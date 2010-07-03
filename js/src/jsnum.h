@@ -47,6 +47,7 @@
 #ifdef SOLARIS
 #include <ieeefp.h>
 #endif
+#include "jsvalue.h"
 
 #include "jsstdint.h"
 #include "jsstr.h"
@@ -117,29 +118,9 @@ JSDOUBLE_IS_INFINITE(jsdouble d)
 #endif
 }
 
-static inline int
-JSDOUBLE_IS_NEGZERO(jsdouble d)
-{
-#ifdef WIN32
-    return (d == 0 && (_fpclass(d) & _FPCLASS_NZ));
-#elif defined(SOLARIS)
-    return (d == 0 && copysign(1, d) < 0);
-#else
-    return (d == 0 && signbit(d));
-#endif
-}
-
 #define JSDOUBLE_HI32_SIGNBIT   0x80000000
 #define JSDOUBLE_HI32_EXPMASK   0x7ff00000
 #define JSDOUBLE_HI32_MANTMASK  0x000fffff
-
-static inline bool
-JSDOUBLE_IS_INT32(jsdouble d, int32_t& i)
-{
-    if (JSDOUBLE_IS_NEGZERO(d))
-        return false;
-    return d == (i = int32_t(d));
-}
 
 static inline bool
 JSDOUBLE_IS_NEG(jsdouble d)
@@ -597,27 +578,7 @@ ValueFitsInInt32(const Value &v, int32_t *pi)
         *pi = v.asInt32();
         return true;
     }
-    return v.isDouble() && JSDOUBLE_IS_INT32(v.asDouble(), *pi);
-}
-
-JS_ALWAYS_INLINE
-Value::Value(NumberTag arg)
-{
-    int32_t i;
-    if (JSDOUBLE_IS_INT32(arg.dbl, i))
-        setInt32(i);
-    else
-        setDouble(arg.dbl);
-}
-
-JS_ALWAYS_INLINE void
-Value::setNumber(double d)
-{
-    int32_t i;
-    if (JSDOUBLE_IS_INT32(d, i))
-        setInt32(i);
-    else
-        setDouble(d);
+    return v.isDouble() && JSDOUBLE_IS_INT32(v.asDouble(), pi);
 }
 
 template<typename T> struct NumberTraits { };

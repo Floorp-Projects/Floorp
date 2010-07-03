@@ -2448,7 +2448,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
         if (d == 0) {
             /* Treat -0 (double) as 0. */
             tableIdx = 0;
-        } else if (!JSDOUBLE_IS_INT32(d, (int32_t&)tableIdx)) {
+        } else if (!JSDOUBLE_IS_INT32(d, (int32_t *)&tableIdx)) {
             goto finally;
         }
     } else {

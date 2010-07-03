@@ -51,22 +51,44 @@
 
 JS_BEGIN_EXTERN_C
 
-/* Well-known JS values, initialized on startup. */
-#ifdef DEBUG
+/*
+ * In release builds, jsval and jsid are defined to be integral types. This
+ * prevents many bugs from being caught at compile time. E.g.:
+ *
+ *  jsval v = ...
+ *  if (v == JS_TRUE)  // should compare with JSVAL_TRUE
+ *    ...
+ *
+ *  jsid id = v;       // jsid and jsval have different representations
+ *
+ * To catch more errors, jsval and jsid are given struct types in debug builds.
+ * Struct assignment and (in C++) operator== allow correct code to be mostly
+ * oblivious to the change. This feature can be explicitly disabled in debug
+ * builds by defining JS_NO_JSVAL_JSID_STRUCT_TYPES.
+ */
+#ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
+
+/* Well-known JS values. N.B. These constants are initialized at startup. */
 extern JS_PUBLIC_DATA(jsval) JSVAL_NULL;
 extern JS_PUBLIC_DATA(jsval) JSVAL_ZERO;
 extern JS_PUBLIC_DATA(jsval) JSVAL_ONE;
 extern JS_PUBLIC_DATA(jsval) JSVAL_FALSE;
 extern JS_PUBLIC_DATA(jsval) JSVAL_TRUE;
 extern JS_PUBLIC_DATA(jsval) JSVAL_VOID;
+
 #else
-# define JSVAL_NULL   BUILD_JSVAL(JSVAL_TAG_NULL,      0)
-# define JSVAL_ZERO   BUILD_JSVAL(JSVAL_TAG_INT32,     0)
-# define JSVAL_ONE    BUILD_JSVAL(JSVAL_TAG_INT32,     1)
-# define JSVAL_FALSE  BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_FALSE)
-# define JSVAL_TRUE   BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_TRUE)
-# define JSVAL_VOID   BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0)
+
+/* Well-known JS values. */
+#define JSVAL_NULL   BUILD_JSVAL(JSVAL_TAG_NULL,      0)
+#define JSVAL_ZERO   BUILD_JSVAL(JSVAL_TAG_INT32,     0)
+#define JSVAL_ONE    BUILD_JSVAL(JSVAL_TAG_INT32,     1)
+#define JSVAL_FALSE  BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_FALSE)
+#define JSVAL_TRUE   BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_TRUE)
+#define JSVAL_VOID   BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0)
+
 #endif
+
+/************************************************************************/
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_NULL(jsval v)
@@ -413,7 +435,9 @@ JSID_DEFAULT_XML_NAMESPACE()
 
 /*
  * A void jsid is not a valid id and only arises as an exceptional API return
- * value, such as in JS_NextProperty.
+ * value, such as in JS_NextProperty. Embeddings must not pass JSID_VOID into
+ * JSAPI entry points expecting a jsid and do not need to handle JSID_VOID in
+ * hooks receiving a jsid except when explicitly noted in the API contract.
  */
 
 static JS_ALWAYS_INLINE JSBool
@@ -1034,6 +1058,7 @@ JS_InitCTypesClass(JSContext *cx, JSObject *global);
  */
 #define JS_CALLEE(cx,vp)        ((vp)[0])
 #define JS_ARGV_CALLEE(argv)    ((argv)[-2])
+#define JS_THIS(cx,vp)          JS_ComputeThis(cx, vp)
 #define JS_THIS_OBJECT(cx,vp)   (JSVAL_TO_OBJECT(JS_THIS(cx,vp)))
 #define JS_ARGV(cx,vp)          ((vp) + 2)
 #define JS_RVAL(cx,vp)          (*(vp))
@@ -1043,6 +1068,7 @@ extern JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp);
 
 #ifdef __cplusplus
+#undef JS_THIS
 static inline jsval
 JS_THIS(JSContext *cx, jsval *vp)
 {
@@ -2062,8 +2088,8 @@ struct JSPropertyDescriptor {
     uintN        attrs;
     JSPropertyOp getter;
     JSPropertyOp setter;
-    uintN        shortid;
     jsval        value;
+    uintN        shortid;
 };
 
 /*
@@ -3094,531 +3120,5 @@ JS_SetGCZeal(JSContext *cx, uint8 zeal);
 #endif
 
 JS_END_EXTERN_C
-
-/************************************************************************/
-
-#ifdef __cplusplus
-
-/*
- * Spanky new C++ API
- */
-
-namespace js {
-
-struct NullTag {
-    explicit NullTag() {}
-};
-
-struct UndefinedTag {
-    explicit UndefinedTag() {}
-};
-
-struct Int32Tag {
-    explicit Int32Tag(int32 i32) : i32(i32) {}
-    int32 i32;
-};
-
-struct DoubleTag {
-    explicit DoubleTag(double dbl) : dbl(dbl) {}
-    double dbl;
-};
-
-struct NumberTag {
-    explicit NumberTag(double dbl) : dbl(dbl) {}
-    double dbl;
-};
-
-struct StringTag {
-    explicit StringTag(JSString *str) : str(str) {}
-    JSString *str;
-};
-
-struct ObjectTag {
-    explicit ObjectTag(JSObject &obj) : obj(obj) {}
-    JSObject &obj;
-};
-
-struct ObjectOrNullTag {
-    explicit ObjectOrNullTag(JSObject *obj) : obj(obj) {}
-    JSObject *obj;
-};
-
-struct ObjectOrUndefinedTag {
-    /* Interpret null JSObject* as undefined value */
-    explicit ObjectOrUndefinedTag(JSObject *obj) : obj(obj) {}
-    JSObject *obj;
-};
-
-struct BooleanTag {
-    explicit BooleanTag(bool boo) : boo(boo) {}
-    bool boo;
-};
-
-struct PrivateTag {
-    explicit PrivateTag(void *ptr) : ptr(ptr) {}
-    void *ptr;
-};
-
-/*
- * While there is a single representation for values, there are two declared
- * types for dealing with these values: jsval and js::Value. jsval allows a
- * high-degree of source compatibility with the old word-sized boxed value
- * representation. js::Value is a new C++-only type and more accurately
- * reflects the current, unboxed value representation. As these two types are
- * layout-compatible, pointers to jsval and js::Value are interchangeable and
- * may be cast safely and canonically using js::Jsvalify and js::asValue.
- */
-class Value
-{
-    void staticAssertions() {
-        JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
-        JS_STATIC_ASSERT(sizeof(JSValueTag) == 4);
-        JS_STATIC_ASSERT(sizeof(JSBool) == 4);
-        JS_STATIC_ASSERT(sizeof(JSWhyMagic) <= 4);
-        JS_STATIC_ASSERT(sizeof(jsval) == 8);
-    }
-
-    jsval_layout data;
-
-  public:
-    /* Constructors */
-
-    /* Value's default constructor leaves Value undefined */
-    Value() {}
-
-    /* Construct a Value of a single type */
-
-    Value(NullTag)                  { setNull(); }
-    Value(UndefinedTag)             { setUndefined(); }
-    Value(Int32Tag arg)             { setInt32(arg.i32); }
-    Value(DoubleTag arg)            { setDouble(arg.dbl); }
-    Value(StringTag arg)            { setString(arg.str); }
-    Value(BooleanTag arg)           { setBoolean(arg.boo); }
-    Value(ObjectTag arg)            { setObject(arg.obj); }
-    Value(JSWhyMagic arg)           { setMagic(arg); }
-
-    /* Construct a Value of a type dynamically chosen from a set of types */
-
-    inline Value(NumberTag arg);
-    Value(ObjectOrNullTag arg)      { setObjectOrNull(arg.obj); }
-    Value(ObjectOrUndefinedTag arg) { setObjectOrUndefined(arg.obj); }
-
-    /* Change to a Value of a single type */
-
-    void setNull() {
-        data.asBits = JSVAL_BITS(JSVAL_NULL);
-    }
-
-    void setUndefined() {
-        data.asBits = JSVAL_BITS(JSVAL_VOID);
-    }
-
-    void setInt32(int32 i) {
-        data = INT32_TO_JSVAL_IMPL(i);
-    }
-
-    int32 &asInt32Ref() {
-        JS_ASSERT(isInt32());
-        return data.s.payload.i32;
-    }
-
-    void setDouble(double d) {
-        data = DOUBLE_TO_JSVAL_IMPL(d);
-    }
-
-    double &asDoubleRef() {
-        JS_ASSERT(isDouble());
-        return data.asDouble;
-    }
-
-    void setString(JSString *str) {
-        data = STRING_TO_JSVAL_IMPL(str);
-    }
-
-    void setObject(JSObject &obj) {
-        data = OBJECT_TO_JSVAL_IMPL(&obj);
-    }
-
-    void setBoolean(bool b) {
-        data = BOOLEAN_TO_JSVAL_IMPL(b);
-    }
-
-    void setMagic(JSWhyMagic why) {
-        data = MAGIC_TO_JSVAL_IMPL(why);
-    }
-
-    /* Change to a Value of a type dynamically chosen from a set of types */
-
-    void setNumber(uint32 ui) {
-        if (ui > JSVAL_INT_MAX)
-            data = DOUBLE_TO_JSVAL_IMPL(ui);
-        else
-            data = INT32_TO_JSVAL_IMPL((int32)ui);
-    }
-
-    inline void setNumber(double d);
-
-    inline void setObjectOrNull(JSObject *arg) {
-        if (arg)
-            setObject(*arg);
-        else
-            setNull();
-    }
-
-    inline void setObjectOrUndefined(JSObject *arg) {
-        if (arg)
-            setObject(*arg);
-        else
-            setUndefined();
-    }
-
-    /* Query a Value's type */
-
-    bool isUndefined() const {
-        return JSVAL_IS_UNDEFINED_IMPL(data);
-    }
-
-    bool isNull() const {
-        return JSVAL_IS_NULL_IMPL(data);
-    }
-
-    bool isNullOrUndefined() const {
-        return isNull() || isUndefined();
-    }
-
-    bool isInt32() const {
-        return JSVAL_IS_INT32_IMPL(data);
-    }
-
-    bool isInt32(int32 i32) const {
-        return JSVAL_IS_SPECIFIC_INT32_IMPL(data, i32);
-    }
-
-    bool isDouble() const {
-        return JSVAL_IS_DOUBLE_IMPL(data);
-    }
-
-    bool isNumber() const {
-        return JSVAL_IS_NUMBER_IMPL(data);
-    }
-
-    bool isString() const {
-        return JSVAL_IS_STRING_IMPL(data);
-    }
-
-    bool isObject() const {
-        return JSVAL_IS_OBJECT_IMPL(data);
-    }
-
-    bool isPrimitive() const {
-        return JSVAL_IS_PRIMITIVE_IMPL(data);
-    }
-
-    bool isObjectOrNull() const {
-        return JSVAL_IS_OBJECT_OR_NULL_IMPL(data);
-    }
-
-    bool isGCThing() const {
-        return JSVAL_IS_GCTHING_IMPL(data);
-    }
-
-    bool isBoolean() const {
-        return JSVAL_IS_BOOLEAN_IMPL(data);
-    }
-
-    bool isTrue() const {
-        return JSVAL_IS_SPECIFIC_BOOLEAN(data, true);
-    }
-
-    bool isFalse() const {
-        return JSVAL_IS_SPECIFIC_BOOLEAN(data, false);
-    }
-
-    bool isMagic() const {
-        return JSVAL_IS_MAGIC_IMPL(data);
-    }
-
-    bool isMagic(JSWhyMagic why) const {
-        JS_ASSERT_IF(isMagic(), data.s.payload.why == why);
-        return JSVAL_IS_MAGIC_IMPL(data);
-    }
-
-    bool isMarkable() const {
-        return JSVAL_IS_TRACEABLE_IMPL(data);
-    }
-
-    int32 gcKind() const {
-        JS_ASSERT(isMarkable());
-        return JSVAL_TRACE_KIND_IMPL(data);
-    }
-
-#ifdef DEBUG
-    JSWhyMagic whyMagic() const {
-        JS_ASSERT(isMagic());
-        return data.s.payload.why;
-    }
-#endif
-
-    /* Comparison */
-
-    bool operator==(const Value &rhs) const {
-        return data.asBits == rhs.data.asBits;
-    }
-
-    bool operator!=(const Value &rhs) const {
-        return data.asBits != rhs.data.asBits;
-    }
-
-    friend bool SameType(const Value &lhs, const Value &rhs) {
-        return JSVAL_SAME_TYPE_IMPL(lhs.data, rhs.data);
-    }
-
-    /* Extract a Value's payload */
-
-    int32 asInt32() const {
-        JS_ASSERT(isInt32());
-        return JSVAL_TO_INT32_IMPL(data);
-    }
-
-    double asDouble() const {
-        JS_ASSERT(isDouble());
-        return data.asDouble;
-    }
-
-    double asNumber() const {
-        JS_ASSERT(isNumber());
-        return isDouble() ? asDouble() : double(asInt32());
-    }
-
-    JSString *asString() const {
-        JS_ASSERT(isString());
-        return JSVAL_TO_STRING_IMPL(data);
-    }
-
-    JSObject &asObject() const {
-        JS_ASSERT(isObject());
-        JS_ASSERT(JSVAL_TO_OBJECT_IMPL(data));
-        return *JSVAL_TO_OBJECT_IMPL(data);
-    }
-
-    JSObject *asObjectOrNull() const {
-        JS_ASSERT(isObjectOrNull());
-        return JSVAL_TO_OBJECT_IMPL(data);
-    }
-
-    void *asGCThing() const {
-        JS_ASSERT(isGCThing());
-        return JSVAL_TO_GCTHING_IMPL(data);
-    }
-
-    bool asBoolean() const {
-        JS_ASSERT(isBoolean());
-        return JSVAL_TO_BOOLEAN_IMPL(data);
-    }
-
-    uint32 asRawUint32() const {
-        JS_ASSERT(!isDouble());
-        return data.s.payload.u32;
-    }
-
-    uint64 asRawBits() const {
-        return data.asBits;
-    }
-
-    JSValueType extractNonDoubleType() const {
-        return JSVAL_EXTRACT_TYPE_IMPL(data);
-    }
-
-    JSValueTag extractNonDoubleTag() const {
-        return JSVAL_EXTRACT_TAG_IMPL(data);
-    }
-
-    JSValueType extractNonDoubleObjectTraceType() const {
-        JS_ASSERT(!isObject());
-        return JSVAL_EXTRACT_TYPE_IMPL(data);
-    }
-
-    JSValueTag extractNonDoubleObjectTraceTag() const {
-        JS_ASSERT(!isObject());
-        return JSVAL_EXTRACT_TAG_IMPL(data);
-    }
-
-    void unboxNonDoubleTo(uint64 *out) const {
-        UNBOX_NON_DOUBLE_JSVAL(data, out);
-    }
-
-    void boxNonDoubleFrom(JSValueType type, uint64 *out) {
-        data = BOX_NON_DOUBLE_JSVAL(type, out);
-    }
-
-    /* Swap two Values */
-
-    void swap(Value &rhs) {
-        jsval_layout tmp = data;
-        data = rhs.data;
-        rhs.data = tmp;
-    }
-
-    /*
-     * Private API
-     *
-     * Private setters/getters allow the caller to read/write arbitrary types
-     * that fit in the 64-bit payload. It is the caller's responsibility, after
-     * storing to a value with setPrivateX to only read with getPrivateX.
-     * Privates values are given a valid type of Int32Tag and are thus GC-safe.
-     */
-
-    Value(PrivateTag arg) {
-        setPrivate(arg.ptr);
-    }
-
-    bool isUnderlyingTypeOfPrivate() const {
-        return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data);
-    }
-
-    void setPrivate(void *ptr) {
-        data = PRIVATE_PTR_TO_JSVAL_IMPL(ptr);
-    }
-
-    void *asPrivate() const {
-        JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
-        return JSVAL_TO_PRIVATE_PTR_IMPL(data);
-    }
-
-    void setPrivateUint32(uint32 ui) {
-        data = PRIVATE_UINT32_TO_JSVAL_IMPL(ui);
-    }
-
-    uint32 asPrivateUint32() const {
-        JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
-        return JSVAL_TO_PRIVATE_UINT32_IMPL(data);
-    }
-
-    uint32 &asPrivateUint32Ref() {
-        JS_ASSERT(isDouble());
-        return data.s.payload.u32;
-    }
-
-} VALUE_ALIGNMENT;
-
-/*
- * As asserted above, js::Value and jsval are layout equivalent. To prevent
- * widespread casting, the following safe casts are provided.
- */
-static inline jsval *        Jsvalify(Value *v)        { return (jsval *)v; }
-static inline const jsval *  Jsvalify(const Value *v)  { return (const jsval *)v; }
-static inline jsval &        Jsvalify(Value &v)        { return (jsval &)v; }
-static inline const jsval &  Jsvalify(const Value &v)  { return (const jsval &)v; }
-static inline Value *        Valueify(jsval *v)        { return (Value *)v; }
-static inline const Value *  Valueify(const jsval *v)  { return (const Value *)v; }
-static inline Value **       Valueify(jsval **v)       { return (Value **)v; }
-static inline Value &        Valueify(jsval &v)        { return (Value &)v; }
-static inline const Value &  Valueify(const jsval &v)  { return (const Value &)v; }
-
-/* Convenience inlines. */
-static inline Value undefinedValue() { return UndefinedTag(); }
-static inline Value nullValue()      { return NullTag(); }
-
-/*
- * js::Class is layout compatible with JSCalss and thus may be safely converted back
- * and forth at no cost using Jsvalify and Valueify.
- */
-struct Class {
-    const char          *name;
-    uint32              flags;
-
-    /* Mandatory non-null function pointer members. */
-    PropertyOp          addProperty;
-    PropertyOp          delProperty;
-    PropertyOp          getProperty;
-    PropertyOp          setProperty;
-    JSEnumerateOp       enumerate;
-    JSResolveOp         resolve;
-    ConvertOp           convert;
-    JSFinalizeOp        finalize;
-
-    /* Optionally non-null members start here. */
-    GetObjectOps        getObjectOps;
-    CheckAccessOp       checkAccess;
-    Native              call;
-    Native              construct;
-    JSXDRObjectOp       xdrObject;
-    HasInstanceOp       hasInstance;
-    JSMarkOp            mark;
-    JSReserveSlotsOp    reserveSlots;
-};
-
-JS_STATIC_ASSERT(sizeof(JSClass) == sizeof(Class));
-
-/*
- * js::ExtendedClass is layout compatible with JSExtendedClass and thus may be
- * safely converted back and forth at no cost using Jsvalify and Valueify.
- */
-struct ExtendedClass {
-    Class               base;
-    EqualityOp          equality;
-    JSObjectOp          outerObject;
-    JSObjectOp          innerObject;
-    JSIteratorOp        iteratorObject;
-    JSObjectOp          wrappedObject;          /* NB: infallible, null
-                                                   returns are treated as
-                                                   the original object */
-    void                (*reserved0)(void);
-    void                (*reserved1)(void);
-    void                (*reserved2)(void);
-};
-
-JS_STATIC_ASSERT(sizeof(JSExtendedClass) == sizeof(ExtendedClass));
-
-/*
- * js::PropertyDescriptor is layout compatible with JSPropertyDescriptor and
- * thus may be safely converted back and forth at no cost using Jsvalify and
- * Valueify.
- */
-struct PropertyDescriptor {
-    JSObject     *obj;
-    uintN        attrs;
-    PropertyOp   getter;
-    PropertyOp   setter;
-    uintN        shortid;
-    Value        value;
-};
-
-JS_STATIC_ASSERT(sizeof(JSPropertyDescriptor) == sizeof(PropertyDescriptor));
-
-static JS_ALWAYS_INLINE JSClass *              Jsvalify(Class *c)                { return (JSClass *)c; }
-static JS_ALWAYS_INLINE Class *                Valueify(JSClass *c)              { return (Class *)c; }
-static JS_ALWAYS_INLINE JSExtendedClass *      Jsvalify(ExtendedClass *c)        { return (JSExtendedClass *)c; }
-static JS_ALWAYS_INLINE ExtendedClass *        Valueify(JSExtendedClass *c)      { return (ExtendedClass *)c; }
-static JS_ALWAYS_INLINE JSPropertyDescriptor * Jsvalify(PropertyDescriptor *p) { return (JSPropertyDescriptor *) p; }
-static JS_ALWAYS_INLINE PropertyDescriptor *   Valueify(JSPropertyDescriptor *p) { return (PropertyDescriptor *) p; }
-
-/*
- * In some cases (quickstubs) we want to take a value in whatever manner is
- * appropriate for the architecture and normalize to a const js::Value &. On
- * x64, passing a js::Value may cause the to unnecessarily be passed through
- * memory instead of registers, so jsval, which is a builtin uint64 is used.
- */
-#if JS_BITS_PER_WORD == 32
-typedef const js::Value *ValueArgType;
-
-static JS_ALWAYS_INLINE const js::Value &
-ValueArgToConstRef(const js::Value *arg)
-{
-    return *arg;
-}
-
-#elif JS_BITS_PER_WORD == 64
-typedef js::Value        ValueArgType;
-
-static JS_ALWAYS_INLINE const Value &
-ValueArgToConstRef(const Value &v)
-{
-    return v;
-}
-#endif
-
-} /* namespace js */
-#endif  /* __cplusplus */
 
 #endif /* jsapi_h___ */
