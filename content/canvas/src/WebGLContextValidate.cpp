@@ -258,6 +258,19 @@ PRBool WebGLContext::ValidateFaceEnum(WebGLenum target, const char *info)
     }
 }
 
+PRBool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
+{
+    switch (target) {
+        case LOCAL_GL_STREAM_DRAW:
+        case LOCAL_GL_STATIC_DRAW:
+        case LOCAL_GL_DYNAMIC_DRAW:
+            return PR_TRUE;
+        default:
+            ErrorInvalidEnumInfo(info);
+            return PR_FALSE;
+    }
+}
+
 PRBool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
                                                 PRUint32 *texelSize, const char *info)
 {

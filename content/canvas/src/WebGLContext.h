@@ -337,6 +337,7 @@ protected:
     PRBool ValidateComparisonEnum(WebGLenum target, const char *info);
     PRBool ValidateStencilOpEnum(WebGLenum action, const char *info);
     PRBool ValidateFaceEnum(WebGLenum target, const char *info);
+    PRBool ValidateBufferUsageEnum(WebGLenum target, const char *info);
     PRBool ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
                                       PRUint32 *texelSize, const char *info);
 
