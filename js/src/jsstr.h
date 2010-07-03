@@ -54,6 +54,7 @@
 #include "jshashtable.h"
 #include "jslock.h"
 #include "jsobj.h"
+#include "jsvalue.h"
 
 #define JSSTRING_BIT(n)             ((size_t)1 << (n))
 #define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
