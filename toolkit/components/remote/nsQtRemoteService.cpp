@@ -47,7 +47,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
@@ -143,14 +143,22 @@ nsQtRemoteService::Observe(nsISupports* aSubject,
   { 0xc0773e90, 0x5799, 0x4eff, { 0xad, 0x3, 0x3e, 0xbc, 0xd8, 0x56, 0x24, 0xac } }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsQtRemoteService)
+NS_DEFINE_NAMED_CID(NS_REMOTESERVICE_CID);
 
-static const nsModuleComponentInfo components[] =
-{
-  { "Remote Service",
-    NS_REMOTESERVICE_CID,
-    "@mozilla.org/toolkit/remote-service;1",
-    nsQtRemoteServiceConstructor
-  }
+static const mozilla::Module::CIDEntry kRemoteCIDs[] = {
+  { &kNS_REMOTESERVICE_CID, false, NULL, nsQtRemoteServiceConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(RemoteServiceModule, components)
+static const mozilla::Module::ContractIDEntry kRemoteContracts[] = {
+  { "@mozilla.org/toolkit/remote-service;1", &kNS_REMOTESERVICE_CID },
+  { NULL }
+};
+
+static const mozilla::Module kRemoteModule = {
+  mozilla::Module::kVersion,
+  kRemoteCIDs,
+  kRemoteContracts
+};
+
+NSMODULE_DEFN(RemoteServiceModule) = &kRemoteModule;

@@ -717,21 +717,3 @@ nsBinaryDetector::DetermineContentType(nsIRequest* aRequest)
     mContentType.Truncate();
   }
 }
-
-NS_METHOD
-nsBinaryDetector::Register(nsIComponentManager* compMgr, nsIFile* path, 
-                           const char* registryLocation,
-                           const char* componentType, 
-                           const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) 
-     return rv;
- 
-  return catman->AddCategoryEntry(NS_CONTENT_SNIFFER_CATEGORY,
-                                  "Binary Detector", 
-                                  NS_BINARYDETECTOR_CONTRACTID,
-                                  PR_TRUE, PR_TRUE, nsnull);
-}

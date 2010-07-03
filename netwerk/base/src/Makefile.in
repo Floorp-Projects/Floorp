@@ -47,6 +47,9 @@ MODULE		= necko
 LIBRARY_NAME	= neckobase_s
 LIBXUL_LIBRARY  = 1
 
+ifdef MOZ_IPC
+	EXPORTS = nsURLHelper.h
+endif
 
 CPPSRCS		= \
 		nsTransportUtils.cpp \
@@ -117,6 +120,7 @@ endif
 
 EXTRA_COMPONENTS = \
 		$(srcdir)/nsProxyAutoConfig.js \
+		$(srcdir)/nsProxyAutoConfig.manifest \
 		$(NULL)
 
 EXTRA_JS_MODULES = \
@@ -127,6 +131,8 @@ EXTRA_JS_MODULES = \
 # static lib.
 FORCE_STATIC_LIB = 1
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET

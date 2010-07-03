@@ -46,8 +46,6 @@
  *
  * Provides scriptable and specialized C++-only methods for initializing a
  * nsIInputStream implementation with a simple character array.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(450cd2d4-f0fd-424d-b365-b1251f80fd53)]
 interface nsIStringInputStream : nsIInputStream

@@ -42,8 +42,6 @@
 /**
  * Information on a Certificate Revocation List (CRL)
  * issued by a Aertificate Authority (CA).
- *
- * @status FROZEN
  */
 [scriptable, uuid(c185d920-4a3e-11d5-ba27-00108303b117)]
 interface nsICRLInfo : nsISupports {

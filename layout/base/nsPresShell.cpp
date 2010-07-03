@@ -225,6 +225,9 @@
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
+/* for NS_MEMORY_REPORTER_IMPLEMENT */
+#include "nsIMemoryReporter.h"
+
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 
@@ -3633,14 +3636,9 @@ nsIPresShell::PostRecreateFramesFor(Element* aElement)
 }
 
 void
-nsIPresShell::RestyleForAnimation(Element* aElement)
+nsIPresShell::RestyleForAnimation(Element* aElement, nsRestyleHint aHint)
 {
-  // eRestyle_Self is ok here because animations are always tied to a
-  // particular element and don't directly affect its kids.  The kids
-  // might have animations of their own, or inherit from aElement, but
-  // we handle all that during restyling; we don't need to _force_
-  // animation rule matching on the kids here.
-  FrameConstructor()->PostAnimationRestyleEvent(aElement, eRestyle_Self,
+  FrameConstructor()->PostAnimationRestyleEvent(aElement, aHint,
                                                 NS_STYLE_HINT_NONE);
 }
 
@@ -5819,6 +5817,7 @@ struct PaintParams {
 static void DrawThebesLayer(ThebesLayer* aLayer,
                             gfxContext* aContext,
                             const nsIntRegion& aRegionToDraw,
+                            const nsIntRegion& aRegionToInvalidate,
                             void* aCallbackData)
 {
   PaintParams* params = static_cast<PaintParams*>(aCallbackData);
@@ -6740,7 +6739,7 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
       if (!itemFrame)
         itemFrame = popupFrame;
 
-      nsCOMPtr<nsIWidget> widget = popupFrame->GetWindow();
+      nsCOMPtr<nsIWidget> widget = popupFrame->GetNearestWidget();
       aEvent->widget = widget;
       nsIntPoint widgetPoint = widget->WidgetToScreenOffset();
       aEvent->refPoint = itemFrame->GetScreenRect().BottomLeft() - widgetPoint;
@@ -6894,11 +6893,11 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
   nsIFrame* caretFrame = caret->GetGeometry(domSelection, &caretCoords);
   if (!caretFrame)
     return PR_FALSE;
-  nsPoint windowOffset;
-  nsIWidget* widget = caretFrame->GetWindowOffset(windowOffset);
+  nsPoint widgetOffset;
+  nsIWidget* widget = caretFrame->GetNearestWidget(widgetOffset);
   if (!widget)
     return PR_FALSE;
-  caretCoords.MoveBy(windowOffset);
+  caretCoords.MoveBy(widgetOffset);
   nsIView* caretView = nsIView::GetViewFor(widget);
 
   // in case the view used for caret coordinates was something else, we need

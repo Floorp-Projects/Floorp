@@ -1188,24 +1188,26 @@ void nsHTMLMediaElement::UnbindFromTree(PRBool aDeep,
 #ifdef MOZ_OGG
 // See http://www.rfc-editor.org/rfc/rfc5334.txt for the definitions
 // of Ogg media types and codec types
-static const char gOggTypes[][16] = {
+const char nsHTMLMediaElement::gOggTypes[3][16] = {
   "video/ogg",
   "audio/ogg",
   "application/ogg"
 };
 
-static const char* gOggCodecs[] = {
+char const *const nsHTMLMediaElement::gOggCodecs[3] = {
   "vorbis",
   "theora",
   nsnull
 };
 
-static PRBool IsOggEnabled()
+bool
+nsHTMLMediaElement::IsOggEnabled()
 {
   return nsContentUtils::GetBoolPref("media.ogg.enabled");
 }
 
-static PRBool IsOggType(const nsACString& aType)
+bool
+nsHTMLMediaElement::IsOggType(const nsACString& aType)
 {
   if (!IsOggEnabled())
     return PR_FALSE;
@@ -1221,24 +1223,26 @@ static PRBool IsOggType(const nsACString& aType)
 // See http://www.rfc-editor.org/rfc/rfc2361.txt for the definitions
 // of WAVE media types and codec types. However, the audio/vnd.wave
 // MIME type described there is not used.
-static const char gWaveTypes[][16] = {
+const char nsHTMLMediaElement::gWaveTypes[4][16] = {
   "audio/x-wav",
   "audio/wav",
   "audio/wave",
   "audio/x-pn-wav"
 };
 
-static const char* gWaveCodecs[] = {
+char const *const nsHTMLMediaElement::gWaveCodecs[2] = {
   "1", // Microsoft PCM Format
   nsnull
 };
 
-static PRBool IsWaveEnabled()
+bool
+nsHTMLMediaElement::IsWaveEnabled()
 {
   return nsContentUtils::GetBoolPref("media.wave.enabled");
 }
 
-static PRBool IsWaveType(const nsACString& aType)
+bool
+nsHTMLMediaElement::IsWaveType(const nsACString& aType)
 {
   if (!IsWaveEnabled())
     return PR_FALSE;
@@ -1251,24 +1255,26 @@ static PRBool IsWaveType(const nsACString& aType)
 #endif
 
 #ifdef MOZ_WEBM
-static const char gWebMTypes[][17] = {
+const char nsHTMLMediaElement::gWebMTypes[2][17] = {
   "video/webm",
   "audio/webm"
 };
 
-static const char* gWebMCodecs[] = {
+char const *const nsHTMLMediaElement::gWebMCodecs[4] = {
   "vp8",
   "vp8.0",
   "vorbis",
   nsnull
 };
 
-static PRBool IsWebMEnabled()
+bool
+nsHTMLMediaElement::IsWebMEnabled()
 {
   return nsContentUtils::GetBoolPref("media.webm.enabled");
 }
 
-static PRBool IsWebMType(const nsACString& aType)
+bool
+nsHTMLMediaElement::IsWebMType(const nsACString& aType)
 {
   if (!IsWebMEnabled())
     return PR_FALSE;
@@ -1283,7 +1289,7 @@ static PRBool IsWebMType(const nsACString& aType)
 /* static */
 nsHTMLMediaElement::CanPlayStatus 
 nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
-                                       const char*** aCodecList)
+                                       char const *const ** aCodecList)
 {
 #ifdef MOZ_OGG
   if (IsOggType(nsDependentCString(aMIMEType))) {
@@ -1326,7 +1332,7 @@ PRBool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
 }
 
 static PRBool
-CodecListContains(const char** aCodecs, const nsAString& aCodec)
+CodecListContains(char const *const * aCodecs, const nsAString& aCodec)
 {
   for (PRInt32 i = 0; aCodecs[i]; ++i) {
     if (aCodec.EqualsASCII(aCodecs[i]))
@@ -1346,7 +1352,7 @@ nsHTMLMediaElement::GetCanPlay(const nsAString& aType)
     return CANPLAY_NO;
 
   NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
-  const char** supportedCodecs;
+  char const *const * supportedCodecs;
   CanPlayStatus status = CanHandleMediaType(mimeTypeUTF8.get(),
                                             &supportedCodecs);
   if (status == CANPLAY_NO)
@@ -1390,57 +1396,6 @@ nsHTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
   case CANPLAY_MAYBE: aResult.AssignLiteral("maybe"); break;
   }
   return NS_OK;
-}
-
-/* static */
-void nsHTMLMediaElement::InitMediaTypes()
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-#ifdef MOZ_OGG
-    if (IsOggEnabled()) {
-      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gOggTypes); i++) {
-        catMan->AddCategoryEntry("Gecko-Content-Viewers", gOggTypes[i],
-                                 "@mozilla.org/content/document-loader-factory;1",
-                                 PR_FALSE, PR_TRUE, nsnull);
-      }
-    }
-#endif
-#ifdef MOZ_WEBM
-    if (IsWebMEnabled()) {
-      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWebMTypes); i++) {
-        catMan->AddCategoryEntry("Gecko-Content-Viewers", gWebMTypes[i],
-                                 "@mozilla.org/content/document-loader-factory;1",
-                                 PR_FALSE, PR_TRUE, nsnull);
-      }
-    }
-#endif
-  }
-}
-
-/* static */
-void nsHTMLMediaElement::ShutdownMediaTypes()
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-#ifdef MOZ_OGG
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gOggTypes); i++) {
-      catMan->DeleteCategoryEntry("Gecko-Content-Viewers", gOggTypes[i], PR_FALSE);
-    }
-#endif
-#ifdef MOZ_WAVE
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWaveTypes); i++) {
-      catMan->DeleteCategoryEntry("Gecko-Content-Viewers", gWaveTypes[i], PR_FALSE);
-    }
-#endif
-#ifdef MOZ_WEBM
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gWebMTypes); i++) {
-      catMan->DeleteCategoryEntry("Gecko-Content-Viewers", gWebMTypes[i], PR_FALSE);
-    }
-#endif
-  }
 }
 
 already_AddRefed<nsMediaDecoder>

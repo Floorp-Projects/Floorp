@@ -46,7 +46,7 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-NS_METHOD
+nsresult
 nsUnicodeToBIG5Constructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult);
 

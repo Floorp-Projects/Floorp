@@ -69,6 +69,7 @@ public:
   static void DrawThebesLayer(ThebesLayer* aLayer,
                               gfxContext* aContext,
                               const nsIntRegion& aRegionToDraw,
+                              const nsIntRegion& aRegionToInvalidate,
                               void* aCallbackData);
 };
 

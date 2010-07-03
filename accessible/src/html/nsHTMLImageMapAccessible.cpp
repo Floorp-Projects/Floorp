@@ -157,8 +157,8 @@ nsHTMLImageMapAccessible::CacheChildren()
     // We must respect ARIA on area elements (for the canvas map technique)
     areaAcc->SetRoleMapEntry(nsAccUtils::GetRoleMapEntry(areaContent));
 
-    mChildren.AppendElement(areaAcc);
-    areaAcc->SetParent(this);
+    if (!AppendChild(areaAcc))
+      return;
   }
 }
 

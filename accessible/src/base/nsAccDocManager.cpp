@@ -40,6 +40,7 @@
 
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
+#include "nsApplicationAccessible.h"
 #include "nsOuterDocAccessible.h"
 #include "nsRootAccessibleWrap.h"
 
@@ -454,7 +455,10 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   // Ensure the document container node is accessible, otherwise do not create
   // document accessible.
   nsAccessible *outerDocAcc = nsnull;
-  if (!isRootDoc) {
+  if (isRootDoc) {
+    outerDocAcc = nsAccessNode::GetApplicationAccessible();
+
+  } else {
     nsIDocument* parentDoc = aDocument->GetParentDocument();
     if (!parentDoc)
       return nsnull;
@@ -469,14 +473,14 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
     // presshells per doc. It should be changed to use
     // GetAccessibleInWeakShell().
     outerDocAcc = GetAccService()->GetAccessible(ownerContent);
-    if (!outerDocAcc)
-      return nsnull;
   }
 
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
+  if (!outerDocAcc)
+    return nsnull;
 
   // We only create root accessibles for the true root, otherwise create a
   // doc accessible.
+  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
   nsDocAccessible *docAcc = isRootDoc ?
     new nsRootAccessibleWrap(aDocument, rootElm, weakShell) :
     new nsDocAccessibleWrap(aDocument, rootElm, weakShell);
@@ -491,15 +495,10 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
   }
 
   // XXX: ideally we should initialize an accessible and then put it into tree,
-  // also this code should be shared between doc and root accessibles.
-  if (outerDocAcc) {
-    // Root document accessible doesn't have associated outerdoc accessible, it
-    // adds itself to application accessible instead.
-    outerDocAcc->AppendChild(docAcc);
-  }
-
-  if (!GetAccService()->InitAccessible(docAcc,
-                                       nsAccUtils::GetRoleMapEntry(aDocument))) {
+  // we can't since document accessible fires reorder event on its container
+  // while initialized.
+  if (!outerDocAcc->AppendChild(docAcc) ||
+      !GetAccService()->InitAccessible(docAcc, nsAccUtils::GetRoleMapEntry(aDocument))) {
     mDocAccessibleCache.Remove(static_cast<void*>(aDocument));
     return nsnull;
   }
