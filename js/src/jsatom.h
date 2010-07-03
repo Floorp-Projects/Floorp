@@ -51,6 +51,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jslock.h"
+#include "jsvalue.h"
 
 #define ATOM_PINNED     0x1       /* atom is pinned against GC */
 #define ATOM_INTERNED   0x2       /* pinned variant for JS_Intern* API */

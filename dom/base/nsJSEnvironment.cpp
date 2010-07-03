@@ -3946,7 +3946,7 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
     // Let's limit the high water mark for the first one to 32MB,
     // and second one to 0xffffffff.
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
-                      32L * 1024L * 1024L);
+                      64L * 1024L * 1024L);
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES,
                       0xffffffff);
   } else {

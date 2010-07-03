@@ -2884,7 +2884,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             if (!BindNameToSlot(cx, cg, left))
                 return JS_FALSE;
             if (left->pn_op == JSOP_ARGUMENTS &&
-                JSDOUBLE_IS_INT32(next->pn_dval, slot) &&
+                JSDOUBLE_IS_INT32(next->pn_dval, &slot) &&
                 (jsuint)slot < JS_BIT(16)) {
                 /*
                  * arguments[i]() requires arguments object as "this".
@@ -2958,7 +2958,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             if (!BindNameToSlot(cx, cg, left))
                 return JS_FALSE;
             if (left->pn_op == JSOP_ARGUMENTS &&
-                JSDOUBLE_IS_INT32(right->pn_dval, slot) &&
+                JSDOUBLE_IS_INT32(right->pn_dval, &slot) &&
                 (jsuint)slot < JS_BIT(16)) {
                 left->pn_offset = right->pn_offset = top;
                 EMIT_UINT16_IMM_OP(JSOP_ARGSUB, (jsatomid)slot);
@@ -2988,7 +2988,7 @@ EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
     ptrdiff_t off;
     jsbytecode *pc;
 
-    if (JSDOUBLE_IS_INT32(dval, ival)) {
+    if (JSDOUBLE_IS_INT32(dval, &ival)) {
         if (ival == 0)
             return js_Emit1(cx, cg, JSOP_ZERO) >= 0;
         if (ival == 1)
