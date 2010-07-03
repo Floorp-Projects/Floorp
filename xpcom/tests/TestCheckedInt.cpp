@@ -431,6 +431,32 @@ void test()
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint32)
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt64)
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint64)
+
+    /* Test increment/decrement operators */
+
+    CheckedInt<T> x, y;
+    x = one;
+    y = x++;
+    VERIFY(x == two);
+    VERIFY(y == one);
+    x = one;
+    y = ++x;
+    VERIFY(x == two);
+    VERIFY(y == two);
+    x = one;
+    y = x--;
+    VERIFY(x == zero);
+    VERIFY(y == one);
+    x = one;
+    y = --x;
+    VERIFY(x == zero);
+    VERIFY(y == zero);
+    x = max_value;
+    VERIFY_IS_VALID(x++);
+    VERIFY_IS_INVALID(++x);
+    x = min_value;
+    VERIFY_IS_VALID(x--);
+    VERIFY_IS_INVALID(--x);
 }
 
 } // end namespace CheckedInt_test

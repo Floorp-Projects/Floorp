@@ -333,6 +333,12 @@ template<typename T> inline T is_div_valid(T x, T y)
   * is the type of the checked integer.
   *
   * Safe integers of different types cannot be used in the same arithmetic expression.
+  *
+  * There are convenience typedefs for all PR integer types, of the following form (these are just 2 examples):
+    \code
+    typedef CheckedInt<PRInt32> CheckedInt32;
+    typedef CheckedInt<PRUint16> CheckedUint16;
+    \endcode
   */
 template<typename T>
 class CheckedInt
@@ -412,6 +418,36 @@ public:
     PRBool operator ==(const CheckedInt& other) const
     {
         return PRBool(mIsValid & other.mIsValid & T(value() == other.value()));
+    }
+
+    /** prefix ++ */
+    CheckedInt& operator++()
+    {
+        *this = *this + 1;
+        return *this;
+    }
+
+    /** postfix ++ */
+    CheckedInt operator++(int)
+    {
+        CheckedInt tmp = *this;
+        *this = *this + 1;
+        return tmp;
+    }
+
+    /** prefix -- */
+    CheckedInt& operator--()
+    {
+        *this = *this - 1;
+        return *this;
+    }
+
+    /** postfix -- */
+    CheckedInt operator--(int)
+    {
+        CheckedInt tmp = *this;
+        *this = *this - 1;
+        return tmp;
     }
 
 private:
@@ -518,6 +554,20 @@ inline PRBool operator ==(const U & lhs, const CheckedInt<T> &rhs)
 {
     return cast_to_CheckedInt<T>(lhs) == rhs;
 }
+
+// convenience typedefs.
+// the use of a macro here helps make sure that we don't let a typo slip into some of these.
+#define CHECKEDINT_MAKE_TYPEDEF(Type) \
+typedef CheckedInt<PR##Type> Checked##Type;
+
+CHECKEDINT_MAKE_TYPEDEF(Int8)
+CHECKEDINT_MAKE_TYPEDEF(Uint8)
+CHECKEDINT_MAKE_TYPEDEF(Int16)
+CHECKEDINT_MAKE_TYPEDEF(Uint16)
+CHECKEDINT_MAKE_TYPEDEF(Int32)
+CHECKEDINT_MAKE_TYPEDEF(Uint32)
+CHECKEDINT_MAKE_TYPEDEF(Int64)
+CHECKEDINT_MAKE_TYPEDEF(Uint64)
 
 } // end namespace mozilla
 
