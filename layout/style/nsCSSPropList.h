@@ -2356,8 +2356,8 @@ CSS_PROP_DISPLAY(
     mTransform,
     eCSSType_ValueList,
     kDisplayKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleDisplay, mSpecifiedTransform),
+    eStyleAnimType_Custom)
 CSS_PROP_DISPLAY(
     -moz-transform-origin,
     _moz_transform_origin,
