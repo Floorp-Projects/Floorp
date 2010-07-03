@@ -112,12 +112,7 @@ window.testResult = function(testname, result, msg) {
 
   // ... otherwise, finish
   window.examiner.remove();
-
-  // must call SimpleTest.finish() in the background because it modifies the
-  // DOM (and this might be called during a reflow.)
-  window.setTimeout(function () {
-      SimpleTest.finish();
-    }, 0);
+  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();

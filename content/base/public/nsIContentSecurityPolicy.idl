@@ -42,11 +42,11 @@ interface nsIHttpChannel;
 interface nsIDocShell;
 
 /**
- * nsIContentSecurityPolicy
+ * nsIContentSecurityPolicy  
  * Describes an XPCOM component used to model an enforce CSPs.
  */
 
-[scriptable, uuid(83F51E09-1C7B-41AC-A15F-D972DCC5205D)]
+[scriptable, uuid(AB36A2BF-CB32-4AA6-AB41-6B4E4444A221)]
 interface nsIContentSecurityPolicy : nsISupports
 {
 
@@ -58,14 +58,15 @@ interface nsIContentSecurityPolicy : nsISupports
   attribute boolean isInitialized;
 
   /**
-   * A read-only string version of the enforced policy for debugging.
+   * When set to true, content load-blocking and fail-closed are disabled: CSP
+   * will ONLY send reports, and not modify behavior.
    */
-  readonly attribute AString enforcedPolicy;
+  attribute boolean reportOnlyMode;
 
   /**
-   * A read-only string version of the report-only policy for debugging.
+   * A read-only string version of the policy for debugging.
    */
-  readonly attribute AString reportOnlyPolicy;
+  readonly attribute AString policy;
 
   /**
    * Whether this policy allows in-page script.
@@ -85,22 +86,28 @@ interface nsIContentSecurityPolicy : nsISupports
   readonly attribute boolean allowsEval;
 
   /**
+   * Manually triggers violation report sending given a URI and reason.
+   * The URI may be null, in which case "self" is sent.
+   * @param blockedURI
+   *     the URI that violated the policy
+   * @param violatedDirective
+   *     the directive that was violated.
+   * @return 
+   *     nothing.
+   */
+  void sendReports(in AString blockedURI, in AString violatedDirective);
+
+  /**
    * Called after the CSP object is created to fill in the appropriate request
    * and request header information needed in case a report needs to be sent.
    */
   void scanRequestData(in nsIHttpChannel aChannel);
 
   /**
-   * Updates the enforced policy currently stored in the CSP to be "refined" or
+   * Updates the policy currently stored in the CSP to be "refined" or
    * tightened by the one specified in the string policyString.
    */
-  void refineEnforcedPolicy(in AString policyString, in nsIURI selfURI);
-
-  /**
-   * Updates the report-only policy currently stored in the CSP to be "refined"
-   * or tightened by the one specified in the string policyString.
-   */
-  void refineReportOnlyPolicy(in AString policyString, in nsIURI selfURI);
+  void refinePolicy(in AString policyString, in nsIURI selfURI);
 
   /**
    * Verifies ancestry as permitted by the policy.
