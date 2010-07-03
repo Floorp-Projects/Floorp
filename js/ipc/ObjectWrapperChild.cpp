@@ -152,8 +152,7 @@ ObjectWrapperChild::ObjectWrapperChild(JSContext* cx, JSObject* obj)
 #ifdef DEBUG
     bool added =
 #endif
-        JS_AddNamedRoot(cx, (void*)&mObj,
-                        "mozilla::jsipc::ObjectWrapperChild-rooted JSObject*");
+         JS_AddObjectRoot(cx, &mObj);
     NS_ASSERTION(added, "ObjectWrapperChild constructor failed to root JSObject*");
 }
 
@@ -162,7 +161,7 @@ ObjectWrapperChild::ActorDestroy(ActorDestroyReason why)
 {
     JSContext* cx = Manager()->GetContext();
     JSAutoRequest request(cx);
-    JS_RemoveRoot(cx, (void*)&mObj);
+    JS_RemoveObjectRoot(cx, &mObj);
 }
 
 bool
