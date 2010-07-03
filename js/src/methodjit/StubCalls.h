@@ -106,6 +106,7 @@ void JS_FASTCALL CallProp(VMFrame &f, JSAtom *atom);
 
 void JS_FASTCALL DefFun(VMFrame &f, uint32 index);
 JSObject * JS_FASTCALL DefLocalFun(VMFrame &f, JSFunction *fun);
+JSObject * JS_FASTCALL DefLocalFun_FC(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL RegExp(VMFrame &f, JSObject *regex);
 JSObject * JS_FASTCALL Lambda(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL FlatLambda(VMFrame &f, JSFunction *fun);
