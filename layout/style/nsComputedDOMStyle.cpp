@@ -1021,7 +1021,7 @@ nsresult nsComputedDOMStyle::GetMozTransform(nsIDOMCSSValue **aValue)
   /* If the "no transforms" flag is set, then we should construct a
    * single-element entry and hand it back.
    */
-  if (!display->mTransformPresent) {
+  if (!display->HasTransform()) {
     nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
     if (!val)
       return NS_ERROR_OUT_OF_MEMORY;

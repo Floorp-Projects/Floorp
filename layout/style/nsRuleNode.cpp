@@ -4459,31 +4459,28 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
      */
 
     /* If it's 'none,' indicate that there are no transforms. */
-    if (head->mValue.GetUnit() == eCSSUnit_None)
-      display->mTransformPresent = PR_FALSE;
-
-    /* If we need to inherit, do so by making a full deep-copy. */
+    if (head->mValue.GetUnit() == eCSSUnit_None) {
+      display->mSpecifiedTransform = nsnull;
+    }
+    /* If we need to inherit, copy the pointer owned by a style rule */
     else if (head->mValue.GetUnit() == eCSSUnit_Inherit)  {
-      display->mTransformPresent = parentDisplay->mTransformPresent;
-      if (parentDisplay->mTransformPresent)
+      display->mSpecifiedTransform = parentDisplay->mSpecifiedTransform;
+      if (parentDisplay->mSpecifiedTransform)
         display->mTransform = parentDisplay->mTransform;
       canStoreInRuleTree = PR_FALSE;
     }
     /* If it's 'initial', then we reset to empty. */
-    else if (head->mValue.GetUnit() == eCSSUnit_Initial)
-      display->mTransformPresent = PR_FALSE;
-
+    else if (head->mValue.GetUnit() == eCSSUnit_Initial) {
+      display->mSpecifiedTransform = nsnull;
+    }
     /* Otherwise, we are looking at a list of CSS tokens.  We'll read each of
      * them in as an array of nsTransformFunction objects, then will accumulate
      * them all together to form the final transform matrix.
      */
     else {
-
+      display->mSpecifiedTransform = head; // weak pointer, owned by rule
       display->mTransform =
         ReadTransforms(head, aContext, mPresContext, canStoreInRuleTree);
-
-      /* Make sure to say that this data is valid! */
-      display->mTransformPresent = PR_TRUE;
     }
   }
 
