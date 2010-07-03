@@ -686,6 +686,27 @@ FrameState::dataRematInfo(const FrameEntry *fe) const
     return remat;
 }
 
+inline void
+FrameState::giveOwnRegs(FrameEntry *fe)
+{
+    JS_ASSERT(!fe->isConstant());
+    JS_ASSERT(fe == peek(-1));
+
+    if (!fe->isCopy())
+        return;
+
+    RegisterID data = copyDataIntoReg(fe);
+    if (fe->isTypeKnown()) {
+        JSValueType type = fe->getKnownType();
+        pop();
+        pushTypedPayload(type, data);
+    } else {
+        RegisterID type = copyTypeIntoReg(fe);
+        pop();
+        pushRegs(type, data);
+    }
+}
+
 } /* namspace mjit */
 } /* namspace js */
 
