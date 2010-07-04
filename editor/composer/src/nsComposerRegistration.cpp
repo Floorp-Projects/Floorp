@@ -84,8 +84,7 @@ nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
     {
         return NS_ERROR_NO_AGGREGATION;
     }
-    nsComposeTxtSrvFilter * inst;
-    NS_NEWXPCOM(inst, nsComposeTxtSrvFilter);
+    nsComposeTxtSrvFilter * inst = new nsComposeTxtSrvFilter();
     if (NULL == inst) 
     {
         return NS_ERROR_OUT_OF_MEMORY;

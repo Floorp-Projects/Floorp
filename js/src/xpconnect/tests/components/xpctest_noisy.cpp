@@ -77,7 +77,7 @@ NS_IMETHODIMP_(nsrefcnt) xpctestNoisy::Release(void)
   printf("Noisy %d - decremented refcount to %d\n", mID, mRefCnt.get());
   NS_LOG_RELEASE(this, mRefCnt, "xpctestNoisy");
   if (mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
+    delete this;
     return 0;
   }
   return mRefCnt;

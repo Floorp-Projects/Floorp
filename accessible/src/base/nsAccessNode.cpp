@@ -131,7 +131,7 @@ void nsAccessNode::LastRelease()
     NS_ASSERTION(!mWeakShell, "A Shutdown() impl forgot to call its parent's Shutdown?");
   }
   // ... then die.
-  NS_DELETEXPCOM(this);
+  delete this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

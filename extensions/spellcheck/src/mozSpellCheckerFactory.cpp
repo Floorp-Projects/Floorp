@@ -86,15 +86,13 @@ mozInlineSpellCheckerConstructor(nsISupports *aOuter, REFNSIID aIID,
 
   nsresult rv;
 
-  mozInlineSpellChecker* inst;
-
   *aResult = NULL;
   if (NULL != aOuter) {
     rv = NS_ERROR_NO_AGGREGATION;
     return rv;
   }
 
-  NS_NEWXPCOM(inst, mozInlineSpellChecker);
+  mozInlineSpellChecker* inst = new mozInlineSpellChecker();
   if (NULL == inst) {
     rv = NS_ERROR_OUT_OF_MEMORY;
     return rv;

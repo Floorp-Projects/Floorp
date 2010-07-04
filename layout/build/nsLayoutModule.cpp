@@ -591,15 +591,13 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
 {                                                                             \
     nsresult rv;                                                              \
                                                                               \
-    _InstanceClass * inst;                                                    \
-                                                                              \
     *aResult = NULL;                                                          \
     if (NULL != aOuter) {                                                     \
         rv = NS_ERROR_NO_AGGREGATION;                                         \
         return rv;                                                            \
     }                                                                         \
                                                                               \
-    NS_NEWXPCOM(inst, _InstanceClass);                                        \
+    _InstanceClass * inst = new _InstanceClass();                             \
     if (NULL == inst) {                                                       \
         rv = NS_ERROR_OUT_OF_MEMORY;                                          \
         return rv;                                                            \
