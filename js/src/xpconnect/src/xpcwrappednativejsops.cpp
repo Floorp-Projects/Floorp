@@ -1448,7 +1448,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     if(!XPCPerThreadData::IsMainThread(cx))
         return obj;
 
-    Outerize(cx, &obj);
+    OBJ_TO_OUTER_OBJECT(cx, obj);
     if(!obj)
         return nsnull;
 

@@ -2799,7 +2799,7 @@ nsXPCComponents_Utils::LookupMethod()
     if(NS_FAILED(rv))
         return rv;
 
-    Innerize(cx, &obj);
+    OBJ_TO_INNER_OBJECT(cx, obj);
     if(!obj)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
@@ -3246,7 +3246,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
         JSPRINCIPALS_DROP(cx, jsPrincipals);
     if (!sandbox)
         return NS_ERROR_XPC_UNEXPECTED;
-    js::AutoValueRooter tvr(cx, sandbox);
+    js::AutoObjectRooter tvr(cx, sandbox);
 
     {
         JSAutoCrossCompartmentCall ac;

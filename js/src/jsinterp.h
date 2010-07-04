@@ -137,8 +137,8 @@ struct JSStackFrame
      * also used in some other cases --- entering 'with' blocks, for
      * example.
      */
-    JSObject        *blockChain;
     JSObject        *scopeChain;
+    JSObject        *blockChain;
 
     uint32          flags;          /* frame flags -- see below */
     JSStackFrame    *displaySave;   /* previous value of display entry for
@@ -213,7 +213,6 @@ static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(Value
 
 JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) % sizeof(Value) == 0);
 JS_STATIC_ASSERT(offsetof(JSStackFrame, thisv) % sizeof(Value) == 0);
-JS_STATIC_ASSERT(offsetof(JSStackFrame, scopeChain) % sizeof(Value) == 0);
 
 } /* namespace js */
 
