@@ -2743,7 +2743,7 @@ split_outerObject(JSContext *cx, JSObject *obj)
 static JSObject *
 split_thisObject(JSContext *cx, JSObject *obj)
 {
-    Outerize(cx, &obj);
+    OBJ_TO_OUTER_OBJECT(cx, obj);
     if (!obj)
         return NULL;
     return obj;
@@ -2951,8 +2951,8 @@ NewSandbox(JSContext *cx, bool lazy, bool split)
         if (!lazy && !JS_InitStandardClasses(cx, obj))
             return NULL;
 
-        AutoValueRooter root(cx, BOOLEAN_TO_JSVAL(lazy));
-        if (!JS_SetProperty(cx, obj, "lazy", root.addr()))
+        AutoValueRooter root(cx, BooleanTag(lazy));
+        if (!JS_SetProperty(cx, obj, "lazy", root.jsval_addr()))
             return NULL;
 
         if (split)
@@ -3022,7 +3022,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             return false;
         }
     }
-    return cx->compartment->wrap(cx, rval);
+    return cx->compartment->wrap(cx, Valueify(rval));
 }
 
 static JSBool

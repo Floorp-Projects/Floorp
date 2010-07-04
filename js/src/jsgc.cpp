@@ -796,8 +796,6 @@ GetFinalizableArenaTraceKind(JSGCArenaInfo *ainfo)
 static inline size_t
 GetArenaTraceKind(JSGCArenaInfo *ainfo)
 {
-    if (!ainfo->list)
-        return JSTRACE_DOUBLE;
     return GetFinalizableArenaTraceKind(ainfo);
 }
 
@@ -950,15 +948,13 @@ class ConservativeGCStackMarker {
 #ifdef JS_GCMETER
         JSConservativeGCStats *total = &trc->context->runtime->gcStats.conservative;
         total->words        += stats.words;
-        total->oddaddress   += stats.oddaddress;
-        total->special      += stats.special;
+        total->lowbitset    += stats.lowbitset;
         total->notarena     += stats.notarena;
         total->notchunk     += stats.notchunk;
         total->freearena    += stats.freearena;
         total->wrongtag     += stats.wrongtag;
         total->notlive      += stats.notlive;
         total->gcthings     += stats.gcthings;
-        total->raw          += stats.raw;
         total->unmarked     += stats.unmarked;
 #endif
     }
@@ -1028,15 +1024,13 @@ ConservativeGCStackMarker::dumpStats(FILE *fp, JSConservativeGCStats *stats)
 #define ULSTAT(x)       ((unsigned long)(stats->x))
     fprintf(fp, "CONSERVATIVE STACK SCANNING:\n");
     fprintf(fp, "      number of stack words: %lu\n", ULSTAT(words));
-    fprintf(fp, "      excluded, low bit set: %lu\n", ULSTAT(oddaddress));
-    fprintf(fp, "          excluded, special: %lu\n", ULSTAT(special));
+    fprintf(fp, "      excluded, low bit set: %lu\n", ULSTAT(lowbitset));
     fprintf(fp, "        not withing a chunk: %lu\n", ULSTAT(notchunk));
     fprintf(fp, "     not within arena range: %lu\n", ULSTAT(notarena));
     fprintf(fp, "       points to free arena: %lu\n", ULSTAT(freearena));
     fprintf(fp, "        excluded, wrong tag: %lu\n", ULSTAT(wrongtag));
     fprintf(fp, "         excluded, not live: %lu\n", ULSTAT(notlive));
     fprintf(fp, "              things marked: %lu\n", ULSTAT(gcthings));
-    fprintf(fp, "        raw pointers marked: %lu\n", ULSTAT(raw));
     fprintf(fp, "         conservative roots: %lu\n", ULSTAT(unmarked));
 #undef ULSTAT
 }
@@ -1084,11 +1078,6 @@ ConservativeGCStackMarker::dumpConservativeRoots()
             fprintf(fp, "string %s", buf);
             break;
           }
-          case JSTRACE_DOUBLE: {
-            jsdouble *dp = (jsdouble *) i->thing;
-            fprintf(fp, "double %e", *dp);
-            break;
-          }
 # if JS_HAS_XML_SUPPORT
           case JSTRACE_XML: {
             JSXML *xml = (JSXML *) i->thing;
@@ -1120,31 +1109,26 @@ ConservativeGCStackMarker::markWord(jsuword w)
 #endif
 
 #define RETURN(x) do { CONSERVATIVE_METER(stats.x++); return; } while (0)
+
     /*
      * We assume that the compiler never uses sub-word alignment to store
-     * pointers and does not tag pointers on its own. Thus we exclude words
-     * with JSVAL_INT (any odd words) or JSVAL_SPECIAL tags as they never
-     * point to GC things. We also exclude words with a double tag that point
-     * into a non-double. But, for example, on 32-bit platforms we cannot
-     * exclude a pointer into an object arena tagged with JSVAL_STRING. The
-     * latter is 4 and a compiler can store a pointer not to the object but
-     * rather a pointer to its second field.
+     * pointers and does not tag pointers on its own. Additionally, neither
+     * value representation scheme touches the low bits of a GC-thing payload.
+     * Also, none of JSString, JSObject, and JSXML have sub-word-sized fields.
+     * Thus, we can immediately rule out a word if it has one of the low
+     * log2(sizeof(jsuword)) bits set.
      */
-    JS_STATIC_ASSERT(JSVAL_INT == 1);
-    JS_STATIC_ASSERT(JSVAL_DOUBLE == 2);
-    JS_STATIC_ASSERT(JSVAL_STRING == 4);
-    JS_STATIC_ASSERT(JSVAL_SPECIAL == 6);
+#if JS_BITS_PER_WORD == 32
+    if (w & 0x3)
+        RETURN(lowbitset);
+    jsuword payload = w;
+#elif JS_BITS_PER_WORD == 64
+    if (w & 0x7)
+        RETURN(lowbitset);
+    jsuword payload = w & JSVAL_PAYLOAD_MASK;
+#endif
 
-    if (w & 1)
-        RETURN(oddaddress);
-
-    /* Strip off the tag bits. */
-    jsuword tag = w & JSVAL_TAGMASK;
-
-    if (tag == JSVAL_SPECIAL)
-        RETURN(special);
-
-    jsuword chunk = w & ~GC_CHUNK_MASK;
+    jsuword chunk = payload & ~GC_CHUNK_MASK;
     JSGCChunkInfo *ci;
     if (JS_LIKELY(chunkSet.initialized())) {
         if (!chunkSet.has(chunk))
@@ -1160,10 +1144,10 @@ ConservativeGCStackMarker::markWord(jsuword w)
         }
     }
 
-    if ((w & GC_CHUNK_MASK) >= GC_MARK_BITMAP_ARRAY_OFFSET)
+    if ((payload & GC_CHUNK_MASK) >= GC_MARK_BITMAP_ARRAY_OFFSET)
         RETURN(notarena);
 
-    size_t arenaIndex = (w & GC_CHUNK_MASK) >> GC_ARENA_SHIFT;
+    size_t arenaIndex = (payload & GC_CHUNK_MASK) >> GC_ARENA_SHIFT;
     if (JS_TEST_BIT(ci->getFreeArenaBitmap(), arenaIndex))
         RETURN(freearena);
 
@@ -1172,57 +1156,55 @@ ConservativeGCStackMarker::markWord(jsuword w)
 
     JSGCThing *thing;
     uint32 traceKind;
-    if (!ainfo->list) { /* doubles */
-        if (tag && tag != JSVAL_DOUBLE)
-            RETURN(wrongtag);
-        JS_STATIC_ASSERT(JSVAL_TAGMASK == 7 && (sizeof(double) - 1) == 7);
-        thing = (JSGCThing *) (w & ~JSVAL_TAGMASK);
-        traceKind = JSTRACE_DOUBLE;
-    } else {
-        if (tag == JSVAL_DOUBLE)
-            RETURN(wrongtag);
-        traceKind = GetFinalizableArenaTraceKind(ainfo);
+    traceKind = GetFinalizableArenaTraceKind(ainfo);
+
 #if JS_BYTES_PER_WORD == 8
-        if (tag == JSVAL_STRING && traceKind != JSTRACE_STRING)
-            RETURN(wrongtag);
+    /*
+     * On 64-bit we have the tag information in the same word as the payload.
+     * Since all GC-things have the high bits clear, we are safe in using these
+     * bits as tag information for the purpose avoiding false roots.
+     */
+    JSValueTag tag = w >> JSVAL_TAG_SHIFT;
+    if ((tag == JSVAL_TAG_SHIFT && traceKind != JSTRACE_STRING) ||
+        (tag == JSVAL_TAG_OBJECT && traceKind != JSTRACE_OBJECT)) {
+        RETURN(wrongtag);
+    }
 #endif
 
-        jsuword start = a->toPageStart();
-        jsuword offset = w - start;
-        size_t thingSize = ainfo->list->thingSize;
-        offset -= offset % thingSize;
+    jsuword start = a->toPageStart();
+    jsuword offset = payload - start;
+    size_t thingSize = ainfo->list->thingSize;
+    offset -= offset % thingSize;
 
-        /*
-         * If GC_ARENA_SIZE % thingSize != 0 or when thingSize is not a power
-         * of two, thingSize-aligned pointer may point at the end of the last
-         * thing yet be inside the arena.
-         */
-        if (offset + thingSize > GC_ARENA_SIZE) {
-            JS_ASSERT(thingSize & (thingSize - 1));
-            RETURN(notarena);
-        }
-        thing = (JSGCThing *) (start + offset);
+    /*
+     * If GC_ARENA_SIZE % thingSize != 0 or when thingSize is not a power
+     * of two, thingSize-aligned pointer may point at the end of the last
+     * thing yet be inside the arena.
+     */
+    if (offset + thingSize > GC_ARENA_SIZE) {
+        JS_ASSERT(thingSize & (thingSize - 1));
+        RETURN(notarena);
+    }
+    thing = (JSGCThing *) (start + offset);
 
-        /* Make sure the thing is not on the freelist of the arena. */
-        JSGCThing *cursor = ainfo->freeList;
-        while (cursor) {
-            JS_ASSERT((((jsuword) cursor) & GC_ARENA_MASK) % thingSize == 0);
-            JS_ASSERT(!IsMarkedGCThing(cursor));
+    /* Make sure the thing is not on the freelist of the arena. */
+    JSGCThing *cursor = ainfo->freeList;
+    while (cursor) {
+        JS_ASSERT((((jsuword) cursor) & GC_ARENA_MASK) % thingSize == 0);
+        JS_ASSERT(!IsMarkedGCThing(cursor));
 
-            /* If the cursor moves past the thing, it's not in the freelist. */
-            if (thing < cursor)
-                break;
+        /* If the cursor moves past the thing, it's not in the freelist. */
+        if (thing < cursor)
+            break;
 
-            /* If we find it on the freelist, it's dead. */
-            if (thing == cursor)
-                RETURN(notlive);
-            JS_ASSERT_IF(cursor->link, cursor < cursor->link);
-            cursor = cursor->link;
-        }
+        /* If we find it on the freelist, it's dead. */
+        if (thing == cursor)
+            RETURN(notlive);
+        JS_ASSERT_IF(cursor->link, cursor < cursor->link);
+        cursor = cursor->link;
     }
 
     CONSERVATIVE_METER(stats.gcthings++);
-    CONSERVATIVE_METER_IF(!tag, stats.raw++);
 
     /*
      * We have now a valid pointer, that is either raw or tagged properly.
@@ -1242,8 +1224,7 @@ ConservativeGCStackMarker::markWord(jsuword w)
         conservativeRoots.append(root);
     }
 #endif
-    JS_SET_TRACING_NAME(trc, "machine stack");
-    js_CallGCMarker(trc, thing, traceKind);
+    Mark(trc, thing, traceKind, "machine stack");
 
 #undef RETURN
 }
@@ -2286,16 +2267,16 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 
     if (fp->callobj)
         JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
-    if (fp->argsObj())
-        JS_CALL_OBJECT_TRACER(trc, fp->argsObj(), "arguments");
+    if (fp->argsobj)
+        JS_CALL_OBJECT_TRACER(trc, fp->argsobj, "arguments");
     if (fp->script)
         js_TraceScript(trc, fp->script);
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
     MarkValue(trc, fp->thisv, "this");
     MarkValue(trc, fp->rval, "rval");
-    if (fp->scopeChainObj())
-        JS_CALL_OBJECT_TRACER(trc, fp->scopeChainObj(), "scope chain");
+    if (fp->scopeChain)
+        JS_CALL_OBJECT_TRACER(trc, fp->scopeChain, "scope chain");
 }
 
 void
@@ -2336,8 +2317,7 @@ AutoGCRooter::trace(JSTracer *trc)
 {
     switch (tag) {
       case JSVAL:
-        JS_SET_TRACING_NAME(trc, "js::AutoValueRooter.val");
-        js_CallValueTracerIfGCThing(trc, static_cast<AutoValueRooter *>(this)->val);
+        MarkValue(trc, static_cast<AutoValueRooter *>(this)->val, "js::AutoValueRooter.val");
         return;
 
       case SPROP:
@@ -2363,40 +2343,40 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case IDARRAY: {
         JSIdArray *ida = static_cast<AutoIdArray *>(this)->idArray;
-        TraceValues(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
+        MarkIdRange(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
         return;
       }
 
       case DESCRIPTORS: {
-        PropertyDescriptorArray &descriptors =
-            static_cast<AutoDescriptorArray *>(this)->descriptors;
+        PropDescArray &descriptors =
+            static_cast<AutoPropDescArrayRooter *>(this)->descriptors;
         for (size_t i = 0, len = descriptors.length(); i < len; i++) {
-            PropertyDescriptor &desc = descriptors[i];
-
-            JS_CALL_VALUE_TRACER(trc, desc.pd, "PropertyDescriptor::pd");
-            JS_CALL_VALUE_TRACER(trc, desc.value, "PropertyDescriptor::value");
-            JS_CALL_VALUE_TRACER(trc, desc.get, "PropertyDescriptor::get");
-            JS_CALL_VALUE_TRACER(trc, desc.set, "PropertyDescriptor::set");
-            js_TraceId(trc, desc.id);
+            PropDesc &desc = descriptors[i];
+            MarkValue(trc, desc.pd, "PropDesc::pd");
+            MarkValue(trc, desc.value, "PropDesc::value");
+            MarkValue(trc, desc.get, "PropDesc::get");
+            MarkValue(trc, desc.set, "PropDesc::set");
+            MarkId(trc, desc.id, "PropDesc::id");
         }
         return;
       }
 
       case DESCRIPTOR : {
-        AutoDescriptor &desc = *static_cast<AutoDescriptor *>(this);
+        PropertyDescriptor &desc = *static_cast<AutoPropertyDescriptorRooter *>(this);
         if (desc.obj)
-            JS_CALL_OBJECT_TRACER(trc, desc.obj, "Descriptor::obj");
-        JS_CALL_VALUE_TRACER(trc, desc.value, "Descriptor::value");
+            MarkObject(trc, desc.obj, "Descriptor::obj");
+        MarkValue(trc, desc.value, "Descriptor::value");
         if (desc.attrs & JSPROP_GETTER)
-            JS_CALL_VALUE_TRACER(trc, jsval(desc.getter), "Descriptor::get");
+            MarkObject(trc, CastAsObject(desc.getter), "Descriptor::get");
         if (desc.attrs & JSPROP_SETTER)
-            JS_CALL_VALUE_TRACER(trc, jsval(desc.setter), "Descriptor::set");
+            MarkObject(trc, CastAsObject(desc.setter), "Descriptor::set");
         return;
       }
 
       case NAMESPACES: {
         JSXMLArray &array = static_cast<AutoNamespaceArray *>(this)->array;
-        TraceObjectVector(trc, reinterpret_cast<JSObject **>(array.vector), array.length);
+        MarkObjectRange(trc, array.length, reinterpret_cast<JSObject **>(array.vector),
+                        "JSXMLArray.vector");
         array.cursors->trace(trc);
         return;
       }
@@ -2406,26 +2386,34 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case OBJECT:
-        if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj) {
-            JS_SET_TRACING_NAME(trc, "js::AutoObjectRooter.obj");
-            js_CallGCMarker(trc, obj, JSTRACE_OBJECT);
-        }
+        if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj)
+            MarkObject(trc, obj, "js::AutoObjectRooter.obj");
         return;
 
       case ID:
-        JS_SET_TRACING_NAME(trc, "js::AutoIdRooter.val");
-        js_CallValueTracerIfGCThing(trc, static_cast<AutoIdRooter *>(this)->idval);
+        MarkId(trc, static_cast<AutoIdRooter *>(this)->id_, "js::AutoIdRooter.val");
         return;
 
-      case VECTOR: {
-        js::Vector<jsval, 8> &vector = static_cast<js::AutoValueVector *>(this)->vector;
-        js::TraceValues(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
+      case VALVECTOR: {
+        Vector<Value, 8> &vector = static_cast<js::AutoValueVector *>(this)->vector;
+        MarkValueRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
+        return;
+      }
+
+      case STRING:
+        if (JSString *str = static_cast<js::AutoStringRooter *>(this)->str)
+            MarkString(trc, str, "js::AutoStringRooter.str");
+        return;
+
+      case IDVECTOR: {
+        Vector<jsid, 8> &vector = static_cast<js::AutoIdVector *>(this)->vector;
+        MarkIdRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
         return;
       }
     }
 
     JS_ASSERT(tag >= 0);
-    TraceValues(trc, tag, static_cast<AutoArrayRooter *>(this)->array, "js::AutoArrayRooter.array");
+    MarkValueRange(trc, tag, static_cast<AutoArrayRooter *>(this)->array, "js::AutoArrayRooter.array");
 }
 
 void

@@ -414,15 +414,13 @@ const bool JS_WANT_GC_METER_PRINT = false;
 
 struct JSConservativeGCStats {
     uint32  words;      /* number of words on native stacks */
-    uint32  oddaddress; /* excluded because low bit was set */
-    uint32  special;    /* excluded because a special value */
+    uint32  lowbitset;  /* excluded because one of the low bits was set */
     uint32  notarena;   /* not within arena range in a chunk */
     uint32  notchunk;   /* not within a valid chunk */
     uint32  freearena;  /* not within non-free arena */
     uint32  wrongtag;   /* tagged pointer but wrong type */
     uint32  notlive;    /* gcthing is not allocated */
     uint32  gcthings;   /* number of live gcthings */
-    uint32  raw;        /* number of raw pointers marked */
     uint32  unmarked;   /* number of unmarked gc things discovered on the
                            stack */
 };
@@ -526,15 +524,22 @@ static inline void
 MarkStringRange(JSTracer *trc, size_t len, JSString **vec, const char *name)
 {
     for (uint32 i = 0; i < len; i++) {
-        if (JSString *str = vec[i])
-            MarkString(trc, str, name);
+        if (JSString *str = vec[i]) {
+            JS_SET_TRACING_INDEX(trc, name, i);
+            Mark(trc, str, JSTRACE_STRING);
+        }
     }
 }
 
 static inline void
 MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
 {
-    MarkStringRange(trc, len, reinterpret_cast<JSString **>(vec), name);
+    for (uint32 i = 0; i < len; i++) {
+        if (JSAtom *atom = vec[i]) {
+            JS_SET_TRACING_INDEX(trc, name, i);
+            Mark(trc, ATOM_TO_STRING(atom), JSTRACE_STRING);
+        }
+    }
 }
 
 static inline void
@@ -548,8 +553,10 @@ static inline void
 MarkObjectRange(JSTracer *trc, size_t len, JSObject **vec, const char *name)
 {
     for (uint32 i = 0; i < len; i++) {
-        if (JSObject *obj = vec[i])
-            MarkObject(trc, obj, name);
+        if (JSObject *obj = vec[i]) {
+            JS_SET_TRACING_INDEX(trc, name, i);
+            Mark(trc, obj, JSTRACE_OBJECT);
+        }
     }
 }
 
@@ -584,19 +591,28 @@ MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name)
 }
 
 static inline void
-MarkId(JSTracer *trc, jsid id, const char *name)
+MarkId(JSTracer *trc, jsid id)
 {
     if (JSID_IS_STRING(id))
-        Mark(trc, JSID_TO_STRING(id), JSTRACE_STRING, name);
+        Mark(trc, JSID_TO_STRING(id), JSTRACE_STRING);
     else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
-        Mark(trc, JSID_TO_OBJECT(id), JSTRACE_OBJECT, name);
+        Mark(trc, JSID_TO_OBJECT(id), JSTRACE_OBJECT);
+}
+
+static inline void
+MarkId(JSTracer *trc, jsid id, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    MarkId(trc, id);
 }
 
 static inline void
 MarkIdRange(JSTracer *trc, jsid *beg, jsid *end, const char *name)
 {
-    for (jsid *idp = beg; idp != end; ++idp)
-        MarkId(trc, *idp, name);
+    for (jsid *idp = beg; idp != end; ++idp) {
+        JS_SET_TRACING_INDEX(trc, name, (idp - beg));
+        MarkId(trc, *idp);
+    }
 }
 
 static inline void

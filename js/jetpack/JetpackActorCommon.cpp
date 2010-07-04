@@ -146,7 +146,7 @@ JetpackActorCommon::jsval_to_PrimVariant(JSContext* cx, JSType type, jsval from,
     if (JSVAL_IS_INT(from))
       *to = JSVAL_TO_INT(from);
     else if (JSVAL_IS_DOUBLE(from))
-      *to = *JSVAL_TO_DOUBLE(from);
+      *to = JSVAL_TO_DOUBLE(from);
     else
       return false;
     return true;
@@ -278,7 +278,7 @@ JetpackActorCommon::jsval_from_PrimVariant(JSContext* cx,
     return true;
 
   case PrimVariant::Tdouble:
-    return !!JS_NewDoubleValue(cx, from.get_double(), to);
+    return !!JS_NewNumberValue(cx, from.get_double(), to);
 
   case PrimVariant::TnsString: {
     const nsString& str = from.get_nsString();
@@ -349,11 +349,11 @@ JetpackActorCommon::jsval_from_CompVariant(JSContext* cx,
     for (PRUint32 i = 0; i < kvs.Length(); ++i) {
       const KeyValue& kv = kvs.ElementAt(i);
       js::AutoValueRooter toSet(cx);
-      if (!jsval_from_Variant(cx, kv.value(), toSet.addr(), seen) ||
+      if (!jsval_from_Variant(cx, kv.value(), toSet.jsval_addr(), seen) ||
           !JS_SetUCProperty(cx, obj,
                             kv.key().get(),
                             kv.key().Length(),
-                            toSet.addr()))
+                            toSet.jsval_addr()))
         return false;
     }
 
@@ -457,14 +457,14 @@ JetpackActorCommon::RecvMessage(JSContext* cx,
 
   for (PRUint32 i = 0; i < snapshot.Length(); ++i) {
     Variant* vp = results ? results->AppendElement() : NULL;
-    rval.set(JSVAL_VOID);
+    rval.jsval_set(JSVAL_VOID);
     if (!JS_CallFunctionValue(cx, implGlobal, snapshot[i], argc, argv,
-                              rval.addr())) {
+                              rval.jsval_addr())) {
       // If a receiver throws, we drop the exception on the floor.
       JS_ClearPendingException(cx);
       if (vp)
         *vp = void_t();
-    } else if (vp && !jsval_to_Variant(cx, rval.value(), vp))
+    } else if (vp && !jsval_to_Variant(cx, rval.jsval_value(), vp))
       *vp = void_t();
   }
 

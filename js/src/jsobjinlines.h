@@ -476,24 +476,22 @@ JSObject::setQNameLocalName(jsval name)
 inline JSObject *
 JSObject::getWithThis() const
 {
-    return JSVAL_TO_OBJECT(fslots[JSSLOT_WITH_THIS]);
+    return &fslots[JSSLOT_WITH_THIS].asObject();
 }
 
 inline void
 JSObject::setWithThis(JSObject *thisp)
 {
-    fslots[JSSLOT_WITH_THIS] = OBJECT_TO_JSVAL(thisp);
+    fslots[JSSLOT_WITH_THIS].setObject(*thisp);
 }
 
 inline void
-JSObject::initSharingEmptyScope(js::Class *clasp,
-                                const js::Value &proto,
-                                const js::Value &parent,
+JSObject::initSharingEmptyScope(js::Class *clasp, JSObject *proto, JSObject *parent,
                                 const js::Value &privateSlotValue)
 {
     init(clasp, proto, parent, privateSlotValue);
 
-    JSEmptyScope *emptyScope = proto.asObject().scope()->emptyScope;
+    JSEmptyScope *emptyScope = proto->scope()->emptyScope;
     JS_ASSERT(emptyScope->clasp == clasp);
     map = emptyScope->hold();
 }
@@ -607,7 +605,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
         scope->freeslot = freeslot;
 #ifdef DEBUG
         if (freeslot < obj->numSlots())
-            obj->setSlot(freeslot, JSVAL_VOID);
+            obj->setSlot(freeslot, UndefinedTag());
 #endif
     }
 
@@ -627,7 +625,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
  * prototype as proto, and its parent global as parent.
  */
 static inline JSObject *
-NewNativeClassInstance(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent)
 {
     JS_ASSERT(proto);
     JS_ASSERT(proto->isNative());
@@ -664,7 +662,7 @@ NewNativeClassInstance(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject 
              * builtin. See bug 481444.
              */
             if (cx->debugHooks->objectHook && !JS_ON_TRACE(cx)) {
-                AutoValueRooter tvr(cx, obj);
+                AutoObjectRooter tvr(cx, obj);
                 AutoKeepAtoms keep(cx->runtime);
                 cx->debugHooks->objectHook(cx, obj, JS_TRUE,
                                            cx->debugHooks->objectHookData);
@@ -679,16 +677,16 @@ NewNativeClassInstance(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject 
 
 bool
 FindClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey, JSObject **protop,
-                   JSClass *clasp);
+                   Class *clasp);
 
 /*
  * Helper used to create Boolean, Date, RegExp, etc. instances of built-in
- * classes with class prototypes of the same JSClass. See, e.g., jsdate.cpp,
+ * classes with class prototypes of the same Class. See, e.g., jsdate.cpp,
  * jsregexp.cpp, and js_PrimitiveToObject in jsobj.cpp. Use this to get the
  * right default proto and parent for clasp in cx.
  */
 static inline JSObject *
-NewBuiltinClassInstance(JSContext *cx, JSClass *clasp)
+NewBuiltinClassInstance(JSContext *cx, Class *clasp)
 {
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
@@ -707,10 +705,10 @@ NewBuiltinClassInstance(JSContext *cx, JSClass *clasp)
     }
     JS_ASSERT(global->getClass()->flags & JSCLASS_IS_GLOBAL);
 
-    jsval v = global->getReservedSlot(JSProto_LIMIT + protoKey);
+    const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
     JSObject *proto;
-    if (!JSVAL_IS_PRIMITIVE(v)) {
-        proto = JSVAL_TO_OBJECT(v);
+    if (v.isObject()) {
+        proto = &v.asObject();
         JS_ASSERT(proto->getParent() == global);
     } else {
         if (!FindClassPrototype(cx, global, protoKey, &proto, clasp))
@@ -726,7 +724,7 @@ NewBuiltinClassInstance(JSContext *cx, JSClass *clasp)
  * and NewObject can be used to construct full-sized JSFunction instances.
  */
 static inline JSObject *
-NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+NewObjectWithGivenProto(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent)
 {
     DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
 
@@ -760,9 +758,8 @@ NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject
      * the parent of the prototype's constructor.
      */
     obj->init(clasp,
-              js::ObjectOrNullTag(proto),
-              (!parent && proto) ? proto->getParentValue()
-                                 : ObjectOrNullTag(parent),
+              proto,
+              (!parent && proto) ? proto->getParent() : parent,
               JSObject::defaultPrivate(clasp));
 
     if (ops->isNative()) {
