@@ -155,7 +155,7 @@ _class::Internal::Release(void)                                             \
     NS_LOG_RELEASE(this, agg->mRefCnt, #_class);                            \
     if (agg->mRefCnt == 0) {                                                \
         agg->mRefCnt = 1; /* stabilize */                                   \
-        delete agg;                                                         \
+        NS_DELETEXPCOM(agg);                                                \
         return 0;                                                           \
     }                                                                       \
     return agg->mRefCnt;                                                    \
@@ -188,7 +188,7 @@ _class::Internal::Release(void)                                             \
     NS_LOG_RELEASE(this, count, #_class);                                   \
     if (count == 0) {                                                       \
         agg->mRefCnt.stabilizeForDeletion(this);                            \
-        delete agg;                                                         \
+        NS_DELETEXPCOM(agg);                                                \
         return 0;                                                           \
     }                                                                       \
     return count;                                                           \

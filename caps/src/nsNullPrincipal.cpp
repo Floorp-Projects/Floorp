@@ -78,7 +78,7 @@ nsNullPrincipal::Release()
   nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mJSPrincipals.refcount);
   NS_LOG_RELEASE(this, count, "nsNullPrincipal");
   if (count == 0) {
-    delete this;
+    NS_DELETEXPCOM(this);
   }
 
   return count;

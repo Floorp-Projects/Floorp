@@ -104,7 +104,7 @@ public:                                                                       \
         NS_LOG_RELEASE(this, count, #_class);                                 \
         if (count == 0) {                                                     \
             mRefCnt = 1; /* stabilize */                                      \
-            delete this;                                                      \
+            NS_DELETEXPCOM(this);                                             \
             return 0;                                                         \
         }                                                                     \
         return count;                                                         \
