@@ -191,7 +191,7 @@ struct JSScript {
 # endif
 
     inline uint32 numPICs() {
-        return *(uint32*)((uint8 *)pics - sizeof(uint32));
+        return pics ? *(uint32*)((uint8 *)pics - sizeof(uint32)) : 0;
     }
 #endif
 #if 0 /* def JS_TRACER */

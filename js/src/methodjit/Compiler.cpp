@@ -307,12 +307,12 @@ mjit::Compiler::finishThisUp()
         script->pics[i].atom = pics[i].atom;
         script->pics[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
                                      masm.distanceOf(pics[i].hotPathBegin);
+        script->pics[i].shapeRegHasBaseShape = true;
 
         if (pics[i].kind == ic::PICInfo::SET) {
             script->pics[i].u.vr = pics[i].vr;
-        } else {
+        } else if (pics[i].kind != ic::PICInfo::NAME) {
             script->pics[i].u.get.typeReg = pics[i].typeReg;
-            script->pics[i].u.get.shapeRegHasBaseShape = true;
             if (pics[i].hasTypeCheck) {
                 int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
                                  stubcc.masm.distanceOf(pics[i].slowPathStart);
@@ -786,9 +786,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_CALL)
 
           BEGIN_CASE(JSOP_NAME)
-            prepareStubCall();
-            stubCall(stubs::Name, Uses(0), Defs(1));
-            frame.pushSynced();
+            jsop_name(script->getAtom(fullAtomIndex(PC)));
           END_CASE(JSOP_NAME)
 
           BEGIN_CASE(JSOP_DOUBLE)
@@ -2340,7 +2338,45 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
     pics.append(pic);
 }
 
+void
+mjit::Compiler::jsop_name(JSAtom *atom)
+{
+    PICGenInfo pic(ic::PICInfo::NAME);
+
+    pic.shapeReg = frame.allocReg();
+    pic.objReg = frame.allocReg();
+    pic.typeReg = Registers::ReturnReg;
+    pic.atom = atom;
+    pic.hasTypeCheck = false;
+    pic.hotPathBegin = masm.label();
+
+    pic.shapeGuard = masm.label();
+    Jump j = masm.jump();
+    {
+        pic.slowPathStart = stubcc.masm.label();
+        stubcc.linkExit(j);
+        stubcc.leave();
+        stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
+        pic.callReturn = stubcc.call(ic::Name);
+    }
+
+    pic.storeBack = masm.label();
+    frame.pushRegs(pic.shapeReg, pic.objReg);
+
+    stubcc.rejoin(0);
+
+    pics.append(pic);
+}
+
 #else /* ENABLE_PIC */
+
+void
+mjit::Compiler::jsop_name(JSAtom *atom)
+{
+    prepareStubCall();
+    stubCall(stubs::Name, Uses(0), Defs(1));
+    frame.pushSynced();
+}
 
 void
 mjit::Compiler::jsop_getprop(JSAtom *atom, bool typecheck)

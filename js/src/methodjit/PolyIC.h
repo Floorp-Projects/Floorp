@@ -69,7 +69,8 @@ struct PICInfo {
     {
         GET,
         CALL,
-        SET
+        SET,
+        NAME
     };
 
     union {
@@ -89,15 +90,15 @@ struct PICInfo {
             // asm data location. This is 0 if there is only one shape guard in the
             // last stub.
             int secondShapeGuard : 8;
-
-            // True if register R holds the base object shape along exits from the
-            // last stub.
-            bool shapeRegHasBaseShape : 1;
         } get;
         ValueRemat vr;
     } u;
 
     Kind kind : 2;
+
+    // True if register R holds the base object shape along exits from the
+    // last stub.
+    bool shapeRegHasBaseShape : 1;
 
     // State flags.
     bool hit : 1;                   // this PIC has been executed
@@ -126,8 +127,7 @@ struct PICInfo {
         return u.get.objNeedsRemat;
     }
     inline bool shapeNeedsRemat() {
-        JS_ASSERT(isGet());
-        return u.get.shapeRegHasBaseShape;
+        return !shapeRegHasBaseShape;
     }
     inline bool isFastCall() {
         JS_ASSERT(kind == CALL);
@@ -191,8 +191,8 @@ struct PICInfo {
         if (kind == GET) {
             u.get.secondShapeGuard = 0;
             u.get.objNeedsRemat = false;
-            u.get.shapeRegHasBaseShape = true;
         }
+        shapeRegHasBaseShape = true;
         stubsGenerated = 0;
         releasePools();
         execPools.clear();
@@ -203,6 +203,7 @@ void PurgePICs(JSContext *cx, JSScript *script);
 void JS_FASTCALL GetProp(VMFrame &f, uint32 index);
 void JS_FASTCALL SetProp(VMFrame &f, uint32 index);
 void JS_FASTCALL CallProp(VMFrame &f, uint32 index);
+void JS_FASTCALL Name(VMFrame &f, uint32 index);
 
 }
 } /* namespace mjit */
