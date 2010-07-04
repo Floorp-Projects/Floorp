@@ -515,7 +515,7 @@ num_valueOf(JSContext *cx, uintN argc, Value *vp)
         *vp = vp[1];
         return JS_TRUE;
     }
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!InstanceOf(cx, obj, &js_NumberClass, vp + 2))
         return JS_FALSE;
     *vp = obj->getPrimitiveThis();

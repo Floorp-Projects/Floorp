@@ -134,7 +134,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
         newscope->freeslot = nslots;
 #ifdef DEBUG
     if (newscope->freeslot < nslots)
-        obj->setSlot(newscope->freeslot, JSVAL_VOID);
+        obj->setSlot(newscope->freeslot, UndefinedTag());
 #endif
 
     JS_DROP_ALL_EMPTY_SCOPE_LOCKS(cx, scope);

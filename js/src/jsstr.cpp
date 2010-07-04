@@ -444,7 +444,7 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval
 static JSBool
 str_escape(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     return obj && js_str_escape(cx, obj, argc, vp + 2, vp);
 }
 
@@ -633,7 +633,7 @@ Class js_StringClass = {
 static JSString *
 NormalizeThis(JSContext *cx, Value *vp)
 {
-    if (vp[1].isNull() && (!ComputeThisFromVpInPlace(cx, vp) || vp[1].isNull()))
+    if (vp[1].isNull() && (!ComputeThisFromVp(cx, vp) || vp[1].isNull()))
         return NULL;
 
     /*

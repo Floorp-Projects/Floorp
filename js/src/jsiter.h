@@ -69,46 +69,86 @@ struct NativeIterator {
     uintN     flags;
     JSObject  *next;
 
-    jsid currentId() const {
-        JS_ASSERT((flags & JSITER_FOREACH) == 0);
-        return *reinterpret_cast<jsid *>(props_cursor);
+    bool isKeyIter() const { return (flags & JSITER_FOREACH) == 0; }
+
+    inline jsid *beginKey() const {
+        JS_ASSERT(isKeyIter());
+        return (jsid *)props_array;
     }
 
-    void incIdCursor() {
-        JS_ASSERT((flags & JSITER_FOREACH) == 0);
+    inline jsid *endKey() const {
+        JS_ASSERT(isKeyIter());
+        return (jsid *)props_end;
+    }
+
+    size_t numKeys() const {
+        return endKey() - beginKey();
+    }
+
+    jsid *currentKey() const {
+        JS_ASSERT(isKeyIter());
+        return reinterpret_cast<jsid *>(props_cursor);
+    }
+
+    void incKeyCursor() {
+        JS_ASSERT(isKeyIter());
         props_cursor = reinterpret_cast<jsid *>(props_cursor) + 1;
     }
 
-    const js::Value &currentValue() const {
-        JS_ASSERT((flags & JSITER_FOREACH) != 0);
-        return *reinterpret_cast<js::Value *>(props_cursor);
+    inline js::Value *beginValue() const {
+        JS_ASSERT(!isKeyIter());
+        return (js::Value *)props_array;
+    }
+
+    inline js::Value *endValue() const {
+        JS_ASSERT(!isKeyIter());
+        return (js::Value *)props_end;
+    }
+
+    size_t numValues() const {
+        return endValue() - beginValue();
+    }
+
+    js::Value *currentValue() const {
+        JS_ASSERT(!isKeyIter());
+        return reinterpret_cast<js::Value *>(props_cursor);
     }
 
     void incValueCursor() {
-        JS_ASSERT((flags & JSITER_FOREACH) != 0);
+        JS_ASSERT(!isKeyIter());
         props_cursor = reinterpret_cast<js::Value *>(props_cursor) + 1;
     }
 
     static NativeIterator *allocateKeyIterator(JSContext *cx, uint32 slength,
-                                               const jsid *parray, uint32 plength);
+                                               const js::AutoIdVector &props);
     static NativeIterator *allocateValueIterator(JSContext *cx, uint32 slength,
-                                                 const js::Value *parray, uint32 plength);
-    void init(JSObject *obj, uintN flags, uint32 *sarray, uint32 slength, uint32 key);
+                                                 const js::AutoValueVector &props);
+    void init(JSObject *obj, uintN flags, const uint32 *sarray, uint32 slength, uint32 key);
 
     void mark(JSTracer *trc);
 };
 
 bool
-VectorToIdArray(JSContext *cx, js::AutoValueVector &props, JSIdArray **idap);
+VectorToIdArray(JSContext *cx, js::AutoIdVector &props, JSIdArray **idap);
 
 bool
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoValueVector &props);
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props);
 
 bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, js::Value *vp);
 
 bool
-IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props, js::Value *vp);
+VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props, js::Value *vp);
+
+bool
+VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoValueVector &props, js::Value *vp);
+
+/*
+ * Creates either a key or value iterator, depending on flags. For a value
+ * iterator, performs value-lookup to convert the given list of jsids.
+ */
+bool
+EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props, js::Value *vp);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should

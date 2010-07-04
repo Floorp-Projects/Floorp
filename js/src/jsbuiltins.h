@@ -53,9 +53,7 @@ enum {
     JSTN_ERRTYPE_MASK        = 0x07,
     JSTN_UNBOX_AFTER         = 0x08,
     JSTN_MORE                = 0x10,
-    JSTN_CONSTRUCTOR         = 0x20,
-    JSTN_RETURN_NULLABLE_STR = 0x40,
-    JSTN_RETURN_NULLABLE_OBJ = 0x80
+    JSTN_CONSTRUCTOR         = 0x20
 };
 
 #define JSTN_ERRTYPE(jstn)  ((jstn)->flags & JSTN_ERRTYPE_MASK)

@@ -93,6 +93,7 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
 
@@ -192,7 +193,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
     JSObject *obj;
 
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, ValueArray(argv - 2, argc + 2));
+    assertSameCompartment(cx, JSValueArray(argv - 2, argc + 2));
     sp = argv;
     required = JS_TRUE;
     while ((c = *format++) != '\0') {
@@ -268,13 +269,11 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
             }
             break;
           case 'o':
-          {
-            Value objv;
-            if (!js_ValueToObjectOrNull(cx, Valueify(*sp), Valueify(sp)))
+            if (!js_ValueToObjectOrNull(cx, Valueify(*sp), &obj))
                 return JS_FALSE;
-            *va_arg(ap, JSObject **) = JSVAL_TO_OBJECT(*sp);
+            *sp = OBJECT_TO_JSVAL(obj);
+            *va_arg(ap, JSObject **) = obj;
             break;
-          }
           case 'f':
             obj = js_ValueToFunctionObject(cx, Valueify(sp), 0);
             if (!obj)
@@ -363,7 +362,9 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
         ok = JS_TRUE;
         break;
       case JSTYPE_OBJECT:
-        ok = js_ValueToObjectOrNull(cx, Valueify(v), Valueify(vp));
+        ok = js_ValueToObjectOrNull(cx, Valueify(v), &obj);
+        if (ok)
+            *vp = OBJECT_TO_JSVAL(obj);
         break;
       case JSTYPE_FUNCTION:
         *vp = v;
@@ -400,10 +401,7 @@ JS_ValueToObject(JSContext *cx, jsval v, JSObject **objp)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v);
-    Value objv;
-    bool ok = !!js_ValueToObjectOrNull(cx, Valueify(v), &objv);
-    *objp = objv.asObjectOrNull();
-    return ok;
+    return js_ValueToObjectOrNull(cx, Valueify(v), objp);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -1082,6 +1080,7 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target)
 {
     CHECK_REQUEST(cx);
 
+    JS_ASSERT(target);
     AutoCompartment *call = new AutoCompartment(cx, target);
     if (!call)
         return NULL;
@@ -1202,9 +1201,9 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     }
 
     /* Function.prototype and the global object delegate to Object.prototype. */
-    fun_proto->setProto(ObjectTag(*obj_proto));
+    fun_proto->setProto(obj_proto);
     if (!obj->getProto())
-        obj->setProto(ObjectTag(*obj_proto));
+        obj->setProto(obj_proto);
 
 out:
     /* If resolving, remove the other entry (Object or Function) from table. */
@@ -1711,7 +1710,7 @@ JS_GetScopeChain(JSContext *cx)
             return NULL;
         }
 
-        Innerize(cx, &obj);
+        OBJ_TO_INNER_OBJECT(cx, obj);
         return obj;
     }
     return js_GetScopeChain(cx, fp);
@@ -1738,22 +1737,22 @@ JS_GetGlobalForScopeChain(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     if (cx->fp)
-        return cx->fp->scopeChainObj()->getGlobal();
+        return cx->fp->scopeChain->getGlobal();
 
     JSObject *scope = cx->globalObject;
     if (!scope) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
         return NULL;
     }
-    Innerize(cx, &scope);
+    OBJ_TO_INNER_OBJECT(cx, scope);
     return scope;
 }
 
 JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp)
 {
-    assertSameCompartment(cx, ValueArray(vp, 2));
-    if (!ComputeThisFromVpInPlace(cx, Valueify(vp)))
+    assertSameCompartment(cx, JSValueArray(vp, 2));
+    if (!ComputeThisFromVp(cx, Valueify(vp)))
         return JSVAL_NULL;
     return vp[1];
 }
@@ -2830,7 +2829,7 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, proto, parent);
@@ -2940,7 +2939,7 @@ JS_ConstructObjectWithArguments(JSContext *cx, JSClass *jsclasp, JSObject *proto
                                 JSObject *parent, uintN argc, jsval *argv)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, proto, parent, ValueArray(argv, argc));
+    assertSameCompartment(cx, proto, parent, JSValueArray(argv, argc));
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
@@ -3692,7 +3691,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    AutoValueVector props(cx);
+    AutoIdVector props(cx);
     JSIdArray *ida;
     if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, props) || !VectorToIdArray(cx, props, &ida))
         return false;
@@ -3861,7 +3860,7 @@ JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
 {
     CHECK_REQUEST(cx);
     /* NB: jsuint cast does ToUint32. */
-    assertSameCompartment(cx, ValueArray(vector, vector ? (jsuint)length : 0));
+    assertSameCompartment(cx, JSValueArray(vector, vector ? (jsuint)length : 0));
     return js_NewArrayObject(cx, (jsuint)length, Valueify(vector));
 }
 
@@ -3902,7 +3901,7 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
-    return CheckAccess(cx, obj, id, mode, vp, attrsp);
+    return CheckAccess(cx, obj, id, mode, Valueify(vp), attrsp);
 }
 
 #ifdef JS_THREADSAFE
@@ -4099,6 +4098,7 @@ static JSBool
 js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
     JSFunctionSpec *fs;
+    JSObject *tmp;
     FastNative native;
 
     fs = (JSFunctionSpec *) vp->asObject().getReservedSlot(0).asPrivate();
@@ -4114,8 +4114,9 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
          * Make sure that this is an object or null, as required by the generic
          * functions.
          */
-        if (!js_ValueToObjectOrNull(cx, vp[2], &vp[2]))
+        if (!js_ValueToObjectOrNull(cx, vp[2], &tmp))
             return JS_FALSE;
+        vp[2].setObjectOrNull(tmp);
     }
 
     /*
@@ -4151,6 +4152,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
                                     uintN argc, Value *argv, Value *rval)
 {
     JSFunctionSpec *fs;
+    JSObject *tmp;
 
     fs = (JSFunctionSpec *) argv[-2].asObject().getReservedSlot(0).asPrivate();
     JS_ASSERT((fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) ==
@@ -4166,8 +4168,9 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
          * Make sure that this is an object or null, as required by the generic
          * functions.
          */
-        if (!js_ValueToObjectOrNull(cx, argv[0], &argv[0]))
+        if (!js_ValueToObjectOrNull(cx, argv[0], &tmp))
             return JS_FALSE;
+        argv[0].setObjectOrNull(tmp);
     }
 
     /*
@@ -4700,7 +4703,7 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc, jsval
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, fun, ValueArray(argv, argc));
+    assertSameCompartment(cx, obj, fun, JSValueArray(argv, argc));
     ok = InternalCall(cx, obj, ObjectTag(*fun), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
@@ -4711,7 +4714,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc, 
                     jsval *rval)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, ValueArray(argv, argc));
+    assertSameCompartment(cx, obj, JSValueArray(argv, argc));
 
     AutoValueRooter tvr(cx);
     JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
@@ -4729,7 +4732,7 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc, jsval
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, fval, ValueArray(argv, argc));
+    assertSameCompartment(cx, obj, fval, JSValueArray(argv, argc));
     ok = InternalCall(cx, obj, Valueify(fval), argc, Valueify(argv), Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
@@ -4739,7 +4742,7 @@ JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, ctor, ValueArray(argv, argc));
+    assertSameCompartment(cx, ctor, JSValueArray(argv, argc));
 
     // This is not a simple variation of JS_CallFunctionValue because JSOP_NEW
     // is not a simple variation of JSOP_CALL. We have to determine what class

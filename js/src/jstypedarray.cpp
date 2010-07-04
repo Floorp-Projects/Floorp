@@ -826,9 +826,9 @@ class TypedArrayTemplate
         JSObject *obj;
 
         argv = JS_ARGV(cx, vp);
-        obj = ComputeThisObjectFromVp(cx, vp);
+        obj = ComputeThisFromVp(cx, vp);
 
-        if (!JS_InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp+2))
+        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp+2))
             return false;
 
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
@@ -1555,15 +1555,15 @@ js_ReparentTypedArrayToScope(JSContext *cx, JSObject *obj, JSObject *scope)
     if (!js_GetClassPrototype(cx, scope, key, &proto))
         return JS_FALSE;
 
-    obj->setProto(ObjectTag(*proto));
-    obj->setParent(ObjectTag(*scope));
+    obj->setProto(proto);
+    obj->setParent(scope);
 
     key = JSCLASS_CACHED_PROTO_KEY(&ArrayBuffer::jsclass);
     if (!js_GetClassPrototype(cx, scope, key, &proto))
         return JS_FALSE;
 
-    buffer->setProto(ObjectTag(*proto));
-    buffer->setParent(ObjectTag(*scope));
+    buffer->setProto(proto);
+    buffer->setParent(scope);
 
     return JS_TRUE;
 }

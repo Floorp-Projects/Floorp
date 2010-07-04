@@ -433,6 +433,7 @@ class Value
     }
 
     void setObject(JSObject &obj) {
+        JS_ASSERT(&obj != NULL);
         data = OBJECT_TO_JSVAL_IMPL(&obj);
     }
 
@@ -782,10 +783,9 @@ typedef JSBool
 (* DefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                  PropertyOp getter, PropertyOp setter, uintN attrs);
 typedef JSBool
-(* CheckAccessIdOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-                    Value *vp, uintN *attrsp);
-typedef JSBool
 (* PropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+typedef JSBool
+(* CallOp)(JSContext *cx, uintN argc, Value *vp);
 
 static inline Native            Valueify(JSNative f)          { return (Native)f; }
 static inline JSNative          Jsvalify(Native f)            { return (JSNative)f; }
@@ -807,10 +807,10 @@ static inline EqualityOp        Valueify(JSEqualityOp f);     /* Same type as JS
 static inline JSEqualityOp      Jsvalify(EqualityOp f);       /* Same type as HasInstanceOp */
 static inline DefinePropOp      Valueify(JSDefinePropOp f)    { return (DefinePropOp)f; }
 static inline JSDefinePropOp    Jsvalify(DefinePropOp f)      { return (JSDefinePropOp)f; }
-static inline CheckAccessIdOp   Valueify(JSCheckAccessIdOp f) { return (CheckAccessIdOp)f; }
-static inline JSCheckAccessIdOp Jsvalify(CheckAccessIdOp f)   { return (JSCheckAccessIdOp)f; }
 static inline PropertyIdOp      Valueify(JSPropertyIdOp f);   /* Same type as JSPropertyOp */
 static inline JSPropertyIdOp    Jsvalify(PropertyIdOp f);     /* Same type as PropertyOp */
+static inline CallOp            Valueify(JSCallOp f);         /* Same type as JSFastNative */
+static inline JSCallOp          Jsvalify(CallOp f);           /* Same type as FastNative */
 
 static const PropertyOp    PropertyStub  = (PropertyOp)JS_PropertyStub;
 static const JSEnumerateOp EnumerateStub = JS_EnumerateStub;
@@ -840,8 +840,26 @@ struct Class {
     JSXDRObjectOp       xdrObject;
     HasInstanceOp       hasInstance;
     JSMarkOp            mark;
-    JSReserveSlotsOp    reserveSlots;
+    void                (*reserved0)(void);
 };
+JS_STATIC_ASSERT(offsetof(JSClass, name) == offsetof(Class, name));
+JS_STATIC_ASSERT(offsetof(JSClass, flags) == offsetof(Class, flags));
+JS_STATIC_ASSERT(offsetof(JSClass, addProperty) == offsetof(Class, addProperty));
+JS_STATIC_ASSERT(offsetof(JSClass, delProperty) == offsetof(Class, delProperty));
+JS_STATIC_ASSERT(offsetof(JSClass, getProperty) == offsetof(Class, getProperty));
+JS_STATIC_ASSERT(offsetof(JSClass, setProperty) == offsetof(Class, setProperty));
+JS_STATIC_ASSERT(offsetof(JSClass, enumerate) == offsetof(Class, enumerate));
+JS_STATIC_ASSERT(offsetof(JSClass, resolve) == offsetof(Class, resolve));
+JS_STATIC_ASSERT(offsetof(JSClass, convert) == offsetof(Class, convert));
+JS_STATIC_ASSERT(offsetof(JSClass, finalize) == offsetof(Class, finalize));
+JS_STATIC_ASSERT(offsetof(JSClass, getObjectOps) == offsetof(Class, getObjectOps));
+JS_STATIC_ASSERT(offsetof(JSClass, checkAccess) == offsetof(Class, checkAccess));
+JS_STATIC_ASSERT(offsetof(JSClass, call) == offsetof(Class, call));
+JS_STATIC_ASSERT(offsetof(JSClass, construct) == offsetof(Class, construct));
+JS_STATIC_ASSERT(offsetof(JSClass, xdrObject) == offsetof(Class, xdrObject));
+JS_STATIC_ASSERT(offsetof(JSClass, hasInstance) == offsetof(Class, hasInstance));
+JS_STATIC_ASSERT(offsetof(JSClass, mark) == offsetof(Class, mark));
+JS_STATIC_ASSERT(offsetof(JSClass, reserved0) == offsetof(Class, reserved0));
 JS_STATIC_ASSERT(sizeof(JSClass) == sizeof(Class));
 
 struct ExtendedClass {
@@ -857,6 +875,15 @@ struct ExtendedClass {
     void                (*reserved1)(void);
     void                (*reserved2)(void);
 };
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, base) == offsetof(ExtendedClass, base));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, equality) == offsetof(ExtendedClass, equality));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, outerObject) == offsetof(ExtendedClass, outerObject));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, innerObject) == offsetof(ExtendedClass, innerObject));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, iteratorObject) == offsetof(ExtendedClass, iteratorObject));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, wrappedObject) == offsetof(ExtendedClass, wrappedObject));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, reserved0) == offsetof(ExtendedClass, reserved0));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, reserved1) == offsetof(ExtendedClass, reserved1));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, reserved2) == offsetof(ExtendedClass, reserved2));
 JS_STATIC_ASSERT(sizeof(JSExtendedClass) == sizeof(ExtendedClass));
 
 struct PropertyDescriptor {
@@ -867,6 +894,12 @@ struct PropertyDescriptor {
     Value        value;
     uintN        shortid;
 };
+JS_STATIC_ASSERT(offsetof(JSPropertyDescriptor, obj) == offsetof(PropertyDescriptor, obj));
+JS_STATIC_ASSERT(offsetof(JSPropertyDescriptor, attrs) == offsetof(PropertyDescriptor, attrs));
+JS_STATIC_ASSERT(offsetof(JSPropertyDescriptor, getter) == offsetof(PropertyDescriptor, getter));
+JS_STATIC_ASSERT(offsetof(JSPropertyDescriptor, setter) == offsetof(PropertyDescriptor, setter));
+JS_STATIC_ASSERT(offsetof(JSPropertyDescriptor, value) == offsetof(PropertyDescriptor, value));
+JS_STATIC_ASSERT(offsetof(JSPropertyDescriptor, shortid) == offsetof(PropertyDescriptor, shortid));
 JS_STATIC_ASSERT(sizeof(JSPropertyDescriptor) == sizeof(PropertyDescriptor));
 
 static JS_ALWAYS_INLINE JSClass *              Jsvalify(Class *c)                { return (JSClass *)c; }

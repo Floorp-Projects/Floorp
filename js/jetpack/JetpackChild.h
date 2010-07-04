@@ -80,7 +80,7 @@ private:
   static JetpackChild* GetThis(JSContext* cx);
 
   static const JSPropertySpec sImplProperties[];
-  static JSBool UserJetpackGetter(JSContext* cx, JSObject* obj, jsval idval,
+  static JSBool UserJetpackGetter(JSContext* cx, JSObject* obj, jsid id,
                                   jsval* vp);
 
   static const JSFunctionSpec sImplMethods[];

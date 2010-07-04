@@ -155,7 +155,7 @@ Evaluate(JSContext* cx, const nsCString& code)
   JSAutoRequest request(cx);
   js::AutoValueRooter ignored(cx);
   JS_EvaluateScript(cx, JS_GetGlobalObject(cx), code.get(),
-                    code.Length(), "", 1, ignored.addr());
+                    code.Length(), "", 1, ignored.jsval_addr());
   return true;
 }
 
@@ -195,7 +195,7 @@ JetpackChild::GetThis(JSContext* cx)
 }
 
 JSBool
-JetpackChild::UserJetpackGetter(JSContext* cx, JSObject* obj, jsval id,
+JetpackChild::UserJetpackGetter(JSContext* cx, JSObject* obj, jsid id,
                                 jsval* vp)
 {
   JSObject* userGlobal = JS_GetGlobalObject(GetThis(cx)->mUserCx);
