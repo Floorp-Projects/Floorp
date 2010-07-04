@@ -841,9 +841,16 @@ UIClass.prototype = {
         return;   
       }
     }   
+
+    var oldPageBounds = new Rect(this.pageBounds);
+    var newPageBounds = Items.getPageBounds();
+    if (newPageBounds.equals(oldPageBounds))
+      return;
         
     var items = Items.getTopLevelItems();
-    var itemBounds = new Rect(this.pageBounds);
+    
+    // compute itemBounds: the union of all the top-level items' bounds.
+    var itemBounds = new Rect(this.pageBounds); // why do we start with pageBounds?
     itemBounds.width = 1;
     itemBounds.height = 1;
     iQ.each(items, function(index, item) {
@@ -853,25 +860,19 @@ UIClass.prototype = {
       var bounds = item.getBounds();
       itemBounds = (itemBounds ? itemBounds.union(bounds) : new Rect(bounds));
     });
-
-    var oldPageBounds = new Rect(this.pageBounds);
-    
-    var newPageBounds = Items.getPageBounds();
-    if(newPageBounds.equals(oldPageBounds))
-      return;
       
     Groups.repositionNewTabGroup(); // TODO: 
 
-    if(newPageBounds.width < this.pageBounds.width && newPageBounds.width > itemBounds.width)
+    if (newPageBounds.width < this.pageBounds.width && newPageBounds.width > itemBounds.width)
       newPageBounds.width = this.pageBounds.width;
 
-    if(newPageBounds.height < this.pageBounds.height && newPageBounds.height > itemBounds.height)
+    if (newPageBounds.height < this.pageBounds.height && newPageBounds.height > itemBounds.height)
       newPageBounds.height = this.pageBounds.height;
 
     var wScale;
     var hScale;
-    if(Math.abs(newPageBounds.width - this.pageBounds.width)
-        > Math.abs(newPageBounds.height - this.pageBounds.height)) {
+    if ( Math.abs(newPageBounds.width - this.pageBounds.width)
+         > Math.abs(newPageBounds.height - this.pageBounds.height) ) {
       wScale = newPageBounds.width / this.pageBounds.width;
       hScale = newPageBounds.height / itemBounds.height;
     } else {
@@ -906,6 +907,7 @@ UIClass.prototype = {
     
     iQ.each(pairs, function(index, pair) {
       pair.item.setBounds(pair.bounds, true);
+      pair.item.snap();
     });
 
     this.pageBounds = Items.getPageBounds();
