@@ -580,14 +580,14 @@ str_enumerate(JSContext *cx, JSObject *obj)
         if (!str1)
             return JS_FALSE;
         if (!obj->defineProperty(cx, INT_TO_JSID(i), StringTag(str1),
-                                 JS_PropertyStub, JS_PropertyStub,
+                                 PropertyStub, PropertyStub,
                                  STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
     }
 
     return obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
-                               JSVAL_VOID, NULL, NULL,
+                               UndefinedTag(), NULL, NULL,
                                JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED);
 }
 

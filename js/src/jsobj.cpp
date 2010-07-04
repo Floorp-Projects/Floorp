@@ -1817,7 +1817,7 @@ GetFirstArgumentAsObject(JSContext *cx, uintN argc, Value *vp, const char *metho
 
     const Value &v = vp[2];
     if (v.isPrimitive()) {
-        char *bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
+        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
@@ -1831,7 +1831,7 @@ GetFirstArgumentAsObject(JSContext *cx, uintN argc, Value *vp, const char *metho
 }
 
 static JSBool
-obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
+obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj;
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.getOwnPropertyDescriptor", &obj))
@@ -2470,7 +2470,7 @@ obj_defineProperties(JSContext* cx, uintN argc, Value* vp)
     JSObject *obj;
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.defineProperties", &obj))
         return false;
-    *vp = OBJECT_TO_JSVAL(obj);
+    vp->setObject(*obj);
 
     if (argc < 2) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -2552,31 +2552,35 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-obj_getOwnPropertyNames(JSContext *cx, uintN argc, jsval *vp)
+obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj;
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.getOwnPropertyNames", &obj))
         return false;
 
-    AutoValueVector props(cx);
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, props))
+    AutoIdVector keys(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, keys))
         return false;
 
-    for (size_t i = 0, len = props.length(); i < len; i++) {
-         jsval v = props[i];
-         if (JSVAL_IS_INT(v)) {
-             JSString *str = js_ValueToString(cx, v);
+    AutoValueVector vals(cx);
+    if (!vals.resize(keys.length()))
+        return false;
+
+    for (size_t i = 0, len = keys.length(); i < len; i++) {
+         jsid id = keys[i];
+         if (JSID_IS_INT(id)) {
+             JSString *str = js_ValueToString(cx, Int32Tag(JSID_TO_INT(id)));
              if (!str)
                  return false;
-             props[i] = STRING_TO_JSVAL(str);
+             vals[i].setString(str);
          }
     }
 
-    JSObject *aobj = js_NewArrayObject(cx, props.length(), props.begin());
+    JSObject *aobj = js_NewArrayObject(cx, vals.length(), vals.begin());
     if (!aobj)
         return false;
 
-    *vp = OBJECT_TO_JSVAL(aobj);
+    vp->setObject(*aobj);
     return true;
 }
 

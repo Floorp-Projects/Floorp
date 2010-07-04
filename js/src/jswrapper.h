@@ -81,9 +81,9 @@ class JSWrapper : public js::JSProxyHandler {
     virtual JS_FRIEND_API(bool) iterate(JSContext *cx, JSObject *wrapper, uintN flags, js::Value *vp);
 
     /* Spidermonkey extensions. */
-    virtual JS_FRIEND_API(bool) call(JSContext *cx, JSObject *wrapper, uintN argc, jsval *vp);
+    virtual JS_FRIEND_API(bool) call(JSContext *cx, JSObject *wrapper, uintN argc, js::Value *vp);
     virtual JS_FRIEND_API(bool) construct(JSContext *cx, JSObject *wrapper,
-                                          uintN argc, jsval *argv, jsval *rval);
+                                          uintN argc, js::Value *argv, js::Value *rval);
     virtual JS_FRIEND_API(JSString *) obj_toString(JSContext *cx, JSObject *wrapper);
     virtual JS_FRIEND_API(JSString *) fun_toString(JSContext *cx, JSObject *wrapper, uintN indent);
 
@@ -100,7 +100,7 @@ class JSWrapper : public js::JSProxyHandler {
                                          JSWrapper *handler);
 
     static inline JSObject *wrappedObject(JSObject *wrapper) {
-        return JSVAL_TO_OBJECT(wrapper->getProxyPrivate());
+        return wrapper->getProxyPrivate().asObjectOrNull();
     }
 };
 

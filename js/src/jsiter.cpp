@@ -168,10 +168,10 @@ struct KeyEnumeration
     typedef AutoIdVector ResultVector;
 
     static JS_ALWAYS_INLINE bool
-    append(JSContext *, AutoIdVector &vec, JSObject *, jsid id, uintN flags)
+    append(JSContext *, AutoIdVector &keys, JSObject *, jsid id, uintN flags)
     {
         JS_ASSERT((flags & JSITER_FOREACH) == 0);
-        return vec.append(id);
+        return keys.append(id);
     }
 };
 
@@ -180,15 +180,15 @@ struct ValueEnumeration
     typedef AutoValueVector ResultVector;
 
     static JS_ALWAYS_INLINE bool
-    append(JSContext *cx, AutoValueVector &vec, JSObject *obj, jsid id, uintN flags)
+    append(JSContext *cx, AutoValueVector &vals, JSObject *obj, jsid id, uintN flags)
     {
         JS_ASSERT(flags & JSITER_FOREACH);
 
-        if (!vec.growBy(1))
+        if (!vals.growBy(1))
             return false;
 
         /* Do the lookup on the original object instead of the prototype. */
-        Value *vp = vec.end() - 1;
+        Value *vp = vals.end() - 1;
         if (!obj->getProperty(cx, id, vp))
             return false;
         if ((flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *vp, vp))
@@ -202,7 +202,7 @@ template <class EnumPolicy>
 static inline bool
 Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
           bool enumerable, bool sharedPermanent, uintN flags, IdSet& ht,
-          typename EnumPolicy::ResultVector &vec)
+          typename EnumPolicy::ResultVector &props)
 {
     JS_ASSERT(JSID_IS_INT(id) || JSID_IS_ATOM(id));
 
@@ -236,7 +236,7 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
     }
 
     if (enumerable || (flags & JSITER_HIDDEN))
-        return EnumPolicy::append(cx, vec, obj, id, flags);
+        return EnumPolicy::append(cx, props, obj, id, flags);
 
     return true;
 }
@@ -244,11 +244,11 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
 template <class EnumPolicy>
 static bool
 EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags, IdSet &ht,
-                          typename EnumPolicy::ResultVector &vec)
+                          typename EnumPolicy::ResultVector &props)
 {
     JS_LOCK_OBJ(cx, pobj);
 
-    size_t initialLength = vec.length();
+    size_t initialLength = props.length();
 
     /* Collect all unique properties from this object's scope. */
     JSScope *scope = pobj->scope();
@@ -256,13 +256,13 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
         if (!JSID_IS_DEFAULT_XML_NAMESPACE(sprop->id) &&
             !sprop->isAlias() &&
             !Enumerate<EnumPolicy>(cx, obj, pobj, sprop->id, sprop->enumerable(), sprop->isSharedPermanent(),
-                       flags, ht, sprops))
+                                   flags, ht, props))
         {
             return false;
         }
     }
 
-    Reverse(vec.begin() + initialLength, vec.end());
+    Reverse(props.begin() + initialLength, props.end());
 
     JS_UNLOCK_SCOPE(cx, scope);
     return true;
@@ -271,10 +271,10 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
 template <class EnumPolicy>
 static bool
 EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags,
-                              IdSet &ht, typename EnumPolicy::ResultVector &vec)
+                              IdSet &ht, typename EnumPolicy::ResultVector &props)
 {
-    if (!Enumerate(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false, true,
-                   flags, ht, props)) {
+    if (!Enumerate<EnumPolicy>(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false, true,
+                               flags, ht, props)) {
         return false;
     }
 
@@ -295,7 +295,7 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
 
 template <class EnumPolicy>
 static bool
-Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultVector &vec)
+Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultVector &props)
 {
     /*
      * FIXME: Bug 575997 - We won't need to initialize this hash table if
@@ -314,10 +314,10 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultV
             !(clasp->flags & JSCLASS_NEW_ENUMERATE)) {
             if (!clasp->enumerate(cx, pobj))
                 return false;
-            if (!EnumerateNativeProperties<EnumPolicy>(cx, obj, pobj, flags, ht, vec))
+            if (!EnumerateNativeProperties<EnumPolicy>(cx, obj, pobj, flags, ht, props))
                 return false;
         } else if (pobj->isDenseArray()) {
-            if (!EnumerateDenseArrayProperties<EnumPolicy>(cx, obj, pobj, flags, ht, vec))
+            if (!EnumerateDenseArrayProperties<EnumPolicy>(cx, obj, pobj, flags, ht, props))
                 return false;
         } else {
             if (pobj->isProxy()) {
@@ -330,7 +330,7 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultV
                         return false;
                 }
                 for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
-                    if (!Enumerate<EnumPolicy>(cx, obj, pobj, proxyProps[n], true, false, flags, ht, vec))
+                    if (!Enumerate<EnumPolicy>(cx, obj, pobj, proxyProps[n], true, false, flags, ht, props))
                         return false;
                 }
                 /* Proxy objects enumerate the prototype on their own, so we are done here. */
@@ -341,7 +341,7 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultV
             if (!pobj->enumerate(cx, op, &state, NULL))
                 return false;
             if (state.isMagic(JS_NATIVE_ENUMERATE)) {
-                if (!EnumerateNativeProperties<EnumPolicy>(cx, obj, pobj, flags, ht, vec))
+                if (!EnumerateNativeProperties<EnumPolicy>(cx, obj, pobj, flags, ht, props))
                     return false;
             } else {
                 while (true) {
@@ -350,7 +350,7 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultV
                         return false;
                     if (state.isNull())
                         break;
-                    if (!Enumerate<EnumPolicy>(cx, obj, pobj, id, true, false, flags, ht, vec))
+                    if (!Enumerate<EnumPolicy>(cx, obj, pobj, id, true, false, flags, ht, props))
                         return false;
                 }
             }

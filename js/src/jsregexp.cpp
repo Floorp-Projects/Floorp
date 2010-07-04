@@ -5138,7 +5138,7 @@ lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 static const struct LazyProp {
     const char *name;
     uint16 atomOffset;
-    JSPropertyOp getter;
+    PropertyOp getter;
 } lazyRegExpProps[] = {
     { js_source_str,     ATOM_OFFSET(source),     source_getter },
     { js_global_str,     ATOM_OFFSET(global),     global_getter },
