@@ -688,8 +688,9 @@ UIClass.prototype = {
     } else
       this.pageBounds = Items.getPageBounds();
 
+    var self = this;
     iQ(window).resize(function() {
-      this.resize();
+      self.resize();
     });
 
     // ___ Done
