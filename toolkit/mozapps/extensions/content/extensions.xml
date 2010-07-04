@@ -1197,7 +1197,7 @@
             } else {
               var url = Components.classes["@mozilla.org/network/standard-url;1"]
                                   .createInstance(Components.interfaces.nsIStandardURL);
-              url.init(url.URLTYPE_STANDARD, 80, this.mInstall.sourceURL,
+              url.init(url.URLTYPE_STANDARD, 80, this.mInstall.sourceURI.spec,
                        null, null);
               url.QueryInterface(Components.interfaces.nsIURL);
               this._name.value = url.fileName;

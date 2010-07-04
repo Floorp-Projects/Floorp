@@ -533,7 +533,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
-#if defined(OS_LINUX) && defined(DEBUG)
+#if defined(MOZ_X11) && defined(DEBUG)
     if (GraphicsExpose == event.event.type)
         PLUGIN_LOG_DEBUG(("  received drawable 0x%lx\n",
                           event.event.xgraphicsexpose.drawable));
@@ -811,16 +811,36 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
         return false;
 
 #ifdef MOZ_WIDGET_GTK2
-    if (aWindow.type == NPWindowTypeWindow
-        && gtk_check_version(2,18,7) != NULL) { // older
-        GdkWindow* socket_window = gdk_window_lookup(aWindow.window);
-        if (socket_window) {
-            // A GdkWindow for the socket already exists.  Need to
-            // workaround https://bugzilla.gnome.org/show_bug.cgi?id=607061
-            // See wrap_gtk_plug_embedded in PluginModuleChild.cpp.
-            g_object_set_data(G_OBJECT(socket_window),
-                              "moz-existed-before-set-window",
-                              GUINT_TO_POINTER(1));
+    if (gtk_check_version(2,18,7) != NULL) { // older
+        if (aWindow.type == NPWindowTypeWindow) {
+            GdkWindow* socket_window = gdk_window_lookup(aWindow.window);
+            if (socket_window) {
+                // A GdkWindow for the socket already exists.  Need to
+                // workaround https://bugzilla.gnome.org/show_bug.cgi?id=607061
+                // See wrap_gtk_plug_embedded in PluginModuleChild.cpp.
+                g_object_set_data(G_OBJECT(socket_window),
+                                  "moz-existed-before-set-window",
+                                  GUINT_TO_POINTER(1));
+            }
+        }
+
+        if (aWindow.visualID != None
+            && gtk_check_version(2, 12, 10) != NULL) { // older
+            // Workaround for a bug in Gtk+ (prior to 2.12.10) where deleting
+            // a foreign GdkColormap will also free the XColormap.
+            // http://git.gnome.org/browse/gtk+/log/gdk/x11/gdkcolor-x11.c?id=GTK_2_12_10
+            GdkVisual *gdkvisual = gdkx_visual_get(aWindow.visualID);
+            GdkColormap *gdkcolor =
+                gdk_x11_colormap_foreign_new(gdkvisual, aWindow.colormap);
+
+            if (g_object_get_data(G_OBJECT(gdkcolor), "moz-have-extra-ref")) {
+                // We already have a ref to keep the object alive.
+                g_object_unref(gdkcolor);
+            } else {
+                // leak and mark as already leaked
+                g_object_set_data(G_OBJECT(gdkcolor),
+                                  "moz-have-extra-ref", GUINT_TO_POINTER(1));
+            }
         }
     }
 #endif
@@ -892,6 +912,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     if (mPluginIface->setwindow)
         (void) mPluginIface->setwindow(&mData, &mWindow);
 
+#elif defined(ANDROID)
+#  warning Need Android impl
 #else
 #  error Implement me for your OS
 #endif

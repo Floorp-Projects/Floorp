@@ -1806,14 +1806,36 @@ js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                                           vp);
 }
 
-static JSBool
-obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
+static bool
+GetFirstArgumentAsObject(JSContext *cx, uintN argc, Value *vp, const char *method, JSObject **objp)
 {
-    if (argc == 0 || !vp[2].isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
+    if (argc == 0) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                             method, "0", "s");
         return false;
     }
-    JSObject *obj = &vp[2].asObject();
+
+    const Value &v = vp[2];
+    if (v.isPrimitive()) {
+        char *bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
+        if (!bytes)
+            return false;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                             bytes, "not an object");
+        JS_free(cx, bytes);
+        return false;
+    }
+
+    *objp = &v.asObject();
+    return true;
+}
+
+static JSBool
+obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.getOwnPropertyDescriptor", &obj))
+        return JS_FALSE;
     AutoIdRooter nameidr(cx);
     if (!ValueToId(cx, argc >= 2 ? vp[3] : Value(UndefinedTag()), nameidr.addr()))
         return JS_FALSE;
@@ -1823,14 +1845,11 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 obj_keys(JSContext *cx, uintN argc, Value *vp)
 {
-    const Value &v = argc == 0 ? Value(UndefinedTag()) : vp[2];
-    if (!v.isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.keys", &obj))
         return JS_FALSE;
-    }
 
-    AutoIdArray ida(cx, JS_Enumerate(cx, &v.asObject()));
-
+    AutoIdArray ida(cx, JS_Enumerate(cx, obj));
     if (!ida)
         return JS_FALSE;
 
@@ -2390,13 +2409,10 @@ static JSBool
 obj_defineProperty(JSContext* cx, uintN argc, Value* vp)
 {
     /* 15.2.3.6 steps 1 and 5. */
-    const Value &v = (argc == 0) ? Value(UndefinedTag()) : vp[2];
-    if (v.isPrimitive()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.defineProperty", &obj))
         return JS_FALSE;
-    }
-    *vp = vp[2];
-    JSObject* obj = &vp->asObject();
+    vp->setObject(*obj);
 
     /* 15.2.3.6 step 2. */
     AutoIdRooter nameidr(cx);
@@ -2451,15 +2467,14 @@ static JSBool
 obj_defineProperties(JSContext* cx, uintN argc, Value* vp)
 {
     /* 15.2.3.6 steps 1 and 5. */
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.defineProperties", &obj))
+        return false;
+    *vp = OBJECT_TO_JSVAL(obj);
+
     if (argc < 2) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "Object.defineProperties", "0", "s");
-        return false;
-    }
-
-    *vp = vp[2];
-    if (!vp->isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return false;
     }
 
@@ -2467,8 +2482,6 @@ obj_defineProperties(JSContext* cx, uintN argc, Value* vp)
     if (!props)
         return false;
     vp[3].setObject(*props);
-
-    JSObject *obj = &vp->asObject();
 
     return DefineProperties(cx, obj, props);
 }
@@ -2538,6 +2551,35 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
+static JSBool
+obj_getOwnPropertyNames(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSObject *obj;
+    if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.getOwnPropertyNames", &obj))
+        return false;
+
+    AutoValueVector props(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, props))
+        return false;
+
+    for (size_t i = 0, len = props.length(); i < len; i++) {
+         jsval v = props[i];
+         if (JSVAL_IS_INT(v)) {
+             JSString *str = js_ValueToString(cx, v);
+             if (!str)
+                 return false;
+             props[i] = STRING_TO_JSVAL(str);
+         }
+    }
+
+    JSObject *aobj = js_NewArrayObject(cx, props.length(), props.begin());
+    if (!aobj)
+        return false;
+
+    *vp = OBJECT_TO_JSVAL(aobj);
+    return true;
+}
+
 
 #if JS_HAS_OBJ_WATCHPOINT
 const char js_watch_str[] = "watch";
@@ -2577,6 +2619,7 @@ static JSFunctionSpec object_static_methods[] = {
     JS_FN("defineProperty",            obj_defineProperty,          3,0),
     JS_FN("defineProperties",          obj_defineProperties,        2,0),
     JS_FN("create",                    obj_create,                  2,0),
+    JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1,0),
     JS_FS_END
 };
 
@@ -5387,7 +5430,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, Value *statep, j
         return false;
 
     /* Tell InitNativeIterator to treat us like a native object. */
-    JS_ASSERT(enum_op == JSENUMERATE_INIT);
+    JS_ASSERT(enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL);
     statep->setMagic(JS_NATIVE_ENUMERATE);
     return true;
 }

@@ -5135,6 +5135,37 @@ lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     return true;
 }
 
+static const struct LazyProp {
+    const char *name;
+    uint16 atomOffset;
+    JSPropertyOp getter;
+} lazyRegExpProps[] = {
+    { js_source_str,     ATOM_OFFSET(source),     source_getter },
+    { js_global_str,     ATOM_OFFSET(global),     global_getter },
+    { js_ignoreCase_str, ATOM_OFFSET(ignoreCase), ignoreCase_getter },
+    { js_multiline_str,  ATOM_OFFSET(multiline),  multiline_getter },
+    { js_sticky_str,     ATOM_OFFSET(sticky),     sticky_getter }
+};
+
+static JSBool
+regexp_enumerate(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->isRegExp());
+
+    jsval v;
+    if (!JS_LookupPropertyById(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.lastIndexAtom), &v))
+        return false;
+
+    for (size_t i = 0; i < JS_ARRAY_LENGTH(lazyRegExpProps); i++) {
+        const LazyProp &lazy = lazyRegExpProps[i];
+        jsid id = ATOM_TO_JSID(OFFSET_TO_ATOM(cx->runtime, lazy.atomOffset));
+        if (!JS_LookupPropertyById(cx, obj, id, &v))
+            return false;
+    }
+
+    return true;
+}
+
 static JSBool
 regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
 {
@@ -5153,20 +5184,8 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **ob
         return JS_TRUE;
     }
 
-    static const struct LazyProp {
-        const char *name;
-        uint16 atomOffset;
-        PropertyOp getter;
-    } props[] = {
-        { js_source_str,     ATOM_OFFSET(source),     source_getter },
-        { js_global_str,     ATOM_OFFSET(global),     global_getter },
-        { js_ignoreCase_str, ATOM_OFFSET(ignoreCase), ignoreCase_getter },
-        { js_multiline_str,  ATOM_OFFSET(multiline),  multiline_getter },
-        { js_sticky_str,     ATOM_OFFSET(sticky),     sticky_getter }
-    };
-
-    for (size_t i = 0; i < JS_ARRAY_LENGTH(props); i++) {
-        const LazyProp &lazy = props[i];
+    for (size_t i = 0; i < JS_ARRAY_LENGTH(lazyRegExpProps); i++) {
+        const LazyProp &lazy = lazyRegExpProps[i];
         JSAtom *atom = OFFSET_TO_ATOM(cx->runtime, lazy.atomOffset);
         if (id == ATOM_TO_JSID(atom)) {
             if (!js_DefineNativeProperty(cx, obj, id, UndefinedTag(),
@@ -5414,7 +5433,7 @@ Class js_RegExpClass = {
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     PropertyStub,       PropertyStub,
     PropertyStub,       PropertyStub,
-    EnumerateStub,      reinterpret_cast<JSResolveOp>(regexp_resolve),
+    regexp_enumerate,   reinterpret_cast<JSResolveOp>(regexp_resolve),
     ConvertStub,        regexp_finalize,
     NULL,               NULL,
     regexp_call,        NULL,

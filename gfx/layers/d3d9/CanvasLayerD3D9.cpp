@@ -166,12 +166,6 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
   }
 }
 
-LayerD3D9::LayerType
-CanvasLayerD3D9::GetType()
-{
-  return TYPE_CANVAS;
-}
-
 Layer*
 CanvasLayerD3D9::GetLayer()
 {

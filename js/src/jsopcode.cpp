@@ -2884,7 +2884,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     }
 #endif
                     uva = jp->script->upvars();
-                    index = UPVAR_FRAME_SLOT(uva->vector[index]);
+                    index = uva->vector[index].slot();
                 }
                 atom = GetArgOrVarAtom(jp, index);
                 goto do_name;

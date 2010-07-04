@@ -59,6 +59,50 @@ typedef enum JSTryNoteKind {
     JSTRY_ITER
 } JSTryNoteKind;
 
+namespace js {
+
+/*
+ * Indicates a location in the stack that an upvar value can be retrieved from
+ * as a two tuple of (level, slot).
+ *
+ * Some existing client code uses the level value as a delta, or level "skip"
+ * quantity. We could probably document that through use of more types at some
+ * point in the future.
+ *
+ * Existing XDR code wants this to be backed by a 32b integer for serialization,
+ * so we oblige.
+ *
+ * TODO: consider giving more bits to the slot value and takings ome from the level.
+ */
+class UpvarCookie 
+{
+    uint32 value;
+
+    static const uint32 FREE_VALUE = 0xfffffffful;
+
+  public:
+    /*
+     * All levels above-and-including FREE_LEVEL are reserved so that
+     * FREE_VALUE can be used as a special value.
+     */
+    static const uint16 FREE_LEVEL = 0x3fff;
+    static const uint16 CALLEE_SLOT = 0xffff;
+    static bool isLevelReserved(uint16 level) { return level >= FREE_LEVEL; }
+
+    bool isFree() const { return value == FREE_VALUE; }
+    uint32 asInteger() const { return value; }
+    /* isFree check should be performed before using these accessors. */
+    uint16 level() const { JS_ASSERT(!isFree()); return value >> 16; }
+    uint16 slot() const { JS_ASSERT(!isFree()); return value; }
+
+    void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
+    void set(uint16 newLevel, uint16 newSlot) { value = (uint32(newLevel) << 16) | newSlot; }
+    void makeFree() { set(0xffff, 0xffff); JS_ASSERT(isFree()); }
+};
+JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32));
+
+}
+
 /*
  * Exception handling record.
  */
@@ -82,7 +126,7 @@ typedef struct JSObjectArray {
 } JSObjectArray;
 
 typedef struct JSUpvarArray {
-    uint32          *vector;    /* array of indexed upvar cookies */
+    js::UpvarCookie *vector;    /* array of indexed upvar cookies */
     uint32          length;     /* count of indexed upvar cookies */
 } JSUpvarArray;
 
@@ -90,13 +134,6 @@ typedef struct JSConstArray {
     js::Value       *vector;    /* array of indexed constant values */
     uint32          length;
 } JSConstArray;
-
-#define CALLEE_UPVAR_SLOT               0xffff
-#define FREE_STATIC_LEVEL               0x3fff
-#define FREE_UPVAR_COOKIE               0xffffffff
-#define MAKE_UPVAR_COOKIE(skip,slot)    ((skip) << 16 | (slot))
-#define UPVAR_FRAME_SKIP(cookie)        ((uint32)(cookie) >> 16)
-#define UPVAR_FRAME_SLOT(cookie)        ((uint16)(cookie))
 
 #define JS_OBJECT_ARRAY_SIZE(length)                                          \
     (offsetof(JSObjectArray, vector) + sizeof(JSObject *) * (length))

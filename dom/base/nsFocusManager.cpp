@@ -2106,12 +2106,12 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
             nsRect caretRect;
             nsIFrame *frame = caret->GetGeometry(domSelection, &caretRect);
             if (frame) {
-              nsPoint caretWindowOffset;
-              nsIWidget *window = frame->GetWindowOffset(caretWindowOffset);
-              caretRect.MoveBy(caretWindowOffset);
+              nsPoint caretWidgetOffset;
+              nsIWidget *widget = frame->GetNearestWidget(caretWidgetOffset);
+              caretRect.MoveBy(caretWidgetOffset);
               nsPoint newCaretOffset;
-              nsIWidget *newCaretWindow = newCaretFrame->GetWindowOffset(newCaretOffset);
-              if (window == newCaretWindow && caretRect.y == newCaretOffset.y &&
+              nsIWidget *newCaretWidget = newCaretFrame->GetNearestWidget(newCaretOffset);
+              if (widget == newCaretWidget && caretRect.y == newCaretOffset.y &&
                   caretRect.x == newCaretOffset.x) {
                 // The caret is at the start of the new element.
                 startFrame = newCaretFrame;

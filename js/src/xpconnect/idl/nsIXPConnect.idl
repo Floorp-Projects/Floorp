@@ -397,7 +397,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(0332b12a-8103-4601-aed3-b9933a0d9441)]
+[uuid(c53c54ac-afc1-458a-98f5-cadb52574e40)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -871,4 +871,5 @@ interface nsIXPConnect : nsISupports
 %}
 
     [notxpcom] void getNativeWrapperGetPropertyOp(out JSPropertyOp getProperty);
+    [notxpcom] void getXrayWrapperPropertyHolderGetPropertyOp(out JSPropertyOp getProperty);
 };

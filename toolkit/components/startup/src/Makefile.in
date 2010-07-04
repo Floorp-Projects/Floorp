@@ -65,6 +65,6 @@ endif
 endif
 endif
 
-EXTRA_COMPONENTS = nsTryToClose.js
+EXTRA_COMPONENTS = nsTryToClose.js nsTryToClose.manifest
 
 include $(topsrcdir)/config/rules.mk

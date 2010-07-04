@@ -51,6 +51,10 @@
 #include "nsBlockFrame.h"
 #include "nsTHashtable.h"
 
+#ifdef DrawText
+#undef DrawText
+#endif
+
 /**
  * A structure representing some continuation state for each frame on the line,
  * used to determine the first and the last continuation frame for each

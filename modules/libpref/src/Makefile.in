@@ -53,8 +53,6 @@ endif
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-include $(topsrcdir)/config/config.mk
-
 CPPSRCS		= \
 			  nsPrefBranch.cpp	\
 			  nsPrefService.cpp	\
@@ -77,6 +75,8 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \

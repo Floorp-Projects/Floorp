@@ -119,6 +119,8 @@ nsXPCException::GetNSResultCount()
 
 /***************************************************************************/
 
+NS_IMPL_CLASSINFO(nsXPCException, NULL, nsIClassInfo::DOM_OBJECT,
+                  NS_XPCEXCEPTION_CID)
 NS_INTERFACE_MAP_BEGIN(nsXPCException)
   NS_INTERFACE_MAP_ENTRY(nsIException)
   NS_INTERFACE_MAP_ENTRY(nsIXPCException)

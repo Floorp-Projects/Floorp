@@ -180,10 +180,23 @@ nsImageLoadingContent::OnStartRequest(imgIRequest* aRequest)
 NS_IMETHODIMP
 nsImageLoadingContent::OnStartDecode(imgIRequest* aRequest)
 {
-  // Block onload if it's the current request
+  nsresult rv;
+
+  // Onload blocking. This only applies for the current request.
   if (aRequest == mCurrentRequest) {
-    NS_ABORT_IF_FALSE(!mBlockingOnload, "Shouldn't already be blocking");
-    SetBlockingOnload(PR_TRUE);
+
+    // Determine whether this is a background request (this can be the case
+    // with multipart/x-mixed-replace images, for example).
+    PRUint32 loadFlags;
+    rv = aRequest->GetLoadFlags(&loadFlags);
+    PRBool background =
+      (NS_SUCCEEDED(rv) && (loadFlags & nsIRequest::LOAD_BACKGROUND));
+
+    // Block onload for non-background requests
+    if (!background) {
+      NS_ABORT_IF_FALSE(!mBlockingOnload, "Shouldn't already be blocking");
+      SetBlockingOnload(PR_TRUE);
+    }
   }
 
   LOOP_OVER_OBSERVERS(OnStartDecode(aRequest));

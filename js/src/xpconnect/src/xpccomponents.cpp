@@ -263,6 +263,7 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     switch(enum_op)
     {
         case JSENUMERATE_INIT:
+        case JSENUMERATE_INIT_ALL:
         {
             if(!mManager ||
                NS_FAILED(mManager->EnumerateInterfaces(&e)) || !e ||
@@ -589,6 +590,7 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     switch(enum_op)
     {
         case JSENUMERATE_INIT:
+        case JSENUMERATE_INIT_ALL:
         {
             if(!mManager ||
                NS_FAILED(mManager->EnumerateInterfaces(&e)) || !e ||
@@ -910,6 +912,7 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     switch(enum_op)
     {
         case JSENUMERATE_INIT:
+        case JSENUMERATE_INIT_ALL:
         {
             nsCOMPtr<nsIComponentRegistrar> compMgr;
             if(NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr ||
@@ -1160,6 +1163,7 @@ nsXPCComponents_ClassesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     switch(enum_op)
     {
         case JSENUMERATE_INIT:
+        case JSENUMERATE_INIT_ALL:
         {
             nsCOMPtr<nsIComponentRegistrar> compMgr;
             if(NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr ||
@@ -1430,6 +1434,7 @@ nsXPCComponents_Results::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
     switch(enum_op)
     {
         case JSENUMERATE_INIT:
+        case JSENUMERATE_INIT_ALL:
         {
             if(idp)
                 *idp = INT_TO_JSID(nsXPCException::GetNSResultCount());

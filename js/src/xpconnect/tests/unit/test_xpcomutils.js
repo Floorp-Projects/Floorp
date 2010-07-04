@@ -124,7 +124,7 @@ function test_categoryRegistration()
 {
   const CATEGORY_NAME = "test-cat";
   const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
-  const XULAPPINFO_CID = Components.ID("{95d89e3e-a169-41a3-8e56-719978e15b12}");
+  const XULAPPINFO_CID = Components.ID("{fc937916-656b-4fb3-a395-8c63569e27a8}");
 
   // Create a fake app entry for our category registration apps filter.
   let XULAppInfo = {
@@ -160,7 +160,7 @@ function test_categoryRegistration()
   );
 
   // Load test components.
-  do_load_module("CatRegistrationComponents.js");
+  do_load_manifest("CatRegistrationComponents.manifest");
 
   const EXPECTED_ENTRIES = ["CatAppRegisteredComponent",
                             "CatRegisteredComponent"];

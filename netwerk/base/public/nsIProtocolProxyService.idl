@@ -49,8 +49,6 @@ interface nsIURI;
 /**
  * nsIProtocolProxyService provides methods to access information about
  * various network proxies.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(d7ec6237-162e-40f5-a2b4-46ccd5fa83c9)]
 interface nsIProtocolProxyService : nsISupports

@@ -4789,8 +4789,7 @@ xml_defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
 }
 
 static JSBool
-xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-              Value *statep, jsid *idp)
+xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, Value *statep, jsid *idp)
 {
     JSXML *xml;
     uint32 length, index;
@@ -4801,6 +4800,7 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     switch (enum_op) {
       case JSENUMERATE_INIT:
+      case JSENUMERATE_INIT_ALL:
         if (length == 0) {
             statep->setInt32(0);
         } else {
