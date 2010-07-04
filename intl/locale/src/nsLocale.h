@@ -63,8 +63,6 @@ class nsLocale : public nsILocale {
 
 public:
 	nsLocale(void);
-	nsLocale(const nsTArray<nsString>& categoryList, const nsTArray<nsString>& valueList);
-	nsLocale(nsLocale* other);
 	virtual ~nsLocale(void);
 	
 	/* Declare methods from nsILocale */
@@ -77,7 +75,6 @@ protected:
 	static PLHashNumber Hash_HashFunction(const void* key);
 	static PRIntn Hash_CompareNSString(const void* s1, const void* s2);
 	static PRIntn Hash_EnumerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg);
-	static PRIntn Hash_EnumerateCopy(PLHashEntry *he, PRIntn hashIndex, void *arg);
 
 	PLHashTable*	fHashtable;
 	PRUint32		fCategoryCount;

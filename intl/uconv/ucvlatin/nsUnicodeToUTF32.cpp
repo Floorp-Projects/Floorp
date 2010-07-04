@@ -221,12 +221,6 @@ NS_IMETHODIMP nsUnicodeToUTF32Base::GetMaxLength(const PRUnichar * aSrc,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF32Base::FillInfo(PRUint32 *aInfo)
-{
-  memset(aInfo, 0xFF, (0x10000L >> 3));
-  return NS_OK;
-}
-
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToUTF32BE [implementation]

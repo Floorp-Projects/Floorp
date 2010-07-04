@@ -66,8 +66,6 @@ public:
 
   PRInt32 NextWord(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
 
-  PRInt32 PrevWord(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
-
 protected:
   PRUint8  GetClass(PRUnichar aChar);
 };
