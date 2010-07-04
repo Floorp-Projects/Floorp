@@ -278,6 +278,10 @@ struct JSObject {
     JSObject    *proto;                     /* object's prototype */
     js::Value   *dslots;                    /* dynamically allocated slots */
 #if JS_BITS_PER_WORD == 32
+    // TODO: this is needed to pad out fslots. alternatively, clasp could be
+    // merged by with flags and the padding removed, but I think the upcoming
+    // removal of JSScope will change this all anyway so I will leave this
+    // here for now.
     uint32      padding;
 #endif
     js::Value   fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */

@@ -1547,7 +1547,8 @@ jsid nsDOMClassInfo::sOnpopstate_id      = JSID_VOID;
 jsid nsDOMClassInfo::sOnbeforeunload_id  = JSID_VOID;
 jsid nsDOMClassInfo::sOnunload_id        = JSID_VOID;
 jsid nsDOMClassInfo::sOnhashchange_id    = JSID_VOID;
-jsval nsDOMClassInfo::sOnreadystatechange_id = JSID_VOID;
+jsid nsDOMClassInfo::sOnreadystatechange_id = JSID_VOID;
+jsid nsDOMClassInfo::sOnpageshow_id      = JSID_VOID;
 jsid nsDOMClassInfo::sOnpagehide_id      = JSID_VOID;
 jsid nsDOMClassInfo::sOnabort_id         = JSID_VOID;
 jsid nsDOMClassInfo::sOnerror_id         = JSID_VOID;
@@ -1748,6 +1749,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sOnunload_id,        cx, "onunload");
   SET_JSID_TO_STRING(sOnhashchange_id,    cx, "onhashchange");
   SET_JSID_TO_STRING(sOnreadystatechange_id, cx, "onreadystatechange");
+  SET_JSID_TO_STRING(sOnpageshow_id,      cx, "onpageshow");
   SET_JSID_TO_STRING(sOnpagehide_id,      cx, "onpagehide");
   SET_JSID_TO_STRING(sOnabort_id,         cx, "onabort");
   SET_JSID_TO_STRING(sOnerror_id,         cx, "onerror");
@@ -4761,6 +4763,7 @@ nsDOMClassInfo::ShutDown()
   sOnunload_id        = JSID_VOID;
   sOnhashchange_id    = JSID_VOID;
   sOnreadystatechange_id = JSID_VOID;
+  sOnpageshow_id      = JSID_VOID;
   sOnpagehide_id      = JSID_VOID;
   sOnabort_id         = JSID_VOID;
   sOnerror_id         = JSID_VOID;

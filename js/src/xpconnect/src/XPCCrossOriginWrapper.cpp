@@ -261,7 +261,7 @@ CanAccessWrapper(JSContext *cx, JSObject *outerObj, JSObject *wrappedObj,
     JSObject *innerParent = wrappedObj->getParent();
     if (!innerParent) {
       innerParent = wrappedObj;
-      Innerize(cx, &innerParent);
+      OBJ_TO_INNER_OBJECT(cx, innerParent);
       if (!innerParent) {
         return NS_ERROR_FAILURE;
       }

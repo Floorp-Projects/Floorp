@@ -560,7 +560,7 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared,
             f.write("    if (NS_FAILED(rv)) {\n")
             if isSetter:
                 f.write("        xpc_qsThrowBadSetterValue("
-                        "cx, rv, JSVAL_TO_OBJECT(*tvr.addr()), id);\n")
+                        "cx, rv, JSVAL_TO_OBJECT(*tvr.jsval_addr()), id);\n")
             elif haveCcx:
                 f.write("        xpc_qsThrowBadArgWithCcx(ccx, rv, %d);\n" % i)
             else:
@@ -747,7 +747,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     signature = "static JSBool\n"
     if isAttr:
         # JSPropertyOp signature.
-        signature += "%s(JSContext *cx, JSObject *obj, jsval id,%s jsval *vp)\n"
+        signature += "%s(JSContext *cx, JSObject *obj, jsid id,%s jsval *vp)\n"
     else:
         # JSFastNative.
         signature += "%s(JSContext *cx, uintN argc,%s jsval *vp)\n"
@@ -857,7 +857,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             pthisval = 'vp'
         elif isSetter:
             f.write("    js::AutoValueRooter tvr(cx);\n")
-            pthisval = 'tvr.addr()'
+            pthisval = 'tvr.jsval_addr()'
         else:
             pthisval = '&vp[1]' # as above, ok to overwrite vp[1]
 
@@ -986,7 +986,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             if isGetter:
                 thisval = '*vp'
             else:
-                thisval = '*tvr.addr()'
+                thisval = '*tvr.jsval_addr()'
             f.write("        return xpc_qsThrowGetterSetterFailed(cx, rv, " +
                     "JSVAL_TO_OBJECT(%s), id);\n" % thisval)
 

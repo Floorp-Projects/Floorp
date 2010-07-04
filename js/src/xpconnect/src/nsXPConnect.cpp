@@ -2519,7 +2519,7 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
 
     {
         JSObject *possibleOuter = objectscope->GetGlobalJSObject();
-        Innerize(aJSContext, &possibleOuter);
+        OBJ_TO_INNER_OBJECT(aJSContext, possibleOuter);
         if(!possibleOuter)
             return NS_ERROR_FAILURE;
 

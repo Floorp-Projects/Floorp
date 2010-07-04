@@ -171,10 +171,10 @@ GetHallPass(JSContext *cx, JSObject *wrappedObject, jsid id, JSObject **hallpass
 }
 
 static bool
-Filter(JSContext *cx, JSObject *wrappedObject, AutoValueVector &props)
+Filter(JSContext *cx, JSObject *wrappedObject, AutoIdVector &props)
 {
     JSObject *hallpass;
-    if(!GetHallPass(cx, wrappedObject, JSVAL_VOID, &hallpass))
+    if(!GetHallPass(cx, wrappedObject, JSID_VOID, &hallpass))
         return false;
     if(!hallpass)
         return true;
@@ -193,28 +193,28 @@ Filter(JSContext *cx, JSObject *wrappedObject, AutoValueVector &props)
 }
 
 bool
-ChromeWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoValueVector &props)
+ChromeWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     return JSCrossCompartmentWrapper::getOwnPropertyNames(cx, wrapper, props) &&
            Filter(cx, wrappedObject(wrapper), props);
 }
 
 bool
-ChromeWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoValueVector &props)
+ChromeWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     return JSCrossCompartmentWrapper::enumerate(cx, wrapper, props) &&
            Filter(cx, wrappedObject(wrapper), props);
 }
 
 bool
-ChromeWrapper::enumerateOwn(JSContext *cx, JSObject *wrapper, AutoValueVector &props)
+ChromeWrapper::enumerateOwn(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     return JSCrossCompartmentWrapper::enumerateOwn(cx, wrapper, props) &&
            Filter(cx, wrappedObject(wrapper), props);
 }
 
 bool
-ChromeWrapper::iterate(JSContext *cx, JSObject *wrapper, uintN flags, jsval *vp)
+ChromeWrapper::iterate(JSContext *cx, JSObject *wrapper, uintN flags, Value *vp)
 {
     // We refuse to trigger the iterator hook across chrome wrappers because
     // we don't know how to censor custom iterator objects. Instead we trigger

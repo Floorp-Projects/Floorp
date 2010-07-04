@@ -2642,7 +2642,7 @@ public:
 
     JSObject* GetWrapper()
     {
-        return (JSObject *) (mWrapperWord & FLAG_MASK);
+        return (JSObject *) (mWrapperWord & ~(PRWord)FLAG_MASK);
     }
     void SetWrapper(JSObject *obj)
     {
@@ -2693,7 +2693,9 @@ private:
         DOUBLE_WRAPPER = JS_BIT(1),
         NEEDS_XOW = JS_BIT(2),
 
-        LAST_FLAG = NEEDS_XOW
+        LAST_FLAG = NEEDS_XOW,
+
+        FLAG_MASK = 0x3
     };
 
 protected:

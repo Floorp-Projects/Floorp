@@ -473,14 +473,14 @@ GetAllSuccessEvent::GetResult(JSContext* aCx,
         nsString jsonValue = values[index];
         values[index].Truncate();
 
-        nsresult rv = json->DecodeToJSVal(jsonValue, aCx, value.addr());
+        nsresult rv = json->DecodeToJSVal(jsonValue, aCx, value.jsval_addr());
         if (NS_FAILED(rv)) {
           mCachedValue = JSVAL_VOID;
           NS_ERROR("Failed to decode!");
           return rv;
         }
 
-        if (!JS_SetElement(aCx, array, index, value.addr())) {
+        if (!JS_SetElement(aCx, array, index, value.jsval_addr())) {
           mCachedValue = JSVAL_VOID;
           NS_ERROR("Failed to set array element!");
           return NS_ERROR_FAILURE;
@@ -539,14 +539,14 @@ GetAllKeySuccessEvent::GetResult(JSContext* aCx,
         const Key& key = keys[index];
         NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
 
-        nsresult rv = IDBObjectStore::GetJSValFromKey(key, aCx, value.addr());
+        nsresult rv = IDBObjectStore::GetJSValFromKey(key, aCx, value.jsval_addr());
         if (NS_FAILED(rv)) {
           mCachedValue = JSVAL_VOID;
           NS_WARNING("Failed to get jsval for key!");
           return rv;
         }
 
-        if (!JS_SetElement(aCx, array, index, value.addr())) {
+        if (!JS_SetElement(aCx, array, index, value.jsval_addr())) {
           mCachedValue = JSVAL_VOID;
           NS_WARNING("Failed to set array element!");
           return NS_ERROR_FAILURE;
