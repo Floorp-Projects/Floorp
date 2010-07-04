@@ -46,8 +46,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpconnect
 
-DIRS            = wrappers
-
 ifeq (xpconnect, $(findstring xpconnect, $(BUILD_MODULES)))
 LIBRARY_NAME	= xpconnect
 EXPORT_LIBRARY = 1
@@ -118,7 +116,7 @@ endif
 include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES = \
-		-I$(srcdir)/wrappers \
+		-I$(srcdir)/../wrappers \
 		-I$(srcdir)/../loader \
 		-I$(topsrcdir)/js/src \
 		-I$(topsrcdir)/js/src/nanojit \
@@ -134,13 +132,15 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
-LIBS = wrappers/$(LIB_PREFIX)wrappers.$(LIB_SUFFIX)
-
 ifdef MOZ_JSLOADER
 SHARED_LIBRARY_LIBS = \
 		../loader/$(LIB_PREFIX)jsloader_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
+
+SHARED_LIBRARY_LIBS += \
+		../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -68,21 +68,21 @@ class JSProxyHandler {
     virtual bool fix(JSContext *cx, JSObject *proxy, Value *vp) = 0;
 
     /* ES5 Harmony derived proxy traps. */
-    virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
-    virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp);
-    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp);
-    virtual bool enumerateOwn(JSContext *cx, JSObject *proxy, js::AutoIdVector &props);
-    virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp);
+    virtual JS_FRIEND_API(bool) has(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
+    virtual JS_FRIEND_API(bool) hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
+    virtual JS_FRIEND_API(bool) get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, js::Value *vp);
+    virtual JS_FRIEND_API(bool) set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, js::Value *vp);
+    virtual JS_FRIEND_API(bool) enumerateOwn(JSContext *cx, JSObject *proxy, js::AutoValueVector &props);
+    virtual JS_FRIEND_API(bool) iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp);
 
     /* Spidermonkey extensions. */
-    virtual bool call(JSContext *cx, JSObject *proxy, uintN argc, js::Value *vp);
-    virtual bool construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                           uintN argc, js::Value *argv, js::Value *rval);
-    virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
-    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
-    virtual void finalize(JSContext *cx, JSObject *proxy);
-    virtual void trace(JSTracer *trc, JSObject *proxy);
+    virtual JS_FRIEND_API(bool) call(JSContext *cx, JSObject *proxy, uintN argc, js::Value *vp);
+    virtual JS_FRIEND_API(bool) construct(JSContext *cx, JSObject *proxy,
+                                          uintN argc, js::Value *argv, js::Value *rval);
+    virtual JS_FRIEND_API(JSString *) obj_toString(JSContext *cx, JSObject *proxy);
+    virtual JS_FRIEND_API(JSString *) fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
+    virtual JS_FRIEND_API(void) finalize(JSContext *cx, JSObject *proxy);
+    virtual JS_FRIEND_API(void) trace(JSTracer *trc, JSObject *proxy);
 
     inline void *family() {
         return mFamily;
@@ -116,8 +116,7 @@ class JSProxy {
 
     /* Spidermonkey extensions. */
     static bool call(JSContext *cx, JSObject *proxy, uintN argc, js::Value *vp);
-    static bool construct(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                          uintN argc, js::Value *argv, js::Value *rval);
+    static bool construct(JSContext *cx, JSObject *proxy, uintN argc, js::Value *argv, js::Value *rval);
     static JSString *obj_toString(JSContext *cx, JSObject *proxy);
     static JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
 };

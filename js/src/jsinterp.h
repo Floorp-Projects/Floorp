@@ -386,7 +386,7 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp);
  * the value of the upvar.
  */
 extern const js::Value &
-js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
+js_GetUpvar(JSContext *cx, uintN level, js::UpvarCookie cookie);
 
 /*
  * JS_LONE_INTERPRET indicates that the compiler should see just the code for

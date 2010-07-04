@@ -193,6 +193,7 @@ protected:
     MessageLoop* mWorkerLoop;   // thread where work is done
     bool mChild;                // am I the child or parent?
     CancelableTask* mChannelErrorTask; // NotifyMaybeChannelError runnable
+    IPC::Channel::Listener* mExistingListener; // channel's previous listener
 };
 
 

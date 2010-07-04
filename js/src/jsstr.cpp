@@ -579,12 +579,16 @@ str_enumerate(JSContext *cx, JSObject *obj)
         str1 = js_NewDependentString(cx, str, i, 1);
         if (!str1)
             return JS_FALSE;
-        if (!obj->defineProperty(cx, INT_TO_JSID(i), StringTag(str1), NULL, NULL,
+        if (!obj->defineProperty(cx, INT_TO_JSID(i), StringTag(str1),
+                                 JS_PropertyStub, JS_PropertyStub,
                                  STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
     }
-    return JS_TRUE;
+
+    return obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+                               JSVAL_VOID, NULL, NULL,
+                               JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED);
 }
 
 static JSBool

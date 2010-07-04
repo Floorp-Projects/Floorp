@@ -76,6 +76,9 @@ nsThreadManager nsThreadManager::sInstance;
 // statically allocated instance
 NS_IMETHODIMP_(nsrefcnt) nsThreadManager::AddRef() { return 2; }
 NS_IMETHODIMP_(nsrefcnt) nsThreadManager::Release() { return 1; }
+NS_IMPL_CLASSINFO(nsThreadManager, NULL,
+                  nsIClassInfo::THREADSAFE | nsIClassInfo::SINGLETON,
+                  NS_THREADMANAGER_CID)
 NS_IMPL_QUERY_INTERFACE1_CI(nsThreadManager, nsIThreadManager)
 NS_IMPL_CI_INTERFACE_GETTER1(nsThreadManager, nsIThreadManager)
 

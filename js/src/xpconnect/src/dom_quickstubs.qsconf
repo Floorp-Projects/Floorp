@@ -267,15 +267,7 @@ members = [
 #    'nsIDOMHTMLInputElement.disabled',
 #    'nsIDOMHTMLInputElement.select',
 #    'nsIDOMHTMLInputElement.checked',
-#    'nsIDOMHTMLInputElement.type',
-#    'nsIDOMHTMLInputElement.form',
-#    'nsIDOMHTMLInputElement.src',
-#    'nsIDOMHTMLInputElement.name',
-#    'nsIDOMHTMLInputElement.value',
-#    'nsIDOMHTMLLinkElement.disabled',
-#    'nsIDOMHTMLOptionElement.index',
-#    'nsIDOMHTMLOptionElement.selected',
-#    'nsIDOMHTMLOptionElement.form',
+#    'nsIDOMNSElement.*',
 #    # Readonly, shadowed by nsIDOMNSHTMLOptionElement.text (below).
 #    #'nsIDOMHTMLOptionElement.text',
 #    'nsIDOMHTMLOptionElement.defaultSelected',
@@ -685,6 +677,29 @@ customMethodCalls = {
     'nsIDOMNSElement_': {
         'thisType': 'nsGenericElement'
         },
+    'nsIDOMNSElement_GetScrollTop': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetScrollTop();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_SetScrollTop': {
+        'thisType': 'nsGenericElement',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetScrollLeft': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetScrollLeft();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_SetScrollLeft': {
+        'thisType': 'nsGenericElement',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetScrollHeight': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetScrollHeight();',
+        'canFail': False
+        },
     'nsIDOMNSElement_GetScrollWidth': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetScrollWidth();',
@@ -716,6 +731,38 @@ customMethodCalls = {
     'nsIDOMNSElement_GetClientWidth': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetClientWidth();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetFirstElementChild': {
+        'thisType': 'nsGenericElement',
+        'code': '    nsIContent *result = self->GetFirstElementChild();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetLastElementChild': {
+        'thisType': 'nsGenericElement',
+        'code': '    nsIContent *result = self->GetLastElementChild();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetPreviousElementSibling': {
+        'thisType': 'nsGenericElement',
+        'code': '    nsIContent *result = self->GetPreviousElementSibling();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetNextElementSibling': {
+        'thisType': 'nsGenericElement',
+        'code': '    nsIContent *result = self->GetNextElementSibling();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetClassList': {
+        'thisType': 'nsGenericElement',
+        'code': '    nsIDOMDOMTokenList *result = self->GetClassList(&rv);'
+        },
+    'nsIDOMNSElement_SetCapture': {
+        'thisType': 'nsGenericElement',
+        'canFail': False
+        },
+    'nsIDOMNSElement_ReleaseCapture': {
+        'thisType': 'nsGenericElement',
         'canFail': False
         },
     'nsIDOMNSElement_MozMatchesSelector': {

@@ -858,8 +858,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLUnknownElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLWBRElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
 
   // CSS classes
   NS_DEFINE_CLASSINFO_DATA(CSSStyleRule, nsDOMGenericSH,
@@ -1590,6 +1588,7 @@ jsid nsDOMClassInfo::sPackages_id        = JSID_VOID;
 
 static const JSClass *sObjectClass = nsnull;
 JSPropertyOp nsDOMClassInfo::sXPCNativeWrapperGetPropertyOp = nsnull;
+JSPropertyOp nsDOMClassInfo::sXrayWrapperPropertyHolderGetPropertyOp = nsnull;
 
 /**
  * Set our JSClass pointer for the Object class
@@ -1846,6 +1845,25 @@ nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
   }
   JS_SetPendingException(cx, STRING_TO_JSVAL(str));
   return NS_OK;
+}
+
+// static
+PRBool
+nsDOMClassInfo::ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
+{
+#ifdef DEBUG
+  {
+    nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
+
+    NS_PRECONDITION(!scx || !scx->IsContextInitialized() ||
+                    sXPCNativeWrapperGetPropertyOp,
+                    "Must know what the XPCNativeWrapper class GetProperty op is!");
+  }
+#endif
+
+  JSPropertyOp op = obj->getClass()->getProperty;
+  return !!op && (op == sXPCNativeWrapperGetPropertyOp ||
+                  op == sXrayWrapperPropertyHolderGetPropertyOp);
 }
 
 nsDOMClassInfo::nsDOMClassInfo(nsDOMClassInfoData* aData) : mData(aData)
@@ -2718,11 +2736,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(HTMLUnknownElement, nsIDOMHTMLElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLElement)
-    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(HTMLWBRElement, nsIDOMHTMLElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
@@ -7066,6 +7079,8 @@ nsWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          jsid *idp, PRBool *_retval)
 {
   switch ((JSIterateOp)enum_op) {
+    /* FIXME bug 576449: non-enumerable property support */
+    case JSENUMERATE_INIT_ALL:
     case JSENUMERATE_INIT:
     {
       // First, do the security check that nsDOMClassInfo does to see
@@ -9306,7 +9321,7 @@ nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     if (result) {
       JSAutoRequest ar(cx);
       *_retval = ::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, nsnull,
-                                         nsnull, 0);
+                                         nsnull, JSPROP_ENUMERATE);
 
       *objp = obj;
 
@@ -9364,6 +9379,7 @@ nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 {
   switch (enum_op) {
   case JSENUMERATE_INIT:
+  case JSENUMERATE_INIT_ALL:
     {
       nsCOMPtr<nsIForm> form(do_QueryWrappedNative(wrapper, obj));
 
@@ -10263,7 +10279,8 @@ nsStorageSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (item) {
-    if (!::JS_DefinePropertyById(cx, realObj, id, JSVAL_VOID, nsnull, nsnull, 0)) {
+    if (!::JS_DefinePropertyById(cx, realObj, id, JSVAL_VOID, nsnull, nsnull,
+                                 JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -10335,6 +10352,7 @@ nsStorageSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   switch (enum_op) {
     case JSENUMERATE_INIT:
+    case JSENUMERATE_INIT_ALL:
     {
       nsCOMPtr<nsPIDOMStorage> storage(do_QueryWrappedNative(wrapper));
 
@@ -10430,7 +10448,7 @@ nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   if (!DOMStringIsNull(data)) {
     if (!::JS_DefinePropertyById(cx, realObj, id, JSVAL_VOID, nsnull,
-                                 nsnull, 0)) {
+                                 nsnull, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -10536,6 +10554,7 @@ nsStorage2SH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   switch (enum_op) {
     case JSENUMERATE_INIT:
+    case JSENUMERATE_INIT_ALL:
     {
       nsCOMPtr<nsPIDOMStorage> storage(do_QueryWrappedNative(wrapper));
 

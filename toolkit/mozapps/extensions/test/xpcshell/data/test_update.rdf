@@ -40,6 +40,7 @@
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
                 <em:updateLink>http://localhost:4444/addons/test_update.xpi</em:updateLink>
+                <em:updateInfoURL>http://example.com/updateInfo.xhtml</em:updateInfoURL>
               </Description>
             </em:targetApplication>
           </Description>

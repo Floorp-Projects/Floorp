@@ -53,7 +53,7 @@ static const PRInt16 g_T61ShiftInTable[] =  {
     ShiftInCell(u2BytesChar,  2, 0xC0, 0xCF)
 };
 
-NS_METHOD
+nsresult
 nsT61ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                           void **aResult) 
 {

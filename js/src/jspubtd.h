@@ -124,9 +124,17 @@ typedef enum JSAccessMode {
  * iterator function that has type JSNewEnumerate.
  */
 typedef enum JSIterateOp {
-    JSENUMERATE_INIT,       /* Create new iterator state */
-    JSENUMERATE_NEXT,       /* Iterate once */
-    JSENUMERATE_DESTROY     /* Destroy iterator state */
+    /* Create new iterator state over enumerable properties. */
+    JSENUMERATE_INIT,
+
+    /* Create new iterator state over all properties. */
+    JSENUMERATE_INIT_ALL,
+
+    /* Iterate once. */
+    JSENUMERATE_NEXT,
+
+    /* Destroy iterator state. */
+    JSENUMERATE_DESTROY
 } JSIterateOp;
 
 /* Struct typedefs. */
@@ -186,6 +194,10 @@ typedef JSBool
  *    enumerable properties can't be computed in advance, *idp should be set
  *    to JSVAL_ZERO.
  *
+ *  JSENUMERATE_INIT_ALL
+ *    Used identically to JSENUMERATE_INIT, but exposes all properties of the
+ *    object regardless of enumerability.
+ *
  *  JSENUMERATE_NEXT
  *    A previously allocated opaque iterator state is passed in via statep.
  *    Return the next jsid in the iteration using *idp.  The opaque iterator
@@ -194,7 +206,8 @@ typedef JSBool
  *
  *  JSENUMERATE_DESTROY
  *    Destroy the opaque iterator state previously allocated in *statep by a
- *    call to this function when enum_op was JSENUMERATE_INIT.
+ *    call to this function when enum_op was JSENUMERATE_INIT or
+ *    JSENUMERATE_INIT_ALL.
  *
  * The return value is used to indicate success, with a value of JS_FALSE
  * indicating failure.
@@ -583,7 +596,7 @@ typedef JSBool
  * destination compartment.
  */
 typedef JSObject *
-(* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto);
+(* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto, uintN flags);
 
 JS_END_EXTERN_C
 

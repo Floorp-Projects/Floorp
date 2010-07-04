@@ -188,8 +188,6 @@ enum {
  *
  * This function may allocate additional memory for aContainer.  When
  * aContainer is no longer needed, NS_StringContainerFinish should be called.
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_StringContainerInit(nsStringContainer &aContainer);
@@ -212,8 +210,6 @@ NS_StringContainerInit(nsStringContainer &aContainer);
  *
  * NOTE: NS_StringContainerInit2(container, nsnull, 0, 0) is equivalent to
  * NS_StringContainerInit(container).
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_StringContainerInit2
@@ -226,8 +222,6 @@ NS_StringContainerInit2
  * @param aContainer    string container reference
  *
  * This function frees any memory owned by aContainer.
- *
- * @status FROZEN
  */
 XPCOM_API(void)
 NS_StringContainerFinish(nsStringContainer &aContainer);
@@ -248,8 +242,6 @@ NS_StringContainerFinish(nsStringContainer &aContainer);
  *                      whether or not aStr's internal buffer is null-
  *                      terminated
  * @return              length of aStr's internal buffer
- *
- * @status FROZEN
  */
 XPCOM_API(PRUint32)
 NS_StringGetData
@@ -282,8 +274,6 @@ NS_StringGetData
  * internal buffer.  The behavior depends on the implementation of the abstract
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
- *
- * @status FROZEN
  */
 XPCOM_API(PRUint32)
 NS_StringGetMutableData
@@ -298,8 +288,6 @@ NS_StringGetMutableData
  * @param aStr          abstract string reference
  * @return              null-terminated copy of the string's internal buffer
  *                      (it must be free'd using using nsMemory::Free)
- *
- * @status FROZEN
  */
 XPCOM_API(PRUnichar *)
 NS_StringCloneData
@@ -321,8 +309,6 @@ NS_StringCloneData
  * from aData.  The behavior depends on the implementation of the abstract
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_StringSetData
@@ -354,8 +340,6 @@ NS_StringSetData
  * from aData.  The behavior depends on the implementation of the abstract
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_StringSetDataRange
@@ -376,8 +360,6 @@ NS_StringSetDataRange
  * data from aSrcStr.  The behavior depends on the implementation of the
  * abstract string, aDestStr.  If aDestStr is a reference to a
  * nsStringContainer, then its data will be null-terminated by this function.
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_StringCopy
@@ -511,8 +493,6 @@ enum {
  *
  * This function may allocate additional memory for aContainer.  When
  * aContainer is no longer needed, NS_CStringContainerFinish should be called.
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_CStringContainerInit(nsCStringContainer &aContainer);
@@ -535,8 +515,6 @@ NS_CStringContainerInit(nsCStringContainer &aContainer);
  *
  * NOTE: NS_CStringContainerInit2(container, nsnull, 0, 0) is equivalent to
  * NS_CStringContainerInit(container).
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_CStringContainerInit2
@@ -549,8 +527,6 @@ NS_CStringContainerInit2
  * @param aContainer    string container reference
  *
  * This function frees any memory owned by aContainer.
- *
- * @status FROZEN
  */
 XPCOM_API(void)
 NS_CStringContainerFinish(nsCStringContainer &aContainer);
@@ -571,8 +547,6 @@ NS_CStringContainerFinish(nsCStringContainer &aContainer);
  *                      whether or not aStr's internal buffer is null-
  *                      terminated
  * @return              length of aStr's internal buffer
- *
- * @status FROZEN
  */
 XPCOM_API(PRUint32)
 NS_CStringGetData
@@ -605,8 +579,6 @@ NS_CStringGetData
  * internal buffer.  The behavior depends on the implementation of the abstract
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
- *
- * @status FROZEN
  */
 XPCOM_API(PRUint32)
 NS_CStringGetMutableData
@@ -621,8 +593,6 @@ NS_CStringGetMutableData
  * @param aStr          abstract string reference
  * @return              null-terminated copy of the string's internal buffer
  *                      (it must be free'd using using nsMemory::Free)
- *
- * @status FROZEN
  */
 XPCOM_API(char *)
 NS_CStringCloneData
@@ -644,8 +614,6 @@ NS_CStringCloneData
  * from aData.  The behavior depends on the implementation of the abstract
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_CStringSetData
@@ -677,8 +645,6 @@ NS_CStringSetData
  * from aData.  The behavior depends on the implementation of the abstract
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_CStringSetDataRange
@@ -699,8 +665,6 @@ NS_CStringSetDataRange
  * data from aSrcStr.  The behavior depends on the implementation of the
  * abstract string, aDestStr.  If aDestStr is a reference to a
  * nsStringContainer, then its data will be null-terminated by this function.
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_CStringCopy
@@ -822,8 +786,6 @@ enum nsCStringEncoding {
  * @param aSource       abstract string reference containing source string
  * @param aSrcEncoding  character encoding of the source string
  * @param aDest         abstract string reference to hold the result
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_CStringToUTF16(const nsACString &aSource, nsCStringEncoding aSrcEncoding,
@@ -841,8 +803,6 @@ NS_CStringToUTF16(const nsACString &aSource, nsCStringEncoding aSrcEncoding,
  * @param aSource       abstract string reference containing source string
  * @param aDestEncoding character encoding of the resulting string
  * @param aDest         abstract string reference to hold the result
- *
- * @status FROZEN
  */
 XPCOM_API(nsresult)
 NS_UTF16ToCString(const nsAString &aSource, nsCStringEncoding aDestEncoding,

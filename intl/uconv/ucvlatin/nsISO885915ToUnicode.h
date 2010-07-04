@@ -46,7 +46,7 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-NS_METHOD
+nsresult
 nsISO885915ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult);
 

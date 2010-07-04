@@ -43,7 +43,6 @@
  * getNext() must be pre-ceeded by a call to hasMoreElements(). There is
  * no way to "reset" an enumerator, once you obtain one.
  *
- * @status FROZEN
  * @version 1.0
  */
 

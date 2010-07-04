@@ -42,8 +42,6 @@ interface nsIChannel;
 
 /**
  * nsIProtocolHandler
- *
- * @status FROZEN
  */
 [scriptable, uuid(15fd6940-8ea7-11d3-93ad-00104ba0fd40)]
 interface nsIProtocolHandler : nsISupports

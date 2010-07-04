@@ -56,7 +56,7 @@
 
 // This controls whether we're using integers or floats for coordinates. We
 // want to eventually use floats. If you change this, you need to manually
-// change the definition of nscoord in gfx/idl/gfxidltypes.idl.
+// change the definition of nscoord in gfx/src/gfxidltypes.idl.
 //#define NS_COORD_IS_FLOAT
 
 inline float NS_IEEEPositiveInfinity() {

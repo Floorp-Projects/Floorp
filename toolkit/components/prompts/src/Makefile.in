@@ -45,6 +45,7 @@ MODULE = prompter
 
 EXTRA_COMPONENTS = \
     nsPrompter.js \
+    nsPrompter.manifest \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

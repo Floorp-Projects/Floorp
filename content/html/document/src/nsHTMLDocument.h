@@ -66,7 +66,7 @@ class nsIParser;
 class nsIURI;
 class nsIMarkupDocumentViewer;
 class nsIDocumentCharsetInfo;
-class nsICacheEntryDescriptor;
+class nsICachingChannel;
 
 class nsHTMLDocument : public nsDocument,
                        public nsIHTMLDocument,
@@ -301,7 +301,7 @@ protected:
                                      nsIDocumentCharsetInfo*  aDocInfo,
                                      PRInt32& aCharsetSource,
                                      nsACString& aCharset);
-  static PRBool TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
+  static PRBool TryCacheCharset(nsICachingChannel* aCachingChannel,
                                 PRInt32& aCharsetSource,
                                 nsACString& aCharset);
   static PRBool TryBookmarkCharset(nsIDocShell* aDocShell,

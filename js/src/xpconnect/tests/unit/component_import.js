@@ -38,7 +38,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function FooComponent() {
   this.wrappedJSObject = this;
-  this.postRegisterCalled = gPostRegisterCalled;
 }
 FooComponent.prototype =
 {
@@ -61,7 +60,7 @@ FooComponent.prototype =
       thereIsNoSuchIdentifier;
       threw = false;
     } catch (ex) {
-      do_check_true(ex.lineNumber == 61);
+      do_check_true(ex.lineNumber == 60);
     }
     do_check_true(threw);
     
@@ -117,28 +116,5 @@ function do_check_true(cond, text) {
     throw "Failed check: " + text;
 }
 
-function postRegister(componentManager, file, componentsArray) {
-  const Ci = Components.interfaces;
-  do_check_true(componentManager instanceof Ci.nsIComponentManager,
-               "postRegister: componentManager param is ok");
-  do_check_true(file instanceof Ci.nsIFile,
-                "postRegister: file param is ok");
-  do_check_true(componentsArray === gComponentsArray,
-                "postRegister: componentsArray param is ok");
-  gPostRegisterCalled = true;
-}
-
-function preUnregister(componentManager, file, componentsArray) {
-  const Ci = Components.interfaces;
-  do_check_true(componentManager instanceof Ci.nsIComponentManager,
-               "postRegister: componentManager param is ok");
-  do_check_true(file instanceof Ci.nsIFile,
-                "postRegister: file param is ok");
-  do_check_true(componentsArray === gComponentsArray,
-                "postRegister: componentsArray param is ok");
-}
-
-var gPostRegisterCalled = false;
 var gComponentsArray = [FooComponent, BarComponent];
-var NSGetModule = XPCOMUtils.generateNSGetModule(gComponentsArray,
-                    postRegister, preUnregister);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(gComponentsArray);
