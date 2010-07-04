@@ -1081,7 +1081,7 @@ ConservativeGCStackMarker::dumpConservativeRoots()
 # if JS_HAS_XML_SUPPORT
           case JSTRACE_XML: {
             JSXML *xml = (JSXML *) i->thing;
-            fprintf(fp, "xml %u", xml->xml_class);
+            fprintf(fp, "xml %u", (unsigned)xml->xml_class);
             break;
           }
 # endif
@@ -1158,18 +1158,18 @@ ConservativeGCStackMarker::markWord(jsuword w)
     uint32 traceKind;
     traceKind = GetFinalizableArenaTraceKind(ainfo);
 
-#if JS_BYTES_PER_WORD == 8
     /*
-     * On 64-bit we have the tag information in the same word as the payload.
-     * Since all GC-things have the high bits clear, we are safe in using these
-     * bits as tag information for the purpose avoiding false roots.
+     * On 64-bit we might consider using the tag bits in w to disqualify
+     * additional false roots, however, the condition would have to look
+     * something like:
+     *
+     *   if ((traceKind == JSTRACE_STRING && tag > 0 && tag != JSVAL_TAG_SHIFT) ||
+     *       (traceKind == JSTRACE_OBJECT && tag > 0 && tag != JSVAL_TAG_OBJECT))
+     *     RETURN(wrongtag);
+     *
+     * However, it seems like we should measure how often this actually avoids
+     * false roots.
      */
-    JSValueTag tag = w >> JSVAL_TAG_SHIFT;
-    if ((tag == JSVAL_TAG_SHIFT && traceKind != JSTRACE_STRING) ||
-        (tag == JSVAL_TAG_OBJECT && traceKind != JSTRACE_OBJECT)) {
-        RETURN(wrongtag);
-    }
-#endif
 
     jsuword start = a->toPageStart();
     jsuword offset = payload - start;
