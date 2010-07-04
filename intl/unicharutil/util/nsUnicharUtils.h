@@ -107,6 +107,11 @@ CaseInsensitiveFindInReadable(const nsAString& aPattern,
                         nsCaseInsensitiveStringComparator());
 }
 
+#else // MOZILLA_INTERNAL_API
+
+NS_HIDDEN_(PRInt32)
+CaseInsensitiveCompare(const PRUnichar *a, const PRUnichar *b, PRUint32 len);
+
 #endif // MOZILLA_INTERNAL_API
 
 #endif  /* nsUnicharUtils_h__ */
