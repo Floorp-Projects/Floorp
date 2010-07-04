@@ -142,8 +142,7 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   if (newRequest) {
 
     if (!mListener) {
-      nsBulletListener *listener;
-      NS_NEWXPCOM(listener, nsBulletListener);
+      nsBulletListener *listener = new nsBulletListener();
       NS_ADDREF(listener);
       listener->SetFrame(this);
       listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));

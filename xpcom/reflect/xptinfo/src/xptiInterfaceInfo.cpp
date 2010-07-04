@@ -699,7 +699,7 @@ xptiInterfaceInfo::Release(void)
             mEntry = nsnull;
         }
 
-        NS_DELETEXPCOM(this);
+        delete this;
         return 0;    
     }
     return cnt;

@@ -288,8 +288,7 @@ nsMIMEInputStreamConstructor(nsISupports *outer, REFNSIID iid, void **result)
     if (outer)
         return NS_ERROR_NO_AGGREGATION;
 
-    nsMIMEInputStream *inst;
-    NS_NEWXPCOM(inst, nsMIMEInputStream);
+    nsMIMEInputStream *inst = new nsMIMEInputStream();
     if (!inst)
         return NS_ERROR_OUT_OF_MEMORY;
 

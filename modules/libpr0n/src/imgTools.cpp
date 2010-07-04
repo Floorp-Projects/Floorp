@@ -80,7 +80,7 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   NS_ENSURE_ARG_POINTER(aInStr);
   // If the caller didn't provide a container, create one
   if (!*aContainer) {
-    NS_NEWXPCOM(*aContainer, imgContainer);
+    *aContainer = new imgContainer();
     if (!*aContainer)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aContainer);
