@@ -95,7 +95,7 @@ nsNativeThemeQtConstructor(nsISupports *aOuter, REFNSIID aIID,
     if (NULL != aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    inst = new nsNativeThemeQt();
+    NS_NEWXPCOM(inst, nsNativeThemeQt);
     if (NULL == inst)
         return NS_ERROR_OUT_OF_MEMORY;
 

@@ -70,7 +70,7 @@ nsrefcnt nsEditorTxnLog::Release(void)
 {
   NS_PRECONDITION(0 != mRefCnt, "dup release");
   if (--mRefCnt == 0) {
-    delete this;
+    NS_DELETEXPCOM(this);
     return 0;
   }
   return mRefCnt;
