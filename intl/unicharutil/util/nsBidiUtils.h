@@ -142,23 +142,6 @@ typedef enum nsCharType nsCharType;
   nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32  aNumFlag);
 
   /**
-   * Give a Unicode character, return the symmetric equivalent
-   */
-  PRUint32 SymmSwap(PRUint32 aChar);
-
-  /**
-   * Give a UTF-32 codepoint, return an eBidiCategory
-   */
-  eBidiCategory GetBidiCategory(PRUint32 aChar);
-
-  /**
-   * Give a UTF-32 codepoint and an eBidiCategory, 
-   * return PR_TRUE if the codepoint is in that category, 
-   * return PR_FALSE, otherwise
-   */
-  PRBool IsBidiCategory(PRUint32 aChar, eBidiCategory aBidiCategory);
-
-  /**
    * Give a UTF-32 codepoint, return a nsCharType (compatible with ICU)
    */
   nsCharType GetCharType(PRUint32 aChar);

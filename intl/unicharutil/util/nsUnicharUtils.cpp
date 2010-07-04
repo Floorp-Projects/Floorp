@@ -173,22 +173,6 @@ nsCaseInsensitiveStringComparator::operator()(PRUnichar lhs,
     return 1;
 }
 
-#else // MOZILLA_INTERNAL_API
-
-PRInt32
-CaseInsensitiveCompare(const PRUnichar *a,
-                       const PRUnichar *b,
-                       PRUint32 len)
-{
-  nsICaseConversion* caseConv = NS_GetCaseConversion();
-  if (!caseConv)
-    return NS_strcmp(a, b);
-
-  PRInt32 result;
-  caseConv->CaseInsensitiveCompare(a, b, len, &result);
-  return result;
-}
-
 #endif // MOZILLA_INTERNAL_API
 
 PRUnichar

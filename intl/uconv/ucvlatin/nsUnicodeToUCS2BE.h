@@ -57,10 +57,6 @@ public:
   NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
       nsIUnicharEncoder * aEncoder, PRUnichar aChar);
 
-  //--------------------------------------------------------------------
-  // Interface nsICharRepresentable [declaration]
-  NS_IMETHOD FillInfo(PRUint32 *aInfo);
-
 protected:
   PRUnichar mBOM;
   NS_IMETHOD CopyData(char* aDest, const PRUnichar* aSrc, PRInt32 aLen  );

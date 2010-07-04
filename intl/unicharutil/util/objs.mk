@@ -36,7 +36,6 @@
 
 INTL_UNICHARUTIL_UTIL_LCPPSRCS = \
 	nsUnicharUtils.cpp \
-	nsCompressedCharMap.cpp \
 	nsBidiUtils.cpp \
 	$(NULL)
 
