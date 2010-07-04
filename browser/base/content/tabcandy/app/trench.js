@@ -97,11 +97,6 @@ var Trench = function(element, xory, type, edge) {
   this.position = 0;
 
   //----------
-  // Variable: radius
-  // (integer) radius is how far away we should snap from
-  this.radius = Trenches.defaultRadius;
-
-  //----------
   // Variables: some Ranges
   //   range - (<Range>) explicit range; this is along the transverse axis
   //   minRange - (<Range>) the minimum active range
@@ -111,6 +106,12 @@ var Trench = function(element, xory, type, edge) {
   this.activeRange = new Range(0,10000);
 };
 Trench.prototype = {
+
+  //----------
+  // Getter: radius
+  // (integer) radius is how far away we should snap from
+  get radius() { return this.customRadius || Trenches.defaultRadius; },
+
   //----------
   // Function: setPosition
   // set the trench's position.

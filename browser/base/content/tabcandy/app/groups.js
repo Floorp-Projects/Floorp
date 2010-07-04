@@ -113,14 +113,8 @@ window.Group = function(listOfEls, options) {
     rectToBe = new Rect(options.bounds);
     
   if(!rectToBe) {
-    var boundingBox = this._getBoundingBox(listOfEls);
-    var padding = 30;
-    rectToBe = new Rect(
-      boundingBox.left-padding,
-      boundingBox.top-padding,
-      boundingBox.width+padding*2,
-      boundingBox.height+padding*2
-    );
+    rectToBe = Groups.getBoundingBox(listOfEls);
+		rectToBe.inset( -30, -30 );
   }
 
   var $container = options.container; 
@@ -310,6 +304,7 @@ window.Group = function(listOfEls, options) {
   Groups.register(this);
   
   this.setBounds(rectToBe);
+  this.snap();
   
   // ___ Push other objects away
   if(!options.dontPush)
@@ -414,22 +409,6 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     var css = {width: w};
     this.$title.css(css);
     this.$titleShield.css(css);
-  },
-  
-  // ----------  
-  // Function: _getBoundingBox
-  // Given an array of DOM elements, returns a <Rect> with the union of their locations.
-  _getBoundingBox: function(els) {
-    var el;
-    var boundingBox = {
-      top:    min( [iQ(el).position().top  for([,el] in Iterator(els))] ),
-      left:   min( [iQ(el).position().left for([,el] in Iterator(els))] ),
-      bottom: max( [iQ(el).position().top  for([,el] in Iterator(els))] )  + iQ(els[0]).height(),
-      right:  max( [iQ(el).position().left for([,el] in Iterator(els))] ) + iQ(els[0]).width(),
-    };
-    boundingBox.height = boundingBox.bottom - boundingBox.top;
-    boundingBox.width  = boundingBox.right - boundingBox.left;
-    return new Rect(boundingBox);
   },
   
   // ----------  
@@ -1432,6 +1411,20 @@ window.Groups = {
       return;
 
     Storage.saveGroupsData(Utils.getCurrentWindow(), {nextID:this.nextID});
+  },
+
+  // ----------  
+  // Function: getBoundingBox
+  // Given an array of DOM elements, returns a <Rect> with (roughly) the union of their locations.
+  getBoundingBox: function Groups_getBoundingBox(els) {
+    var el, b;
+    var bounds = [iQ(el).bounds() for each (el in els)];
+    var left   = min( [ b.left   for each (b in bounds) ] );
+    var top    = min( [ b.top    for each (b in bounds) ] );
+    var right  = max( [ b.right  for each (b in bounds) ] );
+    var bottom = max( [ b.bottom for each (b in bounds) ] );
+    
+    return new Rect(left, top, right-left, bottom-top);
   },
 
   // ----------
