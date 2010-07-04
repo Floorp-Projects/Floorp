@@ -150,7 +150,7 @@ Bar::Release(void)
   NS_LOG_RELEASE(this, mRefCnt, "Bar");
   if (mRefCnt == 0) {
     mRefCnt = 1; /* stabilize */
-    delete this;
+    NS_DELETEXPCOM(this);
     return 0;
   }
   return mRefCnt;

@@ -1217,7 +1217,7 @@ static nsresult nsRwsServiceInit(nsRwsService **aClass)
     }
 
   // create an instance of nsRwsService
-  sRwsInstance = new nsRwsService();
+  NS_NEWXPCOM(sRwsInstance, nsRwsService);
   if (sRwsInstance == 0)
     return NS_ERROR_OUT_OF_MEMORY;
 
