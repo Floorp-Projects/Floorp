@@ -183,38 +183,38 @@ window.Item.prototype = {
     
     // ___ drop
     this.dropOptions = {
-  		over: function(){},
-  		out: function(){
-  			var group = drag.info.item.parent;
-  			if(group) {
-  				group.remove(drag.info.$el, {dontClose: true});
-  			}
-  				
-  			iQ(this.container).removeClass("acceptsDrop");
-  		},
-  		drop: function(event){
-  			iQ(this.container).removeClass("acceptsDrop");
-  		},
-  		// Function: dropAcceptFunction
-  		// Given a DOM element, returns true if it should accept tabs being dropped on it.
-  		// Private to this file.
-  		accept: function dropAcceptFunction(item) {
-				return (item && item.isATabItem && (!item.parent || !item.parent.expanded));
-  		}
-  	};
-  	
-  	// ___ resize
-  	var self = this;
-  	var resizeInfo = null;
+      over: function(){},
+      out: function(){
+        var group = drag.info.item.parent;
+        if(group) {
+          group.remove(drag.info.$el, {dontClose: true});
+        }
+          
+        iQ(this.container).removeClass("acceptsDrop");
+      },
+      drop: function(event){
+        iQ(this.container).removeClass("acceptsDrop");
+      },
+      // Function: dropAcceptFunction
+      // Given a DOM element, returns true if it should accept tabs being dropped on it.
+      // Private to this file.
+      accept: function dropAcceptFunction(item) {
+        return (item && item.isATabItem && (!item.parent || !item.parent.expanded));
+      }
+    };
+    
+    // ___ resize
+    var self = this;
+    var resizeInfo = null;
     this.resizeOptions = {
       aspectRatio: self.keepProportional,
       minWidth: 90,
       minHeight: 90,
       start: function(e,ui){
-      	resizeInfo = new Drag(this, e, true); // true = isResizing
+        resizeInfo = new Drag(this, e, true); // true = isResizing
       },
       resize: function(e,ui){
-      	// TODO: maybe the stationaryCorner should be topright for rtl langs?
+        // TODO: maybe the stationaryCorner should be topright for rtl langs?
         resizeInfo.snap('topleft', false, self.keepProportional);
       },
       stop: function(){
@@ -224,7 +224,7 @@ window.Item.prototype = {
         resizeInfo = null;
       } 
     };
-  	
+    
   },
   
   // ----------
@@ -239,15 +239,15 @@ window.Item.prototype = {
   // Function: overlapsWithOtherItems
   // Returns true if this Item overlaps with any other Item on the screen.
   overlapsWithOtherItems: function() {
-		var self = this;
-		var items = Items.getTopLevelItems();
-		var bounds = this.getBounds();
-		return items.some(function(item) {
-			if (item == self) // can't overlap with yourself.
-				return false;
-			var myBounds = item.getBounds();
-			return myBounds.intersects(bounds);
-		} );
+    var self = this;
+    var items = Items.getTopLevelItems();
+    var bounds = this.getBounds();
+    return items.some(function(item) {
+      if (item == self) // can't overlap with yourself.
+        return false;
+      var myBounds = item.getBounds();
+      return myBounds.intersects(bounds);
+    } );
   },
   
   // ----------
@@ -318,12 +318,12 @@ window.Item.prototype = {
     var buffer = Math.floor( Items.defaultGutter / 2 );
     
     var items = Items.getTopLevelItems();
-		// setup each Item's pushAwayData attribute:
+    // setup each Item's pushAwayData attribute:
     iQ.each(items, function pushAway_setupPushAwayData(index, item) {
       var data = {};
       data.bounds = item.getBounds();
       data.startBounds = new Rect(data.bounds);
-			// Infinity = (as yet) unaffected
+      // Infinity = (as yet) unaffected
       data.generation = Infinity;
       item.pushAwayData = data;
     });
@@ -333,13 +333,13 @@ window.Item.prototype = {
     this.pushAwayData.generation = 0;
 
     var pushOne = function(baseItem) {
-    	// the baseItem is an n-generation pushed item. (n could be 0)
+      // the baseItem is an n-generation pushed item. (n could be 0)
       var baseData = baseItem.pushAwayData;
       var bb = new Rect(baseData.bounds);
 
-			// make the bounds larger, adding a +buffer margin to each side.
+      // make the bounds larger, adding a +buffer margin to each side.
       bb.inset(-buffer, -buffer);
-			// bbc = center of the base's bounds
+      // bbc = center of the base's bounds
       var bbc = bb.center();
     
       iQ.each(items, function(index, item) {
@@ -360,9 +360,9 @@ window.Item.prototype = {
         // if the item under consideration overlaps with the base item...
         if(box.intersects(bb)) {
         
-        	// Let's push it a little.
-        	
-        	// First, decide in which direction and how far to push. This is the offset.
+          // Let's push it a little.
+          
+          // First, decide in which direction and how far to push. This is the offset.
           var offset = new Point();
           // center = the current item's center.
           var center = box.center();
@@ -370,13 +370,13 @@ window.Item.prototype = {
           // Consider the relationship between the current item (box) + the base item.
           // If it's more vertically stacked than "side by side"...
           if(Math.abs(center.x - bbc.x) < Math.abs(center.y - bbc.y)) {
-          	// push vertically.
+            // push vertically.
             if(center.y > bbc.y)
               offset.y = bb.bottom - box.top; 
             else
               offset.y = bb.top - box.bottom;
           } else { // if they're more "side by side" than stacked vertically...
-          	// push horizontally.
+            // push horizontally.
             if(center.x > bbc.x)
               offset.x = bb.right - box.left; 
             else
@@ -404,69 +404,69 @@ window.Item.prototype = {
 
     // ___ Squish!
     var pageBounds = Items.getSafeWindowBounds();
-		iQ.each(items, function(index, item) {
-			var data = item.pushAwayData;
-			if(data.generation == 0 || item.locked.bounds)
-				return;
+    iQ.each(items, function(index, item) {
+      var data = item.pushAwayData;
+      if(data.generation == 0 || item.locked.bounds)
+        return;
 
-			function apply(item, posStep, posStep2, sizeStep) {
-				var data = item.pushAwayData;
-				if(data.generation == 0)
-					return;
-					
-				var bounds = data.bounds;
-				bounds.width -= sizeStep.x; 
-				bounds.height -= sizeStep.y;
-				bounds.left += posStep.x;
-				bounds.top += posStep.y;
-				
-				if(!item.isAGroup) {
-					if(sizeStep.y > sizeStep.x) {
-						var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
-						bounds.left += (bounds.width - newWidth) / 2;
-						bounds.width = newWidth;
-					} else {
-						var newHeight = bounds.width * (TabItems.tabHeight / TabItems.tabWidth);
-						bounds.top += (bounds.height - newHeight) / 2;
-						bounds.height = newHeight;
-					}
-				}
-				
-				var pusher = data.pusher;
-				if(pusher)  
-					apply(pusher, posStep.plus(posStep2), posStep2, sizeStep);
-			}
+      function apply(item, posStep, posStep2, sizeStep) {
+        var data = item.pushAwayData;
+        if(data.generation == 0)
+          return;
+          
+        var bounds = data.bounds;
+        bounds.width -= sizeStep.x; 
+        bounds.height -= sizeStep.y;
+        bounds.left += posStep.x;
+        bounds.top += posStep.y;
+        
+        if(!item.isAGroup) {
+          if(sizeStep.y > sizeStep.x) {
+            var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
+            bounds.left += (bounds.width - newWidth) / 2;
+            bounds.width = newWidth;
+          } else {
+            var newHeight = bounds.width * (TabItems.tabHeight / TabItems.tabWidth);
+            bounds.top += (bounds.height - newHeight) / 2;
+            bounds.height = newHeight;
+          }
+        }
+        
+        var pusher = data.pusher;
+        if(pusher)  
+          apply(pusher, posStep.plus(posStep2), posStep2, sizeStep);
+      }
 
-			var bounds = data.bounds;
-			var posStep = new Point();
-			var posStep2 = new Point();
-			var sizeStep = new Point();
+      var bounds = data.bounds;
+      var posStep = new Point();
+      var posStep2 = new Point();
+      var sizeStep = new Point();
 
-			if(bounds.left < pageBounds.left) {      
-				posStep.x = pageBounds.left - bounds.left;
-				sizeStep.x = posStep.x / data.generation;
-				posStep2.x = -sizeStep.x;                
-			} else if(bounds.right > pageBounds.right) {      
-				posStep.x = pageBounds.right - bounds.right;
-				sizeStep.x = -posStep.x / data.generation;
-				posStep.x += sizeStep.x;
-				posStep2.x = sizeStep.x;
-			}
+      if(bounds.left < pageBounds.left) {      
+        posStep.x = pageBounds.left - bounds.left;
+        sizeStep.x = posStep.x / data.generation;
+        posStep2.x = -sizeStep.x;                
+      } else if(bounds.right > pageBounds.right) {      
+        posStep.x = pageBounds.right - bounds.right;
+        sizeStep.x = -posStep.x / data.generation;
+        posStep.x += sizeStep.x;
+        posStep2.x = sizeStep.x;
+      }
 
-			if(bounds.top < pageBounds.top) {      
-				posStep.y = pageBounds.top - bounds.top;
-				sizeStep.y = posStep.y / data.generation;
-				posStep2.y = -sizeStep.y;                
-			} else if(bounds.bottom > pageBounds.bottom) {      
-				posStep.y = pageBounds.bottom - bounds.bottom;
-				sizeStep.y = -posStep.y / data.generation;
-				posStep.y += sizeStep.y;
-				posStep2.y = sizeStep.y;
-			}
+      if(bounds.top < pageBounds.top) {      
+        posStep.y = pageBounds.top - bounds.top;
+        sizeStep.y = posStep.y / data.generation;
+        posStep2.y = -sizeStep.y;                
+      } else if(bounds.bottom > pageBounds.bottom) {      
+        posStep.y = pageBounds.bottom - bounds.bottom;
+        sizeStep.y = -posStep.y / data.generation;
+        posStep.y += sizeStep.y;
+        posStep2.y = sizeStep.y;
+      }
 
-			if(posStep.x || posStep.y || sizeStep.x || sizeStep.y) 
-				apply(item, posStep, posStep2, sizeStep);
-		});
+      if(posStep.x || posStep.y || sizeStep.x || sizeStep.y) 
+        apply(item, posStep, posStep2, sizeStep);
+    });
 
     // ___ Unsquish
     var pairs = [];
@@ -510,36 +510,36 @@ window.Item.prototype = {
   // Sets up/moves the trenches for snapping to this item.
   setTrenches: function(rect) {
 
-		if (this.parent !== null)
-			return;
+    if (this.parent !== null)
+      return;
 
-		var container = this.container;
+    var container = this.container;
 
-		if (!this.borderTrenches) {
-			var bT = this.borderTrenches = {};
-			bT.left = Trenches.register(container,"x","border","left");
-			bT.right = Trenches.register(container,"x","border","right");
-			bT.top = Trenches.register(container,"y","border","top");
-			bT.bottom = Trenches.register(container,"y","border","bottom");
-		}
-		var bT = this.borderTrenches;
-		Trenches.getById(bT.left).setWithRect(rect);
-		Trenches.getById(bT.right).setWithRect(rect);
-		Trenches.getById(bT.top).setWithRect(rect);
-		Trenches.getById(bT.bottom).setWithRect(rect);
-				
-		if (!this.guideTrenches) {
-			var gT = this.guideTrenches = {};
-			gT.left = Trenches.register(container,"x","guide","left");
-			gT.right = Trenches.register(container,"x","guide","right");
-			gT.top = Trenches.register(container,"y","guide","top");
-			gT.bottom = Trenches.register(container,"y","guide","bottom");
-		}
-		var gT = this.guideTrenches;
-		Trenches.getById(gT.left).setWithRect(rect);
-		Trenches.getById(gT.right).setWithRect(rect);
-		Trenches.getById(gT.top).setWithRect(rect);
-		Trenches.getById(gT.bottom).setWithRect(rect);
+    if (!this.borderTrenches) {
+      var bT = this.borderTrenches = {};
+      bT.left = Trenches.register(container,"x","border","left");
+      bT.right = Trenches.register(container,"x","border","right");
+      bT.top = Trenches.register(container,"y","border","top");
+      bT.bottom = Trenches.register(container,"y","border","bottom");
+    }
+    var bT = this.borderTrenches;
+    Trenches.getById(bT.left).setWithRect(rect);
+    Trenches.getById(bT.right).setWithRect(rect);
+    Trenches.getById(bT.top).setWithRect(rect);
+    Trenches.getById(bT.bottom).setWithRect(rect);
+        
+    if (!this.guideTrenches) {
+      var gT = this.guideTrenches = {};
+      gT.left = Trenches.register(container,"x","guide","left");
+      gT.right = Trenches.register(container,"x","guide","right");
+      gT.top = Trenches.register(container,"y","guide","top");
+      gT.bottom = Trenches.register(container,"y","guide","bottom");
+    }
+    var gT = this.guideTrenches;
+    Trenches.getById(gT.left).setWithRect(rect);
+    Trenches.getById(gT.right).setWithRect(rect);
+    Trenches.getById(gT.top).setWithRect(rect);
+    Trenches.getById(gT.bottom).setWithRect(rect);
 
   },
   
@@ -547,14 +547,30 @@ window.Item.prototype = {
   // Function: removeTrenches
   // Removes the trenches for snapping to this item.
   removeTrenches: function() {
-		for (let edge in this.borderTrenches) {
-			Trenches.unregister(this.borderTrenches[edge]); // unregister can take an array
-		}
-		this.borderTrenches = null;
-		for (let edge in this.guideTrenches) {
-			Trenches.unregister(this.guideTrenches[edge]); // unregister can take an array
-		}
-		this.guideTrenches = null;
+    for (let edge in this.borderTrenches) {
+      Trenches.unregister(this.borderTrenches[edge]); // unregister can take an array
+    }
+    this.borderTrenches = null;
+    for (let edge in this.guideTrenches) {
+      Trenches.unregister(this.guideTrenches[edge]); // unregister can take an array
+    }
+    this.guideTrenches = null;
+  },
+  
+  // ----------
+  // Function: removeTrenches
+  // Removes the trenches for snapping to this item.
+  snap: function() {
+    // make the snapping work with a wider range!
+    var defaultRadius = Trenches.defaultRadius;
+    Trenches.defaultRadius = 2 * defaultRadius; // bump up from 10 to 20!
+    
+    var event = {startPosition:{}}; // faux event
+    var FauxDragInfo = new Drag(this,event);
+    FauxDragInfo.snap('none',false);
+    FauxDragInfo.stop();
+    
+    Trenches.defaultRadius = defaultRadius;
   },
   
   // ----------
@@ -794,8 +810,8 @@ window.Item.prototype = {
             startSize = self.getBounds().size();
             startAspect = startSize.y / startSize.x;
             
-						if(iQ.isFunction(self.resizeOptions.start))
-							self.resizeOptions.start.apply(self, [e]);
+            if(iQ.isFunction(self.resizeOptions.start))
+              self.resizeOptions.start.apply(self, [e]);
             
             iQ(window)
               .mousemove(handleMouseMove)
@@ -871,9 +887,9 @@ window.Items = {
     // TODO: set top gutter separately, elsewhere.
     var topGutter = 5;
     if (dontCountNewTabGroup)
-			return new Rect( gutter, topGutter, window.innerWidth - 2 * gutter, window.innerHeight - gutter - topGutter );
-		else
-			return new Rect( gutter, topGutter, window.innerWidth - 2 * gutter, newTabGroupBounds.top -  gutter - topGutter );
+      return new Rect( gutter, topGutter, window.innerWidth - 2 * gutter, window.innerHeight - gutter - topGutter );
+    else
+      return new Rect( gutter, topGutter, window.innerWidth - 2 * gutter, newTabGroupBounds.top -  gutter - topGutter );
 
   },
   
