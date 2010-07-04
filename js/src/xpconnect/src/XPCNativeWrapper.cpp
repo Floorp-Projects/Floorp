@@ -591,7 +591,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     }
 
     JSObject *funobj = JS_GetFunctionObject(fun);
-    funobj->setParent(js::ObjectOrNullTag(obj));
+    funobj->setParent(obj);
 
     return JS_DefineProperty(cx, obj, "toString", OBJECT_TO_JSVAL(funobj),
                              nsnull, nsnull, 0);

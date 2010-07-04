@@ -76,10 +76,15 @@ AccessCheck::isPrivileged(JSCompartment *compartment)
 void
 AccessCheck::deny(JSContext *cx, jsid id)
 {
-    if(id == JSVAL_VOID) {
+    if(id == JSID_VOID) {
         JS_ReportError(cx, "Permission denied to access object");
     } else {
-        JSString *str = JS_ValueToString(cx, id);
+        jsval idval;
+        if (!JS_IdToValue(cx, id, &idval))
+            return;
+        JSString *str = JS_ValueToString(cx, idval);
+        if (!str)
+            return;
         JS_ReportError(cx, "Permission denied to access property '%hs'", str);
     }
 }

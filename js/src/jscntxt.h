@@ -2308,6 +2308,13 @@ class AutoValueRooter : private AutoGCRooter
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
+    AutoValueRooter(JSContext *cx, jsval v
+                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, JSVAL), val(js::Valueify(v))
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
     /*
      * If you are looking for Object* overloads, use AutoObjectRooter instead;
      * rooting Object*s as a js::Value requires discerning whether or not it is

@@ -858,7 +858,6 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
       mScriptableInfo(nsnull),
       mWrapperWord(0)
 {
-    PR_STATIC_ASSERT(LAST_FLAG & JSVAL_TAGMASK);
     mIdentity = aIdentity.get();
 
     NS_ASSERTION(mMaybeProto, "bad ctor param");

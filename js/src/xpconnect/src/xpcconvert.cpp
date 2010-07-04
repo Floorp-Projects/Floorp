@@ -1589,7 +1589,7 @@ class AutoExceptionRestorer
 {
 public:
     AutoExceptionRestorer(JSContext *cx, jsval v)
-        : mContext(cx), tvr(cx, js::Valueify(v))
+        : mContext(cx), tvr(cx, v)
     {
         JS_ClearPendingException(mContext);
     }
