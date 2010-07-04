@@ -96,28 +96,17 @@ window.TabItem = function(container, tab) {
   this.dropOptions.over = function(e){
     var $target = iQ(this.container);
 
-    function elToRect($el){
-      return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
-    }
-
-    var height = elToRect($target).height * 1.5 + 20;
-    var width = elToRect($target).width * 1.5 + 20;
-    var unionRect = elToRect($target).union( elToRect(drag.info.$el) );
-
-    var newLeft = unionRect.left + unionRect.width/2 - width/2;
-    var newTop = unionRect.top + unionRect.height/2 - height/2;
+		var groupBounds = Groups.getBoundingBox( [drag.info.$el, $target] );
+		groupBounds.inset( -20, -20 );
 
     iQ(".phantom").remove();
     var phantom = iQ("<div>")
       .addClass('group phantom group-content')
       .css({
-        width: width,
-        height: height,
-        position:"absolute",
-        top: newTop,
-        left: newLeft,
+        position: "absolute",
         zIndex: -99
       })
+      .css(groupBounds)
       .appendTo("body")
       .hide()
       .fadeIn();
