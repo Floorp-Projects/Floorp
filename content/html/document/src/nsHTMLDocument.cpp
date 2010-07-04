@@ -1254,21 +1254,11 @@ nsHTMLDocument::CreateElement(const nsAString& aTagName,
                               nsIDOMElement** aReturn)
 {
   *aReturn = nsnull;
-  nsresult rv;
+  nsresult rv = nsContentUtils::CheckQName(aTagName, PR_FALSE);
+  if (NS_FAILED(rv))
+    return rv;
 
   nsAutoString tagName(aTagName);
-
-  // if we are in quirks, allow surrounding '<' '>' for IE compat
-  if (mCompatMode == eCompatibility_NavQuirks &&
-      tagName.Length() > 2 &&
-      tagName.First() == '<' &&
-      tagName.Last() == '>') {
-    tagName = Substring(tagName, 1, tagName.Length() - 2); 
-  }
-
-  rv = nsContentUtils::CheckQName(tagName, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (IsHTML()) {
     ToLowerCase(tagName);
   }
