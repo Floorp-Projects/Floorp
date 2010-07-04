@@ -5437,7 +5437,7 @@ Parser::statement()
             JS_SCOPE_DEPTH_METERING(++tc->scopeDepth > tc->maxScopeDepth &&
                                     (tc->maxScopeDepth = tc->scopeDepth));
 
-            obj->setParent(ObjectOrNullTag(tc->blockChain));
+            obj->setParent(tc->blockChain);
             tc->blockChain = obj;
             stmt->blockObj = obj;
 

@@ -125,15 +125,21 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
         if (!fp->callobj->getProperty(cx, argumentsid, &v))
             return false;
 
-        if (v.isPrimitive() && !js_ValueToNonNullObject(cx, v, &v))
-            return false;
-        return v.asObject().getProperty(cx, id, vp);
+        JSObject *obj;
+        if (v.isPrimitive()) {
+            obj = js_ValueToNonNullObject(cx, v);
+            if (!obj)
+                return false;
+        } else {
+            obj = &v.asObject();
+        }
+        return obj->getProperty(cx, id, vp);
     }
 
     vp->setUndefined();
     if (JSID_IS_INT(id)) {
         uint32 arg = uint32(JSID_TO_INT(id));
-        JSObject *argsobj = fp->argsObj();
+        JSObject *argsobj = fp->argsobj;
         if (arg < fp->argc) {
             if (argsobj) {
                 if (argsobj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
@@ -157,7 +163,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
                 return argsobj->getProperty(cx, id, vp);
         }
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
-        JSObject *argsobj = fp->argsObj();
+        JSObject *argsobj = fp->argsobj;
         if (argsobj && argsobj->isArgsLengthOverridden())
             return argsobj->getProperty(cx, id, vp);
         vp->setInt32(fp->argc);
@@ -177,7 +183,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    argsobj->init(&js_ArgumentsClass, ObjectTag(*proto), ObjectTag(*parent), PrivateTag(NULL));
+    argsobj->init(&js_ArgumentsClass, proto, parent, PrivateTag(NULL));
     argsobj->setArgsCallee(ObjectOrNullTag(callee));
     argsobj->setArgsLength(argc);
 
@@ -215,7 +221,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
         fp = fp->down;
 
     /* Create an arguments object for fp only if it lacks one. */
-    JSObject *argsobj = fp->argsObj();
+    JSObject *argsobj = fp->argsobj;
     if (argsobj)
         return argsobj;
 
@@ -227,18 +233,18 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
 
     /* Link the new object to fp so it can get actual argument values. */
     argsobj->setPrivate(fp);
-    fp->setArgsObj(argsobj);
+    fp->argsobj = argsobj;
     return argsobj;
 }
 
 void
 js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 {
-    JSObject *argsobj = fp->argsObj();
+    JSObject *argsobj = fp->argsobj;
     JS_ASSERT(argsobj->getPrivate() == fp);
     PutArguments(cx, argsobj, fp->argv);
     argsobj->setPrivate(NULL);
-    fp->setArgsObj(NULL);
+    fp->argsobj = NULL;
 }
 
 /*
@@ -754,7 +760,7 @@ NewCallObject(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    callobj->init(&js_CallClass, NullTag(), ObjectTag(*scopeChain), PrivateTag(NULL));
+    callobj->init(&js_CallClass, NULL, scopeChain, PrivateTag(NULL));
     callobj->map = cx->runtime->emptyCallScope->hold();
 
     /* This must come after callobj->map has been set. */
@@ -771,7 +777,7 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    envobj->init(&js_DeclEnvClass, NULL, fp->scopeChain, reinterpret_cast<jsval>(fp));
+    envobj->init(&js_DeclEnvClass, NULL, fp->scopeChain, PrivateTag(fp));
     envobj->map = cx->runtime->emptyDeclEnvScope->hold();
     return envobj;
 }
@@ -789,11 +795,11 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 
 #ifdef DEBUG
     /* A call object should be a frame's outermost scope chain element.  */
-    Class *classp = fp->scopeChainObj()->getClass();
+    Class *classp = fp->scopeChain->getClass();
     if (classp == &js_WithClass || classp == &js_BlockClass)
-        JS_ASSERT(fp->scopeChainObj()->getPrivate() != js_FloatingFrameIfGenerator(cx, fp));
+        JS_ASSERT(fp->scopeChain->getPrivate() != js_FloatingFrameIfGenerator(cx, fp));
     else if (classp == &js_CallClass)
-        JS_ASSERT(fp->scopeChainObj()->getPrivate() != fp);
+        JS_ASSERT(fp->scopeChain->getPrivate() != fp);
 #endif
 
     /*
@@ -811,7 +817,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         /* Root envobj before js_DefineNativeProperty (-> JSClass.addProperty). */
         fp->scopeChain = envobj;
         JS_ASSERT(fp->argv);
-        if (!js_DefineNativeProperty(cx, fp->scopeChainObj(), ATOM_TO_JSID(lambdaName),
+        if (!js_DefineNativeProperty(cx, fp->scopeChain, ATOM_TO_JSID(lambdaName),
                                      fp->calleeValue(),
                                      CalleeGetter, NULL,
                                      JSPROP_PERMANENT | JSPROP_READONLY,
@@ -820,7 +826,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         }
     }
 
-    callobj = NewCallObject(cx, fp->fun, fp->scopeChainObj());
+    callobj = NewCallObject(cx, fp->fun, fp->scopeChain);
     if (!callobj)
         return NULL;
 
@@ -834,7 +840,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
      * Push callobj on the top of the scope chain, and make it the
      * variables object.
      */
-    fp->setScopeChainObj(callobj);
+    fp->scopeChain = callobj;
     return callobj;
 }
 
@@ -879,9 +885,9 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     JS_ASSERT(callobj);
 
     /* Get the arguments object to snapshot fp's actual argument values. */
-    if (fp->argsObj()) {
+    if (fp->argsobj) {
         if (!(fp->flags & JSFRAME_OVERRIDE_ARGS))
-            callobj->setSlot(JSSLOT_CALL_ARGUMENTS, fp->argsval);
+            callobj->setSlot(JSSLOT_CALL_ARGUMENTS, ObjectOrNullTag(fp->argsobj));
         js_PutArgsObject(cx, fp);
     }
 
@@ -1375,8 +1381,8 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
         /* Censor the caller if it is from another compartment. */
         if (vp->isObject()) {
-            if (JSVAL_TO_OBJECT(*vp)->getCompartment(cx) != cx->compartment)
-                *vp = JSVAL_NULL;
+            if (vp->asObject().getCompartment(cx) != cx->compartment)
+                vp->setNull();
         }
         break;
 
@@ -1833,13 +1839,13 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
 static JSBool
 fun_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JS_ASSERT(VALUE_IS_FUNCTION(cx, vp[0]));
+    JS_ASSERT(IsFunctionObject(vp[0]));
     uint32_t indent = 0;
 
     if (argc != 0 && !ValueToECMAUint32(cx, vp[2], &indent))
         return false;
 
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj)
         return false;
 
@@ -1847,7 +1853,7 @@ fun_toString(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return true;
 }
 
@@ -1855,9 +1861,9 @@ fun_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 fun_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    JS_ASSERT(VALUE_IS_FUNCTION(cx, vp[0]));
+    JS_ASSERT(IsFunctionObject(vp[0]));
 
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj)
         return false;
 
@@ -1865,7 +1871,7 @@ fun_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return true;
 }
 #endif
@@ -1875,7 +1881,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
 {
     LeaveTrace(cx);
 
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj)
         return JS_FALSE;
     Value fval = vp[1];
@@ -1896,15 +1902,14 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     }
 
     Value *argv = vp + 2;
-    Value objv;
     if (argc == 0) {
         /* Call fun with its global object as the 'this' param if no args. */
-        objv.setNull();
+        obj = NULL;
     } else {
         /* Otherwise convert the first arg to 'this' and skip over it. */
         if (argv[0].isObject())
-            objv = argv[0];
-        else if (!js_ValueToObjectOrNull(cx, argv[0], &objv))
+            obj = &argv[0].asObject();
+        else if (!js_ValueToObjectOrNull(cx, argv[0], &obj))
             return JS_FALSE;
         argc--;
         argv++;
@@ -1917,7 +1922,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
 
     /* Push fval, obj, and the args. */
     args.getvp()[0] = fval;
-    args.getvp()[1] = objv;
+    args.getvp()[1] = ObjectOrNullTag(obj);
     memcpy(args.getvp() + 2, argv, argc * sizeof *argv);
 
     bool ok = Invoke(cx, args, 0);
@@ -1935,7 +1940,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
 
     LeaveTrace(cx);
 
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj)
         return JS_FALSE;
 
@@ -1980,10 +1985,9 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Convert the first arg to 'this' and skip over it. */
-    Value objv;
     if (vp[2].isObject())
-        objv = vp[2];
-    else if (!js_ValueToObjectOrNull(cx, vp[2], &objv))
+        obj = &vp[2].asObject();
+    else if (!js_ValueToObjectOrNull(cx, vp[2], &obj))
         return JS_FALSE;
 
     /* Allocate stack space for fval, obj, and the args. */
@@ -1996,7 +2000,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     /* Push fval, obj, and aobj's elements as args. */
     Value *sp = args.getvp();
     *sp++ = fval;
-    *sp++ = objv;
+    *sp++ = ObjectOrNullTag(obj);
     if (aobj && aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
         /*
          * Two cases, two loops: note how in the case of an active stack frame
@@ -2348,7 +2352,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
 
     if (funobj) {
         JS_ASSERT(funobj->isFunction());
-        funobj->setParent(ObjectOrNullTag(parent));
+        funobj->setParent(parent);
     } else {
         funobj = NewObject(cx, &js_FunctionClass, NULL, parent);
         if (!funobj)

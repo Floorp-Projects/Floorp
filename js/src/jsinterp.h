@@ -84,7 +84,7 @@ struct JSStackFrame
 {
     jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     JSObject            *callobj;       /* lazily created Call object */
-    js::Value           argsval;       /* lazily created arguments object */
+    JSObject            *argsobj;       /* lazily created arguments object */
     JSScript            *script;        /* script being interpreted */
     JSFunction          *fun;           /* function being called or null */
     js::Value           thisv;          /* "this" pointer if in method */
@@ -138,7 +138,7 @@ struct JSStackFrame
      * example.
      */
     JSObject        *blockChain;
-    js::Value       scopeChain;
+    JSObject        *scopeChain;
 
     uint32          flags;          /* frame flags -- see below */
     JSStackFrame    *displaySave;   /* previous value of display entry for
@@ -155,8 +155,8 @@ struct JSStackFrame
          */
         if (callobj) {
             js_PutCallObject(cx, this);
-            JS_ASSERT(argsval.isNull());
-        } else if (argsval.isObject()) {
+            JS_ASSERT(!argsobj);
+        } else if (argsobj) {
             js_PutArgsObject(cx, this);
         }
     }
@@ -185,22 +185,6 @@ struct JSStackFrame
         return argv ? &argv[-2].asObject() : NULL;
     }
 
-    JSObject *argsObj() {
-        return argsval.asObjectOrNull();
-    }
-
-    void setArgsObj(JSObject *obj) {
-        argsval.setObjectOrNull(obj);
-    }
-
-    JSObject *scopeChainObj() {
-        return scopeChain.asObjectOrNull();
-    }
-
-    void setScopeChainObj(JSObject *obj) {
-        scopeChain.setObjectOrNull(obj);
-    }
-
     /*
      * Get the object associated with the Execution Context's
      * VariableEnvironment (ES5 10.3). The given CallStack must contain this
@@ -223,6 +207,7 @@ struct JSStackFrame
 };
 
 namespace js {
+
 JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(Value) == 0);
 static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(Value);
 
@@ -271,20 +256,12 @@ namespace js {
  * objects as, per ECMA-262, they may not be referred to by |this|. argv[-1]
  * must not be a JSVAL_VOID.
  */
-extern bool
+extern JSObject *
 ComputeThisFromArgv(JSContext *cx, js::Value *argv);
 
 JS_ALWAYS_INLINE JSObject *
-ComputeThisObjectFromVp(JSContext *cx, js::Value *vp)
+ComputeThisFromVp(JSContext *cx, js::Value *vp)
 {
-    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
-    return ComputeThisFromArgv(cx, vp + 2) ? &vp[1].asObject() : NULL;
-}
-
-JS_ALWAYS_INLINE bool
-ComputeThisFromVpInPlace(JSContext *cx, js::Value *vp)
-{
-    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
     return ComputeThisFromArgv(cx, vp + 2);
 }
 
@@ -331,32 +308,38 @@ InvokeFriendAPI(JSContext *cx, const InvokeArgsGuard &args, uintN flags);
  */
 #define JSINVOKE_FUNFLAGS       JSINVOKE_CONSTRUCT
 
-#error "TODO: un-js_ and re-inline"
-
 /*
  * "Internal" calls may come from C or C++ code using a JSContext on which no
  * JS is running (!cx->fp), so they may need to push a dummy JSStackFrame.
  */
-#define js_InternalCall(cx,obj,fval,argc,argv,rval)                           \
-    js_InternalInvoke(cx, OBJECT_TO_JSVAL(obj), fval, 0, argc, argv, rval)
-
-#define js_InternalConstruct(cx,obj,fval,argc,argv,rval)                      \
-    js_InternalInvoke(cx, OBJECT_TO_JSVAL(obj), fval, JSINVOKE_CONSTRUCT, argc, argv, rval)
-
 extern JSBool
-js_InternalInvoke(JSContext *cx, jsval thisv, jsval fval, uintN flags,
-                  uintN argc, jsval *argv, jsval *rval);
+InternalInvoke(JSContext *cx, const Value &thisv, const Value &fval, uintN flags,
+               uintN argc, Value *argv, Value *rval);
+
+static JS_ALWAYS_INLINE bool
+InternalCall(JSContext *cx, JSObject *obj, const Value &fval,
+             uintN argc, Value *argv, Value *rval)
+{
+    return InternalInvoke(cx, ObjectOrNullTag(obj), fval, 0, argc, argv, rval);
+}
+
+static JS_ALWAYS_INLINE bool
+InternalConstruct(JSContext *cx, JSObject *obj, const Value &fval,
+                  uintN argc, Value *argv, Value *rval)
+{
+    return InternalInvoke(cx, ObjectOrNullTag(obj), fval, JSINVOKE_CONSTRUCT, argc, argv, rval);
+}
 
 extern bool
 InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
-                 JSAccessMode mode, uintN argc, const Value *argv, Value *rval);
+                 JSAccessMode mode, uintN argc, Value *argv, Value *rval);
 
 extern JS_FORCES_STACK bool
 Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JSStackFrame *down, uintN flags, Value *result);
 
 extern JS_REQUIRES_STACK bool
-InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn);
+InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args);
 
 extern JS_REQUIRES_STACK bool
 Interpret(JSContext *cx);
@@ -375,7 +358,7 @@ extern bool
 SameValue(const Value &v1, const Value &v2, JSContext *cx);
 
 extern JSType
-TypeOfValue(JSContext *cx, const js::Value &v);
+TypeOfValue(JSContext *cx, const Value &v);
 
 inline bool
 InstanceOf(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)

@@ -706,7 +706,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
                                              rval)) {
             return JS_FALSE;
         }
-        JSObject *errProto = JSVAL_TO_OBJECT(*rval);
+        JSObject *errProto = &rval->asObject();
         obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
         if (!obj)
             return JS_FALSE;

@@ -110,6 +110,16 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
 {
 }
 
+static inline void
+js_LeaveLocalRootScopeWithResult(JSContext *cx, Value rval)
+{
+}
+
+static inline void
+js_LeaveLocalRootScopeWithResult(JSContext *cx, void *rval)
+{
+}
+
 #ifdef XML_METERING
 static struct {
     jsrefcount  qname;
@@ -5705,7 +5715,7 @@ NamespacesToJSArray(JSContext *cx, JSXMLArray *array, jsval *rval)
         JSObject *ns = XMLARRAY_MEMBER(array, i, JSObject);
         if (!ns)
             continue;
-        tvr.setObject(ns);
+        tvr.set(ObjectTag(*ns));
         if (!arrayobj->setProperty(cx, INT_TO_JSID(i), tvr.addr()))
             return false;
     }
@@ -7195,7 +7205,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     fp = js_GetTopStackFrame(cx);
 
     obj = NULL;
-    for (tmp = fp->scopeChainObj(); tmp; tmp = tmp->getParent()) {
+    for (tmp = fp->scopeChain; tmp; tmp = tmp->getParent()) {
         Class *clasp = tmp->getClass();
         if (clasp == &js_BlockClass || clasp == &js_WithClass)
             continue;
@@ -7422,7 +7432,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     if (!IsFunctionQName(cx, qn, &funid))
         return JS_FALSE;
 
-    obj = js_GetTopStackFrame(cx)->scopeChainObj();
+    obj = js_GetTopStackFrame(cx)->scopeChain;
     do {
         /* Skip any With object that can wrap XML. */
         target = obj;

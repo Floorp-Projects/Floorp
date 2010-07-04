@@ -1049,12 +1049,18 @@ class TraceRecorder
 
     JS_REQUIRES_STACK void captureStackTypes(unsigned callDepth, JSValueType* typeMap);
 
+    bool isVoidPtrGlobal(const void* p) const;
     bool isGlobal(const Value* p) const;
     ptrdiff_t nativeGlobalSlot(const Value *p) const;
-    ptrdiff_t nativeGlobalOffset(Value* p) const;
+    ptrdiff_t nativeGlobalOffset(const Value* p) const;
+    JS_REQUIRES_STACK ptrdiff_t nativeStackOffsetImpl(const void* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffset(const Value* p) const;
+    JS_REQUIRES_STACK ptrdiff_t nativeStackSlotImpl(const void* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackSlot(const Value* p) const;
-    JS_REQUIRES_STACK ptrdiff_t nativespOffset(Value* p) const;
+    JS_REQUIRES_STACK ptrdiff_t nativespOffsetImpl(const void* p) const;
+    JS_REQUIRES_STACK ptrdiff_t nativespOffset(const Value* p) const;
+    JS_REQUIRES_STACK void importImpl(nanojit::LIns* base, ptrdiff_t offset, const void* p, JSValueType t,
+                                      const char *prefix, uintN index, JSStackFrame *fp);
     JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, const Value* p, JSValueType t,
                                   const char *prefix, uintN index, JSStackFrame *fp);
     JS_REQUIRES_STACK void import(TreeFragment* tree, nanojit::LIns* sp, unsigned stackSlots,
@@ -1077,6 +1083,7 @@ class TraceRecorder
                                                      VMSideExit* exit);
     JS_REQUIRES_STACK nanojit::LIns* slurpSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp, VMSideExit* exit);
     JS_REQUIRES_STACK void slurpSlot(nanojit::LIns* val_ins, ptrdiff_t offset, Value* vp, SlurpInfo* info);
+    JS_REQUIRES_STACK void slurpFrameObjPtrSlot(nanojit::LIns* val_ins, ptrdiff_t offset, JSObject** p, SlurpInfo* info);
     JS_REQUIRES_STACK AbortableRecordingStatus slurpDownFrames(jsbytecode* return_pc);
     JS_REQUIRES_STACK AbortableRecordingStatus upRecursion();
     JS_REQUIRES_STACK AbortableRecordingStatus downRecursion();
@@ -1085,13 +1092,25 @@ class TraceRecorder
 
     nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset,
                              bool demote);
+
+#ifdef DEBUG
+    bool isValidFrameObjPtr(JSObject **obj);
+#endif
+
+    JS_REQUIRES_STACK void setImpl(void* p, nanojit::LIns* l, bool demote = true);
     JS_REQUIRES_STACK void set(Value* p, nanojit::LIns* l, bool demote = true);
+    JS_REQUIRES_STACK void setFrameObjPtr(JSObject** p, nanojit::LIns* l, bool demote = true);
+    nanojit::LIns* getFromTrackerImpl(const void *p);
     nanojit::LIns* getFromTracker(const Value* p);
+    JS_REQUIRES_STACK nanojit::LIns* getImpl(const void* p);
     JS_REQUIRES_STACK nanojit::LIns* get(const Value* p);
+    JS_REQUIRES_STACK nanojit::LIns* getFrameObjPtr(JSObject** p);
     JS_REQUIRES_STACK nanojit::LIns* attemptImport(const Value* p);
     JS_REQUIRES_STACK nanojit::LIns* addr(Value* p);
 
+    JS_REQUIRES_STACK bool knownImpl(const void* p);
     JS_REQUIRES_STACK bool known(const Value* p);
+    JS_REQUIRES_STACK bool known(JSObject** p);
     JS_REQUIRES_STACK void checkForGlobalObjectReallocation();
 
     JS_REQUIRES_STACK TypeConsensus selfTypeStability(SlotMap& smap);

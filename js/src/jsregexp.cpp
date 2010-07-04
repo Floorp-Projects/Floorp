@@ -5097,7 +5097,7 @@ SetRegExpLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
 
 #define DEFINE_GETTER(name, code)                                              \
     static JSBool                                                              \
-    name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                     \
+    name(JSContext *cx, JSObject *obj, jsid id, Value *vp)                     \
     {                                                                          \
         while (obj->getClass() != &js_RegExpClass) {                           \
             obj = obj->getProto();                                             \
@@ -5112,15 +5112,15 @@ SetRegExpLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
     }
 
 /* lastIndex is stored in the object, re = re silences the compiler warning. */
-DEFINE_GETTER(lastIndex_getter,  re = re; *vp = Jsvalify(obj->getRegExpLastIndex()))
-DEFINE_GETTER(source_getter,     *vp = STRING_TO_JSVAL(re->source))
-DEFINE_GETTER(global_getter,     *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_GLOB) != 0))
-DEFINE_GETTER(ignoreCase_getter, *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_FOLD) != 0))
-DEFINE_GETTER(multiline_getter,  *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTILINE) != 0))
-DEFINE_GETTER(sticky_getter,     *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_STICKY) != 0))
+DEFINE_GETTER(lastIndex_getter,  re = re; *vp = obj->getRegExpLastIndex())
+DEFINE_GETTER(source_getter,     vp->setString(re->source))
+DEFINE_GETTER(global_getter,     vp->setBoolean((re->flags & JSREG_GLOB) != 0))
+DEFINE_GETTER(ignoreCase_getter, vp->setBoolean((re->flags & JSREG_FOLD) != 0))
+DEFINE_GETTER(multiline_getter,  vp->setBoolean((re->flags & JSREG_MULTILINE) != 0))
+DEFINE_GETTER(sticky_getter,     vp->setBoolean((re->flags & JSREG_STICKY) != 0))
 
 static JSBool
-lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     while (obj->getClass() != &js_RegExpClass) {
         obj = obj->getProto();
@@ -5128,7 +5128,7 @@ lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             return true;
     }
     jsdouble lastIndex;
-    if (!JS_ValueToNumber(cx, *vp, &lastIndex))
+    if (!ValueToNumber(cx, *vp, &lastIndex))
         return false;
     lastIndex = js_DoubleToInteger(lastIndex);
     SetRegExpLastIndex(cx, obj, lastIndex);
@@ -5144,7 +5144,7 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **ob
         return JS_TRUE;
 
     if (id == ATOM_TO_JSID(cx->runtime->atomState.lastIndexAtom)) {
-        if (!js_DefineNativeProperty(cx, obj, id, JSVAL_VOID,
+        if (!js_DefineNativeProperty(cx, obj, id, UndefinedTag(),
                                      lastIndex_getter, lastIndex_setter,
                                      JSPROP_PERMANENT | JSPROP_SHARED, 0, 0, NULL)) {
             return JS_FALSE;
@@ -5156,7 +5156,7 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **ob
     static const struct LazyProp {
         const char *name;
         uint16 atomOffset;
-        JSPropertyOp getter;
+        PropertyOp getter;
     } props[] = {
         { js_source_str,     ATOM_OFFSET(source),     source_getter },
         { js_global_str,     ATOM_OFFSET(global),     global_getter },
@@ -5169,7 +5169,7 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **ob
         const LazyProp &lazy = props[i];
         JSAtom *atom = OFFSET_TO_ATOM(cx->runtime, lazy.atomOffset);
         if (id == ATOM_TO_JSID(atom)) {
-            if (!js_DefineNativeProperty(cx, obj, id, JSVAL_VOID,
+            if (!js_DefineNativeProperty(cx, obj, id, UndefinedTag(),
                                          lazy.getter, NULL,
                                          JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_READONLY,
                                          0, 0, NULL)) {
@@ -5351,7 +5351,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
 static JSBool
 regexp_call(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
-    return regexp_exec_sub(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv, JS_FALSE, rval);
+    return regexp_exec_sub(cx, &argv[-2].asObject(), argc, argv, JS_FALSE, rval);
 }
 
 #if JS_HAS_XDR
@@ -5487,7 +5487,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
 static JSBool
 regexp_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     return obj && js_regexp_toString(cx, obj, vp);
 }
 
@@ -5608,7 +5608,7 @@ created:
 static JSBool
 regexp_compile(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     return obj && regexp_compile_sub(cx, obj, argc, vp + 2, vp);
 }
 
@@ -5692,14 +5692,14 @@ out:
 static JSBool
 regexp_exec(JSContext *cx, uintN argc, Value *vp)
 {
-    return regexp_exec_sub(cx, ComputeThisObjectFromVp(cx, vp),
+    return regexp_exec_sub(cx, ComputeThisFromVp(cx, vp),
                            argc, vp + 2, JS_FALSE, vp);
 }
 
 static JSBool
 regexp_test(JSContext *cx, uintN argc, Value *vp)
 {
-    if (!regexp_exec_sub(cx, ComputeThisObjectFromVp(cx, vp),
+    if (!regexp_exec_sub(cx, ComputeThisFromVp(cx, vp),
                          argc, vp + 2, JS_TRUE, vp))
         return JS_FALSE;
     if (!vp->isTrue())

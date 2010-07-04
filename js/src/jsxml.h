@@ -171,8 +171,9 @@ struct JSXML {
     void                *domnode;       /* DOM node if mapped info item */
     JSXML               *parent;
     JSObject            *name;
-    uint32              xml_class;      /* discriminates u, below */
-    uint32              xml_flags;      /* flags, see below */
+    /* These fields are word-sized to improve GC-marking on 64-bit: */
+    size_t              xml_class;      /* discriminates u, below */
+    size_t              xml_flags;      /* flags, see below */
     union {
         JSXMLListVar    list;
         JSXMLElemVar    elem;

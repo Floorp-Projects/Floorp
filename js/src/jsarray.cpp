@@ -209,10 +209,7 @@ ValueIsLength(JSContext *cx, Value* vp)
     length = (jsuint) d;
     if (d != (jsdouble) length)
         goto error;
-    if (!js_NewNumberInRootedValue(cx, d, vp)) {
-        *vp = JSVAL_NULL;
-        return 0;
-    }
+    vp->setNumber(length);
     return length;
 
   error:
@@ -747,7 +744,7 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)) {
-        *vp = obj->getProtoValue();
+        vp->setObjectOrNull(obj->getProto());
         return JS_TRUE;
     }
 
@@ -1141,7 +1138,7 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj ||
         (obj->getClass() != &js_SlowArrayClass &&
          !InstanceOf(cx, obj, &js_ArrayClass, vp + 2))) {
@@ -1307,10 +1304,13 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
         if (!(hole || rval->isNullOrUndefined())) {
             if (locale) {
                 /* Work on obj.toLocalString() instead. */
-                if (!js_ValueToObjectOrNull(cx, *rval, rval))
+                JSObject *robj;
+
+                if (!js_ValueToObjectOrNull(cx, *rval, &robj))
                     goto out;
+                rval->setObjectOrNull(robj);
                 JSAtom *atom = cx->runtime->atomState.toLocaleStringAtom;
-                if (!js_TryMethod(cx, rval->asObjectOrNull(), atom, 0, NULL, rval))
+                if (!js_TryMethod(cx, robj, atom, 0, NULL, rval))
                     goto out;
             }
 
@@ -1342,7 +1342,7 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
 static JSBool
 array_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj ||
         (obj->getClass() != &js_SlowArrayClass &&
          !InstanceOf(cx, obj, &js_ArrayClass, vp + 2))) {
@@ -1355,7 +1355,7 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 array_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj ||
         (obj->getClass() != &js_SlowArrayClass &&
          !InstanceOf(cx, obj, &js_ArrayClass, vp + 2))) {
@@ -1524,7 +1524,7 @@ array_join(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         vp[2].setString(str);
     }
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     return obj && array_toString_sub(cx, obj, JS_FALSE, str, vp);
 }
 
@@ -1532,7 +1532,7 @@ static JSBool
 array_reverse(JSContext *cx, uintN argc, Value *vp)
 {
     jsuint len;
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !js_GetLengthProperty(cx, obj, &len))
         return JS_FALSE;
     vp->setObject(*obj);
@@ -1832,7 +1832,7 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
         fval.setNull();
     }
 
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !js_GetLengthProperty(cx, obj, &len))
         return false;
     if (len == 0) {
@@ -2139,7 +2139,7 @@ static JSBool
 array_push(JSContext *cx, uintN argc, Value *vp)
 {
     /* Insist on one argument and obj of the expected class. */
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj)
         return JS_FALSE;
     if (argc != 1 || !obj->isDenseArray())
@@ -2193,7 +2193,7 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
 static JSBool
 array_pop(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj)
         return JS_FALSE;
     if (obj->isDenseArray())
@@ -2207,7 +2207,7 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
     jsuint length, i;
     JSBool hole;
 
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
@@ -2259,7 +2259,7 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
     JSBool hole;
     jsdouble last, newlen;
 
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     newlen = length;
@@ -2326,7 +2326,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     if (argc == 0)
         return JS_TRUE;
     Value *argv = JS_ARGV(cx, vp);
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
@@ -2465,7 +2465,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
     Value *p = JS_ARGV(cx, vp) - 1;
 
     /* Create a new Array object and root it using *vp. */
-    JSObject *aobj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *aobj = ComputeThisFromVp(cx, vp);
     JSObject *nobj;
     jsuint length;
     if (aobj->isDenseArray()) {
@@ -2555,7 +2555,7 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
 
     argv = JS_ARGV(cx, vp);
 
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     begin = 0;
@@ -2632,7 +2632,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
     jsint direction;
     JSBool hole;
 
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
     if (length == 0)
@@ -2721,7 +2721,7 @@ typedef enum ArrayExtraMode {
 static JSBool
 array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     jsuint length;
     if (!obj || !js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
@@ -2802,9 +2802,9 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
 
     JSObject *thisp;
     if (argc > 1 && !REDUCE_MODE(mode)) {
-        if (!js_ValueToObjectOrNull(cx, argv[1], &argv[1]))
+        if (!js_ValueToObjectOrNull(cx, argv[1], &thisp))
             return JS_FALSE;
-        thisp = argv[1].asObjectOrNull();
+        argv[1].setObjectOrNull(thisp);
     } else {
         thisp = NULL;
     }
@@ -3050,7 +3050,7 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
     /* Initialize all fields of JSObject. */
     obj->map = const_cast<JSObjectMap *>(&SharedArrayMap);
 
-    obj->init(&js_ArrayClass, ObjectTag(*proto), proto->getParentValue(), NullTag());
+    obj->init(&js_ArrayClass, proto, proto->getParent(), NullTag());
     obj->setDenseArrayLength(0);
     obj->setDenseArrayCount(0);
     return obj;

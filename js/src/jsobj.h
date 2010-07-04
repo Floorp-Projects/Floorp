@@ -161,7 +161,7 @@ struct PropDesc {
 };
 
 namespace js {
-    typedef Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
+    typedef Vector<PropDesc, 1> PropDescArray;
 }
 
 /* For detailed comments on these function pointer types, see jsprvtd.h. */
@@ -188,7 +188,7 @@ struct JSObjectOps {
 
     /* Optionally non-null members start here. */
     JSObjectOp          thisObject;
-    JSCallOp            call;
+    js::CallOp          call;
     js::Native          construct;
     js::HasInstanceOp   hasInstance;
     JSFinalizeOp        clear;
@@ -276,8 +276,11 @@ struct JSObject {
     js::Class   *clasp;                     /* class pointer */
     jsuword     flags;                      /* see above */
     JSObject    *proto;                     /* object's prototype */
-    js::Value   fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
     js::Value   *dslots;                    /* dynamically allocated slots */
+#if JS_BITS_PER_WORD == 32
+    uint32      padding;
+#endif
+    js::Value   fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
 
     bool isNative() const { return map->ops->isNative(); }
 
@@ -630,7 +633,7 @@ struct JSObject {
     inline bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
-    void init(js::Class *aclasp, const js::Value &proto, const js::Value &parent,
+    void init(js::Class *aclasp, JSObject *proto, JSObject *parent,
               const js::Value &privateSlotValue) {
         JS_STATIC_ASSERT(JSSLOT_PRIVATE + 3 == JS_INITIAL_NSLOTS);
 
@@ -652,8 +655,8 @@ struct JSObject {
      * of a call to js_InitClass(...clasp, ...).
      */
     inline void initSharingEmptyScope(js::Class *clasp,
-                                      const js::Value &proto,
-                                      const js::Value &parent,
+                                      JSObject *proto,
+                                      JSObject *parent,
                                       const js::Value &privateSlotValue);
 
     inline bool hasSlotsArray() const { return !!dslots; }
@@ -749,7 +752,7 @@ struct JSObject {
     inline void initArrayClass();
 };
 
-JS_STATIC_ASSERT(offsetof(JSObject, fslots) % sizeof(Value) == 0);
+JS_STATIC_ASSERT(offsetof(JSObject, fslots) % sizeof(js::Value) == 0);
 JS_STATIC_ASSERT(sizeof(JSObject) % JS_GCTHING_ALIGN == 0);
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
@@ -788,9 +791,9 @@ JS_STATIC_ASSERT(sizeof(JSObject) % JS_GCTHING_ALIGN == 0);
 inline void
 OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
 {
-    JSClass *clasp = obj->getClass();
+    js::Class *clasp = obj->getClass();
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
-        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+        js::ExtendedClass *xclasp = (js::ExtendedClass *) clasp;
         if (xclasp->innerObject)
             obj = xclasp->innerObject(cx, obj);
     }
@@ -803,20 +806,28 @@ OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
 inline void
 OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
 {
-    JSClass *clasp = obj->getClass();
+    js::Class *clasp = obj->getClass();
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
-        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+        js::ExtendedClass *xclasp = (js::ExtendedClass *) clasp;
         if (xclasp->outerObject)
             obj = xclasp->outerObject(cx, obj);
     }
 }
 
-class ValueArray {
+class JSValueArray {
   public:
     jsval *array;
     size_t length;
 
-    ValueArray(jsval *v, size_t c) : array(v), length(c) {}
+    JSValueArray(jsval *v, size_t c) : array(v), length(c) {}
+};
+
+class ValueArray {
+  public:
+    js::Value *array;
+    size_t length;
+
+    ValueArray(js::Value *v, size_t c) : array(v), length(c) {}
 };
 
 extern js::Class js_ObjectClass;
@@ -1294,14 +1305,14 @@ js_PrimitiveToObject(JSContext *cx, js::Value *vp);
  * rooted, the caller must root vp before the next possible GC.
  */
 extern JSBool
-js_ValueToObjectOrNull(JSContext *cx, const js::Value &v, js::Value *vp);
+js_ValueToObjectOrNull(JSContext *cx, const js::Value &v, JSObject **objp);
 
 /*
  * v and vp may alias. On successful return, vp->isObject(). If vp is not
  * rooted, the caller must root vp before the next possible GC.
  */
-extern JSBool
-js_ValueToNonNullObject(JSContext *cx, const js::Value &v, js::Value *vp);
+extern JSObject *
+js_ValueToNonNullObject(JSContext *cx, const js::Value &v);
 
 extern JSBool
 js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, js::Value *rval);

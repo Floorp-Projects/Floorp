@@ -243,8 +243,9 @@ JSObject::isArguments() const
 }
 
 extern JS_PUBLIC_DATA(js::Class) js_CallClass;
-extern js::Class js_DeclEnvClass;
 extern JS_PUBLIC_DATA(js::Class) js_FunctionClass;
+extern js::Class js_DeclEnvClass;
+extern const uint32 CALL_CLASS_FIXED_RESERVED_SLOTS;
 
 inline bool
 JSObject::isFunction() const
@@ -262,9 +263,9 @@ JSObject::isCallable()
 }
 
 static inline bool
-js_IsCallable(jsval v)
+js_IsCallable(const js::Value &v)
 {
-    return !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isCallable();
+    return v.isObject() && v.asObject().isCallable();
 }
 
 /*

@@ -1261,7 +1261,7 @@ date_getTime(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
     vp->setNumber(result);
     return JS_TRUE;
@@ -1272,7 +1272,7 @@ GetYear(JSContext *cx, JSBool fullyear, Value *vp)
 {
     jsdouble result;
 
-    if (!GetAndCacheLocalTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result)) {
@@ -1304,7 +1304,7 @@ date_getUTCFullYear(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1319,7 +1319,7 @@ date_getMonth(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetAndCacheLocalTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1334,7 +1334,7 @@ date_getUTCMonth(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1349,7 +1349,7 @@ date_getDate(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetAndCacheLocalTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1364,7 +1364,7 @@ date_getUTCDate(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1379,7 +1379,7 @@ date_getDay(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetAndCacheLocalTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1394,7 +1394,7 @@ date_getUTCDay(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1409,7 +1409,7 @@ date_getHours(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetAndCacheLocalTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1424,7 +1424,7 @@ date_getUTCHours(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1439,7 +1439,7 @@ date_getMinutes(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetAndCacheLocalTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetAndCacheLocalTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1454,7 +1454,7 @@ date_getUTCMinutes(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1471,7 +1471,7 @@ date_getUTCSeconds(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1488,7 +1488,7 @@ date_getUTCMilliseconds(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble result;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &result))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &result))
         return JS_FALSE;
 
     if (JSDOUBLE_IS_FINITE(result))
@@ -1504,7 +1504,7 @@ date_getTimezoneOffset(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj;
     jsdouble utctime, localtime, result;
 
-    obj = ComputeThisObjectFromVp(cx, vp);
+    obj = ComputeThisFromVp(cx, vp);
     if (!GetUTCTime(cx, obj, vp, &utctime))
         return JS_FALSE;
     if (!GetAndCacheLocalTime(cx, obj, NULL, &localtime))
@@ -1523,7 +1523,7 @@ date_getTimezoneOffset(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_setTime(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!InstanceOf(cx, obj, &js_DateClass, vp + 2))
         return false;
 
@@ -1552,7 +1552,7 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
     jsdouble msec_time;
     jsdouble result;
 
-    obj = ComputeThisObjectFromVp(cx, vp);
+    obj = ComputeThisFromVp(cx, vp);
     if (!GetUTCTime(cx, obj, vp, &result))
         return false;
 
@@ -1689,7 +1689,7 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
     jsdouble year, month, day;
     jsdouble result;
 
-    obj = ComputeThisObjectFromVp(cx, vp);
+    obj = ComputeThisFromVp(cx, vp);
     if (!GetUTCTime(cx, obj, vp, &result))
         return false;
 
@@ -1790,7 +1790,7 @@ date_setUTCFullYear(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 date_setYear(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
 
     jsdouble result;
     if (!GetUTCTime(cx, obj, vp, &result))
@@ -1869,7 +1869,7 @@ date_utc_format(JSContext *cx, Value *vp,
     JSString *str;
     jsdouble utctime;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &utctime))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &utctime))
         return JS_FALSE;
 
     if (!JSDOUBLE_IS_FINITE(utctime)) {
@@ -2045,7 +2045,7 @@ date_toLocaleHelper(JSContext *cx, const char *format, Value *vp)
     PRMJTime split;
     jsdouble utctime;
 
-    obj = ComputeThisObjectFromVp(cx, vp);
+    obj = ComputeThisFromVp(cx, vp);
     if (!GetUTCTime(cx, obj, vp, &utctime))
         return JS_FALSE;
 
@@ -2151,7 +2151,7 @@ date_toTimeString(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble utctime;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &utctime))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &utctime))
         return JS_FALSE;
     return date_format(cx, utctime, FORMATSPEC_TIME, vp);
 }
@@ -2161,7 +2161,7 @@ date_toDateString(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble utctime;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &utctime))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &utctime))
         return JS_FALSE;
     return date_format(cx, utctime, FORMATSPEC_DATE, vp);
 }
@@ -2177,7 +2177,7 @@ date_toSource(JSContext *cx, uintN argc, Value *vp)
     char buf[DTOSTR_STANDARD_BUFFER_SIZE], *numStr, *bytes;
     JSString *str;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &utctime))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &utctime))
         return JS_FALSE;
 
     numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, buf, sizeof buf, DTOSTR_STANDARD, 0, utctime);
@@ -2207,7 +2207,7 @@ date_toString(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble utctime;
 
-    if (!GetUTCTime(cx, ComputeThisObjectFromVp(cx, vp), vp, &utctime))
+    if (!GetUTCTime(cx, ComputeThisFromVp(cx, vp), vp, &utctime))
         return JS_FALSE;
     return date_format(cx, utctime, FORMATSPEC_FULL, vp);
 }
@@ -2368,8 +2368,8 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     jsid toUTCStringId = ATOM_TO_JSID(cx->runtime->atomState.toUTCStringAtom);
     jsid toGMTStringId = ATOM_TO_JSID(cx->runtime->atomState.toGMTStringAtom);
     if (!js_GetProperty(cx, proto, toUTCStringId, toUTCStringFun.addr()) ||
-        !js_DefineProperty(cx, proto, toGMTStringId, toUTCStringFun.value(),
-                           JS_PropertyStub, JS_PropertyStub, 0)) {
+        !js_DefineProperty(cx, proto, toGMTStringId, toUTCStringFun.addr(),
+                           PropertyStub, PropertyStub, 0)) {
         return NULL;
     }
 

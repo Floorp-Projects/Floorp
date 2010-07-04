@@ -1157,22 +1157,27 @@ typedef js::HashMap<void *,
                     js::DefaultHasher<void *>,
                     js::SystemAllocPolicy> RootedValueMap;
 
+/* If HashNumber grows, need to change WrapperHasher. */
+JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
+    
 struct WrapperHasher
 {
-    typedef jsval Lookup;
-    
-    static HashNumber hash(jsval key) {
-        return GCPtrHasher::hash(JSVAL_TO_GCTHING(key));
+    typedef Value Lookup;
+
+    static HashNumber hash(Value key) {
+        uint64 bits = JSVAL_BITS(Jsvalify(key));
+        return (uint32)bits ^ (uint32)(bits >> 32);
     }
 
-    static bool match(jsval l, jsval k) {
+    static bool match(const Value &l, const Value &k) {
         return l == k;
     }
 };
 
-typedef HashMap<void *, jsval, WrapperHasher, SystemAllocPolicy> WrapperMap;
+typedef HashMap<Value, Value, WrapperHasher, SystemAllocPolicy> WrapperMap;
 
 class AutoValueVector;
+class AutoIdVector;
 
 } /* namespace js */
 
@@ -1187,13 +1192,13 @@ struct JSCompartment {
 
     bool init();
 
-    bool wrap(JSContext *cx, jsval *vp);
+    bool wrap(JSContext *cx, js::Value *vp);
     bool wrap(JSContext *cx, JSString **strp);
     bool wrap(JSContext *cx, JSObject **objp);
     bool wrapId(JSContext *cx, jsid *idp);
-    bool wrap(JSContext *cx, JSPropertyOp *op);
-    bool wrap(JSContext *cx, JSPropertyDescriptor *desc);
-    bool wrap(JSContext *cx, js::AutoValueVector &props);
+    bool wrap(JSContext *cx, js::PropertyOp *op);
+    bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
+    bool wrap(JSContext *cx, js::AutoIdVector &props);
     bool wrapException(JSContext *cx);
 
     void sweep(JSContext *cx);
@@ -2314,6 +2319,11 @@ class AutoValueRooter : private AutoGCRooter
         val = v;
     }
 
+    void jsval_set(jsval v) {
+        JS_ASSERT(tag == JSVAL);
+        val = js::Valueify(v);
+    }
+
     const Value &value() const {
         JS_ASSERT(tag == JSVAL);
         return val;
@@ -2474,23 +2484,23 @@ class AutoIdRooter : private AutoGCRooter
   public:
     explicit AutoIdRooter(JSContext *cx, jsid id = INT_TO_JSID(0)
                           JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, ID), idval(id)
+      : AutoGCRooter(cx, ID), id_(id)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     jsid id() {
-        return idval;
+        return id_;
     }
 
     jsid * addr() {
-        return &idval;
+        return &id_;
     }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
-    jsid idval;
+    jsid id_;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -3084,7 +3094,7 @@ class AutoValueVector : private AutoGCRooter
         return vector.reserve(newLength);
     }
 
-    const Value &operator[](size_t i) { return vector[i]; }
+    Value &operator[](size_t i) { return vector[i]; }
     const Value &operator[](size_t i) const { return vector[i]; }
 
     const Value *begin() const { return vector.begin(); }
@@ -3130,7 +3140,7 @@ class AutoIdVector : private AutoGCRooter
         return vector.reserve(newLength);
     }
 
-    const jsid &operator[](size_t i) { return vector[i]; }
+    jsid &operator[](size_t i) { return vector[i]; }
     const jsid &operator[](size_t i) const { return vector[i]; }
 
     const jsid *begin() const { return vector.begin(); }

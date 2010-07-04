@@ -443,6 +443,20 @@ class AlignedPtrAndFlag
     }
 };
 
+template <class T>
+static inline void
+Reverse(T *beg, T *end)
+{
+    while (beg != end) {
+        if (--end == beg)
+            return;
+        T tmp = *beg;
+        *beg = *end;
+        *end = tmp;
+        ++beg;
+    }
+}
+
 } /* namespace js */
 
 #endif /* jstl_h_ */

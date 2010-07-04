@@ -686,8 +686,8 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 fp->script = script;
                 fp->fun = fun;
                 fp->argv = vp + 2;
-                fp->setScopeChainObj(closure->getParent());
-                fp->setArgsObj(NULL);
+                fp->scopeChain = closure->getParent();
+                fp->argsobj = NULL;
 
                 /* Initialize regs. */
                 regs.pc = script ? script->code : NULL;
@@ -797,7 +797,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
 
     origobj = obj;
     obj = obj->wrappedObject(cx);
-    Innerize(cx, &obj);
+    OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
         return JS_FALSE;
 
@@ -1205,7 +1205,7 @@ JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameObject(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->scopeChainObj();
+    return fp->scopeChain;
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1585,9 +1585,9 @@ SetupFakeFrame(JSContext *cx, ExecuteFrameGuard &frame, JSFrameRegs &regs, JSObj
     if (!cx->stack().getExecuteFrame(cx, js_GetTopStackFrame(cx), vplen, nfixed, frame))
         return false;
 
-    jsval *vp = frame.getvp();
+    Value *vp = frame.getvp();
     PodZero(vp, vplen);
-    vp[0] = OBJECT_TO_JSVAL(scopeobj);
+    vp[0].setObject(*scopeobj);
 
     JSStackFrame *fp = frame.getFrame();
     PodZero(fp);
