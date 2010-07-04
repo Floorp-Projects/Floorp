@@ -401,8 +401,7 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_
   PRBool haveExternalHandler = HaveExternalProtocolHandler(aURI);
   if (haveExternalHandler)
   {
-    nsCOMPtr<nsIChannel> channel;
-    NS_NEWXPCOM(channel, nsExtProtocolChannel);
+    nsCOMPtr<nsIChannel> channel = new nsExtProtocolChannel();
     if (!channel) return NS_ERROR_OUT_OF_MEMORY;
 
     ((nsExtProtocolChannel*) channel.get())->SetURI(aURI);
