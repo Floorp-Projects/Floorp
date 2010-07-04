@@ -206,6 +206,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentDLF.h"
+#include "nsHTMLMediaElement.h"
 
 using namespace mozilla::dom;
 
@@ -408,17 +409,6 @@ nsContentUtils::Init()
   rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Ignore failure and just don't load images
-  rv = CallGetService("@mozilla.org/image/loader;1", &sImgLoader);
-  if (NS_FAILED(rv)) {
-    // no image loading for us.  Oh, well.
-    sImgLoader = nsnull;
-    sImgCache = nsnull;
-  } else {
-    if (NS_FAILED(CallGetService("@mozilla.org/image/cache;1", &sImgCache )))
-      sImgCache = nsnull;
-  }
-
   rv = CallGetService(NS_IHISTORY_CONTRACTID, &sHistory);
   if (NS_FAILED(rv)) {
     NS_RUNTIMEABORT("Cannot get the history service");
@@ -460,6 +450,25 @@ nsContentUtils::Init()
   sInitialized = PR_TRUE;
 
   return NS_OK;
+}
+
+bool nsContentUtils::sImgLoaderInitialized;
+
+void
+nsContentUtils::InitImgLoader()
+{
+  sImgLoaderInitialized = true;
+
+  // Ignore failure and just don't load images
+  nsresult rv = CallGetService("@mozilla.org/image/loader;1", &sImgLoader);
+  if (NS_FAILED(rv)) {
+    // no image loading for us.  Oh, well.
+    sImgLoader = nsnull;
+    sImgCache = nsnull;
+  } else {
+    if (NS_FAILED(CallGetService("@mozilla.org/image/cache;1", &sImgCache )))
+      sImgCache = nsnull;
+  }
 }
 
 PRBool
@@ -2382,6 +2391,9 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 PRBool
 nsContentUtils::IsImageInCache(nsIURI* aURI)
 {
+    if (!sImgLoaderInitialized)
+        InitImgLoader();
+
     if (!sImgCache) return PR_FALSE;
 
     // If something unexpected happened we return false, otherwise if props
@@ -6139,7 +6151,7 @@ nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
     nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
     if (rootFrame) {
       nsIWidget* widget =
-        nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetWindow();
+        nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetNearestWidget();
       if (widget) {
         nsRefPtr<mozilla::layers::LayerManager> manager = widget->GetLayerManager();
         return manager.forget();
@@ -6196,6 +6208,38 @@ nsIContentUtils::FindInternalContentViewer(const char* aType,
     }   
     return docFactory.forget();
   }
+
+#ifdef MOZ_MEDIA
+#ifdef MOZ_OGG
+  if (nsHTMLMediaElement::IsOggEnabled()) {
+    for (int i = 0; i < NS_ARRAY_LENGTH(nsHTMLMediaElement::gOggTypes); ++i) {
+      const char* type = nsHTMLMediaElement::gOggTypes[i];
+      if (!strcmp(aType, type)) {
+        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+        if (docFactory && aLoaderType) {
+          *aLoaderType = TYPE_CONTENT;
+        }
+        return docFactory.forget();
+      }
+    }
+  }
+#endif
+
+#ifdef MOZ_WEBM
+  if (nsHTMLMediaElement::IsWebMEnabled()) {
+    for (int i = 0; i < NS_ARRAY_LENGTH(nsHTMLMediaElement::gWebMTypes); ++i) {
+      const char* type = nsHTMLMediaElement::gWebMTypes[i];
+      if (!strcmp(aType, type)) {
+        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+        if (docFactory && aLoaderType) {
+          *aLoaderType = TYPE_CONTENT;
+        }
+        return docFactory.forget();
+      }
+    }
+  }
+#endif
+#endif // MOZ_MEDIA
 
   return NULL;
 }

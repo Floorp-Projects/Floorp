@@ -53,10 +53,8 @@
 #include "nsAutoPtr.h"
 #include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
-#include "nsIComponentManagerObsolete.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/Module.h"
 #include "nsILocalFile.h"
-#include "nsIModule.h"
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "mozJSComponentLoader.h"
@@ -578,7 +576,7 @@ mozJSComponentLoader*
 mozJSComponentLoader::sSelf;
 
 NS_IMPL_ISUPPORTS3(mozJSComponentLoader,
-                   nsIModuleLoader,
+                   mozilla::ModuleLoader,
                    xpcIJSModuleLoader,
                    nsIObserver)
  
@@ -709,30 +707,30 @@ mozJSComponentLoader::JarKey(nsILocalFile* aFile,
     return rv;
 }
 
-NS_IMETHODIMP
-mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
-                                 nsIModule* *aResult)
+const mozilla::Module*
+mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile)
 {
     nsCOMPtr<nsIURI> uri;
     nsCAutoString spec;
     NS_GetURLSpecFromActualFile(aComponentFile, spec);
 
     nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+        return NULL;
 
     nsAutoString hashstring;
     rv = FileKey(aComponentFile, hashstring);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+        return NULL;
 
     return LoadModuleImpl(aComponentFile,
                           hashstring,
-                          uri, aResult);
+                          uri);
 }
 
-NS_IMETHODIMP
+const mozilla::Module*
 mozJSComponentLoader::LoadModuleFromJAR(nsILocalFile *aJarFile,
-                                        const nsACString &aComponentPath,
-                                        nsIModule* *aResult)
+                                        const nsACString &aComponentPath)
 {
 #if !defined(XPCONNECT_STANDALONE)
     nsresult rv;
@@ -747,25 +745,26 @@ mozJSComponentLoader::LoadModuleFromJAR(nsILocalFile *aJarFile,
 
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), jarSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+        return NULL;
 
     nsAutoString hashstring;
     rv = JarKey(aJarFile, aComponentPath, hashstring);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+        return NULL;
 
     return LoadModuleImpl(aJarFile,
                           hashstring,
-                          uri, aResult);
+                          uri);
 #else
     return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
 
-nsresult
+const mozilla::Module*
 mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
                                      nsAString &aKey,
-                                     nsIURI* aComponentURI,
-                                     nsIModule* *aResult)
+                                     nsIURI* aComponentURI)
 {
     nsresult rv;
 
@@ -779,26 +778,16 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
     if (!mInitialized) {
         rv = ReallyInit();
         if (NS_FAILED(rv))
-            return rv;
+            return NULL;
     }
-
-    nsCAutoString uriStr;
-    rv = aComponentURI->GetSpec(uriStr);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!StringTail(uriStr, 3).LowerCaseEqualsLiteral(".js"))
-        return NS_ERROR_INVALID_ARG;
 
     ModuleEntry* mod;
-    if (mModules.Get(aKey, &mod)) {
-        NS_ASSERTION(mod->module, "Bad hashtable data!");
-        NS_ADDREF(*aResult = mod->module);
-        return NS_OK;
-    }
+    if (mModules.Get(aKey, &mod))
+	return mod;
 
     nsAutoPtr<ModuleEntry> entry(new ModuleEntry);
     if (!entry)
-        return NS_ERROR_OUT_OF_MEMORY;
+        return NULL;
 
     rv = GlobalForLocation(aSourceFile, aComponentURI, &entry->global,
                            &entry->location, nsnull);
@@ -806,18 +795,18 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
 #ifdef DEBUG_shaver
         fprintf(stderr, "GlobalForLocation failed!\n");
 #endif
-        return rv;
+        return NULL;
     }
 
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID,
                                                &rv);
     if (NS_FAILED(rv))
-        return rv;
+        return NULL;
 
     nsCOMPtr<nsIComponentManager> cm;
     rv = NS_GetComponentManager(getter_AddRefs(cm));
     if (NS_FAILED(rv))
-        return rv;
+        return NULL;
 
     JSCLContextHelper cx(this);
 
@@ -832,7 +821,7 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
         fprintf(stderr, "WrapNative(%p,%p,nsIComponentManager) failed: %x\n",
                 (void *)(JSContext*)cx, (void *)mCompMgr, rv);
 #endif
-        return rv;
+        return NULL;
     }
 
     rv = cm_holder->GetJSObject(&cm_jsobj);
@@ -840,7 +829,7 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
 #ifdef DEBUG_shaver
         fprintf(stderr, "GetJSObject of ComponentManager failed\n");
 #endif
-        return rv;
+        return NULL;
     }
 
     JSObject* file_jsobj;
@@ -850,69 +839,54 @@ mozJSComponentLoader::LoadModuleImpl(nsILocalFile* aSourceFile,
                          getter_AddRefs(file_holder));
 
     if (NS_FAILED(rv)) {
-        return rv;
+        return NULL;
     }
 
     rv = file_holder->GetJSObject(&file_jsobj);
     if (NS_FAILED(rv)) {
-        return rv;
+        return NULL;
     }
 
     JSCLAutoErrorReporterSetter aers(cx, mozJSLoaderErrorReporter);
 
-    jsval argv[2], retval, NSGetModule_val;
+    jsval NSGetFactory_val;
 
-    if (!JS_GetProperty(cx, entry->global, "NSGetModule", &NSGetModule_val) ||
-        JSVAL_IS_VOID(NSGetModule_val)) {
-        return NS_ERROR_FAILURE;
+    if (!JS_GetProperty(cx, entry->global, "NSGetFactory", &NSGetFactory_val) ||
+        JSVAL_IS_VOID(NSGetFactory_val)) {
+        return NULL;
     }
 
-    if (JS_TypeOfValue(cx, NSGetModule_val) != JSTYPE_FUNCTION) {
-        JS_ReportError(cx, "%s has NSGetModule property that is not a function",
-                       uriStr.get());
-        return NS_ERROR_FAILURE;
+    if (JS_TypeOfValue(cx, NSGetFactory_val) != JSTYPE_FUNCTION) {
+        nsCAutoString spec;
+        aComponentURI->GetSpec(spec);
+        JS_ReportError(cx, "%s has NSGetFactory property that is not a function",
+                       spec.get());
+        return NULL;
     }
     
-    argv[0] = OBJECT_TO_JSVAL(cm_jsobj);
-    argv[1] = OBJECT_TO_JSVAL(file_jsobj);
-    if (!JS_CallFunctionValue(cx, entry->global, NSGetModule_val,
-                              2, argv, &retval)) {
-        return NS_ERROR_FAILURE;
-    }
-
-#ifdef DEBUG_shaver_off
-    JSString *s = JS_ValueToString(cx, retval);
-    fprintf(stderr, "mJCL: %s::NSGetModule returned %s\n",
-            registryLocation, JS_GetStringBytes(s));
-#endif
-
-    JSObject *jsModuleObj;
-    if (!JS_ValueToObject(cx, retval, &jsModuleObj) ||
-        !jsModuleObj) {
+    JSObject *jsGetFactoryObj;
+    if (!JS_ValueToObject(cx, NSGetFactory_val, &jsGetFactoryObj) ||
+        !jsGetFactoryObj) {
         /* XXX report error properly */
-        return NS_ERROR_FAILURE;
+        return NULL;
     }
 
-    rv = xpc->WrapJS(cx, jsModuleObj,
-                     NS_GET_IID(nsIModule), getter_AddRefs(entry->module));
+    rv = xpc->WrapJS(cx, jsGetFactoryObj,
+                     NS_GET_IID(xpcIJSGetFactory), getter_AddRefs(entry->getfactoryobj));
     if (NS_FAILED(rv)) {
         /* XXX report error properly */
 #ifdef DEBUG
         fprintf(stderr, "mJCL: couldn't get nsIModule from jsval\n");
 #endif
-        return rv;
+        return NULL;
     }
 
     // Cache this module for later
     if (!mModules.Put(aKey, entry))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aResult = entry->module);
+        return NULL;
 
     // The hash owns the ModuleEntry now, forget about it
-    entry.forget();
-
-    return NS_OK;
+    return entry.forget();
 }
 
 // Some stack based classes for cleaning up on early return
@@ -1539,6 +1513,13 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     return NS_OK;
 }
 
+/* static */ PLDHashOperator
+mozJSComponentLoader::ClearModules(const nsAString& key, ModuleEntry*& entry, void* cx)
+{
+    entry->Clear();
+    return PL_DHASH_REMOVE;
+}
+    
 void
 mozJSComponentLoader::UnloadModules()
 {
@@ -1546,7 +1527,8 @@ mozJSComponentLoader::UnloadModules()
 
     mInProgressImports.Clear();
     mImports.Clear();
-    mModules.Clear();
+
+    mModules.Enumerate(ClearModules, NULL);
 
     // Destroying our context will force a GC.
     JS_DestroyContext(mContext);
@@ -1850,6 +1832,21 @@ mozJSComponentLoader::Observe(nsISupports *subject, const char *topic,
     }
 
     return NS_OK;
+}
+
+/* static */ already_AddRefed<nsIFactory>
+mozJSComponentLoader::ModuleEntry::GetFactory(const mozilla::Module& module,
+                                              const mozilla::Module::CIDEntry& entry)
+{
+    const ModuleEntry& self = static_cast<const ModuleEntry&>(module);
+    NS_ASSERTION(self.getfactoryobj, "Handing out an uninitialized module?");
+
+    nsCOMPtr<nsIFactory> f;
+    nsresult rv = self.getfactoryobj->Get(*entry.cid, getter_AddRefs(f));
+    if (NS_FAILED(rv))
+        return NULL;
+
+    return f.forget();
 }
 
 //----------------------------------------------------------------------

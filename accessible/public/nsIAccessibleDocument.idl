@@ -55,8 +55,6 @@ interface nsIDOMWindow;
  * of a document. You can also get one from 
  * nsIAccessNode::GetAccessibleDocument() or 
  * nsIAccessibleEvent::GetAccessibleDocument()
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(03c6ce8a-aa40-4484-9282-e6579c56e054)]
 interface nsIAccessibleDocument : nsISupports

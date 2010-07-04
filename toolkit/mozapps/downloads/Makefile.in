@@ -44,6 +44,7 @@ include $(topsrcdir)/config/config.mk
 
 MODULE = helperAppDlg
 
+EXTRA_COMPONENTS = nsHelperAppDlg.manifest
 EXTRA_PP_COMPONENTS = nsHelperAppDlg.js
 
 EXTRA_JS_MODULES = \

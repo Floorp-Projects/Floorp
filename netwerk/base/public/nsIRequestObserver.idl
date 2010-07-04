@@ -41,8 +41,6 @@ interface nsIRequest;
 
 /**
  * nsIRequestObserver
- *
- * @status FROZEN
  */
 [scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
 interface nsIRequestObserver : nsISupports

@@ -118,6 +118,8 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
   if (!children)
     return;
 
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+
   PRUint32 length = 0;
   children->GetLength(&length);
 
@@ -128,12 +130,12 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
       continue;
 
     nsCOMPtr<nsIContent> child(do_QueryInterface(DOMChild));
-    nsAccessible *accessible = GetAccService()->GetAttachedAccessibleFor(child);
+    nsRefPtr<nsAccessible> accessible =
+      GetAccService()->GetOrCreateAccessible(child, presShell, mWeakShell);
     if (!accessible)
       continue;
 
-    mChildren.AppendElement(accessible);
-    accessible->SetParent(this);
+    AppendChild(accessible);
   }
 }
 

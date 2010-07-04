@@ -262,12 +262,8 @@ nsDOMStorageManager::Initialize()
   os->AddObserver(gStorageManager, "cookie-changed", PR_FALSE);
   os->AddObserver(gStorageManager, "offline-app-removed", PR_FALSE);
   os->AddObserver(gStorageManager, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
+  os->AddObserver(gStorageManager, "profile-after-change", PR_FALSE);
   os->AddObserver(gStorageManager, "perm-changed", PR_FALSE);
-
-  nsCOMPtr<nsIPrivateBrowsingService> pbs =
-    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-  if (pbs)
-    pbs->GetPrivateBrowsingEnabled(&gStorageManager->mInPrivateBrowsing);
 
   return NS_OK;
 }
@@ -348,7 +344,13 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
                              const char *aTopic,
                              const PRUnichar *aData)
 {
-  if (!strcmp(aTopic, "offline-app-removed")) {
+  if (!strcmp(aTopic, "profile-after-change")) {
+    nsCOMPtr<nsIPrivateBrowsingService> pbs =
+      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+    if (pbs)
+      pbs->GetPrivateBrowsingEnabled(&gStorageManager->mInPrivateBrowsing);
+  }
+  else if (!strcmp(aTopic, "offline-app-removed")) {
 #ifdef MOZ_STORAGE
     nsresult rv = nsDOMStorage::InitDB();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -530,7 +532,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StorageObsolete)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
+nsresult
 NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsDOMStorage* storage = new nsDOMStorage();
@@ -540,7 +542,7 @@ NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return storage->QueryInterface(aIID, aResult);
 }
 
-NS_IMETHODIMP
+nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsDOMStorage2* storage = new nsDOMStorage2();

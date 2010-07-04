@@ -79,7 +79,7 @@ public:
     virtual ~nsCacheService();
 
     // Define a Create method to be used with a factory:
-    static NS_METHOD
+    static nsresult
     Create(nsISupports* outer, const nsIID& iid, void* *result);
 
 

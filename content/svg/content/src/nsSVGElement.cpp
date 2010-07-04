@@ -766,7 +766,7 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
       // want that to happen from SMIL-animated value of mapped attrs, so
       // ignore animated value for now, and request an animation restyle to
       // get our animated value noticed.
-      shell->RestyleForAnimation(this);
+      shell->RestyleForAnimation(this, eRestyle_Self);
     } else {
       // Ok, this is an animation restyle -- go ahead and update/walk the
       // animated content style rule.

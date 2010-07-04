@@ -130,12 +130,6 @@ ImageContainerD3D9::GetCurrentSize()
   return gfxIntSize(0,0);
 }
 
-LayerD3D9::LayerType
-ImageLayerD3D9::GetType()
-{
-  return TYPE_IMAGE;
-}
-
 Layer*
 ImageLayerD3D9::GetLayer()
 {

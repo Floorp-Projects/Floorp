@@ -707,7 +707,7 @@ nsMouseWheelTransaction::OverrideSystemScrollSpeed(PRInt32 aScrollLines,
   // conditions (e.g., checking the prefs, and also whether the user customized
   // the system settings of the mouse wheel scrolling or not), and can limit
   // the speed for preventing the unexpected high speed scrolling.
-  nsCOMPtr<nsIWidget> widget(sTargetFrame->GetWindow());
+  nsCOMPtr<nsIWidget> widget(sTargetFrame->GetNearestWidget());
   NS_ENSURE_TRUE(widget, aScrollLines);
   PRInt32 overriddenDelta;
   nsresult rv = widget->OverrideSystemMouseScrollSpeed(aScrollLines,
@@ -1760,7 +1760,7 @@ nsEventStateManager::FireContextClick()
 
     if (allowedToDispatch) {
       // make sure the widget sticks around
-      nsCOMPtr<nsIWidget> targetWidget(mCurrentTarget->GetWindow());
+      nsCOMPtr<nsIWidget> targetWidget(mCurrentTarget->GetNearestWidget());
       // init the event while mCurrentTarget is still good
       nsMouseEvent event(PR_TRUE, NS_CONTEXTMENU,
                          targetWidget,
@@ -1859,7 +1859,7 @@ nsEventStateManager::StopTrackingDragGesture()
 void
 nsEventStateManager::FillInEventFromGestureDown(nsMouseEvent* aEvent)
 {
-  NS_ASSERTION(aEvent->widget == mCurrentTarget->GetWindow(),
+  NS_ASSERTION(aEvent->widget == mCurrentTarget->GetNearestWidget(),
                "Incorrect widget in event");
 
   // Set the coordinates in the new event to the coordinates of
@@ -1953,7 +1953,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       if (!targetContent)
         return;
 
-      nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetWindow();
+      nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
 
       // get the widget from the target frame
       nsDragEvent startEvent(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_START, widget);
@@ -3094,7 +3094,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         mCurrentTarget->GetContentForEvent(presContext, aEvent,
                                            getter_AddRefs(targetContent));
 
-        nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetWindow();
+        nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
         nsDragEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_DRAGDROP, widget);
 
         nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aEvent);
@@ -3246,7 +3246,7 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
 
   if (aTargetFrame) {
     SetCursor(cursor, container, haveHotspot, hotspotX, hotspotY,
-              aTargetFrame->GetWindow(), PR_FALSE);
+              aTargetFrame->GetNearestWidget(), PR_FALSE);
   }
 
   if (mLockCursor || NS_STYLE_CURSOR_AUTO != cursor) {
@@ -3635,7 +3635,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
 
       if (mLastMouseOverFrame &&
           nsContentUtils::GetTopLevelWidget(aEvent->widget) !=
-          nsContentUtils::GetTopLevelWidget(mLastMouseOverFrame->GetWindow())) {
+          nsContentUtils::GetTopLevelWidget(mLastMouseOverFrame->GetNearestWidget())) {
         // the MouseOut event widget doesn't have same top widget with
         // mLastMouseOverFrame, it's a spurious event for mLastMouseOverFrame
         break;

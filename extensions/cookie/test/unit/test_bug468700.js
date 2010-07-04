@@ -3,7 +3,7 @@
  */
 
 function run_test() {
-  do_load_module("cookieprompt.js");
+  do_load_manifest("cookieprompt.manifest");
 
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);

@@ -25,6 +25,7 @@ LOCAL_INCLUDES = \
                  $(SQLITE_CFLAGS) \
                  $(NULL)
 
+EXTRA_COMPONENTS = nsURLClassifier.manifest
 
 # Same as JS components that are run through the pre-processor.
 EXTRA_PP_COMPONENTS = nsUrlClassifierLib.js \

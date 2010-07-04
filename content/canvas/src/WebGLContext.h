@@ -283,6 +283,14 @@ public:
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool b) { return NS_OK; };
+    NS_IMETHOD SetIsIPC(PRBool b) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD Redraw(const gfxRect&) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD Swap(mozilla::ipc::Shmem& aBack,
+                    PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
+                    { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD Swap(PRUint32 nativeID,
+                    PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
+                    { return NS_ERROR_NOT_IMPLEMENTED; }
 
     nsresult SynthesizeGLError(WebGLenum err);
     nsresult SynthesizeGLError(WebGLenum err, const char *fmt, ...);
@@ -290,6 +298,9 @@ public:
     nsresult ErrorInvalidEnum(const char *fmt = 0, ...);
     nsresult ErrorInvalidOperation(const char *fmt = 0, ...);
     nsresult ErrorInvalidValue(const char *fmt = 0, ...);
+    nsresult ErrorInvalidEnumInfo(const char *info) {
+        return ErrorInvalidEnum("%s: invalid enum value", info);
+    }
 
     already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *manager);
     void MarkContextClean() { }
@@ -316,10 +327,17 @@ protected:
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRUint32 count);
-    static PRBool ValidateCapabilityEnum(WebGLenum cap);
-    static PRBool ValidateBlendEquationEnum(WebGLuint cap);
-    static PRBool ValidateBlendFuncDstEnum(WebGLuint mode);
-    static PRBool ValidateBlendFuncSrcEnum(WebGLuint mode);
+    PRBool ValidateCapabilityEnum(WebGLenum cap, const char *info);
+    PRBool ValidateBlendEquationEnum(WebGLuint cap, const char *info);
+    PRBool ValidateBlendFuncDstEnum(WebGLuint mode, const char *info);
+    PRBool ValidateBlendFuncSrcEnum(WebGLuint mode, const char *info);
+    PRBool ValidateTextureTargetEnum(WebGLenum target, const char *info);
+    PRBool ValidateComparisonEnum(WebGLenum target, const char *info);
+    PRBool ValidateStencilOpEnum(WebGLenum action, const char *info);
+    PRBool ValidateFaceEnum(WebGLenum target, const char *info);
+    PRBool ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
+                                      PRUint32 *texelSize, const char *info);
+
     void Invalidate();
 
     void MakeContextCurrent() { gl->MakeCurrent(); }

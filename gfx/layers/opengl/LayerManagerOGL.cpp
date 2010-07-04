@@ -62,22 +62,6 @@ using namespace mozilla::gl;
 
 int LayerManagerOGLProgram::sCurrentProgramKey = 0;
 
-static void
-DumpLayerAndChildren(LayerOGL *l, int advance = 0)
-{
-  for (int i = 0; i < advance; i++)
-    fprintf(stderr, "  ");
-
-  fprintf(stderr, "%p: Layer type %d\n", l, l->GetType());
-
-  l = l->GetFirstChildOGL();
-  while (l) {
-    DumpLayerAndChildren(l, advance+1);
-    Layer *genl =  l->GetLayer()->GetNextSibling();
-    l = genl ? static_cast<LayerOGL*>(genl->ImplData()) : nsnull;
-  }
-}
-
 /**
  * LayerManagerOGL
  */
@@ -94,6 +78,8 @@ LayerManagerOGL::~LayerManagerOGL()
 {
   if (mGLContext)
     mGLContext->MakeCurrent();
+
+  mRoot = NULL;
 
   for (unsigned int i = 0; i < mPrograms.Length(); ++i)
     delete mPrograms[i];

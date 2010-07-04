@@ -606,13 +606,6 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
     if(!wrapper->HasMutatedSet())
         return JS_TRUE;
 
-    // Since we might be using this in the helper case, we check to
-    // see if this is all avoidable.
-
-    if(wrapper->GetScriptableInfo() &&
-       wrapper->GetScriptableInfo()->GetFlags().DontEnumStaticProps())
-        return JS_TRUE;
-
     XPCNativeSet* set = wrapper->GetSet();
     XPCNativeSet* protoSet = wrapper->HasProto() ?
                                 wrapper->GetProto()->GetSet() : nsnull;
@@ -1316,8 +1309,9 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     if(si->GetFlags().WantNewEnumerate())
     {
-        if(enum_op == JSENUMERATE_INIT &&
-           !si->GetFlags().DontEnumStaticProps() &&
+        if(((enum_op == JSENUMERATE_INIT &&
+             !si->GetFlags().DontEnumStaticProps()) ||
+            enum_op == JSENUMERATE_INIT_ALL) &&
            wrapper->HasMutatedSet() &&
            !XPC_WN_Shared_Enumerate(cx, obj))
         {
@@ -1331,8 +1325,11 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         rv = si->GetCallback()->
             NewEnumerate(wrapper, cx, obj, enum_op, statep, idp, &retval);
         
-        if(enum_op == JSENUMERATE_INIT && (NS_FAILED(rv) || !retval))
+        if((enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL) &&
+           (NS_FAILED(rv) || !retval))
+        {
             *statep = JSVAL_NULL;
+        }
         
         if(NS_FAILED(rv))
             return Throw(rv, cx);
@@ -1341,9 +1338,10 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     if(si->GetFlags().WantEnumerate())
     {
-        if(enum_op == JSENUMERATE_INIT)
+        if(enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL)
         {
-            if(!si->GetFlags().DontEnumStaticProps() &&
+            if((enum_op == JSENUMERATE_INIT_ALL ||
+                !si->GetFlags().DontEnumStaticProps()) &&
                wrapper->HasMutatedSet() &&
                !XPC_WN_Shared_Enumerate(cx, obj))
             {

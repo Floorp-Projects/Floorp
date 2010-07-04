@@ -1574,6 +1574,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
   switch(enum_op) {
   case JSENUMERATE_INIT:
+  case JSENUMERATE_INIT_ALL:
     state = new NPObjectEnumerateState();
     if (!state) {
       ThrowJSException(cx, "Memory allocation failed for "

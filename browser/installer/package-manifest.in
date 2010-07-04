@@ -105,7 +105,7 @@
 #endif
 
 ; [Components]
-@BINPATH@/components/components.list
+@BINPATH@/components/components.manifest
 @BINPATH@/components/alerts.xpt
 #ifdef ACCESSIBILITY
 #ifdef XP_WIN32
@@ -119,7 +119,6 @@
 @BINPATH@/components/autocomplete.xpt
 @BINPATH@/components/autoconfig.xpt
 @BINPATH@/components/browsercompsbase.xpt
-@BINPATH@/components/browserplaces.xpt
 @BINPATH@/components/browser-feeds.xpt
 @BINPATH@/components/caps.xpt
 @BINPATH@/components/chardet.xpt
@@ -265,70 +264,104 @@
 @BINPATH@/components/zipwriter.xpt
 
 ; JavaScript components
+@BINPATH@/components/FeedProcessor.manifest
 @BINPATH@/components/FeedProcessor.js
+@BINPATH@/components/BrowserFeeds.manifest
 @BINPATH@/components/FeedConverter.js
 @BINPATH@/components/FeedWriter.js
+@BINPATH@/components/fuelApplication.manifest
 @BINPATH@/components/fuelApplication.js
 @BINPATH@/components/WebContentConverter.js
+@BINPATH@/components/BrowserComponents.manifest
 @BINPATH@/components/nsBrowserContentHandler.js
 @BINPATH@/components/nsBrowserGlue.js
+@BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
 @BINPATH@/components/nsMicrosummaryService.js
-@BINPATH@/components/nsPlacesTransactionsService.js
+@BINPATH@/components/BrowserPlaces.manifest
+@BINPATH@/components/nsPrivateBrowsingService.manifest
 @BINPATH@/components/nsPrivateBrowsingService.js
+@BINPATH@/components/toolkitsearch.manifest
 @BINPATH@/components/nsSearchService.js
 @BINPATH@/components/nsSearchSuggestions.js
+@BINPATH@/components/nsTryToClose.manifest
 @BINPATH@/components/nsTryToClose.js
+@BINPATH@/components/passwordmgr.manifest
 @BINPATH@/components/nsLoginInfo.js
 @BINPATH@/components/nsLoginManager.js
 @BINPATH@/components/nsLoginManagerPrompter.js
 @BINPATH@/components/storage-Legacy.js
 @BINPATH@/components/storage-mozStorage.js
 @BINPATH@/components/crypto-SDR.js
+@BINPATH@/components/jsconsole-clhandler.manifest
 @BINPATH@/components/jsconsole-clhandler.js
 #ifdef MOZ_GTK2
+@BINPATH@/components/nsFilePicker.manifest
 @BINPATH@/components/nsFilePicker.js
 #endif
+@BINPATH@/components/nsHelperAppDlg.manifest
 @BINPATH@/components/nsHelperAppDlg.js
+@BINPATH@/components/nsDownloadManagerUI.manifest
 @BINPATH@/components/nsDownloadManagerUI.js
+@BINPATH@/components/nsProxyAutoConfig.manifest
 @BINPATH@/components/nsProxyAutoConfig.js
+@BINPATH@/components/NetworkGeolocationProvider.manifest
 @BINPATH@/components/NetworkGeolocationProvider.js
+@BINPATH@/components/GPSDGeolocationProvider.manifest
 @BINPATH@/components/GPSDGeolocationProvider.js
+@BINPATH@/components/nsSidebar.manifest
 @BINPATH@/components/nsSidebar.js
+@BINPATH@/components/extensions.manifest
 @BINPATH@/components/addonManager.js
 @BINPATH@/components/amContentHandler.js
 @BINPATH@/components/amWebInstallListener.js
 @BINPATH@/components/nsBlocklistService.js
 #ifdef MOZ_UPDATER
+@BINPATH@/components/nsUpdateService.manifest
 @BINPATH@/components/nsUpdateService.js
 @BINPATH@/components/nsUpdateServiceStub.js
 #endif
+@BINPATH@/components/nsUpdateTimerManager.manifest
 @BINPATH@/components/nsUpdateTimerManager.js
-@BINPATH@/components/pluginGlue.js
+@BINPATH@/components/pluginGlue.manifest
+@BINPATH@/components/nsSessionStore.manifest
 @BINPATH@/components/nsSessionStartup.js
 @BINPATH@/components/nsSessionStore.js
+@BINPATH@/components/nsURLFormatter.manifest
 @BINPATH@/components/nsURLFormatter.js
 #ifndef XP_OS2
 @BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
 #else
 @BINPATH@/components/brwsrcmp@DLL_SUFFIX@
 #endif
+@BINPATH@/components/txEXSLTRegExFunctions.manifest
 @BINPATH@/components/txEXSLTRegExFunctions.js
+@BINPATH@/components/toolkitplaces.manifest
 @BINPATH@/components/nsLivemarkService.js
 @BINPATH@/components/nsTaggingService.js
 @BINPATH@/components/nsPlacesDBFlush.js
+@BINPATH@/components/nsPlacesAutoComplete.manifest
 @BINPATH@/components/nsPlacesAutoComplete.js
 @BINPATH@/components/nsPlacesExpiration.js
 @BINPATH@/components/PlacesProtocolHandler.js
+@BINPATH@/components/nsDefaultCLH.manifest
 @BINPATH@/components/nsDefaultCLH.js
+@BINPATH@/components/nsContentPrefService.manifest
 @BINPATH@/components/nsContentPrefService.js
+@BINPATH@/components/nsContentDispatchChooser.manifest
 @BINPATH@/components/nsContentDispatchChooser.js
+@BINPATH@/components/nsHandlerService.manifest
 @BINPATH@/components/nsHandlerService.js
+@BINPATH@/components/nsWebHandlerApp.manifest
 @BINPATH@/components/nsWebHandlerApp.js
+@BINPATH@/components/nsBadCertHandler.manifest
 @BINPATH@/components/nsBadCertHandler.js
+@BINPATH@/components/satchel.manifest
 @BINPATH@/components/nsFormAutoComplete.js
 @BINPATH@/components/nsFormHistory.js
+@BINPATH@/components/contentSecurityPolicy.manifest
 @BINPATH@/components/contentSecurityPolicy.js
+@BINPATH@/components/contentAreaDropListener.manifest
 @BINPATH@/components/contentAreaDropListener.js
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts_s.dylib
@@ -336,7 +369,9 @@
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
 #endif
+@BINPATH@/components/nsINIProcessor.manifest
 @BINPATH@/components/nsINIProcessor.js
+@BINPATH@/components/nsPrompter.manifest
 @BINPATH@/components/nsPrompter.js
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/FormNotifier.js
@@ -348,7 +383,9 @@
 @BINPATH@/modules/*
 
 ; Safe Browsing
+@BINPATH@/components/nsSafebrowsingApplication.manifest
 @BINPATH@/components/nsSafebrowsingApplication.js
+@BINPATH@/components/nsURLClassifier.manifest
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
 @BINPATH@/components/url-classifier.xpt
@@ -637,6 +674,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #ifdef WINCE
 #ifdef MOZ_FASTSTART
 @BINPATH@/firefoxfaststart.exe
+@BINPATH@/components/FastStartup.manifest
 @BINPATH@/components/FastStartup.js
 #endif
 #endif

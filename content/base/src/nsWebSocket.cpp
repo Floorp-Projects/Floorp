@@ -1975,9 +1975,8 @@ IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(Close)
   nsRefPtr<nsWebSocketEstablishedConnection> kungfuDeathGrip = this;
 
   if (mOwner->mReadyState == nsIWebSocket::CONNECTING) {
-    // we must not convey any failure information to scripts, so we just
-    // disconnect and maintain the owner WebSocket object in the CONNECTING
-    // state.
+    mOwner->SetReadyState(nsIWebSocket::CLOSING);
+    mOwner->SetReadyState(nsIWebSocket::CLOSED);
     Disconnect();
     return;
   }
@@ -2035,13 +2034,6 @@ nsWebSocketEstablishedConnection::ForceClose()
   // reference until the end of the method
   nsRefPtr<nsWebSocketEstablishedConnection> kungfuDeathGrip = this;
 
-  if (mOwner->mReadyState == nsIWebSocket::CONNECTING) {
-    // we must not convey any failure information to scripts, so we just
-    // disconnect and maintain the owner WebSocket object in the CONNECTING
-    // state.
-    Disconnect();
-    return;
-  }
   mOwner->SetReadyState(nsIWebSocket::CLOSING);
   mOwner->SetReadyState(nsIWebSocket::CLOSED);
   Disconnect();
@@ -3444,12 +3436,6 @@ nsWebSocket::Close()
     nsRefPtr<nsWebSocket> kungfuDeathGrip = this;
 
     mConnection->FailConnection();
-
-    // We need to set the readyState here because mConnection would set it
-    // only if first connected. Also, let the two readyState changes here
-    // for future extensions (for instance an onreadystatechange event)
-    SetReadyState(nsIWebSocket::CLOSING);
-    SetReadyState(nsIWebSocket::CLOSED);
     return NS_OK;
   }
 

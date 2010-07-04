@@ -75,7 +75,7 @@ static const char kRDFParseTypeInteger[] = " NC:parseType=\"Integer\">";
 static const char kRDFParseTypeDate[] = " NC:parseType=\"Date\">";
 static const char kRDFUnknown[] = "><!-- unknown node type -->";
 
-NS_IMETHODIMP
+nsresult
 nsRDFXMLSerializer::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
     if (aOuter)

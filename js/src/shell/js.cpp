@@ -1780,12 +1780,10 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
 
                     for (uint32 i = 0, n = uva->length; i < n; i++) {
                         JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[upvar_base + i]);
-                        uint32 cookie = uva->vector[i];
+                        UpvarCookie cookie = uva->vector[i];
 
                         printf("  %s: {skip:%u, slot:%u},\n",
-                               js_AtomToPrintableString(cx, atom),
-                               UPVAR_FRAME_SKIP(cookie),
-                               UPVAR_FRAME_SLOT(cookie));
+                               js_AtomToPrintableString(cx, atom), cookie.level(), cookie.slot());
                     }
 
                     JS_ARENA_RELEASE(&cx->tempPool, mark);
@@ -2634,6 +2632,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     switch (enum_op) {
       case JSENUMERATE_INIT:
+      case JSENUMERATE_INIT_ALL:
         cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
 
         if (!cpx->isInner && cpx->inner)
@@ -3002,7 +3001,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
     {
         JSAutoCrossCompartmentCall ac;
-        if (sobj->isCrossCompartmentWrapper()) {
+        if (JSCrossCompartmentWrapper::isCrossCompartmentWrapper(sobj)) {
             sobj = sobj->unwrap();
             if (!ac.enter(cx, sobj))
                 return false;
@@ -4380,6 +4379,7 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     switch (enum_op) {
       case JSENUMERATE_INIT:
+      case JSENUMERATE_INIT_ALL:
         if (its_noisy)
             fprintf(gOutFile, "enumerate its properties\n");
 

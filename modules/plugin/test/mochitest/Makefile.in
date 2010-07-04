@@ -110,12 +110,15 @@ _MOCHICHROME_FILES = \
   test_wmode.xul \
   $(NULL)
 
+# Temporarily disable the tests on x86-Linux, see bug 573290.
+ifneq ($(OS_ARCH)_$(TARGET_XPCOM_ABI),Linux_x86-gcc3)
 ifdef MOZ_CRASHREPORTER
 _MOCHICHROME_FILES += \
   test_crash_notify.xul \
   test_crash_notify_no_report.xul \
   test_crash_submit.xul \
   $(NULL)
+endif
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
