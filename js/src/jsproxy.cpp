@@ -264,7 +264,7 @@ JSProxyHandler::construct(JSContext *cx, JSObject *proxy,
     Value fval = GetConstruct(proxy);
     if (fval.isUndefined()) {
         fval = GetCall(proxy);
-        JSObject *obj = JS_New(cx, &fval.asObject(), argc, argv);
+        JSObject *obj = JS_New(cx, &fval.asObject(), argc, Jsvalify(argv));
         if (!obj)
             return false;
         rval->setObject(*obj);
@@ -275,9 +275,9 @@ JSProxyHandler::construct(JSContext *cx, JSObject *proxy,
      * FIXME: The Proxy proposal says to pass undefined as the this argument,
      * but primitive this is not supported yet. See bug 576644.
      */
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(fval));
-    JSObject *thisobj = JSVAL_TO_OBJECT(fval)->getGlobal();
-    return js_InternalCall(cx, thisobj, fval, argc, argv, rval);
+    JS_ASSERT(fval.isObject());
+    JSObject *thisobj = fval.asObject().getGlobal();
+    return InternalCall(cx, thisobj, fval, argc, argv, rval);
 }
 
 void

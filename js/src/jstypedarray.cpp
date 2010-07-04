@@ -680,7 +680,7 @@ class TypedArrayTemplate
          */
         switch (enum_op) {
           case JSENUMERATE_INIT_ALL:
-            *statep = JSVAL_TRUE;
+            statep->setBoolean(true);
             if (idp)
                 *idp = INT_TO_JSID(tarray->length + 1);
             break;
@@ -692,7 +692,7 @@ class TypedArrayTemplate
             break;
 
           case JSENUMERATE_NEXT:
-            if (statep->isSpecificBoolean(true)) {
+            if (statep->isTrue()) {
                 *idp = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
                 statep->setInt32(0);
             } else {
@@ -702,7 +702,7 @@ class TypedArrayTemplate
                     statep->setInt32(index + 1);
                 } else {
                     JS_ASSERT(index == tarray->length);
-                    *statep = JSVAL_NULL;
+                    statep->setNull();
                 }
             }
             break;
