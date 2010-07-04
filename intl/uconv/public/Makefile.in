@@ -49,7 +49,6 @@ EXPORTS		= \
 		nsIPlatformCharset.h \
 		nsIUnicodeDecoder.h \
 		nsIUnicodeEncoder.h \
-		nsICharRepresentable.h \
 		uconvutil.h \
 		nsEncoderDecoderUtils.h \
 		nsUConvCID.h \

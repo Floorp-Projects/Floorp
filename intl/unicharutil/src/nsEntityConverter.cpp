@@ -277,15 +277,3 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityV
 
   return NS_OK;
 }
-
-
-
-nsresult NS_NewEntityConverter(nsISupports** oResult)
-{
-   if(!oResult)
-      return NS_ERROR_NULL_POINTER;
-   *oResult = new nsEntityConverter();
-   if(*oResult)
-      NS_ADDREF(*oResult);
-   return (*oResult) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}

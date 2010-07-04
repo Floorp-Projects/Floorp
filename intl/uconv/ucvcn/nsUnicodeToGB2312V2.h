@@ -75,7 +75,6 @@ protected:
     return NS_OK;
   }   // just make it not abstract;
 
-  NS_IMETHOD FillInfo(PRUint32 *aInfo);
 protected:
   nsGBKConvUtil mUtil;
 };

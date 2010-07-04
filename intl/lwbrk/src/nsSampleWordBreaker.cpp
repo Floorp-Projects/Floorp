@@ -182,31 +182,3 @@ PRInt32 nsSampleWordBreaker::NextWord(
     return NS_WORDBREAKER_NEED_MORE_TEXT;
   return cur;
 }
-
-PRInt32 nsSampleWordBreaker::PrevWord(
-  const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos) 
-{
-  PRInt8 c1, c2;
-  PRUint32 cur = aPos;
-  if (cur == aLen) {
-    if (cur == 0)
-      return NS_WORDBREAKER_NEED_MORE_TEXT;
-    --cur;
-  }
-  c1 = this->GetClass(aText[cur]);
-
-  for(; cur > 0; cur--)
-  {
-     c2 = this->GetClass(aText[cur-1]);
-     if(c2 != c1)
-       break;
-  }
-  if(kWbClassThaiLetter == c1)
-  {
-	// need to call Thai word breaker from here
-	// we should pass the whole Thai segment to the thai word breaker to find a shorter answer
-  }
-  if (!cur)
-    return NS_WORDBREAKER_NEED_MORE_TEXT;
-  return cur;
-}
