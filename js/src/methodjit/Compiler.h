@@ -229,6 +229,7 @@ class Compiler
     bool jsop_callprop_str(JSAtom *atom);
     bool jsop_callprop_generic(JSAtom *atom);
     void jsop_instanceof();
+    void jsop_name(JSAtom *atom);
 
     /* Fast arithmetic. */
     void jsop_binary(JSOp op, VoidStub stub);
