@@ -123,7 +123,7 @@ Drag.prototype = {
     if ( // if we aren't holding down the meta key...
          !Keys.meta
          // and we aren't a tab on top of something else...
-         && !(this.isATabItem && this.item.overlapsWithOtherItems()) ) { 
+         && !(this.item.isATabItem && this.item.overlapsWithOtherItems()) ) { 
       newRect = Trenches.snap(bounds,stationaryCorner,assumeConstantSize,keepProportional);
       if (newRect) { // might be false if no changes were made
         update = true;
