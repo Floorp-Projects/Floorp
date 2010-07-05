@@ -51,26 +51,6 @@ using namespace js;
 using namespace js::mjit;
 
 void
-mjit::Compiler::jsop_bindname(uint32 index)
-{
-    RegisterID reg = frame.allocReg();
-    Address scopeChain(JSFrameReg, offsetof(JSStackFrame, scopeChain));
-    masm.loadData32(scopeChain, reg);
-
-    Address address(reg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
-
-    Jump j = masm.branch32(Assembler::NotEqual, masm.payloadOf(address), Imm32(0));
-
-    stubcc.linkExit(j);
-    stubcc.leave();
-    stubcc.call(stubs::BindName);
-
-    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
-
-    stubcc.rejoin(1);
-}
-
-void
 mjit::Compiler::jsop_bitnot()
 {
     FrameEntry *top = frame.peek(-1);
