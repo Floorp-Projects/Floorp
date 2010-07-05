@@ -5038,7 +5038,7 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
     CallInfo* ci = new (traceAlloc()) CallInfo();
     ci->_address = uintptr_t(inner->code());
     JS_ASSERT(ci->_address);
-    ci->_typesig = ARGTYPE_P | ARGTYPE_P << ARGTYPE_SHIFT;
+    ci->_typesig = CallInfo::typeSig1(ARGTYPE_P, ARGTYPE_P);
     ci->_isPure = 0;
     ci->_storeAccSet = ACC_STORE_ANY;
     ci->_abi = ABI_FASTCALL;
@@ -10647,11 +10647,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
 
     CallInfo* ci = new (traceAlloc()) CallInfo();
     ci->_address = uintptr_t(setflag ? sprop->setterOp() : sprop->getterOp());
-    ci->_typesig = ARGTYPE_I << (0*ARGTYPE_SHIFT) |
-                   ARGTYPE_P << (1*ARGTYPE_SHIFT) |
-                   ARGTYPE_P << (2*ARGTYPE_SHIFT) |
-                   ARGTYPE_P << (3*ARGTYPE_SHIFT) |
-                   ARGTYPE_P << (4*ARGTYPE_SHIFT);
+    ci->_typesig = CallInfo::typeSig4(ARGTYPE_I, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P);
     ci->_isPure = 0;
     ci->_storeAccSet = ACC_STORE_ANY;
     ci->_abi = ABI_CDECL;
@@ -11007,10 +11003,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         args[0] = invokevp_ins;
         args[1] = lir->insImmI(argc);
         args[2] = cx_ins;
-        typesig = ARGTYPE_I << (0*ARGTYPE_SHIFT) |
-                  ARGTYPE_P << (1*ARGTYPE_SHIFT) |
-                  ARGTYPE_I << (2*ARGTYPE_SHIFT) |
-                  ARGTYPE_P << (3*ARGTYPE_SHIFT);
+        typesig = CallInfo::typeSig3(ARGTYPE_I, ARGTYPE_P, ARGTYPE_I, ARGTYPE_P);
     } else {
         int32_t offset = (vplen - 1) * sizeof(jsval);
         native_rval_ins = lir->ins2(LIR_addp, invokevp_ins, INS_CONSTWORD(offset));
@@ -11019,12 +11012,8 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         args[2] = lir->insImmI(argc);
         args[3] = this_ins;
         args[4] = cx_ins;
-        typesig = ARGTYPE_I << (0*ARGTYPE_SHIFT) |
-                  ARGTYPE_P << (1*ARGTYPE_SHIFT) |
-                  ARGTYPE_P << (2*ARGTYPE_SHIFT) |
-                  ARGTYPE_I << (3*ARGTYPE_SHIFT) |
-                  ARGTYPE_P << (4*ARGTYPE_SHIFT) |
-                  ARGTYPE_P << (5*ARGTYPE_SHIFT);
+        typesig = CallInfo::typeSig5(ARGTYPE_I,
+                                     ARGTYPE_P, ARGTYPE_P, ARGTYPE_I, ARGTYPE_P, ARGTYPE_P);
     }
 
     // Generate CallInfo and a JSSpecializedNative structure on the fly.
