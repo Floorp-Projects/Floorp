@@ -384,7 +384,7 @@ class Value
     /*** Constructors ***/
 
     /* N.B. Value's default constructor leaves Value uninitialized */
-    Value() {}
+    Value() { data.asBits = 0; }
 
     Value(NullTag)                  { setNull(); }
     Value(UndefinedTag)             { setUndefined(); }
