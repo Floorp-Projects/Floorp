@@ -327,7 +327,7 @@ public:                                                                       \
     NS_LOG_RELEASE(this, mRefCnt, #_class);                                   \
     if (mRefCnt == 0) {                                                       \
       mRefCnt = 1; /* stabilize */                                            \
-      NS_DELETEXPCOM(this);                                                   \
+      delete this;                                                            \
     }                                                                         \
   }                                                                           \
 protected:                                                                    \
@@ -411,7 +411,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
  * the refcount to |0|.
  */
 #define NS_IMPL_RELEASE(_class) \
-  NS_IMPL_RELEASE_WITH_DESTROY(_class, NS_DELETEXPCOM(this))
+  NS_IMPL_RELEASE_WITH_DESTROY(_class, delete (this))
 
 /**
  * Use this macro to implement the Release method for a given <i>_class</i>
@@ -465,10 +465,10 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
   NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(_class, _basetype, _destroy)
 
 #define NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(_class, _basetype)         \
-  NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(_class, _basetype, NS_DELETEXPCOM(this))
+  NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(_class, _basetype, delete (this))
 
 #define NS_IMPL_CYCLE_COLLECTING_RELEASE(_class)       \
-  NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(_class, _class, NS_DELETEXPCOM(this))
+  NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(_class, _class, delete (this))
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1278,7 +1278,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
     mRefCnt = 1; /* stabilize */                                              \
     /* enable this to find non-threadsafe destructors: */                     \
     /* NS_ASSERT_OWNINGTHREAD(_class); */                                     \
-    NS_DELETEXPCOM(this);                                                     \
+    delete (this);                                                            \
     return 0;                                                                 \
   }                                                                           \
   return count;                                                               \

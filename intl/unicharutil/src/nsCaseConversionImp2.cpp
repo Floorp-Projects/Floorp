@@ -164,7 +164,7 @@ static nsCompressedMap gLowerMap = {
 nsCaseConversionImp2* nsCaseConversionImp2::GetInstance()
 {
   if (!gCaseConv)
-    NS_NEWXPCOM(gCaseConv, nsCaseConversionImp2);
+    gCaseConv = new nsCaseConversionImp2();
   return gCaseConv;
 }
 
