@@ -319,7 +319,7 @@ class SetPropCompiler : public PICStubCompiler
         JS_ASSERT_IF(!sprop->hasDefaultSetter(), obj->getClass() == &js_CallClass);
 
         Jump rebrand;
-        Jump escapedFrame;
+        Jump skipOver;
         if (sprop->hasDefaultSetter()) {
             Address address(pic.objReg, offsetof(JSObject, fslots) + sprop->slot * sizeof(Value));
             if (sprop->slot >= JS_INITIAL_NSLOTS) {
@@ -340,23 +340,37 @@ class SetPropCompiler : public PICStubCompiler
 
             emitStore(masm, address);
         } else {
-            if (!obj->getPrivate())
-                return disable("callobj set with escaped frame");
+            uint16 slot = uint16(sprop->shortid);
 
             /* Guard that the call object has a frame. */
             Address privSlot(pic.objReg, offsetof(JSObject, fslots) +
                                          JSSLOT_PRIVATE * sizeof(Value));
             masm.loadData32(privSlot, pic.shapeReg);
-            escapedFrame = masm.branchTestPtr(Assembler::Zero, pic.shapeReg, pic.shapeReg);
+            Jump escapedFrame = masm.branchTestPtr(Assembler::Zero, pic.shapeReg, pic.shapeReg);
 
-            uint32 bias = 0;
-            uint16 slot = uint16(sprop->shortid);
-            if (sprop->setterOp() == SetCallArg)
-                masm.loadPtr(Address(pic.shapeReg, offsetof(JSStackFrame, argv)), pic.shapeReg);
-            else
-                bias = sizeof(JSStackFrame);
-            Address address(pic.shapeReg, bias + slot * sizeof(Value));
-            emitStore(masm, address);
+            {
+                uint32 bias = 0;
+                if (sprop->setterOp() == SetCallArg)
+                    masm.loadPtr(Address(pic.shapeReg, offsetof(JSStackFrame, argv)), pic.shapeReg);
+                else
+                    bias = sizeof(JSStackFrame);
+                Address address(pic.shapeReg, bias + slot * sizeof(Value));
+                emitStore(masm, address);
+                skipOver = masm.jump();
+            }
+
+            escapedFrame.linkTo(masm.label(), &masm);
+            {
+                if (sprop->setterOp() == SetCallVar) {
+                    JSFunction *fun = js_GetCallObjectFunction(obj);
+                    slot += fun->nargs;
+                }
+                masm.loadPtr(Address(pic.objReg, offsetof(JSObject, dslots)), pic.objReg);
+
+                Address dslot(pic.objReg, slot * sizeof(Value));
+                emitStore(masm, dslot);
+            }
+
             pic.shapeRegHasBaseShape = false;
         }
         Jump done = masm.jump();
@@ -375,7 +389,7 @@ class SetPropCompiler : public PICStubCompiler
         if (sprop->hasDefaultSetter() && (scope->brandedOrHasMethodBarrier()))
             buffer.link(rebrand, pic.slowPathStart);
         if (!sprop->hasDefaultSetter())
-            buffer.link(escapedFrame, pic.slowPathStart);
+            buffer.link(skipOver, pic.storeBack);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generate setprop stub %p %d %d at %p\n",
                    (void*)&pic,
