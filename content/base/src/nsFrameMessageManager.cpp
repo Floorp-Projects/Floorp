@@ -422,7 +422,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         NS_ENSURE_SUCCESS(rv, rv);
 
         js::AutoValueRooter argv(ctx);
-        argv.set(js::ObjectTag(*param));
+        argv.set(OBJECT_TO_JSVAL(param));
 
         JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
         JS_CallFunctionValue(ctx, thisObject,

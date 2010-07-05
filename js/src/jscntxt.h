@@ -2326,7 +2326,7 @@ class AutoValueRooter : private AutoGCRooter
         val = v;
     }
 
-    void jsval_set(jsval v) {
+    void set(jsval v) {
         JS_ASSERT(tag == JSVAL);
         val = js::Valueify(v);
     }
