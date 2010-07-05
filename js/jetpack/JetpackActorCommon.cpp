@@ -457,7 +457,7 @@ JetpackActorCommon::RecvMessage(JSContext* cx,
 
   for (PRUint32 i = 0; i < snapshot.Length(); ++i) {
     Variant* vp = results ? results->AppendElement() : NULL;
-    rval.jsval_set(JSVAL_VOID);
+    rval.set(JSVAL_VOID);
     if (!JS_CallFunctionValue(cx, implGlobal, snapshot[i], argc, argv,
                               rval.jsval_addr())) {
       // If a receiver throws, we drop the exception on the floor.
