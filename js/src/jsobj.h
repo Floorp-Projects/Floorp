@@ -66,6 +66,12 @@ CastAsPropertyOp(JSObject *object)
     return JS_DATA_TO_FUNC_PTR(PropertyOp, object);
 }
 
+static inline JSPropertyOp
+CastAsJSPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
+}
+
 inline JSObject *
 CastAsObject(PropertyOp op)
 {
