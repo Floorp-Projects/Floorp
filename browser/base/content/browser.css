@@ -22,12 +22,18 @@ tabbrowser {
 
 .tabbrowser-tab {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
+}
+
+.tabbrowser-tab:not([pinned]) {
   -moz-box-flex: 100;
+  max-width: 250px;
+  min-width: 100px;
+  width: 0;
 }
 
 .tabbrowser-tab:not([fadein]) {
-  max-width: 1px !important;
-  min-width: 1px !important;
+  max-width: 1px;
+  min-width: 1px;
 }
 
 .tabbrowser-tab[fadein]:not([pinned]) {
@@ -48,9 +54,6 @@ tabbrowser {
 
 .tabbrowser-tab[pinned] {
   position: fixed;
-  -moz-box-flex: 0;
-  min-width: 0 !important;
-  max-width: none !important;
 }
 
 .tabbrowser-tab[pinned] > .tab-text {
