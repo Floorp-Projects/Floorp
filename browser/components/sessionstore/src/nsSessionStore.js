@@ -1937,6 +1937,11 @@ SessionStoreService.prototype = {
       tabs.push(t < openTabCount ?
                 tabbrowser.tabs[t] :
                 tabbrowser.addTab("about:blank", {skipAnimation: true}));
+      // collapse all unselected tabs to prevent flickering when showing the
+      // tabs in the active group by tabcandy
+      if (!tabs[t].selected) {
+        tabs[t].setAttribute("collapsed", "true");
+      }
       // when resuming at startup: add additionally requested pages to the end
       if (!aOverwriteTabs && root._firstTabs) {
         tabbrowser.moveTabTo(tabs[t], t);
