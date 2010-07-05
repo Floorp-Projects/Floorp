@@ -311,6 +311,7 @@ TabChild::GetInterface(const nsIID & aIID, void **aSink)
 
 NS_IMETHODIMP
 TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
+                        PRBool aCalledFromJS,
                         PRBool aPositionSpecified, PRBool aSizeSpecified,
                         nsIURI* aURI, const nsAString& aName,
                         const nsACString& aFeatures, PRBool* aWindowIsNew,
