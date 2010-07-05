@@ -2573,6 +2573,10 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
              if (!str)
                  return false;
              vals[i].setString(str);
+         } else if (JSID_IS_ATOM(id)) {
+             vals[i].setString(JSID_TO_STRING(id));
+         } else {
+             vals[i].setObject(*JSID_TO_OBJECT(id));
          }
     }
 

@@ -230,7 +230,7 @@ ObjectWrapperParent::GetJSObject(JSContext* cx) const
 static ObjectWrapperParent*
 Unwrap(JSContext* cx, JSObject* obj)
 {
-    while (obj->getClass() != &ObjectWrapperParent::sCPOW_JSClass.base)
+    while (obj->getJSClass() != &ObjectWrapperParent::sCPOW_JSClass.base)
         if (!(obj = obj->getProto()))
             return NULL;
     
@@ -275,7 +275,7 @@ ObjectWrapperParent::jsval_to_JSVariant(JSContext* cx, jsval from,
         if (JSVAL_IS_INT(from))
             *to = JSVAL_TO_INT(from);
         else if (JSVAL_IS_DOUBLE(from))
-            *to = *JSVAL_TO_DOUBLE(from);
+            *to = JSVAL_TO_DOUBLE(from);
         else return false;
         return true;
     case JSTYPE_BOOLEAN:
@@ -310,7 +310,7 @@ ObjectWrapperParent::jsval_from_JSVariant(JSContext* cx, const JSVariant& from,
         *to = INT_TO_JSVAL(from.get_int());
         return true;
     case JSVariant::Tdouble:
-        return !!JS_NewDoubleValue(cx, from.get_double(), to);
+        return !!JS_NewNumberValue(cx, from.get_double(), to);
     case JSVariant::Tbool:
         *to = BOOLEAN_TO_JSVAL(from.get_bool());
         return true;
@@ -379,10 +379,12 @@ jsid_from_nsString(JSContext* cx, const nsString& from, jsid* to)
 }
 
 static bool
-jsval_to_nsString(JSContext* cx, jsval from, nsString* to)
+jsval_to_nsString(JSContext* cx, jsid from, nsString* to)
 {
     JSString* str;
-    if ((str = JS_ValueToString(cx, from))) {
+    jsval idval;
+    if (JS_IdToValue(cx, from, &idval) &&
+        (str = JS_ValueToString(cx, idval))) {
         *to = JS_GetStringChars(str);
         return true;
     }
@@ -390,7 +392,7 @@ jsval_to_nsString(JSContext* cx, jsval from, nsString* to)
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_AddProperty(JSContext *cx, JSObject *obj, jsval id,
+ObjectWrapperParent::CPOW_AddProperty(JSContext *cx, JSObject *obj, jsid id,
                                       jsval *vp)
 {
     CPOW_LOG(("Calling CPOW_AddProperty (%s)...",
@@ -417,7 +419,7 @@ ObjectWrapperParent::CPOW_AddProperty(JSContext *cx, JSObject *obj, jsval id,
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, JSObject *obj, jsval id,
+ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, JSObject *obj, jsid id,
                                       jsval *vp)
 {
     CPOW_LOG(("Calling CPOW_GetProperty (%s)...",
@@ -444,7 +446,7 @@ ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, JSObject *obj, jsval id,
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSObject *obj, jsval id,
+ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSObject *obj, jsid id,
                                       jsval *vp)
 {
     CPOW_LOG(("Calling CPOW_SetProperty (%s)...",
@@ -473,7 +475,7 @@ ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSObject *obj, jsval id,
 }    
     
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_DelProperty(JSContext *cx, JSObject *obj, jsval id,
+ObjectWrapperParent::CPOW_DelProperty(JSContext *cx, JSObject *obj, jsid id,
                                       jsval *vp)
 {
     CPOW_LOG(("Calling CPOW_DelProperty (%s)...",
@@ -579,7 +581,7 @@ ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSObject *obj,
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSObject *obj, jsval id,
+ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSObject *obj, jsid id,
                                      uintN flags, JSObject **objp)
 {
     CPOW_LOG(("Calling CPOW_NewResolve (%s)...",
@@ -605,11 +607,9 @@ ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSObject *obj, jsval id,
         !JSObject_from_PObjectWrapperParent(cx, out_pobj, objp))
         return JS_FALSE;
 
-    jsid interned_id;
-    if (*objp &&
-        JS_ValueToId(cx, id, &interned_id)) {
+    if (*objp) {
         AutoResolveFlag arf(cx, *objp);
-        JS_DefinePropertyById(cx, *objp, interned_id, JSVAL_VOID, NULL, NULL,
+        JS_DefinePropertyById(cx, *objp, id, JSVAL_VOID, NULL, NULL,
                               JSPROP_ENUMERATE);
     }
     return JS_TRUE;
@@ -707,7 +707,7 @@ ObjectWrapperParent::CPOW_Construct(JSContext *cx, JSObject *obj, uintN argc,
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSObject *obj, jsval v,
+ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSObject *obj, const jsval *v,
                                       JSBool *bp)
 {
     CPOW_LOG(("Calling CPOW_HasInstance..."));
@@ -722,7 +722,7 @@ ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSObject *obj, jsval v,
 
     JSVariant in_v;
 
-    if (!jsval_to_JSVariant(cx, v, &in_v))
+    if (!jsval_to_JSVariant(cx, *v, &in_v))
         return JS_FALSE;
 
     return (self->Manager()->RequestRunToCompletion() &&
@@ -732,7 +732,7 @@ ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSObject *obj, jsval v,
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_Equality(JSContext *cx, JSObject *obj, jsval v,
+ObjectWrapperParent::CPOW_Equality(JSContext *cx, JSObject *obj, const jsval *v,
                                    JSBool *bp)
 {
     CPOW_LOG(("Calling CPOW_Equality..."));
@@ -743,10 +743,10 @@ ObjectWrapperParent::CPOW_Equality(JSContext *cx, JSObject *obj, jsval v,
     if (!self)
         return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_Equality");
 
-    if (JSVAL_IS_PRIMITIVE(v))
+    if (JSVAL_IS_PRIMITIVE(*v))
         return JS_TRUE;
 
-    ObjectWrapperParent* other = Unwrap(cx, JSVAL_TO_OBJECT(v));
+    ObjectWrapperParent* other = Unwrap(cx, JSVAL_TO_OBJECT(*v));
     if (!other)
         return JS_TRUE;
 

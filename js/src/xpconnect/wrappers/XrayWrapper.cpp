@@ -92,8 +92,8 @@ GetWrappedNative(JSObject *obj)
 static JSObject *
 GetWrappedNativeObjectFromHolder(JSObject *holder)
 {
-    NS_ASSERTION(holder->getClass() == &HolderClass, "expected a native property holder object");
-    return JSVAL_TO_OBJECT(holder->getSlot(JSSLOT_WN_OBJ));
+    NS_ASSERTION(holder->getJSClass() == &HolderClass, "expected a native property holder object");
+    return holder->getSlot(JSSLOT_WN_OBJ).asObjectOrNull();
 }
 
 // Some DOM objects have shared properties that don't have an explicit
@@ -136,11 +136,11 @@ holder_set(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static bool
-ResolveNativeProperty(JSContext *cx, JSObject *holder, jsval id, bool set, JSPropertyDescriptor *desc)
+ResolveNativeProperty(JSContext *cx, JSObject *holder, jsid id, bool set, JSPropertyDescriptor *desc)
 {
     desc->obj = NULL;
 
-    NS_ASSERTION(holder->getClass() == &HolderClass, "expected a native property holder object");
+    NS_ASSERTION(holder->getJSClass() == &HolderClass, "expected a native property holder object");
     JSObject *wnObject = GetWrappedNativeObjectFromHolder(holder);
     XPCWrappedNative *wn = GetWrappedNative(wnObject);
 
@@ -200,7 +200,7 @@ ResolveNativeProperty(JSContext *cx, JSObject *holder, jsval id, bool set, JSPro
             JS_ReportError(cx, "Failed to clone function object for native getter/setter");
             return false;
         }
-        desc->getter = CastAsPropertyOp(JSVAL_TO_OBJECT(fval));
+        desc->getter = CastAsJSPropertyOp(JSVAL_TO_OBJECT(fval));
         desc->attrs |= JSPROP_GETTER;
         if (member->IsWritableAttribute()) {
             desc->setter = desc->getter;;
@@ -269,9 +269,11 @@ wrappedJSObject_getter(JSContext *cx, JSObject *holder, jsid id, jsval *vp)
 
 template <typename Base>
 bool
-XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, JSPropertyDescriptor *desc)
+XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, PropertyDescriptor *desc_in)
 {
-    if (id == XPCJSRuntime::IDX_WRAPPED_JSOBJECT) {
+    JSPropertyDescriptor *desc = Jsvalify(desc_in);
+
+    if (id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
         desc->getter = wrappedJSObject_getter;
@@ -280,7 +282,7 @@ XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid 
         desc->value = JSVAL_VOID;
         return true;
     }
-    if (!Base::getPropertyDescriptor(cx, wrapper, id, desc)) {
+    if (!Base::getPropertyDescriptor(cx, wrapper, id, desc_in)) {
         return false;
     }
     if (desc->obj)
@@ -290,7 +292,7 @@ XrayWrapper<Base>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid 
 
 template <typename Base>
 bool
-XrayWrapper<Base>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, JSPropertyDescriptor *desc)
+XrayWrapper<Base>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, PropertyDescriptor *desc)
 {
     return getPropertyDescriptor(cx, wrapper, id, desc);
 }
