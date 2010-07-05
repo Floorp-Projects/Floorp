@@ -42,8 +42,8 @@
 /*
  * JS public API typedefs.
  */
+#include "jstypes.h"
 #include "jscompat.h"
-#include "jsutil.h"
 #include "jsval.h"
 
 JS_BEGIN_EXTERN_C
@@ -165,8 +165,6 @@ typedef struct JSCrossCompartmentCall JSCrossCompartmentCall;
 typedef class JSWrapper          JSWrapper;
 typedef class JSCrossCompartmentWrapper JSCrossCompartmentWrapper;
 #endif
-
-/************************************************************************/
 
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 
@@ -416,9 +414,6 @@ typedef void
 
 /* JSExtendedClass function pointer typedefs. */
 
-/*
- *
- */
 typedef JSBool
 (* JSEqualityOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
@@ -443,6 +438,7 @@ typedef JSBool
 (* JSNative)(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              jsval *rval);
 
+/* See jsapi.h, the JS_CALLEE, JS_THIS, etc. macros. */
 typedef JSBool
 (* JSFastNative)(JSContext *cx, uintN argc, jsval *vp);
 
