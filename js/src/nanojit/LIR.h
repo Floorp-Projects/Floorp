@@ -173,12 +173,8 @@ namespace nanojit
 
         // aliases
         ARGTYPE_P = PTR_SIZE(ARGTYPE_I, ARGTYPE_Q), // pointer
-        ARGTYPE_B = ARGTYPE_I   // bool
+        ARGTYPE_B = ARGTYPE_I                       // bool
     };
-
-    // In _typesig, each entry is three bits.
-    static const int ARGTYPE_SHIFT = 3;
-    static const int ARGTYPE_MASK = 0x7;
 
     enum IndirectCall {
         CALL_INDIRECT = 0
@@ -315,9 +311,13 @@ namespace nanojit
     static const AccSet ACC_LOAD_ANY     = ACC_ALL;            // synonym
     static const AccSet ACC_STORE_ANY    = ACC_ALL_STORABLE;   // synonym
 
+
     struct CallInfo
     {
     private:
+        // In CallInfo::_typesig, each entry is three bits.
+        static const int TYPESIG_FIELDSZB = 3;
+        static const int TYPESIG_FIELDMASK = 7;
 
     public:
         uintptr_t   _address;
@@ -327,13 +327,55 @@ namespace nanojit
         AccSet      _storeAccSet;   // access regions stored by the function
         verbose_only ( const char* _name; )
 
+        // The following encode 'r func()' through to 'r func(a1, a2, a3, a4, a5, a6, a7, a8)'.
+        static inline uint32_t typeSig0(ArgType r) {
+            return r;
+        }
+        static inline uint32_t typeSig1(ArgType r, ArgType a1) {
+            return a1 << TYPESIG_FIELDSZB*1 | typeSig0(r);
+        }
+        static inline uint32_t typeSig2(ArgType r, ArgType a1, ArgType a2) {
+            return a1 << TYPESIG_FIELDSZB*2 | typeSig1(r, a2);
+        }
+        static inline uint32_t typeSig3(ArgType r, ArgType a1, ArgType a2, ArgType a3) {
+            return a1 << TYPESIG_FIELDSZB*3 | typeSig2(r, a2, a3);
+        }
+        static inline uint32_t typeSig4(ArgType r, ArgType a1, ArgType a2, ArgType a3, ArgType a4) {
+            return a1 << TYPESIG_FIELDSZB*4 | typeSig3(r, a2, a3, a4);
+        }
+        static inline uint32_t typeSig5(ArgType r,  ArgType a1, ArgType a2, ArgType a3,
+                                 ArgType a4, ArgType a5) {
+            return a1 << TYPESIG_FIELDSZB*5 | typeSig4(r, a2, a3, a4, a5);
+        }
+        static inline uint32_t typeSig6(ArgType r, ArgType a1, ArgType a2, ArgType a3,
+                                 ArgType a4, ArgType a5, ArgType a6) {
+            return a1 << TYPESIG_FIELDSZB*6 | typeSig5(r, a2, a3, a4, a5, a6);
+        }
+        static inline uint32_t typeSig7(ArgType r,  ArgType a1, ArgType a2, ArgType a3,
+                                 ArgType a4, ArgType a5, ArgType a6, ArgType a7) {
+            return a1 << TYPESIG_FIELDSZB*7 | typeSig6(r, a2, a3, a4, a5, a6, a7);
+        }
+        static inline uint32_t typeSig8(ArgType r,  ArgType a1, ArgType a2, ArgType a3, ArgType a4,
+                                 ArgType a5, ArgType a6, ArgType a7, ArgType a8) {
+            return a1 << TYPESIG_FIELDSZB*8 | typeSig7(r, a2, a3, a4, a5, a6, a7, a8);
+        }
+        // Encode 'r func(a1, ..., aN))'
+        static inline uint32_t typeSigN(ArgType r, int N, ArgType a[]) {
+            uint32_t typesig = r;
+            for (int i = 0; i < N; i++) {
+                typesig |= a[i] << TYPESIG_FIELDSZB*(N-i);
+            }
+            return typesig;
+        }
+
         uint32_t count_args() const;
         uint32_t count_int32_args() const;
         // Nb: uses right-to-left order, eg. sizes[0] is the size of the right-most arg.
+        // XXX: See bug 525815 for fixing this.
         uint32_t getArgTypes(ArgType* types) const;
 
         inline ArgType returnType() const {
-            return ArgType(_typesig & ARGTYPE_MASK);
+            return ArgType(_typesig & TYPESIG_FIELDMASK);
         }
 
         inline bool isIndirect() const {
@@ -1581,10 +1623,10 @@ namespace nanojit
             CountMap(Allocator& alloc) : HashMap<Key, int>(alloc) {}
             int add(Key k) {
                 int c = 1;
-                if (containsKey(k)) {
-                    c = 1+get(k);
+                if (this->containsKey(k)) {
+                    c = 1+this->get(k);
                 }
-                put(k,c);
+                this->put(k,c);
                 return c;
             }
         };
