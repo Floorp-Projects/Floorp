@@ -2368,6 +2368,40 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     pics.append(pic);
 }
 
+void
+mjit::Compiler::jsop_bindname(uint32 index)
+{
+    PICGenInfo pic(ic::PICInfo::BIND);
+
+    pic.shapeReg = frame.allocReg();
+    pic.objReg = frame.allocReg();
+    pic.typeReg = Registers::ReturnReg;
+    pic.atom = script->getAtom(index);
+    pic.hasTypeCheck = false;
+    pic.hotPathBegin = masm.label();
+
+    Address parent(pic.objReg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
+    masm.loadData32(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+
+    pic.shapeGuard = masm.label();
+    Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(parent), ImmPtr(0));
+    {
+        pic.slowPathStart = stubcc.masm.label();
+        stubcc.linkExit(j);
+        stubcc.leave();
+        stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
+        pic.callReturn = stubcc.call(ic::BindName);
+    }
+
+    pic.storeBack = masm.label();
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, pic.objReg);
+    frame.freeReg(pic.shapeReg);
+
+    stubcc.rejoin(1);
+
+    pics.append(pic);
+}
+
 #else /* ENABLE_PIC */
 
 void
@@ -2394,6 +2428,26 @@ void
 mjit::Compiler::jsop_setprop(JSAtom *atom)
 {
     jsop_setprop_slow(atom);
+}
+
+void
+mjit::Compiler::jsop_bindname(uint32 index)
+{
+    RegisterID reg = frame.allocReg();
+    Address scopeChain(JSFrameReg, offsetof(JSStackFrame, scopeChain));
+    masm.loadData32(scopeChain, reg);
+
+    Address address(reg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
+
+    Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(address), ImmPtr(0));
+
+    stubcc.linkExit(j);
+    stubcc.leave();
+    stubcc.call(stubs::BindName);
+
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
+
+    stubcc.rejoin(1);
 }
 #endif
 
