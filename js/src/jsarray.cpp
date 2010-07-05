@@ -3229,7 +3229,7 @@ js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
 }
 
 JS_FRIEND_API(JSObject *)
-js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, jsval **vector)
+js_NewArrayObjectWithCapacity(JSContext *cx, uint32 capacity, jsval **vector)
 {
     JSObject *obj = js_NewArrayObject(cx, capacity, NULL);
     if (!obj)
