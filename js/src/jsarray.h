@@ -254,7 +254,7 @@ js_Array(JSContext* cx, JSObject* obj, uintN argc, js::Value* argv, js::Value* r
  * resulting array has length and count both equal to |capacity|.
  */
 JS_FRIEND_API(JSObject *)
-js_NewArrayObjectWithCapacity(JSContext *cx, uint32 capacity, jsval **vector);
+js_NewArrayObjectWithCapacity(JSContext *cx, uint32_t capacity, jsval **vector);
 
 /*
  * Makes a fast clone of a dense array as long as the array only contains
