@@ -85,10 +85,10 @@ namespace nanojit
     {
         uint32_t argc = 0;
         uint32_t argt = _typesig;
-        argt >>= ARGTYPE_SHIFT;         // remove retType
+        argt >>= TYPESIG_FIELDSZB;      // remove retType
         while (argt) {
             argc++;
-            argt >>= ARGTYPE_SHIFT;
+            argt >>= TYPESIG_FIELDSZB;
         }
         return argc;
     }
@@ -97,12 +97,12 @@ namespace nanojit
     {
         uint32_t argc = 0;
         uint32_t argt = _typesig;
-        argt >>= ARGTYPE_SHIFT;     // remove retType
+        argt >>= TYPESIG_FIELDSZB;      // remove retType
         while (argt) {
-            ArgType a = ArgType(argt & ARGTYPE_MASK);
+            ArgType a = ArgType(argt & TYPESIG_FIELDMASK);
             if (a == ARGTYPE_I || a == ARGTYPE_UI)
                 argc++;
-            argt >>= ARGTYPE_SHIFT;
+            argt >>= TYPESIG_FIELDSZB;
         }
         return argc;
     }
@@ -111,12 +111,12 @@ namespace nanojit
     {
         uint32_t argc = 0;
         uint32_t argt = _typesig;
-        argt >>= ARGTYPE_SHIFT;         // remove retType
+        argt >>= TYPESIG_FIELDSZB;      // remove retType
         while (argt) {
-            ArgType a = ArgType(argt & ARGTYPE_MASK);
+            ArgType a = ArgType(argt & TYPESIG_FIELDMASK);
             argTypes[argc] = a;
             argc++;
-            argt >>= ARGTYPE_SHIFT;
+            argt >>= TYPESIG_FIELDSZB;
         }
         return argc;
     }
@@ -2512,18 +2512,18 @@ namespace nanojit
     static int32_t FASTCALL led(double a, double b) { return a <= b; }
     static int32_t FASTCALL ged(double a, double b) { return a >= b; }
 
-    #define SIG_D_I     (ARGTYPE_D | ARGTYPE_I << ARGTYPE_SHIFT*1)
-    #define SIG_D_UI     (ARGTYPE_D | ARGTYPE_UI << ARGTYPE_SHIFT*1)
-    #define SIG_D_D     (ARGTYPE_D | ARGTYPE_D << ARGTYPE_SHIFT*1)
-    #define SIG_D_DD    (ARGTYPE_D | ARGTYPE_D << ARGTYPE_SHIFT*1 | ARGTYPE_D << ARGTYPE_SHIFT*2)
-    #define SIG_B_DD    (ARGTYPE_B | ARGTYPE_D << ARGTYPE_SHIFT*1 | ARGTYPE_D << ARGTYPE_SHIFT*2)
+    #define SIG_D_I     CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_I)
+    #define SIG_D_UI    CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_UI)
+    #define SIG_D_D     CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_D)
+    #define SIG_D_DD    CallInfo::typeSig2(ARGTYPE_D, ARGTYPE_D, ARGTYPE_D)
+    #define SIG_B_DD    CallInfo::typeSig2(ARGTYPE_B, ARGTYPE_D, ARGTYPE_D)
 
     #define SF_CALLINFO(name, typesig) \
         static const CallInfo name##_ci = \
             { (intptr_t)&name, typesig, ABI_FASTCALL, /*isPure*/1, ACC_NONE verbose_only(, #name) }
 
     SF_CALLINFO(i2d,  SIG_D_I);
-    SF_CALLINFO(ui2d,  SIG_D_UI);
+    SF_CALLINFO(ui2d, SIG_D_UI);
     SF_CALLINFO(negd, SIG_D_D);
     SF_CALLINFO(addd, SIG_D_DD);
     SF_CALLINFO(subd, SIG_D_DD);
