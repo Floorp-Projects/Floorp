@@ -919,7 +919,6 @@ class ScopeNameCompiler : public PICStubCompiler
         RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
         repatcher.relink(pic.fastPathStart.jumpAtOffset(JUMP_OFFSET),
                          pic.slowPathStart);
-        // :FIXME: :TODO: :XXX: :URGENT: re-patch type guard
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
         ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
@@ -1074,6 +1073,134 @@ class ScopeNameCompiler : public PICStubCompiler
             return generateCallStub();
 
         return disable("scope object not handled yet");
+    }
+};
+
+class BindNameCompiler : public PICStubCompiler
+{
+    JSObject *scopeChain;
+    JSAtom *atom;
+    void   *stub;
+
+    static const int32 INLINE_JUMP_OFFSET = 10;
+    static const int32 STUB_JUMP_OFFSET = 5;
+
+  public:
+    BindNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
+                      JSAtom *atom, VoidStubUInt32 stub)
+      : PICStubCompiler("bind", f, script, pic), scopeChain(scopeChain), atom(atom),
+        stub(JS_FUNC_TO_DATA_PTR(void *, stub))
+    { }
+
+    JSObject *disable(const char *reason)
+    {
+        PICStubCompiler::disable(reason, stub);
+        return NULL;
+    }
+
+    static void reset(ic::PICInfo &pic)
+    {
+        RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
+        repatcher.relink(pic.fastPathStart.jumpAtOffset(INLINE_JUMP_OFFSET),
+                         pic.slowPathStart);
+
+        RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
+        ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
+        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, ic::BindName));
+        repatcher.relinkCallerToTrampoline(retPtr, target);
+    }
+
+    bool generateStub(JSObject *obj)
+    {
+        Assembler masm;
+        js::Vector<Jump, 8, ContextAllocPolicy> fails(f.cx);
+
+        /* Guard on the shape of the scope chain. */
+        masm.loadData32(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+        masm.loadShape(pic.objReg, pic.shapeReg);
+        Jump firstShape = masm.branch32(Assembler::NotEqual, pic.shapeReg,
+                                        Imm32(scopeChain->shape()));
+
+        /* Walk up the scope chain. */
+        JSObject *tobj = scopeChain;
+        Address parent(pic.objReg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(Value));
+        while (tobj && tobj != obj) {
+            if (!js_IsCacheableNonGlobalScope(tobj))
+                return disable("non-cacheable obj in scope chain");
+            masm.loadData32(parent, pic.objReg);
+            Jump nullTest = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
+            if (!fails.append(nullTest))
+                return false;
+            masm.loadShape(pic.objReg, pic.shapeReg);
+            Jump shapeTest = masm.branch32(Assembler::NotEqual, pic.shapeReg,
+                                           Imm32(tobj->shape()));
+            tobj = tobj->getParent();
+        }
+        if (tobj != obj)
+            return disable("indirect hit");
+
+        Jump done = masm.jump();
+
+        // All failures flow to here, so there is a common point to patch.
+        for (Jump *pj = fails.begin(); pj != fails.end(); ++pj)
+            pj->linkTo(masm.label(), &masm);
+        firstShape.linkTo(masm.label(), &masm);
+        Label failLabel = masm.label();
+        Jump failJump = masm.jump();
+
+        JSC::ExecutablePool *ep = getExecPool(masm.size());
+        if (!ep) {
+            js_ReportOutOfMemory(f.cx);
+            return false;
+        }
+
+        // :TODO: this can OOM 
+        JSC::LinkBuffer buffer(&masm, ep);
+
+        if (!pic.execPools.append(ep)) {
+            ep->release();
+            js_ReportOutOfMemory(f.cx);
+            return false;
+        }
+
+        buffer.link(failJump, pic.slowPathStart);
+        buffer.link(done, pic.storeBack);
+        CodeLocationLabel cs = buffer.finalizeCodeAddendum();
+        JaegerSpew(JSpew_PICs, "generated %s stub at %p\n", type, cs.executableAddress());
+
+        PICRepatchBuffer repatcher(pic, pic.lastPathStart()); 
+        if (!pic.stubsGenerated)
+            repatcher.relink(pic.shapeGuard + INLINE_JUMP_OFFSET, cs);
+        else
+            repatcher.relink(STUB_JUMP_OFFSET, cs);
+
+        pic.stubsGenerated++;
+        pic.lastStubStart = buffer.locationOf(failLabel);
+
+        if (pic.stubsGenerated == MAX_STUBS)
+            disable("max stubs reached");
+
+        return true;
+    }
+
+    JSObject *update()
+    {
+        JS_ASSERT(scopeChain->getParent());
+
+        JSObject *obj = js_FindIdentifierBase(f.cx, scopeChain, ATOM_TO_JSID(atom));
+        if (!obj)
+            return obj;
+
+        if (!pic.hit) {
+            spew("first hit", "nop");
+            pic.hit = true;
+            return obj;
+        }
+
+        if (!generateStub(obj))
+            return NULL;
+
+        return obj;
     }
 };
 
@@ -1378,18 +1505,50 @@ ic::Name(VMFrame &f, uint32 index)
     f.regs.sp[0] = rval;
 }
 
+static void JS_FASTCALL
+SlowBindName(VMFrame &f, uint32 index)
+{
+    stubs::BindName(f);
+}
+
+void JS_FASTCALL
+ic::BindName(VMFrame &f, uint32 index)
+{
+    JSScript *script = f.fp->script;
+    ic::PICInfo &pic = script->pics[index];
+    JSAtom *atom = pic.atom;
+
+    BindNameCompiler cc(f, script, f.fp->scopeChainObj(), pic, atom, SlowBindName);
+
+    JSObject *obj = cc.update();
+    if (!obj) {
+        cc.disable("error");
+        THROW();
+    }
+
+    f.regs.sp[0].setObject(*obj);
+}
+
 void JS_FASTCALL
 ic::PurgePICs(JSContext *cx, JSScript *script)
 {
     uint32 npics = script->numPICs();
     for (uint32 i = 0; i < npics; i++) {
         ic::PICInfo &pic = script->pics[i];
-        if (pic.kind == ic::PICInfo::SET)
+        switch (pic.kind) {
+          case ic::PICInfo::SET:
             SetPropCompiler::reset(pic);
-        else if (pic.kind == ic::PICInfo::NAME)
+            break;
+          case ic::PICInfo::NAME:
             ScopeNameCompiler::reset(pic);
-        else
+            break;
+          case ic::PICInfo::BIND:
+            BindNameCompiler::reset(pic);
+            break;
+          default:
             GetPropCompiler::reset(pic);
+            break;
+        }
         pic.reset();
     }
 }

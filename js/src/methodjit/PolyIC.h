@@ -70,7 +70,8 @@ struct PICInfo {
         GET,
         CALL,
         SET,
-        NAME
+        NAME,
+        BIND
     };
 
     union {
@@ -94,7 +95,7 @@ struct PICInfo {
         ValueRemat vr;
     } u;
 
-    Kind kind : 2;
+    Kind kind : 3;
 
     // True if register R holds the base object shape along exits from the
     // last stub.
@@ -204,6 +205,7 @@ void JS_FASTCALL GetProp(VMFrame &f, uint32 index);
 void JS_FASTCALL SetProp(VMFrame &f, uint32 index);
 void JS_FASTCALL CallProp(VMFrame &f, uint32 index);
 void JS_FASTCALL Name(VMFrame &f, uint32 index);
+void JS_FASTCALL BindName(VMFrame &f, uint32 index);
 
 }
 } /* namespace mjit */
