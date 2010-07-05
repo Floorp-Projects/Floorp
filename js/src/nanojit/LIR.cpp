@@ -2512,18 +2512,18 @@ namespace nanojit
     static int32_t FASTCALL led(double a, double b) { return a <= b; }
     static int32_t FASTCALL ged(double a, double b) { return a >= b; }
 
-    #define SIG_D_I     typeSig1(ARGTYPE_D, ARGTYPE_I)
-    #define SIG_D_UI    typeSig1(ARGTYPE_D, ARGTYPE_UI)
-    #define SIG_D_D     typeSig1(ARGTYPE_D, ARGTYPE_D)
-    #define SIG_D_DD    typeSig2(ARGTYPE_D, ARGTYPE_D, ARGTYPE_D)
-    #define SIG_B_DD    typeSig2(ARGTYPE_B, ARGTYPE_D, ARGTYPE_D)
+    #define SIG_D_I     CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_I)
+    #define SIG_D_UI    CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_UI)
+    #define SIG_D_D     CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_D)
+    #define SIG_D_DD    CallInfo::typeSig2(ARGTYPE_D, ARGTYPE_D, ARGTYPE_D)
+    #define SIG_B_DD    CallInfo::typeSig2(ARGTYPE_B, ARGTYPE_D, ARGTYPE_D)
 
     #define SF_CALLINFO(name, typesig) \
         static const CallInfo name##_ci = \
             { (intptr_t)&name, typesig, ABI_FASTCALL, /*isPure*/1, ACC_NONE verbose_only(, #name) }
 
     SF_CALLINFO(i2d,  SIG_D_I);
-    SF_CALLINFO(ui2d,  SIG_D_UI);
+    SF_CALLINFO(ui2d, SIG_D_UI);
     SF_CALLINFO(negd, SIG_D_D);
     SF_CALLINFO(addd, SIG_D_DD);
     SF_CALLINFO(subd, SIG_D_DD);
