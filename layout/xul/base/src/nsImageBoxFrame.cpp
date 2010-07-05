@@ -222,8 +222,7 @@ nsImageBoxFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aPrevInFlow)
 {
   if (!mListener) {
-    nsImageBoxListener *listener;
-    NS_NEWXPCOM(listener, nsImageBoxListener);
+    nsImageBoxListener *listener = new nsImageBoxListener();
     NS_ADDREF(listener);
     listener->SetFrame(this);
     listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
