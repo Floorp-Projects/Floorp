@@ -586,11 +586,6 @@
                      ondragleave="homeButtonObserver.onDragLeave(event)"
                      onclick="BrowserGoHome(event);"/>
 
-      <toolbarbutton id="tabcandy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&tabCandyButton.label;" removable="true"
-                     command="Browser:ShowTabCandy"
-                     tooltiptext="&tabCandyButton.tooltip;"/>
-
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location" removable="true">
         <textbox id="urlbar" flex="1"
@@ -810,7 +805,7 @@
              iconsize="small" defaulticonsize="small" lockiconsize="true"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
-             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
+             defaultset="tabbrowser-tabs,new-tab-button,tabcandy-button,tabs-closebutton"
              collapsed="true">
 
       <tabs id="tabbrowser-tabs"
@@ -844,6 +839,12 @@
         <menupopup id="alltabs-popup"
                    position="after_end"/>
       </toolbarbutton>
+
+      <toolbarbutton id="tabcandy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&tabCandyButton.label;"
+                     command="Browser:ShowTabCandy"
+                     tooltiptext="&tabCandyButton.tooltip;" 
+                     removable="true"/>
 
       <toolbarbutton id="tabs-closebutton"
                      class="close-button tabs-closebutton"
