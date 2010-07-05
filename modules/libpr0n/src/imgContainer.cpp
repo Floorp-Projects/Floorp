@@ -2370,12 +2370,18 @@ imgContainer::SyncDecode()
 }
 
 //******************************************************************************
-/* [noscript] void draw(in gfxContext aContext, in gfxGraphicsFilter aFilter,
- * in gfxMatrix aUserSpaceToImageSpace, in gfxRect aFill, in nsIntRect aSubimage,
- * in PRUint32 aFlags); */ 
-NS_IMETHODIMP imgContainer::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, 
-                                 gfxMatrix &aUserSpaceToImageSpace, gfxRect &aFill,
-                                 nsIntRect &aSubimage, PRUint32 aFlags)
+/* [noscript] void draw(in gfxContext aContext,
+ *                      in gfxGraphicsFilter aFilter,
+ *                      [const] in gfxMatrix aUserSpaceToImageSpace,
+ *                      [const] in gfxRect aFill,
+ *                      [const] in nsIntRect aSubimage,
+ *                      in PRUint32 aFlags); */
+NS_IMETHODIMP imgContainer::Draw(gfxContext *aContext,
+                                 gfxPattern::GraphicsFilter aFilter,
+                                 const gfxMatrix &aUserSpaceToImageSpace,
+                                 const gfxRect &aFill,
+                                 const nsIntRect &aSubimage,
+                                 PRUint32 aFlags)
 {
   if (mError)
     return NS_ERROR_FAILURE;
