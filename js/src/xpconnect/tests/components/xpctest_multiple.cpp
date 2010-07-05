@@ -185,7 +185,7 @@ private:
     const char *name;
 };
 
-NS_IMPL_CLASSINFO(xpcTestChild2, NULL, 0, NS_XPCTESTCHILD2_CID);
+NS_IMPL_CLASSINFO(xpcTestChild2, NULL, 0, NS_XPCTESTCHILD2_CID)
 NS_IMPL_ISUPPORTS3_CI(xpcTestChild2,nsIXPCTestChild2,nsIXPCTestParentOne,nsIXPCTestParentTwo)
 
 xpcTestChild2 :: xpcTestChild2() 
