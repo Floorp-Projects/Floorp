@@ -47,8 +47,6 @@
 #include "jsprvtd.h"
 #include "jsdbgapi.h"
 
-JS_BEGIN_EXTERN_C
-
 /*
  * Type of try note associated with each catch or finally block, and also with
  * for-in loops.
@@ -419,7 +417,5 @@ js_GetOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
 extern JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
              JSBool *hasMagic);
-
-JS_END_EXTERN_C
 
 #endif /* jsscript_h___ */
