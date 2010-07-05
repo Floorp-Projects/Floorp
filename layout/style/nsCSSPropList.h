@@ -2186,9 +2186,9 @@ CSS_PROP_QUOTES(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_DISPLAY(
-    -moz-resize,
     resize,
-    MozResize,
+    resize,
+    Resize,
     0,
     Display,
     mResize,
