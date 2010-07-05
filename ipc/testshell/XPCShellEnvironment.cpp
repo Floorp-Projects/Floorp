@@ -737,7 +737,7 @@ FullTrustSecMan::CanAccess(PRUint32 aAction,
                            JSObject * aJSObject,
                            nsISupports *aObj,
                            nsIClassInfo *aClassInfo,
-                           jsval aName,
+                           jsid aName,
                            void * *aPolicy)
 {
     return NS_OK;
@@ -747,7 +747,7 @@ NS_IMETHODIMP
 FullTrustSecMan::CheckPropertyAccess(JSContext * aJSContext,
                                      JSObject * aJSObject,
                                      const char *aClassName,
-                                     jsval aProperty,
+                                     jsid aProperty,
                                      PRUint32 aAction)
 {
     return NS_OK;
