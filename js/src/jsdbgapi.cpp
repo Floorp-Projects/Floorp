@@ -680,6 +680,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 Value *vp = frame.getvp();
                 MakeValueRangeGCSafe(vp, vplen);
                 vp[0].setObject(*closure);
+                vp[1] = NullTag();  // satisfy LeaveTree assert
                 JSStackFrame *fp = frame.getFrame();
                 PodZero(fp);
                 MakeValueRangeGCSafe(fp->slots(), nfixed);
@@ -1588,6 +1589,7 @@ SetupFakeFrame(JSContext *cx, ExecuteFrameGuard &frame, JSFrameRegs &regs, JSObj
     Value *vp = frame.getvp();
     PodZero(vp, vplen);
     vp[0].setObject(*scopeobj);
+    vp[1] = NullTag();  // satisfy LeaveTree assert
 
     JSStackFrame *fp = frame.getFrame();
     PodZero(fp);
