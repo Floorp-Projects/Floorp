@@ -3351,62 +3351,7 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
     XPCNativeMember* member;
     XPCNativeInterface* localIface;
 
-    /* PRUnichar->char->PRUnichar hack is to avoid pulling in i18n code. */
-    if(JSID_IS_STRING(name) &&
-       nsnull != (oldJSStr = JSID_TO_STRING(name)) &&
-       nsnull != (oldStr = (PRUnichar*) JS_GetStringChars(oldJSStr)) &&
-       oldStr[0] != 0 &&
-       oldStr[0] >> 8 == 0 &&
-       nsCRT::IsUpper((char)oldStr[0]) &&
-       nsnull != (newStr = nsCRT::strdup(oldStr)))
-    {
-        newStr[0] = (PRUnichar) nsCRT::ToLower((char)newStr[0]);
-        newJSStr = JS_InternUCString(ccx, (const jschar*)newStr);
-        nsCRT::free(newStr);
-        if (!newJSStr)
-            return;
-
-        jsid id = INTERNED_STRING_TO_JSID(newJSStr);
-        if(set ? set->FindMember(id, &member, &localIface)
-               : NS_PTR_TO_INT32(iface->FindMember(id)))
-        {
-            // found it!
-            const char* ifaceName = set ?
-                    localIface->GetNameString() :
-                    iface->GetNameString();
-            const char* goodName = JS_GetStringBytes(newJSStr);
-            const char* badName = JS_GetStringBytes(oldJSStr);
-            char* locationStr = nsnull;
-
-            nsCOMPtr<nsIException> e;
-            nsXPCException::NewException("", NS_OK, nsnull, nsnull, getter_AddRefs(e));
-
-            if(e)
-            {
-                nsresult rv;
-                nsCOMPtr<nsIStackFrame> loc;
-                rv = e->GetLocation(getter_AddRefs(loc));
-                if(NS_SUCCEEDED(rv) && loc) {
-                    loc->ToString(&locationStr); // failure here leaves it nsnull.
-                }
-            }
-
-            if(locationStr && ifaceName && goodName && badName )
-            {
-                printf("**************************************************\n"
-                       "ERROR: JS code at [%s]\n"
-                       "tried to access nonexistent property called\n"
-                       "\'%s\' on interface of type \'%s\'.\n"
-                       "That interface does however have a property called\n"
-                       "\'%s\'. Did you mean to access that lowercase property?\n"
-                       "Please fix the JS code as appropriate.\n"
-                       "**************************************************\n",
-                        locationStr, badName, ifaceName, goodName);
-            }
-            if(locationStr)
-                nsMemory::Free(locationStr);
-        }
-    }
+    // TODO: remove this all more thoroughly.
 }
 #endif
 
