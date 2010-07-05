@@ -81,7 +81,7 @@ CastAsObject(PropertyOp op)
 inline Value
 CastAsObjectJsval(PropertyOp op)
 {
-    return ObjectTag(*CastAsObject(op));
+    return ObjectValue(*CastAsObject(op));
 }
 
 } /* namespace js */
@@ -127,10 +127,10 @@ struct PropDesc {
     }
 
     JSObject* getterObject() const {
-        return get.isUndefined() ? NULL : &get.asObject();
+        return get.isUndefined() ? NULL : &get.toObject();
     }
     JSObject* setterObject() const {
-        return set.isUndefined() ? NULL : &set.asObject();
+        return set.isUndefined() ? NULL : &set.toObject();
     }
 
     const js::Value &getterValue() const {
@@ -331,7 +331,7 @@ struct JSObject {
     }
 
     uint32 numSlots(void) const {
-        return dslots ? dslots[-1].asPrivateUint32() : (uint32)JS_INITIAL_NSLOTS;
+        return dslots ? dslots[-1].toPrivateUint32() : (uint32)JS_INITIAL_NSLOTS;
     }
 
   private:
@@ -353,14 +353,14 @@ struct JSObject {
     js::Value& getSlotRef(uintN slot) {
         return (slot < JS_INITIAL_NSLOTS)
                ? fslots[slot]
-               : (JS_ASSERT(slot < dslots[-1].asPrivateUint32()),
+               : (JS_ASSERT(slot < dslots[-1].toPrivateUint32()),
                   dslots[slot - JS_INITIAL_NSLOTS]);
     }
 
     const js::Value &getSlot(uintN slot) const {
         return (slot < JS_INITIAL_NSLOTS)
                ? fslots[slot]
-               : (JS_ASSERT(slot < dslots[-1].asPrivateUint32()),
+               : (JS_ASSERT(slot < dslots[-1].toPrivateUint32()),
                   dslots[slot - JS_INITIAL_NSLOTS]);
     }
 
@@ -368,7 +368,7 @@ struct JSObject {
         if (slot < JS_INITIAL_NSLOTS) {
             fslots[slot] = value;
         } else {
-            JS_ASSERT(slot < dslots[-1].asPrivateUint32());
+            JS_ASSERT(slot < dslots[-1].toPrivateUint32());
             dslots[slot - JS_INITIAL_NSLOTS] = value;
         }
     }
@@ -405,7 +405,7 @@ struct JSObject {
     }
 
     JSObject *getParent() const {
-        return fslots[JSSLOT_PARENT].asObjectOrNull();
+        return fslots[JSSLOT_PARENT].toObjectOrNull();
     }
 
     void clearParent() {
@@ -432,7 +432,7 @@ struct JSObject {
 
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        void *priv = fslots[JSSLOT_PRIVATE].asPrivate();
+        void *priv = fslots[JSSLOT_PRIVATE].toPrivate();
         return priv;
     }
 
@@ -444,8 +444,8 @@ struct JSObject {
 
     static js::Value defaultPrivate(js::Class *clasp) {
         if (clasp->flags & JSCLASS_HAS_PRIVATE)
-            return js::PrivateTag(NULL);
-        return js::UndefinedTag();
+            return js::PrivateValue(NULL);
+        return js::UndefinedValue();
     }
 
     /*
@@ -873,9 +873,9 @@ js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
     ((OBJ_IS_CLONED_BLOCK(obj) ? obj->getProto() : obj)->scope()->entryCount)
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
-    obj->getSlot(JSSLOT_BLOCK_DEPTH).asInt32()
+    obj->getSlot(JSSLOT_BLOCK_DEPTH).toInt32()
 #define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \
-    obj->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Tag(depth)))
+    obj->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
 
 /*
  * To make sure this slot is well-defined, always call js_NewWithObject to

@@ -63,7 +63,7 @@ GetCall(JSObject *proxy) {
 static inline Value
 GetConstruct(JSObject *proxy) {
     if (proxy->numSlots() <= JSSLOT_PROXY_CONSTRUCT)
-        return UndefinedTag();
+        return UndefinedValue();
     return proxy->getSlot(JSSLOT_PROXY_CONSTRUCT);
 }
 
@@ -234,14 +234,14 @@ JSProxyHandler::fun_toString(JSContext *cx, JSObject *proxy, uintN indent)
     JS_ASSERT(proxy->isProxy());
     Value fval = GetCall(proxy);
     if (proxy->isFunctionProxy() &&
-        (fval.isPrimitive() || !fval.asObject().isFunction())) {
+        (fval.isPrimitive() || !fval.toObject().isFunction())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO,
                              js_Function_str, js_toString_str,
                              "object");
         return NULL;
     }
-    return fun_toStringHelper(cx, &fval.asObject(), indent);
+    return fun_toStringHelper(cx, &fval.toObject(), indent);
 }
 
 bool
@@ -264,7 +264,7 @@ JSProxyHandler::construct(JSContext *cx, JSObject *proxy,
     Value fval = GetConstruct(proxy);
     if (fval.isUndefined()) {
         fval = GetCall(proxy);
-        JSObject *obj = JS_New(cx, &fval.asObject(), argc, Jsvalify(argv));
+        JSObject *obj = JS_New(cx, &fval.toObject(), argc, Jsvalify(argv));
         if (!obj)
             return false;
         rval->setObject(*obj);
@@ -276,7 +276,7 @@ JSProxyHandler::construct(JSContext *cx, JSObject *proxy,
      * but primitive this is not supported yet. See bug 576644.
      */
     JS_ASSERT(fval.isObject());
-    JSObject *thisobj = fval.asObject().getGlobal();
+    JSObject *thisobj = fval.toObject().getGlobal();
     return InternalCall(cx, thisobj, fval, argc, argv, rval);
 }
 
@@ -379,8 +379,8 @@ MakePropertyDescriptorObject(JSContext *cx, jsid id, PropertyDescriptor *desc, V
         return true;
     }
     uintN attrs = desc->attrs;
-    Value getter = (attrs & JSPROP_GETTER) ? CastAsObjectJsval(desc->getter) : Value(UndefinedTag());
-    Value setter = (attrs & JSPROP_SETTER) ? CastAsObjectJsval(desc->setter) : Value(UndefinedTag());
+    Value getter = (attrs & JSPROP_GETTER) ? CastAsObjectJsval(desc->getter) : UndefinedValue();
+    Value setter = (attrs & JSPROP_SETTER) ? CastAsObjectJsval(desc->setter) : UndefinedValue();
     return js_NewPropertyDescriptorObject(cx, id, attrs, getter, setter, desc->value, vp);
 }
 
@@ -399,7 +399,7 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
     if (array.isPrimitive())
         return true;
 
-    JSObject *obj = &array.asObject();
+    JSObject *obj = &array.toObject();
     jsuint length;
     if (!js_GetLengthProperty(cx, obj, &length)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
@@ -466,7 +466,7 @@ ReturnedValueMustNotBePrimitive(JSContext *cx, JSObject *proxy, JSAtom *atom, co
 {
     if (v.isPrimitive()) {
         js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                             JSDVG_SEARCH_STACK, ObjectOrNullTag(proxy), NULL,
+                             JSDVG_SEARCH_STACK, ObjectOrNullValue(proxy), NULL,
                              js_AtomToPrintableString(cx, atom));
         return false;
     }
@@ -477,7 +477,7 @@ static JSObject *
 GetProxyHandlerObject(JSContext *cx, JSObject *proxy)
 {
     JS_ASSERT(OperationInProgress(cx, proxy));
-    return proxy->getProxyPrivate().asObjectOrNull();
+    return proxy->getProxyPrivate().toObjectOrNull();
 }
 
 bool
@@ -587,8 +587,8 @@ JSScriptedProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, 
     JSString *str = js_ValueToString(cx, IdToValue(id));
     if (!str)
         return false;
-    AutoValueRooter tvr(cx, StringTag(str));
-    Value argv[] = { ObjectOrNullTag(receiver), tvr.value() };
+    AutoValueRooter tvr(cx, StringValue(str));
+    Value argv[] = { ObjectOrNullValue(receiver), tvr.value() };
     AutoValueRooter fval(cx);
     if (!DerivedTrap(cx, handler, ATOM(get), fval.addr()))
         return false;
@@ -604,8 +604,8 @@ JSScriptedProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, 
     JSString *str = js_ValueToString(cx, IdToValue(id));
     if (!str)
         return false;
-    AutoValueRooter tvr(cx, StringTag(str));
-    Value argv[] = { ObjectOrNullTag(receiver), tvr.value(), *vp };
+    AutoValueRooter tvr(cx, StringValue(str));
+    Value argv[] = { ObjectOrNullValue(receiver), tvr.value(), *vp };
     AutoValueRooter fval(cx);
     if (!DerivedTrap(cx, handler, ATOM(set), fval.addr()))
         return false;
@@ -961,7 +961,7 @@ JS_FRIEND_API(Class) ObjectProxyClass = {
 JSBool
 proxy_Call(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *proxy = &JS_CALLEE(cx, vp).asObject();
+    JSObject *proxy = &JS_CALLEE(cx, vp).toObject();
     JS_ASSERT(proxy->isProxy());
     return JSProxy::call(cx, proxy, argc, vp);
 }
@@ -969,7 +969,7 @@ proxy_Call(JSContext *cx, uintN argc, Value *vp)
 JSBool
 proxy_Construct(JSContext *cx, JSObject * /*obj*/, uintN argc, Value *argv, Value *rval)
 {
-    JSObject *proxy = &argv[-2].asObject();
+    JSObject *proxy = &argv[-2].toObject();
     JS_ASSERT(proxy->isProxy());
     return JSProxy::construct(cx, proxy, argc, argv, rval);
 }
@@ -1030,12 +1030,12 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
     JSObject *obj = NewObjectWithGivenProto(cx, clasp, proto, parent);
     if (!obj || (construct && !js_EnsureReservedSlots(cx, obj, 0)))
         return NULL;
-    obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateTag(handler));
+    obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
     obj->setSlot(JSSLOT_PROXY_PRIVATE, priv);
     if (fun) {
-        obj->setSlot(JSSLOT_PROXY_CALL, call ? Value(ObjectTag(*call)) : Value(UndefinedTag()));
+        obj->setSlot(JSSLOT_PROXY_CALL, call ? ObjectValue(*call) : UndefinedValue());
         if (construct)
-            obj->setSlot(JSSLOT_PROXY_CONSTRUCT, construct ? Value(ObjectTag(*construct)) : Value(UndefinedTag()));
+            obj->setSlot(JSSLOT_PROXY_CONSTRUCT, construct ? ObjectValue(*construct) : UndefinedValue());
     }
     return obj;
 }
@@ -1047,7 +1047,7 @@ NonNullObject(JSContext *cx, const Value &v)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return NULL;
     }
-    return &v.asObject();
+    return &v.toObject();
 }
 
 static JSBool
@@ -1063,15 +1063,15 @@ proxy_create(JSContext *cx, uintN argc, Value *vp)
         return false;
     JSObject *proto, *parent;
     if (argc > 1 && vp[3].isObject()) {
-        proto = &vp[3].asObject();
+        proto = &vp[3].toObject();
         parent = proto->getParent();
     } else {
         JS_ASSERT(IsFunctionObject(vp[0]));
         proto = NULL;
-        parent = vp[0].asObject().getParent();
+        parent = vp[0].toObject().getParent();
     }
-    JSObject *proxy = NewProxyObject(cx, &JSScriptedProxyHandler::singleton, ObjectTag(*handler),
-                                     proto, parent);
+    JSObject *proxy = NewProxyObject(cx, &JSScriptedProxyHandler::singleton,
+                                     ObjectValue(*handler), proto, parent);
     if (!proxy)
         return false;
 
@@ -1091,7 +1091,7 @@ proxy_createFunction(JSContext *cx, uintN argc, Value *vp)
     if (!(handler = NonNullObject(cx, vp[2])))
         return false;
     JSObject *proto, *parent;
-    parent = vp[0].asObject().getParent();
+    parent = vp[0].toObject().getParent();
     if (!js_GetClassPrototype(cx, parent, JSProto_Function, &proto))
         return false;
     parent = proto->getParent();
@@ -1106,7 +1106,8 @@ proxy_createFunction(JSContext *cx, uintN argc, Value *vp)
             return false;
     }
 
-    JSObject *proxy = NewProxyObject(cx, &JSScriptedProxyHandler::singleton, ObjectTag(*handler),
+    JSObject *proxy = NewProxyObject(cx, &JSScriptedProxyHandler::singleton,
+                                     ObjectValue(*handler),
                                      proto, parent, call, construct);
     if (!proxy)
         return false;
@@ -1174,7 +1175,7 @@ static const uint32 JSSLOT_CALLABLE_CONSTRUCT = JSSLOT_PRIVATE + 1;
 static JSBool
 callable_Call(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
-    JSObject *callable = &argv[-2].asObject();
+    JSObject *callable = &argv[-2].toObject();
     JS_ASSERT(callable->getClass() == &CallableObjectClass);
     const Value &fval = callable->fslots[JSSLOT_CALLABLE_CALL];
     return InternalCall(cx, obj, fval, argc, argv, rval);
@@ -1183,7 +1184,7 @@ callable_Call(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval
 static JSBool
 callable_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
-    JSObject *callable = &argv[-2].asObject();
+    JSObject *callable = &argv[-2].toObject();
     JS_ASSERT(callable->getClass() == &CallableObjectClass);
     Value fval = callable->fslots[JSSLOT_CALLABLE_CONSTRUCT];
     if (fval.isUndefined()) {
@@ -1197,7 +1198,7 @@ callable_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value 
 
         JSObject *proto;
         if (rval->isObject()) {
-            proto = &rval->asObject();
+            proto = &rval->toObject();
         } else {
             if (!js_GetClassPrototype(cx, NULL, JSProto_Object, &proto))
                 return false;

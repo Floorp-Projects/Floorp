@@ -81,7 +81,7 @@ bool_toSource(JSContext *cx, uintN argc, Value *vp)
     char buf[32];
     JS_snprintf(buf, sizeof buf, "(new %s(%s))",
                 js_BooleanClass.name,
-                JS_BOOLEAN_STR(primp->asBoolean()));
+                JS_BOOLEAN_STR(primp->toBoolean()));
     JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;
@@ -96,7 +96,7 @@ bool_toString(JSContext *cx, uintN argc, Value *vp)
     const Value *primp;
     if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &primp))
         return JS_FALSE;
-    JSAtom *atom = cx->runtime->atomState.booleanAtoms[primp->asBoolean() ? 1 : 0];
+    JSAtom *atom = cx->runtime->atomState.booleanAtoms[primp->toBoolean() ? 1 : 0];
     JSString *str = ATOM_TO_STRING(atom);
     if (!str)
         return JS_FALSE;
@@ -149,7 +149,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
                          NULL, boolean_methods, NULL, NULL);
     if (!proto)
         return NULL;
-    proto->setPrimitiveThis(BooleanTag(false));
+    proto->setPrimitiveThis(BooleanValue(false));
     return proto;
 }
 
@@ -174,15 +174,15 @@ js_ValueToBoolean(const Value &v)
     if (v.isObject())
         return JS_TRUE;
     if (v.isString())
-        return v.asString()->length() != 0;
+        return v.toString()->length() != 0;
     if (v.isInt32())
-        return v.asInt32() != 0;
+        return v.toInt32() != 0;
     if (v.isDouble()) {
         jsdouble d;
 
-        d = v.asDouble();
+        d = v.toDouble();
         return !JSDOUBLE_IS_NaN(d) && d != 0;
     }
     JS_ASSERT(v.isBoolean());
-    return v.asBoolean();
+    return v.toBoolean();
 }

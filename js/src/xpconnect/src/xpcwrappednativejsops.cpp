@@ -1507,7 +1507,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     JSStackFrame *fp;
     nsIPrincipal *principal = secMan->GetCxSubjectPrincipalAndFrame(cx, &fp);
 
-    js::AutoValueRooter retval(cx, js::ObjectTag(*obj));
+    js::AutoValueRooter retval(cx, js::ObjectValue(*obj));
 
     if(principal && fp)
     {

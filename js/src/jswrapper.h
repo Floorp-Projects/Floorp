@@ -100,7 +100,7 @@ class JSWrapper : public js::JSProxyHandler {
                                          JSWrapper *handler);
 
     static inline JSObject *wrappedObject(JSObject *wrapper) {
-        return wrapper->getProxyPrivate().asObjectOrNull();
+        return wrapper->getProxyPrivate().toObjectOrNull();
     }
 };
 

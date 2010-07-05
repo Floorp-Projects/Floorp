@@ -59,7 +59,7 @@
  *
  *     { Int32, Double, String, Boolean, Undefined, Null, Object, Magic }
  *
- *   js::Value also contains asX() for each of the the non-singleton types.
+ *   js::Value also contains toX() for each of the non-singleton types.
  *
  * - Magic is a singleton type whose payload contains a JSWhyMagic "reason" for
  *   the magic value. By providing JSWhyMagic values when creating and checking
@@ -77,16 +77,6 @@
  *   To help prevent mistakenly boxing a nullable JSObject* as an object,
  *   Value::setObject takes a JSObject&. (Conversely, Value::asObject returns a
  *   JSObject&. A convenience member Value::setObjectOrNull is provided.
- *
- * - js::Value does not have constructors that accepts the above set of types
- *   since this was found to be a significant source of errors involving
- *   implicit conversions. Instead, the desired type is explicitly stated using
- *   a set of js::XTag classes, where X is one of the above set of types. The
- *   js::XTag constructors are marked 'explicit' which allows the js::Value
- *   constructors to safely be implicit. E.g.:
- *
- *     js::Value v = js::Int32Tag(0);
- *     js_ValueToString(cx, js::DoubleTag(3.5));
  *
  * - JSVAL_VOID is the same as the singleton value of the Undefined type.
  *
@@ -322,83 +312,13 @@ UNBOX_NON_DOUBLE_JSVAL(jsval_layout l, uint64 *out)
 
 namespace js {
 
-struct NullTag {
-    explicit NullTag() {}
-};
-
-struct UndefinedTag {
-    explicit UndefinedTag() {}
-};
-
-struct Int32Tag {
-    explicit Int32Tag(int32 i32) : i32(i32) {}
-    int32 i32;
-};
-
-struct DoubleTag {
-    explicit DoubleTag(double dbl) : dbl(dbl) {}
-    double dbl;
-};
-
-struct NumberTag {
-    explicit NumberTag(double dbl) : dbl(dbl) {}
-    double dbl;
-};
-
-struct StringTag {
-    explicit StringTag(JSString *str) : str(str) {}
-    JSString *str;
-};
-
-struct ObjectTag {
-    explicit ObjectTag(JSObject &obj) : obj(obj) {}
-    JSObject &obj;
-};
-
-struct ObjectOrNullTag {
-    explicit ObjectOrNullTag(JSObject *obj) : obj(obj) {}
-    JSObject *obj;
-};
-
-struct ObjectOrUndefinedTag {
-    /* Interpret null JSObject* as undefined value */
-    explicit ObjectOrUndefinedTag(JSObject *obj) : obj(obj) {}
-    JSObject *obj;
-};
-
-struct BooleanTag {
-    explicit BooleanTag(bool boo) : boo(boo) {}
-    bool boo;
-};
-
-struct PrivateTag {
-    explicit PrivateTag(void *ptr) : ptr(ptr) {}
-    void *ptr;
-};
-
-/******************************************************************************/
-
 class Value
 {
   public:
     /*** Constructors ***/
 
-    /* N.B. Value's default constructor leaves Value uninitialized */
+    /* N.B. the default constructor creates a double. */
     Value() { data.asBits = 0; }
-
-    Value(NullTag)                  { setNull(); }
-    Value(UndefinedTag)             { setUndefined(); }
-    Value(Int32Tag arg)             { setInt32(arg.i32); }
-    Value(DoubleTag arg)            { setDouble(arg.dbl); }
-    Value(StringTag arg)            { setString(arg.str); }
-    Value(BooleanTag arg)           { setBoolean(arg.boo); }
-    Value(ObjectTag arg)            { setObject(arg.obj); }
-    Value(JSWhyMagic arg)           { setMagic(arg); }
-
-    /* Constructers that perform dynamic checks to determine the type */
-    Value(NumberTag arg)            { setNumber(arg.dbl); }
-    Value(ObjectOrNullTag arg)      { setObjectOrNull(arg.obj); }
-    Value(ObjectOrUndefinedTag arg) { setObjectOrUndefined(arg.obj); }
 
     /*** Mutatators ***/
 
@@ -414,7 +334,7 @@ class Value
         data = INT32_TO_JSVAL_IMPL(i);
     }
 
-    int32 &asInt32Ref() {
+    int32 &getInt32Ref() {
         JS_ASSERT(isInt32());
         return data.s.payload.i32;
     }
@@ -423,7 +343,7 @@ class Value
         data = DOUBLE_TO_JSVAL_IMPL(d);
     }
 
-    double &asDoubleRef() {
+    double &getDoubleRef() {
         JS_ASSERT(isDouble());
         return data.asDouble;
     }
@@ -583,32 +503,32 @@ class Value
 
     /*** Extract the value's typed payload ***/
 
-    int32 asInt32() const {
+    int32 toInt32() const {
         JS_ASSERT(isInt32());
         return JSVAL_TO_INT32_IMPL(data);
     }
 
-    double asDouble() const {
+    double toDouble() const {
         JS_ASSERT(isDouble());
         return data.asDouble;
     }
 
-    double asNumber() const {
+    double toNumber() const {
         JS_ASSERT(isNumber());
-        return isDouble() ? asDouble() : double(asInt32());
+        return isDouble() ? toDouble() : double(toInt32());
     }
 
-    JSString *asString() const {
+    JSString *toString() const {
         JS_ASSERT(isString());
         return JSVAL_TO_STRING_IMPL(data);
     }
 
-    JSObject &asObject() const {
+    JSObject &toObject() const {
         JS_ASSERT(isObject());
         return *JSVAL_TO_OBJECT_IMPL(data);
     }
 
-    JSObject *asObjectOrNull() const {
+    JSObject *toObjectOrNull() const {
         JS_ASSERT(isObjectOrNull());
         return JSVAL_TO_OBJECT_IMPL(data);
     }
@@ -618,12 +538,12 @@ class Value
         return JSVAL_TO_GCTHING_IMPL(data);
     }
 
-    bool asBoolean() const {
+    bool toBoolean() const {
         JS_ASSERT(isBoolean());
         return JSVAL_TO_BOOLEAN_IMPL(data);
     }
 
-    uint32 asRawUint32() const {
+    uint32 payloadAsRawUint32() const {
         JS_ASSERT(!isDouble());
         return data.s.payload.u32;
     }
@@ -678,10 +598,6 @@ class Value
      * Privates values are given a type type which ensures they are not marked.
      */
 
-    Value(PrivateTag arg) {
-        setPrivate(arg.ptr);
-    }
-
     bool isUnderlyingTypeOfPrivate() const {
         return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data);
     }
@@ -690,7 +606,7 @@ class Value
         data = PRIVATE_PTR_TO_JSVAL_IMPL(ptr);
     }
 
-    void *asPrivate() const {
+    void *toPrivate() const {
         JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
         return JSVAL_TO_PRIVATE_PTR_IMPL(data);
     }
@@ -699,12 +615,12 @@ class Value
         data = PRIVATE_UINT32_TO_JSVAL_IMPL(ui);
     }
 
-    uint32 asPrivateUint32() const {
+    uint32 toPrivateUint32() const {
         JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
         return JSVAL_TO_PRIVATE_UINT32_IMPL(data);
     }
 
-    uint32 &asPrivateUint32Ref() {
+    uint32 &getPrivateUint32Ref() {
         JS_ASSERT(isDouble());
         return data.s.payload.u32;
     }
@@ -720,6 +636,94 @@ class Value
 
     jsval_layout data;
 } JSVAL_ALIGNMENT;
+
+static JS_ALWAYS_INLINE Value
+NullValue()
+{
+    Value v;
+    v.setNull();
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
+UndefinedValue()
+{
+    Value v;
+    v.setUndefined();
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
+Int32Value(int32 i32)
+{
+    Value v;
+    v.setInt32(i32);
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
+DoubleValue(double dbl)
+{
+    Value v;
+    v.setDouble(dbl);
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
+StringValue(JSString *str)
+{
+    Value v;
+    v.setString(str);
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
+BooleanValue(bool boo)
+{
+    Value v;
+    v.setBoolean(boo);
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
+ObjectValue(JSObject &obj)
+{
+    Value v;
+    v.setObject(obj);
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
+MagicValue(JSWhyMagic why)
+{
+    Value v;
+    v.setMagic(why);
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
+NumberValue(double dbl)
+{
+    Value v;
+    v.setNumber(dbl);
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
+ObjectOrNullValue(JSObject *obj)
+{
+    Value v;
+    v.setObjectOrNull(obj);
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
+PrivateValue(void *ptr)
+{
+    Value v;
+    v.setPrivate(ptr);
+    return v;
+}
 
 /******************************************************************************/
 

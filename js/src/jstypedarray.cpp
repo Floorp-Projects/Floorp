@@ -247,7 +247,7 @@ class TypedArrayGetter {
 inline Value
 getBuffer(TypedArray *tarray)
 {
-    return ObjectTag(*tarray->bufferJS);
+    return ObjectValue(*tarray->bufferJS);
 }
 
 JSBool
@@ -259,7 +259,7 @@ TypedArray::prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 inline Value
 getByteOffset(TypedArray *tarray)
 {
-    return Int32Tag(tarray->byteOffset);
+    return Int32Value(tarray->byteOffset);
 }
 
 JSBool
@@ -271,7 +271,7 @@ TypedArray::prop_getByteOffset(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 inline Value
 getByteLength(TypedArray *tarray)
 {
-    return Int32Tag(tarray->byteLength);
+    return Int32Value(tarray->byteLength);
 }
 
 JSBool
@@ -283,7 +283,7 @@ TypedArray::prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 inline Value
 getLength(TypedArray *tarray)
 {
-    return Int32Tag(tarray->length);
+    return Int32Value(tarray->length);
 }
 
 JSBool
@@ -586,14 +586,14 @@ class TypedArrayTemplate
         }
 
         if (vp->isInt32()) {
-            tarray->setIndex(index, NativeType(vp->asInt32()));
+            tarray->setIndex(index, NativeType(vp->toInt32()));
             return true;
         }
 
         jsdouble d;
 
         if (vp->isDouble()) {
-            d = vp->asDouble();
+            d = vp->toDouble();
         } else if (vp->isNull()) {
             d = 0.0f;
         } else if (vp->isPrimitive()) {
@@ -604,7 +604,7 @@ class TypedArrayTemplate
             } else if (vp->isUndefined()) {
                 d = js_NaN;
             } else {
-                d = (double) vp->asBoolean();
+                d = (double) vp->toBoolean();
             }
         } else {
             // non-primitive assignments become NaN or 0 (for float/int arrays)
@@ -696,7 +696,7 @@ class TypedArrayTemplate
                 *idp = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
                 statep->setInt32(0);
             } else {
-                uint32 index = statep->asInt32();
+                uint32 index = statep->toInt32();
                 if (index < uint32(tarray->length)) {
                     *idp = INT_TO_JSID(index);
                     statep->setInt32(index + 1);
@@ -766,7 +766,7 @@ class TypedArrayTemplate
 
         // figure out the type of the first argument
         if (argv[0].isInt32()) {
-            int32 len = argv[0].asInt32();
+            int32 len = argv[0].toInt32();
             if (len < 0) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_ARRAY_LENGTH);
@@ -814,7 +814,7 @@ class TypedArrayTemplate
                 return false;
             }
 
-            if (!tarray->init(cx, &argv[0].asObject(), byteOffset, length)) {
+            if (!tarray->init(cx, &argv[0].toObject(), byteOffset, length)) {
                 delete tarray;
                 return false;
             }
@@ -1051,10 +1051,10 @@ class TypedArrayTemplate
     nativeFromValue(JSContext *cx, const Value &v)
     {
         if (v.isInt32())
-            return NativeType(v.asInt32());
+            return NativeType(v.toInt32());
 
         if (v.isDouble())
-            return NativeType(v.asDouble());
+            return NativeType(v.toDouble());
 
         if (v.isPrimitive() && !v.isMagic()) {
             jsdouble dval;
@@ -1184,12 +1184,12 @@ class TypedArrayTemplate
     bool
     createBufferWithByteLength(JSContext *cx, int32 bytes)
     {
-        Value argv = Int32Tag(bytes);
+        Value argv = Int32Value(bytes);
         AutoValueRooter tvr(cx);
         if (!ArrayBuffer::create(cx, NULL, 1, &argv, tvr.addr()))
             return false;
 
-        JSObject *obj = &tvr.value().asObject();
+        JSObject *obj = &tvr.value().toObject();
 
         bufferJS = obj;
         buffer = ArrayBuffer::fromJSObject(obj);
@@ -1446,7 +1446,7 @@ js_CreateArrayBuffer(JSContext *cx, jsuint nbytes)
     if (!ArrayBuffer::create(cx, NULL, 1, &vals[0], &vals[1]))
         return NULL;
 
-    return &vals[1].asObject();
+    return &vals[1].toObject();
 }
 
 static inline JSBool
@@ -1499,7 +1499,7 @@ js_CreateTypedArray(JSContext *cx, jsint atype, jsuint nelements)
     if (!TypedArrayConstruct(cx, atype, 1, &vals[0], &vals[1]))
         return NULL;
 
-    return &vals[1].asObject();
+    return &vals[1].toObject();
 }
 
 JS_FRIEND_API(JSObject *)
@@ -1515,7 +1515,7 @@ js_CreateTypedArrayWithArray(JSContext *cx, jsint atype, JSObject *arrayArg)
     if (!TypedArrayConstruct(cx, atype, 1, &vals[0], &vals[1]))
         return NULL;
 
-    return &vals[1].asObject();
+    return &vals[1].toObject();
 }
 
 JS_FRIEND_API(JSObject *)
@@ -1546,7 +1546,7 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
     if (!TypedArrayConstruct(cx, atype, argc, &vals[0], &vals[3]))
         return NULL;
 
-    return &vals[3].asObject();
+    return &vals[3].toObject();
 }
 
 JS_FRIEND_API(JSBool)

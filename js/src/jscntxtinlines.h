@@ -241,7 +241,7 @@ class CompartmentChecker
 
     void check(const js::Value &v) {
         if (v.isObject())
-            check(&v.asObject());
+            check(&v.toObject());
     }
 
     void check(jsval v) {

@@ -95,7 +95,7 @@ JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
 const char *
 js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
 {
-    return js_ValueToPrintableString(cx, StringTag(ATOM_TO_STRING(atom)));
+    return js_ValueToPrintableString(cx, StringValue(ATOM_TO_STRING(atom)));
 }
 
 #define JS_PROTO(name,code,init) const char js_##name##_str[] = #name;
@@ -1157,11 +1157,11 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
 {
     JS_ASSERT(idval.isObject());
     if (obj->isXML()) {
-        *idp = OBJECT_TO_JSID(&idval.asObject());
+        *idp = OBJECT_TO_JSID(&idval.toObject());
         return true;
     }
 
-    if (!js_IsFunctionQName(cx, &idval.asObject(), idp))
+    if (!js_IsFunctionQName(cx, &idval.toObject(), idp))
         return JS_FALSE;
     if (!JSID_IS_VOID(*idp))
         return true;
@@ -1175,13 +1175,13 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
 {
     JS_ASSERT(idval.isObject());
     if (obj->isXML()) {
-        JSObject &idobj = idval.asObject();
+        JSObject &idobj = idval.toObject();
         *idp = OBJECT_TO_JSID(&idobj);
         vp->setObject(idobj);
         return true;
     }
 
-    if (!js_IsFunctionQName(cx, &idval.asObject(), idp))
+    if (!js_IsFunctionQName(cx, &idval.toObject(), idp))
         return JS_FALSE;
     if (!JSID_IS_VOID(*idp)) {
         *vp = IdToValue(*idp);
