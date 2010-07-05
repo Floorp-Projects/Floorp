@@ -1581,10 +1581,10 @@ namespace nanojit
             CountMap(Allocator& alloc) : HashMap<Key, int>(alloc) {}
             int add(Key k) {
                 int c = 1;
-                if (containsKey(k)) {
-                    c = 1+get(k);
+                if (this->containsKey(k)) {
+                    c = 1+this->get(k);
                 }
-                put(k,c);
+                this->put(k,c);
                 return c;
             }
         };
