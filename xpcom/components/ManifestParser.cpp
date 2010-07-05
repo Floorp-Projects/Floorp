@@ -426,6 +426,9 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
   NS_NAMED_LITERAL_STRING(kOsVersion, "osversion");
   NS_NAMED_LITERAL_STRING(kABI, "abi");
 
+  // Obsolete
+  NS_NAMED_LITERAL_STRING(kXPCNativeWrappers, "xpcnativewrappers");
+
   nsAutoString appID;
   nsAutoString appVersion;
   nsAutoString osTarget;
@@ -564,16 +567,24 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
       NS_ConvertASCIItoUTF16 wtoken(token);
 
       if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
-	  CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
+          CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
           CheckStringFlag(kABI, wtoken, abi, stABI) ||
-	  CheckVersionFlag(kOsVersion, wtoken, osVersion, stOsVersion) ||
-	  CheckVersionFlag(kAppVersion, wtoken, appVersion, stAppVersion))
-	continue;
+          CheckVersionFlag(kOsVersion, wtoken, osVersion, stOsVersion) ||
+          CheckVersionFlag(kAppVersion, wtoken, appVersion, stAppVersion))
+        continue;
 
       if (directive->contentflags &&
-	  (CheckFlag(kPlatform, wtoken, platform) ||
-	   CheckFlag(kContentAccessible, wtoken, contentAccessible)))
-	  continue;
+          (CheckFlag(kPlatform, wtoken, platform) ||
+           CheckFlag(kContentAccessible, wtoken, contentAccessible)))
+        continue;
+
+      bool xpcNativeWrappers = true; // Dummy for CheckFlag.
+      if (CheckFlag(kXPCNativeWrappers, wtoken, xpcNativeWrappers)) {
+        LogMessageWithContext(aFile, aPath, line,
+                              "Warning: Ignoring obsolete chrome registration modifier '%s'.",
+                              token);
+        continue;
+      }
 
       LogMessageWithContext(aFile, aPath, line,
                             "Unrecognized chrome manifest modifier '%s'.",
