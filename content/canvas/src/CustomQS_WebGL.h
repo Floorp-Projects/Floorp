@@ -226,7 +226,7 @@ nsICanvasRenderingContextWebGL_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
     js::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
+    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
     // XXX we currently allow passing only 6 args to support the API. Eventually drop that.
