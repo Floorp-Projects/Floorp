@@ -164,7 +164,9 @@ DEFINES += \
   $(addprefix -D,$(filter AVMPLUS%,$(CONFIG))) \
   $(NULL)
 
-ENABLE_TRACEABLE_FLAGS = --enable-traceables
+# TODO: add this back again
+#ENABLE_TRACEABLE_FLAGS = --enable-traceables
+ENABLE_TRACEABLE_FLAGS =
 
 endif # ENABLE_JIT
 

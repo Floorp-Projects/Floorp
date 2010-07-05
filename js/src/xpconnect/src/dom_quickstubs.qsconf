@@ -48,423 +48,423 @@ name = 'DOM'
 # doesn't crash--it may in fact return a plausible wrong answer.
 
 members = [ 
-#    # dom/interfaces/base
-#    #
-#    # Note that many implementations of interfaces in this directory
-#    # use GetCurrentNativeCallContext, notably:
-#    #   - nsIDOMCrypto.{generateCRMFRequest,signText}
-#    #   - nsIDOMLocation.reload
-#    #   - nsIDOMNSHistory.go
-#    #   - nsIDOMJSPluginArray.refresh
-#    #   - nsIDOMWindowInternal.postMessage
-#    #   - nsIDOMJSWindow.{prompt,setTimeout,setInterval,open,openDialog}
-#    #
-#    # (And nsIDOMModalContentWindow.returnValue is an attribute of type
-#    # nsIVariant, which qsgen.py can't handle.)
-#    #
-#    'nsIDOMWindow.name',
-#    'nsIDOMWindow.parent',
-#    'nsIDOMWindow.top',
-#    # Several window properties are magically resolved, including
-#    # location, _content, navigator, document, and window itself.
-#    # These do not need quick stubs.
-#    #'nsIDOMWindow.document',
-#    'nsIDOMWindow.getSelection',
-#    'nsIDOMWindow.scrollByLines',
-#    'nsIDOMJSWindow.dump',
-#    'nsIDOMScreen.top',
-#    'nsIDOMScreen.height',
-#    'nsIDOMScreen.width',
-#    'nsIDOMScreen.left',
-#    'nsIDOMClientRect.*',
-#    'nsIDOMClientRectList.*',
-#    'nsIDOMPaintRequest.*',
-#    'nsIDOMPaintRequestList.*',
-#    # nsLocationSH has ~ALLOW_PROP_MODS_TO_PROTOTYPE, so don't try.
-#    #'nsIDOMLocation.hostname',
-#    #'nsIDOMLocation.href',
-#
-#    # dom/interfaces/canvas
-#    #
-#    # nsIDOMCanvasRenderingContext2D and friends
-#    'nsIDOMCanvasRenderingContext2D.*',
-#    'nsIDOMTextMetrics.*',
-#    'nsIDOMCanvasGradient.*',
-#    'nsIDOMCanvasPattern.*',
-#
-#    # dom/interfaces/core
-#    'nsIDOMCharacterData.data',
-#    'nsIDOMCharacterData.length',
-#    'nsIDOMDocument.documentElement',
-#    'nsIDOMDocument.implementation',
-#    'nsIDOMDocument.getElementsByTagName',
-#    'nsIDOMDocument.doctype',
-#    'nsIDOMDocument.getElementsByTagNameNS',
-#    'nsIDOMDocument.getElementById',
-#    'nsIDOMDocument.createDocumentFragment',
-#    'nsIDOMDocument.createElement',
-#    'nsIDOMDocument.importNode',
-#    'nsIDOMDocument.createTextNode',
-#    'nsIDOMElement.removeAttributeNS',
-#    'nsIDOMElement.removeAttribute',
-#    'nsIDOMElement.getAttribute',
-#    'nsIDOMElement.getElementsByTagName',
-#    'nsIDOMElement.setAttribute',
-#    'nsIDOMElement.getElementsByTagNameNS',
-#    'nsIDOMElement.hasAttributeNS',
-#    'nsIDOMElement.tagName',
-#    'nsIDOMElement.setAttributeNS',
-#    'nsIDOMElement.hasAttribute',
-#    'nsIDOMElement.getAttributeNS',
-#    'nsIDOMNamedNodeMap.item',
-#    'nsIDOMNamedNodeMap.length',
-#    'nsIDOMNode.appendChild',
-#    'nsIDOMNode.nextSibling',
-#    'nsIDOMNode.cloneNode',
-#    'nsIDOMNode.firstChild',
-#    'nsIDOMNode.prefix',
-#    'nsIDOMNode.nodeValue',
-#    'nsIDOMNode.childNodes',
-#    'nsIDOMNode.normalize',
-#    'nsIDOMNode.nodeName',
-#    'nsIDOMNode.namespaceURI',
-#    'nsIDOMNode.hasChildNodes',
-#    'nsIDOMNode.previousSibling',
-#    'nsIDOMNode.nodeType',
-#    'nsIDOMNode.insertBefore',
-#    'nsIDOMNode.replaceChild',
-#    'nsIDOMNode.localName',
-#    'nsIDOMNode.lastChild',
-#    'nsIDOMNode.ownerDocument',
-#    'nsIDOMNode.parentNode',
-#    'nsIDOMNode.removeChild',
-#    'nsIDOMNode.hasAttributes',
-#    'nsIDOMNode.attributes',
-#    'nsIDOMNodeList.*',
-#    'nsIDOMNodeSelector.querySelector',
-#    'nsIDOMNodeSelector.querySelectorAll',
-#    'nsIDOMText.splitText',
-#    'nsIDOM3Document.documentURI',
-#    'nsIDOM3Document.adoptNode',
-#    'nsIDOM3Document.renameNode',
-#    'nsIDOM3Node.*',
-#    'nsIDOMDOMStringList.*',
-#    'nsIDOMDOMTokenList.*',
-#    'nsIDOMDOMSettableTokenList.*',
-#    'nsIDOMNameList.getName',
-#    'nsIDOMNameList.contains',
-#    'nsIDOMNameList.containsNS',
-#    'nsIDOMNameList.length',
-#    'nsIDOMNameList.getNamespaceURI',
-#    'nsIDOMNSDocument.getElementsByClassName',
-#    'nsIDOMNSDocument.title',
-#    'nsIDOMNSDocument.hasFocus',
-#    # This property is treated specially in nsDOMClassInfo in a way that
-#    # would shadow any quick stub.  Also, document.location is a special
-#    # case for security.
-#    #'nsIDOMNSDocument.location',
-#    'nsIDOMNSDocument.elementFromPoint',
-#    'nsIDOMNSDocument.activeElement',
-#    'nsIDOMXULDocument.getBoxObjectFor',
-#    'nsIDOMXMLDocument.evaluateXPointer',
-#    'nsIDOMXMLDocument.evaluateFIXptr',
-#    'nsIDOMNSElement.getClientRects',
-#    'nsIDOMNSElement.getBoundingClientRect',
-#    'nsIDOMNSElement.getElementsByClassName',
-#    'nsIDOMNSElement.scrollWidth',
-#    'nsIDOMNSElement.clientLeft',
-#    'nsIDOMNSElement.clientHeight',
-#    'nsIDOMNSElement.clientWidth',
-#    'nsIDOMNSElement.clientTop',
-#    'nsIDOMNSElement.mozMatchesSelector',
-#
-#    # dom/interfaces/css
-#    'nsIDOMElementCSSInlineStyle.*',
-#    'nsIDOMCSS2Properties.*',
-#    'nsIDOMNSCSS2Properties.*',
-#    'nsIDOMRect.*',
-#    'nsIDOMViewCSS.getComputedStyle',
-#
-#    # dom/interfaces/events
-#    'nsIDOMEventTarget.dispatchEvent',
-#    'nsIDOMEventTarget.removeEventListener',
-#    'nsIDOMNSEventTarget.addEventListener',
-#    'nsIDOMDocumentEvent.*',
-#
-#    'nsIDOMEvent.*',
-#    'nsIDOMMouseEvent.*',
-#    'nsIDOMKeyEvent.*',
-#    'nsIDOMMutationEvent.*',
-#    'nsIDOMDragEvent.*',
-#    'nsIDOMScrollAreaEvent.*',
-#    'nsIDOMNotifyPaintEvent.*',
-#    'nsIDOMMessageEvent.*',
-#    'nsIDOMMouseScrollEvent.*',
-#    'nsIDOMProgressEvent.lengthComputable',
-#    'nsIDOMProgressEvent.loaded',
-#    'nsIDOMProgressEvent.total',
-#    #XXX Can't quickstub initProgressEvent because it has long long parameters.
-#    'nsIDOMNSEvent.originalTarget',
-#    'nsIDOMNSEvent.getPreventDefault',
-#    'nsIDOMNSUIEvent.which',
-#    'nsIDOMNSUIEvent.rangeParent',
-#    'nsIDOMNSUIEvent.rangeOffset',
-#    'nsIDOMNSUIEvent.pageX',
-#    'nsIDOMNSUIEvent.pageY',
-#    'nsIDOMNSUIEvent.isChar',
-#
-#    # dom/interfaces/geolocation - None.
-#
-#    # dom/interfaces/html
-#    'nsIDOMHTMLAnchorElement.href',
-#    'nsIDOMHTMLAnchorElement.rel',
-#    'nsIDOMHTMLAnchorElement.target',
-#    'nsIDOMHTMLAnchorElement.name',
-#    'nsIDOMHTMLBaseElement.href',
-#    'nsIDOMHTMLBaseElement.target',
-#    'nsIDOMHTMLButtonElement.name',
-#    'nsIDOMHTMLButtonElement.form',
-#    'nsIDOMHTMLButtonElement.value',
-#    'nsIDOMHTMLButtonElement.disabled',
-#    'nsIDOMHTMLCollection.item',
-#    # This is shadowed by nsIDOMHTMLOptionsCollection.length,
-#    # but it is also present in other objects where it isn't shadowed.
-#    # Quick stubs handle the shadowing the same as XPConnect.
-#    'nsIDOMHTMLCollection.length',
-#    'nsIDOMHTMLDocument.body',
-#    'nsIDOMHTMLDocument.getElementsByName',
-#    'nsIDOMHTMLDocument.anchors',
-#    'nsIDOMHTMLDocument.links',
-#    'nsIDOMHTMLDocument.title',
-#    'nsIDOMHTMLDocument.URL',
-#    'nsIDOMHTMLDocument.referrer',
-#    'nsIDOMHTMLDocument.forms',
-#    'nsIDOMHTMLDocument.cookie',
-#    'nsIDOMHTMLDocument.images',
-#    'nsIDOMHTMLDocument.write',
-#    'nsIDOMHTMLDocument.writeln',
-#    'nsIDOMHTMLElement.className',
-#    'nsIDOMHTMLElement.id',
-#    'nsIDOMHTMLElement.title',
-#    'nsIDOMHTMLFormElement.elements',
-#    'nsIDOMHTMLFormElement.name',
-#    'nsIDOMHTMLFormElement.submit',
-#    'nsIDOMHTMLFormElement.length',
-#    'nsIDOMHTMLFormElement.target',
-#    'nsIDOMHTMLFormElement.action',
-#    'nsIDOMHTMLFrameElement.src',
-#    'nsIDOMHTMLFrameElement.contentDocument',
-#    'nsIDOMHTMLFrameElement.name',
-#    'nsIDOMHTMLFrameSetElement.rows',
-#    'nsIDOMHTMLFrameSetElement.cols',
-#    'nsIDOMHTMLIFrameElement.src',
-#    'nsIDOMHTMLIFrameElement.contentDocument',
-#    'nsIDOMHTMLImageElement.src',
-#    'nsIDOMHTMLImageElement.name',
-#    'nsIDOMHTMLImageElement.height',
-#    'nsIDOMHTMLImageElement.width',
-#    'nsIDOMHTMLInputElement.defaultChecked',
-#    'nsIDOMHTMLInputElement.disabled',
-#    'nsIDOMHTMLInputElement.select',
-#    'nsIDOMHTMLInputElement.checked',
-#    'nsIDOMNSElement.*',
-#    # Readonly, shadowed by nsIDOMNSHTMLOptionElement.text (below).
-#    #'nsIDOMHTMLOptionElement.text',
-#    'nsIDOMHTMLOptionElement.defaultSelected',
-#    'nsIDOMHTMLOptionElement.value',
-#    'nsIDOMHTMLOptionElement.label',
-#    'nsIDOMHTMLOptionElement.disabled',
-#    'nsIDOMHTMLOptionsCollection.item',
-#    'nsIDOMHTMLOptionsCollection.length',
-#    'nsIDOMHTMLSelectElement.name',
-#    'nsIDOMHTMLSelectElement.form',
-#    'nsIDOMHTMLSelectElement.add',
-#    'nsIDOMHTMLSelectElement.value',
-#    'nsIDOMHTMLSelectElement.disabled',
-#    'nsIDOMHTMLSelectElement.length',
-#    'nsIDOMHTMLSelectElement.remove',
-#    'nsIDOMHTMLSelectElement.selectedIndex',
-#    'nsIDOMHTMLSelectElement.type',
-#    'nsIDOMHTMLSelectElement.options',
-#    'nsIDOMHTMLSelectElement.size',
-#    'nsIDOMHTMLStyleElement.disabled',
-#    'nsIDOMHTMLTableCellElement.colSpan',
-#    'nsIDOMHTMLTableCellElement.headers',
-#    'nsIDOMHTMLTableCellElement.cellIndex',
-#    'nsIDOMHTMLTableCellElement.rowSpan',
-#    'nsIDOMHTMLTableCellElement.abbr',
-#    'nsIDOMHTMLTableCellElement.scope',
-#    'nsIDOMHTMLTableCellElement.noWrap',
-#    'nsIDOMHTMLTableCellElement.width',
-#    'nsIDOMHTMLTableColElement.span',
-#    'nsIDOMHTMLTableColElement.width',
-#    'nsIDOMHTMLTableElement.rows',
-#    'nsIDOMHTMLTableElement.deleteRow',
-#    'nsIDOMHTMLTableElement.summary',
-#    'nsIDOMHTMLTableElement.insertRow',
-#    'nsIDOMHTMLTableRowElement.sectionRowIndex',
-#    'nsIDOMHTMLTableRowElement.rowIndex',
-#    'nsIDOMHTMLTableRowElement.cells',
-#    'nsIDOMHTMLTableRowElement.deleteCell',
-#    'nsIDOMHTMLTableRowElement.insertCell',
-#    'nsIDOMHTMLTableSectionElement.rows',
-#    'nsIDOMHTMLTableSectionElement.insertRow',
-#    'nsIDOMHTMLTableSectionElement.deleteRow',
-#    'nsIDOMHTMLTextAreaElement.rows',
-#    'nsIDOMHTMLTextAreaElement.name',
-#    'nsIDOMHTMLTextAreaElement.form',
-#    'nsIDOMHTMLTextAreaElement.defaultValue',
-#    'nsIDOMHTMLTextAreaElement.cols',
-#    'nsIDOMHTMLTextAreaElement.value',
-#    'nsIDOMHTMLTextAreaElement.type',
-#    'nsIDOMHTMLTextAreaElement.select',
-#    'nsIDOMHTMLTitleElement.text',
-#    'nsIDOMHTMLCanvasElement.width',
-#    'nsIDOMHTMLCanvasElement.height',
-#    'nsIDOMHTMLCanvasElement.getContext',
-#    'nsIDOMHTMLCanvasElement.toDataURL',
-#    'nsIDOMNSHTMLAnchorElement.text',
-#    'nsIDOMNSHTMLAnchorElement.search',
-#    'nsIDOMNSHTMLAnchorElement.hash',
-#    'nsIDOMNSHTMLDocument.width',
-#    'nsIDOMNSHTMLDocument.height',
-#    'nsIDOMNSHTMLDocument.domain',
-#    'nsIDOMNSHTMLDocument.getSelection',
-#    'nsIDOMNSHTMLDocument.designMode',
-#    'nsIDOMNSHTMLElement.contentEditable',
-#    'nsIDOMNSHTMLElement.isContentEditable',
-#    'nsIDOMNSHTMLElement.offsetParent',
-#    'nsIDOMNSHTMLElement.innerHTML',
-#    'nsIDOMNSHTMLElement.offsetLeft',
-#    'nsIDOMNSHTMLElement.offsetTop',
-#    'nsIDOMNSHTMLElement.offsetHeight',
-#    'nsIDOMNSHTMLElement.offsetWidth',
-#    'nsIDOMNSHTMLElement.scrollIntoView',
-#    'nsIDOMNSHTMLFrameElement.contentWindow',
-#    'nsIDOMNSHTMLImageElement.complete',
-#    'nsIDOMNSHTMLInputElement.files',
-#    'nsIDOMNSHTMLInputElement.textLength',
-#    'nsIDOMNSHTMLInputElement.selectionStart',
-#    'nsIDOMNSHTMLInputElement.selectionEnd',
-#    'nsIDOMNSHTMLInputElement.setSelectionRange',
-#    'nsIDOMNSHTMLOptionCollection.selectedIndex',
-#    'nsIDOMNSHTMLOptionCollection.add',
-#    'nsIDOMNSHTMLOptionElement.text',
-#    'nsIDOMNSHTMLSelectElement.item',
-#    'nsIDOMNSHTMLTextAreaElement.setSelectionRange',
-#    'nsIDOMNSHTMLTextAreaElement.selectionStart',
-#    'nsIDOMNSHTMLTextAreaElement.selectionEnd',
-#    'nsIDOMNSHTMLTextAreaElement.textLength',
-#    'nsIDOMNSHTMLTextAreaElement.wrap',
-#
-#    # dom/interfaces/json - None.
-#    # All 4 methods of nsIJSON call GetCurrentNativeCallContext.
-#
-#    # dom/interfaces/load-save - None.
-#
-#    # dom/interfaces/offline - None.
-#
-#    # dom/interfaces/range
-#    'nsIDOMRange.*',
-#
-#    # dom/interfaces/sidebar - None.
-#
-#    # dom/interfaces/smil - None.
-#
-#    # dom/interfaces/storage
-#    'nsIDOMToString.toString',
-#    'nsIDOMStorage.setItem',
-#    'nsIDOMStorage.length',
-#    'nsIDOMStorage.getItem',
-#    'nsIDOMStorage.key',
-#    'nsIDOMStorage.removeItem',
-#    'nsIDOMStorage.clear',
-#    'nsIDOMStorageItem.value',
-#    'nsIDOMStorageWindow.*',
-#
-#    # dom/interfaces/stylesheets - None.
-#
-#    # dom/interfaces/svg - None.
-#
-#    # dom/interfaces/threads - None.
-#
-#    # dom/interfaces/traversal
-#    'nsIDOMDocumentTraversal.createNodeIterator',
-#    'nsIDOMNodeIterator.nextNode',
-#
-#    # dom/interfaces/views
-#    'nsIDOMDocumentView.defaultView',
-#    
-#    # dom/interfaces/xbl - None.
-#
-#    # dom/interfaces/xpath
-#    'nsIDOMXPathEvaluator.evaluate',
-#    'nsIDOMXPathEvaluator.createExpression',
-#    'nsIDOMXPathEvaluator.createNSResolver',
-#    'nsIDOMXPathExpression.evaluate',
-#    'nsIDOMXPathNSResolver.lookupNamespaceURI',
-#    'nsIDOMXPathResult.snapshotItem',
-#    'nsIDOMXPathResult.iterateNext',
-#    'nsIDOMXPathResult.snapshotLength',
-#    'nsIDOMXPathResult.resultType',
-#    'nsIDOMXPathResult.numberValue',
-#    'nsIDOMXPathResult.stringValue',
-#    'nsIDOMXPathResult.booleanValue',
-#    'nsIDOMXPathResult.singleNodeValue',
-#    'nsIDOMNSXPathExpression.evaluateWithContext',
-#
-#    # dom/interfaces/xul - None.
-#
-#    # XHR
-#    'nsIXMLHttpRequest.*',
-#    # nsIXMLHttpRequest.channel is not used on the web, and more
-#    # importantly relies on the CAPS check that quickstubs don't make.
-#    '-nsIXMLHttpRequest.channel',
-#    # nsIXMLHttpRequest.open uses the JS stack
-#    '-nsIXMLHttpRequest.open',
-#    # various XHR things use ACString and AUTF8String and [cstring]
-#    # which quickstubs don't handle as return values (or at all in the
-#    # case of AUTF8String) yet.
-#    '-nsIXMLHttpRequest.statusText',
-#    '-nsIXMLHttpRequest.getAllResponseHeaders',
-#    '-nsIXMLHttpRequest.getResponseHeader',
-#    '-nsIXMLHttpRequest.setRequestHeader',
-#    '-nsIXMLHttpRequest.overrideMimeType',
-#    # nsIXMLHttpRequestUpload doesn't live in its own IDL file, so
-#    # can't be quickstubbed
-#    '-nsIXMLHttpRequest.upload',
-#
-#    # webgl
-#    'nsICanvasRenderingContextWebGL.*',
-#    # These all use GetCurrentNativeCallContext and should be
-#    # custom-quickstubbed.
-#    '-nsICanvasRenderingContextWebGL.getActiveAttrib',
-#    '-nsICanvasRenderingContextWebGL.getActiveUniform',
-#    '-nsICanvasRenderingContextWebGL.getParameter',
-#    '-nsICanvasRenderingContextWebGL.getBufferParameter',
-#    '-nsICanvasRenderingContextWebGL.getFramebufferAttachmentParameter',
-#    '-nsICanvasRenderingContextWebGL.getRenderbufferParameter',
-#    '-nsICanvasRenderingContextWebGL.getProgramParameter',
-#    '-nsICanvasRenderingContextWebGL.texParameterf',
-#    '-nsICanvasRenderingContextWebGL.texParameteri',
-#    '-nsICanvasRenderingContextWebGL.getUniform',
-#    '-nsICanvasRenderingContextWebGL.getVertexAttrib',
-#    '-nsICanvasRenderingContextWebGL.getShaderParameter',
-#
-#    # dom/indexedDB
-#    'nsIIDBCursor.*',
-#    'nsIIDBDatabase.*',
-#    'nsIIDBDatabaseException.*',
-#    'nsIIDBEvent.*',
-#    'nsIIDBErrorEvent.*',
-#    'nsIIDBIndex.*',
-#    'nsIIDBKeyRange.*',
-#    'nsIIDBObjectStore.*',
-#    'nsIIDBRequest.*',
-#    'nsIIDBSuccessEvent.*',
-#    'nsIIDBTransaction.*',
-#    'nsIIDBTransactionEvent.*',
-#    'nsIIDBFactory.*',
+    # dom/interfaces/base
+    #
+    # Note that many implementations of interfaces in this directory
+    # use GetCurrentNativeCallContext, notably:
+    #   - nsIDOMCrypto.{generateCRMFRequest,signText}
+    #   - nsIDOMLocation.reload
+    #   - nsIDOMNSHistory.go
+    #   - nsIDOMJSPluginArray.refresh
+    #   - nsIDOMWindowInternal.postMessage
+    #   - nsIDOMJSWindow.{prompt,setTimeout,setInterval,open,openDialog}
+    #
+    # (And nsIDOMModalContentWindow.returnValue is an attribute of type
+    # nsIVariant, which qsgen.py can't handle.)
+    #
+    'nsIDOMWindow.name',
+    'nsIDOMWindow.parent',
+    'nsIDOMWindow.top',
+    # Several window properties are magically resolved, including
+    # location, _content, navigator, document, and window itself.
+    # These do not need quick stubs.
+    #'nsIDOMWindow.document',
+    'nsIDOMWindow.getSelection',
+    'nsIDOMWindow.scrollByLines',
+    'nsIDOMJSWindow.dump',
+    'nsIDOMScreen.top',
+    'nsIDOMScreen.height',
+    'nsIDOMScreen.width',
+    'nsIDOMScreen.left',
+    'nsIDOMClientRect.*',
+    'nsIDOMClientRectList.*',
+    'nsIDOMPaintRequest.*',
+    'nsIDOMPaintRequestList.*',
+    # nsLocationSH has ~ALLOW_PROP_MODS_TO_PROTOTYPE, so don't try.
+    #'nsIDOMLocation.hostname',
+    #'nsIDOMLocation.href',
+
+    # dom/interfaces/canvas
+    #
+    # nsIDOMCanvasRenderingContext2D and friends
+    'nsIDOMCanvasRenderingContext2D.*',
+    'nsIDOMTextMetrics.*',
+    'nsIDOMCanvasGradient.*',
+    'nsIDOMCanvasPattern.*',
+
+    # dom/interfaces/core
+    'nsIDOMCharacterData.data',
+    'nsIDOMCharacterData.length',
+    'nsIDOMDocument.documentElement',
+    'nsIDOMDocument.implementation',
+    'nsIDOMDocument.getElementsByTagName',
+    'nsIDOMDocument.doctype',
+    'nsIDOMDocument.getElementsByTagNameNS',
+    'nsIDOMDocument.getElementById',
+    'nsIDOMDocument.createDocumentFragment',
+    'nsIDOMDocument.createElement',
+    'nsIDOMDocument.importNode',
+    'nsIDOMDocument.createTextNode',
+    'nsIDOMElement.removeAttributeNS',
+    'nsIDOMElement.removeAttribute',
+    'nsIDOMElement.getAttribute',
+    'nsIDOMElement.getElementsByTagName',
+    'nsIDOMElement.setAttribute',
+    'nsIDOMElement.getElementsByTagNameNS',
+    'nsIDOMElement.hasAttributeNS',
+    'nsIDOMElement.tagName',
+    'nsIDOMElement.setAttributeNS',
+    'nsIDOMElement.hasAttribute',
+    'nsIDOMElement.getAttributeNS',
+    'nsIDOMNamedNodeMap.item',
+    'nsIDOMNamedNodeMap.length',
+    'nsIDOMNode.appendChild',
+    'nsIDOMNode.nextSibling',
+    'nsIDOMNode.cloneNode',
+    'nsIDOMNode.firstChild',
+    'nsIDOMNode.prefix',
+    'nsIDOMNode.nodeValue',
+    'nsIDOMNode.childNodes',
+    'nsIDOMNode.normalize',
+    'nsIDOMNode.nodeName',
+    'nsIDOMNode.namespaceURI',
+    'nsIDOMNode.hasChildNodes',
+    'nsIDOMNode.previousSibling',
+    'nsIDOMNode.nodeType',
+    'nsIDOMNode.insertBefore',
+    'nsIDOMNode.replaceChild',
+    'nsIDOMNode.localName',
+    'nsIDOMNode.lastChild',
+    'nsIDOMNode.ownerDocument',
+    'nsIDOMNode.parentNode',
+    'nsIDOMNode.removeChild',
+    'nsIDOMNode.hasAttributes',
+    'nsIDOMNode.attributes',
+    'nsIDOMNodeList.*',
+    'nsIDOMNodeSelector.querySelector',
+    'nsIDOMNodeSelector.querySelectorAll',
+    'nsIDOMText.splitText',
+    'nsIDOM3Document.documentURI',
+    'nsIDOM3Document.adoptNode',
+    'nsIDOM3Document.renameNode',
+    'nsIDOM3Node.*',
+    'nsIDOMDOMStringList.*',
+    'nsIDOMDOMTokenList.*',
+    'nsIDOMDOMSettableTokenList.*',
+    'nsIDOMNameList.getName',
+    'nsIDOMNameList.contains',
+    'nsIDOMNameList.containsNS',
+    'nsIDOMNameList.length',
+    'nsIDOMNameList.getNamespaceURI',
+    'nsIDOMNSDocument.getElementsByClassName',
+    'nsIDOMNSDocument.title',
+    'nsIDOMNSDocument.hasFocus',
+    # This property is treated specially in nsDOMClassInfo in a way that
+    # would shadow any quick stub.  Also, document.location is a special
+    # case for security.
+    #'nsIDOMNSDocument.location',
+    'nsIDOMNSDocument.elementFromPoint',
+    'nsIDOMNSDocument.activeElement',
+    'nsIDOMXULDocument.getBoxObjectFor',
+    'nsIDOMXMLDocument.evaluateXPointer',
+    'nsIDOMXMLDocument.evaluateFIXptr',
+    'nsIDOMNSElement.*',
+
+    # dom/interfaces/css
+    'nsIDOMElementCSSInlineStyle.*',
+    'nsIDOMCSS2Properties.*',
+    'nsIDOMNSCSS2Properties.*',
+    'nsIDOMRect.*',
+    'nsIDOMViewCSS.getComputedStyle',
+
+    # dom/interfaces/events
+    'nsIDOMEventTarget.dispatchEvent',
+    'nsIDOMEventTarget.removeEventListener',
+    'nsIDOMNSEventTarget.addEventListener',
+    'nsIDOMDocumentEvent.*',
+
+    'nsIDOMEvent.*',
+    'nsIDOMMouseEvent.*',
+    'nsIDOMKeyEvent.*',
+    'nsIDOMMutationEvent.*',
+    'nsIDOMDragEvent.*',
+    'nsIDOMScrollAreaEvent.*',
+    'nsIDOMNotifyPaintEvent.*',
+    'nsIDOMMessageEvent.*',
+    'nsIDOMMouseScrollEvent.*',
+    'nsIDOMProgressEvent.lengthComputable',
+    'nsIDOMProgressEvent.loaded',
+    'nsIDOMProgressEvent.total',
+    #XXX Can't quickstub initProgressEvent because it has long long parameters.
+    'nsIDOMNSEvent.originalTarget',
+    'nsIDOMNSEvent.getPreventDefault',
+    'nsIDOMNSUIEvent.which',
+    'nsIDOMNSUIEvent.rangeParent',
+    'nsIDOMNSUIEvent.rangeOffset',
+    'nsIDOMNSUIEvent.pageX',
+    'nsIDOMNSUIEvent.pageY',
+    'nsIDOMNSUIEvent.isChar',
+
+    # dom/interfaces/geolocation - None.
+
+    # dom/interfaces/html
+    'nsIDOMHTMLAnchorElement.href',
+    'nsIDOMHTMLAnchorElement.rel',
+    'nsIDOMHTMLAnchorElement.target',
+    'nsIDOMHTMLAnchorElement.name',
+    'nsIDOMHTMLBaseElement.href',
+    'nsIDOMHTMLBaseElement.target',
+    'nsIDOMHTMLButtonElement.name',
+    'nsIDOMHTMLButtonElement.form',
+    'nsIDOMHTMLButtonElement.value',
+    'nsIDOMHTMLButtonElement.disabled',
+    'nsIDOMHTMLCollection.item',
+    # This is shadowed by nsIDOMHTMLOptionsCollection.length,
+    # but it is also present in other objects where it isn't shadowed.
+    # Quick stubs handle the shadowing the same as XPConnect.
+    'nsIDOMHTMLCollection.length',
+    'nsIDOMHTMLDocument.body',
+    'nsIDOMHTMLDocument.getElementsByName',
+    'nsIDOMHTMLDocument.anchors',
+    'nsIDOMHTMLDocument.links',
+    'nsIDOMHTMLDocument.title',
+    'nsIDOMHTMLDocument.URL',
+    'nsIDOMHTMLDocument.referrer',
+    'nsIDOMHTMLDocument.forms',
+    'nsIDOMHTMLDocument.cookie',
+    'nsIDOMHTMLDocument.images',
+    'nsIDOMHTMLDocument.write',
+    'nsIDOMHTMLDocument.writeln',
+    'nsIDOMHTMLElement.className',
+    'nsIDOMHTMLElement.id',
+    'nsIDOMHTMLElement.title',
+    'nsIDOMHTMLFormElement.elements',
+    'nsIDOMHTMLFormElement.name',
+    'nsIDOMHTMLFormElement.submit',
+    'nsIDOMHTMLFormElement.length',
+    'nsIDOMHTMLFormElement.target',
+    'nsIDOMHTMLFormElement.action',
+    'nsIDOMHTMLFrameElement.src',
+    'nsIDOMHTMLFrameElement.contentDocument',
+    'nsIDOMHTMLFrameElement.name',
+    'nsIDOMHTMLFrameSetElement.rows',
+    'nsIDOMHTMLFrameSetElement.cols',
+    'nsIDOMHTMLIFrameElement.src',
+    'nsIDOMHTMLIFrameElement.contentDocument',
+    'nsIDOMHTMLImageElement.src',
+    'nsIDOMHTMLImageElement.name',
+    'nsIDOMHTMLImageElement.height',
+    'nsIDOMHTMLImageElement.width',
+    'nsIDOMHTMLInputElement.defaultChecked',
+    'nsIDOMHTMLInputElement.disabled',
+    'nsIDOMHTMLInputElement.select',
+    'nsIDOMHTMLInputElement.checked',
+    'nsIDOMHTMLInputElement.type',
+    'nsIDOMHTMLInputElement.form',
+    'nsIDOMHTMLInputElement.src',
+    'nsIDOMHTMLInputElement.name',
+    'nsIDOMHTMLInputElement.value',
+    'nsIDOMHTMLLinkElement.disabled',
+    'nsIDOMHTMLOptionElement.index',
+    'nsIDOMHTMLOptionElement.selected',
+    'nsIDOMHTMLOptionElement.form',
+    # Readonly, shadowed by nsIDOMNSHTMLOptionElement.text (below).
+    #'nsIDOMHTMLOptionElement.text',
+    'nsIDOMHTMLOptionElement.defaultSelected',
+    'nsIDOMHTMLOptionElement.value',
+    'nsIDOMHTMLOptionElement.label',
+    'nsIDOMHTMLOptionElement.disabled',
+    'nsIDOMHTMLOptionsCollection.item',
+    'nsIDOMHTMLOptionsCollection.length',
+    'nsIDOMHTMLSelectElement.name',
+    'nsIDOMHTMLSelectElement.form',
+    'nsIDOMHTMLSelectElement.add',
+    'nsIDOMHTMLSelectElement.value',
+    'nsIDOMHTMLSelectElement.disabled',
+    'nsIDOMHTMLSelectElement.length',
+    'nsIDOMHTMLSelectElement.remove',
+    'nsIDOMHTMLSelectElement.selectedIndex',
+    'nsIDOMHTMLSelectElement.type',
+    'nsIDOMHTMLSelectElement.options',
+    'nsIDOMHTMLSelectElement.size',
+    'nsIDOMHTMLStyleElement.disabled',
+    'nsIDOMHTMLTableCellElement.colSpan',
+    'nsIDOMHTMLTableCellElement.headers',
+    'nsIDOMHTMLTableCellElement.cellIndex',
+    'nsIDOMHTMLTableCellElement.rowSpan',
+    'nsIDOMHTMLTableCellElement.abbr',
+    'nsIDOMHTMLTableCellElement.scope',
+    'nsIDOMHTMLTableCellElement.noWrap',
+    'nsIDOMHTMLTableCellElement.width',
+    'nsIDOMHTMLTableColElement.span',
+    'nsIDOMHTMLTableColElement.width',
+    'nsIDOMHTMLTableElement.rows',
+    'nsIDOMHTMLTableElement.deleteRow',
+    'nsIDOMHTMLTableElement.summary',
+    'nsIDOMHTMLTableElement.insertRow',
+    'nsIDOMHTMLTableRowElement.sectionRowIndex',
+    'nsIDOMHTMLTableRowElement.rowIndex',
+    'nsIDOMHTMLTableRowElement.cells',
+    'nsIDOMHTMLTableRowElement.deleteCell',
+    'nsIDOMHTMLTableRowElement.insertCell',
+    'nsIDOMHTMLTableSectionElement.rows',
+    'nsIDOMHTMLTableSectionElement.insertRow',
+    'nsIDOMHTMLTableSectionElement.deleteRow',
+    'nsIDOMHTMLTextAreaElement.rows',
+    'nsIDOMHTMLTextAreaElement.name',
+    'nsIDOMHTMLTextAreaElement.form',
+    'nsIDOMHTMLTextAreaElement.defaultValue',
+    'nsIDOMHTMLTextAreaElement.cols',
+    'nsIDOMHTMLTextAreaElement.value',
+    'nsIDOMHTMLTextAreaElement.type',
+    'nsIDOMHTMLTextAreaElement.select',
+    'nsIDOMHTMLTitleElement.text',
+    'nsIDOMHTMLCanvasElement.width',
+    'nsIDOMHTMLCanvasElement.height',
+    'nsIDOMHTMLCanvasElement.getContext',
+    'nsIDOMHTMLCanvasElement.toDataURL',
+    'nsIDOMNSHTMLAnchorElement.text',
+    'nsIDOMNSHTMLAnchorElement.search',
+    'nsIDOMNSHTMLAnchorElement.hash',
+    'nsIDOMNSHTMLDocument.width',
+    'nsIDOMNSHTMLDocument.height',
+    'nsIDOMNSHTMLDocument.domain',
+    'nsIDOMNSHTMLDocument.getSelection',
+    'nsIDOMNSHTMLDocument.designMode',
+    'nsIDOMNSHTMLElement.contentEditable',
+    'nsIDOMNSHTMLElement.isContentEditable',
+    'nsIDOMNSHTMLElement.offsetParent',
+    'nsIDOMNSHTMLElement.innerHTML',
+    'nsIDOMNSHTMLElement.offsetLeft',
+    'nsIDOMNSHTMLElement.offsetTop',
+    'nsIDOMNSHTMLElement.offsetHeight',
+    'nsIDOMNSHTMLElement.offsetWidth',
+    'nsIDOMNSHTMLElement.scrollIntoView',
+    'nsIDOMNSHTMLFrameElement.contentWindow',
+    'nsIDOMNSHTMLImageElement.complete',
+    'nsIDOMNSHTMLInputElement.files',
+    'nsIDOMNSHTMLInputElement.textLength',
+    'nsIDOMNSHTMLInputElement.selectionStart',
+    'nsIDOMNSHTMLInputElement.selectionEnd',
+    'nsIDOMNSHTMLInputElement.setSelectionRange',
+    'nsIDOMNSHTMLOptionCollection.selectedIndex',
+    'nsIDOMNSHTMLOptionCollection.add',
+    'nsIDOMNSHTMLOptionElement.text',
+    'nsIDOMNSHTMLSelectElement.item',
+    'nsIDOMNSHTMLTextAreaElement.setSelectionRange',
+    'nsIDOMNSHTMLTextAreaElement.selectionStart',
+    'nsIDOMNSHTMLTextAreaElement.selectionEnd',
+    'nsIDOMNSHTMLTextAreaElement.textLength',
+    'nsIDOMNSHTMLTextAreaElement.wrap',
+
+    # dom/interfaces/json - None.
+    # All 4 methods of nsIJSON call GetCurrentNativeCallContext.
+
+    # dom/interfaces/load-save - None.
+
+    # dom/interfaces/offline - None.
+
+    # dom/interfaces/range
+    'nsIDOMRange.*',
+
+    # dom/interfaces/sidebar - None.
+
+    # dom/interfaces/smil - None.
+
+    # dom/interfaces/storage
+    'nsIDOMToString.toString',
+    'nsIDOMStorage.setItem',
+    'nsIDOMStorage.length',
+    'nsIDOMStorage.getItem',
+    'nsIDOMStorage.key',
+    'nsIDOMStorage.removeItem',
+    'nsIDOMStorage.clear',
+    'nsIDOMStorageItem.value',
+    'nsIDOMStorageWindow.*',
+
+    # dom/interfaces/stylesheets - None.
+
+    # dom/interfaces/svg - None.
+
+    # dom/interfaces/threads - None.
+
+    # dom/interfaces/traversal
+    'nsIDOMDocumentTraversal.createNodeIterator',
+    'nsIDOMNodeIterator.nextNode',
+
+    # dom/interfaces/views
+    'nsIDOMDocumentView.defaultView',
+
+    # dom/interfaces/xbl - None.
+
+    # dom/interfaces/xpath
+    'nsIDOMXPathEvaluator.evaluate',
+    'nsIDOMXPathEvaluator.createExpression',
+    'nsIDOMXPathEvaluator.createNSResolver',
+    'nsIDOMXPathExpression.evaluate',
+    'nsIDOMXPathNSResolver.lookupNamespaceURI',
+    'nsIDOMXPathResult.snapshotItem',
+    'nsIDOMXPathResult.iterateNext',
+    'nsIDOMXPathResult.snapshotLength',
+    'nsIDOMXPathResult.resultType',
+    'nsIDOMXPathResult.numberValue',
+    'nsIDOMXPathResult.stringValue',
+    'nsIDOMXPathResult.booleanValue',
+    'nsIDOMXPathResult.singleNodeValue',
+    'nsIDOMNSXPathExpression.evaluateWithContext',
+
+    # dom/interfaces/xul - None.
+
+    # XHR
+    'nsIXMLHttpRequest.*',
+    # nsIXMLHttpRequest.channel is not used on the web, and more
+    # importantly relies on the CAPS check that quickstubs don't make.
+    '-nsIXMLHttpRequest.channel',
+    # nsIXMLHttpRequest.open uses the JS stack
+    '-nsIXMLHttpRequest.open',
+    # various XHR things use ACString and AUTF8String and [cstring]
+    # which quickstubs don't handle as return values (or at all in the
+    # case of AUTF8String) yet.
+    '-nsIXMLHttpRequest.statusText',
+    '-nsIXMLHttpRequest.getAllResponseHeaders',
+    '-nsIXMLHttpRequest.getResponseHeader',
+    '-nsIXMLHttpRequest.setRequestHeader',
+    '-nsIXMLHttpRequest.overrideMimeType',
+    # nsIXMLHttpRequestUpload doesn't live in its own IDL file, so
+    # can't be quickstubbed
+    '-nsIXMLHttpRequest.upload',
+
+    # webgl
+    'nsICanvasRenderingContextWebGL.*',
+    # These all use GetCurrentNativeCallContext and should be
+    # custom-quickstubbed.
+    '-nsICanvasRenderingContextWebGL.getActiveAttrib',
+    '-nsICanvasRenderingContextWebGL.getActiveUniform',
+    '-nsICanvasRenderingContextWebGL.getParameter',
+    '-nsICanvasRenderingContextWebGL.getBufferParameter',
+    '-nsICanvasRenderingContextWebGL.getFramebufferAttachmentParameter',
+    '-nsICanvasRenderingContextWebGL.getRenderbufferParameter',
+    '-nsICanvasRenderingContextWebGL.getProgramParameter',
+    '-nsICanvasRenderingContextWebGL.texParameterf',
+    '-nsICanvasRenderingContextWebGL.texParameteri',
+    '-nsICanvasRenderingContextWebGL.getUniform',
+    '-nsICanvasRenderingContextWebGL.getVertexAttrib',
+    '-nsICanvasRenderingContextWebGL.getShaderParameter',
+
+    # dom/indexedDB
+    'nsIIDBCursor.*',
+    'nsIIDBDatabase.*',
+    'nsIIDBDatabaseException.*',
+    'nsIIDBEvent.*',
+    'nsIIDBErrorEvent.*',
+    'nsIIDBIndex.*',
+    'nsIIDBKeyRange.*',
+    'nsIIDBObjectStore.*',
+    'nsIIDBRequest.*',
+    'nsIIDBSuccessEvent.*',
+    'nsIIDBTransaction.*',
+    'nsIIDBTransactionEvent.*',
+    'nsIIDBFactory.*',
     ]
 
 # Most interfaces can be found by searching the includePath; to find
@@ -510,8 +510,8 @@ customIncludes = [
     ]
 
 customQuickStubs = [
-#    'CustomQS_WebGL.h',
-#    'CustomQS_Canvas2D.h'
+    'CustomQS_WebGL.h',
+    'CustomQS_Canvas2D.h'
     ]
 
 customReturnInterfaces = [
