@@ -81,8 +81,7 @@ XPCVariant::XPCVariant(XPCCallContext& ccx, jsval aJSVal)
 
 XPCTraceableVariant::~XPCTraceableVariant()
 {
-    NS_ASSERTION(JSVAL_IS_GCTHING(mJSVal) || JSVAL_IS_NULL(mJSVal), 
-                 "Must be traceable or unlinked");
+    NS_ASSERTION(JSVAL_IS_GCTHING(mJSVal), "Must be traceable or unlinked");
 
     // If mJSVal is JSVAL_STRING, we don't need to clean anything up;
     // simply removing the string from the root set is good.

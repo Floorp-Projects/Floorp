@@ -5614,7 +5614,7 @@ CloneSimpleValues(JSContext* cx,
   *wasCloned = PR_TRUE;
 
   // No cloning necessary for these non-GC'd jsvals.
-  if (!JSVAL_IS_GCTHING(val)) {
+  if (!JSVAL_IS_GCTHING(val) || JSVAL_IS_NULL(val)) {
     return SetPropertyOnValueOrObject(cx, val, rval, robj, rid);
   }
 
@@ -5748,7 +5748,7 @@ nsContentUtils::CreateStructuredClone(JSContext* cx,
   }
 
   jsval output = OBJECT_TO_JSVAL(obj);
-  js::AutoObjectRooter tvr(cx, obj);
+  js::AutoValueRooter tvr(cx, output);
 
   CloneStack stack(cx);
   if (!stack.Push(val, OBJECT_TO_JSVAL(obj),
