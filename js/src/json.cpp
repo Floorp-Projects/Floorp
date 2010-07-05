@@ -503,8 +503,8 @@ InitializeGap(JSContext *cx, jsval space, JSCharBuffer &cb)
 
     if (gap.value().isNumber()) {
         jsdouble d = gap.value().isInt32()
-                     ? gap.value().asInt32()
-                     : js_DoubleToInteger(gap.value().asDouble());
+                     ? gap.value().toInt32()
+                     : js_DoubleToInteger(gap.value().toDouble());
         d = JS_MIN(10, d);
         if (d >= 1 && !cb.appendN(' ', uint32(d)))
             return JS_FALSE;

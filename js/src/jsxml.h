@@ -253,7 +253,7 @@ JSObject::isQName() const
 static inline bool
 IsXML(const js::Value &v)
 {
-    return v.isObject() && v.asObject().isXML();
+    return v.isObject() && v.toObject().isXML();
 }
 
 extern JSObject *

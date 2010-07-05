@@ -1198,7 +1198,7 @@ GetUTCTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
 {
     if (!InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
         return JS_FALSE;
-    *dp = obj->getDateUTCTime().asNumber();
+    *dp = obj->getDateUTCTime().toNumber();
     return JS_TRUE;
 }
 
@@ -1222,7 +1222,7 @@ SetUTCTime(JSContext *cx, JSObject *obj, jsdouble t, Value *vp = NULL)
     JS_ASSERT(obj->getClass() == &js_DateClass);
 
     obj->setDateLocalTime(cx->runtime->NaNValue);
-    obj->setDateUTCTime(DoubleTag(t));
+    obj->setDateUTCTime(DoubleValue(t));
     if (vp)
         vp->setDouble(t);
     return true;
@@ -1238,15 +1238,15 @@ GetAndCacheLocalTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
     if (!obj || !InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
         return false;
 
-    jsdouble result = obj->getDateLocalTime().asNumber();
+    jsdouble result = obj->getDateLocalTime().toNumber();
     if (JSDOUBLE_IS_NaN(result)) {
-        result = obj->getDateUTCTime().asDouble();
+        result = obj->getDateUTCTime().toDouble();
 
         /* if result is NaN, it couldn't be finite. */
         if (JSDOUBLE_IS_FINITE(result))
             result = LocalTime(result, cx);
 
-        obj->setDateLocalTime(DoubleTag(result));
+        obj->setDateLocalTime(DoubleValue(result));
     }
 
     *dp = result;

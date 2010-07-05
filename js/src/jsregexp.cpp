@@ -5003,7 +5003,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             goto out;
         }
         
-        DEFVAL(StringTag(matchstr), INT_TO_JSID(0));
+        DEFVAL(StringValue(matchstr), INT_TO_JSID(0));
     }
 
     res = &cx->regExpStatics;
@@ -5028,7 +5028,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             if (test)
                 continue;
             if (parsub->index == -1) {
-                Value tmp = UndefinedTag();
+                Value tmp = UndefinedValue();
                 ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1),
                                        &tmp, NULL, NULL, JSPROP_ENUMERATE);
             } else {
@@ -5040,7 +5040,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                     ok = JS_FALSE;
                     goto out;
                 }
-                Value tmp = StringTag(parstr);
+                Value tmp = StringValue(parstr);
                 ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1),
                                        &tmp, NULL, NULL, JSPROP_ENUMERATE);
             }
@@ -5060,9 +5060,9 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
          * Define the index and input properties last for better for/in loop
          * order (so they come after the elements).
          */
-        DEFVAL(Int32Tag(start + gData.skipped),
+        DEFVAL(Int32Value(start + gData.skipped),
                ATOM_TO_JSID(cx->runtime->atomState.indexAtom));
-        DEFVAL(StringTag(str),
+        DEFVAL(StringValue(str),
                ATOM_TO_JSID(cx->runtime->atomState.inputAtom));
     }
 
@@ -5092,7 +5092,7 @@ static void
 SetRegExpLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
 {
     JS_ASSERT(obj->isRegExp());
-    obj->setRegExpLastIndex(NumberTag(lastIndex));
+    obj->setRegExpLastIndex(NumberValue(lastIndex));
 }
 
 #define DEFINE_GETTER(name, code)                                              \
@@ -5175,7 +5175,7 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **ob
         return JS_TRUE;
 
     if (id == ATOM_TO_JSID(cx->runtime->atomState.lastIndexAtom)) {
-        if (!js_DefineNativeProperty(cx, obj, id, UndefinedTag(),
+        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
                                      lastIndex_getter, lastIndex_setter,
                                      JSPROP_PERMANENT | JSPROP_SHARED, 0, 0, NULL)) {
             return JS_FALSE;
@@ -5188,7 +5188,7 @@ regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **ob
         const LazyProp &lazy = lazyRegExpProps[i];
         JSAtom *atom = OFFSET_TO_ATOM(cx->runtime, lazy.atomOffset);
         if (id == ATOM_TO_JSID(atom)) {
-            if (!js_DefineNativeProperty(cx, obj, id, UndefinedTag(),
+            if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
                                          lazy.getter, NULL,
                                          JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_READONLY,
                                          0, 0, NULL)) {
@@ -5370,7 +5370,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
 static JSBool
 regexp_call(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
-    return regexp_exec_sub(cx, &argv[-2].asObject(), argc, argv, JS_FALSE, rval);
+    return regexp_exec_sub(cx, &argv[-2].toObject(), argc, argv, JS_FALSE, rval);
 }
 
 #if JS_HAS_XDR
@@ -5535,7 +5535,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
              * here if the flags are specified. (We must use the flags
              * from the original RegExp also).
              */
-            obj2 = argv[0].asObjectOrNull();
+            obj2 = argv[0].toObjectOrNull();
             if (obj2 && obj2->getClass() == &js_RegExpClass) {
                 if (argc >= 2 && !argv[1].isUndefined()) { /* 'flags' passed */
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -5655,7 +5655,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
     HOLD_REGEXP(cx, re);
     sticky = (re->flags & JSREG_STICKY) != 0;
     if (re->flags & (JSREG_GLOB | JSREG_STICKY)) {
-        lastIndex = obj->getRegExpLastIndex().asNumber();
+        lastIndex = obj->getRegExpLastIndex().toNumber();
     } else {
         lastIndex = 0;
     }
@@ -5747,7 +5747,7 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
          * TypeError.)  See 10.15.3.1.
          */
         if ((argc < 2 || argv[1].isUndefined()) && argv[0].isObject() &&
-            argv[0].asObject().getClass() == &js_RegExpClass) {
+            argv[0].toObject().getClass() == &js_RegExpClass) {
             *rval = argv[0];
             return JS_TRUE;
         }

@@ -400,7 +400,7 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 
     /* Otherwise call it and return that object. */
     LeaveTrace(cx);
-    Value arg = BooleanTag((flags & JSITER_FOREACH) == 0);
+    Value arg = BooleanValue((flags & JSITER_FOREACH) == 0);
     if (!InternalCall(cx, obj, *vp, 1, &arg, vp))
         return false;
     if (vp->isPrimitive()) {
@@ -409,7 +409,7 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
          * trace, so the object we are iterating over is on top of the stack (-1).
          */
         js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                             -1, ObjectTag(*obj), NULL,
+                             -1, ObjectValue(*obj), NULL,
                              js_AtomToPrintableString(cx, atom));
         return false;
     }
@@ -451,7 +451,7 @@ NewIteratorObject(JSContext *cx, uintN flags)
         if (!obj)
             return false;
         obj->map = cx->runtime->emptyEnumeratorScope->hold();
-        obj->init(&js_IteratorClass.base, NULL, NULL, NullTag());
+        obj->init(&js_IteratorClass.base, NULL, NULL, NullValue());
         return obj;
     }
 
@@ -705,7 +705,7 @@ iterator_next(JSContext *cx, uintN argc, Value *vp)
 
     if (!js_IteratorMore(cx, obj, vp))
         return false;
-    if (!vp->asBoolean()) {
+    if (!vp->toBoolean()) {
         js_ThrowStopIteration(cx);
         return false;
     }
@@ -739,7 +739,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, Value *vp)
     JSObject *obj;
     if (vp->isObject()) {
         /* Common case. */
-        obj = &vp->asObject();
+        obj = &vp->toObject();
     } else {
         /*
          * Enumerating over null and undefined gives an empty enumerator.
@@ -790,7 +790,7 @@ js_CloseIterator(JSContext *cx, const Value &v)
     cx->iterValue.setMagic(JS_NO_ITER_VALUE);
 
     JS_ASSERT(v.isObject());
-    JSObject *obj = &v.asObject();
+    JSObject *obj = &v.toObject();
     Class *clasp = obj->getClass();
 
     if (clasp == &js_IteratorClass.base) {
@@ -962,7 +962,7 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 
         JSString *str;
         jsint i;
-        if (rval->isInt32() && (jsuint(i = rval->asInt32()) < INT_STRING_LIMIT)) {
+        if (rval->isInt32() && (jsuint(i = rval->toInt32()) < INT_STRING_LIMIT)) {
             str = JSString::intString(i);
         } else {
             str = js_ValueToString(cx, *rval);
@@ -1162,7 +1162,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
 {
     if (gen->state == JSGEN_RUNNING || gen->state == JSGEN_CLOSING) {
         js_ReportValueError(cx, JSMSG_NESTING_GENERATOR,
-                            JSDVG_SEARCH_STACK, ObjectOrNullTag(obj),
+                            JSDVG_SEARCH_STACK, ObjectOrNullValue(obj),
                             JS_GetFunctionId(gen->getFloatingFrame()->fun));
         return JS_FALSE;
     }
@@ -1192,7 +1192,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
 
       default:
         JS_ASSERT(op == JSGENOP_CLOSE);
-        SetPendingException(cx, JS_GENERATOR_CLOSING);
+        SetPendingException(cx, MagicValue(JS_GENERATOR_CLOSING));
         gen->state = JSGEN_CLOSING;
         break;
     }
@@ -1321,7 +1321,7 @@ CloseGenerator(JSContext *cx, JSObject *obj)
     if (gen->state == JSGEN_CLOSED)
         return JS_TRUE;
 
-    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, UndefinedTag());
+    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, UndefinedValue());
 }
 
 /*
@@ -1369,7 +1369,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
           case JSGENOP_SEND:
             return js_ThrowStopIteration(cx);
           case JSGENOP_THROW:
-            SetPendingException(cx, argc >= 1 ? vp[2] : Value(UndefinedTag()));
+            SetPendingException(cx, argc >= 1 ? vp[2] : UndefinedValue());
             return JS_FALSE;
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
@@ -1378,7 +1378,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
     }
 
     bool undef = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0);
-    if (!SendToGenerator(cx, op, obj, gen, undef ? vp[2] : Value(UndefinedTag())))
+    if (!SendToGenerator(cx, op, obj, gen, undef ? vp[2] : UndefinedValue()))
         return JS_FALSE;
     *vp = gen->getFloatingFrame()->rval;
     return JS_TRUE;

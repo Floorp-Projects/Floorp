@@ -265,7 +265,7 @@ JSObject::isCallable()
 static inline bool
 js_IsCallable(const js::Value &v)
 {
-    return v.isObject() && v.asObject().isCallable();
+    return v.isObject() && v.toObject().isCallable();
 }
 
 /*
@@ -277,13 +277,13 @@ js_IsCallable(const js::Value &v)
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v)
 {
-    return v.isObject() && v.asObject().isFunction();
+    return v.isObject() && v.toObject().isFunction();
 }
 
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v, JSObject **funobj)
 {
-    return v.isObject() && (*funobj = &v.asObject())->isFunction();
+    return v.isObject() && (*funobj = &v.toObject())->isFunction();
 }
 
 /*

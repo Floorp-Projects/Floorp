@@ -182,7 +182,7 @@ struct JSStackFrame
     }
 
     JSObject *callee() {
-        return argv ? &argv[-2].asObject() : NULL;
+        return argv ? &argv[-2].toObject() : NULL;
     }
 
     /*
@@ -319,14 +319,14 @@ static JS_ALWAYS_INLINE bool
 InternalCall(JSContext *cx, JSObject *obj, const Value &fval,
              uintN argc, Value *argv, Value *rval)
 {
-    return InternalInvoke(cx, ObjectOrNullTag(obj), fval, 0, argc, argv, rval);
+    return InternalInvoke(cx, ObjectOrNullValue(obj), fval, 0, argc, argv, rval);
 }
 
 static JS_ALWAYS_INLINE bool
 InternalConstruct(JSContext *cx, JSObject *obj, const Value &fval,
                   uintN argc, Value *argv, Value *rval)
 {
-    return InternalInvoke(cx, ObjectOrNullTag(obj), fval, JSINVOKE_CONSTRUCT, argc, argv, rval);
+    return InternalInvoke(cx, ObjectOrNullValue(obj), fval, JSINVOKE_CONSTRUCT, argc, argv, rval);
 }
 
 extern bool
@@ -464,12 +464,12 @@ inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)
 {
     if (flags & JSFRAME_COMPUTED_THIS)
-        return &thisv.asObject();
+        return &thisv.toObject();
     if (!js::ComputeThisFromArgv(cx, argv))
         return NULL;
     thisv = argv[-1];
     flags |= JSFRAME_COMPUTED_THIS;
-    return &thisv.asObject();
+    return &thisv.toObject();
 }
 
 #endif /* jsinterp_h___ */

@@ -2062,7 +2062,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                         bytes);
                 continue;
             }
-            obj = value.asObjectOrNull();
+            obj = value.toObjectOrNull();
             if (obj)
                 DumpScope(cx, obj, stdout);
         }
@@ -2950,7 +2950,7 @@ NewSandbox(JSContext *cx, bool lazy, bool split)
         if (!lazy && !JS_InitStandardClasses(cx, obj))
             return NULL;
 
-        AutoValueRooter root(cx, BooleanTag(lazy));
+        AutoValueRooter root(cx, BooleanValue(lazy));
         if (!JS_SetProperty(cx, obj, "lazy", root.jsval_addr()))
             return NULL;
 

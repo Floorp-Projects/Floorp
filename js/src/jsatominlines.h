@@ -60,7 +60,7 @@ js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp)
      * is least weakly rooted.
      */
     if (v.isString()) {
-        str = v.asString();
+        str = v.toString();
         if (str->isAtomized()) {
             cx->weakRoots.lastAtom = *atomp = STRING_TO_ATOM(str);
             return true;
@@ -92,7 +92,7 @@ inline bool
 js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
                          jsid *idp)
 {
-    JS_ASSERT(!idval.isInt32() || !INT_FITS_IN_JSID(idval.asInt32()));
+    JS_ASSERT(!idval.isInt32() || !INT_FITS_IN_JSID(idval.toInt32()));
 
 #if JS_HAS_XML_SUPPORT
     extern bool js_InternNonIntElementIdSlow(JSContext *, JSObject *,
@@ -108,7 +108,7 @@ inline bool
 js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
                          jsid *idp, js::Value *vp)
 {
-    JS_ASSERT(!idval.isInt32() || !INT_FITS_IN_JSID(idval.asInt32()));
+    JS_ASSERT(!idval.isInt32() || !INT_FITS_IN_JSID(idval.toInt32()));
 
 #if JS_HAS_XML_SUPPORT
     extern bool js_InternNonIntElementIdSlow(JSContext *, JSObject *,
@@ -139,7 +139,7 @@ js_Int32ToId(JSContext* cx, int32 index, jsid* id)
     if (!str)
         return false;
 
-    return js_ValueToStringId(cx, js::StringTag(str), id);
+    return js_ValueToStringId(cx, js::StringValue(str), id);
 }
 
 #endif /* jsatominlines_h___ */

@@ -271,13 +271,13 @@ ComputeGlobalThis(JSContext *cx, Value *argv)
 {
     /* Find the inner global. */
     JSObject *inner;
-    if (argv[-2].isPrimitive() || !argv[-2].asObject().getParent()) {
+    if (argv[-2].isPrimitive() || !argv[-2].toObject().getParent()) {
         inner = cx->globalObject;
         OBJ_TO_INNER_OBJECT(cx, inner);
         if (!inner)
             return NULL;
     } else {
-        inner = argv[-2].asObject().getGlobal();
+        inner = argv[-2].toObject().getGlobal();
     }
     JS_ASSERT(inner->getClass()->flags & JSCLASS_IS_GLOBAL);
 
@@ -290,12 +290,12 @@ ComputeGlobalThis(JSContext *cx, Value *argv)
         const Value &thisv = inner->getReservedSlot(JSRESERVED_GLOBAL_THIS);
         if (!thisv.isUndefined()) {
             argv[-1] = thisv;
-            return thisv.asObjectOrNull();
+            return thisv.toObjectOrNull();
         }
 
         JSObject *stuntThis = CallThisObjectHook(cx, inner, argv);
         JS_ALWAYS_TRUE(js_SetReservedSlot(cx, inner, JSRESERVED_GLOBAL_THIS,
-                                          ObjectOrNullTag(stuntThis)));
+                                          ObjectOrNullValue(stuntThis)));
         return stuntThis;
     }
 
@@ -317,11 +317,11 @@ ComputeThisFromArgv(JSContext *cx, Value *argv)
     if (argv[-1].isPrimitive()) {
         if (!js_PrimitiveToObject(cx, &argv[-1]))
             return NULL;
-        thisp = argv[-1].asObjectOrNull();
+        thisp = argv[-1].toObjectOrNull();
         return thisp;
     } 
 
-    thisp = &argv[-1].asObject();
+    thisp = &argv[-1].toObject();
     if (thisp->getClass() == &js_CallClass || thisp->getClass() == &js_BlockClass)
         return ComputeGlobalThis(cx, argv);
 
@@ -362,7 +362,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
 {
     JS_ASSERT(!vp[1].isPrimitive());
 
-    JSObject *obj = &vp[1].asObject();
+    JSObject *obj = &vp[1].toObject();
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
     AutoValueRooter tvr(cx);
     if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, tvr.addr()))
@@ -373,7 +373,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
 #if JS_HAS_XML_SUPPORT
         /* Extract the function name from function::name qname. */
         if (vp[0].isObject()) {
-            obj = &vp[0].asObject();
+            obj = &vp[0].toObject();
             if (!js_IsFunctionQName(cx, obj, &id))
                 return false;
             if (!JSID_IS_VOID(id))
@@ -407,7 +407,7 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
 
     JS_ASSERT(vp[0].isObject());
     JS_ASSERT(vp[1].isObject());
-    JSObject *obj = &vp[0].asObject();
+    JSObject *obj = &vp[0].toObject();
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
     Value *invokevp = args.getvp();
@@ -520,7 +520,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     fp->fun = fun;
     fp->argc = argc;
     fp->argv = vp + 2;
-    fp->rval = (flags & JSINVOKE_CONSTRUCT) ? fp->thisv : Value(UndefinedTag());
+    fp->rval = (flags & JSINVOKE_CONSTRUCT) ? fp->thisv : UndefinedValue();
     fp->annotation = NULL;
     fp->scopeChain = NULL;
     fp->blockChain = NULL;
@@ -541,7 +541,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     cx->stack().pushInvokeFrame(cx, args, frame, regs);
 
     /* Now that the frame has been pushed, fix up the scope chain. */
-    JSObject *parent = vp[0].asObject().getParent();
+    JSObject *parent = vp[0].toObject().getParent();
     if (native) {
         /* Slow natives and call ops expect the caller's scopeChain as their scopeChain. */
         if (JSStackFrame *down = fp->down)
@@ -572,7 +572,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
         JSBool alreadyThrowing = cx->throwing;
 #endif
 
-        JSObject *thisp = fp->thisv.asObjectOrNull();
+        JSObject *thisp = fp->thisv.toObjectOrNull();
         ok = callJSNative(cx, native, thisp, fp->argc, fp->argv, &fp->rval);
 
         JS_ASSERT(cx->fp == fp);
@@ -619,7 +619,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         return false;
     }
 
-    JSObject *funobj = &v.asObject();
+    JSObject *funobj = &v.toObject();
     Class *clasp = funobj->getClass();
 
     if (clasp == &js_FunctionClass) {
@@ -1021,22 +1021,22 @@ StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref)
     Value lval = lref, rval = rref;
     if (SameType(lval, rval)) {
         if (lval.isString())
-            return js_EqualStrings(lval.asString(), rval.asString());
+            return js_EqualStrings(lval.toString(), rval.toString());
         if (lval.isDouble())
-            return JSDOUBLE_COMPARE(lval.asDouble(), ==, rval.asDouble(), JS_FALSE);
+            return JSDOUBLE_COMPARE(lval.toDouble(), ==, rval.toDouble(), JS_FALSE);
         if (lval.isObject())
-            return EqualObjects(cx, &lval.asObject(), &rval.asObject());
-        return lval.asRawUint32() == rval.asRawUint32();
+            return EqualObjects(cx, &lval.toObject(), &rval.toObject());
+        return lval.payloadAsRawUint32() == rval.payloadAsRawUint32();
     }
 
     if (lval.isDouble() && rval.isInt32()) {
-        double ld = lval.asDouble();
-        double rd = rval.asInt32();
+        double ld = lval.toDouble();
+        double rd = rval.toInt32();
         return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
     }
     if (lval.isInt32() && rval.isDouble()) {
-        double ld = lval.asInt32();
-        double rd = rval.asDouble();
+        double ld = lval.toInt32();
+        double rd = rval.toDouble();
         return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
     }
 
@@ -1046,13 +1046,13 @@ StrictlyEqual(JSContext *cx, const Value &lref, const Value &rref)
 static inline bool
 IsNegativeZero(const Value &v)
 {
-    return v.isDouble() && JSDOUBLE_IS_NEGZERO(v.asDouble());
+    return v.isDouble() && JSDOUBLE_IS_NEGZERO(v.toDouble());
 }
 
 static inline bool
 IsNaN(const Value &v)
 {
-    return v.isDouble() && JSDOUBLE_IS_NaN(v.asDouble());
+    return v.isDouble() && JSDOUBLE_IS_NaN(v.toDouble());
 }
 
 bool
@@ -1080,7 +1080,7 @@ TypeOfValue(JSContext *cx, const Value &vref)
     if (v.isUndefined())
         return JSTYPE_VOID;
     if (v.isObject())
-        return v.asObject().map->ops->typeOf(cx, &v.asObject());
+        return v.toObject().map->ops->typeOf(cx, &v.toObject());
     JS_ASSERT(v.isBoolean());
     return JSTYPE_BOOLEAN;
 }
@@ -1111,7 +1111,7 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args)
     Value *vp = args.getvp();
 
     /* XXX clean up to avoid special cases above ObjectOps layer */
-    if (vp->isPrimitive() || (obj2 = &vp->asObject())->isFunction() ||
+    if (vp->isPrimitive() || (obj2 = &vp->toObject())->isFunction() ||
         !obj2->map->ops->construct)
     {
         fun = js_ValueToFunction(cx, vp, JSV2F_CONSTRUCT);
@@ -1132,14 +1132,14 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args)
          * root to protect this prototype, in case it has no other
          * strong refs.
          */
-        JSObject *obj2 = &vp->asObject();
+        JSObject *obj2 = &vp->toObject();
         if (!obj2->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
                                &vp[1])) {
             return JS_FALSE;
         }
         const Value &v = vp[1];
         if (v.isObjectOrNull())
-            proto = v.asObjectOrNull();
+            proto = v.toObjectOrNull();
         else
             proto = NULL;
         parent = obj2->getParent();
@@ -1190,7 +1190,7 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp)
 
 #if JS_HAS_XML_SUPPORT
     if (v.isObject()) {
-        JSObject *obj = &v.asObject();
+        JSObject *obj = &v.toObject();
         if (obj->isXML()) {
             *idp = OBJECT_TO_JSID(obj);
             return JS_TRUE;
@@ -1221,7 +1221,7 @@ js_EnterWith(JSContext *cx, jsint stackIndex)
 
     JSObject *obj;
     if (sp[-1].isObject()) {
-        obj = &sp[-1].asObject();
+        obj = &sp[-1].toObject();
     } else {
         obj = js_ValueToNonNullObject(cx, sp[-1]);
         if (!obj)
@@ -1772,7 +1772,7 @@ namespace reprmeter {
         if (vp->isNull()) {                                                   \
             b = false;                                                        \
         } else if (vp->isBoolean()) {                                         \
-            b = vp->asBoolean();                                              \
+            b = vp->toBoolean();                                              \
         } else {                                                              \
             b = !!js_ValueToBoolean(*vp);                                     \
         }                                                                     \
@@ -1782,7 +1782,7 @@ namespace reprmeter {
 #define VALUE_TO_OBJECT(cx, vp, obj)                                          \
     JS_BEGIN_MACRO                                                            \
         if ((vp)->isObject()) {                                               \
-            obj = &(vp)->asObject();                                          \
+            obj = &(vp)->toObject();                                          \
         } else {                                                              \
             obj = js_ValueToNonNullObject(cx, *(vp));                         \
             if (!obj)                                                         \
@@ -1801,7 +1801,7 @@ namespace reprmeter {
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(v.isObject());                                              \
         JS_ASSERT(v == regs.sp[n]);                                           \
-        if (!v.asObject().defaultValue(cx, hint, &regs.sp[n]))                \
+        if (!v.toObject().defaultValue(cx, hint, &regs.sp[n]))                \
             goto error;                                                       \
         v = regs.sp[n];                                                       \
     JS_END_MACRO
@@ -1931,7 +1931,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     } else if (entry->vword.isSprop()) {
         JS_ASSERT(entry->vword.toSprop() == sprop);
         JS_ASSERT_IF(sprop->isMethod(),
-                     &sprop->methodObject() == &pobj->lockedGetSlot(sprop->slot).asObject());
+                     &sprop->methodObject() == &pobj->lockedGetSlot(sprop->slot).toObject());
     } else {
         Value v;
         JS_ASSERT(entry->vword.isFunObj());
@@ -1940,11 +1940,11 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         JS_ASSERT(sprop->hasDefaultGetterOrIsMethod());
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, pobj->scope()));
         v = pobj->lockedGetSlot(sprop->slot);
-        JS_ASSERT(&entry->vword.toFunObj() == &v.asObject());
+        JS_ASSERT(&entry->vword.toFunObj() == &v.toObject());
 
         if (sprop->isMethod()) {
             JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_CALLOP);
-            JS_ASSERT(&sprop->methodObject() == &v.asObject());
+            JS_ASSERT(&sprop->methodObject() == &v.toObject());
         }
     }
 
@@ -2215,7 +2215,7 @@ Interpret(JSContext *cx)
     (fun = script->getFunction(GET_FULL_INDEX(PCOFF)))
 
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
-    (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).asDouble())
+    (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
 
 #ifdef JS_TRACER
 

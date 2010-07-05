@@ -243,7 +243,7 @@ namespace_equality(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
     JSObject *obj2;
 
     JS_ASSERT(v->isObjectOrNull());
-    obj2 = v->asObjectOrNull();
+    obj2 = v->toObjectOrNull();
     *bp = (!obj2 || obj2->getClass() != &js_NamespaceClass.base)
           ? JS_FALSE
           : js_EqualStrings(GetURI(obj), GetURI(obj2));
@@ -346,7 +346,7 @@ qname_equality(JSContext *cx, JSObject *qn, const Value *v, JSBool *bp)
 {
     JSObject *obj2;
 
-    obj2 = v->asObjectOrNull();
+    obj2 = v->toObjectOrNull();
     *bp = (!obj2 || obj2->getClass() != &js_QNameClass.base)
           ? JS_FALSE
           : qname_identity(qn, obj2);
@@ -503,7 +503,7 @@ js_ConstructXMLQNameObject(JSContext *cx, const Value &nsval, const Value &lnval
      * production, step 2.
      */
     if (nsval.isObject() &&
-        nsval.asObject().getClass() == &js_AnyNameClass) {
+        nsval.toObject().getClass() == &js_AnyNameClass) {
         argv[0].setNull();
     } else {
         argv[0] = nsval;
@@ -637,7 +637,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
                 if (!prefix)
                     return JS_FALSE;
                 if (!prefix->empty()) {
-                    Value v = StringTag(prefix);
+                    Value v = StringValue(prefix);
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_BAD_XML_NAMESPACE,
                                          js_ValueToPrintableString(cx, v));
@@ -1166,7 +1166,7 @@ ParseNodeToQName(Parser *parser, JSParseNode *pn,
         }
 
         if (!uri) {
-            Value v = StringTag(prefix);
+            Value v = StringValue(prefix);
             ReportCompileErrorNumber(parser->context, &parser->tokenStream, pn,
                                      JSREPORT_ERROR, JSMSG_BAD_XML_NAMESPACE,
                                      js_ValueToPrintableString(parser->context, v));
@@ -1385,7 +1385,7 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
             /* Enforce "Well-formedness constraint: Unique Att Spec". */
             for (pn3 = head; pn3 != pn2; pn3 = pn3->pn_next->pn_next) {
                 if (pn3->pn_atom == pn2->pn_atom) {
-                    Value v = StringTag(ATOM_TO_STRING(pn2->pn_atom));
+                    Value v = StringValue(ATOM_TO_STRING(pn2->pn_atom));
                     ReportCompileErrorNumber(cx, &parser->tokenStream, pn2,
                                              JSREPORT_ERROR, JSMSG_DUPLICATE_XML_ATTR,
                                              js_ValueToPrintableString(cx, v));
@@ -1479,7 +1479,7 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
                 attrjqn = attrj->name;
                 if (js_EqualStrings(GetURI(attrjqn), GetURI(qn)) &&
                     js_EqualStrings(GetLocalName(attrjqn), GetLocalName(qn))) {
-                    Value v = StringTag(ATOM_TO_STRING(pn2->pn_atom));
+                    Value v = StringValue(ATOM_TO_STRING(pn2->pn_atom));
                     ReportCompileErrorNumber(cx, &parser->tokenStream, pn2,
                                              JSREPORT_ERROR, JSMSG_DUPLICATE_XML_ATTR,
                                              js_ValueToPrintableString(cx, v));
@@ -1519,7 +1519,7 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
             xml_class = JSXML_CLASS_COMMENT;
         } else if (pn->pn_type == TOK_XMLPI) {
             if (IS_XML(str)) {
-                Value v = StringTag(str);
+                Value v = StringValue(str);
                 ReportCompileErrorNumber(cx, &parser->tokenStream, pn,
                                          JSREPORT_ERROR, JSMSG_RESERVED_ID,
                                          js_ValueToPrintableString(cx, v));
@@ -2100,7 +2100,7 @@ GetNamespace(JSContext *cx, JSObject *qn, const JSXMLArray *inScopeNSes)
     prefix = GetPrefix(qn);
     JS_ASSERT(uri);
     if (!uri) {
-        Value v = StringTag(prefix);
+        Value v = StringValue(prefix);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_XML_NAMESPACE,
                              prefix
@@ -2843,7 +2843,7 @@ out:
 bad:
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_BAD_XML_NAME,
-                         js_ValueToPrintableString(cx, StringTag(name)));
+                         js_ValueToPrintableString(cx, StringValue(name)));
     return NULL;
 }
 
@@ -3274,7 +3274,7 @@ retry:
                 xobj = js_GetXMLObject(cx, kid);
                 vobj = js_GetXMLObject(cx, vkid);
                 if (!xobj || !vobj ||
-                    !js_TestXMLEquality(cx, ObjectTag(*xobj), ObjectTag(*vobj), bp))
+                    !js_TestXMLEquality(cx, ObjectValue(*xobj), ObjectValue(*vobj), bp))
                     return JS_FALSE;
                 if (!*bp)
                     break;
@@ -3322,7 +3322,7 @@ Equals(JSContext *cx, JSXML *xml, jsval v, JSBool *bp)
                 vobj = js_GetXMLObject(cx, vxml);
                 if (!vobj)
                     return JS_FALSE;
-                return js_TestXMLEquality(cx, ObjectTag(*vobj), Valueify(v), bp);
+                return js_TestXMLEquality(cx, ObjectValue(*vobj), Valueify(v), bp);
             }
             if (JSVAL_IS_VOID(v) && xml->xml_kids.length == 0)
                 *bp = JS_TRUE;
@@ -3757,7 +3757,7 @@ KidToString(JSContext *cx, JSXML *xml, uint32 index)
     kidobj = js_GetXMLObject(cx, kid);
     if (!kidobj)
         return NULL;
-    return js_ValueToString(cx, ObjectTag(*kidobj));
+    return js_ValueToString(cx, ObjectValue(*kidobj));
 }
 
 /* Forward declared -- its implementation uses other statics that call it. */
@@ -4818,7 +4818,7 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, Value *statep, 
             statep->setNull();
             break;
         }
-        cursor = (JSXMLArrayCursor *) statep->asPrivate();
+        cursor = (JSXMLArrayCursor *) statep->toPrivate();
         if (cursor && cursor->array && (index = cursor->index) < length) {
             *idp = INT_TO_JSID(index);
             cursor->index = index + 1;
@@ -4828,7 +4828,7 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, Value *statep, 
 
       case JSENUMERATE_DESTROY:
         if (!statep->isInt32(0)) {
-            cursor = (JSXMLArrayCursor *) statep->asPrivate();
+            cursor = (JSXMLArrayCursor *) statep->toPrivate();
             if (cursor)
                 cx->destroy(cursor);
         }
@@ -4937,12 +4937,12 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
 
     JSObject *obj;
     jsval v;
-    if (v1.isObject() && v1.asObject().isXML()) {
-        obj = &v1.asObject();
+    if (v1.isObject() && v1.toObject().isXML()) {
+        obj = &v1.toObject();
         v = Jsvalify(v2);
     } else {
         v = Jsvalify(v1);
-        obj = &v2.asObject();
+        obj = &v2.toObject();
     }
 
     JS_ASSERT(JS_InstanceOf(cx, obj, Jsvalify(&js_XMLClass), NULL));
@@ -4969,7 +4969,7 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
                  HasSimpleContent(xml))) {
                 ok = js_EnterLocalRootScope(cx);
                 if (ok) {
-                    ok = (str = js_ValueToString(cx, ObjectTag(*obj))) &&
+                    ok = (str = js_ValueToString(cx, ObjectValue(*obj))) &&
                          (vstr = js_ValueToString(cx, Valueify(v)));
                     if (ok)
                         *bp = js_EqualStrings(str, vstr);
@@ -4983,12 +4983,12 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
         ok = js_EnterLocalRootScope(cx);
         if (ok) {
             if (HasSimpleContent(xml)) {
-                ok = (str = js_ValueToString(cx, ObjectTag(*obj))) &&
+                ok = (str = js_ValueToString(cx, ObjectValue(*obj))) &&
                      (vstr = js_ValueToString(cx, Valueify(v)));
                 if (ok)
                     *bp = js_EqualStrings(str, vstr);
             } else if (JSVAL_IS_STRING(v) || JSVAL_IS_NUMBER(v)) {
-                str = js_ValueToString(cx, ObjectTag(*obj));
+                str = js_ValueToString(cx, ObjectValue(*obj));
                 if (!str) {
                     ok = JS_FALSE;
                 } else if (JSVAL_IS_STRING(v)) {
@@ -5457,13 +5457,13 @@ xml_contains(JSContext *cx, uintN argc, jsval *vp)
         JSXMLArrayCursor cursor(&xml->xml_kids);
         while (JSXML *kid = (JSXML *) cursor.getNext()) {
             kidobj = js_GetXMLObject(cx, kid);
-            if (!kidobj || !js_TestXMLEquality(cx, ObjectTag(*kidobj), Valueify(value), &eq))
+            if (!kidobj || !js_TestXMLEquality(cx, ObjectValue(*kidobj), Valueify(value), &eq))
                 return JS_FALSE;
             if (eq)
                 break;
         }
     } else {
-        if (!js_TestXMLEquality(cx, ObjectTag(*obj), Valueify(value), &eq))
+        if (!js_TestXMLEquality(cx, ObjectValue(*obj), Valueify(value), &eq))
             return JS_FALSE;
     }
     *vp = BOOLEAN_TO_JSVAL(eq);
@@ -5715,7 +5715,7 @@ NamespacesToJSArray(JSContext *cx, JSXMLArray *array, jsval *rval)
         JSObject *ns = XMLARRAY_MEMBER(array, i, JSObject);
         if (!ns)
             continue;
-        tvr.set(ObjectTag(*ns));
+        tvr.set(ObjectValue(*ns));
         if (!arrayobj->setProperty(cx, INT_TO_JSID(i), tvr.addr()))
             return false;
     }
@@ -7245,9 +7245,8 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
 
     fp = js_GetTopStackFrame(cx);
     varobj = fp->varobj(cx);
-    if (!varobj->defineProperty(cx, JSID_DEFAULT_XML_NAMESPACE(), ObjectTag(*ns),
-                                PropertyStub, PropertyStub,
-                                JSPROP_PERMANENT)) {
+    if (!varobj->defineProperty(cx, JSID_DEFAULT_XML_NAMESPACE(), ObjectValue(*ns),
+                                PropertyStub, PropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
     return JS_TRUE;
@@ -7416,7 +7415,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
     const char *printable;
 
     JS_ASSERT(nameval.isObject());
-    nameobj = &nameval.asObject();
+    nameobj = &nameval.toObject();
     if (nameobj->getClass() == &js_AnyNameClass) {
         v = ATOM_TO_JSVAL(cx->runtime->atomState.starAtom);
         nameobj = js_ConstructObject(cx, &js_QNameClass.base, NULL, NULL, 1,
@@ -7468,7 +7467,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
         }
     } while ((obj = obj->getParent()) != NULL);
 
-    printable = js_ValueToPrintableString(cx, ObjectTag(*nameobj));
+    printable = js_ValueToPrintableString(cx, ObjectValue(*nameobj));
     if (printable) {
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                      js_GetErrorMessage, NULL,
