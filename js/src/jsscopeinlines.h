@@ -120,10 +120,10 @@ JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, js::Value *vp)
     JS_ASSERT(hasMethodBarrier());
     JS_ASSERT(hasProperty(sprop));
     JS_ASSERT(sprop->isMethod());
-    JS_ASSERT(&vp->asObject() == &sprop->methodObject());
+    JS_ASSERT(&vp->toObject() == &sprop->methodObject());
     JS_ASSERT(object->getClass() == &js_ObjectClass);
 
-    JSObject *funobj = &vp->asObject();
+    JSObject *funobj = &vp->toObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
     JS_ASSERT(FUN_OBJECT(fun) == funobj && FUN_NULL_CLOSURE(fun));
 
@@ -138,8 +138,8 @@ static JS_ALWAYS_INLINE bool
 ChangesMethodValue(const js::Value &prev, const js::Value &v)
 {
     JSObject *prevObj;
-    return prev.isObject() && (prevObj = &prev.asObject())->isFunction() &&
-           (!v.isObject() || &v.asObject() != prevObj);
+    return prev.isObject() && (prevObj = &prev.toObject())->isFunction() &&
+           (!v.isObject() || &v.toObject() != prevObj);
 }
 
 inline bool

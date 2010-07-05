@@ -252,6 +252,11 @@ js_Array(JSContext* cx, JSObject* obj, uintN argc, js::Value* argv, js::Value* r
  * without triggering GC (so this method is allowed to leave those
  * uninitialized) and to set them to non-JSVAL_HOLE values, so that the
  * resulting array has length and count both equal to |capacity|.
+ *
+ * FIXME: for some strange reason, when this file is included from
+ * dom/ipc/TabParent.cpp in MSVC, jsuint resolves to a slightly different
+ * builtin than when mozjs.dll is built, resulting in a link error in xul.dll.
+ * It would be useful to find out what is causing this insanity.
  */
 JS_FRIEND_API(JSObject *)
 js_NewArrayObjectWithCapacity(JSContext *cx, uint32_t capacity, jsval **vector);

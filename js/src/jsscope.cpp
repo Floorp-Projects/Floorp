@@ -134,7 +134,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
         newscope->freeslot = nslots;
 #ifdef DEBUG
     if (newscope->freeslot < nslots)
-        obj->setSlot(newscope->freeslot, UndefinedTag());
+        obj->setSlot(newscope->freeslot, UndefinedValue());
 #endif
 
     JS_DROP_ALL_EMPTY_SCOPE_LOCKS(cx, scope);
@@ -642,7 +642,7 @@ JSScope::reportReadOnlyScope(JSContext *cx)
     JSString *str;
     const char *bytes;
 
-    str = js_ValueToString(cx, ObjectOrNullTag(object));
+    str = js_ValueToString(cx, ObjectOrNullValue(object));
     if (!str)
         return;
     bytes = js_GetStringBytes(cx, str);
@@ -1214,7 +1214,7 @@ JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop)
     if (sprop->isMethod()) {
 #ifdef DEBUG
         const Value &prev = object->lockedGetSlot(sprop->slot);
-        JS_ASSERT(&sprop->methodObject() == &prev.asObject());
+        JS_ASSERT(&sprop->methodObject() == &prev.toObject());
         JS_ASSERT(hasMethodBarrier());
         JS_ASSERT(object->getClass() == &js_ObjectClass);
         JS_ASSERT(!sprop->rawSetter || sprop->rawSetter == js_watch_set);

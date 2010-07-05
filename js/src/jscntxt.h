@@ -2296,7 +2296,7 @@ class AutoValueRooter : private AutoGCRooter
   public:
     explicit AutoValueRooter(JSContext *cx
                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, JSVAL), val(js::NullTag())
+      : AutoGCRooter(cx, JSVAL), val(js::NullValue())
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }

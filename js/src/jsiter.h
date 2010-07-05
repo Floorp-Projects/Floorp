@@ -256,7 +256,7 @@ extern js::Class         js_StopIterationClass;
 static inline bool
 js_ValueIsStopIteration(const js::Value &v)
 {
-    return v.isObject() && v.asObject().getClass() == &js_StopIterationClass;
+    return v.isObject() && v.toObject().getClass() == &js_StopIterationClass;
 }
 
 extern JSObject *

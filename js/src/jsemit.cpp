@@ -1554,7 +1554,7 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 {
     /* XXX just do numbers for now */
     if (pn->pn_type == TOK_NUMBER) {
-        if (!cg->constMap.put(atom, NumberTag(pn->pn_dval)))
+        if (!cg->constMap.put(atom, NumberValue(pn->pn_dval)))
             return JS_FALSE;
     }
     return JS_TRUE;
@@ -1586,7 +1586,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
 
             if (slotp) {
                 JS_ASSERT(obj->fslots[JSSLOT_BLOCK_DEPTH].isInt32());
-                *slotp = obj->fslots[JSSLOT_BLOCK_DEPTH].asInt32() +
+                *slotp = obj->fslots[JSSLOT_BLOCK_DEPTH].toInt32() +
                          sprop->shortid;
             }
             return stmt;
@@ -1841,7 +1841,7 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
             continue;
         }
 
-        JSDefinition *dn = (JSDefinition *) v.asPrivate();
+        JSDefinition *dn = (JSDefinition *) v.toPrivate();
         JS_ASSERT(dn->pn_defn);
         JS_ASSERT(uintN(dn->frameSlot() + depth) < JS_BIT(16));
         dn->pn_cookie.set(dn->pn_cookie.level(), dn->frameSlot() + depth);
@@ -2954,7 +2954,7 @@ EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
         return JS_TRUE;
     }
 
-    if (!cg->constList.append(DoubleTag(dval)))
+    if (!cg->constList.append(DoubleValue(dval)))
         return JS_FALSE;
 
     return EmitIndexOp(cx, JSOP_DOUBLE, cg->constList.length() - 1, cg);
@@ -3162,7 +3162,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 switchOp = JSOP_LOOKUPSWITCH;
                 continue;
             }
-            i = pn3->pn_pval->asInt32();
+            i = pn3->pn_pval->toInt32();
             if ((jsuint)(i + (jsint)JS_BIT(15)) >= (jsuint)JS_BIT(16)) {
                 switchOp = JSOP_LOOKUPSWITCH;
                 continue;
@@ -3357,7 +3357,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
                     if (pn3->pn_type == TOK_DEFAULT)
                         continue;
-                    i = pn3->pn_pval->asInt32();
+                    i = pn3->pn_pval->toInt32();
                     i -= low;
                     JS_ASSERT((uint32)i < tableLength);
                     table[i] = pn3;

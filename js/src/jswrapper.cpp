@@ -65,7 +65,7 @@ JSObject::unwrap(uintN *flagsp)
     uintN flags = 0;
     if (wrapped->isWrapper()) {
         flags |= static_cast<JSWrapper *>(wrapped->getProxyHandler())->flags();
-        wrapped = wrapped->getProxyPrivate().asObjectOrNull();
+        wrapped = wrapped->getProxyPrivate().toObjectOrNull();
     }
     if (flagsp)
         *flagsp = flags;
@@ -271,7 +271,7 @@ JSObject *
 JSWrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
                JSWrapper *handler)
 {
-    return NewProxyObject(cx, handler, ObjectTag(*obj), proto, parent,
+    return NewProxyObject(cx, handler, ObjectValue(*obj), proto, parent,
                           obj->isCallable() ? obj : NULL, NULL);
 }
 
@@ -317,12 +317,12 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         return true;
 
     /* Static strings do not have to be wrapped. */
-    if (vp->isString() && JSString::isStatic(vp->asString()))
+    if (vp->isString() && JSString::isStatic(vp->toString()))
         return true;
 
     /* Unwrap incoming objects. */
     if (vp->isObject()) {
-        JSObject *obj = vp->asObject().unwrap(&flags);
+        JSObject *obj = vp->toObject().unwrap(&flags);
         vp->setObject(*obj);
         /* If the wrapped object is already in this compartment, we are done. */
         if (obj->getCompartment(cx) == this)
@@ -337,7 +337,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     if (vp->isString()) {
         Value orig = *vp;
-        JSString *str = vp->asString();
+        JSString *str = vp->toString();
         JSString *wrapped = js_NewStringCopyN(cx, str->chars(), str->length());
         if (!wrapped)
             return false;
@@ -345,7 +345,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         return crossCompartmentWrappers.put(orig, *vp);
     }
 
-    JSObject *obj = &vp->asObject();
+    JSObject *obj = &vp->toObject();
 
     /*
      * Recurse to wrap the prototype. Long prototype chains will run out of
@@ -389,10 +389,10 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 bool
 JSCompartment::wrap(JSContext *cx, JSString **strp)
 {
-    AutoValueRooter tvr(cx, StringTag(*strp));
+    AutoValueRooter tvr(cx, StringValue(*strp));
     if (!wrap(cx, tvr.addr()))
         return false;
-    *strp = tvr.value().asString();
+    *strp = tvr.value().toString();
     return true;
 }
 
@@ -401,10 +401,10 @@ JSCompartment::wrap(JSContext *cx, JSObject **objp)
 {
     if (!*objp)
         return true;
-    AutoValueRooter tvr(cx, ObjectTag(**objp));
+    AutoValueRooter tvr(cx, ObjectValue(**objp));
     if (!wrap(cx, tvr.addr()))
         return false;
-    *objp = &tvr.value().asObject();
+    *objp = &tvr.value().toObject();
     return true;
 }
 
@@ -458,7 +458,7 @@ JSCompartment::wrapException(JSContext *cx) {
     if (cx->throwing) {
         AutoValueRooter tvr(cx, cx->exception);
         cx->throwing = false;
-        cx->exception = NullTag();
+        cx->exception.setNull();
         if (wrap(cx, tvr.addr())) {
             cx->throwing = true;
             cx->exception = tvr.value();
@@ -487,8 +487,8 @@ SetupFakeFrame(JSContext *cx, ExecuteFrameGuard &frame, JSFrameRegs &regs, JSObj
         return false;
 
     Value *vp = frame.getvp();
-    vp[0] = UndefinedTag();
-    vp[1] = NullTag();  // satisfy LeaveTree assert
+    vp[0].setUndefined();
+    vp[1].setNull();  // satisfy LeaveTree assert
 
     JSStackFrame *fp = frame.getFrame();
     PodZero(fp);  // fp->fun and fp->script are both NULL
@@ -682,14 +682,14 @@ CanReify(Value *vp)
 {
     JSObject *obj;
     return vp->isObject() &&
-           (obj = &vp->asObject())->getClass() == &js_IteratorClass.base &&
+           (obj = &vp->toObject())->getClass() == &js_IteratorClass.base &&
            (obj->getNativeIterator()->flags & JSITER_ENUMERATE);
 }
 
 static bool
 Reify(JSContext *cx, JSCompartment *origin, Value *vp)
 {
-    JSObject *iterObj = &vp->asObject();
+    JSObject *iterObj = &vp->toObject();
     NativeIterator *ni = iterObj->getNativeIterator();
 
     /* Wrap the iteratee. */
@@ -750,7 +750,7 @@ JSCrossCompartmentWrapper::call(JSContext *cx, JSObject *wrapper, uintN argc, Va
     if (!call.enter())
         return false;
 
-    vp[0] = ObjectTag(*call.target);
+    vp[0] = ObjectValue(*call.target);
     if (!call.destination->wrap(cx, &vp[1]))
         return false;
     Value *argv = JS_ARGV(cx, vp);
@@ -781,7 +781,7 @@ JSCrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper, uintN arg
             return false;
     }
     Value *vp = call.getvp();
-    vp[0] = ObjectTag(*call.target);
+    vp[0] = ObjectValue(*call.target);
     if (!JSWrapper::construct(cx, wrapper, argc, argv, rval))
         return false;
 

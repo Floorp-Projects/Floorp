@@ -285,7 +285,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     valueCount = 0;
     for (fp = js_GetTopStackFrame(cx); fp; fp = fp->down) {
         if (fp->fun && fp->argv) {
-            Value v = NullTag();
+            Value v = NullValue();
             if (checkAccess &&
                 !checkAccess(cx, fp->callee(), callerid, JSACC_READ, &v)) {
                 break;
@@ -700,13 +700,13 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
          * NewNativeClassInstance to find the class prototype, we must get the
          * class prototype ourselves.
          */
-        if (!argv[-2].asObject().getProperty(cx,
+        if (!argv[-2].toObject().getProperty(cx,
                                              ATOM_TO_JSID(cx->runtime->atomState
                                                           .classPrototypeAtom),
                                              rval)) {
             return JS_FALSE;
         }
-        JSObject *errProto = &rval->asObject();
+        JSObject *errProto = &rval->toObject();
         obj = NewNativeClassInstance(cx, &js_ErrorClass, errProto, errProto->getParent());
         if (!obj)
             return JS_FALSE;

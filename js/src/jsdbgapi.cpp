@@ -680,7 +680,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 Value *vp = frame.getvp();
                 MakeValueRangeGCSafe(vp, vplen);
                 vp[0].setObject(*closure);
-                vp[1] = NullTag();  // satisfy LeaveTree assert
+                vp[1].setNull();  // satisfy LeaveTree assert
                 JSStackFrame *fp = frame.getFrame();
                 PodZero(fp);
                 MakeValueRangeGCSafe(fp->slots(), nfixed);
@@ -709,7 +709,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             JSBool ok = !wp->setter ||
                         (sprop->hasSetterValue()
                          ? InternalCall(cx, obj,
-                                        ObjectTag(*CastAsObject(wp->setter)),
+                                        ObjectValue(*CastAsObject(wp->setter)),
                                         1, vp, vp)
                          : callJSPropertyOpSetter(cx, wp->setter, obj, userid, vp));
 
@@ -733,7 +733,7 @@ js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
     JSFunction *wrapper;
     jsid userid;
 
-    funobj = &argv[-2].asObject();
+    funobj = &argv[-2].toObject();
     wrapper = GET_FUNCTION_PRIVATE(cx, funobj);
     userid = ATOM_TO_JSID(wrapper->atom);
     *rval = argv[0];
@@ -834,7 +834,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         sprop = js_FindWatchPoint(rt, obj->scope(), propid);
         if (!sprop) {
             /* Make a new property in obj so we can watch for the first set. */
-            if (!js_DefineNativeProperty(cx, obj, propid, Value(UndefinedTag()), NULL, NULL,
+            if (!js_DefineNativeProperty(cx, obj, propid, UndefinedValue(), NULL, NULL,
                                          JSPROP_ENUMERATE, 0, 0, &prop)) {
                 return JS_FALSE;
             }
@@ -850,7 +850,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         if (pobj->isNative()) {
             valroot.set(SPROP_HAS_VALID_SLOT(sprop, pobj->scope())
                         ? pobj->lockedGetSlot(sprop->slot)
-                        : Value(UndefinedTag()));
+                        : UndefinedValue());
             getter = sprop->getter();
             setter = sprop->setter();
             attrs = sprop->attributes();
@@ -1589,7 +1589,7 @@ SetupFakeFrame(JSContext *cx, ExecuteFrameGuard &frame, JSFrameRegs &regs, JSObj
     Value *vp = frame.getvp();
     PodZero(vp, vplen);
     vp[0].setObject(*scopeobj);
-    vp[1] = NullTag();  // satisfy LeaveTree assert
+    vp[1].setNull();  // satisfy LeaveTree assert
 
     JSStackFrame *fp = frame.getFrame();
     PodZero(fp);
@@ -1739,7 +1739,7 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
 
     nbytes = sizeof *obj;
     if (obj->dslots) {
-        nbytes += (obj->dslots[-1].asPrivateUint32() - JS_INITIAL_NSLOTS + 1)
+        nbytes += (obj->dslots[-1].toPrivateUint32() - JS_INITIAL_NSLOTS + 1)
                   * sizeof obj->dslots[0];
     }
     if (obj->isNative()) {

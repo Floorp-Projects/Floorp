@@ -156,7 +156,7 @@ inline js::JSProxyHandler *
 JSObject::getProxyHandler() const
 {
     JS_ASSERT(isProxy());
-    return (js::JSProxyHandler *) getSlot(js::JSSLOT_PROXY_HANDLER).asPrivate();
+    return (js::JSProxyHandler *) getSlot(js::JSSLOT_PROXY_HANDLER).toPrivate();
 }
 
 inline const js::Value &
