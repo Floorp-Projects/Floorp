@@ -661,7 +661,7 @@ nsresult imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup 
   if (aProxyRequest) {
     proxyRequest = static_cast<imgRequestProxy *>(aProxyRequest);
   } else {
-    NS_NEWXPCOM(proxyRequest, imgRequestProxy);
+    proxyRequest = new imgRequestProxy();
     if (!proxyRequest) return NS_ERROR_OUT_OF_MEMORY;
   }
   NS_ADDREF(proxyRequest);
