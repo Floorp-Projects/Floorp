@@ -657,8 +657,8 @@ var gCSSProperties = {
 		other_values: [ "1px", "3em" ],
 		invalid_values: []
 	},
-	"-moz-resize": {
-		domProp: "MozResize",
+	"resize": {
+		domProp: "resize",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "display": "block", "overflow": "auto" },
