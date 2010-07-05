@@ -9973,7 +9973,7 @@ TraceRecorder::is_string_id(LIns *id_ins)
 LIns *
 TraceRecorder::unbox_string_id(LIns *id_ins)
 {
-    JS_STATIC_ASSERT(JSID_STRING_TYPE == 0);
+    JS_STATIC_ASSERT(JSID_TYPE_STRING == 0);
     return id_ins;
 }
 

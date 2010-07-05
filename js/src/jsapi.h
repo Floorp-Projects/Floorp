@@ -307,11 +307,11 @@ JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(jsval v)
  * JS_IdToValue must be used instead.
  */
 
-#define JSID_STRING_TYPE                 0x0
-#define JSID_INT_TYPE                    0x1
-#define JSID_OBJECT_TYPE                 0x2
-#define JSID_VOID_TYPE                   0x4
-#define JSID_DEFAULT_XML_NAMESPACE_TYPE  0x6
+#define JSID_TYPE_STRING                 0x0
+#define JSID_TYPE_INT                    0x1
+#define JSID_TYPE_VOID                   0x2
+#define JSID_TYPE_OBJECT                 0x4
+#define JSID_TYPE_DEFAULT_XML_NAMESPACE  0x6
 #define JSID_TYPE_MASK                   0x7
 
 /*
@@ -348,7 +348,7 @@ INTERNED_STRING_TO_JSID(JSString *str)
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_INT(jsid iden)
 {
-    return !!(JSID_BITS(iden) & JSID_INT_TYPE);
+    return !!(JSID_BITS(iden) & JSID_TYPE_INT);
 }
 
 static JS_ALWAYS_INLINE int32
@@ -373,14 +373,14 @@ INT_TO_JSID(int32 i)
 {
     jsid iden;
     JS_ASSERT(INT_FITS_IN_JSID(i));
-    JSID_BITS(iden) = ((i << 1) | JSID_INT_TYPE);
+    JSID_BITS(iden) = ((i << 1) | JSID_TYPE_INT);
     return iden;
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_OBJECT(jsid iden)
 {
-    return (JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_OBJECT_TYPE;
+    return (JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_OBJECT;
 }
 
 static JS_ALWAYS_INLINE JSObject *
@@ -396,7 +396,7 @@ OBJECT_TO_JSID(JSObject *obj)
     jsid iden;
     JS_ASSERT(obj != NULL);
     JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
-    JSID_BITS(iden) = ((size_t)obj | JSID_OBJECT_TYPE);
+    JSID_BITS(iden) = ((size_t)obj | JSID_TYPE_OBJECT);
     return iden;
 }
 
@@ -420,16 +420,16 @@ JSID_TO_GCTHING(jsid iden)
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_DEFAULT_XML_NAMESPACE(jsid iden)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_DEFAULT_XML_NAMESPACE_TYPE,
-                 JSID_BITS(iden) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
-    return ((size_t)JSID_BITS(iden) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
+    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_DEFAULT_XML_NAMESPACE,
+                 JSID_BITS(iden) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
+    return ((size_t)JSID_BITS(iden) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
 }
 
 static JS_ALWAYS_INLINE jsid
 JSID_DEFAULT_XML_NAMESPACE()
 {
     jsid iden;
-    JSID_BITS(iden) = JSID_DEFAULT_XML_NAMESPACE_TYPE;
+    JSID_BITS(iden) = JSID_TYPE_DEFAULT_XML_NAMESPACE;
     return iden;
 }
 
@@ -443,15 +443,15 @@ JSID_DEFAULT_XML_NAMESPACE()
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_VOID(jsid iden)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_VOID_TYPE,
-                 JSID_BITS(iden) == JSID_VOID_TYPE);
-    return ((size_t)JSID_BITS(iden) == JSID_VOID_TYPE);
+    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
+                 JSID_BITS(iden) == JSID_TYPE_VOID);
+    return ((size_t)JSID_BITS(iden) == JSID_TYPE_VOID);
 }
 
 #ifdef DEBUG
 extern JS_PUBLIC_DATA(jsid) JSID_VOID;
 #else
-# define JSID_VOID  ((jsid)JSID_VOID_TYPE)
+# define JSID_VOID  ((jsid)JSID_TYPE_VOID)
 #endif
 
 /************************************************************************/

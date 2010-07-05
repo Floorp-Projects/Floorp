@@ -110,7 +110,7 @@ using namespace js;
 #endif
 
 #ifdef DEBUG
-JS_PUBLIC_DATA(jsid) JSID_VOID = { (size_t)JSID_VOID_TYPE };
+JS_PUBLIC_DATA(jsid) JSID_VOID = { (size_t)JSID_TYPE_VOID };
 #endif
 
 #ifdef DEBUG
