@@ -1210,9 +1210,6 @@
               t.setAttribute("label", aURI);
 
             t.setAttribute("crop", "end");
-            t.style.maxWidth = this.tabContainer.mTabMaxWidth + "px";
-            t.style.minWidth = this.tabContainer.mTabMinWidth + "px";
-            t.width = 0;
             t.setAttribute("validate", "never");
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
@@ -2505,8 +2502,6 @@
     <implementation implements="nsIDOMEventListener">
       <constructor>
         <![CDATA[
-          this.mTabMinWidth = Services.prefs.getIntPref("browser.tabs.tabMinWidth");
-          this.mTabMaxWidth = Services.prefs.getIntPref("browser.tabs.tabMaxWidth");
           this.mTabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
           this.mCloseButtons = Services.prefs.getIntPref("browser.tabs.closeButtons");
           this._closeWindowWithLastTab = Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
@@ -2514,9 +2509,6 @@
           var tab = this.firstChild;
           tab.setAttribute("label",
                            this.tabbrowser.mStringBundle.getString("tabs.emptyTabTitle"));
-          tab.style.minWidth = this.mTabMinWidth + "px";
-          tab.style.maxWidth = this.mTabMaxWidth + "px";
-          tab.width = 0;
           tab.setAttribute("crop", "end");
           tab.setAttribute("validate", "never");
           tab.setAttribute("onerror", "this.removeAttribute('image');");
