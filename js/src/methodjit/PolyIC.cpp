@@ -951,9 +951,6 @@ class ScopeNameCompiler : public PICStubCompiler
             return disable("unhandled callobj sprop getter");
         }
 
-        if (!holder->getPrivate())
-            return disable("escaped callobj not yet handled");
-
         /* Walk the scope chain. */
         JSObject *tobj = scopeChain;
         while (tobj && tobj != holder) {
@@ -1010,12 +1007,27 @@ class ScopeNameCompiler : public PICStubCompiler
             skipOver = masm.jump();
         }
 
+        escapedFrame.linkTo(masm.label(), &masm);
+
+        {
+            masm.loadPtr(Address(pic.objReg, offsetof(JSObject, dslots)), pic.objReg);
+
+            JSFunction *fun = js_GetCallObjectFunction(holder);
+            if (kind == VAR)
+                slot += fun->nargs;
+            Address dslot(pic.objReg, slot * sizeof(Value));
+            masm.loadTypeTag(dslot, pic.shapeReg);
+            masm.loadData32(dslot, pic.objReg);
+        }
+
+        skipOver.linkTo(masm.label(), &masm);
+        Jump done = masm.jump();
+
         // All failures flow to here, so there is a common point to patch.
         for (Jump *pj = fails.begin(); pj != fails.end(); ++pj)
             pj->linkTo(masm.label(), &masm);
         finalNull.linkTo(masm.label(), &masm);
         finalShape.linkTo(masm.label(), &masm);
-        escapedFrame.linkTo(masm.label(), &masm);
         Label failLabel = masm.label();
         Jump failJump = masm.jump();
 
@@ -1035,7 +1047,7 @@ class ScopeNameCompiler : public PICStubCompiler
         }
 
         buffer.link(failJump, pic.slowPathStart);
-        buffer.link(skipOver, pic.storeBack);
+        buffer.link(done, pic.storeBack);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
         JaegerSpew(JSpew_PICs, "generated %s stub at %p\n", type, cs.executableAddress());
 
