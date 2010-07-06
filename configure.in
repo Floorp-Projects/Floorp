@@ -5979,7 +5979,7 @@ if test -n "$MOZ_SYDNEYAUDIO"; then
 linux*)
       PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
          [echo "$MOZ_ALSA_PKG_ERRORS"
-          AC_MSG_ERROR([Need alsa for Ogg or Wave decoding on Linux.  Disable with --disable-ogg --disable-wave.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
+          AC_MSG_ERROR([Need alsa for Ogg, Wave or WebM decoding on Linux.  Disable with --disable-ogg --disable-wave --disable-webm.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
       ;;
    esac
 fi
