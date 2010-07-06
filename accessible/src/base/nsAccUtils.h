@@ -198,19 +198,6 @@ public:
    static nsAccessible * GetAncestorWithRole(nsAccessible *aDescendant,
                                              PRUint32 aRole);
 
-   /**
-     * For an ARIA tree item , get the accessible that represents its conceptual parent.
-     * This method will use the correct method for the given way the tree is constructed.
-     * The conceptual parent is what the user sees as the parent, not the DOM or accessible parent.
-     * @param aStartTreeItem  The tree item to get the parent for
-     * @param aStartTreeItemContent  The content node for the tree item
-     * @param The tree item's parent, or null if none
-     */
-   static void
-     GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
-                           nsIContent *aStartTreeItemContent,
-                           nsIAccessible **aTreeItemParent);
-
   /**
    * Return single or multi selectable container for the given item.
    *

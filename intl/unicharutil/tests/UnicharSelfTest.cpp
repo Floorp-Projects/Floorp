@@ -376,29 +376,6 @@ void TestCaseConversion()
        }
     }
 
-    /* 
-     * It would be pointless to test ToTitle() with the whole buffer, since
-     *  the expected result would be that only the first character would be
-     *  transformed. Instead, pass a series of 2-character buffers starting
-     *  with each character of the test cases, and check that the first
-     *  character is transformed as expected and the second remains unchanged
-     */
-     printf("Test 7 - ToTitle(PRUnichar*, PRUnichar*, PRUint32):\n");
-     for (i = 0; i < T4LEN; i++)
-     {
-       PRUnichar* titleTest = t4data + i;
-       res = t->ToTitle(titleTest, buf, 2);
-       if(NS_FAILED(res)) {
-         printf("\tFailed!! return value != NS_OK\n");
-       } else {
-         if (buf[0] != t4result[i] || buf[1] != t4data[i + 1])
-         {
-           printf("\tFailed!! result unexpected %d\n", i);
-           break;
-         }
-       }
-     }
-
    NS_RELEASE(t);
    }
    printf("==============================\n");

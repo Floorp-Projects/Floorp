@@ -153,7 +153,7 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
    if (mListenerArray) {
       for (PRUint32 i = 0, end = mListenerArray->Length(); i < end; i++) {
          nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
-         NS_DELETEXPCOM(state);
+         delete state;
       }
       delete mListenerArray;
       mListenerArray = nsnull;
@@ -237,14 +237,14 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIWeakReference *aListener, c
         // The window hasn't been created yet, so queue up the listener. They'll be
         // registered when the window gets created.
         nsAutoPtr<nsWebBrowserListenerState> state;
-        NS_NEWXPCOM(state, nsWebBrowserListenerState);
+        state = new nsWebBrowserListenerState();
         if (!state) return NS_ERROR_OUT_OF_MEMORY;
 
         state->mWeakPtr = aListener;
         state->mID = aIID;
 
         if (!mListenerArray) {
-            NS_NEWXPCOM(mListenerArray, nsTArray<nsWebBrowserListenerState*>);
+            mListenerArray = new nsTArray<nsWebBrowserListenerState*>();
             if (!mListenerArray) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
@@ -315,9 +315,9 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIWeakReference *aListener
         if (0 >= mListenerArray->Length()) {
             for (PRUint32 i = 0, end = mListenerArray->Length(); i < end; i++) {
                nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
-               NS_DELETEXPCOM(state);
+               delete state;
             }
-            NS_DELETEXPCOM(mListenerArray);
+            delete mListenerArray;
             mListenerArray = nsnull;
         }
 
@@ -1172,9 +1172,9 @@ NS_IMETHODIMP nsWebBrowser::Create()
       }
       for (PRUint32 i = 0, end = mListenerArray->Length(); i < end; i++) {
          nsWebBrowserListenerState *state = mListenerArray->ElementAt(i);
-         NS_DELETEXPCOM(state);
+         delete state;
       }
-      NS_DELETEXPCOM(mListenerArray);
+      delete mListenerArray;
       mListenerArray = nsnull;
    }
 

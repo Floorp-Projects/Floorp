@@ -67,10 +67,6 @@ public:
   // Convert an array of Unicode characters into lower case
   NS_IMETHOD ToLower( const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen) = 0;
 
-  // Convert an array of Unicode characters into title case
-  NS_IMETHOD ToTitle( const PRUnichar* anArray, PRUnichar* aReturn, 
-                      PRUint32 aLen, PRBool aStartInWordBundary=PR_TRUE) = 0;
-
   // case-insensitive PRUnichar* comparison - aResult returns similar
   // to strcasecmp
   NS_IMETHOD CaseInsensitiveCompare(const PRUnichar* aLeft, const PRUnichar* aRight, PRUint32 aLength, PRInt32* aResult) = 0;

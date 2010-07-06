@@ -253,8 +253,8 @@ public:
    * @param aResult the resulting HTMLValue
    * @return whether the value was parsed
    */
-  PRBool ParseDivAlignValue(const nsAString& aString,
-                            nsAttrValue& aResult) const;
+  static PRBool ParseDivAlignValue(const nsAString& aString,
+                                   nsAttrValue& aResult);
 
   /**
    * Convert a table halign string to value (left/right/center/char/justify)

@@ -63,49 +63,6 @@ nsLocale::nsLocale(void)
   NS_ASSERTION(fHashtable, "nsLocale: failed to allocate PR_Hashtable");
 }
 
-nsLocale::nsLocale(nsLocale* other) : fHashtable(nsnull), fCategoryCount(0)
-{
-  fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
-                               &nsLocale::Hash_CompareNSString,
-                               &nsLocale::Hash_CompareNSString, NULL, NULL);
-  NS_ASSERTION(fHashtable, "nsLocale: failed to allocate PR_Hashtable");
-
-  //
-  // enumerate Hash and copy
-  //
-  PL_HashTableEnumerateEntries(other->fHashtable, 
-                               &nsLocale::Hash_EnumerateCopy, fHashtable);
-}
-
-
-nsLocale::nsLocale(const nsTArray<nsString>& categoryList, 
-                   const nsTArray<nsString>& valueList) 
-                  : fHashtable(NULL), fCategoryCount(0)
-{
-  PRUnichar* key, *value;
-
-  fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
-                               &nsLocale::Hash_CompareNSString,
-                               &nsLocale::Hash_CompareNSString,
-                               NULL, NULL);
-  NS_ASSERTION(fHashtable, "nsLocale: failed to allocate PR_Hashtable");
-
-  if (fHashtable)
-  {
-    for(PRUint32 i=0; i < categoryList.Length(); ++i) 
-    {
-      key = ToNewUnicode(categoryList[i]);
-      NS_ASSERTION(key, "nsLocale: failed to allocate internal hash key");
-      value = ToNewUnicode(valueList[i]);
-      NS_ASSERTION(value, "nsLocale: failed to allocate internal hash value");
-      if (!PL_HashTableAdd(fHashtable,key,value)) {
-          nsMemory::Free(key);
-          nsMemory::Free(value);
-      }
-    }
-  }
-}
-
 nsLocale::~nsLocale(void)
 {
   // enumerate all the entries with a delete function to
@@ -184,27 +141,5 @@ nsLocale::Hash_EnumerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg)
   nsMemory::Free((PRUnichar *)he->value);
 
   return (HT_ENUMERATE_NEXT | HT_ENUMERATE_REMOVE);
-}
-
-PRIntn
-nsLocale::Hash_EnumerateCopy(PLHashEntry *he, PRIntn hashIndex, void* arg)
-{
-  PRUnichar* newKey = ToNewUnicode(nsDependentString((PRUnichar *)he->key));
-  if (!newKey) 
-    return HT_ENUMERATE_STOP;
-
-  PRUnichar* newValue = ToNewUnicode(nsDependentString((PRUnichar *)he->value));
-  if (!newValue) {
-    nsMemory::Free(newKey);
-    return HT_ENUMERATE_STOP;
-  }
-
-  if (!PL_HashTableAdd((PLHashTable*)arg, newKey, newValue)) {
-    nsMemory::Free(newKey);
-    nsMemory::Free(newValue);
-    return HT_ENUMERATE_STOP;
-  }
-
-  return (HT_ENUMERATE_NEXT);
 }
 

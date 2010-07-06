@@ -164,7 +164,7 @@ static nsCompressedMap gLowerMap = {
 nsCaseConversionImp2* nsCaseConversionImp2::GetInstance()
 {
   if (!gCaseConv)
-    NS_NEWXPCOM(gCaseConv, nsCaseConversionImp2);
+    gCaseConv = new nsCaseConversionImp2();
   return gCaseConv;
 }
 
@@ -309,48 +309,6 @@ nsresult nsCaseConversionImp2::ToLower(
   return NS_OK;
 }
 
-
-
-nsresult nsCaseConversionImp2::ToTitle(
-  const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen,
-  PRBool aStartInWordBoundary
-)
-{
-  if(0 == aLen)
-    return NS_OK;
-
-  //
-  // We need to replace this implementation to a real one
-  // Currently, it only do the right thing for ASCII
-  // Howerver, we need a word breaker to do the right job
-  //
-  // this->ToLower(anArray, aReturn, aLen); 
-  // CSS define Capitalize as 
-  //  Uppercases the first character of each word
-  // 
-  
-  PRBool bLastIsSpace =  IS_ASCII_SPACE(anArray[0]);
-  if(aStartInWordBoundary)
-  {
-     this->ToTitle(anArray[0], &aReturn[0]);
-  }
-
-  PRUint32 i;
-  for(i=1;i<aLen;i++)
-  {
-    if(bLastIsSpace)
-    {
-      this->ToTitle(anArray[i], &aReturn[i]);
-    }
-    else
-    {
-      aReturn[i] = anArray[i];
-    }
-
-    bLastIsSpace = IS_ASCII_SPACE(aReturn[i]);
-  }
-  return NS_OK;
-}
 
 // implementation moved from the old nsCRT routine
 NS_IMETHODIMP

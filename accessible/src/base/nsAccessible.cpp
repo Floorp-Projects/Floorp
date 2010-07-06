@@ -41,6 +41,7 @@
 
 #include "nsIXBLAccessible.h"
 
+#include "AccGroupInfo.h"
 #include "AccIterator.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
@@ -2125,11 +2126,12 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
           (mRoleMapEntry->role == nsIAccessibleRole::ROLE_OUTLINEITEM ||
            mRoleMapEntry->role == nsIAccessibleRole::ROLE_ROW)) {
 
-        nsCOMPtr<nsIAccessible> accTarget;
-        nsAccUtils::GetARIATreeItemParent(this, mContent,
-                                          getter_AddRefs(accTarget));
+        AccGroupInfo* groupInfo = GetGroupInfo();
+        if (!groupInfo)
+          return NS_OK_NO_RELATION_TARGET;
 
-        return nsRelUtils::AddTarget(aRelationType, aRelation, accTarget);
+        return nsRelUtils::AddTarget(aRelationType, aRelation,
+                                     groupInfo->GetConceptualParent());
       }
 
       // If accessible is in its own Window, or is the root of a document,
@@ -3091,98 +3093,24 @@ nsAccessible::GetActionRule(PRUint32 aStates)
   return eNoAction;
 }
 
+AccGroupInfo*
+nsAccessible::GetGroupInfo()
+{
+  if (mGroupInfo)
+    return mGroupInfo;
+
+  mGroupInfo = AccGroupInfo::CreateGroupInfo(this);
+  return mGroupInfo;
+}
+
 void
 nsAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet, PRInt32 *aSetSize)
 {
-  PRUint32 role = nsAccUtils::Role(this);
-  if (role != nsIAccessibleRole::ROLE_LISTITEM &&
-      role != nsIAccessibleRole::ROLE_MENUITEM &&
-      role != nsIAccessibleRole::ROLE_CHECK_MENU_ITEM &&
-      role != nsIAccessibleRole::ROLE_RADIO_MENU_ITEM &&
-      role != nsIAccessibleRole::ROLE_RADIOBUTTON &&
-      role != nsIAccessibleRole::ROLE_PAGETAB &&
-      role != nsIAccessibleRole::ROLE_OPTION &&
-      role != nsIAccessibleRole::ROLE_OUTLINEITEM &&
-      role != nsIAccessibleRole::ROLE_ROW &&
-      role != nsIAccessibleRole::ROLE_GRID_CELL)
-    return;
-
-  PRUint32 baseRole = role;
-  if (role == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
-      role == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM)
-    baseRole = nsIAccessibleRole::ROLE_MENUITEM;
-
-  nsAccessible* parent = GetParent();
-  NS_ENSURE_TRUE(parent,);
-
-  PRInt32 level = nsAccUtils::GetARIAOrDefaultLevel(this);
-
-  // Compute 'posinset'.
-  PRInt32 positionInGroup = 1;
-  for (PRInt32 idx = mIndexInParent - 1; idx >= 0; idx--) {
-    nsAccessible* sibling = parent->GetChildAt(idx);
-
-    PRUint32 siblingRole = nsAccUtils::Role(sibling);
-
-    // If the sibling is separator then the group is ended.
-    if (siblingRole == nsIAccessibleRole::ROLE_SEPARATOR)
-      break;
-
-    PRUint32 siblingBaseRole = siblingRole;
-    if (siblingRole == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
-        siblingRole == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM)
-      siblingBaseRole = nsIAccessibleRole::ROLE_MENUITEM;
-
-    // If sibling is visible and has the same base role
-    if (siblingBaseRole == baseRole &&
-        !(nsAccUtils::State(sibling) & nsIAccessibleStates::STATE_INVISIBLE)) {
-
-      // and check if it's hierarchical flatten structure, i.e. if the sibling
-      // level is lesser than this one then group is ended, if the sibling level
-      // is greater than this one then the group is splited by some child
-      // elements (group will be continued).
-      PRInt32 siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
-      if (siblingLevel < level)
-        break;
-      else if (level == siblingLevel)
-        ++ positionInGroup;
-    }
+  AccGroupInfo* groupInfo = GetGroupInfo();
+  if (groupInfo) {
+    *aPosInSet = groupInfo->PosInSet();
+    *aSetSize = groupInfo->SetSize();
   }
-
-  // Compute 'setsize'.
-  PRInt32 setSize = positionInGroup;
-
-  PRInt32 siblingCount = parent->GetChildCount();
-  for (PRInt32 idx = mIndexInParent + 1; idx < siblingCount; idx++) {
-    nsAccessible* sibling = parent->GetChildAt(idx);
-    NS_ENSURE_TRUE(sibling,);
-
-    PRUint32 siblingRole = nsAccUtils::Role(sibling);
-
-    // If the sibling is separator then the group is ended.
-    if (siblingRole == nsIAccessibleRole::ROLE_SEPARATOR)
-      break;
-
-    PRUint32 siblingBaseRole = siblingRole;
-    if (siblingRole == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
-        siblingRole == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM)
-      siblingBaseRole = nsIAccessibleRole::ROLE_MENUITEM;
-
-    // If sibling is visible and has the same base role
-    if (siblingBaseRole == baseRole &&
-        !(nsAccUtils::State(sibling) & nsIAccessibleStates::STATE_INVISIBLE)) {
-
-      // and check if it's hierarchical flatten structure.
-      PRInt32 siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
-      if (siblingLevel < level)
-        break;
-      else if (level == siblingLevel)
-        ++ setSize;
-    }
-  }
-
-  *aPosInSet = positionInGroup;
-  *aSetSize = setSize;
 }
 
 PRInt32

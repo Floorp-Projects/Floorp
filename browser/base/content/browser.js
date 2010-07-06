@@ -4727,12 +4727,12 @@ var TabsOnTop = {
 
 #ifdef MENUBAR_CAN_AUTOHIDE
 function updateAppButtonDisplay() {
-  var menubarHidden =
+  var displayAppButton = window.menubar.visible &&
     document.getElementById("toolbar-menubar").getAttribute("autohide") == "true";
 
-  document.getElementById("appmenu-button-container").hidden = !menubarHidden;
+  document.getElementById("appmenu-button-container").hidden = !displayAppButton;
 
-  if (menubarHidden)
+  if (displayAppButton)
     document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
   else
     document.documentElement.removeAttribute("chromemargin");
@@ -7772,6 +7772,10 @@ var TabContextMenu = {
       Cc["@mozilla.org/browser/sessionstore;1"].
       getService(Ci.nsISessionStore).
       getClosedTabCount(window) == 0;
+      
+    // Only one of pin/unpin should be visible
+    document.getElementById("context_pinTab").hidden = this.contextTab.pinned;
+    document.getElementById("context_unpinTab").hidden = !this.contextTab.pinned;
   }
 };
 
