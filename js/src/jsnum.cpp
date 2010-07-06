@@ -215,7 +215,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     }
 
     if (vp[2].isDouble() && (radix == 0 || radix == 10)) {
-        vp->setDouble(DoubleToInteger(vp[2].asDouble()));
+        vp->setDouble(DoubleToInteger(vp[2].toDouble()));
         return JS_TRUE;
     }
 
