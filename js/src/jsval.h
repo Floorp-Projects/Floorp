@@ -99,6 +99,9 @@ JS_ENUM_HEADER(JSValueType, uint8)
     JSVAL_TYPE_NONFUNOBJ           = 0x57,
     JSVAL_TYPE_FUNOBJ              = 0x67,
 
+    JSVAL_TYPE_STRORNULL           = 0x97,
+    JSVAL_TYPE_OBJORNULL           = 0x98,
+
     JSVAL_TYPE_BOXED               = 0x99,
     JSVAL_TYPE_UNINITIALIZED       = 0xcd
 } JS_ENUM_FOOTER(JSValueType);
@@ -148,6 +151,8 @@ typedef uint8 JSValueType;
 #define JSVAL_TYPE_OBJECT            ((uint8)0x07)
 #define JSVAL_TYPE_NONFUNOBJ         ((uint8)0x57)
 #define JSVAL_TYPE_FUNOBJ            ((uint8)0x67)
+#define JSVAL_TYPE_STRORNULL         ((uint8)0x97)
+#define JSVAL_TYPE_OBJORNULL         ((uint8)0x98)
 #define JSVAL_TYPE_STRORNULL         ((uint8)0x97)
 #define JSVAL_TYPE_OBJORNULL         ((uint8)0x98)
 #define JSVAL_TYPE_BOXED             ((uint8)0x99)
