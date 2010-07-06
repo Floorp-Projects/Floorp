@@ -282,7 +282,7 @@ JSObject *
 JSStackFrame::computeThisObject(JSContext *cx)
 {
     JS_ASSERT(thisv.isPrimitive());
-    JS_ASSERT(fun);
+    //JS_ASSERT(fun);
 
     if (!ComputeThisFromArgv(cx, argv))
         return NULL;
