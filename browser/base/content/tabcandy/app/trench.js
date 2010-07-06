@@ -108,7 +108,7 @@ var Trench = function(element, xory, type, edge) {
 Trench.prototype = {
 
   //----------
-  // Getter: radius
+  // Variable: radius
   // (integer) radius is how far away we should snap from
   get radius() { return this.customRadius || Trenches.defaultRadius; },
 
