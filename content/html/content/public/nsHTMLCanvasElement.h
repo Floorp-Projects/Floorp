@@ -83,6 +83,10 @@ public:
   // nsIDOMHTMLCanvasElement
   NS_DECL_NSIDOMHTMLCANVASELEMENT
 
+  // CC
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLCanvasElement,
+                                                     nsGenericHTMLElement)
+
   /**
    * Ask the canvas Element to return the primary frame, if any
    */
@@ -165,6 +169,8 @@ protected:
   nsresult ToDataURLImpl(const nsAString& aMimeType,
                          const nsAString& aEncoderOptions,
                          nsAString& aDataURL);
+  nsresult GetContextHelper(const nsAString& aContextId,
+                            nsICanvasRenderingContextInternal **aContext);
 
   nsString mCurrentContextId;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;

@@ -36,7 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "base/basictypes.h"
+#endif
+
 #include "xpcmodule.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsLayoutStatics.h"
 #include "nsContentCID.h"
 #include "nsContentDLF.h"
@@ -47,7 +52,6 @@
 #include "nsHTMLContentSerializer.h"
 #include "nsHTMLParts.h"
 #include "nsGenericHTMLElement.h"
-#include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
 #include "nsIContentIterator.h"
 #include "nsIContentSerializer.h"
@@ -63,7 +67,6 @@
 #include "nsIFactory.h"
 #include "nsFrameSelection.h"
 #include "nsIFrameUtil.h"
-#include "nsIGenericFactory.h"
 #include "nsIFragmentContentSink.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLToTextSink.h"
@@ -99,6 +102,8 @@
 #include "mozilla/Services.h"
 
 #include "nsIEventListenerService.h"
+#include "nsIFrameMessageManager.h"
+
 // Transformiix stuff
 #include "nsXPathEvaluator.h"
 #include "txMozillaXSLTProcessor.h"
@@ -109,6 +114,7 @@
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsChannelPolicy.h"
+#include "nsWebSocket.h"
 
 // view stuff
 #include "nsViewsCID.h"
@@ -148,7 +154,6 @@
 #include "nsPrincipal.h"
 #include "nsSystemPrincipal.h"
 #include "nsNullPrincipal.h"
-#include "nsPrefsCID.h"
 #include "nsNetCID.h"
 
 #define NS_EDITORCOMMANDTABLE_CID \
@@ -160,7 +165,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 
 // Constructor of a controller which is set up to use, internally, a
 // singleton command-table pre-filled with editor commands.
-static NS_METHOD
+static nsresult
 nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
                                             void **aResult)
 {
@@ -185,7 +190,7 @@ nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
 
 
 // Constructor for a command-table pref-filled with editor commands
-static NS_METHOD
+static nsresult
 nsEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
                                             void **aResult)
 {
@@ -262,10 +267,10 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULSortService.h"
 
-NS_IMETHODIMP
+nsresult
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-NS_IMETHODIMP
+nsresult
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
 
@@ -277,6 +282,12 @@ static void Shutdown();
 #endif
 
 #include "nsGeolocation.h"
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+#include "nsAccelerometerSystem.h"
+#endif
 #include "nsCSPService.h"
 
 // Transformiix
@@ -299,6 +310,9 @@ NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsXPathEvaluator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebSocket)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSSProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileReader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileDataProtocolHandler)
@@ -306,6 +320,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDOMStorageManager,
                                          nsDOMStorageManager::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChannelPolicy)
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerSystem)
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -342,11 +362,11 @@ static PRBool gInitialized = PR_FALSE;
 
 // static
 nsresult
-Initialize(nsIModule* aSelf)
+Initialize()
 {
-  NS_PRECONDITION(!gInitialized, "module already initialized");
   if (gInitialized) {
-    return NS_OK;
+    NS_ERROR("Recursive layout module initialization");
+    return NS_ERROR_FAILURE;
   }
 
   NS_ASSERTION(sizeof(PtrBits) == sizeof(void *),
@@ -355,7 +375,12 @@ Initialize(nsIModule* aSelf)
 
   gInitialized = PR_TRUE;
 
-  nsresult rv = nsLayoutStatics::Initialize();
+  nsresult rv;
+  rv = xpcModuleCtor();
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = nsLayoutStatics::Initialize();
   if (NS_FAILED(rv)) {
     Shutdown();
     return rv;
@@ -436,11 +461,12 @@ nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
 
 nsresult NS_NewEventListenerService(nsIEventListenerService** aResult);
+nsresult NS_NewGlobalMessageManager(nsIChromeFrameMessageManager** aResult);
 
-NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+nsresult NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 #define MAKE_CTOR(ctor_, iface_, func_)                   \
-static NS_IMETHODIMP                                      \
+static nsresult                                           \
 ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
 {                                                         \
   *aResult = nsnull;                                      \
@@ -513,9 +539,11 @@ MAKE_CTOR(CreatePlainTextSerializer,      nsIContentSerializer,        NS_NewPla
 MAKE_CTOR(CreateHTMLFragmentSink,         nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink)
 MAKE_CTOR(CreateHTMLFragmentSink2,        nsIFragmentContentSink,      NS_NewHTMLFragmentContentSink2)
 MAKE_CTOR(CreateHTMLParanoidFragmentSink, nsIFragmentContentSink,      NS_NewHTMLParanoidFragmentSink)
+MAKE_CTOR(CreateHTMLParanoidFragmentSink2,nsIFragmentContentSink,      NS_NewHTMLParanoidFragmentSink2)
 MAKE_CTOR(CreateXMLFragmentSink,          nsIFragmentContentSink,      NS_NewXMLFragmentContentSink)
 MAKE_CTOR(CreateXMLFragmentSink2,         nsIFragmentContentSink,      NS_NewXMLFragmentContentSink2)
 MAKE_CTOR(CreateXHTMLParanoidFragmentSink,nsIFragmentContentSink,      NS_NewXHTMLParanoidFragmentSink)
+MAKE_CTOR(CreateXHTMLParanoidFragmentSink2,nsIFragmentContentSink,     NS_NewXHTMLParanoidFragmentSink2)
 MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSanitizingHTMLSerializer)
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
@@ -534,6 +562,7 @@ MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXML
 #endif
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
 MAKE_CTOR(CreateEventListenerService,     nsIEventListenerService,     NS_NewEventListenerService)
+MAKE_CTOR(CreateGlobalMessageManager,     nsIChromeFrameMessageManager,NS_NewGlobalMessageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
@@ -556,7 +585,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSURI)
 // views are not refcounted, so this is the same as
 // NS_GENERIC_FACTORY_CONSTRUCTOR without the NS_ADDREF/NS_RELEASE
 #define NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(_InstanceClass)                 \
-static NS_IMETHODIMP                                                          \
+static nsresult                                                               \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                             void **aResult)                                   \
 {                                                                             \
@@ -582,7 +611,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
 
-static NS_IMETHODIMP
+static nsresult
 CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   *aResult = nsnull;
@@ -599,41 +628,7 @@ CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return rv;
 }
 
-static NS_IMETHODIMP
-RegisterHTMLImgElement(nsIComponentManager *aCompMgr,
-                       nsIFile* aPath,
-                       const char* aRegistryLocation,
-                       const char* aComponentType,
-                       const nsModuleComponentInfo* aInfo)
-{
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-
-  if (!catman)
-    return NS_ERROR_FAILURE;
-
-  nsXPIDLCString previous;
-  nsresult rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
-                                         "Image", NS_HTMLIMGELEMENT_CONTRACTID,
-                                         PR_TRUE, PR_TRUE, getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY,
-                                  "Image", "HTMLImageElement",
-                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
-
-static NS_IMETHODIMP
-UnregisterHTMLImgElement(nsIComponentManager* aCompMgr,
-                         nsIFile* aPath,
-                         const char* aRegistryLocation,
-                         const nsModuleComponentInfo* aInfo)
-{
-  // XXX remove category entry
-  return NS_OK;
-}
-
-static NS_IMETHODIMP
+static nsresult
 CreateHTMLOptionElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   *aResult = nsnull;
@@ -650,42 +645,8 @@ CreateHTMLOptionElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return rv;
 }
 
-static NS_IMETHODIMP
-RegisterHTMLOptionElement(nsIComponentManager *aCompMgr,
-                          nsIFile* aPath,
-                          const char* aRegistryLocation,
-                          const char* aComponentType,
-                          const nsModuleComponentInfo* aInfo)
-{
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-
-  if (!catman)
-    return NS_ERROR_FAILURE;
-
-  nsXPIDLCString previous;
-  nsresult rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
-                                         "Option", NS_HTMLOPTIONELEMENT_CONTRACTID,
-                                         PR_TRUE, PR_TRUE, getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY,
-                                  "Option", "HTMLOptionElement",
-                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
-
-static NS_IMETHODIMP
-UnregisterHTMLOptionElement(nsIComponentManager* aCompMgr,
-                            nsIFile* aPath,
-                            const char* aRegistryLocation,
-                            const nsModuleComponentInfo* aInfo)
-{
-  // XXX remove category entry
-  return NS_OK;
-}
-
 #ifdef MOZ_MEDIA
-static NS_IMETHODIMP
+static nsresult
 CreateHTMLAudioElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   *aResult = nsnull;
@@ -695,119 +656,9 @@ CreateHTMLAudioElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   nsCOMPtr<nsIContent> inst(NS_NewHTMLAudioElement(nsnull));
   return inst ? inst->QueryInterface(aIID, aResult) : NS_ERROR_OUT_OF_MEMORY;
 }
-
-static NS_IMETHODIMP
-RegisterHTMLAudioElement(nsIComponentManager *aCompMgr,
-                         nsIFile* aPath,
-                         const char* aRegistryLocation,
-                         const char* aComponentType,
-                         const nsModuleComponentInfo* aInfo)
-{
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-
-  if (!catman)
-    return NS_ERROR_FAILURE;
-
-  nsXPIDLCString previous;
-  nsresult rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
-                                         "Audio", NS_HTMLAUDIOELEMENT_CONTRACTID,
-                                         PR_TRUE, PR_TRUE, getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY,
-                                  "Audio", "HTMLAudioElement",
-                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
-
-static NS_IMETHODIMP
-UnregisterHTMLAudioElement(nsIComponentManager* aCompMgr,
-                           nsIFile* aPath,
-                           const char* aRegistryLocation,
-                           const nsModuleComponentInfo* aInfo)
-{
-  // XXX remove category entry
-  return NS_OK;
-}
 #endif
 
-static NS_METHOD
-RegisterDataDocumentContentPolicy(nsIComponentManager *aCompMgr,
-                                  nsIFile* aPath,
-                                  const char* aRegistryLocation,
-                                  const char* aComponentType,
-                                  const nsModuleComponentInfo* aInfo)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsXPIDLCString previous;
-  return catman->AddCategoryEntry("content-policy",
-                                  NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID,
-                                  NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID,
-                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
-
-static NS_METHOD
-UnregisterDataDocumentContentPolicy(nsIComponentManager *aCompMgr,
-                                    nsIFile *aPath,
-                                    const char *registryLocation,
-                                    const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  
-  return catman->DeleteCategoryEntry("content-policy",
-                                     NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID,
-                                     PR_TRUE);
-}
-
-static NS_METHOD
-RegisterNoDataProtocolContentPolicy(nsIComponentManager *aCompMgr,
-                                    nsIFile* aPath,
-                                    const char* aRegistryLocation,
-                                    const char* aComponentType,
-                                    const nsModuleComponentInfo* aInfo)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsXPIDLCString previous;
-  return catman->AddCategoryEntry("content-policy",
-                                  NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID,
-                                  NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID,
-                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
-
-static NS_METHOD
-UnregisterNoDataProtocolContentPolicy(nsIComponentManager *aCompMgr,
-                                      nsIFile *aPath,
-                                      const char *registryLocation,
-                                      const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  
-  return catman->DeleteCategoryEntry("content-policy",
-                                     NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID,
-                                     PR_TRUE);
-}
-
-static NS_METHOD
+static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
                                     REFNSIID aIID, void **aResult)
 {
@@ -822,7 +673,7 @@ CreateWindowCommandTableConstructor(nsISupports *aOuter,
   return commandTable->QueryInterface(aIID, aResult);
 }
 
-static NS_METHOD
+static nsresult
 CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
                                       REFNSIID aIID, void **aResult)
 {
@@ -860,75 +711,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGeolocation, Init)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsGeolocationService, nsGeolocationService::GetGeolocationService)
 
-static NS_METHOD
-CSPServiceRegistration(nsIComponentManager *aCompMgr,
-                       nsIFile *aPath,
-                       const char *registryLocation,
-                       const char *componentType,
-                       const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsIServiceManager> servman = do_QueryInterface((nsISupports*)aCompMgr, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsICategoryManager> catman;
-  rv = servman->GetServiceByContractID(NS_CATEGORYMANAGER_CONTRACTID,
-                                       NS_GET_IID(nsICategoryManager),
-                                       getter_AddRefs(catman));
-  if (NS_FAILED(rv))
-    return rv;
-  
-  nsXPIDLCString previous;
-  rv = catman->AddCategoryEntry("content-policy",
-                                "CSPService",
-                                CSPSERVICE_CONTRACTID,
-                                PR_TRUE,
-                                PR_TRUE,
-                                getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = catman->AddCategoryEntry("net-channel-event-sinks",
-                                "CSPService",
-                                CSPSERVICE_CONTRACTID,
-                                PR_TRUE,
-                                PR_TRUE,
-                                getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return rv;
-}
-
-static NS_METHOD
-CSPServiceUnregistration(nsIComponentManager *aCompMgr,
-                         nsIFile *aPath,
-                         const char *registryLocation,
-                         const nsModuleComponentInfo *info){
-  nsresult rv;
-
-  nsCOMPtr<nsIServiceManager> servman = do_QueryInterface((nsISupports*)aCompMgr, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsICategoryManager> catman;
-  rv = servman->GetServiceByContractID(NS_CATEGORYMANAGER_CONTRACTID,
-                                       NS_GET_IID(nsICategoryManager),
-                                       getter_AddRefs(catman));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = catman->DeleteCategoryEntry("content-policy",
-                                   "CSPService",
-                                   PR_TRUE);
-
-  rv = catman->DeleteCategoryEntry("net-channel-event-sinks",
-                                   "CSPService",
-                                   PR_TRUE);
-
-  return rv;
-}
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(CSPService)
-
-XPCONNECT_FACTORIES
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrincipal)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecurityNameSet)
@@ -936,11 +719,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemPrincipal,
     nsScriptSecurityManager::SystemPrincipalSingletonConstructor)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNullPrincipal, Init)
 
-NS_DECL_CLASSINFO(nsPrincipal)
-NS_DECL_CLASSINFO(nsSystemPrincipal)
-NS_DECL_CLASSINFO(nsNullPrincipal)
-
-static NS_IMETHODIMP
+static nsresult
 Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID, 
                                    void **aResult)
 {
@@ -957,868 +736,486 @@ Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
     return NS_OK;
 }
 
-static NS_METHOD 
-RegisterSecurityNameSet(nsIComponentManager *aCompMgr,
-                        nsIFile *aPath,
-                        const char *registryLocation,
-                        const char *componentType,
-                        const nsModuleComponentInfo *info)
-{
-    nsresult rv = NS_OK;
-
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsXPIDLCString previous;
-    rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY,
-                                  "PrivilegeManager",
-                                  NS_SECURITYNAMESET_CONTRACTID,
-                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = catman->AddCategoryEntry("app-startup", "Script Security Manager",
-                                  "service," NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                                  PR_TRUE, PR_TRUE,
-                                  getter_Copies(previous));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return rv;
-}
-
-// The list of components we register
-static const nsModuleComponentInfo gLayoutComponents[] = {
 #ifdef DEBUG
-  { "Frame utility",
-    NS_FRAME_UTIL_CID,
-    nsnull,
-    CreateNewFrameUtil },
-  { "Layout debugger",
-    NS_LAYOUT_DEBUGGER_CID,
-    nsnull,
-    CreateNewLayoutDebugger },
+NS_DEFINE_NAMED_CID(NS_FRAME_UTIL_CID);
+NS_DEFINE_NAMED_CID(NS_LAYOUT_DEBUGGER_CID);
 #endif
-
-  { "Frame Traversal",
-    NS_FRAMETRAVERSAL_CID,
-    nsnull,
-    CreateNewFrameTraversal },
-
-  // XXX ick
-  { "Presentation shell",
-    NS_PRESSHELL_CID,
-    nsnull,
-    CreateNewPresShell },
-
-  // XXX end ick
-
-  { "Box Object",
-    NS_BOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject;1",
-    CreateNewBoxObject },
-
+NS_DEFINE_NAMED_CID(NS_FRAMETRAVERSAL_CID);
+NS_DEFINE_NAMED_CID(NS_PRESSHELL_CID);
+NS_DEFINE_NAMED_CID(NS_BOXOBJECT_CID);
 #ifdef MOZ_XUL
-  { "XUL Listbox Box Object",
-    NS_LISTBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-listbox;1",
-    CreateNewListBoxObject },
-
-  { "XUL Menu Box Object",
-    NS_MENUBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-menu;1",
-    CreateNewMenuBoxObject },
-
-  { "XUL Popup Box Object",
-    NS_POPUPBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-popup;1",
-    CreateNewPopupBoxObject },
-
-  { "Container Box Object",
-    NS_CONTAINERBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-container;1",
-    CreateNewContainerBoxObject },
-
-  { "XUL ScrollBox Object",
-    NS_SCROLLBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-scrollbox;1",
-    CreateNewScrollBoxObject },
-
-  { "XUL Tree Box Object",
-    NS_TREEBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-tree;1",
-    CreateNewTreeBoxObject },
-
+NS_DEFINE_NAMED_CID(NS_LISTBOXOBJECT_CID);
+NS_DEFINE_NAMED_CID(NS_MENUBOXOBJECT_CID);
+NS_DEFINE_NAMED_CID(NS_POPUPBOXOBJECT_CID);
+NS_DEFINE_NAMED_CID(NS_CONTAINERBOXOBJECT_CID);
+NS_DEFINE_NAMED_CID(NS_SCROLLBOXOBJECT_CID);
+NS_DEFINE_NAMED_CID(NS_TREEBOXOBJECT_CID);
 #endif // MOZ_XUL
-
 #ifndef MOZ_NO_INSPECTOR_APIS
 #ifdef MOZ_XUL
-  { "DOM View",
-    IN_DOMVIEW_CID, 
-    "@mozilla.org/inspector/dom-view;1",
-    inDOMViewConstructor },
+NS_DEFINE_NAMED_CID(IN_DOMVIEW_CID);
 #endif
-
-  { "Deep Tree Walker", 
-    IN_DEEPTREEWALKER_CID, 
-    "@mozilla.org/inspector/deep-tree-walker;1",
-    inDeepTreeWalkerConstructor },
-
-  { "Flasher", 
-    IN_FLASHER_CID, 
-    "@mozilla.org/inspector/flasher;1", 
-    inFlasherConstructor },
-
-  { "CSS Value Search", 
-    IN_CSSVALUESEARCH_CID, 
-    "@mozilla.org/inspector/search;1?type=cssvalue", 
-    inCSSValueSearchConstructor },
-
-  { "DOM Utils", 
-    IN_DOMUTILS_CID, 
-    "@mozilla.org/inspector/dom-utils;1", 
-    inDOMUtilsConstructor },
-
-
+NS_DEFINE_NAMED_CID(IN_DEEPTREEWALKER_CID);
+NS_DEFINE_NAMED_CID(IN_FLASHER_CID);
+NS_DEFINE_NAMED_CID(IN_CSSVALUESEARCH_CID);
+NS_DEFINE_NAMED_CID(IN_DOMUTILS_CID);
 #endif // MOZ_NO_INSPECTOR_APIS
-
-  { "Namespace manager",
-    NS_NAMESPACEMANAGER_CID,
-    NS_NAMESPACEMANAGER_CONTRACTID,
-    CreateNameSpaceManager },
-
-  { "Event listener manager",
-    NS_EVENTLISTENERMANAGER_CID,
-    nsnull,
-    CreateEventListenerManager },
-
-  { "DOM Event group",
-    NS_DOMEVENTGROUP_CID,
-    nsnull,
-    CreateDOMEventGroup },
-
-  { "Document Viewer",
-    NS_DOCUMENT_VIEWER_CID,
-    nsnull,
-    CreateDocumentViewer },
-
-  { "HTML document",
-    NS_HTMLDOCUMENT_CID,
-    nsnull,
-    CreateHTMLDocument },
-
-  { "DOM implementation",
-    NS_DOM_IMPLEMENTATION_CID,
-    nsnull,
-    CreateDOMImplementation },
-
-
-  { "XML document",
-    NS_XMLDOCUMENT_CID,
-    "@mozilla.org/xml/xml-document;1",
-    CreateXMLDocument },
-
+NS_DEFINE_NAMED_CID(NS_NAMESPACEMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_EVENTLISTENERMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_DOMEVENTGROUP_CID);
+NS_DEFINE_NAMED_CID(NS_DOCUMENT_VIEWER_CID);
+NS_DEFINE_NAMED_CID(NS_HTMLDOCUMENT_CID);
+NS_DEFINE_NAMED_CID(NS_DOM_IMPLEMENTATION_CID);
+NS_DEFINE_NAMED_CID(NS_XMLDOCUMENT_CID);
 #ifdef MOZ_SVG
-  { "SVG document",
-    NS_SVGDOCUMENT_CID,
-    "@mozilla.org/svg/svg-document;1",
-    CreateSVGDocument },
+NS_DEFINE_NAMED_CID(NS_SVGDOCUMENT_CID);
 #endif
-
-  { "Image document",
-    NS_IMAGEDOCUMENT_CID,
-    nsnull,
-    CreateImageDocument },
-
-  { "Dom selection",
-    NS_DOMSELECTION_CID,
-    "@mozilla.org/content/dom-selection;1",
-    CreateDOMSelection },
-
-  { "Frame selection",
-    NS_FRAMESELECTION_CID,
-    nsnull,
-    CreateSelection },
-
-  { "Range",
-    NS_RANGE_CID,
-    "@mozilla.org/content/range;1",
-    CreateRange },
-
-  { "Range Utils",
-    NS_RANGEUTILS_CID,
-    "@mozilla.org/content/range-utils;1",
-    CreateRangeUtils },
-
-  { "Content iterator",
-    NS_CONTENTITERATOR_CID,
-    "@mozilla.org/content/post-content-iterator;1",
-    CreateContentIterator },
-
-  { "Pre Content iterator",
-    NS_PRECONTENTITERATOR_CID,
-    "@mozilla.org/content/pre-content-iterator;1",
-    CreatePreContentIterator },
-
-  { "Subtree iterator",
-    NS_SUBTREEITERATOR_CID,
-    "@mozilla.org/content/subtree-content-iterator;1",
-    CreateSubtreeIterator },
-
-  // Needed to support "new Option;", "new Image;" and "new Audio;" in JavaScript
-  { "HTML img element",
-    NS_HTMLIMAGEELEMENT_CID,
-    NS_HTMLIMGELEMENT_CONTRACTID,
-    CreateHTMLImgElement,
-    RegisterHTMLImgElement, 
-    UnregisterHTMLImgElement },
-
-  { "HTML option element",
-    NS_HTMLOPTIONELEMENT_CID,
-    NS_HTMLOPTIONELEMENT_CONTRACTID,
-    CreateHTMLOptionElement,
-    RegisterHTMLOptionElement,
-    UnregisterHTMLOptionElement },
-
+NS_DEFINE_NAMED_CID(NS_IMAGEDOCUMENT_CID);
+NS_DEFINE_NAMED_CID(NS_DOMSELECTION_CID);
+NS_DEFINE_NAMED_CID(NS_FRAMESELECTION_CID);
+NS_DEFINE_NAMED_CID(NS_RANGE_CID);
+NS_DEFINE_NAMED_CID(NS_RANGEUTILS_CID);
+NS_DEFINE_NAMED_CID(NS_CONTENTITERATOR_CID);
+NS_DEFINE_NAMED_CID(NS_PRECONTENTITERATOR_CID);
+NS_DEFINE_NAMED_CID(NS_SUBTREEITERATOR_CID);
+NS_DEFINE_NAMED_CID(NS_HTMLIMAGEELEMENT_CID);
+NS_DEFINE_NAMED_CID(NS_HTMLOPTIONELEMENT_CID);
 #ifdef MOZ_MEDIA
-  { "HTML audio element",
-    NS_HTMLAUDIOELEMENT_CID,
-    NS_HTMLAUDIOELEMENT_CONTRACTID,
-    CreateHTMLAudioElement,
-    RegisterHTMLAudioElement,
-    UnregisterHTMLAudioElement },
+NS_DEFINE_NAMED_CID(NS_HTMLAUDIOELEMENT_CID);
 #endif
-
-  { "Canvas 2D Rendering Context",
-    NS_CANVASRENDERINGCONTEXT2D_CID,
-    "@mozilla.org/content/canvas-rendering-context;1?id=2d",
-    CreateCanvasRenderingContext2D },
-  { "Canvas WebGL Rendering Context",
-    NS_CANVASRENDERINGCONTEXTWEBGL_CID,
-    "@mozilla.org/content/canvas-rendering-context;1?id=moz-webgl",
-    CreateCanvasRenderingContextWebGL },
-  { "Canvas WebGL Rendering Context",
-    NS_CANVASRENDERINGCONTEXTWEBGL_CID,
-    "@mozilla.org/content/canvas-rendering-context;1?id=experimental-webgl",
-    CreateCanvasRenderingContextWebGL },
-
-
-  { "XML document encoder",
-    NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_CONTRACTID_BASE "text/xml",
-    CreateTextEncoder },
-
-  { "XML document encoder",
-    NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_CONTRACTID_BASE "application/xml",
-    CreateTextEncoder },
-
-  { "XHTML document encoder",
-    NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_CONTRACTID_BASE "application/xhtml+xml",
-    CreateTextEncoder },
-
-#ifdef MOZ_SVG
-  { "SVG document encoder",
-    NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_CONTRACTID_BASE "image/svg+xml",
-    CreateTextEncoder },
-#endif
-
-  { "HTML document encoder",
-    NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_CONTRACTID_BASE "text/html",
-    CreateTextEncoder },
-
-  { "Plaintext document encoder",
-    NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_CONTRACTID_BASE "text/plain",
-    CreateTextEncoder },
-
-  { "HTML copy encoder",
-    NS_HTMLCOPY_TEXT_ENCODER_CID,
-    NS_HTMLCOPY_ENCODER_CONTRACTID,
-    CreateHTMLCopyTextEncoder },
-
-  { "XML content serializer",
-    NS_XMLCONTENTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/xml",
-    CreateXMLContentSerializer },
-
-  { "XML content serializer",
-    NS_XMLCONTENTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "application/xml",
-    CreateXMLContentSerializer },
-
-  { "XHTML content serializer",
-    NS_XHTMLCONTENTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "application/xhtml+xml",
-    CreateXHTMLContentSerializer },
-
-#ifdef MOZ_SVG
-  { "SVG content serializer",
-    NS_XMLCONTENTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "image/svg+xml",
-    CreateXMLContentSerializer },
-#endif
-
-  { "HTML content serializer",
-    NS_HTMLCONTENTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/html",
-    CreateHTMLContentSerializer },
-
-  { "XUL content serializer",
-    NS_XMLCONTENTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "application/vnd.mozilla.xul+xml",
-    CreateXMLContentSerializer },
-
-  { "plaintext content serializer",
-    NS_PLAINTEXTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/plain",
-    CreatePlainTextSerializer },
-
-  { "plaintext sink",
-    NS_PLAINTEXTSERIALIZER_CID,
-    NS_PLAINTEXTSINK_CONTRACTID,
-    CreatePlainTextSerializer },
-
-  { "html fragment sink",
-    NS_HTMLFRAGMENTSINK_CID,
-    NS_HTMLFRAGMENTSINK_CONTRACTID,
-    CreateHTMLFragmentSink },
-
-  { "html fragment sink 2",
-    NS_HTMLFRAGMENTSINK2_CID,
-    NS_HTMLFRAGMENTSINK2_CONTRACTID,
-    CreateHTMLFragmentSink2 },
-
-  { "html paranoid fragment sink",
-    NS_HTMLPARANOIDFRAGMENTSINK_CID,
-    NS_HTMLPARANOIDFRAGMENTSINK_CONTRACTID,
-    CreateHTMLParanoidFragmentSink },
-
-  { "HTML sanitizing content serializer",
-    MOZ_SANITIZINGHTMLSERIALIZER_CID,
-    MOZ_SANITIZINGHTMLSERIALIZER_CONTRACTID,
-    CreateSanitizingHTMLSerializer },
-
-  { "xml fragment sink",
-    NS_XMLFRAGMENTSINK_CID,
-    NS_XMLFRAGMENTSINK_CONTRACTID,
-    CreateXMLFragmentSink },
-
-  { "xml fragment sink 2",
-    NS_XMLFRAGMENTSINK2_CID,
-    NS_XMLFRAGMENTSINK2_CONTRACTID,
-    CreateXMLFragmentSink2 },
-
-  { "xhtml paranoid fragment sink",
-    NS_XHTMLPARANOIDFRAGMENTSINK_CID,
-    NS_XHTMLPARANOIDFRAGMENTSINK_CONTRACTID,
-    CreateXHTMLParanoidFragmentSink },
-
-  { "XBL Service",
-    NS_XBLSERVICE_CID,
-    "@mozilla.org/xbl;1",
-    CreateXBLService },
-
-  { "Content policy service",
-    NS_CONTENTPOLICY_CID,
-    NS_CONTENTPOLICY_CONTRACTID,
-    CreateContentPolicy },
-
-  { "Data document content policy",
-    NS_DATADOCUMENTCONTENTPOLICY_CID,
-    NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID,
-    nsDataDocumentContentPolicyConstructor,
-    RegisterDataDocumentContentPolicy,
-    UnregisterDataDocumentContentPolicy },
-
-  { "No data protocol content policy",
-    NS_NODATAPROTOCOLCONTENTPOLICY_CID,
-    NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID,
-    nsNoDataProtocolContentPolicyConstructor,
-    RegisterNoDataProtocolContentPolicy,
-    UnregisterNoDataProtocolContentPolicy },
-
-  { "XUL Controllers",
-    NS_XULCONTROLLERS_CID,
-    "@mozilla.org/xul/xul-controllers;1",
-    NS_NewXULControllers },
-
+NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXT2D_CID);
+NS_DEFINE_NAMED_CID(NS_CANVASRENDERINGCONTEXTWEBGL_CID);
+NS_DEFINE_NAMED_CID(NS_TEXT_ENCODER_CID);
+NS_DEFINE_NAMED_CID(NS_HTMLCOPY_TEXT_ENCODER_CID);
+NS_DEFINE_NAMED_CID(NS_XMLCONTENTSERIALIZER_CID);
+NS_DEFINE_NAMED_CID(NS_XHTMLCONTENTSERIALIZER_CID);
+NS_DEFINE_NAMED_CID(NS_HTMLCONTENTSERIALIZER_CID);
+NS_DEFINE_NAMED_CID(NS_PLAINTEXTSERIALIZER_CID);
+NS_DEFINE_NAMED_CID(NS_HTMLFRAGMENTSINK_CID);
+NS_DEFINE_NAMED_CID(NS_HTMLFRAGMENTSINK2_CID);
+NS_DEFINE_NAMED_CID(NS_HTMLPARANOIDFRAGMENTSINK_CID);
+NS_DEFINE_NAMED_CID(NS_HTMLPARANOIDFRAGMENTSINK2_CID);
+NS_DEFINE_NAMED_CID(MOZ_SANITIZINGHTMLSERIALIZER_CID);
+NS_DEFINE_NAMED_CID(NS_XMLFRAGMENTSINK_CID);
+NS_DEFINE_NAMED_CID(NS_XMLFRAGMENTSINK2_CID);
+NS_DEFINE_NAMED_CID(NS_XHTMLPARANOIDFRAGMENTSINK_CID);
+NS_DEFINE_NAMED_CID(NS_XHTMLPARANOIDFRAGMENTSINK2_CID);
+NS_DEFINE_NAMED_CID(NS_XBLSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_CONTENTPOLICY_CID);
+NS_DEFINE_NAMED_CID(NS_DATADOCUMENTCONTENTPOLICY_CID);
+NS_DEFINE_NAMED_CID(NS_NODATAPROTOCOLCONTENTPOLICY_CID);
+NS_DEFINE_NAMED_CID(NS_XULCONTROLLERS_CID);
 #ifdef MOZ_XUL
-  { "XUL Sort Service",
-    NS_XULSORTSERVICE_CID,
-    "@mozilla.org/xul/xul-sort-service;1",
-    CreateXULSortService },
-
-  { "XUL Template Builder",
-    NS_XULTEMPLATEBUILDER_CID,
-    "@mozilla.org/xul/xul-template-builder;1",
-    NS_NewXULContentBuilder },
-
-  { "XUL Tree Builder",
-    NS_XULTREEBUILDER_CID,
-    "@mozilla.org/xul/xul-tree-builder;1",
-    NS_NewXULTreeBuilder },
-
-  { "XUL Popup Manager",
-    NS_XULPOPUPMANAGER_CID,
-    "@mozilla.org/xul/xul-popup-manager;1",
-    CreateXULPopupManager },
-
-  { "XUL Document",
-    NS_XULDOCUMENT_CID,
-    "@mozilla.org/xul/xul-document;1",
-    CreateXULDocument },
-
-  { "XUL Prototype Cache",
-    NS_XULPROTOTYPECACHE_CID,
-    "@mozilla.org/xul/xul-prototype-cache;1",
-    NS_NewXULPrototypeCache },
-
+NS_DEFINE_NAMED_CID(NS_XULSORTSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_XULTEMPLATEBUILDER_CID);
+NS_DEFINE_NAMED_CID(NS_XULTREEBUILDER_CID);
+NS_DEFINE_NAMED_CID(NS_XULPOPUPMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_XULDOCUMENT_CID);
+NS_DEFINE_NAMED_CID(NS_XULPROTOTYPECACHE_CID);
 #endif
-
 #ifdef MOZ_XTF
-  { "XTF Service",
-    NS_XTFSERVICE_CID,
-    NS_XTFSERVICE_CONTRACTID,
-    CreateXTFService },
-
-  { "XML Content Builder",
-    NS_XMLCONTENTBUILDER_CID,
-    NS_XMLCONTENTBUILDER_CONTRACTID,
-    CreateXMLContentBuilder },
+NS_DEFINE_NAMED_CID(NS_XTFSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_XMLCONTENTBUILDER_CID);
 #endif
-
-  { "Document Loader Factory",
-    NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID,
-    "@mozilla.org/content/document-loader-factory;1",
-    CreateContentDLF,
-    nsContentDLF::RegisterDocumentFactories,
-    nsContentDLF::UnregisterDocumentFactories },
-
-  { "Wyciwyg Handler",
-    NS_WYCIWYGPROTOCOLHANDLER_CID,
-    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "wyciwyg",
-    nsWyciwygProtocolHandlerConstructor },
-
-  { "SyncLoad DOM Service",
-    NS_SYNCLOADDOMSERVICE_CID,
-    NS_SYNCLOADDOMSERVICE_CONTRACTID,
-    nsSyncLoadServiceConstructor },
-
-  // DOM objects
-  { "Script Object Factory",
-    NS_DOM_SCRIPT_OBJECT_FACTORY_CID,
-    nsnull,
-    nsDOMScriptObjectFactoryConstructor
-  },
-  { "Base DOM Exception",
-    NS_BASE_DOM_EXCEPTION_CID,
-    nsnull,
-    nsBaseDOMExceptionConstructor
-  },
-  { "JavaScript Protocol Handler",
-    NS_JSPROTOCOLHANDLER_CID,
-    NS_JSPROTOCOLHANDLER_CONTRACTID,
-    nsJSProtocolHandler::Create },
-  { "JavaScript URI",
-    NS_JSURI_CID,
-    nsnull,
-    nsJSURIConstructor },
-  { "Window Command Table",
-    NS_WINDOWCOMMANDTABLE_CID,
-    "",
-    CreateWindowCommandTableConstructor
-  },
-  { "Window Command Controller",
-    NS_WINDOWCONTROLLER_CID,
-    NS_WINDOWCONTROLLER_CONTRACTID,
-    CreateWindowControllerWithSingletonCommandTable
-  },
-
-  // view stuff
-  { "View Manager", NS_VIEW_MANAGER_CID, "@mozilla.org/view-manager;1",
-    nsViewManagerConstructor },
-
-  { "Plugin Document Loader Factory",
-    NS_PLUGINDOCLOADERFACTORY_CID,
-    "@mozilla.org/content/plugin/document-loader-factory;1",
-    CreateContentDLF },
-
-  { "Plugin Document",
-    NS_PLUGINDOCUMENT_CID,
-    nsnull,
-    CreatePluginDocument },
-
+NS_DEFINE_NAMED_CID(NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
+NS_DEFINE_NAMED_CID(NS_WYCIWYGPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_SYNCLOADDOMSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+NS_DEFINE_NAMED_CID(NS_BASE_DOM_EXCEPTION_CID);
+NS_DEFINE_NAMED_CID(NS_JSPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_JSURI_CID);
+NS_DEFINE_NAMED_CID(NS_WINDOWCOMMANDTABLE_CID);
+NS_DEFINE_NAMED_CID(NS_WINDOWCONTROLLER_CID);
+NS_DEFINE_NAMED_CID(NS_VIEW_MANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_PLUGINDOCLOADERFACTORY_CID);
+NS_DEFINE_NAMED_CID(NS_PLUGINDOCUMENT_CID);
 #ifdef MOZ_MEDIA
-  { "Video Document",
-    NS_VIDEODOCUMENT_CID,
-    nsnull,
-    CreateVideoDocument },
+NS_DEFINE_NAMED_CID(NS_VIDEODOCUMENT_CID);
 #endif
-
-  { "Style sheet service",
-    NS_STYLESHEETSERVICE_CID,
-    NS_STYLESHEETSERVICE_CONTRACTID,
-    nsStyleSheetServiceConstructor },
-
-  // transformiix
-
-  { "XSLTProcessor",
-    TRANSFORMIIX_XSLT_PROCESSOR_CID,
-    TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID,
-    txMozillaXSLTProcessorConstructor },
-
-  { "XPathEvaluator",
-    TRANSFORMIIX_XPATH_EVALUATOR_CID,
-    NS_XPATH_EVALUATOR_CONTRACTID,
-    nsXPathEvaluatorConstructor },
-
-  { "XPath1 XPointer Scheme Processor",
-    TRANSFORMIIX_XPATH1_SCHEME_CID,
-    NS_XPOINTER_SCHEME_PROCESSOR_BASE "xpath1",
-    nsXPath1SchemeProcessorConstructor },
-
-  { "Transformiix NodeSet",
-    TRANSFORMIIX_NODESET_CID,
-    TRANSFORMIIX_NODESET_CONTRACTID,
-    txNodeSetAdaptorConstructor },
-
-  { "XML Serializer",
-    NS_XMLSERIALIZER_CID,
-    NS_XMLSERIALIZER_CONTRACTID,
-    nsDOMSerializerConstructor },
-
-  { "FileReader",
-    NS_FILEREADER_CID,
-    NS_FILEREADER_CONTRACTID,
-    nsDOMFileReaderConstructor },
-
-  { "FormData",
-    NS_FORMDATA_CID,
-    NS_FORMDATA_CONTRACTID,
-    nsFormDataConstructor },
-
-  { "FileData Protocol Handler",
-    NS_FILEDATAPROTOCOLHANDLER_CID,
-    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX FILEDATA_SCHEME,
-    nsFileDataProtocolHandlerConstructor },
-
-  { "XMLHttpRequest",
-    NS_XMLHTTPREQUEST_CID,
-    NS_XMLHTTPREQUEST_CONTRACTID,
-    nsXMLHttpRequestConstructor },
-
-  { "DOM Parser",
-    NS_DOMPARSER_CID,
-    NS_DOMPARSER_CONTRACTID,
-    nsDOMParserConstructor },
-
-  { "DOM Storage",
-    NS_DOMSTORAGE_CID,
-    "@mozilla.org/dom/storage;1",
-    NS_NewDOMStorage },
-
-  { "DOM Storage 2",
-    NS_DOMSTORAGE2_CID,
-    "@mozilla.org/dom/storage;2",
-    NS_NewDOMStorage2 },
-
-  { "DOM Storage Manager",
-    NS_DOMSTORAGEMANAGER_CID,
-    "@mozilla.org/dom/storagemanager;1",
-    nsDOMStorageManagerConstructor },
-
-  { "DOM JSON",
-    NS_DOMJSON_CID,
-    "@mozilla.org/dom/json;1",
-    NS_NewJSON },
-
-  { "Text Editor",
-    NS_TEXTEDITOR_CID,
-    "@mozilla.org/editor/texteditor;1",
-    nsPlaintextEditorConstructor },
-
+NS_DEFINE_NAMED_CID(NS_STYLESHEETSERVICE_CID);
+NS_DEFINE_NAMED_CID(TRANSFORMIIX_XSLT_PROCESSOR_CID);
+NS_DEFINE_NAMED_CID(TRANSFORMIIX_XPATH_EVALUATOR_CID);
+NS_DEFINE_NAMED_CID(TRANSFORMIIX_XPATH1_SCHEME_CID);
+NS_DEFINE_NAMED_CID(TRANSFORMIIX_NODESET_CID);
+NS_DEFINE_NAMED_CID(NS_XMLSERIALIZER_CID);
+NS_DEFINE_NAMED_CID(NS_FILEREADER_CID);
+NS_DEFINE_NAMED_CID(NS_FORMDATA_CID);
+NS_DEFINE_NAMED_CID(NS_FILEDATAPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_XMLHTTPREQUEST_CID);
+NS_DEFINE_NAMED_CID(NS_WEBSOCKET_CID);
+NS_DEFINE_NAMED_CID(NS_WSPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_WSSPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_DOMPARSER_CID);
+NS_DEFINE_NAMED_CID(NS_DOMSTORAGE_CID);
+NS_DEFINE_NAMED_CID(NS_DOMSTORAGE2_CID);
+NS_DEFINE_NAMED_CID(NS_DOMSTORAGEMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_DOMJSON_CID);
+NS_DEFINE_NAMED_CID(NS_TEXTEDITOR_CID);
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #ifdef ENABLE_EDITOR_API_LOG
-    { "HTML Editor",
-      NS_HTMLEDITOR_CID,
-      "@mozilla.org/editor/htmleditor;1",
-      nsHTMLEditorLogConstructor },
+NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
 #else
-    { "HTML Editor",
-      NS_HTMLEDITOR_CID,
-      "@mozilla.org/editor/htmleditor;1",
-      nsHTMLEditorConstructor },
+NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
 #endif
 #endif
-
-    { "Editor Controller",
-      NS_EDITORCONTROLLER_CID,
-      "@mozilla.org/editor/editorcontroller;1",
-      nsEditorControllerConstructor },
-
-    { "Editor Command Table",
-      NS_EDITORCOMMANDTABLE_CID,
-      "",   // no point in using a contract ID
-      nsEditorCommandTableConstructor },
-
+NS_DEFINE_NAMED_CID(NS_EDITORCONTROLLER_CID);
+NS_DEFINE_NAMED_CID(NS_EDITORCOMMANDTABLE_CID);
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
-    { NULL,
-      NS_TEXTSERVICESDOCUMENT_CID,
-      "@mozilla.org/textservices/textservicesdocument;1",
-      nsTextServicesDocumentConstructor },
+NS_DEFINE_NAMED_CID(NS_TEXTSERVICESDOCUMENT_CID);
+#endif
+NS_DEFINE_NAMED_CID(NS_GEOLOCATION_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
+NS_DEFINE_NAMED_CID(NS_FOCUSMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_ICONTENTUTILS_CID);
+NS_DEFINE_NAMED_CID(CSPSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_EVENTLISTENERSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_GLOBALMESSAGEMANAGER_CID);
+NS_DEFINE_NAMED_CID(NSCHANNELPOLICY_CID);
+NS_DEFINE_NAMED_CID(NS_SCRIPTSECURITYMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_PRINCIPAL_CID);
+NS_DEFINE_NAMED_CID(NS_SYSTEMPRINCIPAL_CID);
+NS_DEFINE_NAMED_CID(NS_NULLPRINCIPAL_CID);
+NS_DEFINE_NAMED_CID(NS_SECURITYNAMESET_CID);
+
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+NS_DEFINE_NAMED_CID(NS_ACCELEROMETER_CID);
 #endif
 
-    { "Geolocation Service",
-      NS_GEOLOCATION_SERVICE_CID,
-      "@mozilla.org/geolocation/service;1",
-      nsGeolocationServiceConstructor },
-
-    { "Geolocation",
-      NS_GEOLOCATION_CID,
-      "@mozilla.org/geolocation;1",
-      nsGeolocationConstructor },
-
-    { "Focus Manager",
-      NS_FOCUSMANAGER_CID,
-      "@mozilla.org/focus-manager;1",
-      CreateFocusManager },
-
-    { "Content Utils",
-      NS_ICONTENTUTILS_CID,
-      "@mozilla.org/content/contentutils;1",
-      nsIContentUtilsConstructor },
-
-    { "Content Security Policy Service",
-      CSPSERVICE_CID,
-      CSPSERVICE_CONTRACTID,
-      CSPServiceConstructor,
-      CSPServiceRegistration,
-      CSPServiceUnregistration },
-
-    { "Event Listener Service",
-      NS_EVENTLISTENERSERVICE_CID,
-      NS_EVENTLISTENERSERVICE_CONTRACTID,
-      CreateEventListenerService },
-
-    { "Channel Policy",
-      NSCHANNELPOLICY_CID,
-      NSCHANNELPOLICY_CONTRACTID,
-      nsChannelPolicyConstructor }
+static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
+  XPCONNECT_CIDENTRIES
+#ifdef DEBUG
+  { &kNS_FRAME_UTIL_CID, false, NULL, CreateNewFrameUtil },
+  { &kNS_LAYOUT_DEBUGGER_CID, false, NULL, CreateNewLayoutDebugger },
+#endif
+  { &kNS_FRAMETRAVERSAL_CID, false, NULL, CreateNewFrameTraversal },
+  { &kNS_PRESSHELL_CID, false, NULL, CreateNewPresShell },
+  { &kNS_BOXOBJECT_CID, false, NULL, CreateNewBoxObject },
+#ifdef MOZ_XUL
+  { &kNS_LISTBOXOBJECT_CID, false, NULL, CreateNewListBoxObject },
+  { &kNS_MENUBOXOBJECT_CID, false, NULL, CreateNewMenuBoxObject },
+  { &kNS_POPUPBOXOBJECT_CID, false, NULL, CreateNewPopupBoxObject },
+  { &kNS_CONTAINERBOXOBJECT_CID, false, NULL, CreateNewContainerBoxObject },
+  { &kNS_SCROLLBOXOBJECT_CID, false, NULL, CreateNewScrollBoxObject },
+  { &kNS_TREEBOXOBJECT_CID, false, NULL, CreateNewTreeBoxObject },
+#endif // MOZ_XUL
+#ifndef MOZ_NO_INSPECTOR_APIS
+#ifdef MOZ_XUL
+  { &kIN_DOMVIEW_CID, false, NULL, inDOMViewConstructor },
+#endif
+  { &kIN_DEEPTREEWALKER_CID, false, NULL, inDeepTreeWalkerConstructor },
+  { &kIN_FLASHER_CID, false, NULL, inFlasherConstructor },
+  { &kIN_CSSVALUESEARCH_CID, false, NULL, inCSSValueSearchConstructor },
+  { &kIN_DOMUTILS_CID, false, NULL, inDOMUtilsConstructor },
+#endif // MOZ_NO_INSPECTOR_APIS
+  { &kNS_NAMESPACEMANAGER_CID, false, NULL, CreateNameSpaceManager },
+  { &kNS_EVENTLISTENERMANAGER_CID, false, NULL, CreateEventListenerManager },
+  { &kNS_DOMEVENTGROUP_CID, false, NULL, CreateDOMEventGroup },
+  { &kNS_DOCUMENT_VIEWER_CID, false, NULL, CreateDocumentViewer },
+  { &kNS_HTMLDOCUMENT_CID, false, NULL, CreateHTMLDocument },
+  { &kNS_DOM_IMPLEMENTATION_CID, false, NULL, CreateDOMImplementation },
+  { &kNS_XMLDOCUMENT_CID, false, NULL, CreateXMLDocument },
+#ifdef MOZ_SVG
+  { &kNS_SVGDOCUMENT_CID, false, NULL, CreateSVGDocument },
+#endif
+  { &kNS_IMAGEDOCUMENT_CID, false, NULL, CreateImageDocument },
+  { &kNS_DOMSELECTION_CID, false, NULL, CreateDOMSelection },
+  { &kNS_FRAMESELECTION_CID, false, NULL, CreateSelection },
+  { &kNS_RANGE_CID, false, NULL, CreateRange },
+  { &kNS_RANGEUTILS_CID, false, NULL, CreateRangeUtils },
+  { &kNS_CONTENTITERATOR_CID, false, NULL, CreateContentIterator },
+  { &kNS_PRECONTENTITERATOR_CID, false, NULL, CreatePreContentIterator },
+  { &kNS_SUBTREEITERATOR_CID, false, NULL, CreateSubtreeIterator },
+  { &kNS_HTMLIMAGEELEMENT_CID, false, NULL, CreateHTMLImgElement },
+  { &kNS_HTMLOPTIONELEMENT_CID, false, NULL, CreateHTMLOptionElement },
+#ifdef MOZ_MEDIA
+  { &kNS_HTMLAUDIOELEMENT_CID, false, NULL, CreateHTMLAudioElement },
+#endif
+  { &kNS_CANVASRENDERINGCONTEXT2D_CID, false, NULL, CreateCanvasRenderingContext2D },
+  { &kNS_CANVASRENDERINGCONTEXTWEBGL_CID, false, NULL, CreateCanvasRenderingContextWebGL },
+  { &kNS_TEXT_ENCODER_CID, false, NULL, CreateTextEncoder },
+  { &kNS_HTMLCOPY_TEXT_ENCODER_CID, false, NULL, CreateHTMLCopyTextEncoder },
+  { &kNS_XMLCONTENTSERIALIZER_CID, false, NULL, CreateXMLContentSerializer },
+  { &kNS_HTMLCONTENTSERIALIZER_CID, false, NULL, CreateHTMLContentSerializer },
+  { &kNS_XHTMLCONTENTSERIALIZER_CID, false, NULL, CreateXHTMLContentSerializer },
+  { &kNS_PLAINTEXTSERIALIZER_CID, false, NULL, CreatePlainTextSerializer },
+  { &kNS_HTMLFRAGMENTSINK_CID, false, NULL, CreateHTMLFragmentSink },
+  { &kNS_HTMLFRAGMENTSINK2_CID, false, NULL, CreateHTMLFragmentSink2 },
+  { &kNS_HTMLPARANOIDFRAGMENTSINK_CID, false, NULL, CreateHTMLParanoidFragmentSink },
+  { &kNS_HTMLPARANOIDFRAGMENTSINK2_CID, false, NULL, CreateHTMLParanoidFragmentSink2 },
+  { &kMOZ_SANITIZINGHTMLSERIALIZER_CID, false, NULL, CreateSanitizingHTMLSerializer },
+  { &kNS_XMLFRAGMENTSINK_CID, false, NULL, CreateXMLFragmentSink },
+  { &kNS_XMLFRAGMENTSINK2_CID, false, NULL, CreateXMLFragmentSink2 },
+  { &kNS_XHTMLPARANOIDFRAGMENTSINK_CID, false, NULL, CreateXHTMLParanoidFragmentSink },
+  { &kNS_XHTMLPARANOIDFRAGMENTSINK2_CID, false, NULL, CreateXHTMLParanoidFragmentSink2 },
+  { &kNS_XBLSERVICE_CID, false, NULL, CreateXBLService },
+  { &kNS_CONTENTPOLICY_CID, false, NULL, CreateContentPolicy },
+  { &kNS_DATADOCUMENTCONTENTPOLICY_CID, false, NULL, nsDataDocumentContentPolicyConstructor },
+  { &kNS_NODATAPROTOCOLCONTENTPOLICY_CID, false, NULL, nsNoDataProtocolContentPolicyConstructor },
+  { &kNS_XULCONTROLLERS_CID, false, NULL, NS_NewXULControllers },
+#ifdef MOZ_XUL
+  { &kNS_XULSORTSERVICE_CID, false, NULL, CreateXULSortService },
+  { &kNS_XULTEMPLATEBUILDER_CID, false, NULL, NS_NewXULContentBuilder },
+  { &kNS_XULTREEBUILDER_CID, false, NULL, NS_NewXULTreeBuilder },
+  { &kNS_XULPOPUPMANAGER_CID, false, NULL, CreateXULPopupManager },
+  { &kNS_XULDOCUMENT_CID, false, NULL, CreateXULDocument },
+  { &kNS_XULPROTOTYPECACHE_CID, false, NULL, NS_NewXULPrototypeCache },
+#endif
+#ifdef MOZ_XTF
+  { &kNS_XTFSERVICE_CID, false, NULL, CreateXTFService },
+  { &kNS_XMLCONTENTBUILDER_CID, false, NULL, CreateXMLContentBuilder },
+#endif
+  { &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID, false, NULL, CreateContentDLF },
+  { &kNS_WYCIWYGPROTOCOLHANDLER_CID, false, NULL, nsWyciwygProtocolHandlerConstructor },
+  { &kNS_SYNCLOADDOMSERVICE_CID, false, NULL, nsSyncLoadServiceConstructor },
+  { &kNS_DOM_SCRIPT_OBJECT_FACTORY_CID, false, NULL, nsDOMScriptObjectFactoryConstructor },
+  { &kNS_BASE_DOM_EXCEPTION_CID, false, NULL, nsBaseDOMExceptionConstructor },
+  { &kNS_JSPROTOCOLHANDLER_CID, false, NULL, nsJSProtocolHandler::Create },
+  { &kNS_JSURI_CID, false, NULL, nsJSURIConstructor },
+  { &kNS_WINDOWCOMMANDTABLE_CID, false, NULL, CreateWindowCommandTableConstructor },
+  { &kNS_WINDOWCONTROLLER_CID, false, NULL, CreateWindowControllerWithSingletonCommandTable },
+  { &kNS_VIEW_MANAGER_CID, false, NULL, nsViewManagerConstructor },
+  { &kNS_PLUGINDOCLOADERFACTORY_CID, false, NULL, CreateContentDLF },
+  { &kNS_PLUGINDOCUMENT_CID, false, NULL, CreatePluginDocument },
+#ifdef MOZ_MEDIA
+  { &kNS_VIDEODOCUMENT_CID, false, NULL, CreateVideoDocument },
+#endif
+  { &kNS_STYLESHEETSERVICE_CID, false, NULL, nsStyleSheetServiceConstructor },
+  { &kTRANSFORMIIX_XSLT_PROCESSOR_CID, false, NULL, txMozillaXSLTProcessorConstructor },
+  { &kTRANSFORMIIX_XPATH_EVALUATOR_CID, false, NULL, nsXPathEvaluatorConstructor },
+  { &kTRANSFORMIIX_XPATH1_SCHEME_CID, false, NULL, nsXPath1SchemeProcessorConstructor },
+  { &kTRANSFORMIIX_NODESET_CID, false, NULL, txNodeSetAdaptorConstructor },
+  { &kNS_XMLSERIALIZER_CID, false, NULL, nsDOMSerializerConstructor },
+  { &kNS_FILEREADER_CID, false, NULL, nsDOMFileReaderConstructor },
+  { &kNS_FORMDATA_CID, false, NULL, nsFormDataConstructor },
+  { &kNS_FILEDATAPROTOCOLHANDLER_CID, false, NULL, nsFileDataProtocolHandlerConstructor },
+  { &kNS_XMLHTTPREQUEST_CID, false, NULL, nsXMLHttpRequestConstructor },
+  { &kNS_WEBSOCKET_CID, false, NULL, nsWebSocketConstructor },
+  { &kNS_WSPROTOCOLHANDLER_CID, false, NULL, nsWSProtocolHandlerConstructor },
+  { &kNS_WSSPROTOCOLHANDLER_CID, false, NULL, nsWSSProtocolHandlerConstructor },
+  { &kNS_DOMPARSER_CID, false, NULL, nsDOMParserConstructor },
+  { &kNS_DOMSTORAGE_CID, false, NULL, NS_NewDOMStorage },
+  { &kNS_DOMSTORAGE2_CID, false, NULL, NS_NewDOMStorage2 },
+  { &kNS_DOMSTORAGEMANAGER_CID, false, NULL, nsDOMStorageManagerConstructor },
+  { &kNS_DOMJSON_CID, false, NULL, NS_NewJSON },
+  { &kNS_TEXTEDITOR_CID, false, NULL, nsPlaintextEditorConstructor },
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+#ifdef ENABLE_EDITOR_API_LOG
+  { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorLogConstructor },
+#else
+  { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorConstructor },
+#endif
+#endif
+  { &kNS_EDITORCONTROLLER_CID, false, NULL, nsEditorControllerConstructor },
+  { &kNS_EDITORCOMMANDTABLE_CID, false, NULL, nsEditorCommandTableConstructor },
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+  { &kNS_TEXTSERVICESDOCUMENT_CID, false, NULL, nsTextServicesDocumentConstructor },
+#endif
+  { &kNS_GEOLOCATION_SERVICE_CID, false, NULL, nsGeolocationServiceConstructor },
+  { &kNS_GEOLOCATION_CID, false, NULL, nsGeolocationConstructor },
+  { &kNS_FOCUSMANAGER_CID, false, NULL, CreateFocusManager },
+  { &kNS_ICONTENTUTILS_CID, false, NULL, nsIContentUtilsConstructor },
+  { &kCSPSERVICE_CID, false, NULL, CSPServiceConstructor },
+  { &kNS_EVENTLISTENERSERVICE_CID, false, NULL, CreateEventListenerService },
+  { &kNS_GLOBALMESSAGEMANAGER_CID, false, NULL, CreateGlobalMessageManager },
+  { &kNSCHANNELPOLICY_CID, false, NULL, nsChannelPolicyConstructor },
+  { &kNS_SCRIPTSECURITYMANAGER_CID, false, NULL, Construct_nsIScriptSecurityManager },
+  { &kNS_PRINCIPAL_CID, false, NULL, nsPrincipalConstructor },
+  { &kNS_SYSTEMPRINCIPAL_CID, false, NULL, nsSystemPrincipalConstructor },
+  { &kNS_NULLPRINCIPAL_CID, false, NULL, nsNullPrincipalConstructor },
+  { &kNS_SECURITYNAMESET_CID, false, NULL, nsSecurityNameSetConstructor },
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+  { &kNS_ACCELEROMETER_CID, false, NULL, nsAccelerometerSystemConstructor },
+#endif
+  { NULL }
 };
 
-static nsModuleInfo const kLayoutModuleInfo = {
-    NS_MODULEINFO_VERSION,
-    "nsLayoutModule",
-    gLayoutComponents,
-    (sizeof(gLayoutComponents) / sizeof(gLayoutComponents[0])),
-    Initialize,
-    nsnull
+static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
+  XPCONNECT_CONTRACTS
+  { "@mozilla.org/layout/xul-boxobject;1", &kNS_BOXOBJECT_CID },
+#ifdef MOZ_XUL
+  { "@mozilla.org/layout/xul-boxobject-listbox;1", &kNS_LISTBOXOBJECT_CID },
+  { "@mozilla.org/layout/xul-boxobject-menu;1", &kNS_MENUBOXOBJECT_CID },
+  { "@mozilla.org/layout/xul-boxobject-popup;1", &kNS_POPUPBOXOBJECT_CID },
+  { "@mozilla.org/layout/xul-boxobject-container;1", &kNS_CONTAINERBOXOBJECT_CID },
+  { "@mozilla.org/layout/xul-boxobject-scrollbox;1", &kNS_SCROLLBOXOBJECT_CID },
+  { "@mozilla.org/layout/xul-boxobject-tree;1", &kNS_TREEBOXOBJECT_CID },
+#endif // MOZ_XUL
+#ifndef MOZ_NO_INSPECTOR_APIS
+#ifdef MOZ_XUL
+  { "@mozilla.org/inspector/dom-view;1", &kIN_DOMVIEW_CID },
+#endif
+  { "@mozilla.org/inspector/deep-tree-walker;1", &kIN_DEEPTREEWALKER_CID },
+  { "@mozilla.org/inspector/flasher;1", &kIN_FLASHER_CID },
+  { "@mozilla.org/inspector/search;1?type=cssvalue", &kIN_CSSVALUESEARCH_CID },
+  { "@mozilla.org/inspector/dom-utils;1", &kIN_DOMUTILS_CID },
+#endif // MOZ_NO_INSPECTOR_APIS
+  { NS_NAMESPACEMANAGER_CONTRACTID, &kNS_NAMESPACEMANAGER_CID },
+  { "@mozilla.org/xml/xml-document;1", &kNS_XMLDOCUMENT_CID },
+#ifdef MOZ_SVG
+  { "@mozilla.org/svg/svg-document;1", &kNS_SVGDOCUMENT_CID },
+#endif
+  { "@mozilla.org/content/dom-selection;1", &kNS_DOMSELECTION_CID },
+  { "@mozilla.org/content/range;1", &kNS_RANGE_CID },
+  { "@mozilla.org/content/range-utils;1", &kNS_RANGEUTILS_CID },
+  { "@mozilla.org/content/post-content-iterator;1", &kNS_CONTENTITERATOR_CID },
+  { "@mozilla.org/content/pre-content-iterator;1", &kNS_PRECONTENTITERATOR_CID },
+  { "@mozilla.org/content/subtree-content-iterator;1", &kNS_SUBTREEITERATOR_CID },
+  { NS_HTMLIMGELEMENT_CONTRACTID, &kNS_HTMLIMAGEELEMENT_CID },
+  { NS_HTMLOPTIONELEMENT_CONTRACTID, &kNS_HTMLOPTIONELEMENT_CID },
+#ifdef MOZ_MEDIA
+  { NS_HTMLAUDIOELEMENT_CONTRACTID, &kNS_HTMLAUDIOELEMENT_CID },
+#endif
+  { "@mozilla.org/content/canvas-rendering-context;1?id=2d", &kNS_CANVASRENDERINGCONTEXT2D_CID },
+  { "@mozilla.org/content/canvas-rendering-context;1?id=moz-webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
+  { "@mozilla.org/content/canvas-rendering-context;1?id=experimental-webgl", &kNS_CANVASRENDERINGCONTEXTWEBGL_CID },
+  { NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &kNS_TEXT_ENCODER_CID },
+  { NS_DOC_ENCODER_CONTRACTID_BASE "application/xml", &kNS_TEXT_ENCODER_CID },
+  { NS_DOC_ENCODER_CONTRACTID_BASE "application/xhtml+xml", &kNS_TEXT_ENCODER_CID },
+#ifdef MOZ_SVG
+  { NS_DOC_ENCODER_CONTRACTID_BASE "image/svg+xml", &kNS_TEXT_ENCODER_CID },
+#endif
+  { NS_DOC_ENCODER_CONTRACTID_BASE "text/html", &kNS_TEXT_ENCODER_CID },
+  { NS_DOC_ENCODER_CONTRACTID_BASE "text/plain", &kNS_TEXT_ENCODER_CID },
+  { NS_HTMLCOPY_ENCODER_CONTRACTID, &kNS_HTMLCOPY_TEXT_ENCODER_CID },
+  { NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/xml", &kNS_XMLCONTENTSERIALIZER_CID },
+  { NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "application/xml", &kNS_XMLCONTENTSERIALIZER_CID },
+  { NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "application/xhtml+xml", &kNS_XHTMLCONTENTSERIALIZER_CID },
+#ifdef MOZ_SVG
+  { NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "image/svg+xml", &kNS_XMLCONTENTSERIALIZER_CID },
+#endif
+  { NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/html", &kNS_HTMLCONTENTSERIALIZER_CID },
+  { NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "application/vnd.mozilla.xul+xml", &kNS_XMLCONTENTSERIALIZER_CID },
+  { NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/plain", &kNS_PLAINTEXTSERIALIZER_CID },
+  { NS_PLAINTEXTSINK_CONTRACTID, &kNS_PLAINTEXTSERIALIZER_CID },
+  { NS_HTMLFRAGMENTSINK_CONTRACTID, &kNS_HTMLFRAGMENTSINK_CID },
+  { NS_HTMLFRAGMENTSINK2_CONTRACTID, &kNS_HTMLFRAGMENTSINK2_CID },
+  { NS_HTMLPARANOIDFRAGMENTSINK_CONTRACTID, &kNS_HTMLPARANOIDFRAGMENTSINK_CID },
+  { NS_HTMLPARANOIDFRAGMENTSINK2_CONTRACTID, &kNS_HTMLPARANOIDFRAGMENTSINK2_CID },
+  { MOZ_SANITIZINGHTMLSERIALIZER_CONTRACTID, &kMOZ_SANITIZINGHTMLSERIALIZER_CID },
+  { NS_XMLFRAGMENTSINK_CONTRACTID, &kNS_XMLFRAGMENTSINK_CID },
+  { NS_XMLFRAGMENTSINK2_CONTRACTID, &kNS_XMLFRAGMENTSINK2_CID },
+  { NS_XHTMLPARANOIDFRAGMENTSINK_CONTRACTID, &kNS_XHTMLPARANOIDFRAGMENTSINK_CID },
+  { NS_XHTMLPARANOIDFRAGMENTSINK2_CONTRACTID, &kNS_XHTMLPARANOIDFRAGMENTSINK2_CID },
+  { "@mozilla.org/xbl;1", &kNS_XBLSERVICE_CID },
+  { NS_CONTENTPOLICY_CONTRACTID, &kNS_CONTENTPOLICY_CID },
+  { NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID, &kNS_DATADOCUMENTCONTENTPOLICY_CID },
+  { NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID, &kNS_NODATAPROTOCOLCONTENTPOLICY_CID },
+  { "@mozilla.org/xul/xul-controllers;1", &kNS_XULCONTROLLERS_CID },
+#ifdef MOZ_XUL
+  { "@mozilla.org/xul/xul-sort-service;1", &kNS_XULSORTSERVICE_CID },
+  { "@mozilla.org/xul/xul-template-builder;1", &kNS_XULTEMPLATEBUILDER_CID },
+  { "@mozilla.org/xul/xul-tree-builder;1", &kNS_XULTREEBUILDER_CID },
+  { "@mozilla.org/xul/xul-popup-manager;1", &kNS_XULPOPUPMANAGER_CID },
+  { "@mozilla.org/xul/xul-document;1", &kNS_XULDOCUMENT_CID },
+  { "@mozilla.org/xul/xul-prototype-cache;1", &kNS_XULPROTOTYPECACHE_CID },
+#endif
+#ifdef MOZ_XTF
+  { NS_XTFSERVICE_CONTRACTID, &kNS_XTFSERVICE_CID },
+  { NS_XMLCONTENTBUILDER_CONTRACTID, &kNS_XMLCONTENTBUILDER_CID },
+#endif
+  { CONTENT_DLF_CONTRACTID, &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID },
+  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "wyciwyg", &kNS_WYCIWYGPROTOCOLHANDLER_CID },
+  { NS_SYNCLOADDOMSERVICE_CONTRACTID, &kNS_SYNCLOADDOMSERVICE_CID },
+  { NS_JSPROTOCOLHANDLER_CONTRACTID, &kNS_JSPROTOCOLHANDLER_CID },
+  { NS_WINDOWCONTROLLER_CONTRACTID, &kNS_WINDOWCONTROLLER_CID },
+  { "@mozilla.org/view-manager;1", &kNS_VIEW_MANAGER_CID },
+  { PLUGIN_DLF_CONTRACTID, &kNS_PLUGINDOCLOADERFACTORY_CID },
+  { NS_STYLESHEETSERVICE_CONTRACTID, &kNS_STYLESHEETSERVICE_CID },
+  { TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID, &kTRANSFORMIIX_XSLT_PROCESSOR_CID },
+  { NS_XPATH_EVALUATOR_CONTRACTID, &kTRANSFORMIIX_XPATH_EVALUATOR_CID },
+  { NS_XPOINTER_SCHEME_PROCESSOR_BASE "xpath1", &kTRANSFORMIIX_XPATH1_SCHEME_CID },
+  { TRANSFORMIIX_NODESET_CONTRACTID, &kTRANSFORMIIX_NODESET_CID },
+  { NS_XMLSERIALIZER_CONTRACTID, &kNS_XMLSERIALIZER_CID },
+  { NS_FILEREADER_CONTRACTID, &kNS_FILEREADER_CID },
+  { NS_FORMDATA_CONTRACTID, &kNS_FORMDATA_CID },
+  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX FILEDATA_SCHEME, &kNS_FILEDATAPROTOCOLHANDLER_CID },
+  { NS_XMLHTTPREQUEST_CONTRACTID, &kNS_XMLHTTPREQUEST_CID },
+  { NS_WEBSOCKET_CONTRACTID, &kNS_WEBSOCKET_CID },
+  { NS_WSPROTOCOLHANDLER_CONTRACTID, &kNS_WSPROTOCOLHANDLER_CID },
+  { NS_WSSPROTOCOLHANDLER_CONTRACTID, &kNS_WSSPROTOCOLHANDLER_CID },
+  { NS_DOMPARSER_CONTRACTID, &kNS_DOMPARSER_CID },
+  { "@mozilla.org/dom/storage;1", &kNS_DOMSTORAGE_CID },
+  { "@mozilla.org/dom/storage;2", &kNS_DOMSTORAGE2_CID },
+  { "@mozilla.org/dom/storagemanager;1", &kNS_DOMSTORAGEMANAGER_CID },
+  { "@mozilla.org/dom/json;1", &kNS_DOMJSON_CID },
+  { "@mozilla.org/editor/texteditor;1", &kNS_TEXTEDITOR_CID },
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+#ifdef ENABLE_EDITOR_API_LOG
+  { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
+#else
+  { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
+#endif
+#endif
+  { "@mozilla.org/editor/editorcontroller;1", &kNS_EDITORCONTROLLER_CID },
+  { "", &kNS_EDITORCOMMANDTABLE_CID },
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
+  { "@mozilla.org/textservices/textservicesdocument;1", &kNS_TEXTSERVICESDOCUMENT_CID },
+#endif
+  { "@mozilla.org/geolocation/service;1", &kNS_GEOLOCATION_SERVICE_CID },
+  { "@mozilla.org/geolocation;1", &kNS_GEOLOCATION_CID },
+  { "@mozilla.org/focus-manager;1", &kNS_FOCUSMANAGER_CID },
+  { "@mozilla.org/content/contentutils;1", &kNS_ICONTENTUTILS_CID },
+  { CSPSERVICE_CONTRACTID, &kCSPSERVICE_CID },
+  { NS_EVENTLISTENERSERVICE_CONTRACTID, &kNS_EVENTLISTENERSERVICE_CID },
+  { NS_GLOBALMESSAGEMANAGER_CONTRACTID, &kNS_GLOBALMESSAGEMANAGER_CID },
+  { NSCHANNELPOLICY_CONTRACTID, &kNSCHANNELPOLICY_CID },
+  { NS_SCRIPTSECURITYMANAGER_CONTRACTID, &kNS_SCRIPTSECURITYMANAGER_CID },
+  { NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID, &kNS_SCRIPTSECURITYMANAGER_CID },
+  { NS_PRINCIPAL_CONTRACTID, &kNS_PRINCIPAL_CID },
+  { NS_SYSTEMPRINCIPAL_CONTRACTID, &kNS_SYSTEMPRINCIPAL_CID },
+  { NS_NULLPRINCIPAL_CONTRACTID, &kNS_NULLPRINCIPAL_CID },
+  { NS_SECURITYNAMESET_CONTRACTID, &kNS_SECURITYNAMESET_CID },
+#if defined(XP_UNIX)    || \
+    defined(_WINDOWS)   || \
+    defined(machintosh) || \
+    defined(android)
+  { NS_ACCELEROMETER_CONTRACTID, &kNS_ACCELEROMETER_CID },
+#endif
+  { NULL }
 };
 
-static const nsModuleComponentInfo gXPConnectComponents[] = {
-    XPCONNECT_COMPONENTS,
-
-    { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
-      NS_SCRIPTSECURITYMANAGER_CID, 
-      NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-      Construct_nsIScriptSecurityManager,
-      RegisterSecurityNameSet,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsIClassInfo::MAIN_THREAD_ONLY
-    },
-
-    { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
-      NS_SCRIPTSECURITYMANAGER_CID, 
-      NS_GLOBAL_PREF_SECURITY_CHECK,
-      Construct_nsIScriptSecurityManager,
-      RegisterSecurityNameSet,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsIClassInfo::MAIN_THREAD_ONLY
-    },
-
-    { NS_SCRIPTSECURITYMANAGER_CLASSNAME,
-      NS_SCRIPTSECURITYMANAGER_CID,
-      NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID,
-      Construct_nsIScriptSecurityManager,
-      RegisterSecurityNameSet,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsIClassInfo::MAIN_THREAD_ONLY
-    },
-
-
-
-    { NS_PRINCIPAL_CLASSNAME, 
-      NS_PRINCIPAL_CID, 
-      NS_PRINCIPAL_CONTRACTID,
-      nsPrincipalConstructor,
-      nsnull,
-      nsnull,
-      nsnull,
-      NS_CI_INTERFACE_GETTER_NAME(nsPrincipal),
-      nsnull,
-      &NS_CLASSINFO_NAME(nsPrincipal),
-      nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
-    },
-
-    { NS_SYSTEMPRINCIPAL_CLASSNAME, 
-      NS_SYSTEMPRINCIPAL_CID, 
-      NS_SYSTEMPRINCIPAL_CONTRACTID,
-      nsSystemPrincipalConstructor,
-      nsnull,
-      nsnull,
-      nsnull,
-      NS_CI_INTERFACE_GETTER_NAME(nsSystemPrincipal),
-      nsnull,
-      &NS_CLASSINFO_NAME(nsSystemPrincipal),
-      nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY |
-      nsIClassInfo::EAGER_CLASSINFO
-    },
-
-    { NS_NULLPRINCIPAL_CLASSNAME, 
-      NS_NULLPRINCIPAL_CID, 
-      NS_NULLPRINCIPAL_CONTRACTID,
-      nsNullPrincipalConstructor,
-      nsnull,
-      nsnull,
-      nsnull,
-      NS_CI_INTERFACE_GETTER_NAME(nsNullPrincipal),
-      nsnull,
-      &NS_CLASSINFO_NAME(nsNullPrincipal),
-      nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
-    },
-
-    { "Security Script Name Set",
-      NS_SECURITYNAMESET_CID,
-      NS_SECURITYNAMESET_CONTRACTID,
-      nsSecurityNameSetConstructor,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsIClassInfo::MAIN_THREAD_ONLY
-    }
+static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
+  XPCONNECT_CATEGORIES
+  { JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY, "Image", NS_HTMLIMGELEMENT_CONTRACTID },
+  { JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY, "Image", "HTMLImageElement" },
+  { JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY, "Option", NS_HTMLOPTIONELEMENT_CONTRACTID },
+  { JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY, "Option", "HTMLOptionElement" },
+#ifdef MOZ_MEDIA
+  { JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY, "Audio", NS_HTMLAUDIOELEMENT_CONTRACTID },
+  { JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY, "Audio", "HTMLAudioElement" },
+#endif
+  { "content-policy", NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID, NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID },
+  { "content-policy", NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID, NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID },
+  { "content-policy", "CSPService", CSPSERVICE_CONTRACTID },
+  { "net-channel-event-sinks", "CSPService", CSPSERVICE_CONTRACTID },
+  { JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY, "PrivilegeManager", NS_SECURITYNAMESET_CONTRACTID },
+  { "app-startup", "Script Security Manager", "service," NS_SCRIPTSECURITYMANAGER_CONTRACTID },
+  CONTENTDLF_CATEGORIES
+  { NULL }
 };
 
-void
-XPConnectModuleDtor(nsIModule *self)
+static void
+LayoutModuleDtor()
 {
-  xpcModuleDtor(self);
+  xpcModuleDtor();
 
   nsScriptSecurityManager::Shutdown();
 }
 
-static nsModuleInfo const kXPConnectModuleInfo = {
-    NS_MODULEINFO_VERSION,
-    "XPConnectModule",
-    gXPConnectComponents,
-    (sizeof(gXPConnectComponents) / sizeof(gXPConnectComponents[0])),
-    xpcModuleCtor,
-    XPConnectModuleDtor
+static const mozilla::Module kLayoutModule = {
+  mozilla::Module::kVersion,
+  kLayoutCIDs,
+  kLayoutContracts,
+  kLayoutCategories,
+  NULL,
+  Initialize,
+  LayoutModuleDtor
 };
-
-// XPConnect is initialized early, because it has an XPCOM component loader.
-// Initializing nsLayoutStatics at that point leads to recursive initialization,
-// because it instantiates a bunch of other components. To get around that we
-// use two nsGenericModules, each with their own initialiser. nsLayoutStatics is
-// initialized for the module for layout components, but not for the module for
-// XPConnect components. nsLayoutModule forwards to the two nsGenericModules.
-class nsLayoutModule : public nsIModule
-{
-public:
-  nsLayoutModule(nsIModule *aXPConnectModule, nsIModule *aLayoutModule)
-    : mXPConnectModule(aXPConnectModule),
-      mLayoutModule(aLayoutModule)
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-
-  // nsIModule
-  NS_SCRIPTABLE NS_IMETHOD GetClassObject(nsIComponentManager *aCompMgr,
-                                          const nsCID & aClass,
-                                          const nsIID & aIID,
-                                          void **aResult NS_OUTPARAM)
-  {
-    nsresult rv = mXPConnectModule->GetClassObject(aCompMgr, aClass, aIID,
-                                                   aResult);
-    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED) {
-      rv = mLayoutModule->GetClassObject(aCompMgr, aClass, aIID, aResult);
-    }
-    return rv;
-  }
-  NS_SCRIPTABLE NS_IMETHOD RegisterSelf(nsIComponentManager *aCompMgr,
-                                        nsIFile *aLocation,
-                                        const char *aLoaderStr,
-                                        const char *aType)
-  {
-    nsresult rv = mXPConnectModule->RegisterSelf(aCompMgr, aLocation,
-                                                 aLoaderStr, aType);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mLayoutModule->RegisterSelf(aCompMgr, aLocation, aLoaderStr, aType);
-    }
-    return rv;
-  }
-  NS_SCRIPTABLE NS_IMETHOD UnregisterSelf(nsIComponentManager *aCompMgr,
-                                          nsIFile *aLocation,
-                                          const char *aLoaderStr)
-  {
-    nsresult rv = mXPConnectModule->UnregisterSelf(aCompMgr, aLocation,
-                                                   aLoaderStr);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mLayoutModule->UnregisterSelf(aCompMgr, aLocation, aLoaderStr);
-    }
-    return rv;
-  }
-  NS_SCRIPTABLE NS_IMETHOD CanUnload(nsIComponentManager *aCompMgr,
-                                     PRBool *aResult NS_OUTPARAM)
-  {
-    nsresult rv = mXPConnectModule->CanUnload(aCompMgr, aResult);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mLayoutModule->CanUnload(aCompMgr, aResult);
-    }
-    return rv;
-  }
-
-private:
-  nsCOMPtr<nsIModule> mXPConnectModule;
-  nsCOMPtr<nsIModule> mLayoutModule;
-};
-
-NS_IMPL_ISUPPORTS1(nsLayoutModule, nsIModule)
-
-NSGETMODULE_ENTRY_POINT(nsLayoutModule)(nsIComponentManager *aServMgr,
-                                        nsIFile *aLocation,
-                                        nsIModule **aResult)
-{
-    nsCOMPtr<nsIModule> xpconnectModule;
-    nsresult rv = NS_NewGenericModule2(&kXPConnectModuleInfo,
-                                       getter_AddRefs(xpconnectModule));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIModule> layoutModule;
-    rv = NS_NewGenericModule2(&kLayoutModuleInfo, getter_AddRefs(layoutModule));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ADDREF(*aResult = new nsLayoutModule(xpconnectModule, layoutModule));
-
-    return NS_OK;
-}
+  
+NSMODULE_DEFN(nsLayoutModule) = &kLayoutModule;

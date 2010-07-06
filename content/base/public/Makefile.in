@@ -78,6 +78,7 @@ nsDOMFile.h \
 nsLineBreaker.h \
 nsReferencedElement.h \
 nsXMLNameSpaceMap.h \
+nsDOMEventTargetWrapperCache.h \
 $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
@@ -95,7 +96,6 @@ SDK_XPIDLSRCS   = \
 		$(NULL)
 
 XPIDLSRCS	= \
-		nsIChromeRegistry.idl       \
 		nsIContentPolicy.idl        \
 		nsIDocumentEncoder.idl      \
 		nsIDOMFile.idl \
@@ -123,6 +123,7 @@ XPIDLSRCS	= \
 		nsIXMLHttpRequest.idl \
 		nsIContentSecurityPolicy.idl \
 		nsIFrameMessageManager.idl \
+		nsIWebSocket.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

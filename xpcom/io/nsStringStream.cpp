@@ -119,6 +119,8 @@ private:
 NS_IMPL_THREADSAFE_ADDREF(nsStringInputStream)
 NS_IMPL_THREADSAFE_RELEASE(nsStringInputStream)
 
+NS_IMPL_CLASSINFO(nsStringInputStream, NULL, nsIClassInfo::THREADSAFE,
+                  NS_STRINGINPUTSTREAM_CID)
 NS_IMPL_QUERY_INTERFACE4_CI(nsStringInputStream,
                             nsIStringInputStream,
                             nsIInputStream,
@@ -413,7 +415,7 @@ NS_NewCStringInputStream(nsIInputStream** aStreamResult,
 }
 
 // factory method for constructing a nsStringInputStream object
-NS_METHOD
+nsresult
 nsStringInputStreamConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
     *result = nsnull;

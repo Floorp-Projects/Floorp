@@ -43,13 +43,7 @@
 
 #include "nsIAccessibleEvent.h"
 
-#include "nsCOMPtr.h"
-#include "nsCOMArray.h"
-#include "nsString.h"
-#include "nsCycleCollectionParticipant.h"
-
-#include "nsINode.h"
-#include "nsIDOMNode.h"
+#include "nsAccessible.h"
 
 class nsDocAccessible;
 
@@ -64,14 +58,9 @@ enum EIsFromUserInput
   eAutoDetect = -1
 };
 
-#define NS_ACCEVENT_IMPL_CID                            \
-{  /* 39bde096-317e-4294-b23b-4af4a9b283f7 */           \
-  0x39bde096,                                           \
-  0x317e,                                               \
-  0x4294,                                               \
-  { 0xb2, 0x3b, 0x4a, 0xf4, 0xa9, 0xb2, 0x83, 0xf7 }    \
-}
-
+/**
+ * Generic accessible event.
+ */
 class nsAccEvent: public nsIAccessibleEvent
 {
 public:
@@ -100,16 +89,13 @@ public:
      eDoNotEmit
   };
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCEVENT_IMPL_CID)
-
   // Initialize with an nsIAccessible
-  nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+  nsAccEvent(PRUint32 aEventType, nsAccessible *aAccessible,
              PRBool aIsAsynch = PR_FALSE,
              EIsFromUserInput aIsFromUserInput = eAutoDetect,
              EEventRule aEventRule = eRemoveDupes);
   // Initialize with an nsIDOMNode
-  nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
-             PRBool aIsAsynch = PR_FALSE,
+  nsAccEvent(PRUint32 aEventType, nsINode *aNode, PRBool aIsAsynch = PR_FALSE,
              EIsFromUserInput aIsFromUserInput = eAutoDetect,
              EEventRule aEventRule = eRemoveDupes);
   virtual ~nsAccEvent() {}
@@ -124,16 +110,32 @@ public:
   EEventRule GetEventRule() const { return mEventRule; }
   PRBool IsAsync() const { return mIsAsync; }
   PRBool IsFromUserInput() const { return mIsFromUserInput; }
-  nsIAccessible* GetAccessible() const { return mAccessible; }
 
-  nsINode* GetNode();
+  nsAccessible *GetAccessible();
   nsDocAccessible* GetDocAccessible();
+  nsINode* GetNode();
+
+  enum EventGroup {
+    eGenericEvent,
+    eReorderEvent,
+    eStateChangeEvent,
+    eTextChangeEvent,
+    eHideEvent,
+    eCaretMoveEvent,
+    eTableChangeEvent
+  };
+
+  static const EventGroup kEventGroup = eGenericEvent;
+  virtual unsigned int GetEventGroups() const
+  {
+    return 1U << eGenericEvent;
+  }
 
 protected:
   /**
    * Get an accessible from event target node.
    */
-  already_AddRefed<nsIAccessible> GetAccessibleByNode();
+  nsAccessible *GetAccessibleForNode() const;
 
   /**
    * Determine whether the event is from user input by event state manager if
@@ -146,34 +148,32 @@ protected:
   PRUint32 mEventType;
   EEventRule mEventRule;
   PRPackedBool mIsAsync;
-  nsCOMPtr<nsIAccessible> mAccessible;
+  nsRefPtr<nsAccessible> mAccessible;
   nsCOMPtr<nsINode> mNode;
 
   friend class nsAccEventQueue;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsAccEvent, NS_ACCEVENT_IMPL_CID)
 
-
-#define NS_ACCREORDEREVENT_IMPL_CID                     \
-{  /* f2629eb8-2458-4358-868c-3912b15b767a */           \
-  0xf2629eb8,                                           \
-  0x2458,                                               \
-  0x4358,                                               \
-  { 0x86, 0x8c, 0x39, 0x12, 0xb1, 0x5b, 0x76, 0x7a }    \
-}
-
+/**
+ * Accessible reorder event.
+ */
 class nsAccReorderEvent : public nsAccEvent
 {
 public:
-
-  nsAccReorderEvent(nsIAccessible *aAccTarget, PRBool aIsAsynch,
-                    PRBool aIsUnconditional, nsIDOMNode *aReasonNode);
-
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCREORDEREVENT_IMPL_CID)
+  nsAccReorderEvent(nsAccessible *aAccTarget, PRBool aIsAsynch,
+                    PRBool aIsUnconditional, nsINode *aReasonNode);
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  // nsAccEvent
+  static const EventGroup kEventGroup = eReorderEvent;
+  virtual unsigned int GetEventGroups() const
+  {
+    return nsAccEvent::GetEventGroups() | (1U << eReorderEvent);
+  }
+
+  // nsAccReorderEvent
   /**
    * Return true if event is unconditional, i.e. must be fired.
    */
@@ -186,30 +186,41 @@ public:
 
 private:
   PRBool mUnconditionalEvent;
-  nsCOMPtr<nsIDOMNode> mReasonNode;
+  nsCOMPtr<nsINode> mReasonNode;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsAccReorderEvent, NS_ACCREORDEREVENT_IMPL_CID)
 
-
+/**
+ * Accessible state change event.
+ */
 class nsAccStateChangeEvent: public nsAccEvent,
                              public nsIAccessibleStateChangeEvent
 {
 public:
-  nsAccStateChangeEvent(nsIAccessible *aAccessible,
+  nsAccStateChangeEvent(nsAccessible *aAccessible,
                         PRUint32 aState, PRBool aIsExtraState,
                         PRBool aIsEnabled, PRBool aIsAsynch = PR_FALSE,
                         EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
-  nsAccStateChangeEvent(nsIDOMNode *aNode,
-                        PRUint32 aState, PRBool aIsExtraState,
+  nsAccStateChangeEvent(nsINode *aNode, PRUint32 aState, PRBool aIsExtraState,
                         PRBool aIsEnabled);
 
-  nsAccStateChangeEvent(nsIDOMNode *aNode,
-                        PRUint32 aState, PRBool aIsExtraState);
+  nsAccStateChangeEvent(nsINode *aNode, PRUint32 aState, PRBool aIsExtraState);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLESTATECHANGEEVENT
+
+  // nsAccEvent
+  static const EventGroup kEventGroup = eStateChangeEvent;
+  virtual unsigned int GetEventGroups() const
+  {
+    return nsAccEvent::GetEventGroups() | (1U << eStateChangeEvent);
+  }
+
+  // nsAccStateChangeEvent
+  PRUint32 GetState() const { return mState; }
+  PRBool IsExtraState() const { return mIsExtraState; }
+  PRBool IsStateEnabled() const { return mIsEnabled; }
 
 private:
   PRUint32 mState;
@@ -217,51 +228,147 @@ private:
   PRBool mIsEnabled;
 };
 
+
+/**
+ * Accessible text change event.
+ */
 class nsAccTextChangeEvent: public nsAccEvent,
                             public nsIAccessibleTextChangeEvent
 {
 public:
-  nsAccTextChangeEvent(nsIAccessible *aAccessible, PRInt32 aStart, PRUint32 aLength,
+  nsAccTextChangeEvent(nsAccessible *aAccessible, PRInt32 aStart,
+                       nsAString& aModifiedText,
                        PRBool aIsInserted, PRBool aIsAsynch = PR_FALSE,
                        EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLETEXTCHANGEEVENT
 
+  // nsAccEvent
+  static const EventGroup kEventGroup = eTextChangeEvent;
+  virtual unsigned int GetEventGroups() const
+  {
+    return nsAccEvent::GetEventGroups() | (1U << eTextChangeEvent);
+  }
+
+  // nsAccTextChangeEvent
+  PRInt32 GetStartOffset() const { return mStart; }
+  PRUint32 GetLength() const { return mModifiedText.Length(); }
+  PRBool IsTextInserted() const { return mIsInserted; }
+
 private:
   PRInt32 mStart;
-  PRUint32 mLength;
   PRBool mIsInserted;
   nsString mModifiedText;
+
+  friend class nsAccEventQueue;
 };
 
+
+/**
+ * Accessible hide events.
+ */
+class AccHideEvent : public nsAccEvent
+{
+public:
+  AccHideEvent(nsAccessible* aTarget, nsINode* aTargetNode,
+               PRBool aIsAsynch, EIsFromUserInput aIsFromUserInput);
+
+  // nsAccEvent
+  static const EventGroup kEventGroup = eHideEvent;
+  virtual unsigned int GetEventGroups() const
+  {
+    return nsAccEvent::GetEventGroups() | (1U << eHideEvent);
+  }
+
+protected:
+  nsRefPtr<nsAccessible> mParent;
+  nsRefPtr<nsAccessible> mNextSibling;
+  nsRefPtr<nsAccessible> mPrevSibling;
+  nsRefPtr<nsAccTextChangeEvent> mTextChangeEvent;
+
+  friend class nsAccEventQueue;
+};
+
+
+/**
+ * Accessible caret move event.
+ */
 class nsAccCaretMoveEvent: public nsAccEvent,
                            public nsIAccessibleCaretMoveEvent
 {
 public:
-  nsAccCaretMoveEvent(nsIAccessible *aAccessible, PRInt32 aCaretOffset);
-  nsAccCaretMoveEvent(nsIDOMNode *aNode);
+  nsAccCaretMoveEvent(nsAccessible *aAccessible, PRInt32 aCaretOffset);
+  nsAccCaretMoveEvent(nsINode *aNode);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLECARETMOVEEVENT
+
+  // nsAccEvent
+  static const EventGroup kEventGroup = eCaretMoveEvent;
+  virtual unsigned int GetEventGroups() const
+  {
+    return nsAccEvent::GetEventGroups() | (1U << eCaretMoveEvent);
+  }
+
+  // nsAccCaretMoveEvent
+  PRInt32 GetCaretOffset() const { return mCaretOffset; }
 
 private:
   PRInt32 mCaretOffset;
 };
 
+
+/**
+ * Accessible table change event.
+ */
 class nsAccTableChangeEvent : public nsAccEvent,
-                              public nsIAccessibleTableChangeEvent {
+                              public nsIAccessibleTableChangeEvent
+{
 public:
-  nsAccTableChangeEvent(nsIAccessible *aAccessible, PRUint32 aEventType,
+  nsAccTableChangeEvent(nsAccessible *aAccessible, PRUint32 aEventType,
                         PRInt32 aRowOrColIndex, PRInt32 aNumRowsOrCols,
                         PRBool aIsAsynch);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLETABLECHANGEEVENT
+
+  // nsAccEvent
+  static const EventGroup kEventGroup = eTableChangeEvent;
+  virtual unsigned int GetEventGroups() const
+  {
+    return nsAccEvent::GetEventGroups() | (1U << eTableChangeEvent);
+  }
+
+  // nsAccTableChangeEvent
+  PRUint32 GetIndex() const { return mRowOrColIndex; }
+  PRUint32 GetCount() const { return mNumRowsOrCols; }
 
 private:
   PRUint32 mRowOrColIndex;   // the start row/column after which the rows are inserted/deleted.
   PRUint32 mNumRowsOrCols;   // the number of inserted/deleted rows/columns
+};
+
+
+/**
+ * Downcast the generic accessible event object to derived type.
+ */
+class downcast_accEvent
+{
+public:
+  downcast_accEvent(nsAccEvent *e) : mRawPtr(e) { }
+
+  template<class Destination>
+  operator Destination*() {
+    if (!mRawPtr)
+      return nsnull;
+
+    return mRawPtr->GetEventGroups() & (1U << Destination::kEventGroup) ?
+      static_cast<Destination*>(mRawPtr) : nsnull;
+  }
+
+private:
+  nsAccEvent *mRawPtr;
 };
 
 #endif

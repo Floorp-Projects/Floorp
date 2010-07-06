@@ -270,10 +270,9 @@ PRInt32 nsAccessibleWrap::mAccWrapCreated = 0;
 PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;
 #endif
 
-nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode,
-                                   nsIWeakReference *aShell)
-    : nsAccessible(aNode, aShell),
-      mAtkObject(nsnull)
+nsAccessibleWrap::
+    nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+    nsAccessible(aContent, aShell), mAtkObject(nsnull)
 {
 #ifdef MAI_LOGGING
     ++mAccWrapCreated;
@@ -307,11 +306,11 @@ void nsAccessibleWrap::ShutdownAtkObject()
     }
 }
 
-nsresult
+void
 nsAccessibleWrap::Shutdown()
 {
     ShutdownAtkObject();
-    return nsAccessible::Shutdown();
+    nsAccessible::Shutdown();
 }
 
 MaiHyperlink* nsAccessibleWrap::GetMaiHyperlink(PRBool aCreate /* = PR_TRUE */)
@@ -562,7 +561,7 @@ GetUniqueMaiAtkTypeName(PRUint16 interfacesBits)
 PRBool nsAccessibleWrap::IsValidObject()
 {
     // to ensure we are not shut down
-    return (mDOMNode != nsnull);
+    return !IsDefunct();
 }
 
 /* static functions for ATK callbacks */
@@ -869,21 +868,11 @@ getChildCountCB(AtkObject *aAtkObj)
         return 0;
     }
 
-    PRInt32 count = 0;
-    nsCOMPtr<nsIAccessibleHyperText> hyperText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText), getter_AddRefs(hyperText));
-    if (hyperText) {
-        // If HyperText, then number of links matches number of children
-        hyperText->GetLinkCount(&count);
-    }
-    else {
-        nsCOMPtr<nsIAccessibleText> accText;
-        accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText), getter_AddRefs(accText));
-        if (!accText) {    // Accessible text that is not a HyperText has no children
-            accWrap->GetChildCount(&count);
-        }
-    }
-    return count;
+    // Links within hypertext accessible play role of accessible children in
+    // ATK since every embedded object is a link and text accessibles are
+    // ignored.
+    nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(accWrap);
+    return hyperText ? hyperText->GetLinkCount() : accWrap->GetChildCount();
 }
 
 AtkObject *
@@ -899,25 +888,12 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
         return nsnull;
     }
 
-    nsCOMPtr<nsIAccessible> accChild;
-    nsCOMPtr<nsIAccessibleHyperText> hyperText;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText), getter_AddRefs(hyperText));
-    if (hyperText) {
-        // If HyperText, then number of links matches number of children.
-        // XXX Fix this so it is not O(n^2) to walk through the children
-        // (bug 566328).
-        nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
-        hyperText->GetLink(aChildIndex, getter_AddRefs(hyperLink));
-        accChild = do_QueryInterface(hyperLink);
-    }
-    else {
-        nsCOMPtr<nsIAccessibleText> accText;
-        accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText), getter_AddRefs(accText));
-        if (!accText) {  // Accessible Text that is not HyperText has no children
-            accWrap->GetChildAt(aChildIndex, getter_AddRefs(accChild));
-        }
-    }
-
+    // Links within hypertext accessible play role of accessible children in
+    // ATK since every embedded object is a link and text accessibles are
+    // ignored.
+    nsRefPtr<nsHyperTextAccessible> hyperText = do_QueryObject(accWrap);
+    nsAccessible* accChild = hyperText ? hyperText->GetLinkAt(aChildIndex) :
+                                         accWrap->GetChildAt(aChildIndex);
     if (!accChild)
         return nsnull;
 
@@ -948,21 +924,12 @@ getIndexInParentCB(AtkObject *aAtkObj)
         return -1; // No parent
     }
 
-    PRInt32 currentIndex = 0;
-
-    PRInt32 childCount = parent->GetChildCount();
-    for (PRInt32 idx = 0; idx < childCount; idx++) {
-      nsAccessible *sibling = parent->GetChildAt(idx);
-      if (sibling == accWrap) {
-          return currentIndex;
-      }
-
-      if (nsAccUtils::IsEmbeddedObject(sibling)) {
-          ++ currentIndex;
-      }
-    }
-
-    return -1;
+    // Links within hypertext accessible play role of accessible children in
+    // ATK since every embedded object is a link and text accessibles are
+    // ignored.
+    nsRefPtr<nsHyperTextAccessible> hyperTextParent(do_QueryObject(parent));
+    return hyperTextParent ?
+        hyperTextParent->GetLinkIndex(accWrap) : accWrap->GetIndexInParent();
 }
 
 static void TranslateStates(PRUint32 aState, const AtkStateMap *aStateMap,
@@ -1109,8 +1076,7 @@ nsAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
 nsresult
 nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
 {
-    nsCOMPtr<nsIAccessible> accessible;
-    aEvent->GetAccessible(getter_AddRefs(accessible));
+    nsAccessible *accessible = aEvent->GetAccessible();
     NS_ENSURE_TRUE(accessible, NS_ERROR_FAILURE);
 
     PRUint32 type = aEvent->GetEventType();
@@ -1157,7 +1123,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_VALUE_CHANGE\n"));
-        nsCOMPtr<nsIAccessibleValue> value(do_QueryInterface(accessible));
+        nsCOMPtr<nsIAccessibleValue> value(do_QueryObject(accessible));
         if (value) {    // Make sure this is a numeric value
             // Don't fire for MSAA string value changes (e.g. text editing)
             // ATK values are always numeric
@@ -1179,13 +1145,12 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_CARET_MOVED\n"));
 
-        nsCOMPtr<nsIAccessibleCaretMoveEvent> caretMoveEvent(do_QueryInterface(aEvent));
+        nsAccCaretMoveEvent *caretMoveEvent = downcast_accEvent(aEvent);
         NS_ASSERTION(caretMoveEvent, "Event needs event data");
         if (!caretMoveEvent)
             break;
 
-        PRInt32 caretOffset = -1;
-        caretMoveEvent->GetCaretOffset(&caretOffset);
+        PRInt32 caretOffset = caretMoveEvent->GetCaretOffset();
 
         MAI_LOG_DEBUG(("\n\nCaret postion: %d", caretOffset));
         g_signal_emit_by_name(atkObj,
@@ -1209,12 +1174,11 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
     case nsIAccessibleEvent::EVENT_TABLE_ROW_INSERT:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_INSERT\n"));
-        nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
+        nsAccTableChangeEvent *tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
-        PRInt32 rowIndex, numRows;
-        tableEvent->GetRowOrColIndex(&rowIndex);
-        tableEvent->GetNumRowsOrCols(&numRows);
+        PRInt32 rowIndex = tableEvent->GetIndex();
+        PRInt32 numRows = tableEvent->GetCount();
 
         g_signal_emit_by_name(atkObj,
                               "row_inserted",
@@ -1227,12 +1191,11 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
    case nsIAccessibleEvent::EVENT_TABLE_ROW_DELETE:
      {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_DELETE\n"));
-        nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
+        nsAccTableChangeEvent *tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
-        PRInt32 rowIndex, numRows;
-        tableEvent->GetRowOrColIndex(&rowIndex);
-        tableEvent->GetNumRowsOrCols(&numRows);
+        PRInt32 rowIndex = tableEvent->GetIndex();
+        PRInt32 numRows = tableEvent->GetCount();
 
         g_signal_emit_by_name(atkObj,
                               "row_deleted",
@@ -1252,12 +1215,11 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_INSERT:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_INSERT\n"));
-        nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
+        nsAccTableChangeEvent *tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
-        PRInt32 colIndex, numCols;
-        tableEvent->GetRowOrColIndex(&colIndex);
-        tableEvent->GetNumRowsOrCols(&numCols);
+        PRInt32 colIndex = tableEvent->GetIndex();
+        PRInt32 numCols = tableEvent->GetCount();
 
         g_signal_emit_by_name(atkObj,
                               "column_inserted",
@@ -1270,12 +1232,11 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_DELETE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_DELETE\n"));
-        nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
+        nsAccTableChangeEvent *tableEvent = downcast_accEvent(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
-        PRInt32 colIndex, numCols;
-        tableEvent->GetRowOrColIndex(&colIndex);
-        tableEvent->GetNumRowsOrCols(&numCols);
+        PRInt32 colIndex = tableEvent->GetIndex();
+        PRInt32 numCols = tableEvent->GetCount();
 
         g_signal_emit_by_name(atkObj,
                               "column_deleted",
@@ -1319,7 +1280,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_ACTIVATED\n"));
         nsRootAccessible *rootAcc =
-          static_cast<nsRootAccessible *>(accessible.get());
+          static_cast<nsRootAccessible *>(accessible);
         rootAcc->mActivated = PR_TRUE;
         guint id = g_signal_lookup ("activate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
@@ -1332,7 +1293,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_DEACTIVATED\n"));
         nsRootAccessible *rootAcc =
-          static_cast<nsRootAccessible *>(accessible.get());
+          static_cast<nsRootAccessible *>(accessible);
         rootAcc->mActivated = PR_FALSE;
         guint id = g_signal_lookup ("deactivate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
@@ -1379,18 +1340,12 @@ nsAccessibleWrap::FireAtkStateChangeEvent(nsAccEvent *aEvent,
 {
     MAI_LOG_DEBUG(("\n\nReceived: EVENT_STATE_CHANGE\n"));
 
-    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
-        do_QueryInterface(aEvent);
+    nsAccStateChangeEvent *event = downcast_accEvent(aEvent);
     NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
-    PRUint32 state = 0;
-    event->GetState(&state);
-
-    PRBool isExtra;
-    event->IsExtraState(&isExtra);
-
-    PRBool isEnabled;
-    event->IsEnabled(&isEnabled);
+    PRUint32 state = event->GetState();
+    PRBool isExtra = event->IsExtraState();
+    PRBool isEnabled = event->IsStateEnabled();
 
     PRInt32 stateIndex = AtkStateMap::GetStateIndexFor(state);
     if (stateIndex >= 0) {
@@ -1421,18 +1376,12 @@ nsAccessibleWrap::FireAtkTextChangedEvent(nsAccEvent *aEvent,
 {
     MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_REMOVED/INSERTED\n"));
 
-    nsCOMPtr<nsIAccessibleTextChangeEvent> event =
-        do_QueryInterface(aEvent);
+    nsAccTextChangeEvent *event = downcast_accEvent(aEvent);
     NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
-    PRInt32 start = 0;
-    event->GetStart(&start);
-
-    PRUint32 length = 0;
-    event->GetLength(&length);
-
-    PRBool isInserted;
-    event->IsInserted(&isInserted);
+    PRInt32 start = event->GetStartOffset();
+    PRUint32 length = event->GetLength();
+    PRBool isInserted = event->IsTextInserted();
 
     PRBool isFromUserInput = aEvent->IsFromUserInput();
 

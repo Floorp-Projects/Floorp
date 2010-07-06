@@ -48,9 +48,10 @@
 
 class nsRootAccessibleWrap: public nsRootAccessible
 {
-  public:
-    nsRootAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
-    virtual ~nsRootAccessibleWrap();
+public:
+  nsRootAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
+                       nsIWeakReference *aShell);
+  virtual ~nsRootAccessibleWrap();
 };
 
 #endif

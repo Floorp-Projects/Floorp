@@ -167,6 +167,7 @@ class MochitestOptions(optparse.OptionParser):
     self.add_option("--a11y",
                     action = "store_true", dest = "a11y",
                     help = "run accessibility Mochitests");
+    defaults["a11y"] = False
 
     self.add_option("--setenv",
                     action = "append", type = "string",
@@ -265,6 +266,8 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
     options.webServer = self._automation.DEFAULT_WEB_SERVER
     options.httpPort = self._automation.DEFAULT_HTTP_PORT
     options.sslPort = self._automation.DEFAULT_SSL_PORT
+    options.webSocketPort = self._automation.DEFAULT_WEBSOCKET_PORT
+    options.webSocketProxyPort = self._automation.DEFAULT_WEBSOCKET_PROXY_PORT
 
     if options.vmwareRecording:
       if not self._automation.IS_WIN32:
@@ -339,10 +342,34 @@ class MochitestServer:
       c = urllib2.urlopen(self.shutdownURL)
       c.read()
       c.close()
-      self._process.wait()
+
+      rtncode = self._process.poll()
+      if (rtncode == None):
+        self._process.terminate()
     except:
       self._process.kill()
 
+class WebSocketServer(object):
+  "Class which encapsulates the mod_pywebsocket server"
+
+  def __init__(self, automation, options, scriptdir):
+    self.port = options.webSocketPort
+    self._automation = automation
+    self._scriptdir = scriptdir
+
+  def start(self):
+    script = os.path.join(self._scriptdir, 'pywebsocket/standalone.py')
+    cmd = [sys.executable, script, '-p', str(self.port), '-w', self._scriptdir, '-l', os.path.join(self._scriptdir, "websock.log"), '--log-level=debug']
+
+    self._process = self._automation.Process(cmd)
+    pid = self._process.pid
+    if pid < 0:
+      print "Error starting websocket server."
+      sys.exit(2)
+    self._automation.log.info("INFO | runtests.py | Websocket server pid: %d", pid)
+
+  def stop(self):
+    self._process.kill()
 
 class Mochitest(object):
   # Path to the test script on the server
@@ -388,6 +415,20 @@ class Mochitest(object):
     elif options.browserChrome:
       testURL = "about:blank"
     return testURL
+
+  def startWebSocketServer(self, options):
+    """ Launch the websocket server """
+    if options.webServer != '127.0.0.1':
+      return
+
+    self.wsserver = WebSocketServer(self.automation, options, self.SCRIPT_DIRECTORY)
+    self.wsserver.start()
+
+  def stopWebSocketServer(self, options):
+    if options.webServer != '127.0.0.1':
+      return
+
+    self.wsserver.stop()
 
   def startWebServer(self, options):
     if options.webServer != '127.0.0.1':
@@ -547,7 +588,7 @@ class Mochitest(object):
 
     manifest = self.buildProfile(options)
     self.startWebServer(options)
-
+    self.startWebSocketServer(options)
 
     testURL = self.buildTestPath(options)
     self.buildURLOptions(options)
@@ -587,6 +628,7 @@ class Mochitest(object):
       self.stopVMwareRecording();
 
     self.stopWebServer(options)
+    self.stopWebSocketServer(options)
     processLeakLog(self.leak_report_file, options.leakThreshold)
     self.automation.log.info("\nINFO | runtests.py | Running tests: end.")
 
@@ -654,6 +696,11 @@ toolbar#nav-bar {
       manifestFile.write("""overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/browser-test-overlay.xul
 overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul
 """)
+    elif ((options.chrome == False) and (options.a11y == False)):
+      #only do the ipc-overlay.xul for mochitest-plain.  
+      #Currently there are focus issues in chrome tests and issues with new windows and dialogs when using ipc
+      manifestFile.write("overlay chrome://browser/content/browser.xul chrome://mochikit/content/ipc-overlay.xul")
+      
     manifestFile.close()
 
     return self.installChromeFile(temp_file, options)
@@ -690,7 +737,11 @@ def main():
   if options.symbolsPath and not isURL(options.symbolsPath):
     options.symbolsPath = mochitest.getFullPath(options.symbolsPath)
 
-  automation.setServerInfo(options.webServer, options.httpPort, options.sslPort)
+  automation.setServerInfo(options.webServer, 
+                           options.httpPort, 
+                           options.sslPort, 
+                           options.webSocketPort, 
+                           options.webSocketProxyPort)
   sys.exit(mochitest.runTests(options))
 
 if __name__ == "__main__":

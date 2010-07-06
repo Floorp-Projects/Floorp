@@ -67,12 +67,12 @@
 #include "jsregexp.h"
 #include "jsscan.h"
 #include "jsscope.h"
-#include "jsscopeinlines.h"
 #include "jsscript.h"
 #include "jsautooplen.h"        // generated headers last
 #include "jsstaticcheck.h"
 
 #include "jsobjinlines.h"
+#include "jsscopeinlines.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK  256     /* code allocation increment */
@@ -1835,9 +1835,8 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
     if (depth < 0)
         return false;
 
-    for (uintN slot = JSSLOT_FREE(&js_BlockClass),
-               limit = slot + OBJ_BLOCK_COUNT(cx, blockObj);
-         slot < limit; slot++) {
+    uintN base = JSSLOT_FREE(&js_BlockClass);
+    for (uintN slot = base, limit = base + OBJ_BLOCK_COUNT(cx, blockObj); slot < limit; slot++) {
         const Value &v = blockObj->getSlot(slot);
 
         /* Beware the empty destructuring dummy. */
@@ -1849,18 +1848,18 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
         JSDefinition *dn = (JSDefinition *) v.asPrivate();
         JS_ASSERT(dn->pn_defn);
         JS_ASSERT(uintN(dn->frameSlot() + depth) < JS_BIT(16));
-        dn->pn_cookie += depth;
+        dn->pn_cookie.set(dn->pn_cookie.level(), dn->frameSlot() + depth);
 #ifdef DEBUG
         for (JSParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
             JS_ASSERT(pnu->pn_lexdef == dn);
             JS_ASSERT(!(pnu->pn_dflags & PND_BOUND));
-            JS_ASSERT(pnu->pn_cookie == FREE_UPVAR_COOKIE);
+            JS_ASSERT(pnu->pn_cookie.isFree());
         }
 #endif
     }
 
-    blockObj->scope()->freeslot = JSSLOT_FREE(&js_BlockClass);
-    return blockObj->growSlots(cx, JSSLOT_FREE(&js_BlockClass));
+    blockObj->scope()->freeslot = base;
+    return blockObj->growSlots(cx, base);
 }
 
 /*
@@ -1931,13 +1930,13 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
             return false;
         JS_ASSERT(ALE_INDEX(ale) == cg->upvarList.count - 1);
 
-        uint32 *vector = cg->upvarMap.vector;
+        UpvarCookie *vector = cg->upvarMap.vector;
         uint32 length = cg->upvarMap.length;
 
         JS_ASSERT(ALE_INDEX(ale) <= length);
         if (ALE_INDEX(ale) == length) {
             length = 2 * JS_MAX(2, length);
-            vector = (uint32 *) cx->realloc(vector, length * sizeof *vector);
+            vector = reinterpret_cast<UpvarCookie *>(cx->realloc(vector, length * sizeof *vector));
             if (!vector)
                 return false;
             cg->upvarMap.vector = vector;
@@ -1949,11 +1948,11 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
         JS_ASSERT(index < JS_BIT(16));
 
         uintN skip = cg->staticLevel - upvarLevel;
-        vector[ALE_INDEX(ale)] = MAKE_UPVAR_COOKIE(skip, index);
+        vector[ALE_INDEX(ale)].set(skip, index);
     }
 
     pn->pn_op = JSOP_GETUPVAR;
-    pn->pn_cookie = MAKE_UPVAR_COOKIE(cg->staticLevel, ALE_INDEX(ale));
+    pn->pn_cookie.set(cg->staticLevel, ALE_INDEX(ale));
     pn->pn_dflags |= PND_BOUND;
     return true;
 }
@@ -1981,7 +1980,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JSDefinition *dn;
     JSOp op;
     JSAtom *atom;
-    uint32 cookie;
     JSDefinition::Kind dn_kind;
     JSAtomListElement *ale;
     uintN index;
@@ -2000,7 +1998,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
      * definitions, unless a with statement or direct eval intervened.
      */
     if (pn->pn_used) {
-        JS_ASSERT(pn->pn_cookie == FREE_UPVAR_COOKIE);
+        JS_ASSERT(pn->pn_cookie.isFree());
         dn = pn->pn_lexdef;
         JS_ASSERT(dn->pn_defn);
         if (pn->isDeoptimized())
@@ -2018,7 +2016,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
     atom = pn->pn_atom;
-    cookie = dn->pn_cookie;
+    UpvarCookie cookie = dn->pn_cookie;
     dn_kind = dn->kind();
 
     /*
@@ -2055,7 +2053,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pn->pn_op = op = JSOP_NAME;
     }
 
-    if (cookie == FREE_UPVAR_COOKIE) {
+    if (cookie.isFree()) {
         JSStackFrame *caller = cg->parser->callerFrame;
         if (caller) {
             JS_ASSERT(cg->compileAndGo());
@@ -2161,12 +2159,12 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_TRUE;
         }
         pn->pn_op = op;
-        pn->pn_cookie = cookie;
+        pn->pn_cookie.set(cookie);
         pn->pn_dflags |= PND_BOUND;
         return JS_TRUE;
     }
 
-    uintN level = UPVAR_FRAME_SKIP(cookie);
+    uintN level = cookie.level();
     JS_ASSERT(cg->staticLevel >= level);
 
     /*
@@ -2217,8 +2215,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     uintN skip = cg->staticLevel - level;
     if (skip != 0) {
         JS_ASSERT(cg->inFunction());
-        JS_ASSERT_IF(UPVAR_FRAME_SLOT(cookie) != CALLEE_UPVAR_SLOT,
-                     cg->lexdeps.lookup(atom));
+        JS_ASSERT_IF(cookie.slot() != UpvarCookie::CALLEE_SLOT, cg->lexdeps.lookup(atom));
         JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
         JS_ASSERT(cg->fun->u.i.skipmin <= skip);
 
@@ -2271,11 +2268,11 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             index = ALE_INDEX(ale);
             JS_ASSERT(index == cg->upvarList.count - 1);
 
-            uint32 *vector = cg->upvarMap.vector;
+            UpvarCookie *vector = cg->upvarMap.vector;
             if (!vector) {
                 uint32 length = cg->lexdeps.count;
 
-                vector = (uint32 *) js_calloc(length * sizeof *vector);
+                vector = (UpvarCookie *) js_calloc(length * sizeof *vector);
                 if (!vector) {
                     JS_ReportOutOfMemory(cx);
                     return JS_FALSE;
@@ -2284,8 +2281,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 cg->upvarMap.length = length;
             }
 
-            uintN slot = UPVAR_FRAME_SLOT(cookie);
-            if (slot != CALLEE_UPVAR_SLOT && dn_kind != JSDefinition::ARG) {
+            uintN slot = cookie.slot();
+            if (slot != UpvarCookie::CALLEE_SLOT && dn_kind != JSDefinition::ARG) {
                 JSTreeContext *tc = cg;
                 do {
                     tc = tc->parent;
@@ -2294,11 +2291,12 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     slot += tc->fun->nargs;
             }
 
-            vector[index] = MAKE_UPVAR_COOKIE(skip, slot);
+            vector[index].set(skip, slot);
         }
 
         pn->pn_op = op;
-        pn->pn_cookie = index;
+        JS_ASSERT((index & JS_BITMASK(16)) == index);
+        pn->pn_cookie.set(0, index);
         pn->pn_dflags |= PND_BOUND;
         return JS_TRUE;
     }
@@ -2388,7 +2386,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
     JS_ASSERT(op != PN_OP(pn));
     pn->pn_op = op;
-    pn->pn_cookie = UPVAR_FRAME_SLOT(cookie);
+    pn->pn_cookie.set(0, cookie.slot());
     pn->pn_dflags |= PND_BOUND;
     return JS_TRUE;
 }
@@ -2598,7 +2596,7 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             if (!BindNameToSlot(cx, cg, pn))
                 return JS_FALSE;
             if (pn->pn_op != JSOP_ARGUMENTS && pn->pn_op != JSOP_CALLEE &&
-                pn->pn_cookie == FREE_UPVAR_COOKIE) {
+                pn->pn_cookie.isFree()) {
                 /*
                  * Not an argument or local variable use, and not a use of a
                  * unshadowed named function expression's given name, so this
@@ -2680,8 +2678,8 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         if (callContext && js_Emit1(cx, cg, JSOP_NULL) < 0)
             return JS_FALSE;
     } else {
-        if (pn->pn_cookie != FREE_UPVAR_COOKIE) {
-            EMIT_UINT16_IMM_OP(op, pn->pn_cookie);
+        if (!pn->pn_cookie.isFree()) {
+            EMIT_UINT16_IMM_OP(op, pn->pn_cookie.asInteger());
         } else {
             if (!EmitAtomOp(cx, pn, op, cg))
                 return JS_FALSE;
@@ -2792,7 +2790,7 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
                         if (!ale)
                             return JS_FALSE;
                         atomIndex = ALE_INDEX(ale);
-                        return EmitSlotIndexOp(cx, op, pn2->pn_cookie, atomIndex, cg);
+                        return EmitSlotIndexOp(cx, op, pn2->pn_cookie.asInteger(), atomIndex, cg);
                     }
 
                   default:;
@@ -3666,8 +3664,8 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
     jsatomid atomIndex;
     JSAtomListElement *ale;
 
-    if (pn->pn_cookie != FREE_UPVAR_COOKIE) {
-        atomIndex = (jsatomid) UPVAR_FRAME_SLOT(pn->pn_cookie);
+    if (!pn->pn_cookie.isFree()) {
+        atomIndex = (jsatomid) pn->pn_cookie.slot();
     } else {
         ale = cg->atomList.add(cg->parser, pn->pn_atom);
         if (!ale)
@@ -3795,13 +3793,14 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             break;
 
           case JSOP_SETLOCAL:
-            slot = (jsuint) pn->pn_cookie;
+          {
+            jsuint slot = pn->pn_cookie.asInteger();
             EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, slot);
             break;
 
           case JSOP_SETARG:
           case JSOP_SETGLOBAL:
-            slot = (jsuint) pn->pn_cookie;
+            jsuint slot = pn->pn_cookie.asInteger();
             EMIT_UINT16_IMM_OP(PN_OP(pn), slot);
             if (js_Emit1(cx, cg, JSOP_POP) < 0)
                 return JS_FALSE;
@@ -4199,7 +4198,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 #endif
         } else {
             JS_ASSERT(op != JSOP_CALLEE);
-            JS_ASSERT(pn2->pn_cookie != FREE_UPVAR_COOKIE || !let);
+            JS_ASSERT(!pn2->pn_cookie.isFree() || !let);
             if (!MaybeEmitVarDecl(cx, cg, PN_OP(pn), pn2, &atomIndex))
                 return JS_FALSE;
 
@@ -4268,7 +4267,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         if (op == JSOP_ARGUMENTS) {
             if (js_Emit1(cx, cg, op) < 0)
                 return JS_FALSE;
-        } else if (pn2->pn_cookie != FREE_UPVAR_COOKIE) {
+        } else if (!pn2->pn_cookie.isFree()) {
             EMIT_UINT16_IMM_OP(op, atomIndex);
         } else {
             EMIT_INDEX_OP(op, atomIndex);
@@ -4836,7 +4835,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                    : SRC_DECL_LET) < 0) {
                     return JS_FALSE;
                 }
-                if (pn3->pn_cookie != FREE_UPVAR_COOKIE) {
+                if (!pn3->pn_cookie.isFree()) {
                     op = PN_OP(pn3);
                     switch (op) {
                       case JSOP_GETARG:   /* FALL THROUGH */
@@ -4858,8 +4857,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                              JSMSG_BAD_FOR_LEFTSIDE);
                     return JS_FALSE;
                 }
-                if (pn3->pn_cookie != FREE_UPVAR_COOKIE) {
-                    atomIndex = (jsatomid) pn3->pn_cookie;
+                if (!pn3->pn_cookie.isFree()) {
+                    atomIndex = (jsatomid) pn3->pn_cookie.asInteger();
                     EMIT_UINT16_IMM_OP(op, atomIndex);
                 } else {
                     if (!EmitAtomOp(cx, pn3, op, cg))
@@ -5446,8 +5445,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
           case TOK_NAME:
             /* Inline and specialize BindNameToSlot for pn2. */
-            JS_ASSERT(pn2->pn_cookie != FREE_UPVAR_COOKIE);
-            EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, pn2->pn_cookie);
+            JS_ASSERT(!pn2->pn_cookie.isFree());
+            EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, pn2->pn_cookie.asInteger());
             break;
 
           default:
@@ -5782,8 +5781,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case TOK_NAME:
             if (!BindNameToSlot(cx, cg, pn2))
                 return JS_FALSE;
-            if (pn2->pn_cookie != FREE_UPVAR_COOKIE) {
-                atomIndex = (jsatomid) pn2->pn_cookie;
+            if (!pn2->pn_cookie.isFree()) {
+                atomIndex = (jsatomid) pn2->pn_cookie.asInteger();
             } else {
                 ale = cg->atomList.add(cg->parser, pn2->pn_atom);
                 if (!ale)
@@ -6202,8 +6201,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (op == JSOP_CALLEE) {
                 if (js_Emit1(cx, cg, op) < 0)
                     return JS_FALSE;
-            } else if (pn2->pn_cookie != FREE_UPVAR_COOKIE) {
-                atomIndex = (jsatomid) pn2->pn_cookie;
+            } else if (!pn2->pn_cookie.isFree()) {
+                atomIndex = (jsatomid) pn2->pn_cookie.asInteger();
                 EMIT_UINT16_IMM_OP(op, atomIndex);
             } else {
                 JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
@@ -6837,11 +6836,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #if JS_HAS_XML_SUPPORT
       case TOK_XMLELEM:
       case TOK_XMLLIST:
-        if (pn->pn_op == JSOP_XMLOBJECT) {
-            ok = EmitObjectOp(cx, pn->pn_objbox, PN_OP(pn), cg);
-            break;
-        }
-
         JS_ASSERT(PN_TYPE(pn) == TOK_XMLLIST || pn->pn_count != 0);
         switch (pn->pn_head ? PN_TYPE(pn->pn_head) : TOK_XMLLIST) {
           case TOK_XMLETAGO:
@@ -6885,12 +6879,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_XMLPTAGC:
-        if (pn->pn_op == JSOP_XMLOBJECT) {
-            ok = EmitObjectOp(cx, pn->pn_objbox, PN_OP(pn), cg);
-            break;
-        }
-        /* FALL THROUGH */
-
       case TOK_XMLSTAGO:
       case TOK_XMLETAGO:
       {

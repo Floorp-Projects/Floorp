@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,6 +55,9 @@ import android.location.*;
 
 import android.util.*;
 import android.content.DialogInterface; 
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+
 
 class GeckoAppShell
 {
@@ -69,6 +72,8 @@ class GeckoAppShell
 
     static private boolean gRestartScheduled = false;
 
+    static protected Timer mSoftKBTimer;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -79,6 +84,7 @@ class GeckoAppShell
     public static native void setInitialSize(int width, int height);
     public static native void setSurfaceView(GeckoSurfaceView sv);
     public static native void putenv(String map);
+    public static native void onResume();
 
     // java-side stuff
     public static void loadGeckoLibs() {
@@ -114,6 +120,8 @@ class GeckoAppShell
 
         // Root certs. someday we may teach security/manager/ssl/src/nsNSSComponent.cpp to find ckbi itself
         System.loadLibrary("nssckbi");
+        System.loadLibrary("freebl3");
+        System.loadLibrary("softokn3");
     }
 
     public static void runGecko(String apkPath, String args, String url) {
@@ -168,14 +176,24 @@ class GeckoAppShell
     }
 
     public static void showIME(int state) {
-        InputMethodManager imm = (InputMethodManager) 
-            GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-
         GeckoApp.surfaceView.mIMEState = state;
-        if (state != 0)
-            imm.showSoftInput(GeckoApp.surfaceView, 0);
-        else
-            imm.hideSoftInputFromWindow(GeckoApp.surfaceView.getWindowToken(), 0);
+
+        if (mSoftKBTimer == null) {
+            mSoftKBTimer = new Timer();
+            mSoftKBTimer.schedule(new TimerTask() {
+                public void run() {
+                    InputMethodManager imm = (InputMethodManager) 
+                        GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+                    if (GeckoApp.surfaceView.mIMEState != 0)
+                        imm.showSoftInput(GeckoApp.surfaceView, 0);
+                    else
+                        imm.hideSoftInputFromWindow(GeckoApp.surfaceView.getWindowToken(), 0);
+                    mSoftKBTimer = null;
+                    
+                }
+            }, 200);
+        }
     }
 
     public static void enableAccelerometer(boolean enable) {
@@ -211,6 +229,10 @@ class GeckoAppShell
         }
     }
 
+    public static void moveTaskToBack() {
+        GeckoApp.mAppContext.moveTaskToBack(true);
+    }
+
     public static void returnIMEQueryResult(String result, int selectionStart, int selectionEnd) {
         GeckoApp.surfaceView.inputConnection.mSelectionStart = selectionStart;
         GeckoApp.surfaceView.inputConnection.mSelectionEnd = selectionEnd;
@@ -234,5 +256,40 @@ class GeckoAppShell
     static void scheduleRestart() {
         Log.i("GeckoAppJava", "scheduling restart");
         gRestartScheduled = true;        
+    }
+    
+    static String[] getHandlersForMimeType(String aMimeType) {
+        PackageManager pm = 
+            GeckoApp.surfaceView.getContext().getPackageManager();
+        Intent intent = new Intent();
+        intent.setType(aMimeType);
+        List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+        int numAttr = 2;
+        String[] ret = new String[list.size() * numAttr];
+        for (int i = 0; i < list.size(); i++) {
+          ret[i * numAttr] = list.get(i).loadLabel(pm).toString();
+          if (list.get(i).isDefault)
+              ret[i * numAttr + 1] = "default";
+          else
+              ret[i * numAttr + 1] = "";
+        }
+        return ret;
+    }
+
+    static String getMimeTypeFromExtension(String aFileExt) {
+        return android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(aFileExt);
+    }
+
+    static boolean openUriExternal(String aUriSpec, String aMimeType) {
+        // XXX: It's not clear if we should set the action to view or leave it open
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(android.net.Uri.parse(aUriSpec), aMimeType);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        try {
+            GeckoApp.surfaceView.getContext().startActivity(intent);
+            return true;
+        } catch(ActivityNotFoundException e) {
+            return false;
+        }
     }
 }

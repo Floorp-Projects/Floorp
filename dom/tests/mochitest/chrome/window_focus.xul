@@ -283,9 +283,23 @@ function getTopWindow(win)
 function mouseOnElement(element, expectedElement, focusChanged, testid)
 {
   var expectedWindow = (element.ownerDocument.defaultView == gChildWindow) ? gChildWindow : window;
-  // on Mac, XUL elements are not focused when clicking, except for lists and textboxes.
-  var noFocusOnMouse = (expectedWindow == window && navigator.platform.indexOf("Mac") == 0);
-  if (noFocusOnMouse && element.localName != "listbox") {
+  // on Mac, elements are not focused when clicking, except for lists and textboxes.
+  var noFocusOnMouse = (navigator.platform.indexOf("Mac") == 0);
+  if (noFocusOnMouse) {
+    if (element.namespaceURI == "http://www.w3.org/1999/xhtml") {
+      // links are special. They can be focused but show no focus ring
+      if (element.localName == "a" || element.localName == "select" ||
+          element.localName == "input" && (element.type == "text" ||
+                                           element.type == "password")) {
+        noFocusOnMouse = false;
+      }
+    }
+    else if (element.localName == "listbox") {
+      noFocusOnMouse = false;
+    }
+  }
+
+  if (noFocusOnMouse) {
     // no focus so the last focus method will be 0
     gLastFocusMethod = 0;
     expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
@@ -366,8 +380,8 @@ function startTest()
 
   gLastFocusMethod = fm.FLAG_BYKEY;
   if (gPartialTabbing) {
-    var partialTabList = ["t3", "t5", "t9", "t10", "t11", "t12", "t13", "t14",
-                          "t16", "t19", "t27", "t30"];
+    var partialTabList = ["t3", "t5", "t9", "t10", "t11", "t12", "t13", "t14", "t15",
+                          "t16", "t19", "t20", "t21", "t22", "t26", "t27", "t28", "t29", "t30"];
     for (var idx = 0; idx < partialTabList.length; idx++) {
       expectFocusShift(pressTab, null, getById(partialTabList[idx]), true, "partial tab key " + partialTabList[idx]);
     }
@@ -1085,7 +1099,7 @@ function modalWindowOpened(modalWindow)
   if (gPartialTabbing)
     elem.focus();
   else
-    pressTab();
+    synthesizeKey("VK_TAB", { }, modalWindow);
   is(fm.activeWindow, modalWindow, "modal activeWindow");
   is(fm.focusedElement, elem, "modal focusedElement");
 

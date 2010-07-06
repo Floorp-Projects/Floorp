@@ -205,7 +205,6 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 236539-1.html 236539-1-ref.html
 == 240029-1.html 240029-1-ref.html
 == 240470-1.html 240470-1-ref.html
-skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 240536-resizer-ltr.xul 240536-resizer-rtl.xul
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
 == 243519-1.html 243519-1-ref.html
@@ -1000,7 +999,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 425972-2.html 425972-2-ref.html
 != 425972-1.html 425972-2.html
 == 426629-1.html 426629-1-ref.html
-asserts(3) != 427017-1.xhtml about:blank    # crash test (needs reftest-print)
+asserts(3) != 427017-1.xhtml about:blank # crash test (needs reftest-print). existing assertions are bug 457400.
 == 427129-scrollframe.html 427129-ref.html
 == 427129-table.html 427129-ref.html
 == 427129-image.html 427129-ref.html
@@ -1334,6 +1333,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") ==
 == 498228-1.xul 498228-1-ref.xul
 asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 496840-1.html 496840-1-ref.html
+== 501037.html 501037-ref.html
 == 501257-1a.html 501257-1-ref.html
 == 501257-1b.html 501257-1-ref.html
 == 501257-1.xhtml 501257-1-ref.xhtml
@@ -1380,6 +1380,7 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 521525-2.html 521525-2-ref.html
 == 521539-1.html 521539-1-ref.html
 == 521542-1.xhtml 521542-1-ref.xhtml
+== 521602.html 521602-ref.html
 == 521685-1.html 521685-1-ref.html
 == 522632-1.html 522632-1-ref.html
 == 523096-1.html 523096-1-ref.html
@@ -1393,7 +1394,7 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 528038-1d.html 528038-1-ref.html
 == 528038-1e.html 528038-1-ref.html
 == 528038-1f.html 528038-1-ref.html
-asserts(5) == 528038-2.html 528038-2-ref.html
+asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
 == 531098-1.html 531098-1-ref.html
@@ -1442,3 +1443,16 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 564054-1.html 564054-1-ref.html
 == 565819-1.html 565819-ref.html
 == 565819-2.html 565819-ref.html
+== 569006-1.html 569006-1-ref.html
+== 571281-1a.html 571281-1-ref.html
+== 571281-1b.html 571281-1-ref.html
+== 571281-1c.html 571281-1-ref.html
+== 571347-1a.html 571347-1-ref.html
+== 571347-1b.html 571347-1-ref.html
+== 571347-2a.html 571347-2-ref.html
+== 571347-2b.html 571347-2-ref.html
+== 571347-2c.html 571347-2-ref.html
+== 571347-2d.html 571347-2-ref.html
+== 571347-3.html 571347-3-ref.html
+== 572598-1.html 572598-ref.html
+== 574898-1.html 574898-ref.html

@@ -98,10 +98,14 @@ must be one of the following:
       asserts-if(condition,minCount-maxCount)
           Same as above, but only if condition is true.
 
+      Conditions are JavaScript expressions *without spaces* in them.
+      They are evaluated in a sandbox in which a limited set of
+      variables are defined.  See the BuildConditionSandbox function in
+      layout/tools/reftest.js for details.
+
       Examples of using conditions:
-          fails-if(MOZ_WIDGET_TOOLKIT=="windows") ...
-          fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") ...
-          fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") ...
+          fails-if(winWidget) == test reference
+          asserts-if(2,cocoaWidget) load crashtest
 
    b. <http>, if present, is one of the strings (sans quotes) "HTTP" or
       "HTTP(..)" or "HTTP(../..)" or "HTTP(../../..)", etc. , indicating that

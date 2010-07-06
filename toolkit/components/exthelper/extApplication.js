@@ -556,12 +556,6 @@ extApplication.prototype = {
     this._registered = {"unload": true};
   },
 
-  // get this contractID registered for certain categories via XPCOMUtils
-  _xpcom_categories: [
-    // add Application as a global property for easy access
-    { category: "JavaScript global privileged property" }
-  ],
-
   // for nsIClassInfo
   flags : Ci.nsIClassInfo.SINGLETON,
   implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,

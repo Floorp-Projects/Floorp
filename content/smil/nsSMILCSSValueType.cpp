@@ -327,7 +327,7 @@ GetPresContextForElement(nsIContent* aElem)
     // See bug 534975.
     return nsnull;
   }
-  nsIPresShell* shell = doc->GetPrimaryShell();
+  nsIPresShell* shell = doc->GetShell();
   return shell ? shell->GetPresContext() : nsnull;
 }
 
@@ -337,7 +337,6 @@ ValueFromStringHelper(nsCSSProperty aPropID,
                       nsIContent* aTargetElement,
                       nsPresContext* aPresContext,
                       const nsAString& aString,
-                      PRBool aUseSVGMode,
                       nsStyleAnimation::Value& aStyleAnimValue)
 {
   // If value is negative, we'll strip off the "-" so the CSS parser won't
@@ -353,7 +352,7 @@ ValueFromStringHelper(nsCSSProperty aPropID,
   }
   nsDependentSubstring subString(aString, subStringBegin);
   if (!nsStyleAnimation::ComputeValue(aPropID, aTargetElement, subString,
-                                      aUseSVGMode, aStyleAnimValue)) {
+                                      PR_TRUE, aStyleAnimValue)) {
     return PR_FALSE;
   }
   if (isNegative) {
@@ -376,7 +375,6 @@ void
 nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
                                     nsIContent* aTargetElement,
                                     const nsAString& aString,
-                                    PRBool aUseSVGMode,
                                     nsSMILValue& aValue)
 {
   // XXXbz aTargetElement should be an Element
@@ -389,7 +387,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
 
   nsStyleAnimation::Value parsedValue;
   if (ValueFromStringHelper(aPropID, aTargetElement, presContext,
-                            aString, aUseSVGMode, parsedValue)) {
+                            aString, parsedValue)) {
     sSingleton.Init(aValue);
     aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue, presContext);
     if (!aValue.mU.mPtr) {

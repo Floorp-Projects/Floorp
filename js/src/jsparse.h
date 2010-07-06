@@ -366,7 +366,7 @@ struct JSParseNode {
                                            base object of TOK_DOT */
                 JSDefinition *lexdef;   /* lexical definition for this use */
             };
-            uint32      cookie;         /* upvar cookie with absolute frame
+            js::UpvarCookie cookie;     /* upvar cookie with absolute frame
                                            level (not relative skip), possibly
                                            in current frame */
             uint32      dflags:12,      /* definition/use flags, see below */
@@ -493,12 +493,12 @@ public:
 
     uintN frameLevel() const {
         JS_ASSERT(pn_arity == PN_FUNC || pn_arity == PN_NAME);
-        return UPVAR_FRAME_SKIP(pn_cookie);
+        return pn_cookie.level();
     }
 
     uintN frameSlot() const {
         JS_ASSERT(pn_arity == PN_FUNC || pn_arity == PN_NAME);
-        return UPVAR_FRAME_SLOT(pn_cookie);
+        return pn_cookie.slot();
     }
 
     inline bool test(uintN flag) const;
@@ -795,7 +795,7 @@ struct JSDefinition : public JSParseNode
 
     bool isFreeVar() const {
         JS_ASSERT(pn_defn);
-        return pn_cookie == FREE_UPVAR_COOKIE || test(PND_GVAR);
+        return pn_cookie.isFree() || test(PND_GVAR);
     }
 
     // Grr, windows.h or something under it #defines CONST...

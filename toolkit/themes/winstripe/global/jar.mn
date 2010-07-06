@@ -4,6 +4,8 @@ toolkit.jar:
 # NOTE: If you add a new file here, you'll need to add it to the aero
 # section at the bottom of this file
         skin/classic/global/about.css
+        skin/classic/global/aboutCache.css
+        skin/classic/global/aboutCacheEntry.css
         skin/classic/global/aboutMemory.css
         skin/classic/global/aboutSupport.css
         skin/classic/global/appPicker.css
@@ -25,6 +27,7 @@ toolkit.jar:
 *       skin/classic/global/global.css
         skin/classic/global/globalBindings.xml
         skin/classic/global/groupbox.css
+*       skin/classic/global/headsUpDisplay.css
         skin/classic/global/linkTree.css
         skin/classic/global/listbox.css
 *       skin/classic/global/menu.css
@@ -120,6 +123,8 @@ toolkit.jar:
         skin/classic/global/icons/question-24.png                (icons/question-24.png)
         skin/classic/global/icons/question-48.png                (icons/question-48.png)
         skin/classic/global/icons/question-64.png                (icons/question-64.png)
+        skin/classic/global/icons/resizer.png                    (icons/resizer.png)
+        skin/classic/global/icons/resizer-rtl.png                (icons/resizer-rtl.png)
         skin/classic/global/icons/Restore.gif                    (icons/Restore.gif)
         skin/classic/global/icons/Search-close.png               (icons/Search-close.png)
         skin/classic/global/icons/Search-glass.png               (icons/Search-glass.png)
@@ -167,6 +172,8 @@ toolkit.jar:
 toolkit.jar:
 % skin global classic/1.0 %skin/classic/aero/global/ os=WINNT osversion>=6
         skin/classic/aero/global/about.css
+        skin/classic/aero/global/aboutCache.css
+        skin/classic/aero/global/aboutCacheEntry.css
         skin/classic/aero/global/aboutMemory.css
         skin/classic/aero/global/aboutSupport.css
         skin/classic/aero/global/appPicker.css
@@ -188,6 +195,7 @@ toolkit.jar:
 *       skin/classic/aero/global/global.css
         skin/classic/aero/global/globalBindings.xml
         skin/classic/aero/global/groupbox.css
+*       skin/classic/aero/global/headsUpDisplay.css
         skin/classic/aero/global/linkTree.css
         skin/classic/aero/global/listbox.css
 *       skin/classic/aero/global/menu.css                                (menu-aero.css)
@@ -283,6 +291,8 @@ toolkit.jar:
         skin/classic/aero/global/icons/question-24.png                   (icons/question-24-aero.png)
         skin/classic/aero/global/icons/question-48.png                   (icons/question-48-aero.png)
         skin/classic/aero/global/icons/question-64.png                   (icons/question-64-aero.png)
+        skin/classic/aero/global/icons/resizer.png                       (icons/resizer.png)
+        skin/classic/aero/global/icons/resizer-rtl.png                   (icons/resizer-rtl.png)
         skin/classic/aero/global/icons/Restore.gif                       (icons/Restore.gif)
         skin/classic/aero/global/icons/Search-close.png                  (icons/Search-close-aero.png)
         skin/classic/aero/global/icons/Search-glass.png                  (icons/Search-glass-aero.png)

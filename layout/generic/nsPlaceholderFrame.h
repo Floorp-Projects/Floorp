@@ -75,11 +75,14 @@ nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
 
 // Frame state bits that are used to keep track of what this is a
 // placeholder for.
-#define PLACEHOLDER_FOR_FLOAT    0x00100000
-#define PLACEHOLDER_FOR_ABSPOS   0x00200000
-#define PLACEHOLDER_FOR_FIXEDPOS 0x00400000
-#define PLACEHOLDER_FOR_POPUP    0x00800000
-#define PLACEHOLDER_TYPE_MASK    0x00F00000
+#define PLACEHOLDER_FOR_FLOAT    NS_FRAME_STATE_BIT(20)
+#define PLACEHOLDER_FOR_ABSPOS   NS_FRAME_STATE_BIT(21)
+#define PLACEHOLDER_FOR_FIXEDPOS NS_FRAME_STATE_BIT(22)
+#define PLACEHOLDER_FOR_POPUP    NS_FRAME_STATE_BIT(23)
+#define PLACEHOLDER_TYPE_MASK    (PLACEHOLDER_FOR_FLOAT | \
+                                  PLACEHOLDER_FOR_ABSPOS | \
+                                  PLACEHOLDER_FOR_FIXEDPOS | \
+                                  PLACEHOLDER_FOR_POPUP)
 
 /**
  * Implementation of a frame that's used as a placeholder for a frame that
@@ -125,6 +128,9 @@ public:
                                  InlineMinWidthData *aData);
   virtual void AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
                                   InlinePrefWidthData *aData);
+  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -160,11 +166,11 @@ public:
   virtual PRBool CanContinueTextRun() const;
 
 #ifdef ACCESSIBILITY
-  NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible)
+  virtual already_AddRefed<nsAccessible> CreateAccessible()
   {
-    nsIFrame *realFrame = GetRealFrameForPlaceholder(this);
-    return realFrame ? realFrame->GetAccessible(aAccessible) :
-                       nsFrame::GetAccessible(aAccessible);
+    nsIFrame* realFrame = GetRealFrameForPlaceholder(this);
+    return realFrame ? realFrame->CreateAccessible() :
+                       nsFrame::CreateAccessible();
   }
 #endif
 

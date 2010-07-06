@@ -13,6 +13,23 @@ Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+// Observer to ensure a "lightweight-theme-styling-update" notification is sent
+// when expected
+var gLWThemeChanged = false;
+var LightweightThemeObserver = {
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic != "lightweight-theme-styling-update")
+      return;
+
+    gLWThemeChanged = true;
+  }
+};
+
+AM_Cc["@mozilla.org/observer-service;1"]
+     .getService(Components.interfaces.nsIObserverService)
+     .addObserver(LightweightThemeObserver, "lightweight-theme-styling-update", false);
+
+
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -25,6 +42,7 @@ function run_test() {
     version: "1.0",
     name: "Test 1",
     type: 4,
+    skinnable: true,
     internalName: "theme1/1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -39,6 +57,7 @@ function run_test() {
     id: "theme2@tests.mozilla.org",
     version: "1.0",
     name: "Test 1",
+    skinnable: false,
     internalName: "theme2/1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -71,12 +90,18 @@ function run_test() {
   AddonManager.addAddonListener(AddonListener);
   AddonManager.addInstallListener(InstallListener);
 
-  AddonManager.getAddonsByIDs(["theme1@tests.mozilla.org",
-                               "theme2@tests.mozilla.org"], function([t1, t2]) {
+  AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                               "theme1@tests.mozilla.org",
+                               "theme2@tests.mozilla.org"],
+                               function([d, t1, t2]) {
+    do_check_neq(d, null);
+    do_check_false(d.skinnable);
+
     do_check_neq(t1, null);
     do_check_false(t1.userDisabled);
     do_check_false(t1.appDisabled);
     do_check_true(t1.isActive);
+    do_check_true(t1.skinnable);
     do_check_eq(t1.screenshots.length, 0);
     do_check_true(isThemeInAddonsList(profileDir, t1.id));
     do_check_false(hasFlag(t1.permissions, AddonManager.PERM_CAN_DISABLE));
@@ -86,6 +111,7 @@ function run_test() {
     do_check_true(t2.userDisabled);
     do_check_false(t2.appDisabled);
     do_check_false(t2.isActive);
+    do_check_false(t2.skinnable);
     do_check_eq(t2.screenshots.length, 0);
     do_check_false(isThemeInAddonsList(profileDir, t2.id));
     do_check_false(hasFlag(t2.permissions, AddonManager.PERM_CAN_DISABLE));
@@ -146,6 +172,7 @@ function check_test_1() {
     do_check_true(isThemeInAddonsList(profileDir, t2.id));
     do_check_false(hasFlag(t2.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_false(hasFlag(t2.permissions, AddonManager.PERM_CAN_ENABLE));
+    do_check_false(gLWThemeChanged);
 
     run_test_2();
   });
@@ -173,6 +200,7 @@ function run_test_2() {
 
     do_check_eq(t2, null);
     do_check_false(isThemeInAddonsList(profileDir, "theme2@tests.mozilla.org"));
+    do_check_false(gLWThemeChanged);
 
     run_test_3();
   });
@@ -247,6 +275,12 @@ function run_test_3() {
     do_check_eq(p1.scope, AddonManager.SCOPE_PROFILE);
     do_check_true("isCompatibleWith" in p1);
     do_check_true("findUpdates" in p1);
+    do_check_eq(p1.installDate.getTime(), p1.updateDate.getTime());
+
+    // 5 seconds leeway seems like a lot, but tests can run slow and really if
+    // this is within 5 seconds it is fine. If it is going to be wrong then it
+    // is likely to be hours out at least
+    do_check_true((Date.now() - p1.installDate.getTime()) < 5000);
 
     AddonManager.getAddonsByTypes(["theme"], function(addons) {
       let seen = false;
@@ -261,6 +295,9 @@ function run_test_3() {
         }
       });
       do_check_true(seen);
+
+      do_check_true(gLWThemeChanged);
+      gLWThemeChanged = false;
 
       run_test_4();
     });
@@ -307,6 +344,12 @@ function run_test_4() {
     do_check_true(p2.isActive);
     do_check_eq(p2.pendingOperations, 0);
     do_check_eq(p2.permissions, AddonManager.PERM_CAN_UNINSTALL);
+    do_check_eq(p2.installDate.getTime(), p2.updateDate.getTime());
+
+    // 5 seconds leeway seems like a lot, but tests can run slow and really if
+    // this is within 5 seconds it is fine. If it is going to be wrong then it
+    // is likely to be hours out at least
+    do_check_true((Date.now() - p2.installDate.getTime()) < 5000);
 
     do_check_neq(null, p1);
     do_check_false(p1.appDisabled);
@@ -328,6 +371,9 @@ function run_test_4() {
         }
       });
       do_check_true(seen);
+
+      do_check_true(gLWThemeChanged);
+      gLWThemeChanged = false;
 
       run_test_5();
     });
@@ -385,6 +431,7 @@ function run_test_5() {
     do_check_true(p2.userDisabled);
     do_check_true(hasFlag(AddonManager.PENDING_DISABLE, p2.pendingOperations));
     do_check_true(hasFlag(AddonManager.PERM_CAN_ENABLE, p2.permissions));
+    do_check_false(gLWThemeChanged);
 
     check_test_5();
   });
@@ -401,6 +448,9 @@ function check_test_5() {
     do_check_false(p2.isActive);
     do_check_true(p2.userDisabled);
     do_check_false(hasFlag(AddonManager.PENDING_DISABLE, p2.pendingOperations));
+
+    do_check_true(gLWThemeChanged);
+    gLWThemeChanged = false;
 
     run_test_6();
   });
@@ -455,6 +505,7 @@ function run_test_6() {
     do_check_true(t2.isActive);
     do_check_true(t2.userDisabled);
     do_check_true(hasFlag(AddonManager.PENDING_DISABLE, t2.pendingOperations));
+    do_check_false(gLWThemeChanged);
 
     check_test_6();
   });
@@ -471,6 +522,9 @@ function check_test_6() {
     do_check_false(t2.isActive);
     do_check_true(t2.userDisabled);
     do_check_false(hasFlag(AddonManager.PENDING_DISABLE, t2.pendingOperations));
+
+    do_check_true(gLWThemeChanged);
+    gLWThemeChanged = false;
 
     run_test_7();
   });
@@ -490,6 +544,7 @@ function run_test_7() {
 
     ensure_test_completed();
     do_check_eq(LightweightThemeManager.usedThemes.length, 1);
+    do_check_false(gLWThemeChanged);
 
     run_test_8();
   });
@@ -497,6 +552,8 @@ function run_test_7() {
 
 // Uninstalling a lightweight theme in use should not require a restart and it
 // should reactivate the default theme
+// Also, uninstalling a lightweight theme in use should send a
+// "lightweight-theme-styling-update" notification through the observer service
 function run_test_8() {
   prepare_test({
     "2@personas.mozilla.org": [
@@ -514,6 +571,9 @@ function run_test_8() {
 
     ensure_test_completed();
     do_check_eq(LightweightThemeManager.usedThemes.length, 0);
+
+    do_check_true(gLWThemeChanged);
+    gLWThemeChanged = false;
 
     run_test_9();
   });
@@ -535,6 +595,7 @@ function run_test_9() {
 
     AddonManager.getAddonByID("theme1@tests.mozilla.org", function(newt1) {
       do_check_eq(newt1, null);
+      do_check_false(gLWThemeChanged);
 
       run_test_10();
     });
@@ -580,6 +641,7 @@ function run_test_10() {
       t2.uninstall();
 
       ensure_test_completed();
+      do_check_false(gLWThemeChanged);
 
       restartManager(0);
 
@@ -602,6 +664,7 @@ function run_test_11() {
     do_check_eq(install.version, "1.0");
     do_check_eq(install.name, "Test Theme 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+    do_check_true(install.addon.skinnable, true);
 
     prepare_test({
       "theme1@tests.mozilla.org": [
@@ -624,6 +687,8 @@ function check_test_11() {
     preview.append("preview.png");
     do_check_eq(t1.screenshots.length, 1);
     do_check_eq(t1.screenshots[0], NetUtil.newURI(preview).spec);
+    do_check_true(t1.skinnable);
+    do_check_false(gLWThemeChanged);
 
     run_test_12();
   });
@@ -660,6 +725,7 @@ function run_test_12() {
 function check_test_12() {
   AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     do_check_neq(t1, null);
+    do_check_false(gLWThemeChanged);
 
     run_test_13();
   });
@@ -713,6 +779,7 @@ function check_test_13() {
   AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     do_check_neq(t1, null);
     do_check_true(t1.isActive);
+    do_check_false(gLWThemeChanged);
     t1.uninstall();
     restartManager();
 
@@ -756,6 +823,70 @@ function run_test_14() {
 
     do_check_false(d.userDisabled);
     do_check_true(d.isActive);
+
+    do_check_true(gLWThemeChanged);
+    gLWThemeChanged = false;
+
+    run_test_15();
+  });
+}
+
+// Upgrading the application with a custom theme in use should not disable it
+function run_test_15() {
+  restartManager();
+
+  installAllFiles([do_get_addon("test_theme")], function() {
+    AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
+      t1.userDisabled = false;
+
+      restartManager();
+
+      do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "theme1/1.0");
+      AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                                   "theme1@tests.mozilla.org"], function([d, t1]) {
+        do_check_true(d.userDisabled);
+        do_check_false(d.appDisabled);
+        do_check_false(d.isActive);
+
+        do_check_false(t1.userDisabled);
+        do_check_false(t1.appDisabled);
+        do_check_true(t1.isActive);
+
+        restartManager(1, "2");
+
+        do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "theme1/1.0");
+        AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                                     "theme1@tests.mozilla.org"], function([d, t1]) {
+          do_check_true(d.userDisabled);
+          do_check_false(d.appDisabled);
+          do_check_false(d.isActive);
+
+          do_check_false(t1.userDisabled);
+          do_check_false(t1.appDisabled);
+          do_check_true(t1.isActive);
+
+          run_test_16();
+        });
+      });
+    });
+  });
+}
+
+// Upgrading the application with a custom theme in use should disable it if it
+// is no longer compatible
+function run_test_16() {
+  restartManager(1, "3");
+
+  do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
+  AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                               "theme1@tests.mozilla.org"], function([d, t1]) {
+    do_check_false(d.userDisabled);
+    do_check_false(d.appDisabled);
+    do_check_true(d.isActive);
+
+    do_check_true(t1.userDisabled);
+    do_check_true(t1.appDisabled);
+    do_check_false(t1.isActive);
 
     end_test();
   });

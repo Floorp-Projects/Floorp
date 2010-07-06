@@ -96,21 +96,12 @@ js_GenerateShape(JSContext *cx, bool gcLocked)
 JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj)
 {
-    JSScope *scope, *newscope;
-    Class *clasp;
-    uint32 freeslot;
-
-    scope = obj->scope();
+    JSScope *scope = obj->scope();
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
     if (!scope->isSharedEmpty())
         return scope;
 
-    /*
-     * Compile-time block objects each have their own scope, created at
-     * birth, and runtime clone of a block objects are never mutated.
-     */
-    JS_ASSERT(obj->getClass() != &js_BlockClass);
-    newscope = JSScope::create(cx, scope->ops, obj->getClass(), obj, scope->shape);
+    JSScope *newscope = JSScope::create(cx, scope->ops, obj->getClass(), obj, scope->shape);
     if (!newscope)
         return NULL;
 
@@ -119,21 +110,33 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, newscope));
     obj->map = newscope;
 
-    JS_ASSERT(newscope->freeslot == JSSLOT_FREE(obj->getClass()));
-    clasp = obj->getClass();
-    if (clasp->reserveSlots) {
-        /*
-         * FIXME: Here we change obj->scope()->freeslot without changing
-         * obj->shape(). If we strengthen the shape guarantees to cover
-         * freeslot, we can eliminate a check in JSOP_SETPROP and in
-         * js_AddProperty. See bug 535416.
-         */
-        freeslot = JSSLOT_FREE(clasp) + clasp->reserveSlots(cx, obj);
-        if (freeslot > obj->numSlots())
-            freeslot = obj->numSlots();
-        if (newscope->freeslot < freeslot)
-            newscope->freeslot = freeslot;
+    /*
+     * Subtle dependency on objects that call js_EnsureReservedSlots either:
+     * (a) never escaping anywhere an ad-hoc property could be set on them;
+     * (b) having at least JSSLOT_FREE(obj->getClass()) >= JS_INITIAL_NSLOTS.
+     * Note that (b) depends on fine-tuning of JS_INITIAL_NSLOTS (5).
+     *
+     * Block objects fall into (a); Argument, Call, and Function objects (flat
+     * closures only) fall into (b). All of this goes away soon (FIXME 558451).
+     */
+    JS_ASSERT(newscope->freeslot >= JSSLOT_START(obj->getClass()) &&
+              newscope->freeslot <= JSSLOT_FREE(obj->getClass()));
+    newscope->freeslot = JSSLOT_FREE(obj->getClass());
+
+    uint32 nslots = obj->numSlots();
+    if (newscope->freeslot > nslots && !obj->allocSlots(cx, newscope->freeslot)) {
+        newscope->destroy(cx);
+        obj->map = scope;
+        return NULL;
     }
+
+    if (nslots > JS_INITIAL_NSLOTS && nslots > newscope->freeslot)
+        newscope->freeslot = nslots;
+#ifdef DEBUG
+    if (newscope->freeslot < nslots)
+        obj->setSlot(newscope->freeslot, UndefinedValue());
+#endif
+
     JS_DROP_ALL_EMPTY_SCOPE_LOCKS(cx, scope);
     static_cast<JSEmptyScope *>(scope)->drop(cx);
     return newscope;
@@ -220,7 +223,7 @@ JSScope::create(JSContext *cx, const JSObjectOps *ops, Class *clasp,
     if (!scope)
         return NULL;
 
-    scope->freeslot = JSSLOT_FREE(clasp);
+    scope->freeslot = JSSLOT_START(clasp);
     scope->flags = cx->runtime->gcRegenShapesScopeFlag;
     scope->initMinimal(cx, shape);
 
@@ -241,7 +244,7 @@ JSEmptyScope::JSEmptyScope(JSContext *cx, const JSObjectOps *ops,
      * getEmptyScope, also promises to incref on behalf of its caller.
      */
     nrefs = 2;
-    freeslot = JSSLOT_FREE(clasp);
+    freeslot = JSSLOT_START(clasp);
     flags = OWN_SHAPE | cx->runtime->gcRegenShapesScopeFlag;
     initMinimal(cx, js_GenerateShape(cx, false));
 
@@ -286,12 +289,23 @@ JSScope::initRuntimeState(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
-    rt->emptyArgumentsScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps, &js_ArgumentsClass);
-    if (!rt->emptyArgumentsScope)
-        return false;
-    JS_ASSERT(rt->emptyArgumentsScope->shape == JSScope::EMPTY_ARGUMENTS_SHAPE);
-    JS_ASSERT(rt->emptyArgumentsScope->nrefs == 2);
-    rt->emptyArgumentsScope->nrefs = 1;
+#define SCOPE(Name) rt->empty##Name##Scope
+#define CLASP(Name) &js_##Name##Class
+
+#define INIT_EMPTY_SCOPE(Name,NAME,ops)                                       \
+    INIT_EMPTY_SCOPE_WITH_CLASS(Name, NAME, ops, CLASP(Name))
+
+#define INIT_EMPTY_SCOPE_WITH_CLASS(Name,NAME,ops,clasp)                      \
+    INIT_EMPTY_SCOPE_WITH_FREESLOT(Name, NAME, ops, clasp, JSSLOT_FREE(clasp))
+
+#define INIT_EMPTY_SCOPE_WITH_FREESLOT(Name,NAME,ops,clasp,slot)              \
+    SCOPE(Name) = cx->create<JSEmptyScope>(cx, ops, clasp);                   \
+    if (!SCOPE(Name))                                                         \
+        return false;                                                         \
+    JS_ASSERT(SCOPE(Name)->shape == JSScope::EMPTY_##NAME##_SHAPE);           \
+    JS_ASSERT(SCOPE(Name)->nrefs == 2);                                       \
+    SCOPE(Name)->nrefs = 1;                                                   \
+    SCOPE(Name)->freeslot = slot
 
     /*
      * NewArguments allocates dslots to have enough room for the argc of the
@@ -311,25 +325,10 @@ JSScope::initRuntimeState(JSContext *cx)
      * arguments objects. This helps ensure that any arguments object needing
      * its own mutable scope (with unique shape) is a rare event.
      */
-    rt->emptyArgumentsScope->freeslot = JS_INITIAL_NSLOTS + JS_ARGS_LENGTH_MAX;
+    INIT_EMPTY_SCOPE_WITH_FREESLOT(Arguments, ARGUMENTS, &js_ObjectOps, CLASP(Arguments),
+                                   JS_INITIAL_NSLOTS + JS_ARGS_LENGTH_MAX);
 
-    rt->emptyBlockScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps, &js_BlockClass);
-    if (!rt->emptyBlockScope) {
-        JSScope::finishRuntimeState(cx);
-        return false;
-    }
-    JS_ASSERT(rt->emptyBlockScope->shape == JSScope::EMPTY_BLOCK_SHAPE);
-    JS_ASSERT(rt->emptyBlockScope->nrefs == 2);
-    rt->emptyBlockScope->nrefs = 1;
-
-    rt->emptyCallScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps, &js_CallClass);
-    if (!rt->emptyCallScope) {
-        JSScope::finishRuntimeState(cx);
-        return false;
-    }
-    JS_ASSERT(rt->emptyCallScope->shape == JSScope::EMPTY_CALL_SHAPE);
-    JS_ASSERT(rt->emptyCallScope->nrefs == 2);
-    rt->emptyCallScope->nrefs = 1;
+    INIT_EMPTY_SCOPE(Block, BLOCK, &js_ObjectOps);
 
     /*
      * Initialize the shared scope for all empty Call objects so gets for args
@@ -338,7 +337,23 @@ JSScope::initRuntimeState(JSContext *cx)
      *
      * See comment above for rt->emptyArgumentsScope->freeslot initialization.
      */
-    rt->emptyCallScope->freeslot = JS_INITIAL_NSLOTS + JSFunction::MAX_ARGS_AND_VARS;
+    INIT_EMPTY_SCOPE_WITH_FREESLOT(Call, CALL, &js_ObjectOps, CLASP(Call),
+                                   JS_INITIAL_NSLOTS + JSFunction::MAX_ARGS_AND_VARS);
+
+    /* A DeclEnv object holds the name binding for a named function expression. */
+    INIT_EMPTY_SCOPE(DeclEnv, DECL_ENV, &js_ObjectOps);
+
+    /* Non-escaping native enumerator objects share this empty scope. */
+    INIT_EMPTY_SCOPE_WITH_CLASS(Enumerator, ENUMERATOR, &js_ObjectOps, &js_IteratorClass.base);
+
+    /* Same drill for With objects. */
+    INIT_EMPTY_SCOPE(With, WITH, &js_WithObjectOps);
+
+#undef SCOPE
+#undef CLASP
+#undef INIT_EMPTY_SCOPE
+#undef INIT_EMPTY_SCOPE_WITH_CLASS
+#undef INIT_EMPTY_SCOPE_WITH_FREESLOT
 
     return true;
 }
@@ -348,18 +363,22 @@ void
 JSScope::finishRuntimeState(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    if (rt->emptyArgumentsScope) {
-        rt->emptyArgumentsScope->drop(cx);
-        rt->emptyArgumentsScope = NULL;
+
+#define FINISH_EMPTY_SCOPE(Name)                                              \
+    if (rt->empty##Name##Scope) {                                             \
+        rt->empty##Name##Scope->drop(cx);                                     \
+        rt->empty##Name##Scope = NULL;                                        \
     }
-    if (rt->emptyBlockScope) {
-        rt->emptyBlockScope->drop(cx);
-        rt->emptyBlockScope = NULL;
-    }
-    if (rt->emptyCallScope) {
-        rt->emptyCallScope->drop(cx);
-        rt->emptyCallScope = NULL;
-    }
+
+    /* Mnemonic: ABCDEW */
+    FINISH_EMPTY_SCOPE(Arguments);
+    FINISH_EMPTY_SCOPE(Block);
+    FINISH_EMPTY_SCOPE(Call);
+    FINISH_EMPTY_SCOPE(DeclEnv);
+    FINISH_EMPTY_SCOPE(Enumerator);
+    FINISH_EMPTY_SCOPE(With);
+
+#undef FINISH_EMPTY_SCOPE
 }
 
 JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
@@ -623,7 +642,7 @@ JSScope::reportReadOnlyScope(JSContext *cx)
     JSString *str;
     const char *bytes;
 
-    str = js_ValueToString(cx, ObjectOrNullTag(object));
+    str = js_ValueToString(cx, ObjectOrNullValue(object));
     if (!str)
         return;
     bytes = js_GetStringBytes(cx, str);
@@ -1195,7 +1214,7 @@ JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop)
     if (sprop->isMethod()) {
 #ifdef DEBUG
         const Value &prev = object->lockedGetSlot(sprop->slot);
-        JS_ASSERT(&sprop->methodObject() == &prev.asObject());
+        JS_ASSERT(&sprop->methodObject() == &prev.toObject());
         JS_ASSERT(hasMethodBarrier());
         JS_ASSERT(object->getClass() == &js_ObjectClass);
         JS_ASSERT(!sprop->rawSetter || sprop->rawSetter == js_watch_set);

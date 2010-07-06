@@ -513,10 +513,13 @@ struct JSScope : public JSObjectMap
     static void finishRuntimeState(JSContext *cx);
 
     enum {
-        EMPTY_ARGUMENTS_SHAPE = 1,
-        EMPTY_BLOCK_SHAPE     = 2,
-        EMPTY_CALL_SHAPE      = 3,
-        LAST_RESERVED_SHAPE   = 3
+        EMPTY_ARGUMENTS_SHAPE   = 1,
+        EMPTY_BLOCK_SHAPE       = 2,
+        EMPTY_CALL_SHAPE        = 3,
+        EMPTY_DECL_ENV_SHAPE    = 4,
+        EMPTY_ENUMERATOR_SHAPE  = 5,
+        EMPTY_WITH_SHAPE        = 6,
+        LAST_RESERVED_SHAPE     = 6
     };
 };
 
@@ -712,13 +715,14 @@ struct JSScopeProperty {
     JSObject *getterObject() const { JS_ASSERT(hasGetterValue()); return getterObj; }
 
     // Per ES5, decode null getterObj as the undefined value, which encodes as null.
-    js::ObjectOrUndefinedTag getterValue() const {
+    js::Value getterValue() const {
         JS_ASSERT(hasGetterValue());
-        return js::ObjectOrUndefinedTag(getterObj);
+        return getterObj ? js::ObjectValue(*getterObj) : js::UndefinedValue();
     }
 
-    js::ObjectOrUndefinedTag getterOrUndefined() const {
-        return js::ObjectOrUndefinedTag(hasGetterValue() ? getterObj : NULL);
+    js::Value getterOrUndefined() const {
+        JSObject *obj = hasGetterValue() ? getterObj : NULL;
+        return obj ? js::ObjectValue(*obj) : js::UndefinedValue();
     }
 
     js::PropertyOp setter() const { return rawSetter; }
@@ -727,13 +731,13 @@ struct JSScopeProperty {
     JSObject *setterObject() const { JS_ASSERT(hasSetterValue()); return setterObj; }
 
     // Per ES5, decode null setterObj as the undefined value, which encodes as null.
-    js::ObjectOrUndefinedTag setterValue() const {
+    js::Value setterValue() const {
         JS_ASSERT(hasSetterValue());
-        return js::ObjectOrUndefinedTag(setterObj);
+        return setterObj ? js::ObjectValue(*setterObj) : js::UndefinedValue();
     }
 
-    js::ObjectOrUndefinedTag setterOrUndefined() const {
-        return js::ObjectOrUndefinedTag(hasSetterValue() ? setterObj : NULL);
+    js::Value setterOrUndefined() const {
+        return setterObj ? js::ObjectValue(*setterObj) : js::UndefinedValue();
     }
 
     inline JSDHashNumber hash() const;
@@ -968,51 +972,6 @@ JSScope::canProvideEmptyScope(JSObjectOps *ops, js::Class *clasp)
     if (!object)
         return false;
     return this->ops == ops && (!emptyScope || emptyScope->clasp == clasp);
-}
-
-inline bool
-JSScopeProperty::get(JSContext* cx, JSObject *obj, JSObject *pobj, js::Value* vp)
-{
-    JS_ASSERT(!JSID_IS_VOID(this->id));
-    JS_ASSERT(!hasDefaultGetter());
-
-    if (hasGetterValue()) {
-        JS_ASSERT(!isMethod());
-        return js::InternalGetOrSet(cx, obj, id, getterValue(), JSACC_READ, 0, 0, vp);
-    }
-
-    if (isMethod()) {
-        vp->setObject(methodObject());
-
-        JSScope *scope = pobj->scope();
-        JS_ASSERT(scope->object == pobj);
-        return scope->methodReadBarrier(cx, this, vp);
-    }
-
-    /*
-     * |with (it) color;| ends up here, as do XML filter-expressions.
-     * Avoid exposing the With object to native getters.
-     */
-    if (obj->getClass() == &js_WithClass)
-        obj = js_UnwrapWithObject(cx, obj);
-    return getterOp()(cx, obj, SPROP_USERID(this), vp);
-}
-
-inline bool
-JSScopeProperty::set(JSContext* cx, JSObject *obj, js::Value* vp)
-{
-    JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
-
-    if (attrs & JSPROP_SETTER)
-        return js::InternalGetOrSet(cx, obj, id, setterValue(), JSACC_WRITE, 1, vp, vp);
-
-    if (attrs & JSPROP_GETTER)
-        return !!js_ReportGetterOnlyAssignment(cx);
-
-    /* See the comment in JSScopeProperty::get as to why we check for With. */
-    if (obj->getClass() == &js_WithClass)
-        obj = js_UnwrapWithObject(cx, obj);
-    return setterOp()(cx, obj, SPROP_USERID(this), vp);
 }
 
 inline bool

@@ -42,8 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
       /** Test for Bug 437844 and Bug 348233 **/
       SimpleTest.waitForExplicitFinish();
 
-      let uri = registerCustomChrome("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtlchrome/",
-                                     true, true);
+      let cleanupFunc = registerManifestTemporarily("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtlchrome/rtl.manifest");
 
       // Load about:plugins in an iframe
       let frame = document.createElement("iframe");
@@ -54,13 +53,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
           is(frame.contentDocument.dir, "rtl", "about:plugins should be RTL in RTL locales");
 
           frame = document.createElement("iframe");
-          frame.setAttribute("src", uri.spec); // a file:// URI, bug 348233
+          frame.setAttribute("src", convertChromeURI("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtlchrome/").spec); // a file:// URI, bug 348233
           frame.addEventListener("load", function () {
               frame.removeEventListener("load", arguments.callee, false);
 
               is(frame.contentDocument.body.dir, "rtl", "file:// listings should be RTL in RTL locales");
 
-              cleanupCustomChrome();
+              cleanupFunc();
               SimpleTest.finish();
             }, false);
           document.documentElement.appendChild(frame);

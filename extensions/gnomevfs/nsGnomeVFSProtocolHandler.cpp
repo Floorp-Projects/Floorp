@@ -44,7 +44,7 @@ extern "C" {
 
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
@@ -242,7 +242,7 @@ ProxiedAuthCallback(gconstpointer in,
     return;
 
   nsCOMPtr<nsIStringBundle> bundle;
-  bundleSvc->CreateBundle("chrome://global/locale/prompts.properties",
+  bundleSvc->CreateBundle("chrome://global/locale/commonDialogs.properties",
                           getter_AddRefs(bundle));
   if (!bundle)
     return;
@@ -985,14 +985,22 @@ nsGnomeVFSProtocolHandler::Observe(nsISupports *aSubject,
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSProtocolHandler, Init)
+NS_DEFINE_NAMED_CID(NS_GNOMEVFSPROTOCOLHANDLER_CID);
 
-static const nsModuleComponentInfo components[] =
-{
-  { "nsGnomeVFSProtocolHandler",
-    NS_GNOMEVFSPROTOCOLHANDLER_CID,
-    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX MOZ_GNOMEVFS_SCHEME,
-    nsGnomeVFSProtocolHandlerConstructor
-  }
+static const mozilla::Module::CIDEntry kVFSCIDs[] = {
+  { &kNS_GNOMEVFSPROTOCOLHANDLER_CID, false, NULL, nsGnomeVFSProtocolHandlerConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsGnomeVFSModule, components)
+static const mozilla::Module::ContractIDEntry kVFSContracts[] = {
+  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX MOZ_GNOMEVFS_SCHEME, &kNS_GNOMEVFSPROTOCOLHANDLER_CID },
+  { NULL }
+};
+
+static const mozilla::Module kVFSModule = {
+  mozilla::Module::kVersion,
+  kVFSCIDs,
+  kVFSContracts
+};
+
+NSMODULE_DEFN(nsGnomeVFSModule) = &kVFSModule;

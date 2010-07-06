@@ -295,6 +295,13 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
     }
 #  endif
 
+#elif defined NANOJIT_ARM && defined VMCFG_SYMBIAN
+    void CodeAlloc::flushICache(void *ptr, size_t len) {
+        uint32_t start = (uint32_t)ptr;
+        uint32_t rangeEnd = start + len;
+        User::IMB_Range((TAny*)start, (TAny*)rangeEnd);
+    }
+
 #elif defined AVMPLUS_SPARC
     // fixme: sync_instruction_memory is a solaris api, test for solaris not sparc
     void CodeAlloc::flushICache(void *start, size_t len) {

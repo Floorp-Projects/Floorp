@@ -87,7 +87,7 @@ function test() {
             is(ss.getClosedWindowCount(), closedWindowCount + 1,
                "The closed window was added to Recently Closed Windows");
             let data = JSON.parse(ss.getClosedWindowData())[0];
-            ok(data.title == testURL && data.toSource().indexOf(uniqueText) > -1,
+            ok(data.title == testURL && JSON.stringify(data).indexOf(uniqueText) > -1,
                "The closed window data was stored correctly");
 
             // reopen the closed window and ensure its integrity

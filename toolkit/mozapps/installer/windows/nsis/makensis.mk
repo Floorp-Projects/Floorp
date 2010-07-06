@@ -53,12 +53,13 @@ TOOLKIT_NSIS_FILES_CONV = \
 	version.nsh \
 	$(NULL)
 
-TOOLKIT_NSIS_FILES = \
+CUSTOM_NSIS_PLUGINS = \
+	AccessControl.dll \
 	AppAssocReg.dll \
+	ApplicationID.dll \
 	nsProcess.dll \
 	ShellLink.dll \
 	UAC.dll \
-	ApplicationID.dll \
 	$(NULL)
 
 $(CONFIG_DIR)/setup.exe::
@@ -66,19 +67,19 @@ $(CONFIG_DIR)/setup.exe::
 	  iconv -f UTF-8 -t UTF-16LE $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/$$i | \
 	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > $(CONFIG_DIR)/$$i; \
 	done
-	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
 	$(INSTALL) $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
-	cd $(CONFIG_DIR) && makensisu.exe installer.nsi
+	cd $(CONFIG_DIR) && $(MAKENSISU) installer.nsi
 # Support for building the uninstaller when repackaging locales
 ifeq ($(CONFIG_DIR),l10ngen)
-	cd $(CONFIG_DIR) && makensisu.exe uninstaller.nsi
+	cd $(CONFIG_DIR) && $(MAKENSISU) uninstaller.nsi
 endif
 
 $(CONFIG_DIR)/7zSD.sfx:
 	$(CYGWIN_WRAPPER) upx --best -o $(CONFIG_DIR)/7zSD.sfx $(SFX_MODULE)
 
 installer::
-	$(INSTALL) $(CONFIG_DIR)/removed-files.log $(CONFIG_DIR)/setup.exe $(DEPTH)/installer-stage
+	$(INSTALL) $(CONFIG_DIR)/setup.exe $(DEPTH)/installer-stage
 	cd $(DEPTH)/installer-stage && $(CYGWIN_WRAPPER) 7z a -r -t7z $(ABS_CONFIG_DIR)/app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19  -mb0:1 -mb0s1:2 -mb0s2:3
 	$(MAKE) $(CONFIG_DIR)/7zSD.sfx
 	$(NSINSTALL) -D $(DIST)/$(PKG_INST_PATH)
@@ -92,8 +93,8 @@ uninstaller::
 	  iconv -f UTF-8 -t UTF-16LE $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/$$i | \
 	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > $(CONFIG_DIR)/$$i; \
 	done
-	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
 	$(INSTALL) $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
-	cd $(CONFIG_DIR) && makensisu.exe uninstaller.nsi
+	cd $(CONFIG_DIR) && $(MAKENSISU) uninstaller.nsi
 	$(NSINSTALL) -D $(DIST)/bin/uninstall
 	cp $(CONFIG_DIR)/helper.exe $(DIST)/bin/uninstall

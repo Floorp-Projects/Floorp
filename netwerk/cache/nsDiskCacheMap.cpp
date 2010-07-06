@@ -294,14 +294,14 @@ nsDiskCacheMap::GetBucketRank(PRUint32 bucketIndex, PRUint32 targetRank)
 nsresult
 nsDiskCacheMap::GrowRecords()
 {
-    if (mHeader.mRecordCount >= kMaxRecordCount)
+    if (mHeader.mRecordCount >= mMaxRecordCount)
         return NS_OK;
     CACHE_LOG_DEBUG(("CACHE: GrowRecords\n"));
 
     // Resize the record array
-    PRUint32 newCount = mHeader.mRecordCount << 1;
-    if (newCount > kMaxRecordCount)
-        newCount = kMaxRecordCount;
+    PRInt32 newCount = mHeader.mRecordCount << 1;
+    if (newCount > mMaxRecordCount)
+        newCount = mMaxRecordCount;
     nsDiskCacheRecord *newArray = (nsDiskCacheRecord *)
             PR_REALLOC(mRecordArray, newCount * sizeof(nsDiskCacheRecord));
     if (!newArray)
@@ -1044,3 +1044,17 @@ nsDiskCacheMap::EnsureBuffer(PRUint32 bufSize)
     }
     return NS_OK;
 }        
+
+void
+nsDiskCacheMap::NotifyCapacityChange(PRUint32 capacity)
+{
+  // Heuristic 1. average cache entry size is probably around 1KB
+  // Heuristic 2. we don't want more than 32MB reserved to store the record
+  //              map in memory.
+  const PRInt32 RECORD_COUNT_LIMIT = 32 * 1024 * 1024 / sizeof(nsDiskCacheRecord);
+  PRInt32 maxRecordCount = PR_MIN(PRInt32(capacity), RECORD_COUNT_LIMIT);
+  if (mMaxRecordCount < maxRecordCount) {
+    // We can only grow
+    mMaxRecordCount = maxRecordCount;
+  }
+}

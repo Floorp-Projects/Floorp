@@ -55,6 +55,7 @@
 #include "client/mac/handler/exception_handler.h"
 #include <string>
 #include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -95,6 +96,10 @@
 #include "prprf.h"
 #include "nsIXULAppInfo.h"
 
+#if defined(XP_MACOSX)
+CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
+#endif
+
 #if defined(MOZ_IPC)
 #include "nsIUUIDGenerator.h"
 
@@ -105,7 +110,7 @@ using google_breakpad::ClientInfo;
 
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
-#endif
+#endif // MOZ_IPC
 
 namespace CrashReporter {
 
@@ -524,6 +529,16 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 #error "Implement this for your platform"
 #endif
 
+#ifdef XP_UNIX
+  // During a crash we must not enter the dynamic loader for symbol
+  // resolution. The symbols used from within the exception handler
+  // which might not be called by the application during normal run
+  // should be early-resolved by calling them from here. See bug 573290.
+  int fd = open("/dev/null", O_RDONLY);
+  close(fd);
+  write(-1, NULL, 0);
+#endif
+
   // now set the exception handler
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(tempPath.get(),
@@ -553,7 +568,12 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   // On OS X, many testers like to see the OS crash reporting dialog
   // since it offers immediate stack traces.  We allow them to set
   // a default to pass exceptions to the OS handler.
-  showOSCrashReporter = PassToOSCrashReporter();
+  Boolean keyExistsAndHasValidFormat = false;
+  Boolean prefValue = ::CFPreferencesGetAppBooleanValue(CFSTR("OSCrashReporter"),
+                                                        kCFPreferencesCurrentApplication,
+                                                        &keyExistsAndHasValidFormat);
+  if (keyExistsAndHasValidFormat)
+    showOSCrashReporter = prefValue;
 #endif
 
   return NS_OK;
@@ -1095,8 +1115,25 @@ static nsresult PrefSubmitReports(PRBool* aSubmitReports, bool writePref)
   *aSubmitReports = !!value;
   return NS_OK;
 #elif defined(XP_MACOSX)
-  // TODO: Implement for OSX (bug 542379)
-  return NS_ERROR_NOT_IMPLEMENTED;
+  rv = NS_OK;
+  if (writePref) {
+    CFPropertyListRef cfValue = (CFPropertyListRef)(*aSubmitReports ? kCFBooleanTrue : kCFBooleanFalse);
+    ::CFPreferencesSetAppValue(CFSTR("submitReport"),
+                               cfValue,
+                               reporterClientAppID);
+    if (!::CFPreferencesAppSynchronize(reporterClientAppID))
+      rv = NS_ERROR_FAILURE;
+  }
+  else {
+    *aSubmitReports = PR_TRUE;
+    Boolean keyExistsAndHasValidFormat = false;
+    Boolean prefValue = ::CFPreferencesGetAppBooleanValue(CFSTR("submitReport"),
+                                                          reporterClientAppID,
+                                                          &keyExistsAndHasValidFormat);
+    if (keyExistsAndHasValidFormat)
+      *aSubmitReports = !!prefValue;
+  }
+  return rv;
 #elif defined(XP_UNIX)
   /*
    * NOTE! This needs to stay in sync with the preference checking code

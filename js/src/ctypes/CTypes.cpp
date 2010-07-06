@@ -1915,11 +1915,11 @@ ImplicitConvert(JSContext* cx,
 
       for (jsuint i = 0; i < sourceLength; ++i) {
         js::AutoValueRooter item(cx);
-        if (!JS_GetElement(cx, sourceArray, i, Jsvalify(item.addr())))
+        if (!JS_GetElement(cx, sourceArray, i, item.jsval_addr()))
           return false;
 
         char* data = intermediate.get() + elementSize * i;
-        if (!ImplicitConvert(cx, Jsvalify(item.value()), baseType, data, false, NULL))
+        if (!ImplicitConvert(cx, item.jsval_value(), baseType, data, false, NULL))
           return false;
       }
 
@@ -1959,25 +1959,25 @@ ImplicitConvert(JSContext* cx,
           break;
 
         js::AutoValueRooter fieldVal(cx);
-        JS_IdToValue(cx, id, Jsvalify(fieldVal.addr()));
-        if (!fieldVal.value().isString()) {
+        JS_IdToValue(cx, id, fieldVal.jsval_addr());
+        if (!JSVAL_IS_STRING(fieldVal.jsval_value())) {
           JS_ReportError(cx, "property name is not a string");
           return false;
         }
 
         const FieldInfo* field = StructType::LookupField(cx, targetType,
-                                                         fieldVal.value().asString());
+                                                         JSVAL_TO_STRING(fieldVal.jsval_value()));
         if (!field)
           return false;
 
-        JSString* name = fieldVal.value().asString();
+        JSString* name = JSVAL_TO_STRING(fieldVal.jsval_value());
         js::AutoValueRooter prop(cx);
-        if (!JS_GetUCProperty(cx, obj, name->chars(), name->length(), Jsvalify(prop.addr())))
+        if (!JS_GetUCProperty(cx, obj, name->chars(), name->length(), prop.jsval_addr()))
           return false;
 
         // Convert the field via ImplicitConvert().
         char* fieldData = intermediate.get() + field->mOffset;
-        if (!ImplicitConvert(cx, Jsvalify(prop.value()), field->mType, fieldData, false, NULL))
+        if (!ImplicitConvert(cx, prop.jsval_value(), field->mType, fieldData, false, NULL))
           return false;
 
         ++i;
@@ -2018,7 +2018,7 @@ ExplicitConvert(JSContext* cx, jsval val, JSObject* targetType, void* buffer)
   // hard failure (out of memory, or some other similarly serious condition).
   // We store any pending exception in case we need to re-throw it.
   js::AutoValueRooter ex(cx);
-  if (!JS_GetPendingException(cx, Jsvalify(ex.addr())))
+  if (!JS_GetPendingException(cx, ex.jsval_addr()))
     return false;
 
   // Otherwise, assume soft failure. Clear the pending exception so that we
@@ -2066,7 +2066,7 @@ ExplicitConvert(JSContext* cx, jsval val, JSObject* targetType, void* buffer)
   case TYPE_array:
   case TYPE_struct:
     // ImplicitConvert is sufficient. Re-throw the exception it generated.
-    JS_SetPendingException(cx, Jsvalify(ex.value()));
+    JS_SetPendingException(cx, ex.jsval_value());
     return false;
   case TYPE_void_t:
   case TYPE_function:
@@ -3533,8 +3533,8 @@ ArrayType::ConstructData(JSContext* cx,
       // This could be a JS array, or a CData array.
       JSObject* arg = JSVAL_TO_OBJECT(argv[0]);
       js::AutoValueRooter lengthVal(cx);
-      if (!JS_GetProperty(cx, arg, "length", Jsvalify(lengthVal.addr())) ||
-          !jsvalToSize(cx, Jsvalify(lengthVal.value()), false, &length)) {
+      if (!JS_GetProperty(cx, arg, "length", lengthVal.jsval_addr()) ||
+          !jsvalToSize(cx, lengthVal.jsval_value(), false, &length)) {
         JS_ReportError(cx, "argument must be an array object or length");
         return JS_FALSE;
       }
@@ -3872,12 +3872,12 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
   }
 
   js::AutoValueRooter nameVal(cx);
-  JS_IdToValue(cx, id, Jsvalify(nameVal.addr()));
-  if (!nameVal.value().isString()) {
+  JS_IdToValue(cx, id, nameVal.jsval_addr());
+  if (!JSVAL_IS_STRING(nameVal.jsval_value())) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
     return NULL;
   }
-  JSString* name = nameVal.value().asString();
+  JSString* name = JSVAL_TO_STRING(nameVal.jsval_value());
 
   // make sure we have one, and only one, property
   if (!JS_NextProperty(cx, iter, &id))
@@ -3888,11 +3888,11 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
   }
 
   js::AutoValueRooter propVal(cx);
-  if (!JS_GetUCProperty(cx, obj, name->chars(), name->length(), Jsvalify(propVal.addr())))
+  if (!JS_GetUCProperty(cx, obj, name->chars(), name->length(), propVal.jsval_addr()))
     return NULL;
 
   if (propVal.value().isPrimitive() ||
-      !CType::IsCType(cx, &propVal.value().asObject())) {
+      !CType::IsCType(cx, JSVAL_TO_OBJECT(propVal.jsval_value()))) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
     return NULL;
   }
@@ -3900,7 +3900,7 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
   // Undefined size or zero size struct members are illegal.
   // (Zero-size arrays are legal as struct members in C++, but libffi will
   // choke on a zero-size struct, so we disallow them.)
-  *typeObj = &propVal.value().asObject();
+  *typeObj = JSVAL_TO_OBJECT(propVal.jsval_value());
   size_t size;
   if (!CType::GetSafeSize(cx, *typeObj, &size) || size == 0) {
     JS_ReportError(cx, "struct field types must have defined and nonzero size");
@@ -4026,11 +4026,11 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
 
     for (jsuint i = 0; i < len; ++i) {
       js::AutoValueRooter item(cx);
-      if (!JS_GetElement(cx, fieldsObj, i, Jsvalify(item.addr())))
+      if (!JS_GetElement(cx, fieldsObj, i, item.jsval_addr()))
         return JS_FALSE;
 
       JSObject* fieldType;
-      JSString* name = ExtractStructField(cx, Jsvalify(item.value()), &fieldType);
+      JSString* name = ExtractStructField(cx, item.jsval_value(), &fieldType);
       if (!name)
         return JS_FALSE;
 
@@ -4748,7 +4748,7 @@ FunctionType::Create(JSContext* cx, uintN argc, jsval* vp)
 
   // Pull out the argument types from the array, if any.
   JS_ASSERT(!argTypes.length() || arrayObj);
-  js::AutoArrayRooter items(cx, argTypes.length(), Valueify(argTypes.begin()));
+  js::AutoArrayRooter items(cx, argTypes.length(), argTypes.begin());
   for (jsuint i = 0; i < argTypes.length(); ++i) {
     if (!JS_GetElement(cx, arrayObj, i, &argTypes[i]))
       return JS_FALSE;

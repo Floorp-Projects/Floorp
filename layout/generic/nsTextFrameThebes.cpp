@@ -104,7 +104,6 @@
 
 #include "nsIServiceManager.h"
 #ifdef ACCESSIBILITY
-#include "nsIAccessible.h"
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsAutoPtr.h"
@@ -144,24 +143,24 @@ NS_DECLARE_FRAME_PROPERTY(TabWidthProperty, DestroyTabWidth)
 
 // This bit is set on the first frame in a continuation indicating
 // that it was chopped short because of :first-letter style.
-#define TEXT_FIRST_LETTER    0x00100000
+#define TEXT_FIRST_LETTER    NS_FRAME_STATE_BIT(20)
 // This bit is set on frames that are logically adjacent to the start of the
 // line (i.e. no prior frame on line with actual displayed in-flow content).
-#define TEXT_START_OF_LINE   0x00200000
+#define TEXT_START_OF_LINE   NS_FRAME_STATE_BIT(21)
 // This bit is set on frames that are logically adjacent to the end of the
 // line (i.e. no following on line with actual displayed in-flow content).
-#define TEXT_END_OF_LINE     0x00400000
+#define TEXT_END_OF_LINE     NS_FRAME_STATE_BIT(22)
 // This bit is set on frames that end with a hyphenated break.
-#define TEXT_HYPHEN_BREAK    0x00800000
+#define TEXT_HYPHEN_BREAK    NS_FRAME_STATE_BIT(23)
 // This bit is set on frames that trimmed trailing whitespace characters when
 // calculating their width during reflow.
-#define TEXT_TRIMMED_TRAILING_WHITESPACE 0x01000000
+#define TEXT_TRIMMED_TRAILING_WHITESPACE NS_FRAME_STATE_BIT(24)
 // This bit is set on frames that have justification enabled. We record
 // this in a state bit because we don't always have the containing block
 // easily available to check text-align on.
-#define TEXT_JUSTIFICATION_ENABLED       0x02000000
+#define TEXT_JUSTIFICATION_ENABLED       NS_FRAME_STATE_BIT(25)
 // Set this bit if the textframe has overflow area for IME/spellcheck underline.
-#define TEXT_SELECTION_UNDERLINE_OVERFLOWED 0x04000000
+#define TEXT_SELECTION_UNDERLINE_OVERFLOWED NS_FRAME_STATE_BIT(26)
 
 #define TEXT_REFLOW_FLAGS    \
   (TEXT_FIRST_LETTER|TEXT_START_OF_LINE|TEXT_END_OF_LINE|TEXT_HYPHEN_BREAK| \
@@ -170,19 +169,20 @@ NS_DECLARE_FRAME_PROPERTY(TabWidthProperty, DestroyTabWidth)
 
 // Cache bits for IsEmpty().
 // Set this bit if the textframe is known to be only collapsible whitespace.
-#define TEXT_IS_ONLY_WHITESPACE    0x08000000
+#define TEXT_IS_ONLY_WHITESPACE    NS_FRAME_STATE_BIT(27)
 // Set this bit if the textframe is known to be not only collapsible whitespace.
-#define TEXT_ISNOT_ONLY_WHITESPACE 0x10000000
+#define TEXT_ISNOT_ONLY_WHITESPACE NS_FRAME_STATE_BIT(28)
 
-#define TEXT_WHITESPACE_FLAGS      0x18000000
+#define TEXT_WHITESPACE_FLAGS      (TEXT_IS_ONLY_WHITESPACE | \
+                                    TEXT_ISNOT_ONLY_WHITESPACE)
 // This bit is set while the frame is registered as a blinking frame.
-#define TEXT_BLINK_ON              0x20000000
+#define TEXT_BLINK_ON              NS_FRAME_STATE_BIT(29)
 
 // Set when this text frame is mentioned in the userdata for a textrun
-#define TEXT_IN_TEXTRUN_USER_DATA  0x40000000
+#define TEXT_IN_TEXTRUN_USER_DATA  NS_FRAME_STATE_BIT(30)
 
 // nsTextFrame.h has
-// #define TEXT_HAS_NONCOLLAPSED_CHARACTERS 0x80000000
+// #define TEXT_HAS_NONCOLLAPSED_CHARACTERS NS_FRAME_STATE_BIT(31)
 
 /*
  * Some general notes
@@ -537,6 +537,7 @@ static PRBool IsCSSWordSpacingSpace(const nsTextFragment* aFrag,
   case ' ':
   case CH_NBSP:
     return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
+  case '\r':
   case '\t': return !aStyleText->WhiteSpaceIsSignificant();
   case '\n': return !aStyleText->NewlineIsSignificant();
   default: return PR_FALSE;
@@ -552,14 +553,14 @@ static PRBool IsTrimmableSpace(const PRUnichar* aChars, PRUint32 aLength)
   PRUnichar ch = *aChars;
   if (ch == ' ')
     return !nsTextFrameUtils::IsSpaceCombiningSequenceTail(aChars + 1, aLength - 1);
-  return ch == '\t' || ch == '\f' || ch == '\n';
+  return ch == '\t' || ch == '\f' || ch == '\n' || ch == '\r';
 }
 
 // Check whether the character aCh is trimmable according to CSS
 // 'white-space:normal/nowrap'
 static PRBool IsTrimmableSpace(char aCh)
 {
-  return aCh == ' ' || aCh == '\t' || aCh == '\f' || aCh == '\n';
+  return aCh == ' ' || aCh == '\t' || aCh == '\f' || aCh == '\n' || aCh == '\r';
 }
 
 static PRBool IsTrimmableSpace(const nsTextFragment* aFrag, PRUint32 aPos,
@@ -572,6 +573,7 @@ static PRBool IsTrimmableSpace(const nsTextFragment* aFrag, PRUint32 aPos,
                    !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
   case '\n': return !aStyleText->NewlineIsSignificant();
   case '\t':
+  case '\r':
   case '\f': return !aStyleText->WhiteSpaceIsSignificant();
   default: return PR_FALSE;
   }
@@ -583,7 +585,7 @@ static PRBool IsSelectionSpace(const nsTextFragment* aFrag, PRUint32 aPos)
   PRUnichar ch = aFrag->CharAt(aPos);
   if (ch == ' ' || ch == CH_NBSP)
     return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
-  return ch == '\t' || ch == '\n' || ch == '\f';
+  return ch == '\t' || ch == '\n' || ch == '\f' || ch == '\r';
 }
 
 // Count the amount of trimmable whitespace (as per CSS
@@ -626,7 +628,7 @@ IsAllWhitespace(const nsTextFragment* aFrag, PRBool aAllowNewline)
   const char* str = aFrag->Get1b();
   for (PRInt32 i = 0; i < len; ++i) {
     char ch = str[i];
-    if (ch == ' ' || ch == '\t' || (ch == '\n' && aAllowNewline))
+    if (ch == ' ' || ch == '\t' || ch == '\r' || (ch == '\n' && aAllowNewline))
       continue;
     return PR_FALSE;
   }
@@ -2107,7 +2109,7 @@ static PRBool IsJustifiableCharacter(const nsTextFragment* aFrag, PRInt32 aPos,
                                      PRBool aLangIsCJ)
 {
   PRUnichar ch = aFrag->CharAt(aPos);
-  if (ch == '\n' || ch == '\t')
+  if (ch == '\n' || ch == '\t' || ch == '\r')
     return PR_TRUE;
   if (ch == ' ' || ch == CH_NBSP) {
     // Don't justify spaces that are combined with diacriticals
@@ -3385,22 +3387,24 @@ nsTextPaintStyle::GetResolvedForeColor(nscolor aColor,
 //-----------------------------------------------------------------------------
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsTextFrame::CreateAccessible()
 {
   if (IsEmpty()) {
     nsAutoString renderedWhitespace;
     GetRenderedText(&renderedWhitespace, nsnull, nsnull, 0, 1);
     if (renderedWhitespace.IsEmpty()) {
-      return NS_ERROR_FAILURE;
+      return nsnull;
     }
   }
 
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTMLTextAccessible(static_cast<nsIFrame*>(this), aAccessible);
+    return accService->CreateHTMLTextAccessible(mContent,
+                                                PresContext()->PresShell());
   }
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 #endif
 
@@ -6935,9 +6939,9 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     if (mState & NS_FRAME_SELECTED_CONTENT) {
-      fprintf(out, " [state=%08x] SELECTED", mState);
+      fprintf(out, " [state=%016llx] SELECTED", mState);
     } else {
-      fprintf(out, " [state=%08x]", mState);
+      fprintf(out, " [state=%016llx]", mState);
     }
   }
   fprintf(out, " [content=%p]", static_cast<void*>(mContent));

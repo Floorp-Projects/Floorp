@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:html="http://www.w3.org/1999/xhtml">
+
+<html:style>
+  #mathy { display: table}
+</html:style>
+
+<foreignObject width="500" height="500" y="50">
+  <div xmlns="http://www.w3.org/1999/xhtml">
+    <p>Foo</p>
+    <div>
+      <math xmlns="http://www.w3.org/1998/Math/MathML" id="mathy" display="block">
+        <mrow>
+          <mi>x</mi>
+        </mrow>
+      </math>
+    </div>
+  </div>
+</foreignObject>
+
+</svg>

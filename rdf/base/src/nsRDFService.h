@@ -87,8 +87,8 @@ protected:
 
 public:
     static RDFServiceImpl *gRDFService NS_VISIBILITY_HIDDEN;
-    static NS_METHOD CreateSingleton(nsISupports* aOuter,
-                                     const nsIID& aIID, void **aResult);
+    static nsresult CreateSingleton(nsISupports* aOuter,
+                                    const nsIID& aIID, void **aResult);
 
     // nsISupports
     NS_DECL_ISUPPORTS

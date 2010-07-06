@@ -87,7 +87,6 @@ static const PRUint32 gWinEventMap[] = {
   EVENT_SYSTEM_SCROLLINGEND,                         // nsIAccessibleEvent::EVENT_SCROLLING_END
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_MINIMIZE_START
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_MINIMIZE_END
-  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START
   IA2_EVENT_DOCUMENT_LOAD_COMPLETE,                  // nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE
   IA2_EVENT_DOCUMENT_RELOAD,                         // nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD
   IA2_EVENT_DOCUMENT_LOAD_STOPPED,                   // nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED
@@ -136,7 +135,6 @@ static const PRUint32 gWinEventMap[] = {
   IA2_EVENT_HYPERTEXT_NLINKS_CHANGED,                // nsIAccessibleEvent::EVENT_HYPERTEXT_NLINKS_CHANGED
   IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED,                // nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED
   IA2_EVENT_PAGE_CHANGED,                            // nsIAccessibleEvent::EVENT_PAGE_CHANGED
-  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_INTERNAL_LOAD
   kEVENT_LAST_ENTRY                                  // nsIAccessibleEvent::EVENT_LAST_ENTRY
 };
 

@@ -75,7 +75,7 @@
   </keyset>
 
   <!-- required to overlay the context menu -->
-  <popup id="placesContext" />
+  <menupopup id="placesContext"/>
 
   <!-- Bookmarks and history tooltip -->
   <tooltip id="bhTooltip"/>

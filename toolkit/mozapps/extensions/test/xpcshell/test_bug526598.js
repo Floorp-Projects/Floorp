@@ -55,7 +55,7 @@ function run_test() {
 
       do_check_neq(a1, null);
       do_check_true(a1.hasResource("install.rdf"));
-      let uri = Services.io.newURI(a1.getResourceURL("install.rdf"), "UTF-8", null);
+      let uri = a1.getResourceURI("install.rdf");
       do_check_true(uri instanceof AM_Ci.nsIFileURL);
       let file = uri.file;
       do_check_true(file.exists());
@@ -64,7 +64,7 @@ function run_test() {
 
       do_check_neq(a2, null);
       do_check_true(a2.hasResource("install.rdf"));
-      uri = Services.io.newURI(a2.getResourceURL("install.rdf"), "UTF-8", null);
+      uri = a2.getResourceURI("install.rdf");
       do_check_true(uri instanceof AM_Ci.nsIFileURL);
       file = uri.file;
       do_check_true(file.exists());

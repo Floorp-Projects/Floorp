@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include "prio.h"
 #include "prmem.h"
+#include "nsIComponentManager.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsIPlugin.h"
@@ -79,8 +80,6 @@
 #include "nsICachingChannel.h"
 #include "nsHashtable.h"
 #include "nsIProxyInfo.h"
-#include "nsObsoleteModuleLoading.h"
-#include "nsIComponentRegistrar.h"
 #include "nsPluginLogging.h"
 #include "nsIPrefBranch2.h"
 #include "nsIScriptChannel.h"
@@ -155,10 +154,6 @@
 #if defined(XP_WIN)
 #include "windows.h"
 #include "winbase.h"
-#endif
-
-#if defined(XP_UNIX) && defined(MOZ_WIDGET_GTK2) & defined(MOZ_X11)
-#include <gdk/gdkx.h> // for GDK_DISPLAY()
 #endif
 
 using mozilla::TimeStamp;
@@ -282,7 +277,7 @@ NS_IMETHODIMP nsPluginDocReframeEvent::Run() {
   for (PRUint32 i = 0; i < c; i++) {
     nsCOMPtr<nsIDocument> doc (do_QueryElementAt(mDocs, i));
     if (doc) {
-      nsIPresShell *shell = doc->GetPrimaryShell();
+      nsIPresShell *shell = doc->GetShell();
 
       // if this document has a presentation shell, then it has frames and can be reframed
       if (shell) {

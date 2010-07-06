@@ -117,7 +117,6 @@
 #include "nsIDocumentEncoder.h" //for outputting selection
 #include "nsICharsetResolver.h"
 #include "nsICachingChannel.h"
-#include "nsICacheEntryDescriptor.h"
 #include "nsIJSContextStack.h"
 #include "nsIDocumentViewer.h"
 #include "nsIWyciwygChannel.h"
@@ -342,7 +341,7 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   // Make the content type default to "text/html", we are a HTML
   // document, after all. Once we start getting data, this may be
   // changed.
-  mContentType = "text/html";
+  SetContentTypeInternal(nsDependentCString("text/html"));
 }
 
 nsStyleSet::sheetType
@@ -432,7 +431,7 @@ nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
 }
 
 PRBool
-nsHTMLDocument::TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
+nsHTMLDocument::TryCacheCharset(nsICachingChannel* aCachingChannel,
                                 PRInt32& aCharsetSource,
                                 nsACString& aCharset)
 {
@@ -442,9 +441,8 @@ nsHTMLDocument::TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
     return PR_TRUE;
   }
 
-  nsXPIDLCString cachedCharset;
-  rv = aCacheDescriptor->GetMetaDataElement("charset",
-                                           getter_Copies(cachedCharset));
+  nsCString cachedCharset;
+  rv = aCachingChannel->GetCacheTokenCachedCharset(cachedCharset);
   if (NS_SUCCEEDED(rv) && !cachedCharset.IsEmpty())
   {
     aCharset = cachedCharset;
@@ -738,7 +736,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
-  nsCOMPtr<nsICacheEntryDescriptor> cacheDescriptor;
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer,
@@ -757,12 +754,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   nsCOMPtr<nsICachingChannel> cachingChan = do_QueryInterface(aChannel);
-  if (cachingChan) {
-    nsCOMPtr<nsISupports> cacheToken;
-    cachingChan->GetCacheToken(getter_AddRefs(cacheToken));
-    if (cacheToken)
-      cacheDescriptor = do_QueryInterface(cacheToken);
-  }
 
   if (needsParser) {
     if (loadAsHtml5) {
@@ -880,8 +871,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                TryBookmarkCharset(docShell, aChannel, charsetSource, charset)) {
         // Use the bookmark's charset.
       }
-      else if (cacheDescriptor && !urlSpec.IsEmpty() &&
-               TryCacheCharset(cacheDescriptor, charsetSource, charset)) {
+      else if (cachingChan && !urlSpec.IsEmpty() &&
+               TryCacheCharset(cachingChan, charsetSource, charset)) {
         // Use the cache's charset.
       }
       else if (TryDefaultCharset(muCV, charsetSource, charset)) {
@@ -958,12 +949,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (muCV && !muCVIsParent)
     muCV->SetPrevDocCharacterSet(charset);
 
-  if(cacheDescriptor) {
+  if (cachingChan) {
     NS_ASSERTION(charset == parserCharset,
                  "How did those end up different here?  wyciwyg channels are "
                  "not nsICachingChannel");
-    rv = cacheDescriptor->SetMetaDataElement("charset",
-                                             charset.get());
+    rv = cachingChan->SetCacheTokenCachedCharset(charset);
     NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetMetaDataElement");
   }
 
@@ -1247,7 +1237,7 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 
   mCompatMode = aMode;
   CSSLoader()->SetCompatibilityMode(mCompatMode);
-  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
     nsPresContext *pc = shell->GetPresContext();
     if (pc) {
@@ -1592,16 +1582,8 @@ nsHTMLDocument::GetBody(nsresult *aResult)
 
   // The document is most likely a frameset document so look for the
   // outer most frameset element
-  nsRefPtr<nsContentList> nodeList;
-
-  if (IsHTML()) {
-    nodeList = nsDocument::GetElementsByTagName(NS_LITERAL_STRING("frameset"));
-  } else {
-    nodeList =
-      nsDocument::GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),
-                             NS_LITERAL_STRING("frameset"));
-  }
-
+  nsRefPtr<nsContentList> nodeList =
+    NS_GetContentList(this, nsGkAtoms::frameset, kNameSpaceID_XHTML);
   if (!nodeList) {
     *aResult = NS_ERROR_OUT_OF_MEMORY;
 
@@ -1939,6 +1921,15 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
       }
     }
 
+    // Flag us as not being able to start layout until we hit <body>
+    // or scripts that require layout, so that we won't run into FOUC
+    // issues.  We need to do that before making the Stop() call,
+    // since if we have no frame yet the flush Stop() triggers might
+    // try to create one for us, and we don't want our presshell
+    // starting layout if that happens.  But we don't want to do this
+    // before the PermitUnload call above.
+    mMayStartLayout = PR_FALSE;
+
     nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(shell));
     webnav->Stop(nsIWebNavigation::STOP_NETWORK);
 
@@ -1947,6 +1938,10 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     // document again otherwise the document could have a non-zero onload block
     // count without the onload blocker request being in the loadgroup.
     EnsureOnloadBlocker();
+  } else {
+    // See comment before the mMayStartLayout set in the other branch
+    // of this if.
+    mMayStartLayout = PR_FALSE;
   }
 
   // The open occurred after the document finished loading.
@@ -2022,7 +2017,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   }
 
   // This will be propagated to the parser when someone actually calls write()
-  mContentType = aContentType;
+  SetContentTypeInternal(aContentType);
 
   mWriteState = eDocumentOpened;
 
@@ -2121,7 +2116,7 @@ nsHTMLDocument::Close()
 
     ++mWriteLevel;
     rv = mParser->Parse(EmptyString(), mParser->GetRootContextKey(),
-                        mContentType, PR_TRUE);
+                        GetContentTypeInternal(), PR_TRUE);
     --mWriteLevel;
 
     // XXX Make sure that all the document.written content is
@@ -2145,7 +2140,7 @@ nsHTMLDocument::Close()
     // it be for now, though.  In any case, there's no reason to do
     // this if we have no presshell, since in that case none of the
     // above about reusing frames applies.
-    if (GetPrimaryShell()) {
+    if (GetShell()) {
       FlushPendingNotifications(Flush_Layout);
     }
 
@@ -2221,11 +2216,11 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
   // why pay that price when we don't need to?
   if (aNewlineTerminate) {
     rv = mParser->Parse(aText + new_line,
-                        key, mContentType,
+                        key, GetContentTypeInternal(),
                         (mWriteState == eNotWriting || (mWriteLevel > 1)));
   } else {
     rv = mParser->Parse(aText,
-                        key, mContentType,
+                        key, GetContentTypeInternal(),
                         (mWriteState == eNotWriting || (mWriteLevel > 1)));
   }
 
@@ -2289,6 +2284,13 @@ nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
     aContent->GetNameSpaceID() == kNameSpaceID_XHTML &&
     aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                           *elementName, eCaseMatters);
+}
+
+/* static */
+void*
+nsHTMLDocument::UseExistingNameString(nsINode* aRootNode, const nsString* aName)
+{
+  return const_cast<nsString*>(aName);
 }
 
 NS_IMETHODIMP
@@ -2657,11 +2659,9 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 {
   *aResult = nsnull;
 
-  nsCOMPtr<nsIAtom> name(do_GetAtom(aName));
-
   // We have built a table and cache the named items. The table will
   // be updated as content is added and removed.
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(name);
+  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aName);
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
   if (entry->IsInvalidName()) {
@@ -2685,7 +2685,14 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
     Element* root = GetRootElement();
     if (root && !aName.IsEmpty()) {
-      FindNamedItems(name, root, entry);
+      // do_GetAtom() can fail on OOM, but it'll only do that if the
+      // atom doesn't already exist, which means the named item
+      // doesn't exist either.
+      nsCOMPtr<nsIAtom> name(do_GetAtom(aName));
+
+      if (name) {
+        FindNamedItems(name, root, entry);
+      }
     }
   }
 
@@ -2790,7 +2797,8 @@ nsHTMLDocument::PrePopulateIdentifierMap()
     nsCOMPtr<nsIAtom> atom(do_GetAtom(names[i]));
     NS_ENSURE_TRUE(atom, NS_ERROR_OUT_OF_MEMORY);
   
-    nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(atom);
+    nsIdentifierMapEntry* entry =
+      mIdentifierMap.PutEntry(nsDependentAtomString(atom));
     NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
     entry->SetInvalidName();
@@ -3115,8 +3123,7 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID, nsISupports** aResult
 {
   *aResult = nsnull;
 
-  nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(id);
+  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aID);
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
   Element* root = GetRootElement();
@@ -3126,6 +3133,8 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID, nsISupports** aResult
 
   nsRefPtr<nsContentList> docAllList = entry->GetDocAllList();
   if (!docAllList) {
+    nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
+
     docAllList = new nsContentList(root, DocAllResultMatch,
                                    nsnull, nsnull, PR_TRUE, id);
     NS_ENSURE_TRUE(docAllList, NS_ERROR_OUT_OF_MEMORY);

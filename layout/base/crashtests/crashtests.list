@@ -41,8 +41,8 @@ load 265973-1.html
 asserts(10) asserts-if(MOZ_WIDGET_TOOLKIT=="windows",8) load 265986-1.html # Bug 512405
 load 265999-1.html
 load 266222-1.html
-asserts(7) load 266360-1.html
-asserts(4) load 266445-1.html
+asserts(7) load 266360-1.html # Bug 576358
+asserts(4) load 266445-1.html # Bug 575011
 load 268157-1.html
 load 269566-1.html
 load 272647-1.html
@@ -105,7 +105,7 @@ load 347898-1.html
 load 348126-1.html
 load 348688-1.html
 load 348708-1.xhtml
-asserts(2) load 348729-1.html
+asserts(2) load 348729-1.html # bug 548836
 load 349095-1.xhtml
 load 350128-1.xhtml
 load 350267-1.html
@@ -126,6 +126,7 @@ load 366271-1.html
 load 366967-1.html
 load 367015-1.html
 load 367243-1.html
+load 369176-1.html
 load 369945-1.xhtml
 load 371681-1.xhtml
 load 372237-1.html
@@ -135,7 +136,7 @@ load 374193-1.xhtml
 load 374297-1.html
 load 374297-2.html
 load 376223-1.xhtml
-asserts(1) load 378325-1.html
+asserts(0-99) load 378325-1.html # bug 531589
 load 379105-1.xhtml
 load 379419-1.xhtml
 load 379768-1.html
@@ -201,7 +202,7 @@ load 409513.html
 load 410967.html
 load 411870-1.html
 load 412651-1.html
-asserts(6) load 413587-1.svg
+asserts(6) load 413587-1.svg # Bug 563481?
 load 414058-1.html
 load 414175-1.xul
 load 420031-1.html
@@ -229,17 +230,19 @@ load 444967-1.html
 load 446328.html
 load 448488-1.html
 load 450319-1.xhtml
-asserts(3) load 453894-1.xhtml
+asserts(3) load 453894-1.xhtml # Bug 575011
 load 454751-1.xul
 load 455063-1.html
 load 455063-2.html
 load 455063-3.html
 load 455171-4.html
+load 455623-1.html
 load 457362-1.xhtml
 load 466763-1.html
 load 467881-1.html
 load 468491-1.html
 load 468546-1.xhtml
+load 468555-1.xhtml
 load 468578-1.xhtml
 # These three didn't actually crash without the resizing that the
 # browser does when setting up print preview, but adding them anyway.
@@ -266,6 +269,7 @@ load 492014.xhtml
 load 492112-1.xhtml
 load 492163-1.xhtml
 load 495350-1.html
+load 496011-1.xhtml
 load 497519-1.xhtml
 load 497519-2.xhtml
 load 499741-1.xhtml
@@ -273,21 +277,31 @@ load 499841-1.xhtml
 load 500467-1.html
 load 501878-1.html
 load 503936-1.html
+load 514104-1.xul
 load 522374-1.html
 load 522374-2.html
 load 526378-1.xul
+load 534367-1.xhtml
+load 534768-1.html
+load 534768-2.html
 load 535721-1.xhtml
 load 535911-1.xhtml
 load 536623-1.xhtml
+load 536720.xul
 load 537059-1.xhtml
 load 537141-1.xhtml
 load 537562-1.xhtml
 load 538082-1.xul
 load 538207-1.xhtml
 load 538210-1.html
+load 540760.xul
+load 540771-1.xhtml
 load 541869-1.xhtml
 load 541869-2.html
 load 560441-1.xhtml
 load 560447-1.html
 load 564063-1.html
 load 567292-1.xhtml
+load 569018-1.html
+load 572003.xul
+load 572582-1.xhtml

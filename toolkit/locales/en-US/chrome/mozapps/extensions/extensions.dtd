@@ -10,7 +10,7 @@
 <!-- LOCALIZATION NOTE: These should match the header-* entries in extensions.properties -->
 <!ENTITY view.search.label                    "Search">
 <!ENTITY view.discover.label                  "Get Add-ons">
-<!ENTITY view.languages.label                 "Languages">
+<!ENTITY view.locales.label                   "Languages">
 <!ENTITY view.searchengines.label             "Search Engines">
 <!ENTITY view.features.label                  "Extensions">
 <!ENTITY view.appearance.label                "Themes">
@@ -43,6 +43,8 @@
 <!ENTITY cmd.uninstallAddon.label             "Remove">
 <!ENTITY cmd.uninstallAddon.accesskey         "R">
 <!ENTITY cmd.uninstallAddon.tooltip           "Uninstall this add-on">
+<!ENTITY cmd.showPreferences.label            "Preferences">
+<!ENTITY cmd.showPreferences.tooltip          "Change this add-on's preferences">
 <!ENTITY cmd.contribute.label                 "Contribute">
 <!ENTITY cmd.contribute.accesskey             "C">
 <!ENTITY cmd.contribute.tooltip               "Contribute to the development of this add-on">
@@ -67,7 +69,7 @@
 
 
 <!-- ratings -->
-<!ENTITY rating.yourRating.label              "Your rating:">
+<!ENTITY rating.label                         "Rating:">
 
 <!-- download/install progress -->
 <!ENTITY progress.pause.tooltip               "Pause">

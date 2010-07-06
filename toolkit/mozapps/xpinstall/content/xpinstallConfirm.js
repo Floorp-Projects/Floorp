@@ -66,10 +66,13 @@ XPInstallConfirm.init = function ()
     itemList.appendChild(installItem);
 
     installItem.name = args.installs[i].addon.name;
-    installItem.url = args.installs[i].sourceURL;
+    installItem.url = args.installs[i].sourceURI.spec;
     var icon = args.installs[i].iconURL;
-    if (icon != null)
+    if (icon)
       installItem.icon = icon;
+    var type = args.installs[i].type;
+    if (type)
+      installItem.type = type;
     if (args.installs[i].certName) {
       installItem.cert = bundle.getFormattedString("signed", [args.installs[i].certName]);
     }

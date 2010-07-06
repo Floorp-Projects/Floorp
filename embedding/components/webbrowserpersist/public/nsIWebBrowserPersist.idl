@@ -48,8 +48,6 @@ interface nsIChannel;
 
 /**
  * Interface for persisting DOM documents and URIs to local or remote storage.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(dd4e0a6a-210f-419a-ad85-40e8543b9465)]
 interface nsIWebBrowserPersist : nsICancelable

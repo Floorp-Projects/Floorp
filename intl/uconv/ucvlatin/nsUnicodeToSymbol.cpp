@@ -45,7 +45,7 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "adobesymbol.uf"
 };
 
-NS_METHOD
+nsresult
 nsUnicodeToSymbolConstructor(nsISupports *aOuter, REFNSIID aIID,
                              void **aResult) 
 {

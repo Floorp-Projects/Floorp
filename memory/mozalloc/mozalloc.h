@@ -205,8 +205,10 @@ MOZALLOC_EXPORT void* moz_valloc(size_t size)
 #endif
 
 #ifdef ANDROID
-// Android doesn't fully support exceptions, so its <new> header
-// has operators that don't specify throw() at all.
+/*
+ * Android doesn't fully support exceptions, so its <new> header
+ * has operators that don't specify throw() at all.
+ */
 #define MOZALLOC_THROW_IF_HAS_EXCEPTIONS /**/
 #else
 #define MOZALLOC_THROW_IF_HAS_EXCEPTIONS throw()

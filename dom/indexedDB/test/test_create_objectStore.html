@@ -1,0 +1,117 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
+      const nsIIDBTransaction = Components.interfaces.nsIIDBTransaction;
+
+      const name = window.location.pathname;
+      const description = "My Test Database";
+      const objectStoreInfo = [
+        { name: "1", keyPath: "" },
+        { name: "2", keyPath: "", autoIncrement: true },
+        { name: "3", keyPath: "", autoIncrement: false },
+        { name: "4", keyPath: "" },
+        { name: "5", keyPath: null },
+        { name: "6", keyPath: "foo" }
+      ];
+
+      let request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      ok(event.source === moz_indexedDB, "event.source is correct");
+      let db = event.result;
+
+      let count = db.objectStoreNames.length;
+      is(count, 0, "correct objectStoreNames length");
+
+      try {
+        request = db.createObjectStore(null, null);
+        ok(false, "createObjectStore with null name should throw");
+      }
+      catch(e) {
+        ok(true, "createObjectStore with null name should throw");
+      }
+
+      try {
+        request = db.createObjectStore("", "");
+        ok(false, "createObjectStore with empty name should throw");
+      }
+      catch(e) {
+        ok(true, "createObjectStore with empty name should throw");
+      }
+
+      try {
+        request = db.createObjectStore("Hi");
+        ok(false, "createObjectStore with no keyPath should throw");
+      }
+      catch(e) {
+        ok(true, "createObjectStore with no keyPath should throw");
+      }
+
+      for (let index in objectStoreInfo) {
+        index = parseInt(index);
+        let info = objectStoreInfo[index];
+        request = info.hasOwnProperty("autoIncrement") ?
+                  db.createObjectStore(info.name, info.keyPath,
+                                       info.autoIncrement) :
+                  db.createObjectStore(info.name, info.keyPath);
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+
+        ok(event.source === db, "event.source is correct");
+
+        is(db.objectStoreNames.length, index + 1,
+           "updated objectStoreNames list");
+
+        let found = false;
+        for (let i = 0; i <= index; i++) {
+          if (db.objectStoreNames.item(i) == info.name) {
+            found = true;
+            break;
+          }
+        }
+        is(found, true, "objectStoreNames contains name");
+
+        let objectStore = event.result;
+        is(objectStore.name, info.name, "Bad name");
+        is(objectStore.keyPath, info.keyPath ? info.keyPath : "",
+           "Bad keyPath");
+        if(objectStore.indexNames.length, 0, "Bad indexNames");
+
+        ok(event.transaction, "event has a transaction");
+        ok(event.transaction.db === db, "transaction has the right db");
+        is(event.transaction.readyState, nsIIDBTransaction.LOADING,
+           "transaction has the correct readyState");
+        is(event.transaction.mode, nsIIDBTransaction.READ_WRITE,
+           "transaction has the correct mode");
+        is(event.transaction.objectStoreNames.length, 1,
+           "transaction has correct objectStoreNames list");
+        is(event.transaction.objectStoreNames.item(0), info.name,
+           "transaction has correct objectStoreNames list");
+      }
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

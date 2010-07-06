@@ -478,7 +478,7 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   nsIDocument* doc = content->GetCurrentDoc();
-  nsIPresShell* presShell = doc ? doc->GetPrimaryShell() : nsnull;
+  nsIPresShell* presShell = doc ? doc->GetShell() : nsnull;
 
   if (presShell) {
     nsIFrame* frame = content->GetPrimaryFrame();
@@ -486,7 +486,7 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
       frame = presShell->GetRootFrame();
     }
     if (frame)
-      return frame->GetWindow();
+      return frame->GetNearestWidget();
   }
 
   return nsnull;
@@ -784,7 +784,7 @@ nsDOMWindowUtils::GetScrollXY(PRBool aFlushLayout, PRInt32* aScrollX, PRInt32* a
   }
 
   nsPoint scrollPos(0,0);
-  nsIPresShell *presShell = doc->GetPrimaryShell();
+  nsIPresShell *presShell = doc->GetShell();
   if (presShell) {
     nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
     if (sf) {
@@ -1098,7 +1098,7 @@ nsDOMWindowUtils::SendQueryContentEvent(PRUint32 aType,
 
     // Fire the event on the widget at the point
     if (popupFrame) {
-      targetWidget = popupFrame->GetWindow();
+      targetWidget = popupFrame->GetNearestWidget();
     }
   }
 

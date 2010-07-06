@@ -48,8 +48,6 @@ _TEST_FILES = \
 		feed_discovery.html \
 		test_bug395533.html \
 		bug395533-data.txt \
-		test_contextmenu.html \
-		subtst_contextmenu.html \
 		ctxmenu-image.png \
 		video.ogg \
 		test_offlineNotification.html \
@@ -72,6 +70,16 @@ _TEST_FILES = \
 		gZipOfflineChild.cacheManifest^headers^ \
 		test_bug452451.html \
 		$(NULL)
+
+ifeq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
+_TEST_FILES += \
+		test_contextmenu.html \
+		subtst_contextmenu.html \
+		$(NULL)
+
+else
+$(warning test_contextmenu.html disabled because of intermittent failures; bug 513558)
+endif
 
 # The following tests are disabled because they are unreliable:
 #   browser_bug423833.js is bug 428712
@@ -106,6 +114,7 @@ _BROWSER_FILES = \
                  browser_bug432599.js \
                  browser_bug435035.js \
                  browser_bug441778.js \
+                 browser_popupNotification.js \
                  browser_bug455852.js \
                  browser_bug462673.js \
                  browser_bug477014.js \
@@ -120,8 +129,11 @@ _BROWSER_FILES = \
                  browser_bug521216.js \
                  browser_bug537474.js \
                  browser_bug550565.js \
+                 browser_bug553455.js \
                  browser_bug555224.js \
+                 browser_bug555767.js \
                  browser_bug556061.js \
+                 browser_bug562649.js \
                  browser_bug563588.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
@@ -135,6 +147,7 @@ _BROWSER_FILES = \
                  browser_overflowScroll.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
+                 browser_pinnedTabs.js \
                  browser_plainTextLinks.js \
                  browser_pluginnotification.js \
                  browser_popupUI.js \

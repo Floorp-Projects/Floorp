@@ -60,22 +60,12 @@ public:
   void InvalidateRegion(const nsIntRegion& aRegion);
 
   /* LayerD3D9 implementation */
-  LayerType GetType();
   Layer* GetLayer();
   virtual PRBool IsEmpty();
   virtual void RenderLayer();
   virtual void CleanResources();
 
-  /* ThebesLayerD3D9 */
-  nsIntRect GetVisibleRect() { return mVisibleRegion.GetBounds(); }
-  const nsIntRect &GetInvalidatedRect();
-
 private:
-  /*
-   * Currently invalidated rectangular area.
-   */
-  nsIntRect mInvalidatedRect;
-
   /*
    * D3D9 texture
    */

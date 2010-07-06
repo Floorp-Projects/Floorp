@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<title>background-clip</title>
+<style type="text/css">
+
+div {
+  position: absolute;
+  margin: 1px 2px 4px 8px;
+  border: transparent solid;
+  border-width: 3px 9px 6px 12px;
+  padding: 5px 11px 9px 7px;
+  width: 37px;
+  height: 19px;
+  /*
+   * content box: 37 x 19
+   * padding box: 55 x 33
+   * border  box: 76 x 42
+   * margin  box: 86 x 47
+   */
+}
+
+div.color {
+  top: 10px;
+  background-color: blue;
+}
+
+div.image {
+  top: 110px;
+  background-image: url(blue-32x32.png);
+}
+
+div.border {
+  background-clip: border-box;
+  left: 10px;
+}
+
+div.padding {
+  background-clip: padding-box;
+  left: 110px;
+}
+
+div.content {
+  background-clip: content-box;
+  left: 210px;
+}
+
+</style>
+<div class="color border"></div>
+<div class="color padding"></div>
+<div class="color content"></div>
+<div class="image border"></div>
+<div class="image padding"></div>
+<div class="image content"></div>

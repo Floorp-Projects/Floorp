@@ -88,7 +88,7 @@ namespace nanojit
 
     const Register Assembler::argRegs[] = { A0, A1, A2, A3 };
     const Register Assembler::retRegs[] = { V0, V1 };
-    const Register Assembler::savedRegs[NumSavedRegs] = {
+    const Register Assembler::savedRegs[] = {
         S0, S1, S2, S3, S4, S5, S6, S7,
 #ifdef FPCALLEESAVED
         FS0, FS1, FS2, FS3, FS4, FS5
@@ -389,7 +389,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
+    void Assembler::asm_regarg(ArgType ty, LIns* p, Register r)
     {
         NanoAssert(deprecated_isKnownReg(r));
         if (ty == ARGTYPE_I || ty == ARGTYPE_UI) {
@@ -423,7 +423,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_stkarg(LInsp arg, int stkd)
+    void Assembler::asm_stkarg(LIns* arg, int stkd)
     {
         bool isF64 = arg->isD();
         Register rr;
@@ -466,7 +466,7 @@ namespace nanojit
     // This function operates in the same way as asm_arg, except that it will only
     // handle arguments where (ArgType)ty == ARGTYPE_D.
     void
-    Assembler::asm_arg_64(LInsp arg, Register& r, Register& fr, int& stkd)
+    Assembler::asm_arg_64(LIns* arg, Register& r, Register& fr, int& stkd)
     {
         // The stack offset always be at least aligned to 4 bytes.
         NanoAssert((stkd & 3) == 0);
@@ -568,7 +568,7 @@ namespace nanojit
         TAG("asm_ui2d(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
-    void Assembler::asm_d2i(LInsp ins)
+    void Assembler::asm_d2i(LIns* ins)
     {
         NanoAssert(cpu_has_fpu);
 
@@ -585,8 +585,8 @@ namespace nanojit
     {
         NanoAssert(cpu_has_fpu);
         if (cpu_has_fpu) {
-            LInsp lhs = ins->oprnd1();
-            LInsp rhs = ins->oprnd2();
+            LIns* lhs = ins->oprnd1();
+            LIns* rhs = ins->oprnd2();
             LOpcode op = ins->opcode();
 
             // rr = ra OP rb
@@ -611,7 +611,7 @@ namespace nanojit
     {
         NanoAssert(cpu_has_fpu);
         if (cpu_has_fpu) {
-            LInsp lhs = ins->oprnd1();
+            LIns* lhs = ins->oprnd1();
             Register rr = deprecated_prepResultReg(ins, FpRegs);
             Register sr = ( !lhs->isInReg()
                             ? findRegFor(lhs, FpRegs)
@@ -929,8 +929,8 @@ namespace nanojit
     void Assembler::asm_arith(LIns *ins)
     {
         LOpcode op = ins->opcode();
-        LInsp lhs = ins->oprnd1();
-        LInsp rhs = ins->oprnd2();
+        LIns* lhs = ins->oprnd1();
+        LIns* rhs = ins->oprnd2();
 
         RegisterMask allow = GpRegs;
 
@@ -1566,7 +1566,7 @@ namespace nanojit
      *   on the stack.
      */
     void
-    Assembler::asm_arg(ArgType ty, LInsp arg, Register& r, Register& fr, int& stkd)
+    Assembler::asm_arg(ArgType ty, LIns* arg, Register& r, Register& fr, int& stkd)
     {
         // The stack offset must always be at least aligned to 4 bytes.
         NanoAssert((stkd & 3) == 0);
@@ -1591,7 +1591,7 @@ namespace nanojit
     }
 
     void
-    Assembler::asm_call(LInsp ins)
+    Assembler::asm_call(LIns* ins)
     {
         Register rr;
         LOpcode op = ins->opcode();
@@ -1791,7 +1791,12 @@ namespace nanojit
     void
     Assembler::nInit(AvmCore*)
     {
-        // Cannot use outputf
+        nHints[LIR_calli]  = rmask(V0);
+#if NJ_SOFTFLOAT_SUPPORTED
+        nHints[LIR_hcalli] = rmask(V1);
+#endif
+        nHints[LIR_calld]  = rmask(FV0);
+        nHints[LIR_paramp] = PREFER_SPECIAL;
     }
 
     void Assembler::nBeginAssembly()
@@ -1895,25 +1900,14 @@ namespace nanojit
     }
 
     RegisterMask
-    Assembler::hint(LIns* i)
+    Assembler::nHint(LIns* ins)
     {
-        uint32_t op = i->opcode();
-        RegisterMask prefer = 0LL;
-
-        if (op == LIR_calli)
-            prefer = rmask(V0);
-#if NJ_SOFTFLOAT_SUPPORTED
-        else if (op == LIR_hcalli)
-            prefer = rmask(V1);
-#endif
-        else if (op == LIR_calld)
-            prefer = rmask(FV0);
-        else if (op == LIR_paramp) {
-            // FIXME: FLOAT parameters?
-            if (i->paramArg() < 4)
-                prefer = rmask(argRegs[i->paramArg()]);
-        }
-
+        NanoAssert(ins->isop(LIR_paramp));
+        RegisterMask prefer = 0;
+        // FIXME: FLOAT parameters?
+        if (ins->paramKind() == 0)
+            if (ins->paramArg() < 4)
+                prefer = rmask(argRegs[ins->paramArg()]);
         return prefer;
     }
 

@@ -53,10 +53,8 @@ interface nsIDOMDOMStringList;
  * a given DOM node.
  * More documentation at:
  *   http://www.mozilla.org/projects/ui/accessibility
- *
- * @status UNDER_REVIEW
  */
-[scriptable, uuid(3e5cbd5c-dbab-4ea3-b82b-4cd6201d6fe0)]
+[scriptable, uuid(310ce77d-c92b-4761-82e8-77e1a728e8d4)]
 interface nsIAccessibleRetrieval : nsISupports
 {
   /**
@@ -72,30 +70,6 @@ interface nsIAccessibleRetrieval : nsISupports
    * @return The nsIAccessible for the given DOM node.
    */
   nsIAccessible getAccessibleFor(in nsIDOMNode aNode);
-
-  /**
-   * The same like getAccessibleFor method except it returns accessible only if
-   * it is attached, i.e. accessible is certified to be a descendent of the root
-   * accessible.
-   *
-   * @param aNode - the DOM node to get an accessible for.
-   *
-   * @return - the accessible for the given DOM node.
-   */
-  nsIAccessible getAttachedAccessibleFor(in nsIDOMNode aNode);
-
-  /**
-   * Return an DOM node that is relevant to attached accesible check. This
-   * node is either from bindings chain if given node is anonymous and owner
-   * binding denies accessible in anonymous content or given node (it's not
-   * important whether it is accessible or not). This method doesn't create
-   * accessible object for returned node.
-   *
-   * @param aNode - the DOM node to get relevant content node.
-   *
-   * @return - the DOM node for parent attached accessible
-   */
-  nsIDOMNode getRelevantContentNodeFor(in nsIDOMNode aNode);
 
    /**
     * Returns accessible role as a string.
@@ -128,6 +102,16 @@ interface nsIAccessibleRetrieval : nsISupports
    * @return - accessible relation type presented as human readable string
    */
   AString getStringRelationType(in unsigned long aRelationType);
+
+  /**
+   * Return an accessible for the given DOM node from the cache.
+   * @note  the method is intended for testing purposes
+   *
+   * @param aNode  [in] the DOM node to get an accessible for
+   *
+   * @return       cached accessible for the given DOM node if any
+   */
+  nsIAccessible getAccessibleFromCache(in nsIDOMNode aNode);
 };
 
 

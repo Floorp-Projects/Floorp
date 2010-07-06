@@ -166,37 +166,25 @@ public:
 
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
 
-  /**
-   * Get our JSClass pointer for the XPCNativeWrapper class
-   */
   static JSPropertyOp GetXPCNativeWrapperGetPropertyOp() {
     return sXPCNativeWrapperGetPropertyOp;
   }
 
-  /**
-   * Set our JSClass pointer for the XPCNativeWrapper class
-   */
   static void SetXPCNativeWrapperGetPropertyOp(JSPropertyOp getPropertyOp) {
     NS_ASSERTION(!sXPCNativeWrapperGetPropertyOp,
                  "Double set of sXPCNativeWrapperGetPropertyOp");
     sXPCNativeWrapperGetPropertyOp = getPropertyOp;
   }
 
-  static PRBool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
-  {
-#ifdef DEBUG
-    {
-      nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
-
-      NS_PRECONDITION(!scx || !scx->IsContextInitialized() ||
-                      sXPCNativeWrapperGetPropertyOp,
-                      "Must know what the XPCNativeWrapper class GetProperty op is!");
-    }
-#endif
-
-    return sXPCNativeWrapperGetPropertyOp &&
-      ::JS_GET_CLASS(cx, obj)->getProperty == sXPCNativeWrapperGetPropertyOp;
+  static JSPropertyOp GetXrayWrapperPropertyHolderGetPropertyOp() {
+    return sXrayWrapperPropertyHolderGetPropertyOp;
   }
+
+  static void SetXrayWrapperPropertyHolderGetPropertyOp(JSPropertyOp getPropertyOp) {
+    sXrayWrapperPropertyHolderGetPropertyOp = getPropertyOp;
+  }
+
+  static PRBool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj);
 
   static nsISupports *GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj);
 
@@ -321,6 +309,7 @@ protected:
   static jsid sOnbeforeunload_id;
   static jsid sOnunload_id;
   static jsid sOnhashchange_id;
+  static jsid sOnreadystatechange_id;
   static jsid sOnpageshow_id;
   static jsid sOnpagehide_id;
   static jsid sOnabort_id;
@@ -362,6 +351,7 @@ protected:
   static jsid sPackages_id;
 
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
+  static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;
 };
 
 

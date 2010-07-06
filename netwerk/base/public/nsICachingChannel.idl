@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsICacheInfoChannel.idl"
 
 interface nsIFile;
 
@@ -51,7 +51,7 @@ interface nsIFile;
  *      is insufficient (e.g., HTTP form submission).
  */
 [scriptable, uuid(830D4BCB-3E46-4011-9BDA-51A5D1AF891F)]
-interface nsICachingChannel : nsISupports
+interface nsICachingChannel : nsICacheInfoChannel
 {
     /**
      * Set/get the cache token... uniquely identifies the data in the cache.
@@ -126,13 +126,6 @@ interface nsICachingChannel : nsISupports
      * an error if cacheAsFile is false.
      */
     readonly attribute nsIFile cacheFile;
-
-    /**
-     * TRUE if this channel's data is being loaded from the cache.  This value
-     * is undefined before the channel fires its OnStartRequest notification
-     * and after the channel fires its OnStopRequest notification.
-     */
-    boolean isFromCache();
 
     /**************************************************************************
      * Caching channel specific load flags:

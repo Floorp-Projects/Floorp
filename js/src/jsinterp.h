@@ -82,7 +82,7 @@ struct JSStackFrame
 {
     jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     JSObject            *callobj;       /* lazily created Call object */
-    js::Value           argsval;       /* lazily created arguments object */
+    JSObject            *argsobj;       /* lazily created arguments object */
     JSScript            *script;        /* script being interpreted */
     JSFunction          *fun;           /* function being called or null */
 
@@ -156,8 +156,8 @@ struct JSStackFrame
      * also used in some other cases --- entering 'with' blocks, for
      * example.
      */
+    JSObject        *scopeChain;
     JSObject        *blockChain;
-    js::Value       scopeChain;
 
     uint32          flags;          /* frame flags -- see below */
     JSStackFrame    *displaySave;   /* previous value of display entry for
@@ -174,8 +174,8 @@ struct JSStackFrame
          */
         if (callobj) {
             js_PutCallObject(cx, this);
-            JS_ASSERT(argsval.isNull());
-        } else if (argsval.isObject()) {
+            JS_ASSERT(!argsobj);
+        } else if (argsobj) {
             js_PutArgsObject(cx, this);
         }
     }
@@ -201,23 +201,7 @@ struct JSStackFrame
     }
 
     JSObject *callee() {
-        return argv ? &argv[-2].asObject() : NULL;
-    }
-
-    JSObject *argsObj() {
-        return argsval.asObjectOrNull();
-    }
-
-    void setArgsObj(JSObject *obj) {
-        argsval.setObjectOrNull(obj);
-    }
-
-    JSObject *scopeChainObj() {
-        return scopeChain.asObjectOrNull();
-    }
-
-    void setScopeChainObj(JSObject *obj) {
-        scopeChain.setObjectOrNull(obj);
+        return argv ? &argv[-2].toObject() : NULL;
     }
 
     /*
@@ -240,15 +224,17 @@ struct JSStackFrame
 
   private:
     JSObject *computeThisObject(JSContext *cx);
+
+    bool isDummyFrame() const { return !script && !fun; }
 };
 
 namespace js {
+
 JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(Value) == 0);
 static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(Value);
 
 JS_STATIC_ASSERT(offsetof(JSStackFrame, rval) % sizeof(Value) == 0);
 JS_STATIC_ASSERT(offsetof(JSStackFrame, thisv) % sizeof(Value) == 0);
-JS_STATIC_ASSERT(offsetof(JSStackFrame, scopeChain) % sizeof(Value) == 0);
 
 } /* namespace js */
 
@@ -290,20 +276,12 @@ namespace js {
  * primitive values with the equivalent wrapper objects. argv[-1] must
  * not be JSVAL_VOID or an activation object.
  */
-extern bool
+extern JSObject *
 ComputeThisFromArgv(JSContext *cx, js::Value *argv);
 
 JS_ALWAYS_INLINE JSObject *
-ComputeThisObjectFromVp(JSContext *cx, js::Value *vp)
+ComputeThisFromVp(JSContext *cx, js::Value *vp)
 {
-    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
-    return ComputeThisFromArgv(cx, vp + 2) ? &vp[1].asObject() : NULL;
-}
-
-JS_ALWAYS_INLINE bool
-ComputeThisFromVpInPlace(JSContext *cx, js::Value *vp)
-{
-    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
     return ComputeThisFromArgv(cx, vp + 2);
 }
 
@@ -350,34 +328,38 @@ InvokeFriendAPI(JSContext *cx, const InvokeArgsGuard &args, uintN flags);
  */
 #define JSINVOKE_FUNFLAGS       JSINVOKE_CONSTRUCT
 
-extern bool
-InternalInvoke(JSContext *cx, JSObject *obj, const Value &fval, uintN flags,
-               uintN argc, const Value *argv, Value *rval);
+/*
+ * "Internal" calls may come from C or C++ code using a JSContext on which no
+ * JS is running (!cx->fp), so they may need to push a dummy JSStackFrame.
+ */
+extern JSBool
+InternalInvoke(JSContext *cx, const Value &thisv, const Value &fval, uintN flags,
+               uintN argc, Value *argv, Value *rval);
 
 static JS_ALWAYS_INLINE bool
-InternalCall(JSContext *cx, JSObject *obj, const Value &fval, uintN argc,
-             const Value *argv, Value *rval)
+InternalCall(JSContext *cx, JSObject *obj, const Value &fval,
+             uintN argc, Value *argv, Value *rval)
 {
-    return InternalInvoke(cx, obj, fval, 0, argc, argv, rval);
+    return InternalInvoke(cx, ObjectOrNullValue(obj), fval, 0, argc, argv, rval);
 }
 
 static JS_ALWAYS_INLINE bool
-InternalConstruct(JSContext *cx, JSObject *obj, const Value &fval, uintN argc,
-                  const Value *argv, Value *rval)
+InternalConstruct(JSContext *cx, JSObject *obj, const Value &fval,
+                  uintN argc, Value *argv, Value *rval)
 {
-    return InternalInvoke(cx, obj, fval, JSINVOKE_CONSTRUCT, argc, argv, rval);
+    return InternalInvoke(cx, ObjectOrNullValue(obj), fval, JSINVOKE_CONSTRUCT, argc, argv, rval);
 }
 
 extern bool
 InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
-                 JSAccessMode mode, uintN argc, const Value *argv, Value *rval);
+                 JSAccessMode mode, uintN argc, Value *argv, Value *rval);
 
 extern JS_FORCES_STACK bool
 Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JSStackFrame *down, uintN flags, Value *result);
 
 extern JS_REQUIRES_STACK bool
-InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn);
+InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args);
 
 extern JS_REQUIRES_STACK bool
 Interpret(JSContext *cx);
@@ -399,7 +381,7 @@ extern bool
 SameValue(const Value &v1, const Value &v2, JSContext *cx);
 
 extern JSType
-TypeOfValue(JSContext *cx, const js::Value &v);
+TypeOfValue(JSContext *cx, const Value &v);
 
 inline bool
 InstanceOf(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
@@ -428,7 +410,7 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp);
  * the value of the upvar.
  */
 extern const js::Value &
-js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
+js_GetUpvar(JSContext *cx, uintN level, js::UpvarCookie cookie);
 
 /*
  * JS_LONE_INTERPRET indicates that the compiler should see just the code for
@@ -505,7 +487,13 @@ js_OnUnknownMethod(JSContext *cx, js::Value *vp);
 inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)
 {
-    return thisv.isPrimitive() ? computeThisObject(cx) : &thisv.asObject();
+    if (flags & JSFRAME_COMPUTED_THIS)
+        return &thisv.toObject();
+    if (!js::ComputeThisFromArgv(cx, argv))
+        return NULL;
+    thisv = argv[-1];
+    flags |= JSFRAME_COMPUTED_THIS;
+    return &thisv.toObject();
 }
 
 #endif /* jsinterp_h___ */

@@ -58,9 +58,11 @@ enum eHtml5TreeOperation {
   eTreeOpAppendToDocument,
   eTreeOpAddAttributes,
   eTreeOpDocumentMode,
-  eTreeOpCreateElement,
+  eTreeOpCreateElementNetwork,
+  eTreeOpCreateElementNotNetwork,
   eTreeOpSetFormElement,
   eTreeOpAppendText,
+  eTreeOpAppendIsindexPrompt,
   eTreeOpFosterParentText,
   eTreeOpAppendComment,
   eTreeOpAppendCommentToDocument,
@@ -179,12 +181,15 @@ class nsHtml5TreeOperation {
     inline void Init(PRInt32 aNamespace, 
                      nsIAtom* aName, 
                      nsHtml5HtmlAttributes* aAttributes,
-                     nsIContent** aTarget) {
+                     nsIContent** aTarget,
+                     PRBool aFromNetwork) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
       NS_PRECONDITION(aName, "Initialized tree op with null name.");
       NS_PRECONDITION(aTarget, "Initialized tree op with null target node.");
-      mOpCode = eTreeOpCreateElement;
+      mOpCode = aFromNetwork ?
+                eTreeOpCreateElementNetwork :
+                eTreeOpCreateElementNotNetwork;
       mInt = aNamespace;
       mOne.node = aTarget;
       mTwo.atom = aName;
@@ -315,12 +320,12 @@ class nsHtml5TreeOperation {
 
   private:
 
-    nsresult AppendTextToTextNode(PRUnichar* aBuffer,
+    nsresult AppendTextToTextNode(const PRUnichar* aBuffer,
                                   PRInt32 aLength,
                                   nsIContent* aTextNode,
                                   nsHtml5TreeOpExecutor* aBuilder);
 
-    nsresult AppendText(PRUnichar* aBuffer,
+    nsresult AppendText(const PRUnichar* aBuffer,
                         PRInt32 aLength,
                         nsIContent* aParent,
                         nsHtml5TreeOpExecutor* aBuilder);

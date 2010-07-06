@@ -97,14 +97,14 @@ function test() {
 
   var result;
   // Now we can run our tests
-  result = synthesizeDrop($("drag1"), drag1, null, window);
+  result = synthesizeDrop($("drag1"), $("drag1"), drag1, null, window);
   ok(gEnter, "Fired dragenter");
   ok(gOver,  "Fired dragover");
   is(result, "copy", "copy is dropEffect");
   is(gData, drag1[0][0].data, "Received valid drop data");
 
   gSetDropEffect = false;
-  result = synthesizeDrop($("drag1"), drag1, "link", window);
+  result = synthesizeDrop($("drag1"), $("drag1"), drag1, "link", window);
   is(result, "link", "link is dropEffect");
 
   SimpleTest.finish();

@@ -45,7 +45,7 @@ static const PRUint16 g_utMappingTable[] = {
 #include "iso-ir-111.ut"
 };
 
-NS_METHOD
+nsresult
 nsISOIR111ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult) 
 {

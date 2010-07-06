@@ -129,7 +129,7 @@ public:
                         const nsAString* aValue, PRBool aNotify);
   
   // nsIContent overrides...
-  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
+  virtual PRBool IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -241,7 +241,7 @@ nsHTMLButtonElement::Click()
   nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
 
   if (doc) {
-    nsIPresShell *shell = doc->GetPrimaryShell();
+    nsIPresShell *shell = doc->GetShell();
     if (shell) {
       nsRefPtr<nsPresContext> context = shell->GetPresContext();
       if (context) {
@@ -265,16 +265,17 @@ nsHTMLButtonElement::Click()
 }
 
 PRBool
-nsHTMLButtonElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
+nsHTMLButtonElement::IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
-  if (nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex)) {
+  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return PR_TRUE;
   }
-  if (aTabIndex && (sTabFocusModel & eTabFocus_formElementsMask) == 0) {
-    *aTabIndex = -1;
-  }
 
-  *aIsFocusable = !HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+  *aIsFocusable = 
+#ifdef XP_MACOSX
+    !aWithMouse &&
+#endif
+    !HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
 
   return PR_FALSE;
 }

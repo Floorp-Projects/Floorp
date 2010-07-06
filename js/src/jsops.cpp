@@ -83,9 +83,11 @@
                 moreInterrupts = true;
                 break;
               case ARECORD_IMACRO:
+              case ARECORD_IMACRO_ABORTED:
                 atoms = COMMON_ATOMS_START(&rt->atomState);
                 op = JSOp(*regs.pc);
-                DO_OP();    /* keep interrupting for op. */
+                if (status == ARECORD_IMACRO)
+                    DO_OP();    /* keep interrupting for op. */
                 break;
               case ARECORD_ERROR:
                 // The code at 'error:' aborts the recording.
@@ -148,7 +150,7 @@ BEGIN_CASE(JSOP_POPN)
     JS_ASSERT_IF(obj,
                  OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
                  <= (size_t) (regs.sp - fp->base()));
-    for (obj = fp->scopeChainObj(); obj; obj = obj->getParent()) {
+    for (obj = fp->scopeChain; obj; obj = obj->getParent()) {
         Class *clasp = obj->getClass();
         if (clasp != &js_BlockClass && clasp != &js_WithClass)
             continue;
@@ -183,11 +185,11 @@ BEGIN_CASE(JSOP_ENTERWITH)
      * We set sp[-1] to the current "with" object to help asserting the
      * enter/leave balance in [leavewith].
      */
-    regs.sp[-1] = fp->scopeChain;
+    regs.sp[-1].setObject(*fp->scopeChain);
 END_CASE(JSOP_ENTERWITH)
 
 BEGIN_CASE(JSOP_LEAVEWITH)
-    JS_ASSERT(&regs.sp[-1].asObject() == fp->scopeChainObj());
+    JS_ASSERT(&regs.sp[-1].toObject() == fp->scopeChain);
     regs.sp--;
     js_LeaveWith(cx);
 END_CASE(JSOP_LEAVEWITH)
@@ -231,7 +233,7 @@ BEGIN_CASE(JSOP_STOP)
   inline_return:
     {
         JS_ASSERT(!fp->blockChain);
-        JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChainObj(), 0));
+        JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
 
         if (JS_LIKELY(script->staticLevel < JS_DISPLAY_SIZE))
             cx->display[script->staticLevel] = fp->displaySave;
@@ -478,7 +480,7 @@ BEGIN_CASE(JSOP_IN)
         js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, NULL);
         goto error;
     }
-    JSObject *obj = &rref.asObject();
+    JSObject *obj = &rref.toObject();
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
     JSObject *obj2;
@@ -511,7 +513,7 @@ BEGIN_CASE(JSOP_MOREITER)
     JS_ASSERT(regs.sp[-1].isObject());
     PUSH_NULL();
     bool cond;
-    if (!IteratorMore(cx, &regs.sp[-2].asObject(), &cond, &regs.sp[-1]))
+    if (!IteratorMore(cx, &regs.sp[-2].toObject(), &cond, &regs.sp[-1]))
         goto error;
     CHECK_INTERRUPT_HANDLER();
     TRY_BRANCH_AFTER_COND(cond, 1);
@@ -536,7 +538,7 @@ BEGIN_CASE(JSOP_FORARG)
     uintN slot = GET_ARGNO(regs.pc);
     JS_ASSERT(slot < fp->fun->nargs);
     JS_ASSERT(regs.sp[-1].isObject());
-    if (!IteratorNext(cx, &regs.sp[-1].asObject(), &fp->argv[slot]))
+    if (!IteratorNext(cx, &regs.sp[-1].toObject(), &fp->argv[slot]))
         goto error;
 }
 END_CASE(JSOP_FORARG)
@@ -547,7 +549,7 @@ BEGIN_CASE(JSOP_FORLOCAL)
     uintN slot = GET_SLOTNO(regs.pc);
     JS_ASSERT(slot < fp->script->nslots);
     JS_ASSERT(regs.sp[-1].isObject());
-    if (!IteratorNext(cx, &regs.sp[-1].asObject(), &fp->slots()[slot]))
+    if (!IteratorNext(cx, &regs.sp[-1].toObject(), &fp->slots()[slot]))
         goto error;
 }
 END_CASE(JSOP_FORLOCAL)
@@ -567,7 +569,7 @@ BEGIN_CASE(JSOP_FORNAME)
     {
         AutoValueRooter tvr(cx);
         JS_ASSERT(regs.sp[-1].isObject());
-        if (!IteratorNext(cx, &regs.sp[-1].asObject(), tvr.addr()))
+        if (!IteratorNext(cx, &regs.sp[-1].toObject(), tvr.addr()))
             goto error;
         if (!obj->setProperty(cx, id, tvr.addr()))
             goto error;
@@ -586,7 +588,7 @@ BEGIN_CASE(JSOP_FORPROP)
     {
         AutoValueRooter tvr(cx);
         JS_ASSERT(regs.sp[-2].isObject());
-        if (!IteratorNext(cx, &regs.sp[-2].asObject(), tvr.addr()))
+        if (!IteratorNext(cx, &regs.sp[-2].toObject(), tvr.addr()))
             goto error;
         if (!obj->setProperty(cx, id, tvr.addr()))
             goto error;
@@ -605,7 +607,7 @@ BEGIN_CASE(JSOP_FORELEM)
     JS_ASSERT(regs.sp - 1 >= fp->base());
     JS_ASSERT(regs.sp[-1].isObject());
     PUSH_NULL();
-    if (!IteratorNext(cx, &regs.sp[-2].asObject(), &regs.sp[-1]))
+    if (!IteratorNext(cx, &regs.sp[-2].toObject(), &regs.sp[-1]))
         goto error;
 END_CASE(JSOP_FORELEM)
 
@@ -764,7 +766,7 @@ BEGIN_CASE(JSOP_BINDNAME)
          * the rhs. We desire such resolve hook equivalence between the two
          * forms.
          */
-        obj = fp->scopeChainObj();
+        obj = fp->scopeChain;
         if (!obj->getParent())
             break;
 
@@ -778,7 +780,7 @@ BEGIN_CASE(JSOP_BINDNAME)
         }
 
         jsid id = ATOM_TO_JSID(atom);
-        obj = js_FindIdentifierBase(cx, fp->scopeChainObj(), id);
+        obj = js_FindIdentifierBase(cx, fp->scopeChain, id);
         if (!obj)
             goto error;
     } while (0);
@@ -824,8 +826,8 @@ END_CASE(JSOP_BITAND)
  */
 #if JS_HAS_XML_SUPPORT
 #define XML_EQUALITY_OP(OP)                                                   \
-    if ((lval.isObject() && lval.asObject().isXML()) ||                       \
-        (rval.isObject() && rval.asObject().isXML())) {                       \
+    if ((lval.isObject() && lval.toObject().isXML()) ||                       \
+        (rval.isObject() && rval.toObject().isXML())) {                       \
         if (!js_TestXMLEquality(cx, lval, rval, &cond))                       \
             goto error;                                                       \
         cond = cond OP JS_TRUE;                                               \
@@ -852,17 +854,17 @@ END_CASE(JSOP_BITAND)
         XML_EQUALITY_OP(OP)                                                   \
         if (SameType(lval, rval)) {                                           \
             if (lval.isString()) {                                            \
-                JSString *l = lval.asString(), *r = rval.asString();          \
+                JSString *l = lval.toString(), *r = rval.toString();          \
                 cond = js_EqualStrings(l, r) OP JS_TRUE;                      \
             } else if (lval.isDouble()) {                                     \
-                double l = lval.asDouble(), r = rval.asDouble();              \
+                double l = lval.toDouble(), r = rval.toDouble();              \
                 cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                     \
             } else if (lval.isObject()) {                                     \
-                JSObject *l = &lval.asObject(), *r = &rval.asObject();        \
+                JSObject *l = &lval.toObject(), *r = &rval.toObject();        \
                 EXTENDED_EQUALITY_OP(OP)                                      \
                 cond = l OP r;                                                \
             } else {                                                          \
-                cond = lval.asRawUint32() OP rval.asRawUint32();              \
+                cond = lval.payloadAsRawUint32() OP rval.payloadAsRawUint32();\
             }                                                                 \
         } else {                                                              \
             if (lval.isNullOrUndefined()) {                                   \
@@ -875,7 +877,7 @@ END_CASE(JSOP_BITAND)
                 if (rval.isObject())                                          \
                     DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);                 \
                 if (lval.isString() && rval.isString()) {                     \
-                    JSString *l = lval.asString(), *r = rval.asString();      \
+                    JSString *l = lval.toString(), *r = rval.toString();      \
                     cond = js_EqualStrings(l, r) OP JS_TRUE;                  \
                 } else {                                                      \
                     double l, r;                                              \
@@ -961,14 +963,14 @@ END_CASE(JSOP_CASEX)
         bool cond;                                                            \
         /* Optimize for two int-tagged operands (typical loop control). */    \
         if (lval.isInt32() && rval.isInt32()) {                               \
-            cond = lval.asInt32() OP rval.asInt32();                          \
+            cond = lval.toInt32() OP rval.toInt32();                          \
         } else {                                                              \
             if (lval.isObject())                                              \
                 DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                   \
             if (rval.isObject())                                              \
                 DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                   \
             if (lval.isString() && rval.isString()) {                         \
-                JSString *l = lval.asString(), *r = rval.asString();          \
+                JSString *l = lval.toString(), *r = rval.toString();          \
                 cond = js_CompareStrings(l, r) OP 0;                          \
             } else {                                                          \
                 double l, r;                                                  \
@@ -1046,7 +1048,7 @@ BEGIN_CASE(JSOP_ADD)
     Value lval = regs.sp[-2];
 
     if (lval.isInt32() && rval.isInt32()) {
-        int32_t l = lval.asInt32(), r = rval.asInt32();
+        int32_t l = lval.toInt32(), r = rval.toInt32();
         int32_t sum = l + r;
         regs.sp--;
         if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000)))
@@ -1056,7 +1058,7 @@ BEGIN_CASE(JSOP_ADD)
     } else
 #if JS_HAS_XML_SUPPORT
     if (IsXML(lval) && IsXML(rval)) {
-        if (!js_ConcatenateXML(cx, &lval.asObject(), &rval.asObject(), &rval))
+        if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), &rval))
             goto error;
         regs.sp--;
         regs.sp[-1] = rval;
@@ -1071,7 +1073,7 @@ BEGIN_CASE(JSOP_ADD)
         if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
             JSString *lstr, *rstr;
             if (lIsString) {
-                lstr = lval.asString();
+                lstr = lval.toString();
             } else {
                 lstr = js_ValueToString(cx, lval);
                 if (!lstr)
@@ -1079,7 +1081,7 @@ BEGIN_CASE(JSOP_ADD)
                 regs.sp[-2].setString(lstr);
             }
             if (rIsString) {
-                rstr = rval.asString();
+                rstr = rval.toString();
             } else {
                 rstr = js_ValueToString(cx, rval);
                 if (!rstr)
@@ -1190,7 +1192,7 @@ BEGIN_CASE(JSOP_MOD)
     Value &rref = regs.sp[-1];
     int32_t l, r;
     if (lref.isInt32() && rref.isInt32() &&
-        (l = lref.asInt32()) >= 0 && (r = rref.asInt32()) > 0) {
+        (l = lref.toInt32()) >= 0 && (r = rref.toInt32()) > 0) {
         int32_t mod = l % r;
         regs.sp--;
         regs.sp[-1].setInt32(mod);
@@ -1239,7 +1241,7 @@ BEGIN_CASE(JSOP_NEG)
      */
     const Value &ref = regs.sp[-1];
     int32_t i;
-    if (ref.isInt32() && (i = ref.asInt32()) != 0 && i != INT32_MIN) {
+    if (ref.isInt32() && (i = ref.toInt32()) != 0 && i != INT32_MIN) {
         i = -i;
         regs.sp[-1].setInt32(i);
     } else {
@@ -1368,7 +1370,7 @@ BEGIN_CASE(JSOP_DECGNAME)
 BEGIN_CASE(JSOP_GNAMEINC)
 BEGIN_CASE(JSOP_GNAMEDEC)
 {
-    obj = fp->scopeChainObj();
+    obj = fp->scopeChain;
     if (js_CodeSpec[op].format & JOF_GNAME)
         obj = obj->getGlobal();
 
@@ -1382,11 +1384,11 @@ BEGIN_CASE(JSOP_GNAMEDEC)
             JS_ASSERT(slot < obj->scope()->freeslot);
             Value &rref = obj->getSlotRef(slot);
             int32_t tmp;
-            if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.asInt32()))) {
+            if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.toInt32()))) {
                 int32_t inc = tmp + ((js_CodeSpec[op].format & JOF_INC) ? 1 : -1);
                 if (!(js_CodeSpec[op].format & JOF_POST))
                     tmp = inc;
-                rref.asInt32Ref() = inc;
+                rref.getInt32Ref() = inc;
                 PUSH_INT32(tmp);
                 len = JSOP_INCNAME_LENGTH;
                 DO_NEXT_OP(len);
@@ -1421,12 +1423,12 @@ do_incop:
     JS_ASSERT((cs->format & JOF_TMPSLOT_MASK) >= JOF_TMPSLOT2);
     Value &ref = regs.sp[-1];
     int32_t tmp;
-    if (JS_LIKELY(ref.isInt32() && CanIncDecWithoutOverflow(tmp = ref.asInt32()))) {
+    if (JS_LIKELY(ref.isInt32() && CanIncDecWithoutOverflow(tmp = ref.toInt32()))) {
         int incr = (cs->format & JOF_INC) ? 1 : -1;
         if (cs->format & JOF_POST)
-            ref.asInt32Ref() = tmp + incr;
+            ref.getInt32Ref() = tmp + incr;
         else
-            ref.asInt32Ref() = tmp += incr;
+            ref.getInt32Ref() = tmp += incr;
         fp->flags |= JSFRAME_ASSIGNING;
         JSBool ok = obj->setProperty(cx, id, &ref);
         fp->flags &= ~JSFRAME_ASSIGNING;
@@ -1525,8 +1527,8 @@ BEGIN_CASE(JSOP_LOCALINC)
 
   do_int_fast_incop:
     int32_t tmp;
-    if (JS_LIKELY(vp->isInt32() && CanIncDecWithoutOverflow(tmp = vp->asInt32()))) {
-        vp->asInt32Ref() = tmp + incr;
+    if (JS_LIKELY(vp->isInt32() && CanIncDecWithoutOverflow(tmp = vp->toInt32()))) {
+        vp->getInt32Ref() = tmp + incr;
         JS_ASSERT(JSOP_INCARG_LENGTH == js_CodeSpec[op].length);
         SKIP_POP_AFTER_SET(JSOP_INCARG_LENGTH, 0);
         PUSH_INT32(tmp + incr2);
@@ -1651,9 +1653,9 @@ END_VARLEN_CASE
 BEGIN_CASE(JSOP_LENGTH)
     vp = &regs.sp[-1];
     if (vp->isString()) {
-        vp->setInt32(vp->asString()->length());
+        vp->setInt32(vp->toString()->length());
     } else if (vp->isObject()) {
-        JSObject *obj = &vp->asObject();
+        JSObject *obj = &vp->toObject();
         if (obj->isArray()) {
             jsuint length = obj->getArrayLength();
             regs.sp[-1].setNumber(length);
@@ -1699,7 +1701,7 @@ BEGIN_CASE(JSOP_CALLPROP)
         objv.setObject(*pobj);
     }
 
-    JSObject *aobj = js_GetProtoIfDenseArray(&objv.asObject());
+    JSObject *aobj = js_GetProtoIfDenseArray(&objv.toObject());
     Value rval;
 
     PropertyCacheEntry *entry;
@@ -1717,7 +1719,7 @@ BEGIN_CASE(JSOP_CALLPROP)
         } else {
             JS_ASSERT(entry->vword.isSprop());
             JSScopeProperty *sprop = entry->vword.toSprop();
-            NATIVE_GET(cx, &objv.asObject(), obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval);
+            NATIVE_GET(cx, &objv.toObject(), obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval);
         }
         regs.sp[-1] = rval;
         PUSH_COPY(lval);
@@ -1733,7 +1735,7 @@ BEGIN_CASE(JSOP_CALLPROP)
 
     PUSH_NULL();
     if (lval.isObject()) {
-        if (!js_GetMethod(cx, &objv.asObject(), id,
+        if (!js_GetMethod(cx, &objv.toObject(), id,
                           JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                           : JSGET_NO_METHOD_BARRIER,
@@ -1743,8 +1745,8 @@ BEGIN_CASE(JSOP_CALLPROP)
         regs.sp[-1] = objv;
         regs.sp[-2] = rval;
     } else {
-        JS_ASSERT(objv.asObject().map->ops->getProperty == js_GetProperty);
-        if (!js_GetPropertyHelper(cx, &objv.asObject(), id,
+        JS_ASSERT(objv.toObject().map->ops->getProperty == js_GetProperty);
+        if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
                                   JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
                                   &rval)) {
             goto error;
@@ -1777,7 +1779,7 @@ END_CASE(JSOP_CALLPROP)
 
 BEGIN_CASE(JSOP_UNBRAND)
     JS_ASSERT(regs.sp - fp->slots() >= 1);
-    if (!regs.sp[-1].asObject().unbrand(cx))
+    if (!regs.sp[-1].toObject().unbrand(cx))
         goto error;
 END_CASE(JSOP_UNBRAND)
 
@@ -1896,17 +1898,12 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 PCMETER(cache->pchits++);
                 PCMETER(cache->addpchits++);
 
-                /*
-                 * Beware classes such as Function that use the
-                 * reserveSlots hook to allocate a number of reserved
-                 * slots that may vary with obj.
-                 */
-                if (slot < obj->numSlots() &&
-                    !obj->getClass()->reserveSlots) {
+                if (slot < obj->numSlots()) {
                     ++scope->freeslot;
                 } else {
                     if (!js_AllocSlot(cx, obj, &slot))
                         goto error;
+                    JS_ASSERT(slot + 1 == scope->freeslot);
                 }
 
                 /*
@@ -1914,12 +1911,16 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * if something created a hash table for scope, we must
                  * pay the price of JSScope::putProperty.
                  *
-                 * (A reserveSlots hook can cause scopes of the same
-                 * shape to have different freeslot values. This is
-                 * what causes the slot != sprop->slot case. See
-                 * js_GetMutableScope.)
+                 * (A built-in object with a pre-allocated but not fixed
+                 * population of reserved slots  hook can cause scopes of the
+                 * same shape to have different freeslot values. Arguments,
+                 * Block, Call, and certain Function objects pre-allocate
+                 * reserveds lots this way. This is what causes the slot !=
+                 * sprop->slot case. See js_GetMutableScope. FIXME 558451)
                  */
-                if (slot != sprop->slot || scope->table) {
+                if (slot == sprop->slot && !scope->table) {
+                    scope->extend(cx, sprop);
+                } else {
                     JSScopeProperty *sprop2 =
                         scope->putProperty(cx, sprop->id,
                                            sprop->getter(), sprop->setter(),
@@ -1930,8 +1931,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         goto error;
                     }
                     sprop = sprop2;
-                } else {
-                    scope->extend(cx, sprop);
                 }
 
                 /*
@@ -1997,8 +1996,8 @@ BEGIN_CASE(JSOP_GETELEM)
     Value &lref = regs.sp[-2];
     Value &rref = regs.sp[-1];
     if (lref.isString() && rref.isInt32()) {
-        JSString *str = lref.asString();
-        int32_t i = rref.asInt32();
+        JSString *str = lref.toString();
+        int32_t i = rref.toInt32();
         if (size_t(i) < str->length()) {
             str = JSString::getUnitString(cx, str, size_t(i));
             if (!str)
@@ -2017,7 +2016,7 @@ BEGIN_CASE(JSOP_GETELEM)
     Value rval;
     jsid id;
     if (rref.isInt32()) {
-        int32_t i = rref.asInt32();
+        int32_t i = rref.toInt32();
         if (obj->isDenseArray()) {
             jsuint idx = jsuint(i);
 
@@ -2167,7 +2166,7 @@ BEGIN_CASE(JSOP_NEW)
                                   &vp[1])) {
                 goto error;
             }
-            JSObject *proto = vp[1].isObject() ? &vp[1].asObject() : NULL;
+            JSObject *proto = vp[1].isObject() ? &vp[1].toObject() : NULL;
             JSObject *obj2 = NewObject(cx, &js_ObjectClass, proto, obj->getParent());
             if (!obj2)
                 goto error;
@@ -2184,7 +2183,7 @@ BEGIN_CASE(JSOP_NEW)
         }
     }
 
-    if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc), JS_FALSE))
+    if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc)))
         goto error;
     regs.sp = vp + 1;
     CHECK_INTERRUPT_HANDLER();
@@ -2244,14 +2243,14 @@ BEGIN_CASE(JSOP_APPLY)
 
             /* Initialize stack frame. */
             newfp->callobj = NULL;
-            newfp->setArgsObj(NULL);
+            newfp->argsobj = NULL;
             newfp->script = newscript;
             newfp->fun = fun;
             newfp->argc = argc;
             newfp->argv = vp + 2;
-            newfp->rval.setUndefined();
+            newfp->rval = UndefinedValue();
             newfp->annotation = NULL;
-            newfp->setScopeChainObj(obj->getParent());
+            newfp->scopeChain = obj->getParent();
             newfp->flags = flags;
             newfp->blockChain = NULL;
             if (JS_LIKELY(newscript->staticLevel < JS_DISPLAY_SIZE)) {
@@ -2267,10 +2266,6 @@ BEGIN_CASE(JSOP_APPLY)
             /* Push void to initialize local variables. */
             Value *newsp = newfp->base();
             SetValueRangeToUndefined(newfp->slots(), newsp);
-
-            /* Scope with a call object parented by callee's parent. */
-            if (fun->isHeavyweight() && !js_GetCallObject(cx, newfp))
-                goto error;
 
             /* Switch version if currentVersion wasn't overridden. */
             newfp->callerVersion = (JSVersion) cx->version;
@@ -2292,6 +2287,10 @@ BEGIN_CASE(JSOP_APPLY)
             fp = newfp;
             script = newscript;
             atoms = script->atomMap.vector;
+
+            /* Now that the new frame is rooted, maybe create a call object. */
+            if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
+                goto error;
 
             /* Call the debugger hook if present. */
             if (JSInterpreterHook hook = cx->debugHooks->callHook) {
@@ -2413,7 +2412,7 @@ BEGIN_CASE(JSOP_CALLGNAME)
 BEGIN_CASE(JSOP_NAME)
 BEGIN_CASE(JSOP_CALLNAME)
 {
-    JSObject *obj = fp->scopeChainObj();
+    JSObject *obj = fp->scopeChain;
     if (op == JSOP_GETGNAME || op == JSOP_CALLGNAME)
         obj = obj->getGlobal();
 
@@ -2567,7 +2566,7 @@ BEGIN_CASE(JSOP_REGEXP)
      */
     jsatomid index = GET_FULL_INDEX(0);
     JSObject *proto;
-    if (!js_GetClassPrototype(cx, fp->scopeChainObj(), JSProto_RegExp, &proto))
+    if (!js_GetClassPrototype(cx, fp->scopeChain, JSProto_RegExp, &proto))
         goto error;
     JS_ASSERT(proto);
     JSObject *obj = js_CloneRegExpObject(cx, script->getRegExp(index), proto);
@@ -2611,8 +2610,8 @@ BEGIN_CASE(JSOP_TABLESWITCH)
     const Value &rref = *--regs.sp;
     int32_t i;
     if (rref.isInt32()) {
-        i = rref.asInt32();
-    } else if (rref.isDouble() && rref.asDouble() == 0) {
+        i = rref.toInt32();
+    } else if (rref.isDouble() && rref.toDouble() == 0) {
         /* Treat -0 (double) as 0. */
         i = 0;
     } else {
@@ -2649,8 +2648,8 @@ BEGIN_CASE(JSOP_TABLESWITCHX)
     const Value &rref = *--regs.sp;
     int32_t i;
     if (rref.isInt32()) {
-        i = rref.asInt32();
-    } else if (rref.isDouble() && rref.asDouble() == 0) {
+        i = rref.toInt32();
+    } else if (rref.isDouble() && rref.toDouble() == 0) {
         /* Treat -0 (double) as 0. */
         i = 0;
     } else {
@@ -2720,17 +2719,17 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
     }
 
     if (lval.isString()) {
-        JSString *str = lval.asString();
+        JSString *str = lval.toString();
         JSString *str2;
         SEARCH_PAIRS(
             match = (rval.isString() &&
-                     ((str2 = rval.asString()) == str ||
+                     ((str2 = rval.toString()) == str ||
                       js_EqualStrings(str2, str)));
         )
     } else if (lval.isNumber()) {
-        double ldbl = lval.asNumber();
+        double ldbl = lval.toNumber();
         SEARCH_PAIRS(
-            match = rval.isNumber() && ldbl == rval.asNumber();
+            match = rval.isNumber() && ldbl == rval.toNumber();
         )
     } else {
         SEARCH_PAIRS(
@@ -2768,7 +2767,7 @@ BEGIN_CASE(JSOP_TRAP)
     JS_ASSERT(status == JSTRAP_CONTINUE);
     CHECK_INTERRUPT_HANDLER();
     JS_ASSERT(rval.isInt32());
-    op = (JSOp) rval.asInt32();
+    op = (JSOp) rval.toInt32();
     JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
     DO_OP();
 }
@@ -2913,12 +2912,12 @@ BEGIN_CASE(JSOP_GETDSLOT)
 BEGIN_CASE(JSOP_CALLDSLOT)
 {
     JS_ASSERT(fp->argv);
-    JSObject *obj = &fp->argv[-2].asObject();
+    JSObject *obj = &fp->argv[-2].toObject();
     JS_ASSERT(obj);
     JS_ASSERT(obj->dslots);
 
     uintN index = GET_UINT16(regs.pc);
-    JS_ASSERT(JS_INITIAL_NSLOTS + index < obj->dslots[-1].asPrivateUint32());
+    JS_ASSERT(JS_INITIAL_NSLOTS + index < obj->dslots[-1].toPrivateUint32());
     JS_ASSERT_IF(obj->scope()->object == obj,
                  JS_INITIAL_NSLOTS + index < obj->scope()->freeslot);
 
@@ -3021,7 +3020,7 @@ BEGIN_CASE(JSOP_DEFVAR)
 
     /* Bind a variable only if it's not yet defined. */
     if (!prop) {
-        if (!js_DefineNativeProperty(cx, obj, id, Value(UndefinedTag()), PropertyStub, PropertyStub,
+        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(), PropertyStub, PropertyStub,
                                      attrs, 0, 0, &prop)) {
             goto error;
         }
@@ -3058,7 +3057,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          * FIXME: bug 476950, although debugger users may also demand some kind
          * of scope link for debugger-assisted eval-in-frame.
          */
-        obj2 = fp->scopeChainObj();
+        obj2 = fp->scopeChain;
     } else {
         JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
 
@@ -3067,7 +3066,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          * top-level function.
          */
         if (!fp->blockChain) {
-            obj2 = fp->scopeChainObj();
+            obj2 = fp->scopeChain;
         } else {
             obj2 = js_GetScopeChain(cx, fp);
             if (!obj2)
@@ -3096,9 +3095,9 @@ BEGIN_CASE(JSOP_DEFFUN)
      * fp->scopeChain code below the parent->defineProperty call.
      */
     MUST_FLOW_THROUGH("restore_scope");
-    fp->setScopeChainObj(obj);
+    fp->scopeChain = obj;
 
-    Value rval = ObjectTag(*obj);
+    Value rval = ObjectValue(*obj);
 
     /*
      * ECMA requires functions defined when entering Eval code to be
@@ -3180,7 +3179,7 @@ BEGIN_CASE(JSOP_DEFFUN)
 
   restore_scope:
     /* Restore fp->scopeChain now that obj is defined in fp->callobj. */
-    fp->setScopeChainObj(obj2);
+    fp->scopeChain = obj2;
     if (!ok)
         goto error;
 }
@@ -3198,7 +3197,7 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
     if (!obj)
         goto error;
 
-    Value rval = ObjectTag(*obj);
+    Value rval = ObjectValue(*obj);
 
     uintN attrs = (fp->flags & JSFRAME_EVAL)
                   ? JSPROP_ENUMERATE
@@ -3254,7 +3253,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     JSObject *obj = FUN_OBJECT(fun);
 
     if (FUN_NULL_CLOSURE(fun)) {
-        obj = CloneFunctionObject(cx, fun, fp->scopeChainObj());
+        obj = CloneFunctionObject(cx, fun, fp->scopeChain);
         if (!obj)
             goto error;
     } else {
@@ -3321,7 +3320,7 @@ BEGIN_CASE(JSOP_LAMBDA)
     do {
         JSObject *parent;
         if (FUN_NULL_CLOSURE(fun)) {
-            parent = fp->scopeChainObj();
+            parent = fp->scopeChain;
 
             if (obj->getParent() == parent) {
                 op = JSOp(regs.pc[JSOP_LAMBDA_LENGTH]);
@@ -3338,14 +3337,14 @@ BEGIN_CASE(JSOP_LAMBDA)
 
                     const Value &lref = regs.sp[-1];
                     if (lref.isObject() &&
-                        lref.asObject().getClass() == &js_ObjectClass) {
+                        lref.toObject().getClass() == &js_ObjectClass) {
                         break;
                     }
                 } else if (op == JSOP_INITMETHOD) {
 #ifdef DEBUG
                     const Value &lref = regs.sp[-1];
                     JS_ASSERT(lref.isObject());
-                    JSObject *obj2 = &lref.asObject();
+                    JSObject *obj2 = &lref.toObject();
                     JS_ASSERT(obj2->getClass() == &js_ObjectClass);
                     JS_ASSERT(obj2->scope()->object == obj2);
 #endif
@@ -3456,7 +3455,7 @@ BEGIN_CASE(JSOP_SETTER)
       {
         const Value &lref = regs.sp[i-1];
         JS_ASSERT(lref.isObject());
-        obj = &lref.asObject();
+        obj = &lref.toObject();
         break;
       }
     }
@@ -3480,17 +3479,17 @@ BEGIN_CASE(JSOP_SETTER)
      */
     Value rtmp;
     uintN attrs;
-    if (!obj->checkAccess(cx, id, JSACC_WATCH, &rtmp, &attrs))
+    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &rtmp, &attrs))
         goto error;
 
     PropertyOp getter, setter;
     if (op == JSOP_GETTER) {
-        getter = CastAsPropertyOp(&rval.asObject());
+        getter = CastAsPropertyOp(&rval.toObject());
         setter = PropertyStub;
         attrs = JSPROP_GETTER;
     } else {
         getter = PropertyStub;
-        setter = CastAsPropertyOp(&rval.asObject());
+        setter = CastAsPropertyOp(&rval.toObject());
         attrs = JSPROP_SETTER;
     }
     attrs |= JSPROP_ENUMERATE | JSPROP_SHARED;
@@ -3499,7 +3498,7 @@ BEGIN_CASE(JSOP_SETTER)
     if (!CheckRedeclaration(cx, obj, id, attrs, NULL, NULL))
         goto error;
 
-    if (!obj->defineProperty(cx, id, Value(UndefinedTag()), getter, setter, attrs))
+    if (!obj->defineProperty(cx, id, UndefinedValue(), getter, setter, attrs))
         goto error;
 
     regs.sp += i;
@@ -3537,7 +3536,7 @@ BEGIN_CASE(JSOP_NEWINIT)
         if (!obj)
             goto error;
     } else {
-        obj = NewObject(cx, &js_ObjectClass, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
         if (!obj)
             goto error;
 
@@ -3570,7 +3569,7 @@ BEGIN_CASE(JSOP_ENDINIT)
     JS_ASSERT(regs.sp - fp->base() >= 1);
     const Value &lref = regs.sp[-1];
     JS_ASSERT(lref.isObject());
-    cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = &lref.asObject();
+    cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = &lref.toObject();
 }
 END_CASE(JSOP_ENDINIT)
 
@@ -3582,9 +3581,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
     Value rval = regs.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
-    JSObject *obj = &regs.sp[-2].asObject();
+    JSObject *obj = &regs.sp[-2].toObject();
     JS_ASSERT(obj->isNative());
-    JS_ASSERT(!obj->getClass()->reserveSlots);
 
     JSScope *scope = obj->scope();
 
@@ -3678,7 +3676,7 @@ BEGIN_CASE(JSOP_INITELEM)
     /* Find the object being initialized at top of stack. */
     const Value &lref = regs.sp[-3];
     JS_ASSERT(lref.isObject());
-    JSObject *obj = &lref.asObject();
+    JSObject *obj = &lref.toObject();
 
     /* Fetch id now that we have obj. */
     jsid id;
@@ -3721,7 +3719,7 @@ BEGIN_CASE(JSOP_DEFSHARP)
     const Value &lref = fp->slots()[slot];
     JSObject *obj;
     if (lref.isObject()) {
-        obj = &lref.asObject();
+        obj = &lref.toObject();
     } else {
         JS_ASSERT(lref.isUndefined());
         obj = js_NewArrayObject(cx, 0, NULL);
@@ -3754,7 +3752,7 @@ BEGIN_CASE(JSOP_USESHARP)
     if (lref.isUndefined()) {
         rval.setUndefined();
     } else {
-        JSObject *obj = &fp->slots()[slot].asObject();
+        JSObject *obj = &fp->slots()[slot].toObject();
         jsid id = INT_TO_JSID(i);
         if (!obj->getProperty(cx, id, &rval))
             goto error;
@@ -3785,11 +3783,11 @@ BEGIN_CASE(JSOP_SHARPINIT)
      * initialisers; and the second comes directly before JSOP_ENDINIT.
      */
     if (regs.pc[JSOP_SHARPINIT_LENGTH] != JSOP_ENDINIT) {
-        rval.setInt32(rval.isUndefined() ? 1 : rval.asInt32() + 1);
+        rval.setInt32(rval.isUndefined() ? 1 : rval.toInt32() + 1);
     } else {
         JS_ASSERT(rval.isInt32());
-        rval.asInt32Ref() -= 1;
-        if (rval.asInt32() == 0)
+        rval.getInt32Ref() -= 1;
+        if (rval.toInt32() == 0)
             vp[0].setUndefined();
     }
     vp[1] = rval;
@@ -3823,7 +3821,7 @@ BEGIN_CASE(JSOP_RETSUB)
     POP_COPY_TO(rval);
     POP_COPY_TO(lval);
     JS_ASSERT(lval.isBoolean());
-    if (lval.asBoolean()) {
+    if (lval.toBoolean()) {
         /*
          * Exception was pending during finally, throw it *before* we adjust
          * pc, because pc indexes into script->trynotes.  This turns out not to
@@ -3835,7 +3833,7 @@ BEGIN_CASE(JSOP_RETSUB)
         goto error;
     }
     JS_ASSERT(rval.isInt32());
-    len = rval.asInt32();
+    len = rval.toInt32();
     regs.pc = script->main;
 END_VARLEN_CASE
 }
@@ -3912,7 +3910,7 @@ BEGIN_CASE(JSOP_INSTANCEOF)
     const Value &rref = regs.sp[-1];
     JSObject *obj;
     if (rref.isPrimitive() ||
-        !(obj = &rref.asObject())->map->ops->hasInstance) {
+        !(obj = &rref.toObject())->map->ops->hasInstance) {
         js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                             -1, rref, NULL);
         goto error;
@@ -3984,7 +3982,7 @@ BEGIN_CASE(JSOP_QNAMECONST)
 {
     JSAtom *atom;
     LOAD_ATOM(0, atom);
-    Value rval = StringTag(ATOM_TO_STRING(atom));
+    Value rval = StringValue(ATOM_TO_STRING(atom));
     Value lval = regs.sp[-1];
     JSObject *obj = js_ConstructXMLQNameObject(cx, lval, rval);
     if (!obj)
@@ -4020,7 +4018,7 @@ BEGIN_CASE(JSOP_TOATTRVAL)
     Value rval;
     rval = regs.sp[-1];
     JS_ASSERT(rval.isString());
-    JSString *str = js_EscapeAttributeValue(cx, rval.asString(), JS_FALSE);
+    JSString *str = js_EscapeAttributeValue(cx, rval.toString(), JS_FALSE);
     if (!str)
         goto error;
     regs.sp[-1].setString(str);
@@ -4032,8 +4030,8 @@ BEGIN_CASE(JSOP_ADDATTRVAL)
 {
     Value rval = regs.sp[-1];
     Value lval = regs.sp[-2];
-    JSString *str = lval.asString();
-    JSString *str2 = rval.asString();
+    JSString *str = lval.toString();
+    JSString *str2 = rval.toString();
     str = js_AddAttributePart(cx, op == JSOP_ADDATTRNAME, str, str2);
     if (!str)
         goto error;
@@ -4057,7 +4055,7 @@ END_CASE(JSOP_BINDXMLNAME)
 
 BEGIN_CASE(JSOP_SETXMLNAME)
 {
-    JSObject *obj = &regs.sp[-3].asObject();
+    JSObject *obj = &regs.sp[-3].toObject();
     Value rval = regs.sp[-1];
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
@@ -4193,17 +4191,6 @@ BEGIN_CASE(JSOP_XMLELTEXPR)
 }
 END_CASE(JSOP_XMLELTEXPR)
 
-BEGIN_CASE(JSOP_XMLOBJECT)
-{
-    JSObject *obj;
-    LOAD_OBJECT(0, obj);
-    obj = js_CloneXMLObject(cx, obj);
-    if (!obj)
-        goto error;
-    PUSH_OBJECT(*obj);
-}
-END_CASE(JSOP_XMLOBJECT)
-
 BEGIN_CASE(JSOP_XMLCDATA)
 {
     JSAtom *atom;
@@ -4234,7 +4221,7 @@ BEGIN_CASE(JSOP_XMLPI)
     LOAD_ATOM(0, atom);
     JSString *str = ATOM_TO_STRING(atom);
     Value rval = regs.sp[-1];
-    JSString *str2 = rval.asString();
+    JSString *str2 = rval.toString();
     JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_PROCESSING_INSTRUCTION, str, str2);
     if (!obj)
         goto error;
@@ -4274,7 +4261,7 @@ BEGIN_CASE(JSOP_ENTERBLOCK)
      * anything else we should have popped off fp->scopeChain when we left its
      * static scope.
      */
-    JSObject *obj2 = fp->scopeChainObj();
+    JSObject *obj2 = fp->scopeChain;
     Class *clasp;
     while ((clasp = obj2->getClass()) == &js_WithClass)
         obj2 = obj2->getParent();
@@ -4306,7 +4293,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
      * cloned onto fp->scopeChain, clear its private data, move its locals from
      * the stack into the clone, and pop it off the chain.
      */
-    JSObject *obj = fp->scopeChainObj();
+    JSObject *obj = fp->scopeChain;
     if (obj->getProto() == fp->blockChain) {
         JS_ASSERT(obj->getClass() == &js_BlockClass);
         if (!js_PutBlockObject(cx, JS_TRUE))
@@ -4338,7 +4325,7 @@ BEGIN_CASE(JSOP_GENERATOR)
     JSObject *obj = js_NewGenerator(cx);
     if (!obj)
         goto error;
-    JS_ASSERT(!fp->callobj && !fp->argsObj());
+    JS_ASSERT(!fp->callobj && !fp->argsobj);
     fp->rval.setObject(*obj);
     interpReturnOK = true;
     if (inlineCallCount != 0)
@@ -4364,13 +4351,15 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
     uint32 slot = GET_UINT16(regs.pc);
     JS_ASSERT(script->nfixed <= slot);
     JS_ASSERT(slot < script->nslots);
-    JSObject *obj = &fp->slots()[slot].asObject();
+    JSObject *obj = &fp->slots()[slot].toObject();
     if (!js_ArrayCompPush(cx, obj, regs.sp[-1]))
         goto error;
     regs.sp--;
 }
 END_CASE(JSOP_ARRAYPUSH)
 #endif /* JS_HAS_GENERATORS */
+
+  L_JSOP_UNUSED180:
 
 #if JS_THREADED_INTERP
   L_JSOP_BACKPATCH:
@@ -4401,7 +4390,6 @@ END_CASE(JSOP_ARRAYPUSH)
   L_JSOP_XMLPI:
   L_JSOP_XMLCOMMENT:
   L_JSOP_XMLCDATA:
-  L_JSOP_XMLOBJECT:
   L_JSOP_XMLELTEXPR:
   L_JSOP_XMLTAGEXPR:
   L_JSOP_TOXMLLIST:

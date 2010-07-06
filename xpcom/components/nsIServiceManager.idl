@@ -48,8 +48,6 @@
  *
  * A user of a service may keep references to particular services indefinitely
  * and only must call Release when it shuts down.
- *
- * @status FROZEN
  */
 
 [scriptable, uuid(8bb35ed9-e332-462d-9155-4a002ab5c958)]
@@ -106,8 +104,8 @@ interface nsIServiceManager : nsISupports
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsXPCOM.h"
+#include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIServiceManagerObsolete.h"
 #endif
 %}
 

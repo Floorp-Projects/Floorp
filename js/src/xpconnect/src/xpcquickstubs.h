@@ -143,6 +143,9 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
                           jsid propId);
 
 
+JSBool
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+
 /* Functions for converting values between COM and JS. */
 
 inline JSBool

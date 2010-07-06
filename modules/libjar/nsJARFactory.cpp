@@ -49,60 +49,57 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
-#include "nsJAR.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIJARFactory.h"
 #include "nsRecyclingAllocator.h"
-#include "nsXPTZipLoader.h"
 #include "nsJARProtocolHandler.h"
 #include "nsJARURI.h"
+#include "nsJAR.h"
 
 extern nsRecyclingAllocator *gZlibAllocator;
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPTZipLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAR)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsZipReaderCache)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsJARProtocolHandler,
                                          nsJARProtocolHandler::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJARURI)
 
-// The list of components we register
-static const nsModuleComponentInfo components[] = 
-{
-    { "XPT Zip Reader",
-      NS_XPTZIPREADER_CID,
-      NS_XPTLOADER_CONTRACTID_PREFIX "zip",
-      nsXPTZipLoaderConstructor
-    },
-    { "Zip Reader", 
-       NS_ZIPREADER_CID,
-      "@mozilla.org/libjar/zip-reader;1", 
-      nsJARConstructor
-    },
-    { "Zip Reader Cache", 
-       NS_ZIPREADERCACHE_CID,
-      "@mozilla.org/libjar/zip-reader-cache;1", 
-      nsZipReaderCacheConstructor
-    },
-    { NS_JARPROTOCOLHANDLER_CLASSNAME,
-      NS_JARPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar", 
-      nsJARProtocolHandlerConstructor
-    },
-    { NS_JARURI_CLASSNAME, // needed only for fastload
-      NS_JARURI_CID,
-      nsnull,
-      nsJARURIConstructor
-    }
+NS_DEFINE_NAMED_CID(NS_ZIPREADER_CID);
+NS_DEFINE_NAMED_CID(NS_ZIPREADERCACHE_CID);
+NS_DEFINE_NAMED_CID(NS_JARPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_JARURI_CID);
+
+static const mozilla::Module::CIDEntry kJARCIDs[] = {
+    { &kNS_ZIPREADER_CID, false, NULL, nsJARConstructor },
+    { &kNS_ZIPREADERCACHE_CID, false, NULL, nsZipReaderCacheConstructor },
+    { &kNS_JARPROTOCOLHANDLER_CID, false, NULL, nsJARProtocolHandlerConstructor },
+    { &kNS_JARURI_CID, false, NULL, nsJARURIConstructor },
+    { NULL }
+};
+
+static const mozilla::Module::ContractIDEntry kJARContracts[] = {
+    { "@mozilla.org/libjar/zip-reader;1", &kNS_ZIPREADER_CID },
+    { "@mozilla.org/libjar/zip-reader-cache;1", &kNS_ZIPREADERCACHE_CID },
+    { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar", &kNS_JARPROTOCOLHANDLER_CID },
+    { NULL }
 };
 
 // Jar module shutdown hook
-static void nsJarShutdown(nsIModule *module)
+static void nsJarShutdown()
 {
     // Release cached buffers from zlib allocator
     delete gZlibAllocator;
     NS_IF_RELEASE(gJarHandler);
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsJarModule, components, nsJarShutdown)
+static const mozilla::Module kJARModule = {
+    mozilla::Module::kVersion,
+    kJARCIDs,
+    kJARContracts,
+    NULL,
+    NULL,
+    NULL,
+    nsJarShutdown
+};
+
+NSMODULE_DEFN(nsJarModule) = &kJARModule;

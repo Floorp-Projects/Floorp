@@ -180,21 +180,15 @@ libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 install:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/searchplugins
 
-tests:
-ifneq (en-US, $(AB_CD))
-	@echo "Verifying $(AB_CD) installer variable usage"
-	@$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/check-locales.pl $(LOCALE_SRCDIR)/installer
-endif
-
 
 libs-%:
 	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) -C ../../toolkit/locales libs-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref BOTH_MANIFESTS=1
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
-	@$(MAKE) tests AB_CD=$*
 
 
 repackage-win32-installer: WIN32_INSTALLER_OUT="$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"

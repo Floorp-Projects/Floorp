@@ -30,12 +30,14 @@ function popupsOpened()
   framedoc.addEventListener("DOMAttrModified", modified, false);
 
   // this is the order in which the menus should be hidden (reverse of the
-  // order they were opened in). The frame for the second menu is removed
-  // during the mutation listener, so never gets an mutation event.
+  // order they were opened in). The second menu is removed during the
+  // mutation listener, so gets the event afterwards.
   gMenus.push(framedoc.getElementById("nestedmenu4"));
+  gMenus.push(framedoc.getElementById("nestedmenu2"));
   gMenus.push(framedoc.getElementById("nestedmenu3"));
   gMenus.push(framedoc.getElementById("nestedmenu1"));
   gMenus.push(framedoc.getElementById("separatemenu4"));
+  gMenus.push(framedoc.getElementById("separatemenu2"));
   gMenus.push(framedoc.getElementById("separatemenu3"));
   gMenus.push(framedoc.getElementById("separatemenu1"));
 

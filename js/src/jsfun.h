@@ -242,9 +242,10 @@ JSObject::isArguments() const
     return getClass() == &js_ArgumentsClass;
 }
 
-extern js::Class js_DeclEnvClass;
 extern JS_PUBLIC_DATA(js::Class) js_CallClass;
 extern JS_PUBLIC_DATA(js::Class) js_FunctionClass;
+extern js::Class js_DeclEnvClass;
+extern const uint32 CALL_CLASS_FIXED_RESERVED_SLOTS;
 
 inline bool
 JSObject::isFunction() const
@@ -252,7 +253,20 @@ JSObject::isFunction() const
     return getClass() == &js_FunctionClass;
 }
 
-extern const uint32 CALL_CLASS_FIXED_RESERVED_SLOTS;
+inline bool
+JSObject::isCallable()
+{
+    if (isNative())
+        return isFunction() || getClass()->call;
+
+    return !!map->ops->call;
+}
+
+static inline bool
+js_IsCallable(const js::Value &v)
+{
+    return v.isObject() && v.toObject().isCallable();
+}
 
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
@@ -263,13 +277,13 @@ extern const uint32 CALL_CLASS_FIXED_RESERVED_SLOTS;
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v)
 {
-    return v.isObject() && v.asObject().isFunction();
+    return v.isObject() && v.toObject().isFunction();
 }
 
 static JS_ALWAYS_INLINE bool
 IsFunctionObject(const js::Value &v, JSObject **funobj)
 {
-    return v.isObject() && (*funobj = &v.asObject())->isFunction();
+    return v.isObject() && (*funobj = &v.toObject())->isFunction();
 }
 
 /*
@@ -302,7 +316,7 @@ GetArgsPrivateNative(JSObject *argsobj)
 {
     JS_ASSERT(argsobj->isArguments());
     uintptr_t p = (uintptr_t) argsobj->getPrivate();
-    return (ArgsPrivateNative *) (p & 2 ? p & ~2 : NULL);
+    return p & 2 ? (ArgsPrivateNative *)(p & ~2) : NULL;
 }
 
 } /* namespace js */
@@ -496,4 +510,11 @@ js_fun_apply(JSContext *cx, uintN argc, js::Value *vp);
 extern JSBool
 js_fun_call(JSContext *cx, uintN argc, js::Value *vp);
 
+
+namespace js {
+
+extern JSString *
+fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
+
+}
 #endif /* jsfun_h___ */

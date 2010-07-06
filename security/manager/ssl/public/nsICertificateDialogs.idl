@@ -43,8 +43,6 @@ interface nsICRLInfo;
 
 /**
  * Functions that implement user interface dialogs to manage certificates.
- *
- * @status FROZEN
  */
 [scriptable, uuid(a03ca940-09be-11d5-ac5d-000064657374)]
 interface nsICertificateDialogs : nsISupports

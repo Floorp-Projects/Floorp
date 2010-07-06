@@ -513,14 +513,14 @@ FinishSharingTitle(JSContext *cx, JSTitle *title)
         for (uint32 i = JSSLOT_START(obj->getClass()); i != nslots; ++i) {
             Value v = obj->getSlot(i);
             if (v.isString() &&
-                !js_MakeStringImmutable(cx, v.asString())) {
+                !js_MakeStringImmutable(cx, v.toString())) {
                 /*
                  * FIXME bug 363059: The following error recovery changes
                  * runtime execution semantics, arbitrarily and silently
                  * ignoring errors except out-of-memory, which should have been
                  * reported through JS_ReportOutOfMemory at this point.
                  */
-                obj->setSlot(i, UndefinedTag());
+                obj->setSlot(i, UndefinedValue());
             }
         }
     }

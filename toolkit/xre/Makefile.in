@@ -117,12 +117,10 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS += MacLaunchHelper.mm
-CPPSRCS += nsCommandLineServiceMac.cpp
-OS_CXXFLAGS += -fexceptions
-endif
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS += MacApplicationDelegate.mm
 CMMSRCS += MacAutoreleasePool.mm
+CPPSRCS += nsCommandLineServiceMac.cpp
+OS_CXXFLAGS += -fexceptions
 endif
 
 ifdef MOZ_X11

@@ -1397,6 +1397,10 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mInLazyFCRefresh(PR_FALSE)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
+  , mPendingRestyles(ELEMENT_HAS_PENDING_RESTYLE |
+                     ELEMENT_IS_POTENTIAL_RESTYLE_ROOT, this)
+  , mPendingAnimationRestyles(ELEMENT_HAS_PENDING_ANIMATION_RESTYLE |
+                              ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT, this)
 {
   // XXXbz this should be in Init() or something!
   if (!mPendingRestyles.Init() || !mPendingAnimationRestyles.Init()) {
@@ -2332,6 +2336,14 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   // XXXbz why, exactly?
   if (!mTempFrameTreeState)
     state.mPresShell->CaptureHistoryState(getter_AddRefs(mTempFrameTreeState));
+
+  // Make sure that we'll handle restyles for this document element in
+  // the future.  We need this, because the document element might
+  // have stale restyle bits from a previous frame constructor for
+  // this document.  Unlike in AddFrameConstructionItems, it's safe to
+  // unset all element restyle flags, since we don't have any
+  // siblings.
+  aDocElement->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS);
 
   // --------- CREATE AREA OR BOX FRAME -------
   nsRefPtr<nsStyleContext> styleContext;
@@ -5024,6 +5036,16 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
                                                  FrameConstructionItemList& aItems)
 {
   aContent->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
+  if (aContent->IsElement()) {
+    // We can't just remove our pending restyle flags, since we may
+    // have restyle-later-siblings set on us.  But we _can_ remove the
+    // "is possible restyle root" flags, and need to.  Otherwise we can
+    // end up with stale such flags (e.g. if we used to have a
+    // display:none parent when our last restyle was posted and
+    // processed and now no longer do).
+    aContent->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS &
+                         ~ELEMENT_PENDING_RESTYLE_FLAGS);
+  }
 
   // don't create a whitespace frame if aParent doesn't want it
   if (!NeedFrameFor(aState, aParentFrame, aContent)) {
@@ -5491,6 +5513,13 @@ nsCSSFrameConstructor::GetFrameFor(nsIContent* aContent)
 
   if (!frame)
     return nsnull;
+
+  // If the content of the frame is not the desired content then this is not
+  // really a frame for the desired content.
+  // XXX This check is needed due to bug 135040. Remove it once that's fixed.
+  if (frame->GetContent() != aContent) {
+    return nsnull;
+  }
 
   nsIFrame* insertionFrame = frame->GetContentInsertionFrame();
 
@@ -6234,11 +6263,6 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
   // Walk up the tree setting the NODE_DESCENDANTS_NEED_FRAMES bit as we go.
   nsIContent* content = aContainer;
 #ifdef DEBUG
-  // We have to jump through hoops so that we can make some reasonable asserts
-  // due to bug 135040. We detect if we find a bogus primary frame (I'm looking
-  // at you, areas), and relax our assertions for the remaining ancestors.
-  PRBool bogusPrimaryFrame = PR_FALSE;
-
   // If we hit a node with no primary frame, or the NODE_NEEDS_FRAME bit set
   // we want to assert, but leaf frames that process their own children and may
   // ignore anonymous children (eg framesets) make this complicated. So we set
@@ -6253,15 +6277,10 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     if (content->GetPrimaryFrame() && content->GetPrimaryFrame()->IsLeaf()) {
       noPrimaryFrame = needsFrameBitSet = PR_FALSE;
     }
-    if (!bogusPrimaryFrame && content->GetPrimaryFrame() &&
-        content->GetPrimaryFrame()->GetContent() != content) {
-      bogusPrimaryFrame = PR_TRUE;
-    }
-    if (!noPrimaryFrame && !content->GetPrimaryFrame() && !bogusPrimaryFrame) {
+    if (!noPrimaryFrame && !content->GetPrimaryFrame()) {
       noPrimaryFrame = PR_TRUE;
     }
-    if (!needsFrameBitSet && content->HasFlag(NODE_NEEDS_FRAME) &&
-        !bogusPrimaryFrame) {
+    if (!needsFrameBitSet && content->HasFlag(NODE_NEEDS_FRAME)) {
       needsFrameBitSet = PR_TRUE;
     }
 #endif
@@ -8079,7 +8098,9 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 void
 nsCSSFrameConstructor::RestyleElement(Element        *aElement,
                                       nsIFrame       *aPrimaryFrame,
-                                      nsChangeHint   aMinHint)
+                                      nsChangeHint   aMinHint,
+                                      RestyleTracker& aRestyleTracker,
+                                      PRBool          aRestyleDescendants)
 {
   NS_ASSERTION(aPrimaryFrame == aElement->GetPrimaryFrame(),
                "frame/content mismatch");
@@ -8096,25 +8117,12 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
   } else if (aPrimaryFrame) {
     nsStyleChangeList changeList;
     mPresShell->FrameManager()->
-      ComputeStyleChangeFor(aPrimaryFrame, &changeList, aMinHint);
+      ComputeStyleChangeFor(aPrimaryFrame, &changeList, aMinHint,
+                            aRestyleTracker, aRestyleDescendants);
     ProcessRestyledFrames(changeList);
   } else {
     // no frames, reconstruct for content
     MaybeRecreateFramesForElement(aElement);
-  }
-}
-
-void
-nsCSSFrameConstructor::RestyleLaterSiblings(Element *aElement)
-{
-  for (nsIContent* sibling = aElement->GetNextSibling();
-       sibling;
-       sibling = sibling->GetNextSibling()) {
-    if (!sibling->IsElement())
-      continue;
-
-    RestyleElement(sibling->AsElement(), sibling->GetPrimaryFrame(),
-                   NS_STYLE_HINT_NONE);
   }
 }
 
@@ -9633,7 +9641,13 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
          iter != last;
          ++iter) {
       PRInt32 i = iter.XBLInvolved() ? -1 : iter.position();
-      AddFrameConstructionItems(aState, *iter, i, aFrame, itemsToConstruct);
+      nsIContent* child = *iter;
+      // Frame construction item construction should not post
+      // restyles, so removing restyle flags here is safe.
+      if (child->IsElement()) {
+        child->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS);
+      }
+      AddFrameConstructionItems(aState, child, i, aFrame, itemsToConstruct);
     }
     itemsToConstruct.SetParentHasNoXBLChildren(!iter.XBLInvolved());
 
@@ -10957,6 +10971,13 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
         content->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
       continue;
     }
+    if (content->IsElement()) {
+      // See comment explaining why we need to remove the "is possible
+      // restyle root" flags in AddFrameConstructionItems.  But note
+      // that we can remove all restyle flags, just like in
+      // ProcessChildren and for the same reason.
+      content->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS);
+    }
 
     nsRefPtr<nsStyleContext> childContext =
       ResolveStyleContext(parentStyleContext, content);
@@ -11333,9 +11354,8 @@ void
 nsCSSFrameConstructor::RestyleForEmptyChange(Element* aContainer)
 {
   // In some cases (:empty + E, :empty ~ E), a change if the content of
-  // an element requires restyling its grandparent, because it changes
-  // its parent's :empty state.
-  nsRestyleHint hint = eRestyle_Self;
+  // an element requires restyling its parent's siblings.
+  nsRestyleHint hint = eRestyle_Subtree;
   nsIContent* grandparent = aContainer->GetParent();
   if (grandparent &&
       (grandparent->GetFlags() & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS)) {
@@ -11385,7 +11405,7 @@ nsCSSFrameConstructor::RestyleForAppend(Element* aContainer,
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Subtree, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -11396,7 +11416,7 @@ nsCSSFrameConstructor::RestyleForAppend(Element* aContainer,
          cur;
          cur = cur->GetPreviousSibling()) {
       if (cur->IsElement()) {
-        PostRestyleEvent(cur->AsElement(), eRestyle_Self, NS_STYLE_HINT_NONE);
+        PostRestyleEvent(cur->AsElement(), eRestyle_Subtree, NS_STYLE_HINT_NONE);
         break;
       }
     }
@@ -11404,17 +11424,20 @@ nsCSSFrameConstructor::RestyleForAppend(Element* aContainer,
 }
 
 // Needed since we can't use PostRestyleEvent on non-elements (with
-// eRestyle_LaterSiblings or nsRestyleHint(eRestyle_Self |
+// eRestyle_LaterSiblings or nsRestyleHint(eRestyle_Subtree |
 // eRestyle_LaterSiblings) as appropriate).
 static void
 RestyleSiblingsStartingWith(nsCSSFrameConstructor *aFrameConstructor,
                             nsIContent *aStartingSibling /* may be null */)
 {
-  if (aStartingSibling) {
-    nsIContent* parent = aStartingSibling->GetParent();
-    if (parent && parent->IsElement()) {
-      aFrameConstructor->PostRestyleEvent(parent->AsElement(), eRestyle_Self,
-                                          NS_STYLE_HINT_NONE);
+  for (nsIContent *sibling = aStartingSibling; sibling;
+       sibling = sibling->GetNextSibling()) {
+    if (sibling->IsElement()) {
+      aFrameConstructor->
+        PostRestyleEvent(sibling->AsElement(),
+                         nsRestyleHint(eRestyle_Subtree | eRestyle_LaterSiblings),
+                         NS_STYLE_HINT_NONE);
+      break;
     }
   }
 }
@@ -11460,7 +11483,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(Element* aContainer,
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Subtree, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -11482,7 +11505,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(Element* aContainer,
       }
       if (content->IsElement()) {
         if (passedChild) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Self,
+          PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
                            NS_STYLE_HINT_NONE);
         }
         break;
@@ -11499,7 +11522,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(Element* aContainer,
       }
       if (content->IsElement()) {
         if (passedChild) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Self,
+          PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
                            NS_STYLE_HINT_NONE);
         }
         break;
@@ -11542,7 +11565,7 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Subtree, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -11564,7 +11587,7 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
       }
       if (content->IsElement()) {
         if (reachedFollowingSibling) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Self,
+          PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
                            NS_STYLE_HINT_NONE);
         }
         break;
@@ -11577,7 +11600,7 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
          content = content->GetPreviousSibling()) {
       if (content->IsElement()) {
         if (reachedFollowingSibling) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Self, NS_STYLE_HINT_NONE);
+          PostRestyleEvent(content->AsElement(), eRestyle_Subtree, NS_STYLE_HINT_NONE);
         }
         break;
       }
@@ -11588,59 +11611,6 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
   }
 }
 
-
-static PLDHashOperator
-CollectRestyles(nsISupports* aElement,
-                nsCSSFrameConstructor::RestyleData& aData,
-                void* aRestyleArrayPtr)
-{
-  nsCSSFrameConstructor::RestyleEnumerateData** restyleArrayPtr =
-    static_cast<nsCSSFrameConstructor::RestyleEnumerateData**>
-               (aRestyleArrayPtr);
-  nsCSSFrameConstructor::RestyleEnumerateData* currentRestyle =
-    *restyleArrayPtr;
-  currentRestyle->mElement = static_cast<Element*>(aElement);
-  currentRestyle->mRestyleHint = aData.mRestyleHint;
-  currentRestyle->mChangeHint = aData.mChangeHint;
-
-  // Increment to the next slot in the array
-  *restyleArrayPtr = currentRestyle + 1; 
-
-  return PL_DHASH_NEXT;
-}
-
-void
-nsCSSFrameConstructor::ProcessOneRestyle(Element* aElement,
-                                         nsRestyleHint aRestyleHint,
-                                         nsChangeHint aChangeHint)
-{
-  NS_PRECONDITION(aElement, "Must have element");
-  
-  if (!aElement->IsInDoc() ||
-      aElement->GetCurrentDoc() != mDocument) {
-    // Content node has been removed from our document; nothing else
-    // to do here
-    return;
-  }
-  
-  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
-  if (aRestyleHint & eRestyle_Self) {
-    RestyleElement(aElement, primaryFrame, aChangeHint);
-  } else if (aChangeHint &&
-               (primaryFrame ||
-                (aChangeHint & nsChangeHint_ReconstructFrame))) {
-    // Don't need to recompute style; just apply the hint
-    nsStyleChangeList changeList;
-    changeList.AppendChange(primaryFrame, aElement, aChangeHint);
-    ProcessRestyledFrames(changeList);
-  }
-
-  if (aRestyleHint & eRestyle_LaterSiblings) {
-    RestyleLaterSiblings(aElement);
-  }
-}
-
-#define RESTYLE_ARRAY_STACKSIZE 128
 
 void
 nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
@@ -11686,8 +11656,10 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   nsStyleChangeList changeList;
   // XXX Does it matter that we're passing aExtraHint to the real root
   // frame and not the root node's primary frame?
+  // Note: The restyle tracker we pass in here doesn't matter.
   mPresShell->FrameManager()->ComputeStyleChangeFor(mPresShell->GetRootFrame(),
-                                                    &changeList, aExtraHint);
+                                                    &changeList, aExtraHint,
+                                                    mPendingRestyles, PR_TRUE);
   // Process the required changes
   ProcessRestyledFrames(changeList);
   // Tell the style set it's safe to destroy the old rule tree.  We
@@ -11697,58 +11669,6 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   // until they are destroyed).
   mPresShell->StyleSet()->EndReconstruct();
   batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-}
-
-void
-nsCSSFrameConstructor::ProcessPendingRestyleTable(
-                   nsDataHashtable<nsISupportsHashKey, RestyleData>& aRestyles)
-{
-  PRUint32 count = aRestyles.Count();
-
-  // Make sure to not rebuild quote or counter lists while we're
-  // processing restyles
-  BeginUpdate();
-
-  // loop so that we process any restyle events generated by processing
-  while (count) {
-    // Use the stack if we can, otherwise fall back on heap-allocation.
-    nsAutoTArray<RestyleEnumerateData, RESTYLE_ARRAY_STACKSIZE> restyleArr;
-    RestyleEnumerateData* restylesToProcess = restyleArr.AppendElements(count);
-  
-    if (!restylesToProcess) {
-      return;
-    }
-
-    RestyleEnumerateData* lastRestyle = restylesToProcess;
-    aRestyles.Enumerate(CollectRestyles, &lastRestyle);
-
-    NS_ASSERTION(lastRestyle - restylesToProcess == PRInt32(count),
-                 "Enumeration screwed up somehow");
-
-    // Clear the hashtable so we don't end up trying to process a restyle we're
-    // already processing, sending us into an infinite loop.
-    aRestyles.Clear();
-
-    for (RestyleEnumerateData* currentRestyle = restylesToProcess;
-         currentRestyle != lastRestyle;
-         ++currentRestyle) {
-      ProcessOneRestyle(currentRestyle->mElement,
-                        currentRestyle->mRestyleHint,
-                        currentRestyle->mChangeHint);
-    }
-
-    count = aRestyles.Count();
-  }
-
-  // Set mInStyleRefresh to false now, since the EndUpdate call might
-  // add more restyles.
-  mInStyleRefresh = PR_FALSE;
-
-  EndUpdate();
-
-#ifdef DEBUG
-  mPresShell->VerifyStyleTree();
-#endif
 }
 
 void
@@ -11764,7 +11684,7 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
                     "Nesting calls to ProcessPendingRestyles?");
   presContext->SetProcessingRestyles(PR_TRUE);
 
-  ProcessPendingRestyleTable(mPendingRestyles);
+  mPendingRestyles.ProcessRestyles();
 
 #ifdef DEBUG
   PRUint32 oldPendingRestyleCount = mPendingRestyles.Count();
@@ -11779,7 +11699,7 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   // the running transition so it can check for a new change on the same
   // property, and then posts an immediate animation style change).
   presContext->SetProcessingAnimationStyleChange(PR_TRUE);
-  ProcessPendingRestyleTable(mPendingAnimationRestyles);
+  mPendingAnimationRestyles.ProcessRestyles();
   presContext->SetProcessingAnimationStyleChange(PR_FALSE);
 
   presContext->SetProcessingRestyles(PR_FALSE);
@@ -11810,19 +11730,9 @@ nsCSSFrameConstructor::PostRestyleEventCommon(Element* aElement,
     return;
   }
 
-  RestyleData existingData;
-  existingData.mRestyleHint = nsRestyleHint(0);
-  existingData.mChangeHint = NS_STYLE_HINT_NONE;
-
-  nsDataHashtable<nsISupportsHashKey, RestyleData> &restyles =
+  RestyleTracker& tracker =
     aForAnimation ? mPendingAnimationRestyles : mPendingRestyles;
-
-  restyles.Get(aElement, &existingData);
-  existingData.mRestyleHint =
-    nsRestyleHint(existingData.mRestyleHint | aRestyleHint);
-  NS_UpdateHint(existingData.mChangeHint, aMinChangeHint);
-
-  restyles.Put(aElement, existingData);
+  tracker.AddPendingRestyle(aElement, aRestyleHint, aMinChangeHint);
 
   PostRestyleEventInternal(PR_FALSE);
 }
@@ -11835,8 +11745,7 @@ nsCSSFrameConstructor::PostRestyleEventInternal(PRBool aForLazyConstruction)
   // add ourselves as a refresh observer until then.
   PRBool inRefresh = aForLazyConstruction ? mInLazyFCRefresh : mInStyleRefresh;
   if (!mObservingRefreshDriver && !inRefresh) {
-    mObservingRefreshDriver = mPresShell->GetPresContext()->
-      RefreshDriver()->AddRefreshObserver(this, Flush_Style);
+    mObservingRefreshDriver = mPresShell->AddRefreshObserver(this, Flush_Style);
   }
 }
 
@@ -11848,8 +11757,7 @@ nsCSSFrameConstructor::WillRefresh(mozilla::TimeStamp aTime)
   // a refresh so we don't restart due to animation-triggered
   // restyles.  The actual work of processing our restyles will get
   // done when the refresh driver flushes styles.
-  mPresShell->GetPresContext()->RefreshDriver()->
-    RemoveRefreshObserver(this, Flush_Style);
+  mPresShell->RemoveRefreshObserver(this, Flush_Style);
   mObservingRefreshDriver = PR_FALSE;
   mInLazyFCRefresh = PR_TRUE;
   mInStyleRefresh = PR_TRUE;
