@@ -62,10 +62,8 @@ static inline JSObject *
 ValueToObject(JSContext *cx, Value *vp)
 {
     if (vp->isObject())
-        return &vp->asObject();
-    if (!js_ValueToNonNullObject(cx, *vp, vp))
-        return NULL;
-    return &vp->asObject();
+        return &vp->toObject();
+    return js_ValueToNonNullObject(cx, *vp);
 }
 
 #define NATIVE_SET(cx,obj,sprop,entry,vp)                                     \

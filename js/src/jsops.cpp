@@ -743,7 +743,7 @@ END_CASE(JSOP_ENUMCONSTELEM)
 #endif
 
 BEGIN_CASE(JSOP_BINDGNAME)
-    PUSH_OBJECT(*fp->scopeChainObj()->getGlobal());
+    PUSH_OBJECT(*fp->scopeChain->getGlobal());
 END_CASE(JSOP_BINDGNAME)
 
 BEGIN_CASE(JSOP_BINDNAME)
@@ -1482,7 +1482,7 @@ BEGIN_CASE(JSOP_GLOBALDEC)
     slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
     JSObject *obj;
-    obj = fp->scopeChainObj()->getGlobal();
+    obj = fp->scopeChain->getGlobal();
     vp = &obj->getSlotRef(slot);
     goto do_int_fast_incop;
 END_CASE(JSOP_INCGLOBAL)
@@ -1795,7 +1795,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
     JSObject *obj;
     VALUE_TO_OBJECT(cx, &lref, obj);
 
-    JS_ASSERT_IF(op == JSOP_SETGNAME, obj == fp->scopeChainObj()->getGlobal());
+    JS_ASSERT_IF(op == JSOP_SETGNAME, obj == fp->scopeChain->getGlobal());
 
     do {
         PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
@@ -2259,7 +2259,7 @@ BEGIN_CASE(JSOP_APPLY)
                 *disp = newfp;
             }
             JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
-            JS_ASSERT_IF(!vp[1].isPrimitive(), IsSaneThisObject(vp[1].asObject()));
+            JS_ASSERT_IF(!vp[1].isPrimitive(), IsSaneThisObject(vp[1].toObject()));
             newfp->thisv = vp[1];
             newfp->imacpc = NULL;
 
@@ -2331,7 +2331,7 @@ BEGIN_CASE(JSOP_APPLY)
              * complete.
              */
             if (!TRACE_RECORDER(cx)) {
-                JSObject *scope = newfp->scopeChainObj();
+                JSObject *scope = newfp->scopeChain;
                 mjit::CompileStatus status = mjit::CanMethodJIT(cx, newscript, fun, scope);
                 if (status == mjit::Compile_Error)
                     goto error;
@@ -2932,7 +2932,7 @@ BEGIN_CASE(JSOP_CALLGLOBAL)
 {
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
-    JSObject *obj = fp->scopeChainObj()->getGlobal();
+    JSObject *obj = fp->scopeChain->getGlobal();
     JS_ASSERT(slot < obj->scope()->freeslot);
     PUSH_COPY(obj->getSlot(slot));
     if (op == JSOP_CALLGLOBAL)
@@ -2943,12 +2943,12 @@ END_CASE(JSOP_GETGLOBAL)
 BEGIN_CASE(JSOP_FORGLOBAL)
 {
     Value rval;
-    if (!IteratorNext(cx, &regs.sp[-1].asObject(), &rval))
+    if (!IteratorNext(cx, &regs.sp[-1].toObject(), &rval))
         goto error;
     PUSH_COPY(rval);
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
-    JSObject *obj = fp->scopeChainObj()->getGlobal();
+    JSObject *obj = fp->scopeChain->getGlobal();
     JS_ASSERT(slot < obj->scope()->freeslot);
     JS_LOCK_OBJ(cx, obj);
     {
@@ -2968,7 +2968,7 @@ BEGIN_CASE(JSOP_SETGLOBAL)
 {
     uint32 slot = GET_SLOTNO(regs.pc);
     slot = script->getGlobalSlot(slot);
-    JSObject *obj = fp->scopeChainObj()->getGlobal();
+    JSObject *obj = fp->scopeChain->getGlobal();
     JS_ASSERT(slot < obj->scope()->freeslot);
     {
         JS_LOCK_OBJ(cx, obj);

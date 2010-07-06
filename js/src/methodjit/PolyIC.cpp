@@ -43,6 +43,7 @@
 #include "assembler/assembler/LinkBuffer.h"
 #include "jsscope.h"
 #include "jsnum.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jspropertycache.h"
 #include "jspropertycacheinlines.h"
@@ -771,7 +772,7 @@ class GetPropCompiler : public PICStubCompiler
         if (obj != holder) {
             // Emit code that walks the prototype chain.
             JSObject *tempObj = obj;
-            Address fslot(pic.objReg, offsetof(JSObject, fslots) + JSSLOT_PROTO * sizeof(Value));
+            Address proto(pic.objReg, offsetof(JSObject, proto));
             do {
                 tempObj = tempObj->getProto();
                 // FIXME: we should find out why this condition occurs. It is probably
@@ -781,7 +782,7 @@ class GetPropCompiler : public PICStubCompiler
                 JS_ASSERT(tempObj);
                 JS_ASSERT(tempObj->isNative());
 
-                masm.loadData32(fslot, pic.objReg);
+                masm.loadData32(proto, pic.objReg);
                 pic.shapeRegHasBaseShape = false;
                 pic.u.get.objNeedsRemat = true;
 
@@ -1244,11 +1245,11 @@ ic::GetProp(VMFrame &f, uint32 index)
                 cc.disable("error");
                 THROW();
             }
-            JSString *str = f.regs.sp[-1].asString();
+            JSString *str = f.regs.sp[-1].toString();
             f.regs.sp[-1].setInt32(str->length());
             return;
         } else if (!f.regs.sp[-1].isPrimitive()) {
-            JSObject *obj = &f.regs.sp[-1].asObject();
+            JSObject *obj = &f.regs.sp[-1].toObject();
             if (obj->isArray()) {
                 GetPropCompiler cc(f, script, obj, pic, NULL, stubs::Length);
                 if (!cc.generateArrayLengthStub()) {
@@ -1397,7 +1398,7 @@ ic::CallProp(VMFrame &f, uint32 index)
         objv.setObject(*pobj);
     }
 
-    JSObject *aobj = js_GetProtoIfDenseArray(&objv.asObject());
+    JSObject *aobj = js_GetProtoIfDenseArray(&objv.toObject());
     Value rval;
 
     bool usePIC = true;
@@ -1416,7 +1417,7 @@ ic::CallProp(VMFrame &f, uint32 index)
         } else {
             JS_ASSERT(entry->vword.isSprop());
             JSScopeProperty *sprop = entry->vword.toSprop();
-            NATIVE_GET(cx, &objv.asObject(), obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval,
+            NATIVE_GET(cx, &objv.toObject(), obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval,
                        THROW());
         }
         regs.sp++;
@@ -1435,7 +1436,7 @@ ic::CallProp(VMFrame &f, uint32 index)
     regs.sp++;
     regs.sp[-1].setNull();
     if (lval.isObject()) {
-        if (!js_GetMethod(cx, &objv.asObject(), id,
+        if (!js_GetMethod(cx, &objv.toObject(), id,
                           JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                           : JSGET_NO_METHOD_BARRIER,
@@ -1445,8 +1446,8 @@ ic::CallProp(VMFrame &f, uint32 index)
         regs.sp[-1] = objv;
         regs.sp[-2] = rval;
     } else {
-        JS_ASSERT(objv.asObject().map->ops->getProperty == js_GetProperty);
-        if (!js_GetPropertyHelper(cx, &objv.asObject(), id,
+        JS_ASSERT(objv.toObject().map->ops->getProperty == js_GetProperty);
+        if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
                                   JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
                                   &rval)) {
             THROW();
@@ -1468,7 +1469,7 @@ ic::CallProp(VMFrame &f, uint32 index)
         }
     }
 
-    GetPropCompiler cc(f, script, &objv.asObject(), pic, origAtom, CallPropSlow);
+    GetPropCompiler cc(f, script, &objv.toObject(), pic, origAtom, CallPropSlow);
     if (usePIC) {
         if (lval.isObject()) {
             if (!cc.update()) {
@@ -1509,7 +1510,7 @@ ic::Name(VMFrame &f, uint32 index)
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
 
-    ScopeNameCompiler cc(f, script, f.fp->scopeChainObj(), pic, atom, SlowName);
+    ScopeNameCompiler cc(f, script, f.fp->scopeChain, pic, atom, SlowName);
 
     if (!cc.update()) {
         cc.disable("error");
@@ -1544,7 +1545,7 @@ ic::BindName(VMFrame &f, uint32 index)
     ic::PICInfo &pic = script->pics[index];
     JSAtom *atom = pic.atom;
 
-    BindNameCompiler cc(f, script, f.fp->scopeChainObj(), pic, atom, SlowBindName);
+    BindNameCompiler cc(f, script, f.fp->scopeChain, pic, atom, SlowBindName);
 
     JSObject *obj = cc.update();
     if (!obj) {

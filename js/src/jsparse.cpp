@@ -3021,7 +3021,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
 
     if (!outertc->inFunction() && topLevel && funAtom && !lambda &&
         outertc->compiling()) {
-        JS_ASSERT(pn->pn_cookie == FREE_UPVAR_COOKIE);
+        JS_ASSERT(pn->pn_cookie.isFree());
         if (!DefineGlobal(pn, (JSCodeGenerator *)outertc, funAtom))
             return false;
     }
@@ -3343,20 +3343,20 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
          * we can. If we can't, don't bother emitting a GVAR op,
          * since it's unlikely that it will optimize either.
          */
-        uint32 index;
+        UpvarCookie cookie;
         if (!sprop->configurable() &&
             SPROP_HAS_VALID_SLOT(sprop, globalObj->scope()) &&
             sprop->hasDefaultGetterOrIsMethod() &&
             sprop->hasDefaultSetter() &&
             pn->pn_type != TOK_FUNCTION)
         {
-            if (!cg->addGlobalUse(atom, sprop->slot, &index)) {
+            if (!cg->addGlobalUse(atom, sprop->slot, cookie)) {
                 JS_UNLOCK_SCOPE(cg->parser->context, scope);
                 return false;
             }
-            if (index != FREE_UPVAR_COOKIE) {
+            if (!cookie.isFree()) {
                 pn->pn_op = JSOP_GETGLOBAL;
-                pn->pn_cookie = index;
+                pn->pn_cookie.set(cookie);
                 pn->pn_dflags |= PND_BOUND | PND_GVAR;
             }
         }
@@ -3391,12 +3391,12 @@ DefineGlobal(JSParseNode *pn, JSCodeGenerator *cg, JSAtom *atom)
             return false;
     }
 
-    uint32 index;
-    if (!cg->addGlobalUse(atom, slot, &index))
+    UpvarCookie cookie;
+    if (!cg->addGlobalUse(atom, slot, cookie))
         return false;
 
-    if (index != FREE_UPVAR_COOKIE) {
-        pn->pn_cookie = index;
+    if (!cookie.isFree()) {
+        pn->pn_cookie.set(cookie);
         pn->pn_dflags |= PND_GVAR;
         if (pn->pn_type != TOK_FUNCTION) {
             pn->pn_op = JSOP_GETGLOBAL;

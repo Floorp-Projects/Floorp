@@ -530,7 +530,7 @@ struct JSCodeGenerator : public JSTreeContext
      */
     ~JSCodeGenerator();
 
-    bool addGlobalUse(JSAtom *atom, uint32 slot, uint32 *indexp);
+    bool addGlobalUse(JSAtom *atom, uint32 slot, js::UpvarCookie &cooke);
 
     bool hasSharps() {
         bool rv = !!(flags & TCF_HAS_SHARPS);

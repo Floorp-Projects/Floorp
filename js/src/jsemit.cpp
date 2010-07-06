@@ -1337,7 +1337,7 @@ js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObject *blockObj,
 {
     js_PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
-    blockObj->setParent(ObjectOrNullTag(tc->blockChain));
+    blockObj->setParent(tc->blockChain);
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
     tc->blockChain = blockObj;
@@ -1558,7 +1558,7 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 {
     /* XXX just do numbers for now */
     if (pn->pn_type == TOK_NUMBER) {
-        if (!cg->constMap.put(atom, NumberTag(pn->pn_dval)))
+        if (!cg->constMap.put(atom, NumberValue(pn->pn_dval)))
             return JS_FALSE;
     }
     return JS_TRUE;
@@ -1590,7 +1590,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
 
             if (slotp) {
                 JS_ASSERT(obj->fslots[JSSLOT_BLOCK_DEPTH].isInt32());
-                *slotp = obj->fslots[JSSLOT_BLOCK_DEPTH].asInt32() +
+                *slotp = obj->fslots[JSSLOT_BLOCK_DEPTH].toInt32() +
                          sprop->shortid;
             }
             return stmt;
@@ -1845,7 +1845,7 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
             continue;
         }
 
-        JSDefinition *dn = (JSDefinition *) v.asPrivate();
+        JSDefinition *dn = (JSDefinition *) v.toPrivate();
         JS_ASSERT(dn->pn_defn);
         JS_ASSERT(uintN(dn->frameSlot() + depth) < JS_BIT(16));
         dn->pn_cookie.set(dn->pn_cookie.level(), dn->frameSlot() + depth);
@@ -2149,13 +2149,13 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JSCodeGenerator *globalCg = cg->compiler()->globalScope->cg;
         if (globalCg != cg) {
-            uint32 slot = globalCg->globalUses[cookie].slot;
+            uint32 slot = globalCg->globalUses[cookie.asInteger()].slot;
 
             /* Fall back to NAME if we can't add a slot. */
-            if (!cg->addGlobalUse(atom, slot, &cookie))
+            if (!cg->addGlobalUse(atom, slot, cookie))
                 return JS_FALSE;
 
-            if (cookie == FREE_UPVAR_COOKIE)
+            if (cookie.isFree())
                 return JS_TRUE;
         }
         pn->pn_op = op;
@@ -2392,17 +2392,17 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 }
 
 bool
-JSCodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, uint32 *indexp)
+JSCodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie &cookie)
 {
     JSAtomListElement *ale = globalMap.lookup(atom);
     if (ale) {
-        *indexp = ALE_INDEX(ale);
+        cookie.set(0, ALE_INDEX(ale));
         return true;
     }
 
     /* Don't bother encoding indexes >= uint16 */
     if (globalUses.length() >= UINT16_LIMIT) {
-        *indexp = FREE_UPVAR_COOKIE;
+        cookie.makeFree();
         return true;
     }
 
@@ -2411,7 +2411,7 @@ JSCodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, uint32 *indexp)
     if (!ale)
         return false;
 
-    *indexp = uint32(globalUses.length());
+    cookie.set(0, globalUses.length());
 
     GlobalSlotArray::Entry entry = { ALE_INDEX(ale), slot };
     if (!globalUses.append(entry))
@@ -2421,7 +2421,7 @@ JSCodeGenerator::addGlobalUse(JSAtom *atom, uint32 slot, uint32 *indexp)
     if (!ale)
         return false;
 
-    ALE_SET_INDEX(ale, *indexp);
+    ALE_SET_INDEX(ale, cookie.asInteger());
     return true;
 }
 
@@ -3013,7 +3013,7 @@ EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
         return JS_TRUE;
     }
 
-    if (!cg->constList.append(DoubleTag(dval)))
+    if (!cg->constList.append(DoubleValue(dval)))
         return JS_FALSE;
 
     return EmitIndexOp(cx, JSOP_DOUBLE, cg->constList.length() - 1, cg);
@@ -3221,7 +3221,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 switchOp = JSOP_LOOKUPSWITCH;
                 continue;
             }
-            i = pn3->pn_pval->asInt32();
+            i = pn3->pn_pval->toInt32();
             if ((jsuint)(i + (jsint)JS_BIT(15)) >= (jsuint)JS_BIT(16)) {
                 switchOp = JSOP_LOOKUPSWITCH;
                 continue;
@@ -3416,7 +3416,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
                     if (pn3->pn_type == TOK_DEFAULT)
                         continue;
-                    i = pn3->pn_pval->asInt32();
+                    i = pn3->pn_pval->toInt32();
                     i -= low;
                     JS_ASSERT((uint32)i < tableLength);
                     table[i] = pn3;
@@ -3690,7 +3690,7 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
         (((JSDefinition *)pn)->pn_dflags & PND_CLOSED))
     {
         CG_SWITCH_TO_PROLOG(cg);
-        EMIT_UINT16_IMM_OP(JSOP_DEFUPVAR, pn->pn_cookie);
+        EMIT_UINT16_IMM_OP(JSOP_DEFUPVAR, pn->pn_cookie.asInteger());
         CG_SWITCH_TO_MAIN(cg);
     }
 
@@ -3754,8 +3754,6 @@ EmitDestructuringOpsHelper(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn);
 static JSBool
 EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
-    jsuint slot;
-
     /*
      * Now emit the lvalue opcode sequence.  If the lvalue is a nested
      * destructuring initialiser-form, call ourselves to handle it, then
@@ -3797,14 +3795,17 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             jsuint slot = pn->pn_cookie.asInteger();
             EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, slot);
             break;
+          }
 
           case JSOP_SETARG:
           case JSOP_SETGLOBAL:
+          {
             jsuint slot = pn->pn_cookie.asInteger();
             EMIT_UINT16_IMM_OP(PN_OP(pn), slot);
             if (js_Emit1(cx, cg, JSOP_POP) < 0)
                 return JS_FALSE;
             break;
+          }
 
           default:
           {
@@ -4500,7 +4501,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (!cg->inFunction()) {
             JS_ASSERT(!cg->topStmt);
-            if (pn->pn_cookie == FREE_UPVAR_COOKIE) {
+            if (pn->pn_cookie.isFree()) {
                 CG_SWITCH_TO_PROLOG(cg);
                 op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
                 EMIT_INDEX_OP(op, index);

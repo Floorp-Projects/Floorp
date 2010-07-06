@@ -145,25 +145,25 @@ mjit::Compiler::jsop_bitop(JSOp op)
     }
 
     if (lhs->isConstant() && rhs->isConstant()) {
-        int32 L = lhs->getValue().asInt32();
-        int32 R = rhs->getValue().asInt32();
+        int32 L = lhs->getValue().toInt32();
+        int32 R = rhs->getValue().toInt32();
 
         frame.popn(2);
         switch (op) {
           case JSOP_BITOR:
-            frame.push(Int32Tag(L | R));
+            frame.push(Int32Value(L | R));
             return;
           case JSOP_BITXOR:
-            frame.push(Int32Tag(L ^ R));
+            frame.push(Int32Value(L ^ R));
             return;
           case JSOP_BITAND:
-            frame.push(Int32Tag(L & R));
+            frame.push(Int32Value(L & R));
             return;
           case JSOP_LSH:
-            frame.push(Int32Tag(L << R));
+            frame.push(Int32Value(L << R));
             return;
           case JSOP_RSH:
-            frame.push(Int32Tag(L >> R));
+            frame.push(Int32Value(L >> R));
             return;
           default:
             JS_NOT_REACHED("say wat");
@@ -188,11 +188,11 @@ mjit::Compiler::jsop_bitop(JSOp op)
         reg = frame.ownRegForData(lhs);
         if (rhs->isConstant()) {
             if (op == JSOP_BITAND)
-                masm.and32(Imm32(rhs->getValue().asInt32()), reg);
+                masm.and32(Imm32(rhs->getValue().toInt32()), reg);
             else if (op == JSOP_BITXOR)
-                masm.xor32(Imm32(rhs->getValue().asInt32()), reg);
+                masm.xor32(Imm32(rhs->getValue().toInt32()), reg);
             else
-                masm.or32(Imm32(rhs->getValue().asInt32()), reg);
+                masm.or32(Imm32(rhs->getValue().toInt32()), reg);
         } else if (frame.shouldAvoidDataRemat(rhs)) {
             if (op == JSOP_BITAND)
                 masm.and32(masm.payloadOf(frame.addressOf(rhs)), reg);
@@ -218,7 +218,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
       {
         /* Not commutative. */
         if (rhs->isConstant()) {
-            int32 shift = rhs->getValue().asInt32() & 0x1F;
+            int32 shift = rhs->getValue().toInt32() & 0x1F;
 
             reg = frame.ownRegForData(lhs);
 
@@ -255,7 +255,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
             frame.pinReg(rr);
             if (lhs->isConstant()) {
                 reg = frame.allocReg();
-                masm.move(Imm32(lhs->getValue().asInt32()), reg);
+                masm.move(Imm32(lhs->getValue().toInt32()), reg);
             } else {
                 reg = frame.ownRegForData(lhs);
             }
@@ -515,7 +515,7 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
         if (!(rhsConst = rhs->isConstant()))
             rr = frame.ownRegForData(rhs);
         else
-            rval = rhs->getValue().asInt32();
+            rval = rhs->getValue().toInt32();
 
         frame.pop();
         frame.pop();
@@ -587,7 +587,7 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
 
         /* Emit the compare & set. */
         if (rhs->isConstant()) {
-            masm.set32(cond, reg, Imm32(rhs->getValue().asInt32()), resultReg);
+            masm.set32(cond, reg, Imm32(rhs->getValue().toInt32()), resultReg);
         } else if (frame.shouldAvoidDataRemat(rhs)) {
             masm.set32(cond, reg,
                        masm.payloadOf(frame.addressOf(rhs)),
@@ -641,7 +641,7 @@ mjit::Compiler::jsop_not()
     if (top->isConstant()) {
         const Value &v = top->getValue();
         frame.pop();
-        frame.push(BooleanTag(!js_ValueToBoolean(v)));
+        frame.push(BooleanValue(!js_ValueToBoolean(v)));
         return;
     }
 
@@ -677,7 +677,7 @@ mjit::Compiler::jsop_not()
           case JSVAL_TYPE_OBJECT:
           {
             frame.pop();
-            frame.push(BooleanTag(false));
+            frame.push(BooleanValue(false));
             break;
           }
 
@@ -781,7 +781,7 @@ mjit::Compiler::jsop_typeof()
 
         if (atom) {
             frame.pop();
-            frame.push(StringTag(ATOM_TO_STRING(atom)));
+            frame.push(StringValue(ATOM_TO_STRING(atom)));
             return;
         }
     }
@@ -916,7 +916,7 @@ mjit::Compiler::jsop_setelem()
 
     if ((obj->isTypeKnown() && obj->getKnownType() != JSVAL_TYPE_OBJECT) ||
         (id->isTypeKnown() && id->getKnownType() != JSVAL_TYPE_INT32) ||
-        (id->isConstant() && id->getValue().asInt32() < 0)) {
+        (id->isConstant() && id->getValue().toInt32() < 0)) {
         jsop_setelem_slow();
         return;
     }
@@ -949,11 +949,11 @@ mjit::Compiler::jsop_setelem()
     if (id->isConstant()) {
         Jump inRange = masm.branch32(Assembler::LessThanOrEqual,
                                      masm.payloadOf(Address(objReg, -int(sizeof(Value)))),
-                                     Imm32(id->getValue().asInt32()));
+                                     Imm32(id->getValue().toInt32()));
         stubcc.linkExit(inRange);
 
         /* guard not a hole */
-        Address slot(objReg, id->getValue().asInt32() * sizeof(Value));
+        Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
         stubcc.linkExit(notHole);
 
@@ -1020,7 +1020,7 @@ mjit::Compiler::jsop_getelem()
 
     if ((obj->isTypeKnown() && obj->getKnownType() != JSVAL_TYPE_OBJECT) ||
         (id->isTypeKnown() && id->getKnownType() != JSVAL_TYPE_INT32) ||
-        (id->isConstant() && id->getValue().asInt32() < 0)) {
+        (id->isConstant() && id->getValue().toInt32() < 0)) {
         jsop_getelem_slow();
         return;
     }
@@ -1053,11 +1053,11 @@ mjit::Compiler::jsop_getelem()
     if (id->isConstant()) {
         Jump inRange = masm.branch32(Assembler::LessThanOrEqual,
                                      masm.payloadOf(Address(objReg, -int(sizeof(Value)))),
-                                     Imm32(id->getValue().asInt32()));
+                                     Imm32(id->getValue().toInt32()));
         stubcc.linkExit(inRange);
 
         /* guard not a hole */
-        Address slot(objReg, id->getValue().asInt32() * sizeof(Value));
+        Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
         stubcc.linkExit(notHole);
 
@@ -1125,7 +1125,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         if (test->isTypeKnown()) {
             FrameEntry *known = lhsTest ? lhs : rhs;
             frame.popn(2);
-            frame.push(BooleanTag((test->getKnownType() == known->getKnownType()) ==
+            frame.push(BooleanValue((test->getKnownType() == known->getKnownType()) ==
                                   (op == JSOP_STRICTEQ)));
             return;
         }
@@ -1150,7 +1150,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
         if (test->isTypeKnown() && test->getKnownType() != JSVAL_TYPE_BOOLEAN) {
             frame.popn(2);
-            frame.push(BooleanTag(op == JSOP_STRICTNE));
+            frame.push(BooleanValue(op == JSOP_STRICTNE));
             return;
         }
 
@@ -1158,7 +1158,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             frame.popn(2);
             const Value &L = lhs->getValue();
             const Value &R = rhs->getValue();
-            frame.push(BooleanTag((L.asBoolean() == R.asBoolean()) == (op == JSOP_STRICTEQ)));
+            frame.push(BooleanValue((L.toBoolean() == R.toBoolean()) == (op == JSOP_STRICTEQ)));
             return;
         }
 
@@ -1170,7 +1170,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
            notBoolean = frame.testBoolean(Assembler::NotEqual, test);
 
         /* Do a dynamic test. */
-        bool val = lhsTest ? lhs->getValue().asBoolean() : rhs->getValue().asBoolean();
+        bool val = lhsTest ? lhs->getValue().toBoolean() : rhs->getValue().toBoolean();
         if (frame.shouldAvoidDataRemat(test))
             masm.set32(cond, masm.payloadOf(frame.addressOf(test)), Imm32(val), result);
         else

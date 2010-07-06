@@ -222,10 +222,10 @@ struct JSStackFrame
         return !!(flags & JSFRAME_FLOATING_GENERATOR);
     }
 
+    bool isDummyFrame() const { return !script && !fun; }
+
   private:
     JSObject *computeThisObject(JSContext *cx);
-
-    bool isDummyFrame() const { return !script && !fun; }
 };
 
 namespace js {
@@ -276,12 +276,20 @@ namespace js {
  * primitive values with the equivalent wrapper objects. argv[-1] must
  * not be JSVAL_VOID or an activation object.
  */
-extern JSObject *
+extern bool
 ComputeThisFromArgv(JSContext *cx, js::Value *argv);
 
 JS_ALWAYS_INLINE JSObject *
 ComputeThisFromVp(JSContext *cx, js::Value *vp)
 {
+    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
+    return ComputeThisFromArgv(cx, vp + 2) ? &vp[1].toObject() : NULL;
+}
+
+JS_ALWAYS_INLINE bool
+ComputeThisFromVpInPlace(JSContext *cx, js::Value *vp)
+{
+    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
     return ComputeThisFromArgv(cx, vp + 2);
 }
 
@@ -487,13 +495,7 @@ js_OnUnknownMethod(JSContext *cx, js::Value *vp);
 inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)
 {
-    if (flags & JSFRAME_COMPUTED_THIS)
-        return &thisv.toObject();
-    if (!js::ComputeThisFromArgv(cx, argv))
-        return NULL;
-    thisv = argv[-1];
-    flags |= JSFRAME_COMPUTED_THIS;
-    return &thisv.toObject();
+    return thisv.isPrimitive() ? computeThisObject(cx) : &thisv.toObject();
 }
 
 #endif /* jsinterp_h___ */
