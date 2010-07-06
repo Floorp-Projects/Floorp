@@ -831,28 +831,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_OR)
           BEGIN_CASE(JSOP_AND)
-          {
-            JS_STATIC_ASSERT(JSOP_OR_LENGTH == JSOP_AND_LENGTH);
-            jsbytecode *target = PC + GET_JUMP_OFFSET(PC);
-
-            /* :FIXME: Can we do better and only spill on the taken path? */
-            frame.forgetEverything();
-            masm.fixScriptStack(frame.frameDepth());
-            masm.setupVMFrame();
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
-            masm.push(Registers::ArgReg0);
-#endif
-            masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
-            masm.pop();
-#endif
-            Assembler::Condition cond = (op == JSOP_OR)
-                                        ? Assembler::NonZero
-                                        : Assembler::Zero;
-            Jump j = masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
-            jumpInScript(j, target);
-            frame.pop();
-          }
+            jsop_andor(op, PC + GET_JUMP_OFFSET(PC));
           END_CASE(JSOP_AND)
 
           BEGIN_CASE(JSOP_TABLESWITCH)
