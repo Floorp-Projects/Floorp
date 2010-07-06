@@ -336,7 +336,7 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
  * Unfortunately some bytecodes such as JSOP_LOOKUPSWITCH have immediates that
  * might be string or double atoms. Those opcodes cannot be used from imacros.
  * See the assertions in the JSOP_DOUBLE and JSOP_LOOKUPSWTICH* opcode cases in
- * jsops.cpp.
+ * jsinterp.cpp.
  */
 #define GET_DOUBLE_FROM_BYTECODE(script, pc, pcoff, dbl)                      \
     JS_BEGIN_MACRO                                                            \
