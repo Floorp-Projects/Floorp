@@ -40,7 +40,7 @@
 #ifndef jsvalimpl_h__
 #define jsvalimpl_h__
 /*
- * JS value implementation details needed for manipulating jsval and jsid.
+ * JS value implementation details for operations on jsval and jsid.
  * Embeddings should not rely on any of the definitions in this file. For a
  * description of the value representation and the engine-internal C++ value
  * interface, js::Value, see jsvalue.h.
