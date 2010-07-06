@@ -84,6 +84,12 @@ toolbar[printpreview="true"] {
   -moz-box-ordinal-group: 10;
 }
 
+%ifdef MENUBAR_CAN_AUTOHIDE
+#main-window[inFullscreen] > #appmenu-button-container {
+  display: none;
+}
+%endif
+
 toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
