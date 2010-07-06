@@ -20,11 +20,11 @@ load 367587-1.html
 load 370703-1.html
 load 370940-1.html
 load 373586-1.xhtml
-asserts(8-10) load 378413-1.xhtml
+asserts(8-10) load 378413-1.xhtml # bug 424225, bug 402850?
 load 380116-1.xhtml
 load 382212-1.xhtml
 load 382610-1.html
-asserts-if(MOZ_WIDGET_TOOLKIT=="windows",1) load 383887-1.html
+asserts-if(MOZ_WIDGET_TOOLKIT=="windows",1) load 383887-1.html # bug 576434
 load 386554-1.html
 load 388374-1.xhtml
 load 388374-2.html
@@ -38,3 +38,6 @@ load 455451-1.html
 load 457537-1.html
 load 457537-2.html
 load 478219-1.xhtml
+load 513113-1.html
+load 570624-1.html
+load 498698-1.html

@@ -1,0 +1,596 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket test</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="testWebSocket()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=472529">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/*
+ * tests:
+ *  1. client tries to connect to a http scheme location;
+ *  2. assure serialization of the connections;
+ *  3. client tries to connect to an non-existent ws server;
+ *  4. client tries to connect using a relative url;
+ *  5. client uses an invalid protocol value;
+ *  6. counter and encoding check;
+ *  7. client calls close() and the server keeps sending messages and it doesn't
+ *     send the close frame;
+ *  8. client calls close() and the server sends the close frame in
+ *     acknowledgement;
+ *  9. client closes the connection before the ws connection is established;
+ * 10. client sends a message before the ws connection is established;
+ * 11. a simple hello echo;
+ * 12. client sends a message with bad bytes;
+ * 13. server sends an invalid message;
+ * 14. server sends the close frame, it doesn't close the tcp connection and
+ *     it keeps sending normal ws messages;
+ * 15. server closes the tcp connection, but it doesn't send the close frame;
+ * 16. client calls close() and tries to send a message;
+ * 17. see bug 572975 - all event listeners set
+ * 18. client tries to connect to an http resource;
+ * 19. server closes the tcp connection before establishing the ws connection;
+ * 20. see bug 572975 - only on error and onclose event listeners set
+ * 21. see bug 572975 - same as test 17, but delete strong event listeners when
+ *     receiving the message event;
+ * 22. server takes too long to establish the ws connection;
+ */
+
+var first_test = 1;
+var last_test = 22;
+
+var current_test = first_test;
+
+var timeoutToAbortTest = 60000;
+var timeoutToOpenWS = 25000;
+var all_ws = [];
+
+function shouldNotOpen(e)
+{
+  var ws = e.target;
+  ok(false, "onopen shouldn't be called on test " + ws._testNumber + "!");
+}
+
+function shouldNotReceiveCloseEvent(e)
+{
+  var ws = e.target;
+  ok(false, "onclose shouldn't be called on test " + ws._testNumber + "!");
+}
+
+function shouldCloseCleanly(e)
+{
+  var ws = e.target;
+  ok(e.wasClean, "the ws connection in test " + ws._testNumber + " should be closed cleanly");
+}
+
+function shouldCloseNotCleanly(e)
+{
+  var ws = e.target;
+  ok(!e.wasClean, "the ws connection in test " + ws._testNumber + " shouldn't be closed cleanly");
+}
+
+function CreateTestWS(ws_location, ws_protocol)
+{
+  var ws;
+
+  try {
+    if (ws_protocol == undefined) {
+      ws = new WebSocket(ws_location);
+    } else {
+      ws = new WebSocket(ws_location, ws_protocol);
+    }
+
+    ws.onerror = function(e)
+    {
+      ok(false, "onerror called on test " + e.target._testNumber + "!");
+    };
+    ws._testNumber = current_test;
+    ws._receivedCloseEvent = false;
+    ws.addEventListener("close", function(e)
+    {
+      ws._receivedCloseEvent = true;
+    }, false);
+  }
+  catch (e) {
+    throw e;
+  }
+  finally {
+    current_test++;
+  }
+
+  all_ws.push(ws);
+  return ws;
+}
+
+function forcegc()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  Components.utils.forceGC();
+  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  wu.garbageCollect();
+  setTimeout(function()
+  {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    wu.garbageCollect();
+  }, 1);
+}
+
+function doTest(number)
+{
+  if (doTest.timeoutId !== null) {
+    clearTimeout(doTest.timeoutId);
+    doTest.timeoutId = null;
+  }
+
+  if (number > last_test) {
+    setTimeout(finishWSTest, 30000);  // wait for the close events be dispatched
+    return;
+  }
+
+  $("feedback").innerHTML = "executing test: " + number + " of " + last_test + " tests.";
+
+  var fnTest = eval("test" + number + "");
+
+  if (fnTest._started === true) {
+    doTest(number + 1);
+    return;
+  }
+
+  doTest.timeoutId = setTimeout(function()
+  {
+    ok(false, "test " + number + " took too long to finish!");
+    doTest(number + 1);
+  }, timeoutToAbortTest);
+
+  fnTest._started = true;
+  fnTest();
+}
+doTest.timeoutId = null;
+
+function test1()
+{
+  try {
+    var ws = CreateTestWS("http://mochi.test:8888/tests/content/base/test/file_websocket");
+    ok(false, "test1 failed");
+  }
+  catch (e) {
+    ok(true, "test1 failed");
+  }
+  doTest(2);
+}
+
+// this test expects that the serialization list to connect to the proxy
+// is empty
+function test2()
+{
+  var ws1 = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 2.1");
+  current_test--; // CreateTestWS incremented this
+  var ws2 = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 2.2");
+
+  var ws2CanConnect = false;
+
+  // the server will delay ws1 for 5 seconds
+
+  ws1.onopen = function()
+  {
+    ws2CanConnect = true;
+  }
+
+  ws2.onopen = function()
+  {
+    ok(ws2CanConnect, "shouldn't connect yet in test 2!");
+    doTest(3);
+  }
+}
+
+function test3()
+{
+  var ws = CreateTestWS("ws://this.websocket.server.probably.does.not.exist");
+  ws.onopen = shouldNotOpen;
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(4);
+  };
+}
+
+function test4()
+{
+  try {
+    var ws = CreateTestWS("file_websocket");
+    ok(false, "test 4 failed");
+  }
+  catch (e) {
+    ok(true, "test 4 failed");
+  }
+  doTest(5);
+}
+
+function test5()
+{
+  try {
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "");
+    ok(false, "couldn't accept an empty string in the protocol parameter");
+  }
+  catch (e) {
+    ok(true, "couldn't accept an empty string in the protocol parameter");
+  }
+  current_test--; // CreateTestWS incremented this
+  try {
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "\n");
+    ok(false, "couldn't accept any not printable ASCII character in the protocol parameter");
+  }
+  catch (e) {
+    ok(true, "couldn't accept any not printable ASCII character in the protocol parameter");
+  }
+  doTest(6);
+}
+
+function test6()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 6");
+  var counter = 1;
+  ws.onopen = function()
+  {
+    ws.send(counter);
+  }
+  ws.onmessage = function(e)
+  {
+    if (counter == 5) {
+      ok(e.data == "あいうえお");
+      ws.close();
+      doTest(7);
+    } else {
+      ok(e.data == counter+1, "bad counter");
+      counter += 2;
+      ws.send(counter);
+    }
+  }
+  ws.onclose = shouldCloseCleanly;
+}
+
+function test7()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 7");
+  ws.onopen = function()
+  {
+    ws.close();
+  }
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(8);
+  };
+}
+
+function test8()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 8");
+  ws.onopen = function()
+  {
+    ws.close();
+  }
+  ws.onclose = function(e)
+  {
+    shouldCloseCleanly(e);
+    doTest(9);
+  };
+}
+
+function test9()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 9");
+  ws.onopen = shouldNotOpen;
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(10);
+  };
+
+  ws.close();
+}
+
+function test10()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 10");
+  ws.onclose = shouldCloseCleanly;
+
+  try {
+    ws.send("client data");
+    ok(false, "Couldn't send data before connecting!");
+  }
+  catch (e) {
+    ok(true, "Couldn't send data before connecting!");
+  }
+  ws.onopen = function()
+  {
+    doTest(11);
+  }
+}
+
+function test11()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 11");
+  ok(ws.readyState == 0, "bad readyState in test 11!");
+  ws.onopen = function()
+  {
+    ok(ws.readyState == 1, "bad readyState in test 11!");
+    ws.send("client data");
+  }
+  ws.onmessage = function(e)
+  {
+    ok(e.data == "server data", "bad received message in test 11!");
+    ws.close();
+    ok(ws.readyState == 2, "bad readyState in test 11!");
+  }
+  ws.onclose = function(e)
+  {
+    ok(ws.readyState == 3, "bad readyState in test 11!");
+    shouldCloseCleanly(e);
+    doTest(12);
+  }
+}
+
+function test12()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 12");
+  ws.onopen = function()
+  {
+    try {
+      // send an unpaired surrogate
+      ws.send(String.fromCharCode(0xD800));
+      ok(false, "couldn't send an unpaired surrogate!");
+    }
+    catch (e) {
+      ok(true, "couldn't send an unpaired surrogate!");
+    }
+    ws.close();
+    doTest(13);
+  };
+}
+
+function test13()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 13");
+  ws._timesCalledOnError = 0;
+  ws.onerror = function()
+  {
+    ws._timesCalledOnError++;
+    if (ws._timesCalledOnError == 2) {
+      ok(true, "test 13 succeeded");
+      doTest(14);
+    }
+  }
+  ws.onclose = shouldCloseCleanly;
+}
+
+function test14()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 14");
+  ws.onmessage = function()
+  {
+    ok(false, "shouldn't received message after the server sent the close frame");
+  }
+  ws.onclose = function(e)
+  {
+    shouldCloseCleanly(e);
+    doTest(15);
+  };
+}
+
+function test15()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 15");
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(16);
+  };
+}
+
+function test16()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 16");
+  ws.onopen = function()
+  {
+    ws.close();
+    ok(!ws.send("client data"), "shouldn't send message after calling close()");
+    doTest(17);
+  }
+  ws.onmessage = function()
+  {
+    ok(false, "shouldn't send message after calling close()");
+  }
+  ws.onclose = shouldCloseCleanly;
+}
+
+var status_test17 = "not started";
+
+window._test17 = function()
+{
+  var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 17");
+  current_test++;
+
+  status_test17 = "started";
+
+  local_ws.onopen = function(e)
+  {
+    status_test17 = "opened";
+    e.target.send("client data");
+    forcegc();
+  };
+
+  local_ws.onerror = function()
+  {
+    ok(false, "onerror called on test " + e.target._testNumber + "!");
+  };
+
+  local_ws.onmessage = function(e)
+  {
+    ok(e.data == "server data", "Bad message in test 17");
+    status_test17 = "got message";
+    forcegc();
+  };
+
+  local_ws.onclose = function(e)
+  {
+    ok(status_test17 == "got message", "Didn't got message in test 17!");
+    shouldCloseCleanly(e);
+    status_test17 = "closed";
+    forcegc();
+    doTest(18);
+    forcegc();
+  };
+
+  local_ws = null;
+  window._test17 = null;
+  forcegc();
+}
+
+function test17()
+{
+  window._test17();
+}
+
+// The tests that expects that their websockets neither open nor close MUST
+// be in the end of the tests, i.e. HERE, in order to prevent blocking the other
+// tests.
+
+function test18()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket_http_resource.txt");
+  ws.onopen = shouldNotOpen;
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(19);
+  };
+}
+
+function test19()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 19");
+  ws.onopen = shouldNotOpen;
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(20);
+  };
+}
+
+window._test20 = function()
+{
+  var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 20");
+  current_test++;
+
+  local_ws.onerror = function()
+  {
+    ok(false, "onerror called on test " + e.target._testNumber + "!");
+  };
+
+  local_ws.onclose = shouldNotReceiveCloseEvent;
+
+  local_ws = null;
+  window._test20 = null;
+  forcegc();
+}
+
+function test20()
+{
+  window._test20();
+  doTest(21);
+}
+
+var timeoutTest21;
+
+window._test21 = function()
+{
+  var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 21");
+  current_test++;
+
+  local_ws.onopen = function(e)
+  {
+    e.target.send("client data");
+    timeoutTest21 = setTimeout(function()
+    {
+      ok(false, "Didn't received message on test 21!");
+    }, 15000);
+    forcegc();
+    e.target.onopen = null;
+    forcegc();
+  };
+
+  local_ws.onerror = function()
+  {
+    ok(false, "onerror called on test " + e.target._testNumber + "!");
+  };
+
+  local_ws.onmessage = function(e)
+  {
+    clearTimeout(timeoutTest21);
+    ok(e.data == "server data", "Bad message in test 21");
+    forcegc();
+    e.target.onmessage = null;
+    forcegc();
+  };
+
+  local_ws.onclose = shouldNotReceiveCloseEvent;
+
+  local_ws = null;
+  window._test21 = null;
+  forcegc();
+}
+
+function test21()
+{
+  window._test21();
+  doTest(22);
+}
+
+function test22()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 22");
+  ws.onopen = shouldNotOpen;
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    doTest(23);
+  };
+}
+
+function finishWSTest()
+{
+  for (i = 0; i < all_ws.length; ++i) {
+    if (all_ws[i] != shouldNotReceiveCloseEvent &&
+        !all_ws[i]._receivedCloseEvent) {
+      ok(false, "didn't called close on test " + all_ws[i]._testNumber + "!");
+    }
+  }
+  SimpleTest.finish();
+}
+
+function testWebSocket ()
+{
+  doTest(first_test);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+
+<div id="feedback">
+</div>
+
+</body>
+</html>

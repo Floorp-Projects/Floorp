@@ -95,7 +95,7 @@ JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
 const char *
 js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
 {
-    return js_ValueToPrintableString(cx, StringTag(ATOM_TO_STRING(atom)));
+    return js_ValueToPrintableString(cx, StringValue(ATOM_TO_STRING(atom)));
 }
 
 #define JS_PROTO(name,code,init) const char js_##name##_str[] = #name;
@@ -146,21 +146,29 @@ const char *const js_common_atom_names[] = {
     js_eval_str,                /* evalAtom                     */
     js_fileName_str,            /* fileNameAtom                 */
     js_get_str,                 /* getAtom                      */
+    js_global_str,              /* globalAtom                   */
+    js_ignoreCase_str,          /* ignoreCaseAtom               */
     js_index_str,               /* indexAtom                    */
     js_input_str,               /* inputAtom                    */
     js_iterator_str,            /* iteratorAtom                 */
+    js_lastIndex_str,           /* lastIndexAtom                */
     js_length_str,              /* lengthAtom                   */
     js_lineNumber_str,          /* lineNumberAtom               */
     js_message_str,             /* messageAtom                  */
+    js_multiline_str,           /* multilineAtom                */
     js_name_str,                /* nameAtom                     */
     js_next_str,                /* nextAtom                     */
     js_noSuchMethod_str,        /* noSuchMethodAtom             */
     js_proto_str,               /* protoAtom                    */
     js_set_str,                 /* setAtom                      */
+    js_source_str,              /* sourceAtom                   */
     js_stack_str,               /* stackAtom                    */
+    js_sticky_str,              /* stickyAtom                   */
+    js_toGMTString_str,         /* toGMTStringAtom              */
     js_toLocaleString_str,      /* toLocaleStringAtom           */
     js_toSource_str,            /* toSourceAtom                 */
     js_toString_str,            /* toStringAtom                 */
+    js_toUTCString_str,         /* toUTCStringAtom              */
     js_valueOf_str,             /* valueOfAtom                  */
     js_toJSON_str,              /* toJSONAtom                   */
     "(void 0)",                 /* void0Atom                    */
@@ -232,12 +240,16 @@ const char js_eval_str[]            = "eval";
 const char js_fileName_str[]        = "fileName";
 const char js_get_str[]             = "get";
 const char js_getter_str[]          = "getter";
+const char js_global_str[]          = "global";
+const char js_ignoreCase_str[]      = "ignoreCase";
 const char js_index_str[]           = "index";
 const char js_input_str[]           = "input";
 const char js_iterator_str[]        = "__iterator__";
+const char js_lastIndex_str[]       = "lastIndex";
 const char js_length_str[]          = "length";
 const char js_lineNumber_str[]      = "lineNumber";
 const char js_message_str[]         = "message";
+const char js_multiline_str[]       = "multiline";
 const char js_name_str[]            = "name";
 const char js_next_str[]            = "next";
 const char js_noSuchMethod_str[]    = "__noSuchMethod__";
@@ -245,10 +257,14 @@ const char js_object_str[]          = "object";
 const char js_proto_str[]           = "__proto__";
 const char js_setter_str[]          = "setter";
 const char js_set_str[]             = "set";
+const char js_source_str[]          = "source";
 const char js_stack_str[]           = "stack";
+const char js_sticky_str[]          = "sticky";
+const char js_toGMTString_str[]     = "toGMTString";
+const char js_toLocaleString_str[]  = "toLocaleString";
 const char js_toSource_str[]        = "toSource";
 const char js_toString_str[]        = "toString";
-const char js_toLocaleString_str[]  = "toLocaleString";
+const char js_toUTCString_str[]     = "toUTCString";
 const char js_undefined_str[]       = "undefined";
 const char js_valueOf_str[]         = "valueOf";
 const char js_toJSON_str[]          = "toJSON";
@@ -1141,11 +1157,11 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
 {
     JS_ASSERT(idval.isObject());
     if (obj->isXML()) {
-        *idp = OBJECT_TO_JSID(&idval.asObject());
+        *idp = OBJECT_TO_JSID(&idval.toObject());
         return true;
     }
 
-    if (!js_IsFunctionQName(cx, &idval.asObject(), idp))
+    if (!js_IsFunctionQName(cx, &idval.toObject(), idp))
         return JS_FALSE;
     if (!JSID_IS_VOID(*idp))
         return true;
@@ -1159,13 +1175,13 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
 {
     JS_ASSERT(idval.isObject());
     if (obj->isXML()) {
-        JSObject &idobj = idval.asObject();
+        JSObject &idobj = idval.toObject();
         *idp = OBJECT_TO_JSID(&idobj);
         vp->setObject(idobj);
         return true;
     }
 
-    if (!js_IsFunctionQName(cx, &idval.asObject(), idp))
+    if (!js_IsFunctionQName(cx, &idval.toObject(), idp))
         return JS_FALSE;
     if (!JSID_IS_VOID(*idp)) {
         *vp = IdToValue(*idp);

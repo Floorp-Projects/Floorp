@@ -61,6 +61,17 @@ Components.utils.import("resource://gre/modules/Services.jsm");
   });
 }, this);
 
+function notifyObservers(aTopic, aWindow, aUri, aInstalls) {
+  let info = {
+    originatingWindow: aWindow,
+    originatingURI: aUri,
+    installs: aInstalls,
+
+    QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallInfo])
+  };
+  Services.obs.notifyObservers(info, aTopic, null);
+}
+
 /**
  * Creates a new installer to monitor downloads and prompt to install when
  * ready
@@ -76,46 +87,89 @@ function Installer(aWindow, aUrl, aInstalls) {
   this.window = aWindow;
   this.url = aUrl;
   this.downloads = aInstalls;
-  this.installs = [];
+  this.installed = [];
 
-  this.bundle = Cc["@mozilla.org/intl/stringbundle;1"].
-                getService(Ci.nsIStringBundleService).
-                createBundle("chrome://mozapps/locale/extensions/extensions.properties");
+  notifyObservers("addon-install-started", aWindow, aUrl, aInstalls);
 
-  this.count = aInstalls.length;
   aInstalls.forEach(function(aInstall) {
     aInstall.addListener(this);
 
-    // Might already be a local file
-    if (aInstall.state == AddonManager.STATE_DOWNLOADED)
-      this.onDownloadEnded(aInstall);
-    else
+    // Start downloading if it hasn't already begun
+    if (aInstall.state == AddonManager.STATE_AVAILABLE)
       aInstall.install();
   }, this);
+
+  this.checkAllDownloaded();
 }
 
 Installer.prototype = {
   window: null,
   downloads: null,
-  installs: null,
-  count: null,
+  installed: null,
+  isDownloading: true,
 
   /**
    * Checks if all downloads are now complete and if so prompts to install.
    */
   checkAllDownloaded: function() {
-    if (--this.count > 0)
+    // Prevent re-entrancy caused by the confirmation dialog cancelling unwanted
+    // installs.
+    if (!this.isDownloading)
       return;
 
-    // Maybe none of the downloads were sucessful
-    if (this.installs.length == 0)
+    var failed = [];
+    var installs = [];
+
+    for (let i = 0; i < this.downloads.length; i++) {
+      let install = this.downloads[i];
+      switch (install.state) {
+      case AddonManager.STATE_AVAILABLE:
+      case AddonManager.STATE_DOWNLOADING:
+        // Exit early if any add-ons haven't started downloading yet or are
+        // still downloading
+        return;
+      case AddonManager.STATE_DOWNLOAD_FAILED:
+        failed.push(install);
+        break;
+      case AddonManager.STATE_DOWNLOADED:
+        // App disabled items are not compatible and so fail to install
+        if (install.addon.appDisabled)
+          failed.push(install);
+        else
+          installs.push(install);
+        break;
+      default:
+        WARN("Download of " + install.sourceURI + " in unexpected state " +
+             install.state);
+      }
+    }
+
+    this.isDownloading = false;
+    this.downloads = installs;
+
+    if (failed.length > 0) {
+      // Stop listening and cancel any installs that are failed because of
+      // compatibility reasons.
+      failed.forEach(function(aInstall) {
+        if (aInstall.state == AddonManager.STATE_DOWNLOADED) {
+          aInstall.removeListener(this);
+          aInstall.cancel();
+        }
+      }, this);
+      notifyObservers("addon-install-failed", this.window, this.url, failed);
+    }
+
+    // If none of the downloads were successful then exit early
+    if (this.downloads.length == 0)
       return;
 
+    // Check for a custom installation prompt that may be provided by the
+    // applicaton
     if ("@mozilla.org/addons/web-install-prompt;1" in Cc) {
       try {
         let prompt = Cc["@mozilla.org/addons/web-install-prompt;1"].
                      getService(Ci.amIWebInstallPrompt);
-        prompt.confirm(this.window, this.url, this.installs, this.installs.length);
+        prompt.confirm(this.window, this.url, this.downloads, this.downloads.length);
         return;
       }
       catch (e) {}
@@ -123,66 +177,73 @@ Installer.prototype = {
 
     let args = {};
     args.url = this.url;
-    args.installs = this.installs;
+    args.installs = this.downloads;
     args.wrappedJSObject = args;
 
     Services.ww.openWindow(this.window, "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul",
                            null, "chrome,modal,centerscreen", args);
   },
 
+  /**
+   * Checks if all installs are now complete and if so notifies observers.
+   */
+  checkAllInstalled: function() {
+    var failed = [];
+
+    for (let i = 0; i < this.downloads.length; i++) {
+      let install = this.downloads[i];
+      switch(install.state) {
+      case AddonManager.STATE_DOWNLOADED:
+      case AddonManager.STATE_INSTALLING:
+        // Exit early if any add-ons haven't started installing yet or are
+        // still installing
+        return;
+      case AddonManager.STATE_INSTALL_FAILED:
+        failed.push(install);
+        break;
+      }
+    }
+
+    this.downloads = null;
+
+    if (failed.length > 0)
+      notifyObservers("addon-install-failed", this.window, this.url, failed);
+
+    if (this.installed.length > 0)
+      notifyObservers("addon-install-complete", this.window, this.url, this.installed);
+    this.installed = null;
+  },
+
   onDownloadCancelled: function(aInstall) {
     aInstall.removeListener(this);
-
     this.checkAllDownloaded();
   },
 
-  onDownloadFailed: function(aInstall, aError) {
+  onDownloadFailed: function(aInstall) {
     aInstall.removeListener(this);
-
-    // TODO show some better error
-    Services.prompt.alert(this.window, "Download Failed", "The download of " + aInstall.sourceURL + " failed: " + aError);
     this.checkAllDownloaded();
   },
 
   onDownloadEnded: function(aInstall) {
-    aInstall.removeListener(this);
-
-    if (aInstall.addon.appDisabled) {
-      // App disabled items are not compatible
-      aInstall.cancel();
-
-      let title = null;
-      let text = null;
-
-      let problems = "";
-      if (!aInstall.addon.isCompatible)
-        problems += "incompatible, ";
-      if (!aInstall.addon.providesUpdatesSecurely)
-        problems += "insecure updates, ";
-      if (aInstall.addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
-        problems += "blocklisted, ";
-        title = bundle.GetStringFromName("blocklistedInstallTitle2");
-        text = this.bundle.formatStringFromName("blocklistedInstallMsg2",
-                                                [install.addon.name], 1);
-      }
-      problems = problems.substring(0, problems.length - 2);
-      WARN("Not installing " + aInstall.addon.id + " because of the following: " + problems);
-
-      title = this.bundle.GetStringFromName("incompatibleTitle2", 1);
-      text = this.bundle.formatStringFromName("incompatibleMessage2",
-                                              [aInstall.addon.name,
-                                               aInstall.addon.version,
-                                               Services.appinfo.name,
-                                               Services.appinfo.version], 4);
-      Services.prompt.alert(this.window, title, text);
-    }
-    else {
-      this.installs.push(aInstall);
-    }
-
     this.checkAllDownloaded();
     return false;
   },
+
+  onInstallCancelled: function(aInstall) {
+    aInstall.removeListener(this);
+    this.checkAllInstalled();
+  },
+
+  onInstallFailed: function(aInstall) {
+    aInstall.removeListener(this);
+    this.checkAllInstalled();
+  },
+
+  onInstallEnded: function(aInstall) {
+    aInstall.removeListener(this);
+    this.installed.push(aInstall);
+    this.checkAllInstalled();
+  }
 };
 
 function extWebInstallListener() {
@@ -225,5 +286,4 @@ extWebInstallListener.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallListener])
 };
 
-function NSGetModule(aCompMgr, aFileSpec)
-  XPCOMUtils.generateModule([extWebInstallListener]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([extWebInstallListener]);

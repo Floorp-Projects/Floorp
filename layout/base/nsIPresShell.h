@@ -67,6 +67,8 @@
 #include "mozFlushType.h"
 #include "nsWeakReference.h"
 #include <stdio.h> // for FILE definition
+#include "nsRefreshDriver.h"
+#include "nsChangeHint.h"
 
 class nsIContent;
 class nsIDocument;
@@ -97,7 +99,7 @@ class nsDisplayList;
 class nsDisplayListBuilder;
 
 typedef short SelectionType;
-typedef PRUint32 nsFrameState;
+typedef PRUint64 nsFrameState;
 
 namespace mozilla {
 namespace dom {
@@ -433,7 +435,8 @@ public:
   virtual NS_HIDDEN_(nsresult) RecreateFramesFor(nsIContent* aContent) = 0;
 
   void PostRecreateFramesFor(mozilla::dom::Element* aElement);
-  void RestyleForAnimation(mozilla::dom::Element* aElement);
+  void RestyleForAnimation(mozilla::dom::Element* aElement,
+                           nsRestyleHint aHint);
 
   /**
    * Determine if it is safe to flush all pending notifications
@@ -998,6 +1001,37 @@ public:
    */
   PRUint64 GetPaintCount() { return mPaintCount; }
   void IncrementPaintCount() { ++mPaintCount; }
+
+  /**
+   * Refresh observer management.
+   */
+protected:
+  virtual PRBool AddRefreshObserverExternal(nsARefreshObserver* aObserver,
+                                            mozFlushType aFlushType);
+  PRBool AddRefreshObserverInternal(nsARefreshObserver* aObserver,
+                                    mozFlushType aFlushType);
+  virtual PRBool RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
+                                               mozFlushType aFlushType);
+  PRBool RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
+                                       mozFlushType aFlushType);
+public:
+  PRBool AddRefreshObserver(nsARefreshObserver* aObserver,
+                            mozFlushType aFlushType) {
+#ifdef _IMPL_NS_LAYOUT
+    return AddRefreshObserverInternal(aObserver, aFlushType);
+#else
+    return AddRefreshObserverExternal(aObserver, aFlushType);
+#endif
+  }
+
+  PRBool RemoveRefreshObserver(nsARefreshObserver* aObserver,
+                               mozFlushType aFlushType) {
+#ifdef _IMPL_NS_LAYOUT
+    return RemoveRefreshObserverInternal(aObserver, aFlushType);
+#else
+    return RemoveRefreshObserverExternal(aObserver, aFlushType);
+#endif
+  }
 
   /**
    * Initialize and shut down static variables.

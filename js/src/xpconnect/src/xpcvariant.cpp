@@ -41,9 +41,11 @@
 /* nsIVariant implementation for xpconnect. */
 
 #include "xpcprivate.h"
+#include "XPCWrapper.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCVariant)
 
+NS_IMPL_CLASSINFO(XPCVariant, NULL, 0, XPCVARIANT_CID)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XPCVariant)
   NS_INTERFACE_MAP_ENTRY(XPCVariant)
   NS_INTERFACE_MAP_ENTRY(nsIVariant)
@@ -79,8 +81,7 @@ XPCVariant::XPCVariant(XPCCallContext& ccx, jsval aJSVal)
 
 XPCTraceableVariant::~XPCTraceableVariant()
 {
-    NS_ASSERTION(JSVAL_IS_GCTHING(mJSVal) || JSVAL_IS_NULL(mJSVal), 
-                 "Must be traceable or unlinked");
+    NS_ASSERTION(JSVAL_IS_GCTHING(mJSVal), "Must be traceable or unlinked");
 
     // If mJSVal is JSVAL_STRING, we don't need to clean anything up;
     // simply removing the string from the root set is good.
@@ -432,14 +433,16 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
         NS_ASSERTION(type == nsIDataType::VTYPE_INTERFACE ||
                      type == nsIDataType::VTYPE_INTERFACE_IS,
                      "Weird variant");
-        *pJSVal = realVal;
-        return JS_TRUE;
 
-        // else, it's an object and we really need to double wrap it if we've 
-        // already decided that its 'natural' type is as some sort of interface.
-
-        // We just fall through to the code below and let it do what it does.
+        return XPCWrapper::RewrapObject(lccx.GetJSContext(), scope,
+                                        JSVAL_TO_OBJECT(realVal),
+                                        XPCWrapper::UNKNOWN, pJSVal);
     }
+
+    // else, it's an object and we really need to double wrap it if we've 
+    // already decided that its 'natural' type is as some sort of interface.
+
+    // We just fall through to the code below and let it do what it does.
 
     // The nsIVariant is not a XPCVariant (or we act like it isn't).
     // So we extract the data and do the Right Thing.

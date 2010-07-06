@@ -62,7 +62,7 @@ CAccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleHyperlink == iid) {
-    nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
+    nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
     if (!acc)
       return E_NOINTERFACE;
 
@@ -82,7 +82,7 @@ CAccessibleHyperlink::get_anchor(long aIndex, VARIANT *aAnchor)
 __try {
   VariantInit(aAnchor);
 
-  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
@@ -115,7 +115,7 @@ CAccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT *aAnchorTarget)
 __try {
   VariantInit(aAnchorTarget);
 
-  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
@@ -153,7 +153,7 @@ CAccessibleHyperlink::get_startIndex(long *aIndex)
 __try {
   *aIndex = 0;
 
-  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
@@ -175,7 +175,7 @@ CAccessibleHyperlink::get_endIndex(long *aIndex)
 __try {
   *aIndex = 0;
 
-  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
@@ -197,7 +197,7 @@ CAccessibleHyperlink::get_valid(boolean *aValid)
 __try {
   *aValid = false;
 
-  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
+  nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 

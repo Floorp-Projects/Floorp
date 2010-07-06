@@ -88,6 +88,16 @@ public:
   }
   PRBool TagsAreNot() { return mTagsAreNot; }
 
+  const nsTArray<PRUint32>& Transitions() const { return mTransitions; }
+  nsresult SetTransitions(const nsTArray<PRUint32>& aTransitions)
+  {
+    if (!mTransitions.ReplaceElementsAt(0, mTransitions.Length(),
+                                        aTransitions))
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
+  }
+
 private:
   ~nsNavHistoryQuery() {}
 
@@ -110,6 +120,7 @@ protected:
   nsTArray<PRInt64> mFolders;
   nsTArray<nsString> mTags;
   PRBool mTagsAreNot;
+  nsTArray<PRUint32> mTransitions;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryQuery, NS_NAVHISTORYQUERY_IID)

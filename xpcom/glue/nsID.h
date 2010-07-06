@@ -48,7 +48,6 @@
 
 /**
  * A "unique identifier". This is modeled after OSF DCE UUIDs.
- * @status FROZEN
  */
 
 struct nsID {
@@ -123,6 +122,9 @@ typedef nsID nsCID;
 // Define an CID
 #define NS_DEFINE_CID(_name, _cidspec) \
   const nsCID _name = _cidspec
+
+#define NS_DEFINE_NAMED_CID(_name) \
+  static nsCID k##_name = _name
 
 #define REFNSCID const nsCID&
 

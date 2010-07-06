@@ -46,6 +46,8 @@
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsError.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/CondVar.h"
 #include "nsThreadUtils.h"
 
 #include "Variant.h"
@@ -60,7 +62,10 @@ namespace storage {
 nsresult
 convertResultCode(int aSQLiteResultCode)
 {
-  switch (aSQLiteResultCode) {
+  // Drop off the extended result bits of the result code.
+  int rc = aSQLiteResultCode & 0xFF;
+
+  switch (rc) {
     case SQLITE_OK:
     case SQLITE_ROW:
     case SQLITE_DONE:
@@ -89,13 +94,15 @@ convertResultCode(int aSQLiteResultCode)
     case SQLITE_ABORT:
     case SQLITE_INTERRUPT:
       return NS_ERROR_ABORT;
+    case SQLITE_CONSTRAINT:
+      return NS_ERROR_STORAGE_CONSTRAINT;
   }
 
   // generic error
 #ifdef DEBUG
   nsCAutoString message;
   message.AppendLiteral("SQLite returned error code ");
-  message.AppendInt(aSQLiteResultCode);
+  message.AppendInt(rc);
   message.AppendLiteral(" , Storage will convert it to NS_ERROR_FAILURE");
   NS_WARNING(message.get());
 #endif
@@ -199,6 +206,129 @@ newCompletionEvent(mozIStorageCompletionCallback *aCallback)
   NS_ASSERTION(aCallback, "Passing a null callback is a no-no!");
   nsCOMPtr<nsIRunnable> event = new CallbackEvent(aCallback);
   return event.forget();
+}
+
+/**
+ * This code is heavily based on the sample at:
+ *   http://www.sqlite.org/unlock_notify.html
+ */
+namespace {
+
+class UnlockNotification
+{
+public:
+  UnlockNotification()
+  : mMutex("UnlockNotification mMutex")
+  , mCondVar(mMutex, "UnlockNotification condVar")
+  , mSignaled(false)
+  {
+  }
+
+  void Wait()
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    while (!mSignaled) {
+      (void)mCondVar.Wait();
+    }
+  }
+
+  void Signal()
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    mSignaled = true;
+    (void)mCondVar.Notify();
+  }
+
+private:
+  mozilla::Mutex mMutex;
+  mozilla::CondVar mCondVar;
+  bool mSignaled;
+};
+
+void
+UnlockNotifyCallback(void **aArgs,
+                     int aArgsSize)
+{
+  for (int i = 0; i < aArgsSize; i++) {
+    UnlockNotification *notification =
+      static_cast<UnlockNotification *>(aArgs[i]);
+    notification->Signal();
+  }
+}
+
+int
+WaitForUnlockNotify(sqlite3* aDatabase)
+{
+  UnlockNotification notification;
+  int srv = ::sqlite3_unlock_notify(aDatabase, UnlockNotifyCallback,
+                                    &notification);
+  NS_ASSERTION(srv == SQLITE_LOCKED || srv == SQLITE_OK, "Bad result!");
+  if (srv == SQLITE_OK)
+    notification.Wait();
+
+  return srv;
+}
+
+} // anonymous namespace
+
+int
+stepStmt(sqlite3_stmt* aStatement)
+{
+  bool checkedMainThread = false;
+
+  sqlite3* db = ::sqlite3_db_handle(aStatement);
+  (void)::sqlite3_extended_result_codes(db, 1);
+
+  int srv;
+  while ((srv = ::sqlite3_step(aStatement)) == SQLITE_LOCKED_SHAREDCACHE) {
+    if (!checkedMainThread) {
+      checkedMainThread = true;
+      if (NS_IsMainThread()) {
+        NS_WARNING("We won't allow blocking on the main thread!");
+        break;
+      }
+    }
+
+    srv = WaitForUnlockNotify(sqlite3_db_handle(aStatement));
+    if (srv != SQLITE_OK)
+      break;
+
+    ::sqlite3_reset(aStatement);
+  }
+
+  (void)::sqlite3_extended_result_codes(db, 0);
+  // Drop off the extended result bits of the result code.
+  return srv & 0xFF;
+}
+
+int
+prepareStmt(sqlite3* aDatabase,
+            const nsCString &aSQL,
+            sqlite3_stmt **_stmt)
+{
+  bool checkedMainThread = false;
+
+  (void)::sqlite3_extended_result_codes(aDatabase, 1);
+
+  int srv;
+  while((srv = ::sqlite3_prepare_v2(aDatabase, aSQL.get(), -1, _stmt, NULL)) ==
+        SQLITE_LOCKED_SHAREDCACHE) {
+    if (!checkedMainThread) {
+      checkedMainThread = true;
+      if (NS_IsMainThread()) {
+        NS_WARNING("We won't allow blocking on the main thread!");
+        break;
+      }
+    }
+
+    srv = WaitForUnlockNotify(aDatabase);
+    if (srv != SQLITE_OK)
+      break;
+  }
+
+  (void)::sqlite3_extended_result_codes(aDatabase, 0);
+  // Drop off the extended result bits of the result code.
+  return srv & 0xFF;
 }
 
 } // namespace storage

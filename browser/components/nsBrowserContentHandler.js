@@ -36,6 +36,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const nsISupports            = Components.interfaces.nsISupports;
 
 const nsIBrowserDOMWindow    = Components.interfaces.nsIBrowserDOMWindow;
@@ -48,7 +50,6 @@ const nsIContentHandler      = Components.interfaces.nsIContentHandler;
 const nsIDocShellTreeItem    = Components.interfaces.nsIDocShellTreeItem;
 const nsIDOMChromeWindow     = Components.interfaces.nsIDOMChromeWindow;
 const nsIDOMWindow           = Components.interfaces.nsIDOMWindow;
-const nsIFactory             = Components.interfaces.nsIFactory;
 const nsIFileURL             = Components.interfaces.nsIFileURL;
 const nsIHttpProtocolHandler = Components.interfaces.nsIHttpProtocolHandler;
 const nsIInterfaceRequestor  = Components.interfaces.nsIInterfaceRequestor;
@@ -303,7 +304,7 @@ function doSearch(searchTerm, cmdLine) {
   var ss = Components.classes["@mozilla.org/browser/search-service;1"]
                      .getService(nsIBrowserSearchService);
 
-  var submission = ss.defaultEngine.getSubmission(searchTerm, null);
+  var submission = ss.defaultEngine.getSubmission(searchTerm);
 
   // fill our nsISupportsArray with uri-as-wstring, null, null, postData
   var sa = Components.classes["@mozilla.org/supports-array;1"]
@@ -324,14 +325,26 @@ function doSearch(searchTerm, cmdLine) {
   var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(nsIWindowWatcher);
 
-  return wwatch.openWindow(null, nsBrowserContentHandler.chromeURL,
+  return wwatch.openWindow(null, gBrowserContentHandler.chromeURL,
                            "_blank",
                            "chrome,dialog=no,all" +
-                             nsBrowserContentHandler.getFeatures(cmdLine),
+                           gBrowserContentHandler.getFeatures(cmdLine),
                            sa);
 }
 
-var nsBrowserContentHandler = {
+function nsBrowserContentHandler() {
+}
+nsBrowserContentHandler.prototype = {
+  classID: Components.ID("{5d0ce354-df01-421a-83fb-7ead0990c24e}"),
+
+  _xpcom_factory: {
+    createInstance: function bch_factory_ci(outer, iid) {
+      if (outer)
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
+      return gBrowserContentHandler.QueryInterface(iid);
+    }
+  },
+
   /* helper functions */
 
   mChromeURL : null,
@@ -349,17 +362,10 @@ var nsBrowserContentHandler = {
   },
 
   /* nsISupports */
-  QueryInterface : function bch_QI(iid) {
-    if (!iid.equals(nsISupports) &&
-        !iid.equals(nsICommandLineHandler) &&
-        !iid.equals(nsIBrowserHandler) &&
-        !iid.equals(nsIContentHandler) &&
-        !iid.equals(nsICommandLineValidator) &&
-        !iid.equals(nsIFactory))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-
-    return this;
-  },
+  QueryInterface : XPCOMUtils.generateQI([nsICommandLineHandler,
+                                          nsIBrowserHandler,
+                                          nsIContentHandler,
+                                          nsICommandLineValidator]),
 
   /* nsICommandLineHandler */
   handle : function bch_handle(cmdLine) {
@@ -693,22 +699,9 @@ var nsBrowserContentHandler = {
       cmdLine.handleFlag("osint", false)
     }
   },
-
-  /* nsIFactory */
-  createInstance: function bch_CI(outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-    return this.QueryInterface(iid);
-  },
-    
-  lockFactory : function bch_lock(lock) {
-    /* no-op */
-  }
 };
+var gBrowserContentHandler = new nsBrowserContentHandler();
 
-const bch_contractID = "@mozilla.org/browser/clh;1";
-const bch_CID = Components.ID("{5d0ce354-df01-421a-83fb-7ead0990c24e}");
 const CONTRACTID_PREFIX = "@mozilla.org/uriloader/content-handler;1?type=";
 
 function handURIToExistingBrowser(uri, location, cmdLine)
@@ -719,8 +712,8 @@ function handURIToExistingBrowser(uri, location, cmdLine)
   var navWin = getMostRecentBrowserWindow();
   if (!navWin) {
     // if we couldn't load it in an existing window, open a new one
-    openWindow(null, nsBrowserContentHandler.chromeURL, "_blank",
-               "chrome,dialog=no,all" + nsBrowserContentHandler.getFeatures(cmdLine),
+    openWindow(null, gBrowserContentHandler.chromeURL, "_blank",
+               "chrome,dialog=no,all" + gBrowserContentHandler.getFeatures(cmdLine),
                uri.spec);
     return;
   }
@@ -735,13 +728,16 @@ function handURIToExistingBrowser(uri, location, cmdLine)
                nsIBrowserDOMWindow.OPEN_EXTERNAL);
 }
 
+function nsDefaultCommandLineHandler() {
+}
 
-var nsDefaultCommandLineHandler = {
+nsDefaultCommandLineHandler.prototype = {
+  classID: Components.ID("{47cd0651-b1be-4a0f-b5c4-10e5a573ef71}"),
+
   /* nsISupports */
   QueryInterface : function dch_QI(iid) {
     if (!iid.equals(nsISupports) &&
-        !iid.equals(nsICommandLineHandler) &&
-        !iid.equals(nsIFactory))
+        !iid.equals(nsICommandLineHandler))
       throw Components.results.NS_ERROR_NO_INTERFACE;
 
     return this;
@@ -843,150 +839,23 @@ var nsDefaultCommandLineHandler = {
 
       var URLlist = urilist.filter(shouldLoadURI).map(function (u) u.spec);
       if (URLlist.length) {
-        openWindow(null, nsBrowserContentHandler.chromeURL, "_blank",
-                   "chrome,dialog=no,all" + nsBrowserContentHandler.getFeatures(cmdLine),
+        openWindow(null, gBrowserContentHandler.chromeURL, "_blank",
+                   "chrome,dialog=no,all" + gBrowserContentHandler.getFeatures(cmdLine),
                    URLlist);
       }
 
     }
     else if (!cmdLine.preventDefault) {
       // Passing defaultArgs, so use NO_EXTERNAL_URIS
-      openWindow(null, nsBrowserContentHandler.chromeURL, "_blank",
-                 "chrome,dialog=no,all" + nsBrowserContentHandler.getFeatures(cmdLine),
-                 nsBrowserContentHandler.defaultArgs, NO_EXTERNAL_URIS);
+      openWindow(null, gBrowserContentHandler.chromeURL, "_blank",
+                 "chrome,dialog=no,all" + gBrowserContentHandler.getFeatures(cmdLine),
+                 gBrowserContentHandler.defaultArgs, NO_EXTERNAL_URIS);
     }
   },
 
   // XXX localize me... how?
   helpInfo : "Usage: firefox [-flags] [<url>]\n",
-
-  /* nsIFactory */
-  createInstance: function dch_CI(outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-    return this.QueryInterface(iid);
-  },
-    
-  lockFactory : function dch_lock(lock) {
-    /* no-op */
-  }
 };
 
-const dch_contractID = "@mozilla.org/browser/final-clh;1";
-const dch_CID = Components.ID("{47cd0651-b1be-4a0f-b5c4-10e5a573ef71}");
-
-var Module = {
-  /* nsISupports */
-  QueryInterface: function mod_QI(iid) {
-    if (iid.equals(Components.interfaces.nsIModule) ||
-        iid.equals(Components.interfaces.nsISupports))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
-  /* nsIModule */
-  getClassObject: function mod_getco(compMgr, cid, iid) {
-    if (cid.equals(bch_CID))
-      return nsBrowserContentHandler.QueryInterface(iid);
-
-    if (cid.equals(dch_CID))
-      return nsDefaultCommandLineHandler.QueryInterface(iid);
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-    
-  registerSelf: function mod_regself(compMgr, fileSpec, location, type) {
-    if (Components.classes["@mozilla.org/xre/app-info;1"]) {
-      // Don't register these if Firefox is launching a XULRunner application
-      const FIREFOX_UID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
-      var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
-                              .getService(Components.interfaces.nsIXULAppInfo);
-      if (appInfo.ID != FIREFOX_UID)
-        return;
-    }
-
-    var compReg =
-      compMgr.QueryInterface( Components.interfaces.nsIComponentRegistrar );
-
-    compReg.registerFactoryLocation( bch_CID,
-                                     "nsBrowserContentHandler",
-                                     bch_contractID,
-                                     fileSpec,
-                                     location,
-                                     type );
-    compReg.registerFactoryLocation( dch_CID,
-                                     "nsDefaultCommandLineHandler",
-                                     dch_contractID,
-                                     fileSpec,
-                                     location,
-                                     type );
-
-    function registerType(contentType) {
-      compReg.registerFactoryLocation( bch_CID,
-                                       "Browser Cmdline Handler",
-                                       CONTRACTID_PREFIX + contentType,
-                                       fileSpec,
-                                       location,
-                                       type );
-    }
-
-    registerType("text/html");
-    registerType("application/vnd.mozilla.xul+xml");
-#ifdef MOZ_SVG
-    registerType("image/svg+xml");
-#endif
-    registerType("text/rdf");
-    registerType("text/xml");
-    registerType("application/xhtml+xml");
-    registerType("text/css");
-    registerType("text/plain");
-    registerType("image/gif");
-    registerType("image/jpeg");
-    registerType("image/jpg");
-    registerType("image/png");
-    registerType("image/bmp");
-    registerType("image/x-icon");
-    registerType("image/vnd.microsoft.icon");
-    registerType("application/http-index-format");
-
-    var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                           .getService(nsICategoryManager);
-
-    catMan.addCategoryEntry("command-line-handler",
-                            "m-browser",
-                            bch_contractID, true, true);
-    catMan.addCategoryEntry("command-line-handler",
-                            "x-default",
-                            dch_contractID, true, true);
-    catMan.addCategoryEntry("command-line-validator",
-                            "b-browser",
-                            bch_contractID, true, true);
-  },
-    
-  unregisterSelf : function mod_unregself(compMgr, location, type) {
-    var compReg = compMgr.QueryInterface(nsIComponentRegistrar);
-    compReg.unregisterFactoryLocation(bch_CID, location);
-    compReg.unregisterFactoryLocation(dch_CID, location);
-
-    var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                           .getService(nsICategoryManager);
-
-    catMan.deleteCategoryEntry("command-line-handler",
-                               "m-browser", true);
-    catMan.deleteCategoryEntry("command-line-handler",
-                               "x-default", true);
-    catMan.deleteCategoryEntry("command-line-validator",
-                               "b-browser", true);
-  },
-
-  canUnload: function(compMgr) {
-    return true;
-  }
-};
-
-// NSGetModule: Return the nsIModule object.
-function NSGetModule(compMgr, fileSpec) {
-  return Module;
-}
+var components = [nsBrowserContentHandler, nsDefaultCommandLineHandler];
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

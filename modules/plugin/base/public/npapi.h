@@ -38,22 +38,35 @@
 #ifndef npapi_h_
 #define npapi_h_
 
-#ifdef __OS2__
+#if defined(__OS2__)
 #pragma pack(1)
 #endif
 
 #include "nptypes.h"
 
-#if defined (__OS2__) || defined (OS2)
+#if defined(__OS2__) || defined(OS2)
 #ifndef XP_OS2
 #define XP_OS2 1
 #endif
 #endif
 
-#ifdef _WINDOWS
+#if defined(_WIN32) && !defined(__SYMBIAN32__)
 #include <windef.h>
 #ifndef XP_WIN
 #define XP_WIN 1
+#endif
+#endif
+
+#if defined(__SYMBIAN32__)
+#ifndef XP_SYMBIAN
+#define XP_SYMBIAN 1
+#undef XP_WIN
+#endif
+#endif
+
+#if defined(__APPLE_CC__) && !defined(XP_UNIX)
+#ifndef XP_MACOSX
+#define XP_MACOSX 1
 #endif
 #endif
 
@@ -62,7 +75,7 @@
 #define NP_NO_CARBON
 #endif
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
 #include <OpenGL/OpenGL.h>
 #ifndef NP_NO_CARBON
@@ -70,7 +83,7 @@
 #endif
 #endif
 
-#if defined(XP_UNIX) 
+#if defined(XP_UNIX)
 #include <stdio.h>
 #if defined(MOZ_X11)
 #include <X11/Xlib.h>
@@ -78,12 +91,17 @@
 #endif
 #endif
 
+#if defined(XP_SYMBIAN)
+#include <QEvent>
+#include <QRegion>
+#endif
+
 /*----------------------------------------------------------------------*/
 /*                        Plugin Version Constants                      */
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 23
+#define NP_VERSION_MINOR 25
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
@@ -199,11 +217,16 @@ typedef struct _NPRect
   uint16_t right;
 } NPRect;
 
-typedef struct _NPSize 
-{ 
-  int32_t width; 
-  int32_t height; 
-} NPSize; 
+typedef struct _NPSize
+{
+  int32_t width;
+  int32_t height;
+} NPSize;
+
+typedef enum {
+  NPFocusNext = 0,
+  NPFocusPrevious = 1
+} NPFocusDirection;
 
 /* Return values for NPP_HandleEvent */
 #define kNPEventNotHandled 0
@@ -211,7 +234,7 @@ typedef struct _NPSize
 /* Exact meaning must be spec'd in event model. */
 #define kNPEventStartIME 2
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX)
 /*
  * Unix specific structures and definitions
  */
@@ -234,7 +257,7 @@ typedef struct
 typedef struct
 {
   int32_t      type;
-#ifdef MOZ_X11
+#if defined(MOZ_X11)
   Display*     display;
   Visual*      visual;
   Colormap     colormap;
@@ -250,14 +273,15 @@ typedef struct
 
 #endif /* XP_UNIX */
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX)
 typedef enum {
 #ifndef NP_NO_QUICKDRAW
   NPDrawingModelQuickDraw = 0,
 #endif
   NPDrawingModelCoreGraphics = 1,
   NPDrawingModelOpenGL = 2,
-  NPDrawingModelCoreAnimation = 3
+  NPDrawingModelCoreAnimation = 3,
+  NPDrawingModelInvalidatingCoreAnimation = 4
 } NPDrawingModel;
 
 typedef enum {
@@ -269,21 +293,21 @@ typedef enum {
 #endif
 
 /*
- *   The following masks are applied on certain platforms to NPNV and 
- *   NPPV selectors that pass around pointers to COM interfaces. Newer 
- *   compilers on some platforms may generate vtables that are not 
- *   compatible with older compilers. To prevent older plugins from 
- *   not understanding a new browser's ABI, these masks change the 
+ *   The following masks are applied on certain platforms to NPNV and
+ *   NPPV selectors that pass around pointers to COM interfaces. Newer
+ *   compilers on some platforms may generate vtables that are not
+ *   compatible with older compilers. To prevent older plugins from
+ *   not understanding a new browser's ABI, these masks change the
  *   values of those selectors on those platforms. To remain backwards
- *   compatible with different versions of the browser, plugins can 
+ *   compatible with different versions of the browser, plugins can
  *   use these masks to dynamically determine and use the correct C++
- *   ABI that the browser is expecting. This does not apply to Windows 
+ *   ABI that the browser is expecting. This does not apply to Windows
  *   as Microsoft's COM ABI will likely not change.
  */
 
 #define NP_ABI_GCC3_MASK  0x10000000
 /*
- *   gcc 3.x generated vtables on UNIX and OSX are incompatible with 
+ *   gcc 3.x generated vtables on UNIX and OSX are incompatible with
  *   previous compilers.
  */
 #if (defined(XP_UNIX) && defined(__GNUC__) && (__GNUC__ >= 3))
@@ -292,7 +316,7 @@ typedef enum {
 #define _NP_ABI_MIXIN_FOR_GCC3 0
 #endif
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX)
 #define NP_ABI_MACHO_MASK 0x01000000
 #define _NP_ABI_MIXIN_FOR_MACHO NP_ABI_MACHO_MASK
 #else
@@ -328,9 +352,9 @@ typedef enum {
    * in NPAPI minor version 15.
    */
   NPPVformValue = 16,
-  
+
   NPPVpluginUrlRequestsDisplayedBool = 17,
-  
+
   /* Checks if the plugin is interested in receiving the http body of
    * all http requests (including failed ones, http status != 200).
    */
@@ -340,9 +364,11 @@ typedef enum {
   NPPVpluginNativeAccessibleAtkPlugId = 19,
 
   /* Checks to see if the plug-in would like the browser to load the "src" attribute. */
-  NPPVpluginCancelSrcStream = 20
+  NPPVpluginCancelSrcStream = 20,
 
-#ifdef XP_MACOSX
+  NPPVSupportsAdvancedKeyHandling = 21
+
+#if defined(XP_MACOSX)
   /* Used for negotiating drawing models */
   , NPPVpluginDrawingModel = 1000
   /* Used for negotiating event models */
@@ -351,7 +377,7 @@ typedef enum {
   , NPPVpluginCoreAnimationLayer = 1003
 #endif
 
-#if (MOZ_PLATFORM_MAEMO == 5)
+#if defined(MOZ_PLATFORM_MAEMO) && (MOZ_PLATFORM_MAEMO == 5)
   , NPPVpluginWindowlessLocalBool = 2002
 #endif
 } NPPVariable;
@@ -381,9 +407,11 @@ typedef enum {
 
   NPNVSupportsWindowless = 17,
 
-  NPNVprivateModeBool = 18
+  NPNVprivateModeBool = 18,
 
-#ifdef XP_MACOSX
+  NPNVsupportsAdvancedKeyHandling = 21
+
+#if defined(XP_MACOSX)
   /* Used for negotiating drawing models */
   , NPNVpluginDrawingModel = 1000
 #ifndef NP_NO_QUICKDRAW
@@ -392,12 +420,13 @@ typedef enum {
   , NPNVsupportsCoreGraphicsBool = 2001
   , NPNVsupportsOpenGLBool = 2002
   , NPNVsupportsCoreAnimationBool = 2003
+  , NPNVsupportsInvalidatingCoreAnimationBool = 2004
 #ifndef NP_NO_CARBON
   , NPNVsupportsCarbonBool = 3000 /* TRUE if the browser supports the Carbon event model */
 #endif
   , NPNVsupportsCocoaBool = 3001 /* TRUE if the browser supports the Cocoa event model */
 #endif
-#if (MOZ_PLATFORM_MAEMO == 5)
+#if defined(MOZ_PLATFORM_MAEMO) && (MOZ_PLATFORM_MAEMO == 5)
   , NPNVSupportsWindowlessLocal = 2002
 #endif
 } NPNVariable;
@@ -434,8 +463,7 @@ typedef struct _NPWindow
   uint32_t width;  /* Maximum window size */
   uint32_t height;
   NPRect   clipRect; /* Clipping rectangle in port coordinates */
-                     /* Used by MAC only. */
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
+#if (defined(XP_UNIX) || defined(XP_SYMBIAN)) && !defined(XP_MACOSX)
   void * ws_info; /* Platform-dependent additional data */
 #endif /* XP_UNIX */
   NPWindowType type; /* Is this a window or a drawable? */
@@ -481,10 +509,12 @@ typedef struct _NPPrint
   } print;
 } NPPrint;
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX)
 #ifndef NP_NO_CARBON
 typedef EventRecord NPEvent;
 #endif
+#elif defined(XP_SYMBIAN)
+typedef QEvent NPEvent;
 #elif defined(XP_WIN)
 typedef struct _NPEvent
 {
@@ -499,13 +529,13 @@ typedef struct _NPEvent
   uint32_t wParam;
   uint32_t lParam;
 } NPEvent;
-#elif defined (XP_UNIX) && defined(MOZ_X11)
+#elif defined(XP_UNIX) && defined(MOZ_X11)
 typedef XEvent NPEvent;
 #else
 typedef void*  NPEvent;
 #endif
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX)
 typedef void* NPRegion;
 #ifndef NP_NO_QUICKDRAW
 typedef RgnHandle NPQDRegion;
@@ -515,6 +545,8 @@ typedef CGPathRef NPCGRegion;
 typedef HRGN NPRegion;
 #elif defined(XP_UNIX) && defined(MOZ_X11)
 typedef Region NPRegion;
+#elif defined(XP_SYMBIAN)
+typedef QRegion* NPRegion;
 #else
 typedef void *NPRegion;
 #endif
@@ -523,7 +555,7 @@ typedef struct _NPNSString NPNSString;
 typedef struct _NPNSWindow NPNSWindow;
 typedef struct _NPNSMenu   NPNSMenu;
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX)
 typedef NPNSMenu NPMenu;
 #else
 typedef void *NPMenu;
@@ -537,26 +569,29 @@ typedef enum {
   NPCoordinateSpaceFlippedScreen
 } NPCoordinateSpace;
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX)
 
+#ifndef NP_NO_QUICKDRAW
 typedef struct NP_Port
 {
   CGrafPtr port;
   int32_t portx; /* position inside the topmost window */
   int32_t porty;
 } NP_Port;
+#endif /* NP_NO_QUICKDRAW */
+
+/*
+ * NP_CGContext is the type of the NPWindow's 'window' when the plugin specifies NPDrawingModelCoreGraphics
+ * as its drawing model.
+ */
 
 typedef struct NP_CGContext
 {
   CGContextRef context;
-#ifdef NP_NO_CARBON
-  NPNSWindow *window;
-#else
-  void *window; /* A WindowRef or NULL for the Cocoa event model. */
-#endif
+  void *window; /* A WindowRef under the Carbon event model. */
 } NP_CGContext;
 
-/* 
+/*
  * NP_GLContext is the type of the NPWindow's 'window' when the plugin specifies NPDrawingModelOpenGL as its
  * drawing model.
  */
@@ -567,7 +602,7 @@ typedef struct NP_GLContext
 #ifdef NP_NO_CARBON
   NPNSWindow *window;
 #else
-  void *window; // Can be either an NSWindow or a WindowRef depending on the event model
+  void *window; /* Can be either an NSWindow or a WindowRef depending on the event model */
 #endif
 } NP_GLContext;
 
@@ -595,7 +630,7 @@ typedef struct _NPCocoaEvent {
     struct {
       uint32_t modifierFlags;
       double   pluginX;
-      double   pluginY;           
+      double   pluginY;
       int32_t  buttonNumber;
       int32_t  clickCount;
       double   deltaX;
@@ -717,6 +752,9 @@ enum NPEventType {
 #define NPVERS_HAS_PLUGIN_THREAD_ASYNC_CALL 19
 #define NPVERS_HAS_ALL_NETWORK_STREAMS      20
 #define NPVERS_HAS_URL_AND_AUTH_INFO        21
+#define NPVERS_HAS_PRIVATE_MODE             22
+#define NPVERS_MACOSX_HAS_COCOA_EVENTS      23
+#define NPVERS_HAS_ADVANCED_KEY_HANDLING    25
 
 /*----------------------------------------------------------------------*/
 /*                        Function Prototypes                           */
@@ -734,12 +772,12 @@ extern "C" {
 
 /* NPP_* functions are provided by the plugin and called by the navigator. */
 
-#ifdef XP_UNIX
-char* NPP_GetMIMEDescription();
+#if defined(XP_UNIX)
+char* NPP_GetMIMEDescription(void);
 #endif
 
-NPError NP_LOADDS NPP_Initialize();
-void    NP_LOADDS NPP_Shutdown();
+NPError NP_LOADDS NPP_Initialize(void);
+void    NP_LOADDS NPP_Shutdown(void);
 NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance,
                           uint16_t mode, int16_t argc, char* argn[],
                           char* argv[], NPSavedData* saved);
@@ -761,6 +799,8 @@ void    NP_LOADDS NPP_URLNotify(NPP instance, const char* url,
                                 NPReason reason, void* notifyData);
 NPError NP_LOADDS NPP_GetValue(NPP instance, NPPVariable variable, void *value);
 NPError NP_LOADDS NPP_SetValue(NPP instance, NPNVariable variable, void *value);
+NPBool  NP_LOADDS NPP_GotFocus(NPP instance, NPFocusDirection direction);
+void    NP_LOADDS NPP_LostFocus(NPP instance);
 
 /* NPN_* functions are provided by the navigator and called by the plugin. */
 void        NP_LOADDS NPN_Version(int* plugin_major, int* plugin_minor,
@@ -778,7 +818,7 @@ NPError     NP_LOADDS NPN_PostURL(NPP instance, const char* url,
                                   const char* buf, NPBool file);
 NPError     NP_LOADDS NPN_RequestRead(NPStream* stream, NPByteRange* rangeList);
 NPError     NP_LOADDS NPN_NewStream(NPP instance, NPMIMEType type,
-                                const char* target, NPStream** stream);
+                                    const char* target, NPStream** stream);
 int32_t     NP_LOADDS NPN_Write(NPP instance, NPStream* stream, int32_t len,
                                 void* buffer);
 NPError     NP_LOADDS NPN_DestroyStream(NPP instance, NPStream* stream,
@@ -820,13 +860,15 @@ uint32_t    NP_LOADDS NPN_ScheduleTimer(NPP instance, uint32_t interval, NPBool 
 void        NP_LOADDS NPN_UnscheduleTimer(NPP instance, uint32_t timerID);
 NPError     NP_LOADDS NPN_PopUpContextMenu(NPP instance, NPMenu* menu);
 NPBool      NP_LOADDS NPN_ConvertPoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
+NPBool      NP_LOADDS NPN_HandleEvent(NPP instance, void *event, NPBool handled);
+NPBool      NP_LOADDS NPN_UnfocusInstance(NPP instance, NPFocusDirection direction);
 
 #ifdef __cplusplus
 }  /* end extern "C" */
 #endif
 
 #endif /* RC_INVOKED */
-#ifdef __OS2__
+#if defined(__OS2__)
 #pragma pack()
 #endif
 

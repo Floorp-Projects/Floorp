@@ -826,6 +826,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMTransitionEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("popstateevent"))
     return NS_NewDOMPopStateEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("closeevent"))
+    return NS_NewDOMCloseEvent(aDOMEvent, aPresContext, nsnull);
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

@@ -210,9 +210,8 @@
               <menupopup id="menu_viewPopup">
                 <menu id="viewToolbarsMenu"
                       label="&viewToolbarsMenu.label;"
-                      accesskey="&viewToolbarsMenu.accesskey;"
-                      onpopupshowing="onViewToolbarsPopupShowing(event);">
-                  <menupopup>
+                      accesskey="&viewToolbarsMenu.accesskey;">
+                  <menupopup onpopupshowing="onViewToolbarsPopupShowing(event);">
                     <menuseparator/>
                     <menuitem command="cmd_ToggleTabsOnTop"
                               type="checkbox"
@@ -456,15 +455,15 @@
             </menu>
 
             <menu id="history-menu"
-                  oncommand="this._placesView._onCommand(event);"
-                  onclick="checkForMiddleClick(this, event);"
                   label="&historyMenu.label;"
                   accesskey="&historyMenu.accesskey;">
               <menupopup id="goPopup"
 #ifndef XP_MACOSX
                          placespopup="true"
 #endif
-                         onpopupshowing="if (!document.getElementById('history-menu')._placesView)
+                         oncommand="this.parentNode._placesView._onCommand(event);"
+                         onclick="checkForMiddleClick(this, event);"
+                         onpopupshowing="if (!this.parentNode._placesView)
                                            new HistoryMenu(event);"
                          tooltip="bhTooltip"
                          popupsinherittooltip="true">
@@ -498,7 +497,9 @@
 #endif
                           command="Browser:ShowAllHistory"/>
                 <menuseparator id="startHistorySeparator"/>
-                <menuseparator id="endHistorySeparator" builder="end"/>
+                <menuseparator id="endHistorySeparator"
+                               class="hide-if-empty-places-result"
+                               builder="end"/>
                 <menu id="historyUndoMenu"
                       label="&historyUndoMenu.label;"
                       disabled="true">
@@ -523,9 +524,9 @@
   <menu id="bookmarksMenu"
         label="&bookmarksMenu.label;"
         accesskey="&bookmarksMenu.accesskey;"
-        ondragenter="PlacesMenuDNDController.onBookmarksMenuDragEnter(event);"
-        ondragover="BookmarksMenuDropHandler.onDragOver(event);"
-        ondrop="BookmarksMenuDropHandler.onDrop(event);">
+        ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
+        ondragover="PlacesMenuDNDHandler.onDragOver(event);"
+        ondrop="PlacesMenuDNDHandler.onDrop(event);">
     <menupopup id="bookmarksMenuPopup"
 #ifndef XP_MACOSX
                placespopup="true"
@@ -534,7 +535,7 @@
                openInTabs="children"
                oncommand="BookmarksEventHandler.onCommand(event);"
                onclick="BookmarksEventHandler.onClick(event);"
-               onpopupshowing="if (!document.getElementById('bookmarksMenu')._placesView)
+               onpopupshowing="if (!this.parentNode._placesView)
                                  new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
                tooltip="bhTooltip" popupsinherittooltip="true">
       <menuitem id="menu_bookmarkThisPage"
@@ -610,6 +611,11 @@
                         accesskey="&errorConsoleCmd.accesskey;"
                         key="key_errorConsole"
                         oncommand="toJavaScriptConsole();"/>
+              <menuitem id="headsUpDisplayConsole"
+                        label="&hudConsoleCmd.label;"
+                        accesskey="&hudConsoleCmd.accesskey;"
+                        key="key_hudConsole"
+                        oncommand="HUDConsoleUI.toggleHUD();"/>
               <menuitem id="menu_pageInfo"
                         accesskey="&pageInfoCmd.accesskey;"
                         label="&pageInfoCmd.label;"

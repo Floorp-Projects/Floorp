@@ -137,8 +137,8 @@ jsdouble FASTCALL
 js_UnboxDouble(Value v)
 {
     if (v.isInt32())
-        return (jsdouble)v.asInt32();
-    return v.asDouble();
+        return (jsdouble)v.toInt32();
+    return v.toDouble();
 }
 JS_DEFINE_CALLINFO_1(extern, DOUBLE, js_UnboxDouble, JSVAL, 1, ACC_NONE)
 
@@ -146,8 +146,8 @@ int32 FASTCALL
 js_UnboxInt32(Value v)
 {
     if (v.isInt32())
-        return v.asInt32();
-    return js_DoubleToECMAInt32(v.asDouble());
+        return v.toInt32();
+    return js_DoubleToECMAInt32(v.toDouble());
 }
 JS_DEFINE_CALLINFO_1(extern, INT32, js_UnboxInt32, VALUE, 1, ACC_NONE)
 
@@ -190,19 +190,19 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, bool isD
     uint32 slot = sprop->slot;
     JSScope* scope = obj->scope();
     if (slot != scope->freeslot)
-        goto exit_trace;
+        return false;
     JS_ASSERT(sprop->parent == scope->lastProperty());
 
     if (scope->isSharedEmpty()) {
         scope = js_GetMutableScope(cx, obj);
         if (!scope)
-            goto exit_trace;
+            return false;
     } else {
         JS_ASSERT(!scope->hasProperty(sprop));
     }
 
     if (!scope->table) {
-        if (slot < obj->numSlots() && !obj->getClass()->reserveSlots) {
+        if (slot < obj->numSlots()) {
             JS_ASSERT(obj->getSlot(scope->freeslot).isUndefined());
             ++scope->freeslot;
         } else {
@@ -229,11 +229,11 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, bool isD
         goto exit_trace;
 
     JS_UNLOCK_SCOPE(cx, scope);
-    return JS_TRUE;
+    return true;
 
   exit_trace:
     JS_UNLOCK_SCOPE(cx, scope);
-    return JS_FALSE;
+    return false;
 }
 
 JSBool FASTCALL
@@ -324,8 +324,7 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     if (!closure)
         return NULL;
 
-    closure->initSharingEmptyScope(&js_FunctionClass, ObjectTag(*proto), ObjectTag(*parent),
-                                   PrivateTag(fun));
+    closure->initSharingEmptyScope(&js_FunctionClass, proto, parent, PrivateValue(fun));
     return closure;
 }
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT, 0,

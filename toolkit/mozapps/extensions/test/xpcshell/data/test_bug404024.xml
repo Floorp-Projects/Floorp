@@ -98,7 +98,7 @@
     </compatible_applications>
     <compatible_os>ALL</compatible_os>
     <learnmore>https://addons.mozilla.org/addon/5992</learnmore>
-    <install hash="sha1:c26f0b0d62e5dcddcda95074d3f3fedb9bbc26e3">http://localhost:4444/test.xpi</install>
+    <install size="234" hash="sha1:c26f0b0d62e5dcddcda95074d3f3fedb9bbc26e3">http://localhost:4444/test.xpi</install>
   </addon>
   <addon>
     <name>FAIL</name>
@@ -160,7 +160,7 @@
       </application>
     </compatible_applications>
     <compatible_os>XPCShell</compatible_os>
-    <install>http://localhost:4444/test.xpi</install>
+    <install size="1204">http://localhost:4444/test.xpi</install>
   </addon>
 </searchresults>
 

@@ -163,7 +163,7 @@ function test()
     {
       if (a[i] !== unshiftArgs[i])
       {
-        throw "unexpected value at index " + index + " during " +
+        throw "unexpected value at index " + i + " during " +
           describe("testArrayUnshift", startLength, unshiftArgs, expectThrow,
                    expectLength);
       }

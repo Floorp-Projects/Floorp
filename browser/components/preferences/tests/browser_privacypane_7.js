@@ -13,12 +13,13 @@
  *
  * The Original Code is Privacy PrefPane Test.
  *
- * The Initial Developer of the Original Code is Mozilla Corp.
+ * The Initial Developer of the Original Code is
+ * Ehsan Akhgari.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Drew Willcoxon <adw@mozilla.com> (Original Author)
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,20 +41,9 @@ function test() {
   loader.loadSubScript("chrome://mochikit/content/browser/browser/components/preferences/tests/privacypane_tests.js", this);
 
   run_test_subset([
-    // history mode should be initialized to remember
-    test_historymode_retention("remember", undefined),
-
-    // history mode should remain remember; toggle acceptCookies checkbox
-    test_custom_retention("acceptCookies", "remember"),
-
-    // history mode should now be custom; set history mode to dontremember
-    test_historymode_retention("dontremember", "custom"),
-
-    // history mode should remain custom; set history mode to remember
-    test_historymode_retention("remember", "custom"),
-
-    // history mode should now be remember
-    test_historymode_retention("remember", "remember"),
+    test_privatebrowsing_ui,
+    enter_private_browsing, // once again, test with PB initially enabled
+    test_privatebrowsing_ui,
 
     // reset all preferences to their default values once we're done
     reset_preferences

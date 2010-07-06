@@ -62,7 +62,7 @@ class PropertyProvider;
 
 // This state bit is set on frames that have some non-collapsed characters after
 // reflow
-#define TEXT_HAS_NONCOLLAPSED_CHARACTERS 0x80000000
+#define TEXT_HAS_NONCOLLAPSED_CHARACTERS NS_FRAME_STATE_BIT(31)
 
 class nsTextFrame : public nsFrame {
 public:
@@ -216,7 +216,7 @@ public:
   }
   
 #ifdef ACCESSIBILITY
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+  virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
   
   virtual void MarkIntrinsicWidthsDirty();

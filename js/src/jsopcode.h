@@ -350,7 +350,7 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
     JS_BEGIN_MACRO                                                            \
         uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
         JS_ASSERT(index_ < (script)->consts()->length);                       \
-        (dbl) = (script)->getConst(index_).asDouble();                        \
+        (dbl) = (script)->getConst(index_).toDouble();                        \
     JS_END_MACRO
 
 #define GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj)                      \

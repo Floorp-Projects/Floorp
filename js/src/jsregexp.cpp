@@ -5003,7 +5003,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             goto out;
         }
         
-        DEFVAL(StringTag(matchstr), INT_TO_JSID(0));
+        DEFVAL(StringValue(matchstr), INT_TO_JSID(0));
     }
 
     res = &cx->regExpStatics;
@@ -5028,7 +5028,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             if (test)
                 continue;
             if (parsub->index == -1) {
-                Value tmp = UndefinedTag();
+                Value tmp = UndefinedValue();
                 ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1),
                                        &tmp, NULL, NULL, JSPROP_ENUMERATE);
             } else {
@@ -5040,7 +5040,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                     ok = JS_FALSE;
                     goto out;
                 }
-                Value tmp = StringTag(parstr);
+                Value tmp = StringValue(parstr);
                 ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1),
                                        &tmp, NULL, NULL, JSPROP_ENUMERATE);
             }
@@ -5060,9 +5060,9 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
          * Define the index and input properties last for better for/in loop
          * order (so they come after the elements).
          */
-        DEFVAL(Int32Tag(start + gData.skipped),
+        DEFVAL(Int32Value(start + gData.skipped),
                ATOM_TO_JSID(cx->runtime->atomState.indexAtom));
-        DEFVAL(StringTag(str),
+        DEFVAL(StringValue(str),
                ATOM_TO_JSID(cx->runtime->atomState.inputAtom));
     }
 
@@ -5092,12 +5092,12 @@ static void
 SetRegExpLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
 {
     JS_ASSERT(obj->isRegExp());
-    obj->setRegExpLastIndex(NumberTag(lastIndex));
+    obj->setRegExpLastIndex(NumberValue(lastIndex));
 }
 
 #define DEFINE_GETTER(name, code)                                              \
     static JSBool                                                              \
-    name(JSContext *cx, JSObject *obj, jsid id, jsval *vp)                     \
+    name(JSContext *cx, JSObject *obj, jsid id, Value *vp)                     \
     {                                                                          \
         while (obj->getClass() != &js_RegExpClass) {                           \
             obj = obj->getProto();                                             \
@@ -5112,15 +5112,15 @@ SetRegExpLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
     }
 
 /* lastIndex is stored in the object, re = re silences the compiler warning. */
-DEFINE_GETTER(lastIndex_getter,  re = re; *vp = Jsvalify(obj->getRegExpLastIndex()))
-DEFINE_GETTER(source_getter,     *vp = STRING_TO_JSVAL(re->source))
-DEFINE_GETTER(global_getter,     *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_GLOB) != 0))
-DEFINE_GETTER(ignoreCase_getter, *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_FOLD) != 0))
-DEFINE_GETTER(multiline_getter,  *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTILINE) != 0))
-DEFINE_GETTER(sticky_getter,     *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_STICKY) != 0))
+DEFINE_GETTER(lastIndex_getter,  re = re; *vp = obj->getRegExpLastIndex())
+DEFINE_GETTER(source_getter,     vp->setString(re->source))
+DEFINE_GETTER(global_getter,     vp->setBoolean((re->flags & JSREG_GLOB) != 0))
+DEFINE_GETTER(ignoreCase_getter, vp->setBoolean((re->flags & JSREG_FOLD) != 0))
+DEFINE_GETTER(multiline_getter,  vp->setBoolean((re->flags & JSREG_MULTILINE) != 0))
+DEFINE_GETTER(sticky_getter,     vp->setBoolean((re->flags & JSREG_STICKY) != 0))
 
 static JSBool
-lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     while (obj->getClass() != &js_RegExpClass) {
         obj = obj->getProto();
@@ -5128,26 +5128,79 @@ lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             return true;
     }
     jsdouble lastIndex;
-    if (!JS_ValueToNumber(cx, *vp, &lastIndex))
+    if (!ValueToNumber(cx, *vp, &lastIndex))
         return false;
     lastIndex = js_DoubleToInteger(lastIndex);
     SetRegExpLastIndex(cx, obj, lastIndex);
     return true;
 }
 
-#define REGEXP_PROP_ATTRS     (JSPROP_PERMANENT | JSPROP_SHARED)
-#define RO_REGEXP_PROP_ATTRS  (REGEXP_PROP_ATTRS | JSPROP_READONLY)
-
-static JSPropertySpec regexp_props[] = {
-    {"source",     0, RO_REGEXP_PROP_ATTRS, source_getter,     NULL},
-    {"global",     0, RO_REGEXP_PROP_ATTRS, global_getter,     NULL},
-    {"ignoreCase", 0, RO_REGEXP_PROP_ATTRS, ignoreCase_getter, NULL},
-    {"lastIndex",  0, REGEXP_PROP_ATTRS,    lastIndex_getter,
-                                            lastIndex_setter},
-    {"multiline",  0, RO_REGEXP_PROP_ATTRS, multiline_getter,  NULL},
-    {"sticky",     0, RO_REGEXP_PROP_ATTRS, sticky_getter,     NULL},
-    {0,0,0,0,0}
+static const struct LazyProp {
+    const char *name;
+    uint16 atomOffset;
+    PropertyOp getter;
+} lazyRegExpProps[] = {
+    { js_source_str,     ATOM_OFFSET(source),     source_getter },
+    { js_global_str,     ATOM_OFFSET(global),     global_getter },
+    { js_ignoreCase_str, ATOM_OFFSET(ignoreCase), ignoreCase_getter },
+    { js_multiline_str,  ATOM_OFFSET(multiline),  multiline_getter },
+    { js_sticky_str,     ATOM_OFFSET(sticky),     sticky_getter }
 };
+
+static JSBool
+regexp_enumerate(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->isRegExp());
+
+    jsval v;
+    if (!JS_LookupPropertyById(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.lastIndexAtom), &v))
+        return false;
+
+    for (size_t i = 0; i < JS_ARRAY_LENGTH(lazyRegExpProps); i++) {
+        const LazyProp &lazy = lazyRegExpProps[i];
+        jsid id = ATOM_TO_JSID(OFFSET_TO_ATOM(cx->runtime, lazy.atomOffset));
+        if (!JS_LookupPropertyById(cx, obj, id, &v))
+            return false;
+    }
+
+    return true;
+}
+
+static JSBool
+regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
+{
+    JS_ASSERT(obj->isRegExp());
+
+    if (!JSID_IS_ATOM(id))
+        return JS_TRUE;
+
+    if (id == ATOM_TO_JSID(cx->runtime->atomState.lastIndexAtom)) {
+        if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
+                                     lastIndex_getter, lastIndex_setter,
+                                     JSPROP_PERMANENT | JSPROP_SHARED, 0, 0, NULL)) {
+            return JS_FALSE;
+        }
+        *objp = obj;
+        return JS_TRUE;
+    }
+
+    for (size_t i = 0; i < JS_ARRAY_LENGTH(lazyRegExpProps); i++) {
+        const LazyProp &lazy = lazyRegExpProps[i];
+        JSAtom *atom = OFFSET_TO_ATOM(cx->runtime, lazy.atomOffset);
+        if (id == ATOM_TO_JSID(atom)) {
+            if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(),
+                                         lazy.getter, NULL,
+                                         JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_READONLY,
+                                         0, 0, NULL)) {
+                return JS_FALSE;
+            }
+            *objp = obj;
+            return JS_TRUE;
+        }
+    }
+
+    return JS_TRUE;
+}
 
 /*
  * RegExp class static properties and their Perl counterparts:
@@ -5274,15 +5327,14 @@ DEFINE_STATIC_SETTER(static_multiline_setter,
                          return false;
                      res->multiline = JSVAL_TO_BOOLEAN(*vp))
 
-#define REGEXP_STATIC_PROP_ATTRS    (REGEXP_PROP_ATTRS | JSPROP_ENUMERATE)
-#define RO_REGEXP_STATIC_PROP_ATTRS (REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY)
+const uint8 REGEXP_STATIC_PROP_ATTRS    = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE;
+const uint8 RO_REGEXP_STATIC_PROP_ATTRS = REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY;
 
 #define G Jsvalify(regexp_static_getProperty)
 #define S Jsvalify(regexp_static_setProperty)
 
 static JSPropertySpec regexp_static_props[] = {
-    {"input",        0, REGEXP_STATIC_PROP_ATTRS,    static_input_getter,
-                                                     static_input_setter},
+    {"input",        0, REGEXP_STATIC_PROP_ATTRS,    static_input_getter, static_input_setter},
     {"multiline",    0, REGEXP_STATIC_PROP_ATTRS,    static_multiline_getter,
                                                      static_multiline_setter},
     {"lastMatch",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastMatch_getter,    NULL},
@@ -5318,8 +5370,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
 static JSBool
 regexp_call(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
-    return regexp_exec_sub(cx, &argv[-2].asObject(), argc, argv,
-                           JS_FALSE, rval);
+    return regexp_exec_sub(cx, &argv[-2].toObject(), argc, argv, JS_FALSE, rval);
 }
 
 #if JS_HAS_XDR
@@ -5346,7 +5397,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         return JS_FALSE;
     }
     if (xdr->mode == JSXDR_DECODE) {
-        obj = NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
+        obj = NewBuiltinClassInstance(xdr->cx, &js_RegExpClass);
         if (!obj)
             return JS_FALSE;
         obj->clearParent();
@@ -5377,12 +5428,12 @@ regexp_trace(JSTracer *trc, JSObject *obj)
 
 Class js_RegExpClass = {
     js_RegExp_str,
-    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_FIXED_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     PropertyStub,       PropertyStub,
     PropertyStub,       PropertyStub,
-    EnumerateStub,      ResolveStub,
+    regexp_enumerate,   reinterpret_cast<JSResolveOp>(regexp_resolve),
     ConvertStub,        regexp_finalize,
     NULL,               NULL,
     regexp_call,        NULL,
@@ -5455,7 +5506,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
 static JSBool
 regexp_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     return obj && js_regexp_toString(cx, obj, vp);
 }
 
@@ -5484,7 +5535,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
              * here if the flags are specified. (We must use the flags
              * from the original RegExp also).
              */
-            obj2 = argv[0].asObjectOrNull();
+            obj2 = argv[0].toObjectOrNull();
             if (obj2 && obj2->getClass() == &js_RegExpClass) {
                 if (argc >= 2 && !argv[1].isUndefined()) { /* 'flags' passed */
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -5576,7 +5627,7 @@ created:
 static JSBool
 regexp_compile(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     return obj && regexp_compile_sub(cx, obj, argc, vp + 2, vp);
 }
 
@@ -5604,7 +5655,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
     HOLD_REGEXP(cx, re);
     sticky = (re->flags & JSREG_STICKY) != 0;
     if (re->flags & (JSREG_GLOB | JSREG_STICKY)) {
-        lastIndex = obj->getRegExpLastIndex().asNumber();
+        lastIndex = obj->getRegExpLastIndex().toNumber();
     } else {
         lastIndex = 0;
     }
@@ -5660,14 +5711,14 @@ out:
 static JSBool
 regexp_exec(JSContext *cx, uintN argc, Value *vp)
 {
-    return regexp_exec_sub(cx, ComputeThisObjectFromVp(cx, vp),
+    return regexp_exec_sub(cx, ComputeThisFromVp(cx, vp),
                            argc, vp + 2, JS_FALSE, vp);
 }
 
 static JSBool
 regexp_test(JSContext *cx, uintN argc, Value *vp)
 {
-    if (!regexp_exec_sub(cx, ComputeThisObjectFromVp(cx, vp),
+    if (!regexp_exec_sub(cx, ComputeThisFromVp(cx, vp),
                          argc, vp + 2, JS_TRUE, vp))
         return JS_FALSE;
     if (!vp->isTrue())
@@ -5696,13 +5747,13 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
          * TypeError.)  See 10.15.3.1.
          */
         if ((argc < 2 || argv[1].isUndefined()) && argv[0].isObject() &&
-            argv[0].asObject().getClass() == &js_RegExpClass) {
+            argv[0].toObject().getClass() == &js_RegExpClass) {
             *rval = argv[0];
             return JS_TRUE;
         }
 
         /* Otherwise, replace obj with a new RegExp object. */
-        obj = NewObject(cx, &js_RegExpClass, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
         if (!obj)
             return JS_FALSE;
 
@@ -5719,8 +5770,7 @@ JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto = js_InitClass(cx, obj, NULL, &js_RegExpClass, RegExp, 1,
-                                   regexp_props, regexp_methods,
-                                   regexp_static_props, NULL);
+                                   NULL, regexp_methods, regexp_static_props, NULL);
     if (!proto)
         return NULL;
 
@@ -5758,7 +5808,7 @@ js_NewRegExpObject(JSContext *cx, TokenStream *ts,
     re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
     if (!re)
         return NULL;
-    obj = NewObject(cx, &js_RegExpClass, NULL, NULL);
+    obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
     if (!obj) {
         js_DestroyRegExp(cx, re);
         return NULL;
@@ -5774,7 +5824,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     JS_ASSERT(obj->getClass() == &js_RegExpClass);
     JS_ASSERT(proto);
     JS_ASSERT(proto->getClass() == &js_RegExpClass);
-    JSObject *clone = NewObjectWithGivenProto(cx, &js_RegExpClass, proto, NULL);
+    JSObject *clone = NewNativeClassInstance(cx, &js_RegExpClass, proto, proto->getParent());
     if (!clone)
         return NULL;
     JSRegExp *re = static_cast<JSRegExp *>(obj->getPrivate());

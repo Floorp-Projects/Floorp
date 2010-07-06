@@ -1,0 +1,119 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
+      const nsIIDBTransaction = Components.interfaces.nsIIDBTransaction;
+
+      const name = window.location.pathname;
+      const description = "My Test Database";
+      const objectStoreInfo = [
+        { name: "a", keyPath: "id", autoIncrement: true },
+        { name: "b", keyPath: "id", autoIncrement: false },
+      ];
+      const indexInfo = [
+        { name: "1", keyPath: "unique_value", unique: true },
+        { name: "2", keyPath: "value", unique: false },
+        { name: "3", keyPath: "value" },
+      ];
+
+      let request = moz_indexedDB.open(name, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+      let db = event.result;
+
+      for (let i = 0; i < objectStoreInfo.length; i++) {
+        let info = objectStoreInfo[i];
+        request = info.hasOwnProperty("autoIncrement") ?
+                  db.createObjectStore(info.name, info.keyPath,
+                                       info.autoIncrement) :
+                  db.createObjectStore(info.name, info.keyPath);
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+        let objectStore = event.result;
+
+        // Test basic failure conditions.
+        try {
+          request = objectStore.createIndex(null, null);
+          ok(false, "createIndex with null name should throw");
+        }
+        catch(e) {
+          ok(true, "createIndex with null name should throw");
+        }
+
+        try {
+          request = objectStore.createIndex("", "");
+          ok(false, "createIndex with empty name should throw");
+        }
+        catch(e) {
+          ok(true, "createIndex with empty name should throw");
+        }
+
+        try {
+          request = objectStore.createIndex("Hola");
+          ok(false, "createIndex with no keyPath should throw");
+        }
+        catch(e) {
+          ok(true, "createIndex with no keyPath should throw");
+        }
+
+        // Test index creation, and that it ends up in indexNames.
+        let objectStoreName = info.name;
+        for (let j = 0; j < indexInfo.length; j++) {
+          let info = indexInfo[j];
+          let count = objectStore.indexNames.length;
+          request = info.hasOwnProperty("unique") ?
+                    objectStore.createIndex(info.name, info.keyPath,
+                                            info.unique) :
+                    objectStore.createIndex(info.name, info.keyPath);
+          request.onerror = errorHandler;
+          request.onsuccess = grabEventAndContinueHandler;
+          event = yield;
+
+          is(objectStore.indexNames.length, count + 1,
+             "indexNames grew in size");
+          let found = false;
+          for (let k = 0; k < objectStore.indexNames.length; k++) {
+            if (objectStore.indexNames.item(k) == info.name) {
+              found = true;
+              break;
+            }
+          }
+          ok(found, "Name is on objectStore.indexNames");
+
+          ok(event.transaction, "event has a transaction");
+          ok(event.transaction.db === db, "transaction has the right db");
+          is(event.transaction.readyState, nsIIDBTransaction.LOADING,
+             "transaction has the correct readyState");
+          is(event.transaction.mode, nsIIDBTransaction.READ_WRITE,
+             "transaction has the correct mode");
+          is(event.transaction.objectStoreNames.length, 1,
+             "transaction only has one object store");
+          is(event.transaction.objectStoreNames.item(0), objectStoreName,
+             "transaction has the correct object store");
+        }
+      }
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

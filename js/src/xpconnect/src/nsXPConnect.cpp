@@ -56,6 +56,8 @@
 
 #include "jstypedarray.h"
 
+#include "XrayWrapper.h"
+
 NS_IMPL_THREADSAFE_ISUPPORTS6(nsXPConnect,
                               nsIXPConnect,
                               nsISupportsWeakReference,
@@ -445,7 +447,24 @@ nsXPConnect::Collect()
 
     JSContext *cx = mCycleCollectionContext->GetJSContext();
     gOldJSGCCallback = JS_SetGCCallback(cx, XPCCycleCollectGCCallback);
-    JS_GC(cx);
+
+    // We want to scan the current thread for GC roots only if it was in a
+    // request prior to the Collect call to avoid false positives during the
+    // cycle collection. So to compensate for JS_BeginRequest in
+    // XPCCallContext::Init we disable the conservative scanner if that call
+    // has started the only request on this thread.
+    JS_ASSERT(cx->requestDepth >= 1);
+    JS_ASSERT(cx->thread->contextsInRequests >= 1);
+    if(cx->requestDepth >= 2 || cx->thread->contextsInRequests >= 2)
+    {
+        JS_GC(cx);
+    }
+    else
+    {
+        JS_THREAD_DATA(cx)->conservativeGC.disable();
+        JS_GC(cx);
+        JS_THREAD_DATA(cx)->conservativeGC.enable();
+    }
     JS_SetGCCallback(cx, gOldJSGCCallback);
     gOldJSGCCallback = nsnull;
 
@@ -582,7 +601,8 @@ nsXPConnect::CommenceShutdown()
     fprintf(stderr, "nsXPConnect::CommenceShutdown()\n");
 #endif
     // Tell the JS engine that we are about to destroy the runtime.
-    JS_CommenceRuntimeShutDown(mRuntime->GetJSRuntime());
+    JSRuntime* rt = mRuntime->GetJSRuntime();
+    JS_CommenceRuntimeShutDown(rt);
 }
 
 NS_IMETHODIMP
@@ -1069,8 +1089,7 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
         return UnexpectedFailure(NS_ERROR_FAILURE);
     SaveFrame sf(aJSContext);
 
-    if(!xpc_InitJSxIDClassObjects())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
+    xpc_InitJSxIDClassObjects();
 
     if(!xpc_InitWrappedNativeJSOps())
         return UnexpectedFailure(NS_ERROR_FAILURE);
@@ -2148,6 +2167,15 @@ nsXPConnect::UpdateXOWs(JSContext* aJSContext,
     if(!list)
         return NS_OK; // No wrappers to update.
 
+    if(aWay == nsIXPConnect::XPC_XOW_NAVIGATED)
+    {
+        XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(aObject);
+        NS_ASSERTION(wn->NeedsXOW(), "Window isn't a window");
+
+        XPCCrossOriginWrapper::WindowNavigated(aJSContext, wn);
+        return NS_OK;
+    }
+
     JSAutoRequest req(aJSContext);
 
     Link* cur = list;
@@ -2492,7 +2520,7 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
 
     {
         JSObject *possibleOuter = objectscope->GetGlobalJSObject();
-        Innerize(aJSContext, &possibleOuter);
+        OBJ_TO_INNER_OBJECT(aJSContext, possibleOuter);
         if(!possibleOuter)
             return NS_ERROR_FAILURE;
 
@@ -2562,7 +2590,7 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
         return NS_ERROR_FAILURE;
 
     *_retval = OBJECT_TO_JSVAL(wrappedObj);
-    if(wrapper && wrapper->NeedsChromeWrapper() &&
+    if(wrapper && wrapper->NeedsSOW() &&
        !SystemOnlyWrapper::WrapObject(aJSContext, aScope, *_retval, _retval))
         return NS_ERROR_FAILURE;
     return NS_OK;
@@ -2763,6 +2791,12 @@ nsXPConnect::GetPrincipal(JSObject* obj, PRBool allowShortCircuit) const
     }
 
     return nsnull;
+}
+
+NS_IMETHODIMP_(void)
+nsXPConnect::GetXrayWrapperPropertyHolderGetPropertyOp(JSPropertyOp *getPropertyPtr)
+{
+    *getPropertyPtr = xpc::HolderClass.getProperty;
 }
 
 NS_IMETHODIMP_(void)

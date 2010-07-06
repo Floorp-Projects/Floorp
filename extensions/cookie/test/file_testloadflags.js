@@ -23,6 +23,19 @@ function setupTest(uri, domain, cookies, loads, headers) {
 
   var cs = Components.classes["@mozilla.org/cookiemanager;1"]
                      .getService(Components.interfaces.nsICookieManager2);
+
+  ok(true, "we are going to remove these cookies");
+  var count = 0;
+  var list = cs.enumerator;
+  while (list.hasMoreElements()) {
+    var cookie = list.getNext().QueryInterface(Components.interfaces.nsICookie);
+    ok(true, "cookie: " + cookie);
+    ok(true, "cookie host " + cookie.host + " path " + cookie.path + " name " + cookie.name +
+       " value " + cookie.value + " isSecure " + cookie.isSecure + " expires " + cookie.expires);
+    ++count;
+  }
+  ok(true, count + " cookies");
+
   cs.removeAll();
   cs.add(domain, "", "oh", "hai", false, false, true, Math.pow(2, 62));
   is(cs.countCookiesFromHost(domain), 1, "number of cookies for domain " + domain);
@@ -166,5 +179,5 @@ function runTest() {
   is(count, gExpectedCookies, "total number of cookies");
   cs.removeAll();
 
-  finishTest();
+  setTimeout(finishTest, 5000);
 }

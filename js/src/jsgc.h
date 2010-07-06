@@ -42,6 +42,9 @@
 /*
  * JS Garbage Collector.
  */
+#include <setjmp.h>
+
+#include "jstypes.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsdhash.h"
@@ -190,18 +193,6 @@ typedef enum JSGCInvocationKind {
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
 
-/*
- * Set object's prototype or parent slot while checking that doing so would
- * not create a cycle in the proto or parent chain. The cycle check and slot
- * change are done only when all other requests are finished or suspended to
- * ensure exclusive access to the chain. If there is a cycle, return false
- * without reporting an error. Otherwise, set the proto or parent and return
- * true.
- */
-extern bool
-js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
-                                     uint32 slot, JSObject *pobj);
-
 #ifdef JS_THREADSAFE
 /*
  * This is a helper for code at can potentially run outside JS request to
@@ -337,9 +328,9 @@ struct JSWeakRoots {
 
 #define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
 
-#ifdef JS_THREADSAFE
-
 namespace js {
+
+#ifdef JS_THREADSAFE
 
 /*
  * During the finalization we do not free immediately. Rather we add the
@@ -383,8 +374,31 @@ class BackgroundSweepTask : public JSBackgroundTask {
     virtual void run();
 };
 
-}
-#endif
+#endif /* JS_THREADSAFE */
+
+struct ConservativeGCThreadData {
+
+    /*
+     * The GC scans conservatively between JSThreadData::nativeStackBase and
+     * nativeStackTop unless the latter is NULL.
+     */
+    jsuword             *nativeStackTop;
+
+    union {
+        jmp_buf         jmpbuf;
+        jsuword         words[JS_HOWMANY(sizeof(jmp_buf), sizeof(jsuword))];
+    } registerSnapshot;
+
+    int                 enableCount;
+
+    JS_NEVER_INLINE JS_FRIEND_API(void) enable(bool knownStackBoundary = false);
+    JS_FRIEND_API(void) disable();
+    bool isEnabled() const { return enableCount > 0; }
+};
+
+} /* namespace js */
+
+#define JS_DUMP_CONSERVATIVE_GC_ROOTS 1
 
 extern void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str);
@@ -394,6 +408,23 @@ const bool JS_WANT_GC_METER_PRINT = true;
 #elif defined DEBUG
 # define JS_GCMETER 1
 const bool JS_WANT_GC_METER_PRINT = false;
+#endif
+
+#if defined JS_GCMETER || defined JS_DUMP_CONSERVATIVE_GC_ROOTS
+
+struct JSConservativeGCStats {
+    uint32  words;      /* number of words on native stacks */
+    uint32  lowbitset;  /* excluded because one of the low bits was set */
+    uint32  notarena;   /* not within arena range in a chunk */
+    uint32  notchunk;   /* not within a valid chunk */
+    uint32  freearena;  /* not within non-free arena */
+    uint32  wrongtag;   /* tagged pointer but wrong type */
+    uint32  notlive;    /* gcthing is not allocated */
+    uint32  gcthings;   /* number of live gcthings */
+    uint32  unmarked;   /* number of unmarked gc things discovered on the
+                           stack */
+};
+
 #endif
 
 #ifdef JS_GCMETER
@@ -443,6 +474,8 @@ struct JSGCStats {
     uint32  maxnchunks;     /* maximum number of allocated chunks */
 
     JSGCArenaStats  arenaStats[FINALIZE_LIMIT];
+
+    JSConservativeGCStats conservative;
 };
 
 extern JS_FRIEND_API(void)
@@ -458,6 +491,16 @@ extern void
 js_MarkTraps(JSTracer *trc);
 
 namespace js {
+
+/*
+ * Set object's prototype while checking that doing so would not create
+ * a cycle in the proto chain. The cycle check and proto change are done
+ * only when all other requests are finished or suspended to ensure exclusive
+ * access to the chain. If there is a cycle, return false without reporting
+ * an error. Otherwise, set the proto and return true.
+ */
+extern bool
+SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto);
 
 /* N.B. Assumes JS_SET_TRACING_NAME/INDEX has already been called. */
 void
@@ -481,15 +524,22 @@ static inline void
 MarkStringRange(JSTracer *trc, size_t len, JSString **vec, const char *name)
 {
     for (uint32 i = 0; i < len; i++) {
-        if (JSString *str = vec[i])
-            MarkString(trc, str, name);
+        if (JSString *str = vec[i]) {
+            JS_SET_TRACING_INDEX(trc, name, i);
+            Mark(trc, str, JSTRACE_STRING);
+        }
     }
 }
 
 static inline void
 MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
 {
-    MarkStringRange(trc, len, reinterpret_cast<JSString **>(vec), name);
+    for (uint32 i = 0; i < len; i++) {
+        if (JSAtom *atom = vec[i]) {
+            JS_SET_TRACING_INDEX(trc, name, i);
+            Mark(trc, ATOM_TO_STRING(atom), JSTRACE_STRING);
+        }
+    }
 }
 
 static inline void
@@ -503,8 +553,10 @@ static inline void
 MarkObjectRange(JSTracer *trc, size_t len, JSObject **vec, const char *name)
 {
     for (uint32 i = 0; i < len; i++) {
-        if (JSObject *obj = vec[i])
-            MarkObject(trc, obj, name);
+        if (JSObject *obj = vec[i]) {
+            JS_SET_TRACING_INDEX(trc, name, i);
+            Mark(trc, obj, JSTRACE_OBJECT);
+        }
     }
 }
 
@@ -539,19 +591,28 @@ MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name)
 }
 
 static inline void
-MarkId(JSTracer *trc, jsid id, const char *name)
+MarkId(JSTracer *trc, jsid id)
 {
     if (JSID_IS_STRING(id))
-        Mark(trc, JSID_TO_STRING(id), JSTRACE_STRING, name);
+        Mark(trc, JSID_TO_STRING(id), JSTRACE_STRING);
     else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
-        Mark(trc, JSID_TO_OBJECT(id), JSTRACE_OBJECT, name);
+        Mark(trc, JSID_TO_OBJECT(id), JSTRACE_OBJECT);
+}
+
+static inline void
+MarkId(JSTracer *trc, jsid id, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    MarkId(trc, id);
 }
 
 static inline void
 MarkIdRange(JSTracer *trc, jsid *beg, jsid *end, const char *name)
 {
-    for (jsid *idp = beg; idp != end; ++idp)
-        MarkId(trc, *idp, name);
+    for (jsid *idp = beg; idp != end; ++idp) {
+        JS_SET_TRACING_INDEX(trc, name, (idp - beg));
+        MarkId(trc, *idp);
+    }
 }
 
 static inline void
@@ -579,10 +640,7 @@ MarkGCThing(JSTracer *trc, void *thing, const char *name, size_t index)
 }
 
 JSCompartment *
-NewCompartment(JSContext *cx);
-
-void
-SweepCompartments(JSContext *cx);
+NewCompartment(JSContext *cx, JSPrincipals *principals);
 
 } /* namespace js */
 

@@ -78,7 +78,6 @@ CPPSRCS		= \
 		nsScreenManagerGtk.cpp \
 		nsImageToPixbuf.cpp \
 		nsAccessibilityHelper.cpp \
-		nsAccelerometerUnix.cpp \
 		nsGtkIMModule.cpp \
 		$(NULL)
 
@@ -92,6 +91,9 @@ CPPSRCS		+= \
 		nsPrintOptionsGTK.cpp \
 		nsPrintDialogGTK.cpp \
 		nsPrintSettingsGTK.cpp \
+		nsCUPSShim.cpp \
+		nsPaperPS.cpp \
+		nsPSPrinters.cpp \
 		$(NULL)
 endif
 
@@ -154,14 +156,8 @@ endif
 
 DEFINES		+= -DCAIRO_GFX
 
-ifdef MOZ_ENABLE_POSTSCRIPT
-DEFINES         += -DUSE_POSTSCRIPT
-EXTRA_DSO_LDOPTS += -lgfxpsshar
-endif
-
-
-DEFINES		+=
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/../shared \
 		-I$(topsrcdir)/other-licenses/atk-1.0 \
 		$(NULL)

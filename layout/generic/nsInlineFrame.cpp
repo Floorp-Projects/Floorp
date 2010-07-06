@@ -718,90 +718,88 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (NS_INLINE_IS_BREAK(aStatus)) {
-    if (NS_INLINE_IS_BREAK_BEFORE(aStatus)) {
-      if (aFrame != mFrames.FirstChild()) {
-        // Change break-before status into break-after since we have
-        // already placed at least one child frame. This preserves the
-        // break-type so that it can be propagated upward.
-        aStatus = NS_FRAME_NOT_COMPLETE |
-          NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
-          (aStatus & NS_INLINE_BREAK_TYPE_MASK);
-        PushFrames(aPresContext, aFrame, irs.mPrevFrame, irs);
-      }
-      else {
-        // Preserve reflow status when breaking-before our first child
-        // and propagate it upward without modification.
-        // Note: if we're lazily setting the frame pointer for our child 
-        // frames, then we need to set it now. Don't return and leave the
-        // remaining child frames in our child list with the wrong parent
-        // frame pointer...
-        if (irs.mSetParentPointer) {
-          if (irs.mLineContainer && irs.mLineContainer->GetPrevContinuation()) {
-            ReparentFloatsForInlineChild(irs.mLineContainer, aFrame->GetNextSibling(),
-                                         PR_TRUE);
-          }
-          for (nsIFrame* f = aFrame->GetNextSibling(); f; f = f->GetNextSibling()) {
-            f->SetParent(this);
-            if (lineLayout->GetInFirstLine()) {
-              aPresContext->FrameManager()->ReparentStyleContext(f);
-            }
-          }
-        }
-      }
+
+  if (NS_INLINE_IS_BREAK_BEFORE(aStatus)) {
+    if (aFrame != mFrames.FirstChild()) {
+      // Change break-before status into break-after since we have
+      // already placed at least one child frame. This preserves the
+      // break-type so that it can be propagated upward.
+      aStatus = NS_FRAME_NOT_COMPLETE |
+        NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
+        (aStatus & NS_INLINE_BREAK_TYPE_MASK);
+      PushFrames(aPresContext, aFrame, irs.mPrevFrame, irs);
     }
     else {
-      // Break-after
-      if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-        nsIFrame* newFrame;
-        rv = CreateNextInFlow(aPresContext, aFrame, newFrame);
-        if (NS_FAILED(rv)) {
-          return rv;
+      // Preserve reflow status when breaking-before our first child
+      // and propagate it upward without modification.
+      // Note: if we're lazily setting the frame pointer for our child 
+      // frames, then we need to set it now. Don't return and leave the
+      // remaining child frames in our child list with the wrong parent
+      // frame pointer...
+      if (irs.mSetParentPointer) {
+        if (irs.mLineContainer && irs.mLineContainer->GetPrevContinuation()) {
+          ReparentFloatsForInlineChild(irs.mLineContainer, aFrame->GetNextSibling(),
+                                       PR_TRUE);
         }
-      }
-      nsIFrame* nextFrame = aFrame->GetNextSibling();
-      if (nextFrame) {
-        NS_FRAME_SET_INCOMPLETE(aStatus);
-        PushFrames(aPresContext, nextFrame, aFrame, irs);
-      }
-      else if (nsnull != GetNextInFlow()) {
-        // We must return an incomplete status if there are more child
-        // frames remaining in a next-in-flow that follows this frame.
-        nsInlineFrame* nextInFlow = (nsInlineFrame*) GetNextInFlow();
-        while (nsnull != nextInFlow) {
-          if (nextInFlow->mFrames.NotEmpty()) {
-            NS_FRAME_SET_INCOMPLETE(aStatus);
-            break;
+        for (nsIFrame* f = aFrame->GetNextSibling(); f; f = f->GetNextSibling()) {
+          f->SetParent(this);
+          if (lineLayout->GetInFirstLine()) {
+            aPresContext->FrameManager()->ReparentStyleContext(f);
           }
-          nextInFlow = (nsInlineFrame*) nextInFlow->GetNextInFlow();
         }
       }
     }
+    return NS_OK;
   }
-  else if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
+
+  // Create a next-in-flow if needed.
+  if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
     if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
       nsBlockReflowState* blockRS = lineLayout->mBlockRS;
-      nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(aFrame);
-      rv = blockRS->mBlock->SplitFloat(*blockRS, placeholder->GetOutOfFlowFrame(),
+      nsPlaceholderFrame* placeholder =
+        static_cast<nsPlaceholderFrame*>(aFrame);
+      rv = blockRS->mBlock->SplitFloat(*blockRS,
+                                       placeholder->GetOutOfFlowFrame(),
                                        aStatus);
-      // Allow the parent to continue reflowing
+      // Allow the parent to continue reflowing.
       aStatus = NS_FRAME_COMPLETE;
+      return rv;
     }
-    else {
-      nsIFrame* newFrame;
-      rv = CreateNextInFlow(aPresContext, aFrame, newFrame);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      if (!reflowingFirstLetter) {
-        nsIFrame* nextFrame = aFrame->GetNextSibling();
-        if (nextFrame) {
-          PushFrames(aPresContext, nextFrame, aFrame, irs);
-        }
-      }
+    nsIFrame* newFrame;
+    rv = CreateNextInFlow(aPresContext, aFrame, newFrame);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
-  return rv;
+
+  if (NS_INLINE_IS_BREAK_AFTER(aStatus)) {
+    nsIFrame* nextFrame = aFrame->GetNextSibling();
+    if (nextFrame) {
+      NS_FRAME_SET_INCOMPLETE(aStatus);
+      PushFrames(aPresContext, nextFrame, aFrame, irs);
+    }
+    else {
+      // We must return an incomplete status if there are more child
+      // frames remaining in a next-in-flow that follows this frame.
+      nsInlineFrame* nextInFlow = static_cast<nsInlineFrame*>(GetNextInFlow());
+      while (nextInFlow) {
+        if (nextInFlow->mFrames.NotEmpty()) {
+          NS_FRAME_SET_INCOMPLETE(aStatus);
+          break;
+        }
+        nextInFlow = static_cast<nsInlineFrame*>(nextInFlow->GetNextInFlow());
+      }
+    }
+    return NS_OK;
+  }
+
+  if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus) && !reflowingFirstLetter) {
+    nsIFrame* nextFrame = aFrame->GetNextSibling();
+    if (nextFrame) {
+      PushFrames(aPresContext, nextFrame, aFrame, irs);
+    }
+  }
+  return NS_OK;
 }
 
 nsIFrame*
@@ -946,27 +944,30 @@ nsInlineFrame::GetSkipSides() const
 }
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsInlineFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsInlineFrame::CreateAccessible()
 {
   // Broken image accessibles are created here, because layout
   // replaces the image or image control frame with an inline frame
-  *aAccessible = nsnull;
   nsIAtom *tagAtom = mContent->Tag();
   if ((tagAtom == nsGkAtoms::img || tagAtom == nsGkAtoms::input || 
        tagAtom == nsGkAtoms::label) && mContent->IsHTML()) {
     // Only get accessibility service if we're going to use it
     nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
     if (!accService)
-      return NS_ERROR_FAILURE;
+      return nsnull;
     if (tagAtom == nsGkAtoms::input)  // Broken <input type=image ... />
-      return accService->CreateHTMLButtonAccessible(static_cast<nsIFrame*>(this), aAccessible);
+      return accService->CreateHTMLButtonAccessible(mContent,
+                                                    PresContext()->PresShell());
     else if (tagAtom == nsGkAtoms::img)  // Create accessible for broken <img>
-      return accService->CreateHTMLImageAccessible(static_cast<nsIFrame*>(this), aAccessible);
+      return accService->CreateHTMLImageAccessible(mContent,
+                                                   PresContext()->PresShell());
     else if (tagAtom == nsGkAtoms::label)  // Creat accessible for <label>
-      return accService->CreateHTMLLabelAccessible(static_cast<nsIFrame*>(this), aAccessible);
+      return accService->CreateHTMLLabelAccessible(mContent,
+                                                   PresContext()->PresShell());
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 #endif
 

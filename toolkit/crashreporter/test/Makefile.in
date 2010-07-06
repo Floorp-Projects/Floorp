@@ -48,6 +48,7 @@ XPCSHELL_TESTS = unit
 
 LIBRARY_NAME = testcrasher
 IS_COMPONENT    = 1
+NO_DIST_INSTALL = 1
 
 XPIDLSRCS = nsITestCrasher.idl
 
@@ -75,9 +76,13 @@ EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS) $(XPCOM_LIBS)
 
 endif
 
+EXTRA_PP_COMPONENTS = testcrasher.manifest
+
 include $(topsrcdir)/config/rules.mk
 
-ifeq (browser,$(MOZ_BUILD_APP))
+DEFINES += -DSHARED_LIBRARY=$(SHARED_LIBRARY)
+
+ifneq (mobile,$(MOZ_BUILD_APP))
 _BROWSER_FILES = \
   browser/aboutcrashes_utils.js \
   browser/crashreport.sjs \
@@ -88,13 +93,9 @@ _BROWSER_FILES = \
 
 libs::  $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/browser
-	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
-	$(INSTALL) $(SHARED_LIBRARY) \
-          $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
-else
-
-libs::
-	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
-	$(INSTALL) $(SHARED_LIBRARY) \
-          $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
 endif
+
+libs:: $(SHARED_LIBRARY) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
+	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
+	$(INSTALL) $^ $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(srcdir)/testcrasher.manifest > $(DEPTH)/_tests/xpcshell/$(MODULE)/unit/components/testcrasher.manifest

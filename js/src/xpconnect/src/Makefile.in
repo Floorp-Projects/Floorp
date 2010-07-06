@@ -116,6 +116,7 @@ endif
 include $(topsrcdir)/config/config.mk
 
 LOCAL_INCLUDES = \
+		-I$(srcdir)/../wrappers \
 		-I$(srcdir)/../loader \
 		-I$(topsrcdir)/js/src \
 		-I$(topsrcdir)/js/src/nanojit \
@@ -136,6 +137,10 @@ SHARED_LIBRARY_LIBS = \
 		../loader/$(LIB_PREFIX)jsloader_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
+
+SHARED_LIBRARY_LIBS += \
+		../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -159,7 +164,9 @@ DEFINES += \
   $(addprefix -D,$(filter AVMPLUS%,$(CONFIG))) \
   $(NULL)
 
-ENABLE_TRACEABLE_FLAGS = --enable-traceables
+# TODO: add this back again
+#ENABLE_TRACEABLE_FLAGS = --enable-traceables
+ENABLE_TRACEABLE_FLAGS =
 
 endif # ENABLE_JIT
 

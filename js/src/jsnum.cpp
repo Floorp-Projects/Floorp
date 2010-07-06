@@ -306,7 +306,7 @@ num_toSource(JSContext *cx, uintN argc, Value *vp)
     const Value *primp;
     if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &primp))
         return JS_FALSE;
-    double d = primp->asNumber();
+    double d = primp->toNumber();
     numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, numBuf, sizeof numBuf,
                        DTOSTR_STANDARD, 0, d);
     if (!numStr) {
@@ -378,7 +378,7 @@ num_toString(JSContext *cx, uintN argc, Value *vp)
     const Value *primp;
     if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &primp))
         return JS_FALSE;
-    double d = primp->asNumber();
+    double d = primp->toNumber();
     int32_t base = 10;
     if (argc != 0 && !vp[2].isUndefined()) {
         if (!ValueToECMAInt32(cx, vp[2], &base))
@@ -420,7 +420,7 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
     if (!num_toString(cx, 0, vp))
         return JS_FALSE;
     JS_ASSERT(vp->isString());
-    num = js_GetStringBytes(cx, vp->asString());
+    num = js_GetStringBytes(cx, vp->toString());
     if (!num)
         return JS_FALSE;
 
@@ -515,7 +515,7 @@ num_valueOf(JSContext *cx, uintN argc, Value *vp)
         *vp = vp[1];
         return JS_TRUE;
     }
-    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+    JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!InstanceOf(cx, obj, &js_NumberClass, vp + 2))
         return JS_FALSE;
     *vp = obj->getPrimitiveThis();
@@ -537,7 +537,7 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
     const Value *primp;
     if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &primp))
         return JS_FALSE;
-    double d = primp->asNumber();
+    double d = primp->toNumber();
 
     double precision;
     if (argc == 0) {
@@ -742,7 +742,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;
-    proto->setPrimitiveThis(Int32Tag(0));
+    proto->setPrimitiveThis(Int32Value(0));
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
         return NULL;
 
@@ -862,10 +862,10 @@ js_NumberValueToCharBuffer(JSContext *cx, const Value &v, JSCharBuffer &cb)
     char arr[arrSize];
     const char *cstr;
     if (v.isInt32()) {
-        cstr = IntToCString(v.asInt32(), 10, arr, arrSize);
+        cstr = IntToCString(v.toInt32(), 10, arr, arrSize);
     } else {
         cstr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, arr, arrSize,
-                         DTOSTR_STANDARD, 0, v.asDouble());
+                         DTOSTR_STANDARD, 0, v.toDouble());
     }
     if (!cstr)
         return JS_FALSE;
@@ -898,19 +898,19 @@ ValueToNumberSlow(JSContext *cx, Value v, double *out)
     goto skip_int_double;
     for (;;) {
         if (v.isNumber()) {
-            *out = v.asNumber();
+            *out = v.toNumber();
             return true;
         }
       skip_int_double:
         if (v.isString()) {
-            jsdouble d = StringToNumberType<jsdouble>(cx, v.asString());
+            jsdouble d = StringToNumberType<jsdouble>(cx, v.toString());
             if (JSDOUBLE_IS_NaN(d))
                 break;
             *out = d;
             return true;
         }
         if (v.isBoolean()) {
-            if (v.asBoolean()) {
+            if (v.toBoolean()) {
                 *out = 1.0;
                 return true;
             }
@@ -925,7 +925,7 @@ ValueToNumberSlow(JSContext *cx, Value v, double *out)
             break;
 
         JS_ASSERT(v.isObject());
-        JSObject *obj = &v.asObject();
+        JSObject *obj = &v.toObject();
 
         /*
          * defaultValue has a special contract whereby the callee may not
@@ -948,7 +948,7 @@ ValueToECMAInt32Slow(JSContext *cx, const Value &v, int32_t *out)
     JS_ASSERT(!v.isInt32());
     jsdouble d;
     if (v.isDouble()) {
-        d = v.asDouble();
+        d = v.toDouble();
     } else {
         if (!ValueToNumberSlow(cx, v, &d))
             return false;
@@ -963,7 +963,7 @@ ValueToECMAUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
     JS_ASSERT(!v.isInt32());
     jsdouble d;
     if (v.isDouble()) {
-        d = v.asDouble();
+        d = v.toDouble();
     } else {
         if (!ValueToNumberSlow(cx, v, &d))
             return false;
@@ -1011,7 +1011,7 @@ ValueToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
     JS_ASSERT(!v.isInt32());
     jsdouble d;
     if (v.isDouble()) {
-        d = v.asDouble();
+        d = v.toDouble();
     } else if (!ValueToNumberSlow(cx, v, &d)) {
         return false;
     }
@@ -1031,7 +1031,7 @@ ValueToUint16Slow(JSContext *cx, const Value &v, uint16_t *out)
     JS_ASSERT(!v.isInt32());
     jsdouble d;
     if (v.isDouble()) {
-        d = v.asDouble();
+        d = v.toDouble();
     } else if (!ValueToNumberSlow(cx, v, &d)) {
         return false;
     }

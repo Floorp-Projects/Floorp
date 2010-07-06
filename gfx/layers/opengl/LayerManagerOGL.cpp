@@ -62,29 +62,14 @@ using namespace mozilla::gl;
 
 int LayerManagerOGLProgram::sCurrentProgramKey = 0;
 
-static void
-DumpLayerAndChildren(LayerOGL *l, int advance = 0)
-{
-  for (int i = 0; i < advance; i++)
-    fprintf(stderr, "  ");
-
-  fprintf(stderr, "%p: Layer type %d\n", l, l->GetType());
-
-  l = l->GetFirstChildOGL();
-  while (l) {
-    DumpLayerAndChildren(l, advance+1);
-    Layer *genl =  l->GetLayer()->GetNextSibling();
-    l = genl ? static_cast<LayerOGL*>(genl->ImplData()) : nsnull;
-  }
-}
-
 /**
  * LayerManagerOGL
  */
-LayerManagerOGL::LayerManagerOGL(nsIWidget *aWidget) 
+LayerManagerOGL::LayerManagerOGL(nsIWidget *aWidget)
   : mWidget(aWidget)
   , mBackBufferFBO(0)
   , mBackBufferTexture(0)
+  , mBackBufferSize(-1, -1)
   , mHasBGRA(0)
 {
 }
@@ -94,6 +79,8 @@ LayerManagerOGL::~LayerManagerOGL()
   if (mGLContext)
     mGLContext->MakeCurrent();
 
+  mRoot = NULL;
+
   for (unsigned int i = 0; i < mPrograms.Length(); ++i)
     delete mPrograms[i];
 
@@ -101,13 +88,17 @@ LayerManagerOGL::~LayerManagerOGL()
 }
 
 PRBool
-LayerManagerOGL::Initialize()
+LayerManagerOGL::Initialize(GLContext *aExistingContext)
 {
-  mGLContext = sGLContextProvider.CreateForWindow(mWidget);
+  if (aExistingContext) {
+    mGLContext = aExistingContext;
+  } else {
+    mGLContext = sGLContextProvider.CreateForWindow(mWidget);
 
-  if (!mGLContext) {
-    NS_WARNING("Failed to create LayerManagerOGL context");
-    return PR_FALSE;
+    if (!mGLContext) {
+      NS_WARNING("Failed to create LayerManagerOGL context");
+      return PR_FALSE;
+    }
   }
 
   MakeCurrent();
@@ -226,6 +217,8 @@ LayerManagerOGL::Initialize()
     return false;
   }
 
+  mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+
   if (mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB) {
     /* If we're using TEXTURE_RECTANGLE, then we must have the ARB
      * extension -- the EXT variant does not provide support for
@@ -295,7 +288,6 @@ LayerManagerOGL::SetClippingRegion(const nsIntRegion& aClippingRegion)
 void
 LayerManagerOGL::BeginTransaction()
 {
-  NS_ASSERTION(mRootLayer, "Root not set");
 }
 
 void
@@ -317,12 +309,6 @@ LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
   mThebesLayerCallbackData = nsnull;
 
   mTarget = NULL;
-}
-
-void
-LayerManagerOGL::SetRoot(Layer *aLayer)
-{
-  mRootLayer = static_cast<LayerOGL*>(aLayer->ImplData());;
 }
 
 already_AddRefed<ThebesLayer>
@@ -373,13 +359,15 @@ LayerManagerOGL::MakeCurrent()
   mGLContext->MakeCurrent();
 }
 
+LayerOGL*
+LayerManagerOGL::RootLayer() const
+{
+  return static_cast<LayerOGL*>(mRoot->ImplData());
+}
+
 void
 LayerManagerOGL::Render()
 {
-  static int rcount = 0;
-
-  //DumpLayerAndChildren(mRootLayer);
-
   nsIntRect rect;
   mWidget->GetBounds(rect);
   GLint width = rect.width;
@@ -406,7 +394,7 @@ LayerManagerOGL::Render()
   // helping us with anything -- we draw to a specific location in the
   // front buffer as it is.
 
-  const nsIntRect *clipRect = mRootLayer->GetLayer()->GetClipRect();
+  const nsIntRect *clipRect = mRoot->GetClipRect();
 
   if (clipRect) {
     mGLContext->fScissor(clipRect->x, clipRect->y,
@@ -423,7 +411,7 @@ LayerManagerOGL::Render()
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
   // Render our layers.
-  mRootLayer->RenderLayer(mBackBufferFBO, nsIntPoint(0, 0));
+  RootLayer()->RenderLayer(mBackBufferFBO, nsIntPoint(0, 0));
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
@@ -512,7 +500,13 @@ LayerManagerOGL::Render()
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
-  mGLContext->fFinish();
+  // XXX this is an intermediate workaround for windows that are
+  // double-buffered by default on GLX systems.  The swap is a no-op
+  // everywhere else (and for non-double-buffered GLX windows).  If
+  // the swap is actually performed, it implicitly glFlush()s.
+  if (!mGLContext->SwapBuffers()) {
+    mGLContext->fFlush();
+  } 
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 }
@@ -634,8 +628,8 @@ LayerManagerOGL::ProgramType LayerManagerOGL::sLayerProgramTypes[] = {
 };
 
 #define FOR_EACH_LAYER_PROGRAM(vname)                       \
-  for (int lpindex = 0;                                     \
-       lpindex < sizeof(sLayerProgramTypes)/sizeof(int);    \
+  for (size_t lpindex = 0;                                  \
+       lpindex < NS_ARRAY_LENGTH(sLayerProgramTypes);       \
        ++lpindex)                                           \
   {                                                         \
     LayerProgram *vname = static_cast<LayerProgram*>        \

@@ -758,7 +758,7 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   nsIDocument* doc = GetOwnerDoc();
   NS_ASSERTION(doc, "SVG element without doc");
   if (doc) {
-    nsIPresShell* shell = doc->GetPrimaryShell();
+    nsIPresShell* shell = doc->GetShell();
     nsPresContext* context = shell ? shell->GetPresContext() : nsnull;
     if (context && context->IsProcessingRestyles() &&
         !context->IsProcessingAnimationStyleChange()) {
@@ -766,7 +766,7 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
       // want that to happen from SMIL-animated value of mapped attrs, so
       // ignore animated value for now, and request an animation restyle to
       // get our animated value noticed.
-      context->PresShell()->RestyleForAnimation(this);
+      shell->RestyleForAnimation(this, eRestyle_Self);
     } else {
       // Ok, this is an animation restyle -- go ahead and update/walk the
       // animated content style rule.
@@ -872,7 +872,6 @@ nsSVGElement::sViewportsMap[] = {
 // PresentationAttributes-Makers
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sMarkersMap[] = {
-  { &nsGkAtoms::marker },
   { &nsGkAtoms::marker_end },
   { &nsGkAtoms::marker_mid },
   { &nsGkAtoms::marker_start },

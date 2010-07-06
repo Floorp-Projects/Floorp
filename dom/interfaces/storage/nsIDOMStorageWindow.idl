@@ -39,8 +39,8 @@
 
 /**
  * Interface for a client side storage. See
- * http://www.whatwg.org/specs/web-apps/current-work/#scs-client-side
- * for more information.
+ * http://www.whatwg.org/specs/web-apps/current-work/#scs-client-side and
+ * http://www.w3.org/TR/IndexedDB/ for more information.
  *
  * Allows access to contextual storage areas.
  */
@@ -48,8 +48,9 @@
 interface nsIDOMStorageObsolete;
 interface nsIDOMStorage;
 interface nsIDOMStorageList;
+interface nsIIDBFactory;
 
-[scriptable, uuid(A44581FE-DD9B-4fd7-9893-00C4AB43F12E)]
+[scriptable, uuid(b6f6efd8-1bdc-43af-b8ef-6685d6260931)]
 interface nsIDOMStorageWindow : nsISupports
 {
   /**
@@ -66,4 +67,9 @@ interface nsIDOMStorageWindow : nsISupports
    * Local storage for the current browsing context.
    */
   readonly attribute nsIDOMStorage localStorage;
+
+  /**
+   * Indexed Databases for the current browsing context.
+   */
+  readonly attribute nsIIDBFactory moz_indexedDB;
 };

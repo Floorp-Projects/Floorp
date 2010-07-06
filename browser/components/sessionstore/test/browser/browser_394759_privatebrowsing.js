@@ -139,7 +139,7 @@ function continue_test() {
 
                   // Ensure we added window to undo list.
                   let data = JSON.parse(ss.getClosedWindowData())[0];
-                  ok(data.toSource().indexOf(TESTS[aTestIndex].value) > -1,
+                  ok(JSON.stringify(data).indexOf(TESTS[aTestIndex].value) > -1,
                      "The closed window data was stored correctly");
 
                   if (aRunNextTestInPBMode) {
@@ -164,7 +164,7 @@ function continue_test() {
                        "when exiting PB mode");
 
                     let data = JSON.parse(ss.getClosedWindowData())[0];
-                    ok(data.toSource().indexOf(TESTS[aTestIndex - 1].value) > -1,
+                    ok(JSON.stringify(data).indexOf(TESTS[aTestIndex - 1].value) > -1,
                        "The data associated with the recently closed window was " +
                        "restored when exiting PB mode");
                   }

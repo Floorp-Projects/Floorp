@@ -56,35 +56,45 @@ function check_geolocation(location) {
 }
 
 
-function getNotificationBox()
+function getChromeWindow()
 {
   const Ci = Components.interfaces;
-  
-  function getChromeWindow(aWindow) {
-      var chromeWin = aWindow 
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation)
-          .QueryInterface(Ci.nsIDocShellTreeItem)
-          .rootTreeItem
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindow)
-          .QueryInterface(Ci.nsIDOMChromeWindow);
-      return chromeWin;
-  }
+  var chromeWin = window.top
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebNavigation)
+      .QueryInterface(Ci.nsIDocShellTreeItem)
+      .rootTreeItem
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindow)
+      .QueryInterface(Ci.nsIDOMChromeWindow);
+  return chromeWin;
+}
 
-  var notifyWindow = window.top;
-
-  var chromeWin = getChromeWindow(notifyWindow);
-
-  var notifyBox = chromeWin.getNotificationBox(notifyWindow);
+function getNotificationBox()
+{
+  var chromeWin = getChromeWindow();
+  var notifyBox = chromeWin.getNotificationBox(window.top);
 
   return notifyBox;
 }
 
-
 function clickNotificationButton(aButtonIndex) {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
+  // First, check for new-style Firefox notifications
+  var chromeWin = getChromeWindow();
+  if (chromeWin.PopupNotifications) {
+    var panel = chromeWin.PopupNotifications.panel;
+    var notificationEl = panel.getElementsByAttribute("id", "geolocation")[0];
+    if (aButtonIndex == kAcceptButton)
+      notificationEl.button.doCommand();
+    else if (aButtonIndex == kDenyButton)
+      throw "clickNotificationButton(kDenyButton) isn't supported in Firefox";
+
+    return;
+  }
+
+  // Otherwise, fall back to looking for a notificationbox
   // This is a bit of a hack. The notification doesn't have an API to
   // trigger buttons, so we dive down into the implementation and twiddle
   // the buttons directly.

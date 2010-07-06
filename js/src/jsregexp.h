@@ -125,7 +125,7 @@ extern void
 js_FreeRegExpStatics(JSContext *cx);
 
 #define VALUE_IS_REGEXP(cx, v)                                                \
-    ((v).isObject() && v.asObject().isRegExp())
+    ((v).isObject() && v.toObject().isRegExp())
 
 extern js::Class js_RegExpClass;
 

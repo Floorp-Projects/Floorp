@@ -43,7 +43,7 @@
 /**
  * A character set converter from MacArabic to Unicode.
  */
-NS_METHOD
+nsresult
 nsMacArabicToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult);
 

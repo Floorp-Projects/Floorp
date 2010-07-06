@@ -57,7 +57,7 @@ public:
   nsUnicharStreamLoader() { }
   virtual ~nsUnicharStreamLoader() {}
 
-  static NS_METHOD
+  static nsresult
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:

@@ -63,7 +63,7 @@ protected:
     if (!mElement) {
       return nsnull;
     }
-    return mElement->GetParsedAttr(mAttrAtom);
+    return mElement->GetAttrInfo(kNameSpaceID_None, mAttrAtom).mValue;
   }
 
   nsresult CheckToken(const nsAString& aStr);

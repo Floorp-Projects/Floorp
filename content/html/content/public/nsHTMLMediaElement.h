@@ -61,7 +61,13 @@ class nsHTMLMediaElement : public nsGenericHTMLElement,
   typedef mozilla::layers::ImageContainer ImageContainer;
 
 public:
-  nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
+  enum CanPlayStatus {
+    CANPLAY_NO,
+    CANPLAY_MAYBE,
+    CANPLAY_YES
+  };
+
+  nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser = 0);
   virtual ~nsHTMLMediaElement();
 
   /**
@@ -226,12 +232,17 @@ public:
   // main thread when/if the size changes.
   void UpdateMediaSize(nsIntSize size);
 
-  // Returns true if we can handle this MIME type.
-  // If it returns true, then it also returns a null-terminated list
-  // of supported codecs in *aSupportedCodecs. This
-  // list should not be freed, it is static data.
-  static PRBool CanHandleMediaType(const char* aMIMEType,
-                                   const char*** aSupportedCodecs);
+  // Returns the CanPlayStatus indicating if we can handle this
+  // MIME type. The MIME type should not include the codecs parameter.
+  // If it returns anything other than CANPLAY_NO then it also
+  // returns a null-terminated list of supported codecs
+  // in *aSupportedCodecs. This list should not be freed, it is static data.
+  static CanPlayStatus CanHandleMediaType(const char* aMIMEType,
+                                          char const *const ** aSupportedCodecs);
+
+  // Returns the CanPlayStatus indicating if we can handle the
+  // full MIME type including the optional codecs parameter.
+  static CanPlayStatus GetCanPlay(const nsAString& aType);
 
   // Returns true if we should handle this MIME type when it appears
   // as an <object> or as a toplevel page. If, in practice, our support
@@ -239,14 +250,26 @@ public:
   // false here even if CanHandleMediaType would return true.
   static PRBool ShouldHandleMediaType(const char* aMIMEType);
 
-  /**
-   * Initialize data for available media types
-   */
-  static void InitMediaTypes();
-  /**
-   * Shutdown data for available media types
-   */
-  static void ShutdownMediaTypes();
+#ifdef MOZ_OGG
+  static bool IsOggEnabled();
+  static bool IsOggType(const nsACString& aType);
+  static const char gOggTypes[3][16];
+  static char const *const gOggCodecs[3];
+#endif
+
+#ifdef MOZ_WAVE
+  static bool IsWaveEnabled();
+  static bool IsWaveType(const nsACString& aType);
+  static const char gWaveTypes[4][16];
+  static char const *const gWaveCodecs[2];
+#endif
+
+#ifdef MOZ_WEBM
+  static bool IsWebMEnabled();
+  static bool IsWebMType(const nsACString& aType);
+  static const char gWebMTypes[2][17];
+  static char const *const gWebMCodecs[4];
+#endif
 
   /**
    * Called when a child source element is added to this media element. This

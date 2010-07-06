@@ -398,7 +398,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   // Output the rect and state
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
-    fprintf(out, " [state=%08x]", mState);
+    fprintf(out, " [state=%016llx]", mState);
   }
   nsBlockFrame* f = const_cast<nsBlockFrame*>(this);
   if (f->HasOverflowRect()) {
@@ -6125,24 +6125,28 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsBlockFrame::CreateAccessible()
 {
-  *aAccessible = nsnull;
   nsCOMPtr<nsIAccessibilityService> accService = 
     do_GetService("@mozilla.org/accessibilityService;1");
-  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+  if (!accService) {
+    return nsnull;
+  }
+
+  nsPresContext* presContext = PresContext();
 
   // block frame may be for <hr>
   if (mContent->Tag() == nsGkAtoms::hr) {
-    return accService->CreateHTMLHRAccessible(static_cast<nsIFrame*>(this), aAccessible);
+    return accService->CreateHTMLHRAccessible(mContent,
+                                              presContext->PresShell());
   }
 
-  nsPresContext *aPresContext = PresContext();
-  if (!mBullet || !aPresContext) {
+  if (!mBullet || !presContext) {
     if (!mContent->GetParent()) {
       // Don't create accessible objects for the root content node, they are redundant with
       // the nsDocAccessible object created with the document node
-      return NS_ERROR_FAILURE;
+      return nsnull;
     }
     
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc =
@@ -6153,12 +6157,13 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
       if (SameCOMIdentity(body, mContent)) {
         // Don't create accessible objects for the body, they are redundant with
         // the nsDocAccessible object created with the document node
-        return NS_ERROR_FAILURE;
+        return nsnull;
       }
     }
 
     // Not a bullet, treat as normal HTML container
-    return accService->CreateHyperTextAccessible(static_cast<nsIFrame*>(this), aAccessible);
+    return accService->CreateHyperTextAccessible(mContent,
+                                                 presContext->PresShell());
   }
 
   // Create special list bullet accessible
@@ -6174,10 +6179,8 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
     mBullet->GetListItemText(*myList, bulletText);
   }
 
-  return accService->CreateHTMLLIAccessible(static_cast<nsIFrame*>(this), 
-                                            static_cast<nsIFrame*>(mBullet), 
-                                            bulletText,
-                                            aAccessible);
+  return accService->CreateHTMLLIAccessible(mContent, presContext->PresShell(),
+                                            bulletText);
 }
 #endif
 
@@ -6338,12 +6341,28 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
       return rv;
     }
 
-    // Create list bullet if this is a list-item. Note that this is done
-    // here so that RenumberLists will work (it needs the bullets to
-    // store the bullet numbers).
-    const nsStyleDisplay* styleDisplay = GetStyleDisplay();
+    // Create a list bullet if this is a list-item. Note that this is
+    // done here so that RenumberLists will work (it needs the bullets
+    // to store the bullet numbers).  Also note that due to various
+    // wrapper frames (scrollframes, columns) we want to use the
+    // outermost (primary, ideally, but it's not set yet when we get
+    // here) frame of our content for the display check.  On the other
+    // hand, we look at ourselves for the GetPrevInFlow() check, since
+    // for a columnset we don't want a bullet per column.  Note that
+    // the outermost frame for the content is the primary frame in
+    // most cases; the ones when it's not (like tables) can't be
+    // NS_STYLE_DISPLAY_LIST_ITEM).
+    nsIFrame* possibleListItem = this;
+    while (1) {
+      nsIFrame* parent = possibleListItem->GetParent();
+      if (parent->GetContent() != GetContent()) {
+        break;
+      }
+      possibleListItem = parent;
+    }
     if ((nsnull == GetPrevInFlow()) &&
-        (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) &&
+        (NS_STYLE_DISPLAY_LIST_ITEM ==
+           possibleListItem->GetStyleDisplay()->mDisplay) &&
         (nsnull == mBullet)) {
       // Resolve style for the bullet frame
       const nsStyleList* styleList = GetStyleList();
@@ -6397,7 +6416,8 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
 PRBool
 nsBlockFrame::BulletIsEmpty() const
 {
-  NS_ASSERTION(GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM &&
+  NS_ASSERTION(mContent->GetPrimaryFrame()->GetStyleDisplay()->mDisplay ==
+                 NS_STYLE_DISPLAY_LIST_ITEM &&
                HaveOutsideBullet(),
                "should only care when we have an outside bullet");
   const nsStyleList* list = GetStyleList();

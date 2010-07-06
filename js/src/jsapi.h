@@ -307,11 +307,11 @@ JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(jsval v)
  * JS_IdToValue must be used instead.
  */
 
-#define JSID_STRING_TYPE                 0x0
-#define JSID_INT_TYPE                    0x1
-#define JSID_OBJECT_TYPE                 0x2
-#define JSID_VOID_TYPE                   0x4
-#define JSID_DEFAULT_XML_NAMESPACE_TYPE  0x6
+#define JSID_TYPE_STRING                 0x0
+#define JSID_TYPE_INT                    0x1
+#define JSID_TYPE_VOID                   0x2
+#define JSID_TYPE_OBJECT                 0x4
+#define JSID_TYPE_DEFAULT_XML_NAMESPACE  0x6
 #define JSID_TYPE_MASK                   0x7
 
 /*
@@ -348,7 +348,7 @@ INTERNED_STRING_TO_JSID(JSString *str)
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_INT(jsid iden)
 {
-    return !!(JSID_BITS(iden) & JSID_INT_TYPE);
+    return !!(JSID_BITS(iden) & JSID_TYPE_INT);
 }
 
 static JS_ALWAYS_INLINE int32
@@ -373,14 +373,14 @@ INT_TO_JSID(int32 i)
 {
     jsid iden;
     JS_ASSERT(INT_FITS_IN_JSID(i));
-    JSID_BITS(iden) = ((i << 1) | JSID_INT_TYPE);
+    JSID_BITS(iden) = ((i << 1) | JSID_TYPE_INT);
     return iden;
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_OBJECT(jsid iden)
 {
-    return (JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_OBJECT_TYPE;
+    return (JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_OBJECT;
 }
 
 static JS_ALWAYS_INLINE JSObject *
@@ -396,7 +396,7 @@ OBJECT_TO_JSID(JSObject *obj)
     jsid iden;
     JS_ASSERT(obj != NULL);
     JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
-    JSID_BITS(iden) = ((size_t)obj | JSID_OBJECT_TYPE);
+    JSID_BITS(iden) = ((size_t)obj | JSID_TYPE_OBJECT);
     return iden;
 }
 
@@ -420,16 +420,16 @@ JSID_TO_GCTHING(jsid iden)
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_DEFAULT_XML_NAMESPACE(jsid iden)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_DEFAULT_XML_NAMESPACE_TYPE,
-                 JSID_BITS(iden) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
-    return ((size_t)JSID_BITS(iden) == JSID_DEFAULT_XML_NAMESPACE_TYPE);
+    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_DEFAULT_XML_NAMESPACE,
+                 JSID_BITS(iden) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
+    return ((size_t)JSID_BITS(iden) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
 }
 
 static JS_ALWAYS_INLINE jsid
 JSID_DEFAULT_XML_NAMESPACE()
 {
     jsid iden;
-    JSID_BITS(iden) = JSID_DEFAULT_XML_NAMESPACE_TYPE;
+    JSID_BITS(iden) = JSID_TYPE_DEFAULT_XML_NAMESPACE;
     return iden;
 }
 
@@ -443,15 +443,15 @@ JSID_DEFAULT_XML_NAMESPACE()
 static JS_ALWAYS_INLINE JSBool
 JSID_IS_VOID(jsid iden)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_VOID_TYPE,
-                 JSID_BITS(iden) == JSID_VOID_TYPE);
-    return ((size_t)JSID_BITS(iden) == JSID_VOID_TYPE);
+    JS_ASSERT_IF(((size_t)JSID_BITS(iden) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
+                 JSID_BITS(iden) == JSID_TYPE_VOID);
+    return ((size_t)JSID_BITS(iden) == JSID_TYPE_VOID);
 }
 
 #ifdef DEBUG
 extern JS_PUBLIC_DATA(jsid) JSID_VOID;
 #else
-# define JSID_VOID  ((jsid)JSID_VOID_TYPE)
+# define JSID_VOID  ((jsid)JSID_TYPE_VOID)
 #endif
 
 /************************************************************************/
@@ -492,7 +492,7 @@ extern JS_PUBLIC_DATA(jsid) JSID_VOID;
 #define JSFUN_GETTER_TEST(f)       ((f) & JSFUN_GETTER)
 #define JSFUN_SETTER_TEST(f)       ((f) & JSFUN_SETTER)
 #define JSFUN_BOUND_METHOD_TEST(f) ((f) & JSFUN_BOUND_METHOD)
-#define JSFUN_HEAVYWEIGHT_TEST(f)  (!!((f) & JSFUN_HEAVYWEIGHT))
+#define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
 
 #define JSFUN_GSFLAG2ATTR(f)       JSFUN_GSFLAGS(f)
 
@@ -964,6 +964,39 @@ JS_ToggleOptions(JSContext *cx, uint32 options);
 extern JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void);
 
+extern JS_PUBLIC_API(JSWrapObjectCallback)
+JS_SetWrapObjectCallback(JSContext *cx, JSWrapObjectCallback callback);
+
+extern JS_PUBLIC_API(JSCrossCompartmentCall *)
+JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
+
+extern JS_PUBLIC_API(void)
+JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call);
+
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+class JSAutoCrossCompartmentCall
+{
+    JSCrossCompartmentCall *call;
+  public:
+    JSAutoCrossCompartmentCall() : call(NULL) {}
+
+    bool enter(JSContext *cx, JSObject *target) {
+        JS_ASSERT(!call);
+        call = JS_EnterCrossCompartmentCall(cx, target);
+        return call != NULL;
+    }
+
+    ~JSAutoCrossCompartmentCall() {
+        if (call)
+            JS_LeaveCrossCompartmentCall(call);
+    }
+};
+
+JS_BEGIN_EXTERN_C
+#endif
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalObject(JSContext *cx);
 
@@ -1175,115 +1208,19 @@ extern JS_FRIEND_API(JSBool)
 js_RemoveRoot(JSRuntime *rt, void *rp);
 
 /*
- * The last GC thing of each type (object, string, double, external string
- * types) created on a given context is kept alive until another thing of the
- * same type is created, using a newborn root in the context.  These newborn
- * roots help native code protect newly-created GC-things from GC invocations
- * activated before those things can be rooted using local or global roots.
- *
- * However, the newborn roots can also entrain great gobs of garbage, so the
- * JS_GC entry point clears them for the context on which GC is being forced.
- * Embeddings may need to do likewise for all contexts.
- *
- * See the scoped local root API immediately below for a better way to manage
- * newborns in cases where native hooks (functions, getters, setters, etc.)
- * create many GC-things, potentially without connecting them to predefined
- * local roots such as *rval or argv[i] in an active native function.  Using
- * JS_EnterLocalRootScope disables updating of the context's per-gc-thing-type
- * newborn roots, until control flow unwinds and leaves the outermost nesting
- * local root scope.
+ * This symbol may be used by embedders to detect the change from the old
+ * JS_AddRoot(JSContext *, void *) APIs to the new ones above.
  */
+#define JS_TYPED_ROOTING_API
+
 extern JS_PUBLIC_API(void)
 JS_ClearNewbornRoots(JSContext *cx);
 
-/*
- * Scoped local root management allows native functions, getter/setters, etc.
- * to avoid worrying about the newborn root pigeon-holes, overloading local
- * roots allocated in argv and *rval, or ending up having to call JS_Add*Root
- * and JS_Remove*Root to manage global roots temporarily.
- *
- * Instead, calling JS_EnterLocalRootScope and JS_LeaveLocalRootScope around
- * the body of the native hook causes the engine to allocate a local root for
- * each newborn created in between the two API calls, using a local root stack
- * associated with cx.  For example:
- *
- *    JSBool
- *    my_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
- *    {
- *        JSBool ok;
- *
- *        if (!JS_EnterLocalRootScope(cx))
- *            return JS_FALSE;
- *        ok = my_GetPropertyBody(cx, obj, id, vp);
- *        JS_LeaveLocalRootScope(cx);
- *        return ok;
- *    }
- *
- * NB: JS_LeaveLocalRootScope must be called once for every prior successful
- * call to JS_EnterLocalRootScope.  If JS_EnterLocalRootScope fails, you must
- * not make the matching JS_LeaveLocalRootScope call.
- *
- * JS_LeaveLocalRootScopeWithResult(cx, rval) is an alternative way to leave
- * a local root scope that protects a result or return value, by effectively
- * pushing it in the caller's local root scope.
- *
- * In case a native hook allocates many objects or other GC-things, but the
- * native protects some of those GC-things by storing them as property values
- * in an object that is itself protected, the hook can call JS_ForgetLocalRoot
- * to free the local root automatically pushed for the now-protected GC-thing.
- *
- * JS_ForgetLocalRoot works on any GC-thing allocated in the current local
- * root scope, but it's more time-efficient when called on references to more
- * recently created GC-things.  Calling it successively on other than the most
- * recently allocated GC-thing will tend to average the time inefficiency, and
- * may risk O(n^2) growth rate, but in any event, you shouldn't allocate too
- * many local roots if you can root as you go (build a tree of objects from
- * the top down, forgetting each latest-allocated GC-thing immediately upon
- * linking it to its parent).
- */
-extern JS_PUBLIC_API(JSBool)
-JS_EnterLocalRootScope(JSContext *cx);
-
-extern JS_PUBLIC_API(void)
-JS_LeaveLocalRootScope(JSContext *cx);
-
-extern JS_PUBLIC_API(void)
-JS_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval);
-
-extern JS_PUBLIC_API(void)
-JS_ForgetLocalRoot(JSContext *cx, void *thing);
-
-#ifdef __cplusplus
-JS_END_EXTERN_C
-
-class JSAutoLocalRootScope {
-  public:
-    JSAutoLocalRootScope(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mContext(cx) {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_EnterLocalRootScope(mContext);
-    }
-    ~JSAutoLocalRootScope() {
-        JS_LeaveLocalRootScope(mContext);
-    }
-
-    void forget(void *thing) {
-        JS_ForgetLocalRoot(mContext, thing);
-    }
-
-  protected:
-    JSContext *mContext;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-#if 0
-  private:
-    static void *operator new(size_t) CPP_THROW_NEW { return 0; };
-    static void operator delete(void *, size_t) { };
-#endif
-};
-
-JS_BEGIN_EXTERN_C
-#endif
+/* Obsolete rooting APIs. */
+#define JS_EnterLocalRootScope(cx) (JS_TRUE)
+#define JS_LeaveLocalRootScope(cx) ((void) 0)
+#define JS_LeaveLocalRootScopeWithResult(cx, rval) ((void) 0)
+#define JS_ForgetLocalRoot(cx, thing) ((void) 0)
 
 typedef enum JSGCRootType {
     JS_GC_ROOT_VALUE_PTR,
@@ -1717,7 +1654,7 @@ struct JSClass {
     JSXDRObjectOp       xdrObject;
     JSHasInstanceOp     hasInstance;
     JSMarkOp            mark;
-    JSReserveSlotsOp    reserveSlots;
+    void                (*reserved0)(void);
 };
 
 struct JSExtendedClass {
@@ -1784,9 +1721,10 @@ struct JSExtendedClass {
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
 #define JSCLASS_GLOBAL_FLAGS \
-    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT * 3 + 1))
+    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT * 3 + 2))
 
 #define JSRESERVED_GLOBAL_COMPARTMENT (JSProto_LIMIT * 3)
+#define JSRESERVED_GLOBAL_THIS        (JSRESERVED_GLOBAL_COMPARTMENT + 1)
 
 /* Fast access to the original value of each standard class's prototype. */
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
@@ -1803,7 +1741,6 @@ struct JSExtendedClass {
 #define JSCLASS_NO_RESERVED_MEMBERS     0,0,0
 
 struct JSIdArray {
-    void *self;
     jsint length;
     jsid  vector[1];    /* actually, length jsid words */
 };
@@ -1959,6 +1896,9 @@ JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewGlobalObject(JSContext *cx, JSClass *clasp);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);

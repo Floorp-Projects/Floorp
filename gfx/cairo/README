@@ -72,6 +72,8 @@ quartz-remove-snapshot.patch: remove broken implementation of backend snapshot
 
 quartz-cglayers.patch: add support for cairo surfaces backed by CGLayers
 
+quartz-cglayers-fix-fallback.patch: Bug 572912; fix bug in fallback code in previous patch
+
 premultiply-alpha-solid-gradients.patch: bug 539165; multiply the solid color by the alpha component before using it for a solid surface
 
 xlib-initialize-members.path: bug 548793; initialize XRender version if the server doesn't have the extension
@@ -111,6 +113,16 @@ native-clipping.patch: Add support for a native clipping api
 quartz-is-clear.patch: Propagate the quartz is_clear flag.
 
 cairo-qt-compile.patch: Fix compile error, return not reached, and clone_similar interface
+
+dwrite-glyph-extents.patch: Add padding to extents of antialiased glyphs, to avoid unwanted clipping. (bug 568191)
+
+fix-ps-output.patch: PS: Add missing 'q' when resetting clip path (42b5cac7668625c9761113ff72b47af5cfd10377)
+
+ensure-text-flushed.patch: PDF-operators: ensure text operations flushed before emitting clip (42b5cac7668625c9761113ff72b47af5cfd10377)
+
+fix-xcopyarea-with-clips.patch: 5d07307b691afccccbb15f773d5231669ba44f5a
+
+cairo-x-visual.patch: make valid visua for cairo_xlib_surface_create_with_xrender_format (55037bfb2454a671332d961e061c712ab5471580)
 
 ==== pixman patches ====
 

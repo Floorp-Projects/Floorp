@@ -37,8 +37,6 @@
 /*Factory for internal browser security resource managers*/
 
 #include "nsCOMPtr.h"
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -52,7 +50,6 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
-#include "nsPrefsCID.h"
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
 

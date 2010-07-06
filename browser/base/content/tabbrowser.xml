@@ -158,6 +158,41 @@
         false
       </field>
 
+      <property name="_numPinnedTabs" readonly="true">
+        <getter><![CDATA[
+          for (var i = 0; i < this.tabs.length; i++) {
+            if (!this.tabs[i].pinned)
+              break;
+          }
+          return i;
+        ]]></getter>
+      </property>
+
+      <method name="pinTab">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          if (aTab.pinned)
+            return;
+
+          this.moveTabTo(aTab, this._numPinnedTabs);
+          aTab.setAttribute("pinned", "true");
+          this.tabContainer._positionPinnedTabs();
+        ]]></body>
+      </method>
+
+      <method name="unpinTab">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          if (!aTab.pinned)
+            return;
+
+          this.moveTabTo(aTab, this._numPinnedTabs - 1);
+          aTab.removeAttribute("pinned");
+          aTab.style.MozMarginStart = "";
+          this.tabContainer._positionPinnedTabs();
+        ]]></body>
+      </method>
+
       <method name="previewTab">
         <parameter name="aTab"/>
         <parameter name="aCallback"/>
@@ -1044,6 +1079,7 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            var aFromExternal;
             var aRelatedToCurrent;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
@@ -1054,6 +1090,7 @@
               aPostData             = params.postData;
               aLoadInBackground     = params.inBackground;
               aAllowThirdPartyFixup = params.allowThirdPartyFixup;
+              aFromExternal         = params.fromExternal;
               aRelatedToCurrent     = params.relatedToCurrent;
             }
 
@@ -1066,6 +1103,7 @@
                                   postData: aPostData,
                                   ownerTab: owner,
                                   allowThirdPartyFixup: aAllowThirdPartyFixup,
+                                  fromExternal: aFromExternal,
                                   relatedToCurrent: aRelatedToCurrent});
             if (!bgLoad)
               this.selectedTab = tab;
@@ -1106,11 +1144,11 @@
             }
           }
           else
-            firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner});
+            firstTabAdded = this.addTab(aURIs[0], {ownerTab: owner, skipAnimation: true});
 
           var tabNum = this.tabContainer.selectedIndex;
           for (let i = 1; i < aURIs.length; ++i) {
-            let tab = this.addTab(aURIs[i]);
+            let tab = this.addTab(aURIs[i], {skipAnimation: true});
             if (aReplace)
               this.moveTabTo(tab, ++tabNum);
           }
@@ -1135,7 +1173,9 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            var aFromExternal;
             var aRelatedToCurrent;
+            var aSkipAnimation;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1145,7 +1185,9 @@
               aPostData             = params.postData;
               aOwner                = params.ownerTab;
               aAllowThirdPartyFixup = params.allowThirdPartyFixup;
+              aFromExternal         = params.fromExternal;
               aRelatedToCurrent     = params.relatedToCurrent;
+              aSkipAnimation        = params.skipAnimation;
             }
 
             this._browsers = null; // invalidate cache
@@ -1168,13 +1210,25 @@
               t.setAttribute("label", aURI);
 
             t.setAttribute("crop", "end");
-            t.maxWidth = this.tabContainer.mTabMaxWidth;
-            t.minWidth = this.tabContainer.mTabMinWidth;
+            t.style.maxWidth = this.tabContainer.mTabMaxWidth + "px";
+            t.style.minWidth = this.tabContainer.mTabMinWidth + "px";
             t.width = 0;
-            t.setAttribute("flex", "100");
             t.setAttribute("validate", "never");
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
+
+            // When overflowing, new tabs are scrolled into view smoothly, which
+            // doesn't go well together with the width transition. So we skip the
+            // transition in that case.
+            if (aSkipAnimation ||
+                this.tabContainer.getAttribute("overflow") == "true") {
+              t.setAttribute("fadein", "true");
+              setTimeout(function (tabContainer) {
+                tabContainer._handleNewTab(t);
+              }, 0, this.tabContainer);
+            } else {
+              setTimeout(function () { t.setAttribute("fadein", "true"); }, 0);
+            }
 
             this.tabContainer.appendChild(t);
 
@@ -1184,7 +1238,7 @@
                * order to make sure the same set of tabs is visible before and
                * after the new tab is added.  See bug 508816. */
 
-              this.tabContainer.mTabstrip.scrollByPixels(this.tabs[0].clientWidth);
+              this.tabContainer.mTabstrip.scrollByPixels(t.clientWidth);
             }
 
             // invalidate cache, because tabContainer is about to change
@@ -1239,20 +1293,6 @@
 
             this.tabContainer.adjustTabstrip();
 
-            // Do this asynchronically, as we don't know yet if the tab
-            // will be selected.
-            setTimeout(function (aTabContainer) {
-              if (aTabContainer.selectedItem != t)
-                aTabContainer._notifyBackgroundTab(t);
-            }, 0, this.tabContainer);
-
-            // XXXmano: this is a temporary workaround for bug 345399
-            // We need to manually update the scroll buttons disabled state
-            // if a tab was inserted to the overflow area or removed from it
-            // without any scrolling and when the tabbar has already
-            // overflowed.
-            this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
-
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
             // even if the event listener opens or closes tabs.
@@ -1270,9 +1310,11 @@
               // the document successfully loads
               b.userTypedValue = aURI;
 
-              let flags = aAllowThirdPartyFixup ?
-                          Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP :
-                          Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+              let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+              if (aAllowThirdPartyFixup)
+                flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+              if (aFromExternal)
+                flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
               try {
                 b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
               }
@@ -1477,7 +1519,7 @@
             // update the UI early for responsiveness
             aTab.collapsed = true;
             if (aNewTab)
-              this.addTab("about:blank");
+              this.addTab("about:blank", {skipAnimation: true});
             this.tabContainer._fillTrailingGap();
             this._blurTab(aTab);
 
@@ -1517,6 +1559,8 @@
             if (browser == this.mCurrentBrowser)
               this.mCurrentBrowser = null;
 
+            var wasPinned = aTab.pinned;
+
             // Invalidate browsers cache, as the tab is removed from the
             // tab container.
             this._browsers = null;
@@ -1528,9 +1572,13 @@
             for (let i = aTab._tPos; i < this.tabs.length; i++)
               this.tabs[i]._tPos = i;
 
-            // update tab close buttons state
-            if (!this._windowIsClosing)
+            if (!this._windowIsClosing) {
+              if (wasPinned)
+                this.tabContainer._positionPinnedTabs();
+
+              // update tab close buttons state
               this.tabContainer.adjustTabstrip();
+            }
 
             // update first-tab/last-tab/beforeselected/afterselected attributes
             this.selectedTab._selected = true;
@@ -1836,8 +1884,16 @@
           if (oldPosition == aIndex)
             return;
 
+          // Don't allow mixing pinned and unpinned tabs.
+          if (aTab.pinned)
+            aIndex = Math.min(aIndex, this._numPinnedTabs - 1);
+          else
+            aIndex = Math.max(aIndex, this._numPinnedTabs);
+          if (oldPosition == aIndex)
+            return;
+
           this._lastRelatedTab = null;
-          this._browsers = null; // invalidate cache
+
           this.mTabFilters.splice(aIndex, 0, this.mTabFilters.splice(aTab._tPos, 1)[0]);
           this.mTabListeners.splice(aIndex, 0, this.mTabListeners.splice(aTab._tPos, 1)[0]);
 
@@ -1855,6 +1911,9 @@
           }
           this.mCurrentTab._selected = true;
           this.tabContainer.mTabstrip.ensureElementIsVisible(this.mCurrentTab, false);
+
+          if (aTab.pinned)
+            this.tabContainer._positionPinnedTabs();
 
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("TabMove", true, false, window, oldPosition);
@@ -2252,6 +2311,7 @@
           this.mCurrentTab.linkedPanel = uniqueId;
           this.mCurrentTab._tPos = 0;
           this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
+          this.mCurrentTab.setAttribute("fadein", "true");
 
           // set up the shared autoscroll popup
           this._autoScrollPopup = this.mCurrentBrowser._createAutoScrollPopup();
@@ -2385,6 +2445,12 @@
           return document.getBindingParent(this).childNodes;
         ]]></body>
       </method>
+      <method name="_canScrollToElement">
+        <parameter name="tab"/>
+        <body>
+          return !tab.pinned;
+        </body>
+      </method>
     </implementation>
 
     <handlers>
@@ -2394,6 +2460,7 @@
 
          var tabs = document.getBindingParent(this);
          tabs.removeAttribute("overflow");
+         tabs._positionPinnedTabs();
       ]]></handler>
       <handler event="overflow"><![CDATA[
          if (event.detail == 0)
@@ -2401,7 +2468,7 @@
 
          var tabs = document.getBindingParent(this);
          tabs.setAttribute("overflow", "true");
-         this.ensureElementIsVisible(tabs.selectedItem, false);
+         tabs._positionPinnedTabs();
       ]]></handler>
     </handlers>
   </binding>
@@ -2447,10 +2514,9 @@
           var tab = this.firstChild;
           tab.setAttribute("label",
                            this.tabbrowser.mStringBundle.getString("tabs.emptyTabTitle"));
-          tab.minWidth = this.mTabMinWidth;
-          tab.maxWidth = this.mTabMaxWidth;
+          tab.style.minWidth = this.mTabMinWidth + "px";
+          tab.style.maxWidth = this.mTabMaxWidth + "px";
           tab.width = 0;
-          tab.setAttribute("flex", "100");
           tab.setAttribute("crop", "end");
           tab.setAttribute("validate", "never");
           tab.setAttribute("onerror", "this.removeAttribute('image');");
@@ -2565,10 +2631,13 @@
           case 1:
             if (this.childNodes.length == 1 && this._closeWindowWithLastTab)
               this.setAttribute("closebuttons", "noclose");
-            else if (this.firstChild.getBoundingClientRect().width > this.mTabClipWidth)
-              this.setAttribute("closebuttons", "alltabs");
-            else
-              this.setAttribute("closebuttons", "activetab");
+            else {
+              let tab = this.childNodes.item(this.tabbrowser._numPinnedTabs);
+              if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
+                this.setAttribute("closebuttons", "alltabs");
+              else
+                this.setAttribute("closebuttons", "activetab");
+            }
             break;
           case 2:
           case 3:
@@ -2602,6 +2671,21 @@
         ]]></body>
       </method>
 
+      <method name="_positionPinnedTabs">
+        <body><![CDATA[
+          var width = 0;
+          var scrollButtonWidth = this.getAttribute("overflow") != "true" ? 0 :
+                                  this.mTabstrip._scrollButtonDown.scrollWidth;
+          for (var i = this.tabbrowser._numPinnedTabs - 1; i >= 0; i--) {
+            let tab = this.childNodes[i];
+            width += tab.scrollWidth;
+            tab.style.MozMarginStart = - (width + scrollButtonWidth) + "px";
+          }
+          this.style.MozMarginStart = width + "px";
+          this.mTabstrip.ensureElementIsVisible(this.selectedItem, false);
+        ]]></body>
+      </method>
+
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -2626,6 +2710,9 @@
       <method name="_notifyBackgroundTab">
         <parameter name="aTab"/>
         <body><![CDATA[
+          if (aTab.pinned)
+            return;
+
           var scrollRect = this.mTabstrip.scrollClientRect;
           var tab = aTab.getBoundingClientRect();
 
@@ -2733,6 +2820,28 @@
         ]]></body>
       </method>
 
+      <method name="_handleNewTab">
+        <parameter name="tab"/>
+        <body><![CDATA[
+          if (tab.parentNode != this)
+            return;
+
+          if (tab.getAttribute("selected") == "true") {
+            this._fillTrailingGap();
+            this._handleTabSelect();
+          } else {
+            this._notifyBackgroundTab(tab);
+          }
+
+          // XXXmano: this is a temporary workaround for bug 345399
+          // We need to manually update the scroll buttons disabled state
+          // if a tab was inserted to the overflow area or removed from it
+          // without any scrolling and when the tabbar has already
+          // overflowed.
+          this.mTabstrip._updateScrollButtonsDisabledState();
+        ]]></body>
+      </method>
+
       <!-- Deprecated stuff, implemented for backwards compatibility. -->
       <property name="mTabstripClosebutton" readonly="true"
                 onget="return document.getElementById('tabs-closebutton');"/>
@@ -2743,6 +2852,11 @@
     <handlers>
       <handler event="TabSelect" action="this._handleTabSelect();"/>
 
+      <handler event="transitionend"><![CDATA[
+        if (event.propertyName == "max-width")
+          this._handleNewTab(event.target);
+      ]]></handler>
+
       <handler event="dblclick"><![CDATA[
         // See hack note in the tabbrowser-close-button binding
         if (!this._blockDblClick && event.button == 0 &&
@@ -2751,12 +2865,17 @@
       ]]></handler>
 
       <handler event="click"><![CDATA[
-        if (event.button != 1 || event.target.localName != "tab")
+        if (event.button != 1)
           return;
 
-        if (this.childNodes.length > 1 ||
-            !this._closeWindowWithLastTab)
-          this.tabbrowser.removeTab(event.target);
+        if (event.target.localName == "tab") {
+          if (this.childNodes.length > 1 || !this._closeWindowWithLastTab)
+            this.tabbrowser.removeTab(event.target);
+        } else if (event.originalTarget.localName == "box") {
+          BrowserOpenTab();
+        } else {
+          return;
+        }
 
         event.stopPropagation();
       ]]></handler>
@@ -3074,7 +3193,7 @@
         this._ignoredClick = false;
 
         tabContainer.tabbrowser.removeTab(bindingParent);
-        this._blockDblClick = true;
+        tabContainer._blockDblClick = true;
 
         /* XXXmano hack (see bug 343628):
          * Since we're removing the event target, if the user
@@ -3084,7 +3203,6 @@
          * In this context, we're manually blocking the dblclick event
          * (see dblclick handler).
          */
-        var self = this;
         var clickedOnce = false;
         function enableDblClick(event) {
           if (event.detail == 1 && !clickedOnce) {
@@ -3092,7 +3210,7 @@
             return;
           }
           setTimeout(function() {
-            self._blockDblClick = false;
+            tabContainer._blockDblClick = false;
           }, 0);
           tabContainer.removeEventListener("click", enableDblClick, false);
         }
@@ -3130,6 +3248,12 @@
     </content>
 
     <implementation>
+      <property name="pinned" readonly="true">
+        <getter>
+          return this.getAttribute("pinned") == "true";
+        </getter>
+      </property>
+
       <field name="mOverCloseButton">false</field>
       <field name="mCorrespondingMenuitem">null</field>
     </implementation>

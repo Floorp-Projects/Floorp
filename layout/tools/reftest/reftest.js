@@ -109,6 +109,8 @@ var gSlowestTestTime = 0;
 var gSlowestTestURL;
 var gClearingForAssertionCheck = false;
 
+var gDrawWindowFlags;
+
 const TYPE_REFTEST_EQUAL = '==';
 const TYPE_REFTEST_NOTEQUAL = '!=';
 const TYPE_LOAD = 'load';     // test without a reference (just test that it does
@@ -294,38 +296,10 @@ function getStreamContent(inputStream)
   return streamBuf;
 }
 
-function ReadTopManifest(aFileURL)
-{
-    gURLs = new Array();
-    var url = gIOService.newURI(aFileURL, null, null);
-    if (!url)
-      throw "Expected a file or http URL for the manifest.";
-    ReadManifest(url);
-}
-
-// Note: If you materially change the reftest manifest parsing,
-// please keep the parser in print-manifest-dirs.py in sync.
-function ReadManifest(aURL)
-{
-    var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
-                     .getService(CI.nsIScriptSecurityManager);
-
-    var listURL = aURL;
-    var channel = gIOService.newChannelFromURI(aURL);
-    var inputStream = channel.open();
-    if (channel instanceof Components.interfaces.nsIHttpChannel
-        && channel.responseStatus != 200) {
-      dump("REFTEST TEST-UNEXPECTED-FAIL | | HTTP ERROR : " + 
-        channel.responseStatus + "\n");
-    }
-    var streamBuf = getStreamContent(inputStream);
-    inputStream.close();
-    var lines = streamBuf.split(/(\n|\r|\r\n)/);
-
-    // Build the sandbox for fails-if(), etc., condition evaluation.
+// Build the sandbox for fails-if(), etc., condition evaluation.
+function BuildConditionSandbox(aURL) {
     var sandbox = new Components.utils.Sandbox(aURL.spec);
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
-    sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
     sandbox.isDebugBuild = gDebug.isDebugBuild;
     sandbox.xulRuntime = {widgetToolkit: xr.widgetToolkit, OS: xr.OS};
 
@@ -336,6 +310,15 @@ function ReadManifest(aURL)
     } catch(e) {
       sandbox.xulRuntime.XPCOMABI = "";
     }
+
+    // Backwards compatibility from when we preprocessed autoconf.mk.
+    sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
+
+    // Shortcuts for widget toolkits.
+    sandbox.cocoaWidget = xr.widgetToolkit == "cocoa";
+    sandbox.gtk2Widget = xr.widgetToolkit == "gtk2";
+    sandbox.qtWidget = xr.widgetToolkit == "qt";
+    sandbox.winWidget = xr.widgetToolkit == "windows";
 
     var hh = CC[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].
                  getService(CI.nsIHttpProtocolHandler);
@@ -379,8 +362,42 @@ function ReadManifest(aURL)
       },
       _prefs:      prefs,
       getBoolPref: function(p) { return this._prefs.getBoolPref(p); },
-      getIntPref:  function(p) { return this._prefs.getIntPref(p) }
+      getIntPref:  function(p) { return this._prefs.getIntPref(p); }
     }
+
+    return sandbox;
+}
+
+function ReadTopManifest(aFileURL)
+{
+    gURLs = new Array();
+    var url = gIOService.newURI(aFileURL, null, null);
+    if (!url)
+      throw "Expected a file or http URL for the manifest.";
+    ReadManifest(url);
+}
+
+// Note: If you materially change the reftest manifest parsing,
+// please keep the parser in print-manifest-dirs.py in sync.
+function ReadManifest(aURL)
+{
+    var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
+                     .getService(CI.nsIScriptSecurityManager);
+
+    var listURL = aURL;
+    var channel = gIOService.newChannelFromURI(aURL);
+    var inputStream = channel.open();
+    if (channel instanceof Components.interfaces.nsIHttpChannel
+        && channel.responseStatus != 200) {
+      dump("REFTEST TEST-UNEXPECTED-FAIL | | HTTP ERROR : " + 
+        channel.responseStatus + "\n");
+    }
+    var streamBuf = getStreamContent(inputStream);
+    inputStream.close();
+    var lines = streamBuf.split(/(\n|\r|\r\n)/);
+
+    // Build the sandbox for fails-if(), etc., condition evaluation.
+    var sandbox = BuildConditionSandbox(aURL);
 
     var lineNo = 0;
     var urlprefix = "";
@@ -662,7 +679,7 @@ function StartCurrentURI(aState)
         // there's already a canvas for this URL
         setTimeout(DocumentLoaded, 0);
     } else {
-        dump("REFTEST INFO | Loading " + gCurrentURL + "\n");
+        dump("REFTEST TEST-START | " + gCurrentURL + "\n");
         gBrowser.loadURI(gCurrentURL);
     }
 }
@@ -698,8 +715,8 @@ function DoneTests()
 
     dump("REFTEST INFO | Total canvas count = " + gRecycledCanvases.length + "\n");
 
+    dump("REFTEST TEST-START | Shutdown\n");
     function onStopped() {
-        dump("REFTEST INFO | Quitting...\n");
         goQuitApplication();
     }
     if (gServer)
@@ -916,8 +933,41 @@ function UpdateCanvasCache(url, canvas)
     }
 }
 
+// Compute drawWindow flags lazily so the window is set up and can be
+// measured accurately
+function DoDrawWindow(ctx, win, x, y, w, h)
+{
+    if (typeof gDrawWindowFlags == "undefined") {
+        gDrawWindowFlags = ctx.DRAWWINDOW_DRAW_CARET |
+                           ctx.DRAWWINDOW_DRAW_VIEW;
+        var flags = "DRAWWINDOW_DRAW_CARET | DRAWWINDOW_DRAW_VIEW";
+        if (window.innerWidth == gCurrentCanvas.width &&
+            window.innerHeight == gCurrentCanvas.height) {
+            // We can use the window's retained layers
+            // because the window is big enough to display the entire reftest
+            gDrawWindowFlags |= ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
+            flags += " | DRAWWINDOW_USE_WIDGET_LAYERS";
+        }
+        dump("REFTEST INFO | drawWindow flags = " + flags + "\n");
+    }
+
+    var scrollX = 0;
+    var scrollY = 0;
+    if (!(gDrawWindowFlags & ctx.DRAWWINDOW_DRAW_VIEW)) {
+        scrollX = win.scrollX;
+        scrollY = win.scrollY;
+    }
+    ctx.drawWindow(win, scrollX + x, scrollY + y, w, h, "rgb(255,255,255)",
+                   gDrawWindowFlags);
+}
+
 function InitCurrentCanvasWithSnapshot()
 {
+    if (gURLs[0].type == TYPE_LOAD || gURLs[0].type == TYPE_SCRIPT) {
+        // We don't want to snapshot this kind of test
+        return;
+    }
+
     gCurrentCanvas = AllocateCanvas();
 
     /* XXX This needs to be rgb(255,255,255) because otherwise we get
@@ -931,12 +981,9 @@ function InitCurrentCanvasWithSnapshot()
     // window, so scale the drawing to show the zoom (making each canvas pixel be one
     // device pixel instead)
     ctx.scale(scale, scale);
-    ctx.drawWindow(win, win.scrollX, win.scrollY,
-                   Math.ceil(gCurrentCanvas.width / scale),
-                   Math.ceil(gCurrentCanvas.height / scale),
-                   "rgb(255,255,255)",
-                   ctx.DRAWWINDOW_DRAW_CARET |
-                   ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
+    DoDrawWindow(ctx, win, 0, 0,
+                 Math.ceil(gCurrentCanvas.width / scale),
+                 Math.ceil(gCurrentCanvas.height / scale));
     ctx.restore();
 }
 
@@ -947,6 +994,9 @@ function roundTo(x, fraction)
 
 function UpdateCurrentCanvasForEvent(event)
 {
+    if (!gCurrentCanvas)
+        return;
+
     var win = gBrowser.contentWindow;
     var ctx = gCurrentCanvas.getContext("2d");
     var scale = gBrowser.markupDocumentViewer.fullZoom;
@@ -963,10 +1013,7 @@ function UpdateCurrentCanvasForEvent(event)
         ctx.save();
         ctx.scale(scale, scale);
         ctx.translate(left, top);
-        ctx.drawWindow(win, left + win.scrollX, top + win.scrollY,
-                       right - left, bottom - top,
-                       "rgb(255,255,255)",
-                       ctx.DRAWWINDOW_DRAW_CARET);
+        DoDrawWindow(ctx, win, left, top, right - left, bottom - top);
         ctx.restore();
     }
 }
@@ -1004,6 +1051,7 @@ function DocumentLoaded()
     if (gURLs[0].type == TYPE_LOAD) {
         ++gTestResults.LoadOnly;
         dump("REFTEST TEST-PASS | " + gURLs[0].prettyPath + " | (LOAD ONLY)\n");
+        gCurrentCanvas = null;
         FinishTestItem();
         return;
     }

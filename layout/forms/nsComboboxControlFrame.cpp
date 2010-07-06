@@ -300,17 +300,17 @@ NS_QUERYFRAME_HEAD(nsComboboxControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsComboboxControlFrame::CreateAccessible()
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(PresContext()->PresShell()));
-    return accService->CreateHTMLComboboxAccessible(node, weakShell, aAccessible);
+    return accService->CreateHTMLComboboxAccessible(mContent,
+                                                    PresContext()->PresShell());
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 #endif
 

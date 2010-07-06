@@ -59,7 +59,7 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILocalStore, NS_ILOCALSTORE_IID)
 
-extern NS_IMETHODIMP
+extern nsresult
 NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 

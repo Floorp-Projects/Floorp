@@ -87,8 +87,8 @@ private:
   nsImageFrame *mFrame;
 };
 
-#define IMAGE_SIZECONSTRAINED       0x00100000
-#define IMAGE_GOTINITIALREFLOW      0x00200000
+#define IMAGE_SIZECONSTRAINED       NS_FRAME_STATE_BIT(20)
+#define IMAGE_GOTINITIALREFLOW      NS_FRAME_STATE_BIT(21)
 
 #define ImageFrameSuper nsSplittableFrame
 
@@ -128,7 +128,7 @@ public:
                               PRInt32 aModType);
 
 #ifdef ACCESSIBILITY
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+  virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
   virtual nsIAtom* GetType() const;

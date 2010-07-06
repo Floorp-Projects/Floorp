@@ -88,10 +88,9 @@ struct nsDiskCacheEntry;
 
 // Min and max values for the number of records in the DiskCachemap
 #define kMinRecordCount    512
-#define kMaxRecordCount    16384
 
 #define kSeparateFile      0
-#define kMaxDataFileSize   0x4000000   // 64 MiB
+#define kMaxDataFileSize   0x3FFFC00   // 65535 KiB (see bug #443067)
 #define kBuckets           (1 << 5)    // must be a power of 2!
 
 class nsDiskCacheRecord {
@@ -335,7 +334,7 @@ class nsDiskCacheRecordVisitor {
 
 struct nsDiskCacheHeader {
     PRUint32    mVersion;                           // cache version.
-    PRUint32    mDataSize;                          // size of cache in units of 256bytes.
+    PRUint32    mDataSize;                          // size of cache in units of 1024bytes.
     PRInt32     mEntryCount;                        // number of entries stored in cache.
     PRUint32    mIsDirty;                           // dirty flag.
     PRInt32     mRecordCount;                       // Number of records
@@ -396,7 +395,9 @@ public:
         mMapFD(nsnull),
         mRecordArray(nsnull),
         mBufferSize(0),
-        mBuffer(nsnull) { }
+        mBuffer(nsnull),
+        mMaxRecordCount(16384) // this default value won't matter
+    { }
 
     ~nsDiskCacheMap() {
         (void) Close(PR_TRUE);
@@ -416,6 +417,8 @@ public:
 
     nsresult  FlushHeader();
     nsresult  FlushRecords( PRBool unswap);
+
+    void      NotifyCapacityChange(PRUint32 capacity);
 
 /**
  *  Record operations
@@ -541,6 +544,7 @@ private:
     PRUint32                mBufferSize;
     char *                  mBuffer;
     nsDiskCacheHeader       mHeader;
+    PRInt32                 mMaxRecordCount;
 };
 
 #endif // _nsDiskCacheMap_h_

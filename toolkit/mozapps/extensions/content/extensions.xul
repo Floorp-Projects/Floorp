@@ -46,7 +46,10 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      id="addons-page" title="&addons.windowTitle;">
+      id="addons-page" title="&addons.windowTitle;"
+      ondragenter="gDragDrop.onDragOver(event)"
+      ondragover="gDragDrop.onDragOver(event)"
+      ondrop="gDragDrop.onDrop(event)">
 
   <script type="application/javascript"
           src="chrome://mozapps/content/extensions/extensions.js"/>
@@ -99,16 +102,16 @@
     <vbox id="left-pane">
 
       <!-- category list -->
-      <richlistbox id="categories" flex="1">
+      <richlistbox id="categories" flex="1" persist="last-selected">
         <richlistitem id="category-search" value="addons://search/"
                       class="category"
                       name="&view.search.label;" disabled="true"/>
         <richlistitem id="category-discover" value="addons://discover/"
                       class="category"
                       name="&view.discover.label;"/>
-        <richlistitem id="category-languages" value="addons://list/language"
+        <richlistitem id="category-languages" value="addons://list/locale"
                       class="category"
-                      name="&view.languages.label;" hidden="true"/>
+                      name="&view.locales.label;" hidden="true"/>
         <richlistitem id="category-searchengines"
                       value="addons://list/searchengine"
                       class="category"
@@ -250,9 +253,9 @@
                 <description flex="1" id="detail-desc" class="fade"/>
                 <hbox>
                 <!-- XXXunf placeholder - bug 553463 -->
-                  <label value="&rating.yourRating.label;"/>
+                  <label value="&rating.label;"/>
                   <label class="meta-value meta-rating" userrating="3"
-                         showrating="user"/>
+                         showrating="average"/>
                   <spacer flex="1"/>
                   <label id="detail-homepage" class="text-link" value="&addon.homepage;"/>
                 </hbox>

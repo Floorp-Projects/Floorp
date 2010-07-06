@@ -43,13 +43,11 @@
 #include "xpcom-private.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
-#include "nsIComponentManagerObsolete.h"
-#include "nsCategoryManager.h"
 #include "nsIServiceManager.h"
 #include "nsILocalFile.h"
-#include "nsIModule.h"
-#include "nsIModuleLoader.h"
-#include "nsStaticComponentLoader.h"
+#include "mozilla/Module.h"
+#include "mozilla/ModuleLoader.h"
+#include "nsXULAppAPI.h"
 #include "nsNativeComponentLoader.h"
 #include "nsIFactory.h"
 #include "nsIInterfaceRequestor.h"
@@ -58,12 +56,20 @@
 #include "prtime.h"
 #include "prmon.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsWeakReference.h"
 #include "nsIFile.h"
 #include "plarena.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
+#include "nsInterfaceHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsTArray.h"
+
+#ifdef MOZ_OMNIJAR
+#include "mozilla/Omnijar.h"
+#include "nsIManifestLoader.h"
+#endif
 
 struct nsFactoryEntry;
 class nsIServiceManager;
@@ -90,181 +96,222 @@ typedef int LoaderType;
 // Predefined loader types.
 #define NS_LOADER_TYPE_NATIVE  -1
 #define NS_LOADER_TYPE_STATIC  -2
-#define NS_LOADER_TYPE_INVALID -3
+#define NS_LOADER_TYPE_JAR     -3
+#define NS_LOADER_TYPE_INVALID -4
 
 #ifdef DEBUG
 #define XPCOM_CHECK_PENDING_CIDS
 #endif
 ////////////////////////////////////////////////////////////////////////////////
 
+extern const mozilla::Module kXPCOMModule;
+
 // Array of Loaders and their type strings
 struct nsLoaderdata {
-    nsCOMPtr<nsIModuleLoader> loader;
+    nsCOMPtr<mozilla::ModuleLoader> loader;
     nsCString                 type;
 };
 
-// Deferred modules are kept as a nsTArray of this type. This is not a nested
-// class so that nsStaticComponentLoader.h can forward-declare it.
-struct DeferredModule
-{
-    DeferredModule() :
-        type(nsnull), modTime(0) { }
-
-    const char             *type;
-    nsCOMPtr<nsILocalFile>  file;
-    nsCString               location;
-    nsCOMPtr<nsIModule>     module;
-    PRInt64                 modTime;
-};
-
 class nsComponentManagerImpl
-    : public nsIComponentManager,
-      public nsIServiceManager,
-      public nsIComponentRegistrar,
-      public nsSupportsWeakReference,
-      public nsIInterfaceRequestor,
-      public nsIServiceManagerObsolete,
-      public nsIComponentManagerObsolete
+    : public nsIComponentManager
+    , public nsIServiceManager
+    , public nsSupportsWeakReference
+    , public nsIComponentRegistrar
+    , public nsIInterfaceRequestor
+#ifdef MOZ_OMNIJAR
+    , public nsIManifestLoaderSink
+#endif
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEREQUESTOR
-    // Since the nsIComponentManagerObsolete and nsIComponentManager share some of the 
-    // same interface function names, we have to manually define the functions here.
-    // The only function that is in nsIComponentManagerObsolete and is in nsIComponentManager
-    // is GetClassObjectContractID.  
-    //
-    // nsIComponentManager function not in nsIComponentManagerObsolete:
-    NS_IMETHOD GetClassObjectByContractID(const char *aContractID,
-                                          const nsIID &aIID,
-                                          void **_retval);
+    NS_DECL_NSICOMPONENTMANAGER
+    NS_DECL_NSICOMPONENTREGISTRAR
+#ifdef MOZ_OMNIJAR
+    NS_DECL_NSIMANIFESTLOADERSINK
+#endif
 
+    static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-    NS_DECL_NSICOMPONENTMANAGEROBSOLETE
-
-    // Since the nsIComponentManagerObsolete and nsIComponentRegistrar share some of the
-    // same interface function names, we have to manually define the functions here.
-    // the only function that is shared is UnregisterFactory
-    NS_IMETHOD AutoRegister(nsIFile *aSpec); 
-    NS_IMETHOD AutoUnregister(nsIFile *aSpec); 
-    NS_IMETHOD RegisterFactory(const nsCID & aClass, const char *aClassName, const char *aContractID, nsIFactory *aFactory); 
-    //  NS_IMETHOD UnregisterFactory(const nsCID & aClass, nsIFactory *aFactory); 
-    NS_IMETHOD RegisterFactoryLocation(const nsCID & aClass, const char *aClassName, const char *aContractID, nsIFile *aFile, const char *loaderStr, const char *aType); 
-    NS_IMETHOD UnregisterFactoryLocation(const nsCID & aClass, nsIFile *aFile); 
-    NS_IMETHOD IsCIDRegistered(const nsCID & aClass, PRBool *_retval); 
-    NS_IMETHOD IsContractIDRegistered(const char *aClass, PRBool *_retval); 
-    NS_IMETHOD EnumerateCIDs(nsISimpleEnumerator **_retval); 
-    NS_IMETHOD EnumerateContractIDs(nsISimpleEnumerator **_retval); 
-    NS_IMETHOD CIDToContractID(const nsCID & aClass, char **_retval); 
-    NS_IMETHOD ContractIDToCID(const char *aContractID, nsCID * *_retval); 
-    
     nsresult RegistryLocationForFile(nsIFile* aFile,
                                      nsCString& aResult);
     nsresult FileForRegistryLocation(const nsCString &aLocation,
                                      nsILocalFile **aSpec);
 
     NS_DECL_NSISERVICEMANAGER
-    NS_DECL_NSISERVICEMANAGEROBSOLETE
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();
 
     static nsComponentManagerImpl* gComponentManager;
-    nsresult Init(nsStaticModuleInfo const *aStaticModules,
-                  PRUint32 aStaticModuleCount);
-    // NOTE: XPCOM initialization must call either ReadPersistentRegistry or
-    // AutoRegister to fully initialize the nsComponentManagerImpl.
-
-    nsresult WritePersistentRegistry();
-    nsresult ReadPersistentRegistry();
+    nsresult Init();
 
     nsresult Shutdown(void);
 
     nsresult FreeServices();
 
-    nsresult
-    NS_GetService(const char *aContractID, const nsIID& aIID, PRBool aDontCreate, nsISupports** result);
+    already_AddRefed<mozilla::ModuleLoader> LoaderForExtension(const nsACString& aExt);
+    nsInterfaceHashtable<nsCStringHashKey, mozilla::ModuleLoader> mLoaderMap;
 
-    nsresult RegisterComponentCommon(const nsCID &aClass,
-                                     const char *aClassName,
-                                     const char *aContractID,
-                                     PRUint32 aContractIDLen,
-                                     const char *aRegistryName,
-                                     PRUint32 aRegistryNameLen,
-                                     PRBool aReplace, PRBool aPersist,
-                                     const char *aType);
-    // Convert a loader type string into an index into the loader data
-    // array. Empty loader types are converted to NATIVE. Returns
-    // NS_LOADER_TYPE_INVALID if loader type cannot be determined.
-    LoaderType GetLoaderType(const char *typeStr);
-    LoaderType AddLoaderType(const char *typeStr);
-    const char* StringForLoaderType(LoaderType aType) {
-        return mLoaderData[aType].type.get();
-    }
-    nsIModuleLoader* LoaderForType(LoaderType aType);
-    int GetLoaderCount() { return mLoaderData.Length(); }
-    void GetAllLoaders();
+    already_AddRefed<nsIFactory> FindFactory(const nsCID& aClass);
+    already_AddRefed<nsIFactory> FindFactory(const char *contractID,
+                                             PRUint32 aContractIDLen);
 
-    nsresult FindFactory(const char *contractID, PRUint32 aContractIDLen, nsIFactory **aFactory) ;
-    nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
+    already_AddRefed<nsIFactory> LoadFactory(nsFactoryEntry *aEntry);
 
     nsFactoryEntry *GetFactoryEntry(const char *aContractID,
                                     PRUint32 aContractIDLen);
     nsFactoryEntry *GetFactoryEntry(const nsCID &aClass);
 
-    nsresult SyncComponentsInDir(PRInt32 when, nsIFile *dirSpec);
+    nsDataHashtable<nsIDHashKey, nsFactoryEntry*> mFactories;
+    nsDataHashtable<nsCStringHashKey, nsFactoryEntry*> mContractIDs;
 
-    // NOTE: HashContractID operates on the hash table with ContractIDs,
-    // for thread-safety it should only be invoked from inside mMon.
-    nsresult HashContractID(const char *acontractID, PRUint32 aContractIDLen,
-                            nsFactoryEntry *fe_ptr);
-
-    void DeleteContractIDEntriesByCID(const nsCID* aClass, nsIFactory* factory);
-    nsresult AutoRegisterImpl(nsIFile*                  inDirSpec,
-                              nsCOMArray<nsILocalFile> &aLeftovers,
-                              nsTArray<DeferredModule> &aDeferred);
-    nsresult AutoRegisterDirectory(nsIFile*                  aComponentFile,
-                                   nsCOMArray<nsILocalFile> &aLeftovers,
-                                   nsTArray<DeferredModule> &aDeferred);
-    nsresult AutoRegisterComponentsList(nsIFile* inDir,
-                                        PRFileDesc* fd,
-                                        nsCOMArray<nsILocalFile>& aLeftovers,
-                                        nsTArray<DeferredModule>& aDeferred);
-    nsresult AutoRegisterComponent(nsILocalFile*             aComponentFile,
-                                   nsTArray<DeferredModule> &aDeferred,
-                                   LoaderType                minLoader = NS_LOADER_TYPE_NATIVE);
-    void LoadLeftoverComponents(nsCOMArray<nsILocalFile> &aLeftovers,
-                                nsTArray<DeferredModule> &aDeferred,
-                                LoaderType                minLoader);
-
-    void LoadDeferredModules(nsTArray<DeferredModule> &aDeferred);
-
-    PLDHashTable        mFactories;
-    PLDHashTable        mContractIDs;
     PRMonitor*          mMon;
 
+    static void InitializeStaticModules();
+    static void InitializeModuleLocations();
+
+    struct ComponentLocation
+    {
+        NSLocationType type;
+        nsCOMPtr<nsILocalFile> location;
+    };
+
+    static nsTArray<const mozilla::Module*>* sStaticModules;
+    static nsTArray<ComponentLocation>* sModuleLocations;
+
     nsNativeModuleLoader mNativeModuleLoader;
-    nsStaticModuleLoader mStaticModuleLoader;
-    nsCOMPtr<nsIFile>   mComponentsDir;
-    PRInt32             mComponentsOffset;
 
-    nsCOMPtr<nsIFile>   mGREComponentsDir;
-    PRInt32             mGREComponentsOffset;
+    class KnownModule
+    {
+    public:
+        /**
+         * Static or binary module.
+         */
+        KnownModule(const mozilla::Module* aModule, nsILocalFile* aFile)
+            : mModule(aModule)
+            , mFile(aFile)
+            , mLoaded(false)
+            , mFailed(false)
+        { }
 
-    nsCOMPtr<nsIFile>   mRegistryFile;
+        KnownModule(nsILocalFile* aFile)
+            : mModule(NULL)
+            , mFile(aFile)
+            , mLoader(NULL)
+            , mLoaded(false)
+            , mFailed(false)
+        { }
+
+#ifdef MOZ_OMNIJAR
+        KnownModule(const nsACString& aPath)
+            : mModule(NULL)
+            , mFile(NULL)
+            , mPath(aPath)
+            , mLoader(NULL)
+            , mLoaded(false)
+            , mFailed(false)
+        { }
+#endif
+
+        ~KnownModule()
+        {
+            if (mLoaded && mModule->unloadProc)
+                mModule->unloadProc();
+        }
+
+        bool EnsureLoader();
+        bool Load();
+
+        const mozilla::Module* Module() const
+        {
+            return mModule;
+        }
+
+        /**
+         * For error logging, get a description of this module, either the
+         * file path, or <static module>.
+         */
+        nsCString Description() const;
+
+    private:
+        const mozilla::Module* mModule;
+        nsCOMPtr<nsILocalFile> mFile;
+#ifdef MOZ_OMNIJAR
+        nsCString mPath;
+#endif
+        nsCOMPtr<mozilla::ModuleLoader> mLoader;
+        bool mLoaded;
+        bool mFailed;
+    };
+
+    // The KnownModule is kept alive by these members, it is
+    // referenced by pointer from the factory entries.
+    nsTArray< nsAutoPtr<KnownModule> > mKnownStaticModules;
+    nsClassHashtable<nsHashableHashKey, KnownModule> mKnownFileModules;
+#ifdef MOZ_OMNIJAR
+    nsClassHashtable<nsCStringHashKey, KnownModule> mKnownJARModules;
+#endif
+
+    void RegisterModule(const mozilla::Module* aModule,
+                        nsILocalFile* aFile);
+    void RegisterCIDEntry(const mozilla::Module::CIDEntry* aEntry,
+                          KnownModule* aModule);
+    void RegisterContractID(const mozilla::Module::ContractIDEntry* aEntry);
+
+    void RegisterLocation(NSLocationType aType, nsILocalFile* aLocation,
+                          bool aChromeOnly);
+
+#ifdef MOZ_OMNIJAR
+    void RegisterOmnijar(bool aChromeOnly);
+#endif
+
+    void GetManifestsInDirectory(nsILocalFile* aDirectory,
+                                 nsCOMArray<nsILocalFile>& aManifests);
+
+    void RegisterManifestFile(NSLocationType aType, nsILocalFile* aFile,
+                              bool aChromeOnly);
+
+    struct ManifestProcessingContext
+    {
+        ManifestProcessingContext(NSLocationType aType, nsILocalFile* aFile)
+            : mType(aType)
+            , mFile(aFile)
+            , mPath(NULL)
+        { }
+
+#ifdef MOZ_OMNIJAR
+        ManifestProcessingContext(NSLocationType aType, const char* aPath)
+            : mType(aType)
+            , mFile(mozilla::OmnijarPath())
+            , mPath(aPath)
+        { }
+#endif
+
+        ~ManifestProcessingContext() { }
+
+        NSLocationType mType;
+        nsILocalFile* mFile;
+        const char* mPath;
+    };
+
+    void ManifestBinaryComponent(ManifestProcessingContext& cx, int lineno, char *const * argv);
+    void ManifestXPT(ManifestProcessingContext& cx, int lineno, char *const * argv);
+    void ManifestComponent(ManifestProcessingContext& cx, int lineno, char *const * argv);
+    void ManifestContract(ManifestProcessingContext& cx, int lineno, char* const * argv);
+    void ManifestCategory(ManifestProcessingContext& cx, int lineno, char* const * argv);
+
+    void RereadChromeManifests();
 
     // Shutdown
-    #define NS_SHUTDOWN_NEVERHAPPENED 0
-    #define NS_SHUTDOWN_INPROGRESS 1
-    #define NS_SHUTDOWN_COMPLETE 2
-    PRUint32 mShuttingDown;
+    enum {
+        NOT_INITIALIZED,
+        NORMAL,
+        SHUTDOWN_IN_PROGRESS,
+        SHUTDOWN_COMPLETE
+    } mStatus;
 
     nsTArray<nsLoaderdata> mLoaderData;
-
-    nsDataHashtable<nsHashableHashKey, PRInt64> mAutoRegEntries;
-
-    PRBool              mRegistryDirty;
-    nsCOMPtr<nsCategoryManager>  mCategoryManager;
 
     PLArenaPool   mArena;
 
@@ -282,70 +329,35 @@ public:
 
 private:
     ~nsComponentManagerImpl();
+
+#ifdef MOZ_OMNIJAR
+    nsIManifestLoader* mManifestLoader;
+    bool mRegisterJARChromeOnly;
+#endif
 };
 
 
-#define NS_MAX_FILENAME_LEN	1024
+#define NS_MAX_FILENAME_LEN     1024
 
 #define NS_ERROR_IS_DIR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM, 24)
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * Class: nsFactoryEntry()
- *
- * There are two types of FactoryEntries.
- *
- * 1. {CID, dll} mapping.
- *		Factory is a consequence of the dll. These can be either session
- *		specific or persistent based on whether we write this
- *		to the registry or not.
- *
- * 2. {CID, factory} mapping
- *		These are strictly session specific and in memory only.
- */
+struct nsFactoryEntry
+{
+    nsFactoryEntry(const mozilla::Module::CIDEntry* entry,
+                   nsComponentManagerImpl::KnownModule* module);
 
-struct nsFactoryEntry {
-    nsFactoryEntry(const nsCID    &aClass,
-                   LoaderType      aLoaderType,
-                   const char     *aLocationKey,
-                   nsFactoryEntry *aParent = nsnull);
-
-    nsFactoryEntry(const nsCID    &aClass,
-                   nsIFactory     *aFactory,
-                   nsFactoryEntry *aParent = nsnull) :
-        mCid(aClass),
-        mLoaderType(NS_LOADER_TYPE_INVALID),
-        mFactory(aFactory),
-        mParent(aParent) {
-        mLocationKey = nsnull;
-    }
+    // nsIComponentRegistrar.registerFactory support
+    nsFactoryEntry(const nsCID& aClass, nsIFactory* factory);
 
     ~nsFactoryEntry();
 
-    void ReInit(LoaderType  aLoaderType,
-                const char *aLocationKey);
+    already_AddRefed<nsIFactory> GetFactory();
 
-    nsresult GetFactory(nsIFactory **aFactory);
+    const mozilla::Module::CIDEntry* mCIDEntry;
+    nsComponentManagerImpl::KnownModule* mModule;
 
-    nsCID                  mCid;
-    LoaderType             mLoaderType;
-    const char            *mLocationKey;
     nsCOMPtr<nsIFactory>   mFactory;
     nsCOMPtr<nsISupports>  mServiceObject;
-    nsFactoryEntry        *mParent;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-struct nsFactoryTableEntry : public PLDHashEntryHdr {
-    nsFactoryEntry *mFactoryEntry;    
-};
-
-struct nsContractIDTableEntry : public PLDHashEntryHdr {
-    char           *mContractID;
-    PRUint32        mContractIDLen;
-    nsFactoryEntry *mFactoryEntry;    
 };
 
 #endif // nsComponentManager_h__
-

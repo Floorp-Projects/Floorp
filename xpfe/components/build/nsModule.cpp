@@ -35,10 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsICategoryManager.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsNetUtil.h"
-#include "nsXPIDLString.h"
 #include "nsDirectoryViewer.h"
 #ifdef MOZ_RDF
 #include "rdf.h"
@@ -52,49 +50,39 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
 
-static NS_METHOD
-RegisterProc(nsIComponentManager *aCompMgr,
-             nsIFile *aPath,
-             const char *registryLocation,
-             const char *componentType,
-             const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // add the MIME types layotu can handle to the handlers category.
-    // this allows users of layout's viewers (the docshell for example)
-    // to query the types of viewers layout can create.
-    return catman->AddCategoryEntry("Gecko-Content-Viewers", "application/http-index-format",
-                                    "@mozilla.org/xpfe/http-index-format-factory-constructor",
-                                    PR_TRUE, PR_TRUE, nsnull);
-}
-
-static NS_METHOD
-UnregisterProc(nsIComponentManager *aCompMgr,
-               nsIFile *aPath,
-               const char *registryLocation,
-               const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    return catman->DeleteCategoryEntry("Gecko-Content-Viewers",
-                                       "application/http-index-format", PR_TRUE);
-}
-
-static const nsModuleComponentInfo components[] = {
-   { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
-      "@mozilla.org/xpfe/http-index-format-factory-constructor",
-      nsDirectoryViewerFactoryConstructor, RegisterProc, UnregisterProc  },
+NS_DEFINE_NAMED_CID(NS_DIRECTORYVIEWERFACTORY_CID);
 #ifdef MOZ_RDF
-    { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_SERVICE_CONTRACTID,
-      nsHTTPIndexConstructor },
-    { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
-      nsHTTPIndexConstructor },
+NS_DEFINE_NAMED_CID(NS_HTTPINDEX_SERVICE_CID);
 #endif
+
+
+static const mozilla::Module::CIDEntry kXPFECIDs[] = {
+    { &kNS_DIRECTORYVIEWERFACTORY_CID, false, NULL, nsDirectoryViewerFactoryConstructor },
+#ifdef MOZ_RDF
+    { &kNS_HTTPINDEX_SERVICE_CID, false, NULL, nsHTTPIndexConstructor },
+#endif
+    { NULL }
 };
 
-NS_IMPL_NSGETMODULE(application, components)
+static const mozilla::Module::ContractIDEntry kXPFEContracts[] = {
+    { "@mozilla.org/xpfe/http-index-format-factory-constructor", &kNS_DIRECTORYVIEWERFACTORY_CID },
+#ifdef MOZ_RDF
+    { NS_HTTPINDEX_SERVICE_CONTRACTID, &kNS_HTTPINDEX_SERVICE_CID },
+    { NS_HTTPINDEX_DATASOURCE_CONTRACTID, &kNS_HTTPINDEX_SERVICE_CID },
+#endif
+    { NULL }
+};
+
+static const mozilla::Module::CategoryEntry kXPFECategories[] = {
+    { "Gecko-Content-Viewers", "application/http-index-format", "@mozilla.org/xpfe/http-index-format-factory-constructor" },
+    { NULL }
+};
+
+static const mozilla::Module kXPFEModule = {
+    mozilla::Module::kVersion,
+    kXPFECIDs,
+    kXPFEContracts,
+    kXPFECategories
+};
+
+NSMODULE_DEFN(application) = &kXPFEModule;

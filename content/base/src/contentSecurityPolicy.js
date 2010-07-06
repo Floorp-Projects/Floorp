@@ -113,13 +113,8 @@ function ContentSecurityPolicy() {
 }
 
 ContentSecurityPolicy.prototype = {
-  classDescription: "Content Security Policy Component",
-  contractID:       "@mozilla.org/contentsecuritypolicy;1",
   classID:          Components.ID("{AB36A2BF-CB32-4AA6-AB41-6B4E4444A221}"),
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentSecurityPolicy]),
-
-  // get this contractID registered for certain categories via XPCOMUtils
-  _xpcom_categories: [ ],
 
   get isInitialized() {
     return this._isInitialized;
@@ -287,7 +282,7 @@ ContentSecurityPolicy.prototype = {
 
         try {
           req.open("POST", uris[i], true);
-          req.setRequestHeader('Content-Type', 'application/xml');
+          req.setRequestHeader('Content-Type', 'application/json');
           req.upload.addEventListener("error", failure, false);
           req.upload.addEventListener("abort", failure, false);
           //req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
@@ -438,7 +433,4 @@ ContentSecurityPolicy.prototype = {
 
 };
 
-
-
-function NSGetModule(aComMgr, aFileSpec)
-  XPCOMUtils.generateModule([ContentSecurityPolicy]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentSecurityPolicy]);

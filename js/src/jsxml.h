@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -60,6 +60,17 @@ struct JSXMLArray {
     uint32              capacity;
     void                **vector;
     JSXMLArrayCursor    *cursors;
+
+    void init() {
+        length = capacity = 0;
+        vector = NULL;
+        cursors = NULL;
+    }
+
+    void finish(JSContext *cx);
+
+    bool setCapacity(JSContext *cx, uint32 capacity);
+    void trim();
 };
 
 struct JSXMLArrayCursor
@@ -242,7 +253,7 @@ JSObject::isQName() const
 static inline bool
 IsXML(const js::Value &v)
 {
-    return v.isObject() && v.asObject().isXML();
+    return v.isObject() && v.toObject().isXML();
 }
 
 extern JSObject *
@@ -333,9 +344,6 @@ js_ValueToXMLObject(JSContext *cx, const js::Value &v);
 
 extern JSObject *
 js_ValueToXMLListObject(JSContext *cx, const js::Value &v);
-
-extern JSObject *
-js_CloneXMLObject(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,

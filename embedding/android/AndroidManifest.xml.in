@@ -2,6 +2,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.mozilla.@MOZ_APP_NAME@"
+      android:installLocation="auto"
       android:versionCode="1"
       android:versionName="1.9.3"
       android:sharedUserId="org.mozilla.sharedID">
@@ -17,7 +18,8 @@
         <activity android:name="App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|orientation|mcc|mnc"
-                  android:windowSoftInputMode="stateUnspecified|adjustResize">
+                  android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -475,6 +475,13 @@ public:
             NS_WARNING("Not same origin error!");
             errorevent.errorMsg = xoriginMsg.get();
             errorevent.lineNr = 0;
+            // FIXME: once the principal of the script is not tied to
+            // the filename, we can stop using the post-redirect
+            // filename if we want and remove this line.  Note that
+            // apparently we can't handle null filenames in the error
+            // event dispatching code.
+            static PRUnichar nullFilename[] = { PRUnichar(0) };
+            errorevent.fileName = nullFilename;
           }
 
           nsEventDispatcher::Dispatch(win, presContext, &errorevent, nsnull,
@@ -2636,11 +2643,16 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Now check whether we need to grab a pointer to the
-    // XPCNativeWrapper class
+    // XPCNativeWrapper and XrayWrapperPropertyHolder getProperty ops.
     if (!nsDOMClassInfo::GetXPCNativeWrapperGetPropertyOp()) {
       JSPropertyOp getProperty;
       xpc->GetNativeWrapperGetPropertyOp(&getProperty);
       nsDOMClassInfo::SetXPCNativeWrapperGetPropertyOp(getProperty);
+    }
+    if (!nsDOMClassInfo::GetXrayWrapperPropertyHolderGetPropertyOp()) {
+      JSPropertyOp getProperty;
+      xpc->GetXrayWrapperPropertyHolderGetPropertyOp(&getProperty);
+      nsDOMClassInfo::SetXrayWrapperPropertyHolderGetPropertyOp(getProperty);
     }
   } else {
     // There's already a global object. We are preparing this outer window

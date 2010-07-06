@@ -45,6 +45,8 @@
 
 #include "nsAutoPtr.h"
 
+#include "nsRefreshDriver.h"
+
 class nsIPersistentProperties;
 
 /**
@@ -67,7 +69,7 @@ public:
    * @param  aIsAsync     [in, optional] specifies whether the origin change
    *                        this event is fired owing to is async.
    */
-  static void FireEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+  static void FireEvent(PRUint32 aEventType, nsAccessible *aAccessible,
                         PRBool aIsAsynch = PR_FALSE,
                         EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
@@ -78,11 +80,11 @@ public:
    * @param  aNode        [in] the DOM node
    * @param  aAttributes  [in, out] the attributes
    */
-  static void GetEventAttributes(nsIDOMNode *aNode,
+  static void GetEventAttributes(nsINode *aNode,
                                  nsIPersistentProperties *aAttributes);
 
 private:
-  static nsCOMPtr<nsIDOMNode> sEventTargetNode;
+  static nsCOMPtr<nsINode> sEventTargetNode;
   static PRBool sEventFromUserInput;
 };
 
@@ -90,7 +92,8 @@ private:
 /**
  * Event queue.
  */
-class nsAccEventQueue : public nsISupports
+class nsAccEventQueue : public nsISupports,
+                        public nsARefreshObserver
 {
 public:
   nsAccEventQueue(nsDocAccessible *aDocument);
@@ -112,7 +115,7 @@ public:
 private:
 
   /**
-   * Start pending events procesing asyncroniously.
+   * Start pending events processing asynchronously.
    */
   void PrepareFlush();
   
@@ -120,12 +123,10 @@ private:
    * Process pending events. It calls nsDocAccessible::ProcessPendingEvent()
    * where the real event processing is happen.
    */
-  void Flush();
-
-  NS_DECL_RUNNABLEMETHOD(nsAccEventQueue, Flush)
+  virtual void WillRefresh(mozilla::TimeStamp aTime);
 
   /**
-   * Coalesce redurant events from the queue.
+   * Coalesce redundant events from the queue.
    */
   void CoalesceEvents();
 
@@ -156,8 +157,35 @@ private:
   void CoalesceReorderEventsFromSameTree(nsAccEvent *aAccEvent,
                                          nsAccEvent *aDescendantAccEvent);
 
-  PRBool mProcessingStarted;
+  /**
+   * Coalesce text change events caused by sibling hide events.
+   */
+  void CoalesceTextChangeEventsFor(AccHideEvent* aTailEvent,
+                                   AccHideEvent* aThisEvent);
+
+  /**
+   * Create text change event caused by hide event. When a node is hidden or
+   * removed, the text in an ancestor hyper text will lose characters. Create
+   * text change event unless the node is being removed or frame is being
+   * destroyed.
+   */
+  void CreateTextChangeEventFor(AccHideEvent* aEvent);
+
+  /**
+   * Indicates whether we're waiting on a refresh notification from our
+   * presshell to flush events
+   */
+  PRBool mObservingRefresh;
+
+  /**
+   * The document accessible reference owning this queue.
+   */
   nsRefPtr<nsDocAccessible> mDocument;
+
+  /**
+   * Pending events array.  Don't make this an nsAutoTArray; we use
+   * SwapElements() on it.
+   */
   nsTArray<nsRefPtr<nsAccEvent> > mEvents;
 };
 

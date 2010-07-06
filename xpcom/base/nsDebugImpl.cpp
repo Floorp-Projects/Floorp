@@ -500,7 +500,7 @@ Break(const char *aMsg)
 
 static const nsDebugImpl kImpl;
 
-NS_METHOD
+nsresult
 nsDebugImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
   NS_ENSURE_NO_AGGREGATION(outer);
