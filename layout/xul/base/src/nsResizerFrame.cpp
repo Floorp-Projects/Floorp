@@ -382,12 +382,7 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
     return parent ? parent->FindFirstNonNativeAnonymous() : nsnull;
   }
 
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aPresShell->GetDocument());
-  nsCOMPtr<nsIDOMElement> element;
-  doc->GetElementById(elementid, getter_AddRefs(element));
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-  return content.get();
+  return aPresShell->GetDocument()->GetElementById(elementid);
 }
 
 /* adjust the window position and size according to the mouse movement and

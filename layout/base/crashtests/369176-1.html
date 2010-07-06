@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+
+<script>
+
+function boom()
+{
+  document.getElementById("f").className = 'q';
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+<style>
+
+body {
+  width: 10em;
+}
+
+#f:after {
+  content: "TTT";
+}
+
+</style>
+
+</head>
+
+<body onload="setTimeout(boom, 0);">
+
+<span id="f">foo foo foo foo foo foo foo foo foo foo<span style="display: block"></span></span>
+
+
+</div>
+
+</body>
+</html>

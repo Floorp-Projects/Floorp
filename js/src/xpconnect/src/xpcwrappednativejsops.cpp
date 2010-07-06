@@ -606,13 +606,6 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
     if(!wrapper->HasMutatedSet())
         return JS_TRUE;
 
-    // Since we might be using this in the helper case, we check to
-    // see if this is all avoidable.
-
-    if(wrapper->GetScriptableInfo() &&
-       wrapper->GetScriptableInfo()->GetFlags().DontEnumStaticProps())
-        return JS_TRUE;
-
     XPCNativeSet* set = wrapper->GetSet();
     XPCNativeSet* protoSet = wrapper->HasProto() ?
                                 wrapper->GetProto()->GetSet() : nsnull;
@@ -1316,8 +1309,9 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     if(si->GetFlags().WantNewEnumerate())
     {
-        if(enum_op == JSENUMERATE_INIT &&
-           !si->GetFlags().DontEnumStaticProps() &&
+        if(((enum_op == JSENUMERATE_INIT &&
+             !si->GetFlags().DontEnumStaticProps()) ||
+            enum_op == JSENUMERATE_INIT_ALL) &&
            wrapper->HasMutatedSet() &&
            !XPC_WN_Shared_Enumerate(cx, obj))
         {
@@ -1331,8 +1325,11 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         rv = si->GetCallback()->
             NewEnumerate(wrapper, cx, obj, enum_op, statep, idp, &retval);
         
-        if(enum_op == JSENUMERATE_INIT && (NS_FAILED(rv) || !retval))
+        if((enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL) &&
+           (NS_FAILED(rv) || !retval))
+        {
             *statep = JSVAL_NULL;
+        }
         
         if(NS_FAILED(rv))
             return Throw(rv, cx);
@@ -1341,9 +1338,10 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     if(si->GetFlags().WantEnumerate())
     {
-        if(enum_op == JSENUMERATE_INIT)
+        if(enum_op == JSENUMERATE_INIT || enum_op == JSENUMERATE_INIT_ALL)
         {
-            if(!si->GetFlags().DontEnumStaticProps() &&
+            if((enum_op == JSENUMERATE_INIT_ALL ||
+                !si->GetFlags().DontEnumStaticProps()) &&
                wrapper->HasMutatedSet() &&
                !XPC_WN_Shared_Enumerate(cx, obj))
             {
@@ -1448,7 +1446,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     if(!XPCPerThreadData::IsMainThread(cx))
         return obj;
 
-    Outerize(cx, &obj);
+    OBJ_TO_OUTER_OBJECT(cx, obj);
     if(!obj)
         return nsnull;
 
@@ -1457,6 +1455,36 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     {
         XPCThrower::Throw(NS_ERROR_FAILURE, cx);
         return nsnull;
+    }
+
+    // Note that by innerizing the incoming object instead of outerizing the
+    // scope, we are doing an implicit security check: if the window has
+    // already navigated, then we don't want to use our cache.
+    JSObject* innerobj = obj;
+    OBJ_TO_INNER_OBJECT(cx, innerobj);
+    if(!innerobj)
+        return nsnull;
+
+    if(innerobj == scope)
+    {
+        // Fast-path for the common case: a window being wrapped in its own
+        // scope. Check to see if the object actually needs a XOW, and then
+        // give it one in its own scope.
+
+        XPCWrappedNative *wn =
+            static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
+
+        if(!wn->NeedsXOW())
+            return obj;
+
+        XPCWrappedNativeWithXOW *wnxow =
+            static_cast<XPCWrappedNativeWithXOW *>(wn);
+        JSObject *wrapper = wnxow->GetXOW();
+        if(wrapper)
+            return wrapper;
+
+        // Otherwise, this is our first time through,
+        // XPCCrossOriginWrapper::WrapObject will fill the cache.
     }
 
     XPCPerThreadData *threadData = XPCPerThreadData::GetData(cx);
@@ -1469,27 +1497,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     AutoPopJSContext popper(threadData->GetJSContextStack());
     popper.PushIfNotTop(cx);
 
-    JSObject* outerscope = scope;
-    Outerize(cx, &outerscope);
-    if(!outerscope)
-        return nsnull;
-
-    if(obj == outerscope)
-    {
-        // Fast-path for the common case: a window being wrapped in its own
-        // scope. Check to see if the object actually needs a XOW, and then
-        // give it one in its own scope.
-
-        if(!XPCCrossOriginWrapper::ClassNeedsXOW(obj->getClass()->name))
-            return obj;
-
-        js::AutoValueRooter tvr(cx, js::ObjectTag(*obj));
-        if(!XPCCrossOriginWrapper::WrapObject(cx, scope, tvr.jsval_addr()))
-            return nsnull;
-
-        return &tvr.value().asObject();
-    }
-
     nsIScriptSecurityManager* secMan = XPCWrapper::GetSecurityManager();
     if(!secMan)
     {
@@ -1500,7 +1507,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     JSStackFrame *fp;
     nsIPrincipal *principal = secMan->GetCxSubjectPrincipalAndFrame(cx, &fp);
 
-    js::AutoValueRooter retval(cx, js::ObjectTag(*obj));
+    js::AutoValueRooter retval(cx, js::ObjectValue(*obj));
 
     if(principal && fp)
     {

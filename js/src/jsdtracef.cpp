@@ -115,16 +115,16 @@ jsdtrace_jsvaltovoid(JSContext *cx, const js::Value &argval)
         return (void *)JS_TYPE_STR(JSTYPE_VOID);
 
     if (argval.isBoolean())
-        return (void *)argval.asBoolean();
+        return (void *)argval.toBoolean();
 
     if (argval.isString())
-        return (void *)js_GetStringBytes(cx, argval.asString());
+        return (void *)js_GetStringBytes(cx, argval.toString());
 
     if (argval.isNumber()) {
         if (argval.isInt32())
-            return (void *)argval.asInt32();
+            return (void *)argval.toInt32();
         // FIXME Now what?
-        //return (void *)argval.asDouble();
+        //return (void *)argval.toDouble();
     }
 
     return argval.asGCThing();

@@ -47,6 +47,7 @@
 #include "nsIForm.h"
 #include "nsFormSubmission.h"
 #include "nsIFormProcessor.h"
+#include "nsContentCreatorFunctions.h"
 
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIOptionElement.h"
@@ -134,12 +135,13 @@ nsSafeOptionListMutation::~nsSafeOptionListMutation()
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Select)
 
 nsHTMLSelectElement::nsHTMLSelectElement(nsINodeInfo *aNodeInfo,
-                                         PRBool aFromParser)
+                                         PRUint32 aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mOptions(new nsHTMLOptionCollection(this)),
     mIsDoneAddingChildren(!aFromParser),
     mDisabledChanged(PR_FALSE),
     mMutating(PR_FALSE),
+    mInhibitStateRestoration(!!(aFromParser & NS_FROM_PARSER_FRAGMENT)),
     mNonOptionChildren(0),
     mOptGroupCount(0),
     mSelectedIndex(-1)
@@ -1223,15 +1225,15 @@ nsHTMLSelectElement::Focus()
 }
 
 PRBool
-nsHTMLSelectElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
+nsHTMLSelectElement::IsHTMLFocusable(PRBool aWithMouse,
+                                     PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
-  if (nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex)) {
+  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return PR_TRUE;
   }
-  if (aTabIndex && (sTabFocusModel & eTabFocus_formElementsMask) == 0) {
-    *aTabIndex = -1;
-  }
+
   *aIsFocusable = !HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+
   return PR_FALSE;
 }
 
@@ -1353,7 +1355,9 @@ nsHTMLSelectElement::DoneAddingChildren(PRBool aHaveNotified)
   }
 
   // Restore state
-  RestoreFormControlState(this, this);
+  if (!mInhibitStateRestoration) {
+    RestoreFormControlState(this, this);
+  }
 
   // Now that we're done, select something (if it's a single select something
   // must be selected)

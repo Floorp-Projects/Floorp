@@ -40,6 +40,13 @@
 #ifndef jstl_h_
 #define jstl_h_
 
+/* Gross special case for Gecko, which defines malloc/calloc/free. */
+#ifdef mozilla_mozalloc_macro_wrappers_h
+#  define JS_UNDEFD_MOZALLOC_WRAPPERS
+/* The "anti-header" */
+#  include "mozilla/mozalloc_undef_macro_wrappers.h"
+#endif
+
 #include "jsbit.h"
 
 #include <new>
@@ -344,6 +351,11 @@ class LazilyConstructed
         JS_ASSERT(constructed);
         return asT();
     }
+
+    void destroy() {
+        ref().~T();
+        constructed = false;
+    }
 };
 
 
@@ -430,6 +442,20 @@ class AlignedPtrAndFlag
         bits = uintptr_t(t) | flag;
     }
 };
+
+template <class T>
+static inline void
+Reverse(T *beg, T *end)
+{
+    while (beg != end) {
+        if (--end == beg)
+            return;
+        T tmp = *beg;
+        *beg = *end;
+        *end = tmp;
+        ++beg;
+    }
+}
 
 } /* namespace js */
 

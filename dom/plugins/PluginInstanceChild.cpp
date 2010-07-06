@@ -120,11 +120,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     mWindow.ws_info = &mWsInfo;
     memset(&mWsInfo, 0, sizeof(mWsInfo));
-#ifdef MOZ_WIDGET_GTK2
-    mWsInfo.display = GDK_DISPLAY();
-#elif defined(MOZ_WIDGET_QT)
-    mWsInfo.display = QX11Info::display();
-#endif // MOZ_WIDGET_GTK2
+    mWsInfo.display = DefaultXDisplay();
 #endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)
     memset(&mAlphaExtract, 0, sizeof(mAlphaExtract));
@@ -358,6 +354,11 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         return NPERR_NO_ERROR;
     }
 
+    case NPNVsupportsInvalidatingCoreAnimationBool: {
+        *((NPBool*)aValue) = true;
+        return NPERR_NO_ERROR;
+    }
+
     case NPNVsupportsCocoaBool: {
         *((NPBool*)aValue) = true;
         return NPERR_NO_ERROR;
@@ -532,7 +533,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
-#if defined(OS_LINUX) && defined(DEBUG)
+#if defined(MOZ_X11) && defined(DEBUG)
     if (GraphicsExpose == event.event.type)
         PLUGIN_LOG_DEBUG(("  received drawable 0x%lx\n",
                           event.event.xgraphicsexpose.drawable));
@@ -614,6 +615,8 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
+    PaintTracker pt;
+
     NPCocoaEvent evcopy = event.event;
 
     if (evcopy.type == NPCocoaEventDrawRect) {
@@ -685,10 +688,12 @@ PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
+    PaintTracker pt;
+
     NPCocoaEvent evcopy = event.event;
     nsIOSurface* surf = nsIOSurface::LookupSurface(surfaceid);
     if (!surf) {
-        NS_ERROR("Invalid IOSurface.\n");
+        NS_ERROR("Invalid IOSurface.");
         *handled = false;
         return false;
     }
@@ -806,16 +811,36 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
         return false;
 
 #ifdef MOZ_WIDGET_GTK2
-    if (aWindow.type == NPWindowTypeWindow
-        && gtk_check_version(2,18,7) != NULL) { // older
-        GdkWindow* socket_window = gdk_window_lookup(aWindow.window);
-        if (socket_window) {
-            // A GdkWindow for the socket already exists.  Need to
-            // workaround https://bugzilla.gnome.org/show_bug.cgi?id=607061
-            // See wrap_gtk_plug_embedded in PluginModuleChild.cpp.
-            g_object_set_data(G_OBJECT(socket_window),
-                              "moz-existed-before-set-window",
-                              GUINT_TO_POINTER(1));
+    if (gtk_check_version(2,18,7) != NULL) { // older
+        if (aWindow.type == NPWindowTypeWindow) {
+            GdkWindow* socket_window = gdk_window_lookup(aWindow.window);
+            if (socket_window) {
+                // A GdkWindow for the socket already exists.  Need to
+                // workaround https://bugzilla.gnome.org/show_bug.cgi?id=607061
+                // See wrap_gtk_plug_embedded in PluginModuleChild.cpp.
+                g_object_set_data(G_OBJECT(socket_window),
+                                  "moz-existed-before-set-window",
+                                  GUINT_TO_POINTER(1));
+            }
+        }
+
+        if (aWindow.visualID != None
+            && gtk_check_version(2, 12, 10) != NULL) { // older
+            // Workaround for a bug in Gtk+ (prior to 2.12.10) where deleting
+            // a foreign GdkColormap will also free the XColormap.
+            // http://git.gnome.org/browse/gtk+/log/gdk/x11/gdkcolor-x11.c?id=GTK_2_12_10
+            GdkVisual *gdkvisual = gdkx_visual_get(aWindow.visualID);
+            GdkColormap *gdkcolor =
+                gdk_x11_colormap_foreign_new(gdkvisual, aWindow.colormap);
+
+            if (g_object_get_data(G_OBJECT(gdkcolor), "moz-have-extra-ref")) {
+                // We already have a ref to keep the object alive.
+                g_object_unref(gdkcolor);
+            } else {
+                // leak and mark as already leaked
+                g_object_set_data(G_OBJECT(gdkcolor),
+                                  "moz-have-extra-ref", GUINT_TO_POINTER(1));
+            }
         }
     }
 #endif
@@ -887,6 +912,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     if (mPluginIface->setwindow)
         (void) mPluginIface->setwindow(&mData, &mWindow);
 
+#elif defined(ANDROID)
+#  warning Need Android impl
 #else
 #  error Implement me for your OS
 #endif
@@ -1065,7 +1092,7 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
 
     // The plugin received keyboard focus, let the parent know so the dom is up to date.
     if (message == WM_MOUSEACTIVATE)
-        self->CallPluginGotFocus();
+      self->CallPluginFocusChange(PR_TRUE);
 
     // Prevent lockups due to plugins making rpc calls when the parent
     // is making a synchronous SendMessage call to the child window. Add
@@ -1081,6 +1108,9 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
             break;
         }
     }
+
+    if (message == WM_KILLFOCUS)
+      self->CallPluginFocusChange(PR_FALSE);
 
     if (message == WM_USER+1 &&
         (self->mQuirks & PluginInstanceChild::QUIRK_FLASH_THROTTLE_WMUSER_EVENTS)) {

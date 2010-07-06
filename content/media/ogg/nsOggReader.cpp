@@ -65,16 +65,11 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 // is about 4300 bytes, so we read the file in chunks larger than that.
 static const int PAGE_STEP = 8192;
 
-// The frame rate to use if there is no video data in the resource to
-// be played.
-#define AUDIO_FRAME_RATE 25.0
-
 nsOggReader::nsOggReader(nsBuiltinDecoder* aDecoder)
   : nsBuiltinDecoderReader(aDecoder),
     mTheoraState(nsnull),
     mVorbisState(nsnull),
     mPageOffset(0),
-    mCallbackPeriod(0),
     mTheoraGranulepos(-1),
     mVorbisGranulepos(-1)
 {
@@ -251,10 +246,8 @@ nsresult nsOggReader::ReadMetadata()
   // Theora spec these can be considered the 'primary' bitstreams for playback.
   // Extract the metadata needed from these streams.
   // Set a default callback period for if we have no video data
-  mCallbackPeriod = 1000 / AUDIO_FRAME_RATE;
   if (mTheoraState) {
     if (mTheoraState->Init()) {
-      mCallbackPeriod = mTheoraState->mFrameDuration;
       gfxIntSize sz(mTheoraState->mInfo.pic_width,
                     mTheoraState->mInfo.pic_height);
       mDecoder->SetVideoData(sz, mTheoraState->mPixelAspectRatio, nsnull);
@@ -268,13 +261,11 @@ nsresult nsOggReader::ReadMetadata()
 
   mInfo.mHasAudio = HasAudio();
   mInfo.mHasVideo = HasVideo();
-  mInfo.mCallbackPeriod = mCallbackPeriod;
   if (HasAudio()) {
     mInfo.mAudioRate = mVorbisState->mInfo.rate;
     mInfo.mAudioChannels = mVorbisState->mInfo.channels;
   }
   if (HasVideo()) {
-    mInfo.mFramerate = mTheoraState->mFrameRate;
     mInfo.mPixelAspectRatio = mTheoraState->mPixelAspectRatio;
     mInfo.mPicture.width = mTheoraState->mInfo.pic_width;
     mInfo.mPicture.height = mTheoraState->mInfo.pic_height;
@@ -482,6 +473,7 @@ nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
   if (ret == TH_DUPFRAME) {
     aFrames.AppendElement(VideoData::CreateDuplicate(mPageOffset,
                                                      time,
+                                                     time + mTheoraState->mFrameDuration,
                                                      aPacket->granulepos));
   } else if (ret == 0) {
     th_ycbcr_buffer buffer;
@@ -499,6 +491,7 @@ nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
                                      mDecoder->GetImageContainer(),
                                      mPageOffset,
                                      time,
+                                     time + mTheoraState->mFrameDuration,
                                      b,
                                      isKeyframe,
                                      aPacket->granulepos);
@@ -1045,10 +1038,8 @@ nsresult nsOggReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime
   // Decode forward to the seek target frame. Start with video, if we have it.
   // We should pass a keyframe while doing this.
   if (HasVideo()) {
-    nsAutoPtr<VideoData> video;
     PRBool eof = PR_FALSE;
     PRInt64 startTime = -1;
-    video = nsnull;
     while (HasVideo() && !eof) {
       while (mVideoQueue.GetSize() == 0 && !eof) {
         PRBool skip = PR_FALSE;
@@ -1064,10 +1055,10 @@ nsresult nsOggReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime
       if (mVideoQueue.GetSize() == 0) {
         break;
       }
-      video = mVideoQueue.PeekFront();
+      nsAutoPtr<VideoData> video(mVideoQueue.PeekFront());
       // If the frame end time is less than the seek target, we won't want
       // to display this frame after the seek, so discard it.
-      if (video && video->mTime + mCallbackPeriod < aTarget) {
+      if (video && video->mEndTime < aTarget) {
         if (startTime == -1) {
           startTime = video->mTime;
         }

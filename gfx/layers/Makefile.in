@@ -68,14 +68,15 @@ EXPORTS = \
 CPPSRCS = \
         BasicImages.cpp \
         BasicLayers.cpp \
-        LayerManagerOGL.cpp \
+        ThebesLayerBuffer.cpp \
+        CanvasLayerOGL.cpp \
         ColorLayerOGL.cpp \
-        ThebesLayerOGL.cpp \
         ContainerLayerOGL.cpp \
         ImageLayerOGL.cpp \
-	CanvasLayerOGL.cpp \
+        LayerManagerOGL.cpp \
+        ThebesLayerOGL.cpp \
         $(NULL)
- 
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifdef MOZ_ENABLE_D3D9_LAYER
 EXPORTS += LayerManagerD3D9.h
@@ -102,7 +103,7 @@ include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
 
-LayerManagerOGLShaders.h: LayerManagerOGLShaders.txt genshaders.py
+LayerManagerOGLShaders.h: LayerManagerOGLShaders.txt genshaders.py $(GLOBAL_DEPS)
 	$(PYTHON) $(srcdir)/opengl/genshaders.py $< $@
 
 LayerManagerOGL.$(OBJ_SUFFIX): LayerManagerOGLShaders.h

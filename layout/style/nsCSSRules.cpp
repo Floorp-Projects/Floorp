@@ -1480,7 +1480,7 @@ AppendSerializedFontSrc(const nsCSSValue& src, nsAString & aResult NS_OUTPARAM)
                   "improper value unit for src:");
 
   const nsCSSValue::Array& sources = *src.GetArrayValue();
-  PRUint32 i = 0;
+  size_t i = 0;
 
   while (i < sources.Count()) {
     nsAutoString formats;

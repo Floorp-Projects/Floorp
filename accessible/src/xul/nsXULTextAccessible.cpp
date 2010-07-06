@@ -52,22 +52,22 @@
 #include "nsString.h"
 #include "nsNetUtil.h"
 
-/**
-  * For XUL descriptions and labels
-  */
-nsXULTextAccessible::nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsHyperTextAccessibleWrap(aDomNode, aShell)
-{ 
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTextAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+nsXULTextAccessible::
+  nsXULTextAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
+{
 }
 
 nsresult
 nsXULTextAccessible::GetNameInternal(nsAString& aName)
-{ 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-
+{
   // if the value attr doesn't exist, the screen reader must get the accessible text
   // from the accessible text interface or from the children
-  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
   return NS_OK;
 }
 
@@ -99,13 +99,9 @@ nsXULTextAccessible::GetRelationByType(PRUint32 aRelationType,
     nsHyperTextAccessibleWrap::GetRelationByType(aRelationType, aRelation);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIContent *content = nsCoreUtils::GetRoleContent(mDOMNode);
-  if (!content)
-    return NS_OK;
-
   if (aRelationType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
     // Caption is the label for groupbox
-    nsIContent *parent = content->GetParent();
+    nsIContent *parent = mContent->GetParent();
     if (parent && parent->Tag() == nsAccessibilityAtoms::caption) {
       nsCOMPtr<nsIAccessible> parentAccessible;
       GetParent(getter_AddRefs(parentAccessible));
@@ -118,12 +114,15 @@ nsXULTextAccessible::GetRelationByType(PRUint32 aRelationType,
   return NS_OK;
 }
 
-/**
-  * For XUL tooltip
-  */
-nsXULTooltipAccessible::nsXULTooltipAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsLeafAccessible(aDomNode, aShell)
-{ 
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTooltipAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+nsXULTooltipAccessible::
+  nsXULTooltipAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsLeafAccessible(aContent, aShell)
+{
 }
 
 nsresult
@@ -145,12 +144,14 @@ nsXULTooltipAccessible::GetRoleInternal(PRUint32 *aRole)
   return NS_OK;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULLinkAccessible
+////////////////////////////////////////////////////////////////////////////////
 
 nsXULLinkAccessible::
-  nsXULLinkAccessible(nsIDOMNode *aDomNode, nsIWeakReference *aShell):
-  nsHyperTextAccessibleWrap(aDomNode, aShell)
+  nsXULLinkAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
 {
 }
 
@@ -169,19 +170,14 @@ nsXULLinkAccessible::GetValue(nsAString& aValue)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, aValue);
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, aValue);
   return NS_OK;
 }
 
 nsresult
 nsXULLinkAccessible::GetNameInternal(nsAString& aName)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
   if (!aName.IsEmpty())
     return NS_OK;
 
@@ -253,12 +249,14 @@ nsXULLinkAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
   if (aIndex != 0)
     return NS_ERROR_INVALID_ARG;
 
-  nsAutoString href;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, href);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
-  nsCOMPtr<nsIDocument> document = content->GetOwnerDoc();
+  nsAutoString href;
+  mContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, href);
+
+  nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
+  nsIDocument* document = mContent->GetOwnerDoc();
   return NS_NewURI(aURI, href,
                    document ? document->GetDocumentCharacterSet().get() : nsnull,
                    baseURI);

@@ -52,9 +52,9 @@ class nsTableFrame;
 /**
  * Additional frame-state bits
  */
-#define NS_TABLE_CELL_CONTENT_EMPTY       0x80000000
-#define NS_TABLE_CELL_HAD_SPECIAL_REFLOW  0x20000000
-#define NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT 0x10000000
+#define NS_TABLE_CELL_CONTENT_EMPTY       NS_FRAME_STATE_BIT(31)
+#define NS_TABLE_CELL_HAD_SPECIAL_REFLOW  NS_FRAME_STATE_BIT(29)
+#define NS_TABLE_CELL_HAS_PCT_OVER_HEIGHT NS_FRAME_STATE_BIT(28)
 
 /**
  * nsTableCellFrame
@@ -86,7 +86,7 @@ public:
                   nsIFrame*        aPrevInFlow);
 
 #ifdef ACCESSIBILITY
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+  virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,

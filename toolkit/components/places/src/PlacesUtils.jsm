@@ -40,12 +40,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = ["PlacesUtils"];
+const EXPORTED_SYMBOLS = [
+  "PlacesUtils"
+, "PlacesAggregatedTransaction"
+, "PlacesCreateFolderTransaction"
+, "PlacesCreateBookmarkTransaction"
+, "PlacesCreateSeparatorTransaction"
+, "PlacesCreateLivemarkTransaction"
+, "PlacesMoveItemTransaction"
+, "PlacesRemoveItemTransaction"
+, "PlacesEditItemTitleTransaction"
+, "PlacesEditBookmarkURITransaction"
+, "PlacesSetItemAnnotationTransaction"
+, "PlacesSetPageAnnotationTransaction"
+, "PlacesEditBookmarkKeywordTransaction"
+, "PlacesEditBookmarkPostDataTransaction"
+, "PlacesEditLivemarkSiteURITransaction"
+, "PlacesEditLivemarkFeedURITransaction"
+, "PlacesEditBookmarkMicrosummaryTransaction"
+, "PlacesEditItemDateAddedTransaction"
+, "PlacesEditItemLastModifiedTransaction"
+, "PlacesSortFolderByNameTransaction"
+, "PlacesTagURITransaction"
+, "PlacesUntagURITransaction"
+];
 
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cr = Components.results;
-var Cu = Components.utils;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -59,6 +82,14 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   return NetUtil;
 });
 
+// Global observers flags.
+let gHasAnnotationsObserver = false;
+let gHasShutdownObserver = false;
+
+// The minimum amount of transactions before starting a batch. Usually we do
+// do incremental updates, a batch will cause views to completely
+// refresh instead.
+const MIN_TRANSACTIONS_FOR_BATCH = 5;
 
 // The RESTORE_*_NSIOBSERVER_TOPIC constants should match the #defines of the
 // same names in browser/components/places/src/nsPlacesImportExportService.cpp
@@ -141,11 +172,11 @@ var PlacesUtils = {
   },
 
   getFormattedString: function PU_getFormattedString(key, params) {
-    return this._bundle.formatStringFromName(key, params, params.length);
+    return bundle.formatStringFromName(key, params, params.length);
   },
 
   getString: function PU_getString(key) {
-    return this._bundle.GetStringFromName(key);
+    return bundle.GetStringFromName(key);
   },
 
   /**
@@ -244,41 +275,113 @@ var PlacesUtils = {
    * At shutdown, the annotation and shutdown observers are removed.
    */
   get _readOnly() {
-    // add annotations observer
-    this.annotations.addObserver(this, false);
-
-    // observe shutdown, so we can remove the anno observer
-    Services.obs.addObserver(this, this.TOPIC_SHUTDOWN, false);
-
+    // Add annotations observer.
+    if (!gHasAnnotationsObserver) {
+      this.annotations.addObserver(this, false);
+      gHasAnnotationsObserver = true;
+    }
+    // Observe shutdown, so we can remove the anno observer.
+    if (!gHasShutdownObserver) {
+      Services.obs.addObserver(this, this.TOPIC_SHUTDOWN, false);
+      gHasShutdownObserver = true;
+    }
     var readOnly = this.annotations.getItemsWithAnnotation(this.READ_ONLY_ANNO);
     this.__defineGetter__("_readOnly", function() readOnly);
     return this._readOnly;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAnnotationObserver,
-                                         Ci.nsIObserver]),
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIAnnotationObserver
+  , Ci.nsIObserver
+  , Ci.nsITransactionListener
+  ]),
 
   // nsIObserver
   observe: function PU_observe(aSubject, aTopic, aData) {
     if (aTopic == this.TOPIC_SHUTDOWN) {
-      this.annotations.removeObserver(this);
+      if (gHasAnnotationsObserver)
+        this.annotations.removeObserver(this);
+
+      if (Object.getOwnPropertyDescriptor(this, "transactionManager").value !== undefined) {
+        // Clear all references to local transactions in the transaction manager,
+        // this prevents from leaking it.
+        this.transactionManager.RemoveListener(this);
+        this.transactionManager.clear();
+      }
+
       Services.obs.removeObserver(this, this.TOPIC_SHUTDOWN);
+      gHasShutdownObserver = false;
     }
   },
 
-  // nsIAnnotationObserver
-  onItemAnnotationSet: function(aItemId, aAnnotationName) {
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsIAnnotationObserver
+
+  onItemAnnotationSet: function PU_onItemAnnotationSet(aItemId, aAnnotationName)
+  {
     if (aAnnotationName == this.READ_ONLY_ANNO &&
         this._readOnly.indexOf(aItemId) == -1)
       this._readOnly.push(aItemId);
   },
-  onItemAnnotationRemoved: function(aItemId, aAnnotationName) {
+
+  onItemAnnotationRemoved:
+  function PU_onItemAnnotationRemoved(aItemId, aAnnotationName)
+  {
     var index = this._readOnly.indexOf(aItemId);
     if (aAnnotationName == this.READ_ONLY_ANNO && index > -1)
       delete this._readOnly[index];
   },
-  onPageAnnotationSet: function(aUri, aAnnotationName) {},
-  onPageAnnotationRemoved: function(aUri, aAnnotationName) {},
+
+  onPageAnnotationSet: function() {},
+  onPageAnnotationRemoved: function() {},
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsITransactionListener
+
+  didDo: function PU_didDo(aManager, aTransaction, aDoResult)
+  {
+    updateCommandsOnActiveWindow();
+  },
+
+  didUndo: function PU_didUndo(aManager, aTransaction, aUndoResult)
+  {
+    updateCommandsOnActiveWindow();
+  },
+
+  didRedo: function PU_didRedo(aManager, aTransaction, aRedoResult)
+  {
+    updateCommandsOnActiveWindow();
+  },
+
+  didBeginBatch: function PU_didBeginBatch(aManager, aResult)
+  {
+    // A no-op transaction is pushed to the stack, in order to make safe and
+    // easy to implement "Undo" an unknown number of transactions (including 0),
+    // "above" beginBatch and endBatch. Otherwise,implementing Undo that way
+    // head to dataloss: for example, if no changes were done in the
+    // edit-item panel, the last transaction on the undo stack would be the
+    // initial createItem transaction, or even worse, the batched editing of
+    // some other item.
+    // DO NOT MOVE this to the window scope, that would leak (bug 490068)!
+    this.transactionManager.doTransaction({ doTransaction: function() {},
+                                            undoTransaction: function() {},
+                                            redoTransaction: function() {},
+                                            isTransient: false,
+                                            merge: function() { return false; }
+                                          });
+  },
+
+  willDo: function PU_willDo() {},
+  willUndo: function PU_willUndo() {},
+  willRedo: function PU_willRedo() {},
+  willBeginBatch: function PU_willBeginBatch() {},
+  willEndBatch: function PU_willEndBatch() {},
+  didEndBatch: function PU_didEndBatch() {},
+  willMerge: function PU_willMerge() {},
+  didMerge: function PU_didMerge() {},
+
 
   /**
    * Determines if a node is read only (children cannot be inserted, sometimes
@@ -395,7 +498,7 @@ var PlacesUtils = {
     // If the Livemark service hasn't yet been initialized then
     // use the annotations service directly to avoid instanciating
     // it on startup. (bug 398300)
-    if (this.__lookupGetter__("livemarks"))
+    if (Object.getOwnPropertyDescriptor(this, "livemarks").value === undefined)
       return this.annotations.itemHasAnnotation(aItemId, this.LMANNO_FEEDURI);
     // If the livemark service has already been instanciated, use it.
     return this.livemarks.isLivemark(aItemId);
@@ -988,7 +1091,7 @@ var PlacesUtils = {
     // If the Livemark service hasn't yet been initialized then
     // use the annotations service directly to avoid instanciating
     // it on startup. (bug 398300)
-    if (this.__lookupGetter__("livemarks")) {
+    if (Object.getOwnPropertyDescriptor(this, "livemarks").value === undefined) {
       var feedSpec = aFeedURI.spec
       var annosvc = this.annotations;
       var livemarks = annosvc.getItemsWithAnnotation(this.LMANNO_FEEDURI);
@@ -1508,28 +1611,14 @@ var PlacesUtils = {
       }
     }
 
-    function writeScalarNode(aStream, aNode) {
-      // serialize to json
-      var jstr = PlacesUtils.toJSONString(aNode);
-      // write to stream
-      aStream.write(jstr, jstr.length);
-    }
+    function appendConvertedComplexNode(aNode, aSourceNode, aArray) {
+      var repr = {};
 
-    function writeComplexNode(aStream, aNode, aSourceNode) {
-      var escJSONStringRegExp = /(["\\])/g;
-      // write prefix
-      var properties = [];
-      for (let [name, value] in Iterator(aNode)) {
-        if (name == "annos")
-          value = PlacesUtils.toJSONString(value);
-        else if (typeof value == "string")
-          value = "\"" + value.replace(escJSONStringRegExp, '\\$1') + "\"";
-        properties.push("\"" + name.replace(escJSONStringRegExp, '\\$1') + "\":" + value);
-      }
-      var jStr = "{" + properties.join(",") + ",\"children\":[";
-      aStream.write(jStr, jStr.length);
+      for (let [name, value] in Iterator(aNode))
+        repr[name] = value;
 
       // write child nodes
+      var children = repr.children = [];
       if (!aNode.livemark) {
         asContainer(aSourceNode);
         var wasOpen = aSourceNode.containerOpen;
@@ -1540,19 +1629,17 @@ var PlacesUtils = {
           var childNode = aSourceNode.getChild(i);
           if (aExcludeItems && aExcludeItems.indexOf(childNode.itemId) != -1)
             continue;
-          var written = serializeNodeToJSONStream(aSourceNode.getChild(i), i);
-          if (written && i < cc - 1)
-            aStream.write(",", 1);
+          appendConvertedNode(aSourceNode.getChild(i), i, children);
         }
         if (!wasOpen)
           aSourceNode.containerOpen = false;
       }
 
-      // write suffix
-      aStream.write("]}", 2);
+      aArray.push(repr);
+      return true;
     }
 
-    function serializeNodeToJSONStream(bNode, aIndex) {
+    function appendConvertedNode(bNode, aIndex, aArray) {
       var node = {};
 
       // set index in order received
@@ -1570,6 +1657,7 @@ var PlacesUtils = {
         // Tag root accept only folder nodes
         if (parent && parent.itemId == PlacesUtils.tagsFolderId)
           return false;
+
         // Check for url validity, since we can't halt while writing a backup.
         // This will throw if we try to serialize an invalid url and it does
         // not make sense saving a wrong or corrupt uri node.
@@ -1578,12 +1666,14 @@ var PlacesUtils = {
         } catch (ex) {
           return false;
         }
+
         addURIProperties(bNode, node);
       }
       else if (PlacesUtils.nodeIsContainer(bNode)) {
         // Tag containers accept only uri nodes
         if (grandParent && grandParent.itemId == PlacesUtils.tagsFolderId)
           return false;
+
         addContainerProperties(bNode, node);
       }
       else if (PlacesUtils.nodeIsSeparator(bNode)) {
@@ -1597,14 +1687,21 @@ var PlacesUtils = {
       }
 
       if (!node.feedURI && node.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER)
-        writeComplexNode(aStream, node, bNode);
-      else
-        writeScalarNode(aStream, node);
+        return appendConvertedComplexNode(node, bNode, aArray);
+
+      aArray.push(node);
       return true;
     }
 
     // serialize to stream
-    serializeNodeToJSONStream(aNode, null);
+    var array = [];
+    if (appendConvertedNode(aNode, null, array)) {
+      var json = JSON.stringify(array[0]);
+      aStream.write(json, json.length);
+    }
+    else {
+      throw Cr.NS_ERROR_UNEXPECTED;
+    }
   },
 
   /**
@@ -1997,9 +2094,1246 @@ XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "microsummaries",
                                    "@mozilla.org/microsummary/service;1",
                                    "nsIMicrosummaryService");
 
-XPCOMUtils.defineLazyGetter(PlacesUtils, "_bundle", function() {
+XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {
+  Services.obs.addObserver(PlacesUtils,
+                           PlacesUtils.TOPIC_SHUTDOWN,
+                           false);
+  // Observe shutdown, so we can remove the anno observer.
+  if (!gHasShutdownObserver) {
+    Services.obs.addObserver(PlacesUtils, PlacesUtils.TOPIC_SHUTDOWN, false);
+    gHasShutdownObserver = true;
+  }
+
+  let tm = Cc["@mozilla.org/transactionmanager;1"].
+           getService(Ci.nsITransactionManager);
+  tm.AddListener(PlacesUtils);
+  return tm;
+});
+
+XPCOMUtils.defineLazyGetter(this, "bundle", function() {
   const PLACES_STRING_BUNDLE_URI = "chrome://places/locale/places.properties";
   return Cc["@mozilla.org/intl/stringbundle;1"].
          getService(Ci.nsIStringBundleService).
          createBundle(PLACES_STRING_BUNDLE_URI);
 });
+
+XPCOMUtils.defineLazyServiceGetter(this, "focusManager",
+                                   "@mozilla.org/focus-manager;1",
+                                   "nsIFocusManager");
+
+////////////////////////////////////////////////////////////////////////////////
+//// Transactions handlers.
+
+/**
+ * Updates commands in the undo group of the active window commands.
+ * Inactive windows commands will be updated on focus.
+ */
+function updateCommandsOnActiveWindow()
+{
+  let win = focusManager.activeWindow;
+  if (win && win instanceof Ci.nsIDOMWindowInternal) {
+    // Updating "undo" will cause a group update including "redo".
+    win.updateCommands("undo");
+  }
+}
+
+
+/**
+ * Base transaction implementation.
+ *
+ * @note used internally, DO NOT EXPORT.
+ */
+
+function BaseTransaction() {}
+
+BaseTransaction.prototype = {
+  doTransaction: function BTXN_doTransaction() {},
+  redoTransaction: function BTXN_redoTransaction() this.doTransaction(),
+  undoTransaction: function BTXN_undoTransaction() {},
+  merge: function BTXN_merge() false,
+  get isTransient() false,
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsITransaction
+  ]),
+};
+
+
+/**
+ * Transaction for performing several Places Transactions in a single batch. 
+ * 
+ * @param aName
+ *        title of the aggregate transactions
+ * @param aTransactions
+ *        an array of transactions to perform
+ * @returns nsITransaction object
+ */
+
+function PlacesAggregatedTransaction(aName, aTransactions)
+{
+  this._transactions = aTransactions;
+  this._name = aName;
+  this.container = -1;
+
+  // Check child transactions number.  We will batch if we have more than
+  // MIN_TRANSACTIONS_FOR_BATCH total number of transactions.
+  let countTransactions = function(aTransactions, aTxnCount)
+  {
+    for (let i = 0;
+         i < aTransactions.length && aTxnCount < MIN_TRANSACTIONS_FOR_BATCH;
+         ++i, ++aTxnCount) {
+      let txn = aTransactions[i];
+      if (txn && txn.childTransactions && txn.childTransactions.length)
+        aTxnCount = countTransactions(txn.childTransactions, aTxnCount);
+    }
+    return aTxnCount;
+  }
+
+  let txnCount = countTransactions(this._transactions, 0);
+  this._useBatch = txnCount >= MIN_TRANSACTIONS_FOR_BATCH;
+}
+
+PlacesAggregatedTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function ATXN_doTransaction()
+  {
+    this._isUndo = false;
+    if (this._useBatch)
+      PlacesUtils.bookmarks.runInBatchMode(this, null);
+    else
+      this.runBatched(false);
+  },
+
+  undoTransaction: function ATXN_undoTransaction()
+  {
+    this._isUndo = true;
+    if (this._useBatch)
+      PlacesUtils.bookmarks.runInBatchMode(this, null);
+    else
+      this.runBatched(true);
+  },
+
+  runBatched: function ATXN_runBatched()
+  {
+    // Use a copy of the transactions array, so we won't reverse the original
+    // one on undoing.
+    let transactions = this._transactions.slice(0);
+    if (this._isUndo)
+      transactions.reverse();
+    for (let i = 0; i < transactions.length; ++i) {
+      let txn = transactions[i];
+      if (this.container > -1)
+        txn.container = this.container;
+      if (this._isUndo)
+        txn.undoTransaction();
+      else
+        txn.doTransaction();
+    }
+  }
+};
+
+
+/**
+ * Transaction for creating a new folder item.
+ *
+ * @param aName
+ *        the name of the new folder
+ * @param aContainerId
+ *        the identifier of the folder in which the new folder should be
+ *        added.
+ * @param [optional] aIndex
+ *        the index of the item in aContainer, pass -1 or nothing to create
+ *        the item at the end of aContainer.
+ * @param [optional] aAnnotations
+ *        the annotations to set for the new folder.
+ * @param [optional] aChildItemsTransactions
+ *        array of transactions for items to be created under the new folder.
+ * @returns nsITransaction object
+ */
+
+function PlacesCreateFolderTransaction(aName, aContainer, aIndex, aAnnotations,
+                                       aChildItemsTransactions)
+{
+  this._name = aName;
+  this._container = aContainer;
+  this._index = typeof(aIndex) == "number" ? aIndex : -1;
+  this._annotations = aAnnotations;
+  this._id = null;
+  this.childTransactions = aChildItemsTransactions || [];
+}
+
+PlacesCreateFolderTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  // childItemsTransaction support
+  get container() this._container,
+  set container(val) this._container = val,
+
+  doTransaction: function CFTXN_doTransaction()
+  {
+    this._id = PlacesUtils.bookmarks.createFolder(this._container, 
+                                                  this._name, this._index);
+    if (this._annotations && this._annotations.length > 0)
+      PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
+
+    if (this.childTransactions.length) {
+      // Set the new container id into child transactions.
+      for (let i = 0; i < this.childTransactions.length; ++i) {
+        this.childTransactions[i].container = this._id;
+      }
+
+      let txn = new PlacesAggregatedTransaction("Create folder childTxn",
+                                                this.childTransactions);
+      txn.doTransaction();
+    }
+
+    if (this._GUID)
+      PlacesUtils.bookmarks.setItemGUID(this._id, this._GUID);
+  },
+
+  undoTransaction: function CFTXN_undoTransaction()
+  {
+    if (this.childTransactions.length) {
+      let txn = new PlacesAggregatedTransaction("Create folder childTxn",
+                                                this.childTransactions);
+      txn.undoTransaction();
+    }
+
+    // If a GUID exists for this item, preserve it before removing the item.
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, PlacesUtils.GUID_ANNO))
+      this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
+
+    // Remove item only after all child transactions have been reverted.
+    PlacesUtils.bookmarks.removeItem(this._id);
+  }
+};
+
+
+/**
+ * Transaction for creating a new bookmark item
+ *
+ * @param aURI
+ *        the uri of the new bookmark (nsIURI)
+ * @param aContainerId
+ *        the identifier of the folder in which the bookmark should be added.
+ * @param [optional] aIndex
+ *        the index of the item in aContainer, pass -1 or nothing to create
+ *        the item at the end of aContainer.
+ * @param [optional] aTitle
+ *        the title of the new bookmark.
+ * @param [optional] aKeyword
+ *        the keyword of the new bookmark.
+ * @param [optional] aAnnotations
+ *        the annotations to set for the new bookmark.
+ * @param [optional] aChildTransactions
+ *        child transactions to commit after creating the bookmark. Prefer
+ *        using any of the arguments above if possible. In general, a child
+ *        transations should be used only if the change it does has to be
+ *        reverted manually when removing the bookmark item.
+ *        a child transaction must support setting its bookmark-item
+ *        identifier via an "id" js setter.
+ * @returns nsITransaction object
+ */
+
+function PlacesCreateBookmarkTransaction(aURI, aContainer, aIndex, aTitle,
+                                         aKeyword, aAnnotations,
+                                         aChildTransactions)
+{
+  this._uri = aURI;
+  this._container = aContainer;
+  this._index = typeof(aIndex) == "number" ? aIndex : -1;
+  this._title = aTitle;
+  this._keyword = aKeyword;
+  this._annotations = aAnnotations;
+  this.childTransactions = aChildTransactions || [];
+}
+
+PlacesCreateBookmarkTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  // childItemsTransactions support for the create-folder transaction
+  get container() this._container,
+  set container(val) this._container = val,
+
+  doTransaction: function CITXN_doTransaction()
+  {
+    this._id = PlacesUtils.bookmarks.insertBookmark(this.container, this._uri,
+                                                    this._index, this._title);
+    if (this._keyword)
+      PlacesUtils.bookmarks.setKeywordForBookmark(this._id, this._keyword);
+    if (this._annotations && this._annotations.length > 0)
+      PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
+ 
+    if (this.childTransactions.length) {
+      // Set the new item id into child transactions.
+      for (let i = 0; i < this.childTransactions.length; ++i) {
+        this.childTransactions[i].id = this._id;
+      }
+      let txn = new PlacesAggregatedTransaction("Create item childTxn",
+                                                this.childTransactions);
+      txn.doTransaction();
+    }
+    if (this._GUID)
+      PlacesUtils.bookmarks.setItemGUID(this._id, this._GUID);
+  },
+
+  undoTransaction: function CITXN_undoTransaction()
+  {
+    if (this.childTransactions.length) {
+      // Undo transactions should always be done in reverse order.
+      let txn = new PlacesAggregatedTransaction("Create item childTxn",
+                                                this.childTransactions);
+      txn.undoTransaction();
+    }
+
+    // If a GUID exists for this item, preserve it before removing the item.
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, PlacesUtils.GUID_ANNO))
+      this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
+
+    // Remove item only after all child transactions have been reverted.
+    PlacesUtils.bookmarks.removeItem(this._id);
+  }
+};
+
+
+/**
+ * Transaction for creating a new separator item
+ *
+ * @param aContainerId
+ *        the identifier of the folder in which the separator should be
+ *        added.
+ * @param [optional] aIndex
+ *        the index of the item in aContainer, pass -1 or nothing to create
+ *        the separator at the end of aContainer.
+ * @returns nsITransaction object
+ */
+
+function PlacesCreateSeparatorTransaction(aContainer, aIndex)
+{
+  this._container = aContainer;
+  this._index = typeof(aIndex) == "number" ? aIndex : -1;
+  this._id = null;
+}
+
+PlacesCreateSeparatorTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  // childItemsTransaction support
+  get container() this._container,
+  set container(val) this._container = val,
+
+  doTransaction: function CSTXN_doTransaction()
+  {
+    this._id = PlacesUtils.bookmarks
+                          .insertSeparator(this.container, this._index);
+    if (this._GUID)
+      PlacesUtils.bookmarks.setItemGUID(this._id, this._GUID);
+  },
+
+  undoTransaction: function CSTXN_undoTransaction()
+  {
+    // If a GUID exists for this item, preserve it before removing the item.
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, PlacesUtils.GUID_ANNO))
+      this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
+
+    PlacesUtils.bookmarks.removeItem(this._id);
+  }
+};
+
+
+/**
+ * Transaction for creating a new live-bookmark item.
+ *
+ * @see nsILivemarksService::createLivemark for documentation regarding the
+ * first three arguments.
+ *
+ * @param aContainerId
+ *        the identifier of the folder in which the live-bookmark should be
+ *        added.
+ * @param [optional]  aIndex
+ *        the index of the item in aContainer, pass -1 or nothing to create
+ *        the item at the end of aContainer.
+ * @param [optional] aAnnotations
+ *        the annotations to set for the new live-bookmark.
+ * @returns nsITransaction object
+ */
+
+function PlacesCreateLivemarkTransaction(aFeedURI, aSiteURI, aName, aContainer,
+                                         aIndex, aAnnotations)
+{
+  this._feedURI = aFeedURI;
+  this._siteURI = aSiteURI;
+  this._name = aName;
+  this._container = aContainer;
+  this._index = typeof(aIndex) == "number" ? aIndex : -1;
+  this._annotations = aAnnotations;
+}
+
+PlacesCreateLivemarkTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  // childItemsTransaction support
+  get container() this._container,
+  set container(val) this._container = val,
+
+  doTransaction: function CLTXN_doTransaction()
+  {
+    this._id = PlacesUtils.livemarks.createLivemark(this._container, this._name,
+                                                    this._siteURI, this._feedURI,
+                                                    this._index);
+    if (this._annotations && this._annotations.length > 0)
+      PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
+    if (this._GUID)
+      PlacesUtils.bookmarks.setItemGUID(this._id, this._GUID);
+  },
+
+  undoTransaction: function CLTXN_undoTransaction()
+  {
+    // If a GUID exists for this item, preserve it before removing the item.
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, PlacesUtils.GUID_ANNO))
+      this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
+
+    PlacesUtils.bookmarks.removeItem(this._id);
+  }
+};
+
+
+/**
+ * Transaction for removing a live-bookmark item.
+ *
+ * @param aFolderId
+ *        the identifier of the folder for the live-bookmark.
+ * @returns nsITransaction object
+ * @note used internally by PlacesRemoveItemTransaction, DO NOT EXPORT.
+ */
+
+function PlacesRemoveLivemarkTransaction(aFolderId)
+{
+  this._id = aFolderId;
+  this._title = PlacesUtils.bookmarks.getItemTitle(this._id);
+  this._container = PlacesUtils.bookmarks.getFolderIdForItem(this._id);
+  let annos = PlacesUtils.getAnnotationsForItem(this._id);
+  // Exclude livemark service annotations, those will be recreated automatically
+  let annosToExclude = ["livemark/feedURI",
+                        "livemark/siteURI",
+                        "livemark/expiration",
+                        "livemark/loadfailed",
+                        "livemark/loading"];
+  this._annotations = annos.filter(function(aValue, aIndex, aArray) {
+      return annosToExclude.indexOf(aValue.name) == -1;
+    });
+  this._feedURI = PlacesUtils.livemarks.getFeedURI(this._id);
+  this._siteURI = PlacesUtils.livemarks.getSiteURI(this._id);
+  this._dateAdded = PlacesUtils.bookmarks.getItemDateAdded(this._id);
+  this._lastModified = PlacesUtils.bookmarks.getItemLastModified(this._id);
+}
+
+PlacesRemoveLivemarkTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function RLTXN_doTransaction()
+  {
+    this._index = PlacesUtils.bookmarks.getItemIndex(this._id);
+    PlacesUtils.bookmarks.removeItem(this._id);
+  },
+
+  undoTransaction: function RLTXN_undoTransaction()
+  {
+    this._id = PlacesUtils.livemarks.createLivemark(this._container,
+                                                    this._title,
+                                                    this._siteURI,
+                                                    this._feedURI,
+                                                    this._index);
+    PlacesUtils.bookmarks.setItemDateAdded(this._id, this._dateAdded);
+    PlacesUtils.bookmarks.setItemLastModified(this._id, this._lastModified);
+    // Restore annotations
+    PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
+  }
+};
+
+
+/**
+ * Transaction for moving an Item.
+ *
+ * @param aItemId
+ *        the id of the item to move
+ * @param aNewContainerId
+ *        id of the new container to move to
+ * @param aNewIndex
+ *        index of the new position to move to
+ * @returns nsITransaction object
+ */
+
+function PlacesMoveItemTransaction(aItemId, aNewContainer, aNewIndex)
+{
+  this._id = aItemId;
+  this._oldContainer = PlacesUtils.bookmarks.getFolderIdForItem(this._id);
+  this._newContainer = aNewContainer;
+  this._newIndex = aNewIndex;
+}
+
+PlacesMoveItemTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function MITXN_doTransaction()
+  {
+    this._oldIndex = PlacesUtils.bookmarks.getItemIndex(this._id);
+    PlacesUtils.bookmarks.moveItem(this._id, this._newContainer, this._newIndex);
+    this._undoIndex = PlacesUtils.bookmarks.getItemIndex(this._id);
+  },
+
+  undoTransaction: function MITXN_undoTransaction()
+  {
+    // moving down in the same container takes in count removal of the item
+    // so to revert positions we must move to oldIndex + 1
+    if (this._newContainer == this._oldContainer &&
+        this._oldIndex > this._undoIndex)
+      PlacesUtils.bookmarks.moveItem(this._id, this._oldContainer, this._oldIndex + 1);
+    else
+      PlacesUtils.bookmarks.moveItem(this._id, this._oldContainer, this._oldIndex);
+  }
+};
+
+
+/**
+ * Transaction for removing an Item
+ *
+ * @param aItemId
+ *        id of the item to remove
+ * @returns nsITransaction object
+ */
+
+function PlacesRemoveItemTransaction(aItemId)
+{
+  if (PlacesUtils.isRootItem(aItemId))
+    throw Cr.NS_ERROR_INVALID_ARG;
+
+  // if the item lives within a tag container, use the tagging transactions
+  let parent = PlacesUtils.bookmarks.getFolderIdForItem(aItemId);
+  let grandparent = PlacesUtils.bookmarks.getFolderIdForItem(parent);
+  if (grandparent == PlacesUtils.tagsFolderId) {
+    let uri = PlacesUtils.bookmarks.getBookmarkURI(aItemId);
+    return new PlacesUntagURITransaction(uri, [parent]);
+  }
+
+  // if the item is a livemark container we will not save its children and
+  // will use createLivemark to undo.
+  if (PlacesUtils.itemIsLivemark(aItemId))
+    return new PlacesRemoveLivemarkTransaction(aItemId);
+
+  this._id = aItemId;
+  this._itemType = PlacesUtils.bookmarks.getItemType(this._id);
+  if (this._itemType == Ci.nsINavBookmarksService.TYPE_FOLDER) {
+    this.childTransactions = this._getFolderContentsTransactions();
+    // Remove this folder itself.
+    let txn = PlacesUtils.bookmarks.getRemoveFolderTransaction(this._id);
+    this.childTransactions.push(txn);
+  }
+  else if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK) {
+    this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._id);
+    this._keyword = PlacesUtils.bookmarks.getKeywordForBookmark(this._id);
+  }
+
+  if (this._itemType != Ci.nsINavBookmarksService.TYPE_SEPARATOR)
+    this._title = PlacesUtils.bookmarks.getItemTitle(this._id);
+
+  this._oldContainer = PlacesUtils.bookmarks.getFolderIdForItem(this._id);
+  this._annotations = PlacesUtils.getAnnotationsForItem(this._id);
+  this._dateAdded = PlacesUtils.bookmarks.getItemDateAdded(this._id);
+  this._lastModified = PlacesUtils.bookmarks.getItemLastModified(this._id);
+}
+
+PlacesRemoveItemTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function RITXN_doTransaction()
+  {
+    this._oldIndex = PlacesUtils.bookmarks.getItemIndex(this._id);
+
+    if (this._itemType == Ci.nsINavBookmarksService.TYPE_FOLDER) {
+      let txn = new PlacesAggregatedTransaction("Remove item childTxn",
+                                                this.childTransactions);
+      txn.doTransaction();
+    }
+    else {
+      PlacesUtils.bookmarks.removeItem(this._id);
+      if (this._uri) {
+        // if this was the last bookmark (excluding tag-items and livemark
+        // children, see getMostRecentBookmarkForURI) for the bookmark's url,
+        // remove the url from tag containers as well.
+        if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
+          this._tags = PlacesUtils.tagging.getTagsForURI(this._uri);
+          PlacesUtils.tagging.untagURI(this._uri, this._tags);
+        }
+      }
+    }
+  },
+
+  undoTransaction: function RITXN_undoTransaction()
+  {
+    if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK) {
+      this._id = PlacesUtils.bookmarks.insertBookmark(this._oldContainer,
+                                                      this._uri,
+                                                      this._oldIndex,
+                                                      this._title);
+      if (this._tags && this._tags.length > 0)
+        PlacesUtils.tagging.tagURI(this._uri, this._tags);
+      if (this._keyword)
+        PlacesUtils.bookmarks.setKeywordForBookmark(this._id, this._keyword);
+    }
+    else if (this._itemType == Ci.nsINavBookmarksService.TYPE_FOLDER) {
+      let txn = new PlacesAggregatedTransaction("Remove item childTxn",
+                                                this.childTransactions);
+      txn.undoTransaction();
+    }
+    else // TYPE_SEPARATOR
+      this._id = PlacesUtils.bookmarks.insertSeparator(this._oldContainer, this._oldIndex);
+
+    if (this._annotations.length > 0)
+      PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
+
+    PlacesUtils.bookmarks.setItemDateAdded(this._id, this._dateAdded);
+    PlacesUtils.bookmarks.setItemLastModified(this._id, this._lastModified);
+  },
+
+  /**
+  * Returns a flat, ordered list of transactions for a depth-first recreation
+  * of items within this folder.
+  */
+  _getFolderContentsTransactions:
+  function RITXN__getFolderContentsTransactions()
+  {
+    let transactions = [];
+    let contents =
+      PlacesUtils.getFolderContents(this._id, false, false).root;
+    for (let i = 0; i < contents.childCount; ++i) {
+      let txn = new PlacesRemoveItemTransaction(contents.getChild(i).itemId);
+      transactions.push(txn);
+    }
+    contents.containerOpen = false;
+    // Reverse transactions to preserve parent-child relationship.
+    return transactions.reverse();
+  }
+};
+
+
+/**
+ * Transaction for editting a bookmark's title.
+ *
+ * @param aItemId
+ *        id of the item to edit
+ * @param aNewTitle
+ *        new title for the item to edit
+ * @returns nsITransaction object
+ */
+
+function PlacesEditItemTitleTransaction(id, newTitle)
+{
+  this._id = id;
+  this._newTitle = newTitle;
+  this._oldTitle = "";
+}
+
+PlacesEditItemTitleTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function EITTXN_doTransaction()
+  {
+    this._oldTitle = PlacesUtils.bookmarks.getItemTitle(this._id);
+    PlacesUtils.bookmarks.setItemTitle(this._id, this._newTitle);
+  },
+
+  undoTransaction: function EITTXN_undoTransaction()
+  {
+    PlacesUtils.bookmarks.setItemTitle(this._id, this._oldTitle);
+  }
+};
+
+
+/**
+ * Transaction for editing a bookmark's uri.
+ *
+ * @param aBookmarkId
+ *        id of the bookmark to edit
+ * @param aNewURI
+ *        new uri for the bookmark
+ * @returns nsITransaction object
+ */
+
+function PlacesEditBookmarkURITransaction(aBookmarkId, aNewURI) {
+  this._id = aBookmarkId;
+  this._newURI = aNewURI;
+}
+
+PlacesEditBookmarkURITransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function EBUTXN_doTransaction()
+  {
+    this._oldURI = PlacesUtils.bookmarks.getBookmarkURI(this._id);
+    PlacesUtils.bookmarks.changeBookmarkURI(this._id, this._newURI);
+    // move tags from old URI to new URI
+    this._tags = PlacesUtils.tagging.getTagsForURI(this._oldURI);
+    if (this._tags.length != 0) {
+      // only untag the old URI if this is the only bookmark
+      if (PlacesUtils.getBookmarksForURI(this._oldURI, {}).length == 0)
+        PlacesUtils.tagging.untagURI(this._oldURI, this._tags);
+      PlacesUtils.tagging.tagURI(this._newURI, this._tags);
+    }
+  },
+
+  undoTransaction: function EBUTXN_undoTransaction()
+  {
+    PlacesUtils.bookmarks.changeBookmarkURI(this._id, this._oldURI);
+    // move tags from new URI to old URI 
+    if (this._tags.length != 0) {
+      // only untag the new URI if this is the only bookmark
+      if (PlacesUtils.getBookmarksForURI(this._newURI, {}).length == 0)
+        PlacesUtils.tagging.untagURI(this._newURI, this._tags);
+      PlacesUtils.tagging.tagURI(this._oldURI, this._tags);
+    }
+  }
+};
+
+
+/**
+ * Transaction for setting/unsetting an item annotation
+ *
+ * @param aItemId
+ *        id of the item where to set annotation
+ * @param aAnnotationObject
+ *        Object representing an annotation, containing the following
+ *        properties: name, flags, expires, type, mimeType (only used for
+ *        binary annotations), value.
+ *        If value is null the annotation will be removed
+ * @returns nsITransaction object
+ */
+
+function PlacesSetItemAnnotationTransaction(aItemId, aAnnotationObject)
+{
+  this.id = aItemId;
+  this._anno = aAnnotationObject;
+  // create an empty old anno
+  this._oldAnno = { name: this._anno.name,
+                    type: Ci.nsIAnnotationService.TYPE_STRING,
+                    flags: 0,
+                    value: null,
+                    expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+}
+
+PlacesSetItemAnnotationTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function SIATXN_doTransaction()
+  {
+    // Since this can be used as a child transaction this.id will be known
+    // only at this point, after the external caller has set it.
+    if (PlacesUtils.annotations.itemHasAnnotation(this.id, this._anno.name)) {
+      // Save the old annotation if it is set.
+      let flags = {}, expires = {}, mimeType = {}, type = {};
+      PlacesUtils.annotations.getItemAnnotationInfo(this.id, this._anno.name,
+                                                    flags, expires, mimeType,
+                                                    type);
+      this._oldAnno.flags = flags.value;
+      this._oldAnno.expires = expires.value;
+      this._oldAnno.mimeType = mimeType.value;
+      this._oldAnno.type = type.value;
+      this._oldAnno.value = PlacesUtils.annotations
+                                       .getItemAnnotation(this.id,
+                                                          this._anno.name);
+    }
+
+    PlacesUtils.setAnnotationsForItem(this.id, [this._anno]);
+  },
+
+  undoTransaction: function SIATXN_undoTransaction()
+  {
+    PlacesUtils.setAnnotationsForItem(this.id, [this._oldAnno]);
+  }
+};
+
+
+/**
+ * Transaction for setting/unsetting a page annotation
+ *
+ * @param aURI
+ *        URI of the page where to set annotation
+ * @param aAnnotationObject
+ *        Object representing an annotation, containing the following
+ *        properties: name, flags, expires, type, mimeType (only used for
+ *        binary annotations), value.
+ *        If value is null the annotation will be removed
+ * @returns nsITransaction object
+ */
+
+function PlacesSetPageAnnotationTransaction(aURI, aAnnotationObject)
+{
+  this._uri = aURI;
+  this._anno = aAnnotationObject;
+  // create an empty old anno
+  this._oldAnno = { name: this._anno.name,
+                    type: Ci.nsIAnnotationService.TYPE_STRING,
+                    flags: 0,
+                    value: null,
+                    expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+
+  if (PlacesUtils.annotations.pageHasAnnotation(this._uri, this._anno.name)) {
+    // fill the old anno if it is set
+    let flags = {}, expires = {}, mimeType = {}, type = {};
+    PlacesUtils.annotations.getPageAnnotationInfo(this._uri, this._anno.name,
+                                                  flags, expires, mimeType, type);
+    this._oldAnno.flags = flags.value;
+    this._oldAnno.expires = expires.value;
+    this._oldAnno.mimeType = mimeType.value;
+    this._oldAnno.type = type.value;
+    this._oldAnno.value = PlacesUtils.annotations
+                                     .getPageAnnotation(this._uri, this._anno.name);
+  }
+
+}
+
+PlacesSetPageAnnotationTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function SPATXN_doTransaction()
+  {
+    PlacesUtils.setAnnotationsForURI(this._uri, [this._anno]);
+  },
+
+  undoTransaction: function SPATXN_undoTransaction()
+  {
+    PlacesUtils.setAnnotationsForURI(this._uri, [this._oldAnno]);
+  }
+};
+
+
+/**
+ * Transaction for editing a bookmark's keyword.
+ *
+ * @param aBookmarkId
+ *        id of the bookmark to edit
+ * @param aNewKeyword
+ *        new keyword for the bookmark
+ * @returns nsITransaction object
+ */
+
+function PlacesEditBookmarkKeywordTransaction(id, newKeyword) {
+  this.id = id;
+  this._newKeyword = newKeyword;
+  this._oldKeyword = "";
+
+}
+
+PlacesEditBookmarkKeywordTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function EBKTXN_doTransaction()
+  {
+    this._oldKeyword = PlacesUtils.bookmarks.getKeywordForBookmark(this.id);
+    PlacesUtils.bookmarks.setKeywordForBookmark(this.id, this._newKeyword);
+  },
+
+  undoTransaction: function EBKTXN_undoTransaction()
+  {
+    PlacesUtils.bookmarks.setKeywordForBookmark(this.id, this._oldKeyword);
+  }
+};
+
+
+/**
+ * Transaction for editing the post data associated with a bookmark.
+ *
+ * @param aBookmarkId
+ *        id of the bookmark to edit
+ * @param aPostData
+ *        post data
+ * @returns nsITransaction object
+ */
+
+function PlacesEditBookmarkPostDataTransaction(aItemId, aPostData)
+{
+  this.id = aItemId;
+  this._newPostData = aPostData;
+  this._oldPostData = null;
+}
+
+PlacesEditBookmarkPostDataTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function EBPDTXN_doTransaction()
+  {
+    this._oldPostData = PlacesUtils.getPostDataForBookmark(this.id);
+    PlacesUtils.setPostDataForBookmark(this.id, this._newPostData);
+  },
+
+  undoTransaction: function EBPDTXN_undoTransaction()
+  {
+    PlacesUtils.setPostDataForBookmark(this.id, this._oldPostData);
+  }
+};
+
+
+/**
+ * Transaction for editing a live bookmark's site URI.
+ *
+ * @param aLivemarkId
+ *        id of the livemark
+ * @param aURI
+ *        new site uri
+ * @returns nsITransaction object
+ */
+
+function PlacesEditLivemarkSiteURITransaction(folderId, uri)
+{
+  this._folderId = folderId;
+  this._newURI = uri;
+  this._oldURI = null;
+}
+
+PlacesEditLivemarkSiteURITransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function ELSUTXN_doTransaction()
+  {
+    this._oldURI = PlacesUtils.livemarks.getSiteURI(this._folderId);
+    PlacesUtils.livemarks.setSiteURI(this._folderId, this._newURI);
+  },
+
+  undoTransaction: function ELSUTXN_undoTransaction()
+  {
+    PlacesUtils.livemarks.setSiteURI(this._folderId, this._oldURI);
+  }
+};
+
+
+/**
+ * Transaction for editting a live bookmark's feed URI.
+ *
+ * @param aLivemarkId
+ *        id of the livemark
+ * @param aURI
+ *        new feed uri
+ * @returns nsITransaction object
+ */
+
+function PlacesEditLivemarkFeedURITransaction(folderId, uri)
+{
+  this._folderId = folderId;
+  this._newURI = uri;
+  this._oldURI = null;
+}
+
+PlacesEditLivemarkFeedURITransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function ELFUTXN_doTransaction()
+  {
+    this._oldURI = PlacesUtils.livemarks.getFeedURI(this._folderId);
+    PlacesUtils.livemarks.setFeedURI(this._folderId, this._newURI);
+    PlacesUtils.livemarks.reloadLivemarkFolder(this._folderId);
+  },
+
+  undoTransaction: function ELFUTXN_undoTransaction()
+  {
+    PlacesUtils.livemarks.setFeedURI(this._folderId, this._oldURI);
+    PlacesUtils.livemarks.reloadLivemarkFolder(this._folderId);
+  }
+};
+
+
+/**
+ * Transaction for editing a bookmark's microsummary.
+ *
+ * @param aBookmarkId
+ *        id of the bookmark to edit
+ * @param aNewMicrosummary
+ *        new microsummary for the bookmark
+ * @returns nsITransaction object
+ */
+
+function PlacesEditBookmarkMicrosummaryTransaction(aItemId, newMicrosummary)
+{
+  this.id = aItemId;
+  this._mss = Cc["@mozilla.org/microsummary/service;1"].
+              getService(Ci.nsIMicrosummaryService);
+  this._newMicrosummary = newMicrosummary;
+  this._oldMicrosummary = null;
+}
+
+PlacesEditBookmarkMicrosummaryTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function EBMTXN_doTransaction()
+  {
+    this._oldMicrosummary = this._mss.getMicrosummary(this.id);
+    if (this._newMicrosummary)
+      this._mss.setMicrosummary(this.id, this._newMicrosummary);
+    else
+      this._mss.removeMicrosummary(this.id);
+  },
+
+  undoTransaction: function EBMTXN_undoTransaction()
+  {
+    if (this._oldMicrosummary)
+      this._mss.setMicrosummary(this.id, this._oldMicrosummary);
+    else
+      this._mss.removeMicrosummary(this.id);
+  }
+};
+
+
+/**
+ * Transaction for editing an item's date added property.
+ *
+ * @param aItemId
+ *        id of the item to edit
+ * @param aNewDateAdded
+ *        new date added for the item 
+ * @returns nsITransaction object
+ */
+
+function PlacesEditItemDateAddedTransaction(id, newDateAdded)
+{
+  this.id = id;
+  this._newDateAdded = newDateAdded;
+  this._oldDateAdded = null;
+}
+
+PlacesEditItemDateAddedTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  // to support folders as well
+  get container() this.id,
+  set container(val) this.id = val,
+
+  doTransaction: function EIDATXN_doTransaction()
+  {
+    this._oldDateAdded = PlacesUtils.bookmarks.getItemDateAdded(this.id);
+    PlacesUtils.bookmarks.setItemDateAdded(this.id, this._newDateAdded);
+  },
+
+  undoTransaction: function EIDATXN_undoTransaction()
+  {
+    PlacesUtils.bookmarks.setItemDateAdded(this.id, this._oldDateAdded);
+  }
+};
+
+
+/**
+ * Transaction for editing an item's last modified time.
+ *
+ * @param aItemId
+ *        id of the item to edit
+ * @param aNewLastModified
+ *        new last modified date for the item 
+ * @returns nsITransaction object
+ */
+
+function PlacesEditItemLastModifiedTransaction(id, newLastModified)
+{
+  this.id = id;
+  this._newLastModified = newLastModified;
+  this._oldLastModified = null;
+}
+
+PlacesEditItemLastModifiedTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  // to support folders as well
+  get container() this.id,
+  set container(val) this.id = val,
+
+  doTransaction:
+  function EILMTXN_doTransaction()
+  {
+    this._oldLastModified = PlacesUtils.bookmarks.getItemLastModified(this.id);
+    PlacesUtils.bookmarks.setItemLastModified(this.id, this._newLastModified);
+  },
+
+  undoTransaction:
+  function EILMTXN_undoTransaction()
+  {
+    PlacesUtils.bookmarks.setItemLastModified(this.id, this._oldLastModified);
+  }
+};
+
+
+/**
+ * Transaction for sorting a folder by name
+ *
+ * @param aFolderId
+ *        id of the folder to sort
+ * @returns nsITransaction object
+ */
+
+function PlacesSortFolderByNameTransaction(aFolderId)
+{
+  this._folderId = aFolderId;
+  this._oldOrder = null;
+}
+
+PlacesSortFolderByNameTransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function SFBNTXN_doTransaction()
+  {
+    this._oldOrder = [];
+
+    let contents =
+      PlacesUtils.getFolderContents(this._folderId, false, false).root;
+    let count = contents.childCount;
+
+    // sort between separators
+    let newOrder = []; 
+    let preSep = []; // temporary array for sorting each group of items
+    let sortingMethod =
+      function (a, b) {
+        if (PlacesUtils.nodeIsContainer(a) && !PlacesUtils.nodeIsContainer(b))
+          return -1;
+        if (!PlacesUtils.nodeIsContainer(a) && PlacesUtils.nodeIsContainer(b))
+          return 1;
+        return a.title.localeCompare(b.title);
+      };
+
+    for (let i = 0; i < count; ++i) {
+      let item = contents.getChild(i);
+      this._oldOrder[item.itemId] = i;
+      if (PlacesUtils.nodeIsSeparator(item)) {
+        if (preSep.length > 0) {
+          preSep.sort(sortingMethod);
+          newOrder = newOrder.concat(preSep);
+          preSep.splice(0);
+        }
+        newOrder.push(item);
+      }
+      else
+        preSep.push(item);
+    }
+    contents.containerOpen = false;
+
+    if (preSep.length > 0) {
+      preSep.sort(sortingMethod);
+      newOrder = newOrder.concat(preSep);
+    }
+
+    // set the nex indexes
+    let callback = {
+      runBatched: function() {
+        for (let i = 0; i < newOrder.length; ++i) {
+          PlacesUtils.bookmarks.setItemIndex(newOrder[i].itemId, i);
+        }
+      }
+    };
+    PlacesUtils.bookmarks.runInBatchMode(callback, null);
+  },
+
+  undoTransaction: function SFBNTXN_undoTransaction()
+  {
+    let callback = {
+      _self: this,
+      runBatched: function() {
+        for (item in this._self._oldOrder)
+          PlacesUtils.bookmarks.setItemIndex(item, this._self._oldOrder[item]);
+      }
+    };
+    PlacesUtils.bookmarks.runInBatchMode(callback, null);
+  }
+};
+
+
+/**
+ * Transaction for tagging a URL with the given set of tags. Current tags set
+ * for the URL persist. It's the caller's job to check whether or not aURI
+ * was already tagged by any of the tags in aTags, undoing this tags
+ * transaction removes them all from aURL!
+ *
+ * @param aURI
+ *        the URL to tag.
+ * @param aTags
+ *        Array of tags to set for the given URL.
+ */
+
+function PlacesTagURITransaction(aURI, aTags)
+{
+  this._uri = aURI;
+  this._tags = aTags;
+  this._unfiledItemId = -1;
+}
+
+PlacesTagURITransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function TUTXN_doTransaction()
+  {
+    if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
+      // Force an unfiled bookmark first
+      this._unfiledItemId =
+        PlacesUtils.bookmarks
+                   .insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                   this._uri,
+                                   PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                   PlacesUtils.history.getPageTitle(this._uri));
+      if (this._GUID)
+        PlacesUtils.bookmarks.setItemGUID(this._unfiledItemId, this._GUID);
+    }
+    PlacesUtils.tagging.tagURI(this._uri, this._tags);
+  },
+
+  undoTransaction: function TUTXN_undoTransaction()
+  {
+    if (this._unfiledItemId != -1) {
+      // If a GUID exists for this item, preserve it before removing the item.
+      if (PlacesUtils.annotations.itemHasAnnotation(this._unfiledItemId, PlacesUtils.GUID_ANNO)) {
+        this._GUID = PlacesUtils.bookmarks.getItemGUID(this._unfiledItemId);
+      }
+      PlacesUtils.bookmarks.removeItem(this._unfiledItemId);
+      this._unfiledItemId = -1;
+    }
+    PlacesUtils.tagging.untagURI(this._uri, this._tags);
+  }
+};
+
+
+/**
+ * Transaction for removing tags from a URL. It's the caller's job to check
+ * whether or not aURI isn't tagged by any of the tags in aTags, undoing this
+ * tags transaction adds them all to aURL!
+ *
+ * @param aURI
+ *        the URL to un-tag.
+ * @param aTags
+ *        Array of tags to unset. pass null to remove all tags from the given
+ *        url.
+ */
+
+function PlacesUntagURITransaction(aURI, aTags)
+{
+  this._uri = aURI;
+  if (aTags) {    
+    // Within this transaction, we cannot rely on tags given by itemId
+    // since the tag containers may be gone after we call untagURI.
+    // Thus, we convert each tag given by its itemId to name.
+    this._tags = aTags;
+    for (let i = 0; i < aTags.length; ++i) {
+      if (typeof(this._tags[i]) == "number")
+        this._tags[i] = PlacesUtils.bookmarks.getItemTitle(this._tags[i]);
+    }
+  }
+  else {
+    this._tags = PlacesUtils.tagging.getTagsForURI(this._uri);
+  }
+}
+
+PlacesUntagURITransaction.prototype = {
+  __proto__: BaseTransaction.prototype,
+
+  doTransaction: function UTUTXN_doTransaction()
+  {
+    PlacesUtils.tagging.untagURI(this._uri, this._tags);
+  },
+
+  undoTransaction: function UTUTXN_undoTransaction()
+  {
+    PlacesUtils.tagging.tagURI(this._uri, this._tags);
+  }
+};

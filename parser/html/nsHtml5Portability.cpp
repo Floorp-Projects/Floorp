@@ -40,7 +40,6 @@
 #include "nsString.h"
 #include "jArray.h"
 #include "nsHtml5Portability.h"
-#include "nsContentUtils.h"
 
 nsIAtom*
 nsHtml5Portability::newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length, nsHtml5AtomTable* interner)
@@ -178,29 +177,6 @@ nsHtml5Portability::literalEqualsString(const char* literal, nsString* string)
     return PR_FALSE;
   }
   return string->EqualsASCII(literal);
-}
-
-jArray<PRUnichar,PRInt32>
-nsHtml5Portability::isIndexPrompt()
-{
-  nsXPIDLString prompt;
-  nsresult rv =
-      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                         "IsIndexPromptWithSpace", prompt);
-  PRUint32 len = prompt.Length();
-  if (NS_FAILED(rv) || !len) {
-    // jArray doesn't support dynamically-allocated zero-length arrays
-    // and this method has no way to signal an error. Let's return
-    // the REPLACEMENT CHARACTER to avoid crashing on null pointer.
-    jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>(1);
-    arr[0] = 0xFFFD;
-    return arr;
-  }
-  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>(len);
-  PRUnichar* arrAsPtr = arr;
-  const PRUnichar* strAsPtr = prompt.BeginReading();
-  memcpy(arrAsPtr, strAsPtr, len * sizeof(PRUnichar));
-  return arr;
 }
 
 void

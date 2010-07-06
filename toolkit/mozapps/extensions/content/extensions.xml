@@ -294,13 +294,16 @@
       <method name="_handleChange">
         <parameter name="aSort"/>
         <body><![CDATA[
+          const ASCENDING_SORT_FIELDS = ["name"];
+
           if (aSort == this.sortBy) {
             this.ascending = !this.ascending;
             return;
           }
 
           this.sortBy = aSort;
-          this.ascending = false;
+          // Name sorting defaults to ascending, others to descending
+          this.ascending = ASCENDING_SORT_FIELDS.indexOf(aSort) >= 0;
 
           this._refreshState();
         ]]></body>
@@ -360,7 +363,7 @@
   <!-- Category item - an item in the category list. -->
   <binding id="category"
            extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
-    <content>
+    <content align="center">
       <xul:image anonid="icon" class="category-icon"/>
       <xul:label anonid="name" class="category-name" flex="1" xbl:inherits="value=name"/>
       <xul:label anonid="badge" class="category-badge" xbl:inherits="value=count"/>
@@ -616,7 +619,6 @@
       </method>
 
       <method name="onDownloadFailed">
-        <parameter name="aError"/>
         <body><![CDATA[
           this.refreshState();
         ]]></body>
@@ -643,7 +645,6 @@
       </method>
 
       <method name="onInstallFailed">
-        <parameter name="aError"/>
         <body><![CDATA[
           this.refreshState();
         ]]></body>
@@ -686,6 +687,7 @@
       <xul:vbox flex="1" class="fade">
         <xul:hbox class="name-container">
           <xul:label anonid="name" class="name" xbl:inherits="value=name"/>
+          <xul:label anonid="version" class="version"/>
           <xul:label class="disabled-postfix" value="&addon.disabled.postfix;"/>
         </xul:hbox>
         <xul:label anonid="creator" class="creator"/>
@@ -699,8 +701,8 @@
             <xul:label anonid="incompatible-warning"/>
           </xul:hbox>
           <xul:hbox>
-            <xul:label value="&rating.yourRating.label;"/>
-            <xul:label class="meta-rating" userrating="-1" showrating="user"/>
+            <xul:label value="&rating.label;"/>
+            <xul:label class="meta-rating" userrating="-1" showrating="average"/>
           </xul:hbox>
           <xul:label anonid="date-updated" unknown="&addon.unknownDate;"/>
           <xul:vbox anonid="extra-details" class="extra-details">
@@ -722,6 +724,10 @@
         </xul:vbox>
         <xul:spacer flex="1"/>
         <xul:hbox anonid="control-container" class="control-container">
+          <xul:button anonid="preferences-btn" class="addon-control"
+                      label="&cmd.showPreferences.label;"
+                      tooltiptext="&cmd.showPreferences.tooltip;"
+                      oncommand="document.getBindingParent(this).showPreferences();"/>
           <xul:button anonid="remove-btn" class="addon-control remove"
                       label="&cmd.uninstallAddon.label;"
                       tooltiptext="&cmd.uninstallAddon.tooltip;"
@@ -778,6 +784,8 @@
         if (iconURL)
           this._icon.src = iconURL;
 
+        this._version.value = this.mAddon.version;
+
         var creator = this.mAddon.creator;
         var creatorURL = this.mAddon.creatorURL;
         // XXxunf api
@@ -819,6 +827,9 @@
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "homepage");
       </field>
+      <field name="_version">
+        document.getAnonymousElementByAttribute(this, "anonid", "version");
+      </field>
       <field name="_icon">
         document.getAnonymousElementByAttribute(this, "anonid", "icon");
       </field>
@@ -833,6 +844,10 @@
       <field name="_description">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "description");
+      </field>
+      <field name="_preferencesBtn">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "preferences-btn");
       </field>
       <field name="_enableBtn">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -910,9 +925,9 @@
 
       <method name="_updateSize">
         <body><![CDATA[
-          var bytes = this.getAttribute("size"); // this.mAddon.size; //XXXunf api
+          var bytes = this.getAttribute("size"); // this.mAddon.size;
           var formatted = gStrings.dl.GetStringFromName("doneSizeUnknown");
-          if (bytes > 0) {
+          if (bytes && bytes > 0) {
             let [size, unit] = DownloadUtils.convertByteUnits(bytes);
             formatted = gStrings.dl.GetStringFromName("doneSize");
             formatted = formatted.replace("#1", size).replace("#2", unit);
@@ -945,6 +960,8 @@
         <body><![CDATA[
           this.setAttribute("incompatible", !this.mAddon.isCompatible);
 
+          this._preferencesBtn.hidden = !this.mAddon.optionsURL;
+
           this._enableBtn.hidden = !this.hasPermission("enable");
           this._disableBtn.hidden = !this.hasPermission("disable");
           this._removeBtn.hidden = !this.hasPermission("uninstall");
@@ -965,6 +982,12 @@
       <method name="uninstall">
         <body><![CDATA[
           this.mAddon.uninstall();
+        ]]></body>
+      </method>
+
+      <method name="showPreferences">
+        <body><![CDATA[
+          gViewController.doCommand("cmd_showItemPreferences", this.mAddon);
         ]]></body>
       </method>
 
@@ -1174,7 +1197,7 @@
             } else {
               var url = Components.classes["@mozilla.org/network/standard-url;1"]
                                   .createInstance(Components.interfaces.nsIStandardURL);
-              url.init(url.URLTYPE_STANDARD, 80, this.mInstall.sourceURL,
+              url.init(url.URLTYPE_STANDARD, 80, this.mInstall.sourceURI.spec,
                        null, null);
               url.QueryInterface(Components.interfaces.nsIURL);
               this._name.value = url.fileName;

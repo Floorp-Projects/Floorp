@@ -76,6 +76,7 @@ const STATE_TRAVERSED = nsIAccessibleStates.STATE_TRAVERSED;
 const STATE_UNAVAILABLE = nsIAccessibleStates.STATE_UNAVAILABLE;
 
 const EXT_STATE_ACTIVE = nsIAccessibleStates.EXT_STATE_ACTIVE;
+const EXT_STATE_DEFUNCT = nsIAccessibleStates.EXT_STATE_DEFUNCT;
 const EXT_STATE_EDITABLE = nsIAccessibleStates.EXT_STATE_EDITABLE;
 const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
 const EXT_STATE_HORIZONTAL = nsIAccessibleStates.EXT_STATE_HORIZONTAL;
@@ -94,6 +95,8 @@ const WIN = (navigator.platform.indexOf("Win") != -1)? true : false;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible general
+
+const kEmbedChar = String.fromCharCode(0xfffc);
 
 /**
  * nsIAccessibleRetrieval, initialized when test is loaded.
@@ -196,7 +199,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
     elm = aAccOrElmOrID;
 
   } else {
-    var elm = document.getElementById(aAccOrElmOrID);
+    elm = document.getElementById(aAccOrElmOrID);
     if (!elm) {
       ok(false, "Can't get DOM element for " + aAccOrElmOrID);
       return null;
@@ -220,6 +223,8 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
       return null;
     }
   }
+
+  acc.QueryInterface(nsIAccessNode);
 
   if (!aInterfaces)
     return acc;
@@ -394,6 +399,15 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree)
 }
 
 /**
+ * Return true if accessible for the given node is in cache.
+ */
+function isAccessibleInCache(aNodeOrId)
+{
+  var node = getNode(aNodeOrId);
+  return gAccRetrieval.getAccessibleFromCache(node) ? true : false;
+}
+
+/**
  * Test accessible tree for defunct accessible.
  *
  * @param  aAcc       [in] the defunct accessible
@@ -520,11 +534,14 @@ function prettyName(aIdentifier)
 {
   if (aIdentifier instanceof nsIAccessible) {
     var acc = getAccessible(aIdentifier, [nsIAccessNode]);
-    var msg = "[" + getNodePrettyName(acc.DOMNode) +
-      ", role: " + roleToString(acc.role);
-
-    if (acc.name)
-      msg += ", name: '" + acc.name + "'"
+    var msg = "[" + getNodePrettyName(acc.DOMNode);
+    try {
+      msg += ", role: " + roleToString(acc.role);
+      if (acc.name)
+        msg += ", name: '" + acc.name + "'";
+    } catch (e) {
+      msg += "defunct";
+    }
     msg += "]";
 
     return msg;

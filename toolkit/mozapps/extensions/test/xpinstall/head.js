@@ -52,30 +52,37 @@ var Harness = {
 
   pendingCount: null,
   installCount: null,
+  runningInstalls: null,
 
   // Setup and tear down functions
   setup: function() {
     waitForExplicitFinish();
     Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
+    Services.obs.addObserver(this, "addon-install-started", false);
     Services.obs.addObserver(this, "addon-install-blocked", false);
+    Services.obs.addObserver(this, "addon-install-failed", false);
+    Services.obs.addObserver(this, "addon-install-complete", false);
     Services.wm.addListener(this);
 
     AddonManager.addInstallListener(this);
     this.installCount = 0;
     this.pendingCount = 0;
+    this.runningInstalls = [];
+
+    var self = this;
+    registerCleanupFunction(function() {
+      Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
+      Services.obs.removeObserver(self, "addon-install-started");
+      Services.obs.removeObserver(self, "addon-install-blocked");
+      Services.obs.removeObserver(self, "addon-install-failed");
+      Services.obs.removeObserver(self, "addon-install-complete");
+      Services.wm.removeListener(self);
+
+      AddonManager.removeInstallListener(self);
+    });
   },
 
   finish: function() {
-    Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
-    Services.obs.removeObserver(this, "addon-install-blocked");
-    Services.wm.removeListener(this);
-
-    var win = Services.wm.getMostRecentWindow("Extension:Manager");
-    if (win)
-      win.close();
-
-    AddonManager.removeInstallListener(this);
-
     AddonManager.getAllInstalls(function(installs) {
       is(installs.length, 0, "Should be no active installs at the end of the test");
       finish();
@@ -85,24 +92,32 @@ var Harness = {
   endTest: function() {
     // Defer the final notification to allow things like the InstallTrigger
     // callback to complete
-    let callback = this.installsCompletedCallback;
-    let count = this.installCount;
+    var self = this;
     executeSoon(function() {
+      let callback = self.installsCompletedCallback;
+      let count = self.installCount;
+
+      is(self.runningInstalls.length, 0, "Should be no running installs left");
+      self.runningInstalls.forEach(function(aInstall) {
+        info("Install for " + aInstall.sourceURI + " is in state " + aInstall.state);
+      });
+
+      self.installBlockedCallback = null;
+      self.authenticationCallback = null;
+      self.installConfirmCallback = null;
+      self.downloadStartedCallback = null;
+      self.downloadProgressCallback = null;
+      self.downloadCancelledCallback = null;
+      self.downloadFailedCallback = null;
+      self.downloadEndedCallback = null;
+      self.installStartedCallback = null;
+      self.installFailedCallback = null;
+      self.installEndedCallback = null;
+      self.installsCompletedCallback = null;
+      self.runningInstalls = null;
+
       callback(count);
     });
-
-    this.installBlockedCallback = null;
-    this.authenticationCallback = null;
-    this.installConfirmCallback = null;
-    this.downloadStartedCallback = null;
-    this.downloadProgressCallback = null;
-    this.downloadCancelledCallback = null;
-    this.downloadFailedCallback = null;
-    this.downloadEndedCallback = null;
-    this.installStartedCallback = null;
-    this.installFailedCallback = null;
-    this.installEndedCallback = null;
-    this.installsCompletedCallback = null;
   },
 
   // Window open handling
@@ -132,10 +147,16 @@ var Harness = {
       }
     }
     else if (window.document.location.href == PROMPT_URL) {
-      switch (window.gCommonDialogParam.GetInt(3)) {
-        case 0: window.document.documentElement.acceptDialog();
+        var promptType = window.gArgs.getProperty("promptType");
+        switch (promptType) {
+          case "alert":
+          case "alertCheck":
+          case "confirmCheck":
+          case "confirm":
+          case "confirmEx":
+                window.document.documentElement.acceptDialog();
                 break;
-        case 2: if (window.gCommonDialogParam.GetInt(4) != 1) {
+          case "promptUserAndPass":
                   // This is a login dialog, hopefully an authentication prompt
                   // for the xpi.
                   if (this.authenticationCallback) {
@@ -152,7 +173,9 @@ var Harness = {
                   else {
                     window.document.documentElement.cancelDialog();
                   }
-                }
+                break;
+          default:
+                ok(false, "prompt type " + promptType + " not handled in test.");
                 break;
       }
     }
@@ -184,6 +207,7 @@ var Harness = {
                           .getInterface(Components.interfaces.nsIDOMWindowInternal);
     var self = this;
     domwindow.addEventListener("load", function() {
+      domwindow.removeEventListener("load", arguments.callee, false);
       self.windowLoad(domwindow);
     }, false);
   },
@@ -192,6 +216,10 @@ var Harness = {
   },
 
   // Addon Install Listener
+
+  onNewInstall: function(install) {
+    this.runningInstalls.push(install);
+  },
 
   onDownloadStarted: function(install) {
     this.pendingCount++;
@@ -210,14 +238,18 @@ var Harness = {
   },
 
   onDownloadCancelled: function(install) {
+    isnot(this.runningInstalls.indexOf(install), -1,
+          "Should only see cancelations for started installs");
+    this.runningInstalls.splice(this.runningInstalls.indexOf(install), 1);
+
     if (this.downloadCancelledCallback)
       this.downloadCancelledCallback(install);
     this.checkTestEnded();
   },
 
-  onDownloadFailed: function(install, status) {
+  onDownloadFailed: function(install) {
     if (this.downloadFailedCallback)
-      this.downloadFailedCallback(install, status);
+      this.downloadFailedCallback(install);
     this.checkTestEnded();
   },
 
@@ -233,14 +265,13 @@ var Harness = {
     this.checkTestEnded();
   },
 
-  onInstallFailed: function(install, status) {
+  onInstallFailed: function(install) {
     if (this.installFailedCallback)
-      this.installFailedCallback(install, status);
+      this.installFailedCallback(install);
     this.checkTestEnded();
   },
 
   checkTestEnded: function() {
-    dump("checkTestPending " + this.pendingCount + "\n");
     if (--this.pendingCount == 0)
       this.endTest();
   },
@@ -249,7 +280,43 @@ var Harness = {
 
   observe: function(subject, topic, data) {
     var installInfo = subject.QueryInterface(Components.interfaces.amIWebInstallInfo);
-    this.installBlocked(installInfo);
+    switch (topic) {
+    case "addon-install-started":
+      is(this.runningInstalls.length, installInfo.installs.length,
+         "Should have seen the expected number of installs started");
+      break;
+    case "addon-install-blocked":
+      this.installBlocked(installInfo);
+      break;
+    case "addon-install-failed":
+      installInfo.installs.forEach(function(aInstall) {
+        isnot(this.runningInstalls.indexOf(aInstall), -1,
+              "Should only see failures for started installs");
+
+        ok(aInstall.error != 0 || aInstall.addon.appDisabled,
+           "Failed installs should have an error or be appDisabled");
+
+        this.runningInstalls.splice(this.runningInstalls.indexOf(aInstall), 1);
+      }, this);
+      break;
+    case "addon-install-complete":
+      installInfo.installs.forEach(function(aInstall) {
+        isnot(this.runningInstalls.indexOf(aInstall), -1,
+              "Should only see completed events for started installs");
+
+        is(aInstall.error, 0, "Completed installs should have no error");
+        ok(!aInstall.appDisabled, "Completed installs should not be appDisabled");
+
+        // Complete installs are either in the INSTALLED or CANCELLED state
+        // since the test may cancel installs the moment they complete.
+        ok(aInstall.state == AddonManager.STATE_INSTALLED ||
+           aInstall.state == AddonManager.STATE_CANCELLED,
+           "Completed installs should be in the right state");
+
+        this.runningInstalls.splice(this.runningInstalls.indexOf(aInstall), 1);
+      }, this);
+      break;
+    }
   },
 
   QueryInterface: function(iid) {

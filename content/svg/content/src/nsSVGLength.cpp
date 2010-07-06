@@ -358,7 +358,7 @@ nsSVGLength::SetValueAsString(const nsAString & aValueAsString)
   char *str = ToNewCString(aValueAsString);
 
   char* number = str;
-  while (*number && isspace(*number))
+  while (*number && IsSVGWhitespace(*number))
     ++number;
 
   if (*number) {

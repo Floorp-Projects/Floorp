@@ -685,25 +685,17 @@ FeedWriter.prototype = {
     if (file instanceof Ci.nsILocalFileWin) {
       try {
         return file.getVersionInfoField("FileDescription");
-      }
-      catch (e) {
-      }
+      } catch (e) {}
     }
 #endif
 #ifdef XP_MACOSX
-    var lfm = file.QueryInterface(Ci.nsILocalFileMac);
-    try {
-      return lfm.bundleDisplayName;
-    }
-    catch (e) {
-      // fall through to the file name
+    if (file instanceof Ci.nsILocalFileMac) {
+      try {
+        return file.bundleDisplayName;
+      } catch (e) {}
     }
 #endif
-    var ios = 
-        Cc["@mozilla.org/network/io-service;1"].
-        getService(Ci.nsIIOService);
-    var url = ios.newFileURI(file).QueryInterface(Ci.nsIURL);
-    return url.fileName;
+    return file.leafName;
   },
 
   /**
@@ -1424,17 +1416,12 @@ FeedWriter.prototype = {
     return interfaces;
   },
   getHelperForLanguage: function FW_getHelperForLanguage(language) null,
-  contractID: "@mozilla.org/browser/feeds/result-writer;1",
-  classDescription: "Feed Writer",
   classID: Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}"),
   implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
   flags: Ci.nsIClassInfo.DOM_OBJECT,
-  _xpcom_categories: [{ category: "JavaScript global constructor",
-                        entry: "BrowserFeedWriter"}],
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedWriter, Ci.nsIClassInfo,
                                          Ci.nsIDOMEventListener, Ci.nsIObserver,
                                          Ci.nsINavHistoryObserver])
 };
 
-function NSGetModule(cm, file)
-  XPCOMUtils.generateModule([FeedWriter]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([FeedWriter]);

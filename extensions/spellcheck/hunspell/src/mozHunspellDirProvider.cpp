@@ -136,43 +136,5 @@ mozHunspellDirProvider::AppendingEnumerator::AppendingEnumerator
   GetNext(nsnull);
 }
 
-NS_METHOD
-mozHunspellDirProvider::Register(nsIComponentManager* aCompMgr,
-				nsIFile* aPath, const char *aLoaderStr,
-				const char *aType,
-				const nsModuleComponentInfo *aInfo)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsICategoryManager> catMan =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-  if (!catMan)
-    return NS_ERROR_FAILURE;
-
-  rv = catMan->AddCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY,
-				"spellcheck-directory-provider",
-				kContractID, PR_TRUE, PR_TRUE, nsnull);
-  return rv;
-}
-
-NS_METHOD
-mozHunspellDirProvider::Unregister(nsIComponentManager* aCompMgr,
-				  nsIFile* aPath,
-				  const char *aLoaderStr,
-				  const nsModuleComponentInfo *aInfo)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsICategoryManager> catMan =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-  if (!catMan)
-    return NS_ERROR_FAILURE;
-
-  rv = catMan->DeleteCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY,
-				   "spellcheck-directory-provider",
-				   PR_TRUE);
-  return rv;
-}
-
 char const *const
 mozHunspellDirProvider::kContractID = "@mozilla.org/spellcheck/dir-provider;1";

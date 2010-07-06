@@ -49,13 +49,13 @@ interface nsIDOMNSCSS2Properties : nsIDOMSVGCSS2Properties
            attribute DOMString        MozAppearance;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBackgroundClip;
+           attribute DOMString        backgroundClip;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozBackgroundInlinePolicy;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBackgroundOrigin;
+           attribute DOMString        backgroundOrigin;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozBinding;
@@ -258,7 +258,7 @@ interface nsIDOMNSCSS2Properties : nsIDOMSVGCSS2Properties
            attribute DOMString        MozWindowShadow;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBackgroundSize;
+           attribute DOMString        backgroundSize;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozTransitionProperty;

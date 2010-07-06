@@ -82,15 +82,16 @@ EXTERN_C GUID CDECL CLSID_Accessible =
 
 static const PRInt32 kIEnumVariantDisconnected = -1;
 
-/*
- * Class nsAccessibleWrap
- */
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessibleWrap
+////////////////////////////////////////////////////////////////////////////////
 
 //-----------------------------------------------------
 // construction
 //-----------------------------------------------------
-nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell):
-  nsAccessible(aNode, aShell), mEnumVARIANTPosition(0), mTypeInfo(NULL)
+nsAccessibleWrap::
+  nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
+  nsAccessible(aContent, aShell), mEnumVARIANTPosition(0), mTypeInfo(NULL)
 {
 }
 
@@ -230,7 +231,7 @@ __try {
         // not an extra parent window for just the scrollbars
         nsIScrollableFrame *scrollFrame = do_QueryFrame(frame);
         if (scrollFrame) {
-          hwnd = (HWND)scrollFrame->GetScrolledFrame()->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+          hwnd = (HWND)scrollFrame->GetScrolledFrame()->GetNearestWidget()->GetNativeData(NS_NATIVE_WINDOW);
           NS_ASSERTION(hwnd, "No window handle for window");
         }
       }
@@ -323,9 +324,6 @@ __try {
   if (!*pszName)
     return E_OUTOFMEMORY;
 
-#ifdef DEBUG_A11Y
-  NS_ASSERTION(mIsInitialized, "Access node was not initialized");
-#endif
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -481,7 +479,7 @@ __try {
   // -- Try BSTR role
   // Could not map to known enumerated MSAA role like ROLE_BUTTON
   // Use BSTR role to expose role attribute or tag name + namespace
-  nsIContent *content = nsCoreUtils::GetRoleContent(xpAccessible->GetDOMNode());
+  nsIContent *content = xpAccessible->GetContent();
   if (!content)
     return E_FAIL;
 
@@ -596,9 +594,8 @@ STDMETHODIMP nsAccessibleWrap::get_accFocus(
   // VT_DISPATCH: pdispVal member is the address of the IDispatch interface
   //              for the child object with the keyboard focus.
 __try {
-  if (!mDOMNode) {
-    return E_FAIL; // This node is shut down
-  }
+  if (IsDefunct())
+    return E_FAIL;
 
   VariantInit(pvarChild);
 
@@ -1470,7 +1467,7 @@ nsAccessibleWrap::get_windowHandle(HWND *aWindowHandle)
 __try {
   *aWindowHandle = 0;
 
-  if (!mDOMNode)
+  if (IsDefunct())
     return E_FAIL;
 
   void *handle = nsnull;
@@ -1666,8 +1663,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
   // Means we're not active.
   NS_ENSURE_TRUE(mWeakShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIAccessible> accessible;
-  aEvent->GetAccessible(getter_AddRefs(accessible));
+  nsAccessible *accessible = aEvent->GetAccessible();
   if (!accessible)
     return NS_OK;
 
@@ -1681,11 +1677,11 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
     return NS_OK; // Can't fire an event without a child ID
 
   // See if we're in a scrollable area with its own window
-  nsCOMPtr<nsIAccessible> newAccessible;
+  nsAccessible *newAccessible = nsnull;
   if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
     // Don't use frame from current accessible when we're hiding that
     // accessible.
-    accessible->GetParent(getter_AddRefs(newAccessible));
+    newAccessible = accessible->GetCachedParent();
   } else {
     newAccessible = accessible;
   }
@@ -1731,16 +1727,15 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 }
 
 HWND
-nsAccessibleWrap::GetHWNDFor(nsIAccessible *aAccessible)
+nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
 {
-  nsRefPtr<nsAccessNode> accessNode = do_QueryObject(aAccessible);
-  if (!accessNode)
-    return 0;
-
   HWND hWnd = 0;
-  nsIFrame *frame = accessNode->GetFrame();
+  if (!aAccessible)
+    return hWnd;
+
+  nsIFrame *frame = aAccessible->GetFrame();
   if (frame) {
-    nsIWidget *window = frame->GetWindow();
+    nsIWidget *window = frame->GetNearestWidget();
     PRBool isVisible;
     window->IsVisible(isVisible);
     if (isVisible) {
@@ -1758,13 +1753,13 @@ nsAccessibleWrap::GetHWNDFor(nsIAccessible *aAccessible)
       // JAWS doesn't echo the current option as it changes in a closed
       // combo box, we need to use an ensure that we never fire an event with
       // an HWND for a hidden window.
-      hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+      hWnd = (HWND)frame->GetNearestWidget()->GetNativeData(NS_NATIVE_WINDOW);
     }
   }
 
   if (!hWnd) {
     void* handle = nsnull;
-    nsDocAccessible *accessibleDoc = accessNode->GetDocAccessible();
+    nsDocAccessible *accessibleDoc = aAccessible->GetDocAccessible();
     if (!accessibleDoc)
       return 0;
 

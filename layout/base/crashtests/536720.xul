@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  var menupopup = document.getElementById("menupopup");
+  menupopup.parentNode.removeChild(menupopup);
+}
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"><menulist><menupopup id="menupopup"/>
+T
+</menulist></window>
+
+</window>

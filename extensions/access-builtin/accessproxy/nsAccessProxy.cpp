@@ -141,7 +141,7 @@ NS_IMETHODIMP nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
   if (domDoc) {
     doc = do_QueryInterface(domDoc);
     if (doc) {
-      presShell = doc->GetPrimaryShell();
+      presShell = doc->GetShell();
     }
   }
   //return  NS_OK;

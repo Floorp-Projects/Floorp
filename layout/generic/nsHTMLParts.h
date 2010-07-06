@@ -42,6 +42,7 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "nsIFrame.h"
 class nsIAtom;
 class nsNodeInfoManager;
 class nsIContent;
@@ -69,15 +70,18 @@ class nsTableColFrame;
  *  frame, or the block has first-letter style but has no first letter, this
  *  bit is not set. This bit is set on the first continuation only.
  */
-#define NS_BLOCK_NO_AUTO_MARGINS            0x00200000
-#define NS_BLOCK_MARGIN_ROOT                0x00400000
-#define NS_BLOCK_FLOAT_MGR                  0x00800000
-#define NS_BLOCK_HAS_FIRST_LETTER_STYLE     0x20000000
-#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET   0x40000000
-#define NS_BLOCK_HAS_FIRST_LETTER_CHILD     0x80000000
+#define NS_BLOCK_MARGIN_ROOT              NS_FRAME_STATE_BIT(22)
+#define NS_BLOCK_FLOAT_MGR                NS_FRAME_STATE_BIT(23)
+#define NS_BLOCK_HAS_FIRST_LETTER_STYLE   NS_FRAME_STATE_BIT(29)
+#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET NS_FRAME_STATE_BIT(30)
+#define NS_BLOCK_HAS_FIRST_LETTER_CHILD   NS_FRAME_STATE_BIT(31)
 // These are the bits that get inherited from a block frame to its
 // next-in-flows and are not private to blocks
-#define NS_BLOCK_FLAGS_MASK                 0xF0E00000 
+#define NS_BLOCK_FLAGS_MASK               (NS_BLOCK_MARGIN_ROOT | \
+                                           NS_BLOCK_FLOAT_MGR | \
+                                           NS_BLOCK_HAS_FIRST_LETTER_STYLE | \
+                                           NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET | \
+                                           NS_BLOCK_HAS_FIRST_LETTER_CHILD)
 
 // Factory methods for creating html layout objects
 
@@ -231,6 +235,8 @@ NS_NewHTMLFragmentContentSink2(nsIFragmentContentSink** aInstancePtrResult);
 // in nsContentSink.h
 nsresult
 NS_NewHTMLParanoidFragmentSink(nsIFragmentContentSink** aInstancePtrResult);
+nsresult
+NS_NewHTMLParanoidFragmentSink2(nsIFragmentContentSink** aInstancePtrResult);
 void
 NS_HTMLParanoidFragmentSinkShutdown();
 #endif /* nsHTMLParts_h___ */

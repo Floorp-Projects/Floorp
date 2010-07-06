@@ -69,7 +69,6 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIGenericFactory.h"
 #include "nsMemory.h"
 #include "nsIXPConnect.h"
 #include "nsIInterfaceInfo.h"
@@ -79,7 +78,6 @@
 #include "nsIJSRuntimeService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-#include "nsIModule.h"
 #include "nsAutoLock.h"
 #include "nsXPTCUtils.h"
 #include "xptinfo.h"
@@ -418,14 +416,6 @@ private:
 const PRBool OBJ_IS_GLOBAL = PR_TRUE;
 const PRBool OBJ_IS_NOT_GLOBAL = PR_FALSE;
 
-#define NS_JS_RUNTIME_SERVICE_CID \
-{0xb5e65b52, 0x1dd1, 0x11b2, \
-    { 0xae, 0x8f, 0xf0, 0x92, 0x8e, 0xd8, 0x84, 0x82 }}
-
-#define NS_XPC_THREAD_JSCONTEXT_STACK_CID  \
-{ 0xff8c4d10, 0x3194, 0x11d3, \
-    { 0x98, 0x85, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-
 class nsXPConnect : public nsIXPConnect,
                     public nsIThreadObserver,
                     public nsSupportsWeakReference,
@@ -447,6 +437,7 @@ public:
 public:
     // These get non-addref'd pointers
     static nsXPConnect*  GetXPConnect();
+    static nsXPConnect*  FastGetXPConnect() { return gSelf ? gSelf : GetXPConnect(); }
     static XPCJSRuntime* GetRuntimeInstance();
     XPCJSRuntime* GetRuntime() {return mRuntime;}
 
@@ -2259,7 +2250,7 @@ static inline XPCWrappedNativeProto*
 GetSlimWrapperProto(JSObject *obj)
 {
   const js::Value &v = obj->getSlot(JSSLOT_START(obj->getClass()));
-  return static_cast<XPCWrappedNativeProto*>(v.asPrivate());
+  return static_cast<XPCWrappedNativeProto*>(v.toPrivate());
 }
 
 
@@ -2341,6 +2332,7 @@ private:
 };
 
 void *xpc_GetJSPrivate(JSObject *obj);
+inline JSObject *xpc_GetGlobalForObject(JSObject *obj);
 
 /***************************************************************************/
 // XPCWrappedNative the wrapper around one instance of a native xpcom object
@@ -2632,20 +2624,25 @@ public:
 
     JSBool HasExternalReference() const {return mRefCnt > 1;}
 
-    JSBool NeedsChromeWrapper() { return !!(mWrapperWord & CHROME_ONLY); }
-    void SetNeedsChromeWrapper() { mWrapperWord |= CHROME_ONLY; }
-    JSBool IsDoubleWrapper() { return !!(mWrapperWord & DOUBLE_WRAPPER); }
-    void SetIsDoubleWrapper() { mWrapperWord |= DOUBLE_WRAPPER; }
+    JSBool NeedsSOW() { return !!(mWrapperWord & NEEDS_SOW); }
+    void SetNeedsSOW() { mWrapperWord |= NEEDS_SOW; }
+    JSBool NeedsCOW() { return !!(mWrapperWord & NEEDS_COW); }
+    void SetNeedsCOW() { mWrapperWord |= NEEDS_COW; }
+    JSBool NeedsXOW() { return !!(mWrapperWord & NEEDS_XOW); }
 
     JSObject* GetWrapper()
     {
-        return (JSObject *) (mWrapperWord & FLAG_MASK);
+        return (JSObject *) (mWrapperWord & (size_t)~(size_t)FLAG_MASK);
     }
     void SetWrapper(JSObject *obj)
     {
-        JSBool needsChrome = NeedsChromeWrapper();
-        JSBool doubleWrapper = IsDoubleWrapper();
-        mWrapperWord = PRWord(obj) | doubleWrapper | needsChrome;
+        PRWord needsSOW = NeedsSOW() ? NEEDS_SOW : 0;
+        PRWord needsCOW = NeedsCOW() ? NEEDS_COW : 0;
+        PRWord needsXOW = NeedsXOW() ? NEEDS_XOW : 0;
+        mWrapperWord = PRWord(obj) |
+                         needsSOW |
+                         needsCOW |
+                         needsXOW;
     }
 
     void NoteTearoffs(nsCycleCollectionTraversalCallback& cb);
@@ -2681,7 +2678,23 @@ protected:
     virtual ~XPCWrappedNative();
 
 private:
-    enum { CHROME_ONLY = JS_BIT(0), DOUBLE_WRAPPER = JS_BIT(1), FLAG_MASK = (PRWord)~(PRWord)0x3 };
+    enum {
+        NEEDS_SOW = JS_BIT(0),
+        NEEDS_COW = JS_BIT(1),
+        NEEDS_XOW = JS_BIT(2),
+
+        LAST_FLAG = NEEDS_XOW,
+
+        FLAG_MASK = 0x7
+    };
+
+protected:
+    void SetNeedsXOW() {
+        NS_ASSERTION(mWrapperWord == 0, "It's too late to call this");
+        mWrapperWord = NEEDS_XOW;
+    }
+
+private:
 
     void TraceOtherWrapper(JSTracer* trc);
     JSBool Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
@@ -2722,6 +2735,39 @@ private:
 public:
     nsCOMPtr<nsIThread>          mThread; // Don't want to overload _mOwningThread
 #endif
+};
+
+class XPCWrappedNativeWithXOW : public XPCWrappedNative
+{
+public:
+    XPCWrappedNativeWithXOW(already_AddRefed<nsISupports> aIdentity,
+                            XPCWrappedNativeProto* aProto)
+        : XPCWrappedNative(aIdentity, aProto),
+          mXOW(nsnull)
+    {
+        SetNeedsXOW();
+    }
+    XPCWrappedNativeWithXOW(already_AddRefed<nsISupports> aIdentity,
+                            XPCWrappedNativeScope* aScope,
+                            XPCNativeSet* aSet)
+        : XPCWrappedNative(aIdentity, aScope, aSet),
+          mXOW(nsnull)
+    {
+        SetNeedsXOW();
+    }
+
+    JSObject *GetXOW()
+    {
+        return mXOW;
+    }
+
+    void SetXOW(JSObject *xow)
+    {
+        mXOW = xow;
+    }
+
+private:
+    JSObject *mXOW;
 };
 
 /***************************************************************************
@@ -3278,7 +3324,7 @@ private:
 * member (as a hidden implementaion detail) to which they delegate many calls.
 */
 
-extern JSBool xpc_InitJSxIDClassObjects();
+extern void xpc_InitJSxIDClassObjects();
 extern void xpc_DestroyJSxIDClassObjects();
 
 
@@ -3786,161 +3832,7 @@ private:
 };
 
 /***************************************************************************/
-// XXX allowing for future notifications to XPCCallContext
 
-class NS_STACK_CLASS AutoJSRequest
-{
-public:
-    AutoJSRequest(XPCCallContext& aCCX MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mCCX(aCCX), mCX(aCCX.GetJSContext()) {
-        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-        BeginRequest();
-    }
-    ~AutoJSRequest() {EndRequest();}
-
-    void EndRequest() {
-        if(mCX) {
-            JS_EndRequest(mCX);
-            mCX = nsnull;
-        }
-    }
-private:
-    void BeginRequest() {
-        if(JS_GetContextThread(mCX))
-            JS_BeginRequest(mCX);
-        else
-            mCX = nsnull;
-    }
-private:
-    XPCCallContext& mCCX;
-    JSContext* mCX;
-    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class NS_STACK_CLASS AutoJSSuspendRequest
-{
-public:
-    AutoJSSuspendRequest(XPCCallContext& aCCX
-                         MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mCX(aCCX.GetJSContext()) {
-        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-        SuspendRequest();
-    }
-    ~AutoJSSuspendRequest() {ResumeRequest();}
-
-    void ResumeRequest() {
-        if(mCX) {
-            JS_ResumeRequest(mCX, mDepth);
-            mCX = nsnull;
-        }
-    }
-private:
-    void SuspendRequest() {
-        if(JS_GetContextThread(mCX))
-            mDepth = JS_SuspendRequest(mCX);
-        else
-            mCX = nsnull;
-    }
-private:
-    JSContext* mCX;
-    jsrefcount mDepth;
-    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class NS_STACK_CLASS AutoJSSuspendRequestWithNoCallContext
-{
-public:
-    AutoJSSuspendRequestWithNoCallContext(JSContext *aCX
-                                          MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mCX(aCX) {
-        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-        SuspendRequest();
-    }
-    ~AutoJSSuspendRequestWithNoCallContext() {ResumeRequest();}
-
-    void ResumeRequest() {
-        if(mCX) {
-            JS_ResumeRequest(mCX, mDepth);
-            mCX = nsnull;
-        }
-    }
-private:
-    void SuspendRequest() {
-        if(JS_GetContextThread(mCX))
-            mDepth = JS_SuspendRequest(mCX);
-        else
-            mCX = nsnull;
-    }
-private:
-    JSContext* mCX;
-    jsrefcount mDepth;
-    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class NS_STACK_CLASS AutoJSSuspendNonMainThreadRequest
-{
-public:
-    AutoJSSuspendNonMainThreadRequest(JSContext *aCX
-                                      MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mCX(aCX) {
-        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-        SuspendRequest();
-    }
-    ~AutoJSSuspendNonMainThreadRequest() {ResumeRequest();}
-
-    void ResumeRequest() {
-        if (mCX) {
-            JS_ResumeRequest(mCX, mDepth);
-            mCX = nsnull;
-        }
-    }
-
-private:
-    void SuspendRequest() {
-        if (mCX && !XPCPerThreadData::IsMainThread(mCX))
-            mDepth = JS_SuspendRequest(mCX);
-        else
-            mCX = nsnull;
-    }
-
-    JSContext *mCX;
-    jsrefcount mDepth;
-    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-        
-
-/*****************************************/
-
-class NS_STACK_CLASS AutoJSRequestWithNoCallContext
-{
-public:
-    AutoJSRequestWithNoCallContext(JSContext* aCX
-                                   MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mCX(aCX) {
-        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-        BeginRequest();
-    }
-    ~AutoJSRequestWithNoCallContext() {EndRequest();}
-
-    void EndRequest() {
-        if(mCX) {
-            JS_EndRequest(mCX);
-            mCX = nsnull;
-        }
-    }
-private:
-    void BeginRequest() {
-        if(JS_GetContextThread(mCX))
-            JS_BeginRequest(mCX);
-        else
-            mCX = nsnull;
-    }
-private:
-    JSContext* mCX;
-    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-/***************************************************************************/
 class NS_STACK_CLASS AutoJSErrorAndExceptionEater
 {
 public:
@@ -4231,6 +4123,11 @@ extern char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
     {0x1809fd50, 0x91e8, 0x11d5, \
       { 0x90, 0xf9, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a } }
 
+// {DC524540-487E-4501-9AC7-AAA784B17C1C}
+#define XPCVARIANT_CID                                                        \
+    {0xdc524540, 0x487e, 0x4501,                                              \
+      { 0x9a, 0xc7, 0xaa, 0xa7, 0x84, 0xb1, 0x7c, 0x1c } }
+
 class XPCVariant : public nsIVariant
 {
 public:
@@ -4338,6 +4235,14 @@ xpc_GetJSPrivate(JSObject *obj)
 {
     return obj->getPrivate();
 }
+inline JSObject *
+xpc_GetGlobalForObject(JSObject *obj)
+{
+    while(JSObject *parent = obj->getParent())
+        obj = parent;
+    return obj;
+}
+
 
 #ifndef XPCONNECT_STANDALONE
 

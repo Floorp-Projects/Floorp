@@ -175,13 +175,14 @@ public:
   virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
 
 #ifdef ACCESSIBILITY
-  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+  virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
   // nsIFrameFrame
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
   NS_IMETHOD BeginSwapDocShells(nsIFrame* aOther);
   virtual void EndSwapDocShells(nsIFrame* aOther);
+  virtual nsIFrame* GetFrame() { return this; }
 
   // nsIReflowCallback
   virtual PRBool ReflowFinished();
@@ -235,16 +236,13 @@ nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
 }
 
 #ifdef ACCESSIBILITY
-NS_IMETHODIMP nsSubDocumentFrame::GetAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsSubDocumentFrame::CreateAccessible()
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
-  if (accService) {
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    return accService->CreateOuterDocAccessible(node, aAccessible);
-  }
-
-  return NS_ERROR_FAILURE;
+  return accService ?
+    accService->CreateOuterDocAccessible(mContent, PresContext()->PresShell()) :
+    nsnull;
 }
 #endif
 
@@ -668,52 +666,16 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
 PRBool
 nsSubDocumentFrame::ReflowFinished()
 {
-  nsCOMPtr<nsIDocShell> docShell;
-  GetDocShell(getter_AddRefs(docShell));
-
-  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell));
-
-  // resize the sub document
-  if (baseWindow) {
-    PRInt32 x = 0;
-    PRInt32 y = 0;
-
+  if (mFrameLoader) {
     nsWeakFrame weakFrame(this);
-    
-    nsPresContext* presContext = PresContext();
-    baseWindow->GetPositionAndSize(&x, &y, nsnull, nsnull);
 
-    if (!weakFrame.IsAlive()) {
-      // GetPositionAndSize() killed us
-      return PR_FALSE;
+    mFrameLoader->UpdatePositionAndSize(this);
+
+    if (weakFrame.IsAlive()) {
+      // Make sure that we can post a reflow callback in the future.
+      mPostedReflowCallback = PR_FALSE;
     }
-
-    // GetPositionAndSize might have resized us.  So now is the time to
-    // get our size.
-    mPostedReflowCallback = PR_FALSE;
-  
-    nsSize innerSize(GetSize());
-    if (IsInline()) {
-      nsMargin usedBorderPadding = GetUsedBorderAndPadding();
-
-      // Sadly, XUL smacks the frame size without changing the used
-      // border and padding, so we can't trust those.  Subtracting
-      // them might make things negative.
-      innerSize.width  -= usedBorderPadding.LeftRight();
-      innerSize.width = NS_MAX(innerSize.width, 0);
-      
-      innerSize.height -= usedBorderPadding.TopBottom();
-      innerSize.height = NS_MAX(innerSize.height, 0);
-    }  
-
-    PRInt32 cx = presContext->AppUnitsToDevPixels(innerSize.width);
-    PRInt32 cy = presContext->AppUnitsToDevPixels(innerSize.height);
-    baseWindow->SetPositionAndSize(x, y, cx, cy, PR_FALSE);
-  } else {
-    // Make sure that we can post a reflow callback in the future.
-    mPostedReflowCallback = PR_FALSE;
   }
-
   return PR_FALSE;
 }
 

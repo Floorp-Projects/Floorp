@@ -39,8 +39,6 @@
  * The nsIWebPageDescriptor interface allows content being displayed in one
  * window to be loaded into another window without refetching it from the
  * network.
- *
- * @status UNDER_REVIEW
  */
 
 [scriptable, uuid(6f30b676-3710-4c2c-80b1-0395fb26516e)]

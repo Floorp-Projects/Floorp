@@ -375,7 +375,8 @@ enum XPTTypeDescriptorTags {
     TD_PWSTRING_SIZE_IS  = 22,
     TD_UTF8STRING        = 23,
     TD_CSTRING           = 24,
-    TD_ASTRING           = 25
+    TD_ASTRING           = 25,
+    TD_JSVAL             = 26
 };
 
 struct XPTTypeDescriptor {
@@ -486,7 +487,8 @@ struct XPTMethodDescriptor {
 #define XPT_MD_CTOR     0x10
 #define XPT_MD_HIDDEN   0x08
 #define XPT_MD_OPT_ARGC 0x04
-#define XPT_MD_FLAGMASK 0xfc
+#define XPT_MD_CONTEXT  0x02
+#define XPT_MD_FLAGMASK 0xfe
 
 #define XPT_MD_IS_GETTER(flags)      (flags & XPT_MD_GETTER)
 #define XPT_MD_IS_SETTER(flags)      (flags & XPT_MD_SETTER)
@@ -494,6 +496,7 @@ struct XPTMethodDescriptor {
 #define XPT_MD_IS_CTOR(flags)        (flags & XPT_MD_CTOR)
 #define XPT_MD_IS_HIDDEN(flags)      (flags & XPT_MD_HIDDEN)
 #define XPT_MD_WANTS_OPT_ARGC(flags) (flags & XPT_MD_OPT_ARGC)
+#define XPT_MD_WANTS_CONTEXT(flags)  (flags & XPT_MD_CONTEXT)
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_FillMethodDescriptor(XPTArena *arena, 

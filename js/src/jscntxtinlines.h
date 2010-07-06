@@ -42,9 +42,8 @@
 
 #include "jscntxt.h"
 #include "jsparse.h"
+#include "jsstaticcheck.h"
 #include "jsxml.h"
-
-#include "jsobjinlines.h"
 
 inline bool
 JSContext::ensureGeneratorStackSpace()
@@ -182,120 +181,208 @@ AutoIdArray::trace(JSTracer *trc) {
     MarkIdRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
 }
 
-class AutoNamespaces : protected AutoGCRooter {
-  protected:
-    AutoNamespaces(JSContext *cx) : AutoGCRooter(cx, NAMESPACES) {
+class AutoNamespaceArray : protected AutoGCRooter {
+  public:
+    AutoNamespaceArray(JSContext *cx) : AutoGCRooter(cx, NAMESPACES) {
+        array.init();
     }
 
-    friend void AutoGCRooter::trace(JSTracer *trc);
+    ~AutoNamespaceArray() {
+        array.finish(context);
+    }
+
+    uint32 length() const { return array.length; }
 
   public:
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
     JSXMLArray array;
 };
 
-inline void
-AutoGCRooter::trace(JSTracer *trc)
+#ifdef DEBUG
+class CompartmentChecker
 {
-    switch (tag) {
-      case JSVAL:
-        MarkValue(trc, static_cast<AutoValueRooter *>(this)->val, "js::AutoValueRooter.val");
-        return;
+  private:
+    JSContext *context;
+    JSCompartment *compartment;
 
-      case SPROP:
-        static_cast<AutoScopePropertyRooter *>(this)->sprop->trace(trc);
-        return;
-
-      case WEAKROOTS:
-        static_cast<AutoPreserveWeakRoots *>(this)->savedRoots.mark(trc);
-        return;
-
-      case PARSER:
-        static_cast<Parser *>(this)->trace(trc);
-        return;
-
-      case SCRIPT:
-        if (JSScript *script = static_cast<AutoScriptRooter *>(this)->script)
-            js_TraceScript(trc, script);
-        return;
-
-      case ENUMERATOR:
-        static_cast<AutoEnumStateRooter *>(this)->trace(trc);
-        return;
-
-      case IDARRAY: {
-        JSIdArray *ida = static_cast<AutoIdArray *>(this)->idArray;
-        MarkIdRange(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
-        return;
-      }
-
-      case DESCRIPTORS: {
-        PropDescArray &descriptors =
-            static_cast<AutoPropDescArrayRooter *>(this)->descriptors;
-        for (size_t i = 0, len = descriptors.length(); i < len; i++) {
-            PropDesc &desc = descriptors[i];
-
-            MarkValue(trc, desc.pd, "PropDesc::pd");
-            MarkValue(trc, desc.value, "PropDesc::value");
-            MarkValue(trc, desc.get, "PropDesc::get");
-            MarkValue(trc, desc.set, "PropDesc::set");
-            MarkId(trc, desc.id, "desc.id");
-        }
-        return;
-      }
-
-      case DESCRIPTOR : {
-        AutoPropertyDescriptorRooter &desc = *static_cast<AutoPropertyDescriptorRooter *>(this);
-        if (desc.obj)
-            MarkObject(trc, desc.obj, "Descriptor::obj");
-        MarkValue(trc, desc.value, "Descriptor::value");
-        if (desc.attrs & JSPROP_GETTER)
-            MarkObject(trc, CastAsObject(desc.getter), "Descriptor::get");
-        if (desc.attrs & JSPROP_SETTER)
-            MarkObject(trc, CastAsObject(desc.setter), "Descriptor::set");
-        return;
-      }
-
-      case NAMESPACES: {
-        JSXMLArray &array = static_cast<AutoNamespaces *>(this)->array;
-        MarkObjectRange(trc, array.length, reinterpret_cast<JSObject **>(array.vector),
-                        "JSXMLArray");
-        array.cursors->trace(trc);
-        return;
-      }
-
-      case XML:
-        js_TraceXML(trc, static_cast<AutoXMLRooter *>(this)->xml);
-        return;
-
-      case OBJECT:
-        if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj)
-            Mark(trc, obj, JSTRACE_OBJECT, "js::AutoObjectRooter.obj");
-        return;
-
-      case ID:
-        MarkId(trc, static_cast<AutoIdRooter *>(this)->idval, "js::AutoIdRooter.val");
-        return;
-
-      case VALVECTOR: {
-        Vector<Value, 8> &vector = static_cast<AutoValueVector *>(this)->vector;
-        MarkValueRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
-        return;
-      }
-
-      case STRING:
-        if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
-            Mark(trc, str, JSTRACE_STRING, "js::AutoStringRooter.str");
-        return;
-
-      case IDVECTOR: {
-        Vector<jsid, 8> &vector = static_cast<AutoIdVector *>(this)->vector;
-        MarkIdRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
-        return;
-      }
+  public:
+    explicit CompartmentChecker(JSContext *cx) : context(cx), compartment(cx->compartment) {
+        check(cx->fp ? JS_GetGlobalForScopeChain(cx) : cx->globalObject);
+        VOUCH_DOES_NOT_REQUIRE_STACK();
     }
 
-    JS_ASSERT(tag >= 0);
-    MarkValueRange(trc, tag, static_cast<AutoArrayRooter *>(this)->array, "js::AutoArrayRooter.array");
+    /*
+     * Set a breakpoint here (break js::CompartmentChecker::fail) to debug
+     * compartment mismatches.
+     */
+    static void fail(JSCompartment *c1, JSCompartment *c2) {
+#ifdef DEBUG_jorendorff
+        printf("*** Compartment mismatch %p vs. %p\n", (void *) c1, (void *) c2);
+        // JS_NOT_REACHED("compartment mismatch");
+#endif
+    }
+
+    void check(JSCompartment *c) {
+        if (c && c != context->runtime->defaultCompartment) {
+            if (!compartment)
+                compartment = c;
+            else if (c != compartment)
+                fail(compartment, c);
+        }
+    }
+
+    void check(JSPrincipals *) { /* nothing for now */ }
+
+    void check(JSObject *obj) {
+        if (obj)
+            check(obj->getCompartment(context));
+    }
+
+    void check(const js::Value &v) {
+        if (v.isObject())
+            check(&v.toObject());
+    }
+
+    void check(jsval v) {
+        check(Valueify(v));
+    }
+
+    void check(const ValueArray &arr) {
+        for (size_t i = 0; i < arr.length; i++)
+            check(arr.array[i]);
+    }
+
+    void check(const JSValueArray &arr) {
+        for (size_t i = 0; i < arr.length; i++)
+            check(arr.array[i]);
+    }
+
+    void check(jsid id) {
+        if (JSID_IS_OBJECT(id))
+            check(JSID_TO_OBJECT(id));
+    }
+    
+    void check(JSIdArray *ida) {
+        if (ida) {
+            for (jsint i = 0; i < ida->length; i++) {
+                if (JSID_IS_OBJECT(ida->vector[i]))
+                    check(ida->vector[i]);
+            }
+        }
+    }
+
+    void check(JSScript *script) {
+        if (script && script->u.object)
+            check(script->u.object);
+    }
+
+    void check(JSString *) { /* nothing for now */ }
+};
+
+#endif
+
+/*
+ * Don't perform these checks when called from a finalizer. The checking
+ * depends on other objects not having been swept yet.
+ */
+#define START_ASSERT_SAME_COMPARTMENT()                                       \
+    if (cx->runtime->gcRunning)                                               \
+        return;                                                               \
+    CompartmentChecker c(cx)
+
+template <class T1> inline void
+assertSameCompartment(JSContext *cx, T1 t1)
+{
+#ifdef DEBUG
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+#endif
+}
+
+template <class T1, class T2> inline void
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2)
+{
+#ifdef DEBUG
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+    c.check(t2);
+#endif
+}
+
+template <class T1, class T2, class T3> inline void
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3)
+{
+#ifdef DEBUG
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+    c.check(t2);
+    c.check(t3);
+#endif
+}
+
+template <class T1, class T2, class T3, class T4> inline void
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4)
+{
+#ifdef DEBUG
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+    c.check(t2);
+    c.check(t3);
+    c.check(t4);
+#endif
+}
+
+template <class T1, class T2, class T3, class T4, class T5> inline void
+assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
+{
+#ifdef DEBUG
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+    c.check(t2);
+    c.check(t3);
+    c.check(t4);
+    c.check(t5);
+#endif
+}
+
+#undef START_ASSERT_SAME_COMPARTMENT
+
+inline JSBool
+callJSNative(JSContext *cx, js::Native native, JSObject *thisobj, uintN argc, js::Value *argv, js::Value *rval)
+{
+    assertSameCompartment(cx, thisobj, ValueArray(argv, argc));
+    JSBool ok = native(cx, thisobj, argc, argv, rval);
+    if (ok)
+        assertSameCompartment(cx, *rval);
+    return ok;
+}
+
+inline JSBool
+callJSFastNative(JSContext *cx, js::FastNative native, uintN argc, js::Value *vp)
+{
+    assertSameCompartment(cx, ValueArray(vp, argc + 2));
+    JSBool ok = native(cx, argc, vp);
+    if (ok)
+        assertSameCompartment(cx, vp[0]);
+    return ok;
+}
+
+inline JSBool
+callJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
+{
+    assertSameCompartment(cx, obj, id, *vp);
+    JSBool ok = op(cx, obj, id, vp);
+    if (ok)
+        assertSameCompartment(cx, obj, *vp);
+    return ok;
+}
+
+inline JSBool
+callJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
+{
+    assertSameCompartment(cx, obj, id, *vp);
+    return op(cx, obj, id, vp);
 }
 
 }  /* namespace js */

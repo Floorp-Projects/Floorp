@@ -215,6 +215,10 @@
 #define NS_HTMLPARANOIDFRAGMENTSINK_CID \
 { 0xa47e9526, 0x6e48, 0x4574, { 0x9d, 0x6c, 0x31, 0x64, 0xe2, 0x71, 0xf7, 0x4e } }
 
+// {35aab9d8-db42-4c82-8aba-fad2b1d8f465}
+#define NS_HTMLPARANOIDFRAGMENTSINK2_CID \
+{ 0x35aab9d8, 0xdb42, 0x4c82, { 0x8a, 0xba, 0xfa, 0xd2, 0xb1, 0xd8, 0xf4, 0x65 } }
+
 // {4B664E54-72A2-4bbf-A5C2-66D4DC3066A0}
 #define NS_XMLFRAGMENTSINK_CID \
 { 0x4b664e54, 0x72a2, 0x4bbf, { 0xa5, 0xc2, 0x66, 0xd4, 0xdc, 0x30, 0x66, 0xa0 } }
@@ -226,6 +230,10 @@
 // {2D78BBF0-E26C-482B-92B3-78A7B2AFC8F7}
 #define NS_XHTMLPARANOIDFRAGMENTSINK_CID  \
 { 0x2d78bbf0, 0xe26c, 0x482b, { 0x92, 0xb3, 0x78, 0xa7, 0xb2, 0xaf, 0xc8, 0xf7} }
+
+// {921dac9c-ffd4-4b5c-9901-4015b03862e6}
+#define NS_XHTMLPARANOIDFRAGMENTSINK2_CID  \
+{ 0x921dac9c, 0xffd4, 0x4b5c, { 0x99, 0x01, 0x40, 0x15, 0xb0, 0x38, 0x62, 0xe6} }
 
 // {3986B301-097C-11d3-BF87-00105A1B0627}
 #define NS_XULPOPUPLISTENER_CID \
@@ -299,6 +307,13 @@
   {0xb2, 0x24, 0x24, 0x4e, 0xe8, 0x2a, 0x41, 0x3a } }
 #define NS_EVENTLISTENERSERVICE_CONTRACTID \
   "@mozilla.org/eventlistenerservice;1"
+
+#define NS_GLOBALMESSAGEMANAGER_CID                   \
+ { /* 130b016f-fad7-4526-bc7f-827dabf79265 */         \
+    0x130b016f, 0xfad7, 0x4526,                       \
+  { 0xbc, 0x7f, 0x82, 0x7d, 0xab, 0xf7, 0x92, 0x65 } }
+#define NS_GLOBALMESSAGEMANAGER_CONTRACTID \
+  "@mozilla.org/globalmessagemanager;1"
 
 // {f96f5ec9-755b-447e-b1f3-717d1a84bb41}
 #define NS_PLUGINDOCUMENT_CID \

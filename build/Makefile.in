@@ -71,6 +71,10 @@ endif
 
 DIRS += pgo
 
+ifeq (Android,$(OS_TARGET))
+  DIRS += mobile/sutagent/android
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # we install to _leaktest/
@@ -106,6 +110,9 @@ libs:: bloaturls.txt
 # autocycling of URLs.
 libs:: bloatcycle.html
 	$(INSTALL) $< $(DIST)/bin/res
+
+libs:: $(topsrcdir)/tools/rb/fix_stack_using_bpsyms.py
+	$(INSTALL) $< $(DIST)/bin
 
 ifeq ($(OS_ARCH),Darwin)
 libs:: $(topsrcdir)/tools/rb/fix-macosx-stack.pl
@@ -178,7 +185,7 @@ check::
 	rm -rf unify-sort-test
 	mkdir unify-sort-test unify-sort-test/a unify-sort-test/b
 	printf "lmn\nabc\nxyz\n" > unify-sort-test/a/file.foo
-	printf "xyz\nlmn\nabc\n" > unify-sort-test/b/file.foo
+	printf "xyz\nlmn\nabc" > unify-sort-test/b/file.foo
 	printf "abc\nlmn\nxyz\n" > unify-sort-test/expected-result
 	@if ! $(srcdir)/macosx/universal/unify --unify-with-sort "\.foo$$" \
           ./unify-sort-test/a ./unify-sort-test/b \

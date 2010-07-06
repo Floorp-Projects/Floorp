@@ -432,7 +432,7 @@ public:
   PRUint32 GetHash(void) const
   {
     return NS_PTR_TO_INT32(mRootNode) ^ (NS_PTR_TO_INT32(mFunc) << 12) ^
-      nsCRT::HashCode(PromiseFlatString(mString).get());
+      nsCRT::HashCode(mString.BeginReading(), mString.Length());
   }
 
 private:
@@ -443,16 +443,27 @@ private:
   const nsAString& mString;
 };
 
+/**
+ * A function that allocates the matching data for this
+ * FuncStringContentList.  Returning aString is perfectly fine; in
+ * that case the destructor function should be a no-op.
+ */
+typedef void* (*nsFuncStringContentListDataAllocator)(nsINode* aRootNode,
+                                                      const nsString* aString);
+
+// aDestroyFunc is allowed to be null
 class nsCacheableFuncStringContentList : public nsContentList {
 public:
   nsCacheableFuncStringContentList(nsINode* aRootNode,
                                    nsContentListMatchFunc aFunc,
                                    nsContentListDestroyFunc aDestroyFunc,
-                                   void* aData,
+                                   nsFuncStringContentListDataAllocator aDataAllocator,
                                    const nsAString& aString) :
-    nsContentList(aRootNode, aFunc, aDestroyFunc, aData),
+    nsContentList(aRootNode, aFunc, aDestroyFunc, nsnull),
     mString(aString)
-  {}
+  {
+    mData = (*aDataAllocator)(aRootNode, &mString);
+  }
 
   virtual ~nsCacheableFuncStringContentList();
 
@@ -460,6 +471,8 @@ public:
     return mRootNode == aKey->mRootNode && mFunc == aKey->mFunc &&
       mString == aKey->mString;
   }
+
+  PRBool AllocatedData() const { return !!mData; }
 protected:
   virtual void RemoveFromCaches() {
     RemoveFromFuncStringHashtable();
@@ -477,6 +490,6 @@ already_AddRefed<nsContentList>
 NS_GetFuncStringContentList(nsINode* aRootNode,
                             nsContentListMatchFunc aFunc,
                             nsContentListDestroyFunc aDestroyFunc,
-                            void* aData,
+                            nsFuncStringContentListDataAllocator aDataAllocator,
                             const nsAString& aString);
 #endif // nsContentList_h___

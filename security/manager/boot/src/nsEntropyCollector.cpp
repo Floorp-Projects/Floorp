@@ -40,6 +40,7 @@
 #include "prlog.h"
 #include "nsEntropyCollector.h"
 #include "nsMemory.h"
+#include "nsAlgorithm.h"
 
 nsEntropyCollector::nsEntropyCollector()
 :mBytesCollected(0), mWritePointer(mEntropyCache)
@@ -72,10 +73,11 @@ nsEntropyCollector::RandomUpdate(void *new_entropy, PRInt32 bufLen)
       const unsigned char *PastEndPointer = mEntropyCache + entropy_buffer_size;
 
       // if the input is large, we only take as much as we can store
-      PRInt32 bytes_wanted = PR_MIN(bufLen, entropy_buffer_size);
+      PRInt32 bytes_wanted = NS_MIN(bufLen, PRInt32(entropy_buffer_size));
 
       // remember the number of bytes we will have after storing new_entropy
-      mBytesCollected = PR_MIN(entropy_buffer_size, mBytesCollected + bytes_wanted);
+      mBytesCollected = NS_MIN(PRInt32(entropy_buffer_size),
+                               mBytesCollected + bytes_wanted);
 
       // as the above statements limit bytes_wanted to the entropy_buffer_size,
       // this loop will iterate at most twice.
@@ -85,7 +87,7 @@ nsEntropyCollector::RandomUpdate(void *new_entropy, PRInt32 bufLen)
         const PRInt32 space_to_end = PastEndPointer - mWritePointer;
 
         // how many bytes can we copy, not reaching the end of the buffer?
-        const PRInt32 this_time = PR_MIN(space_to_end, bytes_wanted);
+        const PRInt32 this_time = NS_MIN(space_to_end, bytes_wanted);
 
         // copy at most to the end of the cyclic buffer
         for (PRInt32 i = 0; i < this_time; ++i) {

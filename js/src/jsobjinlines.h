@@ -46,10 +46,12 @@
 #include "jsiter.h"
 #include "jsobj.h"
 #include "jsscope.h"
+#include "jsstaticcheck.h"
 #include "jsxml.h"
 
 #include "jsdtracef.h"
 
+#include "jscntxt.h"
 #include "jsscopeinlines.h"
 
 inline void
@@ -101,7 +103,7 @@ inline js::Value
 JSObject::getReservedSlot(uintN index) const
 {
     uint32 slot = JSSLOT_START(getClass()) + index;
-    return (slot < numSlots()) ? getSlot(slot) : js::Value(js::UndefinedTag());
+    return (slot < numSlots()) ? getSlot(slot) : js::UndefinedValue();
 }
 
 inline bool
@@ -146,14 +148,14 @@ JSObject::isDenseArrayMinLenCapOk(bool strictAboutLength) const
 
     uint32 length = uncheckedGetArrayLength();
     uint32 capacity = uncheckedGetDenseArrayCapacity();
-    uint32 minLenCap = fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].asPrivateUint32();
+    uint32 minLenCap = fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].toPrivateUint32();
     return minLenCap == JS_MIN(length, capacity);
 }
 
 inline uint32
 JSObject::uncheckedGetArrayLength() const
 {
-    return fslots[JSSLOT_ARRAY_LENGTH].asPrivateUint32();
+    return fslots[JSSLOT_ARRAY_LENGTH].toPrivateUint32();
 }
 
 inline uint32
@@ -184,7 +186,7 @@ inline uint32
 JSObject::getDenseArrayCount() const
 {
     JS_ASSERT(isDenseArray());
-    return fslots[JSSLOT_DENSE_ARRAY_COUNT].asPrivateUint32();
+    return fslots[JSSLOT_DENSE_ARRAY_COUNT].toPrivateUint32();
 }
 
 inline void 
@@ -198,20 +200,20 @@ inline void
 JSObject::incDenseArrayCountBy(uint32 posDelta)
 {
     JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_DENSE_ARRAY_COUNT].asPrivateUint32Ref() += posDelta;
+    fslots[JSSLOT_DENSE_ARRAY_COUNT].getPrivateUint32Ref() += posDelta;
 }
 
 inline void 
 JSObject::decDenseArrayCountBy(uint32 negDelta)
 {
     JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_DENSE_ARRAY_COUNT].asPrivateUint32Ref() -= negDelta;
+    fslots[JSSLOT_DENSE_ARRAY_COUNT].getPrivateUint32Ref() -= negDelta;
 }
 
 inline uint32
 JSObject::uncheckedGetDenseArrayCapacity() const
 {
-    return dslots ? dslots[-1].asPrivateUint32Ref() : 0;
+    return dslots ? dslots[-1].toPrivateUint32() : 0;
 }
 
 inline uint32
@@ -296,7 +298,7 @@ inline uint32
 JSObject::getArgsLength() const
 {
     JS_ASSERT(isArguments());
-    uint32 argc = uint32(fslots[JSSLOT_ARGS_LENGTH].asInt32()) >> 1;
+    uint32 argc = uint32(fslots[JSSLOT_ARGS_LENGTH].toInt32()) >> 1;
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     return argc;
 }
@@ -305,7 +307,7 @@ inline void
 JSObject::setArgsLengthOverridden()
 {
     JS_ASSERT(isArguments());
-    fslots[JSSLOT_ARGS_LENGTH].asInt32Ref() |= 1;
+    fslots[JSSLOT_ARGS_LENGTH].getInt32Ref() |= 1;
 }
 
 inline bool
@@ -313,7 +315,7 @@ JSObject::isArgsLengthOverridden() const
 {
     JS_ASSERT(isArguments());
     const js::Value &v = fslots[JSSLOT_ARGS_LENGTH];
-    return (v.asInt32() & 1) != 0;
+    return (v.toInt32() & 1) != 0;
 }
 
 inline const js::Value & 
@@ -471,15 +473,25 @@ JSObject::setQNameLocalName(jsval name)
     fslots[JSSLOT_QNAME_LOCAL_NAME] = js::Valueify(name);
 }
 
+inline JSObject *
+JSObject::getWithThis() const
+{
+    return &fslots[JSSLOT_WITH_THIS].toObject();
+}
+
 inline void
-JSObject::initSharingEmptyScope(js::Class *clasp,
-                                const js::Value &proto,
-                                const js::Value &parent,
+JSObject::setWithThis(JSObject *thisp)
+{
+    fslots[JSSLOT_WITH_THIS].setObject(*thisp);
+}
+
+inline void
+JSObject::initSharingEmptyScope(js::Class *clasp, JSObject *proto, JSObject *parent,
                                 const js::Value &privateSlotValue)
 {
     init(clasp, proto, parent, privateSlotValue);
 
-    JSEmptyScope *emptyScope = proto.asObject().scope()->emptyScope;
+    JSEmptyScope *emptyScope = proto->scope()->emptyScope;
     JS_ASSERT(emptyScope->clasp == clasp);
     map = emptyScope->hold();
 }
@@ -488,7 +500,7 @@ inline void
 JSObject::freeSlotsArray(JSContext *cx)
 {
     JS_ASSERT(hasSlotsArray());
-    JS_ASSERT(dslots[-1].asPrivateUint32() > JS_INITIAL_NSLOTS);
+    JS_ASSERT(dslots[-1].toPrivateUint32() > JS_INITIAL_NSLOTS);
     cx->free(dslots - 1);
 }
 
@@ -511,38 +523,7 @@ JSObject::unbrand(JSContext *cx)
     return true;
 }
 
-inline bool
-JSObject::isCallable()
-{
-    if (isNative())
-        return isFunction() || getClass()->call;
-
-    return !!map->ops->call;
-}
-
-static inline bool
-js_IsCallable(const js::Value &v)
-{
-    return v.isObject() && v.asObject().isCallable();
-}
-
-inline bool
-JSObject::thisObject(JSContext *cx, const js::Value &v, js::Value *vp)
-{
-    if (JSObjectOp thisOp = v.asObject().map->ops->thisObject) {
-        JSObject *pobj = thisOp(cx, &v.asObject());
-        if (!pobj)
-            return false;
-        vp->setObject(*pobj);
-    } else {
-        *vp = v;
-    }
-    return true;
-}
-
 namespace js {
-
-typedef Vector<PropDesc, 1> PropDescArray;
 
 class AutoPropDescArrayRooter : private AutoGCRooter
 {
@@ -578,6 +559,14 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
         value.setUndefined();
     }
 
+    AutoPropertyDescriptorRooter(JSContext *cx, PropertyDescriptor *desc) : AutoGCRooter(cx, DESCRIPTOR) {
+        obj = desc->obj;
+        attrs = desc->attrs;
+        getter = desc->getter;
+        setter = desc->setter;
+        value = desc->value;
+    }
+
     friend void AutoGCRooter::trace(JSTracer *trc);
 };
 
@@ -609,14 +598,15 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
         scope = JSScope::create(cx, ops, clasp, obj, js_GenerateShape(cx, false));
         if (!scope)
             goto bad;
-
-        /* Let JSScope::create set freeslot so as to reserve slots. */
-        JS_ASSERT(scope->freeslot >= JSSLOT_PRIVATE);
-        if (scope->freeslot > JS_INITIAL_NSLOTS &&
-            !obj->allocSlots(cx, scope->freeslot)) {
-            scope->destroy(cx);
+        uint32 freeslot = JSSLOT_FREE(clasp);
+        JS_ASSERT(freeslot >= scope->freeslot);
+        if (freeslot > JS_INITIAL_NSLOTS && !obj->allocSlots(cx, freeslot))
             goto bad;
-        }
+        scope->freeslot = freeslot;
+#ifdef DEBUG
+        if (freeslot < obj->numSlots())
+            obj->setSlot(freeslot, UndefinedValue());
+#endif
     }
 
     obj->map = scope;
@@ -628,9 +618,113 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
     return false;
 }
 
+/*
+ * Helper optimized for creating a native instance of the given class (not the
+ * class's prototype object). Use this in preference to NewObjectWithGivenProto
+ * and NewObject, but use NewBuiltinClassInstance if you need the default class
+ * prototype as proto, and its parent global as parent.
+ */
 static inline JSObject *
-NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto,
-                        JSObject *parent, size_t objectSize = 0)
+NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent)
+{
+    JS_ASSERT(proto);
+    JS_ASSERT(proto->isNative());
+    JS_ASSERT(parent);
+
+    DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
+
+    /*
+     * Allocate an object from the GC heap and initialize all its fields before
+     * doing any operation that can potentially trigger GC. Functions have a
+     * larger non-standard allocation size.
+     */
+    JSObject* obj = js_NewGCObject(cx);
+    if (obj) {
+        /*
+         * Default parent to the parent of the prototype, which was set from
+         * the parent of the prototype's constructor.
+         */
+        obj->init(clasp, proto, parent, JSObject::defaultPrivate(clasp));
+
+        JS_LOCK_OBJ(cx, proto);
+        JSScope *scope = proto->scope();
+        JS_ASSERT(scope->canProvideEmptyScope(&js_ObjectOps, clasp));
+        scope = scope->getEmptyScope(cx, clasp);
+        JS_UNLOCK_OBJ(cx, proto);
+
+        if (!scope) {
+            obj = NULL;
+        } else {
+            obj->map = scope;
+
+            /*
+             * Do not call debug hooks on trace, because we might be in a non-_FAIL
+             * builtin. See bug 481444.
+             */
+            if (cx->debugHooks->objectHook && !JS_ON_TRACE(cx)) {
+                AutoObjectRooter tvr(cx, obj);
+                AutoKeepAtoms keep(cx->runtime);
+                cx->debugHooks->objectHook(cx, obj, JS_TRUE,
+                                           cx->debugHooks->objectHookData);
+                cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = obj;
+            }
+        }
+    }
+
+    objectCreationScope.handleCreation(obj);
+    return obj;
+}
+
+bool
+FindClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey, JSObject **protop,
+                   Class *clasp);
+
+/*
+ * Helper used to create Boolean, Date, RegExp, etc. instances of built-in
+ * classes with class prototypes of the same Class. See, e.g., jsdate.cpp,
+ * jsregexp.cpp, and js_PrimitiveToObject in jsobj.cpp. Use this to get the
+ * right default proto and parent for clasp in cx.
+ */
+static inline JSObject *
+NewBuiltinClassInstance(JSContext *cx, Class *clasp)
+{
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+
+    JSProtoKey protoKey = JSCLASS_CACHED_PROTO_KEY(clasp);
+    JS_ASSERT(protoKey != JSProto_Null);
+
+    /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
+    JSObject *global;
+    if (!cx->fp) {
+        global = cx->globalObject;
+        OBJ_TO_INNER_OBJECT(cx, global);
+        if (!global)
+            return NULL;
+    } else {
+        global = cx->fp->scopeChain->getGlobal();
+    }
+    JS_ASSERT(global->getClass()->flags & JSCLASS_IS_GLOBAL);
+
+    const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
+    JSObject *proto;
+    if (v.isObject()) {
+        proto = &v.toObject();
+        JS_ASSERT(proto->getParent() == global);
+    } else {
+        if (!FindClassPrototype(cx, global, protoKey, &proto, clasp))
+            return NULL;
+    }
+
+    return NewNativeClassInstance(cx, clasp, proto, global);
+}
+
+/*
+ * Like NewObject but with exactly the given proto. A null parent defaults to
+ * proto->getParent() if proto is non-null (else to null). NB: only this helper
+ * and NewObject can be used to construct full-sized JSFunction instances.
+ */
+static inline JSObject *
+NewObjectWithGivenProto(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent)
 {
     DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
 
@@ -645,7 +739,7 @@ NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto,
      * larger non-standard allocation size.
      */
     JSObject* obj;
-    if (clasp == &js_FunctionClass && !objectSize) {
+    if (clasp == &js_FunctionClass) {
         obj = (JSObject*) js_NewGCFunction(cx);
 #ifdef DEBUG
         if (obj) {
@@ -654,7 +748,6 @@ NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto,
         }
 #endif
     } else {
-        JS_ASSERT(!objectSize || objectSize == sizeof(JSObject));
         obj = js_NewGCObject(cx);
     }
     if (!obj)
@@ -665,9 +758,8 @@ NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto,
      * the parent of the prototype's constructor.
      */
     obj->init(clasp,
-              js::ObjectOrNullTag(proto),
-              (!parent && proto) ? proto->getParentValue()
-                                 : ObjectOrNullTag(parent),
+              proto,
+              (!parent && proto) ? proto->getParent() : parent,
               JSObject::defaultPrivate(clasp));
 
     if (ops->isNative()) {
@@ -708,22 +800,28 @@ GetClassProtoKey(js::Class *clasp)
     return JSProto_Null;
 }
 
+/*
+ * Create an instance of any class, native or not, JSFunction-sized or not.
+ *
+ * If proto is null, use the memoized original value of the class constructor
+ * .prototype property object for a built-in class, else the current value of
+ * .prototype if available, else Object.prototype.
+ *
+ * Default parent is null to proto's parent (null if proto is null too).
+ */
 static inline JSObject *
-NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
-          size_t objectSize = 0)
+NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
 {
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (!proto) {
         JSProtoKey protoKey = GetClassProtoKey(clasp);
         if (!js_GetClassPrototype(cx, parent, protoKey, &proto, clasp))
             return NULL;
-        if (!proto &&
-            !js_GetClassPrototype(cx, parent, JSProto_Object, &proto)) {
+        if (!proto && !js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
             return NULL;
-        }
     }
 
-    return NewObjectWithGivenProto(cx, clasp, proto, parent, objectSize);
+    return NewObjectWithGivenProto(cx, clasp, proto, parent);
 }
 
 } /* namespace js */

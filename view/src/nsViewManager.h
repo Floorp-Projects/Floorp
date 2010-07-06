@@ -203,25 +203,13 @@ private:
   void UpdateWidgetsForView(nsView* aView);
 
   /**
-   * Transforms a rectangle from aView's coordinate system to the coordinate
-   * system of the widget attached to aWidgetView, which should be an ancestor
-   * of aView.
+   * Intersects aRect with aView's bounds and then transforms it from aView's
+   * coordinate system to the coordinate system of the widget attached to
+   * aView.
    */
-  nsIntRect ViewToWidget(nsView *aView, nsView* aWidgetView, const nsRect &aRect) const;
+  nsIntRect ViewToWidget(nsView *aView, const nsRect &aRect) const;
 
-  void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
-  {
-    nsRect oldDim;
-    nsRect newDim(0, 0, aWidth, aHeight);
-    mRootView->GetDimensions(oldDim);
-    // We care about resizes even when one dimension is already zero.
-    if (!oldDim.IsExactEqual(newDim)) {
-      // Don't resize the widget. It is already being set elsewhere.
-      mRootView->SetDimensions(newDim, PR_TRUE, PR_FALSE);
-      if (mObserver)
-        mObserver->ResizeReflow(mRootView, aWidth, aHeight);
-    }
-  }
+  void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
 
   // Safety helpers
   void IncrementUpdateCount() {

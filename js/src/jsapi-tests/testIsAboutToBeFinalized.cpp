@@ -1,3 +1,7 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=99:
+ */
+
 #include "tests.h"
 #include "jsstr.h"
 
@@ -5,6 +9,7 @@ static JSGCCallback oldGCCallback;
 
 static void **checkPointers;
 static jsuint checkPointersLength;
+static size_t checkPointersStaticStrings;
 
 static JSBool
 TestAboutToBeFinalizedCallback(JSContext *cx, JSGCStatus status)
@@ -21,7 +26,55 @@ TestAboutToBeFinalizedCallback(JSContext *cx, JSGCStatus status)
     return !oldGCCallback || oldGCCallback(cx, status);
 }
 
+/*
+ * NativeFrameCleaner write to sink so a compiler nwould not be able to optimze out
+ * the buffer memset there.
+ */
+volatile void *ptrSink;
+
+static JS_NEVER_INLINE void
+NativeFrameCleaner()
+{
+    char buffer[1 << 16];
+    memset(buffer, 0, sizeof buffer);
+    ptrSink = buffer; 
+}
+
 BEGIN_TEST(testIsAboutToBeFinalized_bug528645)
+{
+    /*
+     * Due to the conservative GC we use separated never-inline function to
+     * test rooted elements.
+     */
+    CHECK(createAndTestRooted());
+    NativeFrameCleaner();
+
+    JS_GC(cx);
+
+    /* Everything is unrooted except unit strings. */
+    for (jsuint i = 0; i != checkPointersLength; ++i) {
+        void *p = checkPointers[i];
+        if (p) {
+            CHECK(JSString::isStatic(p));
+            CHECK(checkPointersStaticStrings != 0);
+            --checkPointersStaticStrings;
+        }
+    }
+    CHECK(checkPointersStaticStrings == 0);
+
+    free(checkPointers);
+    checkPointers = NULL;
+    JS_SetGCCallback(cx, oldGCCallback);
+
+    return true;
+}
+
+JS_NEVER_INLINE bool createAndTestRooted();
+
+END_TEST(testIsAboutToBeFinalized_bug528645)
+
+JS_NEVER_INLINE bool
+cls_testIsAboutToBeFinalized_bug528645::createAndTestRooted()
 {
     jsvalRoot root(cx);
 
@@ -40,23 +93,22 @@ BEGIN_TEST(testIsAboutToBeFinalized_bug528645)
     JSBool ok = JS_GetArrayLength(cx, array, &checkPointersLength);
     CHECK(ok);
 
-    void **elems = (void **) malloc(sizeof(void *) * checkPointersLength);
-    CHECK(elems);
+    checkPointers = (void **) malloc(sizeof(void *) * checkPointersLength);
+    CHECK(checkPointers);
 
-    size_t staticStrings = 0;
+    checkPointersStaticStrings = 0;
     for (jsuint i = 0; i != checkPointersLength; ++i) {
         jsval v;
         ok = JS_GetElement(cx, array, i, &v);
         CHECK(ok);
         JS_ASSERT(JSVAL_IS_GCTHING(v));
         JS_ASSERT(!JSVAL_IS_NULL(v));
-        elems[i] = JSVAL_TO_GCTHING(v);
-        if (JSString::isStatic(elems[i]))
-            ++staticStrings;
+        checkPointers[i] = JSVAL_TO_GCTHING(v);
+        if (JSString::isStatic(checkPointers[i]))
+            ++checkPointersStaticStrings;
     }
 
     oldGCCallback = JS_SetGCCallback(cx, TestAboutToBeFinalizedCallback);
-    checkPointers = elems;
     JS_GC(cx);
 
     /*
@@ -65,25 +117,6 @@ BEGIN_TEST(testIsAboutToBeFinalized_bug528645)
      */
     for (jsuint i = 0; i != checkPointersLength; ++i)
         CHECK(checkPointers[i]);
-
-    root = JSVAL_NULL;
-    JS_GC(cx);
-
-    /* Everything is unrooted except unit strings. */
-    for (jsuint i = 0; i != checkPointersLength; ++i) {
-        void *p = checkPointers[i];
-        if (p) {
-            CHECK(JSString::isStatic(p));
-            CHECK(staticStrings != 0);
-            --staticStrings;
-        }
-    }
-    CHECK(staticStrings == 0);
-
-    checkPointers = NULL;
-    JS_SetGCCallback(cx, oldGCCallback);
-    free(elems);
-
     return true;
 }
-END_TEST(testIsAboutToBeFinalized_bug528645)
+

@@ -82,7 +82,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558403
             ok(equal, "logical and visual documents should be identical: expected " +
                str1 + " but got " + str2);
         
-            cleanupCustomChrome();
             SimpleTest.finish();
           }
         }
@@ -174,8 +173,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558403
     } else {
       SimpleTest.waitForExplicitFinish();
 
-      registerCustomChrome("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtlchrome/",
-                           true, false);
+      registerManifestPermanently("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtlchrome/righttoleft.manifest");
 
       // Load plugin test pages in iframes
       let displayElement = document.getElementById("display");

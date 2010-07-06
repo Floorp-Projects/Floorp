@@ -407,8 +407,6 @@ nsDogbertProfileMigrator::PrefTransform gTransforms[] = {
   { "network.proxy.autoconfig_url",   0, F(GetString),   F(SetString), PR_FALSE, { -1 } },
   { "network.proxy.ftp",              0, F(GetString),   F(SetString), PR_FALSE, { -1 } },
   { "network.proxy.ftp_port",         0, F(GetInt),      F(SetInt),    PR_FALSE, { -1 } },
-  { "network.proxy.gopher",           0, F(GetString),   F(SetString), PR_FALSE, { -1 } },
-  { "network.proxy.gopher_port",      0, F(GetInt),      F(SetInt),    PR_FALSE, { -1 } },
   { "network.proxy.http",             0, F(GetString),   F(SetString), PR_FALSE, { -1 } },
   { "network.proxy.http_port",        0, F(GetInt),      F(SetInt),    PR_FALSE, { -1 } },
   { "network.proxy.ssl",              0, F(GetString),   F(SetString), PR_FALSE, { -1 } },

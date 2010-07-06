@@ -97,6 +97,18 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jReturnIMEQueryResult = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "returnIMEQueryResult", "(Ljava/lang/String;II)V");
     jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
     jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
+    jGetHandlersForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;)[Ljava/lang/String;");
+    jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;)Z");
+    jGetMimeTypeFromExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtension", "(Ljava/lang/String;)Ljava/lang/String;");
+    jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
+
+
+    jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
+    jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
+    jEGLSurfaceImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLSurfaceImpl"));
+    jEGLContextImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLContextImpl"));
+    jEGLConfigImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLConfigImpl"));
+    jEGLDisplayImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLDisplayImpl"));
 
     InitAndroidJavaWrappers(jEnv);
 
@@ -213,9 +225,105 @@ AndroidBridge::NotifyXreExit()
 }
 
 void
+AndroidBridge::GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStringArray)
+{
+    NS_PRECONDITION(aStringArray != nsnull, "null array pointer passed in");
+    AutoLocalJNIFrame jniFrame;
+    NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
+    jstring jstr = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, 
+                                                  jGetHandlersForMimeType, 
+                                                  jstr);
+    jobjectArray arr = static_cast<jobjectArray>(obj);
+    if (!arr)
+        return;
+    jsize len = mJNIEnv->GetArrayLength(arr);
+    for (jsize i = 0; i < len; i+=2) {
+        jstring jstr = static_cast<jstring>(mJNIEnv->GetObjectArrayElement(arr, i));
+        nsJNIString jniStr(jstr);
+        aStringArray->AppendString(jniStr);
+    } 
+}
+
+PRBool
+AndroidBridge::OpenUriExternal(nsCString& aUriSpec, nsCString& aMimeType) 
+{
+    AutoLocalJNIFrame jniFrame;
+    NS_ConvertUTF8toUTF16 wUriSpec(aUriSpec);
+    NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
+    jstring jstrUri = mJNIEnv->NewString(wUriSpec.get(), wUriSpec.Length());
+    jstring jstrType = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
+    return mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass,
+                                            jOpenUriExternal,
+                                            jstrUri, jstrType);
+}
+
+void
+AndroidBridge::GetMimeTypeFromExtension(const nsCString& aFileExt, nsCString& aMimeType) {
+    AutoLocalJNIFrame jniFrame;
+    NS_ConvertUTF8toUTF16 wFileExt(aFileExt);
+    jstring jstrExt = mJNIEnv->NewString(wFileExt.get(), wFileExt.Length());
+    jstring jstrType =  static_cast<jstring>(mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
+                                                                             jGetMimeTypeFromExtension,
+                                                                             jstrExt));
+    nsJNIString jniStr(jstrType);
+    aMimeType.Assign(NS_ConvertUTF16toUTF8(jniStr.get()));
+}
+
+void
+AndroidBridge::MoveTaskToBack()
+{
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jMoveTaskToBack);
+}
+
+void
 AndroidBridge::SetSurfaceView(jobject obj)
 {
     mSurfaceView.Init(obj);
+}
+
+void *
+AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoSurfaceView &sview)
+{
+    AutoLocalJNIFrame jniFrame;
+
+    /*
+     * This is basically:
+     *
+     *    s = EGLContext.getEGL().eglCreateWindowSurface(new EGLDisplayImpl(dpy),
+     *                                                   new EGLConfigImpl(config),
+     *                                                   view.getHolder(), null);
+     *    return s.mEGLSurface;
+     *
+     * We can't do it from java, because the EGLConfigImpl constructor is private.
+     */
+
+    jobject surfaceHolder = sview.GetSurfaceHolder();
+    if (!surfaceHolder)
+        return nsnull;
+
+    // grab some fields and methods we'll need
+    jmethodID constructConfig = mJNIEnv->GetMethodID(jEGLConfigImplClass, "<init>", "(I)V");
+    jmethodID constructDisplay = mJNIEnv->GetMethodID(jEGLDisplayImplClass, "<init>", "(I)V");
+
+    jmethodID getEgl = mJNIEnv->GetStaticMethodID(jEGLContextClass, "getEGL", "()Ljavax/microedition/khronos/egl/EGL;");
+    jmethodID createWindowSurface = mJNIEnv->GetMethodID(jEGL10Class, "eglCreateWindowSurface", "(Ljavax/microedition/khronos/egl/EGLDisplay;Ljavax/microedition/khronos/egl/EGLConfig;Ljava/lang/Object;[I)Ljavax/microedition/khronos/egl/EGLSurface;");
+
+    jobject egl = mJNIEnv->CallStaticObjectMethod(jEGLContextClass, getEgl);
+
+    jobject jdpy = mJNIEnv->NewObject(jEGLDisplayImplClass, constructDisplay, (int) dpy);
+    jobject jconf = mJNIEnv->NewObject(jEGLConfigImplClass, constructConfig, (int) config);
+
+    // make the call
+    jobject surf = mJNIEnv->CallObjectMethod(egl, createWindowSurface, jdpy, jconf, surfaceHolder, NULL);
+    if (!surf)
+        return nsnull;
+
+    jfieldID sfield = mJNIEnv->GetFieldID(jEGLSurfaceImplClass, "mEGLSurface", "I");
+
+    jint realSurface = mJNIEnv->GetIntField(surf, sfield);
+
+    return (void*) realSurface;
 }
 
 // Available for places elsewhere in the code to link to.
@@ -241,4 +349,3 @@ extern "C" JNIEnv * GetJNIForThread()
 {
   return mozilla::AndroidBridge::JNIForThread();
 }
-

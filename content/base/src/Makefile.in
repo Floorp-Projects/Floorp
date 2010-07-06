@@ -91,6 +91,7 @@ CPPSRCS		= \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \
+		nsDOMEventTargetWrapperCache.cpp \
 		nsDOMFile.cpp \
 		nsDOMFileReader.cpp \
 		nsDOMLists.cpp \
@@ -138,6 +139,7 @@ CPPSRCS		= \
 		nsTextNode.cpp \
 		nsTraversal.cpp \
 		nsTreeWalker.cpp \
+		nsWebSocket.cpp \
 		nsXHTMLContentSerializer.cpp \
 		nsXMLContentSerializer.cpp \
 		nsXMLHttpRequest.cpp \
@@ -156,14 +158,19 @@ FORCE_STATIC_LIB = 1
 
 EXTRA_COMPONENTS = \
 		$(srcdir)/nsBadCertHandler.js \
+		nsBadCertHandler.manifest \
 		contentSecurityPolicy.js \
+		contentSecurityPolicy.manifest \
 		contentAreaDropListener.js \
+		contentAreaDropListener.manifest \
 		$(NULL)
 
 EXTRA_JS_MODULES = \
 		CSPUtils.jsm \
 		$(NULL)
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= \
@@ -179,8 +186,11 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../dom/base \
 		-I$(srcdir)/../../xml/document/src \
 		-I$(topsrcdir)/xpcom/io \
+		-I$(topsrcdir)/dom/ipc \
 		-I$(topsrcdir)/js/src/xpconnect/src \
 		-I$(topsrcdir)/caps/include \
 		$(NULL)
+
+CXXFLAGS += $(TK_CFLAGS)
 
 DEFINES += -D_IMPL_NS_LAYOUT

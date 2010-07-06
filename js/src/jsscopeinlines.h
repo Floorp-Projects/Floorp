@@ -46,7 +46,7 @@
 #include "jsobj.h"
 #include "jsscope.h"
 
-#include "jsobjinlines.h"
+#include "jscntxtinlines.h"
 
 inline JSEmptyScope *
 JSScope::createEmptyScope(JSContext *cx, js::Class *clasp)
@@ -120,10 +120,10 @@ JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, js::Value *vp)
     JS_ASSERT(hasMethodBarrier());
     JS_ASSERT(hasProperty(sprop));
     JS_ASSERT(sprop->isMethod());
-    JS_ASSERT(&vp->asObject() == &sprop->methodObject());
+    JS_ASSERT(&vp->toObject() == &sprop->methodObject());
     JS_ASSERT(object->getClass() == &js_ObjectClass);
 
-    JSObject *funobj = &vp->asObject();
+    JSObject *funobj = &vp->toObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
     JS_ASSERT(FUN_OBJECT(fun) == funobj && FUN_NULL_CLOSURE(fun));
 
@@ -138,8 +138,8 @@ static JS_ALWAYS_INLINE bool
 ChangesMethodValue(const js::Value &prev, const js::Value &v)
 {
     JSObject *prevObj;
-    return prev.isObject() && (prevObj = &prev.asObject())->isFunction() &&
-           (!v.isObject() || &v.asObject() != prevObj);
+    return prev.isObject() && (prevObj = &prev.toObject())->isFunction() &&
+           (!v.isObject() || &v.toObject() != prevObj);
 }
 
 inline bool
@@ -267,6 +267,54 @@ JSScopeProperty::matchesParamsAfterId(js::PropertyOp agetter, js::PropertyOp ase
            attrs == aattrs &&
            ((flags ^ aflags) & PUBLIC_FLAGS) == 0 &&
            shortid == ashortid;
+}
+
+inline bool
+JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, js::Value* vp)
+{
+    JS_ASSERT(!JSID_IS_VOID(this->id));
+    JS_ASSERT(!hasDefaultGetter());
+
+    if (hasGetterValue()) {
+        JS_ASSERT(!isMethod());
+        js::Value fval = getterValue();
+        return js::InternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
+    }
+
+    if (isMethod()) {
+        vp->setObject(methodObject());
+
+        JSScope *scope = pobj->scope();
+        JS_ASSERT(scope->object == pobj);
+        return scope->methodReadBarrier(cx, this, vp);
+    }
+
+    /*
+     * |with (it) color;| ends up here, as do XML filter-expressions.
+     * Avoid exposing the With object to native getters.
+     */
+    if (obj->getClass() == &js_WithClass)
+        obj = js_UnwrapWithObject(cx, obj);
+    return js::callJSPropertyOp(cx, getterOp(), obj, SPROP_USERID(this), vp);
+}
+
+inline bool
+JSScopeProperty::set(JSContext* cx, JSObject* obj, js::Value* vp)
+{
+    JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
+
+    if (attrs & JSPROP_SETTER) {
+        js::Value fval = setterValue();
+        return js::InternalGetOrSet(cx, obj, id, fval, JSACC_WRITE, 1, vp, vp);
+    }
+
+    if (attrs & JSPROP_GETTER)
+        return js_ReportGetterOnlyAssignment(cx);
+
+    /* See the comment in JSScopeProperty::get as to why we check for With. */
+    if (obj->getClass() == &js_WithClass)
+        obj = js_UnwrapWithObject(cx, obj);
+    return js::callJSPropertyOpSetter(cx, setterOp(), obj, SPROP_USERID(this), vp);
 }
 
 #endif /* jsscopeinlines_h___ */

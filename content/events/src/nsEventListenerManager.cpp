@@ -296,7 +296,6 @@ nsEventListenerManager::~nsEventListenerManager()
 
   --mInstanceCount;
   if(mInstanceCount == 0) {
-    NS_IF_RELEASE(gSystemEventGroup);
     NS_IF_RELEASE(gDOM2EventGroup);
   }
 }
@@ -311,8 +310,18 @@ nsEventListenerManager::RemoveAllListeners()
 void
 nsEventListenerManager::Shutdown()
 {
+  NS_IF_RELEASE(gSystemEventGroup);
   sAddListenerID = JSID_VOID;
   nsDOMEvent::Shutdown();
+}
+
+nsIDOMEventGroup*
+nsEventListenerManager::GetSystemEventGroup()
+{
+  if (!gSystemEventGroup) {
+    CallCreateInstance(kDOMEventGroupCID, &gSystemEventGroup);
+  }
+  return gSystemEventGroup;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventListenerManager)
@@ -1220,17 +1229,8 @@ nsEventListenerManager::SetListenerTarget(nsISupports* aTarget)
 NS_IMETHODIMP
 nsEventListenerManager::GetSystemEventGroupLM(nsIDOMEventGroup **aGroup)
 {
-  if (!gSystemEventGroup) {
-    nsresult result;
-    nsCOMPtr<nsIDOMEventGroup> group(do_CreateInstance(kDOMEventGroupCID,&result));
-    if (NS_FAILED(result))
-      return result;
-
-    gSystemEventGroup = group;
-    NS_ADDREF(gSystemEventGroup);
-  }
-
-  *aGroup = gSystemEventGroup;
+  *aGroup = GetSystemEventGroup();
+  NS_ENSURE_TRUE(*aGroup, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aGroup);
   return NS_OK;
 }
@@ -1296,7 +1296,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   }
 
   // Obtain a presentation shell
-  nsIPresShell *shell = document->GetPrimaryShell();
+  nsIPresShell *shell = document->GetShell();
   nsRefPtr<nsPresContext> context;
   if (shell) {
     context = shell->GetPresContext();

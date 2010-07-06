@@ -641,7 +641,7 @@ static PRInt32 GetMaxBlocks()
   // We look up the cache size every time. This means dynamic changes
   // to the pref are applied.
   // Cache size is in KB
-  PRInt32 cacheSize = nsContentUtils::GetIntPref("media.cache_size", 50*1024);
+  PRInt32 cacheSize = nsContentUtils::GetIntPref("media.cache_size", 500*1024);
   PRInt64 maxBlocks = PRInt64(cacheSize)*1024/nsMediaCache::BLOCK_SIZE;
   maxBlocks = PR_MAX(maxBlocks, 1);
   return PRInt32(PR_MIN(maxBlocks, PR_INT32_MAX));
@@ -1744,11 +1744,13 @@ nsMediaCacheStream::NotifyDataEnded(nsresult aStatus)
 nsMediaCacheStream::~nsMediaCacheStream()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  NS_ASSERTION(mClosed, "Stream was not closed");
   NS_ASSERTION(!mPinCount, "Unbalanced Pin");
 
-  gMediaCache->ReleaseStream(this);
-  nsMediaCache::MaybeShutdown();
+  if (gMediaCache) {
+    NS_ASSERTION(mClosed, "Stream was not closed");
+    gMediaCache->ReleaseStream(this);
+    nsMediaCache::MaybeShutdown();
+  }
 }
 
 void

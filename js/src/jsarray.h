@@ -45,7 +45,6 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsobj.h"
-#include "jsatom.h"
 
 #define ARRAY_CAPACITY_MIN      7
 
@@ -64,7 +63,7 @@ js_IdIsIndex(jsid id, jsuint *indexp)
         return JS_TRUE;
     }
 
-    if (JS_UNLIKELY(!JSID_IS_ATOM(id)))
+    if (JS_UNLIKELY(!JSID_IS_STRING(id)))
         return JS_FALSE;
 
     return js_StringIsIndex(JSID_TO_STRING(id), indexp);
@@ -253,9 +252,14 @@ js_Array(JSContext* cx, JSObject* obj, uintN argc, js::Value* argv, js::Value* r
  * without triggering GC (so this method is allowed to leave those
  * uninitialized) and to set them to non-JSVAL_HOLE values, so that the
  * resulting array has length and count both equal to |capacity|.
+ *
+ * FIXME: for some strange reason, when this file is included from
+ * dom/ipc/TabParent.cpp in MSVC, jsuint resolves to a slightly different
+ * builtin than when mozjs.dll is built, resulting in a link error in xul.dll.
+ * It would be useful to find out what is causing this insanity.
  */
 JS_FRIEND_API(JSObject *)
-js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, jsval **vector);
+js_NewArrayObjectWithCapacity(JSContext *cx, uint32_t capacity, jsval **vector);
 
 /*
  * Makes a fast clone of a dense array as long as the array only contains

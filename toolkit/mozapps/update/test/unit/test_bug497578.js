@@ -67,8 +67,6 @@ function run_test() {
   Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, true);
   Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
 
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
-  setDefaultPrefs();
   do_timeout(0, run_test_pt1);
 }
 

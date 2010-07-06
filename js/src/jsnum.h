@@ -207,7 +207,7 @@ JS_ALWAYS_INLINE bool
 ValueToNumber(JSContext *cx, const js::Value &v, double *out)
 {
     if (v.isNumber()) {
-        *out = v.asNumber();
+        *out = v.toNumber();
         return true;
     }
     extern bool ValueToNumberSlow(JSContext *, js::Value, double *);
@@ -237,7 +237,7 @@ JS_ALWAYS_INLINE bool
 ValueToECMAInt32(JSContext *cx, const js::Value &v, int32_t *out)
 {
     if (v.isInt32()) {
-        *out = v.asInt32();
+        *out = v.toInt32();
         return true;
     }
     extern bool ValueToECMAInt32Slow(JSContext *, const js::Value &, int32_t *);
@@ -248,7 +248,7 @@ JS_ALWAYS_INLINE bool
 ValueToECMAUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 {
     if (v.isInt32()) {
-        *out = (uint32_t)v.asInt32();
+        *out = (uint32_t)v.toInt32();
         return true;
     }
     extern bool ValueToECMAUint32Slow(JSContext *, const js::Value &, uint32_t *);
@@ -264,7 +264,7 @@ JS_ALWAYS_INLINE bool
 ValueToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 {
     if (v.isInt32()) {
-        *out = v.asInt32();
+        *out = v.toInt32();
         return true;
     }
     extern bool ValueToInt32Slow(JSContext *, const js::Value &, int32_t *);
@@ -280,7 +280,7 @@ JS_ALWAYS_INLINE bool
 ValueToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 {
     if (v.isInt32()) {
-        *out = (uint16_t)v.asInt32();
+        *out = (uint16_t)v.toInt32();
         return true;
     }
     extern bool ValueToUint16Slow(JSContext *, const js::Value &, uint16_t *);
@@ -575,10 +575,10 @@ static JS_ALWAYS_INLINE bool
 ValueFitsInInt32(const Value &v, int32_t *pi)
 {
     if (v.isInt32()) {
-        *pi = v.asInt32();
+        *pi = v.toInt32();
         return true;
     }
-    return v.isDouble() && JSDOUBLE_IS_INT32(v.asDouble(), pi);
+    return v.isDouble() && JSDOUBLE_IS_INT32(v.toDouble(), pi);
 }
 
 template<typename T> struct NumberTraits { };

@@ -107,6 +107,7 @@
 #endif // IBMBIDI
 
 #include "nsContentUtils.h"
+#include "nsPIWindowRoot.h"
 
 // Needed for Start/Stop of Image Animation
 #include "imgIContainer.h"
@@ -308,6 +309,9 @@ nsPresContext::~nsPresContext()
 
   delete mBidiUtils;
 #endif // IBMBIDI
+  nsContentUtils::UnregisterPrefCallback("gfx.font_rendering.",
+                                         nsPresContext::PrefChangedCallback,
+                                         this);
   nsContentUtils::UnregisterPrefCallback("layout.css.dpi",
                                          nsPresContext::PrefChangedCallback,
                                          this);
@@ -806,6 +810,10 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
     // Changes to bidi.numeral also needs to empty the text run cache.
     // This is handled in gfxTextRunWordCache.cpp.
   }
+  if (StringBeginsWith(prefName, NS_LITERAL_CSTRING("gfx.font_rendering."))) {
+    // Changes to font_rendering prefs need to trigger a reflow
+    mPrefChangePendingNeedsReflow = PR_TRUE;
+  }
   // we use a zero-delay timer to coalesce multiple pref updates
   if (!mPrefChangedTimer)
   {
@@ -915,6 +923,8 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   nsContentUtils::RegisterPrefCallback("bidi.", PrefChangedCallback,
                                        this);
 #endif
+  nsContentUtils::RegisterPrefCallback("gfx.font_rendering.", PrefChangedCallback,
+                                       this);
   nsContentUtils::RegisterPrefCallback("layout.css.dpi",
                                        nsPresContext::PrefChangedCallback,
                                        this);
@@ -1746,9 +1756,9 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
   unit = val.GetUnit();
   if (unit == eCSSUnit_Array) {
     nsCSSValue::Array *srcArr = val.GetArrayValue();
-    PRUint32 i, numSrc = srcArr->Count();
+    size_t numSrc = srcArr->Count();
     
-    for (i = 0; i < numSrc; i++) {
+    for (size_t i = 0; i < numSrc; i++) {
       val = srcArr->Item(i);
       unit = val.GetUnit();
       gfxFontFaceSrc *face = srcArray.AppendElements(1);
@@ -2053,39 +2063,41 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (aInnerWindow->HasPaintEventListeners())
     return PR_TRUE;
 
-  nsPIDOMEventTarget* chromeEventHandler = aInnerWindow->GetChromeEventHandler();
-  if (!chromeEventHandler)
+  nsPIDOMEventTarget* parentTarget = aInnerWindow->GetParentTarget();
+  if (!parentTarget)
     return PR_FALSE;
 
   nsIEventListenerManager* manager = nsnull;
+  if ((manager = parentTarget->GetListenerManager(PR_FALSE)) &&
+      manager->MayHavePaintEventListener()) {
+    return PR_TRUE;
+  }
+
   nsCOMPtr<nsINode> node;
-  nsCOMPtr<nsIInProcessContentFrameMessageManager> mm =
-    do_QueryInterface(chromeEventHandler);
-  if (mm) {
-    nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(mm);
-    if (target && (manager = target->GetListenerManager(PR_FALSE)) &&
-        manager->MayHavePaintEventListener()) {
-      return PR_TRUE;
+  if (parentTarget != aInnerWindow->GetChromeEventHandler()) {
+    nsCOMPtr<nsIInProcessContentFrameMessageManager> mm =
+      do_QueryInterface(parentTarget);
+    if (mm) {
+      node = mm->GetOwnerContent();
     }
-    node = mm->GetOwnerContent();
   }
 
   if (!node) {
-    node = do_QueryInterface(chromeEventHandler);
+    node = do_QueryInterface(parentTarget);
   }
   if (node)
     return MayHavePaintEventListener(node->GetOwnerDoc()->GetInnerWindow());
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(chromeEventHandler);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(parentTarget);
   if (window)
     return MayHavePaintEventListener(window);
 
-  manager =
-    chromeEventHandler->GetListenerManager(PR_FALSE);
-  if (manager && manager->MayHavePaintEventListener())
-    return PR_TRUE;
-
-  return PR_FALSE;
+  nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(parentTarget);
+  nsPIDOMEventTarget* tabChildGlobal;
+  return root &&
+         (tabChildGlobal = root->GetParentTarget()) &&
+         (manager = tabChildGlobal->GetListenerManager(PR_FALSE)) &&
+         manager->MayHavePaintEventListener();
 }
 
 PRBool
@@ -2246,7 +2258,7 @@ nsPresContext::HavePendingInputEvent()
     case ModeEvent: {
       nsIFrame* f = PresShell()->GetRootFrame();
       if (f) {
-        nsIWidget* w = f->GetWindow();
+        nsIWidget* w = f->GetNearestWidget();
         if (w) {
           return w->HasPendingInputEvent();
         }
@@ -2489,7 +2501,7 @@ nsRootPresContext::UpdatePluginGeometry(nsIFrame* aChangedSubtree)
   GetPluginGeometryUpdates(aChangedSubtree, &configurations);
   if (configurations.IsEmpty())
     return;
-  nsIWidget* widget = FrameManager()->GetRootFrame()->GetWindow();
+  nsIWidget* widget = FrameManager()->GetRootFrame()->GetNearestWidget();
   NS_ASSERTION(widget, "Plugins must have a parent window");
   widget->ConfigureChildren(configurations);
   DidApplyPluginGeometryUpdates();

@@ -71,7 +71,7 @@ static const PRUint16 *gMappingTables[SIZE_OF_TABLES] = {
     g_uf0212Mapping
 };
 
-NS_METHOD
+nsresult
 nsUnicodeToEUCJPConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult)
 {

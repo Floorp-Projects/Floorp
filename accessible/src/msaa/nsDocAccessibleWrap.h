@@ -53,8 +53,9 @@ class nsDocAccessibleWrap: public nsDocAccessible,
                            public ISimpleDOMDocument
 {
 public:
-    nsDocAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
-    virtual ~nsDocAccessibleWrap();
+  nsDocAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
+                      nsIWeakReference *aShell);
+  virtual ~nsDocAccessibleWrap();
 
     // IUnknown
     STDMETHODIMP_(ULONG) AddRef();

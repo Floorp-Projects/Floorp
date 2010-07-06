@@ -87,6 +87,10 @@ core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURD
 # XPI-contents staging directory for ambitious and right-thinking extensions.
 FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)
 
+ifdef XPI_NAME
+DEFINES += -DXPI_NAME=$(XPI_NAME)
+endif
+
 # MAKE_JARS_TARGET is a staging area for make-jars.pl.  When packaging in
 # the jar format, make-jars leaves behind a directory structure that's not
 # needed in $(FINAL_TARGET).  For both, flat, and symlink, the directory
@@ -502,6 +506,13 @@ ifeq (WINNT_1,$(OS_ARCH)_$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
 FAIL_ON_WARNINGS_DEBUG=
 FAIL_ON_WARNINGS=
 endif # WINNT && (MOS_PROFILE_GENERATE ^ MOZ_PROFILE_USE)
+
+# Also clear FAIL_ON_WARNINGS[_DEBUG] for Android builds, since
+# they have some platform-specific warnings we haven't fixed yet.
+ifeq ($(OS_TARGET),Android)
+FAIL_ON_WARNINGS_DEBUG=
+FAIL_ON_WARNINGS=
+endif # Android
 
 # Now, check for debug version of flag; it turns on normal flag in debug builds.
 ifdef FAIL_ON_WARNINGS_DEBUG

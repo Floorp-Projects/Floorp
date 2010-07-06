@@ -130,29 +130,25 @@ nsHTMLURIRefObject::Reset()
 NS_IMETHODIMP
 nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
 {
-  if (!mNode)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
 
   nsAutoString tagName;
   nsresult rv = mNode->GetNodeName(tagName);
-  if (NS_FAILED(rv))
-  return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Loop over attribute list:
   if (!mAttributes)
   {
     nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mNode));
-    if (!element)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_TRUE(element, NS_ERROR_INVALID_ARG);
 
     mCurAttrIndex = 0;
     mNode->GetAttributes(getter_AddRefs(mAttributes));
-    if (!mAttributes)
-      return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mAttributes, NS_ERROR_NOT_INITIALIZED);
 
     rv = mAttributes->GetLength(&mAttributeCnt);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!mAttributeCnt) return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(mAttributeCnt, NS_ERROR_FAILURE);
     mCurAttrIndex = 0;
   }
 #ifdef DEBUG_akkana
@@ -290,10 +286,8 @@ nsHTMLURIRefObject::RewriteAllURIs(const nsAString & aOldPat,
 NS_IMETHODIMP
 nsHTMLURIRefObject::GetNode(nsIDOMNode** aNode)
 {
-  if (!mNode)
-    return NS_ERROR_NOT_INITIALIZED;
-  if (!aNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
   *aNode = mNode.get();
   NS_ADDREF(*aNode);
   return NS_OK;
@@ -319,7 +313,7 @@ nsHTMLURIRefObject::SetNode(nsIDOMNode *aNode)
 nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode)
 {
   nsHTMLURIRefObject* refObject = new nsHTMLURIRefObject();
-  if (!refObject) return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(refObject, NS_ERROR_OUT_OF_MEMORY);
   nsresult rv = refObject->SetNode(aNode);
   if (NS_FAILED(rv)) {
     *aResult = 0;

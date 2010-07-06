@@ -566,14 +566,28 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
     fragmentLength -= temp;
 
     if (frame && fragmentLength <= 0) {
-      if (runLength <= 0) {
-        // If the frame is at the end of a run, split all ancestor inlines that need splitting.
+      // If the frame is at the end of a run, split all ancestor inlines that
+      // need splitting.
+      // To determine whether we're at the end of the run, we check that we've
+      // finished processing the current run, and that the current frame
+      // doesn't have a fluid continuation (it could have a fluid continuation
+      // of zero length, so testing runLength alone is not sufficient).
+      if (runLength <= 0 && !frame->GetNextInFlow()) {
         nsIFrame* child = frame;
         nsIFrame* parent = frame->GetParent();
         // As long as we're on the last sibling, the parent doesn't have to be split.
+        // However, if the parent has a fluid continuation, we do have to make
+        // it non-fluid. This can happen e.g. when we have a first-letter frame
+        // and the end of the first-letter coincides with the end of a
+        // directional run.
         while (parent &&
                IsBidiSplittable(parent) &&
                !child->GetNextSibling()) {
+          nsIFrame* next = parent->GetNextInFlow();
+          if (next) {
+            parent->SetNextContinuation(next);
+            next->SetPrevContinuation(parent);
+          }
           child = parent;
           parent = child->GetParent();
         }

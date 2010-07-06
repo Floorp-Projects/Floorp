@@ -46,11 +46,11 @@ function test() {
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
     ss.setTabValue(tab, "bug485563", uniqueValue);
-    let tabState = eval("(" + ss.getTabState(tab) + ")");
+    let tabState = JSON.parse(ss.getTabState(tab));
     is(tabState.extData["bug485563"], uniqueValue,
        "unicode line separator wasn't over-encoded");
     ss.deleteTabValue(tab, "bug485563");
-    ss.setTabState(tab, tabState.toSource());
+    ss.setTabState(tab, JSON.stringify(tabState));
     is(ss.getTabValue(tab, "bug485563"), uniqueValue,
        "unicode line separator was correctly preserved");
     

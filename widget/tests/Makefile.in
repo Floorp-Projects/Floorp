@@ -51,6 +51,8 @@ ifdef NS_ENABLE_TSF
 CPP_UNIT_TESTS += TestWinTSF.cpp  \
                   $(NULL)
 endif
+CPP_UNIT_TESTS += TestChromeMargin.cpp  \
+                  $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -73,6 +75,7 @@ _CHROME_FILES =	test_bug343416.xul \
 		test_plugin_scroll_consistency.html \
 		test_composition_text_querycontent.xul \
 		window_composition_text_querycontent.xul \
+		test_input_events_on_deactive_window.xul \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -96,6 +99,9 @@ ifneq ($(OS_ARCH), WINCE)
 _CHROME_FILES  += taskbar_previews.xul \
 		window_state_windows.xul \
 		taskbar_progress.xul \
+		$(NULL)
+
+_TEST_FILES +=	test_bug565392.html \
 		$(NULL)
 endif
 endif

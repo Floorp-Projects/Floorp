@@ -52,7 +52,7 @@ else
 ifeq (,$(filter-out SunOS, $(OS_ARCH)))
    MOZ_PKG_FORMAT  = BZ2
 else
-   ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+   ifeq (,$(filter-out gtk2 qt, $(MOZ_WIDGET_TOOLKIT)))
       MOZ_PKG_FORMAT  = BZ2
    else
       MOZ_PKG_FORMAT  = TGZ
@@ -364,6 +364,8 @@ ifdef MOZ_OPTIONAL_PKG_LIST
 		$(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) )
 endif
 	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v -x "$(XPIDL_LINK)"
+	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py $(DIST)/manifests $(DEPTH)/installer-stage/nonlocalized
+
 
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 	@rm -rf $(DIST)/$(MOZ_PKG_DIR) $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
@@ -375,11 +377,12 @@ ifndef UNIVERSAL_BINARY
 # If UNIVERSAL_BINARY, the package will be made from an already-prepared
 # STAGEPATH
 ifdef MOZ_PKG_MANIFEST
-	$(RM) -rf $(DIST)/xpt
+	$(RM) -rf $(DIST)/xpt $(RM) -rf $(DIST)/manifests
 	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
 		 "$(call core_abspath,$(DIST)/$(MOZ_PKG_DIR))", \
 		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
 	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/components -v -x "$(XPIDL_LINK)"
+	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py $(DIST)/manifests $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)
 else # !MOZ_PKG_MANIFEST
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef STAGE_SDK
@@ -387,7 +390,7 @@ ifndef STAGE_SDK
 	@echo "Linking XPT files..."
 	@rm -rf $(DIST)/xpt
 	@$(NSINSTALL) -D $(DIST)/xpt
-	@($(XPIDL_LINK) $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/*.xpt && rm -f $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/*.xpt && cp $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components) || echo No *.xpt files found in: $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/.  Continuing...
+	@($(XPIDL_LINK) $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/*.xpt && rm -f $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/*.xpt && cp $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components && printf "interfaces $(MOZ_PKG_APPNAME).xpt\n" >$(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/interfaces.manifest) || echo No *.xpt files found in: $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/components/.  Continuing...
 else
 	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_DIR); tar -xf -)
 endif
@@ -396,7 +399,7 @@ else
 	@echo "Linking XPT files..."
 	@rm -rf $(DIST)/xpt
 	@$(NSINSTALL) -D $(DIST)/xpt
-	@($(XPIDL_LINK) $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && rm -f $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && cp $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components) || echo No *.xpt files found in: $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/.  Continuing...
+	@($(XPIDL_LINK) $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && rm -f $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/*.xpt && cp $(DIST)/xpt/$(MOZ_PKG_APPNAME).xpt $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components && printf "interfaces $(MOZ_PKG_APPNAME).xpt\n" >$(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/interfaces.manifest) || echo No *.xpt files found in: $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/components/.  Continuing...
 endif # DMG
 endif # MOZ_PKG_MANIFEST
 endif # UNIVERSAL_BINARY

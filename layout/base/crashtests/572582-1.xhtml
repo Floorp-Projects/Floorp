@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="width: 1px">
+<head>
+<script style="display: none;" id="fuzz1" type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  var span = document.createElementNS("http://www.w3.org/1999/xhtml", "span")
+  var t1 = document.createTextNode("\uD1B5");
+  span.appendChild(t1);
+  var t2 = document.createTextNode("");
+  span.appendChild(t2);
+  var t3 = document.createTextNode("\u200Bq");
+  span.appendChild(t3);
+  document.documentElement.appendChild(span);
+  document.documentElement.offsetHeight;
+  t3.data = "\u062A";
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+</head>
+</html>

@@ -66,6 +66,16 @@
 #include "nsContentSink.h"
 #include "nsTHashtable.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsCSSParser.h"
+#include "nsCSSProperty.h"
+#include "nsCSSDeclaration.h"
+#include "nsICSSStyleRule.h"
+#include "nsUnicharInputStream.h"
+#include "nsCSSStyleSheet.h"
+#include "nsICSSRuleList.h"
+#include "nsCSSDeclaration.h"
+#include "nsCSSProperty.h"
+#include "nsIDOMCSSRule.h"
 
 //
 // XXX THIS IS TEMPORARY CODE
@@ -77,6 +87,9 @@
 class nsHTMLFragmentContentSink : public nsIFragmentContentSink,
                                   public nsIHTMLContentSink {
 public:
+  /**
+   * @param aAllContent Whether there is context information available for the fragment.
+   */
   nsHTMLFragmentContentSink(PRBool aAllContent = PR_FALSE);
   virtual ~nsHTMLFragmentContentSink();
 
@@ -135,8 +148,6 @@ public:
 
   nsresult AddText(const nsAString& aString);
   nsresult FlushText();
-
-  nsresult Init();
 
   PRPackedBool mAllContent;
   PRPackedBool mProcessing;
@@ -352,10 +363,9 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
     if (nodeType == eHTMLTag_userdefined) {
-      NS_ConvertUTF16toUTF8 tmp(aNode.GetText());
-      ToLowerCase(tmp);
-
-      nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
+      nsAutoString lower;
+      nsContentUtils::ASCIIToLower(aNode.GetText(), lower);
+      nsCOMPtr<nsIAtom> name = do_GetAtom(lower);
       nodeInfo = mNodeInfoManager->GetNodeInfo(name, 
                                                nsnull, 
                                                kNameSpaceID_XHTML);
@@ -447,10 +457,9 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         nsCOMPtr<nsINodeInfo> nodeInfo;
 
         if (nodeType == eHTMLTag_userdefined) {
-          NS_ConvertUTF16toUTF8 tmp(aNode.GetText());
-          ToLowerCase(tmp);
-
-          nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
+          nsAutoString lower;
+          nsContentUtils::ASCIIToLower(aNode.GetText(), lower);
+          nsCOMPtr<nsIAtom> name = do_GetAtom(lower);
           nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull,
                                                    kNameSpaceID_XHTML);
           NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
@@ -727,7 +736,7 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
     return NS_OK;
   }
 
-  nsCAutoString k;
+  nsAutoString k;
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
   // The attributes are on the parser node in the order they came in in the
@@ -741,12 +750,7 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
 
   for (PRInt32 i = ac - 1; i >= 0; i--) {
     // Get lower-cased key
-    const nsAString& key = aNode.GetKeyAt(i);
-    // Copy up-front to avoid shared-buffer overhead (and convert to UTF-8
-    // at the same time since that's what the atom table uses).
-    CopyUTF16toUTF8(key, k);
-    ToLowerCase(k);
-
+    nsContentUtils::ASCIIToLower(aNode.GetKeyAt(i), k);
     nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(k);
 
     // Get value and remove mandatory quotes
@@ -774,10 +778,11 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
 // Find the whitelist of allowed elements and attributes in
 // nsContentSink.h We share it with nsHTMLParanoidFragmentSink
 
-class nsHTMLParanoidFragmentSink : public nsHTMLFragmentContentSink
+class nsHTMLParanoidFragmentSink : public nsHTMLFragmentContentSink,
+                                   public nsIParanoidFragmentContentSink
 {
 public:
-  nsHTMLParanoidFragmentSink();
+  nsHTMLParanoidFragmentSink(PRBool aAllContent = PR_FALSE);
 
   static nsresult Init();
   static void Cleanup();
@@ -793,14 +798,24 @@ public:
 
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIContent* aContent);
+
+  // nsIParanoidFragmentContentSink
+  virtual void AllowStyles();
+  virtual void AllowComments();
+
 protected:
   nsresult NameFromType(const nsHTMLTag aTag,
                         nsIAtom **aResult);
 
   nsresult NameFromNode(const nsIParserNode& aNode,
                         nsIAtom **aResult);
+
+  void SanitizeStyleRule(nsICSSStyleRule *aRule, nsAutoString &aRuleText);
   
-  PRBool mSkip; // used when we descend into <style> or <script>
+  PRPackedBool mSkip; // used when we descend into <style> or <script>
+  PRPackedBool mProcessStyle; // used when style is explicitly white-listed
+  PRPackedBool mInStyle; // whether we're inside a style element
+  PRPackedBool mProcessComments; // used when comments are allowed
 
   // Use nsTHashTable as a hash set for our whitelists
   static nsTHashtable<nsISupportsHashKey>* sAllowedTags;
@@ -810,8 +825,9 @@ protected:
 nsTHashtable<nsISupportsHashKey>* nsHTMLParanoidFragmentSink::sAllowedTags;
 nsTHashtable<nsISupportsHashKey>* nsHTMLParanoidFragmentSink::sAllowedAttributes;
 
-nsHTMLParanoidFragmentSink::nsHTMLParanoidFragmentSink():
-  nsHTMLFragmentContentSink(PR_FALSE), mSkip(PR_FALSE)
+nsHTMLParanoidFragmentSink::nsHTMLParanoidFragmentSink(PRBool aAllContent):
+  nsHTMLFragmentContentSink(aAllContent), mSkip(PR_FALSE),
+  mProcessStyle(PR_FALSE), mInStyle(PR_FALSE), mProcessComments(PR_FALSE)
 {
 }
 
@@ -882,14 +898,27 @@ NS_NewHTMLParanoidFragmentSink(nsIFragmentContentSink** aResult)
   return NS_OK;
 }
 
+nsresult
+NS_NewHTMLParanoidFragmentSink2(nsIFragmentContentSink** aResult)
+{
+  nsHTMLParanoidFragmentSink* it = new nsHTMLParanoidFragmentSink(PR_TRUE);
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult rv = nsHTMLParanoidFragmentSink::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ADDREF(*aResult = it);
+  
+  return NS_OK;
+}
+
 void
 NS_HTMLParanoidFragmentSinkShutdown()
 {
   nsHTMLParanoidFragmentSink::Cleanup();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLParanoidFragmentSink,
-                             nsHTMLFragmentContentSink)
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLParanoidFragmentSink, nsHTMLFragmentContentSink, nsIParanoidFragmentContentSink)
 
 nsresult
 nsHTMLParanoidFragmentSink::NameFromType(const nsHTMLTag aTag,
@@ -926,6 +955,18 @@ nsHTMLParanoidFragmentSink::NameFromNode(const nsIParserNode& aNode,
   return rv;
 }
 
+void
+nsHTMLParanoidFragmentSink::AllowStyles()
+{
+  mProcessStyle = PR_TRUE;
+}
+
+void
+nsHTMLParanoidFragmentSink::AllowComments()
+{
+  mProcessComments = PR_TRUE;
+}
+
 // nsHTMLFragmentContentSink
 
 nsresult
@@ -938,7 +979,7 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
     return NS_OK;
   }
 
-  nsCAutoString k;
+  nsAutoString k;
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
   nsresult rv;
@@ -948,15 +989,15 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
 
   for (PRInt32 i = ac - 1; i >= 0; i--) {
     rv = NS_OK;
-    const nsAString& key = aNode.GetKeyAt(i);
-    CopyUTF16toUTF8(key, k);
-    ToLowerCase(k);
-
+    nsContentUtils::ASCIIToLower(aNode.GetKeyAt(i), k);
     nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(k);
 
     // not an allowed attribute
     if (!sAllowedAttributes || !sAllowedAttributes->GetEntry(keyAtom)) {
-      continue;
+      // unless it's style, and we're allowing it
+      if (!mProcessStyle || keyAtom != nsGkAtoms::style) {
+        continue;
+      }
     }
 
     // Get value and remove mandatory quotes
@@ -985,7 +1026,27 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
       continue;
     }
 
-    if (nodeType == eHTMLTag_a && keyAtom == nsGkAtoms::name) {
+    // Filter unsafe stuff from style attributes if they're allowed
+    if (mProcessStyle && keyAtom == nsGkAtoms::style) {
+      if (!baseURI) {
+        baseURI = aContent->GetBaseURI();
+      }
+      nsCSSParser parser;
+      nsCOMPtr<nsICSSStyleRule> rule;
+      rv = parser.ParseStyleAttribute(aNode.GetValueAt(i),
+                                      mTargetDocument->GetDocumentURI(),
+                                      baseURI,
+                                      mTargetDocument->NodePrincipal(),
+                                      getter_AddRefs(rule));
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString cleanValue;
+        SanitizeStyleRule(rule, cleanValue);
+        aContent->SetAttr(kNameSpaceID_None, keyAtom, cleanValue, PR_FALSE);
+      } else {
+        // we couldn't sanitize the style attribute, ignore it
+        continue;
+      }
+    } else if (nodeType == eHTMLTag_a && keyAtom == nsGkAtoms::name) {
       NS_ConvertUTF16toUTF8 cname(v);
       NS_ConvertUTF8toUTF16 uv(nsUnescape(cname.BeginWriting()));
       // Add attribute to content
@@ -1004,9 +1065,10 @@ nsHTMLParanoidFragmentSink::OpenContainer(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
   
-  // bail if it's a script or style, or we're already inside one of those
+  // bail if it's a script or style (when we don't allow processing of stylesheets),
+  // or we're already inside one of those
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-  if (type == eHTMLTag_script || type == eHTMLTag_style) {
+  if (type == eHTMLTag_script || (!mProcessStyle && type == eHTMLTag_style)) {
     mSkip = PR_TRUE;
     return rv;
   }
@@ -1017,7 +1079,14 @@ nsHTMLParanoidFragmentSink::OpenContainer(const nsIParserNode& aNode)
 
   // not on whitelist
   if (!sAllowedTags || !sAllowedTags->GetEntry(name)) {
-    return NS_OK;
+    // unless it's style, and we're allowing it
+    if (!mProcessStyle || name != nsGkAtoms::style) {
+      return NS_OK;
+    }
+  }
+
+  if (type == eHTMLTag_style) {
+    mInStyle = PR_TRUE;
   }
 
   return nsHTMLFragmentContentSink::OpenContainer(aNode);
@@ -1039,10 +1108,121 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
   
   // not on whitelist
   if (!sAllowedTags || !sAllowedTags->GetEntry(name)) {
-    return NS_OK;
+    // unless it's style, and we're allowing it
+    if (!mProcessStyle || name != nsGkAtoms::style) {
+      return NS_OK;
+    }
+  }
+
+  if (mInStyle && name == nsGkAtoms::style) {
+    mInStyle = PR_FALSE;
+
+    // Flush the text to make sure that the style text is complete.
+    FlushText();
+
+    // sanitizedStyleText will hold the permitted CSS text.
+    // We use a white-listing approach, so we explicitly allow
+    // the CSS style and font-face rule types.  We also clear
+    // -moz-binding CSS properties.
+    nsAutoString sanitizedStyleText;
+    nsIContent* style = GetCurrentContent();
+    if (style) {
+      // styleText will hold the text inside the style element.
+      nsAutoString styleText;
+      nsContentUtils::GetNodeTextContent(style, PR_FALSE, styleText);
+      // Create a unichar input stream for the CSS parser.
+      nsCOMPtr<nsIUnicharInputStream> uin;
+      rv = nsSimpleUnicharStreamFactory::GetInstance()->
+        CreateInstanceFromString(styleText, getter_AddRefs(uin));
+      if (NS_SUCCEEDED(rv)) {
+        // Create a sheet to hold the parsed CSS
+        nsRefPtr<nsCSSStyleSheet> sheet;
+        rv = NS_NewCSSStyleSheet(getter_AddRefs(sheet));
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIURI> baseURI = style->GetBaseURI();
+          sheet->SetURIs(mTargetDocument->GetDocumentURI(), nsnull, baseURI);
+          sheet->SetPrincipal(mTargetDocument->NodePrincipal());
+          // Create the CSS parser, and parse the CSS text.
+          nsCSSParser parser(nsnull, sheet);
+          rv = parser.Parse(uin, mTargetDocument->GetDocumentURI(),
+                            baseURI, mTargetDocument->NodePrincipal(),
+                            0, PR_FALSE);
+          // Mark the sheet as complete.
+          if (NS_SUCCEEDED(rv)) {
+            sheet->SetModified(PR_FALSE);
+            sheet->SetComplete();
+          }
+          if (NS_SUCCEEDED(rv)) {
+            // Loop through all the rules found in the CSS text
+            PRInt32 ruleCount = sheet->StyleRuleCount();
+            for (PRInt32 i = 0; i < ruleCount; ++i) {
+              nsRefPtr<nsICSSRule> rule;
+              rv = sheet->GetStyleRuleAt(i, *getter_AddRefs(rule));
+              if (NS_FAILED(rv))
+                continue;
+              NS_ASSERTION(rule, "We should have a rule by now");
+              PRInt32 type;
+              rv = rule->GetType(type);
+              if (NS_FAILED(rv))
+                continue;
+              switch (type) {
+                case nsICSSRule::UNKNOWN_RULE:
+                case nsICSSRule::CHARSET_RULE:
+                case nsICSSRule::IMPORT_RULE:
+                case nsICSSRule::MEDIA_RULE:
+                case nsICSSRule::PAGE_RULE:
+                  // Ignore these rule types.
+                  break;
+                case nsICSSRule::NAMESPACE_RULE:
+                case nsICSSRule::FONT_FACE_RULE: {
+                  // Append @namespace and @font-face rules verbatim.
+                  nsAutoString cssText;
+                  nsCOMPtr<nsIDOMCSSRule> styleRule = do_QueryInterface(rule);
+                  if (styleRule) {
+                    rv = styleRule->GetCssText(cssText);
+                    if (NS_SUCCEEDED(rv)) {
+                      sanitizedStyleText.Append(cssText);
+                    }
+                  }
+                  break;
+                }
+                case nsICSSRule::STYLE_RULE: {
+                  // For style rules, we will just look for and remove the
+                  // -moz-binding properties.
+                  nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(rule);
+                  NS_ASSERTION(styleRule, "Must be a style rule");
+                  nsAutoString decl;
+                  SanitizeStyleRule(styleRule, decl);
+                  rv = styleRule->GetCssText(decl);
+                  // Only add the rule when sanitized.
+                  if (NS_SUCCEEDED(rv)) {
+                    sanitizedStyleText.Append(decl);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      // Replace the style element content with its sanitized style text
+      nsContentUtils::SetNodeTextContent(style, sanitizedStyleText, PR_TRUE);
+    }
   }
 
   return nsHTMLFragmentContentSink::CloseContainer(aTag);
+}
+
+void
+nsHTMLParanoidFragmentSink::SanitizeStyleRule(nsICSSStyleRule *aRule, nsAutoString &aRuleText)
+{
+  aRuleText.Truncate();
+  nsCSSDeclaration *style = aRule->GetDeclaration();
+  if (style) {
+    nsresult rv = style->RemoveProperty(eCSSProperty_binding);
+    if (NS_SUCCEEDED(rv)) {
+      style->ToString(aRuleText);
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -1067,7 +1247,9 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
     }
 
     if (!sAllowedTags || !sAllowedTags->GetEntry(name)) {
-      return NS_OK;
+      if (!mProcessStyle || name != nsGkAtoms::style) {
+        return NS_OK;
+      }
     }
   }
 
@@ -1077,6 +1259,8 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsHTMLParanoidFragmentSink::AddComment(const nsIParserNode& aNode)
 {
+  if (mProcessComments)
+    return nsHTMLFragmentContentSink::AddComment(aNode);
   // no comments
   return NS_OK;
 }

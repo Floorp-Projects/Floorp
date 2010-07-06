@@ -10,7 +10,8 @@ browser.jar:
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/feed-icons.png
   skin/classic/browser/fullscreen-video.css
-  skin/classic/browser/Geo.png
+  skin/classic/browser/Geolocation-16.png
+  skin/classic/browser/Geolocation-64.png
   skin/classic/browser/Go-arrow.png
   skin/classic/browser/home.png
   skin/classic/browser/hud-panel.png
@@ -37,6 +38,7 @@ browser.jar:
   skin/classic/browser/Popup-blocked.png
   skin/classic/browser/Privacy-16.png
   skin/classic/browser/Privacy-48.png
+  skin/classic/browser/searchbar-dropmarker.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/Search.png
   skin/classic/browser/Search-addengines.png
@@ -47,6 +49,7 @@ browser.jar:
   skin/classic/browser/Secure-statusbar-broken.png
   skin/classic/browser/Secure-background.gif
   skin/classic/browser/Toolbar.png
+  skin/classic/browser/toolbarbutton-dropmarker.png
   skin/classic/browser/urlbar-favicon-glow.png
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)

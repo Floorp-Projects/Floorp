@@ -75,11 +75,16 @@ MOBILE_BUILD_FILES := \
 # the build, but that we need for the test harness.
 TEST_HARNESS_COMPONENTS := \
   httpd.js \
+  httpd.manifest \
   $(NULL)
 
 ifdef MOZ_CRASHREPORTER
 #XXX: should find a better way to do this
 TEST_HARNESS_COMPONENTS +=  crashreporter_test.xpt
+endif
+
+ifdef MOZ_ENABLE_LIBXUL
+TEST_HARNESS_COMPONENTS += xpcom_typelib_test.jar
 endif
 
 # Rules for staging the necessary harness bits for a test package

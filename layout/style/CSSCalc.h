@@ -126,7 +126,7 @@ ComputeCalc(const nsCSSValue& aValue, CalcOps &aOps)
     case eCSSUnit_Calc_Maximum: {
       nsCSSValue::Array *arr = aValue.GetArrayValue();
       typename CalcOps::result_type result = ComputeCalc(arr->Item(0), aOps);
-      for (PRUint32 i = 1, i_end = arr->Count(); i < i_end; ++i) {
+      for (size_t i = 1, i_end = arr->Count(); i < i_end; ++i) {
         typename CalcOps::result_type tmp = ComputeCalc(arr->Item(i), aOps);
         result = aOps.MergeAdditive(aValue.GetUnit(), result, tmp);
       }

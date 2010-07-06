@@ -42,6 +42,29 @@
 
 #include "jstypedarray.h"
 
+#define GET_INT32_ARG(var, index) \
+  int32 var; \
+  do { \
+    if (!JS_ValueToECMAInt32(cx, argv[index], &(var))) \
+      return JS_FALSE; \
+  } while (0)
+
+#define GET_UINT32_ARG(var, index) \
+  uint32 var; \
+  do { \
+    if (!JS_ValueToECMAUint32(cx, argv[index], &(var))) \
+      return JS_FALSE; \
+  } while (0)
+
+#define GET_OPTIONAL_UINT32_ARG(var, index) \
+  uint32 var = 0; \
+  do { \
+    if (argc > index) \
+      if (!JS_ValueToECMAUint32(cx, argv[index], &(var))) \
+        return JS_FALSE; \
+  } while (0)
+
+
 static inline bool
 helper_isInt32Array(JSObject *obj) {
     return obj->getClass() == &js::TypedArray::fastClasses[js::TypedArray::TYPE_INT32];
@@ -102,7 +125,7 @@ nsICanvasRenderingContextWebGL_BufferData(JSContext *cx, uintN argc, jsval *vp)
     {
         return JS_FALSE;
     }
-      
+
     nsresult rv;
 
     if (wa)
@@ -187,10 +210,105 @@ nsICanvasRenderingContextWebGL_BufferSubData(JSContext *cx, uintN argc, jsval *v
 }
 
 /*
+ * ReadPixels takes:
+ *    TexImage2D(int, int, int, int, uint, uint, ArrayBufferView)
+ */
+static JSBool
+nsICanvasRenderingContextWebGL_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
+{
+    XPC_QS_ASSERT_CONTEXT_OK(cx);
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj)
+        return JS_FALSE;
+
+    nsresult rv;
+
+    nsICanvasRenderingContextWebGL *self;
+    xpc_qsSelfRef selfref;
+    js::AutoValueRooter tvr(cx);
+    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
+        return JS_FALSE;
+
+    // XXX we currently allow passing only 6 args to support the API. Eventually drop that.
+    if (argc < 6)
+        return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+
+    jsval *argv = JS_ARGV(cx, vp);
+
+    // arguments common to all cases
+    GET_INT32_ARG(argv0, 0);
+    GET_INT32_ARG(argv1, 1);
+    GET_INT32_ARG(argv2, 2);
+    GET_INT32_ARG(argv3, 3);
+    GET_UINT32_ARG(argv4, 4);
+    GET_UINT32_ARG(argv5, 5);
+
+    if (argc == 6) {
+        /*** BEGIN old API deprecated code. Eventually drop that. ***/
+        // the code here is ugly, but temporary. It comes from the old ReadPixels implementation.
+        // Remove it as soon as it's OK to drop the old API.
+
+        PRInt32 byteLength;
+        rv = self->ReadPixels_byteLength_old_API_deprecated(argv2, argv3, argv4, argv5, &byteLength);
+        if (NS_FAILED(rv)) {
+            xpc_qsThrow(cx, NS_ERROR_FAILURE);
+            return JS_FALSE;
+        }
+        JSObject *abufObject = js_CreateArrayBuffer(cx, byteLength);
+        if (!abufObject) {
+            xpc_qsThrow(cx, NS_ERROR_FAILURE);
+            return JS_FALSE;
+        }
+
+        js::ArrayBuffer *abuf = js::ArrayBuffer::fromJSObject(abufObject);
+
+        rv = self->ReadPixels_buf(
+            argv0, argv1, argv2, argv3, argv4, argv5, abuf);
+        if (NS_FAILED(rv)) {
+            xpc_qsThrow(cx, NS_ERROR_FAILURE);
+            return JS_FALSE;
+        }
+        JSObject *retval = js_CreateTypedArrayWithBuffer(cx, js::TypedArray::TYPE_UINT8,
+                                                         abufObject, 0, byteLength);
+
+        *vp = OBJECT_TO_JSVAL(retval);
+        return JS_TRUE; // return here to be unaffected by the *vp = JSVAL_VOID; below
+
+        /*** END old API deprecated code ***/
+    } else if (   argc == 7
+               && JSVAL_IS_OBJECT(argv[6])
+               && !JSVAL_IS_PRIMITIVE(argv[6]))
+        {
+        JSObject *argv6 = JSVAL_TO_OBJECT(argv[6]);
+        if (js_IsArrayBuffer(argv6)) {
+            rv = self->ReadPixels_buf(argv0, argv1, argv2, argv3,
+                                      argv4, argv5, js::ArrayBuffer::fromJSObject(argv6));
+        } else if (js_IsTypedArray(argv6)) {
+            rv = self->ReadPixels_array(argv0, argv1, argv2, argv3,
+                                        argv4, argv5,
+                                        js::TypedArray::fromJSObject(argv6));
+        } else {
+            xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 6);
+            return JS_FALSE;
+        }
+    } else {
+        xpc_qsThrow(cx, NS_ERROR_FAILURE);
+        return JS_FALSE;
+    }
+
+    if (NS_FAILED(rv))
+        return xpc_qsThrowMethodFailed(cx, rv, vp);
+
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
+}
+
+
+/*
  * TexImage2D takes:
- *    TexImage2D(int, int, int, int, int, int, int, int, WebGLArray)
- *    TexImage2D(int, int, int, int, int, int, int, int, WebGLArrayBuffer)
- *    TexImage2D(int, int, nsIDOMElement, [bool[, bool]])
+ *    TexImage2D(uint, int, uint, int, int, int, uint, uint, ArrayBufferView)\
+ *    TexImage2D(uint, int, uint, uint, uint, nsIDOMElement)
+ *    TexImage2D(uint, int, uint, uint, uint, ImageData)
  */
 static JSBool
 nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
@@ -208,71 +326,102 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
+    // XXX we currently allow passing only 3 args to support the API. Eventually drop that.
+    // if (argc < 6 || argc == 7 || argc == 8)
     if (argc < 3)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    int32 intargs[8];
-    JSObject *arg9 = nsnull;
+    // arguments common to all cases
+    GET_UINT32_ARG(argv0, 0);
+    GET_INT32_ARG(argv1, 1);
 
-    // convert the first two args, they must be ints
-    for (jsuint i = 0; i < 2; ++i) {
-        if (!JS_ValueToECMAInt32(cx, argv[i], &intargs[i]))
-            return JS_FALSE;
-    }
+    if (argc > 2 && JSVAL_IS_OBJECT(argv[2])) {
+        // the old API. Eventually drop that.
 
-    if (JSVAL_IS_OBJECT(argv[2])) {
-        // try to make this a nsIDOMElement
         nsIDOMElement *elt;
         xpc_qsSelfRef eltRef;
         rv = xpc_qsUnwrapArg<nsIDOMElement>(cx, argv[2], &elt, &eltRef.ptr, &argv[2]);
-        if (NS_SUCCEEDED(rv)) {
-            intargs[3] = 0;
-            intargs[4] = 0;
+        if (NS_FAILED(rv)) return JS_FALSE;
 
-            // convert args 4 and 5 if present, default to 0
-            for (jsuint i = 3; i < 5 && i < argc; ++i) {
-                if (!JS_ValueToECMAInt32(cx, argv[i], &intargs[i]))
-                    return JS_FALSE;
+        GET_OPTIONAL_UINT32_ARG(argv3, 3);
+        GET_OPTIONAL_UINT32_ARG(argv4, 4);
+
+        rv = self->TexImage2D_dom_old_API_deprecated(argv0, argv1, elt, argv3, argv4);
+    } else if (argc > 5 && JSVAL_IS_OBJECT(argv[5])) {
+        // implement the variants taking a DOMElement as argv[5]
+        GET_UINT32_ARG(argv2, 2);
+        GET_UINT32_ARG(argv3, 3);
+        GET_UINT32_ARG(argv4, 4);
+
+        nsIDOMElement *elt;
+        xpc_qsSelfRef eltRef;
+        rv = xpc_qsUnwrapArg<nsIDOMElement>(cx, argv[5], &elt, &eltRef.ptr, &argv[5]);
+        if (NS_FAILED(rv)) return JS_FALSE;
+
+        rv = self->TexImage2D_dom(argv0, argv1, argv2, argv3, argv4, elt);
+
+        if (NS_FAILED(rv)) {
+            // failed to interprete argv[5] as a DOMElement, now try to interprete it as ImageData
+            JSObject *argv5 = JSVAL_TO_OBJECT(argv[5]);
+            jsval js_width, js_height, js_data;
+            JS_GetProperty(cx, argv5, "width", &js_width);
+            JS_GetProperty(cx, argv5, "height", &js_height);
+            JS_GetProperty(cx, argv5, "data", &js_data);
+            if (js_width  == JSVAL_VOID ||
+                js_height == JSVAL_VOID ||
+                js_data   == JSVAL_VOID)
+            {
+                xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 5);
+                return JS_FALSE;
             }
-
-            rv = self->TexImage2D_dom(intargs[0], intargs[1], elt, (WebGLboolean) intargs[3], (WebGLboolean) intargs[4]);
-            goto check_rv_and_return;
+            int32 int_width, int_height;
+            JSObject *obj_data = JSVAL_TO_OBJECT(js_data);
+            if (!JS_ValueToECMAInt32(cx, js_width, &int_width) ||
+                !JS_ValueToECMAInt32(cx, js_height, &int_height) ||
+                !js_IsTypedArray(obj_data))
+            {
+                xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 5);
+                return JS_FALSE;
+            }
+            rv = self->TexImage2D_array(argv0, argv1, argv2,
+                                        int_width, int_height, 0,
+                                        argv3, argv4, js::TypedArray::fromJSObject(obj_data));
         }
-    }
+    } else if (argc > 8 && JSVAL_IS_OBJECT(argv[8])) {
+        // implement the variants taking a buffer/array as argv[8]
+        GET_UINT32_ARG(argv2, 2);
+        GET_INT32_ARG(argv3, 3);
+        GET_INT32_ARG(argv4, 4);
+        GET_INT32_ARG(argv5, 5);
+        GET_UINT32_ARG(argv6, 6);
+        GET_UINT32_ARG(argv7, 7);
 
-    // didn't succeed? convert the rest of the int args
-    for (jsuint i = 2; i < 8; ++i) {
-        if (!JS_ValueToECMAInt32(cx, argv[i], &intargs[i]))
+        JSObject *argv8 = JSVAL_TO_OBJECT(argv[8]);
+
+        // then try to grab either a js::ArrayBuffer, js::TypedArray, or null
+        if (argv8 == nsnull) {
+            rv = self->TexImage2D_buf(argv0, argv1, argv2, argv3,
+                                      argv4, argv5, argv6, argv7,
+                                      nsnull);
+        } else if (js_IsArrayBuffer(argv8)) {
+            rv = self->TexImage2D_buf(argv0, argv1, argv2, argv3,
+                                      argv4, argv5, argv6, argv7,
+                                      js::ArrayBuffer::fromJSObject(argv8));
+        } else if (js_IsTypedArray(argv8)) {
+            rv = self->TexImage2D_array(argv0, argv1, argv2, argv3,
+                                        argv4, argv5, argv6, argv7,
+                                        js::TypedArray::fromJSObject(argv8));
+        } else {
+            xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
             return JS_FALSE;
-    }
-
-    if (!JSVAL_IS_OBJECT(argv[8])) {
-        xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
-        return JS_FALSE;
-    }
-
-    // then try to grab either a js::ArrayBuffer, js::TypedArray, or null
-    arg9 = JSVAL_TO_OBJECT(argv[8]);
-    if (arg9 == nsnull) {
-        rv = self->TexImage2D_buf(intargs[0], intargs[1], intargs[2], intargs[3],
-                                  intargs[4], intargs[5], intargs[6], intargs[7],
-                                  nsnull);
-    } else if (js_IsArrayBuffer(arg9)) {
-        rv = self->TexImage2D_buf(intargs[0], intargs[1], intargs[2], intargs[3],
-                                    intargs[4], intargs[5], intargs[6], intargs[7],
-                                    js::ArrayBuffer::fromJSObject(arg9));
-    } else if (js_IsTypedArray(arg9)) {
-        rv = self->TexImage2D_array(intargs[0], intargs[1], intargs[2], intargs[3],
-                                  intargs[4], intargs[5], intargs[6], intargs[7],
-                                  js::TypedArray::fromJSObject(arg9));
+        }
     } else {
-        xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
+        xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
         return JS_FALSE;
     }
 
-check_rv_and_return:
     if (NS_FAILED(rv))
         return xpc_qsThrowMethodFailed(cx, rv, vp);
 
@@ -280,11 +429,10 @@ check_rv_and_return:
     return JS_TRUE;
 }
 
-/*
- * TexSubImage2D takes:
- *    TexSubImage2D(int, int, int, int, int, int, int, int, WebGLArray)
- *    TexSubImage2D(int, int, int, int, int, int, int, int, WebGLArrayBuffer)
- *    TexSubImage2D(int, int, int, int, int, int, nsIDOMElement, [bool[, bool]])
+/* TexSubImage2D takes:
+ *    TexSubImage2D(uint, int, int, int, int, int, uint, uint, ArrayBufferView)
+ *    TexSubImage2D(uint, int, int, int, uint, uint, nsIDOMElement)
+ *    TexSubImage2D(uint, int, int, int, uint, uint, ImageData)
  */
 static JSBool
 nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
@@ -302,80 +450,80 @@ nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *v
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
-    if (argc < 7)
+    if (argc < 7 || argc == 8)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    int32 intargs[9];
+    // arguments common to all cases
+    GET_UINT32_ARG(argv0, 0);
+    GET_INT32_ARG(argv1, 1);
+    GET_INT32_ARG(argv2, 2);
+    GET_INT32_ARG(argv3, 3);
 
-    // convert the first six args, they must be ints
-    for (jsuint i = 0; i < 6; ++i) {
-        if (!JS_ValueToECMAInt32(cx, argv[i], &intargs[i]))
-            return JS_FALSE;
-    }
+    if (argc > 6 && JSVAL_IS_OBJECT(argv[6])) {
+        // implement the variants taking a DOMElement as argv[6]
+        GET_UINT32_ARG(argv4, 4);
+        GET_UINT32_ARG(argv5, 5);
 
-    if (JSVAL_IS_OBJECT(argv[6])) {
-        // try to make this a nsIDOMElement
         nsIDOMElement *elt;
         xpc_qsSelfRef eltRef;
+        rv = xpc_qsUnwrapArg<nsIDOMElement>(cx, argv[6], &elt, &eltRef.ptr, &argv[6]);
+        if (NS_FAILED(rv)) return JS_FALSE;
 
-        // these are two optinal args, default to 0
-        intargs[7] = 0;
-        intargs[8] = 0;
+        rv = self->TexSubImage2D_dom(argv0, argv1, argv2, argv3, argv4, argv5, elt);
 
-        // convert args 7 and 8 if present
-        for (jsuint i = 7; i < 9 && i < argc; ++i) {
-            if (!JS_ValueToECMAInt32(cx, argv[i], &intargs[i]))
+        if (NS_FAILED(rv)) {
+            // failed to interprete argv[6] as a DOMElement, now try to interprete it as ImageData
+            JSObject *argv6 = JSVAL_TO_OBJECT(argv[6]);
+            jsval js_width, js_height, js_data;
+            JS_GetProperty(cx, argv6, "width", &js_width);
+            JS_GetProperty(cx, argv6, "height", &js_height);
+            JS_GetProperty(cx, argv6, "data", &js_data);
+            if (js_width  == JSVAL_VOID ||
+                js_height == JSVAL_VOID ||
+                js_data   == JSVAL_VOID)
+            {
+                xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 6);
                 return JS_FALSE;
+            }
+            int32 int_width, int_height;
+            JSObject *obj_data = JSVAL_TO_OBJECT(js_data);
+            if (!JS_ValueToECMAInt32(cx, js_width, &int_width) ||
+                !JS_ValueToECMAInt32(cx, js_height, &int_height) ||
+                !js_IsTypedArray(obj_data))
+            {
+                xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 6);
+                return JS_FALSE;
+            }
+            rv = self->TexSubImage2D_array(argv0, argv1, argv2, argv3,
+                                           int_width, int_height,
+                                           argv4, argv5,
+                                           js::TypedArray::fromJSObject(obj_data));
         }
+    } else if (argc > 8 && JSVAL_IS_OBJECT(argv[8])) {
+        // implement the variants taking a buffer/array as argv[8]
+        GET_INT32_ARG(argv4, 4);
+        GET_INT32_ARG(argv5, 5);
+        GET_UINT32_ARG(argv6, 6);
+        GET_UINT32_ARG(argv7, 7);
 
-        rv = xpc_qsUnwrapArg<nsIDOMElement>(cx, argv[2], &elt, &eltRef.ptr, &argv[2]);
-        if (NS_SUCCEEDED(rv)) {
-            rv = self->TexSubImage2D_dom(intargs[0], intargs[1], intargs[2],
-                                         intargs[2], intargs[4], intargs[5],
-                                         elt, (WebGLboolean) intargs[7], (WebGLboolean) intargs[8]);
-            if (NS_FAILED(rv))
-                return xpc_qsThrowMethodFailed(cx, rv, vp);
-            return JS_TRUE;
-        }
-    }
-
-    // didn't succeed? convert the rest of the int args
-    for (jsuint i = 6; i < 8; ++i) {
-        if (!JS_ValueToECMAInt32(cx, argv[i], &intargs[i]))
+        JSObject *argv8 = JSVAL_TO_OBJECT(argv[8]);
+        // try to grab either a js::ArrayBuffer or js::TypedArray
+        if (js_IsArrayBuffer(argv8)) {
+            rv = self->TexSubImage2D_buf(argv0, argv1, argv2, argv3,
+                                         argv4, argv5, argv6, argv7,
+                                         js::ArrayBuffer::fromJSObject(argv8));
+        } else if (js_IsTypedArray(argv8)) {
+            rv = self->TexSubImage2D_array(argv0, argv1, argv2, argv3,
+                                           argv4, argv5, argv6, argv7,
+                                           js::TypedArray::fromJSObject(argv8));
+        } else {
+            xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
             return JS_FALSE;
-    }
-
-    if (JSVAL_IS_PRIMITIVE(argv[8])) {
-        xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
-        return JS_FALSE;
-    }
-
-    // then try to grab either a js::ArrayBuffer or js::TypedArray
-    js::TypedArray *wa = 0;
-    js::ArrayBuffer *wb = 0;
-
-    JSObject *arg9 = JSVAL_TO_OBJECT(argv[8]);
-    if (js_IsArrayBuffer(arg9)) {
-        wb = js::ArrayBuffer::fromJSObject(arg9);
-    } else if (js_IsTypedArray(arg9)) {
-        wa = js::TypedArray::fromJSObject(arg9);
+        }
     } else {
-        xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
-        return JS_FALSE;
-    }
-
-    if (wa) {
-        rv = self->TexSubImage2D_array(intargs[0], intargs[1], intargs[2], intargs[3],
-                                       intargs[4], intargs[5], intargs[6], intargs[7],
-                                       wa);
-    } else if (wb) {
-        rv = self->TexSubImage2D_buf(intargs[0], intargs[1], intargs[2], intargs[3],
-                                     intargs[4], intargs[5], intargs[6], intargs[7],
-                                     wb);
-    } else {
-        xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
+        xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
         return JS_FALSE;
     }
 
@@ -563,7 +711,7 @@ helper_nsICanvasRenderingContextWebGL_UniformMatrix_x_fv(JSContext *cx, uintN ar
         xpc_qsThrowBadArg(cx, rv, vp, 0);
         return JS_FALSE;
     }
-    
+
     int32 transpose;
     if (!JS_ValueToECMAInt32(cx, argv[1], &transpose))
         return JS_FALSE;

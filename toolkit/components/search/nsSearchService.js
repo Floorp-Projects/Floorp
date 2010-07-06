@@ -42,6 +42,8 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
@@ -2469,6 +2471,8 @@ function SearchService() {
   this._addObservers();
 }
 SearchService.prototype = {
+  classID: Components.ID("{7319788a-fe93-4db3-9f39-818cf08f4256}"),
+
   _engines: { },
   __sortedEngines: null,
   get _sortedEngines() {
@@ -3678,62 +3682,6 @@ var engineUpdateService = {
   }
 };
 
-const kClassID    = Components.ID("{7319788a-fe93-4db3-9f39-818cf08f4256}");
-const kClassName  = "Browser Search Service";
-const kContractID = "@mozilla.org/browser/search-service;1";
-
-// nsIFactory
-const kFactory = {
-  createInstance: function (outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return (new SearchService()).QueryInterface(iid);
-  }
-};
-
-// nsIModule
-const gModule = {
-  get _catMan() {
-    return Cc["@mozilla.org/categorymanager;1"].
-           getService(Ci.nsICategoryManager);
-  },
-
-  registerSelf: function (componentManager, fileSpec, location, type) {
-    componentManager.QueryInterface(Ci.nsIComponentRegistrar);
-    componentManager.registerFactoryLocation(kClassID,
-                                             kClassName,
-                                             kContractID,
-                                             fileSpec, location, type);
-    this._catMan.addCategoryEntry("update-timer", kClassName,
-                                  kContractID + 
-                                  ",getService," +
-                                  "search-engine-update-timer," +
-                                  BROWSER_SEARCH_PREF + "update.interval," +
-                                  "21600", /* 6 hours */
-                                  true, true);
-  },
-
-  unregisterSelf: function(componentManager, fileSpec, location) {
-    componentManager.QueryInterface(Ci.nsIComponentRegistrar);
-    componentManager.unregisterFactoryLocation(kClassID, fileSpec);
-    this._catMan.deleteCategoryEntry("update-timer", kClassName, true);
-  },
-
-  getClassObject: function (componentManager, cid, iid) {
-    if (!cid.equals(kClassID))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    if (!iid.equals(Ci.nsIFactory))
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-    return kFactory;
-  },
-
-  canUnload: function (componentManager) {
-    return true;
-  }
-};
-
-function NSGetModule(componentManager, fileSpec) {
-  return gModule;
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([SearchService]);
 
 #include ../../../toolkit/content/debug.js

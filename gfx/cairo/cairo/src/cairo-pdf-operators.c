@@ -480,6 +480,12 @@ _cairo_pdf_operators_clip (cairo_pdf_operators_t	*pdf_operators,
     const char *pdf_operator;
     cairo_status_t status;
 
+    if (pdf_operators->in_text_object) {
+	status = _cairo_pdf_operators_end_text (pdf_operators);
+	if (unlikely (status))
+	    return status;
+    }
+
     if (! path->has_current_point) {
 	/* construct an empty path */
 	_cairo_output_stream_printf (pdf_operators->stream, "0 0 m ");

@@ -227,6 +227,7 @@ function nsPlacesAutoComplete()
            "AND AUTOCOMPLETE_MATCH(:searchString, h.url, " +
                                   "IFNULL(bookmark, h.title), tags, " +
                                   "h.visit_count, h.typed, parent, " +
+                                  "t.open_count, " +
                                   ":matchBehavior, :searchBehavior) " +
           "{ADDITIONAL_CONDITIONS} ";
   }
@@ -338,6 +339,7 @@ function nsPlacesAutoComplete()
       "AND AUTOCOMPLETE_MATCH(:searchString, c_url, " +
                              "IFNULL(bookmark, c_title), tags, " +
                              "c_visit_count, c_typed, parent, " +
+                             "t.open_count, " +
                              ":matchBehavior, :searchBehavior) " +
       "ORDER BY rank DESC, IFNULL(h_t.frecency, h.frecency) DESC"
     );
@@ -389,6 +391,11 @@ nsPlacesAutoComplete.prototype = {
   startSearch: function PAC_startSearch(aSearchString, aSearchParam,
                                         aPreviousResult, aListener)
   {
+    // If a previous query is running and the controller has not taken care
+    // of stopping it, kill it.
+    if ("_pendingQuery" in this)
+      this.stopSearch();
+
     // Note: We don't use aPreviousResult to make sure ordering of results are
     //       consistent.  See bug 412730 for more details.
 
@@ -574,6 +581,9 @@ nsPlacesAutoComplete.prototype = {
     else if (uri.indexOf("ftp://") == 0)
       uri = uri.slice(6);
 
+    if (uri.indexOf("www.") == 0)
+      uri = uri.slice(4);
+
     return this._textURIService.unEscapeURIForUI("UTF-8", uri);
   },
 
@@ -702,9 +712,11 @@ nsPlacesAutoComplete.prototype = {
     this._matchURLToken = safeGetter("match.url", "@");
     this._defaultBehavior = safeGetter("default.behavior", 0);
     // Further restrictions to apply for "empty searches" (i.e. searches for "").
-    // By default we use (HISTORY | TYPED | OPENPAGE) = 161.
-    this._emptySearchDefaultBehavior = this._defaultBehavior |
-                                       safeGetter("default.behavior.emptyRestriction", 161);
+    this._emptySearchDefaultBehavior =
+      this._defaultBehavior |
+      safeGetter("default.behavior.emptyRestriction",
+                 Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY |
+                 Ci.mozIPlacesAutoComplete.BEHAVIOR_TYPED);
 
     // Validate matchBehavior; default to MATCH_BOUNDARY_ANYWHERE.
     if (this._matchBehavior != MATCH_ANYWHERE &&
@@ -951,22 +963,12 @@ nsPlacesAutoComplete.prototype = {
         style = "favicon";
     }
 
-    // If actions aren't enabled, avoid doing any additional work.
-    if (!this._enableActions) {
-      this._addToResults(entryId, escapedEntryURL, title, entryFavicon, style);
-      return true;
-    }
-
-    // Add a special entry for an open-page match.
-    if ((this._hasBehavior("openpage") || this._hasBehavior("everything")) &&
-        openPageCount > 0)
-      this._addToResults(entryId, "moz-action:switchtab," + escapedEntryURL, title, entryFavicon, "action");
-
-    // If restricting to only open-page matches, there should only be the
-    // switch-to-tab results.
-    if (!this._onlyHasBehavior("openpage"))
-      this._addToResults(entryId, escapedEntryURL, title, entryFavicon, style);
-
+    // If actions are enabled and the page is open, add only the switch-to-tab
+    // result.  Otherwise, add the normal result.
+    let [url, style] = this._enableActions && openPageCount > 0 ?
+                       ["moz-action:switchtab," + escapedEntryURL, "action"] :
+                       [escapedEntryURL, style];
+    this._addToResults(entryId, url, title, entryFavicon, style);
     return true;
   },
 
@@ -1020,29 +1022,12 @@ nsPlacesAutoComplete.prototype = {
    * Determines if the specified AutoComplete behavior is set.
    *
    * @param aType
-   *        The behavior type to test for, or "everything" to test if no
-   *        specific behavior has been set.
+   *        The behavior type to test for.
    * @return true if the behavior is set, false otherwise.
    */
   _hasBehavior: function PAC_hasBehavior(aType)
   {
-    if (aType == "everything")
-      return this._behavior == 0;
     return (this._behavior &
-            Ci.mozIPlacesAutoComplete["BEHAVIOR_" + aType.toUpperCase()]);
-  },
-
-  /**
-   * Determines if the specified AutoComplete behavior is the only behavior set.
-   *
-   * @param aType
-   *        The behavior type to test for.
-   * @return true if the behavior is set and no other behaviors are set,
-   *         false otherwise.
-   */
-  _onlyHasBehavior: function PAC_onlyHasBehavior(aType)
-  {
-    return (this._behavior ==
             Ci.mozIPlacesAutoComplete["BEHAVIOR_" + aType.toUpperCase()]);
   },
 
@@ -1087,9 +1072,7 @@ nsPlacesAutoComplete.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsISupports
 
-  classDescription: "AutoComplete result generator for Places.",
   classID: Components.ID("d0272978-beab-4adc-a3d4-04b76acfa4e7"),
-  contractID: "@mozilla.org/autocomplete/search;1?name=history",
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIAutoCompleteSearch,
@@ -1099,11 +1082,5 @@ nsPlacesAutoComplete.prototype = {
   ])
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// Module Registration
-
 let components = [nsPlacesAutoComplete];
-function NSGetModule(compMgr, fileSpec)
-{
-  return XPCOMUtils.generateModule(components);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

@@ -57,7 +57,7 @@ static const uRange g_BIG5Ranges[] = {
   { 0x81, 0xFE }
 };
 
-NS_METHOD
+nsresult
 nsBIG5ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                            void **aResult)
 {

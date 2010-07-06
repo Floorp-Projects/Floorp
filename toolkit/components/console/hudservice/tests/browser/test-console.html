@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US"><head>
+    <title>Console test</title>
+    <script type="text/javascript">
+      dump("i am dumping this");
+      function test() {
+        var str = "Dolske Digs Bacon, Now and Forevermore."
+        for (var i=0; i < 5; i++) {
+          console.log(str);
+        } 
+      }
+      console.info("INLINE SCRIPT:");
+      test();
+      console.warn("I'm warning you, he will eat up all yr bacon.");
+      console.error("Error Message");
+    </script>
+  </head>
+  <body>
+    <h1>Heads Up Display Demo</h1>
+    <button onclick="test();">Log stuff about Dolske</button>
+  </body>
+</html>

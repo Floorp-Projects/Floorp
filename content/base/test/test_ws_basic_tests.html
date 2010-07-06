@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Basic websocket test</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="testWebSocket()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=472529">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var ws;
+
+var params = ["protocol", "resource", "origin", "end"];
+var results = ["test", "/tests/content/base/test/file_ws_basic_tests", "http://mochi.test:8888", "end"];
+
+function forcegc(){
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  Components.utils.forceGC();
+  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  wu.garbageCollect();
+}
+
+function testWebSocket () {
+  var url = "ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests";
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
+  is(ws.url, url, "Wrong Websocket.url!");
+  ws.onopen = function(e) {
+    for (var i = 0; i < params.length; ++i) {
+      document.getElementById('log').textContent += "sending " + params[i] + "\n";
+      ws.send(params[i]);
+    }
+  }
+  ws.onclose = function(e) {
+    is(results.length, 0, "All the messages should have been processed!");
+    testWebSocket2();
+  }
+  ws.onerror = function(e) {
+    ok(false, "onerror called!");
+    SimpleTest.finish();
+  }
+  ws.onmessage = function(e) {
+    document.getElementById('log').textContent += "\n" + e.data;
+    is(e.data, results[0], "Unexpected message");
+    results.shift();
+  }
+}
+
+function testWebSocket2() {
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
+  var testCount = 1000; // Send lots of messages
+  var messageCount = 0;
+  var testMessage = "test message";
+  ws.onopen = function(e) {
+    for (var i = 0; i < testCount; ++i) {
+      ws.send(testMessage + (i + 1));
+    }
+    ws.send("end");
+  }
+  ws.onclose = function(e) {
+    is(messageCount, testCount, "Didn't receive all the messages!");
+    testWebSocket3();
+  }
+  ws.onerror = function(e) {
+    ok(false, "onerror called!");
+    SimpleTest.finish();
+  }
+  ws.onmessage = function(e) {
+    ++messageCount;
+    is(e.data, testMessage + messageCount, "Wrong message");
+    document.getElementById('log').textContent = messageCount;
+    if (messageCount == testCount) {
+      this.onmessage = null;
+    }
+  }
+}
+
+function testWebSocket3() {
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
+  var testCount = 100; // Send lots of messages
+  var messageCount = 0;
+  var testMessage = "test message";
+  ws.onopen = function(e) {
+    for (var i = 0; i < testCount; ++i) {
+      forcegc(); // Do something evil, call cycle collector a lot.
+      ws.send(testMessage + (i + 1));
+    }
+    ws.send("end");
+  }
+  ws.onclose = function(e) {
+    is(messageCount, testCount, "Didn't receive all the messages!");
+    testWebSocket4();
+  }
+  ws.onerror = function(e) {
+    ok(false, "onerror called!");
+    SimpleTest.finish();
+  }
+  ws.onmessage = function(e) {
+    forcegc(); // Do something evil, call cycle collector a lot.
+    ++messageCount;
+    is(e.data, testMessage + messageCount, "Wrong message");
+    document.getElementById('log').textContent = messageCount;
+    if (messageCount == testCount) {
+      this.onmessage = null;
+    }
+  }
+}
+
+function testWebSocket4() {
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
+  var longString = new Array(10000).join("-huge websocket message");
+  ws.onopen = function(e) {
+    is(this, ws, "'this' should point to the WebSocket. (1)");
+    ws.send(longString);
+  }
+  ws.onclose = function(e) {
+    is(this, ws, "'this' should point to the WebSocket. (2)");
+    //ok(e.wasClean, "Connection should have closed cleanly.");
+    testWebSocket5();
+  }
+  ws.onerror = function(e) {
+    ok(false, "onerror called!");
+    SimpleTest.finish();
+  }
+  ws.onmessage = function(e) {
+    is(this, ws, "'this' should point to the WebSocket. (3)");
+    is(e.data, longString, "Didn't get the huge message back!");
+    document.getElementById('log').textContent += "\nReceived the huge message";
+    this.close();
+  }
+}
+
+function testWebSocket5() {
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_ws_basic_tests", "test");
+  ws.onopen = function(e) {
+    this.close();
+  }
+  ws.onclose = function(e) {
+    //ok(e.wasClean, "Connection should have closed cleanly.");
+    is(this.bufferedAmount, 0, "Shouldn't have anything buffered");
+    var msg = "some data";
+    this.send(msg);
+    ok(this.bufferedAmount, msg.length, "Should have some data buffered");
+    SimpleTest.finish();
+  }
+  ws.onerror = function(e) {
+    ok(false, "onerror called!");
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+<pre id="log">
+</pre>
+</pre>
+<div>
+
+
+</div>
+
+
+</body>
+</html>

@@ -36,8 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
+#include "mozilla/ModuleUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
@@ -49,62 +48,58 @@
 #include "nsAppShellSingleton.h"
 #include "nsScreenManagerAndroid.h"
 
-#include "nsAccelerometerAndroid.h"
 #include "nsIdleServiceAndroid.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerAndroid)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerAndroid)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceAndroid)
 
+NS_DEFINE_NAMED_CID(NS_TOOLKIT_CID);
+NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
+NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
+NS_DEFINE_NAMED_CID(NS_CHILD_CID);
+NS_DEFINE_NAMED_CID(NS_LOOKANDFEEL_CID);
+NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
 
-static const nsModuleComponentInfo components[] =
-{
-    { "Android Toolkit",
-      NS_TOOLKIT_CID,
-      "@mozilla.org/widget/toolkit/android;1",
-      nsToolkitConstructor },
-    { "Android AppShell",
-      NS_APPSHELL_CID,
-      "@mozilla.org/widget/appshell/android;1",
-      nsAppShellConstructor },
-    { "Android nsWindow",
-      NS_WINDOW_CID,
-      "@mozilla.org/widgets/window/android;1",
-      nsWindowConstructor },
-    { "Android Child nsWindow",
-      NS_CHILD_CID,
-      "@mozilla.org/widgets/child_window/android;1",
-      nsWindowConstructor }, /* Note: same as Window! */
-    { "Android Look And Feel",
-      NS_LOOKANDFEEL_CID,
-      "@mozilla.org/widget/lookandfeel/android;1",
-      nsLookAndFeelConstructor },
-    { "Android Screen Manager",
-      NS_SCREENMANAGER_CID,
-      "@mozilla.org/gfx/screenmanager;1",
-      nsScreenManagerAndroidConstructor },
-    { "Android Idle Service",
-      NS_IDLE_SERVICE_CID,
-      "@mozilla.org/widget/idleservice;1",
-      nsIdleServiceAndroidConstructor },
-    { "Accelerometer",
-      NS_ACCELEROMETER_CID,
-      NS_ACCELEROMETER_CONTRACTID,
-      nsAccelerometerAndroidConstructor },
+static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
+  { &kNS_WINDOW_CID, false, NULL, nsWindowConstructor },
+  { &kNS_CHILD_CID, false, NULL, nsWindowConstructor },
+  { &kNS_APPSHELL_CID, false, NULL, nsAppShellConstructor },
+  { &kNS_TOOLKIT_CID, false, NULL, nsToolkitConstructor },
+  { &kNS_LOOKANDFEEL_CID, false, NULL, nsLookAndFeelConstructor },
+  { &kNS_SCREENMANAGER_CID, false, NULL, nsScreenManagerAndroidConstructor },
+  { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceAndroidConstructor },
+  { NULL }
+};
 
+static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
+  { "@mozilla.org/widgets/window/android;1", &kNS_WINDOW_CID },
+  { "@mozilla.org/widgets/child_window/android;1", &kNS_CHILD_CID },
+  { "@mozilla.org/widget/appshell/android;1", &kNS_APPSHELL_CID },
+  { "@mozilla.org/widget/toolkit/android;1", &kNS_TOOLKIT_CID },
+  { "@mozilla.org/widget/lookandfeel/android;1", &kNS_LOOKANDFEEL_CID },
+  { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
+  { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
+  { NULL }
 };
 
 static void
-nsWidgetAndroidModuleDtor(nsIModule *aSelf)
+nsWidgetAndroidModuleDtor()
 {
-    nsAppShellShutdown(aSelf);
+    nsAppShellShutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetAndroidModule,
-                                   components,
-                                   nsAppShellInit,
-                                   nsWidgetAndroidModuleDtor)
+static const mozilla::Module kWidgetModule = {
+    mozilla::Module::kVersion,
+    kWidgetCIDs,
+    kWidgetContracts,
+    NULL,
+    NULL,
+    nsAppShellInit,
+    nsWidgetAndroidModuleDtor
+};
 
+NSMODULE_DEFN(nsWidgetAndroidModule) = &kWidgetModule;

@@ -62,19 +62,18 @@ nsresult
 nsSMILMappedAttribute::ValueFromString(const nsAString& aStr,
                                        const nsISMILAnimationElement* aSrcElement,
                                        nsSMILValue& aValue,
-                                       PRBool& aCanCache) const
+                                       PRBool& aPreventCachingOfSandwich) const
 {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
 
-  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr,
-                                      PR_TRUE, aValue);
+  nsSMILCSSValueType::ValueFromString(mPropID, mElement, aStr, aValue);
   if (aValue.IsNull()) {
     return NS_ERROR_FAILURE;
   }
 
   // XXXdholbert: For simplicity, just assume that all CSS values have to
   // reparsed every sample. See note in nsSMILCSSProperty::ValueFromString.
-  aCanCache = PR_FALSE;
+  aPreventCachingOfSandwich = PR_TRUE;
   return NS_OK;
 }
 
@@ -87,8 +86,8 @@ nsSMILMappedAttribute::GetBaseValue() const
                                      baseStringValue);
   nsSMILValue baseValue;
   if (success) {
-    nsSMILCSSValueType::ValueFromString(mPropID, mElement, baseStringValue,
-                                        PR_TRUE, baseValue);
+    nsSMILCSSValueType::ValueFromString(mPropID, mElement,
+                                        baseStringValue, baseValue);
   } else {
     // Attribute is unset -- use computed value.
     // FIRST: Temporarily clear animated value, to make sure it doesn't pollute
@@ -144,12 +143,8 @@ void
 nsSMILMappedAttribute::ClearAnimValue()
 {
   nsRefPtr<nsIAtom> attrName = GetAttrNameAtom();
-  nsresult rv = mElement->DeleteProperty(SMIL_MAPPED_ATTR_ANIMVAL, attrName);
-  if (NS_SUCCEEDED(rv)) {
-    FlushChangesToTargetAttr();
-  }
-  // Else, there's no animated value to be cleared -- no need to flush
-  // changes, because we didn't change anything.
+  mElement->DeleteProperty(SMIL_MAPPED_ATTR_ANIMVAL, attrName);
+  FlushChangesToTargetAttr();
 }
 
 void
@@ -162,9 +157,9 @@ nsSMILMappedAttribute::FlushChangesToTargetAttr() const
 
   // Request animation restyle
   if (doc) {
-    nsIPresShell* shell = doc->GetPrimaryShell();
+    nsIPresShell* shell = doc->GetShell();
     if (shell) {
-      shell->RestyleForAnimation(mElement);
+      shell->RestyleForAnimation(mElement, eRestyle_Self);
     }
   }
 }

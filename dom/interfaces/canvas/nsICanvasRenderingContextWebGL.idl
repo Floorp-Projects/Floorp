@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIVariant.idl"
 
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
@@ -566,6 +567,10 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   const unsigned long INVALID_FRAMEBUFFER_OPERATION  = 0x0506;
 
+  const unsigned long UNPACK_FLIP_Y_WEBGL            = 0x9240;
+  const unsigned long UNPACK_PREMULTIPLY_ALPHA_WEBGL = 0x9241;
+  const unsigned long CONTEXT_LOST_WEBGL             = 0x9242;
+
   //
   //  ATTRIBUTES
   //
@@ -638,7 +643,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void drawArrays(in WebGLenum mode, in WebGLint first, in WebGLsizei count);
 
   // Modified: void glDrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, const void* indices);
-  void drawElements(in WebGLenum mode, in WebGLuint count, in WebGLenum type, in WebGLuint offset);
+  void drawElements(in WebGLenum mode, in WebGLsizei count, in WebGLenum type, in WebGLint offset);
 
   void enable(in WebGLenum cap);
   void enableVertexAttribArray(in WebGLuint index);
@@ -655,33 +660,31 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   nsIWebGLActiveInfo getActiveAttrib(in nsIWebGLProgram program, in PRUint32 index);
   nsIWebGLActiveInfo getActiveUniform(in nsIWebGLProgram program, in PRUint32 index);
 
-  // TBD
-  // void glGetAttachedShaders(WebGLuint program, WebGLsizei maxcount, WebGLsizei* count, WebGLuint* shaders);
-  //nsIWebGLShaderArray glGetAttachedShaders(in WebGLuint program);
+  nsIVariant getAttachedShaders(in nsIWebGLProgram program);
 
   WebGLint getAttribLocation(in nsIWebGLProgram program, in DOMString name);
 
-  void getParameter(in WebGLenum pname);
+  nsIVariant getParameter(in WebGLenum pname);
 
   // Modified: void glGetBufferParameteriv(WebGLenum target, WebGLenum pname, WebGLint* params);
-  void getBufferParameter(in WebGLenum target, in WebGLenum pname);
+  nsIVariant getBufferParameter(in WebGLenum target, in WebGLenum pname);
 
   WebGLenum getError();
 
   // Modified: void glGetFramebufferAttachmentParameteriv(WebGLenum target, WebGLenum attachment, WebGLenum pname, WebGLint* params);
-  void getFramebufferAttachmentParameter(in WebGLenum target, in WebGLenum attachment, in WebGLenum pname);
+  nsIVariant getFramebufferAttachmentParameter(in WebGLenum target, in WebGLenum attachment, in WebGLenum pname);
 
   // Modified: void glGetProgramiv(nsIWebGLProgram program, WebGLenum pname, WebGLint* params);
-  void getProgramParameter(in nsIWebGLProgram program, in WebGLenum pname);
+  nsIVariant getProgramParameter(in nsIWebGLProgram program, in WebGLenum pname);
 
   // Modified: void glGetProgramInfoLog(WebGLuint program, WebGLsizei bufsize, WebGLsizei* length, char* infolog);
   DOMString getProgramInfoLog(in nsIWebGLProgram program);
 
   // Modified: void glGetRenderbufferParameteriv(WebGLenum target, WebGLenum pname, WebGLint* params);
   //nsIWebGLIntArray getRenderbufferParameteriv(in WebGLenum target, in WebGLenum pname);
-  void getRenderbufferParameter(in WebGLenum target, in WebGLenum pname);
+  nsIVariant getRenderbufferParameter(in WebGLenum target, in WebGLenum pname);
 
-  void getShaderParameter(in nsIWebGLShader shader, in WebGLenum pname);
+  nsIVariant getShaderParameter(in nsIWebGLShader shader, in WebGLenum pname);
 
   // Modified: void glGetShaderInfoLog(WebGLuint shader, WebGLsizei bufsize, WebGLsizei* length, char* infolog);
   DOMString getShaderInfoLog(in nsIWebGLShader shader);
@@ -690,11 +693,10 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   //void glGetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype, WebGLint* range, WebGLint* precision);
 
   DOMString getShaderSource(in nsIWebGLShader shader);
-  DOMString getString(in WebGLenum name);
 
-  void getTexParameter(in WebGLenum target, in WebGLenum pname);
+  nsIVariant getTexParameter(in WebGLenum target, in WebGLenum pname);
 
-  void getUniform (in nsIWebGLProgram program, in nsIWebGLUniformLocation location);
+  nsIVariant getUniform(in nsIWebGLProgram program, in nsIWebGLUniformLocation location);
 
   nsIWebGLUniformLocation getUniformLocation (in nsIWebGLProgram program, in DOMString name);
 
@@ -719,9 +721,13 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void pixelStorei(in WebGLenum pname, in WebGLint param);
   void polygonOffset(in WebGLfloat factor, in WebGLfloat units);
 
-  // TBD
-  //ZZ void glReadPixels(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height, WebGLenum format, WebGLenum type, void* pixels);
-  void readPixels(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height, in WebGLenum format, in WebGLenum type);
+  void readPixels([optional] in long dummy);
+  [noscript] void readPixels_array(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
+                                   in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
+  [noscript] void readPixels_buf(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
+                                 in WebGLenum format, in WebGLenum type, in WebGLArrayBufferPtr pixels);
+  [noscript] WebGLsizei readPixels_byteLength_old_API_deprecated(
+                            in WebGLsizei width, in WebGLsizei height, in WebGLenum format, in WebGLenum type);
 
   //void glReleaseShaderCompiler();
 
@@ -747,9 +753,11 @@ interface nsICanvasRenderingContextWebGL : nsISupports
                                    in WebGLsizei width, in WebGLsizei height,
                                    in WebGLint border, in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
-  [noscript] void texImage2D_dom(in WebGLenum target, in WebGLint level, in nsIDOMElement element,
-                                 [optional] in WebGLboolean premultiply, [optional] in WebGLboolean asPremultipliedAlpha);
-
+  [noscript] void texImage2D_dom(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
+                                 in WebGLenum format, in WebGLenum type, in nsIDOMElement element);
+  // XXX the old API. Eventually drop that.
+  [noscript] void TexImage2D_dom_old_API_deprecated(in WebGLenum target, in WebGLint level,
+                                                    in nsIDOMElement element, in PRBool flipY, in PRBool premultiplyAlpha);
 
   void texSubImage2D([optional] in long dummy);
   [noscript] void texSubImage2D_buf(in WebGLenum target, in WebGLint level,
@@ -760,9 +768,8 @@ interface nsICanvasRenderingContextWebGL : nsISupports
                                       in WebGLenum format, in WebGLenum type, in WebGLArrayPtr pixels);
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
   [noscript] void texSubImage2D_dom(in WebGLenum target, in WebGLint level,
-                                    in WebGLint xoffset, in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
-                                    in nsIDOMElement element,
-                                    [optional] in WebGLboolean premultiply, [optional] in WebGLboolean asPremultipliedAlpha);
+                                    in WebGLint xoffset, in WebGLint yoffset, in WebGLenum format, in WebGLenum type,
+                                    in nsIDOMElement element);
 
   // Modified: This replaces glTexParameterf, glTexParameterfv, glTexParameteri and glTexParameteriv
   void texParameterf(in WebGLenum target, in WebGLenum pname, in WebGLfloat param);
