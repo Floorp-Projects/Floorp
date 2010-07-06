@@ -759,7 +759,7 @@ InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
 }
 
 bool
-Execute(JSContext *cx, JSObject *const chain, JSScript *script,
+Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JSStackFrame *down, uintN flags, Value *result)
 {
     if (script->isEmpty()) {
