@@ -200,6 +200,20 @@ body {
     rgba(0,0,0, .2) 1px 1px 4px;
 }
 
+/* InfoItems
+----------------------------------*/
+
+.info-item {
+	position: absolute;
+  cursor: move;
+	border: 1px solid rgba(230,230,230,1);
+	background-color: rgba(248,248,248,1);
+	-moz-border-radius: 0.4em;
+	-moz-box-shadow: 
+		inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
+		rgba(0,0,0, .2) 1px 1px 4px;
+}
+
 /* Trenches
 ----------------------------------*/
 
@@ -210,10 +224,10 @@ body {
 .guideTrench {
   z-index: -101;
   opacity: 0.9;
-  border: 1px dashed  rgba(0,0,0,.08);
+  border: 1px dashed  rgba(0,0,0,.12);
   border-bottom: none;
   border-right: none;
-  -moz-box-shadow: 1px 1px 0 rgba(255,255,255,.1);
+  -moz-box-shadow: 1px 1px 0 rgba(255,255,255,.15);
 }
 
 .visibleTrench {
