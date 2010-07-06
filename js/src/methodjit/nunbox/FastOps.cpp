@@ -794,6 +794,100 @@ mjit::Compiler::jsop_typeof()
 }
 
 void
+mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
+{
+    FrameEntry *fe = frame.peek(-1);
+
+    if (fe->isConstant()) {
+        JSBool b = js_ValueToBoolean(fe->getValue());
+        
+        /* Short-circuit. */
+        if ((op == JSOP_OR && b == JS_TRUE) ||
+            (op == JSOP_AND && b == JS_FALSE)) {
+            frame.forgetEverything();
+            jumpInScript(masm.jump(), target);
+        }
+
+        frame.pop();
+        return;
+    }
+
+    MaybeRegisterID type;
+    MaybeRegisterID data;
+
+    if (!fe->isTypeKnown() && !frame.shouldAvoidTypeRemat(fe)) {
+        type.setReg(frame.tempRegForType(fe));
+        frame.pinReg(type.getReg());
+    }
+    data.setReg(frame.tempRegForData(fe));
+
+    /* :FIXME: Can something more lightweight be used? */
+    frame.forgetEverything();
+
+    Assembler::Condition cond = (op == JSOP_OR)
+                                ? Assembler::NonZero
+                                : Assembler::Zero;
+    Assembler::Condition ncond = (op == JSOP_OR)
+                                 ? Assembler::Zero
+                                 : Assembler::NonZero;
+
+    /* Inline path: Boolean guard + call script. */
+    MaybeJump jmpNotBool;
+    MaybeJump jmpNotExecScript;
+    if (type.isSet()) {
+        jmpNotBool.setJump(masm.testBoolean(Assembler::NotEqual, type.getReg()));
+    } else {
+        if (!fe->isTypeKnown()) {
+            jmpNotBool.setJump(masm.testBoolean(Assembler::NotEqual,
+                                                frame.addressOf(fe)));
+        } else if (fe->getKnownType() != JSVAL_TYPE_BOOLEAN) {
+            jmpNotBool.setJump(masm.jump());
+        }
+    }
+
+    /* 
+     * TODO: We don't need the second jump if
+     * jumpInScript() can go from ool path to inline path.
+     */
+    jmpNotExecScript.setJump(masm.branchTest32(ncond, data.getReg(), data.getReg()));
+    Label lblExecScript = masm.label();
+    Jump j = masm.jump();
+
+
+    /* OOL path: Conversion to boolean. */
+    MaybeJump jmpCvtExecScript;
+    MaybeJump jmpCvtRejoin;
+    Label lblCvtPath = stubcc.masm.label();
+
+    if (!fe->isTypeKnown() || fe->getKnownType() != JSVAL_TYPE_BOOLEAN) {
+        stubcc.masm.fixScriptStack(frame.frameDepth());
+        stubcc.masm.setupVMFrame();
+        stubcc.masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
+
+        jmpCvtExecScript.setJump(stubcc.masm.branchTest32(cond, Registers::ReturnReg,
+                                                          Registers::ReturnReg));
+        jmpCvtRejoin.setJump(stubcc.masm.jump());
+    }
+
+    /* Rejoin tag. */
+    Label lblAfterScript = masm.label();
+
+    /* Patch up jumps. */
+    jumpInScript(j, target);
+    if (jmpNotBool.isSet())
+        stubcc.linkExitDirect(jmpNotBool.getJump(), lblCvtPath);
+    if (jmpNotExecScript.isSet())
+        jmpNotExecScript.getJump().linkTo(lblAfterScript, &masm);
+
+    if (jmpCvtExecScript.isSet())
+        stubcc.crossJump(jmpCvtExecScript.getJump(), lblExecScript);
+    if (jmpCvtRejoin.isSet())
+        stubcc.crossJump(jmpCvtRejoin.getJump(), lblAfterScript);
+
+    frame.pop();
+}
+
+void
 mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 {
     bool post = (op == JSOP_LOCALINC || op == JSOP_LOCALDEC);

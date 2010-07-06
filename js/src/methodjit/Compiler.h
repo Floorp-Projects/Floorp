@@ -122,7 +122,7 @@ class Compiler
     class MaybeRegisterID {
       public:
         MaybeRegisterID()
-          : set(false)
+          : reg(Registers::ReturnReg), set(false)
         { }
 
         inline RegisterID getReg() const { JS_ASSERT(set); return reg; }
@@ -252,6 +252,7 @@ class Compiler
     void jsop_objtostr();
     void jsop_not();
     void jsop_typeof();
+    void jsop_andor(JSOp op, jsbytecode *target);
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
     void jsop_setelem();
