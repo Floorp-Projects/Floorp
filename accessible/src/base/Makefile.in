@@ -49,6 +49,7 @@ LIBXUL_LIBRARY = 1
 
 CPPSRCS = \
   AccCollector.cpp \
+  AccGroupInfo.cpp \
   AccIterator.cpp \
   filters.cpp \
   nsAccDocManager.cpp \

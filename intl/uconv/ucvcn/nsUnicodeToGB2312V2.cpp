@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsUnicodeToGB2312V2.h"
-#include "nsICharRepresentable.h"
 #include "nsUCvCnDll.h"
 #include "gbku.h"
 
@@ -98,16 +97,4 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
   *aDestLength = iDestLength;
   *aSrcLength = iSrcLength;
   return res;
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableEncoderSupport class [implementation]
-
-NS_IMETHODIMP nsUnicodeToGB2312V2::FillInfo(PRUint32 *aInfo)
-{
-  mUtil.FillGB2312Info(aInfo);
-  //GB2312 font lib also have single byte ASCII characters, set them here
-  for ( PRUint16 u = 0x0000; u <= 0x007F; u++)
-    SET_REPRESENTABLE(aInfo, u);
-  return NS_OK;
 }

@@ -57,7 +57,7 @@ public:
   nsSMILInterval(const nsSMILInterval& aOther);
   ~nsSMILInterval();
   void NotifyChanged(const nsSMILTimeContainer* aContainer);
-  void NotifyDeleting();
+  void Unlink(PRBool aFiltered = PR_FALSE);
 
   const nsSMILInstanceTime* Begin() const
   {
@@ -83,36 +83,14 @@ public:
     SetEnd(aEnd);
   }
 
-  void FreezeBegin()
-  {
-    NS_ABORT_IF_FALSE(mBegin && mEnd,
-        "Freezing Begin() on un-initialized instance time");
-    mBegin->MarkNoLongerUpdating();
-  }
-
-  void FreezeEnd()
-  {
-    NS_ABORT_IF_FALSE(mBegin && mEnd,
-        "Freezing End() on un-initialized instance time");
-    NS_ABORT_IF_FALSE(!mBegin->MayUpdate(),
-        "Freezing the end of an interval without a fixed begin");
-    mEnd->MarkNoLongerUpdating();
-  }
-
-  // XXX Backwards seeking support (bug 492458)
-  void Unfreeze()
-  {
-    // XXX
-    UnfreezeEnd();
-  }
-
-  void UnfreezeEnd()
-  {
-    // XXX
-  }
+  void FixBegin();
+  void FixEnd();
 
   void AddDependentTime(nsSMILInstanceTime& aTime);
   void RemoveDependentTime(const nsSMILInstanceTime& aTime);
+
+  // Cue for assessing if this interval can be filtered
+  PRBool IsDependencyChainLink() const;
 
 private:
   nsRefPtr<nsSMILInstanceTime> mBegin;
@@ -122,6 +100,18 @@ private:
 
   // nsSMILInstanceTimes to notify when this interval is changed or deleted.
   InstanceTimeList mDependentTimes;
+
+  // Indicates if the end points of the interval are fixed or not.
+  //
+  // Note that this is not the same as having an end point whose TIME is fixed
+  // (i.e. nsSMILInstanceTime::IsFixed() returns PR_TRUE). This is because it is
+  // possible to have an end point with a fixed TIME and yet still update the
+  // end point to refer to a different nsSMILInstanceTime object.
+  //
+  // However, if mBegin/EndFixed is PR_TRUE, then BOTH the nsSMILInstanceTime
+  // OBJECT returned for that end point and its TIME value will not change.
+  PRPackedBool mBeginFixed;
+  PRPackedBool mEndFixed;
 
   // When change notifications are passed around the timing model we try to
   // filter out all changes where there is no observable difference to an

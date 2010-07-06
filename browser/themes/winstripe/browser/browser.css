@@ -181,7 +181,7 @@ statusbarpanel#statusbar-display {
     position: relative !important;
     background-color: -moz-dialog !important;
   }
-  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] ~ #TabsToolbar {
+  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] ~ #TabsToolbar:not([inFullscreen]) {
     -moz-padding-start: 10em !important;
   }
 %ifdef WINSTRIPE_AERO

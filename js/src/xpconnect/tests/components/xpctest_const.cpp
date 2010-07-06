@@ -55,7 +55,7 @@ xpcTestConst :: xpcTestConst() {
     NS_ADDREF_THIS();
 }
 
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestConst(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;

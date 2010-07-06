@@ -168,6 +168,7 @@ xpcshell-tests:
           -I$(topsrcdir)/build \
           $(testxpcsrcdir)/runxpcshelltests.py \
           --symbols-path=$(DIST)/crashreporter-symbols \
+          $(EXTRA_TEST_ARGS) \
           $(DIST)/bin/xpcshell \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
@@ -193,6 +194,8 @@ check-one:
           --symbols-path=$(DIST)/crashreporter-symbols \
           --test-path=$(SOLO_FILE) \
           --profile-name=$(MOZ_APP_NAME) \
+          --verbose \
+          $(EXTRA_TEST_ARGS) \
           $(DIST)/bin/xpcshell \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
@@ -2291,3 +2294,6 @@ CHECK_FROZEN_VARIABLES = $(foreach var,$(FREEZE_VARIABLES), \
 
 libs export libs::
 	$(CHECK_FROZEN_VARIABLES)
+
+default::
+	if test -d $(DIST)/bin ; then touch $(DIST)/bin/.purgecaches ; fi

@@ -207,9 +207,6 @@ nsGlobalHistory::OpenDB
 nsFontCache::
 
 <font>
-nsFontMetricsGTK::
-
-<font>
 nsFont::nsFont
 
 <gtk>

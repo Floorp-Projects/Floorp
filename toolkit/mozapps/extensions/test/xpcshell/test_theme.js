@@ -888,6 +888,32 @@ function run_test_16() {
     do_check_true(t1.appDisabled);
     do_check_false(t1.isActive);
 
+    run_test_17();
+  });
+}
+
+// Verifies that if the selected theme pref is changed by a different version
+// of the application that we correctly reset it when it points to an
+// incompatible theme
+function run_test_17() {
+  restartManager(1, "2");
+  shutdownManager();
+
+  Services.prefs.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, "theme1/1.0");
+
+  restartManager(1, "3");
+
+  do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
+  AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                               "theme1@tests.mozilla.org"], function([d, t1]) {
+    do_check_false(d.userDisabled);
+    do_check_false(d.appDisabled);
+    do_check_true(d.isActive);
+
+    do_check_true(t1.userDisabled);
+    do_check_true(t1.appDisabled);
+    do_check_false(t1.isActive);
+
     end_test();
   });
 }

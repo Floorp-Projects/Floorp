@@ -87,6 +87,8 @@ CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint64, unsupported_type)
  ***         is supported, what that twice bigger type is, and some stuff as found
  ***         in std::numeric_limits (which we don't use because PRInt.. types may
  ***         not support it, if they are defined directly from compiler built-in types).
+ ***         We use function names min_value() and max_value() instead of min() and max()
+ ***         because of stupid min/max macros in Windows headers.
  ***/
 
 template<typename T> struct is_unsupported_type { enum { answer = 0 }; };
@@ -107,15 +109,15 @@ template<typename T> struct integer_traits
         is_signed = (T(-1) > T(0)) ? 0 : 1
     };
 
-    static T min()
+    static T min_value()
     {
         // bitwise ops may return a larger type, that's why we cast explicitly to T
         return is_signed ? T(T(1) << position_of_sign_bit) : T(0);
     }
 
-    static T max()
+    static T max_value()
     {
-        return ~min();
+        return ~min_value();
     }
 };
 
@@ -145,8 +147,8 @@ struct is_in_range_impl<T, U, true, true>
 {
     static T run(U x)
     {
-        return (x <= integer_traits<T>::max()) &
-               (x >= integer_traits<T>::min());
+        return (x <= integer_traits<T>::max_value()) &
+               (x >= integer_traits<T>::min_value());
     }
 };
 
@@ -155,7 +157,7 @@ struct is_in_range_impl<T, U, false, false>
 {
     static T run(U x)
     {
-        return x <= integer_traits<T>::max();
+        return x <= integer_traits<T>::max_value();
     }
 };
 
@@ -167,7 +169,7 @@ struct is_in_range_impl<T, U, true, false>
         if (sizeof(T) > sizeof(U))
             return 1;
         else
-            return x <= U(integer_traits<T>::max());
+            return x <= U(integer_traits<T>::max_value());
     }
 };
 
@@ -179,7 +181,7 @@ struct is_in_range_impl<T, U, false, true>
         if (sizeof(T) >= sizeof(U))
             return x >= 0;
         else
-            return x >= 0 && x <= U(integer_traits<T>::max());
+            return x >= 0 && x <= U(integer_traits<T>::max_value());
     }
 };
 
@@ -240,8 +242,8 @@ struct is_mul_valid_impl<T, true, false>
 {
     static T run(T x, T y)
     {
-        const T max_value = integer_traits<T>::max();
-        const T min_value = integer_traits<T>::min();
+        const T max_value = integer_traits<T>::max_value();
+        const T min_value = integer_traits<T>::min_value();
 
         if (x == 0 || y == 0) return true;
 
@@ -264,7 +266,7 @@ struct is_mul_valid_impl<T, false, false>
 {
     static T run(T x, T y)
     {
-        const T max_value = integer_traits<T>::max();
+        const T max_value = integer_traits<T>::max_value();
         if (x == 0 || y == 0) return true;
         return x <= max_value / y;
     }
@@ -279,7 +281,7 @@ template<typename T> inline T is_div_valid(T x, T y)
 {
     return integer_traits<T>::is_signed ?
                         // keep in mind that min/-1 is invalid because abs(min)>max
-                        y != 0 && (x != integer_traits<T>::min() || y != T(-1))
+                        y != 0 && (x != integer_traits<T>::min_value() || y != T(-1))
                     :
                         y != 0;
 }
@@ -333,6 +335,12 @@ template<typename T> inline T is_div_valid(T x, T y)
   * is the type of the checked integer.
   *
   * Safe integers of different types cannot be used in the same arithmetic expression.
+  *
+  * There are convenience typedefs for all PR integer types, of the following form (these are just 2 examples):
+    \code
+    typedef CheckedInt<PRInt32> CheckedInt32;
+    typedef CheckedInt<PRUint16> CheckedUint16;
+    \endcode
   */
 template<typename T>
 class CheckedInt
@@ -412,6 +420,36 @@ public:
     PRBool operator ==(const CheckedInt& other) const
     {
         return PRBool(mIsValid & other.mIsValid & T(value() == other.value()));
+    }
+
+    /** prefix ++ */
+    CheckedInt& operator++()
+    {
+        *this = *this + 1;
+        return *this;
+    }
+
+    /** postfix ++ */
+    CheckedInt operator++(int)
+    {
+        CheckedInt tmp = *this;
+        *this = *this + 1;
+        return tmp;
+    }
+
+    /** prefix -- */
+    CheckedInt& operator--()
+    {
+        *this = *this - 1;
+        return *this;
+    }
+
+    /** postfix -- */
+    CheckedInt operator--(int)
+    {
+        CheckedInt tmp = *this;
+        *this = *this - 1;
+        return tmp;
     }
 
 private:
@@ -518,6 +556,20 @@ inline PRBool operator ==(const U & lhs, const CheckedInt<T> &rhs)
 {
     return cast_to_CheckedInt<T>(lhs) == rhs;
 }
+
+// convenience typedefs.
+// the use of a macro here helps make sure that we don't let a typo slip into some of these.
+#define CHECKEDINT_MAKE_TYPEDEF(Type) \
+typedef CheckedInt<PR##Type> Checked##Type;
+
+CHECKEDINT_MAKE_TYPEDEF(Int8)
+CHECKEDINT_MAKE_TYPEDEF(Uint8)
+CHECKEDINT_MAKE_TYPEDEF(Int16)
+CHECKEDINT_MAKE_TYPEDEF(Uint16)
+CHECKEDINT_MAKE_TYPEDEF(Int32)
+CHECKEDINT_MAKE_TYPEDEF(Uint32)
+CHECKEDINT_MAKE_TYPEDEF(Int64)
+CHECKEDINT_MAKE_TYPEDEF(Uint64)
 
 } // end namespace mozilla
 

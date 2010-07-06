@@ -808,6 +808,8 @@ public:
                                                         nsIntPoint& aPoint,
                                                         nsIntRect* aScreenRect);
 
+  virtual already_AddRefed<nsPIDOMWindow> GetRootWindow();
+
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView* aDisplayRoot,
@@ -1247,6 +1249,7 @@ protected:
 private:
 
   PRBool InZombieDocument(nsIContent *aContent);
+  already_AddRefed<nsIPresShell> GetParentPresShell();
   nsresult RetargetEventToParent(nsGUIEvent* aEvent,
                                  nsEventStatus*  aEventStatus);
 
@@ -6013,8 +6016,51 @@ PRBool PresShell::InZombieDocument(nsIContent *aContent)
   return !doc || !doc->GetWindow();
 }
 
-nsresult PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
-                                          nsEventStatus*  aEventStatus)
+already_AddRefed<nsPIDOMWindow>
+PresShell::GetRootWindow()
+{
+  nsCOMPtr<nsPIDOMWindow> window =
+    do_QueryInterface(mDocument->GetWindow());
+  if (window) {
+    nsCOMPtr<nsPIDOMWindow> rootWindow = window->GetPrivateRoot();
+    NS_ASSERTION(rootWindow, "nsPIDOMWindow::GetPrivateRoot() returns NULL");
+    return rootWindow.forget();
+  }
+
+  // If we don't have DOM window, we're zombie, we should find the root window
+  // with our parent shell.
+  nsCOMPtr<nsIPresShell> parent = GetParentPresShell();
+  NS_ENSURE_TRUE(parent, nsnull);
+  return parent->GetRootWindow();
+}
+
+already_AddRefed<nsIPresShell>
+PresShell::GetParentPresShell()
+{
+  NS_ENSURE_TRUE(mPresContext, nsnull);
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  if (!container) {
+    container = do_QueryReferent(mForwardingContainer);
+  }
+
+  // Now, find the parent pres shell and send the event there
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(container);
+  // Might have gone away, or never been around to start with
+  NS_ENSURE_TRUE(treeItem, nsnull);
+
+  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+  treeItem->GetParent(getter_AddRefs(parentTreeItem));
+  nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentTreeItem);
+  NS_ENSURE_TRUE(parentDocShell && treeItem != parentTreeItem, nsnull);
+
+  nsIPresShell* parentPresShell = nsnull;
+  parentDocShell->GetPresShell(&parentPresShell);
+  return parentPresShell;
+}
+
+nsresult
+PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
+                                 nsEventStatus*  aEventStatus)
 {
   // Send this events straight up to the parent pres shell.
   // We do this for keystroke events in zombie documents or if either a frame
@@ -6022,28 +6068,8 @@ nsresult PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
   // That way at least the UI key bindings can work.
 
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-  if (!container)
-    container = do_QueryReferent(mForwardingContainer);
-
-  // Now, find the parent pres shell and send the event there
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = 
-    do_QueryInterface(container);
-  if (!treeItem) {
-    // Might have gone away, or never been around to start with
-    return NS_ERROR_FAILURE;
-  }
-  
-  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  treeItem->GetParent(getter_AddRefs(parentTreeItem));
-  nsCOMPtr<nsIDocShell> parentDocShell = 
-    do_QueryInterface(parentTreeItem);
-  if (!parentDocShell || treeItem == parentTreeItem) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPresShell> parentPresShell;
-  parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
+  nsCOMPtr<nsIPresShell> parentPresShell = GetParentPresShell();
+  NS_ENSURE_TRUE(parentPresShell, NS_ERROR_FAILURE);
   nsCOMPtr<nsIViewObserver> parentViewObserver = 
     do_QueryInterface(parentPresShell);
   if (!parentViewObserver) {
@@ -6069,11 +6095,7 @@ PresShell::DisableNonTestMouseEvents(PRBool aDisable)
 already_AddRefed<nsPIDOMWindow>
 PresShell::GetFocusedDOMWindowInOurWindow()
 {
-  nsCOMPtr<nsPIDOMWindow> window =
-    do_QueryInterface(mDocument->GetWindow());
-  NS_ENSURE_TRUE(window, nsnull);
-
-  nsCOMPtr<nsPIDOMWindow> rootWindow = window->GetPrivateRoot();
+  nsCOMPtr<nsPIDOMWindow> rootWindow = GetRootWindow();
   NS_ENSURE_TRUE(rootWindow, nsnull);
   nsPIDOMWindow* focusedWindow;
   nsFocusManager::GetFocusedDescendant(rootWindow, PR_TRUE, &focusedWindow);
