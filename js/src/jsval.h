@@ -61,6 +61,8 @@ JS_BEGIN_EXTERN_C
    * so we just don't try to align.
    */
 # define JSVAL_ALIGNMENT
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+# define JSVAL_ALIGNMENT
 #endif
 
 /*
