@@ -656,46 +656,50 @@ UIClass.prototype = {
 
   // ----------
   delayInit : function() {
-    // ___ Storage
-    let currentWindow = Utils.getCurrentWindow();
-    let data = Storage.readUIData(currentWindow);
-    this.storageSanity(data);
-
-    let groupsData = Storage.readGroupsData(currentWindow);
-    let firstTime = !groupsData || iQ.isEmptyObject(groupsData);
-    let groupData = Storage.readGroupData(currentWindow);
-    Groups.reconstitute(groupsData, groupData);
-
-    TabItems.init();
-
-    if(firstTime) {
-      let items = TabItems.getItems();
-      iQ.each(items, function(index, item) {
-        if(item.parent)
-          item.parent.remove(item);
+    try {
+      // ___ Storage
+      let currentWindow = Utils.getCurrentWindow();
+      let data = Storage.readUIData(currentWindow);
+      this.storageSanity(data);
+  
+      let groupsData = Storage.readGroupsData(currentWindow);
+      let firstTime = !groupsData || iQ.isEmptyObject(groupsData);
+      let groupData = Storage.readGroupData(currentWindow);
+      Groups.reconstitute(groupsData, groupData);
+  
+      TabItems.init();
+  
+      if(firstTime) {
+        let items = TabItems.getItems();
+        iQ.each(items, function(index, item) {
+          if(item.parent)
+            item.parent.remove(item);
+        });
+  
+        let box = Items.getPageBounds();
+        box.inset(10, 10);
+        let options = {padding: 10};
+        Items.arrange(items, box, options);
+      } 
+          
+      // ___ resizing
+      if(data.pageBounds) {
+        this.pageBounds = data.pageBounds;
+        this.resize(true);
+      } else
+        this.pageBounds = Items.getPageBounds();
+  
+      var self = this;
+      iQ(window).resize(function() {
+        self.resize();
       });
-
-      let box = Items.getPageBounds();
-      box.inset(10, 10);
-      let options = {padding: 10};
-      Items.arrange(items, box, options);
-    } 
-        
-    // ___ resizing
-    if(data.pageBounds) {
-      this.pageBounds = data.pageBounds;
-      this.resize(true);
-    } else
-      this.pageBounds = Items.getPageBounds();
-
-    var self = this;
-    iQ(window).resize(function() {
-      self.resize();
-    });
-
-    // ___ Done
-    this.initialized = true;
-    this.save(); // for this.pageBounds
+  
+      // ___ Done
+      this.initialized = true;
+      this.save(); // for this.pageBounds
+    } catch(e) {
+      Utils.log(e);
+    }
   },
   
   // ----------
@@ -850,7 +854,8 @@ UIClass.prototype = {
     var items = Items.getTopLevelItems();
     
     // compute itemBounds: the union of all the top-level items' bounds.
-    var itemBounds = new Rect(this.pageBounds); // why do we start with pageBounds?
+    var itemBounds = new Rect(this.pageBounds); // We start with pageBounds so that we respect
+                                                // the empty space the user has left on the page.
     itemBounds.width = 1;
     itemBounds.height = 1;
     iQ.each(items, function(index, item) {
@@ -922,7 +927,7 @@ UIClass.prototype = {
       var $select = iQ('<select>')
         .css({
           position: 'absolute',
-          bottom: 5,
+          top: 5,
           right: 5,
           opacity: .2
         })
