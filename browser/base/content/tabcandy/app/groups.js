@@ -103,6 +103,15 @@ window.Group = function(listOfEls, options) {
   // The <TabItem> for the group's active tab. 
   this._activeTab = null;
   
+ 	// Variables: xDensity, yDensity
+ 	// "density" ranges from 0 to 1, with 0 being "not dense" = "squishable" and 1 being "dense"
+ 	// = "not squishable". For example, if there is extra space in the vertical direction, 
+ 	// yDensity will be < 1. These are set by <Group.arrange>, as it is dependent on the tab items
+ 	// inside the group.
+  this.xDensity = 0;
+  this.yDensity = 0;
+
+  
   if(isPoint(options.userSize))  
     this.userSize = new Point(options.userSize);
 
@@ -302,7 +311,8 @@ window.Group = function(listOfEls, options) {
     this.setResizable(true);
   
   Groups.register(this);
-  
+
+	// ___ Position
   this.setBounds(rectToBe);
   this.snap();
   
@@ -869,10 +879,31 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
         if(this.isNewTabsGroup()) {
           arrangeOptions.count++;
-        } else if(!count)
+        } else if (!count) {
+					this.xDensity = 0;
+					this.yDensity = 0;
           return;
+        }
     
         var rects = Items.arrange(this._children, bb, arrangeOptions);
+    		
+    		// yDensity = (the distance of the bottom of the last tab to the top of the content area) 
+    		// / (the total available content height)
+    		this.yDensity = (rects[rects.length - 1].bottom - bb.top) / (bb.height);
+
+    		// xDensity = (the distance from the left of the content area to the right of the rightmost
+    		// tab) / (the total available content width)
+    		
+    		// first, find the right of the rightmost tab! luckily, they're in order.
+    		// TODO: does this change for rtl?
+    		var rightMostRight = 0;
+				for each (let rect in rects) {
+					if (rect.right > rightMostRight)
+						rightMostRight = rect.right;
+					else
+						break;
+				}
+    		this.xDensity = (rightMostRight - bb.left) / (bb.width);
         
         iQ.each(this._children, function(index, child) {
           if(!child.locked.bounds) {
@@ -925,20 +956,32 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     
     var zIndex = this.getZ() + count + 1;
     
+    var Pi = Math.acos(-1);
+    var maxRotation = 35; // degress
     var scale = 0.8;
     var newTabsPad = 10;
     var w;
     var h; 
     var itemAspect = TabItems.tabHeight / TabItems.tabWidth;
     var bbAspect = bb.height / bb.width;
+
+    // compute h and w. h and w are the dimensions of each of the tabs... in other words, the
+    // height and width of the entire stack, modulo rotation.
     if(bbAspect > itemAspect) { // Tall, thin group
       w = bb.width * scale;
       h = w * itemAspect;
+			// let's say one, because, even though there's more space, we're enforcing that with scale.
+			this.xDensity = 1;
+			this.yDensity = h / (bb.height * scale);
     } else { // Short, wide group
       h = bb.height * scale;
       w = h * (1 / itemAspect);
+			this.yDensity = 1;
+			this.xDensity = h / (bb.width * scale);
     }
     
+    // x is the left margin that the stack will have, within the content area (bb)
+    // y is the vertical margin
     var x = (bb.width - w) / 2;
     if(this.isNewTabsGroup())
       x -= (w + newTabsPad) / 2;
@@ -962,7 +1005,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         
         child.addClass("stacked");
         child.setBounds(box, !animate);
-        child.setRotation(self._randRotate(35, index));
+        child.setRotation(self._randRotate(maxRotation, index));
       }
     });
     
