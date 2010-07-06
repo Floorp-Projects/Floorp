@@ -96,6 +96,7 @@ class UpvarCookie
     void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
     void set(uint16 newLevel, uint16 newSlot) { value = (uint32(newLevel) << 16) | newSlot; }
     void makeFree() { set(0xffff, 0xffff); JS_ASSERT(isFree()); }
+    void fromInteger(uint32 u32) { value = u32; }
 };
 JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32));
 

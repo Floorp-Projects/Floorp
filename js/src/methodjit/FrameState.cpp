@@ -557,7 +557,7 @@ FrameState::copyInt32ConstantIntoReg(Assembler &masm, FrameEntry *fe)
         fe = fe->copyOf();
 
     RegisterID reg = allocReg();
-    masm.move(Imm32(fe->getValue().asInt32()), reg);
+    masm.move(Imm32(fe->getValue().toInt32()), reg);
     return reg;
 }
 

@@ -268,10 +268,10 @@ CallThisObjectHook(JSContext *cx, JSObject *obj, Value *argv)
  *
  * The alert should display "true".
  */
-JS_STATIC_INTERPRET JSObject *
+JS_STATIC_INTERPRET bool
 ComputeGlobalThis(JSContext *cx, Value *argv)
 {
-    JSObject *thisp = argv[-2].asObject().getGlobal()->thisObject(cx);
+    JSObject *thisp = argv[-2].toObject().getGlobal()->thisObject(cx);
     if (!thisp)
         return false;
     argv[-1].setObject(*thisp);
@@ -287,13 +287,13 @@ JSStackFrame::computeThisObject(JSContext *cx)
     if (!ComputeThisFromArgv(cx, argv))
         return NULL;
     thisv = argv[-1];
-    JS_ASSERT(IsSaneThisObject(thisv.asObject()));
-    return &thisv.asObject();
+    JS_ASSERT(IsSaneThisObject(thisv.toObject()));
+    return &thisv.toObject();
 }
 
 namespace js {
 
-JSObject *
+bool
 ComputeThisFromArgv(JSContext *cx, Value *argv)
 {
     JS_ASSERT(!argv[-1].isMagic());  // check for SynthesizeFrame poisoning
@@ -303,7 +303,7 @@ ComputeThisFromArgv(JSContext *cx, Value *argv)
     if (!argv[-1].isObject())
         return !!js_PrimitiveToObject(cx, &argv[-1]);
 
-    JS_ASSERT(IsSaneThisObject(argv[-1].asObject()));
+    JS_ASSERT(IsSaneThisObject(argv[-1].toObject()));
     return true;
 }
 
@@ -336,7 +336,7 @@ Class js_NoSuchMethodClass = {
  * call by name, and args is an Array containing this invocation's actual
  * parameters.
  */
-JSBool
+JS_STATIC_INTERPRET JSBool
 js_OnUnknownMethod(JSContext *cx, Value *vp)
 {
     JS_ASSERT(!vp[1].isPrimitive());
@@ -469,14 +469,8 @@ RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain
     return Interpret(cx);
 }
 
-/*
- * Find a function reference and its 'this' object implicit first parameter
- * under argc arguments on cx's stack, and call the function.  Push missing
- * required arguments, allocate declared local variables, and pop everything
- * when done.  Then push the return value.
- */
-JS_REQUIRES_STACK bool
-Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
+static JS_REQUIRES_STACK bool
+callJSNative(JSContext *cx, CallOp callOp, JSObject *thisp, uintN argc, Value *argv, Value *rval)
 {
     Value *vp = argv - 2;
     if (callJSFastNative(cx, callOp, argc, vp)) {
@@ -494,37 +488,6 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     uintN argc = args.getArgc();
     Value *vp = args.getvp();
 
-        if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
-            /* Handle bound method special case. */
-            vp[1].setObjectOrNull(parent);
-        } else if (vp[1].isPrimitive()) {
-            JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
-            if (PrimitiveThisTest(fun, vp[1]))
-                goto start_call;
-        }
-    }
-
-    if (flags & JSINVOKE_CONSTRUCT) {
-        JS_ASSERT(vp[1].isObject());
-    } else {
-        /*
-         * We must call js_ComputeThis in case we are not called from the
-         * interpreter, where a prior bytecode has computed an appropriate
-         * |this| already.
-         *
-         * But we need to compute |this| eagerly only for so-called "slow"
-         * (i.e., not fast) native functions. Fast natives must use either
-         * JS_THIS or JS_THIS_OBJECT, and scripted functions will go through
-         * the appropriate this-computing bytecode, e.g., JSOP_THIS.
-         */
-        if (native && (!fun || !(fun->flags & JSFUN_FAST_NATIVE))) {
-            if (!ComputeThisFromArgv(cx, vp + 2))
-                return false;
-            flags |= JSFRAME_COMPUTED_THIS;
-        }
-    }
-
-  start_call:
     if (native && fun && fun->isFastNative()) {
 #ifdef DEBUG_NOT_THROWING
         JSBool alreadyThrowing = cx->throwing;
@@ -631,16 +594,18 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
          * interpreter, where a prior bytecode has computed an appropriate
          * |this| already.
          */
-        JSObject *thisp = vp[1].asObjectOrNull();
-        if (!thisp)
+        JSObject *thisp = vp[1].toObjectOrNull();
+        if (!thisp) {
+            JSObject *funobj = &args.getvp()[0].toObject();
             thisp = funobj->getGlobal();
+        }
         thisp = thisp->thisObject(cx);
         if (!thisp)
              return false;
          vp[1].setObject(*thisp);
          fp->thisv.setObject(*thisp);
     }
-    JS_ASSERT_IF(!vp[1].isPrimitive(), IsSaneThisObject(vp[1].asObject()));
+    JS_ASSERT_IF(!vp[1].isPrimitive(), IsSaneThisObject(vp[1].toObject()));
 
     /* Call the hook if present after we fully initialized the frame. */
     JSInterpreterHook hook = cx->debugHooks->callHook;
@@ -657,8 +622,9 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
         JSBool alreadyThrowing = cx->throwing;
 #endif
         /* Primitive |this| should not be passed to slow natives. */
-        JSObject *thisp = fun ? fp->getThisObject(cx) : fp->thisv.asObjectOrNull();
-        ok = native(cx, thisp, fp->argc, fp->argv, &fp->rval);
+        JSObject *thisp = fun ? fp->getThisObject(cx) : fp->thisv.toObjectOrNull();
+        ok = callJSNative(cx, native, thisp, fp->argc, fp->argv, &fp->rval);
+
         JS_ASSERT(cx->fp == fp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
@@ -668,7 +634,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     } else {
         JS_ASSERT(script);
         AutoPreserveEnumerators preserve(cx);
-        ok = RunScript(cx, script, fun, &fp->scopeChain.asObject());
+        ok = RunScript(cx, script, fun, fp->scopeChain);
     }
 
     DTrace::exitJSFun(cx, fp, fun, fp->rval);
@@ -756,7 +722,6 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
                 Value *vp = args.getvp();
                 if (!ComputeThisFromVp(cx, vp))
                     return false;
-                flags |= JSFRAME_COMPUTED_THIS;
             }
         }
         return InvokeCommon(cx, fun, script, native, args, flags);
@@ -963,7 +928,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData);
 
     AutoPreserveEnumerators preserve(cx);
-    JSBool ok = RunScript(cx, script, NULL, &fp->scopeChain.asObject());
+    JSBool ok = RunScript(cx, script, NULL, fp->scopeChain);
     if (result)
         *result = fp->rval;
 
@@ -2300,7 +2265,7 @@ Interpret(JSContext *cx)
     (fun = script->getFunction(GET_FULL_INDEX(PCOFF)))
 
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
-    (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).asDouble())
+    (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
 
 #ifdef JS_TRACER
 
