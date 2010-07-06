@@ -41,7 +41,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsBidiUtils.h"
-#include "symmtable.h"
 #include "bidicattable.h"
 #include "nsCharTraits.h"
 
@@ -146,24 +145,6 @@ nsresult HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
       break;
   }
   return NS_OK;
-}
-
-PRUint32 SymmSwap(PRUint32 aChar)
-{
-  return Mirrored(aChar);
-}
-
-eBidiCategory GetBidiCategory(PRUint32 aChar)
-{
-  eBidiCategory oResult = GetBidiCat(aChar);
-  if (eBidiCat_CC == oResult)
-    oResult = (eBidiCategory)(aChar & 0xFF); /* Control codes have special treatment to keep the tables smaller */
-  return oResult;
-}
-
-PRBool IsBidiCategory(PRUint32 aChar, eBidiCategory aBidiCategory)
-{
-  return (GetBidiCategory(aChar) == aBidiCategory);
 }
 
 #define LRM_CHAR 0x200e

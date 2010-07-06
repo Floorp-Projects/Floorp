@@ -325,6 +325,9 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   mResampleNeeded = PR_FALSE;
 
   // STEP 1: Bring model up to date
+  // (i)  Rewind elements where necessary
+  // (ii) Run milestone samples
+  RewindElements();
   DoMilestoneSamples();
 
   // STEP 2: Sample the child time containers
@@ -400,6 +403,56 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   mLastCompositorTable = currentCompositorTable.forget();
 
   NS_ASSERTION(!mResampleNeeded, "Resample dirty flag set during sample!");
+}
+
+void
+nsSMILAnimationController::RewindElements()
+{
+  PRBool rewindNeeded = PR_FALSE;
+  mChildContainerTable.EnumerateEntries(RewindNeeded, &rewindNeeded);
+  if (!rewindNeeded)
+    return;
+
+  mAnimationElementTable.EnumerateEntries(RewindAnimation, nsnull);
+  mChildContainerTable.EnumerateEntries(ClearRewindNeeded, nsnull);
+}
+
+/*static*/ PR_CALLBACK PLDHashOperator
+nsSMILAnimationController::RewindNeeded(TimeContainerPtrKey* aKey,
+                                        void* aData)
+{
+  NS_ABORT_IF_FALSE(aData,
+      "Null data pointer during time container enumeration");
+  PRBool* rewindNeeded = static_cast<PRBool*>(aData);
+
+  nsSMILTimeContainer* container = aKey->GetKey();
+  if (container->NeedsRewind()) {
+    *rewindNeeded = PR_TRUE;
+    return PL_DHASH_STOP;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+/*static*/ PR_CALLBACK PLDHashOperator
+nsSMILAnimationController::RewindAnimation(AnimationElementPtrKey* aKey,
+                                           void* aData)
+{
+  nsISMILAnimationElement* animElem = aKey->GetKey();
+  nsSMILTimeContainer* timeContainer = animElem->GetTimeContainer();
+  if (timeContainer && timeContainer->NeedsRewind()) {
+    animElem->TimedElement().Rewind();
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+/*static*/ PR_CALLBACK PLDHashOperator
+nsSMILAnimationController::ClearRewindNeeded(TimeContainerPtrKey* aKey,
+                                             void* aData)
+{
+  aKey->GetKey()->ClearNeedsRewind();
+  return PL_DHASH_NEXT;
 }
 
 void
@@ -542,6 +595,7 @@ nsSMILAnimationController::SampleTimeContainer(TimeContainerPtrKey* aKey,
       (container->NeedsSample() || !params->mSkipUnchangedContainers)) {
     container->ClearMilestones();
     container->Sample();
+    container->MarkSeekFinished();
     params->mActiveContainers->PutEntry(container);
   }
 
@@ -587,6 +641,8 @@ nsSMILAnimationController::SampleTimedElement(
 
   nsSMILTime containerTime = timeContainer->GetCurrentTime();
 
+  NS_ABORT_IF_FALSE(!timeContainer->IsSeeking(),
+      "Doing a regular sample but the time container is still seeking");
   aElement->TimedElement().SampleAt(containerTime);
 }
 

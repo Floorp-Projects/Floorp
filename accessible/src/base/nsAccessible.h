@@ -52,6 +52,7 @@
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"
 
+class AccGroupInfo;
 class nsAccessible;
 class nsAccEvent;
 struct nsRoleMapEntry;
@@ -324,7 +325,12 @@ protected:
    * Set accessible parent and index in parent.
    */
   void BindToParent(nsAccessible* aParent, PRUint32 aIndexInParent);
-  void UnbindFromParent() { mParent = nsnull; mIndexInParent = -1; }
+  void UnbindFromParent()
+  {
+    mParent = nsnull;
+    mIndexInParent = -1;
+    mGroupInfo = nsnull;
+  }
 
   /**
    * Return sibling accessible at the given offset.
@@ -425,6 +431,11 @@ protected:
   PRUint32 GetActionRule(PRUint32 aStates);
 
   /**
+   * Return group info.
+   */
+  AccGroupInfo* GetGroupInfo();
+
+  /**
    * Fires platform accessible event. It's notification method only. It does
    * change nothing on Gecko side. Don't use it until you're sure what you do
    * (see example in XUL tree accessible), use nsEventShell::FireEvent()
@@ -439,6 +450,9 @@ protected:
   nsTArray<nsRefPtr<nsAccessible> > mChildren;
   PRBool mAreChildrenInitialized;
   PRInt32 mIndexInParent;
+
+  nsAutoPtr<AccGroupInfo> mGroupInfo;
+  friend class AccGroupInfo;
 
   nsRoleMapEntry *mRoleMapEntry; // Non-null indicates author-supplied role; possibly state & value as well
 };

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="go()">
+  <script type="text/javascript">
+  function go() {
+    // Check that dynamic times are preserved even from filtering
+    var svg = document.documentElement;
+    var a = document.getElementById('a');
+    svg.pauseAnimations();
+    // Generate a series of intervals with dynamic begin points
+    svg.setCurrentTime(1);
+    a.beginElement();
+    svg.setCurrentTime(3);
+    a.beginElement();
+    svg.setCurrentTime(5);
+    a.beginElement();
+    svg.setCurrentTime(7);
+    a.beginElement();
+    svg.setCurrentTime(9);
+    a.beginElement();
+    svg.setCurrentTime(11);
+    // By now, the first interval will have been filtered but test that we have
+    // preserved the instance time in order to reconstruct it
+    svg.setCurrentTime(1.5);
+    svg.removeAttribute("class");
+  }
+  </script>
+  <rect x="100" y="15" width="200" height="200" fill="blue">
+    <set attributeName="x" to="15" begin="indefinite" dur="1s" id="a"/>
+  </rect>
+</svg>

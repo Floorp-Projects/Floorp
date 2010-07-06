@@ -39,7 +39,6 @@
 #ifndef NSCOMPRESSEDCHARMAP_H
 #define NSCOMPRESSEDCHARMAP_H
 #include "prtypes.h"
-#include "nsICharRepresentable.h"
 
 #define ALU_SIZE PR_BITS_PER_LONG
 //#define ALU_SIZE 16
@@ -59,23 +58,8 @@
 #   define CCMAP_BITS_PER_ALU_LOG2 4
 #endif
 
-
-class nsICharRepresentable;
-
-extern PRUint16* CreateEmptyCCMap();
-extern PRUint16* MapToCCMap(PRUint32* aMap);
-extern PRUint16* MapperToCCMap(nsICharRepresentable *aMapper);
-extern void FreeCCMap(PRUint16* &aMap);
-extern PRBool NextNonEmptyCCMapPage(const PRUint16 *, PRUint32 *);
-extern PRBool IsSameCCMap(PRUint16* ccmap1, PRUint16* ccmap2);
-#ifdef DEBUG
-void printCCMap(PRUint16* aCCMap);
-#endif
-
-
-// surrogate support extension
-extern PRUint16*
-MapToCCMapExt(PRUint32* aBmpPlaneMap, PRUint32** aOtherPlaneMaps, PRUint32 aOtherPlaneNum);
+// Note: nsCompressedCharMap.cpp along with class
+// nsCompressedCharMap was removed in bug 559489.
 
 // 
 // nsCompressedCharMap
@@ -102,36 +86,6 @@ MapToCCMapExt(PRUint32* aBmpPlaneMap, PRUint32** aOtherPlaneMaps, PRUint32 aOthe
 
 // non-bmp unicode support extension
 #define EXTENDED_UNICODE_PLANES    16
-
-class nsCompressedCharMap {
-public:
-  nsCompressedCharMap();
-  ~nsCompressedCharMap();
-
-  PRUint16* NewCCMap();
-  PRUint16* FillCCMap(PRUint16* aCCMap);
-  PRUint16  GetSize() {return mUsedLen;}
-  void      SetChar(PRUint32);
-  void      SetChars(PRUint16*);
-  void      SetChars(PRUint16, ALU_TYPE*);
-  void      SetChars(PRUint32*);
-  void      Extend() {mExtended = PR_TRUE;} // enable surrogate area
-
-protected:
-  union {
-    PRUint16 mCCMap[CCMAP_MAX_LEN];
-    ALU_TYPE used_for_align; // do not use; only here to cause
-                             // alignment
-  } u;
-  PRUint16 mUsedLen;   // in PRUint16
-  PRUint16 mAllOnesPage;
-
-  PRBool mExtended;
-
-  // for surrogate support
-  PRUint32* mExtMap[EXTENDED_UNICODE_PLANES+1];
-  PRUint32  mMap[UCS2_MAP_LEN];
-};
 
 //
 // Character Map Compression

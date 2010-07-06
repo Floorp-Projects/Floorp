@@ -985,12 +985,19 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
           et->mPropertyTransitions.RemoveElementAt(i);
         } else if (pt.mStartTime + pt.mDuration <= aTime) {
           // This transition has completed.
-          nsCSSProperty prop = pt.mProperty;
-          if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME)) {
-            prop = nsCSSProps::OtherNameFor(prop);
+
+          // Fire transitionend events only for transitions on elements
+          // and not those on pseudo-elements, since we can't target an
+          // event at pseudo-elements.
+          if (et->mElementProperty == nsGkAtoms::transitionsProperty) {
+            nsCSSProperty prop = pt.mProperty;
+            if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME))
+            {
+              prop = nsCSSProps::OtherNameFor(prop);
+            }
+            events.AppendElement(
+              TransitionEventInfo(et->mElement, prop, pt.mDuration));
           }
-          events.AppendElement(
-            TransitionEventInfo(et->mElement, prop, pt.mDuration));
 
           // Leave this transition in the list for one more refresh
           // cycle, since we haven't yet processed its style change, and

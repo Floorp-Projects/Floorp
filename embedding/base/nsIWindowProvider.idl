@@ -56,7 +56,7 @@ interface nsIURI;
  * or the provider does not provide a window, the window watcher will proceed
  * to actually open a new window.
  */
-[scriptable, uuid(5119ac7f-81dd-4061-96a7-71f2cf5efee4)]
+[scriptable, uuid(f607bd66-08e5-4d2e-ad83-9f9f3ca17658)]
 interface nsIWindowProvider : nsISupports
 {
   /**
@@ -114,6 +114,7 @@ interface nsIWindowProvider : nsISupports
    */
   nsIDOMWindow provideWindow(in nsIDOMWindow aParent,
                              in unsigned long aChromeFlags,
+                             in boolean aCalledFromJS,
                              in boolean aPositionSpecified,
                              in boolean aSizeSpecified,
                              in nsIURI aURI,

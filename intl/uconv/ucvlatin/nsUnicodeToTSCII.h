@@ -44,12 +44,11 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsICharRepresentable.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToTSCII [declaration]
 
-class nsUnicodeToTSCII : public nsIUnicodeEncoder, public nsICharRepresentable
+class nsUnicodeToTSCII : public nsIUnicodeEncoder
 {
 
 NS_DECL_ISUPPORTS
@@ -71,8 +70,6 @@ public:
   NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior,
                                     nsIUnicharEncoder * aEncoder, 
                                     PRUnichar aChar);
-
-  NS_IMETHOD FillInfo(PRUint32* aInfo);
 
 private:
   PRUint32 mBuffer; // buffer for character(s) to be combined with the following

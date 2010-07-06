@@ -39,6 +39,8 @@
 
 #include "WebGLContext.h"
 
+#include "CheckedInt.h"
+
 using namespace mozilla;
 
 /*
@@ -112,12 +114,18 @@ WebGLContext::ValidateBuffers(PRUint32 count)
             continue;
 
         // compute the number of bytes we actually need
-        WebGLuint needed = vd.byteOffset +     // the base offset
-            vd.actualStride() * (count-1) +    // to stride to the start of the last element group
-            vd.componentSize() * vd.size;      // and the number of bytes needed for these components
+        CheckedUint32 checked_needed = CheckedUint32(vd.byteOffset) + // the base offset
+            CheckedUint32(vd.actualStride()) * (count-1) + // to stride to the start of the last element group
+            CheckedUint32(vd.componentSize()) * vd.size;   // and the number of bytes needed for these components
 
-        if (vd.buf->ByteLength() < needed) {
-            LogMessage("VBO too small for bound attrib index %d: need at least %d bytes, but have only %d", i, needed, vd.buf->ByteLength());
+        if (!checked_needed.valid()) {
+            LogMessage("Integer overflow computing the size of bound vertex attrib buffer at index %d", i);
+            return PR_FALSE;
+        }
+
+        if (vd.buf->ByteLength() < checked_needed.value()) {
+            LogMessage("VBO too small for bound attrib index %d: need at least %d bytes, but have only %d",
+                       i, checked_needed.value(), vd.buf->ByteLength());
             return PR_FALSE;
         }
     }
@@ -243,6 +251,19 @@ PRBool WebGLContext::ValidateFaceEnum(WebGLenum target, const char *info)
         case LOCAL_GL_FRONT:
         case LOCAL_GL_BACK:
         case LOCAL_GL_FRONT_AND_BACK:
+            return PR_TRUE;
+        default:
+            ErrorInvalidEnumInfo(info);
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
+{
+    switch (target) {
+        case LOCAL_GL_STREAM_DRAW:
+        case LOCAL_GL_STATIC_DRAW:
+        case LOCAL_GL_DYNAMIC_DRAW:
             return PR_TRUE;
         default:
             ErrorInvalidEnumInfo(info);
