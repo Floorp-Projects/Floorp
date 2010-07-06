@@ -916,66 +916,70 @@ UIClass.prototype = {
   
   // ----------
   addDevMenu: function() {
-    var self = this;
-    
-    var $select = iQ('<select>')
-      .css({
-        position: 'absolute',
-        bottom: 5,
-        right: 5,
-        opacity: .2
-      })
-      .appendTo('body')
-      .change(function () {
-        var index = iQ(this).val();
-        try {
-          commands[index].code.apply(commands[index].element);
-        } catch(e) {
-          Utils.log('dev menu error', e);
+    try {
+      var self = this;
+      
+      var $select = iQ('<select>')
+        .css({
+          position: 'absolute',
+          bottom: 5,
+          right: 5,
+          opacity: .2
+        })
+        .appendTo('body')
+        .change(function () {
+          var index = iQ(this).val();
+          try {
+            commands[index].code.apply(commands[index].element);
+          } catch(e) {
+            Utils.log('dev menu error', e);
+          }
+          iQ(this).val(0);
+        });
+        
+      var commands = [{
+        name: 'dev menu', 
+        code: function() {
         }
-        iQ(this).val(0);
-      });
-      
-    var commands = [{
-      name: 'dev menu', 
-      code: function() {
+      }, {
+        name: 'show trenches', 
+        code: function() {
+          Trenches.toggleShown();
+          iQ(this).html((Trenches.showDebug ? 'hide' : 'show') + ' trenches');
+        }
+      }, {
+        name: 'refresh', 
+        code: function() {
+          location.href = 'tabcandy.html';
+        }
+      }, {
+        name: 'code docs', 
+        code: function() {
+          self.newTab('http://hg.mozilla.org/labs/tabcandy/raw-file/tip/content/doc/index.html');
+        }
+      }, {
+        name: 'save', 
+        code: function() {
+          self.saveAll();
+        }
+      }, {
+        name: 'group sites', 
+        code: function() {
+          self.arrangeBySite();
+        }
+      }];
+        
+      var count = commands.length;
+      var a;
+      for(a = 0; a < count; a++) {
+        commands[a].element = iQ('<option>')
+          .val(a)
+          .html(commands[a].name)
+          .appendTo($select)
+          .get(0);
       }
-    }, {
-      name: 'show trenches', 
-      code: function() {
-        Trenches.toggleShown();
-        iQ(this).html((Trenches.showDebug ? 'hide' : 'show') + ' trenches');
-      }
-    }, {
-      name: 'refresh', 
-      code: function() {
-        location.href = 'tabcandy.html';
-      }
-    }, {
-      name: 'code docs', 
-      code: function() {
-        self.newTab('http://hg.mozilla.org/labs/tabcandy/raw-file/tip/content/doc/index.html');
-      }
-    }, {
-      name: 'save', 
-      code: function() {
-        self.saveAll();
-      }
-    }, {
-      name: 'group sites', 
-      code: function() {
-        self.arrangeBySite();
-      }
-    }];
-      
-    var count = commands.length;
-    var a;
-    for(a = 0; a < count; a++) {
-      commands[a].element = iQ('<option>')
-        .val(a)
-        .html(commands[a].name)
-        .appendTo($select)
-        .get(0);
+    } catch(e) {
+      Utils.log(e);
     }
   },
 
