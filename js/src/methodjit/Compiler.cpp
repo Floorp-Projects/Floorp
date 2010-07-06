@@ -192,7 +192,7 @@ mjit::Compiler::generatePrologue()
         /* Set locals to undefined. */
         for (uint32 i = 0; i < script->nslots; i++) {
             Address local(JSFrameReg, sizeof(JSStackFrame) + i * sizeof(Value));
-            masm.storeValue(UndefinedTag(), local);
+            masm.storeValue(UndefinedValue(), local);
         }
 
         /* Create the call object. */
@@ -400,7 +400,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_NOP)
 
           BEGIN_CASE(JSOP_PUSH)
-            frame.push(UndefinedTag());
+            frame.push(UndefinedValue());
           END_CASE(JSOP_PUSH)
 
           BEGIN_CASE(JSOP_POPV)
@@ -553,7 +553,7 @@ mjit::Compiler::generateMethod()
                     frame.pop();
 
                     if (!target) {
-                        frame.push(Value(BooleanTag(result)));
+                        frame.push(Value(BooleanValue(result)));
                     } else {
                         if (fused == JSOP_IFEQ)
                             result = !result;
@@ -633,7 +633,7 @@ mjit::Compiler::generateMethod()
                 ValueToECMAInt32(cx, top->getValue(), &i);
                 i = ~i;
                 frame.pop();
-                frame.push(Int32Tag(i));
+                frame.push(Int32Value(i));
             } else {
                 jsop_bitnot();
             }
@@ -648,7 +648,7 @@ mjit::Compiler::generateMethod()
                 ValueToNumber(cx, top->getValue(), &d);
                 d = -d;
                 frame.pop();
-                frame.push(DoubleTag(d));
+                frame.push(DoubleValue(d));
             } else {
                 jsop_neg();
             }
@@ -666,7 +666,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_VOID)
             frame.pop();
-            frame.push(UndefinedTag());
+            frame.push(UndefinedValue());
           END_CASE(JSOP_VOID)
 
           BEGIN_CASE(JSOP_INCNAME)
@@ -792,8 +792,8 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DOUBLE)
           {
             uint32 index = fullAtomIndex(PC);
-            double d = script->getConst(index).asDouble();
-            frame.push(Value(DoubleTag(d)));
+            double d = script->getConst(index).toDouble();
+            frame.push(Value(DoubleValue(d)));
           }
           END_CASE(JSOP_DOUBLE)
 
@@ -801,7 +801,7 @@ mjit::Compiler::generateMethod()
           {
             JSAtom *atom = script->getAtom(fullAtomIndex(PC));
             JSString *str = ATOM_TO_STRING(atom);
-            frame.push(Value(StringTag(str)));
+            frame.push(Value(StringValue(str)));
           }
           END_CASE(JSOP_STRING)
 
@@ -814,7 +814,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_ONE)
 
           BEGIN_CASE(JSOP_NULL)
-            frame.push(NullTag());
+            frame.push(NullValue());
           END_CASE(JSOP_NULL)
 
           BEGIN_CASE(JSOP_THIS)
@@ -822,11 +822,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_THIS)
 
           BEGIN_CASE(JSOP_FALSE)
-            frame.push(Value(BooleanTag(false)));
+            frame.push(Value(BooleanValue(false)));
           END_CASE(JSOP_FALSE)
 
           BEGIN_CASE(JSOP_TRUE)
-            frame.push(Value(BooleanTag(true)));
+            frame.push(Value(BooleanValue(true)));
           END_CASE(JSOP_TRUE)
 
           BEGIN_CASE(JSOP_OR)
@@ -920,7 +920,7 @@ mjit::Compiler::generateMethod()
           {
             jsop_getarg(GET_SLOTNO(PC));
             if (op == JSOP_CALLARG)
-                frame.push(NullTag());
+                frame.push(NullValue());
           }
           END_CASE(JSOP_GETARG)
 
@@ -958,7 +958,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_SETLOCAL)
 
           BEGIN_CASE(JSOP_UINT16)
-            frame.push(Value(Int32Tag((int32_t) GET_UINT16(PC))));
+            frame.push(Value(Int32Value((int32_t) GET_UINT16(PC))));
           END_CASE(JSOP_UINT16)
 
           BEGIN_CASE(JSOP_NEWINIT)
@@ -1139,7 +1139,7 @@ mjit::Compiler::generateMethod()
             frame.freeReg(reg);
             frame.push(Address(reg, GET_UINT16(PC) * sizeof(Value)));
             if (op == JSOP_CALLDSLOT)
-                frame.push(NullTag());
+                frame.push(NullValue());
           }
           END_CASE(JSOP_CALLDSLOT)
 
@@ -1178,7 +1178,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CALLGNAME)
             jsop_getgname(fullAtomIndex(PC));
             if (op == JSOP_CALLGNAME)
-                frame.push(NullTag());
+                frame.push(NullValue());
           END_CASE(JSOP_GETGNAME)
 
           BEGIN_CASE(JSOP_SETGNAME)
@@ -1209,16 +1209,16 @@ mjit::Compiler::generateMethod()
             JS_ASSERT(index < uva->length);
 
             prepareStubCall();
-            masm.move(Imm32(uva->vector[index]), Registers::ArgReg1);
+            masm.move(Imm32(uva->vector[index].asInteger()), Registers::ArgReg1);
             stubCall(stubs::GetUpvar, Uses(0), Defs(1));
             frame.pushSynced();
             if (op == JSOP_CALLUPVAR)
-                frame.push(NullTag());
+                frame.push(NullValue());
           }
           END_CASE(JSOP_CALLUPVAR)
 
           BEGIN_CASE(JSOP_UINT24)
-            frame.push(Value(Int32Tag((int32_t) GET_UINT24(PC))));
+            frame.push(Value(Int32Value((int32_t) GET_UINT24(PC))));
           END_CASE(JSOP_UINT24)
 
           BEGIN_CASE(JSOP_CALLELEM)
@@ -1265,15 +1265,15 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_CALLLOCAL)
             frame.pushLocal(GET_SLOTNO(PC));
-            frame.push(NullTag());
+            frame.push(NullValue());
           END_CASE(JSOP_CALLLOCAL)
 
           BEGIN_CASE(JSOP_INT8)
-            frame.push(Value(Int32Tag(GET_INT8(PC))));
+            frame.push(Value(Int32Value(GET_INT8(PC))));
           END_CASE(JSOP_INT8)
 
           BEGIN_CASE(JSOP_INT32)
-            frame.push(Value(Int32Tag(GET_INT32(PC))));
+            frame.push(Value(Int32Value(GET_INT32(PC))));
           END_CASE(JSOP_INT32)
 
           BEGIN_CASE(JSOP_NEWARRAY)
@@ -1355,7 +1355,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CALLGLOBAL)
             jsop_getglobal(GET_SLOTNO(PC));
             if (op == JSOP_CALLGLOBAL)
-                frame.push(NullTag());
+                frame.push(NullValue());
           END_CASE(JSOP_GETGLOBAL)
 
           BEGIN_CASE(JSOP_SETGLOBAL)
@@ -1532,8 +1532,9 @@ mjit::Compiler::emitReturn()
             Jump j = stubcc.masm.jump();
 
             /* if (arguments) ... */
-            Jump argsObj = masm.testObject(Assembler::Equal,
-                                           Address(JSFrameReg, offsetof(JSStackFrame, argsval)));
+            Jump argsObj = masm.branchPtr(Assembler::NotEqual,
+                                          Address(JSFrameReg, offsetof(JSStackFrame, argsobj)),
+                                          ImmIntPtr(0));
             stubcc.linkExit(argsObj);
             stubcc.call(stubs::PutArgsObject);
             stubcc.rejoin(0);
@@ -1767,7 +1768,7 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
     JS_ASSERT(rhs.isPrimitive());
 
     if (lhs.isString() && rhs.isString()) {
-        int cmp = js_CompareStrings(lhs.asString(), rhs.asString());
+        int cmp = js_CompareStrings(lhs.toString(), rhs.toString());
         switch (op) {
           case JSOP_LT:
             return cmp < 0;
@@ -1883,7 +1884,7 @@ mjit::Compiler::jsop_length()
 
     if (top->isTypeKnown() && top->getKnownType() == JSVAL_TYPE_STRING) {
         if (top->isConstant()) {
-            JSString *str = top->getValue().asString();
+            JSString *str = top->getValue().toString();
             Value v;
             v.setNumber(uint32(str->length()));
             frame.pop();
@@ -2512,7 +2513,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
         jsop_getprop(atom);
         // OBJ V
 
-        frame.push(Int32Tag(amt));
+        frame.push(Int32Value(amt));
         // OBJ V 1
 
         /* Use sub since it calls ValueToNumber instead of string concat. */
@@ -2539,7 +2540,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.dup();
         // OBJ N N
 
-        frame.push(Int32Tag(-amt));
+        frame.push(Int32Value(-amt));
         // OBJ N N 1
 
         jsop_binary(JSOP_ADD, stubs::Add);
@@ -2702,7 +2703,7 @@ void
 mjit::Compiler::jsop_bindgname()
 {
     if (script->compileAndGo && globalObj) {
-        frame.push(ObjectTag(*globalObj));
+        frame.push(ObjectValue(*globalObj));
         return;
     }
 
@@ -2729,7 +2730,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
     mic.type = ic::MICInfo::GET;
     mic.entry = masm.label();
     if (fe->isConstant()) {
-        JSObject *obj = &fe->getValue().asObject();
+        JSObject *obj = &fe->getValue().toObject();
         frame.pop();
         JS_ASSERT(obj->isNative());
 
@@ -2805,7 +2806,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
     mic.type = ic::MICInfo::SET;
     mic.entry = masm.label();
     if (objFe->isConstant()) {
-        JSObject *obj = &objFe->getValue().asObject();
+        JSObject *obj = &objFe->getValue().toObject();
         JS_ASSERT(obj->isNative());
 
         JSObjectMap *map = obj->map;
@@ -2972,7 +2973,7 @@ mjit::Compiler::jsop_instanceof()
     j = masm.branchTest32(Assembler::NonZero, temp, temp);
     stubcc.linkExit(j);
 
-    Address protoAddr(obj, offsetof(JSObject, fslots) + JSSLOT_PROTO * sizeof(Value));
+    Address protoAddr(obj, offsetof(JSObject, proto));
     Label loop = masm.label();
 
     /* Walk prototype chain, break out on NULL or hit. */

@@ -1751,8 +1751,7 @@ JS_GetGlobalForScopeChain(JSContext *cx)
 JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp)
 {
-    assertSameCompartment(cx, JSValueArray(vp, 2));
-    if (!ComputeThisFromVp(cx, Valueify(vp)))
+    if (!ComputeThisFromVpInPlace(cx, Valueify(vp)))
         return JSVAL_NULL;
     return vp[1];
 }

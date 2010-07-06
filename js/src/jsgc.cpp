@@ -3515,7 +3515,7 @@ SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
                 cycle = true;
                 break;
             }
-            obj2 = (slot == JSSLOT_PARENT) ? obj2->getParent() : obj2->getProto();
+            obj2 = obj2->getProto();
         }
         if (!cycle)
             obj->setProto(proto);

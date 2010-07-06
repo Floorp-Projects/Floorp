@@ -79,16 +79,16 @@ mjit::stubs::BindName(VMFrame &f)
     PropertyCacheEntry *entry;
 
     /* Fast-path should have caught this. See comment in interpreter. */
-    JS_ASSERT(f.fp->scopeChainObj()->getParent());
+    JS_ASSERT(f.fp->scopeChain->getParent());
 
     JSAtom *atom;
     JSObject *obj2;
     JSContext *cx = f.cx;
-    JSObject *obj = f.fp->scopeChainObj();
+    JSObject *obj = f.fp->scopeChain;
     JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
     if (atom) {
         jsid id = ATOM_TO_JSID(atom);
-        obj = js_FindIdentifierBase(cx, f.fp->scopeChainObj(), id);
+        obj = js_FindIdentifierBase(cx, f.fp->scopeChain, id);
         if (!obj)
             THROW();
     }
@@ -99,7 +99,7 @@ mjit::stubs::BindName(VMFrame &f)
 JSObject * JS_FASTCALL
 mjit::stubs::BindGlobalName(VMFrame &f)
 {
-    return f.fp->scopeChainObj()->getGlobal();
+    return f.fp->scopeChain->getGlobal();
 }
 
 void JS_FASTCALL
@@ -219,8 +219,7 @@ mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
                  * reserveSlots hook to allocate a number of reserved
                  * slots that may vary with obj.
                  */
-                if (slot < obj->numSlots() &&
-                    !obj->getClass()->reserveSlots) {
+                if (slot < obj->numSlots()) {
                     ++scope->freeslot;
                 } else {
                     if (!js_AllocSlot(cx, obj, &slot))
@@ -424,14 +423,14 @@ NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 void JS_FASTCALL
 stubs::Name(VMFrame &f)
 {
-    if (!NameOp(f, f.fp->scopeChainObj()))
+    if (!NameOp(f, f.fp->scopeChain))
         THROW();
 }
 
 void JS_FASTCALL
 stubs::GetGlobalName(VMFrame &f)
 {
-    JSObject *globalObj = f.fp->scopeChainObj()->getGlobal();
+    JSObject *globalObj = f.fp->scopeChain->getGlobal();
     if (!NameOp(f, globalObj))
          THROW();
 }
@@ -442,16 +441,16 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->getClass() == &js_IteratorClass.base) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        if ((ni->flags & JSITER_FOREACH) == 0) {
-            jsid id = ni->currentId();
+        if (ni->isKeyIter()) {
+            jsid id = *ni->currentKey();
             if (JSID_IS_ATOM(id)) {
                 rval->setString(JSID_TO_STRING(id));
-                ni->incIdCursor();
+                ni->incKeyCursor();
                 return true;
             }
             /* Take the slow path if we have to stringify a numeric property name. */
         } else {
-            *rval = ni->currentValue();
+            *rval = *ni->currentValue();
             ni->incValueCursor();
             return true;
         }
@@ -476,7 +475,7 @@ stubs::ForName(VMFrame &f, JSAtom *atom)
     {
         AutoValueRooter tvr(cx);
         JS_ASSERT(regs.sp[-1].isObject());
-        if (!IteratorNext(cx, &regs.sp[-1].asObject(), tvr.addr()))
+        if (!IteratorNext(cx, &regs.sp[-1].toObject(), tvr.addr()))
             THROW();
         if (!obj->setProperty(cx, id, tvr.addr()))
             THROW();
@@ -499,8 +498,8 @@ stubs::GetElem(VMFrame &f)
 
     if (lval.isString() && rval.isInt32()) {
         Value retval;
-        JSString *str = lval.asString();
-        i = rval.asInt32();
+        JSString *str = lval.toString();
+        i = rval.toInt32();
 
         if ((size_t)i >= str->length())
             THROW();
@@ -518,7 +517,7 @@ stubs::GetElem(VMFrame &f)
 
     if (rval.isInt32()) {
         if (obj->isDenseArray()) {
-            jsuint idx = jsuint(rval.asInt32());
+            jsuint idx = jsuint(rval.toInt32());
             
             if (idx < obj->getArrayLength() &&
                 idx < obj->getDenseArrayCapacity()) {
@@ -532,7 +531,7 @@ stubs::GetElem(VMFrame &f)
                    && !GetArgsPrivateNative(obj)
 #endif
                   ) {
-            uint32 arg = uint32(rval.asInt32());
+            uint32 arg = uint32(rval.toInt32());
 
             if (arg < obj->getArgsLength()) {
                 JSStackFrame *afp = (JSStackFrame *) obj->getPrivate();
@@ -547,7 +546,7 @@ stubs::GetElem(VMFrame &f)
                 /* Otherwise, fall to getProperty(). */
             }
         }
-        id = INT_TO_JSID(rval.asInt32());
+        id = INT_TO_JSID(rval.toInt32());
 
     } else {
         if (!js_InternNonIntElementId(cx, obj, rval, &id))
@@ -658,7 +657,7 @@ stubs::SetElem(VMFrame &f)
 void JS_FASTCALL
 stubs::CallName(VMFrame &f)
 {
-    JSObject *obj = NameOp(f, f.fp->scopeChainObj(), true);
+    JSObject *obj = NameOp(f, f.fp->scopeChain, true);
     if (!obj)
         THROW();
 }
@@ -835,7 +834,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
          * FIXME: bug 476950, although debugger users may also demand some kind
          * of scope link for debugger-assisted eval-in-frame.
          */
-        obj2 = fp->scopeChainObj();
+        obj2 = fp->scopeChain;
     } else {
         JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
 
@@ -844,7 +843,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
          * top-level function.
          */
         if (!fp->blockChain) {
-            obj2 = fp->scopeChainObj();
+            obj2 = fp->scopeChain;
         } else {
             obj2 = js_GetScopeChain(cx, fp);
             if (!obj2)
@@ -873,7 +872,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
      * fp->scopeChain code below the parent->defineProperty call.
      */
     MUST_FLOW_THROUGH("restore_scope");
-    fp->setScopeChainObj(obj);
+    fp->scopeChain = obj;
 
     Value rval;
     rval.setObject(*obj);
@@ -966,7 +965,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
 
   restore_scope:
     /* Restore fp->scopeChain now that obj is defined in fp->callobj. */
-    fp->setScopeChainObj(obj2);
+    fp->scopeChain = obj2;
     if (!ok)
         THROW();
 }
@@ -975,7 +974,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(v.isObject());                                              \
         JS_ASSERT(v == regs.sp[n]);                                           \
-        if (!v.asObject().defaultValue(cx, hint, &regs.sp[n]))                \
+        if (!v.toObject().defaultValue(cx, hint, &regs.sp[n]))                \
             THROWV(JS_FALSE);                                                 \
         v = regs.sp[n];                                                       \
     JS_END_MACRO
@@ -992,7 +991,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
         if (rval.isObject())                                                  \
             DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                       \
         if (lval.isString() && rval.isString()) {                             \
-            JSString *l = lval.asString(), *r = rval.asString();              \
+            JSString *l = lval.toString(), *r = rval.toString();              \
             cond = js_CompareStrings(l, r) OP 0;                              \
         } else {                                                              \
             double l, r;                                                      \
@@ -1057,8 +1056,8 @@ StubEqualityOp(VMFrame &f)
     JSBool cond;
 
 #if JS_HAS_XML_SUPPORT
-    if ((lval.isObject() && lval.asObject().isXML()) ||
-        (rval.isObject() && rval.asObject().isXML())) {
+    if ((lval.isObject() && lval.toObject().isXML()) ||
+        (rval.isObject() && rval.toObject().isXML())) {
         if (!js_TestXMLEquality(cx, lval, rval, &cond))
             return false;
         cond = cond == EQ;
@@ -1067,18 +1066,18 @@ StubEqualityOp(VMFrame &f)
 
     if (SameType(lval, rval)) {
         if (lval.isString()) {
-            JSString *l = lval.asString();
-            JSString *r = rval.asString();
+            JSString *l = lval.toString();
+            JSString *r = rval.toString();
             cond = js_EqualStrings(l, r) == EQ;
         } else if (lval.isDouble()) {
-            double l = lval.asDouble();
-            double r = rval.asDouble();
+            double l = lval.toDouble();
+            double r = rval.toDouble();
             if (EQ)
                 cond = JSDOUBLE_COMPARE(l, ==, r, IFNAN);
             else
                 cond = JSDOUBLE_COMPARE(l, !=, r, IFNAN);
         } else if (lval.isObject()) {
-            JSObject *l = &lval.asObject(), *r = &rval.asObject();
+            JSObject *l = &lval.toObject(), *r = &rval.toObject();
             if (((clasp = l->getClass())->flags & JSCLASS_IS_EXTENDED) &&
                 ((ExtendedClass  *)clasp)->equality) {
                 if (!((ExtendedClass *)clasp)->equality(cx, l, &rval, &cond))
@@ -1088,7 +1087,7 @@ StubEqualityOp(VMFrame &f)
                 cond = (l == r) == EQ;
             }
         } else {
-            cond = (lval.asRawUint32() == rval.asRawUint32()) == EQ;
+            cond = (lval.payloadAsRawUint32() == rval.payloadAsRawUint32()) == EQ;
         }
     } else {
         if (lval.isNullOrUndefined()) {
@@ -1097,20 +1096,20 @@ StubEqualityOp(VMFrame &f)
             cond = !EQ;
         } else {
             if (lval.isObject()) {
-                if (!lval.asObject().defaultValue(cx, JSTYPE_VOID, &regs.sp[-2]))
+                if (!lval.toObject().defaultValue(cx, JSTYPE_VOID, &regs.sp[-2]))
                     return false;
                 lval = regs.sp[-2];
             }
 
             if (rval.isObject()) {
-                if (!rval.asObject().defaultValue(cx, JSTYPE_VOID, &regs.sp[-1]))
+                if (!rval.toObject().defaultValue(cx, JSTYPE_VOID, &regs.sp[-1]))
                     return false;
                 rval = regs.sp[-1];
             }
 
             if (lval.isString() && rval.isString()) {
-                JSString *l = lval.asString();
-                JSString *r = rval.asString();
+                JSString *l = lval.toString();
+                JSString *r = rval.toString();
                 cond = js_EqualStrings(l, r) == EQ;
             } else {
                 double l, r;
@@ -1136,7 +1135,7 @@ stubs::Equal(VMFrame &f)
 {
     if (!StubEqualityOp<JS_TRUE, false>(f))
         THROWV(JS_FALSE);
-    return f.regs.sp[-2].asBoolean();
+    return f.regs.sp[-2].toBoolean();
 }
 
 JSBool JS_FASTCALL
@@ -1144,14 +1143,14 @@ stubs::NotEqual(VMFrame &f)
 {
     if (!StubEqualityOp<JS_FALSE, true>(f))
         THROWV(JS_FALSE);
-    return f.regs.sp[-2].asBoolean();
+    return f.regs.sp[-2].toBoolean();
 }
 
 static inline bool
 DefaultValue(VMFrame &f, JSType hint, Value &v, int n)
 {
     JS_ASSERT(v.isObject());
-    if (!v.asObject().defaultValue(f.cx, hint, &f.regs.sp[n]))
+    if (!v.toObject().defaultValue(f.cx, hint, &f.regs.sp[n]))
         return false;
     v = f.regs.sp[n];
     return true;
@@ -1166,7 +1165,7 @@ stubs::Add(VMFrame &f)
     Value lval = regs.sp[-2];
 
     if (lval.isInt32() && rval.isInt32()) {
-        int32_t l = lval.asInt32(), r = rval.asInt32();
+        int32_t l = lval.toInt32(), r = rval.toInt32();
         int32_t sum = l + r;
         regs.sp--;
         if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000)))
@@ -1175,9 +1174,9 @@ stubs::Add(VMFrame &f)
             regs.sp[-1].setInt32(sum);
     } else
 #if JS_HAS_XML_SUPPORT
-    if (lval.isObject() && lval.asObject().isXML() &&
-        rval.isObject() && rval.asObject().isXML()) {
-        if (!js_ConcatenateXML(cx, &lval.asObject(), &rval.asObject(), &rval))
+    if (lval.isObject() && lval.toObject().isXML() &&
+        rval.isObject() && rval.toObject().isXML()) {
+        if (!js_ConcatenateXML(cx, &lval.toObject(), &rval.toObject(), &rval))
             THROW();
         regs.sp--;
         regs.sp[-1] = rval;
@@ -1192,7 +1191,7 @@ stubs::Add(VMFrame &f)
         if ((lIsString = lval.isString()) | (rIsString = rval.isString())) {
             JSString *lstr, *rstr;
             if (lIsString) {
-                lstr = lval.asString();
+                lstr = lval.toString();
             } else {
                 lstr = js_ValueToString(cx, lval);
                 if (!lstr)
@@ -1200,7 +1199,7 @@ stubs::Add(VMFrame &f)
                 regs.sp[-2].setString(lstr);
             }
             if (rIsString) {
-                rstr = rval.asString();
+                rstr = rval.toString();
             } else {
                 rstr = js_ValueToString(cx, rval);
                 if (!rstr)
@@ -1295,7 +1294,7 @@ stubs::Mod(VMFrame &f)
     Value &rref = regs.sp[-1];
     int32_t l, r;
     if (lref.isInt32() && rref.isInt32() &&
-        (l = lref.asInt32()) >= 0 && (r = rref.asInt32()) > 0) {
+        (l = lref.toInt32()) >= 0 && (r = rref.toInt32()) > 0) {
         int32_t mod = l % r;
         regs.sp[-2].setInt32(mod);
     } else {
@@ -1418,7 +1417,7 @@ stubs::InitElem(VMFrame &f, uint32 last)
     /* Find the object being initialized at top of stack. */
     const Value &lref = regs.sp[-3];
     JS_ASSERT(lref.isObject());
-    JSObject *obj = &lref.asObject();
+    JSObject *obj = &lref.toObject();
 
     /* Fetch id now that we have obj. */
     jsid id;
@@ -1451,10 +1450,12 @@ stubs::InitElem(VMFrame &f, uint32 last)
 }
 
 void JS_FASTCALL
-stubs::GetUpvar(VMFrame &f, uint32 cookie)
+stubs::GetUpvar(VMFrame &f, uint32 ck)
 {
     /* :FIXME: We can do better, this stub isn't needed. */
     uint32 staticLevel = f.fp->script->staticLevel;
+    UpvarCookie cookie;
+    cookie.fromInteger(ck);
     f.regs.sp[0] = js_GetUpvar(f.cx, staticLevel, cookie);
 }
 
@@ -1473,7 +1474,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
     JSObject *obj = FUN_OBJECT(fun);
 
     if (FUN_NULL_CLOSURE(fun)) {
-        obj = CloneFunctionObject(f.cx, fun, f.fp->scopeChainObj());
+        obj = CloneFunctionObject(f.cx, fun, f.fp->scopeChain);
         if (!obj)
             THROWV(NULL);
     } else {
@@ -1512,7 +1513,7 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
      * js_GetClassPrototype uses the latter only to locate the global.
      */
     JSObject *proto;
-    if (!js_GetClassPrototype(f.cx, f.fp->scopeChainObj(), JSProto_RegExp, &proto))
+    if (!js_GetClassPrototype(f.cx, f.fp->scopeChain, JSProto_RegExp, &proto))
         THROWV(NULL);
     JS_ASSERT(proto);
     JSObject *obj = js_CloneRegExpObject(f.cx, regex, proto);
@@ -1528,7 +1529,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
 
     JSObject *parent;
     if (FUN_NULL_CLOSURE(fun)) {
-        parent = f.fp->scopeChainObj();
+        parent = f.fp->scopeChain;
     } else {
         parent = js_GetScopeChain(f.cx, f.fp);
         if (!parent)
@@ -1563,11 +1564,11 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
 
     Value &ref = f.regs.sp[-1];
     int32_t tmp;
-    if (JS_LIKELY(ref.isInt32() && CanIncDecWithoutOverflow(tmp = ref.asInt32()))) {
+    if (JS_LIKELY(ref.isInt32() && CanIncDecWithoutOverflow(tmp = ref.toInt32()))) {
         if (POST)
-            ref.asInt32Ref() = tmp + N;
+            ref.getInt32Ref() = tmp + N;
         else
-            ref.asInt32Ref() = tmp += N;
+            ref.getInt32Ref() = tmp += N;
         fp->flags |= JSFRAME_ASSIGNING;
         JSBool ok = obj->setProperty(cx, id, &ref);
         fp->flags &= ~JSFRAME_ASSIGNING;
@@ -1619,11 +1620,11 @@ NameIncDec(VMFrame &f, JSObject *obj, JSAtom *origAtom)
             JS_ASSERT(slot < obj->scope()->freeslot);
             Value &rref = obj->getSlotRef(slot);
             int32_t tmp;
-            if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.asInt32()))) {
+            if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.toInt32()))) {
                 int32_t inc = tmp + N;
                 if (!POST)
                     tmp = inc;
-                rref.asInt32Ref() = inc;
+                rref.getInt32Ref() = inc;
                 f.regs.sp[0].setInt32(tmp);
                 return true;
             }
@@ -1745,7 +1746,7 @@ stubs::DecElem(VMFrame &f)
 void JS_FASTCALL
 stubs::NameInc(VMFrame &f, JSAtom *atom)
 {
-    JSObject *obj = f.fp->scopeChainObj();
+    JSObject *obj = f.fp->scopeChain;
     if (!NameIncDec<1, true>(f, obj, atom))
         THROW();
 }
@@ -1753,7 +1754,7 @@ stubs::NameInc(VMFrame &f, JSAtom *atom)
 void JS_FASTCALL
 stubs::NameDec(VMFrame &f, JSAtom *atom)
 {
-    JSObject *obj = f.fp->scopeChainObj();
+    JSObject *obj = f.fp->scopeChain;
     if (!NameIncDec<-1, true>(f, obj, atom))
         THROW();
 }
@@ -1761,7 +1762,7 @@ stubs::NameDec(VMFrame &f, JSAtom *atom)
 void JS_FASTCALL
 stubs::IncName(VMFrame &f, JSAtom *atom)
 {
-    JSObject *obj = f.fp->scopeChainObj();
+    JSObject *obj = f.fp->scopeChain;
     if (!NameIncDec<1, false>(f, obj, atom))
         THROW();
 }
@@ -1769,7 +1770,7 @@ stubs::IncName(VMFrame &f, JSAtom *atom)
 void JS_FASTCALL
 stubs::DecName(VMFrame &f, JSAtom *atom)
 {
-    JSObject *obj = f.fp->scopeChainObj();
+    JSObject *obj = f.fp->scopeChain;
     if (!NameIncDec<-1, false>(f, obj, atom))
         THROW();
 }
@@ -1777,7 +1778,7 @@ stubs::DecName(VMFrame &f, JSAtom *atom)
 void JS_FASTCALL
 stubs::GlobalNameInc(VMFrame &f, JSAtom *atom)
 {
-    JSObject *obj = f.fp->scopeChainObj()->getGlobal();
+    JSObject *obj = f.fp->scopeChain->getGlobal();
     if (!NameIncDec<1, true>(f, obj, atom))
         THROW();
 }
@@ -1785,7 +1786,7 @@ stubs::GlobalNameInc(VMFrame &f, JSAtom *atom)
 void JS_FASTCALL
 stubs::GlobalNameDec(VMFrame &f, JSAtom *atom)
 {
-    JSObject *obj = f.fp->scopeChainObj()->getGlobal();
+    JSObject *obj = f.fp->scopeChain->getGlobal();
     if (!NameIncDec<-1, true>(f, obj, atom))
         THROW();
 }
@@ -1793,7 +1794,7 @@ stubs::GlobalNameDec(VMFrame &f, JSAtom *atom)
 void JS_FASTCALL
 stubs::IncGlobalName(VMFrame &f, JSAtom *atom)
 {
-    JSObject *obj = f.fp->scopeChainObj()->getGlobal();
+    JSObject *obj = f.fp->scopeChain->getGlobal();
     if (!NameIncDec<1, false>(f, obj, atom))
         THROW();
 }
@@ -1801,7 +1802,7 @@ stubs::IncGlobalName(VMFrame &f, JSAtom *atom)
 void JS_FASTCALL
 stubs::DecGlobalName(VMFrame &f, JSAtom *atom)
 {
-    JSObject *obj = f.fp->scopeChainObj()->getGlobal();
+    JSObject *obj = f.fp->scopeChain->getGlobal();
     if (!NameIncDec<-1, false>(f, obj, atom))
         THROW();
 }
@@ -1901,7 +1902,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
         objv.setObject(*pobj);
     }
 
-    JSObject *aobj = js_GetProtoIfDenseArray(&objv.asObject());
+    JSObject *aobj = js_GetProtoIfDenseArray(&objv.toObject());
     Value rval;
 
     PropertyCacheEntry *entry;
@@ -1918,7 +1919,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
         } else {
             JS_ASSERT(entry->vword.isSprop());
             JSScopeProperty *sprop = entry->vword.toSprop();
-            NATIVE_GET(cx, &objv.asObject(), obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval,
+            NATIVE_GET(cx, &objv.toObject(), obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval,
                        THROW());
         }
         regs.sp++;
@@ -1937,7 +1938,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
     regs.sp++;
     regs.sp[-1].setNull();
     if (lval.isObject()) {
-        if (!js_GetMethod(cx, &objv.asObject(), id,
+        if (!js_GetMethod(cx, &objv.toObject(), id,
                           JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                           : JSGET_NO_METHOD_BARRIER,
@@ -1947,8 +1948,8 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
         regs.sp[-1] = objv;
         regs.sp[-2] = rval;
     } else {
-        JS_ASSERT(objv.asObject().map->ops->getProperty == js_GetProperty);
-        if (!js_GetPropertyHelper(cx, &objv.asObject(), id,
+        JS_ASSERT(objv.toObject().map->ops->getProperty == js_GetProperty);
+        if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
                                   JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
                                   &rval)) {
             THROW();
@@ -2002,10 +2003,10 @@ stubs::Length(VMFrame &f)
     Value *vp = &regs.sp[-1];
 
     if (vp->isString()) {
-        vp->setInt32(vp->asString()->length());
+        vp->setInt32(vp->toString()->length());
         return;
     } else if (vp->isObject()) {
-        JSObject *obj = &vp->asObject();
+        JSObject *obj = &vp->toObject();
         if (obj->isArray()) {
             jsuint length = obj->getArrayLength();
             regs.sp[-1].setDouble(length);
@@ -2043,9 +2044,8 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
     rval = regs.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
-    JSObject *obj = &regs.sp[-2].asObject();
+    JSObject *obj = &regs.sp[-2].toObject();
     JS_ASSERT(obj->isNative());
-    JS_ASSERT(!obj->getClass()->reserveSlots);
 
     JSScope *scope = obj->scope();
 
@@ -2141,7 +2141,7 @@ stubs::IterNext(VMFrame &f)
     JS_ASSERT(f.regs.sp - 1 >= f.fp->base());
     JS_ASSERT(f.regs.sp[-1].isObject());
 
-    JSObject *iterobj = &f.regs.sp[-1].asObject();
+    JSObject *iterobj = &f.regs.sp[-1].toObject();
     f.regs.sp[0].setNull();
     f.regs.sp++;
     if (!js_IteratorNext(f.cx, iterobj, &f.regs.sp[-1]))
@@ -2155,11 +2155,11 @@ stubs::IterMore(VMFrame &f)
     JS_ASSERT(f.regs.sp[-1].isObject());
 
     Value v;
-    JSObject *iterobj = &f.regs.sp[-1].asObject();
+    JSObject *iterobj = &f.regs.sp[-1].toObject();
     if (!js_IteratorMore(f.cx, iterobj, &v))
         THROWV(JS_FALSE);
 
-    return v.asBoolean();
+    return v.toBoolean();
 }
 
 void JS_FASTCALL
@@ -2247,7 +2247,7 @@ stubs::InstanceOf(VMFrame &f)
     const Value &rref = regs.sp[-1];
     JSObject *obj;
     if (rref.isPrimitive() ||
-        !(obj = &rref.asObject())->map->ops->hasInstance) {
+        !(obj = &rref.toObject())->map->ops->hasInstance) {
         js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                             -1, rref, NULL);
         THROWV(JS_FALSE);
@@ -2274,7 +2274,7 @@ stubs::FastInstanceOf(VMFrame &f)
         THROW();
     }
 
-    f.regs.sp[-3].setBoolean(js_IsDelegate(f.cx, &lref.asObject(), f.regs.sp[-3]));
+    f.regs.sp[-3].setBoolean(js_IsDelegate(f.cx, &lref.toObject(), f.regs.sp[-3]));
 }
 
 void JS_FASTCALL
@@ -2315,7 +2315,7 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
      * anything else we should have popped off fp->scopeChain when we left its
      * static scope.
      */
-    JSObject *obj2 = fp->scopeChainObj();
+    JSObject *obj2 = fp->scopeChain;
     Class *clasp;
     while ((clasp = obj2->getClass()) == &js_WithClass)
         obj2 = obj2->getParent();
@@ -2349,7 +2349,7 @@ stubs::LeaveBlock(VMFrame &f)
      * cloned onto fp->scopeChain, clear its private data, move its locals from
      * the stack into the clone, and pop it off the chain.
      */
-    JSObject *obj = fp->scopeChainObj();
+    JSObject *obj = fp->scopeChain;
     if (obj->getProto() == fp->blockChain) {
         JS_ASSERT(obj->getClass() == &js_BlockClass);
         if (!js_PutBlockObject(cx, JS_TRUE))
@@ -2384,12 +2384,12 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
     JS_ASSERT(npairs);
 
     if (lval.isString()) {
-        JSString *str = lval.asString();
+        JSString *str = lval.toString();
         for (uint32 i = 1; i <= npairs; i++) {
             Value rval = script->getConst(GET_INDEX(pc));
             pc += INDEX_LEN;
             if (rval.isString()) {
-                JSString *rhs = rval.asString();
+                JSString *rhs = rval.toString();
                 if (rhs == str || js_EqualStrings(str, rhs)) {
                     ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
                     JS_ASSERT(script->nmap[offs]);
@@ -2399,11 +2399,11 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             pc += JUMP_OFFSET_LEN;
         }
     } else if (lval.isNumber()) {
-        double d = lval.asNumber();
+        double d = lval.toNumber();
         for (uint32 i = 1; i <= npairs; i++) {
             Value rval = script->getConst(GET_INDEX(pc));
             pc += INDEX_LEN;
-            if (rval.isNumber() && d == rval.asNumber()) {
+            if (rval.isNumber() && d == rval.toNumber()) {
                 ptrdiff_t offs = (jpc + GET_JUMP_OFFSET(pc)) - script->code;
                 JS_ASSERT(script->nmap[offs]);
                 return script->nmap[offs];
@@ -2442,9 +2442,9 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
 
     jsint tableIdx;
     if (rval.isInt32()) {
-        tableIdx = rval.asInt32();
+        tableIdx = rval.toInt32();
     } else if (rval.isDouble()) {
-        double d = rval.asDouble();
+        double d = rval.toDouble();
         if (d == 0) {
             /* Treat -0 (double) as 0. */
             tableIdx = 0;
@@ -2480,7 +2480,7 @@ finally:
 void JS_FASTCALL
 stubs::Unbrand(VMFrame &f)
 {
-    if (!f.regs.sp[-1].asObject().unbrand(f.cx))
+    if (!f.regs.sp[-1].toObject().unbrand(f.cx))
         THROW();
 }
 

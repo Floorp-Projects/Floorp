@@ -87,9 +87,9 @@ JSOpBinaryTryConstantFold(JSContext *cx, FrameState &frame, JSOp op, FrameEntry 
             if (dL == 0 || JSDOUBLE_IS_NaN(dL))
                 dL = js_NaN;
             else if (JSDOUBLE_IS_NEG(dL) != JSDOUBLE_IS_NEG(dR))
-                dL = cx->runtime->negativeInfinityValue.asDouble();
+                dL = cx->runtime->negativeInfinityValue.toDouble();
             else
-                dL = cx->runtime->positiveInfinityValue.asDouble();
+                dL = cx->runtime->positiveInfinityValue.toDouble();
         } else {
             dL /= dR;
         }
@@ -145,7 +145,7 @@ mjit::Compiler::jsop_binary_intmath(JSOp op, RegisterID *returnReg, MaybeJump &j
       case JSOP_ADD:
         if (rhs->isConstant()) {
             fail = masm.branchAdd32(Assembler::Overflow,
-                                    Imm32(rhs->getValue().asInt32()), reg);
+                                    Imm32(rhs->getValue().toInt32()), reg);
         } else if (frame.shouldAvoidDataRemat(rhs)) {
             fail = masm.branchAdd32(Assembler::Overflow,
                                     frame.addressOf(rhs), reg);
@@ -159,7 +159,7 @@ mjit::Compiler::jsop_binary_intmath(JSOp op, RegisterID *returnReg, MaybeJump &j
       case JSOP_SUB:
         if (rhs->isConstant()) {
             fail = masm.branchSub32(Assembler::Overflow,
-                                    Imm32(rhs->getValue().asInt32()), reg);
+                                    Imm32(rhs->getValue().toInt32()), reg);
         } else if (frame.shouldAvoidDataRemat(rhs)) {
             fail = masm.branchSub32(Assembler::Overflow,
                                     frame.addressOf(rhs), reg);
@@ -231,9 +231,9 @@ mjit::Compiler::slowLoadConstantDouble(Assembler &masm,
 {
     jsdpun u;
     if (fe->getKnownType() == JSVAL_TYPE_INT32)
-        u.d = (double)fe->getValue().asInt32();
+        u.d = (double)fe->getValue().toInt32();
     else
-        u.d = fe->getValue().asDouble();
+        u.d = fe->getValue().toDouble();
 
     masm.storeData32(Imm32(u.s.lo), frame.addressOf(fe));
     masm.storeTypeTag(ImmTag(JSValueTag(u.s.hi)), frame.addressOf(fe));
