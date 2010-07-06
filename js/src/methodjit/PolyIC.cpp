@@ -1556,7 +1556,7 @@ ic::BindName(VMFrame &f, uint32 index)
     f.regs.sp[0].setObject(*obj);
 }
 
-void JS_FASTCALL
+void
 ic::PurgePICs(JSContext *cx, JSScript *script)
 {
     uint32 npics = script->numPICs();
