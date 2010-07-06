@@ -2697,7 +2697,7 @@ js_NonEmptyObject(JSContext* cx, JSObject* proto)
     }
 
     /*
-     * See comments in the JSOP_NEWINIT case of jsops.cpp why we cannot
+     * See comments in the JSOP_NEWINIT case of jsinterp.cpp why we cannot
      * assume that cx owns the scope and skip the unlock call.
      */
     JS_UNLOCK_SCOPE(cx, scope);

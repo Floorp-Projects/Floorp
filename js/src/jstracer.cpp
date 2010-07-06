@@ -14771,7 +14771,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENUMELEM()
 {
     /*
-     * To quote from jsops.cpp's JSOP_ENUMELEM case:
+     * To quote from jsinterp.cpp's JSOP_ENUMELEM case:
      * Funky: the value to set is under the [obj, id] pair.
      */
     return setElem(-2, -1, -3);
@@ -14834,7 +14834,7 @@ TraceRecorder::record_JSOP_LAMBDA()
      * JSOP_SETMETHOD or JSOP_INITMETHOD, since we optimize away the clone for
      * these combinations and clone only if the "method value" escapes.
      *
-     * See jsops.cpp, the JSOP_LAMBDA null closure case. The JSOP_SETMETHOD and
+     * See jsinterp.cpp, the JSOP_LAMBDA null closure case. The JSOP_SETMETHOD and
      * JSOP_INITMETHOD logic governing the early ARECORD_CONTINUE returns below
      * must agree with the corresponding break-from-do-while(0) logic there.
      */
