@@ -56,10 +56,10 @@ JS_BEGIN_EXTERN_C
  * prevents many bugs from being caught at compile time. E.g.:
  *
  *  jsval v = ...
- *  if (v == JS_TRUE)  // should compare with JSVAL_TRUE
+ *  if (v == JS_TRUE)  // error
  *    ...
  *
- *  jsid id = v;       // jsid and jsval have different representations
+ *  jsid id = v;       // error
  *
  * To catch more errors, jsval and jsid are given struct types in debug builds.
  * Struct assignment and (in C++) operator== allow correct code to be mostly
