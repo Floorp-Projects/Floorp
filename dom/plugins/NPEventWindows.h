@@ -81,13 +81,13 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
         // set to a pointer to a LOGFONT structure.
         switch (paramCopy.event.event) {
             case WM_WINDOWPOSCHANGED:
-                // The lParam paramter of WM_WINDOWPOSCHANGED holds a pointer to
+                // The lParam parameter of WM_WINDOWPOSCHANGED holds a pointer to
                 // a WINDOWPOS structure that contains information about the
                 // window's new size and position
                 paramCopy.lParamData.windowpos = *(reinterpret_cast<WINDOWPOS*>(paramCopy.event.lParam));
                 break;
             case WM_PAINT:
-                // The lParam paramter of WM_PAINT holds a pointer to an RECT
+                // The lParam parameter of WM_PAINT holds a pointer to an RECT
                 // structure specifying the bounding box of the update area.
                 paramCopy.lParamData.rect = *(reinterpret_cast<RECT*>(paramCopy.event.lParam));
                 break;
