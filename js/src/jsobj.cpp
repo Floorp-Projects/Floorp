@@ -113,7 +113,6 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_GetAttributes,
     js_SetAttributes,
     js_DeleteProperty,
-    js_DefaultValue,
     js_Enumerate,
     js_TypeOf,
     js_TraceObject,
@@ -2935,12 +2934,6 @@ with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 }
 
 static JSBool
-with_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
-{
-    return obj->getProto()->defaultValue(cx, hint, vp);
-}
-
-static JSBool
 with_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                jsval *statep, jsid *idp)
 {
@@ -2968,7 +2961,6 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     with_GetAttributes,
     with_SetAttributes,
     with_DeleteProperty,
-    with_DefaultValue,
     with_Enumerate,
     with_TypeOf,
     js_TraceObject,
@@ -5344,8 +5336,10 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     return ok && js_SuppressDeletedProperty(cx, obj, id);
 }
 
+namespace js {
+
 JSBool
-js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
+DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 {
     jsval v, save;
     JSString *str;
@@ -5441,6 +5435,8 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
     *vp = v;
     return JS_TRUE;
 }
+
+} /* namespace js */
 
 JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, jsval *statep, jsid *idp)

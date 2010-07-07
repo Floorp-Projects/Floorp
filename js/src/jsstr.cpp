@@ -258,7 +258,7 @@ ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
         return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     vp += 2 + arg;
 
-    if (!JSVAL_IS_PRIMITIVE(*vp) && !JSVAL_TO_OBJECT(*vp)->defaultValue(cx, JSTYPE_STRING, vp))
+    if (!JSVAL_IS_PRIMITIVE(*vp) && !DefaultValue(cx, JSVAL_TO_OBJECT(*vp), JSTYPE_STRING, vp))
         return NULL;
 
     JSString *str;
@@ -3235,7 +3235,7 @@ js_ValueToString(JSContext *cx, jsval v)
 {
     JSString *str;
 
-    if (!JSVAL_IS_PRIMITIVE(v) && !JSVAL_TO_OBJECT(v)->defaultValue(cx, JSTYPE_STRING, &v))
+    if (!JSVAL_IS_PRIMITIVE(v) && !DefaultValue(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v))
         return NULL;
 
     if (JSVAL_IS_STRING(v)) {
@@ -3268,7 +3268,7 @@ AppendAtom(JSAtom *atom, JSCharBuffer &cb)
 JS_FRIEND_API(JSBool)
 js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 {
-    if (!JSVAL_IS_PRIMITIVE(v) && !JSVAL_TO_OBJECT(v)->defaultValue(cx, JSTYPE_STRING, &v))
+    if (!JSVAL_IS_PRIMITIVE(v) && !DefaultValue(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v))
         return JS_FALSE;
 
     if (JSVAL_IS_STRING(v)) {

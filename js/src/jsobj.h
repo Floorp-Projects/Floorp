@@ -159,7 +159,6 @@ struct JSObjectOps {
     JSAttributesOp      getAttributes;
     JSAttributesOp      setAttributes;
     JSPropertyIdOp      deleteProperty;
-    JSConvertOp         defaultValue;
     JSNewEnumerateOp    enumerate;
     JSTypeOfOp          typeOf;
     JSTraceOp           trace;
@@ -674,10 +673,6 @@ struct JSObject {
 
     JSBool deleteProperty(JSContext *cx, jsid id, jsval *rval) {
         return map->ops->deleteProperty(cx, this, id, rval);
-    }
-
-    JSBool defaultValue(JSContext *cx, JSType hint, jsval *vp) {
-        return map->ops->defaultValue(cx, this, hint, vp);
     }
 
     JSBool enumerate(JSContext *cx, JSIterateOp op, jsval *statep,
@@ -1211,8 +1206,12 @@ js_SetNativeAttributes(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 extern JSBool
 js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
 
+namespace js {
+
 extern JSBool
-js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
+DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
+
+}
 
 extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
