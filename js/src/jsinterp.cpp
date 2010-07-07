@@ -598,6 +598,41 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     return ok;
 }
 
+static JSBool
+DoConstruct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+{
+
+    Class *clasp = argv[-2].toObject().getClass();
+    if (!clasp->construct) {
+        js_ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
+        return JS_FALSE;
+    }
+    return clasp->construct(cx, obj, argc, argv, rval);
+}
+
+static JSBool
+DoSlowCall(JSContext *cx, uintN argc, Value *vp)
+{
+    JSStackFrame *fp = cx->fp;
+    JSObject *obj = fp->getThisObject(cx);
+    if (!obj)
+        return false;
+    JS_ASSERT(ObjectValue(*obj) == fp->thisv);
+
+    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
+    Class *clasp = callee->getClass();
+    JS_ASSERT(!(clasp->flags & CLASS_CALL_IS_FAST));
+    if (!clasp->call) {
+        js_ReportIsNotFunction(cx, &vp[0], 0);
+        return JS_FALSE;
+    }
+    AutoValueRooter rval(cx);
+    JSBool ok = clasp->call(cx, obj, argc, JS_ARGV(cx, vp), rval.addr());
+    if (ok)
+        JS_SET_RVAL(cx, vp, rval.value());
+    return ok;
+}
+
 /*
  * Find a function reference and its 'this' value implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -681,27 +716,15 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         return NoSuchMethod(cx, argc, vp, flags);
 #endif
 
-    /* Function is inlined, all other classes use object ops. */
-    const JSObjectOps *ops = funobj->map->ops;
-
     /* Try a call or construct native object op. */
     if (flags & JSINVOKE_CONSTRUCT) {
         if (!vp[1].isObjectOrNull()) {
             if (!js_PrimitiveToObject(cx, &vp[1]))
                 return false;
         }
-        Native native = ops->construct;
-        if (!native) {
-            js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
-            return false;
-        }
-        return InvokeCommon(cx, NULL, NULL, native, args, flags);
+        return InvokeCommon(cx, NULL, NULL, DoConstruct, args, flags);
     }
-    CallOp callOp = ops->call;
-    if (!callOp) {
-        js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_FUNFLAGS);
-        return false;
-    }
+    CallOp callOp = (clasp->flags & CLASS_CALL_IS_FAST) ? (CallOp) clasp->call : DoSlowCall;
     return InvokeCommon(cx, NULL, NULL, callOp, args, flags);
 }
 
@@ -1006,6 +1029,17 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
                                           type, name);
 }
 
+JSBool
+js_HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
+{
+    Class *clasp = obj->getClass();
+    if (clasp->hasInstance)
+        return clasp->hasInstance(cx, obj, v, bp);
+    js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
+                        JSDVG_SEARCH_STACK, ObjectValue(*obj), NULL);
+    return JS_FALSE;
+}
+
 static JS_ALWAYS_INLINE bool
 EqualObjects(JSContext *cx, JSObject *lobj, JSObject *robj)
 {
@@ -1104,50 +1138,37 @@ InstanceOfSlow(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
 JS_REQUIRES_STACK bool
 InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args)
 {
-    JSFunction *fun = NULL;
-    JSObject *obj2 = NULL;
+    JS_ASSERT(!js_FunctionClass.construct);
     Value *vp = args.getvp();
 
-    /* XXX clean up to avoid special cases above ObjectOps layer */
-    if (vp->isPrimitive() || (obj2 = &vp->toObject())->isFunction() ||
-        !obj2->map->ops->construct)
-    {
-        fun = js_ValueToFunction(cx, vp, JSV2F_CONSTRUCT);
-        if (!fun)
-            return JS_FALSE;
-    }
-
-    JSObject *proto, *parent;
-    Class *clasp = &js_ObjectClass;
     if (vp->isPrimitive()) {
-        proto = NULL;
-        parent = NULL;
-        fun = NULL;
-    } else {
-        /*
-         * Get the constructor prototype object for this function.
-         * Use the nominal 'this' parameter slot, vp[1], as a local
-         * root to protect this prototype, in case it has no other
-         * strong refs.
-         */
-        JSObject *obj2 = &vp->toObject();
-        if (!obj2->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                               &vp[1])) {
-            return JS_FALSE;
-        }
-        const Value &v = vp[1];
-        if (v.isObjectOrNull())
-            proto = v.toObjectOrNull();
-        else
-            proto = NULL;
-        parent = obj2->getParent();
-
-        if (obj2->getClass() == &js_FunctionClass) {
-            JSFunction *f = GET_FUNCTION_PRIVATE(cx, obj2);
-            if (!f->isInterpreted() && f->u.n.clasp)
-                clasp = f->u.n.clasp;
-        }
+        /* Use js_ValueToFunction to report an error. */
+        JS_ALWAYS_TRUE(!js_ValueToFunction(cx, vp, JSV2F_CONSTRUCT));
+        return false;
     }
+
+    JSObject *obj2 = &vp->toObject();
+
+    /*
+     * Get the constructor prototype object for this function.
+     * Use the nominal 'this' parameter slot, vp[1], as a local
+     * root to protect this prototype, in case it has no other
+     * strong refs.
+     */
+    if (!obj2->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &vp[1]))
+        return false;
+
+    const Value &v = vp[1];
+    JSObject *proto = v.isObjectOrNull() ? v.toObjectOrNull() : NULL;
+    JSObject *parent = obj2->getParent();
+    Class *clasp = &js_ObjectClass;
+
+    if (obj2->getClass() == &js_FunctionClass) {
+        JSFunction *f = GET_FUNCTION_PRIVATE(cx, obj2);
+        if (!f->isInterpreted() && f->u.n.clasp)
+            clasp = f->u.n.clasp;
+    }
+
     JSObject *obj = NewObject(cx, clasp, proto, parent);
     if (!obj)
         return JS_FALSE;
@@ -1163,7 +1184,7 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args)
     /* Check the return value and if it's primitive, force it to be obj. */
     const Value &rval = *vp;
     if (rval.isPrimitive()) {
-        if (!fun) {
+        if (obj2->getClass() != &js_FunctionClass) {
             /* native [[Construct]] returning primitive is error */
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_NEW_RESULT,
@@ -6292,16 +6313,14 @@ END_CASE(JSOP_OBJTOP)
 BEGIN_CASE(JSOP_INSTANCEOF)
 {
     const Value &rref = regs.sp[-1];
-    JSObject *obj;
-    if (rref.isPrimitive() ||
-        !(obj = &rref.toObject())->map->ops->hasInstance) {
-        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
-                            -1, rref, NULL);
+    if (rref.isPrimitive()) {
+        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, NULL);
         goto error;
     }
+    JSObject *obj = &rref.toObject();
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
-    if (!obj->map->ops->hasInstance(cx, obj, &lref, &cond))
+    if (!js_HasInstance(cx, obj, &lref, &cond))
         goto error;
     regs.sp--;
     regs.sp[-1].setBoolean(cond);

@@ -14660,7 +14660,7 @@ HasInstance(JSContext* cx, JSObject* ctor, ValueArgType arg)
 {
     const Value &argref = ValueArgToConstRef(arg);
     JSBool result = JS_FALSE;
-    if (!ctor->map->ops->hasInstance(cx, ctor, &argref, &result))
+    if (!js_HasInstance(cx, ctor, &argref, &result))
         SetBuiltinError(cx);
     return result;
 }
