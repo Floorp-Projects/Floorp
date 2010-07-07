@@ -1348,7 +1348,7 @@
         <![CDATA[
           var tabsToClose = this.tabs.length;
           if (!aAll)
-            --tabsToClose;
+            tabsToClose = (TabCandy.getVisibleTabs().length - 1);
           if (tabsToClose <= 1)
             return true;
 
@@ -1396,11 +1396,12 @@
         <body>
           <![CDATA[
             if (this.warnAboutClosingTabs(false)) {
+              var tabs = TabCandy.getVisibleTabs();
               this.selectedTab = aTab;
 
-              for (let i = this.tabs.length - 1; i >= 0; --i) {
-                if (this.tabs[i] != aTab)
-                  this.removeTab(this.tabs[i]);
+              for (let i = tabs.length - 1; i >= 0; --i) {
+                if (tabs[i] != aTab)
+                  this.removeTab(tabs[i]);
               }
             }
           ]]>
@@ -1456,7 +1457,7 @@
             var closeWindow = false;
             var newTab = false;
             if (this.tabs.length - this._removingTabs.length == 1) {
-              if (!isTabCandyVisible()) {
+              if (!TabCandy.isVisible()) {
                 closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                               !window.toolbar.visible ||
                                 this.tabContainer._closeWindowWithLastTab;
@@ -1708,10 +1709,11 @@
       <method name="reloadAllTabs">
         <body>
           <![CDATA[
-            var l = this.mPanelContainer.childNodes.length;
+            var tabs = TabCandy.getVisibleTabs();
+            var l = tabs.length;
             for (var i = 0; i < l; i++) {
               try {
-                this.getBrowserAtIndex(i).reload();
+                this.getBrowserForTab(tabs[i]).reload();
               } catch (e) {
                 // ignore failure to reload so others will be reloaded
               }
@@ -2638,6 +2640,9 @@
               this.setAttribute("closebuttons", "noclose");
             else {
               let tab = this.childNodes.item(this.tabbrowser._numPinnedTabs);
+              if (tab && tab.collapsed) {
+                tab = TabCandy.getVisibleTabs()[0];
+              }
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
               else
@@ -3422,7 +3427,7 @@
       <![CDATA[
         // set up the menu popup
         var tabcontainer = gBrowser.tabContainer;
-        var tabs = tabcontainer.childNodes;
+        var tabs = TabCandy.getVisibleTabs();
 
         // Listen for changes in the tab bar.
         tabcontainer.addEventListener("TabOpen", this, false);
