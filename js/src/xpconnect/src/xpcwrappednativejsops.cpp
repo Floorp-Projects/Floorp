@@ -1551,8 +1551,6 @@ JSBool xpc_InitWrappedNativeJSOps()
     {
         memcpy(&XPC_WN_NoCall_JSOps, &js_ObjectOps, sizeof(JSObjectOps));
         XPC_WN_NoCall_JSOps.enumerate = js::Valueify(XPC_WN_JSOp_Enumerate);
-        XPC_WN_NoCall_JSOps.call = nsnull;
-        XPC_WN_NoCall_JSOps.construct = nsnull;
         XPC_WN_NoCall_JSOps.typeOf = XPC_WN_JSOp_TypeOf_Object;
         XPC_WN_NoCall_JSOps.clear = XPC_WN_JSOp_Clear;
         XPC_WN_NoCall_JSOps.thisObject = XPC_WN_JSOp_ThisObject;

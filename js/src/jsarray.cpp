@@ -1008,11 +1008,8 @@ JSObjectOps js_ArrayObjectOps = {
     js_Enumerate,
     array_typeOf,
     array_trace,
-    NULL,   /* thisObject */
-    NULL,   /* call */
-    NULL,   /* construct */
-    js_HasInstance,
-    NULL
+    NULL, /* thisObject */
+    NULL  /* clear */
 };
 
 static JSObjectOps *
