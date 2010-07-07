@@ -140,11 +140,11 @@ function go() {
     checkGetAttachedShaders([fs], [], [fs], "attaching a single shader should give the expected list");
     checkGetAttachedShaders([fs, vs, fs2, vs2], [], [fs, vs, fs2, vs2],
         "attaching some shaders should give the expected list");
-    checkGetAttachedShaders([fs], [fs], [], "attaching a shader and detaching it shoud leave an empty list");
+    checkGetAttachedShaders([fs], [fs], [], "attaching a shader and detaching it should leave an empty list");
     checkGetAttachedShaders([fs, vs, fs2, vs2], [fs, vs, fs2, vs2], [],
-        "attaching some shaders and detaching them in same order shoud leave an empty list");
+        "attaching some shaders and detaching them in same order should leave an empty list");
     checkGetAttachedShaders([fs, vs, fs2, vs2], [fs, vs2, vs, fs2], [],
-        "attaching some shaders and detaching them in random order shoud leave an empty list");
+        "attaching some shaders and detaching them in random order should leave an empty list");
     checkGetAttachedShaders([fs, vs, fs2, vs2], [vs], [fs, fs2, vs2],
         "attaching and detaching some shaders should leave the difference list");
     checkGetAttachedShaders([fs, vs, fs2, vs2], [fs, vs2], [vs, fs2],

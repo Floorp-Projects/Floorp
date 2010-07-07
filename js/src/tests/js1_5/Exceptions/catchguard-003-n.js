@@ -65,7 +65,7 @@ function test()
   {  
     actual = e + ': 1';
   }
-  catch (e) /* two non-guarded catch statements shoud generate an error */
+  catch (e) /* two non-guarded catch statements should generate an error */
   {
     actual = e + ': 2';
   }
