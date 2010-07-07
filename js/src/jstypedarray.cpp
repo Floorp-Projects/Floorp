@@ -1331,7 +1331,6 @@ template<> JSObjectOps _typedArray::fastObjectOps = {                          \
     _typedArray::obj_getAttributes,                                            \
     _typedArray::obj_setAttributes,                                            \
     _typedArray::obj_deleteProperty,                                           \
-    js_DefaultValue,                                                           \
     _typedArray::obj_enumerate,                                                \
     _typedArray::obj_typeOf,                                                   \
     _typedArray::obj_trace,                                                    \

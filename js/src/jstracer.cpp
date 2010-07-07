@@ -9174,28 +9174,6 @@ TraceRecorder::map(LIns* obj_ins)
     return addName(lir->insLoad(LIR_ldp, obj_ins, (int) offsetof(JSObject, map), ACC_OTHER), "map");
 }
 
-bool
-TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, size_t op_offset)
-{
-    JS_ASSERT(op_offset < sizeof(JSObjectOps));
-    JS_ASSERT(op_offset % sizeof(void *) == 0);
-
-#define OP(ops) (*(void **) ((uint8 *) (ops) + op_offset))
-    void* ptr = OP(map->ops);
-    if (ptr != OP(&js_ObjectOps))
-        return false;
-#undef OP
-
-    ops_ins = addName(lir->insLoad(LIR_ldp, map_ins, int(offsetof(JSObjectMap, ops)), ACC_READONLY),
-                      "ops");
-    LIns* n = lir->insLoad(LIR_ldp, ops_ins, op_offset, ACC_READONLY);
-    guard(true,
-          addName(lir->ins2(LIR_eqp, n, INS_CONSTPTR(ptr)), "guard(native-map)"),
-          BRANCH_EXIT);
-
-    return true;
-}
-
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, PCVal& pcval)
 {
@@ -9681,8 +9659,6 @@ TraceRecorder::guardNativeConversion(jsval& v)
     JSObject* obj = JSVAL_TO_OBJECT(v);
     LIns* obj_ins = get(&v);
 
-    if (obj->map->ops->defaultValue != js_DefaultValue)
-        RETURN_STOP("operand has non-native defaultValue op");
     JSConvertOp convert = obj->getClass()->convert;
     if (convert != JS_ConvertStub && convert != js_TryValueOf)
         RETURN_STOP("operand has convert hook");
@@ -9695,11 +9671,9 @@ TraceRecorder::guardNativeConversion(jsval& v)
         CHECK_STATUS(guardShape(obj_ins, obj, obj->shape(),
                                 "guardNativeConversion", exit));
     } else {
-        // Guard that the defaultValue hook is native at run time,
-        // even though other ops are not. This has overhead.
-        LIns* ops_ins;
-        JS_ALWAYS_TRUE(map_is_native(obj->map, map(obj_ins), ops_ins,
-                                     offsetof(JSObjectOps, defaultValue)));
+        // We could specialize to guard on just JSClass.convert, but a mere
+        // class guard is simpler and slightly faster.
+        guardClass(obj_ins, obj->getClass(), snapshot(MISMATCH_EXIT), ACC_OTHER);
     }
     return RECORD_CONTINUE;
 }

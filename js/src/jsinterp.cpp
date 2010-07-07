@@ -1829,7 +1829,7 @@ namespace reprmeter {
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));                                    \
         JS_ASSERT(v == regs.sp[n]);                                           \
-        if (!JSVAL_TO_OBJECT(v)->defaultValue(cx, hint, &regs.sp[n]))         \
+        if (!DefaultValue(cx, JSVAL_TO_OBJECT(v), hint, &regs.sp[n]))         \
             goto error;                                                       \
         v = regs.sp[n];                                                       \
     JS_END_MACRO
