@@ -157,6 +157,7 @@ let gInitialPages = [
 #include inspector.js
 #include browser-places.js
 #include browser-tabPreviews.js
+#include browser-tabcandy.js
 
 XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
 #ifdef XP_WIN
@@ -1801,16 +1802,6 @@ function focusAndSelectUrlBar() {
     }
   }
   return false;
-}
-
-function BrowserShowTabCandy() {
-  let event = document.createEvent("Events");
-  event.initEvent("tabcandyshow", false, false);
-  dispatchEvent(event);
-}
-
-function isTabCandyVisible() {
-  return window.document.getElementById("tab-candy-deck").selectedIndex == 1
 }
 
 function openLocation() {
@@ -6664,11 +6655,13 @@ var gBookmarkAllTabsHandler = {
     this._command = document.getElementById("Browser:BookmarkAllTabs");
     gBrowser.tabContainer.addEventListener("TabOpen", this, true);
     gBrowser.tabContainer.addEventListener("TabClose", this, true);
+    gBrowser.tabContainer.addEventListener("TabSelect", this, true);
+    gBrowser.tabContainer.addEventListener("TabMove", this, true);
     this._updateCommandState();
   },
 
   _updateCommandState: function BATH__updateCommandState(aTabClose) {
-    var numTabs = gBrowser.tabs.length;
+    var numTabs = TabCandy.getVisibleTabs().length;
 
     // The TabClose event is fired before the tab is removed from the DOM
     if (aTabClose)
@@ -7691,7 +7684,7 @@ var TabContextMenu = {
   updateContextMenu: function updateContextMenu(aPopupMenu) {
     this.contextTab = document.popupNode.localName == "tab" ?
                       document.popupNode : gBrowser.selectedTab;
-    var disabled = gBrowser.tabs.length == 1;
+    var disabled = TabCandy.getVisibleTabs().length == 1;
     var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
     for (var i = 0; i < menuItems.length; i++)
       menuItems[i].disabled = disabled;
