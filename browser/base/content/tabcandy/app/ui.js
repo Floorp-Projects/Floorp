@@ -488,7 +488,7 @@ window.Page = {
     }
     
     iQ(window).mousemove(updateSize)
-    iQ(window).one('mouseup', finalize);
+    iQ(Utils.getCurrentWindow()).one('mouseup', finalize);
     e.preventDefault();  
     return false;
   },

@@ -662,7 +662,7 @@ window.Item.prototype = {
         
       // ___ mouseup
       var handleMouseUp = function(e) {
-        iQ(window)
+        iQ(Utils.getCurrentWindow())
           .unbind('mousemove', handleMouseMove)
           .unbind('mouseup', handleMouseUp);
           
@@ -714,7 +714,7 @@ window.Item.prototype = {
           }
         });
 
-        iQ(window)
+        iQ(Utils.getCurrentWindow())
           .mousemove(handleMouseMove)
           .mouseup(handleMouseUp);          
                     
@@ -787,7 +787,7 @@ window.Item.prototype = {
           
         // ___ mouseup
         var handleMouseUp = function(e) {
-          iQ(window)
+          iQ(Utils.getCurrentWindow())
             .unbind('mousemove', handleMouseMove)
             .unbind('mouseup', handleMouseUp);
             
@@ -813,7 +813,7 @@ window.Item.prototype = {
             if(iQ.isFunction(self.resizeOptions.start))
               self.resizeOptions.start.apply(self, [e]);
             
-            iQ(window)
+            iQ(Utils.getCurrentWindow())
               .mousemove(handleMouseMove)
               .mouseup(handleMouseUp);          
                         
