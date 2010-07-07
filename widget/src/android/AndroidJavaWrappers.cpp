@@ -288,7 +288,10 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case MOTION_EVENT:
             mTime = jenv->GetLongField(jobj, jTimeField);
+            mCount = jenv->GetIntField(jobj, jCountField);
             ReadP0Field(jenv);
+            if (mCount > 1)
+                ReadP1Field(jenv);
             break;
 
         case IME_EVENT:
