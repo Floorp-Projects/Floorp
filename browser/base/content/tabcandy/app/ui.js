@@ -182,8 +182,6 @@ window.Page = {
   showChrome: function(){
     let currentWin = Utils.getCurrentWindow();
     currentWin.document.getElementById("tab-candy-deck").selectedIndex = 0;
-
-    this.setCloseButtonOnTabs();
     
     // Mac Only
     Utils.getCurrentWindow().document.getElementById("main-window").
@@ -219,19 +217,6 @@ window.Page = {
         UI.resize(true);
       });
     }
-  },
-
-  setCloseButtonOnTabs : function() {
-    // TODO: we will need to modify the adjustTabstrip() to fix this when merging
-    // this extension to Firefox.
-    // http://mxr.mozilla.org/mozilla1.9.2/source/browser/base/content/tabbrowser.xml#3050
-    iQ.timeout(function() { // iQ.timeout adds a try/catch to setTimeout
-      var tabContainer = Utils.getCurrentWindow().gBrowser.tabContainer;
-      if (tabContainer.mCloseButtons == 1 &&
-          tabContainer.getAttribute("overflow") != "true") {
-        tabContainer.setAttribute("closebuttons", "alltabs");
-      };
-    }, 50);
   },
   
   setupKeyHandlers: function(){
@@ -312,9 +297,7 @@ window.Page = {
         
     Tabs.onClose(function(){
       if (!self.isTabCandyVisible()) {
-        iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
-          Page.setCloseButtonOnTabs();        
-            
+        iQ.timeout(function() { // Marshal event from chrome thread to DOM thread            
           // Only go back to the TabCandy tab when there you close the last
           // tab of a group.
           var group = Groups.getActiveGroup();
@@ -604,12 +587,6 @@ UIClass.prototype = {
         self.newTab('http://feedback.mozillalabs.com/forums/56804-tabcandy');
       });
 
-      Tabs.onOpen(function(a, b) {
-        iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
-          Page.setCloseButtonOnTabs();
-        }, 1);
-      });
-
       iQ(window).bind('beforeunload', function() {
         // Things may not all be set up by now, so check for everything
         if(self.showChrome)
@@ -631,10 +608,7 @@ UIClass.prototype = {
         
       currentWindow.addEventListener(
         "tabcandyhide", function() { Page.showChrome(); }, false);
-        
-      currentWindow.addEventListener(
-        "resize", function() { Page.setCloseButtonOnTabs(); }, false);
-        
+          
       // ___ delay init
       Storage.onReady(function() {
         self.delayInit();
