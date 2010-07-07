@@ -55,9 +55,9 @@ Storage = {
       // us to check whether it's loaded or not so using a private one for
       // now.
       var alreadyReady = Utils.getCurrentWindow().__SSi;
-      if(alreadyReady)
+      if(alreadyReady) {
         callback();
-      else {    
+      } else {    
         var obsService =
           Components.classes["@mozilla.org/observer-service;1"]
           .getService(Components.interfaces.nsIObserverService);

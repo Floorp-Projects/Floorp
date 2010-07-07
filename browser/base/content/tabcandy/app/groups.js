@@ -542,6 +542,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Function: setZ
   // Set the Z order for the group's container, as well as its children. 
   setZ: function(value) {
+    this.zIndex = value;
+
     iQ(this.container).css({zIndex: value});
 
     if(this.$debug) 
