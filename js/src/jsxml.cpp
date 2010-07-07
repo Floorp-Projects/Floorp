@@ -2667,7 +2667,7 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
 
     obj = JSVAL_TO_OBJECT(v);
     if (!obj->isXML()) {
-        if (!obj->defaultValue(cx, JSTYPE_STRING, &v))
+        if (!DefaultValue(cx, obj, JSTYPE_STRING, &v))
             return NULL;
         str = js_ValueToString(cx, v);
         if (!str)
@@ -4746,24 +4746,10 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     return JS_TRUE;
 }
 
-static JSBool
-xml_defaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
+JSBool
+xml_convert(JSContext *cx, JSObject *obj, JSType type, jsval *rval)
 {
-    JSXML *xml;
-
-    if (hint == JSTYPE_OBJECT) {
-        /* Called from for..in code in js_Interpret: return an XMLList. */
-        xml = (JSXML *) obj->getPrivate();
-        if (xml->xml_class != JSXML_CLASS_LIST) {
-            obj = ToXMLList(cx, OBJECT_TO_JSVAL(obj));
-            if (!obj)
-                return JS_FALSE;
-        }
-        *vp = OBJECT_TO_JSVAL(obj);
-        return JS_TRUE;
-    }
-
-    return JS_CallFunctionName(cx, obj, js_toString_str, 0, NULL, vp);
+    return js_TryMethod(cx, obj, cx->runtime->atomState.toStringAtom, 0, NULL, rval);
 }
 
 static JSBool
@@ -5031,7 +5017,6 @@ JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
     xml_getAttributes,
     xml_setAttributes,
     xml_deleteProperty,
-    xml_defaultValue,
     xml_enumerate,
     xml_typeOf,
     js_TraceObject,
@@ -5053,7 +5038,7 @@ JS_FRIEND_DATA(JSClass) js_XMLClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_XML),
     JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
-    JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    xml_finalize,
+    JS_EnumerateStub,  JS_ResolveStub,    xml_convert,       xml_finalize,
     xml_getObjectOps,  NULL,              NULL,              NULL,
     NULL,              NULL,              JS_CLASS_TRACE(xml_trace), NULL
 };
