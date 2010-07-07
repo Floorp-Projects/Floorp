@@ -356,6 +356,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 
   // ----------
   setZ: function(value) {
+    this.zIndex = value;
     iQ(this.container).css({zIndex: value});
   },
     
