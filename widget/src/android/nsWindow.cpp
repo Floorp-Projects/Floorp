@@ -616,8 +616,12 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 DumpWindows();
 #endif
 
-                if (target)
-                    target->OnMotionEvent(ae);
+                if (target) {
+                    if (ae->Count() > 1)
+                        target->OnMultitouchEvent(ae);
+                    else
+                        target->OnMotionEvent(ae);
+                }
             }
             break;
         }
@@ -907,7 +911,6 @@ nsWindow::OnMotionEvent(AndroidGeckoEvent *ae)
             break;
 
         default:
-            // we don't handle any other motion events yet
             return;
     }
 
@@ -948,6 +951,51 @@ send_again:
         msg = NS_MOUSE_MOVE;
         goto send_again;
     }
+}
+
+static double
+getDistance(int x1, int y1, int x2, int y2)
+{
+    double deltaX = x2 - x1;
+    double deltaY = y2 - y1;
+    return sqrt(deltaX*deltaX + deltaY*deltaY);
+}
+
+void nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
+{
+    double dist = getDistance(ae->P0().x, ae->P0().y, ae->P1().x, ae->P1().y);
+
+    PRUint32 msg;
+    switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
+        case AndroidMotionEvent::ACTION_MOVE:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+            break;
+        case AndroidMotionEvent::ACTION_POINTER_DOWN:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
+            mStartDist = dist;
+            break;
+        case AndroidMotionEvent::ACTION_POINTER_UP:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY;
+            break;
+
+        default:
+            return;
+    }
+
+    nsIntPoint offset = WidgetToScreenOffset();
+    nsSimpleGestureEvent event(PR_TRUE, msg, this, 0, dist - mStartDist);
+
+    event.isShift = gLeftShift || gRightShift;
+    event.isControl = gSym;
+    event.isMeta = PR_FALSE;
+    event.isAlt = gLeftAlt || gRightAlt;
+    event.time = ae->Time();
+    event.refPoint.x = ((ae->P0().x + ae->P1().x) / 2) - offset.x;
+    event.refPoint.y = ((ae->P0().y + ae->P1().y) / 2) - offset.y;
+
+    DispatchEvent(&event);
+
+    mStartDist = dist;
 }
 
 void
