@@ -74,13 +74,6 @@ Navbar = {
 // Singleton for managing the tabbar of the browser. 
 var Tabbar = {
   // ----------
-  // Variable: _hidden
-  // We keep track of whether the tabs are hidden in this (internal) variable
-  // so we still have access to that information during the window's unload event,
-  // when window.Tabs no longer exists.
-  _hidden: false, 
-  
-  // ----------
   get el() {
     return window.Tabs[0].raw.parentNode; 
   },
@@ -172,10 +165,6 @@ window.Page = {
   startX: 30, 
   startY: 70,
   
-  show: function(){
-    this.hideChrome();
-  },
-
   isTabCandyVisible: function(){
     return (Utils.getCurrentWindow().document.getElementById("tab-candy-deck").
              selectedIndex == 1);
@@ -322,23 +311,27 @@ window.Page = {
     this.setupKeyHandlers();
         
     Tabs.onClose(function(){
-      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
-        Page.setCloseButtonOnTabs();        
-          
-        // Only go back to the TabCandy tab when there you close the last
-        // tab of a group.
-        var group = Groups.getActiveGroup();
-        if( group && group._children.length == 0 )
-          Page.show();
-  
-        // Take care of the case where you've closed the last tab in
-        // an un-named group, which means that the group is gone (null) and
-        // there are no visible tabs.
-        if( group == null && Tabbar.getVisibleTabs().length == 0){
-          Page.show();
-        }
-      }, 1);
-
+      if (!self.isTabCandyVisible()) {
+        iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+          Page.setCloseButtonOnTabs();        
+            
+          // Only go back to the TabCandy tab when there you close the last
+          // tab of a group.
+          var group = Groups.getActiveGroup();
+          if( group && group._children.length == 0 ) {
+            self.hideChrome();
+            self.showTabCandy();
+          }
+    
+          // Take care of the case where you've closed the last tab in
+          // an un-named group, which means that the group is gone (null) and
+          // there are no visible tabs.
+          if( group == null && Tabbar.getVisibleTabs().length == 0){
+            self.hideChrome();
+            self.showTabCandy();
+          }
+        }, 1);
+      }
       return false;
     });
     
