@@ -368,6 +368,9 @@ InstanceOf(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
     return InstanceOfSlow(cx, obj, clasp, argv);
 }
 
+extern JSBool
+js_HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
+
 inline void *
 GetInstancePrivate(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
 {

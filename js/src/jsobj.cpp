@@ -115,9 +115,6 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_TypeOf,
     js_TraceObject,
     NULL,   /* thisObject */
-    js_Call,
-    js_Construct,
-    js_HasInstance,
     js_Clear
 };
 
@@ -2937,9 +2934,6 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     with_TypeOf,
     js_TraceObject,
     with_ThisObject,
-    NULL,   /* call */
-    NULL,   /* construct */
-    NULL,   /* hasInstance */
     js_Clear
 };
 
@@ -5546,51 +5540,6 @@ js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
     JS_UNLOCK_OBJ(cx, obj);
 }
 #endif
-
-JSBool
-js_Call(JSContext *cx, uintN argc, Value *vp)
-{
-    JSStackFrame *fp = cx->fp;
-    JSObject *obj = fp->getThisObject(cx);
-    if (!obj)
-        return false;
-    JS_ASSERT(ObjectValue(*obj) == fp->thisv);
-
-    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
-    Class *clasp = callee->getClass();
-    if (!clasp->call) {
-        js_ReportIsNotFunction(cx, &vp[0], 0);
-        return JS_FALSE;
-    }
-    AutoValueRooter rval(cx);
-    JSBool ok = clasp->call(cx, obj, argc, JS_ARGV(cx, vp), rval.addr());
-    if (ok)
-        JS_SET_RVAL(cx, vp, rval.value());
-    return ok;
-}
-
-JSBool
-js_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
-{
-
-    Class *clasp = argv[-2].toObject().getClass();
-    if (!clasp->construct) {
-        js_ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
-        return JS_FALSE;
-    }
-    return clasp->construct(cx, obj, argc, argv, rval);
-}
-
-JSBool
-js_HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
-{
-    Class *clasp = obj->getClass();
-    if (clasp->hasInstance)
-        return clasp->hasInstance(cx, obj, v, bp);
-    js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
-                        JSDVG_SEARCH_STACK, ObjectValue(*obj), NULL);
-    return JS_FALSE;
-}
 
 bool
 js_IsDelegate(JSContext *cx, JSObject *obj, const Value &v)

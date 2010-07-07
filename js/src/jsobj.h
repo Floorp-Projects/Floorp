@@ -167,8 +167,20 @@ struct PropDesc {
 };
 
 namespace js {
-    typedef Vector<PropDesc, 1> PropDescArray;
+
+typedef Vector<PropDesc, 1> PropDescArray;
+
+/*
+ * Flag and type-safe cast helper to denote that Class::call is a fast native.
+ */
+const uint32 CLASS_CALL_IS_FAST = uint32(1) << (JSCLASS_LAST_API_FLAG_SHIFT + 1);
+
+inline Native CastCallOpAsNative(CallOp op)
+{
+    return reinterpret_cast<Native>(op);
 }
+
+} /* namespace js */
 
 /* For detailed comments on these function pointer types, see jsprvtd.h. */
 struct JSObjectOps {
@@ -193,9 +205,6 @@ struct JSObjectOps {
 
     /* Optionally non-null members start here. */
     JSObjectOp          thisObject;
-    js::CallOp          call;
-    js::Native          construct;
-    js::HasInstanceOp   hasInstance;
     JSFinalizeOp        clear;
 
     bool inline isNative() const;
@@ -1274,16 +1283,6 @@ CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
 
 extern JSType
 js_TypeOf(JSContext *cx, JSObject *obj);
-
-extern JSBool
-js_Call(JSContext *cx, uintN argc, js::Value *vp);
-
-extern JSBool
-js_Construct(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
-             js::Value *rval);
-
-extern JSBool
-js_HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
 
 extern bool
 js_IsDelegate(JSContext *cx, JSObject *obj, const js::Value &v);
