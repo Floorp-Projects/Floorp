@@ -443,7 +443,7 @@ dwarf2reader::DIEHandler *DwarfCUToModule::NamedScopeHandler::FindChildHandler(
     default:
       return NULL;
   }
-};
+}
 
 void DwarfCUToModule::WarningReporter::CUHeading() {
   if (printed_cu_header_)
