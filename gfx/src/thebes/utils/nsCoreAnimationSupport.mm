@@ -676,7 +676,7 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext,
                                               nsIOSurface *surf, 
                                               CGColorSpaceRef aColorSpace,
                                               int aX, int aY,
-                                              int aWidth, int aHeight) {
+                                              uint32_t aWidth, uint32_t aHeight) {
   surf->Lock();
   size_t bytesPerRow = surf->GetBytesPerRow();
   size_t ioWidth = surf->GetWidth();
