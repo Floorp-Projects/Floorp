@@ -1065,15 +1065,16 @@ proxy_create(JSContext *cx, uintN argc, jsval *vp)
     JSObject *handler;
     if (!(handler = NonNullObject(cx, vp[2])))
         return false;
-    JSObject *proto, *parent;
+    JSObject *proto, *parent = NULL;
     if (argc > 1 && !JSVAL_IS_PRIMITIVE(vp[3])) {
         proto = JSVAL_TO_OBJECT(vp[3]);
         parent = proto->getParent();
     } else {
         JS_ASSERT(VALUE_IS_FUNCTION(cx, vp[0]));
         proto = NULL;
-        parent = JSVAL_TO_OBJECT(vp[0])->getParent();
     }
+    if (!parent)
+        parent = JSVAL_TO_OBJECT(vp[0])->getParent();
     JSObject *proxy = NewProxyObject(cx, &JSScriptedProxyHandler::singleton, OBJECT_TO_JSVAL(handler),
                                      proto, parent);
     if (!proxy)
