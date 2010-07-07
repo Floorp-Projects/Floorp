@@ -4014,7 +4014,7 @@ var XULBrowserWindow = {
     }
   },
 
-  onLinkIconAvailable: function (aBrowser, aIconURL) {
+  onLinkIconAvailable: function (aIconURL) {
     if (gProxyFavIcon && gBrowser.userTypedValue === null)
       PageProxySetIcon(aIconURL); // update the favicon in the URL bar
   },
