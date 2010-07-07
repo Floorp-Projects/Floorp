@@ -65,6 +65,10 @@ window.Item = function() {
   // The position and size of this Item, represented as a <Rect>. 
   this.bounds = null;
   
+  // Variable: zIndex
+  // The z-index for this item. 
+  this.zIndex = 0;
+  
   // Variable: debug
   // When set to true, displays a rectangle on the screen that corresponds with bounds.
   // May be used for additional debugging features in the future.
@@ -291,7 +295,7 @@ window.Item.prototype = {
   // Function: getZ
   // Returns the zIndex of the Item.
   getZ: function() {
-    return parseInt(iQ(this.container).css('zIndex'));
+    return this.zIndex;
   },
 
   // ----------
