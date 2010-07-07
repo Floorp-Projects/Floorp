@@ -55,7 +55,7 @@ var SubscribeHandler = {
     this._feedWriter.close();
   },
   
-  subscribe: function FH_subscribe() {
+  subscribe: function SH_subscribe() {
     this._feedWriter.subscribe();
   }
 };
