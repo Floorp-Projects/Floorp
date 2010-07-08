@@ -80,7 +80,7 @@ WeaveService.prototype = {
     if (resProt.hasSubstitution("services-sync"))
       return;
 
-    let uri = ioService.newURI("resource://gre/modules/services-sync",
+    let uri = ioService.newURI("resource://gre/modules/services-sync/",
                                null, null);
     resProt.setSubstitution("services-sync", uri);
   }
@@ -138,10 +138,13 @@ AboutWeaveLog1.prototype = {
   }
 };
 
+let components = [WeaveService, AboutWeaveLog, AboutWeaveLog1];
+
+// Gecko <2.0
 function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule([
-    WeaveService,
-    AboutWeaveLog,
-    AboutWeaveLog1
-  ]);
+  return XPCOMUtils.generateModule(components);
 }
+
+// Gecko >=2.0
+if (typeof XPCOMUtils.generateNSGetFactory == "function")
+    const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
