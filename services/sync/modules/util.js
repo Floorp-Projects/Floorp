@@ -742,6 +742,30 @@ let Utils = {
     return ret;
   },
 
+  encodeUTF8: function(str) {
+    try {
+      var unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                             .createInstance(Ci.nsIScriptableUnicodeConverter);
+      unicodeConverter.charset = "UTF-8";
+      str = unicodeConverter.ConvertFromUnicode(str);
+      return str + unicodeConverter.Finish();
+    } catch(ex) {
+      return null;
+    }
+  },
+
+  decodeUTF8: function(str) {
+    try {
+      var unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                             .createInstance(Ci.nsIScriptableUnicodeConverter);
+      unicodeConverter.charset = "UTF-8";
+      str = unicodeConverter.ConvertToUnicode(str);
+      return str + unicodeConverter.Finish();
+    } catch(ex) {
+      return null;
+    }
+  },
+
   /**
    * Create an array like the first but without elements of the second
    */
