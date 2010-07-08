@@ -294,8 +294,8 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
         bool isStringResult = (op == JSOP_ADD) &&
                               ((lhs->isTypeKnown() && lhs->getKnownType() == JSVAL_TYPE_STRING) ||
                                (rhs->isTypeKnown() && rhs->getKnownType() == JSVAL_TYPE_STRING));
-        prepareStubCall();
-        stubCall(stub, Uses(2), Defs(1));
+        prepareStubCall(Uses(2));
+        stubCall(stub);
         frame.popn(2);
         if (isStringResult)
             frame.pushSyncedType(JSVAL_TYPE_STRING);
@@ -562,8 +562,8 @@ mjit::Compiler::jsop_neg()
     FrameEntry *fe = frame.peek(-1);
 
     if (fe->isTypeKnown() && fe->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET) {
-        prepareStubCall();
-        stubCall(stubs::Neg, Uses(1), Defs(1));
+        prepareStubCall(Uses(1));
+        stubCall(stubs::Neg);
         frame.pop();
         frame.pushSynced();
         return;

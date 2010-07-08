@@ -57,8 +57,8 @@ mjit::Compiler::jsop_bitnot()
 
     /* We only want to handle integers here. */
     if (top->isTypeKnown() && top->getKnownType() != JSVAL_TYPE_INT32) {
-        prepareStubCall();
-        stubCall(stubs::BitNot, Uses(1), Defs(1));
+        prepareStubCall(Uses(1));
+        stubCall(stubs::BitNot);
         frame.pop();
         frame.pushSyncedType(JSVAL_TYPE_INT32);
         return;
@@ -118,8 +118,8 @@ mjit::Compiler::jsop_bitop(JSOp op)
     /* We only want to handle integers here. */
     if ((rhs->isTypeKnown() && rhs->getKnownType() != JSVAL_TYPE_INT32) ||
         (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_INT32)) {
-        prepareStubCall();
-        stubCall(stub, Uses(2), Defs(1));
+        prepareStubCall(Uses(2));
+        stubCall(stub);
         frame.popn(2);
         frame.pushSyncedType(JSVAL_TYPE_INT32);
         return;
@@ -612,8 +612,8 @@ mjit::Compiler::jsop_objtostr()
     FrameEntry *top = frame.peek(-1);
 
     if (top->isTypeKnown() && top->getKnownType() == JSVAL_TYPE_OBJECT) {
-        prepareStubCall();
-        stubCall(stubs::ObjToStr, Uses(1), Defs(1));
+        prepareStubCall(Uses(1));
+        stubCall(stubs::ObjToStr);
         frame.pop();
         frame.pushSynced();
         return;
@@ -683,8 +683,8 @@ mjit::Compiler::jsop_not()
 
           default:
           {
-            prepareStubCall();
-            stubCall(stubs::ValueToBoolean, Uses(0), Defs(0));
+            prepareStubCall(Uses(1));
+            stubCall(stubs::ValueToBoolean);
 
             RegisterID reg = Registers::ReturnReg;
             frame.takeReg(reg);
@@ -786,8 +786,8 @@ mjit::Compiler::jsop_typeof()
         }
     }
 
-    prepareStubCall();
-    stubCall(stubs::TypeOf, Uses(1), Defs(1));
+    prepareStubCall(Uses(1));
+    stubCall(stubs::TypeOf);
     frame.pop();
     frame.takeReg(Registers::ReturnReg);
     frame.pushTypedPayload(JSVAL_TYPE_STRING, Registers::ReturnReg);
@@ -1282,11 +1282,11 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         return;
     }
 
-    prepareStubCall();
+    prepareStubCall(Uses(2));
     if (op == JSOP_STRICTEQ)
-        stubCall(stubs::StrictEq, Uses(2), Defs(1));
+        stubCall(stubs::StrictEq);
     else
-        stubCall(stubs::StrictNe, Uses(2), Defs(1));
+        stubCall(stubs::StrictNe);
     frame.popn(2);
     frame.takeReg(Registers::ReturnReg);
     frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
@@ -1300,8 +1300,8 @@ mjit::Compiler::jsop_pos()
     if (top->isTypeKnown()) {
         if (top->getKnownType() <= JSVAL_TYPE_INT32)
             return;
-        prepareStubCall();
-        stubCall(stubs::Pos, Uses(1), Defs(1));
+        prepareStubCall(Uses(1));
+        stubCall(stubs::Pos);
         frame.pop();
         frame.pushSynced();
         return;

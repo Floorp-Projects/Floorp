@@ -197,8 +197,8 @@ mjit::Compiler::generatePrologue()
 
         /* Create the call object. */
         if (fun->isHeavyweight()) {
-            prepareStubCall();
-            stubCall(stubs::GetCallObject, Uses(0), Defs(0));
+            prepareStubCall(Uses(0));
+            stubCall(stubs::GetCallObject);
         }
 
         j.linkTo(masm.label(), &masm);
@@ -469,8 +469,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_IFNE)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
-            prepareStubCall();
-            stubCall(stubs::Arguments, Uses(0), Defs(1));
+            prepareStubCall(Uses(0));
+            stubCall(stubs::Arguments);
             frame.pushSynced();
           END_CASE(JSOP_ARGUMENTS)
 
@@ -595,8 +595,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_RSH)
 
           BEGIN_CASE(JSOP_URSH)
-            prepareStubCall();
-            stubCall(stubs::Ursh, Uses(2), Defs(1));
+            prepareStubCall(Uses(2));
+            stubCall(stubs::Ursh);
             frame.popn(2);
             frame.pushSynced();
           END_CASE(JSOP_URSH)
@@ -768,9 +768,9 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_SETELEM);
 
           BEGIN_CASE(JSOP_CALLNAME)
-            prepareStubCall();
+            prepareStubCall(Uses(0));
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
-            stubCall(stubs::CallName, Uses(0), Defs(2));
+            stubCall(stubs::CallName);
             frame.pushSynced();
             frame.pushSynced();
           END_CASE(JSOP_CALLNAME)
@@ -837,7 +837,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TABLESWITCH)
             frame.forgetEverything();
             masm.move(ImmPtr(PC), Registers::ArgReg1);
-            stubCall(stubs::TableSwitch, Uses(1), Defs(0));
+            stubCall(stubs::TableSwitch);
             masm.jump(Registers::ReturnReg);
             PC += js_GetVariableBytecodeLength(PC);
             break;
@@ -846,7 +846,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_LOOKUPSWITCH)
             frame.forgetEverything();
             masm.move(ImmPtr(PC), Registers::ArgReg1);
-            stubCall(stubs::LookupSwitch, Uses(1), Defs(0));
+            stubCall(stubs::LookupSwitch);
             masm.jump(Registers::ReturnReg);
             PC += js_GetVariableBytecodeLength(PC);
             break;
@@ -862,9 +862,9 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_ITER)
           {
-            prepareStubCall();
+            prepareStubCall(Uses(1));
             masm.move(Imm32(PC[1]), Registers::ArgReg1);
-            stubCall(stubs::Iter, Uses(1), Defs(1));
+            stubCall(stubs::Iter);
             frame.pop();
             frame.pushSynced();
           }
@@ -877,8 +877,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_MOREITER)
 
           BEGIN_CASE(JSOP_ENDITER)
-            prepareStubCall();
-            stubCall(stubs::EndIter, Uses(1), Defs(0));
+            prepareStubCall(Uses(1));
+            stubCall(stubs::EndIter);
             frame.pop();
           END_CASE(JSOP_ENDITER)
 
@@ -945,13 +945,13 @@ mjit::Compiler::generateMethod()
             jsint i = GET_INT8(PC);
             JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
-            prepareStubCall();
+            prepareStubCall(Uses(0));
             if (i == JSProto_Array) {
-                stubCall(stubs::NewInitArray, Uses(0), Defs(1));
+                stubCall(stubs::NewInitArray);
             } else {
                 JSOp next = JSOp(PC[JSOP_NEWINIT_LENGTH]);
                 masm.move(Imm32(next == JSOP_ENDINIT ? 1 : 0), Registers::ArgReg1);
-                stubCall(stubs::NewInitObject, Uses(0), Defs(1));
+                stubCall(stubs::NewInitObject);
             }
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
@@ -976,9 +976,9 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_INITPROP)
           {
             JSAtom *atom = script->getAtom(fullAtomIndex(PC));
-            prepareStubCall();
+            prepareStubCall(Uses(2));
             masm.move(ImmPtr(atom), Registers::ArgReg1);
-            stubCall(stubs::InitProp, Uses(1), Defs(0));
+            stubCall(stubs::InitProp);
             frame.pop();
           }
           END_CASE(JSOP_INITPROP)
@@ -986,9 +986,9 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_INITELEM)
           {
             JSOp next = JSOp(PC[JSOP_INITELEM_LENGTH]);
-            prepareStubCall();
+            prepareStubCall(Uses(3));
             masm.move(Imm32(next == JSOP_ENDINIT ? 1 : 0), Registers::ArgReg1);
-            stubCall(stubs::InitElem, Uses(2), Defs(0));
+            stubCall(stubs::InitElem);
             frame.popn(2);
           }
           END_CASE(JSOP_INITELEM)
@@ -1011,9 +1011,9 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_ARGDEC)
 
           BEGIN_CASE(JSOP_FORNAME)
-            prepareStubCall();
+            prepareStubCall(Uses(1));
             masm.move(ImmPtr(script->getAtom(fullAtomIndex(PC))), Registers::ArgReg1);
-            stubCall(stubs::ForName, Uses(0), Defs(0));
+            stubCall(stubs::ForName);
           END_CASE(JSOP_FORNAME)
 
           BEGIN_CASE(JSOP_INCLOCAL)
@@ -1048,8 +1048,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_SETNAME)
 
           BEGIN_CASE(JSOP_THROW)
-            prepareStubCall();
-            stubCall(stubs::Throw, Uses(1), Defs(0));
+            prepareStubCall(Uses(1));
+            stubCall(stubs::Throw);
             frame.pop();
           END_CASE(JSOP_THROW)
 
@@ -1074,18 +1074,18 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_LINENO)
 
           BEGIN_CASE(JSOP_DEFFUN)
-            prepareStubCall();
+            prepareStubCall(Uses(0));
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
-            stubCall(stubs::DefFun, Uses(0), Defs(0));
+            stubCall(stubs::DefFun);
           END_CASE(JSOP_DEFFUN)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
           {
             uint32 slot = GET_SLOTNO(PC);
             JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
-            prepareStubCall();
+            prepareStubCall(Uses(frame.frameDepth()));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
-            stubCall(stubs::DefLocalFun_FC, Uses(0), Defs(0));
+            stubCall(stubs::DefLocalFun_FC);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
             frame.storeLocal(slot);
@@ -1096,9 +1096,9 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_LAMBDA)
           {
             JSFunction *fun = script->getFunction(fullAtomIndex(PC));
-            prepareStubCall();
+            prepareStubCall(Uses(0));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
-            stubCall(stubs::Lambda, Uses(0), Defs(1));
+            stubCall(stubs::Lambda);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
           }
@@ -1123,15 +1123,15 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_CALLDSLOT)
 
           BEGIN_CASE(JSOP_ARGSUB)
-            prepareStubCall();
+            prepareStubCall(Uses(0));
             masm.move(Imm32(GET_ARGNO(PC)), Registers::ArgReg1);
-            stubCall(stubs::ArgSub, Uses(0), Defs(1));
+            stubCall(stubs::ArgSub);
             frame.pushSynced();
           END_CASE(JSOP_ARGSUB)
 
           BEGIN_CASE(JSOP_ARGCNT)
-            prepareStubCall();
-            stubCall(stubs::ArgCnt, Uses(0), Defs(1));
+            prepareStubCall(Uses(0));
+            stubCall(stubs::ArgCnt);
             frame.pushSynced();
           END_CASE(JSOP_ARGCNT)
 
@@ -1139,9 +1139,9 @@ mjit::Compiler::generateMethod()
           {
             uint32 slot = GET_SLOTNO(PC);
             JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
-            prepareStubCall();
+            prepareStubCall(Uses(0));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
-            stubCall(stubs::DefLocalFun, Uses(0), Defs(0));
+            stubCall(stubs::DefLocalFun);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
             frame.storeLocal(slot);
@@ -1167,9 +1167,9 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_REGEXP)
           {
             JSObject *regex = script->getRegExp(fullAtomIndex(PC));
-            prepareStubCall();
+            prepareStubCall(Uses(0));
             masm.move(ImmPtr(regex), Registers::ArgReg1);
-            stubCall(stubs::RegExp, Uses(0), Defs(1));
+            stubCall(stubs::RegExp);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
           }
@@ -1187,9 +1187,9 @@ mjit::Compiler::generateMethod()
             JSUpvarArray *uva = script->upvars();
             JS_ASSERT(index < uva->length);
 
-            prepareStubCall();
+            prepareStubCall(Uses(0));
             masm.move(Imm32(uva->vector[index].asInteger()), Registers::ArgReg1);
-            stubCall(stubs::GetUpvar, Uses(0), Defs(1));
+            stubCall(stubs::GetUpvar);
             frame.pushSynced();
             if (op == JSOP_CALLUPVAR)
                 frame.push(NullValue());
@@ -1201,8 +1201,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_UINT24)
 
           BEGIN_CASE(JSOP_CALLELEM)
-            prepareStubCall();
-            stubCall(stubs::CallElem, Uses(2), Defs(2));
+            prepareStubCall(Uses(2));
+            stubCall(stubs::CallElem);
             frame.popn(2);
             frame.pushSynced();
             frame.pushSynced();
@@ -1228,7 +1228,7 @@ mjit::Compiler::generateMethod()
             frame.forgetEverything();
             masm.move(ImmPtr(obj), Registers::ArgReg1);
             uint32 n = js_GetEnterBlockStackDefs(cx, script, PC);
-            stubCall(stubs::EnterBlock, Uses(0), Defs(n));
+            stubCall(stubs::EnterBlock);
             frame.enterBlock(n);
           }
           END_CASE(JSOP_ENTERBLOCK)
@@ -1236,8 +1236,8 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_LEAVEBLOCK)
           {
             uint32 n = js_GetVariableStackUses(op, PC);
-            prepareStubCall();
-            stubCall(stubs::LeaveBlock, Uses(n), Defs(0));
+            prepareStubCall(Uses(n));
+            stubCall(stubs::LeaveBlock);
             frame.leaveBlock(n);
           }
           END_CASE(JSOP_LEAVEBLOCK)
@@ -1257,10 +1257,10 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_NEWARRAY)
           {
-            prepareStubCall();
             uint32 len = GET_UINT16(PC);
+            prepareStubCall(Uses(len));
             masm.move(Imm32(len), Registers::ArgReg1);
-            stubCall(stubs::NewArray, Uses(len), Defs(1));
+            stubCall(stubs::NewArray);
             frame.popn(len);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
@@ -1270,9 +1270,9 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_LAMBDA_FC)
           {
             JSFunction *fun = script->getFunction(fullAtomIndex(PC));
-            prepareStubCall();
+            prepareStubCall(Uses(frame.frameDepth()));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
-            stubCall(stubs::FlatLambda, Uses(0), Defs(1));
+            stubCall(stubs::FlatLambda);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
           }
@@ -1297,9 +1297,9 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_CONCATN)
           {
             uint32 argc = GET_ARGC(PC);
-            prepareStubCall();
+            prepareStubCall(Uses(argc));
             masm.move(Imm32(argc), Registers::ArgReg1);
-            stubCall(stubs::ConcatN, Uses(argc), Defs(1));
+            stubCall(stubs::ConcatN);
             frame.popn(argc);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_STRING, Registers::ReturnReg);
@@ -1309,9 +1309,9 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_INITMETHOD)
           {
             JSAtom *atom = script->getAtom(fullAtomIndex(PC));
-            prepareStubCall();
+            prepareStubCall(Uses(2));
             masm.move(ImmPtr(atom), Registers::ArgReg1);
-            stubCall(stubs::InitMethod, Uses(1), Defs(0));
+            stubCall(stubs::InitMethod);
             frame.pop();
           }
           END_CASE(JSOP_INITMETHOD)
@@ -1494,8 +1494,8 @@ mjit::Compiler::emitReturn()
     if (fun) {
         if (fun->isHeavyweight()) {
             /* There will always be a call object. */
-            prepareStubCall();
-            stubCall(stubs::PutCallObject, Uses(0), Defs(0));
+            prepareStubCall(Uses(0));
+            stubCall(stubs::PutCallObject);
             frame.throwaway();
         } else {
             /* if (callobj) ... */
@@ -1554,15 +1554,15 @@ mjit::Compiler::emitReturn()
 }
 
 void
-mjit::Compiler::prepareStubCall()
+mjit::Compiler::prepareStubCall(Uses uses)
 {
     JaegerSpew(JSpew_Insns, " ---- STUB CALL, SYNCING FRAME ---- \n");
-    frame.syncAndKill(Registers::TempRegs);
+    frame.syncAndKill(Registers(Registers::TempRegs), uses);
     JaegerSpew(JSpew_Insns, " ---- FRAME SYNCING DONE ---- \n");
 }
 
 JSC::MacroAssembler::Call
-mjit::Compiler::stubCall(void *ptr, Uses uses, Defs defs)
+mjit::Compiler::stubCall(void *ptr)
 {
     JaegerSpew(JSpew_Insns, " ---- CALLING STUB ---- \n");
     Call cl = masm.stubCall(ptr, PC, frame.stackDepth() + script->nfixed);
@@ -1577,7 +1577,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     bool typeKnown = fe->isTypeKnown();
 
     if (typeKnown && fe->getKnownType() != JSVAL_TYPE_OBJECT) {
-        prepareStubCall();
+        prepareStubCall(Uses(argc + 2));
         VoidPtrStubUInt32 stub = callingNew ? stubs::SlowNew : stubs::SlowCall;
         masm.move(Imm32(argc), Registers::ArgReg1);
         masm.stubCall(stub, PC, frame.stackDepth() + script->nfixed);
@@ -1607,7 +1607,8 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
      * We rely on the fact that syncAndKill() is not allowed to touch the
      * registers we've preserved.
      */
-    frame.syncForCall(argc + 2);
+    frame.syncAndKill(Registers(Registers::AvailRegs), Uses(argc + 2));
+    frame.resetRegState();
 
     Label invoke;
     if (!typeKnown) {
@@ -1804,8 +1805,8 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
 void
 mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
 {
-    prepareStubCall();
-    stubCall(stub, Uses(2), Defs(0));
+    prepareStubCall(Uses(2));
+    stubCall(stub);
     frame.pop();
     frame.pop();
 
@@ -1828,9 +1829,9 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
 void
 mjit::Compiler::jsop_setprop_slow(JSAtom *atom)
 {
-    prepareStubCall();
+    prepareStubCall(Uses(2));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(stubs::SetName, Uses(2), Defs(1));
+    stubCall(stubs::SetName);
     JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
     frame.shimmy(1);
 }
@@ -1838,8 +1839,8 @@ mjit::Compiler::jsop_setprop_slow(JSAtom *atom)
 void
 mjit::Compiler::jsop_getprop_slow()
 {
-    prepareStubCall();
-    stubCall(stubs::GetProp, Uses(1), Defs(1));
+    prepareStubCall(Uses(1));
+    stubCall(stubs::GetProp);
     frame.pop();
     frame.pushSynced();
 }
@@ -1847,9 +1848,9 @@ mjit::Compiler::jsop_getprop_slow()
 bool
 mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
 {
-    prepareStubCall();
+    prepareStubCall(Uses(1));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(stubs::CallProp, Uses(1), Defs(2));
+    stubCall(stubs::CallProp);
     frame.pop();
     frame.pushSynced();
     frame.pushSynced();
@@ -1880,8 +1881,8 @@ mjit::Compiler::jsop_length()
 #if ENABLE_PIC
     jsop_getprop(cx->runtime->atomState.lengthAtom);
 #else
-    prepareStubCall();
-    stubCall(stubs::Length, Uses(1), Defs(1));
+    prepareStubCall(Uses(1));
+    stubCall(stubs::Length);
     frame.pop();
     frame.pushSynced();
 #endif
@@ -2387,8 +2388,8 @@ mjit::Compiler::jsop_bindname(uint32 index)
 void
 mjit::Compiler::jsop_name(JSAtom *atom)
 {
-    prepareStubCall();
-    stubCall(stubs::Name, Uses(0), Defs(1));
+    prepareStubCall(Uses(0));
+    stubCall(stubs::Name);
     frame.pushSynced();
 }
 
@@ -2468,9 +2469,9 @@ void
 mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
-    prepareStubCall();
+    prepareStubCall(Uses(0));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(stub, Uses(0), Defs(1));
+    stubCall(stub);
     frame.pushSynced();
 }
 
@@ -2541,9 +2542,9 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
         // N
     }
 #else
-    prepareStubCall();
+    prepareStubCall(Uses(1));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(stub, Uses(1), Defs(1));
+    stubCall(stub);
     frame.pop();
     frame.pushSynced();
 #endif
@@ -2664,8 +2665,8 @@ mjit::Compiler::iterMore()
 void
 mjit::Compiler::jsop_eleminc(JSOp op, VoidStub stub)
 {
-    prepareStubCall();
-    stubCall(stub, Uses(2), Defs(1));
+    prepareStubCall(Uses(2));
+    stubCall(stub);
     frame.popn(2);
     frame.pushSynced();
 }
@@ -2673,8 +2674,8 @@ mjit::Compiler::jsop_eleminc(JSOp op, VoidStub stub)
 void
 mjit::Compiler::jsop_getgname_slow(uint32 index)
 {
-    prepareStubCall();
-    stubCall(stubs::GetGlobalName, Uses(0), Defs(1));
+    prepareStubCall(Uses(0));
+    stubCall(stubs::GetGlobalName);
     frame.pushSynced();
 }
 
@@ -2687,8 +2688,8 @@ mjit::Compiler::jsop_bindgname()
     }
 
     /* :TODO: this is slower than it needs to be. */
-    prepareStubCall();
-    stubCall(stubs::BindGlobalName, Uses(0), Defs(1));
+    prepareStubCall(Uses(0));
+    stubCall(stubs::BindGlobalName);
     frame.takeReg(Registers::ReturnReg);
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
 }
@@ -2764,9 +2765,9 @@ void
 mjit::Compiler::jsop_setgname_slow(uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
-    prepareStubCall();
+    prepareStubCall(Uses(2));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(stubs::SetGlobalName, Uses(2), Defs(1));
+    stubCall(stubs::SetGlobalName);
     frame.popn(2);
     frame.pushSynced();
 }
@@ -2873,8 +2874,8 @@ mjit::Compiler::jsop_setgname(uint32 index)
 void
 mjit::Compiler::jsop_setelem_slow()
 {
-    prepareStubCall();
-    stubCall(stubs::SetElem, Uses(3), Defs(1));
+    prepareStubCall(Uses(3));
+    stubCall(stubs::SetElem);
     frame.popn(3);
     frame.pushSynced();
 }
@@ -2882,8 +2883,8 @@ mjit::Compiler::jsop_setelem_slow()
 void
 mjit::Compiler::jsop_getelem_slow()
 {
-    prepareStubCall();
-    stubCall(stubs::GetElem, Uses(2), Defs(1));
+    prepareStubCall(Uses(2));
+    stubCall(stubs::GetElem);
     frame.popn(2);
     frame.pushSynced();
 }
@@ -2891,8 +2892,8 @@ mjit::Compiler::jsop_getelem_slow()
 void
 mjit::Compiler::jsop_unbrand()
 {
-    prepareStubCall();
-    stubCall(stubs::Unbrand, Uses(0), Defs(0));
+    prepareStubCall(Uses(1));
+    stubCall(stubs::Unbrand);
 }
 
 void
@@ -2906,8 +2907,8 @@ mjit::Compiler::jsop_instanceof()
      */
 
     if (rhs->isTypeKnown() && rhs->getKnownType() != JSVAL_TYPE_OBJECT) {
-        prepareStubCall();
-        stubCall(stubs::InstanceOf, Uses(2), Defs(1));
+        prepareStubCall(Uses(2));
+        stubCall(stubs::InstanceOf);
         frame.popn(2);
         frame.takeReg(Registers::ReturnReg);
         frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
