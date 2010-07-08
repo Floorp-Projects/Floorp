@@ -128,15 +128,16 @@ class StubCompiler
      * Force a frame sync and return a label before the syncing code.
      * A Jump may bind to the label with leaveExitDirect().
      */
-    JSC::MacroAssembler::Label syncExit();
+    JSC::MacroAssembler::Label syncExit(Uses uses);
+
     /*
      * Sync the exit, and state that code will be immediately outputted
      * to the out-of-line buffer.
      */
-    JSC::MacroAssembler::Label syncExitAndJump();
+    JSC::MacroAssembler::Label syncExitAndJump(Uses uses);
 
     /* Exits from the fast path into the slow path. */
-    void linkExit(Jump j);
+    void linkExit(Jump j, Uses uses);
     void linkExitDirect(Jump j, Label L);
 
     void leave();
@@ -147,7 +148,7 @@ class StubCompiler
      * specifies how many stack slots below sp must not be reloaded from
      * registers.
      */
-    void rejoin(uint32 invalidationDepth);
+    void rejoin(Changes changes);
     void linkRejoin(Jump j);
 
     /* Finish all native code patching. */

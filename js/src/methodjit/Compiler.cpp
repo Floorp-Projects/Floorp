@@ -1286,10 +1286,10 @@ mjit::Compiler::generateMethod()
                 Address flag(cxreg, offsetof(JSContext, interruptFlags));
                 Jump jump = masm.branchTest32(Assembler::NonZero, flag);
                 frame.freeReg(cxreg);
-                stubcc.linkExit(jump);
+                stubcc.linkExit(jump, Uses(0));
                 stubcc.leave();
                 stubcc.call(stubs::Interrupt);
-                stubcc.rejoin(0);
+                stubcc.rejoin(Changes(0));
             }
           }
           END_CASE(JSOP_TRACE)
@@ -1463,7 +1463,7 @@ mjit::Compiler::emitReturn()
     Jump noInlineCalls = masm.branchPtr(Assembler::Equal,
                                         FrameAddress(offsetof(VMFrame, inlineCallCount)),
                                         ImmPtr(0));
-    stubcc.linkExit(noInlineCalls);
+    stubcc.linkExit(noInlineCalls, Uses(frame.frameDepth()));
 #if defined(JS_CPU_ARM)
     stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), JSC::ARMRegisters::lr);
 #endif
@@ -1502,7 +1502,7 @@ mjit::Compiler::emitReturn()
             Jump callObj = masm.branchPtr(Assembler::NotEqual,
                                           Address(JSFrameReg, offsetof(JSStackFrame, callobj)),
                                           ImmPtr(0));
-            stubcc.linkExit(callObj);
+            stubcc.linkExit(callObj, Uses(frame.frameDepth()));
 
             frame.throwaway();
 
@@ -1514,9 +1514,9 @@ mjit::Compiler::emitReturn()
             Jump argsObj = masm.branchPtr(Assembler::NotEqual,
                                           Address(JSFrameReg, offsetof(JSStackFrame, argsobj)),
                                           ImmIntPtr(0));
-            stubcc.linkExit(argsObj);
+            stubcc.linkExit(argsObj, Uses(0));
             stubcc.call(stubs::PutArgsObject);
-            stubcc.rejoin(0);
+            stubcc.rejoin(Changes(0));
             stubcc.crossJump(j, masm.label());
         }
     }
@@ -1618,9 +1618,9 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
         else
             j = masm.testObject(Assembler::NotEqual, type);
         invoke = stubcc.masm.label();
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(argc + 2));
         j = masm.testFunction(Assembler::NotEqual, data);
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(argc + 2));
         stubcc.leave();
         stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
         stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
@@ -1648,7 +1648,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
         } else {
             /* Create a new slow path. */
             invoke = stubcc.masm.label();
-            stubcc.linkExit(notInterp);
+            stubcc.linkExit(notInterp, Uses(argc + 2));
             stubcc.leave();
             stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
             stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
@@ -1717,7 +1717,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
      */
     if (callingNew) {
         Jump primitive = masm.testPrimitive(Assembler::Equal, JSReturnReg_Type);
-        stubcc.linkExit(primitive);
+        stubcc.linkExitDirect(primitive, stubcc.masm.label());
         FrameEntry *fe = frame.peek(-int(argc + 1));
         Address thisv(frame.addressOf(fe));
         stubcc.masm.loadTypeTag(thisv, JSReturnReg_Type);
@@ -1732,7 +1732,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     frame.takeReg(JSReturnReg_Data);
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
 
-    stubcc.rejoin(0);
+    stubcc.rejoin(Changes(0));
 }
 
 void
@@ -1927,7 +1927,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
         Jump j = masm.testObject(Assembler::NotEqual, reg);
 
         pic.typeCheck = stubcc.masm.label();
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(1));
         stubcc.leave();
         typeCheck = stubcc.masm.jump();
         pic.hasTypeCheck = true;
@@ -1953,7 +1953,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     Jump j = masm.branch32(Assembler::NotEqual, shapeReg,
                            Imm32(int32(JSObjectMap::INVALID_SHAPE)));
     pic.slowPathStart = stubcc.masm.label();
-    stubcc.linkExit(j);
+    stubcc.linkExit(j, Uses(1));
 
     stubcc.leave();
     if (pic.hasTypeCheck)
@@ -1973,7 +1973,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     frame.pushRegs(shapeReg, objReg);
     pic.storeBack = masm.label();
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 
     pics.append(pic);
 }
@@ -2006,7 +2006,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
      * will be the target of patched jumps in the PIC.
      */
     Jump typeCheck = masm.testObject(Assembler::NotEqual, pic.typeReg);
-    stubcc.linkExit(typeCheck);
+    stubcc.linkExit(typeCheck, Uses(1));
     stubcc.leave();
     Jump typeCheckDone = stubcc.masm.jump();
 
@@ -2034,7 +2034,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     Jump j = masm.branch32(Assembler::NotEqual, shapeReg,
                            Imm32(int32(JSObjectMap::INVALID_SHAPE)));
     pic.slowPathStart = stubcc.masm.label();
-    stubcc.linkExit(j);
+    stubcc.linkExit(j, Uses(1));
 
     /* Slow path. */
     stubcc.leave();
@@ -2056,7 +2056,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     masm.loadData32(slot, objReg);
     pic.storeBack = masm.label();
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(2));
 
     pics.append(pic);
 
@@ -2104,7 +2104,7 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     masm.and32(Imm32(JSFUN_THISP_STRING), temp);
     Jump noPrim = masm.branchTest32(Assembler::Zero, temp, temp);
     {
-        stubcc.linkExit(noPrim);
+        stubcc.linkExit(noPrim, Uses(1));
         stubcc.leave();
         stubcc.call(stubs::WrapPrimitiveThis);
     }
@@ -2114,7 +2114,7 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     notFun2.linkTo(masm.label(), &masm);
     notFun1.linkTo(masm.label(), &masm);
     
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(2));
 
     return true;
 }
@@ -2147,7 +2147,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     Jump j = masm.branch32(Assembler::NotEqual, shapeReg,
                            Imm32(int32(JSObjectMap::INVALID_SHAPE)));
     pic.slowPathStart = stubcc.masm.label();
-    stubcc.linkExit(j);
+    stubcc.linkExit(j, Uses(1));
 
     stubcc.leave();
     stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
@@ -2176,7 +2176,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     frame.pushRegs(shapeReg, objReg);
     frame.shift(-2);
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(2));
 
     pics.append(pic);
 
@@ -2226,7 +2226,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
         Jump j = masm.testObject(Assembler::NotEqual, reg);
 
         pic.typeCheck = stubcc.masm.label();
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(2));
         stubcc.leave();
         stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
         stubcc.call(stubs::SetName);
@@ -2281,7 +2281,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
     /* Slow path. */
     {
         pic.slowPathStart = stubcc.masm.label();
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(2));
 
         stubcc.leave();
         stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
@@ -2313,7 +2313,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
     {
         if (pic.hasTypeCheck)
             typeCheck.linkTo(stubcc.masm.label(), &stubcc.masm);
-        stubcc.rejoin(1);
+        stubcc.rejoin(Changes(1));
     }
 
     pics.append(pic);
@@ -2335,7 +2335,7 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     Jump j = masm.jump();
     {
         pic.slowPathStart = stubcc.masm.label();
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(0));
         stubcc.leave();
         stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
         pic.callReturn = stubcc.call(ic::Name);
@@ -2344,7 +2344,7 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     pic.storeBack = masm.label();
     frame.pushRegs(pic.shapeReg, pic.objReg);
 
-    stubcc.rejoin(0);
+    stubcc.rejoin(Changes(1));
 
     pics.append(pic);
 }
@@ -2368,7 +2368,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(parent), ImmPtr(0));
     {
         pic.slowPathStart = stubcc.masm.label();
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(0));
         stubcc.leave();
         stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
         pic.callReturn = stubcc.call(ic::BindName);
@@ -2378,7 +2378,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, pic.objReg);
     frame.freeReg(pic.shapeReg);
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 
     pics.append(pic);
 }
@@ -2422,13 +2422,13 @@ mjit::Compiler::jsop_bindname(uint32 index)
 
     Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(address), ImmPtr(0));
 
-    stubcc.linkExit(j);
+    stubcc.linkExit(j, Uses(0));
     stubcc.leave();
     stubcc.call(stubs::BindName);
 
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 }
 #endif
 
@@ -2447,10 +2447,10 @@ mjit::Compiler::jsop_this()
     Address thisvAddr(JSFrameReg, offsetof(JSStackFrame, thisv));
     if (0 && !script->strictModeCode) {
         Jump null = masm.testNull(Assembler::Equal, thisvAddr);
-        stubcc.linkExit(null);
+        stubcc.linkExit(null, Uses(1));
         stubcc.leave();
         stubcc.call(stubs::ComputeThis);
-        stubcc.rejoin(0);
+        stubcc.rejoin(Changes(1));
 
         RegisterID reg = frame.allocReg();
         masm.loadData32(thisvAddr, reg);
@@ -2458,10 +2458,10 @@ mjit::Compiler::jsop_this()
     } else {
         frame.push(thisvAddr);
         Jump null = frame.testNull(Assembler::Equal, frame.peek(-1));
-        stubcc.linkExit(null);
+        stubcc.linkExit(null, Uses(1));
         stubcc.leave();
         stubcc.call(stubs::This);
-        stubcc.rejoin(1);
+        stubcc.rejoin(Changes(1));
     }
 }
 
@@ -2572,7 +2572,7 @@ mjit::Compiler::iterNext()
     /* Test clasp */
     masm.loadPtr(Address(reg, offsetof(JSObject, clasp)), T1);
     Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass.base));
-    stubcc.linkExit(notFast);
+    stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. :FIXME: X64 */
     Address privSlot(reg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
@@ -2585,7 +2585,7 @@ mjit::Compiler::iterNext()
     masm.load32(Address(T1, offsetof(NativeIterator, flags)), T3);
     masm.and32(Imm32(JSITER_FOREACH), T3);
     notFast = masm.branchTest32(Assembler::NonZero, T3, T3);
-    stubcc.linkExit(notFast);
+    stubcc.linkExit(notFast, Uses(1));
 
     RegisterID T2 = frame.allocReg();
 
@@ -2597,7 +2597,7 @@ mjit::Compiler::iterNext()
     masm.move(T3, T4);
     masm.andPtr(Imm32(JSID_TYPE_MASK), T4);
     notFast = masm.branchTestPtr(Assembler::NonZero, T4, T4);
-    stubcc.linkExit(notFast);
+    stubcc.linkExit(notFast, Uses(1));
 
     /* It's safe to increase the cursor now. */
     masm.addPtr(Imm32(sizeof(jsid)), T2, T4);
@@ -2613,7 +2613,7 @@ mjit::Compiler::iterNext()
     frame.pushUntypedPayload(JSVAL_TYPE_STRING, T3);
 
     /* Join with the stub call. */
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 }
 
 void
@@ -2629,7 +2629,7 @@ mjit::Compiler::iterMore()
     /* Test clasp */
     masm.loadPtr(Address(reg, offsetof(JSObject, clasp)), T1);
     Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass.base));
-    stubcc.linkExit(notFast);
+    stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. :FIXME: X64 */
     Address privSlot(reg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
@@ -2659,7 +2659,7 @@ mjit::Compiler::iterMore()
     PC += JSOP_MOREITER_LENGTH;
     PC += js_CodeSpec[next].length;
 
-    stubcc.rejoin(0);
+    stubcc.rejoin(Changes(1));
 }
 
 void
@@ -2730,7 +2730,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
         shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, reg, mic.shapeVal);
         frame.freeReg(reg);
     }
-    stubcc.linkExit(shapeGuard);
+    stubcc.linkExit(shapeGuard, Uses(0));
 
     stubcc.leave();
     stubcc.masm.move(Imm32(mics.length()), Registers::ArgReg1);
@@ -2753,7 +2753,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
     frame.freeReg(objReg);
     frame.push(address);
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 
     mics.append(mic);
 #else
@@ -2805,7 +2805,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
         shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, reg, mic.shapeVal);
         frame.freeReg(reg);
     }
-    stubcc.linkExit(shapeGuard);
+    stubcc.linkExit(shapeGuard, Uses(1));
 
     stubcc.leave();
     stubcc.masm.move(Imm32(mics.length()), Registers::ArgReg1);
@@ -2863,7 +2863,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
             frame.pushRegs(typeReg, dataReg);
     }
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 
     mics.append(mic);
 #else
@@ -2919,10 +2919,10 @@ mjit::Compiler::jsop_instanceof()
     bool typeKnown = rhs->isTypeKnown();
     if (!typeKnown) {
         Jump j = frame.testObject(Assembler::NotEqual, rhs);
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(2));
         RegisterID reg = frame.tempRegForData(rhs);
         j = masm.testFunction(Assembler::NotEqual, reg);
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(2));
         stubcc.leave();
         stubcc.call(stubs::InstanceOf);
         firstSlow = stubcc.masm.jump();
@@ -2936,7 +2936,7 @@ mjit::Compiler::jsop_instanceof()
     /* Primitive prototypes are invalid. */
     rhs = frame.peek(-1);
     Jump j = frame.testPrimitive(Assembler::Equal, rhs);
-    stubcc.linkExit(j);
+    stubcc.linkExit(j, Uses(3));
 
     /* Allocate registers up front, because of branchiness. */
     FrameEntry *lhs = frame.peek(-3);
@@ -2951,7 +2951,7 @@ mjit::Compiler::jsop_instanceof()
     masm.load32(Address(temp, offsetof(JSClass, flags)), temp);
     masm.and32(Imm32(JSCLASS_IS_EXTENDED), temp);
     j = masm.branchTest32(Assembler::NonZero, temp, temp);
-    stubcc.linkExit(j);
+    stubcc.linkExit(j, Uses(3));
 
     Address protoAddr(obj, offsetof(JSObject, proto));
     Label loop = masm.label();
@@ -2979,6 +2979,6 @@ mjit::Compiler::jsop_instanceof()
     frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, temp);
 
     firstSlow.linkTo(stubcc.masm.label(), &stubcc.masm);
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 }
 
