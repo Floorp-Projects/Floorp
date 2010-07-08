@@ -2905,7 +2905,7 @@ END_CASE(JSOP_MOREITER)
 BEGIN_CASE(JSOP_ENDITER)
 {
     JS_ASSERT(regs.sp - 1 >= fp->base());
-    bool ok = !!js_CloseIterator(cx, regs.sp[-1]);
+    bool ok = !!js_CloseIterator(cx, &regs.sp[-1].toObject());
     regs.sp--;
     if (!ok)
         goto error;
@@ -6955,7 +6955,7 @@ END_CASE(JSOP_ARRAYPUSH)
                 JS_ASSERT(js_GetOpcode(cx, fp->script, regs.pc) == JSOP_ENDITER);
                 AutoValueRooter tvr(cx, cx->exception);
                 cx->throwing = false;
-                ok = js_CloseIterator(cx, regs.sp[-1]);
+                ok = js_CloseIterator(cx, &regs.sp[-1].toObject());
                 regs.sp -= 1;
                 if (!ok)
                     goto error;
