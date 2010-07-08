@@ -697,7 +697,12 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
     if (!origin->wrap(cx, &obj))
         return false;
 
-    /* Wrap the elements in the iterator's snapshot. */
+    /*
+     * Wrap the elements in the iterator's snapshot.
+     * N.B. the order of closing/creating iterators is important due to the
+     * implicit cx->enumerators state.
+     */
+
     if (ni->isKeyIter()) {
         size_t length = ni->numKeys();
         AutoIdVector keys(cx);
@@ -711,27 +716,25 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
             }
         }
 
-        if (!VectorToKeyIterator(cx, obj, ni->flags, keys, vp))
-            return false;
-    } else {
-        size_t length = ni->numValues();
-        AutoValueVector vals(cx);
-        if (length > 0) {
-            if (!vals.resize(length))
-                return false;
-            for (size_t i = 0; i < length; ++i) {
-                vals[i] = ni->beginValue()[i];
-                if (!origin->wrap(cx, &vals[i]))
-                    return false;
-            }
-
-        }
-
-        if (!VectorToValueIterator(cx, obj, ni->flags, vals, vp))
-            return false;
+        return js_CloseIterator(cx, iterObj) &&
+               VectorToKeyIterator(cx, obj, ni->flags, keys, vp);
     }
 
-    return js_CloseIterator(cx, *vp);
+    size_t length = ni->numValues();
+    AutoValueVector vals(cx);
+    if (length > 0) {
+        if (!vals.resize(length))
+            return false;
+        for (size_t i = 0; i < length; ++i) {
+            vals[i] = ni->beginValue()[i];
+            if (!origin->wrap(cx, &vals[i]))
+                return false;
+        }
+
+    }
+
+    return js_CloseIterator(cx, iterObj) &&
+           VectorToValueIterator(cx, obj, ni->flags, vals, vp);
 }
 
 bool
