@@ -601,6 +601,26 @@ var Utils = {
     }
   },
   
+  // Function: assertThrow
+  // Throws label as an exception if condition is false.
+  assertThrow: function(label, condition) {
+    if(!condition) {
+      var text;
+      if(typeof(label) == 'undefined')
+        text = 'badly formed assert';
+      else
+        text = 'tabcandy assert: ' + label; 
+        
+      if(typeof(printStackTrace) == 'function') {
+        var calls = printStackTrace();
+        calls.splice(0, 3); // Remove this call and the printStackTrace calls
+        text += '\n' + calls.join('\n');
+      }
+  
+      throw text;       
+    }
+  },
+  
   expandObject: function(obj) {
       var s = obj + ' = {';
       for(prop in obj) {
