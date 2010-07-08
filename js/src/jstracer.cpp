@@ -14252,7 +14252,7 @@ TraceRecorder::record_JSOP_MOREITER()
 static JSBool FASTCALL
 CloseIterator(JSContext *cx, JSObject *iterobj)
 {
-    if (!js_CloseIterator(cx, ObjectValue(*iterobj))) {
+    if (!js_CloseIterator(cx, iterobj)) {
         SetBuiltinError(cx);
         return false;
     }
