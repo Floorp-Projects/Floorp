@@ -68,7 +68,7 @@ mjit::Compiler::jsop_bitnot()
     bool stubNeeded = false;
     if (!top->isTypeKnown()) {
         Jump intFail = frame.testInt32(Assembler::NotEqual, top);
-        stubcc.linkExit(intFail);
+        stubcc.linkExit(intFail, Uses(1));
         frame.learnType(top, JSVAL_TYPE_INT32);
         stubNeeded = true;
     }
@@ -84,7 +84,7 @@ mjit::Compiler::jsop_bitnot()
     frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
 
     if (stubNeeded)
-        stubcc.rejoin(1);
+        stubcc.rejoin(Changes(1));
 }
 
 void
@@ -129,13 +129,13 @@ mjit::Compiler::jsop_bitop(JSOp op)
     bool stubNeeded = false;
     if (!rhs->isTypeKnown()) {
         Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
-        stubcc.linkExit(rhsFail);
+        stubcc.linkExit(rhsFail, Uses(2));
         frame.learnType(rhs, JSVAL_TYPE_INT32);
         stubNeeded = true;
     }
     if (!lhs->isTypeKnown()) {
         Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
-        stubcc.linkExit(lhsFail);
+        stubcc.linkExit(lhsFail, Uses(2));
         stubNeeded = true;
     }
 
@@ -230,7 +230,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
                 frame.popn(2);
                 frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
                 if (stubNeeded)
-                    stubcc.rejoin(1);
+                    stubcc.rejoin(Changes(1));
                 return;
             }
 
@@ -285,7 +285,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
     frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
 
     if (stubNeeded)
-        stubcc.rejoin(2);
+        stubcc.rejoin(Changes(1));
 }
 
 void
@@ -312,11 +312,11 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
         frame.push(addr);
         FrameEntry *fe = frame.peek(-1);
         Jump notInt = frame.testInt32(Assembler::NotEqual, fe);
-        stubcc.linkExit(notInt);
+        stubcc.linkExit(notInt, Uses(0));
         data = frame.copyDataIntoReg(fe);
     } else {
         Jump notInt = masm.testInt32(Assembler::NotEqual, addr);
-        stubcc.linkExit(notInt);
+        stubcc.linkExit(notInt, Uses(0));
         data = frame.allocReg();
         masm.loadData32(addr, data);
     }
@@ -326,7 +326,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
         ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), data);
     else
         ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), data);
-    stubcc.linkExit(ovf);
+    stubcc.linkExit(ovf, Uses(0));
 
     stubcc.leave();
     stubcc.masm.lea(addr, Registers::ArgReg1);
@@ -341,7 +341,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
 
     frame.freeReg(reg);
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes((!post && !popped) ? 1 : 0));
 }
 
 static inline bool
@@ -436,12 +436,12 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
     /* Test the types. */
     if (!rhs->isTypeKnown()) {
         Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
-        stubcc.linkExit(rhsFail);
+        stubcc.linkExit(rhsFail, Uses(2));
         frame.learnType(rhs, JSVAL_TYPE_INT32);
     }
     if (!lhs->isTypeKnown()) {
         Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
-        stubcc.linkExit(lhsFail);
+        stubcc.linkExit(lhsFail, Uses(2));
     }
 
     Assembler::Condition cond;
@@ -602,7 +602,7 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
         if (reg != resultReg)
             frame.freeReg(reg);
         frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, resultReg);
-        stubcc.rejoin(1);
+        stubcc.rejoin(Changes(1));
     }
 }
 
@@ -625,12 +625,12 @@ mjit::Compiler::jsop_objtostr()
     frame.giveOwnRegs(top);
 
     Jump isObj = frame.testPrimitive(Assembler::NotEqual, top);
-    stubcc.linkExit(isObj);
+    stubcc.linkExit(isObj, Uses(1));
 
     stubcc.leave();
     stubcc.call(stubs::ObjToStr);
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 }
 
 void
@@ -705,7 +705,7 @@ mjit::Compiler::jsop_not()
     else
         masm.move(frame.tempRegForData(top), data);
     RegisterID type = frame.tempRegForType(top);
-    Label syncTarget = stubcc.syncExitAndJump();
+    Label syncTarget = stubcc.syncExitAndJump(Uses(1));
 
 
     /* Inline path is for booleans. */
@@ -746,7 +746,7 @@ mjit::Compiler::jsop_not()
     frame.pop();
     frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, data);
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 }
 
 void
@@ -919,10 +919,10 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         /* :TODO: do something smarter for the known-type-is-bad case. */
         if (fe->isTypeKnown()) {
             Jump j = masm.jump();
-            stubcc.linkExit(j);
+            stubcc.linkExit(j, Uses(0));
         } else {
             Jump intFail = frame.testInt32(Assembler::NotEqual, fe);
-            stubcc.linkExit(intFail);
+            stubcc.linkExit(intFail, Uses(0));
         }
     }
 
@@ -934,7 +934,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), reg);
     else
         ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
-    stubcc.linkExit(ovf);
+    stubcc.linkExit(ovf, Uses(0));
 
     /* Note, stub call will push original value again no matter what. */
     stubcc.leave();
@@ -949,7 +949,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
     if (post || popped)
         frame.pop();
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes((post || popped) ? 0 : 1));
 }
 
 void
@@ -965,7 +965,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
 
     FrameEntry *fe = frame.peek(-1);
     Jump notInt = frame.testInt32(Assembler::NotEqual, fe);
-    stubcc.linkExit(notInt);
+    stubcc.linkExit(notInt, Uses(0));
 
     RegisterID reg = frame.ownRegForData(fe);
     frame.pop();
@@ -975,7 +975,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
         ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), reg);
     else
         ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
-    stubcc.linkExit(ovf);
+    stubcc.linkExit(ovf, Uses(0));
 
     Address argv(JSFrameReg, offsetof(JSStackFrame, argv));
 
@@ -998,7 +998,7 @@ mjit::Compiler::jsop_arginc(JSOp op, uint32 slot, bool popped)
     else
         frame.forgetType(fe);
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes((post || popped) ? 0 : 1));
 }
 
 void
@@ -1018,13 +1018,13 @@ mjit::Compiler::jsop_setelem()
     /* id.isInt32() */
     if (!id->isTypeKnown()) {
         Jump j = frame.testInt32(Assembler::NotEqual, id);
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(3));
     }
 
     /* obj.isObject() */
     if (!obj->isTypeKnown()) {
         Jump j = frame.testObject(Assembler::NotEqual, obj);
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(3));
     }
 
     /* obj.isDenseArray() */
@@ -1032,24 +1032,24 @@ mjit::Compiler::jsop_setelem()
     Jump guardDense = masm.branchPtr(Assembler::NotEqual,
                                       Address(objReg, offsetof(JSObject, clasp)),
                                       ImmPtr(&js_ArrayClass));
-    stubcc.linkExit(guardDense);
+    stubcc.linkExit(guardDense, Uses(3));
 
     /* dslots non-NULL */
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
     Jump guardSlots = masm.branchTestPtr(Assembler::Zero, objReg, objReg);
-    stubcc.linkExit(guardSlots);
+    stubcc.linkExit(guardSlots, Uses(3));
 
     /* guard within capacity */
     if (id->isConstant()) {
         Jump inRange = masm.branch32(Assembler::LessThanOrEqual,
                                      masm.payloadOf(Address(objReg, -int(sizeof(Value)))),
                                      Imm32(id->getValue().toInt32()));
-        stubcc.linkExit(inRange);
+        stubcc.linkExit(inRange, Uses(3));
 
         /* guard not a hole */
         Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
-        stubcc.linkExit(notHole);
+        stubcc.linkExit(notHole, Uses(3));
 
         stubcc.leave();
         stubcc.call(stubs::SetElem);
@@ -1073,12 +1073,12 @@ mjit::Compiler::jsop_setelem()
         Jump inRange = masm.branch32(Assembler::AboveOrEqual,
                                      idReg,
                                      masm.payloadOf(Address(objReg, -int(sizeof(Value)))));
-        stubcc.linkExit(inRange);
+        stubcc.linkExit(inRange, Uses(3));
 
         /* guard not a hole */
         BaseIndex slot(objReg, idReg, Assembler::JSVAL_SCALE);
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
-        stubcc.linkExit(notHole);
+        stubcc.linkExit(notHole, Uses(3));
 
         stubcc.leave();
         stubcc.call(stubs::SetElem);
@@ -1103,7 +1103,7 @@ mjit::Compiler::jsop_setelem()
     frame.freeReg(objReg);
 
     frame.shimmy(2);
-    stubcc.rejoin(0);
+    stubcc.rejoin(Changes(0));
 }
 
 void
@@ -1122,13 +1122,13 @@ mjit::Compiler::jsop_getelem()
     /* id.isInt32() */
     if (!id->isTypeKnown()) {
         Jump j = frame.testInt32(Assembler::NotEqual, id);
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(2));
     }
 
     /* obj.isNonFunObj() */
     if (!obj->isTypeKnown()) {
         Jump j = frame.testObject(Assembler::NotEqual, obj);
-        stubcc.linkExit(j);
+        stubcc.linkExit(j, Uses(2));
     }
 
     /* obj.isDenseArray() */
@@ -1136,24 +1136,24 @@ mjit::Compiler::jsop_getelem()
     Jump guardDense = masm.branchPtr(Assembler::NotEqual,
                                       Address(objReg, offsetof(JSObject, clasp)),
                                       ImmPtr(&js_ArrayClass));
-    stubcc.linkExit(guardDense);
+    stubcc.linkExit(guardDense, Uses(2));
 
     /* dslots non-NULL */
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
     Jump guardSlots = masm.branchTestPtr(Assembler::Zero, objReg, objReg);
-    stubcc.linkExit(guardSlots);
+    stubcc.linkExit(guardSlots, Uses(2));
 
     /* guard within capacity */
     if (id->isConstant()) {
         Jump inRange = masm.branch32(Assembler::LessThanOrEqual,
                                      masm.payloadOf(Address(objReg, -int(sizeof(Value)))),
                                      Imm32(id->getValue().toInt32()));
-        stubcc.linkExit(inRange);
+        stubcc.linkExit(inRange, Uses(2));
 
         /* guard not a hole */
         Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
-        stubcc.linkExit(notHole);
+        stubcc.linkExit(notHole, Uses(2));
 
         stubcc.leave();
         stubcc.call(stubs::GetElem);
@@ -1166,12 +1166,12 @@ mjit::Compiler::jsop_getelem()
         Jump inRange = masm.branch32(Assembler::AboveOrEqual,
                                      idReg,
                                      masm.payloadOf(Address(objReg, -int(sizeof(Value)))));
-        stubcc.linkExit(inRange);
+        stubcc.linkExit(inRange, Uses(2));
 
         /* guard not a hole */
         BaseIndex slot(objReg, idReg, Assembler::JSVAL_SCALE);
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
-        stubcc.linkExit(notHole);
+        stubcc.linkExit(notHole, Uses(2));
 
         stubcc.leave();
         stubcc.call(stubs::GetElem);
@@ -1185,7 +1185,7 @@ mjit::Compiler::jsop_getelem()
         frame.pushRegs(reg, idReg);
     }
 
-    stubcc.rejoin(0);
+    stubcc.rejoin(Changes(1));
 }
 
 static inline bool
@@ -1314,11 +1314,11 @@ mjit::Compiler::jsop_pos()
         j = masm.testNumber(Assembler::NotEqual, frame.addressOf(top));
     else
         j = masm.testNumber(Assembler::NotEqual, frame.tempRegForType(top));
-    stubcc.linkExit(j);
+    stubcc.linkExit(j, Uses(1));
 
     stubcc.leave();
     stubcc.call(stubs::Pos);
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 }
 

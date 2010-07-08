@@ -69,7 +69,7 @@ StubCompiler::linkExitDirect(Jump j, Label L)
 }
 
 JSC::MacroAssembler::Label
-StubCompiler::syncExit()
+StubCompiler::syncExit(Uses uses)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW MERGE CODE ---- \n");
 
@@ -79,7 +79,7 @@ StubCompiler::syncExit()
     }
 
     Label l = masm.label();
-    frame.sync(masm);
+    frame.sync(masm, uses);
     lastGeneration = generation;
 
     JaegerSpew(JSpew_Insns, " ---- END SLOW MERGE CODE ---- \n");
@@ -88,9 +88,9 @@ StubCompiler::syncExit()
 }
 
 JSC::MacroAssembler::Label
-StubCompiler::syncExitAndJump()
+StubCompiler::syncExitAndJump(Uses uses)
 {
-    Label l = syncExit();
+    Label l = syncExit(uses);
     Jump j2 = masm.jump();
     jumpList.append(j2);
     /* Suppress jumping on next sync/link. */
@@ -106,9 +106,9 @@ StubCompiler::syncExitAndJump()
  * icache locality.
  */
 void
-StubCompiler::linkExit(Jump j)
+StubCompiler::linkExit(Jump j, Uses uses)
 {
-    Label l = syncExit();
+    Label l = syncExit(uses);
     linkExitDirect(j, l);
 }
 
@@ -122,11 +122,11 @@ StubCompiler::leave()
 }
  
 void
-StubCompiler::rejoin(uint32 invalidationDepth)
+StubCompiler::rejoin(Changes changes)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW RESTORE CODE ---- \n");
 
-    frame.merge(masm, invalidationDepth);
+    frame.merge(masm, changes);
 
     Jump j = masm.jump();
     crossJump(j, cc.getLabel());
