@@ -810,7 +810,7 @@ var ContextHandler = {
   }
 };
 
-ContextHandler.init();
+//ContextHandler.init();
 
 
 var FormSubmitObserver = {
