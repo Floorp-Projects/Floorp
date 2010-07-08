@@ -182,7 +182,7 @@ FrameState::evictSomeReg(uint32 mask)
 void
 FrameState::forgetEverything()
 {
-    syncAndKill(Registers::AvailRegs);
+    syncAndKill(Registers(Registers::AvailRegs), Uses(frameDepth()));
 
     throwaway();
 }
@@ -354,19 +354,12 @@ FrameState::sync(Assembler &masm) const
 }
 
 void
-FrameState::syncForCall(uint32 argc)
+FrameState::syncAndKill(Registers kill, Uses uses)
 {
-    syncAndKill(Registers::AvailRegs);
-    freeRegs = Registers();
-}
-
-void
-FrameState::syncAndKill(uint32 mask)
-{
-    Registers kill(mask);
-
     /* Backwards, so we can allocate registers to backing slots better. */
     FrameEntry *tos = tosFe();
+    FrameEntry *bottom = tos - uses.nuses;
+
     for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
         FrameEntry *fe = tracker[i];
         if (fe >= tos)
@@ -374,12 +367,16 @@ FrameState::syncAndKill(uint32 mask)
 
         Address address = addressOf(fe);
         FrameEntry *backing = fe;
-        if (fe->isCopy())
+        if (fe->isCopy()) {
+            if (fe < bottom)
+                continue;
             backing = fe->copyOf();
+        }
 
         JS_ASSERT_IF(i == 0, !fe->isCopy());
 
-        if (!fe->data.synced()) {
+        bool killData = fe->data.inRegister() && kill.hasReg(fe->data.reg());
+        if (!fe->data.synced() && (killData || fe >= bottom)) {
             if (backing != fe && backing->data.inMemory())
                 tempRegForData(backing);
             syncData(backing, address, masm);
@@ -387,20 +384,21 @@ FrameState::syncAndKill(uint32 mask)
             if (fe->isConstant() && !fe->type.synced())
                 fe->type.sync();
         }
-        if (fe->data.inRegister() && kill.hasReg(fe->data.reg())) {
+        if (killData) {
             JS_ASSERT(backing == fe);
             JS_ASSERT(fe->data.synced());
             if (regstate[fe->data.reg()].fe)
                 forgetReg(fe->data.reg());
             fe->data.setMemory();
         }
-        if (!fe->type.synced()) {
+        bool killType = fe->type.inRegister() && kill.hasReg(fe->type.reg());
+        if (!fe->type.synced() && (killType || fe >= bottom)) {
             if (backing != fe && backing->type.inMemory())
                 tempRegForType(backing);
             syncType(backing, address, masm);
             fe->type.sync();
         }
-        if (fe->type.inRegister() && kill.hasReg(fe->type.reg())) {
+        if (killType) {
             JS_ASSERT(backing == fe);
             JS_ASSERT(fe->type.synced());
             if (regstate[fe->type.reg()].fe)
@@ -408,6 +406,12 @@ FrameState::syncAndKill(uint32 mask)
             fe->type.setMemory();
         }
     }
+}
+
+void
+FrameState::resetRegState()
+{
+    freeRegs = Registers();
 }
 
 void

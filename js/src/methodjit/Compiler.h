@@ -105,13 +105,6 @@ class Compiler
         ValueRemat vr;
     };
 
-    struct Uses {
-        Uses(uint32 nuses)
-          : nuses(nuses)
-        { }
-        uint32 nuses;
-    };
-
     struct Defs {
         Defs(uint32 ndefs)
           : ndefs(ndefs)
@@ -262,8 +255,8 @@ class Compiler
     void jsop_pos();
 
 #define STUB_CALL_TYPE(type)                                            \
-    Call stubCall(type stub, Uses uses, Defs defs) {                    \
-        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub), uses, defs); \
+    Call stubCall(type stub) {                                          \
+        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub));             \
     }
 
     STUB_CALL_TYPE(JSObjStub);
@@ -283,8 +276,8 @@ class Compiler
     STUB_CALL_TYPE(VoidVpStub);
 
 #undef STUB_CALL_TYPE
-    void prepareStubCall();
-    Call stubCall(void *ptr, Uses uses, Defs defs);
+    void prepareStubCall(Uses uses);
+    Call stubCall(void *ptr);
 };
 
 } /* namespace js */
