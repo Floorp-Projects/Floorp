@@ -236,6 +236,7 @@ RuleHash_TagTable_InitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
 {
   RuleHashTagTableEntry* entry = static_cast<RuleHashTagTableEntry*>(hdr);
   new (entry) RuleHashTagTableEntry();
+  entry->mTag = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
   return PR_TRUE;
 }
 
@@ -390,7 +391,6 @@ protected:
   typedef nsTArray<RuleValue> RuleValueList;
   void AppendRuleToTable(PLDHashTable* aTable, const void* aKey,
                          const RuleSelectorPair& aRuleInfo);
-  void AppendRuleToTagTable(nsIAtom* aKey, const RuleSelectorPair& aRuleInfo);
   void AppendUniversalRule(const RuleSelectorPair& aRuleInfo);
 
   PRInt32     mRuleCount;
@@ -529,8 +529,8 @@ void RuleHash::AppendRuleToTable(PLDHashTable* aTable, const void* aKey,
 }
 
 static void
-DoAppendRuleToTagTable(PLDHashTable* aTable, nsIAtom* aKey,
-                       const RuleSelectorPair& aRuleInfo, PRInt32 aIndex)
+AppendRuleToTagTable(PLDHashTable* aTable, nsIAtom* aKey,
+                     const RuleValue& aRuleInfo)
 {
   // Get a new or exisiting entry
   RuleHashTagTableEntry *entry = static_cast<RuleHashTagTableEntry*>
@@ -538,17 +538,7 @@ DoAppendRuleToTagTable(PLDHashTable* aTable, nsIAtom* aKey,
   if (!entry)
     return;
 
-  entry->mTag = aKey;
-
-  // This may give the same rule two different rule counts, but that is OK
-  // because we never combine two different entries in a tag table.
-  entry->mRules.AppendElement(RuleValue(aRuleInfo, aIndex));
-}
-
-void RuleHash::AppendRuleToTagTable(nsIAtom* aKey,
-                                    const RuleSelectorPair& aRuleInfo)
-{
-  DoAppendRuleToTagTable(&mTagTable, aKey, aRuleInfo, mRuleCount++);
+  entry->mRules.AppendElement(aRuleInfo);
 }
 
 void RuleHash::AppendUniversalRule(const RuleSelectorPair& aRuleInfo)
@@ -568,11 +558,12 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
     RULE_HASH_STAT_INCREMENT(mClassSelectors);
   }
   else if (selector->mLowercaseTag) {
-    AppendRuleToTagTable(selector->mLowercaseTag, aRuleInfo);
+    RuleValue ruleValue(aRuleInfo, mRuleCount++);
+    AppendRuleToTagTable(&mTagTable, selector->mLowercaseTag, ruleValue);
     RULE_HASH_STAT_INCREMENT(mTagSelectors);
     if (selector->mCasedTag && 
         selector->mCasedTag != selector->mLowercaseTag) {
-      AppendRuleToTagTable(selector->mCasedTag, aRuleInfo);
+      AppendRuleToTagTable(&mTagTable, selector->mCasedTag, ruleValue);
       RULE_HASH_STAT_INCREMENT(mTagSelectors);
     }
   }
@@ -2779,18 +2770,18 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
 
     // Index doesn't matter here, since we'll just be walking these
     // rules in order; just pass 0.
-    DoAppendRuleToTagTable(&cascade->mAnonBoxRules,
-                           aRuleInfo->mSelector->mLowercaseTag,
-                           *aRuleInfo, 0);
+    AppendRuleToTagTable(&cascade->mAnonBoxRules,
+                         aRuleInfo->mSelector->mLowercaseTag,
+                         RuleValue(*aRuleInfo, 0));
   } else {
 #ifdef MOZ_XUL
     NS_ASSERTION(pseudoType == nsCSSPseudoElements::ePseudo_XULTree,
                  "Unexpected pseudo type");
     // Index doesn't matter here, since we'll just be walking these
     // rules in order; just pass 0.
-    DoAppendRuleToTagTable(&cascade->mXULTreeRules,
-                           aRuleInfo->mSelector->mLowercaseTag,
-                           *aRuleInfo, 0);
+    AppendRuleToTagTable(&cascade->mXULTreeRules,
+                         aRuleInfo->mSelector->mLowercaseTag,
+                         RuleValue(*aRuleInfo, 0));
 #else
     NS_NOTREACHED("Unexpected pseudo type");
 #endif
