@@ -637,16 +637,39 @@ UIClass.prototype = {
       TabItems.init();
   
       if(firstTime) {
+        var padding = 10;
+        var infoWidth = 300;
+        var infoHeight = 200;
+        var pageBounds = Items.getPageBounds();
+        pageBounds.inset(padding, padding);      
+                
+        // ___ make a fresh group
+        var box = new Rect(pageBounds);
+        box.width = Math.min(box.width * 0.667, pageBounds.width - (infoWidth + padding));
+        box.height = box.height * 0.667;
+        var options = {
+          bounds: box
+        };
+  
+        var group = new Group([], options); 
+
         let items = TabItems.getItems();
-        iQ.each(items, function(index, item) {
+        items.forEach(function(item) {
           if(item.parent)
             item.parent.remove(item);
+            
+          group.add(item);
         });
-  
-        let box = Items.getPageBounds();
-        box.inset(10, 10);
-        let options = {padding: 10};
-        Items.arrange(items, box, options);
+        
+        // ___ make info item
+        var html = '<h1>Welcome to Firefox Tab Sets</h1>'
+          + '(more goes here)';
+        
+        box.left = box.right + padding;
+        box.width = infoWidth;
+        box.height = infoHeight;
+        var infoItem = new InfoItem(box);
+        infoItem.html(html);
       } 
           
       // ___ resizing
@@ -923,6 +946,11 @@ UIClass.prototype = {
         name: 'refresh', 
         code: function() {
           location.href = 'tabcandy.html';
+        }
+      }, {
+        name: 'reset', 
+        code: function() {
+          self.reset();
         }
       }, {
         name: 'code docs', 

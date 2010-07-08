@@ -186,6 +186,20 @@ body {
 		inset rgba(255, 255, 255, 0.6) -2px 0px 0px;	*/
 }
 
+/* InfoItems
+----------------------------------*/
+
+.info-item {
+	position: absolute;
+  cursor: move;
+	border: 1px solid rgba(230,230,230,1);
+	background-color: rgba(248,248,248,1);
+	-moz-border-radius: 0.4em;
+	-moz-box-shadow: 
+		inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
+		rgba(0,0,0, .2) 1px 1px 4px;
+}
+
 /* Trenches
 ----------------------------------*/
 

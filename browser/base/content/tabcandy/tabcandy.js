@@ -12,4 +12,5 @@
 #include app/trench.js
 #include app/tabitems.js
 #include app/groups.js
+#include app/infoitems.js
 #include app/ui.js

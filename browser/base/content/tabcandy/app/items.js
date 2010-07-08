@@ -859,7 +859,7 @@ window.Items = {
   getTopLevelItems: function() {
     var items = [];
     
-    iQ('.tab, .group').each(function() {
+    iQ('.tab, .group, .info-item').each(function() {
       var $this = iQ(this);
       var item = $this.data('item');  
       if(item && !item.parent && !$this.hasClass('phantom'))
