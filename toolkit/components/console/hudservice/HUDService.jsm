@@ -3053,9 +3053,8 @@ HUDConsoleObserver = {
       Services.console.unregisterListener(this);
     }
 
-    if (aSubject instanceof Ci.nsIConsoleMessage) {
-      var err = aSubject.QueryInterface(Ci.nsIScriptError);
-      switch (err.category) {
+    if (aSubject instanceof Ci.nsIScriptError) {
+      switch (aSubject.category) {
         case "XPConnect JavaScript":
         case "component javascript":
         case "chrome javascript":
@@ -3065,7 +3064,7 @@ HUDConsoleObserver = {
         case "HUDConsole":
         case "CSS Parser":
         case "content javascript":
-          HUDService.reportConsoleServiceContentScriptError(err);
+          HUDService.reportConsoleServiceContentScriptError(aSubject);
           return;
         default:
           HUDService.reportConsoleServiceMessage(aSubject);
