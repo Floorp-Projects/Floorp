@@ -334,7 +334,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
         rhsTypeRegNeedsLoad = !frame.peekTypeInRegister(rhs);
         rhsTypeReg.setReg(frame.predictRegForType(rhs));
     }
-    Label rhsSyncTarget = stubcc.syncExitAndJump();
+    Label rhsSyncTarget = stubcc.syncExitAndJump(Uses(2));
     
     MaybeRegisterID lhsTypeReg;
     bool lhsTypeRegNeedsLoad = false;
@@ -344,7 +344,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     }
     Label lhsSyncTarget = rhsSyncTarget;
     if (!rhsTypeReg.isSet() || lhsTypeReg.isSet())
-        lhsSyncTarget = stubcc.syncExitAndJump();
+        lhsSyncTarget = stubcc.syncExitAndJump(Uses(2));
 
 
     /* Reassigned by jsop_binary_intmath() */
@@ -551,7 +551,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
         frame.pushSynced();
 
     stubcc.crossJump(jmpDblRejoin, masm.label());
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 }
 
 static const uint64 DoubleNegMask = 0x8000000000000000ULL;
@@ -593,7 +593,7 @@ mjit::Compiler::jsop_neg()
      *  code being in the int path, versus stub call syncing..)
      */
     RegisterID reg = frame.copyDataIntoReg(masm, fe);
-    Label feSyncTarget = stubcc.syncExitAndJump();
+    Label feSyncTarget = stubcc.syncExitAndJump(Uses(1));
 
     /* Try a double path (inline). */
     MaybeJump jmpNotDbl;
@@ -654,6 +654,6 @@ mjit::Compiler::jsop_neg()
     if (jmpIntRejoin.isSet())
         stubcc.crossJump(jmpIntRejoin.getJump(), masm.label());
 
-    stubcc.rejoin(1);
+    stubcc.rejoin(Changes(1));
 }
 

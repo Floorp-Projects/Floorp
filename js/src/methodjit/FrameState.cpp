@@ -291,15 +291,18 @@ FrameState::syncFancy(Assembler &masm, Registers avail, uint32 resumeAt) const
 }
 
 void
-FrameState::sync(Assembler &masm) const
+FrameState::sync(Assembler &masm, Uses uses) const
 {
     /*
      * Keep track of free registers using a bitmask. If we have to drop into
      * syncFancy(), then this mask will help avoid eviction.
      */
     Registers avail(freeRegs);
+    Registers temp(Registers::TempRegs);
 
     FrameEntry *tos = tosFe();
+    FrameEntry *bottom = tos - uses.nuses;
+
     for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
         FrameEntry *fe = tracker[i];
         if (fe >= tos)
@@ -322,7 +325,7 @@ FrameState::sync(Assembler &masm) const
             }
             if (!fe->type.synced())
                 syncType(fe, addressOf(fe), masm);
-        } else {
+        } else if (fe >= bottom) {
             FrameEntry *backing = fe->copyOf();
             JS_ASSERT(backing != fe);
             JS_ASSERT(!backing->isConstant() && !fe->isConstant());
@@ -452,9 +455,11 @@ FrameState::syncAllRegs(uint32 mask)
 }
 
 void
-FrameState::merge(Assembler &masm, uint32 iVD) const
+FrameState::merge(Assembler &masm, Changes changes) const
 {
     FrameEntry *tos = tosFe();
+    Registers temp(Registers::TempRegs);
+
     for (uint32 i = 0; i < tracker.nentries; i++) {
         FrameEntry *fe = tracker[i];
         if (fe >= tos)

@@ -59,10 +59,17 @@ struct StateRemat {
 };
 
 struct Uses {
-    Uses(uint32 nuses)
+    explicit Uses(uint32 nuses)
       : nuses(nuses)
     { }
     uint32 nuses;
+};
+
+struct Changes {
+    explicit Changes(uint32 nchanges)
+      : nchanges(nchanges)
+    { }
+    uint32 nchanges;
 };
 
 /*
@@ -382,12 +389,12 @@ class FrameState
     /*
      * Restores state from a slow path.
      */
-    void merge(Assembler &masm, uint32 ivD) const;
+    void merge(Assembler &masm, Changes changes) const;
 
     /*
      * Writes unsynced stores to an arbitrary buffer.
      */
-    void sync(Assembler &masm) const;
+    void sync(Assembler &masm, Uses uses) const;
 
     /*
      * Syncs all outstanding stores to memory and possibly kills regs in the
