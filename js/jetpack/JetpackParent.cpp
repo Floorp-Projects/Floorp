@@ -57,8 +57,8 @@ JetpackParent::JetpackParent(JSContext* cx)
 
 JetpackParent::~JetpackParent()
 {
-  XRE_GetIOMessageLoop()
-    ->PostTask(FROM_HERE, new DeleteTask<JetpackProcessParent>(mSubprocess));
+  if (mSubprocess)
+    Destroy();
 }
 
 NS_IMPL_ISUPPORTS1(JetpackParent, nsIJetpack)
@@ -221,6 +221,20 @@ JetpackParent::CreateHandle(nsIVariant** aResult)
     return NS_ERROR_FAILURE;
 
   return xpc->JSToVariant(mContext, OBJECT_TO_JSVAL(hobj), aResult);
+}
+
+NS_IMETHODIMP
+JetpackParent::Destroy()
+{
+  if (!mSubprocess)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  Close();
+  XRE_GetIOMessageLoop()
+    ->PostTask(FROM_HERE, new DeleteTask<JetpackProcessParent>(mSubprocess));
+  mSubprocess = NULL;
+
+  return NS_OK;
 }
 
 PHandleParent*
