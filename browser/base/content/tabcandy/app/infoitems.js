@@ -78,13 +78,16 @@ window.InfoItem = function(bounds, options) {
       .css(this.bounds)
       .appendTo('body');
       
+    this.$contents = iQ('<div>')
+      .appendTo($container);
+  
     var $close = iQ('<div>')
       .addClass('close')
       .click(function() {
         self.close();
       })
       .appendTo($container);
-  
+      
     // ___ locking
     if(this.locked.bounds)
       $container.css({cursor: 'default'});    
@@ -246,7 +249,7 @@ window.InfoItem.prototype = iQ.extend(new Item(), new Subscribable(), {
   html: function(value) {
     try {
       Utils.assertThrow('value must be a string', typeof(value) == 'string');
-      iQ(this.container).html(value);
+      this.$contents.html(value);
     } catch(e) {
       Utils.log(e);
     }
