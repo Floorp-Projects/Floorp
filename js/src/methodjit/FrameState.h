@@ -58,6 +58,13 @@ struct StateRemat {
     bool inReg : 1;
 };
 
+struct Uses {
+    Uses(uint32 nuses)
+      : nuses(nuses)
+    { }
+    uint32 nuses;
+};
+
 /*
  * The FrameState keeps track of values on the frame during compilation.
  * The compiler can query FrameState for information about arguments, locals,
@@ -386,7 +393,7 @@ class FrameState
      * Syncs all outstanding stores to memory and possibly kills regs in the
      * process.
      */
-    void syncAndKill(uint32 mask); 
+    void syncAndKill(Registers kill, Uses uses); 
 
     /*
      * Syncs all outstanding stores to memory.
@@ -394,9 +401,9 @@ class FrameState
     void syncAllRegs(uint32 mask);
 
     /*
-     * Syncs the entire frame for a call.
+     * Reset the register state.
      */
-    void syncForCall(uint32 argc);
+    void resetRegState();
 
     /*
      * Clear all tracker entries, syncing all outstanding stores in the process.
