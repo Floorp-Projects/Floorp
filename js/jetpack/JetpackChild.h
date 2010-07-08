@@ -65,6 +65,8 @@ public:
   void CleanUp();
 
 protected:
+  NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
+
   NS_OVERRIDE virtual bool RecvSendMessage(const nsString& messageName,
                                            const nsTArray<Variant>& data);
   NS_OVERRIDE virtual bool RecvLoadImplementation(const nsCString& code);
