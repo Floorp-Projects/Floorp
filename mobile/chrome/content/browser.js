@@ -1065,7 +1065,7 @@ var Browser = {
     let zoomLevel = bv.getZoomLevel();
 
     let zoomValues = ZoomManager.zoomValues;
-    var i = zoomValues.indexOf(ZoomManager.snap(zoomLevel)) + (aDirection < 0 ? 1 : -1);
+    let i = zoomValues.indexOf(ZoomManager.snap(zoomLevel)) + (aDirection < 0 ? 1 : -1);
     if (i >= 0 && i < zoomValues.length)
       zoomLevel = zoomValues[i];
 
@@ -1167,18 +1167,19 @@ var Browser = {
     bv.commitOffscreenOperation();
   },
 
-  zoomToPoint: function zoomToPoint(cX, cY, rect) {
-    let [x, y] = this.transformClientToBrowser(cX, cY);
+  zoomToPoint: function zoomToPoint(cX, cY, aRect) {
     let bv = this._browserView;
+    if (!bv.allowZoom)
+      return;
 
     let zoomRect = null;
-    if (rect)
-      zoomRect = this._getZoomRectForRect(rect, y);
+    if (aRect)
+      zoomRect = this._getZoomRectForRect(aRect, cY);
 
     if (!zoomRect && bv.isDefaultZoom())
-      zoomRect = this._getZoomRectForPoint(x, y, bv.getZoomLevel() * 2);
+      zoomRect = this._getZoomRectForPoint(cY, cY, bv.getZoomLevel() * 2);
 
-    if (zoomRect && bv.allowZoom)
+    if (zoomRect)
       this.animatedZoomTo(zoomRect);
 
     return zoomRect;
@@ -1186,13 +1187,12 @@ var Browser = {
 
   zoomFromPoint: function zoomFromPoint(cX, cY) {
     let bv = this._browserView;
-    if (!bv.isDefaultZoom() && bv.allowZoom) {
+    if (bv.allowZoom && !bv.isDefaultZoom()) {
       let zoomLevel = bv.getDefaultZoomLevel();
-      let [x, y] = this.transformClientToBrowser(cX, cY);
-      let zoomRect = this._getZoomRectForPoint(x, y, zoomLevel);
+      let zoomRect = this._getZoomRectForPoint(cX, cY, zoomLevel);
       this.animatedZoomTo(zoomRect);
     }
-  }, 
+  },
 
   /**
    * Transform x and y from client coordinates to BrowserView coordinates.
