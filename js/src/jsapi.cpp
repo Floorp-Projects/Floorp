@@ -3789,6 +3789,8 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
         for (key = JSProto_Null; key < JSProto_LIMIT * 3; key++)
             JS_SetReservedSlot(cx, obj, key, JSVAL_VOID);
     }
+
+    js_InitRandom(cx);
 }
 
 JS_PUBLIC_API(JSIdArray *)
