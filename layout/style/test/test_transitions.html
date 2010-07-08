@@ -68,6 +68,8 @@ function add_future_call(index, func)
 }
 var gStartTime1, gStartTime2;
 var gCurrentTime;
+var gSetupComplete = false;
+
 function process_future_calls(index)
 {
     var calls = gFutureCalls[index];
@@ -466,7 +468,7 @@ function check_transition_value(func, start_time, end_time,
     var time_range; // in seconds
     var uns_range; // |range| before being sorted (so errors give it
                    // in the original order
-    if (gCurrentTime == gStartTime2) {
+    if (!gSetupComplete) {
         // No timers involved
         time_range = [0, 0];
         if (start_time < 0) {
@@ -752,6 +754,8 @@ add_future_call(2, function() { check_pseudo_element_tests(2); });
 add_future_call(4, function() { check_pseudo_element_tests(4); });
 add_future_call(6, function() { check_pseudo_element_tests(6); });
 add_future_call(8, function() { check_pseudo_element_tests(8); });
+
+gSetupComplete = true;
 </script>
 </pre>
 </body>
