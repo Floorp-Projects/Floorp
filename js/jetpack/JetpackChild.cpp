@@ -37,6 +37,7 @@
 
 #include "base/basictypes.h"
 #include "jscntxt.h"
+#include "nsXULAppAPI.h"
 
 #include "mozilla/jetpack/JetpackChild.h"
 #include "mozilla/jetpack/Handle.h"
@@ -135,10 +136,17 @@ JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
 void
 JetpackChild::CleanUp()
 {
+  ClearReceivers();
   JS_DestroyContext(mUserCx);
   JS_DestroyContext(mImplCx);
   JS_DestroyRuntime(mRuntime);
   JS_ShutDown();
+}
+
+void
+JetpackChild::ActorDestroy(ActorDestroyReason why)
+{
+  XRE_ShutdownChildProcess();
 }
 
 bool
