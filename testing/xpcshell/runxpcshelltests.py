@@ -175,7 +175,7 @@ class XPCShellTests(object):
       '-e', 'print("To start the test, type |_execute_test();|.");',
       '-i']
     else:
-      self.xpcsRunArgs = ['-e', '_execute_test();']
+      self.xpcsRunArgs = ['-e', '_execute_test(); quit(0);']
 
   def getPipes(self):
     """

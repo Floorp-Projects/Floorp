@@ -53,8 +53,7 @@ interface nsIJetpack : nsISupports
                           in jsval aReceiver);
   void unregisterReceivers(in AString aMessageName);
 
-  void loadImplementation(in AString aURI);
-  void loadUserScript(in AString aURI);
+  void evalScript(in AString aScript);
 
   nsIVariant createHandle();
 
