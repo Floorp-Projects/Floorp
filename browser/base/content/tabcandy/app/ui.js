@@ -160,6 +160,7 @@ window.Page = {
   startX: 30, 
   startY: 70,
   closedLastVisibleTab: false,
+  closedSelectedTabInTabCandy: false,
     
   isTabCandyVisible: function(){
     return (Utils.getCurrentWindow().document.getElementById("tab-candy-deck").
@@ -192,7 +193,6 @@ window.Page = {
 
   showTabCandy : function() {
     let self = this;
-
     let currentTab = UI.currentTab;
     let item = null;
 
@@ -295,19 +295,24 @@ window.Page = {
     this.setupKeyHandlers();
 
     Tabs.onClose(function(){
-      if (!self.isTabCandyVisible()) {        
+      if (self.isTabCandyVisible()) {
+        // just closed the selected tab in the tab candy interface.
+        if (UI.currentTab == this) {
+          self.closedSelectedTabInTabCandy = true;
+        }
+      } else {
+        var group = Groups.getActiveGroup();
         // 1) Only go back to the TabCandy tab when there you close the last
         // tab of a group.
         // 2) ake care of the case where you've closed the last tab in
         // an un-named group, which means that the group is gone (null) and
         // there are no visible tabs.
-        var group = Groups.getActiveGroup();
         if ((group && group._children.length == 1) ||
             (group == null && Tabbar.getVisibleTabCount() == 1)) {
           self.closedLastVisibleTab = true;
           // remove the zoom prep.
           if(this && this.mirror) {
-            item = TabItems.getItemByTabElement(this.mirror.el);
+            var item = TabItems.getItemByTabElement(this.mirror.el);
             if (item) {
               item.setZoomPrep(false);
             }
@@ -320,10 +325,8 @@ window.Page = {
     
     Tabs.onMove(function() {
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
-        Utils.log("hit on move...");
         var activeGroup = Groups.getActiveGroup();
         if( activeGroup ) {
-          Utils.log("has group");
           activeGroup.reorderBasedOnTabOrder();                
         }
       }, 1);
@@ -341,48 +344,56 @@ window.Page = {
     
     UI.currentTab = focusTab;
     // if the last visible tab has just been closed, don't show the chrome UI.
-    if (this.isTabCandyVisible() && !this.closedLastVisibleTab) {
-      this.showChrome()
+    if (this.isTabCandyVisible()) {
+      if (!this.closedLastVisibleTab && !this.closedSelectedTabInTabCandy) {
+        this.showChrome();
+        doSetup = true;
+      }
+    } else {
+      doSetup = true;
+    }
+    
+    if (doSetup) {
+      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread      
+        let visibleTabCount = Tabbar.getVisibleTabs().length;
+   
+        if(focusTab != UI.currentTab) {
+          // things have changed while we were in timeout
+          return;
+        }
+         
+        let newItem = null;
+        if(focusTab && focusTab.mirror)
+          newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
+  
+        if(newItem)
+          Groups.setActiveGroup(newItem.parent);
+  
+        // ___ prepare for when we return to TabCandy
+        let oldItem = null;
+        if(currentTab && currentTab.mirror)
+          oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
+  
+        if(newItem != oldItem) {
+          if(oldItem)
+            oldItem.setZoomPrep(false);
+          
+          // if the last visible tab is removed, don't set zoom prep because
+          // we shoud be in the Tab Candy interface.
+          if (visibleTabCount > 0) {
+            if(newItem)
+              newItem.setZoomPrep(true);
+          }
+        } else {
+          // the tab is already focused so the new and old items are the
+          // same.
+          if (oldItem)
+            oldItem.setZoomPrep(true);
+        }
+      }, 1);
     }
     this.closedLastVisibleTab = false;
-
-    iQ.timeout(function() { // Marshal event from chrome thread to DOM thread      
-      let visibleTabCount = Tabbar.getVisibleTabCount();
- 
-      if(focusTab != UI.currentTab) {
-        // things have changed while we were in timeout
-        return;
-      }
-       
-      let newItem = null;
-      if(focusTab && focusTab.mirror)
-        newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
-
-      if(newItem)
-        Groups.setActiveGroup(newItem.parent);
-
-      // ___ prepare for when we return to TabCandy
-      let oldItem = null;
-      if(currentTab && currentTab.mirror)
-        oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
-
-      if(newItem != oldItem) {
-        if(oldItem)
-          oldItem.setZoomPrep(false);
-        
-        // if the last visible tab is removed, don't set zoom prep because
-        // we shoud be in the Tab Candy interface.
-        if (visibleTabCount > 0) {
-          if(newItem)
-            newItem.setZoomPrep(true);
-        }
-      } else {
-        // the tab is already focused so the new and old items are the
-        // same.
-        if (oldItem)
-          oldItem.setZoomPrep(true);
-      }
-    }, 1);
+    this.closedSelectedTabInTabCandy = false;
   },
 
   // ----------  
@@ -617,7 +628,12 @@ UIClass.prototype = {
         }, false);
         
       currentWindow.addEventListener(
-        "tabcandyhide", function() { Page.showChrome(); }, false);
+        "tabcandyhide", function() {
+          var activeTab = Page.getActiveTab();
+          if (activeTab) {
+            activeTab.zoomIn();
+          }
+        }, false);
           
       // ___ delay init
       Storage.onReady(function() {
@@ -783,15 +799,6 @@ UIClass.prototype = {
             self.advanceSelectedTab(false, (charCode - 48));
             event.stopPropagation();
             event.preventDefault();
-          } else if (charCode == 101) { // cmd+e
-            if (Page.isTabCandyVisible()) {
-              var activeTab = Page.getActiveTab();
-              if (activeTab) {
-                activeTab.zoomIn();
-              }
-              event.stopPropagation();
-              event.preventDefault();
-            }
           }
         }
       }
