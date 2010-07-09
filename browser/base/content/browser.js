@@ -3518,7 +3518,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 
 function BrowserToolboxCustomizeChange() {
   gHomeButton.updatePersonalToolbarStyle();
-
+  BookmarksMenuButton.customizeChange();
   allTabs.readPref();
 }
 

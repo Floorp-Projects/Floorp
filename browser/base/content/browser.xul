@@ -719,7 +719,8 @@
       </toolbaritem>
 
       <toolbaritem id="bookmarks-menu-button-container"
-                   class="chromeclass-toolbar-additional">
+                   class="chromeclass-toolbar-additional"
+                   removable="true">
         <toolbarbutton id="bookmarks-menu-button"
                        type="menu"
                        class="toolbarbutton-1"
