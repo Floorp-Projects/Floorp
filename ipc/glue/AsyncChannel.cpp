@@ -387,6 +387,7 @@ AsyncChannel::MaybeHandleError(Result code, const char* channelName)
         break;
     case MsgProcessingError:
         errorMsg = "Processing error: message was deserialized, but the handler returned false (indicating failure)";
+        break;
     case MsgRouteError:
         errorMsg = "Route error: message sent to unknown actor ID";
         break;
@@ -416,8 +417,10 @@ AsyncChannel::ReportConnectionError(const char* channelName) const
         break;
     case ChannelTimeout:
         errorMsg = "Channel timeout: cannot send/recv";
+        break;
     case ChannelClosing:
         errorMsg = "Channel closing: too late to send/recv, messages will be lost";
+        break;
     case ChannelError:
         errorMsg = "Channel error: cannot send/recv";
         break;

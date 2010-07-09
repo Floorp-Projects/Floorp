@@ -59,7 +59,6 @@
 #include "nsISupports.h"
 #include "nsQueryFrame.h"
 #include "nsCoord.h"
-#include "nsRect.h"
 #include "nsColor.h"
 #include "nsEvent.h"
 #include "nsCompatibility.h"
@@ -98,6 +97,10 @@ class nsIDOMEvent;
 class nsDisplayList;
 class nsDisplayListBuilder;
 class nsPIDOMWindow;
+struct nsPoint;
+struct nsIntPoint;
+struct nsRect;
+struct nsIntRect;
 
 typedef short SelectionType;
 typedef PRUint64 nsFrameState;

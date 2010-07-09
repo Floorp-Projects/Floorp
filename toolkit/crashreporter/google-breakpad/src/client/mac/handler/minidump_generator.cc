@@ -36,7 +36,6 @@
 #include <mach-o/loader.h>
 #include <sys/sysctl.h>
 #include <sys/resource.h>
-#include <mach/mach_vm.h>
 
 #include <CoreFoundation/CoreFoundation.h>
 
@@ -49,6 +48,12 @@ using MacStringUtils::ConvertToString;
 using MacStringUtils::IntegerValueAtIndex;
 
 namespace google_breakpad {
+
+#if __LP64__
+#define LC_SEGMENT_ARCH LC_SEGMENT_64
+#else
+#define LC_SEGMENT_ARCH LC_SEGMENT
+#endif
 
 // constructor when generating from within the crashed process
 MinidumpGenerator::MinidumpGenerator()
@@ -615,8 +620,10 @@ bool MinidumpGenerator::WriteSystemInfoStream(
       info_ptr->processor_architecture = MD_CPU_ARCHITECTURE_PPC;
       break;
     case CPU_TYPE_I386:
-      info_ptr->processor_architecture = MD_CPU_ARCHITECTURE_X86;
+    case CPU_TYPE_X86_64:
+      // hw.cputype is currently always I386 even on an x86-64 system
 #ifdef __i386__
+      info_ptr->processor_architecture = MD_CPU_ARCHITECTURE_X86;
       // ebx is used for PIC code, so we need
       // to preserve it.
 #define cpuid(op,eax,ebx,ecx,edx)      \
@@ -629,6 +636,18 @@ bool MinidumpGenerator::WriteSystemInfoStream(
          "=c" (ecx),                   \
          "=d" (edx)                    \
        : "0" (op))
+#elif defined(__x86_64__)
+      info_ptr->processor_architecture = MD_CPU_ARCHITECTURE_AMD64;
+#define cpuid(op,eax,ebx,ecx,edx)      \
+  asm ("cpuid         \n\t"            \
+       : "=a" (eax),                   \
+         "=b" (ebx),                   \
+         "=c" (ecx),                   \
+         "=d" (edx)                    \
+       : "0" (op))
+#endif
+
+#if defined(__i386__) || defined(__x86_64__)
       int unused, unused2;
       // get vendor id
       cpuid(0, unused, info_ptr->cpu.x86_cpu_info.vendor_id[0],
@@ -659,7 +678,7 @@ bool MinidumpGenerator::WriteSystemInfoStream(
           ((info_ptr->cpu.x86_cpu_info.version_information & 0xFF00000) >> 20);
       }
 
-#endif // __i386__
+#endif  // __i386__ || __x86_64_
       break;
     default:
       info_ptr->processor_architecture = MD_CPU_ARCHITECTURE_UNKNOWN;
@@ -763,7 +782,7 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
     memset(module, 0, sizeof(MDRawModule));
 
     for (unsigned int i = 0; cmd && (i < header->ncmds); i++) {
-      if (cmd->cmd == LC_SEGMENT) {
+      if (cmd->cmd == LC_SEGMENT_ARCH) {
 
         const breakpad_mach_segment_command *seg =
           reinterpret_cast<const breakpad_mach_segment_command *>(cmd);

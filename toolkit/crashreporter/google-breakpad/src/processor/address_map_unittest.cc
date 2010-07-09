@@ -31,8 +31,8 @@
 //
 // Author: Mark Mentovai
 
-#include <climits>
-#include <cstdio>
+#include <limits.h>
+#include <stdio.h>
 
 #include "processor/address_map-inl.h"
 #include "processor/linked_ptr.h"

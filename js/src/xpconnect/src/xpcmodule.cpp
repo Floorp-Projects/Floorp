@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define XPCONNECT_MODULE
 #include "xpcprivate.h"
 
 nsresult

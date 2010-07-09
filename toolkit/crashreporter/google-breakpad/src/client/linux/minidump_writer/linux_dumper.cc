@@ -59,6 +59,8 @@
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/linux_syscall_support.h"
 
+static const char kMappedFileUnsafePrefix[] = "/dev/";
+
 namespace google_breakpad {
 
 bool AttachThread(pid_t pid) {
@@ -79,6 +81,17 @@ bool AttachThread(pid_t pid) {
 
 bool DetachThread(pid_t pid) {
   return sys_ptrace(PTRACE_DETACH, pid, NULL, NULL) >= 0;
+}
+
+inline bool IsMappedFileOpenUnsafe(
+    const google_breakpad::MappingInfo* mapping) {
+  // It is unsafe to attempt to open a mapped file that lives under /dev,
+  // because the semantics of the open may be driver-specific so we'd risk
+  // hanging the crash dumper. And a file in /dev/ almost certainly has no
+  // ELF file identifier anyways.
+  return my_strncmp(mapping->name,
+                    kMappedFileUnsafePrefix,
+                    sizeof(kMappedFileUnsafePrefix) - 1) == 0;
 }
 
 bool GetThreadRegisters(ThreadInfo* info) {
@@ -193,7 +206,11 @@ LinuxDumper::ElfFileIdentifierForMapping(unsigned int mapping_id,
                                          uint8_t identifier[sizeof(MDGUID)])
 {
   assert(mapping_id < mappings_.size());
+  my_memset(identifier, 0, sizeof(MDGUID));
   const MappingInfo* mapping = mappings_[mapping_id];
+  if (IsMappedFileOpenUnsafe(mapping)) {
+    return false;
+  }
   int fd = sys_open(mapping->name, O_RDONLY, 0);
   if (fd < 0)
     return false;
