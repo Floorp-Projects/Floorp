@@ -274,7 +274,7 @@ AC_ARG_ENABLE(debug,
       else
           MOZ_DEBUG=
       fi ],
-      MOZ_DEBUG=)
+      MOZ_DEBUG_SYMBOLS=1)
 
 AC_ARG_ENABLE(debug-symbols,
     [  --enable-debug-symbols[=DBG]    Enable debugging symbols
@@ -289,6 +289,8 @@ AC_ARG_ENABLE(debug-symbols,
                   AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
               fi
           fi
+      else
+          MOZ_DEBUG_SYMBOLS=
       fi ])
 
 AC_ARG_ENABLE(win32-target,
