@@ -85,6 +85,7 @@
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button:-moz-lwtheme-darktext,
 #TabsToolbar[tabsontop="false"] > toolbarbutton:-moz-lwtheme-darktext,
 #TabsToolbar[tabsontop="false"] > toolbarpaletteitem > toolbarbutton:-moz-lwtheme-darktext,
+#TabsToolbar[tabsontop="false"] > #bookmarks-menu-button-container > #bookmarks-menu-button:-moz-lwtheme-darktext,
 #TabsToolbar[tabsontop="false"] #tabs-closebutton:-moz-lwtheme-darktext,
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-lwtheme-darktext,
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-lwtheme-darktext,
@@ -95,6 +96,7 @@
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button:-moz-lwtheme-brighttext,
 #TabsToolbar[tabsontop="false"] > toolbarbutton:-moz-lwtheme-brighttext,
 #TabsToolbar[tabsontop="false"] > toolbarpaletteitem > toolbarbutton:-moz-lwtheme-brighttext,
+#TabsToolbar[tabsontop="false"] > #bookmarks-menu-button-container > #bookmarks-menu-button:-moz-lwtheme-brighttext,
 #TabsToolbar[tabsontop="false"] #tabs-closebutton:-moz-lwtheme-brighttext,
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-lwtheme-brighttext,
 #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-lwtheme-brighttext,
@@ -1620,6 +1622,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #TabsToolbar > toolbarbutton,
 #TabsToolbar > toolbarpaletteitem > toolbarbutton,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button,
 #TabsToolbar > toolbarbutton[type="menu-button"] > .toolbarbutton-menubutton-button,
 #TabsToolbar > toolbarpaletteitem > toolbarbutton[type="menu-button"] > .toolbarbutton-menubutton-button,
 #TabsToolbar > toolbarbutton[type="menu-button"] > .toolbarbutton-menubutton-dropmarker,
@@ -1634,6 +1637,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #TabsToolbar > toolbarbutton:not([type="menu-button"]),
 #TabsToolbar > toolbarpaletteitem > toolbarbutton:not([type="menu-button"]),
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button,
 #TabsToolbar > toolbarbutton[type="menu-button"] > .toolbarbutton-menubutton-button,
 #TabsToolbar > toolbarpaletteitem > toolbarbutton[type="menu-button"] > .toolbarbutton-menubutton-button,
 #TabsToolbar > toolbarbutton[type="menu-button"] > .toolbarbutton-menubutton-dropmarker,
@@ -1650,6 +1654,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabs-newtab-button > .toolbarbutton-icon,
 #TabsToolbar > toolbarbutton > .toolbarbutton-icon,
 #TabsToolbar > toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button > .toolbarbutton-icon,
 #TabsToolbar > toolbarbutton[type="menu-button"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #TabsToolbar > toolbarpaletteitem > toolbarbutton[type="menu-button"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   padding: 0;
@@ -1658,6 +1663,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover,
 #TabsToolbar > toolbarbutton:not([type="menu-button"]):not([disabled="true"]):not([open="true"]):hover,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button:not([type="menu-button"]):not([disabled="true"]):not([open="true"]):hover,
 #TabsToolbar > toolbarbutton[type="menu-button"] > .toolbarbutton-menubutton-button:not([disabled="true"]):hover,
 #TabsToolbar > toolbarbutton[type="menu-button"]:not([disabled="true"]):not([buttonover="true"]):hover > .toolbarbutton-menubutton-dropmarker {
   background-image: -moz-linear-gradient(transparent, rgba(0,0,0,.15)) !important;
@@ -1666,6 +1672,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover:active,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover:active,
 #TabsToolbar > toolbarbutton:not([type="menu-button"]):not([disabled="true"]):hover:active,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button:not([type="menu-button"]):not([disabled="true"]):hover:active,
 #TabsToolbar > toolbarbutton[type="menu"][open="true"],
 #TabsToolbar > toolbarbutton[type="menu-button"] > .toolbarbutton-menubutton-button:not([disabled="true"]):hover:active,
 #TabsToolbar > toolbarbutton[type="menu-button"][open="true"]:not([disabled="true"]):hover > .toolbarbutton-menubutton-dropmarker {
