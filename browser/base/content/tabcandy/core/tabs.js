@@ -386,6 +386,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
               break;
 
             case "TabMove":
+              Utils.log("tab move");
               tabsMixIns.bubble("onMove",
                                trackedTabs.get(chromeTab),
                                true);
@@ -448,7 +449,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
            event.tab = self;
            return event;
          }});
-  
+      /* ToDo: do we need this?  onFocus is fired twice if this is uncommented.
       mixIns.add(
         {name: "onFocus",
          observe: chromeTab,
@@ -461,7 +462,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
            // 'this' variable, so just return true for now.         
            return true;
          }});
-  
+        */
       this.__proto__ = {
         get isClosed() { return (browser == null); },
   
