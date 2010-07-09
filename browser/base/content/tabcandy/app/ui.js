@@ -66,21 +66,15 @@ var Tabbar = {
   },
   
   // ----------
-  // Function: getVisibleTabs
-  // Returns an array of the tabs which are currently visibible in the
-  // tab bar.
-  getVisibleTabs: function(){
-    var visibleTabs = [];
-    var length = this.el.children.length; 
-    // this.el.children is not a real array and does contain
-    // useful functions like filter or forEach. Convert it into a real array.
-    for( var i=0; i<length; i++ ){
-      var tab = this.el.children[i];
-      if( tab.collapsed == false )
-        visibleTabs.push("");
-    }
-    
-    return visibleTabs;
+  // Function: getVisibleTabCount
+  // Returns the number of tabs that are currently visible
+  getVisibleTabCount: function(){
+    let visibleTabCount = 0;
+    this.getAllTabs().forEach(function(tab){
+      if ( !tab.collapsed )
+        visibleTabCount++
+    });
+    return visibleTabCount;
   },
   
   // ----------
@@ -113,7 +107,6 @@ var Tabbar = {
           
       var tabbrowser = Utils.getCurrentWindow().gBrowser;
       var visibleTabs = [];
-      
       var tabBarTabs = this.getAllTabs();
             
       tabs.forEach(function(tab) {
@@ -154,10 +147,9 @@ var Tabbar = {
   // Function: showAllTabs
   // Shows all of the tabs in the tab bar.
   showAllTabs: function(){
-    for( var i=0; i<this.el.children.length; i++ ){
-      var tab = this.el.children[i];
+    this.getAllTabs().forEach(function(tab) {
       tab.collapsed = false;
-    }
+    });
   }
 }
 
@@ -311,7 +303,7 @@ window.Page = {
         // there are no visible tabs.
         var group = Groups.getActiveGroup();
         if ((group && group._children.length == 1) ||
-            (group == null && Tabbar.getVisibleTabs().length == 1)) {
+            (group == null && Tabbar.getVisibleTabCount() == 1)) {
           self.closedLastVisibleTab = true;
           // remove the zoom prep.
           if(this && this.mirror) {
@@ -355,7 +347,7 @@ window.Page = {
     this.closedLastVisibleTab = false;
 
     iQ.timeout(function() { // Marshal event from chrome thread to DOM thread      
-      let visibleTabCount = Tabbar.getVisibleTabs().length;
+      let visibleTabCount = Tabbar.getVisibleTabCount();
  
       if(focusTab != UI.currentTab) {
         // things have changed while we were in timeout
