@@ -43,6 +43,7 @@
 #include "nsIHTTPHeaderListener.h"
 #include "nsIRequest.h"
 #include "nsITimer.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 
 #define MAX_PLUGIN_NECKO_BUFFER 16384
@@ -85,7 +86,7 @@ protected:
   void* mNotifyData;
   char* mStreamBuffer;
   char* mNotifyURL;
-  nsNPAPIPluginInstance* mInst;
+  nsRefPtr<nsNPAPIPluginInstance> mInst;
   NPStream mNPStream;
   PRUint32 mStreamBufferSize;
   PRInt32 mStreamBufferByteCount;
