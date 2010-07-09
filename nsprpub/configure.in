@@ -50,7 +50,7 @@ dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=8
-MOD_PATCH_VERSION=5
+MOD_PATCH_VERSION=6
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -274,7 +274,7 @@ AC_ARG_ENABLE(debug,
       else
           MOZ_DEBUG=
       fi ],
-      MOZ_DEBUG=)
+      MOZ_DEBUG_SYMBOLS=1)
 
 AC_ARG_ENABLE(debug-symbols,
     [  --enable-debug-symbols[=DBG]    Enable debugging symbols
@@ -289,6 +289,8 @@ AC_ARG_ENABLE(debug-symbols,
                   AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
               fi
           fi
+      else
+          MOZ_DEBUG_SYMBOLS=
       fi ])
 
 AC_ARG_ENABLE(win32-target,
@@ -659,7 +661,7 @@ AC_MSG_RESULT([$result])
 
 if test $result = "yes"; then
    PROFILE_GEN_LDFLAGS="-fprofile-generate"
-   PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freoder-blocks-and-partition"
+   PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freorder-blocks-and-partition"
    PROFILE_USE_LDFLAGS="-fprofile-use"
 fi
 
@@ -1678,17 +1680,16 @@ arm-android-eabi)
 
         # Determine compiler version
         changequote(,)
-        _MSVC_VER_FILTER='s|.* ([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?).*|\1|p'
+        _MSVC_VER_FILTER='s|.* \([0-9]\+\.[0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?\).*|\1|p'
         changequote([,])
-
-        CC_VERSION=`"${CC}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
+        CC_VERSION=`"${CC}" -v 2>&1 | sed -ne "$_MSVC_VER_FILTER"`
         _CC_MAJOR_VERSION=`echo ${CC_VERSION} | awk -F\. '{ print $1 }'`
         _CC_MINOR_VERSION=`echo ${CC_VERSION} | awk -F\. '{ print $2 }'`
         _CC_RELEASE=`echo ${CC_VERSION} | awk -F\. '{ print $3 }'`
         _CC_BUILD=`echo ${CC_VERSION} | awk -F\. '{ print $4 }'`
         MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
 
-        if test "$_CC_MAJOR_VERSION" = "14"; then
+        if test "$_CC_MAJOR_VERSION" -eq "14"; then
            dnl -DYNAMICBASE is only supported on VC8SP1 or newer,
            dnl so be very specific here!
            dnl VC8 is 14.00.50727.42, VC8SP1 is 14.00.50727.762
@@ -1697,7 +1698,7 @@ arm-android-eabi)
            elif test $_CC_BUILD -ge 762; then
               _USE_DYNAMICBASE=1
            fi
-        elif test $_CC_MAJOR_VERSION -gt 15; then
+        elif test $_CC_MAJOR_VERSION -ge 15; then
            _USE_DYNAMICBASE=1    
         fi
 

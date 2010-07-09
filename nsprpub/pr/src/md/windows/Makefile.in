@@ -93,7 +93,7 @@ include $(topsrcdir)/config/rules.mk
 export:: $(TARGETS)
 
 # Bug 122433 workaround: disable global optimization (-Og-) on ntio.c.
-ifdef BUILD_OPT
+ifdef MOZ_OPTIMIZE
 ifeq ($(OS_TARGET), WINNT)
 ifndef NS_USE_GCC
 $(OBJDIR)/ntio.$(OBJ_SUFFIX): ntio.c
