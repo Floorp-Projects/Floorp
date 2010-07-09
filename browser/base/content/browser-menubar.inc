@@ -211,7 +211,7 @@
                 <menuitem id="menu_tabcandy"
                           label="&showTabCandy.label;"
                           key="key_tabcandy"
-                          command="Browser:ShowTabCandy"/>
+                          command="Browser:ToggleTabCandy"/>
                 <menu id="viewToolbarsMenu"
                       label="&viewToolbarsMenu.label;"
                       accesskey="&viewToolbarsMenu.accesskey;">

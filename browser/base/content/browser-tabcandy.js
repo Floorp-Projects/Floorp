@@ -36,9 +36,14 @@
 
 // New API methods can be added to here.
 var TabCandy = {
-  show: function() {
+  toggle: function() {
     let event = document.createEvent("Events");
-    event.initEvent("tabcandyshow", false, false);
+
+    if (this.isVisible()) {
+      event.initEvent("tabcandyhide", false, false);
+    } else {
+      event.initEvent("tabcandyshow", false, false);
+    }
     dispatchEvent(event);
   },
 

@@ -842,7 +842,7 @@
 
       <toolbarbutton id="tabcandy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&tabCandyButton.label;"
-                     command="Browser:ShowTabCandy"
+                     command="Browser:ToggleTabCandy"
                      tooltiptext="&tabCandyButton.tooltip;" 
                      removable="true"/>
 
