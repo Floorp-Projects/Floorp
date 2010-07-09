@@ -95,21 +95,6 @@ var gTabsListener = {
       // Test finished.  This will move to the next one.
       waitForFocus(gCurrentTest.finish, gBrowser.ownerDocument.defaultView);
     }
-  },
-
-  onProgressChange: function(aBrowser, aWebProgress, aRequest,
-                             aCurSelfProgress, aMaxSelfProgress,
-                             aCurTotalProgress, aMaxTotalProgress) {
-  },
-  onStateChange: function(aBrowser, aWebProgress, aRequest,
-                          aStateFlags, aStatus) {
-  },  
-  onStatusChange: function(aBrowser, aWebProgress, aRequest,
-                           aStatus, aMessage) {
-  },
-  onSecurityChange: function(aBrowser, aWebProgress, aRequest, aState) {
-  },
-  noLinkIconAvailable: function(aBrowser) {
   }
 }
 
