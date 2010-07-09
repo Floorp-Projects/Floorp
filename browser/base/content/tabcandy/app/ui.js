@@ -49,7 +49,10 @@ window.Keys = {meta: false};
 Navbar = {
   // ----------
   get urlBar() {
-    return Utils.getCurrentWindow().gURLBar;      
+    let win = Utils.getCurrentWindow();
+    if (win)
+      return win.gURLBar;
+    return null;
   }
 };
 
@@ -80,26 +83,38 @@ var Tabbar = {
   },
   
   // ----------
+  // Function: getAllTabs
+  // Returns an array of all tabs which exist in the current window
+  // tabbrowser. Returns an Array.
+  getAllTabs: function() {
+    let tabBarTabs = [];
+    if (this.el) {
+      // this.el.children is not a real array and does contain
+      // useful functions like filter or forEach. Convert it into a real array.
+      for (let i = 0; i < this.el.children.length; i++) {
+        tabBarTabs.push(this.el.children[i]);
+      }
+    }
+    return tabBarTabs;
+  },
+  
+  // ----------
   // Function: showOnlyTheseTabs
   // Hides all of the tabs in the tab bar which are not passed into this function.
   //
   // Paramaters
   //  - An array of <Tab> objects.
+  //  - Some options
   showOnlyTheseTabs: function(tabs, options){
     try { 
       if(!options)
         options = {};
           
       var tabbrowser = Utils.getCurrentWindow().gBrowser;
-      var tabBarTabs = [];
       var visibleTabs = [];
-      var length = this.el.children.length;
       
-      // this.el.children is not a real array so convert it.
-      for (var i = 0; i < length; i++) {
-        tabBarTabs.push(this.el.children[i]);
-      }
-      
+      var tabBarTabs = this.getAllTabs();
+            
       tabs.forEach(function(tab) {
         var rawTab = tab.tab.raw;
         tabBarTabs.some(function(tabBarTab) {
