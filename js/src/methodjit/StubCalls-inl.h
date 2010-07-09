@@ -66,6 +66,14 @@ ValueToObject(JSContext *cx, Value *vp)
     return js_ValueToNonNullObject(cx, *vp);
 }
 
+static inline void
+ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
+{
+    const char *printable = js_AtomToPrintableString(cx, atom);
+    if (printable)
+        js_ReportIsNotDefined(cx, printable);
+}
+
 #define NATIVE_SET(cx,obj,sprop,entry,vp)                                     \
     JS_BEGIN_MACRO                                                            \
         if (sprop->hasDefaultSetter() &&                                      \

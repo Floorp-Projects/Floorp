@@ -314,14 +314,6 @@ stubs::SetGlobalName(VMFrame &f, JSAtom *atom)
     SetName(f, atom);
 }
 
-static void
-ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
-{
-    const char *printable = js_AtomToPrintableString(cx, atom);
-    if (printable)
-        js_ReportIsNotDefined(cx, printable);
-}
-
 static JSObject *
 NameOp(VMFrame &f, JSObject *obj, bool callname = false)
 {
