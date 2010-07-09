@@ -48,24 +48,8 @@ window.Keys = {meta: false};
 // ##########
 Navbar = {
   // ----------
-  get el(){
-    var win = Utils.getCurrentWindow();
-    if(win) {
-      var navbar = win.gBrowser.ownerDocument.getElementById("navigator-toolbox");
-      return navbar;      
-    }
-
-    return null;
-  },
-  
-  get urlBar(){
-    var win = Utils.getCurrentWindow();
-    if(win) {
-      var navbar = win.gBrowser.ownerDocument.getElementById("urlbar");
-      return navbar;      
-    }
-
-    return null;    
+  get urlBar() {
+    return Utils.getCurrentWindow().gURLBar;      
   }
 };
 
@@ -76,11 +60,6 @@ var Tabbar = {
   // ----------
   get el() {
     return window.Tabs[0].raw.parentNode; 
-  },
-
-  // ----------
-  get height() {
-    return window.Tabs[0].raw.parentNode.getBoundingClientRect().height;
   },
   
   // ----------
@@ -111,36 +90,44 @@ var Tabbar = {
       if(!options)
         options = {};
           
-      var visibleTabs = [];
-      // this.el.children is not a real array and does contain
-      // useful functions like filter or forEach. Convert it into a real array.
+      var tabbrowser = Utils.getCurrentWindow().gBrowser;
       var tabBarTabs = [];
-      for( var i=0; i<this.el.children.length; i++ ){
+      var visibleTabs = [];
+      var length = this.el.children.length;
+      
+      // this.el.children is not a real array so convert it.
+      for (var i = 0; i < length; i++) {
         tabBarTabs.push(this.el.children[i]);
       }
       
-      for each( var tab in tabs ){
+      tabs.forEach(function(tab) {
         var rawTab = tab.tab.raw;
-        var toShow = tabBarTabs.filter(function(testTab){
-          return testTab == rawTab;
-        }); 
-        visibleTabs = visibleTabs.concat( toShow );
-      }
-  
-      tabBarTabs.forEach(function(tab){
-        tab.collapsed = true;
+        tabBarTabs.some(function(tabBarTab) {
+          if (tabBarTab == rawTab) {
+            visibleTabs.push(tabBarTab);
+            return true;
+          }
+        });
       });
-      
+
       // Show all of the tabs in the group and move them (in order)
       // that they appear in the group to the end of the tab strip.
       // This way the tab order is matched up to the group's thumbnail
-      // order.
-      var self = this;
-      visibleTabs.forEach(function(tab){
-        tab.collapsed = false;
-        
-        if(!options.dontReorg)
-          Utils.getCurrentWindow().gBrowser.moveTabTo(tab, self.el.children.length-1);
+      // order.      
+      tabBarTabs.forEach(function(tab){
+        var collapsed = true;
+        visibleTabs.some(function(visibleTab, i) {
+          if (visibleTab == tab) {
+            collapsed = false;
+            // remove the element to speed up the next loop.
+            visibleTabs.splice(i, 1);
+            if (!options.dontReorg) {
+              tabbrowser.moveTabTo(tab, length - 1);
+            }
+            return true;
+          }
+        });
+        tab.collapsed = collapsed;
       });
     } catch(e) {
       Utils.log(e);
