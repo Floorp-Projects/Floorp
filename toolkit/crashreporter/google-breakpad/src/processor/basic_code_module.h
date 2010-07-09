@@ -63,6 +63,21 @@ class BasicCodeModule : public CodeModule {
         debug_file_(that->debug_file()),
         debug_identifier_(that->debug_identifier()),
         version_(that->version()) {}
+
+  BasicCodeModule(u_int64_t base_address, u_int64_t size,
+		  const string &code_file,
+		  const string &code_identifier,
+		  const string &debug_file,
+		  const string &debug_identifier,
+		  const string &version)
+    : base_address_(base_address),
+      size_(size),
+      code_file_(code_file),
+      code_identifier_(code_identifier),
+      debug_file_(debug_file),
+      debug_identifier_(debug_identifier),
+      version_(version)
+    {}
   virtual ~BasicCodeModule() {}
 
   // See code_module.h for descriptions of these methods and the associated

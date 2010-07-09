@@ -3904,7 +3904,6 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
 {
     jsint i;
     JSObject *obj;
-    JSScope *scope;
     JSScopeProperty *sprop;
     JSIdArray *ida;
 
@@ -3915,12 +3914,11 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         /* Native case: private data is a property tree node pointer. */
         obj = iterobj->getParent();
         JS_ASSERT(obj->isNative());
-        scope = obj->scope();
         sprop = (JSScopeProperty *) iterobj->getPrivate();
 
         /*
-         * If the next property mapped by scope in the property tree ancestor
-         * line is not enumerable, or it's an alias, skip it and keep on trying
+         * If the next property in the property tree ancestor line is
+         * not enumerable, or it's an alias, skip it and keep on trying
          * to find an enumerable property that is still in scope.
          */
         while (sprop && (!sprop->enumerable() || sprop->isAlias()))

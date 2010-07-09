@@ -1963,7 +1963,7 @@ var PlacesUtils = {
         }
       };
 
-      // Get list of itemIds that must be exluded from the backup.
+      // Get list of itemIds that must be excluded from the backup.
       let excludeItems =
         PlacesUtils.annotations.getItemsWithAnnotation(PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
 
