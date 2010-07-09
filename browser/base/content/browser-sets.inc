@@ -117,7 +117,7 @@
     <command id="Browser:NextTab" oncommand="gBrowser.tabContainer.advanceSelectedTab(1, true);"/>
     <command id="Browser:PrevTab" oncommand="gBrowser.tabContainer.advanceSelectedTab(-1, true);"/>
     <command id="Browser:ShowAllTabs" oncommand="allTabs.open();"/>
-    <command id="Browser:ShowTabCandy" oncommand="TabCandy.show();"/>
+    <command id="Browser:ToggleTabCandy" oncommand="TabCandy.toggle();"/>
     <command id="cmd_fullZoomReduce"  oncommand="FullZoom.reduce()"/>
     <command id="cmd_fullZoomEnlarge" oncommand="FullZoom.enlarge()"/>
     <command id="cmd_fullZoomReset"   oncommand="FullZoom.reset()"/>
@@ -327,7 +327,7 @@
 
     <key id="key_showAllTabs" command="Browser:ShowAllTabs" keycode="VK_TAB" modifiers="control,shift"/>
 
-    <key id="key_tabcandy" command="Browser:ShowTabCandy" key="&showTabCandy.commandkey;" modifiers="accel" />
+    <key id="key_tabcandy" command="Browser:ToggleTabCandy" key="&showTabCandy.commandkey;" modifiers="accel" />
 
     <key id="key_switchTextDirection" key="&bidiSwitchTextDirectionItem.commandkey;" command="cmd_switchTextDirection" modifiers="accel,shift" />
 

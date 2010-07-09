@@ -386,7 +386,6 @@ window.TabsManager = iQ.extend(new Subscribable(), {
               break;
 
             case "TabMove":
-              Utils.log("tab move");
               tabsMixIns.bubble("onMove",
                                trackedTabs.get(chromeTab),
                                true);
