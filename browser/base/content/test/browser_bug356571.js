@@ -57,12 +57,7 @@ var gProgressListener = {
       ok(gBrowser.tabs.length == kURIs.length, "Correctly opened all expected tabs");
       finishTest();
     }
-  },
-
-  onProgressChange: function () {},
-  onLocationChange: function () {},
-  onStatusChange: function () {},
-  onSecurityChange: function () {}
+  }
 }
 
 function test() {
