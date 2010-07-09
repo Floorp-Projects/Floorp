@@ -71,12 +71,13 @@ var Tabbar = {
   // tab bar.
   getVisibleTabs: function(){
     var visibleTabs = [];
+    var length = this.el.children.length; 
     // this.el.children is not a real array and does contain
     // useful functions like filter or forEach. Convert it into a real array.
-    for( var i=0; i<this.el.children.length; i++ ){
+    for( var i=0; i<length; i++ ){
       var tab = this.el.children[i];
       if( tab.collapsed == false )
-        visibleTabs.push();
+        visibleTabs.push("");
     }
     
     return visibleTabs;
@@ -166,7 +167,8 @@ var Tabbar = {
 window.Page = {
   startX: 30, 
   startY: 70,
-  
+  closedLastVisibleTab: false,
+    
   isTabCandyVisible: function(){
     return (Utils.getCurrentWindow().document.getElementById("tab-candy-deck").
              selectedIndex == 1);
@@ -183,8 +185,14 @@ window.Page = {
   
   showChrome: function(){
     let currentWin = Utils.getCurrentWindow();
+    let tabContainer = currentWin.gBrowser.tabContainer;
     currentWin.document.getElementById("tab-candy-deck").selectedIndex = 0;
-    
+
+    // set the close button on tab
+    iQ.timeout(function() { // Marshal event from chrome thread to DOM thread   
+      tabContainer.adjustTabstrip();
+    }, 1);
+
     // Mac Only
     Utils.getCurrentWindow().document.getElementById("main-window").
       removeAttribute("activetitlebarcolor");
@@ -220,7 +228,7 @@ window.Page = {
       });
     }
   },
-  
+
   setupKeyHandlers: function(){
     var self = this;
     iQ(window).keyup(function(e){
@@ -259,9 +267,6 @@ window.Page = {
         case 38: // Up
           norm = function(a, me){return a.y < me.y}
           break;
-        case 69: // Command-E
-          if( Keys.meta ) if( self.getActiveTab() ) self.getActiveTab().zoomIn();
-          break;
       }
       
       if( norm != null && iQ(":focus").length == 0 ){
@@ -296,35 +301,39 @@ window.Page = {
     });
 
     this.setupKeyHandlers();
-        
+
     Tabs.onClose(function(){
-      if (!self.isTabCandyVisible()) {
-        iQ.timeout(function() { // Marshal event from chrome thread to DOM thread            
-          // Only go back to the TabCandy tab when there you close the last
-          // tab of a group.
-          var group = Groups.getActiveGroup();
-          if( group && group._children.length == 0 ) {
-            self.hideChrome();
-            self.showTabCandy();
+      if (!self.isTabCandyVisible()) {        
+        // 1) Only go back to the TabCandy tab when there you close the last
+        // tab of a group.
+        // 2) ake care of the case where you've closed the last tab in
+        // an un-named group, which means that the group is gone (null) and
+        // there are no visible tabs.
+        var group = Groups.getActiveGroup();
+        if ((group && group._children.length == 1) ||
+            (group == null && Tabbar.getVisibleTabs().length == 1)) {
+          self.closedLastVisibleTab = true;
+          // remove the zoom prep.
+          if(this && this.mirror) {
+            item = TabItems.getItemByTabElement(this.mirror.el);
+            if (item) {
+              item.setZoomPrep(false);
+            }
           }
-    
-          // Take care of the case where you've closed the last tab in
-          // an un-named group, which means that the group is gone (null) and
-          // there are no visible tabs.
-          if( group == null && Tabbar.getVisibleTabs().length == 0){
-            self.hideChrome();
-            self.showTabCandy();
-          }
-        }, 1);
+          self.hideChrome();
+        }
       }
       return false;
     });
     
     Tabs.onMove(function() {
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+        Utils.log("hit on move...");
         var activeGroup = Groups.getActiveGroup();
-        if( activeGroup )
+        if( activeGroup ) {
+          Utils.log("has group");
           activeGroup.reorderBasedOnTabOrder();                
+        }
       }, 1);
     });
     
@@ -339,11 +348,15 @@ window.Page = {
     var currentTab = UI.currentTab;
     
     UI.currentTab = focusTab;
-    if (this.isTabCandyVisible()) {
-      this.showChrome();    
+    // if the last visible tab has just been closed, don't show the chrome UI.
+    if (this.isTabCandyVisible() && !this.closedLastVisibleTab) {
+      this.showChrome()
     }
+    this.closedLastVisibleTab = false;
 
-    iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+    iQ.timeout(function() { // Marshal event from chrome thread to DOM thread      
+      let visibleTabCount = Tabbar.getVisibleTabs().length;
+ 
       if(focusTab != UI.currentTab) {
         // things have changed while we were in timeout
         return;
@@ -364,15 +377,18 @@ window.Page = {
       if(newItem != oldItem) {
         if(oldItem)
           oldItem.setZoomPrep(false);
-
-        if(newItem)
-          newItem.setZoomPrep(true);
+        
+        // if the last visible tab is removed, don't set zoom prep because
+        // we shoud be in the Tab Candy interface.
+        if (visibleTabCount > 0) {
+          if(newItem)
+            newItem.setZoomPrep(true);
+        }
       } else {
         // the tab is already focused so the new and old items are the
         // same.
-        if (oldItem) {
+        if (oldItem)
           oldItem.setZoomPrep(true);
-        }
       }
     }, 1);
   },
@@ -775,6 +791,15 @@ UIClass.prototype = {
             self.advanceSelectedTab(false, (charCode - 48));
             event.stopPropagation();
             event.preventDefault();
+          } else if (charCode == 101) { // cmd+e
+            if (Page.isTabCandyVisible()) {
+              var activeTab = Page.getActiveTab();
+              if (activeTab) {
+                activeTab.zoomIn();
+              }
+              event.stopPropagation();
+              event.preventDefault();
+            }
           }
         }
       }
