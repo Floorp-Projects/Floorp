@@ -466,18 +466,15 @@ Content.prototype = {
         if (!element)
           return;
 
-        this._sendMouseEvent("mousedown", element, x, y);
-
-        // If we don't release the implicit capture, we'll get dragging problems
-        // when a contextmenu is displayed
-        element.ownerDocument.releaseCapture();
-
         if (element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label")) {
           this._overlayTimeout = content.setTimeout(function() {
             let rects = getContentClientRects(element);
-            sendSyncMessage("Browser:Highlight", { rects: rects });
+            sendAsyncMessage("Browser:Highlight", { rects: rects });
+            this._overlayTimeout = 0;
           }, kTapOverlayTimeout);
         }
+
+        this._startContextTimeout(element);
         break;
 
       case "Browser:MouseUp": {
@@ -487,16 +484,20 @@ Content.prototype = {
           if (uri)
             sendAsyncMessage("Browser:OpenURI", { uri: uri });
         } else if (!this._formAssistant.open(element)) {
+          this._sendMouseEvent("mousedown", element, x, y);
           this._sendMouseEvent("mouseup", element, x, y);
         }
         break;
       }
 
       case "Browser:MouseCancel":
-        this._cancelMouseEvent();
         if (this._overlayTimeout) {
           content.clearTimeout(this._overlayTimeout);
           this._overlayTimeout = 0;
+        }
+
+        if (this._contextTimeout) {
+          content.clearTimeout(this._contextTimeout);
         }
         break;
 
@@ -580,12 +581,16 @@ Content.prototype = {
     windowUtils.sendMouseEvent(aName, aX - scrollOffset.x, aY - scrollOffset.y, 0, 1, 0, true);
   },
 
-  _cancelMouseEvent: function _cancelMouseEvent() {
-    // We use a mouseup with a clickcount=0 to cancel the contextmenu timer in
-    // nsEventStateManager.cpp
-    let scrollOffset = Util.getScrollOffset(content);
-    let windowUtils = Util.getWindowUtils(content);
-    windowUtils.sendMouseEvent("mouseup", scrollOffset.x, scrollOffset.y, 0, 0, 0, true);
+  _contextTimeout: null,
+  _startContextTimeout: function startContextTimeout(aElement) {
+    if (this._contextTimeout)
+      content.clearTimeout(this._contextTimeout);
+
+    this._contextTimeout = content.setTimeout(function() {
+      let event = content.document.createEvent("PopupEvents");
+      event.initEvent("contextmenu", true, true);
+      aElement.dispatchEvent(event);
+    }, 500);
   },
 
   startLoading: function startLoading() {
@@ -769,7 +774,7 @@ var ContextHandler = {
       mediaURL: ""
     };
 
-    let popupNode = elementFromPoint(aEvent.clientX, aEvent.clientY);
+    let popupNode = aEvent.originalTarget;
 
     // Do checks for nodes that never have children.
     if (popupNode.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
@@ -810,7 +815,7 @@ var ContextHandler = {
   }
 };
 
-//ContextHandler.init();
+ContextHandler.init();
 
 
 var FormSubmitObserver = {
