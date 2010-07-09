@@ -420,7 +420,8 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 }
 
 #TabsToolbar > .toolbarbutton-1,
-#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 {
+#TabsToolbar > toolbarpaletteitem > .toolbarbutton-1,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
   -moz-appearance: toolbarbutton;
   margin: 0;
   padding: 0 3px;
@@ -1268,7 +1269,8 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   .tabbrowser-arrowscrollbox > .scrollbutton-up,
   .tabbrowser-arrowscrollbox > .scrollbutton-down,
   #TabsToolbar > toolbarbutton,
-  #TabsToolbar > toolbarpaletteitem > toolbarbutton {
+  #TabsToolbar > toolbarpaletteitem > toolbarbutton,
+  #TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
     min-width: .81cm;
   }
 

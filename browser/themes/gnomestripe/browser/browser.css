@@ -1188,7 +1188,8 @@ statusbarpanel#statusbar-display {
 }
 
 #TabsToolbar > toolbarbutton,
-#TabsToolbar > toolbarpaletteitem > toolbarbutton {
+#TabsToolbar > toolbarpaletteitem > toolbarbutton,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
   margin-bottom: 1px;
 }
 
