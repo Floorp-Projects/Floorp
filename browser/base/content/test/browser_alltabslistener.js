@@ -38,11 +38,6 @@ var gFrontProgressListener = {
 }
 
 var gAllProgressListener = {
-  onProgressChange: function (aBrowser, aWebProgress, aRequest,
-                              aCurSelfProgress, aMaxSelfProgress,
-                              aCurTotalProgress, aMaxTotalProgress) {
-  },
-
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     var state = "onStateChange";
     info("AllProgress: " + state + " 0x" + aStateFlags.toString(16));
