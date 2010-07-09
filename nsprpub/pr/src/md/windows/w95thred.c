@@ -38,7 +38,7 @@
 #include "primpl.h"
 #include <process.h>  /* for _beginthreadex() */
 
-#if _MSC_VER <= 1200
+#if defined(_MSC_VER) && _MSC_VER <= 1200
 /*
  * VC++ 6.0 doesn't have DWORD_PTR.
  */
