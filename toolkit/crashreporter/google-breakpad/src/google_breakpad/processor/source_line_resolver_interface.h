@@ -36,6 +36,7 @@
 
 #include <string>
 #include "google_breakpad/common/breakpad_types.h"
+#include "google_breakpad/processor/code_module.h"
 
 namespace google_breakpad {
 
@@ -53,37 +54,40 @@ class SourceLineResolverInterface {
 
   // Adds a module to this resolver, returning true on success.
   //
-  // module_name may be an arbitrary string.  Typically, it will be the
-  // filename of the module, optionally with version identifiers.
+  // module should have at least the code_file, debug_file,
+  // and debug_identifier members populated.
   //
   // map_file should contain line/address mappings for this module.
-  virtual bool LoadModule(const string &module_name,
+  virtual bool LoadModule(const CodeModule *module,
                           const string &map_file) = 0;
   // Same as above, but takes the contents of a pre-read map buffer
-  virtual bool LoadModuleUsingMapBuffer(const string &module_name,
+  virtual bool LoadModuleUsingMapBuffer(const CodeModule *module,
                                         const string &map_buffer) = 0;
 
-  // Returns true if a module with the given name has been loaded.
-  virtual bool HasModule(const string &module_name) const = 0;
+  // Request that the specified module be unloaded from this resolver.
+  // A resolver may choose to ignore such a request.
+  virtual void UnloadModule(const CodeModule *module) = 0;
+
+  // Returns true if the module has been loaded.
+  virtual bool HasModule(const CodeModule *module) = 0;
 
   // Fills in the function_base, function_name, source_file_name,
   // and source_line fields of the StackFrame.  The instruction and
   // module_name fields must already be filled in.  
-  virtual void FillSourceLineInfo(StackFrame *frame) const = 0;
+  virtual void FillSourceLineInfo(StackFrame *frame) = 0;
 
   // If Windows stack walking information is available covering
   // FRAME's instruction address, return a WindowsFrameInfo structure
   // describing it. If the information is not available, returns NULL.
   // A NULL return value does not indicate an error. The caller takes
   // ownership of any returned WindowsFrameInfo object.
-  virtual WindowsFrameInfo *FindWindowsFrameInfo(const StackFrame *frame) 
-    const = 0; 
+  virtual WindowsFrameInfo *FindWindowsFrameInfo(const StackFrame *frame) = 0; 
 
   // If CFI stack walking information is available covering ADDRESS,
   // return a CFIFrameInfo structure describing it. If the information
   // is not available, return NULL. The caller takes ownership of any
   // returned CFIFrameInfo object.
-  virtual CFIFrameInfo *FindCFIFrameInfo(const StackFrame *frame) const = 0;
+  virtual CFIFrameInfo *FindCFIFrameInfo(const StackFrame *frame) = 0;
 
  protected:
   // SourceLineResolverInterface cannot be instantiated except by subclasses

@@ -30,11 +30,13 @@
 // Unit test for MinidumpProcessor.  Uses a pre-generated minidump and
 // corresponding symbol file, and checks the stack frames for correctness.
 
-#include <cstdlib>
+#include <stdlib.h>
+
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <map>
+
 #include "breakpad_googletest_includes.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/call_stack.h"
@@ -260,7 +262,7 @@ TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
   ASSERT_EQ(state.system_info()->cpu, kSystemInfoCPU);
   ASSERT_EQ(state.system_info()->cpu_info, kSystemInfoCPUInfo);
   ASSERT_TRUE(state.crashed());
-  ASSERT_EQ(state.crash_reason(), "EXCEPTION_ACCESS_VIOLATION");
+  ASSERT_EQ(state.crash_reason(), "EXCEPTION_ACCESS_VIOLATION_WRITE");
   ASSERT_EQ(state.crash_address(), 0x45U);
   ASSERT_EQ(state.threads()->size(), size_t(1));
   ASSERT_EQ(state.requesting_thread(), 0);

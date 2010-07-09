@@ -55,5 +55,9 @@ FormNotifier.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormHistory2]),
 };
 
-let components = [FormNotifier];
-const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+// Gecko <2.0
+function NSGetModule(compMgr, fileSpec) XPCOMUtils.generateModule([FormNotifier]);
+
+// Gecko >=2.0
+if (typeof XPCOMUtils.generateNSGetFactory == "function")
+    const NSGetFactory = XPCOMUtils.generateNSGetFactory([FormNotifier]);
