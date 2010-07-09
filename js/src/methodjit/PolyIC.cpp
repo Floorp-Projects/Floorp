@@ -47,6 +47,7 @@
 #include "jsscopeinlines.h"
 #include "jspropertycache.h"
 #include "jspropertycacheinlines.h"
+#include "jsautooplen.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -1518,11 +1519,22 @@ ic::Name(VMFrame &f, uint32 index)
     }
 
     Value rval;
-    if (!cc.obj->isNative() || !cc.holder->isNative()) {
+    if (cc.prop && (!cc.obj->isNative() || !cc.holder->isNative())) {
         cc.holder->dropProperty(f.cx, cc.prop);
         if (!cc.obj->getProperty(f.cx, ATOM_TO_JSID(atom), &rval))
             THROW();
     } else {
+        if (!cc.prop) {
+            /* Kludge to allow (typeof foo == "undefined") tests. */
+            cc.disable("property not found");
+            JSOp op2 = js_GetOpcode(f.cx, f.fp->script, f.regs.pc + JSOP_NAME_LENGTH);
+            if (op2 == JSOP_TYPEOF) {
+                f.regs.sp[0].setUndefined();
+                return;
+            }
+            ReportAtomNotDefined(f.cx, atom);
+            THROW();
+        }
         JSScopeProperty *sprop = (JSScopeProperty *)cc.prop;
         NATIVE_GET(f.cx, cc.obj, cc.holder, sprop, JSGET_METHOD_BARRIER, &rval,
                    THROW());
