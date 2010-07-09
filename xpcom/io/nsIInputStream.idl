@@ -111,13 +111,13 @@ interface nsIInputStream : nsISupports
      * that is closed will throw an exception when this method is called.  That
      * enables the caller to know the condition of the stream before attempting
      * to read from it.  If a stream is at end-of-file, but not closed, then
-     * this method should return 0 bytes available.
+     * this method returns 0 bytes available.  (Note: some nsIInputStream
+     * implementations automatically close when eof is reached; some do not).
      *
      * @return number of bytes currently available in the stream, or
      *   PR_UINT32_MAX if the size of the stream exceeds PR_UINT32_MAX.
      *
-     * @throws NS_BASE_STREAM_CLOSED if the stream is closed normally or at
-     *   end-of-file
+     * @throws NS_BASE_STREAM_CLOSED if the stream is closed normally.
      * @throws <other-error> if the stream is closed due to some error
      *   condition
      */
