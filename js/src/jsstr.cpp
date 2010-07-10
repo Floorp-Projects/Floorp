@@ -2301,8 +2301,8 @@ BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
     return true;
 }
 
-static JSBool
-str_replace(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::str_replace(JSContext *cx, uintN argc, Value *vp)
 {
     ReplaceData rdata(cx);
     NORMALIZE_THIS(cx, vp, rdata.str);

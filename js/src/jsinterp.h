@@ -181,14 +181,32 @@ struct JSStackFrame
         return argv[-2];
     }
 
+    /* Infallible getter to return the callee object from this frame. */
+    JSObject &calleeObject() const {
+        JS_ASSERT(argv);
+        return argv[-2].toObject();
+    }
+
+    /*
+     * Fallible getter to compute the correct callee function object, which may
+     * require deferred cloning due to JSScope::methodReadBarrier. For a frame
+     * with null fun member, return true with *vp set from this->callee().
+     */
+    bool getValidCalleeObject(JSContext *cx, js::Value *vp);
+
+    void setCalleeObject(JSObject &callable) {
+        JS_ASSERT(argv);
+        argv[-2].setObject(callable);
+    }
+
     JSObject *callee() {
         return argv ? &argv[-2].toObject() : NULL;
     }
 
     /*
-     * Get the object associated with the Execution Context's
-     * VariableEnvironment (ES5 10.3). The given CallStackSegment must contain
-     * this stack frame.
+     * Get the "variable object" (ES3 term) associated with the Execution
+     * Context's VariableEnvironment (ES5 10.3). The given CallStackSegment
+     * must contain this stack frame.
      */
     JSObject *varobj(js::CallStackSegment *css) const;
 

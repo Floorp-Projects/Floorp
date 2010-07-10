@@ -2696,15 +2696,15 @@ BEGIN_CASE(JSOP_STOP)
                       == JSOP_CALL_LENGTH);
             TRACE_0(LeaveFrame);
             if (!TRACE_RECORDER(cx) && recursive) {
-                if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE) {
+                if (regs.pc[JSOP_CALL_LENGTH] == JSOP_TRACE) {
                     regs.pc += JSOP_CALL_LENGTH;
                     MONITOR_BRANCH(Record_LeaveFrame);
                     op = (JSOp)*regs.pc;
                     DO_OP();
                 }
             }
-            if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE ||
-                *(regs.pc + JSOP_CALL_LENGTH) == JSOP_NOP) {
+            if (regs.pc[JSOP_CALL_LENGTH] == JSOP_TRACE ||
+                regs.pc[JSOP_CALL_LENGTH] == JSOP_NOP) {
                 JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
                 regs.pc += JSOP_CALL_LENGTH;
                 len = JSOP_TRACE_LENGTH;
@@ -4064,7 +4064,8 @@ BEGIN_CASE(JSOP_GETXPROP)
             jsid id = ATOM_TO_JSID(atom);
             if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
                 ? !js_GetPropertyHelper(cx, obj, id,
-                                        fp->imacpc
+                                        (fp->imacpc ||
+                                         regs.pc[JSOP_GETPROP_LENGTH + i] == JSOP_IFEQ)
                                         ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                                         : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                                         &rval)
@@ -5727,24 +5728,19 @@ BEGIN_CASE(JSOP_LAMBDA)
             parent = fp->scopeChain;
 
             if (obj->getParent() == parent) {
-                op = JSOp(regs.pc[JSOP_LAMBDA_LENGTH]);
+                jsbytecode *pc2 = regs.pc + JSOP_LAMBDA_LENGTH;
+                JSOp op2 = JSOp(*pc2);
 
                 /*
-                 * Optimize ({method: function () { ... }, ...}) and
-                 * this.method = function () { ... }; bytecode sequences.
+                 * Optimize var obj = {method: function () { ... }, ...},
+                 * this.method = function () { ... }; and other significant
+                 * single-use-of-null-closure bytecode sequences.
+                 *
+                 * WARNING: code in TraceRecorder::record_JSOP_LAMBDA must
+                 * match the optimization cases in the following code that
+                 * break from the outer do-while(0).
                  */
-                if (op == JSOP_SETMETHOD) {
-#ifdef DEBUG
-                    JSOp op2 = JSOp(regs.pc[JSOP_LAMBDA_LENGTH + JSOP_SETMETHOD_LENGTH]);
-                    JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
-#endif
-
-                    const Value &lref = regs.sp[-1];
-                    if (lref.isObject() &&
-                        lref.toObject().getClass() == &js_ObjectClass) {
-                        break;
-                    }
-                } else if (op == JSOP_INITMETHOD) {
+                if (op2 == JSOP_INITMETHOD) {
 #ifdef DEBUG
                     const Value &lref = regs.sp[-1];
                     JS_ASSERT(lref.isObject());
@@ -5752,9 +5748,78 @@ BEGIN_CASE(JSOP_LAMBDA)
                     JS_ASSERT(obj2->getClass() == &js_ObjectClass);
                     JS_ASSERT(obj2->scope()->object == obj2);
 #endif
+
+                    fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(JSOP_LAMBDA_LENGTH)));
+                    JS_FUNCTION_METER(cx, joinedinitmethod);
                     break;
                 }
+
+                if (op2 == JSOP_SETMETHOD) {
+#ifdef DEBUG
+                    op2 = JSOp(pc2[JSOP_SETMETHOD_LENGTH]);
+                    JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
+#endif
+
+                    const Value &lref = regs.sp[-1];
+                    if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
+                        fun->setMethodAtom(script->getAtom(GET_FULL_INDEX(JSOP_LAMBDA_LENGTH)));
+                        JS_FUNCTION_METER(cx, joinedsetmethod);
+                        break;
+                    }
+                } else if (fun->joinable()) {
+                    if (op2 == JSOP_CALL) {
+                        /*
+                         * Array.prototype.sort and String.prototype.replace are
+                         * optimized as if they are special form. We know that they
+                         * won't leak the joined function object in obj, therefore
+                         * we don't need to clone that compiler- created function
+                         * object for identity/mutation reasons.
+                         */
+                        int iargc = GET_ARGC(pc2);
+
+                        /*
+                         * Note that we have not yet pushed obj as the final argument,
+                         * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
+                         * is the callee for this JSOP_CALL.
+                         */
+                        JSFunction *calleeFun =
+                            GET_FUNCTION_PRIVATE(cx, &regs.sp[1 - (iargc + 2)].toObject());
+                        FastNative fastNative = FUN_FAST_NATIVE(calleeFun);
+
+                        if (iargc == 1 && fastNative == array_sort) {
+                            JS_FUNCTION_METER(cx, joinedsort);
+                            break;
+                        }
+                        if (iargc == 2 && fastNative == str_replace) {
+                            JS_FUNCTION_METER(cx, joinedreplace);
+                            break;
+                        }
+                    } else if (op2 == JSOP_NULL) {
+                        pc2 += JSOP_NULL_LENGTH;
+                        op2 = JSOp(*pc2);
+
+                        if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0) {
+                            JS_FUNCTION_METER(cx, joinedmodulepat);
+                            break;
+                        }
+                    }
+                }
             }
+
+#ifdef JS_FUNCTION_METERING
+            // No locking, this is mainly for js shell testing.
+            ++rt->functionMeter.unjoined;
+
+            typedef JSRuntime::FunctionCountMap HM;
+            HM &h = rt->unjoinedFunctionCountMap;
+            HM::AddPtr p = h.lookupForAdd(fun);
+            if (!p) {
+                h.add(p, fun, 1);
+            } else {
+                JS_ASSERT(p->key == fun);
+                ++p->value;
+            }
+#endif
         } else {
             parent = js_GetScopeChain(cx, fp);
             if (!parent)
