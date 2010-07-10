@@ -4520,6 +4520,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ASSERT(index < JS_BIT(20));
             pn->pn_index = index;
             op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFLOCALFUN_FC : JSOP_DEFLOCALFUN;
+            if ((pn->pn_dflags & PND_CLOSED) && !(cg->flags & TCF_FUN_USES_EVAL)) {
+                CG_SWITCH_TO_PROLOG(cg);
+                EMIT_UINT16_IMM_OP(JSOP_DEFUPVAR, pn->pn_cookie.asInteger());
+                CG_SWITCH_TO_MAIN(cg);
+            }
             if (!EmitSlotIndexOp(cx, op, slot, index, cg))
                 return JS_FALSE;
         }
