@@ -252,6 +252,8 @@ const uint32 JSSLOT_PARENT  = 0;
  */
 const uint32 JSSLOT_PRIVATE = 1;
 
+class JSFunction;
+
 /*
  * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
  * 64 bytes on 64-bit systems. The JSFunction struct is an extension of this
@@ -293,7 +295,7 @@ struct JSObject {
     js::Value   *dslots;                    /* dynamically allocated slots */
 #if JS_BITS_PER_WORD == 32
     // TODO: this is needed to pad out fslots. alternatively, clasp could be
-    // merged by with flags and the padding removed, but I think the upcoming
+    // merged with flags and the padding removed, but I think the upcoming
     // removal of JSScope will change this all anyway so I will leave this
     // here for now.
     uint32      padding;
@@ -560,6 +562,22 @@ struct JSObject {
     inline void setDateUTCTime(const js::Value &pthis);
 
     /*
+     * Function-specific getters and setters.
+     */
+
+  private:
+    friend class JSFunction;
+
+    static const uint32 JSSLOT_FUN_METHOD_ATOM = JSSLOT_PRIVATE + 1;
+    static const uint32 JSSLOT_FUN_METHOD_OBJ  = JSSLOT_PRIVATE + 2;
+
+  public:
+    static const uint32 FUN_FIXED_RESERVED_SLOTS = 2;
+
+    inline bool hasMethodObj(const JSObject& obj) const;
+    inline void setMethodObj(JSObject& obj);
+
+    /*
      * RegExp-specific getters and setters.
      */
 
@@ -722,6 +740,8 @@ struct JSObject {
 
     void swap(JSObject *obj);
 
+    inline bool canHaveMethodBarrier() const;
+
     inline bool isArguments() const;
     inline bool isArray() const;
     inline bool isDenseArray() const;
@@ -732,6 +752,9 @@ struct JSObject {
     inline bool isPrimitive() const;
     inline bool isDate() const;
     inline bool isFunction() const;
+    inline bool isObject() const;
+    inline bool isWith() const;
+    inline bool isBlock() const;
     inline bool isRegExp() const;
     inline bool isXML() const;
     inline bool isNamespace() const;
@@ -830,6 +853,10 @@ class ValueArray {
 extern js::Class js_ObjectClass;
 extern js::Class js_WithClass;
 extern js::Class js_BlockClass;
+
+inline bool JSObject::isObject() const { return getClass() == &js_ObjectClass; }
+inline bool JSObject::isWith() const   { return getClass() == &js_WithClass; }
+inline bool JSObject::isBlock() const  { return getClass() == &js_BlockClass; }
 
 /*
  * Block scope object macros.  The slots reserved by js_BlockClass are:
