@@ -165,9 +165,9 @@ Parser::init(const jschar *base, size_t length,
 {
     JSContext *cx = context;
 
-    tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
+    tempPoolMark = cx->tempPool.getMark();
     if (!tokenStream.init(base, length, fp, filename, lineno)) {
-        JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
+        cx->tempPool.release(tempPoolMark);
         return false;
     }
     return true;
@@ -180,7 +180,7 @@ Parser::~Parser()
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
     tokenStream.close();
-    JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
+    cx->tempPool.release(tempPoolMark);
 }
 
 void
@@ -204,7 +204,7 @@ Parser::newObjectBox(JSObject *obj)
      * parsing and code generation for the whole script or top-level function.
      */
     JSObjectBox *objbox;
-    JS_ARENA_ALLOCATE_TYPE(objbox, JSObjectBox, &context->tempPool);
+    context->tempPool.allocateType<JSObjectBox>(objbox);
     if (!objbox) {
         js_ReportOutOfScriptQuota(context);
         return NULL;
@@ -229,7 +229,7 @@ Parser::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
      * parsing and code generation for the whole script or top-level function.
      */
     JSFunctionBox *funbox;
-    JS_ARENA_ALLOCATE_TYPE(funbox, JSFunctionBox, &context->tempPool);
+    context->tempPool.allocateType<JSFunctionBox>(funbox);
     if (!funbox) {
         js_ReportOutOfScriptQuota(context);
         return NULL;
@@ -453,7 +453,7 @@ NewOrRecycledNode(JSTreeContext *tc)
     if (!pn) {
         JSContext *cx = tc->parser->context;
 
-        JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
+        cx->tempPool.allocateType<JSParseNode>(pn);
         if (!pn)
             js_ReportOutOfScriptQuota(cx);
     } else {
@@ -739,10 +739,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     if (!compiler.init(chars, length, file, filename, lineno))
         return NULL;
 
-    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode),
-                     &cx->scriptStackQuota);
-    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote),
-                     &cx->scriptStackQuota);
+    codePool.init("code", 1024, sizeof(jsbytecode), &cx->scriptStackQuota);
+    notePool.init("note", 1024, sizeof(jssrcnote), &cx->scriptStackQuota);
 
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
@@ -936,8 +934,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     printf("Code-gen growth: %d (%u bytecodes, %u srcnotes)\n",
            (char *)sbrk(0) - (char *)before, CG_OFFSET(&cg), cg.noteCount);
 #endif
-#ifdef JS_ARENAMETER
-    JS_DumpArenaStats(stdout);
+#ifdef DEBUG
+    JS_DumpArenaStats();
 #endif
     script = js_NewScriptFromCG(cx, &cg);
     if (script && funbox && script != script->emptyScript())
@@ -954,8 +952,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
 #endif
 
   out:
-    JS_FinishArenaPool(&codePool);
-    JS_FinishArenaPool(&notePool);
+    codePool.finish();
+    notePool.finish();
     return script;
 
   too_many_slots:
@@ -1513,10 +1511,8 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
 
     /* No early return from after here until the js_FinishArenaPool calls. */
     JSArenaPool codePool, notePool;
-    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode),
-                     &cx->scriptStackQuota);
-    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote),
-                     &cx->scriptStackQuota);
+    codePool.init("code", 1024, sizeof(jsbytecode), &cx->scriptStackQuota);
+    notePool.init("note", 1024, sizeof(jssrcnote), &cx->scriptStackQuota);
 
     Parser &parser = compiler.parser;
     TokenStream &tokenStream = parser.tokenStream;
@@ -1588,8 +1584,8 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
     }
 
     /* Restore saved state and release code generation arenas. */
-    JS_FinishArenaPool(&codePool);
-    JS_FinishArenaPool(&notePool);
+    codePool.finish();
+    notePool.finish();
     return pn != NULL;
 }
 

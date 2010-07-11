@@ -430,7 +430,7 @@ NewRENode(CompilerState *state, REOp op)
     RENode *ren;
 
     cx = state->context;
-    JS_ARENA_ALLOCATE_CAST(ren, RENode *, &cx->tempPool, sizeof *ren);
+    cx->tempPool.allocateCast<RENode *>(ren, sizeof *ren);
     if (!ren) {
         js_ReportOutOfScriptQuota(cx);
         return NULL;
@@ -3330,13 +3330,13 @@ CompileRegExpToNative(JSContext* cx, JSRegExp* re, Fragment* fragment)
     RegExpNativeCompiler rc(cx, re, &state, fragment);
 
     JS_ASSERT(!fragment->code());
-    mark = JS_ARENA_MARK(&cx->tempPool);
+    mark = cx->tempPool.getMark();
     if (!CompileRegExpToAST(cx, NULL, re->source, re->flags, state)) {
         goto out;
     }
     rv = rc.compile();
  out:
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
+    cx->tempPool.release(mark);
     return rv;
 }
 
@@ -3378,7 +3378,7 @@ js_NewRegExp(JSContext *cx, TokenStream *ts,
     uintN i;
 
     re = NULL;
-    mark = JS_ARENA_MARK(&cx->tempPool);
+    mark = cx->tempPool.getMark();
 
     /*
      * Parsing the string as flat is now expressed internally using
@@ -3438,7 +3438,7 @@ js_NewRegExp(JSContext *cx, TokenStream *ts,
     re->source = str;
 
 out:
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
+    cx->tempPool.release(mark);
     return re;
 }
 
@@ -3518,8 +3518,7 @@ PushBackTrackState(REGlobalData *gData, REOp op,
         ptrdiff_t offset = (char *)result - (char *)gData->backTrackStack;
 
         btincr = JS_ROUNDUP(btincr, btsize);
-        JS_ARENA_GROW_CAST(gData->backTrackStack, REBackTrackData *,
-                           &gData->cx->regexpPool, btsize, btincr);
+        gData->cx->regexpPool.growCast<REBackTrackData *>(gData->backTrackStack, btsize, btincr);
         if (!gData->backTrackStack) {
             js_ReportOutOfScriptQuota(gData->cx);
             gData->ok = JS_FALSE;
@@ -3977,8 +3976,7 @@ ReallocStateStack(REGlobalData *gData)
     size_t limit = gData->stateStackLimit;
     size_t sz = sizeof(REProgState) * limit;
 
-    JS_ARENA_GROW_CAST(gData->stateStack, REProgState *,
-                       &gData->cx->regexpPool, sz, sz);
+    gData->cx->regexpPool.growCast<REProgState *>(gData->stateStack, sz, sz);
     if (!gData->stateStack) {
         js_ReportOutOfScriptQuota(gData->cx);
         gData->ok = JS_FALSE;
@@ -4838,9 +4836,8 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re, size_t length)
     uintN i;
 
     gData->backTrackStackSize = INITIAL_BACKTRACK;
-    JS_ARENA_ALLOCATE_CAST(gData->backTrackStack, REBackTrackData *,
-                           &cx->regexpPool,
-                           INITIAL_BACKTRACK);
+    JSArenaPool &regexpPool = cx->regexpPool;
+    regexpPool.allocateCast<REBackTrackData *>(gData->backTrackStack, INITIAL_BACKTRACK);
     if (!gData->backTrackStack)
         goto bad;
 
@@ -4855,9 +4852,8 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re, size_t length)
     }
 
     gData->stateStackLimit = INITIAL_STATESTACK;
-    JS_ARENA_ALLOCATE_CAST(gData->stateStack, REProgState *,
-                           &cx->regexpPool,
-                           sizeof(REProgState) * INITIAL_STATESTACK);
+    regexpPool.allocateCast<REProgState *>(gData->stateStack,
+                                           sizeof(REProgState) * INITIAL_STATESTACK);
     if (!gData->stateStack)
         goto bad;
 
@@ -4866,10 +4862,8 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re, size_t length)
     gData->regexp = re;
     gData->ok = JS_TRUE;
 
-    JS_ARENA_ALLOCATE_CAST(result, REMatchState *,
-                           &cx->regexpPool,
-                           offsetof(REMatchState, parens)
-                           + re->parenCount * sizeof(RECapture));
+    regexpPool.allocateCast<REMatchState *>(result, offsetof(REMatchState, parens)
+                                            + re->parenCount * sizeof(RECapture));
     if (!result)
         goto bad;
 
@@ -4922,17 +4916,16 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     gData.start = start;
     gData.skipped = 0;
 
-    if (!cx->regexpPool.first.next) {
+    if (!cx->regexpPool.getSecond()) {
         /*
          * The first arena in the regexpPool must have a timestamp at its base.
          */
-        JS_ARENA_ALLOCATE_CAST(timestamp, int64 *,
-                               &cx->regexpPool, sizeof *timestamp);
+        cx->regexpPool.allocateCast<int64 *>(timestamp, sizeof *timestamp);
         if (!timestamp)
             return JS_FALSE;
         *timestamp = JS_Now();
     }
-    mark = JS_ARENA_MARK(&cx->regexpPool);
+    mark = cx->regexpPool.getMark();
 
     x = InitMatch(cx, &gData, re, length);
 
@@ -5076,7 +5069,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     res->rightContext.length = gData.cpend - ep;
 
 out:
-    JS_ARENA_RELEASE(&cx->regexpPool, mark);
+    cx->regexpPool.release(mark);
     return ok;
 }
 
@@ -5216,9 +5209,8 @@ js_InitRegExpStatics(JSContext *cx)
      *   + (sizeof(REProgState) * INITIAL_STATESTACK)
      *   + (offsetof(REMatchState, parens) + avgParanSize * sizeof(RECapture))
      */
-    JS_InitArenaPool(&cx->regexpPool, "regexp",
-                     12 * 1024 - 40,  /* FIXME: bug 421435 */
-                     sizeof(void *), &cx->scriptStackQuota);
+    cx->regexpPool.init("regexp", 12 * 1024 - 40,  /* FIXME: bug 421435 */
+                        sizeof(void *), &cx->scriptStackQuota);
 
     JS_ClearRegExpStatics(cx);
 }
@@ -5254,7 +5246,7 @@ void
 js_FreeRegExpStatics(JSContext *cx)
 {
     JS_ClearRegExpStatics(cx);
-    JS_FinishArenaPool(&cx->regexpPool);
+    cx->regexpPool.finish();
 }
 
 #define DEFINE_STATIC_GETTER(name, code)                                       \
