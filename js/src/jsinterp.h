@@ -160,8 +160,6 @@ struct JSStackFrame
     JSObject        *blockChain;
 
     uint32          flags;          /* frame flags -- see below */
-    JSStackFrame    *displaySave;   /* previous value of display entry for
-                                       script->staticLevel */
 
     /* Members only needed for inline calls. */
     void            *hookData;      /* debugger call hook data */
@@ -411,14 +409,17 @@ GetInstancePrivate(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
 extern bool
 ValueToId(JSContext *cx, const Value &v, jsid *idp);
 
-} /* namespace js */
-
 /*
- * Given an active context, a static scope level, and an upvar cookie, return
- * the value of the upvar.
+ * @param closureLevel      The static level of the closure that the cookie
+ *                          pertains to.
+ * @param cookie            Level amount is a "skip" (delta) value from the
+ *                          closure level.
+ * @return  The value of the upvar.
  */
 extern const js::Value &
-js_GetUpvar(JSContext *cx, uintN level, js::UpvarCookie cookie);
+GetUpvar(JSContext *cx, uint16 closureLevel, js::UpvarCookie cookie);
+
+} /* namespace js */
 
 /*
  * JS_LONE_INTERPRET indicates that the compiler should see just the code for

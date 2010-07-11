@@ -84,6 +84,7 @@ class UpvarCookie
      * FREE_VALUE can be used as a special value.
      */
     static const uint16 FREE_LEVEL = 0x3fff;
+    static const uint16 MAX_LEVEL = FREE_LEVEL - 1;
     static const uint16 CALLEE_SLOT = 0xffff;
     static bool isLevelReserved(uint16 level) { return level >= FREE_LEVEL; }
 
