@@ -18,3 +18,4 @@ include xul/reftest.list
 == emptypasswd-2.html emptypasswd-ref.html
 == caret_on_positioned.html caret_on_positioned-ref.html
 == spellcheck-1.html spellcheck-ref.html
+!= caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
