@@ -1762,7 +1762,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
                 if (fun->u.i.nupvars) {
                     fputs("\nupvars: {\n", stdout);
 
-                    void *mark = JS_ARENA_MARK(&cx->tempPool);
+                    void *mark = cx->tempPool.getMark();
                     jsuword *localNames = js_GetLocalNameArray(cx, fun, &cx->tempPool);
                     if (!localNames)
                         return false;
@@ -1778,7 +1778,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
                                js_AtomToPrintableString(cx, atom), cookie.level(), cookie.slot());
                     }
 
-                    JS_ARENA_RELEASE(&cx->tempPool, mark);
+                    cx->tempPool.release(mark);
                     putchar('}');
                 }
             }

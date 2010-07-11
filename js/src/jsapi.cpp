@@ -2442,8 +2442,8 @@ JS_GC(JSContext *cx)
     LeaveTrace(cx);
 
     /* Don't nuke active arenas if executing or compiling. */
-    if (cx->tempPool.current == &cx->tempPool.first)
-        JS_FinishArenaPool(&cx->tempPool);
+    if (cx->tempPool.currentIsFirst())
+        cx->tempPool.finish();
     js_GC(cx, GC_NORMAL);
 }
 
@@ -4131,7 +4131,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         JSUpvarArray *uva = fun->u.i.script->upvars();
         JS_ASSERT(uva->length <= size_t(clone->dslots[-1]));
 
-        void *mark = JS_ARENA_MARK(&cx->tempPool);
+        void *mark = cx->tempPool.getMark();
         jsuword *names = js_GetLocalNameArray(cx, fun, &cx->tempPool);
         if (!names)
             return NULL;
@@ -4155,7 +4155,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         }
 
       break2:
-        JS_ARENA_RELEASE(&cx->tempPool, mark);
+        cx->tempPool.release(mark);
         if (i < n)
             return NULL;
     }
