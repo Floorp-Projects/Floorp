@@ -1002,7 +1002,10 @@ nsZipCursor::nsZipCursor(nsZipItem *item, nsZipArchive *aZip, PRUint8* aBuf, PRU
   mDoCRC(doCRC)
 {
   if (mItem->Compression() == DEFLATED) {
-    nsresult status = gZlibInit(&mZs);
+#ifdef DEBUG
+    nsresult status =
+#endif
+      gZlibInit(&mZs);
     NS_ASSERTION(status == NS_OK, "Zlib failed to initialize");
     NS_ASSERTION(aBuf, "Must pass in a buffer for DEFLATED nsZipItem");
   }
