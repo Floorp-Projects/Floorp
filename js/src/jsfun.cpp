@@ -339,7 +339,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     wfun->atom = fun->atom;
 
     if (fun->hasLocalNames()) {
-        void *mark = cx->tempPool.getMark();
+        void *mark = JS_ARENA_MARK(&cx->tempPool);
         jsuword *names = js_GetLocalNameArray(cx, fun, &cx->tempPool);
         if (!names)
             return NULL;
@@ -361,7 +361,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
                 break;
         }
 
-        cx->tempPool.release(mark);
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
         if (!ok)
             return NULL;
         JS_ASSERT(wfun->nargs == fun->nargs);
@@ -956,7 +956,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
     if (n == 0)
         return JS_TRUE;
 
-    mark = cx->tempPool.getMark();
+    mark = JS_ARENA_MARK(&cx->tempPool);
 
     MUST_FLOW_THROUGH("out");
     names = js_GetLocalNameArray(cx, fun, &cx->tempPool);
@@ -990,7 +990,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
     ok = JS_TRUE;
 
   out:
-    cx->tempPool.release(mark);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
 }
 
@@ -1602,13 +1602,16 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     /* do arguments and local vars */
     n = nargs + nvars + nupvars;
     if (n != 0) {
-        JSArenaPool &tempPool = xdr->cx->tempPool;
-        void *mark = tempPool.getMark();
+        void *mark;
         uintN i;
+        uintN bitmapLength;
+        uint32 *bitmap;
         jsuword *names;
         JSAtom *name;
         JSLocalKind localKind;
+
         bool ok = true;
+        mark = JS_ARENA_MARK(&xdr->cx->tempPool);
 
         /*
          * From this point the control must flow via the label release_mark.
@@ -1621,16 +1624,16 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
          * name is declared as const, not as ordinary var.
          * */
         MUST_FLOW_THROUGH("release_mark");
-        uintN bitmapLength = JS_HOWMANY(n, JS_BITS_PER_UINT32);
-        uint32 *bitmap;
-        tempPool.allocateCast<uint32 *>(bitmap, bitmapLength * sizeof *bitmap);
+        bitmapLength = JS_HOWMANY(n, JS_BITS_PER_UINT32);
+        JS_ARENA_ALLOCATE_CAST(bitmap, uint32 *, &xdr->cx->tempPool,
+                               bitmapLength * sizeof *bitmap);
         if (!bitmap) {
             js_ReportOutOfScriptQuota(xdr->cx);
             ok = false;
             goto release_mark;
         }
         if (xdr->mode == JSXDR_ENCODE) {
-            names = js_GetLocalNameArray(xdr->cx, fun, &tempPool);
+            names = js_GetLocalNameArray(xdr->cx, fun, &xdr->cx->tempPool);
             if (!names) {
                 ok = false;
                 goto release_mark;
@@ -1689,7 +1692,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         }
 
       release_mark:
-        tempPool.release(mark);
+        JS_ARENA_RELEASE(&xdr->cx->tempPool, mark);
         if (!ok)
             return false;
 
@@ -2260,8 +2263,9 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * for a terminating 0.  Mark cx->tempPool for later release, to free
          * collected_args and its tokenstream in one swoop.
          */
-        mark = cx->tempPool.getMark();
-        cx->tempPool.allocateCast<jschar *>(cp, (args_length + 1) * sizeof(jschar));
+        mark = JS_ARENA_MARK(&cx->tempPool);
+        JS_ARENA_ALLOCATE_CAST(cp, jschar *, &cx->tempPool,
+                               (args_length+1) * sizeof(jschar));
         if (!cp) {
             js_ReportOutOfScriptQuota(cx);
             return JS_FALSE;
@@ -2283,7 +2287,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
         /* Initialize a tokenstream that reads from the given string. */
         if (!ts.init(collected_args, args_length, NULL, filename, lineno)) {
-            cx->tempPool.release(mark);
+            JS_ARENA_RELEASE(&cx->tempPool, mark);
             return JS_FALSE;
         }
 
@@ -2343,7 +2347,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                  JSMSG_BAD_FORMAL);
         }
         ts.close();
-        cx->tempPool.release(mark);
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
         if (state != OK)
             return JS_FALSE;
     }
@@ -2952,7 +2956,7 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool)
      * No need to check for overflow of the allocation size as we are making a
      * copy of already allocated data. As such it must fit size_t.
      */
-    pool->allocateCast<jsuword *>(names, (size_t) n * sizeof *names);
+    JS_ARENA_ALLOCATE_CAST(names, jsuword *, pool, (size_t) n * sizeof *names);
     if (!names) {
         js_ReportOutOfScriptQuota(cx);
         return NULL;
