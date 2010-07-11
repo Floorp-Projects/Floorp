@@ -61,8 +61,15 @@ PRIntn sign(PRIntn val) {
 // iso-latin-1 strings, so the comparison must be valid.
 static void Check(const char* s1, const char* s2, PRIntn n)
 {
-  PRIntn clib = PL_strcmp(s1, s2);
-  PRIntn clib_n = PL_strncmp(s1, s2, n);
+#ifdef DEBUG
+  PRIntn clib =
+#endif
+    PL_strcmp(s1, s2);
+
+#ifdef DEBUG
+  PRIntn clib_n =
+#endif
+    PL_strncmp(s1, s2, n);
 
   nsAutoString t1,t2; 
   t1.AssignWithConversion(s1);
@@ -70,8 +77,15 @@ static void Check(const char* s1, const char* s2, PRIntn n)
   const PRUnichar* us1 = t1.get();
   const PRUnichar* us2 = t2.get();
 
-  PRIntn u2 = nsCRT::strcmp(us1, us2);
-  PRIntn u2_n = nsCRT::strncmp(us1, us2, n);
+#ifdef DEBUG
+  PRIntn u2 =
+#endif
+    nsCRT::strcmp(us1, us2);
+
+#ifdef DEBUG
+  PRIntn u2_n =
+#endif
+    nsCRT::strncmp(us1, us2, n);
 
   NS_ASSERTION(sign(clib) == sign(u2), "strcmp");
   NS_ASSERTION(sign(clib_n) == sign(u2_n), "strncmp");
