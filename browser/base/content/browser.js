@@ -4490,29 +4490,21 @@ var CombinedStopReload = {
 };
 
 var TabsProgressListener = {
-  onProgressChange: function (aBrowser, aWebProgress, aRequest,
-                              aCurSelfProgress, aMaxSelfProgress,
-                              aCurTotalProgress, aMaxTotalProgress) {
-  },
-
-  onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
 #ifdef MOZ_CRASHREPORTER
+  onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     if (aRequest instanceof Ci.nsIChannel &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT &&
         gCrashReporter.enabled) {
       gCrashReporter.annotateCrashReport("URL", aRequest.URI.spec);
     }
-#endif
   },
+#endif
 
   onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI) {
     // Filter out any sub-frame loads
     if (aBrowser.contentWindow == aWebProgress.DOMWindow)
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
-  },
-
-  onStatusChange: function (aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
   },
 
   onRefreshAttempted: function (aBrowser, aWebProgress, aURI, aDelay, aSameURI) {
@@ -4561,9 +4553,6 @@ var TabsProgressListener = {
       return false;
     }
     return true;
-  },
-
-  onSecurityChange: function (aBrowser, aWebProgress, aRequest, aState) {
   }
 }
 
