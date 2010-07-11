@@ -103,11 +103,11 @@ window.Group = function(listOfEls, options) {
   // The <TabItem> for the group's active tab. 
   this._activeTab = null;
   
- 	// Variables: xDensity, yDensity
- 	// "density" ranges from 0 to 1, with 0 being "not dense" = "squishable" and 1 being "dense"
- 	// = "not squishable". For example, if there is extra space in the vertical direction, 
- 	// yDensity will be < 1. These are set by <Group.arrange>, as it is dependent on the tab items
- 	// inside the group.
+   // Variables: xDensity, yDensity
+   // "density" ranges from 0 to 1, with 0 being "not dense" = "squishable" and 1 being "dense"
+   // = "not squishable". For example, if there is extra space in the vertical direction, 
+   // yDensity will be < 1. These are set by <Group.arrange>, as it is dependent on the tab items
+   // inside the group.
   this.xDensity = 0;
   this.yDensity = 0;
 
@@ -123,7 +123,7 @@ window.Group = function(listOfEls, options) {
     
   if(!rectToBe) {
     rectToBe = Groups.getBoundingBox(listOfEls);
-		rectToBe.inset( -30, -30 );
+    rectToBe.inset( -30, -30 );
   }
 
   var $container = options.container; 
@@ -312,7 +312,7 @@ window.Group = function(listOfEls, options) {
   
   Groups.register(this);
 
-	// ___ Position
+  // ___ Position
   this.setBounds(rectToBe);
   this.snap();
   
@@ -370,9 +370,9 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // ----------
   // Function: isEmpty
   // Returns true if the tab group is empty and unnamed.
-	isEmpty: function() {
-		return this._children.length == 0 && !this.getTitle();
-	},
+  isEmpty: function() {
+    return this._children.length == 0 && !this.getTitle();
+  },
 
   // ----------
   // Function: save
@@ -668,10 +668,9 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
             var insertLeft = dropPos.left <= box.left + box.width/2;
             if( !insertLeft ) 
               return best.index+1;
-            else 
-              return best.index;
-          } else 
-            return self._children.length;
+            return best.index;
+          }
+          return self._children.length;
         }
         
         return 0;      
@@ -882,30 +881,30 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         if(this.isNewTabsGroup()) {
           arrangeOptions.count++;
         } else if (!count) {
-					this.xDensity = 0;
-					this.yDensity = 0;
+          this.xDensity = 0;
+          this.yDensity = 0;
           return;
         }
     
         var rects = Items.arrange(this._children, bb, arrangeOptions);
-    		
-    		// yDensity = (the distance of the bottom of the last tab to the top of the content area) 
-    		// / (the total available content height)
-    		this.yDensity = (rects[rects.length - 1].bottom - bb.top) / (bb.height);
+        
+        // yDensity = (the distance of the bottom of the last tab to the top of the content area) 
+        // / (the total available content height)
+        this.yDensity = (rects[rects.length - 1].bottom - bb.top) / (bb.height);
 
-    		// xDensity = (the distance from the left of the content area to the right of the rightmost
-    		// tab) / (the total available content width)
-    		
-    		// first, find the right of the rightmost tab! luckily, they're in order.
-    		// TODO: does this change for rtl?
-    		var rightMostRight = 0;
-				for each (let rect in rects) {
-					if (rect.right > rightMostRight)
-						rightMostRight = rect.right;
-					else
-						break;
-				}
-    		this.xDensity = (rightMostRight - bb.left) / (bb.width);
+        // xDensity = (the distance from the left of the content area to the right of the rightmost
+        // tab) / (the total available content width)
+        
+        // first, find the right of the rightmost tab! luckily, they're in order.
+        // TODO: does this change for rtl?
+        var rightMostRight = 0;
+        for each (let rect in rects) {
+          if (rect.right > rightMostRight)
+            rightMostRight = rect.right;
+          else
+            break;
+        }
+        this.xDensity = (rightMostRight - bb.left) / (bb.width);
         
         iQ.each(this._children, function(index, child) {
           if(!child.locked.bounds) {
@@ -972,14 +971,14 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     if(bbAspect > itemAspect) { // Tall, thin group
       w = bb.width * scale;
       h = w * itemAspect;
-			// let's say one, because, even though there's more space, we're enforcing that with scale.
-			this.xDensity = 1;
-			this.yDensity = h / (bb.height * scale);
+      // let's say one, because, even though there's more space, we're enforcing that with scale.
+      this.xDensity = 1;
+      this.yDensity = h / (bb.height * scale);
     } else { // Short, wide group
       h = bb.height * scale;
       w = h * (1 / itemAspect);
-			this.yDensity = 1;
-			this.xDensity = h / (bb.width * scale);
+      this.yDensity = 1;
+      this.xDensity = h / (bb.width * scale);
     }
     
     // x is the left margin that the stack will have, within the content area (bb)

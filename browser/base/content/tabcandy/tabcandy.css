@@ -4,21 +4,21 @@ html {
 }
 
 body { 
-	font-family: Tahoma, sans-serif !important;
-	padding: 0px;	
-	color: rgba(0,0,0,0.4);
-	font-size:12px;
-	line-height: 16px;
-	margin: 0 auto;	
+  font-family: Tahoma, sans-serif !important;
+  padding: 0px;  
+  color: rgba(0,0,0,0.4);
+  font-size:12px;
+  line-height: 16px;
+  margin: 0 auto;  
 }
 
 #bg {
-	background: -moz-linear-gradient(top,#C4C4C4,#9E9E9E);
-	position:absolute;
-	top:0;
-	left:0;
-	width: 100%;
-	height: 100%;
+  background: -moz-linear-gradient(top,#C4C4C4,#9E9E9E);
+  position:absolute;
+  top:0;
+  left:0;
+  width: 100%;
+  height: 100%;
   z-index: -999999;
 }
 
@@ -27,93 +27,93 @@ body {
 
 
 .tab {
-	position: absolute;
-	padding: 4px 6px 6px 4px;
-	border: 1px solid rgba(230,230,230,1);
-	background-color: rgba(245,245,245,1);
-	overflow: visible !important;
-	-moz-border-radius: 0.4em;
-	-moz-box-shadow: inset rgba(255, 255, 255, 0.6) 0 0 0 2px;
-  cursor: pointer;	
+  position: absolute;
+  padding: 4px 6px 6px 4px;
+  border: 1px solid rgba(230,230,230,1);
+  background-color: rgba(245,245,245,1);
+  overflow: visible !important;
+  -moz-border-radius: 0.4em;
+  -moz-box-shadow: inset rgba(255, 255, 255, 0.6) 0 0 0 2px;
+  cursor: pointer;  
 }
 
 .tab canvas {
-	border: 1px solid rgba(0,0,0,0.2);
-	width: 100%;
-	height: 100%;
+  border: 1px solid rgba(0,0,0,0.2);
+  width: 100%;
+  height: 100%;
 }
 
 .thumb {
-	width: 100%;
-  height: 100%;		
+  width: 100%;
+  height: 100%;    
 }
 
 .thumbShadow {
-		position: absolute;
-		border-bottom: 5px solid rgba(0,0,0,0.05);
-		margin-right: -12px;
-		bottom: 2px;
-		width: 94.5%;
+    position: absolute;
+    border-bottom: 5px solid rgba(0,0,0,0.05);
+    margin-right: -12px;
+    bottom: 2px;
+    width: 94.5%;
 }
 
 .favicon {
-	position: absolute;
-	background-color: rgba(245,245,245,1);
-	-moz-border-radius-bottomright: 0.4em;
-	-moz-box-shadow: 
-		inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
-		inset rgba(255, 255, 255, 0.6) -2px 0px 0px;
-	padding: 4px 6px 6px 4px;
-	top: 4px;
-	left: 4px;
-	border-right: 1px solid rgba(0,0,0,0.2);
-	border-bottom: 1px solid rgba(0,0,0,0.2);
+  position: absolute;
+  background-color: rgba(245,245,245,1);
+  -moz-border-radius-bottomright: 0.4em;
+  -moz-box-shadow: 
+    inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
+    inset rgba(255, 255, 255, 0.6) -2px 0px 0px;
+  padding: 4px 6px 6px 4px;
+  top: 4px;
+  left: 4px;
+  border-right: 1px solid rgba(0,0,0,0.2);
+  border-bottom: 1px solid rgba(0,0,0,0.2);
   height: 17;
   width: 17;
 }
 
 .favicon img {
-	border: none;
-	width: 16px;
-	height: 16px;
+  border: none;
+  width: 16px;
+  height: 16px;
 }
 
 
 .close {
-	position: absolute;
-	top: 6px;
-	right: 6px;
-	width: 16px;
-	height: 16px;
-	background: url(chrome://global/skin/icons/closetab.png) no-repeat;
-	opacity: 0.2;
-	cursor: pointer;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  background: url(chrome://global/skin/icons/closetab.png) no-repeat;
+  opacity: 0.2;
+  cursor: pointer;
 }
 
 .close:hover{ opacity: 1.0;}
 
 .expander {
-	position: absolute;
-	bottom: 6px;
-	right: 6px;
-	width: 16px;
-	height: 16px;
-	background: url(chrome://global/skin/icons/resizer.png) no-repeat;
-	opacity: 0.2;
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  background: url(chrome://global/skin/icons/resizer.png) no-repeat;
+  opacity: 0.2;
 }
 
 .expander:hover{opacity:1.0;}
 
 .favicon img:hover, .close img:hover, .expander img:hover{
-	opacity: 1;
-	border: none;
+  opacity: 1;
+  border: none;
 }
 
 .tab-title {
-	position: absolute;
-	top: 100%;
-	text-align: center;
-	width: 94.5%;
+  position: absolute;
+  top: 100%;
+  text-align: center;
+  width: 94.5%;
   white-space: nowrap;
   overflow: hidden;
 }
@@ -125,7 +125,7 @@ body {
 
 .stack-trayed .tab-title{
   display: block !important;
-	text-shadow: rgba(0,0,0,1) 1px 1px 2px;
+  text-shadow: rgba(0,0,0,1) 1px 1px 2px;
   color: #EEE;
   font-size: 11px;
 }
@@ -148,20 +148,20 @@ body {
 
 .tabInGroup {
   border: none;
-	-moz-box-shadow: none !important;
+  -moz-box-shadow: none !important;
 }
 
 
 .group {
-	position: absolute;
-/* 	float: left;  */
+  position: absolute;
+/*   float: left;  */
   cursor: move;
-	border: 1px solid rgba(230,230,230,1);
-	background-color: rgba(248,248,248,1);
-	-moz-border-radius: 0.4em;
-	-moz-box-shadow: 
-		inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
-		rgba(0,0,0, .2) 1px 1px 4px;
+  border: 1px solid rgba(230,230,230,1);
+  background-color: rgba(248,248,248,1);
+  -moz-border-radius: 0.4em;
+  -moz-box-shadow: 
+    inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
+    rgba(0,0,0, .2) 1px 1px 4px;
 }
 
 .phantom {
@@ -172,32 +172,32 @@ body {
   
   background-color: rgba(0,0,0,.7) !important;
   -moz-box-shadow: 3px 3px 8px rgba(0,0,0,.5);        
-	-moz-border-radius: 0.4em;
-	
-	/*
-	border: 1px solid rgba(230,230,230,1);
-	background-color: rgba(248,248,248,1);
-	-moz-border-radius: 0.4em;
-	-moz-box-shadow:
-	  rgba(0,0,0, .3) 2px 2px 8px,
-		inset rgba(255, 255, 255, 0.6) 0 2px 0px,
-		inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
-		inset rgba(255, 255, 255, 0.6) 2px 0px 0px,
-		inset rgba(255, 255, 255, 0.6) -2px 0px 0px;	*/
+  -moz-border-radius: 0.4em;
+  
+  /*
+  border: 1px solid rgba(230,230,230,1);
+  background-color: rgba(248,248,248,1);
+  -moz-border-radius: 0.4em;
+  -moz-box-shadow:
+    rgba(0,0,0, .3) 2px 2px 8px,
+    inset rgba(255, 255, 255, 0.6) 0 2px 0px,
+    inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
+    inset rgba(255, 255, 255, 0.6) 2px 0px 0px,
+    inset rgba(255, 255, 255, 0.6) -2px 0px 0px;  */
 }
 
 /* InfoItems
 ----------------------------------*/
 
 .info-item {
-	position: absolute;
+  position: absolute;
   cursor: move;
-	border: 1px solid rgba(230,230,230,1);
-	background-color: rgba(248,248,248,1);
-	-moz-border-radius: 0.4em;
-	-moz-box-shadow: 
-		inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
-		rgba(0,0,0, .2) 1px 1px 4px;
+  border: 1px solid rgba(230,230,230,1);
+  background-color: rgba(248,248,248,1);
+  -moz-border-radius: 0.4em;
+  -moz-box-shadow: 
+    inset rgba(255, 255, 255, 0.6) 0 0 0 2px,
+    rgba(0,0,0, .2) 1px 1px 4px;
 }
 
 /* Trenches
@@ -262,15 +262,15 @@ body {
   cursor: pointer;
   z-index:99999;
   border: none;
-	-moz-border-radius: 4px;
-	font-size: 50px;
-	line-height: 50px;
-	height: 57px !important;
-	width: 70px !important;
-	margin-top: 4px !important;
-	text-align: center;
-	background-color: #888888;
-	-moz-box-shadow: inset 0px 0px 5px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.3);
+  -moz-border-radius: 4px;
+  font-size: 50px;
+  line-height: 50px;
+  height: 57px !important;
+  width: 70px !important;
+  margin-top: 4px !important;
+  text-align: center;
+  background-color: #888888;
+  -moz-box-shadow: inset 0px 0px 5px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.3);
 }
 
 .newTabButtonAlt>span{
@@ -283,8 +283,8 @@ body {
   background-color: #8F8F8F;
   border: none;
   border-top: 1px solid rgba(127,127,127,.5);
-	-moz-border-radius: 0.1em;
-	-moz-box-shadow: inset 0px 5px 10px rgba(0,0,0,.1);
+  -moz-border-radius: 0.1em;
+  -moz-box-shadow: inset 0px 5px 10px rgba(0,0,0,.1);
 }
 
 .inNewTabGroup{
@@ -292,8 +292,8 @@ body {
 }
 
 .inNewTabGroup .favicon{
-	background-color: #8F8F8F;
-	-moz-box-shadow: none;
+  background-color: #8F8F8F;
+  -moz-box-shadow: none;
 }
 
 .inNewTabGroup .tab-title{
@@ -303,7 +303,7 @@ body {
 
 
 .newTabGroup .name{
-	display: none;
+  display: none;
 }
 
 .newTabAnimatee{
@@ -389,10 +389,10 @@ input.defaultName:hover{
 ----------------------------------*/
 .resizer{
   background-image: url(chrome://global/skin/icons/resizer.png);
-	position: absolute;
-	bottom: 6px;
-	right: 6px;
-	opacity: .2;  
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  opacity: .2;  
 }
 
 .iq-resizable { }
@@ -406,8 +406,8 @@ input.defaultName:hover{
 .front{
   z-index: 999999 !important;
   -moz-border-radius: 0 !important;
-	-moz-box-shadow: none !important;
-	-moz-transform: none !important;
+  -moz-box-shadow: none !important;
+  -moz-transform: none !important;
   image-rendering: -moz-crisp-edges;
 }
 

@@ -96,8 +96,8 @@ window.TabItem = function(container, tab) {
   this.dropOptions.over = function(e){
     var $target = iQ(this.container);
 
-		var groupBounds = Groups.getBoundingBox( [drag.info.$el, $target] );
-		groupBounds.inset( -20, -20 );
+    var groupBounds = Groups.getBoundingBox( [drag.info.$el, $target] );
+    groupBounds.inset( -20, -20 );
 
     iQ(".phantom").remove();
     var phantom = iQ("<div>")
@@ -299,8 +299,9 @@ window.TabItem.prototype = iQ.extend(new Item(), {
           return value;
         }
         
-        if( val == undefined ) return slide;
-        else return slide(val);
+        if( val == undefined )
+          return slide;
+        return slide(val);
       };
 
       if(css.width && !this.inStack()) {

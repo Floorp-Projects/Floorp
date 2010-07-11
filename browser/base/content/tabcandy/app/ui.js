@@ -232,8 +232,9 @@ window.Page = {
           .sort(function(a,b){
             return myCenter.distance(a[0]) - myCenter.distance(b[0]);
           });
-        if( matches.length > 0 ) return matches[0][1];
-        else return null;
+        if( matches.length > 0 )
+          return matches[0][1];
+        return null;
       }
 
       var norm = null;
