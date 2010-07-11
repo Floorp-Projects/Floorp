@@ -1611,20 +1611,20 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     frame.resetRegState();
 
     Label invoke;
+    Jump j;
     if (!typeKnown) {
-        Jump j;
         if (!hasTypeReg)
             j = masm.testObject(Assembler::NotEqual, frame.addressOf(fe));
         else
             j = masm.testObject(Assembler::NotEqual, type);
         invoke = stubcc.masm.label();
         stubcc.linkExit(j, Uses(argc + 2));
-        j = masm.testFunction(Assembler::NotEqual, data);
-        stubcc.linkExit(j, Uses(argc + 2));
-        stubcc.leave();
-        stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
-        stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
     }
+    j = masm.testFunction(Assembler::NotEqual, data);
+    stubcc.linkExit(j, Uses(argc + 2));
+    stubcc.leave();
+    stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+    stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
 
     /* Get function private pointer. */
     Address funPrivate(data, offsetof(JSObject, fslots) +
