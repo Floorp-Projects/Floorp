@@ -3306,10 +3306,6 @@ nsHTMLDocument::EditingStateChanged()
       // designMode is being turned on (overrides contentEditable).
       editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
 
-      // We need to flush styles here because we're setting an XBL binding in
-      // designmode.css.
-      FlushPendingNotifications(Flush_Style);
-
       // Disable scripting and plugins.
       rv = editSession->DisableJSAndPlugins(window);
       NS_ENSURE_SUCCESS(rv, rv);
