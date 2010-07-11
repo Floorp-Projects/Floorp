@@ -223,6 +223,10 @@ public:
         return PR_TRUE;
     }
 
+    virtual nsresult GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer) {
+        return NS_ERROR_FAILURE; // all platform subclasses should reimplement this!
+    }
+
     void SetFamily(gfxFontFamily* aFamily) {
         mFamily = aFamily;
     }
@@ -283,10 +287,6 @@ protected:
         mUserFontData(nsnull),
         mFamily(nsnull)
     { }
-
-    virtual nsresult GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer) {
-        return NS_ERROR_FAILURE; // all platform subclasses should reimplement this!
-    }
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold) {
         NS_NOTREACHED("oops, somebody didn't override CreateFontInstance");
@@ -1109,10 +1109,27 @@ protected:
     // been updated.)
     virtual void CreatePlatformShaper() { }
 
+    // Helper for subclasses that want to initialize standard metrics from the
+    // tables of sfnt (TrueType/OpenType) fonts.
+    // This will use mFUnitsConvFactor if it is already set, else compute it
+    // from mAdjustedSize and the unitsPerEm in the font's 'head' table.
+    // Returns TRUE and sets mIsValid=TRUE if successful;
+    // Returns TRUE but leaves mIsValid=FALSE if the font seems to be broken.
+    // Returns FALSE if the font does not appear to be an sfnt at all,
+    // and should be handled (if possible) using other APIs.
+    PRBool InitMetricsFromSfntTables(Metrics& aMetrics);
+
+    // Helper to calculate various derived metrics from the results of
+    // InitMetricsFromSfntTables or equivalent platform code
+    void CalculateDerivedMetrics(Metrics& aMetrics);
+
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
     void SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont);
 };
+
+// proportion of ascent used for x-height, if unable to read value from font
+#define DEFAULT_XHEIGHT_FACTOR 0.56f
 
 class THEBES_API gfxTextRunFactory {
     NS_INLINE_DECL_REFCOUNTING(gfxTextRunFactory)

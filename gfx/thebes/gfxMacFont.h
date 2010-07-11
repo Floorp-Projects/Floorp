@@ -76,9 +76,12 @@ protected:
     virtual void CreatePlatformShaper();
 
     void InitMetrics();
+    void InitMetricsFromATSMetrics();
 
-    gfxFloat GetCharWidth(CFDataRef aCmap, PRUint32 aUpem, gfxFloat aSize,
-                          PRUnichar aUniChar, PRUint32 *aGlyphID);
+    // Get width and glyph ID for a character; requires that
+    // mFUnitsConvFactor has been set before this is called
+    gfxFloat GetCharWidth(CFDataRef aCmap, PRUnichar aUniChar,
+                          PRUint32 *aGlyphID);
 
     static void DestroyBlobFunc(void* aUserData);
 
