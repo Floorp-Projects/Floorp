@@ -221,7 +221,7 @@ public:
     }
 
     virtual PRBool SupportsLangGroup(nsIAtom* aLangGroup) const {
-        if (!aLangGroup) {
+        if (!aLangGroup || aLangGroup == gfxAtoms::x_unicode) {
             return PR_TRUE;
         }
 
