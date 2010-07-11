@@ -563,6 +563,10 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-home?size=toolbar&state=disabled");
 }
 
+#tabcandy-button {
+  list-style-image: url(chrome://browser/skin/tabcandy/tabcandy.png);
+}
+
 #downloads-button {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
