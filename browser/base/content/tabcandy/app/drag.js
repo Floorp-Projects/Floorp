@@ -226,8 +226,8 @@ Drag.prototype = {
     if (update) {
       rect.snappedTrenches = snappedTrenches;
       return rect;
-    } else
-      return false;
+    }
+    return false;
   },
   
   // ----------  

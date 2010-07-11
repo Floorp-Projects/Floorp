@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Ian Gilman <ian@iangilman.com>
+ * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -203,7 +204,7 @@ function EventListenerMixIn(options) {
 /*         Utils.log(Utils.expandObject(event) + '; ' + listenersCopy.length); */
         for (var i = 0; i < listenersCopy.length; i++)
           try {
-/*           	Utils.log('telling listener'); */
+/*             Utils.log('telling listener'); */
             listenersCopy[i].call(target, event);
           } catch (e) {
             Utils.log(e);
@@ -215,7 +216,7 @@ function EventListenerMixIn(options) {
   };
 
   options.mixInto[options.name] = function bind(cb) {
-// 	Utils.trace('bind');
+//   Utils.trace('bind');
     if (typeof(cb) != "function")
       Utils.log("Callback must be a function.");
     if (listeners)
@@ -495,32 +496,21 @@ window.TabsManager = iQ.extend(new Subscribable(), {
         get tabbrowser() tabbrowser,
 
         isFocused: function() {
-          let focused = false;
-          if (browser) {
-            if (tabbrowser.selectedTab == chromeTab) {
-              focused = true;
-            }
-          }
-          return focused;
+          return browser && tabbrowser.selectedTab == chromeTab;
         },
 
         focus: function focus() {
-          if (browser) {
+          if (browser)
             tabbrowser.selectedTab = chromeTab;
-          }
         },
   
         close: function close() {
-          if (browser) {
+          if (browser)
             tabbrowser.removeTab(chromeTab);
-          }
         },
   
         toString: function toString() {
-          if (!browser)
-            return "[Closed Browser Tab]";
-          else
-            return "[Browser Tab]";
+          return !browser ? "[Closed Browser Tab]" : "[Browser Tab]";
         },
   
         _unload: function _unload() {

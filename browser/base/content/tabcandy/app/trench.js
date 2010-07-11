@@ -621,9 +621,8 @@ var Trenches = {
     if (updated) {
       rect.snappedTrenches = snappedTrenches;
       return rect;
-    } else {
-      return false;
     }
+    return false;
   },
 
   // ---------
