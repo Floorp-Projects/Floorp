@@ -558,9 +558,9 @@ SprintEnsureBuffer(Sprinter *sp, size_t len)
         return JS_TRUE;
     base = sp->base;
     if (!base) {
-        sp->pool->allocateCast<char *>(base, nb);
+        JS_ARENA_ALLOCATE_CAST(base, char *, sp->pool, nb);
     } else {
-        sp->pool->growCast<char *>(base, sp->size, nb);
+        JS_ARENA_GROW_CAST(base, char *, sp->pool, sp->size, nb);
     }
     if (!base) {
         js_ReportOutOfScriptQuota(sp->context);
@@ -736,11 +736,11 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote)
     char *bytes;
     JSString *escstr;
 
-    mark = cx->tempPool.getMark();
+    mark = JS_ARENA_MARK(&cx->tempPool);
     INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
     bytes = QuoteString(&sprinter, str, quote);
     escstr = bytes ? JS_NewStringCopyZ(cx, bytes) : NULL;
-    cx->tempPool.release(mark);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return escstr;
 }
 
@@ -770,7 +770,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
     if (!jp)
         return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
-    jp->pool.init(name, 256, 1, &cx->scriptStackQuota);
+    JS_InitArenaPool(&jp->pool, name, 256, 1, &cx->scriptStackQuota);
     jp->indent = indent;
     jp->pretty = !!pretty;
     jp->grouped = !!grouped;
@@ -793,7 +793,7 @@ js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
 void
 js_DestroyPrinter(JSPrinter *jp)
 {
-    jp->pool.finish();
+    JS_FinishArenaPool(&jp->pool);
     jp->sprinter.context->free(jp);
 }
 
@@ -809,7 +809,7 @@ js_GetPrinterOutput(JSPrinter *jp)
     str = JS_NewStringCopyZ(cx, jp->sprinter.base);
     if (!str)
         return NULL;
-    jp->pool.free();
+    JS_FreeArenaPool(&jp->pool);
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
     return str;
 }
@@ -1779,7 +1779,7 @@ InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
     /* Allocate the parallel (to avoid padding) offset and opcode stacks. */
     offsetsz = depth * sizeof(ptrdiff_t);
     opcodesz = depth * sizeof(jsbytecode);
-    cx->tempPool.allocate(space, offsetsz + opcodesz);
+    JS_ARENA_ALLOCATE(space, &cx->tempPool, offsetsz + opcodesz);
     if (!space) {
         js_ReportOutOfScriptQuota(cx);
         return JS_FALSE;
@@ -4069,7 +4069,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * Therefore after InitSprintStack succeeds, we must
                      * release to mark before returning.
                      */
-                    mark = cx->tempPool.getMark();
+                    mark = JS_ARENA_MARK(&cx->tempPool);
                     if (!fun->hasLocalNames()) {
                         innerLocalNames = NULL;
                     } else {
@@ -4079,7 +4079,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     }
                     inner = fun->u.i.script;
                     if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner))) {
-                        cx->tempPool.release(mark);
+                        JS_ARENA_RELEASE(&cx->tempPool, mark);
                         return NULL;
                     }
                     ss2.inGenExp = JS_TRUE;
@@ -4103,7 +4103,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     jp->fun = outerfun;
                     jp->localNames = outerLocalNames;
                     if (!ok) {
-                        cx->tempPool.release(mark);
+                        JS_ARENA_RELEASE(&cx->tempPool, mark);
                         return NULL;
                     }
 
@@ -4169,7 +4169,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * from cx's tempPool.
                      */
                     rval = JS_strdup(cx, PopStr(&ss2, op));
-                    cx->tempPool.release(mark);
+                    JS_ARENA_RELEASE(&cx->tempPool, mark);
                     if (!rval)
                         return NULL;
                     todo = SprintCString(&ss->sprinter, rval);
@@ -4846,7 +4846,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
 
     /* Initialize a sprinter for use with the offset stack. */
     cx = jp->sprinter.context;
-    mark = cx->tempPool.getMark();
+    mark = JS_ARENA_MARK(&cx->tempPool);
     ok = InitSprintStack(cx, &ss, jp, depth);
     if (!ok)
         goto out;
@@ -4900,7 +4900,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
 
 out:
     /* Free all temporary stuff allocated under this call. */
-    cx->tempPool.release(mark);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
 }
 
@@ -5017,7 +5017,7 @@ js_DecompileFunction(JSPrinter *jp)
 #if JS_HAS_DESTRUCTURING
         ss.printer = NULL;
         jp->script = script;
-        mark = jp->sprinter.context->tempPool.getMark();
+        mark = JS_ARENA_MARK(&jp->sprinter.context->tempPool);
 #endif
 
         for (i = 0; i < fun->nargs; i++) {
@@ -5068,7 +5068,7 @@ js_DecompileFunction(JSPrinter *jp)
 
 #if JS_HAS_DESTRUCTURING
         jp->script = NULL;
-        jp->sprinter.context->tempPool.release(mark);
+        JS_ARENA_RELEASE(&jp->sprinter.context->tempPool, mark);
 #endif
         if (!ok)
             return JS_FALSE;
