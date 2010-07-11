@@ -588,6 +588,12 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button:not([disabled="tru
   -moz-image-region: rect(0, 90px, 18px, 72px);
 }
 
+/* tabcandy button */
+
+#tabcandy-button {
+  list-style-image: url(chrome://browser/skin/tabcandy/tabcandy.png);
+}
+
 /* download manager button */
 
 #downloads-button {
