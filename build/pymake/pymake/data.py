@@ -1402,7 +1402,7 @@ class Makefile(object):
         Inform the makefile of a target which is a candidate for being the default target,
         if there isn't already a default target.
         """
-        if self.defaulttarget is None:
+        if self.defaulttarget is None and t != '.PHONY':
             self.defaulttarget = t
 
     def getpatternvariables(self, pattern):
