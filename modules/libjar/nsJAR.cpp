@@ -151,7 +151,10 @@ nsrefcnt nsJAR::Release(void)
     return 0; 
   }
   else if (1 == count && mCache) {
-    nsresult rv = mCache->ReleaseZip(this);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      mCache->ReleaseZip(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to release zip file");
   }
   return count; 
@@ -1150,7 +1153,10 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
       return rv;
     }
 
-    PRBool collision = mZips.Put(&key, static_cast<nsIZipReader*>(zip)); // AddRefs to 2
+#ifdef DEBUG
+    PRBool collision =
+#endif
+      mZips.Put(&key, static_cast<nsIZipReader*>(zip)); // AddRefs to 2
     NS_ASSERTION(!collision, "horked");
   }
   *result = zip;
@@ -1304,8 +1310,10 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
   }
 
   nsCStringKey key(uri);
-  PRBool removed;
-  removed = mZips.Remove(&key);  // Releases
+#ifdef DEBUG
+  PRBool removed =
+#endif
+    mZips.Remove(&key);   // Releases
   NS_ASSERTION(removed, "botched");
 
   return NS_OK;
@@ -1337,7 +1345,10 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
       mZips.Enumerate(FindFlushableZip, &flushable); 
       if ( ! flushable )
         break;
-      PRBool removed = mZips.Remove(flushable);  // Releases
+#ifdef DEBUG
+      PRBool removed =
+#endif
+        mZips.Remove(flushable);   // Releases
       NS_ASSERTION(removed, "botched");
 
 #ifdef xDEBUG_jband
