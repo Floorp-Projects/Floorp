@@ -1365,16 +1365,14 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
 
     if (granuleTime >= seekTarget) {
       // We've landed after the seek target.
-      ogg_int64_t old_offset_end = endOffset;
+      NS_ASSERTION(pageOffset < endOffset, "offset_end must decrease");
       endOffset = pageOffset;
-      NS_ASSERTION(endOffset < old_offset_end, "offset_end must decrease");
       endTime = granuleTime;
     } else if (granuleTime < seekTarget) {
       // Landed before seek target.
-      ogg_int64_t old_offset_start = startOffset;
+      NS_ASSERTION(pageOffset > startOffset, "offset_start must increase");
       startOffset = pageOffset;
       startLength = pageLength;
-      NS_ASSERTION(startOffset > old_offset_start, "offset_start must increase");
       startTime = granuleTime;
     }
     NS_ASSERTION(startTime < seekTarget, "Must be before seek target");
