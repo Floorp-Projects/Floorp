@@ -235,9 +235,6 @@ BEGIN_CASE(JSOP_STOP)
         JS_ASSERT(!fp->blockChain);
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
 
-        if (JS_LIKELY(script->staticLevel < JS_DISPLAY_SIZE))
-            cx->display[script->staticLevel] = fp->displaySave;
-
         void *hookData = fp->hookData;
         if (JS_UNLIKELY(hookData != NULL)) {
             if (JSInterpreterHook hook = cx->debugHooks->callHook) {
@@ -2253,11 +2250,6 @@ BEGIN_CASE(JSOP_APPLY)
             newfp->scopeChain = obj->getParent();
             newfp->flags = flags;
             newfp->blockChain = NULL;
-            if (JS_LIKELY(newscript->staticLevel < JS_DISPLAY_SIZE)) {
-                JSStackFrame **disp = &cx->display[newscript->staticLevel];
-                newfp->displaySave = *disp;
-                *disp = newfp;
-            }
             JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
             JS_ASSERT_IF(!vp[1].isPrimitive(), IsSaneThisObject(vp[1].toObject()));
             newfp->thisv = vp[1];
@@ -2855,7 +2847,7 @@ BEGIN_CASE(JSOP_CALLUPVAR)
     uintN index = GET_UINT16(regs.pc);
     JS_ASSERT(index < uva->length);
 
-    const Value &rval = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
+    const Value &rval = GetUpvar(cx, script->staticLevel, uva->vector[index]);
     PUSH_COPY(rval);
 
     if (op == JSOP_CALLUPVAR)

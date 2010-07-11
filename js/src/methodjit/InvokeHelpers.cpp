@@ -242,12 +242,6 @@ CreateFrame(VMFrame &f, uint32 flags, uint32 argc)
 
     stack.pushInlineFrame(cx, fp, cx->regs->pc, newfp);
 
-    if (newscript->staticLevel < JS_DISPLAY_SIZE) {
-        JSStackFrame **disp = &cx->display[newscript->staticLevel];
-        newfp->displaySave = *disp;
-        *disp = newfp;
-    }
-
     return true;
 }
 
@@ -299,9 +293,6 @@ InlineReturn(JSContext *cx, JSBool ok)
 
     JS_ASSERT(!fp->blockChain);
     JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
-
-    if (fp->script->staticLevel < JS_DISPLAY_SIZE)
-        cx->display[fp->script->staticLevel] = fp->displaySave;
 
     // Marker for debug support.
     void *hookData = fp->hookData;
@@ -493,12 +484,6 @@ CreateLightFrame(VMFrame &f, uint32 flags, uint32 argc)
     newfp->down = fp;
     fp->savedPC = f.regs.pc;
     cx->setCurrentFrame(newfp);
-
-    if (newscript->staticLevel < JS_DISPLAY_SIZE) {
-        JSStackFrame **disp = &cx->display[newscript->staticLevel];
-        newfp->displaySave = *disp;
-        *disp = newfp;
-    }
 
     return true;
 }
