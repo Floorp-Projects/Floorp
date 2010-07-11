@@ -98,7 +98,7 @@ var Tabbar = {
   // Hides all of the tabs in the tab bar which are not passed into this function.
   //
   // Paramaters
-  //  - An array of <Tab> objects.
+  //  - An array of <BrowserTab> objects.
   //  - Some options
   showOnlyTheseTabs: function(tabs, options){
     try { 
@@ -355,7 +355,7 @@ window.Page = {
     
     if (doSetup) {
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread      
-        let visibleTabCount = Tabbar.getVisibleTabs().length;
+        let visibleTabCount = Tabbar.getVisibleTabCount();
    
         if(focusTab != UI.currentTab) {
           // things have changed while we were in timeout
