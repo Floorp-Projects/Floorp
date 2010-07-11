@@ -78,8 +78,7 @@ both:
   async PHandle();
 
 child:
-  async LoadImplementation(nsCString code);
-  async LoadUserScript(nsCString code);
+  async EvalScript(nsString code);
 
 parent:
   sync CallMessage(nsString messageName,
