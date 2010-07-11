@@ -463,7 +463,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
          }});
         */
       this.__proto__ = {
-        get isClosed() { return (browser == null); },
+        get isClosed() (browser == null),
   
         get url() {
           if (browser && browser.currentURI)
@@ -490,7 +490,9 @@ window.TabsManager = iQ.extend(new Subscribable(), {
           return null;
         },
   
-        get raw() { return chromeTab; },
+        get raw() chromeTab,
+        
+        get tabbrowser() tabbrowser,
 
         isFocused: function() {
           let focused = false;
