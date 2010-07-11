@@ -894,7 +894,11 @@ static void SetStyleImageToImageRect(nsStyleContext* aStyleContext,
   NS_FOR_CSS_SIDES(side) {
     nsStyleCoord coord;
     const nsCSSValue& val = arr->Item(2 + side);
-    PRBool unitOk = SetAbsCoord(val, coord, SETCOORD_FACTOR | SETCOORD_PERCENT);
+
+#ifdef DEBUG
+    PRBool unitOk =
+#endif
+      SetAbsCoord(val, coord, SETCOORD_FACTOR | SETCOORD_PERCENT);
     NS_ABORT_IF_FALSE(unitOk, "Incorrect data structure created by CSS parser");
     cropRect.Set(side, coord);
   }
