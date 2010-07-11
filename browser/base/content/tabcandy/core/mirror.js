@@ -178,8 +178,8 @@ Mirror.prototype = iQ.extend(new Subscribable(), {
   // Function: triggerPaint
   // Forces the mirror in question to update its thumbnail. 
   triggerPaint: function() {
-  	var date = new Date();
-  	this.needsPaint = date.getTime();
+    var date = new Date();
+    this.needsPaint = date.getTime();
   },
   
   // ----------

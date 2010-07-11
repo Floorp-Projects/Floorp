@@ -891,9 +891,10 @@ window.Items = {
     // TODO: set top gutter separately, elsewhere.
     var topGutter = 5;
     if (dontCountNewTabGroup)
-      return new Rect( gutter, topGutter, window.innerWidth - 2 * gutter, window.innerHeight - gutter - topGutter );
-    else
-      return new Rect( gutter, topGutter, window.innerWidth - 2 * gutter, newTabGroupBounds.top -  gutter - topGutter );
+      return new Rect( gutter, topGutter, 
+        window.innerWidth - 2 * gutter, window.innerHeight - gutter - topGutter );
+    return new Rect( gutter, topGutter,
+      window.innerWidth - 2 * gutter, newTabGroupBounds.top -  gutter - topGutter );
 
   },
   

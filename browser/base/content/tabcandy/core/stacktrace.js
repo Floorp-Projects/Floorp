@@ -148,7 +148,7 @@ printStackTrace.implementation.prototype = {
             
             //Opera bug: if curr.caller does not exist, Opera returns curr (WTF)
             if (curr === curr.caller && window.opera) {
-	            //TODO: check for same arguments if possible
+              //TODO: check for same arguments if possible
                 break;
             }
             curr = curr.caller;
@@ -184,7 +184,7 @@ printStackTrace.implementation.prototype = {
     },
     
     createXMLHTTPObject: function() {
-	    // Try XHR methods in order and store XHR factory
+      // Try XHR methods in order and store XHR factory
         var xmlhttp, XMLHttpFactories = [
             function() {
                 return new XMLHttpRequest();
