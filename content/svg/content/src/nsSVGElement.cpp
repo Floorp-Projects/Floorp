@@ -1349,9 +1349,13 @@ nsSVGElement::UpdateAnimatedContentStyleRule()
     animContentStyleRule(mappedAttrParser.CreateStyleRule());
 
   if (animContentStyleRule) {
-    nsresult rv = SetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
-                              SMIL_MAPPED_ATTR_STYLERULE_ATOM,
-                              animContentStyleRule.get(), ReleaseStyleRule);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      SetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
+                  SMIL_MAPPED_ATTR_STYLERULE_ATOM,
+                  animContentStyleRule.get(),
+                  ReleaseStyleRule);
     animContentStyleRule.forget();
     NS_ABORT_IF_FALSE(rv == NS_OK,
                       "SetProperty failed (or overwrote something)");

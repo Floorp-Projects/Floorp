@@ -551,7 +551,11 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
     NS_ASSERTION(remainingDist >= 0, "distance values must be non-negative");
 
     double curIntervalDist;
-    nsresult rv = aValues[i].ComputeDistance(aValues[i+1], curIntervalDist);
+
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      aValues[i].ComputeDistance(aValues[i+1], curIntervalDist);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
                       "If we got through ComputePacedTotalDistance, we should "
                       "be able to recompute each sub-distance without errors");
