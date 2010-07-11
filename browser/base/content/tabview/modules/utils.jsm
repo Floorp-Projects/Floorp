@@ -131,7 +131,7 @@ window.Rect.prototype = {
   
   // ----------
   set right(value) {
-		this.width = value - this.left;
+    this.width = value - this.left;
   },
 
   // ----------
@@ -141,17 +141,17 @@ window.Rect.prototype = {
   
   // ----------
   set bottom(value) {
-		this.height = value - this.top;
+    this.height = value - this.top;
   },
 
   // ----------
   get xRange() {
-		return new Range(this.left,this.right);
+    return new Range(this.left,this.right);
   },
   
   // ----------
   get yRange() {
-		return new Range(this.top,this.bottom);
+    return new Range(this.top,this.bottom);
   },
 
   // ----------
@@ -304,13 +304,13 @@ window.Rect.prototype = {
 // Constructor: Range
 // Creates a Range with the given min and max
 window.Range = function(min, max) {
-	if (isRange(min) && !max) { // if the one variable given is a range, copy it.
-		this.min = min.min;
-		this.max = min.max;
-	} else {
-		this.min = min || 0;
-		this.max = max || 0;
-	}
+  if (isRange(min) && !max) { // if the one variable given is a range, copy it.
+    this.min = min.min;
+    this.max = min.max;
+  } else {
+    this.min = min || 0;
+    this.max = max || 0;
+  }
 };
 
 // ----------
@@ -321,15 +321,15 @@ window.isRange = function(r) {
 };
 
 window.Range.prototype = {  
-	// Variable: extent
-	// Equivalent to max-min
-	get extent() {
-		return (this.max - this.min);
-	},
+  // Variable: extent
+  // Equivalent to max-min
+  get extent() {
+    return (this.max - this.min);
+  },
 
-	set extent(extent) {
-		this.max = extent - this.min;
-	},
+  set extent(extent) {
+    this.max = extent - this.min;
+  },
 
   // ----------
   // Function: contains
@@ -338,10 +338,9 @@ window.Range.prototype = {
   // Paramaters
   //  - a number or <Range>
   contains: function(value) {
-  	if (Utils.isNumber(value))
-			return ( value >= this.min && value <= this.max );
-		else if (isRange(value))
-			return ( value.min >= this.min && value.max <= this.max );
+    return Utils.isNumber(value) ?
+      ( value >= this.min && value <= this.max ) :
+      ( value.min >= this.min && value.max <= this.max );
   },
   // ----------
   // Function: containsWithin
@@ -350,10 +349,9 @@ window.Range.prototype = {
   // Paramaters
   //  - a number or <Range>
   containsWithin: function(value) {
-  	if (Utils.isNumber(value))
-			return ( value > this.min && value < this.max );
-		else if (isRange(value))
-			return ( value.min > this.min && value.max < this.max );
+    return Utils.isNumber(value) ?
+      ( value > this.min && value < this.max ) :
+      ( value.min > this.min && value.max < this.max );
   },
   // ----------
   // Function: overlaps
@@ -362,10 +360,9 @@ window.Range.prototype = {
   // Paramaters
   //  - a number or <Range>
   overlaps: function(value) {
-  	if (Utils.isNumber(value))
-			return this.contains(value);
-		else if (isRange(value))
-			return ( value.min <= this.max && this.min <= value.max );
+    return Utils.isNumber(value) ? 
+      this.contains(value) :
+      ( value.min <= this.max && this.min <= value.max );
   },
 };
 
@@ -517,7 +514,7 @@ var Utils = {
       var tabbrowser = browserWin.gBrowser;
       let tabCandyContainer = browserWin.document.getElementById("tab-candy");
       if (tabCandyContainer && tabCandyContainer.contentWindow == window) {
-      	return browserWin;
+        return browserWin;
       }
     }
     
@@ -673,7 +670,7 @@ var Utils = {
   isRightClick: function(event) {
     if(event.which)
       return (event.which == 3);
-    else if(event.button) 
+    if(event.button) 
       return (event.button == 2);
     
     return false;
@@ -681,8 +678,8 @@ var Utils = {
   
   // ___ Time
   getMilliseconds: function() {
-  	var date = new Date();
-  	return date.getTime();
+    var date = new Date();
+    return date.getTime();
   },
   
   // ___ Misc
