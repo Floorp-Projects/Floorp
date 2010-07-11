@@ -65,7 +65,7 @@ function shouldNotReceiveCloseEvent(e)
   var ws = e.target;
   var extendedErrorInfo = "";
   if (!ws._testNumber) {
-    extendedErrorInfo += "ws members:\n";
+    extendedErrorInfo += "\nws members:\n";
     for (var i in ws) {
       extendedErrorInfo += (i + ": " + ws[i] + "\n");
     }
