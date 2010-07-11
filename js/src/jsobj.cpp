@@ -6630,9 +6630,6 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
         if (fp->blockChain)
             fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->blockChain);
 
-        if (fp->displaySave)
-            fprintf(stderr, "  displaySave: (JSStackFrame *) %p\n", (void *) fp->displaySave);
-
         fputc('\n', stderr);
     }
 }

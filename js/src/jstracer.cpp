@@ -3112,8 +3112,8 @@ GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, 
      * If we did not find the upvar in the frames for the active traces,
      * then we simply get the value from the interpreter state.
      */
-    JS_ASSERT(upvarLevel < JS_DISPLAY_SIZE);
-    JSStackFrame* fp = cx->display[upvarLevel];
+    JS_ASSERT(upvarLevel < UpvarCookie::FREE_LEVEL);
+    JSStackFrame* fp = FindFrameAtLevel(cx, upvarLevel);
     Value v = T::interp_get(fp, slot);
     JSValueType type = getCoercedType(v);
     ValueToNative(v, type, result);
@@ -5637,11 +5637,6 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     newfp->blockChain = NULL;
     newfp->thisv.setNull(); // will be updated in FlushNativeStackFrame
     newfp->imacpc = NULL;
-    if (newscript->staticLevel < JS_DISPLAY_SIZE) {
-        JSStackFrame **disp = &cx->display[newscript->staticLevel];
-        newfp->displaySave = *disp;
-        *disp = newfp;
-    }
 
     /*
      * Note that fp->script is still the caller's script; set the callee
@@ -5713,7 +5708,6 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
     fp->scopeChain = cx->fp->scopeChain;
     fp->blockChain = NULL;
     fp->flags = exit->constructing() ? JSFRAME_CONSTRUCTING : 0;
-    fp->displaySave = NULL;
 
     state.bailedSlowNativeRegs = *cx->regs;
 
@@ -12925,13 +12919,13 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, Value& v)
 {
     /*
      * Try to find the upvar in the current trace's tracker. For &vr to be
-     * the address of the jsval found in js_GetUpvar, we must initialize
+     * the address of the jsval found in js::GetUpvar, we must initialize
      * vr directly with the result, so it is a reference to the same location.
      * It does not work to assign the result to v, because v is an already
      * existing reference that points to something else.
      */
     UpvarCookie cookie = uva->vector[index];
-    const Value& vr = js_GetUpvar(cx, script->staticLevel, cookie);
+    const Value& vr = GetUpvar(cx, script->staticLevel, cookie);
     v = vr;
 
     if (LIns* ins = attemptImport(&vr))
@@ -12943,7 +12937,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, Value& v)
      */
     uint32 level = script->staticLevel - cookie.level();
     uint32 cookieSlot = cookie.slot();
-    JSStackFrame* fp = cx->display[level];
+    JSStackFrame* fp = FindFrameAtLevel(cx, level);
     const CallInfo* ci;
     int32 slot;
     if (!fp->fun || (fp->flags & JSFRAME_EVAL)) {

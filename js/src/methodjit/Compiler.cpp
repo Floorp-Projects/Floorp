@@ -1454,8 +1454,6 @@ mjit::Compiler::jsop_getglobal(uint32 index)
 void
 mjit::Compiler::emitReturn()
 {
-    RegisterID t0 = frame.allocReg();
-
     /*
      * if (!f.inlineCallCount)
      *     return;
@@ -1468,17 +1466,6 @@ mjit::Compiler::emitReturn()
     stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), JSC::ARMRegisters::lr);
 #endif
     stubcc.masm.ret();
-
-    /* Restore display. */
-    if (script->staticLevel < JS_DISPLAY_SIZE) {
-        RegisterID t1 = frame.allocReg();
-        masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), t0);
-        masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, displaySave)), t1);
-        masm.storePtr(t1, Address(t0,
-                                  offsetof(JSContext, display) +
-                                  script->staticLevel * sizeof(JSStackFrame*)));
-        frame.freeReg(t1);
-    }
 
     JS_ASSERT_IF(!fun, JSOp(*PC) == JSOP_STOP);
 

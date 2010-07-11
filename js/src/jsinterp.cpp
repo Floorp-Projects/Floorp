@@ -430,18 +430,11 @@ struct AutoInterpPreparer  {
     AutoInterpPreparer(JSContext *cx, JSScript *script)
       : cx(cx), script(script)
     {
-        if (script->staticLevel < JS_DISPLAY_SIZE) {
-            JSStackFrame **disp = &cx->display[script->staticLevel];
-            cx->fp->displaySave = *disp;
-            *disp = cx->fp;
-        }
         cx->interpLevel++;
     }
 
     ~AutoInterpPreparer()
     {
-        if (script->staticLevel < JS_DISPLAY_SIZE)
-            cx->display[script->staticLevel] = cx->fp->displaySave;
         --cx->interpLevel;
     }
 };
@@ -551,7 +544,6 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     fp->blockChain = NULL;
     fp->imacpc = NULL;
     fp->flags = flags;
-    fp->displaySave = NULL;
 
     /* Initialize regs. */
     if (script) {
@@ -1383,17 +1375,14 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
 }
 
 const Value &
-js_GetUpvar(JSContext *cx, uintN level, UpvarCookie cookie)
+js::GetUpvar(JSContext *cx, uint16 closureLevel, UpvarCookie cookie)
 {
-    level -= cookie.level();
-    JS_ASSERT(level < JS_DISPLAY_SIZE);
+    JS_ASSERT(closureLevel >= cookie.level() && cookie.level() > 0);
+    const uint16 targetLevel = closureLevel - cookie.level();
+    JSStackFrame *fp = FindFrameAtLevel(cx, targetLevel);
 
-    JSStackFrame *fp = cx->display[level];
-    JS_ASSERT(fp->script);
-
-    uintN slot = cookie.slot();
+    uint16 slot = cookie.slot();
     Value *vp;
-
     if (!fp->fun || (fp->flags & JSFRAME_EVAL)) {
         vp = fp->slots() + fp->script->nfixed;
     } else if (slot < fp->fun->nargs) {
