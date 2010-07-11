@@ -106,19 +106,10 @@ var Tabbar = {
         options = {};
           
       var tabbrowser = Utils.getCurrentWindow().gBrowser;
-      var visibleTabs = [];
       var tabBarTabs = this.getAllTabs();
-            
-      tabs.forEach(function(tab) {
-        var rawTab = tab.tab.raw;
-        tabBarTabs.some(function(tabBarTab) {
-          if (tabBarTab == rawTab) {
-            visibleTabs.push(tabBarTab);
-            return true;
-          }
-        });
-      });
-
+      
+      var visibleTabs = [ tab.tab.raw for each ( tab in tabs ) if (tab.tab.tabbrowser == tabbrowser) ];
+      
       // Show all of the tabs in the group and move them (in order)
       // that they appear in the group to the end of the tab strip.
       // This way the tab order is matched up to the group's thumbnail
