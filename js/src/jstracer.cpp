@@ -3384,7 +3384,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, TraceType t,
     jsuword* localNames = NULL;
     const char* funName = NULL;
     if (*prefix == 'a' || *prefix == 'v') {
-        mark = cx->tempPool.getMark();
+        mark = JS_ARENA_MARK(&cx->tempPool);
         if (fp->fun->hasLocalNames())
             localNames = js_GetLocalNameArray(cx, fp->fun, &cx->tempPool);
         funName = fp->fun->atom ? js_AtomToPrintableString(cx, fp->fun->atom) : "<anonymous>";
@@ -3404,7 +3404,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, TraceType t,
     }
 
     if (mark)
-        cx->tempPool.release(mark);
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
     addName(ins, name);
 
     static const char* typestr[] = {

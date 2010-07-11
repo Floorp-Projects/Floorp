@@ -194,7 +194,7 @@ TokenStream::init(const jschar *base, size_t length, FILE *fp, const char *fn, u
     size_t nb = fp
          ? 2 * LINE_LIMIT * sizeof(jschar)
          : LINE_LIMIT * sizeof(jschar);
-    cx->tempPool.allocateCast<jschar *>(buf, nb);
+    JS_ARENA_ALLOCATE_CAST(buf, jschar *, &cx->tempPool, nb);
     if (!buf) {
         js_ReportOutOfScriptQuota(cx);
         return false;

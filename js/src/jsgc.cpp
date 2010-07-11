@@ -1511,8 +1511,8 @@ CheckLeakedRoots(JSRuntime *rt);
 void
 js_FinishGC(JSRuntime *rt)
 {
-#ifdef DEBUG
-    JS_DumpArenaStats();
+#ifdef JS_ARENAMETER
+    JS_DumpArenaStats(stdout);
 #endif
 #ifdef JS_GCMETER
     if (JS_WANT_GC_METER_PRINT)
