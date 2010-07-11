@@ -927,31 +927,6 @@ struct TableDirEntry {
     AutoSwap_PRUint32    length;                 // Length of this table.        
 };
 
-struct HeadTable {
-    enum {
-        HEAD_MAGIC_NUMBER = 0x5F0F3CF5,
-        HEAD_CHECKSUM_CALC_CONST = 0xB1B0AFBA
-    };
-
-    AutoSwap_PRUint32    tableVersionNumber;    // Fixed, 0x00010000 for version 1.0.
-    AutoSwap_PRUint32    fontRevision;          // Set by font manufacturer.
-    AutoSwap_PRUint32    checkSumAdjustment;    // To compute: set it to 0, sum the entire font as ULONG, then store 0xB1B0AFBA - sum.
-    AutoSwap_PRUint32    magicNumber;           // Set to 0x5F0F3CF5.
-    AutoSwap_PRUint16    flags;
-    AutoSwap_PRUint16    unitsPerEm;            // Valid range is from 16 to 16384. This value should be a power of 2 for fonts that have TrueType outlines.
-    AutoSwap_PRUint64    created;               // Number of seconds since 12:00 midnight, January 1, 1904. 64-bit integer
-    AutoSwap_PRUint64    modified;              // Number of seconds since 12:00 midnight, January 1, 1904. 64-bit integer
-    AutoSwap_PRInt16     xMin;                  // For all glyph bounding boxes.
-    AutoSwap_PRInt16     yMin;                  // For all glyph bounding boxes.
-    AutoSwap_PRInt16     xMax;                  // For all glyph bounding boxes.
-    AutoSwap_PRInt16     yMax;                  // For all glyph bounding boxes.
-    AutoSwap_PRUint16    macStyle;              // Bit 0: Bold (if set to 1);
-    AutoSwap_PRUint16    lowestRecPPEM;         // Smallest readable size in pixels.
-    AutoSwap_PRInt16     fontDirectionHint;
-    AutoSwap_PRInt16     indexToLocFormat;
-    AutoSwap_PRInt16     glyphDataFormat;
-};
-
 // name table stores set of name record structures, followed by
 // large block containing all the strings.  name record offset and length
 // indicates the offset and length within that block.
@@ -959,46 +934,6 @@ struct HeadTable {
 struct NameRecordData {
     PRUint32  offset;
     PRUint32  length;
-};
-
-struct OS2Table {
-    AutoSwap_PRUint16    version;                // 0004 = OpenType 1.5
-    AutoSwap_PRInt16     xAvgCharWidth;
-    AutoSwap_PRUint16    usWeightClass;
-    AutoSwap_PRUint16    usWidthClass;
-    AutoSwap_PRUint16    fsType;
-    AutoSwap_PRInt16     ySubscriptXSize;
-    AutoSwap_PRInt16     ySubscriptYSize;
-    AutoSwap_PRInt16     ySubscriptXOffset;
-    AutoSwap_PRInt16     ySubscriptYOffset;
-    AutoSwap_PRInt16     ySuperscriptXSize;
-    AutoSwap_PRInt16     ySuperscriptYSize;
-    AutoSwap_PRInt16     ySuperscriptXOffset;
-    AutoSwap_PRInt16     ySuperscriptYOffset;
-    AutoSwap_PRInt16     yStrikeoutSize;
-    AutoSwap_PRInt16     yStrikeoutPosition;
-    AutoSwap_PRInt16     sFamilyClass;
-    PRUint8              panose[10];
-    AutoSwap_PRUint32    unicodeRange1;
-    AutoSwap_PRUint32    unicodeRange2;
-    AutoSwap_PRUint32    unicodeRange3;
-    AutoSwap_PRUint32    unicodeRange4;
-    PRUint8              achVendID[4];
-    AutoSwap_PRUint16    fsSelection;
-    AutoSwap_PRUint16    usFirstCharIndex;
-    AutoSwap_PRUint16    usLastCharIndex;
-    AutoSwap_PRInt16     sTypoAscender;
-    AutoSwap_PRInt16     sTypoDescender;
-    AutoSwap_PRInt16     sTypoLineGap;
-    AutoSwap_PRUint16    usWinAscent;
-    AutoSwap_PRUint16    usWinDescent;
-    AutoSwap_PRUint32    codePageRange1;
-    AutoSwap_PRUint32    codePageRange2;
-    AutoSwap_PRInt16     sxHeight;
-    AutoSwap_PRInt16     sCapHeight;
-    AutoSwap_PRUint16    usDefaultChar;
-    AutoSwap_PRUint16    usBreakChar;
-    AutoSwap_PRUint16    usMaxContext;
 };
 
 // old 'kern' table, supported on Windows
