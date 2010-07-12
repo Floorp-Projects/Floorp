@@ -71,27 +71,12 @@ BytecodeAnalyzer::analyze(uint32 index)
     jsbytecode *pc = doList[index];
     uint32 stackDepth = ops[pc - script->code].stackDepth;
 
-#ifdef DEBUG
-    bool canAssert = true;
-#endif
-
     for (;;) {
         JSOp op = JSOp(pc[0]);
         OpcodeStatus &status = ops[pc - script->code];
 
         if (status.visited)
             return true;
-
-#ifdef DEBUG
-        if (assertDepths) {
-            jssrcnote *sn = js_GetSrcNote(script, pc);
-            if (sn && SN_TYPE(sn) == SRC_HIDDEN)
-                canAssert = false;
-
-            JS_ASSERT_IF(canAssert && pc > script->main,
-                         js_ReconstructStackDepth(cx, script, pc) == stackDepth);
-        }
-#endif
 
         status.visited = true;
         status.stackDepth = stackDepth;
