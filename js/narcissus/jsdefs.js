@@ -168,3 +168,11 @@ for (i = 0, j = assignOps.length; i < j; i++) {
     t = assignOps[i];
     assignOps[t] = tokens[t];
 }
+
+function defineGetter(obj, prop, fn, dontDelete, dontEnum) {
+    Object.defineProperty(obj, prop, { get: fn, configurable: !dontDelete, enumerable: !dontEnum });
+}
+
+function defineProperty(obj, prop, val, dontDelete, readOnly, dontEnum) {
+    Object.defineProperty(obj, prop, { value: val, writable: !readOnly, configurable: !dontDelete, enumerable: !dontEnum });
+}
