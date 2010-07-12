@@ -150,7 +150,7 @@ top:
                   AutoValueRooter tvr(cx, cx->exception);
                   JS_ASSERT(js_GetOpcode(cx, fp->script, pc) == JSOP_ENDITER);
                   cx->throwing = JS_FALSE;
-                  ok = !!js_CloseIterator(cx, cx->regs->sp[-1]);
+                  ok = !!js_CloseIterator(cx, &cx->regs->sp[-1].toObject());
                   cx->regs->sp -= 1;
                   if (!ok)
                       goto top;

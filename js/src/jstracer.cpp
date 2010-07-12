@@ -218,6 +218,8 @@ TypeToChar(JSValueType type)
       case JSVAL_TYPE_FUNOBJ: return 'F';
       case JSVAL_TYPE_NONFUNOBJ: return 'O';
       case JSVAL_TYPE_BOXED: return '#';
+      case JSVAL_TYPE_STRORNULL: return 's';
+      case JSVAL_TYPE_OBJORNULL: return 'o';
       case JSVAL_TYPE_UNINITIALIZED: return '*';
     }
     return '?';
@@ -2631,13 +2633,13 @@ TraceRecorder::trackNativeStackUse(unsigned slots)
 static inline void
 ValueToNative(const Value &v, JSValueType type, double* slot)
 {
-    if (type > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET) {
+    JS_ASSERT(type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET);
+    if (type > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET)
         v.unboxNonDoubleTo((uint64 *)slot);
-    } else if (type == JSVAL_TYPE_INT32) {
+    else if (type == JSVAL_TYPE_INT32)
         *(int32_t *)slot = v.isInt32() ? v.toInt32() : (int32_t)v.toDouble();
-    } else {
+    else
         *(double *)slot = v.toNumber();
-    }
 
 #ifdef DEBUG
     int32_t _;
@@ -2804,6 +2806,12 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
         v.setNumber(*slot);
     } else if (JS_LIKELY(type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET)) {
         v.boxNonDoubleFrom(type, (uint64 *)slot);
+    } else if (type == JSVAL_TYPE_STRORNULL) {
+        JSString *str = *(JSString **)slot;
+        v = str ? StringValue(str) : NullValue();
+    } else if (type == JSVAL_TYPE_OBJORNULL) {
+        JSObject *obj = *(JSObject **)slot;
+        v = obj ? ObjectValue(*obj) : NullValue();
     } else {
         JS_ASSERT(type == JSVAL_TYPE_BOXED);
         JS_STATIC_ASSERT(sizeof(Value) == sizeof(double));
@@ -2850,6 +2858,12 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
                           : "unnamed");
         break;
       }
+      case JSVAL_TYPE_STRORNULL:
+        debug_only_printf(LC_TMTracer, "nullablestr<%p> ", v.isNull() ? NULL : (void *)v.toString());
+        break;
+      case JSVAL_TYPE_OBJORNULL:
+        debug_only_printf(LC_TMTracer, "nullablestr<%p> ", v.isNull() ? NULL : (void *)&v.toObject());
+        break;
       case JSVAL_TYPE_BOXED:
         debug_only_printf(LC_TMTracer, "box<%llx> ", v.asRawBits());
         break;
@@ -4143,7 +4157,13 @@ TraceRecorder::snapshot(ExitType exitType)
         if (pendingUnboxSlot == cx->regs->sp - 2)
             pos = stackSlots - 2;
         typemap[pos] = JSVAL_TYPE_BOXED;
-    }
+    } else if (pendingSpecializedNative &&
+               (pendingSpecializedNative->flags & JSTN_RETURN_NULLABLE_STR)) {
+        typemap[stackSlots - 1] = JSVAL_TYPE_STRORNULL;
+    } else if (pendingSpecializedNative &&
+               (pendingSpecializedNative->flags & JSTN_RETURN_NULLABLE_OBJ)) {
+        typemap[stackSlots - 1] = JSVAL_TYPE_OBJORNULL;
+    } 
 
     /* Now restore the the original pc (after which early returns are ok). */
     if (resumeAfter) {
@@ -13394,6 +13414,11 @@ TraceRecorder::record_NativeCallComplete()
          */
         JS_ASSERT(&v == &cx->regs->sp[-1] && get(&v) == v_ins);
         set(&v, unbox_value(v, native_rval_ins, 0, snapshot(BRANCH_EXIT)));
+    } else if (pendingSpecializedNative->flags &
+               (JSTN_RETURN_NULLABLE_STR | JSTN_RETURN_NULLABLE_OBJ)) {
+        guard(v.isNull(),
+              addName(lir->insEqP_0(v_ins), "guard(nullness)"),
+              BRANCH_EXIT);
     } else if (JSTN_ERRTYPE(pendingSpecializedNative) == FAIL_NEG) {
         /* Already added i2d in functionCall. */
         JS_ASSERT(v.isNumber());
@@ -14223,7 +14248,7 @@ TraceRecorder::record_JSOP_MOREITER()
 static JSBool FASTCALL
 CloseIterator(JSContext *cx, JSObject *iterobj)
 {
-    if (!js_CloseIterator(cx, ObjectValue(*iterobj))) {
+    if (!js_CloseIterator(cx, iterobj)) {
         SetBuiltinError(cx);
         return false;
     }
@@ -14757,7 +14782,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENUMELEM()
 {
     /*
-     * To quote from jsops.cpp's JSOP_ENUMELEM case:
+     * To quote from jsinterp.cpp's JSOP_ENUMELEM case:
      * Funky: the value to set is under the [obj, id] pair.
      */
     return setElem(-2, -1, -3);
@@ -14820,7 +14845,7 @@ TraceRecorder::record_JSOP_LAMBDA()
      * JSOP_SETMETHOD or JSOP_INITMETHOD, since we optimize away the clone for
      * these combinations and clone only if the "method value" escapes.
      *
-     * See jsops.cpp, the JSOP_LAMBDA null closure case. The JSOP_SETMETHOD and
+     * See jsinterp.cpp, the JSOP_LAMBDA null closure case. The JSOP_SETMETHOD and
      * JSOP_INITMETHOD logic governing the early ARECORD_CONTINUE returns below
      * must agree with the corresponding break-from-do-while(0) logic there.
      */
