@@ -1915,7 +1915,7 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
         return true;
 
     JS_ASSERT(cg->staticLevel > upvarLevel);
-    if (cg->staticLevel >= JS_DISPLAY_SIZE || upvarLevel >= JS_DISPLAY_SIZE)
+    if (cg->staticLevel >= UpvarCookie::MAX_LEVEL || upvarLevel >= UpvarCookie::MAX_LEVEL)
         return true;
 
     JSAtomListElement *ale = cg->upvarList.lookup(atom);
@@ -2164,7 +2164,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         return JS_TRUE;
     }
 
-    uintN level = cookie.level();
+    uint16 level = cookie.level();
     JS_ASSERT(cg->staticLevel >= level);
 
     /*
@@ -2212,7 +2212,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         return MakeUpvarForEval(pn, cg);
     }
 
-    uintN skip = cg->staticLevel - level;
+    uint16 skip = cg->staticLevel - level;
     if (skip != 0) {
         JS_ASSERT(cg->inFunction());
         JS_ASSERT_IF(cookie.slot() != UpvarCookie::CALLEE_SLOT, cg->lexdeps.lookup(atom));
@@ -2226,7 +2226,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         if (op != JSOP_NAME)
             return JS_TRUE;
-        if (level >= JS_DISPLAY_SIZE)
+        if (level >= UpvarCookie::MAX_LEVEL)
             return JS_TRUE;
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             return JS_TRUE;
@@ -6377,7 +6377,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * For operator new applied to other expressions than E4X ones, we emit
          * JSOP_GETPROP instead of JSOP_CALLPROP, etc. This is necessary to
          * interpose the lambda-initialized method read barrier -- see the code
-         * in jsops.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
+         * in jsinterp.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
          *
          * Then (or in a call case that has no explicit reference-base object)
          * we emit JSOP_NULL as a placeholder local GC root to hold the |this|

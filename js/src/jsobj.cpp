@@ -2697,7 +2697,7 @@ js_NonEmptyObject(JSContext* cx, JSObject* proto)
     }
 
     /*
-     * See comments in the JSOP_NEWINIT case of jsops.cpp why we cannot
+     * See comments in the JSOP_NEWINIT case of jsinterp.cpp why we cannot
      * assume that cx owns the scope and skip the unlock call.
      */
     JS_UNLOCK_SCOPE(cx, scope);
@@ -6629,9 +6629,6 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
             fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) fp->scopeChain);
         if (fp->blockChain)
             fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->blockChain);
-
-        if (fp->displaySave)
-            fprintf(stderr, "  displaySave: (JSStackFrame *) %p\n", (void *) fp->displaySave);
 
         fputc('\n', stderr);
     }

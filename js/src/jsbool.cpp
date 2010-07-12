@@ -169,14 +169,14 @@ js_BooleanToCharBuffer(JSContext *cx, JSBool b, JSCharBuffer &cb)
 JSBool
 js_ValueToBoolean(const Value &v)
 {
-    if (v.isNullOrUndefined())
-        return JS_FALSE;
-    if (v.isObject())
-        return JS_TRUE;
-    if (v.isString())
-        return v.toString()->length() != 0;
     if (v.isInt32())
         return v.toInt32() != 0;
+    if (v.isString())
+        return v.toString()->length() != 0;
+    if (v.isObject())
+        return JS_TRUE;
+    if (v.isNullOrUndefined())
+        return JS_FALSE;
     if (v.isDouble()) {
         jsdouble d;
 

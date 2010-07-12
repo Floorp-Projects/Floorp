@@ -160,7 +160,7 @@ extern JS_FRIEND_API(JSBool)
 js_ValueToIterator(JSContext *cx, uintN flags, js::Value *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_CloseIterator(JSContext *cx, const js::Value &v);
+js_CloseIterator(JSContext *cx, JSObject *iterObj);
 
 bool
 js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id);

@@ -291,7 +291,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
     JSAtomList      lexdeps;        /* unresolved lexical name dependencies */
     JSTreeContext   *parent;        /* enclosing function or global context */
-    uintN           staticLevel;    /* static compilation unit nesting level */
+    uint16          staticLevel;    /* static compilation unit nesting level */
 
     JSFunctionBox   *funbox;        /* null or box for function we're compiling
                                        if (flags & TCF_IN_FUNCTION) and not in

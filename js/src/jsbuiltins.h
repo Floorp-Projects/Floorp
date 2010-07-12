@@ -53,7 +53,9 @@ enum {
     JSTN_ERRTYPE_MASK        = 0x07,
     JSTN_UNBOX_AFTER         = 0x08,
     JSTN_MORE                = 0x10,
-    JSTN_CONSTRUCTOR         = 0x20
+    JSTN_CONSTRUCTOR         = 0x20,
+    JSTN_RETURN_NULLABLE_STR = 0x40,
+    JSTN_RETURN_NULLABLE_OBJ = 0x80
 };
 
 #define JSTN_ERRTYPE(jstn)  ((jstn)->flags & JSTN_ERRTYPE_MASK)
@@ -178,7 +180,6 @@ struct ClosureVarInfo;
  * effects.
  */
 #define _JS_CTYPE(ctype, size, pch, ach, flags)     (ctype, size, pch, ach, flags)
-#define _JS_JSVAL_CTYPE(size, pch, ach, flags)  (Value, size, pch, ach, (flags | JSTN_UNBOX_AFTER))
 
 #define _JS_CTYPE_CONTEXT           _JS_CTYPE(JSContext *,            _JS_PTR,"C", "", INFALLIBLE)
 #define _JS_CTYPE_RUNTIME           _JS_CTYPE(JSRuntime *,            _JS_PTR,"R", "", INFALLIBLE)
