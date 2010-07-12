@@ -75,13 +75,13 @@ struct PICInfo {
     };
 
     union {
-        // This struct comes out to 60 bits.
+        // This struct comes out to 61 bits.
         struct {
             RegisterID typeReg  : 5;  // reg used for checking type
             bool hasTypeCheck   : 1;  // type check and reg are present
 
             // Reverse offset from slowPathStart to the type check slow path.
-            uint8 typeCheckOffset : 8;
+            uint16 typeCheckOffset : 9;
 
             // Remat info for the object reg.
             uint32 objRemat    : 20;
