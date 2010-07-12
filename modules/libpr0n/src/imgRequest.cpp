@@ -74,6 +74,8 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 
+#include "imgDiscardTracker.h"
+
 #define DISCARD_PREF "image.mem.discardable"
 #define DECODEONDRAW_PREF "image.mem.decodeondraw"
 
@@ -103,6 +105,9 @@ ReloadPrefs(nsIPrefBranch *aBranch)
   rv = aBranch->GetBoolPref(DECODEONDRAW_PREF, &decodeondraw);
   if (NS_SUCCEEDED(rv))
     gDecodeOnDraw = decodeondraw;
+
+  // Discard timeout
+  imgDiscardTracker::ReloadTimeout();
 }
 
 // Observer
@@ -124,7 +129,8 @@ imgRequestPrefObserver::Observe(nsISupports     *aSubject,
 
   // Right pref
   if (strcmp(NS_LossyConvertUTF16toASCII(aData).get(), DISCARD_PREF) &&
-      strcmp(NS_LossyConvertUTF16toASCII(aData).get(), DECODEONDRAW_PREF))
+      strcmp(NS_LossyConvertUTF16toASCII(aData).get(), DECODEONDRAW_PREF) &&
+      strcmp(NS_LossyConvertUTF16toASCII(aData).get(), DISCARD_TIMEOUT_PREF))
     return NS_OK;
 
   // Get the pref branch
@@ -224,6 +230,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
       if (branch) {
         branch->AddObserver(DISCARD_PREF, observer, PR_FALSE);
         branch->AddObserver(DECODEONDRAW_PREF, observer, PR_FALSE);
+        branch->AddObserver(DISCARD_TIMEOUT_PREF, observer, PR_FALSE);
         ReloadPrefs(branch);
         gRegisteredPrefObserver = PR_TRUE;
       }
