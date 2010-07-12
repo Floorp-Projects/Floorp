@@ -64,7 +64,7 @@ var consoleService = Cc["@mozilla.org/consoleservice;1"]
 // and creates a Point with it along with y. If either a or y are omitted, 
 // 0 is used in their place. 
 window.Point = function(a, y) {
-  if(isPoint(a)) {
+  if (isPoint(a)) {
     this.x = a.x;
     this.y = a.y;
   } else {
@@ -101,7 +101,7 @@ window.Point.prototype = {
 // and creates a Rect with it along with top, width, and height. 
 window.Rect = function(a, top, width, height) {
   // Note: perhaps 'a' should really be called 'rectOrLeft'
-  if(isRect(a)) {
+  if (isRect(a)) {
     this.left = a.left;
     this.top = a.top;
     this.width = a.width;
@@ -167,7 +167,7 @@ window.Rect.prototype = {
     var box = new Rect(Math.max(rect.left, this.left), Math.max(rect.top, this.top), 0, 0);
     box.right = Math.min(rect.right, this.right);
     box.bottom = Math.min(rect.bottom, this.bottom);
-    if(box.width > 0 && box.height > 0)
+    if (box.width > 0 && box.height > 0)
       return box;
       
     return null;
@@ -229,7 +229,7 @@ window.Rect.prototype = {
   // Paramaters
   //  - A <Point> or two arguments: x and y
   inset: function(a, b) {
-    if(typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
+    if (typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
       b = a.y; 
       a = a.x;
     }
@@ -247,7 +247,7 @@ window.Rect.prototype = {
   // Paramaters
   //  - A <Point> or two arguments: x and y
   offset: function(a, b) {
-    if(typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
+    if (typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
       this.left += a.x;
       this.top += a.y;
     } else {
@@ -382,7 +382,7 @@ window.Subscribable.prototype = {
   // The given callback will be called when the Subscribable fires the given event.
   // The refObject is used to facilitate removal if necessary. 
   addSubscriber: function(refObject, eventName, callback) {
-    if(!this.subscribers[eventName])
+    if (!this.subscribers[eventName])
       this.subscribers[eventName] = [];
       
     var subs = this.subscribers[eventName];
@@ -390,7 +390,7 @@ window.Subscribable.prototype = {
       return element.refObject == refObject;
     });
     
-    if(existing.length) {
+    if (existing.length) {
       Utils.assert('should only ever be one', existing.length == 1);
       existing[0].callback = callback;
     } else {  
@@ -405,7 +405,7 @@ window.Subscribable.prototype = {
   // Function: removeSubscriber
   // Removes the callback associated with refObject for the given event. 
   removeSubscriber: function(refObject, eventName) {
-    if(!this.subscribers[eventName])
+    if (!this.subscribers[eventName])
       return;
       
     this.subscribers[eventName] = iQ.grep(this.subscribers[eventName], function(element) {
@@ -417,7 +417,7 @@ window.Subscribable.prototype = {
   // Function: _sendToSubscribers
   // Internal routine. Used by the Subscribable to fire events.
   _sendToSubscribers: function(eventName, eventInfo) {
-    if(!this.subscribers[eventName])
+    if (!this.subscribers[eventName])
       return;
       
     var self = this;
@@ -432,14 +432,14 @@ window.Subscribable.prototype = {
   // The given callback will be called when the Subscribable fires its onClose.
   // The referenceElement is used to facilitate removal if necessary. 
   addOnClose: function(referenceElement, callback) {
-    if(!this.onCloseSubscribers)
+    if (!this.onCloseSubscribers)
       this.onCloseSubscribers = [];
       
     var existing = iQ.grep(this.onCloseSubscribers, function(element) {
       return element.referenceElement == referenceElement;
     });
     
-    if(existing.length) {
+    if (existing.length) {
       Utils.assert('should only ever be one', existing.length == 1);
       existing[0].callback = callback;
     } else {  
@@ -454,7 +454,7 @@ window.Subscribable.prototype = {
   // Function: removeOnClose
   // Removes the callback associated with referenceElement for onClose notification. 
   removeOnClose: function(referenceElement) {
-    if(!this.onCloseSubscribers)
+    if (!this.onCloseSubscribers)
       return;
       
     this.onCloseSubscribers = iQ.grep(this.onCloseSubscribers, function(element) {
@@ -466,7 +466,7 @@ window.Subscribable.prototype = {
   // Function: _sendOnClose
   // Internal routine. Used by the Subscribable to fire onClose events.
   _sendOnClose: function() {
-    if(!this.onCloseSubscribers)
+    if (!this.onCloseSubscribers)
       return;
       
     iQ.each(this.onCloseSubscribers, function(index, object) { 
@@ -490,8 +490,8 @@ var Utils = {
       Utils.assert('tabBrowser', tabBrowser);
       
       var rawTab = tabBrowser.selectedTab;
-      for( var i=0; i<Tabs.length; i++){
-        if(Tabs[i].raw == rawTab)
+      for ( var i=0; i<Tabs.length; i++){
+        if (Tabs[i].raw == rawTab)
           return Tabs[i];
       }
     } catch(e) {
@@ -542,9 +542,9 @@ var Utils = {
   
   getFiles: function(dir) {
     var files = [];
-    if(dir.isReadable() && dir.isDirectory) {
+    if (dir.isReadable() && dir.isDirectory) {
       var entries = dir.directoryEntries;
-      while(entries.hasMoreElements()) {
+      while (entries.hasMoreElements()) {
         var entry = entries.getNext();
         entry.QueryInterface(Ci.nsIFile);
         files.push(entry);
@@ -572,7 +572,7 @@ var Utils = {
   
   trace: function() { // pass as many arguments as you want, it'll print them all
     var text = this.expandArgumentsForLog(arguments);
-    if(typeof(printStackTrace) != 'function')
+    if (typeof(printStackTrace) != 'function')
       this.log(text + ' trace: you need to include stacktrace.js');
     else {
       var calls = printStackTrace();
@@ -582,14 +582,14 @@ var Utils = {
   }, 
   
   assert: function(label, condition) {
-    if(!condition) {
+    if (!condition) {
       var text;
-      if(typeof(label) == 'undefined')
+      if (typeof(label) == 'undefined')
         text = 'badly formed assert';
       else
         text = 'tabcandy assert: ' + label;        
         
-      if(typeof(printStackTrace) == 'function') {
+      if (typeof(printStackTrace) == 'function') {
         var calls = printStackTrace();
         text += '\n' + calls[3];
       }
@@ -601,14 +601,14 @@ var Utils = {
   // Function: assertThrow
   // Throws label as an exception if condition is false.
   assertThrow: function(label, condition) {
-    if(!condition) {
+    if (!condition) {
       var text;
-      if(typeof(label) == 'undefined')
+      if (typeof(label) == 'undefined')
         text = 'badly formed assert';
       else
         text = 'tabcandy assert: ' + label; 
         
-      if(typeof(printStackTrace) == 'function') {
+      if (typeof(printStackTrace) == 'function') {
         var calls = printStackTrace();
         calls.splice(0, 3); // Remove this call and the printStackTrace calls
         text += '\n' + calls.join('\n');
@@ -620,7 +620,7 @@ var Utils = {
   
   expandObject: function(obj) {
       var s = obj + ' = {';
-      for(prop in obj) {
+      for (prop in obj) {
         var value;
         try {
           value = obj[prop]; 
@@ -629,9 +629,9 @@ var Utils = {
         }
         
         s += prop + ': ';
-        if(typeof(value) == 'string')
+        if (typeof(value) == 'string')
           s += '\'' + value + '\'';
-        else if(typeof(value) == 'function')
+        else if (typeof(value) == 'function')
           s += 'function';
         else
           s += value;
@@ -645,13 +645,13 @@ var Utils = {
     var s = '';
     var count = args.length;
     var a;
-    for(a = 0; a < count; a++) {
+    for (a = 0; a < count; a++) {
       var arg = args[a];
-      if(typeof(arg) == 'object')
+      if (typeof(arg) == 'object')
         arg = this.expandObject(arg);
         
       s += arg;
-      if(a < count - 1)
+      if (a < count - 1)
         s += '; ';
     }
     
@@ -668,9 +668,9 @@ var Utils = {
   
   // ___ Event
   isRightClick: function(event) {
-    if(event.which)
+    if (event.which)
       return (event.which == 3);
-    if(event.button) 
+    if (event.button) 
       return (event.button == 2);
     
     return false;
@@ -699,8 +699,8 @@ var Utils = {
   // Returns a copy of the argument. Note that this is a shallow copy; if the argument
   // has properties that are themselves objects, those properties will be copied by reference.
   copy: function(value) {
-    if(value && typeof(value) == 'object') {
-      if(iQ.isArray(value))
+    if (value && typeof(value) == 'object') {
+      if (iQ.isArray(value))
         return iQ.extend([], value);
         
       return iQ.extend({}, value);

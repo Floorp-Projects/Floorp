@@ -158,7 +158,7 @@ window.Item.prototype = {
     
     this.container = container;
     
-    if(this.debug) {
+    if (this.debug) {
       this.$debug = iQ('<div>')
         .css({
           border: '2px solid green',
@@ -190,7 +190,7 @@ window.Item.prototype = {
       over: function(){},
       out: function(){
         var group = drag.info.item.parent;
-        if(group) {
+        if (group) {
           group.remove(drag.info.$el, {dontClose: true});
         }
           
@@ -347,13 +347,13 @@ window.Item.prototype = {
       var bbc = bb.center();
     
       iQ.each(items, function(index, item) {
-        if(item == baseItem || item.locked.bounds)
+        if (item == baseItem || item.locked.bounds)
           return;
           
         var data = item.pushAwayData;
         // if the item under consideration has already been pushed, or has a lower
         // "generation" (and thus an implictly greater placement priority) then don't move it.
-        if(data.generation <= baseData.generation)
+        if (data.generation <= baseData.generation)
           return;
         
         // box = this item's current bounds, with a +buffer margin.
@@ -362,7 +362,7 @@ window.Item.prototype = {
         box.inset(-buffer, -buffer);
         
         // if the item under consideration overlaps with the base item...
-        if(box.intersects(bb)) {
+        if (box.intersects(bb)) {
         
           // Let's push it a little.
           
@@ -373,15 +373,15 @@ window.Item.prototype = {
           
           // Consider the relationship between the current item (box) + the base item.
           // If it's more vertically stacked than "side by side"...
-          if(Math.abs(center.x - bbc.x) < Math.abs(center.y - bbc.y)) {
+          if (Math.abs(center.x - bbc.x) < Math.abs(center.y - bbc.y)) {
             // push vertically.
-            if(center.y > bbc.y)
+            if (center.y > bbc.y)
               offset.y = bb.bottom - box.top; 
             else
               offset.y = bb.top - box.bottom;
           } else { // if they're more "side by side" than stacked vertically...
             // push horizontally.
-            if(center.x > bbc.x)
+            if (center.x > bbc.x)
               offset.x = bb.right - box.left; 
             else
               offset.x = bb.left - box.right;
@@ -403,19 +403,19 @@ window.Item.prototype = {
     // push each of the itemsToPush, one at a time.
     // itemsToPush starts with just [this], but pushOne can add more items to the stack.
     // Maximally, this could run through all Items on the screen.
-    while(itemsToPush.length)
+    while (itemsToPush.length)
       pushOne(itemsToPush.shift());         
 
     // ___ Squish!
     var pageBounds = Items.getSafeWindowBounds();
     iQ.each(items, function(index, item) {
       var data = item.pushAwayData;
-      if(data.generation == 0 || item.locked.bounds)
+      if (data.generation == 0 || item.locked.bounds)
         return;
 
       function apply(item, posStep, posStep2, sizeStep) {
         var data = item.pushAwayData;
-        if(data.generation == 0)
+        if (data.generation == 0)
           return;
           
         var bounds = data.bounds;
@@ -424,8 +424,8 @@ window.Item.prototype = {
         bounds.left += posStep.x;
         bounds.top += posStep.y;
         
-        if(!item.isAGroup) {
-          if(sizeStep.y > sizeStep.x) {
+        if (!item.isAGroup) {
+          if (sizeStep.y > sizeStep.x) {
             var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
             bounds.left += (bounds.width - newWidth) / 2;
             bounds.width = newWidth;
@@ -437,7 +437,7 @@ window.Item.prototype = {
         }
         
         var pusher = data.pusher;
-        if(pusher)  
+        if (pusher)  
           apply(pusher, posStep.plus(posStep2), posStep2, sizeStep);
       }
 
@@ -446,29 +446,29 @@ window.Item.prototype = {
       var posStep2 = new Point();
       var sizeStep = new Point();
 
-      if(bounds.left < pageBounds.left) {      
+      if (bounds.left < pageBounds.left) {      
         posStep.x = pageBounds.left - bounds.left;
         sizeStep.x = posStep.x / data.generation;
         posStep2.x = -sizeStep.x;                
-      } else if(bounds.right > pageBounds.right) {      
+      } else if (bounds.right > pageBounds.right) {      
         posStep.x = pageBounds.right - bounds.right;
         sizeStep.x = -posStep.x / data.generation;
         posStep.x += sizeStep.x;
         posStep2.x = sizeStep.x;
       }
 
-      if(bounds.top < pageBounds.top) {      
+      if (bounds.top < pageBounds.top) {      
         posStep.y = pageBounds.top - bounds.top;
         sizeStep.y = posStep.y / data.generation;
         posStep2.y = -sizeStep.y;                
-      } else if(bounds.bottom > pageBounds.bottom) {      
+      } else if (bounds.bottom > pageBounds.bottom) {      
         posStep.y = pageBounds.bottom - bounds.bottom;
         sizeStep.y = -posStep.y / data.generation;
         posStep.y += sizeStep.y;
         posStep2.y = sizeStep.y;
       }
 
-      if(posStep.x || posStep.y || sizeStep.x || sizeStep.y) 
+      if (posStep.x || posStep.y || sizeStep.x || sizeStep.y) 
         apply(item, posStep, posStep2, sizeStep);
     });
 
@@ -488,7 +488,7 @@ window.Item.prototype = {
     iQ.each(items, function(index, item) {
       var data = item.pushAwayData;
       var bounds = data.bounds;
-      if(!bounds.equals(data.startBounds)) {
+      if (!bounds.equals(data.startBounds)) {
         item.setBounds(bounds);
       }
     });
@@ -499,7 +499,7 @@ window.Item.prototype = {
   // Called by a subclass when its bounds change, to update the debugging rectangles on screen.
   // This functionality is enabled only by the debug property.
   _updateDebugBounds: function() {
-    if(this.$debug) {
+    if (this.$debug) {
       this.$debug.css({
         left: this.bounds.left,
         top: this.bounds.top,
@@ -585,7 +585,7 @@ window.Item.prototype = {
       Utils.assert('dragOptions', this.dragOptions);
         
       var cancelClasses = [];
-      if(typeof(this.dragOptions.cancelClass) == 'string')
+      if (typeof(this.dragOptions.cancelClass) == 'string')
         cancelClasses = this.dragOptions.cancelClass.split(' ');
         
       var self = this;
@@ -608,8 +608,8 @@ window.Item.prototype = {
         self.setBounds(box, true);
 
         // drag events
-        if(!startSent) {
-          if(iQ.isFunction(self.dragOptions.start)) {
+        if (!startSent) {
+          if (iQ.isFunction(self.dragOptions.start)) {
             self.dragOptions.start.apply(self, 
                 [startEvent, {position: {left: startPos.x, top: startPos.y}}]);
           }
@@ -617,7 +617,7 @@ window.Item.prototype = {
           startSent = true;
         }
 
-        if(iQ.isFunction(self.dragOptions.drag))
+        if (iQ.isFunction(self.dragOptions.drag))
           self.dragOptions.drag.apply(self, [e, {position: box.position()}]);
           
         // drop events
@@ -628,35 +628,35 @@ window.Item.prototype = {
         
         iQ.each(droppables, function(index, droppable) {
           var intersection = box.intersection(droppable.bounds);
-          if(intersection && intersection.area() > best.score) {
+          if (intersection && intersection.area() > best.score) {
             var possibleDropTarget = droppable.item;
             var accept = true;
-            if(possibleDropTarget != dropTarget) {
+            if (possibleDropTarget != dropTarget) {
               var dropOptions = possibleDropTarget.dropOptions;
-              if(dropOptions && iQ.isFunction(dropOptions.accept))
+              if (dropOptions && iQ.isFunction(dropOptions.accept))
                 accept = dropOptions.accept.apply(possibleDropTarget, [self]);
             }
             
-            if(accept) {
+            if (accept) {
               best.dropTarget = possibleDropTarget;
               best.score = intersection.area();
             }
           }
         });
 
-        if(best.dropTarget != dropTarget) {
+        if (best.dropTarget != dropTarget) {
           var dropOptions;
-          if(dropTarget) {
+          if (dropTarget) {
             dropOptions = dropTarget.dropOptions;
-            if(dropOptions && iQ.isFunction(dropOptions.out))
+            if (dropOptions && iQ.isFunction(dropOptions.out))
               dropOptions.out.apply(dropTarget, [e]);
           }
           
           dropTarget = best.dropTarget; 
 
-          if(dropTarget) {
+          if (dropTarget) {
             dropOptions = dropTarget.dropOptions;
-            if(dropOptions && iQ.isFunction(dropOptions.over))
+            if (dropOptions && iQ.isFunction(dropOptions.over))
               dropOptions.over.apply(dropTarget, [e]);
           }
         }
@@ -670,13 +670,13 @@ window.Item.prototype = {
           .unbind('mousemove', handleMouseMove)
           .unbind('mouseup', handleMouseUp);
           
-        if(dropTarget) {
+        if (dropTarget) {
           var dropOptions = dropTarget.dropOptions;
-          if(dropOptions && iQ.isFunction(dropOptions.drop))
+          if (dropOptions && iQ.isFunction(dropOptions.drop))
             dropOptions.drop.apply(dropTarget, [e]);
         }
 
-        if(startSent && iQ.isFunction(self.dragOptions.stop))
+        if (startSent && iQ.isFunction(self.dragOptions.stop))
           self.dragOptions.stop.apply(self, [e]);
           
         e.preventDefault();    
@@ -684,19 +684,19 @@ window.Item.prototype = {
       
       // ___ mousedown
       $container.mousedown(function(e) {
-        if(Utils.isRightClick(e))
+        if (Utils.isRightClick(e))
           return;
         
         var cancel = false;
         var $target = iQ(e.target);
         iQ.each(cancelClasses, function(index, class) {
-          if($target.hasClass(class)) {
+          if ($target.hasClass(class)) {
             cancel = true;
             return false;
           }
         });
         
-        if(cancel) {
+        if (cancel) {
           e.preventDefault();
           return;
         }
@@ -709,7 +709,7 @@ window.Item.prototype = {
         
         droppables = [];
         iQ('.iq-droppable').each(function() {
-          if(this != self.container) {
+          if (this != self.container) {
             var item = Items.item(this);
             droppables.push({
               item: item, 
@@ -735,7 +735,7 @@ window.Item.prototype = {
   droppable: function(value) {
     try {
       var $container = iQ(this.container);
-      if(value)
+      if (value)
         $container.addClass('iq-droppable');
       else {
         Utils.assert('dropOptions', this.dropOptions);
@@ -755,7 +755,7 @@ window.Item.prototype = {
       var $container = iQ(this.container);
       iQ('.iq-resizable-handle', $container).remove();
 
-      if(!value) {
+      if (!value) {
         $container.removeClass('iq-resizable');
       } else {
         Utils.assert('resizeOptions', this.resizeOptions);
@@ -773,8 +773,8 @@ window.Item.prototype = {
           box.width = Math.max(self.resizeOptions.minWidth || 0, startSize.x + (mouse.x - startMouse.x));
           box.height = Math.max(self.resizeOptions.minHeight || 0, startSize.y + (mouse.y - startMouse.y));
 
-          if(self.resizeOptions.aspectRatio) {
-            if(startAspect < 1)
+          if (self.resizeOptions.aspectRatio) {
+            if (startAspect < 1)
               box.height = box.width * startAspect;
             else
               box.width = box.height / startAspect;
@@ -782,7 +782,7 @@ window.Item.prototype = {
                         
           self.setBounds(box, true);
   
-          if(iQ.isFunction(self.resizeOptions.resize))
+          if (iQ.isFunction(self.resizeOptions.resize))
             self.resizeOptions.resize.apply(self, [e]);
             
           e.preventDefault();
@@ -795,7 +795,7 @@ window.Item.prototype = {
             .unbind('mousemove', handleMouseMove)
             .unbind('mouseup', handleMouseUp);
             
-          if(iQ.isFunction(self.resizeOptions.stop))
+          if (iQ.isFunction(self.resizeOptions.stop))
             self.resizeOptions.stop.apply(self, [e]);
             
           e.preventDefault();    
@@ -807,14 +807,14 @@ window.Item.prototype = {
           .addClass('iq-resizable-handle iq-resizable-se')
           .appendTo($container)
           .mousedown(function(e) {
-            if(Utils.isRightClick(e))
+            if (Utils.isRightClick(e))
               return;
             
             startMouse = new Point(e.pageX, e.pageY);
             startSize = self.getBounds().size();
             startAspect = startSize.y / startSize.x;
             
-            if(iQ.isFunction(self.resizeOptions.start))
+            if (iQ.isFunction(self.resizeOptions.start))
               self.resizeOptions.start.apply(self, [e]);
             
             iQ(Utils.getCurrentWindow())
@@ -862,7 +862,7 @@ window.Items = {
     iQ('.tab, .group, .info-item').each(function() {
       var $this = iQ(this);
       var item = $this.data('item');  
-      if(item && !item.parent && !$this.hasClass('phantom'))
+      if (item && !item.parent && !$this.hasClass('phantom'))
         items.push(item);
     });
     
@@ -919,21 +919,21 @@ window.Items = {
   //   the list of rectangles if the pretend option is set; otherwise null
   arrange: function(items, bounds, options) {
     var animate;
-    if(!options || typeof(options.animate) == 'undefined') 
+    if (!options || typeof(options.animate) == 'undefined') 
       animate = true;
     else 
       animate = options.animate;
 
-    if(typeof(options) == 'undefined')
+    if (typeof(options) == 'undefined')
       options = {};
     
     var rects = null;
-    if(options.pretend)
+    if (options.pretend)
       rects = [];
       
     var tabAspect = TabItems.tabHeight / TabItems.tabWidth;
     var count = options.count || (items ? items.length : 0);
-    if(!count)
+    if (!count)
       return rects;
       
     var columns = 1;
@@ -953,12 +953,12 @@ window.Items = {
     
     figure();
     
-    while(rows > 1 && totalHeight > bounds.height) {
+    while (rows > 1 && totalHeight > bounds.height) {
       columns++; 
       figure();
     }
     
-    if(rows == 1) {
+    if (rows == 1) {
       var maxWidth = Math.max(TabItems.tabWidth, bounds.width / 2);
       tabWidth = Math.min(Math.min(maxWidth, bounds.width / count), bounds.height / tabAspect);
       tabHeight = tabWidth * tabAspect;
@@ -970,22 +970,22 @@ window.Items = {
     var immediately;
     
     var a;
-    for(a = 0; a < count; a++) {
+    for (a = 0; a < count; a++) {
 /*
-      if(animate == 'sometimes')
+      if (animate == 'sometimes')
         immediately = (typeof(item.groupData.row) == 'undefined' || item.groupData.row == row);
       else
 */
         immediately = !animate;
         
-      if(rects)
+      if (rects)
         rects.push(new Rect(box));
-      else if(items && a < items.length) {
+      else if (items && a < items.length) {
         var item = items[a];
-        if(!item.locked.bounds) {
+        if (!item.locked.bounds) {
           item.setBounds(box, immediately);
           item.setRotation(0);
-          if(options.z)
+          if (options.z)
             item.setZ(options.z);
         }
       }
@@ -997,7 +997,7 @@ window.Items = {
       
       box.left += box.width + padding;
       column++;
-      if(column == columns) {
+      if (column == columns) {
         box.left = bounds.left;
         box.top += (box.height * yScale) + padding;
         column = 0;
@@ -1019,7 +1019,7 @@ window.Items = {
   //   ignore - an <Item> to not include in calculations (because it's about to be closed, for instance)
   unsquish: function(pairs, ignore) {
     var pairsProvided = (pairs ? true : false);
-    if(!pairsProvided) {
+    if (!pairsProvided) {
       var items = Items.getTopLevelItems();
       pairs = [];
       iQ.each(items, function(index, item) {
@@ -1033,23 +1033,23 @@ window.Items = {
     var pageBounds = Items.getSafeWindowBounds();
     iQ.each(pairs, function(index, pair) {
       var item = pair.item;
-      if(item.locked.bounds || item == ignore)
+      if (item.locked.bounds || item == ignore)
         return;
         
       var bounds = pair.bounds;
       var newBounds = new Rect(bounds);
 
       var newSize;
-      if(isPoint(item.userSize)) 
+      if (isPoint(item.userSize)) 
         newSize = new Point(item.userSize);
       else
         newSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
         
-      if(item.isAGroup) {
+      if (item.isAGroup) {
           newBounds.width = Math.max(newBounds.width, newSize.x);
           newBounds.height = Math.max(newBounds.height, newSize.y);
       } else {
-        if(bounds.width < newSize.x) {
+        if (bounds.width < newSize.x) {
           newBounds.width = newSize.x;
           newBounds.height = newSize.y;
         }
@@ -1059,38 +1059,38 @@ window.Items = {
       newBounds.top -= (newBounds.height - bounds.height) / 2;
       
       var offset = new Point();
-      if(newBounds.left < pageBounds.left)
+      if (newBounds.left < pageBounds.left)
         offset.x = pageBounds.left - newBounds.left;
-      else if(newBounds.right > pageBounds.right)
+      else if (newBounds.right > pageBounds.right)
         offset.x = pageBounds.right - newBounds.right;
 
-      if(newBounds.top < pageBounds.top)
+      if (newBounds.top < pageBounds.top)
         offset.y = pageBounds.top - newBounds.top;
-      else if(newBounds.bottom > pageBounds.bottom)
+      else if (newBounds.bottom > pageBounds.bottom)
         offset.y = pageBounds.bottom - newBounds.bottom;
         
       newBounds.offset(offset);
 
-      if(!bounds.equals(newBounds)) {        
+      if (!bounds.equals(newBounds)) {        
         var blocked = false;
         iQ.each(pairs, function(index, pair2) {
-          if(pair2 == pair || pair2.item == ignore)
+          if (pair2 == pair || pair2.item == ignore)
             return;
             
           var bounds2 = pair2.bounds;
-          if(bounds2.intersects(newBounds)) {
+          if (bounds2.intersects(newBounds)) {
             blocked = true;
             return false;
           }
         });
         
-        if(!blocked) {
+        if (!blocked) {
           pair.bounds.copy(newBounds);
         }
       }
     });
 
-    if(!pairsProvided) {
+    if (!pairsProvided) {
       iQ.each(pairs, function(index, pair) {
         pair.item.setBounds(pair.bounds);
       });
