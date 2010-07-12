@@ -266,9 +266,14 @@ BytecodeAnalyzer::analyze()
         JSTryNoteArray *tnarray = script->trynotes();
         for (unsigned i = 0; i < tnarray->length; ++i) {
             JSTryNote &tn = tnarray->vector[i];
+            unsigned pcstart = script->main + tn.start - script->code;
+            unsigned pcoff = pcstart + tn.length;
+
+            for (unsigned j = pcstart; j < pcoff; j++)
+                ops[j].inTryBlock = true;
+
             if (tn.kind == JSTRY_ITER)
                 continue;
-            unsigned pcoff = script->main + tn.start + tn.length - script->code;
             
             ops[pcoff].exceptionEntry = true;
             ops[pcoff].nincoming = 1;

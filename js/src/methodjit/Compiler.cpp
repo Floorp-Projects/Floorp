@@ -376,6 +376,7 @@ mjit::Compiler::generateMethod()
         if (opinfo.nincoming)
             frame.forgetEverything(opinfo.stackDepth);
         opinfo.safePoint = true;
+        frame.setInTryBlock(opinfo.inTryBlock);
         jumpMap[uint32(PC - script->code)] = masm.label();
 
         if (!opinfo.visited) {
@@ -2760,7 +2761,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
         shapeGuard = masm.branchPtrWithPatch(Assembler::NotEqual, reg, mic.shapeVal);
         frame.freeReg(reg);
     }
-    stubcc.linkExit(shapeGuard, Uses(1));
+    stubcc.linkExit(shapeGuard, Uses(2));
 
     stubcc.leave();
     stubcc.masm.move(Imm32(mics.length()), Registers::ArgReg1);
