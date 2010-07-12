@@ -438,6 +438,8 @@ function Content() {
   this._progressController.start();
 
   this._formAssistant = new FormAssistant();
+  this._overlayTimeout = new Util.Timeout();
+  this._contextTimeout = new Util.Timeout();
 }
 
 Content.prototype = {
@@ -459,22 +461,27 @@ Content.prototype = {
         break;
 
       case "Browser:MouseDown":
-        if (this._overlayTimeout)
-          return;
+        this._overlayTimeout.clear();
+        this._overlayTimeout.clear();
 
         let element = elementFromPoint(x, y);
         if (!element)
           return;
 
         if (element.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,*[role=button],button,input,option,select,textarea,label")) {
-          this._overlayTimeout = content.setTimeout(function() {
+          this._overlayTimeout.once(kTapOverlayTimeout, function() {
             let rects = getContentClientRects(element);
             sendAsyncMessage("Browser:Highlight", { rects: rects });
-            this._overlayTimeout = 0;
-          }, kTapOverlayTimeout);
+          });
         }
 
-        this._startContextTimeout(element);
+        // We add a few milliseconds because of how the InputHandler wait before
+        // dispatching a single click (default: 500)
+        this._contextTimeout.once(500 + 200, function() {
+          let event = content.document.createEvent("PopupEvents");
+          event.initEvent("contextmenu", true, true);
+          element.dispatchEvent(event);
+        });
         break;
 
       case "Browser:MouseUp": {
@@ -491,14 +498,8 @@ Content.prototype = {
       }
 
       case "Browser:MouseCancel":
-        if (this._overlayTimeout) {
-          content.clearTimeout(this._overlayTimeout);
-          this._overlayTimeout = 0;
-        }
-
-        if (this._contextTimeout) {
-          content.clearTimeout(this._contextTimeout);
-        }
+        this._overlayTimeout.clear();
+        this._contextTimeout.clear();
         break;
 
       case "Browser:SaveAs":
@@ -581,19 +582,9 @@ Content.prototype = {
     windowUtils.sendMouseEvent(aName, aX - scrollOffset.x, aY - scrollOffset.y, 0, 1, 0, true);
   },
 
-  _contextTimeout: null,
-  _startContextTimeout: function startContextTimeout(aElement) {
-    if (this._contextTimeout)
-      content.clearTimeout(this._contextTimeout);
-
-    this._contextTimeout = content.setTimeout(function() {
-      let event = content.document.createEvent("PopupEvents");
-      event.initEvent("contextmenu", true, true);
-      aElement.dispatchEvent(event);
-    }, 500);
-  },
-
   startLoading: function startLoading() {
+    this._contextTimeout.clear();
+    this._overlayTimeout.clear();
     this._loading = true;
     this._coalescer.start();
   },
@@ -741,13 +732,13 @@ var ContextHandler = {
 
     return null;
   },
-  
+
   _getProtocol: function ch_getProtocol(aURI) {
     if (aURI)
       return aURI.scheme;
     return null;
   },
-  
+
   _isSaveable: function ch_isSaveable(aProtocol) {
     // We don't do the Right Thing for news/snews yet, so turn them off until we do
     return aProtocol && !(aProtocol == "mailto" || aProtocol == "javascript" || aProtocol == "news" || aProtocol == "snews");
@@ -763,6 +754,9 @@ var ContextHandler = {
   },
 
   handleEvent: function ch_handleEvent(aEvent) {
+    if (aEvent.getPreventDefault())
+      return;
+
     let state = {
       onLink: false,
       onSaveableLink: false,
