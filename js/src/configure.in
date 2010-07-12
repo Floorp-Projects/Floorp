@@ -1275,7 +1275,7 @@ x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
     ;;
 
-arm)
+arm*)
     CPU_ARCH=arm
     ;;
 esac
