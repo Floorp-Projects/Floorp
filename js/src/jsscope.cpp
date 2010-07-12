@@ -320,7 +320,7 @@ JSScope::initRuntimeState(JSContext *cx)
      * is less than freeslot to succeed. As the shared emptyArgumentsScope is
      * never mutated, it's safe to pretend to have all the slots possible.
      *
-     * Note how the fast paths in jsops.cpp for JSOP_LENGTH and JSOP_GETELEM
+     * Note how the fast paths in jsinterp.cpp for JSOP_LENGTH and JSOP_GETELEM
      * bypass resolution of scope properties for length and element indices on
      * arguments objects. This helps ensure that any arguments object needing
      * its own mutable scope (with unique shape) is a rare event.
