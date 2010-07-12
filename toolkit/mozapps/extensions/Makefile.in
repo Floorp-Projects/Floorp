@@ -43,6 +43,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE         = extensions
 LIBRARY_NAME   = extensions
+SHORT_LIBNAME  = extnsion
 IS_COMPONENT   = 1
 MODULE_NAME    = AddonsModule
 GRE_MODULE     = 1
