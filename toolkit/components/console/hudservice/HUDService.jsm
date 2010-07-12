@@ -180,11 +180,6 @@ HUD_SERVICE.prototype =
   filterPrefs: {},
 
   /**
-   * We keep track of all of the DOMMutation event listers in this object
-   */
-  mutationEventFunctions: {},
-
-  /**
    * Event handler to get window errors
    * TODO: a bit of a hack but is able to associate
    * errors thrown in a window's scope we do not know
@@ -383,24 +378,6 @@ HUD_SERVICE.prototype =
   setFilterState: function HS_setFilterState(aHUDId, aToggleType, aState)
   {
     this.filterPrefs[aHUDId][aToggleType] = aState;
-    this.toggleBinaryFilter(aToggleType, aHUDId);
-  },
-
-  /**
-   * toggle a binary filter on the filter toolbar
-   *
-   * @param string aFilter
-   * @param string aHUDId
-   * @returns void
-   */
-  toggleBinaryFilter:
-  function HS_toggleBinaryFilter(aFilter, aHUDId)
-  {
-    // this is used when document-specific listeners have to be
-    // started or stopped
-    if (aFilter == "mutation") {
-      this.toggleMutationListeners(aHUDId);
-    }
   },
 
   /**
@@ -1373,69 +1350,6 @@ HUD_SERVICE.prototype =
   },
 
   /**
-   * attaches the DOMMutation listeners to a nsIDOMWindow object
-   *
-   * @param nsIDOMWindow aWindow
-   * @param string aHUDId
-   * @returns void
-   */
-  attachMutationListeners:
-  function HS_attachMutationListeners(aWindow, aHUDId)
-  {
-    try {
-      // remove first in case it is on already
-      new ConsoleDOMListeners(aWindow, aHUDId, true);
-      // add mutation listeners
-      var domListeners = new ConsoleDOMListeners(aWindow, aHUDId);
-    }
-    catch (ex) {
-      Cu.reportError(ex);
-    }
-  },
-
-  /**
-   * removes DOMMutation listeners
-   *
-   * @param nsIDOMWindow aWindow
-   * @param string aHUDId
-   * @returns void
-   */
-  removeMutationListeners:
-  function HS_removeMutationListeners(aWindow, aHUDId)
-  {
-    // turns off the listeners if active
-    try {
-      new ConsoleDOMListeners(aWindow, aHUDId, true);
-    }
-    catch (ex) {
-      Cu.reportError(ex);
-    }
-  },
-
-  /**
-   * toggle on and off teh DOMMutation listeners
-   *
-   * @param string aHUDId
-   * @returns void
-   */
-  toggleMutationListeners: function HS_toggleMutationListeners(aHUDId)
-  {
-    // get the contentWindow from the HUDId
-    var window = this.getContentWindowFromHUDId(aHUDId);
-    var filterState = this.getFilterState(aHUDId, "mutation");
-
-    if (!filterState) {
-      // turn it off
-      this.removeMutationListeners(window);
-    }
-    else {
-      this.attachMutationListeners(window, aHUDId);
-    }
-  },
-
-  mutationListenerIndex: {},
-
-  /**
    * Creates a generator that always returns a unique number for use in the
    * indexes
    *
@@ -1568,10 +1482,6 @@ HUD_SERVICE.prototype =
         HUDService.registerHUDWeakReference(hudWeakRef, hudId);
 
         aContentWindow.wrappedJSObject.console = _hud.console;
-        var mutationFlag = this.getFilterState(this.hudId, "mutation");
-        if (mutationFlag) {
-          this.attachMutationListeners(aContentWindow, this.hudId);
-        }
       }
     }
     // capture JS Errors
@@ -1714,11 +1624,7 @@ function HeadsUpDisplay(aConfig)
   let console = this.createConsole();
 
   this.contentWindow.wrappedJSObject.console = console;
-  // check prefs to see if we should attact mutation listeners
-  var mutationFlag = HUDService.getFilterState(this.hudId, "mutation");
-  if (mutationFlag) {
-    HUDService.attachMutationListeners(this.contentWindow, this.hudId);
-  }
+
   // create the JSTerm input element
   try {
     this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
@@ -1948,8 +1854,7 @@ HeadsUpDisplay.prototype = {
    */
   makeFilterToolbar: function HUD_makeFilterToolbar()
   {
-    let buttons = ["Mutation", "Network", "CSSParser",
-                   "Exception", "Error",
+    let buttons = ["Network", "CSSParser", "Exception", "Error",
                    "Info", "Warn", "Log",];
 
     let toolbar = this.makeXULNode("toolbar");
@@ -2695,137 +2600,6 @@ FirefoxApplicationHooks.prototype = {
   }
 };
 
-/**
- * ConsoleDOMListeners
- *   Attach DOM Mutation listeners to a document
- * @param nsIDOMWindow aWindow
- * @param string aHUDId
- * @param boolean aRemoveBool
- * @returns void
- */
-function ConsoleDOMListeners(aWindow, aHUDId, aRemoveBool)
-{
-  this.hudId = aHUDId;
-  this.window = XPCNativeWrapper.unwrap(aWindow);
-  this.console = this.window.console;
-  this.document = this.window.document;
-  this.trackedEvents = ['DOMSubtreeModified',
-                        'DOMNodeInserted',
-                        'DOMNodeRemoved',
-                        'DOMNodeRemovedFromDocument',
-                        'DOMNodeInsertedIntoDocument',
-                        'DOMAttrModified',
-                        'DOMCharacterDataModified',
-                        'DOMElementNameChanged',
-                        'DOMAttributeNameChanged',
-                       ];
-  if (aRemoveBool) {
-    var removeFunc = this.removeAllListeners(aHUDId);
-    removeFunc();
-  }
-  this.init();
-}
-
-ConsoleDOMListeners.prototype = {
-  init: function CDL_init()
-  {
-    for (var event in this.trackedEvents) {
-      let evt = this.trackedEvents[event];
-      let callback = this.eventListenerFactory(evt);
-
-      this.document.addEventListener(evt, callback, false);
-      this.storeMutationFunc(this.hudId, callback, evt);
-    }
-  },
-
-  /**
-   * function factory that generates an event handler for DOM Mutations
-   *
-   * @param string aEventName
-   * @returns function
-   */
-  eventListenerFactory: function CDL_eventListenerFactory(aEventName)
-  {
-    var self = this;
-    function callback(aEvent)
-    {
-      var nodeTag = aEvent.target.tagName;
-      var nodeClass = aEvent.target.getAttribute("class");
-      if (!nodeClass) {
-        nodeClass = "null";
-      }
-
-      var nodeId = aEvent.target.getAttribute("id");
-
-      if (!nodeId) {
-        nodeId = "null";
-      }
-
-      var message = "DOM Mutation Event: '"
-                    + aEventName + "'"
-                    + " on node. "
-                    + " id: " + nodeId
-                    + " class: " + nodeClass
-                    + " tag: " + nodeTag;
-
-      self.console.info(message);
-    }
-    return callback;
-  },
-
-  /**
-   * generates a function that removes all DOM Mutation listeners
-   * per HeadsUpDisplay
-   *  TODO: needs some tweaks, see bug 568658
-   *
-   * @param string aHUDId
-   * @returns function
-   */
-  removeAllListeners: function CDL_removeAllListeners(aHUDId)
-  {
-    var self = this;
-    function removeListeners()
-    {
-      for (var idx in HUDService.mutationEventFunctions[aHUDId]) {
-        let evtObj = HUDService.mutationEventFunctions[aHUDId][idx];
-        self.document.removeEventListener(evtObj.name, evtObj.func, false);
-      }
-    }
-    return removeListeners;
-  },
-
-  /**
-   * store a DOM Mutation function for later retrieval,
-   * removal and destruction
-   *
-   * @param string aHUDId
-   * @param function aFunc
-   * @param string aEventName
-   * @returns void
-   */
-  storeMutationFunc:
-  function CDL_storeMutationFunc(aHUDId, aFunc, aEventName)
-  {
-    var evtObj = {func: aFunc, name: aEventName};
-    if (!HUDService.mutationEventFunctions[aHUDId]) {
-      HUDService.mutationEventFunctions[aHUDId] = [];
-    }
-    HUDService.mutationEventFunctions[aHUDId].push(evtObj);
-  },
-
-  /**
-   * Removes the stored DOMMutation functions from the storage object
-   *
-   * @param string aHUDId
-   * @returns void
-   */
-  removeStoredMutationFuncs:
-  function CDL_removeStoredMutationFuncs(aHUDId)
-  {
-    delete HUDService.mutationEventFunctions[aHUDId];
-  }
-};
-
 //////////////////////////////////////////////////////////////////////////////
 // Utility functions used by multiple callers
 //////////////////////////////////////////////////////////////////////////////
@@ -2952,12 +2726,6 @@ HeadsUpDisplayUICommands = {
     }
   },
 
-  toggleMutationListeners: function UIC_toggleMutationListeners(aButton)
-  {
-    var hudId = aButton.getAttribute("hudId");
-    // if the button is for mutations, tell HUD to toggle it
-    HUDService.toggleMutationListeners(hudId);
-  },
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -2969,8 +2737,7 @@ var prefs = Services.prefs;
 const GLOBAL_STORAGE_INDEX_ID = "GLOBAL_CONSOLE";
 const PREFS_BRANCH_PREF = "devtools.hud.display.filter";
 const PREFS_PREFIX = "devtools.hud.display.filter.";
-const PREFS = { mutation: PREFS_PREFIX + "mutation",
-                network: PREFS_PREFIX + "network",
+const PREFS = { network: PREFS_PREFIX + "network",
                 cssparser: PREFS_PREFIX + "cssparser",
                 exception: PREFS_PREFIX + "exception",
                 error: PREFS_PREFIX + "error",
@@ -3012,7 +2779,6 @@ function ConsoleStorage()
 
   if (filterPrefs) {
     defaultDisplayPrefs = {
-      mutation: (prefs.getBoolPref(PREFS.mutation) ? true: false),
       network: (prefs.getBoolPref(PREFS.network) ? true: false),
       cssparser: (prefs.getBoolPref(PREFS.cssparser) ? true: false),
       exception: (prefs.getBoolPref(PREFS.exception) ? true: false),
@@ -3026,7 +2792,6 @@ function ConsoleStorage()
   else {
     prefs.setBoolPref(PREFS_BRANCH_PREF, false);
     // default prefs for each HeadsUpDisplay
-    prefs.setBoolPref(PREFS.mutation, false);
     prefs.setBoolPref(PREFS.network, true);
     prefs.setBoolPref(PREFS.cssparser, true);
     prefs.setBoolPref(PREFS.exception, true);
@@ -3037,7 +2802,6 @@ function ConsoleStorage()
     prefs.setBoolPref(PREFS.global, false);
 
     defaultDisplayPrefs = {
-      mutation: prefs.getBoolPref(PREFS.mutation),
       network: prefs.getBoolPref(PREFS.network),
       cssparser: prefs.getBoolPref(PREFS.cssparser),
       exception: prefs.getBoolPref(PREFS.exception),
@@ -3055,7 +2819,6 @@ ConsoleStorage.prototype = {
 
   updateDefaultDisplayPrefs:
   function CS_updateDefaultDisplayPrefs(aPrefsObject) {
-    prefs.setBoolPref(PREFS.mutation, (aPrefsObject.mutation ? true : false));
     prefs.setBoolPref(PREFS.network, (aPrefsObject.network ? true : false));
     prefs.setBoolPref(PREFS.cssparser, (aPrefsObject.cssparser ? true : false));
     prefs.setBoolPref(PREFS.exception, (aPrefsObject.exception ? true : false));
