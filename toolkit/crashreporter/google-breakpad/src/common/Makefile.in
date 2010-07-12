@@ -71,6 +71,13 @@ HOST_CPPSRCS += \
   stabs_to_module.cc \
   $(NULL)
 
+ifdef MOZ_PLATFORM_MAEMO
+# The GCC in scratchbox crashes writing DWARF debug info for language.cc.
+# Since we don't really need debug symbols for the host tools anyway,
+# just get rid of debug options.
+HOST_CXXFLAGS = $(patsubst -g%,,$(CXXFLAGS))
+endif
+
 # This kind of sucks.
 ifeq (Linux,$(OS_ARCH))
 HOST_CXXFLAGS += -DHAVE_A_OUT_H
@@ -80,13 +87,6 @@ HOST_CXXFLAGS += -DHAVE_MACH_O_NLIST_H
 endif
 
 HOST_CSRCS = $(CSRCS)
-
-ifdef MOZ_PLATFORM_MAEMO
-# The GCC in scratchbox crashes writing DWARF debug info for language.cc.
-# Since we don't really need debug symbols for the host tools anyway,
-# just get rid of debug options.
-HOST_CXXFLAGS = $(patsubst -g%,,$(CXXFLAGS))
-endif
 
 # need static lib
 FORCE_STATIC_LIB = 1
