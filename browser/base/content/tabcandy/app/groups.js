@@ -1056,13 +1056,13 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     }
 
     // ___ we're stacked, but command isn't held down
-    /*if( Keys.meta == false ){
+    /*if (!Keys.meta) {
       Groups.setActiveGroup(self);
       return { shouldZoom: true };      
     }*/
         
     Groups.setActiveGroup(self);
-    return { shouldZoom: true };    
+    return { shouldZoom: true };
     
     /*this.expand();
     return {};*/
@@ -1352,7 +1352,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     var groupTabs = [];
     for ( var i=0; i<UI.tabBar.el.children.length; i++ ){
       var tab = UI.tabBar.el.children[i];
-      if ( tab.collapsed == false )
+      if (!tab.collapsed)
         groupTabs.push(tab);
     }
      

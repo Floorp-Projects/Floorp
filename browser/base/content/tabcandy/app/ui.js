@@ -215,13 +215,13 @@ window.Page = {
   setupKeyHandlers: function(){
     var self = this;
     iQ(window).keyup(function(e){
-      if ( e.metaKey == false ) window.Keys.meta = false;
+      if (!e.metaKey) window.Keys.meta = false;
     });
     
     iQ(window).keydown(function(e){
-      if ( e.metaKey == true ) window.Keys.meta = true;
+      if (e.metaKey) window.Keys.meta = true;
       
-      if ( !self.getActiveTab() ) return;
+      if (!self.getActiveTab()) return;
       
       var centers = [[item.bounds.center(), item] for each(item in TabItems.getItems())];
       myCenter = self.getActiveTab().bounds.center();
@@ -845,13 +845,11 @@ UIClass.prototype = {
     // If we are currently doing an animation or if TabCandy isn't focused
     // don't perform a resize. This resize really slows things down.
     var isAnimating = iQ.isAnimating();
-    if ( force == false){
-      if ( isAnimating || !Page.isTabCandyVisible() ) {
-        // TODO: should try again once the animation is done
-        // Actually, looks like iQ.isAnimating is non-functional;
-        // perhaps we should clean it out, or maybe we should fix it. 
-        return;   
-      }
+    if ( !force && ( isAnimating || !Page.isTabCandyVisible() ) ) {
+      // TODO: should try again once the animation is done
+      // Actually, looks like iQ.isAnimating is non-functional;
+      // perhaps we should clean it out, or maybe we should fix it. 
+      return;
     }   
 
     var oldPageBounds = new Rect(this.pageBounds);
