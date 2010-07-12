@@ -794,23 +794,9 @@ mjit::Compiler::jsop_typeof()
 }
 
 void
-mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
+mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
 {
     FrameEntry *fe = frame.peek(-1);
-
-    if (fe->isConstant()) {
-        JSBool b = js_ValueToBoolean(fe->getValue());
-        
-        /* Short-circuit. */
-        if ((op == JSOP_OR && b == JS_TRUE) ||
-            (op == JSOP_AND && b == JS_FALSE)) {
-            frame.forgetEverything();
-            jumpInScript(masm.jump(), target);
-        }
-
-        frame.pop();
-        return;
-    }
 
     MaybeRegisterID type;
     MaybeRegisterID data;
@@ -824,10 +810,10 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
     /* :FIXME: Can something more lightweight be used? */
     frame.forgetEverything();
 
-    Assembler::Condition cond = (op == JSOP_OR)
+    Assembler::Condition cond = (op == JSOP_IFNE || op == JSOP_OR)
                                 ? Assembler::NonZero
                                 : Assembler::Zero;
-    Assembler::Condition ncond = (op == JSOP_OR)
+    Assembler::Condition ncond = (op == JSOP_IFNE || op == JSOP_OR)
                                  ? Assembler::Zero
                                  : Assembler::NonZero;
 
@@ -885,6 +871,49 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
         stubcc.crossJump(jmpCvtRejoin.getJump(), lblAfterScript);
 
     frame.pop();
+}
+
+void
+mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
+{
+    FrameEntry *fe = frame.peek(-1);
+
+    if (fe->isConstant()) {
+        JSBool b = js_ValueToBoolean(fe->getValue());
+
+        if (op == JSOP_IFEQ)
+            b = !b;
+        if (b) {
+            frame.forgetEverything();
+            jumpInScript(masm.jump(), target);
+        }
+        frame.pop();
+        return;
+    }
+
+    booleanJumpScript(op, target);
+}
+
+void
+mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
+{
+    FrameEntry *fe = frame.peek(-1);
+
+    if (fe->isConstant()) {
+        JSBool b = js_ValueToBoolean(fe->getValue());
+        
+        /* Short-circuit. */
+        if ((op == JSOP_OR && b == JS_TRUE) ||
+            (op == JSOP_AND && b == JS_FALSE)) {
+            frame.forgetEverything();
+            jumpInScript(masm.jump(), target);
+        }
+
+        frame.pop();
+        return;
+    }
+
+    booleanJumpScript(op, target);
 }
 
 void
