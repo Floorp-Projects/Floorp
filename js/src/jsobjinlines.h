@@ -307,27 +307,6 @@ JSObject::setDateUTCTime(const js::Value &time)
     fslots[JSSLOT_DATE_UTC_TIME] = time;
 }
 
-inline const js::Value &
-JSObject::getRegExpLastIndex() const
-{
-    JS_ASSERT(isRegExp());
-    return fslots[JSSLOT_REGEXP_LAST_INDEX];
-}
-
-inline void
-JSObject::setRegExpLastIndex(const js::Value &v)
-{
-    JS_ASSERT(isRegExp());
-    fslots[JSSLOT_REGEXP_LAST_INDEX] = v;
-}
-
-inline void 
-JSObject::zeroRegExpLastIndex()
-{
-    JS_ASSERT(isRegExp());
-    fslots[JSSLOT_REGEXP_LAST_INDEX].setInt32(0);
-}
-
 inline NativeIterator *
 JSObject::getNativeIterator() const
 {
