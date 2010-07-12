@@ -40,7 +40,7 @@
 #ifndef jsvalimpl_h__
 #define jsvalimpl_h__
 /*
- * JS value implementation details needed for manipulating jsval and jsid.
+ * JS value implementation details for operations on jsval and jsid.
  * Embeddings should not rely on any of the definitions in this file. For a
  * description of the value representation and the engine-internal C++ value
  * interface, js::Value, see jsvalue.h.
@@ -60,6 +60,8 @@ JS_BEGIN_EXTERN_C
    * Structs can be aligned with MSVC, but not if they are used as parameters,
    * so we just don't try to align.
    */
+# define JSVAL_ALIGNMENT
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 # define JSVAL_ALIGNMENT
 #endif
 
@@ -98,6 +100,9 @@ JS_ENUM_HEADER(JSValueType, uint8)
 
     JSVAL_TYPE_NONFUNOBJ           = 0x57,
     JSVAL_TYPE_FUNOBJ              = 0x67,
+
+    JSVAL_TYPE_STRORNULL           = 0x97,
+    JSVAL_TYPE_OBJORNULL           = 0x98,
 
     JSVAL_TYPE_BOXED               = 0x99,
     JSVAL_TYPE_UNINITIALIZED       = 0xcd
@@ -148,6 +153,8 @@ typedef uint8 JSValueType;
 #define JSVAL_TYPE_OBJECT            ((uint8)0x07)
 #define JSVAL_TYPE_NONFUNOBJ         ((uint8)0x57)
 #define JSVAL_TYPE_FUNOBJ            ((uint8)0x67)
+#define JSVAL_TYPE_STRORNULL         ((uint8)0x97)
+#define JSVAL_TYPE_OBJORNULL         ((uint8)0x98)
 #define JSVAL_TYPE_STRORNULL         ((uint8)0x97)
 #define JSVAL_TYPE_OBJORNULL         ((uint8)0x98)
 #define JSVAL_TYPE_BOXED             ((uint8)0x99)

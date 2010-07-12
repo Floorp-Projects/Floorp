@@ -1724,13 +1724,6 @@ struct JSContext
     /* JSRuntime contextList linkage. */
     JSCList             link;
 
-    /*
-     * Classic Algol "display" static link optimization.
-     */
-#define JS_DISPLAY_SIZE 16U
-
-    JSStackFrame        *display[JS_DISPLAY_SIZE];
-
     /* Runtime version control identifier. */
     uint16              version;
 
@@ -3049,6 +3042,22 @@ CanLeaveTrace(JSContext *cx)
 #else
     return JS_FALSE;
 #endif
+}
+
+/*
+ * Search the call stack for the nearest frame with static level targetLevel.
+ * @param baseFrame If not provided, the context's current frame is used.
+ */
+static JS_INLINE JSStackFrame *
+FindFrameAtLevel(JSContext *cx, uint16 targetLevel, JSStackFrame * const baseFrame = NULL)
+{
+    JSStackFrame *it = baseFrame ? baseFrame : cx->fp;
+    JS_ASSERT(it && it->script);
+    while (it->script->staticLevel != targetLevel) {
+        it = it->down;
+        JS_ASSERT(it && it->script);
+    }
+    return it;
 }
 
 extern void

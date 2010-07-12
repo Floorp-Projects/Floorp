@@ -2502,9 +2502,9 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
     JSUpvarArray *uva = fun->u.i.script->upvars();
     JS_ASSERT(uva->length <= closure->dslots[-1].toPrivateUint32());
 
-    uintN level = fun->u.i.script->staticLevel;
+    uint16 level = fun->u.i.script->staticLevel;
     for (uint32 i = 0, n = uva->length; i < n; i++)
-        closure->dslots[i] = js_GetUpvar(cx, level, uva->vector[i]);
+        closure->dslots[i] = GetUpvar(cx, level, uva->vector[i]);
 
     return closure;
 }

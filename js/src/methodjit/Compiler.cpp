@@ -300,7 +300,7 @@ mjit::Compiler::finishThisUp()
         script->pics[i].fastPathStart = fullCode.locationOf(pics[i].hotPathBegin);
         script->pics[i].storeBack = fullCode.locationOf(pics[i].storeBack);
         script->pics[i].slowPathStart = stubCode.locationOf(pics[i].slowPathStart);
-        script->pics[i].callReturn = uint8((uint8*)stubCode.locationOf(pics[i].callReturn).executableAddress() -
+        script->pics[i].callReturn = uint16((uint8*)stubCode.locationOf(pics[i].callReturn).executableAddress() -
                                            (uint8*)script->pics[i].slowPathStart.executableAddress());
         script->pics[i].shapeReg = pics[i].shapeReg;
         script->pics[i].objReg = pics[i].objReg;
@@ -316,8 +316,8 @@ mjit::Compiler::finishThisUp()
             if (pics[i].hasTypeCheck) {
                 int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
                                  stubcc.masm.distanceOf(pics[i].slowPathStart);
-                JS_ASSERT(-int32(uint8(-distance)) == distance);
-                script->pics[i].u.get.typeCheckOffset = uint8(-distance);
+                script->pics[i].u.get.typeCheckOffset = uint16(-distance);
+                JS_ASSERT(script->pics[i].u.get.typeCheckOffset == -distance);
             }
             script->pics[i].u.get.hasTypeCheck = pics[i].hasTypeCheck;
             script->pics[i].u.get.objRemat = pics[i].objRemat.offset;
@@ -433,39 +433,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_IFEQ)
           BEGIN_CASE(JSOP_IFNE)
-          {
-            FrameEntry *top = frame.peek(-1);
-            Jump j;
-            if (top->isConstant()) {
-                const Value &v = top->getValue();
-                JSBool b = js_ValueToBoolean(v);
-                if (op == JSOP_IFEQ)
-                    b = !b;
-                frame.pop();
-                frame.forgetEverything();
-                if (b) {
-                    j = masm.jump();
-                    jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
-                }
-            } else {
-                frame.forgetEverything();
-                masm.fixScriptStack(frame.frameDepth());
-                masm.setupVMFrame();
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
-                masm.push(Registers::ArgReg0);
-#endif
-                masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
-                masm.pop();
-#endif
-                Assembler::Condition cond = (op == JSOP_IFEQ)
-                                            ? Assembler::Zero
-                                            : Assembler::NonZero;
-                j = masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
-                frame.pop();
-                jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
-            }
-          }
+            jsop_ifneq(op, PC + GET_JUMP_OFFSET(PC));
           END_CASE(JSOP_IFNE)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
@@ -1454,8 +1422,6 @@ mjit::Compiler::jsop_getglobal(uint32 index)
 void
 mjit::Compiler::emitReturn()
 {
-    RegisterID t0 = frame.allocReg();
-
     /*
      * if (!f.inlineCallCount)
      *     return;
@@ -1468,17 +1434,6 @@ mjit::Compiler::emitReturn()
     stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), JSC::ARMRegisters::lr);
 #endif
     stubcc.masm.ret();
-
-    /* Restore display. */
-    if (script->staticLevel < JS_DISPLAY_SIZE) {
-        RegisterID t1 = frame.allocReg();
-        masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), t0);
-        masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, displaySave)), t1);
-        masm.storePtr(t1, Address(t0,
-                                  offsetof(JSContext, display) +
-                                  script->staticLevel * sizeof(JSStackFrame*)));
-        frame.freeReg(t1);
-    }
 
     JS_ASSERT_IF(!fun, JSOp(*PC) == JSOP_STOP);
 
@@ -1611,20 +1566,20 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     frame.resetRegState();
 
     Label invoke;
+    Jump j;
     if (!typeKnown) {
-        Jump j;
         if (!hasTypeReg)
             j = masm.testObject(Assembler::NotEqual, frame.addressOf(fe));
         else
             j = masm.testObject(Assembler::NotEqual, type);
         invoke = stubcc.masm.label();
         stubcc.linkExit(j, Uses(argc + 2));
-        j = masm.testFunction(Assembler::NotEqual, data);
-        stubcc.linkExit(j, Uses(argc + 2));
-        stubcc.leave();
-        stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
-        stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
     }
+    j = masm.testFunction(Assembler::NotEqual, data);
+    stubcc.linkExit(j, Uses(argc + 2));
+    stubcc.leave();
+    stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+    stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
 
     /* Get function private pointer. */
     Address funPrivate(data, offsetof(JSObject, fslots) +

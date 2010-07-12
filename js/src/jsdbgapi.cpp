@@ -1343,11 +1343,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
 {
     JS_ASSERT_NOT_ON_TRACE(cx);
 
-    JSObject *scobj;
-    JSScript *script;
-    JSBool ok;
-
-    scobj = JS_GetFrameScopeChain(cx, fp);
+    JSObject *scobj = JS_GetFrameScopeChain(cx, fp);
     if (!scobj)
         return JS_FALSE;
 
@@ -1357,55 +1353,16 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
      * we use a static level that will cause us not to attempt to optimize
      * variable references made by this frame.
      */
-    script = Compiler::compileScript(cx, scobj, fp, JS_StackFramePrincipals(cx, fp),
-                                     TCF_COMPILE_N_GO, chars, length, NULL,
-                                     filename, lineno, NULL, JS_DISPLAY_SIZE);
+    JSScript *script = Compiler::compileScript(cx, scobj, fp, JS_StackFramePrincipals(cx, fp),
+                                               TCF_COMPILE_N_GO, chars, length, NULL, filename,
+                                               lineno, NULL, UpvarCookie::MAX_LEVEL);
 
     if (!script)
         return JS_FALSE;
 
-    JSStackFrame *displayCopy[JS_DISPLAY_SIZE];
-    if (cx->fp != fp) {
-        memcpy(displayCopy, cx->display, sizeof displayCopy);
+    bool ok = !!Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL,
+                        Valueify(rval));
 
-        /*
-         * Set up cx->display as it would have been when fp was active.
-         *
-         * NB: To reconstruct cx->display for fp, we have to follow the frame
-         * chain from oldest to youngest, in the opposite direction to its
-         * single linkge. To avoid the obvious recursive reversal algorithm,
-         * which might use too much stack, we reverse in place and reverse
-         * again as we reconstruct the display. This is safe because cx is
-         * thread-local and we can't cause GC until the call to js_Execute
-         * below.
-         */
-        JSStackFrame *fp2 = fp, *last = NULL;
-        while (fp2) {
-            JSStackFrame *next = fp2->down;
-            fp2->down = last;
-            last = fp2;
-            fp2 = next;
-        }
-
-        fp2 = last;
-        last = NULL;
-        while (fp2) {
-            JSStackFrame *next = fp2->down;
-            fp2->down = last;
-            last = fp2;
-
-            JSScript *script = fp2->script;
-            if (script && script->staticLevel < JS_DISPLAY_SIZE)
-                cx->display[script->staticLevel] = fp2;
-            fp2 = next;
-        }
-    }
-
-    ok = Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL,
-                 Valueify(rval));
-
-    if (cx->fp != fp)
-        memcpy(cx->display, displayCopy, sizeof cx->display);
     js_DestroyScript(cx, script);
     return ok;
 }

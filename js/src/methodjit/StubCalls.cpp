@@ -1448,7 +1448,7 @@ stubs::GetUpvar(VMFrame &f, uint32 ck)
     uint32 staticLevel = f.fp->script->staticLevel;
     UpvarCookie cookie;
     cookie.fromInteger(ck);
-    f.regs.sp[0] = js_GetUpvar(f.cx, staticLevel, cookie);
+    f.regs.sp[0] = GetUpvar(f.cx, staticLevel, cookie);
 }
 
 JSObject * JS_FASTCALL
@@ -2158,7 +2158,7 @@ void JS_FASTCALL
 stubs::EndIter(VMFrame &f)
 {
     JS_ASSERT(f.regs.sp - 1 >= f.fp->base());
-    if (!js_CloseIterator(f.cx, f.regs.sp[-1]))
+    if (!js_CloseIterator(f.cx, &f.regs.sp[-1].toObject()))
         THROW();
 }
 
