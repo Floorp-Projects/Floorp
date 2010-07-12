@@ -44,8 +44,6 @@
       SimpleTest.executeSoon(function() { testGenerator.next(); });
       yield;
 
-      let objectStore = db.objectStore("foo");
-
       let continueReading = true;
       let readerCount = 0;
       let callbackCount = 0;
@@ -55,7 +53,7 @@
       // loop.
       for (let i = 0; i < 20; i++) {
         readerCount++;
-        request = objectStore.get(key);
+        request = db.objectStore("foo").get(key);
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
           callbackCount++;
@@ -75,7 +73,7 @@
             request.onsuccess = function(event) {
               continueReading = false;
               finalCallbackCount = callbackCount;
-              ok(event.result == callbackCount,
+              is(event.result, callbackCount,
                  "write callback came before later reads");
             }
           }
@@ -96,7 +94,9 @@
       finishTest();
       yield;
     }
+
     SimpleTest.requestLongerTimeout(5); // see bug 580875
+
   </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>
 
