@@ -571,6 +571,7 @@ struct JSObject {
 
     inline const js::Value &getRegExpLastIndex() const;
     inline void setRegExpLastIndex(const js::Value &v);
+    inline void setRegExpLastIndex(jsdouble d);
     inline void zeroRegExpLastIndex();
 
     /*
