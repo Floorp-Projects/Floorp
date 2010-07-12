@@ -872,7 +872,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
               if (wndProc != PluginWindowProc) {
                   mPluginWndProc = reinterpret_cast<WNDPROC>(
                       SetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC,
-                                       reinterpret_cast<LONG>(PluginWindowProc)));
+                                       reinterpret_cast<LONG_PTR>(PluginWindowProc)));
               }
           }
       }
@@ -983,7 +983,7 @@ PluginInstanceChild::CreatePluginWindow()
 
     // Apparently some plugins require an ASCII WndProc.
     SetWindowLongPtrA(mPluginWindowHWND, GWLP_WNDPROC,
-                      reinterpret_cast<LONG>(DefWindowProcA));
+                      reinterpret_cast<LONG_PTR>(DefWindowProcA));
 
     return true;
 }
@@ -998,7 +998,7 @@ PluginInstanceChild::DestroyPluginWindow()
         if (wndProc == PluginWindowProc) {
             NS_ASSERTION(mPluginWndProc, "Should have old proc here!");
             SetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC,
-                             reinterpret_cast<LONG>(mPluginWndProc));
+                             reinterpret_cast<LONG_PTR>(mPluginWndProc));
             mPluginWndProc = 0;
         }
 
@@ -1013,7 +1013,7 @@ PluginInstanceChild::ReparentPluginWindow(HWND hWndParent)
 {
     if (hWndParent != mPluginParentHWND && IsWindow(hWndParent)) {
         // Fix the child window's style to be a child window.
-        LONG style = GetWindowLongPtr(mPluginWindowHWND, GWL_STYLE);
+        LONG_PTR style = GetWindowLongPtr(mPluginWindowHWND, GWL_STYLE);
         style |= WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
         style &= ~WS_POPUP;
         SetWindowLongPtr(mPluginWindowHWND, GWL_STYLE, style);
@@ -1531,7 +1531,7 @@ PluginInstanceChild::UnhookWinlessFlashThrottle()
 
   // reset the subclass
   SetWindowLongPtr(mWinlessHiddenMsgHWND, GWLP_WNDPROC,
-                   reinterpret_cast<LONG>(tmpProc));
+                   reinterpret_cast<LONG_PTR>(tmpProc));
 
   // Remove our instance prop
   RemoveProp(mWinlessHiddenMsgHWND, kPluginInstanceChildProperty);
@@ -1603,7 +1603,7 @@ PluginInstanceChild::EnumThreadWindowsCallback(HWND hWnd,
             self->mWinlessHiddenMsgHWND = hWnd;
             self->mWinlessThrottleOldWndProc =
                 reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWnd, GWLP_WNDPROC,
-                reinterpret_cast<LONG>(WinlessHiddenFlashWndProc)));
+                reinterpret_cast<LONG_PTR>(WinlessHiddenFlashWndProc)));
             SetProp(hWnd, kPluginInstanceChildProperty, self);
             NS_ASSERTION(self->mWinlessThrottleOldWndProc,
                          "SetWindowLongPtr failed?!");
