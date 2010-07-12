@@ -62,11 +62,13 @@ ImmutableSync::init(uint32 nentries)
 }
 
 void
-ImmutableSync::reset(Assembler *masm, Registers avail, uint32 n)
+ImmutableSync::reset(Assembler *masm, Registers avail, uint32 n,
+                     FrameEntry *bottom)
 {
     this->avail = avail;
     this->nentries = n;
     this->masm = masm;
+    this->bottom = bottom;
     memset(entries, 0, sizeof(SyncEntry) * nentries);
     memset(regs, 0, sizeof(regs));
 }
@@ -163,6 +165,26 @@ ImmutableSync::sync(FrameEntry *fe)
     nentries--;
 }
 
+bool
+ImmutableSync::shouldSyncType(FrameEntry *fe, SyncEntry &e)
+{
+    if (fe->type.inRegister() && !e.typeClobbered)
+        return true;
+    if (e.hasTypeReg)
+        return true;
+    return frame.inTryBlock || fe >= bottom;
+}
+
+bool
+ImmutableSync::shouldSyncData(FrameEntry *fe, SyncEntry &e)
+{
+    if (fe->data.inRegister() && !e.dataClobbered)
+        return true;
+    if (e.hasDataReg)
+        return true;
+    return frame.inTryBlock || fe >= bottom;
+}
+
 JSC::MacroAssembler::RegisterID
 ImmutableSync::ensureTypeReg(FrameEntry *fe, SyncEntry &e)
 {
@@ -194,6 +216,9 @@ ImmutableSync::ensureDataReg(FrameEntry *fe, SyncEntry &e)
 void
 ImmutableSync::syncCopy(FrameEntry *fe)
 {
+    if (!frame.inTryBlock && fe < bottom)
+        return;
+
     FrameEntry *backing = fe->copyOf();
     SyncEntry &e = entryFor(backing);
 
@@ -229,7 +254,8 @@ ImmutableSync::syncNormal(FrameEntry *fe)
         e.typeTag = fe->getKnownTag();
     }
 
-    if (!fe->data.synced() && !e.dataSynced) {
+    if (!fe->data.synced() && !e.dataSynced &&
+        shouldSyncData(fe, e)) {
         if (fe->isConstant()) {
             masm->storeValue(fe->getValue(), addr);
             return;
@@ -237,7 +263,8 @@ ImmutableSync::syncNormal(FrameEntry *fe)
         masm->storeData32(ensureDataReg(fe, e), addr);
     }
 
-    if (!fe->type.synced() && !e.typeSynced) {
+    if (!fe->type.synced() && !e.typeSynced &&
+        shouldSyncType(fe, e)) {
         if (e.learnedType)
             masm->storeTypeTag(ImmTag(e.typeTag), addr);
         else

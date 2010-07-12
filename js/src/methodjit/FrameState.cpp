@@ -275,10 +275,11 @@ FrameState::assertValidRegisterState() const
 #endif
 
 void
-FrameState::syncFancy(Assembler &masm, Registers avail, uint32 resumeAt) const
+FrameState::syncFancy(Assembler &masm, Registers avail, uint32 resumeAt,
+                      FrameEntry *bottom) const
 {
     /* :TODO: can be resumeAt? */
-    reifier.reset(&masm, avail, tracker.nentries);
+    reifier.reset(&masm, avail, tracker.nentries, bottom);
 
     FrameEntry *tos = tosFe();
     for (uint32 i = resumeAt; i < tracker.nentries; i--) {
@@ -303,6 +304,9 @@ FrameState::sync(Assembler &masm, Uses uses) const
     FrameEntry *tos = tosFe();
     FrameEntry *bottom = tos - uses.nuses;
 
+    if (inTryBlock)
+        bottom = NULL;
+
     for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
         FrameEntry *fe = tracker[i];
         if (fe >= tos)
@@ -318,12 +322,12 @@ FrameState::sync(Assembler &masm, Uses uses) const
                 avail.putReg(fe->type.reg());
 
             /* Sync. */
-            if (!fe->data.synced()) {
+            if (!fe->data.synced() && (fe->data.inRegister() || fe >= bottom)) {
                 syncData(fe, address, masm);
                 if (fe->isConstant())
                     continue;
             }
-            if (!fe->type.synced())
+            if (!fe->type.synced() && (fe->type.inRegister() || fe >= bottom))
                 syncType(fe, addressOf(fe), masm);
         } else if (fe >= bottom) {
             FrameEntry *backing = fe->copyOf();
@@ -336,7 +340,7 @@ FrameState::sync(Assembler &masm, Uses uses) const
              */
             if ((!fe->type.synced() && !fe->type.inRegister()) ||
                 (!fe->data.synced() && !fe->data.inRegister())) {
-                syncFancy(masm, avail, i);
+                syncFancy(masm, avail, i, bottom);
                 return;
             }
 
@@ -363,6 +367,9 @@ FrameState::syncAndKill(Registers kill, Uses uses)
     FrameEntry *tos = tosFe();
     FrameEntry *bottom = tos - uses.nuses;
 
+    if (inTryBlock)
+        bottom = NULL;
+
     for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
         FrameEntry *fe = tracker[i];
         if (fe >= tos)
@@ -371,7 +378,7 @@ FrameState::syncAndKill(Registers kill, Uses uses)
         Address address = addressOf(fe);
         FrameEntry *backing = fe;
         if (fe->isCopy()) {
-            if (fe < bottom)
+            if (!inTryBlock && fe < bottom)
                 continue;
             backing = fe->copyOf();
         }

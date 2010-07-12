@@ -52,6 +52,7 @@ namespace js
         bool   visited;         /* flag for CFG traversal */
         bool   exceptionEntry;  /* true iff this is a catch/finally entry point */
         bool   safePoint;       /* false by default */
+        bool   inTryBlock;      /* true if in try block */
         uint32 nincoming;       /* number of CFG inedges here */
         uint32 stackDepth;      /* stack depth before this opcode */
     };
