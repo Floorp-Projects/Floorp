@@ -547,6 +547,10 @@ class FrameState
 
     inline void addEscaping(uint32 local);
 
+    inline void setInTryBlock(bool inTryBlock) {
+        this->inTryBlock = inTryBlock;
+    }
+
   private:
     inline RegisterID allocReg(FrameEntry *fe, RematInfo::RematType type);
     inline void forgetReg(RegisterID reg);
@@ -561,7 +565,8 @@ class FrameState
     inline void swapInTracker(FrameEntry *lhs, FrameEntry *rhs);
     inline uint32 localIndex(uint32 n);
     void pushCopyOf(uint32 index);
-    void syncFancy(Assembler &masm, Registers avail, uint32 resumeAt) const;
+    void syncFancy(Assembler &masm, Registers avail, uint32 resumeAt,
+                   FrameEntry *bottom) const;
 
     /*
      * "Uncopies" the backing store of a FrameEntry that has been copied. The
@@ -632,6 +637,7 @@ class FrameState
 
     uint32 *escaping;
     bool eval;
+    bool inTryBlock;
 };
 
 } /* namespace mjit */

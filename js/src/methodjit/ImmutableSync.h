@@ -87,7 +87,8 @@ class ImmutableSync
     ~ImmutableSync();
     bool init(uint32 nentries);
 
-    void reset(Assembler *masm, Registers avail, uint32 n);
+    void reset(Assembler *masm, Registers avail, uint32 n,
+               FrameEntry *bottom);
     void sync(FrameEntry *fe);
 
   private:
@@ -99,6 +100,9 @@ class ImmutableSync
 
     inline SyncEntry &entryFor(FrameEntry *fe);
 
+    bool shouldSyncType(FrameEntry *fe, SyncEntry &e);
+    bool shouldSyncData(FrameEntry *fe, SyncEntry &e);
+
   private:
     JSContext *cx;
     SyncEntry *entries;
@@ -107,6 +111,7 @@ class ImmutableSync
     Registers avail;
     Assembler *masm;
     SyncEntry *regs[Assembler::TotalRegisters];
+    FrameEntry *bottom;
 };
 
 } /* namespace mjit */
