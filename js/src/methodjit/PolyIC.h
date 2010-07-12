@@ -151,7 +151,7 @@ struct PICInfo {
     JSC::CodeLocationLabel storeBack;
 
     // Return address of slow path call, as an offset from slowPathStart.
-    uint8 callReturn;
+    uint16 callReturn : 9;
 
     // Offset from callReturn to the start of the slow case.
     JSC::CodeLocationLabel slowPathStart;
