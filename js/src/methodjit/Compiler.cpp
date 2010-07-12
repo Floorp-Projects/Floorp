@@ -433,39 +433,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_IFEQ)
           BEGIN_CASE(JSOP_IFNE)
-          {
-            FrameEntry *top = frame.peek(-1);
-            Jump j;
-            if (top->isConstant()) {
-                const Value &v = top->getValue();
-                JSBool b = js_ValueToBoolean(v);
-                if (op == JSOP_IFEQ)
-                    b = !b;
-                frame.pop();
-                frame.forgetEverything();
-                if (b) {
-                    j = masm.jump();
-                    jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
-                }
-            } else {
-                frame.forgetEverything();
-                masm.fixScriptStack(frame.frameDepth());
-                masm.setupVMFrame();
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
-                masm.push(Registers::ArgReg0);
-#endif
-                masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
-#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
-                masm.pop();
-#endif
-                Assembler::Condition cond = (op == JSOP_IFEQ)
-                                            ? Assembler::Zero
-                                            : Assembler::NonZero;
-                j = masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
-                frame.pop();
-                jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
-            }
-          }
+            jsop_ifneq(op, PC + GET_JUMP_OFFSET(PC));
           END_CASE(JSOP_IFNE)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
