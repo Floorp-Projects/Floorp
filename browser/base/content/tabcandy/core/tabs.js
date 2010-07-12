@@ -261,7 +261,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
   init: function() {
     var self = this;
     var chromeWindow = Utils.getCurrentWindow();
-    if(!chromeWindow || !chromeWindow.getBrowser || !chromeWindow.getBrowser()) {
+    if (!chromeWindow || !chromeWindow.getBrowser || !chromeWindow.getBrowser()) {
       iQ.timeout(function() {
         self.init();
       }, 100);
@@ -300,7 +300,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
   
       // ----------
       open: function open(url, inBackground) {
-        if(typeof(inBackground) == 'undefined')
+        if (typeof(inBackground) == 'undefined')
           inBackground = false;
           
         var browserWindow = windows.focused;
@@ -318,9 +318,9 @@ window.TabsManager = iQ.extend(new Subscribable(), {
       tab: function tab(value) {
         // assuming value is a DOM element for the time being
         var result = iQ(value).data('tab');
-        if(!result) {
+        if (!result) {
           result = iQ(value).find("canvas").data("link").tab;
-          if(result)
+          if (result)
             Utils.log('turns out the secondary strategy in Tabs.tab() is needed');
         }
         

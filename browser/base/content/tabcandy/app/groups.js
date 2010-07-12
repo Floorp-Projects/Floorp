@@ -83,7 +83,7 @@ function max(list){ return list.slice().sort(numCmp).reverse()[0]; }
 //   dontPush - true if this group shouldn't push away on creation; default is false
 window.Group = function(listOfEls, options) {
   try {
-  if(typeof(options) == 'undefined')
+  if (typeof(options) == 'undefined')
     options = {};
 
   this._inited = false;
@@ -112,28 +112,28 @@ window.Group = function(listOfEls, options) {
   this.yDensity = 0;
 
   
-  if(isPoint(options.userSize))  
+  if (isPoint(options.userSize))  
     this.userSize = new Point(options.userSize);
 
   var self = this;
 
   var rectToBe;
-  if(options.bounds)
+  if (options.bounds)
     rectToBe = new Rect(options.bounds);
     
-  if(!rectToBe) {
+  if (!rectToBe) {
     rectToBe = Groups.getBoundingBox(listOfEls);
     rectToBe.inset( -30, -30 );
   }
 
   var $container = options.container; 
-  if(!$container) {
+  if (!$container) {
     $container = iQ('<div>')
       .addClass('group')
       .css({position: 'absolute'})
       .css(rectToBe);
     
-    if( this.isNewTabsGroup() ) $container.addClass("newTabGroup");
+    if ( this.isNewTabsGroup() ) $container.addClass("newTabGroup");
   }
   
   this.bounds = $container.bounds();
@@ -156,7 +156,7 @@ window.Group = function(listOfEls, options) {
     
   this.$ntb.get(0).title = 'New tab';
   
-  if( this.isNewTabsGroup() ) this.$ntb.html("<span>+</span>");
+  if ( this.isNewTabsGroup() ) this.$ntb.html("<span>+</span>");
     
   // ___ Resizer
   this.$resizer = iQ("<div>")
@@ -199,7 +199,7 @@ window.Group = function(listOfEls, options) {
   
   var titleUnfocus = function() {
     self.$titleShield.show();
-    if(!self.getTitle()) {
+    if (!self.getTitle()) {
       self.$title
         .addClass("defaultName")
         .val(self.defaultName);
@@ -216,7 +216,7 @@ window.Group = function(listOfEls, options) {
   };
   
   var handleKeyPress = function(e){
-    if( e.which == 13 ) { // return
+    if ( e.which == 13 ) { // return
       self.$title.get(0).blur();
       self.$title
         .addClass("transparentBorder")
@@ -233,12 +233,12 @@ window.Group = function(listOfEls, options) {
     .css({backgroundRepeat: 'no-repeat'})
     .blur(titleUnfocus)
     .focus(function() {
-      if(self.locked.title) {
+      if (self.locked.title) {
         self.$title.get(0).blur();
         return;
       }  
       self.$title.get(0).select();
-      if(!self.getTitle()) {
+      if (!self.getTitle()) {
         self.$title
           .removeClass("defaultName")
           .val('');
@@ -248,7 +248,7 @@ window.Group = function(listOfEls, options) {
   
   titleUnfocus();
   
-  if(this.locked.title)
+  if (this.locked.title)
     this.$title.addClass('name-locked');
   else {
     this.$titleShield
@@ -258,10 +258,10 @@ window.Group = function(listOfEls, options) {
       .mouseup(function(e) { 
         var same = (e.target == self.lastMouseDownTarget);
         self.lastMouseDownTarget = null;
-        if(!same)
+        if (!same)
           return;
         
-        if(!self.isDragging) {        
+        if (!self.isDragging) {        
           self.$titleShield.hide();
           self.$title.get(0).focus();
         }
@@ -287,16 +287,16 @@ window.Group = function(listOfEls, options) {
     .hide(); 
   
   // ___ locking
-  if(this.locked.bounds)
+  if (this.locked.bounds)
     $container.css({cursor: 'default'});    
     
-  if(this.locked.close)
+  if (this.locked.close)
     $close.hide();
     
   // ___ Superclass initialization
   this._init($container.get(0));
 
-  if(this.$debug) 
+  if (this.$debug) 
     this.$debug.css({zIndex: -1000});
   
   // ___ Children
@@ -307,7 +307,7 @@ window.Group = function(listOfEls, options) {
   // ___ Finish Up
   this._addHandlers($container);
   
-  if(!this.locked.bounds)
+  if (!this.locked.bounds)
     this.setResizable(true);
   
   Groups.register(this);
@@ -317,7 +317,7 @@ window.Group = function(listOfEls, options) {
   this.snap();
   
   // ___ Push other objects away
-  if(!options.dontPush)
+  if (!options.dontPush)
     this.pushAway();   
 
   this._inited = true;
@@ -361,7 +361,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       id: this.id
     };
     
-    if(isPoint(this.userSize))  
+    if (isPoint(this.userSize))  
       data.userSize = new Point(this.userSize);
   
     return data;
@@ -382,7 +382,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       return;
 
     var data = this.getStorageData();
-    if(Groups.groupStorageSanity(data))
+    if (Groups.groupStorageSanity(data))
       Storage.saveGroup(Utils.getCurrentWindow(), data);
   },
   
@@ -431,7 +431,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     box.height -= titleHeight;
     box.inset(6, 6);
     
-    if(this.isNewTabsGroup())
+    if (this.isNewTabsGroup())
       box.height -= 12; // Hack for tab titles
     else
       box.height -= 33; // For new tab button
@@ -443,7 +443,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Function: setBounds
   // Sets the bounds with the given <Rect>, animating unless "immediately" is false.
   setBounds: function(rect, immediately) {
-    if(!isRect(rect)) {
+    if (!isRect(rect)) {
       Utils.trace('Group.setBounds: rect is not a real rectangle!', rect);
       return;
     }
@@ -461,33 +461,33 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     var contentCSS = {};
     var force = false;
 
-    if(force || rect.left != this.bounds.left)
+    if (force || rect.left != this.bounds.left)
       css.left = rect.left;
       
-    if(force || rect.top != this.bounds.top) 
+    if (force || rect.top != this.bounds.top) 
       css.top = rect.top;
       
-    if(force || rect.width != this.bounds.width) {
+    if (force || rect.width != this.bounds.width) {
       css.width = rect.width;
       titlebarCSS.width = rect.width;
       contentCSS.width = rect.width;
     }
 
-    if(force || rect.height != this.bounds.height) {
+    if (force || rect.height != this.bounds.height) {
       css.height = rect.height; 
       contentCSS.height = rect.height - titleHeight; 
     }
       
-    if(iQ.isEmptyObject(css))
+    if (iQ.isEmptyObject(css))
       return;
       
     var offset = new Point(rect.left - this.bounds.left, rect.top - this.bounds.top);
     this.bounds = new Rect(rect);
 
     // ___ Deal with children
-    if(css.width || css.height) {
+    if (css.width || css.height) {
       this.arrange({animate: !immediately}); //(immediately ? 'sometimes' : true)});
-    } else if(css.left || css.top) {
+    } else if (css.left || css.top) {
       iQ.each(this._children, function(index, child) {
         var box = child.getBounds();
         child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
@@ -495,7 +495,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     }
           
     // ___ Update our representation
-    if(immediately) {
+    if (immediately) {
 /*
       $(this.container).stop(true, true);
       this.$titlebar.stop(true, true);
@@ -529,7 +529,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
     this._updateDebugBounds();
 
-    if(!isRect(this.bounds))
+    if (!isRect(this.bounds))
       Utils.trace('Group.setBounds: this.bounds is not a real rectangle!', this.bounds);
 
     if (!this.isNewTabsGroup())
@@ -546,16 +546,16 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
     iQ(this.container).css({zIndex: value});
 
-    if(this.$debug) 
+    if (this.$debug) 
       this.$debug.css({zIndex: value + 1});
 
     var count = this._children.length;
-    if(count) {
+    if (count) {
       var topZIndex = value + count + 1;
       var zIndex = topZIndex;
       var self = this;
       iQ.each(this._children, function(index, child) {
-        if(child == self.topChild)
+        if (child == self.topChild)
           child.setZ(topZIndex + 1);
         else {
           child.setZ(zIndex);
@@ -586,7 +586,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Closes the group and all of its children.
   closeAll: function() {
     var self = this;
-    if(this._children.length) {
+    if (this._children.length) {
       var toClose = iQ.merge([], this._children);
       iQ.each(toClose, function(index, child) {
         child.removeOnClose(self);
@@ -594,7 +594,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       });
     } 
     
-    if(!this.locked.close)
+    if (!this.locked.close)
       this.close();
   },
     
@@ -611,7 +611,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     try {
       var item;
       var $el;
-      if(a.isAnItem) {
+      if (a.isAnItem) {
         item = a;
         $el = iQ(a.container);  
       } else {
@@ -623,17 +623,17 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       
       Utils.assert('shouldn\'t already be in another group', !item.parent || item.parent == this);
   
-      if(!dropPos) 
+      if (!dropPos) 
         dropPos = {top:window.innerWidth, left:window.innerHeight};
         
-      if(typeof(options) == 'undefined')
+      if (typeof(options) == 'undefined')
         options = {};
         
       var self = this;
       
       var wasAlreadyInThisGroup = false;
       var oldIndex = iQ.inArray(item, this._children);
-      if(oldIndex != -1) {
+      if (oldIndex != -1) {
         this._children.splice(oldIndex, 1); 
         wasAlreadyInThisGroup = true;
       }
@@ -641,7 +641,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       // TODO: You should be allowed to drop in the white space at the bottom and have it go to the end
       // (right now it can match the thumbnail above it and go there)
       function findInsertionPoint(dropPos){
-        if(self.shouldStack(self._children.length + 1))
+        if (self.shouldStack(self._children.length + 1))
           return 0;
           
         var best = {dist: Infinity, item: null};
@@ -649,24 +649,24 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         var box;
         iQ.each(self._children, function(index, child) {        
           box = child.getBounds();
-          if(box.bottom < dropPos.top || box.top > dropPos.top)
+          if (box.bottom < dropPos.top || box.top > dropPos.top)
             return;
           
           var dist = Math.sqrt( Math.pow((box.top+box.height/2)-dropPos.top,2) 
               + Math.pow((box.left+box.width/2)-dropPos.left,2) );
               
-          if( dist <= best.dist ){
+          if ( dist <= best.dist ){
             best.item = child;
             best.dist = dist;
             best.index = index;
           }
         });
   
-        if( self._children.length > 0 ){
-          if(best.item) {
+        if ( self._children.length > 0 ){
+          if (best.item) {
             box = best.item.getBounds();
             var insertLeft = dropPos.left <= box.left + box.width/2;
-            if( !insertLeft ) 
+            if ( !insertLeft ) 
               return best.index+1;
             return best.index;
           }
@@ -682,9 +682,9 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   
       item.setZ(this.getZ() + 1);
       $el.addClass("tabInGroup");
-      if( this.isNewTabsGroup() ) $el.addClass("inNewTabGroup")
+      if ( this.isNewTabsGroup() ) $el.addClass("inNewTabGroup")
       
-      if(!wasAlreadyInThisGroup) {
+      if (!wasAlreadyInThisGroup) {
         item.droppable(false);
         item.groupData = {};
     
@@ -694,17 +694,17 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         
         item.setParent(this);
         
-        if(typeof(item.setResizable) == 'function')
+        if (typeof(item.setResizable) == 'function')
           item.setResizable(false);
           
-        if(item.tab == Utils.activeTab)
+        if (item.tab == Utils.activeTab)
           Groups.setActiveGroup(this);
       }
       
-      if(!options.dontArrange)
+      if (!options.dontArrange)
         this.arrange();
       
-      if( this._nextNewTabCallback ){
+      if ( this._nextNewTabCallback ){
         this._nextNewTabCallback.apply(this, [item])
         this._nextNewTabCallback = null;
       }
@@ -726,7 +726,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       var $el;  
       var item;
        
-      if(a.isAnItem) {
+      if (a.isAnItem) {
         item = a;
         $el = iQ(item.container);
       } else {
@@ -734,11 +734,11 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         item = Items.item($el);
       }
       
-      if(typeof(options) == 'undefined')
+      if (typeof(options) == 'undefined')
         options = {};
       
       var index = iQ.inArray(item, this._children);
-      if(index != -1)
+      if (index != -1)
         this._children.splice(index, 1); 
       
       item.setParent(null);
@@ -752,12 +752,12 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       item.droppable(true);    
       item.removeOnClose(this);
       
-      if(typeof(item.setResizable) == 'function')
+      if (typeof(item.setResizable) == 'function')
         item.setResizable(true);
   
-      if(this._children.length == 0 && !this.locked.close && !this.getTitle() && !options.dontClose){
+      if (this._children.length == 0 && !this.locked.close && !this.getTitle() && !options.dontClose){
         this.close();
-      } else if(!options.dontArrange) {
+      } else if (!options.dontArrange) {
         this.arrange();
       }
     } catch(e) {
@@ -788,7 +788,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     };
     
 /*     this.$ntb.stop(true, true);     */
-    if(!immediately)
+    if (!immediately)
       this.$ntb.animate(css, {
         duration: 320,
         easing: 'tabcandyBounce'
@@ -828,7 +828,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Function: shouldStack
   // Returns true if the group, given "count", should stack (instead of grid). 
   shouldStack: function(count) {
-    if(count <= 1)
+    if (count <= 1)
       return false;
       
     var bb = this.getContentBounds();
@@ -848,7 +848,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Parameters: 
   //   options - passed to <Items.arrange> or <_stackArrange>
   arrange: function(options) {
-    if(this.expanded) {
+    if (this.expanded) {
       this.topChild = null;
       var box = new Rect(this.expanded.bounds);
       box.inset(8, 8);
@@ -856,14 +856,14 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     } else {
       var bb = this.getContentBounds();
       var count = this._children.length;
-      if(!this.shouldStack(count)) {
+      if (!this.shouldStack(count)) {
         var animate;
-        if(!options || typeof(options.animate) == 'undefined') 
+        if (!options || typeof(options.animate) == 'undefined') 
           animate = true;
         else 
           animate = options.animate;
     
-        if(typeof(options) == 'undefined')
+        if (typeof(options) == 'undefined')
           options = {};
           
         this._children.forEach(function(child){
@@ -878,7 +878,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
           count: count
         });
 
-        if(this.isNewTabsGroup()) {
+        if (this.isNewTabsGroup()) {
           arrangeOptions.count++;
         } else if (!count) {
           this.xDensity = 0;
@@ -907,15 +907,15 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         this.xDensity = (rightMostRight - bb.left) / (bb.width);
         
         iQ.each(this._children, function(index, child) {
-          if(!child.locked.bounds) {
+          if (!child.locked.bounds) {
             child.setBounds(rects[index], !animate);
             child.setRotation(0);
-            if(options.z)
+            if (options.z)
               child.setZ(options.z);
           }
         });
         
-        if(this.isNewTabsGroup()) {
+        if (this.isNewTabsGroup()) {
           var box = rects[rects.length - 1];
           box.left -= this.bounds.left;
           box.top -= this.bounds.top;
@@ -927,7 +927,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         this._stackArrange(bb, options);
     }
     
-    if( this._isStacked && !this.expanded) this.showExpandControl();
+    if ( this._isStacked && !this.expanded) this.showExpandControl();
     else this.hideExpandControl();
   },
   
@@ -943,16 +943,16 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   //   animate - whether to animate; default: true.
   _stackArrange: function(bb, options) { 
     var animate;
-    if(!options || typeof(options.animate) == 'undefined') 
+    if (!options || typeof(options.animate) == 'undefined') 
       animate = true;
     else 
       animate = options.animate;
 
-    if(typeof(options) == 'undefined')
+    if (typeof(options) == 'undefined')
       options = {};
 
     var count = this._children.length;
-    if(!count)
+    if (!count)
       return;
     
     var zIndex = this.getZ() + count + 1;
@@ -968,7 +968,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
     // compute h and w. h and w are the dimensions of each of the tabs... in other words, the
     // height and width of the entire stack, modulo rotation.
-    if(bbAspect > itemAspect) { // Tall, thin group
+    if (bbAspect > itemAspect) { // Tall, thin group
       w = bb.width * scale;
       h = w * itemAspect;
       // let's say one, because, even though there's more space, we're enforcing that with scale.
@@ -984,7 +984,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     // x is the left margin that the stack will have, within the content area (bb)
     // y is the vertical margin
     var x = (bb.width - w) / 2;
-    if(this.isNewTabsGroup())
+    if (this.isNewTabsGroup())
       x -= (w + newTabsPad) / 2;
       
     var y = Math.min(x, (bb.height - h) / 2);
@@ -993,14 +993,14 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     var self = this;
     var children = [];
     iQ.each(this._children, function(index, child) {
-      if(child == self.topChild)
+      if (child == self.topChild)
         children.unshift(child);
       else
         children.push(child);
     });
     
     iQ.each(children, function(index, child) {
-      if(!child.locked.bounds) {
+      if (!child.locked.bounds) {
         child.setZ(zIndex);
         zIndex--;
         
@@ -1010,7 +1010,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       }
     });
     
-    if(this.isNewTabsGroup()) {
+    if (this.isNewTabsGroup()) {
       box.left += box.width + newTabsPad;
       box.left -= this.bounds.left;
       box.top -= this.bounds.top;
@@ -1024,13 +1024,13 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Function: _randRotate
   // Random rotation generator for <_stackArrange>
   _randRotate: function(spread, index){
-    if( index >= this._stackAngles.length ){
+    if ( index >= this._stackAngles.length ){
       var randAngle = 5*index + parseInt( (Math.random()-.5)*1 );
       this._stackAngles.push(randAngle);
       return randAngle;          
     }
     
-    if( index > 5 ) index = 5;
+    if ( index > 5 ) index = 5;
 
     return this._stackAngles[index];
   },
@@ -1046,7 +1046,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     var self = this;
     
     // ___ normal click
-    if(!this._isStacked || this.expanded) {
+    if (!this._isStacked || this.expanded) {
       return {
         shouldZoom: true,
         callback: function() {
@@ -1096,10 +1096,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     pos.left -= overlayWidth/3;
     pos.top  -= overlayHeight/3;      
           
-    if( pos.top < 0 )  pos.top = 20;
-    if( pos.left < 0 ) pos.left = 20;      
-    if( pos.top+overlayHeight > window.innerHeight ) pos.top = window.innerHeight-overlayHeight-20;
-    if( pos.left+overlayWidth > window.innerWidth )  pos.left = window.innerWidth-overlayWidth-20;
+    if ( pos.top < 0 )  pos.top = 20;
+    if ( pos.left < 0 ) pos.left = 20;      
+    if ( pos.top+overlayHeight > window.innerHeight ) pos.top = window.innerHeight-overlayHeight-20;
+    if ( pos.left+overlayWidth > window.innerWidth )  pos.left = window.innerWidth-overlayWidth-20;
     
     $tray
       .animate({
@@ -1155,7 +1155,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Function: collapse
   // Collapses the group from the expanded "tray" mode. 
   collapse: function() {
-    if(this.expanded) {
+    if (this.expanded) {
       var z = this.getZ();
       var box = this.getBounds();
       this.expanded.$tray
@@ -1194,7 +1194,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     var self = this;
     
     this.dropOptions.over = function(){
-      if( !this.isNewTabsGroup() )
+      if ( !this.isNewTabsGroup() )
         iQ(this.container).addClass("acceptsDrop");
     };
     this.dropOptions.drop = function(event){
@@ -1202,7 +1202,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       this.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
     };
     
-    if(!this.locked.bounds)
+    if (!this.locked.bounds)
       this.draggable();
     
     iQ(container)
@@ -1213,12 +1213,12 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         };
       })    
       .mouseup(function(e){
-        if(!self._mouseDown || !self._mouseDown.location || !self._mouseDown.className)
+        if (!self._mouseDown || !self._mouseDown.location || !self._mouseDown.className)
           return;
           
         // Don't zoom in on clicks inside of the controls.
         var className = self._mouseDown.className;
-        if(className.indexOf('title-shield') != -1
+        if (className.indexOf('title-shield') != -1
             || className.indexOf('name') != -1
             || className.indexOf('close') != -1
             || className.indexOf('newTabButton') != -1
@@ -1228,19 +1228,19 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         
         var location = new Point(e.clientX, e.clientY);
       
-        if(location.distance(self._mouseDown.location) > 1.0) 
+        if (location.distance(self._mouseDown.location) > 1.0) 
           return;
           
         // Don't zoom in to the last tab for the new tab group.
-        if( self.isNewTabsGroup() ) 
+        if ( self.isNewTabsGroup() ) 
           return;
         
         // Zoom into the last-active tab when the group
         // is clicked.
         /*var activeTab = self.getActiveTab();
-        if( activeTab ) 
+        if ( activeTab ) 
           activeTab.zoomIn();
-        else if(self.getChild(0))
+        else if (self.getChild(0))
           self.getChild(0).zoomIn();*/
           
         self._mouseDown = null;
@@ -1261,7 +1261,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     this.resizeOptions.minWidth = 90;
     this.resizeOptions.minHeight = 90;
 
-    if(value) {
+    if (value) {
       this.$resizer.fadeIn();
       this.resizable(true);
     } else {
@@ -1350,9 +1350,9 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // tab bar.
   reorderBasedOnTabOrder: function(){    
     var groupTabs = [];
-    for( var i=0; i<UI.tabBar.el.children.length; i++ ){
+    for ( var i=0; i<UI.tabBar.el.children.length; i++ ){
       var tab = UI.tabBar.el.children[i];
-      if( tab.collapsed == false )
+      if ( tab.collapsed == false )
         groupTabs.push(tab);
     }
      
@@ -1382,8 +1382,8 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   //  index - the index of the child tab to return, use negative
   //          numbers to index from the end (-1 is the last child)
   getChild: function(index){
-    if( index < 0 ) index = this._children.length+index;
-    if( index >= this._children.length || index < 0 ) return null;
+    if ( index < 0 ) index = this._children.length+index;
+    if ( index >= this._children.length || index < 0 ) return null;
     return this._children[index];
   },
   
@@ -1477,13 +1477,13 @@ window.Groups = {
   // If no data, sets up blank slate (including "new tabs" group).
   reconstitute: function(groupsData, groupData) {
     try {
-      if(groupsData && groupsData.nextID)
+      if (groupsData && groupsData.nextID)
         this.nextID = groupsData.nextID;
         
-      if(groupData) {
+      if (groupData) {
         for (var id in groupData) {
           var group = groupData[id];
-          if(this.groupStorageSanity(group)) {
+          if (this.groupStorageSanity(group)) {
             var isNewTabsGroup = (group.title == 'New Tabs');
             var options = {
               locked: {
@@ -1500,7 +1500,7 @@ window.Groups = {
       }
       
       var group = this.getNewTabGroup();
-      if(!group) {
+      if (!group) {
         var box = this.getBoundsForNewTabGroup();
         var options = {
           locked: {
@@ -1531,7 +1531,7 @@ window.Groups = {
   groupStorageSanity: function(groupData) {
     // TODO: check everything 
     var sane = true;
-    if(!isRect(groupData.bounds)) {
+    if (!isRect(groupData.bounds)) {
       Utils.log('Groups.groupStorageSanity: bad bounds', groupData.bounds);
       sane = false;
     }
@@ -1545,7 +1545,7 @@ window.Groups = {
   getGroupWithTitle: function(title) {
     var result = null;
     iQ.each(this.groups, function(index, group) {
-      if(group.getTitle() == title) {
+      if (group.getTitle() == title) {
         result = group;
         return false;
       }
@@ -1563,7 +1563,7 @@ window.Groups = {
       return group.getTitle() == groupTitle;
     });
     
-    if(array.length) 
+    if (array.length) 
       return array[0];
       
     return null;
@@ -1604,10 +1604,10 @@ window.Groups = {
   // Removes the given <Group> from the list of groups we're tracking.
   unregister: function(group) {
     var index = iQ.inArray(group, this.groups);
-    if(index != -1)
+    if (index != -1)
       this.groups.splice(index, 1);  
     
-    if(group == this._activeGroup)
+    if (group == this._activeGroup)
       this._activeGroup = null;   
   },
   
@@ -1618,7 +1618,7 @@ window.Groups = {
   group: function(a) {
     var result = null;
     iQ.each(this.groups, function(index, candidate) {
-      if(candidate.id == a) {
+      if (candidate.id == a) {
         result = candidate;
         return false;
       }
@@ -1646,14 +1646,14 @@ window.Groups = {
     
     var i = 0;
     iQ.each(this.groups, function(index, group) {
-      if(group.locked.bounds)
+      if (group.locked.bounds)
         return; 
         
       group.setBounds(box, true);
       
       box.left += box.width + padding;
       i++;
-      if(i % columns == 0) {
+      if (i % columns == 0) {
         box.left = startX;
         box.top += box.height + padding;
       }
@@ -1675,11 +1675,11 @@ window.Groups = {
   // Given a <TabItem>, files it in the appropriate group. 
   newTab: function(tabItem) {
     var group = this.getActiveGroup();
-    if( group == null )
+    if ( group == null )
       group = this.getNewTabGroup();
     
     var $el = iQ(tabItem.container);
-    if(group) group.add($el);
+    if (group) group.add($el);
   },
   
   // ----------
@@ -1709,12 +1709,12 @@ window.Groups = {
   // Function: updateTabBarForActiveGroup
   // Hides and shows tabs in the tab bar based on the active group.
   updateTabBarForActiveGroup: function() {
-    if(!window.UI)
+    if (!window.UI)
       return; // called too soon
       
-    if(this._activeGroup)
+    if (this._activeGroup)
       UI.tabBar.showOnlyTheseTabs( this._activeGroup._children );
-    else if( this._activeGroup == null)
+    else if ( this._activeGroup == null)
       UI.tabBar.showOnlyTheseTabs( this.getOrphanedTabs(), {dontReorg: true});
   },
   

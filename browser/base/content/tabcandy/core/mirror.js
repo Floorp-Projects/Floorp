@@ -103,11 +103,11 @@ TabCanvas.prototype = {
   
     var w = this.canvas.width;
     var h = this.canvas.height;
-    if(!w || !h)
+    if (!w || !h)
       return;
   
     var fromWin = this.tab.contentWindow;
-    if(fromWin == null) {
+    if (fromWin == null) {
       Utils.log('null fromWin in paint');
       return;
     }
@@ -161,7 +161,7 @@ function Mirror(tab, manager) {
   this.canvasEl = iQ('.thumb canvas', $div).get(0);
       
   var doc = this.tab.contentDocument;
-  if( !_isIframe(doc) ) {
+  if ( !_isIframe(doc) ) {
     this.tabCanvas = new TabCanvas(this.tab, this.canvasEl);    
     this.tabCanvas.attach();
     this.triggerPaint();
@@ -208,7 +208,7 @@ Mirror.prototype = iQ.extend(new Subscribable(), {
 // Class: TabMirror
 // A singleton that manages all of the <Mirror>s in the system.
 var TabMirror = function() {
-  if(window.Tabs) {
+  if (window.Tabs) {
     this.init();
   }
   else { 
@@ -265,18 +265,18 @@ TabMirror.prototype = {
 /*       Utils.log('heartbeat', this.paintingPaused); */
       var now = Utils.getMilliseconds();
       var count = Tabs.length;
-      if(count && this.paintingPaused <= 0) {
+      if (count && this.paintingPaused <= 0) {
         this.heartbeatIndex++;
-        if(this.heartbeatIndex >= count)
+        if (this.heartbeatIndex >= count)
           this.heartbeatIndex = 0;
           
         var tab = Tabs[this.heartbeatIndex];
         var mirror = tab.mirror; 
 /*         Utils.log('heartbeat mirror check'); */
-        if(mirror) {
+        if (mirror) {
 /*           Utils.log('hasMirror'); */
           var iconUrl = tab.raw.linkedBrowser.mIconURL;
-          if( iconUrl == null ){
+          if ( iconUrl == null ){
             iconUrl = "chrome://mozapps/skin/places/defaultFavicon.png";
           }
 
@@ -284,38 +284,38 @@ TabMirror.prototype = {
           var $name = iQ(mirror.nameEl);
           var $canvas = iQ(mirror.canvasEl);
           
-          if(iconUrl != mirror.favEl.src) { 
+          if (iconUrl != mirror.favEl.src) { 
             mirror.favEl.src = iconUrl;
             mirror.triggerPaint();
           }
             
-          if($name.text() != label) {
+          if ($name.text() != label) {
             $name.text(label);
             mirror.triggerPaint();
           }
           
-          if(tab.url != mirror.url) {
+          if (tab.url != mirror.url) {
             var oldURL = mirror.url;
             mirror.url = tab.url;
             mirror._sendToSubscribers('urlChanged', {oldURL: oldURL, newURL: tab.url});
             mirror.triggerPaint();
           }
           
-          if(!mirror.canvasSizeForced) {
+          if (!mirror.canvasSizeForced) {
             var w = $canvas.width();
             var h = $canvas.height();
-            if(w != mirror.canvasEl.width || h != mirror.canvasEl.height) {
+            if (w != mirror.canvasEl.width || h != mirror.canvasEl.height) {
               mirror.canvasEl.width = w;
               mirror.canvasEl.height = h;
               mirror.triggerPaint();
             }
           }
           
-          if(mirror.needsPaint) {
+          if (mirror.needsPaint) {
 /*             Utils.log('aboutToPaint'); */
             mirror.tabCanvas.paint();
             
-            if(Utils.getMilliseconds() - mirror.needsPaint > 5000)
+            if (Utils.getMilliseconds() - mirror.needsPaint > 5000)
               mirror.needsPaint = 0;
           }
         }
@@ -346,13 +346,13 @@ TabMirror.prototype = {
   update: function(tab){
     this.link(tab);
 
-    if(tab.mirror && tab.mirror.tabCanvas)
+    if (tab.mirror && tab.mirror.tabCanvas)
       tab.mirror.triggerPaint();
   },
   
   link: function(tab){
     // Don't add duplicates
-    if(tab.mirror)
+    if (tab.mirror)
       return false;
     
     // Add the tab to the page
@@ -362,10 +362,10 @@ TabMirror.prototype = {
   
   unlink: function(tab){
     var mirror = tab.mirror;
-    if(mirror) {
+    if (mirror) {
       mirror._sendOnClose();
       var tabCanvas = mirror.tabCanvas;
-      if(tabCanvas)
+      if (tabCanvas)
         tabCanvas.detach();
       
       iQ(mirror.el).remove();
