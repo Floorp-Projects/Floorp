@@ -300,7 +300,7 @@ mjit::Compiler::finishThisUp()
         script->pics[i].fastPathStart = fullCode.locationOf(pics[i].hotPathBegin);
         script->pics[i].storeBack = fullCode.locationOf(pics[i].storeBack);
         script->pics[i].slowPathStart = stubCode.locationOf(pics[i].slowPathStart);
-        script->pics[i].callReturn = uint8((uint8*)stubCode.locationOf(pics[i].callReturn).executableAddress() -
+        script->pics[i].callReturn = uint16((uint8*)stubCode.locationOf(pics[i].callReturn).executableAddress() -
                                            (uint8*)script->pics[i].slowPathStart.executableAddress());
         script->pics[i].shapeReg = pics[i].shapeReg;
         script->pics[i].objReg = pics[i].objReg;
