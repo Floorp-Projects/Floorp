@@ -2939,7 +2939,7 @@ END_CASE(JSOP_MOREITER)
 BEGIN_CASE(JSOP_ENDITER)
 {
     JS_ASSERT(regs.sp - 1 >= fp->base());
-    bool ok = !!js_CloseIterator(cx, regs.sp[-1]);
+    bool ok = !!js_CloseIterator(cx, &regs.sp[-1].toObject());
     regs.sp--;
     if (!ok)
         goto error;
@@ -3912,6 +3912,7 @@ BEGIN_CASE(JSOP_ARGINC)
     incr =  1; incr2 =  0;
 
   do_arg_incop:
+    // If we initialize in the declaration, MSVC complains that the labels skip init.
     slot = GET_ARGNO(regs.pc);
     JS_ASSERT(slot < fp->fun->nargs);
     METER_SLOT_OP(op, slot);
@@ -4816,6 +4817,7 @@ END_CASE(JSOP_SETCALL)
         }                                                                   \
         PUSH_OBJECT_OR_NULL(thisp);                                         \
     JS_END_MACRO
+
 BEGIN_CASE(JSOP_GETGNAME)
 BEGIN_CASE(JSOP_CALLGNAME)
 BEGIN_CASE(JSOP_NAME)
@@ -5437,7 +5439,30 @@ BEGIN_CASE(JSOP_DEFVAR)
         obj2 = obj;
     }
 
-    obj2->dropProperty(cx, prop);
+    /*
+     * Try to optimize a property we either just created, or found
+     * directly in the global object, that is permanent, has a slot,
+     * and has stub getter and setter, into a "fast global" accessed
+     * by the JSOP_*GVAR opcodes.
+     */
+    if (!fp->fun &&
+        index < GlobalVarCount(fp) &&
+        obj2 == obj &&
+        obj->isNative()) {
+        JSScopeProperty *sprop = (JSScopeProperty *) prop;
+        if (!sprop->configurable() &&
+            SPROP_HAS_VALID_SLOT(sprop, obj->scope()) &&
+            sprop->hasDefaultGetterOrIsMethod() &&
+            sprop->hasDefaultSetter()) {
+            /*
+             * Fast globals use frame variables to map the global name's atom
+             * index to the permanent varobj slot number, tagged as a jsval.
+             * The atom index for the global's name literal is identical to its
+             * variable index.
+             */
+            fp->slots()[index].setInt32(sprop->slot);
+        }
+    }
 }
 END_CASE(JSOP_DEFVAR)
 
@@ -6977,7 +7002,7 @@ END_CASE(JSOP_ARRAYPUSH)
                 JS_ASSERT(js_GetOpcode(cx, fp->script, regs.pc) == JSOP_ENDITER);
                 AutoValueRooter tvr(cx, cx->exception);
                 cx->throwing = false;
-                ok = js_CloseIterator(cx, regs.sp[-1]);
+                ok = js_CloseIterator(cx, &regs.sp[-1].toObject());
                 regs.sp -= 1;
                 if (!ok)
                     goto error;

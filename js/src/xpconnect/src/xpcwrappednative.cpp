@@ -3341,16 +3341,6 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
                                               XPCNativeInterface* iface,
                                               jsid name)
 {
-    if(!ccx.IsValid())
-        return;
-
-    JSString* oldJSStr;
-    JSString* newJSStr;
-    PRUnichar* oldStr;
-    PRUnichar* newStr;
-    XPCNativeMember* member;
-    XPCNativeInterface* localIface;
-
     // TODO: remove this all more thoroughly.
 }
 #endif

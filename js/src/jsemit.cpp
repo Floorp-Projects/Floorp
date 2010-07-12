@@ -6372,7 +6372,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * For operator new applied to other expressions than E4X ones, we emit
          * JSOP_GETPROP instead of JSOP_CALLPROP, etc. This is necessary to
          * interpose the lambda-initialized method read barrier -- see the code
-         * in jsops.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
+         * in jsinterp.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
          *
          * Then (or in a call case that has no explicit reference-base object)
          * we emit JSOP_NULL as a placeholder local GC root to hold the |this|
