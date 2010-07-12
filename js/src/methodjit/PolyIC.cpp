@@ -1504,7 +1504,7 @@ SlowName(VMFrame &f, uint32 index)
     stubs::Name(f);
 }
 
-void
+void JS_FASTCALL
 ic::Name(VMFrame &f, uint32 index)
 {
     JSScript *script = f.fp->script;
