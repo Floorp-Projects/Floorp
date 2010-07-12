@@ -62,27 +62,12 @@ namespace js
         JSScript     *script;
         OpcodeStatus *ops;
         Vector<jsbytecode *, 16, ContextAllocPolicy> doList;
-#ifdef DEBUG
-        bool         assertDepths;
-#endif
 
       public:
         BytecodeAnalyzer(JSContext *cx, JSScript *script)
           : cx(cx), script(script), ops(NULL),
             doList(ContextAllocPolicy(cx))
         {
-#ifdef DEBUG
-            // This takes a very long time with SunSpider's string-tagcloud.
-            if (script->filename) {
-                const char *filename = script->filename;
-                size_t flen = strlen(filename);
-                const char *pat = "string-tagcloud.js";
-                size_t plen = strlen(pat);
-                bool endswith = (plen < flen && 
-                                 memcmp(filename + flen - plen, pat, plen) == 0);
-                assertDepths = !endswith;
-            }
-#endif
         }
         ~BytecodeAnalyzer();
 
