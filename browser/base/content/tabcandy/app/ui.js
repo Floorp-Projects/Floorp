@@ -102,7 +102,7 @@ var Tabbar = {
   //  - Some options
   showOnlyTheseTabs: function(tabs, options){
     try { 
-      if(!options)
+      if (!options)
         options = {};
           
       var tabbrowser = Utils.getCurrentWindow().gBrowser;
@@ -187,23 +187,23 @@ window.Page = {
     let currentTab = UI.currentTab;
     let item = null;
 
-    if(currentTab && currentTab.mirror)
+    if (currentTab && currentTab.mirror)
       item = TabItems.getItemByTabElement(currentTab.mirror.el);
 
-    if(item) {
+    if (item) {
       // If there was a previous currentTab we want to animate
       // its mirror for the zoom out.
       // Note that we start the animation on the chrome thread.
 
       // Zoom out!
       item.zoomOut(function() {
-        if(!currentTab.mirror) // if the tab's been destroyed
+        if (!currentTab.mirror) // if the tab's been destroyed
           item = null;
 
         self.setActiveTab(item);
 
         let activeGroup = Groups.getActiveGroup();
-        if( activeGroup )
+        if ( activeGroup )
           activeGroup.setTopChild(item);
   
         window.Groups.setActiveGroup(null);
@@ -215,13 +215,13 @@ window.Page = {
   setupKeyHandlers: function(){
     var self = this;
     iQ(window).keyup(function(e){
-      if( e.metaKey == false ) window.Keys.meta = false;
+      if ( e.metaKey == false ) window.Keys.meta = false;
     });
     
     iQ(window).keydown(function(e){
-      if( e.metaKey == true ) window.Keys.meta = true;
+      if ( e.metaKey == true ) window.Keys.meta = true;
       
-      if( !self.getActiveTab() ) return;
+      if ( !self.getActiveTab() ) return;
       
       var centers = [[item.bounds.center(), item] for each(item in TabItems.getItems())];
       myCenter = self.getActiveTab().bounds.center();
@@ -232,13 +232,13 @@ window.Page = {
           .sort(function(a,b){
             return myCenter.distance(a[0]) - myCenter.distance(b[0]);
           });
-        if( matches.length > 0 )
+        if ( matches.length > 0 )
           return matches[0][1];
         return null;
       }
 
       var norm = null;
-      switch(e.which){
+      switch (e.which){
         case 39: // Right
           norm = function(a, me){return a.x > me.x};
           break;
@@ -253,10 +253,10 @@ window.Page = {
           break;
       }
       
-      if( norm != null && iQ(":focus").length == 0 ){
+      if ( norm != null && iQ(":focus").length == 0 ){
         var nextTab = getClosestTabBy(norm);
-        if( nextTab ){
-          if( nextTab.inStack() && !nextTab.parent.expanded){
+        if ( nextTab ){
+          if ( nextTab.inStack() && !nextTab.parent.expanded){
             nextTab = nextTab.parent.getChild(0);
           }
           self.setActiveTab(nextTab);           
@@ -264,8 +264,8 @@ window.Page = {
         e.preventDefault();               
       }
       
-      if((e.which == 27 || e.which == 13) && iQ(":focus").length == 0 )
-        if( self.getActiveTab() ) self.getActiveTab().zoomIn();
+      if ((e.which == 27 || e.which == 13) && iQ(":focus").length == 0 )
+        if ( self.getActiveTab() ) self.getActiveTab().zoomIn();
     });
     
   },
@@ -280,7 +280,7 @@ window.Page = {
       Utils.getCurrentWindow().document.getElementById("tab-candy").
         contentDocument;
     iQ(tabCandyContentDoc).mousedown(function(e){
-      if( e.originalTarget.id == "bg" )
+      if ( e.originalTarget.id == "bg" )
         Page.createGroupOnDrag(e)
     });
 
@@ -303,7 +303,7 @@ window.Page = {
             (group == null && Tabbar.getVisibleTabCount() == 1)) {
           self.closedLastVisibleTab = true;
           // remove the zoom prep.
-          if(this && this.mirror) {
+          if (this && this.mirror) {
             var item = TabItems.getItemByTabElement(this.mirror.el);
             if (item) {
               item.setZoomPrep(false);
@@ -318,7 +318,7 @@ window.Page = {
     Tabs.onMove(function() {
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
         var activeGroup = Groups.getActiveGroup();
-        if( activeGroup ) {
+        if ( activeGroup ) {
           activeGroup.reorderBasedOnTabOrder();                
         }
       }, 1);
@@ -349,31 +349,31 @@ window.Page = {
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread      
         let visibleTabCount = Tabbar.getVisibleTabCount();
    
-        if(focusTab != UI.currentTab) {
+        if (focusTab != UI.currentTab) {
           // things have changed while we were in timeout
           return;
         }
          
         let newItem = null;
-        if(focusTab && focusTab.mirror)
+        if (focusTab && focusTab.mirror)
           newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
   
-        if(newItem)
+        if (newItem)
           Groups.setActiveGroup(newItem.parent);
   
         // ___ prepare for when we return to TabCandy
         let oldItem = null;
-        if(currentTab && currentTab.mirror)
+        if (currentTab && currentTab.mirror)
           oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
   
-        if(newItem != oldItem) {
-          if(oldItem)
+        if (newItem != oldItem) {
+          if (oldItem)
             oldItem.setZoomPrep(false);
           
           // if the last visible tab is removed, don't set zoom prep because
           // we shoud be in the Tab Candy interface.
           if (visibleTabCount > 0) {
-            if(newItem)
+            if (newItem)
               newItem.setZoomPrep(true);
           }
         } else {
@@ -517,17 +517,17 @@ window.Page = {
   //  - Takes a <TabItem>
   //
   setActiveTab: function(tab){
-    if(tab == this._activeTab)
+    if (tab == this._activeTab)
       return;
       
-    if(this._activeTab) { 
+    if (this._activeTab) { 
       this._activeTab.makeDeactive();
       this._activeTab.removeOnClose(this);
     }
       
     this._activeTab = tab;
     
-    if(this._activeTab) {
+    if (this._activeTab) {
       var self = this;
       this._activeTab.addOnClose(this, function() {
         self._activeTab = null;
@@ -550,7 +550,7 @@ window.Page = {
 // Class: UIClass
 // Singleton top-level UI manager. TODO: Integrate with <Page>.
 function UIClass(){ 
-  if(window.Tabs)
+  if (window.Tabs)
     this.init();
   else {
     var self = this;
@@ -602,10 +602,10 @@ UIClass.prototype = {
 
       iQ(window).bind('beforeunload', function() {
         // Things may not all be set up by now, so check for everything
-        if(self.showChrome)
+        if (self.showChrome)
           self.showChrome();  
           
-        if(self.tabBar && self.tabBar.showAllTabs)
+        if (self.tabBar && self.tabBar.showAllTabs)
           self.tabBar.showAllTabs();
       });
       
@@ -654,7 +654,7 @@ UIClass.prototype = {
   
       TabItems.init();
   
-      if(firstTime) {
+      if (firstTime) {
         var padding = 10;
         var infoWidth = 300;
         var infoHeight = 200;
@@ -673,7 +673,7 @@ UIClass.prototype = {
 
         let items = TabItems.getItems();
         items.forEach(function(item) {
-          if(item.parent)
+          if (item.parent)
             item.parent.remove(item);
             
           group.add(item);
@@ -691,7 +691,7 @@ UIClass.prototype = {
       } 
           
       // ___ resizing
-      if(data.pageBounds) {
+      if (data.pageBounds) {
         this.pageBounds = data.pageBounds;
         this.resize(true);
       } else
@@ -840,13 +840,13 @@ UIClass.prototype = {
 
   // ----------
   resize: function(force) {
-    if( typeof(force) == "undefined" ) force = false;
+    if ( typeof(force) == "undefined" ) force = false;
 
     // If we are currently doing an animation or if TabCandy isn't focused
     // don't perform a resize. This resize really slows things down.
     var isAnimating = iQ.isAnimating();
-    if( force == false){
-      if( isAnimating || !Page.isTabCandyVisible() ) {
+    if ( force == false){
+      if ( isAnimating || !Page.isTabCandyVisible() ) {
         // TODO: should try again once the animation is done
         // Actually, looks like iQ.isAnimating is non-functional;
         // perhaps we should clean it out, or maybe we should fix it. 
@@ -867,7 +867,7 @@ UIClass.prototype = {
     itemBounds.width = 1;
     itemBounds.height = 1;
     iQ.each(items, function(index, item) {
-      if(item.locked.bounds)
+      if (item.locked.bounds)
         return;
         
       var bounds = item.getBounds();
@@ -897,7 +897,7 @@ UIClass.prototype = {
     var self = this;
     var pairs = [];
     iQ.each(items, function(index, item) {
-      if(item.locked.bounds)
+      if (item.locked.bounds)
         return;
         
       var bounds = item.getBounds();
@@ -989,7 +989,7 @@ UIClass.prototype = {
         
       var count = commands.length;
       var a;
-      for(a = 0; a < count; a++) {
+      for (a = 0; a < count; a++) {
         commands[a].element = iQ('<option>')
           .val(a)
           .html(commands[a].name)
@@ -1016,23 +1016,23 @@ UIClass.prototype = {
 
   // ----------
   save: function() {  
-    if(!this.initialized) 
+    if (!this.initialized) 
       return;
       
     var data = {
       pageBounds: this.pageBounds
     };
     
-    if(this.storageSanity(data))
+    if (this.storageSanity(data))
       Storage.saveUIData(Utils.getCurrentWindow(), data);
   },
 
   // ----------
   storageSanity: function(data) {
-    if(iQ.isEmptyObject(data))
+    if (iQ.isEmptyObject(data))
       return true;
       
-    if(!isRect(data.pageBounds)) {
+    if (!isRect(data.pageBounds)) {
       Utils.log('UI.storageSanity: bad pageBounds', data.pageBounds);
       data.pageBounds = null;
       return false;
@@ -1045,7 +1045,7 @@ UIClass.prototype = {
   arrangeBySite: function() {
     function putInGroup(set, key) {
       var group = Groups.getGroupWithTitle(key);
-      if(group) {
+      if (group) {
         iQ.each(set, function(index, el) {
           group.add(el);
         });
@@ -1061,12 +1061,12 @@ UIClass.prototype = {
     iQ.each(items, function(index, item) {
       var url = item.getURL(); 
       var domain = url.split('/')[2]; 
-      if(!domain)
+      if (!domain)
         newTabsGroup.add(item);
       else {
         var domainParts = domain.split('.');
         var mainDomain = domainParts[domainParts.length - 2];
-        if(groups[mainDomain]) 
+        if (groups[mainDomain]) 
           groups[mainDomain].push(item.container);
         else 
           groups[mainDomain] = [item.container];
@@ -1074,9 +1074,9 @@ UIClass.prototype = {
     });
     
     var leftovers = [];
-    for(key in groups) {
+    for (key in groups) {
       var set = groups[key];
-      if(set.length > 1) {
+      if (set.length > 1) {
         putInGroup(set, key);
       } else
         leftovers.push(set[0]);
@@ -1091,7 +1091,7 @@ UIClass.prototype = {
   newTab: function(url) {
     try {
       var group = Groups.getNewTabGroup();
-      if(group)
+      if (group)
         group.newTab(url);
       else
         Tabs.open(url);

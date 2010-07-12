@@ -85,7 +85,7 @@ window.TabItem = function(container, tab) {
     var phantom = $target.data("phantomGroup");
     
     var group = drag.info.item.parent;
-    if( group == null ){
+    if ( group == null ){
       phantom.removeClass("phantom");
       phantom.removeClass("group-content");
       group = new Group([$target, drag.info.$el], {container:phantom});
@@ -116,7 +116,7 @@ window.TabItem = function(container, tab) {
   
   this.dropOptions.out = function(e){      
     var phantom = iQ(this.container).data("phantomGroup");
-    if(phantom) { 
+    if (phantom) { 
       phantom.fadeOut(function(){
         iQ(this).remove();
       });
@@ -128,20 +128,20 @@ window.TabItem = function(container, tab) {
   
   // ___ more div setup
   $div.mousedown(function(e) {
-    if(!Utils.isRightClick(e))
+    if (!Utils.isRightClick(e))
       self.lastMouseDownTarget = e.target;
   });
     
   $div.mouseup(function(e) {
     var same = (e.target == self.lastMouseDownTarget);
     self.lastMouseDownTarget = null;
-    if(!same)
+    if (!same)
       return;
     
-    if(iQ(e.target).hasClass("close")) 
+    if (iQ(e.target).hasClass("close")) 
       tab.close();
     else {
-      if(!Items.item(this).isDragging) 
+      if (!Items.item(this).isDragging) 
         self.zoomIn();
     }
   });
@@ -169,7 +169,7 @@ window.TabItem = function(container, tab) {
   });   
      
   this.tab.mirror.addSubscriber(this, 'urlChanged', function(who, info) {
-    if(!self.reconnected && (info.oldURL == 'about:blank' || !info.oldURL)) 
+    if (!self.reconnected && (info.oldURL == 'about:blank' || !info.oldURL)) 
       TabItems.reconnect(self);
 
     self.save();
@@ -190,11 +190,11 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   // ----------
   save: function() {
     try{
-      if(!this.tab || !this.tab.raw || !this.reconnected) // too soon/late to save
+      if (!this.tab || !this.tab.raw || !this.reconnected) // too soon/late to save
         return;
 
       var data = this.getStorageData();
-      if(TabItems.storageSanity(data))
+      if (TabItems.storageSanity(data))
         Storage.saveTab(this.tab.raw, data);
     }catch(e){
       Utils.log("Error in saving tab value: "+e);
@@ -208,15 +208,15 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     
   // ----------  
   setBounds: function(rect, immediately, options) {
-    if(!isRect(rect)) {
+    if (!isRect(rect)) {
       Utils.trace('TabItem.setBounds: rect is not a real rectangle!', rect);
       return;
     }
     
-    if(!options)
+    if (!options)
       options = {};
 
-    if(this._zoomPrep)
+    if (this._zoomPrep)
       this.bounds.copy(rect);
     else {
       var $container = iQ(this.container);
@@ -229,13 +229,13 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       const minFontSize = 8;
       const maxFontSize = 15;
   
-      if(rect.left != this.bounds.left || options.force)
+      if (rect.left != this.bounds.left || options.force)
         css.left = rect.left;
         
-      if(rect.top != this.bounds.top || options.force)
+      if (rect.top != this.bounds.top || options.force)
         css.top = rect.top;
         
-      if(rect.width != this.bounds.width || options.force) {
+      if (rect.width != this.bounds.width || options.force) {
         css.width = rect.width - this.sizeExtra.x;
         var scale = css.width / TabItems.tabWidth;
         
@@ -245,10 +245,10 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         css.fontSize = minFontSize + (maxFontSize-minFontSize)*(.5+.5*Math.tanh(2*scale-2))
       }
   
-      if(rect.height != this.bounds.height || options.force) 
+      if (rect.height != this.bounds.height || options.force) 
         css.height = rect.height - this.sizeExtra.y; 
         
-      if(iQ.isEmptyObject(css))
+      if (iQ.isEmptyObject(css))
         return;
         
       this.bounds.copy(rect);
@@ -256,7 +256,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       // If this is a brand new tab don't animate it in from
       // a random location (i.e., from [0,0]). Instead, just
       // have it appear where it should be.
-      if(immediately || (!this._hasBeenDrawn) ) {
+      if (immediately || (!this._hasBeenDrawn) ) {
   /*       $container.stop(true, true); */
         $container.css(css);
       } else {
@@ -271,8 +271,8 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     /*       }).dequeue(); */
       }
   
-      if(css.fontSize && !this.inStack()) {
-        if(css.fontSize < minFontSize )
+      if (css.fontSize && !this.inStack()) {
+        if (css.fontSize < minFontSize )
           $title.fadeOut();//.dequeue();
         else
           $title.fadeIn();//.dequeue();
@@ -284,32 +284,32 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       // @60- return 0; at @70+ return 1; @65 return 0.5
       function slider(bounds, val){
         var keys = [];
-        for(var key in bounds){ keys.push(key); bounds[key] = parseFloat(bounds[key]); };
+        for (var key in bounds){ keys.push(key); bounds[key] = parseFloat(bounds[key]); };
         keys.sort(function(a,b){return a-b});
         var min = keys[0], max = keys[1];
         
         function slide(value){
-          if( value >= max ) return bounds[max];
-          if( value <= min ) return bounds[min];
+          if ( value >= max ) return bounds[max];
+          if ( value <= min ) return bounds[min];
           var rise = bounds[max] - bounds[min];
           var run = max-min;
           var value = rise * (value-min)/run;
-          if( value >= bounds[max] ) return bounds[max];
-          if( value <= bounds[min] ) return bounds[min];
+          if ( value >= bounds[max] ) return bounds[max];
+          if ( value <= bounds[min] ) return bounds[min];
           return value;
         }
         
-        if( val == undefined )
+        if ( val == undefined )
           return slide;
         return slide(val);
       };
 
-      if(css.width && !this.inStack()) {
+      if (css.width && !this.inStack()) {
         $fav.css({top:4,left:4});
         
         var opacity = slider({70:1, 60:0}, css.width);
         $close.show().css({opacity:opacity});
-        if( opacity <= .1 ) $close.hide()
+        if ( opacity <= .1 ) $close.hide()
 
         var pad = slider({70:6, 60:1}, css.width);
         $fav.css({
@@ -321,7 +321,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         });
       } 
       
-      if(css.width && this.inStack()){
+      if (css.width && this.inStack()){
         $fav.css({top:0, left:0});
         var opacity = slider({90:1, 70:0}, css.width);
         
@@ -341,7 +341,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     this._updateDebugBounds();
     rect = this.getBounds(); // ensure that it's a <Rect>
     
-    if(!isRect(this.bounds))
+    if (!isRect(this.bounds))
       Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
     
     if (this.parent === null)
@@ -396,7 +396,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     this.resizeOptions.minWidth = TabItems.minTabWidth;
     this.resizeOptions.minHeight = TabItems.minTabWidth * (TabItems.tabHeight / TabItems.tabWidth);
 
-    if(value) {
+    if (value) {
       $resizer.fadeIn();
       this.resizable(true);
     } else {
@@ -423,10 +423,10 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     var self = this;
     var $tabEl = iQ(this.container);
     var childHitResult = { shouldZoom: true };
-    if(this.parent)
+    if (this.parent)
       childHitResult = this.parent.childHit(this);
       
-    if(childHitResult.shouldZoom) {
+    if (childHitResult.shouldZoom) {
       // Zoom in! 
       var orig = {
         width: $tabEl.width(),
@@ -458,7 +458,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 
         // If the tab is in a group set then set the active
         // group to the tab's parent. 
-        if( self.parent ){
+        if ( self.parent ){
           var gID = self.parent.id;
           var group = Groups.group(gID);
           Groups.setActiveGroup( group );
@@ -467,7 +467,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         else
           Groups.setActiveGroup( null );
       
-        if(childHitResult.callback)
+        if (childHitResult.callback)
           childHitResult.callback();             
       }
       
@@ -528,7 +528,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         self._zoomPrep = false;
         self.setBounds(self.getBounds(), true, {force: true});    
         
-        if(iQ.isFunction(complete)) 
+        if (iQ.isFunction(complete)) 
            complete();
       }
     });
@@ -544,7 +544,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     var data;
     
     var box = this.getBounds();
-    if(value) { 
+    if (value) { 
       this._zoomPrep = true;
 
       // The divide by two part here is a clever way to speed up the zoom-out code.
@@ -600,7 +600,7 @@ window.TabItems = {
           Items.unsquish(null, item);
         });
 
-        if(!self.reconnect(item))
+        if (!self.reconnect(item))
           Groups.newTab(item);          
       //}
     });
@@ -615,7 +615,7 @@ window.TabItems = {
   // ----------  
   unregister: function(item) {
     var index = iQ.inArray(item, this.items);
-    if(index != -1)
+    if (index != -1)
       this.items.splice(index, 1);  
   },
     
@@ -644,7 +644,7 @@ window.TabItems = {
   storageSanity: function(data) {
     // TODO: check everything 
     var sane = true;
-    if(!isRect(data.bounds)) {
+    if (!isRect(data.bounds)) {
       Utils.log('TabItems.storageSanity: bad bounds', data.bounds);
       sane = false;
     }
@@ -660,28 +660,28 @@ window.TabItems = {
       Utils.assert('item', item);
       Utils.assert('item.tab', item.tab);
       
-      if(item.reconnected) 
+      if (item.reconnected) 
         return true;
         
-      if(!item.tab.raw)
+      if (!item.tab.raw)
         return false;
         
       var tab = Storage.getTabData(item.tab.raw);       
       if (tab && this.storageSanity(tab)) {
-        if(item.parent)
+        if (item.parent)
           item.parent.remove(item);
           
         item.setBounds(tab.bounds, true);
         
-        if(isPoint(tab.userSize))
+        if (isPoint(tab.userSize))
           item.userSize = new Point(tab.userSize);
           
-        if(tab.groupID) {
+        if (tab.groupID) {
           var group = Groups.group(tab.groupID);
-          if(group) {
+          if (group) {
             group.add(item);          
           
-            if(item.tab == Utils.activeTab) 
+            if (item.tab == Utils.activeTab) 
               Groups.setActiveGroup(item.parent);
           }
         }  
