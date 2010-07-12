@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 #include <string.h>
 
 #include "jstypes.h"
