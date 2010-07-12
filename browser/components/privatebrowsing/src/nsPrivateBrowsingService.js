@@ -571,6 +571,17 @@ PrivateBrowsingService.prototype = {
       }
     }
 
+    // Image Cache
+    let (imageCache = Cc["@mozilla.org/image/cache;1"].
+                      getService(Ci.imgICache)) {
+      try {
+        imageCache.clearCache(false); // true=chrome, false=content
+      } catch (ex) {
+        Cu.reportError("Exception thrown while clearing the image cache: " +
+          ex.toString());
+      }
+    }
+
     // Cookies
     let (cm = Cc["@mozilla.org/cookiemanager;1"].
               getService(Ci.nsICookieManager2)) {
