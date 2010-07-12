@@ -245,6 +245,8 @@ class Compiler
     void jsop_objtostr();
     void jsop_not();
     void jsop_typeof();
+    void booleanJumpScript(JSOp op, jsbytecode *target);
+    void jsop_ifneq(JSOp op, jsbytecode *target);
     void jsop_andor(JSOp op, jsbytecode *target);
     void jsop_arginc(JSOp op, uint32 slot, bool popped);
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
