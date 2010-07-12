@@ -1008,7 +1008,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   // If the request went through, say we loaded the image, and update the
   // cache entry size. Otherwise, cancel the request, which adds an error
   // flag to mImageStatus.
-  if (NS_SUCCEEDED(status)) {
+  if (mImage && NS_SUCCEEDED(status)) {
 
     // Flag that we loaded the image
     mImageStatus |= imgIRequest::STATUS_LOAD_COMPLETE;
