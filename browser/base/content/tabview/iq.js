@@ -448,7 +448,7 @@ iQ.fn = iQ.prototype = {
   // Function: data
   data: function(key, value) {
     var data = null;
-    if(value === undefined) {
+    if (value === undefined) {
       Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
       data = this[0].iQData;
       return (data ? data[key] : null);
@@ -457,7 +457,7 @@ iQ.fn = iQ.prototype = {
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       data = elem.iQData;
 
-      if(!data)
+      if (!data)
         data = elem.iQData = {};
         
       data[key] = value;
@@ -471,7 +471,7 @@ iQ.fn = iQ.prototype = {
   // TODO: security
   html: function(value) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
-    if(value === undefined)
+    if (value === undefined)
       return this[0].innerHTML;
       
     this[0].innerHTML = value;
@@ -482,7 +482,7 @@ iQ.fn = iQ.prototype = {
   // Function: text
   text: function(value) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
-    if(value === undefined) {
+    if (value === undefined) {
       return this[0].textContent;
     }
       
@@ -493,7 +493,7 @@ iQ.fn = iQ.prototype = {
   // Function: val
   val: function(value) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
-    if(value === undefined) {
+    if (value === undefined) {
       return this[0].value;
     }
     
@@ -525,7 +525,7 @@ iQ.fn = iQ.prototype = {
   attr: function(key, value) {
     try {
       Utils.assert('string key', typeof key === 'string');
-      if(value === undefined) {
+      if (value === undefined) {
         Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);      
         return this[0].getAttribute(key);
       }
@@ -544,9 +544,9 @@ iQ.fn = iQ.prototype = {
   css: function(a, b) {
     var properties = null;
     
-    if(typeof a === 'string') {
+    if (typeof a === 'string') {
       var key = a; 
-      if(b === undefined) {
+      if (b === undefined) {
         Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);      
 
         var substitutions = {
@@ -573,10 +573,10 @@ iQ.fn = iQ.prototype = {
     
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       iQ.each(properties, function(key, value) {
-        if(pixels[key] && typeof(value) != 'string') 
+        if (pixels[key] && typeof(value) != 'string') 
           value += 'px';
         
-        if(key.indexOf('-') != -1)
+        if (key.indexOf('-') != -1)
           elem.style.setProperty(key, value, '');
         else
           elem.style[key] = value;
@@ -604,7 +604,7 @@ iQ.fn = iQ.prototype = {
     try {
       Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
 
-      if(!options)
+      if (!options)
         options = {};
       
       var easings = {
@@ -622,7 +622,7 @@ iQ.fn = iQ.prototype = {
       var rupper = /([A-Z])/g;    
       this.each(function(){
         var cStyle = window.getComputedStyle(this, null);      
-        for(var prop in css){
+        for (var prop in css){
           prop = prop.replace( rupper, "-$1" ).toLowerCase();
           iQ(this).css(prop, cStyle.getPropertyValue(prop));
         }    
@@ -645,7 +645,7 @@ iQ.fn = iQ.prototype = {
           '-moz-transition-timing-function': ''
         });
 
-        if(iQ.isFunction(options.complete))
+        if (iQ.isFunction(options.complete))
           options.complete.apply(self);
       }, duration);
     } catch(e) {
@@ -666,7 +666,7 @@ iQ.fn = iQ.prototype = {
         duration: 400,
         complete: function() {
           iQ(this).css({display: 'none'});
-          if(iQ.isFunction(callback))
+          if (iQ.isFunction(callback))
             callback.apply(this);
         }
       });  
@@ -734,10 +734,10 @@ iQ.fn = iQ.prototype = {
     };
 
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-      if(!elem.iQEventData)
+      if (!elem.iQEventData)
         elem.iQEventData = {};
         
-      if(!elem.iQEventData[type])
+      if (!elem.iQEventData[type])
         elem.iQEventData[type] = [];
         
       elem.iQEventData[type].push({
@@ -771,10 +771,10 @@ iQ.fn = iQ.prototype = {
     
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       var handler = func;
-      if(elem.iQEventData && elem.iQEventData[type]) {
-        for(var a = 0, count = elem.iQEventData[type].length; a < count; a++) {
+      if (elem.iQEventData && elem.iQEventData[type]) {
+        for (var a = 0, count = elem.iQEventData[type].length; a < count; a++) {
           var pair = elem.iQEventData[type][a];
-          if(pair.original == func) {
+          if (pair.original == func) {
             handler = pair.modified; 
             elem.iQEventData[type].splice(a, 1);
             break;
