@@ -2163,6 +2163,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 void
 nsGlobalWindow::DispatchDOMWindowCreated()
 {
+  if (!mDoc || !mDocument) {
+    return;
+  }
+
   // Fire DOMWindowCreated at chrome event listeners
   nsContentUtils::DispatchChromeEvent(mDoc, mDocument, NS_LITERAL_STRING("DOMWindowCreated"),
                                       PR_TRUE /* bubbles */,
