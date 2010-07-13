@@ -120,7 +120,6 @@ STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \
 	gkgfx \
-	gfxutils \
 	$(NULL)
 
 ifdef MOZ_IPC
