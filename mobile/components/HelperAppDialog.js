@@ -36,10 +36,12 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Service.jsm");
 
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
@@ -55,10 +57,8 @@ HelperAppLauncherDialog.prototype = {
     let window = aContext.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowInternal);
 
-    let sbs = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-    let bundle = sbs.createBundle("chrome://browser/locale/browser.properties");
+    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
-    let prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
     let flags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
                 (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
 
@@ -84,20 +84,20 @@ HelperAppLauncherDialog.prototype = {
     if (aLauncher.MIMEInfo.hasDefaultHandler) {
       flags += (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2);
 
-      let choice = prompter.confirmEx(window,
-                                      title, message,
-                                      flags, save, open, nothing,
-                                      null, {});
+      let choice = Services.prompt.confirmEx(window,
+                                             title, message,
+                                             flags, save, open, nothing,
+                                             null, {});
 
       if (choice == 0)
         aLauncher.saveToDisk(null, false);
       else if (choice == 1)
         aLauncher.launchWithApplication(null, false);
     } else {
-      let choice = prompter.confirmEx(window,
-                                      title, message,
-                                      flags, save, nothing, null,
-                                      null, {});
+      let choice = Services.prompt.confirmEx(window,
+                                             title, message,
+                                             flags, save, nothing, null,
+                                             null, {});
 
       if (choice == 0)
         aLauncher.saveToDisk(null, false);
@@ -107,7 +107,7 @@ HelperAppLauncherDialog.prototype = {
   promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
     let file = null;
 
-    let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    let prefs = Services.prefs;
 
     if (!aForcePrompt) {
       // Check to see if the user wishes to auto save to the default download

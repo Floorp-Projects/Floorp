@@ -34,11 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function ContentDispatchChooser() {}
 
@@ -55,14 +55,12 @@ ContentDispatchChooser.prototype =
         window = aWindowContext.getInterface(Ci.nsIDOMWindow);
     } catch (e) { /* it's OK to not have a window */ }
 
-    let sbs = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-    let bundle = sbs.createBundle("chrome://mozapps/locale/handling/handling.properties");
+    let bundle = Services.strings.createBundle("chrome://mozapps/locale/handling/handling.properties");
 
-    let prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
     let title = bundle.GetStringFromName("protocol.title");
     let message = bundle.GetStringFromName("protocol.description");
 
-    let open = prompter.confirm(window, title, message);
+    let open = Services.prompt.confirm(window, title, message);
     if (open)
       aHandler.launchWithURI(aURI, aWindowContext);
   }

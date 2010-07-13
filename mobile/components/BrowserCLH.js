@@ -37,15 +37,13 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
+Cu.import("resource://gre/modules/Services.jsm");
 
 function openWindow(aParent, aURL, aTarget, aFeatures) {
-  let wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
-  return wwatch.openWindow(aParent, aURL, aTarget, aFeatures, null);
+  return Services.ww.openWindow(aParent, aURL, aTarget, aFeatures, null);
 }
 
 function resolveURIInternal(aCmdLine, aArgument) {
@@ -88,8 +86,7 @@ BrowserCLH.prototype = {
     // NOTE: This code assumes this CLH is run before the nsDefaultCLH, which
     // consumes the "-silent" flag.
     if (aCmdLine.findFlag("silent", false) > -1) {
-      let searchService = Cc["@mozilla.org/browser/search-service;1"].
-                          getService(Ci.nsIBrowserSearchService);
+      let searchService = Services.search;
       let autoComplete = Cc["@mozilla.org/autocomplete/search;1?name=history"].
                          getService(Ci.nsIAutoCompleteSearch);
     }
@@ -114,8 +111,7 @@ BrowserCLH.prototype = {
 
     let win;
     try {
-      let windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-      win = windowMediator.getMostRecentWindow("navigator:browser");
+      win = Services.wm.getMostRecentWindow("navigator:browser");
       if (!win)
         return;
 

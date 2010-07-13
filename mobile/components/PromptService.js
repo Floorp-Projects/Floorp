@@ -36,6 +36,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function PromptService() {
 }
@@ -79,8 +80,7 @@ PromptService.prototype = {
   },
 
   getDocument: function getDocument() {
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-    let win = wm.getMostRecentWindow("navigator:browser");
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
     return win ? win.document : null;
   },
 
@@ -151,8 +151,7 @@ Prompt.prototype = {
   /* ---------- internal methods ---------- */
  
   openDialog: function openDialog(aSrc, aParams) {
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-    let browser = wm.getMostRecentWindow("navigator:browser");
+    let browser = Services.wm.getMostRecentWindow("navigator:browser");
     return browser.importDialog(this._domWin, aSrc, aParams);
   },
   
@@ -516,7 +515,7 @@ let PromptUtils = {
     let proxyAuth = (aAuthInfo.flags & aAuthInfo.AUTH_PROXY) != 0;
     let realm = aAuthInfo.realm;
     if (realm.length > 100) { // truncate and add ellipsis
-      let pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+      let pref = Services.prefs;
       let ellipsis = pref.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
       if (!ellipsis)
         ellipsis = "...";
@@ -565,8 +564,7 @@ let PromptUtils = {
 };
 
 XPCOMUtils.defineLazyGetter(PromptUtils, "bundle", function () {
-  let bundleService = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-  return bundleService.createBundle("chrome://global/locale/commonDialogs.properties");
+  return Services.strings.createBundle("chrome://global/locale/commonDialogs.properties");
 });
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([PromptService]);

@@ -76,7 +76,7 @@
 
       <field name="_documentURI">null</field>
       <property name="documentURI"
-                onget="return gIOService.newURI(this._documentURI, null, null)"
+                onget="return Services.io.newURI(this._documentURI, null, null)"
                 readonly="true"/>
 
       <field name="contentWindowId">null</field>
@@ -123,7 +123,7 @@
               let linkType = this._getLinkType(link);
               switch(linkType) {
                 case "icon":
-                  let iconURI = gIOService.newURI(link.href, link.charset, null);
+                  let iconURI = Services.io.newURI(link.href, link.charset, null);
                   if (!iconURI.schemeIs("javascript") && !gFaviconService.isFailedFavicon(iconURI)) {
                     gFaviconService.setAndLoadFaviconForPage(this.currentURI, iconURI, true);
                     this.mIconURL = iconURI.spec;
@@ -341,7 +341,7 @@
             // http://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.js#500
             var obj = {
               requestingWindowId: json.windowId,
-              popupWindowURI: gIOService.newURI(json.popupWindowURI.spec, json.popupWindowURI.charset, null),
+              popupWindowURI: Services.io.newURI(json.popupWindowURI.spec, json.popupWindowURI.charset, null),
               popupWindowFeatures: json.popupWindowFeatures,
               popupWindowName: json.popupWindowName
             };

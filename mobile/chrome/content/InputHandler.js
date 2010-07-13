@@ -973,13 +973,13 @@ function KineticController(aPanBy, aEndCallback) {
 
   // How often do we change the position of the scroll pane?  Too often and panning may jerk near
   // the end. Too little and panning will be choppy. In milliseconds.
-  this._updateInterval = gPrefService.getIntPref("browser.ui.kinetic.updateInterval");
+  this._updateInterval = Services.prefs.getIntPref("browser.ui.kinetic.updateInterval");
   // "Friction" of the scroll pane. The lower, the less friction and the further distance traveled.
-  this._decelerationRate = gPrefService.getIntPref("browser.ui.kinetic.decelerationRate") / 10000;
+  this._decelerationRate = Services.prefs.getIntPref("browser.ui.kinetic.decelerationRate") / 10000;
   // A multiplier for the initial velocity of the movement.
-  this._speedSensitivity = gPrefService.getIntPref("browser.ui.kinetic.speedSensitivity") / 100;
+  this._speedSensitivity = Services.prefs.getIntPref("browser.ui.kinetic.speedSensitivity") / 100;
   // Number of milliseconds that can contain a swipe. Movements earlier than this are disregarded.
-  this._swipeLength = gPrefService.getIntPref("browser.ui.kinetic.swipeLength");
+  this._swipeLength = Services.prefs.getIntPref("browser.ui.kinetic.swipeLength");
 
   this._reset();
 }
@@ -1305,9 +1305,9 @@ GestureModule.prototype = {
     this._ignoreNextUpdate = true; // first update gives useless, huge delta
 
     // cache gesture limit values
-    this._maxGrowth = gPrefService.getIntPref("browser.ui.pinch.maxGrowth");
-    this._maxShrink = gPrefService.getIntPref("browser.ui.pinch.maxShrink");
-    this._scalingFactor = gPrefService.getIntPref("browser.ui.pinch.scalingFactor");
+    this._maxGrowth = Services.prefs.getIntPref("browser.ui.pinch.maxGrowth");
+    this._maxShrink = Services.prefs.getIntPref("browser.ui.pinch.maxShrink");
+    this._scalingFactor = Services.prefs.getIntPref("browser.ui.pinch.scalingFactor");
 
     // save the initial gesture start point as reference
     [this._pinchStartX, this._pinchStartY] =

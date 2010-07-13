@@ -34,10 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 // -----------------------------------------------------------------------
 // Web Install Prompt service
@@ -51,8 +52,7 @@ WebInstallPrompt.prototype = {
 
   confirm: function(aWindow, aURL, aInstalls) {
     // first check if the extensions panel is open : fast path to return true
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-    let browser = wm.getMostRecentWindow("navigator:browser");
+    let browser = Services.wm.getMostRecentWindow("navigator:browser");
     if (browser.ExtensionsView.visible) {
       aInstalls.forEach(function(install) {
         install.install();
@@ -60,10 +60,9 @@ WebInstallPrompt.prototype = {
       return;
     }
     
-    let bundleService = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-    let bundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
-    let prompt = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
+    let prompt = Services.prompt;
     let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_IS_STRING + prompt.BUTTON_POS_1 * prompt.BUTTON_TITLE_CANCEL;
     let title = bundle.GetStringFromName("addonsConfirmInstall.title");
     let button = bundle.GetStringFromName("addonsConfirmInstall.install");

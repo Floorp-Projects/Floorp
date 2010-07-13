@@ -36,29 +36,19 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gObs",
-                                   "@mozilla.org/observer-service;1",
-                                   "nsIObserverService");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
   Components.utils.import("resource://gre/modules/AddonManager.jsm");
   return AddonManager;
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "gIO",
-                                   "@mozilla.org/network/io-service;1",
-                                   "nsIIOService");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gPref",
-                                   "@mozilla.org/preferences-service;1",
-                                   "nsIPrefBranch2");
-
 function getPref(func, preference, defaultValue) {
   try {
-    return gPref[func](preference);
+    return Services.prefs[func](preference);
   }
   catch (e) {}
   return defaultValue;
@@ -88,14 +78,14 @@ AddonUpdateService.prototype = {
     if (gNeedsRestart)
       return;
 
-    gIO.offline = false;
+    Services.io.offline = false;
 
     AddonManager.getAddonsByTypes(null, function(aAddonList) {
       aAddonList.forEach(function(aAddon) {
         if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE) {
           let data = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
           data.data = JSON.stringify({ id: aAddon.id, name: aAddon.name });
-          gObs.notifyObservers(data, "addon-update-started", null);
+          Services.obs.notifyObservers(data, "addon-update-started", null);
 
           let listener = new UpdateCheckListener();
           aAddon.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -141,7 +131,7 @@ UpdateCheckListener.prototype = {
     if (aError)
       this._status = "error";
 
-    gObs.notifyObservers(data, "addon-update-ended", this._status);
+    Services.obs.notifyObservers(data, "addon-update-ended", this._status);
   }
 };
 

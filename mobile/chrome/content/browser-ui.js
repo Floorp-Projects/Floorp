@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
   Cu.import("resource://gre/modules/PluralForm.jsm");
@@ -63,34 +64,14 @@ const TOOLBARSTATE_LOADED   = 2;
      [Ci.nsIFaviconService]
   ],
   [
-    "gIOService",
-    "@mozilla.org/network/io-service;1",
-    [Ci.nsIIOService],
-  ],
-  [
     "gURIFixup",
     "@mozilla.org/docshell/urifixup;1",
     [Ci.nsIURIFixup]
   ],
   [
-    "gPrefService",
-    "@mozilla.org/preferences-service;1",
-    [Ci.nsIPrefBranch2]
-  ],
-  [
     "gFocusManager",
     "@mozilla.org/focus-manager;1",
     [Ci.nsIFocusManager]
-  ],
-  [
-    "gWindowMediator",
-    "@mozilla.org/appshell/window-mediator;1",
-    [Ci.nsIWindowMediator]
-  ],
-  [
-    "gObserverService",
-    "@mozilla.org/observer-service;1",
-    [Ci.nsIObserverService]
   ]
 ].forEach(function (service) {
   let [name, contract, ifaces] = service;
@@ -744,7 +725,7 @@ var BrowserUI = {
         if (!this._isEventInsidePopup(aEvent))
           this._hidePopup();
 
-        let selectAll = gPrefService.getBoolPref("browser.urlbar.doubleClickSelectsAll");
+        let selectAll = Services.prefs.getBoolPref("browser.urlbar.doubleClickSelectsAll");
         if (aEvent.detail == 2 && aEvent.button == 0 && selectAll && aEvent.target == this._edit) {
           this._edit.editor.selectAll();
           aEvent.preventDefault();
@@ -798,7 +779,7 @@ var BrowserUI = {
           DownloadsView._updateStatus(element);
         }
         catch(e) {}
-        gObserverService.notifyObservers(download, "dl-done", null);
+        Services.obs.notifyObservers(download, "dl-done", null);
         break;
 
       case "Browser:Highlight":
@@ -958,8 +939,8 @@ var BrowserUI = {
         break;
       case "cmd_lockscreen":
       {
-        let locked = gPrefService.getBoolPref("toolkit.screen.lock");
-        gPrefService.setBoolPref("toolkit.screen.lock", !locked);
+        let locked = Services.prefs.getBoolPref("toolkit.screen.lock");
+        Services.prefs.setBoolPref("toolkit.screen.lock", !locked);
 
         let strings = Elements.browserBundle;
         let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
@@ -1014,11 +995,6 @@ var TapHighlightHelper = {
 }
 
 var PageActions = {
-  get _permissionManager() {
-    delete this._permissionManager;
-    return this._permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
-  },
-
   get _loginManager() {
     delete this._loginManager;
     return this._loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -1028,7 +1004,7 @@ var PageActions = {
   _permissions: ["popup", "offline-app", "geo"],
 
   _forEachPermissions: function _forEachPermissions(aHost, aCallback) {
-    let pm = this._permissionManager;
+    let pm = Services.perms;
     for (let i = 0; i < this._permissions.length; i++) {
       let type = this._permissions[i];
       if (!pm.testPermission(aHost, type))
@@ -1098,7 +1074,7 @@ var PageActions = {
   },
 
   clearPagePermissions: function clearPagePermissions() {
-    let pm = this._permissionManager;
+    let pm = Services.perms;
     let host = Browser.selectedBrowser.currentURI;
     this._forEachPermissions(host, function(aType) {
       pm.remove(host.asciiHost, aType);
@@ -1141,7 +1117,7 @@ var PageActions = {
     let current = Browser.selectedBrowser.currentURI.spec;
     stmt.params.name = picker.file.leafName;
     stmt.params.source = current;
-    stmt.params.target = gIOService.newFileURI(picker.file).spec;
+    stmt.params.target = Services.io.newFileURI(picker.file).spec;
     stmt.params.startTime = Date.now() * 1000;
     stmt.params.endTime = Date.now() * 1000;
     stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED;
@@ -1155,7 +1131,7 @@ var PageActions = {
       DownloadsView.downloadStarted(download);
     }
     catch(e) {}
-    gObserverService.notifyObservers(download, "dl-start", null);
+    Services.obs.notifyObservers(download, "dl-start", null);
 
     let data = {
       type: Ci.nsIPrintSettings.kOutputFormatPDF,
@@ -1600,7 +1576,7 @@ var FormHelper = {
       return;
 
     let zoomLevel = Browser._getZoomLevelForRect(bv.browserToViewportRect(elRect.clone()));
-    if (gPrefService.getBoolPref("formhelper.autozoom")) {
+    if (Services.prefs.getBoolPref("formhelper.autozoom")) {
       this._restore = {
         zoom: bv.getZoomLevel(),
         contentScrollOffset: Browser.getScrollboxPosition(Browser.contentScrollboxScroller),
@@ -1626,7 +1602,7 @@ var FormHelper = {
   /** Element is no longer selected. Restore zoom level if setting is enabled. */
   _zoomFinish: function _zoomFinish() {
     let restore = this._restore;
-    if (restore && gPrefService.getBoolPref("formhelper.restore")) {
+    if (restore && Services.prefs.getBoolPref("formhelper.restore")) {
       bv.setZoomLevel(restore.zoom);
       Browser.contentScrollboxScroller.scrollTo(restore.contentScrollOffset.x,
                                                 restore.contentScrollOffset.y);

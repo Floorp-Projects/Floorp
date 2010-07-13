@@ -4,7 +4,7 @@
  *              component, specifically for bookmark management.
  */
 
-var thread = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager).currentThread;
+var thread = Services.tm.currentThread;
 var testURL_02 = "chrome://mochikit/content/browser/mobile/chrome/browser_blank_02.html";
 var chromeWindow = window;
 
@@ -38,7 +38,7 @@ function test() {
   ok(thread, "nsIThreadManager must be in context");
   ok(PlacesUtils, "PlacesUtils must be in context");
   ok(EventUtils, "EventUtils must be in context");
-  ok(gIOService, "nsIIOService must be in context");
+  ok(Services.io, "nsIIOService must be in context");
   ok(chromeWindow, "ChromeWindow must be in context");
   
   ok(true, "*** Starting test browser_bookmark_folders.js\n"); 

@@ -42,26 +42,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-const Cc = Components.classes;
 const Ci = Components.interfaces;
-const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-var gStrBundleService = null;
-function srGetStrBundle(path) {
-  if (!gStrBundleService) {
-    gStrBundleService = Cc["@mozilla.org/intl/stringbundle;1"].
-                        getService(Ci.nsIStringBundleService);
-  }
-
-  return gStrBundleService.createBundle(path);
-}
+Cu.import("resource://gre/modules/Services.jsm");
 
 function Sidebar() {
-  this.searchService = Cc["@mozilla.org/browser/search-service;1"].
-                       getService(Ci.nsIBrowserSearchService);
 }
 
 Sidebar.prototype = {
@@ -80,15 +67,13 @@ Sidebar.prototype = {
     } catch(ex) {
       Cu.reportError("Invalid argument passed to window.sidebar.addSearchEngine: " + ex);
       
-      var searchBundle = srGetStrBundle("chrome://global/locale/search/search.properties");
-      var brandBundle = srGetStrBundle("chrome://branding/locale/brand.properties");
+      var searchBundle = Services.strings.createBundle("chrome://global/locale/search/search.properties");
+      var brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
       var brandName = brandBundle.GetStringFromName("brandShortName");
       var title = searchBundle.GetStringFromName("error_invalid_engine_title");
       var msg = searchBundle.formatStringFromName("error_invalid_engine_msg",
                                                   [brandName], 1);
-      var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                          getService(Ci.nsIPromptService);
-      promptService.alert(null, title, msg);
+      Services.prompt.alert(null, title, msg);
       return false;
     }
     
@@ -127,7 +112,7 @@ Sidebar.prototype = {
     else
       dataType = Ci.nsISearchEngine.DATA_XML;
 
-    this.searchService.addEngine(engineURL, dataType, iconURL, true);
+    Services.search.addEngine(engineURL, dataType, iconURL, true);
   },
 
   // =========================== nsISidebarExternal ===========================
@@ -139,7 +124,7 @@ Sidebar.prototype = {
       return;
   
     const typeXML = Ci.nsISearchEngine.DATA_XML;
-    this.searchService.addEngine(aDescriptionURL, typeXML, "", true);
+    Services.search.addEngine(aDescriptionURL, typeXML, "", true);
   },
 
   // This function exists to implement window.external.IsSearchProviderInstalled(),

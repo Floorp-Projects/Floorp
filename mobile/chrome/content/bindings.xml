@@ -99,7 +99,7 @@
                 onget="return this._items.boxObject;"/>
 
       <field name="_scrollBoxObject">
-        this.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+        this.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
       </field>
 
       <!-- nsIAutocompleteInput -->
@@ -385,11 +385,6 @@
       <field name="_control">null</field>
       <field name="_isEditing">false</field>
 
-      <field name="_ioService">
-        Components.classes["@mozilla.org/network/io-service;1"]
-                  .getService(Components.interfaces.nsIIOService);
-      </field>
-
       <field name="_nameField">
         document.getAnonymousElementByAttribute(this, "anonid", "name");
       </field>
@@ -405,7 +400,7 @@
       <property name="uri">
         <getter><![CDATA[
           if (!this._uri && this.getAttribute("uri"))
-            this._uri = this._ioService.newURI(this.getAttribute("uri"), null, null);
+            this._uri = Services.io.newURI(this.getAttribute("uri"), null, null);
 
           return this._uri;
         ]]></getter>
@@ -536,7 +531,7 @@
               if (spec && this.uri.spec != spec) {
                 try {
                   let oldURI = this._uri;
-                  this._uri = this._ioService.newURI(spec, null, null);
+                  this._uri = Services.io.newURI(spec, null, null);
                   PlacesUtils.bookmarks.changeBookmarkURI(this.itemId, this.uri);
                   this.setAttribute('uri', this.spec);
 
@@ -696,11 +691,6 @@
           this._folderParents[PlacesUtils.toolbarFolderId] = this._desktopFolderId;
         ]]>
       </constructor>
-      <field name="_bundle">
-        Components.classes["@mozilla.org/intl/stringbundle;1"]
-                  .getService(Components.interfaces.nsIStringBundleService)
-                  .createBundle("chrome://browser/locale/browser.properties");
-      </field>
 
       <field name="_desktopFolderId">-1000</field>
       <field name="_desktopFolder"><![CDATA[
@@ -1106,8 +1096,7 @@
             SelectHelper.show(new BasicWrapper(this));
           }
           catch(e) {
-            let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
-            loader.loadSubScript("chrome://browser/content/forms.js", this);
+            Services.scriptloader.loadSubScript("chrome://browser/content/forms.js", this);
             SelectHelper.show(new BasicWrapper(this));
           }
         ]]>

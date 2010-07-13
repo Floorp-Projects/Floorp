@@ -117,7 +117,7 @@ function getMetaTag(name) {
 function verifyTest(n) {
   return function() {
     is(window.innerWidth, 800, "Test assumes window width is 800px");
-    is(gPrefService.getIntPref("zoom.dpiScale") / 100, 1.5, "Test assumes zoom.dpiScale is 1.5");
+    is(Services.prefs.getIntPref("zoom.dpiScale") / 100, 1.5, "Test assumes zoom.dpiScale is 1.5");
 
     // Do sanity tests
     var uri = working_tab.browser.currentURI.spec;

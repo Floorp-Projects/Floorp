@@ -66,9 +66,7 @@ Sanitizer.prototype = {
    */
   sanitize: function ()
   {
-    var psvc = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefService);
-    var branch = psvc.getBranch(this._prefDomain);
+    var branch = Services.prefs.getBranch(this._prefDomain);
     var errors = null;
     for (var itemName in this.items) {
       var item = this.items[itemName];
@@ -95,14 +93,12 @@ Sanitizer.prototype = {
     cache: {
       clear: function ()
       {
-        var cacheService = Cc["@mozilla.org/network/cache-service;1"]
-                             .getService(Ci.nsICacheService);
+        var cacheService = Cc["@mozilla.org/network/cache-service;1"].getService(Ci.nsICacheService);
         try {
           cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
         } catch(er) {}
 
-        let imageCache = Cc["@mozilla.org/image/cache;1"].
-                         getService(Ci.imgICache);
+        let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
         try {
           imageCache.clearCache(false); // true=chrome, false=content
         } catch(er) {}
@@ -117,8 +113,7 @@ Sanitizer.prototype = {
     cookies: {
       clear: function ()
       {
-        var cookieMgr = Components.classes["@mozilla.org/cookiemanager;1"]
-                                  .getService(Components.interfaces.nsICookieManager);
+        var cookieMgr = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
         cookieMgr.removeAll();
       },
       
@@ -132,13 +127,11 @@ Sanitizer.prototype = {
       clear: function ()
       {
         // clear any network geolocation provider sessions
-        var psvc = Components.classes["@mozilla.org/preferences-service;1"]
-                             .getService(Components.interfaces.nsIPrefService);
         try {
-          var branch = psvc.getBranch("geo.wifi.access_token.");
+          var branch = Services.prefs.getBranch("geo.wifi.access_token.");
           branch.deleteBranch("");
           
-          branch = psvc.getBranch("geo.request.remember.");
+          branch = Services.prefs.getBranch("geo.request.remember.");
           branch.deleteBranch("");
         } catch (e) {dump(e);}
       },
@@ -153,19 +146,15 @@ Sanitizer.prototype = {
       clear: function ()
       {
         // Clear site-specific permissions like "Allow this site to open popups"
-        var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                           .getService(Components.interfaces.nsIPermissionManager);
-        pm.removeAll();
+        Services.perms.removeAll();
 
         // Clear site-specific settings like page-zoom level
-        var cps = Components.classes["@mozilla.org/content-pref/service;1"]
-                            .getService(Components.interfaces.nsIContentPrefService);
+        var cps = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService);
         cps.removeGroupedPrefs();
 
         // Clear "Never remember passwords for this site", which is not handled by
         // the permission manager
-        var pwmgr = Components.classes["@mozilla.org/login-manager;1"]
-                              .getService(Components.interfaces.nsILoginManager);
+        var pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
         var hosts = pwmgr.getAllDisabledHosts({})
         for each (var host in hosts) {
           pwmgr.setLoginSavingEnabled(host, true);
@@ -181,17 +170,13 @@ Sanitizer.prototype = {
     offlineApps: {
       clear: function ()
       {
-        const Cc = Components.classes;
-        const Ci = Components.interfaces;
-        var cacheService = Cc["@mozilla.org/network/cache-service;1"].
-                           getService(Ci.nsICacheService);
+        var cacheService = Cc["@mozilla.org/network/cache-service;1"].getService(Ci.nsICacheService);
         try {
           cacheService.evictEntries(Ci.nsICache.STORE_OFFLINE);
         } catch(er) {}
 
-        var storageManagerService = Cc["@mozilla.org/dom/storagemanager;1"].
-                                    getService(Ci.nsIDOMStorageManager);
-        storageManagerService.clearOfflineApps();
+        var storage = Cc["@mozilla.org/dom/storagemanager;1"].getService(Ci.nsIDOMStorageManager);
+        storage.clearOfflineApps();
       },
 
       get canClear()
@@ -203,22 +188,17 @@ Sanitizer.prototype = {
     history: {
       clear: function ()
       {
-        var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                                      .getService(Components.interfaces.nsIBrowserHistory);
+        var globalHistory = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIBrowserHistory);
         globalHistory.removeAllPages();
         
         try {
-          var os = Components.classes["@mozilla.org/observer-service;1"]
-                             .getService(Components.interfaces.nsIObserverService);
-          os.notifyObservers(null, "browser:purge-session-history", "");
+          Services.obs.notifyObservers(null, "browser:purge-session-history", "");
         }
         catch (e) { }
         
         // Clear last URL of the Open Web Location dialog
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefBranch2);
         try {
-          prefs.clearUserPref("general.open_location.last_url");
+          Services.prefs.clearUserPref("general.open_location.last_url");
         }
         catch (e) { }
       },
@@ -235,9 +215,7 @@ Sanitizer.prototype = {
       clear: function ()
       {
         //Clear undo history of all searchBars
-        var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-        var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-        var windows = windowManagerInterface.getEnumerator("navigator:browser");
+        var windows = Services.wm.getEnumerator("navigator:browser");
         while (windows.hasMoreElements()) {
           var searchBar = windows.getNext().document.getElementById("searchbar");
           if (searchBar) {
@@ -246,15 +224,13 @@ Sanitizer.prototype = {
           }
         }
 
-        var formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
-                                    .getService(Components.interfaces.nsIFormHistory2);
+        var formHistory = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
         formHistory.removeAllEntries();
       },
       
       get canClear()
       {
-        var formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
-                                    .getService(Components.interfaces.nsIFormHistory2);
+        var formHistory = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
         return formHistory.hasEntries;
       }
     },
@@ -262,15 +238,13 @@ Sanitizer.prototype = {
     downloads: {
       clear: function ()
       {
-        var dlMgr = Components.classes["@mozilla.org/download-manager;1"]
-                              .getService(Components.interfaces.nsIDownloadManager);
+        var dlMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
         dlMgr.cleanUp();
       },
 
       get canClear()
       {
-        var dlMgr = Components.classes["@mozilla.org/download-manager;1"]
-                              .getService(Components.interfaces.nsIDownloadManager);
+        var dlMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
         return dlMgr.canCleanUp;
       }
     },
@@ -278,15 +252,13 @@ Sanitizer.prototype = {
     passwords: {
       clear: function ()
       {
-        var pwmgr = Components.classes["@mozilla.org/login-manager;1"]
-                              .getService(Components.interfaces.nsILoginManager);
+        var pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
         pwmgr.removeAllLogins();
       },
       
       get canClear()
       {
-        var pwmgr = Components.classes["@mozilla.org/login-manager;1"]
-                              .getService(Components.interfaces.nsILoginManager);
+        var pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
         var count = pwmgr.countLogins("", "", ""); // count all logins
         return (count > 0);
       }
@@ -296,13 +268,11 @@ Sanitizer.prototype = {
       clear: function ()
       {
         // clear all auth tokens
-        var sdr = Components.classes["@mozilla.org/security/sdr;1"]
-                            .getService(Components.interfaces.nsISecretDecoderRing);
+        var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
         sdr.logoutAndTeardown();
 
         // clear plain HTTP auth sessions
-        var authMgr = Components.classes['@mozilla.org/network/http-auth-manager;1']
-                                .getService(Components.interfaces.nsIHttpAuthManager);
+        var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].getService(Ci.nsIHttpAuthManager);
         authMgr.clearAll();
       },
       
@@ -315,7 +285,6 @@ Sanitizer.prototype = {
 };
 
 
-
 // "Static" members
 Sanitizer.prefDomain          = "privacy.sanitize.";
 Sanitizer.prefShutdown        = "sanitizeOnShutdown";
@@ -325,8 +294,8 @@ Sanitizer._prefs = null;
 Sanitizer.__defineGetter__("prefs", function() 
 {
   return Sanitizer._prefs ? Sanitizer._prefs
-    : Sanitizer._prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefService)
+    : Sanitizer._prefs = Cc["@mozilla.org/preferences-service;1"]
+                         .getService(Ci.nsIPrefService)
                          .getBranch(Sanitizer.prefDomain);
 });
 

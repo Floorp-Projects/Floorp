@@ -53,15 +53,12 @@ XPCOMUtils.defineLazyGetter(this, "AddonRepository", function() {
 });
 
 var ExtensionsView = {
-  _pref: null,
-  _ios: null,
   _strings: {},
   _list: null,
   _localItem: null,
   _repoItem: null,
   _msg: null,
   _dloadmgr: null,
-  _search: null,
   _restartCount: 0,
   _observerIndex: -1,
 
@@ -107,9 +104,8 @@ var ExtensionsView = {
   _messageActions: function ev__messageActions(aData) {
     if (aData == "addons-restart-app") {
       // Notify all windows that an application quit has been requested
-      var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
       var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-      os.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+      Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
 
       // If nothing aborted, quit the app
       if (cancelQuit.data == false) {
@@ -207,19 +203,18 @@ var ExtensionsView = {
   },
 
   init: function ev_init() {
-    if (this._ios)
+    if (this._dloadmgr)
       return;
 
-    this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     this._dloadmgr = new AddonInstallListener();
     AddonManager.addInstallListener(this._dloadmgr);
 
     // Watch for add-on update notifications
-    let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    let os = Services.obs;
     os.addObserver(this, "addon-update-started", false);
     os.addObserver(this, "addon-update-ended", false);
 
-    if (!gPrefService.getBoolPref("extensions.hideUpdateButton"))
+    if (!Services.prefs.getBoolPref("extensions.hideUpdateButton"))
       document.getElementById("addons-update-all").hidden = false;
 
     let self = this;
@@ -236,8 +231,6 @@ var ExtensionsView = {
     if (this._list)
       return;
 
-    this._pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
-    this._search = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
     this._list = document.getElementById("addons-list");
     this._localItem = document.getElementById("addons-local");
     this._repoItem = document.getElementById("addons-repo");
@@ -265,7 +258,7 @@ var ExtensionsView = {
   },
 
   uninit: function ev_uninit() {
-    let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    let os = Services.obs;
     os.removeObserver(this, "addon-update-started");
     os.removeObserver(this, "addon-update-ended");
 
@@ -304,14 +297,14 @@ var ExtensionsView = {
       }
 
       // Load the search engines
-      let defaults = self._search.getDefaultEngines({ }).map(function (e) e.name);
+      let defaults = Services.search.getDefaultEngines({ }).map(function (e) e.name);
       function isDefault(aEngine)
         defaults.indexOf(aEngine.name) != -1
 
       let strings = Elements.browserBundle;
       let defaultDescription = strings.getString("addonsSearchEngine.description");
 
-      let engines = self._search.getEngines({ });
+      let engines = Services.search.getEngines({ });
       for (let e = 0; e < engines.length; e++) {
         let engine = engines[e];
         let addon = {};
@@ -384,7 +377,7 @@ var ExtensionsView = {
       // Make sure the engine isn't hidden before removing it, to make sure it's
       // visible if the user later re-adds it (works around bug 341833)
       aItem._engine.hidden = false;
-      this._search.removeEngine(aItem._engine);
+      Services.search.removeEngine(aItem._engine);
       // the search-engine-modified observer in browser.js will take care of
       // updating the list
     } else {
@@ -417,7 +410,7 @@ var ExtensionsView = {
 
   _isSafeURI: function ev_isSafeURI(aURL) {
     try {
-      var uri = this._ios.newURI(aURL, null, null);
+      var uri = Services.io.newURI(aURL, null, null);
       var scheme = uri.scheme;
     } catch (ex) {}
     return (uri && (scheme == "http" || scheme == "https" || scheme == "ftp"));
@@ -455,7 +448,7 @@ var ExtensionsView = {
       AddonSearchResults.selectFirstResult = aSelectFirstResult;
       this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"),
                                 strings.getString("addonsSearchStart.button"), false);
-      AddonRepository.searchAddons(aTerms, this._pref.getIntPref(PREF_GETADDONS_MAXRESULTS), AddonSearchResults);
+      AddonRepository.searchAddons(aTerms, Services.prefs.getIntPref(PREF_GETADDONS_MAXRESULTS), AddonSearchResults);
     }
     else {
       if (RecommendedSearchResults.cache) {
@@ -464,7 +457,7 @@ var ExtensionsView = {
       else {
         this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"),
                                   strings.getString("addonsSearchStart.button"), false);
-        AddonRepository.retrieveRecommendedAddons(this._pref.getIntPref(PREF_GETADDONS_MAXRESULTS), RecommendedSearchResults);
+        AddonRepository.retrieveRecommendedAddons(Services.prefs.getIntPref(PREF_GETADDONS_MAXRESULTS), RecommendedSearchResults);
       }
     }
   },
@@ -537,7 +530,7 @@ var ExtensionsView = {
         let label = PluralForm.get(aTotalResults, labelBase).replace("#1", aTotalResults);
         showmore.setAttribute("label", label);
 
-        let url = gPrefService.getCharPref("extensions.getAddons.search.browseURL");
+        let url = Services.prefs.getCharPref("extensions.getAddons.search.browseURL");
         url = url.replace(/%TERMS%/g, encodeURIComponent(this.searchBox.value));
         url = formatter.formatURL(url);
         showmore.setAttribute("url", url);
@@ -727,8 +720,7 @@ AddonInstallListener.prototype = {
         return;
   
       element.removeAttribute("opType");
-      let bundles = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-      let strings = bundles.createBundle("chrome://global/locale/xpinstall/xpinstall.properties");
+      let strings = Services.strings.createBundle("chrome://global/locale/xpinstall/xpinstall.properties");
 
       let error = null;
       switch (aError) {
