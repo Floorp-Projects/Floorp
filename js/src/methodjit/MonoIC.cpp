@@ -65,6 +65,8 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
     JSAtom *atom = f.fp->script->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
+    JS_ASSERT(mic.kind == ic::MICInfo::GET);
+
     JS_LOCK_OBJ(f.cx, obj);
     JSScope *scope = obj->scope();
     JSScopeProperty *sprop = scope->lookup(id);
@@ -82,24 +84,7 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
     uint32 slot = sprop->slot;
     JS_UNLOCK_SCOPE(f.cx, scope);
 
-    /*
-     * :TODO:
-     * These cases should never hit, because the global object has tons of
-     * reserved slots. We should prove this and remove the code, and assert
-     * easier.
-     */
-    if (slot < JS_INITIAL_NSLOTS &&
-        (!mic.touched || mic.lastSlot >= JS_INITIAL_NSLOTS)) {
-        /* Need to patch mov to lea. */
-        JS_NOT_REACHED("waat");
-    } else if (slot >= JS_INITIAL_NSLOTS && mic.touched &&
-               mic.lastSlot < JS_INITIAL_NSLOTS) {
-        /* Need to patch lea to mov. */
-        JS_NOT_REACHED("waat");
-    }
-
     mic.touched = true;
-    mic.lastSlot = slot;
 
     /* Patch shape guard. */
     JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
@@ -140,6 +125,8 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     JSAtom *atom = f.fp->script->getAtom(GET_INDEX(f.regs.pc));
     jsid id = ATOM_TO_JSID(atom);
 
+    JS_ASSERT(mic.kind == ic::MICInfo::SET);
+
     JS_LOCK_OBJ(f.cx, obj);
     JSScope *scope = obj->scope();
     JSScopeProperty *sprop = scope->lookup(id);
@@ -157,24 +144,7 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     uint32 slot = sprop->slot;
     JS_UNLOCK_SCOPE(f.cx, scope);
 
-    /*
-     * :TODO:
-     * These cases should never hit, because the global object has tons of
-     * reserved slots. We should prove this and remove the code, and assert
-     * easier.
-     */
-    if (slot < JS_INITIAL_NSLOTS &&
-        (!mic.touched || mic.lastSlot >= JS_INITIAL_NSLOTS)) {
-        /* Need to patch mov to lea. */
-        JS_NOT_REACHED("waat");
-    } else if (slot >= JS_INITIAL_NSLOTS && mic.touched &&
-               mic.lastSlot < JS_INITIAL_NSLOTS) {
-        /* Need to patch lea to mov. */
-        JS_NOT_REACHED("waat");
-    }
-
     mic.touched = true;
-    mic.lastSlot = slot;
 
     /* Patch shape guard. */
     JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);

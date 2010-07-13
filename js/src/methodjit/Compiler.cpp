@@ -278,7 +278,7 @@ mjit::Compiler::finishThisUp()
         script->mics[i].shape = fullCode.locationOf(mics[i].shapeVal);
         script->mics[i].stubCall = stubCode.locationOf(mics[i].call);
         script->mics[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
-        script->mics[i].type = mics[i].type;
+        script->mics[i].kind = mics[i].kind;
         script->mics[i].typeConst = mics[i].typeConst;
         script->mics[i].dataConst = mics[i].dataConst;
         script->mics[i].dataWrite = mics[i].dataWrite;
@@ -2659,11 +2659,10 @@ mjit::Compiler::jsop_getgname(uint32 index)
     FrameEntry *fe = frame.peek(-1);
     JS_ASSERT(fe->isTypeKnown() && fe->getKnownType() == JSVAL_TYPE_OBJECT);
 
-    MICGenInfo mic;
+    MICGenInfo mic(ic::MICInfo::GET);
     RegisterID objReg;
     Jump shapeGuard;
 
-    mic.type = ic::MICInfo::GET;
     mic.entry = masm.label();
     if (fe->isConstant()) {
         JSObject *obj = &fe->getValue().toObject();
@@ -2735,11 +2734,10 @@ mjit::Compiler::jsop_setgname(uint32 index)
     FrameEntry *objFe = frame.peek(-2);
     JS_ASSERT_IF(objFe->isTypeKnown(), objFe->getKnownType() == JSVAL_TYPE_OBJECT);
 
-    MICGenInfo mic;
+    MICGenInfo mic(ic::MICInfo::SET);
     RegisterID objReg;
     Jump shapeGuard;
 
-    mic.type = ic::MICInfo::SET;
     mic.entry = masm.label();
     if (objFe->isConstant()) {
         JSObject *obj = &objFe->getValue().toObject();
