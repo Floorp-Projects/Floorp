@@ -43,9 +43,17 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= gfx
-
 MOZILLA_INTERNAL_API = 1
 
+XPCSHELL_TESTS = unit
+
+_TEST_FILES = $(addprefix mochitest/, \
+	test_bug509244.html \
+	test_bug513439.html \
+)
+
+ifndef MOZ_ENABLE_LIBXUL
+ifndef BUILD_STATIC_LIBS
 
 CPP_UNIT_TESTS	= \
 		TestColorNames.cpp \
@@ -53,16 +61,59 @@ CPP_UNIT_TESTS	= \
 		TestRegion.cpp \
 		$(NULL)
 
+# These are built but not run.  gfxColorManagementTest.cpp can't even
+# be built, because it has not been updated for qcms.
+CPP_DISABLED_UNIT_TESTS = \
+		gfxFontSelectionTest.cpp \
+		gfxSurfaceRefCountTest.cpp \
+		gfxTextRunPerfTest.cpp \
+		gfxWordCacheTest.cpp \
+		$(NULL)
+#		gfxColorManagementTest.cpp \
+
+
+# rules.mk will put the CPP_UNIT_TESTS into SIMPLE_PROGRAMS twice if we
+# define SIMPLE_PROGRAMS based on CPPSRCS directly.
+CPPSRCS		= $(CPP_DISABLED_UNIT_TESTS)
+SIMPLE_PROGRAMS	= $(CPP_DISABLED_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS		= gfxTestCocoaHelper.mm
+HELPER_OBJS	= gfxTestCocoaHelper.$(OBJ_SUFFIX)
+EXTRA_DEPS	+= gfxTestCocoaHelper.$(OBJ_SUFFIX)
+endif
+
 LIBS		= \
+		$(HELPER_OBJS) \
+		$(call EXPAND_LIBNAME_PATH,thebes,../thebes) \
 		$(call EXPAND_LIBNAME_PATH,gkgfx,../src) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)
 
-XPCSHELL_TESTS = unit
+endif
+endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(srcdir)/../src
+CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+OS_LIBS		+= $(call EXPAND_LIBNAME,usp10)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+OS_LIBS		+= -framework Cocoa
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+OS_LIBS		+= $(MOZ_PANGO_LIBS) $(XLIBS)
+CXXFLAGS	+= $(MOZ_PANGO_CFLAGS)
+endif
+
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") \
+	    $(DEPTH)/_tests/testing/mochitest/tests/gfx
