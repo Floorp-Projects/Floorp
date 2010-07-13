@@ -101,12 +101,15 @@ function CreateTestWS(ws_location, ws_protocol)
       ws = new WebSocket(ws_location, ws_protocol);
     }
 
+
+    ws._testNumber = current_test;
+    ws._receivedCloseEvent = false;
+    ok(true, "added testNumber: " + ws._testNumber +"\n");
+
     ws.onerror = function(e)
     {
       ok(false, "onerror called on test " + e.target._testNumber + "!");
     };
-    ws._testNumber = current_test;
-    ws._receivedCloseEvent = false;
     ws.addEventListener("close", function(e)
     {
       ws._receivedCloseEvent = true;
