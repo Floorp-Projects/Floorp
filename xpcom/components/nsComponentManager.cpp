@@ -316,7 +316,7 @@ nsComponentManagerImpl::InitializeStaticModules()
         return;
 
     sStaticModules = new nsTArray<const mozilla::Module*>;
-#if defined(_BUILD_STATIC_BIN) || defined(MOZ_ENABLE_LIBXUL)
+#ifdef MOZ_ENABLE_LIBXUL
     for (const mozilla::Module *const *staticModules = kPStaticModules;
          *staticModules; ++staticModules)
         sStaticModules->AppendElement(*staticModules);
