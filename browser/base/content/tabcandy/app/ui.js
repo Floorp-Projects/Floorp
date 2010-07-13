@@ -344,65 +344,66 @@ window.Page = {
     let focusTab = tab;
     let currentTab = UI.currentTab;
     let currentWindow = Utils.getCurrentWindow();
-    let doSetup = false;
     let self = this;
     
     UI.currentTab = focusTab;
     // if the last visible tab has just been closed, don't show the chrome UI.
-    if (this.isTabCandyVisible()) {
-      if (!this.closedLastVisibleTab && !this.closedSelectedTabInTabCandy) {
-        this.showChrome();
-        doSetup = true;
-      }
-    } else
-      doSetup = true;
-    
-    if (doSetup) {
-      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread      
-        // this value is true when tabcandy is open at browser startup.
-        if (Page.stopZoomPreparation) {
-          self.stopZoomPreparation = false;
-          return;
-        }
-        let visibleTabCount = Tabbar.getVisibleTabCount();
-   
-        if (focusTab != UI.currentTab) {
-          // things have changed while we were in timeout
-          return;
-        }
-         
-        let newItem = null;
-        if (focusTab && focusTab.mirror)
-          newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
-    
-        if (newItem)
-          Groups.setActiveGroup(newItem.parent);
-  
-        // ___ prepare for when we return to TabCandy
-        let oldItem = null;
-        if (currentTab && currentTab.mirror)
-          oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
-  
-        if (newItem != oldItem) {
-          if (oldItem)
-            oldItem.setZoomPrep(false);
-          
-          // if the last visible tab is removed, don't set zoom prep because
-          // we shoud be in the Tab Candy interface.
-          if (visibleTabCount > 0) {
-            if (newItem)
-              newItem.setZoomPrep(true);
-          }
-        } else {
-          // the tab is already focused so the new and old items are the
-          // same.
-          if (oldItem)
-            oldItem.setZoomPrep(true);
-        }
-      }, 1);
+    if (this.isTabCandyVisible() && (this.closedLastVisibleTab || this.closedSelectedTabInTabCandy)) {
+      this.closedLastVisibleTab = false;
+      this.closedSelectedTabInTabCandy = false;
+      return;      
     }
+
+    // if TabCandy is visible but we didn't just close the last tab or selected tab, show chrome.
+    if (this.isTabCandyVisible())
+      this.showChrome();
+
+    // reset these vars, just in case.    
     this.closedLastVisibleTab = false;
     this.closedSelectedTabInTabCandy = false;
+    
+    iQ.timeout(function() { // Marshal event from chrome thread to DOM thread      
+      // this value is true when tabcandy is open at browser startup.
+      if (Page.stopZoomPreparation) {
+        self.stopZoomPreparation = false;
+        return;
+      }
+      let visibleTabCount = Tabbar.getVisibleTabCount();
+ 
+      if (focusTab != UI.currentTab) {
+        // things have changed while we were in timeout
+        return;
+      }
+       
+      let newItem = null;
+      if (focusTab && focusTab.mirror)
+        newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
+  
+      if (newItem)
+        Groups.setActiveGroup(newItem.parent);
+
+      // ___ prepare for when we return to TabCandy
+      let oldItem = null;
+      if (currentTab && currentTab.mirror)
+        oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
+
+      if (newItem != oldItem) {
+        if (oldItem)
+          oldItem.setZoomPrep(false);
+        
+        // if the last visible tab is removed, don't set zoom prep because
+        // we shoud be in the Tab Candy interface.
+        if (visibleTabCount > 0) {
+          if (newItem)
+            newItem.setZoomPrep(true);
+        }
+      } else {
+        // the tab is already focused so the new and old items are the
+        // same.
+        if (oldItem)
+          oldItem.setZoomPrep(true);
+      }
+    }, 1);
   },
 
   // ----------  
@@ -1074,9 +1075,7 @@ UIClass.prototype = {
 
   // ----------
   saveVisibility: function(isVisible) {
-    Utils.log("isVisible: " + isVisible);
-    Storage.saveVisibilityData(
-      Utils.getCurrentWindow(), { visible: isVisible });
+    Storage.saveVisibilityData(Utils.getCurrentWindow(), { visible: isVisible });
   },
 
   // ----------
