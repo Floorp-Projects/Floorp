@@ -91,8 +91,8 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
     repatch.repatch(mic.shape, reinterpret_cast<void*>(shape));
 
     /* Patch loads. */
-    if (slot >= JS_INITIAL_NSLOTS)
-        slot -= JS_INITIAL_NSLOTS;
+    JS_ASSERT(slot >= JS_INITIAL_NSLOTS);
+    slot -= JS_INITIAL_NSLOTS;
     slot *= sizeof(Value);
     JSC::RepatchBuffer loads(mic.load.executableAddress(), 32, false);
     loads.repatch(mic.load.dataLabel32AtOffset(MICInfo::GET_TYPE_OFFSET), slot + 4);
@@ -151,8 +151,8 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     repatch.repatch(mic.shape, reinterpret_cast<void*>(shape));
 
     /* Patch loads. */
-    if (slot >= JS_INITIAL_NSLOTS)
-        slot -= JS_INITIAL_NSLOTS;
+    JS_ASSERT(slot >= JS_INITIAL_NSLOTS);
+    slot -= JS_INITIAL_NSLOTS;
     slot *= sizeof(Value);
 
     JSC::RepatchBuffer stores(mic.load.executableAddress(), 32, false);
