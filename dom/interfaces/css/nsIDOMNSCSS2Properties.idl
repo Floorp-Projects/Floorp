@@ -40,7 +40,7 @@
 
 #include "nsIDOMSVGCSS2Properties.idl"
 
-[scriptable, uuid(29B6104D-933F-4DD0-8FC8-BDEC0514469D)]
+[scriptable, uuid(C8FA5710-8E47-4E76-9EBD-87E2ACF4F46C)]
 interface nsIDOMNSCSS2Properties : nsIDOMSVGCSS2Properties
 {
            /* Non-DOM 2 extensions */
@@ -119,6 +119,12 @@ interface nsIDOMNSCSS2Properties : nsIDOMSVGCSS2Properties
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozFloatEdge;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozFontFeatureSettings;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozFontLanguageOverride;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozForceBrokenImageIcon;

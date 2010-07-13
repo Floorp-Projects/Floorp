@@ -1699,6 +1699,7 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
   PRUint32 weight = NS_STYLE_FONT_WEIGHT_NORMAL;
   PRUint32 stretch = NS_STYLE_FONT_STRETCH_NORMAL;
   PRUint32 italicStyle = FONT_STYLE_NORMAL;
+  nsString featureSettings, languageOverride;
 
   // set up family name
   aRule->GetDesc(eCSSFontDesc_Family, val);
@@ -1747,6 +1748,30 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
   } else {
     NS_ASSERTION(unit == eCSSUnit_Null,
                  "@font-face style has unexpected unit");
+  }
+
+  // set up font features
+  aRule->GetDesc(eCSSFontDesc_FontFeatureSettings, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Normal) {
+    // empty feature string
+  } else if (unit == eCSSUnit_String) {
+    val.GetStringValue(featureSettings);
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face font-feature-settings has unexpected unit");
+  }
+
+  // set up font language override
+  aRule->GetDesc(eCSSFontDesc_FontLanguageOverride, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Normal) {
+    // empty feature string
+  } else if (unit == eCSSUnit_String) {
+    val.GetStringValue(languageOverride);
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face font-language-override has unexpected unit");
   }
 
   // set up src array
@@ -1824,7 +1849,8 @@ InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
   }
   
   if (!fontfamily.IsEmpty() && srcArray.Length() > 0) {
-    aFontSet->AddFontFace(fontfamily, srcArray, weight, stretch, italicStyle);
+    aFontSet->AddFontFace(fontfamily, srcArray, weight, stretch, italicStyle,
+                          featureSettings, languageOverride);
   }
 }
 

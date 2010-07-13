@@ -1431,6 +1431,28 @@ CSS_PROP_FONT(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_FONT(
+    -moz-font-feature-settings,
+    font_feature_settings,
+    MozFontFeatureSettings,
+    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    Font,
+    mFontFeatureSettings,
+    eCSSType_Value,
+    nsnull,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_FONT(
+    -moz-font-language-override,
+    font_language_override,
+    MozFontLanguageOverride,
+    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    Font,
+    mFontLanguageOverride,
+    eCSSType_Value,
+    nsnull,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_FONT(
     font-size,
     font_size,
     FontSize,

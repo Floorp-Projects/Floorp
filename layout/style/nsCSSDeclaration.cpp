@@ -1030,6 +1030,10 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
         *data->ValueStorageFor(eCSSProperty_font_stretch);
       const nsCSSValue &sizeAdjust =
         *data->ValueStorageFor(eCSSProperty_font_size_adjust);
+      const nsCSSValue &featureSettings =
+        *data->ValueStorageFor(eCSSProperty_font_feature_settings);
+      const nsCSSValue &languageOverride =
+        *data->ValueStorageFor(eCSSProperty_font_language_override);
 
       if (systemFont &&
           systemFont->GetUnit() != eCSSUnit_None &&
@@ -1041,19 +1045,24 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
             lh.GetUnit() != eCSSUnit_System_Font ||
             family.GetUnit() != eCSSUnit_System_Font ||
             stretch.GetUnit() != eCSSUnit_System_Font ||
-            sizeAdjust.GetUnit() != eCSSUnit_System_Font) {
+            sizeAdjust.GetUnit() != eCSSUnit_System_Font ||
+            featureSettings.GetUnit() != eCSSUnit_System_Font ||
+            languageOverride.GetUnit() != eCSSUnit_System_Font) {
           // This can't be represented as a shorthand.
           return NS_OK;
         }
         AppendCSSValueToString(eCSSProperty__x_system_font, *systemFont,
                                aValue);
       } else {
-        // The font-stretch and font-size-adjust
+        // The font-stretch, font-size-adjust,
+        // -moz-font-feature-settings, and -moz-font-language-override
         // properties are reset by this shorthand property to their
         // initial values, but can't be represented in its syntax.
         if (stretch.GetUnit() != eCSSUnit_Enumerated ||
             stretch.GetIntValue() != NS_STYLE_FONT_STRETCH_NORMAL ||
-            sizeAdjust.GetUnit() != eCSSUnit_None) {
+            sizeAdjust.GetUnit() != eCSSUnit_None ||
+            featureSettings.GetUnit() != eCSSUnit_Normal ||
+            languageOverride.GetUnit() != eCSSUnit_Normal) {
           return NS_OK;
         }
 

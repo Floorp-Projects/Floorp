@@ -5963,6 +5963,10 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
                         nsCSSProps::kFloatEdgeKTable);
   case eCSSProperty_font_family:
     return ParseFamily(aValue);
+  case eCSSProperty_font_feature_settings:
+  case eCSSProperty_font_language_override:
+    return ParseVariant(aValue, VARIANT_NORMAL | VARIANT_INHERIT |
+                                VARIANT_STRING, nsnull);
   case eCSSProperty_font_size:
     return ParseNonNegativeVariant(aValue,
                                    VARIANT_HKLP | VARIANT_SYSFONT |
@@ -6240,6 +6244,10 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
 
   case eCSSFontDesc_UnicodeRange:
     return ParseFontRanges(aValue);
+
+  case eCSSFontDesc_FontFeatureSettings:
+  case eCSSFontDesc_FontLanguageOverride:
+    return ParseVariant(aValue, VARIANT_NORMAL | VARIANT_STRING, nsnull);
 
   case eCSSFontDesc_UNKNOWN:
   case eCSSFontDesc_COUNT:
@@ -7825,6 +7833,8 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_line_height, family);
         AppendValue(eCSSProperty_font_stretch, family);
         AppendValue(eCSSProperty_font_size_adjust, family);
+        AppendValue(eCSSProperty_font_feature_settings, family);
+        AppendValue(eCSSProperty_font_language_override, family);
       }
       else {
         AppendValue(eCSSProperty__x_system_font, family);
@@ -7837,6 +7847,8 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_line_height, systemFont);
         AppendValue(eCSSProperty_font_stretch, systemFont);
         AppendValue(eCSSProperty_font_size_adjust, systemFont);
+        AppendValue(eCSSProperty_font_feature_settings, systemFont);
+        AppendValue(eCSSProperty_font_language_override, systemFont);
       }
       return PR_TRUE;
     }
@@ -7898,6 +7910,8 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_stretch,
                   nsCSSValue(NS_FONT_STRETCH_NORMAL, eCSSUnit_Enumerated));
       AppendValue(eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None));
+      AppendValue(eCSSProperty_font_feature_settings, nsCSSValue(eCSSUnit_Normal));
+      AppendValue(eCSSProperty_font_language_override, nsCSSValue(eCSSUnit_Normal));
       return PR_TRUE;
     }
   }
