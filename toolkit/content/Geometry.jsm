@@ -99,8 +99,7 @@ let Util = {
 
   /** Executes aFunc after other events have been processed. */
   executeSoon: function executeSoon(aFunc) {
-    let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-    tm.mainThread.dispatch({
+    Services.tm.mainThread.dispatch({
       run: function() {
         aFunc();
       }
@@ -130,7 +129,7 @@ let Util = {
   },
 
   makeURI: function makeURI(aURL, aOriginCharset, aBaseURI) {
-    return gIOService.newURI(aURL, aOriginCharset, aBaseURI);
+    return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
   },
 
   makeURLAbsolute: function makeURLAbsolute(base, url) {
@@ -157,7 +156,7 @@ let Util = {
   needHomepageOverride: function needHomepageOverride() {
     let savedmstone = null;
     try {
-      savedmstone = gPrefService.getCharPref("browser.startup.homepage_override.mstone");
+      savedmstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
     } catch (e) {}
 
     if (savedmstone == "ignore")
@@ -166,7 +165,7 @@ let Util = {
 #expand    let ourmstone = "__MOZ_APP_VERSION__";
 
     if (ourmstone != savedmstone) {
-      gPrefService.setCharPref("browser.startup.homepage_override.mstone", ourmstone);
+      Services.prefs.setCharPref("browser.startup.homepage_override.mstone", ourmstone);
 
       return (savedmstone ? "new version" : "new profile");
     }
@@ -203,7 +202,7 @@ let Util = {
   // process.
   forceOnline: function forceOnline() {
 #ifdef MOZ_ENABLE_LIBCONIC
-    gIOService.offline = false;
+    Services.io.offline = false;
 #endif
   },
 
