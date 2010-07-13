@@ -422,7 +422,7 @@ window.Subscribable.prototype = {
       
     var self = this;
     var subsCopy = iQ.merge([], this.subscribers[eventName]);
-    iQ.each(subsCopy, function(index, object) { 
+    subsCopy.forEach(function(object) { 
       object.callback(self, eventInfo);
     });
   },
@@ -435,7 +435,7 @@ window.Subscribable.prototype = {
     if (!this.onCloseSubscribers)
       this.onCloseSubscribers = [];
       
-    var existing = iQ.grep(this.onCloseSubscribers, function(element) {
+    var existing = this.onCloseSubscribers.filter(function(element) {
       return element.referenceElement == referenceElement;
     });
     
@@ -457,7 +457,7 @@ window.Subscribable.prototype = {
     if (!this.onCloseSubscribers)
       return;
       
-    this.onCloseSubscribers = iQ.grep(this.onCloseSubscribers, function(element) {
+    this.onCloseSubscribers = this.onCloseSubscribers.filter(function(element) {
       return element.referenceElement == referenceElement;
     }, true);
   },
@@ -469,8 +469,9 @@ window.Subscribable.prototype = {
     if (!this.onCloseSubscribers)
       return;
       
-    iQ.each(this.onCloseSubscribers, function(index, object) { 
-      object.callback(this);
+    var self = this;
+    this.onCloseSubscribers.forEach(function(object) {
+      object.callback(self);
     });
   }
 };

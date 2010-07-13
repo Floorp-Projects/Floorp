@@ -903,7 +903,7 @@ UIClass.prototype = {
                                                 // the empty space the user has left on the page.
     itemBounds.width = 1;
     itemBounds.height = 1;
-    iQ.each(items, function(index, item) {
+    items.forEach(function(item) {
       if (item.locked.bounds)
         return;
         
@@ -933,7 +933,7 @@ UIClass.prototype = {
     var scale = Math.min(hScale, wScale);
     var self = this;
     var pairs = [];
-    iQ.each(items, function(index, item) {
+    items.forEach(function(item) {
       if (item.locked.bounds)
         return;
         
@@ -955,7 +955,7 @@ UIClass.prototype = {
     
     Items.unsquish(pairs);
     
-    iQ.each(pairs, function(index, pair) {
+    pairs.forEach(function(pair) {
       pair.item.setBounds(pair.bounds, true);
       pair.item.snap();
     });
@@ -1100,7 +1100,7 @@ UIClass.prototype = {
     var newTabsGroup = Groups.getNewTabGroup();
     var groups = [];
     var items = TabItems.getItems();
-    iQ.each(items, function(index, item) {
+    items.forEach(function(item) {
       var url = item.getURL(); 
       var domain = url.split('/')[2]; 
       if (!domain)

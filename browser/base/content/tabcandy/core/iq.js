@@ -1060,7 +1060,7 @@ iQ.extend({
     'focus'
   ];
   
-  iQ.each(events, function(index, event) {
+  events.forEach(function(event) {
     iQ.fn[event] = function(func) {
       return this.bind(event, func);
     };
