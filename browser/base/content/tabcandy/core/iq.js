@@ -201,7 +201,20 @@ iQ.fn = iQ.prototype = {
       this.context = selector.context;
     }
 
-    return iQ.makeArray( selector, this );
+    // this used to be makeArray:
+    var ret = this || [];
+    if ( selector != null ) {
+      // The window, strings (and functions) also have 'length'
+      // The extra typeof function check is to prevent crashes
+      // in Safari 2 (See: #3039)
+      if ( selector.length == null || typeof selector === "string" || iQ.isFunction(selector) || (typeof selector !== "function" && selector.setInterval) ) {
+        push.call( ret, selector );
+      } else {
+        iQ.merge( ret, selector );
+      }
+    }
+    return ret;
+    
   },
   
   // Start with an empty selector
@@ -960,26 +973,6 @@ iQ.extend({
   // Function: trim
   trim: function( text ) {
     return (text || "").replace( rtrim, "" );
-  },
-
-  // ----------
-  // Function: makeArray
-  // results is for internal usage only
-  makeArray: function( array, results ) {
-    var ret = results || [];
-
-    if ( array != null ) {
-      // The window, strings (and functions) also have 'length'
-      // The extra typeof function check is to prevent crashes
-      // in Safari 2 (See: #3039)
-      if ( array.length == null || typeof array === "string" || iQ.isFunction(array) || (typeof array !== "function" && array.setInterval) ) {
-        push.call( ret, array );
-      } else {
-        iQ.merge( ret, array );
-      }
-    }
-
-    return ret;
   },
 
   // ----------
