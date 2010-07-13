@@ -173,9 +173,9 @@ window.Page = {
     currentWin.document.getElementById("tab-candy-deck").selectedIndex = 0;
     
     // set the close button on tab
-    iQ.timeout(function() { // Marshal event from chrome thread to DOM thread   
+/*     iQ.timeout(function() { // Marshal event from chrome thread to DOM thread    */
       tabContainer.adjustTabstrip();
-    }, 1);
+/*     }, 1); */
 
     this._setActiveTitleColor(false);
     UI.saveVisibility(false);
@@ -675,8 +675,8 @@ UIClass.prototype = {
   
       if (firstTime) {
         var padding = 10;
-        var infoWidth = 300;
-        var infoHeight = 200;
+        var infoWidth = 350;
+        var infoHeight = 350;
         var pageBounds = Items.getPageBounds();
         pageBounds.inset(padding, padding);      
                 
@@ -699,7 +699,12 @@ UIClass.prototype = {
         });
         
         // ___ make info item
-        var html = '<h1>Welcome to Firefox Tab Sets</h1>(more goes here)';
+        var html = 
+          "<div class='intro'>"
+            + "<h1>Welcome to Firefox Tab Sets</h1>"
+            + "<div>(more goes here)</div><br>"
+            + "<video src='http://html5demos.com/assets/dizzy.ogv' width='100%' preload controls>"
+          + "</div>";
         
         box.left = box.right + padding;
         box.width = infoWidth;
