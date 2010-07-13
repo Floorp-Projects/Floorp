@@ -40,8 +40,7 @@ chrome.jar:
   content/content.css                  (content/content.css)
   content/checkerboard.png             (content/checkerboard.png)
 % content branding %content/branding/
-* content/sanitize.xul                 (content/sanitize.xul)
-* content/sanitize.js                  (content/sanitize.js)
+  content/sanitize.js                  (content/sanitize.js)
 * content/BrowserView.js               (content/BrowserView.js)
   content/TileManager.js               (TileManager.js)
 * content/InputHandler.js              (content/InputHandler.js)
