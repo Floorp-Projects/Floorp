@@ -87,11 +87,12 @@ class Test(object):
 class TestCase(Test):
     """A test case consisting of a test and an expected result."""
 
-    def __init__(self, path, enable, expect, random):
+    def __init__(self, path, enable, expect, random, slow):
         Test.__init__(self, path)
         self.enable = enable     # bool: True => run test, False => don't run
         self.expect = expect     # bool: expected result, True => pass
         self.random = random     # bool: True => ignore output as 'random'
+        self.slow = slow         # bool: True => test may run slowly
 
     def __str__(self):
         ans = self.path
@@ -101,6 +102,8 @@ class TestCase(Test):
             ans += ', fails'
         if self.random:
             ans += ', random'
+        if self.slow:
+            ans += ', slow'
         return ans
 
 class TestOutput:
