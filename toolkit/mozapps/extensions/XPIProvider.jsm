@@ -5075,9 +5075,15 @@ function AddonWrapper(aAddon) {
     return aAddon.applyBackgroundUpdates;
   });
   this.__defineSetter__("applyBackgroundUpdates", function(val) {
+    if (val == aAddon.applyBackgroundUpdates)
+      return val;
+
     XPIDatabase.setAddonProperties(aAddon, {
       applyBackgroundUpdates: val
     });
+    AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
+
+    return val;
   });
 
   this.__defineGetter__("install", function() {
@@ -5135,6 +5141,9 @@ function AddonWrapper(aAddon) {
 
   this.__defineGetter__("isActive", function() aAddon.active);
   this.__defineSetter__("userDisabled", function(val) {
+    if (val == aAddon.userDisabled)
+      return val;
+
     if (aAddon.type == "theme" && val)
       throw new Error("Cannot disable the active theme");
 
@@ -5142,6 +5151,8 @@ function AddonWrapper(aAddon) {
       XPIProvider.updateAddonDisabledState(aAddon, val);
     else
       aAddon.userDisabled = val;
+
+    return val;
   });
 
   this.isCompatibleWith = function(aAppVersion, aPlatformVersion) {
