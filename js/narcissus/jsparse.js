@@ -66,10 +66,13 @@ function Script(t, x) {
 }
 
 // Node extends Array, which we extend slightly with a top-of-stack method.
-defineProperty(Array.prototype, "top",
-               function() {
-                   return this.length && this[this.length-1];
-               }, false, false, true);
+Array.prototype.__defineProperty__(
+    'top',
+    function () {
+        return this.length && this[this.length-1];
+    },
+    false, false, true
+);
 
 function Node(t, type) {
     var token = t.token;
@@ -130,18 +133,19 @@ Np.getSource = function () {
     return this.tokenizer.source.slice(this.start, this.end);
 };
 
-defineGetter(Np, "filename",
-             function() {
-                 return this.tokenizer.filename;
-             });
+Np.__defineGetter__('filename',
+                    function () { return this.tokenizer.filename; });
 
-defineProperty(String.prototype, "repeat",
-               function(n) {
-                   var s = "", t = this + s;
-                   while (--n >= 0)
-                       s += t;
-                   return s;
-               }, false, false, true);
+String.prototype.__defineProperty__(
+    'repeat',
+    function (n) {
+        var s = "", t = this + s;
+        while (--n >= 0)
+            s += t;
+        return s;
+    },
+    false, false, true
+);
 
 // Statement stack and nested statement handler.
 function nest(t, x, node, func, end) {
