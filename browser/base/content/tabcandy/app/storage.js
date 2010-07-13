@@ -44,6 +44,7 @@ Storage = {
   GROUPS_DATA_IDENTIFIER: "tabcandy-groups",
   TAB_DATA_IDENTIFIER:    "tabcandy-tab",
   UI_DATA_IDENTIFIER:    "tabcandy-ui",
+  VISIBILITY_DATA_IDENTIFIER:    "tabcandy-visibility",
 
   // ----------
   // Function: onReady
@@ -105,6 +106,7 @@ Storage = {
       // ___ Other
       this.saveGroupsData(win, {});
       this.saveUIData(win, {});
+      this.saveVisibilityData(win, {});
       
       this._sessionStore.setWindowValue(win, this.GROUP_DATA_IDENTIFIER,
         JSON.stringify({}));
@@ -192,7 +194,17 @@ Storage = {
   readUIData: function(win) {
     return this.readData(win, this.UI_DATA_IDENTIFIER);
   },
-  
+
+  // ----------
+  saveVisibilityData: function(win, data) {
+    this.saveData(win, this.VISIBILITY_DATA_IDENTIFIER, data);
+  },
+
+  // ----------
+  readVisibilityData: function(win) {
+    return this.readData(win, this.VISIBILITY_DATA_IDENTIFIER);
+  },
+    
   // ----------
   saveData: function(win, id, data) {
     try {

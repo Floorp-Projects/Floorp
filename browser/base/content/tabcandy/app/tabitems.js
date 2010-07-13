@@ -590,19 +590,14 @@ window.TabItems = {
     window.TabMirror.customize(function(mirror) {
       var $div = iQ(mirror.el);
       var tab = mirror.tab;
-
-      //if(tab == Utils.homeTab)
-      //  $div.hide();
-      //else {
-        var item = new TabItem(mirror.el, tab);
+      var item = new TabItem(mirror.el, tab);
         
-        item.addOnClose(self, function() {
-          Items.unsquish(null, item);
-        });
+      item.addOnClose(self, function() {
+        Items.unsquish(null, item);
+      });
 
-        if (!self.reconnect(item))
-          Groups.newTab(item);          
-      //}
+      if (!self.reconnect(item))
+        Groups.newTab(item);          
     });
   },
 

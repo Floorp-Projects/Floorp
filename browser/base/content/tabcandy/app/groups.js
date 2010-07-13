@@ -1272,7 +1272,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   
   // ----------
   // Function: newTab
-  // Creates a new tab within this groups.
+  // Creates a new tab within this group.
   newTab: function(url) {
     Groups.setActiveGroup(this);          
     var newTab = Tabs.open(url || "about:blank", true);
@@ -1285,7 +1285,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     iQ.timeout(function(){
       Page.hideChrome()
     }, 1);
-    
+
     var self = this;
     var doNextTab = function(tab){
       var group = Groups.getActiveGroup();
