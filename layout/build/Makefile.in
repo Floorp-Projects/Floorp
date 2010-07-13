@@ -59,7 +59,7 @@ GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
 ifndef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LIBS	= gkgfx gfxutils
+EXTRA_DSO_LIBS	= gkgfx
 endif
 EXTRA_DSO_LIBS	+= thebes ycbcr
 
