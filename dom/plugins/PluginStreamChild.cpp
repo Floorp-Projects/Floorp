@@ -42,6 +42,7 @@ namespace mozilla {
 namespace plugins {
 
 PluginStreamChild::PluginStreamChild()
+  : mClosed(false)
 {
   memset(&mStream, 0, sizeof(mStream));
   mStream.ndata = static_cast<AStream*>(this);
