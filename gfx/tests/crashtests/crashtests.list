@@ -5,6 +5,7 @@ load 199379-1.html
 load 206561-1.html
 load 248518-1.html
 load 306649-1.xml
+load 306902-1.xml
 load 333861-1.html
 load 334735-1.html
 load 345576-1.html
@@ -19,6 +20,7 @@ load 377231-1.html
 load 377232-1.xhtml
 load 377461-1.xhtml
 load 383473-1.html
+load 383872-1.svg
 load 385289-1.xhtml
 load 385228-1.svg
 skip load 385228-2.svg  # bug 523255 / bug 385228
@@ -55,9 +57,11 @@ load 420945-1.html
 load 420962-1.html
 load 421393-1.html
 load 421813-1.html
+load 423110-1.xhtml
 load 423270-1.html
 load 429899-1.html
 load 441360.html
+load 445711.html
 load 463307-1.html
 load 467703-1.xhtml
 load 467873-1.html
