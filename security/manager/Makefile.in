@@ -184,7 +184,7 @@ DEFAULT_GMAKE_FLAGS += NO_MDUPDATE=1
 DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ECC=1
 DEFAULT_GMAKE_FLAGS += NSINSTALL="$(NSINSTALL)"
 ifndef MOZ_NATIVE_SQLITE
-DEFAULT_GMAKE_FLAGS += SQLITE=$(call EXPAND_LIBNAME,mozsqlite3)
+DEFAULT_GMAKE_FLAGS += SQLITE_LIB_NAME=mozsqlite3
 endif
 ifdef NSS_DISABLE_DBM 
 DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
@@ -235,12 +235,6 @@ endif
 ifdef MACOS_SDK_DIR
 DEFAULT_GMAKE_FLAGS += MACOS_SDK_DIR=$(MACOS_SDK_DIR)
 endif
-endif
-# Build libfreebl3.so the same way it's built in Fedora, so that Fedora's
-# /lib/libcrypt.so.1 can get the NSSRAWHASH_3.12.3 symbols it needs from
-# our libfreebl3.so.
-ifeq ($(OS_ARCH),Linux)
-DEFAULT_GMAKE_FLAGS += FREEBL_NO_DEPEND=1
 endif
 
 # Turn off TLS compression support because NSS 3.12.6 can't be built
