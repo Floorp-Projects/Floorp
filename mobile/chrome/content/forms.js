@@ -75,7 +75,7 @@ FormAssistant.prototype = {
     if (!wrapper.canAssist())
       return false;
 
-    this._enabled = gPrefService.getBoolPref("formhelper.enabled");
+    this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
     if (!this._enabled && !wrapper.hasChoices()) {
       return false;
     }

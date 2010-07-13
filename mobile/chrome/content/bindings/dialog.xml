@@ -18,9 +18,7 @@
         this._closed = false;
         if (this.hasAttribute("script")) {
           try {
-            let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                         .getService(Components.interfaces.mozIJSSubScriptLoader); 
-            loader.loadSubScript(this.getAttribute("script"), this);
+            Services.scriptloader.loadSubScript(this.getAttribute("script"), this);
           } catch(e) {
             throw("Dialog : Unable to load script : " + this.getAttribute("script") + "\n");
           }
@@ -88,11 +86,8 @@
       
       <method name="waitForClose">
         <body><![CDATA[
-          let thread = Components.classes["@mozilla.org/thread-manager;1"]
-                          .getService(Components.interfaces.nsIThreadManager)
-                          .currentThread;
           while (!this._closed)
-            thread.processNextEvent(true);
+            Services.tm.currentThread.processNextEvent(true);
         ]]></body>
       </method>
     </implementation>

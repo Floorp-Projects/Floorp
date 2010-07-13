@@ -6,14 +6,12 @@ const kTapOverlayTimeout = 200;
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
+let Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
+
 let gFocusManager = Cc["@mozilla.org/focus-manager;1"]
   .getService(Ci.nsIFocusManager);
-let gPrefService = Cc["@mozilla.org/preferences-service;1"]
-  .getService(Ci.nsIPrefBranch2);
-let gObserverService = Cc["@mozilla.org/observer-service;1"]
-  .getService(Ci.nsIObserverService);
-let gIOService = Cc["@mozilla.org/network/io-service;1"]
-  .getService(Ci.nsIIOService);
 
 let XULDocument = Ci.nsIDOMXULDocument;
 let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
@@ -24,17 +22,18 @@ let HTMLFrameElement = Ci.nsIDOMHTMLFrameElement;
 /** Watches for mouse click in content and redirect them to the best found target **/
 const ElementTouchHelper = {
   get radius() {
+    let prefs = Services.prefs;
     delete this.radius;
-    return this.radius = { "top": gPrefService.getIntPref("browser.ui.touch.top"),
-                           "right": gPrefService.getIntPref("browser.ui.touch.right"),
-                           "bottom": gPrefService.getIntPref("browser.ui.touch.bottom"),
-                           "left": gPrefService.getIntPref("browser.ui.touch.left")
+    return this.radius = { "top": prefs.getIntPref("browser.ui.touch.top"),
+                           "right": prefs.getIntPref("browser.ui.touch.right"),
+                           "bottom": prefs.getIntPref("browser.ui.touch.bottom"),
+                           "left": prefs.getIntPref("browser.ui.touch.left")
                          };
   },
 
   get weight() {
     delete this.weight;
-    return this.weight = { "visited": gPrefService.getIntPref("browser.ui.touch.weight.visited")
+    return this.weight = { "visited": Services.prefs.getIntPref("browser.ui.touch.weight.visited")
                          };
   },
 
@@ -643,7 +642,7 @@ let ViewportHandler = {
   },
 
   getViewportMetadata: function getViewportMetadata() {
-    let dpiScale = gPrefService.getIntPref("zoom.dpiScale") / 100;
+    let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
 
     let doctype = content.document.doctype;
     if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
@@ -814,7 +813,7 @@ ContextHandler.init();
 
 var FormSubmitObserver = {
   init: function init() {
-    gObserverService.addObserver(this, "formsubmit", false);
+    Services.obs.addObserver(this, "formsubmit", false);
   },
 
   notify: function notify(aFormElement, aWindow, aActionURI, aCancelSubmit) {

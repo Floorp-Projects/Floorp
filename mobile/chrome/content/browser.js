@@ -422,7 +422,7 @@ var Browser = {
       let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
       let scaledDefaultH = (kDefaultBrowserWidth * (h / w));
       let scaledScreenH = (window.screen.width * (h / w));
-      let dpiScale = gPrefService.getIntPref("zoom.dpiScale") / 100;
+      let dpiScale = Services.prefs.getIntPref("zoom.dpiScale") / 100;
 
       Browser.styles["viewport-width"].width = (w / dpiScale) + "px";
       Browser.styles["viewport-height"].height = (h / dpiScale) + "px";
@@ -484,7 +484,7 @@ var Browser = {
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
 
-    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    var os = Services.obs;
     os.addObserver(gXPInstallObserver, "addon-install-blocked", false);
     os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
 
@@ -542,7 +542,7 @@ var Browser = {
     this.addTab(whereURI, true);
 
     // JavaScript Error Console
-    if (gPrefService.getBoolPref("browser.console.showInPanel")){
+    if (Services.prefs.getBoolPref("browser.console.showInPanel")){
       let button = document.getElementById("tool-console");
       button.hidden = false;
     }
@@ -550,8 +550,8 @@ var Browser = {
     bv.commitBatchOperation();
 
     // If some add-ons were disabled during during an application update, alert user
-    if (gPrefService.prefHasUserValue("extensions.disabledAddons")) {
-      let addons = gPrefService.getCharPref("extensions.disabledAddons").split(",");
+    if (Services.prefs.prefHasUserValue("extensions.disabledAddons")) {
+      let addons = Services.prefs.getCharPref("extensions.disabledAddons").split(",");
       if (addons.length > 0) {
         let disabledStrings = Elements.browserBundle.getString("alertAddonsDisabled");
         let label = PluralForm.get(addons.length, disabledStrings).replace("#1", addons.length);
@@ -560,7 +560,7 @@ var Browser = {
         alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, Elements.browserBundle.getString("alertAddons"),
                                      label, false, "", null);
       }
-      gPrefService.clearUserPref("extensions.disabledAddons");
+      Services.prefs.clearUserPref("extensions.disabledAddons");
     }
 
     // Force commonly used border-images into the image cache
@@ -586,9 +586,9 @@ var Browser = {
     // Prompt if we have multiple tabs before closing window
     let numTabs = this._tabs.length;
     if (numTabs > 1) {
-      let shouldPrompt = gPrefService.getBoolPref("browser.tabs.warnOnClose");
+      let shouldPrompt = Services.prefs.getBoolPref("browser.tabs.warnOnClose");
       if (shouldPrompt) {
-        let prompt = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+        let prompt = Services.prompt;
   
         // Default to true: if it were false, we wouldn't get this far
         let warnOnClose = { value: true };
@@ -609,7 +609,7 @@ var Browser = {
         // Don't set the pref unless they press OK and it's false
         let reallyClose = (pressed == 0);
         if (reallyClose && !warnOnClose.value)
-          gPrefService.setBoolPref("browser.tabs.warnOnClose", false);
+          Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
 
         // If we don't want to close, return now. If we are closing, continue with other housekeeping.
         if (!reallyClose)
@@ -619,7 +619,7 @@ var Browser = {
 
     // Figure out if there's at least one other browser window around.
     let lastBrowser = true;
-    let e = gWindowMediator.getEnumerator("navigator:browser");
+    let e = Services.wm.getEnumerator("navigator:browser");
     while (e.hasMoreElements() && lastBrowser) {
       let win = e.getNext();
       if (win != window && win.toolbar.visible)
@@ -630,11 +630,11 @@ var Browser = {
 
     // Let everyone know we are closing the last browser window
     let closingCanceled = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-    gObserverService.notifyObservers(closingCanceled, "browser-lastwindow-close-requested", null);
+    Services.obs.notifyObservers(closingCanceled, "browser-lastwindow-close-requested", null);
     if (closingCanceled.data)
       return false;
   
-    gObserverService.notifyObservers(null, "browser-lastwindow-close-granted", null);
+    Services.obs.notifyObservers(null, "browser-lastwindow-close-granted", null);
     return true;
   },
 
@@ -642,7 +642,7 @@ var Browser = {
     this._browserView.uninit();
     BrowserUI.uninit();
 
-    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    var os = Services.obs;
     os.removeObserver(gXPInstallObserver, "addon-install-blocked");
     os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
     os.removeObserver(MemoryObserver, "memory-pressure");
@@ -658,7 +658,7 @@ var Browser = {
   getHomePage: function () {
     let url = "about:home";
     try {
-      url = gPrefService.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
+      url = Services.prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
     } catch (e) { }
 
     return url;
@@ -922,7 +922,7 @@ var Browser = {
           ot == errorDoc.getElementById("permanentExceptionButton")) {
         try {
           // add a new SSL exception for this URL
-          let uri = gIOService.newURI(errorDoc.location.href, null, null);
+          let uri = Services.io.newURI(errorDoc.location.href, null, null);
           let sslExceptions = new SSLExceptions();
 
           if (ot == errorDoc.getElementById("permanentExceptionButton")) {
@@ -939,8 +939,7 @@ var Browser = {
       }
       else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
         // Get the start page from the *default* pref branch, not the user's
-        var defaultPrefs = Cc["@mozilla.org/preferences-service;1"]
-                          .getService(Ci.nsIPrefService).getDefaultBranch(null);
+        var defaultPrefs = Services.prefs.getDefaultBranch(null);
         var url = "about:blank";
         try {
           url = defaultPrefs.getCharPref("browser.startup.homepage");
@@ -1404,10 +1403,10 @@ nsBrowserAccess.prototype = {
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
       switch (aContext) {
         case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL :
-          aWhere = gPrefService.getIntPref("browser.link.open_external");
+          aWhere = Services.prefs.getIntPref("browser.link.open_external");
           break;
         default : // OPEN_NEW or an illegal value
-          aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
+          aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
       }
     }
 
@@ -1428,7 +1427,7 @@ nsBrowserAccess.prototype = {
       if (aURI) {
         if (aOpener) {
           location = aOpener.location;
-          referrer = gIOService.newURI(location, null, null);
+          referrer = Services.io.newURI(location, null, null);
         }
         browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
       }
@@ -1482,15 +1481,10 @@ const BrowserSearch = {
     }
   },
 
-  get searchService() {
-    delete this.searchService;
-    return this.searchService = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
-  },
-
   get engines() {
     if (this._engines)
       return this._engines;
-    return this._engines = this.searchService.getVisibleEngines({ });
+    return this._engines = Services.search.getVisibleEngines({ });
   },
 
   updatePageSearchEngines: function() {
@@ -1518,7 +1512,7 @@ const BrowserSearch = {
 
   addPermanentSearchEngine: function (aEngine) {
     let iconURL = BrowserUI._favicon.src;
-    this.searchService.addEngine(aEngine.href, Ci.nsISearchEngine.DATA_XML, iconURL, false);
+    Services.search.addEngine(aEngine.href, Ci.nsISearchEngine.DATA_XML, iconURL, false);
 
     this._engines = null;
   },
@@ -1911,8 +1905,6 @@ function getIdentityHandler() {
  * Handler for blocked popups, triggered by DOMUpdatePageReport events in browser.xml
  */
 const gPopupBlockerObserver = {
-  _kIPM: Ci.nsIPermissionManager,
-
   onUpdatePageReport: function onUpdatePageReport(aEvent)
   {
     var cBrowser = Browser.selectedBrowser;
@@ -1922,8 +1914,7 @@ const gPopupBlockerObserver = {
     if (!cBrowser.pageReport)
       return;
 
-    let pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
-    let result = pm.testExactPermission(Browser.selectedBrowser.currentURI, "popup");
+    let result = Services.perms.testExactPermission(Browser.selectedBrowser.currentURI, "popup");
     if (result == Ci.nsIPermissionManager.DENY_ACTION)
       return;
 
@@ -1931,7 +1922,7 @@ const gPopupBlockerObserver = {
     // notifications are per-browser, we don't need to worry about re-adding
     // it.
     if (!cBrowser.pageReport.reported) {
-      if(gPrefService.getBoolPref("privacy.popups.showBrowserMessage")) {
+      if (Services.prefs.getBoolPref("privacy.popups.showBrowserMessage")) {
         var brandBundle = document.getElementById("bundle_brand");
         var brandShortName = brandBundle.getString("brandShortName");
         var message;
@@ -1958,12 +1949,12 @@ const gPopupBlockerObserver = {
             {
               label: strings.getString("popupButtonAlwaysAllow2"),
               accessKey: null,
-              callback: function() { gPopupBlockerObserver.allowPopupsForSite(); }
+              callback: function() { gPopupBlockerObserver.allowPopupsForSite(true); }
             },
             {
               label: strings.getString("popupButtonNeverWarn2"),
               accessKey: null,
-              callback: function() { gPopupBlockerObserver.denyPopupsForSite(); }
+              callback: function() { gPopupBlockerObserver.allowPopupsForSite(false); }
             }
           ];
 
@@ -1979,18 +1970,11 @@ const gPopupBlockerObserver = {
     }
   },
 
-  allowPopupsForSite: function allowPopupsForSite(aEvent) {
+  allowPopupsForSite: function allowPopupsForSite(aAllow) {
     var currentURI = Browser.selectedBrowser.currentURI;
-    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(this._kIPM);
-    pm.add(currentURI, "popup", this._kIPM.ALLOW_ACTION);
-
-    Browser.getNotificationBox().removeCurrentNotification();
-  },
-
-  denyPopupsForSite: function denyPopupsForSite(aEvent) {
-    var currentURI = Browser.selectedBrowser.currentURI;
-    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(this._kIPM);
-    pm.add(currentURI, "popup", this._kIPM.DENY_ACTION);
+    Services.perms.add(currentURI, "popup", aAllow
+                       ?  Ci.nsIPermissionManager.ALLOW_ACTION
+                       :  Ci.nsIPermissionManager.DENY_ACTION);
 
     Browser.getNotificationBox().removeCurrentNotification();
   },
@@ -2033,12 +2017,12 @@ const gXPInstallObserver = {
         var strings = Elements.browserBundle;
         var enabled = true;
         try {
-          enabled = gPrefService.getBoolPref("xpinstall.enabled");
+          enabled = Services.prefs.getBoolPref("xpinstall.enabled");
         }
         catch (e) {}
         if (!enabled) {
           notificationName = "xpinstall-disabled";
-          if (gPrefService.prefIsLocked("xpinstall.enabled")) {
+          if (Services.prefs.prefIsLocked("xpinstall.enabled")) {
             messageString = strings.getString("xpinstallDisabledMessageLocked");
             buttons = [];
           }
@@ -2050,7 +2034,7 @@ const gXPInstallObserver = {
               accessKey: null,
               popup: null,
               callback: function editPrefs() {
-                gPrefService.setBoolPref("xpinstall.enabled", true);
+                Services.prefs.setBoolPref("xpinstall.enabled", true);
                 return false;
               }
             }];
@@ -2187,7 +2171,7 @@ var AlertsHelper = {
     container.top = window.innerHeight - (rect.height + 20);
     container.left = window.innerWidth - (rect.width + 20);
 
-    let timeout = gPrefService.getIntPref("alerts.totalOpenTime");
+    let timeout = Services.prefs.getIntPref("alerts.totalOpenTime");
     let self = this;
     this._timeoutID = setTimeout(function() { self._timeoutAlert(); }, timeout);
   },
@@ -2368,23 +2352,18 @@ ProgressController.prototype = {
 };
 
 var OfflineApps = {
-  get _pm() {
-    delete this._pm;
-    return this._pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
-  },
-
   offlineAppRequested: function(aRequest) {
-    if (!gPrefService.getBoolPref("browser.offline-apps.notify"))
+    if (!Services.prefs.getBoolPref("browser.offline-apps.notify"))
       return;
 
-    let currentURI = gIOService.newURI(aRequest.location, aRequest.charset, null);
+    let currentURI = Services.io.newURI(aRequest.location, aRequest.charset, null);
 
     // don't bother showing UI if the user has already made a decision
-    if (this._pm.testExactPermission(currentURI, "offline-app") != Ci.nsIPermissionManager.UNKNOWN_ACTION)
+    if (Services.perms.testExactPermission(currentURI, "offline-app") != Ci.nsIPermissionManager.UNKNOWN_ACTION)
       return;
 
     try {
-      if (gPrefService.getBoolPref("offline-apps.allow_by_default")) {
+      if (Services.prefs.getBoolPref("offline-apps.allow_by_default")) {
         // all pages can use offline capabilities, no need to ask the user
         return;
       }
@@ -2430,8 +2409,8 @@ var OfflineApps = {
   },
 
   allowSite: function(aRequest) {
-    let currentURI = gIOService.newURI(aRequest.location, aRequest.charset, null);
-    this._pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+    let currentURI = Services.io.newURI(aRequest.location, aRequest.charset, null);
+    Services.perms.add(currentURI, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
 
     // When a site is enabled while loading, manifest resources will start
     // fetching immediately.  This one time we need to do it ourselves.
@@ -2439,13 +2418,13 @@ var OfflineApps = {
   },
 
   disallowSite: function(aRequest) {
-    let currentURI = gIOService.newURI(aRequest.location, aRequest.charset, null);
-    this._pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.DENY_ACTION);
+    let currentURI = Services.io.newURI(aRequest.location, aRequest.charset, null);
+    Services.perms.add(currentURI, "offline-app", Ci.nsIPermissionManager.DENY_ACTION);
   },
 
   _startFetching: function(aRequest) {
-    let currentURI = gIOService.newURI(aRequest.location, aRequest.charset, null);
-    let manifestURI = gIOService.newURI(aRequest.manifest, aRequest.charset, currentURI);
+    let currentURI = Services.io.newURI(aRequest.location, aRequest.charset, null);
+    let manifestURI = Services.io.newURI(aRequest.manifest, aRequest.charset, currentURI);
 
     let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].getService(Ci.nsIOfflineCacheUpdateService);
     updateService.scheduleUpdate(manifestURI, currentURI);
@@ -2612,7 +2591,7 @@ Tab.prototype = {
     browser.setAttribute("style", "overflow: -moz-hidden-unscrollable; visibility: hidden;");
     browser.setAttribute("type", "content");
 
-    let useRemote = gPrefService.getBoolPref("browser.tabs.remote");
+    let useRemote = Services.prefs.getBoolPref("browser.tabs.remote");
     let useLocal = Util.isLocalScheme(aURI);
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
     

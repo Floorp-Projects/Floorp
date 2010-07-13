@@ -47,13 +47,6 @@
       <xul:label class="settings-title" xbl:inherits="value=label" crop="end" flex="1"/>
       <children />
     </content>
-
-    <implementation>
-      <field name="prefs">
-        Components.classes["@mozilla.org/preferences-service;1"]
-                  .getService(Components.interfaces.nsIPrefBranch2);
-      </field>
-    </implementation>
   </binding>
 
   <binding id="setting-base">
@@ -62,16 +55,16 @@
         this.preferenceChanged();
         
         if (this.usePref)
-          this._prefs.addObserver(this.pref, this._observer, true);
+          Services.prefs.addObserver(this.pref, this._observer, true);
       ]]></constructor>
 
       <field name="_observer"><![CDATA[({
         _self: this,
 
         QueryInterface: function(aIID) {
-          if (aIID.equals(Components.interfaces.nsIObserver) ||
-              aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-              aIID.equals(Components.interfaces.nsISupports))
+          if (aIID.equals(Ci.nsIObserver) ||
+              aIID.equals(Ci.nsISupportsWeakReference) ||
+              aIID.equals(Ci.nsISupports))
             return this;
 
           throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -103,7 +96,7 @@
               f.call(this, event);
             }
             catch (e) {
-              Components.utils.reportError(e);
+              Cu.reportError(e);
             }
           ]]>
         </body>
@@ -158,13 +151,6 @@
       <property name="type" readonly="true" onget="return this.getAttribute('type');"/>
       <property name="value" onget="return this.input.value;" onset="return this.input.value = val;"/>
 
-      <field name="_prefs">
-        this.settings ?
-          this.settings.prefs :
-          Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefBranch2);
-      </field>
-
       <field name="_updatingInput">false</field>
       <field name="input">document.getAnonymousElementByAttribute(this, "anonid", "input");</field>
 
@@ -193,7 +179,7 @@
       <method name="valueFromPreference">
         <body>
         <![CDATA[
-          let val = this._prefs.getBoolPref(this.pref);
+          let val = Services.prefs.getBoolPref(this.pref);
           this.value = this.inverted ? !val : val;
          ]]>
         </body>
@@ -203,7 +189,7 @@
         <body>
         <![CDATA[
           let val = this.value;
-          this._prefs.setBoolPref(this.pref, this.inverted ? !val : val);
+          Services.prefs.setBoolPref(this.pref, this.inverted ? !val : val);
         ]]>
         </body>
       </method>
@@ -232,7 +218,7 @@
       <method name="valueFromPreference">
         <body>
         <![CDATA[
-          let val = this._prefs.getIntPref(this.pref);
+          let val = Services.prefs.getIntPref(this.pref);
           this.value = (val == this.getAttribute("on"));
          ]]>
         </body>
@@ -241,7 +227,7 @@
       <method name="valueToPreference">
         <body>
         <![CDATA[
-          this._prefs.setIntPref(this.pref, this.getAttribute(this.value ? "on" : "off"));
+          Services.prefs.setIntPref(this.pref, this.getAttribute(this.value ? "on" : "off"));
         ]]>
         </body>
       </method>
@@ -270,7 +256,7 @@
       <method name="valueFromPreference">
         <body>
         <![CDATA[
-          let val = this._prefs.getIntPref(this.pref);
+          let val = Services.prefs.getIntPref(this.pref);
           this.value = val;
          ]]>
         </body>
@@ -279,7 +265,7 @@
       <method name="valueToPreference">
         <body>
         <![CDATA[
-          this._prefs.setIntPref(this.pref, this.value);
+          Services.prefs.setIntPref(this.pref, this.value);
         ]]>
         </body>
       </method>
@@ -324,8 +310,8 @@
       <method name="valueFromPreference">
         <body>
         <![CDATA[
-          this.value = this._prefs
-                           .getComplexValue(this.pref, Components.interfaces.nsISupportsString)
+          this.value = Services.prefs
+                           .getComplexValue(this.pref, Ci.nsISupportsString)
                            .data;
          ]]>
         </body>
@@ -334,11 +320,10 @@
       <method name="valueToPreference">
         <body>
         <![CDATA[
-          let iss = Components.classes["@mozilla.org/supports-string;1"]
-                              .createInstance(Components.interfaces.nsISupportsString);
+          let iss = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
           iss.data = this.value;
-          this._prefs
-              .setComplexValue(this.pref, Components.interfaces.nsISupportsString, iss);
+          Services.prefs
+              .setComplexValue(this.pref, Ci.nsISupportsString, iss);
         ]]>
         </body>
       </method>

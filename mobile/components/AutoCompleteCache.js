@@ -38,8 +38,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
@@ -60,17 +61,9 @@ XPCOMUtils.defineLazyGetter(this, "PACS", function() {
                    .getService(Ci.nsIAutoCompleteSearch);
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "gObsSvc",
-                                   "@mozilla.org/observer-service;1",
-                                   "nsIObserverService");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gDirSvc",
-                                   "@mozilla.org/file/directory_service;1",
-                                   "nsIProperties");
-
 // Gets a directory from the directory service
 function getDir(aKey) {
-  return gDirSvc.get(aKey, Ci.nsIFile);
+  return Services.dirsvc.get(aKey, Ci.nsIFile);
 }
 
 // -----------------------------------------------------------------------
@@ -233,7 +226,7 @@ var AutoCompleteUtils = {
 function AutoCompleteCache() {
   AutoCompleteUtils.init();
 
-  gObsSvc.addObserver(this, "browser:purge-session-history", true);
+  Services.obs.addObserver(this, "browser:purge-session-history", true);
 }
 
 AutoCompleteCache.prototype = {

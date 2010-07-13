@@ -34,10 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 // -----------------------------------------------------------------------
 // Download Manager UI
@@ -52,15 +52,13 @@ DownloadManagerUI.prototype = {
     if (!aReason)
       aReason = Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED;
 
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-    let browser = wm.getMostRecentWindow("navigator:browser");
+    let browser = Services.wm.getMostRecentWindow("navigator:browser");
     if (browser)
       browser.showDownloadManager(aWindowContext, aID, aReason);
   },
 
   get visible() {
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-    let browser = wm.getMostRecentWindow("navigator:browser");
+    let browser = Services.wm.getMostRecentWindow("navigator:browser");
     if (browser) {
       return browser.DownloadsView.visible;
     }

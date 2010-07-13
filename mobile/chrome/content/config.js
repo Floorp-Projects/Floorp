@@ -34,8 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let Cc = Components.classes;
 let Ci = Components.interfaces;
+
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var ViewConfig = {
   get _container() {
@@ -282,8 +283,7 @@ var Utils = {
 
   get _branch() {
     delete this._branch;
-    let prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
-    this._branch = prefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2);
+    this._branch = Services.prefs.getBranch(null).QueryInterface(Ci.nsIPrefBranch2);
     this._branch.addObserver("", this, true);
     return this._branch;
   },

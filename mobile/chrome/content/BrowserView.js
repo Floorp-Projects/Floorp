@@ -205,7 +205,7 @@ BrowserView.prototype = {
 
     let cacheSize = kBrowserViewCacheSize;
     try {
-      cacheSize = gPrefService.getIntPref("tile.cache.size");
+      cacheSize = Services.prefs.getIntPref("tile.cache.size");
     } catch(e) {}
 
     if (cacheSize == -1) {
@@ -587,7 +587,7 @@ BrowserView.prototype = {
     let pageZoom = this.getPageZoomLevel();
 
     // If pageZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
-    let granularity = gPrefService.getIntPref("browser.ui.zoom.pageFitGranularity");
+    let granularity = Services.prefs.getIntPref("browser.ui.zoom.pageFitGranularity");
     let threshold = 1 - 1 / granularity;
     if (threshold < pageZoom && pageZoom < 1)
       pageZoom = 1;

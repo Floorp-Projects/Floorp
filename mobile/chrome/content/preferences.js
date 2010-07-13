@@ -44,9 +44,8 @@ var PreferencesView = {
   _messageActions: function ev__messageActions(aData) {
     if (aData == "prefs-restart-app") {
       // Notify all windows that an application quit has been requested
-      var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
       var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-      os.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+      Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
 
       // If nothing aborted, quit the app
       if (cancelQuit.data == false) {
@@ -132,8 +131,7 @@ var PreferencesView = {
     let selectedLocale = chrome.getSelectedLocale("browser");
     let availableLocales = chrome.getLocalesForPackage("browser");
     
-    let bundles = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-    let strings = bundles.createBundle("chrome://browser/content/languages.properties");
+    let strings = Services.strings.createBundle("chrome://browser/content/languages.properties");
 
     // Render locale menulist by iterating through the query result from getLocalesForPackage()
     let selectedItem = null;
@@ -156,7 +154,7 @@ var PreferencesView = {
     // Are we using auto-detection?
     let autoDetect = false;
     try {
-      autoDetect = gPrefService.getBoolPref("intl.locale.matchOS");
+      autoDetect = Services.prefs.getBoolPref("intl.locale.matchOS");
     }
     catch (e) {}
     
@@ -174,14 +172,15 @@ var PreferencesView = {
   updateLocale: function updateLocale() {
     // Which locale did the user select?
     let newLocale = this._languages.selectedItem.value;
+    let prefs = Services.prefs;
     
     if (newLocale == "auto") {
-      if (gPrefService.prefHasUserValue("general.useragent.locale"))
-        gPrefService.clearUserPref("general.useragent.locale");
-      gPrefService.setBoolPref("intl.locale.matchOS", true);
+      if (prefs.prefHasUserValue("general.useragent.locale"))
+        prefs.clearUserPref("general.useragent.locale");
+      prefs.setBoolPref("intl.locale.matchOS", true);
     } else {
-      gPrefService.setBoolPref("intl.locale.matchOS", false);
-      gPrefService.setCharPref("general.useragent.locale", newLocale);
+      prefs.setBoolPref("intl.locale.matchOS", false);
+      prefs.setCharPref("general.useragent.locale", newLocale);
     }
 
     // Show the restart notification, if needed
@@ -203,7 +202,7 @@ var PreferencesView = {
     let value = "default";
     let display = url;
     try {
-      display = gPrefService.getComplexValue("browser.startup.homepage.title", Ci.nsIPrefLocalizedString).data;
+      display = Services.prefs.getComplexValue("browser.startup.homepage.title", Ci.nsIPrefLocalizedString).data;
     } catch (e) { }
 
     switch (url) {
@@ -278,10 +277,10 @@ var PreferencesView = {
     // Save the homepage URL to a preference
     let pls = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
     pls.data = url;
-    gPrefService.setComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString, pls);
+    Services.prefs.setComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString, pls);
 
     // Save the homepage title to a preference
     pls.data = display;
-    gPrefService.setComplexValue("browser.startup.homepage.title", Ci.nsIPrefLocalizedString, pls);
+    Services.prefs.setComplexValue("browser.startup.homepage.title", Ci.nsIPrefLocalizedString, pls);
   }
 };

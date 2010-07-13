@@ -37,7 +37,7 @@
 
 let ConsoleView = {
   _list: null,
-  _console: null,
+  _inited: false,
   _evalTextbox: null,
   _evalFrame: null,
   _evalCode: "",
@@ -66,11 +66,11 @@ let ConsoleView = {
   },
 
   _delayedInit: function cv__delayedInit() {
-    if (this._console)
+    if (this._inited)
       return;
+    this._inited = true;
 
-    this._console = Cc['@mozilla.org/consoleservice;1'].getService(Ci.nsIConsoleService);
-    this._console.registerListener(this);
+    Services.console.registerListener(this);
 
     this.appendInitialItems();
 
@@ -85,8 +85,8 @@ let ConsoleView = {
   },
 
   uninit: function cv_uninit() {
-    if (this._console)
-      this._console.unregisterListener(this);
+    if (this._inited)
+      Services.console.unregisterListener(this);
   },
 
   observe: function(aObject) {
@@ -97,8 +97,8 @@ let ConsoleView = {
     if (this._showChromeErrors != -1)
       return this._showChromeErrors;
 
-    let pref = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefBranch);
     try {
+      let pref = Services.prefs;
       return this._showChromeErrors = pref.getBoolPref("javascript.options.showInConsole");
     }
     catch(ex) {
@@ -206,7 +206,7 @@ let ConsoleView = {
 
   appendInitialItems: function cv_appendInitialItems() {
     let out = {}; // Throwaway references to support 'out' parameters.
-    this._console.getMessageArray(out, {});
+    Services.console.getMessageArray(out, {});
     let messages = out.value;
 
     // In case getMessageArray returns 0-length array as null
@@ -282,7 +282,7 @@ let ConsoleView = {
     resultRange.selectNode(this._evalFrame.contentDocument.documentElement);
     let result = resultRange.toString();
     if (result)
-      this._console.logStringMessage(result);
+      Services.console.logStringMessage(result);
       // or could use appendMessage which doesn't persist
   },
 

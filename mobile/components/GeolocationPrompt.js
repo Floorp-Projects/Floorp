@@ -1,9 +1,9 @@
 const Ci = Components.interfaces;
-const Cc = Components.classes;
 const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const kCountBeforeWeRemember = 5;
 
@@ -15,8 +15,7 @@ GeolocationPrompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIGeolocationPrompt]),
  
   prompt: function(request) {
-    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
-    var result = pm.testExactPermission(request.requestingURI, "geo");
+    var result = Services.perms.testExactPermission(request.requestingURI, "geo");
     
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       request.allow();
@@ -28,7 +27,7 @@ GeolocationPrompt.prototype = {
     }
 
     function setPagePermission(uri, allow) {
-      var prefService = Cc["@mozilla.org/content-pref/service;1"].getService(Ci.nsIContentPrefService);
+      var prefService = Services.prefs;
         
       if (! prefService.hasPref(request.requestingURI, "geo.request.remember"))
         prefService.setPref(request.requestingURI, "geo.request.remember", 0);
@@ -67,8 +66,7 @@ GeolocationPrompt.prototype = {
 
     var notification = notificationBox.getNotificationWithValue("geolocation");
     if (!notification) {
-      var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-      var browserBundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
+      var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
       var buttons = [{
         label: browserBundle.GetStringFromName("geolocation.share"),

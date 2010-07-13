@@ -14,7 +14,7 @@ function waitFor(callback, test, timeout) {
 };
 
 function makeURI(spec) {
-  return gIOService.newURI(spec, null, null);
+  return Services.io.newURI(spec, null, null);
 };
 
 EventUtils.synthesizeString = function synthesizeString(aString, aWindow) {

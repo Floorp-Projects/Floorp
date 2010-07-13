@@ -39,15 +39,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gObserverService",
-  "@mozilla.org/observer-service;1", "nsIObserverService");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gWindowMediator",
-  "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gPrefService",
-  "@mozilla.org/preferences-service;1", "nsIPrefBranch2");
+Cu.import("resource://gre/modules/Services.jsm");
 
 #ifdef MOZ_CRASH_REPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -80,8 +72,7 @@ SessionStore.prototype = {
   
   init: function ss_init() {
     // Get file references
-    let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    this._sessionFile = dirService.get("ProfD", Ci.nsILocalFile);
+    this._sessionFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
     this._sessionFileBackup = this._sessionFile.clone();
     this._sessionFile.append("sessionstore.js");
     this._sessionFileBackup.append("sessionstore.bak");
@@ -98,24 +89,25 @@ SessionStore.prototype = {
     }
 
     try {
-      this._interval = gPrefService.getIntPref("sessionstore.interval");
+      this._interval = Services.prefs.getIntPref("sessionstore.interval");
     } catch (e) {}
   },
   
   observe: function ss_observe(aSubject, aTopic, aData) {
     let self = this;
+    let observerService = Services.obs;
     switch (aTopic) {
       case "app-startup": 
-        gObserverService.addObserver(this, "final-ui-startup", true);
-        gObserverService.addObserver(this, "domwindowopened", true);
-        gObserverService.addObserver(this, "domwindowclosed", true);
-        gObserverService.addObserver(this, "browser-lastwindow-close-granted", true);
-        gObserverService.addObserver(this, "quit-application-requested", true);
-        gObserverService.addObserver(this, "quit-application-granted", true);
-        gObserverService.addObserver(this, "quit-application", true);
+        observerService.addObserver(this, "final-ui-startup", true);
+        observerService.addObserver(this, "domwindowopened", true);
+        observerService.addObserver(this, "domwindowclosed", true);
+        observerService.addObserver(this, "browser-lastwindow-close-granted", true);
+        observerService.addObserver(this, "quit-application-requested", true);
+        observerService.addObserver(this, "quit-application-granted", true);
+        observerService.addObserver(this, "quit-application", true);
         break;
       case "final-ui-startup": 
-        gObserverService.removeObserver(this, "final-ui-startup");
+        observerService.removeObserver(this, "final-ui-startup");
         this.init();
         break;
       case "domwindowopened":
@@ -150,12 +142,12 @@ SessionStore.prototype = {
         // Freeze the data at what we've got (ignoring closing windows)
         this._loadState = STATE_QUITTING;
 
-        gObserverService.removeObserver(this, "domwindowopened");
-        gObserverService.removeObserver(this, "domwindowclosed");
-        gObserverService.removeObserver(this, "browser-lastwindow-close-granted");
-        gObserverService.removeObserver(this, "quit-application-requested");
-        gObserverService.removeObserver(this, "quit-application-granted");
-        gObserverService.removeObserver(this, "quit-application");
+        observerService.removeObserver(this, "domwindowopened");
+        observerService.removeObserver(this, "domwindowclosed");
+        observerService.removeObserver(this, "browser-lastwindow-close-granted");
+        observerService.removeObserver(this, "quit-application-requested");
+        observerService.removeObserver(this, "quit-application-granted");
+        observerService.removeObserver(this, "quit-application");
 
         // Make sure to break our cycle with the save timer
         if (this._saveTimer) {
@@ -352,7 +344,7 @@ SessionStore.prototype = {
   },
 
   _forEachBrowserWindow: function ss_forEachBrowserWindow(aFunc) {
-    let windowsEnum = gWindowMediator.getEnumerator("navigator:browser");
+    let windowsEnum = Services.wm.getEnumerator("navigator:browser");
     while (windowsEnum.hasMoreElements()) {
       let window = windowsEnum.getNext();
       if (window.__SSID && !window.closed)
@@ -363,7 +355,7 @@ SessionStore.prototype = {
   _writeFile: function ss_writeFile(aFile, aData) {
     let stateString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
     stateString.data = aData;
-    gObserverService.notifyObservers(stateString, "sessionstore-state-write", "");
+    Services.obs.notifyObservers(stateString, "sessionstore-state-write", "");
 
     // Don't touch the file if an observer has deleted all state data
     if (!stateString.data)
@@ -381,7 +373,7 @@ SessionStore.prototype = {
     let istream = converter.convertToInputStream(aData);
     NetUtil.asyncCopy(istream, ostream, function(rc) {
       if (Components.isSuccessCode(rc)) {
-        gObserverService.notifyObservers(null, "sessionstore-state-write-complete", "");
+        Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
       }
     });
   },
