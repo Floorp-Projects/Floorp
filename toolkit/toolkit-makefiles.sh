@@ -122,16 +122,11 @@ MAKEFILES_xmlparser="
 MAKEFILES_gfx="
   gfx/Makefile
   gfx/ycbcr/Makefile
-  gfx/idl/Makefile
   gfx/layers/Makefile
-  gfx/public/Makefile
   gfx/src/Makefile
-  gfx/src/psshared/Makefile
   gfx/src/thebes/Makefile
   gfx/tests/Makefile
   gfx/thebes/Makefile
-  gfx/thebes/public/Makefile
-  gfx/thebes/src/Makefile
   gfx/qcms/Makefile
 "
 
@@ -205,6 +200,10 @@ MAKEFILES_xpconnect="
   js/src/xpconnect/tests/Makefile
   js/src/xpconnect/tests/components/Makefile
   js/src/xpconnect/tests/idl/Makefile
+"
+
+MAKEFILES_jsipc="
+  js/ipc/Makefile
 "
 
 MAKEFILES_jsdebugger="
@@ -525,8 +524,6 @@ MAKEFILES_xpcom="
 
 MAKEFILES_xpcom_tests="
   xpcom/tests/Makefile
-  xpcom/tests/dynamic/Makefile
-  xpcom/tests/services/Makefile
   xpcom/tests/windows/Makefile
   xpcom/tests/static-checker/Makefile
 "
@@ -789,6 +786,7 @@ add_makefiles "
   $MAKEFILES_htmlparser
   $MAKEFILES_intl
   $MAKEFILES_xpconnect
+  $MAKEFILES_jsipc
   $MAKEFILES_jsdebugger
   $MAKEFILES_jsctypes
   $MAKEFILES_content

@@ -575,6 +575,37 @@ enum DwarfCFI
     DW_CFA_GNU_negative_offset_extended = 0x2f
   };
 
+// Exception handling 'z' augmentation letters.
+enum DwarfZAugmentationCodes {
+  // If the CFI augmentation string begins with 'z', then the CIE and FDE
+  // have an augmentation data area just before the instructions, whose
+  // contents are determined by the subsequent augmentation letters.
+  DW_Z_augmentation_start = 'z',
+
+  // If this letter is present in a 'z' augmentation string, the CIE
+  // augmentation data includes a pointer encoding, and the FDE
+  // augmentation data includes a language-specific data area pointer,
+  // represented using that encoding.
+  DW_Z_has_LSDA = 'L',
+
+  // If this letter is present in a 'z' augmentation string, the CIE
+  // augmentation data includes a pointer encoding, followed by a pointer
+  // to a personality routine, represented using that encoding.
+  DW_Z_has_personality_routine = 'P',
+
+  // If this letter is present in a 'z' augmentation string, the CIE
+  // augmentation data includes a pointer encoding describing how the FDE's
+  // initial location, address range, and DW_CFA_set_loc operands are
+  // encoded.
+  DW_Z_has_FDE_address_encoding = 'R',
+
+  // If this letter is present in a 'z' augmentation string, then code
+  // addresses covered by FDEs that cite this CIE are signal delivery
+  // trampolines. Return addresses of frames in trampolines should not be
+  // adjusted as described in section 6.4.4 of the DWARF 3 spec.
+  DW_Z_is_signal_trampoline = 'S'
+};
+
 // Exception handling frame description pointer formats, as described
 // by the Linux Standard Base Core Specification 4.0, section 11.5,
 // DWARF Extensions.

@@ -32,9 +32,10 @@
 //
 // Author: Mark Mentovai
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <string>
 #include <vector>
 
@@ -97,6 +98,10 @@ static string StripSeparator(const string &original) {
   string result = original;
   string::size_type position = 0;
   while ((position = result.find(kOutputSeparator, position)) != string::npos) {
+    result.erase(position, 1);
+  }
+  position = 0;
+  while ((position = result.find('\n', position)) != string::npos) {
     result.erase(position, 1);
   }
   return result;

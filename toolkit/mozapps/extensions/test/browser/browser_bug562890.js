@@ -26,16 +26,26 @@ function test() {
   
   open_manager(null, function(aWindow) {
     var addonList = aWindow.document.getElementById("addon-list");
-    var addonItem = addonList.childNodes[0];
+    for (var i = 0; i < addonList.childNodes.length; i++) {
+      var addonItem = addonList.childNodes[i];
+      if (addonItem.hasAttribute("name") &&
+          addonItem.getAttribute("name") == "Test add-on 1")
+        break;
+    }
     var prefsBtn = aWindow.document.getAnonymousElementByAttribute(addonItem,
                                                                    "anonid",
                                                                    "preferences-btn");
     is(prefsBtn.hidden, true, "Prefs button should be hidden for addon with no optionsURL set")
 
-    addonItem = addonList.childNodes[1];
+    for (i = 0; i < addonList.childNodes.length; i++) {
+      addonItem = addonList.childNodes[i];
+      if (addonItem.hasAttribute("name") &&
+          addonItem.getAttribute("name") == "Test add-on 2")
+        break;
+    }
     prefsBtn = aWindow.document.getAnonymousElementByAttribute(addonItem,
-                                                                   "anonid",
-                                                                   "preferences-btn");
+                                                               "anonid",
+                                                               "preferences-btn");
     is(prefsBtn.hidden, false, "Prefs button should be shown for addon with a optionsURL set")
 
     Services.ww.registerNotification(function(aSubject, aTopic, aData) {

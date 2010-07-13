@@ -158,6 +158,20 @@ private:
                                          nsAccEvent *aDescendantAccEvent);
 
   /**
+   * Coalesce text change events caused by sibling hide events.
+   */
+  void CoalesceTextChangeEventsFor(AccHideEvent* aTailEvent,
+                                   AccHideEvent* aThisEvent);
+
+  /**
+   * Create text change event caused by hide event. When a node is hidden or
+   * removed, the text in an ancestor hyper text will lose characters. Create
+   * text change event unless the node is being removed or frame is being
+   * destroyed.
+   */
+  void CreateTextChangeEventFor(AccHideEvent* aEvent);
+
+  /**
    * Indicates whether we're waiting on a refresh notification from our
    * presshell to flush events
    */

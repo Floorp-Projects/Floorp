@@ -81,7 +81,7 @@ interface nsISHistoryInternal: nsISupports
 
   /**
    * Replace the nsISHEntry at a particular index
-   * @param aIndex - The index at which the entry shoud be replaced
+   * @param aIndex - The index at which the entry should be replaced
    * @param aReplaceEntry - The replacement entry for the index.
    */
    void replaceEntry(in long aIndex, in nsISHEntry aReplaceEntry);

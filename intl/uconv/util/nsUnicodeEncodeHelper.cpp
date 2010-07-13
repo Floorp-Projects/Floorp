@@ -152,16 +152,3 @@ nsresult nsUnicodeEncodeHelper::ConvertByMultiTable(
   *aDestLength  = dest - aDest;
   return res;
 }
-
-nsresult nsUnicodeEncodeHelper::FillInfo(PRUint32 *aInfo, uMappingTable  * aMappingTable)
-{
-   uFillInfo((uTable*) aMappingTable, aInfo);
-   return NS_OK;
-}
-
-nsresult nsUnicodeEncodeHelper::FillInfo(PRUint32 *aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable)
-{
-   for (PRInt32 i=0; i<aTableCount; i++) 
-      uFillInfo((uTable*) aMappingTable[i], aInfo);
-   return NS_OK;
-}

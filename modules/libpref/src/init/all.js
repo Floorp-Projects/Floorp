@@ -170,7 +170,7 @@ pref("media.webm.enabled", true);
 pref("media.autoplay.enabled", true);
 
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
-// See eCMSMode in gfx/thebes/public/gfxPlatform.h
+// See eCMSMode in gfx/thebes/gfxPlatform.h
 pref("gfx.color_management.mode", 2);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
@@ -694,7 +694,8 @@ pref("network.http.redirection-limit", 20);
 
 // Enable http compression: comment this out in case of problems with 1.1
 // NOTE: support for "compress" has been disabled per bug 196406.
-pref("network.http.accept-encoding" ,"gzip,deflate");
+// NOTE: separate values with comma+space (", "): see bug 576033
+pref("network.http.accept-encoding", "gzip, deflate");
 
 pref("network.http.pipelining"      , false);
 pref("network.http.pipelining.ssl"  , false); // disable pipelining over SSL
@@ -3116,6 +3117,11 @@ pref("image.mem.discardable", false);
 // Prevents images from automatically being decoded on load, instead allowing
 // them to be decoded on demand when they are drawn.
 pref("image.mem.decodeondraw", false);
+
+// Minimum timeout for image discarding (in milliseconds). The actual time in
+// which an image must inactive for it to be discarded will vary between this
+// value and twice this value.
+pref("image.mem.min_discard_timeout_ms", 10000);
 
 // WebGL prefs
 pref("webgl.enabled_for_all_sites", false);

@@ -44,15 +44,12 @@
 #include "nsISupports.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
-#include "nsICharRepresentable.h"
 #include "prmem.h"
 #include "nsReadableUtils.h"
 
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
-
-//#define TEST_IS_REPRESENTABLE
 
 /**
  * Test program for the Unicode Converters.
@@ -218,20 +215,6 @@ nsresult testEncoder(nsIUnicodeEncoder * aEnc,
       return NS_ERROR_UNEXPECTED;
   }
   
-#ifdef TEST_IS_REPRESENTABLE
-  nsICharRepresentable* rp = nsnull;
-  res = aEnc->QueryInterface(NS_GET_IID(nsICharRepresentable),(void**) &rp);
-  if(NS_SUCCEEDED(res))  {
-    PRUint32 *info= (PRUint32*)PR_Calloc((0x10000 >> 5), 4);
-    rp->FillInfo(info);
-    for(int i=0;i< 0x10000;i++)
-    {
-       if(IS_REPRESENTABLE(info, i)) 
-           printf("%4x\n", i);
-    }
-  }
-#endif
-
   return NS_OK;
 }
 

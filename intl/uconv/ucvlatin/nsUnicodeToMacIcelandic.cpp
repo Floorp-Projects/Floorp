@@ -45,7 +45,7 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "macicela.uf"
 };
 
-NS_METHOD
+nsresult
 nsUnicodeToMacIcelandicConstructor(nsISupports *aOuter, REFNSIID aIID,
                                    void **aResult) 
 {

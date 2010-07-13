@@ -687,6 +687,7 @@
       <xul:vbox flex="1" class="fade">
         <xul:hbox class="name-container">
           <xul:label anonid="name" class="name" xbl:inherits="value=name"/>
+          <xul:label anonid="version" class="version"/>
           <xul:label class="disabled-postfix" value="&addon.disabled.postfix;"/>
         </xul:hbox>
         <xul:label anonid="creator" class="creator"/>
@@ -700,8 +701,8 @@
             <xul:label anonid="incompatible-warning"/>
           </xul:hbox>
           <xul:hbox>
-            <xul:label value="&rating.yourRating.label;"/>
-            <xul:label class="meta-rating" userrating="-1" showrating="user"/>
+            <xul:label value="&rating.label;"/>
+            <xul:label class="meta-rating" userrating="-1" showrating="average"/>
           </xul:hbox>
           <xul:label anonid="date-updated" unknown="&addon.unknownDate;"/>
           <xul:vbox anonid="extra-details" class="extra-details">
@@ -783,6 +784,8 @@
         if (iconURL)
           this._icon.src = iconURL;
 
+        this._version.value = this.mAddon.version;
+
         var creator = this.mAddon.creator;
         var creatorURL = this.mAddon.creatorURL;
         // XXxunf api
@@ -823,6 +826,9 @@
       <field name="_homepage">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "homepage");
+      </field>
+      <field name="_version">
+        document.getAnonymousElementByAttribute(this, "anonid", "version");
       </field>
       <field name="_icon">
         document.getAnonymousElementByAttribute(this, "anonid", "icon");
@@ -1191,7 +1197,7 @@
             } else {
               var url = Components.classes["@mozilla.org/network/standard-url;1"]
                                   .createInstance(Components.interfaces.nsIStandardURL);
-              url.init(url.URLTYPE_STANDARD, 80, this.mInstall.sourceURL,
+              url.init(url.URLTYPE_STANDARD, 80, this.mInstall.sourceURI.spec,
                        null, null);
               url.QueryInterface(Components.interfaces.nsIURL);
               this._name.value = url.fileName;

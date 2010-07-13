@@ -22,12 +22,18 @@ tabbrowser {
 
 .tabbrowser-tab {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
+}
+
+.tabbrowser-tab:not([pinned]) {
   -moz-box-flex: 100;
+  max-width: 250px;
+  min-width: 100px;
+  width: 0;
 }
 
 .tabbrowser-tab:not([fadein]) {
-  max-width: 1px !important;
-  min-width: 1px !important;
+  max-width: 1px;
+  min-width: 1px;
 }
 
 .tabbrowser-tab[fadein]:not([pinned]) {
@@ -48,9 +54,6 @@ tabbrowser {
 
 .tabbrowser-tab[pinned] {
   position: fixed;
-  -moz-box-flex: 0;
-  min-width: 0 !important;
-  max-width: none !important;
 }
 
 .tabbrowser-tab[pinned] > .tab-text {
@@ -80,6 +83,12 @@ toolbar[printpreview="true"] {
 #navigator-toolbox[tabsontop="true"] > #TabsToolbar {
   -moz-box-ordinal-group: 10;
 }
+
+%ifdef MENUBAR_CAN_AUTOHIDE
+#main-window[inFullscreen] > #appmenu-button-container {
+  display: none;
+}
+%endif
 
 toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
@@ -201,7 +210,8 @@ toolbarbutton.bookmark-item {
 
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide="true"]) ~ #nav-bar > #bookmarks-menu-button-container,
-#toolbar-menubar:not([autohide="true"]) ~ toolbar > #personal-bookmarks > #bookmarks-menu-button {
+#toolbar-menubar:not([autohide="true"]) ~ toolbar > #personal-bookmarks > #bookmarks-menu-button,
+#toolbar-menubar:not([autohide="true"]) > #personal-bookmarks > #bookmarks-menu-button {
   display: none;
 }
 %endif
@@ -251,13 +261,12 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 /*  Full Screen UI */
+
 #fullscr-toggler {
-  display: none;
-  min-height: 5px;
-  height: 5px;
+  height: 1px;
+  background: black;
 }
 
-#navigator-toolbox[inFullscreen="true"] > #fullscr-toggler,
 #nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-icon {
   display: -moz-box;
 }
@@ -323,6 +332,7 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: none;
 }
 
-#notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon {
+#notification-popup-box[anchorid="geo-notification-icon"] > #geo-notification-icon,
+#notification-popup-box[anchorid="addons-notification-icon"] > #addons-notification-icon {
   display: -moz-box;
 }

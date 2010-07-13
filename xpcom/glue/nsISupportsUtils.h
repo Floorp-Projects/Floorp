@@ -62,27 +62,6 @@
 #endif
 
 /**
- * Macro for instantiating a new object that implements nsISupports.
- * Note that you can only use this if you adhere to the no arguments
- * constructor com policy (which you really should!).
- * @param _result Where the new instance pointer is stored
- * @param _type The type of object to call "new" with.
- */
-#define NS_NEWXPCOM(_result,_type)                                            \
-  PR_BEGIN_MACRO                                                              \
-    _result = new _type();                                                    \
-  PR_END_MACRO
-
-/**
- * Macro for deleting an object that implements nsISupports.
- * @param _ptr The object to delete.
- */
-#define NS_DELETEXPCOM(_ptr)                                                  \
-  PR_BEGIN_MACRO                                                              \
-    delete (_ptr);                                                            \
-  PR_END_MACRO
-
-/**
  * Macro for adding a reference to an interface.
  * @param _ptr The interface pointer.
  */

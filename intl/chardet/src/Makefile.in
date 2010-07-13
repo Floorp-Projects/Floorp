@@ -53,9 +53,6 @@ LIBXUL_LIBRARY  = 1
 
 CPPSRCS		= \
 		nsObserverBase.cpp \
-		nsXMLEncodingObserver.cpp \
-		nsMetaCharsetObserver.cpp \
-		nsDetectionAdaptor.cpp \
 		nsDebugDetector.cpp \
 		nsCyrillicDetector.cpp \
 		nsDocumentCharsetInfo.cpp \

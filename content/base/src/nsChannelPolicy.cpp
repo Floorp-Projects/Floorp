@@ -37,6 +37,7 @@
 #include "nsChannelPolicy.h"
 
 nsChannelPolicy::nsChannelPolicy()
+  : mLoadType(0)
 {
 }
 

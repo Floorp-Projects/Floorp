@@ -72,7 +72,6 @@ protected:
   // Subclassing of nsIUnicodeEncoder class [declaration]
 
   NS_IMETHOD Reset() {mBOM = 0; mHighSurrogate = 0; return NS_OK;}
-  NS_IMETHOD FillInfo(PRUint32* aInfo);
   NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
                                     nsIUnicharEncoder * aEncoder, 
                                     PRUnichar aChar) 

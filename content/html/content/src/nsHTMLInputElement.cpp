@@ -3229,12 +3229,6 @@ nsHTMLInputElement::IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRI
     return PR_FALSE;
   }
 
-  // We need to set tabindex to -1 if we're not tabbable
-  if (!IsSingleLineTextControl(PR_FALSE) &&
-      !(sTabFocusModel & eTabFocus_formElementsMask)) {
-    *aTabIndex = -1;
-  }
-
   if (mType != NS_FORM_INPUT_RADIO) {
     *aIsFocusable = defaultFocusable;
     return PR_FALSE;

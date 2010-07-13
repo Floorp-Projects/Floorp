@@ -46,6 +46,7 @@
 #include "nsScriptableUConv.h"
 #include "nsIStringStream.h"
 #include "nsCRT.h"
+#include "nsComponentManagerUtils.h"
 
 #include "nsIPlatformCharset.h"
 

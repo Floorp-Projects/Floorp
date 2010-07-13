@@ -1796,15 +1796,6 @@ VisitGlobalSlots(Visitor &visitor, JSContext *cx, JSObject *globalObj,
     }
 }
 
-template <typename Visitor>
-static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-VisitGlobalSlots(Visitor &visitor, JSContext *cx, TreeFragment *f)
-{
-    JSObject* globalObj = f->globalObj();
-    SlotList& gslots = *f->globalSlots;
-    VisitGlobalSlots(visitor, cx, globalObj, gslots.length(), gslots.data());
-}
-
 class AdjustCallerTypeVisitor;
 
 template <typename Visitor>

@@ -39,7 +39,6 @@
  * Provides information about global history to gecko. 
  *
  * @note  This interface replaces and deprecates nsIGlobalHistory.
- * @status UNDER_REVIEW
  */
 
 #include "nsISupports.idl"

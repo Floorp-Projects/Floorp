@@ -75,7 +75,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mBuildCaret(aBuildCaret),
       mEventDelivery(aIsForEvents),
       mIsAtRootOfPseudoStackingContext(PR_FALSE),
-      mPaintAllFrames(PR_FALSE),
+      mSelectedFramesOnly(PR_FALSE),
       mAccurateVisibleRegions(PR_FALSE),
       mInTransform(PR_FALSE),
       mSyncDecodeImages(PR_FALSE),
@@ -431,7 +431,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     nsIFrame* referenceFrame = aBuilder->ReferenceFrame();
     NS_ASSERTION(referenceFrame == nsLayoutUtils::GetDisplayRootFrame(referenceFrame),
                  "Reference frame must be a display root for us to use the layer manager");
-    nsIWidget* window = referenceFrame->GetWindow();
+    nsIWidget* window = referenceFrame->GetNearestWidget();
     if (window) {
       layerManager = window->GetLayerManager();
     }

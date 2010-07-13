@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait" onload="run()">
+  <script type="application/javascript"><![CDATA[
+
+  function run() {
+    var b = document.getElementById("B");
+    getComputedStyle(b, "").width; // flush
+    b.style.MozBoxOrdinalGroup = "";
+    document.documentElement.removeAttribute("class");
+  }
+
+  ]]></script>
+  <label id="C" value="C" style="-moz-box-ordinal-group: 2" />
+  <label id="A" value="A" />
+  <label id="B" value="B" style="-moz-box-ordinal-group: 2" />
+</window>

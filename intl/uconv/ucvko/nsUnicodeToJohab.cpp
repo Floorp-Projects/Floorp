@@ -60,7 +60,7 @@ static const uScanClassID g_JohabScanClassTable[4] =  {
 //----------------------------------------------------------------------
 // Class nsUnicodeToJohab [implementation]
 
-NS_METHOD
+nsresult
 nsUnicodeToJohabConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult) {
 
