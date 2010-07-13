@@ -3593,7 +3593,10 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                 ssm->GetCxSubjectPrincipalAndFrame(cx, &fp);
             PRBool system;
             ssm->IsSystemPrincipal(subjectPrincipal, &system);
-            NS_ASSERTION(!fp || system, "Bad caller!");
+            if (fp && !system) {
+                ssm->IsCapabilityEnabled("UniversalXPConnect", &system);
+                NS_ASSERTION(system, "Bad caller!");
+            }
         }
     }
 #endif

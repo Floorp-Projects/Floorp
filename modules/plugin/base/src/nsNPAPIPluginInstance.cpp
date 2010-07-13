@@ -876,7 +876,6 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
     mWantsAllNetworkStreams(PR_FALSE),
     mInPluginInitCall(PR_FALSE),
     mLibrary(aLibrary),
-    mStreamListeners(nsnull),
     mMIMEType(nsnull),
     mOwner(nsnull),
     mCurrentPluginEvent(nsnull)
@@ -1093,9 +1092,6 @@ nsNPAPIPluginInstance::InitializePlugin()
     }
   }
 
-  // XXX Note that the NPPluginType_* enums were crafted to be
-  // backward compatible...
-  
   PRInt32       mode;
   const char*   mimetype;
   NPError       error = NPERR_GENERIC_ERROR;
