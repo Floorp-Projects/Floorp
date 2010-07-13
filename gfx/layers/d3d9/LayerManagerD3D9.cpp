@@ -323,7 +323,7 @@ LayerManagerD3D9::Render()
   }
   SetupPipeline();
   nsIntRect rect;
-  mWidget->GetBounds(rect);
+  mWidget->GetClientBounds(rect);
 
   mDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0xffffffff, 0, 0);
 
@@ -370,7 +370,7 @@ void
 LayerManagerD3D9::SetupPipeline()
 {
   nsIntRect rect;
-  mWidget->GetBounds(rect);
+  mWidget->GetClientBounds(rect);
 
   float viewMatrix[4][4];
   /*
@@ -401,7 +401,7 @@ LayerManagerD3D9::SetupBackBuffer()
 
   D3DSURFACE_DESC desc;
   nsIntRect rect;
-  mWidget->GetBounds(rect);
+  mWidget->GetClientBounds(rect);
   backBuffer->GetDesc(&desc);
 
   HRESULT hr = mDevice->TestCooperativeLevel();
