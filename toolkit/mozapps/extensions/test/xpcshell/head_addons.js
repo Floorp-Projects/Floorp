@@ -440,6 +440,19 @@ function getExpectedEvent(aId) {
 }
 
 const AddonListener = {
+  onPropertyChanged: function(aAddon, aProperties) {
+    let [event, properties] = getExpectedEvent(aAddon.id);
+    do_check_eq("onPropertyChanged", event);
+    do_check_eq(aProperties.length, properties.length);
+    properties.forEach(function(aProperty) {
+      // Only test that the expected properties are listed, having additional
+      // properties listed is not necessary a problem
+      if (aProperties.indexOf(aProperty) != -1)
+        ok(false, "Did not see property change for " + aProperty);
+    });
+    return check_test_completed(arguments);
+  },
+
   onEnabling: function(aAddon, aRequiresRestart) {
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onEnabling", event);

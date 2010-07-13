@@ -91,6 +91,17 @@ function run_test_1() {
     do_check_eq(a1.version, "1.0");
     do_check_true(a1.applyBackgroundUpdates);
     do_check_eq(a1.releaseNotesURI, null);
+
+    a1.applyBackgroundUpdates = true;
+
+    prepare_test({
+      "addon1@tests.mozilla.org": [
+        ["onPropertyChanged", ["applyBackgroundUpdates"]]
+      ]
+    });
+    a1.applyBackgroundUpdates = false;
+    check_test_completed();
+
     a1.applyBackgroundUpdates = false;
 
     prepare_test({}, [
