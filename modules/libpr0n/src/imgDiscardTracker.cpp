@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * ***** BEGIN LICENSE BLOCK *****
+   ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -14,9 +14,8 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIServiceManager.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch2.h"
+
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
 #include "imgContainer.h"
@@ -43,8 +46,7 @@
 
 static PRBool sInitialized = PR_FALSE;
 static PRBool sTimerOn = PR_FALSE;
-/* TODO - don't hardcode. See bug 478398. */
-static PRUint32 sMinDiscardTimeoutMs = 10000;
+static PRUint32 sMinDiscardTimeoutMs = 10000; /* Default if pref unreadable. */
 static nsITimer *sTimer = nsnull;
 static struct imgDiscardTrackerNode sHead, sSentinel, sTail;
 
@@ -129,6 +131,9 @@ imgDiscardTracker::Initialize()
   sSentinel.prev = &sHead;
   sSentinel.next = &sTail;
 
+  // Load the timeout
+  ReloadTimeout();
+
   // Create and start the timer
   nsCOMPtr<nsITimer> t = do_CreateInstance("@mozilla.org/timer;1");
   NS_ENSURE_TRUE(t, NS_ERROR_OUT_OF_MEMORY);
@@ -152,6 +157,37 @@ imgDiscardTracker::Shutdown()
     sTimer->Cancel();
     NS_RELEASE(sTimer);
     sTimer = nsnull;
+  }
+}
+
+/**
+ * Sets the minimum timeout.
+ */
+void
+imgDiscardTracker::ReloadTimeout()
+{
+  nsresult rv;
+
+  // read the timeout pref
+  PRInt32 discardTimeout;
+  nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  rv = branch->GetIntPref(DISCARD_TIMEOUT_PREF, &discardTimeout);
+
+  // If we got something bogus, return
+  if (!NS_SUCCEEDED(rv) || discardTimeout <= 0)
+    return;
+
+  // If the value didn't change, return
+  if ((PRUint32) discardTimeout == sMinDiscardTimeoutMs)
+    return;
+
+  // Update the value
+  sMinDiscardTimeoutMs = (PRUint32) discardTimeout;
+
+  // If the timer's on, restart the clock to make changes take effect
+  if (sTimerOn) {
+    TimerOff();
+    TimerOn();
   }
 }
 
