@@ -708,12 +708,10 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
                     "        return JS_TRUE;\n"
                     "      }\n"
                     "    }\n"
-                    "    qsObjectHelper helper(ToSupports(result));\n"
-                    "    helper.SetNode(result);\n"
-                    "    helper.SetCanonical(ToCanonicalSupports(result));\n"
                     "    // After this point do not use 'result'!\n"
+                    "    qsObjectHelper helper(result, cache);\n"
                     "    return xpc_qsXPCOMObjectToJsval(lccx, "
-                    "&helper, cache, &NS_GET_IID(%s), &interfaces[k_%s], %s);\n"
+                    "helper, &NS_GET_IID(%s), &interfaces[k_%s], %s);\n"
                     % (jsvalPtr, type.name, type.name, jsvalPtr))
             return
 
@@ -1250,12 +1248,10 @@ def writeTraceableResultConv(f, type):
                     "        return wrapper;\n"
                     "      }\n"
                     "    }\n"
-                    "    qsObjectHelper helper(ToSupports(result));\n"
-                    "    helper.SetNode(result);\n"
-                    "    helper.SetCanonical(ToCanonicalSupports(result));\n"
                     "    // After this point do not use 'result'!\n"
+                    "    qsObjectHelper helper(result, cache);\n"
                     "    JSBool ok = xpc_qsXPCOMObjectToJsval(lccx, "
-                    "&helper, cache, &NS_GET_IID(%s), &interfaces[k_%s], "
+                    "helper, &NS_GET_IID(%s), &interfaces[k_%s], "
                     "&vp.array[0]);\n"
                     % (type.name, type.name))
         f.write("    if (!ok) {\n");
