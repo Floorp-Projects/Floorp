@@ -6202,6 +6202,7 @@ js_Clear(JSContext *cx, JSObject *obj)
     JS_UNLOCK_OBJ(cx, obj);
 }
 
+#ifdef DEBUG
 /* On failure the function unlocks the object. */
 static bool
 ReservedSlotIndexOK(JSContext *cx, JSObject *obj, JSClass *clasp,
@@ -6220,6 +6221,7 @@ ReservedSlotIndexOK(JSContext *cx, JSObject *obj, JSClass *clasp,
     }
     return true;
 }
+#endif
 
 bool
 js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
@@ -6230,7 +6232,9 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
     }
 
     JSClass *clasp = obj->getClass();
+#ifdef DEBUG
     uint32 limit = JSCLASS_RESERVED_SLOTS(clasp);
+#endif
 
     JS_LOCK_OBJ(cx, obj);
     JS_ASSERT(index < limit || ReservedSlotIndexOK(cx, obj, clasp, index, limit));

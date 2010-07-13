@@ -82,6 +82,7 @@
 #include "CSSCalc.h"
 
 using namespace mozilla::dom;
+namespace css = mozilla::css;
 
 #define NS_SET_IMAGE_REQUEST(method_, context_, request_)                   \
   if ((context_)->PresContext()->IsDynamic()) {                               \
@@ -179,8 +180,8 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
                               PRBool aUseUserFontSet,
                               PRBool& aCanStoreInRuleTree);
 
-struct CalcLengthCalcOps : public mozilla::css::BasicCoordCalcOps,
-                           public mozilla::css::NumbersAlreadyNormalizedOps
+struct CalcLengthCalcOps : public css::BasicCoordCalcOps,
+                           public css::NumbersAlreadyNormalizedOps
 {
   // All of the parameters to CalcLengthWith except aValue.
   const nscoord mFontSize;
@@ -327,7 +328,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       CalcLengthCalcOps ops(aFontSize, aStyleFont, aStyleContext, aPresContext,
                             aUseProvidedRootEmSize, aUseUserFontSet,
                             aCanStoreInRuleTree);
-      return mozilla::css::ComputeCalc(aValue, ops);
+      return css::ComputeCalc(aValue, ops);
     }
     default:
       NS_NOTREACHED("unexpected unit");
@@ -368,6 +369,212 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
                         PR_TRUE, PR_FALSE, canStoreInRuleTree);
 }
 
+struct SpecifiedToComputedCalcOps : public css::NumbersAlreadyNormalizedOps
+{
+  // FIXME (perf): Is there too much copying as a result of returning
+  // nsStyleCoord objects?
+  typedef nsStyleCoord result_type;
+
+  nsStyleContext* const mStyleContext;
+  nsPresContext* const mPresContext;
+  PRBool& mCanStoreInRuleTree;
+
+  SpecifiedToComputedCalcOps(nsStyleContext* aStyleContext,
+                             nsPresContext* aPresContext,
+                             PRBool& aCanStoreInRuleTree)
+    : mStyleContext(aStyleContext),
+      mPresContext(aPresContext),
+      mCanStoreInRuleTree(aCanStoreInRuleTree)
+  {
+  }
+
+  result_type
+  MergeAdditive(nsCSSUnit aCalcFunction,
+                result_type aValue1, result_type aValue2)
+  {
+    nsStyleUnit unit1 = aValue1.GetUnit();
+    nsStyleUnit unit2 = aValue2.GetUnit();
+    NS_ABORT_IF_FALSE(unit1 == eStyleUnit_Coord ||
+                      unit1 == eStyleUnit_Percent ||
+                      aValue1.IsCalcUnit(),
+                      "unexpected unit");
+    NS_ABORT_IF_FALSE(unit2 == eStyleUnit_Coord ||
+                      unit2 == eStyleUnit_Percent ||
+                      aValue2.IsCalcUnit(),
+                      "unexpected unit");
+    nsStyleCoord result;
+    if (unit1 == unit2 && !aValue1.IsCalcUnit()) {
+      // Merge nodes that we don't need to keep separate.
+      if (unit1 == eStyleUnit_Percent) {
+        css::BasicFloatCalcOps ops;
+        result.SetPercentValue(ops.MergeAdditive(aCalcFunction,
+                                                 aValue1.GetPercentValue(),
+                                                 aValue2.GetPercentValue()));
+      } else {
+        css::BasicCoordCalcOps ops;
+        result.SetCoordValue(ops.MergeAdditive(aCalcFunction,
+                                               aValue1.GetCoordValue(),
+                                               aValue2.GetCoordValue()));
+      }
+    } else {
+      nsStyleCoord::Array *array =
+        nsStyleCoord::Array::Create(mStyleContext, mCanStoreInRuleTree, 2);
+      array->Item(0) = aValue1;
+      array->Item(1) = aValue2;
+      result.SetArrayValue(array, css::ConvertCalcUnit(aCalcFunction));
+    }
+    return result;
+  }
+
+  result_type
+  MergeMultiplicativeL(nsCSSUnit aCalcFunction,
+                       float aValue1, result_type aValue2)
+  {
+    nsStyleCoord result;
+    switch (aValue2.GetUnit()) {
+      case eStyleUnit_Percent: {
+        css::BasicFloatCalcOps ops;
+        result.SetPercentValue(ops.MergeMultiplicativeL(
+          aCalcFunction, aValue1, aValue2.GetPercentValue()));
+        break;
+      }
+      case eStyleUnit_Coord: {
+        css::BasicCoordCalcOps ops;
+        result.SetCoordValue(ops.MergeMultiplicativeL(
+          aCalcFunction, aValue1, aValue2.GetCoordValue()));
+        break;
+      }
+      default:
+        NS_ABORT_IF_FALSE(aValue2.IsCalcUnit(), "unexpected unit");
+        nsStyleCoord::Array *array =
+          nsStyleCoord::Array::Create(mStyleContext, mCanStoreInRuleTree, 2);
+        array->Item(0).SetFactorValue(aValue1);
+        array->Item(1) = aValue2;
+        result.SetArrayValue(array, css::ConvertCalcUnit(aCalcFunction));
+        break;
+    }
+    return result;
+  }
+
+  result_type
+  MergeMultiplicativeR(nsCSSUnit aCalcFunction,
+                       result_type aValue1, float aValue2)
+  {
+    nsStyleCoord result;
+    switch (aValue1.GetUnit()) {
+      case eStyleUnit_Percent: {
+        css::BasicFloatCalcOps ops;
+        result.SetPercentValue(ops.MergeMultiplicativeR(
+          aCalcFunction, aValue1.GetPercentValue(), aValue2));
+        break;
+      }
+      case eStyleUnit_Coord: {
+        css::BasicCoordCalcOps ops;
+        result.SetCoordValue(ops.MergeMultiplicativeR(
+          aCalcFunction, aValue1.GetCoordValue(), aValue2));
+        break;
+      }
+      default:
+        NS_ABORT_IF_FALSE(aValue1.IsCalcUnit(), "unexpected unit");
+        nsStyleCoord::Array *array =
+          nsStyleCoord::Array::Create(mStyleContext, mCanStoreInRuleTree, 2);
+        array->Item(0) = aValue1;
+        array->Item(1).SetFactorValue(aValue2);
+        result.SetArrayValue(array, css::ConvertCalcUnit(aCalcFunction));
+        break;
+    }
+    return result;
+  }
+
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
+  {
+    nsStyleCoord result;
+    if (aValue.GetUnit() == eCSSUnit_Percent) {
+      result.SetPercentValue(aValue.GetPercentValue());
+    } else {
+      result.SetCoordValue(CalcLength(aValue, mStyleContext, mPresContext,
+                                      mCanStoreInRuleTree));
+    }
+    return result;
+  }
+};
+
+static void
+SpecifiedCalcToComputedCalc(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
+                            nsStyleContext* aStyleContext,
+                            PRBool& aCanStoreInRuleTree)
+{
+  SpecifiedToComputedCalcOps ops(aStyleContext, aStyleContext->PresContext(),
+                                 aCanStoreInRuleTree);
+  aCoord = ComputeCalc(aValue, ops);
+}
+
+struct ComputeComputedCalcCalcOps : public css::BasicCoordCalcOps
+{
+  typedef nsStyleCoord input_type;
+  typedef nsStyleCoord::Array input_array_type;
+
+  static nsCSSUnit GetUnit(const nsStyleCoord& aValue)
+  {
+    if (aValue.IsCalcUnit()) {
+      return css::ConvertCalcUnit(aValue.GetUnit());
+    }
+    return eCSSUnit_Null;
+  }
+
+  const nscoord mPercentageBasis;
+
+  ComputeComputedCalcCalcOps(nscoord aPercentageBasis)
+    : mPercentageBasis(aPercentageBasis)
+  {
+  }
+
+  result_type ComputeLeafValue(const nsStyleCoord& aValue)
+  {
+    nscoord result;
+    if (aValue.GetUnit() == eStyleUnit_Percent) {
+      result = NSCoordSaturatingMultiply(mPercentageBasis,
+                                         aValue.GetPercentValue());
+    } else {
+      result = aValue.GetCoordValue();
+    }
+    return result;
+  }
+
+  float ComputeNumber(const nsStyleCoord& aValue)
+  {
+    NS_ABORT_IF_FALSE(PR_FALSE, "SpecifiedToComputedCalcOps should not "
+                                "leave numbers in structure");
+    return 0.0f;
+  }
+};
+
+// This is our public API for handling calc() expressions that involve
+// percentages.
+/* static */ nscoord
+nsRuleNode::ComputeComputedCalc(const nsStyleCoord& aValue,
+                                nscoord aPercentageBasis)
+{
+  ComputeComputedCalcCalcOps ops(aPercentageBasis);
+  return css::ComputeCalc(aValue, ops);
+}
+
+/* static */ nscoord
+nsRuleNode::ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
+                                    nscoord aPercentageBasis)
+{
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_Coord:
+      return aCoord.GetCoordValue();
+    case eStyleUnit_Percent:
+      return NSCoordSaturatingMultiply(aPercentageBasis,
+                                       aCoord.GetPercentValue());
+    default:
+      NS_ABORT_IF_FALSE(aCoord.IsCalcUnit(), "unexpected unit");
+      return nsRuleNode::ComputeComputedCalc(aCoord, aPercentageBasis);
+  }
+}
+
 #define SETCOORD_NORMAL                 0x01   // N
 #define SETCOORD_AUTO                   0x02   // A
 #define SETCOORD_INHERIT                0x04   // H
@@ -384,6 +591,7 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
 #define SETCOORD_INITIAL_HALF           0x2000
 #define SETCOORD_CALC_LENGTH_ONLY       0x4000
 #define SETCOORD_CALC_CLAMP_NONNEGATIVE 0x8000 // modifier for CALC_LENGTH_ONLY
+#define SETCOORD_STORE_CALC             0x00010000
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -477,6 +685,19 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   else if (((aMask & SETCOORD_INITIAL_HALF) != 0) &&
            (aValue.GetUnit() == eCSSUnit_Initial)) {
     aCoord.SetPercentValue(0.5f);
+  }
+  else if (((aMask & SETCOORD_STORE_CALC) != 0) &&
+           (aValue.IsCalcUnit())) {
+    if (aValue.GetUnit() == eCSSUnit_Calc) {
+      // Don't copy the extra Calc node at top-level.
+      nsCSSValue::Array *array = aValue.GetArrayValue();
+      NS_ABORT_IF_FALSE(array->Count() == 1, "unexpected count");
+      SpecifiedCalcToComputedCalc(array->Item(0), aCoord, aStyleContext,
+                                  aCanStoreInRuleTree);
+    } else {
+      SpecifiedCalcToComputedCalc(aValue, aCoord, aStyleContext,
+                                  aCanStoreInRuleTree);
+    }
   }
   else {
     result = PR_FALSE;  // didn't set anything
@@ -2654,8 +2875,8 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
 }
 #endif
 
-struct SetFontSizeCalcOps : public mozilla::css::BasicCoordCalcOps,
-                            public mozilla::css::NumbersAlreadyNormalizedOps
+struct SetFontSizeCalcOps : public css::BasicCoordCalcOps,
+                            public css::NumbersAlreadyNormalizedOps
 {
   // The parameters beyond aValue that we need for CalcLengthWith.
   const nscoord mParentSize;
@@ -2771,7 +2992,7 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
            aFontData.mSize.IsCalcUnit()) {
     SetFontSizeCalcOps ops(aParentSize, aParentFont, aPresContext, aAtRoot,
                            aCanStoreInRuleTree);
-    *aSize = mozilla::css::ComputeCalc(aFontData.mSize, ops);
+    *aSize = css::ComputeCalc(aFontData.mSize, ops);
     if (*aSize < 0) {
       NS_ABORT_IF_FALSE(aFontData.mSize.IsCalcUnit(),
                         "negative lengths and percents should be rejected "
@@ -3676,38 +3897,6 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
   COMPUTE_END_RESET(UIReset, ui)
 }
 
-/* Given a -moz-transform token stream, accumulates them into an
- * nsStyleTransformMatrix
- *
- * @param aList The nsCSSValueList of arrays to read into transform functions.
- * @param aContext The style context to use for unit conversion.
- * @param aPresContext The presentation context to use for unit conversion
- * @param aCanStoreInRuleTree This is set to PR_FALSE if the value cannot be stored in the rule tree.
- * @return An nsStyleTransformMatrix corresponding to the net transform.
- */
-static nsStyleTransformMatrix ReadTransforms(const nsCSSValueList* aList,
-                                             nsStyleContext* aContext,
-                                             nsPresContext* aPresContext,
-                                             PRBool &aCanStoreInRuleTree)
-{
-  nsStyleTransformMatrix result;
-
-  for (const nsCSSValueList* curr = aList; curr != nsnull; curr = curr->mNext) {
-    const nsCSSValue &currElem = curr->mValue;
-    NS_ASSERTION(currElem.GetUnit() == eCSSUnit_Function,
-                 "Stream should consist solely of functions!");
-    NS_ASSERTION(currElem.GetArrayValue()->Count() >= 1,
-                 "Incoming function is too short!");
-
-    /* Read in a single transform matrix, then accumulate it with the total. */
-    nsStyleTransformMatrix currMatrix;
-    currMatrix.SetToTransformFunction(currElem.GetArrayValue(), aContext,
-                                      aPresContext, aCanStoreInRuleTree);
-    result *= currMatrix;
-  }
-  return result;
-}
-
 // A simple helper function to get the length of a nsCSSValueList
 inline static PRUint32 GetValueListLength(nsCSSValueList* aValueList)
 {
@@ -4238,31 +4427,28 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
      */
 
     /* If it's 'none,' indicate that there are no transforms. */
-    if (head->mValue.GetUnit() == eCSSUnit_None)
-      display->mTransformPresent = PR_FALSE;
-
-    /* If we need to inherit, do so by making a full deep-copy. */
+    if (head->mValue.GetUnit() == eCSSUnit_None) {
+      display->mSpecifiedTransform = nsnull;
+    }
+    /* If we need to inherit, copy the pointer owned by a style rule */
     else if (head->mValue.GetUnit() == eCSSUnit_Inherit)  {
-      display->mTransformPresent = parentDisplay->mTransformPresent;
-      if (parentDisplay->mTransformPresent)
+      display->mSpecifiedTransform = parentDisplay->mSpecifiedTransform;
+      if (parentDisplay->mSpecifiedTransform)
         display->mTransform = parentDisplay->mTransform;
       canStoreInRuleTree = PR_FALSE;
     }
     /* If it's 'initial', then we reset to empty. */
-    else if (head->mValue.GetUnit() == eCSSUnit_Initial)
-      display->mTransformPresent = PR_FALSE;
-
+    else if (head->mValue.GetUnit() == eCSSUnit_Initial) {
+      display->mSpecifiedTransform = nsnull;
+    }
     /* Otherwise, we are looking at a list of CSS tokens.  We'll read each of
      * them in as an array of nsTransformFunction objects, then will accumulate
      * them all together to form the final transform matrix.
      */
     else {
-
-      display->mTransform =
-        ReadTransforms(head, aContext, mPresContext, canStoreInRuleTree);
-
-      /* Make sure to say that this data is valid! */
-      display->mTransformPresent = PR_TRUE;
+      display->mSpecifiedTransform = head; // weak pointer, owned by rule
+      display->mTransform = nsStyleTransformMatrix::ReadTransforms(head,
+                              aContext, mPresContext, canStoreInRuleTree);
     }
   }
 

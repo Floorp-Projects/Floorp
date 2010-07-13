@@ -37,10 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 DIR_ATOM(sCurrentProcess, NS_XPCOM_CURRENT_PROCESS_DIR)
-DIR_ATOM(sComponentRegistry, NS_XPCOM_COMPONENT_REGISTRY_FILE)
-DIR_ATOM(sComponentDirectory, NS_XPCOM_COMPONENT_DIR)
 DIR_ATOM(sGRE_Directory, NS_GRE_DIR)
-DIR_ATOM(sGRE_ComponentDirectory, NS_GRE_COMPONENT_DIR)
 DIR_ATOM(sOS_DriveDirectory, NS_OS_DRIVE_DIR)
 DIR_ATOM(sOS_TemporaryDirectory, NS_OS_TEMP_DIR)
 DIR_ATOM(sOS_CurrentProcessDirectory, NS_OS_CURRENT_PROCESS_DIR)

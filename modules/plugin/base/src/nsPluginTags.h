@@ -66,6 +66,11 @@ struct nsPluginInfo;
 class nsPluginTag : public nsIPluginTag
 {
 public:
+  enum nsRegisterType {
+    ePluginRegister,
+    ePluginUnregister
+  };
+  
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGINTAG
   
@@ -93,6 +98,8 @@ public:
   PRUint32 Flags();
   PRBool Equals(nsPluginTag* aPluginTag);
   PRBool IsEnabled();
+  void RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
+                                   nsRegisterType aType = ePluginRegister);
   
   nsRefPtr<nsPluginTag> mNext;
   nsPluginHost *mPluginHost;

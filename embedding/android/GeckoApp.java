@@ -60,8 +60,6 @@ abstract public class GeckoApp
     public static GeckoSurfaceView surfaceView;
     public static GeckoApp mAppContext;
 
-    public static boolean useSoftwareDrawing;
-
     void launch()
     {
         // unpack files in the components directory
@@ -120,8 +118,6 @@ abstract public class GeckoApp
         setContentView(mainLayout,
                        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT,
                                                   ViewGroup.LayoutParams.FILL_PARENT));
-
-        useSoftwareDrawing = true; //isInEmulator() == 1;
 
         if (!GeckoAppShell.sGeckoRunning) {
             // Load our JNI libs; we need to do this before launch() because
@@ -282,7 +278,7 @@ abstract public class GeckoApp
             componentsDir.mkdir();
             zip = new ZipFile(getApplication().getPackageResourcePath());
 
-            ZipEntry componentsList = zip.getEntry("components/components.list");
+            ZipEntry componentsList = zip.getEntry("components/components.manifest");
             if (componentsList == null) {
                 Log.i("GeckoAppJava", "Can't find components.list !");
                 return;
@@ -299,6 +295,7 @@ abstract public class GeckoApp
         StreamTokenizer tkn = new StreamTokenizer(new InputStreamReader(listStream));
         String line = "components/";
         int status;
+        boolean addnext = false;
         tkn.eolIsSignificant(true);
         do {
             try {
@@ -309,15 +306,18 @@ abstract public class GeckoApp
             }
             switch (status) {
             case StreamTokenizer.TT_WORD:
-                line += tkn.sval;
+                if (tkn.sval.equals("binary-component"))
+                    addnext = true;
+                else if (addnext) {
+                    line += tkn.sval;
+                    addnext = false;
+                }
                 break;
             case StreamTokenizer.TT_NUMBER:
-                line += tkn.nval;
                 break;
             case StreamTokenizer.TT_EOF:
             case StreamTokenizer.TT_EOL:
-                if (!line.endsWith(".js"))
-                    unpackFile(zip, buf, null, line);
+                unpackFile(zip, buf, null, line);
                 line = "components/";
                 break;
             }

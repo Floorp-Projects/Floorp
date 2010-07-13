@@ -1,0 +1,4 @@
+category abitest test1 found ABI=XPCShell_noarch-spidermonkey
+category abitest test2 notfound ABI=WINNT_noarch-spidermonkey
+category abitest test3 found ABI!=WINNT_noarch-spidermonkey
+category abitest test4 notfound ABI!=XPCShell_noarch-spidermonkey

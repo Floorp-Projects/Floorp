@@ -164,7 +164,7 @@ static NSWindow* NativeWindowForFrame(nsIFrame* aFrame,
   if (!aFrame)
     return nil;  
 
-  nsIWidget* widget = aFrame->GetWindow();
+  nsIWidget* widget = aFrame->GetNearestWidget();
   if (!widget)
     return nil;
 

@@ -355,12 +355,18 @@ function writeInstallRDFToDir(aData, aDir) {
   rdf += '<Description about="urn:mozilla:install-manifest">\n';
 
   ["id", "version", "type", "internalName", "updateURL", "updateKey",
-   "optionsURL", "aboutURL", "iconURL"].forEach(function(aProp) {
+   "optionsURL", "aboutURL", "iconURL", "skinnable"].forEach(function(aProp) {
     if (aProp in aData)
       rdf += "<em:" + aProp + ">" + escapeXML(aData[aProp]) + "</em:" + aProp + ">\n";
   });
 
   rdf += writeLocaleStrings(aData);
+
+  if ("targetPlatforms" in aData) {
+    aData.targetPlatforms.forEach(function(aPlatform) {
+      rdf += "<em:targetPlatform>" + escapeXML(aPlatform) + "</em:targetPlatform>\n";
+    });
+  }
 
   if ("targetApplications" in aData) {
     aData.targetApplications.forEach(function(aApp) {
@@ -434,6 +440,19 @@ function getExpectedEvent(aId) {
 }
 
 const AddonListener = {
+  onPropertyChanged: function(aAddon, aProperties) {
+    let [event, properties] = getExpectedEvent(aAddon.id);
+    do_check_eq("onPropertyChanged", event);
+    do_check_eq(aProperties.length, properties.length);
+    properties.forEach(function(aProperty) {
+      // Only test that the expected properties are listed, having additional
+      // properties listed is not necessary a problem
+      if (aProperties.indexOf(aProperty) != -1)
+        ok(false, "Did not see property change for " + aProperty);
+    });
+    return check_test_completed(arguments);
+  },
+
   onEnabling: function(aAddon, aRequiresRestart) {
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onEnabling", event);

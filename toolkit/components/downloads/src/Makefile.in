@@ -68,6 +68,7 @@ ifndef MOZ_SUITE
 # of nsIDownloadManagerUI overrides toolkit's.
 EXTRA_COMPONENTS = \
   nsDownloadManagerUI.js \
+  nsDownloadManagerUI.manifest \
   $(NULL)
 endif
 

@@ -508,8 +508,6 @@ LivemarkService.prototype = {
   },
 
   // nsISupports
-  classDescription: "Livemark Service",
-  contractID: LS_CONTRACTID,
   classID: Components.ID("{dca61eb5-c7cd-4df1-b0fb-d0722baba251}"),
 
   QueryInterface: XPCOMUtils.generateQI([
@@ -718,6 +716,4 @@ LivemarkLoadListener.prototype = {
 }
 
 let component = [LivemarkService];
-function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule(component);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

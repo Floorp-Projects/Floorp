@@ -1538,7 +1538,7 @@ x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
     ;;
 
-arm)
+arm*)
     CPU_ARCH=arm
     ;;
 esac
@@ -1567,8 +1567,8 @@ if test "$GNU_CC"; then
     ASFLAGS="$ASFLAGS -fPIC"
     _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
     _MOZ_RTTI_FLAGS_OFF=${_COMPILER_PREFIX}-fno-rtti
-    _MOZ_EXCEPTIONS_FLAGS_ON='-fhandle-exceptions'
-    _MOZ_EXCEPTIONS_FLAGS_OFF='-fno-handle-exceptions'
+    _MOZ_EXCEPTIONS_FLAGS_ON='-fexceptions'
+    _MOZ_EXCEPTIONS_FLAGS_OFF='-fno-exceptions'
 
     # Turn on GNU specific features
     # -Wall - turn on all warnings
@@ -2181,8 +2181,8 @@ ia64*-hpux*)
     elif test "$GNU_CC" || test "$GNU_CXX"; then
         GCC_VERSION=`$CC -v 2>&1 | awk '/^gcc version/ { print $3 }'`
         case $GCC_VERSION in
-        4.1.*|4.2.*)
-            # -Os is broken on gcc 4.1.x and 4.2.x, we need to tweak it to get good results.
+        4.1.*|4.2.*|4.5.*)
+            # -Os is broken on gcc 4.1.x 4.2.x, 4.5.x we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
         MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
@@ -2539,8 +2539,8 @@ ia64*-hpux*)
 	USE_PTHREADS=1
 	_PEDANTIC=
 	LIBS="$LIBS -lsocket -lstdc++"
-	_DEFINES_CFLAGS='-Wp,-include -Wp,$(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
-	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -Wp,-include -Wp,$(DEPTH)/mozilla-config.h -D_POSIX_C_SOURCE=199506'
+	_DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
+	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h -D_POSIX_C_SOURCE=199506'
 	if test "$with_x" != "yes"
 	then
 		_PLATFORM_DEFAULT_TOOLKIT="photon"
@@ -4025,32 +4025,6 @@ esac
 
 dnl ===================================================================
 dnl ========================================================
-dnl By default, turn rtti and exceptions off on g++/egcs
-dnl ========================================================
-if test "$GNU_CXX"; then
-
-  AC_MSG_CHECKING(for C++ exceptions flag)
-
-  dnl They changed -f[no-]handle-exceptions to -f[no-]exceptions in g++ 2.8
-  AC_CACHE_VAL(ac_cv_cxx_exceptions_flags,
-  [echo "int main() { return 0; }" | cat > conftest.C
-
-  ${CXX-g++} ${CXXFLAGS} -c -fno-handle-exceptions conftest.C > conftest.out 2>&1
-
-  if egrep "warning.*renamed" conftest.out >/dev/null; then
-    ac_cv_cxx_exceptions_flags=${_COMPILER_PREFIX}-fno-exceptions
-  else
-    ac_cv_cxx_exceptions_flags=${_COMPILER_PREFIX}-fno-handle-exceptions
-  fi
-
-  rm -f conftest*])
-
-  AC_MSG_RESULT($ac_cv_cxx_exceptions_flags)
-  _MOZ_EXCEPTIONS_FLAGS_OFF=$ac_cv_cxx_exceptions_flags
-  _MOZ_EXCEPTIONS_FLAGS_ON=`echo $ac_cv_cxx_exceptions_flags | sed 's|no-||'`
-fi
-
-dnl ========================================================
 dnl Put your C++ language/feature checks below
 dnl ========================================================
 AC_LANG_CPLUSPLUS
@@ -4985,7 +4959,6 @@ case "${target}" in
         MOZ_CRASHREPORTER=
         NS_PRINTING=
         NECKO_WIFI=
-        MOZ_PLUGINS=
         MOZ_THUMB2=1
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
@@ -5700,7 +5673,7 @@ dnl ========================================================
 dnl = Disable IPC support for tabs and plugins
 dnl ========================================================
 case "${target}" in
-*-wince*|*-android*)
+*-wince*)
     MOZ_IPC=
     ;;
 esac
@@ -6006,7 +5979,7 @@ if test -n "$MOZ_SYDNEYAUDIO"; then
 linux*)
       PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
          [echo "$MOZ_ALSA_PKG_ERRORS"
-          AC_MSG_ERROR([Need alsa for Ogg or Wave decoding on Linux.  Disable with --disable-ogg --disable-wave.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
+          AC_MSG_ERROR([Need alsa for Ogg, Wave or WebM decoding on Linux.  Disable with --disable-ogg --disable-wave --disable-webm.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
       ;;
    esac
 fi
@@ -7978,7 +7951,7 @@ if test "$_cpp_md_flag"; then
   if test "$OS_ARCH" = "OpenVMS"; then
     _DEPEND_CFLAGS='$(subst =, ,$(filter-out %/.pp,-MM=-MD=-MF=$(MDDEPDIR)/$(basename $(@F)).pp))'
   else
-    _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(basename $(@F)).pp)'
+    _DEPEND_CFLAGS='$(filter-out %/.pp,-MD -MF $(MDDEPDIR)/$(basename $(@F)).pp)'
   fi
   dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
   if test "$SOLARIS_SUNPRO_CC"; then

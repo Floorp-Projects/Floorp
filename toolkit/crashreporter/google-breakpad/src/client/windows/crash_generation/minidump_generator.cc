@@ -68,6 +68,23 @@ bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
                                       MINIDUMP_TYPE dump_type,
                                       bool is_client_pointers,
                                       wstring* dump_path) {
+  // Just call the full WriteMinidump with NULL as the full_dump_path.
+  return this->WriteMinidump(process_handle, process_id, thread_id,
+                             requesting_thread_id, exception_pointers,
+                             assert_info, dump_type, is_client_pointers,
+                             dump_path, NULL);
+}
+
+bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
+                                      DWORD process_id,
+                                      DWORD thread_id,
+                                      DWORD requesting_thread_id,
+                                      EXCEPTION_POINTERS* exception_pointers,
+                                      MDRawAssertionInfo* assert_info,
+                                      MINIDUMP_TYPE dump_type,
+                                      bool is_client_pointers,
+                                      wstring* dump_path,
+                                      wstring* full_dump_path) {
   MiniDumpWriteDumpType write_dump = GetWriteDump();
   if (!write_dump) {
     return false;
@@ -223,6 +240,9 @@ bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
   if (result && dump_path) {
     *dump_path = dump_file_path;
   }
+  if (result && full_memory_dump && full_dump_path) {
+    *full_dump_path = full_dump_file_path;
+  }
 
   return result;
 }
@@ -275,7 +295,7 @@ bool MinidumpGenerator::GenerateDumpFilePath(wstring* file_path) {
   UUID id = {0};
 
   UuidCreateType create_uuid = GetCreateUuid();
-  if(!create_uuid) {
+  if (!create_uuid) {
     return false;
   }
 

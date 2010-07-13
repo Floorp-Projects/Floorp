@@ -129,6 +129,12 @@
                 accesskey="&openTabInNewWindow.accesskey;"
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
+      <menuitem id="context_pinTab" label="&pinTab.label;"
+                accesskey="&pinTab.accesskey;"
+                oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
+      <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
+                accesskey="&unpinTab.accesskey;"
+                oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
       <menuseparator/>
       <menuitem id="context_bookmarkTab"
                 label="&bookmarkThisTab.label;"
@@ -611,6 +617,7 @@
                  onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
           <box id="notification-popup-box" hidden="true" align="center">
             <image id="geo-notification-icon" class="notification-anchor-icon"/>
+            <image id="addons-notification-icon" class="notification-anchor-icon"/>
           </box>
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events.
@@ -790,7 +797,7 @@
                                                    ._placesView._onChevronPopupShowing(event);">
               <menupopup id="PlacesChevronPopup"
                          placespopup="true"
-                         popupsinherittooltip="true"
+                         tooltip="bhTooltip" popupsinherittooltip="true"
                          context="placesContext"/>
             </toolbarbutton>
           </hbox>

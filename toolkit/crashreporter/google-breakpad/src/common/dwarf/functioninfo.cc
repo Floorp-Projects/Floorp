@@ -30,10 +30,13 @@
 // information from the debug info.
 
 #include <assert.h>
+#include <limits.h>
+#include <stdio.h>
 
 #include <map>
 #include <queue>
 #include <vector>
+#include <memory>
 
 #include "common/dwarf/functioninfo.h"
 

@@ -486,7 +486,7 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
       frame = presShell->GetRootFrame();
     }
     if (frame)
-      return frame->GetWindow();
+      return frame->GetNearestWidget();
   }
 
   return nsnull;
@@ -1098,7 +1098,7 @@ nsDOMWindowUtils::SendQueryContentEvent(PRUint32 aType,
 
     // Fire the event on the widget at the point
     if (popupFrame) {
-      targetWidget = popupFrame->GetWindow();
+      targetWidget = popupFrame->GetNearestWidget();
     }
   }
 
@@ -1265,6 +1265,27 @@ nsDOMWindowUtils::GetVisitedDependentComputedStyle(
   static_cast<nsComputedDOMStyle*>(decl.get())->SetExposeVisitedStyle(PR_FALSE);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::EnterModalState()
+{
+  mWindow->EnterModalState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::LeaveModalState()
+{
+  mWindow->LeaveModalState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::IsInModalState(PRBool *retval)
+{
+  *retval = mWindow->IsInModalState();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

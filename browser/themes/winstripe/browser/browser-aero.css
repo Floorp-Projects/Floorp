@@ -25,8 +25,12 @@
   }
 
   /* the new titlebar requires this, or content will be clipped at the top of the screen. */
-  #main-window[sizemode="maximized"] {
+  #main-window[sizemode="maximized"][chromemargin^="0,"] {
     margin-top: 8px;
+  }
+
+  #main-window[sizemode="normal"][chromemargin^="0,"] {
+    margin-top: 2px;
   }
 
   #main-window:not(:-moz-lwtheme)[inFullscreen="true"] {
@@ -53,7 +57,7 @@
   #navigator-toolbox[tabsontop="true"] > #TabsToolbar,
   #navigator-toolbox:not([tabsontop="true"]) > #nav-bar,
   #navigator-toolbox:not([tabsontop="true"]) > #nav-bar + #customToolbars + #PersonalToolbar[collapsed="true"] + #TabsToolbar:last-child,
-  #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#fullscr-toggler):-moz-lwtheme {
+  #navigator-toolbox > toolbar:not(#toolbar-menubar):-moz-lwtheme {
     -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
   }
 

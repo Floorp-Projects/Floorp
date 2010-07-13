@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -38,20 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef xpcmodule_h___
-#define xpcmodule_h___
-
 #include "xpcprivate.h"
-#ifdef MOZ_JSLOADER
 #include "mozJSLoaderConstructors.h"
-#endif
 
 /* Module implementation for the xpconnect library. */
-
-// {DC524540-487E-4501-9AC7-AAA784B17C1C}
-#define XPCVARIANT_CID                                                        \
-    {0xdc524540, 0x487e, 0x4501,                                              \
-      { 0x9a, 0xc7, 0xaa, 0xa7, 0x84, 0xb1, 0x7c, 0x1c } }
 
 #define XPCVARIANT_CONTRACTID "@mozilla.org/xpcvariant;1"
 #define XPC_JSCONTEXT_STACK_ITERATOR_CONTRACTID                               \
@@ -62,176 +52,65 @@
     {0xfe4f7592, 0xc1fc, 0x4662,                                              \
       { 0xac, 0x83, 0x53, 0x88, 0x41, 0x31, 0x88, 0x3 } }
 
-
-#define XPCONNECT_GENERAL_FACTORIES                                           \
-  NS_DECL_CLASSINFO(XPCVariant)                                               \
-  NS_DECL_CLASSINFO(nsXPCException)                                           \
-                                                                              \
-  NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)                                      \
-  NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCException)                              \
-  NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCJSContextStackIterator)                 \
-  NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect,                      \
-                                           nsXPConnect::GetSingleton)         \
-  NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)                               \
-  NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCComponents_Interfaces)
-
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCException)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCJSContextStackIterator)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect,
+                                         nsXPConnect::GetSingleton)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCComponents_Interfaces)
 
 #ifdef XPC_IDISPATCH_SUPPORT
-
-#define XPCONNECT_FACTORIES                                                   \
-  NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIDispatchSupport,                \
-                                           nsDispatchSupport::GetSingleton)   \
-  XPCONNECT_GENERAL_FACTORIES
-
-#else
-
-#define XPCONNECT_FACTORIES XPCONNECT_GENERAL_FACTORIES
-
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIDispatchSupport,
+                                         nsDispatchSupport::GetSingleton)
 #endif // XPC_IDISPATCH_SUPPORT
 
-
-#ifdef XPCONNECT_STANDALONE
-#define NO_SUBSCRIPT_LOADER
+NS_DEFINE_NAMED_CID(NS_JS_ID_CID);
+NS_DEFINE_NAMED_CID(NS_XPCONNECT_CID);
+NS_DEFINE_NAMED_CID(NS_XPCEXCEPTION_CID);
+NS_DEFINE_NAMED_CID(NS_SCRIPTERROR_CID);
+NS_DEFINE_NAMED_CID(SCRIPTABLE_INTERFACES_CID);
+NS_DEFINE_NAMED_CID(XPCVARIANT_CID);
+NS_DEFINE_NAMED_CID(NS_XPC_JSCONTEXT_STACK_ITERATOR_CID);
+NS_DEFINE_NAMED_CID(MOZJSCOMPONENTLOADER_CID);
+NS_DEFINE_NAMED_CID(MOZ_JSSUBSCRIPTLOADER_CID);
+#ifdef XPC_IDISPATCH_SUPPORT
+NS_DEFINE_NAMED_CID(NS_IDISPATCH_SUPPORT_CID);
+#define XPCIDISPATCH_CIDS \
+  { &kNS_IDISPATCH_SUPPORT_CID, false, NULL, nsIDispatchSupportConstructor },
+#define XPCIDISPATCH_CONTRACTS \
+  { NS_IDISPATCH_SUPPORT_CONTRACTID, &kNS_IDISPATCH_SUPPORT_CID },
+#else
+#define XPCIDISPATCH_CIDS
+#define XPCIDISPATCH_CONTRACTS
 #endif
 
+#define XPCONNECT_CIDENTRIES \
+  { &kNS_JS_ID_CID, false, NULL,  nsJSIDConstructor }, \
+  { &kNS_XPCONNECT_CID, false, NULL,  nsIXPConnectConstructor }, \
+  { &kNS_XPCEXCEPTION_CID, false, NULL, nsXPCExceptionConstructor }, \
+  { &kNS_SCRIPTERROR_CID, false, NULL, nsScriptErrorConstructor }, \
+  { &kSCRIPTABLE_INTERFACES_CID, false, NULL, nsXPCComponents_InterfacesConstructor }, \
+  { &kNS_XPC_JSCONTEXT_STACK_ITERATOR_CID, false, NULL, nsXPCJSContextStackIteratorConstructor }, \
+  { &kMOZJSCOMPONENTLOADER_CID, false, NULL, mozJSComponentLoaderConstructor }, \
+  { &kMOZ_JSSUBSCRIPTLOADER_CID, false, NULL, mozJSSubScriptLoaderConstructor }, \
+  XPCIDISPATCH_CIDS
 
-#define XPCONNECT_GENERAL_COMPONENTS                                          \
-  {                                                                           \
-    nsnull,                                                                   \
-    NS_JS_ID_CID,                                                             \
-    XPC_ID_CONTRACTID,                                                        \
-    nsJSIDConstructor                                                         \
-  },                                                                          \
-  {                                                                           \
-    nsnull,                                                                   \
-    NS_XPCONNECT_CID,                                                         \
-    XPC_XPCONNECT_CONTRACTID,                                                 \
-    nsIXPConnectConstructor                                                   \
-  },                                                                          \
-  {                                                                           \
-    nsnull,                                                                   \
-    NS_XPC_THREAD_JSCONTEXT_STACK_CID,                                        \
-    XPC_CONTEXT_STACK_CONTRACTID,                                             \
-    nsIXPConnectConstructor                                                   \
-  },                                                                          \
-  {                                                                           \
-    nsnull,                                                                   \
-    NS_XPCEXCEPTION_CID,                                                      \
-    XPC_EXCEPTION_CONTRACTID,                                                 \
-    nsXPCExceptionConstructor,                                                \
-    nsnull,                                                                   \
-    nsnull,                                                                   \
-    nsnull,                                                                   \
-    NS_CI_INTERFACE_GETTER_NAME(nsXPCException),                              \
-    nsnull,                                                                   \
-    &NS_CLASSINFO_NAME(nsXPCException),                                       \
-    nsIClassInfo::DOM_OBJECT                                                  \
-  },                                                                          \
-  {                                                                           \
-    nsnull,                                                                   \
-    NS_JS_RUNTIME_SERVICE_CID,                                                \
-    XPC_RUNTIME_CONTRACTID,                                                   \
-    nsIXPConnectConstructor                                                   \
-  },                                                                          \
-  {                                                                           \
-    NS_SCRIPTERROR_CLASSNAME,                                                 \
-    NS_SCRIPTERROR_CID,                                                       \
-    NS_SCRIPTERROR_CONTRACTID,                                                \
-    nsScriptErrorConstructor                                                  \
-  },                                                                          \
-  {                                                                           \
-    nsnull,                                                                   \
-    SCRIPTABLE_INTERFACES_CID,                                                \
-    NS_SCRIPTABLE_INTERFACES_CONTRACTID,                                      \
-    nsXPCComponents_InterfacesConstructor,                                    \
-    nsnull,                                                                   \
-    nsnull,                                                                   \
-    nsnull,                                                                   \
-    nsnull,                                                                   \
-    nsnull,                                                                   \
-    nsnull,                                                                   \
-    nsIClassInfo::THREADSAFE                                                  \
-  },                                                                          \
-  {                                                                           \
-    nsnull,                                                                   \
-    XPCVARIANT_CID,                                                           \
-    XPCVARIANT_CONTRACTID,                                                    \
-    nsnull,                                                                   \
-    nsnull,                                                                   \
-    nsnull,                                                                   \
-    nsnull,                                                                   \
-    NS_CI_INTERFACE_GETTER_NAME(XPCVariant),                                  \
-    nsnull,                                                                   \
-    &NS_CLASSINFO_NAME(XPCVariant)                                            \
-  },                                                                          \
-  {                                                                           \
-    nsnull,                                                                   \
-    NS_XPC_JSCONTEXT_STACK_ITERATOR_CID,                                      \
-    XPC_JSCONTEXT_STACK_ITERATOR_CONTRACTID,                                  \
-    nsXPCJSContextStackIteratorConstructor                                    \
-  }
+#define XPCONNECT_CONTRACTS \
+  { XPC_ID_CONTRACTID, &kNS_JS_ID_CID }, \
+  { XPC_XPCONNECT_CONTRACTID, &kNS_XPCONNECT_CID }, \
+  { XPC_CONTEXT_STACK_CONTRACTID, &kNS_XPCONNECT_CID }, \
+  { XPC_RUNTIME_CONTRACTID, &kNS_XPCONNECT_CID }, \
+  { XPC_EXCEPTION_CONTRACTID, &kNS_XPCEXCEPTION_CID }, \
+  { NS_SCRIPTERROR_CONTRACTID, &kNS_SCRIPTERROR_CID }, \
+  { NS_SCRIPTABLE_INTERFACES_CONTRACTID, &kSCRIPTABLE_INTERFACES_CID }, \
+  { XPC_JSCONTEXT_STACK_ITERATOR_CONTRACTID, &kNS_XPC_JSCONTEXT_STACK_ITERATOR_CID }, \
+  { MOZJSCOMPONENTLOADER_CONTRACTID, &kMOZJSCOMPONENTLOADER_CID }, \
+  { mozJSSubScriptLoadContractID, &kMOZ_JSSUBSCRIPTLOADER_CID }, \
+  XPCIDISPATCH_CONTRACTS
 
-// jsloader stuff
-#ifdef MOZ_JSLOADER
+#define XPCONNECT_CATEGORIES \
+  { "module-loader", "js", MOZJSCOMPONENTLOADER_CONTRACTID },
 
-#define XPCONNECT_LOADER_COMPONENTS                                           \
-  {                                                                           \
-    "JS component loader",                                                    \
-    MOZJSCOMPONENTLOADER_CID,                                                 \
-    MOZJSCOMPONENTLOADER_CONTRACTID,                                          \
-    mozJSComponentLoaderConstructor,                                          \
-    RegisterJSLoader,                                                         \
-    UnregisterJSLoader                                                        \
-  },                                                                          \
-  XPCONNECT_SUBSCRIPT_LOADER_COMPONENTS
-
-#ifdef NO_SUBSCRIPT_LOADER
-
-#define XPCONNECT_SUBSCRIPT_LOADER_COMPONENTS
-
-#else
-
-#define XPCONNECT_SUBSCRIPT_LOADER_COMPONENTS                                 \
-  {                                                                           \
-    "JS subscript loader",                                                    \
-    MOZ_JSSUBSCRIPTLOADER_CID,                                                \
-    mozJSSubScriptLoadContractID,                                             \
-    mozJSSubScriptLoaderConstructor                                           \
-  },
-
-#endif // NO_SUBSCRIPT_LOADER
-
-#else
-
-#define XPCONNECT_LOADER_COMPONENTS
-
-#endif // MOZ_JSLOADER
-
-
-#ifdef XPC_IDISPATCH_SUPPORT
-
-#define XPCONNECT_IDISPATCH_COMPONENTS                                        \
-  {                                                                           \
-    nsnull,                                                                   \
-    NS_IDISPATCH_SUPPORT_CID,                                                 \
-    NS_IDISPATCH_SUPPORT_CONTRACTID,                                          \
-    nsIDispatchSupportConstructor                                             \
-  },
-
-#else
-
-#define XPCONNECT_IDISPATCH_COMPONENTS
-
-#endif // XPC_IDISPATCH_SUPPORT
-
-
-#define XPCONNECT_COMPONENTS                                                  \
-  XPCONNECT_LOADER_COMPONENTS                                                 \
-  XPCONNECT_IDISPATCH_COMPONENTS                                              \
-  XPCONNECT_GENERAL_COMPONENTS
-
-extern nsresult xpcModuleCtor(nsIModule* self);
-extern void xpcModuleDtor(nsIModule*);
-
-#endif /* xpcmodule_h___ */
-
+nsresult xpcModuleCtor();
+void xpcModuleDtor();

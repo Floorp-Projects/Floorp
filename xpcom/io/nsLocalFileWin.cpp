@@ -764,7 +764,7 @@ nsLocalFile::nsLocalFile()
 {
 }
 
-NS_METHOD
+nsresult
 nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);

@@ -41,7 +41,7 @@
 #include "mozilla/jetpack/JetpackParent.h"
 #include "nsIJetpack.h"
 
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 
 #include "nsIXPConnect.h"
 
@@ -81,14 +81,23 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(JetpackService)
 { 0x4cf18fcd, 0x4247, 0x4388, \
   { 0xb1, 0x88, 0xb0, 0x72, 0x2a, 0xc0, 0x52, 0x21 } }
 
-static const nsModuleComponentInfo kComponents[] = {
-  {
-    "mozilla::jetpack::JetpackService",
-    JETPACKSERVICE_CID,
-    "@mozilla.org/jetpack/service;1",
-    mozilla::jetpack::JetpackServiceConstructor
-  }
+NS_DEFINE_NAMED_CID(JETPACKSERVICE_CID);
+
+static const mozilla::Module::CIDEntry kJetpackCIDs[] = {
+  { &kJETPACKSERVICE_CID, false, NULL, mozilla::jetpack::JetpackServiceConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(jetpack, kComponents)
+static const mozilla::Module::ContractIDEntry kJetpackContracts[] = {
+  { "@mozilla.org/jetpack/service;1", &kJETPACKSERVICE_CID },
+  { NULL }
+};
+
+static const mozilla::Module kJetpackModule = {
+  mozilla::Module::kVersion,
+  kJetpackCIDs,
+  kJetpackContracts
+};
+
+NSMODULE_DEFN(jetpack) = &kJetpackModule;
 

@@ -45,7 +45,7 @@ static const PRUint16 g_utMappingTable[] = {
 #include "8859-15.ut"
 };
 
-NS_METHOD
+nsresult
 nsISO885915ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult) 
 {

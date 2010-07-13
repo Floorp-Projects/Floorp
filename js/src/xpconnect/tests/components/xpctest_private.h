@@ -49,7 +49,7 @@
 #include "nsIXPConnect.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsAString.h"
@@ -163,27 +163,27 @@
 class xpctest
 {
 public:
-  static NS_METHOD ConstructEcho(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructChild(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructNoisy(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructStringTest(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructOverloaded(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestObjectReadOnly(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestObjectReadWrite(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestIn(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestOut(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestInOut(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestConst(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestCallJS(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestParentOne(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestParentTwo(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestChild2(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestChild3(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestChild4(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestChild5(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructArrayTest(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestDOMString(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  static NS_METHOD ConstructXPCTestVariant(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructEcho(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructChild(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructNoisy(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructStringTest(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructOverloaded(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestObjectReadOnly(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestObjectReadWrite(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestIn(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestOut(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestInOut(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestConst(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestCallJS(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestParentOne(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestParentTwo(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestChild2(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestChild3(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestChild4(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestChild5(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructArrayTest(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestDOMString(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult ConstructXPCTestVariant(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
     xpctest();  // not implemented

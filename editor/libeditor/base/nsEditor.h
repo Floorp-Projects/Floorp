@@ -193,6 +193,12 @@ public:
   */
   nsresult CreateHTMLContent(const nsAString& aTag, nsIContent** aContent);
 
+  // IME event handlers
+  virtual nsresult BeginIMEComposition();
+  virtual nsresult UpdateIMEComposition(const nsAString &aCompositionString,
+                                        nsIPrivateTextRangeList *aTextRange)=0;
+  nsresult EndIMEComposition();
+
 protected:
   nsCString mContentMIMEType;       // MIME type of the doc we are editing.
 

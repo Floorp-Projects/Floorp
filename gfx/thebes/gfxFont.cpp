@@ -68,6 +68,8 @@
 
 #include "nsCRT.h"
 
+using namespace mozilla;
+
 gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
 
 static PRLogModuleInfo *gFontSelection = PR_NewLogModule("fontSelectionLog");
@@ -1397,6 +1399,152 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID, PRBool aNeed
     gfxRect bounds(extents.x_bearing*d2a, extents.y_bearing*d2a,
                    extents.width*d2a, extents.height*d2a);
     aExtents->SetTightGlyphExtents(aGlyphID, bounds);
+}
+
+// Try to initialize font metrics by reading sfnt tables directly;
+// set mIsValid=TRUE and return TRUE on success.
+// Return FALSE if the gfxFontEntry subclass does not
+// implement GetFontTable(), or for non-sfnt fonts where tables are
+// not available.
+PRBool
+gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
+{
+    mIsValid = PR_FALSE; // font is NOT valid in case of early return
+
+    const PRUint32 kHeadTableTag = TRUETYPE_TAG('h','e','a','d');
+    const PRUint32 kHheaTableTag = TRUETYPE_TAG('h','h','e','a');
+    const PRUint32 kPostTableTag = TRUETYPE_TAG('p','o','s','t');
+    const PRUint32 kOS_2TableTag = TRUETYPE_TAG('O','S','/','2');
+
+    if (mFUnitsConvFactor == 0.0) {
+        // If the conversion factor from FUnits is not yet set,
+        // 'head' table is required; otherwise we cannot read any metrics
+        // because we don't know unitsPerEm
+        nsAutoTArray<PRUint8,sizeof(HeadTable)> headData;
+        if (NS_FAILED(mFontEntry->GetFontTable(kHeadTableTag, headData)) ||
+            headData.Length() < sizeof(HeadTable)) {
+            return PR_FALSE; // no 'head' table -> not an sfnt
+        }
+        HeadTable *head = reinterpret_cast<HeadTable*>(headData.Elements());
+        PRUint32 unitsPerEm = head->unitsPerEm;
+        if (!unitsPerEm) {
+            return PR_TRUE; // is an sfnt, but not valid
+        }
+        mFUnitsConvFactor = mAdjustedSize / unitsPerEm;
+    }
+
+    // 'hhea' table is required to get vertical extents
+    nsAutoTArray<PRUint8,sizeof(HheaTable)> hheaData;
+    if (NS_FAILED(mFontEntry->GetFontTable(kHheaTableTag, hheaData)) ||
+        hheaData.Length() < sizeof(HheaTable)) {
+        return PR_FALSE; // no 'hhea' table -> not an sfnt
+    }
+    HheaTable *hhea = reinterpret_cast<HheaTable*>(hheaData.Elements());
+
+#define SET_UNSIGNED(field,src) aMetrics.field = PRUint16(src) * mFUnitsConvFactor
+#define SET_SIGNED(field,src)   aMetrics.field = PRInt16(src) * mFUnitsConvFactor
+
+    SET_UNSIGNED(maxAdvance, hhea->advanceWidthMax);
+    SET_SIGNED(maxAscent, hhea->ascender);
+    SET_SIGNED(maxDescent, -PRInt16(hhea->descender));
+    SET_SIGNED(externalLeading, hhea->lineGap);
+
+    // 'post' table is required for underline metrics
+    nsAutoTArray<PRUint8,sizeof(PostTable)> postData;
+    if (NS_FAILED(mFontEntry->GetFontTable(kPostTableTag, postData))) {
+        return PR_TRUE; // no 'post' table -> sfnt is not valid
+    }
+    if (postData.Length() <
+        offsetof(PostTable, underlineThickness) + sizeof(PRUint16)) {
+        return PR_TRUE; // bad post table -> sfnt is not valid
+    }
+    PostTable *post = reinterpret_cast<PostTable*>(postData.Elements());
+
+    SET_SIGNED(underlineOffset, post->underlinePosition);
+    SET_UNSIGNED(underlineSize, post->underlineThickness);
+
+    // 'OS/2' table is optional, if not found we'll estimate xHeight
+    // and aveCharWidth by measuring glyphs
+    nsAutoTArray<PRUint8,sizeof(OS2Table)> os2data;
+    if (NS_SUCCEEDED(mFontEntry->GetFontTable(kOS_2TableTag, os2data))) {
+        OS2Table *os2 = reinterpret_cast<OS2Table*>(os2data.Elements());
+
+        if (os2data.Length() >= offsetof(OS2Table, sxHeight) +
+                                sizeof(PRInt16) &&
+            PRUint16(os2->version) >= 2) {
+            // version 2 and later includes the x-height field
+            SET_SIGNED(xHeight, os2->sxHeight);
+            // PR_ABS because of negative xHeight seen in Kokonor (Tibetan) font
+            aMetrics.xHeight = PR_ABS(aMetrics.xHeight);
+        }
+        // this should always be present
+        if (os2data.Length() >= offsetof(OS2Table, yStrikeoutPosition) +
+                                sizeof(PRInt16)) {
+            SET_SIGNED(aveCharWidth, os2->xAvgCharWidth);
+            SET_SIGNED(subscriptOffset, os2->ySubscriptYOffset);
+            SET_SIGNED(superscriptOffset, os2->ySuperscriptYOffset);
+            SET_SIGNED(strikeoutSize, os2->yStrikeoutSize);
+            SET_SIGNED(strikeoutOffset, os2->yStrikeoutPosition);
+        }
+    }
+
+    mIsValid = PR_TRUE;
+
+    return PR_TRUE;
+}
+
+static double
+RoundToNearestMultiple(double aValue, double aFraction)
+{
+    return floor(aValue/aFraction + 0.5) * aFraction;
+}
+
+void gfxFont::CalculateDerivedMetrics(Metrics& aMetrics)
+{
+    aMetrics.maxAscent =
+        NS_ceil(RoundToNearestMultiple(aMetrics.maxAscent, 1/1024.0));
+    aMetrics.maxDescent =
+        NS_ceil(RoundToNearestMultiple(aMetrics.maxDescent, 1/1024.0));
+
+    if (aMetrics.xHeight <= 0) {
+        // only happens if we couldn't find either font metrics
+        // or a char to measure;
+        // pick an arbitrary value that's better than zero
+        aMetrics.xHeight = aMetrics.maxAscent * DEFAULT_XHEIGHT_FACTOR;
+    }
+
+    aMetrics.maxHeight = aMetrics.maxAscent + aMetrics.maxDescent;
+
+    if (aMetrics.maxHeight - aMetrics.emHeight > 0.0) {
+        aMetrics.internalLeading = aMetrics.maxHeight - aMetrics.emHeight;
+    } else {
+        aMetrics.internalLeading = 0.0;
+    }
+
+    aMetrics.emAscent = aMetrics.maxAscent * aMetrics.emHeight
+                            / aMetrics.maxHeight;
+    aMetrics.emDescent = aMetrics.emHeight - aMetrics.emAscent;
+
+    if (GetFontEntry()->IsFixedPitch()) {
+        // Some Quartz fonts are fixed pitch, but there's some glyph with a bigger
+        // advance than the average character width... this forces
+        // those fonts to be recognized like fixed pitch fonts by layout.
+        aMetrics.maxAdvance = aMetrics.aveCharWidth;
+    }
+
+    if (!aMetrics.subscriptOffset) {
+        aMetrics.subscriptOffset = aMetrics.xHeight;
+    }
+    if (!aMetrics.superscriptOffset) {
+        aMetrics.superscriptOffset = aMetrics.xHeight;
+    }
+
+    if (!aMetrics.strikeoutOffset) {
+        aMetrics.strikeoutOffset = aMetrics.xHeight * 0.5;
+    }
+    if (!aMetrics.strikeoutSize) {
+        aMetrics.strikeoutSize = aMetrics.underlineSize;
+    }
 }
 
 void

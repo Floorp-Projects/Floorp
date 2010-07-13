@@ -405,6 +405,12 @@ function AddonWrapper(aTheme, aBeingEnabled) {
     });
   }, this);
 
+  ["installDate", "updateDate"].forEach(function(prop) {
+    this.__defineGetter__(prop, function() {
+      return prop in aTheme ? new Date(aTheme[prop]) : null;
+    });
+  }, this);
+
   this.__defineGetter__("creator", function() aTheme.author);
   this.__defineGetter__("screenshots", function() [aTheme.previewURL]);
 
@@ -413,6 +419,12 @@ function AddonWrapper(aTheme, aBeingEnabled) {
     if (this.isActive == this.userDisabled)
       pending |= this.isActive ? AddonManager.PENDING_DISABLE : AddonManager.PENDING_ENABLE;
     return pending;
+  });
+
+  this.__defineGetter__("size", function() {
+    // The size changes depending on whether the theme is in use or not, this is
+    // probably not worth exposing.
+    return null;
   });
 
   this.__defineGetter__("permissions", function() {
@@ -476,6 +488,10 @@ AddonWrapper.prototype = {
     return true;
   },
 
+  get isPlatformCompatible() {
+    return true;
+  },
+
   get scope() {
     return AddonManager.SCOPE_PROFILE;
   },
@@ -530,6 +546,12 @@ function _setCurrentTheme(aData, aLocal) {
     let theme = LightweightThemeManager.getUsedTheme(aData.id);
     let isInstall = !theme || theme.version != aData.version;
     if (isInstall) {
+      aData.updateDate = Date.now();
+      if (theme && "installDate" in theme)
+        aData.installDate = theme.installDate;
+      else
+        aData.installDate = aData.updateDate;
+
       var oldWrapper = theme ? new AddonWrapper(theme) : null;
       var wrapper = new AddonWrapper(aData);
       AddonManagerPrivate.callInstallListeners("onExternalInstall", null,

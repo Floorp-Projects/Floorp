@@ -41,7 +41,7 @@ function run_test() {
   var scope = {};
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", scope);
   do_check_eq(typeof(scope.XPCOMUtils), "object");
-  do_check_eq(typeof(scope.XPCOMUtils.generateModule), "function");
+  do_check_eq(typeof(scope.XPCOMUtils.generateNSGetFactory), "function");
   
   // access module's global object directly without importing any
   // symbols
@@ -50,20 +50,20 @@ function run_test() {
   do_check_eq(typeof(XPCOMUtils), "undefined");
   do_check_eq(typeof(module), "object");
   do_check_eq(typeof(module.XPCOMUtils), "object");
-  do_check_eq(typeof(module.XPCOMUtils.generateModule), "function");
+  do_check_eq(typeof(module.XPCOMUtils.generateNSGetFactory), "function");
   do_check_true(scope.XPCOMUtils == module.XPCOMUtils);
 
   // import symbols to our global object
   do_check_eq(typeof(Components.utils.import), "function");
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
   do_check_eq(typeof(XPCOMUtils), "object");
-  do_check_eq(typeof(XPCOMUtils.generateModule), "function");
+  do_check_eq(typeof(XPCOMUtils.generateNSGetFactory), "function");
   
   // try on a new object
   var scope2 = {};
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", scope2);
   do_check_eq(typeof(scope2.XPCOMUtils), "object");
-  do_check_eq(typeof(scope2.XPCOMUtils.generateModule), "function");
+  do_check_eq(typeof(scope2.XPCOMUtils.generateNSGetFactory), "function");
   
   do_check_true(scope2.XPCOMUtils == scope.XPCOMUtils);
 
@@ -77,7 +77,7 @@ function run_test() {
   var scope3 = {};
   Components.utils.import(filePath, scope3);
   do_check_eq(typeof(scope3.XPCOMUtils), "object");
-  do_check_eq(typeof(scope3.XPCOMUtils.generateModule), "function");
+  do_check_eq(typeof(scope3.XPCOMUtils.generateNSGetFactory), "function");
   
   do_check_true(scope3.XPCOMUtils == scope.XPCOMUtils);
 
@@ -92,7 +92,7 @@ function run_test() {
   do_check_true(didThrow);
  
   // try to create a component
-  do_load_module("component_import.js");
+  do_load_manifest("component_import.manifest");
   const contractID = "@mozilla.org/tests/module-importer;";
   do_check_true((contractID + "1") in Components.classes);
   var foo = Components.classes[contractID + "1"]

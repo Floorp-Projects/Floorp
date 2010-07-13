@@ -65,7 +65,7 @@ nsUnicharStreamLoader::Init(nsIUnicharStreamLoaderObserver *aObserver,
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 nsUnicharStreamLoader::Create(nsISupports *aOuter,
                               REFNSIID aIID,
                               void **aResult)

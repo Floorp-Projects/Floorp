@@ -1360,8 +1360,7 @@ nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
   if (httpChannel) {
-    nsHeaderVisitor *visitor = nsnull;
-    NS_NEWXPCOM(visitor, nsHeaderVisitor);
+    nsHeaderVisitor *visitor = new nsHeaderVisitor();
     if (!visitor)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(visitor);

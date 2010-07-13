@@ -43,7 +43,6 @@
  *  
  *  nsIUnicodeDecoder 
  *  nsIUnicodeEncoder 
- *  nsICharRepresentable
  */
 [uuid(c60097ba-c79d-461b-9116-80a66404c0b0)]
 interface nsINativeUConvService : nsISupports

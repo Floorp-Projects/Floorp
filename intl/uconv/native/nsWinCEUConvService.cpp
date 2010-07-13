@@ -39,7 +39,6 @@
 #include "nsNativeUConvService.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsICharRepresentable.h"
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
 
@@ -74,8 +73,7 @@ void DisplayLastError(const char * msg)
 
 
 class WinCEUConvAdapter : public nsIUnicodeDecoder,
-                          public nsIUnicodeEncoder,
-                          public nsICharRepresentable
+                          public nsIUnicodeEncoder
 {
 public:
   
@@ -121,15 +119,12 @@ public:
                                     nsIUnicharEncoder * aEncoder, 
                                     PRUnichar aChar);
   
-  NS_IMETHOD FillInfo(PRUint32* aInfo);
-  
   PRUint32 mCodepage;
 };
 
-NS_IMPL_ISUPPORTS3(WinCEUConvAdapter,
+NS_IMPL_ISUPPORTS2(WinCEUConvAdapter,
                    nsIUnicodeDecoder,
-                   nsIUnicodeEncoder,
-                   nsICharRepresentable)
+                   nsIUnicodeEncoder)
 
 WinCEUConvAdapter::WinCEUConvAdapter()
 {
@@ -397,12 +392,6 @@ NS_IMETHODIMP
 WinCEUConvAdapter::SetOutputErrorBehavior(PRInt32 aBehavior, 
                                           nsIUnicharEncoder * aEncoder, 
                                           PRUnichar aChar)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WinCEUConvAdapter::FillInfo(PRUint32* aInfo)
 {
   return NS_OK;
 }

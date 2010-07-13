@@ -500,7 +500,7 @@ nsEditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
     return NS_OK;
   }
 
-  return mEditor->SetCompositionString(composedText, textRangeList);
+  return mEditor->UpdateIMEComposition(composedText, textRangeList);
 }
 
 /**
@@ -773,14 +773,14 @@ NS_IMETHODIMP
 nsEditorEventListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
-  return mEditor->BeginComposition();
+  return mEditor->BeginIMEComposition();
 }
 
 NS_IMETHODIMP
 nsEditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
-  return mEditor->EndComposition();
+  return mEditor->EndIMEComposition();
 }
 
 /**

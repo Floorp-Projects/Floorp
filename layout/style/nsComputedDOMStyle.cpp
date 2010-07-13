@@ -81,8 +81,10 @@
 #include "nsDisplayList.h"
 #include "nsDOMCSSDeclaration.h"
 #include "mozilla/dom/Element.h"
+#include "CSSCalc.h"
 
 using namespace mozilla::dom;
+namespace css = mozilla::css;
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -1019,7 +1021,7 @@ nsresult nsComputedDOMStyle::GetMozTransform(nsIDOMCSSValue **aValue)
   /* If the "no transforms" flag is set, then we should construct a
    * single-element entry and hand it back.
    */
-  if (!display->mTransformPresent) {
+  if (!display->HasTransform()) {
     nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
     if (!val)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -3719,6 +3721,57 @@ nsComputedDOMStyle::GetBorderStyleFor(mozilla::css::Side aSide, nsIDOMCSSValue**
   return NS_OK;
 }
 
+struct StyleCoordSerializeCalcOps {
+  StyleCoordSerializeCalcOps(nsAString& aResult, PRInt32 aAppUnitsPerInch)
+    : mResult(aResult),
+      mAppUnitsPerInch(aAppUnitsPerInch)
+  {
+  }
+
+  typedef nsStyleCoord input_type;
+  typedef nsStyleCoord::Array input_array_type;
+
+  static nsCSSUnit GetUnit(const input_type& aValue) {
+    if (aValue.IsCalcUnit()) {
+      return css::ConvertCalcUnit(aValue.GetUnit());
+    }
+    return eCSSUnit_Null;
+  }
+
+  void Append(const char* aString)
+  {
+    mResult.AppendASCII(aString);
+  }
+
+  void AppendLeafValue(const input_type& aValue)
+  {
+    nsRefPtr<nsROCSSPrimitiveValue> val =
+      new nsROCSSPrimitiveValue(mAppUnitsPerInch);
+    if (aValue.GetUnit() == eStyleUnit_Percent) {
+      val->SetPercent(aValue.GetPercentValue());
+    } else {
+      NS_ABORT_IF_FALSE(aValue.GetUnit() == eStyleUnit_Coord,
+                        "unexpected unit");
+      val->SetAppUnits(aValue.GetCoordValue());
+    }
+
+    nsAutoString tmp;
+    val->GetCssText(tmp);
+    mResult.Append(tmp);
+  }
+
+  void AppendNumber(const input_type& aValue)
+  {
+    NS_ABORT_IF_FALSE(PR_FALSE,
+                      "should not have numbers in nsStyleCoord calc()");
+  }
+
+private:
+  nsAString &mResult;
+  PRInt32 mAppUnitsPerInch;
+};
+
+
 void
 nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
                                     const nsStyleCoord& aCoord,
@@ -3743,7 +3796,8 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
         nscoord percentageBase;
         if (aPercentageBaseGetter &&
             (this->*aPercentageBaseGetter)(percentageBase)) {
-          nscoord val = nscoord(aCoord.GetPercentValue() * percentageBase);
+          nscoord val = NSCoordSaturatingMultiply(percentageBase,
+                                                  aCoord.GetPercentValue());
           aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
         } else {
           aValue->SetPercent(aCoord.GetPercentValue());
@@ -3777,7 +3831,22 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
       break;
 
     default:
-      NS_ERROR("Can't handle this unit");
+      if (aCoord.IsCalcUnit()) {
+        nscoord percentageBase;
+        if (aPercentageBaseGetter &&
+            (this->*aPercentageBaseGetter)(percentageBase)) {
+          nscoord val =
+            nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
+          aValue->SetAppUnits(NS_MAX(aMinAppUnits, NS_MIN(val, aMaxAppUnits)));
+        } else {
+          nsAutoString tmp;
+          StyleCoordSerializeCalcOps ops(tmp, mAppUnitsPerInch);
+          css::SerializeCalc(aCoord, ops);
+          aValue->SetString(tmp); // not really SetString
+        }
+      } else {
+        NS_ERROR("Can't handle this unit");
+      }
       break;
   }
 }
@@ -3788,19 +3857,15 @@ nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
                                         nscoord aDefaultValue)
 {
   NS_PRECONDITION(aPercentageBaseGetter, "Must have a percentage base getter");
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_Coord:
-      return aCoord.GetCoordValue();
-    case eStyleUnit_Percent:
-      {
-        nscoord percentageBase;
-        if ((this->*aPercentageBaseGetter)(percentageBase)) {
-          return nscoord(aCoord.GetPercentValue() * percentageBase);
-        }
-      }
-      // Fall through to returning aDefaultValue if we have no percentage base.
-    default:
-      break;
+  if (aCoord.GetUnit() == eStyleUnit_Coord) {
+    return aCoord.GetCoordValue();
+  }
+  if (aCoord.GetUnit() == eStyleUnit_Percent || aCoord.IsCalcUnit()) {
+    nscoord percentageBase;
+    if ((this->*aPercentageBaseGetter)(percentageBase)) {
+      return nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
+    }
+    // Fall through to returning aDefaultValue if we have no percentage base.
   }
 
   return aDefaultValue;

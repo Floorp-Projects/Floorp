@@ -57,8 +57,6 @@ interface nsICommandLine;
  * command-line-handler m-irc          @mozilla.org/chatzilla/clh;1
  * command-line-handler y-final        @mozilla.org/browser/clh-final;1
  *
- * @status UNDER_REVIEW This interface is intended to be frozen, but it isn't
- *                      frozen yet. Be careful!
  * @note What do we do about localizing helpInfo? Do we make each handler do it,
  *       or provide a generic solution of some sort? Don't freeze this interface
  *       without thinking about this!

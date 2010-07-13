@@ -413,6 +413,28 @@ nsXULListboxAccessible::GetRowIndexAt(PRInt32 aIndex, PRInt32 *aRow)
 }
 
 NS_IMETHODIMP
+nsXULListboxAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
+                                                 PRInt32* aRowIndex,
+                                                 PRInt32* aColumnIndex)
+{
+  NS_ENSURE_ARG_POINTER(aRowIndex);
+  *aRowIndex = -1;
+  NS_ENSURE_ARG_POINTER(aColumnIndex);
+  *aColumnIndex = -1;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  PRInt32 columnCount = 0;
+  nsresult rv = GetColumnCount(&columnCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aColumnIndex = aCellIndex % columnCount;
+  *aRowIndex = aCellIndex / columnCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULListboxAccessible::GetColumnExtentAt(PRInt32 aRow, PRInt32 aColumn,
                                           PRInt32 *aCellSpans)
 {

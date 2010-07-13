@@ -266,7 +266,7 @@ var PluginInstallService = {
 
   getPidForInstall: function(install) {
     for (let i = 0; i < this._xpiPlugins.length; i++) {
-      if (install.sourceURL == this._xpiPlugins[i].XPILocation)
+      if (install.sourceURI.spec == this._xpiPlugins[i].XPILocation)
         return this._xpiPlugins[i].pid;
     }
     return -1;

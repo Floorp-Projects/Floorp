@@ -89,6 +89,7 @@ TEST_F(Simple, NoCFA) {
   cfi.SetRARule("0");
   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
                                              &caller_registers));
+  ASSERT_EQ(".ra: 0", cfi.Serialize());
 }
 
 // FindCallerRegs should fail if no .ra rule is provided.
@@ -98,6 +99,7 @@ TEST_F(Simple, NoRA) {
   cfi.SetCFARule("0");
   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
                                              &caller_registers));
+  ASSERT_EQ(".cfa: 0", cfi.Serialize());
 }
 
 TEST_F(Simple, SetCFAAndRARule) {
@@ -110,6 +112,9 @@ TEST_F(Simple, SetCFAAndRARule) {
   ASSERT_EQ(2U, caller_registers.size());
   ASSERT_EQ(330903416631436410ULL, caller_registers[".cfa"]);
   ASSERT_EQ(5870666104170902211ULL, caller_registers[".ra"]);
+
+  ASSERT_EQ(".cfa: 330903416631436410 .ra: 5870666104170902211",
+            cfi.Serialize());
 }
 
 TEST_F(Simple, SetManyRules) {
@@ -130,6 +135,13 @@ TEST_F(Simple, SetManyRules) {
   ASSERT_EQ(31740999U,          caller_registers["vodkathumbscrewingly"]);
   ASSERT_EQ(-22136316ULL,       caller_registers["pubvexingfjordschmaltzy"]);
   ASSERT_EQ(12U,                caller_registers["uncopyrightables"]);
+  ASSERT_EQ(".cfa: $temp1 68737028 = $temp2 61072337 = $temp1 $temp2 - "
+            ".ra: .cfa 99804755 + "
+            "pubvexingfjordschmaltzy: .cfa 29801007 - "
+            "register1: .cfa 54370437 * "
+            "uncopyrightables: 92642917 .cfa / "
+            "vodkathumbscrewingly: 24076308 .cfa +",
+            cfi.Serialize());
 }
 
 TEST_F(Simple, RulesOverride) {
@@ -143,6 +155,8 @@ TEST_F(Simple, RulesOverride) {
   ASSERT_EQ(2U, caller_registers.size());
   ASSERT_EQ(2828089117179001ULL, caller_registers[".cfa"]);
   ASSERT_EQ(5870666104170902211ULL, caller_registers[".ra"]);
+  ASSERT_EQ(".cfa: 2828089117179001 .ra: 5870666104170902211",
+            cfi.Serialize());
 }
 
 class Scope: public CFIFixture, public Test { };

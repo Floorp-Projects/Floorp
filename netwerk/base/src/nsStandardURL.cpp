@@ -38,6 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "IPCMessageUtils.h"
+#endif
+
 #include "nsStandardURL.h"
 #include "nsDependentSubstring.h"
 #include "nsReadableUtils.h"
@@ -73,6 +77,9 @@ PRBool nsStandardURL::gEncodeQueryInUTF8 = PR_TRUE;
 //
 static PRLogModuleInfo *gStandardURLLog;
 #endif
+
+// The Chromium code defines its own LOG macro which we don't want
+#undef LOG
 #define LOG(args)     PR_LOG(gStandardURLLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gStandardURLLog, PR_LOG_DEBUG)
 
@@ -856,6 +863,22 @@ nsStandardURL::WriteSegment(nsIBinaryOutputStream *stream, const URLSegment &seg
     return NS_OK;
 }
 
+#ifdef MOZ_IPC
+bool
+nsStandardURL::ReadSegment(const IPC::Message *aMsg, void **aIter, URLSegment &seg)
+{
+    return (IPC::ReadParam(aMsg, aIter, &seg.mPos) &&
+            IPC::ReadParam(aMsg, aIter, &seg.mLen));
+}
+
+void
+nsStandardURL::WriteSegment(IPC::Message *aMsg, const URLSegment &seg)
+{
+    IPC::WriteParam(aMsg, seg.mPos);
+    IPC::WriteParam(aMsg, seg.mLen);
+}
+#endif
+
 /* static */ void
 nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 {
@@ -912,6 +935,7 @@ NS_INTERFACE_MAP_BEGIN(nsStandardURL)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileURL, mSupportsFileURL)
     NS_INTERFACE_MAP_ENTRY(nsIStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsISerializable)
+    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializable)
     NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
     NS_INTERFACE_MAP_ENTRY(nsIMutable)
     // see nsStandardURL::Equals
@@ -1651,8 +1675,7 @@ nsStandardURL::SchemeIs(const char *scheme, PRBool *result)
 /* virtual */ nsStandardURL*
 nsStandardURL::StartClone()
 {
-    nsStandardURL *clone;
-    NS_NEWXPCOM(clone, nsStandardURL);
+    nsStandardURL *clone = new nsStandardURL();
     return clone;
 }
 
@@ -2783,6 +2806,112 @@ nsStandardURL::Write(nsIObjectOutputStream *stream)
     // mSpecEncoding and mHostA are just caches that can be recovered as needed.
 
     return NS_OK;
+}
+
+//---------------------------------------------------------------------------
+// nsStandardURL::nsIIPCSerializable
+//---------------------------------------------------------------------------
+
+PRBool
+nsStandardURL::Read(const IPC::Message *aMsg, void **aIter)
+{
+#ifdef MOZ_IPC
+    using IPC::ReadParam;
+    
+    NS_PRECONDITION(!mHostA, "Shouldn't have cached ASCII host");
+    NS_PRECONDITION(mSpecEncoding == eEncoding_Unknown,
+                    "Shouldn't have spec encoding here");
+    NS_PRECONDITION(!mFile, "Shouldn't have cached file");
+    
+    PRUint32 urlType;
+    if (!ReadParam(aMsg, aIter, &urlType))
+        return PR_FALSE;
+    
+    mURLType = urlType;
+    switch (mURLType) {
+        case URLTYPE_STANDARD:
+            mParser = net_GetStdURLParser();
+            break;
+        case URLTYPE_AUTHORITY:
+            mParser = net_GetAuthURLParser();
+            break;
+        case URLTYPE_NO_AUTHORITY:
+            mParser = net_GetNoAuthURLParser();
+            break;
+        default:
+            NS_NOTREACHED("bad urlType");
+            return PR_FALSE;
+    }
+
+    PRUint32 hostEncoding;
+    bool isMutable, supportsFileURL;
+    if (!ReadParam(aMsg, aIter, &mPort) ||
+        !ReadParam(aMsg, aIter, &mDefaultPort) ||
+        !ReadParam(aMsg, aIter, &mSpec) ||
+        !ReadSegment(aMsg, aIter, mScheme) ||
+        !ReadSegment(aMsg, aIter, mAuthority) ||
+        !ReadSegment(aMsg, aIter, mUsername) ||
+        !ReadSegment(aMsg, aIter, mPassword) ||
+        !ReadSegment(aMsg, aIter, mHost) ||
+        !ReadSegment(aMsg, aIter, mPath) ||
+        !ReadSegment(aMsg, aIter, mFilepath) ||
+        !ReadSegment(aMsg, aIter, mDirectory) ||
+        !ReadSegment(aMsg, aIter, mBasename) ||
+        !ReadSegment(aMsg, aIter, mExtension) ||
+        !ReadSegment(aMsg, aIter, mParam) ||
+        !ReadSegment(aMsg, aIter, mQuery) ||
+        !ReadSegment(aMsg, aIter, mRef) ||
+        !ReadParam(aMsg, aIter, &mOriginCharset) ||
+        !ReadParam(aMsg, aIter, &isMutable) ||
+        !ReadParam(aMsg, aIter, &supportsFileURL) ||
+        !ReadParam(aMsg, aIter, &hostEncoding))
+        return PR_FALSE;
+
+    if (hostEncoding != eEncoding_ASCII && hostEncoding != eEncoding_UTF8) {
+        NS_WARNING("Unexpected host encoding");
+        return PR_FALSE;
+    }
+    mHostEncoding = hostEncoding;
+    mMutable = isMutable;
+    mSupportsFileURL = supportsFileURL;
+
+    // mSpecEncoding and mHostA are just caches that can be recovered as needed.
+
+    return PR_TRUE;
+#else
+    return PR_FALSE;
+#endif
+}
+
+void
+nsStandardURL::Write(IPC::Message *aMsg)
+{
+#ifdef MOZ_IPC
+    using IPC::WriteParam;
+    
+    WriteParam(aMsg, mURLType);
+    WriteParam(aMsg, mPort);
+    WriteParam(aMsg, mDefaultPort);
+    WriteParam(aMsg, mSpec);
+    WriteSegment(aMsg, mScheme);
+    WriteSegment(aMsg, mAuthority);
+    WriteSegment(aMsg, mUsername);
+    WriteSegment(aMsg, mPassword);
+    WriteSegment(aMsg, mHost);
+    WriteSegment(aMsg, mPath);
+    WriteSegment(aMsg, mFilepath);
+    WriteSegment(aMsg, mDirectory);
+    WriteSegment(aMsg, mBasename);
+    WriteSegment(aMsg, mExtension);
+    WriteSegment(aMsg, mParam);
+    WriteSegment(aMsg, mQuery);
+    WriteSegment(aMsg, mRef);
+    WriteParam(aMsg, mOriginCharset);
+    WriteParam(aMsg, bool(mMutable));
+    WriteParam(aMsg, bool(mSupportsFileURL));
+    WriteParam(aMsg, mHostEncoding);
+    // mSpecEncoding and mHostA are just caches that can be recovered as needed.
+#endif
 }
 
 //----------------------------------------------------------------------------

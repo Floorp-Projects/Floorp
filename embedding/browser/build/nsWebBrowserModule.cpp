@@ -37,10 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIModule.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
-#include "nsIGenericFactory.h"
-#include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
 
 #include "nsEmbedCID.h"
@@ -55,56 +53,37 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandHandler)
 
-static NS_METHOD
-RegisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                      const char *registryLocation, const char *componentType,
-                      const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString previous;
-    return catman->AddCategoryEntry("content-policy",
-                                    NS_WEBBROWSERCONTENTPOLICY_CONTRACTID,
-                                    NS_WEBBROWSERCONTENTPOLICY_CONTRACTID,
-                                    PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
+NS_DEFINE_NAMED_CID(NS_WEBBROWSER_CID);
+NS_DEFINE_NAMED_CID(NS_COMMANDHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_WEBBROWSERCONTENTPOLICY_CID);
 
-static NS_METHOD
-UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                        const char *registryLocation,
-                        const nsModuleComponentInfo *info)
-{
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    return catman->DeleteCategoryEntry("content-policy",
-                                       NS_WEBBROWSERCONTENTPOLICY_CONTRACTID,
-                                       PR_TRUE);
-}
-
-// Component Table
-
-static const nsModuleComponentInfo components[] =
-{
-   { "WebBrowser Component", NS_WEBBROWSER_CID, 
-     NS_WEBBROWSER_CONTRACTID, nsWebBrowserConstructor },
-   { "CommandHandler Component", NS_COMMANDHANDLER_CID,
-     NS_COMMANDHANDLER_CONTRACTID, nsCommandHandlerConstructor },
-   { "nsIWebBrowserSetup content policy enforcer", 
-     NS_WEBBROWSERCONTENTPOLICY_CID,
-     NS_WEBBROWSERCONTENTPOLICY_CONTRACTID,
-     nsWebBrowserContentPolicyConstructor,
-     RegisterContentPolicy, UnregisterContentPolicy }
+static const mozilla::Module::CIDEntry kWebBrowserCIDs[] = {
+    { &kNS_WEBBROWSER_CID, false, NULL, nsWebBrowserConstructor },
+    { &kNS_COMMANDHANDLER_CID, false, NULL, nsCommandHandlerConstructor },
+    { &kNS_WEBBROWSERCONTENTPOLICY_CID, false, NULL, nsWebBrowserContentPolicyConstructor },
+    { NULL }
 };
 
+static const mozilla::Module::ContractIDEntry kWebBrowserContracts[] = {
+    { NS_WEBBROWSER_CONTRACTID, &kNS_WEBBROWSER_CID },
+    { NS_COMMANDHANDLER_CONTRACTID, &kNS_COMMANDHANDLER_CID },
+    { NS_WEBBROWSERCONTENTPOLICY_CONTRACTID, &kNS_WEBBROWSERCONTENTPOLICY_CID },
+    { NULL }
+};
 
-// NSGetModule implementation.
+static const mozilla::Module::CategoryEntry kWebBrowserCategories[] = {
+    { "content-policy", NS_WEBBROWSERCONTENTPOLICY_CONTRACTID, NS_WEBBROWSERCONTENTPOLICY_CONTRACTID },
+    { NULL }
+};
 
-NS_IMPL_NSGETMODULE(Browser_Embedding_Module, components)
+static const mozilla::Module kWebBrowserModule = {
+    mozilla::Module::kVersion,
+    kWebBrowserCIDs,
+    kWebBrowserContracts,
+    kWebBrowserCategories
+};
+
+NSMODULE_DEFN(Browser_Embedding_Module) = &kWebBrowserModule;
 
 
 
