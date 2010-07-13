@@ -42,19 +42,16 @@
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsIPlugin.h"
 #include "nsIPluginInstance.h"
-#include "nsIPluginTagInfo.h"
 #include "nsPIDOMWindow.h"
-#include "nsIPluginInstanceOwner.h"
 #include "nsITimer.h"
-#include "mozilla/TimeStamp.h"
+#include "nsIPluginTagInfo.h"
 
-#include "npfunctions.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/PluginLibrary.h"
 
 class nsNPAPIPluginStreamListener;
-class nsPIDOMWindow;
+class nsIPluginInstanceOwner;
 
 class nsNPAPITimer
 {
