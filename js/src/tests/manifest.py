@@ -110,6 +110,7 @@ def parse(filename, xul_tester, reldir = ''):
             enable = True
             expect = True
             random = False
+            slow = False
 
             pos = 0
             while pos < len(parts):
@@ -144,11 +145,14 @@ def parse(filename, xul_tester, reldir = ''):
                 elif parts[pos] == 'script':
                     script = parts[pos+1]
                     pos += 2
+                elif parts[pos] == 'slow':
+                    slow = True
+                    pos += 1
                 else:
                     print 'warning: invalid manifest line element "%s"'%parts[pos]
                     pos += 1
 
             assert script is not None
             ans.append(TestCase(os.path.join(reldir, script), 
-                                enable, expect, random))
+                                enable, expect, random, slow))
     return ans
