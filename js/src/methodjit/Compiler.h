@@ -75,12 +75,14 @@ class Compiler
     };
 
     struct MICGenInfo {
+        MICGenInfo(ic::MICInfo::Kind kind) : kind(kind)
+        { }
         Label entry;
         Label stubEntry;
         DataLabelPtr shapeVal;
         Label load;
         Call call;
-        ic::MICInfo::Type type;
+        ic::MICInfo::Kind kind;
         bool typeConst;
         bool dataConst;
         bool dataWrite;

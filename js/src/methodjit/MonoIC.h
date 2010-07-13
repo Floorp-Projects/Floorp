@@ -59,7 +59,7 @@ struct MICInfo {
     static const uint32 SET_DATA_TYPE_OFFSET = 15;
 #endif
 
-    enum Type {
+    enum Kind {
         GET,
         SET
     };
@@ -69,12 +69,11 @@ struct MICInfo {
     JSC::CodeLocationLabel load;
     JSC::CodeLocationDataLabelPtr shape;
     JSC::CodeLocationCall stubCall;
-    bool touched;
-    bool typeConst;
-    bool dataConst;
-    bool dataWrite;
-    uint32 lastSlot;
-    Type type;
+    bool touched : 1;
+    bool typeConst : 1;
+    bool dataConst : 1;
+    bool dataWrite : 1;
+    Kind kind : 2;
 };
 
 void JS_FASTCALL GetGlobalName(VMFrame &f, uint32 index);
