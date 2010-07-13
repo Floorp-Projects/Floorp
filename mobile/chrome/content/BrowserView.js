@@ -315,6 +315,8 @@ BrowserView.prototype = {
         bounded = Math.max(bounded, md.minZoom);
       if (md && md.maxZoom)
         bounded = Math.min(bounded, md.maxZoom);
+
+      bounded = Math.max(bounded, this.getPageZoomLevel());
     }
 
     let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
@@ -578,6 +580,10 @@ BrowserView.prototype = {
     if (!bvs)
       return 0;
 
+    let md = bvs.metaData;
+    if (md && md.defaultZoom)
+      return this.clampZoomLevel(md.defaultZoom);
+
     let pageZoom = this.getPageZoomLevel();
 
     // If pageZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
@@ -586,17 +592,13 @@ BrowserView.prototype = {
     if (threshold < pageZoom && pageZoom < 1)
       pageZoom = 1;
 
-    let md = bvs.metaData;
-    if (md && md.defaultZoom)
-      return Math.max(pageZoom, this.clampZoomLevel(md.defaultZoom));
-
-    return pageZoom;
+    return this.clampZoomLevel(pageZoom);
   },
 
   getPageZoomLevel: function getPageZoomLevel() {
     let bvs = this._browserViewportState;  // browser exists, so bvs must as well
     let browserW = this.viewportToBrowser(bvs.viewportRect.right);
-    return this.clampZoomLevel(this.getVisibleRect().width / browserW);
+    return this.getVisibleRect().width / browserW;
   },
 
   zoom: function zoom(aDirection) {

@@ -1069,7 +1069,7 @@ var Browser = {
     if (i >= 0 && i < zoomValues.length)
       zoomLevel = zoomValues[i];
 
-    zoomLevel = Math.max(zoomLevel, bv.getPageZoomLevel());
+    zoomLevel = bv.clampZoomLevel(zoomLevel);
 
     let center = this.getVisibleRect().center().map(bv.viewportToBrowser);
     this.animatedZoomTo(this._getZoomRectForPoint(center.x, center.y, zoomLevel));
