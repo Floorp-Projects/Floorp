@@ -18,5 +18,7 @@
 	<string>MOZB</string>
 	<key>CFBundleVersion</key>
 	<string>APP_VERSION</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.5</string>
 </dict>
 </plist>

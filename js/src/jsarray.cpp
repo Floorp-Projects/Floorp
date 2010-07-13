@@ -337,7 +337,7 @@ JSObject::resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
         return JS_TRUE;
     }
 
-    if (newcap > MAX_DSLOTS_LENGTH) {
+    if (newcap > MAX_DSLOTS_LENGTH32) {
         js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }

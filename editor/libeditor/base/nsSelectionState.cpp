@@ -249,7 +249,9 @@ nsRangeUpdater::SelAdjCreateNode(nsIDOMNode *aParent, PRInt32 aPosition)
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
   NS_ENSURE_TRUE(aParent, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();
-  NS_ENSURE_TRUE(count, NS_OK);
+  if (!count) {
+    return NS_OK;
+  }
 
   nsRangeStore *item;
   
@@ -279,7 +281,9 @@ nsRangeUpdater::SelAdjDeleteNode(nsIDOMNode *aNode)
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();
-  NS_ENSURE_TRUE(count, NS_OK);
+  if (!count) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset = 0;
@@ -337,7 +341,9 @@ nsRangeUpdater::SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, nsID
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
   NS_ENSURE_TRUE(aOldRightNode && aNewLeftNode, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();
-  NS_ENSURE_TRUE(count, NS_OK);
+  if (!count) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
@@ -393,7 +399,9 @@ nsRangeUpdater::SelAdjJoinNodes(nsIDOMNode *aLeftNode,
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
   NS_ENSURE_TRUE(aLeftNode && aRightNode && aParent, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();
-  NS_ENSURE_TRUE(count, NS_OK);
+  if (!count) {
+    return NS_OK;
+  }
 
   nsRangeStore *item;
 
@@ -463,7 +471,9 @@ nsRangeUpdater::SelAdjInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
 
   PRUint32 count = mArray.Length();
-  NS_ENSURE_TRUE(count, NS_OK);
+  if (!count) {
+    return NS_OK;
+  }
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aTextNode));
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
   
@@ -489,7 +499,9 @@ nsRangeUpdater::SelAdjDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
 
   PRUint32 i, count = mArray.Length();
-  NS_ENSURE_TRUE(count, NS_OK);
+  if (!count) {
+    return NS_OK;
+  }
   nsRangeStore *item;
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aTextNode));
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
@@ -531,7 +543,9 @@ nsRangeUpdater::DidReplaceContainer(nsIDOMNode *aOriginalNode, nsIDOMNode *aNewN
 
   NS_ENSURE_TRUE(aOriginalNode && aNewNode, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();
-  NS_ENSURE_TRUE(count, NS_OK);
+  if (!count) {
+    return NS_OK;
+  }
 
   nsRangeStore *item;
   
@@ -566,7 +580,9 @@ nsRangeUpdater::DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt
 
   NS_ENSURE_TRUE(aNode && aParent, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();
-  NS_ENSURE_TRUE(count, NS_OK);
+  if (!count) {
+    return NS_OK;
+  }
 
   nsRangeStore *item;
   
@@ -630,7 +646,9 @@ nsRangeUpdater::DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOMNo
 
   NS_ENSURE_TRUE(aOldParent && aNewParent, NS_ERROR_NULL_POINTER);
   PRUint32 i, count = mArray.Length();
-  NS_ENSURE_TRUE(count, NS_OK);
+  if (!count) {
+    return NS_OK;
+  }
 
   nsRangeStore *item;
   

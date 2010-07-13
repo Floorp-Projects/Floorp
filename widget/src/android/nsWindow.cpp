@@ -156,6 +156,10 @@ nsWindow::Create(nsIWidget *aParent,
     ALOG("nsWindow[%p]::Create %p [%d %d %d %d]", (void*)this, (void*)aParent, aRect.x, aRect.y, aRect.width, aRect.height);
     nsWindow *parent = (nsWindow*) aParent;
 
+    if (!AndroidBridge::Bridge()) {
+        aNativeParent = nsnull;
+    }
+
     if (aNativeParent) {
         if (parent) {
             ALOG("Ignoring native parent on Android window [%p], since parent was specified (%p %p)", (void*)this, (void*)aNativeParent, (void*)aParent);
@@ -580,8 +584,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             int nh = ae->P0().y;
 
             if (nw == gAndroidBounds.width &&
-                nh == gAndroidBounds.height)
-            {
+                nh == gAndroidBounds.height) {
                 return;
             }
 
@@ -613,8 +616,12 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 DumpWindows();
 #endif
 
-                if (target)
-                    target->OnMotionEvent(ae);
+                if (target) {
+                    if (ae->Count() > 1)
+                        target->OnMultitouchEvent(ae);
+                    else
+                        target->OnMotionEvent(ae);
+                }
             }
             break;
         }
@@ -683,12 +690,12 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
     if (coveringChildIndex == -1) {
         ALOG("nsWindow[%p]::DrawTo no covering child, drawing this", (void*) this);
 
+        nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+        event.region = boundsRect;
         switch (GetLayerManager()->GetBackendType()) {
             case LayerManager::LAYERS_BASIC: {
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
-                nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-                event.region = boundsRect;
                 {
                     AutoLayerManagerSetup setupLayerManager(this, ctx);
                     status = DispatchEvent(&event);
@@ -703,19 +710,16 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 
                 // XXX if we got an ignore for the parent, do we still want to draw the children?
                 // We don't really have a good way not to...
-
-            }
                 break;
+            }
 
             case LayerManager::LAYERS_OPENGL: {
                 static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager())->
                     SetClippingRegion(nsIntRegion(boundsRect));
 
-                nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-                event.region = boundsRect;
                 status = DispatchEvent(&event);
-            }
                 break;
+            }
 
             default:
                 NS_ERROR("Invalid layer manager");
@@ -733,8 +737,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 
     for (PRUint32 i = coveringChildIndex; i < mChildren.Length(); ++i) {
         if (mChildren[i]->mBounds.IsEmpty() ||
-            !mChildren[i]->mBounds.Intersects(boundsRect))
-        {
+            !mChildren[i]->mBounds.Intersects(boundsRect)) {
             continue;
         }
 
@@ -753,20 +756,6 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
         targetSurface->SetDeviceOffset(offset);
 
     return PR_TRUE;
-}
-
-static int
-next_power_of_two(int v)
-{
-    v--;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    v++;
-
-    return v;
 }
 
 void
@@ -794,43 +783,36 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     }
 
-    int drawType = sview.BeginDrawing();
-
-    if (drawType == AndroidGeckoSurfaceView::DRAW_ERROR) {
-        ALOG("##### BeginDrawing failed!");
-        return;
-    }
-
     if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_BASIC) {
-        drawType = AndroidGeckoSurfaceView::DRAW_SOFTWARE;
-    } else {
-        drawType = AndroidGeckoSurfaceView::DRAW_GLES_2;
-    }
+        jobject bytebuf = sview.GetSoftwareDrawBuffer();
+        if (!bytebuf) {
+            ALOG("no buffer to draw into - skipping draw");
+            return;
+        }
 
-    if (drawType == AndroidGeckoSurfaceView::DRAW_SOFTWARE) {
-        int bufCap;
-        unsigned char *buf = sview.GetSoftwareDrawBuffer(&bufCap);
-        if (!buf || bufCap != mBounds.width * mBounds.height * 4) {
-            ALOG("### Software drawing, but too small a buffer %d expected %d (or no buffer %p)!", bufCap, mBounds.width * mBounds.height * 4, (void*)buf);
-            sview.EndDrawing();
+        void *buf = AndroidBridge::JNI()->GetDirectBufferAddress(bytebuf);
+        int cap = AndroidBridge::JNI()->GetDirectBufferCapacity(bytebuf);
+        if (!buf || cap < (mBounds.width * mBounds.height * 2)) {
+            ALOG("### Software drawing, but too small a buffer %d expected %d (or no buffer %p)!", cap, mBounds.width * mBounds.height * 2, buf);
             return;
         }
 
         nsRefPtr<gfxImageSurface> targetSurface =
-            new gfxImageSurface(buf,
+            new gfxImageSurface((unsigned char *)buf,
                                 gfxIntSize(mBounds.width, mBounds.height),
-                                mBounds.width * 4,
-                                gfxASurface::ImageFormatARGB32);
+                                mBounds.width * 2,
+                                gfxASurface::ImageFormatRGB16_565);
 
         DrawTo(targetSurface);
+        sview.Draw2D(bytebuf);
+    } else {
+        int drawType = sview.BeginDrawing();
 
-        // need to swap B and R channels, to get ABGR instead of ARGB
-        unsigned int *ibuf = (unsigned int*) buf;
-        unsigned int *ibufMax = ibuf + mBounds.width * mBounds.height;
-        while (ibuf < ibufMax) {
-            *ibuf++ = (*ibuf & 0xff00ff00) | ((*ibuf & 0x00ff0000) >> 16) | ((*ibuf & 0x000000ff) << 16);
+        if (drawType == AndroidGeckoSurfaceView::DRAW_ERROR) {
+            ALOG("##### BeginDrawing failed!");
+            return;
         }
-    } else if (drawType == AndroidGeckoSurfaceView::DRAW_GLES_2) {
+
         NS_ASSERTION(sGLContext, "Drawing with GLES without a GL context?");
 
         sGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
@@ -839,9 +821,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
         if (sGLContext)
             sGLContext->SwapBuffers();
+        sview.EndDrawing();
     }
-
-    sview.EndDrawing();
 }
 
 void
@@ -930,7 +911,6 @@ nsWindow::OnMotionEvent(AndroidGeckoEvent *ae)
             break;
 
         default:
-            // we don't handle any other motion events yet
             return;
     }
 
@@ -971,6 +951,51 @@ send_again:
         msg = NS_MOUSE_MOVE;
         goto send_again;
     }
+}
+
+static double
+getDistance(int x1, int y1, int x2, int y2)
+{
+    double deltaX = x2 - x1;
+    double deltaY = y2 - y1;
+    return sqrt(deltaX*deltaX + deltaY*deltaY);
+}
+
+void nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
+{
+    double dist = getDistance(ae->P0().x, ae->P0().y, ae->P1().x, ae->P1().y);
+
+    PRUint32 msg;
+    switch (ae->Action() & AndroidMotionEvent::ACTION_MASK) {
+        case AndroidMotionEvent::ACTION_MOVE:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+            break;
+        case AndroidMotionEvent::ACTION_POINTER_DOWN:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
+            mStartDist = dist;
+            break;
+        case AndroidMotionEvent::ACTION_POINTER_UP:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY;
+            break;
+
+        default:
+            return;
+    }
+
+    nsIntPoint offset = WidgetToScreenOffset();
+    nsSimpleGestureEvent event(PR_TRUE, msg, this, 0, dist - mStartDist);
+
+    event.isShift = gLeftShift || gRightShift;
+    event.isControl = gSym;
+    event.isMeta = PR_FALSE;
+    event.isAlt = gLeftAlt || gRightAlt;
+    event.time = ae->Time();
+    event.refPoint.x = ((ae->P0().x + ae->P1().x) / 2) - offset.x;
+    event.refPoint.y = ((ae->P0().y + ae->P1().y) / 2) - offset.y;
+
+    DispatchEvent(&event);
+
+    mStartDist = dist;
 }
 
 void

@@ -44,30 +44,6 @@
 
 #define UNICODE_BYTE_ORDER_MARK    0xFEFF
 
-NS_IMETHODIMP NS_NewUTF8ToUnicode(nsISupports* aOuter,
-                                  const nsIID& aIID,
-                                  void** aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsUTF8ToUnicode * inst = new nsUTF8ToUnicode();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
-}
-
 //----------------------------------------------------------------------
 // Class nsUTF8ToUnicode [implementation]
 

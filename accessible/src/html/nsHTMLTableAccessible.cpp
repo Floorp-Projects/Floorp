@@ -40,6 +40,7 @@
 #include "nsHTMLTableAccessible.h"
 
 #include "nsAccessibilityService.h"
+#include "nsAccTreeWalker.h"
 #include "nsAccUtils.h"
 #include "nsDocAccessible.h"
 #include "nsRelUtils.h"
@@ -452,25 +453,20 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTableAccessible, nsAccessible,
 void
 nsHTMLTableAccessible::CacheChildren()
 {
-  nsAccessible::CacheChildren();
+  // Move caption accessible so that it's the first child. Check for the first
+  // caption only, because nsAccessibilityService ensures we don't create
+  // accessibles for the other captions, since only the first is actually
+  // visible.
+  nsAccTreeWalker walker(mWeakShell, mContent, GetAllowsAnonChildAccessibles());
 
-  // Move caption accessible so that it's the first child.
-  PRInt32 length = mChildren.Length();
-  for (PRInt32 idx = 0; idx < length; idx++) {
-    // Check for the first caption, because nsAccessibilityService ensures we
-    // don't create accessibles for the other captions, since only the first is
-    // actually visible.
-
-    nsAccessible* child = mChildren.ElementAt(idx);
+  nsRefPtr<nsAccessible> child;
+  while ((child = walker.GetNextChild())) {
     if (nsAccUtils::Role(child) == nsIAccessibleRole::ROLE_CAPTION) {
-      if (idx == 0)
-        break;
-
-      nsRefPtr<nsAccessible> tmp = mChildren[0];
-      mChildren[0] = child;
-      mChildren[idx] = tmp;
+      InsertChildAt(0, child);
+      while ((child = walker.GetNextChild()) && AppendChild(child));
       break;
     }
+    AppendChild(child);
   }
 }
 
@@ -955,6 +951,26 @@ nsHTMLTableAccessible::GetRowIndexAt(PRInt32 aIndex, PRInt32 *aRow)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return (*aRow == -1 || column == -1) ? NS_ERROR_INVALID_ARG : NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTableAccessible::GetRowAndColumnIndicesAt(PRInt32 aIndex,
+                                                PRInt32* aRowIdx,
+                                                PRInt32* aColumnIdx)
+{
+  NS_ENSURE_ARG_POINTER(aRowIdx);
+  *aRowIdx = -1;
+  NS_ENSURE_ARG_POINTER(aColumnIdx);
+  *aColumnIdx = -1;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsITableLayout* tableLayout = GetTableLayout();
+  if (tableLayout)
+    tableLayout->GetRowAndColumnByIndex(aIndex, aRowIdx, aColumnIdx);
+
+  return (*aRowIdx == -1 || *aColumnIdx == -1) ? NS_ERROR_INVALID_ARG : NS_OK;
 }
 
 NS_IMETHODIMP

@@ -87,12 +87,7 @@ public:
   /* ------------ nsIEditorMailSupport overrides -------------- */
   NS_DECL_NSIEDITORMAILSUPPORT
 
-  /* ------------ nsIEditorIMESupport overrides -------------- */
-  NS_IMETHOD SetCompositionString(const nsAString &aCompositionString,
-                                  nsIPrivateTextRangeList *aTextRange);
-
   /* ------------ Overrides of nsEditor interface methods -------------- */
-  NS_IMETHOD BeginComposition();
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                       const nsAString & aAttribute,
                                       const nsAString & aValue,
@@ -151,6 +146,10 @@ public:
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
 
   virtual already_AddRefed<nsPIDOMEventTarget> GetPIDOMEventTarget();
+
+  virtual nsresult BeginIMEComposition();
+  virtual nsresult UpdateIMEComposition(const nsAString &aCompositionString,
+                                        nsIPrivateTextRangeList *aTextRange);
 
   /* ------------ Utility Routines, not part of public API -------------- */
   NS_IMETHOD TypedText(const nsAString& aString, PRInt32 aAction);

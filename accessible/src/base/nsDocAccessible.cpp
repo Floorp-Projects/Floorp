@@ -39,6 +39,7 @@
 #include "nsAccCache.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
+#include "nsAccTreeWalker.h"
 #include "nsAccUtils.h"
 #include "nsRootAccessible.h"
 #include "nsTextEquivUtils.h"
@@ -631,10 +632,8 @@ nsDocAccessible::Shutdown()
 
   RemoveEventListeners();
 
-  if (mParent) {
+  if (mParent)
     mParent->RemoveChild(this);
-    mParent = nsnull;
-  }
 
   mWeakShell = nsnull;  // Avoid reentrancy
 
@@ -955,8 +954,6 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   }
 
   NS_ASSERTION(aContent, "No node for attr modified");
-  if (!aContent || !nsAccUtils::IsNodeRelevant(aContent))
-    return;
 
   // Universal boolean properties that don't require a role. Fire the state
   // change when disabled or aria-disabled attribute is set.
@@ -1272,12 +1269,6 @@ nsDocAccessible::ParentChainChanged(nsIContent *aContent)
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible
 
-nsAccessible*
-nsDocAccessible::GetParent()
-{
-  return IsDefunct() ? nsnull : mParent.get();
-}
-
 #ifdef DEBUG_ACCDOCMGR
 nsresult
 nsDocAccessible::HandleAccEvent(nsAccEvent *aAccEvent)
@@ -1334,15 +1325,15 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
   if (!textAccessible)
     return;
 
-  // Get offset within hypertext accessible.
-  PRInt32 offset = 0;
-  textAccessible->DOMPointToHypertextOffset(aContent, contentOffset, &offset);
+  // Get offset within hypertext accessible and invalidate cached offsets after
+  // this child accessible.
+  PRInt32 offset = textAccessible->GetChildOffset(accessible, PR_TRUE);
 
+  // Get added or removed text.
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame)
     return;
 
-  // Get added or removed text.
   PRUint32 textOffset = 0;
   nsresult rv = textAccessible->ContentToRenderedOffset(frame, contentOffset,
                                                         &textOffset);
@@ -1354,17 +1345,15 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
   if (NS_FAILED(rv))
     return;
 
-  // Get text length.
-  PRUint32 length = text.Length();
-  if (length == 0)
+  if (text.IsEmpty())
     return;
 
   // Normally we only fire delayed events created from the node, not an
   // accessible object. See the nsAccTextChangeEvent constructor for details
   // about this exceptional case.
   nsRefPtr<nsAccEvent> event =
-      new nsAccTextChangeEvent(textAccessible, offset, length, text,
-                               aIsInserted, PR_FALSE);
+    new nsAccTextChangeEvent(textAccessible, offset + textOffset, text,
+                             aIsInserted, PR_FALSE);
   FireDelayedAccessibleEvent(event);
 
   FireValueChangeForTextFields(textAccessible);
@@ -1373,7 +1362,7 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
 already_AddRefed<nsAccEvent>
 nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible,
                                               nsIContent *aChangeNode,
-                                              nsAccessible *aAccessibleForChangeNode,
+                                              nsAccessible *aChangeChild,
                                               PRBool aIsInserting,
                                               PRBool aIsAsynch,
                                               EIsFromUserInput aIsFromUserInput)
@@ -1384,43 +1373,11 @@ nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible
     return nsnull;
   }
 
-  PRInt32 offset = 0;
-  nsAccessible *changeAcc =
-    textAccessible->DOMPointToHypertextOffset(aChangeNode, -1, &offset);
-
   nsAutoString text;
-  if (!aAccessibleForChangeNode) {
-    // A span-level object or something else without an accessible is being removed, where
-    // it has no accessible but it has descendant content which is aggregated as text
-    // into the parent hypertext.
-    // In this case, accessibleToBeRemoved may just be the first
-    // accessible that is removed, which affects the text in the hypertext container
-    if (!changeAcc)
-      return nsnull; // No descendant content that represents any text in the hypertext parent
-
-    nsAccessible *parent = changeAcc->GetParent();
-    nsINode *parentNode = parent->GetNode();
-    PRInt32 childCount = parent->GetChildCount();
-    PRInt32 changeAccIdx = parent->GetIndexOf(changeAcc);
-
-    for (PRInt32 idx = changeAccIdx; idx < childCount; idx++) {
-      nsAccessible *child = parent->GetChildAt(idx);
-      nsINode *childNode = child->GetNode();
-
-      if (!nsCoreUtils::IsAncestorOf(aChangeNode, childNode, parentNode)) {
-        // We only want accessibles with DOM nodes as children of this node
-        break;
-      }
-
-      child->AppendTextTo(text, 0, PR_UINT32_MAX);
-    }
-  }
-  else {
-    NS_ASSERTION(!changeAcc || changeAcc == aAccessibleForChangeNode,
-                 "Hypertext is reporting a different accessible for this node");
-
-    if (nsAccUtils::Role(aAccessibleForChangeNode) == nsIAccessibleRole::ROLE_WHITESPACE) {  // newline
-      // Don't fire event for the first html:br in an editor.
+  PRInt32 offset = 0;
+  if (aChangeChild) {
+    // Don't fire event for the first html:br in an editor.
+    if (nsAccUtils::Role(aChangeChild) == nsIAccessibleRole::ROLE_WHITESPACE) {
       nsCOMPtr<nsIEditor> editor;
       textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
       if (editor) {
@@ -1432,16 +1389,46 @@ nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible
       }
     }
 
-    aAccessibleForChangeNode->AppendTextTo(text, 0, PR_UINT32_MAX);
+    offset = textAccessible->GetChildOffset(aChangeChild);
+    aChangeChild->AppendTextTo(text, 0, PR_UINT32_MAX);
+
+  } else {
+    // A span-level object or something else without an accessible is being
+    // added, where it has no accessible but it has descendant content which is
+    // aggregated as text into the parent hypertext. In this case, changed text
+    // is compounded from all accessible contained in changed node.
+    nsAccTreeWalker walker(mWeakShell, aChangeNode,
+                           GetAllowsAnonChildAccessibles());
+    nsRefPtr<nsAccessible> child = walker.GetNextChild();
+
+    // No descendant content that represents any text in the hypertext parent.
+    if (!child)
+      return nsnull;
+
+    offset = textAccessible->GetChildOffset(child);
+    child->AppendTextTo(text, 0, PR_UINT32_MAX);
+
+    nsINode* containerNode = textAccessible->GetNode();
+    PRInt32 childCount = textAccessible->GetChildCount();
+    PRInt32 childIdx = child->GetIndexInParent();
+
+    for (PRInt32 idx = childIdx + 1; idx < childCount; idx++) {
+      nsAccessible* nextChild = textAccessible->GetChildAt(idx);
+      // We only want accessibles with DOM nodes as children of this node.
+      if (!nsCoreUtils::IsAncestorOf(aChangeNode, nextChild->GetNode(),
+                                     containerNode))
+        break;
+
+      nextChild->AppendTextTo(text, 0, PR_UINT32_MAX);
+    }
   }
 
-  PRUint32 length = text.Length();
-  if (length == 0)
+  if (text.IsEmpty())
     return nsnull;
 
   nsAccEvent *event =
-      new nsAccTextChangeEvent(aContainerAccessible, offset, length, text,
-                               aIsInserting, aIsAsynch, aIsFromUserInput);
+    new nsAccTextChangeEvent(aContainerAccessible, offset, text,
+                             aIsInserting, aIsAsynch, aIsFromUserInput);
   NS_IF_ADDREF(event);
 
   return event;
@@ -1504,7 +1491,7 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
         // Don't need to invalidate this current accessible, but can
         // just invalidate the children instead
         FireShowHideEvents(node, PR_TRUE, eventType, eNormalEvent,
-                           isAsync, isFromUserInput); 
+                           isAsync, isFromUserInput);
         return;
       }
       gLastFocusedFrameType = newFrameType;
@@ -1513,16 +1500,17 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
 
   if (eventType == nsIAccessibleEvent::EVENT_SHOW) {
 
-    nsAccessible *containerAccessible = nsnull;
-    if (accessible)
+    nsAccessible* containerAccessible = nsnull;
+    if (accessible) {
       containerAccessible = accessible->GetParent();
-
-    if (!containerAccessible) {
+    } else {
+      nsCOMPtr<nsIWeakReference> weakShell(nsCoreUtils::GetWeakShellFor(node));
       containerAccessible = GetAccService()->GetContainerAccessible(node,
-                                                                    PR_TRUE);
-      if (!containerAccessible)
-        containerAccessible = this;
+                                                                    weakShell);
     }
+
+    if (!containerAccessible)
+      containerAccessible = this;
 
     if (isAsync) {
       // For asynch show, delayed invalidatation of parent's children
@@ -1654,7 +1642,7 @@ nsDocAccessible::RefreshNodes(nsINode *aStartNode)
 
     // We only need to shutdown the accessibles here if one of them has been
     // created.
-    if (accessible->GetCachedFirstChild()) {
+    if (accessible->GetCachedChildCount() > 0) {
       nsCOMPtr<nsIArray> children;
       // use GetChildren() to fetch all children at once, because after shutdown
       // the child references are cleared.
@@ -1769,7 +1757,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       // Just invalidate accessible hierarchy and return,
       // otherwise the page load time slows down way too much
       nsAccessible *containerAccessible =
-        GetAccService()->GetContainerAccessible(childNode, PR_FALSE);
+        GetAccService()->GetCachedContainerAccessible(childNode);
       if (!containerAccessible) {
         containerAccessible = this;
       }
@@ -1805,7 +1793,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 #endif
 
   nsAccessible *containerAccessible =
-    GetAccService()->GetContainerAccessible(childNode, PR_TRUE);
+    GetAccService()->GetCachedContainerAccessible(childNode);
   if (!containerAccessible) {
     containerAccessible = this;
   }
@@ -1837,24 +1825,6 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
                                      eDelayedEvent, isAsynch);
     if (NS_FAILED(rv))
       return;
-
-    if (aChild) {
-      // Fire text change unless the node being removed is for this doc.
-      // When a node is hidden or removed, the text in an ancestor hyper text will lose characters
-      // At this point we still have the frame and accessible for this node if there was one
-      // XXX Collate events when a range is deleted
-      // XXX We need a way to ignore SplitNode and JoinNode() when they
-      // do not affect the text within the hypertext
-      // Normally we only fire delayed events created from the node, not an
-      // accessible object. See the nsAccTextChangeEvent constructor for details
-      // about this exceptional case.
-      nsRefPtr<nsAccEvent> textChangeEvent =
-        CreateTextChangeEventForNode(containerAccessible, aChild, childAccessible,
-                                     PR_FALSE, isAsynch);
-      if (textChangeEvent) {
-        FireDelayedAccessibleEvent(textChangeEvent);
-      }
-    }
   }
 
   // We need to get an accessible for the mutation event's container node
@@ -1950,16 +1920,26 @@ nsDocAccessible::FireShowHideEvents(nsINode *aNode,
       accessible = GetCachedAccessible(aNode);
     } else {
       // Allow creation of new accessibles for show events
-      accessible = GetAccService()->GetAttachedAccessibleFor(aNode);
+      accessible = GetAccService()->GetAccessible(aNode);
     }
   }
 
   if (accessible) {
     // Found an accessible, so fire the show/hide on it and don't look further
     // into this subtree.
-    nsRefPtr<nsAccEvent> event =
-      new nsAccEvent(aEventType, accessible, aIsAsyncChange, aIsFromUserInput,
-                     nsAccEvent::eCoalesceFromSameSubtree);
+    nsRefPtr<nsAccEvent> event;
+    if (aDelayedOrNormal == eDelayedEvent &&
+        aEventType == nsIAccessibleEvent::EVENT_HIDE) {
+      // Use AccHideEvent for delayed hide events to coalesce text change events
+      // caused by these hide events.
+      event = new AccHideEvent(accessible, accessible->GetNode(),
+                               aIsAsyncChange, aIsFromUserInput);
+
+    } else {
+      event = new nsAccEvent(aEventType, accessible, aIsAsyncChange,
+                             aIsFromUserInput,
+                             nsAccEvent::eCoalesceFromSameSubtree);
+    }
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
     if (aDelayedOrNormal == eDelayedEvent)

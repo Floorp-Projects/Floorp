@@ -37,7 +37,6 @@
   
 /**
  * The mother of all xpcom interfaces.
- * @status FROZEN
  */
 
 /* In order to get both the right typelib and the right header we force

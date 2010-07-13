@@ -1852,48 +1852,43 @@ nsEditor::StopPreservingSelection()
 
 #ifdef XP_MAC
 #pragma mark -
-#pragma mark  nsIEditorIMESupport 
+#pragma mark  IME event handlers 
 #pragma mark -
 #endif
 
-//
-// The BeingComposition method is called from the Editor Composition event listeners.
-//
-NS_IMETHODIMP
-nsEditor::BeginComposition()
+nsresult
+nsEditor::BeginIMEComposition()
 {
-#ifdef DEBUG_tague
-  printf("nsEditor::StartComposition\n");
-#endif
   mInIMEMode = PR_TRUE;
-  if (mPhonetic)
+  if (mPhonetic) {
     mPhonetic->Truncate(0);
-
+  }
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEditor::EndComposition(void)
+nsresult
+nsEditor::EndIMEComposition()
 {
   NS_ENSURE_TRUE(mInIMEMode, NS_OK); // nothing to do
-  
-  nsresult result = NS_OK;
+
+  nsresult rv = NS_OK;
 
   // commit the IME transaction..we can get at it via the transaction mgr.
   // Note that this means IME won't work without an undo stack!
-  if (mTxnMgr) 
-  {
+  if (mTxnMgr) {
     nsCOMPtr<nsITransaction> txn;
-    result = mTxnMgr->PeekUndoStack(getter_AddRefs(txn));  
+    rv = mTxnMgr->PeekUndoStack(getter_AddRefs(txn));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "PeekUndoStack() failed");
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryInterface(txn);
-    if (plcTxn)
-    {
-      result = plcTxn->Commit();
+    if (plcTxn) {
+      rv = plcTxn->Commit();
+      NS_ASSERTION(NS_SUCCEEDED(rv),
+                   "nsIAbsorbingTransaction::Commit() failed");
     }
   }
 
   /* reset the data we need to construct a transaction */
-  mIMETextNode = do_QueryInterface(nsnull);
+  mIMETextNode = nsnull;
   mIMETextOffset = 0;
   mIMEBufferLength = 0;
   mInIMEMode = PR_FALSE;
@@ -1902,15 +1897,16 @@ nsEditor::EndComposition(void)
   // notify editor observers of action
   NotifyEditorObservers();
 
-  return result;
+  return rv;
 }
 
-NS_IMETHODIMP
-nsEditor::SetCompositionString(const nsAString& aCompositionString,
-                               nsIPrivateTextRangeList* aTextRangeList)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  nsIPhonetic
+#pragma mark -
+#endif
+
 
 NS_IMETHODIMP
 nsEditor::GetPhonetic(nsAString& aPhonetic)
@@ -1922,6 +1918,13 @@ nsEditor::GetPhonetic(nsAString& aPhonetic)
 
   return NS_OK;
 }
+
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  nsIEditorIMESupport 
+#pragma mark -
+#endif
 
 
 static nsresult
@@ -1940,7 +1943,7 @@ GetEditorContentWindow(nsIDOMElement *aRoot, nsIWidget **aResult)
 
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  *aResult = frame->GetWindow();
+  *aResult = frame->GetNearestWidget();
   NS_ENSURE_TRUE(*aResult, NS_ERROR_FAILURE);
 
   NS_ADDREF(*aResult);

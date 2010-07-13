@@ -45,7 +45,6 @@
 #include "nsWebBrowser.h"
 
 // Helper Classes
-#include "nsIGenericFactory.h"
 #include "nsStyleCoord.h"
 #include "nsSize.h"
 #include "nsHTMLReflowState.h"
@@ -120,6 +119,8 @@
 static nsresult
 GetPIDOMEventTarget( nsWebBrowser* inBrowser, nsPIDOMEventTarget** aTarget)
 {
+  NS_ENSURE_ARG_POINTER(inBrowser);
+  
   nsCOMPtr<nsIDOMWindow> domWindow;
   inBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
   NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
@@ -913,6 +914,8 @@ nsDocShellTreeOwner::RemoveChromeListeners()
 
   nsCOMPtr<nsPIDOMEventTarget> piTarget;
   GetPIDOMEventTarget(mWebBrowser, getter_AddRefs(piTarget));
+  if (!piTarget)
+    return NS_OK;
 
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
   piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));

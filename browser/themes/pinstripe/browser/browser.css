@@ -135,7 +135,6 @@
   margin-top: -1px; /* overlay the bottom border of the toolbar above us */
   background-color: -moz-mac-chrome-active;
   border-bottom: 1px solid rgba(0, 0, 0, 0.57);
-  min-height: 22px;
 }
 
 #PersonalToolbar:-moz-window-inactive {
@@ -144,7 +143,7 @@
 }
 
 #personal-bookmarks {
-  -moz-box-align: center;
+  min-height: 17px; /* 16px button height + 1px margin-bottom */
 }
 
 toolbarbutton.chevron {
@@ -791,7 +790,7 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
 }
 
 #urlbar-display {
-  margin-top: -2px;
+  margin-top: -3px;
   margin-bottom: -2px;
   padding-top: 3px;
   padding-bottom: 2px;
@@ -1816,7 +1815,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin-top: -3px;
   margin-left: -23px;
   min-width: 280px;
-  -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 18 22 50 / 26px 18px 22px 50px repeat; 
+  -moz-border-image: url(chrome://browser/skin/hud-panel.png) 26 18 22 50 / 26px 18px 22px 50px repeat;
 }
 
 #notification-popup {
@@ -1828,11 +1827,18 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin: 0 3px;
 }
 
-#geo-notification-icon {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+.notification-anchor-icon {
   width: 16px;
   height: 16px;
   margin: 0 2px;
+}
+
+#geo-notification-icon {
+  list-style-image: url(chrome://browser/skin/Geolocation-16.png);
+}
+
+#addons-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
 
 .popup-notification-description {
@@ -1846,7 +1852,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .popup-notification-icon[popupid="geolocation"] {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+  list-style-image: url(chrome://browser/skin/Geolocation-64.png);
+}
+
+.popup-notification-icon[popupid="xpinstall-disabled"],
+.popup-notification-icon[popupid="addon-install-blocked"],
+.popup-notification-icon[popupid="addon-install-failed"],
+.popup-notification-icon[popupid="addon-install-complete"] {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
+  width: 32px;
+  height: 32px;
 }
 
 #identity-popup-container,

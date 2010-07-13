@@ -82,6 +82,7 @@ CPPSRCS += Omnijar.cpp
 endif
 
 SHARED_LIBRARY_LIBS = \
+		$(DEPTH)/chrome/src/$(LIB_PREFIX)chrome_s.$(LIB_SUFFIX) \
 		../ds/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \
 		../io/$(LIB_PREFIX)xpcomio_s.$(LIB_SUFFIX) \
 		../components/$(LIB_PREFIX)xpcomcomponents_s.$(LIB_SUFFIX) \
@@ -113,6 +114,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../threads/_xpidlgen \
 		-I$(srcdir)/../proxy/src \
 		-I$(srcdir)/../reflect/xptinfo/src \
+		-I$(topsrcdir)/chrome/src \
 		$(NULL)
 
 EXPORTS_NAMESPACES = mozilla

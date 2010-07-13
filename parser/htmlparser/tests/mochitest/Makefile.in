@@ -64,5 +64,10 @@ _TEST_FILES =	parser_datreader.js \
 		invalidchar.xml \
 		$(NULL)
 
+# Disabled test due to orange on Linux
+#		test_bug568470.html \
+#		file_bug568470.sjs \
+#		file_bug568470-script.sjs \
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

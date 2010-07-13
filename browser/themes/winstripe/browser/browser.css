@@ -181,7 +181,7 @@ statusbarpanel#statusbar-display {
     position: relative !important;
     background-color: -moz-dialog !important;
   }
-  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] ~ #TabsToolbar {
+  #navigator-toolbox[tabsontop="true"] > #toolbar-menubar[autohide="true"] ~ #TabsToolbar:not([inFullscreen]) {
     -moz-padding-start: 10em !important;
   }
 %ifdef WINSTRIPE_AERO
@@ -376,7 +376,7 @@ toolbar[iconsize="small"][mode="icons"] toolbarbutton[type="menu-button"] {
 
 .toolbarbutton-menubutton-button:not([disabled="true"]):not(:active):hover,
 toolbarbutton[type="menu-button"]:not([open="true"]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
-.toolbarbutton-1:not([disabled="true"]):not([checked="true"]):not(:active):hover {
+.toolbarbutton-1:not([disabled="true"]):not([checked="true"]):not([open="true"]):not(:active):hover {
   background-color: hsla(190,60%,70%,.5);
   border-color: hsla(190,50%,65%,.8) hsla(190,50%,50%,.8) hsla(190,50%,40%,.8);
   -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
@@ -1609,7 +1609,16 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 .popup-notification-icon[popupid="geolocation"] {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+  list-style-image: url(chrome://browser/skin/Geolocation-64.png);
+}
+
+.popup-notification-icon[popupid="xpinstall-disabled"],
+.popup-notification-icon[popupid="addon-install-blocked"],
+.popup-notification-icon[popupid="addon-install-failed"],
+.popup-notification-icon[popupid="addon-install-complete"] {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
+  width: 32px;
+  height: 32px;
 }
 
 /* Notification icon box */
@@ -1617,10 +1626,17 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin: 0 3px;
 }
 
-#geo-notification-icon {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+.notification-anchor-icon {
   width: 16px;
   height: 16px;
+}
+
+#geo-notification-icon {
+  list-style-image: url(chrome://browser/skin/Geolocation-16.png);
+}
+
+#addons-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
 
 #identity-popup-container {

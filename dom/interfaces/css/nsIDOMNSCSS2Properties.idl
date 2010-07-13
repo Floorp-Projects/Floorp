@@ -40,7 +40,7 @@
 
 #include "nsIDOMSVGCSS2Properties.idl"
 
-[scriptable, uuid(649B0B41-C5F7-4EA2-B6DF-CFFF6B6DD30A)]
+[scriptable, uuid(29B6104D-933F-4DD0-8FC8-BDEC0514469D)]
 interface nsIDOMNSCSS2Properties : nsIDOMSVGCSS2Properties
 {
            /* Non-DOM 2 extensions */
@@ -282,6 +282,6 @@ interface nsIDOMNSCSS2Properties : nsIDOMSVGCSS2Properties
            attribute DOMString        MozTabSize;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozResize;
+           attribute DOMString        resize;
                                         // raises(DOMException) on setting
 };

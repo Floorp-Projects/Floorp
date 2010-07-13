@@ -150,6 +150,8 @@ var TestPilotMenuUtils;
        * after startup is complete.  It's hacky, but the benefit is that
        * TestPilotSetup.onWindowLoad can treat all windows the same no matter
        * whether they opened with Firefox on startup or were opened later. */
+      TestPilotWindowHandlers.setUpToolbarFeedbackButton();
+
       if (TestPilotSetup.startupComplete) {
         TestPilotSetup.onWindowLoad(window);
       } else {
@@ -162,6 +164,31 @@ var TestPilotMenuUtils;
           }
         };
         observerSvc.addObserver(observer, "testpilot:startup:complete", false);
+      }
+    },
+
+    setUpToolbarFeedbackButton: function() {
+      /* If this is first run, and it's ffx4 beta version, and the feedback
+       * button is not in the expected place, put it there!
+       * (copied from MozReporterButtons extension) */
+      if (!window.document.getElementById("feedback-menu-happy-button")) {
+        return;
+      }
+      let firefoxnav = window.document.getElementById("nav-bar");
+      let curSet = firefoxnav.currentSet;
+
+      if (-1 == curSet.indexOf("feedback-menu-button")) {
+        // place the buttons after the search box.
+        let newSet = curSet + ",feedback-menu-button";
+
+        firefoxnav.setAttribute("currentset", newSet);
+        firefoxnav.currentSet = newSet;
+        window.document.persist("nav-bar", "currentset");
+        // if you don't do the following call, funny things happen.
+        try {
+          BrowserToolboxCustomizeDone(true);
+        } catch (e) {
+        }
       }
     },
 

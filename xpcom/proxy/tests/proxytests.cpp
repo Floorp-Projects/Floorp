@@ -504,10 +504,6 @@ main(int argc, char **argv)
 
     // Scope code so everything is destroyed before we run call NS_ShutdownXPCOM
     {
-        nsCOMPtr<nsIComponentRegistrar> registrar;
-        NS_GetComponentRegistrar(getter_AddRefs(registrar));
-        registrar->AutoRegister(nsnull);
-
         RunApartmentTest();
 
         nsCOMPtr<nsIThread> eventLoopThread;

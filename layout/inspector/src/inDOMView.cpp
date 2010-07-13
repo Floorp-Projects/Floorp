@@ -384,8 +384,7 @@ inDOMView::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray *
 
     nsCOMPtr<nsIAccessible> accessible;
     nsresult rv =
-      accService->GetAttachedAccessibleFor(node->node,
-                                           getter_AddRefs(accessible));
+      accService->GetAccessibleFor(node->node, getter_AddRefs(accessible));
     if (NS_SUCCEEDED(rv) && accessible)
       properties->AppendElement(kAccessibleNodeAtom);
   }

@@ -40,8 +40,6 @@
 #include "nsIStringBundle.h"
 #include "nsCOMPtr.h"
 
-nsresult NS_NewEntityConverter(nsISupports** oResult);
-
 #define kVERSION_STRING_LEN 128
 
 class nsEntityVersionList

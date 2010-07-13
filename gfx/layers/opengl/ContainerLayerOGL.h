@@ -58,8 +58,6 @@ public:
   void RemoveChild(Layer* aChild);
 
   /** LayerOGL implementation */
-  LayerType GetType();
-
   Layer* GetLayer();
 
   LayerOGL* GetFirstChildOGL();
@@ -68,8 +66,6 @@ public:
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
-private:
-  GLuint mTexture;
 };
 
 } /* layers */

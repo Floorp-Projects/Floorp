@@ -39,6 +39,8 @@
 
 #include "WebGLContext.h"
 
+#include "CheckedInt.h"
+
 using namespace mozilla;
 
 /*
@@ -112,12 +114,18 @@ WebGLContext::ValidateBuffers(PRUint32 count)
             continue;
 
         // compute the number of bytes we actually need
-        WebGLuint needed = vd.byteOffset +     // the base offset
-            vd.actualStride() * (count-1) +    // to stride to the start of the last element group
-            vd.componentSize() * vd.size;      // and the number of bytes needed for these components
+        CheckedUint32 checked_needed = CheckedUint32(vd.byteOffset) + // the base offset
+            CheckedUint32(vd.actualStride()) * (count-1) + // to stride to the start of the last element group
+            CheckedUint32(vd.componentSize()) * vd.size;   // and the number of bytes needed for these components
 
-        if (vd.buf->ByteLength() < needed) {
-            LogMessage("VBO too small for bound attrib index %d: need at least %d bytes, but have only %d", i, needed, vd.buf->ByteLength());
+        if (!checked_needed.valid()) {
+            LogMessage("Integer overflow computing the size of bound vertex attrib buffer at index %d", i);
+            return PR_FALSE;
+        }
+
+        if (vd.buf->ByteLength() < checked_needed.value()) {
+            LogMessage("VBO too small for bound attrib index %d: need at least %d bytes, but have only %d",
+                       i, checked_needed.value(), vd.buf->ByteLength());
             return PR_FALSE;
         }
     }
@@ -125,7 +133,7 @@ WebGLContext::ValidateBuffers(PRUint32 count)
     return PR_TRUE;
 }
 
-PRBool WebGLContext::ValidateCapabilityEnum(WebGLenum cap)
+PRBool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
 {
     switch (cap) {
         case LOCAL_GL_BLEND:
@@ -139,11 +147,12 @@ PRBool WebGLContext::ValidateCapabilityEnum(WebGLenum cap)
         case LOCAL_GL_STENCIL_TEST:
             return PR_TRUE;
         default:
+            ErrorInvalidEnumInfo(info);
             return PR_FALSE;
     }
 }
 
-PRBool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode)
+PRBool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode, const char *info)
 {
     switch (mode) {
         case LOCAL_GL_FUNC_ADD:
@@ -151,11 +160,12 @@ PRBool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode)
         case LOCAL_GL_FUNC_REVERSE_SUBTRACT:
             return PR_TRUE;
         default:
+            ErrorInvalidEnumInfo(info);
             return PR_FALSE;
     }
 }
 
-PRBool WebGLContext::ValidateBlendFuncDstEnum(WebGLenum factor)
+PRBool WebGLContext::ValidateBlendFuncDstEnum(WebGLenum factor, const char *info)
 {
     switch (factor) {
         case LOCAL_GL_ZERO:
@@ -174,16 +184,143 @@ PRBool WebGLContext::ValidateBlendFuncDstEnum(WebGLenum factor)
         case LOCAL_GL_ONE_MINUS_CONSTANT_ALPHA:
             return PR_TRUE;
         default:
+            ErrorInvalidEnumInfo(info);
             return PR_FALSE;
     }
 }
 
-PRBool WebGLContext::ValidateBlendFuncSrcEnum(WebGLenum factor)
+PRBool WebGLContext::ValidateBlendFuncSrcEnum(WebGLenum factor, const char *info)
 {
-    if(factor == LOCAL_GL_SRC_ALPHA_SATURATE)
+    if (factor == LOCAL_GL_SRC_ALPHA_SATURATE)
         return PR_TRUE;
     else
-        return ValidateBlendFuncDstEnum(factor);
+        return ValidateBlendFuncDstEnum(factor, info);
+}
+
+PRBool WebGLContext::ValidateTextureTargetEnum(WebGLenum target, const char *info)
+{
+    switch (target) {
+        case LOCAL_GL_TEXTURE_2D:
+        case LOCAL_GL_TEXTURE_CUBE_MAP:
+            return PR_TRUE;
+        default:
+            ErrorInvalidEnumInfo(info);
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateComparisonEnum(WebGLenum target, const char *info)
+{
+    switch (target) {
+        case LOCAL_GL_NEVER:
+        case LOCAL_GL_LESS:
+        case LOCAL_GL_LEQUAL:
+        case LOCAL_GL_GREATER:
+        case LOCAL_GL_GEQUAL:
+        case LOCAL_GL_EQUAL:
+        case LOCAL_GL_NOTEQUAL:
+        case LOCAL_GL_ALWAYS:
+            return PR_TRUE;
+        default:
+            ErrorInvalidEnumInfo(info);
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateStencilOpEnum(WebGLenum action, const char *info)
+{
+    switch (action) {
+        case LOCAL_GL_KEEP:
+        case LOCAL_GL_ZERO:
+        case LOCAL_GL_REPLACE:
+        case LOCAL_GL_INCR:
+        case LOCAL_GL_INCR_WRAP:
+        case LOCAL_GL_DECR:
+        case LOCAL_GL_DECR_WRAP:
+        case LOCAL_GL_INVERT:
+            return PR_TRUE;
+        default:
+            ErrorInvalidEnumInfo(info);
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateFaceEnum(WebGLenum target, const char *info)
+{
+    switch (target) {
+        case LOCAL_GL_FRONT:
+        case LOCAL_GL_BACK:
+        case LOCAL_GL_FRONT_AND_BACK:
+            return PR_TRUE;
+        default:
+            ErrorInvalidEnumInfo(info);
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
+{
+    switch (target) {
+        case LOCAL_GL_STREAM_DRAW:
+        case LOCAL_GL_STATIC_DRAW:
+        case LOCAL_GL_DYNAMIC_DRAW:
+            return PR_TRUE;
+        default:
+            ErrorInvalidEnumInfo(info);
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
+                                                PRUint32 *texelSize, const char *info)
+{
+    if (type == LOCAL_GL_UNSIGNED_BYTE)
+    {
+        switch (format) {
+            case LOCAL_GL_RED:
+            case LOCAL_GL_GREEN:
+            case LOCAL_GL_BLUE:
+            case LOCAL_GL_ALPHA:
+            case LOCAL_GL_LUMINANCE:
+                *texelSize = 1;
+                return PR_TRUE;
+            case LOCAL_GL_LUMINANCE_ALPHA:
+                *texelSize = 2;
+                return PR_TRUE;
+            case LOCAL_GL_RGB:
+                *texelSize = 3;
+                return PR_TRUE;
+            case LOCAL_GL_RGBA:
+                *texelSize = 4;
+                return PR_TRUE;
+            default:
+                ErrorInvalidEnum("%s: invalid format", info);
+                return PR_FALSE;
+        }
+    } else {
+        switch (type) {
+            case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
+            case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
+                if (format == LOCAL_GL_RGBA) {
+                    *texelSize = 2;
+                    return PR_TRUE;
+                } else {
+                    ErrorInvalidOperation("%s: mutually incompatible format and type", info);
+                    return PR_FALSE;
+                }
+            case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
+                if (format == LOCAL_GL_RGB) {
+                    *texelSize = 2;
+                    return PR_TRUE;
+                } else {
+                    ErrorInvalidOperation("%s: mutually incompatible format and type", info);
+                    return PR_FALSE;
+                }
+            default:
+                ErrorInvalidEnum("%s: invalid type", info);
+                return PR_FALSE;
+        }
+    }
 }
 
 PRBool

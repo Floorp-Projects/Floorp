@@ -117,7 +117,6 @@
 #include "nsIDocumentEncoder.h" //for outputting selection
 #include "nsICharsetResolver.h"
 #include "nsICachingChannel.h"
-#include "nsICacheEntryDescriptor.h"
 #include "nsIJSContextStack.h"
 #include "nsIDocumentViewer.h"
 #include "nsIWyciwygChannel.h"
@@ -432,7 +431,7 @@ nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
 }
 
 PRBool
-nsHTMLDocument::TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
+nsHTMLDocument::TryCacheCharset(nsICachingChannel* aCachingChannel,
                                 PRInt32& aCharsetSource,
                                 nsACString& aCharset)
 {
@@ -442,9 +441,8 @@ nsHTMLDocument::TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
     return PR_TRUE;
   }
 
-  nsXPIDLCString cachedCharset;
-  rv = aCacheDescriptor->GetMetaDataElement("charset",
-                                           getter_Copies(cachedCharset));
+  nsCString cachedCharset;
+  rv = aCachingChannel->GetCacheTokenCachedCharset(cachedCharset);
   if (NS_SUCCEEDED(rv) && !cachedCharset.IsEmpty())
   {
     aCharset = cachedCharset;
@@ -738,7 +736,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
-  nsCOMPtr<nsICacheEntryDescriptor> cacheDescriptor;
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer,
@@ -757,12 +754,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   nsCOMPtr<nsICachingChannel> cachingChan = do_QueryInterface(aChannel);
-  if (cachingChan) {
-    nsCOMPtr<nsISupports> cacheToken;
-    cachingChan->GetCacheToken(getter_AddRefs(cacheToken));
-    if (cacheToken)
-      cacheDescriptor = do_QueryInterface(cacheToken);
-  }
 
   if (needsParser) {
     if (loadAsHtml5) {
@@ -880,8 +871,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                TryBookmarkCharset(docShell, aChannel, charsetSource, charset)) {
         // Use the bookmark's charset.
       }
-      else if (cacheDescriptor && !urlSpec.IsEmpty() &&
-               TryCacheCharset(cacheDescriptor, charsetSource, charset)) {
+      else if (cachingChan && !urlSpec.IsEmpty() &&
+               TryCacheCharset(cachingChan, charsetSource, charset)) {
         // Use the cache's charset.
       }
       else if (TryDefaultCharset(muCV, charsetSource, charset)) {
@@ -958,12 +949,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (muCV && !muCVIsParent)
     muCV->SetPrevDocCharacterSet(charset);
 
-  if(cacheDescriptor) {
+  if (cachingChan) {
     NS_ASSERTION(charset == parserCharset,
                  "How did those end up different here?  wyciwyg channels are "
                  "not nsICachingChannel");
-    rv = cacheDescriptor->SetMetaDataElement("charset",
-                                             charset.get());
+    rv = cachingChan->SetCacheTokenCachedCharset(charset);
     NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetMetaDataElement");
   }
 
@@ -1264,21 +1254,11 @@ nsHTMLDocument::CreateElement(const nsAString& aTagName,
                               nsIDOMElement** aReturn)
 {
   *aReturn = nsnull;
-  nsresult rv;
+  nsresult rv = nsContentUtils::CheckQName(aTagName, PR_FALSE);
+  if (NS_FAILED(rv))
+    return rv;
 
   nsAutoString tagName(aTagName);
-
-  // if we are in quirks, allow surrounding '<' '>' for IE compat
-  if (mCompatMode == eCompatibility_NavQuirks &&
-      tagName.Length() > 2 &&
-      tagName.First() == '<' &&
-      tagName.Last() == '>') {
-    tagName = Substring(tagName, 1, tagName.Length() - 2); 
-  }
-
-  rv = nsContentUtils::CheckQName(tagName, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (IsHTML()) {
     ToLowerCase(tagName);
   }

@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include "prio.h"
 #include "prmem.h"
+#include "nsIComponentManager.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsIPlugin.h"
@@ -79,8 +80,6 @@
 #include "nsICachingChannel.h"
 #include "nsHashtable.h"
 #include "nsIProxyInfo.h"
-#include "nsObsoleteModuleLoading.h"
-#include "nsIComponentRegistrar.h"
 #include "nsPluginLogging.h"
 #include "nsIPrefBranch2.h"
 #include "nsIScriptChannel.h"
@@ -633,70 +632,6 @@ NS_IMETHODIMP
 nsPluginStreamListenerPeer::SetStreamOffset(PRInt32 value)
 {
   mStreamOffset = value;
-  return NS_OK;
-}
-
-class nsPluginCacheListener : public nsIStreamListener
-{
-public:
-  nsPluginCacheListener(nsPluginStreamListenerPeer* aListener);
-  virtual ~nsPluginCacheListener();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
-
-private:
-  nsPluginStreamListenerPeer* mListener;
-};
-
-nsPluginCacheListener::nsPluginCacheListener(nsPluginStreamListenerPeer* aListener)
-{
-  mListener = aListener;
-  NS_ADDREF(mListener);
-}
-
-nsPluginCacheListener::~nsPluginCacheListener()
-{
-  NS_IF_RELEASE(mListener);
-}
-
-NS_IMPL_ISUPPORTS1(nsPluginCacheListener, nsIStreamListener)
-
-NS_IMETHODIMP
-nsPluginCacheListener::OnStartRequest(nsIRequest *request, nsISupports* ctxt)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginCacheListener::OnDataAvailable(nsIRequest *request, nsISupports* ctxt,
-                                       nsIInputStream* aIStream,
-                                       PRUint32 sourceOffset,
-                                       PRUint32 aLength)
-{
-
-  PRUint32 readlen;
-  char* buffer = (char*) PR_Malloc(aLength);
-
-  // if we don't read from the stream, OnStopRequest will never be called
-  if (!buffer)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult rv = aIStream->Read(buffer, aLength, &readlen);
-
-  NS_ASSERTION(aLength == readlen, "nsCacheListener->OnDataAvailable: "
-               "readlen != aLength");
-
-  PR_Free(buffer);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsPluginCacheListener::OnStopRequest(nsIRequest *request,
-                                     nsISupports* aContext,
-                                     nsresult aStatus)
-{
   return NS_OK;
 }
 
@@ -2606,42 +2541,6 @@ nsPluginHost::IsPluginEnabledForType(const char* aMimeType)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPluginHost::IsFullPagePluginEnabledForType(const char* aMimeType,
-                                             FullPagePluginEnabledType* aResult)
-{
-  *aResult = NOT_ENABLED;
-
-  nsCOMPtr<nsIPrefBranch> psvc(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (!psvc)
-    return NS_OK;
-  
-  // A preference controls whether or not the full page plugin is disabled for
-  // a particular type. The string must be in the form:
-  //   type1,type2,type3,type4
-  // Note: need an actual interface to control this and subsequent disabling 
-  // (and other plugin host settings) so applications can reliably disable 
-  // plugins - without relying on implementation details such as prefs/category
-  // manager entries.
-  nsXPIDLCString overrideTypes;
-  psvc->GetCharPref("plugin.disable_full_page_plugin_for_types", getter_Copies(overrideTypes));
-  overrideTypes.Insert(',', 0);
-  overrideTypes.Append(',');
-  
-  nsCAutoString commaSeparated(',');
-  commaSeparated.Append(aMimeType);
-  commaSeparated.Append(',');
-  if (overrideTypes.Find(commaSeparated) != kNotFound)
-    return NS_OK;
-
-  nsPluginTag* plugin = FindPluginForType(aMimeType, PR_TRUE);
-  if (!plugin || !plugin->IsEnabled())
-    return NS_OK;
-
-  *aResult = mOverrideInternalTypes ? OVERRIDE_BUILTIN : AVAILABLE;
-  return NS_OK;
-}
-
 // check comma delimitered extensions
 static int CompareExtensions(const char *aExtensionList, const char *aExtension)
 {
@@ -3386,6 +3285,9 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile * pluginsDir,
       pluginTag->SetHost(this);
       pluginTag->mNext = mPlugins;
       mPlugins = pluginTag;
+
+      if (pluginTag->IsEnabled())
+        pluginTag->RegisterWithCategoryManager(mOverrideInternalTypes);
     }
   }
   

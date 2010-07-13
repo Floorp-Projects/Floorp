@@ -171,6 +171,21 @@ public:
   PRBool NeedsSample() const { return !mPauseState || mNeedsPauseSample; }
 
   /*
+   * Indicates if the elements of this time container need to be rewound.
+   * This occurs during a backwards seek.
+   */
+  PRBool NeedsRewind() const { return mNeedsRewind; }
+  void ClearNeedsRewind() { mNeedsRewind = PR_FALSE; }
+
+  /*
+   * Indicates the time container is currently processing a SetCurrentTime
+   * request and appropriate seek behaviour should be applied by child elements
+   * (e.g. not firing time events).
+   */
+  PRBool IsSeeking() const { return mIsSeeking; }
+  void MarkSeekFinished() { mIsSeeking = PR_FALSE; }
+
+  /*
    * Sets the parent time container.
    *
    * The callee still retains ownership of the time container.
@@ -278,6 +293,9 @@ protected:
 
   // Whether or not a pause sample is required
   PRPackedBool mNeedsPauseSample;
+
+  PRPackedBool mNeedsRewind; // Backwards seek performed
+  PRPackedBool mIsSeeking; // Currently in the middle of a seek operation
 
   // A bitfield of the pause state for all pause requests
   PRUint32 mPauseState;

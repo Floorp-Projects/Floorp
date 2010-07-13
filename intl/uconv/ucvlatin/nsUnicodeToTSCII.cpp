@@ -55,9 +55,9 @@
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToTSCII [implementation]
-  
-NS_IMPL_ISUPPORTS2(nsUnicodeToTSCII, nsIUnicodeEncoder, nsICharRepresentable)
 
+NS_IMPL_ISUPPORTS1(nsUnicodeToTSCII, nsIUnicodeEncoder)
+  
 /* 
  * During UCS-4 to TSCII conversion, mState contains 
  * the last byte (or sometimes the last two bytes) to be output.
@@ -388,47 +388,6 @@ nsUnicodeToTSCII::GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength,
   return NS_OK;
 }
 
-
-NS_IMETHODIMP 
-nsUnicodeToTSCII::FillInfo(PRUint32* aInfo)
-{
-  // Tamil block is so sparse.
-  static const PRUint8 coverage[] = {
-    0xe8, // 11101000  U+0B87 - U+0B80
-    0xc7, // 11000111  U+0B8F - U+0B88
-    0x3d, // 00111101  U+0B97 - U+0B90
-    0xd6, // 11010110  U+0B9F - U+0B98
-    0x18, // 00011000  U+0BA7 - U+0BA0
-    0xc7, // 11000111  U+0BAF - U+0BA8
-    0xbf, // 10111111  U+0BB7 - U+0BB0
-    0xc7, // 11000111  U+0BBF - U+0BB8
-    0xc7, // 11000111  U+0BC7 - U+0BC0
-    0x3d, // 00111101  U+0BCF - U+0BC8
-    0x80, // 10000000  U+0BD7 - U+0BD0
-    0x00, // 00000000  U+0BDF - U+0BD8
-    0x80, // 10000000  U+0BE7 - U+0BE0
-    0xff, // 11111111  U+0BEF - U+0BE8
-    0x07, // 00000111  U+0BF7 - U+0BF0
-  };
-
-  PRUnichar i;
-  for(i = 0; i <  0x78; i++)
-    if (coverage[i / 8] & (1 << (i % 8)))
-      SET_REPRESENTABLE(aInfo, i + UNI_TAMIL_START);
-
-  // TSCII is a superset of US-ASCII.
-  for(i = 0x20; i < 0x7f; i++)
-     SET_REPRESENTABLE(aInfo, i);
-
-  // additional characters in TSCII
-  SET_REPRESENTABLE(aInfo, 0xA9);   // copyright sign
-  SET_REPRESENTABLE(aInfo, UNI_LEFT_SINGLE_QUOTE);
-  SET_REPRESENTABLE(aInfo, UNI_RIGHT_SINGLE_QUOTE);
-  SET_REPRESENTABLE(aInfo, UNI_LEFT_DOUBLE_QUOTE);
-  SET_REPRESENTABLE(aInfo, UNI_RIGHT_DOUBLE_QUOTE);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP 
 nsUnicodeToTSCII::SetOutputErrorBehavior(PRInt32 aBehavior, 

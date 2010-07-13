@@ -168,15 +168,7 @@ members = [
     'nsIDOMXULDocument.getBoxObjectFor',
     'nsIDOMXMLDocument.evaluateXPointer',
     'nsIDOMXMLDocument.evaluateFIXptr',
-    'nsIDOMNSElement.getClientRects',
-    'nsIDOMNSElement.getBoundingClientRect',
-    'nsIDOMNSElement.getElementsByClassName',
-    'nsIDOMNSElement.scrollWidth',
-    'nsIDOMNSElement.clientLeft',
-    'nsIDOMNSElement.clientHeight',
-    'nsIDOMNSElement.clientWidth',
-    'nsIDOMNSElement.clientTop',
-    'nsIDOMNSElement.mozMatchesSelector',
+    'nsIDOMNSElement.*',
 
     # dom/interfaces/css
     'nsIDOMElementCSSInlineStyle.*',
@@ -469,20 +461,10 @@ members = [
     'nsIIDBKeyRange.*',
     'nsIIDBObjectStore.*',
     'nsIIDBRequest.*',
-# Remove once XPIDL can handle jsvals
-#    'nsIIDBSuccessEvent.*',
+    'nsIIDBSuccessEvent.*',
     'nsIIDBTransaction.*',
     'nsIIDBTransactionEvent.*',
     'nsIIDBFactory.*',
-# Remove once XPIDL can handle jsvals
-    '-nsIIDBObjectStore.add',
-    '-nsIIDBObjectStore.modify',
-    '-nsIIDBObjectStore.addOrModify',
-    '-nsIIDBCursor.continue',
-    '-nsIIDBCursor.value',
-    '-nsIIDBCursor.update',
-    '-nsIIDBIndex.openCursor',
-    '-nsIIDBIndex.openObjectCursor'
     ]
 
 # Most interfaces can be found by searching the includePath; to find
@@ -695,6 +677,29 @@ customMethodCalls = {
     'nsIDOMNSElement_': {
         'thisType': 'nsGenericElement'
         },
+    'nsIDOMNSElement_GetScrollTop': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetScrollTop();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_SetScrollTop': {
+        'thisType': 'nsGenericElement',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetScrollLeft': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetScrollLeft();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_SetScrollLeft': {
+        'thisType': 'nsGenericElement',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetScrollHeight': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetScrollHeight();',
+        'canFail': False
+        },
     'nsIDOMNSElement_GetScrollWidth': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetScrollWidth();',
@@ -726,6 +731,38 @@ customMethodCalls = {
     'nsIDOMNSElement_GetClientWidth': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetClientWidth();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetFirstElementChild': {
+        'thisType': 'nsGenericElement',
+        'code': '    nsIContent *result = self->GetFirstElementChild();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetLastElementChild': {
+        'thisType': 'nsGenericElement',
+        'code': '    nsIContent *result = self->GetLastElementChild();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetPreviousElementSibling': {
+        'thisType': 'nsGenericElement',
+        'code': '    nsIContent *result = self->GetPreviousElementSibling();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetNextElementSibling': {
+        'thisType': 'nsGenericElement',
+        'code': '    nsIContent *result = self->GetNextElementSibling();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetClassList': {
+        'thisType': 'nsGenericElement',
+        'code': '    nsIDOMDOMTokenList *result = self->GetClassList(&rv);'
+        },
+    'nsIDOMNSElement_SetCapture': {
+        'thisType': 'nsGenericElement',
+        'canFail': False
+        },
+    'nsIDOMNSElement_ReleaseCapture': {
+        'thisType': 'nsGenericElement',
         'canFail': False
         },
     'nsIDOMNSElement_MozMatchesSelector': {

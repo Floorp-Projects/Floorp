@@ -56,7 +56,7 @@
  * @created         05/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-NS_METHOD
+nsresult
 nsMacRomanToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult);
 

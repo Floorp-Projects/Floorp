@@ -1054,6 +1054,12 @@ nsBoxFrame::InsertFrames(nsIAtom*        aListName,
    if (mLayoutManager)
      mLayoutManager->ChildrenInserted(this, state, aPrevFrame, newFrames);
 
+   // Make sure to check box order _after_ notifying the layout
+   // manager; otherwise the slice we give the layout manager will
+   // just be bogus.  If the layout manager cares about the order, we
+   // just lose.
+   CheckBoxOrder(state);
+
 #ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.
    if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
@@ -1080,6 +1086,12 @@ nsBoxFrame::AppendFrames(nsIAtom*        aListName,
    // notify the layout manager
    if (mLayoutManager)
      mLayoutManager->ChildrenAppended(this, state, newFrames);
+
+   // Make sure to check box order _after_ notifying the layout
+   // manager; otherwise the slice we give the layout manager will
+   // just be bogus.  If the layout manager cares about the order, we
+   // just lose.
+   CheckBoxOrder(state);
 
 #ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.

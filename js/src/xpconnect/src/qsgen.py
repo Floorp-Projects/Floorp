@@ -202,7 +202,7 @@ def removeStubMember(memberId, member):
 
 def addStubMember(memberId, member, traceable):
     mayTrace = False
-    if member.kind == 'method':
+    if member.kind == 'method' and not member.implicit_jscontext:
         # This code MUST match writeTraceableQuickStub
         haveCallee = memberNeedsCallee(member)
         # Traceable natives support up to MAX_TRACEABLE_NATIVE_ARGS
@@ -255,7 +255,8 @@ def checkStubMember(member, isCustom):
 
     # Check for unknown properties.
     for attrname, value in vars(member).items():
-        if value is True and attrname not in ('readonly','optional_argc','traceable'):
+        if value is True and attrname not in ('readonly','optional_argc',
+                                              'traceable','implicit_jscontext'):
             raise UserError("%s %s: unrecognized property %r"
                             % (member.kind.capitalize(), memberId,
                                attrname))
@@ -940,6 +941,8 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
         if isMethod:
             comName = header.methodNativeName(member)
             argv = ['arg' + str(i) for i, p in enumerate(member.params)]
+            if member.implicit_jscontext:
+                argv.append('cx')
             if member.optional_argc:
                 argv.append('argc - %d' % requiredArgs)
             if not isVoidType(member.realtype):
@@ -951,6 +954,8 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                 args = outParamForm(resultname, member.realtype)
             else:
                 args = "arg0"
+            if member.implicit_jscontext:
+                args = "cx, " + args
 
         f.write("    ")
         if canFail or debugGetter:
@@ -1347,7 +1352,7 @@ def writeAttrStubs(f, customMethodCalls, attr):
     if not custom:
         writeQuickStub(f, customMethodCalls, attr, getterName)
     if attr.readonly:
-        setterName = 'js_GetterOnlyPropertyStub'
+        setterName = 'xpc_qsGetterOnlyPropertyStub'
     else:
         setterName = (attr.iface.name + '_'
                       + header.attributeNativeName(attr, False))

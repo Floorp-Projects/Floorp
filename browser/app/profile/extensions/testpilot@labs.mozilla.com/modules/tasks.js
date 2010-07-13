@@ -203,12 +203,16 @@ var TestPilotTask = {
   },
 
   onDetailPageOpened: function TestPilotTask_onDetailPageOpened(){
+    // TODO fold this into loadPage()?
   },
 
   checkDate: function TestPilotTask_checkDate() {
   },
 
   changeStatus: function TPS_changeStatus(newStatus, suppressNotification) {
+    // TODO we always suppress notifications except when new status is
+    // "finished"; maybe remove that argument and only fire notification
+    // when status is "finished".
     let logger = Log4Moz.repository.getLogger("TestPilot.Task");
     logger.info("Changing task " + this._id + " status to " + newStatus);
     this._status = newStatus;
@@ -441,14 +445,9 @@ TestPilotExperiment.prototype = {
   },
 
   experimentIsRunning: function TestPilotExperiment_isRunning() {
-    if (this._optInRequired) {
-      return (this._status == TaskConstants.STATUS_STARTING ||
-              this._status == TaskConstants.STATUS_IN_PROGRESS);
-    } else {
-      // Tests that don't require extra opt-in should start running even
-      // if you haven't seen them yet.
-      return (this._status < TaskConstants.STATUS_FINISHED);
-    }
+    // bug 575767
+    return (this._status == TaskConstants.STATUS_STARTING ||
+            this._status == TaskConstants.STATUS_IN_PROGRESS);
   },
 
   // Pass events along to handlers:
@@ -584,7 +583,7 @@ TestPilotExperiment.prototype = {
         this._reschedule();
       } else {
         // Normal case is reset to new.
-        this.changeStatus(TaskConstants.STATUS_NEW);
+        this.changeStatus(TaskConstants.STATUS_NEW, true);
 
         // increment count of how many times this recurring test has run
         let numTimesRun = this._numTimesRun;
@@ -596,11 +595,23 @@ TestPilotExperiment.prototype = {
       }
     }
 
-    // No-opt-in required tests skip PENDING and go straight to STARTING.
+    // If the notify-on-new-study pref is turned off, and the test doesn't
+    // require opt-in, then it can jump straight ahead to STARTING.
     if (!this._optInRequired &&
-        this._status < TaskConstants.STATUS_STARTING &&
+        !Application.prefs.getValue("extensions.testpilot.popup.showOnNewStudy",
+                                    false) &&
+        (this._status == TaskConstants.STATUS_NEW ||
+         this._status == TaskConstants.STATUS_PENDING)) {
+      this._logger.info("Skipping pending and going straight to starting.");
+      this.changeStatus(TaskConstants.STATUS_STARTING, true);
+    }
+
+    // If a study is STARTING, and we're in the right date range,
+    // then start it, and move it to IN_PROGRESS.
+    if ( this._status == TaskConstants.STATUS_STARTING &&
         currentDate >= this._startDate &&
         currentDate <= this._endDate) {
+      this._logger.info("Study now starting.");
       let uuidGenerator =
         Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
       let uuid = uuidGenerator.generateUUID().toString();
@@ -610,7 +621,7 @@ TestPilotExperiment.prototype = {
       }
       // clear the data before starting.
       this._dataStore.wipeAllData();
-      this.changeStatus(TaskConstants.STATUS_STARTING);
+      this.changeStatus(TaskConstants.STATUS_STARTING, true);
       Application.prefs.setValue(GUID_PREF_PREFIX + this._id, uuid);
       this.onExperimentStartup();
     }

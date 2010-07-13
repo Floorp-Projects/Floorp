@@ -48,6 +48,7 @@ JAVAFILES = \
   GeckoAppShell.java \
   GeckoEvent.java \
   GeckoSurfaceView.java \
+  GeckoInputConnection.java \
   $(NULL)
 
 DEFINES += \
@@ -146,14 +147,9 @@ dist: FORCE
 	$(NSINSTALL) -D dist/components
 	rm -f dist/components/*
 	@(for f in $(DIST)/bin/components/* ; do ln -sf ../../$$f dist/components ; done)
-	$(DIST)/host/bin/host_xpt_link gecko.xpt dist/components/*.xpt
-	rm dist/components/*.xpt
-	mv gecko.xpt dist/components
 	$(NSINSTALL) -D dist/chrome
 	rm -f dist/chrome/*
 	@(for f in $(DIST)/bin/chrome/* ; do ln -sf ../../$$f dist/chrome ; done)
-	@(for MANIFEST in dist/chrome/*.manifest ; do cat "$$MANIFEST" >> chrome.manifest ; echo >> chrome.manifest; rm "$$MANIFEST" ; done )
-	mv chrome.manifest dist/chrome/
 	$(NSINSTALL) -D dist/defaults
 	rm -f dist/defaults/*
 	@(for f in $(DIST)/bin/defaults/* ; do ln -sf ../../$$f dist/defaults ; done )

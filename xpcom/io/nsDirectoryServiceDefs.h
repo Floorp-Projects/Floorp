@@ -74,22 +74,6 @@
  */
 #define NS_XPCOM_CURRENT_PROCESS_DIR            "XCurProcD"
 
-/* Property will return the location of the application components
- * directory.  By default, this directory will be contained in the 
- * NS_XPCOM_CURRENT_PROCESS_DIR.
- */
-#define NS_XPCOM_COMPONENT_DIR                  "ComsD"
-
-/* Property will return a list of components directories that will
- * will be registered after the application components directory.
- */
-#define NS_XPCOM_COMPONENT_DIR_LIST             "ComsDL"
-
-/* Property will return the location of the application components
- * registry file.
- */
-#define NS_XPCOM_COMPONENT_REGISTRY_FILE        "ComRegF"
-
 /* Property will return the location of the the XPCOM Shared Library.
  */
 #define NS_XPCOM_LIBRARY_FILE                   "XpcomLib"
@@ -99,13 +83,6 @@
  * NS_XPCOM_CURRENT_PROCESS_DIR.
  */
 #define NS_GRE_DIR                              "GreD"
-
-/* Property will return the current location of the the GRE component 
- * directory.  If no GRE is used, this propery will behave like 
- * NS_XPCOM_COMPONENT_DIR.
- */
-#define NS_GRE_COMPONENT_DIR                    "GreComsD" 
-
 
 /* Platform Specific Locations */
 

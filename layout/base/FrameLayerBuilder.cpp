@@ -475,8 +475,12 @@ FrameLayerBuilder::MakeContainerLayerFor(nsDisplayListBuilder* aBuilder,
 FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
                                    gfxContext* aContext,
                                    const nsIntRegion& aRegionToDraw,
+                                   const nsIntRegion& aRegionToInvalidate,
                                    void* aCallbackData)
 {
+  // For now, we can ignore aRegionToInvalidate since we don't
+  // use retained layers.
+
   LayerItems* layerItems = static_cast<LayerItems*>(aLayer->GetUserData());
   nsDisplayListBuilder* builder =
     static_cast<nsDisplayListBuilder*>(aCallbackData);

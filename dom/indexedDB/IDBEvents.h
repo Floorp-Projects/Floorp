@@ -50,7 +50,6 @@
 #include "nsIRunnable.h"
 #include "nsIVariant.h"
 
-#include "jsapi.h"
 #include "nsDOMEvent.h"
 
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
@@ -155,7 +154,8 @@ public:
     }
   }
 
-  NS_IMETHOD GetResult(nsIVariant** aResult);
+  NS_IMETHOD GetResult(JSContext* aCx,
+                       jsval* aResult);
 
   nsresult Init(IDBRequest* aRequest,
                 IDBTransaction* aTransaction);
@@ -179,7 +179,8 @@ public:
     }
   }
 
-  NS_IMETHOD GetResult(nsIVariant** aResult);
+  NS_IMETHOD GetResult(JSContext* aCx,
+                       jsval* aResult);
 
 private:
   nsTArray<nsString> mValues;
@@ -196,7 +197,8 @@ public:
     }
   }
 
-  NS_IMETHOD GetResult(nsIVariant** aResult);
+  NS_IMETHOD GetResult(JSContext* aCx,
+                       jsval* aResult);
 
 private:
   nsTArray<Key> mKeys;

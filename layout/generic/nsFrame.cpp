@@ -1467,9 +1467,14 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       dirty.Empty();
     }
     pseudoStackingContext = PR_TRUE;
+  } else if (aBuilder->GetSelectedFramesOnly() &&
+             aChild->IsLeaf() &&
+             !(aChild->GetStateBits() & NS_FRAME_SELECTED_CONTENT)) {
+    return NS_OK;
   }
 
-  if (aBuilder->GetPaintAllFrames()) {
+  if (aBuilder->GetSelectedFramesOnly() &&
+      (aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
     dirty = aChild->GetOverflowRect();
   } else if (!(aChild->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)) {
     // No need to descend into aChild to catch placeholders for visible
@@ -3644,13 +3649,13 @@ nsIFrame::AreAncestorViewsVisible() const
 }
 
 nsIWidget*
-nsIFrame::GetWindow() const
+nsIFrame::GetNearestWidget() const
 {
   return GetClosestView()->GetNearestWidget(nsnull);
 }
 
 nsIWidget*
-nsIFrame::GetWindowOffset(nsPoint& aOffset) const
+nsIFrame::GetNearestWidget(nsPoint& aOffset) const
 {
   nsPoint offsetToView;
   nsPoint offsetToWidget;

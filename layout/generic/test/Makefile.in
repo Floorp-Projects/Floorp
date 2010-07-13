@@ -60,6 +60,7 @@ _TEST_FILES = \
 		test_backspace_delete.xul \
 		test_bug263683.html \
 		test_bug288789.html \
+		test_bug290397.html \
 		test_bug323656.html \
 		test_bug344830.html \
 		test_bug348681.html \

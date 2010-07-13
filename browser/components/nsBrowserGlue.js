@@ -1234,9 +1234,7 @@ BrowserGlue.prototype = {
 
 
   // for XPCOM
-  classDescription: "Firefox Browser Glue Service",
   classID:          Components.ID("{eab9012e-5f74-4cbc-b2b5-a590235513cc}"),
-  contractID:       "@mozilla.org/browser/browserglue;1",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference,
@@ -1244,21 +1242,12 @@ BrowserGlue.prototype = {
 
   // redefine the default factory for XPCOMUtils
   _xpcom_factory: BrowserGlueServiceFactory,
-
-  // get this contractID registered for certain categories via XPCOMUtils
-  _xpcom_categories: [
-    // make BrowserGlue a startup observer
-    { category: "app-startup", service: true,
-      apps: [ /* Firefox */ "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}" ] }
-  ]
 }
 
 function GeolocationPrompt() {}
 
 GeolocationPrompt.prototype = {
-  classDescription: "Geolocation Prompting Component",
   classID:          Components.ID("{C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}"),
-  contractID:       "@mozilla.org/geolocation/prompt;1",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIGeolocationPrompt]),
 
@@ -1353,8 +1342,5 @@ GeolocationPrompt.prototype = {
   },
 };
 
-
-//module initialization
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([BrowserGlue, GeolocationPrompt]);
-}
+var components = [BrowserGlue, GeolocationPrompt];
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

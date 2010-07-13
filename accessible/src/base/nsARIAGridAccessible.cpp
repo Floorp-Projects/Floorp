@@ -222,6 +222,34 @@ nsARIAGridAccessible::GetRowIndexAt(PRInt32 aCellIndex, PRInt32 *aRowIndex)
 }
 
 NS_IMETHODIMP
+nsARIAGridAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
+                                               PRInt32* aRowIndex,
+                                               PRInt32* aColumnIndex)
+{
+  NS_ENSURE_ARG_POINTER(aRowIndex);
+  *aRowIndex = -1;
+  NS_ENSURE_ARG_POINTER(aColumnIndex);
+  *aColumnIndex = -1;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  NS_ENSURE_ARG(aCellIndex >= 0);
+
+  PRInt32 rowCount = 0;
+  GetRowCount(&rowCount);
+
+  PRInt32 colsCount = 0;
+  GetColumnCount(&colsCount);
+
+  NS_ENSURE_ARG(aCellIndex < rowCount * colsCount);
+
+  *aColumnIndex = aCellIndex % colsCount;
+  *aRowIndex = aCellIndex / colsCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsARIAGridAccessible::GetColumnExtentAt(PRInt32 aRow, PRInt32 aColumn,
                                         PRInt32 *aExtentCount)
 {

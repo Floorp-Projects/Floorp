@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=8 autoindent cindent expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -409,6 +410,23 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // common case: no transitions specified or running.
   const nsStyleDisplay *disp = aNewStyleContext->GetStyleDisplay();
   nsCSSPseudoElements::Type pseudoType = aNewStyleContext->GetPseudoType();
+  if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+    if (pseudoType != nsCSSPseudoElements::ePseudo_before &&
+        pseudoType != nsCSSPseudoElements::ePseudo_after) {
+      return nsnull;
+    }
+
+    NS_ASSERTION((pseudoType == nsCSSPseudoElements::ePseudo_before &&
+                  aElement->Tag() == nsGkAtoms::mozgeneratedcontentbefore) ||
+                 (pseudoType == nsCSSPseudoElements::ePseudo_after &&
+                  aElement->Tag() == nsGkAtoms::mozgeneratedcontentafter),
+                 "Unexpected aElement coming through");
+
+    // Else the element we want to use from now on is the element the
+    // :before or :after is attached to.
+    aElement = aElement->GetParent()->AsElement();
+  }
+
   ElementTransitions *et =
       GetElementTransitions(aElement, pseudoType, PR_FALSE);
   if (!et &&
@@ -423,11 +441,6 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     return nsnull;
   }
   
-  if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement &&
-      pseudoType != nsCSSPseudoElements::ePseudo_before &&
-      pseudoType != nsCSSPseudoElements::ePseudo_after) {
-    return nsnull;
-  }
   if (aNewStyleContext->GetParent() &&
       aNewStyleContext->GetParent()->HasPseudoElementData()) {
     // Ignore transitions on things that inherit properties from
@@ -739,7 +752,11 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
     }
   }
 
-  presContext->PresShell()->RestyleForAnimation(aElement);
+  nsRestyleHint hint =
+    aNewStyleContext->GetPseudoType() ==
+      nsCSSPseudoElements::ePseudo_NotPseudoElement ?
+    eRestyle_Self : eRestyle_Subtree;
+  presContext->PresShell()->RestyleForAnimation(aElement, hint);
 
   *aStartedAny = PR_TRUE;
   aWhichStarted->AddProperty(aProperty);
@@ -823,7 +840,8 @@ nsTransitionManager::WalkTransitionRule(RuleProcessorData* aData,
     return NS_OK;
   }
 
-  if (!aData->mPresContext->IsProcessingAnimationStyleChange()) {
+  if (aData->mPresContext->IsProcessingRestyles() &&
+      !aData->mPresContext->IsProcessingAnimationStyleChange()) {
     // If we're processing a normal style change rather than one from
     // animation, don't add the transition rule.  This allows us to
     // compute the new style value rather than having the transition
@@ -832,7 +850,10 @@ nsTransitionManager::WalkTransitionRule(RuleProcessorData* aData,
     // We need to immediately restyle with animation
     // after doing this.
     if (et) {
-      mPresContext->PresShell()->RestyleForAnimation(aData->mElement);
+      nsRestyleHint hint =
+        aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ?
+        eRestyle_Self : eRestyle_Subtree;
+      mPresContext->PresShell()->RestyleForAnimation(aData->mElement, hint);
     }
     return NS_OK;
   }
@@ -964,12 +985,19 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
           et->mPropertyTransitions.RemoveElementAt(i);
         } else if (pt.mStartTime + pt.mDuration <= aTime) {
           // This transition has completed.
-          nsCSSProperty prop = pt.mProperty;
-          if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME)) {
-            prop = nsCSSProps::OtherNameFor(prop);
+
+          // Fire transitionend events only for transitions on elements
+          // and not those on pseudo-elements, since we can't target an
+          // event at pseudo-elements.
+          if (et->mElementProperty == nsGkAtoms::transitionsProperty) {
+            nsCSSProperty prop = pt.mProperty;
+            if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME))
+            {
+              prop = nsCSSProps::OtherNameFor(prop);
+            }
+            events.AppendElement(
+              TransitionEventInfo(et->mElement, prop, pt.mDuration));
           }
-          events.AppendElement(
-            TransitionEventInfo(et->mElement, prop, pt.mDuration));
 
           // Leave this transition in the list for one more refresh
           // cycle, since we haven't yet processed its style change, and
@@ -984,7 +1012,13 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
 
       // We need to restyle even if the transition rule no longer
       // applies (in which case we just made it not apply).
-      mPresContext->PresShell()->RestyleForAnimation(et->mElement);
+      NS_ASSERTION(et->mElementProperty == nsGkAtoms::transitionsProperty ||
+                   et->mElementProperty == nsGkAtoms::transitionsOfBeforeProperty ||
+                   et->mElementProperty == nsGkAtoms::transitionsOfAfterProperty,
+                   "Unexpected element property; might restyle too much");
+      nsRestyleHint hint = et->mElementProperty == nsGkAtoms::transitionsProperty ?
+        eRestyle_Self : eRestyle_Subtree;
+      mPresContext->PresShell()->RestyleForAnimation(et->mElement, hint);
 
       if (et->mPropertyTransitions.IsEmpty()) {
         et->Destroy();

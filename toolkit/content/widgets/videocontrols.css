@@ -1,20 +1,23 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.scrubber, .volumeControl {
-    -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#suppressChangeEvent");
+.scrubber,
+.volumeControl {
+  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#suppressChangeEvent");
 }
 
 .scrubber .scale-thumb {
-    -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#timeThumb");
+  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#timeThumb");
 }
 
-.playButton, .muteButton,
-.scrubber .scale-slider, .volumeControl .scale-slider {
-    -moz-user-focus: none;
+.playButton,
+.muteButton,
+.scrubber .scale-slider,
+.volumeControl .scale-slider {
+  -moz-user-focus: none;
 }
 
 .mediaControlsFrame {
-    direction: ltr;
+  direction: ltr;
 }
 
 /* CSS Transitions
@@ -24,25 +27,25 @@
  * (in case a 3rd party theme does not provide transitions).
  */
 .controlBar:not([immediate]) {
-    -moz-transition-property: opacity;
-    -moz-transition-duration: 1ms;
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 1ms;
 }
 .controlBar[fadeout] {
-    opacity: 0.0;
+  opacity: 0;
 }
 .volumeStack:not([immediate]) {
-    -moz-transition-property: opacity, margin-top;
-    -moz-transition-duration: 1ms, 1ms;
+  -moz-transition-property: opacity, margin-top;
+  -moz-transition-duration: 1ms, 1ms;
 }
 .volumeStack[fadeout] {
-    opacity: 0.0;
-    margin-top: 0px;
+  opacity: 0;
+  margin-top: 0;
 }
 .statusOverlay:not([immediate]) {
-    -moz-transition-property: opacity;
-    -moz-transition-duration: 1ms;
-    -moz-transition-delay: 750ms;
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 1ms;
+  -moz-transition-delay: 750ms;
 }
 .statusOverlay[fadeout] {
-    opacity: 0.0;
+  opacity: 0;
 }

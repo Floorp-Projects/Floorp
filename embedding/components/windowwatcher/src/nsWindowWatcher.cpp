@@ -66,7 +66,6 @@
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "nsIScriptContext.h"
-#include "nsIGenericFactory.h"
 #include "nsIJSContextStack.h"
 #include "nsIObserverService.h"
 #include "nsIScriptGlobalObject.h"
@@ -624,7 +623,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
         NS_ASSERTION(aParent, "We've _got_ to have a parent here!");
 
         nsCOMPtr<nsIDOMWindow> newWindow;
-        rv = provider->ProvideWindow(aParent, chromeFlags,
+        rv = provider->ProvideWindow(aParent, chromeFlags, aCalledFromJS,
                                      sizeSpec.PositionSpecified(),
                                      sizeSpec.SizeSpecified(),
                                      uriToLoad, name, features, &windowIsNew,
