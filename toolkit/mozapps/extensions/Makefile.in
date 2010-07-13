@@ -43,6 +43,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE         = extensions
 LIBRARY_NAME   = extensions
+SHORT_LIBNAME  = extnsion
 IS_COMPONENT   = 1
 MODULE_NAME    = AddonsModule
 GRE_MODULE     = 1
@@ -71,10 +72,14 @@ EXTRA_PP_JS_MODULES = \
   AddonManager.jsm \
   AddonRepository.jsm \
   XPIProvider.jsm \
-  PluginProvider.jsm \
   AddonUpdateChecker.jsm \
   AddonLogging.jsm \
   $(NULL)
+
+ifdef MOZ_PLUGINS
+  EXTRA_PP_JS_MODULES += PluginProvider.jsm
+  DEFINES += -DMOZ_PLUGINS
+endif
 
 EXTRA_JS_MODULES = \
   LightweightThemeManager.jsm \

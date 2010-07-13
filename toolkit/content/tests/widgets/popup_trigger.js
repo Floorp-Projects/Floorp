@@ -279,7 +279,11 @@ var popupTests = [
   },
   result: function(testname, step) {
     var rect = gMenuPopup.getBoundingClientRect();
-    ok(rect.left == 60 && rect.top == 15 && rect.right && rect.bottom, testname);
+    ok(true, gScreenX + "," + gScreenY);
+    is(rect.left, 60, testname + " left");
+    is(rect.top, 15, testname + " top");
+    ok(rect.right, testname + " right is " + rect.right);
+    ok(rect.bottom, testname + " bottom is " + rect.bottom);
   }
 },
 {
@@ -319,7 +323,10 @@ var popupTests = [
   },
   result: function(testname, step) {
     var rect = gMenuPopup.getBoundingClientRect();
-    ok(rect.left == 24 && rect.top == 20 && rect.right && rect.bottom, testname);
+    is(rect.left, 24, testname + " left");
+    is(rect.top, 20, testname + " top");
+    ok(rect.right, testname + " right is " + rect.right);
+    ok(rect.bottom, testname + " bottom is " + rect.bottom);
   }
 },
 {
@@ -343,7 +350,10 @@ var popupTests = [
   },
   result: function(testname, step) {
     var rect = gMenuPopup.getBoundingClientRect();
-    ok(rect.left == 10 && rect.top == 18 && rect.right && rect.bottom, testname);
+    is(rect.left, 10, testname + " left");
+    is(rect.top, 18, testname + " top");
+    ok(rect.right, testname + " right is " + rect.right);
+    ok(rect.bottom, testname + " bottom is " + rect.bottom);
   }
 },
 {

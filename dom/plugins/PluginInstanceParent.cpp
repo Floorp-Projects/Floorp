@@ -1150,7 +1150,7 @@ PluginInstanceParent::SubclassPluginWindow(HWND aWnd)
         mPluginHWND = aWnd;
         mPluginWndProc = 
             (WNDPROC)::SetWindowLongPtrA(mPluginHWND, GWLP_WNDPROC,
-                         reinterpret_cast<LONG>(PluginWindowHookProc));
+                         reinterpret_cast<LONG_PTR>(PluginWindowHookProc));
         bool bRes = ::SetPropW(mPluginHWND, kPluginInstanceParentProperty, this);
         NS_ASSERTION(mPluginWndProc,
           "PluginInstanceParent::SubclassPluginWindow failed to set subclass!");
@@ -1164,7 +1164,7 @@ PluginInstanceParent::UnsubclassPluginWindow()
 {
     if (mPluginHWND && mPluginWndProc) {
         ::SetWindowLongPtrA(mPluginHWND, GWLP_WNDPROC,
-                            reinterpret_cast<LONG>(mPluginWndProc));
+                            reinterpret_cast<LONG_PTR>(mPluginWndProc));
 
         ::RemovePropW(mPluginHWND, kPluginInstanceParentProperty);
 

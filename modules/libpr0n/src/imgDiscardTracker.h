@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+   ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -15,9 +14,8 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -39,6 +37,8 @@
 
 #ifndef __imgDiscardTracker_h__
 #define __imgDiscardTracker_h__
+
+#define DISCARD_TIMEOUT_PREF "image.mem.min_discard_timeout_ms"
 
 class imgContainer;
 class nsITimer;
@@ -73,6 +73,7 @@ class imgDiscardTracker
     static nsresult Reset(struct imgDiscardTrackerNode *node);
     static void Remove(struct imgDiscardTrackerNode *node);
     static void Shutdown();
+    static void ReloadTimeout();
   private:
     static nsresult Initialize();
     static nsresult TimerOn();
