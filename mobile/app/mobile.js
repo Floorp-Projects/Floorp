@@ -308,7 +308,6 @@ pref("browser.link.open_newwindow", 3);
 pref("browser.link.open_newwindow.restriction", 0);
 
 // controls which bits of private data to clear. by default we clear them all.
-pref("privacy.sanitize.promptOnSanitize", false);
 pref("privacy.item.cache", true);
 pref("privacy.item.cookies", true);
 pref("privacy.item.offlineApps", true);

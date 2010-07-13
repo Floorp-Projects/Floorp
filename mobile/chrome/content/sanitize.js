@@ -1,41 +1,42 @@
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is the Firefox Sanitizer.
-#
-# The Initial Developer of the Original Code is
-# Ben Goodger.
-# Portions created by the Initial Developer are Copyright (C) 2005
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#   Ben Goodger <ben@mozilla.org>
-#   Giorgio Maone <g.maone@informaction.com>
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
+// -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Firefox Sanitizer.
+ *
+ * The Initial Developer of the Original Code is
+ * Ben Goodger.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ben Goodger <ben@mozilla.org>
+ *   Giorgio Maone <g.maone@informaction.com>
+ *   Matt Brubeck <mbrubeck@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 function Sanitizer() {}
 Sanitizer.prototype = {
@@ -94,12 +95,16 @@ Sanitizer.prototype = {
     cache: {
       clear: function ()
       {
-        const cc = Components.classes;
-        const ci = Components.interfaces;
-        var cacheService = cc["@mozilla.org/network/cache-service;1"]
-                             .getService(ci.nsICacheService);
+        var cacheService = Cc["@mozilla.org/network/cache-service;1"]
+                             .getService(Ci.nsICacheService);
         try {
-          cacheService.evictEntries(ci.nsICache.STORE_ANYWHERE);
+          cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
+        } catch(er) {}
+
+        let imageCache = Cc["@mozilla.org/image/cache;1"].
+                         getService(Ci.imgICache);
+        try {
+          imageCache.clearCache(false); // true=chrome, false=content
         } catch(er) {}
       },
       
@@ -313,7 +318,6 @@ Sanitizer.prototype = {
 
 // "Static" members
 Sanitizer.prefDomain          = "privacy.sanitize.";
-Sanitizer.prefPrompt          = "promptOnSanitize";
 Sanitizer.prefShutdown        = "sanitizeOnShutdown";
 Sanitizer.prefDidShutdown     = "didShutdownSanitize";
 
@@ -326,36 +330,15 @@ Sanitizer.__defineGetter__("prefs", function()
                          .getBranch(Sanitizer.prefDomain);
 });
 
-// Shows sanitization UI
-Sanitizer.showUI = function(aParentWindow) 
-{
-  var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                     .getService(Components.interfaces.nsIWindowWatcher);
-#ifdef XP_MACOSX
-  ww.openWindow(null, // make this an app-modal window on Mac
-#else
-  ww.openWindow(aParentWindow,
-#endif
-                "chrome://browser/content/sanitize.xul",
-                "Sanitize",
-                "chrome,titlebar,centerscreen,modal",
-                null);
-};
-
 /** 
  * Deletes privacy sensitive data in a batch, optionally showing the 
  * sanitize UI, according to user preferences
  *
- * @returns  null if everything's fine (no error or displayed UI,  which
- *           should handle errors);  
+ * @returns  null if everything's fine
  *           an object in the form { itemName: error, ... } on (partial) failure
  */
-Sanitizer.sanitize = function(aParentWindow) 
+Sanitizer.sanitize = function() 
 {
-  if (Sanitizer.prefs.getBoolPref(Sanitizer.prefPrompt)) {
-    Sanitizer.showUI(aParentWindow);
-    return null;
-  }
   return new Sanitizer().sanitize();
 };
 
@@ -378,7 +361,7 @@ Sanitizer._checkAndSanitize = function()
   if (prefs.getBoolPref(Sanitizer.prefShutdown) && 
       !prefs.prefHasUserValue(Sanitizer.prefDidShutdown)) {
     // this is a shutdown or a startup after an unclean exit
-    Sanitizer.sanitize(null) || // sanitize() returns null on full success
+    Sanitizer.sanitize() || // sanitize() returns null on full success
       prefs.setBoolPref(Sanitizer.prefDidShutdown, true);
   }
 };
