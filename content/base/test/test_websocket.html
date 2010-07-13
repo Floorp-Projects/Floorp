@@ -434,6 +434,7 @@ var status_test17 = "not started";
 window._test17 = function()
 {
   var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 17");
+  local_ws._testNumber = "local17";
   current_test++;
 
   status_test17 = "started";
@@ -506,6 +507,7 @@ function test19()
 window._test20 = function()
 {
   var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 20");
+  local_ws._testNumber = "local20";
   current_test++;
 
   local_ws.onerror = function()
