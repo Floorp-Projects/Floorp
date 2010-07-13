@@ -78,78 +78,87 @@ struct xpc_qsHashEntry {
     size_t chain;
 };
 
-class qsObjectHelper
+inline nsISupports*
+ToSupports(nsISupports *p)
+{
+    return p;
+}
+
+inline nsISupports*
+ToCanonicalSupports(nsISupports* p)
+{
+  return nsnull;
+}
+
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 2) || \
+    _MSC_FULL_VER >= 140050215
+
+/* Use a compiler intrinsic if one is available. */
+
+#define QS_CASTABLE_TO(_interface, _class) __is_base_of(_interface, _class)
+
+#else
+
+/* The generic version of this predicate relies on the overload resolution
+ * rules.  If |_class| inherits from |_interface|, the |_interface*|
+ * overload of DOMCI_CastableTo<_interface>::p() will be chosen, otherwise
+ * the |void*| overload will be chosen.  There is no definition of these
+ * functions; we determine which overload was selected by inspecting the
+ * size of the return type.
+ */
+
+template <typename Interface> struct QS_CastableTo {
+  struct false_type { int x[1]; };
+  struct true_type { int x[2]; };
+  static false_type p(void*);
+  static true_type p(Interface*);
+};
+
+#define QS_CASTABLE_TO(_interface, _class)                                 \
+  (sizeof(QS_CastableTo<_interface>::p(static_cast<_class*>(0))) ==        \
+   sizeof(QS_CastableTo<_interface>::true_type))
+
+#endif
+
+#define QS_IS_NODE(_class)                                                 \
+  QS_CASTABLE_TO(nsINode, _class) ||                                       \
+  QS_CASTABLE_TO(nsIDOMNode, _class)
+
+class qsObjectHelper : public xpcObjectHelper
 {
 public:
-  qsObjectHelper(nsISupports* aObject)
-  : mObject(aObject),
-    mCanonical(nsnull),
-    mCanonicalIsStrong(PR_FALSE),
-    mNode(nsnull)  {}
-
-  ~qsObjectHelper()
+  template <class T>
+  inline
+  qsObjectHelper(T *aObject, nsWrapperCache *aCache)
+  : xpcObjectHelper(ToSupports(aObject), ToCanonicalSupports(aObject),
+                    aCache, QS_IS_NODE(T))
+  {}
+  template <class T>
+  inline
+  qsObjectHelper(nsCOMPtr<T>& aObject, nsWrapperCache *aCache)
+  : xpcObjectHelper(ToSupports(aObject.get()),
+                    ToCanonicalSupports(aObject.get()), aCache, QS_IS_NODE(T))
   {
-    if (mCanonicalIsStrong) {
-      NS_RELEASE(mCanonical);
+    if (mCanonical)
+    {
+        // Transfer the strong reference.
+        mCanonicalStrong = dont_AddRef(mCanonical);
+        aObject.forget();
     }
   }
-
-  void SetCanonical(already_AddRefed<nsISupports> aCanonical)
+  template <class T>
+  inline
+  qsObjectHelper(nsRefPtr<T>& aObject, nsWrapperCache *aCache)
+  : xpcObjectHelper(ToSupports(aObject.get()),
+                    ToCanonicalSupports(aObject.get()), aCache, QS_IS_NODE(T))
   {
-    mCanonical = aCanonical.get();
-    if (mCanonical) {
-      mCanonicalIsStrong = PR_TRUE;
+    if (mCanonical)
+    {
+        // Transfer the strong reference.
+        mCanonicalStrong = dont_AddRef(mCanonical);
+        aObject.forget();
     }
   }
-
-  void SetCanonical(nsISupports* aCanonical) { mCanonical = aCanonical; }
-
-  void SetNode(nsINode* aNode) { mNode = aNode; }
-
-  void SetNode(void* /*aDummy*/) { }
-  
-  nsISupports* Object() { return mObject; }
-
-  nsISupports* GetCanonical()
-  {
-    if (!mCanonical) {
-      CallQueryInterface(mObject, &mCanonical);
-      mCanonicalIsStrong = PR_TRUE;
-    }
-    return mCanonical;
-  }
-
-  already_AddRefed<nsISupports> TakeCanonical()
-  {
-    nsISupports* retval = mCanonical;
-    if (mCanonicalIsStrong) {
-      mCanonicalIsStrong = PR_FALSE;
-    } else {
-      NS_IF_ADDREF(mCanonical);
-    }
-    mCanonical = nsnull;
-    return retval;
-  }
-
-  already_AddRefed<nsXPCClassInfo> GetXPCClassInfo()
-  {
-    nsRefPtr<nsXPCClassInfo> ci;
-    if (mNode) {
-      ci = mNode->GetClassInfo();
-    } else {
-      CallQueryInterface(mObject, getter_AddRefs(ci));
-    }
-    return ci.forget();
-  }
-
-private:
-  qsObjectHelper(qsObjectHelper& aOther) {}
-  qsObjectHelper() {}
-
-  nsISupports*           mObject;
-  nsISupports*           mCanonical;
-  PRBool                 mCanonicalIsStrong;
-  nsINode*               mNode;
 };
 
 JSBool
@@ -630,8 +639,7 @@ xpc_qsGetWrapperCache(void *p)
  */
 JSBool
 xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx,
-                         qsObjectHelper* aHelper,
-                         nsWrapperCache *cache,
+                         qsObjectHelper &aHelper,
                          const nsIID *iid,
                          XPCNativeInterface **iface,
                          jsval *rval);
@@ -643,18 +651,6 @@ JSBool
 xpc_qsVariantToJsval(XPCLazyCallContext &ccx,
                      nsIVariant *p,
                      jsval *rval);
-
-inline nsISupports*
-ToSupports(nsISupports *p)
-{
-    return p;
-}
-
-inline nsISupports*
-ToCanonicalSupports(nsISupports* p)
-{
-  return nsnull;
-}
 
 #ifdef DEBUG
 void
