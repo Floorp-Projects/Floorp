@@ -915,7 +915,7 @@ gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
 already_AddRefed<gfxFT2Font>
 gfxFT2Font::GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
 {
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->Name(), aStyle);
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry, aStyle);
     if (!font) {
         cairo_scaled_font_t *scaledFont = CreateScaledFont(aFontEntry, aStyle);
         font = new gfxFT2Font(scaledFont, aFontEntry, aStyle);
