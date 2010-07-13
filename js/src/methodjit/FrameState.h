@@ -226,6 +226,11 @@ class FrameState
     inline void popn(uint32 n);
 
     /*
+     * Returns true iff lhs and rhs are copies of the same FrameEntry.
+     */
+    inline bool haveSameBacking(FrameEntry *lhs, FrameEntry *rhs);
+
+    /*
      * Temporarily increase and decrease local variable depth.
      */
     inline void enterBlock(uint32 n);

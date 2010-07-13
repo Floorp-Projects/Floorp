@@ -133,7 +133,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
         frame.learnType(rhs, JSVAL_TYPE_INT32);
         stubNeeded = true;
     }
-    if (!lhs->isTypeKnown()) {
+    if (!lhs->isTypeKnown() && !frame.haveSameBacking(lhs, rhs)) {
         Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
         stubcc.linkExit(lhsFail, Uses(2));
         stubNeeded = true;
@@ -439,7 +439,7 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
         stubcc.linkExit(rhsFail, Uses(2));
         frame.learnType(rhs, JSVAL_TYPE_INT32);
     }
-    if (!lhs->isTypeKnown()) {
+    if (!lhs->isTypeKnown() && !frame.haveSameBacking(lhs, rhs)) {
         Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
         stubcc.linkExit(lhsFail, Uses(2));
     }

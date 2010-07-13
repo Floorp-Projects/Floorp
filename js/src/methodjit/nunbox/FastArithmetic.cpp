@@ -338,7 +338,8 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     
     MaybeRegisterID lhsTypeReg;
     bool lhsTypeRegNeedsLoad = false;
-    if (!lhs->isTypeKnown() && !frame.shouldAvoidTypeRemat(lhs)) {
+    if (!lhs->isTypeKnown() && !frame.shouldAvoidTypeRemat(lhs) &&
+        !frame.haveSameBacking(lhs, rhs)) {
         lhsTypeRegNeedsLoad = !frame.peekTypeInRegister(lhs);
         lhsTypeReg.setReg(frame.predictRegForType(lhs));
     }
