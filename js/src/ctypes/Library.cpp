@@ -97,14 +97,10 @@ Library::Name(JSContext* cx, uintN argc, jsval *vp)
       return JS_FALSE;
   }
 
-#define _S(x) #x
-#define STRINGIFY(x) _S(x)
   AutoString resultString;
-  AppendString(resultString, STRINGIFY(DLL_PREFIX));
+  AppendString(resultString, DLL_PREFIX);
   AppendString(resultString, str);
-  AppendString(resultString, STRINGIFY(DLL_SUFFIX));
-#undef _S
-#undef STRINGIFY
+  AppendString(resultString, DLL_SUFFIX);
 
   JSString *result = JS_NewUCStringCopyN(cx, resultString.begin(),
                                          resultString.length());
