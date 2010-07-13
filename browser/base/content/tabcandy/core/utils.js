@@ -478,7 +478,9 @@ window.Subscribable.prototype = {
 // ##########
 // Class: Utils
 // Singelton with common utility functions.
-var Utils = {  
+var Utils = {
+  _isMac : null,
+  
   // ___ Windows and Tabs
 
   // ----------
@@ -707,6 +709,14 @@ var Utils = {
     }
       
     return value;
+  },
+
+  // ___ Is Mac
+  isMac: function() {
+    if (this._isMac == null)
+      this._isMac = (navigator.platform.search(/mac/i) > -1);
+    
+    return this._isMac;
   }
 };
 

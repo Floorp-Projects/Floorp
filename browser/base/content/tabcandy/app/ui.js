@@ -152,6 +152,7 @@ window.Page = {
   startY: 70,
   closedLastVisibleTab: false,
   closedSelectedTabInTabCandy: false,
+  stopZoomPreparation: false,
     
   isTabCandyVisible: function(){
     return (Utils.getCurrentWindow().document.getElementById("tab-candy-deck").
@@ -162,27 +163,37 @@ window.Page = {
     let currentWin = Utils.getCurrentWindow();
     currentWin.document.getElementById("tab-candy-deck").selectedIndex = 1;    
     
-    // Mac Only
-    Utils.getCurrentWindow().document.getElementById("main-window").
-      setAttribute("activetitlebarcolor", "#C4C4C4");
+    this._setActiveTitleColor(true);
+    UI.saveVisibility(true);
   },
-  
+    
   showChrome: function(){
     let currentWin = Utils.getCurrentWindow();
     let tabContainer = currentWin.gBrowser.tabContainer;
     currentWin.document.getElementById("tab-candy-deck").selectedIndex = 0;
-
+    
     // set the close button on tab
     iQ.timeout(function() { // Marshal event from chrome thread to DOM thread   
       tabContainer.adjustTabstrip();
     }, 1);
 
-    // Mac Only
-    Utils.getCurrentWindow().document.getElementById("main-window").
-      removeAttribute("activetitlebarcolor");
+    this._setActiveTitleColor(false);
+    UI.saveVisibility(false);
   },
 
-  showTabCandy : function() {
+  _setActiveTitleColor: function(set) {
+    // Mac Only
+    if (Utils.isMac()) {
+      let mainWindow =
+        Utils.getCurrentWindow().document.getElementById("main-window");
+      if (set)
+        mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
+      else
+        mainWindow.removeAttribute("activetitlebarcolor");
+    }
+  },
+
+  showTabCandy: function() {
     let self = this;
     let currentTab = UI.currentTab;
     let item = null;
@@ -267,14 +278,13 @@ window.Page = {
       if ((e.which == 27 || e.which == 13) && iQ(":focus").length == 0 )
         if ( self.getActiveTab() ) self.getActiveTab().zoomIn();
     });
-    
   },
     
   // ----------  
   init: function() {
     var self = this;
         
-    // When you click on the background/empty part of TabCandy
+    // When you click on the background/empty part of TabCandy,
     // we create a new group.
     let tabCandyContentDoc =
       Utils.getCurrentWindow().document.getElementById("tab-candy").
@@ -328,11 +338,14 @@ window.Page = {
       self.tabOnFocus(this);
     });
   },
-
+  
   // ----------  
   tabOnFocus: function(tab) {
-    var focusTab = tab;
-    var currentTab = UI.currentTab;
+    let focusTab = tab;
+    let currentTab = UI.currentTab;
+    let currentWindow = Utils.getCurrentWindow();
+    let doSetup = false;
+    let self = this;
     
     UI.currentTab = focusTab;
     // if the last visible tab has just been closed, don't show the chrome UI.
@@ -341,12 +354,16 @@ window.Page = {
         this.showChrome();
         doSetup = true;
       }
-    } else {
+    } else
       doSetup = true;
-    }
     
     if (doSetup) {
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread      
+        // this value is true when tabcandy is open at browser startup.
+        if (Page.stopZoomPreparation) {
+          self.stopZoomPreparation = false;
+          return;
+        }
         let visibleTabCount = Tabbar.getVisibleTabCount();
    
         if (focusTab != UI.currentTab) {
@@ -357,7 +374,7 @@ window.Page = {
         let newItem = null;
         if (focusTab && focusTab.mirror)
           newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
-  
+    
         if (newItem)
           Groups.setActiveGroup(newItem.parent);
   
@@ -631,7 +648,7 @@ UIClass.prototype = {
       Storage.onReady(function() {
         self.delayInit();
       });
-    }catch(e) {
+    } catch(e) {
       Utils.log("Error in UIClass(): " + e);
       Utils.log(e.fileName);
       Utils.log(e.lineNumber);
@@ -644,6 +661,7 @@ UIClass.prototype = {
     try {
       // ___ Storage
       let currentWindow = Utils.getCurrentWindow();
+      
       let data = Storage.readUIData(currentWindow);
       this.storageSanity(data);
   
@@ -680,8 +698,7 @@ UIClass.prototype = {
         });
         
         // ___ make info item
-        var html = '<h1>Welcome to Firefox Tab Sets</h1>'
-          + '(more goes here)';
+        var html = '<h1>Welcome to Firefox Tab Sets</h1>(more goes here)';
         
         box.left = box.right + padding;
         box.width = infoWidth;
@@ -701,7 +718,24 @@ UIClass.prototype = {
       iQ(window).resize(function() {
         self.resize();
       });
-  
+
+      let visibilityData = Storage.readVisibilityData(currentWindow);
+      if (visibilityData && visibilityData.visible) {
+        let currentTab = UI.currentTab;
+        let item;
+
+        if (currentTab && currentTab.mirror) 
+          item = TabItems.getItemByTabElement(currentTab.mirror.el);
+          
+        if (item)
+          item.setZoomPrep(false);
+        else
+          Page.stopZoomPreparation = true;
+
+        Page.hideChrome();
+      } else
+        Page.showChrome();        
+
       // ___ Done
       this.initialized = true;
       this.save(); // for this.pageBounds
@@ -782,9 +816,8 @@ UIClass.prototype = {
         // http://mxr.mozilla.org/mozilla1.9.2/source/toolkit/content/widgets/tabbox.xml#246
         // The below handles the ctrl/meta + number key and prevent the default
         // actions.
-        var isMac = (navigator.platform.search(/mac/i) > -1);
-        
-        if ((isMac && event.metaKey) || (!isMac && event.ctrlKey)) {
+        if ((Utils.isMac() && event.metaKey) ||
+            (!Utils.isMac() && event.ctrlKey)) {
           var charCode = event.charCode;
           // 1 to 9
           if (48 < charCode && charCode < 58) {
@@ -1038,7 +1071,14 @@ UIClass.prototype = {
       
     return true;
   },
-  
+
+  // ----------
+  saveVisibility: function(isVisible) {
+    Utils.log("isVisible: " + isVisible);
+    Storage.saveVisibilityData(
+      Utils.getCurrentWindow(), { visible: isVisible });
+  },
+
   // ----------
   arrangeBySite: function() {
     function putInGroup(set, key) {
