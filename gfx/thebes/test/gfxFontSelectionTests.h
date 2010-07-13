@@ -111,7 +111,9 @@ SetupTests()
                                           16.0,
                                           NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                                           0.0,
-                                          PR_FALSE, PR_FALSE, PR_FALSE);
+                                          PR_FALSE, PR_FALSE, PR_FALSE,
+                                          NS_LITERAL_STRING(""),
+                                          NS_LITERAL_STRING(""));
 
     gfxFontStyle style_western_bold_16 (FONT_STYLE_NORMAL,
                                         NS_FONT_STRETCH_NORMAL,
@@ -119,7 +121,9 @@ SetupTests()
                                         16.0,
                                         NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                                         0.0,
-                                        PR_FALSE, PR_FALSE, PR_FALSE);
+                                        PR_FALSE, PR_FALSE, PR_FALSE,
+                                        NS_LITERAL_STRING(""),
+                                        NS_LITERAL_STRING(""));
 
     /* Test 0 */
     t = AddTest ("sans-serif",
