@@ -630,7 +630,7 @@ window.TabItems = {
   // ----------
   saveAll: function() {
     var items = this.getItems();
-    iQ.each(items, function(index, item) {
+    items.forEach(function(item) {
       item.save();
     });
   },

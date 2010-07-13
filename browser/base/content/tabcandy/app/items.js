@@ -323,7 +323,7 @@ window.Item.prototype = {
     
     var items = Items.getTopLevelItems();
     // setup each Item's pushAwayData attribute:
-    iQ.each(items, function pushAway_setupPushAwayData(index, item) {
+    items.forEach(function pushAway_setupPushAwayData(item) {
       var data = {};
       data.bounds = item.getBounds();
       data.startBounds = new Rect(data.bounds);
@@ -346,7 +346,7 @@ window.Item.prototype = {
       // bbc = center of the base's bounds
       var bbc = bb.center();
     
-      iQ.each(items, function(index, item) {
+      items.forEach(function(item) {
         if (item == baseItem || item.locked.bounds)
           return;
           
@@ -408,7 +408,7 @@ window.Item.prototype = {
 
     // ___ Squish!
     var pageBounds = Items.getSafeWindowBounds();
-    iQ.each(items, function(index, item) {
+    items.forEach(function(item) {
       var data = item.pushAwayData;
       if (data.generation == 0 || item.locked.bounds)
         return;
@@ -474,7 +474,7 @@ window.Item.prototype = {
 
     // ___ Unsquish
     var pairs = [];
-    iQ.each(items, function(index, item) {
+    items.forEach(function(item) {
       var data = item.pushAwayData;
       pairs.push({
         item: item,
@@ -485,7 +485,7 @@ window.Item.prototype = {
     Items.unsquish(pairs);
 
     // ___ Apply changes
-    iQ.each(items, function(index, item) {
+    items.forEach(function(item) {
       var data = item.pushAwayData;
       var bounds = data.bounds;
       if (!bounds.equals(data.startBounds)) {
@@ -626,7 +626,7 @@ window.Item.prototype = {
           score: 0
         };
         
-        iQ.each(droppables, function(index, droppable) {
+        droppables.forEach(function(droppable) {
           var intersection = box.intersection(droppable.bounds);
           if (intersection && intersection.area() > best.score) {
             var possibleDropTarget = droppable.item;
@@ -689,8 +689,8 @@ window.Item.prototype = {
         
         var cancel = false;
         var $target = iQ(e.target);
-        iQ.each(cancelClasses, function(index, class) {
-          if ($target.hasClass(class)) {
+        cancelClasses.forEach(function(className) {
+          if ($target.hasClass(className)) {
             cancel = true;
             return false;
           }
@@ -1022,7 +1022,7 @@ window.Items = {
     if (!pairsProvided) {
       var items = Items.getTopLevelItems();
       pairs = [];
-      iQ.each(items, function(index, item) {
+      items.forEach(function(item) {
         pairs.push({
           item: item,
           bounds: item.getBounds()
@@ -1031,7 +1031,7 @@ window.Items = {
     }
   
     var pageBounds = Items.getSafeWindowBounds();
-    iQ.each(pairs, function(index, pair) {
+    pairs.forEach(function(pair) {
       var item = pair.item;
       if (item.locked.bounds || item == ignore)
         return;
@@ -1073,7 +1073,7 @@ window.Items = {
 
       if (!bounds.equals(newBounds)) {        
         var blocked = false;
-        iQ.each(pairs, function(index, pair2) {
+        pairs.forEach(function(pair2) {
           if (pair2 == pair || pair2.item == ignore)
             return;
             
@@ -1091,7 +1091,7 @@ window.Items = {
     });
 
     if (!pairsProvided) {
-      iQ.each(pairs, function(index, pair) {
+      pairs.forEach(function(pair) {
         pair.item.setBounds(pair.bounds);
       });
     }
