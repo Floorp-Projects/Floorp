@@ -1153,8 +1153,14 @@ ScopedXPCOMStartup::Initialize()
     mozilla::SetOmnijar(lf);
 #endif
 
-#if !defined(_BUILD_STATIC_BIN) && !defined(MOZ_ENABLE_LIBXUL)
+#ifndef MOZ_ENABLE_LIBXUL
+#ifndef _BUILD_STATIC_BIN
   XRE_AddStaticComponent(&kXREModule);
+#else
+  for (const mozilla::Module *const *staticModules = kPStaticModules;
+       *staticModules; ++staticModules)
+      XRE_AddStaticComponent(*staticModules);
+#endif
 #endif
 
   rv = NS_InitXPCOM2(&mServiceManager, gDirServiceProvider->GetAppDir(),
