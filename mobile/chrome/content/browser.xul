@@ -202,69 +202,83 @@
       </vbox>
 
       <!-- Page Area -->
-      <scrollbox id="page-scrollbox" class="window-width window-height" style="overflow: hidden;">
-        <vbox>
-          <!-- Main Toolbar -->
-          <box id="toolbar-container" class="panel-dark toolbar-height">
-            <box id="toolbar-moveable-container">
-              <toolbar id="toolbar-main" class="panel-dark window-width">
+      <stack class="window-width window-height">
+        <scrollbox id="page-scrollbox" class="window-width window-height" style="overflow: hidden;">
+          <vbox>
+            <!-- Main Toolbar -->
+            <box id="toolbar-container" class="panel-dark toolbar-height">
+              <box id="toolbar-moveable-container">
+                <toolbar id="toolbar-main" class="panel-dark window-width">
 #ifdef MOZ_PLATFORM_MAEMO
-                <toolbarbutton id="tool-app-switch" class="button-image" oncommand="BrowserUI.switchTask();"/>
+                  <toolbarbutton id="tool-app-switch" class="button-image" oncommand="BrowserUI.switchTask();"/>
 #endif
-                <hbox id="urlbar-container" flex="1">
-                  <box id="identity-box"
-                       onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
-                       onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-                    <box id="urlbar-image-box" mousethrough="always">
-                      <image id="urlbar-throbber"/>
-                      <image id="urlbar-favicon" hidden="true"/>
+                  <hbox id="urlbar-container" flex="1">
+                    <box id="identity-box"
+                         onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
+                         onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
+                      <box id="urlbar-image-box" mousethrough="always">
+                        <image id="urlbar-throbber"/>
+                        <image id="urlbar-favicon" hidden="true"/>
+                      </box>
                     </box>
-                  </box>
-                  <textbox id="urlbar-edit"
-                           type="autocomplete"
-                           autocompletesearch="history"
-                           autocompletepopup="popup_autocomplete"
-                           enablehistory="false"
-                           maxrows="6"
-                           completeselectedindex="true"
-                           minresultsforpopup="0"
-                           oncontextmenu="event.preventDefault();"
-                           emptytext="&urlbar.emptytext;"
-                           flex="1"
-                           ontextentered="BrowserUI.goToURI();"
-                           clickSelectsAll="true"/>
-                  <hbox id="urlbar-icons" mode="view">
-                    <toolbarbutton id="tool-reload" class="urlbar-cap-button"
-                                   oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
-                    <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
-                    <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
+                    <textbox id="urlbar-edit"
+                             type="autocomplete"
+                             autocompletesearch="history"
+                             autocompletepopup="popup_autocomplete"
+                             enablehistory="false"
+                             maxrows="6"
+                             completeselectedindex="true"
+                             minresultsforpopup="0"
+                             oncontextmenu="event.preventDefault();"
+                             emptytext="&urlbar.emptytext;"
+                             flex="1"
+                             ontextentered="BrowserUI.goToURI();"
+                             clickSelectsAll="true"/>
+                    <hbox id="urlbar-icons" mode="view">
+                      <toolbarbutton id="tool-reload" class="urlbar-cap-button"
+                                     oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
+                      <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
+                      <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
+                    </hbox>
                   </hbox>
-                </hbox>
-                <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
-              </toolbar>
+                  <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
+                </toolbar>
+              </box>
             </box>
-          </box>
 
-          <notificationbox id="notifications" class="window-width"/>
+            <notificationbox id="notifications" class="window-width"/>
 
-          <!-- Content viewport -->
-          <vbox class="window-width window-height">
-            <stack id="tile-stack" class="window-width" flex="1">
-              <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width" flex="1">
-                <!-- Content viewport -->
-                <html:div id="tile-container" style="overflow: hidden;" tabindex="-1">
-                  <html:canvas id="content-overlay" style="display: none; position: absolute; z-index: 1000; left: 0; top: 0;">
-                  </html:canvas>
-                </html:div>
-              </scrollbox>
-              <html:canvas id="view-buffer" style="display: none;" moz-opaque="true">
-              </html:canvas>
-            </stack>
-            <box id="form-helper-spacer" hidden="true"/>
+            <!-- Content viewport -->
+            <vbox class="window-width window-height">
+              <stack id="tile-stack" class="window-width" flex="1">
+                <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width" flex="1">
+                  <!-- Content viewport -->
+                  <html:div id="tile-container" style="overflow: hidden;" tabindex="-1">
+                    <html:canvas id="content-overlay" style="display: none; position: absolute; z-index: 1000; left: 0; top: 0;">
+                    </html:canvas>
+                  </html:div>
+                </scrollbox>
+                <html:canvas id="view-buffer" style="display: none;" moz-opaque="true">
+                </html:canvas>
+              </stack>
+              <box id="form-helper-spacer" hidden="true"/>
+            </vbox>
+
           </vbox>
+        </scrollbox>
 
+        <!-- popup for form helper -->
+        <vbox id="form-helper-container" hidden="true" class="window-width" top="0" pack="end">
+          <arrowscrollbox id="form-helper-autofill" collapsed="true" align="center" flex="1" orient="horizontal"
+                          onclick="FormHelper.doAutoFill(event.target);"/>
+          <hbox id="form-buttons" class="panel-dark" pack="center">
+            <button id="form-helper-previous" class="button-dark" label="&formHelper.previous;" command="cmd_formPrevious"/>
+            <button id="form-helper-next" class="button-dark" label="&formHelper.next;" command="cmd_formNext"/>
+            <spacer flex="1"/>
+            <toolbarbutton id="form-helper-close" class="close-button" command="cmd_formClose"/>
+          </hbox>
         </vbox>
-      </scrollbox>
+      </stack>
 
       <!-- Right toolbar -->
       <vbox class="panel-dark">
@@ -279,18 +293,6 @@
         </vbox>
       </vbox>
     </scrollbox>
-
-    <!-- popup for form helper -->
-    <vbox id="form-helper-container" class="window-width" hidden="true" top="0" pack="end">
-      <arrowscrollbox id="form-helper-autofill" collapsed="true" align="center" flex="1" orient="horizontal"
-                      onclick="FormHelper.doAutoFill(event.target);"/>
-      <hbox id="form-buttons" class="panel-dark" pack="center">
-        <button id="form-helper-previous" class="button-dark" label="&formHelper.previous;" command="cmd_formPrevious"/>
-        <button id="form-helper-next" class="button-dark" label="&formHelper.next;" command="cmd_formNext"/>
-        <spacer flex="1"/>
-        <toolbarbutton id="form-helper-close" class="close-button" command="cmd_formClose"/>
-      </hbox>
-    </vbox>
 
     <!-- popup for site identity information -->
     <vbox id="identity-container" hidden="true" class="panel-dark window-width" mode="unknownIdentity">
