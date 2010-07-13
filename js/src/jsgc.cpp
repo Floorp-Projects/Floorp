@@ -2658,6 +2658,8 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 
     JS_CALL_VALUE_TRACER(trc, acx->iterValue, "iterValue");
 
+    acx->compartment->marked = true;
+
 #ifdef JS_TRACER
     TracerState* state = acx->tracerState;
     while (state) {
