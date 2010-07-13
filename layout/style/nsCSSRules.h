@@ -234,6 +234,8 @@ protected:
   nsCSSValue mStretch;
   nsCSSValue mSrc;
   nsCSSValue mUnicodeRange;
+  nsCSSValue mFontFeatureSettings;
+  nsCSSValue mFontLanguageOverride;
 
   static nsCSSValue nsCSSFontFaceStyleDecl::* const Fields[];  
   inline nsCSSFontFaceRule* ContainingRule();

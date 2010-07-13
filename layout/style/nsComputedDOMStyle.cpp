@@ -1319,6 +1319,40 @@ nsComputedDOMStyle::GetFontVariant(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetMozFontFeatureSettings(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleFont* font = GetStyleFont();
+  if (font->mFont.featureSettings.IsEmpty()) {
+    val->SetIdent(eCSSKeyword_normal);
+  } else {
+    nsString str;
+    nsStyleUtil::AppendEscapedCSSString(font->mFont.featureSettings, str);
+    val->SetString(str);
+  }
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetMozFontLanguageOverride(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleFont* font = GetStyleFont();
+  if (font->mFont.languageOverride.IsEmpty()) {
+    val->SetIdent(eCSSKeyword_normal);
+  } else {
+    nsString str;
+    nsStyleUtil::AppendEscapedCSSString(font->mFont.languageOverride, str);
+    val->SetString(str);
+  }
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetBackgroundList(PRUint8 nsStyleBackground::Layer::* aMember,
                                       PRUint32 nsStyleBackground::* aCount,
                                       const PRInt32 aTable[],
@@ -4764,6 +4798,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_width,        ColumnRuleWidth),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_style,        ColumnRuleStyle),
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
+    COMPUTED_STYLE_MAP_ENTRY(font_feature_settings,         MozFontFeatureSettings),
+    COMPUTED_STYLE_MAP_ENTRY(font_language_override,        MozFontLanguageOverride),
     COMPUTED_STYLE_MAP_ENTRY(force_broken_image_icon,  ForceBrokenImageIcon),
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),

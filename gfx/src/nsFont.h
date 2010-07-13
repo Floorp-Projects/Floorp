@@ -102,15 +102,27 @@ struct NS_GFX nsFont {
   // needs to be done.
   float sizeAdjust;
 
+  // Font features from CSS font-feature-settings
+  nsString featureSettings;
+
+  // Language system tag, to override document language;
+  // this is an OpenType "language system" tag represented as a 32-bit integer
+  // (see http://www.microsoft.com/typography/otspec/languagetags.htm).
+  nsString languageOverride;
+
   // Initialize the font struct with an ASCII name
   nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
          PRUint16 aWeight, PRInt16 aStretch, PRUint8 aDecoration,
-         nscoord aSize, float aSizeAdjust=0.0f);
+         nscoord aSize, float aSizeAdjust=0.0f,
+         const nsString* aFeatureSettings = nsnull,
+         const nsString* aLanguageOverride = nsnull);
 
   // Initialize the font struct with a (potentially) unicode name
   nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
          PRUint16 aWeight, PRInt16 aStretch, PRUint8 aDecoration,
-         nscoord aSize, float aSizeAdjust=0.0f);
+         nscoord aSize, float aSizeAdjust=0.0f,
+         const nsString* aFeatureSettings = nsnull,
+         const nsString* aLanguageOverride = nsnull);
 
   // Make a copy of the given font
   nsFont(const nsFont& aFont);
