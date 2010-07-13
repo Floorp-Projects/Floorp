@@ -95,7 +95,9 @@ RunTest (TestEntry *test, gfxContext *ctx) {
                                               16.0,
                                               NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                                               0.0,
-                                              PR_FALSE, PR_FALSE, PR_FALSE);
+                                              PR_FALSE, PR_FALSE, PR_FALSE,
+                                              NS_LITERAL_STRING(""),
+                                              NS_LITERAL_STRING(""));
 
         fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16, nsnull);
     }

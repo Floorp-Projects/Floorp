@@ -161,7 +161,9 @@ main (int argc, char **argv) {
                            10.0,
                            NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
                            0.0,
-                           PR_FALSE, PR_FALSE, PR_FALSE);
+                           PR_FALSE, PR_FALSE, PR_FALSE,
+                           NS_LITERAL_STRING(""),
+                           NS_LITERAL_STRING(""));
 
        nsRefPtr<gfxFontGroup> fontGroup =
            gfxPlatform::GetPlatform()->CreateFontGroup(NS_LITERAL_STRING("Geneva, MS Sans Serif, Helvetica,serif"), &style, nsnull);
