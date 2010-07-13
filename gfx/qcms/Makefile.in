@@ -53,6 +53,10 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS          += -DMOZ_QCMS
 
+# Disable spammy "missing initializer" GCC warning
+ifdef GNU_CC
+CFLAGS += -Wno-missing-field-initializers
+endif # GNU_CC
 
 # special rules for transform-sse*.c to get the right cflags. (taken from pixman/src/Makefile.in)
 transform-sse1.$(OBJ_SUFFIX): transform-sse1.c $(GLOBAL_DEPS)
