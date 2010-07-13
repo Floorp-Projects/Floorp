@@ -147,9 +147,9 @@
     <command id="cmd_selectAll" label="&selectAll.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- forms navigation -->
-    <command id="cmd_formPrevious" oncommand="FormHelper.goToPrevious();"/>
-    <command id="cmd_formNext" oncommand="FormHelper.goToNext();"/>
-    <command id="cmd_formClose" oncommand="FormHelper.close();"/>
+    <command id="cmd_formPrevious" oncommand="FormHelperUI.goToPrevious();"/>
+    <command id="cmd_formNext" oncommand="FormHelperUI.goToNext();"/>
+    <command id="cmd_formClose" oncommand="FormHelperUI.hide();"/>
   </commandset>
 
   <keyset id="mainKeyset">
@@ -270,7 +270,7 @@
         <!-- popup for form helper -->
         <vbox id="form-helper-container" hidden="true" class="window-width" top="0" pack="end">
           <arrowscrollbox id="form-helper-autofill" collapsed="true" align="center" flex="1" orient="horizontal"
-                          onclick="FormHelper.doAutoFill(event.target);"/>
+                          onclick="FormHelperUI.doAutoComplete(event.target);"/>
           <hbox id="form-buttons" class="panel-dark" pack="center">
             <button id="form-helper-previous" class="button-dark" label="&formHelper.previous;" command="cmd_formPrevious"/>
             <button id="form-helper-next" class="button-dark" label="&formHelper.next;" command="cmd_formNext"/>
@@ -486,7 +486,7 @@
       <vbox id="select-container-inner" class="dialog-dark" flex="1">
         <scrollbox id="select-list" flex="1" orient="vertical"/>
         <hbox id="select-buttons" pack="center">
-          <button id="select-buttons-done" class="button-dark" label="&formHelper.done;" oncommand="SelectHelper.hide();"/>
+          <button id="select-buttons-done" class="button-dark" label="&formHelper.done;" oncommand="SelectHelperUI.hide();"/>
         </hbox>
       </vbox>
       <spacer flex="1000"/>

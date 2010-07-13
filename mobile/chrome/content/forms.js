@@ -62,11 +62,11 @@ function FormAssistant() {
   addMessageListener("FormAssist:ChoiceSelect", this);
   addMessageListener("FormAssist:ChoiceChange", this);
   addMessageListener("FormAssist:AutoComplete", this);
+
+  addEventListener("keyup", this, false);
 };
 
 FormAssistant.prototype = {
-  _enabled: false,
-
   open: function(aElement) {
     if (!aElement)
       return false;
@@ -92,24 +92,14 @@ FormAssistant.prototype = {
     if (!this.getCurrent())
       return false;
 
-    addEventListener("keyup", this, false);
-    sendAsyncMessage("FormAssist:Show", this.getJSON());
+    sendSyncMessage("FormAssist:Show", this.getJSON());
 
     return true;
-  },
-
-  close: function() {
-    removeEventListener("keyup", this, false);
-    sendAsyncMessage("FormAssist:Hide", { });
   },
 
   receiveMessage: function receiveMessage(aMessage) {
     let json = aMessage.json;
     switch (aMessage.name) {
-      case "FormAssist:Close":
-        this.close();
-        break;
-
       case "FormAssist:Previous":
         this.goToPrevious();
         sendAsyncMessage("FormAssist:Show", this.getJSON());
@@ -163,6 +153,9 @@ FormAssistant.prototype = {
   },
 
   handleEvent: function formHelperHandleEvent(aEvent) {
+    if (!this._enabled)
+      return;
+
     let currentWrapper = this.getCurrent();
     let currentElement = currentWrapper.element;
 
@@ -265,10 +258,9 @@ FormAssistant.prototype = {
 
   getJSON: function() {
     return {
-      hasNext: !!this.getNext(),
-      hasPrevious: !!this.getPrevious(),
       current: this.getCurrent().getJSON(),
-      showNavigation: this._enabled
+      hasPrevious: !!this.getPrevious(),
+      hasNext: !!this.getNext()
     };
   },
 
@@ -465,7 +457,7 @@ BasicWrapper.prototype = {
 
     // Build up a flat JSON array of the choices. In HTML, it's possible for select element choices
     // to be under a group header (but not recursively). We distinguish between headers and entries
-    // using the boolean "choiceData.group".
+    // using the boolean "choices.group".
     // XXX If possible, this would be a great candidate for tracing.
     let children = wrapper.getChildren();
     for (let i = 0; i < children.length; i++) {
@@ -507,7 +499,7 @@ BasicWrapper.prototype = {
       value: this.element.value,
       maxLength: this.element.maxLength,
       canAutocomplete: this.canAutocomplete(),
-      choiceData: this.getChoiceData(),
+      choices: this.getChoiceData(),
       navigable: this.canNavigateTo(),
       assistable: this.canAssist(),
       rect: this.getRect(),
