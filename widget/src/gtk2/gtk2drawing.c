@@ -1335,21 +1335,12 @@ moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
        surrounding the scrollbar if the theme thinks that it's butted
        up against the scrollbar arrows.  Note the increases of the
        clip rect below. */
-    /* Changing the cliprect is pretty bogus. This lets themes draw
-       outside the frame, which means we don't invalidate them
-       correctly. See bug 297508. But some themes do seem to need
-       it. So we modify the frame's overflow area to account for what
-       we're doing here; see nsNativeThemeGTK::GetWidgetOverflow. */
     adj = gtk_range_get_adjustment(GTK_RANGE(scrollbar));
 
     if (widget == MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL) {
-        cliprect->x -= 1;
-        cliprect->width += 2;
         adj->page_size = rect->width;
     }
     else {
-        cliprect->y -= 1;
-        cliprect->height += 2;
         adj->page_size = rect->height;
     }
 
