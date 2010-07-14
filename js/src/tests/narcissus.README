@@ -1,0 +1,12 @@
+To run narcissus with jstests.py, make sure that js/src/njs is executable.
+Then change to the js/src/tests/ directory and run the following command:
+
+  python jstests.py -d -j 4 ../njs -m narcissus.list
+
+
+The js/src/tests/narcissus directory can be used for any tweaks that might be needed
+to make Narcissus work properly.  Currently, Narcissus is failing a number of
+tests.  narcissus-failures.txt can be used to ignore those tests.
+
+  python jstests.py -d -j 4 ../njs -m narcissus.list -x narcissus-failures.txt
+
