@@ -141,7 +141,8 @@ var global = {
 
         evaluate(snarf(s), s, 1)
     },
-    print: print, version: null
+    print: print,
+    version: function() { return 185; }
 };
 
 // Helper to avoid Object.prototype.hasOwnProperty polluting scope objects.
