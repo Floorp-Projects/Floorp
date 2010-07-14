@@ -662,7 +662,7 @@ GetExtraSizeForWidget(PRUint8 aWidgetType, PRBool aWidgetIsDefault,
   *aExtra = nsIntMargin(0,0,0,0);
   // Allow an extra one pixel above and below the thumb for certain
   // GTK2 themes (Ximian Industrial, Bluecurve, Misty, at least);
-  // see moz_gtk_scrollbar_thumb_paint in gtk2drawing.c
+  // We modify the frame's overflow area.  See bug 297508.
   switch (aWidgetType) {
   case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     aExtra->top = aExtra->bottom = 1;
