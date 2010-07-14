@@ -394,7 +394,7 @@
             type="menu"
             label="&brandShortName;"
             style="-moz-user-focus: ignore;">
-      <menupopup>
+      <menupopup id="appmenu-popup">
         <menuitem id="appmenu_newNavigator"
                   label="&newNavigatorCmd.label;"
                   command="cmd_newNavigator"/>
