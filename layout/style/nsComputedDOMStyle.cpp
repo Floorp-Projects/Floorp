@@ -165,21 +165,15 @@ DOMCI_DATA(ComputedCSSStyleDeclaration, nsComputedDOMStyle)
 
 // QueryInterface implementation for nsComputedDOMStyle
 NS_INTERFACE_TABLE_HEAD(nsComputedDOMStyle)
+  NS_INTERFACE_TABLE5(nsComputedDOMStyle,
+                      nsICSSDeclaration,
+                      nsIDOMCSSStyleDeclaration,
+                      nsIDOMCSS2Properties,
+                      nsIDOMSVGCSS2Properties,
+                      nsIDOMNSCSS2Properties)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsComputedDOMStyle)
-    NS_INTERFACE_TABLE_ENTRY(nsComputedDOMStyle, nsICSSDeclaration)
-    NS_INTERFACE_TABLE_ENTRY(nsComputedDOMStyle,
-                             nsIDOMCSSStyleDeclaration)
-    NS_INTERFACE_TABLE_ENTRY(nsComputedDOMStyle, nsISupports)
-  NS_OFFSET_AND_INTERFACE_TABLE_END
-  NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsComputedDOMStyle)
-  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMCSS2Properties,
-                                    new CSS2PropertiesTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMSVGCSS2Properties,
-                                    new CSS2PropertiesTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMNSCSS2Properties,
-                                    new CSS2PropertiesTearoff(this))
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ComputedCSSStyleDeclaration)
 NS_INTERFACE_MAP_END
 
@@ -411,6 +405,38 @@ nsComputedDOMStyle::GetPresShellForContent(nsIContent* aContent)
     return nsnull;
 
   return currentDoc->GetShell();
+}
+
+// nsDOMCSSDeclaration abstract methods which should never be called
+// on a nsComputedDOMStyle object, but must be defined to avoid
+// compile errors.
+nsresult
+nsComputedDOMStyle::GetCSSDeclaration(nsCSSDeclaration**, PRBool)
+{
+  NS_RUNTIMEABORT("called nsComputedDOMStyle::GetCSSDeclaration");
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsComputedDOMStyle::DeclarationChanged()
+{
+  NS_RUNTIMEABORT("called nsComputedDOMStyle::DeclarationChanged");
+  return NS_ERROR_FAILURE;
+}
+
+nsIDocument*
+nsComputedDOMStyle::DocToUpdate()
+{
+  NS_RUNTIMEABORT("called nsComputedDOMStyle::DocToUpdate");
+  return nsnull;
+}
+
+nsresult
+nsComputedDOMStyle::GetCSSParsingEnvironment(nsIURI**, nsIURI**, nsIPrincipal**,
+                                             mozilla::css::Loader**)
+{
+  NS_RUNTIMEABORT("called nsComputedDOMStyle::GetCSSParsingEnvironment");
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
