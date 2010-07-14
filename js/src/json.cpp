@@ -220,13 +220,51 @@ class StringifyContext
 {
 public:
     StringifyContext(JSContext *cx, JSCharBuffer &cb, JSObject *replacer)
-    : cb(cb), gap(cx), replacer(replacer), depth(0)
+    : cb(cb), gap(cx), replacer(replacer), depth(0), objectStack(cx)
     {}
+
+    bool initializeGap(JSContext *cx, const Value &space) {
+        AutoValueRooter gapValue(cx, space);
+
+        if (space.isObject()) {
+            JSObject &obj = space.toObject();
+            Class *clasp = obj.getClass();
+            if (clasp == &js_NumberClass || clasp == &js_StringClass)
+                *gapValue.addr() = obj.getPrimitiveThis();
+        }
+
+        if (gapValue.value().isString()) {
+            if (!js_ValueToCharBuffer(cx, gapValue.value(), gap))
+                return false;
+            if (cb.length() > 10)
+                cb.resize(10);
+        }
+
+        if (gapValue.value().isNumber()) {
+            jsdouble d = gapValue.value().isInt32()
+                         ? gapValue.value().toInt32()
+                         : js_DoubleToInteger(gapValue.value().toDouble());
+            d = JS_MIN(10, d);
+            if (d >= 1 && !cb.appendN(' ', uint32(d)))
+                return false;
+        }
+
+        return true;
+    }
+
+    bool initializeStack() {
+        return objectStack.init(16);
+    }
+
+#ifdef DEBUG
+    ~StringifyContext() { JS_ASSERT(objectStack.empty()); }
+#endif
 
     JSCharBuffer &cb;
     JSCharBuffer gap;
     JSObject *replacer;
     uint32 depth;
+    HashSet<JSObject *> objectStack;
 };
 
 static JSBool CallReplacerFunction(JSContext *cx, jsid id, JSObject *holder,
@@ -249,10 +287,39 @@ WriteIndent(JSContext *cx, StringifyContext *scx, uint32 limit)
     return JS_TRUE;
 }
 
+class CycleDetector
+{
+  public:
+    CycleDetector(StringifyContext *scx, JSObject *obj)
+      : objectStack(scx->objectStack), obj(obj) {
+    }
+
+    bool init(JSContext *cx) {
+        HashSet<JSObject *>::AddPtr ptr = objectStack.lookupForAdd(obj);
+        if (ptr) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE, js_object_str);
+            return false;
+        }
+        return objectStack.add(ptr, obj);
+    }
+
+    ~CycleDetector() {
+        objectStack.remove(obj);
+    }
+
+  private:
+    HashSet<JSObject *> &objectStack;
+    JSObject *const obj;
+};
+
 static JSBool
 JO(JSContext *cx, Value *vp, StringifyContext *scx)
 {
     JSObject *obj = &vp->toObject();
+
+    CycleDetector detect(scx, obj);
+    if (!detect.init(cx))
+        return JS_FALSE;
 
     if (!scx->cb.append('{'))
         return JS_FALSE;
@@ -353,6 +420,10 @@ static JSBool
 JA(JSContext *cx, Value *vp, StringifyContext *scx)
 {
     JSObject *obj = &vp->toObject();
+
+    CycleDetector detect(scx, obj);
+    if (!detect.init(cx))
+        return JS_FALSE;
 
     if (!scx->cb.append('['))
         return JS_FALSE;
@@ -483,43 +554,12 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, Value *vp, 
     return JS_TRUE;
 }
 
-static JSBool
-InitializeGap(JSContext *cx, const Value &space, JSCharBuffer &cb)
-{
-    AutoValueRooter gap(cx, space);
-
-    if (space.isObject()) {
-        JSObject *obj = &space.toObject();
-        Class *clasp = obj->getClass();
-        if (clasp == &js_NumberClass || clasp == &js_StringClass)
-            *gap.addr() = obj->getPrimitiveThis();
-    }
-
-    if (gap.value().isString()) {
-        if (!js_ValueToCharBuffer(cx, gap.value(), cb))
-            return JS_FALSE;
-        if (cb.length() > 10)
-            cb.resize(10);
-    }
-
-    if (gap.value().isNumber()) {
-        jsdouble d = gap.value().isInt32()
-                     ? gap.value().toInt32()
-                     : js_DoubleToInteger(gap.value().toDouble());
-        d = JS_MIN(10, d);
-        if (d >= 1 && !cb.appendN(' ', uint32(d)))
-            return JS_FALSE;
-    }
-
-    return JS_TRUE;
-}
-
 JSBool
 js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, const Value &space,
              JSCharBuffer &cb)
 {
     StringifyContext scx(cx, cb, replacer);
-    if (!InitializeGap(cx, space, scx.gap))
+    if (!scx.initializeGap(cx, space) || !scx.initializeStack())
         return JS_FALSE;
 
     JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
