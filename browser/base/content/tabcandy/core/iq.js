@@ -997,22 +997,6 @@ iQ.extend({
   },
 
   // ----------
-  // Function: grep
-  grep: function( elems, callback, inv ) {
-    var ret = [];
-
-    // Go through the array, only saving the items
-    // that pass the validator function
-    for ( var i = 0, length = elems.length; i < length; i++ ) {
-      if ( !inv !== !callback( elems[ i ], i ) ) {
-        ret.push( elems[ i ] );
-      }
-    }
-
-    return ret;
-  },
-
-  // ----------
   // Function: timeout
   // wraps setTimeout with try/catch
   timeout: function(func, delay) {
