@@ -282,7 +282,11 @@
 
       <!-- Right toolbar -->
       <vbox class="panel-dark">
-        <spacer class="toolbar-height"/>
+        <!-- Because of the stack + fixed position of the urlbar when it is in
+             locked mode the event on the top-right part of the urlbar are
+              swallow by this spacer, but not with the mousethrough attribute
+        -->
+        <spacer class="toolbar-height" mousethrough="always"/>
 
         <vbox id="browser-controls" style="overflow: -moz-hidden-unscrollable;" class="panel-dark" flex="1">
           <toolbarbutton id="tool-star" class="browser-control-button button-image" command="cmd_star"/>
