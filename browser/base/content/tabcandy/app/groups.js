@@ -300,7 +300,7 @@ window.Group = function(listOfEls, options) {
     this.$debug.css({zIndex: -1000});
   
   // ___ Children
-  iQ.each(listOfEls, function(index, el) {  
+  Array.prototype.forEach.call(listOfEls, function(el) {  
     self.add(el, null, options);
   });
 
