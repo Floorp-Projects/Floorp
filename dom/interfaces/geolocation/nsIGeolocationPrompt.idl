@@ -73,57 +73,7 @@ interface nsIGeolocationPrompt : nsISupports {
   void prompt(in nsIGeolocationRequest request);
 };
 
-/** 
- * Interface provides a way for a geolocation provider to
- * notify the system that a new location is available.
- */
-[scriptable, uuid(B89D7227-9F04-4236-A582-25A3F2779D72)]
-interface nsIGeolocationUpdate : nsISupports {
-
-  /**
-   * Notify the geolocation service that a new geolocation
-   * has been discovered.
-   * This must be called on the main thread
-   */
-  void update(in nsIDOMGeoPosition position);
-};
-
-
-/**
- * Interface provides location information to the nsGeolocator
- * via the nsIDOMGeolocationCallback interface.  After
- * startup is called, any geo location change should call
- * callback.update().
- */
-[scriptable, uuid(701413ED-0F51-64F7-71C7-4369D8E07D6E)]
-interface nsIGeolocationProvider : nsISupports {
-
-  /**
-   * Start up the provider.  This is called before any other
-   * method.  may be called multiple times.
-   */
-  void startup();
-
-  /**
-   * watch
-   * When a location change is observed, notify the callback
-   */
-  void watch(in nsIGeolocationUpdate callback);
-
-  /**
-   * shutdown
-   * Shuts down the location device.
-   */
-  void shutdown();
-};
-
 %{C++
-/*  
-    This must be implemented by geolocation providers.  It
-    must support nsIGeolocationProvider.
-*/
-#define NS_GEOLOCATION_PROVIDER_CONTRACTID "@mozilla.org/geolocation/provider;1"
-
 /*  
     This must be implemented by embedders.  It must support
     nsIGeolocationPrompt.
