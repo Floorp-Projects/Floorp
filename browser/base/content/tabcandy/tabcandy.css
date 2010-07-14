@@ -12,6 +12,14 @@ body {
   margin: 0 auto;  
 }
 
+#content {
+  position:absolute;
+  top:0;
+  left:0;
+  width: 100%;
+  height: 100%;
+}
+
 #bg {
   background: -moz-linear-gradient(top,#C4C4C4,#9E9E9E);
   position:absolute;
@@ -424,7 +432,7 @@ input.defaultName:hover{
   width: 100px;
   height: 20px;
   line-height: 20px;
-  z-index: 99 !important;
+  z-index: 99999 !important;
   background-color: blue;
   text-align: center;
   color: white;
