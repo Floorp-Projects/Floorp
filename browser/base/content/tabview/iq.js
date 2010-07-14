@@ -227,7 +227,7 @@ iQ.fn = iQ.prototype = {
   // Function: each
   // Execute a callback for every element in the matched set.
   each: function( callback ) {
-    if ( !iQ.isFunction(value) ) {
+    if ( !iQ.isFunction(callback) ) {
       Utils.assert("each's argument must be a function", false);
       return null;
     }
