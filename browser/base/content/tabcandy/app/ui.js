@@ -567,7 +567,7 @@ window.Page = {
 // ##########
 // Class: UIClass
 // Singleton top-level UI manager. TODO: Integrate with <Page>.
-function UIClass(){ 
+function UIClass() { 
   try {
     Utils.log('TabCandy init --------------------');
 
@@ -596,6 +596,8 @@ function UIClass(){
 // ----------
 UIClass.prototype = {
   // ----------
+  // Function: init
+  // Must be called after the object is created. 
   init: function() {
     try {
       if (window.Tabs)
@@ -612,6 +614,9 @@ UIClass.prototype = {
   },
   
   // -----------
+  // Function: _secondaryInit
+  // This is the bulk of the initialization, kicked off automatically by init
+  // once the system is ready.
   _secondaryInit: function() {
     try {   
       var self = this;
@@ -658,7 +663,7 @@ UIClass.prototype = {
           
       // ___ delay init
       Storage.onReady(function() {
-        self.delayInit();
+        self._delayInit();
       });
     } catch(e) {
       Utils.log(e);
@@ -666,7 +671,9 @@ UIClass.prototype = {
   },
 
   // ----------
-  delayInit : function() {
+  // Function: _delayInit
+  // Called automatically by _secondaryInit once sessionstore is online. 
+  _delayInit : function() {
     try {
       // ___ Storage
       let currentWindow = Utils.getCurrentWindow();
@@ -980,11 +987,12 @@ UIClass.prototype = {
       var $select = iQ('<select>')
         .css({
           position: 'absolute',
-          top: 5,
+          bottom: 5,
           right: 5,
+          zIndex: 99999, 
           opacity: .2
         })
-        .appendTo('body')
+        .appendTo('#content')
         .change(function () {
           var index = iQ(this).val();
           try {
