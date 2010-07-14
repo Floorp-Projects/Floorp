@@ -67,33 +67,15 @@ var iQ = function(selector, context) {
   // (both of which we optimize for)
   quickExpr = /^[^<]*(<[\w\W]+>)[^>]*$|^#([\w-]+)$/,
 
-  // Is it a simple selector
-  isSimple = /^.[^:#\[\.,]*$/,
-
-  // Check if a string has a non-whitespace character in it
-  rnotwhite = /\S/,
-
-  // Used for trimming whitespace
-  rtrim = /^(\s|\u00A0)+|(\s|\u00A0)+$/g,
-
   // Match a standalone tag
   rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>)?$/,
 
   // Save a reference to some core methods
   toString = Object.prototype.toString,
   hasOwnProperty = Object.prototype.hasOwnProperty,
-  push = Array.prototype.push,
-  slice = Array.prototype.slice,
-  indexOf = Array.prototype.indexOf;
 
-var rclass = /[\n\t]/g,
-  rspace = /\s+/,
-  rreturn = /\r/g,
-  rspecialurl = /href|src|style/,
-  rtype = /(button|input)/i,
-  rfocusable = /(button|input|object|select|textarea)/i,
-  rclickable = /^(a|area)$/i,
-  rradiocheck = /radio|checkbox/;
+  rclass = /[\n\t]/g,
+  rspace = /\s+/;
 
 // ##########
 // Class: iQ.fn
@@ -208,7 +190,7 @@ iQ.fn = iQ.prototype = {
       // The extra typeof function check is to prevent crashes
       // in Safari 2 (See: #3039)
       if ( selector.length == null || typeof selector === "string" || iQ.isFunction(selector) || (typeof selector !== "function" && selector.setInterval) ) {
-        push.call( ret, selector );
+        Array.prototype.push.call( ret, selector );
       } else {
         iQ.merge( ret, selector );
       }
@@ -227,12 +209,6 @@ iQ.fn = iQ.prototype = {
   length: 0, 
   
   // ----------
-  // Function: toArray
-  toArray: function() {
-    return slice.call( this, 0 );
-  },
-
-  // ----------
   // Function: get
   // Get the Nth element in the matched element set OR
   // Get the whole matched element set as a clean array
@@ -240,40 +216,11 @@ iQ.fn = iQ.prototype = {
     return num == null ?
 
       // Return a 'clean' array
-      this.toArray() :
+      // was toArray
+      Array.prototype.slice.call( this, 0 ) :
 
       // Return just the object
-      ( num < 0 ? this.slice(num)[ 0 ] : this[ num ] );
-  },
-
-  // ----------
-  // Function: pushStack
-  // Take an array of elements and push it onto the stack
-  // (returning the new matched element set)
-  pushStack: function( elems, name, selector ) {
-    // Build a new iQ matched element set
-    var ret = iQ();
-
-    if ( iQ.isArray( elems ) ) {
-      push.apply( ret, elems );
-    
-    } else {
-      iQ.merge( ret, elems );
-    }
-
-    // Add the old object onto the stack (as a reference)
-    ret.prevObject = this;
-
-    ret.context = this.context;
-
-    if ( name === "find" ) {
-      ret.selector = this.selector + (this.selector ? " " : "") + selector;
-    } else if ( name ) {
-      ret.selector = this.selector + "." + name + "(" + selector + ")";
-    }
-
-    // Return the newly-formed element set
-    return ret;
+      ( num < 0 ? this[ num + this.length ] : this[ num ] );
   },
 
   // ----------
@@ -283,13 +230,6 @@ iQ.fn = iQ.prototype = {
   // only used internally.)
   each: function( callback, args ) {
     return iQ.each( this, callback, args );
-  },
-  
-  // ----------
-  // Function: slice
-  slice: function() {
-    return this.pushStack( slice.apply( this, arguments ),
-      "slice", slice.call(arguments).join(",") );
   },
 
   // ----------
@@ -309,7 +249,6 @@ iQ.fn = iQ.prototype = {
         if ( elem.nodeType === 1 ) {
           if ( !elem.className ) {
             elem.className = value;
-
           } else {
             var className = " " + elem.className + " ", setClass = elem.className;
             for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
@@ -317,7 +256,7 @@ iQ.fn = iQ.prototype = {
                 setClass += " " + classNames[c];
               }
             }
-            elem.className = iQ.trim( setClass );
+            elem.className = String.trim( setClass );
           }
         }
       }
@@ -346,7 +285,7 @@ iQ.fn = iQ.prototype = {
             for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
               className = className.replace(" " + classNames[c] + " ", " ");
             }
-            elem.className = iQ.trim( className );
+            elem.className = String.trim( className );
 
           } else {
             elem.className = "";
@@ -881,9 +820,6 @@ iQ.extend({
   
   // -----------
   // Function: isFunction
-  // See test/unit/core.js for details concerning isFunction.
-  // Since version 1.3, DOM methods and functions like alert
-  // aren't supported. They return false on IE (#2968).
   isFunction: function( obj ) {
     return toString.call(obj) === "[object Function]";
   },
@@ -951,12 +887,6 @@ iQ.extend({
     return object;
   },
   
-  // ----------
-  // Function: trim
-  trim: function( text ) {
-    return (text || "").replace( rtrim, "" );
-  },
-
   // ----------
   // Function: merge
   merge: function( first, second ) {
