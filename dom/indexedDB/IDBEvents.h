@@ -150,7 +150,7 @@ public:
   ~GetSuccessEvent()
   {
     if (mJSRuntime) {
-      JS_RemoveRootRT(mJSRuntime, &mCachedValue);
+      js_RemoveRoot(mJSRuntime, &mCachedValue);
     }
   }
 

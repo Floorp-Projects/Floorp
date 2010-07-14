@@ -1064,8 +1064,6 @@ function runDictionaryPropertyPresentTestsFraction(PART, PARTS)
 
 function runNonTerminalPropertyPresentTestsFraction(PART, PARTS)
 {
-  var PART = 1, PARTS = 4;
-
   var gTestfile =
     '15.2.3.6-middle-redefinition-' + PART + '-of-' + PARTS + '.js';
   var BUGNUMBER = 560566;

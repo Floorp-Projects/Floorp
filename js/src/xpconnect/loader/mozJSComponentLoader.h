@@ -176,7 +176,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
             if (global) {
                 JSAutoRequest ar(sSelf->mContext);
                 JS_ClearScope(sSelf->mContext, global);
-                JS_RemoveRoot(sSelf->mContext, &global);
+                JS_RemoveObjectRoot(sSelf->mContext, &global);
             }
 
             if (location)

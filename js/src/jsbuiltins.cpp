@@ -204,19 +204,19 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, bool isD
     uint32 slot = sprop->slot;
     JSScope* scope = obj->scope();
     if (slot != scope->freeslot)
-        goto exit_trace;
+        return false;
     JS_ASSERT(sprop->parent == scope->lastProperty());
 
     if (scope->isSharedEmpty()) {
         scope = js_GetMutableScope(cx, obj);
         if (!scope)
-            goto exit_trace;
+            return false;
     } else {
         JS_ASSERT(!scope->hasProperty(sprop));
     }
 
     if (!scope->table) {
-        if (slot < obj->numSlots() && !obj->getClass()->reserveSlots) {
+        if (slot < obj->numSlots()) {
             JS_ASSERT(JSVAL_IS_VOID(obj->getSlot(scope->freeslot)));
             ++scope->freeslot;
         } else {
@@ -243,11 +243,11 @@ AddPropertyHelper(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, bool isD
         goto exit_trace;
 
     JS_UNLOCK_SCOPE(cx, scope);
-    return JS_TRUE;
+    return true;
 
   exit_trace:
     JS_UNLOCK_SCOPE(cx, scope);
-    return JS_FALSE;
+    return false;
 }
 
 JSBool FASTCALL

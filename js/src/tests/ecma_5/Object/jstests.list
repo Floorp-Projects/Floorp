@@ -1,6 +1,10 @@
 url-prefix ../../jsreftest.html?test=ecma_5/Object/
 skip script defineProperty-setup.js # not a test.
 script 15.2.3.3-01.js
+script 15.2.3.4-01.js
+script 15.2.3.4-02.js
+script 15.2.3.4-03.js
+script 15.2.3.4-04.js
 script 15.2.3.5-01.js
 skip-if(!xulRuntime.shell) script 15.2.3.6-function-length.js # uses shell load() function
 script 15.2.3.6-miscellaneous.js
