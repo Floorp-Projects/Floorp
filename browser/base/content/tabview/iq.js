@@ -976,22 +976,6 @@ iQ.extend({
   },
 
   // ----------
-  // Function: inArray
-  inArray: function( elem, array ) {
-    if ( array.indexOf ) {
-      return array.indexOf( elem );
-    }
-
-    for ( var i = 0, length = array.length; i < length; i++ ) {
-      if ( array[ i ] === elem ) {
-        return i;
-      }
-    }
-
-    return -1;
-  },
-
-  // ----------
   // Function: merge
   merge: function( first, second ) {
     var i = first.length, j = 0;
