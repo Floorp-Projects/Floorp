@@ -226,10 +226,10 @@ iQ.fn = iQ.prototype = {
   // ----------
   // Function: each
   // Execute a callback for every element in the matched set.
-  // (You can seed the arguments with an array of args, but this is
-  // only used internally.)
-  each: function( callback, args ) {
-    return iQ.each( this, callback, args );
+  each: function( callback ) {
+    for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+      callback(elem);
+    }
   },
 
   // ----------
@@ -505,7 +505,8 @@ iQ.fn = iQ.prototype = {
     };
     
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-      iQ.each(properties, function(key, value) {
+      for (var key in properties) {
+        var value = properties[key];
         if (pixels[key] && typeof(value) != 'string') 
           value += 'px';
         
@@ -513,7 +514,7 @@ iQ.fn = iQ.prototype = {
           elem.style.setProperty(key, value, '');
         else
           elem.style[key] = value;
-      });
+      }
     }
     
     return this; 
@@ -553,11 +554,11 @@ iQ.fn = iQ.prototype = {
       // css properties. So for each element to be animated, go through and
       // explicitly define 'em.
       var rupper = /([A-Z])/g;    
-      this.each(function(){
-        var cStyle = window.getComputedStyle(this, null);      
+      this.each(function(elem){
+        var cStyle = window.getComputedStyle(elem, null);      
         for (var prop in css){
           prop = prop.replace( rupper, "-$1" ).toLowerCase();
-          iQ(this).css(prop, cStyle.getPropertyValue(prop));
+          iQ(elem).css(prop, cStyle.getPropertyValue(prop));
         }    
       });
 
@@ -844,28 +845,6 @@ iQ.extend({
       return false;
     }
     return true;
-  },
-
-  // ----------
-  // Function: each
-  // args is for internal usage only
-  each: function( object, callback ) {
-    var name, i = 0,
-      length = object.length,
-      isObj = length === undefined || iQ.isFunction(object);
-
-    if ( isObj ) {
-      for ( name in object ) {
-        if ( callback.call( object[ name ], name, object[ name ] ) === false ) {
-          break;
-        }
-      }
-    } else {
-      for ( var value = object[0];
-        i < length && callback.call( value, i, value ) !== false; value = object[++i] ) {}
-    }
-
-    return object;
   },
   
   // ----------
