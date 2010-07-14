@@ -1,3 +1,5 @@
 url-prefix ../../jsreftest.html?test=ecma_5/JSON/
 script cyclic-stringify.js
+script small-codepoints.js
+script trailing-comma.js
 script stringify-gap.js
