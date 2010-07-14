@@ -74,8 +74,11 @@ xptiWorkingSet::~xptiWorkingSet()
 {
     MOZ_COUNT_DTOR(xptiWorkingSet);
 
-    // Don't destroy the arena; we're shutting down, why touch the
-    // memory when we don't have to?
+    // Only destroy the arena if we're doing leak stats. Why waste shutdown
+    // time touching pages if we don't have to?
+#ifdef NS_FREE_PERMANENT_DATA
+    XPT_DestroyArena(gXPTIStructArena);
+#endif
 }        
 
 XPTArena* gXPTIStructArena;
