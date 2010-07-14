@@ -2675,15 +2675,9 @@ var PrintPreviewListener = {
     this._toggleAffectedChrome();
   },
   _toggleAffectedChrome: function () {
-    // chrome to toggle includes:
-    //   (*) menubar
-    //   (*) navigation bar
-    //   (*) bookmarks toolbar
-    //   (*) tabstrip
-    //   (*) browser messages
-    //   (*) sidebar
-    //   (*) find bar
-    //   (*) statusbar
+#ifdef MENUBAR_CAN_AUTOHIDE
+    updateAppButtonDisplay();
+#endif
 
     gNavToolbox.hidden = gInPrintPreviewMode;
 
@@ -4716,7 +4710,9 @@ var TabsOnTop = {
 
 #ifdef MENUBAR_CAN_AUTOHIDE
 function updateAppButtonDisplay() {
-  var displayAppButton = window.menubar.visible &&
+  var displayAppButton =
+    !gInPrintPreviewMode &&
+    window.menubar.visible &&
     document.getElementById("toolbar-menubar").getAttribute("autohide") == "true";
 
   document.getElementById("appmenu-button-container").hidden = !displayAppButton;
