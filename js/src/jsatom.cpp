@@ -1062,24 +1062,23 @@ static JSHashAllocOps temp_alloc_ops = {
 JSAtomListElement *
 JSAtomList::rawLookup(JSAtom *atom, JSHashEntry **&hep)
 {
-    JSAtomListElement *ale;
-
     if (table) {
         hep = JS_HashTableRawLookup(table, ATOM_HASH(atom), atom);
-        ale = *hep ? (JSAtomListElement *) *hep : NULL;
-    } else {
-        JSHashEntry **alep = &list;
-        hep = NULL;
-        while ((ale = (JSAtomListElement *)*alep) != NULL) {
-            if (ALE_ATOM(ale) == atom) {
-                /* Hit, move atom's element to the front of the list. */
-                *alep = ale->entry.next;
-                ale->entry.next = list;
-                list = &ale->entry;
-                break;
-            }
-            alep = &ale->entry.next;
+        return (JSAtomListElement *) *hep;
+    }
+
+    JSHashEntry **alep = &list;
+    hep = NULL;
+    JSAtomListElement *ale;
+    while ((ale = (JSAtomListElement *)*alep) != NULL) {
+        if (ALE_ATOM(ale) == atom) {
+            /* Hit, move atom's element to the front of the list. */
+            *alep = ale->entry.next;
+            ale->entry.next = list;
+            list = &ale->entry;
+            break;
         }
+        alep = &ale->entry.next;
     }
     return ale;
 }
