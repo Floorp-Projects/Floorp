@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; c-basic-offset: 8 -*- */
+/* -*- Mode: C; tab-width: 8; c-basic-offset: 8; indent-tabs-mode: t -*- */
 /* vim:set softtabstop=8 shiftwidth=8: */
 /*-
  * Copyright (C) 2006-2008 Jason Evans <jasone@FreeBSD.org>.
@@ -4207,18 +4207,23 @@ arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 }
 
 static inline void
-arena_dalloc(arena_t *arena, arena_chunk_t *chunk, void *ptr)
+arena_dalloc(void *ptr, size_t offset)
 {
+	arena_chunk_t *chunk;
+	arena_t *arena;
 	size_t pageind;
 	arena_chunk_map_t *mapelm;
 
+	assert(ptr != NULL);
+	assert(offset != 0);
+	assert(CHUNK_ADDR2OFFSET(ptr) == offset);
+
+	chunk = (arena_chunk_t *) ((uintptr_t)ptr - offset);
+	arena = chunk->arena;
 	assert(arena != NULL);
 	assert(arena->magic == ARENA_MAGIC);
-	assert(chunk->arena == arena);
-	assert(ptr != NULL);
-	assert(CHUNK_ADDR2BASE(ptr) != ptr);
 
-	pageind = (((uintptr_t)ptr - (uintptr_t)chunk) >> pagesize_2pow);
+	pageind = offset >> pagesize_2pow;
 	mapelm = &chunk->map[pageind];
 	assert((mapelm->bits & CHUNK_MAP_ALLOCATED) != 0);
 	if ((mapelm->bits & CHUNK_MAP_LARGE) == 0) {
@@ -4234,13 +4239,13 @@ arena_dalloc(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 static inline void
 idalloc(void *ptr)
 {
-	arena_chunk_t *chunk;
+	size_t offset;
 
 	assert(ptr != NULL);
 
-	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
-	if (chunk != ptr)
-		arena_dalloc(chunk->arena, chunk, ptr);
+	offset = CHUNK_ADDR2OFFSET(ptr);
+	if (offset != 0)
+		arena_dalloc(ptr, offset);
 	else
 		huge_dalloc(ptr);
 }
@@ -6045,13 +6050,20 @@ ZONE_INLINE
 void
 free(void *ptr)
 {
-
+	size_t offset;
+	
 	UTRACE(ptr, 0, 0);
-	if (ptr != NULL) {
-		assert(malloc_initialized);
 
-		idalloc(ptr);
-	}
+	/*
+	 * A version of idalloc that checks for NULL pointer but only for
+	 * huge allocations assuming that CHUNK_ADDR2OFFSET(NULL) == 0.
+	 */
+	assert(CHUNK_ADDR2OFFSET(NULL) == 0);
+	offset = CHUNK_ADDR2OFFSET(ptr);
+	if (offset != 0)
+		arena_dalloc(ptr, offset);
+	else if (ptr != NULL)
+		huge_dalloc(ptr);
 }
 
 /*

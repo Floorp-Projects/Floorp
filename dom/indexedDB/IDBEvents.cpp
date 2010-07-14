@@ -406,8 +406,8 @@ GetSuccessEvent::GetResult(JSContext* aCx,
 
     JSRuntime* rt = JS_GetRuntime(aCx);
 
-    JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
-                                  "GetSuccessEvent::mCachedValue");
+    JSBool ok = js_AddRootRT(rt, &mCachedValue,
+                             "GetSuccessEvent::mCachedValue");
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
     mJSRuntime = rt;
@@ -435,8 +435,8 @@ GetAllSuccessEvent::GetResult(JSContext* aCx,
 
     JSRuntime* rt = JS_GetRuntime(aCx);
 
-    JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
-                                  "GetSuccessEvent::mCachedValue");
+    JSBool ok = js_AddRootRT(rt, &mCachedValue,
+                             "GetSuccessEvent::mCachedValue");
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
     mJSRuntime = rt;
@@ -502,8 +502,8 @@ GetAllKeySuccessEvent::GetResult(JSContext* aCx,
 
     JSRuntime* rt = JS_GetRuntime(aCx);
 
-    JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
-                                  "GetSuccessEvent::mCachedValue");
+    JSBool ok = js_AddRootRT(rt, &mCachedValue,
+                             "GetSuccessEvent::mCachedValue");
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
     mJSRuntime = rt;

@@ -327,7 +327,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
         }
     }
     for (i = 0; i != nupvars; ++i) {
-        if (!JS_XDRUint32(xdr, &script->upvars()->vector[i]))
+        if (!JS_XDRUint32(xdr, reinterpret_cast<uint32 *>(&script->upvars()->vector[i])))
             goto error;
     }
     for (i = 0; i != nregexps; ++i) {
@@ -894,7 +894,7 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
      */
     if (nupvars != 0) {
         script->upvars()->length = nupvars;
-        script->upvars()->vector = (uint32 *)cursor;
+        script->upvars()->vector = reinterpret_cast<UpvarCookie *>(cursor);
         vectorSize = nupvars * sizeof(script->upvars()->vector[0]);
         memset(cursor, 0, vectorSize);
         cursor += vectorSize;

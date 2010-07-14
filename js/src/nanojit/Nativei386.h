@@ -186,10 +186,10 @@ namespace nanojit
         void nativePageSetup();\
         void underrunProtect(int);\
         void asm_immi(Register r, int32_t val, bool canClobberCCs);\
-        void asm_stkarg(LInsp p, int32_t& stkd);\
-        void asm_farg(LInsp, int32_t& stkd);\
-        void asm_arg(ArgType ty, LInsp p, Register r, int32_t& stkd);\
-        void asm_pusharg(LInsp);\
+        void asm_stkarg(LIns* p, int32_t& stkd);\
+        void asm_farg(LIns*, int32_t& stkd);\
+        void asm_arg(ArgType ty, LIns* p, Register r, int32_t& stkd);\
+        void asm_pusharg(LIns*);\
         void asm_cmpd(LIns *cond);\
         NIns* asm_branchd(bool, LIns*, NIns*);\
         void asm_cmp(LIns *cond); \

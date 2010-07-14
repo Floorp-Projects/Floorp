@@ -566,6 +566,7 @@ ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSObject *obj,
 
     switch (enum_op) {
     case JSENUMERATE_INIT:
+    case JSENUMERATE_INIT_ALL:
         self->Manager()->RequestRunToCompletion();
         return self->NewEnumerateInit(cx, statep, idp);
     case JSENUMERATE_NEXT:
