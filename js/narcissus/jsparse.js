@@ -1,5 +1,7 @@
-/* vim: set sw=4 ts=8 et tw=78: */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: JS; tab-width: 4; indent-tabs-mode: nil; -*-
+ * vim: set sw=4 ts=8 et tw=78:
+ * ***** BEGIN LICENSE BLOCK *****
+ *
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -66,13 +68,10 @@ function Script(t, x) {
 }
 
 // Node extends Array, which we extend slightly with a top-of-stack method.
-Array.prototype.__defineProperty__(
-    'top',
-    function () {
-        return this.length && this[this.length-1];
-    },
-    false, false, true
-);
+defineProperty(Array.prototype, "top",
+               function() {
+                   return this.length && this[this.length-1];
+               }, false, false, true);
 
 function Node(t, type) {
     var token = t.token;
@@ -133,19 +132,18 @@ Np.getSource = function () {
     return this.tokenizer.source.slice(this.start, this.end);
 };
 
-Np.__defineGetter__('filename',
-                    function () { return this.tokenizer.filename; });
+defineGetter(Np, "filename",
+             function() {
+                 return this.tokenizer.filename;
+             });
 
-String.prototype.__defineProperty__(
-    'repeat',
-    function (n) {
-        var s = "", t = this + s;
-        while (--n >= 0)
-            s += t;
-        return s;
-    },
-    false, false, true
-);
+defineProperty(String.prototype, "repeat",
+               function(n) {
+                   var s = "", t = this + s;
+                   while (--n >= 0)
+                       s += t;
+                   return s;
+               }, false, false, true);
 
 // Statement stack and nested statement handler.
 function nest(t, x, node, func, end) {
