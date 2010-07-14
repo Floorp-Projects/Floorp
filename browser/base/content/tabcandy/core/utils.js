@@ -386,7 +386,7 @@ window.Subscribable.prototype = {
       this.subscribers[eventName] = [];
       
     var subs = this.subscribers[eventName];
-    var existing = iQ.grep(subs, function(element) {
+    var existing = subs.filter(function(element) {
       return element.refObject == refObject;
     });
     
@@ -408,9 +408,9 @@ window.Subscribable.prototype = {
     if (!this.subscribers[eventName])
       return;
       
-    this.subscribers[eventName] = iQ.grep(this.subscribers[eventName], function(element) {
-      return element.refObject == refObject;
-    }, true);
+    this.subscribers[eventName] = this.subscribers[eventName].filter(function(element) {
+      return element.refObject != refObject;
+    });
   },
   
   // ----------
@@ -458,8 +458,8 @@ window.Subscribable.prototype = {
       return;
       
     this.onCloseSubscribers = this.onCloseSubscribers.filter(function(element) {
-      return element.referenceElement == referenceElement;
-    }, true);
+      return element.referenceElement != referenceElement;
+    });
   },
   
   // ----------
