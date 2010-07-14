@@ -2169,6 +2169,12 @@ nsNavHistory::NotifyOnVisit(nsIURI* aURI,
                            referringVisitID, aTransitionType, &added));
 }
 
+void
+nsNavHistory::NotifyTitleChange(nsIURI* aURI, const nsString& aTitle)
+{
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
+}
 
 PRInt32
 nsNavHistory::GetDaysOfHistory() {
@@ -7340,7 +7346,6 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
   rv = mDBSetPlaceTitle->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // observers (have to check first if it's bookmarked)
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
 

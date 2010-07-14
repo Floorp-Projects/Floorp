@@ -4704,10 +4704,15 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
             treeOwnerAsWin->SetTitle(aTitle);
     }
 
-    if (mGlobalHistory && mCurrentURI && mLoadType != LOAD_ERROR_PAGE) {
-        mGlobalHistory->SetPageTitle(mCurrentURI, nsString(mTitle));
+    if (mCurrentURI && mLoadType != LOAD_ERROR_PAGE) {
+        nsCOMPtr<IHistory> history = services::GetHistoryService();
+        if (history) {
+            history->SetURITitle(mCurrentURI, mTitle);
+        }
+        else if (mGlobalHistory) {
+            mGlobalHistory->SetPageTitle(mCurrentURI, nsString(mTitle));
+        }
     }
-
 
     // Update SessionHistory with the document's title.
     if (mOSHE && mLoadType != LOAD_BYPASS_HISTORY &&
