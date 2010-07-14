@@ -42,7 +42,6 @@
 
 #include "nsICSSDeclaration.h"
 #include "nsIDOMNSCSS2Properties.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
 class nsCSSDeclaration;
@@ -57,24 +56,8 @@ class Loader;
 }
 }
 
-class CSS2PropertiesTearoff : public nsIDOMNSCSS2Properties
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(CSS2PropertiesTearoff)
-
-  NS_DECL_NSIDOMCSS2PROPERTIES
-  NS_DECL_NSIDOMSVGCSS2PROPERTIES
-  NS_DECL_NSIDOMNSCSS2PROPERTIES
-
-  CSS2PropertiesTearoff(nsICSSDeclaration *aOuter);
-  virtual ~CSS2PropertiesTearoff();
-
-private:
-  nsCOMPtr<nsICSSDeclaration> mOuter;
-};
-
-class nsDOMCSSDeclaration : public nsICSSDeclaration
+class nsDOMCSSDeclaration : public nsICSSDeclaration,
+                            public nsIDOMNSCSS2Properties
 {
 public:
   // Only implement QueryInterface; subclasses have the responsibility
@@ -100,6 +83,12 @@ public:
   NS_IMETHOD GetLength(PRUint32 *aLength);
   NS_IMETHOD Item(PRUint32 index, nsAString & _retval);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
+
+  // We implement all of these as shims which forward to GetPropertyValue
+  // and SetPropertyValue; subclasses need not.
+  NS_DECL_NSIDOMCSS2PROPERTIES
+  NS_DECL_NSIDOMSVGCSS2PROPERTIES
+  NS_DECL_NSIDOMNSCSS2PROPERTIES
 
 protected:
   // Always fills in the out parameter, even on failure, and if the out

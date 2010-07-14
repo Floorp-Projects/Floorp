@@ -41,7 +41,7 @@
 #ifndef nsComputedDOMStyle_h__
 #define nsComputedDOMStyle_h__
 
-#include "nsICSSDeclaration.h"
+#include "nsDOMCSSDeclaration.h"
 
 #include "nsROCSSPrimitiveValue.h"
 #include "nsDOMCSSRGBColor.h"
@@ -57,12 +57,13 @@
 
 class nsIPresShell;
 
-class nsComputedDOMStyle : public nsICSSDeclaration,
+class nsComputedDOMStyle : public nsDOMCSSDeclaration,
                            public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsComputedDOMStyle)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsComputedDOMStyle,
+                                           nsICSSDeclaration)
 
   NS_IMETHOD Init(nsIDOMElement *aElement,
                   const nsAString& aPseudoElt,
@@ -99,6 +100,15 @@ public:
     NS_ASSERTION(aExpose != mExposeVisitedStyle, "should always be changing");
     mExposeVisitedStyle = aExpose;
   }
+
+  // nsDOMCSSDeclaration abstract methods which should never be called
+  // on a nsComputedDOMStyle object, but must be defined to avoid
+  // compile errors.
+  virtual nsresult GetCSSDeclaration(nsCSSDeclaration**, PRBool);
+  virtual nsresult DeclarationChanged();
+  virtual nsIDocument* DocToUpdate();
+  virtual nsresult GetCSSParsingEnvironment(nsIURI**, nsIURI**, nsIPrincipal**,
+                                            mozilla::css::Loader**);
 
 private:
   void AssertFlushedPendingReflows() {

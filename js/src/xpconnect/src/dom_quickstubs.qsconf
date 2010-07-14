@@ -173,6 +173,7 @@ members = [
     # dom/interfaces/css
     'nsIDOMElementCSSInlineStyle.*',
     'nsIDOMCSS2Properties.*',
+    'nsIDOMSVGCSS2Properties.*',
     'nsIDOMNSCSS2Properties.*',
     'nsIDOMRect.*',
     'nsIDOMViewCSS.getComputedStyle',
