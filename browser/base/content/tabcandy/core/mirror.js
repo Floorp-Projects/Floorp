@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Ian Gilman <ian@iangilman.com>
+ * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,11 +40,6 @@
 // Title: mirror.js
 
 (function(){
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
 
 function _isIframe(doc){
   var win = doc.defaultView;
@@ -125,13 +121,6 @@ TabCanvas.prototype = {
     }
     
     ctx.restore();
-  },
-  
-  // ----------
-  // Function: animate
-  // Deprecated
-  animate: function(options, duration){
-    Utils.assert('this routine no longer exists', false);
   }
 };
 
