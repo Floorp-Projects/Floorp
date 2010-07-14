@@ -71,6 +71,7 @@ struct EnumerateData {
 
 struct PrefCallbackData {
   nsPrefBranch     *pBranch;
+  nsISupports      *pCanonical;
   nsIObserver      *pObserver;
   nsIWeakReference *pWeakRef;
   char pDomain[1];
@@ -741,6 +742,18 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
     NS_ADDREF(pCallback->pObserver);
   }
 
+  // In RemoveObserver, we need a canonical pointer to compare the removed
+  // observer to. In order to avoid having to call QI every time through the
+  // loop, we call QI here. There are two cases:
+  // 1. We hold a strong reference to the nsIObserver. This must hold
+  //    pCanonical alive.
+  // 2. We hold a weak reference: either the object stays alive and eventually
+  //    we QI the nsIObserver to nsISupports and compare successfully. Or the
+  //    object dies and we have a dangling (but unused) pointer to the
+  //    canonical supports pointer until we remove this entry.
+  CallQueryInterface(aObserver, &pCallback->pCanonical);
+  pCallback->pCanonical->Release();
+
   strcpy(pCallback->pDomain, aDomain);
   mObservers->AppendElement(pCallback);
 
@@ -784,10 +797,24 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
   if (count == 0)
     return NS_OK;
 
+  nsCOMPtr<nsISupports> canonical(do_QueryInterface(aObserver));
+#ifdef DEBUG
+  PRBool alreadyRemoved = PR_FALSE;
+#endif
+
   for (i = 0; i < count; i++) {
     pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
+
+#ifdef DEBUG
+    if (!pCallback) {
+      // Have to assume that the callback we're looking for was already
+      // removed in freeObserverList below.
+      alreadyRemoved = PR_TRUE;
+    }
+#endif
+
     if (pCallback &&
-        pCallback->pObserver == aObserver &&
+        pCallback->pCanonical == canonical &&
         !strcmp(pCallback->pDomain, aDomain)) {
       // We must pass a fully qualified preference name to remove the callback
       pref = getPrefName(aDomain); // aDomain == nsnull only possible failure, trapped above
@@ -807,6 +834,8 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
     }
   }
 
+  NS_WARN_IF_FALSE(alreadyRemoved,
+                   "Failed attempt to remove a pref observer, probably leaking");
   return NS_OK;
 }
 
@@ -864,30 +893,27 @@ void nsPrefBranch::freeObserverList(void)
 
   if (mObservers) {
     // unregister the observers
-    PRInt32 count;
 
-    count = mObservers->Count();
-    if (count > 0) {
-      PRInt32 i;
-      nsCAutoString domain;
-      for (i = 0; i < count; ++i) {
-        pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
-        if (pCallback) {
-          // We must pass a fully qualified preference name to remove the callback
-          pref = getPrefName(pCallback->pDomain);
-          // Remove this observer from our array so that nobody else can remove
-          // what we're trying to remove right now.
-          mObservers->ReplaceElementAt(nsnull, i);
-          PREF_UnregisterCallback(pref, NotifyObserver, pCallback);
-          if (pCallback->pWeakRef) {
-            NS_RELEASE(pCallback->pWeakRef);
-          } else {
-            NS_RELEASE(pCallback->pObserver);
-          }
-          nsMemory::Free(pCallback);
+    PRInt32 i;
+    nsCAutoString domain;
+    for (i = 0; i < mObservers->Count(); ++i) {
+      pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
+      if (pCallback) {
+        // We must pass a fully qualified preference name to remove the callback
+        pref = getPrefName(pCallback->pDomain);
+        // Remove this observer from our array so that nobody else can remove
+        // what we're trying to remove right now.
+        mObservers->ReplaceElementAt(nsnull, i);
+        PREF_UnregisterCallback(pref, NotifyObserver, pCallback);
+        if (pCallback->pWeakRef) {
+          NS_RELEASE(pCallback->pWeakRef);
+        } else {
+          NS_RELEASE(pCallback->pObserver);
         }
+        nsMemory::Free(pCallback);
       }
     }
+
     delete mObservers;
     mObservers = 0;
   }
