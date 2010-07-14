@@ -50,7 +50,7 @@
 #include "nsContentCreatorFunctions.h"
 
 #include "nsIDOMHTMLOptGroupElement.h"
-#include "nsIOptionElement.h"
+#include "nsHTMLOptionElement.h"
 #include "nsIEventStateManager.h"
 #include "nsGUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -828,7 +828,8 @@ nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
     nsCOMPtr<nsIDOMNode> option;
     Item(aIndex, getter_AddRefs(option));
     if (option) {
-      nsCOMPtr<nsIOptionElement> optionElement(do_QueryInterface(option));
+      nsRefPtr<nsHTMLOptionElement> optionElement = 
+        static_cast<nsHTMLOptionElement*>(option.get());
       optionElement->SetSelectedInternal(aSelected, aNotify);
     }
   }
