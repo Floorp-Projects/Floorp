@@ -464,35 +464,15 @@ window.TabsManager = iQ.extend(new Subscribable(), {
          }});
         */
       this.__proto__ = {
-        get isClosed() (browser == null),
+
+        get closed() !browser,
+        get url() browser && browser.currentURI ? browser.currentURI.spec : null,  
+        get favicon() chromeTab && chromeTab.image ? chromeTab.image : null,
   
-        get url() {
-          if (browser && browser.currentURI)
-            return browser.currentURI.spec;
-          return null;
-        },
+        get contentWindow() browser && browser.contentWindow ? browser.contentWindow : null,
+        get contentDocument() browser && browser.contentDocument ? browser.contentDocument : null,
   
-        get favicon() {
-          if (chromeTab && chromeTab.image) {
-            return chromeTab.image;
-          }
-          return null;
-        },
-  
-        get contentWindow() {
-          if (browser && browser.contentWindow)
-            return browser.contentWindow;
-          return null;
-        },
-  
-        get contentDocument() {
-          if (browser && browser.contentDocument)
-            return browser.contentDocument;
-          return null;
-        },
-  
-        get raw() chromeTab,
-        
+        get raw() chromeTab,        
         get tabbrowser() tabbrowser,
 
         isFocused: function() {
