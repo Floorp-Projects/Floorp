@@ -38,14 +38,13 @@
 #ifndef nsNodeUtils_h___
 #define nsNodeUtils_h___
 
-#include "nsDOMAttributeMap.h"
-#include "nsIDOMNode.h"
 #include "nsINode.h"
 
 struct CharacterDataChangeInfo;
 struct JSContext;
 struct JSObject;
 class nsIVariant;
+class nsIDOMNode;
 class nsIDOMUserDataHandler;
 template<class E> class nsCOMArray;
 class nsCycleCollectionTraversalCallback;
@@ -250,9 +249,6 @@ public:
   static void UnlinkUserData(nsINode *aNode);
 
 private:
-  friend PLDHashOperator
-    AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg);
-
   /**
    * Walks aNode, its attributes and, if aDeep is PR_TRUE, its descendant nodes.
    * If aClone is PR_TRUE the nodes will be cloned. If aNewNodeInfoManager is
