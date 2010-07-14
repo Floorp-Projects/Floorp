@@ -35,7 +35,7 @@ function run_test() {
     name: "Test Addon 1",
   }, dest);
 
-  startupManager(1);
+  startupManager();
 
   do_test_pending();
   run_test_1();

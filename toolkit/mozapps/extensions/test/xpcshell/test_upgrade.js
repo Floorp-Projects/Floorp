@@ -59,7 +59,7 @@ function run_test() {
 
 // Test that the test extensions are all installed
 function run_test_1() {
-  startupManager(1);
+  startupManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -80,7 +80,7 @@ function run_test_1() {
 
 // Test that upgrading the application disables now incompatible add-ons
 function run_test_2() {
-  restartManager(1, "2");
+  restartManager("2");
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org"], function([a1, a2, a3]) {
@@ -105,7 +105,7 @@ function run_test_3() {
   var file = gProfD.clone();
   file.append("extensions.ini");
   file.remove(true);
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
