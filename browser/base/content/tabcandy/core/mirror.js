@@ -352,7 +352,7 @@ TabMirror.prototype = {
   unlink: function(tab){
     var mirror = tab.mirror;
     if (mirror) {
-      mirror._sendOnClose();
+      mirror._sendToSubscribers("close");
       var tabCanvas = mirror.tabCanvas;
       if (tabCanvas)
         tabCanvas.detach();

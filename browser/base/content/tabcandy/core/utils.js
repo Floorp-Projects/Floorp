@@ -363,11 +363,8 @@ window.Range.prototype = {
 // ##########
 // Class: Subscribable
 // A mix-in for allowing objects to collect subscribers for custom events. 
-// Currently supports only onClose. 
-// TODO generalize for any number of events
 window.Subscribable = function() {
   this.subscribers = {};
-  this.onCloseSubscribers = null;
 };
 
 window.Subscribable.prototype = {
@@ -418,54 +415,6 @@ window.Subscribable.prototype = {
     var subsCopy = iQ.merge([], this.subscribers[eventName]);
     subsCopy.forEach(function(object) { 
       object.callback(self, eventInfo);
-    });
-  },
-  
-  // ----------
-  // Function: addOnClose
-  // The given callback will be called when the Subscribable fires its onClose.
-  // The referenceElement is used to facilitate removal if necessary. 
-  addOnClose: function(referenceElement, callback) {
-    if (!this.onCloseSubscribers)
-      this.onCloseSubscribers = [];
-      
-    var existing = this.onCloseSubscribers.filter(function(element) {
-      return element.referenceElement == referenceElement;
-    });
-    
-    if (existing.length) {
-      Utils.assert('should only ever be one', existing.length == 1);
-      existing[0].callback = callback;
-    } else {  
-      this.onCloseSubscribers.push({
-        referenceElement: referenceElement, 
-        callback: callback
-      });
-    }
-  },
-  
-  // ----------
-  // Function: removeOnClose
-  // Removes the callback associated with referenceElement for onClose notification. 
-  removeOnClose: function(referenceElement) {
-    if (!this.onCloseSubscribers)
-      return;
-      
-    this.onCloseSubscribers = this.onCloseSubscribers.filter(function(element) {
-      return element.referenceElement != referenceElement;
-    });
-  },
-  
-  // ----------
-  // Function: _sendOnClose
-  // Internal routine. Used by the Subscribable to fire onClose events.
-  _sendOnClose: function() {
-    if (!this.onCloseSubscribers)
-      return;
-      
-    var self = this;
-    this.onCloseSubscribers.forEach(function(object) {
-      object.callback(self);
     });
   }
 };

@@ -163,7 +163,7 @@ window.TabItem = function(container, tab) {
   this._updateDebugBounds();
   
   TabItems.register(this);
-  this.tab.mirror.addOnClose(this, function(who, info) {
+  this.tab.mirror.addSubscriber(this, "close", function(who, info) {
     TabItems.unregister(self);
     self.removeTrenches();
   });   
@@ -380,13 +380,18 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   },
   
   // ----------
+  // Function: addOnClose
+  // Accepts a callback that will be called when this item closes. 
+  // The referenceObject is used to facilitate removal if necessary. 
   addOnClose: function(referenceObject, callback) {
-    this.tab.mirror.addOnClose(referenceObject, callback);      
+    this.tab.mirror.addSubscriber(referenceObject, "close", callback);      
   },
 
   // ----------
+  // Function: removeOnClose
+  // Removes the close event callback associated with referenceObject.
   removeOnClose: function(referenceObject) {
-    this.tab.mirror.removeOnClose(referenceObject);      
+    this.tab.mirror.removeSubscriber(referenceObject, "close");      
   },
   
   // ----------  
