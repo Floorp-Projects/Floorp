@@ -241,23 +241,12 @@ iQ.fn = iQ.prototype = {
     }
 
     if ( value && typeof value === "string" ) {
-      var classNames = (value || "").split( rspace );
-
       for ( var i = 0, l = this.length; i < l; i++ ) {
         var elem = this[i];
-
         if ( elem.nodeType === 1 ) {
-          if ( !elem.className ) {
-            elem.className = value;
-          } else {
-            var className = " " + elem.className + " ", setClass = elem.className;
-            for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
-              if ( className.indexOf( " " + classNames[c] + " " ) < 0 ) {
-                setClass += " " + classNames[c];
-              }
-            }
-            elem.className = String.trim( setClass );
-          }
+          (value || "").split( rspace ).forEach(function(className) {
+            elem.classList.add(className);
+          });
         }
       }
     }
@@ -274,19 +263,13 @@ iQ.fn = iQ.prototype = {
     }
 
     if ( (value && typeof value === "string") || value === undefined ) {
-      var classNames = (value || "").split(rspace);
-
       for ( var i = 0, l = this.length; i < l; i++ ) {
         var elem = this[i];
-
         if ( elem.nodeType === 1 && elem.className ) {
           if ( value ) {
-            var className = (" " + elem.className + " ").replace(rclass, " ");
-            for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
-              className = className.replace(" " + classNames[c] + " ", " ");
-            }
-            elem.className = String.trim( className );
-
+            (value || "").split(rspace).forEach(function(className) {
+              elem.classList.remove(className);
+            });
           } else {
             elem.className = "";
           }
@@ -300,13 +283,11 @@ iQ.fn = iQ.prototype = {
   // ----------
   // Function: hasClass
   hasClass: function( selector ) {
-    var className = " " + selector + " ";
     for ( var i = 0, l = this.length; i < l; i++ ) {
-      if ( (" " + this[i].className + " ").replace(rclass, " ").indexOf( className ) > -1 ) {
+      if ( this[i].classList.contains( selector ) ) {
         return true;
       }
     }
-
     return false;
   },
 
