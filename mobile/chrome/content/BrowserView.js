@@ -597,7 +597,9 @@ BrowserView.prototype = {
 
   getPageZoomLevel: function getPageZoomLevel() {
     let bvs = this._browserViewportState;  // browser exists, so bvs must as well
-    let browserW = this.viewportToBrowser(bvs.viewportRect.right);
+
+    // for xul pages, bvs.viewportRect.right can be 0
+    let browserW = this.viewportToBrowser(bvs.viewportRect.right) || 1.0;
     return this.getVisibleRect().width / browserW;
   },
 
