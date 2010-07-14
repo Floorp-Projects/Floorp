@@ -1088,7 +1088,7 @@ UIClass.prototype = {
     function putInGroup(set, key) {
       var group = Groups.getGroupWithTitle(key);
       if (group) {
-        iQ.each(set, function(index, el) {
+        set.forEach(function(el) {
           group.add(el);
         });
       } else 
