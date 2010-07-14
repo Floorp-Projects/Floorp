@@ -562,8 +562,8 @@ window.Item.prototype = {
   },
   
   // ----------
-  // Function: removeTrenches
-  // Removes the trenches for snapping to this item.
+  // Function: snap
+  // The snap function used during group creation via drag-out
   snap: function() {
     // make the snapping work with a wider range!
     var defaultRadius = Trenches.defaultRadius;
