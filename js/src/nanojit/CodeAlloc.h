@@ -188,6 +188,11 @@ namespace nanojit
         /** add a block previously returned by alloc(), to code */
         static void add(CodeList* &code, NIns* start, NIns* end);
 
+        /** return the number of bytes in all the code blocks in "code", including block overhead */
+#ifdef PERFM
+        static size_t size(const CodeList* code);
+#endif
+
         /** return the total number of bytes held by this CodeAlloc. */
         size_t size();
 

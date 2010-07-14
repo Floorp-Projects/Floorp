@@ -1239,8 +1239,6 @@ class TraceRecorder
     void forgetGuardedShapes();
 
     inline nanojit::LIns* map(nanojit::LIns *obj_ins);
-    JS_REQUIRES_STACK bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins,
-                                         nanojit::LIns*& ops_ins, size_t op_offset = 0);
     JS_REQUIRES_STACK AbortableRecordingStatus test_property_cache(JSObject* obj, nanojit::LIns* obj_ins,
                                                                      JSObject*& obj2, PCVal& pcval);
     JS_REQUIRES_STACK RecordingStatus guardPropertyCacheHit(nanojit::LIns* obj_ins,
@@ -1262,18 +1260,10 @@ class TraceRecorder
                                    nanojit::LIns*& dslots_ins);
     nanojit::LIns* stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot,
                                   nanojit::LIns*& dslots_ins);
+    nanojit::LIns* stobj_get_parent(nanojit::LIns* obj_ins);
+    nanojit::LIns* stobj_get_private(nanojit::LIns* obj_ins);
 
-    nanojit::LIns* stobj_get_private(nanojit::LIns* obj_ins) {
-        return stobj_get_fslot(obj_ins, JSSLOT_PRIVATE);
-    }
-
-    nanojit::LIns* stobj_get_proto(nanojit::LIns* obj_ins) {
-        return stobj_get_fslot(obj_ins, JSSLOT_PROTO);
-    }
-
-    nanojit::LIns* stobj_get_parent(nanojit::LIns* obj_ins) {
-        return stobj_get_fslot(obj_ins, JSSLOT_PARENT);
-    }
+    nanojit::LIns* stobj_get_proto(nanojit::LIns* obj_ins);
 
     JS_REQUIRES_STACK AbortableRecordingStatus name(jsval*& vp, nanojit::LIns*& ins, NameResult& nr);
     JS_REQUIRES_STACK AbortableRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins,

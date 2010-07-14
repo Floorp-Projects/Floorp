@@ -545,8 +545,9 @@ namespace nanojit
         return _nIns;
     }
 
-    void Assembler::asm_branch_xov(LOpcode, NIns*) {
-        TODO(asm_branch_xov);
+    NIns* Assembler::asm_branch_ov(LOpcode, NIns*) {
+        TODO(asm_branch_ov);
+        return _nIns;
     }
 
     void Assembler::asm_cmp(LOpcode condop, LIns *a, LIns *b, ConditionRegister cr) {
@@ -729,7 +730,7 @@ namespace nanojit
         for(uint32_t i = 0; i < argc; i++) {
             uint32_t j = argc - i - 1;
             ArgType ty = argTypes[j];
-            LInsp arg = ins->arg(j);
+            LIns* arg = ins->arg(j);
             NanoAssert(ty != ARGTYPE_V);
             if (ty != ARGTYPE_D) {
                 // GP arg
@@ -762,7 +763,7 @@ namespace nanojit
             max_param_size = param_size;
     }
 
-    void Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
+    void Assembler::asm_regarg(ArgType ty, LIns* p, Register r)
     {
         NanoAssert(r != deprecated_UnknownReg);
         NanoAssert(ty != ARGTYPE_V);
@@ -846,8 +847,8 @@ namespace nanojit
 
     void Assembler::asm_arith(LIns *ins) {
         LOpcode op = ins->opcode();
-        LInsp lhs = ins->oprnd1();
-        LInsp rhs = ins->oprnd2();
+        LIns* lhs = ins->oprnd1();
+        LIns* rhs = ins->oprnd2();
         RegisterMask allow = GpRegs;
         Register rr = deprecated_prepResultReg(ins, allow);
         Register ra = findRegFor(lhs, GpRegs);
@@ -948,8 +949,8 @@ namespace nanojit
 
     void Assembler::asm_fop(LIns *ins) {
         LOpcode op = ins->opcode();
-        LInsp lhs = ins->oprnd1();
-        LInsp rhs = ins->oprnd2();
+        LIns* lhs = ins->oprnd1();
+        LIns* rhs = ins->oprnd2();
         RegisterMask allow = FpRegs;
         Register rr = deprecated_prepResultReg(ins, allow);
         Register ra, rb;
@@ -1010,7 +1011,7 @@ namespace nanojit
     #endif
     }
 
-    void Assembler::asm_d2i(LInsp) {
+    void Assembler::asm_d2i(LIns*) {
         NanoAssertMsg(0, "NJ_F2I_SUPPORTED not yet supported for this architecture");
     }
 
@@ -1211,7 +1212,7 @@ namespace nanojit
     #endif
     }
 
-    void Assembler::asm_cmov(LInsp ins)
+    void Assembler::asm_cmov(LIns* ins)
     {
         LIns* condval = ins->oprnd1();
         LIns* iftrue  = ins->oprnd2();
@@ -1250,24 +1251,12 @@ namespace nanojit
         asm_cmp(condval->opcode(), condval->oprnd1(), condval->oprnd2(), CR7);
     }
 
-    RegisterMask Assembler::hint(LIns* ins) {
-        LOpcode op = ins->opcode();
+    RegisterMask Assembler::nHint(LIns* ins) {
+        NanoAssert(ins->isop(LIR_paramp));
         RegisterMask prefer = 0;
-        if (op == LIR_calli)
-            prefer = rmask(R3);
-    #ifdef NANOJIT_64BIT
-        else if (op == LIR_callq)
-            prefer = rmask(R3);
-    #endif
-        else if (op == LIR_calld)
-            prefer = rmask(F1);
-        else if (op == LIR_paramp) {
-            if (ins->paramKind() == 0) {
-                if (ins->paramArg() < 8) {
-                    prefer = rmask(argRegs[ins->paramArg()]);
-                }
-            }
-        }
+        if (ins->paramKind() == 0)
+            if (ins->paramArg() < 8)
+                prefer = rmask(argRegs[ins->paramArg()]);
         return prefer;
     }
 
@@ -1282,6 +1271,12 @@ namespace nanojit
     }
 
     void Assembler::nInit(AvmCore*) {
+        nHints[LIR_calli]  = rmask(R3);
+    #ifdef NANOJIT_64BIT
+        nHints[LIR_callq]  = rmask(R3);
+    #endif
+        nHints[LIR_calld]  = rmask(F1);
+        nHints[LIR_paramp] = PREFER_SPECIAL;
     }
 
     void Assembler::nBeginAssembly() {
