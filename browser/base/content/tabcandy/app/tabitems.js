@@ -603,13 +603,13 @@ window.TabItems = {
 
   // ----------  
   register: function(item) {
-    Utils.assert('only register once per item', iQ.inArray(item, this.items) == -1);
+    Utils.assert('only register once per item', this.items.indexOf(item) == -1);
     this.items.push(item);
   },
   
   // ----------  
   unregister: function(item) {
-    var index = iQ.inArray(item, this.items);
+    var index = this.items.indexOf(item);
     if (index != -1)
       this.items.splice(index, 1);  
   },
