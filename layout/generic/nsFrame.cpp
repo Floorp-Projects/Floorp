@@ -5348,6 +5348,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
     {
       PRBool eatingNonRenderableWS = PR_FALSE;
       PRBool done = PR_FALSE;
+      PRBool jumpedLine = PR_FALSE;
       
       while (!done) {
         PRBool movingInFrameDirection =
@@ -5359,7 +5360,6 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           done = current->PeekOffsetCharacter(movingInFrameDirection, &offset); 
 
         if (!done) {
-          PRBool jumpedLine;
           result =
             current->GetFrameFromDirection(aPos->mDirection, aPos->mVisual,
                                            aPos->mJumpLines, aPos->mScrollViewStop,
@@ -5380,6 +5380,15 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       aPos->mResultContent = range.content;
       // Output offset is relative to content, not frame
       aPos->mContentOffset = offset < 0 ? range.end : range.start + offset;
+      // If we're dealing with a text frame and moving backward positions us at
+      // the end of that line, decrease the offset by one to make sure that
+      // we're placed before the linefeed character on the previous line.
+      if (offset < 0 && jumpedLine &&
+          aPos->mDirection == eDirPrevious &&
+          current->GetStyleText()->NewlineIsSignificant() &&
+          current->HasTerminalNewline()) {
+        --aPos->mContentOffset;
+      }
       
       break;
     }
