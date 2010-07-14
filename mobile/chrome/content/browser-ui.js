@@ -1562,18 +1562,20 @@ var FormHelperUI = {
 
   /** Retrieve the autocomplete list from the autocomplete service for an element */
   _getAutocompleteSuggestions: function _formHelperGetAutocompleteSuggestions(aElement) {
-    if (!aElement.canAutocomplete)
-      return [];
-
     let suggestions = [];
+
     let autocompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete);
-    let results = autocompleteService.autoCompleteSearch(aElement.name, aElement.value, aElement, null);
-    if (results.matchCount > 0) {
-      for (let i = 0; i < results.matchCount; i++) {
-        let value = results.getValueAt(i);
-        suggestions.push(value);
+    try {
+      let results = autocompleteService.autoCompleteSearch(aElement.name, aElement.value, aElement, null);
+      if (results.matchCount > 0) {
+        for (let i = 0; i < results.matchCount; i++) {
+          let value = results.getValueAt(i);
+          suggestions.push(value);
+        }
       }
     }
+    catch(e) {}
+
     return suggestions;
   },
 
@@ -1709,23 +1711,26 @@ var SelectHelperUI = {
     let choices = aList.choices;
     for (let i = 0; i < choices.length; i++) {
       let choice = choices[i];
+      let item = document.createElement("option");
+      item.setAttribute("label", choice.text);
+      choice.disabled ? item.setAttribute("disabled", choice.disabled)
+                      : item.removeAttribute("disabled");
+      this._container.appendChild(item);
+
       if (choice.group) {
-        let group = document.createElement("option");
-        group.setAttribute("label", choice.text);
-        this._container.appendChild(group);
-        group.className = "optgroup";
-      } else {
-        let item = document.createElement("option");
-        item.setAttribute("label", choice.text);
-        item.optionIndex = choice.optionIndex;
-        item.choiceIndex = i;
-        if (choice.inGroup)
-          item.className = "in-optgroup";
-        this._container.appendChild(item);
-        if (choice.selected) {
-          item.setAttribute("selected", "true");
-          firstSelected = firstSelected || item;
-        }
+        item.className = "optgroup";
+        continue;
+      }
+
+      item.optionIndex = choice.optionIndex;
+      item.choiceIndex = i;
+
+      if (choice.inGroup)
+        item.className = "in-optgroup";
+
+      if (choice.selected) {
+        item.setAttribute("selected", "true");
+        firstSelected = firstSelected || item;
       }
     }
 
@@ -1846,7 +1851,7 @@ var SelectHelperUI = {
   _updateControl: function() {
     let currentSelectedIndexes = this._getSelectedIndexes();
 
-    let isIdentical = currentSelectedIndexes.length == this._selectedIndexes.length;
+    let isIdentical = (this._selectedIndexes && this._selectedIndexes.length == currentSelectedIndexes.length);
     if (isIdentical) {
       for (let i = 0; i < currentSelectedIndexes.length; i++) {
         if (currentSelectedIndexes[i] != this._selectedIndexes[i]) {
@@ -1879,7 +1884,7 @@ var SelectHelperUI = {
             item.selected = true;
           }
 
-          this.onSelect(item.optionIndex, item.selected, this._list.multiple);
+          this.onSelect(item.optionIndex, item.selected, !this._list.multiple);
         }
         break;
     }
