@@ -10096,7 +10096,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
     LIns* a_ins = get(&cx->fp->argsobj);
     LIns* args_ins;
     LIns* callee_ins = get(&cx->fp->argv[-2]);
-    if (a_ins->opcode() == LIR_immi) {
+    if (a_ins->isImmP()) {
         // |arguments| is set to 0 by EnterFrame on this trace, so call to create it.
         args_ins = newArguments(callee_ins);
     } else {
