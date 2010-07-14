@@ -1126,7 +1126,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   } else {
     if (aValue) {
       // Set the correct value in the root node
-      rv = mBoundFrame->UpdateValueDisplay(PR_FALSE, PR_FALSE, aValue);
+      rv = mBoundFrame->UpdateValueDisplay(PR_TRUE, PR_FALSE, aValue);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
