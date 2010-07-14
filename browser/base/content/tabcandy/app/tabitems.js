@@ -344,7 +344,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     if (!isRect(this.bounds))
       Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
     
-    if (this.parent === null)
+    if (!this.parent && !this.tab.closed)
       this.setTrenches(rect);
 
     this.save();
