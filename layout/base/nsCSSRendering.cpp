@@ -2147,10 +2147,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
                                             displayData->mAppearance)) {
-      nsRect dirty;
-      dirty.IntersectRect(aDirtyRect, aBorderArea);
+      nsRect drawing(aBorderArea);
+      theme->GetWidgetOverflow(aPresContext->DeviceContext(),
+                               aForFrame, displayData->mAppearance, &drawing);
+      drawing.IntersectRect(drawing, aDirtyRect);
       theme->DrawWidgetBackground(&aRenderingContext, aForFrame,
-                                  displayData->mAppearance, aBorderArea, dirty);
+                                  displayData->mAppearance, aBorderArea,
+                                  drawing);
       return;
     }
   }
