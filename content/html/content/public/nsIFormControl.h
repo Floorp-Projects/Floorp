@@ -45,6 +45,12 @@ class nsString;
 class nsIFormProcessor;
 class nsFormSubmission;
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 enum FormControlsTypes {
   NS_FORM_FIELDSET = 1,
   NS_FORM_LABEL,
@@ -93,8 +99,8 @@ PR_STATIC_ASSERT((PRUint32)eButtonElementTypesMax < (PRUint32)NS_FORM_INPUT_ELEM
 PR_STATIC_ASSERT((PRUint32)eInputElementTypesMax  < 1<<8);
 
 #define NS_IFORMCONTROL_IID   \
-{ 0x52dc1f0d, 0x1683, 0x4dd7, \
- { 0xae, 0x0a, 0xc4, 0x76, 0x10, 0x64, 0x2f, 0xa8 } }
+{ 0x0dc5083b, 0xb0a8, 0x48c4, \
+ { 0xb2, 0xeb, 0xc2, 0x4f, 0xfb, 0x7e, 0xc2, 0x8e } }
 
 /**
  * Interface which all form controls (e.g. buttons, checkboxes, text,
@@ -109,9 +115,9 @@ public:
 
   /**
    * Get the form for this form control.
-   * @param aForm the form [OUT]
+   * @return the form
    */
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm) = 0;
+  virtual mozilla::dom::Element *GetFormElement() = 0;
 
   /**
    * Set the form for this form control.
