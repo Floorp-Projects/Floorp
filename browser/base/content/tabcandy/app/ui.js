@@ -568,13 +568,28 @@ window.Page = {
 // Class: UIClass
 // Singleton top-level UI manager. TODO: Integrate with <Page>.
 function UIClass(){ 
-  if (window.Tabs)
-    this.init();
-  else {
-    var self = this;
-    TabsManager.addSubscriber(this, 'load', function() {
-      self.init();
-    });
+  try {
+    Utils.log('TabCandy init --------------------');
+
+    // Variable: navBar
+    // A reference to the <Navbar>, for manipulating the browser's nav bar. 
+    this.navBar = Navbar;
+    
+    // Variable: tabBar
+    // A reference to the <Tabbar>, for manipulating the browser's tab bar.
+    this.tabBar = Tabbar;
+    
+    // Variable: devMode
+    // If true (set by an url parameter), adds extra features to the screen. 
+    // TODO: Integrate with the dev menu
+    this.devMode = false;
+    
+    // Variable: currentTab
+    // Keeps track of which <Tabs> tab we are currently on.
+    // Used to facilitate zooming down from a previous tab. 
+    this.currentTab = Utils.activeTab;
+  } catch(e) {
+    Utils.log(e);
   }
 };
 
@@ -583,26 +598,22 @@ UIClass.prototype = {
   // ----------
   init: function() {
     try {
-      Utils.log('TabCandy init --------------------');
-
-      // Variable: navBar
-      // A reference to the <Navbar>, for manipulating the browser's nav bar. 
-      this.navBar = Navbar;
-      
-      // Variable: tabBar
-      // A reference to the <Tabbar>, for manipulating the browser's tab bar.
-      this.tabBar = Tabbar;
-      
-      // Variable: devMode
-      // If true (set by an url parameter), adds extra features to the screen. 
-      // TODO: Integrate with the dev menu
-      this.devMode = false;
-      
-      // Variable: currentTab
-      // Keeps track of which <Tabs> tab we are currently on.
-      // Used to facilitate zooming down from a previous tab. 
-      this.currentTab = Utils.activeTab;
-      
+      if (window.Tabs)
+        this._secondaryInit();
+      else {
+        var self = this;
+        TabsManager.addSubscriber(this, 'load', function() {
+          self._secondaryInit();
+        });
+      }
+    } catch(e) {
+      Utils.log(e);
+    }
+  },
+  
+  // -----------
+  _secondaryInit: function() {
+    try {   
       var self = this;
       
       this.setBrowserKeyHandler();
@@ -650,10 +661,7 @@ UIClass.prototype = {
         self.delayInit();
       });
     } catch(e) {
-      Utils.log("Error in UIClass(): " + e);
-      Utils.log(e.fileName);
-      Utils.log(e.lineNumber);
-      Utils.log(e.stack);
+      Utils.log(e);
     }
   },
 
@@ -1145,5 +1153,6 @@ UIClass.prototype = {
 
 // ----------
 window.UI = new UIClass();
+window.UI.init();
 
 })();
