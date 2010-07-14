@@ -51,6 +51,7 @@ let HTMLLabelElement = Ci.nsIDOMHTMLLabelElement;
 let HTMLButtonElement = Ci.nsIDOMHTMLButtonElement;
 let HTMLOptGroupElement = Ci.nsIDOMHTMLOptGroupElement;
 let HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
+let XULMenuListElement = Ci.nsIDOMXULMenuListElement;
 
 /**
  * Responsible of navigation between forms fields and of the opening of the assistant
@@ -67,73 +68,83 @@ function FormAssistant() {
 };
 
 FormAssistant.prototype = {
-  open: function(aElement) {
-    if (!aElement)
-      return false;
+  get currentElement() {
+    return this._elements[this._currentIndex];
+  },
 
-    let wrapper = new BasicWrapper(aElement);
-    if (!wrapper.canAssist())
-      return false;
+  get currentIndex() {
+    return this._currentIndex;
+  },
 
-    this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
-    if (!this._enabled && !wrapper.hasChoices()) {
-      return false;
+  set currentIndex(aIndex) {
+    let element = this._elements[aIndex];
+    if (element) {
+      gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
+      this._currentIndex = aIndex;
+      sendAsyncMessage("FormAssist:Show", this._getJSON());
     }
-    else if (this._enabled) {
-      this._wrappers = [];
-      this._currentIndex = -1;
-      this._getAllWrappers(aElement);
+    return element;
+  },
+
+  _open: false,
+  open: function(aElement) {
+    // if the click is on an option element we want to check if the parent is a valid target
+    if (aElement instanceof HTMLOptionElement && aElement.parentNode instanceof HTMLSelectElement) {
+      aElement = aElement.parentNode;
+    }
+
+    // Checking if the element is the current focused one while the form assistant is open
+    // allow the user to reposition the caret into an input element
+    if ((this._open && aElement == this.currentElement) || !this._isValidElement(aElement))
+      return this._open = false;
+
+    // If form assistant is disabled but the element of a type of choice list
+    // we still want to show the simple select list
+    this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
+    if (!this._enabled && !this._isSelectElement(aElement))
+      return this._open = false;
+
+    if (this._enabled) {
+      this._elements = [];
+      this.currentIndex = this._getAllElements(aElement);
     }
     else {
-      this._wrappers = [aElement];
-      this._currentIndex = 0;
+      this._elements = [aElement];
+      this.currentIndex = 0;
     }
 
-    if (!this.getCurrent())
-      return false;
-
-    sendSyncMessage("FormAssist:Show", this.getJSON());
-
-    return true;
+    return this._open = true;
   },
 
   receiveMessage: function receiveMessage(aMessage) {
+    if (!this._enabled || !this.currentElement)
+      return;
+
+    let currentElement = this.currentElement;
     let json = aMessage.json;
     switch (aMessage.name) {
       case "FormAssist:Previous":
-        this.goToPrevious();
-        sendAsyncMessage("FormAssist:Show", this.getJSON());
+        this.currentIndex--;
         break;
 
       case "FormAssist:Next":
-        this.goToNext();
-        sendAsyncMessage("FormAssist:Show", this.getJSON());
+        this.currentIndex++;
         break;
 
       case "FormAssist:ChoiceSelect": {
-        let current = this.getCurrent();
-        if (!current)
-          return;
-
-        current.choiceSelect(json.index, json.selected, json.clearAll);
+        let wrapper = getWrapperForElement(currentElement);
+        wrapper.select(json.index, json.selected, json.clearAll);
         break;
       }
 
       case "FormAssist:ChoiceChange": {
-        let current = this.getCurrent();
-        if (!current)
-          return;
-
-        current.choiceChange();
+        let wrapper = getWrapperForElement(currentElement);
+        wrapper.fireOnChange();
         break;
       }
 
       case "FormAssist:AutoComplete":
-        let current = this.getCurrent();
-        if (!current)
-          return;
-
-        current.autocomplete(json.value);
+        currentElement.value = json.value;
         break;
     }
   },
@@ -153,12 +164,10 @@ FormAssistant.prototype = {
   },
 
   handleEvent: function formHelperHandleEvent(aEvent) {
-    if (!this._enabled)
+    if (!this._enabled || !this.currentElement)
       return;
 
-    let currentWrapper = this.getCurrent();
-    let currentElement = currentWrapper.element;
-
+    let currentElement = this.currentElement;
     switch (aEvent.keyCode) {
       case aEvent.DOM_VK_DOWN:
         if (currentElement instanceof HTMLInputElement && !currentWrapper.canAutocomplete()) {
@@ -172,8 +181,7 @@ FormAssistant.prototype = {
             return;
         }
 
-        this.goToNext();
-        sendAsyncMessage("FormAssist:Show", this.getJSON());
+        this.currentIndex++;
         break;
 
       case aEvent.DOM_VK_UP:
@@ -188,54 +196,143 @@ FormAssistant.prototype = {
             return;
         }
 
-        this.goToPrevious();
-        sendAsyncMessage("FormAssist:Show", this.getJSON());
+        this.currentIndex--;
         break;
 
       case aEvent.DOM_VK_RETURN:
         break;
 
       default:
-        if (currentWrapper.canAutocomplete())
-          sendAsyncMessage("FormAssist:AutoComplete", this.getJSON());
+        if (aEvent.target instanceof HTMLInputElement) {
+          sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
+        }
         break;
     }
 
-    let caretRect = currentWrapper.getCaretRect();
+    let caretRect = this._getCaretRect();
     if (!caretRect.isEmpty()) {
       sendAsyncMessage("FormAssist:Update", { caretRect: caretRect });
     }
   },
 
-  _getRectForCaret: function _getRectForCaret() {
-    let currentElement = this.getCurrent();
-    let rect = currentElement.getCaretRect();
-    return null;
+  _isValidElement: function formHelperIsValidElement(aElement) {
+    let formExceptions = {button: true, checkbox: true, file: true, image: true, radio: true, reset: true, submit: true};
+    if (aElement instanceof HTMLInputElement && formExceptions[aElement.type])
+      return false;
+
+    if (aElement instanceof HTMLButtonElement ||
+        (aElement.getAttribute("role") == "button" && aElement.hasAttribute("tabindex")))
+      return false;
+
+    return this._isNavigableElement(aElement) && this._isVisibleElement(aElement);
   },
 
-  _getAllWrappers: function getAllWrappers(aElement) {
+  _isNavigableElement: function formHelperIsNavigableElement(aElement) {
+    if (aElement.disabled)
+      return false;
+
+    if (aElement.getAttribute("role") == "button" && aElement.hasAttribute("tabindex"))
+      return true;
+
+    if (this._isSelectElement(aElement) || aElement instanceof HTMLTextAreaElement)
+      return true;
+
+    if (aElement instanceof HTMLInputElement || aElement instanceof HTMLButtonElement)
+      return !(aElement.type == "hidden")
+
+    return false;
+  },
+
+  _isVisibleElement: function formHelperIsVisibleElement(aElement) {
+    let style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, null);
+    if (!style)
+      return false;
+
+    let isVisible = (style.getPropertyValue("visibility") != "hidden");
+    let isOpaque = (style.getPropertyValue("opacity") != 0);
+
+    let rect = aElement.getBoundingClientRect();
+    return isVisible && isOpaque && (rect.height != 0 || rect.width != 0);
+  },
+
+  _isSelectElement: function formHelperIsSelectElement(aElement) {
+    return (aElement instanceof HTMLSelectElement || aElement instanceof XULMenuListElement);
+  },
+
+  /** Caret is used to input text for this element. */
+  _getCaretRect: function _formHelperGetCaretRect() {
+    let element = this.currentElement;
+    if ((element instanceof HTMLTextAreaElement ||
+        (element instanceof HTMLInputElement && element.type == "text")) &&
+        gFocusManager.focusedElement == element) {
+      let utils = Util.getWindowUtils(element.ownerDocument.defaultView);
+      let rect = utils.sendQueryContentEvent(utils.QUERY_CARET_RECT, element.selectionEnd, 0, 0, 0);
+      if (rect) {
+        let scroll = Util.getScrollOffset(element.ownerDocument.defaultView);
+        return new Rect(scroll.x + rect.left, scroll.y + rect.top, rect.width, rect.height);
+      }
+    }
+
+    return new Rect(0, 0, 0, 0);
+  },
+
+  /** Gets a rect bounding important parts of the element that must be seen when assisting. */
+  _getRect: function _formHelperGetRect() {
+    const kDistanceMax = 100;
+    let element = this.currentElement;
+    let elRect = getBoundingContentRect(element);
+
+    let labels = this._getLabels();
+    for (let i=0; i<labels.length; i++) {
+      let labelRect = getBoundingContentRect(labels[i]);
+      if (labelRect.left < elRect.left) {
+        let isClose = Math.abs(labelRect.left - elRect.left) - labelRect.width < kDistanceMax &&
+                      Math.abs(labelRect.top - elRect.top) - labelRect.height < kDistanceMax;
+        if (isClose) {
+          let width = labelRect.width + elRect.width + (elRect.left - labelRect.left - labelRect.width);
+          return new Rect(labelRect.left, labelRect.top, width, elRect.height).expandToIntegers();
+        }
+      }
+    }
+    return elRect;
+  },
+
+  _getLabels: function formHelperGetLabels() {
+    let associatedLabels = [];
+
+    let element = this.currentElement;
+    let labels = element.ownerDocument.getElementsByTagName("label");
+    for (let i=0; i<labels.length; i++) {
+      if (labels[i].control == element)
+        associatedLabels.push(labels[i]);
+    }
+
+    return associatedLabels.filter(this._isVisibleElement);
+  },
+
+  _getAllElements: function getAllElements(aElement) {
     // XXX good candidate for tracing if possible.
-    // The tough ones are lenght and canNavigateTo / isVisible.
+    // The tough ones are lenght and isVisibleElement.
     let document = aElement.ownerDocument;
     if (!document)
       return;
 
-    let elements = this._wrappers;
-
-    // get all the documents
+    let currentIndex = -1;
     let documents = Util.getAllDocuments(document);
 
+    let elements = this._elements;
     for (let i = 0; i < documents.length; i++) {
       let nodes = documents[i].querySelectorAll("input, button, select, textarea, [role=button]");
       nodes = this._filterRadioButtons(nodes);
 
       for (let j = 0; j < nodes.length; j++) {
         let node = nodes[j];
-        let wrapper = new BasicWrapper(node);
-        if (wrapper.canNavigateTo() && wrapper.isVisible()) {
-          elements.push(wrapper);
-          if (node == aElement)
-            this._setIndex(elements.length - 1);
+        if (!this._isNavigableElement(node) || !this._isVisibleElement(node))
+          continue;
+
+        elements.push(node);
+        if (node == aElement) {
+          currentIndex = elements.length - 1;
         }
       }
     }
@@ -250,34 +347,25 @@ FormAssistant.prototype = {
       return a.tabIndex > b.tabIndex;
     }
     elements = elements.sort(orderByTabIndex);
+    return currentIndex;
   },
 
-  getCurrent: function() {
-    return this._wrappers[this._currentIndex];
-  },
-
-  getJSON: function() {
+  _getJSON: function() {
+    let element = this.currentElement;
+    let list = getListForElement(element);
     return {
-      current: this.getCurrent().getJSON(),
-      hasPrevious: !!this.getPrevious(),
-      hasNext: !!this.getNext()
+      current: {
+        id: element.id,
+        name: element.name,
+        value: element.value,
+        maxLength: element.maxLength,
+        choices: list,
+        rect: this._getRect(),
+        caretRect: this._getCaretRect()
+      },
+      hasPrevious: !!this._elements[this._currentIndex - 1],
+      hasNext: !!this._elements[this._currentIndex + 1]
     };
-  },
-
-  getPrevious: function getPrevious() {
-    return this._wrappers[this._currentIndex - 1];
-  },
-
-  getNext: function getNext() {
-    return this._wrappers[this._currentIndex + 1];
-  },
-
-  goToPrevious: function goToPrevious() {
-    return this._setIndex(this._currentIndex - 1);
-  },
-
-  goToNext: function goToNext() {
-    return this._setIndex(this._currentIndex + 1);
   },
 
   /**
@@ -302,247 +390,81 @@ FormAssistant.prototype = {
       result.push(node);
     }
     return result;
-  },
-
-  _setIndex: function(aIndex) {
-    let element = this._wrappers[aIndex];
-    if (element) {
-      gFocusManager.setFocus(element.element, Ci.nsIFocusManager.FLAG_NOSCROLL);
-      this._currentIndex = aIndex;
-    }
-    return element;
   }
 };
 
 
 /******************************************************************************
- * The next classes wraps some specific forms elements to add helpers while
- * manipulating them.
- *  - BasicWrapper:     All forms elements except <html:select>, <xul:menulist>
- *  - SelectWrapper:    <html:select> elements
- *  - MenulistWrapper:  <xul:menulist> elements
+ * The next classes wraps some forms elements such as different type of list to
+ * abstract the difference between html and xul element while manipulating them
+ *  - SelectWrapper   : <html:select>
+ *  - MenulistWrapper : <xul:menulist>
  *****************************************************************************/
-function BasicWrapper(aElement) {
-  if (!aElement)
-    throw "Instantiating BasicWrapper with null element";
 
-  this.element = aElement;
+function getWrapperForElement(aElement) {
+  let wrapper = null;
+  if (aElement instanceof HTMLSelectElement) {
+    wrapper = new SelectWrapper(aElement);
+  }
+  else if (aElement instanceof XULMenuListElement) {
+    wrapper = new MenulistWrapper(aElement);
+  }
+
+  return wrapper;
 }
 
-BasicWrapper.prototype = {
-  isVisible: function isVisible() {
-    return this._isElementVisible(this.element);
-  },
+function getListForElement(aElement) {
+  let wrapper = getWrapperForElement(aElement);
+  if (!wrapper)
+    return null
 
-  canNavigateTo: function canNavigateTo() {
-    let element = this.element;
-    if (element.disabled)
-      return false;
+  let optionIndex = 0;
+  let result = {
+    multiple: wrapper.getMultiple(),
+    choices: []
+  };
 
-    if (element.getAttribute("role") == "button" && element.hasAttribute("tabindex"))
-      return true;
-
-    if (this.hasChoices() || element instanceof HTMLTextAreaElement)
-      return true;
-
-    if (element instanceof HTMLInputElement || element instanceof HTMLButtonElement) {
-      return !(element.type == "hidden")
-    }
-
-    return false;
-  },
-
-  /** Should assistant act when user taps on element? */
-  canAssist: function canAssist() {
-    let element = this.element;
-
-    let formExceptions = {button: true, checkbox: true, file: true, image: true, radio: true, reset: true, submit: true};
-    if (element instanceof HTMLInputElement && formExceptions[element.type])
-      return false;
-
-    if (element instanceof HTMLButtonElement ||
-        (element.getAttribute("role") == "button" && element.hasAttribute("tabindex")))
-      return false;
-
-    return this.canNavigateTo();
-  },
-
-  /** Gets a rect bounding important parts of the element that must be seen when assisting. */
-  getRect: function getRect() {
-    const kDistanceMax = 100;
-    let element = this.element;
-    let elRect = getBoundingContentRect(element);
-
-    let labels = this._getLabelsFor(element);
-    for (let i=0; i<labels.length; i++) {
-      let labelRect = getBoundingContentRect(labels[i]);
-      if (labelRect.left < elRect.left) {
-        let isClose = Math.abs(labelRect.left - elRect.left) - labelRect.width < kDistanceMax &&
-                      Math.abs(labelRect.top - elRect.top) - labelRect.height < kDistanceMax;
-        if (isClose) {
-          let width = labelRect.width + elRect.width + (elRect.left - labelRect.left - labelRect.width);
-          return new Rect(labelRect.left, labelRect.top, width, elRect.height).expandToIntegers();
-        }
-      }
-    }
-    return elRect;
-  },
-
-  /** Element is capable of having autocomplete suggestions. */
-  canAutocomplete: function() {
-    if (this.element instanceof HTMLInputElement) {
-      let autocomplete = this.element.getAttribute("autocomplete");
-      let allowedValues = ["off", "false", "disabled"];
-      if (allowedValues.indexOf(autocomplete) == -1)
-        return true;
-    }
-    return false;
-  },
-
-  autocomplete: function(aValue) {
-    this.element.value = aValue;
-
-    let event = this.element.ownerDocument.createEvent("Events");
-    event.initEvent("DOMAutoComplete", true, true);
-    this.element.dispatchEvent(event);
-  },
-
-  /** Caret is used to input text for this element. */
-  getCaretRect: function() {
-    let element = this.element;
-    if ((element instanceof HTMLTextAreaElement ||
-        (element instanceof HTMLInputElement && element.type == "text")) &&
-        gFocusManager.focusedElement == element) {
-      let utils = Util.getWindowUtils(element.ownerDocument.defaultView);
-      let rect = utils.sendQueryContentEvent(utils.QUERY_CARET_RECT, element.selectionEnd, 0, 0, 0);
-      if (!rect)
-        return new Rect(0, 0, 0, 0);
-
-      let scroll = Util.getScrollOffset(element.ownerDocument.defaultView);
-      let caret = new Rect(scroll.x + rect.left, scroll.y + rect.top, rect.width, rect.height);
-      return caret;
-    }
-
-    return new Rect(0, 0, 0, 0);
-  },
-
-  /** Returns true if the choices interface needs to shown. */
-  hasChoices: function hasChoices() {
-    let element = this.element;
-    return (element instanceof HTMLSelectElement) || (element instanceof Ci.nsIDOMXULMenuListElement);
-  },
-
-  choiceSelect: function(aIndex, aSelected, aClearAll) {
-    let wrapper = this._getChoiceWrapper(this._currentIndex);
-    if (wrapper)
-      wrapper.select(aIndex, aSelected, aClearAll);
-  },
-
-  choiceChange: function() {
-    let wrapper = this._getChoiceWrapper(this._currentIndex);
-    if (wrapper)
-      wrapper.fireOnChange();
-  },
-
-  getChoiceData: function() {
-    let wrapper = this._getChoiceWrapper();
-    if (!wrapper)
-      return null;
-
-    let optionIndex = 0;
-    let result = {
-      multiple: wrapper.getMultiple(),
-      choices: []
-    };
-
-    // Build up a flat JSON array of the choices. In HTML, it's possible for select element choices
-    // to be under a group header (but not recursively). We distinguish between headers and entries
-    // using the boolean "choices.group".
-    // XXX If possible, this would be a great candidate for tracing.
-    let children = wrapper.getChildren();
-    for (let i = 0; i < children.length; i++) {
-      let child = children[i];
-      if (wrapper.isGroup(child)) {
-        // This is the group element. Add an entry in the choices that says that the following
-        // elements are a member of this group.
-        result.choices.push({ group: true, groupName: child.label });
-        let subchildren = child.children;
-        for (let ii = 0; i < subchildren.length; ii++) {
-          let subchild = subchildren[ii];
-          result.choices.push({
-            group: false,
-            inGroup: true,
-            text: wrapper.getText(subchild),
-            selected: subchild.selected,
-            optionIndex: optionIndex++
-          });
-        }
-      } else if (wrapper.isOption(child)) {
-        // This is a regular choice under no group.
+  // Build up a flat JSON array of the choices. In HTML, it's possible for select element choices
+  // to be under a group header (but not recursively). We distinguish between headers and entries
+  // using the boolean "list.group".
+  // XXX If possible, this would be a great candidate for tracing.
+  let children = wrapper.getChildren();
+  for (let i = 0; i < children.length; i++) {
+    let child = children[i];
+    if (wrapper.isGroup(child)) {
+      // This is the group element. Add an entry in the choices that says that the following
+      // elements are a member of this group.
+      result.choices.push({ group: true,
+                            text: child.label || child.firstChild.data,
+                            disabled: child.disabled
+                          });
+      let subchildren = child.children;
+      for (let j = 0; j < subchildren.length; j++) {
+        let subchild = subchildren[j];
         result.choices.push({
           group: false,
-          inGroup: false,
-          text: wrapper.getText(child),
-          selected: child.selected,
+          inGroup: true,
+          text: wrapper.getText(subchild),
+          disabled: child.disabled || subchild.disabled,
+          selected: subchild.selected,
           optionIndex: optionIndex++
         });
       }
     }
-
-    return result;
-  },
-
-  getJSON: function() {
-    return {
-      id: this.element.id,
-      name: this.element.name,
-      value: this.element.value,
-      maxLength: this.element.maxLength,
-      canAutocomplete: this.canAutocomplete(),
-      choices: this.getChoiceData(),
-      navigable: this.canNavigateTo(),
-      assistable: this.canAssist(),
-      rect: this.getRect(),
-      caretRect: this.getCaretRect()
-    };
-  },
-
-  _getChoiceWrapper: function() {
-    let choiceWrapper = null;
-    let element = this.element;
-    if (element instanceof HTMLSelectElement)
-      choiceWrapper = new SelectWrapper(element);
-    else if (element instanceof Ci.nsIDOMXULMenuListElement)
-      choiceWrapper = new MenulistWrapper(element);
-    return choiceWrapper;
-  },
-
-  _getLabelsFor: function(aElement) {
-    let associatedLabels = [];
-
-    let labels = aElement.ownerDocument.getElementsByTagName("label");
-    for (let i=0; i<labels.length; i++) {
-      if (labels[i].getAttribute("for") == aElement.id)
-        associatedLabels.push(labels[i]);
+    else if (wrapper.isOption(child)) {
+      // This is a regular choice under no group.
+      result.choices.push({
+        group: false,
+        inGroup: false,
+        text: wrapper.getText(child),
+        disabled: child.disabled,
+        selected: child.selected,
+        optionIndex: optionIndex++
+      });
     }
-
-    if (aElement.parentNode instanceof HTMLLabelElement)
-      associatedLabels.push(aElement.parentNode);
-
-    return associatedLabels.filter(this._isElementVisible);
-  },
-
-  _isElementVisible: function(aElement) {
-    let style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, null);
-    if (!style)
-      return false;
-
-    let isVisible = (style.getPropertyValue("visibility") != "hidden");
-    let isOpaque = (style.getPropertyValue("opacity") != 0);
-
-    let rect = aElement.getBoundingClientRect();
-    return isVisible && isOpaque && (rect.height != 0 || rect.width != 0);
   }
+
+  return result;
 };
 
 
@@ -582,10 +504,6 @@ SelectWrapper.prototype = {
   select: function(aIndex, aSelected, aClearAll) {
     let selectElement = this._control.QueryInterface(Ci.nsISelectElement);
     selectElement.setOptionsSelectedByIndex(aIndex, aIndex, aSelected, aClearAll, false, true);
-  },
-
-  focus: function() {
-    this._control.focus();
   },
 
   fireOnChange: function() {
@@ -643,10 +561,6 @@ MenulistWrapper.prototype = {
   select: function(aIndex, aSelected, aClearAll) {
     let control = this._control.wrappedJSObject || this._control;
     control.selectedIndex = aIndex;
-  },
-
-  focus: function() {
-    this._control.focus();
   },
 
   fireOnChange: function() {
