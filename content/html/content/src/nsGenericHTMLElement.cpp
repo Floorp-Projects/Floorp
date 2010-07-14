@@ -111,9 +111,6 @@
 #include "mozAutoDocUpdate.h"
 #include "nsHtml5Module.h"
 #include "nsITextControlElement.h"
-#include "mozilla/dom/Element.h"
-
-using namespace mozilla::dom;
 
 #include "nsThreadUtils.h"
 
@@ -2382,13 +2379,7 @@ nsGenericHTMLFormElement::ClearForm(PRBool aRemoveFromForm,
   mForm = nsnull;
 }
 
-Element*
-nsGenericHTMLFormElement::GetFormElement()
-{
-  return mForm;
-}
-
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   NS_ENSURE_ARG_POINTER(aForm);
