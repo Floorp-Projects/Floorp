@@ -290,7 +290,7 @@ window.Page = {
       Utils.getCurrentWindow().document.getElementById("tab-candy").
         contentDocument;
     iQ(tabCandyContentDoc).mousedown(function(e){
-      if ( e.originalTarget.id == "bg" )
+      if ( e.originalTarget.id == "content" )
         Page.createGroupOnDrag(e)
     });
 
