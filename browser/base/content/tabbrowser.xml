@@ -2384,19 +2384,14 @@
           tab.setAttribute("onerror", "this.removeAttribute('image');");
           this.adjustTabstrip();
 
-          Services.prefs.addObserver("browser.tabs.closeButtons", this._prefObserver, false);
-          Services.prefs.addObserver("browser.tabs.autoHide", this._prefObserver, false);
-          Services.prefs.addObserver("browser.tabs.closeWindowWithLastTab", this._prefObserver, false);
-
+          Services.prefs.addObserver("browser.tabs.", this._prefObserver, false);
           window.addEventListener("resize", this, false);
         ]]>
       </constructor>
 
       <destructor>
         <![CDATA[
-          Services.prefs.removeObserver("browser.tabs.closeButtons", this._prefObserver);
-          Services.prefs.removeObserver("browser.tabs.autoHide", this._prefObserver);
-          Services.prefs.removeObserver("browser.tabs.closeWindowWithLastTab", this._prefObserver);
+          Services.prefs.removeObserver("browser.tabs.", this._prefObserver);
         ]]>
       </destructor>
 
