@@ -48,7 +48,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsUnicharUtils.h"
 #include "nsThreadUtils.h"
-#include "nsInterfaceHashtable.h"
 
 class nsFormControlList;
 
