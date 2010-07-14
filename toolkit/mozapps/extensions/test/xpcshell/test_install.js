@@ -27,7 +27,7 @@ profileDir.append("extensions");
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  startupManager(1);
+  startupManager();
   // Make sure we only register once despite multiple calls
   AddonManager.addInstallListener(InstallListener);
   AddonManager.addAddonListener(AddonListener);
@@ -113,7 +113,7 @@ function check_test_1() {
                             .QueryInterface(AM_Ci.nsIFileURL).file;
       do_check_true(iconFile.exists());
 
-      restartManager(1);
+      restartManager();
 
       AddonManager.getAllInstalls(function(activeInstalls) {
         do_check_eq(activeInstalls, 0);
@@ -149,7 +149,7 @@ function check_test_1() {
           do_check_eq(a1.getResourceURI("install.rdf").spec, uri);
 
           a1.uninstall();
-          restartManager(0);
+          restartManager();
           do_check_not_in_crash_annotation(a1.id, a1.version);
 
           run_test_2();
@@ -222,7 +222,7 @@ function check_test_3() {
   ensure_test_completed();
   AddonManager.getAddonByID("addon2@tests.mozilla.org", function(olda2) {
     do_check_eq(olda2, null);
-    restartManager(1);
+    restartManager();
 
     AddonManager.getAllInstalls(function(installs) {
       do_check_eq(installs, 0);
@@ -343,7 +343,7 @@ function check_test_5(install) {
           do_check_true(a2.installDate <= a2.updateDate);
 
           a2.uninstall();
-          restartManager(0);
+          restartManager();
 
           run_test_6();
         });
@@ -422,7 +422,7 @@ function check_test_7() {
         do_check_true(isExtensionInAddonsList(profileDir, a3.id));
         do_check_true(do_get_addon("test_install3").exists());
         a3.uninstall();
-        restartManager(0);
+        restartManager();
 
         run_test_8();
       });
@@ -454,7 +454,7 @@ function run_test_8() {
 }
 
 function check_test_8() {
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);
@@ -466,7 +466,7 @@ function check_test_8() {
     do_check_true(isExtensionInAddonsList(profileDir, a3.id));
     do_check_true(do_get_addon("test_install3").exists());
     a3.uninstall();
-    restartManager(0);
+    restartManager();
 
     run_test_9();
   });

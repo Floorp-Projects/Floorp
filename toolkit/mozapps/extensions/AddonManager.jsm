@@ -218,20 +218,10 @@ var AddonManagerInternal = {
       }
     }
 
-    let needsRestart = false;
     this.providers.forEach(function(provider) {
-      callProvider(provider, "startup");
-      if (callProvider(provider, "checkForChanges", false, appChanged))
-        needsRestart = true;
+      callProvider(provider, "startup", null, appChanged);
     });
     this.started = true;
-
-    // Flag to the platform that a restart is necessary
-    if (needsRestart) {
-      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
-                       getService(Ci.nsIAppStartup2);
-      appStartup.needsRestart = needsRestart;
-    }
   },
 
   /**

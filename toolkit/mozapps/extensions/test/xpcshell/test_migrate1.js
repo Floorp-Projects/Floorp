@@ -106,7 +106,7 @@ function run_test() {
   // Theme state is determined by the selected theme pref
   Services.prefs.setCharPref("general.skins.selectedSkin", "theme1/1.0");
 
-  startupManager(1);
+  startupManager();
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",

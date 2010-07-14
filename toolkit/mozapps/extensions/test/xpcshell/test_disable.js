@@ -30,7 +30,7 @@ function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  startupManager(1);
+  startupManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_eq(a1, null);
@@ -44,7 +44,7 @@ function run_test() {
     dest.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
     gIconURL = NetUtil.newURI(dest);
 
-    restartManager(1);
+    restartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
       do_check_neq(newa1, null);
@@ -86,7 +86,7 @@ function run_test_1() {
       do_check_eq(list.length, 1);
       do_check_eq(list[0].id, "addon1@tests.mozilla.org");
 
-      restartManager(0);
+      restartManager();
 
       AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
         do_check_neq(newa1, null);
@@ -128,7 +128,7 @@ function run_test_2() {
       do_check_eq(list.length, 1);
       do_check_eq(list[0].id, "addon1@tests.mozilla.org");
 
-      restartManager(0);
+      restartManager();
 
       AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
         do_check_neq(newa1, null);
@@ -170,7 +170,7 @@ function run_test_3() {
 
     ensure_test_completed();
 
-    restartManager(0);
+    restartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
       do_check_neq(newa1, null);

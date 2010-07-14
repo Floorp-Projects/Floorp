@@ -61,7 +61,7 @@ function run_test() {
                                                NetUtil.newURI("http://www.test5.com")));
 
   // Upgrade the application and verify that the permissions are still not there
-  restartManager(1, "2");
+  restartManager("2");
 
   do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
                                                NetUtil.newURI("http://test1.com")));
