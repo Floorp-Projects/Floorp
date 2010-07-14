@@ -667,10 +667,11 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
 #endif
 
 /*
- * The Arguments class is not initialized via JS_InitClass, and must not be,
- * because its name is "Object".  Per ECMA, that causes instances of it to
- * delegate to the object named by Object.prototype.  It also ensures that
- * arguments.toString() returns "[object Object]".
+ * The Arguments class is not initialized via JS_InitClass, because arguments
+ * objects have the initial value of Object.prototype as their [[Prototype]].
+ * However, Object.prototype.toString.call(arguments) === "[object Arguments]"
+ * per ES5 (although not ES3), so its class name is "Arguments" rather than
+ * "Object".
  *
  * The JSClass functions below collaborate to lazily reflect and synchronize
  * actual argument values, argument count, and callee function object stored
@@ -678,7 +679,7 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
  * arguments object.
  */
 JSClass js_ArgumentsClass = {
-    js_Object_str,
+    "Arguments",
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::ARGS_FIXED_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),

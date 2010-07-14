@@ -58,20 +58,49 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
 
 extern JSBool js_TryJSON(JSContext *cx, jsval *vp);
 
+/* JSON parsing states; most permit leading whitespace. */
 enum JSONParserState {
+    /* Start of string. */
     JSON_PARSE_STATE_INIT,
+
+    /* JSON fully processed, expecting only trailing whitespace. */
+    JSON_PARSE_STATE_FINISHED,
+
+    /* Unused: to be removed in bug 564621. */
     JSON_PARSE_STATE_OBJECT_VALUE,
+
+    /* Start of JSON value. */
     JSON_PARSE_STATE_VALUE,
+
+    /* In object, at start of pair, at comma, or at closing brace. */
     JSON_PARSE_STATE_OBJECT,
+
+    /* At start of pair within object, or at closing brace. */
     JSON_PARSE_STATE_OBJECT_PAIR,
+
+    /* At : in key/value pair in object. */
     JSON_PARSE_STATE_OBJECT_IN_PAIR,
+
+    /* In array, at start of element, at comma, or at closing bracket. */
     JSON_PARSE_STATE_ARRAY,
+
+
+    /* The following states allow no leading whitespace. */
+
+    /* Within string literal. */
     JSON_PARSE_STATE_STRING,
+
+    /* At first character after \ in string literal. */
     JSON_PARSE_STATE_STRING_ESCAPE,
+
+    /* Within numbers in \uXXXX in string literal. */
     JSON_PARSE_STATE_STRING_HEX,
+
+    /* Within numeric literal. */
     JSON_PARSE_STATE_NUMBER,
-    JSON_PARSE_STATE_KEYWORD,
-    JSON_PARSE_STATE_FINISHED
+
+    /* Handling keywords (only null/true/false pass validity post-check). */
+    JSON_PARSE_STATE_KEYWORD
 };
 
 enum JSONDataType {
