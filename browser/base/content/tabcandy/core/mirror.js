@@ -377,8 +377,8 @@ window.TabMirror = {
   //     <Mirror> representing the tab in question. 
   customize: function(func) {
     // Apply the custom handlers to all existing elements
-    iQ('div.tab').each(function() {
-      var tab = Tabs.tab(this);
+    iQ('div.tab').each(function(elem) {
+      var tab = Tabs.tab(elem);
       func(tab.mirror);
     });
     

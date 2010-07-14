@@ -708,9 +708,9 @@ window.Item.prototype = {
         dropTarget = null;
         
         droppables = [];
-        iQ('.iq-droppable').each(function() {
-          if (this != self.container) {
-            var item = Items.item(this);
+        iQ('.iq-droppable').each(function(elem) {
+          if (elem != self.container) {
+            var item = Items.item(elem);
             droppables.push({
               item: item, 
               bounds: item.getBounds()
@@ -859,8 +859,8 @@ window.Items = {
   getTopLevelItems: function() {
     var items = [];
     
-    iQ('.tab, .group, .info-item').each(function() {
-      var $this = iQ(this);
+    iQ('.tab, .group, .info-item').each(function(elem) {
+      var $this = iQ(elem);
       var item = $this.data('item');  
       if (item && !item.parent && !$this.hasClass('phantom'))
         items.push(item);
