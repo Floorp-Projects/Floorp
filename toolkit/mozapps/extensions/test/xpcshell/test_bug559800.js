@@ -25,7 +25,7 @@ function run_test() {
     name: "Test Addon 1",
   }, dest);
 
-  startupManager(1);
+  startupManager();
 
   do_test_pending();
 
@@ -52,7 +52,7 @@ function run_test_1() {
 }
 
 function check_test_1() {
-  startupManager(1, false);
+  startupManager(false);
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);

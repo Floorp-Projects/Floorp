@@ -11,7 +11,7 @@ const ADDON_UNINSTALL                 = 6;
 const ADDON_UPGRADE                   = 7;
 const ADDON_DOWNGRADE                 = 8;
 
-// This verifies that bootstrappable add-ons can be used with restarts.
+// This verifies that bootstrappable add-ons can be used without restarts.
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 Services.prefs.setIntPref("bootstraptest.version", 0);
@@ -39,7 +39,7 @@ function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  startupManager(1);
+  startupManager();
 
   run_test_1();
 }
@@ -152,7 +152,7 @@ function run_test_3() {
   do_check_eq(getInstalledVersion(), 1);
   do_check_eq(getActiveVersion(), 0);
   do_check_eq(getShutdownReason(), ADDON_DISABLE);
-  startupManager(0, false);
+  startupManager(false);
   do_check_eq(getInstalledVersion(), 1);
   do_check_eq(getActiveVersion(), 0);
   do_check_eq(getShutdownReason(), ADDON_DISABLE);
@@ -211,7 +211,7 @@ function run_test_5() {
   do_check_eq(getActiveVersion(), 0);
   do_check_eq(getShutdownReason(), APP_SHUTDOWN);
   do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
-  startupManager(0, false);
+  startupManager(false);
   do_check_eq(getInstalledVersion(), 1);
   do_check_eq(getActiveVersion(), 1);
   do_check_eq(getStartupReason(), APP_STARTUP);
@@ -301,7 +301,7 @@ function check_test_7() {
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_eq(b1, null);
 
-    restartManager(0);
+    restartManager();
 
     AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(newb1) {
       do_check_eq(newb1, null);
@@ -329,7 +329,7 @@ function run_test_8() {
   zip.extract("bootstrap.js", dir);
   zip.close();
 
-  startupManager(0, false);
+  startupManager(false);
 
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);
@@ -346,14 +346,14 @@ function run_test_8() {
   });
 }
 
-// Test that items detected as removed during startup don't force an EM restart
+// Test that items detected as removed during startup get removed properly
 function run_test_9() {
   shutdownManager();
 
   let dir = profileDir.clone();
   dir.append("bootstrap1@tests.mozilla.org");
   dir.remove(true);
-  startupManager(0, false);
+  startupManager(false);
 
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_eq(b1, null);
@@ -490,8 +490,8 @@ function check_test_11() {
   run_test_12();
 }
 
-// Tests that bootstrapped extensions are correctly loaded even if an EM restart
-// is necessary.
+// Tests that bootstrapped extensions are correctly loaded even if the app is
+// upgraded at the same time
 function run_test_12() {
   shutdownManager();
 
@@ -508,7 +508,7 @@ function run_test_12() {
   zip.extract("bootstrap.js", dir);
   zip.close();
 
-  startupManager(1, true);
+  startupManager(true);
 
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);
@@ -522,7 +522,7 @@ function run_test_12() {
     do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     b1.uninstall();
-    restartManager(0);
+    restartManager();
 
     run_test_13();
   });
@@ -588,7 +588,7 @@ function check_test_13() {
         do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "3.0");
 
         b1.uninstall();
-        restartManager(0);
+        restartManager();
 
         run_test_14();
       });
@@ -614,7 +614,7 @@ function run_test_14() {
   zip.extract("bootstrap.js", dir);
   zip.close();
 
-  startupManager(0, false);
+  startupManager(false);
 
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);

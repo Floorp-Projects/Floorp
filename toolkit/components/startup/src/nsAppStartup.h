@@ -85,7 +85,6 @@ private:
   PRPackedBool mShuttingDown;   // Quit method reentrancy check
   PRPackedBool mAttemptingQuit; // Quit(eAttemptQuit) still trying
   PRPackedBool mRestart;        // Quit(eRestart)
-  PRPackedBool mNeedsRestart;   // Used to flag that a platform restart is necessary
 };
 
 #endif // nsAppStartup_h__
