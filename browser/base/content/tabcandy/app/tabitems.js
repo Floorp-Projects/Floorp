@@ -178,22 +178,25 @@ window.TabItem = function(container, tab) {
 
 window.TabItem.prototype = iQ.extend(new Item(), {
   // ----------  
-  getStorageData: function() {
+  getStorageData: function(getImageData) {
     return {
       bounds: this.getBounds(), 
       userSize: (isPoint(this.userSize) ? new Point(this.userSize) : null),
       url: this.tab.url,
-      groupID: (this.parent ? this.parent.id : 0)
+      groupID: (this.parent ? this.parent.id : 0),
+      imageData: (getImageData && this.tab.mirror.tabCanvas ?
+                  this.tab.mirror.tabCanvas.toImageData() : null),
+      title: (getImageData && this.tab.raw.label ? this.tab.raw.label : null)
     };
   },
 
   // ----------
-  save: function() {
+  save: function(saveImageData) {
     try{
       if (!this.tab || !this.tab.raw || !this.reconnected) // too soon/late to save
         return;
 
-      var data = this.getStorageData();
+      var data = this.getStorageData(saveImageData);
       if (TabItems.storageSanity(data))
         Storage.saveTab(this.tab.raw, data);
     }catch(e){
@@ -633,10 +636,10 @@ window.TabItems = {
   },
   
   // ----------
-  saveAll: function() {
+  saveAll: function(saveImageData) {
     var items = this.getItems();
     items.forEach(function(item) {
-      item.save();
+      item.save(saveImageData);
     });
   },
   
@@ -684,7 +687,72 @@ window.TabItems = {
             if (item.tab == Utils.activeTab) 
               Groups.setActiveGroup(item.parent);
           }
-        }  
+        }
+        
+        if (tab.imageData) {
+          var mirror = item.tab.mirror;
+          var rawTab = item.tab.raw;
+          var $nameElement = iQ(mirror.nameEl);
+          var $canvasElement = iQ(mirror.canvasEl);
+          var $canvasPlaceholderElement = iQ(mirror.canvasPlaceholderEl);
+          var hidePlaceholder = function() {
+            $canvasPlaceholderElement.hide();
+            $canvasElement.show();
+          };
+          var hidPlaceholder = false;
+          var webProgress = {           
+            onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {
+              if (aFlag &
+                  Components.interfaces.nsIWebProgressListener.STATE_STOP) {
+                if (hidPlaceholder) {
+                  rawtab.linkedBrowser.removeProgressListener(webProgress);
+                } else if (aFlag &
+                  Components.interfaces.nsIWebProgressListener.STATE_IS_WINDOW) {
+                  iQ.timeout(function() {
+                    if (!hidPlaceholder) {
+                      hidPlaceholder = true;
+                      hidePlaceholder();
+                    }
+                  }, 100);
+
+                  rawtab.linkedBrowser.removeProgressListener(webProgress);
+                }
+              }
+            },
+          
+            onLocationChange: function(aProgress, aRequest, aURI) { },
+            onProgressChange: function(
+              aWebProgress, aRequest, curSelf, maxSelf, curTot, maxTot) { },
+            onStatusChange: function(
+              aWebProgress, aRequest, aStatus, aMessage) { },
+            onSecurityChange: function(aWebProgress, aRequest, aState) { },
+
+            QueryInterface: function(aIID) {
+             if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+                 aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+                 aIID.equals(Components.interfaces.nsISupports))
+               return this;
+             throw Components.results.NS_NOINTERFACE;
+            }
+          };
+          
+          // show the placeholders
+          $canvasPlaceholderElement.attr("src", tab.imageData).show();
+          $canvasElement.hide();
+          $nameElement.text(tab.title ? tab.title : "");
+          
+          // add progress listener
+          rawTab.linkedBrowser.addProgressListener(
+            webProgress, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+          // the code in the progress listener doesn't fire sometimes because
+          // tab is being restored so need to catch that.
+          iQ.timeout(function() {
+            if (!hidPlaceholder) {
+              hidPlaceholder = true;
+              hidePlaceholder();
+            }
+          }, 30000);
+        }
         
         Groups.updateTabBarForActiveGroup();
         
