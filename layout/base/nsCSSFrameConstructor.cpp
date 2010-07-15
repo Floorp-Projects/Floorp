@@ -5949,7 +5949,8 @@ nsCSSFrameConstructor::FindPreviousSibling(const ChildIterator& aFirst,
 
   // Note: not all content objects are associated with a frame (e.g., if it's
   // `display: none') so keep looking until we find a previous frame
-  while (aIter-- != aFirst) {
+  while (aIter != aFirst) {
+    --aIter;
     nsIFrame* prevSibling =
       FindFrameForContentSibling(*aIter, child, aTargetContentDisplay, PR_TRUE);
 
@@ -6047,30 +6048,21 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(nsIFrame*& aParentFrame,
   ChildIterator first, last;
   ChildIterator::Init(container, &first, &last);
   ChildIterator iter(first);
-  PRBool xblCase = PR_FALSE;
-  if (iter.XBLInvolved() || container != aContainer) {
-    xblCase = PR_TRUE;
+  PRBool xblCase = iter.XBLInvolved() || container != aContainer;
+  if (xblCase || !aChild->IsRootOfAnonymousSubtree()) {
+    // The check for IsRootOfAnonymousSubtree() is because editor is
+    // severely broken and calls us directly for native anonymous
+    // nodes that it creates.
     if (aStartSkipChild) {
       iter.seek(aStartSkipChild);
     } else {
       iter.seek(aChild);
     }
-    // Don't touch our aIndexInContainer, though it's almost certainly bogus in
-    // this case.  If someone wants to use an index below, they should make
-    // sure to use the right index (aIndexInContainer vs iter.position()) with
-    // the right parent node.
-  } else if (aIndexInContainer != -1) {
-    // Do things the fast way if we can.  The check for -1 is because editor is
-    // severely broken and calls us directly for native anonymous nodes that it
-    // creates.
-    if (aStartSkipIndexInContainer >= 0) {
-      iter.seek(aStartSkipIndexInContainer);
-      NS_ASSERTION(*iter == aStartSkipChild, "Someone screwed up the indexing");
-    } else {
-      iter.seek(aIndexInContainer);
-      NS_ASSERTION(*iter == aChild, "Someone screwed up the indexing");
-    }
   }
+  // If xblCase is true, aIndexInContainer is almost certainly bogus, but don't
+  // change in here.  If someone wants to use an index below, they should make
+  // sure to use the right index (aIndexInContainer vs iter.position()) with
+  // the right parent node.
 #ifdef DEBUG
   else {
     NS_WARNING("Someone passed native anonymous content directly into frame "
@@ -6090,12 +6082,8 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(nsIFrame*& aParentFrame,
   else {
     // If there is no previous sibling, then find the frame that follows
     if (aEndSkipChild) {
-      if (xblCase) {
-        iter.seek(aEndSkipChild);
-        iter--;
-      } else {
-        iter.seek(aEndSkipIndexInContainer-1);
-      }
+      iter.seek(aEndSkipChild);
+      iter--;
     }
     nsIFrame* nextSibling = FindNextSibling(iter, last, childDisplay);
 
