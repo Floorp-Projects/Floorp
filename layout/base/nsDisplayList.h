@@ -621,7 +621,7 @@ public:
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove)
-  { return PR_TRUE; }
+  { return !mVisibleRect.IsEmpty(); }
 
   /**
    * Try to merge with the other item (which is below us in the display
@@ -854,20 +854,24 @@ public:
   void Sort(nsDisplayListBuilder* aBuilder, SortLEQ aCmp, void* aClosure);
 
   /**
-   * Optimize the display list for visibility, removing any elements that
-   * are not visible. We put this logic here so it can be shared by top-level
+   * Compute visiblity for the items in the list.
+   * We put this logic here so it can be shared by top-level
    * painting and also display items that maintain child lists.
    * This is also a good place to put ComputeVisibility-related logic
    * that must be applied to every display item. In particular, this
    * sets mVisibleRect on each display item.
    * This also sets mIsOpaque to whether aVisibleRegion is empty on return.
+   * This does not remove any items from the list, so we can recompute
+   * visiblity with different regions later (see
+   * FrameLayerBuilder::DrawThebesLayer).
    * 
    * @param aVisibleRegion the area that is visible, relative to the
    * reference frame; on return, this contains the area visible under the list
+   * @return true if any item in the list is visible
    */
-  void ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                         nsRegion* aVisibleRegion,
-                         nsRegion* aVisibleRegionBeforeMove);
+  PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                           nsRegion* aVisibleRegion,
+                           nsRegion* aVisibleRegionBeforeMove);
   /**
    * Returns true if the visible region output from ComputeVisiblity was
    * empty, i.e. everything visible in this list is opaque.
@@ -921,6 +925,10 @@ public:
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                nsDisplayItem::HitTestState* aState,
                nsTArray<nsIFrame*> *aOutFrames) const;
+
+#ifdef DEBUG
+  PRBool DidComputeVisibility() const { return mDidComputeVisibility; }
+#endif
 
 private:
   // This class is only used on stack, so we don't have to worry about leaking
