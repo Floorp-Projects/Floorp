@@ -1031,7 +1031,8 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     event.refPoint.y = r.y();
     event.region = nsIntRegion(rect);
     {
-      AutoLayerManagerSetup setupLayerManager(this, ctx);
+      AutoLayerManagerSetup
+          setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
       status = DispatchEvent(&event);
     }
 

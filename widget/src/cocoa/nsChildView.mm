@@ -2702,7 +2702,8 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   PRBool painted;
   {
-    nsBaseWidget::AutoLayerManagerSetup setupLayerManager(mGeckoChild, targetContext);
+    nsBaseWidget::AutoLayerManagerSetup
+      setupLayerManager(mGeckoChild, targetContext, BasicLayerManager::BUFFER_NONE);
     painted = mGeckoChild->DispatchWindowEvent(paintEvent);
   }
 

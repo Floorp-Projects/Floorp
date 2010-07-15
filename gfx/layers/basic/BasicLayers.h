@@ -77,8 +77,19 @@ public:
   /**
    * Set the default target context that will be used when BeginTransaction
    * is called. This can only be called outside a transaction.
+   * 
+   * aDoubleBuffering can request double-buffering for drawing to the
+   * default target. When BUFFERED, the layer manager avoids blitting
+   * temporary results to aContext and then overpainting them with final
+   * results, by using a temporary buffer when necessary. In BUFFERED
+   * mode we always completely overwrite the contents of aContext's
+   * destination surface (within the clip region) using OPERATOR_SOURCE.
    */
-  void SetDefaultTarget(gfxContext* aContext);
+  enum BufferMode {
+    BUFFER_NONE,
+    BUFFER_BUFFERED
+  };
+  void SetDefaultTarget(gfxContext* aContext, BufferMode aDoubleBuffering);
 
   virtual void BeginTransaction();
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
@@ -119,6 +130,8 @@ private:
   TransactionPhase mPhase;
 #endif
 
+  BufferMode   mDoubleBuffering;
+  PRPackedBool mUsingDefaultTarget;
   PRPackedBool mRetain;
 };
 

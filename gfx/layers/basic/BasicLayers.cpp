@@ -575,7 +575,8 @@ BasicLayerManager::BasicLayerManager(gfxContext* aContext) :
 #ifdef DEBUG
   , mPhase(PHASE_NONE)
 #endif
-  , mRetain(PR_FALSE)
+  , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(PR_FALSE),
+    mRetain(PR_FALSE)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
 }
@@ -587,11 +588,13 @@ BasicLayerManager::~BasicLayerManager()
 }
 
 void
-BasicLayerManager::SetDefaultTarget(gfxContext* aContext)
+BasicLayerManager::SetDefaultTarget(gfxContext* aContext,
+                                    BufferMode aDoubleBuffering)
 {
   NS_ASSERTION(!InTransaction(),
                "Must set default target outside transaction");
   mDefaultTarget = aContext;
+  mDoubleBuffering = aDoubleBuffering;
 }
 
 void
@@ -605,11 +608,8 @@ BasicLayerManager::SetRetain(PRBool aRetain)
 void
 BasicLayerManager::BeginTransaction()
 {
-  NS_ASSERTION(!InTransaction(), "Nested transactions not allowed");
-#ifdef DEBUG
-  mPhase = PHASE_CONSTRUCTION;
-#endif
-  mTarget = mDefaultTarget;
+  mUsingDefaultTarget = PR_TRUE;
+  BeginTransactionWithTarget(mDefaultTarget);
 }
 
 void
@@ -633,13 +633,26 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 #endif
 
   if (mTarget) {
+    if (mUsingDefaultTarget && mDoubleBuffering != BUFFER_NONE) {
+      nsRefPtr<gfxASurface> targetSurface = mTarget->CurrentSurface();
+      mTarget->PushGroup(targetSurface->GetContentType());
+    }
+
     PaintLayer(mRoot, aCallback, aCallbackData);
+    
+    if (mUsingDefaultTarget && mDoubleBuffering != BUFFER_NONE) {
+      mTarget->PopGroupToSource();
+      mTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
+      mTarget->Paint();
+    }
+
     mTarget = nsnull;
   }
 
 #ifdef DEBUG
   mPhase = PHASE_NONE;
 #endif
+  mUsingDefaultTarget = PR_FALSE;
 }
 
 void
