@@ -542,6 +542,8 @@ public:
   /**
    * @return PR_FALSE if the painting performed by the item is invariant
    * when frame aFrame is moved relative to aBuilder->GetRootMovingFrame().
+   * In other words, if you render the item at locations P and P', the rendering
+   * only differs by the translation.
    * This can only be called when aBuilder->IsMovingFrame(mFrame) is true.
    * It return PR_TRUE for all wrapped lists.
    */
@@ -549,8 +551,8 @@ public:
   { return PR_FALSE; }
   /**
    * @return PR_TRUE if the contents of this item are rendered fixed relative
-   * to the nearest viewport *and* they cover the viewport. Only return true
-   * if the contents actually vary when scrolling in the viewport.
+   * to the nearest viewport *and* they cover the viewport's scrollport.
+   * Only return true if the contents actually vary when scrolling in the viewport.
    */
   virtual PRBool IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder)
   { return PR_FALSE; }
@@ -1311,6 +1313,7 @@ public:
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
+  virtual PRBool IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Background", TYPE_BACKGROUND)

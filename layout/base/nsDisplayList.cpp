@@ -57,6 +57,7 @@
 #include "nsSVGIntegrationUtils.h"
 #endif
 #include "nsLayoutUtils.h"
+#include "nsIScrollableFrame.h"
 
 #include "imgIContainer.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -709,6 +710,10 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
   NS_ASSERTION(aBuilder->IsMovingFrame(mFrame),
               "IsVaryingRelativeToMovingFrame called on non-moving frame!");
 
+  // theme background overrides any other background and is never fixed
+  if (mIsThemed)
+    return PR_FALSE;
+
   nsPresContext* presContext = mFrame->PresContext();
   nsStyleContext *bgSC;
   PRBool hasBG =
@@ -727,6 +732,46 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
   // change when it is moved. If they are in different documents, we do not
   // want to return true because mFrame won't move relative to its viewport.
   return movingFrame->PresContext() == presContext;
+}
+
+PRBool
+nsDisplayBackground::IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder)
+{
+  if (mIsThemed)
+    return PR_FALSE;
+
+  nsPresContext* presContext = mFrame->PresContext();
+  nsStyleContext* bgSC;
+  PRBool hasBG =
+    nsCSSRendering::FindBackground(presContext, mFrame, &bgSC);
+  if (!hasBG)
+    return PR_FALSE;
+
+  const nsStyleBackground* bg = bgSC->GetStyleBackground();
+  if (!bg->HasFixedBackground())
+    return PR_FALSE;
+
+  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+    const nsStyleBackground::Layer& layer = bg->mLayers[i];
+    if (layer.mAttachment != NS_STYLE_BG_ATTACHMENT_FIXED &&
+        !layer.mImage.IsEmpty()) {
+      return PR_FALSE;
+    }
+    if (layer.mClip != NS_STYLE_BG_CLIP_BORDER)
+      return PR_FALSE;
+  }
+
+  if (nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius))
+    return PR_FALSE;
+
+  nsRect bounds = GetBounds(aBuilder);
+  nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
+  if (!rootScrollFrame)
+    return PR_FALSE;
+  nsIScrollableFrame* scrollable = do_QueryFrame(rootScrollFrame);
+  nsRect scrollport = scrollable->GetScrollPortRect() +
+    aBuilder->ToReferenceFrame(rootScrollFrame);
+  return bounds.Contains(scrollport);
 }
 
 void
