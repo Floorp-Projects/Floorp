@@ -267,6 +267,23 @@ ContentProcessParent::RecvGetChildList(const nsCString& domain,
     return true;
 }
 
+bool
+ContentProcessParent::RecvTestPermission(const IPC::URI&  aUri,
+                                         const nsCString& aType,
+                                         const PRBool&    aExact,
+                                         PRUint32*        retValue)
+{
+    EnsurePermissionService();
+
+    nsCOMPtr<nsIURI> uri = aUri;
+    if (aExact) {
+        mPermissionService->TestExactPermission(uri, aType.get(), retValue);
+    } else {
+        mPermissionService->TestPermission(uri, aType.get(), retValue);
+    }
+    return true;
+}
+
 void
 ContentProcessParent::EnsurePrefService()
 {
@@ -275,6 +292,18 @@ ContentProcessParent::EnsurePrefService()
         mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
         NS_ASSERTION(NS_SUCCEEDED(rv), 
                      "We lost prefService in the Chrome process !");
+    }
+}
+
+void
+ContentProcessParent::EnsurePermissionService()
+{
+    nsresult rv;
+    if (!mPermissionService) {
+        mPermissionService = do_GetService(
+            NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv), 
+                     "We lost permissionService in the Chrome process !");
     }
 }
 
