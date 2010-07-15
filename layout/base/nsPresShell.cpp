@@ -5276,7 +5276,12 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
   nsIDeviceContext* devCtx = mPresContext->DeviceContext();
   gfxFloat scale = gfxFloat(devCtx->AppUnitsPerDevPixel())/nsPresContext::AppUnitsPerCSSPixel();
   aThebesContext->Scale(scale, scale);
-  
+
+  // Since canvas APIs use floats to set up their matrices, we may have
+  // some slight inaccuracy here. Adjust matrix components that are
+  // integers up to the accuracy of floats to be those integers.
+  aThebesContext->NudgeCurrentMatrixToIntegers();
+
   nsCOMPtr<nsIRenderingContext> rc;
   devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
   rc->Init(devCtx, aThebesContext);
