@@ -78,7 +78,7 @@ ThebesLayerBuffer::GetQuadrantRectangle(XSide aXSide, YSide aYSide)
  */
 void
 ThebesLayerBuffer::DrawBufferQuadrant(gfxContext* aTarget,
-                                      XSide aXSide, YSide aYSide)
+                                      XSide aXSide, YSide aYSide, float aOpacity)
 {
   // The rectangle that we're going to fill. Basically we're going to
   // render the buffer at mBufferRect + quadrantTranslation to get the
@@ -93,18 +93,25 @@ ThebesLayerBuffer::DrawBufferQuadrant(gfxContext* aTarget,
   aTarget->Rectangle(gfxRect(fillRect.x, fillRect.y, fillRect.width, fillRect.height),
                      PR_TRUE);
   aTarget->SetSource(mBuffer, gfxPoint(quadrantRect.x, quadrantRect.y));
-  aTarget->Fill();
+  if (aOpacity != 1.0) {
+    aTarget->Save();
+    aTarget->Clip();
+    aTarget->Paint(aOpacity);
+    aTarget->Restore();
+  } else {
+    aTarget->Fill();
+  }
 }
 
 void
-ThebesLayerBuffer::DrawBufferWithRotation(gfxContext* aTarget)
+ThebesLayerBuffer::DrawBufferWithRotation(gfxContext* aTarget, float aOpacity)
 {
   // Draw four quadrants. We could use REPEAT_, but it's probably better
   // not to, to be performance-safe.
-  DrawBufferQuadrant(aTarget, LEFT, TOP);
-  DrawBufferQuadrant(aTarget, RIGHT, TOP);
-  DrawBufferQuadrant(aTarget, LEFT, BOTTOM);
-  DrawBufferQuadrant(aTarget, RIGHT, BOTTOM);
+  DrawBufferQuadrant(aTarget, LEFT, TOP, aOpacity);
+  DrawBufferQuadrant(aTarget, RIGHT, TOP, aOpacity);
+  DrawBufferQuadrant(aTarget, LEFT, BOTTOM, aOpacity);
+  DrawBufferQuadrant(aTarget, RIGHT, BOTTOM, aOpacity);
 }
 
 static void
@@ -215,7 +222,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
       nsIntPoint offset = -destBufferRect.TopLeft();
       tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
       tmpCtx->Translate(gfxPoint(offset.x, offset.y));
-      DrawBufferWithRotation(tmpCtx);
+      DrawBufferWithRotation(tmpCtx, 1.0);
     }
 
     mBuffer = destBuffer.forget();
@@ -248,14 +255,14 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
 }
 
 void
-ThebesLayerBuffer::DrawTo(ThebesLayer* aLayer, PRUint32 aFlags, gfxContext* aTarget)
+ThebesLayerBuffer::DrawTo(ThebesLayer* aLayer, PRUint32 aFlags, gfxContext* aTarget, float aOpacity)
 {
   aTarget->Save();
   ClipToRegion(aTarget, aLayer->GetVisibleRegion());
   if (aFlags & OPAQUE_CONTENT) {
     aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   }
-  DrawBufferWithRotation(aTarget);
+  DrawBufferWithRotation(aTarget, aOpacity);
   aTarget->Restore();
 }
 

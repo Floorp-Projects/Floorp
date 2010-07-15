@@ -96,7 +96,8 @@ public:
    */
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData) {}
+                     void* aCallbackData,
+                     float aOpacity) {}
 };
 
 static BasicImplData*
@@ -261,7 +262,8 @@ public:
 
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+                     void* aCallbackData,
+                     float aOpacity);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -272,10 +274,26 @@ protected:
   ThebesLayerBuffer mBuffer;
 };
 
+static void
+ClipToContain(gfxContext* aContext, const nsIntRect& aRect)
+{
+  gfxRect deviceRect =
+    aContext->UserToDevice(gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
+  deviceRect.RoundOut();
+
+  gfxMatrix currentMatrix = aContext->CurrentMatrix();
+  aContext->IdentityMatrix();
+  aContext->NewPath();
+  aContext->Rectangle(deviceRect);
+  aContext->Clip();
+  aContext->SetMatrix(currentMatrix);
+}
+
 void
 BasicThebesLayer::Paint(gfxContext* aContext,
                         LayerManager::DrawThebesLayerCallback aCallback,
-                        void* aCallbackData)
+                        void* aCallbackData,
+                        float aOpacity)
 {
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
@@ -283,14 +301,24 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   NS_ASSERTION(target, "We shouldn't be called if there's no target");
 
   if (!BasicManager()->IsRetained()) {
+    if (aOpacity != 1.0) {
+      target->Save();
+      ClipToContain(target, mVisibleRegion.GetBounds());
+      target->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+    }
     mValidRegion.SetEmpty();
     mBuffer.Clear();
     aCallback(this, target, mVisibleRegion, nsIntRegion(), aCallbackData);
+    if (aOpacity != 1.0) {
+      target->PopGroupToSource();
+      target->Paint(aOpacity);
+      target->Restore();
+    }
     return;
   }
 
   PRUint32 flags = 0;
-  if (UseOpaqueSurface(this)) {
+  if (UseOpaqueSurface(this) && aOpacity == 1.0) {
     flags |= ThebesLayerBuffer::OPAQUE_CONTENT;
   }
 
@@ -315,7 +343,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     }
   }
 
-  mBuffer.DrawTo(this, flags, target);
+  mBuffer.DrawTo(this, flags, target, aOpacity);
 }
 
 class BasicImageLayer : public ImageLayer, BasicImplData {
@@ -339,7 +367,8 @@ public:
 
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+                     void* aCallbackData,
+                     float aOpacity);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -351,7 +380,8 @@ protected:
 void
 BasicImageLayer::Paint(gfxContext* aContext,
                        LayerManager::DrawThebesLayerCallback aCallback,
-                       void* aCallbackData)
+                       void* aCallbackData,
+                       float aOpacity)
 {
   if (!mContainer)
     return;
@@ -389,7 +419,14 @@ BasicImageLayer::Paint(gfxContext* aContext,
   aContext->NewPath();
   aContext->PixelSnappedRectangleAndSetPattern(
       gfxRect(0, 0, size.width, size.height), pat);
-  aContext->Fill();
+  if (aOpacity != 1.0) {
+    aContext->Save();
+    aContext->Clip();
+    aContext->Paint(aOpacity);
+    aContext->Restore();
+  } else {
+    aContext->Fill();
+  }
 }
 
 class BasicColorLayer : public ColorLayer, BasicImplData {
@@ -413,7 +450,8 @@ public:
 
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+                     void* aCallbackData,
+                     float aOpacity);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -425,10 +463,11 @@ protected:
 void
 BasicColorLayer::Paint(gfxContext* aContext,
                        LayerManager::DrawThebesLayerCallback aCallback,
-                       void* aCallbackData)
+                       void* aCallbackData,
+                       float aOpacity)
 {
   aContext->SetColor(mColor);
-  aContext->Paint();
+  aContext->Paint(aOpacity);
 }
 
 class BasicCanvasLayer : public CanvasLayer,
@@ -445,13 +484,26 @@ public:
     MOZ_COUNT_DTOR(BasicCanvasLayer);
   }
 
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion)
+  {
+    NS_ASSERTION(BasicManager()->InConstruction(),
+                 "Can only set properties in construction phase");
+    CanvasLayer::SetVisibleRegion(aRegion);
+  }
+
   virtual void Initialize(const Data& aData);
   virtual void Updated(const nsIntRect& aRect);
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
-                     void* aCallbackData);
+                     void* aCallbackData,
+                     float aOpacity);
 
 protected:
+  BasicLayerManager* BasicManager()
+  {
+    return static_cast<BasicLayerManager*>(mManager);
+  }
+
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
 
@@ -544,7 +596,8 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
 void
 BasicCanvasLayer::Paint(gfxContext* aContext,
                         LayerManager::DrawThebesLayerCallback aCallback,
-                        void* aCallbackData)
+                        void* aCallbackData,
+                        float aOpacity)
 {
   nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
 
@@ -561,7 +614,14 @@ BasicCanvasLayer::Paint(gfxContext* aContext,
 
   aContext->NewPath();
   aContext->PixelSnappedRectangleAndSetPattern(r, pat);
-  aContext->Fill();
+  if (aOpacity != 1.0) {
+    aContext->Save();
+    aContext->Clip();
+    aContext->Paint(aOpacity);
+    aContext->Restore();
+  } else {
+    aContext->Fill();
+  }
 
   if (mNeedsYFlip) {
     aContext->SetMatrix(m);
@@ -701,7 +761,7 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                            &cachedSurfaceOffset);
     }
 
-    PaintLayer(mRoot, aCallback, aCallbackData);
+    PaintLayer(mRoot, aCallback, aCallbackData, mRoot->GetOpacity());
     
     if (mUsingDefaultTarget && mDoubleBuffering != BUFFER_NONE) {
       finalTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
@@ -726,13 +786,6 @@ BasicLayerManager::SetRoot(Layer* aLayer)
   mRoot = aLayer;
 }
 
-// Returns true if painting aLayer requires a PushGroup
-static PRBool
-NeedsGroup(Layer* aLayer)
-{
-  return aLayer->GetOpacity() != 1.0;
-}
-
 // Returns true if we need to save the state of the gfxContext when
 // we start painting aLayer (and restore the state when we've finished
 // painting aLayer)
@@ -743,13 +796,26 @@ NeedsState(Layer* aLayer)
          !aLayer->GetTransform().IsIdentity();
 }
 
+static inline int
+GetChildCount(Layer *aLayer)
+{
+  int count = 0;
+  for (Layer* child = aLayer->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    count++;
+  }
+  return count;
+}
+
 void
 BasicLayerManager::PaintLayer(Layer* aLayer,
                               DrawThebesLayerCallback aCallback,
-                              void* aCallbackData)
+                              void* aCallbackData,
+                              float aOpacity)
 {
-  PRBool needsGroup = NeedsGroup(aLayer);
+  PRBool needsGroup = aOpacity != 1.0;
   PRBool needsSaveRestore = needsGroup || NeedsState(aLayer);
+  int children = GetChildCount(aLayer);
 
  if (needsSaveRestore) {
     mTarget->Save();
@@ -769,20 +835,10 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
     aLayer->GetTransform().Is2D(&transform);
     mTarget->Multiply(transform);
 
-    if (needsGroup) {
+    if (needsGroup && children > 1) {
       // If we need to call PushGroup, we should clip to the smallest possible
       // area first to minimize the size of the temporary surface.
-      nsIntRect bbox = aLayer->GetVisibleRegion().GetBounds();
-      gfxRect deviceRect =
-        mTarget->UserToDevice(gfxRect(bbox.x, bbox.y, bbox.width, bbox.height));
-      deviceRect.RoundOut();
-
-      gfxMatrix currentMatrix = mTarget->CurrentMatrix();
-      mTarget->IdentityMatrix();
-      mTarget->NewPath();
-      mTarget->Rectangle(deviceRect);
-      mTarget->Clip();
-      mTarget->SetMatrix(currentMatrix);
+      ClipToContain(mTarget, aLayer->GetVisibleRegion().GetBounds());
 
       gfxASurface::gfxContentType type = UseOpaqueSurface(aLayer)
           ? gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA;
@@ -790,16 +846,25 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
     }
   }
 
-  ToData(aLayer)->Paint(mTarget, aCallback, aCallbackData);
-  for (Layer* child = aLayer->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    PaintLayer(child, aCallback, aCallbackData);
+  /* Only paint ourself, or our children - This optimization relies on this! */
+  if (!children) {
+    ToData(aLayer)->Paint(mTarget, aCallback, aCallbackData, aOpacity);
+  } else {
+    for (Layer* child = aLayer->GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      /* If we have a single child, we can pass the aOpacity down, otherwise we will have double buffered */
+      if (needsGroup && children == 1) {
+        PaintLayer(child, aCallback, aCallbackData, child->GetOpacity() * aOpacity);
+      } else {
+        PaintLayer(child, aCallback, aCallbackData, child->GetOpacity());
+      }
+    }
   }
 
   if (needsSaveRestore) {
-    if (needsGroup) {
+    if (needsGroup && children > 1) {
       mTarget->PopGroupToSource();
-      mTarget->Paint(aLayer->GetOpacity());
+      mTarget->Paint(aOpacity);
     }
 
     mTarget->Restore();
