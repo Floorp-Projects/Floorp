@@ -54,6 +54,7 @@
 #ifdef MOZ_SVG
 #include "nsSVGIntegrationUtils.h"
 #endif
+#include "nsExpirationTracker.h"
 
 class nsPresContext;
 class nsIPresShell;
@@ -213,7 +214,7 @@ public:
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   PRBool IsLTR() const;
   PRBool IsScrollbarOnRight() const;
-  PRBool IsScrollingActive() { return mScrollingActive; }
+  PRBool IsScrollingActive() const;
   // adjust the scrollbar rectangle aRect to account for any visible resizer.
   // aHasResizer specifies if there is a content resizer, however this method
   // will also check if a widget resizer is present as well.
@@ -226,6 +227,10 @@ public:
   void LayoutScrollbars(nsBoxLayoutState& aState,
                         const nsRect& aContentArea,
                         const nsRect& aOldScrollArea);
+
+  PRBool IsAlwaysActive() const;
+  void MarkActive();
+  nsExpirationState* GetExpirationState() { return &mActivityExpirationState; }
 
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<nsIContent> mHScrollbarContent;
@@ -252,6 +257,8 @@ public:
 
   nsPoint mRestorePos;
   nsPoint mLastPos;
+
+  nsExpirationState mActivityExpirationState;
 
   PRPackedBool mNeverHasVerticalScrollbar:1;
   PRPackedBool mNeverHasHorizontalScrollbar:1;
