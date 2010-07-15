@@ -143,10 +143,10 @@ private:
                               nsIContent* aChild);
 
   // Issues a single ContentInserted for each child of aContainer in the range
-  // [aStartIndexInContainer, aEndIndexInContainer).
+  // [aStartChild, aEndChild).
   void IssueSingleInsertNofications(nsIContent* aContainer,
-                                    PRInt32 aStartIndexInContainer,
-                                    PRInt32 aEndIndexInContainer,
+                                    nsIContent* aStartChild,
+                                    nsIContent* aEndChild,
                                     PRBool aAllowLazyConstruction);
   
   // Checks if the children of aContainer in the range [aStartChild, aEndChild)
@@ -158,8 +158,6 @@ private:
                                    nsIFrame* aParentFrame,
                                    nsIContent* aStartChild,
                                    nsIContent* aEndChild,
-                                   PRInt32 aStartIndexInContainer,
-                                   PRInt32 aEndIndexInContainer,
                                    PRBool aAllowLazyConstruction);
 
   // Returns true if parent was recreated due to frameset child, false otherwise.
@@ -223,22 +221,18 @@ public:
   // can be done lazily.
   nsresult ContentInserted(nsIContent*            aContainer,
                            nsIContent*            aChild,
-                           PRInt32                aIndexInContainer,
                            nsILayoutHistoryState* aFrameState,
                            PRBool                 aAllowLazyConstruction);
 
   // Like ContentInserted but handles inserting the children of aContainer in
-  // the range [aIndexInContainer, aEndIndexInContainer).  aStartChild is the
-  // child at aIndexInContainer, and must be non-null.  aEndChild is the node at
-  // aEndIndexInContainer (which may be null if the range is at the end of the
-  // child list).  If aAllowLazyConstruction is true then frame construction of
+  // the range [aStartChild, aEndChild).  aStartChild must be non-null.
+  // aEndChild may be null to indicate the range includes all kids after
+  // aStartChild.  If aAllowLazyConstruction is true then frame construction of
   // the new children can be done lazily. It is only allowed to be true when
   // inserting a single node.
   nsresult ContentRangeInserted(nsIContent*            aContainer,
                                 nsIContent*            aStartChild,
                                 nsIContent*            aEndChild,
-                                PRInt32                aIndexInContainer,
-                                PRInt32                aEndIndexInContainer,
                                 nsILayoutHistoryState* aFrameState,
                                 PRBool                 aAllowLazyConstruction);
 
