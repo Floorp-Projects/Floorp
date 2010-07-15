@@ -375,6 +375,14 @@ public:
   {
     return static_cast<nsVideoFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this);
   }
+
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager)
+  {
+    // XXX we should have some kind of activity timeout here so that
+    // inactive videos can be composited into the background
+    return mozilla::LAYER_ACTIVE;
+  }
 };
 
 NS_IMETHODIMP

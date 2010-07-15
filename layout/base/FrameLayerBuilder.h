@@ -57,6 +57,12 @@ class ThebesLayer;
 class LayerManager;
 }
 
+enum LayerState {
+  LAYER_NONE,
+  LAYER_INACTIVE,
+  LAYER_ACTIVE
+};
+
 /**
  * The FrameLayerBuilder belongs to an nsDisplayListBuilder and is
  * responsible for converting display lists into layer trees.
@@ -216,9 +222,12 @@ public:
    * for the container layer this ThebesItem belongs to.
    * aItem must have an underlying frame.
    */
-  void AddThebesDisplayItem(ThebesLayer* aLayer, nsDisplayItem* aItem,
+  void AddThebesDisplayItem(ThebesLayer* aLayer,
+                            nsDisplayListBuilder* aBuilder,
+                            nsDisplayItem* aItem,
                             const nsRect* aClipRect,
-                            nsIFrame* aContainerLayerFrame);
+                            nsIFrame* aContainerLayerFrame,
+                            LayerState aLayerState);
 
   /**
    * Given a frame and a display item key that uniquely identifies a
@@ -298,6 +307,7 @@ protected:
     }
 
     nsDisplayItem* mItem;
+    nsRefPtr<LayerManager> mTempLayerManager;
     nsRect         mClipRect;
     PRPackedBool   mHasClipRect;
   };

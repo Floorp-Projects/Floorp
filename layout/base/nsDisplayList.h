@@ -461,6 +461,7 @@ class nsDisplayItem : public nsDisplayItemLink {
 public:
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
+  typedef mozilla::LayerState LayerState;
 
   // This is never instantiated directly (it has pure virtual methods), so no
   // need to count constructors and destructors.
@@ -546,6 +547,30 @@ public:
    */
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder)
   { return PR_FALSE; }
+
+  /**
+   * @return LAYER_NONE if BuildLayer will return null. In this case
+   * there is no layer for the item, and Paint should be called instead
+   * to paint the content using Thebes.
+   * Return LAYER_INACTIVE if there is a layer --- BuildLayer will
+   * not return null (unless there's an error) --- but the layer contents
+   * are not changing frequently. In this case it makes sense to composite
+   * the layer into a ThebesLayer with other content, so we don't have to
+   * recomposite it every time we paint.
+   * Note: GetLayerState is only allowed to return LAYER_INACTIVE if all
+   * descendant display items returned LAYER_INACTIVE or LAYER_NONE. Also,
+   * all descendant display item frames must have an active scrolled root
+   * that's either the same as this item's frame's active scrolled root, or
+   * a descendant of this item's frame. This ensures that the entire
+   * set of display items can be collapsed onto a single ThebesLayer.
+   * Return LAYER_ACTIVE if the layer is active, that is, its contents are
+   * changing frequently. In this case it makes sense to keep the layer
+   * as a separate buffer in VRAM and composite it into the destination
+   * every time we paint.
+   */
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager)
+  { return mozilla::LAYER_NONE; }
   /**
    * Actually paint this item to some rendering context.
    * Content outside mVisibleRect need not be painted.
@@ -553,13 +578,11 @@ public:
    */
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx) {}
   /**
-   * Get the layer drawn by this display item, if any. If this display
-   * item doesn't have its own layer, then Paint will be called on it
-   * later. If it returns a layer here then Paint will not be called.
+   * Get the layer drawn by this display item. Call this only if
+   * GetLayerState() returns something other than LAYER_NONE.
+   * If GetLayerState returned LAYER_NONE then Paint will be called
+   * instead.
    * This is called while aManager is in the construction phase.
-   * This is where content can decide to be rendered by the layer
-   * system (with the possibility of accelerated or off-main-thread
-   * rendering) instead of cairo.
    * 
    * The caller (nsDisplayList) is responsible for setting the visible
    * region of the layer.
@@ -1427,6 +1450,16 @@ public:
     return nsnull;
   }
 
+  /**
+   * Returns true if all descendant display items can be placed in the same
+   * ThebesLayer --- GetLayerState returns LAYER_INACTIVE or LAYER_NONE,
+   * and they all have the given aActiveScrolledRoot.
+   */
+  static PRBool ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
+                                      LayerManager* aManager,
+                                      const nsDisplayList& aList,
+                                      nsIFrame* aActiveScrolledRoot);
+
 protected:
   nsDisplayWrapList() {}
   
@@ -1473,6 +1506,8 @@ public:
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager);
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove);  
@@ -1493,6 +1528,11 @@ public:
   
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager);
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager)
+  {
+    return mozilla::LAYER_ACTIVE;
+  }
   virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
   {
     // Don't allow merging, each sublist must have its own layer

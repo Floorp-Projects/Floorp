@@ -372,7 +372,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       NS_WARNING("Nowhere to paint into");
       return;
     }
-    layerManager = new BasicLayerManager(aCtx->ThebesContext());
+    layerManager = new BasicLayerManager(nsnull);
     if (!layerManager)
       return;
   }
@@ -1008,6 +1008,31 @@ void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
   NS_ERROR("nsDisplayWrapList should have been flattened away for painting");
 }
 
+PRBool nsDisplayWrapList::ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
+                                                LayerManager* aManager,
+                                                const nsDisplayList& aList,
+                                                nsIFrame* aActiveScrolledRoot) {
+  for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
+    nsIFrame* f = i->GetUnderlyingFrame();
+    if (f) {
+      nsIFrame* activeScrolledRoot =
+        nsLayoutUtils::GetActiveScrolledRootFor(f, nsnull, nsnull);
+      if (activeScrolledRoot != aActiveScrolledRoot)
+        return PR_FALSE;
+    }
+
+    LayerState state = i->GetLayerState(aBuilder, aManager);
+    if (state == LAYER_ACTIVE)
+      return PR_FALSE;
+    if (state == LAYER_NONE) {
+      nsDisplayList* list = i->GetList();
+      if (list && !ChildrenCanBeInactive(aBuilder, aManager, *list, aActiveScrolledRoot))
+        return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
 static nsresult
 WrapDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 nsDisplayList* aList, nsDisplayWrapper* aWrapper) {
@@ -1107,6 +1132,16 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   layer->SetOpacity(mFrame->GetStyleDisplay()->mOpacity);
   return layer.forget();
+}
+
+nsDisplayItem::LayerState
+nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager) {
+  // XXX fix this to detect animated opacity
+  nsIFrame* activeScrolledRoot =
+    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull, nsnull);
+  return !ChildrenCanBeInactive(aBuilder, aManager, mList, activeScrolledRoot)
+      ? LAYER_ACTIVE : LAYER_INACTIVE;
 }
 
 PRBool nsDisplayOpacity::ComputeVisibility(nsDisplayListBuilder* aBuilder,
