@@ -370,15 +370,19 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
 
         const nsCSSValue &color1 = array1->Item(4);
         const nsCSSValue &color2 = array2->Item(4);
-        const nsCSSValue &inset1 = array1->Item(5);
-        const nsCSSValue &inset2 = array2->Item(5);
-        // There are only two possible states of the inset value:
-        //  (1) GetUnit() == eCSSUnit_Null
-        //  (2) GetUnit() == eCSSUnit_Enumerated &&
-        //      GetIntValue() == NS_STYLE_BOX_SHADOW_INSET
-        NS_ABORT_IF_FALSE(color1.GetUnit() == color2.GetUnit() &&
-                          inset1 == inset2,
-                          "AddWeighted should have failed");
+#ifdef DEBUG
+        {
+          const nsCSSValue &inset1 = array1->Item(5);
+          const nsCSSValue &inset2 = array2->Item(5);
+          // There are only two possible states of the inset value:
+          //  (1) GetUnit() == eCSSUnit_Null
+          //  (2) GetUnit() == eCSSUnit_Enumerated &&
+          //      GetIntValue() == NS_STYLE_BOX_SHADOW_INSET
+          NS_ABORT_IF_FALSE(color1.GetUnit() == color2.GetUnit() &&
+                            inset1 == inset2,
+                            "AddWeighted should have failed");
+        }
+#endif
 
         if (color1.GetUnit() != eCSSUnit_Null) {
           nsStyleAnimation::Value color1Value
