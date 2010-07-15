@@ -3856,19 +3856,53 @@ nsIFrame::InvalidateOverflowRect()
   Invalidate(GetOverflowRectRelativeToSelf());
 }
 
+NS_DECLARE_FRAME_PROPERTY(DeferInvalidatesProperty, nsIFrame::DestroyRegion)
+
 void
 nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
 {
+  nsRect rect;
+  rect.IntersectRect(aDamageRect, nsRect(nsPoint(0,0), GetSize()));
+
   if ((mState & NS_FRAME_HAS_CONTAINER_LAYER) &&
       !(aFlags & INVALIDATE_NO_THEBES_LAYERS)) {
-    FrameLayerBuilder::InvalidateThebesLayerContents(this, aDamageRect);
+    FrameLayerBuilder::InvalidateThebesLayerContents(this, rect);
   }
 
   PRUint32 flags =
     (aFlags & INVALIDATE_IMMEDIATE) ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
+
+  nsRegion* excludeRegion = static_cast<nsRegion*>
+    (Properties().Get(DeferInvalidatesProperty()));
+  if (excludeRegion) {
+    flags = NS_VMREFRESH_DEFERRED;
+
+    nsRegion r;
+    r.Sub(rect, *excludeRegion);
+    if (r.IsEmpty())
+      return;
+    rect = r.GetBounds();
+  }
+
   nsIView* view = GetView();
   NS_ASSERTION(view, "This can only be called on frames with views");
-  view->GetViewManager()->UpdateView(view, aDamageRect, flags);
+  view->GetViewManager()->UpdateView(view, rect, flags);
+}
+
+void
+nsIFrame::BeginDeferringInvalidatesForDisplayRoot(const nsRegion& aExcludeRegion)
+{
+  NS_ASSERTION(nsLayoutUtils::GetDisplayRootFrame(this) == this,
+               "Can only call this on display roots");
+  Properties().Set(DeferInvalidatesProperty(), new nsRegion(aExcludeRegion));
+}
+
+void
+nsIFrame::EndDeferringInvalidatesForDisplayRoot()
+{
+  NS_ASSERTION(nsLayoutUtils::GetDisplayRootFrame(this) == this,
+               "Can only call this on display roots");
+  Properties().Delete(DeferInvalidatesProperty());
 }
 
 /**
