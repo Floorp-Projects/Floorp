@@ -137,3 +137,8 @@ enum Type {
 
   TYPE_MAX
 };
+
+enum {
+  // Number of bits needed to represent all types
+  TYPE_BITS = 8
+};
