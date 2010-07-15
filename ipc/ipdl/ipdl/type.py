@@ -298,6 +298,7 @@ class ProtocolType(IPDLType):
         self.managers = set()           # ProtocolType
         self.manages = [ ]
         self.stateless = stateless
+        self.hasDelete = False
     def isProtocol(self): return True
 
     def name(self):
@@ -801,13 +802,12 @@ class GatherDecls(TcheckVisitor):
             msg.accept(self)
         del self.currentProtocolDecl
 
-        if not p.decl.type.isToplevel():
-            dtordecl = self.symtab.lookup(_DELETE_MSG)
-            if not dtordecl:
-                self.error(
-                    p.loc,
-                    "destructor declaration `%s(...)' required for managed protocol `%s'",
-                    _DELETE_MSG, p.name)
+        p.decl.type.hasDelete = (not not self.symtab.lookup(_DELETE_MSG))
+        if not (p.decl.type.hasDelete or p.decl.type.isToplevel()):
+            self.error(
+                p.loc,
+                "destructor declaration `%s(...)' required for managed protocol `%s'",
+                _DELETE_MSG, p.name)
 
         for managed in p.managesStmts:
             mgdname = managed.name
@@ -1038,6 +1038,7 @@ class GatherDecls(TcheckVisitor):
             type=msgtype,
             progname=msgname)
         md.protocolDecl = self.currentProtocolDecl
+        md.decl._md = md
 
 
     def visitTransitionStmt(self, ts):
