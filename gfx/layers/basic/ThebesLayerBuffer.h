@@ -120,7 +120,7 @@ public:
    * Complete the drawing operation. The region to draw must have been drawn
    * before this is called. The contents of the buffer are drawn to aTarget.
    */
-  void DrawTo(ThebesLayer* aLayer, PRUint32 aFlags, gfxContext* aTarget);
+  void DrawTo(ThebesLayer* aLayer, PRUint32 aFlags, gfxContext* aTarget, float aOpacity);
 
 protected:
   enum XSide {
@@ -130,8 +130,8 @@ protected:
     TOP, BOTTOM
   };
   nsIntRect GetQuadrantRectangle(XSide aXSide, YSide aYSide);
-  void DrawBufferQuadrant(gfxContext* aTarget, XSide aXSide, YSide aYSide);
-  void DrawBufferWithRotation(gfxContext* aTarget);
+  void DrawBufferQuadrant(gfxContext* aTarget, XSide aXSide, YSide aYSide, float aOpacity);
+  void DrawBufferWithRotation(gfxContext* aTarget, float aOpacity);
 
 private:
   nsRefPtr<gfxASurface> mBuffer;

@@ -118,7 +118,8 @@ private:
   // Paints aLayer to mTarget.
   void PaintLayer(Layer* aLayer,
                   DrawThebesLayerCallback aCallback,
-                  void* aCallbackData);
+                  void* aCallbackData,
+                  float aOpacity);
 
   already_AddRefed<gfxContext> PushGroupWithCachedSurface(gfxContext *aTarget,
                                                           gfxASurface::gfxContentType aContent,
