@@ -16,6 +16,7 @@ EXPORTS	= \
 	gfxASurface.h \
 	gfxAlphaRecovery.h \
 	gfxBlur.h \
+	gfxCachedTempSurface.h \
 	gfxColor.h \
 	gfxContext.h \
 	gfxFont.h \
@@ -162,6 +163,7 @@ CPPSRCS	= \
 	gfxASurface.cpp \
 	gfxAlphaRecovery.cpp \
 	gfxBlur.cpp \
+	gfxCachedTempSurface.cpp \
 	gfxContext.cpp \
 	gfxImageSurface.cpp \
 	gfxFont.cpp \
