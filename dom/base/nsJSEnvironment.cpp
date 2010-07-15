@@ -2574,7 +2574,7 @@ nsJSContext::GetNativeContext()
 }
 
 nsresult
-nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
+nsJSContext::InitContext()
 {
   // Make sure callers of this use
   // WillInitializeContext/DidInitializeContext around this call.
@@ -2585,105 +2585,97 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
   ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
 
-  if (!aGlobalObject) {
-    // If we don't get a global object then there's nothing more to do here.
-
-    return NS_OK;
+  nsIXPConnect *xpc = nsContentUtils::XPConnect();
+  if (!nsDOMClassInfo::GetXPCNativeWrapperGetPropertyOp()) {
+    JSPropertyOp getProperty;
+    xpc->GetNativeWrapperGetPropertyOp(&getProperty);
+    nsDOMClassInfo::SetXPCNativeWrapperGetPropertyOp(getProperty);
   }
 
-  nsCxPusher cxPusher;
-  if (!cxPusher.Push(mContext)) {
-    return NS_ERROR_FAILURE;
+  if (!nsDOMClassInfo::GetXrayWrapperPropertyHolderGetPropertyOp()) {
+    JSPropertyOp getProperty;
+    xpc->GetXrayWrapperPropertyHolderGetPropertyOp(&getProperty);
+    nsDOMClassInfo::SetXrayWrapperPropertyHolderGetPropertyOp(getProperty);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject)
+{
+  NS_PRECONDITION(!JS_GetGlobalObject(mContext),
+                  "Outer window already initialized");
+
+  nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
+  PRUint32 flags = 0;
+
+  if (chromeWindow) {
+    // Flag this window's global object and objects under it as "system",
+    // for optional automated XPCNativeWrapper construction when chrome JS
+    // views a content DOM.
+    flags = nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
+
+    // Always enable E4X for XUL and other chrome content -- there is no
+    // need to preserve the <!-- script hiding hack from JS-in-HTML daze
+    // (introduced in 1995 for graceful script degradation in Netscape 1,
+    // Mosaic, and other pre-JS browsers).
+    ::JS_SetOptions(mContext, ::JS_GetOptions(mContext) | JSOPTION_XML);
   }
 
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
-
-  JSObject *global = ::JS_GetGlobalObject(mContext);
-
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-
-  // If there's already a global object in mContext we won't tell
-  // XPConnect to wrap aGlobalObject since it's already wrapped.
-
-  nsresult rv;
-
-  if (!global) {
-    nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
-    PRUint32 flags = 0;
-
-    if (chromeWindow) {
-      // Flag this window's global object and objects under it as "system",
-      // for optional automated XPCNativeWrapper construction when chrome JS
-      // views a content DOM.
-      flags = nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
-
-      // Always enable E4X for XUL and other chrome content -- there is no
-      // need to preserve the <!-- script hiding hack from JS-in-HTML daze
-      // (introduced in 1995 for graceful script degradation in Netscape 1,
-      // Mosaic, and other pre-JS browsers).
-      ::JS_SetOptions(mContext, ::JS_GetOptions(mContext) | JSOPTION_XML);
-    }
-
-    rv = xpc->InitClassesWithNewWrappedGlobal(mContext, aGlobalObject,
-                                              NS_GET_IID(nsISupports),
-                                              flags,
-                                              getter_AddRefs(holder));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Now check whether we need to grab a pointer to the
-    // XPCNativeWrapper and XrayWrapperPropertyHolder getProperty ops.
-    if (!nsDOMClassInfo::GetXPCNativeWrapperGetPropertyOp()) {
-      JSPropertyOp getProperty;
-      xpc->GetNativeWrapperGetPropertyOp(&getProperty);
-      nsDOMClassInfo::SetXPCNativeWrapperGetPropertyOp(getProperty);
-    }
-    if (!nsDOMClassInfo::GetXrayWrapperPropertyHolderGetPropertyOp()) {
-      JSPropertyOp getProperty;
-      xpc->GetXrayWrapperPropertyHolderGetPropertyOp(&getProperty);
-      nsDOMClassInfo::SetXrayWrapperPropertyHolderGetPropertyOp(getProperty);
-    }
-  } else {
-    // There's already a global object. We are preparing this outer window
-    // object for use as a real outer window (i.e. everything needs to live on
-    // the inner window).
-
-    // Call ClearScope to nuke any properties (e.g. Function and Object) on the
-    // outer object. From now on, anybody asking the outer object for these
-    // properties will be forwarded to the inner window.
-    ::JS_ClearScope(mContext, global);
-
-    // Now that the inner and outer windows are connected, tell XPConnect to
-    // re-initialize the prototypes on the outer window's scope.
-    rv = xpc->InitClassesForOuterObject(mContext, global);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(aGlobalObject));
-
-    if (ci) {
-      jsval v;
-      rv = nsContentUtils::WrapNative(mContext, global, aGlobalObject, &v,
-                                      getter_AddRefs(holder));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(holder));
-      NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
-
-      rv = wrapper->RefreshPrototype();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
+  nsresult rv =
+    xpc->InitClassesWithNewWrappedGlobal(mContext, aGlobalObject,
+                                         NS_GET_IID(nsISupports),
+                                         flags, getter_AddRefs(holder));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Hold a strong reference to the wrapper for the global to avoid
   // rooting and unrooting the global object every time its AddRef()
   // or Release() methods are called
   mGlobalWrapperRef = holder;
+  return NS_OK;
+}
 
-  holder->GetJSObject(&global);
+nsresult
+nsJSContext::InitOuterWindow()
+{
+  JSObject *global = JS_GetGlobalObject(mContext);
+  nsIScriptGlobalObject *sgo = GetGlobalObject();
+
+  // Call ClearScope to nuke any properties (e.g. Function and Object) on the
+  // outer object. From now on, anybody asking the outer object for these
+  // properties will be forwarded to the inner window.
+  JS_ClearScope(mContext, global);
+
+  // Now that the inner and outer windows are connected, tell XPConnect to
+  // re-initialize the prototypes on the outer window's scope.
+  nsIXPConnect *xpc = nsContentUtils::XPConnect();
+  nsresult rv = xpc->InitClassesForOuterObject(mContext, global);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(sgo));
+
+  if (ci) {
+    jsval v;
+
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = nsContentUtils::WrapNative(mContext, global, sgo, &v,
+                                    getter_AddRefs(holder));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(holder));
+    NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
+
+    rv = wrapper->RefreshPrototype();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   rv = InitClasses(global); // this will complete global object initialization
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult

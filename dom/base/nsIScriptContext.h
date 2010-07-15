@@ -72,10 +72,10 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
-// A4FE2B52-62B5-40C3-BF9C-5E0A27B10F90
+// 5a5d683e-f387-4694-9ff0-3a90b3e6749e
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xA4FE2B52, 0x62B5, 0x40C3, \
-  { 0xBF, 0x9C, 0x5E, 0x0A, 0x27, 0xB1, 0x0F, 0x90 } }
+{ 0x5a5d683e, 0xf387, 0x4694, \
+  { 0x9f, 0xf0, 0x3a, 0x90, 0xb3, 0xe6, 0x74, 0x9e } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -333,17 +333,22 @@ public:
 
 
   /**
-   * Init this context ready for use.  If aGlobalObject is not NULL, this
-   * function may initialize based on this global (for example, using the
-   * global to locate a chrome window, create a new 'scope' for this
-   * global, etc)
-   *
-   * @param aGlobalObject the gobal object, which may be nsnull.
-   *
-   * @return NS_OK if context initialization was successful
-   *
+   * Initialize the context generally. Does not create a global object.
    **/
-  virtual nsresult InitContext(nsIScriptGlobalObject *aGlobalObject) = 0;
+  virtual nsresult InitContext() = 0;
+
+  /**
+   * Creates the outer window for this context.
+   *
+   * @param aGlobalObject The script global object to use as our global.
+   */
+  virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject) = 0;
+
+  /**
+   * Prepares this context for use with the current inner window for the
+   * context's global object. This must be called after InitOuterWindow.
+   */
+  virtual nsresult InitOuterWindow() = 0;
 
   /**
    * Check to see if context is as yet intialized. Used to prevent

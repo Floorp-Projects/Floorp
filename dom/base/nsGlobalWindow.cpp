@@ -1285,22 +1285,15 @@ nsGlobalWindow::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScriptCont
                "We don't support this language ID");
   NS_ASSERTION(IsOuterWindow(), "Uh, SetScriptContext() called on inner window!");
 
-  if (!aScriptContext) {
-    NS_WARNING("Possibly early removal of script object, see bug #41608");
-  } else {
+  NS_ASSERTION(!aScriptContext || !mContext, "Bad call to SetContext()!");
+
+  if (aScriptContext) {
     // should probably assert the context is clean???
     aScriptContext->WillInitializeContext();
 
-    // Bind the script context and the global object
-    nsresult rv = aScriptContext->InitContext(this);
+    nsresult rv = aScriptContext->InitContext();
     NS_ENSURE_SUCCESS(rv, rv);
-  }
 
-  NS_ASSERTION(!aScriptContext || !mContext, "Bad call to SetContext()!");
-
-  void *script_glob = nsnull;
-
-  if (aScriptContext) {
     if (IsFrame()) {
       // This window is a [i]frame, don't bother GC'ing when the
       // frame's context is destroyed since a GC will happen when the
@@ -1309,13 +1302,12 @@ nsGlobalWindow::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScriptCont
       aScriptContext->SetGCOnDestruction(PR_FALSE);
     }
 
+    aScriptContext->CreateOuterObject(this);
     aScriptContext->DidInitializeContext();
-    script_glob = aScriptContext->GetNativeGlobal();
-    NS_ASSERTION(script_glob, "GetNativeGlobal returned NULL!");
+    mJSObject = (JSObject *)aScriptContext->GetNativeGlobal();
   }
 
   mContext = aScriptContext;
-  mJSObject = (JSObject *)script_glob;
   return NS_OK;
 }
 
@@ -1329,7 +1321,8 @@ nsGlobalWindow::EnsureScriptEnvironment(PRUint32 aLangID)
   if (mJSObject)
       return NS_OK;
 
-  NS_ASSERTION(!GetCurrentInnerWindowInternal(), "Huh?");
+  NS_ASSERTION(!GetCurrentInnerWindowInternal(),
+               "mJSObject is null, but we have an inner window?");
 
   nsCOMPtr<nsIScriptRuntime> scriptRuntime;
   nsresult rv = NS_GetScriptRuntimeByID(aLangID, getter_AddRefs(scriptRuntime));
@@ -1894,13 +1887,11 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // ensure that the outer window gets a new prototype so we don't
     // leak prototype properties from the old inner window to the
     // new one.
-    JS_BeginRequest((JSContext *)mContext->GetNativeContext());
-    mContext->InitContext(this);
+    mContext->InitOuterWindow();
 
     // Now that both the the inner and outer windows are initialized
     // let the script context do its magic to hook them together.
     mContext->ConnectToInner(newInnerWindow, mJSObject);
-    JS_EndRequest((JSContext *)mContext->GetNativeContext());
 
     nsCOMPtr<nsIContent> frame = do_QueryInterface(GetFrameElementInternal());
     if (frame && frame->GetOwnerDoc()) {
@@ -1985,7 +1976,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         // make sure the cached document property gets updated.
 
         // XXXmarkh - tell other languages about this?
-        JSAutoRequest ar(cx);
         ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
       }
     } else {
@@ -1998,7 +1988,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
       if (navigatorHolder) {
         // Restore window.navigator onto the new inner window.
-        JSAutoRequest ar(cx);
 
         ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
                             nav, nsnull, nsnull,
