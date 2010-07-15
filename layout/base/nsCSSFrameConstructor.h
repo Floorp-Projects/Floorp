@@ -214,7 +214,6 @@ public:
   // children can be done lazily.
   nsresult ContentAppended(nsIContent* aContainer,
                            nsIContent* aFirstNewContent,
-                           PRInt32     aNewIndexInContainer,
                            PRBool      aAllowLazyConstruction);
 
   // If aAllowLazyConstruction is true then frame construction of the new child
@@ -308,10 +307,10 @@ public:
   void RestyleForInsertOrChange(Element* aContainer, nsIContent* aChild);
 
   // This would be the same as RestyleForInsertOrChange if we got the
-  // notification before the removal.  However, we get it after, so we
-  // have to use the index.  |aContainer| must be non-null; when the
-  // container is null, no work is needed.  aFollowingSibling is the
-  // sibling that used to come after aOldChild before the removal.
+  // notification before the removal.  However, we get it after, so we need the
+  // following sibling in addition to the old child.  |aContainer| must be
+  // non-null; when the container is null, no work is needed.  aFollowingSibling
+  // is the sibling that used to come after aOldChild before the removal.
   void RestyleForRemove(Element* aContainer,
                         nsIContent* aOldChild,
                         nsIContent* aFollowingSibling);
