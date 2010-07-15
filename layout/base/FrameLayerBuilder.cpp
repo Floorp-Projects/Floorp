@@ -102,10 +102,10 @@ public:
                  ContainerLayer* aContainerLayer) :
     mBuilder(aBuilder), mManager(aManager),
     mContainerFrame(aContainerFrame), mContainerLayer(aContainerLayer),
-    mNextFreeRecycledThebesLayer(0),
+    mNextFreeRecycledThebesLayer(0), mNextFreeRecycledColorLayer(0),
     mInvalidateAllThebesContent(PR_FALSE)
   {
-    CollectOldThebesLayers();
+    CollectOldLayers();
   }
 
   void SetInvalidThebesContent(const nsIntRegion& aRegion)
@@ -144,12 +144,15 @@ protected:
    */
   class ThebesLayerData {
   public:
-    ThebesLayerData() : mActiveScrolledRoot(nsnull), mLayer(nsnull) {}
+    ThebesLayerData() :
+      mActiveScrolledRoot(nsnull), mLayer(nsnull),
+      mIsSolidColorInVisibleRegion(PR_FALSE) {}
     /**
      * Record that an item has been added to the ThebesLayer, so we
      * need to update our regions.
      */
-    void Accumulate(const nsIntRect& aVisibleRect, PRBool aIsOpaque);
+    void Accumulate(const nsIntRect& aVisibleRect, PRBool aIsOpaque,
+                    nscolor* aSolidColor);
     nsIFrame* GetActiveScrolledRoot() { return mActiveScrolledRoot; }
 
     /**
@@ -177,20 +180,34 @@ protected:
      */
     nsIFrame*    mActiveScrolledRoot;
     ThebesLayer* mLayer;
+    /**
+     * If mIsSolidColorInVisibleRegion is true, this is the color of the visible
+     * region.
+     */
+    nscolor      mSolidColor;
+    /**
+     * True if every pixel in mVisibleRegion will have color mSolidColor.
+     */
+    PRPackedBool mIsSolidColorInVisibleRegion;
   };
 
   /**
    * Grab the next recyclable ThebesLayer, or create one if there are no
    * more recyclable ThebesLayers. Does any necessary invalidation of
    * a recycled ThebesLayer, and sets up the transform on the ThebesLayer
-   * to account for scrolling. Adds the layer to mNewChildLayers.
+   * to account for scrolling.
    */
   already_AddRefed<ThebesLayer> CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot);
   /**
-   * Grabs all ThebesLayers from the ContainerLayer and makes them
+   * Grab the next recyclable ColorLayer, or create one if there are no
+   * more recyclable ColorLayers.
+   */
+  already_AddRefed<ColorLayer> CreateOrRecycleColorLayer();
+  /**
+   * Grabs all ThebesLayers and ColorLayers from the ContainerLayer and makes them
    * available for recycling.
    */
-  void CollectOldThebesLayers();
+  void CollectOldLayers();
   /**
    * Indicate that we are done adding items to the ThebesLayer at the top of
    * mThebesLayerDataStack. Set the final visible region and opaque-content
@@ -208,10 +225,13 @@ protected:
    * display item
    * @param aIsOpaque whether the bounds of the next display item are
    * opaque
+   * @param aSolidColor if non-null, indicates that every pixel in aVisibleRect
+   * will be painted with aSolidColor by the item
    */
   already_AddRefed<ThebesLayer> FindThebesLayerFor(const nsIntRect& aVisibleRect,
                                                    nsIFrame* aActiveScrolledRoot,
-                                                   PRBool aIsOpaque);
+                                                   PRBool aIsOpaque,
+                                                   nscolor* aSolidColor);
   ThebesLayerData* GetTopThebesLayerData()
   {
     return mThebesLayerDataStack.IsEmpty() ? nsnull
@@ -235,7 +255,9 @@ protected:
    */
   nsAutoTArray<nsRefPtr<Layer>,1>  mNewChildLayers;
   nsTArray<nsRefPtr<ThebesLayer> > mRecycledThebesLayers;
+  nsTArray<nsRefPtr<ColorLayer> >  mRecycledColorLayers;
   PRUint32                         mNextFreeRecycledThebesLayer;
+  PRUint32                         mNextFreeRecycledColorLayer;
   PRPackedBool                     mInvalidateAllThebesContent;
 };
 
@@ -248,6 +270,11 @@ protected:
  * and we wouldn't want to accidentally recycle those.
  */
 static PRUint8 gThebesDisplayItemLayerUserData;
+/**
+ * The address of gColorLayerUserData is used as the user
+ * data pointer for ColorLayers
+ */
+static PRUint8 gColorLayerUserData;
 
 } // anonymous namespace
 
@@ -495,16 +522,40 @@ InvalidatePostTransformRegion(ThebesLayer* aLayer, const nsIntRegion& aRegion)
   }
 }
 
+already_AddRefed<ColorLayer>
+ContainerState::CreateOrRecycleColorLayer()
+{
+  nsRefPtr<ColorLayer> layer;
+  if (mNextFreeRecycledColorLayer < mRecycledColorLayers.Length()) {
+    // Recycle a layer
+    layer = mRecycledColorLayers[mNextFreeRecycledColorLayer];
+    ++mNextFreeRecycledColorLayer;
+    // Clear clip rect so we don't accidentally stay clipped. We will
+    // reapply any necessary clipping.
+    layer->SetClipRect(nsnull);
+  } else {
+    // Create a new layer
+    layer = mManager->CreateColorLayer();
+    if (!layer)
+      return nsnull;
+    // Mark this layer as being used for Thebes-painting display items
+    layer->SetUserData(&gColorLayerUserData);
+  }
+  return layer.forget();
+}
+
 already_AddRefed<ThebesLayer>
 ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
 {
   // We need a new thebes layer
   nsRefPtr<ThebesLayer> layer;
-  if (mNextFreeRecycledThebesLayer <
-      mRecycledThebesLayers.Length()) {
+  if (mNextFreeRecycledThebesLayer < mRecycledThebesLayers.Length()) {
     // Recycle a layer
     layer = mRecycledThebesLayers[mNextFreeRecycledThebesLayer];
     ++mNextFreeRecycledThebesLayer;
+    // Clear clip rect so we don't accidentally stay clipped. We will
+    // reapply any necessary clipping.
+    layer->SetClipRect(nsnull);
 
     // This gets called on recycled ThebesLayers that are going to be in the
     // final layer tree, so it's a convenient time to invalidate the
@@ -542,8 +593,6 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
   matrix.Translate(gfxPoint(pixOffset.x, pixOffset.y));
   layer->SetTransform(gfx3DMatrix::From2D(matrix));
 
-  NS_ASSERTION(!mNewChildLayers.Contains(layer), "Layer already in list???");
-  mNewChildLayers.AppendElement(layer);
   return layer.forget();
 }
 
@@ -603,30 +652,78 @@ ContainerState::PopThebesLayerData()
                                      data->mVisibleRegion);
   }
 
+  Layer* layer;
+  if (data->mIsSolidColorInVisibleRegion) {
+    nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer();
+    colorLayer->SetColor(data->mSolidColor);
+
+    NS_ASSERTION(!mNewChildLayers.Contains(colorLayer), "Layer already in list???");
+    nsTArray_base::index_type index = mNewChildLayers.IndexOf(data->mLayer);
+    NS_ASSERTION(index != nsTArray_base::NoIndex, "Thebes layer not found?");
+    mNewChildLayers.InsertElementAt(index + 1, colorLayer);
+
+    // Copy transform and clip rect
+    colorLayer->SetTransform(data->mLayer->GetTransform());
+    // Clip colorLayer to its visible region, since ColorLayers are
+    // allowed to paint outside the visible region. Here we rely on the
+    // fact that uniform display items fill rectangles; obviously the
+    // area to fill must contain the visible region, and because it's
+    // a rectangle, it must therefore contain the visible region's GetBounds.
+    // Note that the visible region is already clipped appropriately.
+    nsIntRect visibleRect = data->mVisibleRegion.GetBounds();
+    colorLayer->SetClipRect(&visibleRect);
+
+    // Hide the ThebesLayer. We leave it in the layer tree so that we
+    // can find and recycle it later.
+    data->mLayer->IntersectClipRect(nsIntRect());
+    data->mLayer->SetVisibleRegion(nsIntRegion());
+
+    layer = colorLayer;
+  } else {
+    layer = data->mLayer;
+  }
+
   gfxMatrix transform;
-  if (data->mLayer->GetTransform().Is2D(&transform)) {
+  if (layer->GetTransform().Is2D(&transform)) {
     NS_ASSERTION(!transform.HasNonIntegerTranslation(),
                  "Matrix not just an integer translation?");
     // Convert from relative to the container to relative to the
     // ThebesLayer itself.
     nsIntRegion rgn = data->mVisibleRegion;
     rgn.MoveBy(-nsIntPoint(PRInt32(transform.x0), PRInt32(transform.y0)));
-    data->mLayer->SetVisibleRegion(rgn);
+    layer->SetVisibleRegion(rgn);
   } else {
     NS_ERROR("Only 2D transformations currently supported");
   }
 
   nsIntRegion transparentRegion;
   transparentRegion.Sub(data->mVisibleRegion, data->mOpaqueRegion);
-  data->mLayer->SetIsOpaqueContent(transparentRegion.IsEmpty());
+  layer->SetIsOpaqueContent(transparentRegion.IsEmpty());
 
   mThebesLayerDataStack.RemoveElementAt(lastIndex);
 }
 
 void
 ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aRect,
-                                            PRBool aIsOpaque)
+                                            PRBool aIsOpaque,
+                                            nscolor* aSolidColor)
 {
+  if (aSolidColor) {
+    if (mVisibleRegion.IsEmpty()) {
+      // This color is all we have
+      mSolidColor = *aSolidColor;
+      mIsSolidColorInVisibleRegion = PR_TRUE;
+    } else if (mIsSolidColorInVisibleRegion &&
+               mVisibleRegion.IsEqual(nsIntRegion(aRect))) {
+      // we can just blend the colors together
+      mSolidColor = NS_ComposeColors(mSolidColor, *aSolidColor);
+    } else {
+      mIsSolidColorInVisibleRegion = PR_FALSE;
+    }
+  } else {
+    mIsSolidColorInVisibleRegion = PR_FALSE;
+  }
+
   mVisibleRegion.Or(mVisibleRegion, aRect);
   mVisibleRegion.SimplifyOutward(4);
   if (aIsOpaque) {
@@ -638,7 +735,8 @@ ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aRect,
 already_AddRefed<ThebesLayer>
 ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
                                    nsIFrame* aActiveScrolledRoot,
-                                   PRBool aIsOpaque)
+                                   PRBool aIsOpaque,
+                                   nscolor* aSolidColor)
 {
   PRInt32 i;
   PRInt32 lowestUsableLayerWithScrolledRoot = -1;
@@ -679,6 +777,10 @@ ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
   ThebesLayerData* thebesLayerData = nsnull;
   if (lowestUsableLayerWithScrolledRoot < 0) {
     layer = CreateOrRecycleThebesLayer(aActiveScrolledRoot);
+
+    NS_ASSERTION(!mNewChildLayers.Contains(layer), "Layer already in list???");
+    mNewChildLayers.AppendElement(layer);
+
     thebesLayerData = new ThebesLayerData();
     mThebesLayerDataStack.AppendElement(thebesLayerData);
     thebesLayerData->mLayer = layer;
@@ -688,7 +790,7 @@ ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
     layer = thebesLayerData->mLayer;
   }
 
-  thebesLayerData->Accumulate(aVisibleRect, aIsOpaque);
+  thebesLayerData->Accumulate(aVisibleRect, aIsOpaque, aSolidColor);
   return layer.forget();
 }
 
@@ -756,9 +858,12 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       NS_ASSERTION(offsetToActiveScrolledRoot == f->GetOffsetTo(activeScrolledRoot),
                    "Wrong offset");
 
+      nscolor uniformColor;
+      PRBool isUniform = item->IsUniform(mBuilder, &uniformColor);
       nsRefPtr<ThebesLayer> thebesLayer =
         FindThebesLayerFor(itemVisibleRect, activeScrolledRoot,
-                           item->IsOpaque(mBuilder));
+                           item->IsOpaque(mBuilder),
+                           isUniform ? &uniformColor : nsnull);
       
       NS_ASSERTION(f, "Display items that render using Thebes must have a frame");
       PRUint32 key = item->GetPerFrameKey();
@@ -821,17 +926,17 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
 }
 
 void
-ContainerState::CollectOldThebesLayers()
+ContainerState::CollectOldLayers()
 {
   for (Layer* layer = mContainerLayer->GetFirstChild(); layer;
        layer = layer->GetNextSibling()) {
-    if (layer->GetUserData() != &gThebesDisplayItemLayerUserData) {
-      // This layer is not for rendering Thebes-based display items
-      continue;
+    void* data = layer->GetUserData();
+    if (data == &gColorLayerUserData) {
+      mRecycledColorLayers.AppendElement(static_cast<ColorLayer*>(layer));
+    } else if (data == &gThebesDisplayItemLayerUserData) {
+      NS_ASSERTION(layer->AsThebesLayer(), "Wrong layer type");
+      mRecycledThebesLayers.AppendElement(static_cast<ThebesLayer*>(layer));
     }
-    ThebesLayer* thebes = layer->AsThebesLayer();
-    NS_ASSERTION(thebes, "Wrong layer type");
-    mRecycledThebesLayers.AppendElement(thebes);
   }
 }
 
