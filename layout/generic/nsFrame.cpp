@@ -121,6 +121,7 @@
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
 #include "nsIObjectLoadingContent.h"
+#include "nsExpirationTracker.h"
 #ifdef MOZ_SVG
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGEffects.h"
@@ -3690,6 +3691,88 @@ nsIFrame::InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey)
   }
 
   InvalidateWithFlags(aDamageRect, INVALIDATE_NO_THEBES_LAYERS);
+}
+
+class LayerActivity {
+public:
+  LayerActivity(nsIFrame* aFrame) : mFrame(aFrame) {}
+  ~LayerActivity();
+  nsExpirationState* GetExpirationState() { return &mState; }
+
+  nsIFrame* mFrame;
+  nsExpirationState mState;
+};
+
+class LayerActivityTracker : public nsExpirationTracker<LayerActivity,4> {
+public:
+  // 75-100ms is a good timeout period. We use 4 generations of 25ms each.
+  enum { GENERATION_MS = 100 };
+  LayerActivityTracker()
+    : nsExpirationTracker<LayerActivity,4>(GENERATION_MS) {}
+  ~LayerActivityTracker() {
+    AgeAllGenerations();
+  }
+
+  virtual void NotifyExpired(LayerActivity* aObject);
+};
+
+static LayerActivityTracker* gLayerActivityTracker = nsnull;
+
+LayerActivity::~LayerActivity()
+{
+  if (mFrame) {
+    NS_ASSERTION(gLayerActivityTracker, "Should still have a tracker");
+    gLayerActivityTracker->RemoveObject(this);
+  }
+}
+
+static void DestroyLayerActivity(void* aPropertyValue)
+{
+  delete static_cast<LayerActivity*>(aPropertyValue);
+}
+
+NS_DECLARE_FRAME_PROPERTY(LayerActivityProperty, DestroyLayerActivity)
+
+void
+LayerActivityTracker::NotifyExpired(LayerActivity* aObject)
+{
+  RemoveObject(aObject);
+
+  nsIFrame* f = aObject->mFrame;
+  aObject->mFrame = nsnull;
+  f->Properties().Delete(LayerActivityProperty());
+  f->InvalidateOverflowRect();
+}
+
+void
+nsIFrame::MarkLayersActive()
+{
+  FrameProperties properties = Properties();
+  LayerActivity* layerActivity =
+    static_cast<LayerActivity*>(properties.Get(LayerActivityProperty()));
+  if (layerActivity) {
+    gLayerActivityTracker->MarkUsed(layerActivity);
+  } else {
+    if (!gLayerActivityTracker) {
+      gLayerActivityTracker = new LayerActivityTracker();
+    }
+    layerActivity = new LayerActivity(this);
+    gLayerActivityTracker->AddObject(layerActivity);
+    properties.Set(LayerActivityProperty(), layerActivity);
+  }
+}
+
+PRBool
+nsIFrame::AreLayersMarkedActive()
+{
+  return Properties().Get(LayerActivityProperty()) != nsnull;
+}
+
+/* static */ void
+nsFrame::ShutdownLayerActivityTimer()
+{
+  delete gLayerActivityTracker;
+  gLayerActivityTracker = nsnull;
 }
 
 void
