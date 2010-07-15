@@ -6632,9 +6632,11 @@ nsDocShell::RestoreFromHistory()
     nsCOMPtr<nsIMarkupDocumentViewer> newMUDV(do_QueryInterface(viewer));
     float textZoom = 1.0f;
     float pageZoom = 1.0f;
+    PRBool styleDisabled = PR_FALSE;
     if (oldMUDV && newMUDV) {
         oldMUDV->GetTextZoom(&textZoom);
         oldMUDV->GetFullZoom(&pageZoom);
+        oldMUDV->GetAuthorStyleDisabled(&styleDisabled);
     }
 
     // Protect against mLSHE going away via a load triggered from
@@ -6822,6 +6824,7 @@ nsDocShell::RestoreFromHistory()
     if (oldMUDV && newMUDV) {
         newMUDV->SetTextZoom(textZoom);
         newMUDV->SetFullZoom(pageZoom);
+        newMUDV->SetAuthorStyleDisabled(styleDisabled);
     }
 
     nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
