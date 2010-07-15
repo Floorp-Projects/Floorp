@@ -1784,27 +1784,22 @@ private:
   // Find the right previous sibling for an insertion.  This also updates the
   // parent frame to point to the correct continuation of the parent frame to
   // use, and returns whether this insertion is to be treated as an append.
-  // aChild is the child being inserted and aIndexInContainer its index in
-  // aContainer (which is aChild's DOM parent).
+  // aChild is the child being inserted.
   // aIsRangeInsertSafe returns whether it is safe to do a range insert with
   // aChild being the first child in the range. It is the callers'
   // responsibility to check whether a range insert is safe with regards to
   // fieldsets.
   // The skip parameters are used to ignore a range of children when looking
-  // for a sibling. All nodes starting from aStartSkipChild (which is in
-  // aContainer's regular child list at aStartSkipIndexInContainer) and up to
-  // but not including aEndSkipChild (which is at aEndSkipIndexInContainer in
-  // aContainer) will be skipped over when looking for sibling frames. Skipping
-  // a range can deal with XBL but not when there are multiple insertion points.
+  // for a sibling. All nodes starting from aStartSkipChild and up to but not
+  // including aEndSkipChild will be skipped over when looking for sibling
+  // frames. Skipping a range can deal with XBL but not when there are multiple
+  // insertion points.
   nsIFrame* GetInsertionPrevSibling(nsIFrame*& aParentFrame, /* inout */
                                     nsIContent* aContainer,
                                     nsIContent* aChild,
-                                    PRInt32 aIndexInContainer,
                                     PRBool* aIsAppend,
                                     PRBool* aIsRangeInsertSafe,
-                                    PRInt32 aStartSkipIndexInContainer = -1,
                                     nsIContent* aStartSkipChild = nsnull,
-                                    PRInt32 aEndSkipIndexInContainer = -1,
                                     nsIContent *aEndSkipChild = nsnull);
 
   // see if aContent and aSibling are legitimate siblings due to restrictions
