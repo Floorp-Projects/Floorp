@@ -854,11 +854,10 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
                                    XPCWrappedNativeProto* aProto)
     : mMaybeProto(aProto),
       mSet(aProto->GetSet()),
-      mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
+      mFlatJSObject(INVALID_OBJECT), // non-null to pass IsValid() test
       mScriptableInfo(nsnull),
       mWrapperWord(0)
 {
-    PR_STATIC_ASSERT(LAST_FLAG & JSVAL_TAGMASK);
     mIdentity = aIdentity.get();
 
     NS_ASSERTION(mMaybeProto, "bad ctor param");
@@ -874,7 +873,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
 
     : mMaybeScope(TagScope(aScope)),
       mSet(aSet),
-      mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
+      mFlatJSObject(INVALID_OBJECT), // non-null to pass IsValid() test
       mScriptableInfo(nsnull),
       mWrapperWord(0)
 {
@@ -1682,7 +1681,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
         JSObject* funObjParent = funobj->getParent();
         NS_ASSERTION(funObjParent, "funobj has no parent");
 
-        JSClass* funObjParentClass = funObjParent->getClass();
+        JSClass* funObjParentClass = funObjParent->getJSClass();
 
         if(IS_PROTO_CLASS(funObjParentClass))
         {
@@ -1713,7 +1712,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
     {
         // this is on two lines to make the compiler happy given the goto.
         JSClass* clazz;
-        clazz = cur->getClass();
+        clazz = cur->getJSClass();
 
         if(IS_WRAPPER_CLASS(clazz))
         {
@@ -1770,7 +1769,7 @@ return_tearoff:
     // If we didn't find a wrapper using the given funobj and obj, try
     // again with obj's outer object, if it's got one.
 
-    JSClass *clazz = obj->getClass();
+    JSClass *clazz = obj->getJSClass();
 
     if((clazz->flags & JSCLASS_IS_EXTENDED) &&
         ((JSExtendedClass*)clazz)->outerObject)
@@ -2402,19 +2401,23 @@ CallMethodHelper::~CallMethodHelper()
                 // always free the array itself
                 nsMemory::Free(p);
             }
-            else if(dp->IsValAllocated())
-                nsMemory::Free(p);
-            else if(dp->IsValInterface())
-                ((nsISupports*)p)->Release();
-            else if(dp->IsValDOMString())
-                mCallContext.DeleteString((nsAString*)p);
-            else if(dp->IsValUTF8String())
-                delete (nsCString*) p;
-            else if(dp->IsValCString())
-                delete (nsCString*) p;
-            else if(dp->IsValJSRoot())
-                JS_RemoveValueRoot(mCallContext, (jsval*)dp->ptr);
-        }   
+            else
+            {
+                if(dp->IsValJSRoot())
+                    JS_RemoveValueRoot(mCallContext, (jsval*)dp->ptr);
+
+                if(dp->IsValAllocated())
+                    nsMemory::Free(p);
+                else if(dp->IsValInterface())
+                    ((nsISupports*)p)->Release();
+                else if(dp->IsValDOMString())
+                    mCallContext.DeleteString((nsAString*)p);
+                else if(dp->IsValUTF8String())
+                    delete (nsCString*) p;
+                else if(dp->IsValCString())
+                    delete (nsCString*) p;
+            }
+        }
     }
 
 }
@@ -2794,11 +2797,13 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                 }
                 else
                 {
-                    jsval *rootp = (jsval *)&dp->val.p;
+                    JS_STATIC_ASSERT(sizeof(jsval) <= sizeof(uint64));
+                    jsval *rootp = (jsval *)&dp->val.u64;
                     dp->ptr = rootp;
                     *rootp = JSVAL_VOID;
                     if (!JS_AddValueRoot(mCallContext, rootp))
                         return JS_FALSE;
+                    dp->SetValIsJSRoot();
                 }
             }
 
@@ -2878,6 +2883,11 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                     // Is an 'in' CString.
                     useAllocator = JS_TRUE;
                     break;
+                }
+            } else {
+                if (type_tag == nsXPTType::T_JSVAL) {
+                    dp->SetValIsAllocated();
+                    useAllocator = JS_TRUE;
                 }
             }
 
@@ -3121,7 +3131,7 @@ NS_IMETHODIMP XPCWrappedNative::GetXPConnect(nsIXPConnect * *aXPConnect)
 }
 
 /* XPCNativeInterface FindInterfaceWithMember (in jsval name); */
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsval name, nsIInterfaceInfo * *_retval)
+NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsid name, nsIInterfaceInfo * *_retval)
 {
     XPCNativeInterface* iface;
     XPCNativeMember*  member;
@@ -3138,7 +3148,7 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsval name, nsIInterface
 }
 
 /* XPCNativeInterface FindInterfaceWithName (in jsval name); */
-NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsval name, nsIInterfaceInfo * *_retval)
+NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsid name, nsIInterfaceInfo * *_retval)
 {
     XPCNativeInterface* iface = GetSet()->FindNamedInterface(name);
     if(iface)
@@ -3334,7 +3344,7 @@ void
 XPCWrappedNative::HandlePossibleNameCaseError(JSContext* cx,
                                               XPCNativeSet* set,
                                               XPCNativeInterface* iface,
-                                              jsval name)
+                                              jsid name)
 {
     XPCCallContext ccx(JS_CALLER, cx);
     HandlePossibleNameCaseError(ccx, set, iface, name);
@@ -3345,71 +3355,9 @@ void
 XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
                                               XPCNativeSet* set,
                                               XPCNativeInterface* iface,
-                                              jsval name)
+                                              jsid name)
 {
-    if(!ccx.IsValid())
-        return;
-
-    JSString* oldJSStr;
-    JSString* newJSStr;
-    PRUnichar* oldStr;
-    PRUnichar* newStr;
-    XPCNativeMember* member;
-    XPCNativeInterface* localIface;
-
-    /* PRUnichar->char->PRUnichar hack is to avoid pulling in i18n code. */
-    if(JSVAL_IS_STRING(name) &&
-       nsnull != (oldJSStr = JSVAL_TO_STRING(name)) &&
-       nsnull != (oldStr = (PRUnichar*) JS_GetStringChars(oldJSStr)) &&
-       oldStr[0] != 0 &&
-       oldStr[0] >> 8 == 0 &&
-       nsCRT::IsUpper((char)oldStr[0]) &&
-       nsnull != (newStr = nsCRT::strdup(oldStr)))
-    {
-        newStr[0] = (PRUnichar) nsCRT::ToLower((char)newStr[0]);
-        newJSStr = JS_NewUCStringCopyZ(ccx, (const jschar*)newStr);
-        nsCRT::free(newStr);
-        if(newJSStr && (set ?
-             set->FindMember(STRING_TO_JSVAL(newJSStr), &member, &localIface) :
-                        NS_PTR_TO_INT32(iface->FindMember(STRING_TO_JSVAL(newJSStr)))))
-        {
-            // found it!
-            const char* ifaceName = set ?
-                    localIface->GetNameString() :
-                    iface->GetNameString();
-            const char* goodName = JS_GetStringBytes(newJSStr);
-            const char* badName = JS_GetStringBytes(oldJSStr);
-            char* locationStr = nsnull;
-
-            nsIException* e = nsnull;
-            nsXPCException::NewException("", NS_OK, nsnull, nsnull, &e);
-
-            if(e)
-            {
-                nsresult rv;
-                nsCOMPtr<nsIStackFrame> loc = nsnull;
-                rv = e->GetLocation(getter_AddRefs(loc));
-                if(NS_SUCCEEDED(rv) && loc) {
-                    loc->ToString(&locationStr); // failure here leaves it nsnull.
-                }
-            }
-
-            if(locationStr && ifaceName && goodName && badName )
-            {
-                printf("**************************************************\n"
-                       "ERROR: JS code at [%s]\n"
-                       "tried to access nonexistent property called\n"
-                       "\'%s\' on interface of type \'%s\'.\n"
-                       "That interface does however have a property called\n"
-                       "\'%s\'. Did you mean to access that lowercase property?\n"
-                       "Please fix the JS code as appropriate.\n"
-                       "**************************************************\n",
-                        locationStr, badName, ifaceName, goodName);
-            }
-            if(locationStr)
-                nsMemory::Free(locationStr);
-        }
-    }
+    // TODO: remove this all more thoroughly.
 }
 #endif
 

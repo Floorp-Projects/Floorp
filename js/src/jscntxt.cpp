@@ -135,21 +135,21 @@ StackSpace::init()
     void *check = VirtualAlloc(p, COMMIT_BYTES, MEM_COMMIT, PAGE_READWRITE);
     if (p != check)
         return false;
-    base = reinterpret_cast<jsval *>(p);
+    base = reinterpret_cast<Value *>(p);
     commitEnd = base + COMMIT_VALS;
     end = base + CAPACITY_VALS;
 #elif defined(XP_OS2)
     if (DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE | OBJ_ANY) &&
         DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE))
         return false;
-    base = reinterpret_cast<jsval *>(p);
+    base = reinterpret_cast<Value *>(p);
     end = base + CAPACITY_VALS;
 #else
     JS_ASSERT(CAPACITY_BYTES % getpagesize() == 0);
     p = mmap(NULL, CAPACITY_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (p == MAP_FAILED)
         return false;
-    base = reinterpret_cast<jsval *>(p);
+    base = reinterpret_cast<Value *>(p);
     end = base + CAPACITY_VALS;
 #endif
     return true;
@@ -159,22 +159,22 @@ void
 StackSpace::finish()
 {
 #ifdef XP_WIN
-    VirtualFree(base, (commitEnd - base) * sizeof(jsval), MEM_DECOMMIT);
+    VirtualFree(base, (commitEnd - base) * sizeof(Value), MEM_DECOMMIT);
     VirtualFree(base, 0, MEM_RELEASE);
 #elif defined(XP_OS2)
     DosFreeMem(base);
 #else
-    munmap(base, CAPACITY_BYTES);
+    munmap((caddr_t)base, CAPACITY_BYTES);
 #endif
 }
 
 #ifdef XP_WIN
 JS_FRIEND_API(bool)
-StackSpace::bumpCommit(jsval *from, ptrdiff_t nvals) const
+StackSpace::bumpCommit(Value *from, ptrdiff_t nvals) const
 {
     JS_ASSERT(end - from >= nvals);
-    jsval *newCommit = commitEnd;
-    jsval *request = from + nvals;
+    Value *newCommit = commitEnd;
+    Value *request = from + nvals;
 
     /* Use a dumb loop; will probably execute once. */
     JS_ASSERT((end - newCommit) % COMMIT_VALS == 0);
@@ -184,7 +184,7 @@ StackSpace::bumpCommit(jsval *from, ptrdiff_t nvals) const
     } while (newCommit < request);
 
     /* The cast is safe because CAPACITY_BYTES is small. */
-    int32 size = static_cast<int32>(newCommit - commitEnd) * sizeof(jsval);
+    int32 size = static_cast<int32>(newCommit - commitEnd) * sizeof(Value);
 
     if (!VirtualAlloc(commitEnd, size, MEM_COMMIT, PAGE_READWRITE))
         return false;
@@ -200,7 +200,7 @@ StackSpace::mark(JSTracer *trc)
      * The correctness/completeness of marking depends on the continuity
      * invariants described by the CallStack and StackSpace definitions.
      */
-    jsval *end = firstUnused();
+    Value *end = firstUnused();
     for (CallStack *cs = currentCallStack; cs; cs = cs->getPreviousInThread()) {
         if (cs->inContext()) {
             /* This may be the only pointer to the initialVarObj. */
@@ -209,22 +209,22 @@ StackSpace::mark(JSTracer *trc)
 
             /* Mark slots/args trailing off of the last stack frame. */
             JSStackFrame *fp = cs->getCurrentFrame();
-            TraceValues(trc, fp->slots(), end, "stack");
+            MarkValueRange(trc, fp->slots(), end, "stack");
 
             /* Mark stack frames and slots/args between stack frames. */
             JSStackFrame *initialFrame = cs->getInitialFrame();
             for (JSStackFrame *f = fp; f != initialFrame; f = f->down) {
                 js_TraceStackFrame(trc, f);
-                TraceValues(trc, f->down->slots(), f->argEnd(), "stack");
+                MarkValueRange(trc, f->down->slots(), f->argEnd(), "stack");
             }
 
             /* Mark initialFrame stack frame and leading args. */
             js_TraceStackFrame(trc, initialFrame);
-            TraceValues(trc, cs->getInitialArgBegin(), initialFrame->argEnd(), "stack");
+            MarkValueRange(trc, cs->getInitialArgBegin(), initialFrame->argEnd(), "stack");
         } else {
             /* Mark slots/args trailing off callstack. */
             JS_ASSERT(end == cs->getInitialArgEnd());
-            TraceValues(trc, cs->getInitialArgBegin(), cs->getInitialArgEnd(), "stack");
+            MarkValueRange(trc, cs->getInitialArgBegin(), cs->getInitialArgEnd(), "stack");
         }
         end = cs->previousCallStackEnd();
     }
@@ -233,14 +233,14 @@ StackSpace::mark(JSTracer *trc)
 JS_REQUIRES_STACK bool
 StackSpace::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard &ag)
 {
-    jsval *start = firstUnused();
+    Value *start = firstUnused();
     uintN vplen = 2 + argc;
     ptrdiff_t nvals = VALUES_PER_CALL_STACK + vplen;
     if (!ensureSpace(cx, start, nvals))
         return false;
-    jsval *vp = start + VALUES_PER_CALL_STACK;
-    jsval *vpend = vp + vplen;
-    memset(vp, 0, vplen * sizeof(jsval)); /* Init so GC-safe on exit. */
+    Value *vp = start + VALUES_PER_CALL_STACK;
+    Value *vpend = vp + vplen;
+    memset(vp, 0, vplen * sizeof(Value)); /* Init so GC-safe on exit. */
 
     CallStack *cs = new(start) CallStack;
     cs->setInitialArgEnd(vpend);
@@ -278,7 +278,7 @@ StackSpace::getInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
 {
     if (ag.cs) {
         JS_ASSERT(ag.cs == currentCallStack && !ag.cs->inContext());
-        jsval *start = ag.cs->getInitialArgEnd();
+        Value *start = ag.cs->getInitialArgEnd();
         ptrdiff_t nvals = nmissing + VALUES_PER_STACK_FRAME + nfixed;
         if (!ensureSpace(cx, start, nvals))
             return false;
@@ -288,7 +288,7 @@ StackSpace::getInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
 
     assertIsCurrent(cx);
     JS_ASSERT(currentCallStack->isActive());
-    jsval *start = cx->regs->sp;
+    Value *start = cx->regs->sp;
     ptrdiff_t nvals = nmissing + VALUES_PER_CALL_STACK + VALUES_PER_STACK_FRAME + nfixed;
     if (!ensureSpace(cx, start, nvals))
         return false;
@@ -358,7 +358,7 @@ StackSpace::getExecuteFrame(JSContext *cx, JSStackFrame *down,
                             uintN vplen, uintN nfixed,
                             ExecuteFrameGuard &fg) const
 {
-    jsval *start = firstUnused();
+    Value *start = firstUnused();
     ptrdiff_t nvals = VALUES_PER_CALL_STACK + vplen + VALUES_PER_STACK_FRAME + nfixed;
     if (!ensureSpace(cx, start, nvals))
         return false;
@@ -395,7 +395,7 @@ StackSpace::popExecuteFrame(JSContext *cx)
 JS_REQUIRES_STACK void
 StackSpace::getSynthesizedSlowNativeFrame(JSContext *cx, CallStack *&cs, JSStackFrame *&fp)
 {
-    jsval *start = firstUnused();
+    Value *start = firstUnused();
     JS_ASSERT(size_t(end - start) >= VALUES_PER_CALL_STACK + VALUES_PER_STACK_FRAME);
     cs = new(start) CallStack;
     fp = reinterpret_cast<JSStackFrame *>(cs + 1);
@@ -429,16 +429,16 @@ StackSpace::popSynthesizedSlowNativeFrame(JSContext *cx)
  * up-frame's address is the top of the down-frame's stack, modulo missing
  * arguments.
  */
-static inline jsval *
+static inline Value *
 InlineDownFrameSP(JSStackFrame *up)
 {
     JS_ASSERT(up->fun && up->script);
-    jsval *sp = up->argv + up->argc;
+    Value *sp = up->argv + up->argc;
 #ifdef DEBUG
     uint16 nargs = up->fun->nargs;
     uintN argc = up->argc;
     uintN missing = argc < nargs ? nargs - argc : 0;
-    JS_ASSERT(sp == (jsval *)up - missing);
+    JS_ASSERT(sp == (Value *)up - missing);
 #endif
     return sp;
 }
@@ -488,12 +488,12 @@ FrameRegsIter::operator++()
      * scan, keeping track of what is immediately after down in memory.
      */
     curcs = curcs->getPreviousInContext();
-    cursp = curcs->getSuspendedSP();
+    cursp = curcs->getSuspendedRegs()->sp;
     JSStackFrame *f = curcs->getSuspendedFrame();
     while (f != down) {
         if (f == curcs->getInitialFrame()) {
             curcs = curcs->getPreviousInContext();
-            cursp = curcs->getSuspendedSP();
+            cursp = curcs->getSuspendedRegs()->sp;
             f = curcs->getSuspendedFrame();
         } else {
             cursp = InlineDownFrameSP(f);
@@ -1246,7 +1246,7 @@ resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
     const JSResolvingKey *key = (const JSResolvingKey *)ptr;
 
-    return (JSDHashNumber(uintptr_t(key->obj)) >> JSVAL_TAGBITS) ^ key->id;
+    return (JSDHashNumber(uintptr_t(key->obj)) >> JS_GCTHING_ALIGN) ^ JSID_BITS(key->id);
 }
 
 static JSBool
@@ -1779,13 +1779,13 @@ js_ReportIsNotDefined(JSContext *cx, const char *name)
 }
 
 JSBool
-js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
+js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, const Value &v,
                            JSString *fallback)
 {
     char *bytes;
     JSBool ok;
 
-    bytes = js_DecompileValueGenerator(cx, spindex, v, fallback);
+    bytes = DecompileValueGenerator(cx, spindex, v, fallback);
     if (!bytes)
         return JS_FALSE;
 
@@ -1795,13 +1795,13 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
                                           js_GetErrorMessage, NULL,
                                           JSMSG_NO_PROPERTIES, bytes,
                                           NULL, NULL);
-    } else if (JSVAL_IS_VOID(v)) {
+    } else if (v.isUndefined()) {
         ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                           js_GetErrorMessage, NULL,
                                           JSMSG_UNEXPECTED_TYPE, bytes,
                                           js_undefined_str, NULL);
     } else {
-        JS_ASSERT(JSVAL_IS_NULL(v));
+        JS_ASSERT(v.isNull());
         ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                           js_GetErrorMessage, NULL,
                                           JSMSG_UNEXPECTED_TYPE, bytes,
@@ -1813,7 +1813,7 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
 }
 
 void
-js_ReportMissingArg(JSContext *cx, jsval *vp, uintN arg)
+js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
 {
     char argbuf[11];
     char *bytes;
@@ -1821,10 +1821,10 @@ js_ReportMissingArg(JSContext *cx, jsval *vp, uintN arg)
 
     JS_snprintf(argbuf, sizeof argbuf, "%u", arg);
     bytes = NULL;
-    if (VALUE_IS_FUNCTION(cx, *vp)) {
-        atom = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(*vp))->atom;
-        bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, *vp,
-                                           ATOM_TO_STRING(atom));
+    if (IsFunctionObject(v)) {
+        atom = GET_FUNCTION_PRIVATE(cx, &v.toObject())->atom;
+        bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
+                                        v, ATOM_TO_STRING(atom));
         if (!bytes)
             return;
     }
@@ -1836,7 +1836,7 @@ js_ReportMissingArg(JSContext *cx, jsval *vp, uintN arg)
 
 JSBool
 js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
-                         intN spindex, jsval v, JSString *fallback,
+                         intN spindex, const Value &v, JSString *fallback,
                          const char *arg1, const char *arg2)
 {
     char *bytes;
@@ -1844,7 +1844,7 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
 
     JS_ASSERT(js_ErrorFormatString[errorNumber].argCount >= 1);
     JS_ASSERT(js_ErrorFormatString[errorNumber].argCount <= 3);
-    bytes = js_DecompileValueGenerator(cx, spindex, v, fallback);
+    bytes = DecompileValueGenerator(cx, spindex, v, fallback);
     if (!bytes)
         return JS_FALSE;
 
@@ -2230,3 +2230,14 @@ JSContext::purge()
     FreeOldArenas(runtime, &regexpPool);
 }
 
+
+namespace js {
+
+void
+SetPendingException(JSContext *cx, const Value &v)
+{
+    cx->throwing = JS_TRUE;
+    cx->exception = v;
+}
+
+} /* namespace js */

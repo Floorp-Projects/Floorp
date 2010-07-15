@@ -5619,15 +5619,6 @@ CloneSimpleValues(JSContext* cx,
     return SetPropertyOnValueOrObject(cx, val, rval, robj, rid);
   }
 
-  // Clone doubles.
-  if (JSVAL_IS_DOUBLE(val)) {
-    jsval newVal;
-    if (!JS_NewDoubleValue(cx, *JSVAL_TO_DOUBLE(val), &newVal)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return SetPropertyOnValueOrObject(cx, newVal, rval, robj, rid);
-  }
-
   // We'll use immutable strings to prevent copying if we can.
   if (JSVAL_IS_STRING(val)) {
     if (!JS_MakeStringImmutable(cx, JSVAL_TO_STRING(val))) {

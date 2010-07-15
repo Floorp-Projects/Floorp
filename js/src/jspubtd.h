@@ -44,6 +44,7 @@
  */
 #include "jstypes.h"
 #include "jscompat.h"
+#include "jsval.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -52,8 +53,6 @@ typedef uint16    jschar;
 typedef int32     jsint;
 typedef uint32    jsuint;
 typedef float64   jsdouble;
-typedef jsword    jsval;
-typedef jsword    jsid;
 typedef int32     jsrefcount;   /* PRInt32 if JS_THREADSAFE, see jslock.h */
 
 /*
@@ -150,13 +149,11 @@ typedef struct JSTracer          JSTracer;
 typedef struct JSIdArray         JSIdArray;
 typedef struct JSPropertyDescriptor JSPropertyDescriptor;
 typedef struct JSPropertySpec    JSPropertySpec;
-typedef struct JSObject          JSObject;
 typedef struct JSObjectMap       JSObjectMap;
 typedef struct JSObjectOps       JSObjectOps;
 typedef struct JSRuntime         JSRuntime;
 typedef struct JSScript          JSScript;
 typedef struct JSStackFrame      JSStackFrame;
-typedef struct JSString          JSString;
 typedef struct JSXDRState        JSXDRState;
 typedef struct JSExceptionState  JSExceptionState;
 typedef struct JSLocaleCallbacks JSLocaleCallbacks;
@@ -172,14 +169,14 @@ typedef class JSCrossCompartmentWrapper JSCrossCompartmentWrapper;
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 
 /*
- * Add, delete, get or set a property named by id in obj.  Note the jsval id
+ * Add, delete, get or set a property named by id in obj.  Note the jsid id
  * type -- id may be a string (Unicode property identifier) or an int (element
  * index).  The *vp out parameter, on success, is the new property value after
  * an add, get, or set.  After a successful delete, *vp is JSVAL_FALSE iff
  * obj[id] can't be deleted (because it's permanent).
  */
 typedef JSBool
-(* JSPropertyOp)(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+(* JSPropertyOp)(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 /*
  * This function type is used for callbacks that enumerate the properties of
@@ -237,7 +234,7 @@ typedef JSBool
  * NB: JSNewResolveOp provides a cheaper way to resolve lazy properties.
  */
 typedef JSBool
-(* JSResolveOp)(JSContext *cx, JSObject *obj, jsval id);
+(* JSResolveOp)(JSContext *cx, JSObject *obj, jsid id);
 
 /*
  * Like JSResolveOp, but flags provide contextual information as follows:
@@ -269,7 +266,7 @@ typedef JSBool
  * *objp without a new JSClass flag.
  */
 typedef JSBool
-(* JSNewResolveOp)(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+(* JSNewResolveOp)(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                    JSObject **objp);
 
 /*
@@ -330,7 +327,7 @@ typedef JSObjectOps *
  * is either a string or an int jsval.
  */
 typedef JSBool
-(* JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
+(* JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                     jsval *vp);
 
 /*
@@ -346,7 +343,7 @@ typedef JSBool
  * *bp otherwise.
  */
 typedef JSBool
-(* JSHasInstanceOp)(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+(* JSHasInstanceOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 /*
  * Deprecated function type for JSClass.mark. All new code should define
@@ -400,10 +397,10 @@ extern JSMarkOp js_WrongTypeForClassTracer;
  * JS_TraceChildren on the passed thing. In this case the callback must be
  * prepared to deal with cycles in the traversal graph.
  *
- * kind argument is one of JSTRACE_OBJECT, JSTRACE_DOUBLE, JSTRACE_STRING or
- * a tag denoting internal implementation-specific traversal kind. In the
- * latter case the only operations on thing that the callback can do is to call
- * JS_TraceChildren or DEBUG-only JS_PrintTraceThingInfo.
+ * kind argument is one of JSTRACE_OBJECT, JSTRACE_STRING or a tag denoting
+ * internal implementation-specific traversal kind. In the latter case the only
+ * operations on thing that the callback can do is to call JS_TraceChildren or
+ * DEBUG-only JS_PrintTraceThingInfo.
  */
 typedef void
 (* JSTraceCallback)(JSTracer *trc, void *thing, uint32 kind);
@@ -418,7 +415,7 @@ typedef void
 /* JSExtendedClass function pointer typedefs. */
 
 typedef JSBool
-(* JSEqualityOp)(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+(* JSEqualityOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 /*
  * A generic type for functions mapping an object to another object, or null

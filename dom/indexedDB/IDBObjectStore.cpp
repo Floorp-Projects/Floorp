@@ -373,7 +373,7 @@ IDBObjectStore::GetKeyFromJSVal(jsval aKeyVal,
     aKey = JSVAL_TO_INT(aKeyVal);
   }
   else if (JSVAL_IS_DOUBLE(aKeyVal)) {
-    aKey = *JSVAL_TO_DOUBLE(aKeyVal);
+    aKey = JSVAL_TO_DOUBLE(aKeyVal);
   }
   else {
     return NS_ERROR_INVALID_ARG;
@@ -452,14 +452,14 @@ IDBObjectStore::GetJSONFromArg0(/* jsval arg0, */
   JSAutoRequest ar(cx);
 
   js::AutoValueRooter clone(cx);
-  rv = nsContentUtils::CreateStructuredClone(cx, argv[0], clone.addr());
+  rv = nsContentUtils::CreateStructuredClone(cx, argv[0], clone.jsval_addr());
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
 
-  rv = json->EncodeFromJSVal(clone.addr(), cx, aJSON);
+  rv = json->EncodeFromJSVal(clone.jsval_addr(), cx, aJSON);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -488,16 +488,16 @@ IDBObjectStore::GetKeyPathValueFromJSON(const nsAString& aJSON,
   js::AutoValueRooter clone(*aCx);
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
-  rv = json->DecodeToJSVal(aJSON, *aCx, clone.addr());
+  rv = json->DecodeToJSVal(aJSON, *aCx, clone.jsval_addr());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (JSVAL_IS_PRIMITIVE(clone.value())) {
+  if (JSVAL_IS_PRIMITIVE(clone.jsval_value())) {
     // This isn't an object, so just leave the key unset.
     aValue = Key::UNSETKEY;
     return NS_OK;
   }
 
-  JSObject* obj = JSVAL_TO_OBJECT(clone.value());
+  JSObject* obj = JSVAL_TO_OBJECT(clone.jsval_value());
 
   const jschar* keyPathChars =
     reinterpret_cast<const jschar*>(aKeyPath.BeginReading());
@@ -505,10 +505,10 @@ IDBObjectStore::GetKeyPathValueFromJSON(const nsAString& aJSON,
 
   js::AutoValueRooter value(*aCx);
   JSBool ok = JS_GetUCProperty(*aCx, obj, keyPathChars, keyPathLen,
-                               value.addr());
+                               value.jsval_addr());
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  rv = GetKeyFromJSVal(value.value(), aValue);
+  rv = GetKeyFromJSVal(value.jsval_value(), aValue);
   if (NS_FAILED(rv) || aValue.IsNull()) {
     // If the object doesn't have a value that we can use for our index then we
     // leave it unset.
@@ -729,7 +729,7 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
 
   js::AutoValueRooter clone(aCx);
   nsresult rv = nsContentUtils::CreateStructuredClone(aCx, aValue,
-                                                      clone.addr());
+                                                      clone.jsval_addr());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -740,11 +740,11 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
   }
   else {
     // Inline keys live on the object. Make sure it is an object.
-    if (JSVAL_IS_PRIMITIVE(clone.value())) {
+    if (JSVAL_IS_PRIMITIVE(clone.jsval_value())) {
       return NS_ERROR_INVALID_ARG;
     }
 
-    rv = GetKeyFromObject(aCx, JSVAL_TO_OBJECT(clone.value()), mKeyPath, aKey);
+    rv = GetKeyFromObject(aCx, JSVAL_TO_OBJECT(clone.jsval_value()), mKeyPath, aKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Except if null was passed, in which case we're supposed to generate the
@@ -762,11 +762,11 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
   ObjectStoreInfo* objectStoreInfo = GetObjectStoreInfo();
   NS_ENSURE_TRUE(objectStoreInfo, NS_ERROR_FAILURE);
 
-  rv = GetIndexUpdateInfo(objectStoreInfo, aCx, clone.value(), aUpdateInfoArray);
+  rv = GetIndexUpdateInfo(objectStoreInfo, aCx, clone.jsval_value(), aUpdateInfoArray);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
-  rv = json->EncodeFromJSVal(clone.addr(), aCx, aJSON);
+  rv = json->EncodeFromJSVal(clone.jsval_addr(), aCx, aJSON);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -904,8 +904,8 @@ IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::Add(jsval aValue,
-                    jsval aKey,
+IDBObjectStore::Add(const jsval &aValue,
+                    const jsval &aKey,
                     JSContext* aCx,
                     PRUint8 aOptionalArgCount,
                     nsIIDBRequest** _retval)
@@ -920,15 +920,13 @@ IDBObjectStore::Add(jsval aValue,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
-  if (aOptionalArgCount < 1) {
-    aKey = JSVAL_VOID;
-  }
+  jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
 
   nsString jsonValue;
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetAddInfo(aCx, aValue, aKey, jsonValue, key, updateInfo);
+  nsresult rv = GetAddInfo(aCx, aValue, keyval, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -951,8 +949,8 @@ IDBObjectStore::Add(jsval aValue,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::Modify(jsval aValue,
-                       jsval aKey,
+IDBObjectStore::Modify(const jsval &aValue,
+                       const jsval &aKey,
                        JSContext* aCx,
                        PRUint8 aOptionalArgCount,
                        nsIIDBRequest** _retval)
@@ -967,15 +965,13 @@ IDBObjectStore::Modify(jsval aValue,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
-  if (aOptionalArgCount < 1) {
-    aKey = JSVAL_VOID;
-  }
+  jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
 
   nsString jsonValue;
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetAddInfo(aCx, aValue, aKey, jsonValue, key, updateInfo);
+  nsresult rv = GetAddInfo(aCx, aValue, keyval, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -998,8 +994,8 @@ IDBObjectStore::Modify(jsval aValue,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::AddOrModify(jsval aValue,
-                            jsval aKey,
+IDBObjectStore::AddOrModify(const jsval &aValue,
+                            const jsval &aKey,
                             JSContext* aCx,
                             PRUint8 aOptionalArgCount,
                             nsIIDBRequest** _retval)
@@ -1014,15 +1010,13 @@ IDBObjectStore::AddOrModify(jsval aValue,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
-  if (aOptionalArgCount < 1) {
-    aKey = JSVAL_VOID;
-  }
+  jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
 
   nsString jsonValue;
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetAddInfo(aCx, aValue, aKey, jsonValue, key, updateInfo);
+  nsresult rv = GetAddInfo(aCx, aValue, keyval, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1473,10 +1467,10 @@ AddHelper::ModifyValueForNewKey()
   js::AutoValueRooter clone(cx);
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
-  rv = json->DecodeToJSVal(mValue, cx, clone.addr());
+  rv = json->DecodeToJSVal(mValue, cx, clone.jsval_addr());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JSObject* obj = JSVAL_TO_OBJECT(clone.value());
+  JSObject* obj = JSVAL_TO_OBJECT(clone.jsval_value());
   JSBool ok;
   js::AutoValueRooter key(cx);
 
@@ -1484,18 +1478,18 @@ AddHelper::ModifyValueForNewKey()
   const size_t keyPathLen = mKeyPath.Length();
 
 #ifdef DEBUG
-  ok = JS_GetUCProperty(cx, obj, keyPathChars, keyPathLen, key.addr());
-  NS_ASSERTION(ok && JSVAL_IS_VOID(key.value()), "Already has a key prop!");
+  ok = JS_GetUCProperty(cx, obj, keyPathChars, keyPathLen, key.jsval_addr());
+  NS_ASSERTION(ok && JSVAL_IS_VOID(key.jsval_value()), "Already has a key prop!");
 #endif
 
-  ok = JS_NewNumberValue(cx, mKey.IntValue(), key.addr());
+  ok = JS_NewNumberValue(cx, mKey.IntValue(), key.jsval_addr());
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  ok = JS_DefineUCProperty(cx, obj, keyPathChars, keyPathLen, key.value(),
+  ok = JS_DefineUCProperty(cx, obj, keyPathChars, keyPathLen, key.jsval_value(),
                            nsnull, nsnull, JSPROP_ENUMERATE);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  rv = json->EncodeFromJSVal(clone.addr(), cx, mValue);
+  rv = json->EncodeFromJSVal(clone.jsval_addr(), cx, mValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

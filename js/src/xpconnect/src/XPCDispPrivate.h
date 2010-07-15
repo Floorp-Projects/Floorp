@@ -786,10 +786,10 @@ public:
          */
         PRBool IsFunction() const;
         /**
-         * Returns the name of the method as a jsval
-         * @return the name of the method as a jsval
+         * Returns the name of the method as a jsid
+         * @return the name of the method as a jsid
          */
-        jsval GetName() const;
+        jsid GetName() const;
         /**
          * Returns the function object as a value for the method
          * @param ccx an XPConnect call context
@@ -822,7 +822,7 @@ public:
          * Sets the name of the method
          * @param name the name to assign
          */
-        void SetName(jsval name);
+        void SetName(jsid name);
         /**
          * Marks the member as a getter.
          * Both MakeGetter and MakeSetter can be called, making it a setter/getter
@@ -881,7 +881,7 @@ public:
         };
         PRUint16 mType;
         jsval mVal;     // Mutable
-        jsval mName;    // Mutable
+        jsid mName;    // Mutable
         CComPtr<ITypeInfo> mTypeInfo;
         FUNCDESC* mFuncDesc; // We own this
         FUNCDESC* mGetterFuncDesc; // We own this
@@ -915,7 +915,7 @@ public:
      * @param name the name of the member to be returned
      * @return pointer to the member found, nsnull if not found
      */
-    const Member * FindMember(jsval name) const;
+    const Member * FindMember(jsid name) const;
     /**
      * Looksup a member ignoring case
      * TODO: We should look at performance issues concerning this
@@ -923,7 +923,7 @@ public:
      * @param name The name of the member
      * @return A pointer to a member or nsnull if not found
      */
-    const Member* FindMemberCI(XPCCallContext& ccx, jsval name) const;
+    const Member* FindMemberCI(XPCCallContext& ccx, jsid name) const;
     /**
      * Returns a member via index
      * @param index the index of the parameter
@@ -1150,7 +1150,7 @@ public:
      * @param resolved a pointer to a JSBool, set to true if properly resolved
      */
     static JSBool DefineProperty(XPCCallContext & ccx, 
-                                 JSObject *obj, jsval idval,
+                                 JSObject *obj, jsid id,
                                  XPCWrappedNative* wrapperToReflectInterfaceNames,
                                  uintN propFlags, JSBool* resolved);
     /**

@@ -357,7 +357,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
                 {
                     // JS often throws an nsresult.
                     if(JSVAL_IS_DOUBLE(jsexception))
-                        rv = (nsresult)(*JSVAL_TO_DOUBLE(jsexception));
+                        rv = (nsresult)(JSVAL_TO_DOUBLE(jsexception));
                     else
                         rv = (nsresult)(JSVAL_TO_INT(jsexception));
 
@@ -1470,7 +1470,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         goto pre_call_clean_up;
     }
 
-    sp = stackbase = args.getvp();
+    sp = stackbase = Jsvalify(args.getvp());
 
     // this is a function call, so push function and 'this'
     if(invokeCall)
@@ -1678,6 +1678,7 @@ pre_call_clean_up:
     JS_ClearPendingException(cx);
 
     /* On success, the return value is placed in |*stackbase|. */
+    /* On success, the return value is placed in |*stackbase|. */
     if(XPT_MD_IS_GETTER(info->flags))
         success = JS_GetProperty(cx, obj, name, stackbase);
     else if(XPT_MD_IS_SETTER(info->flags))
@@ -1686,7 +1687,7 @@ pre_call_clean_up:
     {
         if(!JSVAL_IS_PRIMITIVE(fval))
         {
-            success = js_Invoke(cx, args, 0);
+            success = js::InvokeFriendAPI(cx, args, 0);
         }
         else
         {

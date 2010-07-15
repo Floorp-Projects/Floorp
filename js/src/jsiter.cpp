@@ -85,14 +85,14 @@ static void iterator_finalize(JSContext *cx, JSObject *obj);
 static void iterator_trace(JSTracer *trc, JSObject *obj);
 static JSObject *iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
 
-JSExtendedClass js_IteratorClass = {
+ExtendedClass js_IteratorClass = {
   { "Iterator",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
     JSCLASS_MARK_IS_TRACE |
     JSCLASS_IS_EXTENDED,
-    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,   iterator_finalize,
+    PropertyStub,     PropertyStub,    PropertyStub,     PropertyStub,
+    EnumerateStub,    ResolveStub,     ConvertStub,      iterator_finalize,
     NULL,             NULL,            NULL,             NULL,
     NULL,             NULL,            JS_CLASS_TRACE(iterator_trace), NULL },
     NULL,             NULL,            NULL,             iterator_iterator,
@@ -103,11 +103,12 @@ JSExtendedClass js_IteratorClass = {
 void
 NativeIterator::mark(JSTracer *trc)
 {
-    for (jsval *vp = props_array; vp < props_end; ++vp) {
-        JS_SET_TRACING_INDEX(trc, "props", (vp - props_array));
-        js_CallValueTracerIfGCThing(trc, *vp);
-    }
-    JS_CALL_OBJECT_TRACER(trc, obj, "obj");
+    if (isKeyIter())
+        MarkIdRange(trc, beginKey(), endKey(), "props");
+    else
+        MarkValueRange(trc, beginValue(), endValue(), "props");
+    if (obj)
+        MarkObject(trc, obj, "obj");
 }
 
 /*
@@ -136,43 +137,75 @@ iterator_trace(JSTracer *trc, JSObject *obj)
         ni->mark(trc);
 }
 
-static bool
-NewKeyValuePair(JSContext *cx, jsid key, jsval val, jsval *rval)
+struct IdHashPolicy {
+    typedef jsid Lookup;
+    static HashNumber hash(jsid id) {
+        return JSID_BITS(id);
+    }
+    static bool match(jsid id1, jsid id2) {
+        return id1 == id2;
+    }
+};
+
+typedef HashSet<jsid, IdHashPolicy, ContextAllocPolicy> IdSet;
+
+static inline bool
+NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)
 {
-    jsval vec[2] = { ID_TO_VALUE(key), val };
+    Value vec[2] = { IdToValue(id), val };
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vec), vec);
 
     JSObject *aobj = js_NewArrayObject(cx, 2, vec);
     if (!aobj)
         return false;
-    *rval = OBJECT_TO_JSVAL(aobj);
+    rval->setObject(*aobj);
     return true;
 }
 
-static bool
-IdToIteratorValue(JSContext *cx, JSObject *obj, jsid id, uintN flags, jsval *vp)
+struct KeyEnumeration
 {
-    if (!(flags & JSITER_FOREACH)) {
-        *vp = ID_TO_VALUE(id);
+    typedef AutoIdVector ResultVector;
+
+    static JS_ALWAYS_INLINE bool
+    append(JSContext *, AutoIdVector &keys, JSObject *, jsid id, uintN flags)
+    {
+        JS_ASSERT((flags & JSITER_FOREACH) == 0);
+        return keys.append(id);
+    }
+};
+
+struct ValueEnumeration
+{
+    typedef AutoValueVector ResultVector;
+
+    static JS_ALWAYS_INLINE bool
+    append(JSContext *cx, AutoValueVector &vals, JSObject *obj, jsid id, uintN flags)
+    {
+        JS_ASSERT(flags & JSITER_FOREACH);
+
+        if (!vals.growBy(1))
+            return false;
+
+        /* Do the lookup on the original object instead of the prototype. */
+        Value *vp = vals.end() - 1;
+        if (!obj->getProperty(cx, id, vp))
+            return false;
+        if ((flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *vp, vp))
+            return false;
+
         return true;
     }
+};
 
-    /* Do the lookup on the original object instead of the prototype. */
-    if (!obj->getProperty(cx, id, vp))
-        return false;
-    if ((flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *vp, vp))
-        return false;
-    return true;
-}
-
+template <class EnumPolicy>
 static inline bool
 Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
-          bool enumerable, bool sharedPermanent, uintN flags, HashSet<jsid>& ht,
-          AutoValueVector& vec)
+          bool enumerable, bool sharedPermanent, uintN flags, IdSet& ht,
+          typename EnumPolicy::ResultVector &props)
 {
-    JS_ASSERT(JSVAL_IS_INT(id) || JSVAL_IS_STRING(id));
+    JS_ASSERT(JSID_IS_INT(id) || JSID_IS_ATOM(id));
 
-    HashSet<jsid>::AddPtr p = ht.lookupForAdd(id);
+    IdSet::AddPtr p = ht.lookupForAdd(id);
     JS_ASSERT_IF(obj == pobj, !p);
 
     /* If we've already seen this, we definitely won't add it. */
@@ -201,62 +234,56 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
             return true;
     }
 
-    if (enumerable || (flags & JSITER_HIDDEN)) {
-        if (!vec.append(JSVAL_VOID))
-            return false;
-        if (!IdToIteratorValue(cx, obj, id, flags, vec.end() - 1))
-            return false;
-    }
+    if (enumerable || (flags & JSITER_HIDDEN))
+        return EnumPolicy::append(cx, props, obj, id, flags);
+
     return true;
 }
 
+template <class EnumPolicy>
 static bool
-EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags,
-                          HashSet<jsid> &ht, AutoValueVector& props)
+EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags, IdSet &ht,
+                          typename EnumPolicy::ResultVector &props)
 {
-    AutoValueVector sprops(cx);
-
     JS_LOCK_OBJ(cx, pobj);
+
+    size_t initialLength = props.length();
 
     /* Collect all unique properties from this object's scope. */
     JSScope *scope = pobj->scope();
     for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
-        if (sprop->id != JSVAL_VOID &&
+        if (!JSID_IS_DEFAULT_XML_NAMESPACE(sprop->id) &&
             !sprop->isAlias() &&
-            !Enumerate(cx, obj, pobj, sprop->id, sprop->enumerable(), sprop->isSharedPermanent(),
-                       flags, ht, sprops))
+            !Enumerate<EnumPolicy>(cx, obj, pobj, sprop->id, sprop->enumerable(), sprop->isSharedPermanent(),
+                                   flags, ht, props))
         {
             return false;
         }
     }
 
-    while (sprops.length() > 0) {
-        if (!props.append(sprops.back()))
-            return false;
-        sprops.popBack();
-    }
+    Reverse(props.begin() + initialLength, props.end());
 
     JS_UNLOCK_SCOPE(cx, scope);
-
     return true;
 }
 
+template <class EnumPolicy>
 static bool
 EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags,
-                              HashSet<jsid> &ht, AutoValueVector& props)
+                              IdSet &ht, typename EnumPolicy::ResultVector &props)
 {
-    if (!Enumerate(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false, true,
-                   flags, ht, props)) {
+    if (!Enumerate<EnumPolicy>(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false, true,
+                               flags, ht, props)) {
         return false;
     }
 
     if (pobj->getDenseArrayCount() > 0) {
         size_t capacity = pobj->getDenseArrayCapacity();
-        jsval *vp = pobj->dslots;
+        Value *vp = pobj->dslots;
         for (size_t i = 0; i < capacity; ++i, ++vp) {
-            if (*vp != JSVAL_HOLE) {
+            if (!vp->isMagic(JS_ARRAY_HOLE)) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
-                if (!Enumerate(cx, obj, pobj, INT_TO_JSVAL(i), true, false, flags, ht, props))
+                if (!Enumerate<EnumPolicy>(cx, obj, pobj, INT_TO_JSID(i), true, false, flags, ht, props))
                     return false;
             }
         }
@@ -265,57 +292,35 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
     return true;
 }
 
-NativeIterator *
-NativeIterator::allocate(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, uint32 slength,
-                         uint32 key, AutoValueVector &props)
-{
-    size_t plength = props.length();
-    NativeIterator *ni = (NativeIterator *)
-        cx->malloc(sizeof(NativeIterator) + plength * sizeof(jsval) + slength * sizeof(uint32));
-    if (!ni)
-        return NULL;
-    ni->obj = obj;
-    ni->props_array = ni->props_cursor = (jsval *) (ni + 1);
-    ni->props_end = ni->props_array + plength;
-    if (plength)
-        memcpy(ni->props_array, props.begin(), plength * sizeof(jsval));
-    ni->shapes_array = (uint32 *) ni->props_end;
-    ni->shapes_length = slength;
-    ni->shapes_key = key;
-    ni->flags = flags;
-    if (slength)
-        memcpy(ni->shapes_array, sarray, slength * sizeof(uint32));
-    return ni;
-}
-
+template <class EnumPolicy>
 static bool
-Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
+Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultVector &props)
 {
     /*
      * FIXME: Bug 575997 - We won't need to initialize this hash table if
      *        (flags & JSITER_OWNONLY) when we eliminate inheritance of
      *        shared-permanent properties as own properties.
      */
-    HashSet<jsid> ht(cx);
+    IdSet ht(cx);
     if (!ht.init(32))
-        return false;
+        return NULL;
 
     JSObject *pobj = obj;
     do {
-        JSClass *clasp = pobj->getClass();
+        Class *clasp = pobj->getClass();
         if (pobj->isNative() &&
             pobj->map->ops->enumerate == js_Enumerate &&
             !(clasp->flags & JSCLASS_NEW_ENUMERATE)) {
             if (!clasp->enumerate(cx, pobj))
                 return false;
-            if (!EnumerateNativeProperties(cx, obj, pobj, flags, ht, props))
+            if (!EnumerateNativeProperties<EnumPolicy>(cx, obj, pobj, flags, ht, props))
                 return false;
         } else if (pobj->isDenseArray()) {
-            if (!EnumerateDenseArrayProperties(cx, obj, pobj, flags, ht, props))
+            if (!EnumerateDenseArrayProperties<EnumPolicy>(cx, obj, pobj, flags, ht, props))
                 return false;
         } else {
             if (pobj->isProxy()) {
-                AutoValueVector proxyProps(cx);
+                AutoIdVector proxyProps(cx);
                 if (flags & JSITER_OWNONLY) {
                     if (!JSProxy::enumerateOwn(cx, pobj, proxyProps))
                         return false;
@@ -324,27 +329,27 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
                         return false;
                 }
                 for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
-                    if (!Enumerate(cx, obj, pobj, (jsid) proxyProps[n], true, false, flags, ht, props))
+                    if (!Enumerate<EnumPolicy>(cx, obj, pobj, proxyProps[n], true, false, flags, ht, props))
                         return false;
                 }
                 /* Proxy objects enumerate the prototype on their own, so we are done here. */
                 break;
             }
-            jsval state;
+            Value state;
             JSIterateOp op = (flags & JSITER_HIDDEN) ? JSENUMERATE_INIT_ALL : JSENUMERATE_INIT;
             if (!pobj->enumerate(cx, op, &state, NULL))
                 return false;
-            if (state == JSVAL_NATIVE_ENUMERATE_COOKIE) {
-                if (!EnumerateNativeProperties(cx, obj, pobj, flags, ht, props))
+            if (state.isMagic(JS_NATIVE_ENUMERATE)) {
+                if (!EnumerateNativeProperties<EnumPolicy>(cx, obj, pobj, flags, ht, props))
                     return false;
             } else {
                 while (true) {
                     jsid id;
                     if (!pobj->enumerate(cx, JSENUMERATE_NEXT, &state, &id))
                         return false;
-                    if (state == JSVAL_NULL)
+                    if (state.isNull())
                         break;
-                    if (!Enumerate(cx, obj, pobj, id, true, false, flags, ht, props))
+                    if (!Enumerate<EnumPolicy>(cx, obj, pobj, id, true, false, flags, ht, props))
                         return false;
                 }
             }
@@ -358,7 +363,7 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
 }
 
 bool
-VectorToIdArray(JSContext *cx, AutoValueVector &props, JSIdArray **idap)
+VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 {
     JS_STATIC_ASSERT(sizeof(JSIdArray) > sizeof(jsid));
     size_t len = props.length();
@@ -375,13 +380,13 @@ VectorToIdArray(JSContext *cx, AutoValueVector &props, JSIdArray **idap)
 }
 
 bool
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &props)
 {
-    return Snapshot(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props);
+    return Snapshot<KeyEnumeration>(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props);
 }
 
 static inline bool
-GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
+GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
     /* Check whether we have a valid __iterator__ method. */
     JSAtom *atom = cx->runtime->atomState.iteratorAtom;
@@ -389,21 +394,21 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
         return false;
 
     /* If there is no custom __iterator__ method, we are done here. */
-    if (*vp == JSVAL_VOID)
+    if (vp->isUndefined())
         return true;
 
     /* Otherwise call it and return that object. */
     LeaveTrace(cx);
-    jsval arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
-    if (!js_InternalCall(cx, obj, *vp, 1, &arg, vp))
+    Value arg = BooleanValue((flags & JSITER_FOREACH) == 0);
+    if (!InternalCall(cx, obj, *vp, 1, &arg, vp))
         return false;
-    if (JSVAL_IS_PRIMITIVE(*vp)) {
+    if (vp->isPrimitive()) {
         /*
          * We are always coming from js_ValueToIterator, and we are no longer on
          * trace, so the object we are iterating over is on top of the stack (-1).
          */
         js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                             -1, OBJECT_TO_JSVAL(obj), NULL,
+                             -1, ObjectValue(*obj), NULL,
                              js_AtomToPrintableString(cx, atom));
         return false;
     }
@@ -445,11 +450,53 @@ NewIteratorObject(JSContext *cx, uintN flags)
         if (!obj)
             return false;
         obj->map = cx->runtime->emptyEnumeratorScope->hold();
-        obj->init(&js_IteratorClass.base, NULL, NULL, JSVAL_NULL);
+        obj->init(&js_IteratorClass.base, NULL, NULL, NullValue());
         return obj;
     }
 
     return NewBuiltinClassInstance(cx, &js_IteratorClass.base);
+}
+
+NativeIterator *
+NativeIterator::allocateKeyIterator(JSContext *cx, uint32 slength, const AutoIdVector &props)
+{
+    size_t plength = props.length();
+    NativeIterator *ni = (NativeIterator *)
+        cx->malloc(sizeof(NativeIterator) + plength * sizeof(jsid) + slength * sizeof(uint32));
+    if (!ni)
+        return NULL;
+    ni->props_array = ni->props_cursor = (jsid *) (ni + 1);
+    ni->props_end = (jsid *)ni->props_array + plength;
+    if (plength)
+        memcpy(ni->props_array, props.begin(), plength * sizeof(jsid));
+    return ni;
+}
+
+NativeIterator *
+NativeIterator::allocateValueIterator(JSContext *cx, uint32 slength, const AutoValueVector &props)
+{
+    size_t plength = props.length();
+    NativeIterator *ni = (NativeIterator *)
+        cx->malloc(sizeof(NativeIterator) + plength * sizeof(Value) + slength * sizeof(uint32));
+    if (!ni)
+        return NULL;
+    ni->props_array = ni->props_cursor = (Value *) (ni + 1);
+    ni->props_end = (Value *)ni->props_array + plength;
+    if (plength)
+        memcpy(ni->props_array, props.begin(), plength * sizeof(Value));
+    return ni;
+}
+
+inline void
+NativeIterator::init(JSObject *obj, uintN flags, const uint32 *sarray, uint32 slength, uint32 key)
+{
+    this->obj = obj;
+    this->flags = flags;
+    this->shapes_array = (uint32 *) this->props_end;
+    this->shapes_length = slength;
+    this->shapes_key = key;
+    if (slength)
+        memcpy(this->shapes_array, sarray, slength * sizeof(uint32));
 }
 
 static inline void
@@ -462,37 +509,89 @@ RegisterEnumerator(JSContext *cx, JSObject *iterobj, NativeIterator *ni)
     }
 }
 
-bool
-IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props, jsval *vp)
+static inline bool
+VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &keys,
+                    const uint32 *sarray, uint32 slength, uint32 key, Value *vp)
 {
+    JS_ASSERT(!(flags & JSITER_FOREACH));
+
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
         return false;
 
-    *vp = OBJECT_TO_JSVAL(iterobj);
 
-    NativeIterator *ni = NativeIterator::allocate(cx, obj, flags, NULL, 0, 0, props);
+    NativeIterator *ni = NativeIterator::allocateKeyIterator(cx, slength, keys);
     if (!ni)
-        return false;
-
-    /* If this is a for-each iteration, fetch the values or key/value pairs. */
-    if (flags & JSITER_FOREACH) {
-        size_t length = props.length();
-        for (size_t n = 0; n < length; ++n) {
-            jsval *vp = &ni->begin()[n];
-            if (!IdToIteratorValue(cx, obj, *vp, flags, vp))
-                return false;
-        }
-    }
+        return NULL;
+    ni->init(obj, flags, sarray, slength, key);
 
     iterobj->setNativeIterator(ni);
+    vp->setObject(*iterobj);
 
     RegisterEnumerator(cx, iterobj, ni);
     return true;
 }
 
 bool
-GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
+VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &props, Value *vp)
+{
+    return VectorToKeyIterator(cx, obj, flags, props, NULL, 0, 0, vp);
+}
+
+static inline bool
+VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &vals,
+                      const uint32 *sarray, uint32 slength, uint32 key, Value *vp)
+{
+    JS_ASSERT(flags & JSITER_FOREACH);
+
+    JSObject *iterobj = NewIteratorObject(cx, flags);
+    if (!iterobj)
+        return false;
+
+    NativeIterator *ni = NativeIterator::allocateValueIterator(cx, slength, vals);
+    if (!ni)
+        return NULL;
+    ni->init(obj, flags, sarray, slength, key);
+
+    iterobj->setNativeIterator(ni);
+    vp->setObject(*iterobj);
+
+    RegisterEnumerator(cx, iterobj, ni);
+    return true;
+}
+
+bool
+VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props, Value *vp)
+{
+    return VectorToValueIterator(cx, obj, flags, props, NULL, 0, 0, vp);
+}
+
+bool
+EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &props, Value *vp)
+{
+    if (!(flags & JSITER_FOREACH))
+        return VectorToKeyIterator(cx, obj, flags, props, vp);
+
+    /* For for-each iteration, we need to look up the value of each id. */
+
+    size_t plength = props.length();
+
+    AutoValueVector vals(cx);
+    if (!vals.reserve(plength))
+        return NULL;
+
+    for (size_t i = 0; i < plength; ++i) {
+        if (!ValueEnumeration::append(cx, vals, obj, props[i], flags))
+            return false;
+    }
+
+    return VectorToValueIterator(cx, obj, flags, vals, vp);
+}
+
+typedef Vector<uint32, 8> ShapeVector;
+
+bool
+GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
     uint32 hash;
     JSObject **hp;
@@ -532,7 +631,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
                 if (ni->shapes_key == key &&
                     ni->shapes_length == shapes.length() &&
                     Compare(ni->shapes_array, shapes.begin(), ni->shapes_length)) {
-                    *vp = OBJECT_TO_JSVAL(iterobj);
+                    vp->setObject(*iterobj);
                     *hp = ni->next;
 
                     RegisterEnumerator(cx, iterobj, ni);
@@ -546,31 +645,23 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
             return JSProxy::iterate(cx, obj, flags, vp);
         if (!GetCustomIterator(cx, obj, flags, vp))
             return false;
-        if (*vp != JSVAL_VOID)
+        if (!vp->isUndefined())
             return true;
     }
 
-    JSObject *iterobj = NewIteratorObject(cx, flags);
-    if (!iterobj)
-        return false;
-
-    /* Store in *vp to protect it from GC (callers must root vp). */
-    *vp = OBJECT_TO_JSVAL(iterobj);
-
     /* NB: for (var p in null) succeeds by iterating over no properties. */
-    AutoValueVector props(cx);
-    if (JS_LIKELY(obj != NULL) && !Snapshot(cx, obj, flags, props))
+
+    if (flags & JSITER_FOREACH) {
+        AutoValueVector vals(cx);
+        if (JS_LIKELY(obj != NULL) && !Snapshot<ValueEnumeration>(cx, obj, flags, vals))
+            return false;
+        return VectorToValueIterator(cx, obj, flags, vals, shapes.begin(), shapes.length(), key, vp);
+    }
+
+    AutoIdVector keys(cx);
+    if (JS_LIKELY(obj != NULL) && !Snapshot<KeyEnumeration>(cx, obj, flags, keys))
         return false;
-
-    NativeIterator *ni =
-        NativeIterator::allocate(cx, obj, flags, shapes.begin(), shapes.length(), key, props);
-    if (!ni)
-        return false;
-
-    iterobj->setNativeIterator(ni);
-
-    RegisterEnumerator(cx, iterobj, ni);
-    return true;
+    return VectorToKeyIterator(cx, obj, flags, keys, shapes.begin(), shapes.length(), key, vp);
 }
 
 static JSObject *
@@ -580,7 +671,7 @@ iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
 }
 
 static JSBool
-Iterator(JSContext *cx, JSObject *iterobj, uintN argc, jsval *argv, jsval *rval)
+Iterator(JSContext *cx, JSObject *iterobj, uintN argc, Value *argv, Value *rval)
 {
     JSBool keyonly;
     uintN flags;
@@ -594,30 +685,29 @@ Iterator(JSContext *cx, JSObject *iterobj, uintN argc, jsval *argv, jsval *rval)
 JSBool
 js_ThrowStopIteration(JSContext *cx)
 {
-    jsval v;
+    Value v;
 
     JS_ASSERT(!JS_IsExceptionPending(cx));
     if (js_FindClassObject(cx, NULL, JSProto_StopIteration, &v))
-        JS_SetPendingException(cx, v);
+        SetPendingException(cx, v);
     return JS_FALSE;
 }
 
 static JSBool
-iterator_next(JSContext *cx, uintN argc, jsval *vp)
+iterator_next(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj;
 
-    obj = JS_THIS_OBJECT(cx, vp);
-    if (!JS_InstanceOf(cx, obj, &js_IteratorClass.base, vp + 2))
+    obj = ComputeThisFromVp(cx, vp);
+    if (!InstanceOf(cx, obj, &js_IteratorClass.base, vp + 2))
         return false;
 
     if (!js_IteratorMore(cx, obj, vp))
         return false;
-    if (*vp == JSVAL_FALSE) {
+    if (!vp->toBoolean()) {
         js_ThrowStopIteration(cx);
         return false;
     }
-    JS_ASSERT(*vp == JSVAL_TRUE);
     return js_IteratorNext(cx, obj, vp);
 }
 
@@ -633,13 +723,8 @@ static JSFunctionSpec iterator_methods[] = {
  * Otherwise construct the default iterator.
  */
 JS_FRIEND_API(JSBool)
-js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
+js_ValueToIterator(JSContext *cx, uintN flags, Value *vp)
 {
-    JSObject *obj;
-    JSClass *clasp;
-    JSExtendedClass *xclasp;
-    JSObject *iterobj;
-
     /* JSITER_KEYVALUE must always come with JSITER_FOREACH */
     JS_ASSERT_IF(flags & JSITER_KEYVALUE, flags & JSITER_FOREACH);
 
@@ -648,13 +733,12 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
      * left in iterValue when a trace is left due to an operation time-out after
      * JSOP_MOREITER but before the value is picked up by FOR*.
      */
-    cx->iterValue = JSVAL_HOLE;
+    cx->iterValue.setMagic(JS_NO_ITER_VALUE);
 
-    AutoValueRooter tvr(cx);
-
-    if (!JSVAL_IS_PRIMITIVE(*vp)) {
+    JSObject *obj;
+    if (vp->isObject()) {
         /* Common case. */
-        obj = JSVAL_TO_OBJECT(*vp);
+        obj = &vp->toObject();
     } else {
         /*
          * Enumerating over null and undefined gives an empty enumerator.
@@ -664,10 +748,10 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
          * standard.
          */
         if ((flags & JSITER_ENUMERATE)) {
-            if (!js_ValueToObject(cx, *vp, &obj))
+            if (!js_ValueToObjectOrNull(cx, *vp, &obj))
                 return false;
             if (!obj)
-                return GetIterator(cx, obj, flags, vp);
+                return GetIterator(cx, NULL, flags, vp);
         } else {
             obj = js_ValueToNonNullObject(cx, *vp);
             if (!obj)
@@ -675,17 +759,18 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
         }
     }
 
-    tvr.setObject(obj);
+    AutoObjectRooter tvr(cx, obj);
 
-    clasp = obj->getClass();
+    Class *clasp = obj->getClass();
+    ExtendedClass *xclasp;
     if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
-        (xclasp = (JSExtendedClass *) clasp)->iteratorObject) {
+        (xclasp = (ExtendedClass *) clasp)->iteratorObject) {
         /* Enumerate Iterator.prototype directly. */
         if (clasp != &js_IteratorClass.base || obj->getNativeIterator()) {
-            iterobj = xclasp->iteratorObject(cx, obj, !(flags & JSITER_FOREACH));
+            JSObject *iterobj = xclasp->iteratorObject(cx, obj, !(flags & JSITER_FOREACH));
             if (!iterobj)
                 return false;
-            *vp = OBJECT_TO_JSVAL(iterobj);
+            vp->setObject(*iterobj);
             return true;
         }
     }
@@ -699,17 +784,11 @@ CloseGenerator(JSContext *cx, JSObject *genobj);
 #endif
 
 JS_FRIEND_API(JSBool)
-js_CloseIterator(JSContext *cx, jsval v)
+js_CloseIterator(JSContext *cx, JSObject *obj)
 {
-    JSObject *obj;
-    JSClass *clasp;
+    cx->iterValue.setMagic(JS_NO_ITER_VALUE);
 
-    cx->iterValue = JSVAL_HOLE;
-
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
-    obj = JSVAL_TO_OBJECT(v);
-    clasp = obj->getClass();
-
+    Class *clasp = obj->getClass();
     if (clasp == &js_IteratorClass.base) {
         /* Remove enumerators from the active list, which is a stack. */
         NativeIterator *ni = obj->getNativeIterator();
@@ -754,10 +833,11 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
     while (iterobj) {
       again:
         NativeIterator *ni = iterobj->getNativeIterator();
-        if (ni->obj == obj && ni->props_cursor < ni->props_end) {
+        /* This only works for identified surpressed keys, not values. */
+        if (ni->isKeyIter() && ni->obj == obj && ni->props_cursor < ni->props_end) {
             /* Check whether id is still to come. */
-            jsid *props_cursor = ni->props_cursor;
-            jsid *props_end = ni->props_end;
+            jsid *props_cursor = ni->currentKey();
+            jsid *props_end = ni->endKey();
             for (jsid *idp = props_cursor; idp < props_end; ++idp) {
                 if (*idp == id) {
                     /*
@@ -796,10 +876,10 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
                      * If it is the next property to be enumerated, just skip it.
                      */
                     if (idp == props_cursor) {
-                        ni->props_cursor++;
+                        ni->incKeyCursor();
                     } else {
                         memmove(idp, idp + 1, (props_end - (idp + 1)) * sizeof(jsid));
-                        ni->props_end--;
+                        ni->props_end = ni->endKey() - 1;
                     }
                     break;
                 }
@@ -811,7 +891,7 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
 }
 
 JSBool
-js_IteratorMore(JSContext *cx, JSObject *iterobj, jsval *rval)
+js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     /* Fast path for native iterators */
     if (iterobj->getClass() == &js_IteratorClass.base) {
@@ -820,42 +900,42 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, jsval *rval)
          * read-only and permanent.
          */
         NativeIterator *ni = iterobj->getNativeIterator();
-        *rval = BOOLEAN_TO_JSVAL(ni->props_cursor < ni->props_end);
+        rval->setBoolean(ni->props_cursor < ni->props_end);
         return true;
     }
 
     /* We might still have a pending value. */
-    if (cx->iterValue != JSVAL_HOLE) {
-        *rval = JSVAL_TRUE;
+    if (!cx->iterValue.isMagic(JS_NO_ITER_VALUE)) {
+        rval->setBoolean(true);
         return true;
     }
 
     /* Fetch and cache the next value from the iterator. */
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.nextAtom);
-    if (!JS_GetMethodById(cx, iterobj, id, &iterobj, rval))
+    if (!js_GetMethod(cx, iterobj, id, JSGET_METHOD_BARRIER, rval))
         return false;
-    if (!js_InternalCall(cx, iterobj, *rval, 0, NULL, rval)) {
+    if (!InternalCall(cx, iterobj, *rval, 0, NULL, rval)) {
         /* Check for StopIteration. */
         if (!cx->throwing || !js_ValueIsStopIteration(cx->exception))
             return false;
 
         /* Inline JS_ClearPendingException(cx). */
         cx->throwing = JS_FALSE;
-        cx->exception = JSVAL_VOID;
-        cx->iterValue = JSVAL_HOLE;
-        *rval = JSVAL_FALSE;
+        cx->exception.setUndefined();
+        cx->iterValue.setMagic(JS_NO_ITER_VALUE);
+        rval->setBoolean(false);
         return true;
     }
 
     /* Cache the value returned by iterobj.next() so js_IteratorNext() can find it. */
-    JS_ASSERT(*rval != JSVAL_HOLE);
+    JS_ASSERT(!rval->isMagic(JS_NO_ITER_VALUE));
     cx->iterValue = *rval;
-    *rval = JSVAL_TRUE;
+    rval->setBoolean(true);
     return true;
 }
 
 JSBool
-js_IteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
+js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     /* Fast path for native iterators */
     if (iterobj->getClass() == &js_IteratorClass.base) {
@@ -865,14 +945,20 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
          */
         NativeIterator *ni = iterobj->getNativeIterator();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        *rval = *ni->props_cursor++;
+        if (ni->isKeyIter()) {
+            *rval = IdToValue(*ni->currentKey());
+            ni->incKeyCursor();
+        } else {
+            *rval = *ni->currentValue();
+            ni->incValueCursor();
+        }
 
-        if (JSVAL_IS_STRING(*rval) || (ni->flags & JSITER_FOREACH))
+        if (rval->isString() || !ni->isKeyIter())
             return true;
 
         JSString *str;
         jsint i;
-        if (JSVAL_IS_INT(*rval) && (jsuint(i = JSVAL_TO_INT(*rval)) < INT_STRING_LIMIT)) {
+        if (rval->isInt32() && (jsuint(i = rval->toInt32()) < INT_STRING_LIMIT)) {
             str = JSString::intString(i);
         } else {
             str = js_ValueToString(cx, *rval);
@@ -880,31 +966,31 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
                 return false;
         }
 
-        *rval = STRING_TO_JSVAL(str);
+        rval->setString(str);
         return true;
     }
 
-    JS_ASSERT(cx->iterValue != JSVAL_HOLE);
+    JS_ASSERT(!cx->iterValue.isMagic(JS_NO_ITER_VALUE));
     *rval = cx->iterValue;
-    cx->iterValue = JSVAL_HOLE;
+    cx->iterValue.setMagic(JS_NO_ITER_VALUE);
 
     return true;
 }
 
 static JSBool
-stopiter_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+stopiter_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
-    *bp = js_ValueIsStopIteration(v);
+    *bp = js_ValueIsStopIteration(*v);
     return JS_TRUE;
 }
 
-JSClass js_StopIterationClass = {
+Class js_StopIterationClass = {
     js_StopIteration_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration),
-    JS_PropertyStub,  JS_PropertyStub,
-    JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,
-    JS_ConvertStub,   NULL,
+    PropertyStub,     PropertyStub,
+    PropertyStub,     PropertyStub,
+    EnumerateStub,    ResolveStub,
+    ConvertStub,      NULL,
     NULL,             NULL,
     NULL,             NULL,
     NULL,             stopiter_hasInstance,
@@ -946,20 +1032,20 @@ generator_trace(JSTracer *trc, JSObject *obj)
 
     JSStackFrame *fp = gen->getFloatingFrame();
     JS_ASSERT(gen->getLiveFrame() == fp);
-    TraceValues(trc, gen->floatingStack, fp->argEnd(), "generator slots");
+    MarkValueRange(trc, gen->floatingStack, fp->argEnd(), "generator slots");
     js_TraceStackFrame(trc, fp);
-    TraceValues(trc, fp->slots(), gen->savedRegs.sp, "generator slots");
+    MarkValueRange(trc, fp->slots(), gen->savedRegs.sp, "generator slots");
 }
 
-JSExtendedClass js_GeneratorClass = {
+ExtendedClass js_GeneratorClass = {
   { js_Generator_str,
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Generator) |
     JSCLASS_IS_ANONYMOUS |
     JSCLASS_MARK_IS_TRACE |
     JSCLASS_IS_EXTENDED,
-    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  generator_finalize,
+    PropertyStub,     PropertyStub,    PropertyStub,    PropertyStub,
+    EnumerateStub,    ResolveStub,     ConvertStub,     generator_finalize,
     NULL,             NULL,            NULL,            NULL,
     NULL,             NULL,            JS_CLASS_TRACE(generator_trace), NULL },
     NULL,             NULL,            NULL,            iterator_iterator,
@@ -990,19 +1076,19 @@ js_NewGenerator(JSContext *cx)
 
     /* Compute JSGenerator size. */
     uintN nbytes = sizeof(JSGenerator) +
-                   (-1 + /* one jsval included in JSGenerator */
+                   (-1 + /* one Value included in JSGenerator */
                     vplen +
                     VALUES_PER_STACK_FRAME +
-                    fp->script->nslots) * sizeof(jsval);
+                    fp->script->nslots) * sizeof(Value);
 
     JSGenerator *gen = (JSGenerator *) cx->malloc(nbytes);
     if (!gen)
         return NULL;
 
     /* Cut up floatingStack space. */
-    jsval *vp = gen->floatingStack;
+    Value *vp = gen->floatingStack;
     JSStackFrame *newfp = reinterpret_cast<JSStackFrame *>(vp + vplen);
-    jsval *slots = newfp->slots();
+    Value *slots = newfp->slots();
 
     /* Initialize JSGenerator. */
     gen->obj = obj;
@@ -1023,7 +1109,7 @@ js_NewGenerator(JSContext *cx)
     }
     newfp->argsobj = fp->argsobj;
     if (fp->argsobj) {      /* Steal args object. */
-        JSVAL_TO_OBJECT(fp->argsobj)->setPrivate(newfp);
+        fp->argsobj->setPrivate(newfp);
         fp->argsobj = NULL;
     }
     newfp->script = fp->script;
@@ -1039,8 +1125,8 @@ js_NewGenerator(JSContext *cx)
     newfp->flags = fp->flags | JSFRAME_GENERATOR | JSFRAME_FLOATING_GENERATOR;
 
     /* Copy in arguments and slots. */
-    memcpy(vp, fp->argv - 2, vplen * sizeof(jsval));
-    memcpy(slots, fp->slots(), fp->script->nfixed * sizeof(jsval));
+    memcpy(vp, fp->argv - 2, vplen * sizeof(Value));
+    memcpy(slots, fp->slots(), fp->script->nfixed * sizeof(Value));
 
     obj->setPrivate(gen);
     return obj;
@@ -1068,11 +1154,11 @@ typedef enum JSGeneratorOp {
  */
 static JS_REQUIRES_STACK JSBool
 SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
-                JSGenerator *gen, jsval arg)
+                JSGenerator *gen, const Value &arg)
 {
     if (gen->state == JSGEN_RUNNING || gen->state == JSGEN_CLOSING) {
         js_ReportValueError(cx, JSMSG_NESTING_GENERATOR,
-                            JSDVG_SEARCH_STACK, OBJECT_TO_JSVAL(obj),
+                            JSDVG_SEARCH_STACK, ObjectOrNullValue(obj),
                             JS_GetFunctionId(gen->getFloatingFrame()->fun));
         return JS_FALSE;
     }
@@ -1096,13 +1182,13 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         break;
 
       case JSGENOP_THROW:
-        JS_SetPendingException(cx, arg);
+        SetPendingException(cx, arg);
         gen->state = JSGEN_RUNNING;
         break;
 
       default:
         JS_ASSERT(op == JSGENOP_CLOSE);
-        JS_SetPendingException(cx, JSVAL_ARETURN);
+        SetPendingException(cx, MagicValue(JS_GENERATOR_CLOSING));
         gen->state = JSGEN_CLOSING;
         break;
     }
@@ -1110,7 +1196,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     JSStackFrame *genfp = gen->getFloatingFrame();
     JSBool ok;
     {
-        jsval *genVp = gen->floatingStack;
+        Value *genVp = gen->floatingStack;
         uintN vplen = gen->vplen;
         uintN nfixed = genfp->script->nslots;
 
@@ -1124,7 +1210,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
             return JS_FALSE;
         }
 
-        jsval *vp = frame.getvp();
+        Value *vp = frame.getvp();
         JSStackFrame *fp = frame.getFrame();
 
         /*
@@ -1132,7 +1218,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
          * only be set on the generator's frame. See args_or_call_trace.
          */
         uintN usedBefore = gen->savedRegs.sp - genVp;
-        memcpy(vp, genVp, usedBefore * sizeof(jsval));
+        memcpy(vp, genVp, usedBefore * sizeof(Value));
         fp->flags &= ~JSFRAME_FLOATING_GENERATOR;
         fp->argv = vp + 2;
         gen->savedRegs.sp = fp->slots() + (gen->savedRegs.sp - genfp->slots());
@@ -1140,7 +1226,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
 
 #ifdef DEBUG
         JSObject *callobjBefore = fp->callobj;
-        jsval argsobjBefore = fp->argsobj;
+        JSObject *argsobjBefore = fp->argsobj;
 #endif
 
         /*
@@ -1152,7 +1238,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         if (genfp->callobj)
             fp->callobj->setPrivate(fp);
         if (genfp->argsobj)
-            JSVAL_TO_OBJECT(fp->argsobj)->setPrivate(fp);
+            fp->argsobj->setPrivate(fp);
         gen->liveFrame = fp;
         (void)cx->enterGenerator(gen); /* OOM check above. */
 
@@ -1163,7 +1249,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         JSObject *enumerators = cx->enumerators;
         cx->enumerators = gen->enumerators;
 
-        ok = js_Interpret(cx);
+        ok = Interpret(cx);
 
         /* Restore the original enumerators stack. */
         gen->enumerators = cx->enumerators;
@@ -1173,7 +1259,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         cx->leaveGenerator(gen);
         gen->liveFrame = genfp;
         if (fp->argsobj)
-            JSVAL_TO_OBJECT(fp->argsobj)->setPrivate(genfp);
+            fp->argsobj->setPrivate(genfp);
         if (fp->callobj)
             fp->callobj->setPrivate(genfp);
 
@@ -1183,7 +1269,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         /* Copy and rebase stack frame/args/slots. Restore "floating" flag. */
         JS_ASSERT(uintN(gen->savedRegs.sp - fp->slots()) <= fp->script->nslots);
         uintN usedAfter = gen->savedRegs.sp - vp;
-        memcpy(genVp, vp, usedAfter * sizeof(jsval));
+        memcpy(genVp, vp, usedAfter * sizeof(Value));
         genfp->flags |= JSFRAME_FLOATING_GENERATOR;
         genfp->argv = genVp + 2;
         gen->savedRegs.sp = genfp->slots() + (gen->savedRegs.sp - fp->slots());
@@ -1201,7 +1287,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         return JS_TRUE;
     }
 
-    genfp->rval = JSVAL_VOID;
+    genfp->rval.setUndefined();
     gen->state = JSGEN_CLOSED;
     if (ok) {
         /* Returned, explicitly or by falling off the end. */
@@ -1231,22 +1317,20 @@ CloseGenerator(JSContext *cx, JSObject *obj)
     if (gen->state == JSGEN_CLOSED)
         return JS_TRUE;
 
-    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, JSVAL_VOID);
+    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, UndefinedValue());
 }
 
 /*
  * Common subroutine of generator_(next|send|throw|close) methods.
  */
 static JSBool
-generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
+generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
 {
     JSObject *obj;
-    jsval arg;
-
     LeaveTrace(cx);
 
-    obj = JS_THIS_OBJECT(cx, vp);
-    if (!JS_InstanceOf(cx, obj, &js_GeneratorClass.base, vp + 2))
+    obj = ComputeThisFromVp(cx, vp);
+    if (!InstanceOf(cx, obj, &js_GeneratorClass.base, vp + 2))
         return JS_FALSE;
 
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
@@ -1262,7 +1346,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
             break;
 
           case JSGENOP_SEND:
-            if (argc >= 1 && !JSVAL_IS_VOID(vp[2])) {
+            if (argc >= 1 && !vp[2].isUndefined()) {
                 js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
                                     JSDVG_SEARCH_STACK, vp[2], NULL);
                 return JS_FALSE;
@@ -1281,7 +1365,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
           case JSGENOP_SEND:
             return js_ThrowStopIteration(cx);
           case JSGENOP_THROW:
-            JS_SetPendingException(cx, argc >= 1 ? vp[2] : JSVAL_VOID);
+            SetPendingException(cx, argc >= 1 ? vp[2] : UndefinedValue());
             return JS_FALSE;
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
@@ -1289,35 +1373,33 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
         }
     }
 
-    arg = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0)
-          ? vp[2]
-          : JSVAL_VOID;
-    if (!SendToGenerator(cx, op, obj, gen, arg))
+    bool undef = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0);
+    if (!SendToGenerator(cx, op, obj, gen, undef ? vp[2] : UndefinedValue()))
         return JS_FALSE;
     *vp = gen->getFloatingFrame()->rval;
     return JS_TRUE;
 }
 
 static JSBool
-generator_send(JSContext *cx, uintN argc, jsval *vp)
+generator_send(JSContext *cx, uintN argc, Value *vp)
 {
     return generator_op(cx, JSGENOP_SEND, vp, argc);
 }
 
 static JSBool
-generator_next(JSContext *cx, uintN argc, jsval *vp)
+generator_next(JSContext *cx, uintN argc, Value *vp)
 {
     return generator_op(cx, JSGENOP_NEXT, vp, argc);
 }
 
 static JSBool
-generator_throw(JSContext *cx, uintN argc, jsval *vp)
+generator_throw(JSContext *cx, uintN argc, Value *vp)
 {
     return generator_op(cx, JSGENOP_THROW, vp, argc);
 }
 
 static JSBool
-generator_close(JSContext *cx, uintN argc, jsval *vp)
+generator_close(JSContext *cx, uintN argc, Value *vp)
 {
     return generator_op(cx, JSGENOP_CLOSE, vp, argc);
 }
@@ -1343,19 +1425,19 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (stop)
         return stop;
 
-    proto = JS_InitClass(cx, obj, NULL, &js_IteratorClass.base, Iterator, 2,
+    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass.base, Iterator, 2,
                          NULL, iterator_methods, NULL, NULL);
     if (!proto)
         return NULL;
 
 #if JS_HAS_GENERATORS
     /* Initialize the generator internals if configured. */
-    if (!JS_InitClass(cx, obj, NULL, &js_GeneratorClass.base, NULL, 0,
+    if (!js_InitClass(cx, obj, NULL, &js_GeneratorClass.base, NULL, 0,
                       NULL, generator_methods, NULL, NULL)) {
         return NULL;
     }
 #endif
 
-    return JS_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0,
+    return js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0,
                         NULL, NULL, NULL, NULL);
 }

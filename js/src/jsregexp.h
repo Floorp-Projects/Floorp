@@ -50,17 +50,15 @@
 #include "jsdhash.h"
 #endif
 
-JS_BEGIN_EXTERN_C
-
-namespace js { class AutoValueRooter; }
+namespace js { class AutoStringRooter; }
 
 extern JS_FRIEND_API(void)
 js_SaveAndClearRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                             js::AutoValueRooter *tvr);
+                             js::AutoStringRooter *tvr);
 
 extern JS_FRIEND_API(void)
 js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                        js::AutoValueRooter *tvr);
+                        js::AutoStringRooter *tvr);
 
 /*
  * This struct holds a bitmap representation of a class from a regexp.
@@ -115,7 +113,7 @@ js_DestroyRegExp(JSContext *cx, JSRegExp *re);
  */
 extern JSBool
 js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
-                 JSBool test, jsval *rval);
+                 JSBool test, js::Value *rval);
 
 extern void
 js_InitRegExpStatics(JSContext *cx);
@@ -127,9 +125,9 @@ extern void
 js_FreeRegExpStatics(JSContext *cx);
 
 #define VALUE_IS_REGEXP(cx, v)                                                \
-    (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isRegExp())
+    ((v).isObject() && v.toObject().isRegExp())
 
-extern JSClass js_RegExpClass;
+extern js::Class js_RegExpClass;
 
 inline bool
 JSObject::isRegExp() const
@@ -147,7 +145,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj);
  * Export js_regexp_toString to the decompiler.
  */
 extern JSBool
-js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp);
+js_regexp_toString(JSContext *cx, JSObject *obj, js::Value *vp);
 
 /*
  * Create, serialize/deserialize, or clone a RegExp object.
@@ -165,7 +163,5 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto);
 /* Return whether the given character array contains RegExp meta-characters. */
 extern bool
 js_ContainsRegExpMetaChars(const jschar *chars, size_t length);
-
-JS_END_EXTERN_C
 
 #endif /* jsregexp_h___ */

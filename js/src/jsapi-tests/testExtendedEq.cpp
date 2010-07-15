@@ -8,7 +8,7 @@
 #include "tests.h"
 
 static JSBool
-my_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+my_Equality(JSContext *cx, JSObject *obj, const jsval *, JSBool *bp)
 {
     *bp = JS_TRUE;
     return JS_TRUE;

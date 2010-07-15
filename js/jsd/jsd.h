@@ -966,7 +966,7 @@ jsd_GetValueBoolean(JSDContext* jsdc, JSDValue* jsdval);
 extern int32
 jsd_GetValueInt(JSDContext* jsdc, JSDValue* jsdval);
 
-extern jsdouble*
+extern jsdouble
 jsd_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval);
 
 extern JSString*

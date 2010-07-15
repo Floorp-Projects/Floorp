@@ -52,22 +52,52 @@
 #include "jshash.h" /* Added by JSIFY */
 #include "jspubtd.h"
 #include "jsprvtd.h"
+#include "jsvalue.h"
 #include "jsvector.h"
 
-namespace js { class AutoDescriptorArray; class JSProxyHandler; }
+namespace js {
+
+class JSProxyHandler;
+class AutoPropDescArrayRooter;
+
+static inline PropertyOp
+CastAsPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(PropertyOp, object);
+}
+
+static inline JSPropertyOp
+CastAsJSPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
+}
+
+inline JSObject *
+CastAsObject(PropertyOp op)
+{
+    return JS_FUNC_TO_DATA_PTR(JSObject *, op);
+}
+
+inline Value
+CastAsObjectJsval(PropertyOp op)
+{
+    return ObjectValue(*CastAsObject(op));
+}
+
+} /* namespace js */
 
 /*
  * A representation of ECMA-262 ed. 5's internal property descriptor data
  * structure.
  */
-struct PropertyDescriptor {
-    friend class js::AutoDescriptorArray;
+struct PropDesc {
+    friend class js::AutoPropDescArrayRooter;
 
-    PropertyDescriptor();
+    PropDesc();
 
   public:
     /* 8.10.5 ToPropertyDescriptor(Obj) */
-    bool initialize(JSContext* cx, jsid id, jsval v);
+    bool initialize(JSContext* cx, jsid id, const js::Value &v);
 
     /* 8.10.1 IsAccessorDescriptor(desc) */
     bool isAccessorDescriptor() const {
@@ -97,32 +127,32 @@ struct PropertyDescriptor {
     }
 
     JSObject* getterObject() const {
-        return (get != JSVAL_VOID) ? JSVAL_TO_OBJECT(get) : NULL;
+        return get.isUndefined() ? NULL : &get.toObject();
     }
     JSObject* setterObject() const {
-        return (set != JSVAL_VOID) ? JSVAL_TO_OBJECT(set) : NULL;
+        return set.isUndefined() ? NULL : &set.toObject();
     }
 
-    jsval getterValue() const {
+    const js::Value &getterValue() const {
         return get;
     }
-    jsval setterValue() const {
+    const js::Value &setterValue() const {
         return set;
     }
 
-    JSPropertyOp getter() const {
+    js::PropertyOp getter() const {
         return js::CastAsPropertyOp(getterObject());
     }
-    JSPropertyOp setter() const {
+    js::PropertyOp setter() const {
         return js::CastAsPropertyOp(setterObject());
     }
 
     static void traceDescriptorArray(JSTracer* trc, JSObject* obj);
     static void finalizeDescriptorArray(JSContext* cx, JSObject* obj);
 
-    jsval pd;
+    js::Value pd;
     jsid id;
-    jsval value, get, set;
+    js::Value value, get, set;
 
     /* Property descriptor boolean fields. */
     uint8 attrs;
@@ -137,10 +167,8 @@ struct PropertyDescriptor {
 };
 
 namespace js {
-    typedef Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
+    typedef Vector<PropDesc, 1> PropDescArray;
 }
-
-JS_BEGIN_EXTERN_C
 
 /* For detailed comments on these function pointer types, see jsprvtd.h. */
 struct JSObjectOps {
@@ -153,21 +181,21 @@ struct JSObjectOps {
 
     /* Mandatory non-null function pointer members. */
     JSLookupPropOp      lookupProperty;
-    JSDefinePropOp      defineProperty;
-    JSPropertyIdOp      getProperty;
-    JSPropertyIdOp      setProperty;
+    js::DefinePropOp    defineProperty;
+    js::PropertyIdOp    getProperty;
+    js::PropertyIdOp    setProperty;
     JSAttributesOp      getAttributes;
     JSAttributesOp      setAttributes;
-    JSPropertyIdOp      deleteProperty;
-    JSNewEnumerateOp    enumerate;
+    js::PropertyIdOp    deleteProperty;
+    js::NewEnumerateOp  enumerate;
     JSTypeOfOp          typeOf;
     JSTraceOp           trace;
 
     /* Optionally non-null members start here. */
     JSObjectOp          thisObject;
-    JSCallOp            call;
-    JSNative            construct;
-    JSHasInstanceOp     hasInstance;
+    js::CallOp          call;
+    js::Native          construct;
+    js::HasInstanceOp   hasInstance;
     JSFinalizeOp        clear;
 
     bool inline isNative() const;
@@ -208,24 +236,17 @@ const uint32 JSSLOT_PARENT  = 0;
 
 /*
  * The first available slot to store generic value. For JSCLASS_HAS_PRIVATE
- * classes the slot stores a pointer to private data reinterpreted as jsval.
+ * classes the slot stores a pointer to private data stuffed in a Value.
  * Such pointer is stored as is without an overhead of PRIVATE_TO_JSVAL
  * tagging and should be accessed using the (get|set)Private methods of
  * JSObject.
  */
 const uint32 JSSLOT_PRIVATE = 1;
 
-const uintptr_t JSSLOT_CLASS_MASK_BITS = 3;
-
 /*
  * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
  * 64 bytes on 64-bit systems. The JSFunction struct is an extension of this
  * struct allocated from a larger GC size-class.
- *
- * The classword member stores the JSClass pointer for this object, with the
- * least two bits encoding whether this object is a "delegate" or a "system"
- * object. We do *not* synchronize updates of classword -- API clients must
- * take care.
  *
  * An object is a delegate if it is on another object's prototype (linked by
  * JSSLOT_PROTO) or scope (JSSLOT_PARENT) chain, and therefore the delegate
@@ -242,11 +263,11 @@ const uintptr_t JSSLOT_CLASS_MASK_BITS = 3;
  * to be complementary to this bit, but it is up to the API client to implement
  * any such association.
  *
- * Both these classword tag bits are initially zero; they may be set or queried
- * using the (is|set)(Delegate|System) inline methods.
+ * Both these flags are initially zero; they may be set or queried using the
+ * (is|set)(Delegate|System) inline methods.
  *
  * The dslots member is null or a pointer into a dynamically allocated vector
- * of jsvals for reserved and dynamic slots. If dslots is not null, dslots[-1]
+ * of Values for reserved and dynamic slots. If dslots is not null, dslots[-1]
  * records the number of available slots.
  */
 struct JSObject {
@@ -257,30 +278,42 @@ struct JSObject {
     friend class js::TraceRecorder;
 
     JSObjectMap *map;                       /* property map, see jsscope.h */
-    jsuword     classword;                  /* JSClass ptr | bits, see above */
+    js::Class   *clasp;                     /* class pointer */
+    jsuword     flags;                      /* see above */
     JSObject    *proto;                     /* object's prototype */
-    jsval       fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
-    jsval       *dslots;                    /* dynamically allocated slots */
+    js::Value   *dslots;                    /* dynamically allocated slots */
+#if JS_BITS_PER_WORD == 32
+    // TODO: this is needed to pad out fslots. alternatively, clasp could be
+    // merged by with flags and the padding removed, but I think the upcoming
+    // removal of JSScope will change this all anyway so I will leave this
+    // here for now.
+    uint32      padding;
+#endif
+    js::Value   fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
 
     bool isNative() const { return map->ops->isNative(); }
 
-    JSClass *getClass() const {
-        return (JSClass *) (classword & ~JSSLOT_CLASS_MASK_BITS);
+    js::Class *getClass() const {
+        return clasp;
     }
 
-    bool hasClass(const JSClass *clasp) const {
-        return clasp == getClass();
+    JSClass *getJSClass() const {
+        return Jsvalify(clasp);
+    }
+
+    bool hasClass(const js::Class *c) const {
+        return c == clasp;
     }
 
     inline JSScope *scope() const;
     inline uint32 shape() const;
 
     bool isDelegate() const {
-        return (classword & jsuword(1)) != jsuword(0);
+        return (flags & jsuword(1)) != jsuword(0);
     }
 
     void setDelegate() {
-        classword |= jsuword(1);
+        flags |= jsuword(1);
     }
 
     static void setDelegateNullSafe(JSObject *obj) {
@@ -289,15 +322,15 @@ struct JSObject {
     }
 
     bool isSystem() const {
-        return (classword & jsuword(2)) != jsuword(0);
+        return (flags & jsuword(2)) != jsuword(0);
     }
 
     void setSystem() {
-        classword |= jsuword(2);
+        flags |= jsuword(2);
     }
 
     uint32 numSlots(void) const {
-        return dslots ? (uint32)dslots[-1] : (uint32)JS_INITIAL_NSLOTS;
+        return dslots ? dslots[-1].toPrivateUint32() : (uint32)JS_INITIAL_NSLOTS;
     }
 
   private:
@@ -316,31 +349,31 @@ struct JSObject {
     bool growSlots(JSContext *cx, size_t nslots);
     void shrinkSlots(JSContext *cx, size_t nslots);
 
-    jsval& getSlotRef(uintN slot) {
+    js::Value& getSlotRef(uintN slot) {
         return (slot < JS_INITIAL_NSLOTS)
                ? fslots[slot]
-               : (JS_ASSERT(slot < (uint32)dslots[-1]),
+               : (JS_ASSERT(slot < dslots[-1].toPrivateUint32()),
                   dslots[slot - JS_INITIAL_NSLOTS]);
     }
 
-    jsval getSlot(uintN slot) const {
+    const js::Value &getSlot(uintN slot) const {
         return (slot < JS_INITIAL_NSLOTS)
                ? fslots[slot]
-               : (JS_ASSERT(slot < (uint32)dslots[-1]),
+               : (JS_ASSERT(slot < dslots[-1].toPrivateUint32()),
                   dslots[slot - JS_INITIAL_NSLOTS]);
     }
 
-    void setSlot(uintN slot, jsval value) {
+    void setSlot(uintN slot, const js::Value &value) {
         if (slot < JS_INITIAL_NSLOTS) {
             fslots[slot] = value;
         } else {
-            JS_ASSERT(slot < (uint32)dslots[-1]);
+            JS_ASSERT(slot < dslots[-1].toPrivateUint32());
             dslots[slot - JS_INITIAL_NSLOTS] = value;
         }
     }
 
-    inline jsval lockedGetSlot(uintN slot) const;
-    inline void lockedSetSlot(uintN slot, jsval value);
+    inline const js::Value &lockedGetSlot(uintN slot) const;
+    inline void lockedSetSlot(uintN slot, const js::Value &value);
 
     /*
      * These ones are for multi-threaded ("MT") objects.  Use getSlot(),
@@ -348,10 +381,10 @@ struct JSObject {
      * one thread can access obj, or when accessing read-only slots within
      * JS_INITIAL_NSLOTS.
      */
-    inline jsval getSlotMT(JSContext *cx, uintN slot);
-    inline void setSlotMT(JSContext *cx, uintN slot, jsval value);
+    inline js::Value getSlotMT(JSContext *cx, uintN slot);
+    inline void setSlotMT(JSContext *cx, uintN slot, const js::Value &value);
 
-    inline jsval getReservedSlot(uintN index) const;
+    inline js::Value getReservedSlot(uintN index) const;
 
     JSObject *getProto() const {
         return proto;
@@ -371,11 +404,11 @@ struct JSObject {
     }
 
     JSObject *getParent() const {
-        return JSVAL_TO_OBJECT(fslots[JSSLOT_PARENT]);
+        return fslots[JSSLOT_PARENT].toObjectOrNull();
     }
 
     void clearParent() {
-        fslots[JSSLOT_PARENT] = JSVAL_NULL;
+        fslots[JSSLOT_PARENT].setNull();
     }
 
     void setParent(JSObject *newParent) {
@@ -384,7 +417,7 @@ struct JSObject {
             JS_ASSERT(obj != this);
 #endif
         setDelegateNullSafe(newParent);
-        fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(newParent);
+        fslots[JSSLOT_PARENT].setObjectOrNull(newParent);
     }
 
     void traceProtoAndParent(JSTracer *trc) const {
@@ -398,22 +431,20 @@ struct JSObject {
 
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        jsval v = fslots[JSSLOT_PRIVATE];
-        JS_ASSERT((v & jsval(1)) == jsval(0));
-        return reinterpret_cast<void *>(v);
+        void *priv = fslots[JSSLOT_PRIVATE].toPrivate();
+        return priv;
     }
 
     void setPrivate(void *data) {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        jsval v = reinterpret_cast<jsval>(data);
-        JS_ASSERT((v & jsval(1)) == jsval(0));
-        fslots[JSSLOT_PRIVATE] = v;
+        JS_ASSERT((size_t(data) & 1) == 0);
+        fslots[JSSLOT_PRIVATE].setPrivate(data);
     }
 
-    static jsval defaultPrivate(JSClass *clasp) {
-        return (clasp->flags & JSCLASS_HAS_PRIVATE)
-               ? JSVAL_NULL
-               : JSVAL_VOID;
+    static js::Value defaultPrivate(js::Class *clasp) {
+        if (clasp->flags & JSCLASS_HAS_PRIVATE)
+            return js::PrivateValue(NULL);
+        return js::UndefinedValue();
     }
 
     /*
@@ -424,8 +455,8 @@ struct JSObject {
     static const uint32 JSSLOT_PRIMITIVE_THIS = JSSLOT_PRIVATE;
 
   public:
-    inline jsval getPrimitiveThis() const;
-    inline void setPrimitiveThis(jsval pthis);
+    inline const js::Value &getPrimitiveThis() const;
+    inline void setPrimitiveThis(const js::Value &pthis);
 
     /*
      * Array-specific getters and setters (for both dense and slow arrays).
@@ -464,11 +495,11 @@ struct JSObject {
 
     inline bool isDenseArrayMinLenCapOk(bool strictAboutLength = true) const;
 
-    inline jsval getDenseArrayElement(uint32 i) const;
-    inline jsval *addressOfDenseArrayElement(uint32 i);
-    inline void setDenseArrayElement(uint32 i, jsval v);
+    inline const js::Value &getDenseArrayElement(uint32 i) const;
+    inline js::Value *addressOfDenseArrayElement(uint32 i);
+    inline void setDenseArrayElement(uint32 i, const js::Value &v);
 
-    inline jsval *getDenseArrayElements() const;   // returns pointer to the Array's elements array
+    inline js::Value *getDenseArrayElements() const;   // returns pointer to the Array's elements array
     bool resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
                                bool initializeAllSlots = true);
     bool ensureDenseArrayElements(JSContext *cx, uint32 newcap,
@@ -509,11 +540,12 @@ struct JSObject {
     inline void setArgsLengthOverridden();
     inline bool isArgsLengthOverridden() const;
 
-    inline jsval getArgsCallee() const;
-    inline void setArgsCallee(jsval callee);
+    inline const js::Value &getArgsCallee() const;
+    inline void setArgsCallee(const js::Value &callee);
 
-    inline jsval getArgsElement(uint32 i) const;
-    inline void setArgsElement(uint32 i, jsval v);
+    inline const js::Value &getArgsElement(uint32 i) const;
+    inline js::Value *addressOfArgsElement(uint32 i) const;
+    inline void setArgsElement(uint32 i, const js::Value &v);
 
     /*
      * Date-specific getters and setters.
@@ -527,13 +559,11 @@ struct JSObject {
   public:
     static const uint32 DATE_FIXED_RESERVED_SLOTS = 2;
 
-    inline jsval getDateLocalTime() const;
-    inline jsval *addressOfDateLocalTime();
-    inline void setDateLocalTime(jsval pthis);
+    inline const js::Value &getDateLocalTime() const;
+    inline void setDateLocalTime(const js::Value &pthis);
 
-    inline jsval getDateUTCTime() const;
-    inline jsval *addressOfDateUTCTime();
-    inline void setDateUTCTime(jsval pthis);
+    inline const js::Value &getDateUTCTime() const;
+    inline void setDateUTCTime(const js::Value &pthis);
 
     /*
      * RegExp-specific getters and setters.
@@ -545,8 +575,8 @@ struct JSObject {
   public:
     static const uint32 REGEXP_FIXED_RESERVED_SLOTS = 1;
 
-    inline jsval getRegExpLastIndex() const;
-    inline jsval *addressOfRegExpLastIndex();
+    inline const js::Value &getRegExpLastIndex() const;
+    inline void setRegExpLastIndex(const js::Value &v);
     inline void zeroRegExpLastIndex();
 
     /*
@@ -596,8 +626,8 @@ struct JSObject {
      */
 
     inline js::JSProxyHandler *getProxyHandler() const;
-    inline jsval getProxyPrivate() const;
-    inline void setProxyPrivate(jsval priv);
+    inline const js::Value &getProxyPrivate() const;
+    inline void setProxyPrivate(const js::Value &priv);
 
     /*
      * With object-specific getters and setters.
@@ -612,22 +642,20 @@ struct JSObject {
     inline bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
-    void init(JSClass *clasp, JSObject *proto, JSObject *parent,
-              jsval privateSlotValue) {
-        JS_ASSERT(((jsuword) clasp & 3) == 0);
+    void init(js::Class *aclasp, JSObject *proto, JSObject *parent,
+              const js::Value &privateSlotValue) {
         JS_STATIC_ASSERT(JSSLOT_PRIVATE + 3 == JS_INITIAL_NSLOTS);
-        JS_ASSERT_IF(clasp->flags & JSCLASS_HAS_PRIVATE,
-                     (privateSlotValue & jsval(1)) == jsval(0));
 
-        classword = jsuword(clasp);
+        clasp = aclasp;
+        flags = 0;
         JS_ASSERT(!isDelegate());
         JS_ASSERT(!isSystem());
 
         setProto(proto);
         setParent(parent);
         fslots[JSSLOT_PRIVATE] = privateSlotValue;
-        fslots[JSSLOT_PRIVATE + 1] = JSVAL_VOID;
-        fslots[JSSLOT_PRIVATE + 2] = JSVAL_VOID;
+        fslots[JSSLOT_PRIVATE + 1].setUndefined();
+        fslots[JSSLOT_PRIVATE + 2].setUndefined();
         dslots = NULL;
     }
 
@@ -635,8 +663,10 @@ struct JSObject {
      * Like init, but also initializes map. The catch: proto must be the result
      * of a call to js_InitClass(...clasp, ...).
      */
-    inline void initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *parent,
-                                      jsval privateSlotValue);
+    inline void initSharingEmptyScope(js::Class *clasp,
+                                      JSObject *proto,
+                                      JSObject *parent,
+                                      const js::Value &privateSlotValue);
 
     inline bool hasSlotsArray() const { return !!dslots; }
 
@@ -648,18 +678,18 @@ struct JSObject {
         return map->ops->lookupProperty(cx, this, id, objp, propp);
     }
 
-    JSBool defineProperty(JSContext *cx, jsid id, jsval value,
-                          JSPropertyOp getter = JS_PropertyStub,
-                          JSPropertyOp setter = JS_PropertyStub,
+    JSBool defineProperty(JSContext *cx, jsid id, const js::Value &value,
+                          js::PropertyOp getter = js::PropertyStub,
+                          js::PropertyOp setter = js::PropertyStub,
                           uintN attrs = JSPROP_ENUMERATE) {
-        return map->ops->defineProperty(cx, this, id, value, getter, setter, attrs);
+        return map->ops->defineProperty(cx, this, id, &value, getter, setter, attrs);
     }
 
-    JSBool getProperty(JSContext *cx, jsid id, jsval *vp) {
+    JSBool getProperty(JSContext *cx, jsid id, js::Value *vp) {
         return map->ops->getProperty(cx, this, id, vp);
     }
 
-    JSBool setProperty(JSContext *cx, jsid id, jsval *vp) {
+    JSBool setProperty(JSContext *cx, jsid id, js::Value *vp) {
         return map->ops->setProperty(cx, this, id, vp);
     }
 
@@ -671,11 +701,11 @@ struct JSObject {
         return map->ops->setAttributes(cx, this, id, attrsp);
     }
 
-    JSBool deleteProperty(JSContext *cx, jsid id, jsval *rval) {
+    JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval) {
         return map->ops->deleteProperty(cx, this, id, rval);
     }
 
-    JSBool enumerate(JSContext *cx, JSIterateOp op, jsval *statep,
+    JSBool enumerate(JSContext *cx, JSIterateOp op, js::Value *statep,
                      jsid *idp) {
         return map->ops->enumerate(cx, this, op, statep, idp);
     }
@@ -690,6 +720,7 @@ struct JSObject {
     JSObject *thisObject(JSContext *cx) {
         return map->ops->thisObject ? map->ops->thisObject(cx, this) : this;
     }
+    static bool thisObject(JSContext *cx, const js::Value &v, js::Value *vp);
 
     inline void dropProperty(JSContext *cx, JSProperty *prop);
 
@@ -720,7 +751,12 @@ struct JSObject {
     JS_FRIEND_API(JSObject *) unwrap(uintN *flagsp = NULL);
 
     inline bool unbrand(JSContext *cx);
+
+    inline void initArrayClass();
 };
+
+JS_STATIC_ASSERT(offsetof(JSObject, fslots) % sizeof(js::Value) == 0);
+JS_STATIC_ASSERT(sizeof(JSObject) % JS_GCTHING_ALIGN == 0);
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \
@@ -734,8 +770,8 @@ struct JSObject {
  * obj->dslots[-1] that is used to store the length of the vector biased by
  * JS_INITIAL_NSLOTS (and again net of the slot at index -1).
  */
-#define MAX_DSLOTS_LENGTH   (~size_t(0) / sizeof(jsval) - 1)
-#define MAX_DSLOTS_LENGTH32 (~uint32(0) / sizeof(jsval) - 1)
+#define MAX_DSLOTS_LENGTH   (~size_t(0) / sizeof(js::Value) - 1)
+#define MAX_DSLOTS_LENGTH32 (~uint32(0) / sizeof(js::Value) - 1)
 
 #define OBJ_CHECK_SLOT(obj,slot)                                              \
     (JS_ASSERT((obj)->isNative()), JS_ASSERT(slot < (obj)->scope()->freeslot))
@@ -758,9 +794,9 @@ struct JSObject {
 inline void
 OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
 {
-    JSClass *clasp = obj->getClass();
+    js::Class *clasp = obj->getClass();
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
-        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+        js::ExtendedClass *xclasp = (js::ExtendedClass *) clasp;
         if (xclasp->innerObject)
             obj = xclasp->innerObject(cx, obj);
     }
@@ -773,25 +809,33 @@ OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
 inline void
 OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
 {
-    JSClass *clasp = obj->getClass();
+    js::Class *clasp = obj->getClass();
     if (clasp->flags & JSCLASS_IS_EXTENDED) {
-        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+        js::ExtendedClass *xclasp = (js::ExtendedClass *) clasp;
         if (xclasp->outerObject)
             obj = xclasp->outerObject(cx, obj);
     }
 }
 
-class ValueArray {
+class JSValueArray {
   public:
     jsval *array;
     size_t length;
 
-    ValueArray(jsval *v, size_t c) : array(v), length(c) {}
+    JSValueArray(jsval *v, size_t c) : array(v), length(c) {}
 };
 
-extern JSClass  js_ObjectClass;
-extern JSClass  js_WithClass;
-extern JSClass  js_BlockClass;
+class ValueArray {
+  public:
+    js::Value *array;
+    size_t length;
+
+    ValueArray(js::Value *v, size_t c) : array(v), length(c) {}
+};
+
+extern js::Class js_ObjectClass;
+extern js::Class js_WithClass;
+extern js::Class js_BlockClass;
 
 /*
  * Block scope object macros.  The slots reserved by js_BlockClass are:
@@ -824,9 +868,9 @@ js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
     ((OBJ_IS_CLONED_BLOCK(obj) ? obj->getProto() : obj)->scope()->entryCount)
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
-    JSVAL_TO_INT(obj->getSlot(JSSLOT_BLOCK_DEPTH))
+    obj->getSlot(JSSLOT_BLOCK_DEPTH).toInt32()
 #define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \
-    obj->setSlot(JSSLOT_BLOCK_DEPTH, INT_TO_JSVAL(depth))
+    obj->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
 
 /*
  * To make sure this slot is well-defined, always call js_NewWithObject to
@@ -895,21 +939,23 @@ js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map);
 
 extern JSBool
 js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
-                        jsval *vp);
+                        js::Value *vp);
 
 extern JSBool
 js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
                   JSObject **objp, JSProperty **propp);
 
 extern JSBool
-js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs, jsval getter, jsval setter, jsval value, jsval *vp);
+js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs,
+                               const js::Value &getter, const js::Value &setter,
+                               const js::Value &value, js::Value *vp);
 
 extern JSBool
-js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 #ifdef OLD_GETTER_SETTER_METHODS
-JS_FRIEND_API(JSBool) js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp);
-JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp);
+JS_FRIEND_API(JSBool) js_obj_defineGetter(JSContext *cx, uintN argc, js::Value *vp);
+JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, js::Value *vp);
 #endif
 
 extern JSObject *
@@ -917,7 +963,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
-             JSClass *clasp, JSNative constructor, uintN nargs,
+             js::Class *clasp, js::Native constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
@@ -950,8 +996,8 @@ extern const char js_lookupSetter_str[];
  * object, not by the parent of its .prototype object value.
  */
 extern JSObject*
-js_NewObjectWithClassProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           jsval privateSlotValue);
+js_NewObjectWithClassProto(JSContext *cx, js::Class *clasp, JSObject *proto,
+                           const js::Value &privateSlotValue);
 
 extern JSBool
 js_PopulateObject(JSContext *cx, JSObject *newborn, JSObject *props);
@@ -972,12 +1018,12 @@ js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
  * JSProto_Null, clasp must non-null.
  */
 extern JSBool
-js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey key, jsval *vp,
-                   JSClass *clasp = NULL);
+js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey key,
+                   js::Value *vp, js::Class *clasp = NULL);
 
 extern JSObject *
-js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                   JSObject *parent, uintN argc, jsval *argv);
+js_ConstructObject(JSContext *cx, js::Class *clasp, JSObject *proto,
+                   JSObject *parent, uintN argc, js::Value *argv);
 
 extern JSBool
 js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp);
@@ -1021,7 +1067,7 @@ js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
  */
 extern JSScopeProperty *
 js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
-                     JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
+                     js::PropertyOp getter, js::PropertyOp setter, uint32 slot,
                      uintN attrs, uintN flags, intN shortid);
 
 /*
@@ -1032,14 +1078,15 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
 extern JSScopeProperty *
 js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
                              JSScopeProperty *sprop, uintN attrs, uintN mask,
-                             JSPropertyOp getter, JSPropertyOp setter);
+                             js::PropertyOp getter, js::PropertyOp setter);
 
 extern JSBool
-js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
+js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value *value,
+                  js::PropertyOp getter, js::PropertyOp setter, uintN attrs);
 
 extern JSBool
-js_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JSBool *bp);
+js_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id,
+                     const js::Value &descriptor, JSBool *bp);
 
 /*
  * Flags for the defineHow parameter of js_DefineNativeProperty.
@@ -1061,8 +1108,8 @@ const uintN JSDNP_UNQUALIFIED  = 8; /* Unqualified property set.  Only used in
  * the held property, and to release the lock on obj.
  */
 extern JSBool
-js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                        JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
+js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value &value,
+                        js::PropertyOp getter, js::PropertyOp setter, uintN attrs,
                         uintN flags, intN shortid, JSProperty **propp,
                         uintN defineHow = 0);
 
@@ -1095,11 +1142,11 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 static inline bool
 js_IsCacheableNonGlobalScope(JSObject *obj)
 {
-    extern JS_FRIEND_DATA(JSClass) js_CallClass;
-    extern JS_FRIEND_DATA(JSClass) js_DeclEnvClass;
+    extern JS_FRIEND_DATA(js::Class) js_CallClass;
+    extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;
     JS_ASSERT(obj->getParent());
 
-    JSClass *clasp = obj->getClass();
+    js::Class *clasp = obj->getClass();
     bool cacheable = (clasp == &js_CallClass ||
                       clasp == &js_BlockClass ||
                       clasp == &js_DeclEnvClass);
@@ -1154,24 +1201,24 @@ const uintN JSGET_NO_METHOD_BARRIER = 2; // call to joined function can't leak
  */
 extern JSBool
 js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
-             JSScopeProperty *sprop, uintN getHow, jsval *vp);
+             JSScopeProperty *sprop, uintN getHow, js::Value *vp);
 
 extern JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
-             jsval *vp);
+             js::Value *vp);
 
 extern JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
-                     jsval *vp);
+                     js::Value *vp);
 
 extern JSBool
-js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+js_GetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp);
+js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, js::Value *vp);
 
 /*
  * Check whether it is OK to assign an undeclared property with name
@@ -1180,14 +1227,14 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp);
  * when it returns false).
  */
 extern JS_FRIEND_API(bool)
-js_CheckUndeclaredVarAssignment(JSContext *cx, jsval propname);
+js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname);
 
 extern JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
-                     jsval *vp);
+                     js::Value *vp);
 
 extern JSBool
-js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+js_SetProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
 js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
@@ -1204,24 +1251,24 @@ js_SetNativeAttributes(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
                        uintN attrs);
 
 extern JSBool
-js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
+js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *rval);
 
 namespace js {
 
 extern JSBool
-DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
+DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
 
 }
 
 extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-             jsval *statep, jsid *idp);
+             js::Value *statep, jsid *idp);
 
 namespace js {
 
 extern JSBool
 CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-            jsval *vp, uintN *attrsp);
+            js::Value *vp, uintN *attrsp);
 
 }
 
@@ -1229,17 +1276,17 @@ extern JSType
 js_TypeOf(JSContext *cx, JSObject *obj);
 
 extern JSBool
-js_Call(JSContext *cx, uintN argc, jsval *vp);
+js_Call(JSContext *cx, uintN argc, js::Value *vp);
 
 extern JSBool
-js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-             jsval *rval);
+js_Construct(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
+             js::Value *rval);
 
 extern JSBool
-js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+js_HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
 
-extern JSBool
-js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+extern bool
+js_IsDelegate(JSContext *cx, JSObject *obj, const js::Value &v);
 
 /*
  * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
@@ -1247,7 +1294,7 @@ js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
  */
 extern JS_FRIEND_API(JSBool)
 js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
-                     JSObject **protop, JSClass *clasp = NULL);
+                     JSObject **protop, js::Class *clasp = NULL);
 
 extern JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
@@ -1258,20 +1305,28 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
  * *vp must not be an object, null or undefined.
  */
 extern JSBool
-js_PrimitiveToObject(JSContext *cx, jsval *vp);
+js_PrimitiveToObject(JSContext *cx, js::Value *vp);
 
+/*
+ * v and vp may alias. On successful return, vp->isObjectOrNull(). If vp is not
+ * rooted, the caller must root vp before the next possible GC.
+ */
 extern JSBool
-js_ValueToObject(JSContext *cx, jsval v, JSObject **objp);
+js_ValueToObjectOrNull(JSContext *cx, const js::Value &v, JSObject **objp);
 
+/*
+ * v and vp may alias. On successful return, vp->isObject(). If vp is not
+ * rooted, the caller must root vp before the next possible GC.
+ */
 extern JSObject *
-js_ValueToNonNullObject(JSContext *cx, jsval v);
+js_ValueToNonNullObject(JSContext *cx, const js::Value &v);
 
 extern JSBool
-js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, jsval *rval);
+js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, js::Value *rval);
 
 extern JSBool
 js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
-             uintN argc, jsval *argv, jsval *rval);
+             uintN argc, js::Value *argv, js::Value *rval);
 
 extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);
@@ -1286,18 +1341,14 @@ extern void
 js_Clear(JSContext *cx, JSObject *obj);
 
 extern bool
-js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
+js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, js::Value *vp);
 
 extern bool
-js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v);
+js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, const js::Value &v);
 
 /*
  * Precondition: obj must be locked.
  */
-extern JSBool
-js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
-                JSBool exactAllocation);
-
 extern JSObject *
 js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller);
 
@@ -1322,15 +1373,15 @@ extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);
 
 extern JS_FRIEND_API(JSBool)
-js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 #ifdef DEBUG
 JS_FRIEND_API(void) js_DumpChars(const jschar *s, size_t n);
 JS_FRIEND_API(void) js_DumpString(JSString *str);
 JS_FRIEND_API(void) js_DumpAtom(JSAtom *atom);
-JS_FRIEND_API(void) js_DumpValue(jsval val);
-JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpObject(JSObject *obj);
+JS_FRIEND_API(void) js_DumpValue(const js::Value &val);
+JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, JSStackFrame *start = NULL);
 #endif
 
@@ -1339,9 +1390,8 @@ js_InferFlags(JSContext *cx, uintN defaultFlags);
 
 /* Object constructor native. Exposed only so the JIT can know its address. */
 JSBool
-js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+js_Object(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
 
-JS_END_EXTERN_C
 
 namespace js {
 
@@ -1356,5 +1406,4 @@ extern JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj);
 
 }
-
 #endif /* jsobj_h___ */

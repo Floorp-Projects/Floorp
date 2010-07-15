@@ -1222,7 +1222,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
                                            cx->debugHooks->
                                            debuggerHandlerData)) {
       case JSTRAP_RETURN:
-        fp->rval = rval;
+        fp->rval = js::Valueify(rval);
         return JS_TRUE;
       case JSTRAP_ERROR:
         cx->throwing = JS_FALSE;
@@ -3053,10 +3053,10 @@ static JSPropertySpec OptionsProperties[] = {
 };
 
 static JSBool
-GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetOptionsProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-  if (JSVAL_IS_INT(id)) {
-    uint32 optbit = (uint32) JSVAL_TO_INT(id);
+  if (JSID_IS_INT(id)) {
+    uint32 optbit = (uint32) JSID_TO_INT(id);
     if (((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) ||
           optbit == JSOPTION_RELIMIT)
       *vp = (JS_GetOptions(cx) & optbit) ? JSVAL_TRUE : JSVAL_FALSE;
@@ -3065,10 +3065,10 @@ GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-SetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetOptionsProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-  if (JSVAL_IS_INT(id)) {
-    uint32 optbit = (uint32) JSVAL_TO_INT(id);
+  if (JSID_IS_INT(id)) {
+    uint32 optbit = (uint32) JSID_TO_INT(id);
 
     // Don't let options other than strict, werror, or relimit be set -- it
     // would be bad if web page script could clear
@@ -3946,7 +3946,7 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
     // Let's limit the high water mark for the first one to 32MB,
     // and second one to 0xffffffff.
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
-                      32L * 1024L * 1024L);
+                      64L * 1024L * 1024L);
     JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES,
                       0xffffffff);
   } else {

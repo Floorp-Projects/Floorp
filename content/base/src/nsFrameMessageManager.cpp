@@ -422,11 +422,11 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         NS_ENSURE_SUCCESS(rv, rv);
 
         js::AutoValueRooter argv(ctx);
-        argv.setObject(param);
+        argv.set(OBJECT_TO_JSVAL(param));
 
         JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
         JS_CallFunctionValue(ctx, thisObject,
-                             funval, 1, argv.addr(), &rval);
+                             funval, 1, argv.jsval_addr(), &rval);
         if (aJSONRetVal) {
           nsString json;
           if (JS_TryJSON(ctx, &rval) &&

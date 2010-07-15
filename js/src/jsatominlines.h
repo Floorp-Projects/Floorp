@@ -46,8 +46,8 @@
 /*
  * Convert v to an atomized string and wrap it as an id.
  */
-inline JSBool
-js_ValueToStringId(JSContext *cx, jsval v, jsid *idp)
+inline bool
+js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp)
 {
     JSString *str;
     JSAtom *atom;
@@ -59,37 +59,87 @@ js_ValueToStringId(JSContext *cx, jsval v, jsid *idp)
      * done in js_js_AtomizeString) ensures the caller that the resulting id at
      * is least weakly rooted.
      */
-    if (JSVAL_IS_STRING(v)) {
-        str = JSVAL_TO_STRING(v);
+    if (v.isString()) {
+        str = v.toString();
         if (str->isAtomized()) {
-            cx->weakRoots.lastAtom = v;
-            *idp = ATOM_TO_JSID((JSAtom *) v);
-            return JS_TRUE;
+            cx->weakRoots.lastAtom = *atomp = STRING_TO_ATOM(str);
+            return true;
         }
     } else {
         str = js_ValueToString(cx, v);
         if (!str)
-            return JS_FALSE;
+            return false;
     }
     atom = js_AtomizeString(cx, str, 0);
     if (!atom)
-        return JS_FALSE;
-    *idp = ATOM_TO_JSID(atom);
-    return JS_TRUE;
+        return false;
+    *atomp = atom;
+    return true;
 }
 
-inline JSBool
+inline bool
+js_ValueToStringId(JSContext *cx, const js::Value &v, jsid *idp)
+{
+    JSAtom *atom;
+    if (js_ValueToAtom(cx, v, &atom)) {
+        *idp = ATOM_TO_JSID(atom);
+        return true;
+    }
+    return false;
+}
+
+inline bool
+js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
+                         jsid *idp)
+{
+    JS_ASSERT(!idval.isInt32() || !INT_FITS_IN_JSID(idval.toInt32()));
+
+#if JS_HAS_XML_SUPPORT
+    extern bool js_InternNonIntElementIdSlow(JSContext *, JSObject *,
+                                             const js::Value &, jsid *);
+    if (idval.isObject())
+        return js_InternNonIntElementIdSlow(cx, obj, idval, idp);
+#endif
+
+    return js_ValueToStringId(cx, idval, idp);
+}
+
+inline bool
+js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
+                         jsid *idp, js::Value *vp)
+{
+    JS_ASSERT(!idval.isInt32() || !INT_FITS_IN_JSID(idval.toInt32()));
+
+#if JS_HAS_XML_SUPPORT
+    extern bool js_InternNonIntElementIdSlow(JSContext *, JSObject *,
+                                             const js::Value &,
+                                             jsid *, js::Value *);
+    if (idval.isObject())
+        return js_InternNonIntElementIdSlow(cx, obj, idval, idp, vp);
+#endif
+
+    JSAtom *atom;
+    if (js_ValueToAtom(cx, idval, &atom)) {
+        *idp = ATOM_TO_JSID(atom);
+        vp->setString(ATOM_TO_STRING(atom));
+        return true;
+    }
+    return false;
+}
+
+inline bool
 js_Int32ToId(JSContext* cx, int32 index, jsid* id)
 {
-    if (INT_FITS_IN_JSVAL(index)) {
+    if (INT_FITS_IN_JSID(index)) {
         *id = INT_TO_JSID(index);
-        JS_ASSERT(INT_JSID_TO_JSVAL(*id) == INT_TO_JSVAL(index));
-        return JS_TRUE;
+        return true;
     }
+
     JSString* str = js_NumberToString(cx, index);
     if (!str)
-        return JS_FALSE;
-    return js_ValueToStringId(cx, STRING_TO_JSVAL(str), id);
+        return false;
+
+    return js_ValueToStringId(cx, js::StringValue(str), id);
 }
 
 #endif /* jsatominlines_h___ */

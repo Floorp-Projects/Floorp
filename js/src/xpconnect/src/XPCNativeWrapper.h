@@ -68,7 +68,7 @@ IsNativeWrapperClass(JSClass *clazz)
 inline PRBool
 IsNativeWrapper(JSObject *obj)
 {
-  return IsNativeWrapperClass(obj->getClass());
+  return IsNativeWrapperClass(obj->getJSClass());
 }
 
 JSBool

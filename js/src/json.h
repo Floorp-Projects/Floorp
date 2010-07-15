@@ -45,18 +45,16 @@
 #define JSON_MAX_DEPTH  2048
 #define JSON_PARSER_BUFSIZE 1024
 
-JS_BEGIN_EXTERN_C
-
-extern JSClass js_JSONClass;
+extern js::Class js_JSONClass;
 
 extern JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj);
 
 extern JSBool
-js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
-             JSCharBuffer &cb);
+js_Stringify(JSContext *cx, js::Value *vp, JSObject *replacer,
+             const js::Value &space, JSCharBuffer &cb);
 
-extern JSBool js_TryJSON(JSContext *cx, jsval *vp);
+extern JSBool js_TryJSON(JSContext *cx, js::Value *vp);
 
 /* JSON parsing states; most permit leading whitespace. */
 enum JSONParserState {
@@ -113,14 +111,12 @@ enum JSONDataType {
 struct JSONParser;
 
 extern JSONParser *
-js_BeginJSONParse(JSContext *cx, jsval *rootVal);
+js_BeginJSONParse(JSContext *cx, js::Value *rootVal);
 
 extern JSBool
 js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len);
 
 extern bool
-js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
-
-JS_END_EXTERN_C
+js_FinishJSONParse(JSContext *cx, JSONParser *jp, const js::Value &reviver);
 
 #endif /* json_h___ */

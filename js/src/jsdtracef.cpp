@@ -106,30 +106,28 @@ jsdtrace_frame_linenumber(JSContext *cx, JSStackFrame *fp)
  * provide raw (unmasked) jsvals should type info be useful from D scripts.
  */
 static void *
-jsdtrace_jsvaltovoid(JSContext *cx, const jsval argval)
+jsdtrace_jsvaltovoid(JSContext *cx, const js::Value &argval)
 {
-    JSType type = TYPEOF(cx, argval);
+    if (argval.isNull())
+        return (void *)JS_TYPE_STR(JSTYPE_NULL);
 
-    switch (type) {
-      case JSTYPE_NULL:
-      case JSTYPE_VOID:
-        return (void *)JS_TYPE_STR(type);
+    if (argval.isUndefined())
+        return (void *)JS_TYPE_STR(JSTYPE_VOID);
 
-      case JSTYPE_BOOLEAN:
-        return (void *)JSVAL_TO_BOOLEAN(argval);
+    if (argval.isBoolean())
+        return (void *)argval.toBoolean();
 
-      case JSTYPE_STRING:
-        return (void *)js_GetStringBytes(cx, JSVAL_TO_STRING(argval));
+    if (argval.isString())
+        return (void *)js_GetStringBytes(cx, argval.toString());
 
-      case JSTYPE_NUMBER:
-        if (JSVAL_IS_INT(argval))
-            return (void *)JSVAL_TO_INT(argval);
-        return JSVAL_TO_DOUBLE(argval);
-
-      default:
-        return JSVAL_TO_GCTHING(argval);
+    if (argval.isNumber()) {
+        if (argval.isInt32())
+            return (void *)argval.toInt32();
+        // FIXME Now what?
+        //return (void *)argval.toDouble();
     }
-    /* NOTREACHED */
+
+    return argval.asGCThing();
 }
 
 static char *
@@ -176,7 +174,7 @@ DTrace::handleFunctionInfo(JSContext *cx, JSStackFrame *fp, JSStackFrame *dfp, J
 
 void
 DTrace::handleFunctionArgs(JSContext *cx, JSStackFrame *fp, const JSFunction *fun, jsuint argc,
-                           jsval *argv)
+                           js::Value *argv)
 {
     JAVASCRIPT_FUNCTION_ARGS(jsdtrace_filename(fp), jsdtrace_fun_classname(fun),
                              jsdtrace_fun_name(cx, fun), argc, (void *)argv,
@@ -188,7 +186,7 @@ DTrace::handleFunctionArgs(JSContext *cx, JSStackFrame *fp, const JSFunction *fu
 }
 
 void
-DTrace::handleFunctionRval(JSContext *cx, JSStackFrame *fp, JSFunction *fun, jsval rval)
+DTrace::handleFunctionRval(JSContext *cx, JSStackFrame *fp, JSFunction *fun, const js::Value &rval)
 {
     JAVASCRIPT_FUNCTION_RVAL(jsdtrace_filename(fp), jsdtrace_fun_classname(fun),
                              jsdtrace_fun_name(cx, fun), jsdtrace_fun_linenumber(cx, fun),
@@ -224,7 +222,7 @@ DTrace::ObjectCreationScope::handleCreationImpl(JSObject *obj)
 void
 DTrace::finalizeObjectImpl(JSObject *obj)
 {
-    JSClass *clasp = obj->getClass();
+    Class *clasp = obj->getClass();
 
     /* the first arg is NULL - reserved for future use (filename?) */
     JAVASCRIPT_OBJECT_FINALIZE(NULL, (char *)clasp->name, (uintptr_t)obj);
