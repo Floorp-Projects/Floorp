@@ -692,6 +692,10 @@ class nsIWidget : public nsISupports {
      * 
      * This will invalidate areas of the children that have changed, but
      * does not need to invalidate any part of this widget.
+     * 
+     * Children should be moved in the order given; the array is
+     * sorted so to minimize unnecessary invalidation if children are
+     * moved in that order.
      */
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) = 0;
 
