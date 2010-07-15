@@ -643,7 +643,17 @@ public:
 #endif
 
   nsDisplayItem* GetAbove() { return mAbove; }
-  
+
+  /**
+   * Like ComputeVisibility, but does the work that nsDisplayList
+   * does per-item:
+   * -- Intersects GetBounds with aVisibleRegion and puts the result
+   * in mVisibleRect
+   * -- Subtracts bounds from aVisibleRegion if the item is opaque
+   */
+  PRBool RecomputeVisibility(nsDisplayListBuilder* aBuilder,
+                             nsRegion* aVisibleRegion);
+
 protected:
   friend class nsDisplayList;
   

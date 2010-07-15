@@ -160,16 +160,24 @@ public:
    * The callee must draw all of aRegionToDraw. Drawing outside
    * aRegionToDraw will be clipped out or ignored.
    * The callee must draw all of aRegionToDraw.
+   * This region is relative to 0,0 in the ThebesLayer.
    * 
    * aRegionToInvalidate contains a region whose contents have been
    * changed by the layer manager and which must therefore be invalidated.
-   * For example, this could be non-empty if the layer internally switched
-   * from RGBA to RGB or back ... we might want to repaint it to
+   * For example, this could be non-empty if a retained layer internally
+   * switches from RGBA to RGB or back ... we might want to repaint it to
    * consistently use subpixel-AA or not.
+   * This region is relative to 0,0 in the ThebesLayer.
+   * aRegionToInvalidate may contain areas that are outside
+   * aRegionToDraw; the callee must ensure that these areas are repainted
+   * in the current layer manager transaction or in a later layer
+   * manager transaction.
    * 
    * aContext must not be used after the call has returned.
    * We guarantee that buffered contents in the visible
    * region are valid once drawing is complete.
+   * 
+   * The origin of aContext is 0,0 in the ThebesLayer.
    */
   typedef void (* DrawThebesLayerCallback)(ThebesLayer* aLayer,
                                            gfxContext* aContext,
