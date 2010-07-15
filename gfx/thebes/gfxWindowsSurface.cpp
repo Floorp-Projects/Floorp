@@ -63,7 +63,11 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRUint32 flags) :
         mForPrinting = PR_TRUE;
     } else
 #endif
+    if (flags & FLAG_IS_TRANSPARENT) {
+        Init(cairo_win32_surface_create_with_alpha(mDC));
+    } else {
         Init(cairo_win32_surface_create(mDC));
+    }
 }
 
 gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& size, gfxImageFormat imageFormat) :

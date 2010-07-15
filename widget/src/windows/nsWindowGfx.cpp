@@ -436,7 +436,9 @@ PRBool nsWindow::OnPaint(HDC aDC)
           if (!targetSurface &&
               IsRenderMode(gfxWindowsPlatform::RENDER_GDI))
           {
-            targetSurfaceWin = new gfxWindowsSurface(hDC);
+            PRUint32 flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
+                gfxWindowsSurface::FLAG_IS_TRANSPARENT;
+            targetSurfaceWin = new gfxWindowsSurface(hDC, flags);
             targetSurface = targetSurfaceWin;
           }
 #ifdef CAIRO_HAS_D2D_SURFACE
