@@ -44,6 +44,7 @@
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
 
 #include "nsTArray.h"
+#include "nsAlgorithm.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrefService.h"
 
@@ -117,8 +118,11 @@ CreatePixmap(Screen *screen, const gfxIntSize& size, unsigned int depth,
         relatedDrawable = RootWindowOfScreen(screen);
     }
     Display *dpy = DisplayOfScreen(screen);
+    // X gives us a fatal error if we try to create a pixmap of width
+    // or height 0
     return XCreatePixmap(dpy, relatedDrawable,
-                         size.width, size.height, depth);
+                         NS_MAX(1, size.width), NS_MAX(1, size.height),
+                         depth);
 }
 
 /* static */
