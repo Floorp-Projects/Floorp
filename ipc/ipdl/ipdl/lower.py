@@ -129,6 +129,31 @@ def _actorChannel(actor):
 def _actorManager(actor):
     return ExprSelect(actor, '->', 'mManager')
 
+def _actorState(actor):
+    return ExprSelect(actor, '->', 'mState')
+
+def _nullState(proto=None):
+    pfx = ''
+    if proto is not None:  pfx = proto.name() +'::'
+    return ExprVar(pfx +'__Null')
+
+def _errorState(proto=None):
+    pfx = ''
+    if proto is not None:  pfx = proto.name() +'::'
+    return ExprVar(pfx +'__Error')
+
+def _deadState(proto=None):
+    pfx = ''
+    if proto is not None:  pfx = proto.name() +'::'
+    return ExprVar(pfx +'__Dead')
+
+def _startState(proto=None, fq=False):
+    pfx = ''
+    if proto:
+        if fq:  pfx = proto.fullname() +'::'
+        else:   pfx = proto.name() +'::'
+    return ExprVar(pfx +'__Start')
+
 def _lookupListener(idexpr):
     return ExprCall(ExprVar('Lookup'), args=[ idexpr ])
 
@@ -968,7 +993,6 @@ class Protocol(ipdl.ast.Protocol):
             return ExprSelect(actorThis, '->', 'Manager')
         return ExprVar('Manager');
 
-    # FIXME/bug 525181: implement
     def stateMethod(self):
         return ExprVar('state');
 
@@ -1075,6 +1099,21 @@ class Protocol(ipdl.ast.Protocol):
     def idVar(self):
         assert not self.decl.type.isToplevel()
         return ExprVar('mId')
+
+    def stateVar(self):
+        return ExprVar('mState')
+
+    def fqStateType(self):
+        return Type(self.decl.type.name() +'::State')
+
+    def startState(self):
+        return _startState(self.decl.type)
+
+    def nullState(self):
+        return _nullState(self.decl.type)
+
+    def deadState(self):
+        return _deadState(self.decl.type)
 
     def managerVar(self, thisexpr=None):
         assert thisexpr is not None or not self.decl.type.isToplevel()
@@ -1241,7 +1280,9 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
         MessageDecl.upgrade(md)
 
     def visitTransitionStmt(self, ts):
-        ts.state.decl.cxxenum = 'State_%s'% (ts.state.decl.progname)
+        name = ts.state.decl.progname
+        ts.state.decl.cxxname = name
+        ts.state.decl.cxxenum = ExprVar(self.protocolName +'::'+ name)
 
 ##-----------------------------------------------------------------------------
 
@@ -1326,15 +1367,18 @@ child actors.'''
 
         # state information
         stateenum = TypeEnum('State')
+        # NB: __Dead is the first state on purpose, so that it has
+        # value '0'
+        stateenum.addId(_deadState().name)
+        stateenum.addId(_nullState().name)
+        stateenum.addId(_errorState().name)
         for ts in p.transitionStmts:
-            stateenum.addId(ts.state.decl.cxxenum)
+            stateenum.addId(ts.state.decl.cxxname)
         if len(p.transitionStmts):
-            startstate = p.transitionStmts[0].state.decl.cxxenum
+            startstate = p.transitionStmts[0].state.decl.cxxname
         else:
-            startstate = '0'
-        stateenum.addId('StateStart', startstate)
-        stateenum.addId('StateError')
-        stateenum.addId('StateLast')
+            startstate = _nullState().name
+        stateenum.addId(_startState().name, startstate)
 
         ns.addstmts([ StmtDecl(Decl(stateenum,'')), Whitespace.NL ])
 
@@ -2236,6 +2280,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmt(typedef)
         self.cls.addstmt(Whitespace.NL)
 
+        self.cls.addstmts([ Typedef(p.fqStateType(), 'State'), Whitespace.NL ])
+
         # interface methods that the concrete subclass has to impl
         for md in p.messageDecls:
             isctor, isdtor = md.decl.type.isCtor(), md.decl.type.isDtor()
@@ -2324,16 +2370,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     ExprCall(ExprVar('ALLOW_THIS_IN_INITIALIZER_LIST'),
                              [ ExprVar.THIS ]) ]),
                 ExprMemberInit(p.lastActorIdVar(),
-                               [ p.actorIdInit(self.side) ])
+                               [ p.actorIdInit(self.side) ]),
+                ExprMemberInit(p.lastShmemIdVar(),
+                               [ p.shmemIdInit(self.side) ]),
+                ExprMemberInit(p.stateVar(),
+                               [ p.startState() ])
             ]
         else:
             ctor.memberinits = [
-                ExprMemberInit(p.idVar(), [ ExprLiteral.ZERO ]) ]
-
-        if p.decl.type.isToplevel():
-            ctor.memberinits.append(
-                ExprMemberInit(p.lastShmemIdVar(),
-                               [ p.shmemIdInit(self.side) ]))
+                ExprMemberInit(p.idVar(), [ ExprLiteral.ZERO ]),
+                ExprMemberInit(p.stateVar(),
+                               [ p.deadState() ])
+            ]
 
         ctor.addstmt(StmtExpr(ExprCall(ExprVar('MOZ_COUNT_CTOR'),
                                        [ ExprVar(self.clsname) ])))
@@ -2421,6 +2469,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             refmeth.addstmt(StmtReturn(p.managedVar(managed, self.side)))
             
             self.cls.addstmts([ meth, refmeth, Whitespace.NL ])
+
+        statemethod = MethodDefn(MethodDecl(
+            p.stateMethod().name,
+            ret=p.fqStateType()))
+        statemethod.addstmt(StmtReturn(p.stateVar()))
+        self.cls.addstmts([ statemethod, Whitespace.NL ])
 
         ## OnMessageReceived()/OnCallReceived()
 
@@ -2849,6 +2903,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtDecl(Decl(p.shmemMapType(), p.shmemMapVar().name)),
                 StmtDecl(Decl(_shmemIdType(), p.lastShmemIdVar().name))
             ])
+
+        self.cls.addstmt(StmtDecl(Decl(Type('State'), p.stateVar().name)))
 
         for managed in ptype.manages:
             self.cls.addstmts([
@@ -3876,7 +3932,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
 
     def ctorPrologue(self, md, errfn=ExprLiteral.NULL, idexpr=None):
-        actorvar = md.actorDecl().var()
+        actordecl = md.actorDecl()
+        actorvar = actordecl.var()
+        actorproto = actordecl.ipdltype.protocol
 
         if idexpr is None:
             idexpr = ExprCall(self.protocol.registerMethod(),
@@ -3894,7 +3952,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtExpr(_callCxxArrayInsertSorted(
                 self.protocol.managedVar(md.decl.type.constructedType(),
                                          self.side),
-                actorvar))
+                actorvar)),
+            StmtExpr(ExprAssn(_actorState(actorvar),
+                              _startState(actorproto, fq=1)))
         ]
 
     def failCtorIf(self, md, cond):
