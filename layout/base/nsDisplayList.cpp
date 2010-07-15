@@ -449,6 +449,10 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       return;
   }
 
+  if (aFlags & PAINT_FLUSH_LAYERS) {
+    FrameLayerBuilder::InvalidateAllLayers(layerManager);
+  }
+
   if (aCtx) {
     layerManager->BeginTransactionWithTarget(aCtx->ThebesContext());
   } else {
@@ -468,6 +472,10 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
                                aBuilder);
   aBuilder->LayerBuilder()->DidEndTransaction(layerManager);
+
+  if (aFlags & PAINT_FLUSH_LAYERS) {
+    FrameLayerBuilder::InvalidateAllLayers(layerManager);
+  }
 
   nsCSSRendering::DidPaint();
 }
