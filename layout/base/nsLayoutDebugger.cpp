@@ -154,6 +154,8 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
                    PRInt32 aIndent, FILE* aOutput)
 {
   for (nsDisplayItem* i = aList.GetBottom(); i != nsnull; i = i->GetAbove()) {
+    if (aList.DidComputeVisibility() && i->GetVisibleRect().IsEmpty())
+      continue;
     for (PRInt32 j = 0; j < aIndent; ++j) {
       fputc(' ', aOutput);
     }
