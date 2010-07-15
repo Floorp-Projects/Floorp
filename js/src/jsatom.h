@@ -307,6 +307,7 @@ struct JSAtomState {
     JSAtom              *indexAtom;
     JSAtom              *inputAtom;
     JSAtom              *iteratorAtom;
+    JSAtom              *joinAtom;
     JSAtom              *lastIndexAtom;
     JSAtom              *lengthAtom;
     JSAtom              *lineNumberAtom;
@@ -458,6 +459,7 @@ extern const char   js_ignoreCase_str[];
 extern const char   js_index_str[];
 extern const char   js_input_str[];
 extern const char   js_iterator_str[];
+extern const char   js_join_str[];
 extern const char   js_lastIndex_str[];
 extern const char   js_length_str[];
 extern const char   js_lineNumber_str[];
