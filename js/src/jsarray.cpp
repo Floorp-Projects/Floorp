@@ -1392,7 +1392,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
             /* Verify that overwriteType and writeType were accurate. */
             AutoIdRooter idr(cx);
             for (jsuint i = 0; i < count; i++) {
-                JS_ASSERT_IF(vectorType == SourceVectorAllValues, vector[i] != JSVAL_HOLE);
+                JS_ASSERT_IF(vectorType == SourceVectorAllValues, vector[i].isMagic(JS_ARRAY_HOLE));
 
                 jsdouble index = jsdouble(start) + i;
                 if (targetType == TargetElementsAllHoles && index < jsuint(-1)) {
