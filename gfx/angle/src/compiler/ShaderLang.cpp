@@ -130,7 +130,7 @@ void ShDestruct(ShHandle handle)
 //
 // Cleanup symbol tables
 //
-int __fastcall ShFinalize()
+int ShFinalize()
 {  
   if (PerProcessGPA) {
     PerProcessGPA->popAll();

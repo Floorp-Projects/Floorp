@@ -9,10 +9,25 @@
 #include "ResourceLimits.h"
 
 #ifdef _WIN32
+
 #define C_DECL __cdecl
+
+#ifndef MOZ_ENABLE_LIBXUL
+#ifdef ANGLE_BUILD
+#define ANGLE_EXPORT  __declspec(dllexport)
 #else
+#define ANGLE_EXPORT  __declspec(dllimport)
+#endif
+#else
+#define ANGLE_EXPORT
+#endif
+
+#else
+
+#define ANGLE_EXPORT
 #define __fastcall
 #define C_DECL
+
 #endif
 
 //
@@ -27,11 +42,11 @@
 // Driver must call this first, once, before doing any other
 // compiler/linker operations.
 //
-int ShInitialize();
+ANGLE_EXPORT int ShInitialize();
 //
 // Driver should call this at shutdown.
 //
-int __fastcall ShFinalize();
+ANGLE_EXPORT int ShFinalize();
 //
 // Types of languages the compiler can consume.
 //
@@ -88,10 +103,10 @@ typedef void* ShHandle;
 // Driver calls these to create and destroy compiler/linker
 // objects.
 //
-ShHandle ShConstructCompiler(const EShLanguage, int debugOptions);  // one per shader
-ShHandle ShConstructLinker(const EShExecutable, int debugOptions);  // one per shader pair
-ShHandle ShConstructUniformMap();                 // one per uniform namespace (currently entire program object)
-void ShDestruct(ShHandle);
+ANGLE_EXPORT ShHandle ShConstructCompiler(const EShLanguage, int debugOptions);  // one per shader
+ANGLE_EXPORT ShHandle ShConstructLinker(const EShExecutable, int debugOptions);  // one per shader pair
+ANGLE_EXPORT ShHandle ShConstructUniformMap();                 // one per uniform namespace (currently entire program object)
+ANGLE_EXPORT void ShDestruct(ShHandle);
 
 //
 // The return value of ShCompile is boolean, indicating
@@ -100,7 +115,7 @@ void ShDestruct(ShHandle);
 // The info-log should be written by ShCompile into 
 // ShHandle, so it can answer future queries.
 //
-int ShCompile(
+ANGLE_EXPORT int ShCompile(
 	const ShHandle,
 	const char* const shaderStrings[],
 	const int numStrings,
@@ -114,14 +129,14 @@ int ShCompile(
 // Similar to ShCompile, but accepts an opaque handle to an
 // intermediate language structure.
 //
-int ShCompileIntermediate(
+ANGLE_EXPORT int ShCompileIntermediate(
 	ShHandle compiler,
 	ShHandle intermediate,
 	const EShOptimizationLevel,
 	int debuggable           // boolean
 	);
 
-int ShLink(
+ANGLE_EXPORT int ShLink(
 	const ShHandle,               // linker object
 	const ShHandle h[],           // compiler objects to link together
 	const int numHandles,
@@ -129,7 +144,7 @@ int ShLink(
 	short int** uniformsAccessed,  // returned with indexes of uniforms accessed
 	int* numUniformsAccessed); 	
 
-int ShLinkExt(
+ANGLE_EXPORT int ShLinkExt(
 	const ShHandle,               // linker object
 	const ShHandle h[],           // compiler objects to link together
 	const int numHandles);
@@ -138,28 +153,28 @@ int ShLinkExt(
 // ShSetEncrpytionMethod is a place-holder for specifying
 // how source code is encrypted.
 //
-void ShSetEncryptionMethod(ShHandle);
+ANGLE_EXPORT void ShSetEncryptionMethod(ShHandle);
 
 //
 // All the following return 0 if the information is not
 // available in the object passed down, or the object is bad.
 //
-const char* ShGetInfoLog(const ShHandle);
-const char* ShGetObjectCode(const ShHandle);
-const void* ShGetExecutable(const ShHandle);
-int ShSetVirtualAttributeBindings(const ShHandle, const ShBindingTable*);   // to detect user aliasing
-int ShSetFixedAttributeBindings(const ShHandle, const ShBindingTable*);     // to force any physical mappings
-int ShGetPhysicalAttributeBindings(const ShHandle, const ShBindingTable**); // for all attributes
+ANGLE_EXPORT const char* ShGetInfoLog(const ShHandle);
+ANGLE_EXPORT const char* ShGetObjectCode(const ShHandle);
+ANGLE_EXPORT const void* ShGetExecutable(const ShHandle);
+ANGLE_EXPORT int ShSetVirtualAttributeBindings(const ShHandle, const ShBindingTable*);   // to detect user aliasing
+ANGLE_EXPORT int ShSetFixedAttributeBindings(const ShHandle, const ShBindingTable*);     // to force any physical mappings
+ANGLE_EXPORT int ShGetPhysicalAttributeBindings(const ShHandle, const ShBindingTable**); // for all attributes
 //
 // Tell the linker to never assign a vertex attribute to this list of physical attributes
 //
-int ShExcludeAttributes(const ShHandle, int *attributes, int count);
+ANGLE_EXPORT int ShExcludeAttributes(const ShHandle, int *attributes, int count);
 
 //
 // Returns the location ID of the named uniform.
 // Returns -1 if error.
 //
-int ShGetUniformLocation(const ShHandle uniformMap, const char* name);
+ANGLE_EXPORT int ShGetUniformLocation(const ShHandle uniformMap, const char* name);
 
 enum TDebugOptions {
 	EDebugOpNone               = 0x000,

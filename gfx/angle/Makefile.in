@@ -114,7 +114,11 @@ CSRCS   = \
         tokens.c \
 	$(NULL)
 
-DEFINES += -DANGLE_USE_NSPR
+DEFINES += -DANGLE_USE_NSPR -DANGLE_BUILD
+
+ifndef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
