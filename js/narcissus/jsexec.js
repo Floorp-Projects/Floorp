@@ -911,7 +911,22 @@ if (!('__call__' in Fp)) {
     defineProperty(Fp, "__construct__",
                    function (a, x) {
                        a = Array.prototype.splice.call(a, 0, a.length);
-                       return this.__applyConstructor__(a);
+                       switch (a.length) {
+                         case 0:
+                           return new this();
+                         case 1:
+                           return new this(a[0]);
+                         case 2:
+                           return new this(a[0], a[1]);
+                         case 3:
+                           return new this(a[0], a[1], a[2]);
+                         default:
+                           var argStr = "";
+                           for (var i=0; i<a.length; i++) {
+                               argStr += 'a[' + i + '],';
+                           }
+                           return eval('new this(' + argStr.slice(0,-1) + ');');
+                       }
                    }, true, true, true);
 
     // Since we use native functions such as Date along with host ones such
