@@ -1685,10 +1685,14 @@ static void
 InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
                    PRUint8 aSheetType)
 {
-  PRInt32 type;
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(aRule->GetType(type)) 
-                    && type == nsICSSRule::FONT_FACE_RULE, 
-                    "InsertFontFaceRule passed a non-fontface CSS rule");
+#ifdef DEBUG
+  {
+    PRInt32 type;
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(aRule->GetType(type)) 
+                      && type == nsICSSRule::FONT_FACE_RULE, 
+                      "InsertFontFaceRule passed a non-fontface CSS rule");
+  }
+#endif
 
   // aRule->List();
 
