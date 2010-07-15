@@ -249,38 +249,25 @@ nsRect nsCanvasFrame::CanvasArea() const
   return result;
 }
 
-/*
- * Override nsDisplayBackground methods so that we pass aBGClipRect to
- * PaintBackground, covering the whole overflow area.
- */
-class nsDisplayCanvasBackground : public nsDisplayBackground {
-public:
-  nsDisplayCanvasBackground(nsIFrame *aFrame)
-    : nsDisplayBackground(aFrame)
-  {
+void
+nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
+                                 nsIRenderingContext* aCtx)
+{
+  nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
+  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsRect bgClipRect = frame->CanvasArea() + offset;
+
+  if (NS_GET_A(mExtraBackgroundColor) > 0) {
+    aCtx->SetColor(mExtraBackgroundColor);
+    aCtx->FillRect(bgClipRect);
   }
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
-  {
-    nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
-  }
-
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx)
-  {
-    nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
-    nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
-    nsRect bgClipRect = frame->CanvasArea() + offset;
-    nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
-                                    mVisibleRect,
-                                    nsRect(offset, mFrame->GetSize()),
-                                    aBuilder->GetBackgroundPaintFlags(),
-                                    &bgClipRect);
-  }
-
-  NS_DISPLAY_DECL_NAME("CanvasBackground", TYPE_CANVAS_BACKGROUND)
-};
+  nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
+                                  mVisibleRect,
+                                  nsRect(offset, mFrame->GetSize()),
+                                  aBuilder->GetBackgroundPaintFlags(),
+                                  &bgClipRect);
+}
 
 /**
  * A display item to paint the focus ring for the document.

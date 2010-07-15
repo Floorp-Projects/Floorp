@@ -5713,6 +5713,24 @@ PresShell::RenderSelection(nsISelection* aSelection,
                              aScreenRect);
 }
 
+static PRBool
+AddCanvasBackgroundColor(const nsDisplayList& aList, nsIFrame* aCanvasFrame,
+                         nscolor aColor)
+{
+  for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
+    if (i->GetUnderlyingFrame() == aCanvasFrame &&
+        i->GetType() == nsDisplayItem::TYPE_CANVAS_BACKGROUND) {
+      nsDisplayCanvasBackground* bg = static_cast<nsDisplayCanvasBackground*>(i);
+      bg->SetExtraBackgroundColor(aColor);
+      return PR_TRUE;
+    }
+    nsDisplayList* sublist = i->GetList();
+    if (sublist && AddCanvasBackgroundColor(*sublist, aCanvasFrame, aColor))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 nsresult PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
                                                  nsDisplayList&        aList,
                                                  nsIFrame*             aFrame,
@@ -5730,6 +5748,23 @@ nsresult PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
     return NS_OK;
 
   nscolor bgcolor = NS_ComposeColors(aBackstopColor, mCanvasBackgroundColor);
+
+  // To make layers work better, we want to avoid having a big non-scrolled 
+  // color background behind a scrolled transparent background. Instead,
+  // we'll try to move the color background into the scrolled content
+  // by making nsDisplayCanvasBackground paint it.
+  if (!aFrame->GetParent()) {
+    nsIScrollableFrame* sf =
+      aFrame->PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
+    if (sf) {
+      nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
+      if (canvasFrame && canvasFrame->IsVisibleForPainting(&aBuilder)) {
+        if (AddCanvasBackgroundColor(aList, canvasFrame, bgcolor))
+          return NS_OK;
+      }
+    }
+  }
+
   return aList.AppendNewToBottom(
       new (&aBuilder) nsDisplaySolidColor(aFrame, aBounds, bgcolor));
 }
