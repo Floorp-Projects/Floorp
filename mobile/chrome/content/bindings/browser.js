@@ -289,7 +289,7 @@ let DOMEvents =  {
 
       case "DOMWillOpenModalDialog":
       case "DOMWindowClose":
-        let retvals = sendAsyncMessage(aEvent.type, { });
+        let retvals = sendSyncMessage(aEvent.type, { });
         for (rv in retvals) {
           if (rv.preventDefault) {
             aEvent.preventDefault();
