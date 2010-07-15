@@ -1,5 +1,7 @@
 /* This file is for platform-specific CSS for TabCandy, and is loaded after the 
   platform-independent tabcandy.css, to allow overwriting. 
-  
-  There are currently no platform-specific bits, but we're assured that there will be before we ship.
 */
+
+.close {
+  background: url(chrome://global/skin/icons/Close.gif) no-repeat;
+}
