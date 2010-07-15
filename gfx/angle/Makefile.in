@@ -12,11 +12,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is canvas code.
+# The Original Code is gecko.
 #
 # The Initial Developer of the Original Code is
-#   Vladimir Vukicevic <vladimir@pobox.com>
-# Portions created by the Initial Developer are Copyright (C) 2005
+#   Mozilla 
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,78 +35,92 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= content
-LIBRARY_NAME	= gkconcvs_s
+MODULE		= angle
+LIBRARY_NAME	= angle
 LIBXUL_LIBRARY  = 1
+EXPORT_LIBRARY  = 1
 
-EXPORTS = \
-	CustomQS_Canvas2D.h \
-	CustomQS_WebGL.h \
+EXPORTS_NAMESPACES = angle
+
+EXPORTS_angle = \
+	include/GLSLANG/ShaderLang.h \
+	include/GLSLANG/ResourceLimits.h \
 	$(NULL)
 
-CPPSRCS	= \
-	CanvasUtils.cpp \
-	nsCanvasRenderingContext2D.cpp \
+LOCAL_INCLUDES += -I$(srcdir)/include -I$(srcdir)/src
+
+VPATH += $(srcdir)/src
+VPATH += $(srcdir)/src/compiler
+VPATH += $(srcdir)/src/compiler/preprocessor
+VPATH += $(srcdir)/generated
+
+CPPSRCS = \
+        InfoSink.cpp \
+        Initialize.cpp \
+        InitializeDll.cpp \
+        Intermediate.cpp \
+        intermOut.cpp \
+        IntermTraverse.cpp \
+        MozAngleLink.cpp \
+        parseConst.cpp \
+        ParseHelper.cpp \
+        PoolAlloc.cpp \
+        QualifierAlive.cpp \
+        RemoveTree.cpp \
+        ShaderLang.cpp \
+        SymbolTable.cpp \
+	debug.cpp \
+	ossource_nspr.cpp \
 	$(NULL)
 
-ifdef MOZ_IPC
+# flex/yacc generated files
 CPPSRCS += \
-	DocumentRendererParent.cpp \
-	DocumentRendererChild.cpp \
-	DocumentRendererNativeIDParent.cpp \
-	DocumentRendererNativeIDChild.cpp \
-	DocumentRendererShmemParent.cpp \
-	DocumentRendererShmemChild.cpp \
+	glslang.cpp \
+	glslang_tab.cpp \
 	$(NULL)
-endif
 
-# Canvas 3D Pieces
-
-ifdef MOZ_WEBGL
-
+# GLSL translator backend
 CPPSRCS += \
-	WebGLContext.cpp \
-	WebGLContextGL.cpp \
-	WebGLContextUtils.cpp \
-	WebGLContextValidate.cpp \
-	NativeJSContext.cpp \
+	CodeGenGLSL.cpp \
+	OutputGLSL.cpp \
+	TranslatorGLSL.cpp \
 	$(NULL)
 
-ifndef MOZ_ENABLE_LIBXUL
+# Currently, only one or the other
+# can be selected.
 
-SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/gfx/angle/$(LIB_PREFIX)angle.$(LIB_SUFFIX) \
+## HLSL translator backend
+##CPPSRCS += \
+##	CodeGenHLSL.cpp \
+##	OutputHLSL.cpp \
+##	TranslatorHLSL.cpp \
+##	UnfoldSelect.cpp \
+##	$(NULL)
+
+CSRCS   = \
+        atom.c \
+        cpp.c \
+        cppstruct.c \
+        memory.c \
+        scanner.c \
+        symbols.c \
+        tokens.c \
 	$(NULL)
 
-endif
-
-else
-
-CPPSRCS += WebGLContextNotSupported.cpp
-
-endif
-
-# we don't want the shared lib, but we want to force the creation of a static lib.
-FORCE_STATIC_LIB = 1
+DEFINES += -DANGLE_USE_NSPR
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
-CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
+# We have to filter out -pedantic, because of
+# comma-at-end-of-enumerator list failures.  We can try to get this fixed
+# upstream at some point.
+CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
+CFLAGS := $(filter-out -pedantic,$(CFLAGS))
 
-INCLUDES	+= \
-		-I$(srcdir)/../../../layout/xul/base/src \
-		-I$(srcdir)/../../../layout/style \
-		-I$(srcdir)/../../../layout/generic \
-		-I$(srcdir)/../../base/src \
-		-I$(srcdir)/../../html/content/src \
-		$(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT
