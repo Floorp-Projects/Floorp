@@ -579,8 +579,12 @@ ThreadData::purge(JSContext *cx)
 
     for (ThreadData::ScriptSet::Enum e(picScripts); !e.empty(); e.popFront()) {
         JSScript *script = e.front();
+#if defined JS_POLYIC
         ic::PurgePICs(cx, script);
+#endif
+#if defined JS_MONOIC
         //PurgeMICs(cs, script);
+#endif
     }
 
     picScripts.clear();
@@ -665,7 +669,7 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         script->jitLength = 0;
 #endif
         
-#if ENABLE_PIC
+#if defined JS_POLYIC
         if (script->pics) {
             uint32 npics = script->numPICs();
             for (uint32 i = 0; i < npics; i++) {
@@ -682,10 +686,12 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         cx->free(script->nmap - 1);
         script->nmap = NULL;
     }
+#if defined JS_MONOIC
     if (script->mics) {
         cx->free(script->mics);
         script->mics = NULL;
     }
+#endif
 
 # if 0 /* def JS_TRACER */
     if (script->trees) {

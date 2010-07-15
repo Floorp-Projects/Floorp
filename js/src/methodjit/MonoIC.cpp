@@ -49,6 +49,8 @@ using namespace js;
 using namespace js::mjit;
 using namespace js::mjit::ic;
 
+#if defined JS_MONOIC
+
 static void
 PatchGetFallback(VMFrame &f, ic::MICInfo &mic)
 {
@@ -170,3 +172,4 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     stubs::SetGlobalName(f, atom);
 }
 
+#endif /* JS_MONOIC */

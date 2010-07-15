@@ -38,13 +38,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jsjaeger_mono_ic_h__ && defined JS_METHODJIT
+#if !defined jsjaeger_mono_ic_h__ && defined JS_METHODJIT && defined JS_MONOIC
 #define jsjaeger_mono_ic_h__
 
 #include "assembler/assembler/CodeLocation.h"
 #include "methodjit/MethodJIT.h"
-
-#define ENABLE_MIC 1
 
 namespace js {
 namespace mjit {
