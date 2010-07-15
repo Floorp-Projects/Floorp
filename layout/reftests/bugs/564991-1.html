@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+<div id="d" style="opacity:0.9">HELLO</div>
+<script>
+function finishTest() {
+  var d = document.getElementById("d");
+  d.style.opacity = 0.1;
+
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", finishTest, false);
+</script>
+</body>
+</html>
