@@ -968,7 +968,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     // manager now so that if we need to modify the retained layer
     // tree during this process, those modifications will happen
     // during the construction phase for the retained layer tree.
-    tempManager = new BasicLayerManager(nsnull);
+    tempManager = new BasicLayerManager();
     tempManager->BeginTransaction();
     nsRefPtr<Layer> layer = aItem->BuildLayer(aBuilder, tempManager);
     if (!layer) {

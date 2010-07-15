@@ -53,7 +53,7 @@ public:
         FLAG_IS_TRANSPARENT = (1 << 2),
     };
 
-    gfxWindowsSurface(HWND wnd);
+    gfxWindowsSurface(HWND wnd, PRUint32 flags = 0);
     gfxWindowsSurface(HDC dc, PRUint32 flags = 0);
 
     // Create a DIB surface
@@ -66,6 +66,8 @@ public:
                       gfxImageFormat imageFormat = ImageFormatRGB24);
 
     gfxWindowsSurface(cairo_surface_t *csurf);
+
+    void InitWithDC(PRUint32 flags);
 
     virtual ~gfxWindowsSurface();
 

@@ -107,20 +107,29 @@ public:
     OPAQUE_CONTENT = 0x01
   };
   /**
-   * Start a drawing operation. Ths returns a PaintState describing what
+   * Start a drawing operation. This returns a PaintState describing what
    * needs to be drawn to bring the buffer up to date in the visible region.
    * This queries aLayer to get the currently valid and visible regions.
    * The returned mContext may be null if mRegionToDraw is empty.
    * Otherwise it must not be null.
    * mRegionToInvalidate will contain mRegionToDraw.
+   * @param aReferenceSurface if we need to create a buffer, we'll create
+   * a surface that's similar to aReferenceSurface
    */
-  PaintState BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
+  PaintState BeginPaint(ThebesLayer* aLayer, gfxASurface* aReferenceSurface,
                         PRUint32 aFlags);
   /**
    * Complete the drawing operation. The region to draw must have been drawn
    * before this is called. The contents of the buffer are drawn to aTarget.
    */
   void DrawTo(ThebesLayer* aLayer, PRUint32 aFlags, gfxContext* aTarget, float aOpacity);
+
+  /**
+   * Get the underlying buffer, if any. This is useful because we can pass
+   * in the buffer as the default "reference surface" if there is one.
+   * Don't use it for anything else!
+   */
+  gfxASurface* GetBuffer() { return mBuffer; }
 
 protected:
   enum XSide {

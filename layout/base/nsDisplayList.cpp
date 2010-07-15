@@ -371,7 +371,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       NS_WARNING("Nowhere to paint into");
       return;
     }
-    layerManager = new BasicLayerManager(nsnull);
+    layerManager = new BasicLayerManager();
     if (!layerManager)
       return;
   }
