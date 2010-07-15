@@ -124,6 +124,8 @@ fix-xcopyarea-with-clips.patch: 5d07307b691afccccbb15f773d5231669ba44f5a
 
 cairo-x-visual.patch: make valid visua for cairo_xlib_surface_create_with_xrender_format (55037bfb2454a671332d961e061c712ab5471580)
 
+win32-transparent-surface.patch: add API so we can create a win32 surface for an HDC and indicate the surface has an alpha channel
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
