@@ -74,15 +74,20 @@ NS_NewCanvasRenderingContextWebGL(nsICanvasRenderingContextWebGL** aResult)
 
 WebGLContext::WebGLContext()
     : mCanvasElement(nsnull),
-      gl(nsnull),
-      mWidth(0), mHeight(0),
-      mGeneration(0),
-      mInvalidated(PR_FALSE),
-      mActiveTexture(0),
-      mSynthesizedGLError(LOCAL_GL_NO_ERROR),
-      mPixelStoreFlipY(PR_FALSE),
-      mPixelStorePremultiplyAlpha(PR_FALSE)
+      gl(nsnull)
 {
+    mWidth = mHeight = 0;
+    mGeneration = 0;
+    mInvalidated = PR_FALSE;
+
+    mActiveTexture = 0;
+    mSynthesizedGLError = LOCAL_GL_NO_ERROR;
+    mPixelStoreFlipY = PR_FALSE;
+    mPixelStorePremultiplyAlpha = PR_FALSE;
+
+    // eventually true
+    mShaderValidation = PR_FALSE;
+
     mMapBuffers.Init();
     mMapTextures.Init();
     mMapPrograms.Init();
@@ -165,6 +170,17 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     format.minDepth = 1;
 
     gl = gl::sGLContextProvider.CreatePBuffer(gfxIntSize(width, height), format);
+
+#ifdef USE_GLES2
+    // On native GLES2, no need to validate, the compiler will do it
+    mShaderValidation = PR_FALSE;
+#else
+    // Check the shader validator pref
+    nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(prefService != nsnull, NS_ERROR_FAILURE);
+
+    prefService->GetBoolPref("webgl.shader_validator", &mShaderValidation);
+#endif
 
     if (!InitAndValidateGL()) {
         gl = gl::GLContextProviderOSMesa::CreatePBuffer(gfxIntSize(width, height), format);

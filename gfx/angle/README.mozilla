@@ -1,0 +1,12 @@
+This is the ANGLE project, from http://code.google.com/p/angleproject/.
+
+Current revision: r342
+
+Local patches:
+    angle-nspr.patch - use NSPR for TLS
+
+To regenerate the flex/yacc generated files:
+
+flex --noline --nounistd --outfile=generated/glslang.cpp src/compiler/glslang.l
+bison --no-lines --defines=generated/glslang_tab.h --skeleton=yacc.c --output=generated/glslang_tab.cpp src/compiler/glslang.y
+

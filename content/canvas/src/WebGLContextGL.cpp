@@ -56,6 +56,11 @@
 
 #include "jstypedarray.h"
 
+#ifndef USE_GLES2
+// shader translator
+#include "angle/ShaderLang.h"
+#endif
+
 using namespace mozilla;
 
 static PRBool BaseTypeAndSizeFromUniformType(WebGLenum uType, WebGLenum *baseType, WebGLint *unitSize);
@@ -2819,11 +2824,54 @@ WebGLContext::Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei heig
 NS_IMETHODIMP
 WebGLContext::CompileShader(nsIWebGLShader *sobj)
 {
+    WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetGLName<WebGLShader>(sobj, &shadername))
+    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername))
         return ErrorInvalidOperation("CompileShader: invalid shader");
 
     MakeContextCurrent();
+
+#ifndef USE_GLES2
+    if (shader->NeedsTranslation() && mShaderValidation) {
+        ShHandle compiler = 0;
+        int debugFlags = 0;
+        EShLanguage lang = (shader->ShaderType() == LOCAL_GL_VERTEX_SHADER) ?
+            EShLangVertex : EShLangFragment;
+
+        TBuiltInResource resources;
+
+        resources.maxVertexAttribs = mGLMaxVertexAttribs;
+        resources.maxVertexUniformVectors = mGLMaxVertexUniformVectors;
+        resources.maxVaryingVectors = mGLMaxVaryingVectors;
+        resources.maxVertexTextureImageUnits = mGLMaxVertexTextureImageUnits;
+        resources.maxCombinedTextureImageUnits = mGLMaxTextureUnits;
+        resources.maxTextureImageUnits = mGLMaxTextureImageUnits;
+        resources.maxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
+        resources.maxDrawBuffers = 1;
+
+        compiler = ShConstructCompiler(lang, debugFlags);
+
+        nsDependentCString src(shader->Source());
+        const char *s = src.get();
+
+        if (!ShCompile(compiler, &s, 1, EShOptNone, &resources, debugFlags)) {
+            shader->SetTranslationFailure(nsDependentCString(ShGetInfoLog(compiler)));
+            ShDestruct(compiler);
+            return NS_OK;
+        }
+
+        s = ShGetObjectCode(compiler);
+        gl->fShaderSource(shadername, 1, &s, NULL);
+        shader->SetTranslationSuccess();
+
+        ShDestruct(compiler);
+    } else
+#endif
+    {
+        const char *s = nsDependentCString(shader->Source()).get();
+        gl->fShaderSource(shadername, 1, &s, NULL);
+        shader->SetTranslationSuccess();
+    }
 
     gl->fCompileShader(shadername);
 
@@ -2834,8 +2882,9 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
 NS_IMETHODIMP
 WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname, nsIVariant **retval)
 {
+    WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetGLName<WebGLShader>(sobj, &shadername))
+    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername))
         return ErrorInvalidOperation("GetShaderParameter: invalid shader");
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
@@ -2846,11 +2895,15 @@ WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname, nsIVaria
     switch (pname) {
         case LOCAL_GL_SHADER_TYPE:
         case LOCAL_GL_INFO_LOG_LENGTH:
-        case LOCAL_GL_SHADER_SOURCE_LENGTH:
         {
             GLint i = 0;
             gl->fGetShaderiv(shadername, pname, &i);
             wrval->SetAsInt32(i);
+        }
+            break;
+        case LOCAL_GL_SHADER_SOURCE_LENGTH:
+        {
+            wrval->SetAsInt32(PRInt32(shader->Source().Length()) + 1);
         }
             break;
         case LOCAL_GL_DELETE_STATUS:
@@ -2874,9 +2927,16 @@ WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname, nsIVaria
 NS_IMETHODIMP
 WebGLContext::GetShaderInfoLog(nsIWebGLShader *sobj, nsAString& retval)
 {
+    WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetGLName<WebGLShader>(sobj, &shadername))
+    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername))
         return ErrorInvalidOperation("GetShaderInfoLog: invalid shader");
+
+    const nsCString& tlog = shader->TranslationLog();
+    if (!tlog.IsVoid()) {
+        CopyASCIItoUTF16(tlog, retval);
+        return NS_OK;
+    }
 
     MakeContextCurrent();
 
@@ -2905,30 +2965,12 @@ WebGLContext::GetShaderInfoLog(nsIWebGLShader *sobj, nsAString& retval)
 NS_IMETHODIMP
 WebGLContext::GetShaderSource(nsIWebGLShader *sobj, nsAString& retval)
 {
+    WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetGLName<WebGLShader>(sobj, &shadername))
+    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername))
         return ErrorInvalidOperation("GetShaderSource: invalid shader");
 
-    MakeContextCurrent();
-
-    GLint slen = -1;
-    gl->fGetShaderiv(shadername, LOCAL_GL_SHADER_SOURCE_LENGTH, &slen);
-    if (slen == -1)
-        return NS_ERROR_FAILURE;
-
-    if (slen == 0) {
-        retval.Truncate();
-        return NS_OK;
-    }
-
-    nsCAutoString src;
-    src.SetCapacity(slen);
-
-    gl->fGetShaderSource(shadername, slen, NULL, (char*) src.BeginWriting());
-
-    src.SetLength(slen);
-
-    CopyASCIItoUTF16(src, retval);
+    CopyASCIItoUTF16(shader->Source(), retval);
 
     return NS_OK;
 }
@@ -2936,16 +2978,15 @@ WebGLContext::GetShaderSource(nsIWebGLShader *sobj, nsAString& retval)
 NS_IMETHODIMP
 WebGLContext::ShaderSource(nsIWebGLShader *sobj, const nsAString& source)
 {
+    WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetGLName<WebGLShader>(sobj, &shadername))
+    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername))
         return ErrorInvalidOperation("ShaderSource: invalid shader");
     
-    MakeContextCurrent();
+    shader->SetSource(NS_LossyConvertUTF16toASCII(source));
 
-    NS_LossyConvertUTF16toASCII asciisrc(source);
-    const char *p = asciisrc.get();
+    shader->SetNeedsTranslation();
 
-    gl->fShaderSource(shadername, 1, &p, NULL);
     return NS_OK;
 }
 
