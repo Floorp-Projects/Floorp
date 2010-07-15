@@ -34,9 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsXBLDocumentInfo_h__
+#define nsXBLDocumentInfo_h__
+
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIXBLDocumentInfo.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsWeakReference.h"
 #include "nsIDocument.h"
@@ -46,7 +48,8 @@ class nsXBLPrototypeBinding;
 class nsObjectHashtable;
 class nsXBLDocGlobalObject;
 
-class nsXBLDocumentInfo : public nsIXBLDocumentInfo, public nsIScriptGlobalObjectOwner, public nsSupportsWeakReference
+class nsXBLDocumentInfo : public nsIScriptGlobalObjectOwner,
+                          public nsSupportsWeakReference
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -73,7 +76,7 @@ public:
   virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsXBLDocumentInfo,
-                                                         nsIXBLDocumentInfo)
+                                                         nsIScriptGlobalObjectOwner)
 
 private:
   nsCOMPtr<nsIDocument> mDocument;
@@ -86,3 +89,7 @@ private:
 
   nsRefPtr<nsXBLDocGlobalObject> mGlobalObject;
 };
+
+nsXBLDocumentInfo* NS_NewXBLDocumentInfo(nsIDocument* aDocument);
+
+#endif

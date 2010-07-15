@@ -408,8 +408,8 @@ nsXBLDocGlobalObject::GetPrincipal()
     return nsnull;
   }
 
-  nsCOMPtr<nsIXBLDocumentInfo> docInfo = do_QueryInterface(mGlobalObjectOwner, &rv);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  nsRefPtr<nsXBLDocumentInfo> docInfo =
+    static_cast<nsXBLDocumentInfo*>(mGlobalObjectOwner);
 
   nsCOMPtr<nsIDocument> document;
   rv = docInfo->GetDocument(getter_AddRefs(document));
@@ -487,15 +487,14 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXBLDocumentInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIXBLDocumentInfo)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXBLDocumentInfo)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObjectOwner)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXBLDocumentInfo, nsIXBLDocumentInfo)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXBLDocumentInfo, nsIScriptGlobalObjectOwner)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXBLDocumentInfo,
-                                           nsIXBLDocumentInfo)
+                                           nsIScriptGlobalObjectOwner)
 
 nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
   : mDocument(aDocument),
@@ -622,15 +621,13 @@ nsXBLDocumentInfo::GetScriptGlobalObject()
   return mGlobalObject;
 }
 
-nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aResult)
+nsXBLDocumentInfo* NS_NewXBLDocumentInfo(nsIDocument* aDocument)
 {
   NS_PRECONDITION(aDocument, "Must have a document!");
 
-  *aResult = new nsXBLDocumentInfo(aDocument);
-  if (!*aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsXBLDocumentInfo* result;
 
-  NS_ADDREF(*aResult);
-  return NS_OK;
+  result = new nsXBLDocumentInfo(aDocument);
+  NS_ADDREF(result);
+  return result;
 }

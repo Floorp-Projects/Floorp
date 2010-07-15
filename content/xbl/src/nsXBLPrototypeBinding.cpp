@@ -38,7 +38,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
-#include "nsIXBLDocumentInfo.h"
 #include "nsIInputStream.h"
 #include "nsINameSpaceManager.h"
 #include "nsIURI.h"
@@ -295,7 +294,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
 
 nsresult
 nsXBLPrototypeBinding::Init(const nsACString& aID,
-                            nsIXBLDocumentInfo* aInfo,
+                            nsXBLDocumentInfo* aInfo,
                             nsIContent* aElement,
                             PRBool aFirstBinding)
 {

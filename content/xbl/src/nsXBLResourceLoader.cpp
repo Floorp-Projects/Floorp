@@ -49,7 +49,6 @@
 #include "imgILoader.h"
 #include "imgIRequest.h"
 #include "nsCSSLoader.h"
-#include "nsIXBLDocumentInfo.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsGkAtoms.h"

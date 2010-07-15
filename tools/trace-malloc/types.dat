@@ -669,14 +669,14 @@ PR_Malloc
 PL_ArenaAllocate
 nsFixedSizeAllocator::AddBucket(unsigned int)
 nsFixedSizeAllocator::Init(char const *, unsigned int const *, int, int, int)
-nsXBLPrototypeBinding::nsXBLPrototypeBinding(nsCString const &, nsIContent *, nsIXBLDocumentInfo *)
+nsXBLPrototypeBinding::nsXBLPrototypeBinding(nsCString const &, nsIContent *, nsXBLDocumentInfo *)
 
 <nsXBLPrototypeBinding>
 PR_Malloc
 PL_ArenaAllocate
 nsFixedSizeAllocator::AddBucket(unsigned int)
 nsFixedSizeAllocator::Init(char const *, unsigned int const *, int, int, int)
-nsXBLPrototypeBinding::nsXBLPrototypeBinding(basic_nsAReadableString<char> const &, nsIContent *, nsIXBLDocumentInfo *)
+nsXBLPrototypeBinding::nsXBLPrototypeBinding(basic_nsAReadableString<char> const &, nsIContent *, nsXBLDocumentInfo *)
 
 <nsXBLPrototypeBinding>
 PR_Malloc
@@ -710,7 +710,7 @@ PR_Malloc
 PL_ArenaAllocate
 nsFixedSizeAllocator::AddBucket(unsigned int)
 nsFixedSizeAllocator::Init(char const *, unsigned int const *, int, int, int)
-nsXBLPrototypeBinding::nsXBLPrototypeBinding(nsACString const &, nsIXBLDocumentInfo *)
+nsXBLPrototypeBinding::nsXBLPrototypeBinding(nsACString const &, nsXBLDocumentInfo *)
 
 <nsXBLPrototypeBinding>
 PR_Malloc
@@ -733,7 +733,7 @@ nsCString::SetLength(unsigned int)
 nsACString::do_AssignFromReadable(nsACString const &)
 nsACString::AssignFromReadable(nsACString const &)
 nsCString::nsCString(nsACString const &)
-nsXBLPrototypeBinding::nsXBLPrototypeBinding(nsACString const &, nsIXBLDocumentInfo *)
+nsXBLPrototypeBinding::nsXBLPrototypeBinding(nsACString const &, nsXBLDocumentInfo *)
 
 <nsXBLPrototypeBinding>
 PR_Malloc
@@ -867,7 +867,7 @@ JS_DHashTableFinish
 JS_DHashTableOperate
 js_AddRootRT
 JS_AddNamedRootRT
-NS_NewXBLPrototypeBinding(nsACString const &, nsIContent *, nsIXBLDocumentInfo *, nsIXBLPrototypeBinding **)
+NS_NewXBLPrototypeBinding(nsACString const &, nsIContent *, nsXBLDocumentInfo *, nsIXBLPrototypeBinding **)
 nsXBLPrototypeProperty::ParseMethod(nsIScriptContext *)
 
 # ----------------------------------------------------------------------
@@ -2140,7 +2140,7 @@ __builtin_new
 nsCStringKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
-nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo *)
+nsXULPrototypeCache::PutXBLDocumentInfo(nsXBLDocumentInfo *)
 
 <nsXULPrototypeCache>
 PR_Malloc
@@ -2163,7 +2163,7 @@ PL_HashTableFinalize(PLHashTable *)
 PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
-nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo *)
+nsXULPrototypeCache::PutXBLDocumentInfo(nsXBLDocumentInfo *)
 
 <nsXULPrototypeCache>
 PR_Malloc
@@ -2188,7 +2188,7 @@ nsMemory::Alloc(unsigned int)
 nsCStringKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
-nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo *)
+nsXULPrototypeCache::PutXBLDocumentInfo(nsXBLDocumentInfo *)
 
 <nsXULPrototypeCache>
 PR_Malloc
