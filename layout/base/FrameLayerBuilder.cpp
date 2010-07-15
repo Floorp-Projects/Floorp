@@ -333,7 +333,7 @@ FrameLayerBuilder::DestroyDisplayItemData(nsIFrame* aFrame,
 }
 
 void
-FrameLayerBuilder::BeginUpdatingRetainedLayers(LayerManager* aManager)
+FrameLayerBuilder::WillBeginRetainedLayerTransaction(LayerManager* aManager)
 {
   mRetainingManager = aManager;
   LayerManagerData* data = static_cast<LayerManagerData*>
@@ -371,10 +371,20 @@ FrameLayerBuilder::DidEndTransaction(LayerManager* aManager)
     if (root) {
       RemoveThebesItemsForLayerSubtree(root);
     }
-    return;
   }
+}
 
-  // We need to save the data we'll need to support retaining.
+void
+FrameLayerBuilder::WillEndTransaction(LayerManager* aManager)
+{
+  if (aManager != mRetainingManager)
+    return;
+
+  // We need to save the data we'll need to support retaining. We do this
+  // before we paint so that invalidation triggered by painting will
+  // be able to update the ThebesLayerInvalidRegionProperty values
+  // correctly and the NS_FRAME_HAS_CONTAINER_LAYER bits will be set
+  // correctly.
   LayerManagerData* data = static_cast<LayerManagerData*>
     (mRetainingManager->GetUserData());
   if (data) {
@@ -949,7 +959,10 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
       }
     }
 
-    mContainerFrame->Invalidate(bounds - mBuilder->ToReferenceFrame(mContainerFrame));
+    mContainerFrame->InvalidateWithFlags(
+        bounds - mBuilder->ToReferenceFrame(mContainerFrame),
+        nsIFrame::INVALIDATE_NO_THEBES_LAYERS |
+        nsIFrame::INVALIDATE_EXCLUDE_CURRENT_PAINT);
   }
 }
 
@@ -1261,7 +1274,9 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsRect r = (aRegionToInvalidate.GetBounds() + offset).
     ToAppUnits(appUnitsPerDevPixel);
-  containerLayerFrame->Invalidate(r);
+  containerLayerFrame->InvalidateWithFlags(r,
+      nsIFrame::INVALIDATE_NO_THEBES_LAYERS |
+      nsIFrame::INVALIDATE_EXCLUDE_CURRENT_PAINT);
 
   // Our list may contain content with different prescontexts at
   // different zoom levels. 'rc' contains the nsIRenderingContext

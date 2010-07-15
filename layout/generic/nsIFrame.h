@@ -1805,7 +1805,8 @@ public:
    * nsLayoutUtils::GetDisplayRootFrame). This causes all invalidates
    * reaching this frame to be performed asynchronously off an event,
    * instead of being applied to the widget immediately. Also,
-   * invalidation of areas in aExcludeRegion is ignored completely.
+   * invalidation of areas in aExcludeRegion is ignored completely
+   * for invalidates with INVALIDATE_EXCLUDE_CURRENT_PAINT specified.
    * These can't be nested; two invocations of
    * BeginDeferringInvalidatesForDisplayRoot for a frame must have a
    * EndDeferringInvalidatesForDisplayRoot between them.
@@ -1884,15 +1885,27 @@ public:
    * @param aFlags INVALIDATE_NO_THEBES_LAYERS: don't invalidate the
    * ThebesLayers of any container layer owned by an ancestor. Set this
    * only if ThebesLayers definitely don't need to be updated.
+   * @param aFlags INVALIDATE_EXCLUDE_CURRENT_PAINT: if the invalidation
+   * occurs while we're painting (to be precise, while
+   * BeginDeferringInvalidatesForDisplayRoot is active on the display root),
+   * then invalidation in the current paint region is simply discarded.
+   * Use this flag if areas that are being painted do not need
+   * to be invalidated. By default, when this flag is not specified,
+   * areas that are invalidated while currently being painted will be repainted
+   * again.
+   * This flag is useful when, during painting, FrameLayerBuilder discovers that
+   * a region of the window needs to be drawn differently, and that region
+   * may or may not be contained in the currently painted region.
    */
   enum {
-  	INVALIDATE_IMMEDIATE = 0x01,
-  	INVALIDATE_CROSS_DOC = 0x02,
-  	INVALIDATE_REASON_SCROLL_BLIT = 0x04,
-  	INVALIDATE_REASON_SCROLL_REPAINT = 0x08,
+    INVALIDATE_IMMEDIATE = 0x01,
+    INVALIDATE_CROSS_DOC = 0x02,
+    INVALIDATE_REASON_SCROLL_BLIT = 0x04,
+    INVALIDATE_REASON_SCROLL_REPAINT = 0x08,
     INVALIDATE_REASON_MASK = INVALIDATE_REASON_SCROLL_BLIT |
                              INVALIDATE_REASON_SCROLL_REPAINT,
-    INVALIDATE_NO_THEBES_LAYERS = 0x10
+    INVALIDATE_NO_THEBES_LAYERS = 0x10,
+    INVALIDATE_EXCLUDE_CURRENT_PAINT = 0x20
   };
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,
