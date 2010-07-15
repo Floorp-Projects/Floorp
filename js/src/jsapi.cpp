@@ -2457,6 +2457,7 @@ JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
     JS_ASSERT(thing);
+    JS_ASSERT(!cx->runtime->gcMarkingTracer);
     return js_IsAboutToBeFinalized(thing);
 }
 
