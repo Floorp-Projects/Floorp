@@ -379,9 +379,10 @@ public:
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager)
   {
-    // XXX we should have some kind of activity timeout here so that
-    // inactive videos can be composited into the background
-    return mozilla::LAYER_ACTIVE;
+    nsHTMLMediaElement* elem =
+      static_cast<nsHTMLMediaElement*>(mFrame->GetContent());
+    return elem->IsPotentiallyPlaying() ? mozilla::LAYER_ACTIVE :
+      mozilla::LAYER_INACTIVE;
   }
 };
 
