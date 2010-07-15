@@ -726,7 +726,9 @@ LayerManager* nsBaseWidget::GetLayerManager()
       }
     }
     if (!mLayerManager) {
-      mLayerManager = new BasicLayerManager(nsnull);
+      nsRefPtr<BasicLayerManager> basicManager = new BasicLayerManager(nsnull);
+      basicManager->SetRetain(PR_TRUE);
+      mLayerManager = basicManager.forget();
     }
   }
   return mLayerManager;
