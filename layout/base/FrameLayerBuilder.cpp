@@ -1231,9 +1231,18 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
 {
   nsDisplayListBuilder* builder = static_cast<nsDisplayListBuilder*>
     (aCallbackData);
-  ThebesLayerItemsEntry* entry =
-    builder->LayerBuilder()->mThebesLayerItems.GetEntry(aLayer);
-  NS_ASSERTION(entry, "We shouldn't be drawing into a layer with no items!");
+  nsTArray<ClippedDisplayItem> items;
+  nsIFrame* containerLayerFrame;
+  {
+    ThebesLayerItemsEntry* entry =
+      builder->LayerBuilder()->mThebesLayerItems.GetEntry(aLayer);
+    NS_ASSERTION(entry, "We shouldn't be drawing into a layer with no items!");
+    items.SwapElements(entry->mItems);
+    containerLayerFrame = entry->mContainerLayerFrame;
+    // Later after this point, due to calls to DidEndTransaction
+    // for temporary layer managers, mThebesLayerItems can change,
+    // so 'entry' could become invalid.
+  }
 
   gfxMatrix transform;
   if (!aLayer->GetTransform().Is2D(&transform)) {
@@ -1248,11 +1257,11 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   aContext->Translate(-gfxPoint(transform.x0, transform.y0));
   nsIntPoint offset(PRInt32(transform.x0), PRInt32(transform.y0));
 
-  nsPresContext* presContext = entry->mContainerLayerFrame->PresContext();
+  nsPresContext* presContext = containerLayerFrame->PresContext();
   nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsRect r = (aRegionToInvalidate.GetBounds() + offset).
     ToAppUnits(appUnitsPerDevPixel);
-  entry->mContainerLayerFrame->Invalidate(r);
+  containerLayerFrame->Invalidate(r);
 
   // Our list may contain content with different prescontexts at
   // different zoom levels. 'rc' contains the nsIRenderingContext
@@ -1276,8 +1285,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   visible.MoveBy(NSIntPixelsToAppUnits(offset.x, appUnitsPerDevPixel),
                  NSIntPixelsToAppUnits(offset.y, appUnitsPerDevPixel));
 
-  for (i = entry->mItems.Length(); i > 0; --i) {
-    ClippedDisplayItem* cdi = &entry->mItems[i - 1];
+  for (i = items.Length(); i > 0; --i) {
+    ClippedDisplayItem* cdi = &items[i - 1];
 
     presContext = cdi->mItem->GetUnderlyingFrame()->PresContext();
     if (presContext->AppUnitsPerDevPixel() != appUnitsPerDevPixel) {
@@ -1308,8 +1317,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     }
   }
 
-  for (i = 0; i < entry->mItems.Length(); ++i) {
-    ClippedDisplayItem* cdi = &entry->mItems[i];
+  for (i = 0; i < items.Length(); ++i) {
+    ClippedDisplayItem* cdi = &items[i];
 
     if (cdi->mItem->GetVisibleRect().IsEmpty())
       continue;
