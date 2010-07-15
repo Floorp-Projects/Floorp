@@ -136,10 +136,11 @@ private:
     CONTENTINSERT
   };
 
+  // aChild is the child being inserted for inserts, and the first
+  // child being appended for appends.
   PRBool MaybeConstructLazily(Operation aOperation,
                               nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndex);
+                              nsIContent* aChild);
 
   // Issues a single ContentInserted for each child of aContainer in the range
   // [aStartIndexInContainer, aEndIndexInContainer).
@@ -179,9 +180,8 @@ public:
    *  -the container is in a native anonymous subtree
    *  -the container is XUL
    *  -is any of the appended/inserted nodes are XUL or editable
-   *  -(for inserts) the child is not at the passed in index (this should only
-   *   be happening because the editor is broken and passes in native anonymous
-   *   content with index -1)
+   *  -(for inserts) the child is anonymous.  In the append case this function
+   *   must not be called with anonymous children.
    * The XUL and chrome checks are because XBL bindings only get applied at
    * frame construction time and some things depend on the bindings getting
    * attached synchronously. The editable checks are because the editor seems
