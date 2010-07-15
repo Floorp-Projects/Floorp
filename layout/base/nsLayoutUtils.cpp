@@ -677,6 +677,20 @@ nsLayoutUtils::GetScrollableFrameFor(nsIFrame *aScrolledFrame)
   return sf;
 }
 
+nsIFrame*
+nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
+                                        nsIFrame* aStopAtAncestor,
+                                        nsPoint* aOffset)
+{
+  // For now, just use aStopAtAncestor --- i.e., treat nothing as active.
+  // We'll make this more precise when we actually start using layers for
+  // scrolling.
+  if (aOffset) {
+    *aOffset = aFrame->GetOffsetTo(aStopAtAncestor);
+  }
+  return aStopAtAncestor;
+}
+
 // static
 nsIScrollableFrame*
 nsLayoutUtils::GetNearestScrollableFrameForDirection(nsIFrame* aFrame,

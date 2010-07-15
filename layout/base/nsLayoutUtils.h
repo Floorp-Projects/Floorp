@@ -288,6 +288,17 @@ public:
                                         nsIFrame* aCommonAncestor = nsnull);
 
   /**
+   * Finds the nearest ancestor frame that is the root of an "actively
+   * scrolled" frame subtree, or aStopAtAncestor if there is no
+   * such ancestor before we reach aStopAtAncestor in the ancestor chain.
+   * We expect frames with the same "active scrolled root" to be
+   * scrolled together, so we'll place them in the same ThebesLayer.
+   */
+  static nsIFrame* GetActiveScrolledRootFor(nsIFrame* aFrame,
+                                            nsIFrame* aStopAtAncestor,
+                                            nsPoint* aOffset);
+
+  /**
     * GetFrameFor returns the root frame for a view
     * @param aView is the view to return the root frame for
     * @return the root frame for the view
