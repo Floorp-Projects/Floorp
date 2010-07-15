@@ -684,11 +684,15 @@ nsPlacesExpiration.prototype = {
   _isIdleObserver: false,
   set expireOnIdle(aObserveIdle) {
     if (aObserveIdle != this._isIdleObserver) {
-      if (aObserveIdle && !this._shuttingDown) {
+      // If running a debug expiration we need full control of what happens
+      // but idle cleanup could activate in the middle, since tinderboxes are
+      // permanently idle.  That would cause unexpected oranges, so disable it.
+      if (aObserveIdle && !this._shuttingDown &&
+          this._debugLimit === undefined) {
         this._idle.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
         this._isIdleObserver = true;
       }
-      else {
+      else if (this._isIdleObserver) {
         this._idle.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
         this._isIdleObserver = false;
       }
