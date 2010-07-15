@@ -75,7 +75,7 @@ public:
   }
 #endif
 
-  NS_DISPLAY_DECL_NAME("nsDisplayCanvas")
+  NS_DISPLAY_DECL_NAME("nsDisplayCanvas", TYPE_CANVAS)
 
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder) {
     nsIFrame* f = GetUnderlyingFrame();
