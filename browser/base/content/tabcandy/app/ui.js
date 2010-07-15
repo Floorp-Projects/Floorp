@@ -164,7 +164,6 @@ window.Page = {
     currentWin.document.getElementById("tab-candy-deck").selectedIndex = 1;    
     
     this._setActiveTitleColor(true);
-    UI.saveVisibility(true);
   },
     
   showChrome: function(){
@@ -178,7 +177,6 @@ window.Page = {
 /*     }, 1); */
 
     this._setActiveTitleColor(false);
-    UI.saveVisibility(false);
   },
 
   _setActiveTitleColor: function(set) {
@@ -739,8 +737,9 @@ UIClass.prototype = {
       iQ(window).resize(function() {
         self.resize();
       });
-
-      let visibilityData = Storage.readVisibilityData(currentWindow);
+      
+      // ___ show tab candy at startup
+      var visibilityData = Storage.readVisibilityData(currentWindow);
       if (visibilityData && visibilityData.visible) {
         let currentTab = UI.currentTab;
         let item;
@@ -756,6 +755,23 @@ UIClass.prototype = {
         Page.hideChrome();
       } else
         Page.showChrome();        
+
+      // ___ setup observer to save canvas images
+      Components.utils.import("resource://gre/modules/Services.jsm");
+      var observer = {
+        observe : function(subject, topic, data) {
+          if (topic == "quit-application-requested") {
+            if (Page.isTabCandyVisible()) {
+              TabItems.saveAll(true);
+              self.saveVisibility(true);
+            } else {
+              self.saveVisibility(false);
+            }
+          }
+        }
+      };
+      Services.obs.addObserver(
+        observer, "quit-application-requested", false);
 
       // ___ Done
       this.initialized = true;

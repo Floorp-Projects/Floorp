@@ -45,7 +45,8 @@ body {
   cursor: pointer;  
 }
 
-.tab canvas {
+.tab canvas,
+.thumb-placeholder {
   border: 1px solid rgba(0,0,0,0.2);
   width: 100%;
   height: 100%;
@@ -56,7 +57,7 @@ body {
   height: 100%;    
 }
 
-.thumbShadow {
+.thumb-shadow {
     position: absolute;
     border-bottom: 5px solid rgba(0,0,0,0.05);
     margin-right: -12px;
@@ -85,7 +86,6 @@ body {
   width: 16px;
   height: 16px;
 }
-
 
 .close {
   position: absolute;
@@ -128,10 +128,10 @@ body {
 
 .stacked {padding:0;}
 .stacked .tab-title{ display: none; }
-.stacked .thumbShadow{display: none;}
+.stacked .thumb-shadow{display: none;}
 .stacked .thumb{-moz-box-shadow: rgba(0,0,0,.2) 1px 1px 6px;}
 
-.stack-trayed .tab-title{
+.stack-trayed .tab-title {
   display: block !important;
   text-shadow: rgba(0,0,0,1) 1px 1px 2px;
   color: #EEE;
@@ -143,7 +143,7 @@ body {
   -moz-box-shadow:  rgba(54,79,225,1) 0px 0px 5px -1px !important;
 }
 
-.front .tab-title, .front .close, .front .favicon, .front .expander, .front .thumbShadow {
+.front .tab-title, .front .close, .front .favicon, .front .expander, .front .thumb-shadow {
   display: none;
 }
 
@@ -308,7 +308,7 @@ body {
   -moz-box-shadow: none;
 }
 
-.inNewTabGroup .tab-title{
+.inNewTabGroup .tab-title {
   color: #2C2C2C;
   text-shadow: 0px 1px 0px rgba(255,255,255,.25);
 }

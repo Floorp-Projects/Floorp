@@ -647,8 +647,12 @@ var Utils = {
 
   // ___ Is Mac
   isMac: function() {
-    if (this._isMac == null)
-      this._isMac = (navigator.platform.search(/mac/i) > -1);
+    if (this._isMac == null) {
+      var xulRuntime =
+        Components.classes["@mozilla.org/xre/app-info;1"].
+	  getService(Components.interfaces.nsIXULRuntime);
+      this._isMac = (xulRuntime.OS == "Darwin");
+    }
     
     return this._isMac;
   }

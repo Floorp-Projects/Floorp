@@ -121,6 +121,12 @@ TabCanvas.prototype = {
     }
     
     ctx.restore();
+  },
+  
+  // ----------
+  // Function: toImageData  
+  toImageData: function() {
+    return this.canvas.toDataURL("image/png", "");
   }
 };
 
@@ -137,8 +143,9 @@ function Mirror(tab, manager) {
     .data("tab", this.tab)
     .addClass('tab')
     .html("<div class='favicon'><img/></div>" +
-          "<div class='thumb'><div class='thumbShadow'></div><canvas/></div>" +
-          "<span class='tab-title'>&nbsp;</span>"
+          "<div class='thumb'><div class='thumb-shadow'></div>" +
+	  "<img class='thumb-placeholder' style='display:none'/><canvas/></div>" +
+	  "<span class='tab-title'>&nbsp;</span>"
     )
     .appendTo('body');
     
@@ -148,7 +155,8 @@ function Mirror(tab, manager) {
   this.favEl = iQ('.favicon>img', $div).get(0);
   this.nameEl = iQ('.tab-title', $div).get(0);
   this.canvasEl = iQ('.thumb canvas', $div).get(0);
-      
+  this.canvasPlaceholderEl = iQ('.thumb-placeholder', $div).get(0);
+
   var doc = this.tab.contentDocument;
   if ( !_isIframe(doc) ) {
     this.tabCanvas = new TabCanvas(this.tab, this.canvasEl);    
@@ -277,8 +285,8 @@ TabMirror.prototype = {
             mirror.favEl.src = iconUrl;
             mirror.triggerPaint();
           }
-            
-          if ($name.text() != label) {
+          
+          if ($canvas.css("display") != "none" && $name.text() != label) {
             $name.text(label);
             mirror.triggerPaint();
           }
