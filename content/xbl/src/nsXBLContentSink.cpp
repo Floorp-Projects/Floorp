@@ -421,7 +421,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
   if (aTagName == nsGkAtoms::bindings) {
     ENSURE_XBL_STATE(mState == eXBL_InDocument);
       
-    NS_NewXBLDocumentInfo(mDocument, &mDocInfo);
+    mDocInfo = NS_NewXBLDocumentInfo(mDocument);
     if (!mDocInfo) {
       mState = eXBL_Error;
       return PR_TRUE;
@@ -438,7 +438,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
     uri->SchemeIs("resource", &isRes);
     mIsChromeOrResource = isChrome || isRes;
       
-    nsIXBLDocumentInfo* info = mDocInfo;
+    nsXBLDocumentInfo* info = mDocInfo;
     NS_RELEASE(info); // We keep a weak ref. We've created a cycle between doc/binding manager/doc info.
     mState = eXBL_InBindings;
   }
