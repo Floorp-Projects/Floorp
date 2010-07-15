@@ -1204,12 +1204,11 @@ private:
                               nsStyleContext*          aStyleContext,
                               nsFrameItems&            aFrameItems);
 
-  // If aParentContent's child at aContentIndex is a text node and
-  // doesn't have a frame, append a frame construction item for it to aItems.
+  // If aPossibleTextContent is a text node and doesn't have a frame, append a
+  // frame construction item for it to aItems.
   void AddTextItemIfNeeded(nsFrameConstructorState& aState,
                            nsIFrame* aParentFrame,
-                           nsIContent* aParentContent,
-                           PRInt32 aContentIndex,
+                           nsIContent* aPossibleTextContent,
                            FrameConstructionItemList& aItems);
 
   // If aParentContent's child at aContentIndex is a text node and
