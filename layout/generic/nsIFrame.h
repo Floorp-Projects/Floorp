@@ -828,18 +828,22 @@ public:
 #ifdef _MSC_VER
 // XXX Workaround MSVC issue by making the static FramePropertyDescriptor
 // non-const.  See bug 555727.
-#define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                   \
-  static const FramePropertyDescriptor* prop() {                \
-    static FramePropertyDescriptor descriptor = { dtor };       \
-    return &descriptor;                                         \
-  }
+#define NS_PROPERTY_DESCRIPTOR_CONST
 #else
-#define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                   \
-  static const FramePropertyDescriptor* prop() {                \
-    static const FramePropertyDescriptor descriptor = { dtor }; \
-    return &descriptor;                                         \
-  }
+#define NS_PROPERTY_DESCRIPTOR_CONST const
 #endif
+
+#define NS_DECLARE_FRAME_PROPERTY(prop, dtor)                                                  \
+  static const FramePropertyDescriptor* prop() {                                               \
+    static NS_PROPERTY_DESCRIPTOR_CONST FramePropertyDescriptor descriptor = { dtor, nsnull }; \
+    return &descriptor;                                                                        \
+  }
+// Don't use this unless you really know what you're doing!
+#define NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(prop, dtor)                               \
+  static const FramePropertyDescriptor* prop() {                                               \
+    static NS_PROPERTY_DESCRIPTOR_CONST FramePropertyDescriptor descriptor = { nsnull, dtor }; \
+    return &descriptor;                                                                        \
+  }
 
   NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialSibling, nsnull)
   NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nsnull)
