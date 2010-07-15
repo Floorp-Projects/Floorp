@@ -7670,6 +7670,10 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
         aFrame->InvalidateOverflowRect();
       }
     }
+    if (aChange & nsChangeHint_UpdateOpacityLayer) {
+      aFrame->InvalidateLayer(aFrame->GetOverflowRectRelativeToSelf(),
+                              nsDisplayItem::TYPE_OPACITY);
+    }
   }
 }
 
@@ -7952,7 +7956,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         StyleChangeReflow(frame, hint);
         didReflow = PR_TRUE;
       }
-      if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView)) {
+      if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView |
+                  nsChangeHint_UpdateOpacityLayer)) {
         ApplyRenderingChangeToTree(presContext, frame, hint);
         didInvalidate = PR_TRUE;
       }

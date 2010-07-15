@@ -1004,6 +1004,27 @@ FrameLayerBuilder::InvalidateAllLayers(LayerManager* aManager)
   }
 }
 
+/* static */
+PRBool
+FrameLayerBuilder::HasDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
+{
+  void* propValue = aFrame->Properties().Get(DisplayItemDataProperty());
+  if (!propValue)
+    return PR_FALSE;
+
+  nsTArray<DisplayItemData>* array =
+    (reinterpret_cast<nsTArray<DisplayItemData>*>(&propValue));
+  for (PRUint32 i = 0; i < array->Length(); ++i) {
+    if (array->ElementAt(i).mDisplayItemKey == aDisplayItemKey) {
+      void* layerUserData = array->ElementAt(i).mLayer->GetUserData();
+      if (layerUserData != &gColorLayerUserData &&
+          layerUserData != &gThebesDisplayItemLayerUserData)
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 /* static */ void
 FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
                                    gfxContext* aContext,

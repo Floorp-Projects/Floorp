@@ -3680,6 +3680,19 @@ nsIFrame::IsLeaf() const
 }
 
 void
+nsIFrame::InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey)
+{
+  NS_ASSERTION(aDisplayItemKey > 0, "Need a key");
+
+  if (!FrameLayerBuilder::HasDedicatedLayer(this, aDisplayItemKey)) {
+    Invalidate(aDamageRect);
+    return;
+  }
+
+  InvalidateWithFlags(aDamageRect, INVALIDATE_NO_THEBES_LAYERS);
+}
+
+void
 nsIFrame::InvalidateWithFlags(const nsRect& aDamageRect, PRUint32 aFlags)
 {
   if (aDamageRect.IsEmpty()) {
