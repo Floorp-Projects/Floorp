@@ -490,44 +490,22 @@ GetGCThingMarkBit(void *thing, size_t &bitIndex)
     return reinterpret_cast<jsbitmap *>(chunk | GC_MARK_BITMAP_ARRAY_OFFSET);
 }
 
-/*
- * Live objects are marked black. How many other additional colors are available
- * depends on the size of the GCThing.
- */
-static const uint32 BLACK = 0;
-
-static void
-AssertValidColor(void *thing, uint32 color)
-{
-    JS_ASSERT_IF(color, color < JSGCArenaInfo::fromGCThing(thing)->list->thingSize / GC_CELL_SIZE);
-}
-
 inline bool
-IsMarkedGCThing(void *thing, uint32 color = BLACK)
+IsMarkedGCThing(void *thing)
 {
-    AssertValidColor(thing, color);
-
     size_t index;
     jsbitmap *markBitmap = GetGCThingMarkBit(thing, index);
-    return !!JS_TEST_BIT(markBitmap, index + color);
+    return !!JS_TEST_BIT(markBitmap, index);
 }
 
-/*
- * The GC always marks live objects BLACK. If color is not BLACK, we also mark
- * the object with that additional color.
- */
 inline bool
-MarkIfUnmarkedGCThing(void *thing, uint32 color = BLACK)
+MarkIfUnmarkedGCThing(void *thing)
 {
-    AssertValidColor(thing, color);
-
     size_t index;
     jsbitmap *markBitmap = GetGCThingMarkBit(thing, index);
     if (JS_TEST_BIT(markBitmap, index))
         return false;
     JS_SET_BIT(markBitmap, index);
-    if (color != BLACK)
-        JS_SET_BIT(markBitmap, index + color);
     return true;
 }
 
@@ -882,38 +860,13 @@ js_GetGCThingRuntime(void *thing)
     return JSGCChunkInfo::fromChunk(chunk)->runtime;
 }
 
-JS_FRIEND_API(bool)
+bool
 js_IsAboutToBeFinalized(void *thing)
 {
     if (JSString::isStatic(thing))
         return false;
 
     return !IsMarkedGCThing(thing);
-}
-
-static void
-MarkDelayedChildren(JSTracer *trc);
-
-/* The color is only applied to objects, functions and xml. */
-JS_FRIEND_API(uint32)
-js_SetMarkColor(JSTracer *trc, uint32 color)
-{
-    JSGCTracer *gctracer = trc->context->runtime->gcMarkingTracer;
-    if (trc != gctracer)
-        return color;
-
-    /* Must process any delayed tracing here, otherwise we confuse colors. */
-    MarkDelayedChildren(trc);
-
-    uint32 oldColor = gctracer->color;
-    gctracer->color = color;
-    return oldColor;
-}
-
-JS_FRIEND_API(bool)
-js_GCThingIsMarked(void *thing, uint32 color)
-{
-    return IsMarkedGCThing(thing, color);
 }
 
 JSBool
@@ -2190,25 +2143,45 @@ Mark(JSTracer *trc, void *thing, uint32 kind)
     }
 
     JS_ASSERT(kind == GetFinalizableThingTraceKind(thing));
-    if (!MarkIfUnmarkedGCThing(thing, reinterpret_cast<JSGCTracer *>(trc)->color))
+    if (!MarkIfUnmarkedGCThing(thing))
         goto out;
 
-    /*
-     * With JS_GC_ASSUME_LOW_C_STACK defined the mark phase of GC always
-     * uses the non-recursive code that otherwise would be called only on
-     * a low C stack condition.
-     */
+    if (!cx->insideGCMarkCallback) {
+        /*
+         * With JS_GC_ASSUME_LOW_C_STACK defined the mark phase of GC always
+         * uses the non-recursive code that otherwise would be called only on
+         * a low C stack condition.
+         */
 #ifdef JS_GC_ASSUME_LOW_C_STACK
 # define RECURSION_TOO_DEEP() JS_TRUE
 #else
-    int stackDummy;
+        int stackDummy;
 # define RECURSION_TOO_DEEP() (!JS_CHECK_STACK_SIZE(cx, stackDummy))
 #endif
-
-    if (RECURSION_TOO_DEEP()) {
-        DelayMarkingChildren(rt, thing);
+        if (RECURSION_TOO_DEEP())
+            DelayMarkingChildren(rt, thing);
+        else
+            JS_TraceChildren(trc, thing, kind);
     } else {
+        /*
+         * For API compatibility we allow for the callback to assume that
+         * after it calls JS_MarkGCThing for the last time, the callback can
+         * start to finalize its own objects that are only referenced by
+         * unmarked GC things.
+         *
+         * Since we do not know which call from inside the callback is the
+         * last, we ensure that children of all marked things are traced and
+         * call MarkDelayedChildren(trc) after tracing the thing.
+         *
+         * As MarkDelayedChildren unconditionally invokes JS_TraceChildren
+         * for the things with unmarked children, calling DelayMarkingChildren
+         * is useless here. Hence we always trace thing's children even with a
+         * low native stack.
+         */
+        cx->insideGCMarkCallback = false;
         JS_TraceChildren(trc, thing, kind);
+        MarkDelayedChildren(trc);
+        cx->insideGCMarkCallback = true;
     }
 
   out:
@@ -2505,15 +2478,16 @@ js_TraceRuntime(JSTracer *trc)
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
 
+    if (rt->gcExtraRootsTraceOp)
+        rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
+
     /*
-     * The conservative stack scanner runs before we mark extra roots,
-     * which may use additional colors to implement cycle collection.
+     * For now we use the conservative stack scanner only as a sanity check,
+     * so we mark conservatively after marking all other roots to detect
+     * conservative leaks.
      */
     if (rt->state != JSRTS_LANDING)
         ConservativeGCStackMarker(trc).markRoots();
-
-    if (rt->gcExtraRootsTraceOp)
-        rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
 }
 
 void
@@ -3038,9 +3012,8 @@ GC(JSContext *cx  GCTIMER_PARAM)
     /*
      * Mark phase.
      */
-    JSGCTracer trc;
+    JSTracer trc;
     JS_TRACER_INIT(&trc, cx, NULL);
-    trc.color = BLACK;
     rt->gcMarkingTracer = &trc;
     JS_ASSERT(IS_GC_MARKING_TRACER(&trc));
 
@@ -3054,12 +3027,17 @@ GC(JSContext *cx  GCTIMER_PARAM)
      * tracing.
      */
     MarkDelayedChildren(&trc);
+
+    JS_ASSERT(!cx->insideGCMarkCallback);
+    if (rt->gcCallback) {
+        cx->insideGCMarkCallback = JS_TRUE;
+        (void) rt->gcCallback(cx, JSGC_MARK_END);
+        JS_ASSERT(cx->insideGCMarkCallback);
+        cx->insideGCMarkCallback = JS_FALSE;
+    }
     JS_ASSERT(rt->gcMarkLaterCount == 0);
 
     rt->gcMarkingTracer = NULL;
-
-    if (rt->gcCallback)
-        (void) rt->gcCallback(cx, JSGC_MARK_END);
 
 #ifdef JS_THREADSAFE
     JS_ASSERT(!cx->gcSweepTask);
