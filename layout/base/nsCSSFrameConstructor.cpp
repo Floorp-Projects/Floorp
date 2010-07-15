@@ -6319,7 +6319,6 @@ nsCSSFrameConstructor::CreateNeededFrames(nsIContent* aContent)
   // Scan the children of aContent to see what operations (if any) we need to
   // perform.
   PRUint32 childCount = aContent->GetChildCount();
-  PRUint32 startOfRun = 0;
   PRBool inRun = PR_FALSE;
   nsIContent* firstChildInRun = nsnull;
   for (PRUint32 i = 0; i < childCount; i++) {
@@ -6333,7 +6332,6 @@ nsCSSFrameConstructor::CreateNeededFrames(nsIContent* aContent)
                    "NEEDS_FRAME set on a node that already has a frame?");
       if (!inRun) {
         inRun = PR_TRUE;
-        startOfRun = i;
         firstChildInRun = child;
       }
     } else {
@@ -6346,7 +6344,7 @@ nsCSSFrameConstructor::CreateNeededFrames(nsIContent* aContent)
     }
   }
   if (inRun) {
-    ContentAppended(aContent, firstChildInRun, startOfRun, PR_FALSE);
+    ContentAppended(aContent, firstChildInRun, PR_FALSE);
   }
 
   // Now descend.
@@ -6491,7 +6489,6 @@ nsCSSFrameConstructor::MaybeRecreateForFrameset(nsIFrame* aParentFrame,
 nsresult
 nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                                        nsIContent*     aFirstNewContent,
-                                       PRInt32         aNewIndexInContainer,
                                        PRBool          aAllowLazyConstruction)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
@@ -6500,9 +6497,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ContentAppended container=%p index=%d "
-           "lazy=%d\n",
-           static_cast<void*>(aContainer), aNewIndexInContainer,
+    printf("nsCSSFrameConstructor::ContentAppended container=%p "
+           "first-child=%p lazy=%d\n",
+           static_cast<void*>(aContainer), aFirstNewContent,
            aAllowLazyConstruction);
     if (gReallyNoisyContentUpdates && aContainer) {
       aContainer->List(stdout, 0);
@@ -6644,10 +6641,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     AddTextItemIfNeeded(state, parentFrame,
                         aFirstNewContent->GetPreviousSibling(), items);
   }
-  for (PRUint32 i = aNewIndexInContainer, count = aContainer->GetChildCount();
-       i < count;
-       ++i) {
-    nsIContent* child = aContainer->GetChildAt(i);
+  for (nsIContent* child = aFirstNewContent;
+       child;
+       child = child->GetNextSibling()) {
     AddFrameConstructionItems(state, child, PR_FALSE, parentFrame, items);
   }
 
@@ -6685,15 +6681,15 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   nsFrameItems frameItems;
   ConstructFramesFromItemList(state, items, parentFrame, frameItems);
 
-  for (PRUint32 i = aNewIndexInContainer, count = aContainer->GetChildCount();
-       i < count;
-       ++i) {
+  for (nsIContent* child = aFirstNewContent;
+       child;
+       child = child->GetNextSibling()) {
     // Invalidate now instead of before the WipeContainingBlock call, just in
     // case we do wipe; in that case we don't need to do this walk at all.
     // XXXbz does that matter?  Would it make more sense to save some virtual
     // GetChildAt calls instead and do this during construction of our
     // FrameConstructionItemList?
-    InvalidateCanvasIfNeeded(mPresShell, aContainer->GetChildAt(i));
+    InvalidateCanvasIfNeeded(mPresShell, child);
   }
 
   // if the container is a table and a caption was appended, it needs to be put

@@ -4973,8 +4973,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   // frame reconstruction.
   mFrameConstructor->RestyleForAppend(aContainer->AsElement(), aFirstNewContent);
 
-  mFrameConstructor->ContentAppended(aContainer, aFirstNewContent,
-                                     aNewIndexInContainer, PR_TRUE);
+  mFrameConstructor->ContentAppended(aContainer, aFirstNewContent, PR_TRUE);
   VERIFY_STYLE_TREE;
 }
 
