@@ -191,8 +191,20 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
                 ((cs->format & JOF_TMPSLOT_MASK) >> JOF_TMPSLOT_SHIFT) +
                 extra;
         /* :TODO: hack - remove later. */
-        if (op == JSOP_PROPINC || op == JSOP_PROPDEC)
-            depth++;
+        switch (op) {
+          case JSOP_PROPINC:
+          case JSOP_PROPDEC:
+            depth += 1;
+            break;
+          case JSOP_NAMEINC:
+          case JSOP_NAMEDEC:
+          case JSOP_INCNAME:
+          case JSOP_DECNAME:
+            depth += 2;
+            break;
+          default:
+            break;
+        }
         if (depth > cg->maxStackDepth)
             cg->maxStackDepth = depth;
     }
