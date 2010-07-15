@@ -1394,8 +1394,9 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext,
       // if the last content node has a frame, we are scrolled to the bottom
       ChildIterator iter, last;
       ChildIterator::Init(mContent, &iter, &last);
-      if (last.position() > 0) {
-        iter.seek(last.position() - 1);
+      if (iter != last) {
+        iter = last;
+        --iter;
         nsIContent *lastChild = *iter;
         nsIFrame* lastChildFrame = lastChild->GetPrimaryFrame();
       
