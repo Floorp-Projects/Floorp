@@ -1127,6 +1127,22 @@ AssertEq(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
+AssertJit(JSContext *cx, uintN argc, jsval *vp)
+{
+#ifdef JS_METHODJIT
+    if (JS_GetOptions(cx) & JSOPTION_METHODJIT) {
+        if (cx->fp->script->nmap == NULL) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
+            return JS_FALSE;
+        }
+    }
+#endif
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
 GC(JSContext *cx, uintN argc, jsval *vp)
 {
     size_t preBytes = cx->runtime->gcBytes;
@@ -3878,6 +3894,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("assertEq",       AssertEq,       2,0),
+    JS_FN("assertJit",      AssertJit,      0,0),
     JS_FN("gc",             ::GC,           0,0),
 #ifdef JS_GCMETER
     JS_FN("gcstats",        GCStats,        0,0),
@@ -3971,6 +3988,7 @@ static const char *const shell_help_messages[] = {
 "assertEq(actual, expected[, msg])\n"
 "  Throw if the first two arguments are not the same (both +0 or both -0,\n"
 "  both NaN, or non-zero and ===)",
+"assertJit()              Throw if the calling function failed to JIT\n",
 "gc()                     Run the garbage collector",
 #ifdef JS_GCMETER
 "gcstats()                Print garbage collector statistics",
