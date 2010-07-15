@@ -151,8 +151,16 @@ protected:
     /**
      * Record that an item has been added to the ThebesLayer, so we
      * need to update our regions.
+     * @param aVisibleRect the area of the item that's visible
+     * @param aOpaqueRect if non-null, the area of the item that's opaque.
+     * We pass in a separate opaque rect because the opaque rect can be
+     * bigger than the visible rect, and we want to have the biggest
+     * opaque rect that we can.
+     * @param aSolidColor if non-null, the visible area of the item is
+     * a constant color given by *aSolidColor
      */
-    void Accumulate(const nsIntRect& aVisibleRect, PRBool aIsOpaque,
+    void Accumulate(const nsIntRect& aVisibleRect,
+                    const nsIntRect* aOpaqueRect,
                     nscolor* aSolidColor);
     nsIFrame* GetActiveScrolledRoot() { return mActiveScrolledRoot; }
 
@@ -230,14 +238,13 @@ protected:
    * @param aVisibleRect the area of the next display item that's visible
    * @param aActiveScrolledRoot the active scrolled root for the next
    * display item
-   * @param aIsOpaque whether the bounds of the next display item are
-   * opaque
+   * @param aOpaqueRect if non-null, a region of the display item that is opaque
    * @param aSolidColor if non-null, indicates that every pixel in aVisibleRect
    * will be painted with aSolidColor by the item
    */
   already_AddRefed<ThebesLayer> FindThebesLayerFor(const nsIntRect& aVisibleRect,
                                                    nsIFrame* aActiveScrolledRoot,
-                                                   PRBool aIsOpaque,
+                                                   const nsIntRect* aOpaqueRect,
                                                    nscolor* aSolidColor);
   ThebesLayerData* GetTopThebesLayerData()
   {
@@ -722,7 +729,7 @@ ContainerState::PopThebesLayerData()
 
 void
 ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aRect,
-                                            PRBool aIsOpaque,
+                                            const nsIntRect* aOpaqueRect,
                                             nscolor* aSolidColor)
 {
   if (aSolidColor) {
@@ -743,16 +750,24 @@ ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aRect,
 
   mVisibleRegion.Or(mVisibleRegion, aRect);
   mVisibleRegion.SimplifyOutward(4);
-  if (aIsOpaque) {
-    mOpaqueRegion.Or(mOpaqueRegion, aRect);
-    mOpaqueRegion.SimplifyInward(4);
+  if (aOpaqueRect) {
+    // We don't use SimplifyInward here since it's not defined exactly
+    // what it will discard. For our purposes the most important case
+    // is a large opaque background at the bottom of z-order (e.g.,
+    // a canvas background), so we need to make sure that the first rect
+    // we see doesn't get discarded.
+    nsIntRegion tmp;
+    tmp.Or(mOpaqueRegion, *aOpaqueRect);
+    if (tmp.GetNumRects() <= 4) {
+      mOpaqueRegion = tmp;
+    }
   }
 }
 
 already_AddRefed<ThebesLayer>
 ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
                                    nsIFrame* aActiveScrolledRoot,
-                                   PRBool aIsOpaque,
+                                   const nsIntRect* aOpaqueRect,
                                    nscolor* aSolidColor)
 {
   PRInt32 i;
@@ -807,7 +822,7 @@ ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
     layer = thebesLayerData->mLayer;
   }
 
-  thebesLayerData->Accumulate(aVisibleRect, aIsOpaque, aSolidColor);
+  thebesLayerData->Accumulate(aVisibleRect, aOpaqueRect, aSolidColor);
   return layer.forget();
 }
 
@@ -911,9 +926,14 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
       nscolor uniformColor;
       PRBool isUniform = item->IsUniform(mBuilder, &uniformColor);
+      PRBool isOpaque = item->IsOpaque(mBuilder);
+      nsIntRect opaqueRect;
+      if (isOpaque) {
+        opaqueRect = item->GetBounds(mBuilder).ToNearestPixels(appUnitsPerDevPixel);
+      }
       nsRefPtr<ThebesLayer> thebesLayer =
         FindThebesLayerFor(itemVisibleRect, activeScrolledRoot,
-                           item->IsOpaque(mBuilder),
+                           isOpaque ? &opaqueRect : nsnull,
                            isUniform ? &uniformColor : nsnull);
 
       InvalidateForLayerChange(item, thebesLayer);
