@@ -765,12 +765,6 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
 
 NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aObserver)
 {
-  const char *pref;
-  PrefCallbackData *pCallback;
-  PRInt32 count;
-  PRInt32 i;
-  nsresult rv;
-
   NS_ENSURE_ARG_POINTER(aDomain);
   NS_ENSURE_ARG_POINTER(aObserver);
 
@@ -791,52 +785,9 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
 
   if (!mObservers)
     return NS_OK;
-    
-  // need to find the index of observer, so we can remove it from the domain list too
-  count = mObservers->Count();
-  if (count == 0)
-    return NS_OK;
 
   nsCOMPtr<nsISupports> canonical(do_QueryInterface(aObserver));
-#ifdef DEBUG
-  PRBool alreadyRemoved = PR_FALSE;
-#endif
-
-  for (i = 0; i < count; i++) {
-    pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
-
-#ifdef DEBUG
-    if (!pCallback) {
-      // Have to assume that the callback we're looking for was already
-      // removed in freeObserverList below.
-      alreadyRemoved = PR_TRUE;
-    }
-#endif
-
-    if (pCallback &&
-        pCallback->pCanonical == canonical &&
-        !strcmp(pCallback->pDomain, aDomain)) {
-      // We must pass a fully qualified preference name to remove the callback
-      pref = getPrefName(aDomain); // aDomain == nsnull only possible failure, trapped above
-      rv = PREF_UnregisterCallback(pref, NotifyObserver, pCallback);
-      if (NS_SUCCEEDED(rv)) {
-        // Remove this observer from our array so that nobody else can remove
-        // what we're trying to remove ourselves right now.
-        mObservers->RemoveElementAt(i);
-        if (pCallback->pWeakRef) {
-          NS_RELEASE(pCallback->pWeakRef);
-        } else {
-          NS_RELEASE(pCallback->pObserver);
-        }
-        NS_Free(pCallback);
-      }
-      return rv;
-    }
-  }
-
-  NS_WARN_IF_FALSE(alreadyRemoved,
-                   "Failed attempt to remove a pref observer, probably leaking");
-  return NS_OK;
+  return RemoveObserverFromList(aDomain, canonical);
 }
 
 NS_IMETHODIMP nsPrefBranch::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
@@ -872,7 +823,7 @@ static nsresult NotifyObserver(const char *newpref, void *data)
     observer = do_QueryReferent(pData->pWeakRef);
     if (!observer) {
       // this weak referenced observer went away, remove them from the list
-      pData->pBranch->RemoveObserver(pData->pDomain, pData->pObserver);
+      pData->pBranch->RemoveObserverFromList(pData->pDomain, pData->pCanonical);
       return NS_OK;
     }
   } else {
@@ -917,6 +868,55 @@ void nsPrefBranch::freeObserverList(void)
     delete mObservers;
     mObservers = 0;
   }
+}
+
+nsresult
+nsPrefBranch::RemoveObserverFromList(const char *aDomain, nsISupports *aObserver)
+{
+  PRInt32 count = mObservers->Count();
+  if (!count) {
+    return NS_OK;
+  }
+
+#ifdef DEBUG
+  PRBool alreadyRemoved = PR_FALSE;
+#endif
+
+  for (PRInt32 i = 0; i < count; i++) {
+    PrefCallbackData *pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
+
+#ifdef DEBUG
+    if (!pCallback) {
+      // Have to assume that the callback we're looking for was already
+      // removed in freeObserverList below.
+      alreadyRemoved = PR_TRUE;
+    }
+#endif
+
+    if (pCallback &&
+        pCallback->pCanonical == aObserver &&
+        !strcmp(pCallback->pDomain, aDomain)) {
+      // We must pass a fully qualified preference name to remove the callback
+      const char *pref = getPrefName(aDomain); // aDomain == nsnull only possible failure, trapped above
+      nsresult rv = PREF_UnregisterCallback(pref, NotifyObserver, pCallback);
+      if (NS_SUCCEEDED(rv)) {
+        // Remove this observer from our array so that nobody else can remove
+        // what we're trying to remove ourselves right now.
+        mObservers->RemoveElementAt(i);
+        if (pCallback->pWeakRef) {
+          NS_RELEASE(pCallback->pWeakRef);
+        } else {
+          NS_RELEASE(pCallback->pObserver);
+        }
+        NS_Free(pCallback);
+      }
+      return rv;
+    }
+  }
+
+  NS_WARN_IF_FALSE(alreadyRemoved,
+                   "Failed attempt to remove a pref observer, probably leaking");
+  return NS_OK;
 }
  
 nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, PRUnichar **return_buf)
