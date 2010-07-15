@@ -319,7 +319,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   }
 
   PRUint32 flags = 0;
-  if (UseOpaqueSurface(this) && aOpacity == 1.0) {
+  if (UseOpaqueSurface(this)) {
     flags |= ThebesLayerBuffer::OPAQUE_CONTENT;
   }
 
