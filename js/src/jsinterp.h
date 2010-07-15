@@ -86,12 +86,12 @@ struct JSStackFrame
     JSObject            *callobj;       /* lazily created Call object */
     JSObject            *argsobj;       /* lazily created arguments object */
     JSScript            *script;        /* script being interpreted */
-    JSFunction          *fun;           /* function being called or null */
     js::Value           thisv;          /* "this" pointer if in method */
+    JSFunction          *fun;           /* function being called or null */
     uintN               argc;           /* actual argument count */
     js::Value           *argv;          /* base of argument stack slots */
-    js::Value           rval;           /* function return value */
     void                *annotation;    /* used by Java security */
+    js::Value           rval;           /* function return value */
 
     /* Maintained by StackSpace operations */
     JSStackFrame        *down;          /* previous frame, part of
