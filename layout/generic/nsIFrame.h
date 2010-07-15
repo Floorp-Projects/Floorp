@@ -1818,6 +1818,19 @@ public:
   void EndDeferringInvalidatesForDisplayRoot();
 
   /**
+   * Mark this frame as using active layers. This marking will time out
+   * after a short period. This call does no immediate invalidation,
+   * but when the mark times out, we'll invalidate the frame's overflow
+   * area.
+   */
+  void MarkLayersActive();
+
+  /**
+   * Return true if this frame is marked as needing active layers.
+   */
+  PRBool AreLayersMarkedActive();
+  
+  /**
    * @param aFlags see InvalidateInternal below
    */
   void InvalidateWithFlags(const nsRect& aDamageRect, PRUint32 aFlags);
