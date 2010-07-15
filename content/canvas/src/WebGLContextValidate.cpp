@@ -41,7 +41,7 @@
 
 #include "CheckedInt.h"
 
-#ifndef USE_GLES2
+#if !defined(USE_GLES2) && defined(USE_ANGLE)
 #include "angle/ShaderLang.h"
 #endif
 
@@ -419,7 +419,9 @@ WebGLContext::InitAndValidateGL()
     // gl_PointSize is always available in ES2 GLSL, but has to be
     // specifically enabled on desktop GLSL.
     gl->fEnable(LOCAL_GL_VERTEX_PROGRAM_POINT_SIZE);
+#endif
 
+#if !defined(USE_GLES2) && defined(USE_ANGLE)
     // initialize shader translator
     static bool didTranslatorInit = false;
     if (!didTranslatorInit && mShaderValidation) {
