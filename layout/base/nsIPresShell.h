@@ -133,8 +133,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0x6b32e1ca, 0xb295, 0x406d, \
-    { 0xb2, 0x8b, 0x73, 0xda, 0xc3, 0x66, 0xc2, 0xa7 } }
+  { 0x318f7b6c, 0x56be, 0x4256, \
+    { 0xa3, 0x09, 0xff, 0xdc, 0xde, 0x04, 0x63, 0xf6 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -931,14 +931,13 @@ public:
    * Add a solid color item to the bottom of aList with frame aFrame and
    * bounds aBounds. Checks first if this needs to be done by checking if
    * aFrame is a canvas frame (if aForceDraw is true then this check is
-   * skipped). If aBounds is null (the default) then the bounds will be derived
-   * from the frame. aBackstopColor is composed behind the background color of
+   * skipped). aBackstopColor is composed behind the background color of
    * the canvas, it is transparent by default.
    */
   virtual nsresult AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
                                                 nsDisplayList& aList,
                                                 nsIFrame* aFrame,
-                                                nsRect* aBounds = nsnull,
+                                                const nsRect& aBounds,
                                                 nscolor aBackstopColor = NS_RGBA(0,0,0,0),
                                                 PRBool aForceDraw = PR_FALSE) = 0;
 
