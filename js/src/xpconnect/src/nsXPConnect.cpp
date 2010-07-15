@@ -334,6 +334,51 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
     return FindInfo(NameTester, name, mInterfaceInfoManager, info);
 }
 
+static JSGCCallback gOldJSGCCallback;
+// Whether cycle collection was run.
+static PRBool gDidCollection;
+// Whether starting cycle collection was successful.
+static PRBool gInCollection;
+// Whether cycle collection collected anything.
+static PRBool gCollected;
+
+static JSBool
+XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
+{
+    // Launch the cycle collector.
+    switch(status)
+    {
+      case JSGC_BEGIN:
+        nsXPConnect::GetRuntimeInstance()->ClearWeakRoots();
+        break;
+
+      case JSGC_MARK_END:
+        // This is the hook between marking and sweeping in the JS GC. Do cycle
+        // collection.
+        if(!gDidCollection)
+        {
+            NS_ASSERTION(!gInCollection, "Recursing?");
+
+            gDidCollection = PR_TRUE;
+            gInCollection = nsCycleCollector_beginCollection();
+        }
+        break;
+
+      case JSGC_END:
+        if(gInCollection)
+        {
+            gInCollection = PR_FALSE;
+            gCollected = nsCycleCollector_finishCollection();
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    return gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
+}
+
 PRBool
 nsXPConnect::Collect()
 {
@@ -385,10 +430,12 @@ nsXPConnect::Collect()
 
     mCycleCollecting = PR_TRUE;
     mCycleCollectionContext = &cycleCollectionContext;
-
-    nsXPConnect::GetRuntimeInstance()->ClearWeakRoots();
+    gDidCollection = PR_FALSE;
+    gInCollection = PR_FALSE;
+    gCollected = PR_FALSE;
 
     JSContext *cx = mCycleCollectionContext->GetJSContext();
+    gOldJSGCCallback = JS_SetGCCallback(cx, XPCCycleCollectGCCallback);
 
     // We want to scan the current thread for GC roots only if it was in a
     // request prior to the Collect call to avoid false positives during the
@@ -407,15 +454,13 @@ nsXPConnect::Collect()
         JS_GC(cx);
         JS_THREAD_DATA(cx)->conservativeGC.enable();
     }
-
-    // The JavaScript GC is done. Lets cycle collect.
-    PRBool ok = nsCycleCollector_beginCollection() &&
-                nsCycleCollector_finishCollection();
+    JS_SetGCCallback(cx, gOldJSGCCallback);
+    gOldJSGCCallback = nsnull;
 
     mCycleCollectionContext = nsnull;
     mCycleCollecting = PR_FALSE;
 
-    return ok;
+    return gCollected;
 }
 
 // JSTRACE_XML can recursively hold on to more JSTRACE_XML objects, adding it to
