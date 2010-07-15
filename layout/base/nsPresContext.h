@@ -960,6 +960,9 @@ public:
     return nsnull;
   }
 
+  PRBool MayHaveFixedBackgroundFrames() { return mMayHaveFixedBackgroundFrames; }
+  void SetHasFixedBackgroundFrame() { mMayHaveFixedBackgroundFrames = PR_TRUE; }
+
   PRUint32 EstimateMemoryUsed() {
     PRUint32 result = 0;
 
@@ -1126,6 +1129,7 @@ protected:
   unsigned              mPendingThemeChanged : 1;
   unsigned              mPendingMediaFeatureValuesChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
+  unsigned              mMayHaveFixedBackgroundFrames : 1;
 
   // Is the current mUserFontSet valid?
   unsigned              mUserFontSetDirty : 1;

@@ -2455,6 +2455,8 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   // of aForFrame's border-box will be rendered)
   nsPoint imageTopLeft, anchor;
   if (NS_STYLE_BG_ATTACHMENT_FIXED == aLayer.mAttachment) {
+    aPresContext->SetHasFixedBackgroundFrame();
+
     // If it's a fixed background attachment, then the image is placed
     // relative to the viewport, which is the area of the root frame
     // in a screen context or the page content frame in a print context.
