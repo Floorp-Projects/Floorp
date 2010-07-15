@@ -2521,7 +2521,8 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
     nsEventStatus status;
     {
-      AutoLayerManagerSetup setupLayerManager(this, paintCtx);
+      AutoLayerManagerSetup
+        setupLayerManager(this, paintCtx, BasicLayerManager::BUFFER_NONE);
       DispatchEvent(&event, status);
     }
 
