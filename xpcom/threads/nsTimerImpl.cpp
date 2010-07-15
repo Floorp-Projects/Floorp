@@ -46,6 +46,9 @@
 #include "nsThreadUtils.h"
 #include "prmem.h"
 
+using mozilla::TimeDuration;
+using mozilla::TimeStamp;
+
 static PRInt32          gGenerator = 0;
 static TimerThread*     gThread = nsnull;
 
@@ -142,18 +145,12 @@ nsTimerImpl::nsTimerImpl() :
   mArmed(PR_FALSE),
   mCanceled(PR_FALSE),
   mGeneration(0),
-  mDelay(0),
-  mTimeout(0)
+  mDelay(0)
 {
   // XXXbsmedberg: shouldn't this be in Init()?
   mEventTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
 
   mCallback.c = nsnull;
-
-#ifdef DEBUG_TIMERS
-  mStart = 0;
-  mStart2 = 0;
-#endif
 }
 
 nsTimerImpl::~nsTimerImpl()
@@ -301,8 +298,8 @@ NS_IMETHODIMP nsTimerImpl::SetDelay(PRUint32 aDelay)
 
   // If we're already repeating precisely, update mTimeout now so that the
   // new delay takes effect in the future.
-  if (mTimeout != 0 && mType == TYPE_REPEATING_PRECISE)
-    mTimeout = PR_IntervalNow();
+  if (!mTimeout.IsNull() && mType == TYPE_REPEATING_PRECISE)
+    mTimeout = TimeStamp::Now();
 
   SetDelayInternal(aDelay);
 
@@ -379,31 +376,32 @@ void nsTimerImpl::Fire()
   if (mCanceled)
     return;
 
-  PRIntervalTime now = PR_IntervalNow();
+  TimeStamp now = TimeStamp::Now();
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-    PRIntervalTime a = now - mStart; // actual delay in intervals
-    PRUint32       b = PR_MillisecondsToInterval(mDelay); // expected delay in intervals
-    PRUint32       d = PR_IntervalToMilliseconds((a > b) ? a - b : b - a); // delta in ms
+    TimeDuration   a = now - mStart; // actual delay in intervals
+    TimeDuration   b = TimeDuration::FromMilliseconds(mDelay); // expected delay in intervals
+    TimeDuration   delta = (a > b) ? a - b : b - a;
+    PRUint32       d = delta.ToMilliseconds(); // delta in ms
     sDeltaSum += d;
     sDeltaSumSquared += double(d) * double(d);
     sDeltaNum++;
 
     PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] expected delay time %4dms\n", this, mDelay));
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] actual delay time   %4dms\n", this, PR_IntervalToMilliseconds(a)));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] actual delay time   %4dms\n", this, PRInt32(a.ToMilliseconds())));
     PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] (mType is %d)       -------\n", this, mType));
     PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p]     delta           %4dms\n", this, (a > b) ? (PRInt32)d : -(PRInt32)d));
 
     mStart = mStart2;
-    mStart2 = 0;
+    mStart2 = TimeStamp::TimeStamp();
   }
 #endif
 
-  PRIntervalTime timeout = mTimeout;
+  TimeStamp timeout = mTimeout;
   if (mType == TYPE_REPEATING_PRECISE) {
     // Precise repeating timers advance mTimeout by mDelay without fail before
     // calling Fire().
-    timeout -= PR_MillisecondsToInterval(mDelay);
+    timeout -= TimeDuration::FromMilliseconds(mDelay);
   }
   if (gThread)
     gThread->UpdateFilter(mDelay, timeout, now);
@@ -458,7 +456,7 @@ void nsTimerImpl::Fire()
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
     PR_LOG(gTimerLog, PR_LOG_DEBUG,
            ("[this=%p] Took %dms to fire timer callback\n",
-            this, PR_IntervalToMilliseconds(PR_IntervalNow() - now)));
+            this, (TimeStamp::Now() - now).ToMilliseconds()));
   }
 #endif
 
@@ -483,7 +481,7 @@ public:
   }
 
 #ifdef DEBUG_TIMERS
-  PRIntervalTime mInitTime;
+  TimeStamp mInitTime;
 #endif
 
 private:
@@ -509,10 +507,10 @@ NS_IMETHODIMP nsTimerEvent::Run()
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-    PRIntervalTime now = PR_IntervalNow();
+    TimeStamp now = TimeStamp::Now();
     PR_LOG(gTimerLog, PR_LOG_DEBUG,
            ("[this=%p] time between PostTimerEvent() and Fire(): %dms\n",
-            this, PR_IntervalToMilliseconds(now - mInitTime)));
+            this, (now - mInitTime).ToMilliseconds()));
   }
 #endif
 
@@ -536,7 +534,7 @@ nsresult nsTimerImpl::PostTimerEvent()
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-    event->mInitTime = PR_IntervalNow();
+    event->mInitTime = TimeStamp::Now();
   }
 #endif
 
@@ -559,23 +557,19 @@ nsresult nsTimerImpl::PostTimerEvent()
 
 void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
 {
-  PRIntervalTime delayInterval = PR_MillisecondsToInterval(aDelay);
-  if (delayInterval > DELAY_INTERVAL_MAX) {
-    delayInterval = DELAY_INTERVAL_MAX;
-    aDelay = PR_IntervalToMilliseconds(delayInterval);
-  }
+  TimeDuration delayInterval = TimeDuration::FromMilliseconds(aDelay);
 
   mDelay = aDelay;
 
-  PRIntervalTime now = PR_IntervalNow();
-  if (mTimeout == 0 || mType != TYPE_REPEATING_PRECISE)
+  TimeStamp now = TimeStamp::Now();
+  if (mTimeout.IsNull() || mType != TYPE_REPEATING_PRECISE)
     mTimeout = now;
 
   mTimeout += delayInterval;
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-    if (mStart == 0)
+    if (mStart.IsNull())
       mStart = now;
     else
       mStart2 = now;
