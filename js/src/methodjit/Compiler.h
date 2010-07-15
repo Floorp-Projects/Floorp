@@ -203,6 +203,7 @@ class Compiler
     void emitReturn();
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void inlineCallHelper(uint32 argc, bool callingNew);
+    void jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_eleminc(JSOp op, VoidStub);

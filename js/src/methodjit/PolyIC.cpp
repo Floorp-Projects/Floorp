@@ -1337,6 +1337,10 @@ ic::SetProp(VMFrame &f, uint32 index)
       case JSOP_PROPDEC:
       case JSOP_INCPROP:
       case JSOP_DECPROP:
+      case JSOP_NAMEINC:
+      case JSOP_NAMEDEC:
+      case JSOP_INCNAME:
+      case JSOP_DECNAME:
         stub = SetPropDumb;
         break;
       default:
