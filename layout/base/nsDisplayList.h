@@ -503,9 +503,19 @@ public:
   /**
    * Some consecutive items should be rendered together as a unit, e.g.,
    * outlines for the same element. For this, we need a way for items to
-   * identify their type.
+   * identify their type. We use the type for other purposes too.
    */
   virtual Type GetType() = 0;
+  /**
+   * If this returns a non-zero value, then pairing this with the
+   * GetUnderlyingFrame() pointer gives a key that uniquely identifies
+   * this display item in the display item tree.
+   * This will only return a zero value for items which wrap display lists
+   * and do not create a CSS stacking context, therefore requiring
+   * display items to be individually wrapped --- currently nsDisplayClip
+   * only.
+   */
+  virtual PRUint32 GetPerFrameKey() { return PRUint32(GetType()); }
   /**
    * This is called after we've constructed a display list for event handling.
    * When this is called, we've already ensured that aRect intersects the
@@ -1500,6 +1510,7 @@ public:
                                    nsRegion* aVisibleRegionBeforeMove);
   virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
   NS_DISPLAY_DECL_NAME("Clip", TYPE_CLIP)
+  virtual PRUint32 GetPerFrameKey() { return 0; }
   
   nsRect GetClipRect() { return mClip; }
   void SetClipRect(const nsRect& aRect) { mClip = aRect; }
