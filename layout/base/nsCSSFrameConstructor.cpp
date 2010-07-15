@@ -120,6 +120,7 @@
 #include "nsTArray.h"
 #include "nsGenericDOMDataNode.h"
 #include "mozilla/dom/Element.h"
+#include "FrameLayerBuilder.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -7671,6 +7672,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       }
     }
     if (aChange & nsChangeHint_UpdateOpacityLayer) {
+      aFrame->MarkLayersActive();
       aFrame->InvalidateLayer(aFrame->GetOverflowRectRelativeToSelf(),
                               nsDisplayItem::TYPE_OPACITY);
     }

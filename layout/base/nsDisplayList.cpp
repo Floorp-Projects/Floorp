@@ -1137,7 +1137,8 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
 nsDisplayItem::LayerState
 nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager) {
-  // XXX fix this to detect animated opacity
+  if (mFrame->AreLayersMarkedActive())
+    return LAYER_ACTIVE;
   nsIFrame* activeScrolledRoot =
     nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull, nsnull);
   return !ChildrenCanBeInactive(aBuilder, aManager, mList, activeScrolledRoot)
