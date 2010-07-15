@@ -37,6 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentProcessChild.h"
+#endif
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
 #include "nsCRT.h"
@@ -54,6 +57,41 @@
 #include "mozIStorageConnection.h"
 #include "mozStorageHelper.h"
 #include "mozStorageCID.h"
+#include "nsXULAppAPI.h"
+
+#ifdef MOZ_IPC
+static PRBool
+IsChildProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Content;
+}
+
+/**
+ * @returns The child process object, or if we are not in the child
+ *          process, nsnull.
+ */
+static mozilla::dom::ContentProcessChild*
+ChildProcess()
+{
+  if (IsChildProcess()) {
+    mozilla::dom::ContentProcessChild* cpc =
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    if (!cpc)
+      NS_RUNTIMEABORT("Content Process is NULL!");
+    return cpc;
+  }
+
+  return nsnull;
+}
+#endif
+
+#define ENSURE_NOT_CHILD_PROCESS \
+  PR_BEGIN_MACRO \
+  if (IsChildProcess()) { \
+    NS_ERROR("cannot set permission from content process"); \
+    return NS_ERROR_NOT_AVAILABLE; \
+  } \
+  PR_END_MACRO
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -121,6 +159,12 @@ nsPermissionManager::Init()
   if (!mHostTable.Init()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+#ifdef MOZ_IPC
+  // Child will route messages to parent, so no need for further initialization
+  if (IsChildProcess())
+    return NS_OK;
+#endif
 
   // ignore failure here, since it's non-fatal (we can run fine without
   // persistent storage - e.g. if there's no profile).
@@ -316,6 +360,10 @@ nsPermissionManager::Add(nsIURI     *aURI,
                          PRUint32    aExpireType,
                          PRInt64     aExpireTime)
 {
+#ifdef MOZ_IPC
+  ENSURE_NOT_CHILD_PROCESS;
+#endif
+
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aType);
   NS_ENSURE_TRUE(aExpireType == nsIPermissionManager::EXPIRE_NEVER ||
@@ -487,6 +535,10 @@ NS_IMETHODIMP
 nsPermissionManager::Remove(const nsACString &aHost,
                             const char       *aType)
 {
+#ifdef MOZ_IPC
+  ENSURE_NOT_CHILD_PROCESS;
+#endif
+
   NS_ENSURE_ARG_POINTER(aType);
 
   // AddInternal() handles removal, just let it do the work
@@ -503,6 +555,10 @@ nsPermissionManager::Remove(const nsACString &aHost,
 NS_IMETHODIMP
 nsPermissionManager::RemoveAll()
 {
+#ifdef MOZ_IPC
+  ENSURE_NOT_CHILD_PROCESS;
+#endif
+
   nsresult rv = RemoveAllInternal();
   NotifyObservers(nsnull, NS_LITERAL_STRING("cleared").get());
   return rv;
@@ -534,6 +590,13 @@ nsPermissionManager::TestExactPermission(nsIURI     *aURI,
                                          const char *aType,
                                          PRUint32   *aPermission)
 {
+#ifdef MOZ_IPC
+  mozilla::dom::ContentProcessChild* cpc = ChildProcess();
+  if (cpc) {
+    return cpc->SendTestPermission(IPC::URI(aURI), nsDependentCString(aType), PR_TRUE,
+      aPermission) ? NS_OK : NS_ERROR_FAILURE;
+  }
+#endif
   return CommonTestPermission(aURI, aType, aPermission, PR_TRUE);
 }
 
@@ -542,6 +605,13 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
                                     const char *aType,
                                     PRUint32   *aPermission)
 {
+#ifdef MOZ_IPC
+  mozilla::dom::ContentProcessChild* cpc = ChildProcess();
+  if (cpc) {
+    return cpc->SendTestPermission(IPC::URI(aURI), nsDependentCString(aType), PR_FALSE,
+      aPermission) ? NS_OK : NS_ERROR_FAILURE;
+  }
+#endif
   return CommonTestPermission(aURI, aType, aPermission, PR_FALSE);
 }
 
@@ -645,6 +715,10 @@ AddPermissionsToList(nsHostEntry *entry, void *arg)
 
 NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 {
+#ifdef MOZ_IPC
+  ENSURE_NOT_CHILD_PROCESS;
+#endif
+
   // roll an nsCOMArray of all our permissions, then hand out an enumerator
   nsCOMArray<nsIPermission> array;
   nsGetEnumeratorData data(&array, &mTypeArray);
@@ -656,6 +730,10 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 
 NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
+#ifdef MOZ_IPC
+  ENSURE_NOT_CHILD_PROCESS;
+#endif
+
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
     // or is going away because the application is shutting down.

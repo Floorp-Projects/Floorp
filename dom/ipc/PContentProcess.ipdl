@@ -42,10 +42,12 @@ include protocol PNecko;
 
 include "mozilla/TabTypes.h";
 include "mozilla/chrome/RegistryMessageUtils.h";
+include "mozilla/net/NeckoMessageUtils.h";
 
 using ChromePackage;
 using ResourceMapping;
 using OverrideMapping;
+using IPC::URI;
 
 namespace mozilla {
 namespace dom {
@@ -71,7 +73,9 @@ child:
 parent:
     PNecko();
 
-    // prefs-related messages ...
+    // Services remoting
+
+    // PrefService messages
     sync GetPrefType(nsCString prefName) returns (PRInt32 retValue, nsresult rv);
     sync GetBoolPref(nsCString prefName) returns (PRBool retValue, nsresult rv);
     sync GetIntPref(nsCString prefName)  returns (PRInt32 retValue, nsresult rv);
@@ -80,6 +84,9 @@ parent:
     sync PrefHasUserValue(nsCString prefName) returns (PRBool retValue, nsresult rv);
     sync PrefIsLocked(nsCString prefName) returns (PRBool retValue, nsresult rv);
     sync GetChildList(nsCString domain) returns (nsCString[] list, nsresult rv);
+
+    // PermissionsManager messages
+    sync TestPermission(URI uri, nsCString type, PRBool exact) returns (PRUint32 retValue);
 };
 
 }
