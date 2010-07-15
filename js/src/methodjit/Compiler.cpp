@@ -79,8 +79,14 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegister
 mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
   : cx(cx), script(script), scopeChain(scopeChain), globalObj(scopeChain->getGlobal()), fun(fun),
     analysis(cx, script), jumpMap(NULL), frame(cx, script, masm),
-    branchPatches(ContextAllocPolicy(cx)), mics(ContextAllocPolicy(cx)),
-    pics(ContextAllocPolicy(cx)), stubcc(cx, *this, frame, script)
+    branchPatches(ContextAllocPolicy(cx)),
+#if defined JS_MONOIC
+    mics(ContextAllocPolicy(cx)),
+#endif
+#if defined JS_POLYIC
+    pics(ContextAllocPolicy(cx)), 
+#endif
+    stubcc(cx, *this, frame, script)
 {
 #ifdef DEBUG
     masm.setSpewPath(false);
@@ -262,6 +268,7 @@ mjit::Compiler::finishThisUp()
         }
     }
 
+#if defined JS_MONOIC
     if (mics.length()) {
         script->mics = (ic::MICInfo *)cx->calloc(sizeof(ic::MICInfo) * mics.length());
         if (!script->mics) {
@@ -269,9 +276,11 @@ mjit::Compiler::finishThisUp()
             return Compile_Error;
         }
     }
+#endif
 
     JSC::LinkBuffer fullCode(result, masm.size() + stubcc.size());
     JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
+#if defined JS_MONOIC
     for (size_t i = 0; i < mics.length(); i++) {
         script->mics[i].entry = fullCode.locationOf(mics[i].entry);
         script->mics[i].load = fullCode.locationOf(mics[i].load);
@@ -283,7 +292,9 @@ mjit::Compiler::finishThisUp()
         script->mics[i].dataConst = mics[i].dataConst;
         script->mics[i].dataWrite = mics[i].dataWrite;
     }
+#endif /* JS_MONOIC */
 
+#if defined JS_POLYIC
     if (pics.length()) {
         uint8 *cursor = (uint8 *)cx->calloc(sizeof(ic::PICInfo) * pics.length() + sizeof(uint32));
         if (!cursor) {
@@ -324,6 +335,7 @@ mjit::Compiler::finishThisUp()
         }
         new (&script->pics[i].execPools) ic::PICInfo::ExecPoolVector(SystemAllocPolicy());
     }
+#endif /* JS_POLYIC */
 
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
@@ -1842,7 +1854,7 @@ mjit::Compiler::jsop_length()
         return;
     }
 
-#if ENABLE_PIC
+#if defined JS_POLYIC
     jsop_getprop(cx->runtime->atomState.lengthAtom);
 #else
     prepareStubCall(Uses(1));
@@ -1852,7 +1864,7 @@ mjit::Compiler::jsop_length()
 #endif
 }
 
-#if ENABLE_PIC
+#if defined JS_POLYIC
 void
 mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
 {
@@ -2347,7 +2359,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     pics.append(pic);
 }
 
-#else /* ENABLE_PIC */
+#else /* JS_POLYIC */
 
 void
 mjit::Compiler::jsop_name(JSAtom *atom)
@@ -2363,10 +2375,10 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool typecheck)
     jsop_getprop_slow();
 }
 
-void
+bool
 mjit::Compiler::jsop_callprop(JSAtom *atom)
 {
-    jsop_callprop_slow(atom);
+    return jsop_callprop_slow(atom);
 }
 
 void
@@ -2443,11 +2455,11 @@ void
 mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
+#if defined JS_POLYIC
     jsbytecode *next = &PC[JSOP_NAMEINC_LENGTH];
     bool pop = (JSOp(*next) == JSOP_POP) && !analysis[next].nincoming;
     int amt = (op == JSOP_NAMEINC || op == JSOP_INCNAME) ? -1 : 1;
 
-#if ENABLE_PIC
     if (pop || (op == JSOP_INCNAME || op == JSOP_DECNAME)) {
         /* These cases are easy, the original value is not observed. */
 
@@ -2514,6 +2526,9 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.pop();
         // N
     }
+
+    if (pop)
+        PC += JSOP_POP_LENGTH;
 #else
     prepareStubCall(Uses(1));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
@@ -2523,19 +2538,17 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
 #endif
 
     PC += JSOP_NAMEINC_LENGTH;
-    if (pop)
-        PC += JSOP_POP_LENGTH;
 }
 
 void
 mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
+#if defined JS_POLYIC
     jsbytecode *next = &PC[JSOP_PROPINC_LENGTH];
     bool pop = (JSOp(*next) == JSOP_POP) && !analysis[next].nincoming;
     int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
 
-#if ENABLE_PIC
     if (pop || (op == JSOP_INCPROP || op == JSOP_DECPROP)) {
         /* These cases are easy, the original value is not observed. */
 
@@ -2593,6 +2606,8 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.shimmy(1);
         // N
     }
+    if (pop)
+        PC += JSOP_POP_LENGTH;
 #else
     prepareStubCall(Uses(1));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
@@ -2602,8 +2617,6 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
 #endif
 
     PC += JSOP_PROPINC_LENGTH;
-    if (pop)
-        PC += JSOP_POP_LENGTH;
 }
 
 /*
@@ -2749,7 +2762,7 @@ mjit::Compiler::jsop_bindgname()
 void
 mjit::Compiler::jsop_getgname(uint32 index)
 {
-#if ENABLE_MIC
+#if defined JS_MONOIC
     jsop_bindgname();
 
     FrameEntry *fe = frame.peek(-1);
@@ -2826,7 +2839,7 @@ mjit::Compiler::jsop_setgname_slow(uint32 index)
 void
 mjit::Compiler::jsop_setgname(uint32 index)
 {
-#if ENABLE_MIC
+#if defined JS_MONOIC
     FrameEntry *objFe = frame.peek(-2);
     JS_ASSERT_IF(objFe->isTypeKnown(), objFe->getKnownType() == JSVAL_TYPE_OBJECT);
 

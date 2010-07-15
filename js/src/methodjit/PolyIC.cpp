@@ -52,7 +52,7 @@
 using namespace js;
 using namespace js::mjit;
 
-#if ENABLE_PIC
+#if defined JS_POLYIC
 
 /* Rough over-estimate of how much memory we need to unprotect. */
 static const uint32 INLINE_PATH_LENGTH = 64;
@@ -1595,5 +1595,6 @@ ic::PurgePICs(JSContext *cx, JSScript *script)
         pic.reset();
     }
 }
-#endif
+
+#endif /* JS_POLYIC */
 
