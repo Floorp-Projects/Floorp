@@ -715,7 +715,12 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+            if (TabCandy.isVisible()) {
+              // ToDo: this will be removed when we gain ability to draw o the menu bar. 
+              this.ownerDocument.title = TabCandy.getWindowTitle();
+            } else {
+              this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+            }
           ]]>
         </body>
       </method>
