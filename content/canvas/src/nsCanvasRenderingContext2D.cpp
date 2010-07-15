@@ -415,7 +415,8 @@ public:
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool isOpaque);
-    already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *manager);
+    already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
+                                                 LayerManager *aManager);
     void MarkContextClean();
     NS_IMETHOD SetIsIPC(PRBool isIPC);
     // this rect is in CSS pixels
@@ -505,6 +506,7 @@ protected:
     PRInt32 mWidth, mHeight;
     PRPackedBool mValid;
     PRPackedBool mOpaque;
+    PRPackedBool mResetLayer;
 
 #ifdef MOZ_IPC
     PRPackedBool mIPC;
@@ -822,7 +824,7 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 }
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
-    : mValid(PR_FALSE), mOpaque(PR_FALSE)
+    : mValid(PR_FALSE), mOpaque(PR_FALSE), mResetLayer(PR_TRUE)
 #ifdef MOZ_IPC
     , mIPC(PR_FALSE)
 #endif
@@ -1139,6 +1141,7 @@ nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASur
 
     mSurface = surface;
     mThebes = surface ? new gfxContext(mSurface) : nsnull;
+    mResetLayer = PR_TRUE;
 
     /* Create dummy surfaces here */
     if (mSurface == nsnull || mSurface->CairoStatus() != 0 ||
@@ -4074,17 +4077,29 @@ nsCanvasRenderingContext2D::SetMozImageSmoothingEnabled(PRBool val)
     return NS_OK;
 }
 
+static PRUint8 g2DContextLayerUserData;
+
 already_AddRefed<CanvasLayer>
-nsCanvasRenderingContext2D::GetCanvasLayer(LayerManager *manager)
+nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
+                                           LayerManager *aManager)
 {
     if (!mValid)
         return nsnull;
 
-    nsRefPtr<CanvasLayer> canvasLayer = manager->CreateCanvasLayer();
+    if (!mResetLayer && aOldLayer &&
+        aOldLayer->GetUserData() == &g2DContextLayerUserData) {
+        NS_ADDREF(aOldLayer);
+        // XXX Need to just update the changed area here
+        aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
+        return aOldLayer;
+    }
+
+    nsRefPtr<CanvasLayer> canvasLayer = aManager->CreateCanvasLayer();
     if (!canvasLayer) {
         NS_WARNING("CreateCanvasLayer returned null!");
         return nsnull;
     }
+    canvasLayer->SetUserData(&g2DContextLayerUserData);
 
     CanvasLayer::Data data;
 
@@ -4095,6 +4110,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(LayerManager *manager)
     canvasLayer->SetIsOpaqueContent(mOpaque);
     canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
 
+    mResetLayer = PR_FALSE;
     return canvasLayer.forget().get();
 }
 

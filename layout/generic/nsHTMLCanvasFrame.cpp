@@ -91,7 +91,8 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager)
   {
-    return static_cast<nsHTMLCanvasFrame*>(mFrame)->BuildLayer(aBuilder, aManager);
+    return static_cast<nsHTMLCanvasFrame*>(mFrame)->
+      BuildLayer(aBuilder, aManager, this);
   }
 };
 
@@ -230,7 +231,8 @@ nsHTMLCanvasFrame::GetInnerArea() const
 
 already_AddRefed<Layer>
 nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
-                              LayerManager* aManager)
+                              LayerManager* aManager,
+                              nsDisplayItem* aItem)
 {
   nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
   nsHTMLCanvasElement* element = static_cast<nsHTMLCanvasElement*>(GetContent());
@@ -239,7 +241,9 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (canvasSize.width <= 0 || canvasSize.height <= 0 || area.IsEmpty())
     return nsnull;
 
-  nsRefPtr<CanvasLayer> layer = element->GetCanvasLayer(aManager);
+  CanvasLayer* oldLayer = static_cast<CanvasLayer*>
+    (aBuilder->LayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
+  nsRefPtr<CanvasLayer> layer = element->GetCanvasLayer(oldLayer, aManager);
   if (!layer)
     return nsnull;
 

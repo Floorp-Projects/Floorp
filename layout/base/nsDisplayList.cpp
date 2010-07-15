@@ -453,7 +453,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
 
   nsRefPtr<Layer> root = aBuilder->LayerBuilder()->
-    MakeContainerLayerFor(aBuilder, layerManager, nsnull, *this);
+    GetContainerLayerFor(aBuilder, layerManager, nsnull, *this);
   if (!root)
     return;
 
@@ -1147,7 +1147,7 @@ already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager) {
   nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
-    MakeContainerLayerFor(aBuilder, aManager, this, mList);
+    GetContainerLayerFor(aBuilder, aManager, this, mList);
   if (!layer)
     return nsnull;
 

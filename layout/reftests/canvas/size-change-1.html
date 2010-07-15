@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+<canvas width="100" height="100" id="c"></canvas>
+<script>
+var c = document.getElementById("c");
+var ctx = c.getContext("2d");
+ctx.fillStyle = "red";
+ctx.fillRect(0,0,100,100);
+
+function finishTest() {
+  c.width = 200;
+  c.height = 200;
+  ctx.fillStyle = "lime";
+  ctx.fillRect(0,0,200,200);
+
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", finishTest, false);
+</script>
+</body>
+</html>

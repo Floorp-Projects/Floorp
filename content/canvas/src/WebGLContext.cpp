@@ -79,6 +79,7 @@ WebGLContext::WebGLContext()
     mWidth = mHeight = 0;
     mGeneration = 0;
     mInvalidated = PR_FALSE;
+    mResetLayer = PR_TRUE;
 
     mActiveTexture = 0;
     mSynthesizedGLError = LOCAL_GL_NO_ERROR;
@@ -109,7 +110,7 @@ WebGLContext::Invalidate()
     if (mInvalidated)
         return;
 
-    mInvalidated = true;
+    mInvalidated = PR_TRUE;
     HTMLCanvasElement()->InvalidateFrame();
 }
 
@@ -195,6 +196,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
     mWidth = width;
     mHeight = height;
+    mResetLayer = PR_TRUE;
 
     // increment the generation number
     ++mGeneration;
@@ -313,14 +315,28 @@ WebGLContext::GetThebesSurface(gfxASurface **surface)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
+static PRUint8 gWebGLLayerUserData;
+
 already_AddRefed<layers::CanvasLayer>
-WebGLContext::GetCanvasLayer(LayerManager *manager)
+WebGLContext::GetCanvasLayer(CanvasLayer *aOldLayer,
+                             LayerManager *aManager)
 {
-    nsRefPtr<CanvasLayer> canvasLayer = manager->CreateCanvasLayer();
+    if (!mResetLayer && aOldLayer &&
+        aOldLayer->GetUserData() == &gWebGLLayerUserData) {
+        NS_ADDREF(aOldLayer);
+        if (mInvalidated) {
+            aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
+            mInvalidated = PR_FALSE;
+        }
+        return aOldLayer;
+    }
+
+    nsRefPtr<CanvasLayer> canvasLayer = aManager->CreateCanvasLayer();
     if (!canvasLayer) {
         NS_WARNING("CreateCanvasLayer returned null!");
         return nsnull;
     }
+    canvasLayer->SetUserData(&gWebGLLayerUserData);
 
     CanvasLayer::Data data;
 
@@ -351,6 +367,7 @@ WebGLContext::GetCanvasLayer(LayerManager *manager)
     canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
 
     mInvalidated = PR_FALSE;
+    mResetLayer = PR_FALSE;
 
     return canvasLayer.forget().get();
 }
