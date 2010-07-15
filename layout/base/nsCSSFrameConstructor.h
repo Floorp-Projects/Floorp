@@ -149,14 +149,15 @@ private:
                                     PRInt32 aEndIndexInContainer,
                                     PRBool aAllowLazyConstruction);
   
-  // Checks if the children of aContainer in the range
-  // [aStartIndexInContainer, aEndIndexInContainer) can be inserted/appended
-  // to one insertion point together. If so, returns that insertion point. If
-  // not, returns null and issues single ContentInserted calls for each child.
-  // aEndIndexInContainer = -1 is a special value that indicates it is an
-  // append and the range includes the last child.
+  // Checks if the children of aContainer in the range [aStartChild, aEndChild)
+  // can be inserted/appended to one insertion point together. If so, returns
+  // that insertion point. If not, returns null and issues single
+  // ContentInserted calls for each child.  aEndChild = nsnull indicates that we
+  // are dealing with an append.
   nsIFrame* GetRangeInsertionPoint(nsIContent* aContainer,
                                    nsIFrame* aParentFrame,
+                                   nsIContent* aStartChild,
+                                   nsIContent* aEndChild,
                                    PRInt32 aStartIndexInContainer,
                                    PRInt32 aEndIndexInContainer,
                                    PRBool aAllowLazyConstruction);

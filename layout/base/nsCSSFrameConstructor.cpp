@@ -6413,6 +6413,8 @@ nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aContainer,
 nsIFrame*
 nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
                                               nsIFrame* aParentFrame,
+                                              nsIContent* aStartChild,
+                                              nsIContent* aEndChild,
                                               PRInt32 aStartIndexInContainer,
                                               PRInt32 aEndIndexInContainer,
                                               PRBool aAllowLazyConstruction)
@@ -6428,14 +6430,11 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
  
   PRBool hasInsertion = PR_FALSE;
   if (!multiple) {
-    nsIDocument* document = nsnull; 
-    nsIContent *firstAppendedChild =
-      aContainer->GetChildAt(aStartIndexInContainer);
-    if (firstAppendedChild) {
-      document = firstAppendedChild->GetDocument();
-    }
+    // XXXbz XBL2/sXBL issue
+    nsIDocument* document = aStartChild->GetDocument();
+    // XXXbz how would |document| be null here?
     if (document &&
-        document->BindingManager()->GetInsertionParent(firstAppendedChild)) {
+        document->BindingManager()->GetInsertionParent(aStartChild)) {
       hasInsertion = PR_TRUE;
     }
   }
@@ -6462,13 +6461,13 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
     // If we have multiple insertion points or if we have an insertion point
     // and the operation is not a true append or if the insertion point already
     // has explicit children, then we must fall back.
-    if (multiple || aEndIndexInContainer != -1 || childCount > 0) {
-      // Now comes the fun part.  For each appended child, make a
+    if (multiple || aEndChild != nsnull || childCount > 0) {
+      // Now comes the fun part.  For each inserted child, make a
       // ContentInserted call as if it had just gotten inserted at the index
       // it's at in aContainer and let ContentInserted handle the mess.  If our
       // insertion point is non-XBL that's the correct index, and otherwise
       // ContentInserted will ignore the passed-in index.
-      PRUint32 endIndex = aEndIndexInContainer == -1 ?
+      PRUint32 endIndex = aEndChild == nsnull ?
         aContainer->GetChildCount() : aEndIndexInContainer;
       IssueSingleInsertNofications(aContainer, aStartIndexInContainer,
                                    endIndex, aAllowLazyConstruction);
@@ -6548,7 +6547,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
   LAYOUT_PHASE_TEMP_EXIT();
   parentFrame = GetRangeInsertionPoint(aContainer, parentFrame,
-                  aNewIndexInContainer, -1, aAllowLazyConstruction);
+                                       aFirstNewContent, nsnull,
+                                       aNewIndexInContainer, -1,
+                                       aAllowLazyConstruction);
   LAYOUT_PHASE_TEMP_REENTER();
   if (!parentFrame) {
     return NS_OK;
@@ -6959,7 +6960,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     // GetRangeInsertionPoint will take care of that for us.
     LAYOUT_PHASE_TEMP_EXIT();
     parentFrame = GetRangeInsertionPoint(aContainer, parentFrame,
-      aIndexInContainer, aEndIndexInContainer, aAllowLazyConstruction);
+                                         aStartChild, aEndChild,
+                                         aIndexInContainer,
+                                         aEndIndexInContainer,
+                                         aAllowLazyConstruction);
     LAYOUT_PHASE_TEMP_REENTER();
     if (!parentFrame) {
       return NS_OK;
