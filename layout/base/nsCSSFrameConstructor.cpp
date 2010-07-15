@@ -6244,8 +6244,7 @@ IsActuallyEditable(nsIContent* aContainer, nsIContent* aChild)
 PRBool
 nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
                                             nsIContent* aContainer,
-                                            nsIContent* aChild,
-                                            PRInt32 aIndex)
+                                            nsIContent* aChild)
 {
   if (mPresShell->GetPresContext()->IsChrome() || !aContainer ||
       aContainer->IsInNativeAnonymousSubtree() || aContainer->IsXUL()) {
@@ -6253,16 +6252,16 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
   }
 
   if (aOperation == CONTENTINSERT) {
-    if (aIndex < 0 || aContainer->GetChildAt(aIndex) != aChild ||
+    if (aChild->IsRootOfAnonymousSubtree() ||
         aChild->IsXUL() || IsActuallyEditable(aContainer, aChild)) {
       return PR_FALSE;
     }
   } else { // CONTENTAPPEND
     NS_ASSERTION(aOperation == CONTENTAPPEND,
                  "operation should be either insert or append");
-    PRUint32 containerCount = aContainer->GetChildCount();
-    for (PRUint32 i = aIndex; i < containerCount; i++) {
-      nsIContent* child = aContainer->GetChildAt(i);
+    for (nsIContent* child = aChild; child; child = child->GetNextSibling()) {
+      NS_ASSERTION(!child->IsRootOfAnonymousSubtree(),
+                   "Should be coming through the CONTENTAPPEND case");
       if (child->IsXUL() || IsActuallyEditable(aContainer, child)) {
         return PR_FALSE;
       }
@@ -6320,9 +6319,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
                  "setting NEEDS_FRAME on a node that already has a frame?");
     aChild->SetFlags(NODE_NEEDS_FRAME);
   } else { // CONTENTAPPEND
-    PRUint32 containerCount = aContainer->GetChildCount();
-    for (PRUint32 i = aIndex; i < containerCount; i++) {
-      nsIContent* child = aContainer->GetChildAt(i);
+    for (nsIContent* child = aChild; child; child = child->GetNextSibling()) {
       NS_ASSERTION(!child->GetPrimaryFrame() ||
                    child->GetPrimaryFrame()->GetContent() != child,
                    //XXX the child->GetPrimaryFrame()->GetContent() != child
@@ -6579,8 +6576,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     return NS_OK;
 
   if (aAllowLazyConstruction &&
-      MaybeConstructLazily(CONTENTAPPEND, aContainer, nsnull,
-                           aNewIndexInContainer)) {
+      MaybeConstructLazily(CONTENTAPPEND, aContainer, aFirstNewContent)) {
     return NS_OK;
   }
 
@@ -6978,8 +6974,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     return NS_OK;
 
   if (aAllowLazyConstruction &&
-      MaybeConstructLazily(CONTENTINSERT, aContainer, aStartChild,
-                           aIndexInContainer)) {
+      MaybeConstructLazily(CONTENTINSERT, aContainer, aStartChild)) {
     return NS_OK;
   }
 
