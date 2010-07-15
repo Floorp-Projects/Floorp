@@ -48,6 +48,7 @@
 #include "nsIThreadInternal.h"
 #include "mozilla/Monitor.h"
 #include "nsIPrefService.h"
+#include "nsIPermissionManager.h"
 
 namespace mozilla {
 
@@ -136,7 +137,13 @@ private:
     virtual bool RecvGetChildList(const nsCString& domain,
             nsTArray<nsCString>* list, nsresult* rv);
 
+    virtual bool RecvTestPermission(const IPC::URI&  aUri,
+                                    const nsCString& aType,
+                                    const PRBool&    aExact,
+                                    PRUint32*        retValue);
+
     void EnsurePrefService();
+    void EnsurePermissionService();
 
     mozilla::Monitor mMonitor;
 
@@ -148,6 +155,7 @@ private:
 
     bool mIsAlive;
     nsCOMPtr<nsIPrefBranch> mPrefService; 
+    nsCOMPtr<nsIPermissionManager> mPermissionService; 
 };
 
 } // namespace dom
