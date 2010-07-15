@@ -1594,14 +1594,10 @@ PRBool nsGfxScrollFrameInner::IsAlwaysActive() const
 {
   // The root scrollframe for a non-chrome document which is the direct
   // child of a chrome document is always treated as "active".
-  if (!mIsRoot)
-    return PR_FALSE;
-  nsPresContext* presContext = mOuter->PresContext();
-  if (presContext->IsChrome())
-    return PR_FALSE;
-  nsIFrame* rootFrame = mOuter->PresContext()->PresShell()->GetRootFrame();
-  nsIFrame* rootParent = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
-  return !rootParent || rootParent->PresContext()->IsChrome(); 
+  // XXX maybe we should extend this so that IFRAMEs which are fill the
+  // entire viewport (like GMail!) are always active
+  return mIsRoot &&
+    !nsContentUtils::IsChildOfSameType(mOuter->GetContent()->GetCurrentDoc());
 }
 
 PRBool nsGfxScrollFrameInner::IsScrollingActive() const

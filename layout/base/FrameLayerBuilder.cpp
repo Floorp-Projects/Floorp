@@ -41,6 +41,7 @@
 #include "nsPresContext.h"
 #include "nsLayoutUtils.h"
 #include "Layers.h"
+#include "BasicLayers.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -208,6 +209,12 @@ protected:
    * available for recycling.
    */
   void CollectOldLayers();
+  /**
+   * If aItem used to belong to a ThebesLayer, invalidates the area of
+   * aItem in that layer. If aNewLayer is a ThebesLayer, invalidates the area of
+   * aItem in that layer.
+   */
+  void InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer);
   /**
    * Indicate that we are done adding items to the ThebesLayer at the top of
    * mThebesLayerDataStack. Set the final visible region and opaque-content
@@ -825,9 +832,19 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(item);
     nsIntRect itemVisibleRect =
       item->GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
-    nsRefPtr<Layer> ownLayer = item->BuildLayer(mBuilder, mManager);
+    nsDisplayItem::LayerState layerState =
+      item->GetLayerState(mBuilder, mManager);
+
     // Assign the item to a layer
-    if (ownLayer) {
+    if (layerState == LAYER_ACTIVE) {
+      // Just use its layer.
+      nsRefPtr<Layer> ownLayer = item->BuildLayer(mBuilder, mManager);
+      if (!ownLayer) {
+        InvalidateForLayerChange(item, ownLayer);
+        continue;
+      }
+
+      // Update that layer's clip and visible rects.
       NS_ASSERTION(ownLayer->Manager() == mManager, "Wrong manager");
       NS_ASSERTION(ownLayer->GetUserData() != &gThebesDisplayItemLayerUserData,
                    "We shouldn't have a FrameLayerBuilder-managed layer here!");
@@ -847,6 +864,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       }
       NS_ASSERTION(!mNewChildLayers.Contains(ownLayer),
                    "Layer already in list???");
+
+      InvalidateForLayerChange(item, ownLayer);
+
       mNewChildLayers.AppendElement(ownLayer);
       mBuilder->LayerBuilder()->AddLayerDisplayItem(ownLayer, item);
     } else {
@@ -864,50 +884,95 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         FindThebesLayerFor(itemVisibleRect, activeScrolledRoot,
                            item->IsOpaque(mBuilder),
                            isUniform ? &uniformColor : nsnull);
-      
-      NS_ASSERTION(f, "Display items that render using Thebes must have a frame");
-      PRUint32 key = item->GetPerFrameKey();
-      NS_ASSERTION(key, "Display items that render using Thebes must have a key");
-      Layer* oldLayer = mBuilder->LayerBuilder()->GetOldLayerFor(f, key);
-      if (oldLayer && thebesLayer != oldLayer) {
-        NS_ASSERTION(oldLayer->AsThebesLayer(),
-                     "The layer for a display item changed type!");
-        // The item has changed layers.
-        // Invalidate the bounds in the old layer and new layer.
-        // The bounds might have changed, but we assume that any difference
-        // in the bounds will have been invalidated for all Thebes layers
-        // in the container via regular frame invalidation.
-        nsRect bounds = item->GetBounds(mBuilder);
-        nsIntRect r = bounds.ToOutsidePixels(appUnitsPerDevPixel);
-        // Update the layer contents
-        InvalidatePostTransformRegion(oldLayer->AsThebesLayer(), r);
-        InvalidatePostTransformRegion(thebesLayer, r);
 
-        // Ensure the relevant area of the window is repainted.
-        // Note that the area we're currently repainting will not be
-        // repainted again, thanks to the logic in nsFrame::InvalidateRoot.
-        mContainerFrame->Invalidate(bounds - mBuilder->ToReferenceFrame(mContainerFrame));
-      }
+      InvalidateForLayerChange(item, thebesLayer);
 
       mBuilder->LayerBuilder()->
-        AddThebesDisplayItem(thebesLayer, item, aClipRect, mContainerFrame);
+        AddThebesDisplayItem(thebesLayer, mBuilder,
+                             item, aClipRect, mContainerFrame,
+                             layerState);
     }
   }
 }
 
 void
+ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
+{
+  nsIFrame* f = aItem->GetUnderlyingFrame();
+  NS_ASSERTION(f, "Display items that render using Thebes must have a frame");
+  PRUint32 key = aItem->GetPerFrameKey();
+  NS_ASSERTION(key, "Display items that render using Thebes must have a key");
+  Layer* oldLayer = mBuilder->LayerBuilder()->GetOldLayerFor(f, key);
+  if (!oldLayer) {
+    // Nothing to do here, this item didn't have a layer before
+    return;
+  }
+  if (aNewLayer != oldLayer) {
+    // The item has changed layers.
+    // Invalidate the bounds in the old layer and new layer.
+    // The bounds might have changed, but we assume that any difference
+    // in the bounds will have been invalidated for all Thebes layers
+    // in the container via regular frame invalidation.
+    nsRect bounds = aItem->GetBounds(mBuilder);
+    PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
+    nsIntRect r = bounds.ToOutsidePixels(appUnitsPerDevPixel);
+
+    ThebesLayer* t = oldLayer->AsThebesLayer();
+    if (t) {
+      InvalidatePostTransformRegion(t, r);
+    }
+    if (aNewLayer) {
+      ThebesLayer* newLayer = aNewLayer->AsThebesLayer();
+      if (newLayer) {
+        InvalidatePostTransformRegion(newLayer, r);
+      }
+    }
+
+    mContainerFrame->Invalidate(bounds - mBuilder->ToReferenceFrame(mContainerFrame));
+  }
+}
+
+void
 FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
+                                        nsDisplayListBuilder* aBuilder,
                                         nsDisplayItem* aItem,
                                         const nsRect* aClipRect,
-                                        nsIFrame* aContainerLayerFrame)
+                                        nsIFrame* aContainerLayerFrame,
+                                        LayerState aLayerState)
 {
+  nsRefPtr<BasicLayerManager> tempManager;
+  if (aLayerState == LAYER_INACTIVE) {
+    // This item has an inactive layer. We will render it to a ThebesLayer
+    // using a temporary BasicLayerManager. Set up the layer
+    // manager now so that if we need to modify the retained layer
+    // tree during this process, those modifications will happen
+    // during the construction phase for the retained layer tree.
+    tempManager = new BasicLayerManager(nsnull);
+    tempManager->BeginTransaction();
+    nsRefPtr<Layer> layer = aItem->BuildLayer(aBuilder, tempManager);
+    if (!layer) {
+      tempManager->EndTransaction(nsnull, nsnull);
+      return;
+    }
+    PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
+    nsIntRect itemVisibleRect =
+      aItem->GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
+    SetVisibleRectForLayer(layer, itemVisibleRect);
+
+    tempManager->SetRoot(layer);
+    // No painting should occur yet, since there is no target context.
+    tempManager->EndTransaction(nsnull, nsnull);
+  }
+
   AddLayerDisplayItem(aLayer, aItem);
 
   ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(aLayer);
   if (entry) {
     entry->mContainerLayerFrame = aContainerLayerFrame;
     NS_ASSERTION(aItem->GetUnderlyingFrame(), "Must have frame");
-    entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClipRect));
+    ClippedDisplayItem* cdi =
+      entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClipRect));
+    cdi->mTempLayerManager = tempManager.forget();
   }
 }
 
@@ -1003,11 +1068,17 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     Layer* oldLayer = GetOldLayerFor(aContainerFrame, containerDisplayItemKey);
     if (oldLayer) {
       NS_ASSERTION(oldLayer->Manager() == aManager, "Wrong manager");
-      NS_ASSERTION(oldLayer->GetType() == Layer::TYPE_CONTAINER,
-                   "Wrong layer type");
-      containerLayer = static_cast<ContainerLayer*>(oldLayer);
-      // Clear clip rect, the caller will set it.
-      containerLayer->SetClipRect(nsnull);
+      if (oldLayer->GetUserData() == &gThebesDisplayItemLayerUserData) {
+        // The old layer for this item is actually our ThebesLayer
+        // because we rendered its layer into that ThebesLayer. So we
+        // don't actually have a retained container layer.
+      } else {
+        NS_ASSERTION(oldLayer->GetType() == Layer::TYPE_CONTAINER,
+                     "Wrong layer type");
+        containerLayer = static_cast<ContainerLayer*>(oldLayer);
+        // Clear clip rect; the caller will set it if necessary.
+        containerLayer->SetClipRect(nsnull);
+      }
     }
   }
   if (!containerLayer) {
@@ -1242,17 +1313,24 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       }
     }
 
-    if (presContext != lastPresContext) {
-      // Create a new rendering context with the right
-      // appunits-per-dev-pixel.
-      nsresult rv =
-        presContext->DeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
-      if (NS_FAILED(rv))
-        break;
-      rc->Init(presContext->DeviceContext(), aContext);
-      lastPresContext = presContext;
+    if (cdi->mTempLayerManager) {
+      // This item has an inactive layer. Render it to the ThebesLayer
+      // using the temporary BasicLayerManager.
+      cdi->mTempLayerManager->BeginTransactionWithTarget(aContext);
+      cdi->mTempLayerManager->EndTransaction(DrawThebesLayer, builder);
+    } else {
+      if (presContext != lastPresContext) {
+        // Create a new rendering context with the right
+        // appunits-per-dev-pixel.
+        nsresult rv =
+          presContext->DeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
+        if (NS_FAILED(rv))
+          break;
+        rc->Init(presContext->DeviceContext(), aContext);
+        lastPresContext = presContext;
+      }
+      cdi->mItem->Paint(builder, rc);
     }
-    cdi->mItem->Paint(builder, rc);
   }
 
   if (setClipRect) {

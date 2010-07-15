@@ -811,13 +811,14 @@ void
 BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
 {
-  NS_ASSERTION(mRoot, "Root not set");
   NS_ASSERTION(InConstruction(), "Should be in construction phase");
 #ifdef DEBUG
   mPhase = PHASE_DRAWING;
 #endif
 
   if (mTarget) {
+    NS_ASSERTION(mRoot, "Root not set");
+
     nsRefPtr<gfxContext> finalTarget = mTarget;
     gfxPoint cachedSurfaceOffset;
 
