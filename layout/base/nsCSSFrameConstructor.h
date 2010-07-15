@@ -479,14 +479,12 @@ private:
 
   // Add the frame construction items for the given aContent and aParentFrame
   // to the list.  This might add more than one item in some rare cases.
-  // aContentIndex is the index of aContent in its parent's child list,
-  // or -1 if it's not in its parent's child list, or the index is
-  // not known. If the index is not known, optimizations that
+  // If aSuppressWhiteSpaceOptimizations is true, optimizations that
   // may suppress the construction of white-space-only text frames
-  // may not be performed.
+  // must be skipped for these items and items around them.
   void AddFrameConstructionItems(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
-                                 PRInt32                  aContentIndex,
+                                 PRBool                   aSuppressWhiteSpaceOptimizations,
                                  nsIFrame*                aParentFrame,
                                  FrameConstructionItemList& aItems);
 
@@ -874,20 +872,21 @@ private:
       return mDesiredParentCounts[aDesiredParentType] == mItemCount;
     }
 
-    // aContentIndex is the index of aContent in its parent's child list,
-    // or -1 if aContent is not in its parent's child list, or the index
-    // is not known.
+    // aSuppressWhiteSpaceOptimizations is true if optimizations that
+    // skip constructing whitespace frames for this item or items
+    // around it cannot be performed.
     FrameConstructionItem* AppendItem(const FrameConstructionData* aFCData,
                                       nsIContent* aContent,
                                       nsIAtom* aTag,
                                       PRInt32 aNameSpaceID,
-                                      PRInt32 aContentIndex,
                                       PendingBinding* aPendingBinding,
-                                      already_AddRefed<nsStyleContext> aStyleContext)
+                                      already_AddRefed<nsStyleContext> aStyleContext,
+                                      PRBool aSuppressWhiteSpaceOptimizations)
     {
       FrameConstructionItem* item =
         new FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
-                                  aContentIndex, aPendingBinding, aStyleContext);
+                                  aPendingBinding, aStyleContext,
+                                  aSuppressWhiteSpaceOptimizations);
       if (item) {
         PR_APPEND_LINK(item, &mItems);
         ++mItemCount;
@@ -1038,12 +1037,13 @@ private:
                           nsIContent* aContent,
                           nsIAtom* aTag,
                           PRInt32 aNameSpaceID,
-                          PRInt32 aContentIndex,
                           PendingBinding* aPendingBinding,
-                          already_AddRefed<nsStyleContext> aStyleContext) :
+                          already_AddRefed<nsStyleContext> aStyleContext,
+                          PRBool aSuppressWhiteSpaceOptimizations) :
       mFCData(aFCData), mContent(aContent), mTag(aTag),
-      mNameSpaceID(aNameSpaceID), mContentIndex(aContentIndex),
+      mNameSpaceID(aNameSpaceID),
       mPendingBinding(aPendingBinding), mStyleContext(aStyleContext),
+      mSuppressWhiteSpaceOptimizations(aSuppressWhiteSpaceOptimizations),
       mIsText(PR_FALSE), mIsGeneratedContent(PR_FALSE),
       mIsRootPopupgroup(PR_FALSE), mIsAllInline(PR_FALSE), mIsBlock(PR_FALSE),
       mHasInlineEnds(PR_FALSE), mIsPopup(PR_FALSE),
@@ -1077,9 +1077,6 @@ private:
     nsIAtom* mTag;
     // The XBL-resolved namespace to use for frame construction.
     PRInt32 mNameSpaceID;
-    // The index of mContent in its parent's child list, or -1 if it's
-    // not in the parent's child list or not known.
-    PRInt32 mContentIndex;
     // The PendingBinding for this frame construction item, if any.  May be
     // null.  We maintain a list of PendingBindings in the frame construction
     // state in the order in which AddToAttachedQueue should be called on them:
@@ -1091,6 +1088,9 @@ private:
     PendingBinding* mPendingBinding;
     // The style context to use for creating the new frame.
     nsRefPtr<nsStyleContext> mStyleContext;
+    // Whether optimizations to skip constructing textframes around
+    // this content need to be suppressed.
+    PRPackedBool mSuppressWhiteSpaceOptimizations;
     // Whether this is a text content item.
     PRPackedBool mIsText;
     // Whether this is a generated content container.
@@ -1271,7 +1271,7 @@ private:
                                          nsIFrame*                aParentFrame,
                                          nsIAtom*                 aTag,
                                          PRInt32                  aNameSpaceID,
-                                         PRInt32                  aContentIndex,
+                                         PRBool                   aSuppressWhiteSpaceOptimizations,
                                          nsStyleContext*          aStyleContext,
                                          PRUint32                 aFlags,
                                          FrameConstructionItemList& aItems);
