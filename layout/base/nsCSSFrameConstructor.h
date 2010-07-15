@@ -161,10 +161,9 @@ private:
                                    PRBool aAllowLazyConstruction);
 
   // Returns true if parent was recreated due to frameset child, false otherwise.
-  PRBool MaybeRecreateForFrameset(nsIContent* aContainer,
-                                  nsIFrame* aParentFrame,
-                                  PRUint32 aStartIndexInContainer,
-                                  PRUint32 aEndIndexInContainer);
+  PRBool MaybeRecreateForFrameset(nsIFrame* aParentFrame,
+                                  nsIContent* aStartChild,
+                                  nsIContent* aEndChild);
 
 public:
   /**

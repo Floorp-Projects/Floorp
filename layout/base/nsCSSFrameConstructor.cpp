@@ -6517,17 +6517,16 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
 }
 
 PRBool
-nsCSSFrameConstructor::MaybeRecreateForFrameset(nsIContent* aContainer,
-                                                nsIFrame* aParentFrame,
-                                                PRUint32 aStartIndexInContainer,
-                                                PRUint32 aEndIndexInContainer)
+nsCSSFrameConstructor::MaybeRecreateForFrameset(nsIFrame* aParentFrame,
+                                                nsIContent* aStartChild,
+                                                nsIContent* aEndChild)
 {
   if (aParentFrame->GetType() == nsGkAtoms::frameSetFrame) {
     // Check whether we have any kids we care about.
-    for (PRUint32 i = aStartIndexInContainer;
-         i < aEndIndexInContainer;
-         ++i) {
-      if (IsSpecialFramesetChild(aContainer->GetChildAt(i))) {
+    for (nsIContent* cur = aStartChild;
+         cur != aEndChild;
+         cur = cur->GetNextSibling()) {
+      if (IsSpecialFramesetChild(cur)) {
         // Just reframe the parent, since framesets are weird like that.
         RecreateFramesForContent(aParentFrame->GetContent(), PR_FALSE);
         return PR_TRUE;
@@ -6594,8 +6593,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
-  if (MaybeRecreateForFrameset(aContainer, parentFrame, aNewIndexInContainer,
-                               aContainer->GetChildCount())) {
+  if (MaybeRecreateForFrameset(parentFrame, aFirstNewContent, nsnull)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return NS_OK;
   }
@@ -7026,24 +7024,12 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   nsIContent* container = parentFrame->GetContent();
 
   nsIAtom* frameType = parentFrame->GetType();
-  if (isSingleInsert) {
-    if (frameType == nsGkAtoms::frameSetFrame &&
-        IsSpecialFramesetChild(aStartChild)) {
-      // Just reframe the parent, since framesets are weird like that.
-      LAYOUT_PHASE_TEMP_EXIT();
-      nsresult rv = RecreateFramesForContent(parentFrame->GetContent(), PR_FALSE);
-      LAYOUT_PHASE_TEMP_REENTER();
-      return rv;
-    }
-  } else {
-    LAYOUT_PHASE_TEMP_EXIT();
-    if (MaybeRecreateForFrameset(aContainer, parentFrame,
-          aIndexInContainer, aEndIndexInContainer)) {
-      LAYOUT_PHASE_TEMP_REENTER();
-      return NS_OK;
-    }
+  LAYOUT_PHASE_TEMP_EXIT();
+  if (MaybeRecreateForFrameset(parentFrame, aStartChild, aEndChild)) {
     LAYOUT_PHASE_TEMP_REENTER();
+    return NS_OK;
   }
+  LAYOUT_PHASE_TEMP_REENTER();
 
   // We should only get here with fieldsets when doing a single insert, because
   // fieldsets have multiple insertion points.
