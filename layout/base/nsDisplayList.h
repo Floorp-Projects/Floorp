@@ -547,6 +547,13 @@ public:
    */
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder)
   { return PR_FALSE; }
+  /**
+   * @return PR_TRUE if the contents of this item are rendered fixed relative
+   * to the nearest viewport *and* they cover the viewport. Only return true
+   * if the contents actually vary when scrolling in the viewport.
+   */
+  virtual PRBool IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder)
+  { return PR_FALSE; }
 
   /**
    * @return LAYER_NONE if BuildLayer will return null. In this case
@@ -1290,13 +1297,16 @@ public:
   {
     aOutFrames->AppendElement(mFrame);
   }
+  virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion,
+                                   nsRegion* aVisibleRegionBeforeMove);
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Background", TYPE_BACKGROUND)
-private:
+protected:
   /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
   PRPackedBool mIsThemed;
   nsITheme::Transparency mThemeTransparency;

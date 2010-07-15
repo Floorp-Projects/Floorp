@@ -249,6 +249,37 @@ nsRect nsCanvasFrame::CanvasArea() const
   return result;
 }
 
+PRBool
+nsDisplayCanvasBackground::IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder)
+{
+  if (mIsThemed)
+    return PR_FALSE;
+
+  nsPresContext* presContext = mFrame->PresContext();
+  nsStyleContext* bgSC;
+  PRBool hasBG =
+    nsCSSRendering::FindBackground(presContext, mFrame, &bgSC);
+  NS_ASSERTION(hasBG, "This item should have been pruned if it has no real background");
+  if (!hasBG)
+    return PR_FALSE;
+
+  const nsStyleBackground* bg = bgSC->GetStyleBackground();
+  if (!bg->HasFixedBackground())
+    return PR_FALSE;
+
+  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+    const nsStyleBackground::Layer& layer = bg->mLayers[i];
+    if (layer.mAttachment != NS_STYLE_BG_ATTACHMENT_FIXED &&
+        !layer.mImage.IsEmpty()) {
+      return PR_FALSE;
+    }
+  }
+
+  // The canvas background always covers the (scrolled) area of the
+  // viewport
+  return PR_TRUE;
+}
+
 void
 nsDisplayCanvasBackground::Paint(nsDisplayListBuilder* aBuilder,
                                  nsIRenderingContext* aCtx)

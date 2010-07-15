@@ -632,12 +632,25 @@ static PRBool RoundedRectContainsRect(const nsRect& aRoundedRect,
 }
 
 PRBool
+nsDisplayBackground::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                       nsRegion* aVisibleRegion,
+                                       nsRegion* aVisibleRegionBeforeMove)
+{
+  // Return false if the background was propagated away from this
+  // frame. We don't want this display item to show up and confuse
+  // anything.
+  nsStyleContext* bgSC;
+  return mIsThemed ||
+    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC);
+}
+
+PRBool
 nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   // theme background overrides any other background
   if (mIsThemed)
     return mThemeTransparency == nsITheme::eOpaque;
 
-  nsStyleContext *bgSC;
+  nsStyleContext* bgSC;
   if (!nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC))
     return PR_FALSE;
   const nsStyleBackground* bg = bgSC->GetStyleBackground();
@@ -694,7 +707,7 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
   nsPresContext* presContext = mFrame->PresContext();
   nsStyleContext *bgSC;
   PRBool hasBG =
-    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC);
+    nsCSSRendering::FindBackground(presContext, mFrame, &bgSC);
   if (!hasBG)
     return PR_FALSE;
   const nsStyleBackground* bg = bgSC->GetStyleBackground();
