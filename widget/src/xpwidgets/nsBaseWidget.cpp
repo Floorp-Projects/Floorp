@@ -129,6 +129,11 @@ nsBaseWidget::nsBaseWidget()
 //-------------------------------------------------------------------------
 nsBaseWidget::~nsBaseWidget()
 {
+  if (mLayerManager &&
+      mLayerManager->GetBackendType() == LayerManager::LAYERS_BASIC) {
+    static_cast<BasicLayerManager*>(mLayerManager.get())->ClearRetainerWidget();
+  }
+
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets--;
   printf("WIDGETS- = %d\n", gNumWidgets);
@@ -727,9 +732,7 @@ LayerManager* nsBaseWidget::GetLayerManager()
       }
     }
     if (!mLayerManager) {
-      nsRefPtr<BasicLayerManager> basicManager = new BasicLayerManager(nsnull);
-      basicManager->SetRetain(PR_TRUE);
-      mLayerManager = basicManager.forget();
+      mLayerManager = new BasicLayerManager(this);
     }
   }
   return mLayerManager;

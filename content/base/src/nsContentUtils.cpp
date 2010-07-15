@@ -209,6 +209,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsHTMLMediaElement.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::layers;
 
 const char kLoadAsData[] = "loadAsData";
 
@@ -6128,7 +6129,7 @@ nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
-already_AddRefed<mozilla::layers::LayerManager>
+already_AddRefed<LayerManager>
 nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
 {
   nsIDocument* doc = aDoc;
@@ -6163,14 +6164,13 @@ nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
       nsIWidget* widget =
         nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetNearestWidget();
       if (widget) {
-        nsRefPtr<mozilla::layers::LayerManager> manager = widget->GetLayerManager();
+        nsRefPtr<LayerManager> manager = widget->GetLayerManager();
         return manager.forget();
       }
     }
   }
 
-  nsRefPtr<mozilla::layers::LayerManager> manager =
-    new mozilla::layers::BasicLayerManager(nsnull);
+  nsRefPtr<LayerManager> manager = new BasicLayerManager();
   return manager.forget();
 }
 
