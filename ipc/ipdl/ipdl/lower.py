@@ -361,6 +361,12 @@ def _printErrorMessage(msg):
     return StmtExpr(
         ExprCall(ExprVar('NS_ERROR'), args=[ msg ]))
 
+def _printWarningMessage(msg):
+    if isinstance(msg, str):
+        msg = ExprLiteral.String(msg)
+    return StmtExpr(
+        ExprCall(ExprVar('NS_WARNING'), args=[ msg ]))
+
 def _fatalError(msg):
     return StmtExpr(
         ExprCall(ExprVar('FatalError'), args=[ ExprLiteral.String(msg) ]))
@@ -372,6 +378,10 @@ def _killProcess(pid):
                # XXX this is meaningless on POSIX
                ExprVar('base::PROCESS_END_KILLED_BY_USER'),
                ExprLiteral.FALSE ])
+
+def _badTransition():
+    # FIXME: make this a FatalError()
+    return [ _printWarningMessage('bad state transition!') ]
 
 # Results that IPDL-generated code returns back to *Channel code.
 # Users never see these
@@ -2222,7 +2232,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Typedef(Type(self.protocol.channelName()), 'Channel'),
             Typedef(Type(self.protocol.fqListenerName()), 'ChannelListener'),
             Typedef(Type('base::ProcessHandle'), 'ProcessHandle'),
-            Typedef(Type('mozilla::ipc::SharedMemory'), 'SharedMemory')
+            Typedef(Type('mozilla::ipc::SharedMemory'), 'SharedMemory'),
+            Typedef(Type('mozilla::ipc::Trigger'), 'Trigger')
         ]
 
 
@@ -4218,6 +4229,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
+            + self.transition(md, 'in')
             + [ StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns ]
             # alloc the actor, register it under the foreign ID
@@ -4245,6 +4257,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
+            + self.transition(md, 'in')
             + [ StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns ]
             + self.invokeRecvHandler(md, implicit=0)
@@ -4268,6 +4281,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
+            + self.transition(md, 'in')
             + [ StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns ]
             + saveIdStmts
@@ -4420,30 +4434,34 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sendok = ExprVar('__sendok')
         return (
             sendok,
-            [ Whitespace.NL,
-              self.logMessage(md, msgexpr, 'Sending '),
-              Whitespace.NL,
-              StmtDecl(Decl(Type.BOOL, sendok.name),
-                       init=ExprCall(
-                           ExprSelect(self.protocol.channelVar(actor),
-                                      self.protocol.channelSel(), 'Send'),
-                           args=[ msgexpr ]))
+            ([ Whitespace.NL,
+               self.logMessage(md, msgexpr, 'Sending ') ]
+            + self.transition(md, 'out', actor)
+            + [ Whitespace.NL,
+                StmtDecl(Decl(Type.BOOL, sendok.name),
+                         init=ExprCall(
+                             ExprSelect(self.protocol.channelVar(actor),
+                                        self.protocol.channelSel(), 'Send'),
+                             args=[ msgexpr ]))
             ])
+        )
 
     def sendBlocking(self, md, msgexpr, replyexpr, actor=None):
         sendok = ExprVar('__sendok')
         return (
             sendok,
-            [ Whitespace.NL,
-              self.logMessage(md, msgexpr, 'Sending '),
-              Whitespace.NL,
-              StmtDecl(
-                  Decl(Type.BOOL, sendok.name),
-                  init=ExprCall(ExprSelect(self.protocol.channelVar(actor),
-                                           self.protocol.channelSel(),
-                                           _sendPrefix(md.decl.type)),
-                                args=[ msgexpr, ExprAddrOf(replyexpr) ]))
+            ([ Whitespace.NL,
+               self.logMessage(md, msgexpr, 'Sending ') ]
+            + self.transition(md, 'out', actor)
+            + [ Whitespace.NL,
+                StmtDecl(
+                    Decl(Type.BOOL, sendok.name),
+                    init=ExprCall(ExprSelect(self.protocol.channelVar(actor),
+                                             self.protocol.channelSel(),
+                                             _sendPrefix(md.decl.type)),
+                                  args=[ msgexpr, ExprAddrOf(replyexpr) ]))
             ])
+        )
 
     def callAllocActor(self, md, retsems):
         return ExprCall(
@@ -4516,6 +4534,28 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             saveIdStmts = [ ]
         return idvar, saveIdStmts
+
+    def transition(self, md, direction, actor=None):
+        if actor is not None:  stateexpr = _actorState(actor)
+        else:                  stateexpr = self.protocol.stateVar()
+        
+        if (self.side is 'parent' and direction is 'out'
+            or self.side is 'child' and direction is 'in'):
+            action = ExprVar('Trigger::Send')
+        elif (self.side is 'parent' and direction is 'in'
+            or self.side is 'child' and direction is 'out'):
+            action = ExprVar('Trigger::Recv')
+        else: assert 0 and 'unknown combo %s/%s'% (self.side, direction)
+
+        ifbad = StmtIf(ExprNot(
+            ExprCall(
+                ExprVar(self.protocol.name +'::Transition'),
+                args=[ stateexpr,
+                       ExprCall(ExprVar('Trigger'),
+                                args=[ action, ExprVar(md.pqMsgId()) ]),
+                       ExprAddrOf(stateexpr) ])))
+        ifbad.addifstmts(_badTransition())
+        return [ ifbad ]
 
     def checkedRead(self, ipdltype, expr, msgexpr, iterexpr, errfn):
         ifbad = StmtIf(ExprNot(self.read(ipdltype, expr, msgexpr, iterexpr)))
