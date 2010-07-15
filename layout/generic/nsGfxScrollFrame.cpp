@@ -1555,9 +1555,13 @@ InvalidateFixedBackgroundFramesFromList(nsDisplayListBuilder* aBuilder,
     if (sublist) {
       InvalidateFixedBackgroundFramesFromList(aBuilder, *sublist);
     } else if (item->IsVaryingRelativeToMovingFrame(aBuilder)) {
-      nsIFrame* f = item->GetUnderlyingFrame();
-      NS_ASSERTION(f, "No underlying frame for varying item?");
-      f->Invalidate(item->GetVisibleRect() - aBuilder->ToReferenceFrame(f));
+      if (item->IsFixedAndCoveringViewport(aBuilder)) {
+        // FrameLayerBuilder takes care of scrolling these
+      } else {
+        nsIFrame* f = item->GetUnderlyingFrame();
+        NS_ASSERTION(f, "No underlying frame for varying item?");
+        f->Invalidate(item->GetVisibleRect() - aBuilder->ToReferenceFrame(f));
+      }
     }
   }
 }

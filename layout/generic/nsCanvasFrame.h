@@ -171,11 +171,20 @@ public:
     mExtraBackgroundColor = NS_RGBA(0,0,0,0);
   }
 
+  virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion,
+                                   nsRegion* aVisibleRegionBeforeMove)
+  {
+    return NS_GET_A(mExtraBackgroundColor) > 0 ||
+           nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion,
+                                                  aVisibleRegionBeforeMove);
+  }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder)
   {
     return NS_GET_A(mExtraBackgroundColor) == 255 ||
            nsDisplayBackground::IsOpaque(aBuilder);
   }
+  virtual PRBool IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
   {
     nscolor background;

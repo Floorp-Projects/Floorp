@@ -877,6 +877,18 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                                 &offsetToActiveScrolledRoot);
       NS_ASSERTION(offsetToActiveScrolledRoot == f->GetOffsetTo(activeScrolledRoot),
                    "Wrong offset");
+      if (item->IsFixedAndCoveringViewport(mBuilder)) {
+        // Make its active scrolled root be the active scrolled root of
+        // the enclosing viewport, since it shouldn't be scrolled by scrolled
+        // frames in its document. InvalidateFixedBackgroundFramesFromList in
+        // nsGfxScrollFrame will not repaint this item when scrolling occurs.
+        nsIFrame* viewportFrame =
+          nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
+        NS_ASSERTION(viewportFrame, "no viewport???");
+        activeScrolledRoot =
+          nsLayoutUtils::GetActiveScrolledRootFor(viewportFrame, mBuilder->ReferenceFrame(),
+                                                  &offsetToActiveScrolledRoot);
+      }
 
       nscolor uniformColor;
       PRBool isUniform = item->IsUniform(mBuilder, &uniformColor);
