@@ -371,8 +371,8 @@ protected:
   EditingState mEditingState;
 
   nsresult   DoClipboardSecurityCheck(PRBool aPaste);
-  static jsval       sCutCopyInternal_id;
-  static jsval       sPasteInternal_id;
+  static jsid        sCutCopyInternal_id;
+  static jsid        sPasteInternal_id;
 
   // When false, the .cookies property is completely disabled
   PRBool mDisableCookieAccess;

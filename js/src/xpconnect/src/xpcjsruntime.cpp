@@ -1121,7 +1121,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     DOM_InitInterfaces();
 
     // these jsids filled in later when we have a JSContext to work with.
-    mStrIDs[0] = 0;
+    mStrIDs[0] = JSID_VOID;
 
     mJSRuntime = JS_NewRuntime(32L * 1024L * 1024L); // pref ?
     if(mJSRuntime)
@@ -1197,7 +1197,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
 
     // if it is our first context then we need to generate our string ids
     JSBool ok = JS_TRUE;
-    if(!mStrIDs[0])
+    if(JSID_IS_VOID(mStrIDs[0]))
     {
         JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
         JSAutoRequest ar(cx);
@@ -1206,7 +1206,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
             JSString* str = JS_InternString(cx, mStrings[i]);
             if(!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &mStrIDs[i]))
             {
-                mStrIDs[0] = 0;
+                mStrIDs[0] = JSID_VOID;
                 ok = JS_FALSE;
                 break;
             }

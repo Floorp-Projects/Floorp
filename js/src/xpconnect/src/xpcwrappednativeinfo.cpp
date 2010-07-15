@@ -98,7 +98,8 @@ XPCNativeMember::GetCallInfo(XPCCallContext& ccx,
 
     if(!JS_GetReservedSlot(ccx, funobj, 0, &ifaceVal) ||
        !JS_GetReservedSlot(ccx, funobj, 1, &memberVal) ||
-       !JSVAL_IS_INT(ifaceVal) || !JSVAL_IS_INT(memberVal))
+       !JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(ifaceVal) ||
+       !JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(memberVal))
     {
         return JS_FALSE;
     }
@@ -367,8 +368,8 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
     PRUint16 realTotalCount = 0;
     XPCNativeMember* cur;
     JSString*  str;
-    jsval name;
-    jsval interfaceName;
+    jsid name;
+    jsid interfaceName;
 
     // XXX Investigate lazy init? This is a problem given the
     // 'placement new' scheme - we need to at least know how big to make
@@ -432,7 +433,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
             failed = JS_TRUE;
             break;
         }
-        name = STRING_TO_JSVAL(str);
+        name = INTERNED_STRING_TO_JSID(str);
 
         if(info->IsSetter())
         {
@@ -476,7 +477,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
                 failed = JS_TRUE;
                 break;
             }
-            name = STRING_TO_JSVAL(str);
+            name = INTERNED_STRING_TO_JSID(str);
 
             // XXX need better way to find dups
             //NS_ASSERTION(!LookupMemberByID(name),"duplicate method/constant name");
@@ -495,7 +496,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
         {
             failed = JS_TRUE;
         }
-        interfaceName = STRING_TO_JSVAL(str);
+        interfaceName = INTERNED_STRING_TO_JSID(str);
     }
 
     if(!failed)
@@ -537,7 +538,7 @@ const char*
 XPCNativeInterface::GetMemberName(XPCCallContext& ccx,
                                   const XPCNativeMember* member) const
 {
-    return JS_GetStringBytes(JSVAL_TO_STRING(member->GetName()));
+    return JS_GetStringBytes(JSID_TO_STRING(member->GetName()));
 }
 
 void

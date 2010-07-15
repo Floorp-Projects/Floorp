@@ -3635,10 +3635,10 @@ ConvertToMidasInternalCommand(const nsAString & inCommandID,
                                             dummyBool, dummyBool, PR_TRUE);
 }
 
-jsval
-nsHTMLDocument::sCutCopyInternal_id = JSVAL_VOID;
-jsval
-nsHTMLDocument::sPasteInternal_id = JSVAL_VOID;
+jsid
+nsHTMLDocument::sCutCopyInternal_id = JSID_VOID;
+jsid
+nsHTMLDocument::sPasteInternal_id = JSID_VOID;
 
 /* Helper function to check security of clipboard commands. If aPaste is */
 /* true, we check paste, else we check cutcopy */
@@ -3664,17 +3664,17 @@ nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
     nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
     if (aPaste) {
-      if (nsHTMLDocument::sPasteInternal_id == JSVAL_VOID) {
+      if (nsHTMLDocument::sPasteInternal_id == JSID_VOID) {
         nsHTMLDocument::sPasteInternal_id =
-          STRING_TO_JSVAL(::JS_InternString(cx, "paste"));
+          INTERNED_STRING_TO_JSID(::JS_InternString(cx, "paste"));
       }
       rv = secMan->CheckPropertyAccess(cx, nsnull, classNameStr.get(),
                                        nsHTMLDocument::sPasteInternal_id,
                                        nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
     } else {
-      if (nsHTMLDocument::sCutCopyInternal_id == JSVAL_VOID) {
+      if (nsHTMLDocument::sCutCopyInternal_id == JSID_VOID) {
         nsHTMLDocument::sCutCopyInternal_id =
-          STRING_TO_JSVAL(::JS_InternString(cx, "cutcopy"));
+          INTERNED_STRING_TO_JSID(::JS_InternString(cx, "cutcopy"));
       }
       rv = secMan->CheckPropertyAccess(cx, nsnull, classNameStr.get(),
                                        nsHTMLDocument::sCutCopyInternal_id,

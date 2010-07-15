@@ -54,13 +54,11 @@ extern "C"
 }
 #endif
 
-JS_BEGIN_EXTERN_C
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #ifdef LIVEWIRE
 #include "lwdbgapi.h"
 #endif
-JS_END_EXTERN_C
 
 JS_BEGIN_EXTERN_C
 
@@ -1270,7 +1268,7 @@ JSD_GetValueInt(JSDContext* jsdc, JSDValue* jsdval);
 * Return double value (does NOT do conversion).
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(jsdouble*)
+extern JSD_PUBLIC_API(jsdouble)
 JSD_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval);
 
 /*

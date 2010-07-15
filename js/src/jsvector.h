@@ -190,6 +190,8 @@ class Vector : AllocPolicy
     bool growHeapStorageBy(size_t lengthInc);
     bool convertToHeapStorage(size_t lengthInc);
 
+    template <bool InitNewElems> inline bool growByImpl(size_t inc);
+
     /* magic constants */
 
     static const int sMaxInlineBytes = 1024;
@@ -371,6 +373,9 @@ class Vector : AllocPolicy
     /* Call shrinkBy or growBy based on whether newSize > length(). */
     bool resize(size_t newLength);
 
+    /* Leave new elements as uninitialized memory. */
+    bool growByUninitialized(size_t incr);
+
     void clear();
 
     bool append(const T &t);
@@ -546,15 +551,17 @@ Vector<T,N,AP>::shrinkBy(size_t incr)
 }
 
 template <class T, size_t N, class AP>
-inline bool
-Vector<T,N,AP>::growBy(size_t incr)
+template <bool InitNewElems>
+JS_ALWAYS_INLINE bool
+Vector<T,N,AP>::growByImpl(size_t incr)
 {
     ReentrancyGuard g(*this);
     if (usingInlineStorage()) {
         size_t freespace = sInlineCapacity - inlineLength();
         if (incr <= freespace) {
             T *newend = inlineEnd() + incr;
-            Impl::initialize(inlineEnd(), newend);
+            if (InitNewElems)
+                Impl::initialize(inlineEnd(), newend);
             inlineLength() += incr;
             JS_ASSERT(usingInlineStorage());
             return true;
@@ -574,9 +581,24 @@ Vector<T,N,AP>::growBy(size_t incr)
     /* We are !usingInlineStorage(). Initialize new elements. */
     JS_ASSERT(heapCapacity() - heapLength() >= incr);
     T *newend = heapEnd() + incr;
-    Impl::initialize(heapEnd(), newend);
+    if (InitNewElems)
+        Impl::initialize(heapEnd(), newend);
     heapEnd() = newend;
     return true;
+}
+
+template <class T, size_t N, class AP>
+inline bool
+Vector<T,N,AP>::growBy(size_t incr)
+{
+    return growByImpl<true>(incr);
+}
+
+template <class T, size_t N, class AP>
+inline bool
+Vector<T,N,AP>::growByUninitialized(size_t incr)
+{
+    return growByImpl<false>(incr);
 }
 
 template <class T, size_t N, class AP>

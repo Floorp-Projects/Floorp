@@ -23,21 +23,25 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable)
     jsvalRoot vget(cx);
     JSFunction *funGet = JS_NewFunction(cx, native, 0, 0, NULL, "get");
     CHECK(funGet);
+    JSObject *funGetObj = JS_GetFunctionObject(funGet);
+    vget = OBJECT_TO_JSVAL(funGetObj);
 
     jsvalRoot vset(cx);
     JSFunction *funSet = JS_NewFunction(cx, native, 1, 0, NULL, "set");
     CHECK(funSet);
+    JSObject *funSetObj = JS_GetFunctionObject(funSet);
+    vset = OBJECT_TO_JSVAL(funSetObj);
 
     CHECK(JS_DefineProperty(cx, JSVAL_TO_OBJECT(vobj), PROPERTY_NAME,
                             JSVAL_VOID,
-                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, jsval(vget)),
-                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, jsval(vset)),
+                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, funGetObj),
+                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, funSetObj),
                             JSPROP_GETTER | JSPROP_SETTER | JSPROP_ENUMERATE));
 
     CHECK(JS_DefineProperty(cx, JSVAL_TO_OBJECT(vobj), PROPERTY_NAME,
                             JSVAL_VOID,
-                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, jsval(vget)),
-                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, jsval(vset)),
+                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, funGetObj),
+                            JS_DATA_TO_FUNC_PTR(JSPropertyOp, funSetObj),
                             JSPROP_GETTER | JSPROP_SETTER | JSPROP_PERMANENT));
 
     JSBool found = JS_FALSE;

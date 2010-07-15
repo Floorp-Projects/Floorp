@@ -83,7 +83,7 @@ cls_testIsAboutToBeFinalized_bug528645::createAndTestRooted()
      * Make sure to include unit and numeric strings to the set.
      */
     EVAL("var x = 1.1; "
-         "[x + 0.1, ''+x, 'a', '42', 'something'.substring(1), "
+         "[''+x, 'a', '42', 'something'.substring(1), "
          "{}, [], new Function('return 10;'), <xml/>];",
          root.addr());
 

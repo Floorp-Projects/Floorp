@@ -672,7 +672,7 @@ class Worker : public WorkerParent
         return !w->checkTermination();
     }
 
-    static JSBool jsResolveGlobal(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+    static JSBool jsResolveGlobal(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                                   JSObject **objp)
     {
         JSBool resolved;
@@ -870,7 +870,7 @@ class InitEvent : public Event
             return fail;
 
         AutoValueRooter rval(cx);
-        JSBool ok = JS_ExecuteScript(cx, child->getGlobal(), script, rval.addr());
+        JSBool ok = JS_ExecuteScript(cx, child->getGlobal(), script, Jsvalify(rval.addr()));
         JS_DestroyScript(cx, script);
         return Result(ok);
     }
@@ -907,7 +907,7 @@ class ErrorEvent : public Event
         JSString *data = NULL;
         jsval exc;
         if (JS_GetPendingException(cx, &exc)) {
-            AutoValueRooter tvr(cx, exc);
+            AutoValueRooter tvr(cx, Valueify(exc));
             JS_ClearPendingException(cx);
 
             // Determine what error message to put in the error event.

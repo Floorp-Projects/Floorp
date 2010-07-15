@@ -1803,7 +1803,7 @@ public:
 
   ~nsAutoGCRoot() {
     if (NS_SUCCEEDED(mResult)) {
-      RemoveJSGCRoot(mPtr, mRootType);
+      RemoveJSGCRoot((jsval *)mPtr, mRootType);
     }
   }
 
