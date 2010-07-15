@@ -154,6 +154,9 @@ def _startState(proto=None, fq=False):
         else:   pfx = proto.name() +'::'
     return ExprVar(pfx +'__Start')
 
+def _deleteId():
+    return ExprVar('Msg___delete____ID')
+
 def _lookupListener(idexpr):
     return ExprCall(ExprVar('Lookup'), args=[ idexpr ])
 
@@ -1396,6 +1399,8 @@ child actors.'''
         msgenum.addId(self.protocol.name +'End')
         ns.addstmts([ StmtDecl(Decl(msgenum, '')), Whitespace.NL ])
 
+        ns.addstmts([ self.genTransitionFunc(), Whitespace.NL ])
+
         typedefs = self.protocol.decl.cxxtypedefs
         for md in p.messageDecls:
             ns.addstmts([
@@ -1410,6 +1415,122 @@ child actors.'''
                     Whitespace.NL ])
 
         ns.addstmts([ Whitespace.NL, Whitespace.NL ])
+
+
+    def genTransitionFunc(self):
+        ptype = self.protocol.decl.type
+        usesend, sendvar = set(), ExprVar('__Send')
+        userecv, recvvar = set(), ExprVar('__Recv')
+        
+        def sameTrigger(trigger, actionexpr):
+            if trigger is ipdl.ast.SEND or trigger is ipdl.ast.CALL:
+                usesend.add('yes')
+                return ExprBinary(sendvar, '==', actionexpr)
+            else:
+                userecv.add('yes')
+                return ExprBinary(recvvar, '==',
+                                  actionexpr)
+
+        def stateEnum(s):
+            if s is ipdl.ast.State.DEAD:
+                return _deadState()
+            else:
+                return ExprVar(s.decl.cxxname)
+
+        # bool Transition(State from, Trigger trigger, State* next)
+        fromvar = ExprVar('from')
+        triggervar = ExprVar('trigger')
+        nextvar = ExprVar('next')
+        msgexpr = ExprSelect(triggervar, '.', 'mMsg')
+        actionexpr = ExprSelect(triggervar, '.', 'mAction')
+
+        transitionfunc = MethodDefn(MethodDecl(
+            'Transition',
+            params=[ Decl(Type('State'), fromvar.name),
+                     Decl(Type('mozilla::ipc::Trigger'), triggervar.name),
+                     Decl(Type('State', ptr=1), nextvar.name) ],
+            ret=Type.BOOL,
+            inline=1))
+
+        fromswitch = StmtSwitch(fromvar)
+
+        for ts in self.protocol.transitionStmts:
+            msgswitch = StmtSwitch(msgexpr)
+
+            msgToTransitions = { }
+
+            for t in ts.transitions:
+                msgid = t.msg._md.msgId()
+
+                ifsametrigger = StmtIf(sameTrigger(t.trigger, actionexpr))
+                # FIXME multi-out states
+                for nextstate in t.toStates: break
+                ifsametrigger.addifstmts([
+                    StmtExpr(ExprAssn(ExprDeref(nextvar),
+                                      stateEnum(nextstate))),
+                    StmtReturn(ExprLiteral.TRUE)
+                ])
+
+                transitions = msgToTransitions.get(msgid, [ ])
+                transitions.append(ifsametrigger)
+                msgToTransitions[msgid] = transitions
+
+            for msgid, transitions in msgToTransitions.iteritems():
+                block = Block()
+                block.addstmts(transitions +[ StmtBreak() ])
+                msgswitch.addcase(CaseLabel(msgid), block)
+
+            msgblock = Block()
+            msgblock.addstmts([
+                msgswitch,
+                StmtBreak()
+            ])
+            fromswitch.addcase(CaseLabel(ts.state.decl.cxxname), msgblock)
+
+        # special cases for Null and Error
+        nullerrorblock = Block()
+        if ptype.hasDelete:
+            ifdelete = StmtIf(ExprBinary(_deleteId(), '==', msgexpr))
+            ifdelete.addifstmts([
+                StmtExpr(ExprAssn(ExprDeref(nextvar), _deadState())),
+                StmtReturn(ExprLiteral.TRUE) ])
+            nullerrorblock.addstmt(ifdelete)
+        nullerrorblock.addstmt(
+            StmtReturn(ExprBinary(_nullState(), '==', fromvar)))
+        fromswitch.addfallthrough(CaseLabel(_nullState().name))
+        fromswitch.addcase(CaseLabel(_errorState().name), nullerrorblock)
+
+        # special case for Dead
+        deadblock = Block()
+        deadblock.addstmts([
+            _runtimeAbort('__delete__()d actor'),
+            StmtReturn(ExprLiteral.FALSE) ])
+        fromswitch.addcase(CaseLabel(_deadState().name), deadblock)
+
+        unreachedblock = Block()
+        unreachedblock.addstmts([
+            _runtimeAbort('corrupted actor state'),
+            StmtReturn(ExprLiteral.FALSE) ])
+        fromswitch.addcase(DefaultLabel(), unreachedblock)
+
+        if usesend:
+            transitionfunc.addstmt(
+                StmtDecl(Decl(Type('int32', const=1), sendvar.name),
+                         init=ExprVar('mozilla::ipc::Trigger::Send')))
+        if userecv:
+            transitionfunc.addstmt(
+                StmtDecl(Decl(Type('int32', const=1), recvvar.name),
+                         init=ExprVar('mozilla::ipc::Trigger::Recv')))
+        if usesend or userecv:
+            transitionfunc.addstmt(Whitespace.NL)
+
+        transitionfunc.addstmts([
+            fromswitch,
+            # all --> Error transitions break to here
+            StmtExpr(ExprAssn(ExprDeref(nextvar), _errorState())),
+            StmtReturn(ExprLiteral.FALSE)
+        ])
+        return transitionfunc
 
 ##--------------------------------------------------
 
