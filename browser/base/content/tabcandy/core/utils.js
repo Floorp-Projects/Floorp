@@ -485,7 +485,7 @@ var Utils = {
     while (browserEnumerator.hasMoreElements()) {
       var browserWin = browserEnumerator.getNext();
       var tabbrowser = browserWin.gBrowser;
-      let tabCandyContainer = browserWin.document.getElementById("tab-candy");
+      var tabCandyContainer = browserWin.document.getElementById("tab-candy");
       if (tabCandyContainer && tabCandyContainer.contentWindow == window) {
         return browserWin;
       }

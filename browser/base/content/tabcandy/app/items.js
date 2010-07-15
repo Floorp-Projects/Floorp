@@ -551,11 +551,11 @@ window.Item.prototype = {
   // Function: removeTrenches
   // Removes the trenches for snapping to this item.
   removeTrenches: function() {
-    for (let edge in this.borderTrenches) {
+    for (var edge in this.borderTrenches) {
       Trenches.unregister(this.borderTrenches[edge]); // unregister can take an array
     }
     this.borderTrenches = null;
-    for (let edge in this.guideTrenches) {
+    for (var edge in this.guideTrenches) {
       Trenches.unregister(this.guideTrenches[edge]); // unregister can take an array
     }
     this.guideTrenches = null;
