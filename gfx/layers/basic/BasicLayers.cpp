@@ -47,6 +47,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "ThebesLayerBuffer.h"
+#include "nsIWidget.h"
 
 #include "GLContext.h"
 
@@ -323,8 +324,22 @@ BasicThebesLayer::Paint(gfxContext* aContext,
   }
 
   {
+    nsRefPtr<gfxASurface> referenceSurface = mBuffer.GetBuffer();
+    if (!referenceSurface) {
+      gfxContext* defaultTarget = BasicManager()->GetDefaultTarget();
+      if (defaultTarget) {
+        referenceSurface = defaultTarget->CurrentSurface();
+      } else {
+        nsIWidget* widget = BasicManager()->GetRetainerWidget();
+        if (widget) {
+          referenceSurface = widget->GetThebesSurface();
+        } else {
+          referenceSurface = aContext->CurrentSurface();
+        }
+      }
+    }
     ThebesLayerBuffer::PaintState state =
-      mBuffer.BeginPaint(this, aContext, flags);
+      mBuffer.BeginPaint(this, referenceSurface, flags);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
     if (state.mContext) {
@@ -697,13 +712,23 @@ MayHaveOverlappingOrTransparentLayers(Layer* aLayer,
   return PR_FALSE;
 }
 
-BasicLayerManager::BasicLayerManager(gfxContext* aContext) :
-  mDefaultTarget(aContext)
+BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
+  mWidget(aWidget)
 #ifdef DEBUG
   , mPhase(PHASE_NONE)
 #endif
-  , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(PR_FALSE),
-    mRetain(PR_FALSE)
+  , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(PR_FALSE)
+{
+  MOZ_COUNT_CTOR(BasicLayerManager);
+  NS_ASSERTION(aWidget, "Must provide a widget");
+}
+
+BasicLayerManager::BasicLayerManager() :
+  mWidget(nsnull)
+#ifdef DEBUG
+  , mPhase(PHASE_NONE)
+#endif
+  , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(PR_FALSE)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
 }
@@ -722,14 +747,6 @@ BasicLayerManager::SetDefaultTarget(gfxContext* aContext,
                "Must set default target outside transaction");
   mDefaultTarget = aContext;
   mDoubleBuffering = aDoubleBuffering;
-}
-
-void
-BasicLayerManager::SetRetain(PRBool aRetain)
-{
-  NS_ASSERTION(!InTransaction(),
-               "Must set retained mode outside transaction");
-  mRetain = aRetain;
 }
 
 void

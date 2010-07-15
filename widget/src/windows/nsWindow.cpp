@@ -3260,7 +3260,11 @@ gfxASurface *nsWindow::GetThebesSurface()
     return (new gfxD2DSurface(mWnd, content));
   } else {
 #endif
-    return (new gfxWindowsSurface(mWnd));
+    PRUint32 flags = gfxWindowsSurface::FLAG_TAKE_DC;
+    if (mTransparencyMode != eTransparencyOpaque) {
+        flags |= gfxWindowsSurface::FLAG_IS_TRANSPARENT;
+    }
+    return (new gfxWindowsSurface(mWnd, flags));
 #ifdef CAIRO_HAS_D2D_SURFACE
   }
 #endif

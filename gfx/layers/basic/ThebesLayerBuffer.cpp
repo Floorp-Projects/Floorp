@@ -132,14 +132,14 @@ CreateBuffer(gfxASurface* aTargetSurface, gfxASurface::gfxContentType aType,
 }
 
 ThebesLayerBuffer::PaintState
-ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
+ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer,
+                              gfxASurface* aReferenceSurface,
                               PRUint32 aFlags)
 {
   PaintState result;
 
   gfxASurface::gfxContentType desiredContentType = gfxASurface::CONTENT_COLOR_ALPHA;
-  nsRefPtr<gfxASurface> targetSurface = aTarget->CurrentSurface();
-  if (targetSurface->AreSimilarSurfacesSensitiveToContentType()) {
+  if (aReferenceSurface->AreSimilarSurfacesSensitiveToContentType()) {
     if (aFlags & OPAQUE_CONTENT) {
       desiredContentType = gfxASurface::CONTENT_COLOR;
     }
@@ -192,7 +192,8 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
           // We can't do a real self-copy because the buffer is rotated.
           // So allocate a new buffer for the destination.
           destBufferRect = visibleBounds;
-          destBuffer = CreateBuffer(targetSurface, desiredContentType, destBufferRect.Size());
+          destBuffer = CreateBuffer(aReferenceSurface, desiredContentType,
+                                    destBufferRect.Size());
           if (!destBuffer)
             return result;
         }
@@ -210,7 +211,8 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
   } else {
     // The buffer's not big enough, so allocate a new one
     destBufferRect = visibleBounds;
-    destBuffer = CreateBuffer(targetSurface, desiredContentType, destBufferRect.Size());
+    destBuffer = CreateBuffer(aReferenceSurface, desiredContentType,
+                              destBufferRect.Size());
     if (!destBuffer)
       return result;
   }
