@@ -161,14 +161,9 @@ typedef PRUint64 nsFrameState;
 // continuation, e.g. a bidi continuation.
 #define NS_FRAME_IS_FLUID_CONTINUATION              NS_FRAME_STATE_BIT(2)
 
-/*
- * This bit is obsolete, replaced by HasOverflowRect().
- * The definition is left here as a placeholder for now, to remind us
- * that this bit is now free to allocate for other purposes.
- * // This bit is set when the frame's overflow rect is
- * // different from its border rect (i.e. GetOverflowRect() != GetRect())
- * NS_FRAME_OUTSIDE_CHILDREN                        NS_FRAME_STATE_BIT(3)
- */
+// This bit is set whenever the frame has one or more associated
+// container layers.
+#define NS_FRAME_HAS_CONTAINER_LAYER                NS_FRAME_STATE_BIT(3)
 
 // If this bit is set, then a reference to the frame is being held
 // elsewhere.  The frame may want to send a notification when it is
@@ -1842,6 +1837,9 @@ public:
    * part of the window to another
    * @param aFlags INVALIDATE_REASON_SCROLL_REPAINT: set if the invalidation
    * was triggered by scrolling
+   * @param aFlags INVALIDATE_NO_THEBES_LAYERS: don't invalidate the
+   * ThebesLayers of any container layer owned by an ancestor. Set this
+   * only if ThebesLayers definitely don't need to be updated.
    */
   enum {
   	INVALIDATE_IMMEDIATE = 0x01,
@@ -1849,7 +1847,8 @@ public:
   	INVALIDATE_REASON_SCROLL_BLIT = 0x04,
   	INVALIDATE_REASON_SCROLL_REPAINT = 0x08,
     INVALIDATE_REASON_MASK = INVALIDATE_REASON_SCROLL_BLIT |
-                             INVALIDATE_REASON_SCROLL_REPAINT
+                             INVALIDATE_REASON_SCROLL_REPAINT,
+    INVALIDATE_NO_THEBES_LAYERS = 0x10
   };
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,

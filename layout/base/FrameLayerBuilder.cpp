@@ -441,10 +441,10 @@ static void BuildLayers(nsDisplayListBuilder* aBuilder,
 } // anonymous namespace
 
 already_AddRefed<Layer>
-FrameLayerBuilder::MakeContainerLayerFor(nsDisplayListBuilder* aBuilder,
-                                         LayerManager* aManager,
-                                         nsDisplayItem* aContainer,
-                                         const nsDisplayList& aChildren)
+FrameLayerBuilder::GetContainerLayerFor(nsDisplayListBuilder* aBuilder,
+                                        LayerManager* aManager,
+                                        nsDisplayItem* aContainer,
+                                        const nsDisplayList& aChildren)
 {
   // If there's only one layer, then in principle we can try to flatten
   // things by returning that layer here. But that adds complexity to
@@ -469,6 +469,22 @@ FrameLayerBuilder::MakeContainerLayerFor(nsDisplayListBuilder* aBuilder,
   container->SetIsOpaqueContent(aChildren.IsOpaque());
   nsRefPtr<Layer> layer = container.forget();
   return layer.forget();
+}
+
+Layer*
+FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   nsDisplayItem* aItem)
+{
+  // Layers aren't retained yet
+  return nsnull;
+}
+
+/* static */ void
+FrameLayerBuilder::InvalidateThebesLayerContents(nsIFrame* aFrame,
+                                                 const nsRect& aRect)
+{
+  // do nothing; layers aren't retained yet
 }
 
 /* static */ void
