@@ -511,62 +511,6 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
   return UpdateView(view, bounds, aUpdateFlags);
 }
 
-nsresult
-nsViewManager::WillBitBlit(nsIView* aView, const nsRect& aRect,
-                           nsPoint aCopyDelta)
-{
-  if (!IsRootVM()) {
-    RootViewManager()->WillBitBlit(aView, aRect, aCopyDelta);
-    return NS_OK;
-  }
-
-  // aView must be a display root
-  NS_PRECONDITION(aView &&
-                  (aView == mRootView || aView->GetFloating()),
-                  "Must have a display root view");
-
-  ++mScrollCnt;
-  
-  nsView* v = static_cast<nsView*>(aView);
-  if (v->HasNonEmptyDirtyRegion()) {
-    nsRegion* dirty = v->GetDirtyRegion();
-    nsRegion intersection = *dirty;
-    intersection.MoveBy(-aCopyDelta);
-    intersection.And(intersection, aRect);
-    if (!intersection.IsEmpty()) {
-      dirty->Or(*dirty, intersection);
-      // Random simplification number...
-      dirty->SimplifyOutward(20);
-    }
-  }
-  return NS_OK;
-}
-
-// Invalidate all widgets which overlap the view, other than the view's own widgets.
-void
-nsViewManager::UpdateViewAfterScroll(nsIView *aView,
-                                     const nsRegion& aUpdateRegion)
-{
-  NS_ASSERTION(RootViewManager()->mScrollCnt > 0,
-               "Someone forgot to call WillBitBlit()");
-  // No need to check for empty aUpdateRegion here. We'd still need to
-  // do most of the work here anyway.
-
-  nsView* view = static_cast<nsView*>(aView);
-  nsView* displayRoot = GetDisplayRootFor(view);
-  nsPoint offset = view->GetOffsetTo(displayRoot);
-  nsRegion update(aUpdateRegion);
-  update.MoveBy(offset);
-
-  nsViewManager* displayRootVM = displayRoot->GetViewManager();
-  displayRootVM->UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
-                                  update, nsnull);
-  // FlushPendingInvalidates();
-
-  Composite();
-  --RootViewManager()->mScrollCnt;
-}
-
 static PRBool
 IsWidgetDrawnByPlugin(nsIWidget* aWidget, nsIView* aView)
 {
@@ -815,24 +759,22 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
           // If an ancestor widget was hidden and then shown, we could
           // have a delayed resize to handle.
           PRBool didResize = PR_FALSE;
-          if (rootVM->mScrollCnt == 0) {
-            for (nsViewManager *vm = this; vm;
-                 vm = vm->mRootView->GetParent()
-                        ? vm->mRootView->GetParent()->GetViewManager()
-                        : nsnull) {
-              if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-                  IsViewVisible(vm->mRootView)) {
-                vm->FlushDelayedResize();
+          for (nsViewManager *vm = this; vm;
+               vm = vm->mRootView->GetParent()
+                      ? vm->mRootView->GetParent()->GetViewManager()
+                      : nsnull) {
+            if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
+                IsViewVisible(vm->mRootView)) {
+              vm->FlushDelayedResize();
 
-                // Paint later.
-                vm->UpdateView(vm->mRootView, NS_VMREFRESH_NO_SYNC);
-                didResize = PR_TRUE;
+              // Paint later.
+              vm->UpdateView(vm->mRootView, NS_VMREFRESH_NO_SYNC);
+              didResize = PR_TRUE;
 
-                // not sure if it's valid for us to claim that we
-                // ignored this, but we're going to do so anyway, since
-                // we didn't actually paint anything
-                *aStatus = nsEventStatus_eIgnore;
-              }
+              // not sure if it's valid for us to claim that we
+              // ignored this, but we're going to do so anyway, since
+              // we didn't actually paint anything
+              *aStatus = nsEventStatus_eIgnore;
             }
           }
 
@@ -849,7 +791,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
                 transparentWindow = widget->GetTransparencyMode() == eTransparencyTransparent;
 
             nsView* view = static_cast<nsView*>(aView);
-            if (rootVM->mScrollCnt == 0 && !transparentWindow) {
+            if (!transparentWindow) {
               nsIViewObserver* observer = GetViewObserver();
               if (observer) {
                 // Do an update view batch.  Make sure not to do it DEFERRED,
@@ -1589,17 +1531,14 @@ nsViewManager::FlushPendingInvalidates()
   // we don't go through two invalidate-processing cycles).
   NS_ASSERTION(gViewManagers, "Better have a viewmanagers array!");
 
-  // Make sure to not send WillPaint notifications while scrolling
-  if (mScrollCnt == 0) {
-    // Disable refresh while we notify our view observers, so that if they do
-    // view update batches we don't reenter this code and so that we batch
-    // all of them together.  We don't use
-    // BeginUpdateViewBatch/EndUpdateViewBatch, since that would reenter this
-    // exact code, but we want the effect of a single big update batch.
-    ++mUpdateBatchCnt;
-    CallWillPaintOnObservers();
-    --mUpdateBatchCnt;
-  }
+  // Disable refresh while we notify our view observers, so that if they do
+  // view update batches we don't reenter this code and so that we batch
+  // all of them together.  We don't use
+  // BeginUpdateViewBatch/EndUpdateViewBatch, since that would reenter this
+  // exact code, but we want the effect of a single big update batch.
+  ++mUpdateBatchCnt;
+  CallWillPaintOnObservers();
+  --mUpdateBatchCnt;
   
   if (mHasPendingUpdates) {
     ProcessPendingUpdates(mRootView, PR_TRUE);
