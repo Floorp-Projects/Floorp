@@ -138,18 +138,22 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer,
 {
   PaintState result;
 
+  result.mRegionToDraw.Sub(aLayer->GetVisibleRegion(), aLayer->GetValidRegion());
+
   gfxASurface::gfxContentType desiredContentType = gfxASurface::CONTENT_COLOR_ALPHA;
   if (aReferenceSurface->AreSimilarSurfacesSensitiveToContentType()) {
     if (aFlags & OPAQUE_CONTENT) {
       desiredContentType = gfxASurface::CONTENT_COLOR;
     }
     if (mBuffer && desiredContentType != mBuffer->GetContentType()) {
+      // We're effectively clearing the valid region, so we need to draw
+      // the entire visible region now.
+      result.mRegionToDraw = aLayer->GetVisibleRegion();
       result.mRegionToInvalidate = aLayer->GetValidRegion();
       Clear();
     }
   }
 
-  result.mRegionToDraw.Sub(aLayer->GetVisibleRegion(), aLayer->GetValidRegion());
   if (result.mRegionToDraw.IsEmpty())
     return result;
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
