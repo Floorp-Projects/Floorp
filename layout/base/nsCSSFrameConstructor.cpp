@@ -6852,11 +6852,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ContentRangeInserted container=%p "
-           "start-child=%p end-child=%p "
-           "index=%d endindex=%d lazy=%d\n",
+           "start-child=%p end-child=%p lazy=%d\n",
            static_cast<void*>(aContainer),
            static_cast<void*>(aStartChild), static_cast<void*>(aEndChild),
-           aIndexInContainer, aEndIndexInContainer, aAllowLazyConstruction);
+           aAllowLazyConstruction);
     if (gReallyNoisyContentUpdates) {
       if (aContainer) {
         aContainer->List(stdout,0);
@@ -6869,7 +6868,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
 
   nsresult rv = NS_OK;
 
-  PRBool isSingleInsert = (aIndexInContainer + 1 == aEndIndexInContainer);
+  PRBool isSingleInsert = (aStartChild->GetNextSibling() == aEndChild);
   NS_ASSERTION(isSingleInsert || !aAllowLazyConstruction,
                "range insert shouldn't be lazy");
   NS_ASSERTION(isSingleInsert || !aContainer ||
@@ -6879,10 +6878,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
 #ifdef MOZ_XUL
   if (aContainer && IsXULListBox(aContainer)) {
     if (isSingleInsert) {
-      // aIndexInContainer might be bogus here, but it's not used by
-      // NotifyListBoxBody's CONTENT_INSERTED handling in any case.
       if (NotifyListBoxBody(mPresShell->GetPresContext(), aContainer,
-                            aStartChild, aIndexInContainer, 
+                            // The insert case in NotifyListBoxBody
+                            // doesn't use the index.
+                            aStartChild, -1, 
                             mDocument, nsnull, CONTENT_INSERTED)) {
         return NS_OK;
       }
@@ -7142,13 +7141,13 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   }
 
   if (isSingleInsert) {
-    AddFrameConstructionItems(state, aStartChild, aIndexInContainer == -1,
+    AddFrameConstructionItems(state, aStartChild,
+                              aStartChild->IsRootOfAnonymousSubtree(),
                               parentFrame, items);
   } else {
-    for (PRUint32 i = aIndexInContainer;
-         i < (PRUint32)aEndIndexInContainer;
-         ++i) {
-      nsIContent* child = aContainer->GetChildAt(i);
+    for (nsIContent* child = aStartChild;
+         child != aEndChild;
+         child = child->GetNextSibling()){
       AddFrameConstructionItems(state, child, PR_FALSE, parentFrame, items);
     }
   }
@@ -7182,14 +7181,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   ConstructFramesFromItemList(state, items, parentFrame, frameItems);
 
   if (frameItems.NotEmpty()) {
-    if (isSingleInsert) {
-      InvalidateCanvasIfNeeded(mPresShell, aStartChild);
-    } else {
-      for (PRUint32 i = aIndexInContainer;
-           i < (PRUint32)aEndIndexInContainer;
-           ++i) {
-        InvalidateCanvasIfNeeded(mPresShell, aContainer->GetChildAt(i));
-      }
+    for (nsIContent* child = aStartChild;
+         child != aEndChild;
+         child = child->GetNextSibling()){
+      InvalidateCanvasIfNeeded(mPresShell, child);
     }
 
     if (nsGkAtoms::tableFrame == frameType ||
