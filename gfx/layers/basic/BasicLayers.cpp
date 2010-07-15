@@ -630,6 +630,72 @@ BasicCanvasLayer::Paint(gfxContext* aContext,
   mUpdatedRect.Empty();
 }
 
+static nsIntRect
+ToOutsideIntRect(const gfxRect &aRect)
+{
+  gfxRect r = aRect;
+  r.RoundOut();
+  return nsIntRect(r.pos.x, r.pos.y, r.size.width, r.size.height);
+}
+
+/**
+ * Returns false if there is at most one leaf layer overlapping aBounds
+ * and that layer is opaque.
+ * aDirtyVisibleRegionInContainer is filled in only if we return false.
+ * It contains the union of the visible regions of leaf layers under aLayer.
+ */
+static PRBool
+MayHaveOverlappingOrTransparentLayers(Layer* aLayer,
+                                      const nsIntRect& aBounds,
+                                      nsIntRegion* aDirtyVisibleRegionInContainer)
+{
+  if (!aLayer->IsOpaqueContent()) {
+    return PR_TRUE;
+  }
+
+  gfxMatrix matrix;
+  if (!aLayer->GetTransform().Is2D(&matrix) ||
+      matrix.HasNonIntegerTranslation()) {
+    return PR_TRUE;
+  }
+
+  nsIntPoint translation = nsIntPoint(PRInt32(matrix.x0), PRInt32(matrix.y0));
+  nsIntRect bounds = aBounds - translation;
+
+  nsIntRect clippedDirtyRect = bounds;
+  const nsIntRect* clipRect = aLayer->GetClipRect();
+  if (clipRect) {
+    clippedDirtyRect.IntersectRect(clippedDirtyRect, *clipRect - translation);
+  }
+  aDirtyVisibleRegionInContainer->And(aLayer->GetVisibleRegion(), clippedDirtyRect);
+  aDirtyVisibleRegionInContainer->MoveBy(translation);
+
+  /* Ignore layers outside the clip rect */
+  if (aDirtyVisibleRegionInContainer->IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  nsIntRegion region;
+
+  for (Layer* child = aLayer->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    nsIntRegion childRegion;
+    if (MayHaveOverlappingOrTransparentLayers(child, bounds, &childRegion)) {
+      return PR_TRUE;
+    }
+
+    nsIntRegion tmp;
+    tmp.And(region, childRegion);
+    if (!tmp.IsEmpty()) {
+      return PR_TRUE;
+    }
+
+    region.Or(region, childRegion);
+  }
+
+  return PR_FALSE;
+}
+
 BasicLayerManager::BasicLayerManager(gfxContext* aContext) :
   mDefaultTarget(aContext)
 #ifdef DEBUG
@@ -755,7 +821,13 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
     nsRefPtr<gfxContext> finalTarget = mTarget;
     gfxPoint cachedSurfaceOffset;
 
-    if (mUsingDefaultTarget && mDoubleBuffering != BUFFER_NONE) {
+    nsIntRegion rootRegion;
+    PRBool useDoubleBuffering = mUsingDefaultTarget &&
+      mDoubleBuffering != BUFFER_NONE &&
+      MayHaveOverlappingOrTransparentLayers(mRoot,
+                                            ToOutsideIntRect(mTarget->GetClipExtents()),
+                                            &rootRegion);
+    if (useDoubleBuffering) {
       nsRefPtr<gfxASurface> targetSurface = mTarget->CurrentSurface();
       mTarget = PushGroupWithCachedSurface(mTarget, targetSurface->GetContentType(),
                                            &cachedSurfaceOffset);
@@ -763,7 +835,7 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 
     PaintLayer(mRoot, aCallback, aCallbackData, mRoot->GetOpacity());
     
-    if (mUsingDefaultTarget && mDoubleBuffering != BUFFER_NONE) {
+    if (useDoubleBuffering) {
       finalTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
       PopGroupWithCachedSurface(finalTarget, cachedSurfaceOffset);
     }
