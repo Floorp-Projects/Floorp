@@ -74,6 +74,7 @@ class Compiler
         jsbytecode *pc;
     };
 
+#if defined JS_MONOIC
     struct MICGenInfo {
         MICGenInfo(ic::MICInfo::Kind kind) : kind(kind)
         { }
@@ -87,7 +88,9 @@ class Compiler
         bool dataConst;
         bool dataWrite;
     };
+#endif
 
+#if defined JS_POLYIC
     struct PICGenInfo {
         PICGenInfo(ic::PICInfo::Kind kind) : kind(kind)
         { }
@@ -106,6 +109,7 @@ class Compiler
         bool hasTypeCheck;
         ValueRemat vr;
     };
+#endif
 
     struct Defs {
         Defs(uint32 ndefs)
@@ -155,8 +159,12 @@ class Compiler
     Assembler masm;
     FrameState frame;
     js::Vector<BranchPatch, 64> branchPatches;
+#if defined JS_MONOIC
     js::Vector<MICGenInfo, 64> mics;
+#endif
+#if defined JS_POLYIC
     js::Vector<PICGenInfo, 64> pics;
+#endif
     StubCompiler stubcc;
     Label invokeLabel;
 

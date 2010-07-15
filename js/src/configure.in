@@ -2580,6 +2580,8 @@ i?86-*)
     ENABLE_TRACEJIT=1
     NANOJIT_ARCH=i386
     ENABLE_METHODJIT=1
+    ENABLE_MONOIC=1
+    ENABLE_POLYIC=1
     AC_DEFINE(JS_CPU_X86)
     AC_DEFINE(JS_32BIT)
     ;;
@@ -2606,6 +2608,14 @@ MOZ_ARG_DISABLE_BOOL(methodjit,
 [  --disable-methodjit           Disable method JIT support],
   ENABLE_METHODJIT= )
 
+MOZ_ARG_DISABLE_BOOL(monoic,
+[  --disable-monoic      Disable use of MICs by JIT compiler],
+  ENABLE_MONOIC= )
+
+MOZ_ARG_DISABLE_BOOL(polyic,
+[  --disable-polyic      Disable use of PICs by JIT compiler],
+  ENABLE_POLYIC= )
+
 MOZ_ARG_DISABLE_BOOL(tracejit,
 [  --disable-tracejit      Disable tracing JIT support],
   ENABLE_TRACEJIT=)
@@ -2621,6 +2631,14 @@ if test "$ENABLE_METHODJIT"; then
     AC_DEFINE(JS_METHODJIT)
 else
     ENABLE_TRACEJIT= 
+fi
+
+if test "$ENABLE_MONOIC"; then
+    AC_DEFINE(JS_MONOIC)
+fi
+
+if test "$ENABLE_POLYIC"; then
+    AC_DEFINE(JS_POLYIC)
 fi
 
 if test "$ENABLE_METHODJIT_SPEW"; then

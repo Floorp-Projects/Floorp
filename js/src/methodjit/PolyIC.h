@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jsjaeger_poly_ic_h__ && defined JS_METHODJIT
+#if !defined jsjaeger_poly_ic_h__ && defined JS_METHODJIT && defined JS_POLYIC
 #define jsjaeger_poly_ic_h__
 
 #include "jscntxt.h"
@@ -47,8 +47,6 @@
 #include "assembler/assembler/CodeLocation.h"
 #include "methodjit/MethodJIT.h"
 #include "RematInfo.h"
-
-#define ENABLE_PIC 1
 
 namespace js {
 namespace mjit {
