@@ -2526,6 +2526,74 @@ nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
   closure.mAffectedPlugins.EnumerateEntries(PluginHideEnumerator, &closure);
 }
 
+static PRBool
+HasOverlap(const nsIntPoint& aOffset1, const nsTArray<nsIntRect>& aClipRects1,
+           const nsIntPoint& aOffset2, const nsTArray<nsIntRect>& aClipRects2)
+{
+  nsIntPoint offsetDelta = aOffset1 - aOffset2;
+  for (PRUint32 i = 0; i < aClipRects1.Length(); ++i) {
+    for (PRUint32 j = 0; j < aClipRects2.Length(); ++j) {
+      if ((aClipRects1[i] + offsetDelta).Intersects(aClipRects2[j]))
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+/**
+ * Given a list of plugin windows to move to new locations, sort the list
+ * so that for each window move, the window moves to a location that
+ * does not intersect other windows. This minimizes flicker and repainting.
+ * It's not always possible to do this perfectly, since in general
+ * we might have cycles. But we do our best.
+ * We need to take into account that windows are clipped to particular
+ * regions and the clip regions change as the windows are moved.
+ */
+static void
+SortConfigurations(nsTArray<nsIWidget::Configuration>* aConfigurations)
+{
+  if (aConfigurations->Length() > 10) {
+    // Give up, we don't want to get bogged down here
+    return;
+  }
+
+  nsTArray<nsIWidget::Configuration> pluginsToMove;
+  pluginsToMove.SwapElements(*aConfigurations);
+
+  // Our algorithm is quite naive. At each step we try to identify
+  // a window that can be moved to its new location that won't overlap
+  // any other windows at the new location. If there is no such
+  // window, we just move the last window in the list anyway.
+  while (!pluginsToMove.IsEmpty()) {
+    // Find a window whose destination does not overlap any other window
+    PRUint32 i;
+    for (i = 0; i + 1 < pluginsToMove.Length(); ++i) {
+      nsIWidget::Configuration* config = &pluginsToMove[i];
+      PRBool foundOverlap = PR_FALSE;
+      for (PRUint32 j = 0; j < pluginsToMove.Length(); ++j) {
+        if (i == j)
+          continue;
+        nsIntRect bounds;
+        pluginsToMove[j].mChild->GetBounds(bounds);
+        nsAutoTArray<nsIntRect,1> clipRects;
+        pluginsToMove[j].mChild->GetWindowClipRegion(&clipRects);
+        if (HasOverlap(bounds.TopLeft(), clipRects,
+                       config->mBounds.TopLeft(),
+                       config->mClipRegion)) {
+          foundOverlap = PR_TRUE;
+          break;
+        }
+      }
+      if (!foundOverlap)
+        break;
+    }
+    // Note that we always move the last plugin in pluginsToMove, if we
+    // can't find any other plugin to move
+    aConfigurations->AppendElement(pluginsToMove[i]);
+    pluginsToMove.RemoveElementAt(i);
+  }
+}
+
 void
 nsRootPresContext::UpdatePluginGeometry()
 {
@@ -2546,6 +2614,7 @@ nsRootPresContext::UpdatePluginGeometry()
   GetPluginGeometryUpdates(f, &configurations);
   if (configurations.IsEmpty())
     return;
+  SortConfigurations(&configurations);
   nsIWidget* widget = FrameManager()->GetRootFrame()->GetNearestWidget();
   NS_ASSERTION(widget, "Plugins must have a parent window");
   widget->ConfigureChildren(configurations);
