@@ -81,7 +81,7 @@ public:
   // binding URIs.
   PRBool CompareBindingURI(nsIURI* aURI) const;
 
-  nsresult GetAllowScripts(PRBool* aResult);
+  PRBool GetAllowScripts();
 
   nsresult BindingAttached(nsIContent* aBoundElement);
   nsresult BindingDetached(nsIContent* aBoundElement);

@@ -1373,11 +1373,8 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
 PRBool
 nsXBLBinding::AllowScripts()
 {
-  PRBool result;
-  mPrototypeBinding->GetAllowScripts(&result);
-  if (!result) {
-    return result;
-  }
+  if (!mPrototypeBinding->GetAllowScripts())
+    return PR_FALSE;
 
   // Nasty hack.  Use the JSContext of the bound node, since the
   // security manager API expects to get the docshell type from
@@ -1404,8 +1401,8 @@ nsXBLBinding::AllowScripts()
   
   JSContext* cx = (JSContext*) context->GetNativeContext();
 
-  nsCOMPtr<nsIDocument> ourDocument;
-  mPrototypeBinding->XBLDocumentInfo()->GetDocument(getter_AddRefs(ourDocument));
+  nsCOMPtr<nsIDocument> ourDocument =
+    mPrototypeBinding->XBLDocumentInfo()->GetDocument();
   PRBool canExecute;
   nsresult rv =
     mgr->CanExecuteScripts(cx, ourDocument->NodePrincipal(), &canExecute);

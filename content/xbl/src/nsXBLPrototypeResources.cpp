@@ -105,8 +105,8 @@ nsXBLPrototypeResources::FlushSkinSheets()
   if (mStyleSheetList.Length() == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIDocument> doc;
-  mLoader->mBinding->XBLDocumentInfo()->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc =
+    mLoader->mBinding->XBLDocumentInfo()->GetDocument();
   mozilla::css::Loader* cssLoader = doc->CSSLoader();
 
   // We have scoped stylesheets.  Reload any chrome stylesheets we

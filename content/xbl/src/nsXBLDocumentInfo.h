@@ -57,20 +57,22 @@ public:
   nsXBLDocumentInfo(nsIDocument* aDocument);
   virtual ~nsXBLDocumentInfo();
 
-  NS_IMETHOD GetDocument(nsIDocument** aResult) { NS_ADDREF(*aResult = mDocument); return NS_OK; }
+  already_AddRefed<nsIDocument> GetDocument()
+    { NS_ADDREF(mDocument); return mDocument.get(); }
 
-  NS_IMETHOD GetScriptAccess(PRBool* aResult) { *aResult = mScriptAccess; return NS_OK; }
+  PRBool GetScriptAccess() { return mScriptAccess; }
 
-  NS_IMETHOD_(nsIURI*) DocumentURI() { return mDocument->GetDocumentURI(); }
+  nsIURI* DocumentURI() { return mDocument->GetDocumentURI(); }
 
-  NS_IMETHOD GetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding** aResult);
-  NS_IMETHOD SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding);
+  nsXBLPrototypeBinding* GetPrototypeBinding(const nsACString& aRef);
+  nsresult SetPrototypeBinding(const nsACString& aRef,
+                               nsXBLPrototypeBinding* aBinding);
 
-  NS_IMETHOD SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding);
+  void SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding);
   
-  NS_IMETHOD FlushSkinStylesheets();
+  void FlushSkinStylesheets();
 
-  NS_IMETHOD_(PRBool) IsChrome() { return mIsChrome; }
+  PRBool IsChrome() { return mIsChrome; }
 
   // nsIScriptGlobalObjectOwner methods
   virtual nsIScriptGlobalObject* GetScriptGlobalObject();
