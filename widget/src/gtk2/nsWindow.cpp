@@ -339,19 +339,8 @@ typedef void (*_gdk_window_set_urgency_hint_fn)(GdkWindow *window,
 // cursor cache
 static GdkCursor *gCursorCache[eCursorCount];
 
-// Global update pixmap
-static PRBool gUseBufferPixmap = PR_FALSE;
-static GdkPixmap *gBufferPixmap = nsnull;
-static gfxIntSize gBufferPixmapSize(0,0);
-static gfxIntSize gBufferPixmapMaxSize(0,0);
-static int gBufferPixmapUsageCount = 0;
-
 // imported in nsWidgetFactory.cpp
 PRBool gDisableNativeTheme = PR_FALSE;
-
-// If this is 1, then a 24bpp buffer surface is always
-// created for exposes, even if the display has a different depth
-static PRBool gForce24bpp = PR_FALSE;
 
 static GtkWidget *gInvisibleContainer = NULL;
 
@@ -458,16 +447,6 @@ nsWindow::nsWindow()
     mDFB            = NULL;
     mDFBLayer       = NULL;
 #endif
-
-
-    if (gUseBufferPixmap) {
-        if (gBufferPixmapMaxSize.width == 0) {
-            gBufferPixmapMaxSize.width = gdk_screen_width();
-            gBufferPixmapMaxSize.height = gdk_screen_height();
-        }
-
-        gBufferPixmapUsageCount++;
-    }
 }
 
 nsWindow::~nsWindow()
@@ -734,18 +713,6 @@ nsWindow::Destroy(void)
 
     /** Need to clean our LayerManager up while still alive */
     mLayerManager = NULL;
-
-    if (gUseBufferPixmap &&
-        gBufferPixmapUsageCount &&
-        --gBufferPixmapUsageCount == 0)
-    {
-        if (gBufferPixmap)
-            g_object_unref(G_OBJECT(gBufferPixmap));
-
-        gBufferPixmap = nsnull;
-        gBufferPixmapSize.width = 0;
-        gBufferPixmapSize.height = 0;
-    }
 
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),
                                          FuncToGpointer(theme_changed_cb),
@@ -2391,10 +2358,6 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         return FALSE;
     }
 
-    // The context that we'll actually paint into. When we're double-
-    // buffering, this can be different from ctx.
-    nsRefPtr<gfxContext> paintCtx = ctx;
-
 #ifdef MOZ_DFB
     gfxPlatformGtk::SetGdkDrawable(ctx->OriginalSurface(),
                                    GDK_DRAWABLE(mGdkWindow));
@@ -2405,15 +2368,13 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         ctx->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
     }
     ctx->Clip();
+
+    BasicLayerManager::BufferMode layerBuffering =
+        BasicLayerManager::BUFFER_NONE;
 #endif
 
 #ifdef MOZ_X11
-    nsIntRect boundsRect = event.region.GetBounds();
-
-    GdkPixmap* bufferPixmap = nsnull;
-    gfxIntSize bufferPixmapSize;
-
-    nsRefPtr<gfxASurface> bufferPixmapSurface;
+    nsIntRect boundsRect; // for translucent only
 
     ctx->NewPath();
     if (translucent) {
@@ -2421,6 +2382,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         // call UpdateTranslucentWindowAlpha once. After we have dropped
         // support for non-Thebes graphics, UpdateTranslucentWindowAlpha will be
         // our private interface so we can rework things to avoid this.
+        boundsRect = event.region.GetBounds();
         ctx->Rectangle(gfxRect(boundsRect.x, boundsRect.y,
                                boundsRect.width, boundsRect.height));
     } else {
@@ -2430,82 +2392,16 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
     ctx->Clip();
 
-    // double buffer
+    BasicLayerManager::BufferMode layerBuffering;
     if (translucent) {
+        // The double buffering is done here to extract the shape mask.
+        // (The shape mask won't be necessary when a visual with an alpha
+        // channel is used on compositing window managers.)
+        layerBuffering = BasicLayerManager::BUFFER_NONE;
         ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
     } else {
-        // Instead of just doing PushGroup we're going to do a little dance
-        // to ensure that GDK creates the pixmap, so it doesn't go all
-        // XGetGeometry on us in gdk_pixmap_foreign_new_for_display when we
-        // paint native themes
-        gint depth;
-
-        if (gForce24bpp) {
-            depth = 24; // 24 always
-        } else {
-            depth = gdk_drawable_get_depth(GDK_DRAWABLE(mGdkWindow));
-        }
-
-        // Make sure we won't create something that will overload the X server
-        nsIntSize safeSize = GetSafeWindowSize(boundsRect.Size());
-        boundsRect.width = safeSize.width;
-        boundsRect.height = safeSize.height;
-
-        if (!gUseBufferPixmap ||
-            boundsRect.width > gBufferPixmapMaxSize.width ||
-            boundsRect.height > gBufferPixmapMaxSize.height)
-        {
-            // create a one-off always if we're not using the global pixmap
-            // if gUseBufferPixmap == TRUE, who's redrawing an area bigger than the screen?
-            bufferPixmap = gdk_pixmap_new(GDK_DRAWABLE(mGdkWindow),
-                                          boundsRect.width, boundsRect.height,
-                                          depth);
-            bufferPixmapSize.width = boundsRect.width;
-            bufferPixmapSize.height = boundsRect.height;
-        } else if (boundsRect.width > gBufferPixmapSize.width ||
-                   boundsRect.height > gBufferPixmapSize.height)
-        {
-            // grow the global pixmap
-            if (gBufferPixmap)
-                g_object_unref(G_OBJECT(gBufferPixmap));
-
-            gBufferPixmapSize.width = PR_MAX(gBufferPixmapSize.width, boundsRect.width);
-            gBufferPixmapSize.height = PR_MAX(gBufferPixmapSize.height, boundsRect.height);
-
-            gBufferPixmap = gdk_pixmap_new(GDK_DRAWABLE(mGdkWindow),
-                                           gBufferPixmapSize.width, gBufferPixmapSize.height,
-                                           depth);
-
-            // use the newly-resized global
-            bufferPixmap = gBufferPixmap;
-            bufferPixmapSize = gBufferPixmapSize;
-        }  else {
-            // global's big enough, just use it
-            bufferPixmap = gBufferPixmap;
-            bufferPixmapSize = gBufferPixmapSize;
-        }
-
-        if (bufferPixmap) {
-            bufferPixmapSurface = GetSurfaceForGdkDrawable(GDK_DRAWABLE(bufferPixmap),
-                                                           nsIntSize(bufferPixmapSize.width, bufferPixmapSize.height));
-
-            if (bufferPixmapSurface && bufferPixmapSurface->CairoStatus()) {
-                bufferPixmapSurface = nsnull;
-            }
-            if (bufferPixmapSurface) {
-                gfxPlatformGtk::GetPlatform()->SetGdkDrawable(
-                        static_cast<gfxASurface *>(bufferPixmapSurface),
-                        GDK_DRAWABLE(bufferPixmap));
-
-                bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
-                nsRefPtr<gfxContext> newCtx = new gfxContext(bufferPixmapSurface);
-                if (newCtx) {
-                    paintCtx = newCtx.forget();
-                } else {
-                    bufferPixmapSurface = nsnull;
-                }
-            }
-        }
+        // Get the layer manager to do double buffering (if necessary).
+        layerBuffering = BasicLayerManager::BUFFER_BUFFERED;
     }
 
 #if 0
@@ -2522,17 +2418,16 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
     nsEventStatus status;
     {
-      AutoLayerManagerSetup
-        setupLayerManager(this, paintCtx, BasicLayerManager::BUFFER_NONE);
+      AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
       DispatchEvent(&event, status);
     }
 
 #ifdef MOZ_X11
     // DispatchEvent can Destroy us (bug 378273), avoid doing any paint
     // operations below if that happened - it will lead to XError and exit().
-    if (NS_LIKELY(!mIsDestroyed)) {
-        if (status != nsEventStatus_eIgnore) {
-            if (translucent) {
+    if (translucent) {
+        if (NS_LIKELY(!mIsDestroyed)) {
+            if (status != nsEventStatus_eIgnore) {
                 nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
                 ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
                 ctx->SetPattern(pattern);
@@ -2555,22 +2450,8 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                                                                    boundsRect.width, boundsRect.height),
                                                          img->Data(), img->Stride());
                 }
-            } else {
-                if (bufferPixmapSurface) {
-                    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-                    ctx->SetSource(bufferPixmapSurface);
-                    ctx->Paint();
-                }
             }
-        } else {
-            // ignore
-            if (translucent)
-                ctx->PopGroup();
         }
-
-        // if we had to allocate a local pixmap, free it here
-        if (bufferPixmap && bufferPixmap != gBufferPixmap)
-            g_object_unref(G_OBJECT(bufferPixmap));
     }
 #endif // MOZ_X11
 
@@ -6375,14 +6256,6 @@ initialize_prefs(void)
     rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus", &val);
     if (NS_SUCCEEDED(rv))
         gRaiseWindows = val;
-
-    rv = prefs->GetBoolPref("mozilla.widget.force-24bpp", &val);
-    if (NS_SUCCEEDED(rv))
-        gForce24bpp = val;
-
-    rv = prefs->GetBoolPref("mozilla.widget.use-buffer-pixmap", &val);
-    if (NS_SUCCEEDED(rv))
-        gUseBufferPixmap = val;
 
     rv = prefs->GetBoolPref("mozilla.widget.disable-native-theme", &val);
     if (NS_SUCCEEDED(rv))
