@@ -301,7 +301,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 COMPONENT_LIBS += widget_android
 endif
 
-STATIC_LIBS += thebes ycbcr
+STATIC_LIBS += thebes ycbcr angle
 COMPONENT_LIBS += gkgfxthebes
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))

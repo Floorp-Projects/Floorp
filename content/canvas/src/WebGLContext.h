@@ -326,6 +326,20 @@ protected:
     WebGLuint mActiveTexture;
     WebGLenum mSynthesizedGLError;
 
+    // whether shader validation is supported
+    PRBool mShaderValidation;
+
+    // some GL constants
+    PRUint32 mGLMaxVertexAttribs;
+    PRUint32 mGLMaxTextureUnits;
+    PRUint32 mGLMaxTextureSize;
+    PRUint32 mGLMaxCubeMapTextureSize;
+    PRUint32 mGLMaxTextureImageUnits;
+    PRUint32 mGLMaxVertexTextureImageUnits;
+    PRUint32 mGLMaxVaryingVectors;
+    PRUint32 mGLMaxFragmentUniformVectors;
+    PRUint32 mGLMaxVertexUniformVectors;
+
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool InitAndValidateGL();
     PRBool ValidateBuffers(PRUint32 count);
@@ -654,7 +668,8 @@ public:
 
     WebGLShader(WebGLContext *context, WebGLuint name, WebGLenum stype) :
         WebGLContextBoundObject(context),
-        mName(name), mDeleted(PR_FALSE), mType(stype)
+        mName(name), mDeleted(PR_FALSE), mType(stype),
+        mNeedsTranslation(true)
     { }
 
     void Delete() {
@@ -668,12 +683,36 @@ public:
     WebGLuint GLName() { return mName; }
     WebGLenum ShaderType() { return mType; }
 
+    void SetSource(const nsCString& src) {
+        // XXX do some quick gzip here maybe -- getting this will be very rare
+        mSource.Assign(src);
+    }
+
+    const nsCString& Source() const { return mSource; }
+
+    void SetNeedsTranslation() { mNeedsTranslation = true; }
+    bool NeedsTranslation() const { return mNeedsTranslation; }
+
+    void SetTranslationSuccess() {
+        mTranslationLog.SetIsVoid(PR_TRUE);
+        mNeedsTranslation = false;
+    }
+
+    void SetTranslationFailure(const nsCString& msg) {
+        mTranslationLog.Assign(msg);
+    }
+
+    const nsCString& TranslationLog() const { return mTranslationLog; }
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLSHADER
 protected:
     WebGLuint mName;
     PRBool mDeleted;
     WebGLenum mType;
+    nsCString mSource;
+    nsCString mTranslationLog;
+    bool mNeedsTranslation;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WebGLShader, WEBGLSHADER_PRIVATE_IID)

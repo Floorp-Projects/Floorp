@@ -7,8 +7,14 @@
 #ifndef __OSINCLUDE_H
 #define __OSINCLUDE_H
 
+#ifdef ANGLE_USE_NSPR
+
+#include "prthread.h"
+
+#else
+
 //
-// This file contains contains the window's specific datatypes and
+// This file contains contains windows specific datatypes and
 // declares any windows specific functions.
 //
 
@@ -32,12 +38,17 @@
 #include <errno.h>
 #endif  // ANGLE_OS_WIN
 
+#endif  // ANGLE_USE_NSPR
+
 #include "compiler/debug.h"
 
 //
 // Thread Local Storage Operations
 //
-#if defined(ANGLE_OS_WIN)
+#if defined(ANGLE_USE_NSPR)
+typedef PRUintn OS_TLSIndex;
+#define OS_INVALID_TLS_INDEX 0xFFFFFFFF
+#elif defined(ANGLE_OS_WIN)
 typedef DWORD OS_TLSIndex;
 #define OS_INVALID_TLS_INDEX (TLS_OUT_OF_INDEXES)
 #elif defined(ANGLE_OS_POSIX)
@@ -52,7 +63,9 @@ bool OS_FreeTLSIndex(OS_TLSIndex nIndex);
 inline void* OS_GetTLSValue(OS_TLSIndex nIndex)
 {
     assert(nIndex != OS_INVALID_TLS_INDEX);
-#if defined(ANGLE_OS_WIN)
+#if defined(ANGLE_USE_NSPR)
+    return PR_GetThreadPrivate(nIndex);
+#elif defined(ANGLE_OS_WIN)
     return TlsGetValue(nIndex);
 #elif defined(ANGLE_OS_POSIX)
     return pthread_getspecific(nIndex);
