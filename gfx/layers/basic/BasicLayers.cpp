@@ -750,32 +750,10 @@ BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
   gfxRect clip = aTarget->GetClipExtents();
   clip.RoundOut();
 
-  if (mCachedSurface) {
-    /* Verify the current buffer is valid for this purpose */
-    if (mCachedSurface->GetContentType() != aContent) {
-      mCachedSurface = nsnull;
-    } else {
-      /* bufferClip should always be {0,0,width,height} of the buffer surface */
-      if (clip.size.width > mCachedSurfaceSize.width ||
-          clip.size.height > mCachedSurfaceSize.height) {
-        mCachedSurface = nsnull;
-      }
-    }
-  }
-  nsRefPtr<gfxContext> ctx;
-  if (mCachedSurface) {
-    ctx = new gfxContext(mCachedSurface);
-    ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
-    ctx->Paint();
-    ctx->SetOperator(gfxContext::OPERATOR_OVER);
-  } else {
-    mCachedSurfaceSize = gfxIntSize(clip.size.width, clip.size.height);
-    mCachedSurface = currentSurf->CreateSimilarSurface(aContent,
-                                                       mCachedSurfaceSize);
-    if (!mCachedSurface)
-      return nsnull;
-    ctx = new gfxContext(mCachedSurface);
-  }
+  nsRefPtr<gfxContext> ctx =
+    mCachedSurface.Get(aContent,
+                       gfxIntSize(clip.size.width, clip.size.height),
+                       currentSurf);
   /* Align our buffer for the original surface */
   ctx->Translate(-clip.pos);
   *aSavedOffset = clip.pos;
@@ -787,13 +765,13 @@ void
 BasicLayerManager::PopGroupWithCachedSurface(gfxContext *aTarget,
                                              const gfxPoint& aSavedOffset)
 {
-  if (!mCachedSurface)
+  if (!mTarget)
     return;
 
   gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
   aTarget->IdentityMatrix();
 
-  aTarget->SetSource(mCachedSurface, aSavedOffset);
+  aTarget->SetSource(mTarget->OriginalSurface(), aSavedOffset);
   aTarget->Paint();
 }
 
