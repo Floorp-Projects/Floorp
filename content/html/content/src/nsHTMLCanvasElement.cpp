@@ -231,6 +231,10 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   nsCOMPtr<nsICanvasRenderingContextInternal> context;
   nsresult rv = GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(context));
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!context) {
+    // XXX bug 578349
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   // get image bytes
   nsCOMPtr<nsIInputStream> imgStream;
@@ -353,9 +357,10 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 
   if (mCurrentContextId.IsEmpty()) {
     rv = GetContextHelper(aContextId, getter_AddRefs(mCurrentContext));
-    if (NS_FAILED(rv))
-      // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-      return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!mCurrentContext) {
+      return NS_OK;
+    }
 
     // Ensure that the context participates in CC.  Note that returning a
     // CC participant from QI doesn't addref.
@@ -406,8 +411,10 @@ nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
 
   if (mCurrentContextId.IsEmpty()) {
     rv = GetContextHelper(aContextId, getter_AddRefs(mCurrentContext));
-    if (NS_FAILED(rv))
-      return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!mCurrentContext) {
+      return NS_OK;
+    }
 
     mCurrentContext->SetIsIPC(PR_TRUE);
 
