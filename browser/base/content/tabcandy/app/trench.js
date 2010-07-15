@@ -581,7 +581,7 @@ var Trenches = {
 
     var snappedTrenches = {};
 
-    for (let i in this.trenches) {
+    for (var i in this.trenches) {
       var t = this.trenches[i];
       if (!t.active)
         continue;

@@ -49,7 +49,7 @@ window.Keys = {meta: false};
 Navbar = {
   // ----------
   get urlBar() {
-    let win = Utils.getCurrentWindow();
+    var win = Utils.getCurrentWindow();
     if (win)
       return win.gURLBar;
     return null;
@@ -69,7 +69,7 @@ var Tabbar = {
   // Function: getVisibleTabCount
   // Returns the number of tabs that are currently visible
   getVisibleTabCount: function(){
-    let visibleTabCount = 0;
+    var visibleTabCount = 0;
     this.getAllTabs().forEach(function(tab){
       if ( !tab.collapsed )
         visibleTabCount++
@@ -82,11 +82,11 @@ var Tabbar = {
   // Returns an array of all tabs which exist in the current window
   // tabbrowser. Returns an Array.
   getAllTabs: function() {
-    let tabBarTabs = [];
+    var tabBarTabs = [];
     if (this.el) {
       // this.el.children is not a real array and does contain
       // useful functions like filter or forEach. Convert it into a real array.
-      for (let i = 0; i < this.el.children.length; i++) {
+      for (var i = 0; i < this.el.children.length; i++) {
         tabBarTabs.push(this.el.children[i]);
       }
     }
@@ -160,15 +160,16 @@ window.Page = {
   },
   
   hideChrome: function(){
-    let currentWin = Utils.getCurrentWindow();
-    currentWin.document.getElementById("tab-candy-deck").selectedIndex = 1;    
+    var currentWin = Utils.getCurrentWindow();
+    currentWin.document.getElementById("tab-candy-deck").selectedIndex = 1;
     
+    currentWin.gBrowser.updateTitlebar();
     this._setActiveTitleColor(true);
   },
     
   showChrome: function(){
-    let currentWin = Utils.getCurrentWindow();
-    let tabContainer = currentWin.gBrowser.tabContainer;
+    var currentWin = Utils.getCurrentWindow();
+    var tabContainer = currentWin.gBrowser.tabContainer;
     currentWin.document.getElementById("tab-candy-deck").selectedIndex = 0;
     
     // set the close button on tab
@@ -176,13 +177,14 @@ window.Page = {
       tabContainer.adjustTabstrip();
 /*     }, 1); */
 
+    currentWin.gBrowser.updateTitlebar();
     this._setActiveTitleColor(false);
   },
 
   _setActiveTitleColor: function(set) {
     // Mac Only
     if (Utils.isMac()) {
-      let mainWindow =
+      var mainWindow =
         Utils.getCurrentWindow().document.getElementById("main-window");
       if (set)
         mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
@@ -192,9 +194,9 @@ window.Page = {
   },
 
   showTabCandy: function() {
-    let self = this;
-    let currentTab = UI.currentTab;
-    let item = null;
+    var self = this;
+    var currentTab = UI.currentTab;
+    var item = null;
 
     if (currentTab && currentTab.mirror)
       item = TabItems.getItemByTabElement(currentTab.mirror.el);
@@ -211,7 +213,7 @@ window.Page = {
 
         self.setActiveTab(item);
 
-        let activeGroup = Groups.getActiveGroup();
+        var activeGroup = Groups.getActiveGroup();
         if ( activeGroup )
           activeGroup.setTopChild(item);
   
@@ -284,7 +286,7 @@ window.Page = {
         
     // When you click on the background/empty part of TabCandy,
     // we create a new group.
-    let tabCandyContentDoc =
+    var tabCandyContentDoc =
       Utils.getCurrentWindow().document.getElementById("tab-candy").
         contentDocument;
     iQ(tabCandyContentDoc).mousedown(function(e){
@@ -339,10 +341,10 @@ window.Page = {
   
   // ----------  
   tabOnFocus: function(tab) {
-    let focusTab = tab;
-    let currentTab = UI.currentTab;
-    let currentWindow = Utils.getCurrentWindow();
-    let self = this;
+    var focusTab = tab;
+    var currentTab = UI.currentTab;
+    var currentWindow = Utils.getCurrentWindow();
+    var self = this;
     
     UI.currentTab = focusTab;
     // if the last visible tab has just been closed, don't show the chrome UI.
@@ -366,14 +368,14 @@ window.Page = {
         self.stopZoomPreparation = false;
         return;
       }
-      let visibleTabCount = Tabbar.getVisibleTabCount();
+      var visibleTabCount = Tabbar.getVisibleTabCount();
  
       if (focusTab != UI.currentTab) {
         // things have changed while we were in timeout
         return;
       }
        
-      let newItem = null;
+      var newItem = null;
       if (focusTab && focusTab.mirror)
         newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
   
@@ -381,7 +383,7 @@ window.Page = {
         Groups.setActiveGroup(newItem.parent);
 
       // ___ prepare for when we return to TabCandy
-      let oldItem = null;
+      var oldItem = null;
       if (currentTab && currentTab.mirror)
         oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
 
@@ -642,7 +644,7 @@ UIClass.prototype = {
       });
       
       // ___ Page
-      let currentWindow = Utils.getCurrentWindow();
+      var currentWindow = Utils.getCurrentWindow();
       Page.init();
       
       currentWindow.addEventListener(
@@ -674,14 +676,14 @@ UIClass.prototype = {
   _delayInit : function() {
     try {
       // ___ Storage
-      let currentWindow = Utils.getCurrentWindow();
+      var currentWindow = Utils.getCurrentWindow();
       
-      let data = Storage.readUIData(currentWindow);
+      var data = Storage.readUIData(currentWindow);
       this.storageSanity(data);
   
-      let groupsData = Storage.readGroupsData(currentWindow);
-      let firstTime = !groupsData || iQ.isEmptyObject(groupsData);
-      let groupData = Storage.readGroupData(currentWindow);
+      var groupsData = Storage.readGroupsData(currentWindow);
+      var firstTime = !groupsData || iQ.isEmptyObject(groupsData);
+      var groupData = Storage.readGroupData(currentWindow);
       Groups.reconstitute(groupsData, groupData);
   
       TabItems.init();
@@ -703,7 +705,7 @@ UIClass.prototype = {
   
         var group = new Group([], options); 
 
-        let items = TabItems.getItems();
+        var items = TabItems.getItems();
         items.forEach(function(item) {
           if (item.parent)
             item.parent.remove(item);
@@ -741,8 +743,8 @@ UIClass.prototype = {
       // ___ show tab candy at startup
       var visibilityData = Storage.readVisibilityData(currentWindow);
       if (visibilityData && visibilityData.visible) {
-        let currentTab = UI.currentTab;
-        let item;
+        var currentTab = UI.currentTab;
+        var item;
 
         if (currentTab && currentTab.mirror) 
           item = TabItems.getItemByTabElement(currentTab.mirror.el);
@@ -755,7 +757,7 @@ UIClass.prototype = {
         Page.hideChrome();
       } else
         Page.showChrome();        
-
+      
       // ___ setup observer to save canvas images
       Components.utils.import("resource://gre/modules/Services.jsm");
       var observer = {

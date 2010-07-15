@@ -715,7 +715,7 @@ window.TabItems = {
                     }
                   }, 100);
 
-                  rawtab.linkedBrowser.removeProgressListener(webProgress);
+                  rawTab.linkedBrowser.removeProgressListener(webProgress);
                 }
               }
             },

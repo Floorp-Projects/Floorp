@@ -141,8 +141,8 @@ Drag.prototype = {
     }
 
     Trenches.hideGuides();
-    for (let edge in snappedTrenches) {
-      let trench = snappedTrenches[edge];
+    for (var edge in snappedTrenches) {
+      var trench = snappedTrenches[edge];
       if (typeof trench == 'object') {
         trench.showGuide = true;
         trench.show();
