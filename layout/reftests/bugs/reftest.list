@@ -1122,7 +1122,7 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 == 446100-1c.html about:blank
 == 446100-1d.html about:blank
 == 446100-1e.html about:blank
-== 446100-1f.html about:blank
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 446100-1f.html about:blank  # Fails due to AA on GTK2
 == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 # == 448193.html 448193-ref.html  # Fails due to 2 small single-pixel differences
