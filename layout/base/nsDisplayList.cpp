@@ -364,7 +364,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     if (window) {
       layerManager = window->GetLayerManager();
       if (layerManager) {
-        aBuilder->LayerBuilder()->BeginUpdatingRetainedLayers(layerManager);
+        aBuilder->LayerBuilder()->WillBeginRetainedLayerTransaction(layerManager);
       }
     }
   }
@@ -398,6 +398,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   root->SetVisibleRegion(nsIntRegion(visible));
 
   layerManager->SetRoot(root);
+  aBuilder->LayerBuilder()->WillEndTransaction(layerManager);
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
                                aBuilder);
   aBuilder->LayerBuilder()->DidEndTransaction(layerManager);

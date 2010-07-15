@@ -109,13 +109,20 @@ public:
   }
 
   /**
-   * Call this to register a layer tree which was retained since the last
-   * paint.
+   * Call this to notify that we are about to start a transaction on the
+   * retained layer manager aManager.
    */
-  void BeginUpdatingRetainedLayers(LayerManager* aManager);
+  void WillBeginRetainedLayerTransaction(LayerManager* aManager);
 
   /**
-   * Call this whenever we end a transaction on aManager. If aManager
+   * Call this just before we end a transaction on aManager. If aManager
+   * is not the retained layer manager then it must be a temporary layer
+   * manager that will not be used again.
+   */
+  void WillEndTransaction(LayerManager* aManager);
+
+  /**
+   * Call this after we end a transaction on aManager. If aManager
    * is not the retained layer manager then it must be a temporary layer
    * manager that will not be used again.
    */
