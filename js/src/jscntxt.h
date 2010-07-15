@@ -1204,6 +1204,10 @@ struct JSCompartment {
     void sweep(JSContext *cx);
 };
 
+struct JSGCTracer : public JSTracer {
+    uint32 color;
+};
+
 struct JSRuntime {
     /* Default compartment. */
     JSCompartment       *defaultCompartment;
@@ -1247,7 +1251,7 @@ struct JSRuntime {
     size_t              gcMaxMallocBytes;
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcNumber;
-    JSTracer            *gcMarkingTracer;
+    JSGCTracer          *gcMarkingTracer;
     uint32              gcTriggerFactor;
     size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
@@ -1708,12 +1712,9 @@ struct JSContext
 
     /*
      * True if generating an error, to prevent runaway recursion.
-     * NB: generatingError packs with insideGCMarkCallback and throwing below.
+     * NB: generatingError packs with throwing below.
      */
     JSPackedBool        generatingError;
-
-    /* Flag to indicate that we run inside gcCallback(cx, JSGC_MARK_END). */
-    JSPackedBool        insideGCMarkCallback;
 
     /* Exception state -- the exception member is a GC root by definition. */
     JSPackedBool        throwing;           /* is there a pending exception? */
