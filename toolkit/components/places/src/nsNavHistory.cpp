@@ -5757,33 +5757,12 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     (void)os->RemoveObserver(this, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING);
 #endif
 
-    // If shutdown happens in the same scope as the service init, we should
-    // immediately serve the places-init topic, this way topic observers
-    // won't try to access the database after xpcom-shutdown.
-    nsCOMPtr<nsISimpleEnumerator> e;
-    nsresult rv = os->EnumerateObservers(TOPIC_PLACES_INIT_COMPLETE,
-                                         getter_AddRefs(e));
-    if (NS_SUCCEEDED(rv) && e) {
-      // This covers a special case that can happen in tests, if the test
-      // does never interrupt the main thread we could shutdown
-      // before we fire any notification.  That means that if we notify from now
-      // on, we could init the category cache after xpcom-shutdown and leak.
-      mCanNotify = false;
-
-      nsCOMPtr<nsIObserver> observer;
-      PRBool loop = PR_TRUE;
-      while(NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) {
-        e->GetNext(getter_AddRefs(observer));
-        (void)observer->Observe(observer, TOPIC_PLACES_INIT_COMPLETE, nsnull);
-      }
-    }
-
     // Notify all Places users that we are about to shutdown.  The notification
     // is enqueued because there is network work on profile-before-change that
     // should run before us.
     nsRefPtr<PlacesEvent> shutdownEvent =
       new PlacesEvent(TOPIC_PLACES_SHUTDOWN);
-    rv = NS_DispatchToMainThread(shutdownEvent);
+    nsresult rv = NS_DispatchToMainThread(shutdownEvent);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Unable to shutdown Places: message dispatch failed.");
 
@@ -5797,6 +5776,11 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   }
 
   else if (strcmp(aTopic, TOPIC_PLACES_TEARDOWN) == 0) {
+    // Don't even try to notify observers from this point on, the category
+    // cache would init services that could not shutdown correctly or try to
+    // use our APIs.
+    mCanNotify = false;
+
     // Operations that are unlikely to create issues to implementers should go
     // in global shutdown.  Any other thing that must run really late must be
     // here instead.
