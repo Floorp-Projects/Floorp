@@ -226,6 +226,8 @@ static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
 
 using namespace mozilla::dom;
+using mozilla::TimeStamp;
+using mozilla::TimeDuration;
 
 nsIDOMStorageList *nsGlobalWindow::sGlobalStorageList  = nsnull;
 
@@ -8184,14 +8186,14 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
     timeout->mPrincipal = ourPrincipal;
   }
 
-  PRTime delta = (PRTime)realInterval * PR_USEC_PER_MSEC;
+  TimeDuration delta = TimeDuration::FromMilliseconds(realInterval);
 
   if (!IsFrozen() && !mTimeoutsSuspendDepth) {
     // If we're not currently frozen, then we set timeout->mWhen to be the
     // actual firing time of the timer (i.e., now + delta). We also actually
     // create a timer and fire it off.
 
-    timeout->mWhen = PR_Now() + delta;
+    timeout->mWhen = TimeStamp::Now() + delta;
 
     timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_FAILED(rv)) {
@@ -8212,12 +8214,13 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
     // The timeout is now also held in the timer's closure.
     timeout->AddRef();
   } else {
-    // If we are frozen, however, then we instead simply set timeout->mWhen to
-    // be the "time remaining" in the timeout (i.e., the interval itself). We
-    // don't create a timer for it, since that will happen when we are thawed
-    // and the timeout will then get a timer and run to completion.
+    // If we are frozen, however, then we instead simply set
+    // timeout->mTimeRemaining to be the "time remaining" in the timeout (i.e.,
+    // the interval itself). We don't create a timer for it, since that will
+    // happen when we are thawed and the timeout will then get a timer and run
+    // to completion.
 
-    timeout->mWhen = delta;
+    timeout->mTimeRemaining = delta;
   }
 
   timeout->mWindow = this;
@@ -8323,8 +8326,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
   // A native timer has gone off. See which of our timeouts need
   // servicing
-  PRTime now = PR_Now();
-  PRTime deadline;
+  TimeStamp now = TimeStamp::Now();
+  TimeStamp deadline;
 
   if (aTimeout && aTimeout->mWhen > now) {
     // The OS timer fired early (yikes!), and possibly out of order
@@ -8366,6 +8369,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   // win_run_timeout(). This dummy timeout serves as the head of the
   // list for any timeouts inserted as a result of running a timeout.
   dummy_timeout.mFiringDepth = firingDepth;
+  dummy_timeout.mWhen = now;
   PR_INSERT_AFTER(&dummy_timeout, last_expired_timeout);
 
   // Don't let ClearWindowTimeouts throw away our stack-allocated
@@ -8474,13 +8478,9 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     } else {
       // Let the script handler know about the "secret" final argument that
       // indicates timeout lateness in milliseconds
-      PRTime lateness = now - timeout->mWhen;
+      TimeDuration lateness = now - timeout->mWhen;
 
-      // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
-      // PRTime to make the division do the right thing on 64-bit
-      // platforms whether lateness is positive or negative.
-      handler->SetLateness((PRIntervalTime)(lateness /
-                                            (PRTime)PR_USEC_PER_MSEC));
+      handler->SetLateness(lateness.ToMilliseconds());
 
       nsCOMPtr<nsIVariant> dummy;
       nsCOMPtr<nsISupports> me(static_cast<nsIDOMWindow *>(this));
@@ -8537,35 +8537,32 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     // timeout, accounting for clock drift.
     if (timeout->mInterval) {
       // Compute time to next timeout for interval timer.
-      PRTime nextInterval = (PRTime)timeout->mInterval * PR_USEC_PER_MSEC;
-
       // Make sure nextInterval is at least DOM_MIN_TIMEOUT_VALUE.
-      // Note: We must cast the rhs expression to PRTime to work
-      // around what looks like a compiler bug on x86_64.
-      if (nextInterval < (PRTime)(DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC)) {
-         nextInterval = DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC;
-      }
+      TimeDuration nextInterval =
+        TimeDuration::FromMilliseconds(NS_MAX(timeout->mInterval,
+                                              PRUint32(DOM_MIN_TIMEOUT_VALUE)));
 
       // If we're running pending timeouts because they've been temporarily
       // disabled (!aTimeout), set the next interval to be relative to "now",
       // and not to when the timeout that was pending should have fired.  Also
       // check if the next interval timeout is overdue.  If so, then restart
       // the interval from now.
-      if (!aTimeout || nextInterval + timeout->mWhen <= now)
-        nextInterval += now;
+      TimeStamp firingTime;
+      if (!aTimeout || timeout->mWhen + nextInterval <= now)
+        firingTime = now + nextInterval;
       else
-        nextInterval += timeout->mWhen;
+        firingTime = timeout->mWhen + nextInterval;
 
-      PRTime delay = nextInterval - PR_Now();
+      TimeDuration delay = firingTime - TimeStamp::Now();
 
       // And make sure delay is nonnegative; that might happen if the timer
       // thread is firing our timers somewhat early.
-      if (delay < 0) {
-        delay = 0;
+      if (delay < TimeDuration(0)) {
+        delay = TimeDuration(0);
       }
 
       if (timeout->mTimer) {
-        timeout->mWhen = nextInterval;
+        timeout->mWhen = firingTime;
 
         // Reschedule the OS timer. Don't bother returning any error
         // codes if this fails since the callers of this method
@@ -8579,7 +8576,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
         // consistency).
         nsresult rv = timeout->mTimer->
           InitWithFuncCallback(TimerCallback, timeout,
-                               (PRInt32)(delay / (PRTime)PR_USEC_PER_MSEC),
+                               delay.ToMilliseconds(),
                                nsITimer::TYPE_ONE_SHOT);
 
         if (NS_FAILED(rv)) {
@@ -8603,7 +8600,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
                      "How'd our timer end up null if we're not frozen or "
                      "suspended?");
 
-        timeout->mWhen = delay;
+        timeout->mTimeRemaining = delay;
         isInterval = PR_TRUE;
       }
     }
@@ -8808,7 +8805,11 @@ nsGlobalWindow::InsertTimeoutIntoList(nsTimeout *aTimeout)
   nsTimeout* prevSibling;
   for (prevSibling = LastTimeout();
        IsTimeout(prevSibling) && prevSibling != mTimeoutInsertionPoint &&
-         prevSibling->mWhen > aTimeout->mWhen;
+         // This condition needs to match the one in SetTimeoutOrInterval that
+         // determines whether to set mWhen or mTimeRemaining.
+         ((IsFrozen() || mTimeoutsSuspendDepth) ?
+          prevSibling->mTimeRemaining > aTimeout->mTimeRemaining :
+          prevSibling->mWhen > aTimeout->mWhen);
        prevSibling = prevSibling->Prev()) {
     /* Do nothing; just searching */
   }
@@ -9123,13 +9124,13 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
       dts->SuspendWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
     }
   
-    PRTime now = PR_Now();
+    TimeStamp now = TimeStamp::Now();
     for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
-      // Change mWhen to be the time remaining for this timer.    
+      // Set mTimeRemaining to be the time remaining for this timer.
       if (t->mWhen > now)
-        t->mWhen -= now;
+        t->mTimeRemaining = now - t->mWhen;
       else
-        t->mWhen = 0;
+        t->mTimeRemaining = TimeDuration(0);
   
       // Drop the XPCOM timer; we'll reschedule when restoring the state.
       if (t->mTimer) {
@@ -9198,9 +9199,9 @@ nsGlobalWindow::ResumeTimeouts(PRBool aThawChildren)
     }
 
     // Restore all of the timeouts, using the stored time remaining
-    // (stored in timeout->mWhen).
+    // (stored in timeout->mTimeRemaining).
 
-    PRTime now = PR_Now();
+    TimeStamp now = TimeStamp::Now();
 
 #ifdef DEBUG
     PRBool _seenDummyTimeout = PR_FALSE;
@@ -9218,18 +9219,16 @@ nsGlobalWindow::ResumeTimeouts(PRBool aThawChildren)
         continue;
       }
 
-      // Make sure to cast the unsigned PR_USEC_PER_MSEC to signed
-      // PRTime to make the division do the right thing on 64-bit
-      // platforms whether t->mWhen is positive or negative (which is
-      // likely to always be positive here, but cast anyways for
-      // consistency).
+      // XXXbz the combination of the way |delay| and |t->mWhen| are set here
+      // makes no sense.  Are we trying to impose that min timeout value or
+      // not???
       PRUint32 delay =
-        NS_MAX(((PRUint32)(t->mWhen / (PRTime)PR_USEC_PER_MSEC)),
-               (PRUint32)DOM_MIN_TIMEOUT_VALUE);
+        NS_MAX(PRInt32(t->mTimeRemaining.ToMilliseconds()),
+               DOM_MIN_TIMEOUT_VALUE);
 
       // Set mWhen back to the time when the timer is supposed to
       // fire.
-      t->mWhen += now;
+      t->mWhen = now + t->mTimeRemaining;
 
       t->mTimer = do_CreateInstance("@mozilla.org/timer;1");
       NS_ENSURE_TRUE(t->mTimer, NS_ERROR_OUT_OF_MEMORY);
