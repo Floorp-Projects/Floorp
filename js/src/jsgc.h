@@ -137,14 +137,8 @@ js_LockGCThingRT(JSRuntime *rt, void *thing);
 extern void
 js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
-extern JS_FRIEND_API(bool)
+extern bool
 js_IsAboutToBeFinalized(void *thing);
-
-extern JS_FRIEND_API(uint32)
-js_SetMarkColor(JSTracer *trc, uint32 color);
-
-extern JS_FRIEND_API(bool)
-js_GCThingIsMarked(void *thing, uint32 color);
 
 /*
  * Macro to test if a traversal is the marking phase of GC to avoid exposing

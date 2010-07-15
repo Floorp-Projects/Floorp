@@ -408,8 +408,6 @@ private:
 ****************************************************************************
 ***************************************************************************/
 
-static const uint32 XPC_GC_COLOR_GRAY = 1;
-
 // We have a general rule internally that getters that return addref'd interface
 // pointer generally do so using an 'out' parm. When interface pointers are
 // returned as function call result values they are not addref'd. Exceptions
@@ -469,11 +467,6 @@ public:
 
     JSBool IsShuttingDown() const {return mShuttingDown;}
 
-    // The JS GC marks objects gray that are held alive directly or indirectly
-    // by an XPConnect root. The cycle collector explores only this subset
-    // of the JS heap.
-    static JSBool IsGray(void *thing);
-
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
@@ -493,6 +486,14 @@ public:
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
 #endif
+
+    // We should not trace XPConnect JS roots when tracing the graph for the
+    // cycle collector. Those should be traced from the XPCOM objects that hold
+    // them when we know that they won't be collected by the cycle collector.
+    PRBool ShouldTraceRoots()
+    {
+        return !mCycleCollecting;
+    }
 
     XPCCallContext* GetCycleCollectionContext()
     {
@@ -673,7 +674,7 @@ public:
     }
 
     static void TraceJS(JSTracer* trc, void* data);
-    void TraceXPConnectRoots(JSTracer *trc);
+    void TraceXPConnectRoots(JSTracer *trc, JSBool rootGlobals = JS_FALSE);
     void AddXPConnectRoots(JSContext* cx,
                            nsCycleCollectionTraversalCallback& cb);
 
@@ -686,7 +687,10 @@ public:
     nsresult AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
     nsresult RemoveJSHolder(void* aHolder);
 
-    void ClearWeakRoots();
+    void UnrootContextGlobals();
+#ifdef DEBUG_CC
+    void RootContextGlobals();
+#endif
 
     void DebugDump(PRInt16 depth);
 
@@ -750,6 +754,7 @@ private:
     XPCRootSetElem *mWrappedJSRoots;
     XPCRootSetElem *mObjectHolderRoots;
     JSDHashTable mJSHolders;
+    uintN mUnrootedGlobalCount;
     PRCondVar *mWatchdogWakeup;
     PRThread *mWatchdogThread;
     nsTArray<JSGCCallback> extraGCCallbacks;

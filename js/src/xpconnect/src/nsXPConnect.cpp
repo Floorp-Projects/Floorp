@@ -349,7 +349,7 @@ XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
     switch(status)
     {
       case JSGC_BEGIN:
-        nsXPConnect::GetRuntimeInstance()->ClearWeakRoots();
+        nsXPConnect::GetRuntimeInstance()->UnrootContextGlobals();
         break;
 
       case JSGC_MARK_END:
@@ -362,6 +362,11 @@ XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
             gDidCollection = PR_TRUE;
             gInCollection = nsCycleCollector_beginCollection();
         }
+
+        // Mark JS objects that are held by XPCOM objects that are in cycles
+        // that will not be collected.
+        nsXPConnect::GetRuntimeInstance()->
+            TraceXPConnectRoots(cx->runtime->gcMarkingTracer, JS_TRUE);
         break;
 
       case JSGC_END:
@@ -391,28 +396,34 @@ nsXPConnect::Collect()
     // 2. roots held by C++ objects that participate in cycle collection,
     //    held by XPConnect (see XPCJSRuntime::TraceXPConnectRoots). Roots from
     //    this category are considered grey in the cycle collector, their final
-    //    color depends on the objects that hold them.
+    //    color depends on the objects that hold them. It is thus very important
+    //    to always traverse the objects that hold these objects during cycle
+    //    collection (see XPCJSRuntime::AddXPConnectRoots).
     //
     // Note that if a root is in both categories it is the fact that it is in
     // category 1 that takes precedence, so it will be considered black.
     //
-    // During garbage collection we switch to an additional mark color (gray)
-    // when tracing inside TraceXPConnectRoots. This allows us to walk those
-    // roots later on and add all objects reachable only from them to the
-    // cycle collector.
     //
-    // Phases:
+    // We split up garbage collection into 3 phases (1, 3 and 4) and do cycle
+    // collection between the first 2 phases of garbage collection:
     //
     // 1. marking of the roots in category 1 by having the JS GC do its marking
-    // 2. marking of the roots in category 2 by XPCJSRuntime::TraceXPConnectRoots
-    //    using an additional color (gray).
-    // 3. end of GC, GC can sweep its heap
-    // 4. walk gray objects and add them to the cycle collector, cycle collect
+    // 2. cycle collection
+    // 3. marking of the roots in category 2 by
+    //    XPCJSRuntime::TraceXPConnectRoots 
+    // 4. sweeping of unmarked JS objects
     //
-    // JS objects that are part of cycles the cycle collector breaks will be
-    // collected by the next JS.
+    // During cycle collection, marked JS objects (and the objects they hold)
+    // will be colored black. White objects holding roots from category 2 will
+    // be forgotten by XPConnect (in the unlink callback of the white objects).
+    // During phase 3 we'll only mark black objects holding JS objects (white
+    // objects were forgotten) and white JS objects will be swept during
+    // phase 4.
+    // Because splitting up the JS GC itself is hard, we're going to use a GC
+    // callback to do phase 2 and 3 after phase 1 has ended (see
+    // XPCCycleCollectGCCallback).
     //
-    // If DEBUG_CC is not defined the cycle collector will not traverse roots
+    // If DEBUG_CC is not defined the cycle collector will not traverse  roots
     // from category 1 or any JS objects held by them. Any JS objects they hold
     // will already be marked by the JS GC and will thus be colored black
     // themselves. Any C++ objects they hold will have a missing (untraversed)
@@ -532,6 +543,8 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb)
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
+        GetRuntime()->UnrootContextGlobals();
+
         PRBool alreadyCollecting = mCycleCollecting;
         mCycleCollecting = PR_TRUE;
         NoteJSRootTracer trc(&mJSRoots, cb);
@@ -559,6 +572,8 @@ nsXPConnect::FinishCycleCollection()
     {
         mCycleCollectionContext = nsnull;
         mExplainCycleCollectionContext = nsnull;
+
+        GetRuntime()->RootContextGlobals();
     }
 #endif
 
@@ -576,8 +591,6 @@ nsXPConnect::FinishCycleCollection()
 nsCycleCollectionParticipant *
 nsXPConnect::ToParticipant(void *p)
 {
-    if (!ADD_TO_CC(js_GetGCThingTraceKind(p)))
-        return NULL;
     return this;
 }
 
@@ -680,12 +693,6 @@ WrapperIsNotMainThreadOnly(XPCWrappedNative *wrapper)
     return NS_FAILED(CallQueryInterface(wrapper->Native(), &participant));
 }
 
-JSBool
-nsXPConnect::IsGray(void *thing)
-{
-    return js_GCThingIsMarked(thing, XPC_GC_COLOR_GRAY);
-}
-
 NS_IMETHODIMP
 nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 {
@@ -750,7 +757,8 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 #endif
     {
         // Normal codepath (matches non-DEBUG_CC codepath).
-        type = !markJSObject && IsGray(p) ? GCUnmarked : GCMarked;
+        type = !markJSObject && JS_IsAboutToBeFinalized(cx, p) ? GCUnmarked :
+                                                                 GCMarked;
     }
 
     if (cb.WantDebugInfo()) {
@@ -880,6 +888,9 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         cb.DescribeNode(type, 0, sizeof(JSObject), "JS Object");
     }
 
+    if(!ADD_TO_CC(traceKind))
+        return NS_OK;
+
     // There's no need to trace objects that have already been marked by the JS
     // GC. Any JS objects hanging from them will already be marked. Only do this
     // if DEBUG_CC is not defined, else we do want to know about all JS objects
@@ -937,9 +948,6 @@ class JSContextParticipant : public nsCycleCollectionParticipant
 public:
     NS_IMETHOD RootAndUnlinkJSObjects(void *n)
     {
-        JSContext *cx = static_cast<JSContext*>(n);
-        NS_ASSERTION(cx->globalObject, "global object NULL before unlinking");
-        cx->globalObject = nsnull;
         return NS_OK;
     }
     NS_IMETHOD Unlink(void *n)
@@ -965,10 +973,8 @@ public:
         cb.DescribeNode(RefCounted, refCount, sizeof(JSContext),
                         "JSContext");
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
-        if (cx->globalObject) {
-            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                               cx->globalObject);
-        }
+        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                           cx->globalObject);
 
         return NS_OK;
     }
