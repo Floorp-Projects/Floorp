@@ -146,7 +146,6 @@
                 command="History:UndoCloseTab"/>
       <menuseparator/>
       <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
-                tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.removeTab(TabContextMenu.contextTab);"/>
     </menupopup>
 
