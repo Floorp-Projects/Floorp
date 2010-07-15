@@ -1181,9 +1181,19 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
                           PRUint32 aFlags)
 {
+  nsPresContext* presContext = aFrame->PresContext();
+
+  nsRegion visibleRegion;
+  if (aFlags & PAINT_WIDGET_LAYERS) {
+    // This layer tree will be reused, so we'll need to calculate it
+    // for the whole visible area of the window
+    visibleRegion = aFrame->GetOverflowRectRelativeToSelf();
+  } else {
+    visibleRegion = aDirtyRegion;
+  }
+
   nsDisplayListBuilder builder(aFrame, PR_FALSE, PR_TRUE);
   nsDisplayList list;
-  nsRect dirtyRect = aDirtyRegion.GetBounds();
   if (aFlags & PAINT_IN_TRANSFORM) {
     builder.SetInTransform(PR_TRUE);
   }
@@ -1195,6 +1205,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   }
   nsresult rv;
 
+  nsRect dirtyRect = visibleRegion.GetBounds();
   builder.EnterPresShell(aFrame, dirtyRect);
 
   rv = aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
@@ -1221,9 +1232,9 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   // For the viewport frame in print preview/page layout we want to paint
   // the grey background behind the page, not the canvas color.
   if (frameType == nsGkAtoms::viewportFrame &&
-      aFrame->PresContext()->IsRootPaginatedDocument() &&
-      (aFrame->PresContext()->Type() == nsPresContext::eContext_PrintPreview ||
-       aFrame->PresContext()->Type() == nsPresContext::eContext_PageLayout)) {
+      presContext->IsRootPaginatedDocument() &&
+      (presContext->Type() == nsPresContext::eContext_PrintPreview ||
+       presContext->Type() == nsPresContext::eContext_PageLayout)) {
     nsRect bounds = nsRect(builder.ToReferenceFrame(aFrame),
                            aFrame->GetSize());
     rv = list.AppendNewToBottom(new (&builder) nsDisplaySolidColor(
@@ -1236,7 +1247,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     // item once, for the nsPageContentFrame.
 
     // Add the canvas background color.
-    rv = aFrame->PresContext()->PresShell()->AddCanvasBackgroundColorItem(
+    rv = presContext->PresShell()->AddCanvasBackgroundColorItem(
            builder, list, aFrame, nsnull, aBackstop);
   }
 
@@ -1251,7 +1262,6 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   }
 #endif
 
-  nsRegion visibleRegion = aDirtyRegion;
   list.ComputeVisibility(&builder, &visibleRegion, nsnull);
 
 #ifdef DEBUG
@@ -1265,13 +1275,24 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
     nsIWidget *widget = aFrame->GetNearestWidget();
-    PRInt32 pixelRatio = widget->GetDeviceContext()->AppUnitsPerDevPixel();
+    PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
     nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
     nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
 
+    // XXX we should simplify this API now that dirtyWindowRegion always
+    // covers the entire window
     widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
   }
+
   list.PaintRoot(&builder, aRenderingContext, flags);
+
+#ifdef DEBUG
+  if (gDumpPaintList) {
+    fprintf(stderr, "Painting --- retained layer tree:\n");
+    builder.LayerBuilder()->DumpRetainedLayerTree();
+  }
+#endif
+
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
   return NS_OK;
