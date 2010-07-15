@@ -6388,7 +6388,7 @@ nsCSSFrameConstructor::CreateNeededFrames(nsIContent* aContent)
       if (inRun) {
         inRun = PR_FALSE;
         // generate a ContentRangeInserted for [startOfRun,i)
-        ContentRangeInserted(aContent, firstChildInRun, startOfRun, i,
+        ContentRangeInserted(aContent, firstChildInRun, child, startOfRun, i,
                              nsnull, PR_FALSE);
       }
     }
@@ -6857,6 +6857,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 {
   return ContentRangeInserted(aContainer,
                               aChild,
+                              aChild->GetNextSibling(),
                               aIndexInContainer,
                               aIndexInContainer+1,
                               aFrameState,
@@ -6883,7 +6884,8 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 // frames constructed but not yet inserted into the frame tree).
 nsresult
 nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
-                                            nsIContent*            aChild,
+                                            nsIContent*            aStartChild,
+                                            nsIContent*            aEndChild,
                                             PRInt32                aIndexInContainer,
                                             PRInt32                aEndIndexInContainer,
                                             nsILayoutHistoryState* aFrameState,
@@ -6893,21 +6895,23 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   NS_PRECONDITION(mUpdateCount != 0,
                   "Should be in an update while creating frames");
 
-  NS_PRECONDITION(aChild, "must always pass a child");
+  NS_PRECONDITION(aStartChild, "must always pass a child");
 
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ContentRangeInserted container=%p child=%p"
+    printf("nsCSSFrameConstructor::ContentRangeInserted container=%p "
+           "start-child=%p end-child=%p "
            "index=%d endindex=%d lazy=%d\n",
-           static_cast<void*>(aContainer), static_cast<void*>(aChild),
+           static_cast<void*>(aContainer),
+           static_cast<void*>(aStartChild), static_cast<void*>(aEndChild),
            aIndexInContainer, aEndIndexInContainer, aAllowLazyConstruction);
     if (gReallyNoisyContentUpdates) {
       if (aContainer) {
         aContainer->List(stdout,0);
       } else {
-        aChild->List(stdout, 0);
+        aStartChild->List(stdout, 0);
       }
     }
   }
@@ -6927,8 +6931,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     if (isSingleInsert) {
       // aIndexInContainer might be bogus here, but it's not used by
       // NotifyListBoxBody's CONTENT_INSERTED handling in any case.
-      if (NotifyListBoxBody(mPresShell->GetPresContext(), aContainer, aChild,
-                            aIndexInContainer, 
+      if (NotifyListBoxBody(mPresShell->GetPresContext(), aContainer,
+                            aStartChild, aIndexInContainer, 
                             mDocument, nsnull, CONTENT_INSERTED)) {
         return NS_OK;
       }
@@ -6953,7 +6957,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
                  "root node insertion should be a single insertion");
     Element *docElement = mDocument->GetRootElement();
 
-    if (aChild != docElement) {
+    if (aStartChild != docElement) {
       // Not the root element; just bail out
       return NS_OK;
     }
@@ -6966,7 +6970,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     rv = ConstructDocElementFrame(docElement, aFrameState, &docElementFrame);
 
     if (NS_SUCCEEDED(rv) && docElementFrame) {
-      InvalidateCanvasIfNeeded(mPresShell, aChild);
+      InvalidateCanvasIfNeeded(mPresShell, aStartChild);
 #ifdef DEBUG
       if (gReallyNoisyContentUpdates) {
         printf("nsCSSFrameConstructor::ContentRangeInserted: resulting frame "
@@ -6985,7 +6989,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     return NS_OK;
 
   if (aAllowLazyConstruction &&
-      MaybeConstructLazily(CONTENTINSERT, aContainer, aChild,
+      MaybeConstructLazily(CONTENTINSERT, aContainer, aStartChild,
                            aIndexInContainer)) {
     return NS_OK;
   }
@@ -6995,7 +6999,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     // real parent frame; if not, then the frame hasn't been built yet
     // and we just bail.
     nsIFrame* insertionPoint;
-    GetInsertionPoint(parentFrame, aChild, &insertionPoint);
+    GetInsertionPoint(parentFrame, aStartChild, &insertionPoint);
     if (! insertionPoint)
       return NS_OK; // Don't build the frames.
 
@@ -7014,7 +7018,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
 
   PRBool isAppend, isRangeInsertSafe;
   nsIFrame* prevSibling =
-    GetInsertionPrevSibling(parentFrame, aContainer, aChild, aIndexInContainer,
+    GetInsertionPrevSibling(parentFrame, aContainer,
+                            aStartChild, aIndexInContainer,
                             &isAppend, &isRangeInsertSafe);
 
   // check if range insert is safe
@@ -7032,7 +7037,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   nsIAtom* frameType = parentFrame->GetType();
   if (isSingleInsert) {
     if (frameType == nsGkAtoms::frameSetFrame &&
-        IsSpecialFramesetChild(aChild)) {
+        IsSpecialFramesetChild(aStartChild)) {
       // Just reframe the parent, since framesets are weird like that.
       LAYOUT_PHASE_TEMP_EXIT();
       nsresult rv = RecreateFramesForContent(parentFrame->GetContent(), PR_FALSE);
@@ -7054,7 +7059,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   NS_ASSERTION(isSingleInsert || frameType != nsGkAtoms::fieldSetFrame,
                "Unexpected parent");
   if (frameType == nsGkAtoms::fieldSetFrame &&
-      aChild->Tag() == nsGkAtoms::legend) {
+      aStartChild->Tag() == nsGkAtoms::legend) {
     // Just reframe the parent, since figuring out whether this
     // should be the new legend and then handling it is too complex.
     // We could do a little better here --- check if the fieldset already
@@ -7071,7 +7076,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   if (parentFrame->IsLeaf()) {
     // Clear lazy bits so we don't try to construct again.
     if (isSingleInsert) {
-      aChild->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
+      aStartChild->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
     } else {
       ClearLazyBitsInChildren(aContainer, aIndexInContainer,
                               aEndIndexInContainer);
@@ -7148,8 +7153,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
       // Removing the letterframes messes around with the frame tree, removing
       // and creating frames.  We need to reget our prevsibling, parent frame,
       // etc.
-      prevSibling = GetInsertionPrevSibling(parentFrame, aContainer, aChild,
-        aIndexInContainer, &isAppend, &isRangeInsertSafe);
+      prevSibling = GetInsertionPrevSibling(parentFrame, aContainer,
+                                            aStartChild, aIndexInContainer,
+                                            &isAppend, &isRangeInsertSafe);
 
       // Need check whether a range insert is still safe.
       if (!isSingleInsert && !isRangeInsertSafe) {
@@ -7201,7 +7207,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   }
 
   if (isSingleInsert) {
-    AddFrameConstructionItems(state, aChild, aIndexInContainer, parentFrame, items);
+    AddFrameConstructionItems(state, aStartChild, aIndexInContainer,
+                              parentFrame, items);
   } else {
     for (PRUint32 i = aIndexInContainer;
          i < (PRUint32)aEndIndexInContainer;
@@ -7243,7 +7250,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
 
   if (frameItems.NotEmpty()) {
     if (isSingleInsert) {
-      InvalidateCanvasIfNeeded(mPresShell, aChild);
+      InvalidateCanvasIfNeeded(mPresShell, aStartChild);
     } else {
       for (PRUint32 i = aIndexInContainer;
            i < (PRUint32)aEndIndexInContainer;
@@ -7336,7 +7343,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     PRBool ignored;
     if (isSingleInsert) {
       captionPrevSibling =
-        GetInsertionPrevSibling(captionParent, aContainer, aChild,
+        GetInsertionPrevSibling(captionParent, aContainer, aStartChild,
                                 aIndexInContainer, &captionIsAppend, &ignored);
     } else {
       nsIContent* firstCaption = captionItems.FirstChild()->GetContent();
@@ -7346,7 +7353,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
       captionPrevSibling =
         GetInsertionPrevSibling(captionParent, aContainer, firstCaption,
           aContainer->IndexOf(firstCaption), &captionIsAppend, &ignored,
-          aIndexInContainer, aChild,
+          aIndexInContainer, aStartChild,
           aEndIndexInContainer, aContainer->GetChildAt(aEndIndexInContainer));
     }
 

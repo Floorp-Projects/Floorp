@@ -228,15 +228,15 @@ public:
                            PRBool                 aAllowLazyConstruction);
 
   // Like ContentInserted but handles inserting the children of aContainer in
-  // the range [aIndexInContainer, aEndIndexInContainer).
-  // aChild must be non-null. For inserting a single node it should be that
-  // node. For inserting more than one node, aChild must be the first child
-  // being inserted.
-  // If aAllowLazyConstruction is true then frame construction of the new
-  // children can be done lazily. It is only allowed to be true when inserting
-  // a single node.
+  // the range [aIndexInContainer, aEndIndexInContainer).  aStartChild is the
+  // child at aIndexInContainer, and must be non-null.  aEndChild is the node at
+  // aEndIndexInContainer (which may be null if the range is at the end of the
+  // child list).  If aAllowLazyConstruction is true then frame construction of
+  // the new children can be done lazily. It is only allowed to be true when
+  // inserting a single node.
   nsresult ContentRangeInserted(nsIContent*            aContainer,
-                                nsIContent*            aChild,
+                                nsIContent*            aStartChild,
+                                nsIContent*            aEndChild,
                                 PRInt32                aIndexInContainer,
                                 PRInt32                aEndIndexInContainer,
                                 nsILayoutHistoryState* aFrameState,
