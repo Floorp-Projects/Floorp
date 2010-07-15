@@ -837,6 +837,15 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
     // Assign the item to a layer
     if (layerState == LAYER_ACTIVE) {
+      // If the item would have its own layer but is invisible, just hide it.
+      // Note that items without their own layers can't be skipped this
+      // way, since their ThebesLayer may decide it wants to draw them
+      // into its buffer even if they're currently covered.
+      if (itemVisibleRect.IsEmpty()) {
+        InvalidateForLayerChange(item, nsnull);
+        continue;
+      }
+
       // Just use its layer.
       nsRefPtr<Layer> ownLayer = item->BuildLayer(mBuilder, mManager);
       if (!ownLayer) {

@@ -289,13 +289,14 @@ nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
   return bounds;
 }
 
-void
+PRBool
 nsDisplayList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion,
                                  nsRegion* aVisibleRegionBeforeMove) {
   NS_ASSERTION(!aVisibleRegionBeforeMove, "Not supported anymore");
 
   mVisibleRect = aVisibleRegion->GetBounds();
+  PRBool anyVisible = PR_FALSE;
 
   nsAutoTArray<nsDisplayItem*, 512> elements;
   FlattenTo(&elements);
@@ -316,24 +317,22 @@ nsDisplayList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     itemVisible.And(*aVisibleRegion, bounds);
     item->mVisibleRect = itemVisible.GetBounds();
 
-    if (!item->mVisibleRect.IsEmpty() &&
-        item->ComputeVisibility(aBuilder, aVisibleRegion, aVisibleRegionBeforeMove)) {
-      AppendToBottom(item);
-
+    if (item->ComputeVisibility(aBuilder, aVisibleRegion, aVisibleRegionBeforeMove)) {
+      anyVisible = PR_TRUE;
       nsIFrame* f = item->GetUnderlyingFrame();
       if (item->IsOpaque(aBuilder) && f) {
         // Subtract opaque item from the visible region
         aBuilder->SubtractFromVisibleRegion(aVisibleRegion, nsRegion(bounds));
       }
-    } else {
-      item->~nsDisplayItem();
     }
+    AppendToBottom(item);
   }
 
   mIsOpaque = aVisibleRegion->IsEmpty();
 #ifdef DEBUG
   mDidComputeVisibility = PR_TRUE;
 #endif
+  return anyVisible;
 }
 
 void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
@@ -587,8 +586,7 @@ PRBool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
   itemVisible.And(*aVisibleRegion, bounds);
   mVisibleRect = itemVisible.GetBounds();
 
-  if (mVisibleRect.IsEmpty() ||
-      !ComputeVisibility(aBuilder, aVisibleRegion, nsnull))
+  if (!ComputeVisibility(aBuilder, aVisibleRegion, nsnull))
     return PR_FALSE;
 
   if (IsOpaque(aBuilder)) {
@@ -636,6 +634,10 @@ nsDisplayBackground::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                        nsRegion* aVisibleRegion,
                                        nsRegion* aVisibleRegionBeforeMove)
 {
+  if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
+                                        aVisibleRegionBeforeMove))
+    return PR_FALSE;
+
   // Return false if the background was propagated away from this
   // frame. We don't want this display item to show up and confuse
   // anything.
@@ -990,9 +992,7 @@ PRBool
 nsDisplayWrapList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                      nsRegion* aVisibleRegion,
                                      nsRegion* aVisibleRegionBeforeMove) {
-  mList.ComputeVisibility(aBuilder, aVisibleRegion, aVisibleRegionBeforeMove);
-  // If none of the items are visible, they will all have been deleted
-  return mList.GetTop() != nsnull;
+  return mList.ComputeVisibility(aBuilder, aVisibleRegion, aVisibleRegionBeforeMove);
 }
 
 PRBool
