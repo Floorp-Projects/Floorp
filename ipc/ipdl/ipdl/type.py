@@ -834,7 +834,7 @@ class GatherDecls(TcheckVisitor):
         self.declare(loc=State.DEAD.loc,
                      type=StateType(p.decl.type, State.DEAD.name, start=False),
                      progname=State.DEAD.name)
-                
+
         # declare each state before decorating their mention
         for trans in p.transitionStmts:
             p.states[trans.state] = trans
