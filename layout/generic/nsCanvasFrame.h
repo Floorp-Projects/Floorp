@@ -184,7 +184,6 @@ public:
     return NS_GET_A(mExtraBackgroundColor) == 255 ||
            nsDisplayBackground::IsOpaque(aBuilder);
   }
-  virtual PRBool IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
   {
     nscolor background;
