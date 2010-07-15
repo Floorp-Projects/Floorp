@@ -805,6 +805,11 @@ public:
       : GetPosition();
   }
 
+  static void DestroyRegion(void* aPropertyValue)
+  {
+    delete static_cast<nsRegion*>(aPropertyValue);
+  }
+
   static void DestroyMargin(void* aPropertyValue)
   {
     delete static_cast<nsMargin*>(aPropertyValue);
@@ -1794,6 +1799,23 @@ public:
    * be constructed.
    */
   virtual PRBool IsLeaf() const;
+
+  /**
+   * This must only be called on frames that are display roots (see
+   * nsLayoutUtils::GetDisplayRootFrame). This causes all invalidates
+   * reaching this frame to be performed asynchronously off an event,
+   * instead of being applied to the widget immediately. Also,
+   * invalidation of areas in aExcludeRegion is ignored completely.
+   * These can't be nested; two invocations of
+   * BeginDeferringInvalidatesForDisplayRoot for a frame must have a
+   * EndDeferringInvalidatesForDisplayRoot between them.
+   */
+  void BeginDeferringInvalidatesForDisplayRoot(const nsRegion& aExcludeRegion);
+
+  /**
+   * Cancel the most recent BeginDeferringInvalidatesForDisplayRoot.
+   */
+  void EndDeferringInvalidatesForDisplayRoot();
 
   /**
    * @param aFlags see InvalidateInternal below
