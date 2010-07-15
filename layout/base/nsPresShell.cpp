@@ -818,12 +818,6 @@ public:
                    nsIWidget* aWidget,
                    const nsRegion& aDirtyRegion,
                    PRBool aPaintDefaultBackground);
-  NS_IMETHOD ComputeRepaintRegionForCopy(nsIView*      aRootView,
-                                         nsIView*      aMovingView,
-                                         nsPoint       aDelta,
-                                         const nsRect& aUpdateRect,
-                                         nsRegion*     aBlitRegion,
-                                         nsRegion*     aRepaintRegion);
   NS_IMETHOD HandleEvent(nsIView*        aView,
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
@@ -5196,22 +5190,6 @@ nsIFrame*
 PresShell::GetPlaceholderFrameFor(nsIFrame* aFrame) const
 {
   return FrameManager()->GetPlaceholderFrameFor(aFrame);
-}
-
-//nsIViewObserver
-
-NS_IMETHODIMP
-PresShell::ComputeRepaintRegionForCopy(nsIView*      aRootView,
-                                       nsIView*      aMovingView,
-                                       nsPoint       aDelta,
-                                       const nsRect& aUpdateRect,
-                                       nsRegion*     aBlitRegion,
-                                       nsRegion*     aRepaintRegion)
-{
-  return nsLayoutUtils::ComputeRepaintRegionForCopy(
-      static_cast<nsIFrame*>(aRootView->GetClientData()),
-      static_cast<nsIFrame*>(aMovingView->GetClientData()),
-      aDelta, aUpdateRect, aBlitRegion, aRepaintRegion);
 }
 
 nsresult

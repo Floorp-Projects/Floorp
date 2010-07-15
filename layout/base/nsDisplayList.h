@@ -174,11 +174,8 @@ public:
    *   this receives a bounding region for the visible moving content
    * (considering the moving content both before and after the move)
    */
-  void SetMovingFrame(nsIFrame* aMovingFrame, const nsPoint& aMoveDelta,
-                      nsRegion* aSaveVisibleRegionOfMovingContent) {
+  void SetMovingFrame(nsIFrame* aMovingFrame) {
     mMovingFrame = aMovingFrame;
-    mMoveDelta = aMoveDelta;
-    mSaveVisibleRegionOfMovingContent = aSaveVisibleRegionOfMovingContent;
   }
 
   /**
@@ -189,19 +186,6 @@ public:
    * @return the frame that was moved
    */
   nsIFrame* GetRootMovingFrame() { return mMovingFrame; }
-  /**
-   * @return the amount by which mMovingFrame was moved.
-   * Only valid when GetRootMovingFrame() returns non-null.
-   */
-  const nsPoint& GetMoveDelta() { return mMoveDelta; }
-  /**
-   * Given the bounds of some moving content, and a visible region,
-   * intersect the bounds with the visible region and add it to the
-   * recorded region of visible moving content.
-   */
-  void AccumulateVisibleRegionOfMovingContent(const nsRegion& aMovingContent,
-                                              const nsRegion& aVisibleRegionBeforeMove,
-                                              const nsRegion& aVisibleRegionAfterMove);
 
   /**
    * @return PR_TRUE if aFrame is, or is a descendant of, the hypothetical
@@ -262,6 +246,7 @@ public:
    * Call this if we're doing normal painting to the window.
    */
   void SetPaintingToWindow(PRBool aToWindow) { mIsPaintingToWindow = aToWindow; }
+  PRBool IsPaintingToWindow() { return mIsPaintingToWindow; }
   /**
    * Display the caret if needed.
    */
@@ -421,9 +406,7 @@ private:
   FrameLayerBuilder              mLayerBuilder;
   nsIFrame*                      mReferenceFrame;
   nsIFrame*                      mMovingFrame;
-  nsRegion*                      mSaveVisibleRegionOfMovingContent;
   nsIFrame*                      mIgnoreScrollFrame;
-  nsPoint                        mMoveDelta; // only valid when mMovingFrame is non-null
   PLArenaPool                    mPool;
   nsCOMPtr<nsISelection>         mBoundingSelection;
   nsAutoTArray<PresShellState,8> mPresShellStates;
