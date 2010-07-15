@@ -103,10 +103,14 @@ class nsDisplayItem;
  * tree containing FRAME/IFRAME elements can include frames from the subdocuments.
  */
 
+// All types are defined in nsDisplayItemTypes.h
 #ifdef NS_DEBUG
-#define NS_DISPLAY_DECL_NAME(n) virtual const char* Name() { return n; }
+#define NS_DISPLAY_DECL_NAME(n, e) \
+  virtual const char* Name() { return n; } \
+  virtual Type GetType() { return e; }
 #else
-#define NS_DISPLAY_DECL_NAME(n) 
+#define NS_DISPLAY_DECL_NAME(n, e) \
+  virtual Type GetType() { return e; }
 #endif
 
 /**
@@ -485,24 +489,8 @@ public:
     return aBuilder->Allocate(aSize);
   }
 
-  /**
-   * It's useful to be able to dynamically check the type of certain items.
-   * For items whose type never gets checked, TYPE_GENERIC will suffice.
-   */
-  enum Type {
-    TYPE_GENERIC,
-
-    TYPE_BORDER,
-    TYPE_CLIP,
-    TYPE_OPACITY,
-    TYPE_OUTLINE,
-    TYPE_PLUGIN,
-#ifdef MOZ_SVG
-    TYPE_SVG_EFFECTS,
-#endif
-    TYPE_TRANSFORM,
-    TYPE_WRAPLIST
-  };
+// Contains all the type integers for each display list item type
+#include "nsDisplayItemTypes.h"
 
   struct HitTestState {
     ~HitTestState() {
@@ -517,7 +505,7 @@ public:
    * outlines for the same element. For this, we need a way for items to
    * identify their type.
    */
-  virtual Type GetType() { return TYPE_GENERIC; }
+  virtual Type GetType() = 0;
   /**
    * This is called after we've constructed a display list for event handling.
    * When this is called, we've already ensured that aRect intersects the
@@ -1054,11 +1042,12 @@ public:
   typedef void (* PaintCallback)(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                                  const nsRect& aDirtyRect, nsPoint aFramePt);
 
-  nsDisplayGeneric(nsIFrame* aFrame, PaintCallback aPaint, const char* aName)
+  nsDisplayGeneric(nsIFrame* aFrame, PaintCallback aPaint, const char* aName, Type aType)
     : nsDisplayItem(aFrame), mPaint(aPaint)
 #ifdef DEBUG
       , mName(aName)
 #endif
+      , mType(aType)
   {
     MOZ_COUNT_CTOR(nsDisplayGeneric);
   }
@@ -1071,12 +1060,13 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx) {
     mPaint(mFrame, aCtx, mVisibleRect, aBuilder->ToReferenceFrame(mFrame));
   }
-  NS_DISPLAY_DECL_NAME(mName)
+  NS_DISPLAY_DECL_NAME(mName, mType)
 protected:
   PaintCallback mPaint;
 #ifdef DEBUG
   const char*   mName;
 #endif
+  Type mType;
 };
 
 #if defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF)
@@ -1115,7 +1105,7 @@ public:
                                                       mFrame->PresContext(),
                                                       mFrame, mColor);
   }
-  NS_DISPLAY_DECL_NAME("nsDisplayReflowCount")
+  NS_DISPLAY_DECL_NAME("nsDisplayReflowCount", TYPE_REFLOW_COUNT)
 protected:
   const char* mFrameName;
   nscolor mColor;
@@ -1180,7 +1170,7 @@ public:
     return mCaret->GetCaretRect() + aBuilder->ToReferenceFrame(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("Caret")
+  NS_DISPLAY_DECL_NAME("Caret", TYPE_CARET)
 protected:
   nsRefPtr<nsCaret> mCaret;
 };
@@ -1199,12 +1189,11 @@ public:
   }
 #endif
 
-  virtual Type GetType() { return TYPE_BORDER; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove);
-  NS_DISPLAY_DECL_NAME("Border")
+  NS_DISPLAY_DECL_NAME("Border", TYPE_BORDER)
 };
 
 /**
@@ -1244,7 +1233,8 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
 
-  NS_DISPLAY_DECL_NAME("SolidColor")
+  NS_DISPLAY_DECL_NAME("SolidColor", TYPE_SOLID_COLOR)
+
 private:
   nsRect  mBounds;
   nscolor mColor;
@@ -1275,7 +1265,7 @@ public:
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("Background")
+  NS_DISPLAY_DECL_NAME("Background", TYPE_BACKGROUND)
 private:
   /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
   PRPackedBool mIsThemed;
@@ -1301,7 +1291,7 @@ public:
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove);
-  NS_DISPLAY_DECL_NAME("BoxShadowOuter")
+  NS_DISPLAY_DECL_NAME("BoxShadowOuter", TYPE_BOX_SHADOW_OUTER)
 
 private:
   nsRegion mVisibleRegion;
@@ -1325,7 +1315,7 @@ public:
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove);
-  NS_DISPLAY_DECL_NAME("BoxShadowInner")
+  NS_DISPLAY_DECL_NAME("BoxShadowInner", TYPE_BOX_SHADOW_INNER)
 
 private:
   nsRegion mVisibleRegion;
@@ -1345,13 +1335,12 @@ public:
   }
 #endif
 
-  virtual Type GetType() { return TYPE_OUTLINE; }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove);
-  NS_DISPLAY_DECL_NAME("Outline")
+  NS_DISPLAY_DECL_NAME("Outline", TYPE_OUTLINE)
 };
 
 /**
@@ -1373,7 +1362,7 @@ public:
   {
     aOutFrames->AppendElement(mFrame);
   }
-  NS_DISPLAY_DECL_NAME("EventReceiver")
+  NS_DISPLAY_DECL_NAME("EventReceiver", TYPE_EVENT_RECEIVER)
 };
 
 /**
@@ -1401,7 +1390,6 @@ public:
   nsDisplayWrapList(nsIFrame* aFrame, nsDisplayList* aList);
   nsDisplayWrapList(nsIFrame* aFrame, nsDisplayItem* aItem);
   virtual ~nsDisplayWrapList();
-  virtual Type GetType() { return TYPE_WRAPLIST; }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
@@ -1416,7 +1404,7 @@ public:
     NS_WARNING("This list should already have been flattened!!!");
     return PR_FALSE;
   }
-  NS_DISPLAY_DECL_NAME("WrapList")
+  NS_DISPLAY_DECL_NAME("WrapList", TYPE_WRAP_LIST)
                                     
   virtual nsDisplayList* GetList() { return &mList; }
   
@@ -1475,7 +1463,6 @@ public:
   virtual ~nsDisplayOpacity();
 #endif
   
-  virtual Type GetType() { return TYPE_OPACITY; }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager);
@@ -1483,7 +1470,7 @@ public:
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove);  
   virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
-  NS_DISPLAY_DECL_NAME("Opacity")
+  NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
 };
 
 /**
@@ -1506,14 +1493,13 @@ public:
   virtual ~nsDisplayClip();
 #endif
   
-  virtual Type GetType() { return TYPE_CLIP; }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove);
   virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
-  NS_DISPLAY_DECL_NAME("Clip")
+  NS_DISPLAY_DECL_NAME("Clip", TYPE_CLIP)
   
   nsRect GetClipRect() { return mClip; }
   void SetClipRect(const nsRect& aRect) { mClip = aRect; }
@@ -1543,7 +1529,6 @@ public:
   virtual ~nsDisplaySVGEffects();
 #endif
   
-  virtual Type GetType() { return TYPE_SVG_EFFECTS; }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
@@ -1555,7 +1540,7 @@ public:
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove);  
   virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
-  NS_DISPLAY_DECL_NAME("SVGEffects")
+  NS_DISPLAY_DECL_NAME("SVGEffects", TYPE_SVG_EFFECTS)
 
   nsIFrame* GetEffectsFrame() { return mEffectsFrame; }
 
@@ -1591,12 +1576,7 @@ public:
   }
 #endif
 
-  NS_DISPLAY_DECL_NAME("nsDisplayTransform");
-
-  virtual Type GetType() 
-  {
-    return TYPE_TRANSFORM;
-  }
+  NS_DISPLAY_DECL_NAME("nsDisplayTransform", TYPE_TRANSFORM);
 
 #ifdef NS_DEBUG
   nsDisplayWrapList* GetStoredList() { return &mStoredList; }

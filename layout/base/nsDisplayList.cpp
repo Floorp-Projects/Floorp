@@ -294,7 +294,7 @@ void
 nsDisplayList::FlattenTo(nsTArray<nsDisplayItem*>* aElements) {
   nsDisplayItem* item;
   while ((item = RemoveBottom()) != nsnull) {
-    if (item->GetType() == nsDisplayItem::TYPE_WRAPLIST) {
+    if (item->GetType() == nsDisplayItem::TYPE_WRAP_LIST) {
       item->GetList()->FlattenTo(aElements);
       item->~nsDisplayItem();
     } else {

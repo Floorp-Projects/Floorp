@@ -3888,7 +3888,7 @@ public:
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("Text")
+  NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
 };
 
 void

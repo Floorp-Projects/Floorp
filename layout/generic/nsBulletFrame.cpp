@@ -199,7 +199,7 @@ public:
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("Bullet")
+  NS_DISPLAY_DECL_NAME("Bullet", TYPE_BULLET)
 };
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,

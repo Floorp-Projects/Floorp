@@ -354,7 +354,7 @@ public:
   }
 #endif
   
-  NS_DISPLAY_DECL_NAME("Video")
+  NS_DISPLAY_DECL_NAME("Video", TYPE_VIDEO)
 
   // It would be great if we could override IsOpaque to return false here,
   // but it's probably not safe to do so in general. Video frames are
