@@ -1512,7 +1512,7 @@ public:
   NS_DISPLAY_DECL_NAME("Clip", TYPE_CLIP)
   virtual PRUint32 GetPerFrameKey() { return 0; }
   
-  nsRect GetClipRect() { return mClip; }
+  const nsRect& GetClipRect() { return mClip; }
   void SetClipRect(const nsRect& aRect) { mClip = aRect; }
   nsIFrame* GetClippingFrame() { return mClippingFrame; }
 
