@@ -251,11 +251,6 @@ public: // NOT in nsIViewManager, so private to the view module
 
   nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent);
 
-  virtual nsresult WillBitBlit(nsIView* aView, const nsRect& aRect,
-                               nsPoint aScrollAmount);
-  virtual void UpdateViewAfterScroll(nsIView *aView,
-                                     const nsRegion& aUpdateRegion);
-
   nsresult CreateRegion(nsIRegion* *result);
 
   PRBool IsRefreshEnabled() { return RootViewManager()->mUpdateBatchCnt == 0; }
@@ -298,7 +293,6 @@ private:
   PRInt32           mUpdateCnt;
   PRInt32           mUpdateBatchCnt;
   PRUint32          mUpdateBatchFlags;
-  PRInt32           mScrollCnt;
   // Use IsPainting() and SetPainting() to access mPainting.
   PRPackedBool      mPainting;
   PRPackedBool      mRecursiveRefreshPending;
