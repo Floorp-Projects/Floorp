@@ -62,20 +62,20 @@ CanvasElementFromContent(nsIContent *content)
   return domCanvas ? static_cast<nsHTMLCanvasElement*>(domCanvas.get()) : nsnull;
 }
 
-class nsDisplayItemCanvas : public nsDisplayItem {
+class nsDisplayCanvas : public nsDisplayItem {
 public:
-  nsDisplayItemCanvas(nsIFrame* aFrame)
+  nsDisplayCanvas(nsIFrame* aFrame)
     : nsDisplayItem(aFrame)
   {
-    MOZ_COUNT_CTOR(nsDisplayItemCanvas);
+    MOZ_COUNT_CTOR(nsDisplayCanvas);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayItemCanvas() {
-    MOZ_COUNT_DTOR(nsDisplayItemCanvas);
+  virtual ~nsDisplayCanvas() {
+    MOZ_COUNT_DTOR(nsDisplayCanvas);
   }
 #endif
 
-  NS_DISPLAY_DECL_NAME("nsDisplayItemCanvas")
+  NS_DISPLAY_DECL_NAME("nsDisplayCanvas")
 
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder) {
     nsIFrame* f = GetUnderlyingFrame();
@@ -273,8 +273,7 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aLists.Content()->AppendNewToTop(new (aBuilder)
-         nsDisplayItemCanvas(this));
+  rv = aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayCanvas(this));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DisplaySelectionOverlay(aBuilder, aLists,
