@@ -1554,12 +1554,14 @@ InvalidateFixedBackgroundFramesFromList(nsDisplayListBuilder* aBuilder,
     nsDisplayList* sublist = item->GetList();
     if (sublist) {
       InvalidateFixedBackgroundFramesFromList(aBuilder, *sublist);
-    } else if (item->IsVaryingRelativeToMovingFrame(aBuilder)) {
+      continue;
+    }
+    nsIFrame* f = item->GetUnderlyingFrame();
+    if (f && aBuilder->IsMovingFrame(f) &&
+        item->IsVaryingRelativeToMovingFrame(aBuilder)) {
       if (item->IsFixedAndCoveringViewport(aBuilder)) {
         // FrameLayerBuilder takes care of scrolling these
       } else {
-        nsIFrame* f = item->GetUnderlyingFrame();
-        NS_ASSERTION(f, "No underlying frame for varying item?");
         f->Invalidate(item->GetVisibleRect() - aBuilder->ToReferenceFrame(f));
       }
     }
@@ -1592,6 +1594,7 @@ InvalidateFixedBackgroundFrames(nsIFrame* aRootFrame,
   list.ComputeVisibility(&builder, &visibleRegion, nsnull);
 
   InvalidateFixedBackgroundFramesFromList(&builder, list);
+  list.DeleteAll();
 }
 
 PRBool nsGfxScrollFrameInner::IsAlwaysActive() const
@@ -1648,7 +1651,7 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
   if (flags & nsIFrame::INVALIDATE_NO_THEBES_LAYERS) {
     // XXX fix this to transform rectangle properly
     InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame,
-                                    mScrolledFrame->GetRect() + mOuter->GetOffsetTo(displayRoot));
+      GetScrollPortRect() + mOuter->GetOffsetTo(displayRoot));
   }
 }
 
