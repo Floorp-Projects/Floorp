@@ -42,7 +42,10 @@
 #include "cairo-xlib.h"
 #include "cairo-xlib-xrender.h"
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
+
 #include "nsTArray.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIPrefService.h"
 
 // Although the dimension parameters in the xCreatePixmapReq wire protocol are
 // 16-bit unsigned integers, the server's CreatePixmap returns BadAlloc if
@@ -157,6 +160,60 @@ gfxXlibSurface::Create(Screen *screen, XRenderPictFormat *format,
         return nsnull;
 
     return result.forget();
+}
+
+static PRBool GetForce24bppPref()
+{
+    PRBool val = PR_FALSE; // default
+
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefs)
+        return val;
+
+    prefs->GetBoolPref("mozilla.widget.force-24bpp", &val);
+    return val;
+}
+
+already_AddRefed<gfxASurface>
+gfxXlibSurface::CreateSimilarSurface(gfxContentType aContent,
+                                     const gfxIntSize& aSize)
+{
+    if (aContent == CONTENT_COLOR) {
+        // If the destination surface does not have an xrender format, then we
+        // won't be able to copy directly from another Xlib surface with a
+        // different format.  Either an xlib surface with the same visual (for
+        // XCopyArea) or an image surface might be sensible options there, but
+        // we just leave the decision to cairo_surface_create_similar.
+        XRenderPictFormat* format =
+            cairo_xlib_surface_get_xrender_format(CairoSurface());
+        if (format) {
+            // cairo_surface_create_similar will use a matching visual if it
+            // can.  However, systems with 16-bit or indexed default visuals
+            // may benefit from rendering with 24-bit formats.  This same code
+            // can also be used for opaque surfaces when not forcing 24-bit,
+            // so as to skip the black initialization that
+            // cairo_surface_create_simiar does.
+            static PRBool force24bpp = GetForce24bppPref();
+
+            if (force24bpp || (format->type == PictTypeDirect
+                               && format->direct.alphaMask != 0)) {
+                format = XRenderFindStandardFormat(mDisplay,
+                                                   PictStandardRGB24);
+            }
+
+            if (format) {
+                Screen* screen = cairo_xlib_surface_get_screen(CairoSurface());
+                nsRefPtr<gfxASurface> result =
+                    gfxXlibSurface::Create(screen, format, aSize, mDrawable);
+            
+                if (result)
+                    return result.forget();
+            }
+        }
+    }
+
+    // Fall back to cairo_surface_create_similar().
+    return gfxASurface::CreateSimilarSurface(aContent, aSize);
 }
 
 void

@@ -74,6 +74,9 @@ public:
 
     virtual ~gfxXlibSurface();
 
+    virtual already_AddRefed<gfxASurface>
+    CreateSimilarSurface(gfxContentType aType, const gfxIntSize& aSize);
+
     const gfxIntSize& GetSize() { return mSize; }
 
     Display* XDisplay() { return mDisplay; }
