@@ -8899,14 +8899,6 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
     return PR_TRUE;
   }
 
-  nsIContent* content = aFrame->GetContent();
-  if (content && content->IsRootOfNativeAnonymousSubtree()) {
-    // We can't handle reconstructing the root of a native anonymous subtree,
-    // so reconstruct the parent.
-    *aResult = RecreateFramesForContent(content->GetParent(), PR_FALSE);
-    return PR_TRUE;
-  }
-
   // Now check for possibly needing to reconstruct due to a pseudo parent
   nsIFrame* inFlowFrame =
     (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) ?
@@ -9037,6 +9029,16 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
     nsIFrame* nonGeneratedAncestor = nsLayoutUtils::GetNonGeneratedAncestor(frame);
     if (nonGeneratedAncestor->GetContent() != aContent) {
       return RecreateFramesForContent(nonGeneratedAncestor->GetContent(), aAsyncInsert);
+    }
+
+    nsIFrame* parent = frame->GetParent();
+    nsIContent* parentContent = parent ? parent->GetContent() : nsnull;
+    // If the parent frame is a leaf then the subsequent insert will fail to
+    // create a frame, so we need to recreate the parent content. This happens
+    // with native anonymous content from the editor.
+    if (parent && parent->IsLeaf() && parentContent &&
+        parentContent != aContent) {
+      return RecreateFramesForContent(parentContent, aAsyncInsert);
     }
   }
 
