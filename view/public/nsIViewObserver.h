@@ -47,8 +47,8 @@ class nsIRenderingContext;
 class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID  \
-  { 0xac43a985, 0xcae6, 0x499d, \
-    { 0xae, 0x8f, 0x9c, 0x92, 0xec, 0x6f, 0x2c, 0x47 } }
+  { 0x8e69db48, 0x9d01, 0x4c0a, \
+    { 0xb9, 0xea, 0xa4, 0x4b, 0xc5, 0x89, 0xc8, 0x63 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -75,7 +75,8 @@ public:
                    nsIView*        aViewToPaint,
                    nsIWidget*      aWidgetToPaint,
                    const nsRegion& aDirtyRegion,
-                   PRBool          aPaintDefaultBackground) = 0;
+                   PRBool          aPaintDefaultBackground,
+                   PRBool          aWillSendDidPaint) = 0;
 
   /* called when the observer needs to handle an event
    * @param aView  - where to start processing the event; the root view,
@@ -111,7 +112,14 @@ public:
    * gives the observer a chance to make some last-minute invalidates
    * and geometry changes if it wants to.
    */
-  NS_IMETHOD_(void) WillPaint() = 0;
+  NS_IMETHOD_(void) WillPaint(PRBool aWillSendDidPaint) = 0;
+
+  /**
+   * Notify the observer that we finished painting.  This
+   * gives the observer a chance to make some last-minute invalidates
+   * and geometry changes if it wants to.
+   */
+  NS_IMETHOD_(void) DidPaint() = 0;
 
   /**
    * Dispatch the given synthesized mouse move event, and if
