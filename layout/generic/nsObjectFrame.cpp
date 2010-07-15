@@ -1193,8 +1193,7 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove)
 {
-  NS_ASSERTION((aVisibleRegionBeforeMove != nsnull) == aBuilder->HasMovingFrames(),
-               "Should have aVisibleRegionBeforeMove when there are moving frames");
+  NS_ASSERTION(!aVisibleRegionBeforeMove, "not supported anymore");
 
   mVisibleRegion.And(*aVisibleRegion, GetBounds(aBuilder));  
   return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,

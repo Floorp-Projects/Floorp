@@ -683,13 +683,24 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
                                         nsIFrame* aStopAtAncestor,
                                         nsPoint* aOffset)
 {
-  // For now, just use aStopAtAncestor --- i.e., treat nothing as active.
-  // We'll make this more precise when we actually start using layers for
-  // scrolling.
-  if (aOffset) {
-    *aOffset = aFrame->GetOffsetTo(aStopAtAncestor);
+  nsPoint offset(0,0);
+  nsIFrame* f = aFrame;
+  while (f != aStopAtAncestor) {
+    NS_ASSERTION(!IsPopup(f), "Should have stopped before popup");
+    nsPoint extraOffset(0,0);
+    nsIFrame* parent = GetCrossDocParentFrame(f, &extraOffset);
+    if (!parent)
+      break;
+    nsIScrollableFrame* sf = do_QueryFrame(parent);
+    if (sf && sf->IsScrollingActive() && sf->GetScrolledFrame() == f)
+      break;
+    offset += f->GetPosition() + extraOffset;
+    f = parent;
   }
-  return aStopAtAncestor;
+  if (aOffset) {
+    *aOffset = offset;
+  }
+  return f;
 }
 
 // static
@@ -1023,7 +1034,6 @@ nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
 
 static PRBool gDumpPaintList = PR_FALSE;
 static PRBool gDumpEventList = PR_FALSE;
-static PRBool gDumpRepaintRegionForCopy = PR_FALSE;
 #endif
 
 nsIFrame*
@@ -1335,244 +1345,6 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
-  return NS_OK;
-}
-
-#ifdef DEBUG
-static void
-PrintAddedRegion(const char* aFormat, nsIFrame* aFrame,
-                 const nsRegion& aRegion)
-{
-  if (!gDumpRepaintRegionForCopy)
-    return;
-  fprintf(stderr, aFormat, (void*)aFrame);
-  fprintf(stderr, " : [");
-  nsRegionRectIterator iter(aRegion);
-  PRBool first = PR_TRUE;
-  const nsRect* r;
-  while ((r = iter.Next()) != nsnull) {
-    if (!first) {
-      fprintf(stderr, ",");
-    }
-    fprintf(stderr, "(%d,%d,%d,%d)",
-            r->x, r->y, r->XMost(), r->YMost());
-  }
-  fprintf(stderr, "]\n");
-}
-#endif
-
-static void
-AccumulateItemInRegion(nsRegion* aRegion, const nsRect& aUpdateRect,
-                       const nsRect& aItemRect, const nsRect& aExclude,
-                       nsDisplayItem* aItem)
-{
-  nsRect damageRect;
-  if (damageRect.IntersectRect(aUpdateRect, aItemRect)) {
-    nsRegion r;
-    r.Sub(damageRect, aExclude);
-#ifdef DEBUG
-    PrintAddedRegion("Adding rect for frame %p",
-                     aItem->GetUnderlyingFrame(), r);
-#endif
-    aRegion->Or(*aRegion, r);
-  }
-}
-
-static void
-AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
-                 const nsRect& aUpdateRect, const nsRect& aClipRect, nsPoint aDelta,
-                 nsRegion* aRegion)
-{
-  for (nsDisplayItem* item = aList->GetBottom(); item; item = item->GetAbove()) {
-    nsDisplayList* sublist = item->GetList();
-    if (sublist) {
-      nsDisplayItem::Type type = item->GetType();
-#ifdef MOZ_SVG
-      if (type == nsDisplayItem::TYPE_SVG_EFFECTS) {
-        nsDisplaySVGEffects* effectsItem = static_cast<nsDisplaySVGEffects*>(item);
-        if (!aBuilder->IsMovingFrame(effectsItem->GetEffectsFrame())) {
-          // Invalidate the whole thing
-          nsRect r;
-          r.IntersectRect(aClipRect, effectsItem->GetBounds(aBuilder));
- #ifdef DEBUG
-          PrintAddedRegion("Adding region for SVG effects frame %p",
-                           effectsItem->GetEffectsFrame(), nsRegion(r));
- #endif
-          aRegion->Or(*aRegion, r);
-        }
-      } else
-#endif
-      if (type == nsDisplayItem::TYPE_CLIP) {
-        nsDisplayClip* clipItem = static_cast<nsDisplayClip*>(item);
-        nsRect clip = aClipRect;
-        // If the clipping frame is moving, then it isn't clipping any
-        // non-moving content (see ApplyAbsPosClipping), so we don't need
-        // to do anything special, but we should not restrict aClipRect.
-        // If the clipping frame is not moving, but the moving frames
-        // are not in its descendants, then again we don't need to
-        // do anything special.
-        nsIFrame* clipFrame = clipItem->GetClippingFrame();
-        if (!aBuilder->IsMovingFrame(clipFrame) &&
-            nsLayoutUtils::IsProperAncestorFrameCrossDoc(clipFrame, aBuilder->GetRootMovingFrame())) {
-          nscoord appUnitsPerDevPixel = clipFrame->PresContext()->AppUnitsPerDevPixel();
-          // We know the nsDisplayClip will snap because we're in a context
-          // where pixels can be blitted and we don't traverse down through
-          // an nsDisplayTransform.
-          nsRect snappedClip =
-            clipItem->GetClipRect().ToNearestPixels(appUnitsPerDevPixel).
-            ToAppUnits(appUnitsPerDevPixel);
-          clip.IntersectRect(clip, snappedClip);
-
-          // Invalidate the translation of the source area that was clipped out
-          nsRegion clippedOutSource;
-          clippedOutSource.Sub(aUpdateRect - aDelta, clip);
-          clippedOutSource.MoveBy(aDelta);
- #ifdef DEBUG
-          PrintAddedRegion("Adding region for clipped out source frame %p",
-                           clipFrame, clippedOutSource);
- #endif
-          aRegion->Or(*aRegion, clippedOutSource);
-
-          // Invalidate the destination area that is clipped out
-          nsRegion clippedOutDestination;
-          clippedOutDestination.Sub(aUpdateRect, clip);
- #ifdef DEBUG
-          PrintAddedRegion("Adding region for clipped out destination frame %p",
-                           clipFrame, clippedOutDestination);
- #endif
-          aRegion->Or(*aRegion, clippedOutDestination);
-        }
-        AddItemsToRegion(aBuilder, sublist, aUpdateRect, clip, aDelta, aRegion);
-      } else {
-        // opacity, or a generic sublist
-        AddItemsToRegion(aBuilder, sublist, aUpdateRect, aClipRect, aDelta, aRegion);
-      }
-    } else {
-      nsRect r;
-      if (r.IntersectRect(aClipRect, item->GetBounds(aBuilder))) {
-        nsIFrame* f = item->GetUnderlyingFrame();
-        NS_ASSERTION(f, "Must have an underlying frame for leaf item");
-        nsRect exclude;
-        if (aBuilder->IsMovingFrame(f)) {
-          if (item->IsVaryingRelativeToMovingFrame(aBuilder)) {
-            // something like background-attachment:fixed that varies
-            // its drawing when it moves
-            AccumulateItemInRegion(aRegion, aUpdateRect, r, exclude, item);
-          }
-        } else {
-          // not moving.
-          nscolor color;
-          if (item->IsUniform(aBuilder, &color)) {
-            // If it's uniform, we don't need to invalidate where one part
-            // of the item was copied to another part.
-            exclude.IntersectRect(r, r + aDelta);
-          }
-          // area where a non-moving element is visible must be repainted
-          AccumulateItemInRegion(aRegion, aUpdateRect, r, exclude, item);
-          // we may have bitblitted an area that was painted by a non-moving
-          // element. This bitblitted data is invalid and was copied to
-          // "r + aDelta".
-          AccumulateItemInRegion(aRegion, aUpdateRect, r + aDelta,
-                                 exclude, item);
-        }
-      }
-    }
-  }
-}
-
-nsresult
-nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
-                                           nsIFrame* aMovingFrame,
-                                           nsPoint aDelta,
-                                           const nsRect& aUpdateRect,
-                                           nsRegion* aBlitRegion,
-                                           nsRegion* aRepaintRegion)
-{
-  NS_ASSERTION(aRootFrame != aMovingFrame,
-               "The root frame shouldn't be the one that's moving, that makes no sense");
-
-  // Build the 'after' display list over the whole area of interest.
-  // (We have to build the 'after' display list because the frame/view
-  // hierarchy has already been updated for the move.
-  // We need to ensure that the non-moving frame display items we get
-  // are the same ones we would have gotten if we had constructed the
-  // 'before' display list. So opaque moving items are only considered to
-  // cover the intersection of their old and new bounds (see
-  // nsDisplayItem::ComputeVisibility). A moving clip item is not allowed
-  // to clip non-moving items --- this is enforced by the code that sets
-  // up nsDisplayClip items, in particular see ApplyAbsPosClipping.
-  // XXX but currently a non-moving clip item can incorrectly clip
-  // moving items! See bug 428156.
-  nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
-  // Retrieve the area of the moving content (considered in both its
-  // before- and after-movement positions) that's visible. This is the
-  // only area that needs to be blitted or repainted.
-  nsRegion visibleRegionOfMovingContent;
-  builder.SetMovingFrame(aMovingFrame, aDelta, &visibleRegionOfMovingContent);
-  nsDisplayList list;
-
-  builder.EnterPresShell(aRootFrame, aUpdateRect);
-
-  nsresult rv =
-    aRootFrame->BuildDisplayListForStackingContext(&builder, aUpdateRect, &list);
-
-  builder.LeavePresShell(aRootFrame, aUpdateRect);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef DEBUG
-  if (gDumpRepaintRegionForCopy) {
-    fprintf(stderr,
-            "Repaint region for copy --- before optimization (area %d,%d,%d,%d, frame %p):\n",
-            aUpdateRect.x, aUpdateRect.y, aUpdateRect.width, aUpdateRect.height,
-            (void*)aMovingFrame);
-    nsFrame::PrintDisplayList(&builder, list);
-  }
-#endif
-
-  // Optimize for visibility, but frames under aMovingFrame will not be
-  // considered opaque, so they don't cover non-moving frames.
-  nsRegion visibleRegion(aUpdateRect);
-  nsRegion visibleRegionBeforeMove(aUpdateRect);
-  list.ComputeVisibility(&builder, &visibleRegion, &visibleRegionBeforeMove);
-
-#ifdef DEBUG
-  if (gDumpRepaintRegionForCopy) {
-    fprintf(stderr, "Repaint region for copy --- after optimization:\n");
-    nsFrame::PrintDisplayList(&builder, list);
-  }
-#endif
-
-  // It's possible that there was moving content which was visible but
-  // has now been scrolled out of view so it does not intersect aUpdateRect,
-  // so it's not in our display list. So compute the region that that content
-  // could have occupied --- the complete region that has been scrolled out
-  // of view --- and add it to visibleRegionOfMovingContent.
-  // Note that aRepaintRegion does not depend on moving content which has
-  // been scrolled out of view.
-  nsRegion scrolledOutOfView;
-  scrolledOutOfView.Sub(aUpdateRect, aUpdateRect - aDelta);
-  visibleRegionOfMovingContent.Or(visibleRegionOfMovingContent, scrolledOutOfView);
-
-  aRepaintRegion->SetEmpty();
-  // Any visible non-moving display items get added to the repaint region
-  // a) at their current location and b) offset by -aPt (their position in
-  // the 'before' display list) (unless they're uniform and we can exclude them).
-  // Also, any visible position-varying display items get added to the
-  // repaint region. All these areas are confined to aUpdateRect.
-  // We could do more work here: e.g., do another optimize-visibility pass
-  // with the moving items taken into account, either on the before-list
-  // or the after-list, or even both if we cloned the display lists ... but
-  // it's probably not worth it.
-  AddItemsToRegion(&builder, &list, aUpdateRect, aUpdateRect, aDelta, aRepaintRegion);
-  // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
-  list.DeleteAll();
-
-  // Finalize output regions. The region of moving content that's not
-  // visible --- hidden by overlaid opaque non-moving content --- need not
-  // be blitted or repainted.
-  visibleRegionOfMovingContent.And(visibleRegionOfMovingContent, aUpdateRect);
-  aRepaintRegion->And(*aRepaintRegion, visibleRegionOfMovingContent);
-  aBlitRegion->Sub(visibleRegionOfMovingContent, *aRepaintRegion);
   return NS_OK;
 }
 
