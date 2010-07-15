@@ -5819,8 +5819,19 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           mFlash10Quirks = StringBeginsWith(description, flash10Head);
 #endif
         } else if (mWidget) {
-          mWidget->Resize(mPluginWindow->width, mPluginWindow->height,
-                          PR_FALSE);
+          nsIWidget* parent = mWidget->GetParent();
+          NS_ASSERTION(parent, "Plugin windows must not be toplevel");
+          // Set the plugin window to have an empty cliprect. The cliprect
+          // will be reset when nsRootPresContext::UpdatePluginGeometry
+          // runs later. The plugin window does need to have the correct
+          // size here.
+          nsAutoTArray<nsIWidget::Configuration,1> configuration;
+          if (configuration.AppendElement()) {
+            configuration[0].mChild = mWidget;
+            configuration[0].mBounds =
+              nsIntRect(0, 0, mPluginWindow->width, mPluginWindow->height);
+            parent->ConfigureChildren(configuration);
+          }
 
           // mPluginWindow->type is used in |GetPluginPort| so it must
           // be initialized first
