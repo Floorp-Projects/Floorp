@@ -41,6 +41,7 @@
 #include "Layers.h"
 
 #include "gfxContext.h"
+#include "gfxCachedTempSurface.h"
 #include "nsAutoRef.h"
 #include "nsThreadUtils.h"
 
@@ -133,8 +134,7 @@ private:
   nsRefPtr<gfxContext> mTarget;
 
   // Cached surface for double buffering
-  nsRefPtr<gfxASurface> mCachedSurface;
-  gfxIntSize mCachedSurfaceSize;
+  gfxCachedTempSurface mCachedSurface;
 
 #ifdef DEBUG
   enum TransactionPhase { PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING };
