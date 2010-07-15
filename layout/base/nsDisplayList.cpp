@@ -434,6 +434,9 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     nsIWidget* window = referenceFrame->GetNearestWidget();
     if (window) {
       layerManager = window->GetLayerManager();
+      if (layerManager) {
+        aBuilder->LayerBuilder()->BeginUpdatingRetainedLayers(layerManager);
+      }
     }
   }
   if (!layerManager) {
