@@ -817,7 +817,8 @@ public:
                    nsIView* aViewToPaint,
                    nsIWidget* aWidget,
                    const nsRegion& aDirtyRegion,
-                   PRBool aPaintDefaultBackground);
+                   PRBool aPaintDefaultBackground,
+                   PRBool aWillSendDidPaint);
   NS_IMETHOD HandleEvent(nsIView*        aView,
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
@@ -829,7 +830,8 @@ public:
                                                         nsEventStatus* aStatus);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD_(PRBool) IsVisible();
-  NS_IMETHOD_(void) WillPaint();
+  NS_IMETHOD_(void) WillPaint(PRBool aWillSendDidPaint);
+  NS_IMETHOD_(void) DidPaint();
   NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
                                            PRBool aFlushOnHoverChange);
   NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView);
@@ -2853,6 +2855,8 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
   NS_TIME_FUNCTION_MIN(1.0);
 
+  mPresContext->ForgetUpdatePluginGeometryFrame(aFrame);
+
   if (!mIgnoreFrameDestruction) {
     mPresContext->StopImagesFor(aFrame);
 
@@ -2869,7 +2873,7 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
     FrameManager()->NotifyDestroyingFrame(aFrame);
 
     // Remove frame properties
-    mPresContext->PropertyTable()->DeleteAllFor(aFrame);
+    mPresContext->NotifyDestroyingFrame(aFrame);
 
     if (aFrame == mCurrentEventFrame) {
       mCurrentEventContent = aFrame->GetContent();
@@ -4548,7 +4552,7 @@ PresShell::UnsuppressAndInvalidate()
 
     nsRootPresContext* rootPC = mPresContext->GetRootPresContext();
     if (rootPC) {
-      rootPC->UpdatePluginGeometry(rootFrame);
+      rootPC->RequestUpdatePluginGeometry(rootFrame);
     }
   }
 
@@ -4815,6 +4819,16 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
         DoScrollContentIntoView(mContentToScrollTo, mContentScrollVPosition,
                                 mContentScrollHPosition);
         mContentToScrollTo = nsnull;
+      }
+    }
+
+    if (aType >= Flush_Layout) {
+      // Flush plugin geometry. Don't flush plugin geometry for
+      // interruptible layouts, since WillPaint does an interruptible
+      // layout.
+      nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
+      if (rootPresContext) {
+        rootPresContext->UpdatePluginGeometry();
       }
     }
 
@@ -5830,7 +5844,8 @@ PresShell::Paint(nsIView*        aDisplayRoot,
                  nsIView*        aViewToPaint,
                  nsIWidget*      aWidgetToPaint,
                  const nsRegion& aDirtyRegion,
-                 PRBool          aPaintDefaultBackground)
+                 PRBool          aPaintDefaultBackground,
+                 PRBool          aWillSendDidPaint)
 {
 #ifdef NS_FUNCTION_TIMER
   NS_TIME_FUNCTION_DECLARE_DOCURL;
@@ -7085,19 +7100,41 @@ PresShell::IsVisible()
 }
 
 NS_IMETHODIMP_(void)
-PresShell::WillPaint()
+PresShell::WillPaint(PRBool aWillSendDidPaint)
 {
-  // Don't bother reflowing if some viewmanager in our tree is painting while
-  // we still have painting suppressed.
+  // Don't bother doing anything if some viewmanager in our tree is
+  // painting while we still have painting suppressed.
   if (mPaintingSuppressed) {
     return;
   }
-  
+
+  if (!aWillSendDidPaint) {
+    nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
+    if (!rootPresContext) {
+      return;
+    }
+    if (rootPresContext == mPresContext) {
+      rootPresContext->UpdatePluginGeometry();
+    }
+  }
+
   // Process reflows, if we have them, to reduce flicker due to invalidates and
   // reflow being interspersed.  Note that we _do_ allow this to be
   // interruptible; if we can't do all the reflows it's better to flicker a bit
   // than to freeze up.
   FlushPendingNotifications(Flush_InterruptibleLayout);
+}
+
+NS_IMETHODIMP_(void)
+PresShell::DidPaint()
+{
+  nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
+  if (!rootPresContext) {
+    return;
+  }
+  if (rootPresContext == mPresContext) {
+    rootPresContext->UpdatePluginGeometry();
+  }
 }
 
 nsresult
@@ -7494,7 +7531,7 @@ PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
 
   nsRootPresContext* rootPC = mPresContext->GetRootPresContext();
   if (rootPC) {
-    rootPC->UpdatePluginGeometry(target);
+    rootPC->RequestUpdatePluginGeometry(target);
   }
 
   return !interrupted;

@@ -4633,13 +4633,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       break;
 
     case WM_PAINT:
-      *aRetValue = (int) OnPaint();
+      *aRetValue = (int) OnPaint(NULL, 0);
       result = PR_TRUE;
       break;
 
 #ifndef WINCE
     case WM_PRINTCLIENT:
-      result = OnPaint((HDC) wParam);
+      result = OnPaint((HDC) wParam, 0);
       break;
 #endif
 

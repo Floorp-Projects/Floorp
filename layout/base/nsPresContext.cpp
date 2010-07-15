@@ -2365,10 +2365,12 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
 
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
                                      nsPresContextType aType)
-  : nsPresContext(aDocument, aType)
+  : nsPresContext(aDocument, aType),
+    mUpdatePluginGeometryForFrame(nsnull),
+    mNeedsToUpdatePluginGeometry(PR_FALSE)
 {
   mRegisteredPlugins.Init();
-}  
+}
 
 nsRootPresContext::~nsRootPresContext()
 {
@@ -2525,16 +2527,80 @@ nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
 }
 
 void
-nsRootPresContext::UpdatePluginGeometry(nsIFrame* aChangedSubtree)
+nsRootPresContext::UpdatePluginGeometry()
 {
+  if (!mNeedsToUpdatePluginGeometry)
+    return;
+  mNeedsToUpdatePluginGeometry = PR_FALSE;
+
+  nsIFrame* f = mUpdatePluginGeometryForFrame;
+  if (f) {
+    mUpdatePluginGeometryForFrame->PresContext()->
+      SetContainsUpdatePluginGeometryFrame(PR_FALSE);
+    mUpdatePluginGeometryForFrame = nsnull;
+  } else {
+    f = FrameManager()->GetRootFrame();
+  }
+
   nsTArray<nsIWidget::Configuration> configurations;
-  GetPluginGeometryUpdates(aChangedSubtree, &configurations);
+  GetPluginGeometryUpdates(f, &configurations);
   if (configurations.IsEmpty())
     return;
   nsIWidget* widget = FrameManager()->GetRootFrame()->GetNearestWidget();
   NS_ASSERTION(widget, "Plugins must have a parent window");
   widget->ConfigureChildren(configurations);
   DidApplyPluginGeometryUpdates();
+}
+
+void
+nsRootPresContext::ForcePluginGeometryUpdate()
+{
+  // Force synchronous paint
+  nsIPresShell* shell = GetPresShell();
+  if (!shell)
+    return;
+  nsIFrame* rootFrame = shell->GetRootFrame();
+  if (!rootFrame)
+    return;
+  nsCOMPtr<nsIWidget> widget = rootFrame->GetNearestWidget();
+  if (!widget)
+    return;
+  // Force synchronous paint of a single pixel, just to force plugin
+  // updates to be flushed. Doing plugin updates during paint is the best
+  // way to ensure that plugin updates are in sync with our content.
+  widget->Invalidate(nsIntRect(0,0,1,1), PR_TRUE);
+
+  // Update plugin geometry just in case that invalidate didn't work
+  // (e.g. if none of the widget is visible, it might not have processed
+  // a paint event). Normally this won't need to do anything.
+  UpdatePluginGeometry();
+}
+
+void
+nsRootPresContext::RequestUpdatePluginGeometry(nsIFrame* aFrame)
+{
+  if (mRegisteredPlugins.Count() == 0)
+    return;
+
+  if (!mNeedsToUpdatePluginGeometry) {
+    // Dispatch a Gecko event to ensure plugin geometry gets updated
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(this, &nsRootPresContext::ForcePluginGeometryUpdate);
+    NS_DispatchToMainThread(event);
+  }
+
+  mNeedsToUpdatePluginGeometry = PR_TRUE;
+  if (aFrame == mUpdatePluginGeometryForFrame)
+    return;
+  if (!mUpdatePluginGeometryForFrame) {
+    mUpdatePluginGeometryForFrame = aFrame;
+    mUpdatePluginGeometryForFrame->PresContext()->
+      SetContainsUpdatePluginGeometryFrame(PR_TRUE);
+  } else {
+    mUpdatePluginGeometryForFrame->PresContext()->
+      SetContainsUpdatePluginGeometryFrame(PR_FALSE);
+    mUpdatePluginGeometryForFrame = nsnull;
+  }
 }
 
 static PLDHashOperator
@@ -2549,4 +2615,14 @@ void
 nsRootPresContext::DidApplyPluginGeometryUpdates()
 {
   mRegisteredPlugins.EnumerateEntries(PluginDidSetGeometryEnumerator, nsnull);
+}
+
+void
+nsRootPresContext::RootForgetUpdatePluginGeometryFrame(nsIFrame* aFrame)
+{
+  if (aFrame == mUpdatePluginGeometryForFrame) {
+    mUpdatePluginGeometryForFrame->PresContext()->
+      SetContainsUpdatePluginGeometryFrame(PR_FALSE);
+    mUpdatePluginGeometryForFrame = nsnull;
+  }
 }
