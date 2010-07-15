@@ -1143,6 +1143,26 @@ PRBool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem*
   return PR_TRUE;
 }
 
+nsDisplayOwnLayer::nsDisplayOwnLayer(nsIFrame* aFrame, nsDisplayList* aList)
+    : nsDisplayWrapList(aFrame, aList) {
+  MOZ_COUNT_CTOR(nsDisplayOwnLayer);
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayOwnLayer::~nsDisplayOwnLayer() {
+  MOZ_COUNT_DTOR(nsDisplayOwnLayer);
+}
+#endif
+
+// nsDisplayOpacity uses layers for rendering
+already_AddRefed<Layer>
+nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
+                              LayerManager* aManager) {
+  nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList);
+  return layer.forget();
+}
+
 nsDisplayClip::nsDisplayClip(nsIFrame* aFrame, nsIFrame* aClippingFrame,
         nsDisplayItem* aItem, const nsRect& aRect)
    : nsDisplayWrapList(aFrame, aItem),

@@ -1680,6 +1680,17 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt)
   }
 }
 
+static void
+AppendToTop(nsDisplayListBuilder* aBuilder, nsDisplayList* aDest,
+            nsDisplayList* aSource, nsIFrame* aSourceFrame, PRBool aOwnLayer)
+{
+  if (aOwnLayer) {
+    aDest->AppendNewToTop(new (aBuilder) nsDisplayOwnLayer(aSourceFrame, aSource));
+  } else {
+    aDest->AppendToTop(aSource);
+  }  
+}
+
 nsresult
 nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
@@ -1706,6 +1717,16 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // in the tree.
   PRBool hasResizer = HasResizer();
   nsDisplayListCollection scrollParts;
+  // We put scrollbars in their own layers when this is the root scroll
+  // frame and we are a toplevel content document. In this situation, the
+  // scrollbar(s) would normally be assigned their own layer anyway, since
+  // they're not scrolled with the rest of the document. But when both
+  // scrollbars are visible, the layer's visible rectangle would be the size
+  // of the viewport, so most layer implementations would create a layer buffer
+  // that's much larger than necessary. Creating independent layers for each
+  // scrollbar works around the problem.
+  PRBool createLayersForScrollbars = mIsRoot &&
+      !nsContentUtils::IsChildOfSameType(mOuter->GetContent()->GetCurrentDoc());
   for (nsIFrame* kid = mOuter->GetFirstChild(nsnull); kid; kid = kid->GetNextSibling()) {
     if (kid != mScrolledFrame) {
       if (kid == mScrollCornerBox && hasResizer) {
@@ -1715,11 +1736,14 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       rv = mOuter->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, scrollParts,
                                             nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
       NS_ENSURE_SUCCESS(rv, rv);
+      // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into the
+      // PositionedDescendants list.
+      ::AppendToTop(aBuilder, aLists.BorderBackground(),
+                    scrollParts.PositionedDescendants(), kid,
+                    createLayersForScrollbars);
     }
   }
-  // DISPLAY_CHILD_FORCE_STACKING_CONTEXT puts everything into the
-  // PositionedDescendants list.
-  aLists.BorderBackground()->AppendToTop(scrollParts.PositionedDescendants());
+
 
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
@@ -1754,7 +1778,9 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
     // DISPLAY_CHILD_FORCE_STACKING_CONTEXT puts everything into the
     // PositionedDescendants list.
-    aLists.Content()->AppendToTop(scrollParts.PositionedDescendants());
+    ::AppendToTop(aBuilder, aLists.Content(),
+                  scrollParts.PositionedDescendants(), mScrollCornerBox,
+                  createLayersForScrollbars);
   }
 
   return NS_OK;
@@ -2897,7 +2923,8 @@ nsGfxScrollFrameInner::ReflowCallbackCanceled()
 }
 
 static void LayoutAndInvalidate(nsBoxLayoutState& aState,
-                                nsIFrame* aBox, const nsRect& aRect)
+                                nsIFrame* aBox, const nsRect& aRect,
+                                PRBool aScrollbarIsBeingHidden)
 {
   // When a child box changes shape of position, the parent
   // is responsible for invalidation; the overflow rect must be invalidated
@@ -2907,13 +2934,23 @@ static void LayoutAndInvalidate(nsBoxLayoutState& aState,
   // mHasVScrollbar/mHasHScrollbar is false, and this is called after those
   // flags have been set ... if a scrollbar is being hidden, we still need
   // to invalidate the scrollbar area here.
+  // But we also need to invalidate the scrollbar itself in case it has
+  // its own layer; we need to ensure that layer is updated.
   PRBool rectChanged = aBox->GetRect() != aRect;
   if (rectChanged) {
-    aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
+    if (aScrollbarIsBeingHidden) {
+      aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
+    } else {
+      aBox->InvalidateOverflowRect();
+    }
   }
   nsBoxFrame::LayoutChildAt(aState, aBox, aRect);
   if (rectChanged) {
-    aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
+    if (aScrollbarIsBeingHidden) {
+      aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
+    } else {
+      aBox->InvalidateOverflowRect();
+    }
   }
 }
 
@@ -3005,7 +3042,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
       r.y = aContentArea.YMost() - r.height;
       NS_ASSERTION(r.height >= 0, "Scroll area should be inside client rect");
     }
-    LayoutAndInvalidate(aState, mScrollCornerBox, r);
+    LayoutAndInvalidate(aState, mScrollCornerBox, r, PR_FALSE);
   }
 
   nsPresContext* presContext = mScrolledFrame->PresContext();
@@ -3018,7 +3055,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     mVScrollbarBox->GetMargin(margin);
     vRect.Deflate(margin);
     AdjustScrollbarRectForResizer(mOuter, presContext, vRect, hasResizer, PR_TRUE);
-    LayoutAndInvalidate(aState, mVScrollbarBox, vRect);
+    LayoutAndInvalidate(aState, mVScrollbarBox, vRect, !mHasVerticalScrollbar);
   }
 
   if (mHScrollbarBox) {
@@ -3030,7 +3067,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     mHScrollbarBox->GetMargin(margin);
     hRect.Deflate(margin);
     AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer, PR_FALSE);
-    LayoutAndInvalidate(aState, mHScrollbarBox, hRect);
+    LayoutAndInvalidate(aState, mHScrollbarBox, hRect, !mHasHorizontalScrollbar);
   }
 
   // may need to update fixed position children of the viewport,
