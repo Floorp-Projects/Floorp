@@ -232,6 +232,14 @@ public:
                  "to binding parent");
     NS_ASSERTION(!GetParent() ||
                  ((GetBindingParent() == GetParent()) ==
+                  HasFlag(NODE_IS_ANONYMOUS)) ||
+                 // Unfortunately default content for XBL insertion points is
+                 // anonymous content that is bound with the parent of the
+                 // insertion point as the parent but the bound element for the
+                 // binding as the binding parent.  So we have to complicate
+                 // the assert a bit here.
+                 (GetBindingParent() &&
+                  (GetBindingParent() == GetParent()->GetBindingParent()) ==
                   HasFlag(NODE_IS_ANONYMOUS)),
                  "For nodes with parent, flag and GetBindingParent() check "
                  "should match");
