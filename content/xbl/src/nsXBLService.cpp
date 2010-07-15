@@ -877,13 +877,10 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
     return NS_ERROR_FAILURE;
 
   // Get our doc info and determine our script access.
-  nsCOMPtr<nsIDocument> doc;
-  docInfo->GetDocument(getter_AddRefs(doc));
-  PRBool allowScripts;
-  docInfo->GetScriptAccess(&allowScripts);
+  nsCOMPtr<nsIDocument> doc = docInfo->GetDocument();
+  PRBool allowScripts = docInfo->GetScriptAccess();
 
-  nsXBLPrototypeBinding* protoBinding;
-  docInfo->GetPrototypeBinding(ref, &protoBinding);
+  nsXBLPrototypeBinding* protoBinding = docInfo->GetPrototypeBinding(ref);
 
   NS_ASSERTION(protoBinding, "Unable to locate an XBL binding.");
   if (!protoBinding)

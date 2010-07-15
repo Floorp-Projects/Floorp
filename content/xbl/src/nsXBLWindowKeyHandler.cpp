@@ -148,8 +148,7 @@ nsXBLSpecialDocInfo::GetHandlers(nsXBLDocumentInfo* aInfo,
                                  const nsACString& aRef,
                                  nsXBLPrototypeHandler** aResult)
 {
-  nsXBLPrototypeBinding* binding;
-  aInfo->GetPrototypeBinding(aRef, &binding);
+  nsXBLPrototypeBinding* binding = aInfo->GetPrototypeBinding(aRef);
   
   NS_ASSERTION(binding, "No binding found for the XBL window key handler.");
   if (!binding)
