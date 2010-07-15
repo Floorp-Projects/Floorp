@@ -3960,17 +3960,15 @@ nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
   NS_ASSERTION(nsLayoutUtils::GetDisplayRootFrame(this) == this,
                "Can only call this on display roots");
 
-  nsRect rect;
-  rect.IntersectRect(aDamageRect, nsRect(nsPoint(0,0), GetSize()));
-
   if ((mState & NS_FRAME_HAS_CONTAINER_LAYER) &&
       !(aFlags & INVALIDATE_NO_THEBES_LAYERS)) {
-    FrameLayerBuilder::InvalidateThebesLayerContents(this, rect);
+    FrameLayerBuilder::InvalidateThebesLayerContents(this, aDamageRect);
   }
 
   PRUint32 flags =
     (aFlags & INVALIDATE_IMMEDIATE) ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
 
+  nsRect rect = aDamageRect;
   nsRegion* excludeRegion = static_cast<nsRegion*>
     (Properties().Get(DeferInvalidatesProperty()));
   if (excludeRegion) {

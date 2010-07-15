@@ -7440,10 +7440,16 @@ PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
   // use all the available space. If it's simply a `reflow root',
   // then use the target frame's size as the available space.
   nsSize size;
-  if (target == rootFrame)
+  if (target == rootFrame) {
      size = mPresContext->GetVisibleArea().Size();
-  else
+
+     // target->GetRect() has the old size of the frame,
+     // mPresContext->GetVisibleArea() has the new size.
+     target->InvalidateRectDifference(mPresContext->GetVisibleArea(),
+                                      target->GetRect());
+  } else {
      size = target->GetSize();
+  }
 
   NS_ASSERTION(!target->GetNextInFlow() && !target->GetPrevInFlow(),
                "reflow roots should never split");
