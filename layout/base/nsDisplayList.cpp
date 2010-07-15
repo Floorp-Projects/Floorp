@@ -453,7 +453,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
 
   nsRefPtr<Layer> root = aBuilder->LayerBuilder()->
-    GetContainerLayerFor(aBuilder, layerManager, nsnull, *this);
+    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this);
   if (!root)
     return;
 
@@ -464,6 +464,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   layerManager->SetRoot(root);
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
                                aBuilder);
+  aBuilder->LayerBuilder()->DidEndTransaction(layerManager);
 
   nsCSSRendering::DidPaint();
 }
@@ -637,6 +638,24 @@ void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
                          SortLEQ aCmp, void* aClosure) {
   ExplodeAnonymousChildLists(aBuilder);
   ::Sort(this, Count(), aCmp, aClosure);
+}
+
+PRBool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
+                                          nsRegion* aVisibleRegion) {
+  nsRect bounds = GetBounds(aBuilder);
+
+  nsRegion itemVisible;
+  itemVisible.And(*aVisibleRegion, bounds);
+  mVisibleRect = itemVisible.GetBounds();
+
+  if (mVisibleRect.IsEmpty() ||
+      !ComputeVisibility(aBuilder, aVisibleRegion, nsnull))
+    return PR_FALSE;
+
+  if (IsOpaque(aBuilder)) {
+    aVisibleRegion->Sub(*aVisibleRegion, bounds);
+  }
+  return PR_TRUE;
 }
 
 void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
@@ -1147,7 +1166,7 @@ already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager) {
   nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
-    GetContainerLayerFor(aBuilder, aManager, this, mList);
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList);
   if (!layer)
     return nsnull;
 
