@@ -300,7 +300,7 @@ EnsureSharedSurfaceSize(gfxIntSize size)
   return (sSharedSurfaceData != nsnull);
 }
 
-PRBool nsWindow::OnPaint(HDC aDC)
+PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 {
 #ifdef MOZ_IPC
   // We never have reentrant paint events, except when we're running our RPC
@@ -348,6 +348,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #endif
 
   nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
+  willPaintEvent.willSendDidPaint = PR_TRUE;
   DispatchWindowEvent(&willPaintEvent);
 
 #ifdef CAIRO_HAS_DDRAW_SURFACE
@@ -405,6 +406,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
   PRBool forceRepaint = NULL != aDC;
 #endif
   event.region = GetRegionToPaint(forceRepaint, ps, hDC);
+  event.willSendDidPaint = PR_TRUE;
 
   if (!event.region.IsEmpty() && mEventCallback)
   {
@@ -738,6 +740,13 @@ DDRAW_FAILED:
 #endif // WIDGET_DEBUG_OUTPUT && !WINCE
 
   mPainting = PR_FALSE;
+
+  nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, this);
+  DispatchWindowEvent(&didPaintEvent);
+
+  if (aNestingLevel == 0 && ::GetUpdateRect(mWnd, NULL, PR_FALSE)) {
+    OnPaint(aDC, 1);
+  }
 
   return result;
 }

@@ -769,7 +769,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
 
   if (mWidget) {
     rpc->RegisterPluginForGeometryUpdates(this);
-    rpc->UpdatePluginGeometry(this);
+    rpc->RequestUpdatePluginGeometry(this);
 
     // Here we set the background color for this widget because some plugins will use 
     // the child window background color when painting. If it's not set, it may default to gray

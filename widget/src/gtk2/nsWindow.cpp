@@ -2323,6 +2323,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     event.refPoint.x = aEvent->area.x;
     event.refPoint.y = aEvent->area.y;
+    event.willSendDidPaint = PR_TRUE;
 
     GdkRectangle *rects;
     gint nrects;
@@ -2574,6 +2575,17 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 #endif // MOZ_X11
 
     g_free(rects);
+
+    nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, this);
+    DispatchEvent(&didPaintEvent, status);
+
+    // Synchronously flush any new dirty areas
+    GdkRegion* dirtyArea = gdk_window_get_update_area(mGdkWindow);
+    if (dirtyArea) {
+        gdk_window_invalidate_region(mGdkWindow, dirtyArea, PR_FALSE);
+        gdk_region_destroy(dirtyArea);
+        gdk_window_process_updates(mGdkWindow, PR_FALSE);
+    }
 
     // check the return value!
     return TRUE;

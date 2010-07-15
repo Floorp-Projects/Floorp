@@ -439,7 +439,7 @@ void nsViewManager::RenderViews(nsView *aView, nsIWidget *aWidget,
   }
 
   if (mObserver) {
-    mObserver->Paint(displayRoot, aView, aWidget, aRegion, PR_FALSE);
+    mObserver->Paint(displayRoot, aView, aWidget, aRegion, PR_FALSE, PR_FALSE);
   }
 }
 
@@ -806,7 +806,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
                 // We should really sort out the rules on our synch painting
                 // api....
                 UpdateViewBatch batch(this);
-                rootVM->CallWillPaintOnObservers();
+                rootVM->CallWillPaintOnObservers(event->willSendDidPaint);
                 batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
                 // Get the view pointer again since the code above might have
@@ -830,7 +830,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
           // draw something so we don't get blank areas,
           // unless there's no widget or it's transparent.
           nsRegion rgn = ConvertDeviceRegionToAppRegion(event->region, mContext);
-          mObserver->Paint(aView, aView, event->widget, rgn, PR_TRUE);
+          mObserver->Paint(aView, aView, event->widget, rgn, PR_TRUE,
+                           event->willSendDidPaint);
 
           // Clients like the editor can trigger multiple
           // reflows during what the user perceives as a single
@@ -861,6 +862,12 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
 
         break;
       }
+
+    case NS_DID_PAINT: {
+      nsRefPtr<nsViewManager> rootVM = RootViewManager();
+      rootVM->CallDidPaintOnObservers();
+      break;
+    }
 
     case NS_CREATE:
     case NS_DESTROY:
@@ -1520,7 +1527,7 @@ nsViewManager::IsPainting(PRBool& aIsPainting)
 void
 nsViewManager::FlushPendingInvalidates()
 {
-  NS_ASSERTION(IsRootVM(), "Must be root VM for this to be called!\n");
+  NS_ASSERTION(IsRootVM(), "Must be root VM for this to be called!");
   NS_ASSERTION(mUpdateBatchCnt == 0, "Must not be in an update batch!");
   // XXXbz this is probably not quite OK yet, if callers can explicitly
   // DisableRefresh while we have an event posted.
@@ -1537,7 +1544,7 @@ nsViewManager::FlushPendingInvalidates()
   // BeginUpdateViewBatch/EndUpdateViewBatch, since that would reenter this
   // exact code, but we want the effect of a single big update batch.
   ++mUpdateBatchCnt;
-  CallWillPaintOnObservers();
+  CallWillPaintOnObservers(PR_FALSE);
   --mUpdateBatchCnt;
   
   if (mHasPendingUpdates) {
@@ -1547,9 +1554,9 @@ nsViewManager::FlushPendingInvalidates()
 }
 
 void
-nsViewManager::CallWillPaintOnObservers()
+nsViewManager::CallWillPaintOnObservers(PRBool aWillSendDidPaint)
 {
-  NS_PRECONDITION(IsRootVM(), "Must be root VM for this to be called!\n");
+  NS_PRECONDITION(IsRootVM(), "Must be root VM for this to be called!");
   NS_PRECONDITION(mUpdateBatchCnt > 0, "Must be in an update batch!");
 
 #ifdef DEBUG
@@ -1562,9 +1569,27 @@ nsViewManager::CallWillPaintOnObservers()
       // One of our kids.
       nsCOMPtr<nsIViewObserver> obs = vm->GetViewObserver();
       if (obs) {
-        obs->WillPaint();
+        obs->WillPaint(aWillSendDidPaint);
         NS_ASSERTION(mUpdateBatchCnt == savedUpdateBatchCnt,
                      "Observer did not end view batch?");
+      }
+    }
+  }
+}
+
+void
+nsViewManager::CallDidPaintOnObservers()
+{
+  NS_PRECONDITION(IsRootVM(), "Must be root VM for this to be called!");
+
+  PRInt32 index;
+  for (index = 0; index < mVMCount; index++) {
+    nsViewManager* vm = (nsViewManager*)gViewManagers->ElementAt(index);
+    if (vm->RootViewManager() == this) {
+      // One of our kids.
+      nsCOMPtr<nsIViewObserver> obs = vm->GetViewObserver();
+      if (obs) {
+        obs->DidPaint();
       }
     }
   }

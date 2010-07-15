@@ -1627,32 +1627,13 @@ void nsGfxScrollFrameInner::MarkActive()
 
 void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
 {
-  nsRootPresContext* rootPresContext =
-    mOuter->PresContext()->GetRootPresContext();
+  nsRootPresContext* rootPresContext = mOuter->PresContext()->GetRootPresContext();
   if (!rootPresContext) {
     return;
   }
 
-  nsPoint offsetToView;
-  nsPoint offsetToWidget;
-  nsIWidget* nearestWidget =
-    mOuter->GetClosestView(&offsetToView)->GetNearestWidget(&offsetToWidget);
-  nsPoint nearestWidgetOffset = offsetToView + offsetToWidget;
+  rootPresContext->RequestUpdatePluginGeometry(mOuter);
 
-  nsTArray<nsIWidget::Configuration> configurations;
-  // Only update plugin configurations if we're going to scroll the
-  // root widget. Otherwise we must be in a popup or some other situation
-  // where we don't actually support windows plugins.
-  if (rootPresContext->FrameManager()->GetRootFrame()->GetNearestWidget() ==
-        nearestWidget) {
-    rootPresContext->GetPluginGeometryUpdates(mOuter, &configurations);
-  }
-
-  // Just invalidate the frame and adjust child widgets
-  // Recall that our widget's origin is at our bounds' top-left
-  if (nearestWidget) {
-    nearestWidget->ConfigureChildren(configurations);
-  }
   AdjustViewsAndWidgets(mScrolledFrame, PR_FALSE);
   // We need to call this after fixing up the widget and view positions
   // to be consistent with the view and frame hierarchy.
