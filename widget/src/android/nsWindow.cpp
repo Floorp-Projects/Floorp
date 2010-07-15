@@ -697,7 +697,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
                 {
-                    AutoLayerManagerSetup setupLayerManager(this, ctx);
+                    AutoLayerManagerSetup
+                      setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
                     status = DispatchEvent(&event);
                 }
 

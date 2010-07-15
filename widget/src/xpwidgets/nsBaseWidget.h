@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
+#include "BasicLayers.h"
 
 class nsIContent;
 class nsAutoRollup;
@@ -63,6 +64,9 @@ class gfxContext;
 class nsBaseWidget : public nsIWidget
 {
   friend class nsAutoRollup;
+
+protected:
+  typedef mozilla::layers::BasicLayerManager BasicLayerManager;
 
 public:
   nsBaseWidget();
@@ -158,7 +162,8 @@ public:
    */
   class AutoLayerManagerSetup {
   public:
-    AutoLayerManagerSetup(nsBaseWidget* aWidget, gfxContext* aTarget);
+    AutoLayerManagerSetup(nsBaseWidget* aWidget, gfxContext* aTarget,
+                          BasicLayerManager::BufferMode aDoubleBuffering);
     ~AutoLayerManagerSetup();
   private:
     nsBaseWidget* mWidget;
