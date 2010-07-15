@@ -177,6 +177,7 @@ members = [
     'nsIDOMNSCSS2Properties.*',
     'nsIDOMRect.*',
     'nsIDOMViewCSS.getComputedStyle',
+    'nsIDOMCSSStyleDeclaration.*',
 
     # dom/interfaces/events
     'nsIDOMEventTarget.dispatchEvent',
