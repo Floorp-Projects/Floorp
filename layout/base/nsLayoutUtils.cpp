@@ -94,6 +94,7 @@
 #include "nsListControlFrame.h"
 #include "ImageLayers.h"
 #include "mozilla/dom/Element.h"
+#include "nsCanvasFrame.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -1182,6 +1183,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
                           PRUint32 aFlags)
 {
   nsPresContext* presContext = aFrame->PresContext();
+  nsIPresShell* presShell = presContext->PresShell();
 
   nsRegion visibleRegion;
   if (aFlags & PAINT_WIDGET_LAYERS) {
@@ -1192,7 +1194,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     visibleRegion = aDirtyRegion;
   }
 
-  nsDisplayListBuilder builder(aFrame, PR_FALSE, PR_TRUE);
+  nsDisplayListBuilder builder(aFrame, PR_FALSE, !(aFlags & PAINT_HIDE_CARET));
   nsDisplayList list;
   if (aFlags & PAINT_IN_TRANSFORM) {
     builder.SetInTransform(PR_TRUE);
@@ -1202,6 +1204,33 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   }
   if (aFlags & PAINT_WIDGET_LAYERS) {
     builder.SetPaintingToWindow(PR_TRUE);
+  }
+  if (aFlags & PAINT_IGNORE_SUPPRESSION) {
+    builder.SetBackgroundOnly(PR_FALSE);
+  }
+  nsRect canvasArea(nsPoint(0, 0), aFrame->GetSize());
+  if (aFlags & PAINT_IGNORE_VIEWPORT_SCROLLING) {
+    NS_ASSERTION(!aFrame->GetParent(), "must have root frame");
+    nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+    if (rootScrollFrame) {
+      nsIScrollableFrame* rootScrollableFrame =
+        presShell->GetRootScrollFrameAsScrollable();
+      // Make visibleRegion and aRenderingContext relative to the
+      // scrolled frame instead of the root frame.
+      nsPoint pos = rootScrollableFrame->GetScrollPosition();
+      visibleRegion.MoveBy(-pos);
+      aRenderingContext->Translate(pos.x, pos.y);
+      builder.SetIgnoreScrollFrame(rootScrollFrame);
+
+      nsCanvasFrame* canvasFrame =
+        do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
+      if (canvasFrame) {
+        // Use UnionRect here to ensure that areas where the scrollbars
+        // were are still filled with the background color.
+        canvasArea.UnionRect(canvasArea,
+          canvasFrame->CanvasArea() + builder.ToReferenceFrame(canvasFrame));
+      }
+    }
   }
   nsresult rv;
 
@@ -1247,8 +1276,8 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     // item once, for the nsPageContentFrame.
 
     // Add the canvas background color.
-    rv = presContext->PresShell()->AddCanvasBackgroundColorItem(
-           builder, list, aFrame, nsnull, aBackstop);
+    rv = presShell->AddCanvasBackgroundColorItem(
+           builder, list, aFrame, canvasArea, aBackstop);
   }
 
   builder.LeavePresShell(aFrame, dirtyRect);
@@ -1279,9 +1308,18 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
     nsIntRegion dirtyWindowRegion(aDirtyRegion.ToOutsidePixels(pixelRatio));
 
-    // XXX we should simplify this API now that dirtyWindowRegion always
-    // covers the entire window
-    widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
+    if (aFlags & (PAINT_IGNORE_SUPPRESSION |
+                  PAINT_IGNORE_VIEWPORT_SCROLLING |
+                  PAINT_HIDE_CARET)) {
+      // We're going to display something different from what we'd normally
+      // paint in a window, so make sure we flush out any retained layer
+      // trees before *and after* we draw
+      flags |= nsDisplayList::PAINT_FLUSH_LAYERS;
+    } else {
+      // XXX we should simplify this API now that dirtyWindowRegion always
+      // covers the entire window
+      widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
+    }
   }
 
   list.PaintRoot(&builder, aRenderingContext, flags);
