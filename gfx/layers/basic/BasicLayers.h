@@ -70,7 +70,7 @@ public:
   /**
    * When aRetain is true, we will try to retain the visible contents of
    * ThebesLayers as cairo surfaces. This can only be called outside a
-   * transaction.
+   * transaction. By default, layer contents are not retained.
    */
   void SetRetain(PRBool aRetain);
 
