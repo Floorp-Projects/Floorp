@@ -88,7 +88,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
-  NS_DISPLAY_DECL_NAME("TextDecoration")
+  NS_DISPLAY_DECL_NAME("TextDecoration", TYPE_TEXT_DECORATION)
 private:
   nsLineBox*            mLine;
   nscolor               mColor;
@@ -151,12 +151,11 @@ nsDisplayTextDecoration::GetBounds(nsDisplayListBuilder* aBuilder)
 
 class nsDisplayTextShadow : public nsDisplayItem {
 public:
-  nsDisplayTextShadow(nsHTMLContainerFrame* aFrame, const PRUint8 aDecoration,
-                      const nscolor& aColor, nsLineBox* aLine,
-                      const nscoord& aBlurRadius, const nsPoint& aOffset)
-    : nsDisplayItem(aFrame), mLine(aLine), mColor(aColor),
-      mDecorationFlags(aDecoration),
-      mBlurRadius(aBlurRadius), mOffset(aOffset) {
+  nsDisplayTextShadow(nsHTMLContainerFrame* aFrame,
+                      const PRUint8 aDecoration,
+                      nsLineBox* aLine)
+    : nsDisplayItem(aFrame), mLine(aLine),
+      mDecorationFlags(aDecoration) {
     MOZ_COUNT_CTOR(nsDisplayTextShadow);
   }
   virtual ~nsDisplayTextShadow() {
@@ -166,21 +165,16 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
-  NS_DISPLAY_DECL_NAME("TextShadow")
+  NS_DISPLAY_DECL_NAME("TextShadowContainer", TYPE_TEXT_SHADOW)
 private:
   nsLineBox*    mLine;
-  nscolor       mColor;
   PRUint8       mDecorationFlags;
-  nscoord       mBlurRadius;
-  nsPoint       mOffset;
 };
 
 void
 nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
                            nsIRenderingContext* aCtx)
 {
-  mBlurRadius = NS_MAX(mBlurRadius, 0);
-
   nsCOMPtr<nsIFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
   nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm.get());
@@ -193,29 +187,25 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
   gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
 
   nsHTMLContainerFrame* f = static_cast<nsHTMLContainerFrame*>(mFrame);
-  nsPoint pt = aBuilder->ToReferenceFrame(mFrame) + mOffset;
   nsPresContext* presContext = mFrame->PresContext();
+  gfxContext* thebesCtx = aCtx->ThebesContext();
 
-  gfxFloat lineWidth;
-  nsPoint linePt;
   gfxFloat ascent;
+  gfxFloat lineWidth;
+  nscoord start;
   if (mLine) {
     // Block frames give us an nsLineBox, so we must use that
-    nscoord start = mLine->mBounds.x;
     nscoord width = mLine->mBounds.width;
+    start = mLine->mBounds.x;
     f->AdjustForTextIndent(mLine, start, width);
     if (width <= 0)
       return;
 
     lineWidth = presContext->AppUnitsToGfxUnits(width);
-    linePt = nsPoint(start + pt.x, mLine->mBounds.y + pt.y);
     ascent = presContext->AppUnitsToGfxUnits(mLine->GetAscent());
   } else {
     // For inline frames, we must use the frame's geometry
-    nsRect contentRect = mFrame->GetContentRect() - mFrame->GetPosition() + pt;
-
-    lineWidth = presContext->AppUnitsToGfxUnits(contentRect.width);
-    linePt = contentRect.TopLeft();
+    lineWidth = presContext->AppUnitsToGfxUnits(mFrame->GetContentRect().width);
 
     // The ascent of :first-letter frame's text may not be the same as the ascent
     // of the font metrics, because it may use the tight box of the actual
@@ -233,63 +223,94 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  gfxContext* thebesCtx = aCtx->ThebesContext();
-  nsRect shadowRect(0, 0, 0, 0);
+  nsCSSShadowArray* shadowList = mFrame->GetStyleText()->mTextShadow;
+  NS_ABORT_IF_FALSE(shadowList,
+                    "Why did we make a display list item if we have no shadows?");
 
-  // Get the rects for each text decoration line, and union them together so we
-  // know the minimum size we can make our shadow-painting surface.
+  // Get the rects for each text decoration line, so we know how big we
+  // can make each shadow's surface
+  nsRect underlineRect;
+  nsRect overlineRect;
+  nsRect lineThroughRect;
   if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
     gfxSize size(lineWidth, metrics.underlineSize);
-    nsRect rect = nsCSSRendering::GetTextDecorationRect(presContext, size,
-                     ascent, underlineOffset, NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                     nsCSSRendering::DECORATION_STYLE_SOLID);
-    shadowRect.UnionRect(shadowRect, rect + linePt);
+    underlineRect = nsCSSRendering::GetTextDecorationRect(presContext, size,
+                       ascent, underlineOffset,
+                       NS_STYLE_TEXT_DECORATION_UNDERLINE,
+                       nsCSSRendering::DECORATION_STYLE_SOLID);
   }
   if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_OVERLINE) {
     gfxSize size(lineWidth, metrics.underlineSize);
-    nsRect rect = nsCSSRendering::GetTextDecorationRect(presContext, size,
-                     ascent, metrics.maxAscent, NS_STYLE_TEXT_DECORATION_OVERLINE,
-                     nsCSSRendering::DECORATION_STYLE_SOLID);
-    shadowRect.UnionRect(shadowRect, rect + linePt);
+    overlineRect = nsCSSRendering::GetTextDecorationRect(presContext, size,
+                       ascent, metrics.maxAscent,
+                       NS_STYLE_TEXT_DECORATION_OVERLINE,
+                       nsCSSRendering::DECORATION_STYLE_SOLID);
   }
   if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
     gfxSize size(lineWidth, metrics.strikeoutSize);
-    nsRect rect = nsCSSRendering::GetTextDecorationRect(presContext, size,
-                     ascent, metrics.strikeoutOffset, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
-                     nsCSSRendering::DECORATION_STYLE_SOLID);
-    shadowRect.UnionRect(shadowRect, rect + linePt);
+    lineThroughRect = nsCSSRendering::GetTextDecorationRect(presContext, size,
+                       ascent, metrics.strikeoutOffset,
+                       NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
+                       nsCSSRendering::DECORATION_STYLE_SOLID);
   }
 
-  // Create our shadow surface, then paint the text decorations onto it
-  nsContextBoxBlur contextBoxBlur;
-  gfxContext* shadowCtx = contextBoxBlur.Init(shadowRect, mBlurRadius,
-                                              presContext->AppUnitsPerDevPixel(),
-                                              thebesCtx, mVisibleRect, nsnull);
-  if (!shadowCtx)
-    return;
+  for (PRUint32 i = shadowList->Length(); i > 0; --i) {
+    nsCSSShadowItem* shadow = shadowList->ShadowAt(i - 1);
 
-  thebesCtx->Save();
-  thebesCtx->NewPath();
-  thebesCtx->SetColor(gfxRGBA(mColor));
+    nscolor shadowColor =
+      shadow->mHasColor ? shadow->mColor : mFrame->GetStyleColor()->mColor;
 
-  if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
-    f->PaintTextDecorationLine(shadowCtx, pt, mLine, mColor,
-                               underlineOffset, ascent,
-                               metrics.underlineSize, NS_STYLE_TEXT_DECORATION_UNDERLINE);
-  }
-  if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_OVERLINE) {
-    f->PaintTextDecorationLine(shadowCtx, pt, mLine, mColor,
-                               metrics.maxAscent, ascent,
-                               metrics.underlineSize, NS_STYLE_TEXT_DECORATION_OVERLINE);
-  }
-  if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
-    f->PaintTextDecorationLine(shadowCtx, pt, mLine, mColor,
-                               metrics.strikeoutOffset, ascent,
-                               metrics.strikeoutSize, NS_STYLE_TEXT_DECORATION_LINE_THROUGH);
-  }
+    nsPoint pt = aBuilder->ToReferenceFrame(mFrame) +
+      nsPoint(shadow->mXOffset, shadow->mYOffset);
+    nsPoint linePt;
+    if (mLine) {
+      linePt = nsPoint(start + pt.x, mLine->mBounds.y + pt.y);
+    } else {
+      linePt = mFrame->GetContentRect().TopLeft() - mFrame->GetPosition() + pt;
+    }
 
-  contextBoxBlur.DoPaint();
-  thebesCtx->Restore();
+    nsRect shadowRect(0, 0, 0, 0);
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+      shadowRect.UnionRect(shadowRect, underlineRect + linePt);
+    }
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_OVERLINE) {
+      shadowRect.UnionRect(shadowRect, overlineRect + linePt);
+    }
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
+      shadowRect.UnionRect(shadowRect, lineThroughRect + linePt);
+    }
+
+    gfxContextAutoSaveRestore save(thebesCtx);
+    thebesCtx->NewPath();
+    thebesCtx->SetColor(gfxRGBA(shadowColor));
+
+    // Create our shadow surface, then paint the text decorations onto it
+    nsContextBoxBlur contextBoxBlur;
+    gfxContext* shadowCtx = contextBoxBlur.Init(shadowRect, shadow->mRadius,
+                                                presContext->AppUnitsPerDevPixel(),
+                                                thebesCtx, mVisibleRect, nsnull);
+    if (!shadowCtx) {
+      continue;
+    }
+
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+      f->PaintTextDecorationLine(shadowCtx, pt, mLine, shadowColor,
+                                 underlineOffset, ascent,
+                                 metrics.underlineSize, NS_STYLE_TEXT_DECORATION_UNDERLINE);
+    }
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_OVERLINE) {
+      f->PaintTextDecorationLine(shadowCtx, pt, mLine, shadowColor,
+                                 metrics.maxAscent, ascent,
+                                 metrics.underlineSize, NS_STYLE_TEXT_DECORATION_OVERLINE);
+    }
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
+      f->PaintTextDecorationLine(shadowCtx, pt, mLine, shadowColor,
+                                 metrics.strikeoutOffset, ascent,
+                                 metrics.strikeoutSize, NS_STYLE_TEXT_DECORATION_LINE_THROUGH);
+    }
+
+    contextBoxBlur.DoPaint();
+  }
 }
 
 nsRect
@@ -321,43 +342,31 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
   if (decorations == NS_STYLE_TEXT_DECORATION_NONE)
     return NS_OK;
 
-  // The text-shadow spec says that any text decorations must also have a shadow applied to
-  // it. So draw the shadows as part of the display list.
-  const nsStyleText* textStyle = GetStyleText();
-
-  if (textStyle->mTextShadow) {
-    for (PRUint32 i = textStyle->mTextShadow->Length(); i > 0; --i) {
-      nsCSSShadowItem* shadow = textStyle->mTextShadow->ShadowAt(i - 1);
-      nscoord blurRadius = shadow->mRadius;
-      nscolor shadowColor;
-
-      if (shadow->mHasColor)
-        shadowColor = shadow->mColor;
-      else
-        shadowColor = GetStyleColor()->mColor;
-
-      nsPoint offset(shadow->mXOffset, shadow->mYOffset);
-
-      // Add it to the display list so it is painted underneath the text and all decorations
-      nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-        nsDisplayTextShadow(this, decorations, shadowColor, aLine, blurRadius, offset));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  // The text-shadow spec says that any text decorations must also have a
+  // shadow applied to them. So draw the shadows as part of the display
+  // list, underneath the text and all decorations.
+  if (GetStyleText()->mTextShadow) {
+    nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
+      nsDisplayTextShadow(this, decorations, aLine));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (decorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
     nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_UNDERLINE, underColor, aLine));
+      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_UNDERLINE,
+                              underColor, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   if (decorations & NS_STYLE_TEXT_DECORATION_OVERLINE) {
     nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_OVERLINE, overColor, aLine));
+      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_OVERLINE,
+                              overColor, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   if (decorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
     nsresult rv = aAboveTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_LINE_THROUGH, strikeColor, aLine));
+      nsDisplayTextDecoration(this, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
+                              strikeColor, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;

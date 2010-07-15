@@ -1879,7 +1879,7 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("MathMLSelectionRect")
+  NS_DISPLAY_DECL_NAME("MathMLSelectionRect", TYPE_MATHML_SELECTION_RECT)
 private:
   nsRect    mRect;
 };
@@ -1910,7 +1910,7 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("MathMLCharBackground")
+  NS_DISPLAY_DECL_NAME("MathMLCharBackground", TYPE_MATHML_CHAR_BACKGROUND)
 private:
   nsStyleContext* mStyleContext;
   nsRect          mRect;
@@ -1958,7 +1958,7 @@ public:
                            aBuilder->ToReferenceFrame(mFrame), mIsSelected);
   }
 
-  NS_DISPLAY_DECL_NAME("MathMLCharForeground")
+  NS_DISPLAY_DECL_NAME("MathMLCharForeground", TYPE_MATHML_CHAR_FOREGROUND)
 
 private:
   nsMathMLChar* mChar;
@@ -1980,7 +1980,7 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("MathMLCharDebug")
+  NS_DISPLAY_DECL_NAME("MathMLCharDebug", TYPE_MATHML_CHAR_DEBUG)
 private:
   nsRect    mRect;
 };

@@ -279,7 +279,7 @@ public:
                                     &bgClipRect);
   }
 
-  NS_DISPLAY_DECL_NAME("CanvasBackground")
+  NS_DISPLAY_DECL_NAME("CanvasBackground", TYPE_CANVAS_BACKGROUND)
 };
 
 /**
@@ -312,7 +312,7 @@ public:
     frame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
   }
 
-  NS_DISPLAY_DECL_NAME("CanvasFocus")
+  NS_DISPLAY_DECL_NAME("CanvasFocus", TYPE_CANVAS_FOCUS)
 };
 
 NS_IMETHODIMP
