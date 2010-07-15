@@ -364,7 +364,7 @@ window.Range.prototype = {
 // Class: Subscribable
 // A mix-in for allowing objects to collect subscribers for custom events. 
 window.Subscribable = function() {
-  this.subscribers = {};
+  this.subscribers = null;
 };
 
 window.Subscribable.prototype = {
@@ -373,22 +373,34 @@ window.Subscribable.prototype = {
   // The given callback will be called when the Subscribable fires the given event.
   // The refObject is used to facilitate removal if necessary. 
   addSubscriber: function(refObject, eventName, callback) {
-    if (!this.subscribers[eventName])
-      this.subscribers[eventName] = [];
-      
-    var subs = this.subscribers[eventName];
-    var existing = subs.filter(function(element) {
-      return element.refObject == refObject;
-    });
-    
-    if (existing.length) {
-      Utils.assert('should only ever be one', existing.length == 1);
-      existing[0].callback = callback;
-    } else {  
-      subs.push({
-        refObject: refObject, 
-        callback: callback
+    try {
+      Utils.assertThrow("refObject", refObject);
+      Utils.assertThrow("callback must be a function", iQ.isFunction(callback));
+      Utils.assertThrow("eventName must be a non-empty string", 
+          eventName && typeof(eventName) == "string");
+          
+      if (!this.subscribers)
+        this.subscribers = {};
+        
+      if (!this.subscribers[eventName])
+        this.subscribers[eventName] = [];
+        
+      var subs = this.subscribers[eventName];
+      var existing = subs.filter(function(element) {
+        return element.refObject == refObject;
       });
+      
+      if (existing.length) {
+        Utils.assert('should only ever be one', existing.length == 1);
+        existing[0].callback = callback;
+      } else {  
+        subs.push({
+          refObject: refObject, 
+          callback: callback
+        });
+      }
+    } catch(e) {
+      Utils.log(e);
     }
   },
   
@@ -396,26 +408,41 @@ window.Subscribable.prototype = {
   // Function: removeSubscriber
   // Removes the callback associated with refObject for the given event. 
   removeSubscriber: function(refObject, eventName) {
-    if (!this.subscribers[eventName])
-      return;
-      
-    this.subscribers[eventName] = this.subscribers[eventName].filter(function(element) {
-      return element.refObject != refObject;
-    });
+    try {
+      Utils.assertThrow("refObject", refObject);
+      Utils.assertThrow("eventName must be a non-empty string", 
+          eventName && typeof(eventName) == "string");
+          
+      if (!this.subscribers || !this.subscribers[eventName])
+        return;
+        
+      this.subscribers[eventName] = this.subscribers[eventName].filter(function(element) {
+        return element.refObject != refObject;
+      });
+    } catch(e) {
+      Utils.log(e);
+    }
   },
   
   // ----------
   // Function: _sendToSubscribers
   // Internal routine. Used by the Subscribable to fire events.
   _sendToSubscribers: function(eventName, eventInfo) {
-    if (!this.subscribers[eventName])
-      return;
-      
-    var self = this;
-    var subsCopy = iQ.merge([], this.subscribers[eventName]);
-    subsCopy.forEach(function(object) { 
-      object.callback(self, eventInfo);
-    });
+    try {
+      Utils.assertThrow("eventName must be a non-empty string", 
+          eventName && typeof(eventName) == "string");
+          
+      if (!this.subscribers || !this.subscribers[eventName])
+        return;
+        
+      var self = this;
+      var subsCopy = iQ.merge([], this.subscribers[eventName]);
+      subsCopy.forEach(function(object) { 
+        object.callback(self, eventInfo);
+      });
+    } catch(e) {
+      Utils.log(e);
+    }
   }
 };
 
