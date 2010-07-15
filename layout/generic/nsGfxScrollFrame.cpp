@@ -1272,6 +1272,26 @@ IsSmoothScrollingEnabled()
   return PR_FALSE;
 }
 
+class ScrollFrameActivityTracker : public nsExpirationTracker<nsGfxScrollFrameInner,4> {
+public:
+  // Wait for 75-100ms between scrolls before we switch the appearance back to
+  // subpixel AA. That's 4 generations of 25ms each.
+  enum { TIMEOUT_MS = 25 };
+  ScrollFrameActivityTracker()
+    : nsExpirationTracker<nsGfxScrollFrameInner,4>(TIMEOUT_MS) {}
+  ~ScrollFrameActivityTracker() {
+    AgeAllGenerations();
+  }
+
+  virtual void NotifyExpired(nsGfxScrollFrameInner *aObject) {
+    RemoveObject(aObject);
+    aObject->mScrollingActive = PR_FALSE;
+    aObject->mOuter->InvalidateOverflowRect();
+  }
+};
+
+static ScrollFrameActivityTracker *gScrollFrameActivityTracker = nsnull;
+
 nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
                                              PRBool aIsRoot,
                                              PRBool aIsXUL)
@@ -1307,6 +1327,14 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
 
 nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
 {
+  if (mActivityExpirationState.IsTracked()) {
+    gScrollFrameActivityTracker->RemoveObject(this);
+  }
+  if (gScrollFrameActivityTracker &&
+      gScrollFrameActivityTracker->IsEmpty()) {
+    delete gScrollFrameActivityTracker;
+    gScrollFrameActivityTracker = nsnull;
+  }
   delete mAsyncScroll;
 }
 
@@ -1562,6 +1590,41 @@ InvalidateFixedBackgroundFrames(nsIFrame* aRootFrame,
   InvalidateFixedBackgroundFramesFromList(&builder, list);
 }
 
+PRBool nsGfxScrollFrameInner::IsAlwaysActive() const
+{
+  // The root scrollframe for a non-chrome document which is the direct
+  // child of a chrome document is always treated as "active".
+  if (!mIsRoot)
+    return PR_FALSE;
+  nsPresContext* presContext = mOuter->PresContext();
+  if (presContext->IsChrome())
+    return PR_FALSE;
+  nsIFrame* rootFrame = mOuter->PresContext()->PresShell()->GetRootFrame();
+  nsIFrame* rootParent = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
+  return !rootParent || rootParent->PresContext()->IsChrome(); 
+}
+
+PRBool nsGfxScrollFrameInner::IsScrollingActive() const
+{
+  return mScrollingActive || IsAlwaysActive();
+}
+
+void nsGfxScrollFrameInner::MarkActive()
+{
+  if (IsAlwaysActive())
+    return;
+
+  mScrollingActive = PR_TRUE;
+  if (mActivityExpirationState.IsTracked()) {
+    gScrollFrameActivityTracker->MarkUsed(this);
+  } else {
+    if (!gScrollFrameActivityTracker) {
+      gScrollFrameActivityTracker = new ScrollFrameActivityTracker();
+    }
+    gScrollFrameActivityTracker->AddObject(this);
+  }
+}
+
 void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
 {
   nsRootPresContext* rootPresContext =
@@ -1595,10 +1658,10 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
   // to be consistent with the view and frame hierarchy.
   PRUint32 flags = nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT;
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
-  if (CanScrollWithBlitting(mOuter, displayRoot) && mScrollingActive) {
+  if (IsScrollingActive() && CanScrollWithBlitting(mOuter, displayRoot)) {
     flags |= nsIFrame::INVALIDATE_NO_THEBES_LAYERS;
   }
-  mScrollingActive = PR_TRUE;
+  MarkActive();
   mOuter->InvalidateWithFlags(mScrollPort, flags);
 
   if (flags & nsIFrame::INVALIDATE_NO_THEBES_LAYERS) {
