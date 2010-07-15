@@ -89,6 +89,12 @@ public:
                      nsIRenderingContext* aCtx);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("TextDecoration", TYPE_TEXT_DECORATION)
+
+  virtual PRUint32 GetPerFrameKey()
+  {
+    return TYPE_TEXT_DECORATION | (mDecoration << TYPE_BITS);
+  }
+
 private:
   nsLineBox*            mLine;
   nscolor               mColor;
