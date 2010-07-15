@@ -49,13 +49,12 @@
  * allocated from the malloc heap.
  */
 #include <ctype.h>
-#include "jspubtd.h"
+#include "jsapi.h"
 #include "jsprvtd.h"
 #include "jshashtable.h"
 #include "jslock.h"
 #include "jsobj.h"
-
-JS_BEGIN_EXTERN_C
+#include "jsvalue.h"
 
 #define JSSTRING_BIT(n)             ((size_t)1 << (n))
 #define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
@@ -301,6 +300,8 @@ struct JSString {
     static JSString *intString(jsint i);
 };
 
+JS_STATIC_ASSERT(sizeof(JSString) % JS_GCTHING_ALIGN == 0);
+
 extern const jschar *
 js_GetStringChars(JSContext *cx, JSString *str);
 
@@ -472,7 +473,7 @@ JS_ISSPACE(jschar c)
 #define JS7_ISLET(c)    ((c) < 128 && isalpha(c))
 
 /* Initialize the String class, returning its prototype object. */
-extern JSClass js_StringClass;
+extern js::Class js_StringClass;
 
 inline bool
 JSObject::isString() const
@@ -518,10 +519,10 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s);
 /*
  * Convert a value to a printable C string.
  */
-typedef JSString *(*JSValueToStringFun)(JSContext *cx, jsval v);
+typedef JSString *(*JSValueToStringFun)(JSContext *cx, const js::Value &v);
 
 extern JS_FRIEND_API(const char *)
-js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun);
+js_ValueToPrintable(JSContext *cx, const js::Value &, JSValueToStringFun v2sfun);
 
 #define js_ValueToPrintableString(cx,v) \
     js_ValueToPrintable(cx, v, js_ValueToString)
@@ -533,23 +534,23 @@ js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun);
  * Convert a value to a string, returning null after reporting an error,
  * otherwise returning a new string reference.
  */
-extern JS_FRIEND_API(JSString *)
-js_ValueToString(JSContext *cx, jsval v);
+extern JSString *
+js_ValueToString(JSContext *cx, const js::Value &v);
 
 /*
  * This function implements E-262-3 section 9.8, toString. Convert the given
  * value to a string of jschars appended to the given buffer. On error, the
  * passed buffer may have partial results appended.
  */
-extern JS_FRIEND_API(JSBool)
-js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb);
+extern JSBool
+js_ValueToCharBuffer(JSContext *cx, const js::Value &v, JSCharBuffer &cb);
 
 /*
  * Convert a value to its source expression, returning null after reporting
  * an error, otherwise returning a new string reference.
  */
 extern JS_FRIEND_API(JSString *)
-js_ValueToSource(JSContext *cx, jsval v);
+js_ValueToSource(JSContext *cx, const js::Value &v);
 
 /*
  * Compute a hash function from str. The caller can call this function even if
@@ -678,11 +679,11 @@ js_GetStringBytes(JSContext *cx, JSString *str);
 
 /* Export a few natives and a helper to other files in SpiderMonkey. */
 extern JSBool
-js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval);
+js_str_escape(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
+              js::Value *rval);
 
 extern JSBool
-js_str_toString(JSContext *cx, uintN argc, jsval *vp);
+js_str_toString(JSContext *cx, uintN argc, js::Value *vp);
 
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
@@ -718,9 +719,7 @@ js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
                         JSString *str, uint32 quote);
 
 extern JSBool
-js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
-
-JS_END_EXTERN_C
+js_String(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
 
 namespace js {
 

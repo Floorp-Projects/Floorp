@@ -140,8 +140,11 @@ PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     jsval argval = (argc > 0) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    jsid id;
+    if (!JS_ValueToId(cx, argval, &id))
+        return JS_FALSE;
     JS_SET_RVAL(cx, vp, argval);
-    return (*popp)(cx, obj, v, vp);
+    return (*popp)(cx, obj, id, vp);
 }
 
 static void
@@ -293,10 +296,10 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
                        ? JS_GetStringBytes(JSVAL_TO_STRING(idval))
                        : nsnull;
     if(!name ||
-       !IS_PROTO_CLASS(desc.obj->getClass()) ||
+       !IS_PROTO_CLASS(desc.obj->getJSClass()) ||
        (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
        !(desc.getter || desc.setter) ||
-       desc.setter == desc.obj->getClass()->setProperty)
+       desc.setter == desc.obj->getJSClass()->setProperty)
     {
         JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return JS_TRUE;
@@ -339,7 +342,8 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-    JSFastNative forward = wantGetter ? js_obj_defineGetter : js_obj_defineSetter;
+    JSFastNative forward = wantGetter ? Jsvalify(js_obj_defineGetter)
+                                      : Jsvalify(js_obj_defineSetter);
     jsval id = (argc >= 1) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
     if(!JSVAL_IS_STRING(id))
         return forward(cx, argc, vp);
@@ -359,7 +363,7 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
     if(!obj2 ||
        (attrs & (JSPROP_GETTER | JSPROP_SETTER)) ||
        !(getter || setter) ||
-       !IS_PROTO_CLASS(obj2->getClass()))
+       !IS_PROTO_CLASS(obj2->getJSClass()))
         return forward(cx, argc, vp);
 
     // Reify the getter and setter...
@@ -489,7 +493,7 @@ xpc_qsThrow(JSContext *cx, nsresult rv)
  */
 static void
 GetMemberInfo(JSObject *obj,
-              jsval memberId,
+              jsid memberId,
               const char **ifaceName,
               const char **memberName)
 {
@@ -500,8 +504,8 @@ GetMemberInfo(JSObject *obj,
     // but this code often produces a more specific error message, e.g.
     *ifaceName = "Unknown";
 
-    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getClass()) ||
-                 obj->getClass() == &XPC_WN_Tearoff_JSClass,
+    NS_ASSERTION(IS_WRAPPER_CLASS(obj->getJSClass()) ||
+                 obj->getJSClass() == &XPC_WN_Tearoff_JSClass,
                  "obj must be a wrapper");
     XPCWrappedNativeProto *proto;
     if(IS_SLIM_WRAPPER(obj))
@@ -526,8 +530,8 @@ GetMemberInfo(JSObject *obj,
         }
     }
 
-    *memberName = (JSVAL_IS_STRING(memberId)
-                   ? JS_GetStringBytes(JSVAL_TO_STRING(memberId))
+    *memberName = (JSID_IS_STRING(memberId)
+                   ? JS_GetStringBytes(JSID_TO_STRING(memberId))
                    : "unknown");
 }
 
@@ -541,7 +545,7 @@ GetMethodInfo(JSContext *cx,
     NS_ASSERTION(JS_ObjectIsFunction(cx, funobj),
                  "JSFastNative callee should be Function object");
     JSString *str = JS_GetFunctionId((JSFunction *) JS_GetPrivate(cx, funobj));
-    jsval methodId = str ? STRING_TO_JSVAL(str) : JSVAL_NULL;
+    jsid methodId = str ? INTERNED_STRING_TO_JSID(str) : JSID_VOID;
 
     GetMemberInfo(JSVAL_TO_OBJECT(vp[1]), methodId, ifaceName, memberName);
 }
@@ -595,7 +599,7 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
 
 JSBool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
-                              jsval memberId)
+                              jsid memberId)
 {
     const char *ifaceName, *memberName;
     GetMemberInfo(obj, memberId, &ifaceName, &memberName);
@@ -668,7 +672,7 @@ xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
 
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
-                          JSObject *obj, jsval propId)
+                          JSObject *obj, jsid propId)
 {
     const char *ifaceName, *memberName;
     GetMemberInfo(obj, propId, &ifaceName, &memberName);
@@ -676,7 +680,7 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
 }
 
 JSBool
-xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     return JS_ReportErrorFlagsAndNumber(cx,
                                         JSREPORT_WARNING | JSREPORT_STRICT |
@@ -1068,9 +1072,26 @@ xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval)
     }
 
     jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str);
-    if(!jsstr)
+    if(JSVAL_IS_NULL(jsstr))
         return JS_FALSE;
     *rval = jsstr;
+    return JS_TRUE;
+}
+
+JSBool
+xpc_qsStringToJsstring(JSContext *cx, const nsAString &str, JSString **rval)
+{
+    // From the T_DOMSTRING case in XPCConvert::NativeData2JS.
+    if(str.IsVoid())
+    {
+        *rval = nsnull;
+        return JS_TRUE;
+    }
+
+    jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str);
+    if(JSVAL_IS_NULL(jsstr))
+        return JS_FALSE;
+    *rval = JSVAL_TO_STRING(jsstr);
     return JS_TRUE;
 }
 

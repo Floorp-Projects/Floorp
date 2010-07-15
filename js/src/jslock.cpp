@@ -500,16 +500,16 @@ FinishSharingTitle(JSContext *cx, JSTitle *title)
         uint32 nslots = scope->freeslot;
         JS_ASSERT(nslots >= JSSLOT_START(obj->getClass()));
         for (uint32 i = JSSLOT_START(obj->getClass()); i != nslots; ++i) {
-            jsval v = obj->getSlot(i);
-            if (JSVAL_IS_STRING(v) &&
-                !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
+            Value v = obj->getSlot(i);
+            if (v.isString() &&
+                !js_MakeStringImmutable(cx, v.toString())) {
                 /*
                  * FIXME bug 363059: The following error recovery changes
                  * runtime execution semantics, arbitrarily and silently
                  * ignoring errors except out-of-memory, which should have been
                  * reported through JS_ReportOutOfMemory at this point.
                  */
-                obj->setSlot(i, JSVAL_VOID);
+                obj->setSlot(i, UndefinedValue());
             }
         }
     }
@@ -717,7 +717,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         scope->sealed() ||
         (title->ownercx && ClaimTitle(title, cx))) {
-        return obj->getSlot(slot);
+        return Jsvalify(obj->getSlot(slot));
     }
 
 #ifndef NSPR_LOCK
@@ -732,7 +732,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
          * lock release followed by fat lock acquisition.
          */
         if (scope == obj->scope()) {
-            v = obj->getSlot(slot);
+            v = Jsvalify(obj->getSlot(slot));
             if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
                 JS_ASSERT(title->ownercx != cx);
@@ -746,12 +746,12 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
             js_Dequeue(tl);
     }
     else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-        return obj->getSlot(slot);
+        return Jsvalify(obj->getSlot(slot));
     }
 #endif
 
     js_LockObj(cx, obj);
-    v = obj->getSlot(slot);
+    v = Jsvalify(obj->getSlot(slot));
 
     /*
      * Test whether cx took ownership of obj's scope during js_LockObj.
@@ -805,7 +805,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         scope->sealed() ||
         (title->ownercx && ClaimTitle(title, cx))) {
-        obj->lockedSetSlot(slot, v);
+        obj->lockedSetSlot(slot, Valueify(v));
         return;
     }
 
@@ -815,7 +815,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (NativeCompareAndSwap(&tl->owner, 0, me)) {
         if (scope == obj->scope()) {
-            obj->lockedSetSlot(slot, v);
+            obj->lockedSetSlot(slot, Valueify(v));
             if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
                 JS_ASSERT(title->ownercx != cx);
@@ -828,13 +828,13 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
         if (!NativeCompareAndSwap(&tl->owner, me, 0))
             js_Dequeue(tl);
     } else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-        obj->lockedSetSlot(slot, v);
+        obj->lockedSetSlot(slot, Valueify(v));
         return;
     }
 #endif
 
     js_LockObj(cx, obj);
-    obj->lockedSetSlot(slot, v);
+    obj->lockedSetSlot(slot, Valueify(v));
 
     /*
      * Same drill as above, in js_GetSlotThreadSafe.

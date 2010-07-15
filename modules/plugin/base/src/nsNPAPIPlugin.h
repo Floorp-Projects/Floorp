@@ -43,6 +43,8 @@
 #include "npfunctions.h"
 #include "nsPluginHost.h"
 
+#include "jsapi.h"
+
 #include "mozilla/PluginLibrary.h"
 
 /*
@@ -113,6 +115,72 @@ protected:
 namespace mozilla {
 namespace plugins {
 namespace parent {
+
+// On 32-bit platforms, sizeof(jsval) != sizeof(NPIdentifier), so we need to
+// use an alternate encoding scheme. The following inline helpers provide an
+// abstraction for setting and getting the values of NPIdentifiers that should
+// always be used instead of casting an NPIdentifier to a jsval and using the
+// jsapi.
+
+JS_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(jsid));
+
+static inline jsid
+NPIdentifierToJSId(NPIdentifier id)
+{
+    jsid tmp;
+    JSID_BITS(tmp) = (size_t)id;
+    return tmp;
+}
+
+static inline NPIdentifier
+JSIdToNPIdentifier(jsid id)
+{
+    return (NPIdentifier)JSID_BITS(id);
+}
+
+static inline bool
+NPIdentifierIsString(NPIdentifier id)
+{
+    return JSID_IS_STRING(NPIdentifierToJSId(id));
+}
+
+static inline JSString *
+NPIdentifierToString(NPIdentifier id)
+{
+    return JSID_TO_STRING(NPIdentifierToJSId(id));
+}
+
+static inline NPIdentifier
+StringToNPIdentifier(JSString *str)
+{
+    return JSIdToNPIdentifier(INTERNED_STRING_TO_JSID(str));
+}
+
+static inline bool
+NPIdentifierIsInt(NPIdentifier id)
+{
+    return JSID_IS_INT(NPIdentifierToJSId(id));
+}
+
+static inline jsint
+NPIdentifierToInt(NPIdentifier id)
+{
+    return JSID_TO_INT(NPIdentifierToJSId(id));
+}
+
+static inline NPIdentifier
+IntToNPIdentifier(jsint i)
+{
+    return JSIdToNPIdentifier(INT_TO_JSID(i));
+}
+
+static inline bool
+NPIdentifierIsVoid(NPIdentifier id)
+{
+    return JSID_IS_VOID(NPIdentifierToJSId(id));
+}
+
+#define NPIdentifier_VOID (JSIdToNPIdentifier(JSID_VOID))
 
 NPObject* NP_CALLBACK
 _getwindowobject(NPP npp);

@@ -100,7 +100,7 @@ xpc_qsThrow(JSContext *cx, nsresult rv);
  */
 JSBool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
-                              JSObject *obj, jsval memberId);
+                              JSObject *obj, jsid memberId);
 
 /**
  * Fail after an XPCOM method returned rv.
@@ -140,34 +140,29 @@ xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
  */
 void
 xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
-                          jsval propId);
+                          jsid propId);
 
 
 JSBool
-xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 /* Functions for converting values between COM and JS. */
 
 inline JSBool
 xpc_qsInt32ToJsval(JSContext *cx, PRInt32 i, jsval *rv)
 {
-    if(INT_FITS_IN_JSVAL(i))
-    {
-        *rv = INT_TO_JSVAL(i);
-        return JS_TRUE;
-    }
-    return JS_NewDoubleValue(cx, i, rv);
+    *rv = INT_TO_JSVAL(i);
+    return JS_TRUE;
 }
 
 inline JSBool
 xpc_qsUint32ToJsval(JSContext *cx, PRUint32 u, jsval *rv)
 {
     if(u <= JSVAL_INT_MAX)
-    {
         *rv = INT_TO_JSVAL(u);
-        return JS_TRUE;
-    }
-    return JS_NewDoubleValue(cx, u, rv);
+    else
+        *rv = DOUBLE_TO_JSVAL(u);
+    return JS_TRUE;
 }
 
 #ifdef HAVE_LONG_LONG
@@ -350,6 +345,10 @@ xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, PRUnichar **pstr);
 /** Convert an nsAString to jsval, returning JS_TRUE on success. */
 JSBool
 xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval);
+
+/** Convert an nsAString to JSString, returning JS_TRUE on success. */
+JSBool
+xpc_qsStringToJsstring(JSContext *cx, const nsAString &str, JSString **rval);
 
 nsresult
 getWrapper(JSContext *cx,

@@ -63,7 +63,7 @@ CallStack::getCurrentFrame() const
     return isSuspended() ? getSuspendedFrame() : cx->fp;
 }
 
-JS_REQUIRES_STACK inline jsval *
+JS_REQUIRES_STACK inline Value *
 StackSpace::firstUnused() const
 {
     CallStack *ccs = currentCallStack;
@@ -89,7 +89,7 @@ StackSpace::assertIsCurrent(JSContext *cx) const
 }
 
 JS_ALWAYS_INLINE bool
-StackSpace::ensureSpace(JSContext *maybecx, jsval *from, ptrdiff_t nvals) const
+StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 {
     JS_ASSERT(from == firstUnused());
 #ifdef XP_WIN
@@ -127,7 +127,7 @@ StackSpace::ensureEnoughSpaceToEnterTrace()
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
-StackSpace::getInlineFrame(JSContext *cx, jsval *sp,
+StackSpace::getInlineFrame(JSContext *cx, Value *sp,
                            uintN nmissing, uintN nfixed) const
 {
     assertIsCurrent(cx);
@@ -178,7 +178,7 @@ StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
 void
 AutoIdArray::trace(JSTracer *trc) {
     JS_ASSERT(tag == IDARRAY);
-    js::TraceValues(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
+    MarkIdRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
 }
 
 class AutoNamespaceArray : protected AutoGCRooter {
@@ -239,20 +239,36 @@ class CompartmentChecker
             check(obj->getCompartment(context));
     }
 
+    void check(const js::Value &v) {
+        if (v.isObject())
+            check(&v.toObject());
+    }
+
     void check(jsval v) {
-        if (!JSVAL_IS_PRIMITIVE(v))
-            check(JSVAL_TO_OBJECT(v));
+        check(Valueify(v));
     }
 
     void check(const ValueArray &arr) {
         for (size_t i = 0; i < arr.length; i++)
             check(arr.array[i]);
     }
+
+    void check(const JSValueArray &arr) {
+        for (size_t i = 0; i < arr.length; i++)
+            check(arr.array[i]);
+    }
+
+    void check(jsid id) {
+        if (JSID_IS_OBJECT(id))
+            check(JSID_TO_OBJECT(id));
+    }
     
     void check(JSIdArray *ida) {
         if (ida) {
-            for (jsint i = 0; i < ida->length; i++)
-                check(ID_TO_VALUE(ida->vector[i]));
+            for (jsint i = 0; i < ida->length; i++) {
+                if (JSID_IS_OBJECT(ida->vector[i]))
+                    check(ida->vector[i]);
+            }
         }
     }
 
@@ -333,7 +349,7 @@ assertSameCompartment(JSContext *cx, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 #undef START_ASSERT_SAME_COMPARTMENT
 
 inline JSBool
-callJSNative(JSContext *cx, JSNative native, JSObject *thisobj, uintN argc, jsval *argv, jsval *rval)
+callJSNative(JSContext *cx, js::Native native, JSObject *thisobj, uintN argc, js::Value *argv, js::Value *rval)
 {
     assertSameCompartment(cx, thisobj, ValueArray(argv, argc));
     JSBool ok = native(cx, thisobj, argc, argv, rval);
@@ -343,7 +359,7 @@ callJSNative(JSContext *cx, JSNative native, JSObject *thisobj, uintN argc, jsva
 }
 
 inline JSBool
-callJSFastNative(JSContext *cx, JSFastNative native, uintN argc, jsval *vp)
+callJSFastNative(JSContext *cx, js::FastNative native, uintN argc, js::Value *vp)
 {
     assertSameCompartment(cx, ValueArray(vp, argc + 2));
     JSBool ok = native(cx, argc, vp);
@@ -353,22 +369,22 @@ callJSFastNative(JSContext *cx, JSFastNative native, uintN argc, jsval *vp)
 }
 
 inline JSBool
-callJSPropertyOp(JSContext *cx, JSPropertyOp op, JSObject *obj, jsval idval, jsval *vp)
+callJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
-    assertSameCompartment(cx, obj, idval, *vp);
-    JSBool ok = op(cx, obj, idval, vp);
+    assertSameCompartment(cx, obj, id, *vp);
+    JSBool ok = op(cx, obj, id, vp);
     if (ok)
         assertSameCompartment(cx, obj, *vp);
     return ok;
 }
 
 inline JSBool
-callJSPropertyOpSetter(JSContext *cx, JSPropertyOp op, JSObject *obj, jsval idval, jsval *vp)
+callJSPropertyOpSetter(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
 {
-    assertSameCompartment(cx, obj, idval, *vp);
-    return op(cx, obj, idval, vp);
+    assertSameCompartment(cx, obj, id, *vp);
+    return op(cx, obj, id, vp);
 }
 
-}
+}  /* namespace js */
 
 #endif /* jscntxtinlines_h___ */

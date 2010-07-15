@@ -47,8 +47,6 @@
 #include "jsprvtd.h"
 #include "jsdbgapi.h"
 
-JS_BEGIN_EXTERN_C
-
 /*
  * Type of try note associated with each catch or finally block, and also with
  * for-in loops.
@@ -130,6 +128,11 @@ typedef struct JSUpvarArray {
     uint32          length;     /* count of indexed upvar cookies */
 } JSUpvarArray;
 
+typedef struct JSConstArray {
+    js::Value       *vector;    /* array of indexed constant values */
+    uint32          length;
+} JSConstArray;
+
 #define JS_OBJECT_ARRAY_SIZE(length)                                          \
     (offsetof(JSObjectArray, vector) + sizeof(JSObject *) * (length))
 
@@ -151,6 +154,8 @@ struct JSScript {
     uint8           regexpsOffset;  /* offset to the array of to-be-cloned
                                        regexps or 0 if none. */
     uint8           trynotesOffset; /* offset to the array of try notes or
+                                       0 if none */
+    uint8           constOffset;    /* offset to the array of constants or
                                        0 if none */
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
@@ -196,6 +201,11 @@ struct JSScript {
         return (JSTryNoteArray *) ((uint8 *) this + trynotesOffset);
     }
 
+    JSConstArray *consts() {
+        JS_ASSERT(constOffset != 0);
+        return (JSConstArray *) ((uint8 *) this + constOffset);
+    }
+
     JSAtom *getAtom(size_t index) {
         JS_ASSERT(index < atomMap.length);
         return atomMap.vector[index];
@@ -210,6 +220,12 @@ struct JSScript {
     inline JSFunction *getFunction(size_t index);
 
     inline JSObject *getRegExp(size_t index);
+
+    const js::Value &getConst(size_t index) {
+        JSConstArray *arr = consts();
+        JS_ASSERT(index < arr->length);
+        return arr->vector[index];
+    }
 
     /*
      * The isEmpty method tells whether this script has code that computes any
@@ -264,7 +280,7 @@ StackDepth(JSScript *script)
         }                                                                     \
     JS_END_MACRO
 
-extern JS_FRIEND_DATA(JSClass) js_ScriptClass;
+extern JS_FRIEND_DATA(js::Class) js_ScriptClass;
 
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
@@ -323,7 +339,7 @@ js_SweepScriptFilenames(JSRuntime *rt);
 extern JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
              uint32 nobjects, uint32 nupvars, uint32 nregexps,
-             uint32 ntrynotes);
+             uint32 ntrynotes, uint32 nconsts);
 
 extern JSScript *
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
@@ -401,7 +417,5 @@ js_GetOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
 extern JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
              JSBool *hasMagic);
-
-JS_END_EXTERN_C
 
 #endif /* jsscript_h___ */

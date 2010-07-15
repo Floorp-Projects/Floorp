@@ -49,7 +49,7 @@
 #include "jscntxtinlines.h"
 
 inline JSEmptyScope *
-JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
+JSScope::createEmptyScope(JSContext *cx, js::Class *clasp)
 {
     JS_ASSERT(!emptyScope);
     emptyScope = cx->create<JSEmptyScope>(cx, ops, clasp);
@@ -57,7 +57,7 @@ JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
 }
 
 inline JSEmptyScope *
-JSScope::getEmptyScope(JSContext *cx, JSClass *clasp)
+JSScope::getEmptyScope(JSContext *cx, js::Class *clasp)
 {
     if (emptyScope) {
         JS_ASSERT(clasp == emptyScope->clasp);
@@ -67,7 +67,7 @@ JSScope::getEmptyScope(JSContext *cx, JSClass *clasp)
 }
 
 inline bool
-JSScope::ensureEmptyScope(JSContext *cx, JSClass *clasp)
+JSScope::ensureEmptyScope(JSContext *cx, js::Class *clasp)
 {
     if (emptyScope) {
         JS_ASSERT(clasp == emptyScope->clasp);
@@ -115,44 +115,51 @@ JSScope::extend(JSContext *cx, JSScopeProperty *sprop, bool isDefinitelyAtom)
  * objects optimized as typically non-escaping, ad-hoc methods in obj.
  */
 inline bool
-JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, jsval *vp)
+JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, js::Value *vp)
 {
     JS_ASSERT(hasMethodBarrier());
     JS_ASSERT(hasProperty(sprop));
     JS_ASSERT(sprop->isMethod());
-    JS_ASSERT(sprop->methodValue() == *vp);
+    JS_ASSERT(&vp->toObject() == &sprop->methodObject());
     JS_ASSERT(object->getClass() == &js_ObjectClass);
 
-    JSObject *funobj = JSVAL_TO_OBJECT(*vp);
+    JSObject *funobj = &vp->toObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
     JS_ASSERT(FUN_OBJECT(fun) == funobj && FUN_NULL_CLOSURE(fun));
 
     funobj = CloneFunctionObject(cx, fun, funobj->getParent());
     if (!funobj)
         return false;
-    *vp = OBJECT_TO_JSVAL(funobj);
+    vp->setObject(*funobj);
     return !!js_SetPropertyHelper(cx, object, sprop->id, 0, vp);
 }
 
+static JS_ALWAYS_INLINE bool
+ChangesMethodValue(const js::Value &prev, const js::Value &v)
+{
+    JSObject *prevObj;
+    return prev.isObject() && (prevObj = &prev.toObject())->isFunction() &&
+           (!v.isObject() || &v.toObject() != prevObj);
+}
+
 inline bool
-JSScope::methodWriteBarrier(JSContext *cx, JSScopeProperty *sprop, jsval v)
+JSScope::methodWriteBarrier(JSContext *cx, JSScopeProperty *sprop,
+                            const js::Value &v)
 {
     if (flags & (BRANDED | METHOD_BARRIER)) {
-        jsval prev = object->lockedGetSlot(sprop->slot);
-
-        if (prev != v && VALUE_IS_FUNCTION(cx, prev))
+        const js::Value &prev = object->lockedGetSlot(sprop->slot);
+        if (ChangesMethodValue(prev, v))
             return methodShapeChange(cx, sprop);
     }
     return true;
 }
 
 inline bool
-JSScope::methodWriteBarrier(JSContext *cx, uint32 slot, jsval v)
+JSScope::methodWriteBarrier(JSContext *cx, uint32 slot, const js::Value &v)
 {
     if (flags & (BRANDED | METHOD_BARRIER)) {
-        jsval prev = object->lockedGetSlot(slot);
-
-        if (prev != v && VALUE_IS_FUNCTION(cx, prev))
+        const js::Value &prev = object->lockedGetSlot(slot);
+        if (ChangesMethodValue(prev, v))
             return methodShapeChange(cx, slot);
     }
     return true;
@@ -211,7 +218,7 @@ JSScope::trace(JSTracer *trc)
 }
 
 inline
-JSScopeProperty::JSScopeProperty(jsid id, JSPropertyOp getter, JSPropertyOp setter,
+JSScopeProperty::JSScopeProperty(jsid id, js::PropertyOp getter, js::PropertyOp setter,
                                  uint32 slot, uintN attrs, uintN flags, intN shortid)
   : id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(uint8(attrs)),
     flags(uint8(flags)), shortid(int16(shortid))
@@ -235,25 +242,25 @@ JSScopeProperty::hash() const
     hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ slot;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ id;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(id);
     return hash;
 }
 
 inline bool
 JSScopeProperty::matches(const JSScopeProperty *p) const
 {
-    JS_ASSERT(!JSVAL_IS_NULL(id));
-    JS_ASSERT(!JSVAL_IS_NULL(p->id));
+    JS_ASSERT(!JSID_IS_VOID(id));
+    JS_ASSERT(!JSID_IS_VOID(p->id));
     return id == p->id &&
            matchesParamsAfterId(p->rawGetter, p->rawSetter, p->slot, p->attrs, p->flags,
                                 p->shortid);
 }
 
 inline bool
-JSScopeProperty::matchesParamsAfterId(JSPropertyOp agetter, JSPropertyOp asetter, uint32 aslot,
+JSScopeProperty::matchesParamsAfterId(js::PropertyOp agetter, js::PropertyOp asetter, uint32 aslot,
                                       uintN aattrs, uintN aflags, intN ashortid) const
 {
-    JS_ASSERT(!JSVAL_IS_NULL(id));
+    JS_ASSERT(!JSID_IS_VOID(id));
     return rawGetter == agetter &&
            rawSetter == asetter &&
            slot == aslot &&
@@ -263,19 +270,19 @@ JSScopeProperty::matchesParamsAfterId(JSPropertyOp agetter, JSPropertyOp asetter
 }
 
 inline bool
-JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
+JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, js::Value* vp)
 {
-    JS_ASSERT(!JSVAL_IS_NULL(this->id));
+    JS_ASSERT(!JSID_IS_VOID(this->id));
     JS_ASSERT(!hasDefaultGetter());
 
     if (hasGetterValue()) {
         JS_ASSERT(!isMethod());
-        jsval fval = getterValue();
-        return js_InternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
+        js::Value fval = getterValue();
+        return js::InternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
     }
 
     if (isMethod()) {
-        *vp = methodValue();
+        vp->setObject(methodObject());
 
         JSScope *scope = pobj->scope();
         JS_ASSERT(scope->object == pobj);
@@ -292,17 +299,17 @@ JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
 }
 
 inline bool
-JSScopeProperty::set(JSContext* cx, JSObject* obj, jsval* vp)
+JSScopeProperty::set(JSContext* cx, JSObject* obj, js::Value* vp)
 {
     JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
 
     if (attrs & JSPROP_SETTER) {
-        jsval fval = setterValue();
-        return js_InternalGetOrSet(cx, obj, id, fval, JSACC_WRITE, 1, vp, vp);
+        js::Value fval = setterValue();
+        return js::InternalGetOrSet(cx, obj, id, fval, JSACC_WRITE, 1, vp, vp);
     }
 
     if (attrs & JSPROP_GETTER)
-        return !!js_ReportGetterOnlyAssignment(cx);
+        return js_ReportGetterOnlyAssignment(cx);
 
     /* See the comment in JSScopeProperty::get as to why we check for With. */
     if (obj->getClass() == &js_WithClass)

@@ -47,6 +47,10 @@
 #include "jspubtd.h"
 #include "jsutil.h"
 
+#ifdef __cplusplus
+# include "jsvalue.h"
+#endif
+
 JS_BEGIN_EXTERN_C
 
 /*
@@ -100,7 +104,7 @@ typedef enum JSOp {
 #define JOF_INCDEC       (3U<<10) /* increment or decrement opcode */
 #define JOF_POST         (1U<<12) /* postorder increment or decrement */
 #define JOF_FOR          (1U<<13) /* for-in property op (akin to JOF_SET) */
-#define JOF_ASSIGNING     JOF_SET /* hint for JSClass.resolve, used for ops
+#define JOF_ASSIGNING     JOF_SET /* hint for Class.resolve, used for ops
                                      that do simplex assignment */
 #define JOF_DETECTING    (1U<<14) /* object detection for JSNewResolveOp */
 #define JOF_BACKPATCH    (1U<<15) /* backpatch placeholder during codegen */
@@ -332,14 +336,13 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
  * Unfortunately some bytecodes such as JSOP_LOOKUPSWITCH have immediates that
  * might be string or double atoms. Those opcodes cannot be used from imacros.
  * See the assertions in the JSOP_DOUBLE and JSOP_LOOKUPSWTICH* opcode cases in
- * jsops.cpp.
+ * jsinterp.cpp.
  */
-#define GET_DOUBLE_FROM_BYTECODE(script, pc, pcoff, atom)                     \
+#define GET_DOUBLE_FROM_BYTECODE(script, pc, pcoff, dbl)                      \
     JS_BEGIN_MACRO                                                            \
         uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
-        JS_ASSERT(index_ < (script)->atomMap.length);                         \
-        (atom) = (script)->atomMap.vector[index_];                            \
-        JS_ASSERT(ATOM_IS_DOUBLE(atom));                                      \
+        JS_ASSERT(index_ < (script)->consts()->length);                       \
+        (dbl) = (script)->getConst(index_).toDouble();                        \
     JS_END_MACRO
 
 #define GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj)                      \
@@ -462,6 +465,19 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 
 #define JSDVG_IGNORE_STACK      0
 #define JSDVG_SEARCH_STACK      1
+
+#ifdef __cplusplus
+namespace js {
+
+static inline char *
+DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
+                        JSString *fallback)
+{
+    return js_DecompileValueGenerator(cx, spindex, Jsvalify(v), fallback);
+}
+
+}
+#endif
 
 /*
  * Given bytecode address pc in script's main program code, return the operand

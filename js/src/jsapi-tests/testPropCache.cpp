@@ -7,7 +7,7 @@
 static int g_counter;
 
 static JSBool
-CounterAdd(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
+CounterAdd(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     g_counter++;
     return JS_TRUE;

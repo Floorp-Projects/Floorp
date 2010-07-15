@@ -36,6 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "jsversion.h"
 
 #if JS_HAS_XDR
@@ -55,6 +56,8 @@
 #include "jsxdrapi.h"
 
 #include "jsobjinlines.h"
+
+using namespace js;
 
 #ifdef DEBUG
 #define DBG(x) x
@@ -504,22 +507,44 @@ XDRDoubleValue(JSXDRState *xdr, jsdouble *dp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_XDRDouble(JSXDRState *xdr, jsdouble **dpp)
+JS_XDRDouble(JSXDRState *xdr, jsdouble *dp)
 {
-    jsdouble d = (xdr->mode == JSXDR_ENCODE) ? **dpp : 0.0;
+    jsdouble d = (xdr->mode == JSXDR_ENCODE) ? *dp : 0.0;
     if (!XDRDoubleValue(xdr, &d))
         return JS_FALSE;
-    if (xdr->mode == JSXDR_DECODE) {
-        *dpp = JS_NewDouble(xdr->cx, d);
-        if (!*dpp)
-            return JS_FALSE;
-    }
+    if (xdr->mode == JSXDR_DECODE)
+        *dp = d;
     return JS_TRUE;
 }
 
-/* These are magic pseudo-tags: see jsapi.h, near the top, for real tags. */
-#define JSVAL_XDRNULL   0x8
-#define JSVAL_XDRVOID   0xA
+enum jsvaltag {
+    JSVAL_OBJECT  =             0x0,
+    JSVAL_INT     =             0x1,
+    JSVAL_DOUBLE  =             0x2,
+    JSVAL_STRING  =             0x4,
+    JSVAL_SPECIAL =             0x6,
+    JSVAL_XDRNULL =             0x8,
+    JSVAL_XDRVOID =             0xA
+};
+
+static jsvaltag
+JSVAL_TAG(jsval v)
+{
+    if (JSVAL_IS_NULL(v))
+        return JSVAL_XDRNULL;
+    if (JSVAL_IS_VOID(v))
+        return JSVAL_XDRVOID;
+    if (JSVAL_IS_OBJECT(v))
+        return JSVAL_OBJECT;
+    if (JSVAL_IS_INT(v))
+        return JSVAL_INT;
+    if (JSVAL_IS_DOUBLE(v))
+        return JSVAL_DOUBLE;
+    if (JSVAL_IS_STRING(v))
+        return JSVAL_STRING;
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+    return JSVAL_SPECIAL;
+}
 
 static JSBool
 XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
@@ -542,11 +567,11 @@ XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
         break;
       }
       case JSVAL_DOUBLE: {
-        jsdouble *dp = (xdr->mode == JSXDR_ENCODE) ? JSVAL_TO_DOUBLE(*vp) : NULL;
-        if (!JS_XDRDouble(xdr, &dp))
+        double d = xdr->mode == JSXDR_ENCODE ? JSVAL_TO_DOUBLE(*vp) : 0;
+        if (!JS_XDRDouble(xdr, &d))
             return JS_FALSE;
         if (xdr->mode == JSXDR_DECODE)
-            *vp = DOUBLE_TO_JSVAL(dp);
+            *vp = DOUBLE_TO_JSVAL(d);
         break;
       }
       case JSVAL_OBJECT: {
@@ -572,7 +597,7 @@ XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
       default: {
         uint32 i;
 
-        JS_ASSERT(type & JSVAL_INT);
+        JS_ASSERT(type == JSVAL_INT);
         if (xdr->mode == JSXDR_ENCODE)
             i = (uint32) JSVAL_TO_INT(*vp);
         if (!JS_XDRUint32(xdr, &i))
@@ -590,47 +615,28 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 {
     uint32 type;
 
-    if (xdr->mode == JSXDR_ENCODE) {
-        if (JSVAL_IS_NULL(*vp))
-            type = JSVAL_XDRNULL;
-        else if (JSVAL_IS_VOID(*vp))
-            type = JSVAL_XDRVOID;
-        else
-            type = JSVAL_TAG(*vp);
-    }
+    if (xdr->mode == JSXDR_ENCODE)
+        type = JSVAL_TAG(*vp);
     return JS_XDRUint32(xdr, &type) && XDRValueBody(xdr, type, vp);
 }
 
 JSBool
 js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
 {
-    jsval v;
-    uint32 type;
+    JSString *str;
 
-    if (xdr->mode == JSXDR_ENCODE) {
-        v = ATOM_KEY(*atomp);
-        return JS_XDRValue(xdr, &v);
-    }
+    if (xdr->mode == JSXDR_ENCODE)
+        str = ATOM_TO_STRING(*atomp);
 
-    /*
-     * Inline JS_XDRValue when decoding to avoid ceation of GC things when
-     * then corresponding atom already exists. See bug 321985.
-     */
-    if (!JS_XDRUint32(xdr, &type))
+    if (!JS_XDRString(xdr, &str))
         return JS_FALSE;
-    if (type == JSVAL_STRING)
-        return js_XDRStringAtom(xdr, atomp);
 
-    if (type == JSVAL_DOUBLE) {
-        jsdouble d = 0;
-        if (!XDRDoubleValue(xdr, &d))
-            return JS_FALSE;
-        *atomp = js_AtomizeDouble(xdr->cx, d);
+    if (xdr->mode == JSXDR_DECODE) {
+        *atomp = js_AtomizeString(xdr->cx, str, 0);
         return *atomp != NULL;
     }
 
-    return XDRValueBody(xdr, type, &v) &&
-           js_AtomizePrimitiveValue(xdr->cx, v, atomp);
+    return JS_TRUE;
 }
 
 extern JSBool
@@ -644,7 +650,6 @@ js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp)
     jschar stackChars[256];
 
     if (xdr->mode == JSXDR_ENCODE) {
-        JS_ASSERT(ATOM_IS_STRING(*atomp));
         str = ATOM_TO_STRING(*atomp);
         return JS_XDRString(xdr, &str);
     }

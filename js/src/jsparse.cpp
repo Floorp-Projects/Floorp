@@ -88,6 +88,8 @@
 #include "jsdhash.h"
 #endif
 
+#include "jsatominlines.h"
+
 using namespace js;
 
 /*
@@ -3188,7 +3190,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     if (slot >= blockObj->numSlots() && !blockObj->growSlots(cx, slot + 1))
         return false;
     blockObj->scope()->freeslot = slot + 1;
-    blockObj->setSlot(slot, PRIVATE_TO_JSVAL(pn));
+    blockObj->setSlot(slot, PrivateValue(pn));
     return true;
 }
 
@@ -3904,7 +3906,7 @@ CheckDestructuring(JSContext *cx, BindData *data,
         ok = !!js_DefineNativeProperty(cx, tc->blockChain,
                                        ATOM_TO_JSID(cx->runtime->
                                                     atomState.emptyAtom),
-                                       JSVAL_VOID, NULL, NULL,
+                                       UndefinedValue(), NULL, NULL,
                                        JSPROP_ENUMERATE |
                                        JSPROP_PERMANENT |
                                        JSPROP_SHARED,
@@ -4076,7 +4078,7 @@ CloneParseTree(JSParseNode *opn, JSTreeContext *tc)
             NULLCHECK(pn->pn_right = CloneParseTree(opn->pn_right, tc));
         else
             pn->pn_right = pn->pn_left;
-        pn->pn_val = opn->pn_val;
+        pn->pn_pval = opn->pn_pval;
         pn->pn_iflags = opn->pn_iflags;
         break;
 
@@ -7883,8 +7885,11 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     return NULL;
                 pn3->pn_dval = tokenStream.currentToken().t_dval;
                 if (tc->needStrictChecks()) {
-                    atom = js_AtomizeDouble(context, pn3->pn_dval);
-                    if (!atom)
+                    /*
+                     * Use string-valued atoms for detecting duplicate
+                     * properties so that 1 and "1" properly collide.
+                     */
+                    if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
                         return NULL;
                 } else {
                     atom = NULL; /* for the compiler */
@@ -7912,8 +7917,11 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                             return NULL;
                         pn3->pn_dval = tokenStream.currentToken().t_dval;
                         if (tc->needStrictChecks()) {
-                            atom = js_AtomizeDouble(context, pn3->pn_dval);
-                            if (!atom)
+                            /*
+                             * Use string-valued atoms for detecting duplicate
+                             * properties so that 1 and "1" properly collide.
+                             */
+                            if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
                                 return NULL;
                         } else {
                             atom = NULL; /* for the compiler */
@@ -7993,19 +8001,6 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                 } else {
                     JS_NOT_REACHED("bad opcode in object initializer");
                     attributesMask = 0;
-                }
-
-                /*
-                 * Use only string-valued atoms for detecting duplicate
-                 * properties so that 1 and "1" properly collide.
-                 */
-                if (ATOM_IS_DOUBLE(atom)) {
-                    JSString *str = js_NumberToString(context, pn3->pn_dval);
-                    if (!str)
-                        return JS_FALSE;
-                    atom = js_AtomizeString(context, str, 0);
-                    if (!atom)
-                        return JS_FALSE;
                 }
 
                 JSAtomListElement *ale = seen.lookup(atom);
@@ -8386,7 +8381,7 @@ FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
           case TOK_NUMBER:
             if (pn->pn_type == TOK_STRING) {
                 jsdouble d;
-                if (!JS_ValueToNumber(cx, ATOM_KEY(pn->pn_atom), &d))
+                if (!ValueToNumber(cx, StringValue(ATOM_TO_STRING(pn->pn_atom)), &d))
                     return JS_FALSE;
                 pn->pn_dval = d;
                 pn->pn_type = TOK_NUMBER;
@@ -8597,7 +8592,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 
         if (accum) {
             {
-                AutoValueRooter tvr(cx, accum);
+                AutoStringRooter tvr(cx, accum);
                 str = ((tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC) && i != 0)
                       ? js_AddAttributePart(cx, i & 1, accum, str)
                       : js_ConcatStrings(cx, accum, str);
@@ -9145,15 +9140,14 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
       case TOK_AT:
         if (pn1->pn_type == TOK_XMLNAME) {
-            jsval v;
             JSObjectBox *xmlbox;
 
-            v = ATOM_KEY(pn1->pn_atom);
+            Value v = StringValue(ATOM_TO_STRING(pn1->pn_atom));
             if (!js_ToAttributeName(cx, &v))
                 return JS_FALSE;
-            JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+            JS_ASSERT(v.isObject());
 
-            xmlbox = tc->parser->newObjectBox(JSVAL_TO_OBJECT(v));
+            xmlbox = tc->parser->newObjectBox(&v.toObject());
             if (!xmlbox)
                 return JS_FALSE;
 

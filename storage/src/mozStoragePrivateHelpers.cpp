@@ -147,7 +147,7 @@ convertJSValToVariant(
     return new IntegerVariant(JSVAL_TO_INT(aValue));
 
   if (JSVAL_IS_DOUBLE(aValue))
-    return new FloatVariant(*JSVAL_TO_DOUBLE(aValue));
+    return new FloatVariant(JSVAL_TO_DOUBLE(aValue));
 
   if (JSVAL_IS_STRING(aValue)) {
     JSString *str = JSVAL_TO_STRING(aValue);

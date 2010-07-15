@@ -694,7 +694,7 @@ doGetIdentifier(JSContext *cx, const NPUTF8* name)
   if (!str)
     return NULL;
 
-  return (NPIdentifier)STRING_TO_JSVAL(str);
+  return StringToNPIdentifier(str);
 }
 
 #if defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_WINCE)
@@ -1357,25 +1357,23 @@ _getintidentifier(int32_t intid)
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getstringidentifier called from the wrong thread\n"));
   }
-  return (NPIdentifier)INT_TO_JSVAL(intid);
+  return IntToNPIdentifier(intid);
 }
 
 NPUTF8* NP_CALLBACK
-_utf8fromidentifier(NPIdentifier identifier)
+_utf8fromidentifier(NPIdentifier id)
 {
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_utf8fromidentifier called from the wrong thread\n"));
   }
-  if (!identifier)
+  if (!id)
     return NULL;
 
-  jsval v = (jsval)identifier;
-
-  if (!JSVAL_IS_STRING(v)) {
+  if (!NPIdentifierIsString(id)) {
     return nsnull;
   }
 
-  JSString *str = JSVAL_TO_STRING(v);
+  JSString *str = NPIdentifierToString(id);
 
   return
     ToNewUTF8String(nsDependentString((PRUnichar *)::JS_GetStringChars(str),
@@ -1383,29 +1381,27 @@ _utf8fromidentifier(NPIdentifier identifier)
 }
 
 int32_t NP_CALLBACK
-_intfromidentifier(NPIdentifier identifier)
+_intfromidentifier(NPIdentifier id)
 {
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_intfromidentifier called from the wrong thread\n"));
   }
-  jsval v = (jsval)identifier;
 
-  if (!JSVAL_IS_INT(v)) {
+  if (!NPIdentifierIsInt(id)) {
     return PR_INT32_MIN;
   }
 
-  return JSVAL_TO_INT(v);
+  return NPIdentifierToInt(id);
 }
 
 bool NP_CALLBACK
-_identifierisstring(NPIdentifier identifier)
+_identifierisstring(NPIdentifier id)
 {
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_identifierisstring called from the wrong thread\n"));
   }
-  jsval v = (jsval)identifier;
 
-  return JSVAL_IS_STRING(v);
+  return NPIdentifierIsString(id);
 }
 
 NPObject* NP_CALLBACK

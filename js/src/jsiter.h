@@ -47,8 +47,6 @@
 #include "jspubtd.h"
 #include "jsversion.h"
 
-JS_BEGIN_EXTERN_C
-
 /*
  * NB: these flag bits are encoded into the bytecode stream in the immediate
  * operand of JSOP_ITER, so don't change them without advancing jsxdrapi.h's
@@ -62,48 +60,95 @@ JS_BEGIN_EXTERN_C
 
 struct NativeIterator {
     JSObject  *obj;
-    jsval     *props_array;
-    jsval     *props_cursor;
-    jsval     *props_end;
+    void      *props_array;
+    void      *props_cursor;
+    void      *props_end;
     uint32    *shapes_array;
     uint32    shapes_length;
     uint32    shapes_key;
     uintN     flags;
     JSObject  *next;
 
-    static NativeIterator *allocate(JSContext *cx, JSObject *obj, uintN flags,
-                                    uint32 *sarray, uint32 slength, uint32 key,
-                                    js::AutoValueVector &props);
+    bool isKeyIter() const { return (flags & JSITER_FOREACH) == 0; }
 
-    inline size_t length() const {
-        return props_end - props_array;
+    inline jsid *beginKey() const {
+        JS_ASSERT(isKeyIter());
+        return (jsid *)props_array;
     }
 
-    inline jsval *begin() const {
-        return props_array;
+    inline jsid *endKey() const {
+        JS_ASSERT(isKeyIter());
+        return (jsid *)props_end;
     }
+
+    size_t numKeys() const {
+        return endKey() - beginKey();
+    }
+
+    jsid *currentKey() const {
+        JS_ASSERT(isKeyIter());
+        return reinterpret_cast<jsid *>(props_cursor);
+    }
+
+    void incKeyCursor() {
+        JS_ASSERT(isKeyIter());
+        props_cursor = reinterpret_cast<jsid *>(props_cursor) + 1;
+    }
+
+    inline js::Value *beginValue() const {
+        JS_ASSERT(!isKeyIter());
+        return (js::Value *)props_array;
+    }
+
+    inline js::Value *endValue() const {
+        JS_ASSERT(!isKeyIter());
+        return (js::Value *)props_end;
+    }
+
+    size_t numValues() const {
+        return endValue() - beginValue();
+    }
+
+    js::Value *currentValue() const {
+        JS_ASSERT(!isKeyIter());
+        return reinterpret_cast<js::Value *>(props_cursor);
+    }
+
+    void incValueCursor() {
+        JS_ASSERT(!isKeyIter());
+        props_cursor = reinterpret_cast<js::Value *>(props_cursor) + 1;
+    }
+
+    static NativeIterator *allocateKeyIterator(JSContext *cx, uint32 slength,
+                                               const js::AutoIdVector &props);
+    static NativeIterator *allocateValueIterator(JSContext *cx, uint32 slength,
+                                                 const js::AutoValueVector &props);
+    void init(JSObject *obj, uintN flags, const uint32 *sarray, uint32 slength, uint32 key);
 
     void mark(JSTracer *trc);
 };
 
+bool
+VectorToIdArray(JSContext *cx, js::AutoIdVector &props, JSIdArray **idap);
+
+bool
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props);
+
+bool
+GetIterator(JSContext *cx, JSObject *obj, uintN flags, js::Value *vp);
+
+bool
+VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props, js::Value *vp);
+
+bool
+VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoValueVector &props, js::Value *vp);
+
 /*
- * Magic jsval that indicates that a custom enumerate hook forwarded
- * to js_Enumerate, which really means the object can be enumerated like
- * a native object.
+ * Creates either a key or value iterator, depending on flags. For a value
+ * iterator, performs value-lookup to convert the given list of jsids.
  */
-static const jsval JSVAL_NATIVE_ENUMERATE_COOKIE = SPECIAL_TO_JSVAL(0x220576);
-
 bool
-VectorToIdArray(JSContext *cx, js::AutoValueVector &props, JSIdArray **idap);
-
-bool
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoValueVector &props);
-
-bool
-GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp);
-
-bool
-IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoValueVector &props, jsval *vp);
+EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props, js::Value *vp);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
@@ -112,10 +157,10 @@ IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoValueVecto
  * iterator will never be exposed to scripts.
  */
 extern JS_FRIEND_API(JSBool)
-js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp);
+js_ValueToIterator(JSContext *cx, uintN flags, js::Value *vp);
 
 extern JS_FRIEND_API(JSBool)
-js_CloseIterator(JSContext *cx, jsval v);
+js_CloseIterator(JSContext *cx, JSObject *iterObj);
 
 bool
 js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id);
@@ -126,10 +171,10 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id);
  * picked up by IteratorNext(). The value is cached in the current context.
  */
 extern JSBool
-js_IteratorMore(JSContext *cx, JSObject *iterobj, jsval *rval);
+js_IteratorMore(JSContext *cx, JSObject *iterobj, js::Value *rval);
 
 extern JSBool
-js_IteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval);
+js_IteratorNext(JSContext *cx, JSObject *iterobj, js::Value *rval);
 
 extern JSBool
 js_ThrowStopIteration(JSContext *cx);
@@ -154,7 +199,7 @@ struct JSGenerator {
     uintN               vplen;
     JSStackFrame        *liveFrame;
     JSObject            *enumerators;
-    jsval               floatingStack[1];
+    js::Value           floatingStack[1];
 
     JSStackFrame *getFloatingFrame() {
         return reinterpret_cast<JSStackFrame *>(floatingStack + vplen);
@@ -204,20 +249,17 @@ js_LiveFrameIfGenerator(JSStackFrame *fp)
 
 #endif
 
-extern JSExtendedClass js_GeneratorClass;
-extern JSExtendedClass js_IteratorClass;
-extern JSClass         js_StopIterationClass;
+extern js::ExtendedClass js_GeneratorClass;
+extern js::ExtendedClass js_IteratorClass;
+extern js::Class         js_StopIterationClass;
 
 static inline bool
-js_ValueIsStopIteration(jsval v)
+js_ValueIsStopIteration(const js::Value &v)
 {
-    return !JSVAL_IS_PRIMITIVE(v) &&
-           JSVAL_TO_OBJECT(v)->getClass() == &js_StopIterationClass;
+    return v.isObject() && v.toObject().getClass() == &js_StopIterationClass;
 }
 
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj);
-
-JS_END_EXTERN_C
 
 #endif /* jsiter_h___ */

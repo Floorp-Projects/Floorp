@@ -1625,7 +1625,7 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
 
     jsval *retval = nsnull;
     cc->GetRetValPtr(&retval);
-    if (*retval)
+    if (retval)
         *retval = OBJECT_TO_JSVAL(globalObj);
 
     return rv;

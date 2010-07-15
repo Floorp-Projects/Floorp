@@ -87,11 +87,11 @@ JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *handlerp, void **closurep);
 /************************************************************************/
 
 extern JS_PUBLIC_API(JSBool)
-JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
+JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                  JSWatchPointHandler handler, void *closure);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsval id,
+JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                    JSWatchPointHandler *handlerp, void **closurep);
 
 extern JS_PUBLIC_API(JSBool)
@@ -114,22 +114,26 @@ js_SweepWatchPoints(JSContext *cx);
 extern JSScopeProperty *
 js_FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id);
 
+#ifdef __cplusplus
+
 /*
  * NB: callers outside of jsdbgapi.c must pass non-null scope.
  */
-extern JSPropertyOp
+extern js::PropertyOp
 js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
                     const JSScopeProperty *sprop);
 
 extern JSBool
-js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+js_watch_set(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                     jsval *rval);
+js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
+                     js::Value *rval);
 
-extern JSPropertyOp
-js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter);
+extern js::PropertyOp
+js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, js::PropertyOp setter);
+
+#endif
 
 #endif /* JS_HAS_OBJ_WATCHPOINT */
 
@@ -140,6 +144,29 @@ JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
 
 extern JS_PUBLIC_API(jsbytecode *)
 JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno);
+
+extern JS_PUBLIC_API(uintN)
+JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun);
+
+extern JS_PUBLIC_API(JSBool)
+JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun);
+
+/*
+ * N.B. The mark is in the context temp pool and thus the caller must take care
+ * to call JS_ReleaseFunctionLocalNameArray in a LIFO manner (wrt to any other
+ * call that may use the temp pool.
+ */
+extern JS_PUBLIC_API(jsuword *)
+JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **markp);
+
+extern JS_PUBLIC_API(JSAtom *)
+JS_LocalNameToAtom(jsuword w);
+
+extern JS_PUBLIC_API(JSString *)
+JS_AtomKey(JSAtom *atom);
+
+extern JS_PUBLIC_API(void)
+JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mark);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun);
@@ -298,7 +325,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
 /************************************************************************/
 
 typedef struct JSPropertyDesc {
-    jsval           id;         /* primary id, a string or int */
+    jsval           id;         /* primary id, atomized string, or int */
     jsval           value;      /* property value */
     uint8           flags;      /* flags, see below */
     uint8           spare;      /* unused */

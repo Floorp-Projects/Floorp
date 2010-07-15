@@ -6,8 +6,6 @@
 
 BEGIN_TEST(testSameValue)
 {
-    jsvalRoot v1(cx);
-    jsvalRoot v2(cx);
 
     /*
      * NB: passing a double that fits in an integer jsval is API misuse.  As a
@@ -16,9 +14,8 @@ BEGIN_TEST(testSameValue)
      * double, and this is believed to be the only way to make such a
      * comparison possible.
      */
-    CHECK(JS_NewDoubleValue(cx, 0.0, v1.addr()));
-    CHECK(JSVAL_IS_DOUBLE(v1));
-    CHECK(JS_NewNumberValue(cx, -0.0, v2.addr()));
+    jsval v1 = DOUBLE_TO_JSVAL(0.0);
+    jsval v2 = DOUBLE_TO_JSVAL(-0.0);
     CHECK(!JS_SameValue(cx, v1, v2));
     return true;
 }
