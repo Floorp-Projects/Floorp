@@ -411,9 +411,9 @@ nsXBLDocGlobalObject::GetPrincipal()
   nsRefPtr<nsXBLDocumentInfo> docInfo =
     static_cast<nsXBLDocumentInfo*>(mGlobalObjectOwner);
 
-  nsCOMPtr<nsIDocument> document;
-  rv = docInfo->GetDocument(getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  nsCOMPtr<nsIDocument> document = docInfo->GetDocument();
+  if (!document)
+    return NULL;
 
   return document->NodePrincipal();
 }
@@ -531,24 +531,20 @@ nsXBLDocumentInfo::~nsXBLDocumentInfo()
   }
 }
 
-NS_IMETHODIMP
-nsXBLDocumentInfo::GetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding** aResult)
+nsXBLPrototypeBinding*
+nsXBLDocumentInfo::GetPrototypeBinding(const nsACString& aRef)
 {
-  *aResult = nsnull;
   if (!mBindingTable)
-    return NS_OK;
+    return NULL;
 
   if (aRef.IsEmpty()) {
     // Return our first binding
-    *aResult = mFirstBinding;
-    return NS_OK;
+    return mFirstBinding;
   }
 
   const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
   nsCStringKey key(flat.get());
-  *aResult = static_cast<nsXBLPrototypeBinding*>(mBindingTable->Get(&key));
-
-  return NS_OK;
+  return static_cast<nsXBLPrototypeBinding*>(mBindingTable->Get(&key));
 }
 
 static PRBool
@@ -559,13 +555,11 @@ DeletePrototypeBinding(nsHashKey* aKey, void* aData, void* aClosure)
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding)
 {
   if (!mBindingTable) {
     mBindingTable = new nsObjectHashtable(nsnull, nsnull, DeletePrototypeBinding, nsnull);
-    if (!mBindingTable)
-      return NS_ERROR_OUT_OF_MEMORY;
 
     NS_HOLD_JS_OBJECTS(this, nsXBLDocumentInfo);
   }
@@ -578,12 +572,10 @@ nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBin
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXBLDocumentInfo::SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding)
 {
   mFirstBinding = aBinding;
-
-  return NS_OK;
 }
 
 PRBool FlushScopedSkinSheets(nsHashKey* aKey, void* aData, void* aClosure)
@@ -593,13 +585,11 @@ PRBool FlushScopedSkinSheets(nsHashKey* aKey, void* aData, void* aClosure)
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
+void
 nsXBLDocumentInfo::FlushSkinStylesheets()
 {
   if (mBindingTable)
     mBindingTable->Enumerate(FlushScopedSkinSheets);
-  return NS_OK;
-
 }
 
 //----------------------------------------------------------------------

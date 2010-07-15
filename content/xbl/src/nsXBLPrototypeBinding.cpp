@@ -439,10 +439,10 @@ nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
     mInheritStyle = PR_FALSE;
 }
 
-nsresult
-nsXBLPrototypeBinding::GetAllowScripts(PRBool* aResult)
+PRBool
+nsXBLPrototypeBinding::GetAllowScripts()
 {
-  return mXBLDocInfoWeak->GetScriptAccess(aResult);
+  return mXBLDocInfoWeak->GetScriptAccess();
 }
 
 PRBool
