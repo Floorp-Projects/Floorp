@@ -109,7 +109,7 @@ var global = {
         // function onto the null compilation context.
         var f = FunctionDefinition(t, null, false, STATEMENT_FORM);
         var s = {object: global, parent: null};
-        return new FunctionObject(f, s);
+        return newFunction(f,{scope:s});
     },
     Array: function (dummy) {
         // Array when called as a function acts as a constructor.
@@ -245,14 +245,14 @@ function execute(n, x) {
       case FUNCTION:
         if (n.functionForm != DECLARED_FORM) {
             if (!n.name || n.functionForm == STATEMENT_FORM) {
-                v = new FunctionObject(n, x.scope);
+                v = newFunction(n, x);
                 if (n.functionForm == STATEMENT_FORM)
                     defineProperty(x.scope.object, n.name, v, true);
             } else {
                 t = new Object;
                 x.scope = {object: t, parent: x.scope};
                 try {
-                    v = new FunctionObject(n, x.scope);
+                    v = newFunction(n, x);
                     defineProperty(t, n.name, v, true, true);
                 } finally {
                     x.scope = x.scope.parent;
@@ -266,7 +266,7 @@ function execute(n, x) {
         a = n.funDecls;
         for (i = 0, j = a.length; i < j; i++) {
             s = a[i].name;
-            f = new FunctionObject(a[i], x.scope);
+            f = newFunction(a[i], x);
             defineProperty(t, s, f, x.type != EVAL_CODE);
         }
         a = n.varDecls;
@@ -720,7 +720,7 @@ function execute(n, x) {
             if (t.type == PROPERTY_INIT) {
                 v[t[0].value] = getValue(execute(t[1], x));
             } else {
-                f = new FunctionObject(t, x.scope);
+                f = newFunction(t, x);
                 u = (t.type == GETTER) ? '__defineGetter__'
                                        : '__defineSetter__';
                 v[u](t.name, thunk(f, x));
@@ -791,7 +791,64 @@ function FunctionObject(node, scope) {
     defineProperty(proto, "constructor", this, false, false, true);
 }
 
+// Returns a new function wrapped with a Proxy.
+function newFunction(n,x) {
+    var f = new FunctionObject(n, x.scope);
+    var p = Proxy.createFunction(
+
+            // Handler function copied from
+            //  http://wiki.ecmascript.org/doku.php?id=harmony:proxies&s=proxy%20object#examplea_no-op_forwarding_proxy
+            function(obj) { return {
+                getOwnPropertyDescriptor: function(name) {
+                    var desc = Object.getOwnPropertyDescriptor(obj);
+
+                    // a trapping proxy's properties must always be configurable
+                    desc.configurable = true;
+                    return desc;
+                 },
+                getPropertyDescriptor: function(name) {
+                    var desc = Object.getPropertyDescriptor(obj); //assumed
+
+                    // a trapping proxy's properties must always be configurable
+                    desc.configurable = true;
+                    return desc;
+                },
+                getOwnPropertyNames: function() {
+                    return Object.getOwnPropertyNames(obj);
+                },
+                defineProperty: function(name, desc) {
+                    Object.defineProperty(obj, name, desc);
+                },
+                delete: function(name) { return delete obj[name]; },   
+                fix: function() {
+                    if (Object.isFrozen(obj)) {
+                        return Object.getOwnProperties(obj); // assumed
+                    }
+
+                    // As long as obj is not frozen, the proxy won't allow itself to be fixed.
+                    return undefined; // will cause a TypeError to be thrown
+                },
+ 
+                has: function(name) { return name in obj; },
+                hasOwn: function(name) { return ({}).hasOwnProperty.call(obj, name); },
+                get: function(receiver, name) { return obj[name]; },
+
+                // bad behavior when set fails in non-strict mode
+                set: function(receiver, name, val) { obj[name] = val; return true; },
+                enumerate: function() {
+                    var result = [];
+                    for (name in obj) { result.push(name); };
+                    return result;
+                },
+                enumerateOwn: function() { return Object.keys(obj); } };
+            }(f),
+            function() { return f.__call__(this, arguments, x); },
+            function() { return f.__construct__(arguments, x); });
+    return p;
+}
+
 var FOp = FunctionObject.prototype = {
+
     // Internal methods.
     __call__: function (t, a, x) {
         var x2 = new ExecutionContext(FUNCTION_CODE);

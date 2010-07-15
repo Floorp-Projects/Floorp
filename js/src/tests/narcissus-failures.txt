@@ -593,6 +593,7 @@ narcissus/../ecma_3/extensions/regress-368516.js
 narcissus/../ecma_3/extensions/regress-385393-03.js
 narcissus/../ecma_3/Function/arguments-001.js
 narcissus/../ecma_3/Function/regress-131964.js
+narcissus/../ecma_3/Function/regress-313570.js
 narcissus/../ecma_3/Function/regress-49286.js
 narcissus/../ecma_3/Function/regress-58274.js
 narcissus/../ecma_3/Function/regress-85880.js
@@ -638,6 +639,9 @@ narcissus/../ecma_3/Unicode/uc-005.js
 narcissus/../ecma_5/Expressions/11.1.5-01.js
 narcissus/../ecma_5/Expressions/named-accessor-function.js
 narcissus/../ecma_5/Object/15.2.3.3-01.js
+narcissus/../ecma_5/Object/15.2.3.4-01.js
+narcissus/../ecma_5/Object/15.2.3.4-02.js
+narcissus/../ecma_5/Object/15.2.3.4-03.js
 narcissus/../ecma_5/Object/15.2.3.6-miscellaneous.js
 narcissus/../ecma_5/Object/15.2.3.6-function-length.js
 narcissus/../ecma_5/Object/15.2.3.6-new-definition.js
