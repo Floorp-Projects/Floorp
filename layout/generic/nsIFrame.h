@@ -1836,6 +1836,15 @@ public:
   { return InvalidateWithFlags(aDamageRect, 0); }
 
   /**
+   * As Invalidate above, except that this should be called when the
+   * rendering that has changed is performed using layers so we can avoid
+   * updating the contents of ThebesLayers.
+   * @param aDisplayItemKey must not be zero; indicates the kind of display
+   * item that is being invalidated.
+   */
+  void InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey);
+
+  /**
    * Helper function that can be overridden by frame classes. The rectangle
    * (plus aOffsetX/aOffsetY) is relative to this frame.
    * 

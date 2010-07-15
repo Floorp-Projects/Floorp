@@ -46,6 +46,7 @@
 #include "jsapi.h"
 
 #include "nsFrameManager.h"
+#include "nsDisplayList.h"
 #include "ImageLayers.h"
 #include "BasicLayers.h"
 
@@ -502,10 +503,10 @@ nsHTMLCanvasElement::InvalidateFrame(const gfxRect* damageRect)
     // account for border/padding
     invalRect.MoveBy(contentArea.TopLeft() - frame->GetPosition());
 
-    frame->Invalidate(invalRect);
+    frame->InvalidateLayer(invalRect, nsDisplayItem::TYPE_CANVAS);
   } else {
     nsRect r(frame->GetContentRect() - frame->GetPosition());
-    frame->Invalidate(r);
+    frame->InvalidateLayer(r, nsDisplayItem::TYPE_CANVAS);
   }
 }
 
