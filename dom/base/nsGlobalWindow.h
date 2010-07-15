@@ -103,7 +103,6 @@
 #include "nsIContent.h"
 #include "nsIIDBFactory.h"
 #include "nsFrameMessageManager.h"
-#include "mozilla/TimeStamp.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -180,13 +179,9 @@ struct nsTimeout : PRCList
   // Non-zero interval in milliseconds if repetitive timeout
   PRUint32 mInterval;
 
-  // mWhen and mTimeRemaining can't be in a union, sadly, because they
-  // have constructors.
-  // Nominal time to run this timeout.  Use only when timeouts are not
-  // suspended.
-  mozilla::TimeStamp mWhen;
-  // Remaining time to wait.  Used only when timeouts are suspended.
-  mozilla::TimeDuration mTimeRemaining;
+  // Nominal time (in microseconds since the epoch) to run this
+  // timeout
+  PRTime mWhen;
 
   // Principal with which to execute
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -562,8 +557,7 @@ protected:
   static void ClearWindowScope(nsISupports* aWindow);
 
   // Timeout Functions
-  // Language agnostic timeout function (all args passed).
-  // |interval| is in milliseconds.
+  // Language agnostic timeout function (all args passed)
   nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
                                 PRInt32 interval,
                                 PRBool aIsInterval, PRInt32 *aReturn);
