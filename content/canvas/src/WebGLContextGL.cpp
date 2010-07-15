@@ -56,7 +56,7 @@
 
 #include "jstypedarray.h"
 
-#ifndef USE_GLES2
+#if !defined(USE_GLES2) && defined(USE_ANGLE)
 // shader translator
 #include "angle/ShaderLang.h"
 #endif
@@ -2831,7 +2831,7 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
 
     MakeContextCurrent();
 
-#ifndef USE_GLES2
+#if !defined(USE_GLES2) && defined(USE_ANGLE)
     if (shader->NeedsTranslation() && mShaderValidation) {
         ShHandle compiler = 0;
         int debugFlags = 0;
