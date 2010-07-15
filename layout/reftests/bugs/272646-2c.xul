@@ -8,10 +8,10 @@
 	document.getElementById('main_coursetab_general'); e.hidden = true;
 	document.documentElement.getBoundingClientRect(); e.hidden = false;">
     <tabbox id="main_courseframe" flex="1">
-        <tabs id="main_coursetabs" ida-type="gradient">
-            <tab id="main_coursetab_general" label="General" />
-            <tab id="main_coursetab_overview" label="Overview" />
-            <tab id="main_coursetab_extensions" label="Extensions" />
+        <tabs id="main_coursetabs" ida-type="gradient" style="-moz-appearance:none">
+            <tab id="main_coursetab_general" label="General" style="-moz-appearance:none" />
+            <tab id="main_coursetab_overview" label="Overview" style="-moz-appearance:none" />
+            <tab id="main_coursetab_extensions" label="Extensions" style="-moz-appearance:none" />
         </tabs>
 
         <tabpanels id="main_coursetabpanels" flex="1">

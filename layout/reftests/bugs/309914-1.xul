@@ -26,6 +26,7 @@ window.onload = function() {
 
   for(var i=0; i<2; i++) {
     var item = document.createElementNS(XUL_NS, "button");
+    item.setAttribute('style','-moz-appearance:none');
     cont.appendChild(item);
     item.label = i;
   }
