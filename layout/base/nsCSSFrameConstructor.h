@@ -238,7 +238,7 @@ public:
   enum RemoveFlags { REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION };
   nsresult ContentRemoved(nsIContent* aContainer,
                           nsIContent* aChild,
-                          PRInt32     aIndexInContainer,
+                          nsIContent* aOldNextSibling,
                           RemoveFlags aFlags,
                           PRBool*     aDidReconstruct);
 
@@ -1204,10 +1204,10 @@ private:
                            nsIContent* aPossibleTextContent,
                            FrameConstructionItemList& aItems);
 
-  // If aParentContent's child at aContentIndex is a text node and
+  // If aParentContent's child aContent is a text node and
   // doesn't have a frame, try to create a frame for it.
   void ReframeTextIfNeeded(nsIContent* aParentContent,
-                           PRInt32 aContentIndex);
+                           nsIContent* aContent);
 
   void AddPageBreakItem(nsIContent* aContent,
                         nsStyleContext* aMainStyleContext,
