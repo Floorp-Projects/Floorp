@@ -1419,7 +1419,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     dump("nsSessionStore could not be initialized: " + ex + "\n");
   }
 
-  PlacesToolbarHelper.updateState();
+  PlacesToolbarHelper.init();
 
   // bookmark-all-tabs command
   gBookmarkAllTabsHandler.init();
@@ -3420,6 +3420,7 @@ function BrowserCustomizeToolbar()
 
   CombinedStopReload.uninit();
 
+  PlacesToolbarHelper.customizeStart();
   BookmarksMenuButton.customizeStart();
 
   var customizeURL = "chrome://global/content/customizeToolbar.xul";
@@ -3483,7 +3484,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 #endif
   }
 
-  PlacesToolbarHelper.updateState();
+  PlacesToolbarHelper.customizeDone();
   BookmarksMenuButton.customizeDone();
 
   UpdateUrlbarSearchSplitterState();
