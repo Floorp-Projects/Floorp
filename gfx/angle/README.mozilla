@@ -5,6 +5,8 @@ Current revision: r342
 Local patches:
     angle-nspr.patch - use NSPR for TLS
 
+    angle-shared.patch - add declspec dllexport/dllimport support on win32
+
 To regenerate the flex/yacc generated files:
 
 flex --noline --nounistd --outfile=generated/glslang.cpp src/compiler/glslang.l
