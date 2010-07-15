@@ -5820,7 +5820,6 @@ nscolor PresShell::ComputeBackstopColor(nsIView* aDisplayRoot)
 
 struct PaintParams {
   nsIFrame* mFrame;
-  nsPoint mOffsetToRoot;
   nsPoint mOffsetToWidget;
   const nsRegion* mDirtyRegion;
   nscolor mBackgroundColor;
@@ -5841,11 +5840,9 @@ static void DrawThebesLayer(ThebesLayer* aLayer,
     nsresult rv = devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
     if (NS_SUCCEEDED(rv)) {
       rc->Init(devCtx, aContext);
-      nsRegion dirtyRegion = *params->mDirtyRegion;
-      dirtyRegion.MoveBy(params->mOffsetToRoot);
       nsIRenderingContext::AutoPushTranslation
         push(rc, -params->mOffsetToWidget.x, -params->mOffsetToWidget.y);
-      nsLayoutUtils::PaintFrame(rc, frame, dirtyRegion,
+      nsLayoutUtils::PaintFrame(rc, frame, *params->mDirtyRegion,
                                 params->mBackgroundColor,
                                 nsLayoutUtils::PAINT_WIDGET_LAYERS);
     }
@@ -5891,13 +5888,31 @@ PresShell::Paint(nsIView*        aDisplayRoot,
       ? nsnull : static_cast<nsIFrame*>(aDisplayRoot->GetClientData());
 
   if (frame && aViewToPaint == aDisplayRoot) {
+    // Defer invalidates that are triggered during painting, and discard
+    // invalidates of areas that are already being repainted.
+    // The layer system can trigger invalidates during painting
+    // (see FrameLayerBuilder).
+    frame->BeginDeferringInvalidatesForDisplayRoot(aDirtyRegion);
+
     // We can paint directly into the widget using its layer manager.
     // When we get rid of child widgets, this will be the only path we
     // need. (aPaintDefaultBackground will never be needed since the
     // chrome can always paint a default background.)
     nsLayoutUtils::PaintFrame(nsnull, frame, aDirtyRegion, bgcolor,
                               nsLayoutUtils::PAINT_WIDGET_LAYERS);
+
+    frame->EndDeferringInvalidatesForDisplayRoot();
     return NS_OK;
+  }
+
+  nsPoint offsetToRoot = aViewToPaint->GetOffsetTo(aDisplayRoot);
+  nsRegion dirtyRegion = aDirtyRegion;
+  dirtyRegion.MoveBy(offsetToRoot);
+
+  if (frame) {
+    // Defer invalidates that are triggered during painting, and discard
+    // invalidates of areas that are already being repainted.
+    frame->BeginDeferringInvalidatesForDisplayRoot(dirtyRegion);
   }
 
   LayerManager* layerManager = aWidgetToPaint->GetLayerManager();
@@ -5914,15 +5929,16 @@ PresShell::Paint(nsIView*        aDisplayRoot,
   if (!frame) {
     bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
   }
-  nsPoint offsetToRoot = aViewToPaint->GetOffsetTo(aDisplayRoot);
   PaintParams params =
     { frame,
-      offsetToRoot,
       offsetToRoot - aViewToPaint->ViewToWidgetOffset(),
-      &aDirtyRegion,
+      &dirtyRegion,
       bgcolor };
   layerManager->EndTransaction(DrawThebesLayer, &params);
 
+  if (frame) {
+    frame->EndDeferringInvalidatesForDisplayRoot();
+  }
   return NS_OK;
 }
 
