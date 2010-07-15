@@ -170,7 +170,13 @@ public:
    * the next paint.
    */
   static void InvalidateAllLayers(LayerManager* aManager);
-  
+
+  /**
+   * Call this to determine if a frame has a dedicated (non-Thebes) layer
+   * for the given display item key.
+   */
+  static PRBool HasDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
+
   /**
    * This callback must be provided to EndTransaction. The callback data
    * must be the nsDisplayListBuilder containing this FrameLayerBuilder.
