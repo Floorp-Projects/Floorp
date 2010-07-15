@@ -304,7 +304,8 @@ public:
         return ErrorInvalidEnum("%s: invalid enum value", info);
     }
 
-    already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *manager);
+    already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
+                                                 LayerManager *aManager);
     void MarkContextClean() { }
 
     // a number that increments every time we have an event that causes
@@ -321,7 +322,8 @@ protected:
     PRInt32 mWidth, mHeight;
     CheckedUint32 mGeneration;
 
-    PRBool mInvalidated;
+    PRPackedBool mInvalidated;
+    PRPackedBool mResetLayer;
 
     WebGLuint mActiveTexture;
     WebGLenum mSynthesizedGLError;

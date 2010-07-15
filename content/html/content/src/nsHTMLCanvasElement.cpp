@@ -534,12 +534,13 @@ nsHTMLCanvasElement::GetIsOpaque()
 }
 
 already_AddRefed<CanvasLayer>
-nsHTMLCanvasElement::GetCanvasLayer(LayerManager *aManager)
+nsHTMLCanvasElement::GetCanvasLayer(CanvasLayer *aOldLayer,
+                                    LayerManager *aManager)
 {
   if (!mCurrentContext)
     return nsnull;
 
-  return mCurrentContext->GetCanvasLayer(aManager);
+  return mCurrentContext->GetCanvasLayer(aOldLayer, aManager);
 }
 
 void

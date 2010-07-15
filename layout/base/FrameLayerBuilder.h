@@ -43,6 +43,10 @@
 class nsDisplayListBuilder;
 class nsDisplayList;
 class nsDisplayItem;
+class nsIFrame;
+class nsRect;
+class nsIntRegion;
+class gfxContext;
 
 namespace mozilla {
 
@@ -53,14 +57,32 @@ public:
   typedef mozilla::layers::LayerManager LayerManager;
 
   /**
-   * Create a container layer for a display item that contains a child
+   * Get a container layer for a display item that contains a child
    * list, either reusing an existing one or creating a new one.
    * aContainer may be null, in which case we construct a root layer.
    */
-  already_AddRefed<Layer> MakeContainerLayerFor(nsDisplayListBuilder* aBuilder,
-                                                LayerManager* aManager,
-                                                nsDisplayItem* aContainer,
-                                                const nsDisplayList& aChildren);
+  already_AddRefed<Layer> GetContainerLayerFor(nsDisplayListBuilder* aBuilder,
+                                               LayerManager* aManager,
+                                               nsDisplayItem* aContainer,
+                                               const nsDisplayList& aChildren);
+
+  /**
+   * Get a retained layer for a leaf display item. Returns null if no
+   * layer is available, in which case the caller will probably need to
+   * create one.
+   */
+  Layer* GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
+                         LayerManager* aManager,
+                         nsDisplayItem* aItem);
+
+  /**
+   * Call this during invalidation if aFrame has
+   * the NS_FRAME_HAS_CONTAINER_LAYER state bit. Only the nearest
+   * ancestor frame of the damaged frame that has
+   * NS_FRAME_HAS_CONTAINER_LAYER needs to be invalidated this way.
+   */
+  static void InvalidateThebesLayerContents(nsIFrame* aFrame,
+                                            const nsRect& aRect);
 
   /**
    * This callback must be provided to EndTransaction. The callback data
