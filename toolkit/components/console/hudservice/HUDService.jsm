@@ -1975,90 +1975,82 @@ HeadsUpDisplay.prototype = {
  */
 function HUDConsole(aHeadsUpDisplay)
 {
-  this.hud = aHeadsUpDisplay;
-  this.hudId = this.hud.hudId;
-  this.outputNode = this.hud.outputNode;
-  this.chromeDocument = this.hud.chromeDocument;
-  this.makeHTMLNode = this.hud.makeHTMLNode;
-  this.created = new Date();
-  this.hud._console = this;
-  HUDService.updateLoadGroup(this.hudId, this.hud.loadGroup);
-};
+  let hud = aHeadsUpDisplay;
+  let hudId = hud.hudId;
+  let outputNode = hud.outputNode;
+  let chromeDocument = hud.chromeDocument;
+  let makeHTMLNode = hud.makeHTMLNode;
 
-HUDConsole.prototype = {
-  created: null,
+  aHeadsUpDisplay._console = this;
 
-  log: function console_log()
-  {
-    this.sendToHUDService("log", arguments);
-  },
+  HUDService.updateLoadGroup(hudId, hud.loadGroup);
 
-  info: function console_info()
-  {
-    this.sendToHUDService("info", arguments);
-  },
-
-  warn: function console_warn()
-  {
-    this.sendToHUDService("warn", arguments);
-  },
-
-  error: function console_error()
-  {
-    this.sendToHUDService("error", arguments);
-  },
-
-  exception: function console_exception()
-  {
-    this.sendToHUDService("exception", arguments);
-  },
-
-  timeStamp: function Console_timeStamp()
-  {
-    return ConsoleUtils.timeStamp(new Date());
-  },
-
-  sendToHUDService: function console_send(aLevel, aArguments)
+  let sendToHUDService = function console_send(aLevel, aArguments)
   {
     // check to see if logging is on for this level before logging!
-    var filterState = HUDService.getFilterState(this.hudId, aLevel);
+    var filterState = HUDService.getFilterState(hudId, aLevel);
 
     if (!filterState) {
       // Ignoring log message
       return;
     }
 
-    let ts = this.timeStamp();
-    let messageNode =
-      this.hud.makeHTMLNode("div");
+    let ts = ConsoleUtils.timeStamp(new Date());
+    let messageNode = hud.makeHTMLNode("div");
 
     let klass = "hud-msg-node hud-" + aLevel;
 
     messageNode.setAttribute("class", klass);
 
-    let argsArray = [];
+    let argumentArray = [];
     for (var i = 0; i < aArguments.length; i++) {
-      argsArray.push(aArguments[i]);
+      argumentArray.push(aArguments[i]);
     }
 
-    let timestampedMessage =
-      this.chromeDocument.createTextNode(ts + ": " + argsArray.join(" "));
+    let message = argumentArray.join(' ');
+    let timestampedMessage = ts + ": " + message;
 
-    messageNode.appendChild(timestampedMessage);
+    messageNode.appendChild(chromeDocument.createTextNode(timestampedMessage));
+
     // need a constructor here to properly set all attrs
     let messageObject = {
       logLevel: aLevel,
-      hudId: this.hud.hudId,
-      message: this.hud.message,
+      hudId: hud.hudId,
+      message: message,
       timeStamp: ts,
       origin: "HUDConsole",
     };
 
-    HUDService.logMessage(messageObject, this.hud.outputNode, messageNode);
+    HUDService.logMessage(messageObject, hud.outputNode, messageNode);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Console API.
+  this.log = function console_log()
+  {
+    sendToHUDService("log", arguments);
+  },
+
+  this.info = function console_info()
+  {
+    sendToHUDService("info", arguments);
+  },
+
+  this.warn = function console_warn()
+  {
+    sendToHUDService("warn", arguments);
+  },
+
+  this.error = function console_error()
+  {
+    sendToHUDService("error", arguments);
+  },
+
+  this.exception = function console_exception()
+  {
+    sendToHUDService("exception", arguments);
   }
 };
-
-
 
 /**
  * Creates a DOM Node factory for either XUL nodes or HTML nodes - as
