@@ -273,6 +273,27 @@ function testNet()
   });
 }
 
+function testOutputOrder()
+{
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
+  let outputNode = jsterm.outputNode;
+
+  jsterm.clearOutput();
+  jsterm.execute("console.log('foo', 'bar');");
+
+  is(outputNode.childNodes.length, 2, "Two children in output");
+  let outputChildren = outputNode.childNodes;
+
+  let executedStringFirst =
+    /console\.log\('foo', 'bar'\);/.test(outputChildren[0].childNodes[0].nodeValue);
+
+  let outputSecond =
+    /foo bar/.test(outputChildren[1].childNodes[0].nodeValue);
+
+  ok(executedStringFirst && outputSecond, "executed string comes first");
+}
+
 function testCreateDisplay() {
   ok(typeof cs.consoleDisplays == "object",
      "consoledisplays exist");
@@ -452,6 +473,7 @@ function test() {
       testRecordManyEntries();
       testIteration();
       testConsoleHistory();
+      testOutputOrder();
 
       // testUnregister();
       executeSoon(function () {
