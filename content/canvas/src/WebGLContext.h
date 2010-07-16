@@ -380,28 +380,33 @@ protected:
 
     // Conversion from public nsI* interfaces to concrete objects
     template<class ConcreteObjectType, class BaseInterfaceType>
-    PRBool GetConcreteObject(BaseInterfaceType *aInterface,
+    PRBool GetConcreteObject(const char *info,
+                             BaseInterfaceType *aInterface,
                              ConcreteObjectType **aConcreteObject,
                              PRBool *isNull = 0,
-                             PRBool *isDeleted = 0);
+                             PRBool *isDeleted = 0,
+                             PRBool generateErrors = PR_TRUE);
 
     template<class ConcreteObjectType, class BaseInterfaceType>
-    PRBool GetConcreteObjectAndGLName(BaseInterfaceType *aInterface,
+    PRBool GetConcreteObjectAndGLName(const char *info,
+                                      BaseInterfaceType *aInterface,
                                       ConcreteObjectType **aConcreteObject,
                                       WebGLuint *aGLObjectName,
                                       PRBool *isNull = 0,
                                       PRBool *isDeleted = 0);
 
     template<class ConcreteObjectType, class BaseInterfaceType>
-    PRBool GetGLName(BaseInterfaceType *aInterface,
+    PRBool GetGLName(const char *info,
+                     BaseInterfaceType *aInterface,
                      WebGLuint *aGLObjectName,
                      PRBool *isNull = 0,
                      PRBool *isDeleted = 0);
 
     template<class ConcreteObjectType, class BaseInterfaceType>
-    PRBool CheckConversion(BaseInterfaceType *aInterface,
-                           PRBool *isNull = 0,
-                           PRBool *isDeleted = 0);
+    PRBool CanGetConcreteObject(const char *info,
+                                BaseInterfaceType *aInterface,
+                                PRBool *isNull = 0,
+                                PRBool *isDeleted = 0);
 
 
     // the buffers bound to the current program's attribs
@@ -934,16 +939,21 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLUniformLocation, WEBGLUNIFORMLOCATION_PRIVATE
  * By default, null (respectively: deleted) aInterface pointers are
  * not allowed, but if you pass a non-null isNull (respectively:
  * isDeleted) pointer, then they become allowed and the value at
- * isNull (respecively isDeleted) is overwritten. In case of a null
- * pointer, the resulting
+ * isNull (respecively isDeleted) is overwritten.
+ *
+ * If generateErrors is true (which is the default) then upon errors,
+ * GL errors are synthesized and error messages are printed, prepended by
+ * the 'info' string.
  */
 
 template<class ConcreteObjectType, class BaseInterfaceType>
-PRBool
-WebGLContext::GetConcreteObject(BaseInterfaceType *aInterface,
+inline PRBool
+WebGLContext::GetConcreteObject(const char *info,
+                                BaseInterfaceType *aInterface,
                                 ConcreteObjectType **aConcreteObject,
                                 PRBool *isNull,
-                                PRBool *isDeleted)
+                                PRBool *isDeleted,
+                                PRBool generateErrors)
 {
     if (!aInterface) {
         if (NS_LIKELY(isNull)) {
@@ -953,7 +963,8 @@ WebGLContext::GetConcreteObject(BaseInterfaceType *aInterface,
             *aConcreteObject = 0;
             return PR_TRUE;
         } else {
-            LogMessage("Null object passed to WebGL function");
+            if (generateErrors)
+                ErrorInvalidValue("%s: null object passed as argument", info);
             return PR_FALSE;
         }
     }
@@ -970,7 +981,10 @@ WebGLContext::GetConcreteObject(BaseInterfaceType *aInterface,
 
     if (!(*aConcreteObject)->IsCompatibleWithContext(this)) {
         // the object doesn't belong to this WebGLContext
-        LogMessage("Object from different WebGL context given as argument (or older generation of this one)");
+        if (generateErrors) {
+            ErrorInvalidOperation("%s: object from different WebGL context (or older generation of this one) "
+                                  "passed as argument", info);
+        }
         return PR_FALSE;
     }
 
@@ -980,7 +994,8 @@ WebGLContext::GetConcreteObject(BaseInterfaceType *aInterface,
             *isDeleted = PR_TRUE;
             return PR_TRUE;
         } else {
-            LogMessage("Deleted object passed to WebGL function");
+            if (generateErrors)
+                ErrorInvalidOperation("%s: deleted object passed as argument", info);
             return PR_FALSE;
         }
     }
@@ -995,14 +1010,15 @@ WebGLContext::GetConcreteObject(BaseInterfaceType *aInterface,
  * Null objects give the name 0.
  */
 template<class ConcreteObjectType, class BaseInterfaceType>
-PRBool
-WebGLContext::GetConcreteObjectAndGLName(BaseInterfaceType *aInterface,
+inline PRBool
+WebGLContext::GetConcreteObjectAndGLName(const char *info,
+                                         BaseInterfaceType *aInterface,
                                          ConcreteObjectType **aConcreteObject,
                                          WebGLuint *aGLObjectName,
                                          PRBool *isNull,
                                          PRBool *isDeleted)
 {
-    PRBool result = GetConcreteObject(aInterface, aConcreteObject, isNull, isDeleted);
+    PRBool result = GetConcreteObject(info, aInterface, aConcreteObject, isNull, isDeleted);
     if (result == PR_FALSE) return PR_FALSE;
     *aGLObjectName = *aConcreteObject ? (*aConcreteObject)->GLName() : 0;
     return PR_TRUE;
@@ -1011,26 +1027,28 @@ WebGLContext::GetConcreteObjectAndGLName(BaseInterfaceType *aInterface,
 /* Same as GetConcreteObjectAndGLName when you don't need the concrete object pointer.
  */
 template<class ConcreteObjectType, class BaseInterfaceType>
-PRBool
-WebGLContext::GetGLName(BaseInterfaceType *aInterface,
+inline PRBool
+WebGLContext::GetGLName(const char *info,
+                        BaseInterfaceType *aInterface,
                         WebGLuint *aGLObjectName,
                         PRBool *isNull,
                         PRBool *isDeleted)
 {
     ConcreteObjectType *aConcreteObject;
-    return GetConcreteObjectAndGLName(aInterface, &aConcreteObject, aGLObjectName, isNull, isDeleted);
+    return GetConcreteObjectAndGLName(info, aInterface, &aConcreteObject, aGLObjectName, isNull, isDeleted);
 }
 
 /* Same as GetConcreteObject when you only want to check if the conversion succeeds.
  */
 template<class ConcreteObjectType, class BaseInterfaceType>
-PRBool
-WebGLContext::CheckConversion(BaseInterfaceType *aInterface,
+inline PRBool
+WebGLContext::CanGetConcreteObject(const char *info,
+                              BaseInterfaceType *aInterface,
                               PRBool *isNull,
                               PRBool *isDeleted)
 {
     ConcreteObjectType *aConcreteObject;
-    return GetConcreteObject(aInterface, &aConcreteObject, isNull, isDeleted);
+    return GetConcreteObject(info, aInterface, &aConcreteObject, isNull, isDeleted, PR_FALSE);
 }
 
 }
