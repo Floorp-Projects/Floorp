@@ -254,10 +254,18 @@ MOZ_ARG_WITH_STRING(android-toolchain,
                           location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
     android_toolchain=$withval)
 
-MOZ_ARG_WITH_STRING(android-platform,
-[  --with-android-platform=DIR
-                          location of NDK platform dir, default NDK/build/platforms/android-5/arch-arm],
-    android_platform=$withval)
+
+MOZ_ARG_WITH_STRING(android-version,
+[  --with-android-version=VER
+                          android platform version, default 5],
+    android_version=$withval,
+    android_version=5)
+
+MOZ_ARG_WITH_STRING(android-arch,
+[  --with-android-arch=ARCH
+                          android platform architecture, default arm],
+    android_arch=$withval,
+    android_arch=arm)
 
 MOZ_ARG_WITH_STRING(android-sdk,
 [  --with-android-sdk=DIR
@@ -287,18 +295,18 @@ if test "$target" = "arm-android-eabi" ; then
     fi
 
     if test -z "$android_platform" ; then
-       android_platform="$android_ndk"/build/platforms/android-5/arch-arm
+       android_platform="$android_ndk"/build/platforms/android-"$android_version"/arch-"$android_arch"
     fi
 
     dnl set up compilers
-    AS="$android_toolchain"/bin/arm-eabi-as
-    CC="$android_toolchain"/bin/arm-eabi-gcc
-    CXX="$android_toolchain"/bin/arm-eabi-g++
-    CPP="$android_toolchain"/bin/arm-eabi-cpp
-    LD="$android_toolchain"/bin/arm-eabi-ld
-    AR="$android_toolchain"/bin/arm-eabi-ar
-    RANLIB="$android_toolchain"/bin/arm-eabi-ranlib
-    STRIP="$android_toolchain"/bin/arm-eabi-strip
+    if test -z "$AS"; then AS="$android_toolchain"/bin/arm-eabi-as; fi
+    if test -z "$CC"; then CC="$android_toolchain"/bin/arm-eabi-gcc; fi
+    if test -z "$CXX"; then CXX="$android_toolchain"/bin/arm-eabi-g++; fi
+    if test -z "$CPP"; then CPP="$android_toolchain"/bin/arm-eabi-cpp; fi
+    if test -z "$LD"; then LD="$android_toolchain"/bin/arm-eabi-ld; fi
+    if test -z "$AR"; then AR="$android_toolchain"/bin/arm-eabi-ar; fi
+    if test -z "$RANLIB"; then RANLIB="$android_toolchain"/bin/arm-eabi-ranlib; fi
+    if test -z "$STRIP"; then STRIP="$android_toolchain"/bin/arm-eabi-strip; fi
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
     CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
@@ -331,6 +339,7 @@ if test "$target" = "arm-android-eabi" ; then
     ANDROID_TOOLS="${android_tools}"
 
     AC_DEFINE(ANDROID)
+    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
     CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
 fi
