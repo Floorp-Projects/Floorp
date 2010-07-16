@@ -662,8 +662,8 @@ nsXULTreeItemAccessibleBase::
   nsXULTreeItemAccessibleBase(nsIContent *aContent, nsIWeakReference *aShell,
                               nsAccessible *aParent, nsITreeBoxObject *aTree,
                               nsITreeView *aTreeView, PRInt32 aRow) :
-  mTree(aTree), mTreeView(aTreeView), mRow(aRow),
-  nsAccessibleWrap(aContent, aShell)
+  nsAccessibleWrap(aContent, aShell),
+  mTree(aTree), mTreeView(aTreeView), mRow(aRow)
 {
   mParent = aParent;
 }

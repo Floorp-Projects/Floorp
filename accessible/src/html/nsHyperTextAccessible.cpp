@@ -812,7 +812,7 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
     // For line selection with needsStart, set start of line exactly to line break
     if (pos.mContentOffset == 0 && firstChild &&
         nsAccUtils::Role(firstChild) == nsIAccessibleRole::ROLE_STATICTEXT &&
-        nsAccUtils::TextLength(firstChild) == hyperTextOffset) {
+        static_cast<PRInt32>(nsAccUtils::TextLength(firstChild)) == hyperTextOffset) {
       // XXX Bullet hack -- we should remove this once list bullets use anonymous content
       hyperTextOffset = 0;
     }

@@ -2747,6 +2747,14 @@ nsAccessible::BindToParent(nsAccessible* aParent, PRUint32 aIndexInParent)
 }
 
 void
+nsAccessible::UnbindFromParent()
+{
+  mParent = nsnull;
+  mIndexInParent = -1;
+  mGroupInfo = nsnull;
+}
+
+void
 nsAccessible::InvalidateChildren()
 {
   PRInt32 childCount = mChildren.Length();
