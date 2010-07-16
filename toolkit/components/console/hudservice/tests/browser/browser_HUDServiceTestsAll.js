@@ -226,6 +226,17 @@ function testConsoleLoggingAPI(aMethod)
   ok(count == 0, aMethod + " logging tunred off, 0 messages logged");
   HUDService.clearDisplay(hudId);
   filterBox.value = "";
+
+  // test for multiple arguments.
+  HUDService.clearDisplay(hudId);
+  HUDService.setFilterState(hudId, aMethod, true);
+  browser.contentWindow.wrappedJSObject.console[aMethod]("foo", "bar");
+
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
+  let outputLogNode = jsterm.outputNode;
+  ok(/foo bar/.test(outputLogNode.childNodes[0].childNodes[0].nodeValue),
+    "Emitted both console arguments");
 }
 
 function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
