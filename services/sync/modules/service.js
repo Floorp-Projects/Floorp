@@ -1292,6 +1292,7 @@ WeaveSvc.prototype = {
 
     // if we don't have a node, get one.  if that fails, retry in 10 minutes
     if (this.clusterURL == "" && !this._setCluster()) {
+      Status.sync = NO_SYNC_NODE_FOUND;
       this._scheduleNextSync(10 * 60 * 1000);
       return;
     }
