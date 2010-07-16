@@ -43,6 +43,9 @@
 #include "nsIDOMSVGAnimatedNumberList.h"
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsDOMError.h"
+#include "SVGLengthList.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // nsQueryFrame methods
@@ -61,68 +64,21 @@ nsSVGTextContainerFrame::NotifyGlyphMetricsChange()
     textFrame->NotifyGlyphMetricsChange();
 }
 
-already_AddRefed<nsIDOMSVGLengthList>
-nsSVGTextContainerFrame::GetX()
+void
+nsSVGTextContainerFrame::GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY)
 {
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
-    do_QueryInterface(mContent);
-
-  if (!tpElement)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-  tpElement->GetX(getter_AddRefs(animLengthList));
-  nsIDOMSVGLengthList *retval;
-  animLengthList->GetAnimVal(&retval);
-  return retval;
+  static_cast<nsSVGElement*>(mContent)->
+    GetAnimatedLengthListValues(aX, aY, nsnull);
 }
 
-already_AddRefed<nsIDOMSVGLengthList>
-nsSVGTextContainerFrame::GetY()
+void
+nsSVGTextContainerFrame::GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy)
 {
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
-    do_QueryInterface(mContent);
-
-  if (!tpElement)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-  tpElement->GetY(getter_AddRefs(animLengthList));
-  nsIDOMSVGLengthList *retval;
-  animLengthList->GetAnimVal(&retval);
-  return retval;
-}
-
-already_AddRefed<nsIDOMSVGLengthList>
-nsSVGTextContainerFrame::GetDx()
-{
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
-    do_QueryInterface(mContent);
-
-  if (!tpElement)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-  tpElement->GetDx(getter_AddRefs(animLengthList));
-  nsIDOMSVGLengthList *retval;
-  animLengthList->GetAnimVal(&retval);
-  return retval;
-}
-
-already_AddRefed<nsIDOMSVGLengthList>
-nsSVGTextContainerFrame::GetDy()
-{
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
-    do_QueryInterface(mContent);
-
-  if (!tpElement)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-  tpElement->GetDy(getter_AddRefs(animLengthList));
-  nsIDOMSVGLengthList *retval;
-  animLengthList->GetAnimVal(&retval);
-  return retval;
+  // SVGUserUnitList is lazy, so there's little overhead it getting the x
+  // and y lists even though we ignore them.
+  SVGUserUnitList xLengthList, yLengthList;
+  static_cast<nsSVGElement*>(mContent)->
+    GetAnimatedLengthListValues(&xLengthList, &yLengthList, aDx, aDy, nsnull);
 }
 
 already_AddRefed<nsIDOMSVGNumberList>
