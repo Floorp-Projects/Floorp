@@ -247,7 +247,7 @@ function nextTest() {
   else {
     // Collapse the personal toolbar if needed.
     if (wasCollapsed)
-      toolbar.collapsed = true;
+      setToolbarVisibility(toolbar, false);
     finish();
   }
 }
@@ -258,7 +258,7 @@ let wasCollapsed = toolbar.collapsed;
 function test() {
   // Uncollapse the personal toolbar if needed.
   if (wasCollapsed)
-    toolbar.collapsed = false;
+    setToolbarVisibility(toolbar, true);
 
   waitForExplicitFinish();
   nextTest();
