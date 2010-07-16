@@ -527,11 +527,11 @@ BrowserView.prototype = {
 
   updateScrolledArea: function updateScrolledArea(aMessage) {
     let browser = aMessage.target;
-    if (!browser)
-      throw "MozScrolledAreaChanged: Could not find browser";
+    let tab = Browser.getTabForBrowser(browser);
+    if (!browser || !tab)
+      return;
 
     let json = aMessage.json;
-    let tab = Browser.getTabForBrowser(browser);
     let bvs = tab.browserViewportState;
 
     let vis = this.getVisibleRect();
