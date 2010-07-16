@@ -513,7 +513,6 @@ window.Item.prototype = {
   // Function: setTrenches
   // Sets up/moves the trenches for snapping to this item.
   setTrenches: function(rect) {
-
     if (this.parent !== null)
       return;
 

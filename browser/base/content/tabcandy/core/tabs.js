@@ -449,6 +449,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
            event.tab = self;
            return event;
          }});
+
       /* ToDo: do we need this?  onFocus is fired twice if this is uncommented.
       mixIns.add(
         {name: "onFocus",

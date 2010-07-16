@@ -415,14 +415,15 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   
   // ----------  
   makeActive: function(){
-   iQ(this.container).find("canvas").addClass("focus")
-   iQ(this.container).find("img.thumb-placeholder").addClass("focus")
+   iQ(this.container).find("canvas").addClass("focus");
+   iQ(this.container).find("img.cached-thumb").addClass("focus");
+
   },
 
   // ----------    
   makeDeactive: function(){
-   iQ(this.container).find("canvas").removeClass("focus")
-   iQ(this.container).find("img.thumb-placeholder").removeClass("focus")
+   iQ(this.container).find("canvas").removeClass("focus");
+   iQ(this.container).find("img.cached-thumb").removeClass("focus");
   },
   
   // ----------
@@ -671,18 +672,18 @@ window.TabItems = {
       if (!item.tab.raw)
         return false;
         
-      var tab = Storage.getTabData(item.tab.raw);       
-      if (tab && this.storageSanity(tab)) {
+      var tabData = Storage.getTabData(item.tab.raw);       
+      if (tabData && this.storageSanity(tabData)) {
         if (item.parent)
           item.parent.remove(item);
           
-        item.setBounds(tab.bounds, true);
+        item.setBounds(tabData.bounds, true);
         
-        if (isPoint(tab.userSize))
-          item.userSize = new Point(tab.userSize);
+        if (isPoint(tabData.userSize))
+          item.userSize = new Point(tabData.userSize);
           
-        if (tab.groupID) {
-          var group = Groups.group(tab.groupID);
+        if (tabData.groupID) {
+          var group = Groups.group(tabData.groupID);
           if (group) {
             group.add(item);          
           
@@ -691,68 +692,13 @@ window.TabItems = {
           }
         }
         
-        if (tab.imageData) {
+        if (tabData.imageData) {
           var mirror = item.tab.mirror;
-          var rawTab = item.tab.raw;
-          var $nameElement = iQ(mirror.nameEl);
-          var $canvasElement = iQ(mirror.canvasEl);
-          var $canvasPlaceholderElement = iQ(mirror.canvasPlaceholderEl);
-          var hidePlaceholder = function() {
-            $canvasPlaceholderElement.hide();
-            $canvasElement.show();
-          };
-          var hidPlaceholder = false;
-          var webProgress = {           
-            onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {
-              if (aFlag &
-                  Components.interfaces.nsIWebProgressListener.STATE_STOP) {
-                if (hidPlaceholder) {
-                  rawtab.linkedBrowser.removeProgressListener(webProgress);
-                } else if (aFlag &
-                  Components.interfaces.nsIWebProgressListener.STATE_IS_WINDOW) {
-                  iQ.timeout(function() {
-                    if (!hidPlaceholder) {
-                      hidPlaceholder = true;
-                      hidePlaceholder();
-                    }
-                  }, 100);
-
-                  rawTab.linkedBrowser.removeProgressListener(webProgress);
-                }
-              }
-            },
-          
-            onLocationChange: function(aProgress, aRequest, aURI) { },
-            onProgressChange: function(
-              aWebProgress, aRequest, curSelf, maxSelf, curTot, maxTot) { },
-            onStatusChange: function(
-              aWebProgress, aRequest, aStatus, aMessage) { },
-            onSecurityChange: function(aWebProgress, aRequest, aState) { },
-
-            QueryInterface: function(aIID) {
-             if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-                 aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-                 aIID.equals(Components.interfaces.nsISupports))
-               return this;
-             throw Components.results.NS_NOINTERFACE;
-            }
-          };
-          
-          // show the placeholders
-          $canvasPlaceholderElement.attr("src", tab.imageData).show();
-          $canvasElement.hide();
-          $nameElement.text(tab.title ? tab.title : "");
-          
-          // add progress listener
-          rawTab.linkedBrowser.addProgressListener(
-            webProgress, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+          mirror.showCachedData(item.tab, tabData);
           // the code in the progress listener doesn't fire sometimes because
           // tab is being restored so need to catch that.
           iQ.timeout(function() {
-            if (!hidPlaceholder) {
-              hidPlaceholder = true;
-              hidePlaceholder();
-            }
+            mirror.hideCachedData(item.tab);
           }, 30000);
         }
         
@@ -769,5 +715,5 @@ window.TabItems = {
     }
         
     return found; 
-  }
+  }  
 };
