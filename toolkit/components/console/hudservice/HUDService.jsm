@@ -2284,12 +2284,22 @@ JSTerm.prototype = {
             // up arrow: history previous
             if (self.caretInFirstLine()){
               self.historyPeruse(true);
+              if (aEvent.cancelable) {
+                let inputEnd = self.inputNode.value.length;
+                self.inputNode.setSelectionRange(inputEnd, inputEnd);
+                aEvent.preventDefault();
+              }
             }
             break;
           case 40:
             // down arrow: history next
             if (self.caretInLastLine()){
               self.historyPeruse(false);
+              if (aEvent.cancelable) {
+                let inputEnd = self.inputNode.value.length;
+                self.inputNode.setSelectionRange(inputEnd, inputEnd);
+                aEvent.preventDefault();
+              }
             }
             break;
           case 9:
@@ -2318,27 +2328,33 @@ JSTerm.prototype = {
     if (!this.history.length) {
       return;
     }
+
     // Up Arrow key
     if (aFlag) {
-      var idx = this.historyPlaceHolder--;
-      if (idx < - 1) {
+      if (this.historyPlaceHolder <= 0) {
         return;
       }
-      var inputVal = this.history[idx - 1];
 
+      let inputVal = this.history[--this.historyPlaceHolder];
       if (inputVal){
-        this.inputNode.value = this.history[idx - 1];
+        this.inputNode.value = inputVal;
       }
     }
+    // Down Arrow key
     else {
-      var idx = this.historyPlaceHolder++;
-      if (idx > (this.history.length + 1)) {
+      if (this.historyPlaceHolder == this.history.length - 1) {
+        this.historyPlaceHolder ++;
+        this.inputNode.value = "";
         return;
       }
-      var inputVal = this.history[idx + 1];
-
-      if (inputVal){
-        this.inputNode.value = this.history[idx + 1];
+      else if (this.historyPlaceHolder >= (this.history.length)) {
+        return;
+      }
+      else {
+        let inputVal = this.history[++this.historyPlaceHolder];
+        if (inputVal){
+          this.inputNode.value = inputVal;
+        }
       }
     }
   },
