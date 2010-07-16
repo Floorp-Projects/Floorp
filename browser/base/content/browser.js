@@ -4674,13 +4674,18 @@ function onViewToolbarsPopupShowing(aEvent) {
 function onViewToolbarCommand(aEvent) {
   var index = aEvent.originalTarget.getAttribute("toolbarindex");
   var toolbar = gNavToolbox.childNodes[index];
+  var visible = aEvent.originalTarget.getAttribute("checked") == "true";
+  setToolbarVisibility(toolbar, visible);
+}
+
+function setToolbarVisibility(toolbar, visible) {
   var hidingAttribute = toolbar.getAttribute("type") == "menubar" ?
                         "autohide" : "collapsed";
 
-  toolbar.setAttribute(hidingAttribute,
-                       aEvent.originalTarget.getAttribute("checked") != "true");
+  toolbar.setAttribute(hidingAttribute, !visible);
   document.persist(toolbar.id, hidingAttribute);
 
+  PlacesToolbarHelper.init();
   BookmarksMenuButton.updatePosition();
 
 #ifdef MENUBAR_CAN_AUTOHIDE
