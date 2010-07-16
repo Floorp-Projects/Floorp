@@ -620,11 +620,11 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         }
     case nsXPTType::T_JSVAL :
         {
-            NS_ASSERTION(useAllocator,"trying to convert a jsval to const jsval & without allocator : this would leak");
+            NS_ASSERTION(useAllocator, "trying to convert a jsval to const jsval & without allocator : this would leak");
 
             // The C++ type is (const jsval &), which here means (jsval *).
             jsval *buf = new jsval(s);
-            if (!buf)
+            if(!buf)
                 return JS_FALSE;
             *((jsval**)d) = buf;
             break;

@@ -517,7 +517,7 @@ JS_XDRDouble(JSXDRState *xdr, jsdouble *dp)
     return JS_TRUE;
 }
 
-enum jsvaltag {
+enum XDRValueTag {
     JSVAL_OBJECT  =             0x0,
     JSVAL_INT     =             0x1,
     JSVAL_DOUBLE  =             0x2,
@@ -527,8 +527,8 @@ enum jsvaltag {
     JSVAL_XDRVOID =             0xA
 };
 
-static jsvaltag
-JSVAL_TAG(jsval v)
+static XDRValueTag
+GetXDRTag(jsval v)
 {
     if (JSVAL_IS_NULL(v))
         return JSVAL_XDRNULL;
@@ -616,31 +616,12 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
     uint32 type;
 
     if (xdr->mode == JSXDR_ENCODE)
-        type = JSVAL_TAG(*vp);
+        type = GetXDRTag(*vp);
     return JS_XDRUint32(xdr, &type) && XDRValueBody(xdr, type, vp);
 }
 
-JSBool
-js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
-{
-    JSString *str;
-
-    if (xdr->mode == JSXDR_ENCODE)
-        str = ATOM_TO_STRING(*atomp);
-
-    if (!JS_XDRString(xdr, &str))
-        return JS_FALSE;
-
-    if (xdr->mode == JSXDR_DECODE) {
-        *atomp = js_AtomizeString(xdr->cx, str, 0);
-        return *atomp != NULL;
-    }
-
-    return JS_TRUE;
-}
-
 extern JSBool
-js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp)
+js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
 {
     JSString *str;
     uint32 nchars;

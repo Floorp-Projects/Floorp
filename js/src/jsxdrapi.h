@@ -213,9 +213,6 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
 extern JSBool
 js_XDRAtom(JSXDRState *xdr, JSAtom **atomp);
 
-extern JSBool
-js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp);
-
 JS_END_EXTERN_C
 
 #endif /* ! jsxdrapi_h___ */

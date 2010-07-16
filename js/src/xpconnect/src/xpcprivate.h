@@ -2523,28 +2523,6 @@ public:
 
     void SystemIsBeingShutDown(JSContext* cx);
 
-#ifdef XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
-    // This will try to find a member that is of the form "camelCased"
-    // but was accessed from JS using "CamelCased". This is here to catch
-    // mistakes caused by the confusion magnet that JS methods are by
-    // convention 'foo' while C++ members are by convention 'Foo'.
-    static void
-    HandlePossibleNameCaseError(XPCCallContext& ccx,
-                                XPCNativeSet* set,
-                                XPCNativeInterface* iface,
-                                jsid name);
-    static void
-    HandlePossibleNameCaseError(JSContext* cx,
-                                XPCNativeSet* set,
-                                XPCNativeInterface* iface,
-                                jsid name);
-
-#define  HANDLE_POSSIBLE_NAME_CASE_ERROR(context, set, iface, name) \
-    XPCWrappedNative::HandlePossibleNameCaseError(context, set, iface, name)
-#else
-#define  HANDLE_POSSIBLE_NAME_CASE_ERROR(context, set, iface, name) ((void)0)
-#endif
-
     enum CallMode {CALL_METHOD, CALL_GETTER, CALL_SETTER};
 
     static JSBool CallMethod(XPCCallContext& ccx,

@@ -2884,8 +2884,9 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                     useAllocator = JS_TRUE;
                     break;
                 }
-            } else {
-                if (type_tag == nsXPTType::T_JSVAL) {
+            }
+            else {
+                if(type_tag == nsXPTType::T_JSVAL) {
                     dp->SetValIsAllocated();
                     useAllocator = JS_TRUE;
                 }
@@ -3337,29 +3338,6 @@ XPCWrappedNative::ToString(XPCCallContext& ccx,
 }
 
 /***************************************************************************/
-
-#ifdef XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
-// static
-void
-XPCWrappedNative::HandlePossibleNameCaseError(JSContext* cx,
-                                              XPCNativeSet* set,
-                                              XPCNativeInterface* iface,
-                                              jsid name)
-{
-    XPCCallContext ccx(JS_CALLER, cx);
-    HandlePossibleNameCaseError(ccx, set, iface, name);
-}
-
-// static
-void
-XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
-                                              XPCNativeSet* set,
-                                              XPCNativeInterface* iface,
-                                              jsid name)
-{
-    // TODO: remove this all more thoroughly.
-}
-#endif
 
 #ifdef XPC_CHECK_CLASSINFO_CLAIMS
 static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper)
