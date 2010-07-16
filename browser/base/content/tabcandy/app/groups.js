@@ -1248,12 +1248,14 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
           return;
         
         // Zoom into the last-active tab when the group
-        // is clicked.
-        /*var activeTab = self.getActiveTab();
-        if ( activeTab ) 
-          activeTab.zoomIn();
-        else if (self.getChild(0))
-          self.getChild(0).zoomIn();*/
+        // is clicked, but only for non-stacked groups.
+        var activeTab = self.getActiveTab();
+        if( !self._isStacked ){
+          if ( activeTab ) 
+            activeTab.zoomIn();
+          else if (self.getChild(0))
+            self.getChild(0).zoomIn();          
+        }
           
         self._mouseDown = null;
     });
