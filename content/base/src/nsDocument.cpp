@@ -5619,12 +5619,12 @@ nsDocument::SetDocumentURI(const nsAString& aDocumentURI)
 static void BlastSubtreeToPieces(nsINode *aNode);
 
 PLDHashOperator
-BlastFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
+BlastFunc(nsAttrHashKey::KeyType aKey, nsDOMAttribute *aData, void* aUserArg)
 {
   nsCOMPtr<nsIAttribute> *attr =
     static_cast<nsCOMPtr<nsIAttribute>*>(aUserArg);
 
-  *attr = do_QueryInterface(aData);
+  *attr = aData;
 
   NS_ASSERTION(attr->get(),
                "non-nsIAttribute somehow made it into the hashmap?!");

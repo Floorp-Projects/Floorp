@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,29 +35,23 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsHTMLLegendElement_h___
+#define nsHTMLLegendElement_h___
 
-#ifndef nsHTMLOptionElement_h__
-#define nsHTMLOptionElement_h__
-
+#include "nsIDOMHTMLLegendElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLOptionElement.h"
-#include "nsIDOMNSHTMLOptionElement.h"
-#include "nsIJSNativeInitializer.h"
 
-class nsHTMLOptionElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLOptionElement,
-                            public nsIDOMNSHTMLOptionElement,
-                            public nsIJSNativeInitializer
+class nsHTMLLegendElement : public nsGenericHTMLElement,
+                            public nsIDOMHTMLLegendElement
 {
 public:
-  nsHTMLOptionElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsHTMLOptionElement();
+  nsHTMLLegendElement(nsINodeInfo *aNodeInfo);
+  virtual ~nsHTMLLegendElement();
 
-  /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
-  static nsHTMLOptionElement* FromContent(nsIContent *aContent)
+  static nsHTMLLegendElement* FromContent(nsIContent *aContent)
   {
-    if (aContent->NodeInfo()->Equals(nsGkAtoms::option, kNameSpaceID_XHTML))
-      return static_cast<nsHTMLOptionElement*>(aContent);
+    if (aContent->IsHTML() && aContent->Tag() == nsGkAtoms::legend)
+      return static_cast<nsHTMLLegendElement*>(aContent);
     return nsnull;
   }
 
@@ -75,46 +67,53 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
-  // nsIDOMHTMLOptionElement
-  NS_DECL_NSIDOMHTMLOPTIONELEMENT
+  // nsIDOMHTMLLegendElement
+  NS_DECL_NSIDOMHTMLLEGENDELEMENT
 
-  // nsIDOMNSHTMLOptionElement
-  NS_IMETHOD SetText(const nsAString & aText); 
+  // nsGenericHTMLElement
+  NS_IMETHODIMP Focus();
 
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
-                        JSObject *aObj, PRUint32 argc, jsval *argv);
-
-  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              PRInt32 aModType) const;
-
-  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAString* aValue, PRBool aNotify);
-  
-  void SetSelectedInternal(PRBool aValue, PRBool aNotify);
+  virtual void PerformAccesskey(PRBool aKeyCausesActivation,
+                                PRBool aIsTrustedEvent);
 
   // nsIContent
-  virtual PRInt32 IntrinsicState() const;
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const;
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  nsresult CopyInnerTo(nsGenericElement* aDest) const;
+  mozilla::dom::Element *GetFormElement()
+  {
+    nsCOMPtr<nsIFormControl> fieldsetControl = do_QueryInterface(GetFieldSet());
+
+    return fieldsetControl ? fieldsetControl->GetFormElement() : nsnull;
+  }
 
 protected:
   /**
-   * Get the select content element that contains this option, this
-   * intentionally does not return nsresult, all we care about is if
-   * there's a select associated with this option or not.
-   * @param aSelectElement the select element (out param)
+   * Get the fieldset content element that contains this legend.
+   * Returns null if there is no fieldset containing this legend.
    */
-  nsIContent* GetSelect();
-
-  PRPackedBool mSelectedChanged;
-  PRPackedBool mIsSelected;
-
-  // True only while we're under the SetOptionsSelectedByIndex call when our
-  // "selected" attribute is changing and mSelectedChanged is false.
-  PRPackedBool mIsInSetDefaultSelected;
+  nsIContent* GetFieldSet();
 };
 
-#endif
+#endif /* nsHTMLLegendElement_h___ */

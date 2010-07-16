@@ -30,7 +30,7 @@
   </binding>
 
   <binding id="tree" extends="chrome://global/content/bindings/tree.xml#tree-base">
-    <content hidevscroll="true" hidehscroll="true">
+    <content hidevscroll="true" hidehscroll="true" clickthrough="never">
       <children includes="treecols"/>
       <xul:stack class="tree-stack" flex="1">
         <xul:treerows class="tree-rows" flex="1" xbl:inherits="hidevscroll">
