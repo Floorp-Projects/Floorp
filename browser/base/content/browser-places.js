@@ -1073,8 +1073,18 @@ let PlacesToolbarHelper = {
   },
 
   init: function PTH_init() {
-    if (this._viewElt)
-      new PlacesToolbar(this._place);
+    let viewElt = this._viewElt;
+    if (!viewElt || viewElt._placesView)
+      return;
+
+    // If the bookmarks toolbar item is hidden because the parent toolbar is
+    // collapsed or hidden (i.e. in a popup), spare the initialization.
+    let toolbar = viewElt.parentNode.parentNode;
+    if (toolbar.collapsed ||
+        getComputedStyle(toolbar, "").display == "none")
+      return;
+
+    new PlacesToolbar(this._place);
   },
 
   customizeStart: function PTH_customizeStart() {
