@@ -2637,9 +2637,9 @@ WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, js::TypedArray *wa) \
 {                                                                       \
     OBTAIN_UNIFORM_LOCATION(#name ": location")                         \
     if (!wa || wa->type != js::TypedArray::arrayType)                   \
-        return ErrorInvalidOperation("array must be " #arrayType);      \
+        return ErrorInvalidOperation(#name ": array must be " #arrayType);      \
     if (wa->length == 0 || wa->length % cnt != 0)                       \
-        return ErrorInvalidOperation("array must be > 0 elements and have a length multiple of %d", cnt); \
+        return ErrorInvalidOperation(#name ": array must be > 0 elements and have a length multiple of %d", cnt); \
     MakeContextCurrent();                                               \
     gl->f##name(location, wa->length / cnt, (ptrType *)wa->data);            \
     return NS_OK;                                                       \
@@ -2654,9 +2654,9 @@ NS_IMETHODIMP                                                           \
 WebGLContext::name##_array(WebGLuint idx, js::TypedArray *wa)              \
 {                                                                       \
     if (!wa || wa->type != js::TypedArray::arrayType)                   \
-        return ErrorInvalidOperation("array must be " #arrayType);      \
+        return ErrorInvalidOperation(#name ": array must be " #arrayType);      \
     if (wa->length < cnt)                                               \
-        return ErrorInvalidOperation("array must be >= %d elements", cnt); \
+        return ErrorInvalidOperation(#name ": array must be >= %d elements", cnt); \
     MakeContextCurrent();                                               \
     gl->f##name(idx, (ptrType *)wa->data);                              \
     return NS_OK;                                                       \
@@ -2672,9 +2672,11 @@ WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, WebGLboolean transpose
 {                                                                       \
     OBTAIN_UNIFORM_LOCATION(#name ": location")                         \
     if (!wa || wa->type != js::TypedArray::arrayType)                   \
-        return ErrorInvalidOperation("array must be " #arrayType);      \
+        return ErrorInvalidOperation(#name ": array must be " #arrayType);      \
     if (wa->length == 0 || wa->length % (dim*dim) != 0)                 \
-        return ErrorInvalidOperation("array must be > 0 elements and have a length multiple of %d", dim*dim); \
+        return ErrorInvalidOperation(#name ": array must be > 0 elements and have a length multiple of %d", dim*dim); \
+    if (transpose)                                                      \
+        return ErrorInvalidValue(#name ": transpose must be FALSE as per the OpenGL ES 2.0 spec"); \
     MakeContextCurrent();                                               \
     gl->f##name(location, wa->length / (dim*dim), transpose, (ptrType *)wa->data); \
     return NS_OK;                                                       \
