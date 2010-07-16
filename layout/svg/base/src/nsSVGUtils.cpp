@@ -264,6 +264,7 @@ nsSVGUtils::GetFontSize(Element *aElement)
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
                                                          nsnull, nsnull);
   if (!styleContext) {
+    // ReportToConsole
     NS_WARNING("Couldn't get style context for content in GetFontStyle");
     return 1.0f;
   }
@@ -301,6 +302,7 @@ nsSVGUtils::GetFontXHeight(Element *aElement)
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
                                                          nsnull, nsnull);
   if (!styleContext) {
+    // ReportToConsole
     NS_WARNING("Couldn't get style context for content in GetFontStyle");
     return 1.0f;
   }
@@ -328,6 +330,7 @@ nsSVGUtils::GetFontXHeight(nsStyleContext *aStyleContext)
                                                getter_AddRefs(fontMetrics));
 
   if (!fontMetrics) {
+    // ReportToConsole
     NS_WARNING("no FontMetrics in GetFontXHeight()");
     return 1.0f;
   }

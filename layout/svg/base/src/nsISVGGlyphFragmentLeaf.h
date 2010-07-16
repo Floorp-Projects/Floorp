@@ -40,11 +40,13 @@
 #define __NS_ISVGGLYPHFRAGMENTLEAF_H__
 
 #include "nsISVGGlyphFragmentNode.h"
-#include "nsIDOMSVGLengthList.h"
 
 class nsIDOMSVGPoint;
 class nsIDOMSVGRect;
 class nsSVGTextPathFrame;
+namespace mozilla {
+class SVGUserUnitList;
+}
 
 class nsISVGGlyphFragmentLeaf : public nsISVGGlyphFragmentNode
 {
@@ -62,8 +64,7 @@ public:
   NS_IMETHOD_(nsSVGTextPathFrame*) FindTextPathParent()=0;
   NS_IMETHOD_(PRBool) IsStartOfChunk()=0; // == is new absolutely positioned chunk.
 
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX()=0;
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY()=0;
+  NS_IMETHOD_(void) GetXY(mozilla::SVGUserUnitList *aX, mozilla::SVGUserUnitList *aY)=0;
   NS_IMETHOD_(PRUint16) GetTextAnchor()=0;
   NS_IMETHOD_(PRBool) IsAbsolutelyPositioned()=0;
 };

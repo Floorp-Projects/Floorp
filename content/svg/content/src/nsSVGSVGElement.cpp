@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGkAtoms.h"
-#include "nsSVGLength.h"
+#include "DOMSVGLength.h"
 #include "nsSVGAngle.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
@@ -655,7 +655,8 @@ nsSVGSVGElement::CreateSVGNumber(nsIDOMSVGNumber **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGLength(nsIDOMSVGLength **_retval)
 {
-  return NS_NewSVGLength(reinterpret_cast<nsISVGLength**>(_retval));
+  NS_IF_ADDREF(*_retval = new DOMSVGLength());
+  return NS_OK;
 }
 
 /* nsIDOMSVGAngle createSVGAngle (); */

@@ -149,8 +149,7 @@ public:
   NS_IMETHOD_(nsSVGTextPathFrame*) FindTextPathParent();
   NS_IMETHOD_(PRBool) IsStartOfChunk(); // == is new absolutely positioned chunk.
 
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
-  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
+  NS_IMETHOD_(void) GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY);
   NS_IMETHOD_(PRUint16) GetTextAnchor();
   NS_IMETHOD_(PRBool) IsAbsolutelyPositioned();
 
@@ -207,8 +206,7 @@ protected:
                             float aMetricsScale);
   gfxFloat GetBaselineOffset(float aMetricsScale);
 
-  already_AddRefed<nsIDOMSVGLengthList> GetDx();
-  already_AddRefed<nsIDOMSVGLengthList> GetDy();
+  virtual void GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy);
   already_AddRefed<nsIDOMSVGNumberList> GetRotate();
 
   // Used to support GetBBoxContribution by making GetConvasTM use this as the
