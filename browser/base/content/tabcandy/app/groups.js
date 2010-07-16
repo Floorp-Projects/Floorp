@@ -1269,7 +1269,6 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Function: setResizable
   // Sets whether the group is resizable and updates the UI accordingly.
   setResizable: function(value){
-
     this.resizeOptions.minWidth = 90;
     this.resizeOptions.minHeight = 90;
 
