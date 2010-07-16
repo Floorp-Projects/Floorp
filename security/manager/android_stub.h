@@ -41,7 +41,7 @@
 #define ANDROID_STUB_H
 
 #include "dlfcn.h"
-#if ANDROID_VERSION >= 8
+#if ANDROID_VERSION < 8
 /* because dladdr isn't supported in android 2.1 and older.
  * however, it exists in the android repos so.. maybe someday. */
 typedef struct {
