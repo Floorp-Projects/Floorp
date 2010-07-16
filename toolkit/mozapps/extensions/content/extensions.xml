@@ -1178,6 +1178,7 @@
           this.refreshInfo();
           if (!this.isPending("install")) {
             delete this.mInstall;
+            this.setAttribute("name", this.mAddon.name);
             this.setAttribute("status", "installed");
           }
         ]]></body>
