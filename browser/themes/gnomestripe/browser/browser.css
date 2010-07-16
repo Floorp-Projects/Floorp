@@ -1504,3 +1504,26 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 .allTabs-preview-label {
   -moz-transform: translate(0, 2px);
 }
+
+/* Inspector / Highlighter */
+
+#highlighter-panel {
+  -moz-appearance: none;
+  -moz-window-shadow: none;
+}
+
+listitem.style-selector {
+  background-color: DarkGray;
+  color: white;
+}
+
+listitem.style-section {
+  background-color: LightGray;
+  color: black;
+  font-weight: bold;
+}
+
+panel[dimmed="true"] {
+  opacity: 0.5;
+}
+
