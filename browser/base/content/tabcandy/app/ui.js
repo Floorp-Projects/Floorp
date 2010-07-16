@@ -108,27 +108,33 @@ var Tabbar = {
       var tabbrowser = Utils.getCurrentWindow().gBrowser;
       var tabBarTabs = this.getAllTabs();
       
-      var visibleTabs = [ tab.tab.raw for each ( tab in tabs ) if (tab.tab.tabbrowser == tabbrowser) ];
+      var visibleTabs =
+        [ tab.tab.raw for each ( tab in tabs ) if (tab.tab.tabbrowser == tabbrowser) ];
       
-      // Show all of the tabs in the group and move them (in order)
-      // that they appear in the group to the end of the tab strip.
-      // This way the tab order is matched up to the group's thumbnail
-      // order.      
+      // Show all of the tabs in the group.
       tabBarTabs.forEach(function(tab){
         var collapsed = true;
         visibleTabs.some(function(visibleTab, i) {
           if (visibleTab == tab) {
             collapsed = false;
             // remove the element to speed up the next loop.
-            visibleTabs.splice(i, 1);
-            if (!options.dontReorg) {
-              tabbrowser.moveTabTo(tab, tabBarTabs.length - 1);
-            }
+            if (options.dontReorg)
+              visibleTabs.splice(i, 1);
             return true;
           }
         });
         tab.collapsed = collapsed;
       });
+      
+      // Move them (in order) that they appear in the group to the end of the
+      // tab strip. This way the tab order is matched up to the group's
+      // thumbnail order.
+      if (!options.dontReorg) {
+        visibleTabs.forEach(function(visibleTab) {
+          tabbrowser.moveTabTo(visibleTab, tabBarTabs.length - 1);
+        });
+      }
+
     } catch(e) {
       Utils.log(e);
     }
@@ -616,8 +622,6 @@ window.Page = {
 // Singleton top-level UI manager. TODO: Integrate with <Page>.
 function UIClass() { 
   try {
-    Utils.log('TabCandy init --------------------');
-
     // Variable: navBar
     // A reference to the <Navbar>, for manipulating the browser's nav bar. 
     this.navBar = Navbar;
