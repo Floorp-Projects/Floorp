@@ -277,6 +277,7 @@ CPPSRCS += \
 	gfxFT2Fonts.cpp \
 	gfxFT2FontBase.cpp \
 	gfxFT2Utils.cpp \
+	gfxFT2FontList.cpp \
 	nsUnicodeRange.cpp \
 	$(NULL)
 endif
