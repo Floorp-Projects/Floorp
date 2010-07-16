@@ -2848,7 +2848,7 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
     WebGLShader *shader;
     WebGLuint shadername;
 
-    if (!GetGLName<WebGLShader>("compileShader", sobj, &shadername))
+    if (!GetConcreteObjectAndGLName("compileShader", sobj, &shader, &shadername))
         return NS_OK;
     MakeContextCurrent();
 
@@ -2905,7 +2905,7 @@ WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname, nsIVaria
 {
     WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetGLName<WebGLShader>("getShaderParameter: shader", sobj, &shadername))
+    if (!GetConcreteObjectAndGLName("getShaderParameter: shader", sobj, &shader, &shadername))
         return NS_OK;
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
@@ -2950,7 +2950,7 @@ WebGLContext::GetShaderInfoLog(nsIWebGLShader *sobj, nsAString& retval)
 {
     WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetGLName<WebGLShader>("getShaderInfoLog: shader", sobj, &shadername))
+    if (!GetConcreteObjectAndGLName("getShaderInfoLog: shader", sobj, &shader, &shadername))
         return NS_OK;
 
     const nsCString& tlog = shader->TranslationLog();
@@ -2988,7 +2988,7 @@ WebGLContext::GetShaderSource(nsIWebGLShader *sobj, nsAString& retval)
 {
     WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetGLName<WebGLShader>("getShaderSource: shader", sobj, &shadername))
+    if (!GetConcreteObjectAndGLName("getShaderSource: shader", sobj, &shader, &shadername))
         return NS_OK;
 
     CopyASCIItoUTF16(shader->Source(), retval);
@@ -3001,7 +3001,7 @@ WebGLContext::ShaderSource(nsIWebGLShader *sobj, const nsAString& source)
 {
     WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetGLName<WebGLShader>("shaderSource: shader", sobj, &shadername))
+    if (!GetConcreteObjectAndGLName("shaderSource: shader", sobj, &shader, &shadername))
         return NS_OK;
 
     shader->SetSource(NS_LossyConvertUTF16toASCII(source));
