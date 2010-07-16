@@ -2198,6 +2198,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     NS_ENSURE_SUCCESS(rv, rv);
     mHScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                 NS_LITERAL_STRING("horizontal"), PR_FALSE);
+    mHScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
+                                NS_LITERAL_STRING("always"), PR_FALSE);
     if (!aElements.AppendElement(mHScrollbarContent))
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2208,6 +2210,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     NS_ENSURE_SUCCESS(rv, rv);
     mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                 NS_LITERAL_STRING("vertical"), PR_FALSE);
+    mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
+                                NS_LITERAL_STRING("always"), PR_FALSE);
     if (!aElements.AppendElement(mVScrollbarContent))
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2243,6 +2247,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     mScrollCornerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, dir, PR_FALSE);
     mScrollCornerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::element,
                                   NS_LITERAL_STRING("_parent"), PR_FALSE);
+    mScrollCornerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
+                                  NS_LITERAL_STRING("always"), PR_FALSE);
 
     if (!aElements.AppendElement(mScrollCornerContent))
       return NS_ERROR_OUT_OF_MEMORY;

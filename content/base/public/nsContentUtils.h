@@ -223,6 +223,11 @@ public:
   static PRBool   IsCallerTrustedForCapability(const char* aCapability);
 
   /**
+   * Returns the parent node of aChild crossing document boundaries.
+   */
+  static nsINode* GetCrossDocParentNode(nsINode* aChild);
+
+  /**
    * Do not ever pass null pointers to this method.  If one of your
    * nsIContents is null, you have to decide for yourself what
    * "IsDescendantOf" really means.

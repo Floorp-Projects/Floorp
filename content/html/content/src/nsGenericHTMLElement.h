@@ -803,9 +803,11 @@ public:
   virtual void SaveSubtreeState();
 
   // nsIFormControl
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
+  virtual mozilla::dom::Element* GetFormElement();
   virtual void SetForm(nsIDOMHTMLFormElement* aForm);
   virtual void ClearForm(PRBool aRemoveFromForm, PRBool aNotify);
+
+  nsresult GetForm(nsIDOMHTMLFormElement** aForm);
 
   NS_IMETHOD SaveState()
   {

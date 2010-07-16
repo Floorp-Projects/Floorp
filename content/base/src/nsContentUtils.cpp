@@ -1522,6 +1522,21 @@ nsContentUtils::IsCallerTrustedForWrite()
 }
 
 // static
+nsINode*
+nsContentUtils::GetCrossDocParentNode(nsINode* aChild)
+{
+  NS_PRECONDITION(aChild, "The child is null!");
+
+  nsINode* parent = aChild->GetNodeParent();
+  if (parent || !aChild->IsNodeOfType(nsINode::eDOCUMENT))
+    return parent;
+
+  nsIDocument* doc = static_cast<nsIDocument*>(aChild);
+  nsIDocument* parentDoc = doc->GetParentDocument();
+  return parentDoc ? parentDoc->FindContentForSubDocument(doc) : nsnull;
+}
+
+// static
 PRBool
 nsContentUtils::ContentIsDescendantOf(const nsINode* aPossibleDescendant,
                                       const nsINode* aPossibleAncestor)
@@ -1549,16 +1564,7 @@ nsContentUtils::ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
   do {
     if (aPossibleDescendant == aPossibleAncestor)
       return PR_TRUE;
-    nsINode* parent = aPossibleDescendant->GetNodeParent();
-    if (!parent && aPossibleDescendant->IsNodeOfType(nsINode::eDOCUMENT)) {
-      nsIDocument* doc = static_cast<nsIDocument*>(aPossibleDescendant);
-      nsIDocument* parentDoc = doc->GetParentDocument();
-      aPossibleDescendant = parentDoc ?
-                            parentDoc->FindContentForSubDocument(doc) : nsnull;
-    }
-    else {
-      aPossibleDescendant = parent;
-    }
+    aPossibleDescendant = GetCrossDocParentNode(aPossibleDescendant);
   } while (aPossibleDescendant);
 
   return PR_FALSE;
@@ -1915,11 +1921,10 @@ static inline void KeyAppendAtom(nsIAtom* aAtom, nsACString& aKey)
   KeyAppendString(nsAtomCString(aAtom), aKey);
 }
 
-static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)
+static inline PRBool IsAutocompleteOff(nsIContent* aElement)
 {
-  nsAutoString autocomplete;
-  aElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-  return autocomplete.LowerCaseEqualsLiteral("off");
+  return aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::autocomplete,
+                               NS_LITERAL_STRING("off"), eIgnoreCase);
 }
 
 /*static*/ nsresult
@@ -1948,8 +1953,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
-  if (element && IsAutocompleteOff(element)) {
+  if (IsAutocompleteOff(aContent)) {
     return NS_OK;
   }
 
@@ -1995,10 +1999,8 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
       // If in a form, add form name / index of form / index in form
       PRInt32 index = -1;
-      nsCOMPtr<nsIDOMHTMLFormElement> formElement;
-      control->GetForm(getter_AddRefs(formElement));
+      Element *formElement = control->GetFormElement();
       if (formElement) {
-
         if (IsAutocompleteOff(formElement)) {
           aKey.Truncate();
           return NS_OK;
@@ -2007,8 +2009,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
         KeyAppendString(NS_LITERAL_CSTRING("f"), aKey);
 
         // Append the index of the form in the document
-        nsCOMPtr<nsIContent> formContent(do_QueryInterface(formElement));
-        index = htmlForms->IndexOf(formContent, PR_FALSE);
+        index = htmlForms->IndexOf(formElement, PR_FALSE);
         if (index <= -1) {
           //
           // XXX HACK this uses some state that was dumped into the document
@@ -2034,7 +2035,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
         // Append the form name
         nsAutoString formName;
-        formElement->GetName(formName);
+        formElement->GetAttr(kNameSpaceID_None, nsGkAtoms::name, formName);
         KeyAppendString(formName, aKey);
 
       } else {
