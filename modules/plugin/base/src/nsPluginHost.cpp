@@ -594,11 +594,12 @@ NS_IMETHODIMP nsPluginHost::GetURL(nsISupports* pluginInst,
                                    const char* referrer,
                                    PRBool forceJSEnabled)
 {
-  return GetURLWithHeaders(pluginInst, url, target, streamListener,
-                           altHost, referrer, forceJSEnabled, nsnull, nsnull);
+  return GetURLWithHeaders(static_cast<nsNPAPIPluginInstance*>(pluginInst),
+                           url, target, streamListener, altHost, referrer,
+                           forceJSEnabled, nsnull, nsnull);
 }
 
-nsresult nsPluginHost::GetURLWithHeaders(nsISupports* pluginInst,
+nsresult nsPluginHost::GetURLWithHeaders(nsNPAPIPluginInstance* pluginInst,
                                          const char* url,
                                          const char* target,
                                          nsIPluginStreamListener* streamListener,
@@ -616,18 +617,13 @@ nsresult nsPluginHost::GetURLWithHeaders(nsISupports* pluginInst,
   if (!target && !streamListener)
     return NS_ERROR_ILLEGAL_VALUE;
 
-  nsresult rv;
-  nsCOMPtr<nsIPluginInstance> instance = do_QueryInterface(pluginInst, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = DoURLLoadSecurityCheck(instance, url);
+  nsresult rv = DoURLLoadSecurityCheck(pluginInst, url);
   if (NS_FAILED(rv))
     return rv;
 
   if (target) {
     nsCOMPtr<nsIPluginInstanceOwner> owner;
-    rv = instance->GetOwner(getter_AddRefs(owner));
+    rv = pluginInst->GetOwner(getter_AddRefs(owner));
     if (owner) {
       if ((0 == PL_strcmp(target, "newwindow")) ||
           (0 == PL_strcmp(target, "_new")))
@@ -640,7 +636,7 @@ nsresult nsPluginHost::GetURLWithHeaders(nsISupports* pluginInst,
   }
 
   if (streamListener)
-    rv = NewPluginURLStream(string, instance, streamListener, nsnull,
+    rv = NewPluginURLStream(string, pluginInst, streamListener, nsnull,
                             getHeaders, getHeadersLength);
 
   return rv;
@@ -670,9 +666,7 @@ NS_IMETHODIMP nsPluginHost::PostURL(nsISupports* pluginInst,
   if (!target && !streamListener)
     return NS_ERROR_ILLEGAL_VALUE;
 
-  nsCOMPtr<nsIPluginInstance> instance = do_QueryInterface(pluginInst, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  nsNPAPIPluginInstance* instance = static_cast<nsNPAPIPluginInstance*>(pluginInst);
 
   rv = DoURLLoadSecurityCheck(instance, url);
   if (NS_FAILED(rv))
@@ -950,8 +944,8 @@ NS_IMETHODIMP nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
 
 // Called by nsPluginInstanceOwner
 NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
-                                                          nsIURI* aURL,
-                                                          nsIPluginInstanceOwner *aOwner)
+                                                      nsIURI* aURL,
+                                                      nsIPluginInstanceOwner *aOwner)
 {
   NS_ENSURE_ARG_POINTER(aOwner);
 
@@ -967,8 +961,7 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
   PR_LogFlush();
 #endif
 
-  nsresult  rv;
-  nsIPluginInstance *instance = nsnull;
+  nsresult rv;
   nsCOMPtr<nsIPluginTagInfo> pti;
   nsPluginTagType tagType;
 
@@ -1046,18 +1039,18 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
     PLUGIN_LOG(PLUGIN_LOG_NOISY,
     ("nsPluginHost::InstantiateEmbeddedPlugin FoundStopped mime=%s\n", aMimeType));
 
-    aOwner->GetInstance(instance);
+    nsCOMPtr<nsIPluginInstance> instanceCOMPtr;
+    aOwner->GetInstance(getter_AddRefs(instanceCOMPtr));
+    nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get());
     if (!isJava && bCanHandleInternally)
       rv = NewEmbeddedPluginStream(aURL, aOwner, instance);
 
     // notify Java DOM component
     nsresult res;
-    nsCOMPtr<nsIPluginInstanceOwner> javaDOM =
-             do_GetService("@mozilla.org/blackwood/java-dom;1", &res);
+    nsCOMPtr<nsIPluginInstanceOwner> javaDOM = do_GetService("@mozilla.org/blackwood/java-dom;1", &res);
     if (NS_SUCCEEDED(res) && javaDOM)
       javaDOM->SetInstance(instance);
 
-    NS_IF_RELEASE(instance);
     return NS_OK;
   }
 
@@ -1071,15 +1064,15 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  rv = aOwner->GetInstance(instance);
-
+  nsCOMPtr<nsIPluginInstance> instanceCOMPtr;
+  rv = aOwner->GetInstance(getter_AddRefs(instanceCOMPtr));
   // if we have a failure error, it means we found a plugin for the mimetype,
   // but we had a problem with the entry point
   if (rv == NS_ERROR_FAILURE)
     return rv;
 
   // if we are here then we have loaded a plugin for this mimetype
-
+  nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get());
   NPWindow *window = nsnull;
 
   //we got a plugin built, now stream
@@ -1091,8 +1084,7 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
 
     // If we've got a native window, the let the plugin know about it.
     if (window->window) {
-      nsCOMPtr<nsIPluginInstance> inst = instance;
-      ((nsPluginNativeWindow*)window)->CallSetWindow(inst);
+      ((nsPluginNativeWindow*)window)->CallSetWindow(instanceCOMPtr);
     }
 
     // create an initial stream with data
@@ -1116,8 +1108,6 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
              do_GetService("@mozilla.org/blackwood/java-dom;1", &res);
     if (NS_SUCCEEDED(res) && javaDOM)
       javaDOM->SetInstance(instance);
-
-    NS_RELEASE(instance);
   }
 
 #ifdef PLUGIN_LOGGING
@@ -1136,9 +1126,9 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
 
 // Called by full-page case
 NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
-                                                          nsIURI* aURI,
-                                                          nsIStreamListener *&aStreamListener,
-                                                          nsIPluginInstanceOwner *aOwner)
+                                                      nsIURI* aURI,
+                                                      nsIStreamListener *&aStreamListener,
+                                                      nsIPluginInstanceOwner *aOwner)
 {
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec;
@@ -1152,22 +1142,24 @@ NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
     PLUGIN_LOG(PLUGIN_LOG_NOISY,
     ("nsPluginHost::InstantiateFullPagePlugin FoundStopped mime=%s\n",aMimeType));
 
-    nsIPluginInstance* instance;
-    aOwner->GetInstance(instance);
+
     nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
-    if (!pluginTag || !pluginTag->mIsJavaPlugin)
-      NewFullPagePluginStream(aStreamListener, aURI, instance);
-    NS_IF_RELEASE(instance);
+    if (!pluginTag || !pluginTag->mIsJavaPlugin) {
+      nsCOMPtr<nsIPluginInstance> instanceCOMPtr;
+      aOwner->GetInstance(getter_AddRefs(instanceCOMPtr));
+      NewFullPagePluginStream(aStreamListener, aURI, static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get()));
+    }
     return NS_OK;
   }
 
   nsresult rv = SetUpPluginInstance(aMimeType, aURI, aOwner);
 
   if (NS_OK == rv) {
-    nsCOMPtr<nsIPluginInstance> instance;
-    NPWindow* win = nsnull;
+    nsCOMPtr<nsIPluginInstance> instanceCOMPtr;
+    aOwner->GetInstance(getter_AddRefs(instanceCOMPtr));
+    nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get());
 
-    aOwner->GetInstance(*getter_AddRefs(instance));
+    NPWindow* win = nsnull;
     aOwner->GetWindow(win);
 
     if (win && instance) {
@@ -1177,13 +1169,13 @@ NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
       // If we've got a native window, the let the plugin know about it.
       nsPluginNativeWindow * window = (nsPluginNativeWindow *)win;
       if (window->window)
-        window->CallSetWindow(instance);
+        window->CallSetWindow(instanceCOMPtr);
 
       rv = NewFullPagePluginStream(aStreamListener, aURI, instance);
 
       // If we've got a native window, the let the plugin know about it.
       if (window->window)
-        window->CallSetWindow(instance);
+        window->CallSetWindow(instanceCOMPtr);
     }
   }
 
@@ -2869,7 +2861,7 @@ nsPluginHost::EnsurePrivateDirServiceProvider()
 #endif /* XP_WIN */
 
 nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
-                                          nsIPluginInstance *aInstance,
+                                          nsNPAPIPluginInstance *aInstance,
                                           nsIPluginStreamListener* aListener,
                                           nsIInputStream *aPostStream,
                                           const char *aHeadersData,
@@ -2923,7 +2915,7 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
   }
 
   nsRefPtr<nsPluginStreamListenerPeer> listenerPeer = new nsPluginStreamListenerPeer();
-  if (listenerPeer == NULL)
+  if (!listenerPeer)
     return NS_ERROR_OUT_OF_MEMORY;
 
   rv = listenerPeer->Initialize(url, aInstance, aListener);
@@ -2992,8 +2984,8 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
 
 // Called by GetURL and PostURL
 nsresult
-nsPluginHost::DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
-                                         const char* aURL)
+nsPluginHost::DoURLLoadSecurityCheck(nsNPAPIPluginInstance *aInstance,
+                                     const char* aURL)
 {
   if (!aURL || *aURL == '\0')
     return NS_OK;
@@ -3158,15 +3150,14 @@ nsPluginHost::StoppedInstanceTagCount()
 
 nsresult nsPluginHost::NewEmbeddedPluginStreamListener(nsIURI* aURL,
                                                        nsIPluginInstanceOwner *aOwner,
-                                                       nsIPluginInstance* aInstance,
+                                                       nsNPAPIPluginInstance* aInstance,
                                                        nsIStreamListener** aListener)
 {
   if (!aURL)
     return NS_OK;
 
-  nsRefPtr<nsPluginStreamListenerPeer> listener =
-      new nsPluginStreamListenerPeer();
-  if (listener == nsnull)
+  nsRefPtr<nsPluginStreamListenerPeer> listener = new nsPluginStreamListenerPeer();
+  if (!listener)
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv;
@@ -3175,7 +3166,7 @@ nsresult nsPluginHost::NewEmbeddedPluginStreamListener(nsIURI* aURL,
   // if we only have an owner, then we need to pass it in
   // so the listener can set up the instance later after
   // we've determined the mimetype of the stream
-  if (aInstance != nsnull)
+  if (aInstance)
     rv = listener->InitializeEmbedded(aURL, aInstance);
   else if (aOwner != nsnull)
     rv = listener->InitializeEmbedded(aURL, nsnull, aOwner);
@@ -3190,7 +3181,7 @@ nsresult nsPluginHost::NewEmbeddedPluginStreamListener(nsIURI* aURL,
 // Called by InstantiateEmbeddedPlugin()
 nsresult nsPluginHost::NewEmbeddedPluginStream(nsIURI* aURL,
                                                nsIPluginInstanceOwner *aOwner,
-                                               nsIPluginInstance* aInstance)
+                                               nsNPAPIPluginInstance* aInstance)
 {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv = NewEmbeddedPluginStreamListener(aURL, aOwner, aInstance,
@@ -3225,7 +3216,7 @@ nsresult nsPluginHost::NewEmbeddedPluginStream(nsIURI* aURL,
 // Called by InstantiateFullPagePlugin()
 nsresult nsPluginHost::NewFullPagePluginStream(nsIStreamListener *&aStreamListener,
                                                nsIURI* aURI,
-                                               nsIPluginInstance *aInstance)
+                                               nsNPAPIPluginInstance *aInstance)
 {
   nsPluginStreamListenerPeer  *listener = new nsPluginStreamListenerPeer();
   if (!listener)

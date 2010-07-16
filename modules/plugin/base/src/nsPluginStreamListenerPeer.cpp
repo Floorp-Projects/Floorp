@@ -283,7 +283,7 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
 
 // Called as a result of GetURL and PostURL
 nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
-                                                nsIPluginInstance *aInstance,
+                                                nsNPAPIPluginInstance *aInstance,
                                                 nsIPluginStreamListener* aListener,
                                                 PRInt32 requestCount)
 {
@@ -299,7 +299,7 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
   
   mURL = aURL;
   
-  mInstance = aInstance;
+  mPluginInstance = aInstance;
   mPStreamListener = aListener;
   
   mPendingRequests = requestCount;
@@ -317,7 +317,7 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
  * instance owner.
  */
 nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
-                                                        nsIPluginInstance* aInstance,
+                                                        nsNPAPIPluginInstance* aInstance,
                                                         nsIPluginInstanceOwner *aOwner)
 {
 #ifdef PLUGIN_LOGGING
@@ -333,8 +333,8 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
   mURL = aURL;
   
   if (aInstance) {
-    NS_ASSERTION(mInstance == nsnull, "nsPluginStreamListenerPeer::InitializeEmbedded mInstance != nsnull");
-    mInstance = aInstance;
+    NS_ASSERTION(mPluginInstance == nsnull, "nsPluginStreamListenerPeer::InitializeEmbedded mPluginInstance != nsnull");
+    mPluginInstance = aInstance;
   } else {
     mOwner = aOwner;
   }
@@ -347,13 +347,13 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
 }
 
 // Called by NewFullPagePluginStream()
-nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIURI* aURL, nsIPluginInstance *aInstance)
+nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIURI* aURL, nsNPAPIPluginInstance *aInstance)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
              ("nsPluginStreamListenerPeer::InitializeFullPage instance=%p\n",aInstance));
   
-  NS_ASSERTION(mInstance == nsnull, "nsPluginStreamListenerPeer::InitializeFullPage mInstance != nsnull");
-  mInstance = aInstance;
+  NS_ASSERTION(mPluginInstance == nsnull, "nsPluginStreamListenerPeer::InitializeFullPage mPluginInstance != nsnull");
+  mPluginInstance = aInstance;
   
   mURL = aURL;
   
@@ -445,7 +445,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
   // add this listenerPeer to list of stream peers for this instance
   // it'll delay release of listenerPeer until nsPluginInstanceTag::~nsPluginInstanceTag
   // and the temp file is going to stay alive until then
-  nsPluginInstanceTag *instanceTag = pluginHost->FindInstanceTag(mInstance);
+  nsPluginInstanceTag *instanceTag = pluginHost->FindInstanceTag(mPluginInstance);
   if (instanceTag)
     instanceTag->mStreams.AppendObject(this);
   
@@ -484,8 +484,8 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
     
     if (responseCode > 206) { // not normal
       PRBool bWantsAllNetworkStreams = PR_FALSE;
-      mInstance->GetValueFromPlugin(NPPVpluginWantsAllNetworkStreams,
-                                    (void*)&bWantsAllNetworkStreams);
+      mPluginInstance->GetValueFromPlugin(NPPVpluginWantsAllNetworkStreams,
+                                          (void*)&bWantsAllNetworkStreams);
       if (!bWantsAllNetworkStreams) {
         mRequestFailed = PR_TRUE;
         return NS_ERROR_FAILURE;
@@ -563,18 +563,20 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   
   NPWindow* window = nsnull;
   
-  // if we don't have an nsIPluginInstance (mInstance), it means
+  // if we don't have an nsNPAPIPluginInstance (mPluginInstance), it means
   // we weren't able to load a plugin previously because we
   // didn't have the mimetype.  Now that we do (aContentType),
   // we'll try again with SetUpPluginInstance()
   // which is called by InstantiateEmbeddedPlugin()
   // NOTE: we don't want to try again if we didn't get the MIME type this time
   
-  if (!mInstance && mOwner && !aContentType.IsEmpty()) {
-    mOwner->GetInstance(getter_AddRefs(mInstance));
-    
+  if (!mPluginInstance && mOwner && !aContentType.IsEmpty()) {
+    nsCOMPtr<nsIPluginInstance> pluginInstCOMPtr;
+    mOwner->GetInstance(getter_AddRefs(pluginInstCOMPtr));
+    mPluginInstance = static_cast<nsNPAPIPluginInstance*>(pluginInstCOMPtr.get());
+
     mOwner->GetWindow(window);
-    if (!mInstance && window) {
+    if (!mPluginInstance && window) {
       nsRefPtr<nsPluginHost> pluginHost = dont_AddRef(nsPluginHost::GetInst());
       
       // determine if we need to try embedded again. FullPage takes a different code path
@@ -586,14 +588,14 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
         rv = pluginHost->SetUpPluginInstance(aContentType.get(), aURL, mOwner);
       
       if (NS_OK == rv) {
-        mOwner->GetInstance(getter_AddRefs(mInstance));
-        if (mInstance) {
-          mInstance->Start();
+        mOwner->GetInstance(getter_AddRefs(pluginInstCOMPtr));
+        mPluginInstance = static_cast<nsNPAPIPluginInstance*>(pluginInstCOMPtr.get());
+        if (mPluginInstance) {
+          mPluginInstance->Start();
           mOwner->CreateWidget();
           // If we've got a native window, the let the plugin know about it.
           if (window->window) {
-            nsCOMPtr<nsIPluginInstance> inst = mInstance;
-            ((nsPluginNativeWindow*)window)->CallSetWindow(inst);
+            ((nsPluginNativeWindow*)window)->CallSetWindow(pluginInstCOMPtr);
           }
         }
       }
@@ -773,14 +775,14 @@ nsPluginStreamListenerPeer::SetStreamOffset(PRInt32 value)
 nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
                                                        nsISupports* aContext)
 {
-  if (!mInstance)
+  if (!mPluginInstance)
     return NS_ERROR_FAILURE;
   
-  // mInstance->Stop calls mPStreamListener->CleanUpStream(), so stream will be properly clean up
-  mInstance->Stop();
-  mInstance->Start();
+  // mPluginInstance->Stop calls mPStreamListener->CleanUpStream(), so stream will be properly clean up
+  mPluginInstance->Stop();
+  mPluginInstance->Start();
   nsCOMPtr<nsIPluginInstanceOwner> owner;
-  mInstance->GetOwner(getter_AddRefs(owner));
+  mPluginInstance->GetOwner(getter_AddRefs(owner));
   if (owner) {
     NPWindow* window = nsnull;
     owner->GetWindow(window);
@@ -794,8 +796,8 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
     }
 #endif
     if (window->window) {
-      nsCOMPtr<nsIPluginInstance> inst = mInstance;
-      ((nsPluginNativeWindow*)window)->CallSetWindow(inst);
+      nsCOMPtr<nsIPluginInstance> pluginInstCOMPtr = mPluginInstance.get();
+      ((nsPluginNativeWindow*)window)->CallSetWindow(pluginInstCOMPtr);
     }
   }
   
@@ -1067,8 +1069,8 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   // NOTE: this should only happen when a stream was NOT created
   // with GetURL or PostURL (i.e. it's the initial stream we
   // send to the plugin as determined by the SRC or DATA attribute)
-  if (!mPStreamListener && mInstance)
-    rv = mInstance->NewStreamToPlugin(getter_AddRefs(mPStreamListener));
+  if (!mPStreamListener && mPluginInstance)
+    rv = mPluginInstance->NewStreamToPlugin(getter_AddRefs(mPStreamListener));
   
   if (NS_FAILED(rv))
     return rv;
