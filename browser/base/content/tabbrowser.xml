@@ -88,6 +88,8 @@
       <field name="tabs" readonly="true">
         this.tabContainer.childNodes;
       </field>
+      <property name="visibleTabs" readonly="true"
+                onget="return Array.filter(this.tabs, function(tab) !tab.collapsed);"/>
       <field name="mURIFixup" readonly="true">
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
@@ -1225,7 +1227,7 @@
         <![CDATA[
           var tabsToClose = this.tabs.length;
           if (!aAll)
-            tabsToClose = (TabCandy.getVisibleTabs().length - 1);
+            tabsToClose = this.visibleTabs.length - 1;
           if (tabsToClose <= 1)
             return true;
 
@@ -1273,7 +1275,7 @@
         <body>
           <![CDATA[
             if (this.warnAboutClosingTabs(false)) {
-              var tabs = TabCandy.getVisibleTabs();
+              var tabs = this.visibleTabs;
               this.selectedTab = aTab;
 
               for (let i = tabs.length - 1; i >= 0; --i) {
@@ -1586,7 +1588,7 @@
       <method name="reloadAllTabs">
         <body>
           <![CDATA[
-            var tabs = TabCandy.getVisibleTabs();
+            var tabs = this.visibleTabs;
             var l = tabs.length;
             for (var i = 0; i < l; i++) {
               try {
@@ -2508,7 +2510,7 @@
             else {
               let tab = this.childNodes.item(this.tabbrowser._numPinnedTabs);
               if (tab && tab.collapsed) {
-                tab = TabCandy.getVisibleTabs()[0];
+                tab = this.tabbrowser.visibleTabs[0];
               }
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
@@ -3294,7 +3296,7 @@
       <![CDATA[
         // set up the menu popup
         var tabcontainer = gBrowser.tabContainer;
-        var tabs = TabCandy.getVisibleTabs();
+        var tabs = gBrowser.visibleTabs;
 
         // Listen for changes in the tab bar.
         tabcontainer.addEventListener("TabOpen", this, false);

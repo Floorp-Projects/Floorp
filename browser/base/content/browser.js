@@ -6729,7 +6729,7 @@ var gBookmarkAllTabsHandler = {
   },
 
   _updateCommandState: function BATH__updateCommandState(aTabClose) {
-    var numTabs = TabCandy.getVisibleTabs().length;
+    var numTabs = gBrowser.visibleTabs.length;
 
     // The TabClose event is fired before the tab is removed from the DOM
     if (aTabClose)
@@ -7752,7 +7752,7 @@ var TabContextMenu = {
   updateContextMenu: function updateContextMenu(aPopupMenu) {
     this.contextTab = document.popupNode.localName == "tab" ?
                       document.popupNode : gBrowser.selectedTab;
-    var disabled = TabCandy.getVisibleTabs().length == 1;
+    var disabled = gBrowser.visibleTabs.length == 1;
     var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
     for (var i = 0; i < menuItems.length; i++)
       menuItems[i].disabled = disabled;
