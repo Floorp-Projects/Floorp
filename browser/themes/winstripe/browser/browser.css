@@ -1791,3 +1791,26 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .allTabs-preview:focus > * > .allTabs-preview-inner {
   outline: 1px dotted -moz-dialogText;
 }
+
+/* Inspector / Highlighter */
+
+#highlighter-panel {
+  -moz-appearance: none;
+  -moz-window-shadow: none;
+}
+
+listitem.style-selector {
+  background-color: DarkGray;
+  color: white;
+}
+
+listitem.style-section {
+  background-color: LightGray;
+  color: black;
+  font-weight: bold;
+}
+
+panel[dimmed="true"] {
+  opacity: 0.5;
+}
+
