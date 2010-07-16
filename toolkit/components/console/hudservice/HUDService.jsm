@@ -2199,8 +2199,14 @@ JSTerm.prototype = {
       var result =
       Cu.evalInSandbox(str, this.sandbox, "default", "HUD Console", 1);
 
-      if (result !== undefined) {
+      if (result || result === false || result === " ") {
         this.writeOutput(result);
+      }
+      else if (result === undefined) {
+        this.writeOutput("undefined");
+      }
+      else if (result === null) {
+        this.writeOutput("null");
       }
     }
     catch (ex) {
