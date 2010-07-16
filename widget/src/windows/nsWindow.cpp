@@ -1557,7 +1557,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
 
     switch (aMode) {
       case nsSizeMode_Fullscreen :
-        mode = SW_RESTORE;
+        mode = SW_SHOW;
         break;
 
       case nsSizeMode_Maximized :
