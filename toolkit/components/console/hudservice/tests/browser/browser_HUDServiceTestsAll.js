@@ -306,6 +306,17 @@ function testCreateDisplay() {
      "foo index exists");
 }
 
+function testExposedConsoleAPI()
+{
+  let apis = [];
+  for (var prop in browser.contentWindow.wrappedJSObject.console) {
+    apis.push(prop);
+  }
+
+  is(apis.join(" "), "log info warn error exception", "Only console API is exposed on console object");
+}
+
+
 function testRecordEntry() {
   var config = {
     logLevel: "network",
