@@ -81,7 +81,7 @@ CastAsObject(PropertyOp op)
 inline Value
 CastAsObjectJsval(PropertyOp op)
 {
-    return ObjectValue(*CastAsObject(op));
+    return ObjectOrNullValue(CastAsObject(op));
 }
 
 } /* namespace js */
