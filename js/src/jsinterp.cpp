@@ -227,7 +227,7 @@ JSBool
 js_GetPrimitiveThis(JSContext *cx, Value *vp, Class *clasp, const Value **vpp)
 {
     const Value *p = &vp[1];
-    if (p->isObject()) {
+    if (p->isObjectOrNull()) {
         JSObject *obj = ComputeThisFromVp(cx, vp);
         if (!InstanceOf(cx, obj, clasp, vp + 2))
             return JS_FALSE;
