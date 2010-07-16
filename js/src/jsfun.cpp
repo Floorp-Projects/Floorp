@@ -1953,57 +1953,59 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     return ok;
 }
 
+/* ES5 15.3.4.3 */
 JSBool
 js_fun_apply(JSContext *cx, uintN argc, Value *vp)
 {
-    if (argc == 0) {
-        /* Will get globalObject as 'this' and no other arguments. */
-        return js_fun_call(cx, argc, vp);
-    }
-
-    LeaveTrace(cx);
-
     JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj)
-        return JS_FALSE;
+        return false;
 
+    /* Step 1. */
     Value fval = vp[1];
     if (!js_IsCallable(fval)) {
-        JSString *str = js_ValueToString(cx, fval);
-        if (str) {
-            const char *bytes = js_GetStringBytes(cx, str);
-
-            if (bytes) {
+        if (JSString *str = js_ValueToString(cx, fval)) {
+            if (const char *bytes = js_GetStringBytes(cx, str)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_INCOMPATIBLE_PROTO,
                                      js_Function_str, js_apply_str,
                                      bytes);
             }
         }
-        return JS_FALSE;
+        return false;
     }
 
-    /* Quell GCC overwarnings. */
-    JSObject *aobj = NULL;
-    jsuint length = 0;
+    /* Step 2. */
+    if (argc < 2 || vp[3].isNullOrUndefined())
+        return js_fun_call(cx, (argc > 0) ? 1 : 0, vp);
 
-    if (argc >= 2) {
-        /* If the 2nd arg is null or void, call the function with 0 args. */
-        if (vp[3].isNullOrUndefined()) {
-            argc = 0;
+    /* Step 3. */
+    if (!vp[3].isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_APPLY_ARGS, js_apply_str);
+        return false;
+    }
+
+    /*
+     * Steps 4-5 (note erratum removing steps originally numbered 5 and 7 in
+     * original version of ES5).
+     */
+    JSObject *aobj = vp[3].toObject().wrappedObject(cx);
+    jsuint length;
+    if (aobj->isArray()) {
+        length = aobj->getArrayLength();
+    } else if (aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
+        length = aobj->getArgsLength();
+    } else {
+        Value &lenval = vp[0];
+        if (!aobj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), &lenval))
+            return false;
+
+        if (lenval.isInt32()) {
+            length = jsuint(lenval.toInt32()); /* jsuint cast does ToUint32 */
         } else {
-            /* The second arg must be an array (or arguments object). */
-            JSBool arraylike = JS_FALSE;
-            if (vp[3].isObject()) {
-                aobj = &vp[3].toObject();
-                if (!js_IsArrayLike(cx, aobj, &arraylike, &length))
-                    return JS_FALSE;
-            }
-            if (!arraylike) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_APPLY_ARGS, js_apply_str);
-                return JS_FALSE;
-            }
+            JS_STATIC_ASSERT(sizeof(jsuint) == sizeof(uint32_t));
+            if (!ValueToECMAUint32(cx, lenval, (uint32_t *)&length))
+                return false;
         }
     }
 
@@ -2013,17 +2015,21 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     else if (!js_ValueToObjectOrNull(cx, vp[2], &obj))
         return JS_FALSE;
 
-    /* Allocate stack space for fval, obj, and the args. */
-    argc = (uintN)JS_MIN(length, JS_ARGS_LENGTH_MAX);
+    LeaveTrace(cx);
+
+    /* Step 6. */
+    uintN n = uintN(JS_MIN(length, JS_ARGS_LENGTH_MAX));
 
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, argc, args))
-        return JS_FALSE;
+    if (!cx->stack().pushInvokeArgs(cx, n, args))
+        return false;
 
     /* Push fval, obj, and aobj's elements as args. */
     Value *sp = args.getvp();
     *sp++ = fval;
     *sp++ = ObjectOrNullValue(obj);
+
+    /* Steps 7-8. */
     if (aobj && aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
         /*
          * Two cases, two loops: note how in the case of an active stack frame
@@ -2033,29 +2039,31 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
          */
         JSStackFrame *fp = (JSStackFrame *) aobj->getPrivate();
         if (fp) {
-            memcpy(sp, fp->argv, argc * sizeof(Value));
-            for (uintN i = 0; i < argc; i++) {
+            memcpy(sp, fp->argv, n * sizeof(Value));
+            for (uintN i = 0; i < n; i++) {
                 if (aobj->getArgsElement(i).isMagic(JS_ARGS_HOLE)) // suppress deleted element
                     sp[i].setUndefined();
             }
         } else {
-            for (uintN i = 0; i < argc; i++) {
+            for (uintN i = 0; i < n; i++) {
                 sp[i] = aobj->getArgsElement(i);
                 if (sp[i].isMagic(JS_ARGS_HOLE))
                     sp[i].setUndefined();
             }
         }
     } else {
-        for (uintN i = 0; i < argc; i++) {
+        for (uintN i = 0; i < n; i++) {
             if (!aobj->getProperty(cx, INT_TO_JSID(jsint(i)), sp))
                 return JS_FALSE;
             sp++;
         }
     }
 
-    bool ok = Invoke(cx, args, 0);
+    /* Step 9. */
+    if (!Invoke(cx, args, 0))
+        return false;
     *vp = *args.getvp();
-    return ok;
+    return true;
 }
 
 static JSFunctionSpec function_methods[] = {
