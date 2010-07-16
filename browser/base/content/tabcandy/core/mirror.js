@@ -144,18 +144,19 @@ function Mirror(tab, manager) {
     .addClass('tab')
     .html("<div class='favicon'><img/></div>" +
           "<div class='thumb'><div class='thumb-shadow'></div>" +
-	  "<img class='thumb-placeholder' style='display:none'/><canvas/></div>" +
+	  "<img class='cached-thumb' style='display:none'/><canvas/></div>" +
 	  "<span class='tab-title'>&nbsp;</span>"
     )
     .appendTo('body');
     
   this.needsPaint = 0;
   this.canvasSizeForced = false;
+  this.shouldShowCachedData = false;
   this.el = $div.get(0);
   this.favEl = iQ('.favicon>img', $div).get(0);
   this.nameEl = iQ('.tab-title', $div).get(0);
   this.canvasEl = iQ('.thumb canvas', $div).get(0);
-  this.canvasPlaceholderEl = iQ('.thumb-placeholder', $div).get(0);
+  this.cachedThumbEl = iQ('img.cached-thumb', $div).get(0);
 
   var doc = this.tab.contentDocument;
   if ( !_isIframe(doc) ) {
@@ -198,6 +199,33 @@ Mirror.prototype = iQ.extend(new Subscribable(), {
   // times, you just need a single unforce to clear them all. 
   unforceCanvasSize: function() {
     this.canvasSizeForced = false;
+  },
+
+  // ----------
+  // Function: showCachedData
+  // Shows the cached data i.e. image and title.  Note: this method should only
+  // be called at browser startup with the cached data avaliable. 
+  showCachedData : function(tab, tabData) {
+    this.shouldShowCachedData = true;
+    var mirror = tab.mirror;
+    var $nameElement = iQ(mirror.nameEl);
+    var $canvasElement = iQ(mirror.canvasEl);
+    var $cachedThumbElement = iQ(mirror.cachedThumbEl);
+    $cachedThumbElement.attr("src", tabData.imageData).show();
+    $canvasElement.hide();
+    $nameElement.text(tabData.title ? tabData.title : "");
+  },
+
+  // ----------
+  // Function: hideCachedData
+  // Hides the cached data i.e. image and title and show the canvas. 
+  hideCachedData: function(tab) {
+    if (this.shouldShowCachedData) {
+      this.shouldShowCachedData = false;
+      var mirror = tab.mirror;
+      iQ(mirror.cachedThumbEl).hide().attr("src", "");
+      iQ(mirror.canvasEl).show();
+    }
   }
 });
 
@@ -232,11 +260,16 @@ TabMirror.prototype = {
     });
 
     // When a tab is updated, update the mirror
-    Tabs.onReady( function(evt){
+    Tabs.onReady(function(evt) {
       var tab = evt.tab;
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.update(tab);
       }, 1);
+      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+	if (tab.mirror) {
+	  tab.mirror.hideCachedData(tab);
+	}
+      }, 5000);
     });
 
     // When a tab is closed, unlink.    
@@ -269,9 +302,7 @@ TabMirror.prototype = {
           
         var tab = Tabs[this.heartbeatIndex];
         var mirror = tab.mirror; 
-/*         Utils.log('heartbeat mirror check'); */
         if (mirror) {
-/*           Utils.log('hasMirror'); */
           var iconUrl = tab.raw.linkedBrowser.mIconURL;
           if ( iconUrl == null ){
             iconUrl = "chrome://mozapps/skin/places/defaultFavicon.png";
@@ -285,16 +316,17 @@ TabMirror.prototype = {
             mirror.favEl.src = iconUrl;
             mirror.triggerPaint();
           }
-          
-          if ($canvas.css("display") != "none" && $name.text() != label) {
-            $name.text(label);
-            mirror.triggerPaint();
-          }
-          
+
           if (tab.url != mirror.url) {
             var oldURL = mirror.url;
             mirror.url = tab.url;
-            mirror._sendToSubscribers('urlChanged', {oldURL: oldURL, newURL: tab.url});
+            mirror._sendToSubscribers(
+	      'urlChanged', {oldURL: oldURL, newURL: tab.url});
+            mirror.triggerPaint();
+          }
+          
+          if (!mirror.shouldShowCachedData && $name.text() != label) {
+            $name.text(label);
             mirror.triggerPaint();
           }
           
@@ -309,8 +341,7 @@ TabMirror.prototype = {
           }
           
           if (mirror.needsPaint) {
-/*             Utils.log('aboutToPaint'); */
-            mirror.tabCanvas.paint();
+	    mirror.tabCanvas.paint();
             
             if (Utils.getMilliseconds() - mirror.needsPaint > 5000)
               mirror.needsPaint = 0;
@@ -369,7 +400,7 @@ TabMirror.prototype = {
       
       tab.mirror = null;
     }
-  }  
+  }
 };
 
 // ----------
