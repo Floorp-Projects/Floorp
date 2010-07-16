@@ -227,12 +227,6 @@ MOZ_ARG_WITH_STRING(android-version,
     android_version=$withval,
     android_version=5)
 
-MOZ_ARG_WITH_STRING(android-arch,
-[  --with-android-arch=ARCH
-                          android platform architecture, default arm],
-    android_arch=$withval,
-    android_arch=arm)
-
 if test "$target" = "arm-android-eabi" ; then
     if test -z "$android_ndk" ; then
         AC_MSG_ERROR([You must specify --with-android-ndk=/path/to/ndk when targeting Android.])
@@ -243,7 +237,7 @@ if test "$target" = "arm-android-eabi" ; then
     fi
 
     if test -z "$android_platform" ; then
-       android_platform="$android_ndk"/build/platforms/android-"$android_version"/arch-"$android_arch"
+       android_platform="$android_ndk"/build/platforms/android-"$android_version"/arch-"$target_cpu"
     fi
     dnl set up compilers
     if test -z "$AS"; then AS="$android_toolchain"/bin/arm-eabi-as; fi
