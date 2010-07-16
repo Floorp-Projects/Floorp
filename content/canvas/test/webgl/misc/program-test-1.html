@@ -45,7 +45,8 @@ found in the LICENSE file.
 
 	var vbuf = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
-	gl.bufferData(gl.ARRAY_BUFFER, new WebGLFloatArray([-1.0, -1.0, 0.0, 1.0,
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                  -1.0, -1.0, 0.0, 1.0,
 							    -1.0, 1.0, 0.0, 1.0,
 							    1.0, -1.0, 0.0, 1.0,
 							    1.0, 1.0, 0.0, 1.0]), gl.STATIC_DRAW);
@@ -53,7 +54,7 @@ found in the LICENSE file.
 
 	var cbuf = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, cbuf);
-	gl.bufferData(gl.ARRAY_BUFFER, new WebGLUnsignedByteArray([255, 0, 0,
+	gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array([255, 0, 0,
 								   0, 255, 0,
 								   0, 0, 255,
 								   255, 255, 0]), gl.STATIC_DRAW);
@@ -61,7 +62,7 @@ found in the LICENSE file.
 
 	gl.enableVertexAttribArray(0);
 	gl.enableVertexAttribArray(1);
-    
+
 	gl.useProgram(prog);
 
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);

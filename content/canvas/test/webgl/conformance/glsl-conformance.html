@@ -12,7 +12,7 @@ found in the LICENSE file.
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
 <script src="../resources/desktop-gl-constants.js" type="text/javascript"></script>
 <script src="../resources/js-test-pre.js"></script>
-<script src="resources/webgl-test.js"></script>
+<script src="resources/webgl-test-utils.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -64,7 +64,7 @@ void main()
   precision mediump float;
   void main()
   {
-      gl_FragColor = vec4(0.0,0.0,1.0);
+      gl_FragColor = vec4(0.0,0.0,0.0,1.0);
   }
 #else
   foo
@@ -157,6 +157,45 @@ void main()
     gl_Position = _webgl_vPosition;
 }
 </script>
+<script id="vshaderWithImplicitVec3Cast" type="text/something-not-javascript">
+attribute vec4 vPosition;
+void main()
+{
+    highp vec3 k = vec3(1, 2, 3);
+    gl_Position = k;
+}
+</script>
+<script id="vshaderWithExplicitIntCast" type="text/something-not-javascript">
+attribute vec4 vPosition;
+void main()
+{
+    int k = 123;
+    gl_Position = vec4(vPosition.x, vPosition.y, vPosition.z, float(k));
+}
+</script>
+<script id="vshaderWithVersion130" type="text/something-not-javascript">
+#version 130
+attribute vec4 vPosition;
+void main()
+{
+    gl_Position = vPosition;
+}
+</script>
+<script id="vshaderWithVersion100" type="text/something-not-javascript">
+#version 100
+attribute vec4 vPosition;
+void main()
+{
+    gl_Position = vPosition;
+}
+</script>
+<script id="vshaderWithLineDirective" type="text/something-not-javascript">
+#line 123
+foo
+</script>
+<script id="vshaderWith__FILE__" type="text/something-not-javascript">
+__FILE__
+</script>
 <canvas id="canvas" width="2" height="2"> </canvas>
 <script>
 description("This test ensures WebGL implementations allow proper GLES2 shaders compile and improper ones fail.");
@@ -164,7 +203,8 @@ description("This test ensures WebGL implementations allow proper GLES2 shaders 
 debug("");
 debug("Canvas.getContext");
 
-var gl = create3DContext(document.getElementById("canvas"));
+var wtu = WebGLTestUtils;
+var gl = wtu.create3DContext(document.getElementById("canvas"));
 if (!gl) {
   testFailed("context does not exist");
 } else {
@@ -177,35 +217,6 @@ if (!gl) {
     if (window.console && window.console.log) {
       window.console.log(msg);
     }
-  }
-
-  function loadShader(shaderType, shaderId) {
-    // Get the shader source.
-    var shaderSource = document.getElementById(shaderId).text;
-
-    // Create the shader object
-    var shader = gl.createShader(shaderType);
-    if (shader == null) {
-        debug("*** Error: unable to create shader '"+shaderId+"'");
-        return null;
-    }
-
-    // Load the shader source
-    gl.shaderSource(shader, shaderSource);
-
-    // Compile the shader
-    gl.compileShader(shader);
-
-    // Check the compile status
-    var compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if (!compiled) {
-        // Something went wrong during compilation; get the error
-        var error = gl.getShaderInfoLog(shader);
-        log("*** Error compiling shader '"+shader+"':"+error);
-        gl.deleteShader(shader);
-        return null;
-    }
-    return shader;
   }
 
   var shaderInfo = [
@@ -255,7 +266,7 @@ if (!gl) {
       vShaderSuccess: true,
       fShaderId: 'fshaderWithFragDepth',
       fShaderSuccess: false,
-      linkSuccess: true,
+      linkSuccess: false,
       passMsg: 'fragment shader that uses gl_FragDepth should fail',
     },
     { vShaderId: 'vshaderWithClipVertex',
@@ -320,22 +331,91 @@ if (!gl) {
       fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'vertex shader that uses _webgl_ identifier should fail',
+    },
+    { vShaderId: 'vshaderWithExplicitIntCast',
+      vShaderSuccess: true,
+      fShaderId: 'fshader',
+      fShaderSuccess: true,
+      linkSuccess: true,
+      passMsg: 'vertex shader that explicit int to float cast should succeed',
+    },
+    { vShaderId: 'vshaderWithImplicitVec3Cast',
+      vShaderSuccess: false,
+      fShaderId: 'fshader',
+      fShaderSuccess: true,
+      linkSuccess: false,
+      passMsg: 'vertex shader that implicit vec3 to vec4 cast should fail',
+    },
+    { vShaderId: 'vshaderWithVersion130',
+      vShaderSuccess: false,
+      fShaderId: 'fshader',
+      fShaderSuccess: true,
+      linkSuccess: false,
+      passMsg: 'vertex shader uses the #version not 100 directive should fail',
+    },
+    { vShaderId: 'vshaderWithVersion100',
+      vShaderSuccess: true,
+      fShaderId: 'fshader',
+      fShaderSuccess: true,
+      linkSuccess: true,
+      passMsg: 'vertex shader uses the #version 100 directive should succeed',
+    },
+    { vShaderId: 'vshaderWithLineDirective',
+      vShaderSuccess: false,
+      vShaderTest: (function() { return wtu.getLastError().indexOf("124") >= 0; }),
+      fShaderId: 'fshader',
+      fShaderSuccess: true,
+      linkSuccess: false,
+      passMsg: 'vertex shader uses #line directive should report correct line',
     }
   ];
 
+  // Read in all the shader source.
+  for (var ii = 0; ii < shaderInfo.length; ++ii) {
+    var si = shaderInfo[ii];
+    si.vShaderSource = document.getElementById(si.vShaderId).text;
+    si.fShaderSource = document.getElementById(si.fShaderId).text;
+  }
+
+  // Add more tests from external file
+  var fShader = document.getElementById('fshader').text;
+  var files = wtu.readFileList("shaders/implicit/00_shaders.txt");
+  for (var ii = 0; ii < files.length; ++ii) {
+    var file = files[ii];
+    var vShader = wtu.readFile(file);
+    shaderInfo.push({
+        vShaderId: file,
+        vShaderSource: vShader,
+        vShaderSuccess: false,
+        fShaderId: 'fshader',
+        fShaderSource: fShader,
+        fShaderSuccess: true,
+        linkSuccess: false,
+        passMsg: 'shader with implicit cast should fail',
+      })
+  }
+
   for (var ii = 0; ii < shaderInfo.length; ++ii) {
     var info = shaderInfo[ii];
-    log("vs = " + info.vShaderId + ", fs = " + info.fShaderId);
+    var passMsg = '[' + info.vShaderId + '/' + info.fShaderId + ']: ' +
+                  info.passMsg
+    log(passMsg);
     //debug(info.fShaderId);
-    var vShader = loadShader(gl.VERTEX_SHADER, info.vShaderId);
+    var vShader = wtu.loadShader(gl, info.vShaderSource, gl.VERTEX_SHADER);
+    if (info.vShaderTest) {
+      if (!info.vShaderTest(vShader)) {
+        testFailed(passMsg);
+        continue;
+      }
+    }
     if ((vShader != null) != info.vShaderSuccess) {
-      testFailed(info.passMsg);
+      testFailed(passMsg);
       continue;
     }
-    var fShader = loadShader(gl.FRAGMENT_SHADER, info.fShaderId);
+    var fShader = wtu.loadShader(gl, info.fShaderSource, gl.FRAGMENT_SHADER);
     //debug(fShader == null ? "fail" : "succeed");
     if ((fShader != null) != info.fShaderSuccess) {
-      testFailed(info.passMsg);
+      testFailed(passMsg);
       continue;
     }
 
@@ -350,16 +430,16 @@ if (!gl) {
         log("*** Error linking program '"+program+"':"+error);
       }
       if (linked != info.linkSuccess) {
-        testFailed(info.passMsg);
+        testFailed(passMsg);
         continue;
       }
     } else {
       if (info.linkSuccess) {
-        testFailed(info.passMsg);
+        testFailed(passMsg);
         continue;
       }
     }
-    testPassed(info.passMsg);
+    testPassed(passMsg);
   }
 }
 

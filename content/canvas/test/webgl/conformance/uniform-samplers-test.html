@@ -40,9 +40,8 @@ void main()
   <script>
 function init()
 {
-  if (window.layoutTestController) {
-    layoutTestController.overridePreference("WebKitWebGLEnabled", "1");
-    layoutTestController.dumpAsText();
+  if (window.initNonKhronosFramework) {
+    window.initNonKhronosFramework(false);
   }
 
   debug("Tests that only Uniform1i and Uniform1iv can be used to set");
