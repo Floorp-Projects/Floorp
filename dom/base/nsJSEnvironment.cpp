@@ -1384,6 +1384,9 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   if (mContext) {
     ::JS_SetContextPrivate(mContext, static_cast<nsIScriptContext *>(this));
 
+    // Preserve any flags the context callback might have set.
+    mDefaultJSOptions |= ::JS_GetOptions(mContext);
+
     // Make sure the new context gets the default context options
     ::JS_SetOptions(mContext, mDefaultJSOptions);
 
