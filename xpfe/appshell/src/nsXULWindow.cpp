@@ -994,16 +994,6 @@ void nsXULWindow::OnChromeLoaded()
     mChromeLoaded = PR_TRUE;
     ApplyChromeFlags();
     SyncAttributesToWidget();
-    if (!mIgnoreXULSize)
-      LoadSizeFromXUL();
-    if (mIntrinsicallySized) {
-      // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
-      nsCOMPtr<nsIContentViewer> cv;
-      mDocShell->GetContentViewer(getter_AddRefs(cv));
-      nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
-      if (markupViewer)
-        markupViewer->SizeToContent();
-    }
 
     PRBool positionSet = !mIgnoreXULPosition;
     nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
@@ -1016,6 +1006,19 @@ void nsXULWindow::OnChromeLoaded()
 #endif
     if (positionSet)
       positionSet = LoadPositionFromXUL();
+
+    if (!mIgnoreXULSize)
+      LoadSizeFromXUL();
+
+    if (mIntrinsicallySized) {
+      // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
+      nsCOMPtr<nsIContentViewer> cv;
+      mDocShell->GetContentViewer(getter_AddRefs(cv));
+      nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
+      if (markupViewer)
+        markupViewer->SizeToContent();
+    }
+
     LoadMiscPersistentAttributesFromXUL();
 
     if (mCenterAfterLoad && !positionSet)
@@ -1168,7 +1171,7 @@ PRBool nsXULWindow::LoadSizeFromXUL()
 
     mIntrinsicallySized = PR_FALSE;
     if (specWidth != currWidth || specHeight != currHeight)
-      SetSize(specWidth, specHeight, PR_FALSE);
+      SetSize(specWidth, specHeight, PR_TRUE);
   }
 
   return gotSize;
