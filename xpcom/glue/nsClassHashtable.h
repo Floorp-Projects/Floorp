@@ -70,6 +70,18 @@ public:
    * @returns NULL if the key is not present.
    */
   UserDataType Get(KeyType aKey) const;
+
+  /**
+   * Remove the entry for the given key from the hashtable and return it in
+   * aOut.  If the key is not in the hashtable, aOut's pointer is set to NULL.
+   *
+   * Normally, an entry is deleted when it's removed from an nsClassHashtable,
+   * but this function transfers ownership of the entry back to the caller
+   * through aOut -- the entry will be deleted when aOut goes out of scope.
+   *
+   * @param aKey the key to get and remove from the hashtable
+   */
+  void RemoveAndForget(KeyType aKey, nsAutoPtr<T> &aOut);
 };
 
 
@@ -131,6 +143,23 @@ nsClassHashtable<KeyClass,T>::Get(KeyType aKey) const
     return NULL;
 
   return ent->mData;
+}
+
+template<class KeyClass,class T>
+void
+nsClassHashtable<KeyClass,T>::RemoveAndForget(KeyType aKey, nsAutoPtr<T> &aOut)
+{
+  aOut = nsnull;
+  nsAutoPtr<T> ptr;
+
+  typename base_type::EntryType *ent = this->GetEntry(aKey);
+  if (!ent)
+    return;
+
+  // Transfer ownership from ent->mData into aOut.
+  aOut = ent->mData;
+
+  this->Remove(aKey);
 }
 
 
