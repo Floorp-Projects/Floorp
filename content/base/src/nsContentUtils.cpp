@@ -1522,6 +1522,21 @@ nsContentUtils::IsCallerTrustedForWrite()
 }
 
 // static
+nsINode*
+nsContentUtils::GetCrossDocParentNode(nsINode* aChild)
+{
+  NS_PRECONDITION(aChild, "The child is null!");
+
+  nsINode* parent = aChild->GetNodeParent();
+  if (parent || !aChild->IsNodeOfType(nsINode::eDOCUMENT))
+    return parent;
+
+  nsIDocument* doc = static_cast<nsIDocument*>(aChild);
+  nsIDocument* parentDoc = doc->GetParentDocument();
+  return parentDoc ? parentDoc->FindContentForSubDocument(doc) : nsnull;
+}
+
+// static
 PRBool
 nsContentUtils::ContentIsDescendantOf(const nsINode* aPossibleDescendant,
                                       const nsINode* aPossibleAncestor)
@@ -1549,16 +1564,7 @@ nsContentUtils::ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
   do {
     if (aPossibleDescendant == aPossibleAncestor)
       return PR_TRUE;
-    nsINode* parent = aPossibleDescendant->GetNodeParent();
-    if (!parent && aPossibleDescendant->IsNodeOfType(nsINode::eDOCUMENT)) {
-      nsIDocument* doc = static_cast<nsIDocument*>(aPossibleDescendant);
-      nsIDocument* parentDoc = doc->GetParentDocument();
-      aPossibleDescendant = parentDoc ?
-                            parentDoc->FindContentForSubDocument(doc) : nsnull;
-    }
-    else {
-      aPossibleDescendant = parent;
-    }
+    aPossibleDescendant = GetCrossDocParentNode(aPossibleDescendant);
   } while (aPossibleDescendant);
 
   return PR_FALSE;
