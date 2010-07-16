@@ -1578,7 +1578,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 
     if (!JS_XDRUint32(xdr, &firstword))
         return false;
-    if ((firstword & 1U) && !js_XDRStringAtom(xdr, &fun->atom))
+    if ((firstword & 1U) && !js_XDRAtom(xdr, &fun->atom))
         return false;
     if (!JS_XDRUint32(xdr, &localsword) ||
         !JS_XDRUint32(xdr, &flagsword)) {
@@ -1669,7 +1669,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
             }
             if (xdr->mode == JSXDR_ENCODE)
                 name = JS_LOCAL_NAME_TO_ATOM(names[i]);
-            ok = !!js_XDRStringAtom(xdr, &name);
+            ok = !!js_XDRAtom(xdr, &name);
             if (!ok)
                 goto release_mark;
             if (xdr->mode == JSXDR_DECODE) {
