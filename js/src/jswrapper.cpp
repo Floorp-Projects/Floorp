@@ -421,14 +421,10 @@ JSCompartment::wrapId(JSContext *cx, jsid *idp) {
 bool
 JSCompartment::wrap(JSContext *cx, PropertyOp *propp)
 {
-    union {
-        PropertyOp op;
-        jsval v;
-    } u;
-    u.op = *propp;
-    if (!wrap(cx, &Valueify(u.v)))
+    Value v = CastAsObjectJsval(*propp);
+    if (!wrap(cx, &v))
         return false;
-    *propp = u.op;
+    *propp = CastAsPropertyOp(v.toObjectOrNull());
     return true;
 }
 
