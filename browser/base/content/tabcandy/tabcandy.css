@@ -222,10 +222,10 @@ body {
 .guideTrench {
   z-index: -101;
   opacity: 0.9;
-  border: 1px dashed  rgba(0,0,0,.08);
+  border: 1px dashed  rgba(0,0,0,.12);
   border-bottom: none;
   border-right: none;
-  -moz-box-shadow: 1px 1px 0 rgba(255,255,255,.1);
+  -moz-box-shadow: 1px 1px 0 rgba(255,255,255,.15);
 }
 
 .visibleTrench {
