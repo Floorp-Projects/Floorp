@@ -282,7 +282,7 @@ function testOutputOrder()
   jsterm.clearOutput();
   jsterm.execute("console.log('foo', 'bar');");
 
-  is(outputNode.childNodes.length, 2, "Two children in output");
+  is(outputNode.childNodes.length, 3, "Three children in output");
   let outputChildren = outputNode.childNodes;
 
   let executedStringFirst =
@@ -292,6 +292,31 @@ function testOutputOrder()
     /foo bar/.test(outputChildren[1].childNodes[0].nodeValue);
 
   ok(executedStringFirst && outputSecond, "executed string comes first");
+}
+
+function testNullUndefinedOutput()
+{
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
+  let outputNode = jsterm.outputNode;
+
+  jsterm.clearOutput();
+  jsterm.execute("null;");
+
+  is(outputNode.childNodes.length, 2, "Two children in output");
+  let outputChildren = outputNode.childNodes;
+
+  is (outputChildren[1].childNodes[0].nodeValue, "null",
+      "'null' printed to output");
+
+  jsterm.clearOutput();
+  jsterm.execute("undefined;");
+
+  is(outputNode.childNodes.length, 2, "Two children in output");
+  outputChildren = outputNode.childNodes;
+
+  is (outputChildren[1].childNodes[0].nodeValue, "undefined",
+      "'undefined' printed to output");
 }
 
 function testCreateDisplay() {
@@ -485,6 +510,7 @@ function test() {
       testIteration();
       testConsoleHistory();
       testOutputOrder();
+      testNullUndefinedOutput();
 
       // testUnregister();
       executeSoon(function () {
