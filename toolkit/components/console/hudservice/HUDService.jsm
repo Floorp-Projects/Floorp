@@ -1659,6 +1659,12 @@ HeadsUpDisplay.prototype = {
   },
 
   /**
+   * The JSTerm object that contains the console's inputNode
+   *
+   */
+  jsterm: null,
+
+  /**
    * creates and attaches the console input node
    *
    * @param nsIDOMWindow aWindow
@@ -1672,7 +1678,7 @@ HeadsUpDisplay.prototype = {
     if (appName() == "FIREFOX") {
       let outputCSSClassOverride = "hud-msg-node hud-console";
       let mixin = new JSTermFirefoxMixin(context, aParentNode, aExistingConsole, outputCSSClassOverride);
-      let inputNode = new JSTerm(context, aParentNode, mixin);
+      this.jsterm = new JSTerm(context, aParentNode, mixin);
     }
     else {
       throw new Error("Unsupported Gecko Application");
