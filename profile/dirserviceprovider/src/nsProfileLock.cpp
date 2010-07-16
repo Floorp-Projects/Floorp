@@ -142,12 +142,12 @@ static int setupPidLockCleanup;
 PRCList nsProfileLock::mPidLockList =
     PR_INIT_STATIC_CLIST(&nsProfileLock::mPidLockList);
 
-void nsProfileLock::RemovePidLockFiles()
+void nsProfileLock::RemovePidLockFiles(PRBool aFatalSignal)
 {
     while (!PR_CLIST_IS_EMPTY(&mPidLockList))
     {
         nsProfileLock *lock = static_cast<nsProfileLock*>(mPidLockList.next);
-        lock->Unlock();
+        lock->Unlock(aFatalSignal);
     }
 }
 
@@ -163,7 +163,7 @@ void nsProfileLock::FatalSignalHandler(int signo, siginfo_t *info,
                                        void *context)
 {
     // Remove any locks still held.
-    RemovePidLockFiles();
+    RemovePidLockFiles(PR_TRUE);
 
     // Chain to the old handler, which may exit.
     struct sigaction *oldact = nsnull;
@@ -385,7 +385,7 @@ nsresult nsProfileLock::LockWithSymlink(const nsACString& lockFilePath, PRBool a
             if (!setupPidLockCleanup++)
             {
                 // Clean up on normal termination.
-                atexit(RemovePidLockFiles);
+                atexit(RemovePidLockFilesExiting);
 
                 // Clean up on abnormal termination, using POSIX sigaction.
                 // Don't arm a handler if the signal is being ignored, e.g.,
@@ -652,7 +652,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aProfileDir,
 }
 
 
-nsresult nsProfileLock::Unlock()
+nsresult nsProfileLock::Unlock(PRBool aFatalSignal)
 {
     nsresult rv = NS_OK;
 
@@ -675,7 +675,14 @@ nsresult nsProfileLock::Unlock()
         {
             PR_REMOVE_LINK(this);
             (void) unlink(mPidLockFileName);
-            free(mPidLockFileName);
+
+            // Only free mPidLockFileName if we're not in the fatal signal
+            // handler.  The problem is that a call to free() might be the
+            // cause of this fatal signal.  If so, calling free() might cause
+            // us to wait on the malloc implementation's lock.  We're already
+            // holding this lock, so we'll deadlock. See bug 522332.
+            if (!aFatalSignal)
+                free(mPidLockFileName);
             mPidLockFileName = nsnull;
         }
         else if (mLockFileDesc != -1)
