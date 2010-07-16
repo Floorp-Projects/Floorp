@@ -300,8 +300,8 @@ public:
     nsresult ErrorInvalidEnum(const char *fmt = 0, ...);
     nsresult ErrorInvalidOperation(const char *fmt = 0, ...);
     nsresult ErrorInvalidValue(const char *fmt = 0, ...);
-    nsresult ErrorInvalidEnumInfo(const char *info) {
-        return ErrorInvalidEnum("%s: invalid enum value", info);
+    nsresult ErrorInvalidEnumInfo(const char *info, PRUint32 enumvalue) {
+        return ErrorInvalidEnum("%s: invalid enum value 0x%x", info, enumvalue);
     }
 
     already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
@@ -352,10 +352,11 @@ protected:
     PRBool ValidateTextureTargetEnum(WebGLenum target, const char *info);
     PRBool ValidateComparisonEnum(WebGLenum target, const char *info);
     PRBool ValidateStencilOpEnum(WebGLenum action, const char *info);
-    PRBool ValidateFaceEnum(WebGLenum target, const char *info);
+    PRBool ValidateFaceEnum(WebGLenum face, const char *info);
     PRBool ValidateBufferUsageEnum(WebGLenum target, const char *info);
     PRBool ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
                                       PRUint32 *texelSize, const char *info);
+    PRBool ValidateDrawModeEnum(WebGLenum mode, const char *info);
 
     void Invalidate();
 
