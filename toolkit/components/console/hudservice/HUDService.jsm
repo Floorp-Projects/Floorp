@@ -2192,18 +2192,20 @@ JSTerm.prototype = {
     return this.context.get().QueryInterface(Ci.nsIDOMWindowInternal);
   },
 
-  execute: function JST_execute()
+  execute: function JST_execute(aExecuteString)
   {
     // attempt to execute the content of the inputNode
-    var str = this.inputNode.value;
+    var str = aExecuteString || this.inputNode.value;
     if (!str) {
       this.console.log("no value to execute");
       return;
     }
+
+    this.writeOutput(str);
+
     try {
       var result =
       Cu.evalInSandbox(str, this.sandbox, "default", "HUD Console", 1);
-      this.writeOutput(str);
 
       if (result !== undefined) {
         this.writeOutput(result);
@@ -2234,6 +2236,15 @@ JSTerm.prototype = {
     node.appendChild(textNode);
     this.outputNode.appendChild(node);
     node.scrollIntoView(false);
+  },
+
+  clearOutput: function JST_clearOutput()
+  {
+    let outputNode = this.outputNode;
+
+    while (outputNode.firstChild) {
+      outputNode.removeChild(outputNode.firstChild);
+    }
   },
 
   keyDown: function JSTF_keyDown(aEvent)
