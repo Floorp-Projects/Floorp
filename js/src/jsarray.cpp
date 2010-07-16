@@ -585,19 +585,6 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     return !tvr.value().isNull();
 }
 
-JSBool
-js_IsArrayLike(JSContext *cx, JSObject *obj, JSBool *answerp, jsuint *lengthp)
-{
-    JSObject *wrappedObj = obj->wrappedObject(cx);
-
-    *answerp = wrappedObj->isArguments() || wrappedObj->isArray();
-    if (!*answerp) {
-        *lengthp = 0;
-        return JS_TRUE;
-    }
-    return js_GetLengthProperty(cx, obj, lengthp);
-}
-
 /*
  * Since SpiderMonkey supports cross-class prototype-based delegation, we have
  * to be careful about the length getter and setter being called on an object
