@@ -1400,7 +1400,14 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     	return null;
     return this._children[index];
   },
-  
+
+  // ----------
+  // Function: getChildren
+  // Returns all children.
+  getChildren: function(){
+    return this._children;
+  },
+
   // ---------
   // Function: onNextNewTab
   // Sets up a one-time handler that gets called the next time a

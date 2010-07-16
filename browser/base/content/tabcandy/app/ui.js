@@ -162,6 +162,7 @@ window.Page = {
   hideChrome: function(){
     var currentWin = Utils.getCurrentWindow();
     currentWin.document.getElementById("tab-candy-deck").selectedIndex = 1;
+    currentWin.document.getElementById("tab-candy").contentWindow.focus();
     
     currentWin.gBrowser.updateTitlebar();
     this._setActiveTitleColor(true);
@@ -222,64 +223,7 @@ window.Page = {
       });
     }
   },
-
-  setupKeyHandlers: function(){
-    var self = this;
-    iQ(window).keyup(function(e){
-      if (!e.metaKey) window.Keys.meta = false;
-    });
-    
-    iQ(window).keydown(function(e){
-      if (e.metaKey) window.Keys.meta = true;
-      
-      if (!self.getActiveTab()) return;
-      
-      var centers = [[item.bounds.center(), item] for each(item in TabItems.getItems())];
-      myCenter = self.getActiveTab().bounds.center();
-
-      function getClosestTabBy(norm){
-        var matches = centers
-          .filter(function(item){return norm(item[0], myCenter)})
-          .sort(function(a,b){
-            return myCenter.distance(a[0]) - myCenter.distance(b[0]);
-          });
-        if ( matches.length > 0 )
-          return matches[0][1];
-        return null;
-      }
-
-      var norm = null;
-      switch (e.which){
-        case 39: // Right
-          norm = function(a, me){return a.x > me.x};
-          break;
-        case 37: // Left
-          norm = function(a, me){return a.x < me.x};
-          break;
-        case 40: // Down
-          norm = function(a, me){return a.y > me.y};
-          break;
-        case 38: // Up
-          norm = function(a, me){return a.y < me.y}
-          break;
-      }
-      
-      if ( norm != null && iQ(":focus").length == 0 ){
-        var nextTab = getClosestTabBy(norm);
-        if ( nextTab ){
-          if ( nextTab.inStack() && !nextTab.parent.expanded){
-            nextTab = nextTab.parent.getChild(0);
-          }
-          self.setActiveTab(nextTab);           
-        }
-        e.preventDefault();               
-      }
-      
-      if ((e.which == 27 || e.which == 13) && iQ(":focus").length == 0 )
-        if ( self.getActiveTab() ) self.getActiveTab().zoomIn();
-    });
-  },
-    
+  
   // ----------  
   init: function() {
     var self = this;
@@ -291,10 +235,10 @@ window.Page = {
         contentDocument;
     iQ(tabCandyContentDoc).mousedown(function(e){
       if ( e.originalTarget.id == "content" )
-        Page.createGroupOnDrag(e)
+        self.createGroupOnDrag(e)
     });
 
-    this.setupKeyHandlers();
+    this._setupKeyHandlers();
 
     Tabs.onClose(function(){
       if (self.isTabCandyVisible()) {
@@ -348,13 +292,15 @@ window.Page = {
     
     UI.currentTab = focusTab;
     // if the last visible tab has just been closed, don't show the chrome UI.
-    if (this.isTabCandyVisible() && (this.closedLastVisibleTab || this.closedSelectedTabInTabCandy)) {
+    if (this.isTabCandyVisible() &&
+        (this.closedLastVisibleTab || this.closedSelectedTabInTabCandy)) {
       this.closedLastVisibleTab = false;
       this.closedSelectedTabInTabCandy = false;
       return;      
     }
 
-    // if TabCandy is visible but we didn't just close the last tab or selected tab, show chrome.
+    // if TabCandy is visible but we didn't just close the last tab or
+    // selected tab, show chrome.
     if (this.isTabCandyVisible())
       this.showChrome();
 
@@ -364,17 +310,23 @@ window.Page = {
     
     iQ.timeout(function() { // Marshal event from chrome thread to DOM thread      
       // this value is true when tabcandy is open at browser startup.
-      if (Page.stopZoomPreparation) {
+      if (self.stopZoomPreparation) {
         self.stopZoomPreparation = false;
+        if (focusTab && focusTab.mirror) {
+          var item = TabItems.getItemByTabElement(focusTab.mirror.el);
+          if (item)
+            self.setActiveTab(item);
+        }
         return;
       }
-      var visibleTabCount = Tabbar.getVisibleTabCount();
- 
+      
       if (focusTab != UI.currentTab) {
         // things have changed while we were in timeout
         return;
       }
-       
+      
+      var visibleTabCount = Tabbar.getVisibleTabCount();
+
       var newItem = null;
       if (focusTab && focusTab.mirror)
         newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
@@ -406,9 +358,104 @@ window.Page = {
     }, 1);
   },
 
+  // ---------- 
+  _setupKeyHandlers: function(){
+    var self = this;
+    iQ(window).keyup(function(e){
+      if (!e.metaKey) window.Keys.meta = false;
+    });
+    
+    iQ(window).keydown(function(event){
+      if (event.metaKey) window.Keys.meta = true;
+      
+      if (!self.getActiveTab() || iQ(":focus").length > 0) {
+        // prevent the default action when tab is pressed so it doesn't gives
+        // us problem with content focus.
+        if (event.which == 9) {
+          event.stopPropagation();
+          event.preventDefault();
+        }
+        return;
+      }  
+     
+      function getClosestTabBy(norm){
+        var centers =
+          [[item.bounds.center(), item] for each(item in TabItems.getItems())];
+        var myCenter = self.getActiveTab().bounds.center();
+        var matches = centers
+          .filter(function(item){return norm(item[0], myCenter)})
+          .sort(function(a,b){
+            return myCenter.distance(a[0]) - myCenter.distance(b[0]);
+          });
+        if ( matches.length > 0 )
+          return matches[0][1];
+        return null;
+      }
+
+      var norm = null;
+      switch (event.which) {
+        case 39: // Right
+          norm = function(a, me){return a.x > me.x};
+          break;
+        case 37: // Left
+          norm = function(a, me){return a.x < me.x};
+          break;
+        case 40: // Down
+          norm = function(a, me){return a.y > me.y};
+          break;
+        case 38: // Up
+          norm = function(a, me){return a.y < me.y}
+          break;
+      }        
+     
+      if (norm != null) {
+        var nextTab = getClosestTabBy(norm);
+        if (nextTab) {
+          if (nextTab.inStack() && !nextTab.parent.expanded)
+            nextTab = nextTab.parent.getChild(0);
+          self.setActiveTab(nextTab);        
+        }
+        event.stopPropagation();
+        event.preventDefault();
+      } else if (event.which == 27 || event.which == 13) { // esc or return
+        var activeTab = self.getActiveTab();
+        if (activeTab)
+          activeTab.zoomIn();
+        event.stopPropagation();
+        event.preventDefault();
+      } else if (event.which == 9) { // tab or shift+tab
+        var activeTab = self.getActiveTab();
+        if (activeTab) {
+          var tabItems = (activeTab.parent ? activeTab.parent.getChildren() :
+                          Groups.getOrphanedTabs());
+          var length = tabItems.length;
+          var currentIndex = tabItems.indexOf(activeTab);
+            
+          if (length > 1) {
+            if (event.shiftKey) {
+              if (currentIndex == 0) {
+                newIndex = (length - 1);
+              } else {
+                newIndex = (currentIndex - 1);
+              }
+            } else {
+              if (currentIndex == (length - 1)) {
+                newIndex = 0;
+              } else {
+                newIndex = (currentIndex + 1);
+              } 
+            }
+            self.setActiveTab(tabItems[newIndex]);        
+          }
+        }
+        event.stopPropagation();
+        event.preventDefault();
+      }
+    });
+  },
+
   // ----------  
   createGroupOnDrag: function(e){
-/*     e.preventDefault(); */
     const minSize = 60;
     const minMinSize = 15;
     
@@ -621,7 +668,7 @@ UIClass.prototype = {
     try {   
       var self = this;
       
-      this.setBrowserKeyHandler();
+      this._setBrowserKeyHandler();
       
       // ___ Dev Menu
       this.addDevMenu();
@@ -782,9 +829,9 @@ UIClass.prototype = {
       Utils.log(e);
     }
   },
-  
+
   // ----------
-  setBrowserKeyHandler : function() {
+  _setBrowserKeyHandler : function() {
     var self = this;
     var browser = Utils.getCurrentWindow().gBrowser;
     var tabbox = browser.mTabBox;
@@ -865,7 +912,7 @@ UIClass.prototype = {
             event.preventDefault();
           }
         }
-      }
+      }      
     }, false);
   },
   

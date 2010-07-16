@@ -416,11 +416,13 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   // ----------  
   makeActive: function(){
    iQ(this.container).find("canvas").addClass("focus")
+   iQ(this.container).find("img.thumb-placeholder").addClass("focus")
   },
 
   // ----------    
   makeDeactive: function(){
    iQ(this.container).find("canvas").removeClass("focus")
+   iQ(this.container).find("img.thumb-placeholder").removeClass("focus")
   },
   
   // ----------
