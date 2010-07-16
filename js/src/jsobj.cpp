@@ -3283,7 +3283,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         }
 
         /* XDR the real id, then the shortid. */
-        if (!js_XDRStringAtom(xdr, &atom) ||
+        if (!js_XDRAtom(xdr, &atom) ||
             !JS_XDRUint16(xdr, (uint16 *)&shortid)) {
             return false;
         }
@@ -5942,7 +5942,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
      */
     if (!JS_XDRUint32(xdr, &classDef))
         return JS_FALSE;
-    if (classDef == 1 && !js_XDRStringAtom(xdr, &atom))
+    if (classDef == 1 && !js_XDRAtom(xdr, &atom))
         return JS_FALSE;
 
     if (!JS_XDRUint32(xdr, &classId))
