@@ -2099,20 +2099,17 @@ function getNotificationBox(aWindow) {
   return Browser.getNotificationBox();
 }
 
-function importDialog(parent, src, arguments) {
+function importDialog(aParent, aSrc, aArguments) {
   // load the dialog with a synchronous XHR
   let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
-  xhr.open("GET", src, false);
+  xhr.open("GET", aSrc, false);
   xhr.overrideMimeType("text/xml");
   xhr.send(null);
   if (!xhr.responseXML)
     return null;
 
   let currentNode;
-  let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML,
-                                                    NodeFilter.SHOW_TEXT,
-                                                    null,
-                                                    false);
+  let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML, NodeFilter.SHOW_TEXT, null, false);
   while (currentNode = nodeIterator.nextNode()) {
     let trimmed = currentNode.nodeValue.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
     if (!trimmed.length)
@@ -2125,22 +2122,22 @@ function importDialog(parent, src, arguments) {
 
   // we need to insert before select-container if we want it to show correctly
   let selectContainer = document.getElementById("select-container");
-  let parent = selectContainer.parentNode;
+  let parentNode = selectContainer.parentNode;
 
   // emit DOMWillOpenModalDialog event
   let event = document.createEvent("Events");
   event.initEvent("DOMWillOpenModalDialog", true, false);
-  let dispatcher = parent || getBrowser();
+  let dispatcher = aParent || getBrowser();
   dispatcher.dispatchEvent(event);
 
   // create a full-screen semi-opaque box as a background
   let back = document.createElement("box");
   back.setAttribute("class", "modal-block");
   dialog = back.appendChild(document.importNode(doc, true));
-  parent.insertBefore(back, selectContainer);
+  parentNode.insertBefore(back, selectContainer);
 
-  dialog.arguments = arguments;
-  dialog.parent = parent;
+  dialog.arguments = aArguments;
+  dialog.parent = aParent;
   return dialog;
 }
 
