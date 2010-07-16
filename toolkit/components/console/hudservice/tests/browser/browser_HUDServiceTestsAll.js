@@ -341,6 +341,14 @@ function testIteration() {
      "two distinct pages of log entries");
 }
 
+function testHUDGetters()
+{
+  var HUD = HUDService.hudWeakReferences[hudId].get();
+  var jsterm = HUD.jsterm;
+  var klass = jsterm.inputNode.getAttribute("class");
+  ok(klass == "jsterm-input-node", "We have the input node.");
+}
+
 let tab, browser, hudId, hud, filterBox, outputNode, cs;
 
 let win = gBrowser.selectedBrowser;
@@ -364,6 +372,7 @@ function test() {
     executeSoon(function () {
       testRegistries();
       testGetDisplayByURISpec();
+      testHUDGetters();
       introspectLogNodes();
       getAllHUDS();
       getHUDById();
