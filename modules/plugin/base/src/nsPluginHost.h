@@ -114,14 +114,14 @@ public:
 
   nsresult
   NewPluginURLStream(const nsString& aURL, 
-                     nsIPluginInstance *aInstance, 
+                     nsNPAPIPluginInstance *aInstance, 
                      nsIPluginStreamListener *aListener,
                      nsIInputStream *aPostStream = nsnull,
                      const char *aHeadersData = nsnull, 
                      PRUint32 aHeadersDataLen = 0);
 
   nsresult
-  GetURLWithHeaders(nsISupports* pluginInst, 
+  GetURLWithHeaders(nsNPAPIPluginInstance *pluginInst, 
                     const char* url, 
                     const char* target = NULL,
                     nsIPluginStreamListener* streamListener = NULL,
@@ -132,7 +132,7 @@ public:
                     const char* getHeaders = NULL);
 
   nsresult
-  DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
+  DoURLLoadSecurityCheck(nsNPAPIPluginInstance *aInstance,
                          const char* aURL);
 
   nsresult
@@ -185,14 +185,14 @@ private:
 
   nsresult
   NewEmbeddedPluginStreamListener(nsIURI* aURL, nsIPluginInstanceOwner *aOwner,
-                                  nsIPluginInstance* aInstance,
+                                  nsNPAPIPluginInstance* aInstance,
                                   nsIStreamListener** aListener);
 
   nsresult
-  NewEmbeddedPluginStream(nsIURI* aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);
+  NewEmbeddedPluginStream(nsIURI* aURL, nsIPluginInstanceOwner *aOwner, nsNPAPIPluginInstance* aInstance);
 
   nsresult
-  NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIURI* aURI, nsIPluginInstance *aInstance);
+  NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIURI* aURI, nsNPAPIPluginInstance *aInstance);
 
   // Return an nsPluginTag for this type, if any.  If aCheckEnabled is
   // true, only enabled plugins will be returned.
