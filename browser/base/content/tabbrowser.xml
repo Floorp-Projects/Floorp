@@ -3101,6 +3101,7 @@
                  role="presentation"/>
       <xul:toolbarbutton anonid="close-button"
                          tabindex="-1"
+                         clickthrough="never"
                          class="tab-close-button"/>
     </content>
 
