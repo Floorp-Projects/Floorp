@@ -151,7 +151,7 @@ PRBool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
         case LOCAL_GL_STENCIL_TEST:
             return PR_TRUE;
         default:
-            ErrorInvalidEnumInfo(info);
+            ErrorInvalidEnumInfo(info, cap);
             return PR_FALSE;
     }
 }
@@ -164,7 +164,7 @@ PRBool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode, const char *info)
         case LOCAL_GL_FUNC_REVERSE_SUBTRACT:
             return PR_TRUE;
         default:
-            ErrorInvalidEnumInfo(info);
+            ErrorInvalidEnumInfo(info, mode);
             return PR_FALSE;
     }
 }
@@ -188,7 +188,7 @@ PRBool WebGLContext::ValidateBlendFuncDstEnum(WebGLenum factor, const char *info
         case LOCAL_GL_ONE_MINUS_CONSTANT_ALPHA:
             return PR_TRUE;
         default:
-            ErrorInvalidEnumInfo(info);
+            ErrorInvalidEnumInfo(info, factor);
             return PR_FALSE;
     }
 }
@@ -208,7 +208,7 @@ PRBool WebGLContext::ValidateTextureTargetEnum(WebGLenum target, const char *inf
         case LOCAL_GL_TEXTURE_CUBE_MAP:
             return PR_TRUE;
         default:
-            ErrorInvalidEnumInfo(info);
+            ErrorInvalidEnumInfo(info, target);
             return PR_FALSE;
     }
 }
@@ -226,7 +226,7 @@ PRBool WebGLContext::ValidateComparisonEnum(WebGLenum target, const char *info)
         case LOCAL_GL_ALWAYS:
             return PR_TRUE;
         default:
-            ErrorInvalidEnumInfo(info);
+            ErrorInvalidEnumInfo(info, target);
             return PR_FALSE;
     }
 }
@@ -244,20 +244,20 @@ PRBool WebGLContext::ValidateStencilOpEnum(WebGLenum action, const char *info)
         case LOCAL_GL_INVERT:
             return PR_TRUE;
         default:
-            ErrorInvalidEnumInfo(info);
+            ErrorInvalidEnumInfo(info, action);
             return PR_FALSE;
     }
 }
 
-PRBool WebGLContext::ValidateFaceEnum(WebGLenum target, const char *info)
+PRBool WebGLContext::ValidateFaceEnum(WebGLenum face, const char *info)
 {
-    switch (target) {
+    switch (face) {
         case LOCAL_GL_FRONT:
         case LOCAL_GL_BACK:
         case LOCAL_GL_FRONT_AND_BACK:
             return PR_TRUE;
         default:
-            ErrorInvalidEnumInfo(info);
+            ErrorInvalidEnumInfo(info, face);
             return PR_FALSE;
     }
 }
@@ -270,7 +270,24 @@ PRBool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
         case LOCAL_GL_DYNAMIC_DRAW:
             return PR_TRUE;
         default:
-            ErrorInvalidEnumInfo(info);
+            ErrorInvalidEnumInfo(info, target);
+            return PR_FALSE;
+    }
+}
+
+PRBool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
+{
+    switch (mode) {
+        case LOCAL_GL_TRIANGLES:
+        case LOCAL_GL_TRIANGLE_STRIP:
+        case LOCAL_GL_TRIANGLE_FAN:
+        case LOCAL_GL_POINTS:
+        case LOCAL_GL_LINE_STRIP:
+        case LOCAL_GL_LINE_LOOP:
+        case LOCAL_GL_LINES:
+            return PR_TRUE;
+        default:
+            ErrorInvalidEnumInfo(info, mode);
             return PR_FALSE;
     }
 }
@@ -298,7 +315,7 @@ PRBool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
                 *texelSize = 4;
                 return PR_TRUE;
             default:
-                ErrorInvalidEnum("%s: invalid format", info);
+                ErrorInvalidEnum("%s: invalid format 0x%x", info, format);
                 return PR_FALSE;
         }
     } else {
@@ -321,7 +338,7 @@ PRBool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type,
                     return PR_FALSE;
                 }
             default:
-                ErrorInvalidEnum("%s: invalid type", info);
+                ErrorInvalidEnum("%s: invalid type 0x%x", info, type);
                 return PR_FALSE;
         }
     }

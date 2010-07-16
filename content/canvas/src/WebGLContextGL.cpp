@@ -196,7 +196,7 @@ WebGLContext::BindBuffer(WebGLenum target, nsIWebGLBuffer *bobj)
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
         mBoundElementArrayBuffer = buf;
     } else {
-        return ErrorInvalidEnum("BindBuffer: invalid target");
+        return ErrorInvalidEnumInfo("BindBuffer: target", target);
     }
 
     if (!isNull) {
@@ -242,7 +242,7 @@ WebGLContext::BindRenderbuffer(WebGLenum target, nsIWebGLRenderbuffer *rbobj)
     WebGLRenderbuffer *wrb;
 
     if (target != LOCAL_GL_RENDERBUFFER)
-        return ErrorInvalidEnum("BindRenderbuffer: target must be GL_RENDERBUFFER");
+        return ErrorInvalidEnumInfo("bindRenderbuffer: target", target);
 
     if (!GetConcreteObjectAndGLName("bindRenderBuffer", rbobj, &wrb, &renderbuffername, &isNull))
         return NS_OK;
@@ -270,7 +270,7 @@ WebGLContext::BindTexture(WebGLenum target, nsIWebGLTexture *tobj)
     } else if (target == LOCAL_GL_TEXTURE_CUBE_MAP) {
         mBoundCubeMapTextures[mActiveTexture] = tex;
     } else {
-        return ErrorInvalidEnum("BindTexture: invalid target");
+        return ErrorInvalidEnumInfo("bindTexture: target", target);
     }
 
     MakeContextCurrent();
@@ -347,7 +347,7 @@ WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
         boundBuffer = mBoundElementArrayBuffer;
     } else {
-        return ErrorInvalidEnum("BufferData: invalid target");
+        return ErrorInvalidEnumInfo("bufferData: target", target);
     }
 
     if (size < 0)
@@ -379,7 +379,7 @@ WebGLContext::BufferData_buf(WebGLenum target, js::ArrayBuffer *wb, WebGLenum us
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
         boundBuffer = mBoundElementArrayBuffer;
     } else {
-        return ErrorInvalidEnum("BufferData: invalid target");
+        return ErrorInvalidEnumInfo("bufferData: target", target);
     }
 
     if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
@@ -408,7 +408,7 @@ WebGLContext::BufferData_array(WebGLenum target, js::TypedArray *wa, WebGLenum u
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
         boundBuffer = mBoundElementArrayBuffer;
     } else {
-        return ErrorInvalidEnum("BufferData: invalid target");
+        return ErrorInvalidEnumInfo("bufferData: target", target);
     }
 
     if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
@@ -443,7 +443,7 @@ WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, js::ArrayB
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
         boundBuffer = mBoundElementArrayBuffer;
     } else {
-        return ErrorInvalidEnum("BufferSubData: invalid target");
+        return ErrorInvalidEnumInfo("bufferSubData: target", target);
     }
 
     if (!boundBuffer)
@@ -476,7 +476,7 @@ WebGLContext::BufferSubData_array(WebGLenum target, WebGLsizei byteOffset, js::T
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
         boundBuffer = mBoundElementArrayBuffer;
     } else {
-        return ErrorInvalidEnum("BufferSubData: invalid target");
+        return ErrorInvalidEnumInfo("bufferSubData: target", target);
     }
 
     if (!boundBuffer)
@@ -550,7 +550,7 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             break;
         default:
-            return ErrorInvalidEnum("CopyTexImage2D: unsupported target");
+            return ErrorInvalidEnumInfo("copyTexImage2D: target", target);
     }
 
     switch (internalformat) {
@@ -561,7 +561,7 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
         case LOCAL_GL_LUMINANCE_ALPHA:
             break;
         default:
-            return ErrorInvalidEnum("CopyTexImage2D: internal format not supported");
+            return ErrorInvalidEnumInfo("CopyTexImage2D: internal format", internalformat);
     }
 
     if (border != 0) {
@@ -598,7 +598,7 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             break;
         default:
-            return ErrorInvalidEnum("CopyTexSubImage2D: unsupported target");
+            return ErrorInvalidEnumInfo("CopyTexSubImage2D: target", target);
     }
 
     if (!CanvasUtils::CheckSaneSubrectSize(x,y,width, height, mWidth, mHeight))
@@ -632,7 +632,7 @@ WebGLContext::CreateShader(WebGLenum type, nsIWebGLShader **retval)
     if (type != LOCAL_GL_VERTEX_SHADER &&
         type != LOCAL_GL_FRAGMENT_SHADER)
     {
-        return ErrorInvalidEnum("Invalid shader type specified");
+        return ErrorInvalidEnumInfo("createShader: type", type);
     }
 
     MakeContextCurrent();
@@ -851,18 +851,8 @@ WebGLContext::DisableVertexAttribArray(WebGLuint index)
 NS_IMETHODIMP
 WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 {
-    switch (mode) {
-        case LOCAL_GL_TRIANGLES:
-        case LOCAL_GL_TRIANGLE_STRIP:
-        case LOCAL_GL_TRIANGLE_FAN:
-        case LOCAL_GL_POINTS:
-        case LOCAL_GL_LINE_STRIP:
-        case LOCAL_GL_LINE_LOOP:
-        case LOCAL_GL_LINES:
-            break;
-        default:
-            return ErrorInvalidEnum("DrawArrays: invalid mode");
-    }
+    if (!ValidateDrawModeEnum(mode, "drawArrays: mode"))
+        return NS_OK;
 
     if (first < 0 || count < 0)
         return ErrorInvalidValue("DrawArrays: negative first or count");
@@ -896,18 +886,8 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
 NS_IMETHODIMP
 WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, WebGLint byteOffset)
 {
-    switch (mode) {
-        case LOCAL_GL_TRIANGLES:
-        case LOCAL_GL_TRIANGLE_STRIP:
-        case LOCAL_GL_TRIANGLE_FAN:
-        case LOCAL_GL_POINTS:
-        case LOCAL_GL_LINE_STRIP:
-        case LOCAL_GL_LINE_LOOP:
-        case LOCAL_GL_LINES:
-            break;
-        default:
-            return ErrorInvalidEnum("DrawElements: invalid mode");
-    }
+    if (!ValidateDrawModeEnum(mode, "drawElements: mode"))
+        return NS_OK;
 
     if (count < 0 || byteOffset < 0)
         return ErrorInvalidValue("DrawElements: negative count or offset");
@@ -1020,18 +1000,18 @@ WebGLContext::FramebufferRenderbuffer(WebGLenum target, WebGLenum attachment, We
         return NS_OK;
 
     if (target != LOCAL_GL_FRAMEBUFFER)
-        return ErrorInvalidEnum("FramebufferRenderbuffer: target must be GL_FRAMEBUFFER");
+        return ErrorInvalidEnumInfo("framebufferRenderbuffer: target", target);
 
     if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
          attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mFramebufferColorAttachments.Length()) &&
         attachment != LOCAL_GL_DEPTH_ATTACHMENT &&
         attachment != LOCAL_GL_STENCIL_ATTACHMENT)
     {
-        return ErrorInvalidEnum("FramebufferRenderbuffer: invalid attachment");
+        return ErrorInvalidEnumInfo("framebufferRenderbuffer: attachment", attachment);
     }
 
     if (rbtarget != LOCAL_GL_RENDERBUFFER)
-        return ErrorInvalidEnum("FramebufferRenderbuffer: renderbuffer target must be GL_RENDERBUFFER");
+        return ErrorInvalidEnumInfo("framebufferRenderbuffer: renderbuffer target:", rbtarget);
 
     // dimensions are kept for readPixels primarily, function only uses COLOR_ATTACHMENT0
     if (mBoundFramebuffer && attachment == LOCAL_GL_COLOR_ATTACHMENT0)
@@ -1059,18 +1039,18 @@ WebGLContext::FramebufferTexture2D(WebGLenum target,
         return NS_OK;
 
     if (target != LOCAL_GL_FRAMEBUFFER)
-        return ErrorInvalidEnum("FramebufferTexture2D: target must be GL_FRAMEBUFFER");
+        return ErrorInvalidEnumInfo("framebufferTexture2D: target", target);
 
     if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
          attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mFramebufferColorAttachments.Length()) &&
         attachment != LOCAL_GL_DEPTH_ATTACHMENT &&
         attachment != LOCAL_GL_STENCIL_ATTACHMENT)
-        return ErrorInvalidEnum("FramebufferTexture2D: invalid attachment");
+        return ErrorInvalidEnumInfo("framebufferTexture2D: attachment", attachment);
 
     if (textarget != LOCAL_GL_TEXTURE_2D &&
         (textarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
          textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
-        return ErrorInvalidEnum("FramebufferTexture2D: invalid textarget (only 2D or cube face)");
+        return ErrorInvalidEnumInfo("framebufferTexture2D: invalid texture target", textarget);
 
     if (level != 0)
         return ErrorInvalidValue("FramebufferTexture2D: level must be 0");
@@ -1100,7 +1080,7 @@ WebGLContext::FrontFace(WebGLenum mode)
         case LOCAL_GL_CCW:
             break;
         default:
-            return ErrorInvalidEnum("FrontFace: invalid mode");
+            return ErrorInvalidEnumInfo("frontFace: mode", mode);
     }
 
     MakeContextCurrent();
@@ -1488,7 +1468,7 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             break;
 
         default:
-            return ErrorInvalidEnum("GetParameter: invalid parameter");
+            return ErrorInvalidEnumInfo("getParameter: parameter", pname);
     }
 
     *retval = wrval.forget().get();
@@ -1503,7 +1483,7 @@ WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname, nsIVariant *
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     if (target != LOCAL_GL_ARRAY_BUFFER && target != LOCAL_GL_ELEMENT_ARRAY_BUFFER)
-        return ErrorInvalidEnum("GetBufferParameter: invalid target");
+        return ErrorInvalidEnumInfo("getBufferParameter: target", target);
 
     MakeContextCurrent();
 
@@ -1520,7 +1500,7 @@ WebGLContext::GetBufferParameter(WebGLenum target, WebGLenum pname, nsIVariant *
             break;
 
         default:
-            return ErrorInvalidEnum("GetBufferParameter: invalid parameter");
+            return ErrorInvalidEnumInfo("getBufferParameter: parameter", pname);
     }
 
     *retval = wrval.forget().get();
@@ -1535,7 +1515,7 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     if (target != LOCAL_GL_FRAMEBUFFER)
-        return ErrorInvalidEnum("GetFramebufferAttachmentParameter: invalid target");
+        return ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: target", target);
 
     switch (attachment) {
         case LOCAL_GL_COLOR_ATTACHMENT0:
@@ -1543,7 +1523,7 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
         case LOCAL_GL_STENCIL_ATTACHMENT:
             break;
         default:
-            return ErrorInvalidEnum("GetFramebufferAttachmentParameter: invalid attachment");
+            return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: attachment", attachment);
     }
 
     MakeContextCurrent();
@@ -1561,7 +1541,7 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
             break;
 
         default:
-            return ErrorInvalidEnum("GetFramebufferAttachmentParameter: invalid parameter");
+            return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: parameter", pname);
     }
 
     *retval = wrval.forget().get();
@@ -1576,7 +1556,7 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname, nsIVar
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
 
     if (target != LOCAL_GL_RENDERBUFFER)
-        return ErrorInvalidEnum("GetRenderbufferParameter: invalid target");
+        return ErrorInvalidEnumInfo("GetRenderbufferParameter: target", target);
 
     MakeContextCurrent();
 
@@ -1598,7 +1578,7 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname, nsIVar
             break;
 
         default:
-            return ErrorInvalidEnum("GetRenderbufferParameter: invalid parameter");
+            return ErrorInvalidEnumInfo("GetRenderbufferParameter: parameter", pname);
     }
 
     *retval = wrval.forget().get();
@@ -1694,7 +1674,7 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVari
             break;
 
         default:
-            return ErrorInvalidEnum("GetProgramParameter: invalid parameter");
+            return ErrorInvalidEnumInfo("GetProgramParameter: parameter", pname);
     }
 
     *retval = wrval.forget().get();
@@ -1885,7 +1865,7 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **re
             break;
 
         default:
-            return ErrorInvalidEnum("getTexParameter: invalid parameter");
+            return ErrorInvalidEnumInfo("getTexParameter: parameter", pname);
     }
 
     *retval = wrval.forget().get();
@@ -2047,7 +2027,7 @@ WebGLContext::GetVertexAttrib(WebGLuint index, WebGLenum pname)
         // not supported; doesn't make sense to return a pointer unless we have some kind of buffer object abstraction
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER:
         default:
-            return ErrorInvalidEnum("GetVertexAttrib: invalid parameter");
+            return ErrorInvalidEnumInfo("getVertexAttrib: parameter", pname);
     }
 
     return NS_OK;
@@ -2188,7 +2168,7 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
             gl->fPixelStorei(pname, param);
             break;
         default:
-            return ErrorInvalidEnum("PixelStorei: invalid parameter");
+            return ErrorInvalidEnumInfo("PixelStorei: parameter", pname);
     }
 
     return NS_OK;
@@ -2230,7 +2210,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
         size = 4;
         break;
       default:
-        return ErrorInvalidEnum("ReadPixels: unsupported pixel format");
+        return ErrorInvalidEnumInfo("readPixels: format", format);
     }
 
     switch (type) {
@@ -2240,7 +2220,7 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
       case LOCAL_GL_UNSIGNED_BYTE:
         break;
       default:
-        return ErrorInvalidEnum("ReadPixels: unsupported pixel type");
+        return ErrorInvalidEnumInfo("ReadPixels: type", type);
     }
 
     MakeContextCurrent();
@@ -2366,7 +2346,7 @@ WebGLContext::ReadPixels_byteLength_old_API_deprecated(WebGLsizei width, WebGLsi
         size = 4;
         break;
       default:
-        return ErrorInvalidEnum("ReadPixels: unsupported pixel format");
+        return ErrorInvalidEnumInfo("ReadPixels: format", format);
     }
 
     switch (type) {
@@ -2376,7 +2356,7 @@ WebGLContext::ReadPixels_byteLength_old_API_deprecated(WebGLsizei width, WebGLsi
       case LOCAL_GL_UNSIGNED_BYTE:
         break;
       default:
-        return ErrorInvalidEnum("ReadPixels: unsupported pixel type");
+        return ErrorInvalidEnumInfo("ReadPixels: type", type);
     }
     PRUint32 packAlignment;
     gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, (GLint*) &packAlignment);
@@ -2402,7 +2382,7 @@ NS_IMETHODIMP
 WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, WebGLsizei width, WebGLsizei height)
 {
     if (target != LOCAL_GL_RENDERBUFFER)
-        return ErrorInvalidEnum("RenderbufferStorage: invalid target.");
+        return ErrorInvalidEnumInfo("RenderbufferStorage: target", target);
 
     switch (internalformat) {
       case LOCAL_GL_RGBA4:
@@ -2413,7 +2393,7 @@ WebGLContext::RenderbufferStorage(WebGLenum target, WebGLenum internalformat, We
       case LOCAL_GL_STENCIL_INDEX8:
           break;
       default:
-          return ErrorInvalidEnum("RenderbufferStorage: invalid internalformat.");
+          return ErrorInvalidEnumInfo("RenderbufferStorage: internalformat", internalformat);
     }
 
     if (width <= 0 || height <= 0)
@@ -3005,7 +2985,7 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
       case LOCAL_GL_FLOAT:
           break;
       default:
-          return ErrorInvalidEnum("VertexAttribPointer: invalid type");
+          return ErrorInvalidEnumInfo("VertexAttribPointer: type", type);
     }
 
     if (index >= mAttribBuffers.Length())
@@ -3062,7 +3042,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             break;
         default:
-            return ErrorInvalidEnum("TexImage2D: unsupported target");
+            return ErrorInvalidEnumInfo("texImage2D: target", target);
     }
 
     if (level < 0)
@@ -3076,7 +3056,7 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
         case LOCAL_GL_LUMINANCE_ALPHA:
             break;
         default:
-            return ErrorInvalidEnum("TexImage2D: invalid internal format");
+            return ErrorInvalidEnumInfo("TexImage2D: internal format", internalformat);
     }
 
     if (width < 0 || height < 0)
@@ -3210,7 +3190,7 @@ WebGLContext::TexSubImage2D_base(WebGLenum target, WebGLint level,
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             break;
         default:
-            return ErrorInvalidEnum("TexSubImage2D: unsupported target");
+            return ErrorInvalidEnumInfo("texSubImage2D: target", target);
     }
 
     if (level < 0)
