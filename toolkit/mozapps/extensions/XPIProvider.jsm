@@ -1586,8 +1586,14 @@ var XPIProvider = {
           newAddon.userDisabled = aMigrateData.userDisabled;
         if ("installDate" in aMigrateData)
           newAddon.installDate = aMigrateData.installDate;
-        if ("targetApplications" in aMigrateData)
-          newAddon.applyCompatibilityUpdate(aMigrateData, true);
+
+        // Some properties should only be migrated if the add-on hasn't changed.
+        // The version property isn't a perfect check for this but covers the
+        // vast majority of cases.
+        if (aMigrateData.version == newAddon.version) {
+          if ("targetApplications" in aMigrateData)
+            newAddon.applyCompatibilityUpdate(aMigrateData, true);
+        }
       }
 
       try {
@@ -2777,6 +2783,7 @@ var XPIDatabase = {
               migrateData[location] = {};
             let id = source.ValueUTF8.substring(PREFIX_ITEM_URI.length);
             migrateData[location][id] = {
+              version: getRDFProperty(ds, source, "version"),
               userDisabled: false,
               targetApplications: []
             }
@@ -2807,12 +2814,14 @@ var XPIDatabase = {
       try {
         var stmt = this.connection.createStatement("SELECT internal_id, id, " +
                                                    "location, userDisabled, " +
-                                                   "installDate FROM addon");
+                                                   "installDate, version " +
+                                                   "FROM addon");
         for (let row in resultRows(stmt)) {
           if (!(row.location in migrateData))
             migrateData[row.location] = {};
           migrateData[row.location][row.id] = {
             internal_id: row.internal_id,
+            version: row.version,
             installDate: row.installDate,
             userDisabled: row.userDisabled == 1,
             targetApplications: []
