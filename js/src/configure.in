@@ -4455,6 +4455,19 @@ if test -n "$JS_GC_ZEAL"; then
     AC_DEFINE(JS_GC_ZEAL)
 fi
 
+dnl ======================================================
+dnl = Enable compiling with ccache
+dnl ======================================================
+MOZ_ARG_WITH_STRING(ccache,
+[  --with-ccache=path/to/ccache
+                          Enable compiling with ccache],
+    CCACHE_PATH=$withval,)
+
+if test -n "$CCACHE_PATH"; then
+  CC="$CCACHE_PATH $CC"
+  CXX="$CCACHE_PATH $CXX"
+fi
+
 dnl ========================================================
 dnl = Enable static checking using gcc-dehydra
 dnl ========================================================
