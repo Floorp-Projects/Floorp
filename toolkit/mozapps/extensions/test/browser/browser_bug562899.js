@@ -10,6 +10,7 @@ Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 const xpi = "browser/toolkit/mozapps/extensions/test/browser/browser_installssl.xpi";
 
 var gManagerWindow;
+var gCategoryUtilities;
 
 function test() {
   waitForExplicitFinish();
@@ -23,6 +24,7 @@ function test() {
 
   open_manager(null, function(aWindow) {
     gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
     run_next_test();
   });
 }
@@ -39,26 +41,21 @@ function end_test() {
 add_test(function() {
   var themeCount = null;
   var pluginCount = null;
-  var themeItem = gManagerWindow.document.getElementById("category-themes");
-  var pluginItem = gManagerWindow.document.getElementById("category-plugins");
+  var themeItem = gCategoryUtilities.get("theme");
+  var pluginItem = gCategoryUtilities.get("plugin");
   var list = gManagerWindow.document.getElementById("addon-list");
 
-  EventUtils.synthesizeMouse(themeItem, 2, 2, { }, gManagerWindow);
-
-  wait_for_view_load(gManagerWindow, function() {
+  gCategoryUtilities.open(themeItem, function() {
     themeCount = list.childNodes.length;
     ok(themeCount > 0, "Test is useless if there are no themes");
 
-    EventUtils.synthesizeMouse(pluginItem, 2, 2, { }, gManagerWindow);
-
-    wait_for_view_load(gManagerWindow, function() {
+    gCategoryUtilities.open(pluginItem, function() {
       pluginCount = list.childNodes.length;
       ok(pluginCount > 0, "Test is useless if there are no plugins");
 
-      EventUtils.synthesizeMouse(themeItem, 2, 2, { }, gManagerWindow);
-      EventUtils.synthesizeMouse(pluginItem, 2, 2, { }, gManagerWindow);
+      gCategoryUtilities.open(themeItem);
 
-      wait_for_view_load(gManagerWindow, function() {
+      gCategoryUtilities.open(pluginItem, function() {
         is(list.childNodes.length, pluginCount, "Should only see the plugins");
 
         var item = list.firstChild;
@@ -70,11 +67,9 @@ add_test(function() {
         // Tests that switching to, from, to the same pane in quick succession
         // still only shows the right number of results
 
-        EventUtils.synthesizeMouse(themeItem, 2, 2, { }, gManagerWindow);
-        EventUtils.synthesizeMouse(pluginItem, 2, 2, { }, gManagerWindow);
-        EventUtils.synthesizeMouse(themeItem, 2, 2, { }, gManagerWindow);
-
-        wait_for_view_load(gManagerWindow, function() {
+        gCategoryUtilities.open(themeItem);
+        gCategoryUtilities.open(pluginItem);
+        gCategoryUtilities.open(themeItem, function() {
           is(list.childNodes.length, themeCount, "Should only see the theme");
 
           var item = list.firstChild;
