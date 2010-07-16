@@ -2882,7 +2882,7 @@ split_create_outer(JSContext *cx)
     cpx->outer = NULL;
 
     obj = JS_NewGlobalObject(cx, Jsvalify(&split_global_class));
-    if (!obj || !JS_SetParent(cx, obj, NULL)) {
+    if (!obj) {
         JS_free(cx, cpx);
         return NULL;
     }
@@ -2912,7 +2912,7 @@ split_create_inner(JSContext *cx, JSObject *outer)
     cpx->outer = outer;
 
     obj = JS_NewGlobalObject(cx, Jsvalify(&split_global_class));
-    if (!obj || !JS_SetParent(cx, obj, NULL) || !JS_SetPrivate(cx, obj, cpx)) {
+    if (!obj || !JS_SetParent(cx, obj, NULL)) {
         JS_free(cx, cpx);
         return NULL;
     }

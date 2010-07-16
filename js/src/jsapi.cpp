@@ -2856,6 +2856,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
+    JS_ASSERT(parent || !obj->getParent());
     assertSameCompartment(cx, obj, parent);
     obj->setParent(parent);
     return true;
