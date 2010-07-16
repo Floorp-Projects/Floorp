@@ -1071,9 +1071,13 @@ asInt32(const Value &v)
     return jsint(v.toDouble());
 }
 
-/* Return JSVAL_TYPE_DOUBLE for all numbers (int and double) and the tag otherwise. */
+/*
+ * Return JSVAL_TYPE_DOUBLE for all numbers (int and double). Split
+ * JSVAL_TYPE_OBJECT into JSVAL_TYPE_FUNOBJ  and JSVAL_TYPE_NONFUNOBJ.
+ * Otherwise, just return the value's type.
+ */
 static inline JSValueType
-GetPromotedType(const Value &v)
+getPromotedType(const Value &v)
 {
     if (v.isNumber())
         return JSVAL_TYPE_DOUBLE;
@@ -1082,7 +1086,11 @@ GetPromotedType(const Value &v)
     return v.extractNonDoubleObjectTraceType();
 }
 
-/* Return JSVAL_TYPE_INT32 for all whole numbers that fit into signed 32-bit and the tag otherwise. */
+/*
+ * Return JSVAL_TYPE_INT32 for all whole numbers that fit into signed 32-bit.
+ * Split JSVAL_TYPE_OBJECT into JSVAL_TYPE_FUNOBJ and JSVAL_TYPE_NONFUNOBJ.
+ * Otherwise, just return the value's type.
+ */
 static inline JSValueType
 getCoercedType(const Value &v)
 {
@@ -8871,8 +8879,8 @@ TraceRecorder::strictEquality(bool equal, bool cmpCase)
     LIns* x;
     bool cond;
 
-    JSValueType ltag = GetPromotedType(l);
-    if (ltag != GetPromotedType(r)) {
+    JSValueType ltag = getPromotedType(l);
+    if (ltag != getPromotedType(r)) {
         cond = !equal;
         x = lir->insImmI(cond);
     } else if (ltag == JSVAL_TYPE_STRING) {
@@ -8937,7 +8945,7 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
      * a primitive value (which would terminate recursion).
      */
 
-    if (GetPromotedType(l) == GetPromotedType(r)) {
+    if (getPromotedType(l) == getPromotedType(r)) {
         if (l.isUndefined() || l.isNull()) {
             cond = true;
             if (l.isNull())
