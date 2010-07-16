@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -546,8 +546,6 @@ nsAccDocManager::ClearDocCacheEntry(const void* aKey,
                                     nsRefPtr<nsDocAccessible>& aDocAccessible,
                                     void* aUserArg)
 {
-  nsAccDocManager *accDocMgr = static_cast<nsAccDocManager*>(aUserArg);
-
   NS_ASSERTION(aDocAccessible,
                "Calling ClearDocCacheEntry with a NULL pointer!");
 
