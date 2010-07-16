@@ -308,7 +308,7 @@ window.Item.prototype = {
     
   // ----------
   // Function: setParent
-  //
+  // Sets the receiver's parent to the given <Item>. 
   setParent: function(parent) {
     this.parent = parent;
     this.removeTrenches();

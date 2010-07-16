@@ -631,10 +631,10 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         item = Items.item($el);
       }
       
+      Utils.assertThrow('shouldn\'t already be in another group', !item.parent || item.parent == this);
+
       item.removeTrenches();
-      
-      Utils.assert('shouldn\'t already be in another group', !item.parent || item.parent == this);
-  
+        
       if (!dropPos) 
         dropPos = {top:window.innerWidth, left:window.innerHeight};
         
