@@ -48,7 +48,7 @@ let WeaveGlue = {
   },
 
   openRemoteTabs: function openRemoteTabs() {
-    this._openTab("about:sync-tabs");
+    BrowserUI.newOrSelectTab("about:sync-tabs", null);
   },
 
   connect: function connect() {
@@ -78,10 +78,6 @@ let WeaveGlue = {
     // Add the listeners now, and remove them on unload
     addRem(true);
     addEventListener("unload", function() addRem(false), false);
-  },
-
-  _openTab: function _openTab(url) {
-    setTimeout(function() BrowserUI.newTab(url), 0);
   },
 
   get _settings() {
