@@ -5062,6 +5062,13 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(const nsPoint &aPoint,
     // intrinsic widths.
     selectedOffset =
         provider.GetStart().GetOriginalOffset() + provider.GetOriginalLength();
+    // If we're at the end of a preformatted line which has a terminating
+    // linefeed, we want to reduce the offset by one to make sure that the
+    // selection is placed before the linefeed character.
+    if (GetStyleText()->NewlineIsSignificant() &&
+        HasTerminalNewline()) {
+      --selectedOffset;
+    }
   }
 
   offsets.content = GetContent();
