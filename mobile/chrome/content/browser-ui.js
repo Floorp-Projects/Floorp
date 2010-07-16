@@ -587,6 +587,17 @@ var BrowserUI = {
     return tab;
   },
 
+  newOrSelectTab: function newOrSelectTab(aURI, aOwner) {
+    let tabs = Browser.tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].browser.currentURI.spec == aURI) {
+        Browser.selectedTab = tabs[i];
+        return;
+      }
+    }
+    this.newTab(aURI, aOwner);
+  },
+
   closeTab : function closeTab(aTab) {
     // If no tab is passed in, assume the current tab
     Browser.closeTab(aTab || Browser.selectedTab);
