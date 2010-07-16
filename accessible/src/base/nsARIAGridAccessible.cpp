@@ -485,18 +485,18 @@ nsARIAGridAccessible::GetSelectedCells(nsIArray **aCells)
   AccIterator rowIter(this, filters::GetRow);
 
   nsAccessible *row = nsnull;
-  while (row = rowIter.GetNext()) {
+  while ((row = rowIter.GetNext())) {
     AccIterator cellIter(row, filters::GetCell);
     nsAccessible *cell = nsnull;
 
     if (nsAccUtils::IsARIASelected(row)) {
-      while (cell = cellIter.GetNext())
+      while ((cell = cellIter.GetNext()))
         selCells->AppendElement(static_cast<nsIAccessible *>(cell), PR_FALSE);
 
       continue;
     }
 
-    while (cell = cellIter.GetNext()) {
+    while ((cell = cellIter.GetNext())) {
       if (nsAccUtils::IsARIASelected(cell))
         selCells->AppendElement(static_cast<nsIAccessible *>(cell), PR_FALSE);
     }
@@ -529,7 +529,7 @@ nsARIAGridAccessible::GetSelectedCellIndices(PRUint32 *aCellsCount,
   AccIterator rowIter(this, filters::GetRow);
 
   nsAccessible *row = nsnull;
-  for (PRInt32 rowIdx = 0; row = rowIter.GetNext(); rowIdx++) {
+  for (PRInt32 rowIdx = 0; (row = rowIter.GetNext()); rowIdx++) {
     if (nsAccUtils::IsARIASelected(row)) {
       for (PRInt32 colIdx = 0; colIdx < colCount; colIdx++)
         selCells.AppendElement(rowIdx * colCount + colIdx);
@@ -540,7 +540,7 @@ nsARIAGridAccessible::GetSelectedCellIndices(PRUint32 *aCellsCount,
     AccIterator cellIter(row, filters::GetCell);
     nsAccessible *cell = nsnull;
 
-    for (PRInt32 colIdx = 0; cell = cellIter.GetNext(); colIdx++) {
+    for (PRInt32 colIdx = 0; (cell = cellIter.GetNext()); colIdx++) {
       if (nsAccUtils::IsARIASelected(cell))
         selCells.AppendElement(rowIdx * colCount + colIdx);
     }
@@ -589,7 +589,7 @@ nsARIAGridAccessible::GetSelectedRowIndices(PRUint32 *arowCount,
   AccIterator rowIter(this, filters::GetRow);
 
   nsAccessible *row = nsnull;
-  for (PRInt32 rowIdx = 0; row = rowIter.GetNext(); rowIdx++) {
+  for (PRInt32 rowIdx = 0; (row = rowIter.GetNext()); rowIdx++) {
     if (nsAccUtils::IsARIASelected(row)) {
       selRows.AppendElement(rowIdx);
       continue;
@@ -635,7 +635,7 @@ nsARIAGridAccessible::SelectRow(PRInt32 aRow)
   AccIterator rowIter(this, filters::GetRow);
 
   nsAccessible *row = nsnull;
-  for (PRInt32 rowIdx = 0; row = rowIter.GetNext(); rowIdx++) {
+  for (PRInt32 rowIdx = 0; (row = rowIter.GetNext()); rowIdx++) {
     nsresult rv = SetARIASelected(row, rowIdx == aRow);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -887,7 +887,7 @@ nsARIAGridAccessible::GetSelectedColumnsArray(PRUint32 *acolumnCount,
 
     AccIterator cellIter(row, filters::GetCell);
     nsAccessible *cell = nsnull;
-    for (colIdx = 0; cell = cellIter.GetNext(); colIdx++) {
+    for (colIdx = 0; (cell = cellIter.GetNext()); colIdx++) {
       if (isColSelArray.SafeElementAt(colIdx, PR_FALSE) &&
           !nsAccUtils::IsARIASelected(cell)) {
         isColSelArray[colIdx] = PR_FALSE;
