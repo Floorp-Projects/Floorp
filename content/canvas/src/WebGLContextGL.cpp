@@ -871,10 +871,6 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
     if (first < 0 || count < 0)
         return ErrorInvalidValue("DrawArrays: negative first or count");
 
-    // If count is 0, there's nothing to do.
-    if (count == 0)
-        return NS_OK;
-
     // If there is no current program, this is silently ignored.
     // Any checks below this depend on a program being available.
     if (!mCurrentProgram)
@@ -886,7 +882,11 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
         return ErrorInvalidOperation("drawArrays: overflow in first+count");
 
     if (!ValidateBuffers(checked_firstPlusCount.value()))
-        return ErrorInvalidOperation("DrawArrays: bound vertex attribute buffers do not have sufficient data for given first and count");
+        return ErrorInvalidOperation("DrawArrays: bound vertex attribute buffers do not have sufficient size for given first and count");
+
+    // If count is 0, there's nothing to do.
+    if (count == 0)
+        return NS_OK;
 
     MakeContextCurrent();
 
@@ -931,10 +931,6 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
     if (!checked_byteCount.valid())
         return ErrorInvalidValue("DrawElements: overflow in byteCount");
 
-    // If count is 0, there's nothing to do.
-    if (count == 0)
-        return NS_OK;
-
     // If there is no current program, this is silently ignored.
     // Any checks below this depend on a program being available.
     if (!mCurrentProgram)
@@ -966,8 +962,12 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, Web
         return ErrorInvalidOperation("drawElements: overflow in maxIndex+1");
     if (!ValidateBuffers(checked_neededCount.value())) {
         return ErrorInvalidOperation("DrawElements: bound vertex attribute buffers do not have sufficient "
-                                     "data for given indices from the bound element array");
+                                     "size for given indices from the bound element array");
     }
+
+    // If count is 0, there's nothing to do.
+    if (count == 0)
+        return NS_OK;
 
     MakeContextCurrent();
 
