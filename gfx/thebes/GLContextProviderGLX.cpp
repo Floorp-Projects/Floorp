@@ -493,6 +493,7 @@ GLContextProvider::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat& a
     pbattribs.AppendElement(aSize.height);
     pbattribs.AppendElement(GLX_PRESERVED_CONTENTS);
     pbattribs.AppendElement(True);
+    pbattribs.AppendElement(0);
 
     GLXPbuffer pbuffer = sGLXLibrary.xCreatePbuffer(display,
                                                     cfg[0],
