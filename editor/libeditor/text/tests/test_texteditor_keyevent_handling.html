@@ -292,6 +292,18 @@ function runTests()
     is(fm.focusedElement, aElement,
        aDescription + "focus moved unexpectedly (Tab)");
 
+    // If the editor is not tabbable, make sure that it accepts tab characters
+    // even if it's empty.
+    if (!aIsTabbable && !aIsReadonly) {
+      reset("");
+      synthesizeKey("VK_TAB", {});
+      check(aDescription + "Tab on empty textarea",
+            true, true, !aIsReadonly);
+      is(aElement.value, "\t", aDescription + "Tab on empty textarea");
+      is(fm.focusedElement, aElement,
+         aDescription + "focus moved unexpectedly (Tab on empty textarea");
+    }
+
     reset("a");
     synthesizeKey("VK_TAB", { shiftKey: true });
     check(aDescription + "Shift+Tab", true, true, false);
