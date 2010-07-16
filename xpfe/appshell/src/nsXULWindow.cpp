@@ -2064,12 +2064,6 @@ NS_IMETHODIMP nsXULWindow::ApplyChromeFlags()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::WillShowWindow(PRBool *aRetval)
-{
-  *aRetval = mShowAfterLoad && !mChromeLoaded;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsXULWindow::GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow)
 {
   NS_IF_ADDREF(*aXULBrowserWindow = mXULBrowserWindow);
