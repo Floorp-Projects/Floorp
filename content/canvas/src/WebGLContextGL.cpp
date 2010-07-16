@@ -1160,7 +1160,8 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
         return NS_OK;
     }
 
-    nsAutoArrayPtr<char> name(new char[len]);
+    nsAutoArrayPtr<char> name(new char[len + 3]); // +3 because we might have to append "[0]", see below
+
     PRInt32 attrsize = 0;
     PRUint32 attrtype = 0;
 
@@ -1168,6 +1169,25 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
     if (len == 0 || attrsize == 0 || attrtype == 0) {
         *retval = nsnull;
         return NS_OK;
+    }
+
+    // OpenGL ES 2.0 specifies that if foo is a uniform array, GetActiveUniform returns its name as "foo[0]".
+    // See section 2.10 page 35 in the OpenGL ES 2.0.24 specification:
+    //
+    // > If the active uniform is an array, the uniform name returned in name will always
+    // > be the name of the uniform array appended with "[0]".
+    //
+    // There is no such requirement in the OpenGL (non-ES) spec and indeed we have OpenGL implementations returning
+    // "foo" instead of "foo[0]". So, when implementing WebGL on top of desktop OpenGL, we must check if the
+    // returned name ends in [0], and if it doesn't, append that.
+    //
+    // In principle we don't need to do that on OpenGL ES, but this is such a tricky difference between the ES and non-ES
+    // specs that it seems probable that some ES implementers will overlook it. Since the work-around is quite cheap,
+    // we do it unconditionally.
+    if (attrsize > 1 && name[len-1] != ']') {
+        name[len++] = '[';
+        name[len++] = '0';
+        name[len++] = ']';
     }
 
     JSObjectHelper retobj(&js);
@@ -1907,14 +1927,37 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, n
     // one matches the given uniform location.
     GLenum uniformType = 0;
     nsAutoArrayPtr<GLchar> uniformName(new GLchar[uniformNameMaxLength]);
+    // this buffer has 16 more bytes to be able to store [index] at the end.
+    nsAutoArrayPtr<GLchar> uniformNameBracketIndex(new GLchar[uniformNameMaxLength + 16]);
+
     GLint index;
     for (index = 0; index < uniforms; ++index) {
-        GLsizei dummyLength;
-        GLint dummySize;
-        gl->fGetActiveUniform(progname, index, uniformNameMaxLength, &dummyLength,
-                              &dummySize, &uniformType, uniformName);
+        GLsizei length;
+        GLint size;
+        gl->fGetActiveUniform(progname, index, uniformNameMaxLength, &length,
+                              &size, &uniformType, uniformName);
         if (gl->fGetUniformLocation(progname, uniformName) == location->Location())
             break;
+
+        // now we handle the case of array uniforms. In that case, fGetActiveUniform returned as 'size'
+        // the biggest index used plus one, so we need to loop over that. The 0 index has already been handled above,
+        // so we can start at one. For each index, we construct the string uniformName + "[" + index + "]".
+        if (size > 1) {
+            bool found_it = false;
+            if (uniformName[length - 1] == ']') { // if uniformName ends in [0]
+                // remove the [0] at the end
+                length -= 3;
+                uniformName[length] = 0;
+            }
+            for (GLint arrayIndex = 1; arrayIndex < size; arrayIndex++) {
+                sprintf(uniformNameBracketIndex.get(), "%s[%d]", uniformName.get(), arrayIndex);
+                if (gl->fGetUniformLocation(progname, uniformNameBracketIndex) == location->Location()) {
+                    found_it = true;
+                    break;
+                }
+            }
+            if (found_it) break;
+        }
     }
 
     if (index == uniforms)
@@ -2602,9 +2645,9 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
     if (!GetConcreteObject(info, ploc, &location_object))               \
         return NS_OK;                                                   \
     if (mCurrentProgram != location_object->Program())                  \
-        return ErrorInvalidValue("%s: this uniform location corresponds to another program", info); \
+        return ErrorInvalidOperation("%s: this uniform location doesn't correspond to the current program", info); \
     if (mCurrentProgram->Generation() != location_object->ProgramGeneration())            \
-        return ErrorInvalidValue("%s: This uniform location is obsolete since the program has been relinked", info); \
+        return ErrorInvalidOperation("%s: This uniform location is obsolete since the program has been relinked", info); \
     GLint location = location_object->Location();
 
 #define SIMPLE_ARRAY_METHOD_UNIFORM(name, cnt, arrayType, ptrType)      \
