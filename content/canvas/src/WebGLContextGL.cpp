@@ -150,11 +150,9 @@ WebGLContext::AttachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
     WebGLuint progname, shadername;
     WebGLProgram *program;
     WebGLShader *shader;
-    if (!GetConcreteObjectAndGLName(pobj, &program, &progname))
-        return ErrorInvalidOperation("AttachShader: invalid program");
-
-    if (!GetConcreteObjectAndGLName(shobj, &shader, &shadername))
-        return ErrorInvalidOperation("AttachShader: invalid shader");
+    if (!GetConcreteObjectAndGLName("attachShader: program", pobj, &program, &progname) ||
+        !GetConcreteObjectAndGLName("attachShader: shader", shobj, &shader, &shadername))
+        return NS_OK;
 
     if (!program->AttachShader(shader))
         return ErrorInvalidOperation("AttachShader: shader is already attached");
@@ -171,8 +169,8 @@ NS_IMETHODIMP
 WebGLContext::BindAttribLocation(nsIWebGLProgram *pobj, WebGLuint location, const nsAString& name)
 {
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
-        return ErrorInvalidOperation("BindAttribLocation: invalid program");
+    if (!GetGLName<WebGLProgram>("bindAttribLocation: program", pobj, &progname))
+        return NS_OK;
 
     if (name.IsEmpty())
         return ErrorInvalidValue("BindAttribLocation: name can't be null or empty");
@@ -190,8 +188,8 @@ WebGLContext::BindBuffer(WebGLenum target, nsIWebGLBuffer *bobj)
     WebGLuint bufname;
     WebGLBuffer* buf;
     PRBool isNull;
-    if (!GetConcreteObjectAndGLName(bobj, &buf, &bufname, &isNull))
-        return ErrorInvalidOperation("BindBuffer: invalid buffer");
+    if (!GetConcreteObjectAndGLName("bindBuffer", bobj, &buf, &bufname, &isNull))
+        return NS_OK;
 
     if (target == LOCAL_GL_ARRAY_BUFFER) {
         mBoundArrayBuffer = buf;
@@ -224,8 +222,8 @@ WebGLContext::BindFramebuffer(WebGLenum target, nsIWebGLFramebuffer *fbobj)
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorInvalidOperation("BindFramebuffer: target must be GL_FRAMEBUFFER");
 
-    if (!GetConcreteObjectAndGLName(fbobj, &wfb, &framebuffername, &isNull))
-        return ErrorInvalidOperation("BindFramebuffer: invalid framebuffer");
+    if (!GetConcreteObjectAndGLName("bindFramebuffer", fbobj, &wfb, &framebuffername, &isNull))
+        return NS_OK;
 
     MakeContextCurrent();
 
@@ -246,8 +244,8 @@ WebGLContext::BindRenderbuffer(WebGLenum target, nsIWebGLRenderbuffer *rbobj)
     if (target != LOCAL_GL_RENDERBUFFER)
         return ErrorInvalidEnum("BindRenderbuffer: target must be GL_RENDERBUFFER");
 
-    if (!GetConcreteObjectAndGLName(rbobj, &wrb, &renderbuffername, &isNull))
-        return ErrorInvalidOperation("BindRenderbuffer: invalid renderbuffer");
+    if (!GetConcreteObjectAndGLName("bindRenderBuffer", rbobj, &wrb, &renderbuffername, &isNull))
+        return NS_OK;
 
     MakeContextCurrent();
 
@@ -264,8 +262,8 @@ WebGLContext::BindTexture(WebGLenum target, nsIWebGLTexture *tobj)
     WebGLuint texturename;
     WebGLTexture *tex;
     PRBool isNull;
-    if (!GetConcreteObjectAndGLName(tobj, &tex, &texturename, &isNull))
-        return ErrorInvalidOperation("BindTexture: invalid texture");
+    if (!GetConcreteObjectAndGLName("bindTexture", tobj, &tex, &texturename, &isNull))
+        return NS_OK;
 
     if (target == LOCAL_GL_TEXTURE_2D) {
         mBound2DTextures[mActiveTexture] = tex;
@@ -665,8 +663,8 @@ WebGLContext::DeleteBuffer(nsIWebGLBuffer *bobj)
     WebGLuint bufname;
     WebGLBuffer *buf;
     PRBool isNull, isDeleted;
-    if (!GetConcreteObjectAndGLName(bobj, &buf, &bufname, &isNull, &isDeleted))
-        return ErrorInvalidOperation("DeleteBuffer: invalid buffer");
+    if (!GetConcreteObjectAndGLName("deleteBuffer", bobj, &buf, &bufname, &isNull, &isDeleted))
+        return NS_OK;
 
     if (isNull || isDeleted)
         return NS_OK;
@@ -686,8 +684,8 @@ WebGLContext::DeleteFramebuffer(nsIWebGLFramebuffer *fbobj)
     WebGLuint fbufname;
     WebGLFramebuffer *fbuf;
     PRBool isNull, isDeleted;
-    if (!GetConcreteObjectAndGLName(fbobj, &fbuf, &fbufname, &isNull, &isDeleted))
-        return ErrorInvalidOperation("DeleteFramebuffer: invalid framebuffer");
+    if (!GetConcreteObjectAndGLName("deleteFramebuffer", fbobj, &fbuf, &fbufname, &isNull, &isDeleted))
+        return NS_OK;
 
     if (isNull || isDeleted)
         return NS_OK;
@@ -707,8 +705,8 @@ WebGLContext::DeleteRenderbuffer(nsIWebGLRenderbuffer *rbobj)
     WebGLuint rbufname;
     WebGLRenderbuffer *rbuf;
     PRBool isNull, isDeleted;
-    if (!GetConcreteObjectAndGLName(rbobj, &rbuf, &rbufname, &isNull, &isDeleted))
-        return ErrorInvalidOperation("DeleteRenderbuffer: invalid renderbuffer");
+    if (!GetConcreteObjectAndGLName("deleteRenderbuffer", rbobj, &rbuf, &rbufname, &isNull, &isDeleted))
+        return NS_OK;
 
     if (isNull || isDeleted)
         return NS_OK;
@@ -740,8 +738,8 @@ WebGLContext::DeleteTexture(nsIWebGLTexture *tobj)
     WebGLuint texname;
     WebGLTexture *tex;
     PRBool isNull, isDeleted;
-    if (!GetConcreteObjectAndGLName(tobj, &tex, &texname, &isNull, &isDeleted))
-        return ErrorInvalidOperation("DeleteTexture: invalid texture");
+    if (!GetConcreteObjectAndGLName("deleteTexture", tobj, &tex, &texname, &isNull, &isDeleted))
+        return NS_OK;
 
     if (isNull || isDeleted)
         return NS_OK;
@@ -761,8 +759,8 @@ WebGLContext::DeleteProgram(nsIWebGLProgram *pobj)
     WebGLuint progname;
     WebGLProgram *prog;
     PRBool isNull, isDeleted;
-    if (!GetConcreteObjectAndGLName(pobj, &prog, &progname, &isNull, &isDeleted))
-        return ErrorInvalidOperation("DeleteProgram: invalid program");
+    if (!GetConcreteObjectAndGLName("deleteProgram", pobj, &prog, &progname, &isNull, &isDeleted))
+        return NS_OK;
 
     if (isNull || isDeleted)
         return NS_OK;
@@ -782,8 +780,8 @@ WebGLContext::DeleteShader(nsIWebGLShader *sobj)
     WebGLuint shadername;
     WebGLShader *shader;
     PRBool isNull, isDeleted;
-    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername, &isNull, &isDeleted))
-        return ErrorInvalidOperation("DeleteShader: invalid shader");
+    if (!GetConcreteObjectAndGLName("deleteShader", sobj, &shader, &shadername, &isNull, &isDeleted))
+        return NS_OK;
 
     if (isNull || isDeleted)
         return NS_OK;
@@ -803,11 +801,9 @@ WebGLContext::DetachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
     WebGLuint progname, shadername;
     WebGLProgram *program;
     WebGLShader *shader;
-    if (!GetConcreteObjectAndGLName(pobj, &program, &progname))
-        return ErrorInvalidOperation("DetachShader: invalid program");
-
-    if (!GetConcreteObjectAndGLName(shobj, &shader, &shadername))
-        return ErrorInvalidOperation("DetachShader: invalid shader");
+    if (!GetConcreteObjectAndGLName("detachShader: program", pobj, &program, &progname) ||
+        !GetConcreteObjectAndGLName("detachShader: shader", shobj, &shader, &shadername))
+        return NS_OK;
 
     if (!program->DetachShader(shader))
         return ErrorInvalidOperation("DetachShader: shader is not attached");
@@ -1020,8 +1016,8 @@ WebGLContext::FramebufferRenderbuffer(WebGLenum target, WebGLenum attachment, We
     PRBool isNull;
     WebGLRenderbuffer *wrb;
 
-    if (!GetConcreteObjectAndGLName(rbobj, &wrb, &renderbuffername, &isNull))
-        return ErrorInvalidOperation("FramebufferRenderbuffer: invalid renderbuffer");
+    if (!GetConcreteObjectAndGLName("framebufferRenderbuffer: renderbuffer", rbobj, &wrb, &renderbuffername, &isNull))
+        return NS_OK;
 
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorInvalidEnum("FramebufferRenderbuffer: target must be GL_FRAMEBUFFER");
@@ -1059,8 +1055,8 @@ WebGLContext::FramebufferTexture2D(WebGLenum target,
     PRBool isNull;
     WebGLTexture *wtex;
 
-    if (!GetConcreteObjectAndGLName(tobj, &wtex, &texturename, &isNull))
-        return ErrorInvalidOperation("FramebufferTexture2D: invalid texture");
+    if (!GetConcreteObjectAndGLName("framebufferTexture2D: texture", tobj, &wtex, &texturename, &isNull))
+        return NS_OK;
 
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorInvalidEnum("FramebufferTexture2D: target must be GL_FRAMEBUFFER");
@@ -1117,8 +1113,8 @@ NS_IMETHODIMP
 WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLActiveInfo **retval)
 {
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
-        return ErrorInvalidOperation("GetActiveAttrib: invalid program");
+    if (!GetGLName<WebGLProgram>("getActiveAttrib: program", pobj, &progname))
+        return NS_OK;
 
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1168,8 +1164,8 @@ NS_IMETHODIMP
 WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLActiveInfo **retval)
 {
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
-        return ErrorInvalidOperation("GetActiveUniform: invalid program");
+    if (!GetGLName<WebGLProgram>("getActiveUniform: program", pobj, &progname))
+        return NS_OK;
 
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1208,8 +1204,8 @@ NS_IMETHODIMP
 WebGLContext::GetAttachedShaders(nsIWebGLProgram *pobj, nsIVariant **retval)
 {
     WebGLProgram *prog;
-    if (!GetConcreteObject(pobj, &prog))
-        return ErrorInvalidOperation("GetAttachedShaders: invalid program");
+    if (!GetConcreteObject("getAttachedShaders", pobj, &prog))
+        return NS_OK;
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
@@ -1242,8 +1238,8 @@ WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
                                 PRInt32 *retval)
 {
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
-        return ErrorInvalidOperation("GetAttribLocation: invalid program");
+    if (!GetGLName<WebGLProgram>("getAttribLocation: program", pobj, &progname))
+        return NS_OK;
 
     MakeContextCurrent();
     *retval = gl->fGetAttribLocation(progname, NS_LossyConvertUTF16toASCII(name).get());
@@ -1665,8 +1661,8 @@ NS_IMETHODIMP
 WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVariant **retval)
 {
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
-        return ErrorInvalidOperation("GetProgramParameter: invalid program");
+    if (!GetGLName<WebGLProgram>("getProgramParameter: program", pobj, &progname))
+        return NS_OK;
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
@@ -1710,8 +1706,8 @@ NS_IMETHODIMP
 WebGLContext::GetProgramInfoLog(nsIWebGLProgram *pobj, nsAString& retval)
 {
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
-        return ErrorInvalidOperation("GetProgramInfoLog: invalid program");
+    if (!GetGLName<WebGLProgram>("getProgramInfoLog: program", pobj, &progname))
+        return NS_OK;
 
     MakeContextCurrent();
 
@@ -1903,12 +1899,12 @@ WebGLContext::GetUniform(nsIWebGLProgram *pobj, nsIWebGLUniformLocation *ploc, n
 {
     WebGLuint progname;
     WebGLProgram *prog;
-    if (!GetConcreteObjectAndGLName(pobj, &prog, &progname))
-        return ErrorInvalidOperation("GetUniform: invalid program");
+    if (!GetConcreteObjectAndGLName("getUniform: program", pobj, &prog, &progname))
+        return NS_OK;
 
     WebGLUniformLocation *location;
-    if (!GetConcreteObject(ploc, &location))
-        return ErrorInvalidValue("GetUniform: invalid uniform location");
+    if (!GetConcreteObject("getUniform: location", ploc, &location))
+        return NS_OK;
 
     if (location->Program() != prog)
         return ErrorInvalidValue("GetUniform: this uniform location corresponds to another program");
@@ -1997,8 +1993,8 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
 {
     WebGLuint progname;
     WebGLProgram *prog;
-    if (!GetConcreteObjectAndGLName(pobj, &prog, &progname))
-        return ErrorInvalidOperation("GetUniformLocation: invalid program");
+    if (!GetConcreteObjectAndGLName("getUniformLocation: program", pobj, &prog, &progname))
+        return NS_OK;
 
     MakeContextCurrent();
 
@@ -2074,7 +2070,7 @@ NS_IMETHODIMP
 WebGLContext::IsBuffer(nsIWebGLBuffer *bobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CheckConversion<WebGLBuffer>(bobj, 0, &isDeleted) && !isDeleted;
+    *retval = CanGetConcreteObject<WebGLBuffer>("isBuffer", bobj, 0, &isDeleted) && !isDeleted;
 
     return NS_OK;
 }
@@ -2083,7 +2079,7 @@ NS_IMETHODIMP
 WebGLContext::IsFramebuffer(nsIWebGLFramebuffer *fbobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CheckConversion<WebGLFramebuffer>(fbobj, 0, &isDeleted) && !isDeleted;
+    *retval = CanGetConcreteObject<WebGLFramebuffer>("isFramebuffer", fbobj, 0, &isDeleted) && !isDeleted;
 
     return NS_OK;
 }
@@ -2092,7 +2088,7 @@ NS_IMETHODIMP
 WebGLContext::IsProgram(nsIWebGLProgram *pobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CheckConversion<WebGLProgram>(pobj, 0, &isDeleted) && !isDeleted;
+    *retval = CanGetConcreteObject<WebGLProgram>("isProgram", pobj, 0, &isDeleted) && !isDeleted;
 
     return NS_OK;
 }
@@ -2101,7 +2097,7 @@ NS_IMETHODIMP
 WebGLContext::IsRenderbuffer(nsIWebGLRenderbuffer *rbobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CheckConversion<WebGLRenderbuffer>(rbobj, 0, &isDeleted) && !isDeleted;
+    *retval = CanGetConcreteObject<WebGLRenderbuffer>("isRenderBuffer", rbobj, 0, &isDeleted) && !isDeleted;
 
     return NS_OK;
 }
@@ -2110,7 +2106,7 @@ NS_IMETHODIMP
 WebGLContext::IsShader(nsIWebGLShader *sobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CheckConversion<WebGLShader>(sobj, 0, &isDeleted) && !isDeleted;
+    *retval = CanGetConcreteObject<WebGLShader>("isShader", sobj, 0, &isDeleted) && !isDeleted;
 
     return NS_OK;
 }
@@ -2119,7 +2115,7 @@ NS_IMETHODIMP
 WebGLContext::IsTexture(nsIWebGLTexture *tobj, WebGLboolean *retval)
 {
     PRBool isDeleted;
-    *retval = CheckConversion<WebGLTexture>(tobj, 0, &isDeleted) && !isDeleted;
+    *retval = CanGetConcreteObject<WebGLTexture>("isTexture", tobj, 0, &isDeleted) && !isDeleted;
 
     return NS_OK;
 }
@@ -2144,8 +2140,8 @@ WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
 {
     GLuint progname;
     WebGLProgram *program;
-    if (!GetConcreteObjectAndGLName(pobj, &program, &progname))
-        return ErrorInvalidOperation("LinkProgram: invalid program");
+    if (!GetConcreteObjectAndGLName("linkProgram", pobj, &program, &progname))
+        return NS_OK;
 
     if (!program->NextGeneration())
         return NS_ERROR_FAILURE;
@@ -2621,14 +2617,14 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
     return NS_OK;
 }
 
-#define OBTAIN_UNIFORM_LOCATION                                         \
+#define OBTAIN_UNIFORM_LOCATION(info)                                   \
     WebGLUniformLocation *location_object;                              \
-    if (!GetConcreteObject(ploc, &location_object))                     \
-        return ErrorInvalidValue("Invalid uniform location parameter"); \
+    if (!GetConcreteObject(info, ploc, &location_object))               \
+        return NS_OK;                                                   \
     if (mCurrentProgram != location_object->Program())                  \
-        return ErrorInvalidValue("This uniform location corresponds to another program"); \
+        return ErrorInvalidValue("%s: this uniform location corresponds to another program", info); \
     if (mCurrentProgram->Generation() != location_object->ProgramGeneration())            \
-        return ErrorInvalidValue("This uniform location is obsolete since the program has been relinked"); \
+        return ErrorInvalidValue("%s: This uniform location is obsolete since the program has been relinked", info); \
     GLint location = location_object->Location();
 
 #define SIMPLE_ARRAY_METHOD_UNIFORM(name, cnt, arrayType, ptrType)      \
@@ -2639,7 +2635,7 @@ WebGLContext::name(PRInt32 dummy) {                                     \
 NS_IMETHODIMP                                                           \
 WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, js::TypedArray *wa) \
 {                                                                       \
-    OBTAIN_UNIFORM_LOCATION                                             \
+    OBTAIN_UNIFORM_LOCATION(#name ": location")                         \
     if (!wa || wa->type != js::TypedArray::arrayType)                   \
         return ErrorInvalidOperation("array must be " #arrayType);      \
     if (wa->length == 0 || wa->length % cnt != 0)                       \
@@ -2674,7 +2670,7 @@ WebGLContext::name(PRInt32 dummy) {                                     \
 NS_IMETHODIMP                                                           \
 WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, WebGLboolean transpose, js::TypedArray *wa)  \
 {                                                                       \
-    OBTAIN_UNIFORM_LOCATION                                             \
+    OBTAIN_UNIFORM_LOCATION(#name ": location")                         \
     if (!wa || wa->type != js::TypedArray::arrayType)                   \
         return ErrorInvalidOperation("array must be " #arrayType);      \
     if (wa->length == 0 || wa->length % (dim*dim) != 0)                 \
@@ -2686,25 +2682,25 @@ WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, WebGLboolean transpose
 
 #define SIMPLE_METHOD_UNIFORM_1(glname, name, t1)        \
 NS_IMETHODIMP WebGLContext::name(nsIWebGLUniformLocation *ploc, t1 a1) {      \
-    OBTAIN_UNIFORM_LOCATION \
+    OBTAIN_UNIFORM_LOCATION(#name ": location") \
     MakeContextCurrent(); gl->f##glname(location, a1); return NS_OK; \
 }
 
 #define SIMPLE_METHOD_UNIFORM_2(glname, name, t1, t2)        \
 NS_IMETHODIMP WebGLContext::name(nsIWebGLUniformLocation *ploc, t1 a1, t2 a2) {      \
-    OBTAIN_UNIFORM_LOCATION \
+    OBTAIN_UNIFORM_LOCATION(#name ": location") \
     MakeContextCurrent(); gl->f##glname(location, a1, a2); return NS_OK; \
 }
 
 #define SIMPLE_METHOD_UNIFORM_3(glname, name, t1, t2, t3)        \
 NS_IMETHODIMP WebGLContext::name(nsIWebGLUniformLocation *ploc, t1 a1, t2 a2, t3 a3) {      \
-    OBTAIN_UNIFORM_LOCATION \
+    OBTAIN_UNIFORM_LOCATION(#name ": location") \
     MakeContextCurrent(); gl->f##glname(location, a1, a2, a3); return NS_OK; \
 }
 
 #define SIMPLE_METHOD_UNIFORM_4(glname, name, t1, t2, t3, t4)        \
 NS_IMETHODIMP WebGLContext::name(nsIWebGLUniformLocation *ploc, t1 a1, t2 a2, t3 a3, t4 a4) {      \
-    OBTAIN_UNIFORM_LOCATION \
+    OBTAIN_UNIFORM_LOCATION(#name ": location") \
     MakeContextCurrent(); gl->f##glname(location, a1, a2, a3, a4); return NS_OK; \
 }
 
@@ -2748,8 +2744,8 @@ WebGLContext::UseProgram(nsIWebGLProgram *pobj)
     WebGLProgram *prog;
     WebGLuint progname;
     PRBool isNull;
-    if (!GetConcreteObjectAndGLName(pobj, &prog, &progname, &isNull))
-        return ErrorInvalidOperation("UseProgram: invalid program object");
+    if (!GetConcreteObjectAndGLName("useProgram", pobj, &prog, &progname, &isNull))
+        return NS_OK;
 
     MakeContextCurrent();
 
@@ -2770,8 +2766,8 @@ NS_IMETHODIMP
 WebGLContext::ValidateProgram(nsIWebGLProgram *pobj)
 {
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>(pobj, &progname))
-        return ErrorInvalidOperation("ValidateProgram: Invalid program object");
+    if (!GetGLName<WebGLProgram>("validateProgram", pobj, &progname))
+        return NS_OK;
 
     MakeContextCurrent();
 
@@ -2826,9 +2822,9 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
 {
     WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername))
-        return ErrorInvalidOperation("CompileShader: invalid shader");
 
+    if (!GetGLName<WebGLShader>("compileShader", sobj, &shadername))
+        return NS_OK;
     MakeContextCurrent();
 
 #if !defined(USE_GLES2) && defined(USE_ANGLE)
@@ -2884,8 +2880,8 @@ WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname, nsIVaria
 {
     WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername))
-        return ErrorInvalidOperation("GetShaderParameter: invalid shader");
+    if (!GetGLName<WebGLShader>("getShaderParameter: shader", sobj, &shadername))
+        return NS_OK;
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_TRUE(wrval, NS_ERROR_FAILURE);
@@ -2929,8 +2925,8 @@ WebGLContext::GetShaderInfoLog(nsIWebGLShader *sobj, nsAString& retval)
 {
     WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername))
-        return ErrorInvalidOperation("GetShaderInfoLog: invalid shader");
+    if (!GetGLName<WebGLShader>("getShaderInfoLog: shader", sobj, &shadername))
+        return NS_OK;
 
     const nsCString& tlog = shader->TranslationLog();
     if (!tlog.IsVoid()) {
@@ -2967,8 +2963,8 @@ WebGLContext::GetShaderSource(nsIWebGLShader *sobj, nsAString& retval)
 {
     WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername))
-        return ErrorInvalidOperation("GetShaderSource: invalid shader");
+    if (!GetGLName<WebGLShader>("getShaderSource: shader", sobj, &shadername))
+        return NS_OK;
 
     CopyASCIItoUTF16(shader->Source(), retval);
 
@@ -2980,9 +2976,9 @@ WebGLContext::ShaderSource(nsIWebGLShader *sobj, const nsAString& source)
 {
     WebGLShader *shader;
     WebGLuint shadername;
-    if (!GetConcreteObjectAndGLName(sobj, &shader, &shadername))
-        return ErrorInvalidOperation("ShaderSource: invalid shader");
-    
+    if (!GetGLName<WebGLShader>("shaderSource: shader", sobj, &shadername))
+        return NS_OK;
+
     shader->SetSource(NS_LossyConvertUTF16toASCII(source));
 
     shader->SetNeedsTranslation();
