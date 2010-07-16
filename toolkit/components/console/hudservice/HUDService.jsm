@@ -1988,34 +1988,29 @@ function HUDConsole(aHeadsUpDisplay)
 HUDConsole.prototype = {
   created: null,
 
-  log: function console_log(aMessage)
+  log: function console_log()
   {
-    this.message = aMessage;
-    this.sendToHUDService("log");
+    this.sendToHUDService("log", arguments);
   },
 
-  info: function console_info(aMessage)
+  info: function console_info()
   {
-    this.message = aMessage;
-    this.sendToHUDService("info");
+    this.sendToHUDService("info", arguments);
   },
 
-  warn: function console_warn(aMessage)
+  warn: function console_warn()
   {
-    this.message = aMessage;
-    this.sendToHUDService("warn");
+    this.sendToHUDService("warn", arguments);
   },
 
-  error: function console_error(aMessage)
+  error: function console_error()
   {
-    this.message = aMessage;
-    this.sendToHUDService("error");
+    this.sendToHUDService("error", arguments);
   },
 
-  exception: function console_exception(aMessage)
+  exception: function console_exception()
   {
-    this.message = aMessage;
-    this.sendToHUDService("exception");
+    this.sendToHUDService("exception", arguments);
   },
 
   timeStamp: function Console_timeStamp()
@@ -2023,7 +2018,7 @@ HUDConsole.prototype = {
     return ConsoleUtils.timeStamp(new Date());
   },
 
-  sendToHUDService: function console_send(aLevel)
+  sendToHUDService: function console_send(aLevel, aArguments)
   {
     // check to see if logging is on for this level before logging!
     var filterState = HUDService.getFilterState(this.hudId, aLevel);
@@ -2041,8 +2036,13 @@ HUDConsole.prototype = {
 
     messageNode.setAttribute("class", klass);
 
+    let argsArray = [];
+    for (var i = 0; i < aArguments.length; i++) {
+      argsArray.push(aArguments[i]);
+    }
+
     let timestampedMessage =
-      this.chromeDocument.createTextNode(ts + ": " + this.message);
+      this.chromeDocument.createTextNode(ts + ": " + argsArray.join(" "));
 
     messageNode.appendChild(timestampedMessage);
     // need a constructor here to properly set all attrs
