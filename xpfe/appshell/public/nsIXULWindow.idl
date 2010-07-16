@@ -149,10 +149,4 @@ interface nsIXULWindow : nsISupports
    * docshell could cause problems.
    */
   [noscript] void applyChromeFlags();
-
-  /**
-   * This will return true if this nsIXULWindow will call show on its
-   * widget once it has finished loading chrome.
-   */
-  PRBool willShowWindow();
 };
