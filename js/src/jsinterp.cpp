@@ -268,36 +268,17 @@ JS_STATIC_INTERPRET JSObject *
 ComputeGlobalThis(JSContext *cx, Value *argv)
 {
     /* Find the inner global. */
-    JSObject *inner;
-    if (argv[-2].isPrimitive() || !argv[-2].toObject().getParent()) {
-        inner = cx->globalObject;
-        OBJ_TO_INNER_OBJECT(cx, inner);
-        if (!inner)
-            return NULL;
-    } else {
-        inner = argv[-2].toObject().getGlobal();
-    }
-    JS_ASSERT(inner->getClass()->flags & JSCLASS_IS_GLOBAL);
-
-    JSObject *scope = JS_GetGlobalForScopeChain(cx);
-    if (scope == inner) {
-        /*
-         * The outer object has not moved along to a new inner object.
-         * This means we qualify for the cache slot in the global.
-         */
-        const Value &thisv = inner->getReservedSlot(JSRESERVED_GLOBAL_THIS);
-        if (!thisv.isUndefined()) {
-            argv[-1] = thisv;
-            return thisv.toObjectOrNull();
-        }
-
-        JSObject *stuntThis = CallThisObjectHook(cx, inner, argv);
-        JS_ALWAYS_TRUE(js_SetReservedSlot(cx, inner, JSRESERVED_GLOBAL_THIS,
-                                          ObjectOrNullValue(stuntThis)));
-        return stuntThis;
+    JSObject *global = argv[-2].toObject().getGlobal();
+    const Value &thisv = global->getReservedSlot(JSRESERVED_GLOBAL_THIS);
+    if (!thisv.isUndefined()) {
+        argv[-1] = thisv;
+        return thisv.toObjectOrNull();
     }
 
-    return CallThisObjectHook(cx, inner, argv);
+    JSObject *stuntThis = CallThisObjectHook(cx, global, argv);
+    JS_ALWAYS_TRUE(js_SetReservedSlot(cx, global, JSRESERVED_GLOBAL_THIS,
+                                      ObjectOrNullValue(stuntThis)));
+    return stuntThis;
 }
 
 namespace js {
