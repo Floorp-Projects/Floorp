@@ -51,18 +51,6 @@ var TabCandy = {
     return (window.document.getElementById("tab-candy-deck").selectedIndex == 1);
   },
   
-  getVisibleTabs: function() {
-    let visibleTabs = [];
-    let length = gBrowser.tabs.length;
-
-    for (let i = 0; i < length; i++) {
-      if (!gBrowser.tabs[i].collapsed) {
-        visibleTabs.push(gBrowser.tabs[i]);
-      } 
-    }
-    return visibleTabs;
-  },
-  
   getWindowTitle: function() {
     var brandBundle = document.getElementById("bundle_brand");
     var brandShortName = brandBundle.getString("brandShortName");
