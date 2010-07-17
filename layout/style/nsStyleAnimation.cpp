@@ -798,7 +798,7 @@ AppendTransformFunction(nsCSSKeyword aTransformFunction,
  *      shear (K) by it.
  *
  *  (6) At this point, A * D - B * C is either 1 or -1.  If it is -1,
- *      negate the XY shear (K), the X scale (Sy), and A, B, C, and D.
+ *      negate the XY shear (K), the X scale (Sx), and A, B, C, and D.
  *      (Alternatively, we could negate the XY shear (K) and the Y scale
  *      (Sy).)
  *
