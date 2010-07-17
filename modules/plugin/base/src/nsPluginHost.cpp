@@ -1127,8 +1127,8 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
 // Called by full-page case
 NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
                                                       nsIURI* aURI,
-                                                      nsIStreamListener *&aStreamListener,
-                                                      nsIPluginInstanceOwner *aOwner)
+                                                      nsIPluginInstanceOwner *aOwner,
+                                                      nsIStreamListener **aStreamListener)
 {
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec;
@@ -1147,7 +1147,7 @@ NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
     if (!pluginTag || !pluginTag->mIsJavaPlugin) {
       nsCOMPtr<nsIPluginInstance> instanceCOMPtr;
       aOwner->GetInstance(getter_AddRefs(instanceCOMPtr));
-      NewFullPagePluginStream(aStreamListener, aURI, static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get()));
+      NewFullPagePluginStream(aURI, static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get()), aStreamListener);
     }
     return NS_OK;
   }
@@ -1171,7 +1171,7 @@ NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
       if (window->window)
         window->CallSetWindow(instanceCOMPtr);
 
-      rv = NewFullPagePluginStream(aStreamListener, aURI, instance);
+      rv = NewFullPagePluginStream(aURI, instance, aStreamListener);
 
       // If we've got a native window, the let the plugin know about it.
       if (window->window)
@@ -3214,27 +3214,24 @@ nsresult nsPluginHost::NewEmbeddedPluginStream(nsIURI* aURL,
 }
 
 // Called by InstantiateFullPagePlugin()
-nsresult nsPluginHost::NewFullPagePluginStream(nsIStreamListener *&aStreamListener,
-                                               nsIURI* aURI,
-                                               nsNPAPIPluginInstance *aInstance)
+nsresult nsPluginHost::NewFullPagePluginStream(nsIURI* aURI,
+                                               nsNPAPIPluginInstance *aInstance,
+                                               nsIStreamListener **aStreamListener)
 {
-  nsPluginStreamListenerPeer  *listener = new nsPluginStreamListenerPeer();
+  NS_ASSERTION(aStreamListener, "Stream listener out param cannot be null");
+
+  nsRefPtr<nsPluginStreamListenerPeer> listener = new nsPluginStreamListenerPeer();
   if (!listener)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv;
+  nsresult rv = listener->InitializeFullPage(aURI, aInstance);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  rv = listener->InitializeFullPage(aURI, aInstance);
+  listener.forget(aStreamListener);
 
-  aStreamListener = listener;
-  NS_ADDREF(listener);
-
-  // add peer to list of stream peers for this instance
-  nsPluginInstanceTag * p = FindInstanceTag(aInstance);
-  if (p)
-    p->mStreams.AppendObject(listener);
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
