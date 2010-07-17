@@ -390,7 +390,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: save
-  // Saves this group to persistant storage. 
+  // Saves this group to persistent storage. 
   save: function() {
     if (!this._inited) // too soon to save now
       return;
@@ -1248,12 +1248,14 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
           return;
         
         // Zoom into the last-active tab when the group
-        // is clicked.
-        /*var activeTab = self.getActiveTab();
-        if ( activeTab ) 
-          activeTab.zoomIn();
-        else if (self.getChild(0))
-          self.getChild(0).zoomIn();*/
+        // is clicked, but only for non-stacked groups.
+        var activeTab = self.getActiveTab();
+        if( !self._isStacked ){
+          if ( activeTab ) 
+            activeTab.zoomIn();
+          else if (self.getChild(0))
+            self.getChild(0).zoomIn();          
+        }
           
         self._mouseDown = null;
     });
@@ -1447,7 +1449,7 @@ window.Groups = {
 
   // ----------
   // Function: getStorageData
-  // Returns an object for saving Groups state to persistant storage. 
+  // Returns an object for saving Groups state to persistent storage. 
   getStorageData: function() {
     var data = {nextID: this.nextID, groups: []};
     this.groups.forEach(function(group) {
@@ -1547,7 +1549,7 @@ window.Groups = {
   
   // ----------
   // Function: groupStorageSanity
-  // Given persistant storage data for a group, returns true if it appears to not be damaged.
+  // Given persistent storage data for a group, returns true if it appears to not be damaged.
   groupStorageSanity: function(groupData) {
     // TODO: check everything 
     var sane = true;

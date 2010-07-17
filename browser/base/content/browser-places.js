@@ -486,7 +486,7 @@ var PlacesCommandHook = {
     var tabList = [];
     var seenURIs = {};
 
-    var tabs = TabCandy.getVisibleTabs();
+    var tabs = gBrowser.visibleTabs;
     for (var i = 0; i < tabs.length; ++i) {
       let uri = tabs[i].linkedBrowser.currentURI;
 

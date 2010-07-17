@@ -51,9 +51,15 @@ const Cr = Components.results;
 // Singelton 
 var XULApp = {
   appWindowType: "navigator:browser",
+
+  // ---------- 
+  // Function: tabStripForWindow
   tabStripForWindow: function(aWindow) {
     return aWindow.document.getElementById("content").mStrip;
   },
+
+  // ---------- 
+  // Function: openTab
   openTab: function(aUrl, aInBackground) {
     var window = this.mostRecentAppWindow;
     var tabbrowser = window.getBrowser();
@@ -61,6 +67,9 @@ var XULApp = {
     if (!aInBackground)
       tabbrowser.selectedTab = tab;
   },
+
+  // ---------- 
+  // Function: getBrowserFromContentWindow
   getBrowserFromContentWindow: function(aMainWindow, aWindow) {
     var browsers = aMainWindow.gBrowser.browsers;
     for (var i = 0; i < browsers.length; i++) {
@@ -77,6 +86,8 @@ function Dictionary() {
   var keys = [];
   var values = [];
 
+  // ---------- 
+  // Function: set
   this.set = function set(key, value) {
     var id = keys.indexOf(key);
     if (id == -1) {
@@ -86,6 +97,8 @@ function Dictionary() {
       values[id] = value;
   };
 
+  // ---------- 
+  // Function: get
   this.get = function get(key, defaultValue) {
     if (defaultValue === undefined)
       defaultValue = null;
@@ -95,6 +108,8 @@ function Dictionary() {
     return values[id];
   };
 
+  // ---------- 
+  // Function: remove
   this.remove = function remove(key) {
     var id = keys.indexOf(key);
     if (id == -1)
@@ -106,8 +121,16 @@ function Dictionary() {
   var readOnlyKeys = new ImmutableArray(keys);
   var readOnlyValues = new ImmutableArray(values);
 
+  // ---------- 
+  // Variable: keys
   this.__defineGetter__("keys", function() { return readOnlyKeys; });
+
+  // ---------- 
+  // Variable: values
   this.__defineGetter__("values", function() { return readOnlyValues; });
+
+  // ---------- 
+  // Variable: length
   this.__defineGetter__("length", function() { return keys.length; });
 }
 
@@ -125,6 +148,8 @@ function ImmutableArray(baseArray) {
       };
     });
 
+  // ---------- 
+  // Function: toString
   self.toString = function() { return "[ImmutableArray]"; };
 
   self.__proto__ = baseArray;
