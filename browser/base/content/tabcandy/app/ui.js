@@ -46,8 +46,12 @@
 window.Keys = {meta: false};
 
 // ##########
+// Class: Navbar
+// Singleton for helping with the browser's nav bar. 
 Navbar = {
   // ----------
+  // Variable: urlBar
+  // The URL bar for the window.
   get urlBar() {
     var win = Utils.getCurrentWindow();
     if (win)
@@ -61,6 +65,8 @@ Navbar = {
 // Singleton for managing the tabbar of the browser. 
 var Tabbar = {
   // ----------
+  // Variable: el
+  // The tab bar's element. 
   get el() {
     return window.Tabs[0].raw.parentNode; 
   },
@@ -154,11 +160,17 @@ window.Page = {
   closedSelectedTabInTabCandy: false,
   stopZoomPreparation: false,
     
+  // ----------
+  // Function: isTabCandyVisible
+  // Returns true if the TabCandy UI is currently shown. 
   isTabCandyVisible: function(){
     return (Utils.getCurrentWindow().document.getElementById("tab-candy-deck").
              selectedIndex == 1);
   },
   
+  // ----------
+  // Function: hideChrome
+  // Hides the nav bar, tab bar, etc.
   hideChrome: function(){
     var currentWin = Utils.getCurrentWindow();
     currentWin.document.getElementById("tab-candy-deck").selectedIndex = 1;
@@ -167,6 +179,9 @@ window.Page = {
     this._setActiveTitleColor(true);
   },
     
+  // ----------
+  // Function: showChrome
+  // Shows the nav bar, tab bar, etc.
   showChrome: function(){
     var currentWin = Utils.getCurrentWindow();
     var tabContainer = currentWin.gBrowser.tabContainer;
@@ -181,6 +196,13 @@ window.Page = {
     this._setActiveTitleColor(false);
   },
 
+  // ----------
+  // Function: _setActiveTitleColor
+  // Used on the Mac to make the title bar match the gradient in the rest of the 
+  // TabCandy UI. 
+  // 
+  // Parameters: 
+  //   set - true for the special TabCandy color, false for the normal color.
   _setActiveTitleColor: function(set) {
     // Mac Only
     if (Utils.isMac()) {
@@ -193,6 +215,9 @@ window.Page = {
     }
   },
 
+  // ----------
+  // Function: showTabCandy
+  // Zoom out of the current tab (if applicable) and show the TabCandy UI.
   showTabCandy: function() {
     var self = this;
     var currentTab = UI.currentTab;
@@ -223,6 +248,9 @@ window.Page = {
     }
   },
 
+  // ----------
+  // Function: setupKeyHandlers
+  // Sets up the handlers for keyboard navigation. 
   setupKeyHandlers: function(){
     var self = this;
     iQ(window).keyup(function(e){
@@ -281,6 +309,8 @@ window.Page = {
   },
     
   // ----------  
+  // Function: init
+  // Starts this object. 
   init: function() {
     var self = this;
         
@@ -340,6 +370,8 @@ window.Page = {
   },
   
   // ----------  
+  // Function: tabOnFocus
+  // Called when the user switches from one tab to another outside of the TabCandy UI.
   tabOnFocus: function(tab) {
     var focusTab = tab;
     var currentTab = UI.currentTab;
@@ -407,6 +439,9 @@ window.Page = {
   },
 
   // ----------  
+  // Function: createGroupOnDrag
+  // Called in response to a mousedown in empty space in the TabCandy UI;
+  // creates a new group based on the user's drag.
   createGroupOnDrag: function(e){
 /*     e.preventDefault(); */
     const minSize = 60;
@@ -784,6 +819,9 @@ UIClass.prototype = {
   },
   
   // ----------
+  // Function: setBrowserKeyHandler
+  // Overrides the browser's keys for navigating between tabs (outside of the TabCandy UI),
+  // so they do the right thing in respect to groups.
   setBrowserKeyHandler : function() {
     var self = this;
     var browser = Utils.getCurrentWindow().gBrowser;
@@ -870,7 +908,14 @@ UIClass.prototype = {
   },
   
   // ----------
+  // Function: advanceSelectedTab
+  // Moves you to the next tab in the current group's tab strip (outside the TabCandy UI). 
+  // 
+  // Parameters: 
+  //   reverse - true to go to previous instead of next 
+  //   index - go to a particular tab; numerical value from 1 to 9
   advanceSelectedTab : function(reverse, index) {
+    Utils.assert('reverse should be false when index exists', !index || !reverse);
     var tabbox = Utils.getCurrentWindow().gBrowser.mTabBox;
     var tabs = tabbox.tabs;
     var visibleTabs = [];
@@ -911,6 +956,12 @@ UIClass.prototype = {
   },
 
   // ----------
+  // Function: resize
+  // Update the TabCandy UI contents in response to a window size change. 
+  // Won't do anything if it doesn't deem the resize necessary. 
+  // 
+  // Parameters: 
+  //   force - true to update even when "unnecessary"; default false
   resize: function(force) {
     if ( typeof(force) == "undefined" ) force = false;
 
@@ -998,6 +1049,8 @@ UIClass.prototype = {
   },
   
   // ----------
+  // Function: addDevMenu
+  // Fills out the "dev menu" in the TabCandy UI.
   addDevMenu: function() {
     try {
       var self = this;
@@ -1073,12 +1126,17 @@ UIClass.prototype = {
   },
 
   // -----------
+  // Function: reset
+  // Wipes all TabCandy storage and refreshes, giving you the "first-run" state.
   reset: function() {
     Storage.wipe();
     location.href = '';      
   },
     
   // ----------
+  // Function: saveAll
+  // Saves all data associated with TabCandy. 
+  // TODO: Save info items
   saveAll: function() {  
     this.save();
     Groups.saveAll();
@@ -1086,6 +1144,8 @@ UIClass.prototype = {
   },
 
   // ----------
+  // Function: save
+  // Saves the data for this object to persistent storage
   save: function() {  
     if (!this.initialized) 
       return;
@@ -1099,6 +1159,8 @@ UIClass.prototype = {
   },
 
   // ----------
+  // Function: storageSanity
+  // Given storage data for this object, returns true if it looks valid. 
   storageSanity: function(data) {
     if (iQ.isEmptyObject(data))
       return true;
@@ -1113,11 +1175,15 @@ UIClass.prototype = {
   },
 
   // ----------
+  // Function: saveVisibility
+  // Saves to storage whether the TabCandy UI is visible (as passed in).
   saveVisibility: function(isVisible) {
     Storage.saveVisibilityData(Utils.getCurrentWindow(), { visible: isVisible });
   },
 
   // ----------
+  // Function: arrangeBySite
+  // Blows away all existing groups and organizes the tabs into new groups based on domain.
   arrangeBySite: function() {
     function putInGroup(set, key) {
       var group = Groups.getGroupWithTitle(key);
@@ -1164,6 +1230,8 @@ UIClass.prototype = {
   }, 
   
   // ----------
+  // Function: newTab
+  // Opens a new tab with the given URL.
   newTab: function(url) {
     try {
       var group = Groups.getNewTabGroup();

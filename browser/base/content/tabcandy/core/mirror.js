@@ -41,6 +41,8 @@
 
 (function(){
 
+// ---------- 
+// Function: _isIFrame
 function _isIframe(doc){
   var win = doc.defaultView;
   return win.parent != win;
@@ -257,6 +259,8 @@ TabMirror.prototype = {
     this._fireNextHeartbeat();
   },
   
+  // ---------- 
+  // Function: _heartbeat
   _heartbeat: function() {
     try {
 /*       Utils.log('heartbeat', this.paintingPaused); */
@@ -324,6 +328,8 @@ TabMirror.prototype = {
     this._fireNextHeartbeat();
   },
   
+  // ---------- 
+  // Function: _fireNextHeartbeat
   _fireNextHeartbeat: function() {
     var self = this;
     iQ.timeout(function() {
@@ -331,15 +337,21 @@ TabMirror.prototype = {
     }, 100);
   },   
     
+  // ---------- 
+  // Function: _customize
   _customize: function(func){
     // pass
     // This gets set by add-ons/extensions to MirrorTab
   },
   
+  // ---------- 
+  // Function: _createEl
   _createEl: function(tab){
     new Mirror(tab, this); // sets tab.mirror to itself
   },
   
+  // ---------- 
+  // Function: update
   update: function(tab){
     this.link(tab);
 
@@ -347,6 +359,8 @@ TabMirror.prototype = {
       tab.mirror.triggerPaint();
   },
   
+  // ---------- 
+  // Function: link
   link: function(tab){
     // Don't add duplicates
     if (tab.mirror)
@@ -357,6 +371,8 @@ TabMirror.prototype = {
     return true;
   },
   
+  // ---------- 
+  // Function: unlink
   unlink: function(tab){
     var mirror = tab.mirror;
     if (mirror) {
