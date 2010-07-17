@@ -18,7 +18,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
  
  #ifdef _WIN32
 -#define C_DECL __cdecl
-+# ifndef MOZ_ENABLE_LIBXUL
++# if !defined(MOZ_ENABLE_LIBXUL) && !defined(MOZ_STATIC_BUILD)
 +#  ifdef ANGLE_BUILD
 +#   define ANGLE_API NS_EXPORT
 +#  else
