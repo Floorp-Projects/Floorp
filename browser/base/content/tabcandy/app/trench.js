@@ -222,7 +222,7 @@ Trench.prototype = {
       if (!this.dom.guideTrench)
         this.dom.guideTrench = iQ("<div/>").addClass('guideTrench').css({id: 'guideTrench'+this.id});
       var guideTrench = this.dom.guideTrench;
-      guideTrench.css(this.guideRect);
+      guideTrench.css(this.guideRect.css());
       iQ("body").append(guideTrench);
     } else {
       if (this.dom.guideTrench) {
@@ -255,8 +255,8 @@ Trench.prototype = {
     else
       activeVisibleTrench.removeClass('activeTrench');
       
-    visibleTrench.css(this.rect);
-    activeVisibleTrench.css(this.activeRect || this.rect);
+    visibleTrench.css(this.rect.css());
+    activeVisibleTrench.css((this.activeRect || this.rect).css());
     iQ("body").append(visibleTrench);
     iQ("body").append(activeVisibleTrench);
   },
