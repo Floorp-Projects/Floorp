@@ -193,6 +193,14 @@ nsFilePicker.prototype = {
       this.appendFilter(titleBundle.GetStringFromName("appsTitle"),
                         "..apps");
     }
+    if (filterMask & nsIFilePicker.filterAudio) {
+      this.appendFilter(titleBundle.GetStringFromName("audioTitle"),
+                        filterBundle.GetStringFromName("audioFilter"));
+    }
+    if (filterMask & nsIFilePicker.filterVideo) {
+      this.appendFilter(titleBundle.GetStringFromName("videoTitle"),
+                        filterBundle.GetStringFromName("videoFilter"));
+    }
     if (filterMask & nsIFilePicker.filterAll) {
       this.appendFilter(titleBundle.GetStringFromName("allTitle"),
                         filterBundle.GetStringFromName("allFilter"));
