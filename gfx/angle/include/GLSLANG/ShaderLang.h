@@ -11,7 +11,7 @@
 #include "ResourceLimits.h"
 
 #ifdef _WIN32
-# ifndef MOZ_ENABLE_LIBXUL
+# if !defined(MOZ_ENABLE_LIBXUL) && !defined(MOZ_STATIC_BUILD)
 #  ifdef ANGLE_BUILD
 #   define ANGLE_API NS_EXPORT
 #  else
