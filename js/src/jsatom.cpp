@@ -625,6 +625,8 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     entry = TO_ATOM_ENTRY(JS_DHashTableOperate(table, str, JS_DHASH_ADD));
     if (!entry)
         goto failed_hash_add;
+    /* Hashing the string should have flattened it if it was a rope. */
+    JS_ASSERT(str->isFlat() || str->isDependent());
     if (entry->keyAndFlags != 0) {
         key = ATOM_ENTRY_KEY(entry);
     } else {
@@ -657,7 +659,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
                 }
             } else {
                 JS_ASSERT(str->isDependent());
-                if (!js_UndependString(cx, str))
+                if (!str->undepend(cx))
                     return NULL;
                 key = str;
             }
