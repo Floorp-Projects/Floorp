@@ -1945,6 +1945,12 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
         JSString *str = (JSString *) thing;
         if (str->isDependent())
             JS_CALL_STRING_TRACER(trc, str->dependentBase(), "base");
+        else if (str->isRope()) {
+            if (str->isInteriorNode())
+                JS_CALL_STRING_TRACER(trc, str->interiorNodeParent(), "parent");
+            JS_CALL_STRING_TRACER(trc, str->ropeLeft(), "left child");
+            JS_CALL_STRING_TRACER(trc, str->ropeRight(), "right child");
+        }
         break;
       }
 
@@ -2171,16 +2177,26 @@ Mark(JSTracer *trc, void *thing, uint32 kind)
      * is not recursive.
      */
     if (kind == JSTRACE_STRING) {
-        for (;;) {
-            if (JSString::isStatic(thing))
-                goto out;
-            JS_ASSERT(kind == GetFinalizableThingTraceKind(thing));
-            if (!MarkIfUnmarkedGCThing(thing))
-                goto out;
-            if (!((JSString *) thing)->isDependent())
-                goto out;
-            thing = ((JSString *) thing)->dependentBase();
-        }
+        /*
+         * Iterate through all nodes and leaves in the rope if this is part of a
+         * rope; otherwise, we only iterate once: on the string itself.
+         */
+        JSRopeNodeIterator iter((JSString *) thing);
+        JSString *str = iter.init();
+        do {
+            for (;;) {
+                if (JSString::isStatic(str))
+                    break;
+                JS_ASSERT(kind == GetFinalizableThingTraceKind(str));
+                if (!MarkIfUnmarkedGCThing(str))
+                    break;
+                if (!str->isDependent())
+                    break;
+                str = str->dependentBase();
+            }
+            str = iter.next();
+        } while (str);
+        goto out;
         /* NOTREACHED */
     }
 
@@ -2634,13 +2650,16 @@ FinalizeString(JSContext *cx, JSString *str, unsigned thingKind)
     if (str->isDependent()) {
         JS_ASSERT(str->dependentBase());
         JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
-    } else {
+    } else if (str->isFlat()) {
         /*
-         * flatChars for stillborn string is null, but cx->free would checks
+         * flatChars for stillborn string is null, but cx->free checks
          * for a null pointer on its own.
          */
         cx->free(str->flatChars());
+    } else if (str->isTopNode()) {
+        cx->free(str->topNodeBuffer());
     }
+    /* Nothing to be done for rope interior nodes. */
 }
 
 inline void
@@ -2649,7 +2668,7 @@ FinalizeExternalString(JSContext *cx, JSString *str, unsigned thingKind)
     unsigned type = thingKind - FINALIZE_EXTERNAL_STRING0;
     JS_ASSERT(type < JS_ARRAY_LENGTH(str_finalizers));
     JS_ASSERT(!JSString::isStatic(str));
-    JS_ASSERT(!str->isDependent());
+    JS_ASSERT(str->isFlat());
 
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
 
@@ -2671,11 +2690,11 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
 {
     JS_RUNTIME_UNMETER(rt, liveStrings);
     JS_ASSERT(!JSString::isStatic(str));
+    JS_ASSERT(!str->isRope());
 
     if (str->isDependent()) {
         /* A dependent string can not be external and must be valid. */
-        JS_ASSERT(JSGCArenaInfo::fromGCThing(str)->list->thingKind ==
-                  FINALIZE_STRING);
+        JS_ASSERT(JSGCArenaInfo::fromGCThing(str)->list->thingKind == FINALIZE_STRING);
         JS_ASSERT(str->dependentBase());
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
     } else {

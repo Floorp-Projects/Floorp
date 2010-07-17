@@ -8638,7 +8638,9 @@ TraceRecorder::ifop()
                       lir->insEqI_0(lir->ins2(LIR_eqd, v_ins, lir->insImmD(0))));
     } else if (v.isString()) {
         cond = v.toString()->length() != 0;
-        x = lir->insLoad(LIR_ldp, v_ins, offsetof(JSString, mLength), ACC_OTHER);
+        x = lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, v_ins,
+                          offsetof(JSString, mLengthAndFlags), ACC_OTHER),
+                          JSString::FLAGS_LENGTH_SHIFT);
     } else {
         JS_NOT_REACHED("ifop");
         return ARECORD_STOP;
@@ -10798,8 +10800,9 @@ TraceRecorder::record_JSOP_NOT()
         return ARECORD_CONTINUE;
     }
     JS_ASSERT(v.isString());
-    set(&v, lir->insEqP_0(lir->insLoad(LIR_ldp, get(&v),
-                                       offsetof(JSString, mLength), ACC_OTHER)));
+    set(&v, lir->insEqP_0(lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, get(&v),
+                          offsetof(JSString, mLengthAndFlags), ACC_OTHER),
+                          JSString::FLAGS_LENGTH_SHIFT)));
     return ARECORD_CONTINUE;
 }
 
@@ -15736,8 +15739,9 @@ TraceRecorder::record_JSOP_LENGTH()
         if (!l.isString())
             RETURN_STOP_A("non-string primitive JSOP_LENGTH unsupported");
         set(&l, lir->ins1(LIR_i2d,
-                          p2i(lir->insLoad(LIR_ldp, get(&l),
-                                           offsetof(JSString, mLength), ACC_OTHER))));
+            p2i(lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, get(&l),
+                              offsetof(JSString, mLengthAndFlags), ACC_OTHER),
+                              JSString::FLAGS_LENGTH_SHIFT))));
         return ARECORD_CONTINUE;
     }
 
