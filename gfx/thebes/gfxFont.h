@@ -287,7 +287,7 @@ public:
         mFamily = aFamily;
     }
 
-    const nsString& FamilyName();
+    const nsString& FamilyName() const;
 
     already_AddRefed<gfxFont> FindOrMakeFont(const gfxFontStyle *aStyle,
                                              PRBool aNeedsBold);
