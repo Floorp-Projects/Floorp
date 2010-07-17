@@ -2001,7 +2001,7 @@ CompileRegExpToAST(JSContext* cx, TokenStream* ts,
 
     state.context = cx;
     state.tokenStream = ts;
-    state.cp = js_UndependString(cx, str);
+    state.cp = str->undepend(cx);
     if (!state.cp)
         return JS_FALSE;
     state.cpbegin = state.cp;

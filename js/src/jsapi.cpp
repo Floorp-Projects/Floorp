@@ -5002,9 +5002,11 @@ JS_GetStringChars(JSString *str)
     size_t n, size;
     jschar *s;
 
+    str->ensureNotRope();
+
     /*
      * API botch (again, shades of JS_GetStringBytes): we have no cx to report
-     * out-of-memory when undepending strings, so we replace js_UndependString
+     * out-of-memory when undepending strings, so we replace JSString::undepend
      * with explicit malloc call and ignore its errors.
      *
      * If we fail to convert a dependent string into an independent one, our
@@ -5050,7 +5052,7 @@ JS_PUBLIC_API(const jschar *)
 JS_GetStringCharsZ(JSContext *cx, JSString *str)
 {
     assertSameCompartment(cx, str);
-    return js_UndependString(cx, str);
+    return str->undepend(cx);
 }
 
 JS_PUBLIC_API(intN)
@@ -5062,14 +5064,8 @@ JS_CompareStrings(JSString *str1, JSString *str2)
 JS_PUBLIC_API(JSString *)
 JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length)
 {
-    JSString *str;
-
     CHECK_REQUEST(cx);
-    str = js_NewString(cx, chars, length);
-    if (!str)
-        return str;
-    str->flatSetMutable();
-    return str;
+    return js_NewString(cx, chars, length);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5090,7 +5086,7 @@ JS_PUBLIC_API(const jschar *)
 JS_UndependString(JSContext *cx, JSString *str)
 {
     CHECK_REQUEST(cx);
-    return js_UndependString(cx, str);
+    return str->undepend(cx);
 }
 
 JS_PUBLIC_API(JSBool)
