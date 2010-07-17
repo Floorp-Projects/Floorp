@@ -259,6 +259,11 @@ static const char gToolkitBuildID[] = NS_STRINGIFY(GRE_BUILDID);
 static int    gRestartArgc;
 static char **gRestartArgv;
 
+#ifdef MOZ_WIDGET_QT
+static int    gQtOnlyArgc;
+static char **gQtOnlyArgv;
+#endif
+
 #if defined(MOZ_WIDGET_GTK2)
 #if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) \
   || defined(NS_TRACE_MALLOC)
@@ -1726,8 +1731,14 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   // if supported by the platform.  Otherwise, use NSPR.
  
   if (aBlankCommandLine) {
+#if defined(MOZ_WIDGET_QT)
+    // Remove only arguments not given to Qt
+    gRestartArgc = gQtOnlyArgc;
+    gRestartArgv = gQtOnlyArgv;
+#else
     gRestartArgc = 1;
     gRestartArgv[gRestartArgc] = nsnull;
+#endif
   }
 
   SaveToEnv("MOZ_LAUNCHED_CHILD=1");
@@ -3102,6 +3113,22 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (ar == ARG_FOUND)
       PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
     QApplication app(gArgc, gArgv);
+
+    QStringList nonQtArguments = app.arguments();
+    gQtOnlyArgc = 1;
+    gQtOnlyArgv = (char**) malloc(sizeof(char*) 
+                  * (gRestartArgc - nonQtArguments.size() + 2));
+
+    // copy binary path
+    gQtOnlyArgv[0] = gRestartArgv[0];
+
+    for (int i = 1; i < gRestartArgc; ++i) {
+      if (!nonQtArguments.contains(gRestartArgv[i])) {
+        // copy arguments used by Qt for later
+        gQtOnlyArgv[gQtOnlyArgc++] = gRestartArgv[i];
+      }
+    }
+    gQtOnlyArgv[gQtOnlyArgc] = nsnull;
 #endif
 #if defined(MOZ_WIDGET_GTK2)
 #ifdef MOZ_MEMORY
