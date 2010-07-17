@@ -72,7 +72,7 @@
 #include "nsWeakReference.h"
 #include "nsITabChild.h"
 
-class gfxMatrix;
+struct gfxMatrix;
 
 namespace mozilla {
 namespace dom {

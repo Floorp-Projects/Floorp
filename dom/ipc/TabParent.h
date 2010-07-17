@@ -55,7 +55,7 @@
 
 class nsIURI;
 class nsIDOMElement;
-class gfxMatrix;
+struct gfxMatrix;
 
 struct JSContext;
 struct JSObject;
