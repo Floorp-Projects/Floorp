@@ -93,7 +93,7 @@ body {
   right: 6px;
   width: 16px;
   height: 16px;
-  background: url(chrome://global/skin/icons/closetab.png) no-repeat;
+  /* background is set in platform.css */
   opacity: 0.2;
   cursor: pointer;
 }
