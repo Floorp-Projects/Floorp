@@ -969,9 +969,7 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
   nsresult rv;
   if (fullPageMode) {  /* full-page mode */
     nsCOMPtr<nsIStreamListener> stream;
-    rv = aPluginHost->InstantiateFullPagePlugin(aMimeType, aURI,
-          /* resulting stream listener */       *getter_AddRefs(stream),
-                                                mInstanceOwner);
+    rv = aPluginHost->InstantiateFullPagePlugin(aMimeType, aURI, mInstanceOwner, getter_AddRefs(stream));
     if (NS_SUCCEEDED(rv))
       pDoc->SetStreamListener(stream);
   } else {   /* embedded mode */

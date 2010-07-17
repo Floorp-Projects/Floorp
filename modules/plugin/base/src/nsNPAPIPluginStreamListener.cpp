@@ -168,8 +168,9 @@ mResponseHeaderBuf(nsnull)
 nsNPAPIPluginStreamListener::~nsNPAPIPluginStreamListener()
 {
   // remove this from the plugin instance's stream list
-  mInst->mStreamListeners.RemoveElement(this);
-  
+  nsTArray<nsNPAPIPluginStreamListener*> *pStreamListeners = mInst->PStreamListeners();
+  pStreamListeners->RemoveElement(this);
+
   // For those cases when NewStream is never called, we still may need
   // to fire a notification callback. Return network error as fallback
   // reason because for other cases, notify should have already been
@@ -416,9 +417,10 @@ nsNPAPIPluginStreamListener::PluginInitJSLoadInProgress()
 {
   if (!mInst)
     return PR_FALSE;
-  
-  for (unsigned int i = 0; i < mInst->mStreamListeners.Length(); i++) {
-    if (mInst->mStreamListeners[i]->mIsPluginInitJSStream) {
+
+  nsTArray<nsNPAPIPluginStreamListener*> *pStreamListeners = mInst->PStreamListeners();
+  for (unsigned int i = 0; i < pStreamListeners->Length(); i++) {
+    if (pStreamListeners->ElementAt(i)->mIsPluginInitJSStream) {
       return PR_TRUE;
     }
   }
