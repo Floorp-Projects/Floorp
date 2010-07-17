@@ -2407,9 +2407,9 @@ AutoGCRooter::trace(JSTracer *trc)
         if (desc.obj)
             MarkObject(trc, desc.obj, "Descriptor::obj");
         MarkValue(trc, desc.value, "Descriptor::value");
-        if (desc.attrs & JSPROP_GETTER)
+        if ((desc.attrs & JSPROP_GETTER) && desc.getter)
             MarkObject(trc, CastAsObject(desc.getter), "Descriptor::get");
-        if (desc.attrs & JSPROP_SETTER)
+        if (desc.attrs & JSPROP_SETTER && desc.setter)
             MarkObject(trc, CastAsObject(desc.setter), "Descriptor::set");
         return;
       }
