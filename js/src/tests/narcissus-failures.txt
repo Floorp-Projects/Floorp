@@ -913,6 +913,7 @@ narcissus/../js1_5/GC/regress-104584.js
 narcissus/../js1_5/Function/regress-338121-03.js
 narcissus/../js1_5/GC/regress-313479.js
 narcissus/../js1_5/GC/regress-316885-01.js
+narcissus/../js1_5/GC/regress-348532.js
 narcissus/../js1_5/GC/regress-352606.js
 narcissus/../js1_5/GC/regress-390078.js
 narcissus/../js1_5/GC/regress-418128.js

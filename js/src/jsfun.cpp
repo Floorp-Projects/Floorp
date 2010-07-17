@@ -2058,47 +2058,6 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     return ok;
 }
 
-#ifdef NARCISSUS
-static JS_REQUIRES_STACK JSBool
-fun_applyConstructor(JSContext *cx, uintN argc, Value *vp)
-{
-    JSObject *aobj;
-    uintN length, i;
-
-    if (vp[2].isPrimitive() ||
-        (aobj = &vp[2].toObject(),
-         !aobj->isArray() &&
-         !aobj->isArguments())) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_APPLY_ARGS, "__applyConstruct__");
-        return JS_FALSE;
-    }
-
-    if (!js_GetLengthProperty(cx, aobj, &length))
-        return JS_FALSE;
-
-    if (length > JS_ARGS_LENGTH_MAX)
-        length = JS_ARGS_LENGTH_MAX;
-
-    InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, length, args))
-        return JS_FALSE;
-
-    Value *sp = args.getvp();
-    *sp++ = vp[1];
-    *sp++ = NullValue(); /* this is filled automagically */
-    for (i = 0; i < length; i++) {
-        if (!aobj->getProperty(cx, INT_TO_JSID(jsint(i)), sp))
-            return JS_FALSE;
-        sp++;
-    }
-
-    JSBool ok = InvokeConstructor(cx, args);
-    *vp = *args.getvp();
-    return ok;
-}
-#endif
-
 static JSFunctionSpec function_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,   fun_toSource,   0,0),
@@ -2106,9 +2065,6 @@ static JSFunctionSpec function_methods[] = {
     JS_FN(js_toString_str,   fun_toString,   0,0),
     JS_FN(js_apply_str,      js_fun_apply,   2,0),
     JS_FN(js_call_str,       js_fun_call,    1,0),
-#ifdef NARCISSUS
-    JS_FN("__applyConstructor__", fun_applyConstructor, 1,0),
-#endif
     JS_FS_END
 };
 
