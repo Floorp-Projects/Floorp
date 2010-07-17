@@ -88,20 +88,28 @@ WindowDraggingElement.prototype = {
         if (!this.shouldDrag(aEvent))
           return;
 
+#ifdef MOZ_WIDGET_GTK2
+        // On GTK, there is a toolkit-level function which handles
+        // window dragging, which must be used.
+        this._window.beginWindowMove(aEvent);
+#else
         this._deltaX = aEvent.screenX - this._window.screenX;
         this._deltaY = aEvent.screenY - this._window.screenY;
         this._draggingWindow = true;
         this._window.addEventListener("mousemove", this, false);
         this._window.addEventListener("mouseup", this, false);
+#endif
         break;
       case "mousemove":
         if (this._draggingWindow)
           this._window.moveTo(aEvent.screenX - this._deltaX, aEvent.screenY - this._deltaY);
         break;
       case "mouseup":
-        this._draggingWindow = false;
-        this._window.removeEventListener("mousemove", this, false);
-        this._window.removeEventListener("mouseup", this, false);
+        if (this._draggingWindow) {
+          this._draggingWindow = false;
+          this._window.removeEventListener("mousemove", this, false);
+          this._window.removeEventListener("mouseup", this, false);
+        }
         break;
     }
 #endif

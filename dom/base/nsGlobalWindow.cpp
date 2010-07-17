@@ -9433,6 +9433,25 @@ nsGlobalChromeWindow::GetAttentionWithCycleCount(PRInt32 aCycleCount)
   return rv;
 }
 
+NS_IMETHODIMP
+nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent)
+{
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  if (!widget) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPrivateDOMEvent> privEvent = do_QueryInterface(aMouseDownEvent);
+  NS_ENSURE_TRUE(privEvent, NS_ERROR_FAILURE);
+  nsEvent *internalEvent = privEvent->GetInternalNSEvent();
+  NS_ENSURE_TRUE(internalEvent &&
+                 internalEvent->eventStructType == NS_MOUSE_EVENT,
+                 NS_ERROR_FAILURE);
+  nsMouseEvent *mouseEvent = static_cast<nsMouseEvent*>(internalEvent);
+
+  return widget->BeginMoveDrag(mouseEvent);
+}
+
 //Note: This call will lock the cursor, it will not change as it moves.
 //To unlock, the cursor must be set back to CURSOR_AUTO.
 NS_IMETHODIMP
