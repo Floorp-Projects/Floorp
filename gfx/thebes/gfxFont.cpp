@@ -161,7 +161,7 @@ nsresult gfxFontEntry::ReadCMAP()
     return NS_OK;
 }
 
-const nsString& gfxFontEntry::FamilyName()
+const nsString& gfxFontEntry::FamilyName() const
 {
     NS_ASSERTION(mFamily, "gfxFontEntry is not a member of a family");
     return mFamily->Name();
