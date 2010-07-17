@@ -500,12 +500,7 @@ window.Item.prototype = {
   // This functionality is enabled only by the debug property.
   _updateDebugBounds: function() {
     if (this.$debug) {
-      this.$debug.css({
-        left: this.bounds.left,
-        top: this.bounds.top,
-        width: this.bounds.width,
-        height: this.bounds.height
-      });
+      this.$debug.css(this.bounds.css());
     }
   },
   
