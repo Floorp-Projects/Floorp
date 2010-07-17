@@ -192,7 +192,9 @@ private:
   NewEmbeddedPluginStream(nsIURI* aURL, nsIPluginInstanceOwner *aOwner, nsNPAPIPluginInstance* aInstance);
 
   nsresult
-  NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIURI* aURI, nsNPAPIPluginInstance *aInstance);
+  NewFullPagePluginStream(nsIURI* aURI,
+                          nsNPAPIPluginInstance *aInstance,
+                          nsIStreamListener **aStreamListener);
 
   // Return an nsPluginTag for this type, if any.  If aCheckEnabled is
   // true, only enabled plugins will be returned.
