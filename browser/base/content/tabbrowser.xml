@@ -2404,7 +2404,7 @@
       </field>
 
       <field name="contextMenu" readonly="true">
-        document.getElementById(this.getAttribute("context"));
+        document.getElementById("tabContextMenu");
       </field>
 
       <field name="mTabstripWidth">0</field>
@@ -2563,7 +2563,7 @@
       <field name="_animateElement">
         this.mTabstrip._scrollButtonDown;
       </field>
-      
+
       <method name="_notifyBackgroundTab">
         <parameter name="aTab"/>
         <body><![CDATA[
@@ -2786,7 +2786,7 @@
         // otherwise trying to deatch the tab by dropping it on the desktop
         // may result in an "internet shortcut"
         dt.mozSetDataAt("text/x-moz-text-internal", spec, 0);
-        
+
         // Set the cursor to an arrow during tab drags.
         dt.mozCursor = "default";
 
@@ -3091,7 +3091,7 @@
       <stylesheet src="chrome://browser/content/tabbrowser.css"/>
     </resources>
 
-    <content closetabtext="&closeTab.label;">
+    <content context="tabContextMenu" closetabtext="&closeTab.label;">
       <xul:image xbl:inherits="validate,src=image"
                  class="tab-icon-image"
                  role="presentation"/>
