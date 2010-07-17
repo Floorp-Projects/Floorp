@@ -322,7 +322,11 @@ public:
     /**
      * If this metric != 0, show icons in buttons.
      */
-    eMetric_ImagesInButtons
+    eMetric_ImagesInButtons,
+    /**
+     * If this metric != 0, support window dragging on the menubar.
+     */
+    eMetric_MenuBarDrag
   } nsMetricID;
 
   enum {

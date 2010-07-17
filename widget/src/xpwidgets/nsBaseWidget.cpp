@@ -1041,6 +1041,12 @@ nsBaseWidget::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 a
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsBaseWidget::BeginMoveDrag(nsMouseEvent* aEvent)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
  
 //////////////////////////////////////////////////////////////
 //
