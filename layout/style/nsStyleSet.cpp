@@ -1336,6 +1336,10 @@ nsStyleSet::EnsureUniqueInnerOnCSSSheets()
     }
   }
 
+  if (mBindingManager) {
+    mBindingManager->AppendAllSheets(queue);
+  }
+
   nsCSSStyleSheet::EnsureUniqueInnerResult res =
     nsCSSStyleSheet::eUniqueInner_AlreadyUnique;
   while (!queue.IsEmpty()) {

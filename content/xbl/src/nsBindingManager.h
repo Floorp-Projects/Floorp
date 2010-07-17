@@ -226,6 +226,8 @@ public:
   nsresult MediumFeaturesChanged(nsPresContext* aPresContext,
                                  PRBool* aRulesChanged);
 
+  void AppendAllSheets(nsTArray<nsCSSStyleSheet*>& aArray);
+
   NS_HIDDEN_(void) Traverse(nsIContent *aContent,
                             nsCycleCollectionTraversalCallback &cb);
 
