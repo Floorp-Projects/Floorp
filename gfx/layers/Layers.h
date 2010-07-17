@@ -67,14 +67,9 @@ class ColorLayer;
 class ImageContainer;
 class CanvasLayer;
 
-#if defined(DEBUG) || defined(PR_LOGGING)
 #define NS_LAYER_DECL_NAME(n, e) \
   virtual const char* Name() { return n; } \
   virtual LayerType GetType() { return e; }
-#else
-#define NS_LAYER_DECL_NAME(n, e) \
-  virtual LayerType GetType() { return e; }
-#endif
 
 /*
  * Motivation: For truly smooth animation and video playback, we need to
