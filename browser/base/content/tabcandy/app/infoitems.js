@@ -154,7 +154,7 @@ window.InfoItem.prototype = iQ.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: save
-  // Saves this item to persistant storage. 
+  // Saves this item to persistent storage. 
   save: function() {
     try {
       if (!this._inited) // too soon to save now

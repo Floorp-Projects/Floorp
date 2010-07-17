@@ -390,7 +390,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: save
-  // Saves this group to persistant storage. 
+  // Saves this group to persistent storage. 
   save: function() {
     if (!this._inited) // too soon to save now
       return;
@@ -1443,7 +1443,7 @@ window.Groups = {
 
   // ----------
   // Function: getStorageData
-  // Returns an object for saving Groups state to persistant storage. 
+  // Returns an object for saving Groups state to persistent storage. 
   getStorageData: function() {
     var data = {nextID: this.nextID, groups: []};
     this.groups.forEach(function(group) {
@@ -1543,7 +1543,7 @@ window.Groups = {
   
   // ----------
   // Function: groupStorageSanity
-  // Given persistant storage data for a group, returns true if it appears to not be damaged.
+  // Given persistent storage data for a group, returns true if it appears to not be damaged.
   groupStorageSanity: function(groupData) {
     // TODO: check everything 
     var sane = true;
