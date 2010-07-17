@@ -456,11 +456,22 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // ----------  
   // Function: setBounds
   // Sets the bounds with the given <Rect>, animating unless "immediately" is false.
-  setBounds: function(rect, immediately) {
+  // 
+  // Parameters: 
+  //   rect - a <Rect> giving the new bounds
+  //   immediately - true if it should not animate; default false
+  //   options - an object with additional parameters, see below
+  // 
+  // Possible options: 
+  //   force - true to always update the DOM even if the bounds haven't changed; default false
+  setBounds: function(rect, immediately, options) {
     if (!isRect(rect)) {
       Utils.trace('Group.setBounds: rect is not a real rectangle!', rect);
       return;
     }
+    
+    if (!options)
+      options = {};
     
     rect.width = Math.max( 110, rect.width );
     rect.height = Math.max( 125, rect.height);
@@ -471,23 +482,22 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     var css = {};
     var titlebarCSS = {};
     var contentCSS = {};
-    var force = false;
 
-    if (force || rect.left != this.bounds.left)
+    if (rect.left != this.bounds.left || options.force)
       css.left = rect.left;
       
-    if (force || rect.top != this.bounds.top) 
+    if (rect.top != this.bounds.top || options.force)
       css.top = rect.top;
       
-    if (force || rect.width != this.bounds.width) {
+    if (rect.width != this.bounds.width || options.force) {
       css.width = rect.width;
       titlebarCSS.width = rect.width;
       contentCSS.width = rect.width;
     }
 
-    if (force || rect.height != this.bounds.height) {
-      css.height = rect.height; 
-      contentCSS.height = rect.height - titleHeight; 
+    if (rect.height != this.bounds.height || options.force) {
+      css.height = rect.height;
+      contentCSS.height = rect.height - titleHeight;
     }
       
     if (iQ.isEmptyObject(css))
@@ -505,15 +515,9 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
       });
     }
-          
+
     // ___ Update our representation
     if (immediately) {
-/*
-      $(this.container).stop(true, true);
-      this.$titlebar.stop(true, true);
-      this.$content.stop(true, true);
-*/
-
       iQ(this.container).css(css);
       this.$titlebar.css(titlebarCSS);
       this.$content.css(contentCSS);
@@ -526,23 +530,19 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
           TabMirror.resumePainting();
         }
       });
-  /*       }).dequeue(); */
       
       this.$titlebar.animate(titlebarCSS, {
         duration: 350
-      });//.dequeue();        
+      });
       
       this.$content.animate(contentCSS, {
         duration: 350
-      }); //.dequeue();        
+      });
     }
     
     this.adjustTitleSize();
 
     this._updateDebugBounds();
-
-    if (!isRect(this.bounds))
-      Utils.trace('Group.setBounds: this.bounds is not a real rectangle!', this.bounds);
 
     if (!this.isNewTabsGroup())
       this.setTrenches(rect);
@@ -792,21 +792,13 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Function: setNewTabButtonBounds
   // Used for positioning the "new tab" button in the "new tabs" group.
   setNewTabButtonBounds: function(box, immediately) {
-    var css = {
-      left: box.left,
-      top: box.top,
-      width: box.width,
-      height: box.height
-    };
-    
-/*     this.$ntb.stop(true, true);     */
     if (!immediately)
-      this.$ntb.animate(css, {
+      this.$ntb.animate(box.css(), {
         duration: 320,
         easing: 'tabcandyBounce'
       });
     else
-      this.$ntb.css(css);
+      this.$ntb.css(box.css());
   },
   
   // ----------
