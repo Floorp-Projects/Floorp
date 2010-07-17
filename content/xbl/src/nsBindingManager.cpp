@@ -1402,6 +1402,33 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+static PLDHashOperator
+EnumAppendAllSheets(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
+{
+  nsTArray<nsCSSStyleSheet*>* array =
+    static_cast<nsTArray<nsCSSStyleSheet*>*>(aClosure);
+  for (nsXBLBinding *binding = aBinding; binding;
+       binding = binding->GetBaseBinding()) {
+    nsXBLPrototypeResources::sheet_array_type* sheets =
+      binding->PrototypeBinding()->GetStyleSheets();
+    if (sheets) {
+      // Copy from nsTArray<nsRefPtr<nsCSSStyleSheet> > to
+      // nsTArray<nsCSSStyleSheet*>.
+      array->AppendElements(*sheets);
+    }
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+nsBindingManager::AppendAllSheets(nsTArray<nsCSSStyleSheet*>& aArray)
+{
+  if (!mBindingTable.IsInitialized())
+    return;
+
+  mBindingTable.EnumerateRead(EnumAppendAllSheets, &aArray);
+}
+
 nsIContent*
 nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent,
                                           const nsIContent* aChild)
