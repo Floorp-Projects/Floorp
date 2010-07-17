@@ -3146,13 +3146,17 @@ nsCycleCollector::DestroyReversedEdges()
 void
 nsCycleCollector::ShouldBeFreed(nsISupports *n)
 {
-    mExpectedGarbage.PutEntry(n);
+    if (n) {
+        mExpectedGarbage.PutEntry(n);
+    }
 }
 
 void
 nsCycleCollector::WasFreed(nsISupports *n)
 {
-    mExpectedGarbage.RemoveEntry(n);
+    if (n) {
+        mExpectedGarbage.RemoveEntry(n);
+    }
 }
 #endif
 
