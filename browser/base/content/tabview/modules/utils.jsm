@@ -59,7 +59,10 @@ var consoleService = Cc["@mozilla.org/consoleservice;1"]
 // 0 is used in their place. 
 window.Point = function(a, y) {
   if (isPoint(a)) {
+    // Variable: x
     this.x = a.x;
+    
+    // Variable: y
     this.y = a.y;
   } else {
     this.x = (Utils.isNumber(a) ? a : 0);
@@ -68,12 +71,17 @@ window.Point = function(a, y) {
 };
 
 // ----------
+// Function: isPoint
+// Returns true if the given object (p) looks like a <Point>. 
+// Note that this is not an actual method of <Point>, but a global routine. 
 window.isPoint = function(p) {
   return (p && Utils.isNumber(p.x) && Utils.isNumber(p.y));
 };
 
 window.Point.prototype = { 
   // ---------- 
+  // Function: distance
+  // Returns the distance from this point to the given <Point>. 
   distance: function(point) { 
     var ax = Math.abs(this.x - point.x);
     var ay = Math.abs(this.y - point.y);
@@ -81,6 +89,8 @@ window.Point.prototype = {
   },
 
   // ---------- 
+  // Function: plus
+  // Returns a new point with the result of adding this point to the given <Point>. 
   plus: function(point) { 
     return new Point(this.x + point.x, this.y + point.y);
   }
@@ -88,7 +98,9 @@ window.Point.prototype = {
 
 // ##########  
 // Class: Rect
-// A simple rectangle. 
+// A simple rectangle. Note that in addition to the left and width, it also has 
+// a right property; changing one affects the others appropriately. Same for the 
+// vertical properties. 
 //
 // Constructor: Rect
 // If a is a Rect, creates a copy of it. Otherwise, expects a to be left, 
@@ -96,9 +108,16 @@ window.Point.prototype = {
 window.Rect = function(a, top, width, height) {
   // Note: perhaps 'a' should really be called 'rectOrLeft'
   if (isRect(a)) {
+    // Variable: left
     this.left = a.left;
+    
+    // Variable: top
     this.top = a.top;
+    
+    // Variable: width
     this.width = a.width;
+    
+    // Variable: height
     this.height = a.height;
   } else {
     this.left = a;
@@ -109,6 +128,9 @@ window.Rect = function(a, top, width, height) {
 };
 
 // ----------
+// Function: isRect
+// Returns true if the given object (r) looks like a <Rect>. 
+// Note that this is not an actual method of <Rect>, but a global routine. 
 window.isRect = function(r) {
   return (r 
       && Utils.isNumber(r.left)
@@ -119,6 +141,7 @@ window.isRect = function(r) {
 
 window.Rect.prototype = {
   // ----------
+  // Variable: right
   get right() {
     return this.left + this.width;
   },
@@ -129,6 +152,7 @@ window.Rect.prototype = {
   },
 
   // ----------
+  // Variable: bottom
   get bottom() {
     return this.top + this.height;
   },
@@ -139,16 +163,22 @@ window.Rect.prototype = {
   },
 
   // ----------
+  // Variable: xRange
+  // Gives you a new <Range> for the horizontal dimension.
   get xRange() {
     return new Range(this.left,this.right);
   },
   
   // ----------
+  // Variable: yRange
+  // Gives you a new <Range> for the vertical dimension.
   get yRange() {
     return new Range(this.top,this.bottom);
   },
 
   // ----------
+  // Function: intersects
+  // Returns true if this rectangle intersects the given <Rect>.
   intersects: function(rect) {
     return (rect.right > this.left
         && rect.left < this.right
@@ -157,6 +187,9 @@ window.Rect.prototype = {
   },
   
   // ----------
+  // Function: intersection
+  // Returns a new <Rect> with the intersection of this rectangle and the give <Rect>, 
+  // or null if they don't intersect.
   intersection: function(rect) {
     var box = new Rect(Math.max(rect.left, this.left), Math.max(rect.top, this.top), 0, 0);
     box.right = Math.min(rect.right, this.right);
@@ -196,21 +229,29 @@ window.Rect.prototype = {
   },
   
   // ----------
+  // Function: center
+  // Returns a new <Point> with the center location of this rectangle.
   center: function() {
     return new Point(this.left + (this.width / 2), this.top + (this.height / 2));
   },
   
   // ----------
+  // Function: size
+  // Returns a new <Point> with the dimensions of this rectangle.
   size: function() {
     return new Point(this.width, this.height);
   },
   
   // ----------
+  // Function: position
+  // Returns a new <Point> with the top left of this rectangle. 
   position: function() {
     return new Point(this.left, this.top);
   },
   
   // ----------
+  // Function: area
+  // Returns the area of this rectangle. 
   area: function() {
     return this.width * this.height;
   },
@@ -251,6 +292,8 @@ window.Rect.prototype = {
   },
   
   // ----------
+  // Function: equals
+  // Returns true if this rectangle is identical to the given <Rect>. 
   equals: function(a) {
     return (a.left == this.left
         && a.top == this.top
@@ -259,6 +302,8 @@ window.Rect.prototype = {
   },
   
   // ----------
+  // Function: union
+  // Returns a new <Rect> with the union of this rectangle and the given <Rect>.
   union: function(a){
     var newLeft = Math.min(a.left, this.left);
     var newTop = Math.min(a.top, this.top);
@@ -270,6 +315,8 @@ window.Rect.prototype = {
   },
   
   // ----------
+  // Function: copy
+  // Copies the values of the given <Rect> into this rectangle.
   copy: function(a) {
     this.left = a.left;
     this.top = a.top;
@@ -308,6 +355,9 @@ window.Range = function(min, max) {
 };
 
 // ----------
+// Function: isRange
+// Returns true if the given object (r) looks like a <Range>. 
+// Note that this is not an actual method of <Range>, but a global routine. 
 window.isRange = function(r) {
   return (r 
       && Utils.isNumber(r.min)
@@ -495,18 +545,32 @@ var Utils = {
   },
   
   // ___ Logging
-    
-  log: function() { // pass as many arguments as you want, it'll print them all
+
+  // ----------
+  // Function: log
+  // Prints the given arguments to the JavaScript error console as a message. 
+  // Pass as many arguments as you want, it'll print them all. 
+  log: function() { 
     var text = this.expandArgumentsForLog(arguments);
     consoleService.logStringMessage(text);
   }, 
   
-  error: function() { // pass as many arguments as you want, it'll print them all
+  // ----------
+  // Function: error
+  // Prints the given arguments to the JavaScript error console as an error. 
+  // Pass as many arguments as you want, it'll print them all. 
+  // TODO: Does this still work?
+  error: function() { 
     var text = this.expandArgumentsForLog(arguments);
     Cu.reportError('tabcandy error: ' + text);
   }, 
   
-  trace: function() { // pass as many arguments as you want, it'll print them all
+  // ----------
+  // Function: trace
+  // Prints the given arguments to the JavaScript error console as a message, 
+  // along with a full stack trace. 
+  // Pass as many arguments as you want, it'll print them all. 
+  trace: function() { 
     var text = this.expandArgumentsForLog(arguments);
     if (typeof(printStackTrace) != 'function')
       this.log(text + ' trace: you need to include stacktrace.js');
@@ -517,6 +581,9 @@ var Utils = {
     }
   }, 
   
+  // ----------
+  // Function: assert
+  // Prints a stack trace along with label (as a console message) if condition is false. 
   assert: function(label, condition) {
     if (!condition) {
       var text;
@@ -534,6 +601,7 @@ var Utils = {
     }
   },
   
+  // ----------
   // Function: assertThrow
   // Throws label as an exception if condition is false.
   assertThrow: function(label, condition) {
@@ -554,6 +622,9 @@ var Utils = {
     }
   },
   
+  // ----------
+  // Function: expandObject
+  // Prints the given object to a string, including all of its properties. 
   expandObject: function(obj) {
       var s = obj + ' = {';
       for (prop in obj) {
@@ -577,6 +648,9 @@ var Utils = {
       return s + '}';
     }, 
     
+  // ----------
+  // Function: expandArgumentsForLog
+  // Expands all of the given args (an array) into a single string. 
   expandArgumentsForLog: function(args) {
     var s = '';
     var count = args.length;
@@ -594,6 +668,9 @@ var Utils = {
     return s;
   },
   
+  // ----------
+  // Funtion: testLogging
+  // Prints some test messages with the various logging methods. 
   testLogging: function() {
     this.log('beginning logging test'); 
     this.error('this is an error');
@@ -602,7 +679,11 @@ var Utils = {
     this.log('ending logging test');
   }, 
   
-  // ___ Event
+  // ___ Misc
+
+  // ----------
+  // Function: isRightClick
+  // Given a DOM mouse event, returns true if it was for the right mouse button.
   isRightClick: function(event) {
     if (event.which)
       return (event.which == 3);
@@ -612,13 +693,17 @@ var Utils = {
     return false;
   },
   
-  // ___ Time
+  // ----------
+  // Function: getMilliseconds
+  // Returns the total milliseconds on the system clock right now.
   getMilliseconds: function() {
     var date = new Date();
     return date.getTime();
   },
   
-  // ___ Misc
+  // ----------
+  // Function: isDOMElement
+  // Returns true if the given object is a DOM element.
   isDOMElement: function(object) {
     return (object && typeof(object.nodeType) != 'undefined' ? true : false);
   },
@@ -645,7 +730,9 @@ var Utils = {
     return value;
   },
 
-  // ___ Is Mac
+  // ----------
+  // Function: isMac
+  // Returns true if running on a Mac.
   isMac: function() {
     if (this._isMac == null) {
       var xulRuntime =
