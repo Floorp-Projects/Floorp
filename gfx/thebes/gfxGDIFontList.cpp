@@ -132,22 +132,38 @@ static TTDeleteEmbeddedFontProc TTDeleteEmbeddedFontPtr = nsnull;
 
 class WinUserFontData : public gfxUserFontData {
 public:
-    WinUserFontData(HANDLE aFontRef, PRBool aIsCFF)
-        : mFontRef(aFontRef), mIsCFF(aIsCFF)
+    WinUserFontData(HANDLE aFontRef, PRBool aIsEmbedded)
+        : mFontRef(aFontRef), mIsEmbedded(aIsEmbedded)
     { }
 
     virtual ~WinUserFontData()
     {
-        if (mIsCFF) {
-            RemoveFontMemResourceEx(mFontRef);
-        } else {
+        if (mIsEmbedded) {
             ULONG pulStatus;
-            TTDeleteEmbeddedFontPtr(mFontRef, 0, &pulStatus);
+            LONG err;
+            err = TTDeleteEmbeddedFontPtr(mFontRef, 0, &pulStatus);
+#if DEBUG
+            if (err != E_NONE) {
+                char buf[256];
+                sprintf(buf, "error deleting embedded font handle (%p) - TTDeleteEmbeddedFont returned %8.8x", mFontRef, err);
+                NS_ASSERTION(err == E_NONE, buf);
+            }
+#endif
+        } else {
+            BOOL success;
+            success = RemoveFontMemResourceEx(mFontRef);
+#if DEBUG
+            if (!success) {
+                char buf[256];
+                sprintf(buf, "error deleting font handle (%p) - RemoveFontMemResourceEx failed", mFontRef);
+                NS_ASSERTION(success, buf);
+            }
+#endif
         }
     }
     
     HANDLE mFontRef;
-    PRPackedBool mIsCFF;
+    PRPackedBool mIsEmbedded;
 };
 
 BYTE 
@@ -860,24 +876,29 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 
         rv = gfxFontUtils::MakeEOTHeader(aFontData, aLength, &eotHeader, 
                                          &overlayNameData);
-        if (NS_FAILED(rv))
-            return nsnull;
+        if (NS_SUCCEEDED(rv)) {
 
-        // load in embedded font data
-        eotlen = eotHeader.Length();
-        buffer = reinterpret_cast<PRUint8*> (eotHeader.Elements());
-        
-        PRInt32 ret;
-        ULONG privStatus, pulStatus;
-        EOTFontStreamReader eotReader(aFontData, aLength, buffer, eotlen,
-                                      &overlayNameData);
+            // load in embedded font data
+            eotlen = eotHeader.Length();
+            buffer = reinterpret_cast<PRUint8*> (eotHeader.Elements());
+            
+            PRInt32 ret;
+            ULONG privStatus, pulStatus;
+            EOTFontStreamReader eotReader(aFontData, aLength, buffer, eotlen,
+                                          &overlayNameData);
 
-        ret = TTLoadEmbeddedFontPtr(&fontRef, TTLOAD_PRIVATE, &privStatus, 
-                                   LICENSE_PREVIEWPRINT, &pulStatus, 
-                                   EOTFontStreamReader::ReadEOTStream, 
-                                   &eotReader, (PRUnichar*)(fontName.get()), 0, 0);
-        if (ret != E_NONE)
-            fontRef = nsnull;
+            ret = TTLoadEmbeddedFontPtr(&fontRef, TTLOAD_PRIVATE, &privStatus,
+                                       LICENSE_PREVIEWPRINT, &pulStatus,
+                                       EOTFontStreamReader::ReadEOTStream,
+                                       &eotReader,
+                                       (PRUnichar*)(fontName.get()), 0, 0);
+            if (ret != E_NONE) {
+                fontRef = nsnull;
+                char buf[256];
+                sprintf(buf, "font (%s) not loaded using TTLoadEmbeddedFont - error %8.8x", NS_ConvertUTF16toUTF8(aProxyEntry->FamilyName()).get(), ret);
+                NS_WARNING(buf);
+            }
+        }
     }
 
     // load CFF fonts or fonts that failed with t2embed loader
@@ -913,7 +934,7 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     }
 
     // make a new font entry using the unique name
-    WinUserFontData *winUserFontData = new WinUserFontData(fontRef, isCFF);
+    WinUserFontData *winUserFontData = new WinUserFontData(fontRef, isEmbedded);
     PRUint16 w = (aProxyEntry->mWeight == 0 ? 400 : aProxyEntry->mWeight);
 
     GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(uniqueName, 
@@ -926,9 +947,12 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 
     fe->mIsUserFont = PR_TRUE;
 
-    // Uniscribe doesn't place CFF fonts loaded privately via AddFontMemResourceEx
-    if (isCFF)
+    // Uniscribe doesn't place CFF fonts loaded privately 
+    // via AddFontMemResourceEx on XP/Vista
+    if (isCFF && gfxWindowsPlatform::WindowsOSVersion() 
+                 < gfxWindowsPlatform::kWindows7) {
         fe->mForceGDI = PR_TRUE;
+    }
  
     return fe;
 }
