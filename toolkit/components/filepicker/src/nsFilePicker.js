@@ -64,7 +64,7 @@ const nsIFileURL            = Components.interfaces.nsIFileURL;
 const nsISupports           = Components.interfaces.nsISupports;
 const nsIFactory            = Components.interfaces.nsIFactory;
 const nsIFilePicker         = Components.interfaces.nsIFilePicker;
-const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor
+const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
 const nsIDOMWindow          = Components.interfaces.nsIDOMWindow;
 const nsIStringBundleService = Components.interfaces.nsIStringBundleService;
 const nsIWebNavigation      = Components.interfaces.nsIWebNavigation;
@@ -98,7 +98,7 @@ function nsFilePicker()
 }
 
 nsFilePicker.prototype = {
-  classID: Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
+  classID: Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}"),
 
   QueryInterface: function(iid) {
     if (iid.equals(nsIFilePicker) ||
