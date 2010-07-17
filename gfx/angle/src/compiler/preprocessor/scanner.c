@@ -83,15 +83,15 @@ static int byte_scan(InputSrc *, yystypepp * yylvalpp);
 
 #define EOL_SY '\n'
 
-#if defined(_WIN32)
+#if defined(_MSC_VER)
     #define DBG_BREAKPOINT() __asm int 3
-    #elif defined(_M_AMD64)
+#elif defined(_M_AMD64)
     #define DBG_BREAKPOINT() assert(!"Dbg_Breakpoint");
-    #else
+#else
     #define DBG_BREAKPOINT()
-    #endif
+#endif
 
-    #if defined(_WIN32) && !defined(_M_AMD64)
+#if defined(_MSC_VER) && !defined(_M_AMD64)
     __int64 RDTSC ( void ) {
 
         __int64 v;
