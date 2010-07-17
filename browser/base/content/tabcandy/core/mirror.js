@@ -153,7 +153,7 @@ function Mirror(tab, manager) {
     
   this.needsPaint = 0;
   this.canvasSizeForced = false;
-  this.shouldShowCachedData = false;
+  this.isShowingCachedData = false;
   this.el = $div.get(0);
   this.favEl = iQ('.favicon>img', $div).get(0);
   this.nameEl = iQ('.tab-title', $div).get(0);
@@ -207,8 +207,8 @@ Mirror.prototype = iQ.extend(new Subscribable(), {
   // Function: showCachedData
   // Shows the cached data i.e. image and title.  Note: this method should only
   // be called at browser startup with the cached data avaliable. 
-  showCachedData : function(tab, tabData) {
-    this.shouldShowCachedData = true;
+  showCachedData: function(tab, tabData) {
+    this.isShowingCachedData = true;
     var mirror = tab.mirror;
     var $nameElement = iQ(mirror.nameEl);
     var $canvasElement = iQ(mirror.canvasEl);
@@ -222,12 +222,10 @@ Mirror.prototype = iQ.extend(new Subscribable(), {
   // Function: hideCachedData
   // Hides the cached data i.e. image and title and show the canvas. 
   hideCachedData: function(tab) {
-    if (this.shouldShowCachedData) {
-      this.shouldShowCachedData = false;
-      var mirror = tab.mirror;
-      iQ(mirror.cachedThumbEl).hide().attr("src", "");
-      iQ(mirror.canvasEl).show();
-    }
+    this.isShowingCachedData = false;
+    var mirror = tab.mirror;
+    iQ(mirror.cachedThumbEl).hide().attr("src", "");
+    iQ(mirror.canvasEl).show();
   }
 });
 
@@ -267,11 +265,14 @@ TabMirror.prototype = {
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.update(tab);
       }, 1);
-      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
-	if (tab.mirror) {
-	  tab.mirror.hideCachedData(tab);
-	}
-      }, 5000);
+      if (tab.mirror && tab.mirror.isShowingCachedData) {
+	// when DOMContentLoaded is fired, stylesheets, images and subframes
+	// might not be do loading so a few second timeout is needed before
+	// switching back to the canvas.
+	iQ.timeout(function() {
+          tab.mirror.hideCachedData(tab);
+	}, 3000);
+      }
     });
 
     // When a tab is closed, unlink.    
@@ -329,7 +330,7 @@ TabMirror.prototype = {
             mirror.triggerPaint();
           }
           
-          if (!mirror.shouldShowCachedData && $name.text() != label) {
+          if (!mirror.isShowingCachedData && $name.text() != label) {
             $name.text(label);
             mirror.triggerPaint();
           }

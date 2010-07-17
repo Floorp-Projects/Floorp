@@ -758,7 +758,7 @@ window.TabItems = {
           // tab is being restored so need to catch that.
           iQ.timeout(function() {
             mirror.hideCachedData(item.tab);
-          }, 30000);
+          }, 15000);
         }
         
         Groups.updateTabBarForActiveGroup();
