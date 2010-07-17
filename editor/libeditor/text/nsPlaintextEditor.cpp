@@ -867,52 +867,49 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled)
   {
-    // create the new BR node
-    nsCOMPtr<nsIDOMNode> newNode;
-    res = DeleteSelectionAndCreateNode(NS_LITERAL_STRING("br"), getter_AddRefs(newNode));
-    if (!newNode) res = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
+    // get the (collapsed) selection location
+    nsCOMPtr<nsIDOMNode> selNode;
+    PRInt32 selOffset;
+    res = GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
+    NS_ENSURE_SUCCESS(res, res);
+
+    // don't put text in places that can't have it
+    if (!IsTextNode(selNode) && !CanContainTag(selNode, NS_LITERAL_STRING("#text")))
+      return NS_ERROR_FAILURE;
+
+    // we need to get the doc
+    nsCOMPtr<nsIDOMDocument> doc;
+    res = GetDocument(getter_AddRefs(doc));
+    NS_ENSURE_SUCCESS(res, res);
+    NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
+
+    // don't spaz my selection in subtransactions
+    nsAutoTxnsConserveSelection dontSpazMySelection(this);
+
+    // insert a linefeed character
+    res = InsertTextImpl(NS_LITERAL_STRING("\n"), address_of(selNode),
+                         &selOffset, doc);
+    if (!selNode) res = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
     if (NS_SUCCEEDED(res))
     {
-      // set the selection to the new node
-      nsCOMPtr<nsIDOMNode>parent;
-      res = newNode->GetParentNode(getter_AddRefs(parent));
-      if (!parent) res = NS_ERROR_NULL_POINTER; // don't return here, so DidDoAction is called
+      // set the selection to the correct location
+      res = selection->Collapse(selNode, selOffset);
+
       if (NS_SUCCEEDED(res))
       {
-        PRInt32 offsetInParent=-1;  // we use the -1 as a marker to see if we need to compute this or not
-        nsCOMPtr<nsIDOMNode>nextNode;
-        newNode->GetNextSibling(getter_AddRefs(nextNode));
-        if (nextNode)
-        {
-          nsCOMPtr<nsIDOMCharacterData>nextTextNode = do_QueryInterface(nextNode);
-          if (!nextTextNode) {
-            nextNode = do_QueryInterface(newNode); // is this QI needed?
-          }
-          else { 
-            offsetInParent=0; 
-          }
-        }
-        else {
-          nextNode = do_QueryInterface(newNode); // is this QI needed?
-        }
+        // see if we're at the end of the editor range
+        nsCOMPtr<nsIDOMNode> endNode;
+        PRInt32 endOffset;
+        res = GetEndNodeAndOffset(selection, getter_AddRefs(endNode), &endOffset);
 
-        if (-1==offsetInParent) 
+        if (NS_SUCCEEDED(res) && endNode == selNode && endOffset == selOffset)
         {
-          nextNode->GetParentNode(getter_AddRefs(parent));
-          res = GetChildOffset(nextNode, parent, offsetInParent);
-          if (NS_SUCCEEDED(res)) {
-            // SetInterlinePosition(PR_TRUE) means we want the caret to stick to the content on the "right".
-            // We want the caret to stick to whatever is past the break.  This is
-            // because the break is on the same line we were on, but the next content
-            // will be on the following line.
-            nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-            selPriv->SetInterlinePosition(PR_TRUE);
-            res = selection->Collapse(parent, offsetInParent+1);  // +1 to insert just after the break
-          }
-        }
-        else
-        {
-          res = selection->Collapse(nextNode, offsetInParent);
+          // SetInterlinePosition(PR_TRUE) means we want the caret to stick to the content on the "right".
+          // We want the caret to stick to whatever is past the break.  This is
+          // because the break is on the same line we were on, but the next content
+          // will be on the following line.
+          nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+          selPriv->SetInterlinePosition(PR_TRUE);
         }
       }
     }
