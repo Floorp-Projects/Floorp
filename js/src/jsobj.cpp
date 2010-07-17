@@ -5529,18 +5529,6 @@ js_TypeOf(JSContext *cx, JSObject *obj)
                : JSTYPE_OBJECT;
     }
 
-#ifdef NARCISSUS
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    Value v;
-
-    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__call__Atom), &v)) {
-        JS_ClearPendingException(cx);
-    } else {
-        if (IsFunctionObject(v))
-            return JSTYPE_FUNCTION;
-    }
-#endif
-
     return JSTYPE_OBJECT;
 }
 
@@ -5549,29 +5537,6 @@ void
 js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 {
     JS_UNLOCK_OBJ(cx, obj);
-}
-#endif
-
-#ifdef NARCISSUS
-static JSBool
-GetCurrentExecutionContext(JSContext *cx, JSObject *obj, Value *rval)
-{
-    JSObject *tmp;
-    Value xcval;
-
-    while ((tmp = obj->getParent()) != NULL)
-        obj = tmp;
-    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.ExecutionContextAtom), &xcval))
-        return JS_FALSE;
-    if (xcval.isPrimitive()) {
-        JS_ReportError(cx, "invalid ExecutionContext in global object");
-        return JS_FALSE;
-    }
-    if (!xcval.toObject().getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.currentAtom),
-                                      rval)) {
-        return JS_FALSE;
-    }
-    return JS_TRUE;
 }
 #endif
 
@@ -5587,30 +5552,6 @@ js_Call(JSContext *cx, uintN argc, Value *vp)
     JSObject *callee = &JS_CALLEE(cx, vp).toObject();
     Class *clasp = callee->getClass();
     if (!clasp->call) {
-#ifdef NARCISSUS
-        JSObject *args;
-        Value fval, nargv[3];
-        JSBool ok;
-
-        if (!callee->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__call__Atom), &fval))
-            return JS_FALSE;
-        if (IsFunctionObject(fval)) {
-            if (!GetCurrentExecutionContext(cx, obj, &nargv[2]))
-                return JS_FALSE;
-            args = js_GetArgsObject(cx, js_GetTopStackFrame(cx));
-            if (!args)
-                return JS_FALSE;
-            nargv[0].setObject(*obj);
-            nargv[1].setObject(*args);
-            return InternalCall(cx, callee, fval, 3, nargv, rval);
-        }
-        if (fval.isObjectOrNull() && fval.toObjectOrNull() != callee) {
-            vp[0] = fval;
-            ok = js_Call(cx, argc, vp);
-            vp[0].setObject(*callee);
-            return ok;
-        }
-#endif
         js_ReportIsNotFunction(cx, &vp[0], 0);
         return JS_FALSE;
     }
@@ -5627,34 +5568,6 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 
     Class *clasp = argv[-2].toObject().getClass();
     if (!clasp->construct) {
-#ifdef NARCISSUS
-        JSObject *callee, *args;
-        Value cval, nargv[2];
-        JSBool ok;
-
-        callee = &argv[-2].toObject();
-        if (!callee->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__construct__Atom),
-                                 &cval)) {
-            return JS_FALSE;
-        }
-        if (IsFunctionObject(cval)) {
-            if (!GetCurrentExecutionContext(cx, obj, &nargv[1]))
-                return JS_FALSE;
-            args = js_GetArgsObject(cx, js_GetTopStackFrame(cx));
-            if (!args)
-                return JS_FALSE;
-            nargv[0].setObject(*args);
-            return InternalCall(cx, callee, cval, 2, nargv, rval);
-        }
-        if (cval.isObjectOrNull() && cval.toObjectOrNull() != callee) {
-            argv[-2] = cval;
-            ok = js_Call(cx, argc, argv - 2);
-            if (ok)
-                *rval = argv[-2];
-            argv[-2] = OBJECT_TO_JSVAL(callee);
-            return ok;
-        }
-#endif
         js_ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
         return JS_FALSE;
     }
@@ -5667,20 +5580,6 @@ js_HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)
         return clasp->hasInstance(cx, obj, v, bp);
-#ifdef NARCISSUS
-    {
-        Value fval, rval;
-
-        if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__hasInstance__Atom), &fval))
-            return JS_FALSE;
-        if (IsFunctionObject(fval)) {
-            if (!InternalCall(cx, obj, fval, 1, v, &rval))
-                return JS_FALSE;
-            *bp = js_ValueToBoolean(rval);
-            return JS_TRUE;
-        }
-    }
-#endif
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                         JSDVG_SEARCH_STACK, ObjectValue(*obj), NULL);
     return JS_FALSE;
