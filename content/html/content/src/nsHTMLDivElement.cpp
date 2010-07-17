@@ -119,7 +119,7 @@ nsHTMLDivElement::ParseAttribute(PRInt32 aNamespaceID,
         return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
       }
       if (aAttribute == nsGkAtoms::bgcolor) {
-        return aResult.ParseColor(aValue, GetOwnerDoc());
+        return aResult.ParseColor(aValue);
       }
       if ((aAttribute == nsGkAtoms::hspace) ||
           (aAttribute == nsGkAtoms::vspace)) {
