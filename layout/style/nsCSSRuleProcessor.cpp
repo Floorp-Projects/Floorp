@@ -1000,6 +1000,11 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(nsGkAtoms::images_in_buttons);
   }
 
+  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenuBarDrag, metricResult);
+  if (metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::menubar_drag);
+  }
+
   rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowsDefaultTheme, metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(nsGkAtoms::windows_default_theme);
