@@ -178,6 +178,11 @@ window.TabItem = function(container, tab) {
 
 window.TabItem.prototype = iQ.extend(new Item(), {
   // ----------  
+  // Function: getStorageData
+  // Get data to be used for persistent storage of this object. 
+  // 
+  // Parameters: 
+  //   getImageData - true to include thumbnail pixels (and page title as well); default false
   getStorageData: function(getImageData) {
     return {
       bounds: this.getBounds(), 
@@ -191,6 +196,11 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   },
 
   // ----------
+  // Function: save
+  // Store persistent for this object. 
+  // 
+  // Parameters: 
+  //   saveImageData - true to include thumbnail pixels (and page title as well); default false
   save: function(saveImageData) {
     try{
       if (!this.tab || !this.tab.raw || !this.reconnected) // too soon/late to save
@@ -204,12 +214,24 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     }
   },
   
-  // ----------  
+  // ---------- 
+  // Function: getURL
+  // Returns the URL for the page represented by this tab.  
   getURL: function() {
     return this.tab.url;
   },
     
   // ----------  
+  // Function: setBounds
+  // Moves this item to the specified location and size. 
+  // 
+  // Parameters: 
+  //   rect - a <Rect> giving the new bounds
+  //   immediately - true if it should not animate; default false
+  //   options - an object with additional parameters, see below
+  // 
+  // Possible options: 
+  //   force - true to always update the DOM even if the bounds haven't changed; default false
   setBounds: function(rect, immediately, options) {
     if (!isRect(rect)) {
       Utils.trace('TabItem.setBounds: rect is not a real rectangle!', rect);
@@ -354,17 +376,24 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   },
 
   // ----------
+  // Function: inStack
+  // Returns true if this item is in a stacked group. 
   inStack: function(){
     return iQ(this.container).hasClass("stacked");
   },
 
   // ----------
+  // Function: setZ
+  // Sets the z-index for this item. 
   setZ: function(value) {
     this.zIndex = value;
     iQ(this.container).css({zIndex: value});
   },
     
   // ----------
+  // Function: close
+  // Closes this item (actually closes the tab associated with it, which automatically
+  // closes the item.
   close: function() {
     this.tab.close();
 
@@ -373,11 +402,15 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   },
   
   // ----------
+  // Function: addClass
+  // Adds the specified CSS class to this item's container DOM element. 
   addClass: function(className) {
     iQ(this.container).addClass(className);
   },
   
   // ----------
+  // Function: removeClass
+  // Removes the specified CSS class from this item's container DOM element. 
   removeClass: function(className) {
     iQ(this.container).removeClass(className);
   },
@@ -398,6 +431,9 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   },
   
   // ----------  
+  // Function: setResizable
+  // If value is true, makes this item resizable, otherwise non-resizable.
+  // Shows/hides a visible resize handle as appropriate.
   setResizable: function(value){
     var $resizer = iQ('.expander', this.container);
 
@@ -414,6 +450,8 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   },
   
   // ----------  
+  // Function: makeActive
+  // Updates this item to visually indicate that it's active.
   makeActive: function(){
    iQ(this.container).find("canvas").addClass("focus");
    iQ(this.container).find("img.cached-thumb").addClass("focus");
@@ -421,6 +459,8 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   },
 
   // ----------    
+  // Function: makeDeactive
+  // Updates this item to visually indicate that it's not active.
   makeDeactive: function(){
    iQ(this.container).find("canvas").removeClass("focus");
    iQ(this.container).find("img.cached-thumb").removeClass("focus");
@@ -594,6 +634,8 @@ window.TabItems = {
   fontSize: 9,
 
   // ----------
+  // Function: init
+  // Sets the object up.
   init: function() {
     this.items = [];
     
@@ -613,12 +655,17 @@ window.TabItems = {
   },
 
   // ----------  
+  // Function: register
+  // Adds the given <TabItem> to the master list. 
   register: function(item) {
+    Utils.assert('item must be a TabItem', item && item.isAnItem);
     Utils.assert('only register once per item', this.items.indexOf(item) == -1);
     this.items.push(item);
   },
   
   // ----------  
+  // Function: unregister
+  // Removes the given <TabItem> from the master list. 
   unregister: function(item) {
     var index = this.items.indexOf(item);
     if (index != -1)
@@ -626,6 +673,8 @@ window.TabItems = {
   },
     
   // ----------
+  // Function: getItems
+  // Returns a copy of the master array of <TabItem>s.
   getItems: function() {
     return Utils.copy(this.items);
   },
@@ -639,6 +688,11 @@ window.TabItems = {
   },
   
   // ----------
+  // Function: saveAll
+  // Saves all open <TabItem>s. 
+  // 
+  // Parameters: 
+  //   saveImageData - true to include thumbnail pixels (and page title as well); default false
   saveAll: function(saveImageData) {
     var items = this.getItems();
     items.forEach(function(item) {
@@ -647,8 +701,11 @@ window.TabItems = {
   },
   
   // ----------
+  // Function: storageSanity
+  // Checks the specified data (as returned by TabItem.getStorageData or loaded from storage)
+  // and returns true if it looks valid.
+  // TODO: check everything 
   storageSanity: function(data) {
-    // TODO: check everything 
     var sane = true;
     if (!isRect(data.bounds)) {
       Utils.log('TabItems.storageSanity: bad bounds', data.bounds);
@@ -659,6 +716,8 @@ window.TabItems = {
   },
 
   // ----------
+  // Function: reconnect
+  // Given a <TabItem>, attempts to load its persistent data from storage.
   reconnect: function(item) {
     var found = false;
 
