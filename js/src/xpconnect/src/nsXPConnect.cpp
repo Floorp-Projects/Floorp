@@ -495,7 +495,7 @@ NoteJSRoot(JSTracer *trc, void *thing, uint32 kind)
                                  nsXPConnect::GetXPConnect());
         }
     }
-    else if(kind != JSTRACE_DOUBLE && kind != JSTRACE_STRING)
+    else if(kind != JSTRACE_STRING)
     {
         JS_TraceChildren(trc, thing, kind);
     }
