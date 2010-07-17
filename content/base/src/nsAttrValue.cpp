@@ -1168,7 +1168,7 @@ nsAttrValue::SetColorValue(nscolor aColor, const nsAString& aString)
 }
 
 PRBool
-nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
+nsAttrValue::ParseColor(const nsAString& aString)
 {
   ResetIfSet();
 

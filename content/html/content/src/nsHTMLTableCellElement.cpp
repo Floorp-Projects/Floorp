@@ -313,7 +313,7 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
       return ParseTableCellHAlignValue(aValue, aResult);
     }
     if (aAttribute == nsGkAtoms::bgcolor) {
-      return aResult.ParseColor(aValue, GetOwnerDoc());
+      return aResult.ParseColor(aValue);
     }
     if (aAttribute == nsGkAtoms::scope) {
       return aResult.ParseEnumValue(aValue, kCellScopeTable, PR_FALSE);

@@ -142,7 +142,7 @@ nsHTMLHRElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseEnumValue(aValue, kAlignTable, PR_FALSE);
     }
     if (aAttribute == nsGkAtoms::color) {
-      return aResult.ParseColor(aValue, GetOwnerDoc());
+      return aResult.ParseColor(aValue);
     }
   }
 
