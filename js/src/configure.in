@@ -4220,17 +4220,6 @@ if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
 fi
 
 dnl ========================================================
-dnl Enable Narcissus
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(narcissus,
-[  --enable-narcissus      Build with Narcissus code enabled],
-    NARCISSUS=1,
-    NARCISSUS= )
-if test -n "$NARCISSUS"; then
-    AC_DEFINE(NARCISSUS)
-fi
-
-dnl ========================================================
 dnl = Enable trace malloc
 dnl ========================================================
 NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
