@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=552938
+-->
+<head>
+  <title>Test for Bug 552938</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload='runTest();'>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=552938">Mozilla Bug 552938</a>
+<script>
+var svgLoadFired = false;
+</script>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <svg onload="svgLoadFired = true;"></svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 552938 **/
+function runTest() {
+  ok(svgLoadFired, "The SVG load event should have fired.");
+  SimpleTest.finish();
+}
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

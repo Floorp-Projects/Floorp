@@ -49,7 +49,7 @@ load 384637-1.svg
 load 384728-1.svg
 load 385246-1.svg
 load 385246-2.svg
-asserts(1) load 385840-1.svg # bug 385845
+load 385840-1.svg
 load 385852-1.svg
 load 386475-1.xhtml
 load 386566-1.svg
