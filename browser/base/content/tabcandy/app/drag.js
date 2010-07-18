@@ -99,20 +99,18 @@ var Drag = function(item, event, isResizing) {
 
 Drag.prototype = {
   // ----------
-  // Function: snap
-  // Called when a drag or mousemove occurs. Set the bounds based on the mouse move first, then
-  // call snap and it will adjust the item's bounds if appropriate. Also triggers the display of
-  // trenches that it snapped to.
+  // Function: snapBounds
+  // Adjusts the given bounds according to the currently active trenches. Used by <Drag.snap>
   // 
   // Parameters: 
+  //   bounds             - (<Rect>) bounds
   //   stationaryCorner   - which corner is stationary? by default, the top left.
   //                        "topleft", "bottomleft", "topright", "bottomright"
   //   assumeConstantSize - (boolean) whether the bounds' dimensions are sacred or not.
   //   keepProportional   - (boolean) if assumeConstantSize is false, whether we should resize 
   //                        proportionally or not
-  snap: function(stationaryCorner, assumeConstantSize, keepProportional) {
+  snapBounds: function Drag_snapBounds(bounds, stationaryCorner, assumeConstantSize, keepProportional) {
     var stationaryCorner = stationaryCorner || 'topleft';
-    var bounds = this.item.getBounds();
     var update = false; // need to update
     var updateX = false;
     var updateY = false;
@@ -152,7 +150,30 @@ Drag.prototype = {
     }
 
     if (update)
+      Utils.log('snapBounds', update ? bounds : false);
+    return update ? bounds : false;
+  },
+  
+  // ----------
+  // Function: snap
+  // Called when a drag or mousemove occurs. Set the bounds based on the mouse move first, then
+  // call snap and it will adjust the item's bounds if appropriate. Also triggers the display of
+  // trenches that it snapped to.
+  // 
+  // Parameters: 
+  //   stationaryCorner   - which corner is stationary? by default, the top left.
+  //                        "topleft", "bottomleft", "topright", "bottomright"
+  //   assumeConstantSize - (boolean) whether the bounds' dimensions are sacred or not.
+  //   keepProportional   - (boolean) if assumeConstantSize is false, whether we should resize 
+  //                        proportionally or not
+  snap: function Drag_snap(stationaryCorner, assumeConstantSize, keepProportional) {
+    var bounds = this.item.getBounds();
+    bounds = this.snapBounds(bounds, stationaryCorner, assumeConstantSize, keepProportional);
+    if (bounds) {
       this.item.setBounds(bounds,true);
+      return true;
+    }
+    return false;
   },
   
   // --------
