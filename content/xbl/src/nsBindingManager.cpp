@@ -1377,8 +1377,7 @@ EnumMediumFeaturesChanged(nsVoidPtrHashKey *aKey, void* aClosure)
   MediumFeaturesChangedData *data =
     static_cast<MediumFeaturesChangedData*>(aClosure);
 
-  PRBool thisChanged = PR_FALSE;
-  ruleProcessor->MediumFeaturesChanged(data->mPresContext, &thisChanged);
+  PRBool thisChanged = ruleProcessor->MediumFeaturesChanged(data->mPresContext);
   *data->mRulesChanged = *data->mRulesChanged || thisChanged;
 
   return PL_DHASH_NEXT;
