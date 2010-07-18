@@ -1164,11 +1164,7 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
               if (NS_FAILED(rv))
                 continue;
               NS_ASSERTION(rule, "We should have a rule by now");
-              PRInt32 type;
-              rv = rule->GetType(type);
-              if (NS_FAILED(rv))
-                continue;
-              switch (type) {
+              switch (rule->GetType()) {
                 case nsICSSRule::UNKNOWN_RULE:
                 case nsICSSRule::CHARSET_RULE:
                 case nsICSSRule::IMPORT_RULE:

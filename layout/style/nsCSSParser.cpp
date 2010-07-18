@@ -913,9 +913,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
     nsICSSRule* lastRule = nsnull;
     mSheet->GetStyleRuleAt(ruleCount - 1, lastRule);
     if (lastRule) {
-      PRInt32 type;
-      lastRule->GetType(type);
-      switch (type) {
+      switch (lastRule->GetType()) {
         case nsICSSRule::CHARSET_RULE:
         case nsICSSRule::IMPORT_RULE:
           mSection = eCSSSection_Import;
