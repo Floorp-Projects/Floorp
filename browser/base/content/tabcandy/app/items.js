@@ -511,29 +511,19 @@ window.Item.prototype = {
     if (this.parent !== null)
       return;
 
-    var container = this.container;
+    if (!this.borderTrenches)
+      this.borderTrenches = Trenches.registerWithItem(this,"border");
 
-    if (!this.borderTrenches) {
-      var bT = this.borderTrenches = {};
-      bT.left = Trenches.register(container,"x","border","left");
-      bT.right = Trenches.register(container,"x","border","right");
-      bT.top = Trenches.register(container,"y","border","top");
-      bT.bottom = Trenches.register(container,"y","border","bottom");
-    }
     var bT = this.borderTrenches;
     Trenches.getById(bT.left).setWithRect(rect);
     Trenches.getById(bT.right).setWithRect(rect);
     Trenches.getById(bT.top).setWithRect(rect);
     Trenches.getById(bT.bottom).setWithRect(rect);
-        
-    if (!this.guideTrenches) {
-      var gT = this.guideTrenches = {};
-      gT.left = Trenches.register(container,"x","guide","left");
-      gT.right = Trenches.register(container,"x","guide","right");
-      gT.top = Trenches.register(container,"y","guide","top");
-      gT.bottom = Trenches.register(container,"y","guide","bottom");
-    }
-    var gT = this.guideTrenches;
+
+    if (!this.guideTrenches)
+      this.guideTrenches = Trenches.registerWithItem(this,"guide");
+
+    var gT = this.guideTrenches;    
     Trenches.getById(gT.left).setWithRect(rect);
     Trenches.getById(gT.right).setWithRect(rect);
     Trenches.getById(gT.top).setWithRect(rect);
@@ -558,7 +548,7 @@ window.Item.prototype = {
   // ----------
   // Function: snap
   // The snap function used during group creation via drag-out
-  snap: function() {
+  snap: function Item_snap() {
     // make the snapping work with a wider range!
     var defaultRadius = Trenches.defaultRadius;
     Trenches.defaultRadius = 2 * defaultRadius; // bump up from 10 to 20!
