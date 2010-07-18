@@ -51,17 +51,17 @@ var consoleService = Cc["@mozilla.org/consoleservice;1"]
 
 // ##########
 // Class: Point
-// A simple point. 
+// A simple point.
 //
 // Constructor: Point
-// If a is a Point, creates a copy of it. Otherwise, expects a to be x, 
-// and creates a Point with it along with y. If either a or y are omitted, 
-// 0 is used in their place. 
+// If a is a Point, creates a copy of it. Otherwise, expects a to be x,
+// and creates a Point with it along with y. If either a or y are omitted,
+// 0 is used in their place.
 window.Point = function(a, y) {
   if (isPoint(a)) {
     // Variable: x
     this.x = a.x;
-    
+
     // Variable: y
     this.y = a.y;
   } else {
@@ -72,51 +72,51 @@ window.Point = function(a, y) {
 
 // ----------
 // Function: isPoint
-// Returns true if the given object (p) looks like a <Point>. 
-// Note that this is not an actual method of <Point>, but a global routine. 
+// Returns true if the given object (p) looks like a <Point>.
+// Note that this is not an actual method of <Point>, but a global routine.
 window.isPoint = function(p) {
   return (p && Utils.isNumber(p.x) && Utils.isNumber(p.y));
 };
 
-window.Point.prototype = { 
-  // ---------- 
+window.Point.prototype = {
+  // ----------
   // Function: distance
-  // Returns the distance from this point to the given <Point>. 
-  distance: function(point) { 
+  // Returns the distance from this point to the given <Point>.
+  distance: function(point) {
     var ax = Math.abs(this.x - point.x);
     var ay = Math.abs(this.y - point.y);
     return Math.sqrt((ax * ax) + (ay * ay));
   },
 
-  // ---------- 
+  // ----------
   // Function: plus
-  // Returns a new point with the result of adding this point to the given <Point>. 
-  plus: function(point) { 
+  // Returns a new point with the result of adding this point to the given <Point>.
+  plus: function(point) {
     return new Point(this.x + point.x, this.y + point.y);
   }
 };
 
-// ##########  
+// ##########
 // Class: Rect
-// A simple rectangle. Note that in addition to the left and width, it also has 
-// a right property; changing one affects the others appropriately. Same for the 
-// vertical properties. 
+// A simple rectangle. Note that in addition to the left and width, it also has
+// a right property; changing one affects the others appropriately. Same for the
+// vertical properties.
 //
 // Constructor: Rect
-// If a is a Rect, creates a copy of it. Otherwise, expects a to be left, 
-// and creates a Rect with it along with top, width, and height. 
+// If a is a Rect, creates a copy of it. Otherwise, expects a to be left,
+// and creates a Rect with it along with top, width, and height.
 window.Rect = function(a, top, width, height) {
   // Note: perhaps 'a' should really be called 'rectOrLeft'
   if (isRect(a)) {
     // Variable: left
     this.left = a.left;
-    
+
     // Variable: top
     this.top = a.top;
-    
+
     // Variable: width
     this.width = a.width;
-    
+
     // Variable: height
     this.height = a.height;
   } else {
@@ -129,10 +129,10 @@ window.Rect = function(a, top, width, height) {
 
 // ----------
 // Function: isRect
-// Returns true if the given object (r) looks like a <Rect>. 
-// Note that this is not an actual method of <Rect>, but a global routine. 
+// Returns true if the given object (r) looks like a <Rect>.
+// Note that this is not an actual method of <Rect>, but a global routine.
 window.isRect = function(r) {
-  return (r 
+  return (r
       && Utils.isNumber(r.left)
       && Utils.isNumber(r.top)
       && Utils.isNumber(r.width)
@@ -145,7 +145,7 @@ window.Rect.prototype = {
   get right() {
     return this.left + this.width;
   },
-  
+
   // ----------
   set right(value) {
     this.width = value - this.left;
@@ -156,7 +156,7 @@ window.Rect.prototype = {
   get bottom() {
     return this.top + this.height;
   },
-  
+
   // ----------
   set bottom(value) {
     this.height = value - this.top;
@@ -168,7 +168,7 @@ window.Rect.prototype = {
   get xRange() {
     return new Range(this.left,this.right);
   },
-  
+
   // ----------
   // Variable: yRange
   // Gives you a new <Range> for the vertical dimension.
@@ -183,12 +183,12 @@ window.Rect.prototype = {
     return (rect.right > this.left
         && rect.left < this.right
         && rect.bottom > this.top
-        && rect.top < this.bottom);      
+        && rect.top < this.bottom);
   },
-  
+
   // ----------
   // Function: intersection
-  // Returns a new <Rect> with the intersection of this rectangle and the give <Rect>, 
+  // Returns a new <Rect> with the intersection of this rectangle and the give <Rect>,
   // or null if they don't intersect.
   intersection: function(rect) {
     var box = new Rect(Math.max(rect.left, this.left), Math.max(rect.top, this.top), 0, 0);
@@ -196,15 +196,15 @@ window.Rect.prototype = {
     box.bottom = Math.min(rect.bottom, this.bottom);
     if (box.width > 0 && box.height > 0)
       return box;
-      
+
     return null;
   },
-  
+
   // ----------
   // Function: containsPoint
   // Returns a boolean denoting if the <Point> is inside of
   // the bounding rect.
-  // 
+  //
   // Paramaters
   //  - A <Point>
   containsPoint: function(point){
@@ -213,7 +213,7 @@ window.Rect.prototype = {
          && point.y > this.top
          && point.y < this.bottom )
   },
-  
+
   // ----------
   // Function: contains
   // Returns a boolean denoting if the <Rect> is contained inside
@@ -227,35 +227,35 @@ window.Rect.prototype = {
          && rect.top > this.top
          && rect.bottom < this.bottom )
   },
-  
+
   // ----------
   // Function: center
   // Returns a new <Point> with the center location of this rectangle.
   center: function() {
     return new Point(this.left + (this.width / 2), this.top + (this.height / 2));
   },
-  
+
   // ----------
   // Function: size
   // Returns a new <Point> with the dimensions of this rectangle.
   size: function() {
     return new Point(this.width, this.height);
   },
-  
+
   // ----------
   // Function: position
-  // Returns a new <Point> with the top left of this rectangle. 
+  // Returns a new <Point> with the top left of this rectangle.
   position: function() {
     return new Point(this.left, this.top);
   },
-  
+
   // ----------
   // Function: area
-  // Returns the area of this rectangle. 
+  // Returns the area of this rectangle.
   area: function() {
     return this.width * this.height;
   },
-  
+
   // ----------
   // Function: inset
   // Makes the rect smaller (if the arguments are positive) as if a margin is added all around
@@ -265,16 +265,16 @@ window.Rect.prototype = {
   //  - A <Point> or two arguments: x and y
   inset: function(a, b) {
     if (typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
-      b = a.y; 
+      b = a.y;
       a = a.x;
     }
-    
+
     this.left += a;
     this.width -= a * 2;
     this.top += b;
     this.height -= b * 2;
   },
-  
+
   // ----------
   // Function: offset
   // Moves (translates) the rect by the given vector.
@@ -290,17 +290,17 @@ window.Rect.prototype = {
       this.top += b;
     }
   },
-  
+
   // ----------
   // Function: equals
-  // Returns true if this rectangle is identical to the given <Rect>. 
+  // Returns true if this rectangle is identical to the given <Rect>.
   equals: function(a) {
     return (a.left == this.left
         && a.top == this.top
         && a.width == this.width
         && a.height == this.height);
   },
-  
+
   // ----------
   // Function: union
   // Returns a new <Rect> with the union of this rectangle and the given <Rect>.
@@ -309,11 +309,11 @@ window.Rect.prototype = {
     var newTop = Math.min(a.top, this.top);
     var newWidth = Math.max(a.right, this.right) - newLeft;
     var newHeight = Math.max(a.bottom, this.bottom) - newTop;
-    var newRect = new Rect(newLeft, newTop, newWidth, newHeight); 
-  
+    var newRect = new Rect(newLeft, newTop, newWidth, newHeight);
+
     return newRect;
   },
-  
+
   // ----------
   // Function: copy
   // Copies the values of the given <Rect> into this rectangle.
@@ -323,7 +323,7 @@ window.Rect.prototype = {
     this.width = a.width;
     this.height = a.height;
   },
-  
+
   // ----------
   // Function: css
   // Returns an object with the dimensions of this rectangle, suitable for passing into iQ.fn.css.
@@ -338,7 +338,7 @@ window.Rect.prototype = {
   }
 };
 
-// ##########  
+// ##########
 // Class: Range
 // A physical interval, with a min and max.
 //
@@ -356,15 +356,15 @@ window.Range = function(min, max) {
 
 // ----------
 // Function: isRange
-// Returns true if the given object (r) looks like a <Range>. 
-// Note that this is not an actual method of <Range>, but a global routine. 
+// Returns true if the given object (r) looks like a <Range>.
+// Note that this is not an actual method of <Range>, but a global routine.
 window.isRange = function(r) {
-  return (r 
+  return (r
       && Utils.isNumber(r.min)
       && Utils.isNumber(r.max));
 };
 
-window.Range.prototype = {  
+window.Range.prototype = {
   // Variable: extent
   // Equivalent to max-min
   get extent() {
@@ -404,7 +404,7 @@ window.Range.prototype = {
   // Paramaters
   //  - a number or <Range>
   overlaps: function(value) {
-    return Utils.isNumber(value) ? 
+    return Utils.isNumber(value) ?
       this.contains(value) :
       ( value.min <= this.max && this.min <= value.max );
   },
@@ -412,7 +412,7 @@ window.Range.prototype = {
 
 // ##########
 // Class: Subscribable
-// A mix-in for allowing objects to collect subscribers for custom events. 
+// A mix-in for allowing objects to collect subscribers for custom events.
 window.Subscribable = function() {
   this.subscribers = null;
 };
@@ -421,31 +421,31 @@ window.Subscribable.prototype = {
   // ----------
   // Function: addSubscriber
   // The given callback will be called when the Subscribable fires the given event.
-  // The refObject is used to facilitate removal if necessary. 
+  // The refObject is used to facilitate removal if necessary.
   addSubscriber: function(refObject, eventName, callback) {
     try {
       Utils.assertThrow("refObject", refObject);
       Utils.assertThrow("callback must be a function", iQ.isFunction(callback));
-      Utils.assertThrow("eventName must be a non-empty string", 
+      Utils.assertThrow("eventName must be a non-empty string",
           eventName && typeof(eventName) == "string");
-          
+
       if (!this.subscribers)
         this.subscribers = {};
-        
+
       if (!this.subscribers[eventName])
         this.subscribers[eventName] = [];
-        
+
       var subs = this.subscribers[eventName];
       var existing = subs.filter(function(element) {
         return element.refObject == refObject;
       });
-      
+
       if (existing.length) {
         Utils.assert('should only ever be one', existing.length == 1);
         existing[0].callback = callback;
-      } else {  
+      } else {
         subs.push({
-          refObject: refObject, 
+          refObject: refObject,
           callback: callback
         });
       }
@@ -453,19 +453,19 @@ window.Subscribable.prototype = {
       Utils.log(e);
     }
   },
-  
+
   // ----------
   // Function: removeSubscriber
-  // Removes the callback associated with refObject for the given event. 
+  // Removes the callback associated with refObject for the given event.
   removeSubscriber: function(refObject, eventName) {
     try {
       Utils.assertThrow("refObject", refObject);
-      Utils.assertThrow("eventName must be a non-empty string", 
+      Utils.assertThrow("eventName must be a non-empty string",
           eventName && typeof(eventName) == "string");
-          
+
       if (!this.subscribers || !this.subscribers[eventName])
         return;
-        
+
       this.subscribers[eventName] = this.subscribers[eventName].filter(function(element) {
         return element.refObject != refObject;
       });
@@ -473,21 +473,21 @@ window.Subscribable.prototype = {
       Utils.log(e);
     }
   },
-  
+
   // ----------
   // Function: _sendToSubscribers
   // Internal routine. Used by the Subscribable to fire events.
   _sendToSubscribers: function(eventName, eventInfo) {
     try {
-      Utils.assertThrow("eventName must be a non-empty string", 
+      Utils.assertThrow("eventName must be a non-empty string",
           eventName && typeof(eventName) == "string");
-          
+
       if (!this.subscribers || !this.subscribers[eventName])
         return;
-        
+
       var self = this;
       var subsCopy = iQ.merge([], this.subscribers[eventName]);
-      subsCopy.forEach(function(object) { 
+      subsCopy.forEach(function(object) {
         object.callback(self, eventInfo);
       });
     } catch(e) {
@@ -501,7 +501,7 @@ window.Subscribable.prototype = {
 // Singelton with common utility functions.
 var Utils = {
   _isMac : null,
-  
+
   // ___ Windows and Tabs
 
   // ----------
@@ -511,7 +511,7 @@ var Utils = {
     try {
       var tabBrowser = this.getCurrentWindow().gBrowser;
       Utils.assert('tabBrowser', tabBrowser);
-      
+
       var rawTab = tabBrowser.selectedTab;
       for ( var i=0; i<Tabs.length; i++){
         if (Tabs[i].raw == rawTab)
@@ -520,13 +520,13 @@ var Utils = {
     } catch(e) {
       Utils.log(e);
     }
-    
+
     return null;
   },
-  
+
   // ----------
   // Function: getCurrentWindow
-  // Returns the nsIDOMWindowInternal for the currently active window, 
+  // Returns the nsIDOMWindowInternal for the currently active window,
   // i.e. the window belonging to the active page's DOM "window" object.
   getCurrentWindow: function() {
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
@@ -540,37 +540,37 @@ var Utils = {
         return browserWin;
       }
     }
-    
+
     return null;
   },
-  
+
   // ___ Logging
 
   // ----------
   // Function: log
-  // Prints the given arguments to the JavaScript error console as a message. 
-  // Pass as many arguments as you want, it'll print them all. 
-  log: function() { 
+  // Prints the given arguments to the JavaScript error console as a message.
+  // Pass as many arguments as you want, it'll print them all.
+  log: function() {
     var text = this.expandArgumentsForLog(arguments);
     consoleService.logStringMessage(text);
-  }, 
-  
+  },
+
   // ----------
   // Function: error
-  // Prints the given arguments to the JavaScript error console as an error. 
-  // Pass as many arguments as you want, it'll print them all. 
+  // Prints the given arguments to the JavaScript error console as an error.
+  // Pass as many arguments as you want, it'll print them all.
   // TODO: Does this still work?
-  error: function() { 
+  error: function() {
     var text = this.expandArgumentsForLog(arguments);
     Cu.reportError('tabcandy error: ' + text);
-  }, 
-  
+  },
+
   // ----------
   // Function: trace
-  // Prints the given arguments to the JavaScript error console as a message, 
-  // along with a full stack trace. 
-  // Pass as many arguments as you want, it'll print them all. 
-  trace: function() { 
+  // Prints the given arguments to the JavaScript error console as a message,
+  // along with a full stack trace.
+  // Pass as many arguments as you want, it'll print them all.
+  trace: function() {
     var text = this.expandArgumentsForLog(arguments);
     if (typeof(printStackTrace) != 'function')
       this.log(text + ' trace: you need to include stacktrace.js');
@@ -579,28 +579,28 @@ var Utils = {
       calls.splice(0, 3); // Remove this call and the printStackTrace calls
       this.log('trace: ' + text + '\n' + calls.join('\n'));
     }
-  }, 
-  
+  },
+
   // ----------
   // Function: assert
-  // Prints a stack trace along with label (as a console message) if condition is false. 
+  // Prints a stack trace along with label (as a console message) if condition is false.
   assert: function(label, condition) {
     if (!condition) {
       var text;
       if (typeof(label) == 'undefined')
         text = 'badly formed assert';
       else
-        text = 'tabcandy assert: ' + label;        
-        
+        text = 'tabcandy assert: ' + label;
+
       if (typeof(printStackTrace) == 'function') {
         var calls = printStackTrace();
         text += '\n' + calls[3];
       }
-      
+
       this.trace(text);
     }
   },
-  
+
   // ----------
   // Function: assertThrow
   // Throws label as an exception if condition is false.
@@ -610,31 +610,31 @@ var Utils = {
       if (typeof(label) == 'undefined')
         text = 'badly formed assert';
       else
-        text = 'tabcandy assert: ' + label; 
-        
+        text = 'tabcandy assert: ' + label;
+
       if (typeof(printStackTrace) == 'function') {
         var calls = printStackTrace();
         calls.splice(0, 3); // Remove this call and the printStackTrace calls
         text += '\n' + calls.join('\n');
       }
-  
-      throw text;       
+
+      throw text;
     }
   },
-  
+
   // ----------
   // Function: expandObject
-  // Prints the given object to a string, including all of its properties. 
+  // Prints the given object to a string, including all of its properties.
   expandObject: function(obj) {
       var s = obj + ' = {';
       for (prop in obj) {
         var value;
         try {
-          value = obj[prop]; 
+          value = obj[prop];
         } catch(e) {
           value = '[!!error retrieving property]';
         }
-        
+
         s += prop + ': ';
         if (typeof(value) == 'string')
           s += '\'' + value + '\'';
@@ -646,11 +646,11 @@ var Utils = {
         s += ", ";
       }
       return s + '}';
-    }, 
-    
+    },
+
   // ----------
   // Function: expandArgumentsForLog
-  // Expands all of the given args (an array) into a single string. 
+  // Expands all of the given args (an array) into a single string.
   expandArgumentsForLog: function(args) {
     var s = '';
     var count = args.length;
@@ -659,26 +659,26 @@ var Utils = {
       var arg = args[a];
       if (typeof(arg) == 'object')
         arg = this.expandObject(arg);
-        
+
       s += arg;
       if (a < count - 1)
         s += '; ';
     }
-    
+
     return s;
   },
-  
+
   // ----------
   // Funtion: testLogging
-  // Prints some test messages with the various logging methods. 
+  // Prints some test messages with the various logging methods.
   testLogging: function() {
-    this.log('beginning logging test'); 
+    this.log('beginning logging test');
     this.error('this is an error');
     this.trace('this is a trace');
     this.log(1, null, {'foo': 'hello', 'bar': 2}, 'whatever');
     this.log('ending logging test');
-  }, 
-  
+  },
+
   // ___ Misc
 
   // ----------
@@ -687,12 +687,12 @@ var Utils = {
   isRightClick: function(event) {
     if (event.which)
       return (event.which == 3);
-    if (event.button) 
+    if (event.button)
       return (event.button == 2);
-    
+
     return false;
   },
-  
+
   // ----------
   // Function: getMilliseconds
   // Returns the total milliseconds on the system clock right now.
@@ -700,21 +700,21 @@ var Utils = {
     var date = new Date();
     return date.getTime();
   },
-  
+
   // ----------
   // Function: isDOMElement
   // Returns true if the given object is a DOM element.
   isDOMElement: function(object) {
     return (object && typeof(object.nodeType) != 'undefined' ? true : false);
   },
- 
+
   // ----------
   // Function: isNumber
-  // Returns true if the argument is a valid number. 
+  // Returns true if the argument is a valid number.
   isNumber: function(n) {
     return (typeof(n) == 'number' && !isNaN(n));
   },
-  
+
   // ----------
   // Function: copy
   // Returns a copy of the argument. Note that this is a shallow copy; if the argument
@@ -723,10 +723,10 @@ var Utils = {
     if (value && typeof(value) == 'object') {
       if (iQ.isArray(value))
         return iQ.extend([], value);
-        
+
       return iQ.extend({}, value);
     }
-      
+
     return value;
   },
 
@@ -740,7 +740,7 @@ var Utils = {
 	  getService(Components.interfaces.nsIXULRuntime);
       this._isMac = (xulRuntime.OS == "Darwin");
     }
-    
+
     return this._isMac;
   }
 };
@@ -749,7 +749,7 @@ window.Utils = Utils;
 
 window.Math.tanh = function tanh(x){
   var e = Math.exp(x);
-  return (e - 1/e) / (e + 1/e); 
+  return (e - 1/e) / (e + 1/e);
 }
 
 })();
