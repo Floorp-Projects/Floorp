@@ -287,10 +287,10 @@ private:
   nsCSSSelectorList& operator=(const nsCSSSelectorList& aCopy); 
 };
 
-// c6065b5e-4870-4dc5-9be3-747b6e317b25
+// 86354e96-99a5-4e73-89ad-e17f7771c47b
 #define NS_ICSS_STYLE_RULE_IID \
-{ 0xc6065b5e, 0x4870, 0x4dc5, \
-  { 0x9b, 0xe3, 0x74, 0x7b, 0x6e, 0x31, 0x7b, 0x25 } }
+{ 0x86354e96, 0x99a5, 0x4e73, \
+ { 0x89, 0xad, 0xe1, 0x7f, 0x77, 0x71, 0xc4, 0x7b } }
 
 
 class nsICSSStyleRule : public nsICSSRule {

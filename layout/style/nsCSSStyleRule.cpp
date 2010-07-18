@@ -1079,7 +1079,7 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
 
   nsCOMPtr<nsIStyleSheet> sheet;
   if (mRule) {
-    mRule->GetStyleSheet(*getter_AddRefs(sheet));
+    sheet = mRule->GetStyleSheet();
     if (sheet) {
       NS_IF_ADDREF(*aSheetURI = sheet->GetSheetURI());
       NS_IF_ADDREF(*aBaseURI = sheet->GetBaseURI());
@@ -1125,8 +1125,7 @@ DOMCSSDeclarationImpl::DeclarationChanged()
          "can only be called when |GetCSSDeclaration| returned a declaration");
 
   nsCOMPtr<nsIDocument> owningDoc;
-  nsCOMPtr<nsIStyleSheet> sheet;
-  mRule->GetStyleSheet(*getter_AddRefs(sheet));
+  nsCOMPtr<nsIStyleSheet> sheet = mRule->GetStyleSheet();
   if (sheet) {
     owningDoc = sheet->GetOwningDocument();
   }
@@ -1297,10 +1296,10 @@ public:
   virtual nsIStyleRule* GetImportantRule(void);
   virtual void RuleMatched();
 
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-  NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aSheet);
+  virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;
+  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
   
-  NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule);
+  virtual void SetParentRule(nsICSSGroupRule* aRule);
 
   virtual nsresult GetCssText(nsAString& aCssText);
   virtual nsresult SetCssText(const nsAString& aCssText);
@@ -1309,8 +1308,8 @@ public:
   virtual nsresult GetSelectorText(nsAString& aSelectorText);
   virtual nsresult SetSelectorText(const nsAString& aSelectorText);
 
-  NS_IMETHOD GetType(PRInt32& aType) const;
-  NS_IMETHOD Clone(nsICSSRule*& aClone) const;
+  virtual PRInt32 GetType() const;
+  virtual nsresult Clone(nsICSSRule*& aClone) const;
 
   nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
 
@@ -1469,33 +1468,32 @@ CSSStyleRuleImpl::RuleMatched()
   }
 }
 
-NS_IMETHODIMP
-CSSStyleRuleImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
+/* virtual */ already_AddRefed<nsIStyleSheet>
+CSSStyleRuleImpl::GetStyleSheet() const
 {
 // XXX What about inner, etc.
-  return nsCSSRule::GetStyleSheet(aSheet);
+  return nsCSSRule::GetStyleSheet();
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 CSSStyleRuleImpl::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
-  return nsCSSRule::SetStyleSheet(aSheet);
+  nsCSSRule::SetStyleSheet(aSheet);
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 CSSStyleRuleImpl::SetParentRule(nsICSSGroupRule* aRule)
 {
-  return nsCSSRule::SetParentRule(aRule);
+  nsCSSRule::SetParentRule(aRule);
 }
 
-NS_IMETHODIMP
-CSSStyleRuleImpl::GetType(PRInt32& aType) const
+/* virtual */ PRInt32
+CSSStyleRuleImpl::GetType() const
 {
-  aType = nsICSSRule::STYLE_RULE;
-  return NS_OK;
+  return nsICSSRule::STYLE_RULE;
 }
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 CSSStyleRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSStyleRuleImpl* clone = new CSSStyleRuleImpl(*this);
