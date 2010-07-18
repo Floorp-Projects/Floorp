@@ -73,18 +73,17 @@ public:
 #endif
 
   // nsIStyleRuleProcessor
-  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData);
-  NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData);
-  NS_IMETHOD RulesMatching(AnonBoxRuleProcessorData* aData);
+  virtual void RulesMatching(ElementRuleProcessorData* aData);
+  virtual void RulesMatching(PseudoElementRuleProcessorData* aData);
+  virtual void RulesMatching(AnonBoxRuleProcessorData* aData);
 #ifdef MOZ_XUL
-  NS_IMETHOD RulesMatching(XULTreeRuleProcessorData* aData);
+  virtual void RulesMatching(XULTreeRuleProcessorData* aData);
 #endif
   virtual nsRestyleHint HasStateDependentStyle(StateRuleProcessorData* aData);
   virtual PRBool HasDocumentStateDependentStyle(StateRuleProcessorData* aData);
   virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
-  NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,
-                                  PRBool* aResult);
+  virtual PRBool MediumFeaturesChanged(nsPresContext* aPresContext);
 
 private: 
   // These are not supported and are not implemented! 
