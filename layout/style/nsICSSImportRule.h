@@ -45,9 +45,9 @@
 class nsMediaList;
 class nsString;
 
-// IID for the nsICSSImportRule interface {1d7a658b-2f7b-423d-a3d9-dd5b553f69a9}
+// IID for the nsICSSImportRule interface {99118ef3-927d-43f0-a210-27482d75de2e}
 #define NS_ICSS_IMPORT_RULE_IID     \
-{0x1d7a658b, 0x2f7b, 0x423d, {0xa3, 0xd9, 0xdd, 0x5b, 0x55, 0x3f, 0x69, 0xa9}}
+{0x99118ef3, 0x927d, 0x43f0, {0xa2, 0x10, 0x27, 0x48, 0x2d, 0x75, 0xde, 0x2e}}
 
 
 class nsICSSImportRule : public nsICSSRule {

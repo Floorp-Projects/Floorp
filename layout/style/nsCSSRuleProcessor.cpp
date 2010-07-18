@@ -2915,8 +2915,7 @@ static PRBool
 CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
 {
   CascadeEnumData* data = (CascadeEnumData*)aData;
-  PRInt32 type = nsICSSRule::UNKNOWN_RULE;
-  aRule->GetType(type);
+  PRInt32 type = aRule->GetType();
 
   if (nsICSSRule::STYLE_RULE == type) {
     nsICSSStyleRule* styleRule = (nsICSSStyleRule*)aRule;
