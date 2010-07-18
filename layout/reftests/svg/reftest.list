@@ -124,6 +124,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == pattern-live-01a.svg pattern-live-01-ref.svg
 == pattern-live-01b.svg pattern-live-01-ref.svg
 == pattern-live-01c.svg pattern-live-01-ref.svg
+== polygon-marker-01.svg pass.svg
 == pseudo-classes-01.svg pass.svg
 # This test depends on :visited styles (which are asynchronous), so we run
 # it in layout/style/test/test_visited_reftests.html instead of using the
