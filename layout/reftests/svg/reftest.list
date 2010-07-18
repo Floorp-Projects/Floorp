@@ -104,6 +104,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == linearGradient-basic-02.svg pass.svg
 == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
+== marker-viewBox-01.svg marker-viewBox-01-ref.svg
 == mask-containing-masked-content-01.svg pass.svg
 # Bug 456323
 # == mask-transformed-01.svg mask-transformed-01-ref.svg
