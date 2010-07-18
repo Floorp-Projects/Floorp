@@ -149,8 +149,6 @@ Drag.prototype = {
       }
     }
 
-    if (update)
-      Utils.log('snapBounds', update ? bounds : false);
     return update ? bounds : false;
   },
   

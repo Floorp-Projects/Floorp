@@ -82,7 +82,7 @@ function max(list){ return list.slice().sort(numCmp).reverse()[0]; }
 //   container - a DOM element to use as the container for this group; otherwise will create 
 //   title - the title for the group; otherwise blank
 //   dontPush - true if this group shouldn't push away on creation; default is false
-window.Group = function(listOfEls, options) {
+window.Group = function Group(listOfEls, options) {
   try {
   if (typeof(options) == 'undefined')
     options = {};
@@ -119,8 +119,10 @@ window.Group = function(listOfEls, options) {
   var self = this;
 
   var rectToBe;
-  if (options.bounds)
+  if (options.bounds) {
+    Utils.assert("options.bounds must be a Rect",isRect(options.bounds));
     rectToBe = new Rect(options.bounds);
+  }
     
   if (!rectToBe) {
     rectToBe = Groups.getBoundingBox(listOfEls);
@@ -316,6 +318,8 @@ window.Group = function(listOfEls, options) {
   // ___ Position
   this.setBounds(rectToBe);
   this.snap();
+  if ($container)
+    this.setBounds(rectToBe);
   
   // ___ Push other objects away
   if (!options.dontPush)
@@ -1388,9 +1392,9 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   //          numbers to index from the end (-1 is the last child)
   getChild: function(index){
     if ( index < 0 )
-    	index = this._children.length + index;
+      index = this._children.length + index;
     if ( index >= this._children.length || index < 0 )
-    	return null;
+      return null;
     return this._children[index];
   },
 
