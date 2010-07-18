@@ -3005,6 +3005,30 @@ nsHTMLDocument::EndUpdate(nsUpdateType aUpdateType)
   MaybeEditingStateChanged();
 }
 
+
+// Helper class, used below in ChangeContentEditableCount().
+class DeferredContentEditableCountChangeEvent : public nsRunnable
+{
+public:
+  DeferredContentEditableCountChangeEvent(nsHTMLDocument *aDoc,
+                                          nsIContent *aElement)
+    : mDoc(aDoc)
+    , mElement(aElement)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    if (mElement->GetOwnerDoc() == mDoc) {
+      mDoc->DeferredContentEditableCountChange(mElement);
+    }
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsHTMLDocument> mDoc;
+  nsCOMPtr<nsIContent> mElement;
+};
+
 nsresult
 nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
                                            PRInt32 aChange)
@@ -3013,27 +3037,6 @@ nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
                "Trying to decrement too much.");
 
   mContentEditableCount += aChange;
-
-  class DeferredContentEditableCountChangeEvent : public nsRunnable
-  {
-  public:
-    DeferredContentEditableCountChangeEvent(nsHTMLDocument *aDoc, nsIContent *aElement)
-      : mDoc(aDoc)
-      , mElement(aElement)
-    {
-    }
-
-    NS_IMETHOD Run() {
-      if (mElement->GetOwnerDoc() == mDoc) {
-        mDoc->DeferredContentEditableCountChange(mElement);
-      }
-      return NS_OK;
-    }
-
-  private:
-    nsRefPtr<nsHTMLDocument> mDoc;
-    nsCOMPtr<nsIContent> mElement;
-  };
 
   nsContentUtils::AddScriptRunner(
     new DeferredContentEditableCountChangeEvent(this, aElement));
