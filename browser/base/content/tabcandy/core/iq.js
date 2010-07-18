@@ -83,9 +83,9 @@ var iQ = function(selector, context) {
 iQ.fn = iQ.prototype = {
   // ----------
   // Function: init
-  // You don't call this directly; this is what's called by iQ(). 
-  // It works pretty much like jQuery(), with a few exceptions, 
-  // most notably that you can't use strings with complex html, 
+  // You don't call this directly; this is what's called by iQ().
+  // It works pretty much like jQuery(), with a few exceptions,
+  // most notably that you can't use strings with complex html,
   // just simple tags like '<div>'.
   init: function( selector, context ) {
     var match, elem, ret, doc;
@@ -101,7 +101,7 @@ iQ.fn = iQ.prototype = {
       this.length = 1;
       return this;
     }
-    
+
     // The body element only exists once, optimize finding it
     if ( selector === "body" && !context ) {
       this.context = document;
@@ -137,9 +137,9 @@ iQ.fn = iQ.prototype = {
           } else {
               Utils.assert('does not support complex HTML creation', false);
           }
-          
+
           return iQ.merge( this, selector );
-          
+
         // HANDLE $("#id")
         } else {
           elem = document.getElementById( match[2] );
@@ -196,9 +196,9 @@ iQ.fn = iQ.prototype = {
       }
     }
     return ret;
-    
+
   },
-  
+
   // Start with an empty selector
   selector: "",
 
@@ -206,8 +206,8 @@ iQ.fn = iQ.prototype = {
   iq: "1.4.2",
 
   // The default length of a iQ object is 0
-  length: 0, 
-  
+  length: 0,
+
   // ----------
   // Function: get
   // Get the Nth element in the matched element set OR
@@ -334,7 +334,7 @@ iQ.fn = iQ.prototype = {
          elem.parentNode.removeChild( elem );
       }
     }
-    
+
     return this;
   },
 
@@ -346,7 +346,7 @@ iQ.fn = iQ.prototype = {
         elem.removeChild( elem.firstChild );
       }
     }
-    
+
     return this;
   },
 
@@ -354,7 +354,7 @@ iQ.fn = iQ.prototype = {
   // Function: width
   width: function(unused) {
     Utils.assert('does not yet support setting', unused === undefined);
-    return parseInt(this.css('width')); 
+    return parseInt(this.css('width'));
   },
 
   // ----------
@@ -373,7 +373,7 @@ iQ.fn = iQ.prototype = {
       top: parseInt(this.css('top'))
     };
   },
-  
+
   // ----------
   // Function: bounds
   bounds: function(unused) {
@@ -381,7 +381,7 @@ iQ.fn = iQ.prototype = {
     var p = this.position();
     return new Rect(p.left, p.top, this.width(), this.height());
   },
-  
+
   // ----------
   // Function: data
   data: function(key, value) {
@@ -391,19 +391,19 @@ iQ.fn = iQ.prototype = {
       data = this[0].iQData;
       return (data ? data[key] : null);
     }
-    
+
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       data = elem.iQData;
 
       if (!data)
         data = elem.iQData = {};
-        
+
       data[key] = value;
     }
-    
-    return this;    
+
+    return this;
   },
-  
+
   // ----------
   // Function: html
   // TODO: security
@@ -411,11 +411,11 @@ iQ.fn = iQ.prototype = {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
     if (value === undefined)
       return this[0].innerHTML;
-      
+
     this[0].innerHTML = value;
     return this;
-  },  
-  
+  },
+
   // ----------
   // Function: text
   text: function(value) {
@@ -423,10 +423,10 @@ iQ.fn = iQ.prototype = {
     if (value === undefined) {
       return this[0].textContent;
     }
-      
+
     return this.empty().append( (this[0] && this[0].ownerDocument || document).createTextNode(value));
-  },  
-  
+  },
+
   // ----------
   // Function: val
   val: function(value) {
@@ -434,11 +434,11 @@ iQ.fn = iQ.prototype = {
     if (value === undefined) {
       return this[0].value;
     }
-    
-    this[0].value = value;  
+
+    this[0].value = value;
     return this;
-  },  
-  
+  },
+
   // ----------
   // Function: appendTo
   appendTo: function(selector) {
@@ -446,7 +446,7 @@ iQ.fn = iQ.prototype = {
     iQ(selector).append(this);
     return this;
   },
-  
+
   // ----------
   // Function: append
   append: function(selector) {
@@ -456,7 +456,7 @@ iQ.fn = iQ.prototype = {
     this[0].appendChild(object[0]);
     return this;
   },
-  
+
   // ----------
   // Function: attr
   // Sets or gets an attribute on the element(s).
@@ -464,16 +464,16 @@ iQ.fn = iQ.prototype = {
     try {
       Utils.assert('string key', typeof key === 'string');
       if (value === undefined) {
-        Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);      
+        Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);
         return this[0].getAttribute(key);
       }
       for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
         elem.setAttribute(key, value);
-      }    
+      }
     } catch(e) {
       Utils.log(e);
     }
-    
+
     return this;
   },
 
@@ -481,18 +481,18 @@ iQ.fn = iQ.prototype = {
   // Function: css
   css: function(a, b) {
     var properties = null;
-    
+
     if (typeof a === 'string') {
-      var key = a; 
+      var key = a;
       if (b === undefined) {
-        Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);      
+        Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);
 
         var substitutions = {
           'MozTransform': '-moz-transform',
           'zIndex': 'z-index'
         };
 
-        return window.getComputedStyle(this[0], null).getPropertyValue(substitutions[key] || key);  
+        return window.getComputedStyle(this[0], null).getPropertyValue(substitutions[key] || key);
       }
       properties = {};
       properties[key] = b;
@@ -508,79 +508,79 @@ iQ.fn = iQ.prototype = {
       'width': true,
       'height': true
     };
-    
+
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       for (var key in properties) {
         var value = properties[key];
-        if (pixels[key] && typeof(value) != 'string') 
+        if (pixels[key] && typeof(value) != 'string')
           value += 'px';
-        
+
         if (key.indexOf('-') != -1)
           elem.style.setProperty(key, value, '');
         else
           elem.style[key] = value;
       }
     }
-    
-    return this; 
+
+    return this;
   },
 
   // ----------
   // Function: animate
-  // Uses CSS transitions to animate the element. 
-  // 
-  // Parameters: 
+  // Uses CSS transitions to animate the element.
+  //
+  // Parameters:
   //   css - an object map of the CSS properties to change
   //   options - an object with various properites (see below)
   //
-  // Possible "options" properties: 
+  // Possible "options" properties:
   //   duration - how long to animate, in milliseconds
-  //   easing - easing function to use. Possibilities include 'tabcandyBounce', 'easeInQuad'. 
-  //     Default is 'ease'. 
+  //   easing - easing function to use. Possibilities include 'tabcandyBounce', 'easeInQuad'.
+  //     Default is 'ease'.
   //   complete - function to call once the animation is done, takes nothing in, but "this"
-  //     is set to the element that was animated. 
+  //     is set to the element that was animated.
   animate: function(css, options) {
     try {
       Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
 
       if (!options)
         options = {};
-      
+
       var easings = {
-        tabcandyBounce: 'cubic-bezier(0.0, 0.63, .6, 1.29)', 
+        tabcandyBounce: 'cubic-bezier(0.0, 0.63, .6, 1.29)',
         easeInQuad: 'ease-in', // TODO: make it a real easeInQuad, or decide we don't care
         fast: 'cubic-bezier(0.7,0,1,1)'
       };
-      
+
       var duration = (options.duration || 400);
       var easing = (easings[options.easing] || 'ease');
 
       // The latest versions of Firefox do not animate from a non-explicitly set
       // css properties. So for each element to be animated, go through and
       // explicitly define 'em.
-      var rupper = /([A-Z])/g;    
+      var rupper = /([A-Z])/g;
       this.each(function(elem){
-        var cStyle = window.getComputedStyle(elem, null);      
+        var cStyle = window.getComputedStyle(elem, null);
         for (var prop in css){
           prop = prop.replace( rupper, "-$1" ).toLowerCase();
           iQ(elem).css(prop, cStyle.getPropertyValue(prop));
-        }    
+        }
       });
 
 
       this.css({
-        '-moz-transition-property': 'all', // TODO: just animate the properties we're changing  
-        '-moz-transition-duration': (duration / 1000) + 's',  
+        '-moz-transition-property': 'all', // TODO: just animate the properties we're changing
+        '-moz-transition-duration': (duration / 1000) + 's',
         '-moz-transition-timing-function': easing
       });
 
       this.css(css);
-      
+
       var self = this;
       iQ.timeout(function() {
         self.css({
-          '-moz-transition-property': 'none',  
-          '-moz-transition-duration': '',  
+          '-moz-transition-property': 'none',
+          '-moz-transition-duration': '',
           '-moz-transition-timing-function': ''
         });
 
@@ -590,10 +590,10 @@ iQ.fn = iQ.prototype = {
     } catch(e) {
       Utils.log(e);
     }
-    
+
     return this;
   },
-    
+
   // ----------
   // Function: fadeOut
   fadeOut: function(callback) {
@@ -608,14 +608,14 @@ iQ.fn = iQ.prototype = {
           if (iQ.isFunction(callback))
             callback.apply(this);
         }
-      });  
+      });
     } catch(e) {
       Utils.log(e);
     }
-    
+
     return this;
   },
-    
+
   // ----------
   // Function: fadeIn
   fadeIn: function() {
@@ -625,14 +625,14 @@ iQ.fn = iQ.prototype = {
         opacity: 1
       }, {
         duration: 400
-      });  
+      });
     } catch(e) {
       Utils.log(e);
     }
-    
+
     return this;
   },
-    
+
   // ----------
   // Function: hide
   hide: function() {
@@ -641,10 +641,10 @@ iQ.fn = iQ.prototype = {
     } catch(e) {
       Utils.log(e);
     }
-    
+
     return this;
   },
-    
+
   // ----------
   // Function: show
   show: function() {
@@ -653,13 +653,13 @@ iQ.fn = iQ.prototype = {
     } catch(e) {
       Utils.log(e);
     }
-    
+
     return this;
   },
-    
+
   // ----------
   // Function: bind
-  // Binds the given function to the given event type. Also wraps the function 
+  // Binds the given function to the given event type. Also wraps the function
   // in a try/catch block that does a Utils.log on any errors.
   bind: function(type, func) {
     Utils.assert('does not support eventData argument', iQ.isFunction(func));
@@ -675,56 +675,56 @@ iQ.fn = iQ.prototype = {
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       if (!elem.iQEventData)
         elem.iQEventData = {};
-        
+
       if (!elem.iQEventData[type])
         elem.iQEventData[type] = [];
-        
+
       elem.iQEventData[type].push({
-        original: func, 
+        original: func,
         modified: handler
       });
-      
+
       elem.addEventListener(type, handler, false);
     }
-    
-    return this; 
+
+    return this;
   },
-  
+
   // ----------
   // Function: one
   one: function(type, func) {
     Utils.assert('does not support eventData argument', iQ.isFunction(func));
-    
+
     var handler = function(e) {
       iQ(this).unbind(type, handler);
       return func.apply(this, [e]);
     };
-      
+
     return this.bind(type, handler);
   },
-  
+
   // ----------
   // Function: unbind
   unbind: function(type, func) {
     Utils.assert('Must provide a function', iQ.isFunction(func));
-    
+
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       var handler = func;
       if (elem.iQEventData && elem.iQEventData[type]) {
         for (var a = 0, count = elem.iQEventData[type].length; a < count; a++) {
           var pair = elem.iQEventData[type][a];
           if (pair.original == func) {
-            handler = pair.modified; 
+            handler = pair.modified;
             elem.iQEventData[type].splice(a, 1);
             break;
           }
         }
       }
-      
+
       elem.removeEventListener(type, handler, false);
     }
-    
-    return this; 
+
+    return this;
   }
 };
 
@@ -798,13 +798,13 @@ iQ.extend({
   // Variable: animationCount
   // For internal use only
   animationCount: 0,
-  
+
   // ----------
   // Function: isAnimating
   isAnimating: function() {
     return (this.animationCount != 0);
   },
-  
+
   // -----------
   // Function: isFunction
   isFunction: function( obj ) {
@@ -826,20 +826,20 @@ iQ.extend({
     if ( !obj || toString.call(obj) !== "[object Object]" || obj.nodeType || obj.setInterval ) {
       return false;
     }
-    
+
     // Not own constructor property must be Object
     if ( obj.constructor
       && !hasOwnProperty.call(obj, "constructor")
       && !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf") ) {
       return false;
     }
-    
+
     // Own properties are enumerated firstly, so to speed up,
     // if last one is own, then all properties are own.
-  
+
     var key;
     for ( key in obj ) {}
-    
+
     return key === undefined || hasOwnProperty.call( obj, key );
   },
 
@@ -851,7 +851,7 @@ iQ.extend({
     }
     return true;
   },
-  
+
   // ----------
   // Function: merge
   merge: function( first, second ) {
@@ -861,7 +861,7 @@ iQ.extend({
       for ( var l = second.length; j < l; j++ ) {
         first[ i++ ] = second[ j ];
       }
-    
+
     } else {
       while ( second[j] !== undefined ) {
         first[ i++ ] = second[ j++ ];
@@ -877,7 +877,7 @@ iQ.extend({
   // Function: timeout
   // wraps setTimeout with try/catch
   timeout: function(func, delay) {
-    setTimeout(function() { 
+    setTimeout(function() {
       try {
         func();
       } catch(e) {
@@ -904,7 +904,7 @@ iQ.extend({
     'blur',
     'focus'
   ];
-  
+
   events.forEach(function(event) {
     iQ.fn[event] = function(func) {
       return this.bind(event, func);

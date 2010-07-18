@@ -47,7 +47,7 @@
 // OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // **********
-// Title: stacktrace.js 
+// Title: stacktrace.js
 
 /**
  *
@@ -57,7 +57,7 @@
 function printStackTrace(options) {
     var ex = (options && options.e) ? options.e : null;
     var guess = (options && options.guess) ? options.guess : false;
-    
+
     var p = new printStackTrace.implementation();
     var result = p.run(ex);
     return (guess) ? p.guessFunctions(result) : result;
@@ -84,7 +84,7 @@ printStackTrace.implementation.prototype = {
             return this[mode](ex);
         }
     },
-    
+
     mode: function() {
         try {
             (0)();
@@ -101,7 +101,7 @@ printStackTrace.implementation.prototype = {
         }
         return (this._mode = 'other');
     },
-    
+
     chrome: function(e) {
         return e.stack.replace(/^.*?\n/, '').
                 replace(/^.*?\n/, '').
@@ -111,19 +111,19 @@ printStackTrace.implementation.prototype = {
                 replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@').
                 split("\n");
     },
-    
+
     firefox: function(e) {
         return e.stack.replace(/^.*?\n/, '').
                 replace(/(?:\n@:0)?\s+$/m, '').
                 replace(/^\(/gm, '{anonymous}(').
                 split("\n");
     },
-    
+
     // Opera 7.x and 8.x only!
     opera: function(e) {
-        var lines = e.message.split("\n"), ANON = '{anonymous}', 
+        var lines = e.message.split("\n"), ANON = '{anonymous}',
             lineRE = /Line\s+(\d+).*?script\s+(http\S+)(?:.*?in\s+function\s+(\S+))?/i, i, j, len;
-        
+
         for (i = 4, j = 0, len = lines.length; i < len; i += 2) {
             if (lineRE.test(lines[i])) {
                 lines[j++] = (RegExp.$3 ? RegExp.$3 + '()@' + RegExp.$2 + RegExp.$1 : ANON + '()@' + RegExp.$2 + ':' + RegExp.$1) +
@@ -131,21 +131,21 @@ printStackTrace.implementation.prototype = {
                 lines[i + 1].replace(/^\s+/, '');
             }
         }
-        
+
         lines.splice(j, lines.length - j);
         return lines;
     },
-    
+
     // Safari, Opera 9+, IE, and others
     other: function(curr) {
         var ANON = "{anonymous}", fnRE = /function\s*([\w\-$]+)?\s*\(/i, stack = [], j = 0, fn, args;
-        
+
         var maxStackSize = 10;
         while (curr && stack.length < maxStackSize) {
             fn = fnRE.test(curr.toString()) ? RegExp.$1 || ANON : ANON;
             args = Array.prototype.slice.call(curr['arguments']);
             stack[j++] = fn + '(' + printStackTrace.implementation.prototype.stringifyArguments(args) + ')';
-            
+
             //Opera bug: if curr.caller does not exist, Opera returns curr (WTF)
             if (curr === curr.caller && window.opera) {
               //TODO: check for same arguments if possible
@@ -155,7 +155,7 @@ printStackTrace.implementation.prototype = {
         }
         return stack;
     },
-    
+
     stringifyArguments: function(args) {
         for (var i = 0; i < args.length; ++i) {
             var argument = args[i];
@@ -169,9 +169,9 @@ printStackTrace.implementation.prototype = {
         }
         return args.join(',');
     },
-    
+
     sourceCache: {},
-    
+
     ajax: function(url) {
         var req = this.createXMLHTTPObject();
         if (!req) {
@@ -182,7 +182,7 @@ printStackTrace.implementation.prototype = {
         req.send('');
         return req.responseText;
     },
-    
+
     createXMLHTTPObject: function() {
       // Try XHR methods in order and store XHR factory
         var xmlhttp, XMLHttpFactories = [
@@ -205,14 +205,14 @@ printStackTrace.implementation.prototype = {
             } catch (e) {}
         }
     },
-    
+
     getSource: function(url) {
         if (!(url in this.sourceCache)) {
             this.sourceCache[url] = this.ajax(url).split("\n");
         }
         return this.sourceCache[url];
     },
-    
+
     guessFunctions: function(stack) {
         for (var i = 0; i < stack.length; ++i) {
             var reStack = /{anonymous}\(.*\)@(\w+:\/\/([-\w\.]+)+(:\d+)?[^:]+):(\d+):?(\d+)?/;
@@ -227,7 +227,7 @@ printStackTrace.implementation.prototype = {
         }
         return stack;
     },
-    
+
     guessFunctionName: function(url, lineNo) {
         try {
             return this.guessFunctionNameFromLines(lineNo, this.getSource(url));
@@ -235,7 +235,7 @@ printStackTrace.implementation.prototype = {
             return 'getSource failed with url: ' + url + ', exception: ' + e.toString();
         }
     },
-    
+
     guessFunctionNameFromLines: function(lineNo, source) {
         var reFunctionArgNames = /function ([^(]*)\(([^)]*)\)/;
         var reGuessFunction = /['"]?([0-9A-Za-z_]+)['"]?\s*[:=]\s*(function|eval|new Function)/;
