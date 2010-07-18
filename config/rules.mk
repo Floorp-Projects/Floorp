@@ -1204,7 +1204,7 @@ ifndef MOZ_OS2_USE_DECLSPEC
 	$(FILTER) $(OBJS) $(SHARED_LIBRARY_LIBS) >> $@
 endif	
 else
-	echo    _NSGetModule >> $@
+	echo    _NSModule >> $@
 endif
 else
 ifndef MOZ_OS2_USE_DECLSPEC
