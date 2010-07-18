@@ -38,6 +38,8 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!-- NOTE: This file is currently unused, but it's still in the tree because
+     bug 163068 will likely involve adding content to it. -->
 <bindings id="svgBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xbl="http://www.mozilla.org/xbl"
