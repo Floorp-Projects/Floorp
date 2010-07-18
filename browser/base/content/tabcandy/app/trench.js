@@ -63,10 +63,12 @@ var Trench = function(element, xory, type, edge) {
   // ---------
   // Variables: Initial parameters
   //   element - (DOMElement)
+  //   parentItem - <Item> which projects this trench; to be set with setParentItem
   //   xory - (string) "x" or "y"
   //   type - (string) "border" or "guide"
   //   edge - (string) "top", "left", "bottom", or "right"
   this.el = element;
+  this.parentItem = null;
   this.xory = xory; // either "x" or "y"
   this.type = type; // "border" or "guide"
   this.edge = edge; // "top", "left", "bottom", or "right"
@@ -110,7 +112,16 @@ Trench.prototype = {
   //----------
   // Variable: radius
   // (integer) radius is how far away we should snap from
-  get radius() { return this.customRadius || Trenches.defaultRadius; },
+  get radius() this.customRadius || Trenches.defaultRadius,
+
+  setParentItem: function Trench_setParentItem(item) {
+    if (!item.isAnItem) {
+      Utils.assert("parentItem must be an Item",false);
+      return false;
+    }
+    this.parentItem = item;
+    return true;
+  },
 
   //----------
   // Function: setPosition
@@ -488,11 +499,37 @@ var Trenches = {
   // See the constructor <Trench.Trench>'s parameters.
   // 
   // Returns:
-  //   id - (boolean) the new <Trench>'s ID.
+  //   id - (int) the new <Trench>'s ID.
   register: function Trenches_register(element, xory, type, edge) {
     var trench = new Trench(element, xory, type, edge);
     this.trenches[trench.id] = trench;
     return trench.id;
+  },
+
+  // ---------
+  // Function: registerWithItem
+  // Register a whole set of <Trench>es using an <Item> and returns the resulting <Trench> IDs.
+  // 
+  // Parameters:
+  //   item - the <Item> to project trenches
+  //   type - either "border" or "guide"
+  // 
+  // Returns:
+  //   ids - array of the new <Trench>es' IDs.
+  registerWithItem: function Trenches_registerWithItem(item, type) {
+    var container = item.container;
+    var ids = {};
+    ids.left = Trenches.register(container,"x",type,"left");
+    ids.right = Trenches.register(container,"x",type,"right");
+    ids.top = Trenches.register(container,"y",type,"top");
+    ids.bottom = Trenches.register(container,"y",type,"bottom");
+
+    this.getById(ids.left).setParentItem(item);
+    this.getById(ids.right).setParentItem(item);
+    this.getById(ids.top).setParentItem(item);
+    this.getById(ids.bottom).setParentItem(item);
+
+    return ids;
   },
 
   // ---------
