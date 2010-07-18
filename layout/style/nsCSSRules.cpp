@@ -179,7 +179,8 @@ CSSGroupRuleRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
     return rv;
   }
 
-  return CallQueryInterface(rule, aReturn);
+  NS_ADDREF(*aReturn = rule);
+  return NS_OK;
 }
 
 // -------------------------------------------
@@ -275,7 +276,8 @@ CSSCharsetRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSCharsetRuleImpl* clone = new CSSCharsetRuleImpl(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -305,11 +307,12 @@ NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult, const nsAString& aEncoding
 
   CSSCharsetRuleImpl* it = new CSSCharsetRuleImpl(aEncoding);
 
-  if (! it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = it);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -477,7 +480,8 @@ CSSImportRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSImportRuleImpl* clone = new CSSImportRuleImpl(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -546,12 +550,13 @@ NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult,
 
   CSSImportRuleImpl* it = new CSSImportRuleImpl(aMedia);
 
-  if (! it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   it->SetURLSpec(aURLSpec);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = it);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -616,12 +621,9 @@ NS_IMETHODIMP
 CSSImportRuleImpl::GetMedia(nsIDOMMediaList * *aMedia)
 {
   NS_ENSURE_ARG_POINTER(aMedia);
-  if (!mMedia) {
-    *aMedia = nsnull;
-    return NS_OK;
-  }
 
-  return CallQueryInterface(mMedia.get(), aMedia);
+  NS_IF_ADDREF(*aMedia = mMedia);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -841,7 +843,8 @@ nsCSSGroupRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
     NS_ADDREF(mRuleCollection);
   }
 
-  return CallQueryInterface(mRuleCollection, aRuleList);
+  NS_ADDREF(*aRuleList = mRuleCollection);
+  return NS_OK;
 }
 
 nsresult
@@ -957,7 +960,8 @@ nsCSSMediaRule::Clone(nsICSSRule*& aClone) const
 {
   nsCSSMediaRule* clone = new nsCSSMediaRule(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1017,12 +1021,8 @@ NS_IMETHODIMP
 nsCSSMediaRule::GetMedia(nsIDOMMediaList* *aMedia)
 {
   NS_ENSURE_ARG_POINTER(aMedia);
-  if (!mMedia) {
-    *aMedia = nsnull;
-    return NS_OK;
-  }
-
-  return CallQueryInterface(mMedia.get(), aMedia);
+  NS_IF_ADDREF(*aMedia = mMedia);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1128,7 +1128,8 @@ nsCSSDocumentRule::Clone(nsICSSRule*& aClone) const
 {
   nsCSSDocumentRule* clone = new nsCSSDocumentRule(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1359,7 +1360,8 @@ CSSNameSpaceRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSNameSpaceRuleImpl* clone = new CSSNameSpaceRuleImpl(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1406,13 +1408,14 @@ NS_NewCSSNameSpaceRule(nsICSSNameSpaceRule** aInstancePtrResult,
 
   CSSNameSpaceRuleImpl* it = new CSSNameSpaceRuleImpl();
 
-  if (! it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   it->SetPrefix(aPrefix);
   it->SetURLSpec(aURLSpec);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = it);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1792,7 +1795,8 @@ nsCSSFontFaceRule::Clone(nsICSSRule*& aClone) const
 {
   nsCSSFontFaceRule* clone = new nsCSSFontFaceRule(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1897,7 +1901,8 @@ nsCSSFontFaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 NS_IMETHODIMP
 nsCSSFontFaceRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
-  return CallQueryInterface(&mDecl, aStyle);
+  NS_IF_ADDREF(*aStyle = &mDecl);
+  return NS_OK;
 }
 
 // Arguably these should forward to nsCSSFontFaceStyleDecl methods.
