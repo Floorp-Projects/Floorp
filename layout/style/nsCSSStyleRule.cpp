@@ -1502,7 +1502,8 @@ CSSStyleRuleImpl::Clone(nsICSSRule*& aClone) const
     aClone = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return CallQueryInterface(clone, &aClone);
+  NS_ADDREF(aClone = clone);
+  return NS_OK;
 }
 
 nsIDOMCSSRule*
@@ -1651,5 +1652,6 @@ NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = it);
+  return NS_OK;
 }

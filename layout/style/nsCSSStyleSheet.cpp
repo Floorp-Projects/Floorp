@@ -180,7 +180,8 @@ CSSRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
     return rv;
   }
 
-  return CallQueryInterface(rule, aReturn);
+  NS_ADDREF(*aReturn = rule);
+  return NS_OK;
 }
 
 template <class Numeric>
