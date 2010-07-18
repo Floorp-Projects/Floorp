@@ -558,14 +558,9 @@ var Trenches = {
     this.trenches.forEach(function(t) {
       if (t.el === element)
         return;
-      if (t.parentItem) {
-        if (t.parentItem.isAFauxItem)
-          return;
-        if (t.parentItem.isDragging)
-          return;
-        if (t.parentItem.isDropTarget)
-          return;
-      }
+      if (t.parentItem && (t.parentItem.isAFauxItem || t.parentItem.isDragging
+                                                    || t.parentItem.isDropTarget))
+        return;
       t.active = true;
       t.calculateActiveRange();
       t.show(); // debug
