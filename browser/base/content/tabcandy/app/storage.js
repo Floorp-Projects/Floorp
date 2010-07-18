@@ -36,11 +36,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 // **********
-// Title: storage.js 
+// Title: storage.js
 
 // ##########
 // Class: Storage
-// Singleton for permanent storage of TabCandy data. 
+// Singleton for permanent storage of TabCandy data.
 Storage = {
   GROUP_DATA_IDENTIFIER:  "tabcandy-group",
   GROUPS_DATA_IDENTIFIER: "tabcandy-groups",
@@ -51,7 +51,7 @@ Storage = {
   // ----------
   // Function: onReady
   // Calls callback when Storage is ready for business. Could be immediately if it's already ready
-  // or later if needed. 
+  // or later if needed.
   onReady: function(callback) {
     try {
       // ToDo: the session store doesn't expose any public methods/variables for
@@ -60,11 +60,11 @@ Storage = {
       var alreadyReady = Utils.getCurrentWindow().__SSi;
       if (alreadyReady) {
         callback();
-      } else {    
+      } else {
         var obsService =
           Components.classes["@mozilla.org/observer-service;1"]
           .getService(Components.interfaces.nsIObserverService);
-        var observer = {      
+        var observer = {
           observe: function(subject, topic, data) {
             try {
               if (topic == "browser-delayed-startup-finished") {
@@ -77,18 +77,18 @@ Storage = {
             }
           }
         };
-          
+
         obsService.addObserver(
           observer, "browser-delayed-startup-finished", false);
       }
     } catch(e) {
       Utils.log(e);
-    }  
+    }
   },
 
   // ----------
   // Function: init
-  // Sets up the object. 
+  // Sets up the object.
   init: function() {
     this._sessionStore =
       Components.classes["@mozilla.org/browser/sessionstore;1"]
@@ -97,33 +97,33 @@ Storage = {
 
   // ----------
   // Function: wipe
-  // Cleans out all the stored data, leaving empty objects. 
+  // Cleans out all the stored data, leaving empty objects.
   wipe: function() {
     try {
       var win = Utils.getCurrentWindow();
-      
+
       var self = this;
-      
+
       // ___ Tabs
       Tabs.forEach(function(tab) {
         self.saveTab(tab.raw, null);
       });
-      
+
       // ___ Other
       this.saveGroupsData(win, {});
       this.saveUIData(win, {});
       this.saveVisibilityData(win, {});
-      
+
       this._sessionStore.setWindowValue(win, this.GROUP_DATA_IDENTIFIER,
         JSON.stringify({}));
     } catch (e) {
       Utils.log("Error in wipe: "+e);
     }
   },
-  
+
   // ----------
   // Function: saveTab
-  // Saves the data for a single tab. 
+  // Saves the data for a single tab.
   saveTab: function(tab, data) {
     Utils.assert('tab', tab);
 
@@ -148,14 +148,14 @@ Storage = {
       // getWindowValue will fail if the property doesn't exist
       Utils.log(e);
     }
-    
+
 /*     Utils.log('tab', existingData); */
     return existingData;
   },
 
   // ----------
   // Function: saveGroup
-  // Saves the data for a single group, associated with a specific window. 
+  // Saves the data for a single group, associated with a specific window.
   saveGroup: function(win, data) {
     var id = data.id;
     var existingData = this.readGroupData(win);
@@ -193,28 +193,28 @@ Storage = {
 
   // ----------
   // Function: saveGroupsData
-  // Saves the global data for the <Groups> singleton for the given window.  
+  // Saves the global data for the <Groups> singleton for the given window.
   saveGroupsData: function(win, data) {
     this.saveData(win, this.GROUPS_DATA_IDENTIFIER, data);
   },
 
   // ----------
   // Function: readGroupsData
-  // Reads the global data for the <Groups> singleton for the given window.  
+  // Reads the global data for the <Groups> singleton for the given window.
   readGroupsData: function(win) {
     return this.readData(win, this.GROUPS_DATA_IDENTIFIER);
   },
-  
+
   // ----------
   // Function: saveUIData
-  // Saves the global data for the <UIClass> singleton for the given window.  
+  // Saves the global data for the <UIClass> singleton for the given window.
   saveUIData: function(win, data) {
     this.saveData(win, this.UI_DATA_IDENTIFIER, data);
   },
 
   // ----------
   // Function: readUIData
-  // Reads the global data for the <UIClass> singleton for the given window.  
+  // Reads the global data for the <UIClass> singleton for the given window.
   readUIData: function(win) {
     return this.readData(win, this.UI_DATA_IDENTIFIER);
   },
@@ -232,23 +232,23 @@ Storage = {
   readVisibilityData: function(win) {
     return this.readData(win, this.VISIBILITY_DATA_IDENTIFIER);
   },
-    
+
   // ----------
   // Function: saveData
-  // Generic routine for saving data to a window. 
+  // Generic routine for saving data to a window.
   saveData: function(win, id, data) {
     try {
       this._sessionStore.setWindowValue(win, id, JSON.stringify(data));
     } catch (e) {
       Utils.log("Error in saveData: "+e);
     }
-    
+
 /*     Utils.log('save data', id, data); */
   },
 
   // ----------
   // Function: readData
-  // Generic routine for reading data from a window. 
+  // Generic routine for reading data from a window.
   readData: function(win, id) {
     var existingData = {};
     try {
@@ -258,7 +258,7 @@ Storage = {
     } catch (e) {
       Utils.log("Error in readData: "+e);
     }
-    
+
 /*     Utils.log('read data', id, existingData); */
     return existingData;
   }

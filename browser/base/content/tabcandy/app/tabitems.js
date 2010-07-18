@@ -43,12 +43,12 @@
 
 // ##########
 // Class: TabItem
-// An <Item> that represents a tab. 
+// An <Item> that represents a tab.
 window.TabItem = function(container, tab) {
   Utils.assert('container', container);
   Utils.assert('tab', tab);
   Utils.assert('tab.mirror', tab.mirror);
-  
+
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this.locked = {};
   this.isATabItem = true;
@@ -59,14 +59,14 @@ window.TabItem = function(container, tab) {
   // ___ set up div
   var $div = iQ(container);
   var self = this;
-  
+
   $div.data('tabItem', this);
   this.isDragging = false;
-  
-  this.sizeExtra.x = parseInt($div.css('padding-left')) 
+
+  this.sizeExtra.x = parseInt($div.css('padding-left'))
       + parseInt($div.css('padding-right'));
 
-  this.sizeExtra.y = parseInt($div.css('padding-top')) 
+  this.sizeExtra.y = parseInt($div.css('padding-top'))
       + parseInt($div.css('padding-bottom'));
 
   this.bounds = $div.bounds();
@@ -75,16 +75,16 @@ window.TabItem = function(container, tab) {
 
   // ___ superclass setup
   this._init(container);
-  
+
   // ___ drag/drop
   // override dropOptions with custom tabitem methods
   // This is mostly to support the phantom groups.
   this.dropOptions.drop = function(e){
-    var $target = iQ(this.container);  
+    var $target = iQ(this.container);
     this.isDropTarget = false;
-    
+
     var phantom = $target.data("phantomGroup");
-    
+
     var group = drag.info.item.parent;
     if ( group ) {
       group.add( drag.info.$el );
@@ -93,13 +93,13 @@ window.TabItem = function(container, tab) {
       new Group([$target, drag.info.$el], {container:phantom, bounds:phantom.bounds()});
     }
   };
-  
+
   this.dropOptions.over = function(e){
     var $target = iQ(this.container);
     this.isDropTarget = true;
 
     $target.removeClass("acceptsDrop");
-    
+
     var groupBounds = Groups.getBoundingBox( [drag.info.$el, $target] );
     groupBounds.inset( -20, -20 );
 
@@ -119,49 +119,49 @@ window.TabItem = function(container, tab) {
     // Utils.log('updatedBounds:',updatedBounds);
     if (updatedBounds)
       phantom.css(updatedBounds.css());
-    
+
     phantom.fadeIn();
-      
-    $target.data("phantomGroup", phantom);      
+
+    $target.data("phantomGroup", phantom);
   };
-  
-  this.dropOptions.out = function(e){      
+
+  this.dropOptions.out = function(e){
     this.isDropTarget = false;
     var phantom = iQ(this.container).data("phantomGroup");
-    if (phantom) { 
+    if (phantom) {
       phantom.fadeOut(function(){
         iQ(this).remove();
       });
     }
   };
-  
+
   this.draggable();
   this.droppable(true);
-  
+
   // ___ more div setup
   $div.mousedown(function(e) {
     if (!Utils.isRightClick(e))
       self.lastMouseDownTarget = e.target;
   });
-    
+
   $div.mouseup(function(e) {
     var same = (e.target == self.lastMouseDownTarget);
     self.lastMouseDownTarget = null;
     if (!same)
       return;
-    
-    if (iQ(e.target).hasClass("close")) 
+
+    if (iQ(e.target).hasClass("close"))
       tab.close();
     else {
-      if (!Items.item(this).isDragging) 
+      if (!Items.item(this).isDragging)
         self.zoomIn();
     }
   });
-  
+
   iQ("<div>")
     .addClass('close')
-    .appendTo($div); 
-    
+    .appendTo($div);
+
   iQ("<div>")
     .addClass('expander')
     .appendTo($div);
@@ -173,15 +173,15 @@ window.TabItem = function(container, tab) {
   this.setResizable(true);
 
   this._updateDebugBounds();
-  
+
   TabItems.register(this);
   this.tab.mirror.addSubscriber(this, "close", function(who, info) {
     TabItems.unregister(self);
     self.removeTrenches();
-  });   
-     
+  });
+
   this.tab.mirror.addSubscriber(this, 'urlChanged', function(who, info) {
-    if (!self.reconnected && (info.oldURL == 'about:blank' || !info.oldURL)) 
+    if (!self.reconnected && (info.oldURL == 'about:blank' || !info.oldURL))
       TabItems.reconnect(self);
 
     self.save();
@@ -189,15 +189,15 @@ window.TabItem = function(container, tab) {
 };
 
 window.TabItem.prototype = iQ.extend(new Item(), {
-  // ----------  
+  // ----------
   // Function: getStorageData
-  // Get data to be used for persistent storage of this object. 
-  // 
-  // Parameters: 
+  // Get data to be used for persistent storage of this object.
+  //
+  // Parameters:
   //   getImageData - true to include thumbnail pixels (and page title as well); default false
   getStorageData: function(getImageData) {
     return {
-      bounds: this.getBounds(), 
+      bounds: this.getBounds(),
       userSize: (isPoint(this.userSize) ? new Point(this.userSize) : null),
       url: this.tab.url,
       groupID: (this.parent ? this.parent.id : 0),
@@ -209,9 +209,9 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 
   // ----------
   // Function: save
-  // Store persistent for this object. 
-  // 
-  // Parameters: 
+  // Store persistent for this object.
+  //
+  // Parameters:
   //   saveImageData - true to include thumbnail pixels (and page title as well); default false
   save: function(saveImageData) {
     try{
@@ -225,31 +225,31 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       Utils.log("Error in saving tab value: "+e);
     }
   },
-  
-  // ---------- 
+
+  // ----------
   // Function: getURL
-  // Returns the URL for the page represented by this tab.  
+  // Returns the URL for the page represented by this tab.
   getURL: function() {
     return this.tab.url;
   },
-    
-  // ----------  
+
+  // ----------
   // Function: setBounds
-  // Moves this item to the specified location and size. 
-  // 
-  // Parameters: 
+  // Moves this item to the specified location and size.
+  //
+  // Parameters:
   //   rect - a <Rect> giving the new bounds
   //   immediately - true if it should not animate; default false
   //   options - an object with additional parameters, see below
-  // 
-  // Possible options: 
+  //
+  // Possible options:
   //   force - true to always update the DOM even if the bounds haven't changed; default false
   setBounds: function(rect, immediately, options) {
     if (!isRect(rect)) {
       Utils.trace('TabItem.setBounds: rect is not a real rectangle!', rect);
       return;
     }
-    
+
     if (!options)
       options = {};
 
@@ -262,34 +262,34 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       var $close = iQ('.close', $container);
       var $fav   = iQ('.favicon', $container);
       var css = {};
-      
+
       const minFontSize = 8;
       const maxFontSize = 15;
-  
+
       if (rect.left != this.bounds.left || options.force)
         css.left = rect.left;
-        
+
       if (rect.top != this.bounds.top || options.force)
         css.top = rect.top;
-        
+
       if (rect.width != this.bounds.width || options.force) {
         css.width = rect.width - this.sizeExtra.x;
         var scale = css.width / TabItems.tabWidth;
-        
+
         // The ease function ".5+.5*Math.tanh(2*x-2)" is a pretty
         // little graph. It goes from near 0 at x=0 to near 1 at x=2
         // smoothly and beautifully.
         css.fontSize = minFontSize + (maxFontSize-minFontSize)*(.5+.5*Math.tanh(2*scale-2))
       }
-  
-      if (rect.height != this.bounds.height || options.force) 
-        css.height = rect.height - this.sizeExtra.y; 
-        
+
+      if (rect.height != this.bounds.height || options.force)
+        css.height = rect.height - this.sizeExtra.y;
+
       if (iQ.isEmptyObject(css))
         return;
-        
+
       this.bounds.copy(rect);
-      
+
       // If this is a brand new tab don't animate it in from
       // a random location (i.e., from [0,0]). Instead, just
       // have it appear where it should be.
@@ -307,16 +307,16 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         });
     /*       }).dequeue(); */
       }
-  
+
       if (css.fontSize && !this.inStack()) {
         if (css.fontSize < minFontSize )
           $title.fadeOut();//.dequeue();
         else
           $title.fadeIn();//.dequeue();
       }
-  
-              
-      // Usage      
+
+
+      // Usage
       // slide({60:0, 70:1}, 66);
       // @60- return 0; at @70+ return 1; @65 return 0.5
       function slider(bounds, val){
@@ -324,7 +324,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         for (var key in bounds){ keys.push(key); bounds[key] = parseFloat(bounds[key]); };
         keys.sort(function(a,b){return a-b});
         var min = keys[0], max = keys[1];
-        
+
         function slide(value){
           if ( value >= max ) return bounds[max];
           if ( value <= min ) return bounds[min];
@@ -335,7 +335,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
           if ( value <= bounds[min] ) return bounds[min];
           return value;
         }
-        
+
         if ( val == undefined )
           return slide;
         return slide(val);
@@ -343,7 +343,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 
       if (css.width && !this.inStack()) {
         $fav.css({top:4,left:4});
-        
+
         var opacity = slider({70:1, 60:0}, css.width);
         $close.show().css({opacity:opacity});
         if ( opacity <= .1 ) $close.hide()
@@ -356,12 +356,12 @@ window.TabItem.prototype = iQ.extend(new Item(), {
          "padding-bottom": pad + "px",
          "border-color": "rgba(0,0,0,"+ slider({70:.2, 60:.1}, css.width) +")",
         });
-      } 
-      
+      }
+
       if (css.width && this.inStack()){
         $fav.css({top:0, left:0});
         var opacity = slider({90:1, 70:0}, css.width);
-        
+
         var pad = slider({90:6, 70:1}, css.width);
         $fav.css({
          "padding-left": pad + "px",
@@ -370,17 +370,17 @@ window.TabItem.prototype = iQ.extend(new Item(), {
          "padding-bottom": pad + "px",
          "border-color": "rgba(0,0,0,"+ slider({90:.2, 70:.1}, css.width) +")",
         });
-      }   
+      }
 
       this._hasBeenDrawn = true;
     }
 
     this._updateDebugBounds();
     rect = this.getBounds(); // ensure that it's a <Rect>
-    
+
     if (!isRect(this.bounds))
       Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
-    
+
     if (!this.parent && !this.tab.closed)
       this.setTrenches(rect);
 
@@ -389,19 +389,19 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 
   // ----------
   // Function: inStack
-  // Returns true if this item is in a stacked group. 
+  // Returns true if this item is in a stacked group.
   inStack: function(){
     return iQ(this.container).hasClass("stacked");
   },
 
   // ----------
   // Function: setZ
-  // Sets the z-index for this item. 
+  // Sets the z-index for this item.
   setZ: function(value) {
     this.zIndex = value;
     iQ(this.container).css({zIndex: value});
   },
-    
+
   // ----------
   // Function: close
   // Closes this item (actually closes the tab associated with it, which automatically
@@ -412,37 +412,37 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     // No need to explicitly delete the tab data, becasue sessionstore data
     // associated with the tab will automatically go away
   },
-  
+
   // ----------
   // Function: addClass
-  // Adds the specified CSS class to this item's container DOM element. 
+  // Adds the specified CSS class to this item's container DOM element.
   addClass: function(className) {
     iQ(this.container).addClass(className);
   },
-  
+
   // ----------
   // Function: removeClass
-  // Removes the specified CSS class from this item's container DOM element. 
+  // Removes the specified CSS class from this item's container DOM element.
   removeClass: function(className) {
     iQ(this.container).removeClass(className);
   },
-  
+
   // ----------
   // Function: addOnClose
-  // Accepts a callback that will be called when this item closes. 
-  // The referenceObject is used to facilitate removal if necessary. 
+  // Accepts a callback that will be called when this item closes.
+  // The referenceObject is used to facilitate removal if necessary.
   addOnClose: function(referenceObject, callback) {
-    this.tab.mirror.addSubscriber(referenceObject, "close", callback);      
+    this.tab.mirror.addSubscriber(referenceObject, "close", callback);
   },
 
   // ----------
   // Function: removeOnClose
   // Removes the close event callback associated with referenceObject.
   removeOnClose: function(referenceObject) {
-    this.tab.mirror.removeSubscriber(referenceObject, "close");      
+    this.tab.mirror.removeSubscriber(referenceObject, "close");
   },
-  
-  // ----------  
+
+  // ----------
   // Function: setResizable
   // If value is true, makes this item resizable, otherwise non-resizable.
   // Shows/hides a visible resize handle as appropriate.
@@ -460,8 +460,8 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       this.resizable(false);
     }
   },
-  
-  // ----------  
+
+  // ----------
   // Function: makeActive
   // Updates this item to visually indicate that it's active.
   makeActive: function(){
@@ -470,14 +470,14 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 
   },
 
-  // ----------    
+  // ----------
   // Function: makeDeactive
   // Updates this item to visually indicate that it's not active.
   makeDeactive: function(){
    iQ(this.container).find("canvas").removeClass("focus");
    iQ(this.container).find("img.cached-thumb").removeClass("focus");
   },
-  
+
   // ----------
   // Function: zoomIn
   // Allows you to select the tab and zoom in on it, thereby bringing you
@@ -488,9 +488,9 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     var childHitResult = { shouldZoom: true };
     if (this.parent)
       childHitResult = this.parent.childHit(this);
-      
+
     if (childHitResult.shouldZoom) {
-      // Zoom in! 
+      // Zoom in!
       var orig = {
         width: $tabEl.width(),
         height:  $tabEl.height(),
@@ -498,7 +498,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       };
 
       var scale = window.innerWidth/orig.width;
-      
+
       var tab = this.tab;
 
       function onZoomDone(){
@@ -520,25 +520,25 @@ window.TabItem.prototype = iQ.extend(new Item(), {
           .removeClass("front");
 
         // If the tab is in a group set then set the active
-        // group to the tab's parent. 
+        // group to the tab's parent.
         if ( self.parent ){
           var gID = self.parent.id;
           var group = Groups.group(gID);
           Groups.setActiveGroup( group );
-          group.setActiveTab( self );                 
+          group.setActiveTab( self );
         }
         else
           Groups.setActiveGroup( null );
-      
+
         if (childHitResult.callback)
-          childHitResult.callback();             
+          childHitResult.callback();
       }
-      
+
       // The scaleCheat is a clever way to speed up the zoom-in code.
       // Because image scaling is slowest on big images, we cheat and stop the image
       // at scaled-down size and placed accordingly. Because the animation is fast, you can't
       // see the difference but it feels a lot zippier. The only trick is choosing the
-      // right animation function so that you don't see a change in percieved 
+      // right animation function so that you don't see a change in percieved
       // animation speed.
       var scaleCheat = 1.7;
       TabMirror.pausePainting();
@@ -554,30 +554,30 @@ window.TabItem.prototype = iQ.extend(new Item(), {
           easing: 'fast',
           complete: onZoomDone
         });
-    }    
+    }
   },
-  
+
   // ----------
   // Function: zoomOut
   // Handles the zoom down animation after returning to TabCandy.
   // It is expected that this routine will be called from the chrome thread
   // (in response to Tabs.onFocus()).
-  // 
-  // Parameters: 
+  //
+  // Parameters:
   //   complete - a function to call after the zoom down animation
   zoomOut: function(complete) {
     var $tab = iQ(this.container);
-          
+
     var box = this.getBounds();
     box.width -= this.sizeExtra.x;
     box.height -= this.sizeExtra.y;
-      
+
     TabMirror.pausePainting();
 
     var self = this;
     $tab.animate({
       left: box.left,
-      top: box.top, 
+      top: box.top,
       width: box.width,
       height: box.height
     }, {
@@ -585,37 +585,37 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       easing: 'cubic-bezier', // note that this is legal easing, even without parameters
       complete: function() { // note that this will happen on the DOM thread
         $tab.removeClass('front');
-        
-        TabMirror.resumePainting();   
-        
+
+        TabMirror.resumePainting();
+
         self._zoomPrep = false;
-        self.setBounds(self.getBounds(), true, {force: true});    
-        
-        if (iQ.isFunction(complete)) 
+        self.setBounds(self.getBounds(), true, {force: true});
+
+        if (iQ.isFunction(complete))
            complete();
       }
     });
   },
-  
+
   // ----------
   // Function: setZoomPrep
-  // Either go into or return from (depending on <value>) "zoom prep" mode, 
-  // where the tab fills a large portion of the screen in anticipation of 
+  // Either go into or return from (depending on <value>) "zoom prep" mode,
+  // where the tab fills a large portion of the screen in anticipation of
   // the zoom out animation.
   setZoomPrep: function(value) {
     var $div = iQ(this.container);
     var data;
-    
+
     var box = this.getBounds();
-    if (value) { 
+    if (value) {
       this._zoomPrep = true;
 
       // The divide by two part here is a clever way to speed up the zoom-out code.
       // Because image scaling is slowest on big images, we cheat and start the image
       // at half-size and placed accordingly. Because the animation is fast, you can't
       // see the difference but it feels a lot zippier. The only trick is choosing the
-      // right animation function so that you don't see a change in percieved 
-      // animation speed from frame #1 (the tab) to frame #2 (the half-size image) to 
+      // right animation function so that you don't see a change in percieved
+      // animation speed from frame #1 (the tab) to frame #2 (the half-size image) to
       // frame #3 (the first frame of real animation). Choosing an animation that starts
       // fast is key.
       var scaleCheat = 2;
@@ -623,16 +623,16 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         .addClass('front')
         .css({
           left: box.left * (1-1/scaleCheat),
-          top: box.top * (1-1/scaleCheat), 
+          top: box.top * (1-1/scaleCheat),
           width: window.innerWidth/scaleCheat,
           height: box.height * (window.innerWidth / box.width)/scaleCheat
         });
     } else {
       this._zoomPrep = false;
       $div.removeClass('front');
-        
+
       this.setBounds(box, true, {force: true});
-    }                
+    }
   }
 });
 
@@ -640,9 +640,9 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 // Class: TabItems
 // Singleton for managing <TabItem>s
 window.TabItems = {
-  minTabWidth: 40, 
+  minTabWidth: 40,
   tabWidth: 160,
-  tabHeight: 120, 
+  tabHeight: 120,
   fontSize: 9,
 
   // ----------
@@ -650,60 +650,60 @@ window.TabItems = {
   // Sets the object up.
   init: function() {
     this.items = [];
-    
+
     var self = this;
     window.TabMirror.customize(function(mirror) {
       var $div = iQ(mirror.el);
       var tab = mirror.tab;
       var item = new TabItem(mirror.el, tab);
-        
+
       item.addOnClose(self, function() {
         Items.unsquish(null, item);
       });
 
       if (!self.reconnect(item))
-        Groups.newTab(item);          
+        Groups.newTab(item);
     });
   },
 
-  // ----------  
+  // ----------
   // Function: register
-  // Adds the given <TabItem> to the master list. 
+  // Adds the given <TabItem> to the master list.
   register: function(item) {
     Utils.assert('item must be a TabItem', item && item.isAnItem);
     Utils.assert('only register once per item', this.items.indexOf(item) == -1);
     this.items.push(item);
   },
-  
-  // ----------  
+
+  // ----------
   // Function: unregister
-  // Removes the given <TabItem> from the master list. 
+  // Removes the given <TabItem> from the master list.
   unregister: function(item) {
     var index = this.items.indexOf(item);
     if (index != -1)
-      this.items.splice(index, 1);  
+      this.items.splice(index, 1);
   },
-    
+
   // ----------
   // Function: getItems
   // Returns a copy of the master array of <TabItem>s.
   getItems: function() {
     return Utils.copy(this.items);
   },
-    
+
   // ----------
   // Function: getItemByTabElement
-  // Given the DOM element that contains the tab's representation on screen, 
+  // Given the DOM element that contains the tab's representation on screen,
   // returns the <TabItem> it belongs to.
   getItemByTabElement: function(tabElement) {
     return iQ(tabElement).data("tabItem");
   },
-  
+
   // ----------
   // Function: saveAll
-  // Saves all open <TabItem>s. 
-  // 
-  // Parameters: 
+  // Saves all open <TabItem>s.
+  //
+  // Parameters:
   //   saveImageData - true to include thumbnail pixels (and page title as well); default false
   saveAll: function(saveImageData) {
     var items = this.getItems();
@@ -711,19 +711,19 @@ window.TabItems = {
       item.save(saveImageData);
     });
   },
-  
+
   // ----------
   // Function: storageSanity
   // Checks the specified data (as returned by TabItem.getStorageData or loaded from storage)
   // and returns true if it looks valid.
-  // TODO: check everything 
+  // TODO: check everything
   storageSanity: function(data) {
     var sane = true;
     if (!isRect(data.bounds)) {
       Utils.log('TabItems.storageSanity: bad bounds', data.bounds);
       sane = false;
     }
-    
+
     return sane;
   },
 
@@ -736,33 +736,33 @@ window.TabItems = {
     try{
       Utils.assert('item', item);
       Utils.assert('item.tab', item.tab);
-      
-      if (item.reconnected) 
+
+      if (item.reconnected)
         return true;
-        
+
       if (!item.tab.raw)
         return false;
-        
-      var tabData = Storage.getTabData(item.tab.raw);       
+
+      var tabData = Storage.getTabData(item.tab.raw);
       if (tabData && this.storageSanity(tabData)) {
         if (item.parent)
           item.parent.remove(item);
-          
+
         item.setBounds(tabData.bounds, true);
-        
+
         if (isPoint(tabData.userSize))
           item.userSize = new Point(tabData.userSize);
-          
+
         if (tabData.groupID) {
           var group = Groups.group(tabData.groupID);
           if (group) {
-            group.add(item);          
-          
-            if (item.tab == Utils.activeTab) 
+            group.add(item);
+
+            if (item.tab == Utils.activeTab)
               Groups.setActiveGroup(item.parent);
           }
         }
-        
+
         if (tabData.imageData) {
           var mirror = item.tab.mirror;
           mirror.showCachedData(item.tab, tabData);
@@ -772,19 +772,19 @@ window.TabItems = {
             mirror.hideCachedData(item.tab);
           }, 15000);
         }
-        
+
         Groups.updateTabBarForActiveGroup();
-        
+
         item.reconnected = true;
         found = true;
       } else
         item.reconnected = (item.tab.url != 'about:blank');
-    
+
       item.save();
     }catch(e){
       Utils.log(e);
     }
-        
-    return found; 
-  }  
+
+    return found;
+  }
 };
