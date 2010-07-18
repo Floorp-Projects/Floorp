@@ -194,6 +194,9 @@ function test_files() {
 
     } catch (ex) {
       // expected from parsing invalid JSON
+      if (i == 4 || i == 9 || i == 13 || i == 18) {
+        do_throw("Unexpected pass in " + path);
+      }
     }
   }
   
