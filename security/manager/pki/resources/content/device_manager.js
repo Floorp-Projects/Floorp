@@ -387,7 +387,7 @@ function doLogin()
     }
   } catch (e) {
     var alertStr = bundle.GetStringFromName("login_failed"); 
-    alert(alertStr);
+    doPrompt(alertStr);
   }
   enableButtons();
 }
@@ -537,7 +537,7 @@ function toggleFIPS()
       case nsIPKCS11Slot.SLOT_UNINITIALIZED:
       case nsIPKCS11Slot.SLOT_READY:
         // Token has either no or an empty password.
-        alert(bundle.GetStringFromName("fips_nonempty_password_required"));
+        doPrompt(bundle.GetStringFromName("fips_nonempty_password_required"));
         return;
     }
   }
