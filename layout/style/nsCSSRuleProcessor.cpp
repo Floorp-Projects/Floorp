@@ -2320,7 +2320,7 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
   }
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
 {
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
@@ -2333,10 +2333,9 @@ nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
                                          ContentEnumFunc,
                                          aData);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsCSSRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
 {
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
@@ -2352,10 +2351,9 @@ nsCSSRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
                                   aData);
     }
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
 {
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
@@ -2381,11 +2379,10 @@ nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
       }
     }
   }
-  return NS_OK;
 }
 
 #ifdef MOZ_XUL
-NS_IMETHODIMP
+/* virtual */ void
 nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
 {
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
@@ -2408,7 +2405,6 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
       }
     }
   }
-  return NS_OK;
 }
 #endif
 
@@ -2582,9 +2578,8 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   return data.change;
 }
 
-NS_IMETHODIMP
-nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext,
-                                          PRBool* aRulesChanged)
+/* virtual */ PRBool
+nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext)
 {
   RuleCascadeData *old = mRuleCascades;
   // We don't want to do anything if there aren't any sets of rules
@@ -2596,8 +2591,7 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext,
   if (old) {
     RefreshRuleCascade(aPresContext);
   }
-  *aRulesChanged = (old != mRuleCascades);
-  return NS_OK;
+  return (old != mRuleCascades);
 }
 
 // Append all the currently-active font face rules to aArray.  Return
