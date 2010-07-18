@@ -81,40 +81,52 @@ window.TabItem = function(container, tab) {
   // This is mostly to support the phantom groups.
   this.dropOptions.drop = function(e){
     var $target = iQ(this.container);  
-    $target.removeClass("acceptsDrop");
+    this.isDropTarget = false;
+    
     var phantom = $target.data("phantomGroup");
     
     var group = drag.info.item.parent;
-    if ( group == null ){
-      phantom.removeClass("phantom");
-      phantom.removeClass("group-content");
-      group = new Group([$target, drag.info.$el], {container:phantom});
-    } else 
-      group.add( drag.info.$el );      
+    if ( group ) {
+      group.add( drag.info.$el );
+    } else {
+      phantom.removeClass("phantom acceptsDrop");
+      new Group([$target, drag.info.$el], {container:phantom, bounds:phantom.bounds()});
+    }
   };
   
   this.dropOptions.over = function(e){
     var $target = iQ(this.container);
+    this.isDropTarget = true;
 
+    $target.removeClass("acceptsDrop");
+    
     var groupBounds = Groups.getBoundingBox( [drag.info.$el, $target] );
     groupBounds.inset( -20, -20 );
 
     iQ(".phantom").remove();
     var phantom = iQ("<div>")
-      .addClass('group phantom group-content')
+      .addClass("group phantom acceptsDrop")
       .css({
         position: "absolute",
         zIndex: -99
       })
-      .css(groupBounds)
-      .appendTo("body")
+      .css(groupBounds.css())
       .hide()
-      .fadeIn();
+      .appendTo("body");
+
+    var updatedBounds = drag.info.snapBounds(groupBounds,'none');
+
+    // Utils.log('updatedBounds:',updatedBounds);
+    if (updatedBounds)
+      phantom.css(updatedBounds.css());
+    
+    phantom.fadeIn();
       
     $target.data("phantomGroup", phantom);      
   };
   
   this.dropOptions.out = function(e){      
+    this.isDropTarget = false;
     var phantom = iQ(this.container).data("phantomGroup");
     if (phantom) { 
       phantom.fadeOut(function(){
