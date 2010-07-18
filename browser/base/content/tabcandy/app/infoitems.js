@@ -44,74 +44,74 @@
 
 // ##########
 // Class: InfoItem
-// An <Item> in TabCandy used for displaying information, such as the welcome video. 
+// An <Item> in TabCandy used for displaying information, such as the welcome video.
 // Note that it implements the <Subscribable> interface.
-// 
+//
 // ----------
 // Constructor: InfoItem
-// 
-// Parameters: 
+//
+// Parameters:
 //   bounds - a <Rect> for where the item should be located
 //   options - various options for this group (see below)
-// 
-// Possible options: 
+//
+// Possible options:
 //   locked - see <Item.locked>; default is {}
 //   dontPush - true if this group shouldn't push away on creation; default is false
 window.InfoItem = function(bounds, options) {
   try {
     Utils.assertThrow('bounds', isRect(bounds));
-    
+
     if (typeof(options) == 'undefined')
       options = {};
-  
+
     this._inited = false;
     this.isAnInfoItem = true;
     this.defaultSize = bounds.size();
     this.locked = (options.locked ? Utils.copy(options.locked) : {});
     this.bounds = new Rect(bounds);
     this.isDragging = false;
-  
+
     var self = this;
 
     var $container = iQ('<div>')
       .addClass('info-item')
       .css(this.bounds)
       .appendTo('body');
-      
+
     this.$contents = iQ('<div>')
       .appendTo($container);
-  
+
     var $close = iQ('<div>')
       .addClass('close')
       .click(function() {
         self.close();
       })
       .appendTo($container);
-      
+
     // ___ locking
     if (this.locked.bounds)
-      $container.css({cursor: 'default'});    
-      
+      $container.css({cursor: 'default'});
+
     if (this.locked.close)
       $close.hide();
-      
+
     // ___ Superclass initialization
     this._init($container.get(0));
-  
-    if (this.$debug) 
+
+    if (this.$debug)
       this.$debug.css({zIndex: -1000});
-    
+
     // ___ Finish Up
     if (!this.locked.bounds)
       this.draggable();
-    
+
     // ___ Position
     this.snap();
-    
+
     // ___ Push other objects away
     if (!options.dontPush)
-      this.pushAway();   
-  
+      this.pushAway();
+
     this._inited = true;
     this.save();
   } catch(e){
@@ -122,44 +122,44 @@ window.InfoItem = function(bounds, options) {
 // ----------
 window.InfoItem.prototype = iQ.extend(new Item(), new Subscribable(), {
   // ----------
-  // Accepts a callback that will be called when this item closes. 
-  // The referenceObject is used to facilitate removal if necessary. 
+  // Accepts a callback that will be called when this item closes.
+  // The referenceObject is used to facilitate removal if necessary.
   addOnClose: function(referenceObject, callback) {
-    this.addSubscriber(referenceObject, "close", callback);      
+    this.addSubscriber(referenceObject, "close", callback);
   },
 
   // ----------
   // Removes the close event callback associated with referenceObject.
   removeOnClose: function(referenceObject) {
-    this.removeSubscriber(referenceObject, "close");      
+    this.removeSubscriber(referenceObject, "close");
   },
-  
-  // ----------  
+
+  // ----------
   // Function: getStorageData
   // Returns all of the info worth storing about this item.
   getStorageData: function() {
     var data = null;
-    
+
     try {
       data = {
-        bounds: this.getBounds(), 
+        bounds: this.getBounds(),
         locked: Utils.copy(this.locked)
       };
     } catch(e) {
       Utils.log(e);
     }
-  
+
     return data;
   },
 
   // ----------
   // Function: save
-  // Saves this item to persistent storage. 
+  // Saves this item to persistent storage.
   save: function() {
     try {
       if (!this._inited) // too soon to save now
         return;
-  
+
       var data = this.getStorageData();
   /*
       if (Groups.groupStorageSanity(data))
@@ -169,78 +169,78 @@ window.InfoItem.prototype = iQ.extend(new Item(), new Subscribable(), {
       Utils.log(e);
     }
   },
-  
-  // ----------  
+
+  // ----------
   // Function: setBounds
   // Sets the bounds with the given <Rect>, animating unless "immediately" is false.
   setBounds: function(rect, immediately) {
     try {
-      Utils.assertThrow('Group.setBounds: rect must be a real rectangle!', isRect(rect));    
+      Utils.assertThrow('Group.setBounds: rect must be a real rectangle!', isRect(rect));
 
       // ___ Determine what has changed
       var css = {};
-  
+
       if (rect.left != this.bounds.left)
         css.left = rect.left;
-        
-      if (rect.top != this.bounds.top) 
+
+      if (rect.top != this.bounds.top)
         css.top = rect.top;
-        
-      if (rect.width != this.bounds.width) 
+
+      if (rect.width != this.bounds.width)
         css.width = rect.width;
-  
+
       if (rect.height != this.bounds.height)
-        css.height = rect.height; 
-        
+        css.height = rect.height;
+
       if (iQ.isEmptyObject(css))
         return;
-        
+
       this.bounds = new Rect(rect);
-      Utils.assertThrow('Group.setBounds: this.bounds must be a real rectangle!', isRect(this.bounds));    
-            
+      Utils.assertThrow('Group.setBounds: this.bounds must be a real rectangle!', isRect(this.bounds));
+
       // ___ Update our representation
       if (immediately) {
         iQ(this.container).css(css);
       } else {
         TabMirror.pausePainting();
         iQ(this.container).animate(css, {
-          duration: 350, 
-          easing: 'tabcandyBounce', 
+          duration: 350,
+          easing: 'tabcandyBounce',
           complete: function() {
             TabMirror.resumePainting();
           }
         });
       }
-      
+
       this._updateDebugBounds();
-      this.setTrenches(rect);  
+      this.setTrenches(rect);
       this.save();
     } catch(e) {
       Utils.log(e);
     }
   },
-    
+
   // ----------
   // Function: setZ
-  // Set the Z order for the item's container. 
+  // Set the Z order for the item's container.
   setZ: function(value) {
     try {
       Utils.assertThrow('value must be a number', typeof(value) == 'number');
-      
+
       this.zIndex = value;
-  
+
       iQ(this.container).css({zIndex: value});
-  
-      if (this.$debug) 
+
+      if (this.$debug)
         this.$debug.css({zIndex: value + 1});
     } catch(e) {
       Utils.log(e);
     }
   },
-    
+
   // ----------
   // Function: close
-  // Closes the item. 
+  // Closes the item.
   close: function() {
     try {
       this._sendToSubscribers("close");
@@ -249,13 +249,13 @@ window.InfoItem.prototype = iQ.extend(new Item(), new Subscribable(), {
         iQ(this).remove();
         Items.unsquish();
       });
-  
+
   /*     Storage.deleteGroup(Utils.getCurrentWindow(), this.id); */
     } catch(e) {
       Utils.log(e);
     }
   },
-  
+
   // ----------
   // Function: html
   // Sets the item's container's html to the specified value.

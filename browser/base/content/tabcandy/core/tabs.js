@@ -48,17 +48,17 @@ const Cr = Components.results;
 
 // ##########
 // Class: XULApp
-// Singelton 
+// Singelton
 var XULApp = {
   appWindowType: "navigator:browser",
 
-  // ---------- 
+  // ----------
   // Function: tabStripForWindow
   tabStripForWindow: function(aWindow) {
     return aWindow.document.getElementById("content").mStrip;
   },
 
-  // ---------- 
+  // ----------
   // Function: openTab
   openTab: function(aUrl, aInBackground) {
     var window = this.mostRecentAppWindow;
@@ -68,7 +68,7 @@ var XULApp = {
       tabbrowser.selectedTab = tab;
   },
 
-  // ---------- 
+  // ----------
   // Function: getBrowserFromContentWindow
   getBrowserFromContentWindow: function(aMainWindow, aWindow) {
     var browsers = aMainWindow.gBrowser.browsers;
@@ -86,7 +86,7 @@ function Dictionary() {
   var keys = [];
   var values = [];
 
-  // ---------- 
+  // ----------
   // Function: set
   this.set = function set(key, value) {
     var id = keys.indexOf(key);
@@ -97,7 +97,7 @@ function Dictionary() {
       values[id] = value;
   };
 
-  // ---------- 
+  // ----------
   // Function: get
   this.get = function get(key, defaultValue) {
     if (defaultValue === undefined)
@@ -108,7 +108,7 @@ function Dictionary() {
     return values[id];
   };
 
-  // ---------- 
+  // ----------
   // Function: remove
   this.remove = function remove(key) {
     var id = keys.indexOf(key);
@@ -121,15 +121,15 @@ function Dictionary() {
   var readOnlyKeys = new ImmutableArray(keys);
   var readOnlyValues = new ImmutableArray(values);
 
-  // ---------- 
+  // ----------
   // Variable: keys
   this.__defineGetter__("keys", function() { return readOnlyKeys; });
 
-  // ---------- 
+  // ----------
   // Variable: values
   this.__defineGetter__("values", function() { return readOnlyValues; });
 
-  // ---------- 
+  // ----------
   // Variable: length
   this.__defineGetter__("length", function() { return keys.length; });
 }
@@ -148,7 +148,7 @@ function ImmutableArray(baseArray) {
       };
     });
 
-  // ---------- 
+  // ----------
   // Function: toString
   self.toString = function() { return "[ImmutableArray]"; };
 
@@ -278,7 +278,7 @@ function EventListenerMixIn(options) {
 
 // ##########
 // Class: TabsManager
-// Singelton for dealing with the actual tabs in the browser. 
+// Singelton for dealing with the actual tabs in the browser.
 window.TabsManager = iQ.extend(new Subscribable(), {
   // ----------
   // Function: init
@@ -290,16 +290,16 @@ window.TabsManager = iQ.extend(new Subscribable(), {
       iQ.timeout(function() {
         self.init();
       }, 100);
-      
+
       return;
     }
 
     var trackedWindows = new Dictionary();
     var trackedTabs = new Dictionary();
-  
+
     trackedWindows.set(chromeWindow,
                         new BrowserWindow(chromeWindow));
-  
+
     var windows = {
       get focused() {
         var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
@@ -311,9 +311,9 @@ window.TabsManager = iQ.extend(new Subscribable(), {
         return null;
       }
     };
-  
+
     windows.__proto__ = trackedWindows.values;
-  
+
     var tabs = {
       // ----------
       get focused() {
@@ -322,23 +322,23 @@ window.TabsManager = iQ.extend(new Subscribable(), {
           return browserWindow.getFocusedTab();
         return null;
       },
-  
+
       // ----------
       open: function open(url, inBackground) {
         if (typeof(inBackground) == 'undefined')
           inBackground = false;
-          
+
         var browserWindow = windows.focused;
         // TODO: What to do if we have no focused window?
         // make a new one?
-        
+
         var tab = browserWindow.addTab(url);
         if (!inBackground)
           browserWindow.selectedTab = tab; // TODO doesn't seem to be working
-    
+
         return tab;
       },
-  
+
       // ----------
       tab: function tab(value) {
         // assuming value is a DOM element for the time being
@@ -348,47 +348,47 @@ window.TabsManager = iQ.extend(new Subscribable(), {
           if (result)
             Utils.log('turns out the secondary strategy in Tabs.tab() is needed');
         }
-        
+
         return result;
       },
-  
+
       // ----------
       toString: function toString() {
         return "[Tabs]";
       }
     };
-  
+
     var tabsMixIns = new EventListenerMixIns(tabs);
     tabsMixIns.add({name: "onReady"});
     tabsMixIns.add({name: "onFocus"});
     tabsMixIns.add({name: "onClose"});
     tabsMixIns.add({name: "onOpen"});
     tabsMixIns.add({name: "onMove"});
-  
+
     tabs.__proto__ = trackedTabs.values;
   /*   Utils.log(tabs); */
-  
+
     function newBrowserTab(tabbrowser, chromeTab) {
       var browserTab = new BrowserTab(tabbrowser, chromeTab);
       trackedTabs.set(chromeTab, browserTab);
       return browserTab;
     }
-  
+
     function unloadBrowserTab(chromeTab) {
       var browserTab = trackedTabs.get(chromeTab);
       trackedTabs.remove(chromeTab);
       browserTab._unload();
     }
-  
+
     function BrowserWindow(chromeWindow) {
       var tabbrowser = chromeWindow.getBrowser();
-  
+
       for (var i = 0; i < tabbrowser.tabContainer.itemCount; i++)
         newBrowserTab(tabbrowser,
                       tabbrowser.tabContainer.getItemAtIndex(i));
-  
+
       const EVENTS_TO_WATCH = ["TabOpen", "TabMove", "TabClose", "TabSelect"];
-  
+
       function onEvent(event) {
         // TODO: For some reason, exceptions that are raised outside of this
         // function get eaten, rather than logged, so we're adding our own
@@ -396,7 +396,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
         try {
           // This is a XUL <tab> element of class tabbrowser-tab.
           var chromeTab = event.originalTarget;
-  
+
           switch (event.type) {
             case "TabSelect":
               tabsMixIns.bubble("onFocus",
@@ -428,23 +428,23 @@ window.TabsManager = iQ.extend(new Subscribable(), {
           Utils.log(e);
         }
       }
-  
+
       EVENTS_TO_WATCH.forEach(
         function(eventType) {
           tabbrowser.tabContainer.addEventListener(eventType, onEvent, true);
         });
-  
+
       this.addTab = function addTab(url) {
         var chromeTab = tabbrowser.addTab(url);
         // The TabOpen event has just been triggered, so we
         // just need to fetch it from our dictionary now.
         return trackedTabs.get(chromeTab);
       };
-  
+
       this.getFocusedTab = function getFocusedTab() {
         return trackedTabs.get(tabbrowser.selectedTab);
       };
-  
+
       Extension.addUnloadMethod(
         this,
         function() {
@@ -456,13 +456,13 @@ window.TabsManager = iQ.extend(new Subscribable(), {
             unloadBrowserTab(tabbrowser.tabContainer.getItemAtIndex(i));
         });
     }
-  
+
     function BrowserTab(tabbrowser, chromeTab) {
       var browser = chromeTab.linkedBrowser;
-  
+
       var mixIns = new EventListenerMixIns(this);
       var self = this;
-  
+
       mixIns.add(
         {name: "onReady",
          observe: browser,
@@ -485,20 +485,20 @@ window.TabsManager = iQ.extend(new Subscribable(), {
          filter: function(event) {
            // There's not really much to report here other
            // than the Tab itself, but that's already the
-           // 'this' variable, so just return true for now.         
+           // 'this' variable, so just return true for now.
            return true;
          }});
         */
       this.__proto__ = {
 
         get closed() !browser,
-        get url() browser && browser.currentURI ? browser.currentURI.spec : null,  
+        get url() browser && browser.currentURI ? browser.currentURI.spec : null,
         get favicon() chromeTab && chromeTab.image ? chromeTab.image : null,
-  
+
         get contentWindow() browser && browser.contentWindow ? browser.contentWindow : null,
         get contentDocument() browser && browser.contentDocument ? browser.contentDocument : null,
-  
-        get raw() chromeTab,        
+
+        get raw() chromeTab,
         get tabbrowser() tabbrowser,
 
         isFocused: function() {
@@ -509,16 +509,16 @@ window.TabsManager = iQ.extend(new Subscribable(), {
           if (browser)
             tabbrowser.selectedTab = chromeTab;
         },
-  
+
         close: function close() {
           if (browser)
             tabbrowser.removeTab(chromeTab);
         },
-  
+
         toString: function toString() {
           return !browser ? "[Closed Browser Tab]" : "[Browser Tab]";
         },
-  
+
         _unload: function _unload() {
           mixIns.unload();
           mixIns = null;
@@ -528,15 +528,15 @@ window.TabsManager = iQ.extend(new Subscribable(), {
         }
       };
     }
-    
+
     this.__defineGetter__("tabs", function() { return tabs; });
-  
+
     Extension.addUnloadMethod(
       this,
       function() {
         tabsMixIns.unload();
       });
-      
+
     window.Tabs = tabs;
     window.Tabs.app = XULApp;
     this._sendToSubscribers('load');
