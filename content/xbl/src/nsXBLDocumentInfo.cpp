@@ -401,7 +401,6 @@ nsXBLDocGlobalObject::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 nsIPrincipal*
 nsXBLDocGlobalObject::GetPrincipal()
 {
-  nsresult rv = NS_OK;
   if (!mGlobalObjectOwner) {
     // XXXbz this should really save the principal when
     // ClearGlobalObjectOwner() happens.
