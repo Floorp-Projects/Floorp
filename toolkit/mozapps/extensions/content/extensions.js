@@ -45,18 +45,21 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/AddonRepository.jsm");
 
 
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
+const PREF_MAXRESULTS = "extensions.getAddons.maxResults";
 
 const LOADING_MSG_DELAY = 100;
 
 const SEARCH_SCORE_MULTIPLIER_NAME = 2;
 const SEARCH_SCORE_MULTIPLIER_DESCRIPTION = 2;
 
-const SEARCH_SCORE_MATCH_WHOLEWORD = 1;
-const SEARCH_SCORE_MATCH_WORDBOUNDRY = 0.6;
-const SEARCH_SCORE_MATCH_SUBSTRING = 0.3;
+// Use integers so search scores are sortable by nsIXULSortService
+const SEARCH_SCORE_MATCH_WHOLEWORD = 10;
+const SEARCH_SCORE_MATCH_WORDBOUNDRY = 6;
+const SEARCH_SCORE_MATCH_SUBSTRING = 3;
 
 const VIEW_DEFAULT = "addons://list/extension";
 
@@ -124,6 +127,7 @@ function notifyInitialized() {
 }
 
 function shutdown() {
+  gSearchView.shutdown();
   gEventManager.shutdown();
   gViewController.shutdown();
 }
@@ -600,12 +604,13 @@ function isPending(aAddon, aAction) {
 }
 
 
-function createItem(aObj, aIsInstall, aRequiresRestart) {
+function createItem(aObj, aIsInstall, aRequiresRestart, aIsRemote) {
   let item = document.createElement("richlistitem");
 
   item.setAttribute("class", "addon");
   item.setAttribute("name", aObj.name);
   item.setAttribute("type", aObj.type);
+  item.setAttribute("remote", !!aIsRemote);
 
   if (aIsInstall) {
     item.mInstall = aObj;
@@ -788,6 +793,7 @@ var gCategories = {
 
 var gHeader = {
   _search: null,
+  _searching: null,
   _name: null,
   _link: null,
   _dest: "",
@@ -796,6 +802,7 @@ var gHeader = {
     this._name = document.getElementById("header-name");
     this._link = document.getElementById("header-link");
     this._search = document.getElementById("header-search");
+    this._searching = document.getElementById("header-searching");
 
     var self = this;
     this._link.addEventListener("command", function() {
@@ -804,6 +811,9 @@ var gHeader = {
 
     this._search.addEventListener("command", function(aEvent) {
       var query = aEvent.target.value;
+      if (query.length == 0)
+        return false;
+
       gViewController.loadView("addons://search/" + encodeURIComponent(query));
     }, false);
 
@@ -829,6 +839,17 @@ var gHeader = {
 
   set searchQuery(aQuery) {
     this._search.value = aQuery;
+  },
+
+  get isSearching() {
+    return this._searching.hasAttribute("active");
+  },
+
+  set isSearching(aIsSearching) {
+    if (aIsSearching)
+      this._searching.setAttribute("active", true);
+    else
+      this._searching.removeAttribute("active");    
   }
 };
 
@@ -888,14 +909,22 @@ var gDiscoverView = {
 };
 
 
+var gCachedAddons = {};
+
 var gSearchView = {
   node: null,
+  _localFilter: null,
+  _remoteFilter: null,
   _sorters: null,
   _listBox: null,
   _emptyNotice: null,
+  _lastQuery: null,
+  _pendingSearches: 0,
 
   initialize: function() {
     this.node = document.getElementById("search-view");
+    this._localFilter = document.getElementById("search-filter-local");
+    this._remoteFilter = document.getElementById("search-filter-remote");
     this._sorters = document.getElementById("search-sorters");
     this._sorters.handler = this;
     this._listBox = document.getElementById("search-list");
@@ -910,56 +939,151 @@ var gSearchView = {
           item.showInDetailView();
       }
     }, false);
+
+    this._localFilter.addEventListener("command", function() self.updateView(), false);
+    this._remoteFilter.addEventListener("command", function() self.updateView(), false);
+  },
+
+  shutdown: function() {
+    // Force persist of checked state. See bug 15232
+    this._localFilter.setAttribute("checked", !!this._localFilter.checked);
+    this._remoteFilter.setAttribute("checked", !!this._remoteFilter.checked);
+
+    if (AddonRepository.isSearching)
+      AddonRepository.cancelSearch();
+  },
+
+  get isSearching() {
+    return this._pendingSearches > 0;
   },
 
   show: function(aQuery, aRequest) {
     gHeader.setName(gStrings.ext.GetStringFromName("header-search"));
+    gHeader.isSearching = true;
     this.showEmptyNotice(false);
 
     gHeader.searchQuery = aQuery;
     aQuery = aQuery.trim().toLocaleLowerCase();
+    if (this._lastQuery == aQuery) {
+      this.updateView();
+      gViewController.notifyViewChanged();
+      return;
+    }
+    this._lastQuery = aQuery;
+
+    if (AddonRepository.isSearching)
+      AddonRepository.cancelSearch();
 
     while (this._listBox.lastChild.localName == "richlistitem")
       this._listBox.removeChild(this._listBox.lastChild);
 
     var self = this;
-    AddonManager.getAddonsByTypes(null, function(aAddonsList) {
+    gCachedAddons = {};
+    this._pendingSearches = 2;
+    this._sorters.setSort("relevancescore", false);
+
+    function createSearchResults(aObjsList, aIsInstall, aIsRemote) {
+      var createdCount = 0;
+      aObjsList.forEach(function(aObj) {
+        let score = 0;
+        if (aQuery.length > 0) {
+          score = self.getMatchScore(aObj, aQuery);
+          if (score == 0 && !aIsRemote)
+            return;
+        }
+
+        let item = createItem(aObj, aIsInstall, false, aIsRemote);
+        item.setAttribute("relevancescore", score);
+        if (aIsRemote)
+          gCachedAddons[aObj.id] = aObj;
+
+        self._listBox.appendChild(item);
+        createdCount++;
+      });
+
+      return createdCount;
+    }
+
+    function finishSearch(createdCount) {
+      if (createdCount > 0)
+        self.onSortChanged(self._sorters.sortBy, self._sorters.ascending);
+
+      self._pendingSearches--;
+      self.updateView();
+
+      if (!self.isSearching)
+        gViewController.notifyViewChanged();
+    }
+
+    getAddonsAndInstalls(null, function(aAddons, aInstalls) {
       if (gViewController && aRequest != gViewController.currentViewRequest)
         return;
 
-      var elementCount = 0;
-      for (let i = 0; i < aAddonsList.length; i++) {
-        let addon = aAddonsList[i];
-        let score = 0;
-        if (aQuery.length > 0) {
-          score = self.getMatchScore(addon, aQuery);
-          if (score == 0)
-            continue;
-        }
+      var createdCount = createSearchResults(aAddons, false, false);
+      createdCount += createSearchResults(aInstalls, true, false);
+      finishSearch(createdCount);
+    });
 
-        let item = createItem(addon);
-        item.setAttribute("relevancescore", score);
-        self._listBox.appendChild(item);
-        elementCount++;
+    var maxRemoteResults = 0;
+    try {
+      maxRemoteResults = Services.prefs.getIntPref(PREF_MAXRESULTS);
+    } catch(e) {}
+
+    if (maxRemoteResults <= 0) {
+      finishSearch(0);
+      return;
+    }
+
+    AddonRepository.searchAddons(aQuery, maxRemoteResults, {
+      searchFailed: function() {
+        if (gViewController && aRequest != gViewController.currentViewRequest)
+          return;
+
+        // XXXunf Better handling of AMO search failure. See bug 579502
+        finishSearch(0); // Silently fail
+      },
+
+      searchSucceeded: function(aAddonsList, aAddonCount, aTotalResults) {
+        if (gViewController && aRequest != gViewController.currentViewRequest)
+          return;
+
+        var createdCount = createSearchResults(aAddonsList, false, true);
+        finishSearch(createdCount);
+      }
+    });
+  },
+
+  updateView: function() {
+    var showLocal = this._localFilter.checked;
+    var showRemote = this._remoteFilter.checked;
+    this._listBox.setAttribute("local", showLocal);
+    this._listBox.setAttribute("remote", showRemote);
+
+    gHeader.isSearching = this.isSearching;
+    if (!this.isSearching) {
+      var isEmpty = true;
+      var results = this._listBox.getElementsByTagName("richlistitem");
+      for (let i = 0; i < results.length; i++) {
+        var isRemote = (results[i].getAttribute("remote") == "true");
+        if ((isRemote && showRemote) || (!isRemote && showLocal)) {
+          isEmpty = false;
+          break;
+        }
       }
 
-      if (elementCount > 0)
-        self.onSortChanged("relevancescore", false);
-      else
-        self.showEmptyNotice(true);
+      this.showEmptyNotice(isEmpty);
+    }
 
-      gViewController.updateCommands();
-      gViewController.notifyViewChanged();
-    });
+    gViewController.updateCommands();
   },
 
   hide: function() { },
 
-  getMatchScore: function(aAddon, aQuery) {
+  getMatchScore: function(aObj, aQuery) {
     var score = 0;
-    score += this.calculateMatchScore(aAddon.name, aQuery,
+    score += this.calculateMatchScore(aObj.name, aQuery,
                                       SEARCH_SCORE_MULTIPLIER_NAME);
-    score += this.calculateMatchScore(aAddon.description, aQuery,
+    score += this.calculateMatchScore(aObj.description, aQuery,
                                       SEARCH_SCORE_MULTIPLIER_DESCRIPTION);
     return score;
   },
@@ -1182,6 +1306,9 @@ var gDetailView = {
       if (gViewController && aRequest != gViewController.currentViewRequest)
         return;
 
+      if (!aAddon && (aAddonId in gCachedAddons))
+        aAddon = gCachedAddons[aAddonId];
+
       self._addon = aAddon;
       gEventManager.registerAddonListener(self, aAddon.id);
 
@@ -1206,7 +1333,8 @@ var gDetailView = {
       dateUpdated.hidden = !aAddon.updateDate;
 
       var desc = document.getElementById("detail-desc");
-      desc.textContent = aAddon.description;
+      desc.textContent = aAddon.fullDescription ? aAddon.fullDescription
+                                                : aAddon.description;
 
       document.getElementById("detail-autoUpdate").checked = aAddon.applyBackgroundUpdates;
       var canUpdate = hasPermission(aAddon, "upgrade");

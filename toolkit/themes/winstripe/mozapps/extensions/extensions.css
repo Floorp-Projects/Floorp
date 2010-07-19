@@ -164,6 +164,14 @@
   -moz-margin-end: 6px;
 }
 
+#header-searching:not([active]) {
+  visibility: hidden;
+}
+
+#header-searching {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
 .view-header {
   background: -moz-linear-gradient(top, #FFF, #E8E8E8 50%, #FFF);
   padding: 4px;
@@ -404,6 +412,15 @@
   -moz-box-align: center;
   background-color: #FFF;
   font-size: 120%;
+}
+
+#search-list > .addon {
+  visibility: collapse;
+}
+
+#search-list[local="true"]  > .addon[remote="false"],
+#search-list[remote="true"] > .addon[remote="true"] {
+  visibility: visible;
 }
 
 
