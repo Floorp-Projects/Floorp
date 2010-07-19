@@ -436,6 +436,9 @@ members = [
     # can't be quickstubbed
     '-nsIXMLHttpRequest.upload',
 
+    # WebSocket
+    'nsIWebSocket.*',
+
     # webgl
     'nsICanvasRenderingContextWebGL.*',
     # These all use GetCurrentNativeCallContext and should be
