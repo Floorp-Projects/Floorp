@@ -9219,8 +9219,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     //    after the current entry with the following properties, or modify the
     //    current session history entry to set
     //      a. cloned data as the state object,
-    //      b. the given title as the title, and,
-    //      c. if the third argument was present, the absolute URL found in
+    //      b. if the third argument was present, the absolute URL found in
     //         step 2
     // 5. If aReplace is false (i.e. we're doing a pushState instead of a
     //    replaceState), notify bfcache that we've navigated to a new page.
@@ -9233,6 +9232,8 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     // active content viewer.  Since EvictContentViewers at the end of step 5
     // might run script, we can't just put a script blocker around the critical
     // section.
+    //
+    // Note that we completely ignore the aTitle parameter.
 
     nsresult rv;
 
@@ -9420,10 +9421,6 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     else {
         FireOnLocationChange(this, nsnull, mCurrentURI);
     }
-
-    // Try to set the title of the current history element
-    if (mOSHE)
-        mOSHE->SetTitle(aTitle);
 
     return NS_OK;
 }
