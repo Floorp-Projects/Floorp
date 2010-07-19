@@ -270,7 +270,8 @@ public: // NOT in nsIViewManager, so private to the view module
 private:
   nsCOMPtr<nsIDeviceContext> mContext;
   nsIViewObserver   *mObserver;
-  nsIntPoint        mMouseLocation; // device units, relative to mRootView
+  // relative to mRootView and set only on the root view manager
+  nsPoint           mMouseLocation;
 
   // The size for a resize that we delayed until the root view becomes
   // visible again.
