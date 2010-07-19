@@ -63,6 +63,7 @@
 
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
+#include "nsPresContext.h"
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_DOCLOADER_IMPL_CID);
 
@@ -749,14 +750,25 @@ void nsDocLoader::DocLoaderIsEmpty(PRBool aFlushLayout)
 
     NS_ASSERTION(!mIsFlushingLayout, "Someone screwed up");
 
-    // The load group for this DocumentLoader is idle.  Flush layout if we need
-    // to.
+    // The load group for this DocumentLoader is idle.  Flush if we need to.
     if (aFlushLayout && !mDontFlushLayout) {
       nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(GetAsSupports(this));
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
       if (doc) {
+        // We start loads from style resolution, so we need to flush out style
+        // no matter what.  If we have user fonts, we also need to flush layout,
+        // since the reflow is what starts font loads.
+        mozFlushType flushType = Flush_Style;
+        nsIPresShell* shell = doc->GetShell();
+        if (shell) {
+          // Be safe in case this presshell is in teardown now
+          nsPresContext* presContext = shell->GetPresContext();
+          if (presContext && presContext->GetUserFontSet()) {
+            flushType = Flush_Layout;
+          }
+        }
         mDontFlushLayout = mIsFlushingLayout = PR_TRUE;
-        doc->FlushPendingNotifications(Flush_Layout);
+        doc->FlushPendingNotifications(flushType);
         mDontFlushLayout = mIsFlushingLayout = PR_FALSE;
       }
     }
