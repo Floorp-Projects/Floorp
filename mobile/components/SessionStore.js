@@ -37,6 +37,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -62,13 +63,17 @@ const STATE_QUITTING = -1;
 function SessionStore() { }
 
 SessionStore.prototype = {
-  classID: Components.ID("{90c3dfaf-4245-46d3-9bc1-1d8251ff8c01}"),
+  classID: Components.ID("{8c1f07d6-cba3-4226-a315-8bd43d67d032}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventListener, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISessionStore,
+                                         Ci.nsIDOMEventListener,
+                                         Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
 
   _windows: {},
   _lastSaveTime: 0,
   _interval: 15000,
+  _maxTabsUndo: 5,
   
   init: function ss_init() {
     // Get file references
@@ -90,6 +95,7 @@ SessionStore.prototype = {
 
     try {
       this._interval = Services.prefs.getIntPref("sessionstore.interval");
+      this._maxTabsUndo = Services.prefs.getIntPref("sessionstore.max_tabs_undo");
     } catch (e) {}
   },
   
@@ -171,18 +177,30 @@ SessionStore.prototype = {
         this.onTabLoad(window, aEvent.currentTarget, aEvent);
         break;
       case "TabOpen":
-      case "TabClose":
-        let browser = window.Browser.getTabFromChrome(aEvent.originalTarget).browser;
+      case "TabClose": {
+        let browser = aEvent.originalTarget.linkedBrowser;
         if (aEvent.type == "TabOpen") {
           this.onTabAdd(window, browser);
         }
         else {
-          this.onTabClose(window, aEvent.originalTarget);
+          this.onTabClose(window, browser);
           this.onTabRemove(window, browser);
         }
         break;
-      case "TabSelect":
-        this.onTabSelect(window);
+    }
+      case "TabSelect": {
+        let browser = aEvent.originalTarget.linkedBrowser;
+        this.onTabSelect(window, browser);
+        break;
+      }
+    }
+  },
+
+  receiveMessage: function ss_receiveMessage(aMessage) {
+    let window = aMessage.target.ownerDocument.defaultView;
+    switch (aMessage.name) {
+      case "pageshow":
+        this.onTabLoad(window, aMessage.target, aMessage);
         break;
     }
   },
@@ -198,7 +216,7 @@ SessionStore.prototype = {
 
     // Assign it a unique identifier (timestamp) and create its data object
     aWindow.__SSID = "window" + Date.now();
-    this._windows[aWindow.__SSID] = { tabs: [], selected: 0 };
+    this._windows[aWindow.__SSID] = { tabs: [], selected: 0, closedTabs: [] };
 
     // Perform additional initialization when the first window is loading
     if (this._loadState == STATE_STOPPED) {
@@ -247,46 +265,62 @@ SessionStore.prototype = {
   },
   
   onTabAdd: function ss_onTabAdd(aWindow, aBrowser, aNoNotification) {
-    aBrowser.addEventListener("load", this, true);
-    aBrowser.addEventListener("pageshow", this, true);
+    aBrowser.messageManager.addMessageListener("pageshow", this, true);
     
-    if (!aNoNotification) {
-      this.saveStateDelayed(aWindow);
-    }
-
+    if (!aNoNotification)
+      this.saveStateDelayed();
     this._updateCrashReportURL(aWindow);
   },
 
   onTabRemove: function ss_onTabRemove(aWindow, aBrowser, aNoNotification) {
-    aBrowser.removeEventListener("load", this, true);
-    aBrowser.removeEventListener("pageshow", this, true);
+    aBrowser.messageManager.removeMessageListener("pageshow", this, true);
     
     delete aBrowser.__SS_data;
     
-    if (!aNoNotification) {
-      this.saveStateDelayed(aWindow);
-    }
+    if (!aNoNotification)
+      this.saveStateDelayed();
   },
 
-  onTabClose: function ss_onTabClose(aWindow, aTab) {
-  },
-
-  onTabLoad: function ss_onTabLoad(aWindow, aBrowser, aEvent) { 
-    // react on "load" and solitary "pageshow" events (the first "pageshow"
-    // following "load" is too late for deleting the data caches)
-    if (aEvent.type != "load" && !aEvent.persisted) {
+  onTabClose: function ss_onTabClose(aWindow, aBrowser) {
+    if (this._maxTabsUndo == 0)
       return;
+
+    if (aWindow.Browser.tabs.length > 0) {
+      // Bundle this browser's data and extra data and save in the closedTabs
+      // window property
+      let data = aBrowser.__SS_data;
+      data.extraData = aBrowser.__SS_extdata;
+
+      this._windows[aWindow.__SSID].closedTabs.unshift(data);
+      let length = this._windows[aWindow.__SSID].closedTabs.length;
+      if (length > this._maxTabsUndo)
+        this._windows[aWindow.__SSID].closedTabs.splice(this._maxTabsUndo, length - this._maxTabsUndo);
     }
-    
+  },
+
+  onTabLoad: function ss_onTabLoad(aWindow, aBrowser, aMessage) { 
     delete aBrowser.__SS_data;
     this._collectTabData(aBrowser);
 
-    this.saveStateDelayed(aWindow);
-
+    this.saveStateDelayed();
     this._updateCrashReportURL(aWindow);
   },
 
-  onTabSelect: function ss_onTabSelect(aWindow) {
+  onTabSelect: function ss_onTabSelect(aWindow, aBrowser) {
+    if (this._loadState != STATE_RUNNING)
+      return;
+
+    let index = 0;
+    let browser = aWindow.Browser;
+    let tabs = browser.tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].browser == aBrowser) {
+        index = i;
+        break;
+      }
+    }
+
+    this._windows[aWindow.__SSID].selected = index + 1; // 1-based
     this._updateCrashReportURL(aWindow);
   },
 
@@ -308,6 +342,13 @@ SessionStore.prototype = {
   },
 
   saveState: function ss_saveState() {
+    let data = this._getCurrentState();
+    this._writeFile(this._sessionFile, JSON.stringify(data));
+
+    this._lastSaveTime = Date.now();
+  },
+
+  _getCurrentState: function ss_getCurrentState() {
     let self = this;
     this._forEachBrowserWindow(function(aWindow) {
       self._collectWindowData(aWindow);
@@ -317,14 +358,15 @@ SessionStore.prototype = {
     let index;
     for (index in this._windows)
       data.windows.push(this._windows[index]);
-    
-    this._writeFile(this._sessionFile, JSON.stringify(data));
-
-    this._lastSaveTime = Date.now();
+    return data;
   },
-  
+
   _collectTabData: function ss__collectTabData(aBrowser) {
-    let tabData = { url: aBrowser.currentURI.spec, title: aBrowser.contentTitle };
+    let tabData = { entries: [{}] };
+    tabData.entries[0] = { url: aBrowser.currentURI.spec, title: aBrowser.contentTitle };
+    tabData.index = 1;
+    tabData.attributes = { image: aBrowser.mIconURL };
+
     aBrowser.__SS_data = tabData;
   },
   
@@ -338,8 +380,13 @@ SessionStore.prototype = {
 
     let tabs = aWindow.Browser.tabs;
     for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].browser.__SS_data)
-        winData.tabs.push(tabs[i].browser.__SS_data);
+      if (tabs[i].browser.__SS_data) {
+        let browser = tabs[i].browser;
+        let tabData = browser.__SS_data;
+        if (browser.__SS_extdata)
+          tabData.extData = browser.__SS_extdata;
+        winData.tabs.push(tabData);
+      }
     }
   },
 
@@ -396,6 +443,89 @@ SessionStore.prototype = {
         Components.utils.reportError("SessionStore:" + ex);
     }
 #endif
+  },
+
+  getBrowserState: function ss_getBrowserState() {
+    let data = this._getCurrentState();
+    return JSON.stringify(data);
+  },
+
+  getClosedTabCount: function ss_getClosedTabCount(aWindow) {
+    if (!aWindow || !aWindow.__SSID)
+      return 0; // not a browser window, or not otherwise tracked by SS.
+
+    return this._windows[aWindow.__SSID].closedTabs.length;
+  },
+
+  getClosedTabData: function ss_getClosedTabData(aWindow) {
+    if (!aWindow.__SSID)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+
+    return JSON.stringify(this._windows[aWindow.__SSID].closedTabs);
+  },
+
+  undoCloseTab: function ss_undoCloseTab(aWindow, aIndex) {
+    if (!aWindow.__SSID)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+
+    let closedTabs = this._windows[aWindow.__SSID].closedTabs;
+    if (!closedTabs)
+      return null;
+
+    // default to the most-recently closed tab
+    aIndex = aIndex || 0;
+    if (!(aIndex in closedTabs))
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
+    // fetch the data of closed tab, while removing it from the array
+    let closedTab = closedTabs.splice(aIndex, 1).shift();
+
+    // create a new tab and bring to front
+    let tab = aWindow.Browser.addTab(closedTab.entries[0].url, true);
+
+    // Put back the extra data
+    tab.browser.__SS_extdata = closedTab.extraData;
+
+    // TODO: save and restore more data (position, field values, etc)
+
+    return tab.chromeTab;
+  },
+
+  forgetClosedTab: function ss_forgetClosedTab(aWindow, aIndex) {
+    if (!aWindow.__SSID)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
+    let closedTabs = this._windows[aWindow.__SSID].closedTabs;
+
+    // default to the most-recently closed tab
+    aIndex = aIndex || 0;
+    if (!(aIndex in closedTabs))
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
+    // remove closed tab from the array
+    closedTabs.splice(aIndex, 1);
+  },
+
+  getTabValue: function ss_getTabValue(aTab, aKey) {
+    let browser = aTab.linkedBrowser;
+    let data = browser.__SS_extdata || {};
+    return data[aKey] || "";
+  },
+
+  setTabValue: function ss_setTabValue(aTab, aKey, aStringValue) {
+    let browser = aTab.linkedBrowser;
+    if (!browser.__SS_extdata)
+      browser.__SS_extdata = {};
+    browser.__SS_extdata[aKey] = aStringValue;
+    this.saveStateDelayed();
+  },
+
+  deleteTabValue: function ss_deleteTabValue(aTab, aKey) {
+    let browser = aTab.linkedBrowser;
+    if (browser.__SS_extdata && browser.__SS_extdata[aKey])
+      delete browser.__SS_extdata[aKey];
+    else
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   }
 };
 

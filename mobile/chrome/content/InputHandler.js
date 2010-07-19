@@ -1163,11 +1163,8 @@ KeyModule.prototype = {
   handleEvent: function handleEvent(evInfo) {
     if (evInfo.event.type == "keydown" || evInfo.event.type == "keyup" || evInfo.event.type == "keypress") {
       let keyer = this._browserViewContainer.customKeySender;
-      if (keyer) {
+      if (keyer)
         keyer.dispatchKeyEvent(evInfo.event);
-        evInfo.event.preventDefault();
-        evInfo.event.stopPropagation();
-      }
     }
   },
 

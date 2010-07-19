@@ -84,7 +84,7 @@
     </div>
 
     <div id="about">
-    	 <img src="chrome://browser/skin/images/mozilla-32.png"/> <a href="http://www.mozilla.com/about/">&aboutHome.aboutMozilla;</a>
+      <img src="chrome://browser/skin/images/mozilla-32.png"/> <a href="http://www.mozilla.com/about/">&aboutHome.aboutMozilla;</a>
     </div>
   </div>
 
@@ -162,15 +162,19 @@
       
       let tabs = data.windows[0].tabs;
       for (let i=0; i<tabs.length; i++) {
-        let url = tabs[i].url;
+        let tabData = tabs[i];
+        if ("entries" in tabData)
+          tabData = tabData.entries[0];
+
+        let url = tabData.url;
         if (url.indexOf("about:") == 0)
           continue;
 
-        let title = tabs[i].title;
+        let title = tabData.title;
         if (!title)
           continue;
 
-        let uri = chromeWin.makeURI(url);
+        let uri = chromeWin.Util.makeURI(url);
         let favicon = chromeWin.gFaviconService.getFaviconImageForPage(uri).spec;
 
         let outer = document.createElement("div");

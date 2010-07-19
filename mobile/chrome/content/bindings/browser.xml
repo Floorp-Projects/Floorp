@@ -444,7 +444,8 @@
           },
           set currentURI(aURI) { this.loadURI(aURI.spec, null, null, null); },
           referringURI: null,
-          get sessionHistory() { throw "sessionHistory: Not Remoteable"; },
+          get sessionHistory() { return null; },
+          set sessionHistory(aValue) { },
 
           _currentURI: null,
           _browser: this,
