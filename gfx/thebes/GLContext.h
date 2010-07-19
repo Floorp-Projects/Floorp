@@ -1113,10 +1113,10 @@ public:
 inline void
 GLDebugPrintError(GLContext* aCx, const char* const aFile, int aLine)
 {
-  GLenum err = aCx->fGetError();
-  if (err) {
-    fprintf(stderr, "GL ERROR: 0x%04x at %s:%d\n", err, aFile, aLine);
-  }
+    GLenum err = aCx->fGetError();
+    if (err) {
+        printf_stderr("GL ERROR: 0x%04x at %s:%d\n", err, aFile, aLine);
+    }
 }
 
 #ifdef DEBUG

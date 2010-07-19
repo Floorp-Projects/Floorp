@@ -440,12 +440,18 @@ LayerManagerOGL::Render()
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
   // Render our layers.
-  RootLayer()->RenderLayer(mBackBufferFBO, nsIntPoint(0, 0));
+  RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
+                           nsIntPoint(0, 0));
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
   if (mTarget) {
     CopyToTarget();
+    return;
+  }
+
+  if (mGLContext->IsDoubleBuffered()) {
+    mGLContext->SwapBuffers();
     return;
   }
 
@@ -529,13 +535,7 @@ LayerManagerOGL::Render()
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
-  // XXX this is an intermediate workaround for windows that are
-  // double-buffered by default on GLX systems.  The swap is a no-op
-  // everywhere else (and for non-double-buffered GLX windows).  If
-  // the swap is actually performed, it implicitly glFlush()s.
-  if (!mGLContext->SwapBuffers()) {
-    mGLContext->fFlush();
-  } 
+  mGLContext->fFlush();
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 }
@@ -549,10 +549,20 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
   // Matrix to transform to viewport space ( <-1.0, 1.0> topleft, 
   // <1.0, -1.0> bottomright)
   gfx3DMatrix viewMatrix;
-  viewMatrix._11 = 2.0f / float(aWidth);
-  viewMatrix._22 = 2.0f / float(aHeight);
-  viewMatrix._41 = -1.0f;
-  viewMatrix._42 = -1.0f;
+  if (mGLContext->IsDoubleBuffered()) {
+    /* If it's double buffered, we don't have a frontbuffer FBO,
+     * so put in a Y-flip in this transform.
+     */
+    viewMatrix._11 = 2.0f / float(aWidth);
+    viewMatrix._22 = -2.0f / float(aHeight);
+    viewMatrix._41 = -1.0f;
+    viewMatrix._42 = 1.0f;
+  } else {
+    viewMatrix._11 = 2.0f / float(aWidth);
+    viewMatrix._22 = 2.0f / float(aHeight);
+    viewMatrix._41 = -1.0f;
+    viewMatrix._42 = -1.0f;
+  }
 
   SetLayerProgramProjectionMatrix(viewMatrix);
 }
@@ -560,6 +570,10 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight)
 void
 LayerManagerOGL::SetupBackBuffer(int aWidth, int aHeight)
 {
+  if (mGLContext->IsDoubleBuffered()) {
+    mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+  }
+
   // Do we have a FBO of the right size already?
   if (mBackBufferSize.width == aWidth &&
       mBackBufferSize.height == aHeight)
@@ -612,7 +626,8 @@ LayerManagerOGL::CopyToTarget()
 #ifdef USE_GLES2
   // GLES2 promises that binding to any custom FBO will attach 
   // to GL_COLOR_ATTACHMENT0 attachment point.
-  mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mBackBufferFBO);
+  mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER,
+                               mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO);
 #else
   mGLContext->fReadBuffer(LOCAL_GL_COLOR_ATTACHMENT0);
 #endif
