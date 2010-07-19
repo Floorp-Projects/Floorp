@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=79: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -626,6 +627,9 @@ nsBindingManager::RemovedFromDocumentInternal(nsIContent* aContent,
                                               nsIDocument* aOldDocument)
 {
   NS_PRECONDITION(aOldDocument != nsnull, "no old document");
+
+  if (mDestroyed)
+    return;
 
   // Hold a ref to the binding so it won't die when we remove it from our
   // table.
@@ -1650,6 +1654,8 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
 void
 nsBindingManager::DropDocumentReference()
 {
+  mDestroyed = PR_TRUE;
+
   // Make sure to not run any more XBL constructors
   mProcessingAttachedStack = PR_TRUE;
   if (mProcessAttachedQueueEvent) {
@@ -1667,6 +1673,9 @@ nsBindingManager::DropDocumentReference()
   if (mInsertionParentTable.ops)
     PL_DHashTableFinish(&(mInsertionParentTable));
   mInsertionParentTable.ops = nsnull;
+
+  if (mBindingTable.IsInitialized())
+    mBindingTable.Clear();
 
   mDocument = nsnull;
 }
