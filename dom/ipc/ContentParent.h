@@ -36,12 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_ContentProcessParent_h
-#define mozilla_dom_ContentProcessParent_h
+#ifndef mozilla_dom_ContentParent_h
+#define mozilla_dom_ContentParent_h
 
 #include "base/waitable_event_watcher.h"
 
-#include "mozilla/dom/PContentProcessParent.h"
+#include "mozilla/dom/PContentParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "nsIObserver.h"
@@ -60,20 +60,20 @@ namespace dom {
 
 class TabParent;
 
-class ContentProcessParent : public PContentProcessParent
-                           , public nsIObserver
-                           , public nsIThreadObserver
+class ContentParent : public PContentParent
+                    , public nsIObserver
+                    , public nsIThreadObserver
 {
 private:
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
     typedef mozilla::ipc::TestShellParent TestShellParent;
 
 public:
-    static ContentProcessParent* GetSingleton(PRBool aForceNew = PR_TRUE);
+    static ContentParent* GetSingleton(PRBool aForceNew = PR_TRUE);
 
 #if 0
     // TODO: implement this somewhere!
-    static ContentProcessParent* FreeSingleton();
+    static ContentParent* FreeSingleton();
 #endif
 
     NS_DECL_ISUPPORTS
@@ -94,18 +94,18 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why);
 
 private:
-    static ContentProcessParent* gSingleton;
+    static ContentParent* gSingleton;
 
     // Hide the raw constructor methods since we don't want client code
     // using them.
-    using PContentProcessParent::SendPIFrameEmbeddingConstructor;
-    using PContentProcessParent::SendPTestShellConstructor;
+    using PContentParent::SendPBrowserConstructor;
+    using PContentParent::SendPTestShellConstructor;
 
-    ContentProcessParent();
-    virtual ~ContentProcessParent();
+    ContentParent();
+    virtual ~ContentParent();
 
-    virtual PIFrameEmbeddingParent* AllocPIFrameEmbedding();
-    virtual bool DeallocPIFrameEmbedding(PIFrameEmbeddingParent* frame);
+    virtual PBrowserParent* AllocPBrowser();
+    virtual bool DeallocPBrowser(PBrowserParent* frame);
 
     virtual PTestShellParent* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellParent* shell);

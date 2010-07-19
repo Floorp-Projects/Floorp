@@ -37,10 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_ContentProcessChild_h
-#define mozilla_dom_ContentProcessChild_h
+#ifndef mozilla_dom_ContentChild_h
+#define mozilla_dom_ContentChild_h
 
-#include "mozilla/dom/PContentProcessChild.h"
+#include "mozilla/dom/PContentChild.h"
 
 #include "nsIObserverService.h"
 #include "nsTObserverArray.h"
@@ -59,11 +59,11 @@ struct OverrideMapping;
 namespace mozilla {
 namespace dom {
 
-class ContentProcessChild : public PContentProcessChild
+class ContentChild : public PContentChild
 {
 public:
-    ContentProcessChild();
-    virtual ~ContentProcessChild();
+    ContentChild();
+    virtual ~ContentChild();
 
     class nsPrefObserverStorage {
     public:
@@ -125,7 +125,7 @@ public:
               base::ProcessHandle aParentHandle,
               IPC::Channel* aChannel);
 
-    static ContentProcessChild* GetSingleton() {
+    static ContentChild* GetSingleton() {
         NS_ASSERTION(sSingleton, "not initialized");
         return sSingleton;
     }
@@ -133,8 +133,8 @@ public:
     /* if you remove this, please talk to cjones or dougt */
     virtual bool RecvDummy(Shmem& foo) { return true; }
 
-    virtual PIFrameEmbeddingChild* AllocPIFrameEmbedding();
-    virtual bool DeallocPIFrameEmbedding(PIFrameEmbeddingChild*);
+    virtual PBrowserChild* AllocPBrowser();
+    virtual bool DeallocPBrowser(PBrowserChild*);
 
     virtual PTestShellChild* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellChild*);
@@ -168,11 +168,11 @@ private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
 
-    static ContentProcessChild* sSingleton;
+    static ContentChild* sSingleton;
 
     nsTArray< nsAutoPtr<nsPrefObserverStorage> > mPrefObserverArray;
 
-    DISALLOW_EVIL_CONSTRUCTORS(ContentProcessChild);
+    DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
 
 } // namespace dom

@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ContentProcessParent.h"
+#include "ContentParent.h"
 
 #include "TabParent.h"
 #include "mozilla/ipc/TestShellParent.h"
@@ -62,16 +62,16 @@ namespace dom {
 
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
 
-ContentProcessParent* ContentProcessParent::gSingleton;
+ContentParent* ContentParent::gSingleton;
 
-ContentProcessParent*
-ContentProcessParent::GetSingleton(PRBool aForceNew)
+ContentParent*
+ContentParent::GetSingleton(PRBool aForceNew)
 {
     if (gSingleton && !gSingleton->IsAlive())
         gSingleton = nsnull;
     
     if (!gSingleton && aForceNew) {
-        nsRefPtr<ContentProcessParent> parent = new ContentProcessParent();
+        nsRefPtr<ContentParent> parent = new ContentParent();
         if (parent) {
             nsCOMPtr<nsIObserverService> obs =
                 do_GetService("@mozilla.org/observer-service;1");
@@ -100,7 +100,7 @@ ContentProcessParent::GetSingleton(PRBool aForceNew)
 }
 
 void
-ContentProcessParent::ActorDestroy(ActorDestroyReason why)
+ContentParent::ActorDestroy(ActorDestroyReason why)
 {
     nsCOMPtr<nsIThreadObserver>
         kungFuDeathGrip(static_cast<nsIThreadObserver*>(this));
@@ -119,25 +119,25 @@ ContentProcessParent::ActorDestroy(ActorDestroyReason why)
 }
 
 TabParent*
-ContentProcessParent::CreateTab()
+ContentParent::CreateTab()
 {
-  return static_cast<TabParent*>(SendPIFrameEmbeddingConstructor());
+  return static_cast<TabParent*>(SendPBrowserConstructor());
 }
 
 TestShellParent*
-ContentProcessParent::CreateTestShell()
+ContentParent::CreateTestShell()
 {
   return static_cast<TestShellParent*>(SendPTestShellConstructor());
 }
 
 bool
-ContentProcessParent::DestroyTestShell(TestShellParent* aTestShell)
+ContentParent::DestroyTestShell(TestShellParent* aTestShell)
 {
     return PTestShellParent::Send__delete__(aTestShell);
 }
 
-ContentProcessParent::ContentProcessParent()
-    : mMonitor("ContentProcessParent::mMonitor")
+ContentParent::ContentParent()
+    : mMonitor("ContentParent::mMonitor")
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
     , mIsAlive(true)
@@ -153,7 +153,7 @@ ContentProcessParent::ContentProcessParent()
     chromeRegistry->SendRegisteredChrome(this);
 }
 
-ContentProcessParent::~ContentProcessParent()
+ContentParent::~ContentParent()
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     //If the previous content process has died, a new one could have
@@ -163,14 +163,14 @@ ContentProcessParent::~ContentProcessParent()
 }
 
 bool
-ContentProcessParent::IsAlive()
+ContentParent::IsAlive()
 {
     return mIsAlive;
 }
 
 bool
-ContentProcessParent::RecvGetPrefType(const nsCString& prefName,
-                                      PRInt32* retValue, nsresult* rv)
+ContentParent::RecvGetPrefType(const nsCString& prefName,
+                               PRInt32* retValue, nsresult* rv)
 {
     *retValue = 0;
 
@@ -180,8 +180,8 @@ ContentProcessParent::RecvGetPrefType(const nsCString& prefName,
 }
 
 bool
-ContentProcessParent::RecvGetBoolPref(const nsCString& prefName,
-                                      PRBool* retValue, nsresult* rv)
+ContentParent::RecvGetBoolPref(const nsCString& prefName,
+                               PRBool* retValue, nsresult* rv)
 {
     *retValue = PR_FALSE;
 
@@ -191,8 +191,8 @@ ContentProcessParent::RecvGetBoolPref(const nsCString& prefName,
 }
 
 bool
-ContentProcessParent::RecvGetIntPref(const nsCString& prefName,
-                                     PRInt32* retValue, nsresult* rv)
+ContentParent::RecvGetIntPref(const nsCString& prefName,
+                              PRInt32* retValue, nsresult* rv)
 {
     *retValue = 0;
 
@@ -202,8 +202,8 @@ ContentProcessParent::RecvGetIntPref(const nsCString& prefName,
 }
 
 bool
-ContentProcessParent::RecvGetCharPref(const nsCString& prefName,
-                                      nsCString* retValue, nsresult* rv)
+ContentParent::RecvGetCharPref(const nsCString& prefName,
+                               nsCString* retValue, nsresult* rv)
 {
     EnsurePrefService();
     *rv = mPrefService->GetCharPref(prefName.get(), getter_Copies(*retValue));
@@ -211,8 +211,8 @@ ContentProcessParent::RecvGetCharPref(const nsCString& prefName,
 }
 
 bool
-ContentProcessParent::RecvGetPrefLocalizedString(const nsCString& prefName,
-                                                 nsString* retValue, nsresult* rv)
+ContentParent::RecvGetPrefLocalizedString(const nsCString& prefName,
+                                          nsString* retValue, nsresult* rv)
 {
     EnsurePrefService();
     nsCOMPtr<nsIPrefLocalizedString> string;
@@ -226,8 +226,8 @@ ContentProcessParent::RecvGetPrefLocalizedString(const nsCString& prefName,
 }
 
 bool
-ContentProcessParent::RecvPrefHasUserValue(const nsCString& prefName,
-                                           PRBool* retValue, nsresult* rv)
+ContentParent::RecvPrefHasUserValue(const nsCString& prefName,
+                                    PRBool* retValue, nsresult* rv)
 {
     *retValue = PR_FALSE;
 
@@ -237,8 +237,8 @@ ContentProcessParent::RecvPrefHasUserValue(const nsCString& prefName,
 }
 
 bool
-ContentProcessParent::RecvPrefIsLocked(const nsCString& prefName,
-                                       PRBool* retValue, nsresult* rv)
+ContentParent::RecvPrefIsLocked(const nsCString& prefName,
+                                PRBool* retValue, nsresult* rv)
 {
     *retValue = PR_FALSE;
 
@@ -249,8 +249,8 @@ ContentProcessParent::RecvPrefIsLocked(const nsCString& prefName,
 }
 
 bool
-ContentProcessParent::RecvGetChildList(const nsCString& domain,
-                                       nsTArray<nsCString>* list, nsresult* rv)
+ContentParent::RecvGetChildList(const nsCString& domain,
+                                nsTArray<nsCString>* list, nsresult* rv)
 {
     EnsurePrefService();
 
@@ -268,10 +268,10 @@ ContentProcessParent::RecvGetChildList(const nsCString& domain,
 }
 
 bool
-ContentProcessParent::RecvTestPermission(const IPC::URI&  aUri,
-                                         const nsCString& aType,
-                                         const PRBool&    aExact,
-                                         PRUint32*        retValue)
+ContentParent::RecvTestPermission(const IPC::URI&  aUri,
+                                   const nsCString& aType,
+                                   const PRBool&    aExact,
+                                   PRUint32*        retValue)
 {
     EnsurePermissionService();
 
@@ -285,7 +285,7 @@ ContentProcessParent::RecvTestPermission(const IPC::URI&  aUri,
 }
 
 void
-ContentProcessParent::EnsurePrefService()
+ContentParent::EnsurePrefService()
 {
     nsresult rv;
     if (!mPrefService) {
@@ -296,7 +296,7 @@ ContentProcessParent::EnsurePrefService()
 }
 
 void
-ContentProcessParent::EnsurePermissionService()
+ContentParent::EnsurePermissionService()
 {
     nsresult rv;
     if (!mPermissionService) {
@@ -307,7 +307,7 @@ ContentProcessParent::EnsurePermissionService()
     }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(ContentProcessParent,
+NS_IMPL_THREADSAFE_ISUPPORTS2(ContentParent,
                               nsIObserver,
                               nsIThreadObserver)
 
@@ -320,9 +320,9 @@ DeleteSubprocess(GeckoChildProcessHost* aSubprocess)
 }
 
 NS_IMETHODIMP
-ContentProcessParent::Observe(nsISupports* aSubject,
-                              const char* aTopic,
-                              const PRUnichar* aData)
+ContentParent::Observe(nsISupports* aSubject,
+                       const char* aTopic,
+                       const PRUnichar* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
         // remove the global remote preferences observers
@@ -341,25 +341,27 @@ ContentProcessParent::Observe(nsISupports* aSubject,
         mSubprocess = nsnull;
     }
 
+    if (!mIsAlive || !mSubprocess)
+        return NS_OK;
+
     // listening for remotePrefs...
     if (!strcmp(aTopic, "nsPref:changed")) {
         // We know prefs are ASCII here.
         NS_LossyConvertUTF16toASCII strData(aData);
-        if (mIsAlive)
-            SendNotifyRemotePrefObserver(strData);
+        if (!SendNotifyRemotePrefObserver(strData))
+            return NS_ERROR_NOT_AVAILABLE;
     }
-
-    if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC) && mSubprocess) {
+    else if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC)) {
       NS_ConvertUTF16toUTF8 dataStr(aData);
       const char *offline = dataStr.get();
-      if (mIsAlive)
-          SendSetOffline(!strcmp(offline, "true") ? true : false);
+      if (!SendSetOffline(!strcmp(offline, "true") ? true : false))
+          return NS_ERROR_NOT_AVAILABLE;
     }
     return NS_OK;
 }
 
-PIFrameEmbeddingParent*
-ContentProcessParent::AllocPIFrameEmbedding()
+PBrowserParent*
+ContentParent::AllocPBrowser()
 {
   TabParent* parent = new TabParent();
   if (parent){
@@ -369,7 +371,7 @@ ContentProcessParent::AllocPIFrameEmbedding()
 }
 
 bool
-ContentProcessParent::DeallocPIFrameEmbedding(PIFrameEmbeddingParent* frame)
+ContentParent::DeallocPBrowser(PBrowserParent* frame)
 {
   TabParent* parent = static_cast<TabParent*>(frame);
   NS_RELEASE(parent);
@@ -377,33 +379,33 @@ ContentProcessParent::DeallocPIFrameEmbedding(PIFrameEmbeddingParent* frame)
 }
 
 PTestShellParent*
-ContentProcessParent::AllocPTestShell()
+ContentParent::AllocPTestShell()
 {
   return new TestShellParent();
 }
 
 bool
-ContentProcessParent::DeallocPTestShell(PTestShellParent* shell)
+ContentParent::DeallocPTestShell(PTestShellParent* shell)
 {
   delete shell;
   return true;
 }
 
 PNeckoParent* 
-ContentProcessParent::AllocPNecko()
+ContentParent::AllocPNecko()
 {
     return new NeckoParent();
 }
 
 bool 
-ContentProcessParent::DeallocPNecko(PNeckoParent* necko)
+ContentParent::DeallocPNecko(PNeckoParent* necko)
 {
     delete necko;
     return true;
 }
 
 void
-ContentProcessParent::ReportChildAlreadyBlocked()
+ContentParent::ReportChildAlreadyBlocked()
 {
     if (!mRunToCompletionDepth) {
 #ifdef DEBUG
@@ -415,7 +417,7 @@ ContentProcessParent::ReportChildAlreadyBlocked()
 }
     
 bool
-ContentProcessParent::RequestRunToCompletion()
+ContentParent::RequestRunToCompletion()
 {
     if (!mRunToCompletionDepth &&
         BlockChild()) {
@@ -430,7 +432,7 @@ ContentProcessParent::RequestRunToCompletion()
 
 /* void onDispatchedEvent (in nsIThreadInternal thread); */
 NS_IMETHODIMP
-ContentProcessParent::OnDispatchedEvent(nsIThreadInternal *thread)
+ContentParent::OnDispatchedEvent(nsIThreadInternal *thread)
 {
     if (mOldObserver)
         return mOldObserver->OnDispatchedEvent(thread);
@@ -440,9 +442,9 @@ ContentProcessParent::OnDispatchedEvent(nsIThreadInternal *thread)
 
 /* void onProcessNextEvent (in nsIThreadInternal thread, in boolean mayWait, in unsigned long recursionDepth); */
 NS_IMETHODIMP
-ContentProcessParent::OnProcessNextEvent(nsIThreadInternal *thread,
-                                         PRBool mayWait,
-                                         PRUint32 recursionDepth)
+ContentParent::OnProcessNextEvent(nsIThreadInternal *thread,
+                                  PRBool mayWait,
+                                  PRUint32 recursionDepth)
 {
     if (mRunToCompletionDepth)
         ++mRunToCompletionDepth;
@@ -455,8 +457,8 @@ ContentProcessParent::OnProcessNextEvent(nsIThreadInternal *thread,
 
 /* void afterProcessNextEvent (in nsIThreadInternal thread, in unsigned long recursionDepth); */
 NS_IMETHODIMP
-ContentProcessParent::AfterProcessNextEvent(nsIThreadInternal *thread,
-                                            PRUint32 recursionDepth)
+ContentParent::AfterProcessNextEvent(nsIThreadInternal *thread,
+                                     PRUint32 recursionDepth)
 {
     if (mRunToCompletionDepth &&
         !--mRunToCompletionDepth) {

@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ContentProcessChild.h"
+#include "ContentChild.h"
 #include "TabChild.h"
 
 #include "mozilla/ipc/TestShellChild.h"
@@ -59,22 +59,22 @@ using namespace mozilla::net;
 namespace mozilla {
 namespace dom {
 
-ContentProcessChild* ContentProcessChild::sSingleton;
+ContentChild* ContentChild::sSingleton;
 
-ContentProcessChild::ContentProcessChild()
+ContentChild::ContentChild()
 {
 }
 
-ContentProcessChild::~ContentProcessChild()
+ContentChild::~ContentChild()
 {
 }
 
 bool
-ContentProcessChild::Init(MessageLoop* aIOLoop,
-                          base::ProcessHandle aParentHandle,
-                          IPC::Channel* aChannel)
+ContentChild::Init(MessageLoop* aIOLoop,
+                   base::ProcessHandle aParentHandle,
+                   IPC::Channel* aChannel)
 {
-    NS_ASSERTION(!sSingleton, "only one ContentProcessChild per child");
+    NS_ASSERTION(!sSingleton, "only one ContentChild per child");
   
     Open(aChannel, aParentHandle, aIOLoop);
     sSingleton = this;
@@ -82,15 +82,15 @@ ContentProcessChild::Init(MessageLoop* aIOLoop,
     return true;
 }
 
-PIFrameEmbeddingChild*
-ContentProcessChild::AllocPIFrameEmbedding()
+PBrowserChild*
+ContentChild::AllocPBrowser()
 {
   nsRefPtr<TabChild> iframe = new TabChild();
   return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
 }
 
 bool
-ContentProcessChild::DeallocPIFrameEmbedding(PIFrameEmbeddingChild* iframe)
+ContentChild::DeallocPBrowser(PBrowserChild* iframe)
 {
     TabChild* child = static_cast<TabChild*>(iframe);
     NS_RELEASE(child);
@@ -98,42 +98,42 @@ ContentProcessChild::DeallocPIFrameEmbedding(PIFrameEmbeddingChild* iframe)
 }
 
 PTestShellChild*
-ContentProcessChild::AllocPTestShell()
+ContentChild::AllocPTestShell()
 {
     return new TestShellChild();
 }
 
 bool
-ContentProcessChild::DeallocPTestShell(PTestShellChild* shell)
+ContentChild::DeallocPTestShell(PTestShellChild* shell)
 {
     delete shell;
     return true;
 }
 
 bool
-ContentProcessChild::RecvPTestShellConstructor(PTestShellChild* actor)
+ContentChild::RecvPTestShellConstructor(PTestShellChild* actor)
 {
     actor->SendPContextWrapperConstructor()->SendPObjectWrapperConstructor(true);
     return true;
 }
 
 PNeckoChild* 
-ContentProcessChild::AllocPNecko()
+ContentChild::AllocPNecko()
 {
     return new NeckoChild();
 }
 
 bool 
-ContentProcessChild::DeallocPNecko(PNeckoChild* necko)
+ContentChild::DeallocPNecko(PNeckoChild* necko)
 {
     delete necko;
     return true;
 }
 
 bool
-ContentProcessChild::RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
-                                        const nsTArray<ResourceMapping>& resources,
-                                        const nsTArray<OverrideMapping>& overrides)
+ContentChild::RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
+                                 const nsTArray<ResourceMapping>& resources,
+                                 const nsTArray<OverrideMapping>& overrides)
 {
     nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
     nsChromeRegistryContent* chromeRegistry =
@@ -143,7 +143,7 @@ ContentProcessChild::RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
 }
 
 bool
-ContentProcessChild::RecvSetOffline(const PRBool& offline)
+ContentChild::RecvSetOffline(const PRBool& offline)
 {
   nsCOMPtr<nsIIOService> io (do_GetIOService());
   NS_ASSERTION(io, "IO Service can not be null");
@@ -154,7 +154,7 @@ ContentProcessChild::RecvSetOffline(const PRBool& offline)
 }
 
 void
-ContentProcessChild::ActorDestroy(ActorDestroyReason why)
+ContentChild::ActorDestroy(ActorDestroyReason why)
 {
     if (AbnormalShutdown == why)
         NS_WARNING("shutting down because of crash!");
@@ -164,10 +164,10 @@ ContentProcessChild::ActorDestroy(ActorDestroyReason why)
 }
 
 nsresult
-ContentProcessChild::AddRemotePrefObserver(const nsCString &aDomain, 
-                                           const nsCString &aPrefRoot, 
-                                           nsIObserver *aObserver, 
-                                           PRBool aHoldWeak)
+ContentChild::AddRemotePrefObserver(const nsCString &aDomain, 
+                                    const nsCString &aPrefRoot, 
+                                    nsIObserver *aObserver, 
+                                    PRBool aHoldWeak)
 {
     nsPrefObserverStorage* newObserver = 
         new nsPrefObserverStorage(aObserver, aDomain, aPrefRoot, aHoldWeak);
@@ -177,9 +177,9 @@ ContentProcessChild::AddRemotePrefObserver(const nsCString &aDomain,
 }
 
 nsresult
-ContentProcessChild::RemoveRemotePrefObserver(const nsCString &aDomain, 
-                                              const nsCString &aPrefRoot, 
-                                              nsIObserver *aObserver)
+ContentChild::RemoveRemotePrefObserver(const nsCString &aDomain, 
+                                       const nsCString &aPrefRoot, 
+                                       nsIObserver *aObserver)
 {
     if (mPrefObserverArray.IsEmpty())
         return NS_OK;
@@ -199,7 +199,7 @@ ContentProcessChild::RemoveRemotePrefObserver(const nsCString &aDomain,
 }
 
 bool
-ContentProcessChild::RecvNotifyRemotePrefObserver(const nsCString& aDomain)
+ContentChild::RecvNotifyRemotePrefObserver(const nsCString& aDomain)
 {
     nsPrefObserverStorage *entry;
     for (PRUint32 i = 0; i < mPrefObserverArray.Length(); ) {

@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef MOZ_IPC
-#include "mozilla/dom/ContentProcessChild.h"
+#include "mozilla/dom/ContentChild.h"
 #include "nsXULAppAPI.h"
 #endif
 
@@ -86,13 +86,13 @@ static nsresult
   NotifyObserver(const char *newpref, void *data);
 
 #ifdef MOZ_IPC
-using mozilla::dom::ContentProcessChild;
+using mozilla::dom::ContentChild;
 
-static ContentProcessChild*
-GetContentProcessChild()
+static ContentChild*
+GetContentChild()
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    ContentProcessChild* cpc = ContentProcessChild::GetSingleton();
+    ContentChild* cpc = ContentChild::GetSingleton();
     if (!cpc) {
       NS_RUNTIMEABORT("Content Protocol is NULL!  We're going to crash!");
     }
@@ -162,7 +162,7 @@ NS_IMETHODIMP nsPrefBranch::GetRoot(char **aRoot)
 NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, PRInt32 *_retval)
 {
 #ifdef MOZ_IPC
-  if (ContentProcessChild* cpc = GetContentProcessChild()) {
+  if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     PRInt32 retval;
     cpc->SendGetPrefType(nsDependentCString(getPrefName(aPrefName)), &retval, &rv);
@@ -180,7 +180,7 @@ NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, PRInt32 *_retval)
 NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, PRBool *_retval)
 {
 #ifdef MOZ_IPC
-  if (ContentProcessChild* cpc = GetContentProcessChild()) {
+  if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     PRBool retval;
     cpc->SendGetBoolPref(nsDependentCString(getPrefName(aPrefName)), &retval, &rv);
@@ -197,7 +197,7 @@ NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, PRBool *_retval)
 NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, PRInt32 aValue)
 {
 #ifdef MOZ_IPC
-  if (GetContentProcessChild()) {
+  if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -210,7 +210,7 @@ NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, PRInt32 aValue)
 NS_IMETHODIMP nsPrefBranch::GetCharPref(const char *aPrefName, char **_retval)
 {
 #ifdef MOZ_IPC
-  if (ContentProcessChild* cpc = GetContentProcessChild()) {
+  if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     nsCAutoString prefValue;
     cpc->SendGetCharPref(nsDependentCString(getPrefName(aPrefName)), 
@@ -229,7 +229,7 @@ NS_IMETHODIMP nsPrefBranch::GetCharPref(const char *aPrefName, char **_retval)
 NS_IMETHODIMP nsPrefBranch::SetCharPref(const char *aPrefName, const char *aValue)
 {
 #ifdef MOZ_IPC
-  if (GetContentProcessChild()) {
+  if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -242,7 +242,7 @@ NS_IMETHODIMP nsPrefBranch::SetCharPref(const char *aPrefName, const char *aValu
 NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, PRInt32 *_retval)
 {
 #ifdef MOZ_IPC
-  if (ContentProcessChild* cpc = GetContentProcessChild()) {
+  if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     PRInt32 retval;
     cpc->SendGetIntPref(nsDependentCString(getPrefName(aPrefName)), &retval, &rv);
@@ -259,7 +259,7 @@ NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, PRInt32 *_retval)
 NS_IMETHODIMP nsPrefBranch::SetIntPref(const char *aPrefName, PRInt32 aValue)
 {
 #ifdef MOZ_IPC
-  if (GetContentProcessChild()) {
+  if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -280,7 +280,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     if (NS_FAILED(rv)) return rv;
 
 #ifdef MOZ_IPC
-    if (ContentProcessChild* cpc = GetContentProcessChild()) {
+    if (ContentChild* cpc = GetContentChild()) {
       nsAutoString prefValue;
 
       rv = NS_ERROR_NOT_AVAILABLE;
@@ -367,7 +367,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
 
   if (aType.Equals(NS_GET_IID(nsILocalFile))) {
 #ifdef MOZ_IPC
-    if (GetContentProcessChild()) {
+    if (GetContentChild()) {
       NS_ERROR("cannot get nsILocalFile pref from content process");
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -387,7 +387,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
 
   if (aType.Equals(NS_GET_IID(nsIRelativeFilePref))) {
 #ifdef MOZ_IPC
-    if (GetContentProcessChild()) {
+    if (GetContentChild()) {
       NS_ERROR("cannot get nsIRelativeFilePref from content process");
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -446,7 +446,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
 NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue)
 {
 #ifdef MOZ_IPC
-  if (GetContentProcessChild()) {
+  if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -535,7 +535,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 NS_IMETHODIMP nsPrefBranch::ClearUserPref(const char *aPrefName)
 {
 #ifdef MOZ_IPC
-  if (GetContentProcessChild()) {
+  if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -550,7 +550,7 @@ NS_IMETHODIMP nsPrefBranch::PrefHasUserValue(const char *aPrefName, PRBool *_ret
   NS_ENSURE_ARG_POINTER(_retval);
 
 #ifdef MOZ_IPC
-  if (ContentProcessChild* cpc = GetContentProcessChild()) {
+  if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     PRBool retval;
     cpc->SendPrefHasUserValue(nsDependentCString(getPrefName(aPrefName)), &retval, &rv);
@@ -568,7 +568,7 @@ NS_IMETHODIMP nsPrefBranch::PrefHasUserValue(const char *aPrefName, PRBool *_ret
 NS_IMETHODIMP nsPrefBranch::LockPref(const char *aPrefName)
 {
 #ifdef MOZ_IPC
-  if (GetContentProcessChild()) {
+  if (GetContentChild()) {
     NS_ERROR("cannot lock pref from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -583,7 +583,7 @@ NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, PRBool *_retval)
   NS_ENSURE_ARG_POINTER(_retval);
 
 #ifdef MOZ_IPC
-  if (ContentProcessChild* cpc = GetContentProcessChild()) {
+  if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     PRBool retval;
     cpc->SendPrefIsLocked(nsDependentCString(getPrefName(aPrefName)), &retval, &rv);
@@ -601,7 +601,7 @@ NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, PRBool *_retval)
 NS_IMETHODIMP nsPrefBranch::UnlockPref(const char *aPrefName)
 {
 #ifdef MOZ_IPC
-  if (GetContentProcessChild()) {
+  if (GetContentChild()) {
     NS_ERROR("cannot unlock pref from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -620,7 +620,7 @@ NS_IMETHODIMP nsPrefBranch::ResetBranch(const char *aStartingAt)
 NS_IMETHODIMP nsPrefBranch::DeleteBranch(const char *aStartingAt)
 {
 #ifdef MOZ_IPC
-  if (GetContentProcessChild()) {
+  if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -646,7 +646,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
   *aCount = 0;
 
 #ifdef MOZ_IPC
-  if (ContentProcessChild* cpc = GetContentProcessChild()) {
+  if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     cpc->SendGetChildList(nsDependentCString(getPrefName(aStartingAt)),
                           &prefArray, &rv);
@@ -709,7 +709,7 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
   NS_ENSURE_ARG_POINTER(aObserver);
 
 #ifdef MOZ_IPC
-  if (ContentProcessChild* cpc = GetContentProcessChild()) {
+  if (ContentChild* cpc = GetContentChild()) {
     return cpc->AddRemotePrefObserver(nsDependentCString(aDomain), mPrefRoot, aObserver, aHoldWeak);
   }
 #endif
@@ -771,7 +771,7 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
 #ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     nsresult rv = NS_OK;
-    ContentProcessChild *cpc = ContentProcessChild::GetSingleton();
+    ContentChild *cpc = ContentChild::GetSingleton();
     // In case cpc doesn't exist here, we're silently returning (instead of
     // asserting), because the child process is likely to be null
     // when this is called during xpcom-shutdown.
@@ -802,7 +802,7 @@ NS_IMETHODIMP nsPrefBranch::Observe(nsISupports *aSubject, const char *aTopic, c
 static nsresult NotifyObserver(const char *newpref, void *data)
 {
 #ifdef MOZ_IPC
-  if (GetContentProcessChild()) {
+  if (GetContentChild()) {
     // We shouldn't ever get here, since we never register NotifyObserver in the 
     // content process
     NS_NOTREACHED("Remote prefs observation should be done from the \

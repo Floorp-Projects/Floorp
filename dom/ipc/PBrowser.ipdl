@@ -37,12 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PContentProcess;
+include protocol PContent;
+include protocol PContentDialog;
 include protocol PDocumentRenderer;
 include protocol PDocumentRendererShmem;
 include protocol PDocumentRendererNativeID;
 include protocol PGeolocationRequest;
-include protocol PContentDialog;
 
 include "mozilla/TabTypes.h";
 include "TabMessageUtils.h";
@@ -57,14 +57,18 @@ using gfxMatrix;
 namespace mozilla {
 namespace dom {
 
-rpc protocol PIFrameEmbedding
+rpc protocol PBrowser
 {
-    manager PContentProcess;
+    manager PContent;
+
+    manages PContentDialog;
     manages PDocumentRenderer;
     manages PDocumentRendererShmem;
     manages PDocumentRendererNativeID;
     manages PGeolocationRequest;
-    manages PContentDialog;
+
+both:
+    AsyncMessage(nsString aMessage, nsString aJSON);
 
 child:
     __delete__();
@@ -74,34 +78,32 @@ parent:
      * When child sends this message, parent should move focus to
      * the next or previous focusable element.
      */
-    moveFocus(bool forward);
+    MoveFocus(bool forward);
 
-    sendEvent(RemoteDOMEvent aEvent);
+    Event(RemoteDOMEvent aEvent);
 
-    notifyStateChange(PRUint32 stateFlags, nsresult status);
+    NotifyStateChange(PRUint32 stateFlags, nsresult status);
 
-    notifyProgressChange(PRInt64 curSelfProgress,
+    NotifyProgressChange(PRInt64 curSelfProgress,
                          PRInt64 maxSelfProgress,
                          PRInt64 curTotalProgress,
                          PRInt64 maxTotalProgress);
 
-    notifyLocationChange(nsCString uri);
+    NotifyLocationChange(nsCString uri);
 
-    notifyStatusChange(nsresult status,
+    NotifyStatusChange(nsresult status,
                        nsString message);
 
-    notifySecurityChange(PRUint32 aState);
+    NotifySecurityChange(PRUint32 aState);
 
-    sync refreshAttempted(nsCString uri, PRInt32 millis,
+    sync RefreshAttempted(nsCString uri, PRInt32 millis,
                           bool sameURI) returns (bool retval);
 
 
-    rpc createWindow() returns (PIFrameEmbedding window);
+    rpc CreateWindow() returns (PBrowser window);
 
-    sync sendSyncMessageToParent(nsString aMessage, nsString aJSON)
+    sync SyncMessage(nsString aMessage, nsString aJSON)
       returns (nsString[] retval);
-
-    sendAsyncMessageToParent(nsString aMessage, nsString aJSON);
 
     PGeolocationRequest(URI uri);
 
@@ -109,11 +111,11 @@ parent:
                    PRInt32[] aIntParams, nsString[] aStringParams);
 
 child:
-    createWidget(MagicWindowHandle parentWidget);
+    CreateWidget(MagicWindowHandle parentWidget);
 
-    loadURL(nsCString uri);
+    LoadURL(nsCString uri);
 
-    move(PRUint32 x,
+    Move(PRUint32 x,
          PRUint32 y,
          PRUint32 width,
          PRUint32 height);
@@ -121,36 +123,34 @@ child:
     /**
      * Sending an activate message moves focus to the child.
      */
-    activate();
+    Activate();
 
-  /**
-   * @see nsIDOMWindowUtils sendMouseEvent.
-   */
-    sendMouseEvent(nsString aType,
-                   PRInt32 aX, //XXX should be float, but ipdl doesn't seem to support that.
-                   PRInt32 aY, //XXX - " -
-                   PRInt32 aButton,
-                   PRInt32 aClickCount,
-                   PRInt32 aModifiers,
-                   bool aIgnoreRootScrollFrame);
+    /**
+     * @see nsIDOMWindowUtils sendMouseEvent.
+     */
+    MouseEvent(nsString aType,
+               float aX,
+               float aY,
+               PRInt32 aButton,
+               PRInt32 aClickCount,
+               PRInt32 aModifiers,
+               bool aIgnoreRootScrollFrame);
 
-  /**
-   * @see nsIDOMWindowUtils sendKeyEvent.
-   */
-    sendKeyEvent(nsString aType,
-                 PRInt32 aKeyCode,
-                 PRInt32 aCharCode,
-                 PRInt32 aModifiers,
-                 bool aPreventDefault);
+    /**
+     * @see nsIDOMWindowUtils sendKeyEvent.
+     */
+    KeyEvent(nsString aType,
+             PRInt32 aKeyCode,
+             PRInt32 aCharCode,
+             PRInt32 aModifiers,
+             bool aPreventDefault);
 
     /**
      * Activate event forwarding from client to parent.
      */
-    activateFrameEvent(nsString aType, bool capture);
+    ActivateFrameEvent(nsString aType, bool capture);
 
-    loadRemoteScript(nsString aURL);
-
-    sendAsyncMessageToChild(nsString aMessage, nsString aJSON);
+    LoadRemoteScript(nsString aURL);
 
     PDocumentRenderer(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush);
 
