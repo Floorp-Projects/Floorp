@@ -21,8 +21,20 @@
 
 namespace base {
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
+               bool wait, ProcessHandle* process_handle) {
+  return LaunchApp(argv, fds_to_remap, environment_map(),
+                   wait, process_handle);
+}
+#endif
+
+bool LaunchApp(const std::vector<std::string>& argv,
+               const file_handle_mapping_vector& fds_to_remap,
+#if defined(CHROMIUM_MOZILLA_BUILD)
+               const environment_map& env_vars_to_set,
+#endif
                bool wait, ProcessHandle* process_handle) {
   bool retval = true;
 
@@ -35,6 +47,14 @@ bool LaunchApp(const std::vector<std::string>& argv,
   // Make sure we don't leak any FDs to the child process by marking all FDs
   // as close-on-exec.
   SetAllFDsToCloseOnExec();
+
+#if defined(CHROMIUM_MOZILLA_BUILD)
+    for (environment_map::const_iterator it = env_vars_to_set.begin();
+         it != env_vars_to_set.end(); ++it) {
+      if (setenv(it->first.c_str(), it->second.c_str(), 1/*overwrite*/))
+        exit(127);
+    }
+#endif
 
   posix_spawn_file_actions_t file_actions;
   if (posix_spawn_file_actions_init(&file_actions) != 0) {
