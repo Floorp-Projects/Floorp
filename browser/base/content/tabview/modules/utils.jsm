@@ -570,30 +570,28 @@ var Utils = {
   // Pass as many arguments as you want, it'll print them all.
   trace: function() {
     var text = this.expandArgumentsForLog(arguments);
-    if (typeof(printStackTrace) != 'function')
-      this.log(text + ' trace: you need to include stacktrace.js');
-    else {
-      var calls = printStackTrace();
-      calls.splice(0, 3); // Remove this call and the printStackTrace calls
-      this.log('trace: ' + text + '\n' + calls.join('\n'));
+    try { // coerce an error
+      throw new Error("error");
+    } catch (e) {
+      // cut off the first two lines of the stack trace, because they're just this function.
+      var stack = e.stack.replace(/^.*?\n.*?\n/,'');
+      // if the caller was assert, cut out the line for the assert function as well.
+      if (this.trace.caller.name == 'Utils_assert')
+        stack = stack.replace(/^.*?\n/,'');
+      this.log('trace: ' + text + '\n' + stack);
     }
   },
 
   // ----------
   // Function: assert
   // Prints a stack trace along with label (as a console message) if condition is false.
-  assert: function(label, condition) {
+  assert: function Utils_assert(label, condition) {
     if (!condition) {
       var text;
       if (typeof(label) == 'undefined')
         text = 'badly formed assert';
       else
         text = 'tabcandy assert: ' + label;
-
-      if (typeof(printStackTrace) == 'function') {
-        var calls = printStackTrace();
-        text += '\n' + calls[3];
-      }
 
       this.trace(text);
     }
@@ -610,10 +608,11 @@ var Utils = {
       else
         text = 'tabcandy assert: ' + label;
 
-      if (typeof(printStackTrace) == 'function') {
-        var calls = printStackTrace();
-        calls.splice(0, 3); // Remove this call and the printStackTrace calls
-        text += '\n' + calls.join('\n');
+      try { // coerce an error
+        throw new Error("error");
+      } catch (e) {
+        // cut off the first two lines of the stack trace, because they're just this function.
+        text += e.stack.replace(/^.*?\n.*?\n/,'');
       }
 
       throw text;
