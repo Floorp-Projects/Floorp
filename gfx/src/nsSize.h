@@ -69,6 +69,9 @@ struct nsSize {
   nsSize& operator+=(const nsSize& aSize) {width += aSize.width;
                                            height += aSize.height;
                                            return *this;}
+
+  // Converts this size from aFromAPP, an appunits per pixel ratio, to aToAPP.
+  inline nsSize ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const;
 };
 
 struct nsIntSize {
@@ -89,5 +92,16 @@ struct nsIntSize {
 
   void SizeTo(PRInt32 aWidth, PRInt32 aHeight) {width = aWidth; height = aHeight;}
 };
+
+inline nsSize
+nsSize::ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const {
+  if (aFromAPP != aToAPP) {
+    nsSize size;
+    size.width = NSToCoordRound(NSCoordScale(width, aFromAPP, aToAPP));
+    size.height = NSToCoordRound(NSCoordScale(height, aFromAPP, aToAPP));
+    return size;
+  }
+  return *this;
+}
 
 #endif /* NSSIZE_H */
