@@ -227,7 +227,11 @@ WebGLContext::BindFramebuffer(WebGLenum target, nsIWebGLFramebuffer *fbobj)
 
     MakeContextCurrent();
 
-    gl->fBindFramebuffer(target, framebuffername);
+    if (isNull) {
+        gl->fBindFramebuffer(target, gl->GetOffscreenFBO());
+    } else {
+        gl->fBindFramebuffer(target, framebuffername);
+    }
 
     mBoundFramebuffer = wfb;
 
@@ -503,7 +507,9 @@ NS_IMETHODIMP
 WebGLContext::CheckFramebufferStatus(WebGLenum target, WebGLenum *retval)
 {
     MakeContextCurrent();
-    // XXX check target
+    if (target != LOCAL_GL_FRAMEBUFFER)
+        return ErrorInvalidEnum("CheckFramebufferStatus: target must be FRAMEBUFFER");
+
     *retval = gl->fCheckFramebufferStatus(target);
     return NS_OK;
 }
@@ -1013,8 +1019,11 @@ WebGLContext::FramebufferRenderbuffer(WebGLenum target, WebGLenum attachment, We
     if (rbtarget != LOCAL_GL_RENDERBUFFER)
         return ErrorInvalidEnumInfo("framebufferRenderbuffer: renderbuffer target:", rbtarget);
 
+    if (!mBoundFramebuffer)
+        return ErrorInvalidOperation("FramebufferRenderbuffer: cannot modify framebuffer 0");
+
     // dimensions are kept for readPixels primarily, function only uses COLOR_ATTACHMENT0
-    if (mBoundFramebuffer && attachment == LOCAL_GL_COLOR_ATTACHMENT0)
+    if (attachment == LOCAL_GL_COLOR_ATTACHMENT0)
         mBoundFramebuffer->setDimensions(wrb);
 
     MakeContextCurrent();
@@ -1055,8 +1064,11 @@ WebGLContext::FramebufferTexture2D(WebGLenum target,
     if (level != 0)
         return ErrorInvalidValue("FramebufferTexture2D: level must be 0");
 
+    if (!mBoundFramebuffer)
+        return ErrorInvalidOperation("FramebufferTexture2D: cannot modify framebuffer 0");
+
     // dimensions are kept for readPixels primarily, function only uses COLOR_ATTACHMENT0
-    if (mBoundFramebuffer && attachment == LOCAL_GL_COLOR_ATTACHMENT0)
+    if (attachment == LOCAL_GL_COLOR_ATTACHMENT0)
         mBoundFramebuffer->setDimensions(wtex);
 
     // XXXXX we need to store/reference this attachment!
@@ -1478,7 +1490,7 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             break;
 
         case LOCAL_GL_TEXTURE_BINDING_2D:
-            wrval->SetAsISupports( mBound2DTextures[mActiveTexture]);
+            wrval->SetAsISupports(mBound2DTextures[mActiveTexture]);
             break;
 
         case LOCAL_GL_TEXTURE_BINDING_CUBE_MAP:
@@ -1544,22 +1556,61 @@ WebGLContext::GetFramebufferAttachmentParameter(WebGLenum target, WebGLenum atta
             return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: attachment", attachment);
     }
 
+    if (!mBoundFramebuffer)
+        return ErrorInvalidOperation("GetFramebufferAttachmentParameter: cannot query framebuffer 0");
+
     MakeContextCurrent();
 
-    switch (pname) {
-        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
-        {
-            GLint i = 0;
-            gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, &i);
-            wrval->SetAsInt32(i);
-        }
-            break;
+    GLint atype = 0;
+    gl->fGetFramebufferAttachmentParameteriv(target, attachment, LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &atype);
 
-        default:
-            return ErrorInvalidEnumInfo("GetFramebufferAttachmentParameter: parameter", pname);
+    if (atype == LOCAL_GL_RENDERBUFFER) {
+        switch (pname) {
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+                wrval->SetAsInt32(atype);
+                break;
+
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: {
+                GLint i = 0;
+                gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, &i);
+                WebGLRenderbuffer *rb = mMapRenderbuffers.GetWeak(PRUint32(i));
+                NS_ASSERTION(rb, "Expected to find renderbuffer in table, but it's not there?");
+                wrval->SetAsISupports(rb);
+            }
+                break;
+
+            default:
+                return ErrorInvalidEnum("GetFramebufferAttachmentParameter: invalid parameter");
+        }
+    } else if (atype == LOCAL_GL_TEXTURE) {
+        switch (pname) {
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+                wrval->SetAsInt32(atype);
+                break;
+
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: {
+                GLint i = 0;
+                gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, &i);
+                WebGLTexture *tex = mMapTextures.GetWeak(PRUint32(i));
+                NS_ASSERTION(tex, "Expected to find texture in table, but it's not there?");
+                wrval->SetAsISupports(tex);
+            }
+                break;
+
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE: {
+                GLint i = 0;
+                gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, &i);
+                wrval->SetAsInt32(i);
+            }
+                break;
+
+            default:
+                return ErrorInvalidEnum("GetFramebufferAttachmentParameter: invalid parameter");
+        }
+    } else {
+        NS_WARNING("Unknown framebuffer attachment type?");
+        return NS_ERROR_FAILURE;
     }
 
     *retval = wrval.forget().get();
