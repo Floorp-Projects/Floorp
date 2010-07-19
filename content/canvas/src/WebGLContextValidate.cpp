@@ -379,8 +379,7 @@ WebGLContext::InitAndValidateGL()
     // make sure that the opengl stuff that we need is supported
     GLint val = 0;
 
-    // XXX this exposes some strange latent bug; what's going on?
-    //MakeContextCurrent();
+    MakeContextCurrent();
 
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, (GLint*) &mGLMaxVertexAttribs);
     if (mGLMaxVertexAttribs < 8) {
