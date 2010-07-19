@@ -831,3 +831,70 @@ var FormSubmitObserver = {
 };
 
 FormSubmitObserver.init();
+
+var FindHandler = {
+  get _fastFind() {
+    delete this._fastFind;
+    this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
+    this._fastFind.init(docShell);
+    return this._fastFind;
+  },
+
+  get _selectionController() {
+    delete this._selectionController;
+    return this._selectionController = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                               .getInterface(Ci.nsISelectionDisplay)
+                                               .QueryInterface(Ci.nsISelectionController);
+  },
+
+  init: function findHandlerInit() {
+    addMessageListener("FindAssist:Find", this);
+    addMessageListener("FindAssist:Next", this);
+    addMessageListener("FindAssist:Previous", this);
+  },
+
+  receiveMessage: function findHandlerReceiveMessage(aMessage) {
+    let findResult = Ci.nsITypeAheadFind.FIND_NOTFOUND;
+    let json = aMessage.json;
+    switch (aMessage.name) {
+      case "FindAssist:Find":
+        findResult = this._fastFind.find(json.searchString, false);
+        break;
+
+      case "FindAssist:Previous":
+        findResult = this._fastFind.findAgain(true, false);
+        break;
+
+      case "FindAssist:Next":
+        findResult = this._fastFind.findAgain(false, false);
+        break;
+    }
+
+    if (findResult == Ci.nsITypeAheadFind.FIND_NOTFOUND) {
+      sendAsyncMessage("FindAssist:Show", { rect: null , result: findResult });
+      return;
+    }
+
+    let controller = this._selectionController.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
+    if (!controller.rangeCount) {
+      // The selection can be into an input or a textarea element
+      let nodes = content.document.querySelectorAll("input[type='text'], textarea");
+      for (let i = 0; i < nodes.length; i++) {
+        let node = nodes[i];
+        if (node instanceof Ci.nsIDOMNSEditableElement && node.editor) {
+          controller = node.editor.selectionController.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
+          if (controller.rangeCount)
+            break;
+        }
+      }
+    }
+
+    let range = controller.getRangeAt(0);
+    let scroll = Util.getScrollOffset(content);
+    let rect = range.getBoundingClientRect();
+    rect = new Rect(scroll.x + rect.left, scroll.y + rect.top, rect.width, rect.height);
+    sendAsyncMessage("FindAssist:Show", { rect: rect.isEmpty() ? null: rect , result: findResult });
+  }
+};
+
+FindHandler.init();

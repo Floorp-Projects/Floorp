@@ -142,6 +142,9 @@ pref("formhelper.enabled", true);
 pref("formhelper.autozoom", true);
 pref("formhelper.restore", false);
 
+/* find helper */
+pref("findhelper.autozoom", true);
+
 /* autocomplete */
 pref("browser.formfill.enable", true);
 

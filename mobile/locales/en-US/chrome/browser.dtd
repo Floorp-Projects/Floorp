@@ -27,9 +27,10 @@
 <!ENTITY editBookmarkDone.label    "Done">
 <!ENTITY editBookmarkTags.label    "Add tags here">
 
-<!ENTITY formHelper.previous       "Previous">
-<!ENTITY formHelper.next           "Next">
-<!ENTITY formHelper.done           "Done">
+<!ENTITY contentNavigator.previous "Previous">
+<!ENTITY contentNavigator.next     "Next">
+
+<!ENTITY selectHelper.done         "Done">
 
 <!ENTITY addonsHeader.label        "Add-ons">
 <!ENTITY addonsLocal.label         "Your Add-ons">

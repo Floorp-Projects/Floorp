@@ -1831,6 +1831,9 @@ IdentityHandler.prototype = {
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
 
+    // Update the find in page in-site menu
+    FindHelperUI.updateFindInPage();
+
     // Update the search engines results
     BrowserSearch.updatePageSearchEngines();
 
