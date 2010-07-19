@@ -1,4 +1,5 @@
 /* -*- Mode: js2; js2-basic-offset: 2; indent-tabs-mode: nil; -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1995,7 +1996,7 @@ function HUDConsole(aHeadsUpDisplay)
       return;
     }
 
-    let ts = ConsoleUtils.timeStamp(new Date());
+    let ts = ConsoleUtils.timestamp();
     let messageNode = hud.makeHTMLNode("div");
 
     let klass = "hud-msg-node hud-" + aLevel;
@@ -2008,7 +2009,8 @@ function HUDConsole(aHeadsUpDisplay)
     }
 
     let message = argumentArray.join(' ');
-    let timestampedMessage = ts + ": " + message;
+    let timestampedMessage = ConsoleUtils.timestampString(ts) + ": " +
+      message;
 
     messageNode.appendChild(chromeDocument.createTextNode(timestampedMessage));
 
@@ -2528,8 +2530,9 @@ LogMessage.prototype = {
   {
     this.messageNode = this.elementFactory("div");
 
-    var ts = this.timestamp();
-    var timestampedMessage = ts + ": "  + this.message.message;
+    var ts = ConsoleUtils.timestamp();
+    var timestampedMessage = ConsoleUtils.timestampString(ts) + ": " +
+      this.message.message;
     var messageTxtNode = this.textFactory(timestampedMessage);
 
     this.messageNode.appendChild(messageTxtNode);
@@ -2549,28 +2552,6 @@ LogMessage.prototype = {
     };
 
     this.messageObject = messageObject;
-  },
-
-  timestamp: function LM_timestamp()
-  {
-    // TODO: L10N see bug 568656
-    // TODO: DUPLICATED CODE to be consolidated with the utils timestamping
-    // see bug 568657
-    function logDateString(d)
-    {
-      function pad(n, mil)
-      {
-        if (mil) {
-          return n < 100 ? '0' + n : n;
-        }
-        return n < 10 ? '0' + n : n;
-      }
-      return pad(d.getHours())+':'
-        + pad(d.getMinutes())+':'
-        + pad(d.getSeconds()) + ":"
-        + pad(d.getMilliseconds(), true);
-      }
-    return logDateString(new Date());
   }
 };
 
@@ -2643,26 +2624,41 @@ FirefoxApplicationHooks.prototype = {
 ConsoleUtils = {
 
   /**
-   * Generates a millisecond resolution timestamp for console messages
+   * Generates a millisecond resolution timestamp.
    *
-   * @returns string
+   * @returns integer
    */
-  timeStamp: function ConsoleUtils_timeStamp()
+  timestamp: function ConsoleUtils_timestamp()
   {
-    function logDateString(d){
-      function pad(n, mil){
-        if (mil) {
-          return n < 100 ? '0'+n : n;
-        }
-        return n < 10 ? '0'+n : n;
-      }
-      return pad(d.getHours())+':'
-        + pad(d.getMinutes())+':'
-        + pad(d.getSeconds()) + ":"
-        + pad(d.getMilliseconds(), true);
-    }
-    return logDateString(new Date());
+    return Date.now();
+  },
 
+  /**
+   * Generates a formatted timestamp string for displaying in console messages.
+   *
+   * @param integer [ms] Optional, allows you to specify the timestamp in 
+   * milliseconds since the UNIX epoch.
+   * @returns string The timestamp formatted for display.
+   */
+  timestampString: function ConsoleUtils_timestampString(ms)
+  {
+    // TODO: L10N see bug 568656
+    var d = new Date(ms ? ms : null);
+
+    function pad(n, mil)
+    {
+      if (mil) {
+        return n < 100 ? "0" + n : n;
+      }
+      else {
+        return n < 10 ? "0" + n : n;
+      }
+    }
+
+    return pad(d.getHours()) + ":"
+      + pad(d.getMinutes()) + ":"
+      + pad(d.getSeconds()) + ":"
+      + pad(d.getMilliseconds(), true);
   },
 
   /**
