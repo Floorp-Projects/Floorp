@@ -463,40 +463,40 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
     return NS_OK;
   }
 
-  // if we are at the end of the document, we need to insert 
-  // a special mozBR following the normal br, and then set the
-  // selection to stick to the mozBR.
+  // if we are at the end of the textarea, we need to set the
+  // selection to stick to the mozBR at the end of the textarea.
   PRInt32 selOffset;
   nsCOMPtr<nsIDOMNode> selNode;
   nsresult res;
   res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(res, res);
-  // confirm we are at end of document
-  if (selOffset == 0) return NS_OK;  // can't be after a br if we are at offset 0
-  nsIDOMElement *rootElem = mEditor->GetRoot();
 
+  nsCOMPtr<nsIDOMText> nodeAsText = do_QueryInterface(selNode);
+  if (!nodeAsText) return NS_OK; // nothing to do if we're not at a text node
+
+  PRUint32 length;
+  res = nodeAsText->GetLength(&length);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // nothing to do if we're not at the end of the text node
+  if (selOffset != length) return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> parentNode;
+  PRInt32 parentOffset;
+  res = nsEditor::GetNodeLocation(selNode, address_of(parentNode),
+                                  &parentOffset);
+  NS_ENSURE_SUCCESS(res, res);
+
+  nsIDOMElement *rootElem = mEditor->GetRoot();
   nsCOMPtr<nsIDOMNode> root = do_QueryInterface(rootElem);
   NS_ENSURE_TRUE(root, NS_ERROR_NULL_POINTER);
-  if (selNode != root) return NS_OK; // must be inside text node or somewhere other than end of root
+  if (parentNode != root) return NS_OK;
 
-  nsCOMPtr<nsIDOMNode> temp = mEditor->GetChildAt(selNode, selOffset);
-  if (temp) return NS_OK; // can't be at end if there is a node after us.
-
-  nsCOMPtr<nsIDOMNode> nearNode = mEditor->GetChildAt(selNode, selOffset-1);
-  if (nearNode && nsTextEditUtils::IsBreak(nearNode) && !nsTextEditUtils::IsMozBR(nearNode))
+  nsCOMPtr<nsIDOMNode> nextNode = mEditor->GetChildAt(parentNode,
+                                                      parentOffset + 1);
+  if (nextNode && nsTextEditUtils::IsMozBR(nextNode))
   {
-    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
-    // need to insert special moz BR. Why?  Because if we don't
-    // the user will see no new line for the break.  Also, things
-    // like table cells won't grow in height.
-    nsCOMPtr<nsIDOMNode> brNode;
-    res = CreateMozBR(selNode, selOffset, address_of(brNode));
-    NS_ENSURE_SUCCESS(res, res);
-
-    res = nsEditor::GetNodeLocation(brNode, address_of(selNode), &selOffset);
-    NS_ENSURE_SUCCESS(res, res);
-    selPrivate->SetInterlinePosition(PR_TRUE);
-    res = aSelection->Collapse(selNode, selOffset);
+    res = aSelection->Collapse(parentNode, parentOffset + 1);
     NS_ENSURE_SUCCESS(res, res);
   }
   return res;
