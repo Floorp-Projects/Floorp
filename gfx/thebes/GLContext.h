@@ -1056,18 +1056,18 @@ public:
         }
     }
 
-    void CreatedProgram(GLContext *aOrigin, GLuint aName);
-    void CreatedShader(GLContext *aOrigin, GLuint aName);
-    void CreatedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
-    void CreatedTextures(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
-    void CreatedFramebuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
-    void CreatedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
-    void DeletedProgram(GLContext *aOrigin, GLuint aName);
-    void DeletedShader(GLContext *aOrigin, GLuint aName);
-    void DeletedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
-    void DeletedTextures(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
-    void DeletedFramebuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
-    void DeletedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API CreatedProgram(GLContext *aOrigin, GLuint aName);
+    void THEBES_API CreatedShader(GLContext *aOrigin, GLuint aName);
+    void THEBES_API CreatedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API CreatedTextures(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API CreatedFramebuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API CreatedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API DeletedProgram(GLContext *aOrigin, GLuint aName);
+    void THEBES_API DeletedShader(GLContext *aOrigin, GLuint aName);
+    void THEBES_API DeletedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API DeletedTextures(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API DeletedFramebuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API DeletedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
 
     void SharedContextDestroyed(GLContext *aChild);
     void ReportOutstandingNames();
