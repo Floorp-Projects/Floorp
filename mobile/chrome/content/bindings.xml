@@ -16,10 +16,13 @@
       <method name="openPopup">
         <body><![CDATA[
           this.popup.openAutocompletePopup(this, null);
+          this.setAttribute("open", "true");
         ]]></body>
       </method>
       <method name="closePopup">
         <body><![CDATA[
+          this.removeAttribute("open");
+
           // hack! we want to revert to the "all results" popup when the
           // controller would otherwise close us because of an empty search
           // string.
