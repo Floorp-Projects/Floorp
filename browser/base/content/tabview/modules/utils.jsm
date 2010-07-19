@@ -500,8 +500,6 @@ window.Subscribable.prototype = {
 // Class: Utils
 // Singelton with common utility functions.
 var Utils = {
-  _isMac : null,
-
   // ___ Windows and Tabs
 
   // ----------
@@ -728,20 +726,6 @@ var Utils = {
     }
 
     return value;
-  },
-
-  // ----------
-  // Function: isMac
-  // Returns true if running on a Mac.
-  isMac: function() {
-    if (this._isMac == null) {
-      var xulRuntime =
-        Components.classes["@mozilla.org/xre/app-info;1"].
-	  getService(Components.interfaces.nsIXULRuntime);
-      this._isMac = (xulRuntime.OS == "Darwin");
-    }
-
-    return this._isMac;
   }
 };
 
