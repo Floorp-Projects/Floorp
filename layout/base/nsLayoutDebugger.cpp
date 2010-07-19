@@ -175,9 +175,11 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
         break;
     }
     nscolor color;
-    fprintf(aOutput, "%s %p(%s) (%d,%d,%d,%d)%s%s%s%s\n", i->Name(),
-            (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
+    nsRect vis = i->GetVisibleRect();
+    fprintf(aOutput, "%s %p(%s) (%d,%d,%d,%d)(%d,%d,%d,%d)%s%s%s%s\n",
+            i->Name(), (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
             rect.x, rect.y, rect.width, rect.height,
+            vis.x, vis.y, vis.width, vis.height,
             i->IsOpaque(aBuilder) ? " opaque" : "",
             i->IsUniform(aBuilder, &color) ? " uniform" : "",
             f && aBuilder->IsMovingFrame(f) ? " moving" : "",

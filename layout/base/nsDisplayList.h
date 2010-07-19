@@ -1608,6 +1608,38 @@ private:
   nsRect    mClip;
 };
 
+/**
+ * nsDisplayZoom is used for subdocuments that have a different full zoom than
+ * their parent documents.
+ */
+class nsDisplayZoom : public nsDisplayWrapList {
+public:
+  /**
+   * @param aFrame is the root frame of the subdocument.
+   * @param aList contains the display items for the subdocument.
+   * @param aAPD is the app units per dev pixel ratio of the subdocument.
+   * @param aParentAPD is the app units per dev pixel ratio of the parent
+   * document.
+   */
+  nsDisplayZoom(nsIFrame* aFrame, nsDisplayList* aList,
+                PRInt32 aAPD, PRInt32 aParentAPD);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayZoom();
+#endif
+  
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
+  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
+  virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion,
+                                   nsRegion* aVisibleRegionBeforeMove);
+  NS_DISPLAY_DECL_NAME("Zoom", TYPE_ZOOM)
+
+private:
+  PRInt32 mAPD, mParentAPD;
+};
+
 #ifdef MOZ_SVG
 /**
  * A display item to paint a stacking context with effects
