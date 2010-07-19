@@ -159,8 +159,7 @@ function ImmutableArray(baseArray) {
 // Class: Extension
 // Singleton
 var Extension = {
-  // === {{{Extension.addUnloadMethod()}}} ===
-  //
+  // Function: addUnloadMethod
   // This attaches a given method called 'unload' to the given object.
   // The method is also tied to the Extension page's lifetime, so if
   // the unload method isn't called before the page is unloaded, it is
@@ -168,7 +167,6 @@ var Extension = {
   // don't propagate past Extension page reloads, and it can also help
   // developers find objects that aren't being properly cleaned up
   // before the page is unloaded.
-
   addUnloadMethod: function addUnloadMethod(obj, unloader) {
     function unloadWrapper() {
       window.removeEventListener("unload", unloadWrapper, true);
@@ -186,6 +184,8 @@ var Extension = {
 function EventListenerMixIns(mixInto) {
   var mixIns = {};
 
+  // ----------
+  // Function: add
   this.add = function add(options) {
     if (mixIns) {
       if (options.name in mixIns)
@@ -195,6 +195,8 @@ function EventListenerMixIns(mixInto) {
     }
   };
 
+  // ----------
+  // Function: bubble
   this.bubble = function bubble(name, target, event) {
     if (mixIns)
       mixIns[name].trigger(target, event);
@@ -256,6 +258,8 @@ function EventListenerMixIn(options) {
     }
   };
 
+  // ----------
+  // Function: trigger
   this.trigger = function trigger(target, event) {
     onEvent(event, target);
   };
