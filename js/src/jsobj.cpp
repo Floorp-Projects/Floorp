@@ -2268,6 +2268,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
              return JS_FALSE;
         }
 
+        JS_ASSERT_IF(sprop->isMethod(), !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+
         /* 8.12.9 step 12. */
         uintN changed = 0;
         if (desc.hasConfigurable)
@@ -2280,7 +2282,6 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
             changed |= JSPROP_SETTER | JSPROP_SHARED;
 
         attrs = (desc.attrs & changed) | (sprop->attributes() & ~changed);
-        JS_ASSERT_IF(sprop->isMethod(), !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
         if (desc.hasGet) {
             getter = desc.getter();
         } else {
