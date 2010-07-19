@@ -216,7 +216,7 @@ toolbarbutton.urlbar-cap-button {
   text-indent: 3px;
 }
 
-#urlbar-edit:hover:active {
+#urlbar-edit:not([open]):hover:active {
   background-color: #8db8d8;
 }
 
