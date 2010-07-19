@@ -119,9 +119,9 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 }
 
 TabParent*
-ContentParent::CreateTab()
+ContentParent::CreateTab(PRUint32 aChromeFlags)
 {
-  return static_cast<TabParent*>(SendPBrowserConstructor());
+  return static_cast<TabParent*>(SendPBrowserConstructor(aChromeFlags));
 }
 
 TestShellParent*
@@ -361,7 +361,7 @@ ContentParent::Observe(nsISupports* aSubject,
 }
 
 PBrowserParent*
-ContentParent::AllocPBrowser()
+ContentParent::AllocPBrowser(const PRUint32& aChromeFlags)
 {
   TabParent* parent = new TabParent();
   if (parent){

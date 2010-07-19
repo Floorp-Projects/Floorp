@@ -110,8 +110,10 @@ public:
 };
 
 
-TabChild::TabChild()
-: mCx(nsnull), mTabChildGlobal(nsnull)
+TabChild::TabChild(PRUint32 aChromeFlags)
+  : mCx(nsnull)
+  , mTabChildGlobal(nsnull)
+  , mChromeFlags(aChromeFlags)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -182,12 +184,14 @@ TabChild::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 NS_IMETHODIMP
 TabChild::GetChromeFlags(PRUint32* aChromeFlags)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aChromeFlags = mChromeFlags;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 TabChild::SetChromeFlags(PRUint32 aChromeFlags)
 {
+  NS_ERROR("trying to SetChromeFlags from content process?");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -151,7 +151,7 @@ class TabChild : public PBrowserChild,
                  public nsITabChild
 {
 public:
-    TabChild();
+    TabChild(PRUint32 aChromeFlags);
     virtual ~TabChild();
     bool DestroyWidget();
     nsresult Init();
@@ -286,6 +286,7 @@ private:
     nsCOMPtr<nsIChannel> mChannel;
     TabChildGlobal* mTabChildGlobal;
     nsCOMPtr<nsIPrincipal> mPrincipal;
+    PRUint32 mChromeFlags;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
