@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PIFrameEmbedding;
+include protocol PBrowser;
 include "mozilla/TabTypes.h";
 
 namespace mozilla {
@@ -43,7 +43,7 @@ namespace dom {
 
 protocol PContentDialog
 {
-  manager PIFrameEmbedding;
+  manager PBrowser;
 
 child:
     __delete__(PRInt32[] aIntParams, nsString[] aStringParams);

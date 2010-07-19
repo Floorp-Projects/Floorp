@@ -45,7 +45,7 @@
 #include "mozilla/jsipc/ObjectWrapperParent.h"
 #include "mozilla/jsipc/CPOWTypes.h"
 
-#include "mozilla/dom/ContentProcessParent.h"
+#include "mozilla/dom/ContentParent.h"
 
 #include "jsapi.h"
 #include "nsAutoJSValHolder.h"
@@ -53,15 +53,15 @@
 namespace mozilla {
 namespace jsipc {
 
-using mozilla::dom::ContentProcessParent;
+using mozilla::dom::ContentParent;
     
 class ContextWrapperParent
     : public PContextWrapperParent
 {
 public:
 
-    ContextWrapperParent(ContentProcessParent* cpp)
-        : mContentProcess(cpp)
+    ContextWrapperParent(ContentParent* cpp)
+        : mContent(cpp)
         , mGlobal(NULL)
     {}
 
@@ -78,12 +78,12 @@ public:
     }
 
     bool RequestRunToCompletion() {
-        return mContentProcess->RequestRunToCompletion();
+        return mContent->RequestRunToCompletion();
     }
 
 private:
 
-    ContentProcessParent* mContentProcess;
+    ContentParent* mContent;
     ObjectWrapperParent* mGlobal;
     nsAutoJSValHolder mGlobalHolder;
 

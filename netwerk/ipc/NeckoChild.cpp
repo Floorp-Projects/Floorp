@@ -40,7 +40,7 @@
 
 #include "nsHttp.h"
 #include "mozilla/net/NeckoChild.h"
-#include "mozilla/dom/ContentProcessChild.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/CookieServiceChild.h"
 
@@ -63,8 +63,8 @@ void NeckoChild::InitNeckoChild()
   NS_ABORT_IF_FALSE(IsNeckoChild(), "InitNeckoChild called by non-child!");
 
   if (!gNeckoChild) {
-    mozilla::dom::ContentProcessChild * cpc = 
-      mozilla::dom::ContentProcessChild::GetSingleton();
+    mozilla::dom::ContentChild * cpc = 
+      mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
     gNeckoChild = cpc->SendPNeckoConstructor(); 
     NS_ASSERTION(gNeckoChild, "PNecko Protocol init failed!");
@@ -87,7 +87,7 @@ void NeckoChild::DestroyNeckoChild()
 }
 
 PHttpChannelChild* 
-NeckoChild::AllocPHttpChannel(PIFrameEmbeddingChild* iframeEmbedding)
+NeckoChild::AllocPHttpChannel(PBrowserChild* iframeEmbedding)
 {
   // We don't allocate here: see HttpChannelChild::AsyncOpen()
   NS_RUNTIMEABORT("AllocPHttpChannel should not be called");

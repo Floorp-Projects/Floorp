@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PIFrameEmbedding;
+include protocol PBrowser;
 include protocol PTestShell;
 include protocol PNecko;
 
@@ -52,14 +52,14 @@ using IPC::URI;
 namespace mozilla {
 namespace dom {
 
-rpc protocol PContentProcess
+rpc protocol PContent
 {
-    manages PIFrameEmbedding;
+    manages PBrowser;
     manages PTestShell;
     manages PNecko;
 
 child:
-    PIFrameEmbedding();
+    PBrowser();
 
     PTestShell();
 

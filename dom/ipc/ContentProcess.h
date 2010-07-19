@@ -37,31 +37,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/ipc/IOThreadChild.h"
+#ifndef dom_tabs_ContentThread_h
+#define dom_tabs_ContentThread_h 1
 
-#include "ContentProcessProcess.h"
+#include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/ipc/ScopedXREEmbed.h"
+#include "ContentChild.h"
 
-using mozilla::ipc::IOThreadChild;
+#undef _MOZ_LOG
+#define _MOZ_LOG(s)  printf("[ContentProcess] %s", s)
 
 namespace mozilla {
 namespace dom {
 
-bool
-ContentProcessProcess::Init()
+/**
+ * ContentProcess is a singleton on the content process which represents
+ * the main thread where tab instances live.
+ */
+class ContentProcess : public mozilla::ipc::ProcessChild
 {
-    mContentProcess.Init(IOThreadChild::message_loop(),
-                         ParentHandle(),
-                         IOThreadChild::channel());
-    mXREEmbed.Start();
-    
-    return true;
-}
+    typedef mozilla::ipc::ProcessChild ProcessChild;
 
-void
-ContentProcessProcess::CleanUp()
-{
-    mXREEmbed.Stop();
-}
+public:
+    ContentProcess(ProcessHandle mParentHandle)
+        : ProcessChild(mParentHandle)
+    { }
 
-} // namespace tabs
-} // namespace mozilla
+    ~ContentProcess()
+    { }
+
+    NS_OVERRIDE
+    virtual bool Init();
+    NS_OVERRIDE
+    virtual void CleanUp();
+
+private:
+    ContentChild mContent;
+    mozilla::ipc::ScopedXREEmbed mXREEmbed;
+
+    DISALLOW_EVIL_CONSTRUCTORS(ContentProcess);
+};
+
+}  // namespace dom
+}  // namespace mozilla
+
+#endif  // ifndef dom_tabs_ContentThread_h
