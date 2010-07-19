@@ -5080,6 +5080,8 @@ CClosure::Create(JSContext* cx,
                  JSObject* thisObj,
                  PRFuncPtr* fnptr)
 {
+  JS_ASSERT(fnObj);
+
   JSObject* result = JS_NewObject(cx, &sCClosureClass, NULL, NULL);
   if (!result)
     return NULL;
@@ -5183,12 +5185,10 @@ CClosure::Trace(JSTracer* trc, JSObject* obj)
 
   // Identify our objects to the tracer. (There's no need to identify
   // 'closureObj', since that's us.)
-  if (cinfo->typeObj)
-      JS_CALL_OBJECT_TRACER(trc, cinfo->typeObj, "typeObj");
+  JS_CALL_OBJECT_TRACER(trc, cinfo->typeObj, "typeObj");
+  JS_CALL_OBJECT_TRACER(trc, cinfo->jsfnObj, "jsfnObj");
   if (cinfo->thisObj)
-      JS_CALL_OBJECT_TRACER(trc, cinfo->thisObj, "thisObj");
-  if (cinfo->jsfnObj)
-      JS_CALL_OBJECT_TRACER(trc, cinfo->jsfnObj, "jsfnObj");
+    JS_CALL_OBJECT_TRACER(trc, cinfo->thisObj, "thisObj");
 }
 
 void
