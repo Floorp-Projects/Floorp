@@ -943,61 +943,61 @@ UIClass.prototype = {
             break;
 #endif
       }
+      if (handled)
+        return;
 
-      if (!handled) {
-        var charCode = event.charCode;
+      var charCode = event.charCode;
 #ifdef XP_MACOSX
-        // if a text box in a webpage has the focus, the event.altKey would
-        // returns false but we are depending on the charCode here.
-        if (charCode == 160) { // alt + space
+      // if a text box in a webpage has the focus, the event.altKey would
+      // returns false but we are depending on the charCode here.
+      if (!event.ctrlKey && !event.metaKey && !event.shiftKey &&
+          charCode == 160) { // alt + space
 #else
-        if (event.ctrlKey && !event.metaKey && !event.shiftKey &&
-            !event.altKey && charCode == 32) {
+      if (event.ctrlKey && !event.metaKey && !event.shiftKey &&
+          !event.altKey && charCode == 32) {
 #endif
-          event.stopPropagation();
-          event.preventDefault();
-          Page.hideChrome();
-          Page.showTabCandy();
-          return;
-        }
+        event.stopPropagation();
+        event.preventDefault();
+        Page.hideChrome();
+        Page.showTabCandy();
+        return;
+      }
 
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-        if (event.altKey && !event.metaKey && !event.shiftKey &&
-            !event.ctrlKey) {
+      if (event.altKey && !event.metaKey && !event.shiftKey && !event.ctrlKey) {
 #else
-        if (event.metaKey && !event.altKey && !event.shiftKey &&
-            !event.ctrlKey) {
+      if (event.metaKey && !event.altKey && !event.shiftKey && !event.ctrlKey) {
 #endif
 #else
-        if (event.ctrlKey && !event.altKey && !event.shiftKey &&
-            !event.metaKey) {
+      if (event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
 #endif
-          // ToDo: the "tabs" binding implements the nsIDOMXULSelectControlElement,
-          // we might need to rewrite the tabs without using the
-          // nsIDOMXULSelectControlElement.
-          // http://mxr.mozilla.org/mozilla1.9.2/source/toolkit/content/widgets/tabbox.xml#246
-          // The below handles the ctrl/meta + number key and prevent the default
-          // actions.
-          // 1 to 9
-          if (48 < charCode && charCode < 58) {
-            event.stopPropagation();
-            event.preventDefault();
-            self.advanceSelectedTab(false, (charCode - 48));
-          }
-#ifdef XP_MACOSX
-          // Cmd + { / Cmd + }
-          else if (charCode == 91 || charCode == 93) {
-              event.stopPropagation();
-              event.preventDefault();
-              var reverse =
-                (window.getComputedStyle(tabbox, "").direction ==
-                  "ltr" ? true : false);
-              self.advanceSelectedTab(charCode == 91 ? reverse : !reverse);
-          }
-#endif
+        // ToDo: the "tabs" binding implements the nsIDOMXULSelectControlElement,
+        // we might need to rewrite the tabs without using the
+        // nsIDOMXULSelectControlElement.
+        // http://mxr.mozilla.org/mozilla1.9.2/source/toolkit/content/widgets/tabbox.xml#246
+        // The below handles the ctrl/meta + number key and prevent the default
+        // actions.
+        // 1 to 9
+        if (48 < charCode && charCode < 58) {
+          event.stopPropagation();
+          event.preventDefault();
+          self.advanceSelectedTab(false, (charCode - 48));
+          return;
         }
       }
+#ifdef XP_MACOSX
+      // Cmd + { / Cmd + }
+      if (event.metaKey && !event.altKey && !event.ctrlKey &&
+          (charCode == 123 || charCode == 125)) {
+        event.stopPropagation();
+        event.preventDefault();
+        var reverse =
+          (window.getComputedStyle(tabbox, "").direction ==
+            "ltr" ? true : false);
+        self.advanceSelectedTab(charCode == 123 ? reverse : !reverse);
+      }
+#endif
     }, true);
   },
 
