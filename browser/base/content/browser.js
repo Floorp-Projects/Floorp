@@ -4703,6 +4703,8 @@ var TabsOnTop = {
     document.getElementById("cmd_ToggleTabsOnTop")
             .setAttribute("checked", enabled);
     document.documentElement.setAttribute("tabsontop", enabled);
+    document.getElementById("TabsToolbar").setAttribute("tabsontop", enabled);
+    gBrowser.tabContainer.setAttribute("tabsontop", enabled);
   },
   get enabled () {
     return gNavToolbox.getAttribute("tabsontop") == "true";
