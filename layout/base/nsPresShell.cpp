@@ -6802,16 +6802,28 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
   // the client X/Y will be 0,0. We can make use of that if the widget is null.
   // Use the root view manager's widget since it's most likely to have one,
   // and the coordinates returned by GetCurrentItemAndPositionForElement
-  // are relative to the root of the root view manager.
+  // are relative to the widget of the root of the root view manager.
   nsRootPresContext* rootPC = mPresContext->GetRootPresContext();
+  aEvent->refPoint.x = 0;
+  aEvent->refPoint.y = 0;
   if (rootPC) {
     rootPC->PresShell()->GetViewManager()->
       GetRootWidget(getter_AddRefs(aEvent->widget));
+
+    if (aEvent->widget) {
+      // default the refpoint to the topleft of our document
+      nsPoint offset(0, 0);
+      nsIFrame* rootFrame = FrameManager()->GetRootFrame();
+      if (rootFrame) {
+        nsIView* view = rootFrame->GetClosestView(&offset);
+        offset += view->GetOffsetToWidget(aEvent->widget);
+        aEvent->refPoint =
+          offset.ToNearestPixels(mPresContext->AppUnitsPerDevPixel());
+      }
+    }
   } else {
     aEvent->widget = nsnull;
   }
-  aEvent->refPoint.x = 0;
-  aEvent->refPoint.y = 0;
 
   // see if we should use the caret position for the popup
   nsIntPoint caretPoint;
