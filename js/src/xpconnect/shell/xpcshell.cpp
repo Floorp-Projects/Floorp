@@ -1867,25 +1867,26 @@ main(int argc, char **argv)
         xpc->SetSecurityManagerForJSContext(cx, secman, 0xFFFF);
 
 #ifndef XPCONNECT_STANDALONE
+        nsCOMPtr<nsIPrincipal> systemprincipal;
+
         // Fetch the system principal and store it away in a global, to use for
         // script compilation in Load() and ProcessFile() (including interactive
         // eval loop)
         {
-            nsCOMPtr<nsIPrincipal> princ;
 
             nsCOMPtr<nsIScriptSecurityManager> securityManager =
                 do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
             if (NS_SUCCEEDED(rv) && securityManager) {
-                rv = securityManager->GetSystemPrincipal(getter_AddRefs(princ));
+                rv = securityManager->GetSystemPrincipal(getter_AddRefs(systemprincipal));
                 if (NS_FAILED(rv)) {
                     fprintf(gErrFile, "+++ Failed to obtain SystemPrincipal from ScriptSecurityManager service.\n");
                 } else {
                     // fetch the JS principals and stick in a global
-                    rv = princ->GetJSPrincipals(cx, &gJSPrincipals);
+                    rv = systemprincipal->GetJSPrincipals(cx, &gJSPrincipals);
                     if (NS_FAILED(rv)) {
                         fprintf(gErrFile, "+++ Failed to obtain JS principals from SystemPrincipal.\n");
                     }
-                    secman->SetSystemPrincipal(princ);
+                    secman->SetSystemPrincipal(systemprincipal);
                 }
             } else {
                 fprintf(gErrFile, "+++ Failed to get ScriptSecurityManager service, running without principals");
@@ -1921,6 +1922,8 @@ main(int argc, char **argv)
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
                                                   NS_GET_IID(nsISupports),
+                                                  systemprincipal,
+                                                  EmptyCString(),
                                                   nsIXPConnect::
                                                       FLAG_SYSTEM_GLOBAL_OBJECT,
                                                   getter_AddRefs(holder));

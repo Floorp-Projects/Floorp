@@ -3242,15 +3242,20 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JSPrincipals *jsPrincipals;
-    rv = sop->GetPrincipal()->GetJSPrincipals(cx, &jsPrincipals);
-    if (NS_FAILED(rv))
-        return rv;
-    JSObject *sandbox = JS_NewCompartmentAndGlobalObject(cx, &SandboxClass, jsPrincipals);
-    if (jsPrincipals)
-        JSPRINCIPALS_DROP(cx, jsPrincipals);
-    if (!sandbox)
-        return NS_ERROR_XPC_UNEXPECTED;
+    nsIPrincipal *principal = sop->GetPrincipal();
+    nsAdoptingCString principalorigin;
+    principal->GetOrigin(getter_Copies(principalorigin));
+
+    nsCAutoString origin("sandbox:");
+    origin.Append(principalorigin);
+
+    JSCompartment *compartment;
+    JSObject *sandbox;
+
+    rv = xpc_CreateGlobalObject(cx, &SandboxClass, origin, principal, &sandbox,
+                                &compartment);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     js::AutoObjectRooter tvr(cx, sandbox);
 
     {

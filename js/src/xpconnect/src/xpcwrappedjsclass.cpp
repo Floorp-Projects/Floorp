@@ -1308,6 +1308,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
     obj = thisObj = wrapper->GetJSObject();
 
+    JSAutoEnterCompartment autoCompartment(ccx, obj);
+
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     paramCount = info->num_args;
     argc = paramCount -

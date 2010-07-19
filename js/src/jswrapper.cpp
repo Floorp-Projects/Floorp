@@ -289,7 +289,7 @@ TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, u
 }
 
 JSCompartment::JSCompartment(JSRuntime *rt)
-  : rt(rt), principals(NULL), marked(false)
+  : rt(rt), principals(NULL), data(NULL), marked(false)
 {
 }
 

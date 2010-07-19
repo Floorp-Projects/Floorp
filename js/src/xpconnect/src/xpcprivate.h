@@ -95,6 +95,7 @@
 #include "nsXPIDLString.h"
 #include "nsAutoJSValHolder.h"
 #include "mozilla/AutoRestore.h"
+#include "nsDataHashtable.h"
 
 #include "nsThreadUtils.h"
 #include "nsIJSContextStack.h"
@@ -242,6 +243,8 @@ extern const char XPC_CONSOLE_CONTRACTID[];
 extern const char XPC_SCRIPT_ERROR_CONTRACTID[];
 extern const char XPC_ID_CONTRACTID[];
 extern const char XPC_XPCONNECT_CONTRACTID[];
+
+typedef nsDataHashtableMT<nsCStringHashKey, JSCompartment *> XPCCompartmentMap;
 
 /***************************************************************************/
 // useful macros...
@@ -623,6 +626,9 @@ public:
     XPCNativeWrapperMap* GetExplicitNativeWrapperMap() const
         {return mExplicitNativeWrapperMap;}
 
+    XPCCompartmentMap& GetCompartmentMap()
+        {return mCompartmentMap;}
+
     XPCLock* GetMapLock() const {return mMapLock;}
 
     JSBool OnJSContextNew(JSContext* cx);
@@ -741,6 +747,7 @@ private:
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
     XPCNativeWrapperMap*     mExplicitNativeWrapperMap;
+    XPCCompartmentMap        mCompartmentMap;
     XPCLock* mMapLock;
     PRThread* mThreadRunningGC;
     nsTArray<nsXPCWrappedJS*> mWrappedJSToReleaseArray;
@@ -3777,6 +3784,11 @@ xpc_DumpJSObject(JSObject* obj);
 
 extern JSBool
 xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt);
+
+nsresult
+xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
+                       const nsACString &origin, nsIPrincipal *principal,
+                       JSObject **global, JSCompartment **compartment);
 
 /***************************************************************************/
 
