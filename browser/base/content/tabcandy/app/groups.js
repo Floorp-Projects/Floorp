@@ -271,17 +271,6 @@ window.Group = function Group(listOfEls, options) {
       });
   }
 
-  // ___ Content
-  // TODO: I don't think we need this any more
-  this.$content = iQ('<div>')
-    .addClass('group-content')
-    .css({
-      left: 0,
-      top: this.$titlebar.height(),
-      position: 'absolute'
-    })
-    .appendTo($container);
-
   // ___ Stack Expander
   this.$expander = iQ("<img/>")
     .attr('src', 'chrome://browser/skin/tabcandy/stack-expander.png')
@@ -524,7 +513,6 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     if (immediately) {
       iQ(this.container).css(css);
       this.$titlebar.css(titlebarCSS);
-      this.$content.css(contentCSS);
     } else {
       TabMirror.pausePainting();
       iQ(this.container).animate(css, {
@@ -536,10 +524,6 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       });
 
       this.$titlebar.animate(titlebarCSS, {
-        duration: 350
-      });
-
-      this.$content.animate(contentCSS, {
         duration: 350
       });
     }
