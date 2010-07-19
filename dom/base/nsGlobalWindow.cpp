@@ -9823,13 +9823,6 @@ nsNavigator::GetAppVersion(nsAString& aAppVersion)
 
     AppendASCIItoUTF16(str, aAppVersion);
 
-    aAppVersion.AppendLiteral("; ");
-
-    rv = service->GetLanguage(str);
-    if (NS_FAILED(rv))
-      return rv;
-    AppendASCIItoUTF16(str, aAppVersion);
-
     aAppVersion.Append(PRUnichar(')'));
   }
 
