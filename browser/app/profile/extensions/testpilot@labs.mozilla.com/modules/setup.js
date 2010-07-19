@@ -561,7 +561,7 @@ let TestPilotSetup = {
 	    this._showNotification(
 	      task, false,
 	      this._stringBundle.formatStringFromName(
-		"testpilot.notification.newTestPilotStudy.message",
+		"testpilot.notification.newTestPilotStudy.pre.message",
 		[task.title], 1),
 	      this._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotStudy"),
