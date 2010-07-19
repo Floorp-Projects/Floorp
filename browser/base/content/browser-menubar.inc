@@ -210,7 +210,6 @@
               <menupopup id="menu_viewPopup">
                 <menuitem id="menu_tabcandy"
                           label="&showTabCandy.label;"
-                          key="key_tabcandy"
                           command="Browser:ToggleTabCandy"/>
                 <menu id="viewToolbarsMenu"
                       label="&viewToolbarsMenu.label;"
