@@ -1,6 +1,5 @@
 # NB: Certain files need to evaluate before others
 
-#include core/stacktrace.js
 #include core/iq.js
 #include core/utils.js
 #include core/tabs.js
