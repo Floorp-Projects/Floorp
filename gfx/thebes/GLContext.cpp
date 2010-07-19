@@ -90,15 +90,15 @@ LibrarySymbolLoader::LookupSymbol(PRLibrary *lib,
         res = PR_FindFunctionSymbol(lib, sym);
     }
 
-    // try finding it in the process
+    // then try looking it up via the lookup symbol
+    if (!res && lookupFunction) {
+        res = lookupFunction(sym);
+    }
+
+    // finally just try finding it in the process
     if (!res) {
         PRLibrary *leakedLibRef;
         res = PR_FindFunctionSymbolAndLibrary(sym, &leakedLibRef);
-    }
-
-    // no? then try looking it up via the lookup symbol
-    if (!res && lookupFunction) {
-        res = lookupFunction(sym);
     }
 
     return res;
