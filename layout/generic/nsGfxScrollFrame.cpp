@@ -1651,7 +1651,7 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
   if (flags & nsIFrame::INVALIDATE_NO_THEBES_LAYERS) {
     // XXX fix this to transform rectangle properly
     InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame,
-      GetScrollPortRect() + mOuter->GetOffsetTo(displayRoot));
+      GetScrollPortRect() + mOuter->GetOffsetToCrossDoc(displayRoot));
   }
 }
 
