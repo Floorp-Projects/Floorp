@@ -1330,7 +1330,77 @@ nsDisplayWrapList* nsDisplayClip::WrapWithClone(nsDisplayListBuilder* aBuilder,
     nsDisplayClip(aItem->GetUnderlyingFrame(), mClippingFrame, aItem, mClip);
 }
 
+nsDisplayZoom::nsDisplayZoom(nsIFrame* aFrame, nsDisplayList* aList,
+                             PRInt32 aAPD, PRInt32 aParentAPD)
+    : nsDisplayWrapList(aFrame, aList), mAPD(aAPD), mParentAPD(aParentAPD) {
+  MOZ_COUNT_CTOR(nsDisplayZoom);
+}
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayZoom::~nsDisplayZoom() {
+  MOZ_COUNT_DTOR(nsDisplayZoom);
+}
+#endif
+
+nsRect nsDisplayZoom::GetBounds(nsDisplayListBuilder* aBuilder)
+{
+  nsRect bounds = nsDisplayWrapList::GetBounds(aBuilder);
+  return bounds.ConvertAppUnitsRoundOut(mAPD, mParentAPD);
+}
+
+void nsDisplayZoom::HitTest(nsDisplayListBuilder *aBuilder,
+                            const nsRect& aRect,
+                            HitTestState *aState,
+                            nsTArray<nsIFrame*> *aOutFrames)
+{
+  nsRect rect;
+  // A 1x1 rect indicates we are just hit testing a point, so pass down a 1x1
+  // rect as well instead of possibly rounding the width or height to zero.
+  if (aRect.width == 1 && aRect.height == 1) {
+    rect.MoveTo(aRect.TopLeft().ConvertAppUnits(mParentAPD, mAPD));
+    rect.width = rect.height = 1;
+  } else {
+    rect = aRect.ConvertAppUnitsRoundOut(mParentAPD, mAPD);
+  }
+  mList.HitTest(aBuilder, rect, aState, aOutFrames);
+}
+
+void nsDisplayZoom::Paint(nsDisplayListBuilder* aBuilder,
+                          nsIRenderingContext* aCtx)
+{
+  mList.PaintForFrame(aBuilder, aCtx, mFrame, nsDisplayList::PAINT_DEFAULT);
+}
+
+PRBool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
+                                        nsRegion *aVisibleRegion,
+                                        nsRegion *aVisibleRegionBeforeMove)
+{
+  NS_ASSERTION((aVisibleRegionBeforeMove != nsnull) ==
+               aBuilder->HasMovingFrames(),
+               "Should have aVisibleRegionBeforeMove when there are moving "
+               "frames");
+  NS_ASSERTION(aVisibleRegionBeforeMove == nsnull,
+               "we don't support scroll analysis with zoom");
+
+  // Convert the passed in visible region to our appunits.
+  nsRegion visibleRegion =
+    aVisibleRegion->ConvertAppUnitsRoundOut(mParentAPD, mAPD);
+  nsRegion originalVisibleRegion = visibleRegion;
+
+  PRBool retval =
+    nsDisplayWrapList::ComputeVisibility(aBuilder, &visibleRegion, nsnull);
+
+  nsRegion removed;
+  // removed = originalVisibleRegion - visibleRegion
+  removed.Sub(originalVisibleRegion, visibleRegion);
+  // Convert removed region to parent appunits.
+  removed = removed.ConvertAppUnitsRoundIn(mAPD, mParentAPD);
+  // aVisibleRegion = aVisibleRegion - removed (modulo any simplifications
+  // SubtractFromVisibleRegion does)
+  aBuilder->SubtractFromVisibleRegion(aVisibleRegion, removed);
+
+  return retval;
+}
 
 ///////////////////////////////////////////////////
 // nsDisplayTransform Implementation
