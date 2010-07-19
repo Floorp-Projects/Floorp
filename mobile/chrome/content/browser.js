@@ -200,8 +200,8 @@ function onDebugKeyPress(ev) {
   const q = 81;  // toggle orientation
   const r = 82;  // reset visible rect
   const s = 83;
-  const t = 84;  // debug given list of tiles separated by space
-  const u = 85;
+  const t = 84;
+  const u = 85;  // debug given list of tiles separated by space
   const v = 86;
   const w = 87;
   const x = 88;
@@ -278,7 +278,7 @@ function onDebugKeyPress(ev) {
   case b:
     window.tileMapMode = true;
     break;
-  case t:
+  case u:
     let ijstrs = window.prompt('row,col plz').split(' ');
     for each (let ijstr in ijstrs) {
       let [i, j] = ijstr.split(',').map(function (x) { return parseInt(x); });
@@ -2584,6 +2584,7 @@ Tab.prototype = {
 
     // Create the browser using the current width the dynamically size the height
     let browser = this._browser = document.createElement("browser");
+    this._chromeTab.linkedBrowser = browser;
 
     browser.setAttribute("style", "overflow: -moz-hidden-unscrollable; visibility: hidden;");
     browser.setAttribute("type", "content");

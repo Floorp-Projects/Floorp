@@ -102,7 +102,7 @@ var BrowserUI = {
     }
   },
 
-  _titleChanged : function(aBrowser) {
+  _titleChanged: function(aBrowser) {
     var browser = Browser.selectedBrowser;
     if (browser && aBrowser != browser)
       return;
@@ -131,7 +131,7 @@ var BrowserUI = {
     }
   },
 
-  _updateButtons : function(aBrowser) {
+  _updateButtons: function(aBrowser) {
     let back = document.getElementById("cmd_back");
     let forward = document.getElementById("cmd_forward");
 
@@ -150,7 +150,7 @@ var BrowserUI = {
     }
   },
 
-  _tabSelect : function(aEvent) {
+  _tabSelect: function(aEvent) {
     let browser = Browser.selectedBrowser;
     this._titleChanged(browser);
     this._updateToolbar();
@@ -159,7 +159,7 @@ var BrowserUI = {
     this.updateStar();
   },
 
-  showToolbar : function showToolbar(aEdit) {
+  showToolbar: function showToolbar(aEdit) {
     this.hidePanel();
     this._editURI(aEdit);
     if (aEdit)
@@ -195,7 +195,7 @@ var BrowserUI = {
       this._edit.value = aCaption;
   },
 
-  _editURI : function _editURI(aEdit) {
+  _editURI: function _editURI(aEdit) {
     var icons = document.getElementById("urlbar-icons");
     if (aEdit && icons.getAttribute("mode") != "edit") {
       icons.setAttribute("mode", "edit");
@@ -236,7 +236,7 @@ var BrowserUI = {
     return null;
   },
 
-  pushDialog : function pushDialog(aDialog) {
+  pushDialog: function pushDialog(aDialog) {
     // If we have a dialog push it on the stack and set the attr for CSS
     if (aDialog) {
       this.lockToolbar();
@@ -246,7 +246,7 @@ var BrowserUI = {
     }
   },
 
-  popDialog : function popDialog() {
+  popDialog: function popDialog() {
     if (this._dialogs.length) {
       this._dialogs.pop();
       this.unlockToolbar();
@@ -297,7 +297,7 @@ var BrowserUI = {
     return targetNode ? true : false;
   },
 
-  switchPane : function switchPane(id) {
+  switchPane: function switchPane(id) {
     let button = document.getElementsByAttribute("linkedpanel", id)[0];
     if (button)
       button.checked = true;
@@ -329,7 +329,7 @@ var BrowserUI = {
     return this.starButton = document.getElementById("tool-star");
   },
 
-  sizeControls : function(windowW, windowH) {
+  sizeControls: function(windowW, windowH) {
     // tabs
     document.getElementById("tabs").resize();
 
@@ -344,7 +344,7 @@ var BrowserUI = {
     formHelper.top = windowH - formHelper.getBoundingClientRect().height;
   },
 
-  init : function() {
+  init: function() {
     this._edit = document.getElementById("urlbar-edit");
     this._throbber = document.getElementById("urlbar-throbber");
     this._favicon = document.getElementById("urlbar-favicon");
@@ -401,12 +401,12 @@ var BrowserUI = {
     FormHelperUI.init();
   },
 
-  uninit : function() {
+  uninit: function() {
     ExtensionsView.uninit();
     ConsoleView.uninit();
   },
 
-  update : function(aState) {
+  update: function(aState) {
     let icons = document.getElementById("urlbar-icons");
     let browser = Browser.selectedBrowser;
 
@@ -430,7 +430,7 @@ var BrowserUI = {
     }
   },
 
-  _updateIcon : function(aIconSrc) {
+  _updateIcon: function(aIconSrc) {
     this._favicon.src = aIconSrc || "";
     if (Browser.selectedTab.isLoading()) {
       this._throbber.hidden = false;
@@ -444,7 +444,7 @@ var BrowserUI = {
     }
   },
 
-  getDisplayURI : function(browser) {
+  getDisplayURI: function(browser) {
     if (!this._URIFixup)
       this._URIFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
 
@@ -457,7 +457,7 @@ var BrowserUI = {
   },
 
   /* Set the location to the current content */
-  updateURI : function() {
+  updateURI: function() {
     var browser = Browser.selectedBrowser;
 
     // FIXME: deckbrowser should not fire TabSelect on the initial tab (bug 454028)
@@ -477,7 +477,7 @@ var BrowserUI = {
     this._setURI(urlString);
   },
 
-  goToURI : function(aURI) {
+  goToURI: function(aURI) {
     aURI = aURI || this._edit.value;
     if (!aURI)
       return;
@@ -509,7 +509,7 @@ var BrowserUI = {
     gHistSvc.markPageAsTyped(uri);
   },
 
-  showAutoComplete : function showAutoComplete() {
+  showAutoComplete: function showAutoComplete() {
     if (this.isAutoCompleteOpen())
       return;
 
@@ -533,7 +533,7 @@ var BrowserUI = {
     return this._edit.popup.popupOpen;
   },
 
-  doButtonSearch : function(button) {
+  doButtonSearch: function(button) {
     if (!("engine" in button) || !button.engine)
       return;
 
@@ -561,14 +561,14 @@ var BrowserUI = {
     getBrowser().loadURIWithFlags(submission.uri.spec, flags, null, null, submission.postData);
   },
 
-  updateStar : function() {
+  updateStar: function() {
     if (PlacesUtils.getMostRecentBookmarkForURI(Browser.selectedBrowser.currentURI) != -1)
       this.starButton.setAttribute("starred", "true");
     else
       this.starButton.removeAttribute("starred");
   },
 
-  newTab : function newTab(aURI, aOwner) {
+  newTab: function newTab(aURI, aOwner) {
     aURI = aURI || "about:blank";
     let tab = Browser.addTab(aURI, true, aOwner);
 
@@ -598,13 +598,22 @@ var BrowserUI = {
     this.newTab(aURI, aOwner);
   },
 
-  closeTab : function closeTab(aTab) {
+  closeTab: function closeTab(aTab) {
     // If no tab is passed in, assume the current tab
     Browser.closeTab(aTab || Browser.selectedTab);
   },
 
-  selectTab : function selectTab(aTab) {
+  selectTab: function selectTab(aTab) {
     Browser.selectedTab = aTab;
+  },
+
+  undoCloseTab: function undoCloseTab(aIndex) {
+    let tab = null;
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    if (ss.getClosedTabCount(window) > (aIndex || 0)) {
+      tab = ss.undoCloseTab(window, aIndex || 0);
+    }
+    return tab;
   },
 
   isTabsVisible: function isTabsVisible() {
@@ -824,6 +833,7 @@ var BrowserUI = {
       case "cmd_menu":
       case "cmd_newTab":
       case "cmd_closeTab":
+      case "cmd_undoCloseTab":
       case "cmd_actions":
       case "cmd_panel":
       case "cmd_sanitize":
@@ -915,6 +925,9 @@ var BrowserUI = {
         break;
       case "cmd_closeTab":
         this.closeTab();
+        break;
+      case "cmd_undoCloseTab":
+        this.undoCloseTab();
         break;
       case "cmd_sanitize":
       {

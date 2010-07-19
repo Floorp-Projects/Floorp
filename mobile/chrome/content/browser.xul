@@ -113,6 +113,7 @@
     <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" label="&closetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_remoteTabs" oncommand="WeaveGlue.openRemoteTabs();"/>
+    <command id="cmd_undoCloseTab" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- bookmarking -->
     <command id="cmd_star" label="&star.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -185,6 +186,7 @@
     <!-- tabs -->
     <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
     <key id="key_closeTab" key="w" modifiers="accel" command="cmd_closeTab"/>
+    <key id="key_undoCloseTab" key="t" modifiers="accel,shift" command="cmd_undoCloseTab"/>
   </keyset>
 
   <stack flex="1" id="stack">
