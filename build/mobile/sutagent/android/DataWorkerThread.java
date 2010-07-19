@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package com.mozilla.SUTAgentAndroid;
+package com.mozilla.SUTAgentAndroid.service;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -46,6 +46,9 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+
+// import com.mozilla.SUTAgentAndroid.DoCommand;
+import com.mozilla.SUTAgentAndroid.SUTAgentAndroid;
 
 public class DataWorkerThread extends Thread
 {
@@ -125,6 +128,7 @@ public class DataWorkerThread extends Thread
 	public void run()
 		{
 		String	sRet = "";
+		long lEndTime = System.currentTimeMillis() + 60000;
 		
 		try {
 			while(bListening)
@@ -134,7 +138,7 @@ public class DataWorkerThread extends Thread
 				PrintWriter out = new PrintWriter(cmdOut, true);
 				BufferedInputStream in = new BufferedInputStream(cmdIn);
 				String inputLine, outputLine;
-				DoCommand dc = new DoCommand();
+				DoCommand dc = new DoCommand(theParent.svc);
 				
 	    		Calendar cal = Calendar.getInstance();
 	    		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
@@ -146,10 +150,20 @@ public class DataWorkerThread extends Thread
 				int nAvail = cmdIn.available();
 				cmdIn.skip(nAvail);
 				
-				((SUTAgentAndroid)SUTAgentAndroid.me).StartHeartBeat(out);
-
 				while (bListening)
 					{
+					if (System.currentTimeMillis() > lEndTime)
+						{
+						cal = Calendar.getInstance();
+			    		sRet = sdf.format(cal.getTime());
+			    		sRet += " Thump thump - " + SUTAgentAndroid.sUniqueID + "\r\n";
+
+			    		out.write(sRet);
+			    		out.flush();
+						
+						lEndTime = System.currentTimeMillis() + 60000;
+						}
+					
 					if (!(in.available() > 0))
 						{
 						socket.setSoTimeout(500);
@@ -181,15 +195,21 @@ public class DataWorkerThread extends Thread
 							theParent.StopListening();
 							bListening = false;
 							}
+						if (outputLine.equals("quit"))
+							{
+							bListening = false;
+							}
+						outputLine = null;
+						System.gc();
 						}
 					else
 						break;
 					}
 				
-				((SUTAgentAndroid)SUTAgentAndroid.me).StopHeartBeat();
-
 				out.close();
+				out = null;
 				in.close();
+				in = null;
 				socket.close();
 				}
 			}
