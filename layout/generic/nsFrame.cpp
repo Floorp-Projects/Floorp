@@ -3540,8 +3540,8 @@ nsPoint nsIFrame::GetOffsetTo(const nsIFrame* aOther) const
   NS_PRECONDITION(aOther,
                   "Must have frame for destination coordinate system!");
 
-  //NS_ASSERTION(PresContext() == aOther->PresContext(),
-  //             "GetOffsetTo called on frames in different documents");
+  NS_ASSERTION(PresContext() == aOther->PresContext(),
+               "GetOffsetTo called on frames in different documents");
 
   //XXX sometime in the near future once we are confident that all GetOffsetTo
   // callers pass frames that are really in the same doc we can get rid of this
@@ -3941,7 +3941,7 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
 {
   NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");
 
-  /* Whether or not we're transformed, the matrix will be relative to our
+  /* If we're transformed, the matrix will be relative to our
    * cross-doc parent frame.
    */
   *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(this);
@@ -3955,7 +3955,7 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
      * coordinates to our parent.
      */
     NS_ASSERTION(*aOutAncestor, "Cannot transform the viewport frame!");
-    nsPoint delta = GetOffsetTo(*aOutAncestor);
+    nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
     gfxMatrix result =
@@ -3994,7 +3994,7 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
   /* Translate from this frame to our ancestor, if it exists.  That's the
    * entire transform, so we're done.
    */
-  nsPoint delta = GetOffsetTo(*aOutAncestor);
+  nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
   PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
   return gfxMatrix().Translate
     (gfxPoint(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
