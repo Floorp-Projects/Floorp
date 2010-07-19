@@ -142,25 +142,36 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   nsIntRegion rgnToPaint = mVisibleRegion;
   rgnToPaint.Sub(rgnToPaint, mValidRegion);
   PRBool textureBound = PR_FALSE;
-  if (!rgnToPaint.IsEmpty())
-  {
+  if (!rgnToPaint.IsEmpty()) {
     nsIntRect visibleRect = mVisibleRegion.GetBounds();
-    // translate repaint region to texture-buffer space
-    nsIntRegion bufRgnToPaint = rgnToPaint;
-    bufRgnToPaint.MoveBy(-visibleRect.x, -visibleRect.y);
-    nsRefPtr<gfxContext> ctx = mTexImage->BeginUpdate(bufRgnToPaint);
-    if (!ctx)
-    {
+
+    // Offset rgnToPaint by our visible region's origin, before
+    // passing to BeginUpdate.  The TextureImage has no concept of an
+    // origin, only a size, so it always represents a 0,0 origin area.
+    // The layer however has a position, represented by its visible
+    // region.  So we have to move things around so that we can
+    // interact with the TextureImage.
+    rgnToPaint.MoveBy(-visibleRect.TopLeft());
+
+    // BeginUpdate is allowed to modify the given region,
+    // if it wants more to be repainted than we request.
+    nsRefPtr<gfxContext> ctx = mTexImage->BeginUpdate(rgnToPaint);
+    if (!ctx) {
       NS_WARNING("unable to get context for update");
       return;
     }
-    // and translate update context back to screen space
+
+    // Move rgnToPaint back into position so that the thebes callback
+    // gets the right coordintes.
+    rgnToPaint.MoveBy(visibleRect.TopLeft());
+
+    // Translate the context so that we're matching the layer's
+    // origin, not the 0,0-based TextureImage
     ctx->Translate(-gfxPoint(visibleRect.x, visibleRect.y));
 
     TextureImage::ContentType contentType = mTexImage->GetContentType();
     //ClipToRegion(ctx, rgnToDraw);
-    if (gfxASurface::CONTENT_COLOR_ALPHA == contentType)
-    {
+    if (gfxASurface::CONTENT_COLOR_ALPHA == contentType) {
       ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
       ctx->Paint();
       ctx->SetOperator(gfxContext::OPERATOR_OVER);

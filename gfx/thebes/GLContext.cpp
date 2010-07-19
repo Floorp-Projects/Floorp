@@ -413,8 +413,7 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     aRegion = nsIntRegion(mUpdateRect);
         
     nsIntSize rgnSize = mUpdateRect.Size();
-    if (!nsIntRect(nsIntPoint(0, 0), mSize).Contains(mUpdateRect))
-    {
+    if (!nsIntRect(nsIntPoint(0, 0), mSize).Contains(mUpdateRect)) {
         NS_ERROR("update outside of image");
         return NULL;
     }
@@ -428,6 +427,8 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     if (!updateSurface)
         return NULL;
 
+    updateSurface->SetDeviceOffset(gfxPoint(-mUpdateRect.x, -mUpdateRect.y));
+
     mUpdateContext = new gfxContext(updateSurface);
     return mUpdateContext;
 }
@@ -438,8 +439,13 @@ BasicTextureImage::EndUpdate()
     NS_ASSERTION(!!mUpdateContext, "EndUpdate() without BeginUpdate()?");
 
     // FIXME: this is the slow boat.  Make me fast (with GLXPixmap?).
-    nsRefPtr<gfxImageSurface> uploadImage =
-        GetImageForUpload(mUpdateContext->OriginalSurface());
+    nsRefPtr<gfxASurface> originalSurface = mUpdateContext->OriginalSurface();
+
+    // Undo the device offset that BeginUpdate set; doesn't much matter for us here,
+    // but important if we ever do anything directly with the surface.
+    originalSurface->SetDeviceOffset(gfxPoint(0, 0));
+
+    nsRefPtr<gfxImageSurface> uploadImage = GetImageForUpload(originalSurface);
     if (!uploadImage)
         return PR_FALSE;
 
