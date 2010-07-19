@@ -80,7 +80,9 @@ class THEBES_API LayerManagerOGL : public LayerManager {
 public:
   LayerManagerOGL(nsIWidget *aWidget);
   virtual ~LayerManagerOGL();
-  
+
+  void CleanupResources();
+
   /**
    * Initializes the layer manager, this is when the layer manager will
    * actually access the device and attempt to create the swap chain used

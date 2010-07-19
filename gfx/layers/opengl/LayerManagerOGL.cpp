@@ -76,15 +76,40 @@ LayerManagerOGL::LayerManagerOGL(nsIWidget *aWidget)
 
 LayerManagerOGL::~LayerManagerOGL()
 {
-  if (mGLContext)
-    mGLContext->MakeCurrent();
+  mRoot = nsnull;
+  CleanupResources();
+}
 
-  mRoot = NULL;
+void
+LayerManagerOGL::CleanupResources()
+{
+  if (!mGLContext)
+    return;
+
+  mGLContext->MakeCurrent();
 
   for (unsigned int i = 0; i < mPrograms.Length(); ++i)
     delete mPrograms[i];
-
   mPrograms.Clear();
+
+  mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+
+  if (mBackBufferFBO) {
+    mGLContext->fDeleteFramebuffers(1, &mBackBufferFBO);
+    mBackBufferFBO = 0;
+  }
+
+  if (mBackBufferTexture) {
+    mGLContext->fDeleteTextures(1, &mBackBufferTexture);
+    mBackBufferTexture = 0;
+  }
+
+  if (mQuadVBO) {
+    mGLContext->fDeleteBuffers(1, &mQuadVBO);
+    mQuadVBO = 0;
+  }
+
+  mGLContext = nsnull;
 }
 
 PRBool
@@ -93,6 +118,8 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
   if (aExistingContext) {
     mGLContext = aExistingContext;
   } else {
+    if (mGLContext)
+      CleanupResources();
     mGLContext = gl::GLContextProvider::CreateForWindow(mWidget);
 
     if (!mGLContext) {

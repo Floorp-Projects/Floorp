@@ -48,56 +48,6 @@ class gfxASurface;
 namespace mozilla {
 namespace gl {
 
-struct THEBES_API ContextFormat {
-    static const ContextFormat BasicRGBA32Format;
-
-    enum StandardContextFormat {
-        Empty,
-        BasicRGBA32,
-        StrictBasicRGBA32,
-        BasicRGBX32,
-        StrictBasicRGBX32
-    };
-
-    ContextFormat(const StandardContextFormat cf) {
-        memset(this, 0, sizeof(ContextFormat));
-
-        switch (cf) {
-        case BasicRGBA32:
-            red = green = blue = alpha = 8;
-            minRed = minGreen = minBlue = minAlpha = 1;
-            break;
-
-        case StrictBasicRGBA32:
-            red = green = blue = alpha = 8;
-            minRed = minGreen = minBlue = minAlpha = 8;
-            break;
-
-        case BasicRGBX32:
-            red = green = blue = 8;
-            minRed = minGreen = minBlue = 1;
-            break;
-
-        case StrictBasicRGBX32:
-            red = green = blue = alpha = 8;
-            minRed = minGreen = minBlue = 8;
-            break;
-
-        default:
-            break;
-        }
-    }
-
-    int depth, minDepth;
-    int stencil, minStencil;
-    int red, minRed;
-    int green, minGreen;
-    int blue, minBlue;
-    int alpha, minAlpha;
-
-    int colorBits() const { return red + green + blue; }
-};
-
 #define IN_GL_CONTEXT_PROVIDER_H
 
 // Null and OSMesa are always there

@@ -47,33 +47,65 @@ class THEBES_API GL_CONTEXT_PROVIDER_NAME
 public:
     /**
      * Create a context that renders to the surface of the widget that is
-     * passed in.
+     * passed in.  The context is always created with an RGB pixel format,
+     * with no alpha, depth or stencil.  If any of those features are needed,
+     * either use a framebuffer, or use CreateOffscreen.
      *
-     * @param Widget whose surface to create a context for
-     * @return Context to use for this window
+     * This context will attempt to share resources with all other window
+     * contexts.  As such, it's critical that resources allocated that are not
+     * needed by other contexts be deleted before the context is destroyed.
+     *
+     * The GetSharedContext() method will return non-null if sharing
+     * was successful.
+     *
+     * Note: a context created for a widget /must not/ hold a strong
+     * reference to the widget; otherwise a cycle can be created through
+     * a GL layer manager.
+     *
+     * @param aWidget Widget whose surface to create a context for
+     *
+     * @return Context to use for the window
      */
     static already_AddRefed<GLContext>
     CreateForWindow(nsIWidget *aWidget);
 
     /**
-     * Creates a PBuffer.
+     * Create a context for offscreen rendering.  The target of this
+     * context should be treated as opaque -- it might be a FBO, or a
+     * pbuffer, or some other construct.  Users of this GLContext
+     * should not bind framebuffer 0 directly, and instead should bind
+     * the framebuffer returned by GetOffscreenFBO().
      *
-     * @param aSize Size of the pbuffer to create
-     * @param aFormat A ContextFormat describing the desired context attributes.  Defaults to a basic RGBA32 context.
+     * The offscreen context returned by this method will always have
+     * the ability to be rendered into a context created by a window.
+     * It might or might not share resources with the global context;
+     * query GetSharedContext() for a non-null result to check.  If
+     * resource sharing can be avoided on the target platform, it will
+     * be, in order to isolate the offscreen context.
      *
-     * @return Context to use for this Pbuffer
+     * @param aSize The initial size of this offscreen context.
+     * @param aFormat The ContextFormat for this offscreen context.
+     *
+     * @return Context to use for offscreen rendering
      */
     static already_AddRefed<GLContext>
-    CreatePBuffer(const gfxIntSize &aSize,
-                  const ContextFormat& aFormat = ContextFormat::BasicRGBA32Format);
+    CreateOffscreen(const gfxIntSize& aSize,
+                    const ContextFormat& aFormat = ContextFormat::BasicRGBA32Format);
 
     /**
      * Try to create a GL context from native surface for arbitrary gfxASurface
      * If surface not compatible this will return NULL
      *
      * @param aSurface surface to create a context for
+     *
      * @return Context to use for this surface
      */
     static already_AddRefed<GLContext>
     CreateForNativePixmapSurface(gfxASurface *aSurface);
+
+    /**
+     * Get a pointer to the global context, creating it if it doesn't exist.
+     */
+    static GLContext *
+    GetGlobalContext();
 };
