@@ -23,17 +23,25 @@
  * have a range of +-8K for 8-bit data, +-128K for 12-bit data.  This
  * convention improves accuracy in integer implementations and saves some
  * work in floating-point ones.
- * Quantization of the output coefficients is done by jcdctmgr.c.
+ * Quantization of the output coefficients is done by jcdctmgr.c. This
+ * step requires an unsigned type and also one with twice the bits.
  */
 
 #if BITS_IN_JSAMPLE == 8
+#ifndef WITH_SIMD
 typedef int DCTELEM;		/* 16 or 32 bits is fine */
+typedef unsigned int UDCTELEM;
+typedef unsigned long long UDCTELEM2;
+#else
+typedef short DCTELEM;  /* prefer 16 bit with SIMD for parellelism */
+typedef unsigned short UDCTELEM;
+typedef unsigned int UDCTELEM2;
+#endif
 #else
 typedef INT32 DCTELEM;		/* must have 32 bits */
+typedef UINT32 UDCTELEM;
+typedef unsigned long long UDCTELEM2;
 #endif
-
-typedef JMETHOD(void, forward_DCT_method_ptr, (DCTELEM * data));
-typedef JMETHOD(void, float_DCT_method_ptr, (FAST_FLOAT * data));
 
 
 /*

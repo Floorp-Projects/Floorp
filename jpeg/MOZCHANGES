@@ -1,10 +1,69 @@
+To upgrade to a new revision of libjpeg-turbo, do the following:
 
-Changes made to pristine jpeg source by mozilla.org developers.
+* Check out libjpeg-turbo from SVN:
 
-2003/08/18 -- change default mapping for METHODDEF, LOCAL, GLOBAL, EXTERN to better match NSPR
+    $ svn co https://libjpeg-turbo.svn.sourceforge.net/svnroot/libjpeg-turbo/trunk libjpeg-turbo
 
-2003/03/14  -- mingw bustage fix. w32api uses different header guard define
-               for <basestd.h> than msvc.
+* In a clean clone of mozilla-central, run the following commands
 
-????/??/??  -- Lots of undocumented changes. :(
+    $ rm -rf jpeg
+    $ svn export --ignore-externals /path/to/libjpeg-turbo jpeg
+    $ cd jpeg
 
+* Now look through the new files and rm any which are npotb.  When I upgraded
+  to libjpeg-turbo 1.1.0, the only files I kept which didn't match
+
+    *.c  *.h *.asm *.inc
+
+  were README and README-turbo.
+
+  You can easily look for all non *.c, *.h, *.asm, and *.inc files by running
+
+    $ hg status -nu | grep -v '\(c\|h\|asm\|inc\)$'
+
+  Once you're comfortable that you're only deleting files you want to delete
+  (and you've hg add'ed the files you want to keep), you can nuke the remaining
+  files with
+
+    $ hg status -nu | grep -v '\(c\|h\|asm\|inc\)$' | xargs rm
+
+  A helpful command for finding the *.c files which aren't *currently* part of
+  the build is
+
+    diff <(ls *.c | sort) <(grep -o '\w*\.c' Makefile.in | sort)
+
+  of course, libjpeg-turbo might have added some new source files, so you'll
+  have to look though and figure out which of these files to keep.
+
+* Restore files modified in the Mozilla repository.
+
+    $ hg revert --no-backup Makefile.in jconfig.h jmorecfg.h simd/Makefile.in \
+      simd/jsimdcfg.inc jchuff.c jdhuff.c jdhuff.h MOZCHANGES
+
+* Update Makefile.in to build any new files.
+
+* Finally, tell hg that we've added or removed some files:
+
+    $ hg addremove
+
+
+== March 28, 2011 (initial commit, libjpeg-turbo v1.1.0 r469 2011-02-27) ==
+
+* Modified jmorecfg.h to define UINT8, UINT16, INT16, and INT32 in terms of
+  prtypes to fix a build error on Windows.
+
+* Defined INLINE as NS_ALWAYS_INLINE in jconfig.h.
+
+* Removed the following files which are licensed under the wxWindows license:
+
+    bmp.c, bmp.h, jpegut.c, jpgtest.cxx, rrtimer.h, rrutil.h, turbojpeg.h,
+    turbojpegl.c
+
+* Reverted the following files to what was previously in Mozilla's tree
+  (nominally libjpeg 6.2):
+
+    jchuff.c, jdhuff.c, jdhuff.h
+
+  since the versions of these files in libjpeg-turbo are also under the
+  wxWindows license.  (It would have been nicer to revert them to the new
+  libjpeg-8b code, but that doesn't easily integrate with libjpeg-turbo.)
