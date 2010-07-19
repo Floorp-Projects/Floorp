@@ -3539,23 +3539,87 @@ nsPoint nsIFrame::GetOffsetTo(const nsIFrame* aOther) const
 {
   NS_PRECONDITION(aOther,
                   "Must have frame for destination coordinate system!");
+
+  //NS_ASSERTION(PresContext() == aOther->PresContext(),
+  //             "GetOffsetTo called on frames in different documents");
+
+  //XXX sometime in the near future once we are confident that all GetOffsetTo
+  // callers pass frames that are really in the same doc we can get rid of this
+  // check.
+  if (PresContext() != aOther->PresContext()) {
+    return GetOffsetToCrossDoc(aOther);
+  }
+
   nsPoint offset(0, 0);
   const nsIFrame* f;
-  for (f = this; f != aOther && f;
-       f = nsLayoutUtils::GetCrossDocParentFrame(f, &offset)) {
+  for (f = this; f != aOther && f; f = f->GetParent()) {
     offset += f->GetPosition();
   }
 
   if (f != aOther) {
     // Looks like aOther wasn't an ancestor of |this|.  So now we have
-    // the root-document-relative position of |this| in |offset|.  Convert back
+    // the root-frame-relative position of |this| in |offset|.  Convert back
     // to the coordinates of aOther
-    nsPoint negativeOffset(0,0);
     while (aOther) {
       offset -= aOther->GetPosition();
-      aOther = nsLayoutUtils::GetCrossDocParentFrame(aOther, &negativeOffset);
+      aOther = aOther->GetParent();
     }
-    offset -= negativeOffset;
+  }
+
+  return offset;
+}
+
+nsPoint nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther) const
+{
+  return GetOffsetToCrossDoc(aOther, PresContext()->AppUnitsPerDevPixel());
+}
+
+nsPoint
+nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther, const PRInt32 aAPD) const
+{
+  NS_PRECONDITION(aOther,
+                  "Must have frame for destination coordinate system!");
+  NS_ASSERTION(PresContext()->GetRootPresContext() ==
+                 aOther->PresContext()->GetRootPresContext(),
+               "trying to get the offset between frames in different document "
+               "hierarchies?");
+
+  const nsIFrame* root = nsnull;
+  // offset will hold the final offset
+  // docOffset holds the currently accumulated offset at the current APD, it
+  // will be converted and added to offset when the current APD changes.
+  nsPoint offset(0, 0), docOffset(0, 0);
+  const nsIFrame* f = this;
+  PRInt32 currAPD = PresContext()->AppUnitsPerDevPixel();
+  while (f && f != aOther) {
+    docOffset += f->GetPosition();
+    nsIFrame* parent = f->GetParent();
+    if (parent) {
+      f = parent;
+    } else {
+      nsPoint newOffset(0, 0);
+      root = f;
+      f = nsLayoutUtils::GetCrossDocParentFrame(f, &newOffset);
+      PRInt32 newAPD = f ? f->PresContext()->AppUnitsPerDevPixel() : 0;
+      if (!f || newAPD != currAPD) {
+        // Convert docOffset to the right APD and add it to offset.
+        offset += docOffset.ConvertAppUnits(currAPD, aAPD);
+        docOffset.x = docOffset.y = 0;
+      }
+      currAPD = newAPD;
+      docOffset += newOffset;
+    }
+  }
+  if (f == aOther) {
+    offset += docOffset.ConvertAppUnits(currAPD, aAPD);
+  } else {
+    // Looks like aOther wasn't an ancestor of |this|.  So now we have
+    // the root-document-relative position of |this| in |offset|. Subtract the
+    // root-document-relative position of |aOther| from |offset|.
+    // This call won't try to recurse again because root is an ancestor of
+    // aOther.
+    nsPoint negOffset = aOther->GetOffsetToCrossDoc(root, aAPD);
+    offset -= negOffset;
   }
 
   return offset;
