@@ -909,7 +909,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       nsIFrame* activeScrolledRoot =
         nsLayoutUtils::GetActiveScrolledRootFor(f, mBuilder->ReferenceFrame(),
                                                 &offsetToActiveScrolledRoot);
-      NS_ASSERTION(offsetToActiveScrolledRoot == f->GetOffsetTo(activeScrolledRoot),
+      NS_ASSERTION(offsetToActiveScrolledRoot == f->GetOffsetToCrossDoc(activeScrolledRoot),
                    "Wrong offset");
       if (item->IsFixedAndCoveringViewport(mBuilder)) {
         // Make its active scrolled root be the active scrolled root of
