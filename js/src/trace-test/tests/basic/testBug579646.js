@@ -1,3 +1,6 @@
+if (typeof gczeal != "function")
+    gczeal = function() {}
+
 for (a = 0; a < 9; a++)
     for (b = 0; b < 1; b++)
         for (c = 0; c < 2; c++)
