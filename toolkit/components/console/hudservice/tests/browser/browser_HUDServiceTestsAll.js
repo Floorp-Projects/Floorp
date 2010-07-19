@@ -555,6 +555,42 @@ function testHUDGetters()
   var jsterm = HUD.jsterm;
   var klass = jsterm.inputNode.getAttribute("class");
   ok(klass == "jsterm-input-node", "We have the input node.");
+
+  var hudconsole = HUD.console;
+  is(typeof hudconsole, "object", "HUD.console is an object");
+  is(typeof hudconsole.log, "function", "HUD.console.log is a function");
+  is(typeof hudconsole.info, "function", "HUD.console.info is a function");
+}
+
+function testPageReload() {
+  // see bug 578437 - The HUD console fails to re-attach the window.console 
+  // object after page reload.
+
+  browser.addEventListener("DOMContentLoaded", function onDOMLoad () {
+    browser.removeEventListener("DOMContentLoaded", onDOMLoad, false);
+
+    var console = browser.contentWindow.wrappedJSObject.console;
+
+    is(typeof console, "object", "window.console is an object, after page reload");
+    is(typeof console.log, "function", "console.log is a function");
+    is(typeof console.info, "function", "console.info is a function");
+    is(typeof console.warn, "function", "console.warn is a function");
+    is(typeof console.error, "function", "console.error is a function");
+    is(typeof console.exception, "function", "console.exception is a function");
+
+    testEnd();
+  }, false);
+
+  content.location.reload();
+}
+
+function testEnd() {
+  // testUnregister();
+  executeSoon(function () {
+    HUDService.deactivateHUDForContext(tab);
+    HUDService.shutdown();
+  });
+  finish();
 }
 
 let tab, browser, hudId, hud, filterBox, outputNode, cs;
@@ -608,13 +644,7 @@ function test() {
       testExecutionScope();
       testCompletion();
       testPropertyProvider();
-
-      // testUnregister();
-      executeSoon(function () {
-        HUDService.deactivateHUDForContext(tab);
-        HUDService.shutdown();
-      });
-      finish();
+      testPageReload();
     });
   }, false);
 }
