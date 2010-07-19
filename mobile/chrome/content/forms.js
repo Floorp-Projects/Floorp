@@ -170,7 +170,7 @@ FormAssistant.prototype = {
     let currentElement = this.currentElement;
     switch (aEvent.keyCode) {
       case aEvent.DOM_VK_DOWN:
-        if (currentElement instanceof HTMLInputElement && !currentWrapper.canAutocomplete()) {
+        if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
           if (this._hasKeyListener(currentElement))
             return;
         }
@@ -185,7 +185,7 @@ FormAssistant.prototype = {
         break;
 
       case aEvent.DOM_VK_UP:
-        if (currentElement instanceof HTMLInputElement && !currentWrapper.canAutocomplete()) {
+        if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
           if (this._hasKeyListener(currentElement))
             return;
         }
@@ -203,7 +203,7 @@ FormAssistant.prototype = {
         break;
 
       default:
-        if (aEvent.target instanceof HTMLInputElement) {
+        if (this._isAutocomplete(aEvent.target)) {
           sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
         }
         break;
@@ -213,6 +213,17 @@ FormAssistant.prototype = {
     if (!caretRect.isEmpty()) {
       sendAsyncMessage("FormAssist:Update", { caretRect: caretRect });
     }
+  },
+
+  _isAutocomplete: function formHelperIsAutocomplete(aElement) {
+    if (aElement instanceof HTMLInputElement) {
+      let autocomplete = aElement.getAttribute("autocomplete");
+      let allowedValues = ["off", "false", "disabled"];
+      if (allowedValues.indexOf(autocomplete) == -1)
+        return true;
+    }
+
+    return false;
   },
 
   _isValidElement: function formHelperIsValidElement(aElement) {
@@ -360,6 +371,7 @@ FormAssistant.prototype = {
         value: element.value,
         maxLength: element.maxLength,
         choices: list,
+        isAutocomplete: this._isAutocomplete(this.currentElement),
         rect: this._getRect(),
         caretRect: this._getCaretRect()
       },
