@@ -1563,6 +1563,7 @@ var FormHelperUI = {
       name: aElement.name,
       value: aElement.value,
       maxLength: aElement.maxLength,
+      isAutocomplete: aElement.isAutocomplete,
       list: aElement.choices
     }
     this._updateContainer(lastElement, this._currentElement);
@@ -1673,19 +1674,19 @@ var FormHelperUI = {
 
   /** Retrieve the autocomplete list from the autocomplete service for an element */
   _getAutocompleteSuggestions: function _formHelperGetAutocompleteSuggestions(aElement) {
+    if (!aElement.isAutocomplete)
+      return [];
+
     let suggestions = [];
 
     let autocompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete);
-    try {
-      let results = autocompleteService.autoCompleteSearch(aElement.name, aElement.value, aElement, null);
-      if (results.matchCount > 0) {
-        for (let i = 0; i < results.matchCount; i++) {
-          let value = results.getValueAt(i);
-          suggestions.push(value);
-        }
+    let results = autocompleteService.autoCompleteSearch(aElement.name, aElement.value, aElement, null);
+    if (results.matchCount > 0) {
+      for (let i = 0; i < results.matchCount; i++) {
+        let value = results.getValueAt(i);
+        suggestions.push(value);
       }
     }
-    catch(e) {}
 
     return suggestions;
   },
