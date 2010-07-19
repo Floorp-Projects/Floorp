@@ -45,13 +45,20 @@ GLContextProviderNull::CreateForWindow(nsIWidget*)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderNull::CreateForNativePixmapSurface(gfxASurface *aSurface)
+GLContextProviderNull::CreateOffscreen(const gfxIntSize&,
+                                       const ContextFormat&)
 {
-    return 0;
+    return nsnull;
 }
 
 already_AddRefed<GLContext>
-GLContextProviderNull::CreatePBuffer(const gfxIntSize &, const ContextFormat &)
+GLContextProviderNull::CreateForNativePixmapSurface(gfxASurface *)
+{
+    return nsnull;
+}
+
+GLContext *
+GLContextProviderNull::GetGlobalContext()
 {
     return nsnull;
 }
