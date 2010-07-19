@@ -2386,6 +2386,7 @@ nsRootPresContext::UnregisterPluginForGeometryUpdates(nsObjectFrame* aPlugin)
 
 struct PluginGeometryClosure {
   nsIFrame* mRootFrame;
+  PRInt32   mRootAPD;
   nsIFrame* mChangedSubtree;
   nsRect    mChangedRect;
   nsTHashtable<nsPtrHashKey<nsObjectFrame> > mAffectedPlugins;
@@ -2398,7 +2399,9 @@ PluginBoundsEnumerator(nsPtrHashKey<nsObjectFrame>* aEntry, void* userArg)
   PluginGeometryClosure* closure = static_cast<PluginGeometryClosure*>(userArg);
   nsObjectFrame* f = aEntry->GetKey();
   nsRect fBounds = f->GetContentRect() +
-      f->GetParent()->GetOffsetTo(closure->mRootFrame);
+      f->GetParent()->GetOffsetToCrossDoc(closure->mRootFrame);
+  PRInt32 APD = f->PresContext()->AppUnitsPerDevPixel();
+  fBounds = fBounds.ConvertAppUnitsRoundOut(APD, closure->mRootAPD);
   // We're identifying the plugins that may have been affected by changes
   // to the frame subtree rooted at aChangedRoot. Any plugin that overlaps
   // the overflow area of aChangedRoot could have its clip region affected
@@ -2474,9 +2477,13 @@ nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
 
   PluginGeometryClosure closure;
   closure.mRootFrame = mShell->FrameManager()->GetRootFrame();
+  closure.mRootAPD = closure.mRootFrame->PresContext()->AppUnitsPerDevPixel();
   closure.mChangedSubtree = aChangedSubtree;
   closure.mChangedRect = aChangedSubtree->GetOverflowRect() +
-      aChangedSubtree->GetOffsetTo(closure.mRootFrame);
+      aChangedSubtree->GetOffsetToCrossDoc(closure.mRootFrame);
+  PRInt32 subtreeAPD = aChangedSubtree->PresContext()->AppUnitsPerDevPixel();
+  closure.mChangedRect =
+    closure.mChangedRect.ConvertAppUnitsRoundOut(subtreeAPD, closure.mRootAPD);
   closure.mAffectedPlugins.Init();
   closure.mOutputConfigurations = aConfigurations;
   // Fill in closure.mAffectedPlugins and closure.mAffectedPluginBounds

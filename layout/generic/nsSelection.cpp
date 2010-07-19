@@ -462,6 +462,7 @@ public:
       if (!frame.IsAlive())
         return NS_OK;
 
+      NS_ASSERTION(frame->PresContext() == mPresContext, "document mismatch?");
       nsPoint pt = mPoint -
         frame->GetOffsetTo(mPresContext->PresShell()->FrameManager()->GetRootFrame());
       mSelection->DoAutoScroll(frame, pt);
@@ -4663,7 +4664,9 @@ nsTypedSelection::DoAutoScroll(nsIFrame *aFrame, nsPoint& aPoint)
   if (!rootPC)
     return NS_OK;
   nsIFrame* rootmostFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
-  nsPoint globalPoint = aPoint + aFrame->GetOffsetTo(rootmostFrame);
+  // Get the point relative to the root most frame because the scroll we are
+  // about to do will change the coordinates of aFrame.
+  nsPoint globalPoint = aPoint + aFrame->GetOffsetToCrossDoc(rootmostFrame);
 
   PRBool didScroll = presContext->PresShell()->
     ScrollFrameRectIntoView(aFrame, nsRect(aPoint, nsSize(1,1)),
@@ -4677,7 +4680,7 @@ nsTypedSelection::DoAutoScroll(nsIFrame *aFrame, nsPoint& aPoint)
   if (didScroll && mAutoScrollTimer)
   {
     nsPoint presContextPoint = globalPoint -
-      presContext->PresShell()->FrameManager()->GetRootFrame()->GetOffsetTo(rootmostFrame);
+      presContext->PresShell()->FrameManager()->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);
     mAutoScrollTimer->Start(presContext, presContextPoint);
   }
 

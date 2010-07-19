@@ -1235,7 +1235,7 @@ nsObjectFrame::ComputeWidgetGeometry(const nsRegion& aRegion,
 
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsIFrame* rootFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
-  nsRect bounds = GetContentRect() + GetParent()->GetOffsetTo(rootFrame);
+  nsRect bounds = GetContentRect() + GetParent()->GetOffsetToCrossDoc(rootFrame);
   configuration->mBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
 
   // This should produce basically the same rectangle (but not relative

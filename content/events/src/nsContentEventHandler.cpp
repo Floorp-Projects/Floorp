@@ -797,7 +797,11 @@ nsContentEventHandler::OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent)
     aEvent->mSucceeded = PR_TRUE;
     return NS_OK;
   }
-  nsPoint ptInTarget = ptInRoot - targetFrame->GetOffsetTo(rootFrame);
+  nsPoint ptInTarget = ptInRoot + rootFrame->GetOffsetToCrossDoc(targetFrame);
+  PRInt32 rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
+  PRInt32 targetAPD = targetFrame->PresContext()->AppUnitsPerDevPixel();
+  ptInTarget = ptInTarget.ConvertAppUnits(rootAPD, targetAPD);
+
   nsTextFrame* textframe = static_cast<nsTextFrame*>(targetFrame);
   nsIFrame::ContentOffsets offsets =
     textframe->GetCharacterOffsetAtFramePoint(ptInTarget);
