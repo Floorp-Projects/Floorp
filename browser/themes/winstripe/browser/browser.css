@@ -1279,15 +1279,11 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
   -moz-image-region: rect(0, 15px, 17px, 0);
   margin: 0;
   padding-top: 0;
   padding-bottom: 0;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover,
-.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover {
-  -moz-image-region: rect(0, 30px, 17px, 15px);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled="true"],
@@ -1297,29 +1293,21 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover:active,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(0, 45px, 17px, 30px);
+  -moz-image-region: rect(0, 30px, 17px, 15px);
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr) {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
+.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
   -moz-transition: 1s background-color ease-out;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
   background-color: Highlight;
   -moz-transition: none;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
 }
 
 .tabs-newtab-button > .toolbarbutton-icon,
