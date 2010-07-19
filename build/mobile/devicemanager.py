@@ -19,7 +19,8 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-# Joel Maher <joel.maher@gmail.com> (Original Developer)
+#   Joel Maher <joel.maher@gmail.com> (Original Developer)
+#   Clint Talbert <cmtalbert@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,20 +65,58 @@ class DeviceManager:
   base_prompt = '\$\>'
   prompt_sep = '\x00'
   prompt_regex = '.*' + base_prompt + prompt_sep
+  agentErrorRE = re.compile('^##AGENT-ERROR##.*')
 
-  def __init__(self, host, port = 27020):
+  def __init__(self, host, port = 20701):
     self.host = host
     self.port = port
     self._sock = None
     self.getDeviceRoot()
 
-  def sendCMD(self, cmdline, newline = True, sleep = 0):
-    promptre = re.compile(self.prompt_regex + '$')
+  def cmdNeedsResponse(self, cmd):
+    """ Not all commands need a response from the agent:
+        * if the cmd matches the pushRE then it is the first half of push
+          and therefore we want to wait until the second half before looking
+          for a response
+        * rebt obviously doesn't get a response
+        * uninstall performs a reboot to ensure starting in a clean state and
+          so also doesn't look for a response
+    """
+    noResponseCmds = [re.compile('^push .*$'),
+                      re.compile('^rebt'),
+                      re.compile('^uninst .*$')]
 
-    # TODO: any commands that don't output anything and quit need to match this RE
-    pushre = re.compile('^push .*$')
+    for c in noResponseCmds:
+      if (c.match(cmd)):
+        return False
+    
+    # If the command is not in our list, then it gets a response
+    return True
+
+  def shouldCmdCloseSocket(self, cmd):
+    """ Some commands need to close the socket after they are sent:
+    * push
+    * rebt
+    * uninst
+    * quit
+    """
+    
+    socketClosingCmds = [re.compile('^push .*$'),
+                         re.compile('^quit.*'),
+                         re.compile('^rebt.*'),
+                         re.compile('^uninst .*$')]
+
+    for c in socketClosingCmds:
+      if (c.match(cmd)):
+        return True
+
+    return False
+
+  def sendCMD(self, cmdline, newline = True):
+    promptre = re.compile(self.prompt_regex + '$')
     data = ""
-    noQuit = False
+    shouldCloseSocket = False
+    recvGuard = 1000
 
     if (self._sock == None):
       try:
@@ -101,13 +140,15 @@ class DeviceManager:
         if (self.debug >= 2):
           print "unable to connect socket"
         return None
-      
+    
     for cmd in cmdline:
-      if (cmd == 'quit'): break
       if newline: cmd += '\r\n'
       
       try:
-        self._sock.send(cmd)
+        numbytes = self._sock.send(cmd)
+        if (numbytes != len(cmd)):
+          print "ERROR: our cmd was " + str(len(cmd)) + " bytes and we only sent " + str(numbytes)
+          return None
         if (self.debug >= 4): print "send cmd: " + str(cmd)
       except:
         self._redo = True
@@ -115,29 +156,47 @@ class DeviceManager:
         self._sock = None
         return None
       
-      if (pushre.match(cmd) or cmd == 'rebt'):
-        noQuit = True
-      elif noQuit == False:
-        time.sleep(int(sleep))
+      # Check if the command should close the socket
+      shouldCloseSocket = self.shouldCmdCloseSocket(cmd)
+
+      # Handle responses from commands
+      if (self.cmdNeedsResponse(cmd)):
         found = False
-        while (found == False):
+        loopguard = 0
+        # TODO: We had an old sleep here but we don't need it
+
+        while (found == False and (loopguard < recvGuard)):
           if (self.debug >= 4): print "recv'ing..."
-          
+
+          # Get our response
           try:
             temp = self._sock.recv(1024)
+            if (self.debug >= 4): print "response: " + str(temp)
           except:
             self._redo = True
             self._sock.close()
             self._sock = None
             return None
+
+          # If something goes wrong in the agent it will send back a string that
+          # starts with '##AGENT-ERROR##'
+          if (self.agentErrorRE.match(temp)):
+            data = temp
+            break
+
           lines = temp.split('\n')
+
           for line in lines:
             if (promptre.match(line)):
               found = True
           data += temp
 
-    time.sleep(int(sleep))
-    if (noQuit == True):
+          # If we violently lose the connection to the device, this loop tends to spin,
+          # this guard prevents that
+          loopguard = loopguard + 1
+
+    # TODO: We had an old sleep here but we don't need it
+    if (shouldCloseSocket == True):
       try:
         self._sock.close()
         self._sock = None
@@ -180,27 +239,38 @@ class DeviceManager:
 
     if (self.debug >= 2): print "sending: push " + destname
     
-    # sleep 5 seconds / MB
     filesize = os.path.getsize(localname)
-    sleepsize = 1024 * 1024
-    sleepTime = (int(filesize / sleepsize) * 5) + 2
     f = open(localname, 'rb')
     data = f.read()
     f.close()
-    retVal = self.sendCMD(['push ' + destname + '\r\n', data], newline = False, sleep = sleepTime)
-    if (retVal == None):
-      if (self.debug >= 2): print "Error in sendCMD, not validating push"
-      return None
+    retVal = self.sendCMD(['push ' + destname + ' ' + str(filesize) + '\r\n', data], newline = False)
+    
+    if (self.debug >= 3): print "push returned: " + str(retVal)
 
-    if (self.validateFile(destname, localname) == False):
-      if (self.debug >= 2): print "file did not copy as expected"
-      return None
+    validated = False
+    if (retVal):
+      retline = self.stripPrompt(retVal).strip() 
+      if (retline == None or self.agentErrorRE.match(retVal)):
+        # Then we failed to get back a hash from agent, try manual validation
+        validated = self.validateFile(destname, localname)
+      else:
+        # Then we obtained a hash from push
+        localHash = self.getLocalHash(localname)
+        if (str(localHash) == str(retline)):
+          validated = True
+    else:
+      # We got nothing back from sendCMD, try manual validation
+      validated = self.validateFile(destname, localname)
 
-    return retVal
+    if (validated):
+      if (self.debug >= 2): print "Push File Validated!"
+      return True
+    else:
+      if (self.debug >= 2): print "Push File Failed to Validate!"
+      return None
   
   def mkDir(self, name):
     return self.sendCMD(['mkdr ' + name])
-  
   
   # make directory structure on the device
   def mkDirs(self, filename):
@@ -225,18 +295,15 @@ class DeviceManager:
         remoteName = remoteRoot + '/' + file
         if (parts[1] == ""): remoteRoot = remoteDir
         if (self.pushFile(os.path.join(root, file), remoteName) == None):
-          time.sleep(5)
           self.removeFile(remoteName)
-          time.sleep(5)
           if (self.pushFile(os.path.join(root, file), remoteName) == None):
             return None
     return True
 
-
   def dirExists(self, dirname):
     match = ".*" + dirname + "$"
     dirre = re.compile(match)
-    data = self.sendCMD(['cd ' + dirname, 'cwd', 'quit'], sleep = 1)
+    data = self.sendCMD(['cd ' + dirname, 'cwd'])
     if (data == None):
       return None
     retVal = self.stripPrompt(data)
@@ -263,7 +330,7 @@ class DeviceManager:
   def listFiles(self, rootdir):
     if (self.dirExists(rootdir) == False):
       return []  
-    data = self.sendCMD(['cd ' + rootdir, 'ls', 'quit'], sleep=1)
+    data = self.sendCMD(['cd ' + rootdir, 'ls'])
     if (data == None):
       return None
     retVal = self.stripPrompt(data)
@@ -271,16 +338,14 @@ class DeviceManager:
 
   def removeFile(self, filename):
     if (self.debug>= 2): print "removing file: " + filename
-    return self.sendCMD(['rm ' + filename, 'quit'])
-  
-  
+    return self.sendCMD(['rm ' + filename])
+    
   # does a recursive delete of directory on the device: rm -Rf remoteDir
   def removeDir(self, remoteDir):
-    self.sendCMD(['rmdr ' + remoteDir], sleep = 5)
-
+    self.sendCMD(['rmdr ' + remoteDir])
 
   def getProcessList(self):
-    data = self.sendCMD(['ps'], sleep = 3)
+    data = self.sendCMD(['ps'])
     if (data == None):
       return None
       
@@ -298,7 +363,7 @@ class DeviceManager:
     return files
 
   def getMemInfo(self):
-    data = self.sendCMD(['mems', 'quit'])
+    data = self.sendCMD(['mems'])
     if (data == None):
       return None
     retVal = self.stripPrompt(data)
@@ -360,8 +425,6 @@ class DeviceManager:
       return None
     return 1
   
-
-
   # iterates process list and returns pid if exists, otherwise ''
   def processExist(self, appname):
     pid = ''
@@ -381,7 +444,6 @@ class DeviceManager:
         break
     return pid
 
-
   def killProcess(self, appname):
     if (self.sendCMD(['kill ' + appname]) == None):
       return None
@@ -390,11 +452,10 @@ class DeviceManager:
 
   def getTempDir(self):
     retVal = ''
-    data = self.sendCMD(['tmpd', 'quit'])
+    data = self.sendCMD(['tmpd'])
     if (data == None):
       return None
     return self.stripPrompt(data).strip('\n')
-
   
   # copy file from device (remoteFile) to host (localFile)
   def getFile(self, remoteFile, localFile = ''):
@@ -402,7 +463,7 @@ class DeviceManager:
         localFile = os.path.join(self.tempRoot, "temp.txt")
   
     promptre = re.compile(self.prompt_regex + '.*')
-    data = self.sendCMD(['cat ' + remoteFile, 'quit'], sleep = 5)
+    data = self.sendCMD(['cat ' + remoteFile])
     if (data == None):
       return None
     retVal = self.stripPrompt(data)
@@ -410,8 +471,7 @@ class DeviceManager:
     fhandle.write(retVal)
     fhandle.close()
     return retVal
-  
-  
+    
   # copy directory structure from device (remoteDir) to host (localDir)
   def getDirectory(self, remoteDir, localDir):
     if (self.debug >= 2): print "getting files in '" + remoteDir + "'"
@@ -432,7 +492,6 @@ class DeviceManager:
         if (self.getDirectory(remoteDir + '/' + f, os.path.join(localDir, f)) == None):
           return None
 
-
   # true/false check if the two files have the same md5 sum
   def validateFile(self, remoteFile, localFile):
     remoteHash = self.getRemoteHash(remoteFile)
@@ -442,11 +501,10 @@ class DeviceManager:
         return True
 
     return False
-
   
   # return the md5 sum of a remote file
   def getRemoteHash(self, filename):
-      data = self.sendCMD(['hash ' + filename, 'quit'], sleep = 1)
+      data = self.sendCMD(['hash ' + filename])
       if (data == None):
           return ''
       retVal = self.stripPrompt(data)
@@ -455,7 +513,6 @@ class DeviceManager:
       if (self.debug >= 3): print "remote hash returned: '" + retVal + "'"
       return retVal
     
-
   # return the md5 sum of a file on the host
   def getLocalHash(self, filename):
       file = open(filename, 'rb')
@@ -492,7 +549,7 @@ class DeviceManager:
   #       /mochitest
   def getDeviceRoot(self):
     if (not self.deviceRoot):
-      data = self.sendCMD(['testroot'], sleep = 1)
+      data = self.sendCMD(['testroot'])
       if (data == None):
         return '/tests'
       self.deviceRoot = self.stripPrompt(data).strip('\n') + '/tests'
@@ -550,7 +607,6 @@ class DeviceManager:
 
     return self.sendCMD(['cd ' + dir, 'unzp ' + filename])
 
-
   def reboot(self, wait = False):
     self.sendCMD(['rebt'])
 
@@ -582,7 +638,6 @@ class DeviceManager:
             return None
     return True
 
-  #TODO: make this simpler by doing a single directive at a time
   # Returns information about the device:
   # Directive indicates the information you want to get, your choices are:
   # os - name of the os
@@ -594,58 +649,70 @@ class DeviceManager:
   # process - list of running processes (same as ps)
   # disk - total, free, available bytes on disk
   # power - power status (charge, battery temp)
-  # all - all of them
-  def getInfo(self, directive):
+  # all - all of them - or call it with no parameters to get all the information
+  def getInfo(self, directive=None):
     data = None
-    if (directive in ('os','id','uptime','systime','screen','memory','process',
-                      'disk','power')):
-      data = self.sendCMD(['info ' + directive, 'quit'], sleep = 1)
-    else:
-      directive = None
-      data = self.sendCMD(['info', 'quit'], sleep = 1)
-
-    if (data is None):
-      return None
-      
-    data = self.stripPrompt(data)
     result = {}
-        
-    if directive:
-      result[directive] = data.split('\n')
-      for i in range(len(result[directive])):
-        if (len(result[directive][i]) != 0):
-          result[directive][i] = result[directive][i].strip()
+    collapseSpaces = re.compile('  +')
 
-      # Get rid of any empty attributes
-      result[directive].remove('')
+    directives = ['os', 'id','uptime','systime','screen','memory','process',
+                  'disk','power']
+    if (directive in directives):
+      directives = [directive]
 
-    else:
-      lines = data.split('\n')
-      result['id'] = lines[0]
-      result['os'] = lines[1]
-      result['systime'] = lines[2]
-      result['uptime'] = lines[3]
-      result['screen'] = lines[4]
-      result['memory'] = lines[5]
-      if (lines[6] == 'Power status'):
-        tmp = []
-        for i in range(4):
-          tmp.append(line[7 + i])
-        result['power'] = tmp
-      tmp = []
+    for d in directives:
+      data = self.sendCMD(['info ' + d])
+      if (data is None):
+        continue
+      data = self.stripPrompt(data)
+      data = collapseSpaces.sub(' ', data)
+      result[d] = data.split('\n')
 
-      # Linenum is the line where the process list begins
-      linenum = 11
-      for j in range(len(lines) - linenum):
-        if (lines[j + linenum].strip() != ''):
-          procline = lines[j + linenum].split('\t')
+    # Get rid of any 0 length members of the arrays
+    for v in result.itervalues():
+      while '' in v:
+        v.remove('')
+    
+    # Format the process output
+    if 'process' in result:
+      proclist = []
+      for l in result['process']:
+        if l:
+          proclist.append(l.split('\t'))
+      result['process'] = proclist
 
-          if len(procline) == 2:
-            tmp.append([procline[0], procline[1]])
-          elif len(procline) == 3:
-            # Android has <userid> <procid> <procname>
-            # We put the userid to achieve a common format
-            tmp.append([procline[1], procline[2], procline[0]])
-      result['process'] = tmp
+    print "results: " + str(result)
     return result
+
+  """
+  Installs the application onto the device
+  Application bundle - path to the application bundle on the device
+  Destination - destination directory of where application should be
+                installed to (optional)
+  Returns True or False depending on what we get back
+  TODO: we need a real way to know if this works or not
+  """
+  def installApp(self, appBundlePath, destPath=None):
+    cmd = 'inst ' + appBundlePath
+    if destPath:
+      cmd += ' ' + destPath
+    data = self.sendCMD([cmd])
+    if (data is None):
+      return False
+    else:
+      return True
+
+  """
+  Uninstalls the named application from device and causes a reboot.
+  Takes an optional argument of installation path - the path to where the application
+  was installed.
+  Returns True, but it doesn't mean anything other than the command was sent,
+  the reboot happens and we don't know if this succeeds or not.
+  """
+  def uninstallAppAndReboot(self, appName, installPath=None):
+    cmd = 'uninst ' + appName
+    if installPath:
+      cmd += ' ' + installPath
+    self.sendCMD([cmd])
+    return True
 
