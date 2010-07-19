@@ -63,6 +63,8 @@ const TEST_NETWORK_URI = "http://example.com/browser/toolkit/components/console/
 
 const TEST_FILTER_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-filter.html";
 
+const TEST_PROPERTY_PROVIDER_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-property-provider.html";
+
 function noCacheUriSpec(aUriSpec) {
   return aUriSpec + "?_=" + Date.now();
 }
@@ -430,6 +432,77 @@ function testConsoleHistory()
   is (input.value, executeList[idxLast], "check history next idx:" + idxLast);
 }
 
+// test property provider
+function testPropertyProvider()
+{
+  var HUD = HUDService.hudWeakReferences[hudId].get();
+  var jsterm = HUD.jsterm;
+  var context = jsterm.sandbox.window;
+  var completion;
+
+  // Test if the propertyProvider can be accessed from the jsterm object.
+  ok (jsterm.propertyProvider !== undefined, "JSPropertyProvider is defined");
+
+  completion = jsterm.propertyProvider(context, "thisIsNotDefined");
+  is (completion.matches.length, 0, "no match for 'thisIsNotDefined");
+
+  // This is a case the PropertyProvider can't handle. Should return null.
+  completion = jsterm.propertyProvider(context, "window[1].acb");
+  is (completion, null, "no match for 'window[1].acb");
+
+  // A very advanced completion case.
+  var strComplete =
+    'function a() { }document;document.getElementById(window.locatio';
+  completion = jsterm.propertyProvider(context, strComplete);
+  ok(completion.matches.length == 2, "two matches found");
+  ok(completion.matchProp == "locatio", "matching part is 'test'");
+  ok(completion.matches[0] == "location", "the first match is 'location'");
+  ok(completion.matches[1] == "locationbar", "the second match is 'locationbar'");
+}
+
+function testCompletion()
+{
+  var HUD = HUDService.hudWeakReferences[hudId].get();
+  var jsterm = HUD.jsterm;
+  var input = jsterm.inputNode;
+
+  // Test typing 'docu'.
+  input.value = "docu";
+  input.setSelectionRange(4, 4);
+  jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
+  is(input.value, "document", "'docu' completion");
+  is(input.selectionStart, 4, "start selection is alright");
+  is(input.selectionEnd, 8, "end selection is alright");
+
+  // Test typing 'docu' and press tab.
+  input.value = "docu";
+  input.setSelectionRange(4, 4);
+  jsterm.complete(jsterm.COMPLETE_FORWARD);
+  is(input.value, "document", "'docu' tab completion");
+  is(input.selectionStart, 8, "start selection is alright");
+  is(input.selectionEnd, 8, "end selection is alright");
+
+  // Test typing 'document.getElem'.
+  input.value = "document.getElem";
+  input.setSelectionRange(16, 16);
+  jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
+  is(input.value, "document.getElementById", "'document.getElem' completion");
+  is(input.selectionStart, 16, "start selection is alright");
+  is(input.selectionEnd, 23, "end selection is alright");
+
+  // Test pressing tab another time.
+  jsterm.complete(jsterm.COMPLETE_FORWARD);
+  is(input.value, "document.getElementsByClassName", "'document.getElem' another tab completion");
+  is(input.selectionStart, 16, "start selection is alright");
+  is(input.selectionEnd, 31, "end selection is alright");
+
+  // Test pressing shift_tab.
+  jsterm.complete(jsterm.COMPLETE_BACKWARD);
+  is(input.value, "document.getElementById", "'document.getElem' untab completion");
+  is(input.selectionStart, 16, "start selection is alright");
+  is(input.selectionEnd, 23, "end selection is alright");
+}
+
 function testExecutionScope()
 {
   content.location.href = TEST_URI;
@@ -533,6 +606,8 @@ function test() {
       testOutputOrder();
       testNullUndefinedOutput();
       testExecutionScope();
+      testCompletion();
+      testPropertyProvider();
 
       // testUnregister();
       executeSoon(function () {
