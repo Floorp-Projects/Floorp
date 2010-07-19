@@ -577,6 +577,26 @@ WeaveSvc.prototype = {
             return true;
 
           case 401:
+            // Login failed.  If the password contains non-ASCII characters,
+            // perhaps the server password is an old low-byte only one?
+            let id = ID.get('WeaveID');
+            if (id.password != id.passwordUTF8) {
+              let res = new Resource(this.infoURL);
+              let auth = new BrokenBasicAuthenticator(id);
+              res.authenticator = auth;
+              test = res.get();
+              if (test.status == 200) {
+                this._log.debug("Non-ASCII password detected. "
+                                + "Changing to UTF-8 version.");
+                // Let's change the password on the server to the UTF8 version.
+                let url = this.userAPI + this.username + "/password";
+                res = new Resource(url);
+                res.authenticator = auth;
+                res.post(id.passwordUTF8);
+                return this.verifyLogin();
+              }
+            }
+            // Yes, we want to fall through to the 404 case.
           case 404:
             // Check that we're verifying with the correct cluster
             if (this._setCluster())
@@ -636,7 +656,7 @@ WeaveSvc.prototype = {
     this._notify("changepwd", "", function() {
       let url = this.userAPI + this.username + "/password";
       try {
-        let resp = new Resource(url).post(newpass);
+        let resp = new Resource(url).post(Utils.encodeUTF8(newpass));
         if (resp.status != 200) {
           this._log.debug("Password change failed: " + resp);
           return false;
@@ -830,10 +850,10 @@ WeaveSvc.prototype = {
   },
 
   createAccount: function WeaveSvc_createAccount(username, password, email,
-                                            captchaChallenge, captchaResponse)
-  {
+                                            captchaChallenge, captchaResponse) {
     let payload = JSON.stringify({
-      "password": password, "email": email,
+      "password": Utils.encodeUTF8(password),
+      "email": email,
       "captcha-challenge": captchaChallenge,
       "captcha-response": captchaResponse
     });

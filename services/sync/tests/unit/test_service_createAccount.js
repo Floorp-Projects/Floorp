@@ -1,3 +1,4 @@
+Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/service.js");
 
 function run_test() {
@@ -32,6 +33,14 @@ function run_test() {
     do_check_eq(payload.email, "john@doe");
     do_check_eq(payload["captcha-challenge"], "challenge");
     do_check_eq(payload["captcha-response"], "response");
+
+    _("A non-ASCII password is UTF-8 encoded.");
+    res = Weave.Service.createAccount("johndoe", "moneyislike$\u20ac\xa5\u5143",
+                                      "john@doe", "challenge", "response");
+    do_check_eq(res, null);
+    payload = JSON.parse(requestBody);
+    do_check_eq(payload.password,
+                Utils.encodeUTF8("moneyislike$\u20ac\xa5\u5143"));
 
     _("Invalid captcha or other user-friendly error.");
     res = Weave.Service.createAccount("janedoe", "anothersecretpw", "jane@doe",
