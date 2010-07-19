@@ -170,7 +170,9 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     format.depth = 16;
     format.minDepth = 1;
 
-    gl = gl::GLContextProvider::CreatePBuffer(gfxIntSize(width, height), format);
+    gl = gl::GLContextProvider::CreatePBuffer(gfxIntSize(width, height),
+                                              gl::GLContextProvider::GetGlobalContext(),
+                                              format);
 
 #ifdef USE_GLES2
     // On native GLES2, no need to validate, the compiler will do it
@@ -184,7 +186,9 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 #endif
 
     if (!InitAndValidateGL()) {
-        gl = gl::GLContextProviderOSMesa::CreatePBuffer(gfxIntSize(width, height), format);
+        gl = gl::GLContextProviderOSMesa::CreatePBuffer(gfxIntSize(width, height),
+                                                        nsnull,
+                                                        format);
         if (!InitAndValidateGL()) {
             LogMessage("WebGL: Can't get a usable OpenGL context.");
             return NS_ERROR_FAILURE;
