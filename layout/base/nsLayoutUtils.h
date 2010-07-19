@@ -250,7 +250,10 @@ public:
    * and the document has a parent document in the same view hierarchy, then
    * we try to return the subdocumentframe in the parent document.
    * @param aExtraOffset [in/out] if non-null, then as we cross documents
-   * an extra offset may be required and it will be added to aCrossDocOffset
+   * an extra offset may be required and it will be added to aCrossDocOffset.
+   * Be careful dealing with this extra offset as it is in app units of the
+   * parent document, which may have a different app units per dev pixel ratio
+   * than the child document.
    */
   static nsIFrame* GetCrossDocParentFrame(const nsIFrame* aFrame,
                                           nsPoint* aCrossDocOffset = nsnull);
