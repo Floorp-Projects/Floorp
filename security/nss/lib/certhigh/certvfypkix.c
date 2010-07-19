@@ -1224,7 +1224,7 @@ cert_VerifyCertChainPkix(
     runningLeakTest = PKIX_TRUE;
 
     /* Prevent multi-threaded run of object leak test */
-    fnInvLocalCount = PR_AtomicIncrement(&parallelFnInvocationCount);
+    fnInvLocalCount = PR_ATOMIC_INCREMENT(&parallelFnInvocationCount);
     PORT_Assert(fnInvLocalCount == 1);
 
 do {
@@ -1327,7 +1327,7 @@ cleanup:
 } while (errorGenerated);
 
     runningLeakTest = PKIX_FALSE; 
-    PR_AtomicDecrement(&parallelFnInvocationCount);
+    PR_ATOMIC_DECREMENT(&parallelFnInvocationCount);
     usePKIXValidationEngine = savedUsePkixEngFlag;
 #endif /* PKIX_OBJECT_LEAK_TEST */
 
@@ -1517,7 +1517,7 @@ setRevocationMethod(PKIX_RevocationChecker *revChecker,
     PKIX_Error *error = NULL;
     int priority = 0;
     
-    if (revTest->number_of_defined_methods < certRevMethod) {
+    if (revTest->number_of_defined_methods <= certRevMethod) {
         return NULL;
     }
     if (revTest->preferred_methods) {
@@ -1736,6 +1736,7 @@ cert_pkixSetParam(PKIX_ProcessingParams *procParams,
         default:
             PORT_SetError(errCode);
             r = SECFailure;
+            break;
     }
 
     if (policyOIDList != NULL)
@@ -2059,7 +2060,7 @@ SECStatus CERT_PKIXVerifyCert(
     runningLeakTest = PKIX_TRUE;
 
     /* Prevent multi-threaded run of object leak test */
-    fnInvLocalCount = PR_AtomicIncrement(&parallelFnInvocationCount);
+    fnInvLocalCount = PR_ATOMIC_INCREMENT(&parallelFnInvocationCount);
     PORT_Assert(fnInvLocalCount == 1);
 
 do {
@@ -2268,7 +2269,7 @@ cleanup:
 } while (errorGenerated);
 
     runningLeakTest = PKIX_FALSE; 
-    PR_AtomicDecrement(&parallelFnInvocationCount);
+    PR_ATOMIC_DECREMENT(&parallelFnInvocationCount);
     usePKIXValidationEngine = savedUsePkixEngFlag;
 #endif /* PKIX_OBJECT_LEAK_TEST */
 

@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.79 2010/01/14 22:15:23 alexei.volkov.bugs%sun.com Exp $
+ * $Id: cert.h,v 1.80 2010/04/30 07:47:47 nelson%bolyard.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1291,6 +1291,10 @@ CERT_CheckForEvilCert(CERTCertificate *cert);
 
 CERTGeneralName *
 CERT_GetCertificateNames(CERTCertificate *cert, PLArenaPool *arena);
+
+CERTGeneralName *
+CERT_GetConstrainedCertificateNames(CERTCertificate *cert, PLArenaPool *arena,
+                                    PRBool includeSubjectCommonName);
 
 char *
 CERT_GetNickName(CERTCertificate   *cert, CERTCertDBHandle *handle, PLArenaPool *nicknameArena);

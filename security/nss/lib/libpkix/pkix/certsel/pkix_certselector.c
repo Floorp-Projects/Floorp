@@ -824,8 +824,9 @@ cleanup:
  *
  *  Determines whether the bytes at subjKeyId in "params" matches with the
  *  Subject Key Identifier pointed to by "cert". If the subjKeyId in params is
- *  set to NULL, no checking is done and the Cert is considered a match. If
- *  the Cert does not match, an Error pointer is returned.
+ *  set to NULL or the Cert doesn't have a Subject Key Identifier, no checking
+ *  is done and the Cert is considered a match. If the Cert does not match, an
+ *  Error pointer is returned.
  *
  * PARAMETERS:
  *  "params"
@@ -870,8 +871,7 @@ pkix_CertSelector_Match_SubjKeyId(
                     PKIX_CERTGETSUBJECTKEYIDENTIFIERFAILED);
 
                 if (certSubjKeyId == NULL) {
-                    *pResult = PKIX_FALSE;
-                    PKIX_ERROR(PKIX_CERTSELECTORMATCHSUBJKEYIDFAILED);
+                    goto cleanup;
                 }
 
                 PKIX_CHECK(PKIX_PL_Object_Equals
@@ -881,7 +881,7 @@ pkix_CertSelector_Match_SubjKeyId(
                             plContext),
                            PKIX_OBJECTEQUALSFAILED);
                 
-                if (equals != PKIX_TRUE) {
+                if (equals == PKIX_FALSE) {
                     *pResult = PKIX_FALSE;
                     PKIX_ERROR(PKIX_CERTSELECTORMATCHSUBJKEYIDFAILED);
                 }

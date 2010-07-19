@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.52 2010/01/14 22:15:25 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: sslsnce.c,v 1.54 2010/07/05 19:31:56 alexei.volkov.bugs%sun.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -820,7 +820,7 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
                     pcce = 0;
                 }
             }
-            if ((cndx = psce->u.ssl3.srvNameIndex) != -1) {
+            if (psce && ((cndx = psce->u.ssl3.srvNameIndex) != -1)) {
                 PRUint32 gotLock = LockSidCacheLock(cache->srvNameCacheLock,
                                                     now);
                 if (gotLock) {
@@ -1104,8 +1104,8 @@ InitCache(cacheDesc *cache, int maxCacheEntries, int maxCertCacheEntries,
 
     cache->numCertCacheEntries = (maxCertCacheEntries > 0) ?
                                              maxCertCacheEntries : 0;
-    cache->numSrvNameCacheEntries = (maxSrvNameCacheEntries > 0) ?
-                                             maxSrvNameCacheEntries : 0;
+    cache->numSrvNameCacheEntries = (maxSrvNameCacheEntries >= 0) ?
+                                             maxSrvNameCacheEntries : DEF_NAME_CACHE_ENTRIES;
 
     /* compute size of shared memory, and offsets of all pointers */
     ptr = 0;
@@ -1168,9 +1168,6 @@ InitCache(cacheDesc *cache, int maxCacheEntries, int maxCertCacheEntries,
     ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
 
     cache->srvNameCacheData = (srvNameCacheEntry *)ptr;
-    if (cache->numSrvNameCacheEntries < 0) {
-        cache->numSrvNameCacheEntries = DEF_NAME_CACHE_ENTRIES;
-    }
     cache->srvNameCacheSize =
         cache->numSrvNameCacheEntries * sizeof(srvNameCacheEntry);
     ptr = (ptrdiff_t)(cache->srvNameCacheData + cache->numSrvNameCacheEntries);

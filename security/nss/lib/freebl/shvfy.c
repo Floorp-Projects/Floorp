@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: shvfy.c,v 1.11 2008/11/18 19:48:24 rrelyea%redhat.com Exp $ */
+/* $Id: shvfy.c,v 1.13 2010/04/29 00:17:52 rrelyea%redhat.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
