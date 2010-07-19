@@ -518,13 +518,13 @@ JS_XDRDouble(JSXDRState *xdr, jsdouble *dp)
 }
 
 enum XDRValueTag {
-    XDRTAG_OBJECT  =             0x0,
-    XDRTAG_INT     =             0x1,
-    XDRTAG_DOUBLE  =             0x2,
-    XDRTAG_STRING  =             0x4,
-    XDRTAG_SPECIAL =             0x6,
-    XDRTAG_XDRNULL =             0x8,
-    XDRTAG_XDRVOID =             0xA
+    XDRTAG_OBJECT  = 0,
+    XDRTAG_INT     = 1,
+    XDRTAG_DOUBLE  = 2,
+    XDRTAG_STRING  = 3,
+    XDRTAG_SPECIAL = 4,
+    XDRTAG_XDRNULL = 5,
+    XDRTAG_XDRVOID = 6
 };
 
 static XDRValueTag
