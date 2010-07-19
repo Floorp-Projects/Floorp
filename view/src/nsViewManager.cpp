@@ -943,7 +943,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         }
 
         if (nsnull != view) {
-          PRInt32 p2a = AppUnitsPerDevPixel();
+          PRInt32 APD = AppUnitsPerDevPixel();
 
           if ((aEvent->message == NS_MOUSE_MOVE &&
                static_cast<nsMouseEvent*>(aEvent)->reason ==
@@ -951,13 +951,15 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
               aEvent->message == NS_MOUSE_ENTER ||
               aEvent->message == NS_MOUSE_BUTTON_DOWN ||
               aEvent->message == NS_MOUSE_BUTTON_UP) {
-            // aEvent->point is relative to the widget, i.e. the view top-left,
-            // so we need to add the offset to the view origin
-            nsPoint rootOffset = baseView->GetDimensions().TopLeft();
-            rootOffset += baseView->GetOffsetTo(RootViewManager()->mRootView);
-            RootViewManager()->mMouseLocation = aEvent->refPoint +
-                nsIntPoint(NSAppUnitsToIntPixels(rootOffset.x, p2a),
-                           NSAppUnitsToIntPixels(rootOffset.y, p2a));
+            // aEvent->point is relative to the widget, so we convert it to be
+            // relative to the view origin
+            nsPoint pt = -baseView->ViewToWidgetOffset();
+            pt += baseView->GetOffsetTo(RootViewManager()->mRootView);
+            pt.x += NSIntPixelsToAppUnits(aEvent->refPoint.x, APD);
+            pt.y += NSIntPixelsToAppUnits(aEvent->refPoint.y, APD);
+            PRInt32 rootAPD = RootViewManager()->AppUnitsPerDevPixel();
+            pt = pt.ConvertAppUnits(APD, rootAPD);
+            RootViewManager()->mMouseLocation = pt;
 #ifdef DEBUG_MOUSE_LOCATION
             if (aEvent->message == NS_MOUSE_ENTER)
               printf("[vm=%p]got mouse enter for %p\n",
@@ -975,7 +977,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
             // won't matter at all since we'll get the mouse move or
             // enter after the mouse exit when the mouse moves from one
             // of our widgets into another.
-            RootViewManager()->mMouseLocation = nsIntPoint(NSCOORD_NONE, NSCOORD_NONE);
+            RootViewManager()->mMouseLocation =
+              nsPoint(NSCOORD_NONE, NSCOORD_NONE);
 #ifdef DEBUG_MOUSE_LOCATION
             printf("[vm=%p]got mouse exit for %p\n",
                    this, aEvent->widget);
@@ -1654,7 +1657,7 @@ nsViewManager::SynthesizeMouseMove(PRBool aFromScroll)
   if (!IsRootVM())
     return RootViewManager()->SynthesizeMouseMove(aFromScroll);
 
-  if (mMouseLocation == nsIntPoint(NSCOORD_NONE, NSCOORD_NONE))
+  if (mMouseLocation == nsPoint(NSCOORD_NONE, NSCOORD_NONE))
     return NS_OK;
 
   if (!mSynthMouseMoveEvent.IsPending()) {
@@ -1691,7 +1694,7 @@ static nsView* FindFloatingViewContaining(nsView* aView, nsPoint aPt)
     return nsnull;
 
   for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    nsView* r = FindFloatingViewContaining(v, aPt - v->GetOffsetTo(aView));
+    nsView* r = FindFloatingViewContaining(v, v->ConvertFromParentCoords(aPt));
     if (r)
       return r;
   }
@@ -1720,7 +1723,7 @@ static nsView* FindViewContaining(nsView* aView, nsPoint aPt)
   }
 
   for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    nsView* r = FindViewContaining(v, aPt - v->GetOffsetTo(aView));
+    nsView* r = FindViewContaining(v, v->ConvertFromParentCoords(aPt));
     if (r)
       return r;
   }
@@ -1738,7 +1741,7 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
 
   NS_ASSERTION(IsRootVM(), "Only the root view manager should be here");
 
-  if (mMouseLocation == nsIntPoint(NSCOORD_NONE, NSCOORD_NONE) || !mRootView) {
+  if (mMouseLocation == nsPoint(NSCOORD_NONE, NSCOORD_NONE) || !mRootView) {
     mSynthMouseMoveEvent.Forget();
     return;
   }
@@ -1751,30 +1754,37 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
   printf("[vm=%p]synthesizing mouse move to (%d,%d)\n",
          this, mMouseLocation.x, mMouseLocation.y);
 #endif
-                                                       
-  nsPoint pt;
-  PRInt32 p2a = AppUnitsPerDevPixel();
-  pt.x = NSIntPixelsToAppUnits(mMouseLocation.x, p2a);
-  pt.y = NSIntPixelsToAppUnits(mMouseLocation.y, p2a);
+
+  PRInt32 APD = AppUnitsPerDevPixel();
+
+  // this will be mMouseLocation relative to the widget of |view|, the widget
+  // we will put in the event we dispatch, in viewAPD appunits
+  nsPoint refpoint(0, 0);
+  PRInt32 viewAPD;
+  // the VM of the view the point is in
+  nsViewManager *pointVM;
+
   // This could be a bit slow (traverses entire view hierarchy)
   // but it's OK to do it once per synthetic mouse event
-  nsView* view = FindFloatingViewContaining(mRootView, pt);
-  nsIntPoint offset(0, 0);
-  nsViewManager *pointVM;
+  nsView* view = FindFloatingViewContaining(mRootView, mMouseLocation);
   if (!view) {
     view = mRootView;
-    nsView *pointView = FindViewContaining(mRootView, pt);
+    nsView *pointView = FindViewContaining(mRootView, mMouseLocation);
     // pointView can be null in situations related to mouse capture
     pointVM = (pointView ? pointView : view)->GetViewManager();
+    refpoint = mMouseLocation + mRootView->ViewToWidgetOffset();
+    viewAPD = APD;
   } else {
-    nsPoint viewoffset = view->GetOffsetTo(mRootView);
-    offset.x = NSAppUnitsToIntPixels(viewoffset.x, p2a);
-    offset.y = NSAppUnitsToIntPixels(viewoffset.y, p2a);
     pointVM = view->GetViewManager();
+    viewAPD = pointVM->AppUnitsPerDevPixel();
+    refpoint = mMouseLocation.ConvertAppUnits(APD, viewAPD);
+    refpoint -= view->GetOffsetTo(mRootView);
+    refpoint += view->ViewToWidgetOffset();
   }
+  NS_ASSERTION(view->GetWidget(), "view should have a widget here");
   nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, view->GetWidget(),
                      nsMouseEvent::eSynthesized);
-  event.refPoint = mMouseLocation - offset;
+  event.refPoint = refpoint.ToNearestPixels(viewAPD);
   event.time = PR_IntervalNow();
   // XXX set event.isShift, event.isControl, event.isAlt, event.isMeta ?
 
