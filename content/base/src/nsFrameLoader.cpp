@@ -91,6 +91,7 @@
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
 #include "nsIDOMNSHTMLDocument.h"
+#include "nsIXULWindow.h"
 
 #include "nsLayoutUtils.h"
 #include "nsIView.h"
@@ -1651,9 +1652,23 @@ nsFrameLoader::TryNewProcess()
     return false;
   }
 
+  PRUint32 chromeFlags = 0;
+  nsCOMPtr<nsIDocShellTreeOwner> parentOwner;
+  if (NS_FAILED(parentAsItem->GetTreeOwner(getter_AddRefs(parentOwner))) ||
+      !parentOwner) {
+    return false;
+  }
+  nsCOMPtr<nsIXULWindow> window(do_GetInterface(parentOwner));
+  if (!window) {
+    return false;
+  }
+  if (NS_FAILED(window->GetChromeFlags(&chromeFlags))) {
+    return false;
+  }
+
   ContentParent* parent = ContentParent::GetSingleton();
   NS_ASSERTION(parent->IsAlive(), "Process parent should be alive; something is very wrong!");
-  mRemoteBrowser = parent->CreateTab();
+  mRemoteBrowser = parent->CreateTab(chromeFlags);
   if (mRemoteBrowser) {
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mOwnerContent);
     mRemoteBrowser->SetOwnerElement(element);

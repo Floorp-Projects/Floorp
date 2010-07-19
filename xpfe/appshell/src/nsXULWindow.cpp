@@ -148,6 +148,7 @@ nsXULWindow::nsXULWindow(PRUint32 aChromeFlags)
     mLockedUntilChromeLoad(PR_FALSE),
     mIgnoreXULSize(PR_FALSE),
     mIgnoreXULPosition(PR_FALSE),
+    mChromeFlagsFrozen(PR_FALSE),
     mContextFlags(0),
     mBlurSuppressionLevel(0),
     mPersistentAttributesDirty(0),
@@ -332,9 +333,18 @@ NS_IMETHODIMP nsXULWindow::GetChromeFlags(PRUint32 *aChromeFlags)
 
 NS_IMETHODIMP nsXULWindow::SetChromeFlags(PRUint32 aChromeFlags)
 {
+  NS_ASSERTION(!mChromeFlagsFrozen,
+               "SetChromeFlags() after AssumeChromeFlagsAreFrozen()!");
+
   mChromeFlags = aChromeFlags;
   if (mChromeLoaded)
     NS_ENSURE_SUCCESS(ApplyChromeFlags(), NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::AssumeChromeFlagsAreFrozen()
+{
+  mChromeFlagsFrozen = PR_TRUE;
   return NS_OK;
 }
 

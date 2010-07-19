@@ -80,7 +80,7 @@ public:
     NS_DECL_NSIOBSERVER
     NS_DECL_NSITHREADOBSERVER
 
-    TabParent* CreateTab();
+    TabParent* CreateTab(PRUint32 aChromeFlags);
 
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
@@ -104,7 +104,7 @@ private:
     ContentParent();
     virtual ~ContentParent();
 
-    virtual PBrowserParent* AllocPBrowser();
+    virtual PBrowserParent* AllocPBrowser(const PRUint32& aChromeFlags);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
 
     virtual PTestShellParent* AllocPTestShell();

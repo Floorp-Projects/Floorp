@@ -59,7 +59,7 @@ rpc protocol PContent
     manages PNecko;
 
 child:
-    PBrowser();
+    PBrowser(PRUint32 chromeFlags);
 
     PTestShell();
 
