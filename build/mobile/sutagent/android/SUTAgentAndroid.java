@@ -42,18 +42,18 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
+import com.mozilla.SUTAgentAndroid.service.ASMozStub;
+import com.mozilla.SUTAgentAndroid.service.DoCommand;
 
 // import dalvik.system.VMRuntime;
 import android.app.Activity;
 import android.app.KeyguardManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
+// import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -78,11 +78,11 @@ import android.widget.Toast;
 
 public class SUTAgentAndroid extends Activity 
 	{
-	static final int START_PRG = 1959;
+	public static final int START_PRG = 1959;
 	MenuItem mExitMenuItem;
 	Timer timer = null;
 	
-	public static SUTAgentAndroid me = null;
+//	public static SUTAgentAndroid me = null;
     public static String sUniqueID = null;
     public static String sLocalIPAddr = null;
     public static String sACStatus = null;
@@ -104,6 +104,7 @@ public class SUTAgentAndroid extends Activity
     private PowerManager.WakeLock pwl = null;
     
     private BroadcastReceiver battReceiver = null;
+//    private ComponentName service = null;
 
 	public boolean onCreateOptionsMenu(Menu menu)
 		{
@@ -155,7 +156,7 @@ public class SUTAgentAndroid extends Activity
         		pwl.acquire();
         	}
         
-        DoCommand dc = new DoCommand();
+        DoCommand dc = new DoCommand(getApplication());
         
         // Get configuration settings from "ini" file
         File dir = getFilesDir();
@@ -170,9 +171,9 @@ public class SUTAgentAndroid extends Activity
         TextView  tv = (TextView) this.findViewById(R.id.Textview01);
 
         if (getLocalIpAddress() == null)
-        	setUpNetwork();
+        	setUpNetwork(sIniFile);
         
-        me = this;
+//        me = this;
         
         WifiInfo wifi;
         WifiManager wifiMan = (WifiManager)getSystemService(Context.WIFI_SERVICE);
@@ -269,13 +270,15 @@ public class SUTAgentAndroid extends Activity
         
         if (!bNetworkingStarted)
         	{
-        	ToDoListening(1,300,dc);
+        	Thread thread = new Thread(null, doStartService, "StartServiceBkgnd");
+        	thread.start();
+//        	ToDoListening(1,300,dc);
         	bNetworkingStarted = true;
         	String sRegRet = "";
         	if (RegSvrIPAddr.length() > 0)
         		{
         		sRegRet = dc.RegisterTheDevice(RegSvrIPAddr, RegSvrIPPort, sRegString);
-        		if (sRegRet.contains("\"ok\": true"))
+        		if (sRegRet.contains("ok"))
         			{
         			sConfig += "Registered with testserver" + lineSep;
         			sConfig += "\tIPAddress: " + RegSvrIPAddr + lineSep;
@@ -290,7 +293,7 @@ public class SUTAgentAndroid extends Activity
         	}
         
         tv.setText(sConfig);
-        
+
         monitorBatteryState();
         
         final Button goButton = (Button) findViewById(R.id.Button01);
@@ -315,11 +318,11 @@ public class SUTAgentAndroid extends Activity
 		super.onDestroy();
     	if (isFinishing())
     		{
-    		StopHeartBeat();
-    		Intent listenerSvc = new Intent();
+    		Intent listenerSvc = new Intent(this, ASMozStub.class);
     		listenerSvc.setAction("com.mozilla.SUTAgentAndroid.service.LISTENER_SERVICE");
     		stopService(listenerSvc);
     		bNetworkingStarted = false;
+    		
 			unregisterReceiver(battReceiver);
 	        KeyguardManager km = (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
 	        if (km != null)
@@ -329,17 +332,11 @@ public class SUTAgentAndroid extends Activity
 	        		kl.reenableKeyguard();
 	        	}
 	        
-//	        TextView  tv = (TextView) this.findViewById(R.id.Textview01);
-//	        if (tv != null)
-//	        	tv.setKeepScreenOn(false);
-	        
 	        if (pwl != null)
 	        	pwl.release();
 	        
 	    	if (wl != null)
 	    		wl.release();
-	    	
-	        System.exit(0);
     		}
     	}
     
@@ -426,13 +423,21 @@ public class SUTAgentAndroid extends Activity
 		registerReceiver(battReceiver, battFilter);
     	}
  
-    public boolean setUpNetwork()
+    public boolean setUpNetwork(String sIniFile)
     	{
     	boolean	bRet = false;
     	int	lcv	= 0;
     	int	lcv2 = 0;
     	WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
     	WifiConfiguration wc = new WifiConfiguration();
+    	DoCommand tmpdc = new DoCommand(getApplication());
+    	
+    	String ssid = tmpdc.GetIniData("Network Settings", "SSID", sIniFile);
+    	String auth = tmpdc.GetIniData("Network Settings", "AUTH", sIniFile);
+    	String encr = tmpdc.GetIniData("Network Settings", "ENCR", sIniFile);
+    	String key = tmpdc.GetIniData("Network Settings", "KEY", sIniFile);
+    	String eap = tmpdc.GetIniData("Network Settings", "EAP", sIniFile);
+    	String adhoc = tmpdc.GetIniData("Network Settings", "ADHOC", sIniFile);
     	
 		Toast.makeText(getApplication().getApplicationContext(), "Starting and configuring network", Toast.LENGTH_LONG).show();
 /*		
@@ -459,27 +464,32 @@ public class SUTAgentAndroid extends Activity
     	wc.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
     	wc.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
 */    	
-    	wc.SSID = "\"Mozilla-G\"";
+		wc.SSID = "\"" + ssid + "\"";
+//    	wc.SSID = "\"Mozilla-G\"";
 //    	wc.SSID = "\"Mozilla\"";
-    	wc.preSharedKey  = null;
+		
+		if (auth.contentEquals("wpa2"))
+			{
+	    	wc.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+			wc.preSharedKey  = null;
+			}
+		
+		if (encr.contentEquals("aes"))
+			{
+	    	wc.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+	    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+			}
+		
+		if (eap.contentEquals("peap"))
+			{
+	    	wc.eap.setValue("PEAP");
+	    	wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
+	    	wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.IEEE8021X);
+			}
+		
     	wc.hiddenSSID = false;
     	wc.status = WifiConfiguration.Status.ENABLED;
     	
-    	wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
-    	wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.IEEE8021X);
-
-    	wc.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-//    	wc.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
-
-//    	wc.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-    	wc.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-
-//    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-//    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
-//    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-    	
-    	wc.eap.setValue("PEAP");
     	wc.password.setValue("\"password\"");
     	wc.identity.setValue("\"bmoss@mozilla.com\"");
     	
@@ -599,10 +609,23 @@ public class SUTAgentAndroid extends Activity
     	return(bRet);
     	}
     
+    private Runnable doStartService = new Runnable()
+    	{
+    	public void run()
+    		{
+			Intent listenerService = new Intent();
+			listenerService.setAction("com.mozilla.SUTAgentAndroid.service.LISTENER_SERVICE");
+			startService(listenerService);
+//			service = startService(listenerService);
+    		}
+    	};
+/*
     class ToDoListener extends TimerTask 
     	{
     	boolean 	bFirstRun = true;
     	DoCommand	dc = null;
+    	
+    	ToDoListener() {}
     	
     	ToDoListener(DoCommand dc)
     		{
@@ -615,7 +638,7 @@ public class SUTAgentAndroid extends Activity
 				{
 				Intent listenerService = new Intent();
 				listenerService.setAction("com.mozilla.SUTAgentAndroid.service.LISTENER_SERVICE");
-				startService(listenerService);
+				service = startService(listenerService);
 				bFirstRun = false;
 				}
 			else
@@ -629,7 +652,7 @@ public class SUTAgentAndroid extends Activity
 						this.dc.StartAlert();
 					sRet = null;
 					System.gc();
-					}	
+					}
 				}
 			}
 		}
@@ -638,8 +661,9 @@ public class SUTAgentAndroid extends Activity
 		{
 		if (timer == null)
 			timer = new Timer();
-		timer.scheduleAtFixedRate(new ToDoListener(dc), delay * 1000, interval * 1000);
+//		timer.scheduleAtFixedRate(new ToDoListener(dc), delay * 1000, interval * 1000);
 //		timer.schedule(new ToDoListener(dc), delay * 1000);
+		timer.schedule(new ToDoListener(), delay * 1000);
 		}
 
 	class DoHeartBeat extends TimerTask
@@ -686,8 +710,9 @@ public class SUTAgentAndroid extends Activity
 			System.gc();
 			}
 		}
+*/	
 	
-	public String getLocalIpAddress()
+    public String getLocalIpAddress()
 		{
 		try
     		{
