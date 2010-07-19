@@ -151,6 +151,11 @@
     <command id="cmd_formPrevious" oncommand="FormHelperUI.goToPrevious();"/>
     <command id="cmd_formNext" oncommand="FormHelperUI.goToNext();"/>
     <command id="cmd_formClose" oncommand="FormHelperUI.hide();"/>
+
+    <!-- find navigation -->
+    <command id="cmd_findPrevious" oncommand="FindHelperUI.goToPrevious();"/>
+    <command id="cmd_findNext" oncommand="FindHelperUI.goToNext();"/>
+    <command id="cmd_findClose" oncommand="FindHelperUI.hide();"/>
   </commandset>
 
   <keyset id="mainKeyset">
@@ -263,22 +268,16 @@
                 <html:canvas id="view-buffer" style="display: none;" moz-opaque="true">
                 </html:canvas>
               </stack>
-              <box id="form-helper-spacer" hidden="true"/>
+              <box id="content-navigator-spacer" hidden="true"/>
             </vbox>
-
           </vbox>
         </scrollbox>
 
-        <!-- popup for form helper -->
-        <vbox id="form-helper-container" hidden="true" class="window-width" top="0" pack="end">
+        <!-- popup for content navigator helper -->
+        <vbox id="content-navigator" class="window-width" top="0" spacer="content-navigator-spacer">
           <arrowscrollbox id="form-helper-autofill" collapsed="true" align="center" flex="1" orient="horizontal"
                           onclick="FormHelperUI.doAutoComplete(event.target);"/>
-          <hbox id="form-buttons" class="panel-dark" pack="center">
-            <button id="form-helper-previous" class="button-dark" label="&formHelper.previous;" command="cmd_formPrevious"/>
-            <button id="form-helper-next" class="button-dark" label="&formHelper.next;" command="cmd_formNext"/>
-            <spacer flex="1"/>
-            <toolbarbutton id="form-helper-close" class="close-button" command="cmd_formClose"/>
-          </hbox>
+          <textbox id="find-helper-textbox"  oncommand="FindHelperUI.search(this.value)" type="search" flex="1"/>
         </vbox>
       </stack>
 
@@ -286,7 +285,7 @@
       <vbox class="panel-dark">
         <!-- Because of the stack + fixed position of the urlbar when it is in
              locked mode the event on the top-right part of the urlbar are
-              swallow by this spacer, but not with the mousethrough attribute
+             swallow by this spacer, but not with the mousethrough attribute
         -->
         <spacer class="toolbar-height" mousethrough="always"/>
 
@@ -492,7 +491,7 @@
       <vbox id="select-container-inner" class="dialog-dark" flex="1">
         <scrollbox id="select-list" flex="1" orient="vertical"/>
         <hbox id="select-buttons" pack="center">
-          <button id="select-buttons-done" class="button-dark" label="&formHelper.done;" oncommand="SelectHelperUI.hide();"/>
+          <button id="select-buttons-done" class="button-dark" label="&selectHelper.done;" oncommand="SelectHelperUI.hide();"/>
         </hbox>
       </vbox>
       <spacer flex="1000"/>

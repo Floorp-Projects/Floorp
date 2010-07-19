@@ -10,6 +10,10 @@ browser[remote="true"] {
   -moz-binding: url("chrome://browser/content/bindings.xml#autocomplete-aligned");
 }
 
+#content-navigator {
+  -moz-binding: url("chrome://browser/content/bindings.xml#content-navigator");
+}
+
 #tabs {
   -moz-binding: url("chrome://browser/content/tabs.xml#tablist");
 }

@@ -339,9 +339,9 @@ var BrowserUI = {
     popup.height = windowH - this.toolbarH;
     popup.width = windowW;
 
-    // form helper
-    let formHelper = document.getElementById("form-helper-container");
-    formHelper.top = windowH - formHelper.getBoundingClientRect().height;
+    // content navigator helper
+    let contentHelper = document.getElementById("content-navigator");
+    contentHelper.top = windowH - contentHelper.getBoundingClientRect().height;
   },
 
   init: function() {
@@ -399,6 +399,7 @@ var BrowserUI = {
     });
 
     FormHelperUI.init();
+    FindHelperUI.init();
   },
 
   uninit: function() {
@@ -1431,6 +1432,92 @@ var BookmarkList = {
   }
 };
 
+
+var FindHelperUI = {
+  type: "find",
+  commands: {
+    next: "cmd_findNext",
+    previous: "cmd_findPrevious",
+    close: "cmd_findClose"
+  },
+
+  init: function findHelperInit() {
+    this._textbox = document.getElementById("find-helper-textbox");
+    this._container = document.getElementById("content-navigator");
+
+    // Listen for form assistant messages from content
+    messageManager.addMessageListener("FindAssist:Show", this);
+
+    // Listen for events where form assistant should be closed
+    document.getElementById("tabs").addEventListener("TabSelect", this, true);
+    document.getElementById("browsers").addEventListener("URLChanged", this, true);
+  },
+
+  receiveMessage: function findHelperReceiveMessage(aMessage) {
+    let json = aMessage.json;
+    switch(aMessage.name) {
+      case "FindAssist:Show":
+        if (json.rect)
+          this._zoom(Rect.fromRect(json.rect));
+        break;
+    }
+  },
+
+  handleEvent: function findHelperHandleEvent(aEvent) {
+    if (aEvent.type == "TabSelect" || aEvent.type == "URLChanged")
+      this.hide();
+  },
+
+  show: function findHelperShow() {
+    Browser._browserView.ignorePageScroll(true);
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Find", { searchString: "" });
+    this._container.show(this);
+    this._textbox.focus();
+  },
+
+  hide: function findHelperHide() {
+    Browser._browserView.ignorePageScroll(false);
+    this._textbox.value = "";
+    this._container.hide(this);
+  },
+
+  goToPrevious: function findHelperGoToPrevious() {
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Previous", { });
+  },
+
+  goToNext: function findHelperGoToNext() {
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Next", { });
+  },
+
+  search: function findHelperSearch(aValue) {
+    Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Find", { searchString: aValue });
+  },
+
+  updateFindInPage: function findHelperUpdateFindInPage() {
+    PageActions.removeItems("findinpage");
+    let title = Elements.browserBundle.getString("pageactions.findInPage");
+    let node = PageActions.appendItem("findinpage", title, "");
+    node.onclick = function(event) {
+      BrowserUI._hidePopup();
+      FindHelperUI.show();
+    }
+  },
+
+  _zoom: function _findHelperZoom(aElementRect) {
+    let bv = Browser._browserView;
+    let zoomRect = bv.getVisibleRect();
+
+    // Zoom to a specified Rect
+    if (aElementRect && bv.allowZoom && Services.prefs.getBoolPref("findhelper.autozoom")) {
+      let zoomLevel = Browser._getZoomLevelForRect(bv.browserToViewportRect(aElementRect.clone()));
+      zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
+
+      zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
+      Browser.animatedZoomTo(zoomRect);
+    }
+  }
+};
+
 /**
  * Responsible for navigating forms and filling in information.
  *  - Navigating forms is handled by next and previous commands.
@@ -1440,12 +1527,18 @@ var BookmarkList = {
  *  - Provides autocomplete box for input fields.
  */
 var FormHelperUI = {
+  type: "form",
+  commands: {
+    next: "cmd_formNext",
+    previous: "cmd_formPrevious",
+    close: "cmd_formClose"
+  },
+
   init: function formHelperInit() {
-    this._container = document.getElementById("form-helper-container");
-    this._cmdPrevious = document.getElementById("cmd_formPrevious");
-    this._cmdNext = document.getElementById("cmd_formNext");
-    this._helperSpacer = document.getElementById("form-helper-spacer");
+    this._container = document.getElementById("content-navigator");
     this._autofillContainer = document.getElementById("form-helper-autofill");
+    this._cmdPrevious = document.getElementById(this.commands.previous);
+    this._cmdNext = document.getElementById(this.commands.next);
 
     // Listen for form assistant messages from content
     messageManager.addMessageListener("FormAssist:Show", this);
@@ -1485,7 +1578,7 @@ var FormHelperUI = {
     this._open = false;
   },
 
-  handleEvent: function(aEvent) {
+  handleEvent: function formHelperHandleEvent(aEvent) {
     if (aEvent.type == "TabSelect" || aEvent.type == "URLChanged")
       this.hide();
   },
@@ -1508,7 +1601,7 @@ var FormHelperUI = {
 
       case "FormAssist:AutoComplete":
         this._updateAutocompleteFor(json.current);
-        this._updateHelperSize();
+        this._container.contentHasChanged();
         break;
 
       case "FormAssist:Update":
@@ -1532,7 +1625,7 @@ var FormHelperUI = {
   },
 
   get _open() {
-    return !this._container.hidden;
+    return (this._container.getAttribute("type") == this.type);
   },
 
   set _open(aVal) {
@@ -1542,20 +1635,14 @@ var FormHelperUI = {
     let bv = Browser._browserView;
     bv.ignorePageScroll(aVal);
     this._container.hidden = !aVal;
-    this._helperSpacer.hidden = !aVal;
 
     if (aVal) {
       this._zoomStart();
+      this._container.show(this);
     } else {
-      this._currentElement = null;
       this._zoomFinish();
-
-      // give the form spacer area back to the content
-      // XXX this should probably be removed with layers
-      let bv = Browser._browserView;
-      Browser.forceChromeReflow();
-      Browser.contentScrollboxScroller.scrollBy(0, 0);
-      bv.onAfterVisibleMove();
+      this._currentElement = null;
+      this._container.hide(this);
     }
 
     let evt = document.createEvent("UIEvents");
@@ -1609,15 +1696,7 @@ var FormHelperUI = {
 
     // Setup autofill UI
     this._updateAutocompleteFor(aCurrentElement);
-    this._updateHelperSize();
-  },
-
-  _updateHelperSize: function _formHelperUpdateHelperSize() {
-    let height = Math.floor(this._container.getBoundingClientRect().height);
-    this._container.top = window.innerHeight - height;
-
-    let containerHeight = this._container.getBoundingClientRect().height;
-    this._helperSpacer.setAttribute("height", containerHeight);
+    this._container.contentHasChanged();
   },
 
   /** Helper for _updateContainer that handles the case where the new element is a select. */
@@ -1637,7 +1716,7 @@ var FormHelperUI = {
   },
 
   /** Zoom and move viewport so that element is legible and touchable. */
-  _zoom: function formHelperZoom(aElementRect, aCaretRect) {
+  _zoom: function _formHelperZoom(aElementRect, aCaretRect) {
     let bv = Browser._browserView;
     let zoomRect = bv.getVisibleRect();
 
@@ -1681,7 +1760,7 @@ var FormHelperUI = {
 
   /** Element is no longer selected. Restore zoom level if setting is enabled. */
   _zoomFinish: function _formHelperZoomFinish() {
-    if(!gPrefService.getBoolPref("formhelper.restore"))
+    if(!Services.prefs.getBoolPref("formhelper.restore"))
       return;
 
     let restore = this._restore;
@@ -1690,7 +1769,7 @@ var FormHelperUI = {
     Browser.pageScrollboxScroller.scrollTo(restore.pageScrollOffset.x, restore.pageScrollOffset.y);
   },
 
-  _getOffsetForCaret: function formHelper_getOffsetForCaret(aCaretRect, aRect) {
+  _getOffsetForCaret: function _formHelperGetOffsetForCaret(aCaretRect, aRect) {
     // Determine if we need to move left or right to bring the caret into view
     let deltaX = 0;
     if (aCaretRect.right > aRect.right)
@@ -2008,10 +2087,10 @@ var ContextHelper = {
 
     BrowserUI.pushPopup(this, [container]);
   },
-  
+
   hide: function ch_hide() {
     this.popupState = null;
-    
+
     let container = document.getElementById("context-popup");
     container.hidden = true;
 

@@ -1077,6 +1077,85 @@
     </handlers>
   </binding>
 
+  <binding id="content-navigator">
+    <content pack="end">
+      <children includes="arrowscrollbox|vbox"/>
+      <xul:hbox class="panel-dark" pack="center">
+        <children includes="textbox"/>
+        <xul:button anonid="previous-button" class="button-dark" label="&contentNavigator.previous;" xbl:inherits="command=previous"/>
+        <xul:button anonid="next-button" class="button-dark" label="&contentNavigator.next;" xbl:inherits="command=next"/>
+        <xul:spacer flex="1"/>
+        <xul:toolbarbutton class="close-button" xbl:inherits="command=close"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <field name="_previousButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "previous-button");
+      </field>
+
+      <field name="_nextButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "next-button");
+      </field>
+
+      <field name="_spacer">
+        document.getElementById(this.getAttribute("spacer"));
+      </field>
+
+      <method name="contentHasChanged">
+        <body><![CDATA[
+          let height = Math.floor(this.getBoundingClientRect().height);
+          this.top = window.innerHeight - height;
+          this._spacer.setAttribute("height", height);
+        ]]></body>
+      </method>
+
+      <field name="_model">null</field>
+      <method name="show">
+        <parameter name="aModel" />
+        <body><![CDATA[
+          // call the hide callback of the current object if any
+          if (this._model && this._model.type != aModel.type)
+            this._model.hide();
+
+          this.setAttribute("type", aModel.type);
+          this.setAttribute("next", aModel.commands.next);
+          this.setAttribute("previous", aModel.commands.previous);
+          this.setAttribute("close", aModel.commands.close);
+
+          // buttons attributes sync with commands doesn not look updated when
+          // we dynamically switch the "command" attribute so we need to ensure
+          // the disabled state of the buttons is right when switching commands
+          this._previousButton.disabled = document.getElementById(aModel.commands.previous).disabled;
+          this._nextButton.disabled = document.getElementById(aModel.commands.next).disabled;
+
+          this._model = aModel;
+          this.contentHasChanged();
+          this._spacer.hidden = false;
+        ]]></body>
+      </method>
+
+      <method name="hide">
+        <parameter name="aModel" />
+        <body><![CDATA[
+          this.removeAttribute("next");
+          this.removeAttribute("previous");
+          this.removeAttribute("close");
+          this.removeAttribute("type");
+
+          this._model = null;
+          this._spacer.hidden = false;
+
+          // give the form spacer area back to the content
+          // XXX this should probably be removed with layers
+          Browser.forceChromeReflow();
+          Browser.contentScrollboxScroller.scrollBy(0, 0);
+          Browser._browserView.onAfterVisibleMove();
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
   <binding id="menulist" display="xul:box" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <handlers>
       <handler event="mousedown" phase="capturing">
