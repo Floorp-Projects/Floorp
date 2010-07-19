@@ -522,6 +522,7 @@ protected:
 
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
+  PRUint32 mCanvasFramebuffer;
 
   nsIntRect mBounds;
   nsIntRect mUpdatedRect;
@@ -543,8 +544,10 @@ BasicCanvasLayer::Initialize(const Data& aData)
                  "CanvasLayer can't have both surface and GLContext");
     mNeedsYFlip = PR_FALSE;
   } else if (aData.mGLContext) {
+    NS_ASSERTION(aData.mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
     mGLContext = aData.mGLContext;
     mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
+    mCanvasFramebuffer = mGLContext->GetOffscreenFBO();
     mNeedsYFlip = PR_TRUE;
   } else {
     NS_ERROR("CanvasLayer created without mSurface or mGLContext?");
@@ -580,6 +583,15 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
     // in the framebuffer before we read.
     mGLContext->fFlush();
 
+    PRUint32 currentFramebuffer = 0;
+
+    mGLContext->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*)&currentFramebuffer);
+
+    // Make sure that we read pixels from the correct framebuffer, regardless
+    // of what's currently bound.
+    if (currentFramebuffer != mCanvasFramebuffer)
+      mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mCanvasFramebuffer);
+
     // For simplicity, we read the entire framebuffer for now -- in
     // the future we should use mUpdatedRect, though with WebGL we don't
     // have an easy way to generate one.
@@ -592,6 +604,10 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
                             LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
                             isurf->Data());
 #endif
+
+    // Put back the previous framebuffer binding.
+    if (currentFramebuffer != mCanvasFramebuffer)
+      mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, currentFramebuffer);
 
     // If the underlying GLContext doesn't have a framebuffer into which
     // premultiplied values were written, we have to do this ourselves here.

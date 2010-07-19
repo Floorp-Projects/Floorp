@@ -59,7 +59,9 @@ CanvasLayerD3D9::Initialize(const Data& aData)
                  "CanvasLayer can't have both surface and GLContext");
     mNeedsYFlip = PR_FALSE;
   } else if (aData.mGLContext) {
+    NS_ASSERTION(aData.mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
     mGLContext = aData.mGLContext;
+    mCanvasFramebuffer = mGLContext->GetOffscreenFBO();
     mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
     mNeedsYFlip = PR_TRUE;
   } else {
@@ -97,12 +99,25 @@ CanvasLayerD3D9::Updated(const nsIntRect& aRect)
     // in the framebuffer before we read.
     mGLContext->fFlush();
 
+    PRUint32 currentFramebuffer = 0;
+
+    mGLContext->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*)&currentFramebuffer);
+
+    // Make sure that we read pixels from the correct framebuffer, regardless
+    // of what's currently bound.
+    if (currentFramebuffer != mCanvasFramebuffer)
+      mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mCanvasFramebuffer);
+
     // For simplicity, we read the entire framebuffer for now -- in
     // the future we should use aRect, though with WebGL we don't
     // have an easy way to generate one.
     mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
                             LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
                             destination);
+
+    // Put back the previous framebuffer binding.
+    if (currentFramebuffer != mCanvasFramebuffer)
+      mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, currentFramebuffer);
 
     if (r.Pitch != mBounds.width * 4) {
       for (int y = 0; y < mBounds.height; y++) {
