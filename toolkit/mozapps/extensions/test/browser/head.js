@@ -4,6 +4,7 @@
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 const RELATIVE_DIR = "browser/toolkit/mozapps/extensions/test/browser/";
 
@@ -59,6 +60,18 @@ function wait_for_view_load(aManagerWindow, aCallback) {
   }, false);
 }
 
+function wait_for_manager_load(aManagerWindow, aCallback) {
+  if (!aManagerWindow.gIsInitializing) {
+    aCallback(aManagerWindow);
+    return;
+  }
+
+  aManagerWindow.document.addEventListener("Initialized", function() {
+    aManagerWindow.document.removeEventListener("Initialized", arguments.callee, false);
+    aCallback(aManagerWindow);
+  }, false);
+}
+
 function open_manager(aView, aCallback) {
   function setup_manager(aManagerWindow) {
     if (aView)
@@ -67,15 +80,9 @@ function open_manager(aView, aCallback) {
     ok(aManagerWindow != null, "Should have an add-ons manager window");
     is(aManagerWindow.location, MANAGER_URI, "Should be displaying the correct UI");
 
-    if (!aManagerWindow.gIsInitializing) {
+    wait_for_manager_load(aManagerWindow, function() {
       wait_for_view_load(aManagerWindow, aCallback);
-      return;
-    }
-
-    aManagerWindow.document.addEventListener("Initialized", function() {
-      aManagerWindow.document.removeEventListener("Initialized", arguments.callee, false);
-      wait_for_view_load(aManagerWindow, aCallback);
-    }, false);
+    });
   }
 
   if ("switchToTabHavingURI" in window) {
@@ -177,7 +184,7 @@ CategoryUtilities.prototype = {
 
   openType: function(aCategoryType, aCallback) {
     this.open(this.get(aCategoryType), aCallback);
-  },
+  }
 }
 
 function CertOverrideListener(host, bits) {
@@ -336,6 +343,11 @@ MockProvider.prototype = {
     aInstallProperties.forEach(function(aInstallProp) {
       var install = new MockInstall();
       for (var prop in aInstallProp) {
+        if (prop == "sourceURI") {
+          install[prop] = NetUtil.newURI(aInstallProp[prop]);
+          continue;
+        }
+
         install[prop] = aInstallProp[prop];
       }
       this.addInstall(install);
@@ -381,6 +393,8 @@ MockProvider.prototype = {
         return;
       }
     }
+
+    aCallback(null);
   },
 
   /**
@@ -642,8 +656,13 @@ MockInstall.prototype = {
         }
 
         // Adding addon to MockProvider to be implemented when needed
-        this.addon = this._addonToInstall ||
-                     new MockAddon("", this.name, this.type);
+        if (this._addonToInstall)
+          this.addon = this._addonToInstall;
+        else {
+          this.addon = new MockAddon("", this.name, this.type);
+          this.addon.pendingOperations = AddonManager.PENDING_INSTALL;
+        }
+
         this.state = AddonManager.STATE_INSTALLED;
         this.callListeners("onInstallEnded");
         break;
