@@ -184,10 +184,14 @@ private:
 
   void TriggerRefresh(PRUint32 aUpdateFlags);
 
+  // aView is the view for aWidget and aRegion is relative to aWidget.
   void Refresh(nsView *aView, nsIWidget *aWidget,
                const nsIntRegion& aRegion, PRUint32 aUpdateFlags);
+  // aRootView is the view for aWidget, aRegion is relative to aRootView, and
+  // aIntRegion is relative to aWidget.
   void RenderViews(nsView *aRootView, nsIWidget *aWidget,
-                   const nsRegion& aRegion);
+                   const nsRegion& aRegion, const nsIntRegion& aIntRegion,
+                   PRBool aPaintDefaultBackground, PRBool aWillSendDidPaint);
 
   void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut, PRUint32 aUpdateFlags);
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
