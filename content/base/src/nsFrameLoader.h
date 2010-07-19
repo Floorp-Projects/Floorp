@@ -78,8 +78,10 @@ class QX11EmbedContainer;
 class nsFrameLoader : public nsIFrameLoader
 {
   friend class AutoResetInShow;
+#ifdef MOZ_IPC
   typedef mozilla::dom::PBrowserParent PBrowserParent;
   typedef mozilla::dom::TabParent TabParent;
+#endif
 
 protected:
   nsFrameLoader(nsIContent *aOwner) :
