@@ -18,6 +18,7 @@
  *
  * Contributor(s):
  *   Bas Schouten <bschouten@mozilla.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,7 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #ifndef GLCONTEXTPROVIDER_H_
 #define GLCONTEXTPROVIDER_H_
 
@@ -48,126 +48,104 @@ class gfxASurface;
 namespace mozilla {
 namespace gl {
 
-class THEBES_API GLContextProvider 
-{
-public:
-    struct ContextFormat {
-        static const ContextFormat BasicRGBA32Format;
+struct THEBES_API ContextFormat {
+    static const ContextFormat BasicRGBA32Format;
 
-        enum StandardContextFormat {
-            Empty,
-            BasicRGBA32,
-            StrictBasicRGBA32,
-            BasicRGBX32,
-            StrictBasicRGBX32
-        };
-
-        ContextFormat(const StandardContextFormat cf) {
-            memset(this, 0, sizeof(ContextFormat));
-
-            switch (cf) {
-            case BasicRGBA32:
-                red = green = blue = alpha = 8;
-                minRed = minGreen = minBlue = minAlpha = 1;
-                break;
-
-            case StrictBasicRGBA32:
-                red = green = blue = alpha = 8;
-                minRed = minGreen = minBlue = minAlpha = 8;
-                break;
-
-            case BasicRGBX32:
-                red = green = blue = 8;
-                minRed = minGreen = minBlue = 1;
-                break;
-
-            case StrictBasicRGBX32:
-                red = green = blue = alpha = 8;
-                minRed = minGreen = minBlue = 8;
-                break;
-
-            default:
-                break;
-            }
-        }
-
-        int depth, minDepth;
-        int stencil, minStencil;
-        int red, minRed;
-        int green, minGreen;
-        int blue, minBlue;
-        int alpha, minAlpha;
-
-        int colorBits() const { return red + green + blue; }
+    enum StandardContextFormat {
+        Empty,
+        BasicRGBA32,
+        StrictBasicRGBA32,
+        BasicRGBX32,
+        StrictBasicRGBX32
     };
 
-    /**
-     * Creates a PBuffer.
-     *
-     * @param aSize Size of the pbuffer to create
-     * @param aFormat A ContextFormat describing the desired context attributes.  Defaults to a basic RGBA32 context.
-     *
-     * @return Context to use for this Pbuffer
-     */
-    already_AddRefed<GLContext> CreatePBuffer(const gfxIntSize &aSize,
-                                              const ContextFormat& aFormat = ContextFormat::BasicRGBA32Format);
+    ContextFormat(const StandardContextFormat cf) {
+        memset(this, 0, sizeof(ContextFormat));
 
-    /**
-     * Create a context that renders to the surface of the widget that is
-     * passed in.
-     *
-     * @param Widget whose surface to create a context for
-     * @return Context to use for this window
-     */
-    already_AddRefed<GLContext> CreateForWindow(nsIWidget *aWidget);
+        switch (cf) {
+        case BasicRGBA32:
+            red = green = blue = alpha = 8;
+            minRed = minGreen = minBlue = minAlpha = 1;
+            break;
 
-    /**
-     * Try to create a GL context from native surface for arbitrary gfxASurface
-     * If surface not compatible this will return NULL
-     *
-     * @param aSurface surface to create a context for
-     * @return Context to use for this surface
-     */
-    already_AddRefed<GLContext> CreateForNativePixmapSurface(gfxASurface *aSurface);
+        case StrictBasicRGBA32:
+            red = green = blue = alpha = 8;
+            minRed = minGreen = minBlue = minAlpha = 8;
+            break;
+
+        case BasicRGBX32:
+            red = green = blue = 8;
+            minRed = minGreen = minBlue = 1;
+            break;
+
+        case StrictBasicRGBX32:
+            red = green = blue = alpha = 8;
+            minRed = minGreen = minBlue = 8;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    int depth, minDepth;
+    int stencil, minStencil;
+    int red, minRed;
+    int green, minGreen;
+    int blue, minBlue;
+    int alpha, minAlpha;
+
+    int colorBits() const { return red + green + blue; }
 };
 
-/** Same as GLContextProvider but for off-screen Mesa rendering */
-class THEBES_API GLContextProviderOSMesa
-{
-public:
-    typedef GLContextProvider::ContextFormat ContextFormat;
+#define IN_GL_CONTEXT_PROVIDER_H
 
-    /**
-     * Creates a PBuffer.
-     *
-     * @param aSize Size of the pbuffer to create
-     * @param aFormat A ContextFormat describing the desired context attributes.  Defaults to a basic RGBA32 context.
-     *
-     * @return Context to use for this Pbuffer
-     */
-    static already_AddRefed<GLContext> CreatePBuffer(const gfxIntSize &aSize,
-                                              const ContextFormat& aFormat = ContextFormat::BasicRGBA32Format);
+// Null and OSMesa are always there
+#define GL_CONTEXT_PROVIDER_NAME GLContextProviderNull
+#include "GLContextProviderImpl.h"
+#undef GL_CONTEXT_PROVIDER_NAME
 
-    /**
-     * Create a context that renders to the surface of the widget that is
-     * passed in.
-     *
-     * @param Widget whose surface to create a context for
-     * @return Context to use for this window
-     */
-    static already_AddRefed<GLContext> CreateForWindow(nsIWidget *aWidget);
+#define GL_CONTEXT_PROVIDER_NAME GLContextProviderOSMesa
+#include "GLContextProviderImpl.h"
+#undef GL_CONTEXT_PROVIDER_NAME
 
-    /**
-     * Try to create a GL context from native surface for arbitrary gfxASurface
-     * If surface not compatible this will return NULL
-     *
-     * @param aSurface surface to create a context for
-     * @return Context to use for this surface
-     */
-    static already_AddRefed<GLContext> CreateForNativePixmapSurface(gfxASurface *aSurface);
-};
+#ifdef XP_WIN
+#define GL_CONTEXT_PROVIDER_NAME GLContextProviderWGL
+#include "GLContextProviderImpl.h"
+#undef GL_CONTEXT_PROVIDER_NAME
+#define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderWGL
+#define DEFAULT_IMPL WGL
+#endif
 
-extern GLContextProvider THEBES_API sGLContextProvider;
+#ifdef XP_MACOSX
+#define GL_CONTEXT_PROVIDER_NAME GLContextProviderCGL
+#include "GLContextProviderImpl.h"
+#undef GL_CONTEXT_PROVIDER_NAME
+#define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderCGL
+#endif
+
+#if defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
+#define GL_CONTEXT_PROVIDER_NAME GLContextProviderEGL
+#include "GLContextProviderImpl.h"
+#undef GL_CONTEXT_PROVIDER_NAME
+#define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderEGL
+#endif
+
+// X11, but only if we didn't use EGL above
+#if defined(MOZ_X11) && !defined(GL_CONTEXT_PROVIDER_DEFAULT)
+#define GL_CONTEXT_PROVIDER_NAME GLContextProviderGLX
+#include "GLContextProviderImpl.h"
+#undef GL_CONTEXT_PROVIDER_NAME
+#define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderGLX
+#endif
+
+#ifdef GL_CONTEXT_PROVIDER_DEFAULT
+typedef GL_CONTEXT_PROVIDER_DEFAULT GLContextProvider;
+#else
+typedef GLContextProviderNull GLContextProvider;
+#endif
+
+#undef IN_GL_CONTEXT_PROVIDER_H
 
 }
 }

@@ -40,6 +40,7 @@ EXPORTS	= \
 	GLDefs.h \
 	GLContext.h \
 	GLContextProvider.h \
+	GLContextProviderImpl.h \
 	nsCoreAnimationSupport.h \
 	$(NULL)
 

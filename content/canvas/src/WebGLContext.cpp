@@ -166,11 +166,11 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         }
     }
 
-    GLContextProvider::ContextFormat format(GLContextProvider::ContextFormat::BasicRGBA32);
+    gl::ContextFormat format(gl::ContextFormat::BasicRGBA32);
     format.depth = 16;
     format.minDepth = 1;
 
-    gl = gl::sGLContextProvider.CreatePBuffer(gfxIntSize(width, height), format);
+    gl = gl::GLContextProvider::CreatePBuffer(gfxIntSize(width, height), format);
 
 #ifdef USE_GLES2
     // On native GLES2, no need to validate, the compiler will do it
