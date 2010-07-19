@@ -1183,6 +1183,7 @@ class AutoIdVector;
 struct JSCompartment {
     JSRuntime *rt;
     JSPrincipals *principals;
+    void *data;
     bool marked;
     js::WrapperMap crossCompartmentWrappers;
 
@@ -1219,6 +1220,9 @@ struct JSRuntime {
 
     /* Context create/destroy callback. */
     JSContextCallback   cxCallback;
+
+    /* Compartment create/destroy callback. */
+    JSCompartmentCallback compartmentCallback;
 
     /*
      * Shape regenerated whenever a prototype implicated by an "add property"

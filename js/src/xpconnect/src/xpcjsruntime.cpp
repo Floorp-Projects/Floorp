@@ -243,6 +243,32 @@ ContextCallback(JSContext *cx, uintN operation)
     return JS_TRUE;
 }
 
+static JSBool
+CompartmentCallback(JSContext *cx, JSCompartment *compartment, uintN op)
+{
+    if(op == JSCOMPARTMENT_NEW)
+        return JS_TRUE;
+
+    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
+    if(!self)
+        return JS_TRUE;
+
+    XPCCompartmentMap& map = self->GetCompartmentMap();
+    nsAdoptingCString origin;
+    origin.Adopt(static_cast<char *>(JS_SetCompartmentPrivate(cx, compartment, nsnull)));
+
+#ifdef DEBUG
+    {
+        JSCompartment *current;
+        NS_ASSERTION(map.Get(origin, &current), "no compartment?");
+        NS_ASSERTION(current == compartment, "compartment mismatch");
+    }
+#endif
+
+    map.Remove(origin);
+    return JS_TRUE;
+}
+
 struct ObjectHolder : public JSDHashEntryHdr
 {
     void *holder;
@@ -1092,6 +1118,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         // the GC's allocator.
         JS_SetGCParameter(mJSRuntime, JSGC_MAX_BYTES, 0xffffffff);
         JS_SetContextCallback(mJSRuntime, ContextCallback);
+        JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
         JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
         mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
@@ -1104,6 +1131,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     if(!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
                           sizeof(ObjectHolder), 512))
         mJSHolders.ops = nsnull;
+
+    mCompartmentMap.Init();
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG

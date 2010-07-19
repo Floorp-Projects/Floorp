@@ -1302,7 +1302,10 @@ nsGlobalWindow::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScriptCont
       aScriptContext->SetGCOnDestruction(PR_FALSE);
     }
 
-    aScriptContext->CreateOuterObject(this);
+    nsCOMPtr<nsIPrincipal> principal =
+      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+
+    aScriptContext->CreateOuterObject(this, principal);
     aScriptContext->DidInitializeContext();
     mJSObject = (JSObject *)aScriptContext->GetNativeGlobal();
   }
@@ -1617,6 +1620,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     Thaw();
   }
 
+  // XXX Brain transplant outer window JSObject and create new one!
+
   NS_ASSERTION(!GetCurrentInnerWindow() ||
                GetCurrentInnerWindow()->GetExtantDocument() == mDocument,
                "Uh, mDocument doesn't match the current inner window "
@@ -1815,6 +1820,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       void *&newGlobal = (void *&)newInnerWindow->mJSObject;
       nsCOMPtr<nsIXPConnectJSObjectHolder> &holder = mInnerWindowHolder;
       rv = mContext->CreateNativeGlobalForInner(sgo, isChrome,
+                                                aDocument->NodePrincipal(),
                                                 &newGlobal,
                                                 getter_AddRefs(holder));
       NS_ASSERTION(NS_SUCCEEDED(rv) && newGlobal && holder,

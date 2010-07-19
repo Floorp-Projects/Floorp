@@ -1102,17 +1102,60 @@ static JSClass xpcTempGlobalClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+nsresult
+xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
+                       const nsACString &origin, nsIPrincipal *principal,
+                       JSObject **global, JSCompartment **compartment)
+{
+    XPCCompartmentMap& map = nsXPConnect::GetRuntimeInstance()->GetCompartmentMap();
+    JSObject *tempGlobal;
+    if(!map.Get(origin, compartment))
+    {
+        JSPrincipals *principals = nsnull;
+        if(principal)
+            principal->GetJSPrincipals(cx, &principals);
+        tempGlobal = JS_NewCompartmentAndGlobalObject(cx, clasp, principals);
+        if(principals)
+            JSPRINCIPALS_DROP(cx, principals);
+
+        if(!tempGlobal)
+            return UnexpectedFailure(NS_ERROR_FAILURE);
+
+        JSAutoEnterCompartment autocompartment(cx, tempGlobal);
+
+        *global = tempGlobal;
+        *compartment = tempGlobal->getCompartment(cx);
+
+        JS_SetCompartmentPrivate(cx, *compartment, ToNewCString(origin));
+        map.Put(origin, *compartment);
+    }
+    else
+    {
+        JSAutoEnterCompartment autocompartment(cx, *compartment);
+
+        tempGlobal = JS_NewGlobalObject(cx, clasp);
+        if(!tempGlobal)
+            return UnexpectedFailure(NS_ERROR_FAILURE);
+        *global = tempGlobal;
+    }
+
+    return NS_OK;
+}
+
 /* nsIXPConnectJSObjectHolder initClassesWithNewWrappedGlobal (in JSContextPtr aJSContext, in nsISupports aCOMObj, in nsIIDRef aIID, in PRUint32 aFlags); */
 NS_IMETHODIMP
 nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                              nsISupports *aCOMObj,
                                              const nsIID & aIID,
+                                             nsIPrincipal * aPrincipal,
+                                             const nsACString & aOrigin,
                                              PRUint32 aFlags,
                                              nsIXPConnectJSObjectHolder **_retval)
 {
     NS_ASSERTION(aJSContext, "bad param");
     NS_ASSERTION(aCOMObj, "bad param");
     NS_ASSERTION(_retval, "bad param");
+    NS_ASSERTION(!aOrigin.IsEmpty() || aPrincipal, "must be able to assign an origin");
 
     // XXX This is not pretty. We make a temporary global object and
     // init it with all the Components object junk just so we have a
@@ -1121,13 +1164,25 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
 
-    PRBool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
-    JSObject* tempGlobal = JS_NewGlobalObject(aJSContext, &xpcTempGlobalClass);
+    nsCString origin;
+    if(aOrigin.IsEmpty())
+        aPrincipal->GetOrigin(getter_Copies(origin));
+    else
+        origin = aOrigin;
 
-    if(!tempGlobal ||
-       (system && !JS_MakeSystemObject(aJSContext, tempGlobal)) ||
-       !JS_SetParent(aJSContext, tempGlobal, nsnull) ||
-       !JS_SetPrototype(aJSContext, tempGlobal, nsnull))
+    SaveFrame sf(ccx);
+
+    JSCompartment* compartment;
+    JSObject* tempGlobal;
+
+    nsresult rv = xpc_CreateGlobalObject(ccx, &xpcTempGlobalClass, origin,
+                                         aPrincipal, &tempGlobal, &compartment);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JSAutoEnterCompartment autocompartment(ccx, compartment);
+
+    PRBool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
+    if(system && !JS_MakeSystemObject(aJSContext, tempGlobal))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     jsval v;
@@ -1140,7 +1195,6 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         if(NS_FAILED(InitClasses(aJSContext, tempGlobal)))
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
-        nsresult rv;
         if(!XPCConvert::NativeInterface2JSObject(ccx, &v,
                                                  getter_AddRefs(holder),
                                                  aCOMObj, &aIID, nsnull,
@@ -1193,7 +1247,6 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     if(!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {
         // XPCCallContext gives us an active request needed to save/restore.
-        SaveFrame sf(ccx);
         if(!nsXPCComponents::AttachNewComponentsObject(ccx, scope, globalJSObj))
             return UnexpectedFailure(NS_ERROR_FAILURE);
 

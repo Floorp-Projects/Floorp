@@ -594,6 +594,14 @@ typedef JSBool
 typedef JSObject *
 (* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto, uintN flags);
 
+typedef enum {
+    JSCOMPARTMENT_NEW, /* XXX Does it make sense to have a NEW? */
+    JSCOMPARTMENT_DESTROY
+} JSCompartmentOp;
+
+typedef JSBool
+(* JSCompartmentCallback)(JSContext *cx, JSCompartment *compartment, uintN compartmentOp);
+
 JS_END_EXTERN_C
 
 #endif /* jspubtd_h___ */

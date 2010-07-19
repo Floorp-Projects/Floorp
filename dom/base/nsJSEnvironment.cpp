@@ -1590,6 +1590,13 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     JSAutoRequest ar(mContext);
     nsJSVersionSetter setVersion(mContext, aVersion);
 
+    JSAutoCrossCompartmentCall accc;
+    if (!accc.enter(mContext, (JSObject *)aScopeObject)) {
+      JSPRINCIPALS_DROP(mContext, jsprin);
+      stack->Pop(nsnull);
+      return NS_ERROR_FAILURE;
+    }
+
     ++mExecuteDepth;
 
     ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
@@ -1777,6 +1784,13 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // check it isn't JSVERSION_UNKNOWN.
   if (ok && ((JSVersion)aVersion) != JSVERSION_UNKNOWN) {
     JSAutoRequest ar(mContext);
+    JSAutoCrossCompartmentCall accc;
+    if (!accc.enter(mContext, (JSObject *)aScopeObject)) {
+      stack->Pop(nsnull);
+      JSPRINCIPALS_DROP(mContext, jsprin);
+      return NS_ERROR_FAILURE;
+    }
+
     nsJSVersionSetter setVersion(mContext, aVersion);
 
     ok = ::JS_EvaluateUCScriptForPrincipals(mContext,
@@ -2202,6 +2216,12 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 
     jsval funval = OBJECT_TO_JSVAL(static_cast<JSObject *>(aHandler));
     JSAutoRequest ar(mContext);
+    JSAutoCrossCompartmentCall accc;
+    if (!accc.enter(mContext, target)) {
+      stack->Pop(nsnull);
+      return NS_ERROR_FAILURE;
+    }
+
     ++mExecuteDepth;
     PRBool ok = ::JS_CallFunctionValue(mContext, target,
                                        funval, argc, argv, &rval);
@@ -2517,6 +2537,7 @@ nsresult
 nsJSContext::CreateNativeGlobalForInner(
                                 nsIScriptGlobalObject *aNewInner,
                                 PRBool aIsChrome,
+                                nsIPrincipal *aPrincipal,
                                 void **aNativeGlobal, nsISupports **aHolder)
 {
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
@@ -2525,6 +2546,7 @@ nsJSContext::CreateNativeGlobalForInner(
   nsresult rv = xpc->
           InitClassesWithNewWrappedGlobal(mContext,
                                           aNewInner, NS_GET_IID(nsISupports),
+                                          aPrincipal, EmptyCString(),
                                           flags,
                                           getter_AddRefs(jsholder));
   if (NS_FAILED(rv))
@@ -2605,7 +2627,8 @@ nsJSContext::InitContext()
 }
 
 nsresult
-nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject)
+nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
+                               nsIPrincipal *aPrincipal)
 {
   NS_PRECONDITION(!JS_GetGlobalObject(mContext),
                   "Outer window already initialized");
@@ -2631,6 +2654,7 @@ nsJSContext::CreateOuterObject(nsIScriptGlobalObject *aGlobalObject)
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(mContext, aGlobalObject,
                                          NS_GET_IID(nsISupports),
+                                         aPrincipal, EmptyCString(),
                                          flags, getter_AddRefs(holder));
   NS_ENSURE_SUCCESS(rv, rv);
 

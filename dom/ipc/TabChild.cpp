@@ -993,8 +993,9 @@ TabChild::InitTabChildGlobal()
 
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(cx, scopeSupports,
-                                         NS_GET_IID(nsISupports), flags,
-                                         getter_AddRefs(mRootGlobal));
+                                         NS_GET_IID(nsISupports),
+                                         scope->GetPrincipal(), EmptyCString(),
+                                         flags, getter_AddRefs(mRootGlobal));
   NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);

@@ -135,12 +135,14 @@ public:
   virtual nsresult CreateNativeGlobalForInner(
                                       nsIScriptGlobalObject *aGlobal,
                                       PRBool aIsChrome,
+                                      nsIPrincipal *aPrincipal,
                                       void **aNativeGlobal,
                                       nsISupports **aHolder);
   virtual nsresult ConnectToInner(nsIScriptGlobalObject *aNewInner,
                                   void *aOuterGlobal);
   virtual nsresult InitContext();
-  virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject);
+  virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
+                                     nsIPrincipal *aPrincipal);
   virtual nsresult InitOuterWindow();
   virtual PRBool IsContextInitialized();
   virtual void FinalizeContext();
