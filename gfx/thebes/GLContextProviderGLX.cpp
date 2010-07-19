@@ -61,8 +61,6 @@
 namespace mozilla {
 namespace gl {
 
-GLContextProvider sGLContextProvider;
-
 PRBool
 GLXLibrary::EnsureInitialized()
 {
@@ -347,7 +345,7 @@ static PRBool AreCompatibleVisuals(XVisualInfo *one, XVisualInfo *two)
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreateForWindow(nsIWidget *aWidget)
+GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
 {
     if (!sGLXLibrary.EnsureInitialized()) {
         return nsnull;
@@ -448,7 +446,7 @@ GLContextProvider::CreateForWindow(nsIWidget *aWidget)
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat& aFormat)
+GLContextProviderGLX::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat& aFormat)
 {
     if (!sGLXLibrary.EnsureInitialized()) {
         return nsnull;
@@ -511,7 +509,7 @@ GLContextProvider::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat& a
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreateForNativePixmapSurface(gfxASurface *aSurface)
+GLContextProviderGLX::CreateForNativePixmapSurface(gfxASurface *aSurface)
 {
     return nsnull;
 }

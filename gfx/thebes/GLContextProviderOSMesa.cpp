@@ -165,7 +165,7 @@ public:
             sOSMesaLibrary.fDestroyContext(mContext);
     }
 
-    PRBool Init(const gfxIntSize &aSize, const GLContextProvider::ContextFormat& aFormat)
+    PRBool Init(const gfxIntSize &aSize, const ContextFormat& aFormat)
     {
         int osmesa_format = -1;
         int gfxasurface_imageformat = -1;

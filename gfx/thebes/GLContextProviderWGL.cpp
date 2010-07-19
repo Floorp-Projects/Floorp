@@ -47,7 +47,6 @@
 namespace mozilla {
 namespace gl {
 
-GLContextProvider sGLContextProvider;
 WGLLibrary sWGLLibrary;
 
 static HWND gDummyWindow = 0;
@@ -347,7 +346,7 @@ GLContextWGL::CreateBasicTextureImage(GLuint aTexture,
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreateForWindow(nsIWidget *aWidget)
+GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget)
 {
     if (!sWGLLibrary.EnsureInitialized()) {
         return nsnull;
@@ -385,7 +384,7 @@ GLContextProvider::CreateForWindow(nsIWidget *aWidget)
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreatePBuffer(const gfxIntSize& aSize, const ContextFormat& aFormat)
+GLContextProviderWGL::CreatePBuffer(const gfxIntSize& aSize, const ContextFormat& aFormat)
 {
     if (!sWGLLibrary.EnsureInitialized()) {
         return nsnull;
@@ -468,7 +467,7 @@ GLContextProvider::CreatePBuffer(const gfxIntSize& aSize, const ContextFormat& a
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreateForNativePixmapSurface(gfxASurface *aSurface)
+GLContextProviderWGL::CreateForNativePixmapSurface(gfxASurface *aSurface)
 {
     return nsnull;
 }

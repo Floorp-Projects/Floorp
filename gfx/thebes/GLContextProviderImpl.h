@@ -18,6 +18,7 @@
  *
  * Contributor(s):
  *   Bas Schouten <bschouten@mozilla.com>
+ *   Matt Woodrow <mwoodrow@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,28 +34,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "GLContextProvider.h"
+#ifndef IN_GL_CONTEXT_PROVIDER_H
+#error GLContextProviderImpl.h must only be included from GLContextProvider.h
+#endif
 
-namespace mozilla {
-namespace gl {
+#ifndef GL_CONTEXT_PROVIDER_NAME
+#error GL_CONTEXT_PROVIDER_NAME not defined
+#endif
 
-already_AddRefed<GLContext>
-GLContextProviderNull::CreateForWindow(nsIWidget*)
+class THEBES_API GL_CONTEXT_PROVIDER_NAME
 {
-    return nsnull;
-}
+public:
+    /**
+     * Create a context that renders to the surface of the widget that is
+     * passed in.
+     *
+     * @param Widget whose surface to create a context for
+     * @return Context to use for this window
+     */
+    static already_AddRefed<GLContext>
+    CreateForWindow(nsIWidget *aWidget);
 
-already_AddRefed<GLContext>
-GLContextProviderNull::CreateForNativePixmapSurface(gfxASurface *aSurface)
-{
-    return 0;
-}
+    /**
+     * Creates a PBuffer.
+     *
+     * @param aSize Size of the pbuffer to create
+     * @param aFormat A ContextFormat describing the desired context attributes.  Defaults to a basic RGBA32 context.
+     *
+     * @return Context to use for this Pbuffer
+     */
+    static already_AddRefed<GLContext>
+    CreatePBuffer(const gfxIntSize &aSize,
+                  const ContextFormat& aFormat = ContextFormat::BasicRGBA32Format);
 
-already_AddRefed<GLContext>
-GLContextProviderNull::CreatePBuffer(const gfxIntSize &, const ContextFormat &)
-{
-    return nsnull;
-}
-
-} /* namespace gl */
-} /* namespace mozilla */
+    /**
+     * Try to create a GL context from native surface for arbitrary gfxASurface
+     * If surface not compatible this will return NULL
+     *
+     * @param aSurface surface to create a context for
+     * @return Context to use for this surface
+     */
+    static already_AddRefed<GLContext>
+    CreateForNativePixmapSurface(gfxASurface *aSurface);
+};
