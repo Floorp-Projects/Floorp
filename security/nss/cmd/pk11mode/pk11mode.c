@@ -3709,7 +3709,7 @@ CK_RV PKM_FindAllObjects(CK_FUNCTION_LIST_PTR pFunctionList,
         case CKR_BUFFER_TOO_SMALL:
             break;
         default:
-            PKM_Error(  "C_GetAtributeValue(%lu, %lu, {existant attribute"
+            PKM_Error(  "C_GetAtributeValue(%lu, %lu, {existent attribute"
                         " types}, %lu) returned 0x%08X, %-26s\n",
                         h, o, nAttributes, crv, PKM_CK_RVtoStr(crv));
             return crv;

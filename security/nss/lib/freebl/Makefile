@@ -60,7 +60,7 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
--include config.mk
+include config.mk
 
 # default for all platforms
 # unset this on those that have multiple freebl libraries
@@ -74,7 +74,7 @@ ifdef USE_ABI32_FPU
 	DEFINES += -DNSS_USE_ABI32_FPU
 endif
 
-ifdef FREEBL_NO_DEPEND
+ifeq ($(FREEBL_NO_DEPEND),1)
 	DEFINES += -DFREEBL_NO_DEPEND
 endif
 # NSS_X86 means the target is a 32-bits x86 CPU architecture

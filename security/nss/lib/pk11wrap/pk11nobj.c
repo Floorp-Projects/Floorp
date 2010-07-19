@@ -116,7 +116,7 @@ pk11_HandleTrustObject(PK11SlotInfo *slot, CERTCertificate *cert, CERTCertTrust 
   if( NULL == arena ) return PR_FALSE;
 
   /* Unfortunately, it seems that PK11_GetAttributes doesn't deal
-   * well with nonexistant attributes.  I guess we have to check 
+   * well with nonexistent attributes.  I guess we have to check 
    * the trust info fields one at a time.
    */
 

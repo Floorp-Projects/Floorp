@@ -266,7 +266,7 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
     /* invoke the "default" AuthCert handler. */
     rv = SSL_AuthCertificate(arg, fd, checkSig, isServer);
 
-    PR_AtomicIncrement(&certsTested);
+    PR_ATOMIC_INCREMENT(&certsTested);
     if (rv == SECSuccess) {
 	fputs("strsclnt: -- SSL: Server Certificate Validated.\n", stderr);
     }
@@ -732,7 +732,7 @@ PRInt32 lastFullHandshakePeerID;
 void
 myHandshakeCallback(PRFileDesc *socket, void *arg) 
 {
-    PR_AtomicSet(&lastFullHandshakePeerID, (PRInt32) arg);
+    PR_ATOMIC_SET(&lastFullHandshakePeerID, (PRInt32) arg);
 }
 
 #endif
@@ -838,7 +838,7 @@ retry:
         static PRInt32 sockPeerID = 0; /* atomically incremented */
         PRInt32 thisPeerID;
 #endif
-        PRInt32 savid = PR_AtomicIncrement(&globalconid);
+        PRInt32 savid = PR_ATOMIC_INCREMENT(&globalconid);
         PRInt32 conid = 1 + (savid - 1) % 100;
         /* don't change peer ID on the very first handshake, which is always
            a full, so the session gets stored into the client cache */
@@ -849,7 +849,7 @@ retry:
 #ifdef USE_SOCK_PEER_ID
         {
             /* force a full handshake by changing the socket peer ID */
-            thisPeerID = PR_AtomicIncrement(&sockPeerID);
+            thisPeerID = PR_ATOMIC_INCREMENT(&sockPeerID);
         } else {
             /* reuse previous sockPeerID for restart handhsake */
             thisPeerID = lastFullHandshakePeerID;
@@ -869,7 +869,7 @@ retry:
 	goto done;
     }
 
-    PR_AtomicIncrement(&numConnected);
+    PR_ATOMIC_INCREMENT(&numConnected);
 
     if (bigBuf.data != NULL) {
 	result = handle_fdx_connection( ssl_sock, tid);
@@ -877,7 +877,7 @@ retry:
 	result = handle_connection( ssl_sock, tid);
     }
 
-    PR_AtomicDecrement(&numConnected);
+    PR_ATOMIC_DECREMENT(&numConnected);
 
 done:
     if (ssl_sock) {

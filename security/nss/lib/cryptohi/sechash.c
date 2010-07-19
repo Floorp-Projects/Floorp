@@ -235,7 +235,7 @@ HASH_GetHMACOidTagByHashOidTag(SECOidTag hashOid)
 {
     SECOidTag hmacOid = SEC_OID_UNKNOWN;
 
-    switch(hmacOid) {
+    switch(hashOid) {
     /* no oid exists for HMAC_MD2 */
     /* NSS does not define a oid for HMAC_MD4 */
     case SEC_OID_SHA1:   hmacOid = SEC_OID_HMAC_SHA1;   break;

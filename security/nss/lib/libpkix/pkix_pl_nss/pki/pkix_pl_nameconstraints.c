@@ -277,7 +277,7 @@ cleanup:
  * FUNCTION: pkix_pl_CertNameConstraints_CheckNameSpaceNssNames
  * DESCRIPTION:
  *
- *  This function checks if CERTGeneral names in "nssSubjectNames" complies
+ *  This function checks if CERTGeneralNames in "nssSubjectNames" comply
  *  with the permitted and excluded names in "nameConstraints". It returns
  *  PKIX_TRUE in "pCheckPass", if the Names satify the name space of the
  *  permitted list and if the Names are not in the excluded list. Otherwise,
