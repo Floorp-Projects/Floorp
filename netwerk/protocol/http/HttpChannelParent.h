@@ -42,7 +42,7 @@
 #define mozilla_net_HttpChannelParent_h
 
 #include "nsHttp.h"
-#include "mozilla/dom/PIFrameEmbeddingParent.h"
+#include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/net/PHttpChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "nsIStreamListener.h"
@@ -70,7 +70,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIPROGRESSEVENTSINK
 
-  HttpChannelParent(PIFrameEmbeddingParent* iframeEmbedding);
+  HttpChannelParent(PBrowserParent* iframeEmbedding);
   virtual ~HttpChannelParent();
 
 protected:

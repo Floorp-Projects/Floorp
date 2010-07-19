@@ -125,11 +125,11 @@
 
 #ifdef MOZ_IPC
 #  include <algorithm>
-#  include "mozilla/dom/ContentProcessParent.h"
+#  include "mozilla/dom/ContentParent.h"
 #  include "mozilla/ipc/PDocumentRendererParent.h"
 #  include "mozilla/ipc/PDocumentRendererShmemParent.h"
 #  include "mozilla/ipc/PDocumentRendererNativeIDParent.h"
-#  include "mozilla/dom/PIFrameEmbeddingParent.h"
+#  include "mozilla/dom/PBrowserParent.h"
 #  include "mozilla/ipc/DocumentRendererParent.h"
 #  include "mozilla/ipc/DocumentRendererShmemParent.h"
 #  include "mozilla/ipc/DocumentRendererNativeIDParent.h"
@@ -840,7 +840,7 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
     Destroy();
 
 #ifdef MOZ_IPC
-    ContentProcessParent* allocator = ContentProcessParent::GetSingleton(PR_FALSE);
+    ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
     if (allocator && gfxSharedImageSurface::IsSharedImage(mBackSurface)) {
         Shmem mem = static_cast<gfxSharedImageSurface*>(mBackSurface.get())->GetShmem();
         allocator->DeallocShmem(mem);
@@ -861,7 +861,7 @@ void
 nsCanvasRenderingContext2D::Destroy()
 {
 #ifdef MOZ_IPC
-    ContentProcessParent* allocator = ContentProcessParent::GetSingleton(PR_FALSE);
+    ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
     if (allocator && gfxSharedImageSurface::IsSharedImage(mSurface)) {
         Shmem &mem = static_cast<gfxSharedImageSurface*>(mSurface.get())->GetShmem();
         allocator->DeallocShmem(mem);
@@ -1110,7 +1110,7 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 #ifdef MOZ_HAVE_SHAREDMEMORYSYSV
                 shmtype = SharedMemory::TYPE_SYSV;
 #endif
-                ContentProcessParent* allocator = ContentProcessParent::GetSingleton();
+                ContentParent* allocator = ContentParent::GetSingleton();
                 mBackSurface = new gfxSharedImageSurface();
                 static_cast<gfxSharedImageSurface*>(mBackSurface.get())->Init(allocator, size, format, shmtype);
             }
@@ -1271,7 +1271,7 @@ nsCanvasRenderingContext2D::Swap(mozilla::ipc::Shmem& aBack,
     if (aBackImage->Data() != static_cast<gfxImageSurface*>(mBackSurface.get())->Data()) {
         NS_ERROR("Incoming back surface is not equal to our back surface");
         // Delete orphaned memory and return
-        ContentProcessParent* allocator = ContentProcessParent::GetSingleton(PR_FALSE);
+        ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
         if (allocator)
             allocator->DeallocShmem(aBack);
         return NS_ERROR_FAILURE;
@@ -3720,7 +3720,7 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
         return NS_ERROR_FAILURE;
 
 #ifdef MOZ_IPC
-    PIFrameEmbeddingParent *child = frameloader->GetChildProcess();
+    PBrowserParent *child = frameloader->GetRemoteBrowser();
     if (!child) {
         nsCOMPtr<nsIDOMWindow> window =
             do_GetInterface(frameloader->GetExistingDocShell());

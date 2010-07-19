@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef MOZ_IPC
-#include "mozilla/dom/PContentProcessParent.h"
+#include "mozilla/dom/PContentParent.h"
 #include "RegistryMessageUtils.h"
 #include "nsResProtocolHandler.h"
 #endif
@@ -466,7 +466,7 @@ struct EnumerationArgs
 
 void
 nsChromeRegistryChrome::SendRegisteredChrome(
-    mozilla::dom::PContentProcessParent* aParent)
+    mozilla::dom::PContentParent* aParent)
 {
   nsTArray<ChromePackage> packages;
   nsTArray<ResourceMapping> resources;

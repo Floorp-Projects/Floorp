@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef MOZ_IPC
-#include "mozilla/dom/ContentProcessChild.h"
+#include "mozilla/dom/ContentChild.h"
 #endif
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
@@ -60,6 +60,8 @@
 #include "nsXULAppAPI.h"
 
 #ifdef MOZ_IPC
+using mozilla::dom::ContentChild;
+
 static PRBool
 IsChildProcess()
 {
@@ -70,12 +72,11 @@ IsChildProcess()
  * @returns The child process object, or if we are not in the child
  *          process, nsnull.
  */
-static mozilla::dom::ContentProcessChild*
+static ContentChild*
 ChildProcess()
 {
   if (IsChildProcess()) {
-    mozilla::dom::ContentProcessChild* cpc =
-      mozilla::dom::ContentProcessChild::GetSingleton();
+    ContentChild* cpc = ContentChild::GetSingleton();
     if (!cpc)
       NS_RUNTIMEABORT("Content Process is NULL!");
     return cpc;
@@ -591,7 +592,7 @@ nsPermissionManager::TestExactPermission(nsIURI     *aURI,
                                          PRUint32   *aPermission)
 {
 #ifdef MOZ_IPC
-  mozilla::dom::ContentProcessChild* cpc = ChildProcess();
+  ContentChild* cpc = ChildProcess();
   if (cpc) {
     return cpc->SendTestPermission(IPC::URI(aURI), nsDependentCString(aType), PR_TRUE,
       aPermission) ? NS_OK : NS_ERROR_FAILURE;
@@ -606,7 +607,7 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
                                     PRUint32   *aPermission)
 {
 #ifdef MOZ_IPC
-  mozilla::dom::ContentProcessChild* cpc = ChildProcess();
+  ContentChild* cpc = ChildProcess();
   if (cpc) {
     return cpc->SendTestPermission(IPC::URI(aURI), nsDependentCString(aType), PR_FALSE,
       aPermission) ? NS_OK : NS_ERROR_FAILURE;

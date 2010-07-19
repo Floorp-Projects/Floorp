@@ -90,9 +90,9 @@
 
 #include "mozilla/jetpack/JetpackProcessChild.h"
 #include "mozilla/plugins/PluginProcessChild.h"
-#include "mozilla/dom/ContentProcessProcess.h"
-#include "mozilla/dom/ContentProcessParent.h"
-#include "mozilla/dom/ContentProcessChild.h"
+#include "mozilla/dom/ContentProcess.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentChild.h"
 
 #include "mozilla/jsipc/ContextWrapperParent.h"
 
@@ -114,9 +114,9 @@ using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::jetpack::JetpackProcessChild;
 using mozilla::plugins::PluginProcessChild;
-using mozilla::dom::ContentProcessProcess;
-using mozilla::dom::ContentProcessParent;
-using mozilla::dom::ContentProcessChild;
+using mozilla::dom::ContentProcess;
+using mozilla::dom::ContentParent;
+using mozilla::dom::ContentChild;
 
 using mozilla::jsipc::PContextWrapperParent;
 using mozilla::jsipc::ContextWrapperParent;
@@ -399,7 +399,7 @@ XRE_InitChildProcess(int aArgc,
       break;
 
     case GeckoProcessType_Content:
-      process = new ContentProcessProcess(parentHandle);
+      process = new ContentProcess(parentHandle);
       break;
 
     case GeckoProcessType_Jetpack:
@@ -547,10 +547,10 @@ XRE_RunAppShell()
 }
 
 template<>
-struct RunnableMethodTraits<ContentProcessChild>
+struct RunnableMethodTraits<ContentChild>
 {
-    static void RetainCallee(ContentProcessChild* obj) { }
-    static void ReleaseCallee(ContentProcessChild* obj) { }
+    static void RetainCallee(ContentChild* obj) { }
+    static void ReleaseCallee(ContentChild* obj) { }
 };
 
 void
@@ -575,7 +575,7 @@ TestShellParent* gTestShellParent = nsnull;
 TestShellParent* GetOrCreateTestShellParent()
 {
     if (!gTestShellParent) {
-        ContentProcessParent* parent = ContentProcessParent::GetSingleton();
+        ContentParent* parent = ContentParent::GetSingleton();
         NS_ENSURE_TRUE(parent, nsnull);
         gTestShellParent = parent->CreateTestShell();
         NS_ENSURE_TRUE(gTestShellParent, nsnull);
@@ -620,7 +620,7 @@ XRE_ShutdownTestShell()
 {
   if (!gTestShellParent)
     return true;
-  return ContentProcessParent::GetSingleton()->DestroyTestShell(gTestShellParent);
+  return ContentParent::GetSingleton()->DestroyTestShell(gTestShellParent);
 }
 
 #ifdef MOZ_X11
