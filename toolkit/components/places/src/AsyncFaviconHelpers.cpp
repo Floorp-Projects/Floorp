@@ -291,7 +291,7 @@ GetEffectivePageStep::Run()
 
   // If history is disabled or the page isn't addable to history, only load
   // favicons if the page is bookmarked.
-  if (!canAddToHistory || history->IsHistoryDisabled()) {
+  if (!canAddToHistory) {
     // Get place id associated with this page.
     mozIStorageStatement* stmt = history->GetStatementById(DB_GET_PAGE_INFO_BY_URL);
     // Statement is null if we are shutting down.
