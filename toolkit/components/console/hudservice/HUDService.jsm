@@ -2198,8 +2198,9 @@ JSTerm.prototype = {
     this.writeOutput(str);
 
     try {
+      var execStr = "with(window) {" + str + "}";
       var result =
-      Cu.evalInSandbox(str, this.sandbox, "default", "HUD Console", 1);
+        Cu.evalInSandbox(execStr,  this.sandbox, "default", "HUD Console", 1);
 
       if (result || result === false || result === " ") {
         this.writeOutput(result);

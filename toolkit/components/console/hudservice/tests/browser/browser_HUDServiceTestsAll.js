@@ -430,6 +430,27 @@ function testConsoleHistory()
   is (input.value, executeList[idxLast], "check history next idx:" + idxLast);
 }
 
+function testExecutionScope()
+{
+  content.location.href = TEST_URI;
+
+  let HUD = HUDService.hudWeakReferences[hudId].get();
+  let jsterm = HUD.jsterm;
+  let outputNode = jsterm.outputNode;
+
+  jsterm.clearOutput();
+  jsterm.execute("location;");
+
+  is(outputNode.childNodes.length, 2, "Two children in output");
+  let outputChildren = outputNode.childNodes;
+
+  is(/location;/.test(outputChildren[0].childNodes[0].nodeValue), true,
+    "'location;' written to output");
+
+  isnot(outputChildren[1].childNodes[0].nodeValue.indexOf(TEST_URI), -1,
+    "command was executed in the window scope");
+}
+
 function testIteration() {
   var id = "foo";
   var it = cs.displayStore(id);
@@ -511,6 +532,7 @@ function test() {
       testConsoleHistory();
       testOutputOrder();
       testNullUndefinedOutput();
+      testExecutionScope();
 
       // testUnregister();
       executeSoon(function () {
