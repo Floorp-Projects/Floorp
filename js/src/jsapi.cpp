@@ -1081,6 +1081,14 @@ JS_GetImplementationVersion(void)
     return "JavaScript-C 1.8.0 pre-release 1 2007-10-03";
 }
 
+JS_PUBLIC_API(JSCompartmentCallback)
+JS_SetCompartmentCallback(JSRuntime *rt, JSCompartmentCallback callback)
+{
+    JSCompartmentCallback old = rt->compartmentCallback;
+    rt->compartmentCallback = callback;
+    return old;
+}
+
 JS_PUBLIC_API(JSWrapObjectCallback)
 JS_SetWrapObjectCallback(JSContext *cx, JSWrapObjectCallback callback)
 {
@@ -1113,6 +1121,50 @@ JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call)
     CHECK_REQUEST(realcall->context);
     realcall->leave();
     delete realcall;
+}
+
+bool
+JSAutoCrossCompartmentCall::enter(JSContext *cx, JSObject *target)
+{
+    JS_ASSERT(!call);
+    if (cx->compartment == target->getCompartment(cx))
+        return true;
+    call = JS_EnterCrossCompartmentCall(cx, target);
+    return call != NULL;
+}
+
+JSAutoEnterCompartment::JSAutoEnterCompartment(JSContext *cx,
+                                               JSCompartment *newCompartment)
+  : cx(cx), compartment(cx->compartment)
+{
+    cx->compartment = newCompartment;
+}
+
+JSAutoEnterCompartment::JSAutoEnterCompartment(JSContext *cx, JSObject *target)
+  : cx(cx), compartment(cx->compartment)
+{
+    cx->compartment = target->getCompartment(cx);
+}
+
+JSAutoEnterCompartment::~JSAutoEnterCompartment()
+{
+    cx->compartment = compartment;
+}
+
+JS_PUBLIC_API(void *)
+JS_SetCompartmentPrivate(JSContext *cx, JSCompartment *compartment, void *data)
+{
+    CHECK_REQUEST(cx);
+    void *old = compartment->data;
+    compartment->data = data;
+    return old;
+}
+
+JS_PUBLIC_API(void *)
+JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment)
+{
+    CHECK_REQUEST(cx);
+    return compartment->data;
 }
 
 JS_PUBLIC_API(JSObject *)

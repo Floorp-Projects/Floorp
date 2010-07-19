@@ -2967,6 +2967,7 @@ static void
 SweepCompartments(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
+    JSCompartmentCallback callback = rt->compartmentCallback;
     JSCompartment **read = rt->compartments.begin();
     JSCompartment **end = rt->compartments.end();
     JSCompartment **write = read;
@@ -2978,6 +2979,8 @@ SweepCompartments(JSContext *cx)
             /* Remove dead wrappers from the compartment map. */
             compartment->sweep(cx);
         } else {
+            if (callback)
+                (void) callback(cx, compartment, JSCOMPARTMENT_DESTROY);
             if (compartment->principals)
                 JSPRINCIPALS_DROP(cx, compartment->principals);
             delete compartment;
@@ -3568,7 +3571,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
     JSCompartment *compartment = new JSCompartment(rt);
     if (!compartment || !compartment->init()) {
         JS_ReportOutOfMemory(cx);
-        return false;
+        return NULL;
     }
 
     if (principals) {
@@ -3576,12 +3579,21 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
         JSPRINCIPALS_HOLD(cx, principals);
     }
 
-    AutoLockGC lock(rt);
+    {
+        AutoLockGC lock(rt);
 
-    if (!rt->compartments.append(compartment)) {
-        AutoUnlockGC unlock(rt);
-        JS_ReportOutOfMemory(cx);
-        return false;
+        if (!rt->compartments.append(compartment)) {
+            AutoUnlockGC unlock(rt);
+            JS_ReportOutOfMemory(cx);
+            return NULL;
+        }
+    }
+
+    JSCompartmentCallback callback = rt->compartmentCallback;
+    if (callback && !callback(cx, compartment, JSCOMPARTMENT_NEW)) {
+        AutoLockGC lock(rt);
+        rt->compartments.popBack();
+        return NULL;
     }
 
     return compartment;

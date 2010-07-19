@@ -937,6 +937,9 @@ JS_ToggleOptions(JSContext *cx, uint32 options);
 extern JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void);
 
+extern JS_PUBLIC_API(JSCompartmentCallback)
+JS_SetCompartmentCallback(JSRuntime *rt, JSCompartmentCallback callback);
+
 extern JS_PUBLIC_API(JSWrapObjectCallback)
 JS_SetWrapObjectCallback(JSContext *cx, JSWrapObjectCallback callback);
 
@@ -946,25 +949,37 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
 extern JS_PUBLIC_API(void)
 JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call);
 
+extern JS_PUBLIC_API(void *)
+JS_SetCompartmentPrivate(JSContext *cx, JSCompartment *compartment, void *data);
+
+extern JS_PUBLIC_API(void *)
+JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
-class JSAutoCrossCompartmentCall
+class JS_PUBLIC_API(JSAutoCrossCompartmentCall)
 {
     JSCrossCompartmentCall *call;
   public:
     JSAutoCrossCompartmentCall() : call(NULL) {}
 
-    bool enter(JSContext *cx, JSObject *target) {
-        JS_ASSERT(!call);
-        call = JS_EnterCrossCompartmentCall(cx, target);
-        return call != NULL;
-    }
+    bool enter(JSContext *cx, JSObject *target);
 
     ~JSAutoCrossCompartmentCall() {
         if (call)
             JS_LeaveCrossCompartmentCall(call);
     }
+};
+
+class JS_FRIEND_API(JSAutoEnterCompartment)
+{
+    JSContext *cx;
+    JSCompartment *compartment;
+  public:
+    JSAutoEnterCompartment(JSContext *cx, JSCompartment *newCompartment);
+    JSAutoEnterCompartment(JSContext *cx, JSObject *target);
+    ~JSAutoEnterCompartment();
 };
 
 JS_BEGIN_EXTERN_C

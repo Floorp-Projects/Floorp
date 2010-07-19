@@ -144,7 +144,7 @@ class JSCrossCompartmentWrapper : public JSWrapper {
 
 namespace js {
 
-class AutoCompartment
+class JS_FRIEND_API(AutoCompartment)
 {
   public:
     JSContext * const context;

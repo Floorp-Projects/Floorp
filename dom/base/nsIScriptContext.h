@@ -72,10 +72,10 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
-// 5a5d683e-f387-4694-9ff0-3a90b3e6749e
+// 5b6d04a3-f095-4924-ad84-4f44f9b3fae0
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x5a5d683e, 0xf387, 0x4694, \
-  { 0x9f, 0xf0, 0x3a, 0x90, 0xb3, 0xe6, 0x74, 0x9e } }
+{ 0x5b6d04a3, 0xf095, 0x4924, \
+  { 0xad, 0x84, 0x4f, 0x44, 0xf9, 0xb3, 0xfa, 0xe0 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -320,6 +320,7 @@ public:
   virtual nsresult CreateNativeGlobalForInner(
                                       nsIScriptGlobalObject *aNewInner,
                                       PRBool aIsChrome,
+                                      nsIPrincipal *aPrincipal,
                                       void **aNativeGlobal,
                                       nsISupports **aHolder) = 0;
 
@@ -342,7 +343,8 @@ public:
    *
    * @param aGlobalObject The script global object to use as our global.
    */
-  virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject) = 0;
+  virtual nsresult CreateOuterObject(nsIScriptGlobalObject *aGlobalObject,
+                                     nsIPrincipal *aPrincipal) = 0;
 
   /**
    * Prepares this context for use with the current inner window for the
