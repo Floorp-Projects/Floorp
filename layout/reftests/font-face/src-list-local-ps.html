@@ -15,18 +15,23 @@ body {
 
 @font-face {
   font-family: test-regular;
-  src: local(HelveticaNeue), local(BitstreamVeraSans-Roman), local(ArialMT);
+  src: local(HelveticaNeue), local(BitstreamVeraSans-Roman), local(FreeSans), 
+       local(SwissA), local(DejaVuSans), local(ArialMT);
 }
 
 /* use Helvetica on the Mac, since Futura has no bold face on 10.4, 10.5 */
 @font-face {
   font-family: test-bold;
-  src: local(HelveticaNeue-Bold), local(BitstreamVeraSans-Bold), local(Arial-BoldMT);
+  src: local(HelveticaNeue-Bold), local(BitstreamVeraSans-Bold), 
+       local(FreeSansBold), local(SwissA-Bold), local(DejaVuSans-Bold),
+       local(Arial-BoldMT);
 }
 
 @font-face {
   font-family: test-italic;
-  src: local(HelveticaNeue-Italic), local(BitstreamVeraSans-Oblique), local(Arial-ItalicMT);
+  src: local(HelveticaNeue-Italic), local(BitstreamVeraSans-Oblique), 
+       local(FreeSansOblique), local(SwissA-Italic),
+       local(DejaVuSans-Oblique), local(Arial-ItalicMT);
 }
 
 .regular { font-family: test-regular, serif; }
