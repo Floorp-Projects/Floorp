@@ -700,7 +700,7 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 
   docEncoder->SetNativeContainerNode(this);
   rv = docEncoder->EncodeToString(aInnerHTML);
-  doc->SetCachedEncoder(docEncoder);
+  doc->SetCachedEncoder(docEncoder.forget());
   return rv;
 }
 
