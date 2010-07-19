@@ -10834,7 +10834,7 @@ TraceRecorder::record_JSOP_NEG()
             !oracle->isInstructionUndemotable(cx->regs->pc) &&
             isPromoteInt(a) &&
             (!v.isInt32() || v.toInt32() != 0) &&
-            (!v.isDouble() || !JSDOUBLE_IS_NEGZERO(v.toDouble())) &&
+            (!v.isDouble() || v.toDouble() != 0) &&
             -v.toNumber() == (int)-v.toNumber())
         {
             VMSideExit* exit = snapshot(OVERFLOW_EXIT);
