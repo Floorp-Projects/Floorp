@@ -1600,6 +1600,10 @@ var FormHelperUI = {
         }
         break;
 
+      case "FormAssist:Hide":
+        this.hide();
+        break;
+
       case "FormAssist:AutoComplete":
         this._updateAutocompleteFor(json.current);
         this._container.contentHasChanged();

@@ -93,16 +93,32 @@ FormAssistant.prototype = {
       aElement = aElement.parentNode;
     }
 
+    // bug 526045 - the form assistant will close if a click happen:
+    // * outside of the scope of the form helper
+    // * hover a button of type=[image|submit]
+    // * hover a disabled element
+    if (!this._isValidElement(aElement)) {
+      let passiveButtons = { button: true, checkbox: true, file: true, radio: true, reset: true };
+      if ((aElement instanceof HTMLInputElement || aElement instanceof HTMLButtonElement) &&
+          passiveButtons[aElement.type] && !aElement.disabled)
+        return false;
+
+      sendAsyncMessage("FormAssist:Hide", { });
+      return this._open = false;
+    }
+
     // Checking if the element is the current focused one while the form assistant is open
     // allow the user to reposition the caret into an input element
-    if ((this._open && aElement == this.currentElement) || !this._isValidElement(aElement))
-      return this._open = false;
+    if (this._open && aElement == this.currentElement)
+      return false;
 
     // If form assistant is disabled but the element of a type of choice list
     // we still want to show the simple select list
     this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
-    if (!this._enabled && !this._isSelectElement(aElement))
+    if (!this._enabled && !this._isSelectElement(aElement)) {
+      sendAsyncMessage("FormAssist:Hide", { });
       return this._open = false;
+    }
 
     if (this._enabled) {
       this._elements = [];
@@ -227,7 +243,7 @@ FormAssistant.prototype = {
   },
 
   _isValidElement: function formHelperIsValidElement(aElement) {
-    let formExceptions = {button: true, checkbox: true, file: true, image: true, radio: true, reset: true, submit: true};
+    let formExceptions = { button: true, checkbox: true, file: true, image: true, radio: true, reset: true, submit: true };
     if (aElement instanceof HTMLInputElement && formExceptions[aElement.type])
       return false;
 
