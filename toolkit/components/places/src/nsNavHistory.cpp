@@ -2686,8 +2686,8 @@ nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(canAdd);
 
-  // If the user is in private browsing mode, don't add any entry.
-  if (InPrivateBrowsingMode()) {
+  // If history is disabled (included privatebrowsing), don't add any entry.
+  if (IsHistoryDisabled()) {
     *canAdd = PR_FALSE;
     return NS_OK;
   }
@@ -5242,10 +5242,6 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
-
-  // don't add when history is disabled
-  if (IsHistoryDisabled())
-    return NS_OK;
 
   // filter out any unwanted URIs
   PRBool canAdd = PR_FALSE;
