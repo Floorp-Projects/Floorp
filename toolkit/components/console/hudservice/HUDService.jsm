@@ -1932,7 +1932,7 @@ HeadsUpDisplay.prototype = {
     }
   },
 
-  get console() { this._console || this.createConsole(); },
+  get console() { return this._console || this.createConsole(); },
 
   getLogCount: function HUD_getLogCount()
   {
