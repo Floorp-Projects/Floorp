@@ -528,6 +528,19 @@ class nsTSubstring_CharT
          
       NS_COM void StripChar( char_type aChar, PRInt32 aOffset=0 );
 
+        /**
+         * If the string uses a shared buffer, this method
+         * clears the pointer without releasing the buffer.
+         */
+      void ForgetSharedBuffer()
+      {
+        if (mFlags & nsSubstring::F_SHARED)
+          {
+            mData = char_traits::sEmptyBuffer;
+            mLength = 0;
+            mFlags = F_TERMINATED;
+          }
+      }
 
     public:
 
