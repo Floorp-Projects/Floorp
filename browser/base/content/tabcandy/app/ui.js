@@ -157,8 +157,6 @@ var Tabbar = {
 // Class: Page
 // Singleton top-level UI manager. TODO: Integrate with <UIClass>.
 window.Page = {
-  startX: 30,
-  startY: 70,
   closedLastVisibleTab: false,
   closedSelectedTabInTabCandy: false,
   stopZoomPreparation: false,
@@ -180,7 +178,9 @@ window.Page = {
     currentWin.document.getElementById("tab-candy").contentWindow.focus();
 
     currentWin.gBrowser.updateTitlebar();
+#ifdef XP_MACOSX
     this._setActiveTitleColor(true);
+#endif
   },
 
   // ----------
@@ -190,6 +190,7 @@ window.Page = {
     var currentWin = Utils.getCurrentWindow();
     var tabContainer = currentWin.gBrowser.tabContainer;
     currentWin.document.getElementById("tab-candy-deck").selectedIndex = 0;
+    currentWin.gBrowser.contentWindow.focus();
 
     // set the close button on tab
 /*     iQ.timeout(function() { // Marshal event from chrome thread to DOM thread    */
@@ -197,9 +198,12 @@ window.Page = {
 /*     }, 1); */
 
     currentWin.gBrowser.updateTitlebar();
+#ifdef XP_MACOSX
     this._setActiveTitleColor(false);
+#endif
   },
 
+#ifdef XP_MACOSX
   // ----------
   // Function: _setActiveTitleColor
   // Used on the Mac to make the title bar match the gradient in the rest of the
@@ -209,15 +213,14 @@ window.Page = {
   //   set - true for the special TabCandy color, false for the normal color.
   _setActiveTitleColor: function(set) {
     // Mac Only
-    if (Utils.isMac()) {
-      var mainWindow =
-        Utils.getCurrentWindow().document.getElementById("main-window");
-      if (set)
-        mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
-      else
-        mainWindow.removeAttribute("activetitlebarcolor");
-    }
+    var mainWindow =
+      Utils.getCurrentWindow().document.getElementById("main-window");
+    if (set)
+      mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
+    else
+      mainWindow.removeAttribute("activetitlebarcolor");
   },
+#endif
 
   // ----------
   // Function: showTabCandy
@@ -393,8 +396,8 @@ window.Page = {
   // ----------
   _setupKeyHandlers: function(){
     var self = this;
-    iQ(window).keyup(function(e){
-      if (!e.metaKey) window.Keys.meta = false;
+    iQ(window).keyup(function(event){
+      if (!event.metaKey) window.Keys.meta = false;
     });
 
     iQ(window).keydown(function(event){
@@ -449,6 +452,20 @@ window.Page = {
         }
         event.stopPropagation();
         event.preventDefault();
+      } else if (event.which == 32) { // alt or control + space
+#ifdef XP_MACOSX
+        if (event.altKey && !event.metaKey && !event.shiftKey &&
+            !event.ctrlKey) {
+#else
+        if (event.ctrlKey && !event.metaKey && !event.shiftKey &&
+            !event.altKey) {
+#endif
+          var activeTab = Page.getActiveTab();
+          if (activeTab)
+            activeTab.zoomIn();
+          event.stopPropagation();
+          event.preventDefault();
+        }
       } else if (event.which == 27 || event.which == 13) { // esc or return
         var activeTab = self.getActiveTab();
         if (activeTab)
@@ -869,19 +886,22 @@ UIClass.prototype = {
   // so they do the right thing in respect to groups.
   _setBrowserKeyHandler : function() {
     var self = this;
-    var browser = Utils.getCurrentWindow().gBrowser;
-    var tabbox = browser.mTabBox;
+    var currentWin = Utils.getCurrentWindow();
+    var tabbox = currentWin.gBrowser.mTabBox;
 
-    browser.addEventListener("keypress", function(event) {
+    currentWin.addEventListener("keypress", function(event) {
+      if (Page.isTabCandyVisible()) {
+        return;
+      }
       var handled = false;
       // based on http://mxr.mozilla.org/mozilla1.9.2/source/toolkit/content/widgets/tabbox.xml#145
       switch (event.keyCode) {
         case event.DOM_VK_TAB:
           if (event.ctrlKey && !event.altKey && !event.metaKey)
             if (tabbox.tabs && tabbox.handleCtrlTab) {
-              self.advanceSelectedTab(event.shiftKey);
               event.stopPropagation();
               event.preventDefault();
+              self.advanceSelectedTab(event.shiftKey);
               handled = true;
             }
           break;
@@ -889,9 +909,9 @@ UIClass.prototype = {
           if (event.ctrlKey && !event.shiftKey && !event.altKey &&
               !event.metaKey)
             if (tabbox.tabs && tabbox.handleCtrlPageUpDown) {
-              self.advanceSelectedTab(true);
               event.stopPropagation();
               event.preventDefault();
+              self.advanceSelectedTab(true);
               handled = true;
             }
             break;
@@ -899,62 +919,92 @@ UIClass.prototype = {
           if (event.ctrlKey && !event.shiftKey && !event.altKey &&
               !event.metaKey)
             if (tabbox.tabs && tabbox.handleCtrlPageUpDown) {
+              event.stopPropagation();
+              event.preventDefault();
               self.advanceSelectedTab(false);
-              event.stopPropagation();
-              event.preventDefault();
               handled = true;
             }
             break;
+#ifdef XP_MACOSX
         case event.DOM_VK_LEFT:
-          if (event.metaKey && event.altKey && !event.shiftKey &&
-              !event.ctrlKey)
-            if (tabbox.tabs && tabbox._handleMetaAltArrows) {
-              var reverse =
-                window.getComputedStyle(tabbox, "").direction == "ltr" ? -1 : 1;
-              self.advanceSelectedTab(reverse);
-              event.stopPropagation();
-              event.preventDefault();
-              handled = true;
-            }
-            break;
         case event.DOM_VK_RIGHT:
           if (event.metaKey && event.altKey && !event.shiftKey &&
               !event.ctrlKey)
             if (tabbox.tabs && tabbox._handleMetaAltArrows) {
-              var forward =
-                window.getComputedStyle(tabbox, "").direction == "ltr" ? 1 : -1;
-              self.advanceSelectedTab(!forward);
+              var reverse =
+                (window.getComputedStyle(tabbox, "").direction ==
+                  "ltr" ? true : false);
               event.stopPropagation();
               event.preventDefault();
+              self.advanceSelectedTab(
+                event.keyCode == event.DOM_VK_LEFT ? reverse : !reverse);
               handled = true;
             }
             break;
+#endif
       }
 
       if (!handled) {
-        // ToDo: the "tabs" binding implements the nsIDOMXULSelectControlElement,
-        // we might need to rewrite the tabs without using the
-        // nsIDOMXULSelectControlElement.
-        // http://mxr.mozilla.org/mozilla1.9.2/source/toolkit/content/widgets/tabbox.xml#246
-        // The below handles the ctrl/meta + number key and prevent the default
-        // actions.
-        if ((Utils.isMac() && event.metaKey) ||
-            (!Utils.isMac() && event.ctrlKey)) {
-          var charCode = event.charCode;
+        var charCode = event.charCode;
+#ifdef XP_MACOSX
+        // if a text box in a webpage has the focus, the event.altKey would
+        // returns false but we are depending on the charCode here.
+        if (charCode == 160) { // alt + space
+#else
+        if (event.ctrlKey && !event.metaKey && !event.shiftKey &&
+            !event.altKey && charCode == 32) {
+#endif
+          event.stopPropagation();
+          event.preventDefault();
+          Page.hideChrome();
+          Page.showTabCandy();
+          return;
+        }
+
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+        if (event.altKey && !event.metaKey && !event.shiftKey &&
+            !event.ctrlKey) {
+#else
+        if (event.metaKey && !event.altKey && !event.shiftKey &&
+            !event.ctrlKey) {
+#endif
+#else
+        if (event.ctrlKey && !event.altKey && !event.shiftKey &&
+            !event.metaKey) {
+#endif
+          // ToDo: the "tabs" binding implements the nsIDOMXULSelectControlElement,
+          // we might need to rewrite the tabs without using the
+          // nsIDOMXULSelectControlElement.
+          // http://mxr.mozilla.org/mozilla1.9.2/source/toolkit/content/widgets/tabbox.xml#246
+          // The below handles the ctrl/meta + number key and prevent the default
+          // actions.
           // 1 to 9
           if (48 < charCode && charCode < 58) {
-            self.advanceSelectedTab(false, (charCode - 48));
             event.stopPropagation();
             event.preventDefault();
+            self.advanceSelectedTab(false, (charCode - 48));
           }
+#ifdef XP_MACOSX
+          // Cmd + { / Cmd + }
+          else if (charCode == 91 || charCode == 93) {
+              event.stopPropagation();
+              event.preventDefault();
+              var reverse =
+                (window.getComputedStyle(tabbox, "").direction ==
+                  "ltr" ? true : false);
+              self.advanceSelectedTab(charCode == 91 ? reverse : !reverse);
+          }
+#endif
         }
       }
-    }, false);
+    }, true);
   },
 
   // ----------
   // Function: advanceSelectedTab
-  // Moves you to the next tab in the current group's tab strip (outside the TabCandy UI).
+  // Moves you to the next tab in the current group's tab strip
+  // (outside the TabCandy UI).
   //
   // Parameters:
   //   reverse - true to go to previous instead of next
