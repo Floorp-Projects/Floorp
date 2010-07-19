@@ -87,8 +87,8 @@ const kStateActive = 0x00000001;
  *
  * Input modules must provide the following interface:
  *
- *   handleEvent(evInfo)
- *     Entry point by which InputHandler passes wrapped Fennec chrome window events
+ *   handleEvent(nsIDOMEvent)
+ *     Entry point by which InputHandler passes Fennec chrome window events
  *     to the module.
  *
  *   cancelPending()
@@ -243,40 +243,27 @@ InputHandler.prototype = {
       return;
     }
 
-    this._passToModules(new InputHandler.EventInfo(aEvent));
+    aEvent.time = Date.now();
+    this._passToModules(aEvent);
   },
 
   /**
    * Utility method for passing an EventInfo to the handlers of all modules beginning
    * with the module at index skipToIndex and increasing (==> decreasing in priority).
    */
-  _passToModules: function _passToModules(evInfo, skipToIndex) {
+  _passToModules: function _passToModules(aEvent, aSkipToIndex) {
     if (this._grabber) {
-      this._grabber.handleEvent(evInfo);
+      this._grabber.handleEvent(aEvent);
     } else {
       let mods = this._modules;
-      let i = skipToIndex || 0;
+      let i = aSkipToIndex || 0;
 
       for (let len = mods.length; i < len; ++i) {
-        mods[i].handleEvent(evInfo);  // event focus could get grabbed in this invocation
+        mods[i].handleEvent(aEvent);  // event focus could get grabbed in this invocation
         if (this._grabber)            // so don't pass the event to the rest of modules
           break;
       }
     }
-  }
-};
-
-/**
- * Helper class to InputHandler.  Wraps a DOM event with some additional data.
- */
-InputHandler.EventInfo = function EventInfo(aEvent) {
-  this.event = aEvent;
-  this.time = Date.now();
-};
-
-InputHandler.EventInfo.prototype = {
-  toString: function toString() {
-    return '[EventInfo] { event=' + this.event + 'time=' + this.time + ' }';
   }
 };
 
@@ -358,20 +345,19 @@ function MouseModule(owner, browserViewContainer) {
 
 
 MouseModule.prototype = {
-  handleEvent: function handleEvent(evInfo) {
-    let evt = evInfo.event;
-    if (evt.button !== 0)
+  handleEvent: function handleEvent(aEvent) {
+    if (aEvent.button !== 0)
       return;
 
-    switch (evt.type) {
+    switch (aEvent.type) {
       case "mousedown":
-        this._onMouseDown(evInfo);
+        this._onMouseDown(aEvent);
         break;
       case "mousemove":
-        this._onMouseMove(evInfo);
+        this._onMouseMove(aEvent);
         break;
       case "mouseup":
-        this._onMouseUp(evInfo);
+        this._onMouseUp(aEvent);
         break;
       case "MozMagnifyGestureStart":
       case "MozMagnifyGesture":
@@ -422,7 +408,7 @@ MouseModule.prototype = {
    *
    * We grab() in here.
    */
-  _onMouseDown: function _onMouseDown(evInfo) {
+  _onMouseDown: function _onMouseDown(aEvent) {
     this._owner.allowClicks();
 
     let dragData = this._dragData;
@@ -436,14 +422,14 @@ MouseModule.prototype = {
     // walk up the DOM tree in search of nearest scrollable ancestor.  nulls are
     // returned if none found.
     let [targetScrollbox, targetScrollInterface]
-      = this.getScrollboxFromElement(evInfo.event.target);
+      = this.getScrollboxFromElement(aEvent.target);
 
     // stop kinetic panning if targetScrollbox has changed
     let oldInterface = this._targetScrollInterface;
     if (this._kinetic.isActive() && targetScrollInterface != oldInterface)
       this._kinetic.end();
 
-    let targetClicker = this.getClickerFromElement(evInfo.event.target);
+    let targetClicker = this.getClickerFromElement(aEvent.target);
 
     this._targetScrollInterface = targetScrollInterface;
     this._dragger = (targetScrollInterface) ? (targetScrollbox.customDragger || this._defaultDragger)
@@ -451,13 +437,13 @@ MouseModule.prototype = {
     this._clicker = (targetClicker) ? targetClicker.customClicker : null;
 
     if (this._clicker)
-      this._clicker.mouseDown(evInfo.event.clientX, evInfo.event.clientY);
+      this._clicker.mouseDown(aEvent.clientX, aEvent.clientY);
 
     if (targetScrollInterface && this._dragger.isDraggable(targetScrollbox, targetScrollInterface))
-      this._doDragStart(evInfo.event);
+      this._doDragStart(aEvent);
 
-    if (this._targetIsContent(evInfo.event)) {
-      this._recordEvent(evInfo);
+    if (this._targetIsContent(aEvent)) {
+      this._recordEvent(aEvent);
     }
     else {
       if (this._clickTimeout) {
@@ -485,18 +471,18 @@ MouseModule.prototype = {
    *
    * We ungrab() in here.
    */
-  _onMouseUp: function _onMouseUp(evInfo) {
+  _onMouseUp: function _onMouseUp(aEvent) {
     let dragData = this._dragData;
     let oldIsPan = dragData.isPan();
     if (dragData.dragging) {
-      dragData.setDragPosition(evInfo.event.screenX, evInfo.event.screenY);
+      dragData.setDragPosition(aEvent.screenX, aEvent.screenY);
       let [sX, sY] = dragData.panPosition();
       this._doDragStop(sX, sY, !dragData.isPan());
     }
 
-    if (this._targetIsContent(evInfo.event)) {
+    if (this._targetIsContent(aEvent)) {
       // User possibly clicked on something in content
-      this._recordEvent(evInfo);
+      this._recordEvent(aEvent);
       let commitToClicker = this._clicker && dragData.isClick() && (this._downUpEvents.length > 1);
       if (commitToClicker)
         // commit this click to the doubleclick timewait buffer
@@ -511,7 +497,7 @@ MouseModule.prototype = {
       // User was panning around, do not allow chrome click
       // XXX Instead of having suppressNextClick, we could grab until click is seen
       // and THEN ungrab so that owner does not need to know anything about clicking.
-      let generatesClick = evInfo.event.detail;
+      let generatesClick = aEvent.detail;
       if (generatesClick)
         this._owner.suppressNextClick();
     }
@@ -521,7 +507,7 @@ MouseModule.prototype = {
       // Let clicker know when mousemove begins a pan
       if (!oldIsPan && dragData.isPan())
         clicker.panBegin();
-      clicker.mouseUp(evInfo.event.clientX, evInfo.event.clientY);
+      clicker.mouseUp(aEvent.clientX, aEvent.clientY);
     }
 
     this._owner.ungrab(this);
@@ -530,14 +516,14 @@ MouseModule.prototype = {
   /**
    * If we're in a drag, do what we have to do to drag on.
    */
-  _onMouseMove: function _onMouseMove(evInfo) {
+  _onMouseMove: function _onMouseMove(aEvent) {
     let dragData = this._dragData;
 
     if (dragData.dragging) {
       let oldIsPan = dragData.isPan();
-      dragData.setDragPosition(evInfo.event.screenX, evInfo.event.screenY);
-      evInfo.event.stopPropagation();
-      evInfo.event.preventDefault();
+      dragData.setDragPosition(aEvent.screenX, aEvent.screenY);
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
       if (dragData.isPan()) {
         this._owner.grab(this);
         // Only pan when mouse event isn't part of a click. Prevent jittering on tap.
@@ -654,7 +640,7 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a single click and tell the clicker.
    */
   _doSingleClick: function _doSingleClick() {
-    let ev = this._downUpEvents[1].event;
+    let ev = this._downUpEvents[1];
     this._cleanClickBuffer(2);
 
     // borrowed from nsIDOMNSEvent.idl
@@ -670,9 +656,9 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a double click and tell the clicker.
    */
   _doDoubleClick: function _doDoubleClick() {
-    let mouseUp1 = this._downUpEvents[1].event;
+    let mouseUp1 = this._downUpEvents[1];
     // sometimes the second press event is not dispatched at all
-    let mouseUp2 = this._downUpEvents[Math.min(3, this._downUpEvents.length - 1)].event;
+    let mouseUp2 = this._downUpEvents[Math.min(3, this._downUpEvents.length - 1)];
     this._cleanClickBuffer(4);
     this._clicker.doubleClick(mouseUp1.clientX, mouseUp1.clientY,
                               mouseUp2.clientX, mouseUp2.clientY);
@@ -682,8 +668,8 @@ MouseModule.prototype = {
    * Record a mousedown/mouseup event for later redispatch via
    * _redispatchDownUpEvents()
    */
-  _recordEvent: function _recordEvent(evInfo) {
-    this._downUpEvents.push(evInfo);
+  _recordEvent: function _recordEvent(aEvent) {
+    this._downUpEvents.push(aEvent);
   },
 
   /**
@@ -1160,11 +1146,11 @@ KeyModule.prototype = {
     return (elem) ? elem : null;
   },
 
-  handleEvent: function handleEvent(evInfo) {
-    if (evInfo.event.type == "keydown" || evInfo.event.type == "keyup" || evInfo.event.type == "keypress") {
+  handleEvent: function handleEvent(aEvent) {
+    if (aEvent.type == "keydown" || aEvent.type == "keyup" || aEvent.type == "keypress") {
       let keyer = this._browserViewContainer.customKeySender;
       if (keyer)
-        keyer.dispatchKeyEvent(evInfo.event);
+        keyer.dispatchKeyEvent(aEvent);
     }
   },
 
@@ -1184,8 +1170,8 @@ function ScrollwheelModule(owner, browserViewContainer) {
 
 ScrollwheelModule.prototype = {
   pendingEvent : 0,
-  handleEvent: function handleEvent(evInfo) {
-    if (evInfo.event.type == "DOMMouseScroll" || evInfo.event.type == "MozMousePixelScroll") {
+  handleEvent: function handleEvent(aEvent) {
+    if (aEvent.type == "DOMMouseScroll" || aEvent.type == "MozMousePixelScroll") {
       /*
       * If events come too fast we don't want their handling to lag the zoom in/zoom out execution.
       * With the timeout the zoom is executed as we scroll.
@@ -1195,11 +1181,11 @@ ScrollwheelModule.prototype = {
 
       this.pendingEvent = setTimeout(function handleEventImpl(self) {
         self.pendingEvent = 0;
-        Browser.zoom(evInfo.event.detail);
+        Browser.zoom(aEvent.detail);
       }, 0, this);
 
-      evInfo.event.stopPropagation();
-      evInfo.event.preventDefault();
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
     }
   },
 
@@ -1231,15 +1217,15 @@ GestureModule.prototype = {
    * sure to stop propagation of every gesture event so that web content cannot
    * receive gesture events.
    *
-   * @param evInfo Event information structure
+   * @param nsIDOMEvent information structure
    */
-  handleEvent: function handleEvent(evInfo) {
+  handleEvent: function handleEvent(aEvent) {
     try {
       let consume = false;
-      switch (evInfo.event.type) {
+      switch (aEvent.type) {
         case "MozMagnifyGestureStart":
           consume = true;
-          this._pinchStart(evInfo.event);
+          this._pinchStart(aEvent);
           break;
 
         case "MozMagnifyGestureUpdate":
@@ -1247,12 +1233,12 @@ GestureModule.prototype = {
           if (this._ignoreNextUpdate)
             this._ignoreNextUpdate = false;
           else
-            this._pinchUpdate(evInfo.event);
+            this._pinchUpdate(aEvent);
           break;
 
         case "MozMagnifyGesture":
           consume = true;
-          this._pinchEnd(evInfo.event);
+          this._pinchEnd(aEvent);
           break;
 
         case "contextmenu":
@@ -1263,12 +1249,12 @@ GestureModule.prototype = {
       }
       if (consume) {
         // prevent sending of event to content
-        evInfo.event.stopPropagation();
-        evInfo.event.preventDefault();
+        aEvent.stopPropagation();
+        aEvent.preventDefault();
       }
     }
     catch (e) {
-      Util.dumpLn("Error while handling gesture event", evInfo.event.type,
+      Util.dumpLn("Error while handling gesture event", aEvent.type,
                   "\nPlease report error at:", e.getSource());
     }
   },
