@@ -540,7 +540,6 @@ gfxFontUtils::FindPreferredSubtable(const PRUint8 *aBuf, PRUint32 aBufLength,
         const PRUint16 encodingID = ReadShortAt(table, TableOffsetEncodingID);
         const PRUint32 offset = ReadLongAt(table, TableOffsetOffset);
 
-        NS_ASSERTION(offset < aBufLength, "cmap table offset is longer than table size");
         NS_ENSURE_TRUE(offset < aBufLength, NS_ERROR_GFX_CMAP_MALFORMED);
 
         const PRUint8 *subtable = aBuf + offset;
