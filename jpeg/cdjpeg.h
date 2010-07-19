@@ -104,6 +104,7 @@ typedef struct cdjpeg_progress_mgr * cd_progress_ptr;
 #define jinit_write_targa	jIWrTarga
 #define read_quant_tables	RdQTables
 #define read_scan_script	RdScnScript
+#define set_quality_ratings     SetQRates
 #define set_quant_slots		SetQSlots
 #define set_sample_factors	SetSFacts
 #define read_color_map		RdCMap
@@ -131,8 +132,10 @@ EXTERN(djpeg_dest_ptr) jinit_write_targa JPP((j_decompress_ptr cinfo));
 /* cjpeg support routines (in rdswitch.c) */
 
 EXTERN(boolean) read_quant_tables JPP((j_compress_ptr cinfo, char * filename,
-				    int scale_factor, boolean force_baseline));
+				       boolean force_baseline));
 EXTERN(boolean) read_scan_script JPP((j_compress_ptr cinfo, char * filename));
+EXTERN(boolean) set_quality_ratings JPP((j_compress_ptr cinfo, char *arg,
+					 boolean force_baseline));
 EXTERN(boolean) set_quant_slots JPP((j_compress_ptr cinfo, char *arg));
 EXTERN(boolean) set_sample_factors JPP((j_compress_ptr cinfo, char *arg));
 
