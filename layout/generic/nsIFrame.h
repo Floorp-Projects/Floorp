@@ -1656,7 +1656,8 @@ public:
    * 
    * This function is fastest when aOther is an ancestor of |this|.
    *
-   * This function works across document boundaries.
+   * This function _DOES NOT_ work across document boundaries.
+   * Use this function only when |this| and aOther are in the same document.
    *
    * NOTE: this actually returns the offset from aOther to |this|, but
    * that offset is added to transform _coordinates_ from |this| to
@@ -1664,6 +1665,28 @@ public:
    */
   nsPoint GetOffsetTo(const nsIFrame* aOther) const;
   virtual nsPoint GetOffsetToExternal(const nsIFrame* aOther) const;
+
+  /**
+   * Get the offset between the coordinate systems of |this| and aOther
+   * expressed in appunits per dev pixel of |this|' document. Adding the return
+   * value to a point that is relative to the origin of |this| will make the
+   * point relative to the origin of aOther but in the appunits per dev pixel
+   * ratio of |this|.
+   *
+   * aOther must be non-null.
+   * 
+   * This function is fastest when aOther is an ancestor of |this|.
+   *
+   * This function works across document boundaries.
+   *
+   * Because this function may cross document boundaries that have different
+   * app units per dev pixel ratios it needs to be used very carefully.
+   *
+   * NOTE: this actually returns the offset from aOther to |this|, but
+   * that offset is added to transform _coordinates_ from |this| to
+   * aOther.
+   */
+  nsPoint GetOffsetToCrossDoc(const nsIFrame* aOther) const;
 
   /**
    * Get the screen rect of the frame in pixels.
@@ -2572,6 +2595,7 @@ protected:
 private:
   nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
   void SetOverflowRect(const nsRect& aRect);
+  nsPoint GetOffsetToCrossDoc(const nsIFrame* aOther, const PRInt32 aAPD) const;
 
 #ifdef NS_DEBUG
 public:

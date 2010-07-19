@@ -205,11 +205,12 @@ public:
   /**
    * @return a point pt such that adding pt to a coordinate relative to aFrame
    * makes it relative to ReferenceFrame(), i.e., returns 
-   * aFrame->GetOffsetTo(ReferenceFrame()). It may be optimized to be faster
-   * than aFrame->GetOffsetTo(ReferenceFrame()) (but currently isn't).
+   * aFrame->GetOffsetToCrossDoc(ReferenceFrame()). The returned point is in
+   * the appunits of aFrame. It may be optimized to be faster than
+   * aFrame->GetOffsetToCrossDoc(ReferenceFrame()) (but currently isn't).
    */
   nsPoint ToReferenceFrame(const nsIFrame* aFrame) {
-    return aFrame->GetOffsetTo(ReferenceFrame());
+    return aFrame->GetOffsetToCrossDoc(ReferenceFrame());
   }
   /**
    * When building the display list, the scrollframe aFrame will be "ignored"

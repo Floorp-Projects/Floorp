@@ -178,9 +178,16 @@ struct NS_GFX nsRect {
   nsRect  operator+(const nsMargin& aMargin) const { return nsRect(*this) += aMargin; }
   nsRect  operator-(const nsMargin& aMargin) const { return nsRect(*this) -= aMargin; }
 
-  // Scale by aScale, converting coordinates to integers so that the result
-  // is the smallest integer-coordinate rectangle containing the unrounded result
+  // Scale by aScale, converting coordinates to integers so that the result is
+  // the smallest integer-coordinate rectangle containing the unrounded result.
   nsRect& ScaleRoundOut(float aScale);
+
+  // Converts this rect from aFromAPP, an appunits per pixel ratio, to aToAPP.
+  // In the RoundOut version we make the rect the smallest rect containing the
+  // unrounded result. In the RoundIn version we make the rect the largest rect
+  // contained in the unrounded result.
+  inline nsRect ConvertAppUnitsRoundOut(PRInt32 aFromAPP, PRInt32 aToAPP) const;
+  inline nsRect ConvertAppUnitsRoundIn(PRInt32 aFromAPP, PRInt32 aToAPP) const;
 
   // Helpers for accessing the vertices
   nsPoint TopLeft() const { return nsPoint(x, y); }
@@ -333,6 +340,43 @@ struct NS_GFX nsIntRect {
 /*
  * App Unit/Pixel conversions
  */
+
+inline nsRect
+nsRect::ConvertAppUnitsRoundOut(PRInt32 aFromAPP, PRInt32 aToAPP) const
+{
+  if (aFromAPP == aToAPP) {
+    return *this;
+  }
+
+  nsRect rect;
+  nscoord right = NSToCoordCeil(NSCoordScale(XMost(), aFromAPP, aToAPP));
+  nscoord bottom = NSToCoordCeil(NSCoordScale(YMost(), aFromAPP, aToAPP));
+  rect.x = NSToCoordFloor(NSCoordScale(x, aFromAPP, aToAPP));
+  rect.y = NSToCoordFloor(NSCoordScale(y, aFromAPP, aToAPP));
+  rect.width = (right - rect.x);
+  rect.height = (bottom - rect.y);
+
+  return rect;
+}
+
+inline nsRect
+nsRect::ConvertAppUnitsRoundIn(PRInt32 aFromAPP, PRInt32 aToAPP) const
+{
+  if (aFromAPP == aToAPP) {
+    return *this;
+  }
+
+  nsRect rect;
+  nscoord right = NSToCoordFloor(NSCoordScale(XMost(), aFromAPP, aToAPP));
+  nscoord bottom = NSToCoordFloor(NSCoordScale(YMost(), aFromAPP, aToAPP));
+  rect.x = NSToCoordCeil(NSCoordScale(x, aFromAPP, aToAPP));
+  rect.y = NSToCoordCeil(NSCoordScale(y, aFromAPP, aToAPP));
+  rect.width = (right - rect.x);
+  rect.height = (bottom - rect.y);
+
+  return rect;
+}
+
 // scale the rect but round to preserve centers
 inline nsIntRect
 nsRect::ToNearestPixels(nscoord aAppUnitsPerPixel) const
