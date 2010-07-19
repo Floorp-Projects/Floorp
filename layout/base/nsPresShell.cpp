@@ -817,6 +817,7 @@ public:
                    nsIView* aViewToPaint,
                    nsIWidget* aWidget,
                    const nsRegion& aDirtyRegion,
+                   const nsIntRegion& aIntDirtyRegion,
                    PRBool aPaintDefaultBackground,
                    PRBool aWillSendDidPaint);
   NS_IMETHOD HandleEvent(nsIView*        aView,
@@ -5828,7 +5829,7 @@ static void DrawThebesLayer(ThebesLayer* aLayer,
     if (NS_SUCCEEDED(rv)) {
       rc->Init(devCtx, aContext);
       nsIRenderingContext::AutoPushTranslation
-        push(rc, -params->mOffsetToWidget.x, -params->mOffsetToWidget.y);
+        push(rc, params->mOffsetToWidget.x, params->mOffsetToWidget.y);
       nsLayoutUtils::PaintFrame(rc, frame, *params->mDirtyRegion,
                                 params->mBackgroundColor,
                                 nsLayoutUtils::PAINT_WIDGET_LAYERS);
@@ -5844,12 +5845,13 @@ static void DrawThebesLayer(ThebesLayer* aLayer,
 }
 
 NS_IMETHODIMP
-PresShell::Paint(nsIView*        aDisplayRoot,
-                 nsIView*        aViewToPaint,
-                 nsIWidget*      aWidgetToPaint,
-                 const nsRegion& aDirtyRegion,
-                 PRBool          aPaintDefaultBackground,
-                 PRBool          aWillSendDidPaint)
+PresShell::Paint(nsIView*           aDisplayRoot,
+                 nsIView*           aViewToPaint,
+                 nsIWidget*         aWidgetToPaint,
+                 const nsRegion&    aDirtyRegion,
+                 const nsIntRegion& aIntDirtyRegion,
+                 PRBool             aPaintDefaultBackground,
+                 PRBool             aWillSendDidPaint)
 {
 #ifdef NS_FUNCTION_TIMER
   NS_TIME_FUNCTION_DECLARE_DOCURL;
@@ -5893,14 +5895,10 @@ PresShell::Paint(nsIView*        aDisplayRoot,
     return NS_OK;
   }
 
-  nsPoint offsetToRoot = aViewToPaint->GetOffsetTo(aDisplayRoot);
-  nsRegion dirtyRegion = aDirtyRegion;
-  dirtyRegion.MoveBy(offsetToRoot);
-
   if (frame) {
     // Defer invalidates that are triggered during painting, and discard
     // invalidates of areas that are already being repainted.
-    frame->BeginDeferringInvalidatesForDisplayRoot(dirtyRegion);
+    frame->BeginDeferringInvalidatesForDisplayRoot(aDirtyRegion);
   }
 
   LayerManager* layerManager = aWidgetToPaint->GetLayerManager();
@@ -5908,10 +5906,8 @@ PresShell::Paint(nsIView*        aDisplayRoot,
 
   layerManager->BeginTransaction();
   nsRefPtr<ThebesLayer> root = layerManager->CreateThebesLayer();
-  nsIntRect dirtyRect = aDirtyRegion.GetBounds().
-    ToOutsidePixels(presContext->AppUnitsPerDevPixel());
   if (root) {
-    root->SetVisibleRegion(dirtyRect);
+    root->SetVisibleRegion(aIntDirtyRegion);
     layerManager->SetRoot(root);
   }
   if (!frame) {
@@ -5919,8 +5915,8 @@ PresShell::Paint(nsIView*        aDisplayRoot,
   }
   PaintParams params =
     { frame,
-      offsetToRoot - aViewToPaint->ViewToWidgetOffset(),
-      &dirtyRegion,
+      aDisplayRoot->GetOffsetToWidget(aWidgetToPaint),
+      &aDirtyRegion,
       bgcolor };
   layerManager->EndTransaction(DrawThebesLayer, &params);
 
