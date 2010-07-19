@@ -76,6 +76,9 @@ protected:
 
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<GLContext> mGLContext;
+
+  PRUint32 mCanvasFramebuffer;
+
   nsRefPtr<IDirect3DTexture9> mTexture;
 
   nsIntRect mBounds;
