@@ -3022,11 +3022,8 @@ nsGfxScrollFrameInner::AdjustScrollbarRectForResizer(
     resizerRect = mScrollCornerBox->GetRect();
   }
   else {
-    nsPoint offsetToView;
-    nsPoint offsetToWidget;
-    nsIWidget* widget =
-      aFrame->GetClosestView(&offsetToView)->GetNearestWidget(&offsetToWidget);
-    nsPoint offset = offsetToView + offsetToWidget;
+    nsPoint offset;
+    nsIWidget* widget = aFrame->GetNearestWidget(offset);
     nsIntRect widgetRect;
     if (!widget || !widget->ShowsResizeIndicator(&widgetRect))
       return;
