@@ -506,9 +506,8 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
   // Mark the entire view as damaged
   nsView* view = static_cast<nsView*>(aView);
 
-  nsRect bounds = view->GetBounds();
-  view->ConvertFromParentCoords(&bounds.x, &bounds.y);
-  return UpdateView(view, bounds, aUpdateFlags);
+  nsRect dims = view->GetDimensions();
+  return UpdateView(view, dims, aUpdateFlags);
 }
 
 static PRBool
@@ -655,6 +654,9 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
 
   nsView* view = static_cast<nsView*>(aView);
 
+  NS_ASSERTION(view->GetViewManager() == this,
+               "UpdateView called on view we don't own");
+
   nsRect damagedRect(aRect);
   if (damagedRect.IsEmpty()) {
     return NS_OK;
@@ -666,6 +668,9 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   // can overlap each other and be translucent.  So we have to possibly
   // invalidate our rect in each of the widgets we have lying about.
   damagedRect.MoveBy(view->GetOffsetTo(displayRoot));
+  PRInt32 rootAPD = displayRootVM->AppUnitsPerDevPixel();
+  PRInt32 APD = AppUnitsPerDevPixel();
+  damagedRect = damagedRect.ConvertAppUnitsRoundOut(APD, rootAPD);
   displayRootVM->UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
                                   nsRegion(damagedRect), nsnull);
 
@@ -701,7 +706,7 @@ void nsViewManager::UpdateViews(nsView *aView, PRUint32 aUpdateFlags)
   // update all children as well.
   nsView* childView = aView->GetFirstChild();
   while (nsnull != childView)  {
-    UpdateViews(childView, aUpdateFlags);
+    childView->GetViewManager()->UpdateViews(childView, aUpdateFlags);
     childView = childView->GetNextSibling();
   }
 }
@@ -1146,7 +1151,7 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
       //and mark this area as dirty if the view is visible...
 
       if (nsViewVisibility_kHide != child->GetVisibility())
-        UpdateView(child, NS_VMREFRESH_NO_SYNC);
+        child->GetViewManager()->UpdateView(child, NS_VMREFRESH_NO_SYNC);
     }
   return NS_OK;
 }
@@ -1166,11 +1171,12 @@ NS_IMETHODIMP nsViewManager::RemoveChild(nsIView *aChild)
 
   nsView* parent = child->GetParent();
 
-  if (nsnull != parent)
-    {
-      UpdateView(child, NS_VMREFRESH_NO_SYNC);
-      parent->RemoveChild(child);
-    }
+  if (nsnull != parent) {
+    NS_ASSERTION(child->GetViewManager() == this ||
+                 parent->GetViewManager() == this, "wrong view manager");
+    child->GetViewManager()->UpdateView(child, NS_VMREFRESH_NO_SYNC);
+    parent->RemoveChild(child);
+  }
 
   return NS_OK;
 }
@@ -1178,8 +1184,9 @@ NS_IMETHODIMP nsViewManager::RemoveChild(nsIView *aChild)
 NS_IMETHODIMP nsViewManager::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
 {
   nsView* view = static_cast<nsView*>(aView);
+  NS_ASSERTION(view->GetViewManager() == this, "wrong view manager");
   nsPoint oldPt = view->GetPosition();
-  nsRect oldArea = view->GetBounds();
+  nsRect oldBounds = view->GetBoundsInParentUnits();
   view->SetPosition(aX, aY);
 
   // only do damage control if the view is visible
@@ -1187,8 +1194,12 @@ NS_IMETHODIMP nsViewManager::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
   if ((aX != oldPt.x) || (aY != oldPt.y)) {
     if (view->GetVisibility() != nsViewVisibility_kHide) {
       nsView* parentView = view->GetParent();
-      UpdateView(parentView, oldArea, NS_VMREFRESH_NO_SYNC);
-      UpdateView(parentView, view->GetBounds(), NS_VMREFRESH_NO_SYNC);
+      if (parentView) {
+        nsViewManager* parentVM = parentView->GetViewManager();
+        parentVM->UpdateView(parentView, oldBounds, NS_VMREFRESH_NO_SYNC);
+        parentVM->UpdateView(parentView, view->GetBoundsInParentUnits(),
+                             NS_VMREFRESH_NO_SYNC);
+      }
     }
   }
   return NS_OK;
@@ -1227,6 +1238,7 @@ void nsViewManager::InvalidateRectDifference(nsView *aView, const nsRect& aRect,
 NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRBool aRepaintExposedAreaOnly)
 {
   nsView* view = static_cast<nsView*>(aView);
+  NS_ASSERTION(view->GetViewManager() == this, "wrong view manager");
   nsRect oldDimensions;
 
   view->GetDimensions(oldDimensions);
@@ -1240,21 +1252,16 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
     if (view->GetVisibility() == nsViewVisibility_kHide) {  
       view->SetDimensions(aRect, PR_FALSE);
     } else {
+      nsRect oldBounds = view->GetBoundsInParentUnits();
+      view->SetDimensions(aRect, PR_TRUE);
       if (!aRepaintExposedAreaOnly) {
         //Invalidate the union of the old and new size
-        view->SetDimensions(aRect, PR_TRUE);
-
         UpdateView(view, aRect, NS_VMREFRESH_NO_SYNC);
-        view->ConvertToParentCoords(&oldDimensions.x, &oldDimensions.y);
-        UpdateView(parentView, oldDimensions, NS_VMREFRESH_NO_SYNC);
+        UpdateView(parentView, oldBounds, NS_VMREFRESH_NO_SYNC);
       } else {
-        view->SetDimensions(aRect, PR_TRUE);
-
         InvalidateRectDifference(view, aRect, oldDimensions, NS_VMREFRESH_NO_SYNC);
-        nsRect r = aRect;
-        view->ConvertToParentCoords(&r.x, &r.y);
-        view->ConvertToParentCoords(&oldDimensions.x, &oldDimensions.y);
-        InvalidateRectDifference(parentView, oldDimensions, r, NS_VMREFRESH_NO_SYNC);
+        nsRect newBounds = view->GetBoundsInParentUnits();
+        InvalidateRectDifference(parentView, oldBounds, newBounds, NS_VMREFRESH_NO_SYNC);
       } 
     }
   }
@@ -1282,6 +1289,7 @@ NS_IMETHODIMP nsViewManager::SetViewFloating(nsIView *aView, PRBool aFloating)
 NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility aVisible)
 {
   nsView* view = static_cast<nsView*>(aView);
+  NS_ASSERTION(view->GetViewManager() == this, "wrong view manager");
 
   if (aVisible != view->GetVisibility()) {
     view->SetVisibility(aVisible);
@@ -1291,7 +1299,9 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
         if (nsViewVisibility_kHide == aVisible) {
           nsView* parentView = view->GetParent();
           if (parentView) {
-            UpdateView(parentView, view->GetBounds(), NS_VMREFRESH_NO_SYNC);
+            parentView->GetViewManager()->
+              UpdateView(parentView, view->GetBoundsInParentUnits(),
+                         NS_VMREFRESH_NO_SYNC);
           }
         }
         else {
