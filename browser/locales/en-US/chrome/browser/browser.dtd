@@ -226,7 +226,6 @@
 <!ENTITY viewMenu.label         "View"> 
 <!ENTITY viewMenu.accesskey       "V"> 
 <!ENTITY showTabCandy.label "TabCandy">
-<!ENTITY showTabCandy.commandkey "E">
 <!ENTITY viewToolbarsMenu.label       "Toolbars"> 
 <!ENTITY viewToolbarsMenu.accesskey     "T"> 
 <!ENTITY viewSidebarMenu.label "Sidebar">
