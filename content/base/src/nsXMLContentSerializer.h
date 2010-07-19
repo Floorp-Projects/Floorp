@@ -105,43 +105,43 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   /**
    * Appends a PRUnichar string and increments the column position
    */
-  virtual void AppendToString(const PRUnichar* aStr,
-                              PRInt32 aLength,
-                              nsAString& aOutputStr);
+  void AppendToString(const PRUnichar* aStr,
+                      PRInt32 aLength,
+                      nsAString& aOutputStr);
 
   /**
    * Appends a PRUnichar character and increments the column position
    */
-  virtual void AppendToString(const PRUnichar aChar,
-                              nsAString& aOutputStr);
+  void AppendToString(const PRUnichar aChar,
+                      nsAString& aOutputStr);
 
   /**
    * Appends a nsAString string and increments the column position
    */
-  virtual void AppendToString(const nsAString& aStr,
-                              nsAString& aOutputStr);
+  void AppendToString(const nsAString& aStr,
+                      nsAString& aOutputStr);
 
   /**
    * Appends a string by replacing all line-endings
    * by mLineBreak, except in the case of raw output.
    * It increments the column position.
    */
-  virtual void AppendToStringConvertLF(const nsAString& aStr,
-                                       nsAString& aOutputStr);
+  void AppendToStringConvertLF(const nsAString& aStr,
+                               nsAString& aOutputStr);
 
   /**
    * Appends a string by wrapping it when necessary.
    * It updates the column position.
    */
-  virtual void AppendToStringWrapped(const nsASingleFragmentString& aStr,
-                                     nsAString& aOutputStr);
+  void AppendToStringWrapped(const nsASingleFragmentString& aStr,
+                             nsAString& aOutputStr);
 
   /**
    * Appends a string by formating and wrapping it when necessary
    * It updates the column position.
    */
-  virtual void AppendToStringFormatedWrapped(const nsASingleFragmentString& aStr,
-                                             nsAString& aOutputStr);
+  void AppendToStringFormatedWrapped(const nsASingleFragmentString& aStr,
+                                     nsAString& aOutputStr);
 
   // used by AppendToStringWrapped
   void AppendWrapped_WhitespaceSequence(
@@ -171,7 +171,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * add mLineBreak to the string
    * It updates the column position and other flags.
    */
-  virtual void AppendNewLineToString(nsAString& aOutputStr);
+  void AppendNewLineToString(nsAString& aOutputStr);
 
 
   /**
@@ -242,10 +242,10 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                      nsAString& aStr,
                      PRBool aDoEscapeEntities);
 
-  virtual PRBool IsJavaScript(nsIContent * aContent,
-                              nsIAtom* aAttrNameAtom,
-                              PRInt32 aAttrNamespaceID,
-                              const nsAString& aValueString);
+  PRBool IsJavaScript(nsIContent * aContent,
+                      nsIAtom* aAttrNameAtom,
+                      PRInt32 aAttrNamespaceID,
+                      const nsAString& aValueString);
 
   /**
    * This method can be redefined to check if the element can be serialized.
@@ -322,8 +322,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * position is at 0. It updates the column position.
    */
   void AppendIndentation(nsAString& aStr);
-  virtual void IncrIndentation(nsIAtom* aName);
-  virtual void DecrIndentation(nsIAtom* aName);
+  void IncrIndentation(nsIAtom* aName);
+  void DecrIndentation(nsIAtom* aName);
 
   // Functions to check for newlines that needs to be added between nodes in
   // the root of a document. See mAddNewlineForRootNode
@@ -397,6 +397,9 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   // begining, then this newline character should be ignored, because a
   // such character has already been added into the output string
   PRPackedBool  mMayIgnoreLineBreakSequence;
+
+  PRPackedBool  mBodyOnly;
+  PRInt32       mInBody;
 
   // number of nested elements which have preformated content
   PRInt32       mPreLevel;
