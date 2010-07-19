@@ -384,7 +384,7 @@ WebGLContext::InitAndValidateGL()
 
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, (GLint*) &mGLMaxVertexAttribs);
     if (mGLMaxVertexAttribs < 8) {
-        LogMessage("GL_MAX_VERTEX_ATTRIBS is < 8!");
+        LogMessage("GL_MAX_VERTEX_ATTRIBS: %d is < 8!", mGLMaxVertexAttribs);
         return PR_FALSE;
     }
 
@@ -395,7 +395,7 @@ WebGLContext::InitAndValidateGL()
     // GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS value is the accurate value.
     gl->fGetIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, (GLint*) &mGLMaxTextureUnits);
     if (mGLMaxTextureUnits < 8) {
-        LogMessage("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS is < 8!");
+        LogMessage("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %d is < 8!", mGLMaxTextureUnits);
         return PR_FALSE;
     }
 

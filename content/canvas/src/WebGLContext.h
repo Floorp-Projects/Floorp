@@ -57,7 +57,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIJSNativeInitializer.h"
 
-#include "GLContext.h"
+#include "GLContextProvider.h"
 #include "Layers.h"
 
 #include "CheckedInt.h"
@@ -359,6 +359,7 @@ protected:
     PRBool ValidateDrawModeEnum(WebGLenum mode, const char *info);
 
     void Invalidate();
+    void DestroyResourcesAndContext();
 
     void MakeContextCurrent() { gl->MakeCurrent(); }
 
