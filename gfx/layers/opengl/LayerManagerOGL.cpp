@@ -93,7 +93,7 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
   if (aExistingContext) {
     mGLContext = aExistingContext;
   } else {
-    mGLContext = sGLContextProvider.CreateForWindow(mWidget);
+    mGLContext = gl::GLContextProvider::CreateForWindow(mWidget);
 
     if (!mGLContext) {
       NS_WARNING("Failed to create LayerManagerOGL context");

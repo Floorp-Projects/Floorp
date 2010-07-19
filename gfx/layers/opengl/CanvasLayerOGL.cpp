@@ -74,7 +74,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
                  "CanvasLayerOGL can't have both surface and GLContext");
     mNeedsYFlip = PR_FALSE;
     if (mCanvasSurface->GetType() == gfxASurface::SurfaceTypeXlib)
-      mCanvasSurfaceAsGLContext = sGLContextProvider.CreateForNativePixmapSurface(mCanvasSurface);
+      mCanvasSurfaceAsGLContext = GLContextProvider::CreateForNativePixmapSurface(mCanvasSurface);
   } else if (aData.mGLContext) {
     // this must be a pbuffer context
     void *pbuffer = aData.mGLContext->GetNativeData(GLContext::NativePBuffer);

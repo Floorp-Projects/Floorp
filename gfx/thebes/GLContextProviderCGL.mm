@@ -47,8 +47,6 @@
 namespace mozilla {
 namespace gl {
 
-GLContextProvider sGLContextProvider;
-
 class CGLLibrary
 {
 public:
@@ -207,7 +205,7 @@ GLContextCGL::CreateBasicTextureImage(GLuint aTexture,
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreateForWindow(nsIWidget *aWidget)
+GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
 {
     if (!sCGLLibrary.EnsureInitialized()) {
         return nsnull;
@@ -242,8 +240,8 @@ GLContextProvider::CreateForWindow(nsIWidget *aWidget)
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreatePBuffer(const gfxIntSize &aSize,
-                                 const ContextFormat &aFormat)
+GLContextProviderCGL::CreatePBuffer(const gfxIntSize &aSize,
+                                    const ContextFormat &aFormat)
 {
     if (!sCGLLibrary.EnsureInitialized()) {
         return nsnull;
@@ -315,7 +313,7 @@ GLContextProvider::CreatePBuffer(const gfxIntSize &aSize,
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreateForNativePixmapSurface(gfxASurface *aSurface)
+GLContextProviderCGL::CreateForNativePixmapSurface(gfxASurface *aSurface)
 {
     return nsnull;
 }

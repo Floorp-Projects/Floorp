@@ -111,9 +111,6 @@ typedef void *GLeglImageOES;
 #define EGL_NO_DISPLAY       ((EGLDisplay)0)
 #define EGL_NO_SURFACE       ((EGLSurface)0)
 
-GLContextProvider sGLContextProvider;
-
-
 static class EGLLibrary
 {
 public:
@@ -476,7 +473,7 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreateForWindow(nsIWidget *aWidget)
+GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
         return nsnull;
@@ -584,7 +581,7 @@ GLContextProvider::CreateForWindow(nsIWidget *aWidget)
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat &aFormat)
+GLContextProviderEGL::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat &aFormat)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
         return nsnull;
@@ -665,7 +662,7 @@ GLContextProvider::CreatePBuffer(const gfxIntSize &aSize, const ContextFormat &a
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreateForNativePixmapSurface(gfxASurface *aSurface)
+GLContextProviderEGL::CreateForNativePixmapSurface(gfxASurface *aSurface)
 {
     EGLDisplay display = nsnull;
     EGLSurface surface = nsnull;
