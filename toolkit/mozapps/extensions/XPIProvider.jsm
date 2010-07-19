@@ -1655,10 +1655,13 @@ var XPIProvider = {
 
             // The add-on has changed if the modification time has changed, or
             // the directory it is installed in has changed or we have an
-            // updated manifest for it.
+            // updated manifest for it. Also reload the metadata for add-ons
+            // in the application directory when the application version has
+            // changed
             if (aOldAddon.id in aManifests[installLocation.name] ||
                 aOldAddon.updateDate != addonState.mtime ||
-                aOldAddon._descriptor != addonState.descriptor) {
+                aOldAddon._descriptor != addonState.descriptor ||
+                (aUpdateCompatibility && installLocation.name == KEY_APP_GLOBAL)) {
               changed = updateMetadata(installLocation, aOldAddon, addonState) ||
                         changed;
             }
