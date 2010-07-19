@@ -37,7 +37,7 @@
 /*
  * Encryption/decryption routines for CMS implementation, none of which are exported.
  *
- * $Id: cmscipher.c,v 1.12 2008/02/03 06:08:49 nelson%bolyard.com Exp $
+ * $Id: cmscipher.c,v 1.13 2010/03/15 07:25:15 nelson%bolyard.com Exp $
  */
 
 #include "cmslocal.h"
@@ -85,9 +85,9 @@ NSS_CMSCipherContext_StartDecrypt(PK11SymKey *key, SECAlgorithmID *algid)
     NSSCMSCipherContext *cc;
     void *ciphercx;
     CK_MECHANISM_TYPE cryptoMechType;
-    SECItem *param;
     PK11SlotInfo *slot;
     SECOidTag algtag;
+    SECItem *param = NULL;
 
     algtag = SECOID_GetAlgorithmTag(algid);
 
@@ -101,6 +101,7 @@ NSS_CMSCipherContext_StartDecrypt(PK11SymKey *key, SECAlgorithmID *algid)
 
 	cryptoMechType = PK11_GetPBECryptoMechanism(algid, &param, pwitem);
 	if (cryptoMechType == CKM_INVALID_MECHANISM) {
+	    SECITEM_FreeItem(param,PR_TRUE);
 	    return NULL;
 	}
 
@@ -154,10 +155,10 @@ NSS_CMSCipherContext_StartEncrypt(PRArenaPool *poolp, PK11SymKey *key, SECAlgori
 {
     NSSCMSCipherContext *cc;
     void *ciphercx;
-    SECItem *param;
     SECStatus rv;
     CK_MECHANISM_TYPE cryptoMechType;
     PK11SlotInfo *slot;
+    SECItem *param = NULL;
     PRBool needToEncodeAlgid = PR_FALSE;
     SECOidTag algtag = SECOID_GetAlgorithmTag(algid);
 
@@ -171,6 +172,7 @@ NSS_CMSCipherContext_StartEncrypt(PRArenaPool *poolp, PK11SymKey *key, SECAlgori
 
 	cryptoMechType = PK11_GetPBECryptoMechanism(algid, &param, pwitem);
 	if (cryptoMechType == CKM_INVALID_MECHANISM) {
+	    SECITEM_FreeItem(param,PR_TRUE);
 	    return NULL;
 	}
     } else {

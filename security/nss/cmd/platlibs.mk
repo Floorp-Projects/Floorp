@@ -80,8 +80,6 @@ endif
 endif
 endif
 
-SQLITE=-lsqlite3
-
 ifdef NSS_DISABLE_DBM
 DBMLIB = $(NULL)
 else
@@ -110,7 +108,6 @@ PKIXLIB = \
 
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH))) 
-SQLITE = $(LIB_PREFIX)sqlite3.$(LIB_SUFFIX)
 
 EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)smime.$(LIB_SUFFIX) \
@@ -131,7 +128,7 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)nssb.$(LIB_SUFFIX) \
 	$(PKIXLIB) \
 	$(DBMLIB) \
-	$(DIST)/lib/$(SQLITE) \
+	$(DIST)/lib/$(LIB_PREFIX)$(SQLITE_LIB_NAME).$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssutil3.$(LIB_SUFFIX) \
 	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.$(LIB_SUFFIX) \
 	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.$(LIB_SUFFIX) \
@@ -180,7 +177,7 @@ endif
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
-	$(SQLITE) \
+	-l$(SQLITE_LIB_NAME) \
 	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
 	-L$(NSPR_LIB_DIR) \

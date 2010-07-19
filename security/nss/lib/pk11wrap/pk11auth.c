@@ -479,21 +479,17 @@ PK11_ChangePW(PK11SlotInfo *slot, const char *oldpw, const char *newpw)
 {
     CK_RV crv;
     SECStatus rv = SECFailure;
-    int newLen;
-    int oldLen;
+    int newLen = 0;
+    int oldLen = 0;
     CK_SESSION_HANDLE rwsession;
 
     /* use NULL values to trigger the protected authentication path */
-    if (slot->protectedAuthPath) {
-	if (newpw == NULL) newLen = 0;
-	if (oldpw == NULL) oldLen = 0;
-    } else {
+    if (!slot->protectedAuthPath) {
 	if (newpw == NULL) newpw = "";
 	if (oldpw == NULL) oldpw = "";
-	newLen = PORT_Strlen(newpw);
-	oldLen = PORT_Strlen(oldpw);
     }
-
+    if (newpw) newLen = PORT_Strlen(newpw);
+    if (oldpw) oldLen = PORT_Strlen(oldpw);
 
     /* get a rwsession */
     rwsession = PK11_GetRWSession(slot);

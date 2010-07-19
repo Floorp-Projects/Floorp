@@ -113,14 +113,14 @@ dbtest_main()
 
     
     Echo "test opening the database read/write in a nonexisting directory"
-    ${BINDIR}/certutil -L -X -d ./non_existant_dir
+    ${BINDIR}/certutil -L -X -d ./non_existent_dir
     ret=$?
     if [ $ret -ne 255 ]; then
       html_failed "Certutil succeeded in a nonexisting directory $ret"
     else
       html_passed "Certutil didn't work in a nonexisting dir $ret" 
     fi
-    ${BINDIR}/dbtest -r -d ./non_existant_dir
+    ${BINDIR}/dbtest -r -d ./non_existent_dir
     ret=$?
     if [ $ret -ne 46 ]; then
       html_failed "Dbtest readonly succeeded in a nonexisting directory $ret"
@@ -129,7 +129,7 @@ dbtest_main()
     fi
 
     Echo "test force opening the database in a nonexisting directory"
-    ${BINDIR}/dbtest -f -d ./non_existant_dir
+    ${BINDIR}/dbtest -f -d ./non_existent_dir
     ret=$?
     if [ $ret -ne 0 ]; then
       html_failed "Dbtest force failed in a nonexisting directory $ret"

@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.52 2009/05/29 18:10:38 alexei.volkov.bugs%sun.com Exp $
+ * $Id: certt.h,v 1.54 2010/06/18 00:34:22 wtc%google.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -253,7 +253,7 @@ struct CERTCertificateStr {
     unsigned int rawKeyUsage;	/* value of the key usage extension */
     PRBool keyUsagePresent;	/* was the key usage extension present */
     PRUint32 nsCertType;	/* value of the ns cert type extension */
-				/* must be 32-bit for PR_AtomicSet */
+				/* must be 32-bit for PR_ATOMIC_SET */
 
     /* these values can be set by the application to bypass certain checks
      * or to keep the cert in memory for an entire session.
@@ -911,7 +911,8 @@ typedef enum {
    cert_pi_policyOID       = 4, /* validate certificate for policy OID.
 				 * Specified in value.array.oids. Cert must
 				 * be good for at least one OID in order
-				 * to validate. Default is no policyOID */
+				 * to validate. Default is that the user is not
+				 * concerned about certificate policy. */
    cert_pi_policyFlags     = 5, /* flags for each policy specified in policyOID.
 				 * Specified in value.scalar.ul. Policy flags
 				 * apply to all specified oids. 

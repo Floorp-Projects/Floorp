@@ -135,7 +135,7 @@ PKIX_PL_Mutex_Create(
         PKIX_MUTEX_DEBUG("\tCalling PR_NewLock).\n");
         mutex->lock = PR_NewLock();
 
-        /* If an error occured in NSPR, report it here */
+        /* If an error occurred in NSPR, report it here */
         if (mutex->lock == NULL) {
                 PKIX_DECREF(mutex);
                 PKIX_ERROR_ALLOC_ERROR();

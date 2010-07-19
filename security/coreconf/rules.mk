@@ -922,7 +922,7 @@ $(MKDEPENDENCIES)::
 	@$(MAKE_OBJDIR)
 	touch $(MKDEPENDENCIES) 
 	chmod u+w $(MKDEPENDENCIES) 
-#on NT, the preceeding touch command creates a read-only file !?!?!
+#on NT, the preceding touch command creates a read-only file !?!?!
 #which is why we have to explicitly chmod it.
 	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'$(OBJ_SUFFIX)' -f$(MKDEPENDENCIES) \
 $(NOMD_CFLAGS) $(YOPT) $(CSRCS) $(CPPSRCS) $(ASFILES)
