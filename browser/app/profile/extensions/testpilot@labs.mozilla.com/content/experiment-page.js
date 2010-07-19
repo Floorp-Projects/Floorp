@@ -367,6 +367,8 @@ var stringBundle;
     var contentDiv = document.getElementById("experiment-specific-text");
     var dataPrivacyDiv = document.getElementById("data-privacy-text");
     // Get experimentID from the GET args of page
+    // TODO no reason actually to do parseInt here -- all it accomplishes
+    // is preventing us from using non-numeric study IDs.
     var eid = parseInt(getUrlParam("eid"));
     var experiment = TestPilotSetup.getTaskById(eid);
     if (!experiment) {
