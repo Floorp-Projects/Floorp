@@ -2,6 +2,7 @@
  * jmorecfg.h
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
+ * Copyright (C) 2009, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -10,13 +11,7 @@
  * optimizations.  Most users will not need to touch this file.
  */
 
-/*
- * This file has been modified for the Mozilla/Netscape environment.
- * Modifications are distributed under the mozilla.org tri-license and are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved. See http://www.mozilla.org/MPL/
- */
-
+#include "prtypes.h"
 
 /*
  * Define BITS_IN_JSAMPLE as either
@@ -69,11 +64,11 @@ typedef unsigned char JSAMPLE;
 #else /* not HAVE_UNSIGNED_CHAR */
 
 typedef char JSAMPLE;
-#ifdef CHAR_IS_UNSIGNED
+#ifdef __CHAR_UNSIGNED__
 #define GETJSAMPLE(value)  ((int) (value))
 #else
 #define GETJSAMPLE(value)  ((int) (value) & 0xFF)
-#endif /* CHAR_IS_UNSIGNED */
+#endif /* __CHAR_UNSIGNED__ */
 
 #endif /* HAVE_UNSIGNED_CHAR */
 
@@ -105,24 +100,6 @@ typedef short JSAMPLE;
 
 typedef short JCOEF;
 
-/* Defines for MMX/SSE2 support. */
-
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
-#define HAVE_MMX_INTEL_MNEMONICS 
-
-/* SSE2 code appears broken for some cpus (bug 247437) */
-#define HAVE_SSE2_INTEL_MNEMONICS
-#define HAVE_SSE2_INTRINSICS
-#endif
-
-#if defined(__GNUC__) && defined(__i386__)
-#if defined(XP_MACOSX)
-#define HAVE_SSE2_INTRINSICS
-#endif /* ! XP_MACOSX */
-#endif /* ! GNUC && i386 */
-
-/* Add support for other platforms here */
-
 
 /* Compressed datastreams are represented as arrays of JOCTET.
  * These must be EXACTLY 8 bits wide, at least once they are written to
@@ -138,11 +115,11 @@ typedef unsigned char JOCTET;
 #else /* not HAVE_UNSIGNED_CHAR */
 
 typedef char JOCTET;
-#ifdef CHAR_IS_UNSIGNED
+#ifdef __CHAR_UNSIGNED__
 #define GETJOCTET(value)  (value)
 #else
 #define GETJOCTET(value)  ((value) & 0xFF)
-#endif /* CHAR_IS_UNSIGNED */
+#endif /* __CHAR_UNSIGNED__ */
 
 #endif /* HAVE_UNSIGNED_CHAR */
 
@@ -156,39 +133,19 @@ typedef char JOCTET;
 
 /* UINT8 must hold at least the values 0..255. */
 
-#ifdef HAVE_UNSIGNED_CHAR
-typedef unsigned char UINT8;
-#else /* not HAVE_UNSIGNED_CHAR */
-#ifdef CHAR_IS_UNSIGNED
-typedef char UINT8;
-#else /* not CHAR_IS_UNSIGNED */
-typedef short UINT8;
-#endif /* CHAR_IS_UNSIGNED */
-#endif /* HAVE_UNSIGNED_CHAR */
+typedef PRUint8 UINT8;
 
 /* UINT16 must hold at least the values 0..65535. */
 
-#ifdef HAVE_UNSIGNED_SHORT
-typedef unsigned short UINT16;
-#else /* not HAVE_UNSIGNED_SHORT */
-typedef unsigned int UINT16;
-#endif /* HAVE_UNSIGNED_SHORT */
+typedef PRUint16 UINT16;
 
 /* INT16 must hold at least the values -32768..32767. */
 
-#ifndef XMD_H			/* X11/xmd.h correctly defines INT16 */
-typedef short INT16;
-#endif
+typedef PRInt16 INT16;
 
 /* INT32 must hold at least signed 32-bit values. */
 
-#ifndef XMD_H			/* X11/xmd.h correctly defines INT32 */
-#ifndef _BASETSD_H_		/* basetsd.h correctly defines INT32 */
-#ifndef _BASETSD_H
-typedef long INT32;
-#endif
-#endif
-#endif
+typedef PRInt32 INT32;
 
 /* Datatype used for image dimensions.  The JPEG standard only supports
  * images up to 64K*64K due to 16-bit fields in SOF markers.  Therefore
@@ -209,21 +166,14 @@ typedef unsigned int JDIMENSION;
  * or code profilers that require it.
  */
 
-/* Mozilla mod: make external functions be DLL-able via JRI_PUBLIC_API(),
- * and supply extern "C" for C++ users of the C-compiled IJG library.
- * (Well, not anymore, but there's still a modification here.)
- */
-#include "prtypes.h"
-
 /* a function called through method pointers: */
 #define METHODDEF(type)		static type
 /* a function used only in its module: */
 #define LOCAL(type)		static type
-
-PR_BEGIN_EXTERN_C
-#define GLOBAL(type) type
-#define EXTERN(type) extern type
-PR_END_EXTERN_C
+/* a function referenced thru EXTERNs: */
+#define GLOBAL(type)		type
+/* a reference to a GLOBAL function: */
+#define EXTERN(type)		extern type
 
 
 /* This macro is used to declare a "method", that is, a function pointer.
@@ -245,12 +195,10 @@ PR_END_EXTERN_C
  * explicit coding is needed; see uses of the NEED_FAR_POINTERS symbol.
  */
 
-#ifndef FAR
 #ifdef NEED_FAR_POINTERS
 #define FAR  far
 #else
 #define FAR
-#endif
 #endif
 
 
@@ -261,20 +209,8 @@ PR_END_EXTERN_C
  * Defining HAVE_BOOLEAN before including jpeglib.h should make it work.
  */
 
-/* Mozilla mod: IJG distribution makes boolean = int, but on Windows
- * it's far safer to define boolean = unsigned char.  Easier to switch
- * than fight.
- */
-
-/* For some reason, on SunOS 5.3 HAVE_BOOLEAN gets defined when using
- * gcc, but boolean doesn't.  Even if you use -UHAVE_BOOLEAN, it still
- * gets reset somewhere.
- */
-#if defined(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES) && defined(HAVE_BOOLEAN)
-#undef HAVE_BOOLEAN
-#endif
 #ifndef HAVE_BOOLEAN
-typedef unsigned char boolean;
+typedef int boolean;
 #endif
 #ifndef FALSE			/* in case these macros already exist */
 #define FALSE	0		/* values of boolean */
@@ -306,22 +242,13 @@ typedef unsigned char boolean;
  * (You may HAVE to do that if your compiler doesn't like null source files.)
  */
 
-/*
- * Mozilla mods here: undef some features not actually used by the browser.
- * This reduces object code size and more importantly allows us to compile
- * even with broken compilers that crash when fed certain modules of the
- * IJG sources.  Currently we undef:
- * DCT_FLOAT_SUPPORTED INPUT_SMOOTHING_SUPPORTED IDCT_SCALING_SUPPORTED
- * QUANT_1PASS_SUPPORTED QUANT_2PASS_SUPPORTED
- */
-
 /* Arithmetic coding is unsupported for legal reasons.  Complaints to IBM. */
 
 /* Capability options common to encoder and decoder: */
 
 #define DCT_ISLOW_SUPPORTED	/* slow but accurate integer algorithm */
-#undef  DCT_IFAST_SUPPORTED	/* faster, less accurate integer method */
-#undef  DCT_FLOAT_SUPPORTED	/* floating-point: accurate, fast on fast HW */
+#define DCT_IFAST_SUPPORTED	/* faster, less accurate integer method */
+#define DCT_FLOAT_SUPPORTED	/* floating-point: accurate, fast on fast HW */
 
 /* Encoder capability options: */
 
@@ -337,7 +264,7 @@ typedef unsigned char boolean;
  * The exact same statements apply for progressive JPEG: the default tables
  * don't work for progressive mode.  (This may get fixed, however.)
  */
-#undef  INPUT_SMOOTHING_SUPPORTED   /* Input image smoothing option? */
+#define INPUT_SMOOTHING_SUPPORTED   /* Input image smoothing option? */
 
 /* Decoder capability options: */
 
@@ -346,11 +273,11 @@ typedef unsigned char boolean;
 #define D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
 #define SAVE_MARKERS_SUPPORTED	    /* jpeg_save_markers() needed? */
 #define BLOCK_SMOOTHING_SUPPORTED   /* Block smoothing? (Progressive only) */
-#undef  IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? */
+#define IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? */
 #undef  UPSAMPLE_SCALING_SUPPORTED  /* Output rescaling at upsample stage? */
 #define UPSAMPLE_MERGING_SUPPORTED  /* Fast path for sloppy upsampling? */
-#undef  QUANT_1PASS_SUPPORTED	    /* 1-pass color quantization? */
-#undef  QUANT_2PASS_SUPPORTED	    /* 2-pass color quantization? */
+#define QUANT_1PASS_SUPPORTED	    /* 1-pass color quantization? */
+#define QUANT_2PASS_SUPPORTED	    /* 2-pass color quantization? */
 
 /* more capability options later, no doubt */
 
@@ -375,32 +302,25 @@ typedef unsigned char boolean;
 #define RGB_BLUE	2	/* Offset of Blue */
 #define RGB_PIXELSIZE	3	/* JSAMPLEs per RGB scanline element */
 
+#define JPEG_NUMCS 12
+
+static const int rgb_red[JPEG_NUMCS] = {
+	-1, -1, RGB_RED, -1, -1, -1, 0, 0, 2, 2, 3, 1
+};
+
+static const int rgb_green[JPEG_NUMCS] = {
+	-1, -1, RGB_GREEN, -1, -1, -1, 1, 1, 1, 1, 2, 2
+};
+
+static const int rgb_blue[JPEG_NUMCS] = {
+	-1, -1, RGB_BLUE, -1, -1, -1, 2, 2, 0, 0, 1, 3
+};
+
+static const int rgb_pixelsize[JPEG_NUMCS] = {
+	-1, -1, RGB_PIXELSIZE, -1, -1, -1, 3, 4, 3, 4, 4, 4
+};
 
 /* Definitions for speed-related optimizations. */
-
-
-/* If your compiler supports inline functions, define INLINE
- * as the inline keyword; otherwise define it as empty.
- */
-
-/* Mozilla mods here: add more ways of defining INLINE */
-
-#ifndef INLINE
-#ifdef __GNUC__			/* for instance, GNU C knows about inline */
-#define INLINE __inline__
-#endif
-#if defined( __IBMC__ ) || defined (__IBMCPP__)
-#define INLINE _Inline
-#endif
-#ifndef INLINE
-#ifdef __cplusplus
-#define INLINE inline		/* a C++ compiler should have it too */
-#else
-#define INLINE			/* default is to define it as empty */
-#endif
-#endif
-#endif
-
 
 /* On some machines (notably 68000 series) "int" is 32 bits, but multiplying
  * two 16-bit shorts is faster than multiplying two ints.  Define MULTIPLIER
@@ -408,7 +328,11 @@ typedef unsigned char boolean;
  */
 
 #ifndef MULTIPLIER
-#define MULTIPLIER  int16		/* type for fastest integer multiply */
+#ifndef WITH_SIMD
+#define MULTIPLIER  int		/* type for fastest integer multiply */
+#else
+#define MULTIPLIER short  /* prefer 16-bit with SIMD for parellelism */
+#endif
 #endif
 
 

@@ -2,6 +2,7 @@
  * jdcoefct.c
  *
  * Copyright (C) 1994-1997, Thomas G. Lane.
+ * Copyright (C) 2010, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -17,6 +18,7 @@
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
+#include "jpegcomp.h"
 
 /* Block smoothing is only applicable for progressive JPEG, so: */
 #ifndef D_PROGRESSIVE_SUPPORTED
@@ -46,6 +48,9 @@ typedef struct {
    * within the virtual arrays; it is used only by the input side.
    */
   JBLOCKROW MCU_buffer[D_MAX_BLOCKS_IN_MCU];
+
+  /* Temporary workspace for one MCU */
+  JCOEF * workspace;
 
 #ifdef D_MULTISCAN_FILES_SUPPORTED
   /* In multi-pass modes, we need a virtual block array for each component. */
@@ -187,7 +192,7 @@ decompress_onepass (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 	useful_width = (MCU_col_num < last_MCU_col) ? compptr->MCU_width
 						    : compptr->last_col_width;
 	output_ptr = output_buf[compptr->component_index] +
-	  yoffset * compptr->DCT_scaled_size;
+	  yoffset * compptr->_DCT_scaled_size;
 	start_col = MCU_col_num * compptr->MCU_sample_width;
 	for (yindex = 0; yindex < compptr->MCU_height; yindex++) {
 	  if (cinfo->input_iMCU_row < last_iMCU_row ||
@@ -197,11 +202,11 @@ decompress_onepass (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 	      (*inverse_DCT) (cinfo, compptr,
 			      (JCOEFPTR) coef->MCU_buffer[blkn+xindex],
 			      output_ptr, output_col);
-	      output_col += compptr->DCT_scaled_size;
+	      output_col += compptr->_DCT_scaled_size;
 	    }
 	  }
 	  blkn += compptr->MCU_width;
-	  output_ptr += compptr->DCT_scaled_size;
+	  output_ptr += compptr->_DCT_scaled_size;
 	}
       }
     }
@@ -362,9 +367,9 @@ decompress_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 	(*inverse_DCT) (cinfo, compptr, (JCOEFPTR) buffer_ptr,
 			output_ptr, output_col);
 	buffer_ptr++;
-	output_col += compptr->DCT_scaled_size;
+	output_col += compptr->_DCT_scaled_size;
       }
-      output_ptr += compptr->DCT_scaled_size;
+      output_ptr += compptr->_DCT_scaled_size;
     }
   }
 
@@ -471,12 +476,15 @@ decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
   jpeg_component_info *compptr;
   inverse_DCT_method_ptr inverse_DCT;
   boolean first_row, last_row;
-  JBLOCK workspace;
+  JCOEF * workspace;
   int *coef_bits;
   JQUANT_TBL *quanttbl;
   INT32 Q00,Q01,Q02,Q10,Q11,Q20, num;
   int DC1,DC2,DC3,DC4,DC5,DC6,DC7,DC8,DC9;
   int Al, pred;
+
+  /* Keep a local variable to avoid looking it up more than once */
+  workspace = coef->workspace;
 
   /* Force some input to be done if we are getting ahead of the input. */
   while (cinfo->input_scan_number <= cinfo->output_scan_number &&
@@ -654,9 +662,9 @@ decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 	DC4 = DC5; DC5 = DC6;
 	DC7 = DC8; DC8 = DC9;
 	buffer_ptr++, prev_block_row++, next_block_row++;
-	output_col += compptr->DCT_scaled_size;
+	output_col += compptr->_DCT_scaled_size;
       }
-      output_ptr += compptr->DCT_scaled_size;
+      output_ptr += compptr->_DCT_scaled_size;
     }
   }
 
@@ -733,4 +741,9 @@ jinit_d_coef_controller (j_decompress_ptr cinfo, boolean need_full_buffer)
     coef->pub.decompress_data = decompress_onepass;
     coef->pub.coef_arrays = NULL; /* flag for no virtual arrays */
   }
+
+  /* Allocate the workspace buffer */
+  coef->workspace = (JCOEF *)
+    (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
+                                SIZEOF(JCOEF) * DCTSIZE2);
 }
