@@ -48,6 +48,8 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES = \
 	browser_bug399606.js \
 	browser_visituri.js \
+	browser_visituri_nohistory.js \
+	browser_visituri_privatebrowsing.js \
 	browser_settitle.js \
 	$(NULL)
 
