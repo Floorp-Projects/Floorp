@@ -113,16 +113,21 @@ var Tabbar = {
 
       var tabbrowser = Utils.getCurrentWindow().gBrowser;
       var tabBarTabs = this.getAllTabs();
+      var visibleTabs = [];
+
+      tabs.forEach(function(tab) {
+        visibleTabs.push(tab.tab.raw);
+      });
 
       // Show all of the tabs in the group.
       tabBarTabs.forEach(function(tab){
         var collapsed = true;
-        tabs.some(function(visibleTabItem, i) {
-          if (visibleTabItem.tab.raw == tab) {
+        visibleTabs.some(function(visibleTab, i) {
+          if (visibleTab == tab) {
             collapsed = false;
             // remove the element to speed up the next loop.
             if (options.dontReorg)
-              tabs.splice(i, 1);
+              visibleTabs.splice(i, 1);
             return true;
           }
         });
@@ -133,11 +138,10 @@ var Tabbar = {
       // tab strip. This way the tab order is matched up to the group's
       // thumbnail order.
       if (!options.dontReorg) {
-        tabs.forEach(function(visibleTabItem) {
-          tabbrowser.moveTabTo(visibleTabItem.tab.raw, tabBarTabs.length - 1);
+        visibleTabs.forEach(function(visibleTab) {
+          tabbrowser.moveTabTo(visibleTab, tabBarTabs.length - 1);
         });
       }
-
     } catch(e) {
       Utils.log(e);
     }
