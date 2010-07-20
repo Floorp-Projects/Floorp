@@ -270,7 +270,6 @@ nsHttpHandler::Init()
     LOG(("> app-version = %s\n", mAppVersion.get()));
     LOG(("> platform = %s\n", mPlatform.get()));
     LOG(("> oscpu = %s\n", mOscpu.get()));
-    LOG(("> device = %s\n", mDeviceType.get()));
     LOG(("> language = %s\n", mLanguage.get()));
     LOG(("> misc = %s\n", mMisc.get()));
     LOG(("> vendor = %s\n", mVendor.get()));
@@ -612,7 +611,6 @@ nsHttpHandler::BuildUserAgent()
                            mAppVersion.Length() + 
                            mPlatform.Length() + 
                            mOscpu.Length() +
-                           mDeviceType.Length() +
                            mMisc.Length() +
                            mProduct.Length() +
                            mProductSub.Length() +
@@ -794,14 +792,6 @@ nsHttpHandler::InitUserAgentComponents()
         mOscpu.Assign(buf);
     }
 #endif
-
-    nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
-    NS_ASSERTION(infoService, "Could not find a system info service");
-
-    nsCString deviceType;
-    nsresult rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("device"), deviceType);
-    if (NS_SUCCEEDED(rv))
-        mDeviceType = deviceType;
 
     mUserAgentIsDirty = PR_TRUE;
 }
@@ -1714,13 +1704,6 @@ NS_IMETHODIMP
 nsHttpHandler::GetOscpu(nsACString &value)
 {
     value = mOscpu;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::GetDeviceType(nsACString &value)
-{
-    value = mDeviceType;
     return NS_OK;
 }
 

@@ -39,7 +39,7 @@
 
 #include "nsIProxiedProtocolHandler.idl"
 
-[scriptable, uuid(a2479d10-9277-11df-981c-0800200c9a66)]
+[scriptable, uuid(cf549f80-9423-11df-981c-0800200c9a66)]
 interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 {
     /**
@@ -117,14 +117,6 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
      * Get/Set the application comment misc portion.
      */
     attribute ACString misc;
-
-    /**
-     * Get the current device type.
-     *
-     * @return The device type this application is running on.  Maybe
-     * be null.
-     */
-    readonly attribute ACString deviceType;
 
 };
 
