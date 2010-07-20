@@ -1754,7 +1754,8 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
 
   NS_ASSERTION(IsRootVM(), "Only the root view manager should be here");
 
-  if (mMouseLocation == nsPoint(NSCOORD_NONE, NSCOORD_NONE) || !mRootView) {
+  if (mMouseLocation == nsPoint(NSCOORD_NONE, NSCOORD_NONE) || !mRootView ||
+      !mRootView->HasWidget()) {
     mSynthMouseMoveEvent.Forget();
     return;
   }
