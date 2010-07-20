@@ -303,13 +303,13 @@ function Statement(t, x) {
                 n.iterator = n2[0];
                 n.varDecl = n2;
             } else {
-                function badLhs(tt) {
-                     return (tt !== IDENTIFIER && tt !== CALL &&
-                             tt !== DOT && tt !== INDEX);
-                }
-                if (n2t !== GROUP && badLhs(n2t)) throw se;
-                if (n2t === GROUP && badLhs(n2[0].type)) throw se;
-                n.iterator = n2;
+                var oldn2 = n2;
+                while (n2.type === GROUP) n2 = n2[0]; // strip parens
+                n2t = n2.type;
+                if (n2t !== IDENTIFIER && n2t !== CALL &&
+                    n2t !== DOT && n2t !== INDEX)
+                    throw se;
+                n.iterator = oldn2;
                 n.varDecl = null;
             }
             n.object = Expression(t, x);
