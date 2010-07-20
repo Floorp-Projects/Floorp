@@ -1087,7 +1087,12 @@ mjit::Compiler::generateMethod()
             JSFunction *fun = script->getFunction(fullAtomIndex(PC));
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
-            stubCall(stubs::Lambda);
+
+            JSOp next = JSOp(PC[JSOP_LAMBDA_LENGTH]);
+            if (next == JSOP_INITMETHOD)
+                stubCall(stubs::LambdaForInit);
+            else
+                stubCall(stubs::Lambda);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
           }
