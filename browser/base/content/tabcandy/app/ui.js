@@ -882,7 +882,7 @@ UIClass.prototype = {
     var currentWin = Utils.getCurrentWindow();
     var tabbox = currentWin.gBrowser.mTabBox;
 
-    currentWin.gBrowser.addEventListener("keypress", function(event) {
+    currentWin.addEventListener("keypress", function(event) {
       if (Page.isTabCandyVisible()) {
         return;
       }

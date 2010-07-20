@@ -1732,7 +1732,6 @@ window.Groups = {
     });
     return tabs;
   }
-
 };
 
 // ----------
