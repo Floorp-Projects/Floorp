@@ -392,8 +392,12 @@ GLContext::CreateTextureImage(const nsIntSize& aSize,
 
 BasicTextureImage::~BasicTextureImage()
 {
-    mGLContext->MakeCurrent();
-    mGLContext->fDeleteTextures(1, &mTexture);
+    nsRefPtr<GLContext> ctx = mGLContext->GetSharedContext();
+    if (!ctx) {
+      ctx = mGLContext;
+    }
+    ctx->MakeCurrent();
+    ctx->fDeleteTextures(1, &mTexture);
 }
 
 gfxContext*

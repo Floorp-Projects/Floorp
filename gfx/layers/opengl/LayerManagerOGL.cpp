@@ -86,26 +86,31 @@ LayerManagerOGL::CleanupResources()
   if (!mGLContext)
     return;
 
-  mGLContext->MakeCurrent();
+  nsRefPtr<GLContext> ctx = mGLContext->GetSharedContext();
+  if (!ctx) {
+    ctx = mGLContext;
+  }
+  
+  ctx->MakeCurrent();
 
   for (unsigned int i = 0; i < mPrograms.Length(); ++i)
     delete mPrograms[i];
   mPrograms.Clear();
 
-  mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+  ctx->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 
   if (mBackBufferFBO) {
-    mGLContext->fDeleteFramebuffers(1, &mBackBufferFBO);
+    ctx->fDeleteFramebuffers(1, &mBackBufferFBO);
     mBackBufferFBO = 0;
   }
 
   if (mBackBufferTexture) {
-    mGLContext->fDeleteTextures(1, &mBackBufferTexture);
+    ctx->fDeleteTextures(1, &mBackBufferTexture);
     mBackBufferTexture = 0;
   }
 
   if (mQuadVBO) {
-    mGLContext->fDeleteBuffers(1, &mQuadVBO);
+    ctx->fDeleteBuffers(1, &mQuadVBO);
     mQuadVBO = 0;
   }
 
