@@ -303,6 +303,9 @@ void nsBuiltinDecoder::MetadataLoaded()
   {
     MonitorAutoEnter mon(mMonitor);
     mDuration = mDecoderStateMachine ? mDecoderStateMachine->GetDuration() : -1;
+    // Duration has changed so we should recompute playback rate
+    UpdatePlaybackRate();
+
     notifyElement = mNextState != PLAY_STATE_SEEKING;
   }
 
@@ -738,6 +741,9 @@ void nsBuiltinDecoder::DurationChanged()
   MonitorAutoEnter mon(mMonitor);
   PRInt64 oldDuration = mDuration;
   mDuration = mDecoderStateMachine ? mDecoderStateMachine->GetDuration() : -1;
+  // Duration has changed so we should recompute playback rate
+  UpdatePlaybackRate();
+
   if (mElement && oldDuration != mDuration) {
     LOG(PR_LOG_DEBUG, ("%p duration changed to %lldms", this, mDuration));
     mElement->DispatchSimpleEvent(NS_LITERAL_STRING("durationchange"));
@@ -748,11 +754,14 @@ void nsBuiltinDecoder::SetDuration(PRInt64 aDuration)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   mDuration = aDuration;
+
+  MonitorAutoEnter mon(mMonitor);
   if (mDecoderStateMachine) {
-    MonitorAutoEnter mon(mMonitor);
     mDecoderStateMachine->SetDuration(mDuration);
-    UpdatePlaybackRate();
   }
+
+  // Duration has changed so we should recompute playback rate
+  UpdatePlaybackRate();
 }
 
 void nsBuiltinDecoder::SetSeekable(PRBool aSeekable)
