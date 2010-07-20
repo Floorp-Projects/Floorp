@@ -14,11 +14,12 @@
  * The Original Code is tabs.js.
  *
  * The Initial Developer of the Original Code is
- * Aza Raskin <aza@mozilla.com>
+ * Atul Varma <avarma@mozilla.com>
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Aza Raskin <aza@mozilla.com>
  * Ian Gilman <ian@iangilman.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
@@ -45,40 +46,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
-
-// ##########
-// Class: XULApp
-// Singelton
-var XULApp = {
-  appWindowType: "navigator:browser",
-
-  // ----------
-  // Function: tabStripForWindow
-  tabStripForWindow: function(aWindow) {
-    return aWindow.document.getElementById("content").mStrip;
-  },
-
-  // ----------
-  // Function: openTab
-  openTab: function(aUrl, aInBackground) {
-    var window = this.mostRecentAppWindow;
-    var tabbrowser = window.getBrowser();
-    var tab = tabbrowser.addTab(aUrl);
-    if (!aInBackground)
-      tabbrowser.selectedTab = tab;
-  },
-
-  // ----------
-  // Function: getBrowserFromContentWindow
-  getBrowserFromContentWindow: function(aMainWindow, aWindow) {
-    var browsers = aMainWindow.gBrowser.browsers;
-    for (var i = 0; i < browsers.length; i++) {
-      if (browsers[i].contentWindow == aWindow)
-        return browsers[i];
-    }
-    return null;
-  }
-};
 
 // ##########
 // Class: Dictionary
@@ -118,41 +85,17 @@ function Dictionary() {
     values.splice(id, 1);
   };
 
-  var readOnlyKeys = new ImmutableArray(keys);
-  var readOnlyValues = new ImmutableArray(values);
-
   // ----------
   // Variable: keys
-  this.__defineGetter__("keys", function() { return readOnlyKeys; });
+  this.__defineGetter__("keys", function() keys);
 
   // ----------
   // Variable: values
-  this.__defineGetter__("values", function() { return readOnlyValues; });
+  this.__defineGetter__("values", function() values);
 
   // ----------
   // Variable: length
-  this.__defineGetter__("length", function() { return keys.length; });
-}
-
-// ##########
-// Class: ImmutableArray
-function ImmutableArray(baseArray) {
-  var self = this;
-  var UNSUPPORTED_MUTATOR_METHODS = ["pop", "push", "reverse", "shift",
-                                     "sort", "splice", "unshift"];
-  UNSUPPORTED_MUTATOR_METHODS.forEach(
-    function(methodName) {
-      self[methodName] = function() {
-        throw new Error("Mutator method '" + methodName + "()' is " +
-                        "unsupported on this object.");
-      };
-    });
-
-  // ----------
-  // Function: toString
-  self.toString = function() { return "[ImmutableArray]"; };
-
-  self.__proto__ = baseArray;
+  this.__defineGetter__("length", function() keys.length);
 }
 
 // ##########
@@ -287,14 +230,13 @@ window.TabsManager = iQ.extend(new Subscribable(), {
   // ----------
   // Function: init
   // Sets up the TabsManager and window.Tabs
-  init: function() {
+  init: function TabsManager_init() {
     var self = this;
     var chromeWindow = Utils.getCurrentWindow();
     if (!chromeWindow || !chromeWindow.getBrowser || !chromeWindow.getBrowser()) {
-      iQ.timeout(function() {
+      iQ.timeout(function TabsManager_init_delayedInit() {
         self.init();
       }, 100);
-
       return;
     }
 
@@ -316,9 +258,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
       }
     };
 
-    windows.__proto__ = trackedWindows.values;
-
-    var tabs = {
+    window.Tabs = {
       // ----------
       get focused() {
         var browserWindow = windows.focused;
@@ -344,25 +284,14 @@ window.TabsManager = iQ.extend(new Subscribable(), {
       },
 
       // ----------
-      tab: function tab(value) {
-        // assuming value is a DOM element for the time being
-        var result = iQ(value).data('tab');
-        if (!result) {
-          result = iQ(value).find("canvas").data("link").tab;
-          if (result)
-            Utils.log('turns out the secondary strategy in Tabs.tab() is needed');
-        }
-
-        return result;
-      },
-
-      // ----------
       toString: function toString() {
         return "[Tabs]";
       }
     };
 
-    var tabsMixIns = new EventListenerMixIns(tabs);
+    window.Tabs.__proto__ = trackedTabs.values;
+
+    var tabsMixIns = new EventListenerMixIns(window.Tabs);
     tabsMixIns.add({name: "onReady"});
     tabsMixIns.add({name: "onLoad"});
     tabsMixIns.add({name: "onFocus"});
@@ -370,7 +299,6 @@ window.TabsManager = iQ.extend(new Subscribable(), {
     tabsMixIns.add({name: "onOpen"});
     tabsMixIns.add({name: "onMove"});
 
-    tabs.__proto__ = trackedTabs.values;
   /*   Utils.log(tabs); */
 
     function newBrowserTab(tabbrowser, chromeTab) {
@@ -384,10 +312,10 @@ window.TabsManager = iQ.extend(new Subscribable(), {
       trackedTabs.remove(chromeTab);
       browserTab._unload();
     }
-
+    
     function BrowserWindow(chromeWindow) {
       var tabbrowser = chromeWindow.getBrowser();
-
+    
       for (var i = 0; i < tabbrowser.tabContainer.itemCount; i++)
         newBrowserTab(tabbrowser,
                       tabbrowser.tabContainer.getItemAtIndex(i));
@@ -507,35 +435,31 @@ window.TabsManager = iQ.extend(new Subscribable(), {
          }});
         */
       this.__proto__ = {
-
+    
         get closed() !browser,
         get url() browser && browser.currentURI ? browser.currentURI.spec : null,
         get favicon() chromeTab && chromeTab.image ? chromeTab.image : null,
-
+    
         get contentWindow() browser && browser.contentWindow ? browser.contentWindow : null,
         get contentDocument() browser && browser.contentDocument ? browser.contentDocument : null,
-
+    
         get raw() chromeTab,
         get tabbrowser() tabbrowser,
-
-        isFocused: function() {
-          return browser && tabbrowser.selectedTab == chromeTab;
-        },
-
+    
+        isFocused: function() browser && tabbrowser.selectedTab == chromeTab,
+    
         focus: function focus() {
           if (browser)
             tabbrowser.selectedTab = chromeTab;
         },
-
+    
         close: function close() {
           if (browser)
             tabbrowser.removeTab(chromeTab);
         },
-
-        toString: function toString() {
-          return !browser ? "[Closed Browser Tab]" : "[Browser Tab]";
-        },
-
+    
+        toString: function toString() !browser ? "[Closed Browser Tab]" : "[Browser Tab]",
+    
         _unload: function _unload() {
           mixIns.unload();
           mixIns = null;
@@ -546,16 +470,6 @@ window.TabsManager = iQ.extend(new Subscribable(), {
       };
     }
 
-    this.__defineGetter__("tabs", function() { return tabs; });
-
-    Extension.addUnloadMethod(
-      this,
-      function() {
-        tabsMixIns.unload();
-      });
-
-    window.Tabs = tabs;
-    window.Tabs.app = XULApp;
     this._sendToSubscribers('load');
   }
 });
