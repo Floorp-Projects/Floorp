@@ -80,7 +80,8 @@
   padding-bottom: 1px;
 }
 
-#nav-bar:not(:-moz-lwtheme) {
+#nav-bar:not(:-moz-lwtheme),
+#navigator-toolbox[tabsontop="true"] > #nav-bar {
   background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
 }
 
@@ -1086,11 +1087,11 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 #TabsToolbar {
   min-height: 0;
   padding: 0;
-  -moz-box-shadow: 0 -1px ThreeDShadow inset;
 }
 
 #TabsToolbar:not(:-moz-lwtheme),
 #TabsToolbar[tabsontop="false"] {
+  -moz-box-shadow: 0 -1px ThreeDShadow inset;
   background-image: -moz-linear-gradient(transparent, transparent 10%,
                                          rgba(0,0,0,.03) 50%, rgba(0,0,0,.1) 90%, rgba(0,0,0,.2));
 }
@@ -1139,16 +1140,21 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 .tabbrowser-tab:-moz-lwtheme-darktext,
 .tabs-newtab-button:-moz-lwtheme-darktext {
   background-image: -moz-linear-gradient(left, transparent, transparent 1px,
-                                               rgba(255,255,255,.4) 1px, rgba(255,255,255,.4));
+                                               rgba(60%,60%,60%,.5) 1px, rgba(60%,60%,60%,.5));
 }
 
 .tabbrowser-tab:-moz-lwtheme-darktext:not([selected="true"]):hover,
 .tabs-newtab-button:-moz-lwtheme-darktext:hover {
   background-image: -moz-linear-gradient(left, transparent, transparent 1px,
-                                               rgba(255,255,255,.6) 1px, rgba(255,255,255,.6));
+                                               rgba(80%,80%,80%,.5) 1px, rgba(80%,80%,80%,.5));
 }
 
-.tabbrowser-tab[selected="true"] {
+.tabbrowser-tab[selected="true"]:-moz-lwtheme {
+  background-image: -moz-linear-gradient(left, transparent, transparent 1px,
+                                               @toolbarHighlight@ 1px, @toolbarHighlight@);
+}
+
+#tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
   background-image: -moz-linear-gradient(left, transparent, transparent 1px, white 1px, white);
   color: black;
 }
@@ -1164,11 +1170,7 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   color: -moz-dialogText;
 }
 
-.tabbrowser-tab:-moz-lwtheme[selected="true"] {
-  text-shadow: none;
-}
-
-.tabbrowser-tab:-moz-lwtheme:not([selected="true"]) {
+.tabbrowser-tab:-moz-lwtheme {
   color: inherit;
 }
 
