@@ -2530,10 +2530,9 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     if (pop)
         PC += JSOP_POP_LENGTH;
 #else
-    prepareStubCall(Uses(1));
+    prepareStubCall(Uses(0));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
     stubCall(stub);
-    frame.pop();
     frame.pushSynced();
 #endif
 
