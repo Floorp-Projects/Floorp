@@ -288,7 +288,8 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
         }
 
     case nsXPTType::T_JSVAL :
-        *d = *((jsval*)s);
+        JS_STATIC_ASSERT(sizeof(jsval) <= sizeof(uint64));
+        *d = **((jsval**)s);
         break;
 
     default:
@@ -618,8 +619,16 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             break;
         }
     case nsXPTType::T_JSVAL :
-        *((jsval*)d) = s;
-        break;
+        {
+            NS_ASSERTION(useAllocator, "trying to convert a jsval to const jsval & without allocator : this would leak");
+
+            // The C++ type is (const jsval &), which here means (jsval *).
+            jsval *buf = new jsval(s);
+            if(!buf)
+                return JS_FALSE;
+            *((jsval**)d) = buf;
+            break;
+        }
     default:
         if(!type.IsPointer())
         {

@@ -365,7 +365,7 @@ IDBCursor::GetValue(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-IDBCursor::Continue(jsval aKey,
+IDBCursor::Continue(const jsval &aKey,
                     JSContext* aCx,
                     PRUint8 aOptionalArgCount,
                     PRBool* _retval)
@@ -410,7 +410,7 @@ IDBCursor::Continue(jsval aKey,
 }
 
 NS_IMETHODIMP
-IDBCursor::Update(jsval aValue,
+IDBCursor::Update(const jsval &aValue,
                   JSContext* aCx,
                   nsIIDBRequest** _retval)
 {

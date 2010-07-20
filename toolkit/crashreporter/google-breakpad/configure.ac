@@ -67,6 +67,15 @@ AC_ARG_ENABLE(m32,
                esac],
               [usem32=false])
 
+AC_CHECK_MEMBER(struct sockaddr.sa_len,
+                [AC_DEFINE([GET_SA_LEN(X)],[(((struct sockaddr*)&(X))->sa_len)],
+                           [actual length of specific struct sockaddr])],
+                [AC_DEFINE([GET_SA_LEN(X)],
+                           [(((struct sockaddr*)&(X))->sa_family == AF_INET  ? sizeof(struct sockaddr_in) : \
+                            ((struct sockaddr*)&(X))->sa_family == AF_INET6 ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr))],
+                           [actual length of specific struct sockaddr])],
+                [#include <sys/socket.h>])
+
 AC_ARG_ENABLE(selftest,
               AS_HELP_STRING([--enable-selftest],
                              [Run extra tests with "make check" ]

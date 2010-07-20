@@ -2897,7 +2897,7 @@ jsdService::WrapValue(jsdIValue **_rval)
 }
 
 NS_IMETHODIMP
-jsdService::WrapJSValue(jsval value, jsdIValue** _rval)
+jsdService::WrapJSValue(const jsval &value, jsdIValue** _rval)
 {
     JSDValue *jsdv = JSD_NewValue(mCx, value);
     if (!jsdv)

@@ -31,7 +31,7 @@
 //
 // Author: Mark Mentovai
 
-#include <cstdio>
+#include <stdio.h>
 
 #include "processor/contained_range_map-inl.h"
 

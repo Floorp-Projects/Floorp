@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JS Mark-and-Sweep Garbage Collector.
  *
@@ -492,22 +490,44 @@ GetGCThingMarkBit(void *thing, size_t &bitIndex)
     return reinterpret_cast<jsbitmap *>(chunk | GC_MARK_BITMAP_ARRAY_OFFSET);
 }
 
-inline bool
-IsMarkedGCThing(void *thing)
+/*
+ * Live objects are marked black. How many other additional colors are available
+ * depends on the size of the GCThing.
+ */
+static const uint32 BLACK = 0;
+
+static void
+AssertValidColor(void *thing, uint32 color)
 {
-    size_t index;
-    jsbitmap *markBitmap = GetGCThingMarkBit(thing, index);
-    return !!JS_TEST_BIT(markBitmap, index);
+    JS_ASSERT_IF(color, color < JSGCArenaInfo::fromGCThing(thing)->list->thingSize / GC_CELL_SIZE);
 }
 
 inline bool
-MarkIfUnmarkedGCThing(void *thing)
+IsMarkedGCThing(void *thing, uint32 color = BLACK)
 {
+    AssertValidColor(thing, color);
+
+    size_t index;
+    jsbitmap *markBitmap = GetGCThingMarkBit(thing, index);
+    return !!JS_TEST_BIT(markBitmap, index + color);
+}
+
+/*
+ * The GC always marks live objects BLACK. If color is not BLACK, we also mark
+ * the object with that additional color.
+ */
+inline bool
+MarkIfUnmarkedGCThing(void *thing, uint32 color = BLACK)
+{
+    AssertValidColor(thing, color);
+
     size_t index;
     jsbitmap *markBitmap = GetGCThingMarkBit(thing, index);
     if (JS_TEST_BIT(markBitmap, index))
         return false;
     JS_SET_BIT(markBitmap, index);
+    if (color != BLACK)
+        JS_SET_BIT(markBitmap, index + color);
     return true;
 }
 
@@ -862,7 +882,7 @@ js_GetGCThingRuntime(void *thing)
     return JSGCChunkInfo::fromChunk(chunk)->runtime;
 }
 
-bool
+JS_FRIEND_API(bool)
 js_IsAboutToBeFinalized(void *thing)
 {
     if (JSString::isStatic(thing))
@@ -871,14 +891,34 @@ js_IsAboutToBeFinalized(void *thing)
     return !IsMarkedGCThing(thing);
 }
 
+static void
+MarkDelayedChildren(JSTracer *trc);
+
+/* The color is only applied to objects, functions and xml. */
+JS_FRIEND_API(uint32)
+js_SetMarkColor(JSTracer *trc, uint32 color)
+{
+    JSGCTracer *gctracer = trc->context->runtime->gcMarkingTracer;
+    if (trc != gctracer)
+        return color;
+
+    /* Must process any delayed tracing here, otherwise we confuse colors. */
+    MarkDelayedChildren(trc);
+
+    uint32 oldColor = gctracer->color;
+    gctracer->color = color;
+    return oldColor;
+}
+
+JS_FRIEND_API(bool)
+js_GCThingIsMarked(void *thing, uint32 color)
+{
+    return IsMarkedGCThing(thing, color);
+}
+
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
-#if defined(XP_WIN) && defined(_M_X64)
-    if (!InitNtAllocAPIs())
-        return JS_FALSE;
-#endif
-    
     InitGCArenaLists(rt);
 
     if (!rt->gcRootsHash.init(256))
@@ -1905,6 +1945,12 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
         JSString *str = (JSString *) thing;
         if (str->isDependent())
             JS_CALL_STRING_TRACER(trc, str->dependentBase(), "base");
+        else if (str->isRope()) {
+            if (str->isInteriorNode())
+                JS_CALL_STRING_TRACER(trc, str->interiorNodeParent(), "parent");
+            JS_CALL_STRING_TRACER(trc, str->ropeLeft(), "left child");
+            JS_CALL_STRING_TRACER(trc, str->ropeRight(), "right child");
+        }
         break;
       }
 
@@ -2131,59 +2177,49 @@ Mark(JSTracer *trc, void *thing, uint32 kind)
      * is not recursive.
      */
     if (kind == JSTRACE_STRING) {
-        for (;;) {
-            if (JSString::isStatic(thing))
-                goto out;
-            JS_ASSERT(kind == GetFinalizableThingTraceKind(thing));
-            if (!MarkIfUnmarkedGCThing(thing))
-                goto out;
-            if (!((JSString *) thing)->isDependent())
-                goto out;
-            thing = ((JSString *) thing)->dependentBase();
-        }
+        /*
+         * Iterate through all nodes and leaves in the rope if this is part of a
+         * rope; otherwise, we only iterate once: on the string itself.
+         */
+        JSRopeNodeIterator iter((JSString *) thing);
+        JSString *str = iter.init();
+        do {
+            for (;;) {
+                if (JSString::isStatic(str))
+                    break;
+                JS_ASSERT(kind == GetFinalizableThingTraceKind(str));
+                if (!MarkIfUnmarkedGCThing(str))
+                    break;
+                if (!str->isDependent())
+                    break;
+                str = str->dependentBase();
+            }
+            str = iter.next();
+        } while (str);
+        goto out;
         /* NOTREACHED */
     }
 
     JS_ASSERT(kind == GetFinalizableThingTraceKind(thing));
-    if (!MarkIfUnmarkedGCThing(thing))
+    if (!MarkIfUnmarkedGCThing(thing, reinterpret_cast<JSGCTracer *>(trc)->color))
         goto out;
 
-    if (!cx->insideGCMarkCallback) {
-        /*
-         * With JS_GC_ASSUME_LOW_C_STACK defined the mark phase of GC always
-         * uses the non-recursive code that otherwise would be called only on
-         * a low C stack condition.
-         */
+    /*
+     * With JS_GC_ASSUME_LOW_C_STACK defined the mark phase of GC always
+     * uses the non-recursive code that otherwise would be called only on
+     * a low C stack condition.
+     */
 #ifdef JS_GC_ASSUME_LOW_C_STACK
 # define RECURSION_TOO_DEEP() JS_TRUE
 #else
-        int stackDummy;
+    int stackDummy;
 # define RECURSION_TOO_DEEP() (!JS_CHECK_STACK_SIZE(cx, stackDummy))
 #endif
-        if (RECURSION_TOO_DEEP())
-            DelayMarkingChildren(rt, thing);
-        else
-            JS_TraceChildren(trc, thing, kind);
+
+    if (RECURSION_TOO_DEEP()) {
+        DelayMarkingChildren(rt, thing);
     } else {
-        /*
-         * For API compatibility we allow for the callback to assume that
-         * after it calls JS_MarkGCThing for the last time, the callback can
-         * start to finalize its own objects that are only referenced by
-         * unmarked GC things.
-         *
-         * Since we do not know which call from inside the callback is the
-         * last, we ensure that children of all marked things are traced and
-         * call MarkDelayedChildren(trc) after tracing the thing.
-         *
-         * As MarkDelayedChildren unconditionally invokes JS_TraceChildren
-         * for the things with unmarked children, calling DelayMarkingChildren
-         * is useless here. Hence we always trace thing's children even with a
-         * low native stack.
-         */
-        cx->insideGCMarkCallback = false;
         JS_TraceChildren(trc, thing, kind);
-        MarkDelayedChildren(trc);
-        cx->insideGCMarkCallback = true;
     }
 
   out:
@@ -2371,9 +2407,9 @@ AutoGCRooter::trace(JSTracer *trc)
         if (desc.obj)
             MarkObject(trc, desc.obj, "Descriptor::obj");
         MarkValue(trc, desc.value, "Descriptor::value");
-        if (desc.attrs & JSPROP_GETTER)
+        if ((desc.attrs & JSPROP_GETTER) && desc.getter)
             MarkObject(trc, CastAsObject(desc.getter), "Descriptor::get");
-        if (desc.attrs & JSPROP_SETTER)
+        if (desc.attrs & JSPROP_SETTER && desc.setter)
             MarkObject(trc, CastAsObject(desc.setter), "Descriptor::set");
         return;
       }
@@ -2447,6 +2483,8 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 
     MarkValue(trc, acx->iterValue, "iterValue");
 
+    acx->compartment->marked = true;
+
 #ifdef JS_TRACER
     TracerState* state = acx->tracerState;
     while (state) {
@@ -2478,16 +2516,15 @@ js_TraceRuntime(JSTracer *trc)
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
         i.threadData()->mark(trc);
 
-    if (rt->gcExtraRootsTraceOp)
-        rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
-
     /*
-     * For now we use the conservative stack scanner only as a sanity check,
-     * so we mark conservatively after marking all other roots to detect
-     * conservative leaks.
+     * The conservative stack scanner runs before we mark extra roots,
+     * which may use additional colors to implement cycle collection.
      */
     if (rt->state != JSRTS_LANDING)
         ConservativeGCStackMarker(trc).markRoots();
+
+    if (rt->gcExtraRootsTraceOp)
+        rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
 }
 
 void
@@ -2613,13 +2650,16 @@ FinalizeString(JSContext *cx, JSString *str, unsigned thingKind)
     if (str->isDependent()) {
         JS_ASSERT(str->dependentBase());
         JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
-    } else {
+    } else if (str->isFlat()) {
         /*
-         * flatChars for stillborn string is null, but cx->free would checks
+         * flatChars for stillborn string is null, but cx->free checks
          * for a null pointer on its own.
          */
         cx->free(str->flatChars());
+    } else if (str->isTopNode()) {
+        cx->free(str->topNodeBuffer());
     }
+    /* Nothing to be done for rope interior nodes. */
 }
 
 inline void
@@ -2628,7 +2668,7 @@ FinalizeExternalString(JSContext *cx, JSString *str, unsigned thingKind)
     unsigned type = thingKind - FINALIZE_EXTERNAL_STRING0;
     JS_ASSERT(type < JS_ARRAY_LENGTH(str_finalizers));
     JS_ASSERT(!JSString::isStatic(str));
-    JS_ASSERT(!str->isDependent());
+    JS_ASSERT(str->isFlat());
 
     JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
 
@@ -2650,11 +2690,11 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
 {
     JS_RUNTIME_UNMETER(rt, liveStrings);
     JS_ASSERT(!JSString::isStatic(str));
+    JS_ASSERT(!str->isRope());
 
     if (str->isDependent()) {
         /* A dependent string can not be external and must be valid. */
-        JS_ASSERT(JSGCArenaInfo::fromGCThing(str)->list->thingKind ==
-                  FINALIZE_STRING);
+        JS_ASSERT(JSGCArenaInfo::fromGCThing(str)->list->thingKind == FINALIZE_STRING);
         JS_ASSERT(str->dependentBase());
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
     } else {
@@ -2927,6 +2967,7 @@ static void
 SweepCompartments(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
+    JSCompartmentCallback callback = rt->compartmentCallback;
     JSCompartment **read = rt->compartments.begin();
     JSCompartment **end = rt->compartments.end();
     JSCompartment **write = read;
@@ -2938,6 +2979,8 @@ SweepCompartments(JSContext *cx)
             /* Remove dead wrappers from the compartment map. */
             compartment->sweep(cx);
         } else {
+            if (callback)
+                (void) callback(cx, compartment, JSCOMPARTMENT_DESTROY);
             if (compartment->principals)
                 JSPRINCIPALS_DROP(cx, compartment->principals);
             delete compartment;
@@ -3012,8 +3055,9 @@ GC(JSContext *cx  GCTIMER_PARAM)
     /*
      * Mark phase.
      */
-    JSTracer trc;
+    JSGCTracer trc;
     JS_TRACER_INIT(&trc, cx, NULL);
+    trc.color = BLACK;
     rt->gcMarkingTracer = &trc;
     JS_ASSERT(IS_GC_MARKING_TRACER(&trc));
 
@@ -3027,17 +3071,12 @@ GC(JSContext *cx  GCTIMER_PARAM)
      * tracing.
      */
     MarkDelayedChildren(&trc);
-
-    JS_ASSERT(!cx->insideGCMarkCallback);
-    if (rt->gcCallback) {
-        cx->insideGCMarkCallback = JS_TRUE;
-        (void) rt->gcCallback(cx, JSGC_MARK_END);
-        JS_ASSERT(cx->insideGCMarkCallback);
-        cx->insideGCMarkCallback = JS_FALSE;
-    }
     JS_ASSERT(rt->gcMarkLaterCount == 0);
 
     rt->gcMarkingTracer = NULL;
+
+    if (rt->gcCallback)
+        (void) rt->gcCallback(cx, JSGC_MARK_END);
 
 #ifdef JS_THREADSAFE
     JS_ASSERT(!cx->gcSweepTask);
@@ -3209,7 +3248,7 @@ LetOtherGCFinish(JSContext *cx)
     JS_ASSERT(rt->gcThread);
     JS_ASSERT(cx->thread != rt->gcThread);
 
-    size_t requestDebit = cx->thread->contextsInRequests;
+    size_t requestDebit = cx->thread->requestContext ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
 #ifdef JS_TRACER
     JS_ASSERT_IF(requestDebit == 0, !JS_ON_TRACE(cx));
@@ -3288,13 +3327,13 @@ BeginGCSession(JSContext *cx)
     js_NudgeOtherContexts(cx);
 
     /*
-     * Discount all the requests on the current thread from contributing to
+     * Discount the request on the current thread from contributing to
      * rt->requestCount before we wait for all other requests to finish.
      * JS_NOTIFY_REQUEST_DONE, which will wake us up, is only called on
      * rt->requestCount transitions to 0.
      */
-    size_t requestDebit = cx->thread->contextsInRequests;
-    JS_ASSERT_IF(cx->requestDepth != 0, requestDebit >= 1);
+    JS_ASSERT_IF(cx->requestDepth != 0, cx->thread->requestContext);
+    size_t requestDebit = cx->thread->requestContext ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
     if (requestDebit != rt->requestCount) {
         rt->requestCount -= requestDebit;
@@ -3383,11 +3422,10 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
      * Do not scan the current thread on the shutdown or when the GC is called
      * outside a request.
      */
-    bool scanGCThreadStack =
+    bool scanGCThreadStack = (rt->state != JSRTS_LANDING);
 #ifdef JS_THREADSAFE
-                             (cx->thread->contextsInRequests != 0) &&
+    scanGCThreadStack &= !!cx->thread->requestContext;
 #endif
-                             (rt->state != JSRTS_LANDING);
     if (scanGCThreadStack)
         JS_THREAD_DATA(cx)->conservativeGC.enable(true);
     bool firstRun = true;
@@ -3533,7 +3571,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
     JSCompartment *compartment = new JSCompartment(rt);
     if (!compartment || !compartment->init()) {
         JS_ReportOutOfMemory(cx);
-        return false;
+        return NULL;
     }
 
     if (principals) {
@@ -3541,12 +3579,21 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
         JSPRINCIPALS_HOLD(cx, principals);
     }
 
-    AutoLockGC lock(rt);
+    {
+        AutoLockGC lock(rt);
 
-    if (!rt->compartments.append(compartment)) {
-        AutoUnlockGC unlock(rt);
-        JS_ReportOutOfMemory(cx);
-        return false;
+        if (!rt->compartments.append(compartment)) {
+            AutoUnlockGC unlock(rt);
+            JS_ReportOutOfMemory(cx);
+            return NULL;
+        }
+    }
+
+    JSCompartmentCallback callback = rt->compartmentCallback;
+    if (callback && !callback(cx, compartment, JSCOMPARTMENT_NEW)) {
+        AutoLockGC lock(rt);
+        rt->compartments.popBack();
+        return NULL;
     }
 
     return compartment;

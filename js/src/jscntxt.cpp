@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JS execution context.
  */
@@ -502,40 +500,6 @@ FrameRegsIter::operator++()
             f = f->down;
         }
     }
-    return *this;
-}
-
-JS_REQUIRES_STACK
-AllFramesIter::AllFramesIter(JSContext *cx)
-{
-#ifdef JS_THREADSAFE
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-#endif
-
-    curcs = cx->stack().getCurrentCallStack();
-    if (!curcs) {
-        curfp = NULL;
-        return;
-    }
-
-    curfp = curcs->getCurrentFrame();
-}
-
-AllFramesIter &
-AllFramesIter::operator++()
-{
-    JS_ASSERT(!done());
-
-    if (curfp == curcs->getInitialFrame()) {
-        curcs = curcs->getPreviousInThread();
-        if (curcs)
-            curfp = curcs->getCurrentFrame();
-        else
-            curfp = NULL;
-    } else {
-        curfp = curfp->down;
-    }
-
     return *this;
 }
 

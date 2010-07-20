@@ -53,7 +53,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(0da97f1f-ad20-43e5-9793-61df63cc9c9a)]
+[scriptable, uuid(a6dbdbc9-5564-4e52-820a-4056c698f699)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -674,4 +674,21 @@ interface nsIDOMWindowUtils : nsISupports {
    * is no current inner window, throws NS_ERROR_NOT_AVAILABLE.
    */
   readonly attribute unsigned long long currentInnerWindowID;
+
+  /**
+   * Put the window into a state where scripts are frozen and events
+   * suppressed, for use when the window has launched a modal prompt.
+   */
+  void enterModalState();
+
+  /**
+   * Resume normal window state, where scripts can run and events are
+   * delivered.
+   */
+  void leaveModalState();
+
+  /**
+   * Is the window is in a modal state? [See enterModalState()]
+   */
+  boolean isInModalState();
 };

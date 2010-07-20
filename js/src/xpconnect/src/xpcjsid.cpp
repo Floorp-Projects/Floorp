@@ -496,7 +496,7 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                      JSContext * cx, JSObject * obj,
-                     jsval val, PRBool *bp, PRBool *_retval)
+                     const jsval &val, PRBool *bp, PRBool *_retval)
 {
     *bp = JS_FALSE;
     nsresult rv = NS_OK;
@@ -882,7 +882,7 @@ nsJSCID::Construct(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                      JSContext * cx, JSObject * obj,
-                     jsval val, PRBool *bp, PRBool *_retval)
+                     const jsval &val, PRBool *bp, PRBool *_retval)
 {
     *bp = JS_FALSE;
     nsresult rv = NS_OK;

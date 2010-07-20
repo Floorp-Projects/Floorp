@@ -4468,7 +4468,7 @@ nsDOMClassInfo::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMClassInfo::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, jsval val, PRBool *bp,
+                            JSObject *obj, const jsval &val, PRBool *bp,
                             PRBool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::HasInstance Don't call me!");
@@ -4487,7 +4487,7 @@ nsDOMClassInfo::Trace(nsIXPConnectWrappedNative *wrapper, JSTracer *trc,
 
 NS_IMETHODIMP
 nsDOMClassInfo::Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                         JSObject * obj, jsval val, PRBool *bp)
+                         JSObject * obj, const jsval &val, PRBool *bp)
 {
   NS_WARNING("nsDOMClassInfo::Equality Don't call me!");
 
@@ -5680,7 +5680,7 @@ public:
                      jsval *vp, PRBool *_retval);
 
   nsresult HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj, jsval val, PRBool *bp,
+                       JSObject *obj, const jsval &val, PRBool *bp,
                        PRBool *_retval);
 
   nsresult Install(JSContext *cx, JSObject *target, jsval thisAsVal)
@@ -5840,7 +5840,7 @@ nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 nsresult
 nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
                               JSContext * cx, JSObject * obj,
-                              jsval v, PRBool *bp, PRBool *_retval)
+                              const jsval &v, PRBool *bp, PRBool *_retval)
 
 {
   // No need to look these up in the hash.
@@ -6598,7 +6598,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   JSBool ok;
   jsval exn;
   {
-    JSAutoTransferRequest transfer(cx, my_cx);
+    JSAutoRequest transfer(my_cx);
 
     JSObject *realObj;
     wrapper->GetJSObject(&realObj);
@@ -7151,7 +7151,7 @@ nsWindowSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsWindowSH::Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                     JSObject * obj, jsval val, PRBool *bp)
+                     JSObject * obj, const jsval &val, PRBool *bp)
 {
   *bp = PR_FALSE;
 
@@ -10687,7 +10687,7 @@ nsDOMConstructorSH::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMConstructorSH::HasInstance(nsIXPConnectWrappedNative *wrapper,
-                                JSContext *cx, JSObject *obj, jsval val,
+                                JSContext *cx, JSObject *obj, const jsval &val,
                                 PRBool *bp, PRBool *_retval)
 {
   nsDOMConstructor *wrapped =

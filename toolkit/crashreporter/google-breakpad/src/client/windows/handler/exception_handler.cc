@@ -27,12 +27,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <assert.h>
 #include <ObjBase.h>
-#include <winternl.h>
 #include <psapi.h>
-
-#include <cassert>
-#include <cstdio>
+#include <stdio.h>
+#include <winternl.h>
 
 #include "common/windows/string_utils-inl.h"
 
@@ -430,7 +429,7 @@ class AutoExceptionHandler {
   AutoExceptionHandler() {
     // Increment handler_stack_index_ so that if another Breakpad handler is
     // registered using this same HandleException function, and it needs to be
-    // called while this handler is running (either becaause this handler
+    // called while this handler is running (either because this handler
     // declines to handle the exception, or an exception occurs during
     // handling), HandleException will find the appropriate ExceptionHandler
     // object in handler_stack_ to deliver the exception to.
@@ -448,7 +447,6 @@ class AutoExceptionHandler {
     handler_ = ExceptionHandler::handler_stack_->at(
         ExceptionHandler::handler_stack_->size() -
         ++ExceptionHandler::handler_stack_index_);
-    LeaveCriticalSection(&ExceptionHandler::handler_stack_critical_section_);
 
     // In case another exception occurs while this handler is doing its thing,
     // it should be delivered to the previous filter.
@@ -467,7 +465,6 @@ class AutoExceptionHandler {
 #endif  // _MSC_VER >= 1400
     _set_purecall_handler(ExceptionHandler::HandlePureVirtualCall);
 
-    EnterCriticalSection(&ExceptionHandler::handler_stack_critical_section_);
     --ExceptionHandler::handler_stack_index_;
     LeaveCriticalSection(&ExceptionHandler::handler_stack_critical_section_);
   }
@@ -567,16 +564,37 @@ void ExceptionHandler::HandleInvalidParameter(const wchar_t* expression,
   assertion.line = line;
   assertion.type = MD_ASSERTION_INFO_TYPE_INVALID_PARAMETER;
 
+  // Make up an exception record for the current thread and CPU context
+  // to make it possible for the crash processor to classify these
+  // as do regular crashes, and to make it humane for developers to
+  // analyze them.
+  EXCEPTION_RECORD exception_record = {};
+  CONTEXT exception_context = {};
+  EXCEPTION_POINTERS exception_ptrs = { &exception_record, &exception_context };
+  RtlCaptureContext(&exception_context);
+  exception_record.ExceptionCode = STATUS_NONCONTINUABLE_EXCEPTION;
+
+  // We store pointers to the the expression and function strings,
+  // and the line as exception parameters to make them easy to
+  // access by the developer on the far side.
+  exception_record.NumberParameters = 3;
+  exception_record.ExceptionInformation[0] =
+      reinterpret_cast<ULONG_PTR>(&assertion.expression);
+  exception_record.ExceptionInformation[1] =
+      reinterpret_cast<ULONG_PTR>(&assertion.file);
+  exception_record.ExceptionInformation[2] = assertion.line;
+
   bool success = false;
   // In case of out-of-process dump generation, directly call
   // WriteMinidumpWithException since there is no separate thread running.
   if (current_handler->IsOutOfProcess()) {
     success = current_handler->WriteMinidumpWithException(
         GetCurrentThreadId(),
-        NULL,
+        &exception_ptrs,
         &assertion);
   } else {
-    success = current_handler->WriteMinidumpOnHandlerThread(NULL, &assertion);
+    success = current_handler->WriteMinidumpOnHandlerThread(&exception_ptrs,
+                                                            &assertion);
   }
 
   if (!success) {
@@ -615,12 +633,34 @@ void ExceptionHandler::HandleInvalidParameter(const wchar_t* expression,
 
 // static
 void ExceptionHandler::HandlePureVirtualCall() {
+  // This is an pure virtual funciton call, not an exception.  It's safe to
+  // play with sprintf here.
   AutoExceptionHandler auto_exception_handler;
   ExceptionHandler* current_handler = auto_exception_handler.get_handler();
 
   MDRawAssertionInfo assertion;
   memset(&assertion, 0, sizeof(assertion));
   assertion.type = MD_ASSERTION_INFO_TYPE_PURE_VIRTUAL_CALL;
+
+  // Make up an exception record for the current thread and CPU context
+  // to make it possible for the crash processor to classify these
+  // as do regular crashes, and to make it humane for developers to
+  // analyze them.
+  EXCEPTION_RECORD exception_record = {};
+  CONTEXT exception_context = {};
+  EXCEPTION_POINTERS exception_ptrs = { &exception_record, &exception_context };
+  RtlCaptureContext(&exception_context);
+  exception_record.ExceptionCode = STATUS_NONCONTINUABLE_EXCEPTION;
+
+  // We store pointers to the the expression and function strings,
+  // and the line as exception parameters to make them easy to
+  // access by the developer on the far side.
+  exception_record.NumberParameters = 3;
+  exception_record.ExceptionInformation[0] =
+      reinterpret_cast<ULONG_PTR>(&assertion.expression);
+  exception_record.ExceptionInformation[1] =
+      reinterpret_cast<ULONG_PTR>(&assertion.file);
+  exception_record.ExceptionInformation[2] = assertion.line;
 
   bool success = false;
   // In case of out-of-process dump generation, directly call
@@ -629,10 +669,11 @@ void ExceptionHandler::HandlePureVirtualCall() {
   if (current_handler->IsOutOfProcess()) {
     success = current_handler->WriteMinidumpWithException(
         GetCurrentThreadId(),
-        NULL,
+        &exception_ptrs,
         &assertion);
   } else {
-    success = current_handler->WriteMinidumpOnHandlerThread(NULL, &assertion);
+    success = current_handler->WriteMinidumpOnHandlerThread(&exception_ptrs,
+                                                            &assertion);
   }
 
   if (!success) {
@@ -823,13 +864,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
 
   bool success = false;
   if (IsOutOfProcess()) {
-    // Use the EXCEPTION_POINTERS overload for RequestDump if
-    // both exinfo and assertion are NULL.
-    if (!assertion) {
-      success = crash_generation_client_->RequestDump(exinfo);
-    } else {
-      success = crash_generation_client_->RequestDump(assertion);
-    }
+    success = crash_generation_client_->RequestDump(exinfo, assertion);
   } else {
     success = WriteMinidumpWithExceptionForProcess(requesting_thread_id,
                                                    exinfo,

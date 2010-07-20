@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="go()">
+  <script type="text/javascript">
+  function go() {
+    // A negative seek should be clamped to 0
+    var svg = document.documentElement;
+    svg.pauseAnimations();
+    svg.setCurrentTime(-1);
+    svg.removeAttribute("class");
+  }
+  </script>
+  <rect x="100" y="15" width="200" height="200" fill="blue">
+    <animate attributeName="x" from="0" to="30" begin="-1s" dur="2s"/>
+  </rect>
+</svg>

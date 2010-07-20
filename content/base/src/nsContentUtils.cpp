@@ -2415,7 +2415,8 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
   NS_PRECONDITION(aLoadingPrincipal, "Must have a principal");
   NS_PRECONDITION(aRequest, "Null out param");
 
-  if (!sImgLoader) {
+  imgILoader* imgLoader = GetImgLoader();
+  if (!imgLoader) {
     // nothing we can do here
     return NS_OK;
   }
@@ -2444,17 +2445,17 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
 
   // XXXbz using "documentURI" for the initialDocumentURI is not quite
   // right, but the best we can do here...
-  return sImgLoader->LoadImage(aURI,                 /* uri to load */
-                               documentURI,          /* initialDocumentURI */
-                               aReferrer,            /* referrer */
-                               loadGroup,            /* loadgroup */
-                               aObserver,            /* imgIDecoderObserver */
-                               aLoadingDocument,     /* uniquification key */
-                               aLoadFlags,           /* load flags */
-                               nsnull,               /* cache key */
-                               nsnull,               /* existing request*/
-                               channelPolicy,        /* CSP info */
-                               aRequest);
+  return imgLoader->LoadImage(aURI,                 /* uri to load */
+                              documentURI,          /* initialDocumentURI */
+                              aReferrer,            /* referrer */
+                              loadGroup,            /* loadgroup */
+                              aObserver,            /* imgIDecoderObserver */
+                              aLoadingDocument,     /* uniquification key */
+                              aLoadFlags,           /* load flags */
+                              nsnull,               /* cache key */
+                              nsnull,               /* existing request*/
+                              channelPolicy,        /* CSP info */
+                              aRequest);
 }
 
 // static

@@ -932,7 +932,6 @@ JSObjectOps js_ObjectProxyObjectOps = {
     proxy_GetAttributes,
     proxy_SetAttributes,
     proxy_DeleteProperty,
-    js_DefaultValue,
     js_Enumerate,
     proxy_TypeOf_obj,
     proxy_TraceObject,
@@ -995,7 +994,6 @@ JSObjectOps js_FunctionProxyObjectOps = {
     proxy_GetAttributes,
     proxy_SetAttributes,
     proxy_DeleteProperty,
-    js_DefaultValue,
     js_Enumerate,
     proxy_TypeOf_fun,
     proxy_TraceObject,
@@ -1061,17 +1059,18 @@ proxy_create(JSContext *cx, uintN argc, Value *vp)
     JSObject *handler;
     if (!(handler = NonNullObject(cx, vp[2])))
         return false;
-    JSObject *proto, *parent;
+    JSObject *proto, *parent = NULL;
     if (argc > 1 && vp[3].isObject()) {
         proto = &vp[3].toObject();
         parent = proto->getParent();
     } else {
         JS_ASSERT(IsFunctionObject(vp[0]));
         proto = NULL;
-        parent = vp[0].toObject().getParent();
     }
-    JSObject *proxy = NewProxyObject(cx, &JSScriptedProxyHandler::singleton,
-                                     ObjectValue(*handler), proto, parent);
+    if (!parent)
+        parent = vp[0].toObject().getParent();
+    JSObject *proxy = NewProxyObject(cx, &JSScriptedProxyHandler::singleton, ObjectValue(*handler),
+                                     proto, parent);
     if (!proxy)
         return false;
 

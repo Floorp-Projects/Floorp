@@ -984,7 +984,7 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
       }
     }
 
-    // Here's the case where neither NS_NEWXPCOM nor MOZ_COUNT_CTOR were used,
+    // Here's the case where MOZ_COUNT_CTOR was not used,
     // yet we still want to see creation information:
 
     PRBool loggingThisType = (!gTypesToLog || LogThisType(aClazz));
@@ -1068,7 +1068,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClazz)
       }
     }
 
-    // Here's the case where neither NS_DELETEXPCOM nor MOZ_COUNT_DTOR were used,
+    // Here's the case where MOZ_COUNT_DTOR was not used,
     // yet we still want to see deletion information:
 
     if (aRefcnt == 0 && gAllocLog && loggingThisType && loggingThisObject) {

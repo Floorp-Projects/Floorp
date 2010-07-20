@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 #include "jscntxt.h"
 #include "jsscope.h"
 #include "jsobj.h"

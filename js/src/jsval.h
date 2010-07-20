@@ -108,6 +108,8 @@ JS_ENUM_HEADER(JSValueType, uint8)
     JSVAL_TYPE_UNINITIALIZED       = 0xcd
 } JS_ENUM_FOOTER(JSValueType);
 
+JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
+
 #if JS_BITS_PER_WORD == 32
 
 /* Remember to propagate changes to the C defines below. */
@@ -123,6 +125,8 @@ JS_ENUM_HEADER(JSValueTag, uint32)
     JSVAL_TAG_OBJECT               = JSVAL_TAG_CLEAR | JSVAL_TYPE_OBJECT
 } JS_ENUM_FOOTER(JSValueType);
 
+JS_STATIC_ASSERT(sizeof(JSValueTag) == 4);
+
 #elif JS_BITS_PER_WORD == 64
 
 /* Remember to propagate changes to the C defines below. */
@@ -137,6 +141,8 @@ JS_ENUM_HEADER(JSValueTag, uint32)
     JSVAL_TAG_NULL                 = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL,
     JSVAL_TAG_OBJECT               = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_OBJECT
 } JS_ENUM_FOOTER(JSValueType);
+
+JS_STATIC_ASSERT(sizeof(JSValueTag) == 4);
 
 #endif
 
@@ -304,13 +310,19 @@ typedef union jsval_layout
 
 #if JS_BITS_PER_WORD == 32
 
+/*
+ * N.B. GCC, in some but not all cases, chooses to emit signed comparison of
+ * JSValueTag even though its underlying type has been forced to be uint32.
+ * Thus, all comparisons should explicitly cast operands to uint32.
+ */
+
 #define BUILD_JSVAL(tag, payload) \
     ((((uint64)(uint32)(tag)) << 32) | (uint32)(payload))
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_DOUBLE_IMPL(jsval_layout l)
 {
-    return l.s.tag < JSVAL_TAG_CLEAR;
+    return (uint32)l.s.tag < (uint32)JSVAL_TAG_CLEAR;
 }
 
 static JS_ALWAYS_INLINE jsval_layout
@@ -318,7 +330,7 @@ DOUBLE_TO_JSVAL_IMPL(double d)
 {
     jsval_layout l;
     l.asDouble = d;
-    JS_ASSERT(l.s.tag < JSVAL_TAG_CLEAR);
+    JS_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
     return l;
 }
 
@@ -348,7 +360,7 @@ JSVAL_IS_NUMBER_IMPL(jsval_layout l)
 {
     JSValueTag tag = l.s.tag;
     JS_ASSERT(tag != JSVAL_TAG_CLEAR);
-    return tag <= JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET;
+    return (uint32)tag <= (uint32)JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET;
 }
 
 static JS_ALWAYS_INLINE JSBool
@@ -408,14 +420,14 @@ JSVAL_IS_OBJECT_IMPL(jsval_layout l)
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_PRIMITIVE_IMPL(jsval_layout l)
 {
-    return l.s.tag < JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET;
+    return (uint32)l.s.tag < (uint32)JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET;
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_OBJECT_OR_NULL_IMPL(jsval_layout l)
 {
-    JS_ASSERT(l.s.tag <= JSVAL_TAG_OBJECT);
-    return l.s.tag >= JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET;
+    JS_ASSERT((uint32)l.s.tag <= (uint32)JSVAL_TAG_OBJECT);
+    return (uint32)l.s.tag >= (uint32)JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET;
 }
 
 static JS_ALWAYS_INLINE JSObject *
@@ -459,7 +471,8 @@ JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_GCTHING_IMPL(jsval_layout l)
 {
-    return l.s.tag >= JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET;
+    /* gcc sometimes generates signed < without explicit casts. */
+    return (uint32)l.s.tag >= (uint32)JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET;
 }
 
 static JS_ALWAYS_INLINE void *

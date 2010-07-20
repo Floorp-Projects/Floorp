@@ -365,6 +365,9 @@ function BuildConditionSandbox(aURL) {
       getIntPref:  function(p) { return this._prefs.getIntPref(p); }
     }
 
+    dump("REFTEST INFO | Dumping JSON representation of sandbox \n");
+    dump("REFTEST INFO | " + JSON.stringify(sandbox) + " \n");
+
     return sandbox;
 }
 

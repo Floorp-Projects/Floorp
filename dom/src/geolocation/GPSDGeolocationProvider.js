@@ -256,4 +256,4 @@ GPSDProvider.prototype = {
   
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetModule([GPSDProvider]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([GPSDProvider]);

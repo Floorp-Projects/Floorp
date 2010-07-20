@@ -137,8 +137,14 @@ js_LockGCThingRT(JSRuntime *rt, void *thing);
 extern void
 js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
-extern bool
+extern JS_FRIEND_API(bool)
 js_IsAboutToBeFinalized(void *thing);
+
+extern JS_FRIEND_API(uint32)
+js_SetMarkColor(JSTracer *trc, uint32 color);
+
+extern JS_FRIEND_API(bool)
+js_GCThingIsMarked(void *thing, uint32 color);
 
 /*
  * Macro to test if a traversal is the marking phase of GC to avoid exposing
@@ -509,6 +515,7 @@ Mark(JSTracer *trc, void *thing, uint32 kind);
 static inline void
 Mark(JSTracer *trc, void *thing, uint32 kind, const char *name)
 {
+    JS_ASSERT(thing);
     JS_SET_TRACING_NAME(trc, name);
     Mark(trc, thing, kind);
 }
@@ -516,19 +523,9 @@ Mark(JSTracer *trc, void *thing, uint32 kind, const char *name)
 static inline void
 MarkString(JSTracer *trc, JSString *str, const char *name)
 {
+    JS_ASSERT(str);
     JS_SET_TRACING_NAME(trc, name);
     Mark(trc, str, JSTRACE_STRING);
-}
-
-static inline void
-MarkStringRange(JSTracer *trc, size_t len, JSString **vec, const char *name)
-{
-    for (uint32 i = 0; i < len; i++) {
-        if (JSString *str = vec[i]) {
-            JS_SET_TRACING_INDEX(trc, name, i);
-            Mark(trc, str, JSTRACE_STRING);
-        }
-    }
 }
 
 static inline void
@@ -545,6 +542,7 @@ MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
 static inline void
 MarkObject(JSTracer *trc, JSObject *obj, const char *name)
 {
+    JS_ASSERT(obj);
     JS_SET_TRACING_NAME(trc, name);
     Mark(trc, obj, JSTRACE_OBJECT);
 }

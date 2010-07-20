@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 #include "jsversion.h"
 
 #if JS_HAS_XDR
@@ -519,46 +517,46 @@ JS_XDRDouble(JSXDRState *xdr, jsdouble *dp)
     return JS_TRUE;
 }
 
-enum jsvaltag {
-    JSVAL_OBJECT  =             0x0,
-    JSVAL_INT     =             0x1,
-    JSVAL_DOUBLE  =             0x2,
-    JSVAL_STRING  =             0x4,
-    JSVAL_SPECIAL =             0x6,
-    JSVAL_XDRNULL =             0x8,
-    JSVAL_XDRVOID =             0xA
+enum XDRValueTag {
+    XDRTAG_OBJECT  = 0,
+    XDRTAG_INT     = 1,
+    XDRTAG_DOUBLE  = 2,
+    XDRTAG_STRING  = 3,
+    XDRTAG_SPECIAL = 4,
+    XDRTAG_XDRNULL = 5,
+    XDRTAG_XDRVOID = 6
 };
 
-static jsvaltag
-JSVAL_TAG(jsval v)
+static XDRValueTag
+GetXDRTag(jsval v)
 {
     if (JSVAL_IS_NULL(v))
-        return JSVAL_XDRNULL;
+        return XDRTAG_XDRNULL;
     if (JSVAL_IS_VOID(v))
-        return JSVAL_XDRVOID;
+        return XDRTAG_XDRVOID;
     if (JSVAL_IS_OBJECT(v))
-        return JSVAL_OBJECT;
+        return XDRTAG_OBJECT;
     if (JSVAL_IS_INT(v))
-        return JSVAL_INT;
+        return XDRTAG_INT;
     if (JSVAL_IS_DOUBLE(v))
-        return JSVAL_DOUBLE;
+        return XDRTAG_DOUBLE;
     if (JSVAL_IS_STRING(v))
-        return JSVAL_STRING;
+        return XDRTAG_STRING;
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-    return JSVAL_SPECIAL;
+    return XDRTAG_SPECIAL;
 }
 
 static JSBool
 XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
 {
     switch (type) {
-      case JSVAL_XDRNULL:
+      case XDRTAG_XDRNULL:
         *vp = JSVAL_NULL;
         break;
-      case JSVAL_XDRVOID:
+      case XDRTAG_XDRVOID:
         *vp = JSVAL_VOID;
         break;
-      case JSVAL_STRING: {
+      case XDRTAG_STRING: {
         JSString *str;
         if (xdr->mode == JSXDR_ENCODE)
             str = JSVAL_TO_STRING(*vp);
@@ -568,7 +566,7 @@ XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
             *vp = STRING_TO_JSVAL(str);
         break;
       }
-      case JSVAL_DOUBLE: {
+      case XDRTAG_DOUBLE: {
         double d = xdr->mode == JSXDR_ENCODE ? JSVAL_TO_DOUBLE(*vp) : 0;
         if (!JS_XDRDouble(xdr, &d))
             return JS_FALSE;
@@ -576,7 +574,7 @@ XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
             *vp = DOUBLE_TO_JSVAL(d);
         break;
       }
-      case JSVAL_OBJECT: {
+      case XDRTAG_OBJECT: {
         JSObject *obj;
         if (xdr->mode == JSXDR_ENCODE)
             obj = JSVAL_TO_OBJECT(*vp);
@@ -586,7 +584,7 @@ XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
             *vp = OBJECT_TO_JSVAL(obj);
         break;
       }
-      case JSVAL_SPECIAL: {
+      case XDRTAG_SPECIAL: {
         uint32 b;
         if (xdr->mode == JSXDR_ENCODE)
             b = (uint32) JSVAL_TO_BOOLEAN(*vp);
@@ -599,7 +597,7 @@ XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
       default: {
         uint32 i;
 
-        JS_ASSERT(type == JSVAL_INT);
+        JS_ASSERT(type == XDRTAG_INT);
         if (xdr->mode == JSXDR_ENCODE)
             i = (uint32) JSVAL_TO_INT(*vp);
         if (!JS_XDRUint32(xdr, &i))
@@ -618,31 +616,12 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
     uint32 type;
 
     if (xdr->mode == JSXDR_ENCODE)
-        type = JSVAL_TAG(*vp);
+        type = GetXDRTag(*vp);
     return JS_XDRUint32(xdr, &type) && XDRValueBody(xdr, type, vp);
 }
 
-JSBool
-js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
-{
-    JSString *str;
-
-    if (xdr->mode == JSXDR_ENCODE)
-        str = ATOM_TO_STRING(*atomp);
-
-    if (!JS_XDRString(xdr, &str))
-        return JS_FALSE;
-
-    if (xdr->mode == JSXDR_DECODE) {
-        *atomp = js_AtomizeString(xdr->cx, str, 0);
-        return *atomp != NULL;
-    }
-
-    return JS_TRUE;
-}
-
 extern JSBool
-js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp)
+js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
 {
     JSString *str;
     uint32 nchars;

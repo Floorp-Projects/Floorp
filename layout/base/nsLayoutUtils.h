@@ -77,8 +77,8 @@ class nsLayoutUtils
 public:
 
   /**
-   * Uses heuristics to figure out the appropriate child list name
-   * for aChildFrame.
+   * Use heuristics to figure out the name of the child list that
+   * aChildFrame is currently in.
    */
   static nsIAtom* GetChildListNameFor(nsIFrame* aChildFrame);
 

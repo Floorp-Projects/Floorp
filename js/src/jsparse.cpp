@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JS parser.
  *
@@ -92,6 +90,8 @@
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
+
+#include "jsatominlines.h"
 
 using namespace js;
 
@@ -695,7 +695,7 @@ Parser::parse(JSObject *chain)
 JS_STATIC_ASSERT(UpvarCookie::FREE_LEVEL == JS_BITMASK(JSFB_LEVEL_BITS));
 
 static inline bool
-SetStaticLevel(JSTreeContext *tc, uint16 staticLevel)
+SetStaticLevel(JSTreeContext *tc, uintN staticLevel)
 {
     /*
      * This is a lot simpler than error-checking every UpvarCookie::set, and
@@ -719,7 +719,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
                         const jschar *chars, size_t length,
                         FILE *file, const char *filename, uintN lineno,
                         JSString *source /* = NULL */,
-                        uint16 staticLevel /* = 0 */)
+                        uintN staticLevel /* = 0 */)
 {
     JSArenaPool codePool, notePool;
     TokenKind tt;

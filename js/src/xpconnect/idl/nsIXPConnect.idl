@@ -397,7 +397,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(c53c54ac-afc1-458a-98f5-cadb52574e40)]
+[uuid(68090BF7-EA5A-4C9E-BAF9-DB7AF857AC09)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -427,12 +427,27 @@ interface nsIXPConnect : nsISupports
      * below). If you do not pass INIT_JS_STANDARD_CLASSES, then aCOMObj
      * must implement nsIXPCScriptable so it can resolve the standard
      * classes when asked by the JS engine.
+     *
+     * @param aJSContext the context to use while creating the global object.
+     * @param aCOMObj the native object that represents the global object.
+     * @param aIID the IID used to wrap the global object.
+     * @param aPrincipal the principal of the code that will run in this
+     *                   compartment. Can be null. If no specific origin is
+     *                   passed, will be used to compute the origin.
+     * @param aOrigin must be passed if aPrincipal is null. If non-empty,
+     *                overrides aPrincipal's origin. (can be used to separate
+     *                code from the same principals into different
+     *                comartments, like sandboxes).
+     * @param aFlags one of the flags below specifying what options this
+     *               global object wants.
      */
     nsIXPConnectJSObjectHolder
     initClassesWithNewWrappedGlobal(
                   in JSContextPtr aJSContext,
                   in nsISupports  aCOMObj,
                   in nsIIDRef     aIID,
+                  in nsIPrincipal aPrincipal,
+                  in ACString     aOrigin,
                   in PRUint32     aFlags);
 
     const PRUint32 INIT_JS_STANDARD_CLASSES  = 1 << 0;

@@ -904,8 +904,8 @@ IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::Add(jsval aValue,
-                    jsval aKey,
+IDBObjectStore::Add(const jsval &aValue,
+                    const jsval &aKey,
                     JSContext* aCx,
                     PRUint8 aOptionalArgCount,
                     nsIIDBRequest** _retval)
@@ -920,15 +920,13 @@ IDBObjectStore::Add(jsval aValue,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
-  if (aOptionalArgCount < 1) {
-    aKey = JSVAL_VOID;
-  }
+  jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
 
   nsString jsonValue;
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetAddInfo(aCx, aValue, aKey, jsonValue, key, updateInfo);
+  nsresult rv = GetAddInfo(aCx, aValue, keyval, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -951,8 +949,8 @@ IDBObjectStore::Add(jsval aValue,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::Modify(jsval aValue,
-                       jsval aKey,
+IDBObjectStore::Modify(const jsval &aValue,
+                       const jsval &aKey,
                        JSContext* aCx,
                        PRUint8 aOptionalArgCount,
                        nsIIDBRequest** _retval)
@@ -967,15 +965,13 @@ IDBObjectStore::Modify(jsval aValue,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
-  if (aOptionalArgCount < 1) {
-    aKey = JSVAL_VOID;
-  }
+  jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
 
   nsString jsonValue;
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetAddInfo(aCx, aValue, aKey, jsonValue, key, updateInfo);
+  nsresult rv = GetAddInfo(aCx, aValue, keyval, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -998,8 +994,8 @@ IDBObjectStore::Modify(jsval aValue,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::AddOrModify(jsval aValue,
-                            jsval aKey,
+IDBObjectStore::AddOrModify(const jsval &aValue,
+                            const jsval &aKey,
                             JSContext* aCx,
                             PRUint8 aOptionalArgCount,
                             nsIIDBRequest** _retval)
@@ -1014,15 +1010,13 @@ IDBObjectStore::AddOrModify(jsval aValue,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
-  if (aOptionalArgCount < 1) {
-    aKey = JSVAL_VOID;
-  }
+  jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
 
   nsString jsonValue;
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetAddInfo(aCx, aValue, aKey, jsonValue, key, updateInfo);
+  nsresult rv = GetAddInfo(aCx, aValue, keyval, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }

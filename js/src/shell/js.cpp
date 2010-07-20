@@ -3330,7 +3330,7 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
             goto fail;
 
         {
-            JSAutoTransferRequest transfer(cx, newcx);
+            JSAutoRequest req(newcx);
             JS_SetGlobalObject(newcx, global);
         }
         JS_ClearContextThread(newcx);
@@ -4831,67 +4831,6 @@ static JSClass env_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-#ifdef NARCISSUS
-
-static JSBool
-defineProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-               jsval *rval)
-{
-    JSString *str;
-    jsval value;
-    JSBool dontDelete, readOnly, dontEnum;
-    const jschar *chars;
-    size_t length;
-    uintN attrs;
-
-    dontDelete = readOnly = dontEnum = JS_FALSE;
-    if (!JS_ConvertArguments(cx, argc, argv, "Sv/bbb",
-                             &str, &value, &dontDelete, &readOnly, &dontEnum)) {
-        return JS_FALSE;
-    }
-    chars = JS_GetStringChars(str);
-    length = JS_GetStringLength(str);
-    attrs = dontEnum ? 0 : JSPROP_ENUMERATE;
-    if (dontDelete)
-        attrs |= JSPROP_PERMANENT;
-    if (readOnly)
-        attrs |= JSPROP_READONLY;
-    return JS_DefineUCProperty(cx, obj, chars, length, value, NULL, NULL,
-                               attrs);
-}
-
-static JSBool
-Evaluate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    /* function evaluate(source, filename, lineno) { ... } */
-    JSString *source;
-    const char *filename = "";
-    jsuint lineno = 0;
-    uint32 oldopts;
-    JSBool ok;
-
-    if (argc == 0) {
-        *rval = JSVAL_VOID;
-        return JS_TRUE;
-    }
-
-    if (!JS_ConvertArguments(cx, argc, argv, "S/su",
-                             &source, &filename, &lineno)) {
-        return JS_FALSE;
-    }
-
-    oldopts = JS_GetOptions(cx);
-    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-    ok = JS_EvaluateUCScript(cx, obj, JS_GetStringChars(source),
-                             JS_GetStringLength(source), filename,
-                             lineno, rval);
-    JS_SetOptions(cx, oldopts);
-
-    return ok;
-}
-
-#endif /* NARCISSUS */
-
 /*
  * Avoid a reentrancy hazard.
  *
@@ -4983,23 +4922,6 @@ NewGlobalObject(JSContext *cx, JSAutoCrossCompartmentCall &call)
                            its_setter, JSPROP_READONLY))
         return NULL;
 
-#ifdef NARCISSUS
-    jsval v;
-    static const char Object_prototype[] = "Object.prototype";
-
-    if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
-        return NULL;
-
-    if (!JS_EvaluateScript(cx, glob,
-                           Object_prototype, sizeof Object_prototype - 1,
-                           NULL, 0, &v)) {
-        return NULL;
-    }
-    if (!JS_DefineFunction(cx, JSVAL_TO_OBJECT(v), "__defineProperty__",
-                           defineProperty, 5, 0)) {
-        return NULL;
-    }
-#endif
     return glob;
 }
 

@@ -1071,9 +1071,13 @@ asInt32(const Value &v)
     return jsint(v.toDouble());
 }
 
-/* Return JSVAL_TYPE_DOUBLE for all numbers (int and double) and the tag otherwise. */
+/*
+ * Return JSVAL_TYPE_DOUBLE for all numbers (int and double). Split
+ * JSVAL_TYPE_OBJECT into JSVAL_TYPE_FUNOBJ  and JSVAL_TYPE_NONFUNOBJ.
+ * Otherwise, just return the value's type.
+ */
 static inline JSValueType
-GetPromotedType(const Value &v)
+getPromotedType(const Value &v)
 {
     if (v.isNumber())
         return JSVAL_TYPE_DOUBLE;
@@ -1082,7 +1086,11 @@ GetPromotedType(const Value &v)
     return v.extractNonDoubleObjectTraceType();
 }
 
-/* Return JSVAL_TYPE_INT32 for all whole numbers that fit into signed 32-bit and the tag otherwise. */
+/*
+ * Return JSVAL_TYPE_INT32 for all whole numbers that fit into signed 32-bit.
+ * Split JSVAL_TYPE_OBJECT into JSVAL_TYPE_FUNOBJ and JSVAL_TYPE_NONFUNOBJ.
+ * Otherwise, just return the value's type.
+ */
 static inline JSValueType
 getCoercedType(const Value &v)
 {
@@ -1810,15 +1818,6 @@ VisitGlobalSlots(Visitor &visitor, JSContext *cx, JSObject *globalObj,
         unsigned slot = gslots[n];
         visitor.visitGlobalSlot(&globalObj->getSlotRef(slot), n, slot);
     }
-}
-
-template <typename Visitor>
-static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-VisitGlobalSlots(Visitor &visitor, JSContext *cx, TreeFragment *f)
-{
-    JSObject* globalObj = f->globalObj();
-    SlotList& gslots = *f->globalSlots;
-    VisitGlobalSlots(visitor, cx, globalObj, gslots.length(), gslots.data());
 }
 
 class AdjustCallerTypeVisitor;
@@ -2763,6 +2762,7 @@ MarkTree(JSTracer* trc, TreeFragment *f)
     while (len--) {
         Value &v = *vp++;
         JS_SET_TRACING_NAME(trc, "jitgcthing");
+        JS_ASSERT(v.isMarkable());
         Mark(trc, v.asGCThing(), v.gcKind());
     }
     JSScopeProperty** spropp = f->sprops.data();
@@ -4891,17 +4891,17 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         }
     } else {
         exit->exitType = LOOP_EXIT;
+        exit->target = tree;
         debug_only_printf(LC_TMTreeVis, "TREEVIS CHANGEEXIT EXIT=%p TYPE=%s\n", (void*)exit,
                           getExitName(LOOP_EXIT));
 
         JS_ASSERT((fragment == fragment->root) == !!loopLabel);
         if (loopLabel) {
             lir->insBranch(LIR_j, NULL, loopLabel);
-            lir->ins1(LIR_livep, lirbuf->state);
+            fragment->lastIns = lir->ins1(LIR_livep, lirbuf->state);
+        } else {
+            fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
         }
-
-        exit->target = tree;
-        fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
     }
 
     CHECK_STATUS_A(compile());
@@ -8630,7 +8630,9 @@ TraceRecorder::ifop()
                       lir->insEqI_0(lir->ins2(LIR_eqd, v_ins, lir->insImmD(0))));
     } else if (v.isString()) {
         cond = v.toString()->length() != 0;
-        x = lir->insLoad(LIR_ldp, v_ins, offsetof(JSString, mLength), ACC_OTHER);
+        x = lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, v_ins,
+                          offsetof(JSString, mLengthAndFlags), ACC_OTHER),
+                          JSString::FLAGS_LENGTH_SHIFT);
     } else {
         JS_NOT_REACHED("ifop");
         return ARECORD_STOP;
@@ -8871,8 +8873,8 @@ TraceRecorder::strictEquality(bool equal, bool cmpCase)
     LIns* x;
     bool cond;
 
-    JSValueType ltag = GetPromotedType(l);
-    if (ltag != GetPromotedType(r)) {
+    JSValueType ltag = getPromotedType(l);
+    if (ltag != getPromotedType(r)) {
         cond = !equal;
         x = lir->insImmI(cond);
     } else if (ltag == JSVAL_TYPE_STRING) {
@@ -8937,7 +8939,7 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
      * a primitive value (which would terminate recursion).
      */
 
-    if (GetPromotedType(l) == GetPromotedType(r)) {
+    if (getPromotedType(l) == getPromotedType(r)) {
         if (l.isUndefined() || l.isNull()) {
             cond = true;
             if (l.isNull())
@@ -9353,28 +9355,6 @@ inline LIns*
 TraceRecorder::map(LIns* obj_ins)
 {
     return addName(lir->insLoad(LIR_ldp, obj_ins, (int) offsetof(JSObject, map), ACC_OTHER), "map");
-}
-
-bool
-TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, size_t op_offset)
-{
-    JS_ASSERT(op_offset < sizeof(JSObjectOps));
-    JS_ASSERT(op_offset % sizeof(void *) == 0);
-
-#define OP(ops) (*(void **) ((uint8 *) (ops) + op_offset))
-    void* ptr = OP(map->ops);
-    if (ptr != OP(&js_ObjectOps))
-        return false;
-#undef OP
-
-    ops_ins = addName(lir->insLoad(LIR_ldp, map_ins, int(offsetof(JSObjectMap, ops)), ACC_READONLY),
-                      "ops");
-    LIns* n = lir->insLoad(LIR_ldp, ops_ins, op_offset, ACC_READONLY);
-    guard(true,
-          addName(lir->ins2(LIR_eqp, n, INS_CONSTPTR(ptr)), "guard(native-map)"),
-          BRANCH_EXIT);
-
-    return true;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10149,8 +10129,6 @@ TraceRecorder::guardNativeConversion(Value& v)
     JSObject* obj = &v.toObject();
     LIns* obj_ins = get(&v);
 
-    if (obj->map->ops->defaultValue != js_DefaultValue)
-        RETURN_STOP("operand has non-native defaultValue op");
     ConvertOp convert = obj->getClass()->convert;
     if (convert != Valueify(JS_ConvertStub) && convert != js_TryValueOf)
         RETURN_STOP("operand has convert hook");
@@ -10163,11 +10141,9 @@ TraceRecorder::guardNativeConversion(Value& v)
         CHECK_STATUS(guardShape(obj_ins, obj, obj->shape(),
                                 "guardNativeConversion", exit));
     } else {
-        // Guard that the defaultValue hook is native at run time,
-        // even though other ops are not. This has overhead.
-        LIns* ops_ins;
-        JS_ALWAYS_TRUE(map_is_native(obj->map, map(obj_ins), ops_ins,
-                                     offsetof(JSObjectOps, defaultValue)));
+        // We could specialize to guard on just JSClass.convert, but a mere
+        // class guard is simpler and slightly faster.
+        guardClass(obj_ins, obj->getClass(), snapshot(MISMATCH_EXIT), ACC_OTHER);
     }
     return RECORD_CONTINUE;
 }
@@ -10816,8 +10792,9 @@ TraceRecorder::record_JSOP_NOT()
         return ARECORD_CONTINUE;
     }
     JS_ASSERT(v.isString());
-    set(&v, lir->insEqP_0(lir->insLoad(LIR_ldp, get(&v),
-                                       offsetof(JSString, mLength), ACC_OTHER)));
+    set(&v, lir->insEqP_0(lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, get(&v),
+                          offsetof(JSString, mLengthAndFlags), ACC_OTHER),
+                          JSString::FLAGS_LENGTH_SHIFT)));
     return ARECORD_CONTINUE;
 }
 
@@ -10849,7 +10826,7 @@ TraceRecorder::record_JSOP_NEG()
             !oracle->isInstructionUndemotable(cx->regs->pc) &&
             isPromoteInt(a) &&
             (!v.isInt32() || v.toInt32() != 0) &&
-            (!v.isDouble() || !JSDOUBLE_IS_NEGZERO(v.toDouble())) &&
+            (!v.isDouble() || v.toDouble() != 0) &&
             -v.toNumber() == (int)-v.toNumber())
         {
             VMSideExit* exit = snapshot(OVERFLOW_EXIT);
@@ -15664,8 +15641,9 @@ TraceRecorder::record_JSOP_LENGTH()
         if (!l.isString())
             RETURN_STOP_A("non-string primitive JSOP_LENGTH unsupported");
         set(&l, lir->ins1(LIR_i2d,
-                          p2i(lir->insLoad(LIR_ldp, get(&l),
-                                           offsetof(JSString, mLength), ACC_OTHER))));
+            p2i(lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, get(&l),
+                              offsetof(JSString, mLengthAndFlags), ACC_OTHER),
+                              JSString::FLAGS_LENGTH_SHIFT))));
         return ARECORD_CONTINUE;
     }
 

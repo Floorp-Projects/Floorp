@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JavaScript iterators.
  */
@@ -109,7 +107,8 @@ NativeIterator::mark(JSTracer *trc)
         MarkIdRange(trc, beginKey(), endKey(), "props");
     else
         MarkValueRange(trc, beginValue(), endValue(), "props");
-    MarkObject(trc, obj, "obj");
+    if (obj)
+        MarkObject(trc, obj, "obj");
 }
 
 /*

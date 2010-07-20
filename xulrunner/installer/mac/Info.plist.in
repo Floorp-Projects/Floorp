@@ -26,5 +26,8 @@
 
     <key>IFPkgFormatVersion</key>
     <real>0.10000000149011612</real>
+
+    <key>LSMinimumSystemVersion</key>
+    <string>10.5</string>
 </dict>
 </plist>

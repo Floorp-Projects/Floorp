@@ -703,7 +703,8 @@ class GetPropCompiler : public PICStubCompiler
         Assembler masm;
         Jump notString = masm.branch32(Assembler::NotEqual, pic.typeReg(),
                                        ImmTag(JSVAL_TAG_STRING));
-        masm.loadPtr(Address(pic.objReg, offsetof(JSString, mLength)), pic.objReg);
+        masm.loadPtr(Address(pic.objReg, offsetof(JSString, mLengthAndFlags)), pic.objReg);
+        masm.rshiftPtr(Imm32(JSString::FLAGS_LENGTH_SHIFT), pic.objReg);
         masm.move(ImmTag(JSVAL_TAG_INT32), pic.shapeReg);
         Jump done = masm.jump();
 

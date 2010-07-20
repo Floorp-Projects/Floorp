@@ -205,16 +205,13 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
  * before deserialization of bytecode.  If the saved version does not match
  * the current version, abort deserialization and invalidate the file.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 64)
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 66)
 
 /*
  * Library-private functions.
  */
 extern JSBool
 js_XDRAtom(JSXDRState *xdr, JSAtom **atomp);
-
-extern JSBool
-js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp);
 
 JS_END_EXTERN_C
 
