@@ -364,6 +364,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
 
     var tabsMixIns = new EventListenerMixIns(tabs);
     tabsMixIns.add({name: "onReady"});
+    tabsMixIns.add({name: "onLoad"});
     tabsMixIns.add({name: "onFocus"});
     tabsMixIns.add({name: "onClose"});
     tabsMixIns.add({name: "onOpen"});
@@ -471,6 +472,18 @@ window.TabsManager = iQ.extend(new Subscribable(), {
         {name: "onReady",
          observe: browser,
          eventName: "DOMContentLoaded",
+         useCapture: true,
+         bubbleTo: tabsMixIns,
+         filter: function(event) {
+           // Return the document that just loaded.
+           event.tab = self;
+           return event;
+         }});
+
+      mixIns.add(
+        {name: "onLoad",
+         observe: browser,
+         eventName: "load",
          useCapture: true,
          bubbleTo: tabsMixIns,
          filter: function(event) {

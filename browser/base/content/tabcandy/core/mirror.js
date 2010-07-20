@@ -21,6 +21,7 @@
  * Contributor(s):
  * Ian Gilman <ian@iangilman.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
+ * Raymond Lee <raymond@appcoast.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -146,8 +147,8 @@ function Mirror(tab, manager) {
     .addClass('tab')
     .html("<div class='favicon'><img/></div>" +
           "<div class='thumb'><div class='thumb-shadow'></div>" +
-	  "<img class='cached-thumb' style='display:none'/><canvas/></div>" +
-	  "<span class='tab-title'>&nbsp;</span>"
+          "<img class='cached-thumb' style='display:none'/><canvas/></div>" +
+          "<span class='tab-title'>&nbsp;</span>"
     )
     .appendTo('body');
 
@@ -224,8 +225,20 @@ Mirror.prototype = iQ.extend(new Subscribable(), {
   hideCachedData: function(tab) {
     this.isShowingCachedData = false;
     var mirror = tab.mirror;
-    iQ(mirror.cachedThumbEl).hide().attr("src", "");
-    iQ(mirror.canvasEl).show();
+
+    iQ(mirror.cachedThumbEl).animate({
+        opacity: 0.5
+      }, {
+        duration: 250,
+        complete: function() {
+          iQ(this).hide().attr("src", "");
+          iQ(mirror.canvasEl).css({ opacity: 0.5, display: '' }).animate({
+            opacity: 1
+          }, {
+            duration: 250
+          });
+        }
+      });
   }
 });
 
@@ -265,14 +278,21 @@ TabMirror.prototype = {
       iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.update(tab);
       }, 1);
-      if (tab.mirror && tab.mirror.isShowingCachedData) {
-	// when DOMContentLoaded is fired, stylesheets, images and subframes
-	// might not be do loading so a few second timeout is needed before
-	// switching back to the canvas.
-	iQ.timeout(function() {
+    });
+
+    // When a tab's content is loaded, show the canvas and hide the cached data
+    // if necessary.
+    Tabs.onLoad(function(evt) {
+      var tab = evt.tab;
+      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+        self.update(tab);
+      }, 1);
+      // ensure it has already repainted before showing to the canvas.
+      iQ.timeout(function() {
+        if (tab.mirror && tab.mirror.isShowingCachedData) {
           tab.mirror.hideCachedData(tab);
-	}, 3000);
-      }
+        }
+      }, 150);
     });
 
     // When a tab is closed, unlink.
@@ -326,7 +346,7 @@ TabMirror.prototype = {
             var oldURL = mirror.url;
             mirror.url = tab.url;
             mirror._sendToSubscribers(
-	      'urlChanged', {oldURL: oldURL, newURL: tab.url});
+              'urlChanged', {oldURL: oldURL, newURL: tab.url});
             mirror.triggerPaint();
           }
 
@@ -346,7 +366,7 @@ TabMirror.prototype = {
           }
 
           if (mirror.needsPaint) {
-	    mirror.tabCanvas.paint();
+            mirror.tabCanvas.paint();
 
             if (Utils.getMilliseconds() - mirror.needsPaint > 5000)
               mirror.needsPaint = 0;
