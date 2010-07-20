@@ -2961,14 +2961,11 @@ mjit::Compiler::jsop_unbrand()
 void
 mjit::Compiler::jsop_instanceof()
 {
+    FrameEntry *lhs = frame.peek(-2);
     FrameEntry *rhs = frame.peek(-1);
 
-    /*
-     * Optimize only function objects, as these will have js_FunctionClass and
-     * thus have fun_instanceOf, which we're inlining.
-     */
-
-    if (rhs->isTypeKnown() && rhs->getKnownType() != JSVAL_TYPE_OBJECT) {
+    // The fast path applies only when both operands are objects.
+    if (rhs->isNotType(JSVAL_TYPE_OBJECT) || lhs->isNotType(JSVAL_TYPE_OBJECT)) {
         prepareStubCall(Uses(2));
         stubCall(stubs::InstanceOf);
         frame.popn(2);
@@ -2977,9 +2974,8 @@ mjit::Compiler::jsop_instanceof()
         return;
     }
 
-    Jump firstSlow;
-    bool typeKnown = rhs->isTypeKnown();
-    if (!typeKnown) {
+    MaybeJump firstSlow;
+    if (!rhs->isTypeKnown()) {
         Jump j = frame.testObject(Assembler::NotEqual, rhs);
         stubcc.linkExit(j, Uses(2));
         RegisterID reg = frame.tempRegForData(rhs);
@@ -3001,12 +2997,13 @@ mjit::Compiler::jsop_instanceof()
     stubcc.linkExit(j, Uses(3));
 
     /* Allocate registers up front, because of branchiness. */
-    FrameEntry *lhs = frame.peek(-3);
     RegisterID obj = frame.copyDataIntoReg(lhs);
     RegisterID proto = frame.copyDataIntoReg(rhs);
     RegisterID temp = frame.allocReg();
 
-    Jump isFalse = frame.testPrimitive(Assembler::Equal, lhs);
+    MaybeJump isFalse;
+    if (!lhs->isTypeKnown())
+        isFalse = frame.testPrimitive(Assembler::Equal, lhs);
 
     /* Quick test to avoid wrapped objects. */
     masm.loadPtr(Address(obj, offsetof(JSObject, clasp)), temp);
@@ -3026,7 +3023,8 @@ mjit::Compiler::jsop_instanceof()
     masm.move(Imm32(1), temp);
     isTrue = masm.jump();
 
-    isFalse.linkTo(masm.label(), &masm);
+    if (isFalse.isSet())
+        isFalse.getJump().linkTo(masm.label(), &masm);
     isFalse2.linkTo(masm.label(), &masm);
     masm.move(Imm32(0), temp);
     isTrue.linkTo(masm.label(), &masm);
@@ -3040,7 +3038,8 @@ mjit::Compiler::jsop_instanceof()
     frame.popn(3);
     frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, temp);
 
-    firstSlow.linkTo(stubcc.masm.label(), &stubcc.masm);
+    if (firstSlow.isSet())
+        firstSlow.getJump().linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.rejoin(Changes(1));
 }
 
