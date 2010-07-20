@@ -5022,8 +5022,13 @@ main(int argc, char **argv, char **envp)
 #endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
 #ifdef XP_WIN
-    DWORD oldmode = SetErrorMode(SEM_NOGPFAULTERRORBOX);
-    SetErrorMode(oldmode | SEM_NOGPFAULTERRORBOX);
+    {
+        const char *crash_option = getenv("XRE_NO_WINDOWS_CRASH_DIALOG");
+        if (crash_option && strncmp(crash_option, "1", 1)) {
+            DWORD oldmode = SetErrorMode(SEM_NOGPFAULTERRORBOX);
+            SetErrorMode(oldmode | SEM_NOGPFAULTERRORBOX);
+        }
+    }
 #endif
 
     CheckHelpMessages();
