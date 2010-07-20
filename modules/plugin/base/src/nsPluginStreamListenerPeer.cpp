@@ -383,11 +383,10 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
   nsRefPtr<nsPluginHost> pluginHost = dont_AddRef(nsPluginHost::GetInst());
 
   // Look for an existing cache file for the URI.
-  nsTArray< nsAutoPtr<nsPluginInstanceTag> > *instanceTags = pluginHost->InstanceTagArray();
-  for (PRUint32 i = 0; i < instanceTags->Length(); i++) {
-    nsPluginInstanceTag *instanceTag = (*instanceTags)[i];
+  nsTArray< nsRefPtr<nsNPAPIPluginInstance> > *instances = pluginHost->InstanceArray();
+  for (PRUint32 i = 0; i < instances->Length(); i++) {
     // most recent streams are at the end of list
-    nsTArray<nsPluginStreamListenerPeer*> *bStreamListeners = instanceTag->mInstance->BStreamListeners();
+    nsTArray<nsPluginStreamListenerPeer*> *bStreamListeners = instances->ElementAt(i)->BStreamListeners();
     for (PRInt32 i = bStreamListeners->Length() - 1; i >= 0; --i) {
       nsPluginStreamListenerPeer *lp = bStreamListeners->ElementAt(i);
       if (lp && lp->mLocalCachedFileHolder) {
