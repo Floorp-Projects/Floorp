@@ -644,26 +644,13 @@ window.TabItems = {
   tabWidth: 160,
   tabHeight: 120,
   fontSize: 9,
+  items: [],
 
   // ----------
   // Function: init
   // Sets the object up.
   init: function() {
-    this.items = [];
 
-    var self = this;
-    window.TabMirror.customize(function(mirror) {
-      var $div = iQ(mirror.el);
-      var tab = mirror.tab;
-      var item = new TabItem(mirror.el, tab);
-
-      item.addOnClose(self, function() {
-        Items.unsquish(null, item);
-      });
-
-      if (!self.reconnect(item))
-        Groups.newTab(item);
-    });
   },
 
   // ----------
