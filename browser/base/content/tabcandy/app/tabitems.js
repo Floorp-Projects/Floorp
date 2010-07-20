@@ -769,7 +769,9 @@ window.TabItems = {
           // the code in the progress listener doesn't fire sometimes because
           // tab is being restored so need to catch that.
           iQ.timeout(function() {
-            mirror.hideCachedData(item.tab);
+            if (mirror && mirror.isShowingCachedData) {
+              mirror.hideCachedData(item.tab);
+            }
           }, 15000);
         }
 
