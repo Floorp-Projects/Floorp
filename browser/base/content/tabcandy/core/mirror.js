@@ -170,7 +170,7 @@ function Mirror(tab, manager) {
 
 /*   Utils.log('applying mirror'); */
   this.tab.mirror = this;
-  this.manager._customize(this);
+  this.manager.createTabItem(this);
 /*   Utils.log('done creating mirror'); */
 }
 
@@ -390,11 +390,23 @@ TabMirror.prototype = {
   },
 
   // ----------
-  // Function: _customize
-  _customize: function(func){
-    // pass
-    // This gets set by add-ons/extensions to MirrorTab
-  },
+  // Function: createTabItem
+  createTabItem: function(mirror) {
+  	try {
+			var $div = iQ(mirror.el);
+			var tab = mirror.tab;
+			var item = new window.TabItem(mirror.el, tab);
+	
+			item.addOnClose(window.TabItems, function() {
+				Items.unsquish(null, item);
+			});
+	
+			if (!window.TabItems.reconnect(item))
+				Groups.newTab(item);
+		} catch(e) {
+			Utils.error(e);
+		}
+	},
 
   // ----------
   // Function: _createEl
@@ -443,24 +455,6 @@ TabMirror.prototype = {
 // ----------
 window.TabMirror = {
   _private: new TabMirror(),
-
-  // Function: customize
-  // Allows you to customize the tab representations as they are created.
-  //
-  // Parameters:
-  //   func - a callback function that will be called every time a new
-  //     tab or tabs are created. func should take in one parameter, a
-  //     <Mirror> representing the tab in question.
-  customize: function(func) {
-    // Apply the custom handlers to all existing elements
-    iQ('div.tab').each(function(elem) {
-      var tab = Tabs.tab(elem);
-      func(tab.mirror);
-    });
-
-    // Apply it to all future elements.
-    TabMirror.prototype._customize = func;
-  },
 
   // Function: pausePainting
   // Tells the TabMirror to stop updating thumbnails (so you can do
