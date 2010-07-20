@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
 #two { -moz-transition: margin-left 1s; }
 #three { -moz-transition: margin 0.5s 0.25s; }
 
-#four, #five, #six {
+#four, #five, #six, #seven::before, #seven::after {
   -moz-transition: 500ms color;
   border-color: black; /* don't derive from color */
   -moz-column-rule-color: black; /* don't derive from color */
@@ -30,6 +30,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
   -moz-transition-timing-function: cubic-bezier(0, 1, 1, 0);
 }
 
+/* make sure we don't get events for the pseudo-elements */
+#seven::before, #seven::after {
+  content: "x";
+  -moz-transition-duration: 50ms;
+}
+#seven[foo]::before, #seven[foo]::after { color: lime; }
+
 </style>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=531585">Mozilla Bug 531585</a>
@@ -41,6 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
 <span id="four" style="color: blue"></span>
 <span id="five" style="color: blue"></span>
 <span id="six" style="color: blue"></span>
+<span id="seven" style="color: blue"></span>
 
 </p>
 <pre id="test">
@@ -247,6 +255,9 @@ $("five").style.color = "lime";
 // We cancel the transition on six by changing 'transition-duration' and
 // then changing the value, so we should get no event.
 $("six").style.color = "lime";
+
+// We should get no events from transitions on pseudo-elements.
+$("seven").setAttribute("foo", "bar");
 
 setTimeout(function() {
              if (cs("five") != "rgb(0, 255, 0)" &&

@@ -61,7 +61,7 @@ bool SendSyncMessageToParent(void* aCallbackData,
   nsTArray<nsCOMPtr<nsIRunnable> > asyncMessages;
   asyncMessages.SwapElements(tabChild->mASyncMessages);
   PRUint32 len = asyncMessages.Length();
-  for (PRInt32 i = 0; i < len; ++i) {
+  for (PRUint32 i = 0; i < len; ++i) {
     nsCOMPtr<nsIRunnable> async = asyncMessages[i];
     async->Run();
   }
@@ -286,8 +286,9 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
 
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(cx, scopeSupports,
-                                         NS_GET_IID(nsISupports), flags,
-                                         getter_AddRefs(mGlobal));
+                                         NS_GET_IID(nsISupports),
+                                         GetPrincipal(), EmptyCString(),
+                                         flags, getter_AddRefs(mGlobal));
   NS_ENSURE_SUCCESS(rv, false);
 
   JSObject* global = nsnull;

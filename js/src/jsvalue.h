@@ -365,6 +365,7 @@ class Value
         data = MAGIC_TO_JSVAL_IMPL(why);
     }
 
+    JS_ALWAYS_INLINE
     void setNumber(uint32 ui) {
         if (ui > JSVAL_INT_MAX)
             setDouble((double)ui);
@@ -372,6 +373,7 @@ class Value
             setInt32((int32)ui);
     }
 
+    JS_ALWAYS_INLINE
     void setNumber(double d) {
         int32_t i;
         if (JSDOUBLE_IS_INT32(d, &i))
@@ -380,6 +382,7 @@ class Value
             setDouble(d);
     }
 
+    JS_ALWAYS_INLINE
     void setObjectOrNull(JSObject *arg) {
         if (arg)
             setObject(*arg);
@@ -387,6 +390,7 @@ class Value
             setNull();
     }
 
+    JS_ALWAYS_INLINE
     void setObjectOrUndefined(JSObject *arg) {
         if (arg)
             setObject(*arg);

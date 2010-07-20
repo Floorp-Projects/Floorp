@@ -38,9 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#define __STDC_LIMIT_MACROS
-
 /*
  * JS date methods.
  */

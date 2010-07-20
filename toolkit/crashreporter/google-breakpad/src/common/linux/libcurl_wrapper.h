@@ -30,9 +30,10 @@
 // A wrapper for libcurl to do HTTP Uploads, to support easy mocking
 // and unit testing of the HTTPUpload class.
 
+#include <curl/curl.h>
+
 #include <string>
 #include <map>
-#include <curl/curl.h>
 
 namespace google_breakpad {
 class LibcurlWrapper {

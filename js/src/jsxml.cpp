@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 #include "jsversion.h"
 
 #if JS_HAS_XML_SUPPORT
@@ -2679,7 +2677,7 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
 
     obj = JSVAL_TO_OBJECT(v);
     if (!obj->isXML()) {
-        if (!obj->defaultValue(cx, JSTYPE_STRING, Valueify(&v)))
+        if (!DefaultValue(cx, obj, JSTYPE_STRING, Valueify(&v)))
             return NULL;
         str = js_ValueToString(cx, Valueify(v));
         if (!str)
@@ -4768,24 +4766,10 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     return JS_TRUE;
 }
 
-static JSBool
-xml_defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
+JSBool
+xml_convert(JSContext *cx, JSObject *obj, JSType type, Value *rval)
 {
-    JSXML *xml;
-
-    if (hint == JSTYPE_OBJECT) {
-        /* Called from for..in code in js_Interpret: return an XMLList. */
-        xml = (JSXML *) obj->getPrivate();
-        if (xml->xml_class != JSXML_CLASS_LIST) {
-            obj = ToXMLList(cx, OBJECT_TO_JSVAL(obj));
-            if (!obj)
-                return JS_FALSE;
-        }
-        vp->setObject(*obj);
-        return JS_TRUE;
-    }
-
-    return JS_CallFunctionName(cx, obj, js_toString_str, 0, NULL, Jsvalify(vp));
+    return js_TryMethod(cx, obj, cx->runtime->atomState.toStringAtom, 0, NULL, rval);
 }
 
 static JSBool
@@ -5056,7 +5040,6 @@ JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
     xml_getAttributes,
     xml_setAttributes,
     xml_deleteProperty,
-    xml_defaultValue,
     xml_enumerate,
     xml_typeOf,
     js_TraceObject,
@@ -5078,7 +5061,7 @@ JS_FRIEND_DATA(Class) js_XMLClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_XML),
     PropertyStub,      PropertyStub,      PropertyStub,      PropertyStub,
-    EnumerateStub,     ResolveStub,       ConvertStub,       xml_finalize,
+    EnumerateStub,     ResolveStub,       xml_convert,       xml_finalize,
     xml_getObjectOps,  NULL,              NULL,              NULL,
     NULL,              NULL,              JS_CLASS_TRACE(xml_trace), NULL
 };
@@ -7209,7 +7192,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         Class *clasp = tmp->getClass();
         if (clasp == &js_BlockClass || clasp == &js_WithClass)
             continue;
-        if (!tmp->getProperty(cx, JSID_DEFAULT_XML_NAMESPACE(), Valueify(&v)))
+        if (!tmp->getProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, Valueify(&v)))
             return JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(v)) {
             *vp = v;
@@ -7222,7 +7205,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     if (!ns)
         return JS_FALSE;
     v = OBJECT_TO_JSVAL(ns);
-    if (!obj->defineProperty(cx, JSID_DEFAULT_XML_NAMESPACE(), Valueify(v),
+    if (!obj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, Valueify(v),
                              PropertyStub, PropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
@@ -7245,7 +7228,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
 
     fp = js_GetTopStackFrame(cx);
     varobj = fp->varobj(cx);
-    if (!varobj->defineProperty(cx, JSID_DEFAULT_XML_NAMESPACE(), ObjectValue(*ns),
+    if (!varobj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, ObjectValue(*ns),
                                 PropertyStub, PropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
@@ -7283,7 +7266,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
         str = js_NewStringCopyN(cx, chars, len);
         if (!str)
             return NULL;
-        chars = str->flatChars();
+        chars = str->chars();
     } else {
         /*
          * Reallocating str (because we know it has no other references)

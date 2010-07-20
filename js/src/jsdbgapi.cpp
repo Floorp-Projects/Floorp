@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JS debugging API.
  */
@@ -1343,7 +1341,11 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
 {
     JS_ASSERT_NOT_ON_TRACE(cx);
 
-    JSObject *scobj = JS_GetFrameScopeChain(cx, fp);
+    JSObject *scobj;
+    JSScript *script;
+    JSBool ok;
+
+    scobj = JS_GetFrameScopeChain(cx, fp);
     if (!scobj)
         return JS_FALSE;
 
@@ -1353,15 +1355,15 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
      * we use a static level that will cause us not to attempt to optimize
      * variable references made by this frame.
      */
-    JSScript *script = Compiler::compileScript(cx, scobj, fp, JS_StackFramePrincipals(cx, fp),
-                                               TCF_COMPILE_N_GO, chars, length, NULL, filename,
-                                               lineno, NULL, UpvarCookie::MAX_LEVEL);
+    script = Compiler::compileScript(cx, scobj, fp, JS_StackFramePrincipals(cx, fp),
+                                    TCF_COMPILE_N_GO, chars, length, NULL, filename,
+                                    lineno, NULL, UpvarCookie::MAX_LEVEL);
 
     if (!script)
         return JS_FALSE;
 
-    bool ok = !!Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL,
-                        Valueify(rval));
+    ok = Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL,
+                 Valueify(rval));
 
     js_DestroyScript(cx, script);
     return ok;

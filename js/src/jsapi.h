@@ -335,6 +335,7 @@ JSID_TO_STRING(jsid iden)
 JS_PUBLIC_API(JSBool)
 JS_StringHasBeenInterned(JSString *str);
 
+/* A jsid may only hold an interned JSString. */
 static JS_ALWAYS_INLINE jsid
 INTERNED_STRING_TO_JSID(JSString *str)
 {
@@ -425,13 +426,11 @@ JSID_IS_DEFAULT_XML_NAMESPACE(jsid iden)
     return ((size_t)JSID_BITS(iden) == JSID_TYPE_DEFAULT_XML_NAMESPACE);
 }
 
-static JS_ALWAYS_INLINE jsid
-JSID_DEFAULT_XML_NAMESPACE()
-{
-    jsid iden;
-    JSID_BITS(iden) = JSID_TYPE_DEFAULT_XML_NAMESPACE;
-    return iden;
-}
+#ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
+extern JS_PUBLIC_DATA(jsid) JS_DEFAULT_XML_NAMESPACE_ID;
+#else
+#define JS_DEFAULT_XML_NAMESPACE_ID ((jsid)JSID_TYPE_DEFAULT_XML_NAMESPACE)
+#endif
 
 /*
  * A void jsid is not a valid id and only arises as an exceptional API return
@@ -448,10 +447,10 @@ JSID_IS_VOID(jsid iden)
     return ((size_t)JSID_BITS(iden) == JSID_TYPE_VOID);
 }
 
-#ifdef DEBUG
+#ifdef JS_USE_JSVAL_JSID_STRUCT_TYPES
 extern JS_PUBLIC_DATA(jsid) JSID_VOID;
 #else
-# define JSID_VOID  ((jsid)JSID_TYPE_VOID)
+#define JSID_VOID  ((jsid)JSID_TYPE_VOID)
 #endif
 
 /************************************************************************/
@@ -755,9 +754,6 @@ JS_SuspendRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
 
-extern JS_PUBLIC_API(void)
-JS_TransferRequest(JSContext *cx, JSContext *another);
-
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
@@ -821,27 +817,6 @@ class JSAutoSuspendRequest {
     static void *operator new(size_t) CPP_THROW_NEW { return 0; };
     static void operator delete(void *, size_t) { };
 #endif
-};
-
-class JSAutoTransferRequest
-{
-  public:
-    JSAutoTransferRequest(JSContext* cx1, JSContext* cx2)
-        : cx1(cx1), cx2(cx2) {
-        if(cx1 != cx2)
-            JS_TransferRequest(cx1, cx2);
-    }
-    ~JSAutoTransferRequest() {
-        if(cx1 != cx2)
-            JS_TransferRequest(cx2, cx1);
-    }
-  private:
-    JSContext* const cx1;
-    JSContext* const cx2;
-
-    /* Not copyable. */
-    JSAutoTransferRequest(JSAutoTransferRequest &);
-    void operator =(JSAutoTransferRequest&);
 };
 
 JS_BEGIN_EXTERN_C
@@ -964,6 +939,9 @@ JS_ToggleOptions(JSContext *cx, uint32 options);
 extern JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void);
 
+extern JS_PUBLIC_API(JSCompartmentCallback)
+JS_SetCompartmentCallback(JSRuntime *rt, JSCompartmentCallback callback);
+
 extern JS_PUBLIC_API(JSWrapObjectCallback)
 JS_SetWrapObjectCallback(JSContext *cx, JSWrapObjectCallback callback);
 
@@ -973,25 +951,37 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
 extern JS_PUBLIC_API(void)
 JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call);
 
+extern JS_PUBLIC_API(void *)
+JS_SetCompartmentPrivate(JSContext *cx, JSCompartment *compartment, void *data);
+
+extern JS_PUBLIC_API(void *)
+JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment);
+
 #ifdef __cplusplus
 JS_END_EXTERN_C
 
-class JSAutoCrossCompartmentCall
+class JS_PUBLIC_API(JSAutoCrossCompartmentCall)
 {
     JSCrossCompartmentCall *call;
   public:
     JSAutoCrossCompartmentCall() : call(NULL) {}
 
-    bool enter(JSContext *cx, JSObject *target) {
-        JS_ASSERT(!call);
-        call = JS_EnterCrossCompartmentCall(cx, target);
-        return call != NULL;
-    }
+    bool enter(JSContext *cx, JSObject *target);
 
     ~JSAutoCrossCompartmentCall() {
         if (call)
             JS_LeaveCrossCompartmentCall(call);
     }
+};
+
+class JS_FRIEND_API(JSAutoEnterCompartment)
+{
+    JSContext *cx;
+    JSCompartment *compartment;
+  public:
+    JSAutoEnterCompartment(JSContext *cx, JSCompartment *newCompartment);
+    JSAutoEnterCompartment(JSContext *cx, JSObject *target);
+    ~JSAutoEnterCompartment();
 };
 
 JS_BEGIN_EXTERN_C
@@ -1170,6 +1160,7 @@ JS_AddGCThingRoot(JSContext *cx, void **rp);
 #define JS_AddValueRoot(cx,vp) JS_AddNamedValueRoot((cx), (vp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
 #define JS_AddStringRoot(cx,rp) JS_AddNamedStringRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
 #define JS_AddObjectRoot(cx,rp) JS_AddNamedObjectRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
+#define JS_AddGCThingRoot(cx,rp) JS_AddNamedGCThingRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
 #endif
 
 extern JS_PUBLIC_API(JSBool)
@@ -2671,26 +2662,32 @@ extern JS_PUBLIC_API(intN)
 JS_CompareStrings(JSString *str1, JSString *str2);
 
 /*
+ * This function is now obsolete and behaves the same as JS_NewUCString.  Use
+ * JS_NewUCString instead.
+ */
+extern JS_PUBLIC_API(JSString *)
+JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length);
+
+/*
  * Mutable string support.  A string's characters are never mutable in this JS
- * implementation, but a growable string has a buffer that can be reallocated,
- * and a dependent string is a substring of another (growable, dependent, or
- * immutable) string.  The direct data members of the (opaque to API clients)
- * JSString struct may be changed in a single-threaded way for growable and
- * dependent strings.
+ * implementation, but a dependent string is a substring of another dependent
+ * or immutable string, and a rope is a lazily concatenated string that creates
+ * its underlying buffer the first time it is accessed.  Even after a rope
+ * creates its underlying buffer, it still considered mutable.  The direct data
+ * members of the (opaque to API clients) JSString struct may be changed in a
+ * single-threaded way for dependent strings and ropes.
  *
- * Therefore mutable strings cannot be used by more than one thread at a time.
- * You may call JS_MakeStringImmutable to convert the string from a mutable
- * (growable or dependent) string to an immutable (and therefore thread-safe)
- * string.  The engine takes care of converting growable and dependent strings
- * to immutable for you if you store strings in multi-threaded objects using
- * JS_SetProperty or kindred API entry points.
+ * Therefore mutable strings (ropes and dependent strings) cannot be used by
+ * more than one thread at a time.  You may call JS_MakeStringImmutable to
+ * convert the string from a mutable string to an immutable (and therefore
+ * thread-safe) string.  The engine takes care of converting ropes and dependent
+ * strings to immutable for you if you store strings in multi-threaded objects
+ * using JS_SetProperty or kindred API entry points.
  *
  * If you store a JSString pointer in a native data structure that is (safely)
  * accessible to multiple threads, you must call JS_MakeStringImmutable before
  * retiring the store.
  */
-extern JS_PUBLIC_API(JSString *)
-JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length);
 
 /*
  * Create a dependent string, i.e., a string that owns no character storage,
@@ -2702,11 +2699,8 @@ JS_NewDependentString(JSContext *cx, JSString *str, size_t start,
                       size_t length);
 
 /*
- * Concatenate two strings, resulting in a new growable string.  If you create
- * the left string and pass it to JS_ConcatStrings on a single thread, try to
- * use JS_NewGrowableString to create the left string -- doing so helps Concat
- * avoid allocating a new buffer for the result and copying left's chars into
- * the new buffer.  See above for thread safety comments.
+ * Concatenate two strings, possibly resulting in a rope.
+ * See above for thread safety comments.
  */
 extern JS_PUBLIC_API(JSString *)
 JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
@@ -2719,7 +2713,7 @@ extern JS_PUBLIC_API(const jschar *)
 JS_UndependString(JSContext *cx, JSString *str);
 
 /*
- * Convert a mutable string (either growable or dependent) into an immutable,
+ * Convert a mutable string (either rope or dependent) into an immutable,
  * thread-safe one.
  */
 extern JS_PUBLIC_API(JSBool)

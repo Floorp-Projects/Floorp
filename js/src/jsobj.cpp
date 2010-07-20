@@ -41,8 +41,6 @@
 /*
  * JS object implementation.
  */
-#define __STDC_LIMIT_MACROS
-
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
@@ -113,7 +111,6 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_GetAttributes,
     js_SetAttributes,
     js_DeleteProperty,
-    js_DefaultValue,
     js_Enumerate,
     js_TypeOf,
     js_TraceObject,
@@ -1849,45 +1846,30 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
     if (!GetFirstArgumentAsObject(cx, argc, vp, "Object.keys", &obj))
         return JS_FALSE;
 
-    AutoIdArray ida(cx, JS_Enumerate(cx, obj));
-    if (!ida)
+    AutoIdVector props(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, props))
         return JS_FALSE;
 
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto))
-        return JS_FALSE;
-    vp[1].setObject(*proto);
-
-    JS_ASSERT(ida.length() <= UINT32_MAX);
-    JSObject *aobj = js_NewArrayWithSlots(cx, proto, uint32(ida.length()));
-    if (!aobj)
-        return JS_FALSE;
-    vp->setObject(*aobj);
-
-    size_t len = ida.length();
-    JS_ASSERT(aobj->getDenseArrayCapacity() >= len);
-    for (size_t i = 0; i < len; i++) {
-        jsid id = ida[i];
-        if (JSID_IS_INT(id)) {
-            Value idval(Int32Value(JSID_TO_INT(id)));
-            jsid id;
-            if (!js_ValueToStringId(cx, idval, &id))
-                return JS_FALSE;
-            aobj->setDenseArrayElement(i, StringValue(JSID_TO_STRING(id)));
+    AutoValueVector vals(cx);
+    vals.resize(props.length());
+    for (size_t i = 0, len = props.length(); i < len; i++) {
+        jsid id = props[i];
+        if (JSID_IS_STRING(id)) {
+            vals[i].setString(JSID_TO_STRING(id));
         } else {
-            /*
-             * Object-valued ids are a possibility admitted by SpiderMonkey for
-             * the purposes of E4X.  It's unclear whether they could ever be
-             * detected here -- the "obvious" possibility, a property referred
-             * to by a QName, actually appears as a string jsid -- but in the
-             * interests of fidelity we pass object jsids through unchanged.
-             */
-            aobj->setDenseArrayElement(i, IdToValue(id));
+            JS_ASSERT(JSID_IS_INT(id));
+            JSString *str = js_IntToString(cx, JSID_TO_INT(id));
+            if (!str)
+                return JS_FALSE;
+            vals[i].setString(str);
         }
     }
 
-    JS_ASSERT(len <= UINT32_MAX);
-    aobj->setDenseArrayCount(len);
+    JS_ASSERT(props.length() <= UINT32_MAX);
+    JSObject *aobj = js_NewArrayObject(cx, jsuint(vals.length()), vals.begin(), false);
+    if (!aobj)
+        return JS_FALSE;
+    vp->setObject(*aobj);
 
     return JS_TRUE;
 }
@@ -2286,6 +2268,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
              return JS_FALSE;
         }
 
+        JS_ASSERT_IF(sprop->isMethod(), !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+
         /* 8.12.9 step 12. */
         uintN changed = 0;
         if (desc.hasConfigurable)
@@ -2298,7 +2282,6 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
             changed |= JSPROP_SETTER | JSPROP_SHARED;
 
         attrs = (desc.attrs & changed) | (sprop->attributes() & ~changed);
-        JS_ASSERT_IF(sprop->isMethod(), !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
         if (desc.hasGet) {
             getter = desc.getter();
         } else {
@@ -2924,12 +2907,6 @@ with_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
 }
 
 static JSBool
-with_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
-{
-    return obj->getProto()->defaultValue(cx, hint, vp);
-}
-
-static JSBool
 with_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                Value *statep, jsid *idp)
 {
@@ -2957,7 +2934,6 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     with_GetAttributes,
     with_SetAttributes,
     with_DeleteProperty,
-    with_DefaultValue,
     with_Enumerate,
     with_TypeOf,
     js_TraceObject,
@@ -3309,7 +3285,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         }
 
         /* XDR the real id, then the shortid. */
-        if (!js_XDRStringAtom(xdr, &atom) ||
+        if (!js_XDRAtom(xdr, &atom) ||
             !JS_XDRUint16(xdr, (uint16 *)&shortid)) {
             return false;
         }
@@ -5332,8 +5308,10 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     return ok && js_SuppressDeletedProperty(cx, obj, id);
 }
 
+namespace js {
+
 JSBool
-js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
+DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
 {
     JS_ASSERT(hint != JSTYPE_OBJECT && hint != JSTYPE_FUNCTION);
 
@@ -5402,7 +5380,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
                 return JS_FALSE;
         }
     }
-    if (!v.isPrimitive()) {
+    if (v.isObject()) {
         /* Avoid recursive death when decompiling in js_ReportValueError. */
         JSString *str;
         if (hint == JSTYPE_STRING) {
@@ -5423,6 +5401,8 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
     *vp = v;
     return JS_TRUE;
 }
+
+} /* namespace js */
 
 JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, Value *statep, jsid *idp)
@@ -5551,18 +5531,6 @@ js_TypeOf(JSContext *cx, JSObject *obj)
                : JSTYPE_OBJECT;
     }
 
-#ifdef NARCISSUS
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    Value v;
-
-    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__call__Atom), &v)) {
-        JS_ClearPendingException(cx);
-    } else {
-        if (IsFunctionObject(v))
-            return JSTYPE_FUNCTION;
-    }
-#endif
-
     return JSTYPE_OBJECT;
 }
 
@@ -5571,29 +5539,6 @@ void
 js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 {
     JS_UNLOCK_OBJ(cx, obj);
-}
-#endif
-
-#ifdef NARCISSUS
-static JSBool
-GetCurrentExecutionContext(JSContext *cx, JSObject *obj, Value *rval)
-{
-    JSObject *tmp;
-    Value xcval;
-
-    while ((tmp = obj->getParent()) != NULL)
-        obj = tmp;
-    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.ExecutionContextAtom), &xcval))
-        return JS_FALSE;
-    if (xcval.isPrimitive()) {
-        JS_ReportError(cx, "invalid ExecutionContext in global object");
-        return JS_FALSE;
-    }
-    if (!xcval.toObject().getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.currentAtom),
-                                      rval)) {
-        return JS_FALSE;
-    }
-    return JS_TRUE;
 }
 #endif
 
@@ -5609,30 +5554,6 @@ js_Call(JSContext *cx, uintN argc, Value *vp)
     JSObject *callee = &JS_CALLEE(cx, vp).toObject();
     Class *clasp = callee->getClass();
     if (!clasp->call) {
-#ifdef NARCISSUS
-        JSObject *args;
-        Value fval, nargv[3];
-        JSBool ok;
-
-        if (!callee->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__call__Atom), &fval))
-            return JS_FALSE;
-        if (IsFunctionObject(fval)) {
-            if (!GetCurrentExecutionContext(cx, obj, &nargv[2]))
-                return JS_FALSE;
-            args = js_GetArgsObject(cx, js_GetTopStackFrame(cx));
-            if (!args)
-                return JS_FALSE;
-            nargv[0].setObject(*obj);
-            nargv[1].setObject(*args);
-            return InternalCall(cx, callee, fval, 3, nargv, rval);
-        }
-        if (fval.isObjectOrNull() && fval.toObjectOrNull() != callee) {
-            vp[0] = fval;
-            ok = js_Call(cx, argc, vp);
-            vp[0].setObject(*callee);
-            return ok;
-        }
-#endif
         js_ReportIsNotFunction(cx, &vp[0], 0);
         return JS_FALSE;
     }
@@ -5649,34 +5570,6 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 
     Class *clasp = argv[-2].toObject().getClass();
     if (!clasp->construct) {
-#ifdef NARCISSUS
-        JSObject *callee, *args;
-        Value cval, nargv[2];
-        JSBool ok;
-
-        callee = &argv[-2].toObject();
-        if (!callee->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__construct__Atom),
-                                 &cval)) {
-            return JS_FALSE;
-        }
-        if (IsFunctionObject(cval)) {
-            if (!GetCurrentExecutionContext(cx, obj, &nargv[1]))
-                return JS_FALSE;
-            args = js_GetArgsObject(cx, js_GetTopStackFrame(cx));
-            if (!args)
-                return JS_FALSE;
-            nargv[0].setObject(*args);
-            return InternalCall(cx, callee, cval, 2, nargv, rval);
-        }
-        if (cval.isObjectOrNull() && cval.toObjectOrNull() != callee) {
-            argv[-2] = cval;
-            ok = js_Call(cx, argc, argv - 2);
-            if (ok)
-                *rval = argv[-2];
-            argv[-2] = OBJECT_TO_JSVAL(callee);
-            return ok;
-        }
-#endif
         js_ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
         return JS_FALSE;
     }
@@ -5689,20 +5582,6 @@ js_HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)
         return clasp->hasInstance(cx, obj, v, bp);
-#ifdef NARCISSUS
-    {
-        Value fval, rval;
-
-        if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.__hasInstance__Atom), &fval))
-            return JS_FALSE;
-        if (IsFunctionObject(fval)) {
-            if (!InternalCall(cx, obj, fval, 1, v, &rval))
-                return JS_FALSE;
-            *bp = js_ValueToBoolean(rval);
-            return JS_TRUE;
-        }
-    }
-#endif
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                         JSDVG_SEARCH_STACK, ObjectValue(*obj), NULL);
     return JS_FALSE;
@@ -5964,7 +5843,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
      */
     if (!JS_XDRUint32(xdr, &classDef))
         return JS_FALSE;
-    if (classDef == 1 && !js_XDRStringAtom(xdr, &atom))
+    if (classDef == 1 && !js_XDRAtom(xdr, &atom))
         return JS_FALSE;
 
     if (!JS_XDRUint32(xdr, &classId))

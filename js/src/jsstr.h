@@ -69,28 +69,42 @@ js_GetDependentStringChars(JSString *str);
 
 JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
 
+struct JSRopeBufferInfo {
+    /* Number of jschars we can hold, not including null terminator. */
+    size_t  capacity;
+};
+
 /*
  * The GC-thing "string" type.
  *
- * When the DEPENDENT bit of the mFlags field is unset, the mChars field
- * points to a flat character array owned by its GC-thing descriptor.  The
- * array is terminated at index length by a zero character and the size of the
- * array in bytes is (length + 1) * sizeof(jschar). The terminator is purely a
- * backstop, in case the chars pointer flows out to native code that requires
- * \u0000 termination.
- *
- * A flat string with the MUTABLE flag means that the string is accessible only
- * from one thread and it is possible to turn it into a dependent string of the
- * same length to optimize js_ConcatStrings. It is also possible to grow such a
- * string, but extreme care must be taken to ensure that no other code relies
- * on the original length of the string.
+ * In FLAT strings, the mChars field  points to a flat character array owned by
+ * its GC-thing descriptor. The array is terminated at index length by a zero
+ * character and the size of the array in bytes is
+ * (length + 1) * sizeof(jschar). The terminator is purely a backstop, in case
+ * the chars pointer flows out to native code that requires \u0000 termination.
  *
  * A flat string with the ATOMIZED flag means that the string is hashed as
  * an atom. This flag is used to avoid re-hashing the already-atomized string.
  *
- * When the DEPENDENT flag is set, the string depends on characters of another
+ * A flat string with the MUTABLE flag means that the string may change into a
+ * dependent string as part of an optimization with js_ConcatStrings. Flat
+ * strings without the MUTABLE flag can be safely accessed by multiple threads.
+ *
+ * When the string is DEPENDENT, the string depends on characters of another
  * string strongly referenced by the mBase field. The base member may point to
  * another dependent string if chars() has not been called yet.
+ *
+ * To optimize js_ConcatStrings and some other cases, we lazily concatenate
+ * strings when possible, creating concatenation trees, a.k.a. ropes. A string
+ * is an INTERIOR_NODE if it is a non-root, non-leaf node in a rope, and a
+ * string is a TOP_NODE if it is the root of a rope. In order to meet API
+ * requirements, chars() is not allowed to fail, so we build ropes so that they
+ * form a well-defined tree structure, and the top node of every rope contains
+ * an (almost) empty buffer that is large enough to contain the entire string.
+ * Whenever chars() is called on a rope, it traverses its tree and fills that
+ * buffer in, and when concatenating strings, we reuse these empty buffers
+ * whenever possible, so that we can build a string through concatenation in
+ * linear time, and have relatively few malloc calls when doing so.
  *
  * NB: Always use the length() and chars() accessor methods.
  */
@@ -100,30 +114,60 @@ struct JSString {
     friend JSAtom *
     js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
 
-    friend JSString * JS_FASTCALL
-    js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
-
     // Not private because we want to be able to use static
     // initializers for them.  Don't use these directly!
-    size_t          mLength;
-    size_t          mOffset;
-    jsword          mFlags;
     union {
-        jschar      *mChars;
-        JSString    *mBase;
+        size_t              mCapacity; /* in flat strings (optional) */
+        JSString            *mParent; /* in rope interior nodes */
+        JSRopeBufferInfo    *mBufferWithInfo; /* in rope top nodes */
+    };
+    union {
+        size_t              mOffset; /* in dependent strings */
+        JSString            *mLeft;  /* in rope interior and top nodes */
+    };
+    size_t                  mLengthAndFlags;  /* in all strings */
+    union {
+        jschar              *mChars; /* in flat strings */
+        JSString            *mBase;  /* in dependent strings */
+        JSString            *mRight; /* in rope interior and top nodes */
     };
 
     /*
-     * Definitions for flags stored in mFlags.
+     * The mLengthAndFlags field in string headers has data arranged in the
+     * following way:
      *
-     * ATOMIZED is used only with flat, immutable strings.
+     * [ length (bits 4-31) ][ flags (bits 2-3) ][ type (bits 0-1) ]
+     *
+     * The length is packed in mLengthAndFlags, even in string types that don't
+     * need 3 other fields, to make the length check simpler.
+     *
+     * When the string type is FLAT, the flags can contain ATOMIZED or MUTABLE.
+     * When the string type is INTERIOR_NODE or TOP_NODE, the flags area is
+     * used to store the rope traversal count.
      */
-    static const size_t DEPENDENT =     JSSTRING_BIT(1);
-    static const size_t MUTABLE =       JSSTRING_BIT(2);
-    static const size_t ATOMIZED =      JSSTRING_BIT(3);
+    static const size_t FLAT =          0;
+    static const size_t DEPENDENT =     1;
+    static const size_t INTERIOR_NODE = 2;
+    static const size_t TOP_NODE =      3;
+
+    /* Rope/non-rope can be checked by checking one bit. */
+    static const size_t ROPE_BIT = JSSTRING_BIT(1);
+
+    static const size_t ATOMIZED = JSSTRING_BIT(2);
+    static const size_t MUTABLE = JSSTRING_BIT(3);
+
+    static const size_t FLAGS_LENGTH_SHIFT = 4;
+
+    static const size_t ROPE_TRAVERSAL_COUNT_SHIFT = 2;
+    static const size_t ROPE_TRAVERSAL_COUNT_MASK = JSSTRING_BITMASK(4) -
+                                                    JSSTRING_BITMASK(2);
+    static const size_t ROPE_TRAVERSAL_COUNT_UNIT =
+                                (1 << ROPE_TRAVERSAL_COUNT_SHIFT);
+
+    static const size_t TYPE_MASK = JSSTRING_BITMASK(2);
 
     inline bool hasFlag(size_t flag) const {
-        return (mFlags & flag) != 0;
+        return (mLengthAndFlags & flag) != 0;
     }
 
   public:
@@ -133,28 +177,57 @@ struct JSString {
      */
     static const size_t MAX_LENGTH = (1 << 28) - 1;
 
+    inline size_t type() const {
+        return mLengthAndFlags & TYPE_MASK;
+    }
+
     inline bool isDependent() const {
-        return hasFlag(DEPENDENT);
+        return type() == DEPENDENT;
     }
 
     inline bool isFlat() const {
-        return !isDependent();
+        return type() == FLAT;
     }
 
     inline bool isMutable() const {
-        return !isDependent() && hasFlag(MUTABLE);
+        return isFlat() && hasFlag(MUTABLE);
+    }
+
+    inline bool isRope() const {
+        return hasFlag(ROPE_BIT);
     }
 
     inline bool isAtomized() const {
-        return !isDependent() && hasFlag(ATOMIZED);
+        return isFlat() && hasFlag(ATOMIZED);
+    }
+
+    inline bool isInteriorNode() const {
+        return type() == INTERIOR_NODE;
+    }
+
+    inline bool isTopNode() const {
+        return type() == TOP_NODE;
     }
 
     inline jschar *chars() {
-        return isDependent() ? dependentChars() : flatChars();
+        return isFlat() ? flatChars() : nonFlatChars();
+    }
+
+    jschar *nonFlatChars() {
+        if (isDependent())
+            return dependentChars();
+        else {
+            flatten();
+            JS_ASSERT(isFlat() || isDependent());
+            if (isFlat())
+                return flatChars();
+            else
+                return dependentChars();
+        }
     }
 
     inline size_t length() const {
-        return mLength;
+        return mLengthAndFlags >> FLAGS_LENGTH_SHIFT;
     }
 
     inline bool empty() const {
@@ -173,9 +246,17 @@ struct JSString {
     /* Specific flat string initializer and accessor methods. */
     inline void initFlat(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
-        mLength = length;
         mOffset = 0;
-        mFlags = 0;
+        mCapacity = 0;
+        mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT;
+        mChars = chars;
+    }
+
+    inline void initFlatMutable(jschar *chars, size_t length, size_t cap) {
+        JS_ASSERT(length <= MAX_LENGTH);
+        mOffset = 0;
+        mCapacity = cap;
+        mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT | MUTABLE;
         mChars = chars;
     }
 
@@ -187,6 +268,11 @@ struct JSString {
     inline size_t flatLength() const {
         JS_ASSERT(isFlat());
         return length();
+    }
+
+    inline size_t flatCapacity() const {
+        JS_ASSERT(isFlat());
+        return mCapacity;
     }
 
     /*
@@ -205,38 +291,38 @@ struct JSString {
      *     only one thread can access the string (see previous property).
      *
      * Thus, when multiple threads access the string, JSString::flatSetAtomized
-     * is the only function that can update the mFlags field of the string by
-     * changing the mutable bit from 0 to 1. We call the method only after the
-     * string has been hashed. When some threads in js_ValueToStringId see that
-     * the flag is set, it knows that the string was atomized.
+     * is the only function that can update the mLengthAndFlags field of the
+     * string by changing the mutable bit from 0 to 1. We call the method only
+     * after the string has been hashed. When some threads in js_ValueToStringId
+     * see that the flag is set, it knows that the string was atomized.
      *
      * On the other hand, if the thread sees that the flag is unset, it could
      * be seeing a stale value when another thread has just atomized the string
      * and set the flag. But this can lead only to an extra call to
-     * js_AtomizeString.  This function would find that the string was already
+     * js_AtomizeString. This function would find that the string was already
      * hashed and return it with the atomized bit set.
      */
     inline void flatSetAtomized() {
-        JS_ASSERT(isFlat() && !isMutable());
-        JS_ATOMIC_SET_MASK(&mFlags, ATOMIZED);
+        JS_ASSERT(isFlat());
+        JS_ATOMIC_SET_MASK((jsword *)&mLengthAndFlags, ATOMIZED);
     }
 
     inline void flatSetMutable() {
-        JS_ASSERT(isFlat() && !isAtomized());
-        mFlags |= MUTABLE;
+        JS_ASSERT(isFlat());
+        JS_ASSERT(!isAtomized());
+        mLengthAndFlags |= MUTABLE;
     }
 
     inline void flatClearMutable() {
         JS_ASSERT(isFlat());
-        if (hasFlag(MUTABLE))
-            mFlags &= ~MUTABLE;
+        mLengthAndFlags &= ~MUTABLE;
     }
 
     inline void initDependent(JSString *bstr, size_t off, size_t len) {
         JS_ASSERT(len <= MAX_LENGTH);
-        mLength = len;
+        mParent = NULL;
         mOffset = off;
-        mFlags = DEPENDENT;
+        mLengthAndFlags = DEPENDENT | (len << FLAGS_LENGTH_SHIFT);
         mBase = bstr;
     }
 
@@ -246,9 +332,9 @@ struct JSString {
     }
 
     inline jschar *dependentChars() {
-        return dependentBase()->isDependent()
-               ? js_GetDependentStringChars(this)
-               : dependentBase()->flatChars() + dependentStart();
+        return dependentBase()->isFlat()
+               ? dependentBase()->flatChars() + dependentStart()
+               : js_GetDependentStringChars(this);
     }
 
     inline size_t dependentStart() const {
@@ -259,6 +345,99 @@ struct JSString {
         JS_ASSERT(isDependent());
         return length();
     }
+
+    /* Rope-related initializers and accessors. */
+    inline void initTopNode(JSString *left, JSString *right, size_t len,
+                            JSRopeBufferInfo *buf) {
+        JS_ASSERT(left->length() + right->length() <= MAX_LENGTH);
+        mLengthAndFlags = TOP_NODE | (len << FLAGS_LENGTH_SHIFT);
+        mLeft = left;
+        mRight = right;
+        mBufferWithInfo = buf;
+    }
+
+    inline void convertToInteriorNode(JSString *parent) {
+        JS_ASSERT(isTopNode());
+        mParent = parent;
+        mLengthAndFlags = INTERIOR_NODE | (length() << FLAGS_LENGTH_SHIFT);
+    }
+
+    inline JSString *interiorNodeParent() const {
+        JS_ASSERT(isInteriorNode());
+        return mParent;
+    }
+
+    inline JSString *ropeLeft() const {
+        JS_ASSERT(isRope());
+        return mLeft;
+    }
+
+    inline JSString *ropeRight() const {
+        JS_ASSERT(isRope());
+        return mRight;
+    }
+
+    inline size_t topNodeCapacity() const {
+        JS_ASSERT(isTopNode());
+        return mBufferWithInfo->capacity;
+    }
+
+    inline JSRopeBufferInfo *topNodeBuffer() const {
+        JS_ASSERT(isTopNode());
+        return mBufferWithInfo;
+    }
+
+    inline void nullifyTopNodeBuffer() {
+        JS_ASSERT(isTopNode());
+        mBufferWithInfo = NULL;
+    }
+
+    /*   
+     * When flattening a rope, we need to convert a rope node to a dependent
+     * string in two separate parts instead of calling initDependent.
+     */
+    inline void startTraversalConversion(size_t offset) {
+        JS_ASSERT(isInteriorNode());
+        mOffset = offset;
+    }    
+
+    inline void finishTraversalConversion(JSString *base, size_t end) {
+        JS_ASSERT(isInteriorNode());
+        /* Note that setting flags also clears the traversal count. */
+        mLengthAndFlags = JSString::DEPENDENT |
+            ((end - mOffset) << JSString::FLAGS_LENGTH_SHIFT);
+        mBase = base;
+    }    
+
+    inline void ropeClearTraversalCount() {
+        JS_ASSERT(isRope());
+        mLengthAndFlags &= ~ROPE_TRAVERSAL_COUNT_MASK;
+    }
+
+    inline size_t ropeTraversalCount() const {
+        JS_ASSERT(isRope());
+        return (mLengthAndFlags & ROPE_TRAVERSAL_COUNT_MASK) >>
+                ROPE_TRAVERSAL_COUNT_SHIFT;
+    }
+
+    inline void ropeIncrementTraversalCount() {
+        JS_ASSERT(isInteriorNode());
+        mLengthAndFlags += ROPE_TRAVERSAL_COUNT_UNIT;
+    }
+
+    inline bool ensureNotDependent(JSContext *cx) {
+        return !isDependent() || undepend(cx);
+    }
+
+    inline void ensureNotRope() {
+        if (isRope())
+            flatten();
+    }
+
+    const jschar *undepend(JSContext *cx);
+
+    /* By design, this is not allowed to fail. */
+    void flatten();
 
     static inline bool isUnitString(void *ptr) {
         jsuword delta = reinterpret_cast<jsuword>(ptr) -
@@ -299,6 +478,88 @@ struct JSString {
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
     static JSString *intString(jsint i);
 };
+
+/*
+ * An iterator that iterates through all nodes in a rope (the top node, the
+ * interior nodes, and the leaves) without writing to any of the nodes.
+ *
+ * It is safe to iterate through a rope in this way, even when something else is
+ * already iterating through it.
+ *
+ * To use, pass any node of the rope into the constructor. The first call should
+ * be to init, which returns the first node, and each subsequent call should
+ * be to next. NULL is returned when there are no more nodes to return.
+ */
+class JSRopeNodeIterator {
+  private:
+    JSString *mStr;
+    size_t mUsedFlags;
+
+    static const size_t DONE_LEFT = 0x1;
+    static const size_t DONE_RIGHT = 0x2;
+
+  public:
+    JSRopeNodeIterator(JSString *str) {
+        mStr = str;
+    }
+    
+    JSString *init() {
+        /* If we were constructed with a non-rope string, just return that. */
+        if (!mStr->isRope()) {
+            JSString *oldStr = mStr;
+            mStr = NULL;
+            return oldStr;
+        }
+        /* Move to the farthest-left leaf in the rope. */
+        while (mStr->isInteriorNode())
+            mStr = mStr->interiorNodeParent();
+        while (mStr->ropeLeft()->isInteriorNode())
+            mStr = mStr->ropeLeft();
+        mUsedFlags = 0;
+        return mStr;
+    }
+
+    JSString *next() {
+        if (!mStr)
+            return NULL;
+        if (!mStr->ropeLeft()->isInteriorNode() && !(mUsedFlags & DONE_LEFT)) {
+            mUsedFlags |= DONE_LEFT;
+            return mStr->ropeLeft();
+        }
+        if (!mStr->ropeRight()->isInteriorNode() && !(mUsedFlags & DONE_RIGHT)) {
+            mUsedFlags |= DONE_RIGHT;
+            return mStr->ropeRight();
+        }
+        if (mStr->ropeRight()->isInteriorNode()) {
+            /*
+             * If we have a right child, go right once, then left as far as
+             * possible.
+             */
+            mStr = mStr->ropeRight();
+            while (mStr->ropeLeft()->isInteriorNode())
+                mStr = mStr->ropeLeft();
+        } else {
+            /*
+             * If we have no right child, follow our parent until we move
+             * up-right.
+             */
+            JSString *prev;
+            do {
+                prev = mStr;
+                /* Set the string to NULL if we reach the end of the tree. */
+                mStr = mStr->isInteriorNode() ? mStr->interiorNodeParent() : NULL;
+            } while (mStr && mStr->ropeRight() == prev);
+        }
+        mUsedFlags = 0;
+        return mStr;
+    }
+};
+
+JS_STATIC_ASSERT(JSString::INTERIOR_NODE & JSString::ROPE_BIT);
+JS_STATIC_ASSERT(JSString::TOP_NODE & JSString::ROPE_BIT);
+
+JS_STATIC_ASSERT(((JSString::MAX_LENGTH << JSString::FLAGS_LENGTH_SHIFT) >>
+                   JSString::FLAGS_LENGTH_SHIFT) == JSString::MAX_LENGTH);
 
 JS_STATIC_ASSERT(sizeof(JSString) % JS_GCTHING_ALIGN == 0);
 

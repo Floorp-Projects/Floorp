@@ -104,7 +104,7 @@
         window.__proto__ = origProto;
     } catch (e) {
         is(e.toString(),
-           'Error: cyclic __proto__ value',
+           'TypeError: cyclic __proto__ value',
            'throw the right exception for a cyclic proto');
         is(window.__proto__, origProto, 'reset __proto__ after a cyclic proto');
     }

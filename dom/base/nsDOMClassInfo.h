@@ -526,7 +526,7 @@ public:
   NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj);
   NS_IMETHOD Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                      JSObject * obj, jsval val, PRBool *bp);
+                      JSObject * obj, const jsval &val, PRBool *bp);
   NS_IMETHOD OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, JSObject * *_retval);
   NS_IMETHOD InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
@@ -1671,7 +1671,7 @@ public:
                        jsval *vp, PRBool *_retval);
 
   NS_IMETHOD HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsval val, PRBool *bp,
+                         JSObject *obj, const jsval &val, PRBool *bp,
                          PRBool *_retval);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)

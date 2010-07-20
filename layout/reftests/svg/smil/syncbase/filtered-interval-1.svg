@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    This test ensures that even if we have an old interval, if it is part of an
+    active dependency chain it should not be filtered.
+   -->
+  <rect width="100" height="100" fill="orange">
+    <!-- This animation is indirectly dependent on anim 'b' and hence, even
+         though it appears earlier in the document it should be given
+         priority. -->
+    <set attributeName="fill" to="green" begin="a.begin"/>
+
+    <!-- This will generate a series of short intervals such that by t=2s the
+         interval via which the first animation depends on b might be considered
+         as a candidate for filtering. -->
+    <set attributeName="width" to="100" begin="b.begin-2s; a.begin+0.2s"
+      dur="0.1s" id="a"/>
+
+    <set attributeName="fill" to="red" begin="2s" id="b"/>
+  </rect>
+</svg>

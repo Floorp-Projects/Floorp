@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="go()">
+  <script type="text/javascript">
+  function go() {
+    // Check that whilst processing past intervals reset does not clear dynamic
+    // instance times of future intervals
+    var svg = document.documentElement;
+    var a = document.getElementById('a');
+    svg.pauseAnimations();
+    // Generate a series of intervals with dynamic begin points
+    svg.setCurrentTime(1);
+    a.beginElement();
+    svg.setCurrentTime(3);
+    a.beginElement();
+    svg.setCurrentTime(5);
+    a.beginElement();
+    svg.setCurrentTime(7);
+    a.beginElement();
+    svg.setCurrentTime(5.5); // Backwards seek will cause us to rebuild the
+                             // world but in the process we should not clear the
+                             // dynamic instance times for future intervals on
+                             // each restart
+    svg.removeAttribute("class");
+  }
+  </script>
+  <rect x="100" y="15" width="200" height="200" fill="blue">
+    <set attributeName="x" to="15" begin="indefinite" dur="1s" id="a"/>
+  </rect>
+</svg>

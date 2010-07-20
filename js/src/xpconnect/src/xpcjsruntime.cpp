@@ -243,6 +243,32 @@ ContextCallback(JSContext *cx, uintN operation)
     return JS_TRUE;
 }
 
+static JSBool
+CompartmentCallback(JSContext *cx, JSCompartment *compartment, uintN op)
+{
+    if(op == JSCOMPARTMENT_NEW)
+        return JS_TRUE;
+
+    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
+    if(!self)
+        return JS_TRUE;
+
+    XPCCompartmentMap& map = self->GetCompartmentMap();
+    nsAdoptingCString origin;
+    origin.Adopt(static_cast<char *>(JS_SetCompartmentPrivate(cx, compartment, nsnull)));
+
+#ifdef DEBUG
+    {
+        JSCompartment *current;
+        NS_ASSERTION(map.Get(origin, &current), "no compartment?");
+        NS_ASSERTION(current == compartment, "compartment mismatch");
+    }
+#endif
+
+    map.Remove(origin);
+    return JS_TRUE;
+}
+
 struct ObjectHolder : public JSDHashEntryHdr
 {
     void *holder;
@@ -309,13 +335,11 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
     // them here.
     for(XPCRootSetElem *e = self->mObjectHolderRoots; e ; e = e->GetNextRoot())
         static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
-        
-    if(self->GetXPConnect()->ShouldTraceRoots())
-    {
-        // Only trace these if we're not cycle-collecting, the cycle collector
-        // will do that if we are.
-        self->TraceXPConnectRoots(trc);
-    }
+
+    // Mark these roots as gray so the CC can walk them later.
+    uint32 oldColor = js_SetMarkColor(trc, XPC_GC_COLOR_GRAY);
+    self->TraceXPConnectRoots(trc);
+    js_SetMarkColor(trc, oldColor);
 }
 
 static void
@@ -346,30 +370,13 @@ struct ClearedGlobalObject : public JSDHashEntryHdr
     JSObject* mGlobalObject;
 };
 
-void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc, JSBool rootGlobals)
+void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 {
-    if(mUnrootedGlobalCount != 0)
-    {
-        JSContext *iter = nsnull, *acx;
-        while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
-        {
-            if(JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
-            {
-                NS_ASSERTION(nsXPConnect::GetXPConnect()->GetRequestDepth(acx)
-                             == 0, "active cx must be always rooted");
-                NS_ASSERTION(acx->globalObject, "bad state");
-                JS_CALL_OBJECT_TRACER(trc, acx->globalObject,
-                                      "global object");
-                if(rootGlobals)
-                {
-                    NS_ASSERTION(mUnrootedGlobalCount != 0, "bad state");
-                    NS_ASSERTION(trc == acx->runtime->gcMarkingTracer,
-                                 "bad tracer");
-                    JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
-                    --mUnrootedGlobalCount;
-                }
-            }
-        }
+    JSContext *iter = nsnull, *acx;
+    while ((acx = JS_ContextIterator(GetJSRuntime(), &iter))) {
+        JS_ASSERT(JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL));
+        if (acx->globalObject)
+            JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "global object");
     }
 
     XPCWrappedNativeScope::TraceJS(trc, this);
@@ -439,42 +446,20 @@ void XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
         JS_DHashTableEnumerate(&mJSHolders, NoteJSHolder, &cb);
 }
 
-void XPCJSRuntime::UnrootContextGlobals()
+void
+XPCJSRuntime::ClearWeakRoots()
 {
-    mUnrootedGlobalCount = 0;
     JSContext *iter = nsnull, *acx;
+
     while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
     {
-        NS_ASSERTION(!JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL),
-                     "unrooted global should be set only during CC");
         if(XPCPerThreadData::IsMainThread(acx) &&
            nsXPConnect::GetXPConnect()->GetRequestDepth(acx) == 0)
         {
             JS_ClearNewbornRoots(acx);
-            if(acx->globalObject)
-            {
-                JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
-                ++mUnrootedGlobalCount;
-            }
         }
     }
 }
-
-#ifdef DEBUG_CC
-void XPCJSRuntime::RootContextGlobals()
-{
-    JSContext *iter = nsnull, *acx;
-    while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
-    {
-        if(JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))
-        {
-            JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
-            --mUnrootedGlobalCount;
-        }
-    }
-    NS_ASSERTION(mUnrootedGlobalCount == 0, "bad state");
-}
-#endif
 
 template<class T> static void
 DoDeferredRelease(nsTArray<T> &array)
@@ -1107,7 +1092,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mVariantRoots(nsnull),
    mWrappedJSRoots(nsnull),
    mObjectHolderRoots(nsnull),
-   mUnrootedGlobalCount(0),
    mWatchdogWakeup(nsnull),
    mWatchdogThread(nsnull)
 {
@@ -1134,6 +1118,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         // the GC's allocator.
         JS_SetGCParameter(mJSRuntime, JSGC_MAX_BYTES, 0xffffffff);
         JS_SetContextCallback(mJSRuntime, ContextCallback);
+        JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
         JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
         mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
@@ -1146,6 +1131,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     if(!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
                           sizeof(ObjectHolder), 512))
         mJSHolders.ops = nsnull;
+
+    mCompartmentMap.Init();
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
@@ -1226,6 +1213,10 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
 
     JS_SetNativeStackQuota(cx, 512 * 1024);
     JS_SetScriptStackQuota(cx, 100 * 1024 * 1024);
+
+    // we want to mark the global object ourselves since we use a different color
+    JS_ToggleOptions(cx, JSOPTION_UNROOTED_GLOBAL);
+
     return JS_TRUE;
 }
 

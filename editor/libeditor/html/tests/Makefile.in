@@ -74,10 +74,18 @@ _DATA_FILES = \
 		data/cfhtml-ooo.txt \
 		$(NULL)
 
+_CHROME_TEST_FILES = \
+		test_bug490879.xul \
+		green.png \
+		$(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - browserscope 2> /dev/null) | (cd $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir) && tar -xf -)
 
 libs:: $(_DATA_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/data
+
+libs:: $(_CHROME_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 

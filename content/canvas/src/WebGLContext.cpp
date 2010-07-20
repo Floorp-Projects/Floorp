@@ -138,8 +138,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     // If incrementing the generation would cause overflow,
     // don't allow it.  Allowing this would allow us to use
     // resource handles created from older context generations.
-    if (mGeneration + 1 == 0)
-        return NS_ERROR_FAILURE;
+    if (!(mGeneration+1).valid())
+        return NS_ERROR_FAILURE; // exit without changing the value of mGeneration
 
     if (mWidth == width && mHeight == height)
         return NS_OK;
@@ -181,7 +181,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     mHeight = height;
 
     // increment the generation number
-    mGeneration++;
+    ++mGeneration;
 
     MakeContextCurrent();
 

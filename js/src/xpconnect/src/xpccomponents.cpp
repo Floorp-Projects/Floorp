@@ -1725,7 +1725,7 @@ nsXPCComponents_ID::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsXPCComponents_ID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                                 JSContext * cx, JSObject * obj,
-                                jsval val, PRBool *bp, PRBool *_retval)
+                                const jsval &val, PRBool *bp, PRBool *_retval)
 {
     if(bp)
         *bp = JSValIsInterfaceOfType(cx, val, NS_GET_IID(nsIJSID));
@@ -2001,7 +2001,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsXPCComponents_Exception::HasInstance(nsIXPConnectWrappedNative *wrapper,
                                        JSContext * cx, JSObject * obj,
-                                       jsval val, PRBool *bp,
+                                       const jsval &val, PRBool *bp,
                                        PRBool *_retval)
 {
     if(bp)
@@ -2631,7 +2631,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsXPCComponents_Constructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
                                          JSContext * cx, JSObject * obj,
-                                         jsval val, PRBool *bp,
+                                         const jsval &val, PRBool *bp,
                                          PRBool *_retval)
 {
     if(bp)
@@ -3242,15 +3242,20 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JSPrincipals *jsPrincipals;
-    rv = sop->GetPrincipal()->GetJSPrincipals(cx, &jsPrincipals);
-    if (NS_FAILED(rv))
-        return rv;
-    JSObject *sandbox = JS_NewCompartmentAndGlobalObject(cx, &SandboxClass, jsPrincipals);
-    if (jsPrincipals)
-        JSPRINCIPALS_DROP(cx, jsPrincipals);
-    if (!sandbox)
-        return NS_ERROR_XPC_UNEXPECTED;
+    nsIPrincipal *principal = sop->GetPrincipal();
+    nsAdoptingCString principalorigin;
+    principal->GetOrigin(getter_Copies(principalorigin));
+
+    nsCAutoString origin("sandbox:");
+    origin.Append(principalorigin);
+
+    JSCompartment *compartment;
+    JSObject *sandbox;
+
+    rv = xpc_CreateGlobalObject(cx, &SandboxClass, origin, principal, &sandbox,
+                                &compartment);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     js::AutoObjectRooter tvr(cx, sandbox);
 
     {
@@ -3570,7 +3575,10 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                 ssm->GetCxSubjectPrincipalAndFrame(cx, &fp);
             PRBool system;
             ssm->IsSystemPrincipal(subjectPrincipal, &system);
-            NS_ASSERTION(!fp || system, "Bad caller!");
+            if (fp && !system) {
+                ssm->IsCapabilityEnabled("UniversalXPConnect", &system);
+                NS_ASSERTION(system, "Bad caller!");
+            }
         }
     }
 #endif
@@ -3663,7 +3671,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                     // exception into a string.
                     str = JS_ValueToString(sandcx->GetJSContext(), exn);
 
-                    JSAutoTransferRequest transfer(sandcx->GetJSContext(), cx);
+                    JSAutoRequest req(cx);
                     if (str) {
                         // We converted the exception to a string. Use that
                         // as the value exception.
@@ -3673,7 +3681,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                         rv = NS_ERROR_FAILURE;
                     }
                 } else {
-                    JSAutoTransferRequest transfer(sandcx->GetJSContext(), cx);
+                    JSAutoRequest req(cx);
 
                     if (!JSVAL_IS_PRIMITIVE(exn) &&
                         XPCWrapper::RewrapObject(cx, callingScope,

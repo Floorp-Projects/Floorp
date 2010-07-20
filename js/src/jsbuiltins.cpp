@@ -85,8 +85,8 @@ js_dmod(jsdouble a, jsdouble b)
 {
     if (b == 0.0) {
         jsdpun u;
-        u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
-        u.s.lo = 0xffffffff;
+        u.s.hi = JSDOUBLE_HI32_NAN;
+        u.s.lo = JSDOUBLE_LO32_NAN;
         return u.d;
     }
     return js_fmod(a, b);

@@ -480,9 +480,6 @@ js_MeterSlotOpcode(JSOp op, uint32 slot);
 
 #endif /* JS_LONE_INTERPRET */
 
-extern JS_REQUIRES_STACK js::Class *
-js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
-
 /*
  * Unwind block and scope chains to match the given depth. The function sets
  * fp->sp on return to stackDepth.
@@ -492,6 +489,9 @@ js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
 
 extern JSBool
 js_OnUnknownMethod(JSContext *cx, js::Value *vp);
+
+extern JS_REQUIRES_STACK js::Class *
+js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
 
 inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)

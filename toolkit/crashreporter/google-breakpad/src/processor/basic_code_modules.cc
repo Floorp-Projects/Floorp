@@ -34,9 +34,10 @@
 //
 // Author: Mark Mentovai
 
-#include <cassert>
-
 #include "processor/basic_code_modules.h"
+
+#include <assert.h>
+
 #include "google_breakpad/processor/code_module.h"
 #include "processor/linked_ptr.h"
 #include "processor/logging.h"

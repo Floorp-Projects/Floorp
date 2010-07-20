@@ -46,22 +46,18 @@
 #include "nsString.h"
 #include "nsURIHashKey.h"
 #include "nsTArray.h"
-#include "nsDeque.h"
-#include "nsIObserver.h"
 
 namespace mozilla {
 namespace places {
 
 #define NS_HISTORYSERVICE_CID \
-  {0x0937a705, 0x91a6, 0x417a, {0x82, 0x92, 0xb2, 0x2e, 0xb1, 0x0d, 0xa8, 0x6c}}
+  {0x9fc91e65, 0x1475, 0x4353, {0x9b, 0x9a, 0x93, 0xd7, 0x6f, 0x5b, 0xd9, 0xb7}}
 
 class History : public IHistory
-              , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IHISTORY
-  NS_DECL_NSIOBSERVER
 
   History();
 
@@ -72,26 +68,6 @@ public:
    *        The URI to notify about.
    */
   void NotifyVisited(nsIURI *aURI);
-
-  /**
-   * Append a task to the queue for SQL queries that need to happen
-   * atomically.
-   *
-   * @pre aTask is not null
-   *
-   * @param aTask
-   *        Task that needs to be completed atomically
-   */
-  void AppendTask(class Step* aTask);
-
-  /**
-   * Call when all steps of the current running task are finished.  Each task
-   * should be responsible for calling this when it is finished (even if there
-   * are errors).
-   *
-   * Do not call this twice for the same visit.
-   */
-  void CurrentTaskFinished();
 
   /**
    * Obtains a pointer to this service.
@@ -107,30 +83,7 @@ public:
 private:
   ~History();
 
-  /**
-   * Since visits rapidly fire at once, it's very likely to have race
-   * conditions for SQL queries.  We often need to see if a row exists
-   * or peek at values, and by the time we have retrieved them they could
-   * be different.
-   *
-   * We guarantee an ordering of our SQL statements so that a set of
-   * callbacks for one visit are guaranteed to be atomic.  Each visit consists
-   * of a data structure that sits in this queue.
-   *
-   * The front of the queue always has the current visit we are processing.
-   */
-  nsDeque mPendingVisits;
-
-  /**
-   * Begins next task at the front of the queue.  The task remains in the queue
-   * until it is done and calls CurrentTaskFinished.
-   */
-  void StartNextTask();
-
   static History *gService;
-
-  // Ensures new tasks aren't started on destruction.
-  bool mShuttingDown;
 
   typedef nsTArray<mozilla::dom::Link *> ObserverArray;
 

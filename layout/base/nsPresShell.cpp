@@ -808,6 +808,8 @@ public:
                                                         nsIntPoint& aPoint,
                                                         nsIntRect* aScreenRect);
 
+  virtual already_AddRefed<nsPIDOMWindow> GetRootWindow();
+
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView* aDisplayRoot,
@@ -1021,7 +1023,8 @@ protected:
   // create a RangePaintInfo for the range aRange containing the
   // display list needed to paint the range to a surface
   RangePaintInfo* CreateRangePaintInfo(nsIDOMRange* aRange,
-                                       nsRect& aSurfaceRect);
+                                       nsRect& aSurfaceRect,
+                                       PRBool aForPrimarySelection);
 
   /*
    * Paint the items to a new surface and return it.
@@ -1247,6 +1250,7 @@ protected:
 private:
 
   PRBool InZombieDocument(nsIContent *aContent);
+  already_AddRefed<nsIPresShell> GetParentPresShell();
   nsresult RetargetEventToParent(nsGUIEvent* aEvent,
                                  nsEventStatus*  aEventStatus);
 
@@ -1910,6 +1914,7 @@ PresShell::Destroy()
   }
 
   mStyleSet->BeginShutdown(mPresContext);
+  nsRefreshDriver* rd = GetPresContext()->RefreshDriver();
 
   // This shell must be removed from the document before the frame
   // hierarchy is torn down to avoid finding deleted frames through
@@ -1917,14 +1922,13 @@ PresShell::Destroy()
   if (mDocument) {
     NS_ASSERTION(mDocument->GetShell() == this, "Wrong shell?");
     mDocument->DeleteShell();
-  }
 
-  nsRefreshDriver* rd = GetPresContext()->RefreshDriver();
 #ifdef MOZ_SMIL
-  if (mDocument->HasAnimationController()) {
-    mDocument->GetAnimationController()->StopSampling(rd);
-  }
+    if (mDocument->HasAnimationController()) {
+      mDocument->GetAnimationController()->StopSampling(rd);
+    }
 #endif // MOZ_SMIL
+  }
 
   // Revoke any pending events.  We need to do this and cancel pending reflows
   // before we destroy the frame manager, since apparently frame destruction
@@ -5455,7 +5459,8 @@ static PRBool gDumpRangePaintList = PR_FALSE;
 
 RangePaintInfo*
 PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
-                                nsRect& aSurfaceRect)
+                                nsRect& aSurfaceRect,
+                                PRBool aForPrimarySelection)
 {
   NS_TIME_FUNCTION_WITH_DOCURL;
 
@@ -5504,7 +5509,9 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   nsRect ancestorRect = ancestorFrame->GetOverflowRect();
 
   // get a display list containing the range
-  info->mBuilder.SetPaintAllFrames();
+  if (aForPrimarySelection) {
+    info->mBuilder.SetSelectedFramesOnly();
+  }
   info->mBuilder.EnterPresShell(ancestorFrame, ancestorRect);
   ancestorFrame->BuildDisplayListForStackingContext(&info->mBuilder,
                                                     ancestorRect, &info->mList);
@@ -5682,7 +5689,7 @@ PresShell::RenderNode(nsIDOMNode* aNode,
   if (NS_FAILED(range->SelectNode(aNode)))
     return nsnull;
 
-  RangePaintInfo* info = CreateRangePaintInfo(range, area);
+  RangePaintInfo* info = CreateRangePaintInfo(range, area, PR_FALSE);
   if (info && !rangeItems.AppendElement(info)) {
     delete info;
     return nsnull;
@@ -5730,7 +5737,7 @@ PresShell::RenderSelection(nsISelection* aSelection,
     nsCOMPtr<nsIDOMRange> range;
     aSelection->GetRangeAt(r, getter_AddRefs(range));
 
-    RangePaintInfo* info = CreateRangePaintInfo(range, area);
+    RangePaintInfo* info = CreateRangePaintInfo(range, area, PR_TRUE);
     if (info && !rangeItems.AppendElement(info)) {
       delete info;
       return nsnull;
@@ -6013,8 +6020,51 @@ PRBool PresShell::InZombieDocument(nsIContent *aContent)
   return !doc || !doc->GetWindow();
 }
 
-nsresult PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
-                                          nsEventStatus*  aEventStatus)
+already_AddRefed<nsPIDOMWindow>
+PresShell::GetRootWindow()
+{
+  nsCOMPtr<nsPIDOMWindow> window =
+    do_QueryInterface(mDocument->GetWindow());
+  if (window) {
+    nsCOMPtr<nsPIDOMWindow> rootWindow = window->GetPrivateRoot();
+    NS_ASSERTION(rootWindow, "nsPIDOMWindow::GetPrivateRoot() returns NULL");
+    return rootWindow.forget();
+  }
+
+  // If we don't have DOM window, we're zombie, we should find the root window
+  // with our parent shell.
+  nsCOMPtr<nsIPresShell> parent = GetParentPresShell();
+  NS_ENSURE_TRUE(parent, nsnull);
+  return parent->GetRootWindow();
+}
+
+already_AddRefed<nsIPresShell>
+PresShell::GetParentPresShell()
+{
+  NS_ENSURE_TRUE(mPresContext, nsnull);
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  if (!container) {
+    container = do_QueryReferent(mForwardingContainer);
+  }
+
+  // Now, find the parent pres shell and send the event there
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(container);
+  // Might have gone away, or never been around to start with
+  NS_ENSURE_TRUE(treeItem, nsnull);
+
+  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+  treeItem->GetParent(getter_AddRefs(parentTreeItem));
+  nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentTreeItem);
+  NS_ENSURE_TRUE(parentDocShell && treeItem != parentTreeItem, nsnull);
+
+  nsIPresShell* parentPresShell = nsnull;
+  parentDocShell->GetPresShell(&parentPresShell);
+  return parentPresShell;
+}
+
+nsresult
+PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
+                                 nsEventStatus*  aEventStatus)
 {
   // Send this events straight up to the parent pres shell.
   // We do this for keystroke events in zombie documents or if either a frame
@@ -6022,28 +6072,8 @@ nsresult PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
   // That way at least the UI key bindings can work.
 
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-  if (!container)
-    container = do_QueryReferent(mForwardingContainer);
-
-  // Now, find the parent pres shell and send the event there
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = 
-    do_QueryInterface(container);
-  if (!treeItem) {
-    // Might have gone away, or never been around to start with
-    return NS_ERROR_FAILURE;
-  }
-  
-  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  treeItem->GetParent(getter_AddRefs(parentTreeItem));
-  nsCOMPtr<nsIDocShell> parentDocShell = 
-    do_QueryInterface(parentTreeItem);
-  if (!parentDocShell || treeItem == parentTreeItem) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPresShell> parentPresShell;
-  parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
+  nsCOMPtr<nsIPresShell> parentPresShell = GetParentPresShell();
+  NS_ENSURE_TRUE(parentPresShell, NS_ERROR_FAILURE);
   nsCOMPtr<nsIViewObserver> parentViewObserver = 
     do_QueryInterface(parentPresShell);
   if (!parentViewObserver) {
@@ -6069,11 +6099,7 @@ PresShell::DisableNonTestMouseEvents(PRBool aDisable)
 already_AddRefed<nsPIDOMWindow>
 PresShell::GetFocusedDOMWindowInOurWindow()
 {
-  nsCOMPtr<nsPIDOMWindow> window =
-    do_QueryInterface(mDocument->GetWindow());
-  NS_ENSURE_TRUE(window, nsnull);
-
-  nsCOMPtr<nsPIDOMWindow> rootWindow = window->GetPrivateRoot();
+  nsCOMPtr<nsPIDOMWindow> rootWindow = GetRootWindow();
   NS_ENSURE_TRUE(rootWindow, nsnull);
   nsPIDOMWindow* focusedWindow;
   nsFocusManager::GetFocusedDescendant(rootWindow, PR_TRUE, &focusedWindow);

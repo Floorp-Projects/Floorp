@@ -307,6 +307,7 @@ struct JSAtomState {
     JSAtom              *indexAtom;
     JSAtom              *inputAtom;
     JSAtom              *iteratorAtom;
+    JSAtom              *joinAtom;
     JSAtom              *lastIndexAtom;
     JSAtom              *lengthAtom;
     JSAtom              *lineNumberAtom;
@@ -345,14 +346,6 @@ struct JSAtomState {
     JSAtom              *starQualifierAtom;
     JSAtom              *tagcAtom;
     JSAtom              *xmlAtom;
-#endif
-
-#ifdef NARCISSUS
-    JSAtom              *__call__Atom;
-    JSAtom              *__construct__Atom;
-    JSAtom              *__hasInstance__Atom;
-    JSAtom              *ExecutionContextAtom;
-    JSAtom              *currentAtom;
 #endif
 
     JSAtom              *ProxyAtom;
@@ -458,6 +451,7 @@ extern const char   js_ignoreCase_str[];
 extern const char   js_index_str[];
 extern const char   js_input_str[];
 extern const char   js_iterator_str[];
+extern const char   js_join_str[];
 extern const char   js_lastIndex_str[];
 extern const char   js_length_str[];
 extern const char   js_lineNumber_str[];
@@ -495,14 +489,6 @@ extern const char   js_enumerable_str[];
 extern const char   js_configurable_str[];
 extern const char   js_writable_str[];
 extern const char   js_value_str[];
-
-#ifdef NARCISSUS
-extern const char   js___call___str[];
-extern const char   js___construct___str[];
-extern const char   js___hasInstance___str[];
-extern const char   js_ExecutionContext_str[];
-extern const char   js_current_str[];
-#endif
 
 /*
  * Initialize atom state. Return true on success, false on failure to allocate

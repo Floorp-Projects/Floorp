@@ -51,7 +51,6 @@ browser/components/migration/Makefile
 browser/components/migration/public/Makefile
 browser/components/migration/src/Makefile
 browser/components/places/Makefile
-browser/components/places/public/Makefile
 browser/components/places/src/Makefile
 browser/components/preferences/Makefile
 browser/components/privatebrowsing/Makefile

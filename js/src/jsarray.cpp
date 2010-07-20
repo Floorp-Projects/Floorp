@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JS array class.
  *
@@ -316,9 +314,7 @@ JSObject::resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
         return JS_TRUE;
     }
 
-    /* Silence warning */
-    size_t newcapBig = newcap;
-    if (newcapBig > MAX_DSLOTS_LENGTH) {
+    if (newcap > MAX_DSLOTS_LENGTH32) {
         js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
@@ -1009,7 +1005,6 @@ JSObjectOps js_ArrayObjectOps = {
     array_getAttributes,
     array_setAttributes,
     array_deleteProperty,
-    js_DefaultValue,
     js_Enumerate,
     array_typeOf,
     array_trace,
@@ -1339,28 +1334,48 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     return ok;
 }
 
+/* ES5 15.4.4.2. NB: The algorithm here differs from the one in ES3. */
 static JSBool
 array_toString(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj ||
-        (obj->getClass() != &js_SlowArrayClass &&
-         !InstanceOf(cx, obj, &js_ArrayClass, vp + 2))) {
-        return JS_FALSE;
+    if (!obj)
+        return false;
+
+    Value &join = vp[0];
+    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.joinAtom), &join))
+        return false;
+
+    if (!js_IsCallable(join)) {
+        JSString *str = obj_toStringHelper(cx, obj);
+        if (!str)
+            return false;
+        vp->setString(str);
+        return true;
     }
 
-    return array_toString_sub(cx, obj, JS_FALSE, NULL, vp);
+    LeaveTrace(cx);
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, 0, args))
+        return false;
+
+    Value *sp = args.getvp();
+    sp[0] = join;
+    sp[1].setObject(*obj);
+
+    /* Do the call. */
+    if (!Invoke(cx, args, 0))
+        return false;
+    *vp = *args.getvp();
+    return true;
 }
 
 static JSBool
 array_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = ComputeThisFromVp(cx, vp);
-    if (!obj ||
-        (obj->getClass() != &js_SlowArrayClass &&
-         !InstanceOf(cx, obj, &js_ArrayClass, vp + 2))) {
-        return JS_FALSE;
-    }
+    if (!obj)
+        return false;
 
     /*
      *  Passing comma here as the separator. Need a way to get a
@@ -1397,7 +1412,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
             /* Verify that overwriteType and writeType were accurate. */
             AutoIdRooter idr(cx);
             for (jsuint i = 0; i < count; i++) {
-                JS_ASSERT_IF(vectorType == SourceVectorAllValues, vector[i] != JSVAL_HOLE);
+                JS_ASSERT_IF(vectorType == SourceVectorAllValues, !vector[i].isMagic(JS_ARRAY_HOLE));
 
                 jsdouble index = jsdouble(start) + i;
                 if (targetType == TargetElementsAllHoles && index < jsuint(-1)) {

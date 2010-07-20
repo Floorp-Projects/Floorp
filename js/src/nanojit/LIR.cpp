@@ -671,6 +671,7 @@ namespace nanojit
             case LIR_rshi:  return insImmI(c1 >> c2);
             case LIR_lshi:  return insImmI(c1 << c2);
             case LIR_rshui: return insImmI(uint32_t(c1) >> c2);
+
             case LIR_ori:   return insImmI(c1 | c2);
             case LIR_andi:  return insImmI(c1 & c2);
             case LIR_xori:  return insImmI(c1 ^ c2);
@@ -700,6 +701,71 @@ namespace nanojit
                 break;
             }
 
+#ifdef NANOJIT_64BIT
+        } else if (oprnd1->isImmQ() && oprnd2->isImmQ()) {
+            // The operands are both 64-bit integer immediates.
+            int64_t c1 = oprnd1->immQ();
+            int64_t c2 = oprnd2->immQ();
+            static const int64_t MIN_INT64 = int64_t(0x8000000000000000LL);
+            static const int64_t MAX_INT64 = int64_t(0x7FFFFFFFFFFFFFFFLL);
+
+            switch (v) {
+            case LIR_eqq:   return insImmI(c1 == c2);
+            case LIR_ltq:   return insImmI(c1 <  c2);
+            case LIR_gtq:   return insImmI(c1 >  c2);
+            case LIR_leq:   return insImmI(c1 <= c2);
+            case LIR_geq:   return insImmI(c1 >= c2);
+            case LIR_ltuq:  return insImmI(uint64_t(c1) <  uint64_t(c2));
+            case LIR_gtuq:  return insImmI(uint64_t(c1) >  uint64_t(c2));
+            case LIR_leuq:  return insImmI(uint64_t(c1) <= uint64_t(c2));
+            case LIR_geuq:  return insImmI(uint64_t(c1) >= uint64_t(c2));
+
+            case LIR_orq:   return insImmQ(c1 | c2);
+            case LIR_andq:  return insImmQ(c1 & c2);
+            case LIR_xorq:  return insImmQ(c1 ^ c2);
+
+            // Nb: LIR_rshq, LIR_lshq and LIR_rshuq aren't here because their
+            // second arg is a 32-bit int.
+
+            case LIR_addq:
+                // Overflow is only possible if both values are positive or
+                // both negative.  Just like the 32-bit case, this check
+                // probably isn't necessary, because the C++ overflow
+                // behaviour is very likely to be the same as the machine code
+                // overflow behaviour, but we do it just to be safe.
+                if (c1 > 0 && c2 > 0) {
+                    // Overflows if: c1 + c2 > MAX_INT64
+                    // Re-express to avoid overflow in the check: c1 > MAX_INT64 - c2
+                    if (c1 > MAX_INT64 - c2)
+                        break;                  // overflow
+                } else if (c1 < 0 && c2 < 0) {
+                    // Overflows if: c1 + c2 < MIN_INT64
+                    // Re-express to avoid overflow in the check: c1 < MIN_INT64 - c2
+                    if (c1 < MIN_INT64 - c2)
+                        break;                  // overflow
+                }
+                return insImmQ(c1 + c2);
+
+            case LIR_subq:
+                // Overflow is only possible if one value is positive and one
+                // negative.
+                if (c1 > 0 && c2 < 0) {
+                    // Overflows if: c1 - c2 > MAX_INT64
+                    // Re-express to avoid overflow in the check: c1 > MAX_INT64 + c2
+                    if (c1 > MAX_INT64 + c2)
+                        break;                  // overflow
+                } else if (c1 < 0 && c2 > 0) {
+                    // Overflows if: c1 - c2 < MIN_INT64
+                    // Re-express to avoid overflow in the check: c1 < MIN_INT64 + c2
+                    if (c1 < MIN_INT64 + c2)
+                        break;                  // overflow
+                }
+                return insImmQ(c1 - c2);
+
+            default:
+                break;
+            }
+#endif
         } else if (oprnd1->isImmD() && oprnd2->isImmD()) {
             // The operands are both 64-bit double immediates.
             double c1 = oprnd1->immD();
@@ -1001,7 +1067,7 @@ namespace nanojit
                     // jump).  But it won't be optimized away, and it could
                     // indicate a performance problem or other bug, so assert
                     // in debug builds.
-                    NanoAssertMsg(0, "Constantly false guard detected");
+                    NanoAssertMsg(0, "Constantly false branch detected");
 #endif
                     return out->insBranch(LIR_j, NULL, t);
                 }

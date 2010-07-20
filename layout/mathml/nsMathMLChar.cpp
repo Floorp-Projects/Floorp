@@ -829,7 +829,7 @@ nsStyleContext*
 nsMathMLChar::GetStyleContext() const
 {
   NS_ASSERTION(!mParent, "invalid call - not allowed for child chars");
-  NS_ASSERTION(mStyleContext, "chars shoud always have style context");
+  NS_ASSERTION(mStyleContext, "chars should always have style context");
   return mStyleContext;
   return NS_OK;
 }

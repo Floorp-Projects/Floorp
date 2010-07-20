@@ -623,7 +623,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
         NS_ASSERTION(aParent, "We've _got_ to have a parent here!");
 
         nsCOMPtr<nsIDOMWindow> newWindow;
-        rv = provider->ProvideWindow(aParent, chromeFlags,
+        rv = provider->ProvideWindow(aParent, chromeFlags, aCalledFromJS,
                                      sizeSpec.PositionSpecified(),
                                      sizeSpec.SizeSpecified(),
                                      uriToLoad, name, features, &windowIsNew,

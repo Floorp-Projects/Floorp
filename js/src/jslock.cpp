@@ -493,7 +493,7 @@ ShareTitle(JSContext *cx, JSTitle *title)
  * making mutable strings in the title's object's slots be immutable. We have
  * to do this because such strings will soon be available to multiple threads,
  * so their buffers can't be realloc'd any longer in js_ConcatStrings, and
- * their members can't be modified by js_ConcatStrings, js_UndependString or
+ * their members can't be modified by js_ConcatStrings, JSString::undepend, or
  * MinimizeDependentStrings.
  *
  * The last bit of work done by this function nulls title->ownercx and updates

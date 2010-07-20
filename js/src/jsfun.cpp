@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JS function support.
  */
@@ -674,10 +672,11 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
 #endif
 
 /*
- * The Arguments class is not initialized via JS_InitClass, and must not be,
- * because its name is "Object".  Per ECMA, that causes instances of it to
- * delegate to the object named by Object.prototype.  It also ensures that
- * arguments.toString() returns "[object Object]".
+ * The Arguments class is not initialized via JS_InitClass, because arguments
+ * objects have the initial value of Object.prototype as their [[Prototype]].
+ * However, Object.prototype.toString.call(arguments) === "[object Arguments]"
+ * per ES5 (although not ES3), so its class name is "Arguments" rather than
+ * "Object".
  *
  * The JSClass functions below collaborate to lazily reflect and synchronize
  * actual argument values, argument count, and callee function object stored
@@ -685,7 +684,7 @@ args_or_call_trace(JSTracer *trc, JSObject *obj)
  * arguments object.
  */
 Class js_ArgumentsClass = {
-    js_Object_str,
+    "Arguments",
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::ARGS_FIXED_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
@@ -1586,7 +1585,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 
     if (!JS_XDRUint32(xdr, &firstword))
         return false;
-    if ((firstword & 1U) && !js_XDRStringAtom(xdr, &fun->atom))
+    if ((firstword & 1U) && !js_XDRAtom(xdr, &fun->atom))
         return false;
     if (!JS_XDRUint32(xdr, &localsword) ||
         !JS_XDRUint32(xdr, &flagsword)) {
@@ -1677,7 +1676,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
             }
             if (xdr->mode == JSXDR_ENCODE)
                 name = JS_LOCAL_NAME_TO_ATOM(names[i]);
-            ok = !!js_XDRStringAtom(xdr, &name);
+            ok = !!js_XDRAtom(xdr, &name);
             if (!ok)
                 goto release_mark;
             if (xdr->mode == JSXDR_DECODE) {
@@ -2066,47 +2065,6 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     return ok;
 }
 
-#ifdef NARCISSUS
-static JS_REQUIRES_STACK JSBool
-fun_applyConstructor(JSContext *cx, uintN argc, Value *vp)
-{
-    JSObject *aobj;
-    uintN length, i;
-
-    if (vp[2].isPrimitive() ||
-        (aobj = &vp[2].toObject(),
-         !aobj->isArray() &&
-         !aobj->isArguments())) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_APPLY_ARGS, "__applyConstruct__");
-        return JS_FALSE;
-    }
-
-    if (!js_GetLengthProperty(cx, aobj, &length))
-        return JS_FALSE;
-
-    if (length > JS_ARGS_LENGTH_MAX)
-        length = JS_ARGS_LENGTH_MAX;
-
-    InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, length, args))
-        return JS_FALSE;
-
-    Value *sp = args.getvp();
-    *sp++ = vp[1];
-    *sp++ = NullValue(); /* this is filled automagically */
-    for (i = 0; i < length; i++) {
-        if (!aobj->getProperty(cx, INT_TO_JSID(jsint(i)), sp))
-            return JS_FALSE;
-        sp++;
-    }
-
-    JSBool ok = InvokeConstructor(cx, args);
-    *vp = *args.getvp();
-    return ok;
-}
-#endif
-
 static JSFunctionSpec function_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,   fun_toSource,   0,0),
@@ -2114,9 +2072,6 @@ static JSFunctionSpec function_methods[] = {
     JS_FN(js_toString_str,   fun_toString,   0,0),
     JS_FN(js_apply_str,      js_fun_apply,   2,0),
     JS_FN(js_call_str,       js_fun_call,    1,0),
-#ifdef NARCISSUS
-    JS_FN("__applyConstructor__", fun_applyConstructor, 1,0),
-#endif
     JS_FS_END
 };
 
@@ -2502,7 +2457,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
     JSUpvarArray *uva = fun->u.i.script->upvars();
     JS_ASSERT(uva->length <= closure->dslots[-1].toPrivateUint32());
 
-    uint16 level = fun->u.i.script->staticLevel;
+    uintN level = fun->u.i.script->staticLevel;
     for (uint32 i = 0, n = uva->length; i < n; i++)
         closure->dslots[i] = GetUpvar(cx, level, uva->vector[i]);
 

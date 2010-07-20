@@ -1417,36 +1417,43 @@ var XPIProvider = {
       // App version changed, we may need to update the appDisabled property.
       if (aUpdateCompatibility) {
         let appDisabled = !isUsableAddon(aOldAddon);
+        let userDisabled = aOldAddon.userDisabled;
+        // Sync the userDisabled flag to the selectedSkin
+        if (aOldAddon.type == "theme")
+          userDisabled = aOldAddon.internalName != XPIProvider.selectedSkin;
+        let wasDisabled = aOldAddon.appDisabled || aOldAddon.userDisabled;
+        let isDisabled = appDisabled || userDisabled;
 
-        // If the property has changed update the database.
-        if (appDisabled != aOldAddon.appDisabled) {
+        // If either property has changed update the database.
+        if (appDisabled != aOldAddon.appDisabled ||
+            userDisabled != aOldAddon.userDisabled) {
           LOG("Add-on " + aOldAddon.id + " changed appDisabled state to " +
-              appDisabled);
+              appDisabled + " and userDisabled state to " + userDisabled);
           XPIDatabase.setAddonProperties(aOldAddon, {
-            appDisabled: appDisabled
+            appDisabled: appDisabled,
+            userDisabled: userDisabled
           });
+        }
 
-          // If this is a visible add-on and it isn't userDisabled then we
-          // may need a restart or to update the bootstrap list.
-          if (aOldAddon.visible && !aOldAddon.userDisabled) {
-            if (aOldAddon.bootstrap) {
-              // When visible and not userDisabled, active is the opposite of
-              // appDisabled.
-              aOldAddon.active = !aOldAddon.appDisabled;
-              XPIDatabase.updateAddonActive(aOldAddon);
-              if (aOldAddon.active) {
-                XPIProvider.bootstrappedAddons[aOldAddon.id] = {
-                  version: aOldAddon.version,
-                  descriptor: aAddonState.descriptor
-                };
-              }
-              else {
-                delete XPIProvider.bootstrappedAddons[aOldAddon.id];
-              }
+        // If this is a visible add-on and it has changed disabled state then we
+        // may need a restart or to update the bootstrap list.
+        if (aOldAddon.visible && wasDisabled != isDisabled) {
+          if (aOldAddon.bootstrap) {
+            // Update the add-ons active state
+            aOldAddon.active = !isDisabled;
+            XPIDatabase.updateAddonActive(aOldAddon);
+            if (aOldAddon.active) {
+              XPIProvider.bootstrappedAddons[aOldAddon.id] = {
+                version: aOldAddon.version,
+                descriptor: aAddonState.descriptor
+              };
             }
             else {
-              changed = true;
+              delete XPIProvider.bootstrappedAddons[aOldAddon.id];
             }
+          }
+          else {
+            changed = true;
           }
         }
       }
@@ -5293,8 +5300,22 @@ DirectoryInstallLocation.prototype = {
         linkedDirectory.setRelativeDescriptor(file.parent, line.value);
       }
 
+      if (!linkedDirectory.exists()) {
+        WARN("File pointer " + aFile.path + " points to " + linkedDirectory.path +
+             " which does not exist");
+        return null;
+      }
+
+      if (!linkedDirectory.isDirectory()) {
+        WARN("File pointer " + aFile.path + " points to " + linkedDirectory.path +
+             " which is not a directory");
+        return null;
+      }
+
       return linkedDirectory;
     }
+
+    WARN("File pointer " + aFile.path + " does not contain a path");
     return null;
   },
 
@@ -5326,11 +5347,8 @@ DirectoryInstallLocation.prototype = {
       entry.append(id);
       if (entry.isFile()) {
         newEntry = this._readDirectoryFromFile(entry);
-        if (!newEntry || !newEntry.exists() || !newEntry.isDirectory()) {
-          WARN("File pointer " + entry.path + " points to an invalid " +
-               "directory " + newEntry.path);
+        if (!newEntry)
           continue;
-        }
         entry = newEntry;
       }
       else if (!entry.isDirectory()) {

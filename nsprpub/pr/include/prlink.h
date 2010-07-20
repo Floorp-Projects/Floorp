@@ -49,7 +49,7 @@ typedef struct PRLibrary PRLibrary;
 
 typedef struct PRStaticLinkTable {
     const char *name;
-    void (*fp)();
+    void (*fp)(void);
 } PRStaticLinkTable;
 
 /*
@@ -208,7 +208,7 @@ NSPR_API(void*) PR_FindSymbol(PRLibrary *lib, const char *name);
 **
 ** This function does not modify the reference count of the library.
 */
-typedef void (*PRFuncPtr)();
+typedef void (*PRFuncPtr)(void);
 NSPR_API(PRFuncPtr) PR_FindFunctionSymbol(PRLibrary *lib, const char *name);
 
 /*
