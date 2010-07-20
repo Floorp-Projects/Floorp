@@ -45,7 +45,7 @@
 
 // **********
 // Title: iq.js
-// Various helper functions, in the vein of jQuery. 
+// Various helper functions, in the vein of jQuery.
 
 (function( window, undefined ) {
 
@@ -239,7 +239,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: addClass
-  // Adds the given class(es) to the receiver. 
+  // Adds the given class(es) to the receiver.
   addClass: function( value ) {
     if ( iQ.isFunction(value) ) {
       Utils.assert('does not support function argument', false);
@@ -262,7 +262,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: removeClass
-  // Removes the given class(es) from the receiver. 
+  // Removes the given class(es) from the receiver.
   removeClass: function( value ) {
     if ( iQ.isFunction(value) ) {
       Utils.assert('does not support function argument', false);
@@ -289,7 +289,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: hasClass
-  // Returns true is the receiver has the given css class. 
+  // Returns true is the receiver has the given css class.
   hasClass: function( selector ) {
     for ( var i = 0, l = this.length; i < l; i++ ) {
       if ( this[i].classList.contains( selector ) ) {
@@ -301,8 +301,8 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: find
-  // Searches the receiver and its children, returning a new iQ object with 
-  // elements that match the given selector. 
+  // Searches the receiver and its children, returning a new iQ object with
+  // elements that match the given selector.
   find: function( selector ) {
     var ret = [], length = 0;
 
@@ -332,7 +332,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: remove
-  // Removes the receiver from the DOM. 
+  // Removes the receiver from the DOM.
   remove: function(unused) {
     Utils.assert('does not accept a selector', unused === undefined);
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
@@ -359,7 +359,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: width
-  // Returns the width of the receiver. 
+  // Returns the width of the receiver.
   width: function(unused) {
     Utils.assert('does not yet support setting', unused === undefined);
     return parseInt(this.css('width'));
@@ -375,7 +375,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: position
-  // Returns an object with the receiver's position in left and top properties. 
+  // Returns an object with the receiver's position in left and top properties.
   position: function(unused) {
     Utils.assert('does not yet support setting', unused === undefined);
     return {
@@ -386,7 +386,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: bounds
-  // Returns a <Rect> with the receiver's bounds. 
+  // Returns a <Rect> with the receiver's bounds.
   bounds: function(unused) {
     Utils.assert('does not yet support setting', unused === undefined);
     var p = this.position();
@@ -395,8 +395,8 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: data
-  // Pass in both key and value to attach some data to the receiver; 
-  // pass in just key to retrieve it. 
+  // Pass in both key and value to attach some data to the receiver;
+  // pass in just key to retrieve it.
   data: function(key, value) {
     var data = null;
     if (value === undefined) {
@@ -419,7 +419,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: html
-  // Given a value, sets the receiver's innerHTML to it; otherwise returns what's already there. 
+  // Given a value, sets the receiver's innerHTML to it; otherwise returns what's already there.
   // TODO: security
   html: function(value) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
@@ -432,7 +432,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: text
-  // Given a value, sets the receiver's textContent to it; otherwise returns what's already there. 
+  // Given a value, sets the receiver's textContent to it; otherwise returns what's already there.
   text: function(value) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
     if (value === undefined) {
@@ -444,7 +444,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: val
-  // Given a value, sets the receiver's value to it; otherwise returns what's already there. 
+  // Given a value, sets the receiver's value to it; otherwise returns what's already there.
   val: function(value) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
     if (value === undefined) {
@@ -457,7 +457,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: appendTo
-  // Appends the receiver to the result of iQ(selector). 
+  // Appends the receiver to the result of iQ(selector).
   appendTo: function(selector) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
     iQ(selector).append(this);
@@ -466,7 +466,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: append
-  // Appends the result of iQ(selector) to the receiver. 
+  // Appends the result of iQ(selector) to the receiver.
   append: function(selector) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
     var object = iQ(selector);
@@ -497,13 +497,13 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: css
-  // Sets or gets CSS properties on the receiver. When setting certain numerical properties, 
-  // will automatically add "px".  
+  // Sets or gets CSS properties on the receiver. When setting certain numerical properties,
+  // will automatically add "px".
   //
-  // Possible call patterns: 
+  // Possible call patterns:
   //   a: object, b: undefined - sets with properties from a
   //   a: string, b: undefined - gets property specified by a
-  //   a: string, b: string/number - sets property specified by a to b 
+  //   a: string, b: string/number - sets property specified by a to b
   css: function(a, b) {
     var properties = null;
 
@@ -621,7 +621,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: fadeOut
-  // Animates the receiver to full transparency. Calls callback on completion. 
+  // Animates the receiver to full transparency. Calls callback on completion.
   fadeOut: function(callback) {
     try {
       Utils.assert('does not yet support duration', iQ.isFunction(callback) || callback === undefined);
@@ -644,7 +644,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: fadeIn
-  // Animates the receiver to full opacity.  
+  // Animates the receiver to full opacity.
   fadeIn: function() {
     try {
       this.css({display: ''});
@@ -721,7 +721,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: one
-  // Binds the given function to the given event type, but only for one call; 
+  // Binds the given function to the given event type, but only for one call;
   // automatically unbinds after the event fires once.
   one: function(type, func) {
     Utils.assert('does not support eventData argument', iQ.isFunction(func));
@@ -736,7 +736,7 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: unbind
-  // Unbinds the given function from the given event type.   
+  // Unbinds the given function from the given event type.
   unbind: function(type, func) {
     Utils.assert('Must provide a function', iQ.isFunction(func));
 
@@ -766,11 +766,11 @@ iQ.fn.init.prototype = iQ.fn;
 
 // ##########
 // Class: iQ
-// Additional utility functions. 
+// Additional utility functions.
 
 // ----------
 // Function: extend
-// Pass several objects in and it will combine them all into the first object and return it. 
+// Pass several objects in and it will combine them all into the first object and return it.
 iQ.extend = iQ.fn.extend = function() {
   // copy reference to target object
   var target = arguments[0] || {}, i = 1, length = arguments.length, deep = false, options, name, src, copy;
@@ -830,14 +830,14 @@ iQ.extend = iQ.fn.extend = function() {
 iQ.extend({
   // -----------
   // Function: isFunction
-  // Returns true if the given object is a function. 
+  // Returns true if the given object is a function.
   isFunction: function( obj ) {
     return toString.call(obj) === "[object Function]";
   },
 
   // ----------
   // Function: isArray
-  // Returns true if the given object is an array. 
+  // Returns true if the given object is an array.
   isArray: function( obj ) {
     return toString.call(obj) === "[object Array]";
   },
