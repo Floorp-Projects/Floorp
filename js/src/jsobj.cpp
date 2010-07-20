@@ -3516,7 +3516,13 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      *
      * All callers of JSObject::initSharingEmptyScope depend on this.
      */
-    if (!proto->scope()->ensureEmptyScope(cx, clasp))
+    JSScope *scope;
+    bool ok;
+    JS_LOCK_OBJ(cx, proto);
+    scope = js_GetMutableScope(cx, proto);
+    ok = scope && scope->ensureEmptyScope(cx, clasp);
+    JS_UNLOCK_OBJ(cx, proto);
+    if (!ok)
         goto bad;
 
     /* If this is a standard class, cache its prototype. */
