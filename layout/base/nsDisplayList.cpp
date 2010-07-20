@@ -81,7 +81,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mSyncDecodeImages(PR_FALSE),
       mIsPaintingToWindow(PR_FALSE) {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
-  PL_InitArenaPool(&mPool, "displayListArena", 1024, sizeof(void*)-1);
+  PL_InitArenaPool(&mPool, "displayListArena", 1024,
+                   NS_MAX(NS_ALIGNMENT_OF(void*),NS_ALIGNMENT_OF(double))-1);
 
   nsPresContext* pc = aReferenceFrame->PresContext();
   nsIPresShell *shell = pc->PresShell();
