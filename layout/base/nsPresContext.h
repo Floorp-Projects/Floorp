@@ -1267,6 +1267,9 @@ public:
 
 private:
   nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
+  // if mNeedsToUpdatePluginGeometry is set, then this is the frame to
+  // use as the root of the subtree to search for plugin updates, or
+  // null to use the root frame of this prescontext
   nsIFrame* mUpdatePluginGeometryForFrame;
   PRPackedBool mNeedsToUpdatePluginGeometry;
 };
