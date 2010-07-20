@@ -4889,7 +4889,6 @@ BEGIN_CASE(JSOP_CALLNAME)
             goto error;
     } else {
         sprop = (JSScopeProperty *)prop;
-  do_native_get:
         NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
         JS_UNLOCK_OBJ(cx, obj2);
     }
@@ -6845,8 +6844,6 @@ END_CASE(JSOP_ARRAYPUSH)
   L_JSOP_ANYNAME:
   L_JSOP_DEFXMLNS:
 # endif
-
-  L_JSOP_UNUSED218:
 
 #endif /* !JS_THREADED_INTERP */
 #if !JS_THREADED_INTERP
