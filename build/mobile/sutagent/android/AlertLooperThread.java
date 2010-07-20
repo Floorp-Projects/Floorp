@@ -35,9 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package com.mozilla.SUTAgentAndroid;
+package com.mozilla.SUTAgentAndroid.service;
 
 import java.util.Timer;
+
+import android.content.ContextWrapper;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -48,6 +50,12 @@ class AlertLooperThread extends Thread
 	private Looper looper = null;
 	private DoAlert da	= null;
 	private Timer alertTimer = null;
+	private ContextWrapper contextWrapper = null;
+	
+	AlertLooperThread(ContextWrapper ctxW)
+		{
+		this.contextWrapper = ctxW;
+		}
 	
 	public Timer getAlertTimer()
 		{
@@ -81,7 +89,7 @@ class AlertLooperThread extends Thread
     		};
       
     	alertTimer = new Timer();
-    	da = new DoAlert();
+    	da = new DoAlert(contextWrapper);
     	alertTimer.scheduleAtFixedRate(da, 0, 5000);
     	Looper.loop();
 		}

@@ -94,7 +94,28 @@ class GeckoAppShell
 
         // MozAlloc
         System.loadLibrary("mozalloc");
-
+        System.loadLibrary("mozutils");
+                
+        Intent i = GeckoApp.mAppContext.getIntent();
+        String env = i.getStringExtra("env0");
+        Log.i("GeckoApp", "env0: "+ env);
+        for (int c = 1; env != null; c++) {
+            GeckoAppShell.putenv(env);
+            env = i.getStringExtra("env" + c);
+            Log.i("GeckoApp", "env"+ c +": "+ env);
+        }
+        String tmpdir = System.getProperty("java.io.tmpdir");
+        if (tmpdir == null) {
+          try {
+            File f = Environment.getDownloadCacheDirectory();
+            dalvik.system.TemporaryDirectory.setUpDirectory(f);
+            tmpdir = f.getPath();
+          } catch (Exception e) {
+            Log.e("GeckoApp", "error setting up tmp dir" + e);
+          }
+        }
+        GeckoAppShell.putenv("TMPDIR=" + tmpdir);
+        
         // NSPR
         System.loadLibrary("nspr4");
         System.loadLibrary("plc4");

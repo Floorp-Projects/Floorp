@@ -44,6 +44,7 @@
 
 #include "jar.h"
 #include "jarint.h"
+#include "portreg.h"
 
 static void 
 jar_destroy_list (ZZList *list);
@@ -390,7 +391,7 @@ int JAR_find_next (JAR_Context *ctx, JAR_Item **it)
 
 	case jarTypeSF:      /* signer, not jar */
 	    PORT_Assert( signer != NULL );
-	    list = signer->sf;
+	    list = signer ? signer->sf : NULL;
 	    break;
 
 	case jarTypeMF:
@@ -407,6 +408,7 @@ int JAR_find_next (JAR_Context *ctx, JAR_Item **it)
 
 	default:
 	    PORT_Assert( 1 != 2 );
+	    list = NULL;
 	    break;
 	}
 	if (list == NULL) {
@@ -443,13 +445,17 @@ int JAR_find_next (JAR_Context *ctx, JAR_Item **it)
 	    }
 	}
 	PORT_Assert( ctx->next != NULL );
+	if (ctx->next == NULL) {
+	    *it = NULL;
+	    return -1;
+	}
 	while (!ZZ_ListIterDone (list, ctx->next)) {
 	    *it = ctx->next->thing;
 	    ctx->next = ctx->next->next;
 	    if (!*it || (*it)->type != finding)
 		continue;
 	    if (ctx->pattern && *ctx->pattern) {
-		if (PORT_Strcmp ((*it)->pathname, ctx->pattern))
+		if (PORT_RegExpSearch ((*it)->pathname, ctx->pattern))
 		    continue;
 	    }
 	    /* We have a valid match. If this is a jarTypeSign

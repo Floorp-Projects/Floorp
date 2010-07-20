@@ -319,12 +319,6 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   margin: 0;
 }
 
-/* Inspector / Highlighter */
-
-#highlighter-panel {
-  -moz-appearance: none;
-  -moz-window-shadow: none;
-}
 
 /* notification anchors should only be visible when their associated
    notifications are */

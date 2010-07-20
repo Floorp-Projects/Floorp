@@ -1462,6 +1462,7 @@ pkix_Build_BuildSelectorAndParams(
         PKIX_ComCertSelParams *certSelParams = NULL;
         PKIX_CertSelector *certSel = NULL;
         PKIX_PL_X500Name *currentIssuer = NULL;
+        PKIX_PL_ByteArray *authKeyId = NULL;
         PKIX_PL_Date *testDate = NULL;
         PKIX_CertSelector *callerCertSelector = NULL;
         PKIX_ComCertSelParams *callerComCertSelParams = NULL;
@@ -1475,12 +1476,22 @@ pkix_Build_BuildSelectorAndParams(
                 (state->prevCert, &currentIssuer, plContext),
                 PKIX_CERTGETISSUERFAILED);
 
+        PKIX_CHECK(PKIX_PL_Cert_GetAuthorityKeyIdentifier
+                (state->prevCert, &authKeyId, plContext),
+                PKIX_CERTGETAUTHORITYKEYIDENTIFIERFAILED);
+
         PKIX_CHECK(PKIX_ComCertSelParams_Create(&certSelParams, plContext),
                 PKIX_COMCERTSELPARAMSCREATEFAILED);
 
         PKIX_CHECK(PKIX_ComCertSelParams_SetSubject
                 (certSelParams, currentIssuer, plContext),
                 PKIX_COMCERTSELPARAMSSETSUBJECTFAILED);
+
+        if (authKeyId != NULL) {
+            PKIX_CHECK(PKIX_ComCertSelParams_SetSubjKeyIdentifier
+                    (certSelParams, authKeyId, plContext),
+                    PKIX_COMCERTSELPARAMSSETSUBJKEYIDENTIFIERFAILED);
+        }
 
         PKIX_INCREF(state->buildConstants.testDate);
         testDate = state->buildConstants.testDate;
@@ -1548,6 +1559,7 @@ cleanup:
         PKIX_DECREF(certSelParams);
         PKIX_DECREF(certSel);
         PKIX_DECREF(currentIssuer);
+        PKIX_DECREF(authKeyId);
         PKIX_DECREF(testDate);
         PKIX_DECREF(reqEkuOids);
         PKIX_DECREF(callerComCertSelParams);
@@ -2222,9 +2234,9 @@ pkix_BuildForwardDepthFirstSearch(
                     pkixErrorResult = NULL;
                     if (state->verifyNode != NULL) {
                         /* state->verifyNode is the object that contains a list
-                         * of verifyNodes. verifyNodes contains cert chain build
-                         * failures that occured on this level of chian building.
-                         * Here, creating new verify node
+                         * of verifyNodes. verifyNodes contains cert chain
+                         * build failures that occurred on this level of chain
+                         * building.  Here, creating new verify node
                          * to log the failure and adding it to the list. */
                         PKIX_CHECK_FATAL(pkix_VerifyNode_Create
                                          (state->prevCert,

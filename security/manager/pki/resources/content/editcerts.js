@@ -44,6 +44,13 @@ const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
 var certdb;
 var cert;
 
+function doPrompt(msg)
+{
+  let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+    getService(Components.interfaces.nsIPromptService);
+  prompts.alert(window, null, msg);
+}
+
 function setWindowName()
 {
   var dbkey = self.name;
@@ -235,7 +242,7 @@ function editCaTrust()
    else
    {
       var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-      alert(bundle.GetStringFromName("issuerCertNotFound"));
+      doPrompt(bundle.GetStringFromName("issuerCertNotFound"));
    }
 }
 

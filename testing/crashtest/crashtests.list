@@ -48,8 +48,7 @@ include ../../layout/xul/base/src/crashtests/crashtests.list
 include ../../layout/xul/base/src/grid/crashtests/crashtests.list
 include ../../layout/xul/base/src/tree/src/crashtests/crashtests.list
 
-include ../../gfx/src/thebes/crashtests/crashtests.list
-include ../../gfx/thebes/crashtests/crashtests.list
+include ../../gfx/tests/crashtests/crashtests.list
 
 include ../../modules/libpr0n/test/crashtests/crashtests.list
 include ../../modules/plugin/test/crashtests/crashtests.list

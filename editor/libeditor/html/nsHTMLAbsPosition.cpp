@@ -106,7 +106,7 @@ nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement **_retval)
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(element);
   nsCOMPtr<nsIDOMNode> resultNode;
 
-  while (!resultNode && !nsEditor::NodeIsType(node, nsEditProperty::html)) {
+  while (!resultNode && node && !nsEditor::NodeIsType(node, nsEditProperty::html)) {
     res = mHTMLCSSUtils->GetComputedProperty(node, nsEditProperty::cssPosition,
                                              positionStr);
     NS_ENSURE_SUCCESS(res, res);

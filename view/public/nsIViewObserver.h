@@ -47,8 +47,8 @@ class nsIRenderingContext;
 class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID  \
-  { 0xac43a985, 0xcae6, 0x499d, \
-    { 0xae, 0x8f, 0x9c, 0x92, 0xec, 0x6f, 0x2c, 0x47 } }
+  { 0xc5dfb460, 0x50fb, 0x483e, \
+    { 0xb4, 0x22, 0x19, 0xb7, 0x20, 0x4f, 0xe2, 0xdc } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -57,11 +57,16 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IVIEWOBSERVER_IID)
 
   /* called when the observer needs to paint. This paints the entire
-   * frame subtree rooted at the view, including frame subtrees from
+   * frame subtree rooted at aViewToPaint, including frame subtrees from
    * subdocuments.
    * @param aViewToPaint the view for the widget that is being painted
-   * @param aDirtyRegion the region to be painted, in the coordinates of
+   * @param aWidgetToPaint the widget that is being painted, the widget of
    * aViewToPaint
+   * @param aDirtyRegion the region to be painted, in appunits of aDisplayRoot
+   * and relative to aDisplayRoot
+   * @param aIntDirtyRegion the region to be painted, in dev pixels, in the
+   * coordinates of aWidgetToPaint. This conveys the same information as
+   * aDirtyRegion but in a different format.
    * @param aPaintDefaultBackground just paint the default background,
    * don't try to paint any content. This is set when the observer
    * needs to paint something, but the view tree is unstable, so it
@@ -71,11 +76,13 @@ public:
    * which is to paint some default background color over the dirty region.
    * @return error status
    */
-  NS_IMETHOD Paint(nsIView*        aDisplayRoot,
-                   nsIView*        aViewToPaint,
-                   nsIWidget*      aWidgetToPaint,
-                   const nsRegion& aDirtyRegion,
-                   PRBool          aPaintDefaultBackground) = 0;
+  NS_IMETHOD Paint(nsIView*           aDisplayRoot,
+                   nsIView*           aViewToPaint,
+                   nsIWidget*         aWidgetToPaint,
+                   const nsRegion&    aDirtyRegion,
+                   const nsIntRegion& aIntDirtyRegion,
+                   PRBool             aPaintDefaultBackground,
+                   PRBool             aWillSendDidPaint) = 0;
 
   /* called when the observer needs to handle an event
    * @param aView  - where to start processing the event; the root view,
@@ -111,7 +118,14 @@ public:
    * gives the observer a chance to make some last-minute invalidates
    * and geometry changes if it wants to.
    */
-  NS_IMETHOD_(void) WillPaint() = 0;
+  NS_IMETHOD_(void) WillPaint(PRBool aWillSendDidPaint) = 0;
+
+  /**
+   * Notify the observer that we finished painting.  This
+   * gives the observer a chance to make some last-minute invalidates
+   * and geometry changes if it wants to.
+   */
+  NS_IMETHOD_(void) DidPaint() = 0;
 
   /**
    * Dispatch the given synthesized mouse move event, and if

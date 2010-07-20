@@ -35,14 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package com.mozilla.SUTAgentAndroid;
+package com.mozilla.SUTAgentAndroid.service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-
-import android.widget.Toast;
 
 public class RedirOutputThread extends Thread
 	{
@@ -136,7 +134,7 @@ public class RedirOutputThread extends Thread
 				} 
 			catch (IOException e)
 				{
-				Toast.makeText(SUTAgentAndroid.me.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+//				Toast.makeText(SUTAgentAndroid.me.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
 				e.printStackTrace();
 				}
 			}

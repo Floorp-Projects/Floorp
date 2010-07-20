@@ -42,6 +42,15 @@
 #include "nsISMILType.h"
 #include "nsSMILNullType.h"
 
+/**
+ * Although objects of this type are generally only created on the stack and
+ * only exist during the taking of a new time sample, that's not always the
+ * case. The nsSMILValue objects obtained from attributes' base values are
+ * cached so that the SMIL engine can make certain optimizations during a
+ * sample if the base value has not changed since the last sample (potentially
+ * avoiding recomposing). These nsSMILValue objects typically live much longer
+ * than a single sample.
+ */
 class nsSMILValue
 {
 public:

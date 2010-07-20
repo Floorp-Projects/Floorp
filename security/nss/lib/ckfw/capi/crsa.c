@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: crsa.c,v $ $Revision: 1.3 $ $Date: 2005/11/15 00:13:58 $";
+static const char CVS_ID[] = "@(#) $RCSfile: crsa.c,v $ $Revision: 1.4 $ $Date: 2010/04/25 23:37:40 $";
 #endif /* DEBUG */
 
 #include "ckcapi.h"
@@ -550,7 +550,7 @@ ckcapi_mdCryptoOperationRSASign_UpdateFinal
   }
 
   /* OK, Microsoft likes to do things completely differently than anyone
-   * else. We need to reverse the data we recieved here */
+   * else. We need to reverse the data we received here */
   ckcapi_ReverseData(output);
   CryptDestroyHash(hHash);
   return CKR_OK;

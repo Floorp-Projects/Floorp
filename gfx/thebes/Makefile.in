@@ -11,19 +11,12 @@ LIBRARY_NAME	= thebes
 LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1
 
-ifdef ENABLE_TESTS
-DIRS = mochitest
-ifndef MOZ_ENABLE_LIBXUL
-ifndef BUILD_STATIC_LIBS
-TOOL_DIRS = test
-endif
-endif
-endif
-
 EXPORTS	= \
 	gfx3DMatrix.h \
 	gfxASurface.h \
 	gfxAlphaRecovery.h \
+	gfxBlur.h \
+	gfxCachedTempSurface.h \
 	gfxColor.h \
 	gfxContext.h \
 	gfxFont.h \
@@ -41,11 +34,14 @@ EXPORTS	= \
 	gfxTypes.h \
 	gfxTextRunCache.h \
 	gfxTextRunWordCache.h \
+	gfxThebesUtils.h \
 	gfxUtils.h \
 	gfxUserFontSet.h \
 	GLDefs.h \
 	GLContext.h \
 	GLContextProvider.h \
+	GLContextProviderImpl.h \
+	nsCoreAnimationSupport.h \
 	$(NULL)
 
 ifdef MOZ_IPC
@@ -167,6 +163,8 @@ endif
 CPPSRCS	= \
 	gfxASurface.cpp \
 	gfxAlphaRecovery.cpp \
+	gfxBlur.cpp \
+	gfxCachedTempSurface.cpp \
 	gfxContext.cpp \
 	gfxImageSurface.cpp \
 	gfxFont.cpp \
@@ -183,6 +181,7 @@ CPPSRCS	= \
 	gfxSkipChars.cpp \
 	gfxTextRunCache.cpp \
 	gfxTextRunWordCache.cpp \
+	gfxThebesUtils.cpp \
 	gfxUserFontSet.cpp \
 	gfxUtils.cpp \
 	gfxUnicodeProperties.cpp \
@@ -361,10 +360,13 @@ CPPSRCS	+= \
 CPPSRCS +=      nsUnicodeRange.cpp
 CPPSRCS +=      gfxQuartzNativeDrawing.cpp
 
-CMMSRCS = gfxMacPlatformFontList.mm
+CMMSRCS = \
+	gfxMacPlatformFontList.mm \
+	nsCoreAnimationSupport.mm \
+	$(NULL)
 
 # Always link with OpenGL/AGL
-EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit
+EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit -framework QuartzCore
 endif
 
 CSRCS += woff.c

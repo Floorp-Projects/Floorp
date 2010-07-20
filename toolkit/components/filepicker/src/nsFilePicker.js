@@ -64,7 +64,7 @@ const nsIFileURL            = Components.interfaces.nsIFileURL;
 const nsISupports           = Components.interfaces.nsISupports;
 const nsIFactory            = Components.interfaces.nsIFactory;
 const nsIFilePicker         = Components.interfaces.nsIFilePicker;
-const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor
+const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
 const nsIDOMWindow          = Components.interfaces.nsIDOMWindow;
 const nsIStringBundleService = Components.interfaces.nsIStringBundleService;
 const nsIWebNavigation      = Components.interfaces.nsIWebNavigation;
@@ -98,7 +98,7 @@ function nsFilePicker()
 }
 
 nsFilePicker.prototype = {
-  classID: Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
+  classID: Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}"),
 
   QueryInterface: function(iid) {
     if (iid.equals(nsIFilePicker) ||
@@ -192,6 +192,14 @@ nsFilePicker.prototype = {
       // We use "..apps" as a special filter for executable files
       this.appendFilter(titleBundle.GetStringFromName("appsTitle"),
                         "..apps");
+    }
+    if (filterMask & nsIFilePicker.filterAudio) {
+      this.appendFilter(titleBundle.GetStringFromName("audioTitle"),
+                        filterBundle.GetStringFromName("audioFilter"));
+    }
+    if (filterMask & nsIFilePicker.filterVideo) {
+      this.appendFilter(titleBundle.GetStringFromName("videoTitle"),
+                        filterBundle.GetStringFromName("videoFilter"));
     }
     if (filterMask & nsIFilePicker.filterAll) {
       this.appendFilter(titleBundle.GetStringFromName("allTitle"),

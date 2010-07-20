@@ -266,7 +266,11 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
   event.time = PR_IntervalNow();
   event.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
 
-  float appPerDev = float(widget->GetDeviceContext()->AppUnitsPerDevPixel());
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
   event.refPoint.x =
     NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aX) + offset.x,
                           appPerDev);
@@ -318,7 +322,11 @@ nsDOMWindowUtils::SendMouseScrollEvent(const nsAString& aType,
 
   event.time = PR_IntervalNow();
 
-  float appPerDev = float(widget->GetDeviceContext()->AppUnitsPerDevPixel());
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
   event.refPoint.x =
     NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aX) + offset.x,
                           appPerDev);
@@ -594,7 +602,11 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
   event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? PR_TRUE : PR_FALSE;
   event.time = PR_IntervalNow();
 
-  float appPerDev = float(widget->GetDeviceContext()->AppUnitsPerDevPixel());
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
   event.refPoint.x =
     NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aX) + offset.x,
                           appPerDev);

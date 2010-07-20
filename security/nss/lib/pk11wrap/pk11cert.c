@@ -2477,11 +2477,10 @@ PK11_ListCertsInSlot(PK11SlotInfo *slot)
 PK11SlotList *
 PK11_GetAllSlotsForCert(CERTCertificate *cert, void *arg)
 {
-    NSSCertificate *c = STAN_GetNSSCertificate(cert);
-    /* add multiple instances to the cert list */
     nssCryptokiObject **ip;
-    nssCryptokiObject **instances = nssPKIObject_GetInstances(&c->object);
     PK11SlotList *slotList;
+    NSSCertificate *c;
+    nssCryptokiObject **instances;
     PRBool found = PR_FALSE;
 
     if (!cert) {
@@ -2489,6 +2488,14 @@ PK11_GetAllSlotsForCert(CERTCertificate *cert, void *arg)
 	return NULL;
     }
 
+    c = STAN_GetNSSCertificate(cert);
+    if (!c) {
+	CERT_MapStanError();
+	return NULL;
+    }
+
+    /* add multiple instances to the cert list */
+    instances = nssPKIObject_GetInstances(&c->object);
     if (!instances) {
 	PORT_SetError(SEC_ERROR_NO_TOKEN);
 	return NULL;

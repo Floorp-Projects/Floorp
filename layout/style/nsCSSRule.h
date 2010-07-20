@@ -46,6 +46,7 @@ class nsIStyleSheet;
 class nsCSSStyleSheet;
 struct nsRuleData;
 class nsICSSGroupRule;
+template<class T> struct already_AddRefed;
 
 class nsCSSRule {
 public:
@@ -61,10 +62,10 @@ protected:
   NS_DECL_OWNINGTHREAD
 public:
 
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-  NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aSheet);
+  virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;
+  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
 
-  NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule);
+  virtual void SetParentRule(nsICSSGroupRule* aRule);
 
   // nsIStyleRule methods
   // The new mapping function.

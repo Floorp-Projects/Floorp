@@ -63,8 +63,8 @@ enum nsViewVisibility {
 
 // IID for the nsIView interface
 #define NS_IVIEW_IID    \
-  { 0xdb512cfa, 0xe00c, 0x4eff, \
-    { 0xa2, 0x9c, 0x18, 0x74, 0x96, 0x63, 0x17, 0x69 } }
+  { 0xfb9900df, 0x5956, 0x4175, \
+    { 0x83, 0xba, 0x05, 0x74, 0x31, 0x96, 0x61, 0xee } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -144,7 +144,8 @@ public:
 
   /**
    * Called to get the position of a view.
-   * The specified coordinates are in the parent view's coordinate space.
+   * The specified coordinates are relative to the parent view's origin, but
+   * are in appunits of this.
    * This is the (0, 0) origin of the coordinate space established by this view.
    * @param x out parameter for x position
    * @param y out parameter for y position
@@ -165,7 +166,8 @@ public:
   
   /**
    * Called to get the dimensions and position of the view's bounds.
-   * The view's bounds (x,y) are in the coordinate space of the parent view.
+   * The view's bounds (x,y) are relative to the origin of the parent view, but
+   * are in appunits of this.
    * The view's bounds (x,y) might not be the same as the view's position,
    * if the view has content above or to the left of its origin.
    * @param aBounds out parameter for bounds
@@ -177,6 +179,11 @@ public:
    * Adding the return value to a point in the coordinate system of |this|
    * will transform the point to the coordinate system of aOther.
    *
+   * The offset is expressed in appunits of |this|. So if you are getting the
+   * offset between views in different documents that might have different
+   * appunits per devpixel ratios you need to be careful how you use the
+   * result.
+   *
    * If aOther is null, this will return the offset of |this| from the
    * root of the viewmanager tree.
    * 
@@ -186,6 +193,15 @@ public:
    * that offset is added to transform _coordinates_ from |this| to aOther.
    */
   nsPoint GetOffsetTo(const nsIView* aOther) const;
+
+  /**
+   * Get the offset between the origin of |this| and the origin of aWidget.
+   * Adding the return value to a point in the coordinate system of |this|
+   * will transform the point to the coordinate system of aWidget.
+   *
+   * The offset is expressed in appunits of |this|.
+   */
+  nsPoint GetOffsetToWidget(nsIWidget* aWidget) const;
 
   /**
    * Called to query the visibility state of a view.
@@ -250,7 +266,7 @@ public:
    * Get the nearest widget in this view or a parent of this view and
    * the offset from the widget's origin to this view's origin
    * @param aOffset the offset from this view's origin to the widget's origin
-   * (usually positive)
+   * (usually positive) expressed in appunits of this.
    * @return the widget closest to this view; can be null because some view trees
    * don't have widgets at all (e.g., printing), but if any view in the view tree
    * has a widget, then it's safe to assume this will not return null
@@ -354,7 +370,8 @@ public:
 
   // This is an app unit offset to add when converting view coordinates to
   // widget coordinates.  It is the offset in view coordinates from widget
-  // top-left to view top-left.
+  // origin (unlike views, widgets can't extend above or to the left of their
+  // origin) to view origin expressed in appunits of this.
   nsPoint ViewToWidgetOffset() const { return mViewToWidgetOffset; }
 
 protected:
@@ -367,8 +384,11 @@ protected:
   void              *mClientData;
   PRInt32           mZIndex;
   nsViewVisibility  mVis;
+  // position relative our parent view origin but in our appunits
   nscoord           mPosX, mPosY;
-  nsRect            mDimBounds; // relative to parent
+  // relative to parent, but in our appunits
+  nsRect            mDimBounds;
+  // in our appunits
   nsPoint           mViewToWidgetOffset;
   float             mOpacity;
   PRUint32          mVFlags;

@@ -478,6 +478,9 @@ nsWindow::SetFocus(PRBool aRaise)
         ALOG("nsWindow::SetFocus: can't set focus without raising, ignoring aRaise = false!");
 
     gFocusedWindow = this;
+    if (!AndroidBridge::Bridge())
+        return NS_OK;
+
     FindTopLevel()->BringToFront();
 
     return NS_OK;
@@ -578,6 +581,9 @@ nsWindow::GetThebesSurface()
 void
 nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 {
+    if (!AndroidBridge::Bridge())
+        return;
+
     switch (ae->Type()) {
         case AndroidGeckoEvent::SIZE_CHANGED: {
             int nw = ae->P0().x;
@@ -655,6 +661,9 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 void
 nsWindow::OnAndroidEvent(AndroidGeckoEvent *ae)
 {
+    if (!AndroidBridge::Bridge())
+        return;
+
     switch (ae->Type()) {
         case AndroidGeckoEvent::DRAW:
             OnDraw(ae);
@@ -697,7 +706,8 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
                 {
-                    AutoLayerManagerSetup setupLayerManager(this, ctx);
+                    AutoLayerManagerSetup
+                      setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
                     status = DispatchEvent(&event);
                 }
 

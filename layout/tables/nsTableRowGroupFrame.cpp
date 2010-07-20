@@ -178,7 +178,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
 
-  NS_DISPLAY_DECL_NAME("TableRowGroupBackground")
+  NS_DISPLAY_DECL_NAME("TableRowGroupBackground", TYPE_TABLE_ROW_GROUP_BACKGROUND)
 };
 
 void

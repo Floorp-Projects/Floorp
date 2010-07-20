@@ -281,14 +281,14 @@ function securityOnLoad() {
     msg2 = pkiBundle.getString("pageInfo_Privacy_None2");
   }
   else if (info.encryptionStrength >= 90) {
-    hdr = pkiBundle.getFormattedString("pageInfo_StrongEncryption",
+    hdr = pkiBundle.getFormattedString("pageInfo_StrongEncryptionWithBits",
                                        [info.encryptionAlgorithm, info.encryptionStrength + ""]);
     msg1 = pkiBundle.getString("pageInfo_Privacy_Strong1");
     msg2 = pkiBundle.getString("pageInfo_Privacy_Strong2");
     security._cert = info.cert;
   }
   else if (info.encryptionStrength > 0) {
-    hdr  = pkiBundle.getFormattedString("pageInfo_WeakEncryption",
+    hdr  = pkiBundle.getFormattedString("pageInfo_WeakEncryptionWithBits",
                                         [info.encryptionAlgorithm, info.encryptionStrength + ""]);
     msg1 = pkiBundle.getFormattedString("pageInfo_Privacy_Weak1", [info.hostName]);
     msg2 = pkiBundle.getString("pageInfo_Privacy_Weak2");

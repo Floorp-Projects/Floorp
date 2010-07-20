@@ -173,7 +173,7 @@ nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseIntValue(aValue);
     }
     if (aAttribute == nsGkAtoms::color) {
-      return aResult.ParseColor(aValue, GetOwnerDoc());
+      return aResult.ParseColor(aValue);
     }
   }
 
