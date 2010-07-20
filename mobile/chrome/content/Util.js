@@ -225,7 +225,7 @@ Util.Timeout = function(aCallback) {
   this._callback = aCallback;
   this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   this._active = false;
-}
+};
 
 Util.Timeout.prototype = {
   /** Timer callback. Don't call this manually. */
@@ -396,7 +396,7 @@ function Rect(x, y, w, h) {
 
 Rect.fromRect = function fromRect(r) {
   return new Rect(r.left, r.top, r.right - r.left, r.bottom - r.top);
-}
+};
 
 Rect.prototype = {
   get x() { return this.left; },

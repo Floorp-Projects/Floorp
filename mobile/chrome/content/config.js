@@ -217,7 +217,7 @@ var ViewConfig = {
     // XXX An item display value will probably fail if a pref is changed in the
     //     background while there is a filter on the pref
     let item = shouldUpdateEditor ? this._editor.nextSibling
-                                  : this._container.childNodes[aIndex + 1]// add 1 because of the new pref row
+                                  : this._container.childNodes[aIndex + 1];// add 1 because of the new pref row
     if (!item) // the pref is not viewable
       return;
 
@@ -352,7 +352,7 @@ var Utils = {
     let low = 0, middle, element;
 
     while (low <= high) {
-      middle = parseInt((low + high) / 2)
+      middle = parseInt((low + high) / 2);
       element = prefs[middle];
 
       if (element.name > aPrefName)

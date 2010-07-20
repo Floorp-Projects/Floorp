@@ -145,7 +145,7 @@ function elementFromPoint(x, y) {
   // subtract browser's scroll values to adjust
   let cwu = Util.getWindowUtils(content);
   let scroll = Util.getScrollOffset(content);
-  x = x - scroll.x
+  x = x - scroll.x;
   y = y - scroll.y;
   let elem = ElementTouchHelper.getClosest(cwu, x, y);
 
@@ -293,7 +293,7 @@ Coalescer.prototype = {
     rect.left = rect.right;
 
     if (!this._timer.isPending())
-      this.flush()
+      this.flush();
   },
 
   dirty: function dirty(scrollOffset, clientRects) {
@@ -306,7 +306,7 @@ Coalescer.prototype = {
       }
 
       if (!this._timer.isPending())
-        this.flush()
+        this.flush();
     }
   },
 

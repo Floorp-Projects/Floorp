@@ -265,7 +265,7 @@ FormAssistant.prototype = {
       return true;
 
     if (aElement instanceof HTMLInputElement || aElement instanceof HTMLButtonElement)
-      return !(aElement.type == "hidden")
+      return !(aElement.type == "hidden");
 
     return false;
   },
@@ -444,7 +444,7 @@ function getWrapperForElement(aElement) {
 function getListForElement(aElement) {
   let wrapper = getWrapperForElement(aElement);
   if (!wrapper)
-    return null
+    return null;
 
   let optionIndex = 0;
   let result = {
@@ -556,7 +556,7 @@ function MenulistWrapper(aControl) {
 MenulistWrapper.prototype = {
   getSelectedIndex: function() {
     let control = this._control.wrappedJSObject || this._control;
-    let result = control.selectedIndex
+    let result = control.selectedIndex;
     return ((typeof result == "number" && !isNaN(result)) ? result : -1);
   },
 
@@ -583,7 +583,7 @@ MenulistWrapper.prototype = {
   },
 
   isGroup: function(aChild) {
-    return false
+    return false;
   },
 
   select: function(aIndex, aSelected, aClearAll) {
