@@ -54,7 +54,8 @@ var TestPilotWindowUtils;
       } else {
         allStudiesWindow = window.openDialog(
           "chrome://testpilot/content/all-studies-window.xul",
-          ALL_STUDIES_WINDOW_NAME, "chrome,titlebar,centerscreen,dialog=no");
+          ALL_STUDIES_WINDOW_NAME,
+          "chrome,titlebar,centerscreen,dialog=no");
       }
     },
 
@@ -130,9 +131,14 @@ var TestPilotWindowUtils;
       // TODO this window opening triggers studies' window-open code.
       // Is that what we want or not?
 
+      let screenWidth = window.screen.availWidth;
+      let screenHeight = window.screen.availHeight;
+      let width = screenWidth >= 1200 ? 1000 : screenWidth - 200;
+      let height = screenHeight >= 1000 ? 800 : screenHeight - 200;
+
       let win = window.open(url, "TestPilotStudyDetailWindow",
                            "chrome,centerscreen,resizable=yes,scrollbars=yes," +
-                           "status=no,width=1000,height=800");
+                           "status=no,width=" + width + ",height=" + height);
       win.focus();
     }
   };

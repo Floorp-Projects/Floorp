@@ -133,11 +133,6 @@ image.study-result {
   font-size: 16px;
 }
 
-#test-pilot-all-studies-window {
-  min-width: 720px !important;
-  min-height: 500px !important;
-}
-
 #test-pilot-all-studies-window > .prefWindow-dlgbuttons {
     display: none;
 }
@@ -174,13 +169,12 @@ image.study-result {
 }
 
 richlistbox.tp-study-list {
-    height: 522px;
-    width: 502px;
     overflow: auto;
     margin: 0px;
 }
 
 .tp-tab-panel {
+    background-color: -moz-dialog;
     padding: 0px;
 }
 
