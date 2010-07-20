@@ -143,6 +143,8 @@ class Compiler
         inline void setJump(const Jump &j) { jump = j; set = true; }
         inline bool isSet() const { return set; }
 
+        inline MaybeJump &operator=(Jump j) { setJump(j); return *this; }
+
       private:
         Jump jump;
         bool set;

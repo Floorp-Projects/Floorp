@@ -81,6 +81,16 @@ class FrameEntry
         return knownType;
     }
 
+    // Return true iff the type of this value is definitely known to be type_.
+    bool isType(JSValueType type_) const {
+        return isTypeKnown() && getKnownType() == type_;
+    }
+
+    // Return true iff the type of this value is definitely known not to be type_.
+    bool isNotType(JSValueType type_) const {
+        return isTypeKnown() && getKnownType() != type_;
+    }
+
     uint32 getPayload32() const {
         //JS_ASSERT(!Valueify(v_.asBits).isDouble() || type.synced());
         return v_.s.payload.u32;
