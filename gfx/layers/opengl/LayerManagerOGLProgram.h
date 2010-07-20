@@ -121,8 +121,12 @@ public:
   { }
 
   virtual ~LayerManagerOGLProgram() {
-    mGL->MakeCurrent();
-    mGL->fDeleteProgram(mProgram);
+    nsRefPtr<GLContext> ctx = mGL->GetSharedContext();
+    if (!ctx) {
+      ctx = mGL;
+    }
+    ctx->MakeCurrent();
+    ctx->fDeleteProgram(mProgram);
   }
 
   void Activate() {

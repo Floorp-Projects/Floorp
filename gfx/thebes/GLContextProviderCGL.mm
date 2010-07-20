@@ -520,5 +520,10 @@ GLContextProviderCGL::GetGlobalContext()
     return gGlobalContext;
 }
 
+void
+GLContextProviderCGL::Shutdown()
+{
+}
+
 } /* namespace gl */
 } /* namespace mozilla */
