@@ -2653,20 +2653,20 @@ nsRootPresContext::RequestUpdatePluginGeometry(nsIFrame* aFrame)
     return;
 
   if (!mNeedsToUpdatePluginGeometry) {
+    mNeedsToUpdatePluginGeometry = PR_TRUE;
+
     // Dispatch a Gecko event to ensure plugin geometry gets updated
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(this, &nsRootPresContext::ForcePluginGeometryUpdate);
     NS_DispatchToMainThread(event);
-  }
 
-  mNeedsToUpdatePluginGeometry = PR_TRUE;
-  if (aFrame == mUpdatePluginGeometryForFrame)
-    return;
-  if (!mUpdatePluginGeometryForFrame) {
     mUpdatePluginGeometryForFrame = aFrame;
     mUpdatePluginGeometryForFrame->PresContext()->
       SetContainsUpdatePluginGeometryFrame(PR_TRUE);
   } else {
+    if (!mUpdatePluginGeometryForFrame ||
+        aFrame == mUpdatePluginGeometryForFrame)
+      return;
     mUpdatePluginGeometryForFrame->PresContext()->
       SetContainsUpdatePluginGeometryFrame(PR_FALSE);
     mUpdatePluginGeometryForFrame = nsnull;
