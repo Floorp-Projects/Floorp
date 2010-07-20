@@ -577,6 +577,7 @@ LayerManagerOGL::SetupBackBuffer(int aWidth, int aHeight)
 {
   if (mGLContext->IsDoubleBuffered()) {
     mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+    return;
   }
 
   // Do we have a FBO of the right size already?
