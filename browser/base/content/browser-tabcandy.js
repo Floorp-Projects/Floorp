@@ -50,7 +50,7 @@ var TabCandy = {
   isVisible: function() {
     return (window.document.getElementById("tab-candy-deck").selectedIndex == 1);
   },
-  
+
   getWindowTitle: function() {
     var brandBundle = document.getElementById("bundle_brand");
     var brandShortName = brandBundle.getString("brandShortName");
