@@ -104,7 +104,7 @@ AnimatedZoom.prototype._createCanvas = function(width, height) {
   canvas.height = height;
   canvas.mozOpaque = true;
   return canvas;
-}
+};
 
 /** Updates the zoom to new rect. */
 AnimatedZoom.prototype.updateTo = function(nextRect) {
@@ -146,7 +146,7 @@ AnimatedZoom.prototype.updateTo = function(nextRect) {
   }
 
   ctx.restore();
-}
+};
 
 /** Starts an animated zoom to zoomRect. */
 AnimatedZoom.prototype.animateTo = function(aZoomRect) {
@@ -165,7 +165,7 @@ AnimatedZoom.prototype.animateTo = function(aZoomRect) {
   // force first update to be according to FPS even though first callback would take longer
   this.lastTime = 0;
   return true;
-}
+};
 
 /** Callback for the animation. */
 AnimatedZoom.prototype._callback = function() {
@@ -192,7 +192,7 @@ AnimatedZoom.prototype._callback = function() {
     this.finish();
     throw e;
   }
-}
+};
 
 /** Stop animation, zoom to point, and clean up. */
 AnimatedZoom.prototype.finish = function() {
@@ -211,5 +211,5 @@ AnimatedZoom.prototype.finish = function() {
     }
     this.snapshot = null;
   }
-}
+};
 
