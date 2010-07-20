@@ -269,7 +269,6 @@ window.Page = {
         }
       } else {
         var group = Groups.getActiveGroup();
-        var current
         // 1) Only go back to the TabCandy tab when there you close the last
         // tab of a group.
         // 2) ake care of the case where you've closed the last tab in
@@ -458,7 +457,6 @@ window.Page = {
             activeTab.zoomIn();
           event.stopPropagation();
           event.preventDefault();
-          Utils.log("??????????");
         }
       } else if (event.which == 27 || event.which == 13) {
         // esc or return to zoom into the active tab.
