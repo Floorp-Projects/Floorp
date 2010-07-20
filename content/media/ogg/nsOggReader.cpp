@@ -470,10 +470,11 @@ nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
   }
   PRInt64 time = (aPacket->granulepos != -1)
     ? mTheoraState->StartTime(aPacket->granulepos) : -1;
+  PRInt64 endTime = time != -1 ? time + mTheoraState->mFrameDuration : -1;
   if (ret == TH_DUPFRAME) {
     aFrames.AppendElement(VideoData::CreateDuplicate(mPageOffset,
                                                      time,
-                                                     time + mTheoraState->mFrameDuration,
+                                                     endTime,
                                                      aPacket->granulepos));
   } else if (ret == 0) {
     th_ycbcr_buffer buffer;
@@ -491,7 +492,7 @@ nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
                                      mDecoder->GetImageContainer(),
                                      mPageOffset,
                                      time,
-                                     time + mTheoraState->mFrameDuration,
+                                     endTime,
                                      b,
                                      isKeyframe,
                                      aPacket->granulepos);
@@ -607,6 +608,8 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                      th_granule_frame(mTheoraState->mCtx, granulepos) + 1,
                      "Granulepos calculation is incorrect!");
         frames[i]->mTime = mTheoraState->StartTime(granulepos);
+        frames[i]->mEndTime = frames[i]->mTime + mTheoraState->mFrameDuration;
+        NS_ASSERTION(frames[i]->mEndTime >= frames[i]->mTime, "Frame must start before it ends.");
         frames[i]->mTimecode = granulepos;
         succGranulepos = granulepos;
         NS_ASSERTION(frames[i]->mTime < frames[i+1]->mTime, "Times should increase");      
