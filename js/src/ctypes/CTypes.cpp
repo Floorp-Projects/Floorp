@@ -4029,7 +4029,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
       if (!JS_GetElement(cx, fieldsObj, i, item.jsval_addr()))
         return JS_FALSE;
 
-      JSObject* fieldType;
+      JSObject* fieldType = NULL;
       JSString* name = ExtractStructField(cx, item.jsval_value(), &fieldType);
       if (!name)
         return JS_FALSE;
