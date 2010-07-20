@@ -3608,8 +3608,9 @@ nsJSContext::CC()
   sPreviousCCTime = PR_Now();
   sDelayedCCollectCount = 0;
   sCCSuspectChanges = 0;
-  // nsCycleCollector_collect() will run a ::JS_GC() indirectly, so
-  // we do not explicitly call ::JS_GC() here.
+  // nsCycleCollector_collect() no longer forces a JS garbage collection,
+  // so we have to do it ourselves here.
+  nsContentUtils::XPConnect()->GarbageCollect();
   sCollectedObjectsCounts = nsCycleCollector_collect();
   sCCSuspectedCount = nsCycleCollector_suspectedCount();
   sSavedGCCount = JS_GetGCParameter(nsJSRuntime::sRuntime, JSGC_NUMBER);

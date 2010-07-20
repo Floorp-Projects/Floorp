@@ -513,15 +513,13 @@ nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsDOMWindowUtils::GarbageCollect()
 {
-  // NOTE: Only do this in NON debug builds, as this function can useful
-  // during debugging.
+  // Always permit this in debug builds.
 #ifndef DEBUG
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 #endif
 
-  nsJSContext::CC();
   nsJSContext::CC();
 
   return NS_OK;

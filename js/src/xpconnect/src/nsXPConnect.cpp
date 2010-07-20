@@ -90,8 +90,7 @@ nsXPConnect::nsXPConnect()
         mDefaultSecurityManager(nsnull),
         mDefaultSecurityManagerFlags(0),
         mShuttingDown(JS_FALSE),
-        mCycleCollectionContext(nsnull),
-        mCycleCollecting(PR_FALSE)
+        mCycleCollectionContext(nsnull)
 {
     mRuntime = XPCJSRuntime::newXPCJSRuntime(this);
 
@@ -107,8 +106,6 @@ nsXPConnect::nsXPConnect()
 
 nsXPConnect::~nsXPConnect()
 {
-    NS_ASSERTION(!mCycleCollectionContext,
-                 "Didn't call FinishCycleCollection?");
     nsCycleCollector_forgetRuntime(nsIProgrammingLanguage::JAVASCRIPT);
 
     JSContext *cx = nsnull;
@@ -334,7 +331,7 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
     return FindInfo(NameTester, name, mInterfaceInfoManager, info);
 }
 
-PRBool
+void
 nsXPConnect::Collect()
 {
     // We're dividing JS objects into 2 categories:
@@ -362,6 +359,9 @@ nsXPConnect::Collect()
     // 2. marking of the roots in category 2 by XPCJSRuntime::TraceXPConnectRoots
     //    using an additional color (gray).
     // 3. end of GC, GC can sweep its heap
+    //
+    // At some later point, when the cycle collector runs:
+    //
     // 4. walk gray objects and add them to the cycle collector, cycle collect
     //
     // JS objects that are part of cycles the cycle collector breaks will be
@@ -377,18 +377,13 @@ nsXPConnect::Collect()
     // To improve debugging, if DEBUG_CC is defined all JS objects are
     // traversed.
 
-    XPCCallContext cycleCollectionContext(NATIVE_CALLER);
-    if(!cycleCollectionContext.IsValid())
-    {
-        return PR_FALSE;
-    }
-
-    mCycleCollecting = PR_TRUE;
-    mCycleCollectionContext = &cycleCollectionContext;
+    XPCCallContext ccx(NATIVE_CALLER);
+    if(!ccx.IsValid())
+        return;
 
     nsXPConnect::GetRuntimeInstance()->ClearWeakRoots();
 
-    JSContext *cx = mCycleCollectionContext->GetJSContext();
+    JSContext *cx = ccx.GetJSContext();
 
     // We want to scan the current thread for GC roots only if it was in a
     // request prior to the Collect call to avoid false positives during the
@@ -407,15 +402,13 @@ nsXPConnect::Collect()
         JS_GC(cx);
         JS_THREAD_DATA(cx)->conservativeGC.enable();
     }
+}
 
-    // The JavaScript GC is done. Lets cycle collect.
-    PRBool ok = nsCycleCollector_beginCollection() &&
-                nsCycleCollector_finishCollection();
-
-    mCycleCollectionContext = nsnull;
-    mCycleCollecting = PR_FALSE;
-
-    return ok;
+NS_IMETHODIMP
+nsXPConnect::GarbageCollect()
+{
+    Collect();
+    return NS_OK;
 }
 
 // JSTRACE_XML can recursively hold on to more JSTRACE_XML objects, adding it to
@@ -458,23 +451,22 @@ NoteJSRoot(JSTracer *trc, void *thing, uint32 kind)
 #endif
 
 nsresult 
-nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb)
+nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
+                                  bool explainLiveExpectedGarbage)
 {
+    NS_ASSERTION(!mCycleCollectionContext, "Didn't call FinishCollection?");
+    mCycleCollectionContext = new XPCCallContext(NATIVE_CALLER);
+    if (!mCycleCollectionContext->IsValid()) {
+        mCycleCollectionContext = nsnull;
+        return PR_FALSE;
+    }
+
 #ifdef DEBUG_CC
     NS_ASSERTION(!mJSRoots.ops, "Didn't call FinishCollection?");
 
-    if(!mCycleCollectionContext)
+    if(explainLiveExpectedGarbage)
     {
         // Being called from nsCycleCollector::ExplainLiveExpectedGarbage.
-        mExplainCycleCollectionContext = new XPCCallContext(NATIVE_CALLER);
-        if(!mExplainCycleCollectionContext ||
-           !mExplainCycleCollectionContext->IsValid())
-        {
-            mExplainCycleCollectionContext = nsnull;
-            return PR_FALSE;
-        }
-
-        mCycleCollectionContext = mExplainCycleCollectionContext;
 
         // Record all objects held by the JS runtime. This avoids doing a
         // complete GC if we're just tracing to explain (from
@@ -487,21 +479,15 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb)
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        PRBool alreadyCollecting = mCycleCollecting;
-        mCycleCollecting = PR_TRUE;
         NoteJSRootTracer trc(&mJSRoots, cb);
-        JS_TRACER_INIT(&trc, mCycleCollectionContext->GetJSContext(),
-                       NoteJSRoot);
+        JS_TRACER_INIT(&trc, mCycleCollectionContext->GetJSContext(), NoteJSRoot);
         JS_TraceRuntime(&trc);
-        mCycleCollecting = alreadyCollecting;
     }
 #else
-    NS_ASSERTION(mCycleCollectionContext,
-                 "Didn't call nsXPConnect::Collect()?");
+    NS_ASSERTION(!explainLiveExpectedGarbage, "Didn't call nsXPConnect::Collect()?");
 #endif
 
-    GetRuntime()->AddXPConnectRoots(mCycleCollectionContext->GetJSContext(),
-                                    cb);
+    GetRuntime()->AddXPConnectRoots(mCycleCollectionContext->GetJSContext(), cb);
 
     return NS_OK;
 }
@@ -509,13 +495,8 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb)
 nsresult 
 nsXPConnect::FinishCycleCollection()
 {
-#ifdef DEBUG_CC
-    if(mExplainCycleCollectionContext)
-    {
+    if (mCycleCollectionContext)
         mCycleCollectionContext = nsnull;
-        mExplainCycleCollectionContext = nsnull;
-    }
-#endif
 
 #ifdef DEBUG_CC
     if(mJSRoots.ops)
@@ -558,12 +539,10 @@ void
 nsXPConnect::PrintAllReferencesTo(void *p)
 {
 #ifdef DEBUG
-    if(!mCycleCollectionContext) {
-        NS_NOTREACHED("no context");
-        return;
-    }
-    JS_DumpHeap(*mCycleCollectionContext, stdout, nsnull, 0, p,
-                0x7fffffff, nsnull);
+    XPCCallContext ccx(NATIVE_CALLER);
+    if(ccx.IsValid())
+        JS_DumpHeap(ccx.GetJSContext(), stdout, nsnull, 0, p,
+                    0x7fffffff, nsnull);
 #endif
 }
 #endif
@@ -644,9 +623,6 @@ nsXPConnect::IsGray(void *thing)
 NS_IMETHODIMP
 nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 {
-    if(!mCycleCollectionContext)
-        return NS_ERROR_FAILURE;
-
     JSContext *cx = mCycleCollectionContext->GetJSContext();
 
     uint32 traceKind = js_GetGCThingTraceKind(p);
@@ -879,10 +855,10 @@ PRInt32
 nsXPConnect::GetRequestDepth(JSContext* cx)
 {
     PRInt32 requestDepth = cx->outstandingRequests;
-    XPCCallContext* context = GetCycleCollectionContext();
+    XPCCallContext* context = mCycleCollectionContext;
+    // Ignore the request from the XPCCallContext we created for cycle
+    // collection.
     if(context && cx == context->GetJSContext())
-        // Ignore the request from the XPCCallContext we created for cycle
-        // collection.
         --requestDepth;
     return requestDepth;
 }
