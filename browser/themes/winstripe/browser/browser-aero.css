@@ -39,9 +39,9 @@
   }
 
   #toolbar-menubar:not(:-moz-lwtheme),
-  #navigator-toolbox[tabsontop="true"] > #TabsToolbar:not(:-moz-lwtheme),
-  #navigator-toolbox:not([tabsontop="true"]) > #nav-bar:not(:-moz-lwtheme),
-  #navigator-toolbox:not([tabsontop="true"]) > #nav-bar + #customToolbars + #PersonalToolbar[collapsed="true"] + #TabsToolbar:last-child:not(:-moz-lwtheme) {
+  #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop="false"] > #nav-bar:not(:-moz-lwtheme),
+  #nav-bar + #customToolbars + #PersonalToolbar[collapsed="true"] + #TabsToolbar[tabsontop="false"]:last-child:not(:-moz-lwtheme) {
     background: transparent !important;
     color: black;
     text-shadow: 0 0 .7em white, 0 0 .7em white, 0 1px 0 rgba(255,255,255,.4);
@@ -54,9 +54,9 @@
 
   /* Make the window draggable by glassed toolbars (bug 555081) */
   #toolbar-menubar:not([autohide="true"]),
-  #navigator-toolbox[tabsontop="true"] > #TabsToolbar,
-  #navigator-toolbox:not([tabsontop="true"]) > #nav-bar,
-  #navigator-toolbox:not([tabsontop="true"]) > #nav-bar + #customToolbars + #PersonalToolbar[collapsed="true"] + #TabsToolbar:last-child,
+  #TabsToolbar[tabsontop="true"],
+  #navigator-toolbox[tabsontop="false"] > #nav-bar,
+  #nav-bar + #customToolbars + #PersonalToolbar[collapsed="true"] + #TabsToolbar[tabsontop="false"]:last-child,
   #navigator-toolbox > toolbar:not(#toolbar-menubar):-moz-lwtheme {
     -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
   }
