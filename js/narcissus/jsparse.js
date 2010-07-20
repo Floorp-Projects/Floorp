@@ -302,9 +302,13 @@ function Statement(t, x) {
                 if (n2.length != 1) throw se;
                 n.iterator = n2[0];
                 n.varDecl = n2;
-            } else if (n2t !== IDENTIFIER) {
-                throw se;
             } else {
+                function badLhs(tt) {
+                     return (tt !== IDENTIFIER && tt !== CALL &&
+                             tt !== DOT && tt !== INDEX);
+                }
+                if (n2t !== GROUP && badLhs(n2t)) throw se;
+                if (n2t === GROUP && badLhs(n2[0].type)) throw se;
                 n.iterator = n2;
                 n.varDecl = null;
             }
@@ -458,7 +462,7 @@ function Statement(t, x) {
             if (tt == COLON) {
                 label = t.token.value;
                 ss = x.stmtStack;
-                for (i = ss.length-1; i >= 0; --i) {
+                for (i = ss.length - 1; i >= 0; --i) {
                     if (ss[i].label == label)
                         throw t.newSyntaxError("Duplicate label");
                 }
@@ -785,7 +789,17 @@ function Expression(t, x, stop) {
 
           case YIELD:
             if (!x.inFunction) throw t.newSyntaxError("yield not in function");
-            // fall thru
+            // yield is followed by 0 or 1 expr, so we don't know if we should
+            // go to operator or operand mode, we must handle the expr here.
+            n = new Node(t);
+            if ((tt = t.peek()) !== SEMICOLON && tt !== RIGHT_CURLY &&
+                tt !== RIGHT_PAREN && tt !== RIGHT_BRACKET && tt !== COMMA &&
+                tt !== COLON)
+              n.value = Expression(t, x);
+            operands.push(n);
+            t.scanOperand = false;
+            break;
+            
 
           case DELETE: case VOID: case TYPEOF:
           case NOT: case BITWISE_NOT: case UNARY_PLUS: case UNARY_MINUS:
