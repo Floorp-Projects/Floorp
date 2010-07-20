@@ -14,11 +14,6 @@ function nextLeftElement()   elementFromPoint(left(scrollbox) - 1);
 function nextRightElement()  elementFromPoint(right(scrollbox) + 1);
 
 function test() {
-  if (TabsOnTop.enabled) {
-    todo(false, "need to figure out why this doesn't work with tabs on top on OS X and Windows 7 (bug 575748)");
-    return;
-  }
-
   waitForExplicitFinish();
 
   // If the previous (or more) test finished with cleaning up the tabs,
@@ -52,29 +47,29 @@ function runOverflowTests(aEvent) {
   isLeft(tabContainer.firstChild, "Selecting the first tab scrolls it into view");
 
   element = nextRightElement();
-  EventUtils.synthesizeMouse(downButton, 0, 0, {});
+  EventUtils.synthesizeMouse(downButton, 1, 1, {});
   isRight(element, "Scrolled one tab to the right with a single click");
 
   gBrowser.selectedTab = tabContainer.lastChild;
   isRight(tabContainer.lastChild, "Selecting the last tab scrolls it into view");
 
   element = nextLeftElement();
-  EventUtils.synthesizeMouse(upButton, 0, 0, {});
+  EventUtils.synthesizeMouse(upButton, 1, 1, {});
   isLeft(element, "Scrolled one tab to the left with a single click");
 
   element = elementFromPoint(left(scrollbox) - width(scrollbox));
-  EventUtils.synthesizeMouse(upButton, 0, 0, {clickCount: 2});
+  EventUtils.synthesizeMouse(upButton, 1, 1, {clickCount: 2});
   isLeft(element, "Scrolled one page of tabs with a double click");
 
-  EventUtils.synthesizeMouse(upButton, 0, 0, {clickCount: 3});
+  EventUtils.synthesizeMouse(upButton, 1, 1, {clickCount: 3});
   isLeft(tabContainer.firstChild, "Scrolled to the start with a triple click");
 
   for (var i = 2; i; i--)
-    EventUtils.synthesizeMouseScroll(scrollbox, 0, 0, {axis: "horizontal", delta: -1});
+    EventUtils.synthesizeMouseScroll(scrollbox, 1, 1, {axis: "horizontal", delta: -1});
   isLeft(tabContainer.firstChild, "Remained at the start with the mouse wheel");
 
   element = nextRightElement();
-  EventUtils.synthesizeMouseScroll(scrollbox, 0, 0, {axis: "horizontal", delta: 1});
+  EventUtils.synthesizeMouseScroll(scrollbox, 1, 1, {axis: "horizontal", delta: 1});
   isRight(element, "Scrolled one tab to the right with the mouse wheel");
 
   while (tabContainer.childNodes.length > 1)
