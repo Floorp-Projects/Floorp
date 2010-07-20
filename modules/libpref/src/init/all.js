@@ -3125,6 +3125,7 @@ pref("image.mem.min_discard_timeout_ms", 10000);
 
 // WebGL prefs
 pref("webgl.enabled_for_all_sites", false);
+pref("webgl.shader_validator", false);
 pref("webgl.software_render", false);
 pref("webgl.osmesalib", "");
 

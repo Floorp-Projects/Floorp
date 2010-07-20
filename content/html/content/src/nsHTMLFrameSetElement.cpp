@@ -271,7 +271,7 @@ nsHTMLFrameSetElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::bordercolor) {
-      return aResult.ParseColor(aValue, GetOwnerDoc());
+      return aResult.ParseColor(aValue);
     }
     if (aAttribute == nsGkAtoms::frameborder) {
       return nsGenericHTMLElement::ParseFrameborderValue(aValue, aResult);

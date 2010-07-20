@@ -273,39 +273,58 @@
           return this.getAttribute("sortby");
         ]]></getter>
         <setter><![CDATA[
-          this.setAttribute("sortby", val);
-          this._refreshState();
+          if (val != this.sortBy) {
+            this.setAttribute("sortBy", val);
+            this._refreshState();
+          }
         ]]></setter>
       </property>
 
       <property name="ascending">
         <getter><![CDATA[
-          return this.hasAttribute("ascending");
+          return (this.getAttribute("ascending") == "true");
         ]]></getter>
         <setter><![CDATA[
-          if (val)
-            this.setAttribute("ascending", true);
-          else
-            this.removeAttribute("ascending");
-          this._refreshState();
+          val = !!val;
+          if (val != this.ascending) {
+            this.setAttribute("ascending", val);
+            this._refreshState();
+          }
         ]]></setter>
       </property>
+
+      <method name="setSort">
+        <parameter name="aSort"/>
+        <parameter name="aAscending"/>
+        <body><![CDATA[
+          var sortChanged = false;
+          if (aSort != this.sortBy) {
+            this.setAttribute("sortby", aSort);
+            sortChanged = true;
+          }
+
+          aAscending = !!aAscending;
+          if (this.ascending != aAscending) {
+            this.setAttribute("ascending", aAscending);
+            sortChanged = true;
+          }
+
+          if (sortChanged)
+            this._refreshState();
+        ]]></body>
+      </method>
 
       <method name="_handleChange">
         <parameter name="aSort"/>
         <body><![CDATA[
           const ASCENDING_SORT_FIELDS = ["name"];
 
-          if (aSort == this.sortBy) {
+          // Toggle ascending if sort by is not changing, otherwise
+          // name sorting defaults to ascending, others to descending
+          if (aSort == this.sortBy)
             this.ascending = !this.ascending;
-            return;
-          }
-
-          this.sortBy = aSort;
-          // Name sorting defaults to ascending, others to descending
-          this.ascending = ASCENDING_SORT_FIELDS.indexOf(aSort) >= 0;
-
-          this._refreshState();
+          else
+            this.setSort(aSort, ASCENDING_SORT_FIELDS.indexOf(aSort) >= 0);
         ]]></body>
       </method>
 
@@ -442,6 +461,10 @@
     <content>
       <xul:label anonid="message"/>
       <xul:progressmeter anonid="progress" class="download-progress"/>
+      <xul:button anonid="install-remote" hidden="true"
+                  class="addon-control" label="&addon.install.label;"
+                  tooltiptext="&addon.install.tooltip;"
+                  oncommand="document.getBindingParent(this).installRemote();"/>
       <xul:button anonid="restart-needed" hidden="true" command="cmd_restartApp"
                   class="addon-control" label="&addon.restartNow.label;"
                   tooltiptext="&addon.restartNow.tooltip;"/>
@@ -476,6 +499,10 @@
       <field name="_progress">
         document.getAnonymousElementByAttribute(this, "anonid", "progress");
       </field>
+      <field name="_installRemote">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "install-remote");
+      </field>
       <field name="_restartNeeded">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "restart-needed");
@@ -504,6 +531,7 @@
 
       <method name="refreshState">
         <body><![CDATA[
+          var showInstallRemote = false;
           var showRestartInstall = false;
           var showRestartNeeded = false;
           var showUndo = false;
@@ -512,6 +540,11 @@
 
             switch (this.mInstall.state) {
               case AddonManager.STATE_AVAILABLE:
+                if (this.mControl.getAttribute("remote") != "true")
+                  break;
+
+                this._progress.hidden = true;
+                showInstallRemote = true;
                 break;
               case AddonManager.STATE_DOWNLOADING:
                 this.showMessage("installDownloading");
@@ -566,6 +599,7 @@
 
           }
 
+          this._installRemote.hidden = !showInstallRemote;
           this._restartInstall.hidden = !showRestartInstall;
           this._restartNeeded.hidden = !showRestartNeeded;
           this._undo.hidden = !showUndo;
@@ -584,6 +618,18 @@
             this._message.value = msg;
           else
             this._progress.status = msg;
+        ]]></body>
+      </method>
+
+      <method name="installRemote">
+        <body><![CDATA[
+          if (this.mControl.getAttribute("remote") != "true")
+            return;
+
+          delete this.mControl.mAddon;
+          this.mControl.mInstall = this.mInstall;
+          this.mControl.setAttribute("status", "installing");
+          this.mInstall.install();
         ]]></body>
       </method>
 
@@ -676,7 +722,7 @@
   </binding>
 
 
-  <!-- Addon - generic - An normal installed addon item -->
+  <!-- Addon - generic - A normal addon item -->
   <binding id="addon-generic"
            extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
@@ -927,8 +973,8 @@
         <body><![CDATA[
           var bytes = this.getAttribute("size"); // this.mAddon.size;
           var formatted = gStrings.dl.GetStringFromName("doneSizeUnknown");
-          if (bytes && bytes > 0) {
-            let [size, unit] = DownloadUtils.convertByteUnits(bytes);
+          if (bytes && !isNaN(bytes) && bytes > 0) {
+            let [size, unit] = DownloadUtils.convertByteUnits(parseInt(bytes));
             formatted = gStrings.dl.GetStringFromName("doneSize");
             formatted = formatted.replace("#1", size).replace("#2", unit);
           }
@@ -975,7 +1021,11 @@
 
           var pending = this.mAddon.pendingOperations;
           this.setAttribute("pending", pending != 0);
-          this._showStatus(pending != 0 ? "progress" : "none");
+
+          var showProgress = pending != 0;
+          if (this.getAttribute("remote") == "true")
+            showProgress = showProgress || !!this.mAddon.install;
+          this._showStatus(showProgress ? "progress" : "none");
         ]]></body>
       </method>
 
@@ -1178,6 +1228,7 @@
           this.refreshInfo();
           if (!this.isPending("install")) {
             delete this.mInstall;
+            this.setAttribute("name", this.mAddon.name);
             this.setAttribute("status", "installed");
           }
         ]]></body>

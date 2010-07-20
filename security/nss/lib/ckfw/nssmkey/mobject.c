@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: mobject.c,v $ $Revision: 1.4 $ $Date: 2009/02/25 18:38:04 $";
+static const char CVS_ID[] = "@(#) $RCSfile: mobject.c,v $ $Revision: 1.5 $ $Date: 2010/04/25 23:37:40 $";
 #endif /* DEBUG */
 
 #include "ckmk.h"
@@ -852,7 +852,7 @@ ckmk_FetchPrivKeyAttribute
   case CKA_PUBLIC_EXPONENT:
     return &ckmk_emptyItem;
 #ifdef notdef
-  /* the following are sensitive attributes. We could implment them for 
+  /* the following are sensitive attributes. We could implement them for 
    * sensitive keys using the key export function, but it's better to
    * just support wrap through this token. That will more reliably allow us
    * to export any private key that is truly exportable.

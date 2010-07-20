@@ -56,8 +56,6 @@ EXPORTS = \
 		nsIForm.h \
 		nsIFormProcessor.h \
 		nsILink.h \
-		nsIOptionElement.h \
-		nsIRadioControlElement.h \
 		nsIRadioVisitor.h \
 		nsIRadioGroupContainer.h \
 		nsITextControlElement.h \

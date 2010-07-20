@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* TLS extension code moved here from ssl3ecc.c */
-/* $Id: ssl3ext.c,v 1.13 2010/03/01 20:03:45 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: ssl3ext.c,v 1.14 2010/04/03 19:19:07 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -311,12 +311,14 @@ ssl3_SendServerNameXtn(sslSocket * ss, PRBool append,
                        PRUint32 maxBytes)
 {
     SECStatus rv;
+    if (!ss)
+    	return 0;
     if (!ss->sec.isServer) {
         PRUint32 len;
         PRNetAddr netAddr;
         
         /* must have a hostname */
-        if (!ss || !ss->url || !ss->url[0])
+        if (!ss->url || !ss->url[0])
             return 0;
         /* must not be an IPv4 or IPv6 address */
         if (PR_SUCCESS == PR_StringToNetAddr(ss->url, &netAddr)) {

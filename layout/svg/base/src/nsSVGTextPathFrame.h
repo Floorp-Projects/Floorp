@@ -38,7 +38,7 @@
 #define NSSVGTEXTPATHFRAME_H
 
 #include "nsSVGTSpanFrame.h"
-#include "nsSVGLengthList.h"
+#include "SVGLengthList.h"
 #include "nsSVGNumberList.h"
 
 typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
@@ -85,10 +85,8 @@ public:
   gfxFloat GetPathScale();
 protected:
 
-  virtual already_AddRefed<nsIDOMSVGLengthList> GetX();
-  virtual already_AddRefed<nsIDOMSVGLengthList> GetY();
-  virtual already_AddRefed<nsIDOMSVGLengthList> GetDx();
-  virtual already_AddRefed<nsIDOMSVGLengthList> GetDy();
+  virtual void GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY);
+  virtual void GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy);
   virtual already_AddRefed<nsIDOMSVGNumberList> GetRotate();
 
 private:

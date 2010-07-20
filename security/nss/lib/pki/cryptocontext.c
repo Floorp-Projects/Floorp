@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.18 $ $Date: 2007/11/16 05:29:27 $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.19 $ $Date: 2010/05/21 00:02:48 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -49,8 +49,6 @@ static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.18
 #ifndef PKISTORE_H
 #include "pkistore.h"
 #endif /* PKISTORE_H */
-
-#include "pki1t.h"
 
 extern const NSSError NSS_ERROR_NOT_FOUND;
 extern const NSSError NSS_ERROR_INVALID_ARGUMENT;

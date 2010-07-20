@@ -346,8 +346,9 @@ nsHTMLContentSerializer::AppendElementEnd(nsIContent *aElement,
   if (parserService) {
     PRBool isContainer;
 
-    parserService->IsContainer(parserService->HTMLAtomTagToId(name),
-                               isContainer);
+    parserService->
+      IsContainer(parserService->HTMLCaseSensitiveAtomTagToId(name),
+                  isContainer);
     if (!isContainer)
       return NS_OK;
   }

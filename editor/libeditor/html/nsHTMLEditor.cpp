@@ -72,7 +72,7 @@
 #include "nsIDOMEventGroup.h"
 #include "nsILinkHandler.h"
 
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsCSSStyleSheet.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDocumentObserver.h"
@@ -4196,6 +4196,17 @@ nsHTMLEditor::SelectAll()
 
   nsCOMPtr<nsIContent> anchorContent = do_QueryInterface(anchorNode, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+  
+  // If the anchor content has independent selection, we never need to explicitly
+  // select its children.
+  nsIFrame* frame = anchorContent->GetPrimaryFrame();
+  if (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) {
+    nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
+    NS_ENSURE_TRUE(selPriv, NS_ERROR_UNEXPECTED);
+    rv = selPriv->SetAncestorLimiter(nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return selection->SelectAllChildren(mRootElement);
+  }
 
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   nsIContent *rootContent = anchorContent->GetSelectionRootContent(ps);

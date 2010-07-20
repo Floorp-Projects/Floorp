@@ -40,7 +40,6 @@
 #include "nsSMILCSSProperty.h"
 #include "nsSMILCSSValueType.h"
 #include "nsSMILValue.h"
-#include "nsCSSDeclaration.h"
 #include "nsComputedDOMStyle.h"
 #include "nsStyleAnimation.h"
 #include "nsIContent.h"

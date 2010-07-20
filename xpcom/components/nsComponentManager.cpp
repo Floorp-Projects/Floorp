@@ -316,7 +316,7 @@ nsComponentManagerImpl::InitializeStaticModules()
         return;
 
     sStaticModules = new nsTArray<const mozilla::Module*>;
-#if defined(_BUILD_STATIC_BIN) || defined(MOZ_ENABLE_LIBXUL)
+#ifdef MOZ_ENABLE_LIBXUL
     for (const mozilla::Module *const *staticModules = kPStaticModules;
          *staticModules; ++staticModules)
         sStaticModules->AppendElement(*staticModules);
@@ -478,7 +478,7 @@ nsComponentManagerImpl::RegisterCIDEntry(const mozilla::Module::CIDEntry* aEntry
         else
             existing = "<unknown module>";
 
-        LogMessage("While registering XPCOM module, trying to re-register CID '%s' already registered by %s.",
+        LogMessage("While registering XPCOM module %s, trying to re-register CID '%s' already registered by %s.",
                    aModule->Description().get(),
                    idstr,
                    existing.get());

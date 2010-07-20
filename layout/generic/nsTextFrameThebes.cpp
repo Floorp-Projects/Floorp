@@ -1978,6 +1978,50 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
   }
 }
 
+// Find the flow corresponding to aContent in aUserData
+static inline TextRunMappedFlow*
+FindFlowForContent(TextRunUserData* aUserData, nsIContent* aContent)
+{
+  // Find the flow that contains us
+  PRInt32 i = aUserData->mLastFlowIndex;
+  PRInt32 delta = 1;
+  PRInt32 sign = 1;
+  // Search starting at the current position and examine close-by
+  // positions first, moving further and further away as we go.
+  while (i >= 0 && i < aUserData->mMappedFlowCount) {
+    TextRunMappedFlow* flow = &aUserData->mMappedFlows[i];
+    if (flow->mStartFrame->GetContent() == aContent) {
+      return flow;
+    }
+
+    i += delta;
+    delta = -delta - sign;
+    sign = -sign;
+  }
+
+  // We ran into an array edge.  Add |delta| to |i| once more to get
+  // back to the side where we still need to search, then step in
+  // the |sign| direction.
+  i += delta;
+  if (sign > 0) {
+    for (; i < aUserData->mMappedFlowCount; ++i) {
+      TextRunMappedFlow* flow = &aUserData->mMappedFlows[i];
+      if (flow->mStartFrame->GetContent() == aContent) {
+        return flow;
+      }
+    }
+  } else {
+    for (; i >= 0; --i) {
+      TextRunMappedFlow* flow = &aUserData->mMappedFlows[i];
+      if (flow->mStartFrame->GetContent() == aContent) {
+        return flow;
+      }
+    }
+  }
+
+  return nsnull;
+}
+
 gfxSkipCharsIterator
 nsTextFrame::EnsureTextRun(gfxContext* aReferenceContext, nsIFrame* aLineContainer,
                            const nsLineList::iterator* aLine,
@@ -2011,35 +2055,26 @@ nsTextFrame::EnsureTextRun(gfxContext* aReferenceContext, nsIFrame* aLineContain
   }
 
   TextRunUserData* userData = static_cast<TextRunUserData*>(mTextRun->GetUserData());
-  // Find the flow that contains us
-  PRInt32 direction;
-  PRInt32 startAt = userData->mLastFlowIndex;
-  // Search first forward and then backward from the current position
-  for (direction = 1; direction >= -1; direction -= 2) {
-    PRInt32 i;
-    for (i = startAt; 0 <= i && i < userData->mMappedFlowCount; i += direction) {
-      TextRunMappedFlow* flow = &userData->mMappedFlows[i];
-      if (flow->mStartFrame->GetContent() == mContent) {
-        // Since textruns can only contain one flow for a given content element,
-        // this must be our flow.
-        userData->mLastFlowIndex = i;
-        gfxSkipCharsIterator iter(mTextRun->GetSkipChars(),
-                                  flow->mDOMOffsetToBeforeTransformOffset, mContentOffset);
-        if (aFlowEndInTextRun) {
-          if (i + 1 < userData->mMappedFlowCount) {
-            gfxSkipCharsIterator end(mTextRun->GetSkipChars());
-            *aFlowEndInTextRun = end.ConvertOriginalToSkipped(
-                flow[1].mStartFrame->GetContentOffset() + flow[1].mDOMOffsetToBeforeTransformOffset);
-          } else {
-            *aFlowEndInTextRun = mTextRun->GetLength();
-          }
-        }
-        return iter;
+  TextRunMappedFlow* flow = FindFlowForContent(userData, mContent);
+  if (flow) {
+    // Since textruns can only contain one flow for a given content element,
+    // this must be our flow.
+    PRInt32 flowIndex = flow - userData->mMappedFlows;
+    userData->mLastFlowIndex = flowIndex;
+    gfxSkipCharsIterator iter(mTextRun->GetSkipChars(),
+                              flow->mDOMOffsetToBeforeTransformOffset, mContentOffset);
+    if (aFlowEndInTextRun) {
+      if (flowIndex + 1 < userData->mMappedFlowCount) {
+        gfxSkipCharsIterator end(mTextRun->GetSkipChars());
+        *aFlowEndInTextRun = end.ConvertOriginalToSkipped(
+              flow[1].mStartFrame->GetContentOffset() + flow[1].mDOMOffsetToBeforeTransformOffset);
+      } else {
+        *aFlowEndInTextRun = mTextRun->GetLength();
       }
-      ++flow;
     }
-    startAt = userData->mLastFlowIndex - 1;
+    return iter;
   }
+
   NS_ERROR("Can't find flow containing this frame???");
   static const gfxSkipChars emptySkipChars;
   return gfxSkipCharsIterator(emptySkipChars, 0);
@@ -3888,7 +3923,7 @@ public:
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("Text")
+  NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
 };
 
 void

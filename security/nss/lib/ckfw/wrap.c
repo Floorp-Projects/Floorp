@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.18 $ $Date: 2009/02/09 07:55:53 $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.20 $ $Date: 2010/04/03 18:27:29 $";
 #endif /* DEBUG */
 
 /*
@@ -206,7 +206,7 @@ NSSCKFWC_Initialize
   if (!*pFwInstance) {
     goto loser;
   }
-  PR_AtomicIncrement(&liveInstances);
+  PR_ATOMIC_INCREMENT(&liveInstances);
   return CKR_OK;
 
  loser:
@@ -259,7 +259,7 @@ NSSCKFWC_Finalize
   switch( error ) {
   PRInt32 remainingInstances;
   case CKR_OK:
-    remainingInstances = PR_AtomicDecrement(&liveInstances);
+    remainingInstances = PR_ATOMIC_DECREMENT(&liveInstances);
     if (!remainingInstances) {
 	nssArena_Shutdown();
     }
@@ -1776,6 +1776,9 @@ NSSCKFWC_SetOperationState
       goto loser;
     }
   }
+
+  state.data = pOperationState;
+  state.size = ulOperationStateLen;
 
   error = nssCKFWSession_SetOperationState(fwSession, &state, eKey, aKey);
   if( CKR_OK != error ) {

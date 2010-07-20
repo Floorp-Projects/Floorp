@@ -324,7 +324,7 @@ public:
   // event receiver for us
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("XULImage")
+  NS_DISPLAY_DECL_NAME("XULImage", TYPE_XUL_IMAGE)
 };
 
 void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,

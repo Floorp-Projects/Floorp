@@ -180,6 +180,10 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS += -DPACKAGE="mozpixman" -D_USE_MATH_DEFINES
 
+# Disable spammy "missing initializer" GCC warning
+ifdef GNU_CC
+CFLAGS += -Wno-missing-field-initializers
+endif # GNU_CC
 
 # special rule for pixman-mmx to get the right cflags
 pixman-mmx.$(OBJ_SUFFIX): pixman-mmx.c $(GLOBAL_DEPS)

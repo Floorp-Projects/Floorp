@@ -57,6 +57,7 @@
 
 .hud-output-node div {
     -moz-user-select: text;
+    white-space: pre-wrap;
 }
 
 .hud-output-node .hud-network {

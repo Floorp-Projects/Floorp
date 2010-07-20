@@ -1,0 +1,23 @@
+<?xml version="1.0"?> <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="reftest-wait">
+  <script type="text/javascript"><![CDATA[
+    window.addEventListener("load", function() {
+      var x = document.getElementById("x");
+      x.value = "val";
+      x.focus();x.blur();
+      setTimeout(function() {
+        x.value = "";
+        x.hidden = true;
+        setTimeout(function() {
+          x.value = "value";
+          x.hidden = false;
+          x.focus();x.blur();
+          document.documentElement.removeAttribute("class");
+        }, 0);
+      }, 0);
+    }, false);
+  ]]></script>
+  <textbox id="x" placeholder="placeholder"/>
+</window>
+

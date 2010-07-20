@@ -351,6 +351,17 @@ function doTest() {
 }
 document.addEventListener("MozReftestInvalidate", doTest, false);
 
+Zoom Tests
+==========
+
+When the root element of a test has a "reftest-zoom" attribute, that zoom
+factor is applied when rendering the test. The reftest document will be
+800 device pixels wide by 1000 device pixels high. The reftest harness assumes
+that the CSS pixel dimensions are 800/zoom and 1000/zoom. For best results
+therefore, choose zoom factors that do not require rounding when we calculate
+the number of appunits per device pixel; i.e. the zoom factor should divide 60,
+so 60/zoom is an integer.
+
 Printing Tests
 ==============
 Now that the patch for bug 374050 has landed

@@ -49,7 +49,7 @@ DEPTH      = ../..
 #  ckfw (builtins module)
 #  crmf jar (not dll's)
 DIRS =  util freebl $(SQLITE_SRCDIR) softoken \
-	base dev pki pki1 \
+	base dev pki \
 	libpkix \
 	certdb certhigh pk11wrap cryptohi nss \
 	$(ZLIB_SRCDIR) ssl \
