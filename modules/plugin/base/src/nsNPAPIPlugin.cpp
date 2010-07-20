@@ -479,7 +479,19 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   return NS_OK;
 }
 
-NS_METHOD
+PluginLibrary*
+nsNPAPIPlugin::GetLibrary()
+{
+  return mLibrary;
+}
+
+NPPluginFuncs*
+nsNPAPIPlugin::PluginFuncs()
+{
+  return &mPluginFuncs;
+}
+
+NS_IMETHODIMP
 nsNPAPIPlugin::CreatePluginInstance(nsIPluginInstance **aResult)
 {
   if (!aResult)
@@ -487,8 +499,7 @@ nsNPAPIPlugin::CreatePluginInstance(nsIPluginInstance **aResult)
 
   *aResult = NULL;
 
-  nsRefPtr<nsNPAPIPluginInstance> inst =
-    new nsNPAPIPluginInstance(&mPluginFuncs, mLibrary);
+  nsRefPtr<nsNPAPIPluginInstance> inst = new nsNPAPIPluginInstance(this);
   if (!inst)
     return NS_ERROR_OUT_OF_MEMORY;
 

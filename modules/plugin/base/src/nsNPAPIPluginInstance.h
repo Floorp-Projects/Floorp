@@ -46,6 +46,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsITimer.h"
 #include "nsIPluginTagInfo.h"
+#include "nsIURI.h"
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/PluginLibrary.h"
@@ -72,10 +73,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGININSTANCE
 
+  nsNPAPIPlugin* GetPlugin();
+
   nsresult GetNPP(NPP * aNPP);
 
-  // Return the callbacks for the plugin instance.
-  nsresult GetCallbacks(const NPPluginFuncs ** aCallbacks);
+  void SetURI(nsIURI* uri);
+  nsIURI* GetURI();
 
   NPError SetWindowless(PRBool aWindowless);
 
@@ -95,10 +98,12 @@ public:
                            PRBool aCallNotify,
                            const char * aURL);
 
-  nsNPAPIPluginInstance(NPPluginFuncs* callbacks, PluginLibrary* aLibrary);
-
-  // Use Release() to destroy this
+  nsNPAPIPluginInstance(nsNPAPIPlugin* plugin);
   virtual ~nsNPAPIPluginInstance();
+
+  // To be called when an instance becomes orphaned, when
+  // it's plugin is no longer guaranteed to be around.
+  void Destroy();
 
   // Indicates whether the plugin is running normally.
   bool IsRunning() {
@@ -143,11 +148,6 @@ protected:
                          const char*const*& values);
   nsresult GetMode(PRInt32 *result);
 
-  // A pointer to the plugin's callback functions. This information
-  // is actually stored in the plugin class (<b>nsPluginClass</b>),
-  // and is common for all plugins of the class.
-  NPPluginFuncs* mCallbacks;
-
   // The structure used to communicate between the plugin instance and
   // the browser.
   NPP_t mNPP;
@@ -174,9 +174,10 @@ protected:
 public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.
   PRPackedBool mInPluginInitCall;
-  PluginLibrary* mLibrary;
 
 private:
+  nsNPAPIPlugin* mPlugin;
+
   // array of plugin-initiated stream listeners
   nsTArray<nsNPAPIPluginStreamListener*> mPStreamListeners;
   
@@ -199,6 +200,8 @@ private:
   // Timestamp for the last time this plugin was stopped.
   // This is only valid when the plugin is actually stopped!
   mozilla::TimeStamp mStopTime;
+
+  nsCOMPtr<nsIURI> mURI;
 };
 
 #endif // nsNPAPIPluginInstance_h_

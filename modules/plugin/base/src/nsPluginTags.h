@@ -124,16 +124,4 @@ private:
   nsresult EnsureMembersAreUTF8();
 };
 
-struct nsPluginInstanceTag
-{
-  char*                  mURL;
-  nsRefPtr<nsPluginTag>  mPluginTag;
-  nsNPAPIPluginInstance* mInstance; // this must always be valid
-
-  nsPluginInstanceTag(nsPluginTag* aPluginTag,
-                      nsIPluginInstance* aInstance, 
-                      const char * url);
-  ~nsPluginInstanceTag();
-};
-
 #endif // nsPluginTags_h_
