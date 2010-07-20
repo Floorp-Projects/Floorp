@@ -1611,7 +1611,13 @@ NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
     screenmgr->ScreenForRect(*aX, *aY, width, height,
                              getter_AddRefs(screen));
     if (screen) {
-      screen->GetAvailRect(&left, &top, &width, &height);
+      if (mSizeMode != nsSizeMode_Fullscreen) {
+        // For normalized windows, use the desktop work area.
+        screen->GetAvailRect(&left, &top, &width, &height);
+      } else {
+        // For full screen windows, use the desktop.
+        screen->GetRect(&left, &top, &width, &height);
+      }
       screenRect.left = left;
       screenRect.right = left+width;
       screenRect.top = top;
@@ -1623,7 +1629,13 @@ NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop,
       HDC dc = ::GetDC(mWnd);
       if (dc) {
         if (::GetDeviceCaps(dc, TECHNOLOGY) == DT_RASDISPLAY) {
-          ::SystemParametersInfo(SPI_GETWORKAREA, 0, &screenRect, 0);
+          if (mSizeMode != nsSizeMode_Fullscreen) {
+            ::SystemParametersInfo(SPI_GETWORKAREA, 0, &screenRect, 0);
+          } else {
+            screenRect.left = screenRect.top = 0;
+            screenRect.right = GetSystemMetrics(SM_CXFULLSCREEN);
+            screenRect.bottom = GetSystemMetrics(SM_CYFULLSCREEN);
+          }
           doConstrain = PR_TRUE;
         }
         ::ReleaseDC(mWnd, dc);
