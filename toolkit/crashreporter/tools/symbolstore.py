@@ -608,8 +608,8 @@ class Dumper_Win32(Dumper):
         # try compressing it
         compressed_file = os.path.splitext(full_path)[0] + ".pd_"
         # ignore makecab's output
-        success = call(["makecab.exe", full_path, compressed_file],
-                       stdout=open("NUL:","w"), stderr=STDOUT)
+        success = call(["makecab.exe", "/D", "CompressionType=LZX", "/D", "CompressionMemory=21",
+                       full_path, compressed_file], stdout=open("NUL:","w"), stderr=STDOUT)
         if success == 0 and os.path.exists(compressed_file):
             os.unlink(full_path)
             print os.path.splitext(rel_path)[0] + ".pd_"

@@ -119,33 +119,13 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                                  nsAString& aStr);
   PRBool IsShorthandAttr(const nsIAtom* aAttrName,
                          const nsIAtom* aElementName);
-
-  virtual void AppendToString(const PRUnichar* aStr,
-                              PRInt32 aLength,
-                              nsAString& aOutputStr);
-  virtual void AppendToString(const PRUnichar aChar,
-                              nsAString& aOutputStr);
-  virtual void AppendToString(const nsAString& aStr,
-                              nsAString& aOutputStr);
   virtual void AppendAndTranslateEntities(const nsAString& aStr,
                                           nsAString& aOutputStr);
-
-  virtual void AppendToStringConvertLF(const nsAString& aStr,
-                                       nsAString& aOutputStr);
-
-  virtual void AppendToStringWrapped(const nsASingleFragmentString& aStr,
-                                     nsAString& aOutputStr);
-
-  virtual void AppendToStringFormatedWrapped(const nsASingleFragmentString& aStr,
-                                             nsAString& aOutputStr);
-
   nsresult EscapeURI(nsIContent* aContent,
                      const nsAString& aURI,
                      nsAString& aEscapedURI);
 
   nsCOMPtr<nsIEntityConverter> mEntityConverter;
-
-  PRInt32  mInBody;
 
   /*
    * isHTMLParser should be set to true by the HTML parser which inherits from
@@ -154,7 +134,6 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   PRPackedBool  mIsHTMLSerializer;
 
   PRPackedBool  mDoHeader;
-  PRPackedBool  mBodyOnly;
   PRPackedBool  mIsCopying; // Set to PR_TRUE only while copying
 
   /*

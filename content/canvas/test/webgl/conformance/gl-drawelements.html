@@ -35,9 +35,8 @@ found in the LICENSE file.
     <script>
         function init()
         {
-            if (window.layoutTestController) {
-                layoutTestController.overridePreference("WebKitWebGLEnabled", "1");
-                layoutTestController.dumpAsText();
+            if (window.initNonKhronosFramework) {
+                window.initNonKhronosFramework(false);
             }
 
             function checkDrawElements(mode, count, type, expect, msg) {
@@ -50,20 +49,20 @@ found in the LICENSE file.
 
             var vertexObject = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, vertexObject);
-            gl.bufferData(gl.ARRAY_BUFFER, new WebGLFloatArray([ 0,0.5,0, -0.5,-0.5,0, 0.5,-0.5,0 ]), gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0,0.5,0, -0.5,-0.5,0, 0.5,-0.5,0 ]), gl.STATIC_DRAW);
             gl.enableVertexAttribArray(0);
             gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
 
             var vertexObject = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexObject);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new WebGLUnsignedShortArray([ 0, 1, 2]), gl.STATIC_DRAW);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([ 0, 1, 2]), gl.STATIC_DRAW);
 
             checkDrawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT,
                               gl.NO_ERROR, "can call gl.DrawElements with UNSIGNED_SHORT");
 
             var vertexObject = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexObject);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new WebGLUnsignedByteArray([ 0, 1, 2, 0]), gl.STATIC_DRAW);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array([ 0, 1, 2, 0]), gl.STATIC_DRAW);
 
             checkDrawElements(
                 gl.TRIANGLES, 3, gl.UNSIGNED_BYTE,
@@ -80,7 +79,7 @@ found in the LICENSE file.
 
             var vertexObject = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexObject);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new WebGLUnsignedIntArray([ 0, 1, 2]), gl.STATIC_DRAW);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array([ 0, 1, 2]), gl.STATIC_DRAW);
 
             checkDrawElements(
                 gl.TRIANGLES, 3, gl.UNSIGNED_INT,

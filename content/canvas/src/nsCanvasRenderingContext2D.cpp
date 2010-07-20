@@ -125,11 +125,11 @@
 
 #ifdef MOZ_IPC
 #  include <algorithm>
-#  include "mozilla/dom/ContentProcessParent.h"
+#  include "mozilla/dom/ContentParent.h"
 #  include "mozilla/ipc/PDocumentRendererParent.h"
 #  include "mozilla/ipc/PDocumentRendererShmemParent.h"
 #  include "mozilla/ipc/PDocumentRendererNativeIDParent.h"
-#  include "mozilla/dom/PIFrameEmbeddingParent.h"
+#  include "mozilla/dom/PBrowserParent.h"
 #  include "mozilla/ipc/DocumentRendererParent.h"
 #  include "mozilla/ipc/DocumentRendererShmemParent.h"
 #  include "mozilla/ipc/DocumentRendererNativeIDParent.h"
@@ -415,7 +415,8 @@ public:
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool isOpaque);
-    already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *manager);
+    already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
+                                                 LayerManager *aManager);
     void MarkContextClean();
     NS_IMETHOD SetIsIPC(PRBool isIPC);
     // this rect is in CSS pixels
@@ -505,6 +506,7 @@ protected:
     PRInt32 mWidth, mHeight;
     PRPackedBool mValid;
     PRPackedBool mOpaque;
+    PRPackedBool mResetLayer;
 
 #ifdef MOZ_IPC
     PRPackedBool mIPC;
@@ -822,7 +824,7 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 }
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
-    : mValid(PR_FALSE), mOpaque(PR_FALSE)
+    : mValid(PR_FALSE), mOpaque(PR_FALSE), mResetLayer(PR_TRUE)
 #ifdef MOZ_IPC
     , mIPC(PR_FALSE)
 #endif
@@ -838,7 +840,7 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
     Destroy();
 
 #ifdef MOZ_IPC
-    ContentProcessParent* allocator = ContentProcessParent::GetSingleton(PR_FALSE);
+    ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
     if (allocator && gfxSharedImageSurface::IsSharedImage(mBackSurface)) {
         Shmem mem = static_cast<gfxSharedImageSurface*>(mBackSurface.get())->GetShmem();
         allocator->DeallocShmem(mem);
@@ -859,7 +861,7 @@ void
 nsCanvasRenderingContext2D::Destroy()
 {
 #ifdef MOZ_IPC
-    ContentProcessParent* allocator = ContentProcessParent::GetSingleton(PR_FALSE);
+    ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
     if (allocator && gfxSharedImageSurface::IsSharedImage(mSurface)) {
         Shmem &mem = static_cast<gfxSharedImageSurface*>(mSurface.get())->GetShmem();
         allocator->DeallocShmem(mem);
@@ -1108,7 +1110,7 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 #ifdef MOZ_HAVE_SHAREDMEMORYSYSV
                 shmtype = SharedMemory::TYPE_SYSV;
 #endif
-                ContentProcessParent* allocator = ContentProcessParent::GetSingleton();
+                ContentParent* allocator = ContentParent::GetSingleton();
                 mBackSurface = new gfxSharedImageSurface();
                 static_cast<gfxSharedImageSurface*>(mBackSurface.get())->Init(allocator, size, format, shmtype);
             }
@@ -1139,6 +1141,7 @@ nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASur
 
     mSurface = surface;
     mThebes = surface ? new gfxContext(mSurface) : nsnull;
+    mResetLayer = PR_TRUE;
 
     /* Create dummy surfaces here */
     if (mSurface == nsnull || mSurface->CairoStatus() != 0 ||
@@ -1268,7 +1271,7 @@ nsCanvasRenderingContext2D::Swap(mozilla::ipc::Shmem& aBack,
     if (aBackImage->Data() != static_cast<gfxImageSurface*>(mBackSurface.get())->Data()) {
         NS_ERROR("Incoming back surface is not equal to our back surface");
         // Delete orphaned memory and return
-        ContentProcessParent* allocator = ContentProcessParent::GetSingleton(PR_FALSE);
+        ContentParent* allocator = ContentParent::GetSingleton(PR_FALSE);
         if (allocator)
             allocator->DeallocShmem(aBack);
         return NS_ERROR_FAILURE;
@@ -2355,7 +2358,9 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                        fontStyle->mFont.sizeAdjust,
                        fontStyle->mFont.systemFont,
                        fontStyle->mFont.familyNameQuirks,
-                       printerFont);
+                       printerFont,
+                       fontStyle->mFont.featureSettings,
+                       fontStyle->mFont.languageOverride);
 
     CurrentState().fontGroup =
         gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name,
@@ -3516,10 +3521,8 @@ nsCanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op)
     if (op.EqualsLiteral(cvsop))   \
         thebes_op = gfxContext::OPERATOR_##thebesop;
 
-    // XXX "darker" isn't really correct
     CANVAS_OP_TO_THEBES_OP("clear", CLEAR)
     else CANVAS_OP_TO_THEBES_OP("copy", SOURCE)
-    else CANVAS_OP_TO_THEBES_OP("darker", SATURATE)  // XXX
     else CANVAS_OP_TO_THEBES_OP("destination-atop", DEST_ATOP)
     else CANVAS_OP_TO_THEBES_OP("destination-in", DEST_IN)
     else CANVAS_OP_TO_THEBES_OP("destination-out", DEST_OUT)
@@ -3672,7 +3675,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
         renderDocFlags |= nsIPresShell::RENDER_USE_WIDGET_LAYERS;
     }
 
-    presShell->RenderDocument(r, renderDocFlags, bgColor, mThebes);
+    rv = presShell->RenderDocument(r, renderDocFlags, bgColor, mThebes);
 
     // get rid of the pattern surface ref, just in case
     mThebes->SetColor(gfxRGBA(1,1,1,1));
@@ -3717,7 +3720,7 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
         return NS_ERROR_FAILURE;
 
 #ifdef MOZ_IPC
-    PIFrameEmbeddingParent *child = frameloader->GetChildProcess();
+    PBrowserParent *child = frameloader->GetRemoteBrowser();
     if (!child) {
         nsCOMPtr<nsIDOMWindow> window =
             do_GetInterface(frameloader->GetExistingDocShell());
@@ -4074,17 +4077,29 @@ nsCanvasRenderingContext2D::SetMozImageSmoothingEnabled(PRBool val)
     return NS_OK;
 }
 
+static PRUint8 g2DContextLayerUserData;
+
 already_AddRefed<CanvasLayer>
-nsCanvasRenderingContext2D::GetCanvasLayer(LayerManager *manager)
+nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
+                                           LayerManager *aManager)
 {
     if (!mValid)
         return nsnull;
 
-    nsRefPtr<CanvasLayer> canvasLayer = manager->CreateCanvasLayer();
+    if (!mResetLayer && aOldLayer &&
+        aOldLayer->GetUserData() == &g2DContextLayerUserData) {
+        NS_ADDREF(aOldLayer);
+        // XXX Need to just update the changed area here
+        aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
+        return aOldLayer;
+    }
+
+    nsRefPtr<CanvasLayer> canvasLayer = aManager->CreateCanvasLayer();
     if (!canvasLayer) {
         NS_WARNING("CreateCanvasLayer returned null!");
         return nsnull;
     }
+    canvasLayer->SetUserData(&g2DContextLayerUserData);
 
     CanvasLayer::Data data;
 
@@ -4095,6 +4110,7 @@ nsCanvasRenderingContext2D::GetCanvasLayer(LayerManager *manager)
     canvasLayer->SetIsOpaqueContent(mOpaque);
     canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
 
+    mResetLayer = PR_FALSE;
     return canvasLayer.forget().get();
 }
 

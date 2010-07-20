@@ -88,7 +88,7 @@ profileDir.append("extensions");
 // Set up the profile
 function run_test() {
   do_test_pending();
-  startupManager(1);
+  startupManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -135,7 +135,7 @@ function run_test_1() {
   dest.append("addon5@tests.mozilla.org");
   writeInstallRDFToDir(addon5, dest);
 
-  restartManager(1);
+  restartManager();
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
@@ -219,7 +219,7 @@ function run_test_2() {
   dest.append("addon3@tests.mozilla.org");
   dest.remove(true);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -275,7 +275,7 @@ function run_test_3() {
   dest.append("addon4@tests.mozilla.org");
   writeInstallRDFToDir(addon3, dest);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -326,7 +326,7 @@ function run_test_3() {
 function run_test_4() {
   Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_SYSTEM);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -358,7 +358,7 @@ function run_test_4() {
 function run_test_5() {
   Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_USER);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -396,7 +396,7 @@ function run_test_5() {
 function run_test_6() {
   Services.prefs.clearUserPref("extensions.enabledScopes");
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -440,7 +440,7 @@ function run_test_7() {
   dest.append("addon2@tests.mozilla.org");
   dest.remove(true);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -487,7 +487,7 @@ function run_test_7() {
 function run_test_8() {
   Services.prefs.setIntPref("extensions.enabledScopes", 0);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -530,7 +530,7 @@ function run_test_9() {
   addon2.version = "2.4";
   writeInstallRDFToDir(addon2, dest);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -582,7 +582,7 @@ function run_test_10() {
   addon1.version = "1.3";
   writeInstallRDFToDir(addon1, dest);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -632,7 +632,7 @@ function run_test_11() {
   dest.append("addon2@tests.mozilla.org");
   dest.remove(true);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",

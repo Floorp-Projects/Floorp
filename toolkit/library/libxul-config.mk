@@ -120,7 +120,6 @@ STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \
 	gkgfx \
-	gfxutils \
 	$(NULL)
 
 ifdef MOZ_IPC
@@ -303,6 +302,11 @@ COMPONENT_LIBS += widget_android
 endif
 
 STATIC_LIBS += thebes ycbcr
+
+ifneq ($(OS_ARCH)_$(OS_TEST),Linux_x86_64)
+STATIC_LIBS += angle
+endif
+
 COMPONENT_LIBS += gkgfxthebes
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))

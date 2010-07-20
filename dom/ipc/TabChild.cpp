@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "TabChild.h"
-#include "mozilla/dom/PContentProcessChild.h"
+#include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/PContentDialogChild.h"
 
 #include "nsIWebBrowser.h"
@@ -98,7 +98,7 @@ ContentListener::HandleEvent(nsIDOMEvent* aEvent)
   RemoteDOMEvent remoteEvent;
   remoteEvent.mEvent = do_QueryInterface(aEvent);
   NS_ENSURE_STATE(remoteEvent.mEvent);
-  mTabChild->SendsendEvent(remoteEvent);
+  mTabChild->SendEvent(remoteEvent);
   return NS_OK;
 }
 
@@ -110,8 +110,10 @@ public:
 };
 
 
-TabChild::TabChild()
-: mCx(nsnull), mTabChildGlobal(nsnull)
+TabChild::TabChild(PRUint32 aChromeFlags)
+  : mCx(nsnull)
+  , mTabChildGlobal(nsnull)
+  , mChromeFlags(aChromeFlags)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -182,12 +184,14 @@ TabChild::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 NS_IMETHODIMP
 TabChild::GetChromeFlags(PRUint32* aChromeFlags)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aChromeFlags = mChromeFlags;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 TabChild::SetChromeFlags(PRUint32 aChromeFlags)
 {
+  NS_ERROR("trying to SetChromeFlags from content process?");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -290,14 +294,14 @@ TabChild::Blur()
 NS_IMETHODIMP
 TabChild::FocusNextElement()
 {
-  SendmoveFocus(PR_TRUE);
+  SendMoveFocus(PR_TRUE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TabChild::FocusPrevElement()
 {
-  SendmoveFocus(PR_FALSE);
+  SendMoveFocus(PR_FALSE);
   return NS_OK;
 }
 
@@ -319,8 +323,8 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
 {
     *aReturn = nsnull;
 
-    PIFrameEmbeddingChild* newChild;
-    if (!CallcreateWindow(&newChild)) {
+    PBrowserChild* newChild;
+    if (!CallCreateWindow(&newChild)) {
         return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -406,7 +410,7 @@ TabChild::ArraysToParams(const nsTArray<int>& aIntParams,
 }
 
 bool
-TabChild::RecvcreateWidget(const MagicWindowHandle& parentWidget)
+TabChild::RecvCreateWidget(const MagicWindowHandle& parentWidget)
 {
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
     if (!baseWindow) {
@@ -453,7 +457,7 @@ TabChild::RecvcreateWidget(const MagicWindowHandle& parentWidget)
 }
 
 bool
-TabChild::destroyWidget()
+TabChild::DestroyWidget()
 {
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
     if (baseWindow)
@@ -464,7 +468,7 @@ TabChild::destroyWidget()
 
 TabChild::~TabChild()
 {
-    destroyWidget();
+    DestroyWidget();
     nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(mWebNav);
     if (webBrowser) {
       webBrowser->SetContainerWindow(nsnull);
@@ -486,7 +490,7 @@ TabChild::OnStateChange(nsIWebProgress *aWebProgress,
                         PRUint32 aStateFlags,
                         nsresult aStatus)
 {
-  SendnotifyStateChange(aStateFlags, aStatus);
+  SendNotifyStateChange(aStateFlags, aStatus);
   return NS_OK;
 }
 
@@ -501,7 +505,7 @@ TabChild::OnProgressChange(nsIWebProgress *aWebProgress,
                            PRInt32 aCurTotalProgress,
                            PRInt32 aMaxTotalProgress)
 {
-  SendnotifyProgressChange(aCurSelfProgress, aMaxSelfProgress,
+  SendNotifyProgressChange(aCurSelfProgress, aMaxSelfProgress,
                            aCurTotalProgress, aMaxTotalProgress);
   return NS_OK;
 }
@@ -513,7 +517,7 @@ TabChild::OnStatusChange(nsIWebProgress *aWebProgress,
                          const PRUnichar* aMessage)
 {
   nsDependentString message(aMessage);
-  SendnotifyStatusChange(aStatus, message);
+  SendNotifyStatusChange(aStatus, message);
   return NS_OK;
 }
 
@@ -522,7 +526,7 @@ TabChild::OnSecurityChange(nsIWebProgress *aWebProgress,
                            nsIRequest *aRequest,
                            PRUint32 aState)
 {
-  SendnotifySecurityChange(aState);
+  SendNotifySecurityChange(aState);
   return NS_OK;
 }
 
@@ -534,7 +538,7 @@ TabChild::OnLocationChange(nsIWebProgress *aWebProgress,
   NS_ENSURE_ARG_POINTER(aLocation);
   nsCString uri;
   aLocation->GetSpec(uri);
-  SendnotifyLocationChange(uri);
+  SendNotifyLocationChange(uri);
   return NS_OK;
 }
 
@@ -546,7 +550,7 @@ TabChild::OnProgressChange64(nsIWebProgress *aWebProgress,
                              PRInt64 aCurTotalProgress,
                              PRInt64 aMaxTotalProgress)
 {
-  SendnotifyProgressChange(aCurSelfProgress, aMaxSelfProgress,
+  SendNotifyProgressChange(aCurSelfProgress, aMaxSelfProgress,
                            aCurTotalProgress, aMaxTotalProgress);
   return NS_OK;
 }
@@ -561,7 +565,7 @@ TabChild::OnRefreshAttempted(nsIWebProgress *aWebProgress,
   aURI->GetSpec(uri);
   bool sameURL = aSameURL;
   bool refreshAllowed;
-  SendrefreshAttempted(uri, aMillis, sameURL, &refreshAllowed);
+  SendRefreshAttempted(uri, aMillis, sameURL, &refreshAllowed);
   *aRefreshAllowed = refreshAllowed;
   return NS_OK;
 }
@@ -569,7 +573,7 @@ TabChild::OnRefreshAttempted(nsIWebProgress *aWebProgress,
                              
 
 bool
-TabChild::RecvloadURL(const nsCString& uri)
+TabChild::RecvLoadURL(const nsCString& uri)
 {
     printf("loading %s, %d\n", uri.get(), NS_IsMainThread());
 
@@ -584,10 +588,10 @@ TabChild::RecvloadURL(const nsCString& uri)
 }
 
 bool
-TabChild::Recvmove(const PRUint32& x,
-                     const PRUint32& y,
-                     const PRUint32& width,
-                     const PRUint32& height)
+TabChild::RecvMove(const PRUint32& x,
+                   const PRUint32& y,
+                   const PRUint32& width,
+                   const PRUint32& height)
 {
     printf("[TabChild] MOVE to (x,y)=(%ud, %ud), (w,h)= (%ud, %ud)\n",
            x, y, width, height);
@@ -598,7 +602,7 @@ TabChild::Recvmove(const PRUint32& x,
 }
 
 bool
-TabChild::Recvactivate()
+TabChild::RecvActivate()
 {
   nsCOMPtr<nsIWebBrowserFocus> browser = do_QueryInterface(mWebNav);
   browser->Activate();
@@ -606,13 +610,13 @@ TabChild::Recvactivate()
 }
 
 bool
-TabChild::RecvsendMouseEvent(const nsString& aType,
-                             const PRInt32&  aX,
-                             const PRInt32&  aY,
-                             const PRInt32&  aButton,
-                             const PRInt32&  aClickCount,
-                             const PRInt32&  aModifiers,
-                             const bool&     aIgnoreRootScrollFrame)
+TabChild::RecvMouseEvent(const nsString& aType,
+                         const float&    aX,
+                         const float&    aY,
+                         const PRInt32&  aButton,
+                         const PRInt32&  aClickCount,
+                         const PRInt32&  aModifiers,
+                         const bool&     aIgnoreRootScrollFrame)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
   nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
@@ -623,11 +627,11 @@ TabChild::RecvsendMouseEvent(const nsString& aType,
 }
 
 bool
-TabChild::RecvsendKeyEvent(const nsString& aType,
-                           const PRInt32& aKeyCode,
-                           const PRInt32& aCharCode,
-                           const PRInt32& aModifiers,
-                           const bool& aPreventDefault)
+TabChild::RecvKeyEvent(const nsString& aType,
+                       const PRInt32& aKeyCode,
+                       const PRInt32& aCharCode,
+                       const PRInt32& aModifiers,
+                       const bool& aPreventDefault)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
   nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
@@ -846,7 +850,7 @@ TabChild::DeallocPGeolocationRequest(PGeolocationRequestChild* actor)
 }
 
 bool
-TabChild::RecvactivateFrameEvent(const nsString& aType, const bool& capture)
+TabChild::RecvActivateFrameEvent(const nsString& aType, const bool& capture)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
   NS_ENSURE_TRUE(window, true);
@@ -860,7 +864,7 @@ TabChild::RecvactivateFrameEvent(const nsString& aType, const bool& capture)
 }
 
 bool
-TabChild::RecvloadRemoteScript(const nsString& aURL)
+TabChild::RecvLoadRemoteScript(const nsString& aURL)
 {
   nsCString url = NS_ConvertUTF16toUTF8(aURL);
   nsCOMPtr<nsIURI> uri;
@@ -915,8 +919,8 @@ TabChild::RecvloadRemoteScript(const nsString& aURL)
 }
 
 bool
-TabChild::RecvsendAsyncMessageToChild(const nsString& aMessage,
-                                      const nsString& aJSON)
+TabChild::RecvAsyncMessage(const nsString& aMessage,
+                           const nsString& aJSON)
 {
   if (mTabChildGlobal) {
     static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get())->
@@ -1011,24 +1015,24 @@ TabChild::InitTabChildGlobal()
   return true;
 }
 
-static
-bool SendSyncMessageToParent(void* aCallbackData,
-                             const nsAString& aMessage,
-                             const nsAString& aJSON,
-                             nsTArray<nsString>* aJSONRetVal)
+static bool
+SendSyncMessageToParent(void* aCallbackData,
+                        const nsAString& aMessage,
+                        const nsAString& aJSON,
+                        nsTArray<nsString>* aJSONRetVal)
 {
   return static_cast<TabChild*>(aCallbackData)->
-    SendsendSyncMessageToParent(nsString(aMessage), nsString(aJSON),
-                                aJSONRetVal);
+    SendSyncMessage(nsString(aMessage), nsString(aJSON),
+                    aJSONRetVal);
 }
 
-static
-bool SendAsyncMessageToParent(void* aCallbackData,
-                              const nsAString& aMessage,
-                              const nsAString& aJSON)
+static bool
+SendAsyncMessageToParent(void* aCallbackData,
+                         const nsAString& aMessage,
+                         const nsAString& aJSON)
 {
   return static_cast<TabChild*>(aCallbackData)->
-    SendsendAsyncMessageToParent(nsString(aMessage), nsString(aJSON));
+    SendAsyncMessage(nsString(aMessage), nsString(aJSON));
 }
 
 TabChildGlobal::TabChildGlobal(TabChild* aTabChild)

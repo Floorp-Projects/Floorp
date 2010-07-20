@@ -468,6 +468,13 @@ nsMediaFeatures::features[] = {
         { &nsGkAtoms::maemo_classic },
         GetSystemMetric
     },
+    {
+        &nsGkAtoms::_moz_menubar_drag,
+        nsMediaFeature::eMinMaxNotAllowed,
+        nsMediaFeature::eBoolInteger,
+        { &nsGkAtoms::menubar_drag },
+        GetSystemMetric
+    },
 
     // Null-mName terminator:
     {

@@ -204,7 +204,7 @@ _handle_union(const char *str, const char *exp, PRBool case_insensitive,
     if (!e2)
     	return ABORTED;
     for (sx = 1; ; ++sx) {
-	/* Here, exp[sx] is one character past the preceeding '(' or '|'. */
+	/* Here, exp[sx] is one character past the preceding '(' or '|'. */
 	/* Copy everything up to the next delimiter to e2 */
 	count = _scan_and_copy(exp + sx, ')', '|', e2);
 	if (count == ABORTED || !count) {

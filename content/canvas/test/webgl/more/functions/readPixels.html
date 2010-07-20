@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<!--
+Tests for the OpenGL ES 2.0 HTML Canvas context
+
+Copyright (C) 2009  Ilmari Heikkinen <ilmari.heikkinen@gmail.com>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+-->
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../unit.css" />
+<script type="application/x-javascript" src="../unit.js"></script>
+<script type="application/x-javascript" src="../util.js"></script>
+<script type="application/x-javascript">
+
+Tests.startUnit = function () {
+  var canvas = document.getElementById('gl');
+  var gl = wrapGLContext(canvas.getContext(GL_CONTEXT_ID));
+  return [gl];
+}
+
+Tests.testReadPixels = function(gl) {
+  assertOk(function(){gl.readPixels(0,0,1,1,gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertOk(function(){gl.readPixels(0,0,16,16,gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertOk(function(){gl.readPixels(15,15,1,1,gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertOk(function(){gl.readPixels(15,15,1,1,gl.ALPHA, gl.UNSIGNED_BYTE);});
+  assertOk(function(){gl.readPixels(15,15,1,1,gl.RGB, gl.UNSIGNED_BYTE);});
+}
+Tests.testReadPixelsDataDimensions = function(gl) {
+  var id = gl.readPixels(1,2,12,13,gl.RGBA, gl.UNSIGNED_BYTE);
+  assertEquals(12, id.width);
+  assertEquals(13, id.height);
+  assertEquals(12*13*4, id.data.length);
+}
+Tests.testReadPixelsRGBA = function(gl) {
+  gl.clearColor(0.5, 0.5, 0.5, 0.5);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  var id = gl.readPixels(1,2,1,1,gl.RGBA, gl.UNSIGNED_BYTE);
+  assertEquals(1, id.width);
+  assertEquals(1, id.height);
+  assertEquals(4, id.data.length);
+  assertEquals([128, 128, 128, 128], id.data);
+  gl.clearColor(0.5, 0.5, 0.5, 0.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+}
+Tests.testReadPixelsAlpha = function(gl) {
+    gl.clearColor(0.5, 0.5, 0.5, 0.5);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    var id = gl.readPixels(1,2,1,1,gl.ALPHA, gl.UNSIGNED_BYTE);
+    assertEquals(1, id.width);
+    assertEquals(1, id.height);
+    assertEquals(1, id.data.length);
+    assertEquals([128], id.data);
+    gl.clearColor(0.5, 0.5, 0.5, 0.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+}
+Tests.testReadPixelsRGB = function(gl) {
+    gl.clearColor(0.5, 0.5, 0.5, 0.5);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    var id = gl.readPixels(1,2,1,1,gl.RGB, gl.UNSIGNED_BYTE);
+    assertEquals(1, id.width);
+    assertEquals(1, id.height);
+    assertEquals(3, id.data.length);
+    assertEquals([128, 128, 128], id.data);
+    gl.clearColor(0.5, 0.5, 0.5, 0.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+}
+
+Tests.endUnit = function(gl) {
+}
+
+</script>
+<style>canvas{ position:absolute; }</style>
+</head><body>
+<canvas id="gl" width="16" height="16"></canvas>
+</body></html>

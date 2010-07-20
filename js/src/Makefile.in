@@ -459,6 +459,7 @@ endif
 
 ifdef JS_HAS_CTYPES
 DEFINES		+= -DJS_HAS_CTYPES
+DEFINES         += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 endif
 
 ifdef JS_NO_THIN_LOCKS

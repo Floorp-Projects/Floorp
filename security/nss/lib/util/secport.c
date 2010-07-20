@@ -41,7 +41,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.28 2010/01/22 02:34:30 wtc%google.com Exp $
+ * $Id: secport.c,v 1.29 2010/03/28 20:46:37 nelson%bolyard.com Exp $
  */
 
 #include "seccomon.h"
@@ -344,11 +344,7 @@ PORT_FreeArena(PLArenaPool *arena, PRBool zero)
 	checkedEnv = PR_TRUE;
     }
     if (zero) {
-	PLArena *a;
-	for (a = arena->first.next; a; a = a->next) {
-	    PR_ASSERT(a->base <= a->avail && a->avail <= a->limit);
-	    memset((void *)a->base, 0, a->avail - a->base);
-	}
+	PL_ClearArenaPool(arena, 0);
     }
     if (doFreeArenaPool) {
 	PL_FreeArenaPool(arena);

@@ -56,17 +56,17 @@ EXPORTS_mozilla = \
   $(NULL)
 
 EXPORTS_mozilla/dom = \
-  ContentProcessChild.h \
-  ContentProcessParent.h \
-  ContentProcessProcess.h \
+  ContentChild.h \
+  ContentParent.h \
+  ContentProcess.h \
   TabParent.h \
   TabChild.h \
   $(NULL)
 
 CPPSRCS = \
-  ContentProcessProcess.cpp \
-  ContentProcessParent.cpp \
-  ContentProcessChild.cpp \
+  ContentProcess.cpp \
+  ContentParent.cpp \
+  ContentChild.cpp \
   TabParent.cpp \
   TabChild.cpp \
   TabMessageUtils.cpp \

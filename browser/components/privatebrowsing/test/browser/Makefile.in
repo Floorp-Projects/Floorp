@@ -49,7 +49,6 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_beforeunload.js \
 		browser_privatebrowsing_certexceptionsui.js \
 		browser_privatebrowsing_commandline_toggle.js \
-		browser_privatebrowsing_contextmenu_blockimage.js \
 		browser_privatebrowsing_cookieacceptdialog.js \
 		browser_privatebrowsing_crh.js \
 		browser_privatebrowsing_downloadmonitor.js \
