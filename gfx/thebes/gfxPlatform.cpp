@@ -79,6 +79,8 @@
 #include "nsIPrefBranch2.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsCRT.h"
+#include "GLContext.h"
+#include "GLContextProvider.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -307,6 +309,8 @@ gfxPlatform::Shutdown()
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs)
         prefs->RemoveObserver(CMForceSRGBPrefName, gPlatform->overrideObserver);
+
+    mozilla::gl::GLContextProvider::Shutdown();
 
     delete gPlatform;
     gPlatform = nsnull;

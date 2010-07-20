@@ -108,4 +108,10 @@ public:
      */
     static GLContext *
     GetGlobalContext();
+
+    /**
+     * Free any resources held by this Context Provider.
+     */
+    static void
+    Shutdown();
 };

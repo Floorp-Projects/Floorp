@@ -118,14 +118,14 @@ GLXLibrary::EnsureInitialized()
 
     int serverVersion = 0, clientVersion = 0;
     if (serverVersionStr &&
-        strlen(serverVersionStr) > 3 &&
+        strlen(serverVersionStr) >= 3 &&
         serverVersionStr[1] == '.')
     {
         serverVersion = (serverVersionStr[0] - '0') << 8 | (serverVersionStr[2] - '0');
     }
 
-    if (clientVersion &&
-        strlen(clientVersionStr) > 3 &&
+    if (clientVersionStr &&
+        strlen(clientVersionStr) >= 3 &&
         clientVersionStr[1] == '.')
     {
         clientVersion = (clientVersionStr[0] - '0') << 8 | (clientVersionStr[2] - '0');
@@ -743,6 +743,12 @@ GLContextProviderGLX::GetGlobalContext()
     }
 
     return gGlobalContext;
+}
+
+void
+GLContextProviderGLX::Shutdown()
+{
+    gGlobalContext = nsnull;
 }
 
 } /* namespace gl */
