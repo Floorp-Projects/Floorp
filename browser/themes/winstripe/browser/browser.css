@@ -84,7 +84,7 @@
   background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
 }
 
-#navigator-toolbox:not([tabsontop="true"]) > #toolbar-menubar:not(:-moz-lwtheme) {
+#navigator-toolbox[tabsontop="false"] > #toolbar-menubar:not(:-moz-lwtheme) {
   background-image: -moz-linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
 }
 
@@ -1090,7 +1090,7 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 }
 
 #TabsToolbar:not(:-moz-lwtheme),
-#navigator-toolbox:not([tabsontop="true"]) > #TabsToolbar {
+#TabsToolbar[tabsontop="false"] {
   background-image: -moz-linear-gradient(transparent, transparent 10%,
                                          rgba(0,0,0,.03) 50%, rgba(0,0,0,.1) 90%, rgba(0,0,0,.2));
 }
@@ -1153,7 +1153,7 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   color: black;
 }
 
-#navigator-toolbox[tabsontop="true"] > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
+#tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
   background-image: -moz-radial-gradient(center top, white, rgba(255,255,255,0) 60%),
                     -moz-linear-gradient(left, transparent, transparent 1px,
                                                @toolbarHighlight@ 1px, @toolbarHighlight@),
