@@ -184,7 +184,7 @@ Mirror.prototype = iQ.extend(new Subscribable(), {
   },
 
   // ----------
-  // Function: foreceCanvasSize
+  // Function: forceCanvasSize
   // Repaints the thumbnail with the given resolution, and forces it
   // to stay that resolution until unforceCanvasSize is called.
   forceCanvasSize: function(w, h) {
@@ -409,12 +409,6 @@ TabMirror.prototype = {
   },
 
   // ----------
-  // Function: _createEl
-  _createEl: function(tab){
-    new Mirror(tab, this); // sets tab.mirror to itself
-  },
-
-  // ----------
   // Function: update
   update: function(tab){
     this.link(tab);
@@ -431,7 +425,7 @@ TabMirror.prototype = {
       return false;
 
     // Add the tab to the page
-    this._createEl(tab);
+    new Mirror(tab, this); // sets tab.mirror to itself
     return true;
   },
 
