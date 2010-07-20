@@ -954,6 +954,26 @@ nsHTMLTableAccessible::GetRowIndexAt(PRInt32 aIndex, PRInt32 *aRow)
 }
 
 NS_IMETHODIMP
+nsHTMLTableAccessible::GetRowAndColumnIndicesAt(PRInt32 aIndex,
+                                                PRInt32* aRowIdx,
+                                                PRInt32* aColumnIdx)
+{
+  NS_ENSURE_ARG_POINTER(aRowIdx);
+  *aRowIdx = -1;
+  NS_ENSURE_ARG_POINTER(aColumnIdx);
+  *aColumnIdx = -1;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsITableLayout* tableLayout = GetTableLayout();
+  if (tableLayout)
+    tableLayout->GetRowAndColumnByIndex(aIndex, aRowIdx, aColumnIdx);
+
+  return (*aRowIdx == -1 || *aColumnIdx == -1) ? NS_ERROR_INVALID_ARG : NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLTableAccessible::GetColumnExtentAt(PRInt32 aRowIndex,
                                          PRInt32 aColumnIndex,
                                          PRInt32 *aExtentCount)

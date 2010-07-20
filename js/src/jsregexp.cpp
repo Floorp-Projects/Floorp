@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JS regular expressions, after Perl.
  */
@@ -2003,7 +2001,7 @@ CompileRegExpToAST(JSContext* cx, TokenStream* ts,
 
     state.context = cx;
     state.tokenStream = ts;
-    state.cp = js_UndependString(cx, str);
+    state.cp = str->undepend(cx);
     if (!state.cp)
         return JS_FALSE;
     state.cpbegin = state.cp;

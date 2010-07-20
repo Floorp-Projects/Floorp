@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JS atom table.
  */
@@ -151,6 +149,7 @@ const char *const js_common_atom_names[] = {
     js_index_str,               /* indexAtom                    */
     js_input_str,               /* inputAtom                    */
     js_iterator_str,            /* iteratorAtom                 */
+    js_join_str,                /* joinAtom                     */
     js_lastIndex_str,           /* lastIndexAtom                */
     js_length_str,              /* lengthAtom                   */
     js_lineNumber_str,          /* lineNumberAtom               */
@@ -189,14 +188,6 @@ const char *const js_common_atom_names[] = {
     js_starQualifier_str,       /* starQualifierAtom            */
     js_tagc_str,                /* tagcAtom                     */
     js_xml_str,                 /* xmlAtom                      */
-#endif
-
-#ifdef NARCISSUS
-    js___call___str,            /* __call__Atom                 */
-    js___construct___str,       /* __construct__Atom            */
-    js___hasInstance___str,     /* __hasInstance__Atom          */
-    js_ExecutionContext_str,    /* ExecutionContextAtom         */
-    js_current_str,             /* currentAtom                  */
 #endif
 
     "Proxy",                    /* ProxyAtom                    */
@@ -245,6 +236,7 @@ const char js_ignoreCase_str[]      = "ignoreCase";
 const char js_index_str[]           = "index";
 const char js_input_str[]           = "input";
 const char js_iterator_str[]        = "__iterator__";
+const char js_join_str[]            = "join";
 const char js_lastIndex_str[]       = "lastIndex";
 const char js_length_str[]          = "length";
 const char js_lineNumber_str[]      = "lineNumber";
@@ -289,14 +281,6 @@ const char js_xml_str[]             = "xml";
 #if JS_HAS_GENERATORS
 const char js_close_str[]           = "close";
 const char js_send_str[]            = "send";
-#endif
-
-#ifdef NARCISSUS
-const char js___call___str[]         = "__call__";
-const char js___construct___str[]    = "__construct__";
-const char js___hasInstance___str[]  = "__hasInstance__";
-const char js_ExecutionContext_str[] = "ExecutionContext";
-const char js_current_str[]          = "current";
 #endif
 
 /*
@@ -625,6 +609,8 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     entry = TO_ATOM_ENTRY(JS_DHashTableOperate(table, str, JS_DHASH_ADD));
     if (!entry)
         goto failed_hash_add;
+    /* Hashing the string should have flattened it if it was a rope. */
+    JS_ASSERT(str->isFlat() || str->isDependent());
     if (entry->keyAndFlags != 0) {
         key = ATOM_ENTRY_KEY(entry);
     } else {
@@ -657,7 +643,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
                 }
             } else {
                 JS_ASSERT(str->isDependent());
-                if (!js_UndependString(cx, str))
+                if (!str->undepend(cx))
                     return NULL;
                 key = str;
             }
@@ -914,24 +900,23 @@ static JSHashAllocOps temp_alloc_ops = {
 JSAtomListElement *
 JSAtomList::rawLookup(JSAtom *atom, JSHashEntry **&hep)
 {
-    JSAtomListElement *ale;
-
     if (table) {
         hep = JS_HashTableRawLookup(table, ATOM_HASH(atom), atom);
-        ale = *hep ? (JSAtomListElement *) *hep : NULL;
-    } else {
-        JSHashEntry **alep = &list;
-        hep = NULL;
-        while ((ale = (JSAtomListElement *)*alep) != NULL) {
-            if (ALE_ATOM(ale) == atom) {
-                /* Hit, move atom's element to the front of the list. */
-                *alep = ale->entry.next;
-                ale->entry.next = list;
-                list = &ale->entry;
-                break;
-            }
-            alep = &ale->entry.next;
+        return (JSAtomListElement *) *hep;
+    }
+
+    JSHashEntry **alep = &list;
+    hep = NULL;
+    JSAtomListElement *ale;
+    while ((ale = (JSAtomListElement *)*alep) != NULL) {
+        if (ALE_ATOM(ale) == atom) {
+            /* Hit, move atom's element to the front of the list. */
+            *alep = ale->entry.next;
+            ale->entry.next = list;
+            list = &ale->entry;
+            break;
         }
+        alep = &ale->entry.next;
     }
     return ale;
 }

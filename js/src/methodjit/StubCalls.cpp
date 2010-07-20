@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 #include "jscntxt.h"
 #include "jsscope.h"
 #include "jsobj.h"
@@ -966,7 +964,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(v.isObject());                                              \
         JS_ASSERT(v == regs.sp[n]);                                           \
-        if (!v.toObject().defaultValue(cx, hint, &regs.sp[n]))                \
+        if (!DefaultValue(cx, &v.toObject(), hint, &regs.sp[n]))              \
             THROWV(JS_FALSE);                                                 \
         v = regs.sp[n];                                                       \
     JS_END_MACRO
@@ -1088,13 +1086,13 @@ StubEqualityOp(VMFrame &f)
             cond = !EQ;
         } else {
             if (lval.isObject()) {
-                if (!lval.toObject().defaultValue(cx, JSTYPE_VOID, &regs.sp[-2]))
+                if (!DefaultValue(cx, &lval.toObject(), JSTYPE_VOID, &regs.sp[-2]))
                     return false;
                 lval = regs.sp[-2];
             }
 
             if (rval.isObject()) {
-                if (!rval.toObject().defaultValue(cx, JSTYPE_VOID, &regs.sp[-1]))
+                if (!DefaultValue(cx, &rval.toObject(), JSTYPE_VOID, &regs.sp[-1]))
                     return false;
                 rval = regs.sp[-1];
             }
@@ -1142,7 +1140,7 @@ static inline bool
 DefaultValue(VMFrame &f, JSType hint, Value &v, int n)
 {
     JS_ASSERT(v.isObject());
-    if (!v.toObject().defaultValue(f.cx, hint, &f.regs.sp[n]))
+    if (!DefaultValue(f.cx, &v.toObject(), hint, &f.regs.sp[n]))
         return false;
     v = f.regs.sp[n];
     return true;

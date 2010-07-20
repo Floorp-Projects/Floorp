@@ -175,14 +175,14 @@ class XPCShellTests(object):
       '-e', 'print("To start the test, type |_execute_test();|.");',
       '-i']
     else:
-      self.xpcsRunArgs = ['-e', '_execute_test();']
+      self.xpcsRunArgs = ['-e', '_execute_test(); quit(0);']
 
   def getPipes(self):
     """
       Determine the value of the stdout and stderr for the test.
       Return value is a list (pStdout, pStderr).
     """
-    if self.interactive:
+    if self.interactive or self.verbose:
       pStdout = None
       pStderr = None
     else:
@@ -379,7 +379,7 @@ class XPCShellTests(object):
 
   def runTests(self, xpcshell, xrePath=None, symbolsPath=None,
                manifest=None, testdirs=[], testPath=None,
-               interactive=False, logfiles=True,
+               interactive=False, verbose=False, logfiles=True,
                thisChunk=1, totalChunks=1, debugger=None,
                debuggerArgs=None, debuggerInteractive=False,
                profileName=None):
@@ -396,6 +396,8 @@ class XPCShellTests(object):
     |testPath|, if provided, indicates a single path and/or test to run.
     |interactive|, if set to True, indicates to provide an xpcshell prompt
       instead of automatically executing the test.
+    |verbose|, if set to True, will cause stdout/stderr from tests to
+      be printed always
     |logfiles|, if set to False, indicates not to save output to log files.
       Non-interactive only option.
     |debuggerInfo|, if set, specifies the debugger and debugger arguments
@@ -411,6 +413,7 @@ class XPCShellTests(object):
     self.testdirs = testdirs
     self.testPath = testPath
     self.interactive = interactive
+    self.verbose = verbose
     self.logfiles = logfiles
     self.totalChunks = totalChunks
     self.thisChunk = thisChunk
@@ -452,15 +455,13 @@ class XPCShellTests(object):
                 replaceBackSlashes(test)]
 
         try:
+          print "TEST-INFO | %s | running test ..." % test
+
           proc = self.launchProcess(cmdH + cmdT + self.xpcsRunArgs,
                       stdout=pStdout, stderr=pStderr, env=self.env, cwd=testdir)
 
-          # allow user to kill hung subprocess with SIGINT w/o killing this script
-          # - don't move this line above Popen, or child will inherit the SIG_IGN
-          signal.signal(signal.SIGINT, signal.SIG_IGN)
           # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
           stdout, stderr = self.communicate(proc)
-          signal.signal(signal.SIGINT, signal.SIG_DFL)
 
           if interactive:
             # Not sure what else to do here...
@@ -515,6 +516,9 @@ class XPCShellOptions(OptionParser):
     self.add_option("--interactive",
                     action="store_true", dest="interactive", default=False,
                     help="don't automatically run tests, drop to an xpcshell prompt")
+    self.add_option("--verbose",
+                    action="store_true", dest="verbose", default=False,
+                    help="always print stdout and stderr from tests")
     self.add_option("--logfiles",
                     action="store_true", dest="logfiles", default=True,
                     help="create log files (default, only used to override --no-logfiles)")

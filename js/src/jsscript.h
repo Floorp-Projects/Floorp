@@ -92,7 +92,7 @@ class UpvarCookie
     uint32 asInteger() const { return value; }
     /* isFree check should be performed before using these accessors. */
     uint16 level() const { JS_ASSERT(!isFree()); return value >> 16; }
-    uint16 slot() const { JS_ASSERT(!isFree()); return value; }
+    uint16 slot() const { JS_ASSERT(!isFree()); return uint16(value); }
 
     void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
     void set(uint16 newLevel, uint16 newSlot) { value = (uint32(newLevel) << 16) | newSlot; }

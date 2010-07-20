@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "places_test_harness.h"
-#include "nsIBrowserHistory.h"
 
 #include "mock_Link.h"
 using namespace mozilla::dom;
@@ -76,53 +75,6 @@ new_test_uri()
   do_check_success(rv);
   return testURI.forget();
 }
-
-class VisitURIObserver : public nsIObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  VisitURIObserver(int aExpectedVisits = 1) :
-    mVisits(0),
-    mExpectedVisits(aExpectedVisits)
-  {
-    nsCOMPtr<nsIObserverService> observerService =
-      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-    do_check_true(observerService);
-    (void)observerService->AddObserver(this,
-                                       "uri-visit-saved",
-                                       PR_FALSE);
-  }
-
-  void WaitForNotification()
-  {
-    while (mVisits < mExpectedVisits) {
-      (void)NS_ProcessNextEvent();
-    }
-  }
-
-  NS_IMETHOD Observe(nsISupports* aSubject,
-                     const char* aTopic,
-                     const PRUnichar* aData)
-  {
-    mVisits++;
-
-    if (mVisits == mExpectedVisits) {
-      nsCOMPtr<nsIObserverService> observerService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-      (void)observerService->RemoveObserver(this, "uri-visit-saved");
-    }
-
-    return NS_OK;
-  }
-private:
-  int mVisits;
-  int mExpectedVisits;
-};
-NS_IMPL_ISUPPORTS1(
-  VisitURIObserver,
-  nsIObserver
-)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Functions
@@ -411,145 +363,6 @@ test_observer_topic_dispatched()
   run_next_test();
 }
 
-void
-test_visituri_inserts()
-{
-  nsCOMPtr<IHistory> history(do_get_IHistory());
-  nsCOMPtr<nsIURI> lastURI(new_test_uri());
-  nsCOMPtr<nsIURI> visitedURI(new_test_uri());
-
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
-
-  nsCOMPtr<VisitURIObserver> finisher = new VisitURIObserver();
-  finisher->WaitForNotification();
-
-  PlaceRecord place;
-  do_get_place(visitedURI, place);
-
-  do_check_true(place.id > 0);
-  do_check_false(place.hidden);
-  do_check_false(place.typed);
-  do_check_true(place.visitCount == 1);
-
-  run_next_test();
-}
-
-void
-test_visituri_updates()
-{
-  nsCOMPtr<IHistory> history(do_get_IHistory());
-  nsCOMPtr<nsIURI> lastURI(new_test_uri());
-  nsCOMPtr<nsIURI> visitedURI(new_test_uri());
-  nsCOMPtr<VisitURIObserver> finisher;
-
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
-  finisher = new VisitURIObserver();
-  finisher->WaitForNotification();
-
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
-  finisher = new VisitURIObserver();
-  finisher->WaitForNotification();
-
-  PlaceRecord place;
-  do_get_place(visitedURI, place);
-
-  do_check_true(place.visitCount == 2);
-
-  run_next_test();
-}
-
-void
-test_visituri_preserves_shown_and_typed()
-{
-  nsCOMPtr<IHistory> history(do_get_IHistory());
-  nsCOMPtr<nsIURI> lastURI(new_test_uri());
-  nsCOMPtr<nsIURI> visitedURI(new_test_uri());
-
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
-  // this simulates the uri visit happening in a frame.  Normally frame
-  // transitions would be hidden unless it was previously loaded top-level
-  history->VisitURI(visitedURI, lastURI, 0);
-
-  nsCOMPtr<VisitURIObserver> finisher = new VisitURIObserver(2);
-  finisher->WaitForNotification();
-
-  PlaceRecord place;
-  do_get_place(visitedURI, place);
-  do_check_false(place.hidden);
-
-  run_next_test();
-}
-
-void
-test_visituri_creates_visit()
-{
-  nsCOMPtr<IHistory> history(do_get_IHistory());
-  nsCOMPtr<nsIURI> lastURI(new_test_uri());
-  nsCOMPtr<nsIURI> visitedURI(new_test_uri());
-
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
-  nsCOMPtr<VisitURIObserver> finisher = new VisitURIObserver();
-  finisher->WaitForNotification();
-
-  PlaceRecord place;
-  VisitRecord visit;
-  do_get_place(visitedURI, place);
-  do_get_lastVisit(place.id, visit);
-
-  do_check_true(visit.id > 0);
-  do_check_true(visit.lastVisitId == 0);
-  do_check_true(visit.transitionType == nsINavHistoryService::TRANSITION_LINK);
-
-  run_next_test();
-}
-
-void
-test_visituri_transition_typed()
-{
-  nsCOMPtr<nsINavHistoryService> navHistory = do_get_NavHistory();
-  nsCOMPtr<nsIBrowserHistory> browserHistory = do_QueryInterface(navHistory);
-  nsCOMPtr<IHistory> history(do_get_IHistory());
-  nsCOMPtr<nsIURI> lastURI(new_test_uri());
-  nsCOMPtr<nsIURI> visitedURI(new_test_uri());
-
-  browserHistory->MarkPageAsTyped(visitedURI);
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
-  nsCOMPtr<VisitURIObserver> finisher = new VisitURIObserver();
-  finisher->WaitForNotification();
-
-  PlaceRecord place;
-  VisitRecord visit;
-  do_get_place(visitedURI, place);
-  do_get_lastVisit(place.id, visit);
-
-  do_check_true(visit.transitionType == nsINavHistoryService::TRANSITION_TYPED);
-
-  run_next_test();
-}
-
-void
-test_visituri_transition_embed()
-{
-  nsCOMPtr<nsINavHistoryService> navHistory = do_get_NavHistory();
-  nsCOMPtr<nsIBrowserHistory> browserHistory = do_QueryInterface(navHistory);
-  nsCOMPtr<IHistory> history(do_get_IHistory());
-  nsCOMPtr<nsIURI> lastURI(new_test_uri());
-  nsCOMPtr<nsIURI> visitedURI(new_test_uri());
-
-  history->VisitURI(visitedURI, lastURI, 0);
-  nsCOMPtr<VisitURIObserver> finisher = new VisitURIObserver();
-  finisher->WaitForNotification();
-
-  PlaceRecord place;
-  VisitRecord visit;
-  do_get_place(visitedURI, place);
-  do_get_lastVisit(place.id, visit);
-
-  do_check_true(visit.transitionType == nsINavHistoryService::TRANSITION_EMBED);
-
-  run_next_test();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Harness
 
@@ -565,12 +378,6 @@ Test gTests[] = {
   TEST(test_new_visit_notifies_waiting_Link),
   TEST(test_RegisterVisitedCallback_returns_before_notifying),
   TEST(test_observer_topic_dispatched),
-  TEST(test_visituri_inserts),
-  TEST(test_visituri_updates),
-  TEST(test_visituri_preserves_shown_and_typed),
-  TEST(test_visituri_creates_visit),
-  TEST(test_visituri_transition_typed),
-  TEST(test_visituri_transition_embed),
 };
 
 const char* file = __FILE__;

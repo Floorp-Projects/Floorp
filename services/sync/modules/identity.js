@@ -79,18 +79,31 @@ function Identity(realm, username, password) {
   this.realm = realm;
   this.username = username;
   this._password = password;
+  if (password)
+    this._passwordUTF8 = Utils.encodeUTF8(password);
 }
 Identity.prototype = {
   get password() {
     // Look up the password then cache it
     if (this._password == null)
       for each (let login in this._logins)
-        if (login.username.toLowerCase() == this.username)
+        if (login.username.toLowerCase() == this.username) {
           this._password = login.password;
+          this._passwordUTF8 = Utils.encodeUTF8(login.password);
+        }
     return this._password;
   },
 
-  set password(value) this._password = value,
+  set password(value) {
+    this._password = value;
+    this._passwordUTF8 = Utils.encodeUTF8(value);
+  },
+
+  get passwordUTF8() {
+    if (!this._passwordUTF8)
+      this.password; // invoke password getter
+    return this._passwordUTF8;
+  },
 
   persist: function persist() {
     // Clean up any existing passwords unless it's what we're persisting

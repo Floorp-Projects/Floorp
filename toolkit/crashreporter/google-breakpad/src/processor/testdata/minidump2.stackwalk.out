@@ -4,7 +4,7 @@ CPU: x86
      GenuineIntel family 6 model 13 stepping 8
      1 CPU
 
-Crash reason:  EXCEPTION_ACCESS_VIOLATION
+Crash reason:  EXCEPTION_ACCESS_VIOLATION_WRITE
 Crash address: 0x45
 
 Thread 0 (crashed)

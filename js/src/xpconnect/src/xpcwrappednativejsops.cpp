@@ -297,8 +297,6 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
     if(!found)
     {
-        HANDLE_POSSIBLE_NAME_CASE_ERROR(ccx, set, iface, id);
-
         if(reflectToStringAndToSource)
         {
             JSNative call;

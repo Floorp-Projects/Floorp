@@ -47,7 +47,7 @@ th {
   width: 12em;
   word-wrap: break-word;
   vertical-align: top;
-  text-align: right;
+  text-align: end;
 }
 
 td {

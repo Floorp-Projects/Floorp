@@ -55,10 +55,10 @@ std::string ConvertToString(CFStringRef str) {
 
 unsigned int IntegerValueAtIndex(string &str, unsigned int idx) {
   string digits("0123456789"), temp;
-  unsigned int start = 0;
-  unsigned int end;
-  unsigned int found = 0;
-  unsigned int result = 0;
+  size_t start = 0;
+  size_t end;
+  size_t found = 0;
+  size_t result = 0;
 
   for (; found <= idx; ++found) {
     end = str.find_first_not_of(digits, start);

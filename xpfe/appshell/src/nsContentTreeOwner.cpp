@@ -817,6 +817,7 @@ private:
 NS_IMETHODIMP
 nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
                                   PRUint32 aChromeFlags,
+                                  PRBool aCalledFromJS,
                                   PRBool aPositionSpecified,
                                   PRBool aSizeSpecified,
                                   nsIURI* aURI,
@@ -866,6 +867,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
     return NS_OK;
   }
 
+  if (aCalledFromJS) {
   /* Now check our restriction pref.  The restriction pref is a power-user's
      fine-tuning pref. values:     
      0: no restrictions - divert everything
@@ -890,6 +892,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
       (aChromeFlags != nsIWebBrowserChrome::CHROME_ALL ||
        aPositionSpecified || aSizeSpecified)) {
     return NS_OK;
+    }
   }
 
   nsCOMPtr<nsIDOMWindowInternal> domWin;

@@ -154,6 +154,8 @@
 #include <process.h>
 #endif
 
+//#define COLLECT_TIME_DEBUG
+
 #ifdef DEBUG_CC
 #define IF_DEBUG_CC_PARAM(_p) , _p
 #define IF_DEBUG_CC_ONLY_PARAM(_p) _p
@@ -3146,13 +3148,17 @@ nsCycleCollector::DestroyReversedEdges()
 void
 nsCycleCollector::ShouldBeFreed(nsISupports *n)
 {
-    mExpectedGarbage.PutEntry(n);
+    if (n) {
+        mExpectedGarbage.PutEntry(n);
+    }
 }
 
 void
 nsCycleCollector::WasFreed(nsISupports *n)
 {
-    mExpectedGarbage.RemoveEntry(n);
+    if (n) {
+        mExpectedGarbage.RemoveEntry(n);
+    }
 }
 #endif
 

@@ -580,7 +580,6 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   //  METHODS
   //
   void present();
-  long sizeInBytes(in WebGLenum type);
 
   void activeTexture(in WebGLenum texture);
   void attachShader(in nsIWebGLProgram program, in nsIWebGLShader shader);

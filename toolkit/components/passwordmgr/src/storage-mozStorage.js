@@ -1376,6 +1376,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
         // Get a list of existing logins
         let logins = [];
+        let stmt;
         query = "SELECT id, encryptedUsername, encryptedPassword " +
                     "FROM moz_logins WHERE encType isnull";
         try {
@@ -1431,6 +1432,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
         // Get a list of IDs for existing logins.
         let ids = [];
+        let stmt;
         query = "SELECT id FROM moz_logins WHERE timeCreated isnull OR " +
                 "timeLastUsed isnull OR timePasswordChanged isnull OR timesUsed isnull";
         try {

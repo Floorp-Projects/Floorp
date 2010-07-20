@@ -651,6 +651,9 @@ class StackSpace
     inline Value *firstUnused() const;
 
     inline void assertIsCurrent(JSContext *cx) const;
+#ifdef DEBUG
+    CallStack *getCurrentCallStack() const { return currentCallStack; }
+#endif
 
     /*
      * Allocate nvals on the top of the stack, report error on failure.
@@ -777,8 +780,6 @@ class StackSpace
     /* Our privates leak into xpconnect, which needs a public symbol. */
     JS_REQUIRES_STACK
     JS_FRIEND_API(bool) pushInvokeArgsFriendAPI(JSContext *, uintN, InvokeArgsGuard &);
-
-    CallStack *getCurrentCallStack() const { return currentCallStack; }
 };
 
 JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
@@ -809,20 +810,6 @@ class FrameRegsIter
     JSStackFrame *fp() const { return curfp; }
     Value *sp() const { return cursp; }
     jsbytecode *pc() const { return curpc; }
-};
-
-class AllFramesIter
-{
-    CallStack         *curcs;
-    JSStackFrame      *curfp;
-
-  public:
-    JS_REQUIRES_STACK AllFramesIter(JSContext *cx);
-
-    bool done() const { return curfp == NULL; }
-    AllFramesIter &operator++();
-
-    JSStackFrame *fp() const { return curfp; }
 };
 
 /* Holds the number of recording attemps for an address. */
@@ -1108,10 +1095,9 @@ struct JSThread {
     bool                gcWaiting;
 
     /*
-     * Number of JSContext instances that are in requests on this thread. For
-     * such instances JSContext::requestDepth > 0 holds.
+     * The context running the requests.
      */
-    uint32              contextsInRequests;
+    JSContext           *requestContext;
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
@@ -1223,6 +1209,7 @@ class AutoIdVector;
 struct JSCompartment {
     JSRuntime *rt;
     JSPrincipals *principals;
+    void *data;
     bool marked;
     js::WrapperMap crossCompartmentWrappers;
 
@@ -1243,6 +1230,10 @@ struct JSCompartment {
     void sweep(JSContext *cx);
 };
 
+struct JSGCTracer : public JSTracer {
+    uint32 color;
+};
+
 struct JSRuntime {
     /* Default compartment. */
     JSCompartment       *defaultCompartment;
@@ -1255,6 +1246,9 @@ struct JSRuntime {
 
     /* Context create/destroy callback. */
     JSContextCallback   cxCallback;
+
+    /* Compartment create/destroy callback. */
+    JSCompartmentCallback compartmentCallback;
 
     /*
      * Shape regenerated whenever a prototype implicated by an "add property"
@@ -1286,7 +1280,7 @@ struct JSRuntime {
     size_t              gcMaxMallocBytes;
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcNumber;
-    JSTracer            *gcMarkingTracer;
+    JSGCTracer          *gcMarkingTracer;
     uint32              gcTriggerFactor;
     size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
@@ -1743,12 +1737,9 @@ struct JSContext
 
     /*
      * True if generating an error, to prevent runaway recursion.
-     * NB: generatingError packs with insideGCMarkCallback and throwing below.
+     * NB: generatingError packs with throwing below.
      */
     JSPackedBool        generatingError;
-
-    /* Flag to indicate that we run inside gcCallback(cx, JSGC_MARK_END). */
-    JSPackedBool        insideGCMarkCallback;
 
     /* Exception state -- the exception member is a GC root by definition. */
     JSBool              throwing;           /* is there a pending exception? */
@@ -1888,6 +1879,8 @@ struct JSContext
     jsrefcount          requestDepth;
     /* Same as requestDepth but ignoring JS_SuspendRequest/JS_ResumeRequest */
     jsrefcount          outstandingRequests;
+    JSContext           *prevRequestContext;
+    jsrefcount          prevRequestDepth;
 # ifdef DEBUG
     unsigned            checkRequestDepth;
 # endif    

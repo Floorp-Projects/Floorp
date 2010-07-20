@@ -38,8 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 /*
  * JavaScript bytecode interpreter.
  */
@@ -1691,7 +1689,7 @@ namespace reprmeter {
     }
 
     static const char *reprName[] = { "invalid", "int", "double", "bool", "special",
-                                      "string", "null", "object", 
+                                      "string", "null", "object",
                                       "fun:interp", "fun:fast", "fun:slow",
                                       "array:slow", "array:dense" };
 
@@ -1839,7 +1837,7 @@ namespace reprmeter {
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(v.isObject());                                              \
         JS_ASSERT(v == regs.sp[n]);                                           \
-        if (!v.toObject().defaultValue(cx, hint, &regs.sp[n]))                \
+        if (!DefaultValue(cx, &v.toObject(), hint, &regs.sp[n]))              \
             goto error;                                                       \
         v = regs.sp[n];                                                       \
     JS_END_MACRO
@@ -3479,7 +3477,7 @@ BEGIN_CASE(JSOP_ADD)
     } else
 #endif
     {
-        if (lval.isObject()) 
+        if (lval.isObject())
             DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);
         if (rval.isObject())
             DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);
@@ -4663,7 +4661,7 @@ BEGIN_CASE(JSOP_APPLY)
             newfp->fun = fun;
             newfp->argc = argc;
             newfp->argv = vp + 2;
-            newfp->rval = UndefinedValue();
+            newfp->rval.setUndefined();
             newfp->annotation = NULL;
             newfp->scopeChain = obj->getParent();
             newfp->flags = flags;
@@ -4891,6 +4889,7 @@ BEGIN_CASE(JSOP_CALLNAME)
             goto error;
     } else {
         sprop = (JSScopeProperty *)prop;
+  do_native_get:
         NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
         JS_UNLOCK_OBJ(cx, obj2);
     }
@@ -5463,6 +5462,8 @@ BEGIN_CASE(JSOP_DEFVAR)
             fp->slots()[index].setInt32(sprop->slot);
         }
     }
+
+    obj2->dropProperty(cx, prop);
 }
 END_CASE(JSOP_DEFVAR)
 
@@ -6021,7 +6022,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
     JSScope *scope = obj->scope();
 
     /*
-     * Probe the property cache. 
+     * Probe the property cache.
      *
      * We can not assume that the object created by JSOP_NEWINIT is still
      * single-threaded as the debugger can access it from other threads.
@@ -6514,7 +6515,7 @@ BEGIN_CASE(JSOP_XMLNAME)
         goto error;
     regs.sp[-1] = rval;
     if (op == JSOP_CALLXMLNAME)
-        SLOW_PUSH_THISV(cx, obj);
+        PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_XMLNAME)
 
@@ -6845,8 +6846,9 @@ END_CASE(JSOP_ARRAYPUSH)
   L_JSOP_DEFXMLNS:
 # endif
 
-#endif /* !JS_THREADED_INTERP */
+  L_JSOP_UNUSED218:
 
+#endif /* !JS_THREADED_INTERP */
 #if !JS_THREADED_INTERP
           default:
 #endif

@@ -271,7 +271,8 @@ bool CrashGenerationClient::IsRegistered() const {
   return crash_event_ != NULL;
 }
 
-bool CrashGenerationClient::RequestDump(EXCEPTION_POINTERS* ex_info) {
+bool CrashGenerationClient::RequestDump(EXCEPTION_POINTERS* ex_info,
+                                        MDRawAssertionInfo* assert_info) {
   if (!IsRegistered()) {
     return false;
   }
@@ -279,31 +280,21 @@ bool CrashGenerationClient::RequestDump(EXCEPTION_POINTERS* ex_info) {
   exception_pointers_ = ex_info;
   thread_id_ = GetCurrentThreadId();
 
-  assert_info_.line = 0;
-  assert_info_.type = 0;
-  assert_info_.expression[0] = 0;
-  assert_info_.file[0] = 0;
-  assert_info_.function[0] = 0;
-
-  return SignalCrashEventAndWait();
-}
-
-bool CrashGenerationClient::RequestDump(MDRawAssertionInfo* assert_info) {
-  if (!IsRegistered()) {
-    return false;
-  }
-
-  exception_pointers_ = NULL;
-
   if (assert_info) {
     memcpy(&assert_info_, assert_info, sizeof(assert_info_));
   } else {
     memset(&assert_info_, 0, sizeof(assert_info_));
   }
 
-  thread_id_ = GetCurrentThreadId();
-
   return SignalCrashEventAndWait();
+}
+
+bool CrashGenerationClient::RequestDump(EXCEPTION_POINTERS* ex_info) {
+  return RequestDump(ex_info, NULL);
+}
+
+bool CrashGenerationClient::RequestDump(MDRawAssertionInfo* assert_info) {
+  return RequestDump(NULL, assert_info);
 }
 
 bool CrashGenerationClient::SignalCrashEventAndWait() {

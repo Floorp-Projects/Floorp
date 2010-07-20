@@ -235,11 +235,14 @@ public:
    */
   nsIFrame* GetIgnoreScrollFrame() { return mIgnoreScrollFrame; }
   /**
-   * Calling this setter makes us ignore all dirty rects and include all
-   * descendant frames in the display list, wherever they may be positioned.
+   * Calling this setter makes us:
+   * 1. include all positioned descendant frames in the display list,
+   *    wherever they may be positioned (even outside the dirty rects).
+   * 2. exclude all leaf frames that does not have the NS_FRAME_SELECTED_CONTENT
+   *    bit.
    */
-  void SetPaintAllFrames() { mPaintAllFrames = PR_TRUE; }
-  PRBool GetPaintAllFrames() { return mPaintAllFrames; }
+  void SetSelectedFramesOnly() { mSelectedFramesOnly = PR_TRUE; }
+  PRBool GetSelectedFramesOnly() { return mSelectedFramesOnly; }
   /**
    * Calling this setter makes us compute accurate visible regions at the cost
    * of performance if regions get very complex.
@@ -426,7 +429,7 @@ private:
   PRPackedBool                   mEventDelivery;
   PRPackedBool                   mIsBackgroundOnly;
   PRPackedBool                   mIsAtRootOfPseudoStackingContext;
-  PRPackedBool                   mPaintAllFrames;
+  PRPackedBool                   mSelectedFramesOnly;
   PRPackedBool                   mAccurateVisibleRegions;
   // True when we're building a display list that's directly or indirectly
   // under an nsDisplayTransform

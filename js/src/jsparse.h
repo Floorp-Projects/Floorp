@@ -1131,7 +1131,7 @@ struct Compiler
                   const jschar *chars, size_t length,
                   FILE *file, const char *filename, uintN lineno,
                   JSString *source = NULL,
-                  uint16 staticLevel = 0);
+                  uintN staticLevel = 0);
 };
 
 } /* namespace js */

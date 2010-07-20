@@ -51,10 +51,12 @@ function do_run_test()
   let cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
            getService(Ci.nsIChromeRegistry);
 
-  var runtime = Components.classes["@mozilla.org/xre/app-info;1"]
-                .getService(Components.interfaces.nsIXULRuntime);
-  if (runtime.processType ==
-      Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+  // If we don't have libxul or e10s then we don't have process separation, so
+  // we don't need to worry about checking for new chrome.
+  var appInfo = Cc["@mozilla.org/xre/app-info;1"];
+  if (!appInfo ||
+      (appInfo.getService(Ci.nsIXULRuntime).processType ==
+       Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)) {
     cr.checkForNewChrome();
   }
 

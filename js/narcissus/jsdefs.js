@@ -72,7 +72,7 @@ var tokens = [
     // Nonterminal tree node type codes.
     "SCRIPT", "BLOCK", "LABEL", "FOR_IN", "CALL", "NEW_WITH_ARGS", "INDEX",
     "ARRAY_INIT", "OBJECT_INIT", "PROPERTY_INIT", "GETTER", "SETTER",
-    "GROUP", "LIST",
+    "GROUP", "LIST", "LET_STM", "LET_EXP", "LET_DEF",
 
     // Terminals.
     "IDENTIFIER", "NUMBER", "STRING", "REGEXP",
@@ -84,11 +84,13 @@ var tokens = [
     "else", "enum",
     "false", "finally", "for", "function",
     "if", "in", "instanceof",
+    "let",
     "new", "null",
     "return",
     "switch",
     "this", "throw", "true", "try", "typeof",
     "var", "void",
+    "yield",
     "while", "with",
 ];
 
@@ -167,4 +169,12 @@ var assignOps = ['|', '^', '&', '<<', '>>', '>>>', '+', '-', '*', '/', '%'];
 for (i = 0, j = assignOps.length; i < j; i++) {
     t = assignOps[i];
     assignOps[t] = tokens[t];
+}
+
+function defineGetter(obj, prop, fn, dontDelete, dontEnum) {
+    Object.defineProperty(obj, prop, { get: fn, configurable: !dontDelete, enumerable: !dontEnum });
+}
+
+function defineProperty(obj, prop, val, dontDelete, readOnly, dontEnum) {
+    Object.defineProperty(obj, prop, { value: val, writable: !readOnly, configurable: !dontDelete, enumerable: !dontEnum });
 }

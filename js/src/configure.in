@@ -1276,7 +1276,7 @@ x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
     ;;
 
-arm)
+arm*)
     CPU_ARCH=arm
     ;;
 esac
@@ -1305,8 +1305,8 @@ if test "$GNU_CC"; then
     ASFLAGS="$ASFLAGS -fPIC"
     _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
     _MOZ_RTTI_FLAGS_OFF=${_COMPILER_PREFIX}-fno-rtti
-    _MOZ_EXCEPTIONS_FLAGS_ON='-fhandle-exceptions'
-    _MOZ_EXCEPTIONS_FLAGS_OFF='-fno-handle-exceptions'
+    _MOZ_EXCEPTIONS_FLAGS_ON='-fexceptions'
+    _MOZ_EXCEPTIONS_FLAGS_OFF='-fno-exceptions'
 
     # Turn on GNU specific features
     # -Wall - turn on all warnings
@@ -2231,8 +2231,8 @@ ia64*-hpux*)
 	USE_PTHREADS=1
 	_PEDANTIC=
 	LIBS="$LIBS -lsocket -lstdc++"
-	_DEFINES_CFLAGS='-Wp,-include -Wp,$(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
-	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -Wp,-include -Wp,$(DEPTH)/js-confdefs.h -D_POSIX_C_SOURCE=199506'
+	_DEFINES_CFLAGS='-include $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
+	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/js-confdefs.h -D_POSIX_C_SOURCE=199506'
 	if test "$with_x" != "yes"
 	then
 		_PLATFORM_DEFAULT_TOOLKIT="photon"
@@ -3599,32 +3599,6 @@ esac
 
 dnl ===================================================================
 dnl ========================================================
-dnl By default, turn rtti and exceptions off on g++/egcs
-dnl ========================================================
-if test "$GNU_CXX"; then
-
-  AC_MSG_CHECKING(for C++ exceptions flag)
-
-  dnl They changed -f[no-]handle-exceptions to -f[no-]exceptions in g++ 2.8
-  AC_CACHE_VAL(ac_cv_cxx_exceptions_flags,
-  [echo "int main() { return 0; }" | cat > conftest.C
-
-  ${CXX-g++} ${CXXFLAGS} -c -fno-handle-exceptions conftest.C > conftest.out 2>&1
-
-  if egrep "warning.*renamed" conftest.out >/dev/null; then
-    ac_cv_cxx_exceptions_flags=${_COMPILER_PREFIX}-fno-exceptions
-  else
-    ac_cv_cxx_exceptions_flags=${_COMPILER_PREFIX}-fno-handle-exceptions
-  fi
-
-  rm -f conftest*])
-
-  AC_MSG_RESULT($ac_cv_cxx_exceptions_flags)
-  _MOZ_EXCEPTIONS_FLAGS_OFF=$ac_cv_cxx_exceptions_flags
-  _MOZ_EXCEPTIONS_FLAGS_ON=`echo $ac_cv_cxx_exceptions_flags | sed 's|no-||'`
-fi
-
-dnl ========================================================
 dnl Put your C++ language/feature checks below
 dnl ========================================================
 AC_LANG_CPLUSPLUS
@@ -4293,17 +4267,6 @@ if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
 fi
 
 dnl ========================================================
-dnl Enable Narcissus
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(narcissus,
-[  --enable-narcissus      Build with Narcissus code enabled],
-    NARCISSUS=1,
-    NARCISSUS= )
-if test -n "$NARCISSUS"; then
-    AC_DEFINE(NARCISSUS)
-fi
-
-dnl ========================================================
 dnl = Enable trace malloc
 dnl ========================================================
 NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
@@ -4939,7 +4902,7 @@ if test "$_cpp_md_flag"; then
   if test "$OS_ARCH" = "OpenVMS"; then
     _DEPEND_CFLAGS='$(subst =, ,$(filter-out %/.pp,-MM=-MD=-MF=$(MDDEPDIR)/$(basename $(@F)).pp))'
   else
-    _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(basename $(@F)).pp)'
+    _DEPEND_CFLAGS='$(filter-out %/.pp,-MD -MF $(MDDEPDIR)/$(basename $(@F)).pp)'
   fi
   dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
   if test "$SOLARIS_SUNPRO_CC"; then

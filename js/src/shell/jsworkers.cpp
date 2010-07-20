@@ -610,7 +610,7 @@ class Worker : public WorkerParent
         JS_SetVersion(context, JS_GetVersion(parentcx));
         JS_SetContextPrivate(context, this);
         JS_SetOperationCallback(context, jsOperationCallback);
-        JS_TransferRequest(parentcx, context);
+        JS_BeginRequest(context);
 
         JSObject *global = threadPool->getHooks()->newGlobalObject(context);
         JSObject *post, *proto, *ctor;
@@ -638,14 +638,14 @@ class Worker : public WorkerParent
         if (!ctor || !JS_SetReservedSlot(context, ctor, 0, PRIVATE_TO_JSVAL(this)))
             goto bad;
 
-        JS_TransferRequest(context, parentcx);
+        JS_EndRequest(context);
         JS_ClearContextThread(context);
         return true;
 
     bad:
+        JS_EndRequest(context);
         JS_DestroyContext(context);
         context = NULL;
-        JS_BeginRequest(parentcx);
         return false;
     }
 

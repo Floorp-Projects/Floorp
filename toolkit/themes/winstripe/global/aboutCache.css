@@ -46,14 +46,16 @@ table {
   -moz-border-radius: 10px;
 }
 
-#disk { background-color: lightblue; }
-#memory { background-color: lightgreen; }
-#offline { background-color: plum; }
+#disk,
+#memory,
+#offline {
+  background-color: rgba(0, 0, 0, .1);
+}
 
 th {
   width: 14em;
   white-space: nowrap;
-  text-align: right;
+  text-align: end;
 }
 
 td {
@@ -64,16 +66,20 @@ td {
 #col-key {
   width: 60%;
 }
-#col-dataSize, #col-fetchCount,
-#col-lastModified, #col-expires {
+
+#col-dataSize,
+#col-fetchCount,
+#col-lastModified,
+#col-expires {
   width: 13%;
 }
 
 #entries > tbody > tr:nth-child(odd) {
-  background: #fcfcfc;
+  background-color: rgba(0, 0, 0, .03);
 }
+
 #entries > tbody > tr:nth-child(even) {
-  background: #f4f4f4;
+  background-color: rgba(0, 0, 0, .06);
 }
 
 #entries > tbody > tr > td {
@@ -88,5 +94,5 @@ td {
 
 #entries > thead > tr > th:first-child,
 #entries > tbody > tr > td:first-child {
-  text-align: left;
+  text-align: start;
 }

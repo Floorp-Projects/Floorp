@@ -3,6 +3,6 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:textarea xmlns:html="http://www.w3.org/1999/xhtml" style="width: 200px; height: 200px; margin: 0; -moz-resize: none;"/>
+<html:textarea xmlns:html="http://www.w3.org/1999/xhtml" style="width: 200px; height: 200px; margin: 0; resize: none;"/>
 
 </window>

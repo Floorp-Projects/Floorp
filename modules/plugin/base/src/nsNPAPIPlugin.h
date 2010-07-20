@@ -116,12 +116,6 @@ namespace mozilla {
 namespace plugins {
 namespace parent {
 
-// On 32-bit platforms, sizeof(jsval) != sizeof(NPIdentifier), so we need to
-// use an alternate encoding scheme. The following inline helpers provide an
-// abstraction for setting and getting the values of NPIdentifiers that should
-// always be used instead of casting an NPIdentifier to a jsval and using the
-// jsapi.
-
 JS_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(jsid));
 
 static inline jsid

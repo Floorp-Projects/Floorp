@@ -2401,19 +2401,23 @@ CallMethodHelper::~CallMethodHelper()
                 // always free the array itself
                 nsMemory::Free(p);
             }
-            else if(dp->IsValAllocated())
-                nsMemory::Free(p);
-            else if(dp->IsValInterface())
-                ((nsISupports*)p)->Release();
-            else if(dp->IsValDOMString())
-                mCallContext.DeleteString((nsAString*)p);
-            else if(dp->IsValUTF8String())
-                delete (nsCString*) p;
-            else if(dp->IsValCString())
-                delete (nsCString*) p;
-            else if(dp->IsValJSRoot())
-                JS_RemoveValueRoot(mCallContext, (jsval*)dp->ptr);
-        }   
+            else
+            {
+                if(dp->IsValJSRoot())
+                    JS_RemoveValueRoot(mCallContext, (jsval*)dp->ptr);
+
+                if(dp->IsValAllocated())
+                    nsMemory::Free(p);
+                else if(dp->IsValInterface())
+                    ((nsISupports*)p)->Release();
+                else if(dp->IsValDOMString())
+                    mCallContext.DeleteString((nsAString*)p);
+                else if(dp->IsValUTF8String())
+                    delete (nsCString*) p;
+                else if(dp->IsValCString())
+                    delete (nsCString*) p;
+            }
+        }
     }
 
 }
@@ -2793,11 +2797,13 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                 }
                 else
                 {
-                    jsval *rootp = (jsval *)&dp->val.p;
+                    JS_STATIC_ASSERT(sizeof(jsval) <= sizeof(uint64));
+                    jsval *rootp = (jsval *)&dp->val.u64;
                     dp->ptr = rootp;
                     *rootp = JSVAL_VOID;
                     if (!JS_AddValueRoot(mCallContext, rootp))
                         return JS_FALSE;
+                    dp->SetValIsJSRoot();
                 }
             }
 
@@ -2879,13 +2885,24 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                     break;
                 }
             }
+            else {
+                if(type_tag == nsXPTType::T_JSVAL) {
+                    dp->SetValIsAllocated();
+                    useAllocator = JS_TRUE;
+                }
+            }
 
             // Do this *after* the above because in the case where we have a
             // "T_DOMSTRING && IsDipper()" then arg might be null since this
             // is really an 'out' param masquerading as an 'in' param.
             NS_ASSERTION(i < mArgc || paramInfo.IsOptional(),
                          "Expected either enough arguments or an optional argument");
-            src = i < mArgc ? mArgv[i] : JSVAL_NULL;
+            if(i < mArgc)
+                src = mArgv[i];
+            else if(type_tag == nsXPTType::T_JSVAL)
+                src = JSVAL_VOID;
+            else
+                src = JSVAL_NULL;
         }
 
         nsID param_iid;
@@ -3321,29 +3338,6 @@ XPCWrappedNative::ToString(XPCCallContext& ccx,
 }
 
 /***************************************************************************/
-
-#ifdef XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
-// static
-void
-XPCWrappedNative::HandlePossibleNameCaseError(JSContext* cx,
-                                              XPCNativeSet* set,
-                                              XPCNativeInterface* iface,
-                                              jsid name)
-{
-    XPCCallContext ccx(JS_CALLER, cx);
-    HandlePossibleNameCaseError(ccx, set, iface, name);
-}
-
-// static
-void
-XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
-                                              XPCNativeSet* set,
-                                              XPCNativeInterface* iface,
-                                              jsid name)
-{
-    // TODO: remove this all more thoroughly.
-}
-#endif
 
 #ifdef XPC_CHECK_CLASSINFO_CLAIMS
 static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper)

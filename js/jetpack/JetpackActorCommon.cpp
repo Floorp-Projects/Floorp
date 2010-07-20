@@ -71,7 +71,7 @@ public:
   > MapType;
 
   OpaqueSeenType() {
-    NS_ASSERTION(map.init(1), "Failed to initialize map");
+    (void) map.init(1);
   }
 
   bool ok() { return map.initialized(); }
@@ -452,23 +452,17 @@ JetpackActorCommon::RecvMessage(JSContext* cx,
   JSObject* implGlobal = JS_GetGlobalObject(cx);
   js::AutoValueRooter rval(cx);
 
-  const uint32 savedOptions =
-    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
-
   for (PRUint32 i = 0; i < snapshot.Length(); ++i) {
     Variant* vp = results ? results->AppendElement() : NULL;
     rval.set(JSVAL_VOID);
     if (!JS_CallFunctionValue(cx, implGlobal, snapshot[i], argc, argv,
                               rval.jsval_addr())) {
-      // If a receiver throws, we drop the exception on the floor.
-      JS_ClearPendingException(cx);
+      (void) JS_ReportPendingException(cx);
       if (vp)
         *vp = void_t();
     } else if (vp && !jsval_to_Variant(cx, rval.jsval_value(), vp))
       *vp = void_t();
   }
-
-  JS_SetOptions(cx, savedOptions);
 
   return true;
 }

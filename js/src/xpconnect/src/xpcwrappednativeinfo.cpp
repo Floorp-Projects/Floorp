@@ -207,7 +207,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
     JSFunction *fun;
     // Switching contexts, suspend the old and enter the new request.
     {
-        JSAutoTransferRequest transfer(ccx, cx);
+        JSAutoRequest req(cx);
         fun = JS_NewFunction(cx, callback, argc, flags, nsnull, memberName);
     }
 

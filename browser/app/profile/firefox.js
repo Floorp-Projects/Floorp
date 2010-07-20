@@ -320,8 +320,6 @@ pref("browser.tabs.loadInBackground", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
-pref("browser.tabs.tabMinWidth", 100);
-pref("browser.tabs.tabMaxWidth", 250);
 pref("browser.tabs.tabClipWidth", 140);
 
 // Where to show tab close buttons:

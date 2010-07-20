@@ -117,10 +117,10 @@ void test()
 
     test_twice_bigger_type<T>::run();
 
-    CheckedInt<T> max_value(integer_traits<T>::max());
-    CheckedInt<T> min_value(integer_traits<T>::min());
+    CheckedInt<T> max_value(integer_traits<T>::max_value());
+    CheckedInt<T> min_value(integer_traits<T>::min_value());
 
-    // check min() and max(), since they are custom implementations and a mistake there
+    // check min_value() and max_value(), since they are custom implementations and a mistake there
     // could potentially NOT be caught by any other tests... while making everything wrong!
 
     T bit = 1;
@@ -415,10 +415,10 @@ void test()
         if (is_U_signed) \
             VERIFY_IS_VALID_IF(CheckedInt<T>(U(-1)), is_signed); \
         if (sizeof(U) > sizeof(T)) \
-            VERIFY_IS_INVALID(CheckedInt<T>(U(integer_traits<T>::max())+1)); \
-        VERIFY_IS_VALID_IF(CheckedInt<T>(integer_traits<U>::max()), \
+            VERIFY_IS_INVALID(CheckedInt<T>(U(integer_traits<T>::max_value())+1)); \
+        VERIFY_IS_VALID_IF(CheckedInt<T>(integer_traits<U>::max_value()), \
             (sizeof(T) > sizeof(U) || ((sizeof(T) == sizeof(U)) && (is_U_signed || !is_signed)))); \
-        VERIFY_IS_VALID_IF(CheckedInt<T>(integer_traits<U>::min()), \
+        VERIFY_IS_VALID_IF(CheckedInt<T>(integer_traits<U>::min_value()), \
             is_U_signed == false ? 1 : \
             bool(is_signed) == false ? 0 : \
             sizeof(T) >= sizeof(U)); \
@@ -431,6 +431,32 @@ void test()
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint32)
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRInt64)
     VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(PRUint64)
+
+    /* Test increment/decrement operators */
+
+    CheckedInt<T> x, y;
+    x = one;
+    y = x++;
+    VERIFY(x == two);
+    VERIFY(y == one);
+    x = one;
+    y = ++x;
+    VERIFY(x == two);
+    VERIFY(y == two);
+    x = one;
+    y = x--;
+    VERIFY(x == zero);
+    VERIFY(y == one);
+    x = one;
+    y = --x;
+    VERIFY(x == zero);
+    VERIFY(y == zero);
+    x = max_value;
+    VERIFY_IS_VALID(x++);
+    VERIFY_IS_INVALID(++x);
+    x = min_value;
+    VERIFY_IS_VALID(x--);
+    VERIFY_IS_INVALID(--x);
 }
 
 } // end namespace CheckedInt_test

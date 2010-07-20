@@ -146,8 +146,6 @@
               return "spring";
             case "toolbarspacer":
               return "spacer";
-            case "splitter":
-              return "splitter";
             default:
               return aNode.id;
           }
@@ -259,11 +257,6 @@
                 newItem.id = aId + Date.now() + this.childNodes.length;
                 if (aId == "spring")
                   newItem.flex = 1;
-                break;
-              case "splitter":
-                newItem = document.createElementNS(XUL_NS, "splitter");
-                newItem.id = aId + Date.now() + this.childNodes.length;
-                newItem.className = "toolbar-splitter";
                 break;
               default:
                 var toolbox = this.toolbox;

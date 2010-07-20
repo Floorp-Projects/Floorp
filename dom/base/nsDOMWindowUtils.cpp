@@ -1268,6 +1268,27 @@ nsDOMWindowUtils::GetVisitedDependentComputedStyle(
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::EnterModalState()
+{
+  mWindow->EnterModalState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::LeaveModalState()
+{
+  mWindow->LeaveModalState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::IsInModalState(PRBool *retval)
+{
+  *retval = mWindow->IsInModalState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetParent()
 {
   // This wasn't privileged in the past, but better to expose less than more.

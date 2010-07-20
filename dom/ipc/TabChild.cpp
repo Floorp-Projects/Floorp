@@ -311,6 +311,7 @@ TabChild::GetInterface(const nsIID & aIID, void **aSink)
 
 NS_IMETHODIMP
 TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
+                        PRBool aCalledFromJS,
                         PRBool aPositionSpecified, PRBool aSizeSpecified,
                         nsIURI* aURI, const nsAString& aName,
                         const nsACString& aFeatures, PRBool* aWindowIsNew,
@@ -992,8 +993,9 @@ TabChild::InitTabChildGlobal()
 
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(cx, scopeSupports,
-                                         NS_GET_IID(nsISupports), flags,
-                                         getter_AddRefs(mRootGlobal));
+                                         NS_GET_IID(nsISupports),
+                                         scope->GetPrincipal(), EmptyCString(),
+                                         flags, getter_AddRefs(mRootGlobal));
   NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);

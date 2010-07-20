@@ -3443,8 +3443,21 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         DispatchEvent(&contextMenuEvent, status);
     }
     else {
-        // send the key press event
-        DispatchEvent(&event, status);
+        // If the character code is in the BMP, send the key press event.
+        // Otherwise, send a text event with the equivalent UTF-16 string.
+        if (IS_IN_BMP(event.charCode)) {
+            DispatchEvent(&event, status);
+        }
+        else {
+            nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
+            PRUnichar textString[3];
+            textString[0] = H_SURROGATE(event.charCode);
+            textString[1] = L_SURROGATE(event.charCode);
+            textString[2] = 0;
+            textEvent.theText = textString;
+            textEvent.time = event.time;
+            DispatchEvent(&textEvent, status);
+        }
     }
 
     // If the event was consumed, return.

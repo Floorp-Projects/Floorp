@@ -47,8 +47,7 @@
 
 #define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                                      \
   {                                                                                       \
-    _cmdClass* theCmd;                                                                    \
-    NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
+    _cmdClass* theCmd = new _cmdClass();                                                  \
     NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                                           \
     rv = inCommandTable->RegisterCommand(_cmdName,                                        \
                                    static_cast<nsIControllerCommand *>(theCmd));          \
@@ -56,8 +55,7 @@
 
 #define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                                    \
   {                                                                                       \
-    _cmdClass* theCmd;                                                                    \
-    NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
+    _cmdClass* theCmd = new _cmdClass();                                                  \
     NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                                           \
     rv = inCommandTable->RegisterCommand(_cmdName,                                        \
                                    static_cast<nsIControllerCommand *>(theCmd));
