@@ -518,6 +518,48 @@ class GetPropCompiler : public PICStubCompiler
         repatcher.relinkCallerToTrampoline(retPtr, target);
     }
 
+    bool generateArgsLengthStub()
+    {
+        Assembler masm;
+
+        Address clasp(pic.objReg, offsetof(JSObject, clasp));
+        Jump notArgs = masm.branchPtr(Assembler::NotEqual, clasp, ImmPtr(&js_SlowArrayClass));
+
+        masm.loadData32(Address(pic.objReg, offsetof(JSObject, fslots) +
+                                            JSObject::JSSLOT_ARGS_LENGTH * sizeof(Value)),
+                        pic.objReg);
+        masm.move(pic.objReg, pic.shapeReg);
+        masm.and32(Imm32(1), pic.shapeReg);
+        Jump overridden = masm.branchTest32(Assembler::NonZero, pic.shapeReg, pic.shapeReg);
+        
+        masm.move(ImmTag(JSVAL_TAG_INT32), pic.shapeReg);
+        Jump done = masm.jump();
+
+        JSC::ExecutablePool *ep = getExecPool(masm.size());
+        if (!ep || !pic.execPools.append(ep)) {
+            if (ep)
+                ep->release();
+            js_ReportOutOfMemory(f.cx);
+            return false;
+        }
+
+        JSC::LinkBuffer buffer(&masm, ep);
+        buffer.link(notArgs, pic.slowPathStart);
+        buffer.link(overridden, pic.slowPathStart);
+        buffer.link(done, pic.storeBack);
+
+        CodeLocationLabel start = buffer.finalizeCodeAddendum();
+        JaegerSpew(JSpew_PICs, "generate args length stub at %p\n",
+                   start.executableAddress());
+
+        PICRepatchBuffer repatcher(pic, pic.lastPathStart());
+        patchPreviousToHere(repatcher, start);
+
+        disable("args length done");
+
+        return true;
+    }
+
     bool generateArrayLengthStub()
     {
         Assembler masm;
@@ -751,6 +793,7 @@ class GetPropCompiler : public PICStubCompiler
 
         Label start;
         Jump shapeGuard;
+        Jump argsLenGuard;
         if (obj->isDenseArray()) {
             start = masm.label();
             shapeGuard = masm.branchPtr(Assembler::NotEqual,
@@ -1251,13 +1294,21 @@ ic::GetProp(VMFrame &f, uint32 index)
             return;
         } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
-            if (obj->isArray()) {
+            if (obj->isArray() || (obj->isArguments() && !obj->isArgsLengthOverridden())) {
                 GetPropCompiler cc(f, script, obj, pic, NULL, stubs::Length);
-                if (!cc.generateArrayLengthStub()) {
-                    cc.disable("error");
-                    THROW();
+                if (obj->isArray()) {
+                    if (!cc.generateArrayLengthStub()) {
+                        cc.disable("error");
+                        THROW();
+                    }
+                    f.regs.sp[-1].setNumber(obj->getArrayLength());
+                } else if (obj->isArguments()) {
+                    if (!cc.generateArgsLengthStub()) {
+                        cc.disable("error");
+                        THROW();
+                    }
+                    f.regs.sp[-1].setInt32(int32_t(obj->getArgsLength()));
                 }
-                f.regs.sp[-1].setNumber(obj->getArrayLength());
                 return;
             }
         }

@@ -529,11 +529,11 @@ struct JSObject {
      * Argument index i is stored in dslots[i], accessible via
      * {get,set}ArgsElement().
      */
-    static const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
     static const uint32 JSSLOT_ARGS_CALLEE = JSSLOT_PRIVATE + 2;
 
   public:
     /* Number of extra fixed slots besides JSSLOT_PRIVATE. */
+    static const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
     static const uint32 ARGS_FIXED_RESERVED_SLOTS = 2;
 
     inline uint32 getArgsLength() const;
