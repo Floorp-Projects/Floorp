@@ -2087,7 +2087,6 @@ JSContext::saveActiveCallStack()
     JS_ASSERT(fp->savedPC == JSStackFrame::sInvalidPC);
     fp->savedPC = regs->pc;
     setCurrentFrame(NULL);
-    compartment = globalObject ? globalObject->getCompartment(this) : runtime->defaultCompartment;
     setCurrentRegs(NULL);
 }
 
@@ -2096,8 +2095,6 @@ JSContext::restoreCallStack()
 {
     js::CallStack *ccs = currentCallStack;
     setCurrentFrame(ccs->getSuspendedFrame());
-    JSObject *obj = JS_GetGlobalForScopeChain(this);
-    compartment = obj ? obj->getCompartment(this) : runtime->defaultCompartment;
     setCurrentRegs(ccs->getSuspendedRegs());
     ccs->restore();
 #ifdef DEBUG
