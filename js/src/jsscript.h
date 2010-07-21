@@ -169,6 +169,7 @@ namespace ic {
     struct MICInfo;
 # endif
 }
+union CallSite;
 }
 }
 #endif
@@ -226,14 +227,14 @@ struct JSScript {
 # if defined JS_MONOIC
     js::mjit::ic::MICInfo *mics; /* MICs in this script. */
 # endif
-# ifdef DEBUG
-    uint32          jitLength;  /* length of JIT'd code */
+    js::mjit::CallSite *callSites;
+    uint32          inlineLength;  /* length of inline JIT'd code */
+    uint32          outOfLineLength; /* length of out of line JIT'd code */
 
     inline bool isValidJitCode(void *jcode) {
-        return (char*)jcode >= (char*)ncode &&
-               (char*)jcode < (char*)ncode + jitLength;
+        return (char*)jcode >= (char*)nmap[-1] &&
+               (char*)jcode < (char*)nmap[-1] + inlineLength + outOfLineLength;
     }
-# endif
 
 # if defined JS_POLYIC
     inline uint32 numPICs() {
