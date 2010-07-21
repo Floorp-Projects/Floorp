@@ -2017,7 +2017,7 @@ function HUDConsole(aHeadsUpDisplay)
       logLevel: aLevel,
       hudId: hud.hudId,
       message: message,
-      timeStamp: ts,
+      timestamp: ts,
       origin: "HUDConsole",
     };
 
