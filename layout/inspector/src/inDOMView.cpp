@@ -694,6 +694,8 @@ inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     return;
   }
 
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+  
   // get the dom attribute node, if there is any
   nsCOMPtr<nsIDOMNode> content(do_QueryInterface(aContent));
   nsCOMPtr<nsIDOMElement> el(do_QueryInterface(aContent));

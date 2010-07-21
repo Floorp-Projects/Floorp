@@ -764,6 +764,8 @@ nsDOMAttribute::AttributeChanged(nsIDocument* aDocument,
     return;
   }
 
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+  
   // Just blow away our mChild and recreate it if needed
   if (mChild) {
     static_cast<nsTextNode*>(mChild)->UnbindFromAttribute();

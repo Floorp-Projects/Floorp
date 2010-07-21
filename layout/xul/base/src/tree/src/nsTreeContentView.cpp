@@ -820,6 +820,9 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
                                     nsIAtom*     aAttribute,
                                     PRInt32      aModType)
 {
+  // Lots of codepaths under here that do all sorts of stuff, so be safe.
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
   // Make sure this notification concerns us.
   // First check the tag to see if it's one that we care about.
   nsIAtom *tag = aContent->Tag();

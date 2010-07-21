@@ -146,7 +146,7 @@ nsNodeUtils::AttributeChanged(nsIContent* aContent,
                               PRInt32 aModType)
 {
   nsIDocument* doc = aContent->GetOwnerDoc();
-  IMPL_STRONGREF_MUTATION_NOTIFICATION(AttributeChanged, aContent,
+  IMPL_MUTATION_NOTIFICATION(AttributeChanged, aContent,
                              (doc, aContent, aNameSpaceID, aAttribute,
                               aModType));
 }

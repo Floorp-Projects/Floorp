@@ -151,6 +151,7 @@ void nsMenuGroupOwnerX::AttributeChanged(nsIDocument * aDocument,
                                          nsIAtom * aAttribute,
                                          PRInt32 aModType)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   nsChangeObserver* obs = LookupContentChangeObserver(aContent);
   if (obs)
     obs->ObserveAttributeChanged(aDocument, aContent, aAttribute);
