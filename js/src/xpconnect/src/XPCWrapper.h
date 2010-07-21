@@ -445,6 +445,13 @@ WrapFunction(JSContext *cx, JSObject *wrapperObj, JSObject *funobj, jsval *v,
 }
 
 /**
+ * Given a JSObject that might represent a Window object, ensures that the
+ * window object has an inner window.
+ */
+void
+CheckWindow(XPCWrappedNative *wn);
+
+/**
  * Given a potentially-wrapped object, creates a wrapper for it.
  */
 JSBool
