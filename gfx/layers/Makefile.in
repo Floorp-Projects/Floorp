@@ -47,6 +47,10 @@ VPATH       = \
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_IPC
+VPATH       += $(srcdir)/ipc
+endif
+
 MODULE         = thebes
 LIBRARY_NAME   = layers
 LIBXUL_LIBRARY = 1
@@ -101,6 +105,10 @@ endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_IPC
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+endif
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
 
