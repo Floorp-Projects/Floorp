@@ -46,6 +46,7 @@
 #include "mozilla/layers/PLayerChild.h"
 #include "mozilla/layers/PLayersChild.h"
 #include "ShadowLayers.h"
+#include "ShadowLayerChild.h"
 
 namespace mozilla {
 namespace layers {
@@ -291,6 +292,13 @@ ShadowLayerForwarder::EndTransaction(nsTArray<EditReply>* aReplies)
 
   MOZ_LAYERS_LOG(("[LayersForwarder] ... done"));
   return PR_TRUE;
+}
+
+PLayerChild*
+ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
+{
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
+  return mShadowManager->SendPLayerConstructor(new ShadowLayerChild(aLayer));
 }
 
 } // namespace layers
