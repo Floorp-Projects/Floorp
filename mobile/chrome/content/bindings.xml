@@ -40,6 +40,8 @@
           }
         ]]>
       </handler>
+      <handler event="text" phase="bubbling"
+               action="if (this.mController.input == this) this.mController.handleText();"/>
     </handlers>
   </binding>
 
