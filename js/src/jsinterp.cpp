@@ -457,7 +457,7 @@ RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain
         return mjit::JaegerShot(cx);
 #endif
 
-    return Interpret(cx);
+    return Interpret(cx, cx->fp);
 }
 
 static JS_REQUIRES_STACK bool
@@ -2083,7 +2083,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 namespace js {
 
 JS_REQUIRES_STACK bool
-Interpret(JSContext *cx)
+Interpret(JSContext *cx, JSStackFrame *entryFrame, uintptr_t inlineCallCount)
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_INTERP);
@@ -2207,7 +2207,15 @@ Interpret(JSContext *cx)
 #endif /* !JS_THREADED_INTERP */
 
     /* Check for too deep of a native thread stack. */
+#ifdef JS_TRACER
+    JS_CHECK_RECURSION(cx, do {
+            if (TRACE_RECORDER(cx))
+                AbortRecording(cx, "too much recursion");
+            return JS_FALSE;
+        } while (0););
+#else
     JS_CHECK_RECURSION(cx, return JS_FALSE);
+#endif
 
     JSRuntime *const rt = cx->runtime;
 
@@ -2219,8 +2227,8 @@ Interpret(JSContext *cx)
     JS_ASSERT(fp->thisv.isObjectOrNull());
     JS_ASSERT_IF(!fp->fun, !fp->thisv.isNull());
 
-    /* Count of JS function calls that nest in this C Interpret frame. */
-    uintN inlineCallCount = 0;
+    if (!entryFrame)
+        entryFrame = fp;
 
     /*
      * Initialize the index segment register used by LOAD_ATOM and
@@ -2230,6 +2238,8 @@ Interpret(JSContext *cx)
      * the segment from atoms pointer first.
      */
     JSAtom **atoms = script->atomMap.vector;
+
+    bool leaveOnTracePoint = (fp->flags & JSFRAME_BAILING) && !fp->imacpc;
 
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
@@ -2292,6 +2302,7 @@ Interpret(JSContext *cx)
                 JS_ASSERT(TRACE_RECORDER(cx));                                \
                 MONITOR_BRANCH_TRACEVIS;                                      \
                 ENABLE_INTERRUPTS();                                          \
+                leaveOnTracePoint = false;                                    \
             }                                                                 \
             RESTORE_INTERP_VARS();                                            \
             JS_ASSERT_IF(cx->throwing, r == MONITOR_ERROR);                   \
@@ -2320,6 +2331,15 @@ Interpret(JSContext *cx)
 #define TRACE_RECORDER(cx) (false)
 #endif
 
+#define LEAVE_ON_TRACE_POINT()                                                \
+    do {                                                                      \
+        if (leaveOnTracePoint && !fp->imacpc &&                               \
+            script->nmap && script->nmap[regs.pc - script->code]) {           \
+            interpReturnOK = true;                                            \
+            goto stop_recording;                                              \
+        }                                                                     \
+    } while (0)
+
 #define BRANCH(n)                                                             \
     JS_BEGIN_MACRO                                                            \
         regs.pc += (n);                                                       \
@@ -2338,10 +2358,17 @@ Interpret(JSContext *cx)
                 op = (JSOp) *regs.pc;                                         \
             }                                                                 \
         }                                                                     \
+        LEAVE_ON_TRACE_POINT();                                               \
         DO_OP();                                                              \
     JS_END_MACRO
 
     MUST_FLOW_THROUGH("exit");
+
+#ifdef JS_TRACER
+    bool wasRecording = !!(fp->flags & JSFRAME_RECORDING);
+    bool wasImacroRun = fp->imacpc && !TRACE_RECORDER(cx);
+#endif
+
     ++cx->interpLevel;
 
     /*
@@ -2404,9 +2431,20 @@ Interpret(JSContext *cx)
 #endif
 
 #ifdef JS_TRACER
-    /* We cannot reenter the interpreter while recording. */
-    if (TRACE_RECORDER(cx))
+    /*
+     * The method JIT may have already initiated a recording, in which case
+     * there should already be a valid recorder. Otherwise...
+     * we cannot reenter the interpreter while recording.
+     */
+    if (wasRecording) {
+        JS_ASSERT(TRACE_RECORDER(cx));
+        ENABLE_INTERRUPTS();
+    } else if (TRACE_RECORDER(cx)) {
         AbortRecording(cx, "attempt to reenter interpreter while recording");
+    }
+
+    if (fp->imacpc)
+        atoms = COMMON_ATOMS_START(&rt->atomState);
 #endif
 
     /* State communicated between non-local jumps: */
@@ -2501,6 +2539,7 @@ Interpret(JSContext *cx)
               case ARECORD_IMACRO_ABORTED:
                 atoms = COMMON_ATOMS_START(&rt->atomState);
                 op = JSOp(*regs.pc);
+                leaveOnTracePoint = false;
                 if (status == ARECORD_IMACRO)
                     DO_OP();    /* keep interrupting for op. */
                 break;
@@ -2515,6 +2554,9 @@ Interpret(JSContext *cx)
               default:
                 JS_NOT_REACHED("Bad recording status");
             }
+        } else if (wasRecording) {
+            interpReturnOK = true;
+            goto stop_recording;
         }
 #endif /* !JS_TRACER */
 
@@ -2536,12 +2578,17 @@ Interpret(JSContext *cx)
 ADD_EMPTY_CASE(JSOP_NOP)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
-ADD_EMPTY_CASE(JSOP_TRACE)
 #if JS_HAS_XML_SUPPORT
 ADD_EMPTY_CASE(JSOP_STARTXML)
 ADD_EMPTY_CASE(JSOP_STARTXMLEXPR)
 #endif
 END_EMPTY_CASES
+
+BEGIN_CASE(JSOP_TRACE)
+#ifdef JS_METHODJIT
+    LEAVE_ON_TRACE_POINT();
+#endif
+END_CASE(JSOP_TRACE)
 
 /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
 BEGIN_CASE(JSOP_LINENO)
@@ -2623,6 +2670,7 @@ BEGIN_CASE(JSOP_STOP)
     ASSERT_NOT_THROWING(cx);
     CHECK_BRANCH();
 
+#ifdef JS_TRACER
     if (fp->imacpc) {
         /*
          * If we are at the end of an imacro, return to its caller in the
@@ -2632,10 +2680,22 @@ BEGIN_CASE(JSOP_STOP)
         JS_ASSERT((uintN)(regs.sp - fp->slots()) <= script->nslots);
         regs.pc = fp->imacpc + js_CodeSpec[*fp->imacpc].length;
         fp->imacpc = NULL;
+# ifdef JS_METHODJIT
+        if ((wasImacroRun || wasRecording) && !TRACE_RECORDER(cx)) {
+            if (script->nmap[regs.pc - script->code]) {
+                interpReturnOK = true;
+                goto stop_recording;
+            }
+            leaveOnTracePoint = true;
+        }
+# endif
+        JS_ASSERT_IF(!(op == JSOP_STOP || (wasImacroRun && op == JSOP_IMACOP)),
+                     !(fp->flags & JSFRAME_RECORDING));
         atoms = script->atomMap.vector;
         op = JSOp(*regs.pc);
         DO_OP();
     }
+#endif
 
     JS_ASSERT(regs.sp == fp->base());
     if ((fp->flags & JSFRAME_CONSTRUCTING) && fp->rval.isPrimitive()) {
@@ -2644,7 +2704,7 @@ BEGIN_CASE(JSOP_STOP)
     }
 
     interpReturnOK = true;
-    if (inlineCallCount)
+    if (entryFrame != fp)
   inline_return:
     {
         JS_ASSERT(!fp->blockChain);
@@ -2688,7 +2748,6 @@ BEGIN_CASE(JSOP_STOP)
         }
 
         JSStackFrame *down = fp->down;
-        bool recursive = fp->script == down->script;
 
         /* Pop the frame. */
         cx->stack().popInlineFrame(cx, fp, down);
@@ -2702,19 +2761,12 @@ BEGIN_CASE(JSOP_STOP)
         atoms = FrameAtomBase(cx, fp);
 
         /* Resume execution in the calling frame. */
+        JS_ASSERT(inlineCallCount);
         inlineCallCount--;
         if (JS_LIKELY(interpReturnOK)) {
             JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
                       == JSOP_CALL_LENGTH);
             TRACE_0(LeaveFrame);
-            if (!TRACE_RECORDER(cx) && recursive) {
-                if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE) {
-                    regs.pc += JSOP_CALL_LENGTH;
-                    MONITOR_BRANCH(Record_LeaveFrame);
-                    op = (JSOp)*regs.pc;
-                    DO_OP();
-                }
-            }
             if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE ||
                 *(regs.pc + JSOP_CALL_LENGTH) == JSOP_NOP) {
                 JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
@@ -2726,6 +2778,16 @@ BEGIN_CASE(JSOP_STOP)
             DO_NEXT_OP(len);
         }
         goto error;
+    } else {
+#ifdef JS_TRACER
+        /* Hack: re-push rval so either JIT will read it properly. */
+        PUSH_COPY(fp->rval);
+        if (TRACE_RECORDER(cx)) {
+            AbortRecording(cx, "recording out of Interpret");
+            interpReturnOK = true;
+            goto stop_recording;
+        }
+#endif
     }
     interpReturnOK = true;
     goto exit;
@@ -4726,24 +4788,17 @@ BEGIN_CASE(JSOP_APPLY)
                     if (status == ARECORD_ERROR)
                         goto error;
                 }
-            } else if (fp->script == fp->down->script &&
-                       *fp->down->savedPC == JSOP_CALL &&
-                       *regs.pc == JSOP_TRACE) {
-                MONITOR_BRANCH(Record_EnterFrame);
             }
 #endif
 
 #ifdef JS_METHODJIT
-            /*
-             * :FIXME: try to method jit - take this out once we're more
-             * complete.
-             */
-            if (!TRACE_RECORDER(cx)) {
+            /* Try to ensure methods are method JIT'd.  */
+            {
                 JSObject *scope = newfp->scopeChain;
                 mjit::CompileStatus status = mjit::CanMethodJIT(cx, newscript, fun, scope);
                 if (status == mjit::Compile_Error)
                     goto error;
-                if (status == mjit::Compile_Okay) {
+                if (!TRACE_RECORDER(cx) && status == mjit::Compile_Okay) {
                     if (!mjit::JaegerShot(cx))
                         goto error;
                     interpReturnOK = true;
@@ -6762,7 +6817,7 @@ BEGIN_CASE(JSOP_GENERATOR)
     JS_ASSERT(!fp->callobj && !fp->argsobj);
     fp->rval.setObject(*obj);
     interpReturnOK = true;
-    if (inlineCallCount != 0)
+    if (entryFrame != fp)
         goto inline_return;
     goto exit;
 }
@@ -7042,7 +7097,7 @@ END_CASE(JSOP_ARRAYPUSH)
     cx->tracePrevPc = NULL;
 #endif
 
-    if (inlineCallCount)
+    if (entryFrame != fp)
         goto inline_return;
 
   exit:
@@ -7057,12 +7112,13 @@ END_CASE(JSOP_ARRAYPUSH)
      * error case and for a normal return, the code jumps directly to parent's
      * frame pc.
      */
-    JS_ASSERT(inlineCallCount == 0);
+    JS_ASSERT(entryFrame == fp);
     JS_ASSERT(cx->regs == &regs);
     *prevContextRegs = regs;
     cx->setCurrentRegs(prevContextRegs);
 
 #ifdef JS_TRACER
+    JS_ASSERT_IF(interpReturnOK && wasRecording, !TRACE_RECORDER(cx));
     if (TRACE_RECORDER(cx))
         AbortRecording(cx, "recording out of Interpret");
 #endif
@@ -7086,6 +7142,12 @@ END_CASE(JSOP_ARRAYPUSH)
             js_ReportIsNotDefined(cx, printable);
         goto error;
     }
+
+  stop_recording:
+    JS_ASSERT(cx->regs == &regs);
+    *prevContextRegs = regs;
+    cx->setCurrentRegs(prevContextRegs);
+    return interpReturnOK;
 }
 
 } /* namespace js */

@@ -48,11 +48,15 @@
 #include "jsstaticcheck.h"
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
+#include "assembler/assembler/CodeLocation.h"
+#include "assembler/assembler/RepatchBuffer.h"
 #include "jsiter.h"
 #include "jstypes.h"
 #include "methodjit/StubCalls.h"
 #include "jstracer.h"
 #include "jspropertycache.h"
+#include "methodjit/MonoIC.h"
+
 #include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -277,7 +281,7 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
     f.regs.pc = script->code;
     f.regs.sp = fp->base();
 
-    bool ok = !!Interpret(cx);
+    bool ok = !!Interpret(cx, cx->fp);
     InlineReturn(cx, JS_TRUE);
 
     *pret = NULL;
@@ -589,4 +593,309 @@ stubs::GetCallObject(VMFrame &f)
     if (!js_GetCallObject(f.cx, f.fp))
         THROW();
 }
+
+static inline void
+AdvanceReturnPC(JSContext *cx)
+{
+    /*
+     * Simulate an inline_return by advancing the pc, then
+     * finish off the imacro. The inlineCallCount passed is
+     * bogus here, but it doesn't really matter.
+     */
+    JS_ASSERT(*cx->regs->pc == JSOP_CALL ||
+              *cx->regs->pc == JSOP_NEW ||
+              *cx->regs->pc == JSOP_EVAL ||
+              *cx->regs->pc == JSOP_APPLY);
+    cx->regs->pc += JSOP_CALL_LENGTH;
+}
+
+#ifdef JS_TRACER
+
+static inline bool
+SwallowErrors(VMFrame &f, JSStackFrame *stopFp)
+{
+    JSContext *cx = f.cx;
+
+    /* Remove the bottom frame. */
+    bool ok = false;
+    for (;;) {
+        JSStackFrame *fp = cx->fp;
+
+        /* Look for an imacro with hard-coded exception handlers. */
+        if (fp->imacpc && cx->throwing) {
+            cx->regs->pc = fp->imacpc;
+            fp->imacpc = NULL;
+            if (ok)
+                break;
+        }
+        JS_ASSERT(!fp->imacpc);
+
+        /* If there's an exception and a handler, set the pc and leave. */
+        jsbytecode *pc = FindExceptionHandler(cx);
+        if (pc) {
+            cx->regs->pc = pc;
+            ok = true;
+            break;
+        }
+
+        /* Don't unwind if this was the entry frame. */
+        if (fp == stopFp)
+            break;
+
+        /* Unwind and return. */
+        ok &= js_UnwindScope(cx, 0, cx->throwing);
+        InlineReturn(cx, ok);
+    }
+
+    /* Update the VMFrame before leaving. */
+    JS_ASSERT(&f.regs == cx->regs);
+
+    JS_ASSERT_IF(!ok, cx->fp == stopFp);
+    return ok;
+}
+
+static inline bool
+AtSafePoint(JSContext *cx)
+{
+    JSStackFrame *fp = cx->fp;
+    if (fp->imacpc)
+        return false;
+
+    JSScript *script = fp->script;
+    if (!script->nmap)
+        return false;
+
+    JS_ASSERT(cx->regs->pc >= script->code && cx->regs->pc < script->code + script->length);
+    return !!script->nmap[cx->regs->pc - script->code];
+}
+
+static inline JSBool
+PartialInterpret(JSContext *cx)
+{
+    JSStackFrame *fp = cx->fp;
+
+    JS_ASSERT(fp->imacpc || !fp->script->nmap ||
+              !fp->script->nmap[cx->regs->pc - fp->script->code]);
+
+    JSBool ok = JS_TRUE;
+    fp->flags |= JSFRAME_BAILING;
+    ok = Interpret(cx, fp);
+    fp->flags &= ~JSFRAME_BAILING;
+
+    return ok;
+}
+
+JS_STATIC_ASSERT(JSOP_NOP == 0);
+
+static inline JSOp
+FrameIsFinished(JSContext *cx)
+{
+    JSOp op = JSOp(*cx->regs->pc);
+    return (op == JSOP_RETURN ||
+            op == JSOP_RETRVAL ||
+            op == JSOP_STOP)
+        ? op
+        : JSOP_NOP;
+}
+
+static bool
+RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
+{
+    JSContext *cx = f.cx;
+    while (cx->fp != entryFrame) {
+        JSStackFrame *fp = cx->fp;
+        fp->flags &= ~JSFRAME_RECORDING;
+
+        if (AtSafePoint(cx)) {
+            if (!JaegerShot(cx)) {
+                if (!SwallowErrors(f, entryFrame))
+                    return false;
+
+                /* Could be anywhere - restart outer loop. */
+                continue;
+            }
+            InlineReturn(cx, JS_TRUE);
+            AdvanceReturnPC(cx);
+        } else {
+            if (!PartialInterpret(cx)) {
+                if (!SwallowErrors(f, entryFrame))
+                    return false;
+            } else {
+                /*
+                 * Partial interpret could have dropped us anywhere. Deduce the
+                 * edge case: at a RETURN, needing to pop a frame.
+                 */
+                if (!cx->fp->imacpc && FrameIsFinished(cx)) {
+                    InlineReturn(cx, JS_TRUE);
+                    AdvanceReturnPC(cx);
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+#if JS_MONOIC
+static void
+DisableTraceHint(VMFrame &f, ic::MICInfo &mic)
+{
+    JS_ASSERT(mic.kind == ic::MICInfo::TRACER);
+
+    /*
+     * Hack: The value that will be patched is before the executable address,
+     * so to get protection right, just unprotect the general region around
+     * the jump.
+     */
+    uint8 *addr = (uint8 *)(mic.traceHint.executableAddress());
+    JSC::RepatchBuffer repatch(addr - 64, 128);
+    repatch.relink(mic.traceHint, mic.load);
+
+    JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n", mic.traceHint.executableAddress(),
+               mic.load.executableAddress());
+}
+#endif
+
+#if JS_MONOIC
+void *
+RunTracer(VMFrame &f, ic::MICInfo &mic)
+#else
+void *
+RunTracer(VMFrame &f)
+#endif
+{
+    JSContext *cx = f.cx;
+    JSStackFrame *entryFrame = f.fp;
+    TracePointAction tpa;
+
+    /* :TODO: nuke PIC? */
+    if (!cx->jitEnabled)
+        return NULL;
+
+    JS_ASSERT_IF(f.inlineCallCount,
+                 entryFrame->down->script->isValidJitCode(f.scriptedReturn));
+
+    bool blacklist;
+    uintptr_t inlineCallCount = f.inlineCallCount;
+    tpa = MonitorTracePoint(f.cx, inlineCallCount, blacklist);
+    JS_ASSERT(!TRACE_RECORDER(cx));
+
+#if JS_MONOIC
+    if (blacklist)
+        DisableTraceHint(f, mic);
+#endif
+
+    if ((tpa == TPA_RanStuff || tpa == TPA_Recorded) && cx->throwing)
+        tpa = TPA_Error;
+
+    switch (tpa) {
+      case TPA_Nothing:
+        return NULL;
+
+      case TPA_Error:
+        if (!SwallowErrors(f, entryFrame))
+            THROWV(NULL);
+        JS_ASSERT(!cx->fp->imacpc);
+        break;
+
+      case TPA_RanStuff:
+      case TPA_Recorded:
+        break;
+    }
+
+    /*
+     * The tracer could have dropped us off on any frame at any position.
+     * Well, it could not have removed frames (recursion is disabled).
+     *
+     * Frames after the entryFrame cannot be entered via JaegerShot()
+     * unless each is at a safe point. We can JaegerShot these frames
+     * individually, but we must unwind to the entryFrame.
+     *
+     * If we land on entryFrame without a safe point in sight, we'll end up
+     * at the RETURN op. This is an edge case with two paths:
+     *
+     * 1) The entryFrame is the last inline frame. If it fell on a RETURN,
+     *    move the return value down.
+     * 2) The entryFrame is NOT the last inline frame. Pop the frame.
+     *
+     * In both cases, we hijack the stub to return to JaegerFromTracer. This
+     * moves |oldFp->rval| into the scripted return registers, places the
+     * new f.scriptedReturn in the machine return register, and returns to its
+     * caller safely.
+     */
+
+  restart:
+    /* Step 1. Initial removal of excess frames. */
+    if (!RemoveExcessFrames(f, entryFrame))
+        THROWV(NULL);
+
+    /* Step 2. If there's an imacro on the entry frame, remove it. */
+    entryFrame->flags &= ~JSFRAME_RECORDING;
+    while (entryFrame->imacpc) {
+        if (!PartialInterpret(cx)) {
+            if (!SwallowErrors(f, entryFrame))
+                THROWV(NULL);
+        }
+
+        /* After partial interpreting, we could have more frames again. */
+        goto restart;
+    }
+
+    /* Step 3.1. If entryFrame is at a safe point, just leave. */
+    if (AtSafePoint(cx)) {
+        uint32 offs = uint32(cx->regs->pc - entryFrame->script->code);
+        JS_ASSERT(entryFrame->script->nmap[offs]);
+        return entryFrame->script->nmap[offs];
+    }
+
+    /* Step 3.2. If entryFrame is at a RETURN, then leave slightly differently. */
+    if (JSOp op = FrameIsFinished(cx)) {
+        /* We're not guaranteed that the RETURN was run. */
+        if (op == JSOP_RETURN)
+            entryFrame->rval = f.regs.sp[-1];
+
+        /* Don't pop the frame if it's maybe owned by an Invoke. */
+        if (f.inlineCallCount) {
+            if (!InlineReturn(cx, JS_TRUE))
+                THROWV(NULL);
+            f.inlineCallCount--;
+        }
+        f.fp = cx->fp;
+        entryFrame->ncode = f.fp->ncode;
+        void *retPtr = JS_FUNC_TO_DATA_PTR(void *, JaegerFromTracer);
+        f.setReturnAddress(ReturnAddressPtr(retPtr));
+        return NULL;
+    }
+
+    /* Step 3.3. Do a partial interp, then restart the whole process. */
+    if (!PartialInterpret(cx)) {
+        if (!SwallowErrors(f, entryFrame))
+            THROWV(NULL);
+    }
+
+    goto restart;
+}
+
+#endif /* JS_TRACER */
+
+#if JS_MONOIC
+void *JS_FASTCALL
+stubs::InvokeTracer(VMFrame &f, uint32 index)
+{
+    JSScript *script = f.fp->script;
+    ic::MICInfo &mic = script->mics[index];
+
+    JS_ASSERT(mic.kind == ic::MICInfo::TRACER);
+
+    return RunTracer(f, mic);
+}
+
+#else
+
+void *JS_FASTCALL
+stubs::InvokeTracer(VMFrame &f)
+{
+    return RunTracer(f);
+}
+#endif
 

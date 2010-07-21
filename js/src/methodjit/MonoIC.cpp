@@ -86,7 +86,7 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
     uint32 slot = sprop->slot;
     JS_UNLOCK_SCOPE(f.cx, scope);
 
-    mic.touched = true;
+    mic.u.name.touched = true;
 
     /* Patch shape guard. */
     JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
@@ -146,7 +146,7 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     uint32 slot = sprop->slot;
     JS_UNLOCK_SCOPE(f.cx, scope);
 
-    mic.touched = true;
+    mic.u.name.touched = true;
 
     /* Patch shape guard. */
     JSC::RepatchBuffer repatch(mic.entry.executableAddress(), 50);
@@ -161,11 +161,11 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     stores.repatch(mic.load.dataLabel32AtOffset(MICInfo::SET_TYPE_OFFSET), slot + 4);
 
     uint32 dataOffset;
-    if (mic.typeConst)
+    if (mic.u.name.typeConst)
         dataOffset = MICInfo::SET_DATA_CONST_TYPE_OFFSET;
     else
         dataOffset = MICInfo::SET_DATA_TYPE_OFFSET;
-    if (mic.dataWrite)
+    if (mic.u.name.dataWrite)
         stores.repatch(mic.load.dataLabel32AtOffset(dataOffset), slot);
 
     /* Do load anyway... this time. */

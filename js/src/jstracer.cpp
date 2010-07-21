@@ -6053,7 +6053,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
 }
 
 static JS_REQUIRES_STACK bool
-ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
+ExecuteTree(JSContext* cx, TreeFragment* f, uintptr_t& inlineCallCount,
             VMSideExit** innermostNestedGuardp, VMSideExit** lrp);
 
 static inline MonitorResult
@@ -6067,7 +6067,7 @@ RecordingIfTrue(bool b)
  * MONITOR_RECORDING, the recording has been aborted.
  */
 JS_REQUIRES_STACK MonitorResult
-TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
+TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintptr_t& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
     if (cx->fp->scopeChain->getGlobal()->scope()->title.ownercx != cx) {
@@ -6134,7 +6134,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
+TraceRecorder::attemptTreeCall(TreeFragment* f, uintptr_t& inlineCallCount)
 {
     /*
      * It is absolutely forbidden to have recursive loops tree call themselves
@@ -6159,7 +6159,7 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
     prepareTreeCall(f);
 
 #ifdef DEBUG
-    unsigned oldInlineCallCount = inlineCallCount;
+    uintptr_t oldInlineCallCount = inlineCallCount;
 #endif
 
     JSContext *localCx = cx;
@@ -6521,7 +6521,7 @@ FindVMCompatiblePeer(JSContext* cx, JSObject* globalObj, TreeFragment* f, uintN&
  */
 JS_ALWAYS_INLINE
 TracerState::TracerState(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
-                         uintN& inlineCallCount, VMSideExit** innermostNestedGuardp)
+                         uintptr_t& inlineCallCount, VMSideExit** innermostNestedGuardp)
   : cx(cx),
     stackBase(tm->storage->stack()),
     sp(stackBase + f->nativeStackBase / sizeof(double)),
@@ -10360,6 +10360,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         setFrameObjPtr(&fp->scopeChain, scopeChain_ins);
     }
 
+#if 0
     /*
      * Check for recursion. This is a special check for recursive cases that can be
      * a trace-tree, just like a loop. If recursion acts weird, for example
@@ -10374,6 +10375,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
             RETURN_STOP_A("recursion does not match original tree");
         return InjectStatus(downRecursion());
     }
+#endif
 
     /* Try inlining one level in case this recursion doesn't go too deep. */
     if (fp->script == fp->down->script &&
@@ -10381,6 +10383,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         RETURN_STOP_A("recursion started inlining");
     }
 
+#if 0
     TreeFragment* first = LookupLoop(&JS_TRACE_MONITOR(cx), cx->regs->pc, tree->globalObj,
                                      tree->globalShape, fp->argc);
     if (!first)
@@ -10420,8 +10423,9 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
             return ARECORD_ABORTED;
         return attemptTreeCall(f, inlineCallCount);
     }
+#endif
 
-   return ARECORD_CONTINUE;
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10485,10 +10489,13 @@ TraceRecorder::record_JSOP_RETURN()
 {
     /* A return from callDepth 0 terminates the current loop, except for recursion. */
     if (callDepth == 0) {
+#if 0
         if (IsTraceableRecursion(cx) && tree->recursion != Recursion_Disallowed &&
             tree->script == cx->fp->script) {
             return InjectStatus(upRecursion());
-        } else {
+        } else
+#endif
+        {
             AUDIT(returnLoopExits);
             return endLoop();
         }
@@ -15409,11 +15416,13 @@ TraceRecorder::record_JSOP_CALLELEM()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_STOP()
 {
+#if 0
     if (callDepth == 0 && IsTraceableRecursion(cx) &&
         tree->recursion != Recursion_Disallowed &&
         tree->script == cx->fp->script) {
         return InjectStatus(upRecursion());
     }
+#endif
     JSStackFrame *fp = cx->fp;
 
     if (fp->imacpc) {
@@ -16090,6 +16099,128 @@ TraceRecorder::determineGlobalTypes(JSValueType* typeMap)
     DetermineTypesVisitor detVisitor(*this, typeMap);
     VisitGlobalSlots(detVisitor, cx, *tree->globalSlots);
 }
+
+#ifdef JS_METHODJIT
+
+class AutoRetBlacklist
+{
+    jsbytecode* pc;
+    bool& blacklist;
+
+  public:
+    AutoRetBlacklist(jsbytecode* pc, bool& blacklist)
+      : pc(pc), blacklist(blacklist)
+    { }
+
+    ~AutoRetBlacklist()
+    {
+        blacklist = IsBlacklisted(pc);
+    }
+};
+
+JS_REQUIRES_STACK TracePointAction
+MonitorTracePoint(JSContext* cx, uintptr_t& inlineCallCount, bool& blacklist)
+{
+    JSStackFrame* fp = cx->fp;
+    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    jsbytecode* pc = cx->regs->pc;
+
+    JS_ASSERT(!TRACE_RECORDER(cx));
+
+    JSObject* globalObj = cx->fp->scopeChain->getGlobal();
+    uint32 globalShape = -1;
+    SlotList* globalSlots = NULL;
+
+    AutoRetBlacklist autoRetBlacklist(pc, blacklist);
+
+    if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
+        Backoff(cx, pc);
+        return TPA_Nothing;
+    }
+
+    uint32 argc = cx->fp->argc;
+    TreeFragment* tree = LookupOrAddLoop(tm, pc, globalObj, globalShape, argc);
+
+    debug_only_printf(LC_TMTracer,
+                      "Looking for compat peer %d@%d, from %p (ip: %p)\n",
+                      js_FramePCToLineNumber(cx, cx->fp),
+                      FramePCOffset(cx, cx->fp), (void*)tree, tree->ip);
+
+    if (tree->code() || tree->peer) {
+        uintN count;
+        TreeFragment* match = FindVMCompatiblePeer(cx, globalObj, tree, count);
+        if (match) {
+            JS_ASSERT(match->recursion < Recursion_Unwinds);
+
+            VMSideExit* lr = NULL;
+            VMSideExit* innermostNestedGuard = NULL;
+
+            /* Best case - just go and execute. */
+            if (!ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard, &lr))
+                return TPA_Error;
+
+            if (!lr)
+                return TPA_Nothing;
+
+            switch (lr->exitType) {
+              case UNSTABLE_LOOP_EXIT:
+                if (!AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0))
+                    return TPA_RanStuff;
+                break;
+
+              case OVERFLOW_EXIT:
+                tm->oracle->markInstructionUndemotable(cx->regs->pc);
+                /* FALL THROUGH */
+              case BRANCH_EXIT:
+              case CASE_EXIT:
+                if (!AttemptToExtendTree(cx, lr, NULL, NULL))
+                    return TPA_RanStuff;
+                break;
+
+              case LOOP_EXIT:
+                if (!innermostNestedGuard)
+                    return TPA_RanStuff;
+                if (!AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL))
+                    return TPA_RanStuff;
+                break;
+
+              default:
+                return TPA_RanStuff;
+            }
+
+            JS_ASSERT(TRACE_RECORDER(cx));
+
+            goto interpret;
+        }
+
+        if (count >= MAXPEERS) {
+            debug_only_print0(LC_TMTracer, "Blacklisted: too many peer trees.\n");
+            Blacklist((jsbytecode*)tree->root->ip);
+            return TPA_Nothing;
+        }
+    }
+
+    if (++tree->hits() < HOTLOOP)
+        return TPA_Nothing;
+    if (!ScopeChainCheck(cx, tree))
+        return TPA_Nothing;
+    if (!RecordTree(cx, tree->first, NULL, 0, globalSlots, Record_Branch))
+        return TPA_Nothing;
+
+  interpret:
+    JS_ASSERT(TRACE_RECORDER(cx));
+
+    /* Locked and loaded with a recorder. Ask the interperter to go run some code. */
+    fp->flags |= JSFRAME_RECORDING;
+    if (!Interpret(cx, fp, inlineCallCount))
+        return TPA_Error;
+
+    fp->flags &= ~JSFRAME_RECORDING;
+
+    return TPA_RanStuff;
+}
+
+#endif
 
 #include "jsrecursion.cpp"
 
