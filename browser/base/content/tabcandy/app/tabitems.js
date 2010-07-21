@@ -752,12 +752,12 @@ window.TabItems = {
 
         if (tabData.imageData) {
           var mirror = item.tab.mirror;
-          mirror.showCachedData(item.tab, tabData);
+          mirror.showCachedData(tabData);
           // the code in the progress listener doesn't fire sometimes because
           // tab is being restored so need to catch that.
           iQ.timeout(function() {
             if (mirror && mirror.isShowingCachedData) {
-              mirror.hideCachedData(item.tab);
+              mirror.hideCachedData();
             }
           }, 15000);
         }
