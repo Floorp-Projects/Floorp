@@ -74,14 +74,14 @@ using namespace JSC;
 #define THROW()  \
     do {         \
         void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline); \
-        f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr))); \
+        *f.returnAddressLocation() = ptr; \
         return;  \
     } while (0)
 
 #define THROWV(v)       \
     do {                \
         void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline); \
-        f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr))); \
+        *f.returnAddressLocation() = ptr; \
         return v;       \
     } while (0)
 
@@ -863,7 +863,7 @@ RunTracer(VMFrame &f)
         f.fp = cx->fp;
         entryFrame->ncode = f.fp->ncode;
         void *retPtr = JS_FUNC_TO_DATA_PTR(void *, JaegerFromTracer);
-        f.setReturnAddress(ReturnAddressPtr(retPtr));
+        *f.returnAddressLocation() = retPtr;
         return NULL;
     }
 
