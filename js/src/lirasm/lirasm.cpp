@@ -948,6 +948,8 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           CASE64(LIR_q2i:)
           CASE64(LIR_i2q:)
           CASE64(LIR_ui2uq:)
+          CASE64(LIR_dasq:)
+          CASE64(LIR_qasd:)
           case LIR_i2d:
           case LIR_ui2d:
           case LIR_d2i:
@@ -970,6 +972,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_muld:
           case LIR_divd:
           CASE64(LIR_addq:)
+          CASE64(LIR_subq:)
           case LIR_andi:
           case LIR_ori:
           case LIR_xori:
@@ -1425,6 +1428,14 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
     I_D_ops.push_back(LIR_d2i);
 
+#ifdef NANOJIT_64BIT
+    vector<LOpcode> Q_D_ops;
+    Q_D_ops.push_back(LIR_dasq);
+
+    vector<LOpcode> D_Q_ops;
+    D_Q_ops.push_back(LIR_qasd);
+#endif
+
     vector<LOpcode> D_II_ops;
 #if NJ_SOFTFLOAT_SUPPORTED
     D_II_ops.push_back(LIR_ii2d);
@@ -1776,6 +1787,24 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
             break;
 
+#if defined NANOJIT_X64
+        case LOP_Q_D:
+            if (!Ds.empty()) {
+                ins = mLir->ins1(rndPick(Q_D_ops), rndPick(Ds));
+                addOrReplace(Qs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_D_Q:
+            if (!Qs.empty()) {
+                ins = mLir->ins1(rndPick(D_Q_ops), rndPick(Qs));
+                addOrReplace(Ds, ins);
+                n++;
+            }
+            break;
+#endif
+
         case LOP_D_II:
             if (!Is.empty() && !D_II_ops.empty()) {
                 ins = mLir->ins2(rndPick(D_II_ops), rndPick(Is), rndPick(Is));
@@ -2092,6 +2121,7 @@ usageAndQuit(const string& progname)
         "  --execute        execute LIR\n"
         "  --[no-]optimize  enable or disable optimization of the LIR (default=off)\n"
         "  --random [N]     generate a random LIR block of size N (default=1000)\n"
+        "  --word-size      prints the word size (32 or 64) for this build of lirasm and exits\n"
         " i386-specific options:\n"
         "  --sse            use SSE2 instructions\n"
         " ARM-specific options:\n"
@@ -2165,6 +2195,10 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
                     opts.random = defaultSize;  // next arg is not a number
                 }
             }
+        }
+        else if (arg == "--word-size") {
+            cout << sizeof(void*) * 8 << "\n";
+            exit(0);
         }
 
         // Architecture-specific flags.
