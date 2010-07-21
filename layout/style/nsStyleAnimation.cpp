@@ -48,11 +48,12 @@
 #include "nsStyleSet.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCSSParser.h"
-#include "nsCSSDataBlock.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsCSSStruct.h"
 #include "prlog.h"
 #include <math.h>
+
+namespace css = mozilla::css;
 
 // HELPER METHODS
 // --------------
@@ -370,15 +371,19 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
 
         const nsCSSValue &color1 = array1->Item(4);
         const nsCSSValue &color2 = array2->Item(4);
-        const nsCSSValue &inset1 = array1->Item(5);
-        const nsCSSValue &inset2 = array2->Item(5);
-        // There are only two possible states of the inset value:
-        //  (1) GetUnit() == eCSSUnit_Null
-        //  (2) GetUnit() == eCSSUnit_Enumerated &&
-        //      GetIntValue() == NS_STYLE_BOX_SHADOW_INSET
-        NS_ABORT_IF_FALSE(color1.GetUnit() == color2.GetUnit() &&
-                          inset1 == inset2,
-                          "AddWeighted should have failed");
+#ifdef DEBUG
+        {
+          const nsCSSValue &inset1 = array1->Item(5);
+          const nsCSSValue &inset2 = array2->Item(5);
+          // There are only two possible states of the inset value:
+          //  (1) GetUnit() == eCSSUnit_Null
+          //  (2) GetUnit() == eCSSUnit_Enumerated &&
+          //      GetIntValue() == NS_STYLE_BOX_SHADOW_INSET
+          NS_ABORT_IF_FALSE(color1.GetUnit() == color2.GetUnit() &&
+                            inset1 == inset2,
+                            "AddWeighted should have failed");
+        }
+#endif
 
         if (color1.GetUnit() != eCSSUnit_Null) {
           nsStyleAnimation::Value color1Value
@@ -794,7 +799,7 @@ AppendTransformFunction(nsCSSKeyword aTransformFunction,
  *      shear (K) by it.
  *
  *  (6) At this point, A * D - B * C is either 1 or -1.  If it is -1,
- *      negate the XY shear (K), the X scale (Sy), and A, B, C, and D.
+ *      negate the XY shear (K), the X scale (Sx), and A, B, C, and D.
  *      (Alternatively, we could negate the XY shear (K) and the Y scale
  *      (Sy).)
  *
@@ -1604,11 +1609,7 @@ BuildStyleRule(nsCSSProperty aProperty,
                PRBool aUseSVGMode)
 {
   // Set up an empty CSS Declaration
-  nsCSSDeclaration* declaration = new nsCSSDeclaration();
-  if (!declaration) {
-    NS_WARNING("Failed to allocate nsCSSDeclaration");
-    return nsnull;
-  }
+  css::Declaration* declaration = new css::Declaration();
 
   PRBool changed; // ignored, but needed as outparam for ParseProperty
   nsIDocument* doc = aTargetElement->GetOwnerDoc();
@@ -1898,7 +1899,7 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
                                         aComputedValue, storage)) {
     return PR_FALSE;
   }
-  return nsCSSDeclaration::AppendStorageToString(aProperty, storage,
+  return css::Declaration::AppendStorageToString(aProperty, storage,
                                                  aSpecifiedValue);
 }
 

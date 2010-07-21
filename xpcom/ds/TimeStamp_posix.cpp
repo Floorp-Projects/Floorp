@@ -112,9 +112,9 @@ ClockResolutionNs()
     // measurable resolution is either incredibly low, ~1ns, or very
     // high.  fall back on clock_getres()
     struct timespec ts;
-    clock_getres(CLOCK_MONOTONIC, &ts);
-
-    minres = TimespecToNs(ts);
+    if (0 == clock_getres(CLOCK_MONOTONIC, &ts)) {
+      minres = TimespecToNs(ts);
+    }
   }
 
   if (0 == minres) {

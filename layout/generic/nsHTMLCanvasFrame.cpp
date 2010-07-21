@@ -62,20 +62,20 @@ CanvasElementFromContent(nsIContent *content)
   return domCanvas ? static_cast<nsHTMLCanvasElement*>(domCanvas.get()) : nsnull;
 }
 
-class nsDisplayItemCanvas : public nsDisplayItem {
+class nsDisplayCanvas : public nsDisplayItem {
 public:
-  nsDisplayItemCanvas(nsIFrame* aFrame)
+  nsDisplayCanvas(nsIFrame* aFrame)
     : nsDisplayItem(aFrame)
   {
-    MOZ_COUNT_CTOR(nsDisplayItemCanvas);
+    MOZ_COUNT_CTOR(nsDisplayCanvas);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayItemCanvas() {
-    MOZ_COUNT_DTOR(nsDisplayItemCanvas);
+  virtual ~nsDisplayCanvas() {
+    MOZ_COUNT_DTOR(nsDisplayCanvas);
   }
 #endif
 
-  NS_DISPLAY_DECL_NAME("nsDisplayItemCanvas")
+  NS_DISPLAY_DECL_NAME("nsDisplayCanvas", TYPE_CANVAS)
 
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder) {
     nsIFrame* f = GetUnderlyingFrame();
@@ -91,7 +91,15 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager)
   {
-    return static_cast<nsHTMLCanvasFrame*>(mFrame)->BuildLayer(aBuilder, aManager);
+    return static_cast<nsHTMLCanvasFrame*>(mFrame)->
+      BuildLayer(aBuilder, aManager, this);
+  }
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager)
+  {
+    // XXX we should have some kind of activity timeout here so that
+    // inactive canvases can be composited into the background
+    return mozilla::LAYER_ACTIVE;
   }
 };
 
@@ -230,7 +238,8 @@ nsHTMLCanvasFrame::GetInnerArea() const
 
 already_AddRefed<Layer>
 nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
-                              LayerManager* aManager)
+                              LayerManager* aManager,
+                              nsDisplayItem* aItem)
 {
   nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
   nsHTMLCanvasElement* element = static_cast<nsHTMLCanvasElement*>(GetContent());
@@ -239,7 +248,9 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (canvasSize.width <= 0 || canvasSize.height <= 0 || area.IsEmpty())
     return nsnull;
 
-  nsRefPtr<CanvasLayer> layer = element->GetCanvasLayer(aManager);
+  CanvasLayer* oldLayer = static_cast<CanvasLayer*>
+    (aBuilder->LayerBuilder()->GetLeafLayerFor(aBuilder, aManager, aItem));
+  nsRefPtr<CanvasLayer> layer = element->GetCanvasLayer(oldLayer, aManager);
   if (!layer)
     return nsnull;
 
@@ -273,8 +284,7 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aLists.Content()->AppendNewToTop(new (aBuilder)
-         nsDisplayItemCanvas(this));
+  rv = aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplayCanvas(this));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DisplaySelectionOverlay(aBuilder, aLists,

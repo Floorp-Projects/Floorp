@@ -231,7 +231,7 @@ NS_IMETHODIMP
 morkTable::GetPort(nsIMdbEnv* mev,
   nsIMdbPort** acqPort) // collection container
 {
-  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  (void) morkEnv::FromMdbEnv(mev);
   NS_ENSURE_ARG_POINTER(acqPort);    
   *acqPort = mTable_Store;
   return NS_OK;

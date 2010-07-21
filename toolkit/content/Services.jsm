@@ -122,3 +122,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, "console",
 XPCOMUtils.defineLazyServiceGetter(Services, "strings",
                                    "@mozilla.org/intl/stringbundle;1",
                                    "nsIStringBundleService");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "urlFormatter",
+                                   "@mozilla.org/toolkit/URLFormatterService;1",
+                                   "nsIURLFormatter");

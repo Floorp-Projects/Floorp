@@ -231,6 +231,14 @@ class Assembler : public BaseAssembler
     Jump testBoolean(Assembler::Condition cond, Address address) {
         return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_BOOLEAN));
     }
+
+    Jump testString(Assembler::Condition cond, RegisterID reg) {
+        return branch32(cond, reg, ImmTag(JSVAL_TAG_STRING));
+    }
+
+    Jump testString(Assembler::Condition cond, Address address) {
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_STRING));
+    }
 };
 
 } /* namespace js */

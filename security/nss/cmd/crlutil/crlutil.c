@@ -562,7 +562,7 @@ UpdateCrl(CERTSignedCrl *signCrl, PRFileDesc *inCrlInitFile)
      * up memory that was used for CRL generation. Should be called regardless
      * of previouse call status, but only after initialization of
      * crlGenData was done. It will commit all changes that was done before
-     * an error has occured.
+     * an error has occurred.
      */
     if (SECSuccess != CRLGEN_CommitExtensionsAndEntries(crlGenData)) {
         SECU_PrintError(progName, "crl generation failed");

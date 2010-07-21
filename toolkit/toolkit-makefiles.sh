@@ -128,6 +128,7 @@ MAKEFILES_gfx="
   gfx/tests/Makefile
   gfx/thebes/Makefile
   gfx/qcms/Makefile
+  gfx/angle/Makefile
 "
 
 MAKEFILES_htmlparser="

@@ -78,7 +78,7 @@ ThebesLayerBuffer::GetQuadrantRectangle(XSide aXSide, YSide aYSide)
  */
 void
 ThebesLayerBuffer::DrawBufferQuadrant(gfxContext* aTarget,
-                                      XSide aXSide, YSide aYSide)
+                                      XSide aXSide, YSide aYSide, float aOpacity)
 {
   // The rectangle that we're going to fill. Basically we're going to
   // render the buffer at mBufferRect + quadrantTranslation to get the
@@ -93,18 +93,25 @@ ThebesLayerBuffer::DrawBufferQuadrant(gfxContext* aTarget,
   aTarget->Rectangle(gfxRect(fillRect.x, fillRect.y, fillRect.width, fillRect.height),
                      PR_TRUE);
   aTarget->SetSource(mBuffer, gfxPoint(quadrantRect.x, quadrantRect.y));
-  aTarget->Fill();
+  if (aOpacity != 1.0) {
+    aTarget->Save();
+    aTarget->Clip();
+    aTarget->Paint(aOpacity);
+    aTarget->Restore();
+  } else {
+    aTarget->Fill();
+  }
 }
 
 void
-ThebesLayerBuffer::DrawBufferWithRotation(gfxContext* aTarget)
+ThebesLayerBuffer::DrawBufferWithRotation(gfxContext* aTarget, float aOpacity)
 {
   // Draw four quadrants. We could use REPEAT_, but it's probably better
   // not to, to be performance-safe.
-  DrawBufferQuadrant(aTarget, LEFT, TOP);
-  DrawBufferQuadrant(aTarget, RIGHT, TOP);
-  DrawBufferQuadrant(aTarget, LEFT, BOTTOM);
-  DrawBufferQuadrant(aTarget, RIGHT, BOTTOM);
+  DrawBufferQuadrant(aTarget, LEFT, TOP, aOpacity);
+  DrawBufferQuadrant(aTarget, RIGHT, TOP, aOpacity);
+  DrawBufferQuadrant(aTarget, LEFT, BOTTOM, aOpacity);
+  DrawBufferQuadrant(aTarget, RIGHT, BOTTOM, aOpacity);
 }
 
 static void
@@ -125,24 +132,28 @@ CreateBuffer(gfxASurface* aTargetSurface, gfxASurface::gfxContentType aType,
 }
 
 ThebesLayerBuffer::PaintState
-ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
+ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer,
+                              gfxASurface* aReferenceSurface,
                               PRUint32 aFlags)
 {
   PaintState result;
 
+  result.mRegionToDraw.Sub(aLayer->GetVisibleRegion(), aLayer->GetValidRegion());
+
   gfxASurface::gfxContentType desiredContentType = gfxASurface::CONTENT_COLOR_ALPHA;
-  nsRefPtr<gfxASurface> targetSurface = aTarget->CurrentSurface();
-  if (targetSurface->AreSimilarSurfacesSensitiveToContentType()) {
+  if (aReferenceSurface->AreSimilarSurfacesSensitiveToContentType()) {
     if (aFlags & OPAQUE_CONTENT) {
       desiredContentType = gfxASurface::CONTENT_COLOR;
     }
     if (mBuffer && desiredContentType != mBuffer->GetContentType()) {
+      // We're effectively clearing the valid region, so we need to draw
+      // the entire visible region now.
+      result.mRegionToDraw = aLayer->GetVisibleRegion();
       result.mRegionToInvalidate = aLayer->GetValidRegion();
       Clear();
     }
   }
 
-  result.mRegionToDraw.Sub(aLayer->GetVisibleRegion(), aLayer->GetValidRegion());
   if (result.mRegionToDraw.IsEmpty())
     return result;
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
@@ -185,7 +196,8 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
           // We can't do a real self-copy because the buffer is rotated.
           // So allocate a new buffer for the destination.
           destBufferRect = visibleBounds;
-          destBuffer = CreateBuffer(targetSurface, desiredContentType, destBufferRect.Size());
+          destBuffer = CreateBuffer(aReferenceSurface, desiredContentType,
+                                    destBufferRect.Size());
           if (!destBuffer)
             return result;
         }
@@ -203,10 +215,15 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
   } else {
     // The buffer's not big enough, so allocate a new one
     destBufferRect = visibleBounds;
-    destBuffer = CreateBuffer(targetSurface, desiredContentType, destBufferRect.Size());
+    destBuffer = CreateBuffer(aReferenceSurface, desiredContentType,
+                              destBufferRect.Size());
     if (!destBuffer)
       return result;
   }
+
+  // If we have no buffered data already, then destBuffer will be a fresh buffer
+  // and we do not need to clear it below.
+  PRBool isClear = mBuffer == nsnull;
 
   if (destBuffer) {
     if (mBuffer) {
@@ -215,7 +232,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
       nsIntPoint offset = -destBufferRect.TopLeft();
       tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
       tmpCtx->Translate(gfxPoint(offset.x, offset.y));
-      DrawBufferWithRotation(tmpCtx);
+      DrawBufferWithRotation(tmpCtx, 1.0);
     }
 
     mBuffer = destBuffer.forget();
@@ -239,7 +256,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
   result.mContext->Translate(-gfxPoint(quadrantRect.x, quadrantRect.y));
 
   ClipToRegion(result.mContext, result.mRegionToDraw);
-  if (desiredContentType == gfxASurface::CONTENT_COLOR_ALPHA) {
+  if (desiredContentType == gfxASurface::CONTENT_COLOR_ALPHA && !isClear) {
     result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
     result.mContext->Paint();
     result.mContext->SetOperator(gfxContext::OPERATOR_OVER);
@@ -248,14 +265,14 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, gfxContext* aTarget,
 }
 
 void
-ThebesLayerBuffer::DrawTo(ThebesLayer* aLayer, PRUint32 aFlags, gfxContext* aTarget)
+ThebesLayerBuffer::DrawTo(ThebesLayer* aLayer, PRUint32 aFlags, gfxContext* aTarget, float aOpacity)
 {
   aTarget->Save();
   ClipToRegion(aTarget, aLayer->GetVisibleRegion());
   if (aFlags & OPAQUE_CONTENT) {
     aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   }
-  DrawBufferWithRotation(aTarget);
+  DrawBufferWithRotation(aTarget, aOpacity);
   aTarget->Restore();
 }
 

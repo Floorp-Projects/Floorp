@@ -42,6 +42,7 @@
 #include "secder.h"
 #include "certt.h"
 #include "cert.h"
+#include "certi.h"
 #include "xconst.h"
 #include "secerr.h"
 #include "secoid.h"
@@ -1082,17 +1083,31 @@ loser:
     return SECFailure;
 }
 
-/* This function is called by CERT_VerifyCertChain to extract all
-** names from a cert in preparation for a name constraints test.
+/* Extract all names except Subject Common Name from a cert 
+** in preparation for a name constraints test.
 */
 CERTGeneralName *
 CERT_GetCertificateNames(CERTCertificate *cert, PRArenaPool *arena)
 {
+    return CERT_GetConstrainedCertificateNames(cert, arena, PR_FALSE);
+}
+
+/* This function is called by CERT_VerifyCertChain to extract all
+** names from a cert in preparation for a name constraints test.
+*/
+CERTGeneralName *
+CERT_GetConstrainedCertificateNames(CERTCertificate *cert, PRArenaPool *arena,
+                                    PRBool includeSubjectCommonName)
+{
     CERTGeneralName  *DN;
-    CERTGeneralName  *altName         = NULL;
-    SECItem          altNameExtension = {siBuffer, NULL, 0 };
+    CERTGeneralName  *SAN;
+    PRUint32         numDNSNames = 0;
     SECStatus        rv;
 
+    if (!arena) {
+    	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
     /* TODO: mark arena */
     DN = CERT_NewGeneralName(arena, certDirectoryName);
     if (DN == NULL) {
@@ -1114,22 +1129,31 @@ CERT_GetCertificateNames(CERTCertificate *cert, PRArenaPool *arena)
         goto loser;
 
     /* Now extract any GeneralNames from the subject name names extension. */
-    rv = CERT_FindCertExtension(cert, SEC_OID_X509_SUBJECT_ALT_NAME, 
-				&altNameExtension);
-    if (rv == SECSuccess) {
-	altName = CERT_DecodeAltNameExtension(arena, &altNameExtension);
-	rv = altName ? SECSuccess : SECFailure;
+    SAN = cert_GetSubjectAltNameList(cert, arena);
+    if (SAN) {
+	numDNSNames = cert_CountDNSPatterns(SAN);
+	DN = cert_CombineNamesLists(DN, SAN);
     }
-    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_EXTENSION_NOT_FOUND)
-	rv = SECSuccess;
-    if (altNameExtension.data)
-	SECITEM_FreeItem(&altNameExtension, PR_FALSE);
-    if (rv != SECSuccess)
-        goto loser;
-    DN = cert_CombineNamesLists(DN, altName);
-
-    /* TODO: unmark arena */
-    return DN;
+    if (!numDNSNames && includeSubjectCommonName) {
+	char *cn = CERT_GetCommonName(&cert->subject);
+	if (cn) {
+	    CERTGeneralName *CN = CERT_NewGeneralName(arena, certDNSName);
+	    if (CN) {
+		SECItem cnItem = {siBuffer, NULL, 0};
+		cnItem.data = (unsigned char *)cn;
+		cnItem.len  = strlen(cn);
+		rv = SECITEM_CopyItem(arena, &CN->name.other, &cnItem);
+		if (rv == SECSuccess) {
+		    DN = cert_CombineNamesLists(DN, CN);
+	        }
+	    }
+	    PORT_Free(cn);
+	}
+    }
+    if (rv == SECSuccess) {
+	/* TODO: unmark arena */
+	return DN;
+    }
 loser:
     /* TODO: release arena to mark */
     return NULL;

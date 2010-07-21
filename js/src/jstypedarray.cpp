@@ -846,6 +846,14 @@ class TypedArrayTemplate
         if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp+2))
             return false;
 
+        if (obj->getClass() != fastClass()) {
+            // someone tried to apply this slice() to the wrong class
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_INCOMPATIBLE_METHOD,
+                                 fastClass()->name, "slice", obj->getClass()->name);
+            return false;
+        }
+
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         if (!tarray)
             return true;

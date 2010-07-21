@@ -438,6 +438,11 @@ inline PRInt32 NSAppUnitsToIntPixels(nscoord aAppUnits, float aAppUnitsPerPixel)
   return NSToIntRound(float(aAppUnits) / aAppUnitsPerPixel);
 }
 
+inline float NSCoordScale(nscoord aCoord, PRInt32 aFromAPP, PRInt32 aToAPP)
+{
+  return (NSCoordToFloat(aCoord) * aToAPP) / aFromAPP;
+}
+
 /// handy constants
 #define TWIPS_PER_POINT_INT           20
 #define TWIPS_PER_POINT_FLOAT         20.0f

@@ -55,4 +55,11 @@ CPPSRCS     = \
         nsAccelerometerSystem.cpp \
         $(NULL)
 
+ifdef MOZ_MAEMO_LIBLOCATION
+        CPPSRCS         += MaemoLocationProvider.cpp
+        LOCAL_INCLUDES  += $(MOZ_PLATFORM_MAEMO_CFLAGS) \
+                           -I$(topsrcdir)/dom/src/geolocation \
+                           $(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk

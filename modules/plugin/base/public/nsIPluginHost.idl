@@ -62,10 +62,9 @@ interface nsIChannel;
 interface nsIPluginStreamListener;
 
 [ptr] native PRLibraryPtr(PRLibrary);
-[ref] native nsIStreamListenerRef(nsIStreamListener *);
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[scriptable, uuid(D419142E-0571-416B-B797-2A8E6624491D)]
+[scriptable, uuid(C198DEAA-3F93-482D-A47C-85FF6514FE07)]
 interface nsIPluginHost : nsISupports
 {
   [noscript] void init();
@@ -89,8 +88,8 @@ interface nsIPluginHost : nsISupports
 
   [noscript] void instantiateFullPagePlugin(in string aMimeType,
                                             in nsIURI aURI,
-                                            in nsIStreamListenerRef aStreamListener,
-                                            in nsIPluginInstanceOwner aOwner);
+                                            in nsIPluginInstanceOwner aOwner,
+                                            out nsIStreamListener aStreamListener);
 
   /**
    * Instantiate an embedded plugin for an existing channel. The caller is

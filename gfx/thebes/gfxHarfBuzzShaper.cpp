@@ -50,8 +50,10 @@
 #include "gfxUnicodeProperties.h"
 
 #include "harfbuzz/hb-unicode.h"
+#include "harfbuzz/hb-ot.h"
 
 #include "nsUnicodeRange.h"
+#include "nsCRT.h"
 
 #define FloatToFixed(f) (65536 * (f))
 #define FixedToFloat(f) ((f) * (1.0 / 65536.0))
@@ -65,6 +67,7 @@ using namespace mozilla; // for AutoSwap_* types
 gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
     : gfxFontShaper(aFont),
       mHBFace(nsnull),
+      mHBLanguage(nsnull),
       mHmtxTable(nsnull),
       mNumLongMetrics(0),
       mCmapTable(nsnull),
@@ -367,6 +370,18 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
             }
             hb_blob_destroy(hheaTable);
         }
+
+        if (mFont->GetStyle()->languageOverride) {
+            mHBLanguage =
+                hb_ot_tag_to_language(mFont->GetStyle()->languageOverride);
+        } else if (mFont->GetFontEntry()->mLanguageOverride) {
+            mHBLanguage =
+                hb_ot_tag_to_language(mFont->GetFontEntry()->mLanguageOverride);
+        } else {
+            nsCString langString;
+            mFont->GetStyle()->language->ToUTF8String(langString);
+            mHBLanguage = hb_language_from_string(langString.get());
+        }
     }
 
     if (mCmapFormat <= 0 || (!mUseHintedWidths && !mHmtxTable)) {
@@ -399,13 +414,36 @@ gfxHarfBuzzShaper::InitTextRun(gfxContext *aContext,
         features.AppendElement(cligOff);
     }
 
+    // css features need to be merged with the existing ones, if any
+    const nsTArray<gfxFontFeature> *cssFeatures =
+        mFont->GetStyle()->featureSettings;
+    if (!cssFeatures) {
+        cssFeatures = mFont->GetFontEntry()->mFeatureSettings;
+    }
+    if (cssFeatures) {
+        for (PRUint32 i = 0; i < cssFeatures->Length(); ++i) {
+            PRUint32 j;
+            for (j = 0; j < features.Length(); ++j) {
+                if (cssFeatures->ElementAt(i).mTag == features[j].tag) {
+                    features[j].value = cssFeatures->ElementAt(i).mValue;
+                    break;
+                }
+            }
+            if (j == features.Length()) {
+                const gfxFontFeature& f = cssFeatures->ElementAt(i);
+                hb_feature_t hbf = { f.mTag, f.mValue, 0, -1 };
+                features.AppendElement(hbf);
+            }
+        }
+    }
+
     hb_buffer_t *buffer = hb_buffer_create(aRunLength);
     hb_buffer_set_unicode_funcs(buffer, sHBUnicodeFuncs);
     hb_buffer_set_direction(buffer,
                             aTextRun->IsRightToLeft() ?
                                 HB_DIRECTION_RTL : HB_DIRECTION_LTR);
     hb_buffer_set_script(buffer, hb_script_t(aRunScript));
-//    hb_buffer_set_language(buffer, HB_OT_TAG_DEFAULT_LANGUAGE);
+    hb_buffer_set_language(buffer, mHBLanguage);
 
     hb_buffer_add_utf16(buffer, reinterpret_cast<const uint16_t*>(aString + aRunStart),
                         aRunLength, 0, aRunLength);

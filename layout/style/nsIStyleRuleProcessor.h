@@ -61,10 +61,11 @@ struct AttributeRuleProcessorData;
 class nsPresContext;
 
 // IID for the nsIStyleRuleProcessor interface
-// {566a7bea-fdc5-40a5-bf8a-87b5a231d79e}
+// {b8e44bbe-aaac-4125-8ab2-0f42802e14ad}
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
-{ 0x566a7bea, 0xfdc5, 0x40a5, \
- { 0xbf, 0x8a, 0x87, 0xb5, 0xa2, 0x31, 0xd7, 0x9e } }
+{ 0xb8e44bbe, 0xaaac, 0x4125, \
+ { 0x8a, 0xb2, 0x0f, 0x42, 0x80, 0x2e, 0x14, 0xad } }
+
 
 /* The style rule processor interface is a mechanism to separate the matching
  * of style rules from style sheet instances.
@@ -88,25 +89,25 @@ public:
    * tree representing that ordered list of rules (with higher
    * precedence being farther from the root of the lexicographic tree).
    */
-  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData) = 0;
+  virtual void RulesMatching(ElementRuleProcessorData* aData) = 0;
 
   /**
    * Just like the previous |RulesMatching|, except for a given content
    * node <em>and pseudo-element</em>.
    */
-  NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData) = 0;
+  virtual void RulesMatching(PseudoElementRuleProcessorData* aData) = 0;
 
   /**
    * Just like the previous |RulesMatching|, except for a given anonymous box.
    */
-  NS_IMETHOD RulesMatching(AnonBoxRuleProcessorData* aData) = 0;
+  virtual void RulesMatching(AnonBoxRuleProcessorData* aData) = 0;
 
 #ifdef MOZ_XUL
   /**
    * Just like the previous |RulesMatching|, except for a given content
    * node <em>and tree pseudo</em>.
    */
-  NS_IMETHOD RulesMatching(XULTreeRuleProcessorData* aData) = 0;
+  virtual void RulesMatching(XULTreeRuleProcessorData* aData) = 0;
 #endif
 
   /**
@@ -152,8 +153,7 @@ public:
    * the characteristics of the medium, and return whether this rule
    * processor's rules have changed (e.g., because of media queries).
    */
-  NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,
-                                   PRBool* aRulesChanged) = 0;
+  virtual PRBool MediumFeaturesChanged(nsPresContext* aPresContext) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleRuleProcessor,

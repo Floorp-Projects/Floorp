@@ -38,8 +38,7 @@ description("Tests that unknown uniforms don't cause errors.");
 debug("");
 debug("Canvas.getContext");
 
-gl = initWebGL("example", "vshader", "fshader", [ "vPosition"], [ 0, 0, 0, 1 ], 1);
-var gl = create3DContext(document.getElementById("canvas"));
+var gl = initWebGL("example", "vshader", "fshader", [ "vPosition"], [ 0, 0, 0, 1 ], 1);
 if (!gl) {
   testFailed("context does not exist");
 } else {

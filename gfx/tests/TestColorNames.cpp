@@ -70,18 +70,15 @@ int main(int argc, char** argv)
 {
   ScopedXPCOM xpcom("TestColorNames");
   if (xpcom.failed())
-    return -1;
+    return 1;
 
   nscolor rgb;
   int rv = 0;
 
-  // Everything appears to assert if we don't do this first...
-  nsColorNames::AddRefTable();
-
   // First make sure we can find all of the tags that are supposed to
   // be in the table. Futz with the case to make sure any case will
   // work
-    
+
   for (PRUint32 index = 0 ; index < NS_ARRAY_LENGTH(kColorNames); index++) {
     // Lookup color by name and make sure it has the right id
     nsCString tagName(kColorNames[index]);
@@ -89,24 +86,24 @@ int main(int argc, char** argv)
     // Check that color lookup by name gets the right rgb value
     if (!NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tagName), &rgb)) {
       fail("can't find '%s'", tagName.get());
-      rv = -1;
+      rv = 1;
     }
     if (rgb != kColors[index]) {
       fail("name='%s' ColorNameToRGB=%x kColors[%d]=%08x",
            tagName.get(), rgb, index, kColors[index]);
-      rv = -1;
+      rv = 1;
     }
 
     // fiddle with the case to make sure we can still find it
     tagName.SetCharAt(tagName.CharAt(0) - 32, 0);
     if (!NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tagName), &rgb)) {
       fail("can't find '%s'", tagName.get());
-      rv = -1;
+      rv = 1;
     }
     if (rgb != kColors[index]) {
       fail("name='%s' ColorNameToRGB=%x kColors[%d]=%08x",
            tagName.get(), rgb, index, kColors[index]);
-      rv = -1;
+      rv = 1;
     }
 
     // Check that parsing an RGB value in hex gets the right values
@@ -123,11 +120,11 @@ int main(int argc, char** argv)
     nscolor hexrgb;
     if (!NS_HexToRGB(NS_ConvertASCIItoUTF16(cbuf), &hexrgb)) {
       fail("hex conversion to color of '%s'", cbuf);
-      rv = -1;
+      rv = 1;
     }
     if (hexrgb != rgb) {
       fail("rgb=%x hexrgb=%x", rgb, hexrgb);
-      rv = -1;
+      rv = 1;
     }
   }
 
@@ -136,11 +133,9 @@ int main(int argc, char** argv)
     nsCString tag(kJunkNames[i]);
     if (NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tag), &rgb)) {
       fail("found '%s'", kJunkNames[i] ? kJunkNames[i] : "(null)");
-      rv = -1;
+      rv = 1;
     }
   }
-
-  nsColorNames::ReleaseTable();
 
   if (rv == 0)
     passed("TestColorNames");
