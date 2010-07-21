@@ -758,8 +758,6 @@ HUD_SERVICE.prototype =
     switch (aMessage.origin) {
       case "network":
       case "HUDConsole":
-        this.logHUDMessage(aMessage, aConsoleNode, aMessageNode, filterState, filterString);
-        break;
       case "console-listener":
         this.logHUDMessage(aMessage, aConsoleNode, aMessageNode, filterState, filterString);
         break;
