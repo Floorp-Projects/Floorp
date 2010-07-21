@@ -222,10 +222,10 @@ window.TabsManager = iQ.extend(new Subscribable(), {
       }
       browserTab._unload();
     }
-    
+
     function BrowserWindow(chromeWindow) {
       var tabbrowser = chromeWindow.getBrowser();
-    
+
       for (var i = 0; i < tabbrowser.tabContainer.itemCount; i++)
         newBrowserTab(tabbrowser,
                       tabbrowser.tabContainer.getItemAtIndex(i));
@@ -283,7 +283,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
         // just need to fetch its BrowserTab object now.
         return chromeTab.tabcandyBrowserTab;
       };
-    
+
       this.getFocusedTab = function getFocusedTab() {
         return tabbrowser.selectedTab.tabcandyBrowserTab;
       };
@@ -334,31 +334,31 @@ window.TabsManager = iQ.extend(new Subscribable(), {
          }});
         */
       this.__proto__ = {
-    
+
         get closed() !browser,
         get url() browser && browser.currentURI ? browser.currentURI.spec : null,
         get favicon() chromeTab && chromeTab.image ? chromeTab.image : null,
-    
+
         get contentWindow() browser && browser.contentWindow ? browser.contentWindow : null,
         get contentDocument() browser && browser.contentDocument ? browser.contentDocument : null,
-    
+
         get raw() chromeTab,
         get tabbrowser() tabbrowser,
-    
+
         isFocused: function() browser && tabbrowser.selectedTab == chromeTab,
-    
+
         focus: function focus() {
           if (browser)
             tabbrowser.selectedTab = chromeTab;
         },
-    
+
         close: function close() {
           if (browser)
             tabbrowser.removeTab(chromeTab);
         },
-    
+
         toString: function toString() !browser ? "[Closed Browser Tab]" : "[Browser Tab]",
-    
+
         _unload: function _unload() {
           mixIns = null;
           tabbrowser = null;
