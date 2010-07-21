@@ -407,6 +407,8 @@ nsXMLEventsManager::ContentRemoved(nsIDocument* aDocument,
   //And to remember: the same observer can be referenced by many 
   //XMLEventsListeners
 
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
   //If the content was an XML Events observer or handler
   mListeners.Enumerate(EnumAndSetIncomplete, aChild);
 
