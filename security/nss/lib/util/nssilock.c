@@ -125,7 +125,7 @@ static void Vtrace(
     struct pzTrace_s *tp;
 
 RetryTrace:
-    idx = PR_AtomicIncrement( &traceIndex );
+    idx = PR_ATOMIC_INCREMENT( &traceIndex );
     while( NUM_TT_ENTRIES <= idx || op == FlushTT ) {
         if( NUM_TT_ENTRIES == idx  || op == FlushTT )  {
             int writeSize = idx * sizeof(struct pzTrace_s);

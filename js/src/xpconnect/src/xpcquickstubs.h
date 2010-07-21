@@ -342,9 +342,12 @@ JSBool
 xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, PRUnichar **pstr);
 
 
-/** Convert an nsAString to jsval, returning JS_TRUE on success. */
+/** Convert an nsString to jsval, returning JS_TRUE on success.
+ *  Note, the ownership of the string buffer may be moved from str to rval.
+ *  If that happens, str will point to an empty string after this call.
+ */
 JSBool
-xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval);
+xpc_qsStringToJsval(JSContext *cx, nsString &str, jsval *rval);
 
 /** Convert an nsAString to JSString, returning JS_TRUE on success. */
 JSBool

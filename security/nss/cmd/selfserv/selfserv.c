@@ -735,8 +735,8 @@ logger(void *arg)
          */
         PR_Sleep(logPeriodTicks);
         secondsElapsed++;
-        totalPeriodBytes +=  PR_AtomicSet(&loggerBytes, 0);
-        totalPeriodBytesTCP += PR_AtomicSet(&loggerBytesTCP, 0);
+        totalPeriodBytes +=  PR_ATOMIC_SET(&loggerBytes, 0);
+        totalPeriodBytesTCP += PR_ATOMIC_SET(&loggerBytesTCP, 0);
         if (secondsElapsed != logPeriod) {
             continue;
         }
@@ -1349,8 +1349,8 @@ handle_connection(
         /* Send testBulkTotal chunks to the client. Unlimited if 0. */
         if (testBulk) {
             while (0 < (rv = PR_Write(ssl_sock, testBulkBuf, testBulkSize))) {
-                PR_AtomicAdd(&loggerBytes, rv);
-                PR_AtomicIncrement(&bulkSentChunks);
+                PR_ATOMIC_ADD(&loggerBytes, rv);
+                PR_ATOMIC_INCREMENT(&bulkSentChunks);
                 if ((bulkSentChunks > testBulkTotal) && (testBulkTotal != 0))
                     break;
             }
@@ -1359,7 +1359,7 @@ handle_connection(
             if (bulkSentChunks <= testBulkTotal) {
                 errWarn("PR_Write");
             }
-            PR_AtomicDecrement(&loggerOps);
+            PR_ATOMIC_DECREMENT(&loggerOps);
             break;
         }
     } while (0);
@@ -1444,7 +1444,7 @@ do_accepts(
         VLOG(("selfserv: do_accept: Got connection\n"));
 
         if (logStats) {
-            PR_AtomicIncrement(&loggerOps);
+            PR_ATOMIC_INCREMENT(&loggerOps);
         }
 
 	PZ_Lock(qLock);
@@ -1558,7 +1558,7 @@ logWritev (
         timeout);
     /* Add the amount written, but not if there's an error */
     if (rv > 0) 
-        PR_AtomicAdd(&loggerBytesTCP, rv);
+        PR_ATOMIC_ADD(&loggerBytesTCP, rv);
     return rv;
 }
     
@@ -1571,7 +1571,7 @@ logWrite (
     PRInt32 rv = (fd->lower->methods->write)(fd->lower, buf, amount);
     /* Add the amount written, but not if there's an error */
     if (rv > 0) 
-        PR_AtomicAdd(&loggerBytesTCP, rv);
+        PR_ATOMIC_ADD(&loggerBytesTCP, rv);
     
     return rv;
 }
@@ -1588,7 +1588,7 @@ logSend (
         flags, timeout);
     /* Add the amount written, but not if there's an error */
     if (rv > 0) 
-        PR_AtomicAdd(&loggerBytesTCP, rv);
+        PR_ATOMIC_ADD(&loggerBytesTCP, rv);
     return rv;
 }
  

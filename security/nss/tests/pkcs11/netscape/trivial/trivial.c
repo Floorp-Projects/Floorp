@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trivial.c,v $ $Revision: 1.4 $ $Date: 2005/01/20 02:25:51 $";
+static const char CVS_ID[] = "@(#) $RCSfile: trivial.c,v $ $Revision: 1.5 $ $Date: 2010/04/25 23:37:37 $";
 #endif /* DEBUG */
 
 /*
@@ -602,7 +602,7 @@ rmain
           case CKR_BUFFER_TOO_SMALL:
             break;
           default:
-            PR_fprintf(PR_STDERR, "C_GetAtributeValue(%lu, %lu, {existant attribute types}, %lu) returned 0x%08x\n",
+            PR_fprintf(PR_STDERR, "C_GetAtributeValue(%lu, %lu, {existent attribute types}, %lu) returned 0x%08x\n",
                        h, o, nAttributes, ck_rv);
             return 1;
           }

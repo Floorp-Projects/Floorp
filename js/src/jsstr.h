@@ -181,11 +181,11 @@ struct JSString {
         return mLengthAndFlags & TYPE_MASK;
     }
 
-    inline bool isDependent() const {
+    JS_ALWAYS_INLINE bool isDependent() const {
         return type() == DEPENDENT;
     }
 
-    inline bool isFlat() const {
+    JS_ALWAYS_INLINE bool isFlat() const {
         return type() == FLAT;
     }
 
@@ -197,7 +197,7 @@ struct JSString {
         return hasFlag(ROPE_BIT);
     }
 
-    inline bool isAtomized() const {
+    JS_ALWAYS_INLINE bool isAtomized() const {
         return isFlat() && hasFlag(ATOMIZED);
     }
 
@@ -209,11 +209,11 @@ struct JSString {
         return type() == TOP_NODE;
     }
 
-    inline jschar *chars() {
+    JS_ALWAYS_INLINE jschar *chars() {
         return isFlat() ? flatChars() : nonFlatChars();
     }
 
-    jschar *nonFlatChars() {
+    JS_ALWAYS_INLINE jschar *nonFlatChars() {
         if (isDependent())
             return dependentChars();
         else {
@@ -226,25 +226,25 @@ struct JSString {
         }
     }
 
-    inline size_t length() const {
+    JS_ALWAYS_INLINE size_t length() const {
         return mLengthAndFlags >> FLAGS_LENGTH_SHIFT;
     }
 
-    inline bool empty() const {
+    JS_ALWAYS_INLINE bool empty() const {
         return length() == 0;
     }
 
-    inline void getCharsAndLength(const jschar *&chars, size_t &length) {
+    JS_ALWAYS_INLINE void getCharsAndLength(const jschar *&chars, size_t &length) {
         chars = this->chars();
         length = this->length();
     }
 
-    inline void getCharsAndEnd(const jschar *&chars, const jschar *&end) {
+    JS_ALWAYS_INLINE void getCharsAndEnd(const jschar *&chars, const jschar *&end) {
         end = length() + (chars = this->chars());
     }
 
     /* Specific flat string initializer and accessor methods. */
-    inline void initFlat(jschar *chars, size_t length) {
+    JS_ALWAYS_INLINE void initFlat(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
         mOffset = 0;
         mCapacity = 0;
@@ -252,7 +252,7 @@ struct JSString {
         mChars = chars;
     }
 
-    inline void initFlatMutable(jschar *chars, size_t length, size_t cap) {
+    JS_ALWAYS_INLINE void initFlatMutable(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
         mOffset = 0;
         mCapacity = cap;
@@ -260,17 +260,17 @@ struct JSString {
         mChars = chars;
     }
 
-    inline jschar *flatChars() const {
+    JS_ALWAYS_INLINE jschar *flatChars() const {
         JS_ASSERT(isFlat());
         return mChars;
     }
 
-    inline size_t flatLength() const {
+    JS_ALWAYS_INLINE size_t flatLength() const {
         JS_ASSERT(isFlat());
         return length();
     }
 
-    inline size_t flatCapacity() const {
+    JS_ALWAYS_INLINE size_t flatCapacity() const {
         JS_ASSERT(isFlat());
         return mCapacity;
     }
@@ -331,7 +331,7 @@ struct JSString {
         return mBase;
     }
 
-    inline jschar *dependentChars() {
+    JS_ALWAYS_INLINE jschar *dependentChars() {
         return dependentBase()->isFlat()
                ? dependentBase()->flatChars() + dependentStart()
                : js_GetDependentStringChars(this);

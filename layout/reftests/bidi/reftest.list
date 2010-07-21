@@ -9,9 +9,9 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == bidi-004-j.html bidi-004-ref.html
 == bidi-005.html bidi-005-ref.html
 == bidi-006.html bidi-006-ref.html
 == bidi-006-j.html bidi-006-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == visualmarquee.html marquee-ref.html # Bug 561637
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == logicalmarquee.html marquee-ref.html # Bug 561637
-== visualmarquee.html logicalmarquee.html # This passes even with bug 561637
+== visualmarquee.html marquee-ref.html
+== logicalmarquee.html marquee-ref.html
+== visualmarquee.html logicalmarquee.html
 # test for glyph mirroring in right-to-left text
 == mirroring-01.html mirroring-01-ref.html
 # quote marks are not supposed to mirror, but Unicode 5.0 said they should, so some systems do it

@@ -578,7 +578,7 @@ ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS	+= -bundle
 else
-EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name @executable_path/$(SHARED_LIBRARY) -compatibility_version 1 -current_version 1 -single_module
+EXTRA_DSO_LDOPTS	+= -dynamiclib -install_name @loader_path/$(SHARED_LIBRARY) -compatibility_version 1 -current_version 1 -single_module
 endif
 endif
 endif
@@ -1204,7 +1204,7 @@ ifndef MOZ_OS2_USE_DECLSPEC
 	$(FILTER) $(OBJS) $(SHARED_LIBRARY_LIBS) >> $@
 endif	
 else
-	echo    _NSGetModule >> $@
+	echo    _NSModule >> $@
 endif
 else
 ifndef MOZ_OS2_USE_DECLSPEC

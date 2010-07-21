@@ -38,8 +38,31 @@
 #include "ThebesLayerD3D9.h"
 #include "gfxPlatform.h"
 
+#include "gfxWindowsPlatform.h"
+
 namespace mozilla {
 namespace layers {
+
+// Returns true if it's OK to save the contents of aLayer in an
+// opaque surface (a surface without an alpha channel).
+// If we can use a surface without an alpha channel, we should, because
+// it will often make painting of antialiased text faster and higher
+// quality.
+static PRBool
+UseOpaqueSurface(Layer* aLayer)
+{
+  // If the visible content in the layer is opaque, there is no need
+  // for an alpha channel.
+  if (aLayer->IsOpaqueContent())
+    return PR_TRUE;
+  // Also, if this layer is the bottommost layer in a container which
+  // doesn't need an alpha channel, we can use an opaque surface for this
+  // layer too. Any transparent areas must be covered by something else
+  // in the container.
+  ContainerLayer* parent = aLayer->GetParent();
+  return parent && parent->GetFirstChild() == aLayer &&
+         UseOpaqueSurface(parent);
+}
 
 ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
   : ThebesLayer(aManager, NULL)
@@ -67,16 +90,35 @@ ThebesLayerD3D9::SetVisibleRegion(const nsIntRegion &aRegion)
   if (aRegion.IsEqual(mVisibleRegion)) {
     return;
   }
-  nsIntRegion oldVisibleRegion = mVisibleRegion;
-  nsRefPtr<IDirect3DTexture9> oldTexture = mTexture;
 
+  nsIntRegion oldVisibleRegion = mVisibleRegion;
   ThebesLayer::SetVisibleRegion(aRegion);
+
+  if (!mTexture) {
+    // If we don't need to retain content initialize lazily. This is good also
+    // because we might get mIsOpaqueSurface set later than the first call to
+    // SetVisibleRegion.
+    return;
+  }
+
+  D3DFORMAT fmt = UseOpaqueSurface(this) ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
+
+  D3DSURFACE_DESC desc;
+  mTexture->GetLevelDesc(0, &desc);
+
+  if (fmt != desc.Format) {
+    // The new format isn't compatible with the old texture, toss out the old
+    // texture.
+    mTexture = nsnull;
+  }
+
+  nsRefPtr<IDirect3DTexture9> oldTexture = mTexture;
 
   nsIntRect oldBounds = oldVisibleRegion.GetBounds();
   nsIntRect newBounds = mVisibleRegion.GetBounds();
   
   device()->CreateTexture(newBounds.width, newBounds.height, 1,
-                          D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
+                          D3DUSAGE_RENDERTARGET, fmt,
                           D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
 
   // Old visible region will become the region that is covered by both the
@@ -149,11 +191,28 @@ ThebesLayerD3D9::RenderLayer()
   if (mVisibleRegion.IsEmpty()) {
     return;
   }
+  HRESULT hr;
+
   nsIntRect visibleRect = mVisibleRegion.GetBounds();
+
+  // We differentiate between these formats since D3D9 will only allow us to
+  // call GetDC on an opaque surface.
+  D3DFORMAT fmt = UseOpaqueSurface(this) ? D3DFMT_X8R8G8B8 : D3DFMT_A8R8G8B8;
+  if (mTexture) {
+    D3DSURFACE_DESC desc;
+    mTexture->GetLevelDesc(0, &desc);
+
+    if (fmt != desc.Format) {
+      // The new format isn't compatible with the old texture, toss out the old
+      // texture.
+      mTexture = nsnull;
+      mValidRegion.SetEmpty();
+    }
+  }
 
   if (!mTexture) {
     device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
-                            D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
+                            D3DUSAGE_RENDERTARGET, fmt,
                             D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
     mValidRegion.SetEmpty();
   }
@@ -163,48 +222,72 @@ ThebesLayerD3D9::RenderLayer()
     region.Sub(mVisibleRegion, mValidRegion);
     nsIntRect bounds = region.GetBounds();
 
-    gfxASurface::gfxImageFormat imageFormat = gfxASurface::ImageFormatARGB32;;
+    gfxASurface::gfxImageFormat imageFormat = gfxASurface::ImageFormatARGB32;
     nsRefPtr<gfxASurface> destinationSurface;
     nsRefPtr<gfxContext> context;
 
-    // XXX - Should optimize here to use IDirect3DSurface9::GetDC() for GDI
-    // rendering since we're always on windows. We may consider retaining a
-    // SYSTEMMEM texture texture the size of our DEFAULT texture and then use
-    // UpdateTexture and add dirty rects to update in a single call.
-    destinationSurface =
-      gfxPlatform::GetPlatform()->
-        CreateOffscreenSurface(gfxIntSize(bounds.width,
-                                          bounds.height),
-                               imageFormat);
+    nsRefPtr<IDirect3DTexture9> tmpTexture;
+    device()->CreateTexture(bounds.width, bounds.height, 1,
+                            0, fmt,
+                            D3DPOOL_SYSTEMMEM, getter_AddRefs(tmpTexture), NULL);
+
+    nsRefPtr<IDirect3DSurface9> surf;
+    HDC dc;
+    if (UseOpaqueSurface(this)) {
+      hr = tmpTexture->GetSurfaceLevel(0, getter_AddRefs(surf));
+
+      if (FAILED(hr)) {
+        // Uh-oh, bail.
+        NS_WARNING("Failed to get texture surface level.");
+        return;
+      }
+
+      hr = surf->GetDC(&dc);
+
+      if (FAILED(hr)) {
+        NS_WARNING("Failed to get device context for texture surface.");
+        return;
+      }
+
+      destinationSurface = new gfxWindowsSurface(dc);
+    } else {
+      // XXX - We may consider retaining a SYSTEMMEM texture texture the size
+      // of our DEFAULT texture and then use UpdateTexture and add dirty rects
+      // to update in a single call.
+      destinationSurface =
+        gfxPlatform::GetPlatform()->
+          CreateOffscreenSurface(gfxIntSize(bounds.width,
+                                            bounds.height),
+                                 imageFormat);
+    }
 
     context = new gfxContext(destinationSurface);
     context->Translate(gfxPoint(-bounds.x, -bounds.y));
     LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
     cbInfo.Callback(this, context, region, nsIntRegion(), cbInfo.CallbackData);
 
-    nsRefPtr<IDirect3DTexture9> tmpTexture;
-    device()->CreateTexture(bounds.width, bounds.height, 1,
-                            0, D3DFMT_A8R8G8B8,
-                            D3DPOOL_SYSTEMMEM, getter_AddRefs(tmpTexture), NULL);
+    if (UseOpaqueSurface(this)) {
+      surf->ReleaseDC(dc);
+    } else {
+      D3DLOCKED_RECT r;
+      tmpTexture->LockRect(0, &r, NULL, 0);
 
-    D3DLOCKED_RECT r;
-    tmpTexture->LockRect(0, &r, NULL, 0);
+      nsRefPtr<gfxImageSurface> imgSurface =
+        new gfxImageSurface((unsigned char *)r.pBits,
+                            gfxIntSize(bounds.width,
+                                       bounds.height),
+                            r.Pitch,
+                            imageFormat);
 
-    nsRefPtr<gfxImageSurface> imgSurface =
-      new gfxImageSurface((unsigned char *)r.pBits,
-                          gfxIntSize(bounds.width,
-                                     bounds.height),
-                          r.Pitch,
-                          imageFormat);
+      context = new gfxContext(imgSurface);
+      context->SetSource(destinationSurface);
+      context->SetOperator(gfxContext::OPERATOR_SOURCE);
+      context->Paint();
 
-    context = new gfxContext(imgSurface);
-    context->SetSource(destinationSurface);
-    context->SetOperator(gfxContext::OPERATOR_SOURCE);
-    context->Paint();
+      imgSurface = NULL;
 
-    imgSurface = NULL;
-
-    tmpTexture->UnlockRect(0);
+      tmpTexture->UnlockRect(0);
+    }
 
     nsRefPtr<IDirect3DSurface9> srcSurface;
     nsRefPtr<IDirect3DSurface9> dstSurface;

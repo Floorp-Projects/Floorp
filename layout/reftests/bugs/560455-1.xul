@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<hbox style="display: none">
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="test" extends="xul:button">
+  </binding>
+
+</bindings>
+</hbox>
+
+<hbox style="display: block">
+  <div style="-moz-binding: url(#test); width: 0; display: block;
+              overflow: hidden; padding: 10px; border: 1px solid black; "
+       xmlns="http://www.w3.org/1999/xhtml">Correct</div>
+</hbox>
+</window>

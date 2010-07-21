@@ -226,7 +226,7 @@ public:
       mKeyframe(PR_FALSE)
   {
     MOZ_COUNT_CTOR(VideoData);
-    NS_ASSERTION(aEndTime > aTime, "Frame must start before it ends.");
+    NS_ASSERTION(aEndTime >= aTime, "Frame must start before it ends.");
   }
 
   VideoData(PRInt64 aOffset,
@@ -242,7 +242,7 @@ public:
       mKeyframe(aKeyframe)
   {
     MOZ_COUNT_CTOR(VideoData);
-    NS_ASSERTION(aEndTime > aTime, "Frame must start before it ends.");
+    NS_ASSERTION(aEndTime >= aTime, "Frame must start before it ends.");
   }
 
 };

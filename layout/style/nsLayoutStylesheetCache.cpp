@@ -38,7 +38,7 @@
 #include "nsLayoutStylesheetCache.h"
 
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsIFile.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
