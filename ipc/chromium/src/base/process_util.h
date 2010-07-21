@@ -134,7 +134,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                bool wait, ProcessHandle* process_handle);
 
-#if defined(CHROMIUM_MOZILLA_BUILD) && defined(OS_LINUX)
+#if defined(CHROMIUM_MOZILLA_BUILD) && (defined(OS_LINUX) || defined(OS_MACOSX))
 typedef std::map<std::string, std::string> environment_map;
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,

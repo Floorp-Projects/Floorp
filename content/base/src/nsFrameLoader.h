@@ -61,10 +61,10 @@ class AutoResetInShow;
 
 #ifdef MOZ_IPC
 namespace mozilla {
-  namespace dom {
-    class TabParent;
-    class PIFrameEmbeddingParent;
-  }
+namespace dom {
+class PBrowserParent;
+class TabParent;
+}
 }
 
 #ifdef MOZ_WIDGET_GTK2
@@ -78,6 +78,10 @@ class QX11EmbedContainer;
 class nsFrameLoader : public nsIFrameLoader
 {
   friend class AutoResetInShow;
+#ifdef MOZ_IPC
+  typedef mozilla::dom::PBrowserParent PBrowserParent;
+  typedef mozilla::dom::TabParent TabParent;
+#endif
 
 protected:
   nsFrameLoader(nsIContent *aOwner) :
@@ -93,7 +97,7 @@ protected:
     , mDelayRemoteDialogs(PR_FALSE)
     , mRemoteWidgetCreated(PR_FALSE)
     , mRemoteFrame(false)
-    , mChildProcess(nsnull)
+    , mRemoteBrowser(nsnull)
 #if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)
     , mRemoteSocket(nsnull)
 #endif
@@ -149,7 +153,7 @@ public:
   void DestroyChild();
 
 #ifdef MOZ_IPC
-  mozilla::dom::PIFrameEmbeddingParent* GetChildProcess();
+  PBrowserParent* GetRemoteBrowser();
 #endif
   nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
 
@@ -208,7 +212,7 @@ private:
   bool mRemoteFrame;
   // XXX leaking
   nsCOMPtr<nsIObserver> mChildHost;
-  mozilla::dom::TabParent* mChildProcess;
+  TabParent* mRemoteBrowser;
 
 #ifdef MOZ_WIDGET_GTK2
   GtkWidget* mRemoteSocket;

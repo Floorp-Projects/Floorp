@@ -721,8 +721,7 @@ struct JSScopeProperty {
     }
 
     js::Value getterOrUndefined() const {
-        JSObject *obj = hasGetterValue() ? getterObj : NULL;
-        return obj ? js::ObjectValue(*obj) : js::UndefinedValue();
+        return hasGetterValue() && getterObj ? js::ObjectValue(*getterObj) : js::UndefinedValue();
     }
 
     js::PropertyOp setter() const { return rawSetter; }
@@ -737,7 +736,7 @@ struct JSScopeProperty {
     }
 
     js::Value setterOrUndefined() const {
-        return setterObj ? js::ObjectValue(*setterObj) : js::UndefinedValue();
+        return hasSetterValue() && setterObj ? js::ObjectValue(*setterObj) : js::UndefinedValue();
     }
 
     inline JSDHashNumber hash() const;

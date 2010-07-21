@@ -386,7 +386,7 @@ pkix_ComCRLSelParams_Duplicate(
         void *plContext)
 {
         PKIX_ComCRLSelParams *old;
-        PKIX_ComCRLSelParams *new;
+        PKIX_ComCRLSelParams *new = NULL;
 
         PKIX_ENTER(COMCRLSELPARAMS, "pkix_ComCRLSelParams_Duplicate");
         PKIX_NULLCHECK_TWO(object, pNewObject);

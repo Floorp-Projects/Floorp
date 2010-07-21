@@ -733,8 +733,8 @@ ProcessOneOpt(OPT_TYPE type, char *arg)
 	    PR_fprintf(errorFD, errStrings[DUPLICATE_OPTION_ERR],
 	         				"generate (-G)");
 	    warningCount++;
-	    PR_Free(zipfile); 
-	    zipfile = NULL;
+	    PR_Free(genkey); 
+	    genkey = NULL;
 	}
 	if (!arg) {
 	    PR_fprintf(errorFD, errStrings[OPTION_NEEDS_ARG_ERR],

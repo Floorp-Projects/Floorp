@@ -597,7 +597,8 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("MathMLSlash")
+  NS_DISPLAY_DECL_NAME("MathMLSlash", TYPE_MATHML_SLASH)
+
 private:
   nsRect    mRect;
   nscoord   mThickness;

@@ -50,14 +50,14 @@
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsCSSScanner.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSImportRule.h"
 #include "nsCSSRules.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
 #include "nsCSSStyleSheet.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsStyleConsts.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -89,6 +89,8 @@
 #include "prlog.h"
 #include "CSSCalc.h"
 #include "nsMediaFeatures.h"
+
+namespace css = mozilla::css;
 
 // Flags for ParseVariant method
 #define VARIANT_KEYWORD         0x000001  // K
@@ -204,7 +206,7 @@ public:
                                      nsIURI*           aSheetURL,
                                      nsIURI*           aBaseURL,
                                      nsIPrincipal*     aSheetPrincipal,
-                                     nsCSSDeclaration* aDeclaration,
+                                     css::Declaration* aDeclaration,
                                      PRBool            aParseOnlyOneDecl,
                                      PRBool*           aChanged,
                                      PRBool            aClearOldDecl);
@@ -220,7 +222,7 @@ public:
                          nsIURI* aSheetURL,
                          nsIURI* aBaseURL,
                          nsIPrincipal* aSheetPrincipal,
-                         nsCSSDeclaration* aDeclaration,
+                         css::Declaration* aDeclaration,
                          PRBool* aChanged,
                          PRBool aIsImportant);
 
@@ -400,8 +402,8 @@ protected:
   PRBool ParseSelectorGroup(nsCSSSelectorList*& aListHead);
   PRBool ParseSelector(nsCSSSelectorList* aList, PRUnichar aPrevCombinator);
 
-  nsCSSDeclaration* ParseDeclarationBlock(PRBool aCheckForBraces);
-  PRBool ParseDeclaration(nsCSSDeclaration* aDeclaration,
+  css::Declaration* ParseDeclarationBlock(PRBool aCheckForBraces);
+  PRBool ParseDeclaration(css::Declaration* aDeclaration,
                           PRBool aCheckForBraces,
                           PRBool aMustCallValueAppended,
                           PRBool* aChanged);
@@ -415,13 +417,13 @@ protected:
   // is already set in it.  If aOverrideImportant is true, new data will
   // replace old settings of the same properties, even if the old settings
   // are !important and the new data aren't.
-  void TransferTempData(nsCSSDeclaration* aDeclaration,
+  void TransferTempData(css::Declaration* aDeclaration,
                         nsCSSProperty aPropID,
                         PRBool aIsImportant,
                         PRBool aOverrideImportant,
                         PRBool aMustCallValueAppended,
                         PRBool* aChanged);
-  void DoTransferTempData(nsCSSDeclaration* aDeclaration,
+  void DoTransferTempData(css::Declaration* aDeclaration,
                           nsCSSProperty aPropID,
                           PRBool aIsImportant,
                           PRBool aOverrideImportant,
@@ -913,9 +915,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
     nsICSSRule* lastRule = nsnull;
     mSheet->GetStyleRuleAt(ruleCount - 1, lastRule);
     if (lastRule) {
-      PRInt32 type;
-      lastRule->GetType(type);
-      switch (type) {
+      switch (lastRule->GetType()) {
         case nsICSSRule::CHARSET_RULE:
         case nsICSSRule::IMPORT_RULE:
           mSection = eCSSSection_Import;
@@ -1005,7 +1005,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
     haveBraces = PR_FALSE;
   }
 
-  nsCSSDeclaration* declaration = ParseDeclarationBlock(haveBraces);
+  css::Declaration* declaration = ParseDeclarationBlock(haveBraces);
   if (declaration) {
     // Create a style rule for the declaration
     nsICSSStyleRule* rule = nsnull;
@@ -1032,7 +1032,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                          nsIURI*           aSheetURI,
                                          nsIURI*           aBaseURI,
                                          nsIPrincipal*     aSheetPrincipal,
-                                         nsCSSDeclaration* aDeclaration,
+                                         css::Declaration* aDeclaration,
                                          PRBool            aParseOnlyOneDecl,
                                          PRBool*           aChanged,
                                          PRBool            aClearOldDecl)
@@ -1116,7 +1116,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              nsIURI* aSheetURI,
                              nsIURI* aBaseURI,
                              nsIPrincipal* aSheetPrincipal,
-                             nsCSSDeclaration* aDeclaration,
+                             css::Declaration* aDeclaration,
                              PRBool* aChanged,
                              PRBool aIsImportant)
 {
@@ -2428,7 +2428,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
   CLEAR_ERROR();
 
   // Next parse the declaration block
-  nsCSSDeclaration* declaration = ParseDeclarationBlock(PR_TRUE);
+  css::Declaration* declaration = ParseDeclarationBlock(PR_TRUE);
   if (nsnull == declaration) {
     // XXX skip something here
     delete slist;
@@ -3549,7 +3549,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
   return PR_TRUE;
 }
 
-nsCSSDeclaration*
+css::Declaration*
 CSSParserImpl::ParseDeclarationBlock(PRBool aCheckForBraces)
 {
   if (aCheckForBraces) {
@@ -3559,7 +3559,7 @@ CSSParserImpl::ParseDeclarationBlock(PRBool aCheckForBraces)
       return nsnull;
     }
   }
-  nsCSSDeclaration* declaration = new nsCSSDeclaration();
+  css::Declaration* declaration = new css::Declaration();
   mData.AssertInitialState();
   if (declaration) {
     for (;;) {
@@ -3951,7 +3951,7 @@ CSSParserImpl::ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs)
 //----------------------------------------------------------------------
 
 PRBool
-CSSParserImpl::ParseDeclaration(nsCSSDeclaration* aDeclaration,
+CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
                                 PRBool aCheckForBraces,
                                 PRBool aMustCallValueAppended,
                                 PRBool* aChanged)
@@ -4101,7 +4101,7 @@ CSSParserImpl::ClearTempData(nsCSSProperty aPropID)
 }
 
 void
-CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
+CSSParserImpl::TransferTempData(css::Declaration* aDeclaration,
                                 nsCSSProperty aPropID,
                                 PRBool aIsImportant,
                                 PRBool aOverrideImportant,
@@ -4124,7 +4124,7 @@ CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
 // case some other caller wants to use it in the future (although I
 // can't think of why).
 void
-CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
+CSSParserImpl::DoTransferTempData(css::Declaration* aDeclaration,
                                   nsCSSProperty aPropID,
                                   PRBool aIsImportant,
                                   PRBool aOverrideImportant,
@@ -5963,6 +5963,10 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
                         nsCSSProps::kFloatEdgeKTable);
   case eCSSProperty_font_family:
     return ParseFamily(aValue);
+  case eCSSProperty_font_feature_settings:
+  case eCSSProperty_font_language_override:
+    return ParseVariant(aValue, VARIANT_NORMAL | VARIANT_INHERIT |
+                                VARIANT_STRING, nsnull);
   case eCSSProperty_font_size:
     return ParseNonNegativeVariant(aValue,
                                    VARIANT_HKLP | VARIANT_SYSFONT |
@@ -6240,6 +6244,10 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
 
   case eCSSFontDesc_UnicodeRange:
     return ParseFontRanges(aValue);
+
+  case eCSSFontDesc_FontFeatureSettings:
+  case eCSSFontDesc_FontLanguageOverride:
+    return ParseVariant(aValue, VARIANT_NORMAL | VARIANT_STRING, nsnull);
 
   case eCSSFontDesc_UNKNOWN:
   case eCSSFontDesc_COUNT:
@@ -7825,6 +7833,8 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_line_height, family);
         AppendValue(eCSSProperty_font_stretch, family);
         AppendValue(eCSSProperty_font_size_adjust, family);
+        AppendValue(eCSSProperty_font_feature_settings, family);
+        AppendValue(eCSSProperty_font_language_override, family);
       }
       else {
         AppendValue(eCSSProperty__x_system_font, family);
@@ -7837,6 +7847,8 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_line_height, systemFont);
         AppendValue(eCSSProperty_font_stretch, systemFont);
         AppendValue(eCSSProperty_font_size_adjust, systemFont);
+        AppendValue(eCSSProperty_font_feature_settings, systemFont);
+        AppendValue(eCSSProperty_font_language_override, systemFont);
       }
       return PR_TRUE;
     }
@@ -7898,6 +7910,8 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_stretch,
                   nsCSSValue(NS_FONT_STRETCH_NORMAL, eCSSUnit_Enumerated));
       AppendValue(eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None));
+      AppendValue(eCSSProperty_font_feature_settings, nsCSSValue(eCSSUnit_Normal));
+      AppendValue(eCSSProperty_font_language_override, nsCSSValue(eCSSUnit_Normal));
       return PR_TRUE;
     }
   }
@@ -9645,7 +9659,7 @@ nsCSSParser::ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                        nsIURI*           aSheetURI,
                                        nsIURI*           aBaseURI,
                                        nsIPrincipal*     aSheetPrincipal,
-                                       nsCSSDeclaration* aDeclaration,
+                                       css::Declaration* aDeclaration,
                                        PRBool            aParseOnlyOneDecl,
                                        PRBool*           aChanged,
                                        PRBool            aClearOldDecl)
@@ -9673,7 +9687,7 @@ nsCSSParser::ParseProperty(const nsCSSProperty aPropID,
                            nsIURI*             aSheetURI,
                            nsIURI*             aBaseURI,
                            nsIPrincipal*       aSheetPrincipal,
-                           nsCSSDeclaration*   aDeclaration,
+                           css::Declaration*   aDeclaration,
                            PRBool*             aChanged,
                            PRBool              aIsImportant)
 {

@@ -50,8 +50,8 @@ class nsIDeviceContext;
 class nsIViewObserver;
 
 #define NS_IVIEWMANAGER_IID   \
-  { 0xbbdd429c, 0x6542, 0x477a, \
-    { 0xab, 0x48, 0x6c, 0xd6, 0xcb, 0xb8, 0xdf, 0x98 } }
+  { 0x9e924719, 0x3c4b, 0x435b, \
+    { 0xaf, 0x1e, 0x71, 0x52, 0x04, 0x6d, 0xaa, 0x44 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -388,42 +388,6 @@ public:
    * (aFromScroll is false) or scrolled (aFromScroll is true).
    */
   NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll)=0;
-
-  /**
-   * Called to inform the view manager that a view is about to bit-blit.
-   * @param aView the view that will bit-blit
-   * @param aScrollAmount how much aView will scroll by
-   * @return always returns NS_OK
-   * @note
-   * This method used to return void, but MSVC 6.0 SP5 (without the
-   * Processor Pack) and SP6, and the MS eMbedded Visual C++ 4.0 SP4
-   * (for WINCE) hit an internal compiler error when compiling this
-   * method:
-   *
-   * @par
-@verbatim
-       fatal error C1001: INTERNAL COMPILER ERROR
-                   (compiler file 'E:\8966\vc98\p2\src\P2\main.c', line 494)
-@endverbatim
-   *
-   * @par
-   * Making the method return nsresult worked around the internal
-   * compiler error.  See Bugzilla bug 281158.  (The WINCE internal
-   * compiler error was addressed by the patch in bug 291229 comment
-   * 14 although the bug report did not mention the problem.)
-   */
-  virtual nsresult WillBitBlit(nsIView* aView, const nsRect& aRect,
-                               nsPoint aScrollAmount) = 0;
-  
-  /**
-   * Called to inform the view manager that a view has scrolled via a
-   * bitblit.
-   * The view manager will invalidate any widgets which may need
-   * to be rerendered.
-   * @param aView view to paint
-   * @param aUpdateRegion ensure that this part of the view is repainted
-   */
-  virtual void UpdateViewAfterScroll(nsIView *aView, const nsRegion& aUpdateRegion) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)

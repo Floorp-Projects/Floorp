@@ -112,7 +112,7 @@ nsMathMLElement::ParseAttribute(PRInt32 aNamespaceID,
         aAttribute == nsGkAtoms::mathcolor_ ||
         aAttribute == nsGkAtoms::background ||
         aAttribute == nsGkAtoms::mathbackground_) {
-      return aResult.ParseColor(aValue, GetOwnerDoc());
+      return aResult.ParseColor(aValue);
     }
   }
 

@@ -1308,8 +1308,7 @@ nsStyleSet::MediumFeaturesChanged(nsPresContext* aPresContext)
     if (!processor) {
       continue;
     }
-    PRBool thisChanged = PR_FALSE;
-    processor->MediumFeaturesChanged(aPresContext, &thisChanged);
+    PRBool thisChanged = processor->MediumFeaturesChanged(aPresContext);
     stylesChanged = stylesChanged || thisChanged;
   }
 
@@ -1334,6 +1333,10 @@ nsStyleSet::EnsureUniqueInnerOnCSSSheets()
         return nsCSSStyleSheet::eUniqueInner_CloneFailed;
       }
     }
+  }
+
+  if (mBindingManager) {
+    mBindingManager->AppendAllSheets(queue);
   }
 
   nsCSSStyleSheet::EnsureUniqueInnerResult res =

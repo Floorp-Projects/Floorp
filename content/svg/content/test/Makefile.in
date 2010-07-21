@@ -64,6 +64,7 @@ _TEST_FILES = \
 		test_scientific.html \
 		scientific-helper.svg \
 		test_SVGStyleElement.xhtml \
+		test_SVGxxxList.xhtml \
 		test_switch.xhtml \
 		switch-helper.svg \
 		test_text.html \

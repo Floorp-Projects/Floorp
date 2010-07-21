@@ -39,7 +39,7 @@
 #ifndef mozilla_tabs_TabParent_h
 #define mozilla_tabs_TabParent_h
 
-#include "mozilla/dom/PIFrameEmbeddingParent.h"
+#include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PContentDialogParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
@@ -55,7 +55,7 @@
 
 class nsIURI;
 class nsIDOMElement;
-class gfxMatrix;
+struct gfxMatrix;
 
 struct JSContext;
 struct JSObject;
@@ -87,7 +87,7 @@ bool operator==(const TabParentListenerInfo& lhs, const TabParentListenerInfo& r
 
 class ContentDialogParent : public PContentDialogParent {};
 
-class TabParent : public PIFrameEmbeddingParent 
+class TabParent : public PBrowserParent 
                 , public nsITabParent 
                 , public nsIWebProgress
                 , public nsIAuthPromptProvider
@@ -100,29 +100,29 @@ public:
         mBrowserDOMWindow = aBrowserDOMWindow;
     }
 
-    virtual bool RecvmoveFocus(const bool& aForward);
-    virtual bool RecvsendEvent(const RemoteDOMEvent& aEvent);
-    virtual bool RecvnotifyProgressChange(const PRInt64& aProgress,
+    virtual bool RecvMoveFocus(const bool& aForward);
+    virtual bool RecvEvent(const RemoteDOMEvent& aEvent);
+    virtual bool RecvNotifyProgressChange(const PRInt64& aProgress,
                                           const PRInt64& aProgressMax,
                                           const PRInt64& aTotalProgress,
                                           const PRInt64& aMaxTotalProgress);
-    virtual bool RecvnotifyStateChange(const PRUint32& aStateFlags,
+    virtual bool RecvNotifyStateChange(const PRUint32& aStateFlags,
                                        const nsresult& aStatus);
-    virtual bool RecvnotifyLocationChange(const nsCString& aUri);
-    virtual bool RecvnotifyStatusChange(const nsresult& status,
+    virtual bool RecvNotifyLocationChange(const nsCString& aUri);
+    virtual bool RecvNotifyStatusChange(const nsresult& status,
                                         const nsString& message);
-    virtual bool RecvnotifySecurityChange(const PRUint32& aState);
-    virtual bool RecvrefreshAttempted(const nsCString& aURI,
+    virtual bool RecvNotifySecurityChange(const PRUint32& aState);
+    virtual bool RecvRefreshAttempted(const nsCString& aURI,
                                       const PRInt32& aMillis,
                                       const bool& aSameURI,
                                       bool* aAllowRefresh);
 
-    virtual bool AnswercreateWindow(PIFrameEmbeddingParent** retval);
-    virtual bool RecvsendSyncMessageToParent(const nsString& aMessage,
-                                             const nsString& aJSON,
-                                             nsTArray<nsString>* aJSONRetVal);
-    virtual bool RecvsendAsyncMessageToParent(const nsString& aMessage,
-                                              const nsString& aJSON);
+    virtual bool AnswerCreateWindow(PBrowserParent** retval);
+    virtual bool RecvSyncMessage(const nsString& aMessage,
+                                 const nsString& aJSON,
+                                 nsTArray<nsString>* aJSONRetVal);
+    virtual bool RecvAsyncMessage(const nsString& aMessage,
+                                  const nsString& aJSON);
     virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
                                                       const nsCString& aName,
                                                       const nsCString& aFeatures,

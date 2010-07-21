@@ -326,7 +326,7 @@ nsHTMLBodyElement::ParseAttribute(PRInt32 aNamespaceID,
         aAttribute == nsGkAtoms::link ||
         aAttribute == nsGkAtoms::alink ||
         aAttribute == nsGkAtoms::vlink) {
-      return aResult.ParseColor(aValue, GetOwnerDoc());
+      return aResult.ParseColor(aValue);
     }
     if (aAttribute == nsGkAtoms::marginwidth ||
         aAttribute == nsGkAtoms::marginheight ||

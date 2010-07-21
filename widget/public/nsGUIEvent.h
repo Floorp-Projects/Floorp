@@ -173,6 +173,9 @@ class nsHashKey;
 #define NS_DEACTIVATE                   (NS_WINDOW_START + 8)
 // top-level window z-level change request
 #define NS_SETZLEVEL                    (NS_WINDOW_START + 9)
+// Widget was repainted (dispatched when it's safe to move widgets, but
+// only on some platforms (including GTK2 and Windows))
+#define NS_DID_PAINT                   (NS_WINDOW_START + 28)
 // Widget will need to be painted
 #define NS_WILL_PAINT                   (NS_WINDOW_START + 29)
 // Widget needs to be repainted
@@ -638,12 +641,14 @@ class nsPaintEvent : public nsGUIEvent
 {
 public:
   nsPaintEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_PAINT_EVENT)
+    : nsGUIEvent(isTrusted, msg, w, NS_PAINT_EVENT),
+      willSendDidPaint(PR_FALSE)
   {
   }
 
   // area that needs repainting
   nsIntRegion region;
+  PRPackedBool willSendDidPaint;
 };
 
 /**

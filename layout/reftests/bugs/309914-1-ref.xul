@@ -4,8 +4,8 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <hbox>
   <label value="anon label"/>
-  <button label="1"/>
-  <button label="0"/>
+  <button label="1" style="-moz-appearance:none;"/>
+  <button label="0" style="-moz-appearance:none;"/>
 </hbox>
 
 </window>

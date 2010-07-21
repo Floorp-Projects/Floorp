@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<!--
+Tests for the OpenGL ES 2.0 HTML Canvas context
+
+Copyright (C) 2009  Ilmari Heikkinen <ilmari.heikkinen@gmail.com>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+-->
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../unit.css" />
+<script type="application/x-javascript" src="../unit.js"></script>
+<script type="application/x-javascript" src="../util.js"></script>
+<script type="application/x-javascript">
+
+Tests.delay = 1000; // let the browser finish drawing on the GL canvas (gahhh)
+
+Tests.startUnit = function () {
+  var canvas = document.getElementById('gl');
+  var gl = wrapGLContext(canvas.getContext(GL_CONTEXT_ID));
+  return [gl];
+}
+
+Tests.testGetImageData = function(gl) {
+  assertOk(function(){gl.getImageData(0,0,1,1);});
+  assertOk(function(){gl.getImageData(0,0,16,16);});
+  assertOk(function(){gl.getImageData(15,15,1,1);});
+}
+Tests.testGetImageDataDimensions = function(gl) {
+  var id = gl.getImageData(1,2,12,13);
+  assertEquals(12, id.width);
+  assertEquals(13, id.height);
+  assertEquals(12*13*4, id.data.length);
+}
+Tests.testGetImageDataRGBA = function(gl) {
+  var id = gl128.getImageData(1,2,1,1);
+  assertEquals(1, id.width);
+  assertEquals(1, id.height);
+  assertEquals(4, id.data.length);
+  if (id.data.join(",") == "192,128,64,128")
+    assertEquals([192, 128, 64, 128], id.data);
+  else // un-premultiplied data
+    assertEquals([191, 127, 63, 128], id.data);
+  var id = gl0.getImageData(1,2,1,1);
+  if (id.data.join(",") == "192,128,64,0")
+    assertEquals([192, 128, 64, 0], id.data);
+  else // un-premultiplied data-loss
+    assertEquals([0, 0, 0, 0], id.data);
+}
+
+Tests.endUnit = function(gl) {
+}
+
+</script>
+<style>canvas{ position:absolute; }</style>
+</head><body>
+<canvas id="gl" width="16" height="16"></canvas>
+<canvas id="glgrey128" width="16" height="16"></canvas>
+<canvas id="glgrey0" width="16" height="16"></canvas>
+<script>
+  // draw on canvases here as getImageData doesn't trigger render
+  var canvas128 = document.getElementById('glgrey128');
+  window.gl128 = canvas128.getContext(GL_CONTEXT_ID);
+  gl128.clearColor(0.75, 0.5, 0.25, 0.5);
+  gl128.clear(gl128.COLOR_BUFFER_BIT);
+
+  var canvas0 = document.getElementById('glgrey0');
+  window.gl0 = canvas0.getContext(GL_CONTEXT_ID);
+  gl0.clearColor(0.75, 0.5, 0.25, 0.0);
+  gl0.clear(gl0.COLOR_BUFFER_BIT);
+</script>
+</body></html>
