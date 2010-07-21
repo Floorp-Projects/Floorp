@@ -350,6 +350,25 @@ FrameState::predictRegForType(FrameEntry *fe)
 }
 
 inline JSC::MacroAssembler::RegisterID
+FrameState::tempRegForType(FrameEntry *fe, RegisterID fallback)
+{
+    JS_ASSERT(regstate[fallback].fe == NULL);
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    JS_ASSERT(!fe->type.isConstant());
+
+    if (fe->type.inRegister())
+        return fe->type.reg();
+
+    /* :XXX: X86 */
+
+    masm.loadTypeTag(addressOf(fe), fallback);
+    return fallback;
+}
+
+
+inline JSC::MacroAssembler::RegisterID
 FrameState::tempRegForType(FrameEntry *fe)
 {
     if (fe->isCopy())
@@ -540,6 +559,15 @@ FrameState::testBoolean(Assembler::Condition cond, FrameEntry *fe)
     if (shouldAvoidTypeRemat(fe))
         return masm.testBoolean(cond, addressOf(fe));
     return masm.testBoolean(cond, tempRegForType(fe));
+}
+
+inline JSC::MacroAssembler::Jump
+FrameState::testString(Assembler::Condition cond, FrameEntry *fe)
+{
+    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    if (shouldAvoidTypeRemat(fe))
+        return masm.testString(cond, addressOf(fe));
+    return masm.testString(cond, tempRegForType(fe));
 }
 
 inline FrameEntry *
