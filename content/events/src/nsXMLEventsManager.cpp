@@ -337,6 +337,8 @@ nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
                                      nsIAtom* aAttribute,
                                      PRInt32 aModType)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
   if (aNameSpaceID == kNameSpaceID_XMLEvents &&
       (aAttribute == nsGkAtoms::event ||
        aAttribute == nsGkAtoms::handler ||
