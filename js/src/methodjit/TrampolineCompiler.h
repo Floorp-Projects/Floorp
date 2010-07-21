@@ -38,11 +38,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsjaeger_trampolinecompiler_h__ && defined JS_METHODJIT
+#if !defined jsjaeger_trampolinecompiler_h__ && defined JS_METHODJIT
 #define jsjaeger_trampolinecompiler_h__
 
 #include "assembler/jit/ExecutableAllocator.h"
-#include "nunbox/Assembler.h"
+#include "CodeGenIncludes.h"
 
 namespace js {
 namespace mjit {
