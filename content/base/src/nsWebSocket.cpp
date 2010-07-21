@@ -241,11 +241,13 @@ public:
   nsresult Disconnect();
 
   // These are called always on the main thread (they dispatch themselves).
-  // ATTENTION, this method when called can release both the WebSocket object
-  // (i.e. mOwner) and its connection (i.e. *this*) if there are no strong event
-  // listeners.
+  // ATTENTION, these method when called can release both the WebSocket object
+  // (i.e. mOwner) and its connection (i.e. *this*).
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(Close)
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(FailConnection)
+
+  PRBool HasOutgoingMessages()
+  { return mOutgoingMessages.GetSize() != 0; }
 
   PRBool ClosedCleanly() { return mClosedCleanly; }
 
@@ -311,8 +313,6 @@ private:
                                const PRUnichar  *aError,
                                const PRUnichar **aFormatStrings,
                                PRUint32          aFormatStringsLen);
-  PRBool SentAlreadyTheCloseFrame()
-  { return mPostedCloseFrame && mOutgoingMessages.GetSize() == 0; }
 
   // auth specific methods
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(ProcessAuthentication)
@@ -327,6 +327,7 @@ private:
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(DispatchNewMessage)
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(Retry)
   DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(ResolveNextProxyAndConnect)
+  DECL_RUNNABLE_ON_MAIN_THREAD_METHOD(UpdateMustKeepAlive)
 
   // called to cause the underlying socket to start speaking SSL
   nsresult ProxyStartSSL();
@@ -400,6 +401,7 @@ private:
   PRPackedBool mAuthenticating;
 
   PRPackedBool mPostedCloseFrame;
+  PRPackedBool mSentCloseFrame;
   PRPackedBool mClosedCleanly;
 
   /**
@@ -658,6 +660,7 @@ nsWebSocketEstablishedConnection::nsWebSocketEstablishedConnection() :
   mFailureStatus(NS_OK),
   mAuthenticating(PR_FALSE),
   mPostedCloseFrame(PR_FALSE),
+  mSentCloseFrame(PR_FALSE),
   mClosedCleanly(PR_FALSE),
   mStatus(CONN_NOT_CONNECTED)
 {
@@ -709,6 +712,8 @@ nsWebSocketEstablishedConnection::PostData(nsCString *aBuffer,
     rv = mSocketOutput->AsyncWait(this, 0, 0, gWebSocketThread);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  UpdateMustKeepAlive();
 
   return NS_OK;
 }
@@ -1214,7 +1219,7 @@ nsWebSocketEstablishedConnection::HandleNewInputString(PRUint32 aStart)
           // check if it is the close frame
           if (mLengthToDiscard == 0 && frameType == START_BYTE_OF_CLOSE_FRAME) {
             mBytesInBuffer = 0;
-            if (SentAlreadyTheCloseFrame()) {
+            if (mSentCloseFrame) {
               mClosedCleanly = PR_TRUE;
               mStatus = CONN_CLOSED;
             } else {
@@ -2247,6 +2252,12 @@ IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(ResolveNextProxyAndConnect)
 }
 IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_END
 
+IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_BEGIN(UpdateMustKeepAlive)
+{
+  mOwner->UpdateMustKeepAlive();
+}
+IMPL_RUNNABLE_ON_MAIN_THREAD_METHOD_END
+
 void
 nsWebSocketEstablishedConnection::RemoveFromLoadGroup()
 {
@@ -2695,7 +2706,6 @@ nsWebSocketEstablishedConnection::OnOutputStreamReady(nsIAsyncOutputStream *aStr
           strToSend->Length() - mBytesAlreadySentOfFirstOutString;
         PRBool currentStrHasStartFrameByte =
           (mBytesAlreadySentOfFirstOutString == 0);
-        PRBool strIsMessage = (frameToSend->mType == eUTF8MessageFrame);
 
         if (sizeToSend != 0) {
           PRUint32 written;
@@ -2730,7 +2740,7 @@ nsWebSocketEstablishedConnection::OnOutputStreamReady(nsIAsyncOutputStream *aStr
             return NS_BASE_STREAM_CLOSED;
           }
 
-          if (strIsMessage) {
+          if (frameToSend->mType == eUTF8MessageFrame) {
             PRBool currentStrHasEndFrameByte =
               (mBytesAlreadySentOfFirstOutString + written ==
                strToSend->Length());
@@ -2760,17 +2770,20 @@ nsWebSocketEstablishedConnection::OnOutputStreamReady(nsIAsyncOutputStream *aStr
         }
 
         // ok, send the next string
+        if (frameToSend->mType == eCloseFrame) {
+          mSentCloseFrame = PR_TRUE;
+        }
         mOutgoingMessages.PopFront();
         delete frameToSend;
         mBytesAlreadySentOfFirstOutString = 0;
+        UpdateMustKeepAlive();
       }
 
       if (mOutgoingMessages.GetSize() != 0) {
         rv = mSocketOutput->AsyncWait(this, 0, 0, gWebSocketThread);
         ENSURE_SUCCESS_AND_FAIL_IF_FAILED(rv, rv);
       } else {
-        if (mStatus == CONN_SENDING_ACK_CLOSE_FRAME &&
-            SentAlreadyTheCloseFrame()) {
+        if (mStatus == CONN_SENDING_ACK_CLOSE_FRAME && mSentCloseFrame) {
           mClosedCleanly = PR_TRUE;
           mStatus = CONN_CLOSED;
           return Close();
@@ -2833,8 +2846,9 @@ nsWebSocketEstablishedConnection::GetInterface(const nsIID &aIID,
 // nsWebSocket
 ////////////////////////////////////////////////////////////////////////////////
 
-nsWebSocket::nsWebSocket() : mHasStrongEventListeners(PR_FALSE),
-                             mCheckThereAreStrongEventListeners(PR_TRUE),
+nsWebSocket::nsWebSocket() : mKeepingAlive(PR_FALSE),
+                             mCheckMustKeepAlive(PR_TRUE),
+                             mTriggeredCloseEvent(PR_FALSE),
                              mReadyState(nsIWebSocket::CONNECTING),
                              mOutgoingBufferedAmount(0)
 {
@@ -3063,6 +3077,8 @@ nsWebSocket::CreateAndDispatchCloseEvent(PRBool aWasClean)
 {
   nsresult rv;
 
+  mTriggeredCloseEvent = PR_TRUE;
+
   rv = CheckInnerWindowCorrectness();
   if (NS_FAILED(rv)) {
     return NS_OK;
@@ -3138,6 +3154,7 @@ nsWebSocket::SetReadyState(PRUint16 aNewReadyState)
     rv = NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch the close event");
+      mTriggeredCloseEvent = PR_TRUE;
       UpdateMustKeepAlive();
     }
   }
@@ -3251,45 +3268,71 @@ nsWebSocket::SetProtocol(const nsString& aProtocol)
 }
 
 //-----------------------------------------------------------------------------
-// Methods that keep alive the WebSocket object when there are
-// onopen/onmessage event listeners.
+// Methods that keep alive the WebSocket object when:
+//   1. the object has registered event listeners that can be triggered
+//      ("strong event listeners");
+//   2. there are outgoing not sent messages.
 //-----------------------------------------------------------------------------
 
 void
 nsWebSocket::UpdateMustKeepAlive()
 {
-  if (!mCheckThereAreStrongEventListeners) {
+  if (!mCheckMustKeepAlive) {
     return;
   }
 
-  if (mHasStrongEventListeners) {
-    if (!mListenerManager ||
-        ((mReadyState != nsIWebSocket::CONNECTING ||
-          !mListenerManager->HasListenersFor(NS_LITERAL_STRING("open"))) &&
-         (mReadyState == nsIWebSocket::CLOSED ||
-          !mListenerManager->HasListenersFor(NS_LITERAL_STRING("message"))))) {
-      mHasStrongEventListeners = PR_FALSE;
-      static_cast<nsPIDOMEventTarget*>(this)->Release();
+  PRBool shouldKeepAlive = PR_FALSE;
+
+  if (mListenerManager) {
+    switch (mReadyState)
+    {
+      case nsIWebSocket::CONNECTING:
+      {
+        if (mListenerManager->HasListenersFor(NS_LITERAL_STRING("open")) ||
+            mListenerManager->HasListenersFor(NS_LITERAL_STRING("message")) ||
+            mListenerManager->HasListenersFor(NS_LITERAL_STRING("close"))) {
+          shouldKeepAlive = PR_TRUE;
+        }
+      }
+      break;
+
+      case nsIWebSocket::OPEN:
+      case nsIWebSocket::CLOSING:
+      {
+        if (mListenerManager->HasListenersFor(NS_LITERAL_STRING("message")) ||
+            mListenerManager->HasListenersFor(NS_LITERAL_STRING("close")) ||
+            mConnection->HasOutgoingMessages()) {
+          shouldKeepAlive = PR_TRUE;
+        }
+      }
+      break;
+
+      case nsIWebSocket::CLOSED:
+      {
+        shouldKeepAlive =
+          (!mTriggeredCloseEvent &&
+           mListenerManager->HasListenersFor(NS_LITERAL_STRING("close")));
+      }
     }
-  } else {
-    if ((mReadyState == nsIWebSocket::CONNECTING && mListenerManager &&
-         mListenerManager->HasListenersFor(NS_LITERAL_STRING("open"))) ||
-        (mReadyState != nsIWebSocket::CLOSED && mListenerManager &&
-         mListenerManager->HasListenersFor(NS_LITERAL_STRING("message")))) {
-      mHasStrongEventListeners = PR_TRUE;
-      static_cast<nsPIDOMEventTarget*>(this)->AddRef();
-    }
+  }
+
+  if (mKeepingAlive && !shouldKeepAlive) {
+    mKeepingAlive = PR_FALSE;
+    static_cast<nsPIDOMEventTarget*>(this)->Release();
+  } else if (!mKeepingAlive && shouldKeepAlive) {
+    mKeepingAlive = PR_TRUE;
+    static_cast<nsPIDOMEventTarget*>(this)->AddRef();
   }
 }
 
 void
 nsWebSocket::DontKeepAliveAnyMore()
 {
-  if (mHasStrongEventListeners) {
-    mCheckThereAreStrongEventListeners = PR_FALSE;
-    mHasStrongEventListeners = PR_FALSE;
+  if (mKeepingAlive) {
+    mKeepingAlive = PR_FALSE;
     static_cast<nsPIDOMEventTarget*>(this)->Release();
   }
+  mCheckMustKeepAlive = PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -3431,8 +3474,8 @@ nsWebSocket::Close()
   }
 
   if (mReadyState == nsIWebSocket::CONNECTING) {
-    // FailConnection() can release the object if there are no strong event
-    // listeners, so we keep a reference before calling it
+    // FailConnection() can release the object, so we keep a reference
+    // before calling it
     nsRefPtr<nsWebSocket> kungfuDeathGrip = this;
 
     mConnection->FailConnection();

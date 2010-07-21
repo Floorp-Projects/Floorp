@@ -437,7 +437,7 @@ window._test17 = function()
 {
   var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 17");
   local_ws._testNumber = "local17";
-  current_test++;
+  local_ws._testNumber = current_test++;
 
   status_test17 = "started";
 
@@ -510,14 +510,18 @@ window._test20 = function()
 {
   var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 20");
   local_ws._testNumber = "local20";
-  current_test++;
+  local_ws._testNumber = current_test++;
 
   local_ws.onerror = function()
   {
     ok(false, "onerror called on test " + e.target._testNumber + "!");
   };
 
-  local_ws.onclose = shouldNotReceiveCloseEvent;
+  local_ws.onclose = function(e)
+  {
+    shouldCloseCleanly(e);
+    doTest(21);
+  };
 
   local_ws = null;
   window._test20 = null;
@@ -527,7 +531,6 @@ window._test20 = function()
 function test20()
 {
   window._test20();
-  doTest(21);
 }
 
 var timeoutTest21;
@@ -535,7 +538,7 @@ var timeoutTest21;
 window._test21 = function()
 {
   var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test 21");
-  current_test++;
+  local_ws._testNumber = current_test++;
 
   local_ws.onopen = function(e)
   {
@@ -563,7 +566,11 @@ window._test21 = function()
     forcegc();
   };
 
-  local_ws.onclose = shouldNotReceiveCloseEvent;
+  local_ws.onclose = function(e)
+  {
+    shouldCloseCleanly(e);
+    doTest(22);
+  };
 
   local_ws = null;
   window._test21 = null;
@@ -573,7 +580,6 @@ window._test21 = function()
 function test21()
 {
   window._test21();
-  doTest(22);
 }
 
 function test22()

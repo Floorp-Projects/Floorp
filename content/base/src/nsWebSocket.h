@@ -115,12 +115,12 @@ protected:
   // called from mConnection accordingly to the situation
   void SetReadyState(PRUint16 aNewReadyState);
 
-  // if there are onopen or onmessage event listeners ("strong event listeners")
-  // then this method keeps the object alive when js doesn't have strong
-  // references to it.
+  // if there are "strong event listeners" (see comment in nsWebSocket.cpp) or
+  // outgoing not sent messages then this method keeps the object alive
+  // when js doesn't have strong references to it.
   void UpdateMustKeepAlive();
-  // Releases, if necessary, the strong event listeners. ATTENTION, when calling
-  // this method the object can be released (and possibly collected).
+  // ATTENTION, when calling this method the object can be released
+  // (and possibly collected).
   void DontKeepAliveAnyMore();
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnOpenListener;
@@ -133,8 +133,9 @@ protected:
   PRPackedBool mSecure; // if true it is using SSL and the wss scheme,
                         // otherwise it is using the ws scheme with no SSL
 
-  PRPackedBool mHasStrongEventListeners;
-  PRPackedBool mCheckThereAreStrongEventListeners;
+  PRPackedBool mKeepingAlive;
+  PRPackedBool mCheckMustKeepAlive;
+  PRPackedBool mTriggeredCloseEvent;
 
   nsCString mAsciiHost;  // hostname
   PRUint32  mPort;
