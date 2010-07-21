@@ -42,6 +42,7 @@
 
 #include "XPCWrapper.h"
 #include "XPCNativeWrapper.h"
+#include "nsPIDOMWindow.h"
 
 namespace XPCWrapper {
 
@@ -188,6 +189,35 @@ static js::Class IteratorClass = {
       nsnull, // wrappedObject
     }
 };
+
+void
+CheckWindow(XPCWrappedNative *wn)
+{
+  JSClass *clasp = wn->GetFlatJSObject()->getJSClass();
+
+  // Censor objects that can't be windows.
+  switch (clasp->name[0]) {
+    case 'C': // ChromeWindow?
+      if (clasp->name[1] != 'h') {
+        return;
+      }
+
+      break;
+    case 'M': // ModalContentWindow
+      break;
+    case 'W': // Window
+      break;
+    default:
+      return;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> pwin(do_QueryWrappedNative(wn));
+  if (!pwin || pwin->IsInnerWindow()) {
+    return;
+  }
+
+  pwin->EnsureInnerWindow();
+}
 
 JSBool
 RewrapObject(JSContext *cx, JSObject *scope, JSObject *obj, WrapperType hint,
