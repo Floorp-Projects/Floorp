@@ -183,7 +183,7 @@ nsNodeUtils::ContentInserted(nsINode* aContainer,
     document = static_cast<nsIDocument*>(aContainer);
   }
 
-  IMPL_STRONGREF_MUTATION_NOTIFICATION(ContentInserted, aContainer,
+  IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer,
                              (document, container, aChild, aIndexInContainer));
 }
 
