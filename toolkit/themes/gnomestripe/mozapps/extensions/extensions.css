@@ -164,10 +164,6 @@
   -moz-margin-end: 6px;
 }
 
-#header-searching:not([active]) {
-  visibility: hidden;
-}
-
 #header-searching {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
@@ -412,15 +408,6 @@
   -moz-box-align: center;
   background-color: #FFF;
   font-size: 120%;
-}
-
-#search-list > .addon {
-  visibility: collapse;
-}
-
-#search-list[local="true"]  > .addon[remote="false"],
-#search-list[remote="true"] > .addon[remote="true"] {
-  visibility: visible;
 }
 
 
