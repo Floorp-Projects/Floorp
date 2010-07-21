@@ -96,10 +96,11 @@ class nsVirtualKey
 
   void SetDeadKey(PRUint8 aShiftState, PRBool aIsDeadKey)
   {
-    if (aIsDeadKey)
+    if (aIsDeadKey) {
       mIsDeadKey |= 1 << aShiftState;
-    else
+    } else {
       mIsDeadKey &= ~(1 << aShiftState);
+    }
   }
 
 public:
