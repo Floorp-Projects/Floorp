@@ -259,6 +259,12 @@ public:
    * @param aChild     The child that was removed.
    * @param aIndexInContainer The index in the container which the child used
    *                          to have.
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void ContentRemoved(nsIDocument *aDocument,
                               nsIContent* aContainer,
