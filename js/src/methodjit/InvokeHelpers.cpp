@@ -776,7 +776,7 @@ RunTracer(VMFrame &f)
                  entryFrame->down->script->isValidJitCode(f.scriptedReturn));
 
     bool blacklist;
-    uintptr_t inlineCallCount = f.inlineCallCount;
+    uintN inlineCallCount = f.inlineCallCount;
     tpa = MonitorTracePoint(f.cx, inlineCallCount, blacklist);
     JS_ASSERT(!TRACE_RECORDER(cx));
 
