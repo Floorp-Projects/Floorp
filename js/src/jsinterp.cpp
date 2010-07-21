@@ -2083,7 +2083,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 namespace js {
 
 JS_REQUIRES_STACK bool
-Interpret(JSContext *cx, JSStackFrame *entryFrame, uintptr_t inlineCallCount)
+Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_INTERP);

@@ -370,7 +370,7 @@ extern JS_REQUIRES_STACK bool
 InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args);
 
 extern JS_REQUIRES_STACK bool
-Interpret(JSContext *cx, JSStackFrame *stopFp, uintptr_t inlineCallCount = 0);
+Interpret(JSContext *cx, JSStackFrame *stopFp, uintN inlineCallCount = 0);
 
 extern JS_REQUIRES_STACK bool
 RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
