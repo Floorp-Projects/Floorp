@@ -254,6 +254,10 @@ public:
    * parent chain changed.
    *
    * @param aContent  The piece of content that had its parent changed.
+   *
+   * @note Callers of this method might not hold a strong reference to
+   *       the observer.  The observer is responsible for making sure it
+   *       stays alive for the duration of the call as needed.
    */
 
   virtual void ParentChainChanged(nsIContent *aContent) = 0;
