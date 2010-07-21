@@ -47,6 +47,15 @@ runtest "--random 1000000 --optimize"
 
 # ---- Platform-specific tests and configurations. ----
 
+# 64-bit platforms
+if [[ $($LIRASM --word-size) == 64 ]]
+then
+    for infile in "$TESTS_DIR"/64-bit/*.in
+    do
+        runtest $infile
+    done
+fi
+
 # ARM
 if [[ $(uname -m) == arm* ]]
 then
