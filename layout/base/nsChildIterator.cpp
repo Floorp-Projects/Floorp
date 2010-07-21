@@ -52,7 +52,7 @@ ChildIterator::Init(nsIContent*    aContent,
 {
   // Initialize out parameters to be equal, in case of failure.
   aFirst->mContent = aLast->mContent = nsnull;
-  aFirst->mIndex   = aLast->mIndex   = 0;
+  aFirst->mChild   = aLast->mChild   = nsnull;
   
   NS_PRECONDITION(aContent != nsnull, "no content");
   if (! aContent)
@@ -67,18 +67,20 @@ ChildIterator::Init(nsIContent*    aContent,
   // the vanilla content APIs.
   nsINodeList* nodes = doc->BindingManager()->GetXBLChildNodesFor(aContent);
 
-  PRUint32 length;
-  if (nodes)
-    nodes->GetLength(&length);
-  else
-    length = aContent->GetChildCount();
-
   aFirst->mContent = aContent;
   aLast->mContent  = aContent;
-  aFirst->mIndex   = 0;
-  aLast->mIndex    = length;
   aFirst->mNodes   = nodes;
   aLast->mNodes    = nodes;
+
+  if (nodes) {
+    PRUint32 length;
+    nodes->GetLength(&length);
+    aFirst->mIndex = 0;
+    aLast->mIndex = length;
+  } else {
+    aFirst->mChild = aContent->GetFirstChild();
+    aLast->mChild = nsnull;
+  }
 
   return NS_OK;
 }

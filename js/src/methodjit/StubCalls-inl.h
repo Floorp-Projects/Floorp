@@ -47,14 +47,14 @@ namespace mjit {
 #define THROW()  \
     do {         \
         void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline); \
-        f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr))); \
+        *f.returnAddressLocation() = ptr; \
         return;  \
     } while (0)
 
 #define THROWV(v)       \
     do {                \
         void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline); \
-        f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr))); \
+        *f.returnAddressLocation() = ptr; \
         return v;       \
     } while (0)
 

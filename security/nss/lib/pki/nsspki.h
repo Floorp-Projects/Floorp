@@ -38,7 +38,7 @@
 #define NSSPKI_H
 
 #ifdef DEBUG
-static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.12 $ $Date: 2007/07/11 04:47:42 $";
+static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.13 $ $Date: 2010/05/21 00:02:48 $";
 #endif /* DEBUG */
 
 /*
@@ -54,10 +54,6 @@ static const char NSSPKI_CVS_ID[] = "@(#) $RCSfile: nsspki.h,v $ $Revision: 1.12
 #ifndef NSSPKIT_H
 #include "nsspkit.h"
 #endif /* NSSPKIT_H */
-
-#ifndef NSSPKI1_H
-#include "nsspki1.h"
-#endif /* NSSPKI1_H */
 
 #ifndef BASE_H
 #include "base.h"

@@ -488,19 +488,15 @@ public:
                         nsCycleCollectionTraversalCallback &cb);
     
     // nsCycleCollectionLanguageRuntime
-    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
+    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
+                                          bool explainExpectedLiveGarbage);
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
     virtual void CommenceShutdown();
-    virtual PRBool Collect();
+    virtual void Collect();
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
 #endif
-
-    XPCCallContext* GetCycleCollectionContext()
-    {
-        return mCycleCollectionContext;
-    }
 
     PRInt32 GetRequestDepth(JSContext* cx);
 
@@ -538,12 +534,10 @@ private:
     nsIXPCSecurityManager*   mDefaultSecurityManager;
     PRUint16                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
-    XPCCallContext*          mCycleCollectionContext;
 #ifdef DEBUG_CC
-    nsAutoPtr<XPCCallContext> mExplainCycleCollectionContext;
     PLDHashTable             mJSRoots;
 #endif
-    PRBool                   mCycleCollecting;
+    nsAutoPtr<XPCCallContext> mCycleCollectionContext;
 
 #ifndef XPCONNECT_STANDALONE
     typedef nsBaseHashtable<nsVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
@@ -3179,7 +3173,9 @@ class XPCStringConvert
 {
 public:
 
-    static jsval ReadableToJSVal(JSContext *cx, const nsAString &readable);
+    static jsval ReadableToJSVal(JSContext *cx, const nsAString &readable,
+                                 PRBool dontAddrefShared = PR_FALSE,
+                                 PRBool* sharedBuffer = nsnull);
 
     static XPCReadableJSStringWrapper *JSStringToReadable(XPCCallContext& ccx,
                                                           JSString *str);

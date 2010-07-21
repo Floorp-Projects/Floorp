@@ -6053,7 +6053,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
 }
 
 static JS_REQUIRES_STACK bool
-ExecuteTree(JSContext* cx, TreeFragment* f, uintptr_t& inlineCallCount,
+ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
             VMSideExit** innermostNestedGuardp, VMSideExit** lrp);
 
 static inline MonitorResult
@@ -6067,7 +6067,7 @@ RecordingIfTrue(bool b)
  * MONITOR_RECORDING, the recording has been aborted.
  */
 JS_REQUIRES_STACK MonitorResult
-TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintptr_t& inlineCallCount)
+TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
     if (cx->fp->scopeChain->getGlobal()->scope()->title.ownercx != cx) {
@@ -6134,7 +6134,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintptr_t& inline
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::attemptTreeCall(TreeFragment* f, uintptr_t& inlineCallCount)
+TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
 {
     /*
      * It is absolutely forbidden to have recursive loops tree call themselves
@@ -6159,7 +6159,7 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintptr_t& inlineCallCount)
     prepareTreeCall(f);
 
 #ifdef DEBUG
-    uintptr_t oldInlineCallCount = inlineCallCount;
+    uintN oldInlineCallCount = inlineCallCount;
 #endif
 
     JSContext *localCx = cx;
@@ -6521,7 +6521,7 @@ FindVMCompatiblePeer(JSContext* cx, JSObject* globalObj, TreeFragment* f, uintN&
  */
 JS_ALWAYS_INLINE
 TracerState::TracerState(JSContext* cx, TraceMonitor* tm, TreeFragment* f,
-                         uintptr_t& inlineCallCount, VMSideExit** innermostNestedGuardp)
+                         uintN& inlineCallCount, VMSideExit** innermostNestedGuardp)
   : cx(cx),
     stackBase(tm->storage->stack()),
     sp(stackBase + f->nativeStackBase / sizeof(double)),
@@ -11391,7 +11391,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
          */
         if (!(fun->flags & JSFUN_FAST_NATIVE)) {
             if (vp[1].isNull()) {
-                JSObject* thisObj = ComputeThisFromVp(cx, vp + 2);
+                JSObject* thisObj = ComputeThisFromVp(cx, vp);
                 if (!thisObj)
                     RETURN_ERROR("error in js_ComputeGlobalThis");
                 this_ins = INS_CONSTOBJ(thisObj);
@@ -16119,7 +16119,7 @@ class AutoRetBlacklist
 };
 
 JS_REQUIRES_STACK TracePointAction
-MonitorTracePoint(JSContext* cx, uintptr_t& inlineCallCount, bool& blacklist)
+MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
 {
     JSStackFrame* fp = cx->fp;
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);

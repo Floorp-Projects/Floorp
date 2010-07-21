@@ -250,7 +250,10 @@ public:
    * and the document has a parent document in the same view hierarchy, then
    * we try to return the subdocumentframe in the parent document.
    * @param aExtraOffset [in/out] if non-null, then as we cross documents
-   * an extra offset may be required and it will be added to aCrossDocOffset
+   * an extra offset may be required and it will be added to aCrossDocOffset.
+   * Be careful dealing with this extra offset as it is in app units of the
+   * parent document, which may have a different app units per dev pixel ratio
+   * than the child document.
    */
   static nsIFrame* GetCrossDocParentFrame(const nsIFrame* aFrame,
                                           nsPoint* aCrossDocOffset = nsnull);
@@ -286,6 +289,19 @@ public:
    */
   static PRBool IsAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
                                         nsIFrame* aCommonAncestor = nsnull);
+
+  /**
+   * Finds the nearest ancestor frame that is the root of an "actively
+   * scrolled" frame subtree, or aStopAtAncestor if there is no
+   * such ancestor before we reach aStopAtAncestor in the ancestor chain.
+   * We expect frames with the same "active scrolled root" to be
+   * scrolled together, so we'll place them in the same ThebesLayer.
+   * @param aOffset the offset from aFrame to the returned frame is stored
+   * here, if non-null
+   */
+  static nsIFrame* GetActiveScrolledRootFor(nsIFrame* aFrame,
+                                            nsIFrame* aStopAtAncestor,
+                                            nsPoint* aOffset);
 
   /**
     * GetFrameFor returns the root frame for a view
@@ -509,7 +525,10 @@ public:
   enum {
     PAINT_IN_TRANSFORM = 0x01,
     PAINT_SYNC_DECODE_IMAGES = 0x02,
-    PAINT_WIDGET_LAYERS = 0x04
+    PAINT_WIDGET_LAYERS = 0x04,
+    PAINT_IGNORE_SUPPRESSION = 0x08,
+    PAINT_IGNORE_VIEWPORT_SCROLLING = 0x10,
+    PAINT_HIDE_CARET = 0x20
   };
 
   /**
@@ -550,59 +569,6 @@ public:
   static nsresult PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
                              const nsRegion& aDirtyRegion, nscolor aBackstop,
                              PRUint32 aFlags = 0);
-
-  /**
-   * @param aRootFrame the root frame of the tree to be displayed
-   * @param aMovingFrame a frame that has moved
-   * @param aPt the amount by which aMovingFrame has moved
-   * @param aUpdateRect a rectangle that bounds the area to be updated,
-   * relative to aRootFrame
-   * @param aRepaintRegion output: a subregion of aUpdateRect that must be
-   * repainted after doing the blit
-   * @param aBlitRegion output: a subregion of aUpdateRect that should
-   * be repainted by blitting
-   *
-   * If the caller does a bitblt copy of aBlitRegion-aPt to aBlitRegion,
-   * and then repaints aRepaintRegion, then the area aUpdateRect will be
-   * correctly up to date. aBlitRegion and aRepaintRegion do not intersect
-   * and are both contained within aUpdateRect.
-   *
-   * Frame geometry must have already been adjusted for the scroll/copy
-   * operation before this function is called.
-   *
-   * Conceptually it works by computing a display list in the before-state
-   * and a display list in the after-state and analyzing them to find the
-   * differences. In practice it is only feasible to build a display list
-   * in the after-state (plus building two display lists would be less
-   * efficient), so we use some unfortunately tricky techniques to get by
-   * with just the after-list.
-   *
-   * We compute the "visible moving area", a region that contains all
-   * moving content that is visible, either before or after scrolling,
-   * intersected with aUpdateRect.
-   *
-   * The aRepaintRegion region consists of the visible moving area
-   * intersected with the union of the following areas:
-   * a) any visible background-attachment:fixed areas in the after-move display
-   * list
-   * b) any visible areas of the before-move display list corresponding to
-   * frames that will not move (translated by aDelta)
-   * c) any visible areas of the after-move display list corresponding to
-   * frames that did not move
-   *
-   * aBlitRegion is the visible moving area minus aRepaintRegion.
-   *
-   * We may return a larger region for aRepaintRegion and/or aBlitRegion
-   * if computing the above regions precisely is too expensive.  (However,
-   * they will never intersect, since the regions that may be computed
-   * imprecisely are really the "visible moving area" and aRepaintRegion.)
-   */
-  static nsresult ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
-                                              nsIFrame* aMovingFrame,
-                                              nsPoint aDelta,
-                                              const nsRect& aUpdateRect,
-                                              nsRegion* aBlitRegion,
-                                              nsRegion* aRepaintRegion);
 
   /**
    * Compute the used z-index of aFrame; returns zero for elements to which

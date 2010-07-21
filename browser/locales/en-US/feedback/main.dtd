@@ -15,7 +15,7 @@
 <!ENTITY testpilot.studiesWindow.finishedStudies.label  "Finished Studies">
 <!ENTITY testpilot.studiesWindow.studyFindings.label    "Study Findings">
 <!ENTITY testpilot.studiesWindow.settings.label         "Settings">
-<!ENTITY testpilot.studiesWindow.stillLoadingMessage    "Loading, please wait...">
+<!ENTITY testpilot.studiesWindow.stillLoadingMessage    "Loading, please wait…">
 
 <!-- raw data dialog -->
 <!ENTITY testpilot.rawDataWindow.title                  "Test Pilot: Raw Data">
@@ -26,5 +26,5 @@
 <!-- Firefox 4 beta version UI -->
 <!ENTITY testpilot.enable.label                        "Turn On User Studies">
 <!ENTITY testpilot.feedbackbutton.label                "Feedback">
-<!ENTITY testpilot.happy.label        "Firefox Made Me Happy Because...">
-<!ENTITY testpilot.sad.label          "Firefox Made Me Sad Because...">
+<!ENTITY testpilot.happy.label        "Firefox Made Me Happy Because…">
+<!ENTITY testpilot.sad.label          "Firefox Made Me Sad Because…">

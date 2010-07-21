@@ -34,9 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsXBLDocumentInfo_h__
+#define nsXBLDocumentInfo_h__
+
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIXBLDocumentInfo.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsWeakReference.h"
 #include "nsIDocument.h"
@@ -46,7 +48,8 @@ class nsXBLPrototypeBinding;
 class nsObjectHashtable;
 class nsXBLDocGlobalObject;
 
-class nsXBLDocumentInfo : public nsIXBLDocumentInfo, public nsIScriptGlobalObjectOwner, public nsSupportsWeakReference
+class nsXBLDocumentInfo : public nsIScriptGlobalObjectOwner,
+                          public nsSupportsWeakReference
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -54,26 +57,28 @@ public:
   nsXBLDocumentInfo(nsIDocument* aDocument);
   virtual ~nsXBLDocumentInfo();
 
-  NS_IMETHOD GetDocument(nsIDocument** aResult) { NS_ADDREF(*aResult = mDocument); return NS_OK; }
+  already_AddRefed<nsIDocument> GetDocument()
+    { NS_ADDREF(mDocument); return mDocument.get(); }
 
-  NS_IMETHOD GetScriptAccess(PRBool* aResult) { *aResult = mScriptAccess; return NS_OK; }
+  PRBool GetScriptAccess() { return mScriptAccess; }
 
-  NS_IMETHOD_(nsIURI*) DocumentURI() { return mDocument->GetDocumentURI(); }
+  nsIURI* DocumentURI() { return mDocument->GetDocumentURI(); }
 
-  NS_IMETHOD GetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding** aResult);
-  NS_IMETHOD SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding);
+  nsXBLPrototypeBinding* GetPrototypeBinding(const nsACString& aRef);
+  nsresult SetPrototypeBinding(const nsACString& aRef,
+                               nsXBLPrototypeBinding* aBinding);
 
-  NS_IMETHOD SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding);
+  void SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding);
   
-  NS_IMETHOD FlushSkinStylesheets();
+  void FlushSkinStylesheets();
 
-  NS_IMETHOD_(PRBool) IsChrome() { return mIsChrome; }
+  PRBool IsChrome() { return mIsChrome; }
 
   // nsIScriptGlobalObjectOwner methods
   virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsXBLDocumentInfo,
-                                                         nsIXBLDocumentInfo)
+                                                         nsIScriptGlobalObjectOwner)
 
 private:
   nsCOMPtr<nsIDocument> mDocument;
@@ -86,3 +91,7 @@ private:
 
   nsRefPtr<nsXBLDocGlobalObject> mGlobalObject;
 };
+
+nsXBLDocumentInfo* NS_NewXBLDocumentInfo(nsIDocument* aDocument);
+
+#endif

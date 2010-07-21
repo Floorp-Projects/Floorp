@@ -110,13 +110,31 @@ class Compiler
         Label slowPathStart;
         RegisterID shapeReg;
         RegisterID objReg;
+        RegisterID idReg;
         RegisterID typeReg;
         Label shapeGuard;
         JSAtom *atom;
         StateRemat objRemat;
+        StateRemat idRemat;
         Call callReturn;
         bool hasTypeCheck;
         ValueRemat vr;
+
+        void copySimpleMembersTo(ic::PICInfo &pi) const {
+            pi.kind = kind;
+            pi.shapeReg = shapeReg;
+            pi.objReg = objReg;
+            pi.atom = atom;
+            if (kind == ic::PICInfo::SET) {
+                pi.u.vr = vr;
+            } else if (kind != ic::PICInfo::NAME) {
+                pi.u.get.idReg = idReg;
+                pi.u.get.typeReg = typeReg;
+                pi.u.get.hasTypeCheck = hasTypeCheck;
+                pi.u.get.objRemat = objRemat.offset;
+            }
+        }
+
     };
 #endif
 
@@ -131,6 +149,10 @@ class Compiler
       public:
         MaybeRegisterID()
           : reg(Registers::ReturnReg), set(false)
+        { }
+
+        MaybeRegisterID(RegisterID reg)
+          : reg(reg), set(true)
         { }
 
         inline RegisterID getReg() const { JS_ASSERT(set); return reg; }
@@ -159,6 +181,13 @@ class Compiler
         bool set;
     };
 
+    struct InternalCallSite {
+        bool stub;
+        Label location;
+        jsbytecode *pc;
+        uint32 id;
+    };
+
     JSContext *cx;
     JSScript *script;
     JSObject *scopeChain;
@@ -176,6 +205,7 @@ class Compiler
 #if defined JS_POLYIC
     js::Vector<PICGenInfo, 64> pics;
 #endif
+    js::Vector<InternalCallSite, 64> callSites;
     StubCompiler stubcc;
     Label invokeLabel;
     bool addTraceHints;
@@ -194,6 +224,7 @@ class Compiler
     Label getLabel() { return masm.label(); }
     bool knownJump(jsbytecode *pc);
     Label labelOf(jsbytecode *target);
+    void *findCallSite(const CallSite &callSite);
 
   private:
     CompileStatus generatePrologue();
@@ -206,6 +237,7 @@ class Compiler
     void jumpInScript(Jump j, jsbytecode *pc);
     JSC::ExecutablePool *getExecPool(size_t size);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
+    void addCallSite(uint32 id, bool stub);
 
     /* Emitting helpers. */
     void restoreFrameRegs(Assembler &masm);
@@ -276,6 +308,13 @@ class Compiler
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
     void jsop_setelem();
     void jsop_getelem();
+    void jsop_getelem_known_type(FrameEntry *obj, FrameEntry *id, RegisterID tmpReg);
+    void jsop_getelem_with_pic(FrameEntry *obj, FrameEntry *id, RegisterID tmpReg);
+    void jsop_getelem_nopic(FrameEntry *obj, FrameEntry *id, RegisterID tmpReg);
+    void jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID objReg, RegisterID idReg,
+                          RegisterID shapeReg);
+    void jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID objReg,
+                            MaybeRegisterID &idReg, RegisterID shapeReg);
     void jsop_stricteq(JSOp op);
     void jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_pos();
@@ -300,6 +339,7 @@ class Compiler
     STUB_CALL_TYPE(VoidStubJSObj);
     STUB_CALL_TYPE(VoidPtrStubPC);
     STUB_CALL_TYPE(VoidVpStub);
+    STUB_CALL_TYPE(VoidStubPC);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall(Uses uses);

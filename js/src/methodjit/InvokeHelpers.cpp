@@ -74,14 +74,14 @@ using namespace JSC;
 #define THROW()  \
     do {         \
         void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline); \
-        f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr))); \
+        *f.returnAddressLocation() = ptr; \
         return;  \
     } while (0)
 
 #define THROWV(v)       \
     do {                \
         void *ptr = JS_FUNC_TO_DATA_PTR(void *, JaegerThrowpoline); \
-        f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr))); \
+        *f.returnAddressLocation() = ptr; \
         return v;       \
     } while (0)
 
@@ -776,7 +776,7 @@ RunTracer(VMFrame &f)
                  entryFrame->down->script->isValidJitCode(f.scriptedReturn));
 
     bool blacklist;
-    uintptr_t inlineCallCount = f.inlineCallCount;
+    uintN inlineCallCount = f.inlineCallCount;
     tpa = MonitorTracePoint(f.cx, inlineCallCount, blacklist);
     JS_ASSERT(!TRACE_RECORDER(cx));
 
@@ -863,7 +863,7 @@ RunTracer(VMFrame &f)
         f.fp = cx->fp;
         entryFrame->ncode = f.fp->ncode;
         void *retPtr = JS_FUNC_TO_DATA_PTR(void *, JaegerFromTracer);
-        f.setReturnAddress(ReturnAddressPtr(retPtr));
+        *f.returnAddressLocation() = retPtr;
         return NULL;
     }
 
@@ -878,7 +878,8 @@ RunTracer(VMFrame &f)
 
 #endif /* JS_TRACER */
 
-#if JS_MONOIC
+#if defined JS_TRACER
+# if defined JS_MONOIC
 void *JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f, uint32 index)
 {
@@ -890,12 +891,13 @@ stubs::InvokeTracer(VMFrame &f, uint32 index)
     return RunTracer(f, mic);
 }
 
-#else
+# else
 
 void *JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f)
 {
     return RunTracer(f);
 }
-#endif
+# endif /* JS_MONOIC */
+#endif /* JS_TRACER */
 

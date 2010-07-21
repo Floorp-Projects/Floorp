@@ -818,6 +818,11 @@ interface nsIXPConnect : nsISupports
     void setReportAllJSExceptions(in boolean reportAllJSExceptions);
 
     /**
+     * Trigger a JS garbage collection.
+     */
+    void GarbageCollect();
+
+    /**
      * Define quick stubs on the given object, @a proto.
      *
      * @param cx

@@ -940,11 +940,13 @@ void RNG_SystemInfoForRNG(void)
  * BSD/OS we do not call safe_popen when we succeeded in getting data
  * from /dev/urandom.
  *
- * Bug 174993: LINUX provides /dev/urandom, don't fork netstat
- * if data has been gathered successfully
+ * Bug 174993: On platforms providing /dev/urandom, don't fork netstat
+ * either, if data has been gathered successfully.
  */
 
-#if defined(BSDI) || defined(LINUX)
+#if defined(BSDI) || defined(FREEBSD) || defined(NETBSD) \
+    || defined(OPENBSD) || defined(DARWIN) || defined(LINUX) \
+    || defined(HPUX)
     if (bytes)
         return;
 #endif

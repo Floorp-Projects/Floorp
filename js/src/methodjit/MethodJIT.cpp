@@ -43,17 +43,21 @@
 #include "BaseAssembler.h"
 #include "MonoIC.h"
 #include "PolyIC.h"
+#include "TrampolineCompiler.h"
 
 using namespace js;
 using namespace js::mjit;
 
 #ifdef JS_METHODJIT_PROFILE_STUBS
-static uint32 StubCallsForOp[255];
+static const size_t STUB_CALLS_FOR_OP_COUNT = 255;
+static uint32 StubCallsForOp[STUB_CALLS_FOR_OP_COUNT];
 #endif
 
 extern "C" void JS_FASTCALL
 SetVMFrameRegs(VMFrame &f)
 {
+    f.previous = JS_METHODJIT_DATA(f.cx).activeFrame;
+    JS_METHODJIT_DATA(f.cx).activeFrame = &f;
     f.oldRegs = f.cx->regs;
     f.cx->setCurrentRegs(&f.regs);
 }
@@ -61,6 +65,8 @@ SetVMFrameRegs(VMFrame &f)
 extern "C" void JS_FASTCALL
 UnsetVMFrameRegs(VMFrame &f)
 {
+    JS_ASSERT(JS_METHODJIT_DATA(f.cx).activeFrame);
+    JS_METHODJIT_DATA(f.cx).activeFrame = JS_METHODJIT_DATA(f.cx).activeFrame->previous;
     *f.oldRegs = f.regs;
     f.cx->setCurrentRegs(f.oldRegs);
 }
@@ -537,10 +543,23 @@ ThreadData::Initialize()
     if (!execPool)
         return false;
     
+    TrampolineCompiler tc(execPool, &trampolines);
+    if (!tc.compile()) {
+        delete execPool;
+        return false;
+    }
+
     if (!picScripts.init()) {
         delete execPool;
         return false;
     }
+
+#ifdef JS_METHODJIT_PROFILE_STUBS
+    for (size_t i = 0; i < STUB_CALLS_FOR_OP_COUNT; ++i)
+        StubCallsForOp[i] = 0;
+#endif
+
+    activeFrame = NULL;
 
     return true;
 }
@@ -548,6 +567,7 @@ ThreadData::Initialize()
 void
 ThreadData::Finish()
 {
+    TrampolineCompiler::release(&trampolines);
     delete execPool;
 #ifdef JS_METHODJIT_PROFILE_STUBS
     FILE *fp = fopen("/tmp/stub-profiling", "wt");
@@ -666,13 +686,15 @@ void
 mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 {
     if (script->execPool) {
+#if defined DEBUG && (defined JS_CPU_X86 || defined JS_CPU_X64) 
+        memset(script->nmap[-1], 0xcc, script->inlineLength + script->outOfLineLength);
+#endif
         script->execPool->release();
         script->execPool = NULL;
         // Releasing the execPool takes care of releasing the code.
         script->ncode = NULL;
-#ifdef DEBUG
-        script->jitLength = 0;
-#endif
+        script->inlineLength = 0;
+        script->outOfLineLength = 0;
         
 #if defined JS_POLYIC
         if (script->pics) {
@@ -690,6 +712,10 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     if (script->nmap) {
         cx->free(script->nmap - 1);
         script->nmap = NULL;
+    }
+    if (script->callSites) {
+        cx->free(script->callSites - 1);
+        script->callSites = NULL;
     }
 #if defined JS_MONOIC
     if (script->mics) {

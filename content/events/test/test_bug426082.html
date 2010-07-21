@@ -128,7 +128,11 @@ function sendMouseEvent(t, elem) {
 function compareSnapshots_(c1, c2, shouldBeIdentical, msg) {
   var [correct, c1url, c2url] = compareSnapshots(c1, c2, shouldBeIdentical);
   if (correct) {
-    ok(true, msg);
+    if (shouldBeIdentical) {
+      ok(true, msg + " - expected " + c1url);
+    } else {
+      ok(true, msg + " - got " + c1url + " and " + c2url);
+    }
   } else {
     if (shouldBeIdentical) {
       ok(false, msg + " - expected " + c1url + " but got " + c2url);
@@ -142,8 +146,10 @@ function takeSnapshot(canvas) {
   var r = buttonRect();
   var ctx = canvas.getContext("2d");
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  canvas.width = r.width + 4;
+  canvas.height = r.height + 4;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawWindow(window, r.left, r.top, r.width, r.height, "#FFF");
+  ctx.drawWindow(window, r.left - 2, r.top - 2, r.width + 4, r.height + 4, "#FFF");
 }
 
 function buttonRect() {
@@ -157,11 +163,11 @@ function buttonRect() {
 <p><label for="button" id="label">Label</label></p>
 <p id="outside">Something under the label</p>
 
-<canvas id="normalButtonCanvas" width="200" height="100"></canvas>
-<canvas id="pressedButtonCanvas" width="200" height="100"></canvas>
-<canvas id="normalFocusedButtonCanvas" width="200" height="100"></canvas>
-<canvas id="pressedFocusedButtonCanvas" width="200" height="100"></canvas>
-<canvas id="currentSnapshot" width="200" height="100"></canvas>
+<canvas id="normalButtonCanvas"></canvas>
+<canvas id="pressedButtonCanvas"></canvas>
+<canvas id="normalFocusedButtonCanvas"></canvas>
+<canvas id="pressedFocusedButtonCanvas"></canvas>
+<canvas id="currentSnapshot"></canvas>
 
 </body>
 </html>

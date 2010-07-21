@@ -945,7 +945,8 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
 struct nsCycleCollectionXPCOMRuntime : 
     public nsCycleCollectionLanguageRuntime 
 {
-    nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb) 
+    nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
+                                  bool explainLiveExpectedGarbage)
     {
         return NS_OK;
     }
@@ -972,6 +973,7 @@ struct nsCycleCollector
     PRBool mScanInProgress;
     PRBool mFollowupCollection;
     PRUint32 mCollectedObjects;
+    PRBool mFirstCollection;
 
     nsCycleCollectionLanguageRuntime *mRuntimes[nsIProgrammingLanguage::MAX+1];
     nsCycleCollectionXPCOMRuntime mXPCOMRuntime;
@@ -2087,6 +2089,7 @@ nsCycleCollector::nsCycleCollector() :
     mCollectionInProgress(PR_FALSE),
     mScanInProgress(PR_FALSE),
     mCollectedObjects(0),
+    mFirstCollection(PR_TRUE),
     mWhiteNodes(nsnull),
     mWhiteNodeCount(0),
 #ifdef DEBUG_CC
@@ -2519,14 +2522,27 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 
     PRUint32 totalCollections = 0;
     while (aTryCollections > totalCollections) {
-        PRBool collected;
-        if (mRuntimes[nsIProgrammingLanguage::JAVASCRIPT]) {
-            collected = static_cast<nsCycleCollectionJSRuntime*>
+        // The cycle collector uses the mark bitmap to discover what JS objects
+        // were reachable only from XPConnect roots that might participate in
+        // cycles. If this is the first cycle collection after startup force
+        // a garbage collection, otherwise the GC might not have run yet and
+        // the bitmap is invalid.
+        // Also force a JS GC if we are doing our infamous shutdown dance
+        // (aTryCollections > 1).
+        if ((mFirstCollection || aTryCollections > 1) &&
+            mRuntimes[nsIProgrammingLanguage::JAVASCRIPT]) {
+#ifdef COLLECT_TIME_DEBUG
+            PRTime start = PR_Now();
+#endif
+            static_cast<nsCycleCollectionJSRuntime*>
                 (mRuntimes[nsIProgrammingLanguage::JAVASCRIPT])->Collect();
+            mFirstCollection = PR_FALSE;
+#ifdef COLLECT_TIME_DEBUG
+            printf("cc: GC() took %lldms\n", (PR_Now() - start) / PR_USEC_PER_MSEC);
+#endif
         }
-        else {
-            collected = BeginCollection() && FinishCollection();
-        }
+
+        PRBool collected = BeginCollection() && FinishCollection();
 
 #ifdef DEBUG_CC
         // We wait until after FinishCollection to check the white nodes because
@@ -2593,7 +2609,7 @@ nsCycleCollector::BeginCollection()
 #endif
     for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
         if (mRuntimes[i])
-            mRuntimes[i]->BeginCycleCollection(builder);
+            mRuntimes[i]->BeginCycleCollection(builder, false);
     }
 
 #ifdef COLLECT_TIME_DEBUG
@@ -2842,7 +2858,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
         for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
             if (mRuntimes[i])
-                mRuntimes[i]->BeginCycleCollection(builder);
+                mRuntimes[i]->BeginCycleCollection(builder, true);
         }
 
         // But just for extra information, add entries from the purple
@@ -3230,18 +3246,6 @@ PRUint32
 nsCycleCollector_suspectedCount()
 {
     return sCollector ? sCollector->SuspectedCount() : 0;
-}
-
-PRBool 
-nsCycleCollector_beginCollection()
-{
-    return sCollector ? sCollector->BeginCollection() : PR_FALSE;
-}
-
-PRBool 
-nsCycleCollector_finishCollection()
-{
-    return sCollector ? sCollector->FinishCollection() : PR_FALSE;
 }
 
 nsresult 

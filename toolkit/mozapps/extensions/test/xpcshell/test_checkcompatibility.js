@@ -69,7 +69,7 @@ function run_test() {
     writeInstallRDFToDir(a, dest);
   });
 
-  startupManager(1);
+  startupManager();
 
   run_test_1();
 }
@@ -136,7 +136,7 @@ function run_test_1() {
 // add-ons enabled
 function run_test_2() {
   Services.prefs.setBoolPref("extensions.checkCompatibility.2.2", false);
-  restartManager(0);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -154,7 +154,7 @@ function run_test_2() {
 // add-ons enabled.
 function run_test_3() {
   Services.prefs.setBoolPref("extensions.checkCompatibility.2.1a", false);
-  restartManager(1, "2.1a4");
+  restartManager("2.1a4");
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -172,7 +172,7 @@ function run_test_3() {
 // add-ons disabled.
 function run_test_4() {
   Services.prefs.setBoolPref("extensions.checkCompatibility.2.1a", true);
-  restartManager(0);
+  restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",

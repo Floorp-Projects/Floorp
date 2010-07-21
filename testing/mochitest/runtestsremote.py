@@ -241,23 +241,6 @@ class MochiRemote(Mochitest):
         options.profilePath = self.remoteProfile
         return manifest
     
-    def runExtensionRegistration(self, options, browserEnv):
-        """ run once with -silent to let the extension manager do its thing
-            and then exit the app
-            We do this on every run because we need to work around bug 570027
-        """
-        self._automation.log.info("INFO | runtestsremote.py | Performing extension manager registration: start.\n")
-        # Don't care about this |status|: |runApp()| reporting it should be enough.
-        # Because process() doesn't return until fennec starts, we just give it a fudge
-        # factor of 20s before timing it out and killing it.
-        status = self._automation.runApp(None, browserEnv, options.app,
-                                options.profilePath, ["-silent"],
-                                utilityPath = options.utilityPath,
-                                xrePath = options.xrePath,
-                                symbolsPath=options.symbolsPath,
-                                maxTime = 20)
-        # We don't care to call |processLeakLog()| for this step.
-        self._automation.log.info("\nINFO | runtestsremote.py | Performing extension manager registration: end.")
     def buildURLOptions(self, options):
         self.localLog = options.logFile
         options.logFile = self.remoteLog

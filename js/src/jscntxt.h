@@ -128,6 +128,10 @@ namespace JSC {
 
 namespace js {
 
+#ifdef JS_METHODJIT
+struct VMFrame;
+#endif
+
 /* Tracer constants. */
 static const size_t MONITOR_N_GLOBAL_STATES = 4;
 static const size_t FRAGMENT_TABLE_SIZE = 512;
@@ -195,7 +199,7 @@ struct TracerState
     void*          rpAtLastTreeCall;    // value of rp at innermost tree call guard
     VMSideExit*    outermostTreeExitGuard; // the last side exit returned by js_CallTree
     TreeFragment*  outermostTree;       // the outermost tree we initially invoked
-    uintptr_t*     inlineCallCountp;    // inline call count counter
+    uintN*         inlineCallCountp;    // inline call count counter
     VMSideExit**   innermostNestedGuardp;
     VMSideExit*    innermost;
     uint64         startTime;
@@ -223,6 +227,12 @@ struct TracerState
 };
 
 namespace mjit {
+    struct Trampolines
+    {
+        void (* forceReturn)();
+        JSC::ExecutablePool *forceReturnPool;
+    };
+
     struct ThreadData
     {
         JSC::ExecutableAllocator *execPool;
@@ -230,6 +240,11 @@ namespace mjit {
         // Scripts that have had PICs patched or PIC stubs generated.
         typedef js::HashSet<JSScript*, DefaultHasher<JSScript*>, js::SystemAllocPolicy> ScriptSet;
         ScriptSet picScripts;
+
+        // Trampolines for JIT code.
+        Trampolines trampolines;
+
+        VMFrame *activeFrame;
 
         bool Initialize();
         void Finish();
@@ -342,8 +357,7 @@ class CallStack
       : cx(NULL), previousInContext(NULL), previousInThread(NULL),
         initialFrame(NULL), suspendedFrame(NULL),
         suspendedRegsAndSaved(NULL, false), initialArgEnd(NULL),
-        initialVarObj(NULL)
-    {}
+        initialVarObj(NULL) { }
 
     /* Safe casts guaranteed by the contiguous-stack layout. */
 
@@ -651,9 +665,6 @@ class StackSpace
     inline Value *firstUnused() const;
 
     inline void assertIsCurrent(JSContext *cx) const;
-#ifdef DEBUG
-    CallStack *getCurrentCallStack() const { return currentCallStack; }
-#endif
 
     /*
      * Allocate nvals on the top of the stack, report error on failure.
@@ -780,6 +791,9 @@ class StackSpace
     /* Our privates leak into xpconnect, which needs a public symbol. */
     JS_REQUIRES_STACK
     JS_FRIEND_API(bool) pushInvokeArgsFriendAPI(JSContext *, uintN, InvokeArgsGuard &);
+
+    CallStack
+    *getCurrentCallStack() const { return currentCallStack; }
 };
 
 JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
@@ -1770,7 +1784,7 @@ struct JSContext
 
   public:
     friend class js::StackSpace;
-    friend bool js::Interpret(JSContext *, JSStackFrame *, uintptr_t);
+    friend bool js::Interpret(JSContext *, JSStackFrame *, uintN);
 
     /* 'fp' and 'regs' must only be changed by calling these functions. */
     void setCurrentFrame(JSStackFrame *fp) {

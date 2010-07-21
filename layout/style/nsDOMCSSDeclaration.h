@@ -42,10 +42,8 @@
 
 #include "nsICSSDeclaration.h"
 #include "nsIDOMNSCSS2Properties.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
-class nsCSSDeclaration;
 class nsCSSParser;
 class nsIURI;
 class nsIPrincipal;
@@ -53,28 +51,13 @@ class nsIDocument;
 
 namespace mozilla {
 namespace css {
+class Declaration;
 class Loader;
 }
 }
 
-class CSS2PropertiesTearoff : public nsIDOMNSCSS2Properties
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(CSS2PropertiesTearoff)
-
-  NS_DECL_NSIDOMCSS2PROPERTIES
-  NS_DECL_NSIDOMSVGCSS2PROPERTIES
-  NS_DECL_NSIDOMNSCSS2PROPERTIES
-
-  CSS2PropertiesTearoff(nsICSSDeclaration *aOuter);
-  virtual ~CSS2PropertiesTearoff();
-
-private:
-  nsCOMPtr<nsICSSDeclaration> mOuter;
-};
-
-class nsDOMCSSDeclaration : public nsICSSDeclaration
+class nsDOMCSSDeclaration : public nsICSSDeclaration,
+                            public nsIDOMNSCSS2Properties
 {
 public:
   // Only implement QueryInterface; subclasses have the responsibility
@@ -101,11 +84,17 @@ public:
   NS_IMETHOD Item(PRUint32 index, nsAString & _retval);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
 
+  // We implement all of these as shims which forward to GetPropertyValue
+  // and SetPropertyValue; subclasses need not.
+  NS_DECL_NSIDOMCSS2PROPERTIES
+  NS_DECL_NSIDOMSVGCSS2PROPERTIES
+  NS_DECL_NSIDOMNSCSS2PROPERTIES
+
 protected:
   // Always fills in the out parameter, even on failure, and if the out
   // parameter is null the nsresult will be the correct thing to
   // propagate.
-  virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
+  virtual nsresult GetCSSDeclaration(mozilla::css::Declaration **aDecl,
                                      PRBool aAllocate) = 0;
   virtual nsresult DeclarationChanged() = 0;
   // Document that we must call BeginUpdate/EndUpdate on around the

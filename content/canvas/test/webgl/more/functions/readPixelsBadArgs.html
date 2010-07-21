@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<!--
+Tests for the OpenGL ES 2.0 HTML Canvas context
+
+Copyright (C) 2009  Ilmari Heikkinen <ilmari.heikkinen@gmail.com>
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+-->
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../unit.css" />
+<script type="application/x-javascript" src="../unit.js"></script>
+<script type="application/x-javascript" src="../util.js"></script>
+<script type="application/x-javascript">
+
+Tests.startUnit = function () {
+  var canvas = document.getElementById('gl');
+  var gl = wrapGLContext(canvas.getContext(GL_CONTEXT_ID));
+  return [gl];
+}
+
+Tests.testReadPixels = function(gl) {
+  assertFail(function(){gl.readPixels(0,0,-1,1, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(0,0,1,-1, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(-1,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(0,-1,1,1, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(0,0,16,17, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(0,0,17,16, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(0,0,-1,16, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(0,0,16,-1, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(15,16,0,1, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(16,15,1,0, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(17,15,0,0, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(16,15,0,0, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(0,0,0,0, gl.RGBA, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(0,0,1,1, gl.FLOAT, gl.UNSIGNED_BYTE);});
+  assertFail(function(){gl.readPixels(0,0,1,1, gl.ALPHA, gl.FLOAT);});
+}
+
+Tests.testReadPixelsSOPIMG = function(gl) {
+    var img = document.getElementById("i");
+    while (!img.complete) {}
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    // SOP failure
+    assertFail(function(){gl.readPixels(0,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE);});
+    gl.deleteTexture(tex);
+}
+Tests.testReadPixelsSOPCanvas = function(gl) {
+    var img = document.getElementById("i");
+    while (!img.complete) {}
+    var c = document.getElementById("c");
+    c.getContext("2d").drawImage(img, 0, 0);
+    assertFail(function(){c.getContext("2d").getImageData(0,0,1,1);});
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    // SOP failure
+    assertFail(function(){gl.readPixels(0,0,1,1, gl.RGBA, gl.UNSIGNED_BYTE);});
+    gl.deleteTexture(tex);
+}
+
+Tests.endUnit = function(gl) {
+}
+
+</script>
+</head><body>
+<canvas id="gl" width="16" height="16"></canvas>
+<canvas id="c" width="128" height="128"></canvas>
+<img id="i" src="http://mashable.com/wp-content/uploads/2008/08/thunderbird-logo-64x64.png">
+</body></html>
