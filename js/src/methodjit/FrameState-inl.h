@@ -257,7 +257,7 @@ FrameState::push(Address address)
         freeRegs.takeReg(address.base);
 
     RegisterID reg = allocReg(fe, RematInfo::DATA);
-    masm.loadData32(address, reg);
+    masm.loadPayload(address, reg);
     fe->data.setRegister(reg);
 
     /* Now it's safe to grab this register again. */
@@ -399,7 +399,7 @@ FrameState::tempRegForData(FrameEntry *fe)
         return fe->data.reg();
 
     RegisterID reg = allocReg(fe, RematInfo::DATA);
-    masm.loadData32(addressOf(fe), reg);
+    masm.loadPayload(addressOf(fe), reg);
     fe->data.setRegister(reg);
     return reg;
 }
@@ -430,7 +430,7 @@ FrameState::tempRegForData(FrameEntry *fe, RegisterID reg)
             evictReg(reg);
         else
             freeRegs.takeReg(reg);
-        masm.loadData32(addressOf(fe), reg);
+        masm.loadPayload(addressOf(fe), reg);
     }
     regstate[reg] = RegisterState(fe, RematInfo::DATA);
     fe->data.setRegister(reg);
@@ -458,7 +458,7 @@ FrameState::syncType(const FrameEntry *fe, Address to, Assembler &masm) const
 
     if (fe->type.isConstant()) {
         JS_ASSERT(fe->isTypeKnown());
-        masm.storeTypeTag(ImmTag(fe->getKnownTag()), to);
+        masm.storeTypeTag(ImmType(fe->getKnownType()), to);
     } else {
         masm.storeTypeTag(fe->type.reg(), to);
     }
@@ -476,9 +476,9 @@ FrameState::syncData(const FrameEntry *fe, Address to, Assembler &masm) const
        if (!fe->type.synced())
            masm.storeValue(fe->getValue(), to);
        else
-           masm.storeData32(Imm32(fe->getPayload32()), to);
+           masm.storePayload(Imm32(fe->getPayload32()), to);
     } else {
-        masm.storeData32(fe->data.reg(), to);
+        masm.storePayload(fe->data.reg(), to);
     }
 }
 

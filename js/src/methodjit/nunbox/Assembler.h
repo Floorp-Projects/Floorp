@@ -45,6 +45,10 @@
 namespace js {
 namespace mjit {
 
+/* 
+ * Don't use ImmTag. Use ImmType instead.
+ * TODO: ImmTag should really just be for internal use...
+ */
 class ImmTag : public JSC::MacroAssembler::Imm32
 {
   public:
@@ -92,56 +96,56 @@ class Assembler : public BaseAssembler
             address = Address(obj, (slot - JS_INITIAL_NSLOTS) * sizeof(Value));
         }
         if (obj == type) {
-            loadData32(address, data);
+            loadPayload(address, data);
             loadTypeTag(address, type);
         } else {
             loadTypeTag(address, type);
-            loadData32(address, data);
+            loadPayload(address, data);
         }
     }
 
     void loadTypeTag(Address address, RegisterID reg) {
-        load32(Address(address.base, address.offset + TAG_OFFSET), reg);
+        load32(tagOf(address), reg);
     }
 
     void loadTypeTag(BaseIndex address, RegisterID reg) {
         load32(tagOf(address), reg);
     }
 
-    void storeTypeTag(ImmTag imm, Address address) {
-        store32(imm, Address(address.base, address.offset + TAG_OFFSET));
+    void storeTypeTag(ImmType imm, Address address) {
+        store32(imm, tagOf(address));
     }
 
-    void storeTypeTag(ImmTag imm, BaseIndex address) {
+    void storeTypeTag(ImmType imm, BaseIndex address) {
         store32(imm, tagOf(address));
     }
 
     void storeTypeTag(RegisterID reg, Address address) {
-        store32(reg, Address(address.base, address.offset + TAG_OFFSET));
+        store32(reg, tagOf(address));
     }
 
     void storeTypeTag(RegisterID reg, BaseIndex address) {
         store32(reg, tagOf(address));
     }
 
-    void loadData32(Address address, RegisterID reg) {
-        load32(Address(address.base, address.offset + PAYLOAD_OFFSET), reg);
-    }
-
-    void loadData32(BaseIndex address, RegisterID reg) {
+    void loadPayload(Address address, RegisterID reg) {
         load32(payloadOf(address), reg);
     }
 
-    void storeData32(Imm32 imm, Address address) {
-        store32(imm, Address(address.base, address.offset + PAYLOAD_OFFSET));
+    void loadPayload(BaseIndex address, RegisterID reg) {
+        load32(payloadOf(address), reg);
     }
 
-    void storeData32(RegisterID reg, Address address) {
-        store32(reg, Address(address.base, address.offset + PAYLOAD_OFFSET));
-    }
-
-    void storeData32(RegisterID reg, BaseIndex address) {
+    void storePayload(RegisterID reg, Address address) {
         store32(reg, payloadOf(address));
+    }
+
+    void storePayload(RegisterID reg, BaseIndex address) {
+        store32(reg, payloadOf(address));
+    }
+
+    void storePayload(Imm32 imm, Address address) {
+        store32(imm, payloadOf(address));
     }
 
     void storeValue(const Value &v, Address address) {
@@ -151,6 +155,16 @@ class Assembler : public BaseAssembler
         store32(ImmTag(jv.s.tag), tagOf(address));
         if (!v.isUndefined())
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
+    }
+
+    /*
+     * FIXME: This is only used by slowLoadConstantDouble().
+     * It should disappear when that function can generate
+     * constants into the opstream.
+     */
+    void storeLayout(const jsval_layout &jv, Address address) {
+        store32(ImmTag(jv.s.tag), tagOf(address));
+        store32(Imm32(jv.s.payload.u32), payloadOf(address));
     }
 
     void storeValue(const Value &v, BaseIndex address) {

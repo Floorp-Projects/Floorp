@@ -126,7 +126,7 @@ ImmutableSync::allocReg()
             JS_ASSERT(!e.dataClobbered);
             e.dataSynced = true;
             e.dataClobbered = true;
-            masm->storeData32(fe->data.reg(), frame.addressOf(fe));
+            masm->storePayload(fe->data.reg(), frame.addressOf(fe));
         }
         return RegisterID(evictFromFrame);
     }
@@ -209,7 +209,7 @@ ImmutableSync::ensureDataReg(FrameEntry *fe, SyncEntry &e)
     e.dataReg = allocReg();
     e.hasDataReg = true;
     regs[e.dataReg] = &e;
-    masm->loadData32(frame.addressOf(fe), e.dataReg);
+    masm->loadPayload(frame.addressOf(fe), e.dataReg);
     return e.dataReg;
 }
 
@@ -228,15 +228,15 @@ ImmutableSync::syncCopy(FrameEntry *fe)
 
     if (fe->isTypeKnown() && !e.learnedType) {
         e.learnedType = true;
-        e.typeTag = fe->getKnownTag();
+        e.type = fe->getKnownType();
     }
 
     if (!fe->data.synced())
-        masm->storeData32(ensureDataReg(backing, e), addr);
+        masm->storePayload(ensureDataReg(backing, e), addr);
 
     if (!fe->type.synced()) {
         if (e.learnedType)
-            masm->storeTypeTag(ImmTag(e.typeTag), addr);
+            masm->storeTypeTag(ImmType(e.type), addr);
         else
             masm->storeTypeTag(ensureTypeReg(backing, e), addr);
     }
@@ -251,7 +251,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
 
     if (fe->isTypeKnown()) {
         e.learnedType = true;
-        e.typeTag = fe->getKnownTag();
+        e.type = fe->getKnownType();
     }
 
     if (!fe->data.synced() && !e.dataSynced &&
@@ -260,13 +260,13 @@ ImmutableSync::syncNormal(FrameEntry *fe)
             masm->storeValue(fe->getValue(), addr);
             return;
         }
-        masm->storeData32(ensureDataReg(fe, e), addr);
+        masm->storePayload(ensureDataReg(fe, e), addr);
     }
 
     if (!fe->type.synced() && !e.typeSynced &&
         shouldSyncType(fe, e)) {
         if (e.learnedType)
-            masm->storeTypeTag(ImmTag(e.typeTag), addr);
+            masm->storeTypeTag(ImmType(e.type), addr);
         else
             masm->storeTypeTag(ensureTypeReg(fe, e), addr);
     }
