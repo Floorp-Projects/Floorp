@@ -861,10 +861,7 @@ nsFileControlFrame::ParseAcceptAttribute(AcceptAttrCallback aCallback,
                                          void* aClosure) const
 {
   nsAutoString accept;
-  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accept, accept) ||
-      accept.IsEmpty()) {
-    return;
-  }
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accept, accept);
 
   nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
     tokenizer(accept, ',');
