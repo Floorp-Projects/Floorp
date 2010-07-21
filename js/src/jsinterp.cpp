@@ -1138,13 +1138,12 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
     JS_ASSERT(!js_FunctionClass.construct);
     CallArgs args = argsRef;
 
-    if (args.callee().isPrimitive()) {
+    JSObject *obj2;
+    if (args.callee().isPrimitive() || !(obj2 = &args.callee().toObject())->getParent()) {
         /* Use js_ValueToFunction to report an error. */
         JS_ALWAYS_TRUE(!js_ValueToFunction(cx, &args.callee(), JSV2F_CONSTRUCT));
         return false;
     }
-
-    JSObject *obj2 = &args.callee().toObject();
 
     Value protov;
     if (!obj2->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &protov))
@@ -1161,10 +1160,8 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
     }
 
     JSObject* obj = NewObject<WithProto::Class>(cx, clasp, proto, parent);
-    if (!obj) {
+    if (!obj)
         return JS_FALSE;
-    }
-
 
     /* Now we have an object with a constructor method; call it. */
     args.thisv().setObject(*obj);
