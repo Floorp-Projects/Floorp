@@ -175,18 +175,12 @@ browser.jar:
         skin/classic/aero/browser/tabbrowser/progress.png                       (tabbrowser/progress.png)
         skin/classic/aero/browser/tabbrowser/progress-pulsing.png               (tabbrowser/progress-pulsing.png)
         skin/classic/aero/browser/tabbrowser/tab.png                            (tabbrowser/tab.png)
-<<<<<<< local
-        skin/classic/aero/browser/tabbrowser/tab-arrow-left.png                 (tabbrowser/tab-arrow-left-aero.png)
-        skin/classic/aero/browser/tabbrowser/tab-arrow-right.png                (tabbrowser/tab-arrow-right-aero.png)
-        skin/classic/aero/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator-aero.png)
+        skin/classic/aero/browser/tabbrowser/tab-arrow-left.png                 (tabbrowser/tab-arrow-left.png)
+        skin/classic/aero/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator.png)
         skin/classic/aero/browser/tabcandy/edit-light.png            (tabcandy/edit-light.png)
         skin/classic/aero/browser/tabcandy/edit.png                  (tabcandy/edit.png)
         skin/classic/aero/browser/tabcandy/new-tab.png               (tabcandy/new-tab.png)
         skin/classic/aero/browser/tabcandy/platform.css              (tabcandy/platform.css)
         skin/classic/aero/browser/tabcandy/stack-expander.png        (tabcandy/stack-expander.png)
         skin/classic/aero/browser/tabcandy/tabcandy.png              (tabcandy/tabcandy.png)
-=======
-        skin/classic/aero/browser/tabbrowser/tab-arrow-left.png                 (tabbrowser/tab-arrow-left.png)
-        skin/classic/aero/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator.png)
->>>>>>> other
 #endif
