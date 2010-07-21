@@ -77,6 +77,7 @@ class ImageLayer;
 class ColorLayer;
 class ImageContainer;
 class CanvasLayer;
+class SpecificLayerAttributes;
 
 #define MOZ_LAYER_DECL_NAME(n, e)                           \
   virtual const char* Name() const { return n; }            \
@@ -320,7 +321,8 @@ public:
     TYPE_CONTAINER,
     TYPE_IMAGE,
     TYPE_COLOR,
-    TYPE_CANVAS
+    TYPE_CANVAS,
+    TYPE_SHADOW
   };
 
   virtual ~Layer() {}
@@ -429,6 +431,14 @@ public:
   Layer* GetPrevSibling() { return mPrevSibling; }
   virtual Layer* GetFirstChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
+
+  /**
+   * DRAWING PHASE ONLY
+   *
+   * Write layer-subtype-specific attributes into aAttrs.  Used to
+   * synchronize layer attributes to their shadows'.
+   */
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) { }
 
   // Returns true if it's OK to save the contents of aLayer in an
   // opaque surface (a surface without an alpha channel).
