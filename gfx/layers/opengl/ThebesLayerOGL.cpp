@@ -50,29 +50,6 @@ namespace layers {
 
 using namespace mozilla::gl;
 
-// Returns true if it's OK to save the contents of aLayer in an
-// opaque surface (a surface without an alpha channel).
-// If we can use a surface without an alpha channel, we should, because
-// it will often make painting of antialiased text faster and higher
-// quality.
-static PRBool
-UseOpaqueSurface(Layer* aLayer)
-{
-  // If the visible content in the layer is opaque, there is no need
-  // for an alpha channel.
-  if (aLayer->IsOpaqueContent())
-    return PR_TRUE;
-  // Also, if this layer is the bottommost layer in a container which
-  // doesn't need an alpha channel, we can use an opaque surface for this
-  // layer too. Any transparent areas must be covered by something else
-  // in the container.
-  ContainerLayerOGL* parent =
-    static_cast<ContainerLayerOGL*>(aLayer->GetParent());
-  return parent && parent->GetFirstChild() == aLayer &&
-         UseOpaqueSurface(parent);
-}
-
-
 ThebesLayerOGL::ThebesLayerOGL(LayerManagerOGL *aManager)
   : ThebesLayer(aManager, nsnull)
   , LayerOGL(aManager)
@@ -92,8 +69,8 @@ ThebesLayerOGL::EnsureSurface()
 {
   nsIntSize visibleSize = mVisibleRegion.GetBounds().Size();
   TextureImage::ContentType contentType =
-    UseOpaqueSurface(this) ? gfxASurface::CONTENT_COLOR :
-                             gfxASurface::CONTENT_COLOR_ALPHA;
+    CanUseOpaqueSurface() ? gfxASurface::CONTENT_COLOR :
+                            gfxASurface::CONTENT_COLOR_ALPHA;
   if (!mTexImage ||
       mTexImage->GetSize() != visibleSize ||
       mTexImage->GetContentType() != contentType)
@@ -189,7 +166,7 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   // Note BGR: Cairo's image surfaces are always in what
   // OpenGL and our shaders consider BGR format.
   ColorTextureLayerProgram *program =
-    UseOpaqueSurface(this)
+    CanUseOpaqueSurface()
     ? mOGLManager->GetBGRXLayerProgram()
     : mOGLManager->GetBGRALayerProgram();
 
