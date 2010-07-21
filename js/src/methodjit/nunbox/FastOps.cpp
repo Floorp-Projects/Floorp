@@ -318,7 +318,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
         Jump notInt = masm.testInt32(Assembler::NotEqual, addr);
         stubcc.linkExit(notInt, Uses(0));
         data = frame.allocReg();
-        masm.loadData32(addr, data);
+        masm.loadPayload(addr, data);
     }
 
     Jump ovf;
@@ -332,7 +332,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     stubcc.masm.lea(addr, Registers::ArgReg1);
     stubcc.vpInc(op, depth);
 
-    masm.storeData32(data, addr);
+    masm.storePayload(data, addr);
 
     if (!post && !popped)
         frame.pushUntypedPayload(JSVAL_TYPE_INT32, data);
@@ -658,7 +658,7 @@ mjit::Compiler::jsop_not()
           {
             RegisterID data = frame.allocReg(Registers::SingleByteRegs);
             if (frame.shouldAvoidDataRemat(top))
-                masm.loadData32(frame.addressOf(top), data);
+                masm.loadPayload(frame.addressOf(top), data);
             else
                 masm.move(frame.tempRegForData(top), data);
 
@@ -707,7 +707,7 @@ mjit::Compiler::jsop_not()
 
     RegisterID data = frame.allocReg(Registers::SingleByteRegs);
     if (frame.shouldAvoidDataRemat(top))
-        masm.loadData32(frame.addressOf(top), data);
+        masm.loadPayload(frame.addressOf(top), data);
     else
         masm.move(frame.tempRegForData(top), data);
     RegisterID type = frame.tempRegForType(top);
@@ -1099,9 +1099,9 @@ mjit::Compiler::jsop_setelem()
         if (fe->isConstant()) {
             masm.storeValue(fe->getValue(), slot);
         } else {
-            masm.storeData32(frame.tempRegForData(fe), slot);
+            masm.storePayload(frame.tempRegForData(fe), slot);
             if (fe->isTypeKnown())
-                masm.storeTypeTag(ImmTag(fe->getKnownTag()), slot);
+                masm.storeTypeTag(ImmType(fe->getKnownType()), slot);
             else
                 masm.storeTypeTag(frame.tempRegForType(fe), slot);
         }
@@ -1128,9 +1128,9 @@ mjit::Compiler::jsop_setelem()
         if (fe->isConstant()) {
             masm.storeValue(fe->getValue(), slot);
         } else {
-            masm.storeData32(frame.tempRegForData(fe), slot);
+            masm.storePayload(frame.tempRegForData(fe), slot);
             if (fe->isTypeKnown())
-                masm.storeTypeTag(ImmTag(fe->getKnownTag()), slot);
+                masm.storeTypeTag(ImmType(fe->getKnownType()), slot);
             else
                 masm.storeTypeTag(frame.tempRegForType(fe), slot);
         }
@@ -1172,7 +1172,7 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
 
         /* Load slot address into regs. */
         masm.loadTypeTag(slot, tmpReg);
-        masm.loadData32(slot, objReg);
+        masm.loadPayload(slot, objReg);
     } else {
         JS_ASSERT(idReg.isSet());
         Jump inRange = masm.branch32(Assembler::AboveOrEqual,
@@ -1186,7 +1186,7 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
         stubcc.linkExit(notHole, Uses(2));
 
         masm.loadTypeTag(slot, tmpReg);
-        masm.loadData32(slot, objReg);
+        masm.loadPayload(slot, objReg);
     }
     /* Postcondition: type must be in tmpReg, data must be in objReg. */
 
