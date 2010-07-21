@@ -139,6 +139,12 @@ public:
    * @param aDocument The owner-document of aContent. Can be null.
    * @param aContent  The piece of content that changed. Is never null.
    * @param aInfo     The structure with information details about the change.
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void CharacterDataChanged(nsIDocument *aDocument,
                                     nsIContent* aContent,
