@@ -466,6 +466,16 @@ TabChild::DestroyWidget()
     return true;
 }
 
+void
+TabChild::ActorDestroy(ActorDestroyReason why)
+{
+  // The messageManager relays messages via the TabChild which
+  // no longer exists.
+  static_cast<nsFrameMessageManager*>
+    (mTabChildGlobal->mMessageManager.get())->Disconnect();
+  mTabChildGlobal->mMessageManager = nsnull;
+}
+
 TabChild::~TabChild()
 {
     DestroyWidget();
@@ -1073,6 +1083,8 @@ NS_IMETHODIMP
 TabChildGlobal::GetContent(nsIDOMWindow** aContent)
 {
   *aContent = nsnull;
+  if (!mTabChild)
+    return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mTabChild->WebNavigation());
   window.swap(*aContent);
   return NS_OK;
