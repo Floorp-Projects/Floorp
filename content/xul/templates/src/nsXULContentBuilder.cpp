@@ -1562,6 +1562,8 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
                                       nsIAtom*     aAttribute,
                                       PRInt32      aModType)
 {
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
     // Handle "open" and "close" cases. We do this handling before
     // we've notified the observer, so that content is already created
     // for the frame system to walk.

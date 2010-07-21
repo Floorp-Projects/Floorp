@@ -1001,6 +1001,9 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
 
+    // Might not need this, but be safe for now.
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
     // XXXbz once we change AttributeChanged to take Element, we can nix this line
     Element* aElement = aElementContent->AsElement();
 

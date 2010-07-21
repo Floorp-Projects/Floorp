@@ -341,15 +341,12 @@ nsAttributeTextNode::AttributeChanged(nsIDocument* aDocument,
 {
   if (aNameSpaceID == mNameSpaceID && aAttribute == mAttrName &&
       aContent == mGrandparent) {
-    // Since UpdateText notifies, do it asynchronously.  Note that if we get
-    // unbound while the event is up that's ok -- we'll just have no
-    // grandparent when it fires, and will do nothing.    
-    // XXXbz ideally we'd either process this on layout flushes or do it right
-    // after nsIMutationObserver notifications are over or something, instead
-    // of doing it fully async.
+    // Since UpdateText notifies, do it when it's safe to run script.  Note
+    // that if we get unbound while the event is up that's ok -- we'll just
+    // have no grandparent when it fires, and will do nothing.
     void (nsAttributeTextNode::*update)() = &nsAttributeTextNode::UpdateText;
     nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this, update);
-    NS_DispatchToCurrentThread(ev);
+    nsContentUtils::AddScriptRunner(ev);
   }
 }
 

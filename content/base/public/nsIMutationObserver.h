@@ -187,6 +187,12 @@ public:
    * @param aModType     Whether or not the attribute was added, changed, or
    *                     removed. The constants are defined in
    *                     nsIDOMMutationEvent.h.
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void AttributeChanged(nsIDocument* aDocument,
                                 nsIContent*  aContent,
