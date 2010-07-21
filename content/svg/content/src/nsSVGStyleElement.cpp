@@ -246,7 +246,8 @@ void
 nsSVGStyleElement::ContentRemoved(nsIDocument* aDocument,
                                   nsIContent* aContainer,
                                   nsIContent* aChild,
-                                  PRInt32 aIndexInContainer)
+                                  PRInt32 aIndexInContainer,
+                                  nsIContent* aPreviousSibling)
 {
   ContentChanged(aChild);
 }

@@ -3676,6 +3676,8 @@ nsINode::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
     }
   }
 
+  nsIContent* previousSibling = aKid->GetPreviousSibling();
+
   if (GetFirstChild() == aKid) {
     mFirstChild = aKid->GetNextSibling();
   }
@@ -3683,7 +3685,7 @@ nsINode::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   aChildArray.RemoveChildAt(aIndex);
 
   if (aNotify) {
-    nsNodeUtils::ContentRemoved(this, aKid, aIndex);
+    nsNodeUtils::ContentRemoved(this, aKid, aIndex, previousSibling);
   }
 
   aKid->UnbindFromTree();

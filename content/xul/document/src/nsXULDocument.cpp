@@ -1131,7 +1131,8 @@ void
 nsXULDocument::ContentRemoved(nsIDocument* aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
-                              PRInt32 aIndexInContainer)
+                              PRInt32 aIndexInContainer,
+                              nsIContent* aPreviousSibling)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
 

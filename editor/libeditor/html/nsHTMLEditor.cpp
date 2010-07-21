@@ -3870,7 +3870,8 @@ nsHTMLEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
 
 void
 nsHTMLEditor::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
-                             nsIContent* aChild, PRInt32 aIndexInContainer)
+                             nsIContent* aChild, PRInt32 aIndexInContainer,
+                             nsIContent* aPreviousSibling)
 {
   if (SameCOMIdentity(aChild, mRootElement)) {
     ResetRootElementAndEventTarget();
