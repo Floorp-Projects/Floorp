@@ -66,6 +66,7 @@ EXPORTS = \
         $(NULL)
 
 CPPSRCS = \
+	Layers.cpp \
         BasicImages.cpp \
         BasicLayers.cpp \
         ThebesLayerBuffer.cpp \

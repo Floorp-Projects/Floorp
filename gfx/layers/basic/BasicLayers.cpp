@@ -812,6 +812,11 @@ BasicLayerManager::PopGroupWithCachedSurface(gfxContext *aTarget,
 void
 BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
+#ifdef MOZ_LAYERS_HAVE_LOG
+  MOZ_LAYERS_LOG(("[----- BeginTransaction"));
+  Log();
+#endif
+
   NS_ASSERTION(!InTransaction(), "Nested transactions not allowed");
 #ifdef DEBUG
   mPhase = PHASE_CONSTRUCTION;
@@ -823,6 +828,11 @@ void
 BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
 {
+#ifdef MOZ_LAYERS_HAVE_LOG
+  Log();
+  MOZ_LAYERS_LOG(("]----- EndTransaction"));
+#endif
+
   NS_ASSERTION(InConstruction(), "Should be in construction phase");
 #ifdef DEBUG
   mPhase = PHASE_DRAWING;

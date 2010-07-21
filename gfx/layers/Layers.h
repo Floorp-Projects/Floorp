@@ -50,8 +50,15 @@
 #include "gfxPattern.h"
 
 #if defined(DEBUG) || defined(PR_LOGGING)
+#  include <stdio.h>            // FILE
+#  include "prlog.h"
 #  define MOZ_LAYERS_HAVE_LOG
-#endif
+#  define MOZ_LAYERS_LOG(_args)                             \
+  PR_LOG(LayerManager::GetLog(), PR_LOG_DEBUG, _args)
+#else
+struct PRLogModuleInfo;
+#  define MOZ_LAYERS_LOG(_args)
+#endif  // if defined(DEBUG) || defined(PR_LOGGING)
 
 class gfxContext;
 class nsPaintEvent;
@@ -134,7 +141,10 @@ public:
     LAYERS_D3D9
   };
 
-  LayerManager() : mUserData(nsnull) {}
+  LayerManager() : mUserData(nsnull)
+  {
+    InitLog();
+  }
   virtual ~LayerManager() {}
 
   /**
@@ -246,13 +256,47 @@ public:
   void SetUserData(void* aData) { mUserData = aData; }
   void* GetUserData() { return mUserData; }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
+  // We always declare the following logging symbols, because it's
+  // extremely tricky to conditionally declare them.  However, for
+  // ifndef MOZ_LAYERS_HAVE_LOG builds, they only have trivial
+  // definitions in Layers.cpp.
   virtual const char* Name() const { return "???"; }
-#endif // MOZ_LAYERS_HAVE_LOG
+
+  /**
+   * Dump information about this layer manager and its managed tree to
+   * aFile, which defaults to stderr.
+   */
+  void Dump(FILE* aFile=NULL, const char* aPrefix="");
+  /**
+   * Dump information about just this layer manager itself to aFile,
+   * which defaults to stderr.
+   */
+  void DumpSelf(FILE* aFile=NULL, const char* aPrefix="");
+
+  /**
+   * Log information about this layer manager and its managed tree to
+   * the NSPR log (if enabled for "Layers").
+   */
+  void Log(const char* aPrefix="");
+  /**
+   * Log information about just this layer manager itself to the NSPR
+   * log (if enabled for "Layers").
+   */
+  void LogSelf(const char* aPrefix="");
+
+  static bool IsLogEnabled();
+  static PRLogModuleInfo* GetLog() { return sLog; }
 
 protected:
   nsRefPtr<Layer> mRoot;
   void* mUserData;
+
+  // Print interesting information about this into aTo.  Internally
+  // used to implement Dump*() and Log*().
+  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+
+  static void InitLog();
+  static PRLogModuleInfo* sLog;
 };
 
 class ThebesLayer;
@@ -373,9 +417,7 @@ public:
    */
   virtual ThebesLayer* AsThebesLayer() { return nsnull; }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const =0;
-#endif
   virtual LayerType GetType() const =0;
 
   /**
@@ -392,6 +434,30 @@ public:
   void SetNextSibling(Layer* aSibling) { mNextSibling = aSibling; }
   void SetPrevSibling(Layer* aSibling) { mPrevSibling = aSibling; }
 
+  /**
+   * Dump information about this layer manager and its managed tree to
+   * aFile, which defaults to stderr.
+   */
+  void Dump(FILE* aFile=NULL, const char* aPrefix="");
+  /**
+   * Dump information about just this layer manager itself to aFile,
+   * which defaults to stderr.
+   */
+  void DumpSelf(FILE* aFile=NULL, const char* aPrefix="");
+
+  /**
+   * Log information about this layer manager and its managed tree to
+   * the NSPR log (if enabled for "Layers").
+   */
+  void Log(const char* aPrefix="");
+  /**
+   * Log information about just this layer manager itself to the NSPR
+   * log (if enabled for "Layers").
+   */
+  void LogSelf(const char* aPrefix="");
+
+  static bool IsLogEnabled() { return LayerManager::IsLogEnabled(); }
+
 protected:
   Layer(LayerManager* aManager, void* aImplData) :
     mManager(aManager),
@@ -404,6 +470,13 @@ protected:
     mUseClipRect(PR_FALSE),
     mIsOpaqueContent(PR_FALSE)
     {}
+
+  // Print interesting information about this into aTo.  Internally
+  // used to implement Dump*() and Log*().  If subclasses have
+  // additional interesting properties, they should override this with
+  // an implementation that first calls the base implementation then
+  // appends additional info to aTo.
+  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
   LayerManager* mManager;
   ContainerLayer* mParent;
@@ -452,6 +525,8 @@ public:
 protected:
   ThebesLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData) {}
+
+  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
   nsIntRegion mValidRegion;
 };
@@ -518,6 +593,8 @@ protected:
       mColor(0.0, 0.0, 0.0, 0.0)
   {}
 
+  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+
   gfxRGBA mColor;
 };
 
@@ -583,6 +660,8 @@ public:
 protected:
   CanvasLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD) {}
+
+  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
   gfxPattern::GraphicsFilter mFilter;
 };
