@@ -857,6 +857,8 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
   if (NS_FAILED(rv = RowToNode(parentRow, &parentNode)))
     return;
 
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+  
   if (!parentNode->isOpen) {
     // Parent is not open, so don't bother creating tree rows for the
     // kids.  But do indicate that it's now a container, if needed.
