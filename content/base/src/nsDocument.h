@@ -1143,6 +1143,7 @@ private:
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();
 
+  nsresult CheckFrameOptions();
   nsresult InitCSP();
 
   /**
