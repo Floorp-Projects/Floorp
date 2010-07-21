@@ -59,8 +59,14 @@ GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
 ifndef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LIBS	= gkgfx gfxutils
+EXTRA_DSO_LIBS	= gkgfx
+
+ifneq ($(OS_ARCH)_$(OS_TEST),Linux_x86_64)
+EXTRA_DSO_LIBS += angle
 endif
+
+endif
+
 EXTRA_DSO_LIBS	+= thebes ycbcr
 
 

@@ -942,7 +942,7 @@ var XPIProvider = {
   /**
    * Starts the XPI provider initializes the install locations and prefs.
    */
-  startup: function XPI_startup() {
+  startup: function XPI_startup(aAppChanged) {
     LOG("startup");
     this.installs = [];
     this.installLocations = [];
@@ -1030,22 +1030,7 @@ var XPIProvider = {
     this.currentSkin = Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
                                          this.defaultSkin);
     this.selectedSkin = this.currentSkin;
-
-    // Tell the Chrome Registry which Skin to select
-    if (Prefs.getBoolPref(PREF_DSS_SWITCHPENDING, false)) {
-      try {
-        this.selectedSkin = Prefs.getCharPref(PREF_DSS_SKIN_TO_SELECT);
-        Services.prefs.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
-                                   this.selectedSkin);
-        Services.prefs.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
-        LOG("Changed skin to " + this.selectedSkin);
-        this.currentSkin = this.selectedSkin;
-      }
-      catch (e) {
-        ERROR(e);
-      }
-      Services.prefs.clearUserPref(PREF_DSS_SWITCHPENDING);
-    }
+    this.applyThemeChange();
 
     var version = Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
     this.checkCompatibilityPref = PREF_EM_CHECK_COMPATIBILITY + "." + version;
@@ -1053,8 +1038,17 @@ var XPIProvider = {
                                                 true)
     this.checkUpdateSecurity = Prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
                                                  true)
-    this.enabledAddons = Prefs.getCharPref(PREF_EM_ENABLED_ADDONS, "");
+    this.enabledAddons = [];
 
+    Services.prefs.addObserver(this.checkCompatibilityPref, this, false);
+    Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
+
+    this.checkForChanges(aAppChanged);
+
+    // Changes to installed extensions may have changed which theme is selected
+    this.applyThemeChange();
+
+    this.enabledAddons = Prefs.getCharPref(PREF_EM_ENABLED_ADDONS, "");
     if ("nsICrashReporter" in Ci &&
         Services.appinfo instanceof Ci.nsICrashReporter) {
       // Annotate the crash report with relevant add-on information.
@@ -1068,8 +1062,29 @@ var XPIProvider = {
       this.addAddonsToCrashReporter();
     }
 
-    Services.prefs.addObserver(this.checkCompatibilityPref, this, false);
-    Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
+    for (let id in this.bootstrappedAddons) {
+      let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      dir.persistentDescriptor = this.bootstrappedAddons[id].descriptor;
+      this.callBootstrapMethod(id, this.bootstrappedAddons[id].version, dir,
+                               "startup", BOOTSTRAP_REASONS.APP_STARTUP);
+    }
+
+    // Let these shutdown a little earlier when they still have access to most
+    // of XPCOM
+    Services.obs.addObserver({
+      observe: function(aSubject, aTopic, aData) {
+        Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
+                                   JSON.stringify(XPIProvider.bootstrappedAddons));
+        for (let id in XPIProvider.bootstrappedAddons) {
+          let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+          dir.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
+          XPIProvider.callBootstrapMethod(id, XPIProvider.bootstrappedAddons[id].version,
+                                          dir, "shutdown",
+                                          BOOTSTRAP_REASONS.APP_SHUTDOWN);
+        }
+        Services.obs.removeObserver(this, "quit-application-granted");
+      }
+    }, "quit-application-granted", false);
   },
 
   /**
@@ -1103,6 +1118,28 @@ var XPIProvider = {
 
     this.installLocations = null;
     this.installLocationsByName = null;
+  },
+
+  /**
+   * Applies any pending theme change to the preferences.
+   */
+  applyThemeChange: function XPI_applyThemeChange() {
+    if (!Prefs.getBoolPref(PREF_DSS_SWITCHPENDING, false))
+      return;
+
+    // Tell the Chrome Registry which Skin to select
+    try {
+      this.selectedSkin = Prefs.getCharPref(PREF_DSS_SKIN_TO_SELECT);
+      Services.prefs.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
+                                 this.selectedSkin);
+      Services.prefs.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
+      LOG("Changed skin to " + this.selectedSkin);
+      this.currentSkin = this.selectedSkin;
+    }
+    catch (e) {
+      ERROR(e);
+    }
+    Services.prefs.clearUserPref(PREF_DSS_SWITCHPENDING);
   },
 
   /**
@@ -1549,8 +1586,14 @@ var XPIProvider = {
           newAddon.userDisabled = aMigrateData.userDisabled;
         if ("installDate" in aMigrateData)
           newAddon.installDate = aMigrateData.installDate;
-        if ("targetApplications" in aMigrateData)
-          newAddon.applyCompatibilityUpdate(aMigrateData, true);
+
+        // Some properties should only be migrated if the add-on hasn't changed.
+        // The version property isn't a perfect check for this but covers the
+        // vast majority of cases.
+        if (aMigrateData.version == newAddon.version) {
+          if ("targetApplications" in aMigrateData)
+            newAddon.applyCompatibilityUpdate(aMigrateData, true);
+        }
       }
 
       try {
@@ -1612,10 +1655,13 @@ var XPIProvider = {
 
             // The add-on has changed if the modification time has changed, or
             // the directory it is installed in has changed or we have an
-            // updated manifest for it.
+            // updated manifest for it. Also reload the metadata for add-ons
+            // in the application directory when the application version has
+            // changed
             if (aOldAddon.id in aManifests[installLocation.name] ||
                 aOldAddon.updateDate != addonState.mtime ||
-                aOldAddon._descriptor != addonState.descriptor) {
+                aOldAddon._descriptor != addonState.descriptor ||
+                (aUpdateCompatibility && installLocation.name == KEY_APP_GLOBAL)) {
               changed = updateMetadata(installLocation, aOldAddon, addonState) ||
                         changed;
             }
@@ -1760,14 +1806,14 @@ var XPIProvider = {
       // If the application crashed before completing any pending operations then
       // we should perform them now.
       if (changed || Prefs.getBoolPref(PREF_PENDING_OPERATIONS)) {
-        LOG("Restart necessary");
+        LOG("Updating database with changes to installed add-ons");
         XPIDatabase.updateActiveAddons();
         XPIDatabase.commitTransaction();
         XPIDatabase.writeAddonsList([]);
         Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
         Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
                                    JSON.stringify(this.bootstrappedAddons));
-        return true;
+        return;
       }
 
       LOG("No changes found");
@@ -1785,36 +1831,7 @@ var XPIProvider = {
     if (!addonsList.exists()) {
       LOG("Add-ons list is missing, recreating");
       XPIDatabase.writeAddonsList([]);
-      Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
-                                 JSON.stringify(this.bootstrappedAddons));
-      return true;
     }
-
-    for (let id in this.bootstrappedAddons) {
-      let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      dir.persistentDescriptor = this.bootstrappedAddons[id].descriptor;
-      this.callBootstrapMethod(id, this.bootstrappedAddons[id].version, dir,
-                               "startup", BOOTSTRAP_REASONS.APP_STARTUP);
-    }
-
-    // Let these shutdown a little earlier when they still have access to most
-    // of XPCOM
-    Services.obs.addObserver({
-      observe: function(aSubject, aTopic, aData) {
-        Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
-                                   JSON.stringify(XPIProvider.bootstrappedAddons));
-        for (let id in XPIProvider.bootstrappedAddons) {
-          let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-          dir.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
-          XPIProvider.callBootstrapMethod(id, XPIProvider.bootstrappedAddons[id].version,
-                                          dir, "shutdown",
-                                          BOOTSTRAP_REASONS.APP_SHUTDOWN);
-        }
-        Services.obs.removeObserver(this, "quit-application-granted");
-      }
-    }, "quit-application-granted", false);
-
-    return false;
   },
 
   /**
@@ -2769,6 +2786,7 @@ var XPIDatabase = {
               migrateData[location] = {};
             let id = source.ValueUTF8.substring(PREFIX_ITEM_URI.length);
             migrateData[location][id] = {
+              version: getRDFProperty(ds, source, "version"),
               userDisabled: false,
               targetApplications: []
             }
@@ -2799,12 +2817,14 @@ var XPIDatabase = {
       try {
         var stmt = this.connection.createStatement("SELECT internal_id, id, " +
                                                    "location, userDisabled, " +
-                                                   "installDate FROM addon");
+                                                   "installDate, version " +
+                                                   "FROM addon");
         for (let row in resultRows(stmt)) {
           if (!(row.location in migrateData))
             migrateData[row.location] = {};
           migrateData[row.location][row.id] = {
             internal_id: row.internal_id,
+            version: row.version,
             installDate: row.installDate,
             userDisabled: row.userDisabled == 1,
             targetApplications: []
@@ -3709,6 +3729,12 @@ var XPIDatabase = {
     LOG("Updating add-on states");
     let stmt = this.getStatement("setActiveAddons");
     executeStatement(stmt);
+
+    // Note that this does not update the active property on cached
+    // DBAddonInternal instances so we throw away the cache. This should only
+    // happen during shutdown when everything is going away anyway or during
+    // startup when the only references are internal.
+    this.addonCache = [];
   },
 
   /**

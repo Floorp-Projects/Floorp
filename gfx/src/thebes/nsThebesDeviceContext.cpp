@@ -1224,7 +1224,8 @@ nsThebesDeviceContext::SetPixelScale(float aScale)
 void
 nsThebesDeviceContext::UpdateScaledAppUnits()
 {
-    mAppUnitsPerDevPixel = PR_MAX(1, PRInt32(float(mAppUnitsPerDevNotScaledPixel) / mPixelScale));
+    mAppUnitsPerDevPixel =
+        PR_MAX(1, NSToIntRound(float(mAppUnitsPerDevNotScaledPixel) / mPixelScale));
 }
 
 #if defined(XP_WIN) || defined(XP_OS2)

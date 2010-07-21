@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.31 2009/07/31 18:35:30 christophe.ravel.bugs%sun.com Exp $
+ * $Id: certi.h,v 1.34 2010/05/21 00:43:51 wtc%google.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -150,7 +150,7 @@ struct CRLDPCacheStr {
 #else
     PRLock* lock;
 #endif
-    CERTCertificate* issuer;    /* cert issuer 
+    CERTCertificate* issuer;    /* issuer cert
                                    XXX there may be multiple issuer certs,
                                        with different validity dates. Also
                                        need to deal with SKID/AKID . See
@@ -178,9 +178,9 @@ struct CRLDPCacheStr {
     /* cache invalidity bitflag */
     PRUint16 invalid;       /* this state will be set if either
              CRL_CACHE_INVALID_CRLS or CRL_CACHE_LAST_FETCH_FAILED is set.
-             In those cases, all certs are considered revoked as a
-             security precaution. The invalid state can only be cleared
-             during an update if all error states are cleared */
+             In those cases, all certs are considered to have unknown status.
+             The invalid state can only be cleared during an update if all
+             error states are cleared */
     PRBool refresh;        /* manual refresh from tokens has been forced */
     PRBool mustchoose;     /* trigger reselection algorithm, for case when
                               RAM CRL objects are dropped from the cache */
@@ -280,15 +280,6 @@ dpcacheStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn,
 
 /* release a DPCache object that was previously acquired */
 void ReleaseDPCache(CRLDPCache* dpcache, PRBool writeLocked);
-
-/* this function assumes the caller holds a lock on the DPCache */
-SECStatus DPCache_GetAllCRLs(CRLDPCache* dpc, PRArenaPool* arena,
-                             CERTSignedCrl*** crls, PRUint16* status);
-
-/* this function assumes the caller holds a lock on the DPCache */
-SECStatus DPCache_GetCRLEntry(CRLDPCache* cache, PRBool readlocked,
-                              CERTSignedCrl* crl, SECItem* sn,
-                              CERTCrlEntry** returned);
 
 /*
  * map Stan errors into NSS errors
@@ -390,6 +381,14 @@ SECStatus cert_FindCRLByGeneralName(NamedCRLCache* ncc,
                                     NamedCRLCacheEntry** retEntry);
 
 SECStatus cert_ReleaseNamedCRLCache(NamedCRLCache* ncc);
+
+/* This is private for now.  Maybe shoule be public. */
+CERTGeneralName *
+cert_GetSubjectAltNameList(CERTCertificate *cert, PRArenaPool *arena);
+
+/* Count DNS names and IP addresses in a list of GeneralNames */
+PRUint32
+cert_CountDNSPatterns(CERTGeneralName *firstName);
 
 #endif /* _CERTI_H_ */
 

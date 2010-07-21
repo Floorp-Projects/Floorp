@@ -21,8 +21,20 @@
 
 namespace base {
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
+               bool wait, ProcessHandle* process_handle) {
+  return LaunchApp(argv, fds_to_remap, environment_map(),
+                   wait, process_handle);
+}
+#endif
+
+bool LaunchApp(const std::vector<std::string>& argv,
+               const file_handle_mapping_vector& fds_to_remap,
+#if defined(CHROMIUM_MOZILLA_BUILD)
+               const environment_map& env_vars_to_set,
+#endif
                bool wait, ProcessHandle* process_handle) {
   bool retval = true;
 
@@ -36,8 +48,44 @@ bool LaunchApp(const std::vector<std::string>& argv,
   // as close-on-exec.
   SetAllFDsToCloseOnExec();
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
+  // Copy _NSGetEnviron() to a new char array and add the variables
+  // in env_vars_to_set.
+  // Existing variables are overwritten by env_vars_to_set.
+  int pos = 0;
+  environment_map combined_env_vars = env_vars_to_set;
+  while((*_NSGetEnviron())[pos] != NULL) {
+    std::string varString = (*_NSGetEnviron())[pos];
+    std::string varName = varString.substr(0, varString.find_first_of('='));
+    std::string varValue = varString.substr(varString.find_first_of('=') + 1);
+    if (combined_env_vars.find(varName) == combined_env_vars.end()) {
+      combined_env_vars[varName] = varValue;
+    }
+    pos++;
+  }
+  int varsLen = combined_env_vars.size() + 1;
+
+  char** vars = new char*[varsLen];
+  int i = 0;
+  for (environment_map::const_iterator it = combined_env_vars.begin();
+       it != combined_env_vars.end(); ++it) {
+    std::string entry(it->first);
+    entry += "=";
+    entry += it->second;
+    vars[i] = strdup(entry.c_str());
+    i++;
+  }
+  vars[i] = NULL;
+#endif
+
   posix_spawn_file_actions_t file_actions;
   if (posix_spawn_file_actions_init(&file_actions) != 0) {
+#if defined(CHROMIUM_MOZILLA_BUILD)
+    for(int j = 0; j < varsLen; j++) {
+      free(vars[j]);
+    }  
+    delete[] vars;
+#endif
     return false;
   }
 
@@ -57,10 +105,17 @@ bool LaunchApp(const std::vector<std::string>& argv,
       if (posix_spawn_file_actions_adddup2(&file_actions, src_fd, dest_fd) != 0)
           {
         posix_spawn_file_actions_destroy(&file_actions);
+#if defined(CHROMIUM_MOZILLA_BUILD)
+        for(int j = 0; j < varsLen; j++) {
+          free(vars[j]);
+        }  
+        delete[] vars;
+#endif
         return false;
       }
     }
   }
+
 
   int pid = 0;
   int spawn_succeeded = (posix_spawnp(&pid,
@@ -68,7 +123,18 @@ bool LaunchApp(const std::vector<std::string>& argv,
                                       &file_actions,
                                       NULL,
                                       argv_copy,
+#if defined(CHROMIUM_MOZILLA_BUILD)
+                                      vars) == 0);
+#else
                                       *_NSGetEnviron()) == 0);
+#endif
+
+#if defined(CHROMIUM_MOZILLA_BUILD)
+  for(int j = 0; j < varsLen; j++) {
+    free(vars[j]);
+  }  
+  delete[] vars;
+#endif
 
   posix_spawn_file_actions_destroy(&file_actions);
 

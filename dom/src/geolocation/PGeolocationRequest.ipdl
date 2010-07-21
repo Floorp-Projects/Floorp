@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PIFrameEmbedding;
+include protocol PBrowser;
 include "mozilla/net/NeckoMessageUtils.h";
 
 using IPC::URI;
@@ -45,7 +45,7 @@ namespace dom {
 
 protocol PGeolocationRequest
 {
-  manager PIFrameEmbedding;
+  manager PBrowser;
 
 parent:
   prompt();

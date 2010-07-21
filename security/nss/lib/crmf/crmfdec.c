@@ -135,15 +135,17 @@ crmf_decode_process_popoprivkey(CRMFCertReqMsg *inCertReqMsg)
     switch (popoPrivKey->messageChoice) {
     case crmfThisMessage:
     case crmfDHMAC:
+        privKeyDer.type = derPOP->type;
         privKeyDer.data = &derPOP->data[5];
 	privKeyDer.len  = derPOP->len - 5;
 	break;
     case crmfSubsequentMessage:
+        privKeyDer.type = derPOP->type;
         privKeyDer.data = &derPOP->data[4];
 	privKeyDer.len  = derPOP->len - 4;
 	break;
     default:
-        rv = SECFailure;
+        return SECFailure;
     }
 
     rv = SECITEM_CopyItem(inCertReqMsg->poolp, 

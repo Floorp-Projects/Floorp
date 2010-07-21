@@ -48,6 +48,8 @@ namespace mozilla {
 struct FramePropertyDescriptor;
 
 typedef void (*FramePropertyDestructor)(void* aPropertyValue);
+typedef void (*FramePropertyDestructorWithFrame)(nsIFrame* aFrame,
+                                                 void* aPropertyValue);
 
 /**
  * A pointer to a FramePropertyDescriptor serves as a unique property ID.
@@ -62,9 +64,22 @@ typedef void (*FramePropertyDestructor)(void* aPropertyValue);
  */
 struct FramePropertyDescriptor {
   /**
-   * mDestructor may be null, in which case no value destruction is a no-op.
+   * mDestructor will be called if it's non-null.
    */
-  FramePropertyDestructor mDestructor;
+  FramePropertyDestructor          mDestructor;
+  /**
+   * mDestructorWithFrame will be called if it's non-null and mDestructor
+   * is null. WARNING: The frame passed to mDestructorWithFrame may
+   * be a dangling frame pointer, if this is being called during
+   * presshell teardown. Do not use it except to compare against
+   * other frame pointers. No frame will have been allocated with
+   * the same address yet.
+   */
+  FramePropertyDestructorWithFrame mDestructorWithFrame;
+  /**
+   * mDestructor and mDestructorWithFrame may both be null, in which case
+   * no value destruction is a no-op.
+   */
 };
 
 /**
@@ -156,9 +171,11 @@ protected:
       return reinterpret_cast<nsTArray<PropertyValue>*>(&mValue);
     }
 
-    void DestroyValue() {
+    void DestroyValueFor(nsIFrame* aFrame) {
       if (mProperty->mDestructor) {
         mProperty->mDestructor(mValue);
+      } else if (mProperty->mDestructorWithFrame) {
+        mProperty->mDestructorWithFrame(aFrame, mValue);
       }
     }
 

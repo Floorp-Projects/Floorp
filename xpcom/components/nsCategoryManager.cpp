@@ -63,6 +63,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Services.h"
 
+#include "ManifestParser.h"
 #include "mozilla/FunctionTimer.h"
 
 using namespace mozilla;
@@ -741,61 +742,66 @@ nsCategoryManager::SuppressNotifications(PRBool aSuppress)
  * this will attempt to notify the observer with the origin, observerTopic string
  * as parameter.
  */
-NS_COM nsresult
+NS_COM void
 NS_CreateServicesFromCategory(const char *category,
                               nsISupports *origin,
                               const char *observerTopic)
 {
-    NS_TIME_FUNCTION_FMT("NS_CreateServicesFromCategory: %s (%s)", category, observerTopic ? observerTopic : "(no topic)");
+  NS_TIME_FUNCTION_FMT("NS_CreateServicesFromCategory: %s (%s)",
+                       category, observerTopic ? observerTopic : "(no topic)");
 
-    nsresult rv = NS_OK;
-    
-    int nFailed = 0; 
-    nsCOMPtr<nsICategoryManager> categoryManager = 
-        do_GetService("@mozilla.org/categorymanager;1", &rv);
-    if (!categoryManager) return rv;
+  nsresult rv;
 
-    nsCOMPtr<nsISimpleEnumerator> enumerator;
-    rv = categoryManager->EnumerateCategory(category, 
-            getter_AddRefs(enumerator));
-    if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsICategoryManager> categoryManager = 
+    do_GetService("@mozilla.org/categorymanager;1");
+  if (!categoryManager)
+    return;
 
-    nsCOMPtr<nsISupports> entry;
-    while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry)))) {
-        // From here on just skip any error we get.
-        nsCOMPtr<nsISupportsCString> catEntry = do_QueryInterface(entry, &rv);
-        if (NS_FAILED(rv)) {
-            nFailed++;
-            continue;
-        }
-        nsCAutoString entryString;
-        rv = catEntry->GetData(entryString);
-        if (NS_FAILED(rv)) {
-            nFailed++;
-            continue;
-        }
-        nsXPIDLCString contractID;
-        rv = categoryManager->GetCategoryEntry(category,entryString.get(), getter_Copies(contractID));
-        if (NS_FAILED(rv)) {
-            nFailed++;
-            continue;
-        }
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  rv = categoryManager->EnumerateCategory(category, 
+                                          getter_AddRefs(enumerator));
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIUTF8StringEnumerator> senumerator =
+    do_QueryInterface(enumerator);
+  if (!senumerator) {
+    NS_WARNING("Category enumerator doesn't support nsIUTF8StringEnumerator.");
+    return;
+  }
+
+  PRBool hasMore;
+  while (NS_SUCCEEDED(senumerator->HasMore(&hasMore)) && hasMore) {
+    // From here on just skip any error we get.
+    nsCAutoString entryString;
+    if (NS_FAILED(senumerator->GetNext(entryString)))
+      continue;
+      
+    nsXPIDLCString contractID;
+    rv = categoryManager->GetCategoryEntry(category,entryString.get(),
+                                           getter_Copies(contractID));
+    if (NS_FAILED(rv))
+      continue;
         
-        nsCOMPtr<nsISupports> instance = do_GetService(contractID, &rv);
-        if (NS_FAILED(rv)) {
-            nFailed++;
-            continue;
-        }
+    NS_TIME_FUNCTION_MARK("getservice: %s", contractID.get());
 
-        NS_TIME_FUNCTION_MARK("service: %s", nsPromiseFlatCString(contractID).get());
-
-        if (observerTopic) {
-            // try an observer, if it implements it.
-            nsCOMPtr<nsIObserver> observer = do_QueryInterface(instance, &rv);
-            if (NS_SUCCEEDED(rv) && observer)
-                observer->Observe(origin, observerTopic, EmptyString().get());
-            NS_TIME_FUNCTION_MARK(" & observe %s", observerTopic);
-        }
+    nsCOMPtr<nsISupports> instance = do_GetService(contractID);
+    if (!instance) {
+      LogMessage("While creating services from category '%s', could not create service for entry '%s', contract ID '%s'",
+                 category, entryString.get(), contractID.get());
+      continue;
     }
-    return (nFailed ? NS_ERROR_FAILURE : NS_OK);
+
+    if (observerTopic) {
+      NS_TIME_FUNCTION_MARK("observe: %s", contractID.get());
+
+      // try an observer, if it implements it.
+      nsCOMPtr<nsIObserver> observer = do_QueryInterface(instance);
+      if (observer)
+        observer->Observe(origin, observerTopic, EmptyString().get());
+      else
+        LogMessage("While creating services from category '%s', service for entry '%s', contract ID '%s' does not implement nsIObserver.",
+                   category, entryString.get(), contractID.get());
+    }
+  }
 }

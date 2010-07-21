@@ -1420,7 +1420,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     dump("nsSessionStore could not be initialized: " + ex + "\n");
   }
 
-  PlacesToolbarHelper.updateState();
+  PlacesToolbarHelper.init();
 
   // bookmark-all-tabs command
   gBookmarkAllTabsHandler.init();
@@ -2676,15 +2676,9 @@ var PrintPreviewListener = {
     this._toggleAffectedChrome();
   },
   _toggleAffectedChrome: function () {
-    // chrome to toggle includes:
-    //   (*) menubar
-    //   (*) navigation bar
-    //   (*) bookmarks toolbar
-    //   (*) tabstrip
-    //   (*) browser messages
-    //   (*) sidebar
-    //   (*) find bar
-    //   (*) statusbar
+#ifdef MENUBAR_CAN_AUTOHIDE
+    updateAppButtonDisplay();
+#endif
 
     gNavToolbox.hidden = gInPrintPreviewMode;
 
@@ -3427,6 +3421,7 @@ function BrowserCustomizeToolbar()
 
   CombinedStopReload.uninit();
 
+  PlacesToolbarHelper.customizeStart();
   BookmarksMenuButton.customizeStart();
 
   var customizeURL = "chrome://global/content/customizeToolbar.xul";
@@ -3490,7 +3485,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 #endif
   }
 
-  PlacesToolbarHelper.updateState();
+  PlacesToolbarHelper.customizeDone();
   BookmarksMenuButton.customizeDone();
 
   UpdateUrlbarSearchSplitterState();
@@ -3524,7 +3519,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 
 function BrowserToolboxCustomizeChange() {
   gHomeButton.updatePersonalToolbarStyle();
-
+  BookmarksMenuButton.customizeChange();
   allTabs.readPref();
 }
 
@@ -3811,7 +3806,8 @@ var FullScreen =
 
     // Hiding/collapsing the toolbox interferes with the tab bar's scrollbox,
     // so we just move it off-screen instead. See bug 430687.
-    gNavToolbox.style.marginTop = aShow ? "" : -gNavToolbox.clientHeight + "px";
+    gNavToolbox.style.marginTop =
+      aShow ? "" : -gNavToolbox.getBoundingClientRect().height + "px";
 
     document.getElementById("fullscr-toggler").collapsed = aShow;
     this._isChromeCollapsed = !aShow;
@@ -4680,13 +4676,18 @@ function onViewToolbarsPopupShowing(aEvent) {
 function onViewToolbarCommand(aEvent) {
   var index = aEvent.originalTarget.getAttribute("toolbarindex");
   var toolbar = gNavToolbox.childNodes[index];
+  var visible = aEvent.originalTarget.getAttribute("checked") == "true";
+  setToolbarVisibility(toolbar, visible);
+}
+
+function setToolbarVisibility(toolbar, visible) {
   var hidingAttribute = toolbar.getAttribute("type") == "menubar" ?
                         "autohide" : "collapsed";
 
-  toolbar.setAttribute(hidingAttribute,
-                       aEvent.originalTarget.getAttribute("checked") != "true");
+  toolbar.setAttribute(hidingAttribute, !visible);
   document.persist(toolbar.id, hidingAttribute);
 
+  PlacesToolbarHelper.init();
   BookmarksMenuButton.updatePosition();
 
 #ifdef MENUBAR_CAN_AUTOHIDE
@@ -4703,6 +4704,8 @@ var TabsOnTop = {
     document.getElementById("cmd_ToggleTabsOnTop")
             .setAttribute("checked", enabled);
     document.documentElement.setAttribute("tabsontop", enabled);
+    document.getElementById("TabsToolbar").setAttribute("tabsontop", enabled);
+    gBrowser.tabContainer.setAttribute("tabsontop", enabled);
   },
   get enabled () {
     return gNavToolbox.getAttribute("tabsontop") == "true";
@@ -4717,7 +4720,9 @@ var TabsOnTop = {
 
 #ifdef MENUBAR_CAN_AUTOHIDE
 function updateAppButtonDisplay() {
-  var displayAppButton = window.menubar.visible &&
+  var displayAppButton =
+    !gInPrintPreviewMode &&
+    window.menubar.visible &&
     document.getElementById("toolbar-menubar").getAttribute("autohide") == "true";
 
   document.getElementById("appmenu-button-container").hidden = !displayAppButton;
@@ -7752,7 +7757,16 @@ var TabContextMenu = {
   updateContextMenu: function updateContextMenu(aPopupMenu) {
     this.contextTab = document.popupNode.localName == "tab" ?
                       document.popupNode : gBrowser.selectedTab;
+<<<<<<< local
     var disabled = gBrowser.visibleTabs.length == 1;
+=======
+    var disabled = gBrowser.tabs.length == 1;
+
+    // Enable the "Close Tab" menuitem when the window doesn't close with the last tab.
+    document.getElementById("context_closeTab").disabled =
+      disabled && gBrowser.tabContainer._closeWindowWithLastTab;
+
+>>>>>>> other
     var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
     for (var i = 0; i < menuItems.length; i++)
       menuItems[i].disabled = disabled;

@@ -1154,6 +1154,11 @@ PK11_GenerateKeyPairWithOpFlags(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	return NULL;
     }
 
+    if (!param) {
+        PORT_SetError( SEC_ERROR_INVALID_ARGS );
+        return NULL;
+    }
+
     /*
      * The opFlags and opFlagMask parameters allow us to control the
      * settings of the key usage attributes (CKA_ENCRYPT and friends).

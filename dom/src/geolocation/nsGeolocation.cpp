@@ -38,9 +38,9 @@
 #include "nsGeolocationOOP.h"
 #include "nsXULAppAPI.h"
 
-#include "mozilla/dom/PIFrameEmbeddingChild.h"
-#include "mozilla/dom/PIFrameEmbeddingParent.h"
-#include "mozilla/dom/ContentProcessChild.h"
+#include "mozilla/dom/PBrowserChild.h"
+#include "mozilla/dom/PBrowserParent.h"
+#include "mozilla/dom/ContentChild.h"
 #include "nsNetUtil.h"
 
 #include "nsFrameManager.h"
@@ -72,6 +72,7 @@
 #include "nsIPrefBranch2.h"
 #include "nsIJSContextStack.h"
 #include "mozilla/Services.h"
+#include "mozilla/unused.h"
 
 #include <math.h>
 
@@ -93,6 +94,8 @@
 // Some limit to the number of get or watch geolocation requests
 // that a window can make.
 #define MAX_GEO_REQUESTS_PER_WINDOW  1500
+
+using mozilla::unused;          // <snicker>
 
 ////////////////////////////////////////////////////
 // nsDOMGeoPositionError
@@ -1108,7 +1111,7 @@ NS_IMETHODIMP
 nsGeolocationRequestProxy::Cancel()
 {
   NS_ASSERTION(mParent, "No parent for request");
-  (void) mozilla::dom::GeolocationRequestParent::Send__delete__(mParent, false);
+  unused << mozilla::dom::GeolocationRequestParent::Send__delete__(mParent, false);
   return NS_OK;
 }
 
@@ -1116,7 +1119,7 @@ NS_IMETHODIMP
 nsGeolocationRequestProxy::Allow()
 {
   NS_ASSERTION(mParent, "No parent for request");
-  (void) mozilla::dom::GeolocationRequestParent::Send__delete__(mParent, true);
+  unused << mozilla::dom::GeolocationRequestParent::Send__delete__(mParent, true);
   return NS_OK;
 }
 

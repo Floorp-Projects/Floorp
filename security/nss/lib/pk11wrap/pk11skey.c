@@ -217,7 +217,7 @@ PK11_FreeSymKey(PK11SymKey *symKey)
     PK11SlotInfo *slot;
     PRBool freeit = PR_TRUE;
 
-    if (PR_AtomicDecrement(&symKey->refCount) == 0) {
+    if (PR_ATOMIC_DECREMENT(&symKey->refCount) == 0) {
 	PK11SymKey *parent = symKey->parent;
 
 	symKey->parent = NULL;
@@ -279,7 +279,7 @@ PK11_FreeSymKey(PK11SymKey *symKey)
 PK11SymKey *
 PK11_ReferenceSymKey(PK11SymKey *symKey)
 {
-    PR_AtomicIncrement(&symKey->refCount);
+    PR_ATOMIC_INCREMENT(&symKey->refCount);
     return symKey;
 }
 
@@ -1154,13 +1154,18 @@ PK11_PubWrapSymKey(CK_MECHANISM_TYPE type, SECKEYPublicKey *pubKey,
     CK_SESSION_HANDLE session;
     CK_RV crv;
 
+    if (symKey == NULL) {
+	PORT_SetError( SEC_ERROR_INVALID_ARGS );
+	return SECFailure;
+    }
+
     /* if this slot doesn't support the mechanism, go to a slot that does */
     newKey = pk11_ForceSlot(symKey,type,CKA_ENCRYPT);
     if (newKey != NULL) {
 	symKey = newKey;
     }
 
-    if ((symKey == NULL) || (symKey->slot == NULL)) {
+    if (symKey->slot == NULL) {
 	PORT_SetError( SEC_ERROR_NO_MODULE );
 	return SECFailure;
     }

@@ -110,9 +110,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
+// b7ec5f61-57df-4355-81f3-41ced52e8026
 #define NS_IWIDGET_IID \
-{ 0x271ac413, 0xa202, 0x46dc, \
-{ 0xbc, 0xd5, 0x67, 0xa1, 0xfb, 0x58, 0x89, 0x7f } }
+{ 0xb7ec5f61, 0x57df, 0x4355, \
+  { 0x81, 0xf3, 0x41, 0xce, 0xd5, 0x2e, 0x80, 0x26 } }
 
 /*
  * Window shadow styles
@@ -692,6 +693,10 @@ class nsIWidget : public nsISupports {
      * 
      * This will invalidate areas of the children that have changed, but
      * does not need to invalidate any part of this widget.
+     * 
+     * Children should be moved in the order given; the array is
+     * sorted so to minimize unnecessary invalidation if children are
+     * moved in that order.
      */
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) = 0;
 
@@ -960,6 +965,11 @@ class nsIWidget : public nsISupports {
      * Begin a window resizing drag, based on the event passed in.
      */
     NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical) = 0;
+
+    /**
+     * Begin a window moving drag, based on the event passed in.
+     */
+    NS_IMETHOD BeginMoveDrag(nsMouseEvent* aEvent) = 0;
 
     enum Modifiers {
         CAPS_LOCK = 0x01, // when CapsLock is active

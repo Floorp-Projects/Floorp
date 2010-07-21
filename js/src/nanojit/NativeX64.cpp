@@ -70,9 +70,11 @@ namespace nanojit
     const Register Assembler::retRegs[] = { RAX };
 #ifdef _WIN64
     const Register Assembler::argRegs[] = { RCX, RDX, R8, R9 };
+    const static int maxArgRegs = 4;
     const Register Assembler::savedRegs[] = { RBX, RSI, RDI, R12, R13, R14, R15 };
 #else
     const Register Assembler::argRegs[] = { RDI, RSI, RDX, RCX, R8, R9 };
+    const static int maxArgRegs = 6;
     const Register Assembler::savedRegs[] = { RBX, R12, R13, R14, R15 };
 #endif
 
@@ -700,7 +702,7 @@ namespace nanojit
         int32_t imm = getImm32(b);
         LOpcode op = ins->opcode();
         Register rr, ra;
-        if (op == LIR_muli || op == LIR_mulxovi) {
+        if (op == LIR_muli || op == LIR_muljovi || op == LIR_mulxovi) {
             // Special case: imul-by-imm has true 3-addr form.  So we don't
             // need the MR(rr, ra) after the IMULI.
             beginOp1Regs(ins, GpRegs, rr, ra);
@@ -714,13 +716,18 @@ namespace nanojit
             switch (ins->opcode()) {
             default: TODO(arith_imm8);
             case LIR_addi:
+            case LIR_addjovi:
             case LIR_addxovi:    ADDLR8(rr, imm);   break;   // XXX: bug 547125: could use LEA for LIR_addi
             case LIR_andi:       ANDLR8(rr, imm);   break;
             case LIR_ori:        ORLR8( rr, imm);   break;
             case LIR_subi:
+            case LIR_subjovi:
             case LIR_subxovi:    SUBLR8(rr, imm);   break;
             case LIR_xori:       XORLR8(rr, imm);   break;
-            case LIR_addq:       ADDQR8(rr, imm);   break;
+            case LIR_addq:
+            case LIR_addjovq:    ADDQR8(rr, imm);   break;
+            case LIR_subq:
+            case LIR_subjovq:    SUBQR8(rr, imm);   break;
             case LIR_andq:       ANDQR8(rr, imm);   break;
             case LIR_orq:        ORQR8( rr, imm);   break;
             case LIR_xorq:       XORQR8(rr, imm);   break;
@@ -729,13 +736,18 @@ namespace nanojit
             switch (ins->opcode()) {
             default: TODO(arith_imm);
             case LIR_addi:
+            case LIR_addjovi:
             case LIR_addxovi:    ADDLRI(rr, imm);   break;   // XXX: bug 547125: could use LEA for LIR_addi
             case LIR_andi:       ANDLRI(rr, imm);   break;
             case LIR_ori:        ORLRI( rr, imm);   break;
             case LIR_subi:
+            case LIR_subjovi:
             case LIR_subxovi:    SUBLRI(rr, imm);   break;
             case LIR_xori:       XORLRI(rr, imm);   break;
-            case LIR_addq:       ADDQRI(rr, imm);   break;
+            case LIR_addq:
+            case LIR_addjovq:    ADDQRI(rr, imm);   break;
+            case LIR_subq:
+            case LIR_subjovq:    SUBQRI(rr, imm);   break;
             case LIR_andq:       ANDQRI(rr, imm);   break;
             case LIR_orq:        ORQRI( rr, imm);   break;
             case LIR_xorq:       XORQRI(rr, imm);   break;
@@ -834,17 +846,23 @@ namespace nanojit
         default:           TODO(asm_arith);
         case LIR_ori:      ORLRR(rr, rb);  break;
         case LIR_subi:
+        case LIR_subjovi:
         case LIR_subxovi:  SUBRR(rr, rb);  break;
         case LIR_addi:
+        case LIR_addjovi:
         case LIR_addxovi:  ADDRR(rr, rb);  break;  // XXX: bug 547125: could use LEA for LIR_addi
         case LIR_andi:     ANDRR(rr, rb);  break;
         case LIR_xori:     XORRR(rr, rb);  break;
         case LIR_muli:
+        case LIR_muljovi:
         case LIR_mulxovi:  IMUL(rr, rb);   break;
         case LIR_xorq:     XORQRR(rr, rb); break;
         case LIR_orq:      ORQRR(rr, rb);  break;
         case LIR_andq:     ANDQRR(rr, rb); break;
-        case LIR_addq:     ADDQRR(rr, rb); break;
+        case LIR_addq:
+        case LIR_addjovq:  ADDQRR(rr, rb); break;
+        case LIR_subq:
+        case LIR_subjovq:  SUBQRR(rr, rb); break;
         }
         if (rr != ra)
             MR(rr, ra);
@@ -1204,7 +1222,7 @@ namespace nanojit
         return patch;
     }
 
-    void Assembler::asm_branch_xov(LOpcode, NIns* target) {
+    NIns* Assembler::asm_branch_ov(LOpcode, NIns* target) {
         if (target && !isTargetWithinS32(target)) {
             setError(ConditionalBranchTooFar);
             NanoAssert(0);
@@ -1215,6 +1233,7 @@ namespace nanojit
             JO8(8, target);
         else
             JO( 8, target);
+        return _nIns;
     }
 
     // WARNING: this function cannot generate code that will affect the
@@ -1939,6 +1958,9 @@ namespace nanojit
     }
 
     void Assembler::nInit(AvmCore*) {
+        nHints[LIR_calli]  = rmask(retRegs[0]);
+        nHints[LIR_calld]  = rmask(XMM0);
+        nHints[LIR_paramp] = PREFER_SPECIAL;
     }
 
     void Assembler::nBeginAssembly() {
@@ -1985,8 +2007,19 @@ namespace nanojit
     #endif
     }
 
-    RegisterMask Assembler::hint(LIns* /*ins*/) {
-        return 0;
+    RegisterMask Assembler::nHint(LIns* ins)
+    {
+        NanoAssert(ins->isop(LIR_paramp));
+        RegisterMask prefer = 0;
+        uint8_t arg = ins->paramArg();
+        if (ins->paramKind() == 0) {
+            if (arg < maxArgRegs) 
+                prefer = rmask(argRegs[arg]);
+        } else {
+            if (arg < NumSavedRegs)
+                prefer = rmask(savedRegs[arg]);
+        }
+        return prefer;
     }
 
     void Assembler::nativePageSetup() {

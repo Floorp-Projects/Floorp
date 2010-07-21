@@ -216,6 +216,15 @@ JS_EXTERN_API(void)     add_history(char *line);
 JS_END_EXTERN_C
 #endif
 
+static void
+ReportException(JSContext *cx)
+{
+    if (JS_IsExceptionPending(cx)) {
+        if (!JS_ReportPendingException(cx))
+            JS_ClearPendingException(cx);
+    }
+}
+
 class ToString {
 public:
     ToString(JSContext *aCx, jsval v, JSBool aThrow = JS_FALSE)
@@ -223,14 +232,12 @@ public:
     , mThrow(aThrow)
     {
         mStr = JS_ValueToString(cx, v);
-        if (!aThrow && !mStr && JS_IsExceptionPending(cx)) {
-            if (!JS_ReportPendingException(cx))
-                JS_ClearPendingException(cx);
-        }
-        JS_AddNamedRoot(cx, &mStr, "Value ToString helper");
+        if (!aThrow && !mStr)
+            ReportException(cx);
+        JS_AddNamedStringRoot(cx, &mStr, "Value ToString helper");
     }
     ~ToString() {
-        JS_RemoveRoot(cx, &mStr);
+        JS_RemoveStringRoot(cx, &mStr);
     }
     JSBool threw() { return !mStr; }
     jsval getJSVal() { return STRING_TO_JSVAL(mStr); }
@@ -1647,10 +1654,7 @@ SrcNotes(JSContext *cx, JSScript *script)
             if (str) {
               bytes = JS_GetStringBytes(str);
             } else {
-              if (JS_IsExceptionPending(cx)) {
-                if (!JS_ReportPendingException(cx))
-                  JS_ClearPendingException(cx);
-              }
+              ReportException(cx);
               bytes = "N/A";
             }
             fprintf(gOutFile, " function %u (%s)", index, bytes);
@@ -1768,12 +1772,10 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
 
                     for (uint32 i = 0, n = uva->length; i < n; i++) {
                         JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[upvar_base + i]);
-                        uint32 cookie = uva->vector[i];
+                        UpvarCookie cookie = uva->vector[i];
 
                         printf("  %s: {skip:%u, slot:%u},\n",
-                               js_AtomToPrintableString(cx, atom),
-                               UPVAR_FRAME_SKIP(cookie),
-                               UPVAR_FRAME_SLOT(cookie));
+                               js_AtomToPrintableString(cx, atom), cookie.level(), cookie.slot());
                     }
 
                     JS_ARENA_RELEASE(&cx->tempPool, mark);
@@ -2268,10 +2270,7 @@ ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (tmpstr) {
         func = JS_GetStringBytes(tmpstr);
     } else {
-        if (JS_IsExceptionPending(cx)) {
-            if (!JS_ReportPendingException(cx))
-                JS_ClearPendingException(cx);
-        }
+        ReportException(cx);
         func = "error decompiling fun";
     }
     fprintf(gOutFile,
@@ -2625,6 +2624,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     switch (enum_op) {
       case JSENUMERATE_INIT:
+      case JSENUMERATE_INIT_ALL:
         cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
 
         if (!cpx->isInner && cpx->inner)
@@ -2926,99 +2926,98 @@ static JSClass sandbox_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+static JSObject *
+NewSandbox(JSContext *cx, bool lazy, bool split)
+{
+    JSObject *obj = JS_NewCompartmentAndGlobalObject(cx, &sandbox_class, NULL);
+    if (!obj)
+        return NULL;
+
+    {
+        JSAutoCrossCompartmentCall ac;
+        if (!ac.enter(cx, obj))
+            return NULL;
+
+        if (split) {
+            obj = split_setup(cx, JS_TRUE);
+            if (!obj)
+                return NULL;
+        }
+        if (!lazy && !JS_InitStandardClasses(cx, obj))
+            return NULL;
+
+        AutoValueRooter root(cx, BOOLEAN_TO_JSVAL(lazy));
+        if (!JS_SetProperty(cx, obj, "lazy", root.addr()))
+            return NULL;
+
+        if (split)
+            obj = split_outerObject(cx, obj);
+    }
+
+    AutoObjectRooter objroot(cx, obj);
+    if (!cx->compartment->wrap(cx, objroot.addr()))
+        return NULL;
+    return objroot.object();
+}
+
 static JSBool
 EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
     JSString *str;
-    JSObject *sobj;
-    JSContext *scx;
-    const jschar *src;
-    size_t srclen;
-    JSBool lazy, split, ok;
-    JSStackFrame *fp;
-
-    sobj = NULL;
+    JSObject *sobj = NULL;
     if (!JS_ConvertArguments(cx, argc, argv, "S / o", &str, &sobj))
-        return JS_FALSE;
+        return false;
 
-    scx = NewContext(JS_GetRuntime(cx));
-    if (!scx) {
-        JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
-    }
-    JS_SetOptions(scx, JS_GetOptions(cx));
-
-    JS_TransferRequest(cx, scx);
-    src = JS_GetStringChars(str);
-    srclen = JS_GetStringLength(str);
-    split = lazy = JS_FALSE;
+    const jschar *src = JS_GetStringChars(str);
+    size_t srclen = JS_GetStringLength(str);
+    bool split = false, lazy = false;
     if (srclen == 4) {
         if (src[0] == 'l' && src[1] == 'a' && src[2] == 'z' && src[3] == 'y') {
-            lazy = JS_TRUE;
+            lazy = true;
             srclen = 0;
         }
     } else if (srclen == 5) {
         if (src[0] == 's' && src[1] == 'p' && src[2] == 'l' && src[3] == 'i' && src[4] == 't') {
-            split = lazy = JS_TRUE;
+            split = lazy = true;
             srclen = 0;
         }
     }
 
     if (!sobj) {
-        sobj = split
-               ? split_setup(scx, JS_TRUE)
-               : JS_NewGlobalObject(scx, &sandbox_class);
-        if (!sobj || (!lazy && !JS_InitStandardClasses(scx, sobj))) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        AutoValueRooter root(scx, BOOLEAN_TO_JSVAL(lazy));
-        ok = JS_SetProperty(scx, sobj, "lazy", root.addr());
-        if (!ok)
-            goto out;
-        if (split)
-            sobj = split_outerObject(scx, sobj);
+        sobj = NewSandbox(cx, lazy, split);
+        if (!sobj)
+            return false;
     }
 
-    if (srclen == 0) {
-        *rval = OBJECT_TO_JSVAL(sobj);
-        ok = JS_TRUE;
-    } else {
-        fp = JS_GetScriptedCaller(cx, NULL);
-        JS_SetGlobalObject(scx, sobj);
-        JS_ToggleOptions(scx, JSOPTION_DONT_REPORT_UNCAUGHT);
-        OBJ_TO_INNER_OBJECT(scx, sobj);
-        if (!sobj) {
-            ok = JS_FALSE;
-            goto out;
+    *rval = OBJECT_TO_JSVAL(sobj);
+    if (srclen == 0)
+        return true;
+
+    JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
+    {
+        JSAutoCrossCompartmentCall ac;
+        if (JSCrossCompartmentWrapper::isCrossCompartmentWrapper(sobj)) {
+            sobj = sobj->unwrap();
+            if (!ac.enter(cx, sobj))
+                return false;
         }
+
+        OBJ_TO_INNER_OBJECT(cx, sobj);
+        if (!sobj)
+            return false;
         if (!(sobj->getClass()->flags & JSCLASS_IS_GLOBAL)) {
-            JS_TransferRequest(scx, cx);
             JS_ReportError(cx, "Invalid scope argument to evalcx");
-            DestroyContext(scx, false);
-            return JS_FALSE;
+            return false;
         }
-
-        ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
+        if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
                                  fp->script->filename,
-                                 JS_PCToLineNumber(cx, fp->script,
-                                                   fp->pc(cx)),
-                                 rval);
+                                 JS_PCToLineNumber(cx, fp->script, fp->pc(cx)),
+                                 rval)) {
+            return false;
+        }
     }
-
-out:
-    jsval exceptionValue = JSVAL_NULL;
-    JSBool exception = !ok && JS_GetPendingException(scx, &exceptionValue);
-
-    JS_TransferRequest(scx, cx);
-    if (exception)
-        JS_SetPendingException(cx, exceptionValue);
-    else if (!ok)
-        JS_ClearPendingException(cx);
-
-    DestroyContext(scx, false);
-    return ok;
+    return cx->compartment->wrap(cx, rval);
 }
 
 static JSBool
@@ -3263,10 +3262,10 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         goto fail;
     for (i = 0; i < n; i++) {
         sd.results[i] = JSVAL_VOID;
-        ok = JS_AddRoot(cx, &sd.results[i]);
+        ok = JS_AddValueRoot(cx, &sd.results[i]);
         if (!ok) {
             while (i-- > 0)
-                JS_RemoveRoot(cx, &sd.results[i]);
+                JS_RemoveValueRoot(cx, &sd.results[i]);
             free(sd.results);
             sd.results = NULL;
             goto fail;
@@ -3283,14 +3282,14 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         sd.threads[i].cx = NULL;
         sd.threads[i].fn = JSVAL_NULL;
 
-        ok = JS_AddRoot(cx, &sd.threads[i].fn);
+        ok = JS_AddValueRoot(cx, &sd.threads[i].fn);
         if (ok && !JS_GetElement(cx, inArr, (jsint) i, &sd.threads[i].fn)) {
-            JS_RemoveRoot(cx, &sd.threads[i].fn);
+            JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             ok = JS_FALSE;
         }
         if (!ok) {
             while (i-- > 0)
-                JS_RemoveRoot(cx, &sd.threads[i].fn);
+                JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             free(sd.threads);
             sd.threads = NULL;
             goto fail;
@@ -3358,7 +3357,7 @@ out:
         JSContext *acx;
 
         for (i = 0; i < n; i++) {
-            JS_RemoveRoot(cx, &sd.threads[i].fn);
+            JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             acx = sd.threads[i].cx;
             if (acx) {
                 JS_SetContextThread(acx);
@@ -3369,7 +3368,7 @@ out:
     }
     if (sd.results) {
         for (i = 0; i < n; i++)
-            JS_RemoveRoot(cx, &sd.results[i]);
+            JS_RemoveValueRoot(cx, &sd.results[i]);
         free(sd.results);
     }
     if (sd.cvar)
@@ -3848,7 +3847,9 @@ Wrap(JSContext *cx, uintN argc, jsval *vp)
         return true;
     }
 
-    JSObject *wrapped = JSWrapper::wrap(cx, JSVAL_TO_OBJECT(v), NULL, NULL, NULL);
+    JSObject *obj = JSVAL_TO_OBJECT(v);
+    JSObject *wrapped = JSWrapper::New(cx, obj, obj->getProto(), obj->getParent(),
+                                       &JSWrapper::singleton);
     if (!wrapped)
         return false;
 
@@ -3983,7 +3984,8 @@ static const char *const shell_help_messages[] = {
 "testUTF8(mode)           Perform UTF-8 tests (modes are 1 to 4)",
 "throwError()             Throw an error from JS_ReportError",
 #ifdef DEBUG
-"dis([fun])               Disassemble functions into bytecodes",
+"dis([fun])               Disassemble functions into bytecodes\n"
+"dis('-r', fun)           Disassembles recursively",
 "disfile('foo.js')        Disassemble script file into bytecodes",
 "dissrc([fun])            Disassemble functions with source lines",
 "dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])\n"
@@ -4138,7 +4140,9 @@ split_setup(JSContext *cx, JSBool evalcx)
     outer = split_create_outer(cx);
     if (!outer)
         return NULL;
-    JS_SetGlobalObject(cx, outer);
+    AutoObjectRooter root(cx, outer);
+    if (!evalcx)
+        JS_SetGlobalObject(cx, outer);
 
     inner = split_create_inner(cx, outer);
     if (!inner)
@@ -4199,13 +4203,13 @@ its_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return JS_FALSE;
   }
 
-  if (!JS_AddRoot(cx, val)) {
+  if (!JS_AddValueRoot(cx, val)) {
       delete val;
       return JS_FALSE;
   }
 
   if (!JS_SetPrivate(cx, obj, (void*)val)) {
-      JS_RemoveRoot(cx, val);
+      JS_RemoveValueRoot(cx, val);
       delete val;
       return JS_FALSE;
   }
@@ -4371,6 +4375,7 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     switch (enum_op) {
       case JSENUMERATE_INIT:
+      case JSENUMERATE_INIT_ALL:
         if (its_noisy)
             fprintf(gOutFile, "enumerate its properties\n");
 
@@ -4437,7 +4442,7 @@ its_finalize(JSContext *cx, JSObject *obj)
         fprintf(gOutFile, "finalizing it\n");
     rootedVal = (jsval *) JS_GetPrivate(cx, obj);
     if (rootedVal) {
-      JS_RemoveRoot(cx, rootedVal);
+      JS_RemoveValueRoot(cx, rootedVal);
       JS_SetPrivate(cx, obj, NULL);
       delete rootedVal;
     }
@@ -4911,9 +4916,14 @@ DestroyContext(JSContext *cx, bool withGC)
 }
 
 static JSObject *
-NewGlobalObject(JSContext *cx)
+NewGlobalObject(JSContext *cx, JSAutoCrossCompartmentCall &call)
 {
-    JSObject *glob = JS_NewGlobalObject(cx, &global_class);
+    JSObject *glob = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
+    if (!glob)
+        return NULL;
+    if (!call.enter(cx, glob))
+        return NULL;
+
 #ifdef LAZY_STANDARD_CLASSES
     JS_SetGlobalObject(cx, glob);
 #else
@@ -4943,38 +4953,32 @@ NewGlobalObject(JSContext *cx)
         return NULL;
 
 #ifdef NARCISSUS
-    {
-        jsval v;
-        static const char Object_prototype[] = "Object.prototype";
+    jsval v;
+    static const char Object_prototype[] = "Object.prototype";
 
-        if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
-            return NULL;
+    if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
+        return NULL;
 
-        if (!JS_EvaluateScript(cx, glob,
-                               Object_prototype, sizeof Object_prototype - 1,
-                               NULL, 0, &v)) {
-            return NULL;
-        }
-        if (!JS_DefineFunction(cx, JSVAL_TO_OBJECT(v), "__defineProperty__",
-                               defineProperty, 5, 0)) {
-            return NULL;
-        }
+    if (!JS_EvaluateScript(cx, glob,
+                           Object_prototype, sizeof Object_prototype - 1,
+                           NULL, 0, &v)) {
+        return NULL;
+    }
+    if (!JS_DefineFunction(cx, JSVAL_TO_OBJECT(v), "__defineProperty__",
+                           defineProperty, 5, 0)) {
+        return NULL;
     }
 #endif
-
     return glob;
 }
 
 int
 shell(JSContext *cx, int argc, char **argv, char **envp)
 {
-    AutoNewCompartment compartment(cx);
-    if (!compartment.init())
-        return 1;
+    JSAutoRequest ar(cx);
+    JSAutoCrossCompartmentCall ac;
 
-    JS_BeginRequest(cx);
-
-    JSObject *glob = NewGlobalObject(cx);
+    JSObject *glob = NewGlobalObject(cx, ac);
     if (!glob)
         return 1;
 
@@ -5013,10 +5017,13 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
 #ifdef JS_THREADSAFE
     class ShellWorkerHooks : public js::workers::WorkerHooks {
     public:
-        JSObject *newGlobalObject(JSContext *cx) { return NewGlobalObject(cx); }
+        JSObject *newGlobalObject(JSContext *cx) {
+            JSAutoCrossCompartmentCall ac;
+            return NewGlobalObject(cx, ac);
+        }
     };
     ShellWorkerHooks hooks;
-    if (!JS_AddNamedRoot(cx, &gWorkers, "Workers") ||
+    if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
         !js::workers::init(cx, &hooks, glob, &gWorkers)) {
         return 1;
     }
@@ -5026,7 +5033,7 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
 
 #ifdef JS_THREADSAFE
     js::workers::finish(cx, gWorkers);
-    JS_RemoveRoot(cx, &gWorkers);
+    JS_RemoveObjectRoot(cx, &gWorkers);
     if (result == 0)
         result = gExitCode;
 #endif
@@ -5040,8 +5047,6 @@ shell(JSContext *cx, int argc, char **argv, char **envp)
         JSD_DebuggerOff(jsdc);
     }
 #endif  /* JSDEBUGGER */
-
-    JS_EndRequest(cx);
 
     return result;
 }

@@ -109,14 +109,11 @@ public:
       JSFunctionSpec* fs = const_cast<JSFunctionSpec*>(sHandle_Functions);
       JSRuntime* rt;
 
-      const char* name = IsParent(this)
-        ? "mozilla::jetpack::Handle<PHandleParent>::mObj"
-        : "mozilla::jetpack::Handle<PHandleChild>::mObj";
-
       if (JS_SetPrivate(cx, obj, (void*)this) &&
           JS_DefineProperties(cx, obj, ps) &&
           JS_DefineFunctions(cx, obj, fs) &&
-          JS_AddNamedRootRT(rt = JS_GetRuntime(cx), (void*)&mObj, name))
+          (rt = JS_GetRuntime(cx)) &&
+          JS_AddObjectRoot(cx, &mObj))
       {
         mObj = obj;
         mRuntime = rt;
@@ -144,7 +141,7 @@ private:
       // need to remove the root, else the JS engine will complain at
       // shutdown.
       NS_ASSERTION(mRuntime, "Should have a JSRuntime if we had an object");
-      JS_RemoveRootRT(mRuntime, (void*)&mObj);
+      js_RemoveRoot(mRuntime, (void*)&mObj);
       // By not nulling out mRuntime, we prevent ToJSObject from
       // reviving an invalidated/destroyed handle.
     }

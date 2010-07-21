@@ -469,8 +469,9 @@ nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
 
   nsINode* node = serializeClonedChildren ? maybeFixedNode : aNode;
 
-  for (nsINode::ChildIterator iter(node); !iter.IsDone(); iter.Next()) {
-    rv = SerializeToStringRecursive(iter, aStr, PR_FALSE);
+  for (nsINode* child = node->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    rv = SerializeToStringRecursive(child, aStr, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

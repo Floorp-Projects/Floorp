@@ -69,6 +69,7 @@ EXPORTS		= \
 		nsCSSFrameConstructor.h \
 		nsChangeHint.h \
 		nsCompatibility.h \
+		nsDisplayItemTypes.h \
 		nsDisplayList.h \
 		nsFrameManager.h \
 		nsFrameManagerBase.h \

@@ -56,6 +56,8 @@ public:
     PFNWGLGETCURRENTCONTEXT fGetCurrentContext;
     typedef HDC (GLAPIENTRY * PFNWGLGETCURRENTDC) (void);
     PFNWGLGETCURRENTDC fGetCurrentDC;
+    typedef BOOL (GLAPIENTRY * PFNWGLSHARELISTS) (HGLRC oldContext, HGLRC newContext);
+    PFNWGLSHARELISTS fShareLists;
 
     typedef HANDLE (WINAPI * PFNWGLCREATEPBUFFERPROC) (HDC hDC, int iPixelFormat, int iWidth, int iHeight, const int* piAttribList);
     PFNWGLCREATEPBUFFERPROC fCreatePbuffer;

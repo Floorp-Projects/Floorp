@@ -43,6 +43,7 @@
 #include "nsISupports.h"
 
 class nsIURI;
+class nsString;
 
 namespace mozilla {
 
@@ -51,7 +52,7 @@ namespace mozilla {
     }
 
 #define IHISTORY_IID \
-  {0xaf27265d, 0x5672, 0x4d23, {0xa0, 0x75, 0x34, 0x8e, 0xb9, 0x73, 0x5a, 0x9a}}
+  {0x6f736049, 0x6370, 0x4376, {0xb7, 0x17, 0xfa, 0xfc, 0x0b, 0x4f, 0xd0, 0xf1}}
 
 class IHistory : public nsISupports
 {
@@ -96,6 +97,50 @@ public:
      */
     NS_IMETHOD UnregisterVisitedCallback(nsIURI *aURI, dom::Link *aLink) = 0;
 
+    enum VisitFlags {
+        /**
+         * Indicates whether the URI was loaded in a top-level window.
+         */
+        TOP_LEVEL = 1 << 0,
+        /**
+         * Indicates whether the URI was loaded as part of a permanent redirect.
+         */
+        REDIRECT_PERMANENT = 1 << 1,
+        /**
+         * Indicates whether the URI was loaded as part of a temporary redirect.
+         */
+        REDIRECT_TEMPORARY = 1 << 2
+    };
+
+    /**
+     * Adds a history visit for the URI.
+     *
+     * @pre aURI must not be null.
+     *
+     * @param aURI
+     *        The URI of the page being visited.
+     * @param aLastVisitedURI
+     *        The URI of the last visit in the chain.
+     * @param aFlags
+     *        The VisitFlags describing this visit.
+     */
+    NS_IMETHOD VisitURI(
+        nsIURI *aURI,
+        nsIURI *aLastVisitedURI,
+        PRUint32 aFlags
+    ) = 0;
+
+    /**
+     * Set the title of the URI.
+     *
+     * @pre aURI must not be null.
+     *
+     * @param aURI
+     *        The URI to set the title for.
+     * @param aTitle
+     *        The title string.
+     */
+    NS_IMETHOD SetURITitle(nsIURI* aURI, const nsAString& aTitle) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IHistory, IHISTORY_IID)
@@ -104,7 +149,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(IHistory, IHISTORY_IID)
     NS_IMETHOD RegisterVisitedCallback(nsIURI *aURI, \
                                        mozilla::dom::Link *aContent); \
     NS_IMETHOD UnregisterVisitedCallback(nsIURI *aURI, \
-                                         mozilla::dom::Link *aContent);
+                                         mozilla::dom::Link *aContent); \
+    NS_IMETHOD VisitURI(nsIURI *aURI, \
+                        nsIURI *aLastVisitedURI, \
+                        PRUint32 aFlags); \
+    NS_IMETHOD SetURITitle(nsIURI* aURI, const nsAString& aTitle);
 
 } // namespace mozilla
 

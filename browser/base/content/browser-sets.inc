@@ -142,6 +142,19 @@
              oncommand="PlacesCommandHook.showPlacesOrganizer('History');"/>
   </commandset>
 
+  <commandset id="inspectorCommands">
+    <command id="Inspector:Inspect"
+             oncommand="InspectorUI.toggleInspection();"/>
+    <command id="Inspector:Previous"
+             oncommand="InspectorUI.inspectPrevious();"
+             disabled="true"/>
+    <command id="Inspector:Next"
+             oncommand="InspectorUI.inspectNext();"
+             disabled="true"/>
+    <command id="Inspector:Style"
+             oncommand="InspectorUI.toggleStylePanel();"/>
+  </commandset>
+
   <broadcasterset id="mainBroadcasterSet">
     <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"

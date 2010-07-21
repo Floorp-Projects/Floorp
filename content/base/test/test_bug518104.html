@@ -26,8 +26,8 @@ SimpleTest.waitForExplicitFinish();
 
 function done() {
   var iframe = document.getElementById("iframe");
-  var divs = iframe.contentWindow.document.getElementsByTagName("div").length;
-  is(divs, 0, "Div wasn't blown away.")
+  var divs = iframe.contentWindow.document.getElementsByTagName("p").length;
+  is(divs, 0, "<p> got written.")
   SimpleTest.finish();
 }
 

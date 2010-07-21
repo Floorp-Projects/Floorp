@@ -166,12 +166,12 @@ char * DictMgr::mystrsep(char ** stringp, const char delim)
 {
   char * rv = NULL;
   char * mp = *stringp;
-  int n = strlen(mp);
+  size_t n = strlen(mp);
   if (n > 0) {
      char * dp = (char *)memchr(mp,(int)((unsigned char)delim),n);
      if (dp) {
         *stringp = dp+1;
-        int nc = (int)((unsigned long)dp - (unsigned long)mp); 
+        size_t nc = dp - mp; 
         rv = (char *) malloc(nc+1);
         if (rv) {
            memcpy(rv,mp,nc);

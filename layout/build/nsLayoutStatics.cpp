@@ -316,6 +316,7 @@ nsLayoutStatics::Shutdown()
   nsFrame::DisplayReflowShutdown();
 #endif
   nsCellMap::Shutdown();
+  nsFrame::ShutdownLayerActivityTimer();
 
 #ifdef MOZ_SVG
   nsSVGUtils::Shutdown();

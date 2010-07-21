@@ -48,8 +48,6 @@
  * of rooting things that might lose their newborn root due to subsequent GC
  * allocations in the same native method.
  */
-#define __STDC_LIMIT_MACROS
-
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
@@ -258,7 +256,7 @@ ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
         return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     vp += 2 + arg;
 
-    if (!JSVAL_IS_PRIMITIVE(*vp) && !JSVAL_TO_OBJECT(*vp)->defaultValue(cx, JSTYPE_STRING, vp))
+    if (!JSVAL_IS_PRIMITIVE(*vp) && !DefaultValue(cx, JSVAL_TO_OBJECT(*vp), JSTYPE_STRING, vp))
         return NULL;
 
     JSString *str;
@@ -590,12 +588,16 @@ str_enumerate(JSContext *cx, JSObject *obj)
         str1 = js_NewDependentString(cx, str, i, 1);
         if (!str1)
             return JS_FALSE;
-        if (!obj->defineProperty(cx, INT_TO_JSID(i), STRING_TO_JSVAL(str1), NULL, NULL,
+        if (!obj->defineProperty(cx, INT_TO_JSID(i), STRING_TO_JSVAL(str1),
+                                 JS_PropertyStub, JS_PropertyStub,
                                  STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
     }
-    return JS_TRUE;
+
+    return obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+                               JSVAL_VOID, NULL, NULL,
+                               JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED);
 }
 
 static JSBool
@@ -3231,7 +3233,7 @@ js_ValueToString(JSContext *cx, jsval v)
 {
     JSString *str;
 
-    if (!JSVAL_IS_PRIMITIVE(v) && !JSVAL_TO_OBJECT(v)->defaultValue(cx, JSTYPE_STRING, &v))
+    if (!JSVAL_IS_PRIMITIVE(v) && !DefaultValue(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v))
         return NULL;
 
     if (JSVAL_IS_STRING(v)) {
@@ -3264,7 +3266,7 @@ AppendAtom(JSAtom *atom, JSCharBuffer &cb)
 JS_FRIEND_API(JSBool)
 js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 {
-    if (!JSVAL_IS_PRIMITIVE(v) && !JSVAL_TO_OBJECT(v)->defaultValue(cx, JSTYPE_STRING, &v))
+    if (!JSVAL_IS_PRIMITIVE(v) && !DefaultValue(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v))
         return JS_FALSE;
 
     if (JSVAL_IS_STRING(v)) {
@@ -5529,7 +5531,7 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
     return ucs4Char;
 }
 
-#ifdef DEBUG
+#if defined DEBUG || defined JS_DUMP_CONSERVATIVE_GC_ROOTS
 
 JS_FRIEND_API(size_t)
 js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,

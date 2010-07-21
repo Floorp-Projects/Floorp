@@ -412,9 +412,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // our position in the rule node tree is also the same.
   PRBool compare = mRuleNode != aOther->mRuleNode;
 
-  nsChangeHint maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
-      nsChangeHint_UpdateCursor);
-  
 #define DO_STRUCT_DIFFERENCE(struct_)                                         \
   PR_BEGIN_MACRO                                                              \
     NS_ASSERTION(NS_IsHintSubset(nsStyle##struct_::MaxDifference(), maxHint), \
@@ -438,7 +435,12 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // causing the maximal difference, a FRAMECHANGE.
   // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
   // Visibility, Outline, TableBorder, Table, Text, UIReset, Quotes
+  nsChangeHint maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
+      nsChangeHint_UpdateOpacityLayer);
   DO_STRUCT_DIFFERENCE(Display);
+
+  maxHint = nsChangeHint(NS_STYLE_HINT_FRAMECHANGE |
+      nsChangeHint_UpdateCursor);
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
   DO_STRUCT_DIFFERENCE(Content);

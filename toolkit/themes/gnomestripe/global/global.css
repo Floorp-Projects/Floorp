@@ -67,6 +67,10 @@ progressmeter[mode="undetermined"] {
   -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter-undetermined");
 }
 
+toolbar[type="menubar"]:not(-moz-lwtheme):-moz-system-metric(menubar-drag) {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+}
+
 /* ::::: root elements ::::: */
 
 window,

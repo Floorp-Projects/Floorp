@@ -263,6 +263,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 283686-1.html about:blank
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
+== 289384-1.xhtml 289384-ref.xhtml
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
 asserts(1) == 290129-1.html 290129-1-ref.html # bug 315549/460637
 == 291078-1.html 291078-1-ref.html
@@ -1121,7 +1122,7 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 == 446100-1c.html about:blank
 == 446100-1d.html about:blank
 == 446100-1e.html about:blank
-== 446100-1f.html about:blank
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 446100-1f.html about:blank  # Fails due to AA on GTK2
 == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 # == 448193.html 448193-ref.html  # Fails due to 2 small single-pixel differences
@@ -1356,8 +1357,7 @@ asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 507762-2.html 507762-2-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
-# see bug 556124
-random == 508908-1.xul 508908-1-ref.xul
+== 508908-1.xul 508908-1-ref.xul
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
 == 512410.html 512410-ref.html
@@ -1430,6 +1430,7 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 556661-1.html 556661-1-ref.html
 == 557736-1.html 557736-1-ref.html
 == 559284-1.html 559284-1-ref.html
+== 560455-1.xul 560455-1-ref.xul
 == 561981-1.html 561981-1-ref.html
 == 561981-2.html 561981-2-ref.html
 == 561981-3.html 561981-3-ref.html
@@ -1441,6 +1442,7 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 562835-1.html 562835-ref.html
 == 562835-2.html 562835-ref.html
 == 564054-1.html 564054-1-ref.html
+== 564991-1.html 564991-1-ref.html
 == 565819-1.html 565819-ref.html
 == 565819-2.html 565819-ref.html
 == 569006-1.html 569006-1-ref.html

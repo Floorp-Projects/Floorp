@@ -3275,6 +3275,32 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   }
 #endif
 
+  // font-feature-settings
+  if (eCSSUnit_Inherit == aFontData.mFontFeatureSettings.GetUnit()) {
+    aCanStoreInRuleTree = PR_FALSE;
+    aFont->mFont.featureSettings = aParentFont->mFont.featureSettings;
+  } else if (eCSSUnit_Normal == aFontData.mFontFeatureSettings.GetUnit() ||
+             eCSSUnit_Initial == aFontData.mFontFeatureSettings.GetUnit()) {
+    aFont->mFont.featureSettings.Truncate();
+  } else if (eCSSUnit_System_Font == aFontData.mFontFeatureSettings.GetUnit()) {
+    aFont->mFont.featureSettings = systemFont.featureSettings;
+  } else if (eCSSUnit_String == aFontData.mFontFeatureSettings.GetUnit()) {
+    aFontData.mFontFeatureSettings.GetStringValue(aFont->mFont.featureSettings);
+  }
+
+  // font-language-override
+  if (eCSSUnit_Inherit == aFontData.mFontLanguageOverride.GetUnit()) {
+    aCanStoreInRuleTree = PR_FALSE;
+    aFont->mFont.languageOverride = aParentFont->mFont.languageOverride;
+  } else if (eCSSUnit_Normal == aFontData.mFontLanguageOverride.GetUnit() ||
+             eCSSUnit_Initial == aFontData.mFontLanguageOverride.GetUnit()) {
+    aFont->mFont.languageOverride.Truncate();
+  } else if (eCSSUnit_System_Font == aFontData.mFontLanguageOverride.GetUnit()) {
+    aFont->mFont.languageOverride = systemFont.languageOverride;
+  } else if (eCSSUnit_String == aFontData.mFontLanguageOverride.GetUnit()) {
+    aFontData.mFontLanguageOverride.GetStringValue(aFont->mFont.languageOverride);
+  }
+
   // font-size: enum, length, percent, inherit
   nscoord scriptLevelAdjustedParentSize = aParentFont->mSize;
 #ifdef MOZ_MATHML

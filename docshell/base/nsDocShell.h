@@ -433,12 +433,77 @@ protected:
                                        PRUint32 aRedirectFlags,
                                        PRUint32 aStateFlags);
 
-    // Global History
+    /**
+     * Helper function that determines if channel is an HTTP POST.
+     *
+     * @param aChannel
+     *        The channel to test
+     *
+     * @return True iff channel is an HTTP post.
+     */
+    bool ChannelIsPost(nsIChannel* aChannel);
 
-    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
-                                nsIChannel * aChannel);
-    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
-                                nsIURI * aReferrer);
+    /**
+     * Helper function that finds the last URI and its transition flags for a
+     * channel.
+     *
+     * This method first checks the channel's property bag to see if previous
+     * info has been saved.  If not, it gives back the referrer of the channel.
+     *
+     * @param aChannel
+     *        The channel we are transitioning to
+     * @param aURI
+     *        Output parameter with the previous URI, not addref'd
+     * @param aChannelRedirectFlags
+     *        If a redirect, output parameter with the previous redirect flags
+     *        from nsIChannelEventSink
+     */
+    void ExtractLastVisit(nsIChannel* aChannel,
+                          nsIURI** aURI,
+                          PRUint32* aChannelRedirectFlags);
+
+    /**
+     * Helper function that caches a URI and a transition for saving later.
+     *
+     * @param aChannel
+     *        Channel that will have these properties saved
+     * @param aURI
+     *        The URI to save for later
+     * @param aChannelRedirectFlags
+     *        The nsIChannelEventSink redirect flags to save for later
+     */
+    void SaveLastVisit(nsIChannel* aChannel,
+                       nsIURI* aURI,
+                       PRUint32 aChannelRedirectFlags);
+
+    /**
+     * Helper function for adding a URI visit using IHistory.  If IHistory is
+     * not available, the method tries nsIGlobalHistory2.
+     *
+     * The IHistory API maintains chains of visits, tracking both HTTP referrers
+     * and redirects for a user session. VisitURI requires the current URI and
+     * the previous URI in the chain.
+     *
+     * Visits can be saved either during a redirect or when the request has
+     * reached its final destination.  The previous URI in the visit may be
+     * from another redirect or it may be the referrer.
+     *
+     * @pre aURI is not null.
+     *
+     * @param aURI
+     *        The URI that was just visited
+     * @param aReferrerURI
+     *        The referrer URI of this request
+     * @param aPreviousURI
+     *        The previous URI of this visit (may be the same as aReferrerURI)
+     * @param aChannelRedirectFlags
+     *        For redirects, the redirect flags from nsIChannelEventSink
+     *        (0 otherwise)
+     */
+    void AddURIVisit(nsIURI* aURI,
+                     nsIURI* aReferrerURI,
+                     nsIURI* aPreviousURI,
+                     PRUint32 aChannelRedirectFlags);
 
     // Helper Routines
     nsresult   ConfirmRepost(PRBool * aRepost);
@@ -700,6 +765,9 @@ protected:
 
     PRInt32                    mMarginWidth;
     PRInt32                    mMarginHeight;
+
+    // This can either be a content docshell or a chrome docshell.  After
+    // Create() is called, the type is not expected to change.
     PRInt32                    mItemType;
 
     // Index into the SHTransaction list, indicating the previous and current

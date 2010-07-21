@@ -545,7 +545,7 @@ ER3(SEC_ERROR_BAD_INFO_ACCESS_LOCATION,    		(SEC_ERROR_BASE + 165),
 "Bad information access location in cert extension")
 
 ER3(SEC_ERROR_LIBPKIX_INTERNAL,      		(SEC_ERROR_BASE + 166),
-"Libpkix internal error occured during cert validation.")
+"Libpkix internal error occurred during cert validation.")
 
 ER3(SEC_ERROR_PKCS11_GENERAL_ERROR,      		(SEC_ERROR_BASE + 167),
 "A PKCS #11 module returned CKR_GENERAL_ERROR, indicating that an unrecoverable error has occurred.")

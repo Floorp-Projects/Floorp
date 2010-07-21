@@ -88,11 +88,6 @@
 
 using namespace mozilla::places;
 
-// Microsecond timeout for "recent" events such as typed and bookmark following.
-// If you typed it more than this time ago, it's not recent.
-// This is 15 minutes           m    s/m  us/s
-#define RECENT_EVENT_THRESHOLD PRTime((PRInt64)15 * 60 * PR_USEC_PER_SEC)
-
 // The maximum number of things that we will store in the recent events list
 // before calling ExpireNonrecentEvents. This number should be big enough so it
 // is very difficult to get that many unconsumed events (for example, typed but
@@ -232,20 +227,11 @@ NS_IMPL_CI_INTERFACE_GETTER5(
 
 namespace {
 
-static nsresult GetReversedHostname(nsIURI* aURI, nsAString& host);
-static void GetReversedHostname(const nsString& aForward, nsAString& aReversed);
 static PRInt64 GetSimpleBookmarksQueryFolder(
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions);
 static void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                         nsTArray<nsTArray<nsString>*>* aTerms);
-
-inline void ReverseString(const nsString& aInput, nsAString& aReversed)
-{
-  aReversed.Truncate(0);
-  for (PRInt32 i = aInput.Length() - 1; i >= 0; i --)
-    aReversed.Append(aInput[i]);
-}
 
 } // anonymous namespace
 
@@ -888,6 +874,27 @@ nsresult
 nsNavHistory::UpdateSchemaVersion()
 {
   return mDBConn->SetSchemaVersion(DATABASE_SCHEMA_VERSION);
+}
+
+
+PRUint32
+nsNavHistory::GetRecentFlags(nsIURI *aURI)
+{
+  PRUint32 result = 0;
+  nsCAutoString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Unable to get aURI's spec");
+
+  if (NS_SUCCEEDED(rv)) {
+    if (CheckIsRecentEvent(&mRecentTyped, spec))
+      result |= RECENT_TYPED;
+    if (CheckIsRecentEvent(&mRecentLink, spec))
+      result |= RECENT_ACTIVATED;
+    if (CheckIsRecentEvent(&mRecentBookmark, spec))
+      result |= RECENT_BOOKMARKED;
+  }
+
+  return result;
 }
 
 
@@ -1847,6 +1854,9 @@ nsNavHistory::GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
 //    THIS SHOULD BE THE ONLY PLACE NEW moz_places ROWS ARE
 //    CREATED. This allows us to maintain better consistency.
 //
+//    XXX this functionality is being moved to History.cpp, so
+//    in fact there *are* two places where new pages are added.
+//
 //    If non-null, the new page ID will be placed into aPageID.
 
 nsresult
@@ -2143,6 +2153,28 @@ nsNavHistory::GetNewSessionID()
   return mLastSessionID;
 }
 
+
+void
+nsNavHistory::NotifyOnVisit(nsIURI* aURI,
+                          PRInt64 aVisitID,
+                          PRTime aTime,
+                          PRInt64 aSessionID,
+                          PRInt64 referringVisitID,
+                          PRInt32 aTransitionType)
+{
+  PRUint32 added = 0;
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver,
+                   OnVisit(aURI, aVisitID, aTime, aSessionID,
+                           referringVisitID, aTransitionType, &added));
+}
+
+void
+nsNavHistory::NotifyTitleChange(nsIURI* aURI, const nsString& aTitle)
+{
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
+}
 
 PRInt32
 nsNavHistory::GetDaysOfHistory() {
@@ -2654,8 +2686,8 @@ nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(canAdd);
 
-  // If the user is in private browsing mode, don't add any entry.
-  if (InPrivateBrowsingMode()) {
+  // If history is disabled (included privatebrowsing), don't add any entry.
+  if (IsHistoryDisabled()) {
     *canAdd = PR_FALSE;
     return NS_OK;
   }
@@ -2848,12 +2880,9 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // Notify observers: The hidden detection code must match that in
   // GetQueryResults to maintain consistency.
   // FIXME bug 325241: make a way to observe hidden URLs
-  PRUint32 added = 0;
   if (!hidden) {
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavHistoryObserver,
-                     OnVisit(aURI, *aVisitID, aTime, aSessionID,
-                             referringVisitID, aTransitionType, &added));
+    NotifyOnVisit(aURI, *aVisitID, aTime, aSessionID, referringVisitID,
+                  aTransitionType);
   }
 
   // Normally docshell sends the link visited observer notification for us (this
@@ -5214,10 +5243,6 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 
-  // don't add when history is disabled
-  if (IsHistoryDisabled())
-    return NS_OK;
-
   // filter out any unwanted URIs
   PRBool canAdd = PR_FALSE;
   nsresult rv = CanAddURI(aURI, &canAdd);
@@ -5728,33 +5753,12 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     (void)os->RemoveObserver(this, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING);
 #endif
 
-    // If shutdown happens in the same scope as the service init, we should
-    // immediately serve the places-init topic, this way topic observers
-    // won't try to access the database after xpcom-shutdown.
-    nsCOMPtr<nsISimpleEnumerator> e;
-    nsresult rv = os->EnumerateObservers(TOPIC_PLACES_INIT_COMPLETE,
-                                         getter_AddRefs(e));
-    if (NS_SUCCEEDED(rv) && e) {
-      // This covers a special case that can happen in tests, if the test
-      // does never interrupt the main thread we could shutdown
-      // before we fire any notification.  That means that if we notify from now
-      // on, we could init the category cache after xpcom-shutdown and leak.
-      mCanNotify = false;
-
-      nsCOMPtr<nsIObserver> observer;
-      PRBool loop = PR_TRUE;
-      while(NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) {
-        e->GetNext(getter_AddRefs(observer));
-        (void)observer->Observe(observer, TOPIC_PLACES_INIT_COMPLETE, nsnull);
-      }
-    }
-
     // Notify all Places users that we are about to shutdown.  The notification
     // is enqueued because there is network work on profile-before-change that
     // should run before us.
     nsRefPtr<PlacesEvent> shutdownEvent =
       new PlacesEvent(TOPIC_PLACES_SHUTDOWN);
-    rv = NS_DispatchToMainThread(shutdownEvent);
+    nsresult rv = NS_DispatchToMainThread(shutdownEvent);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Unable to shutdown Places: message dispatch failed.");
 
@@ -5768,6 +5772,11 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   }
 
   else if (strcmp(aTopic, TOPIC_PLACES_TEARDOWN) == 0) {
+    // Don't even try to notify observers from this point on, the category
+    // cache would init services that could not shutdown correctly or try to
+    // use our APIs.
+    mCanNotify = false;
+
     // Operations that are unlikely to create issues to implementers should go
     // in global shutdown.  Any other thing that must run really late must be
     // here instead.
@@ -7317,7 +7326,6 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
   rv = mDBSetPlaceTitle->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // observers (have to check first if it's bookmarked)
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
 
@@ -7528,52 +7536,6 @@ nsNavHistory::RemoveDuplicateURIs()
 
 
 namespace {
-
-// GetReversedHostname
-//
-//    This extracts the hostname from the URI and reverses it in the
-//    form that we use (always ending with a "."). So
-//    "http://microsoft.com/" becomes "moc.tfosorcim."
-//
-//    The idea behind this is that we can create an index over the items in
-//    the reversed host name column, and then query for as much or as little
-//    of the host name as we feel like.
-//
-//    For example, the query "host >= 'gro.allizom.' AND host < 'gro.allizom/'
-//    Matches all host names ending in '.mozilla.org', including
-//    'developer.mozilla.org' and just 'mozilla.org' (since we define all
-//    reversed host names to end in a period, even 'mozilla.org' matches).
-//    The important thing is that this operation uses the index. Any substring
-//    calls in a select statement (even if it's for the beginning of a string)
-//    will bypass any indices and will be slow).
-
-nsresult
-GetReversedHostname(nsIURI* aURI, nsAString& aRevHost)
-{
-  nsCString forward8;
-  nsresult rv = aURI->GetHost(forward8);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // can't do reversing in UTF8, better use 16-bit chars
-  NS_ConvertUTF8toUTF16 forward(forward8);
-  GetReversedHostname(forward, aRevHost);
-  return NS_OK;
-}
-
-
-// GetReversedHostname
-//
-//    Same as previous but for strings
-
-void
-GetReversedHostname(const nsString& aForward, nsAString& aRevHost)
-{
-  ReverseString(aForward, aRevHost);
-  aRevHost.Append(PRUnichar('.'));
-}
-
 
 // GetSimpleBookmarksQueryFolder
 //
