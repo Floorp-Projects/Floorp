@@ -76,7 +76,7 @@ struct DeadKeyEntry;
 class DeadKeyTable;
 
 
-class VirtualKey
+class nsVirtualKey
 {
   union KeyShiftState
   {
@@ -122,7 +122,7 @@ public:
 };
 
 
-class KeyboardLayout
+class nsKeyboardLayout
 {
   struct DeadKeyTableListEntry
   {
@@ -134,7 +134,7 @@ class KeyboardLayout
 
   HKL mKeyboardLayout;
 
-  VirtualKey mVirtualKeys [NUM_OF_KEYS];
+  nsVirtualKey mVirtualKeys[NUM_OF_KEYS];
   DeadKeyTableListEntry* mDeadKeyTableListHead;
   PRInt32 mActiveDeadKey;                 // -1 = no active dead-key
   PRUint8 mDeadKeyShiftState;
@@ -157,8 +157,8 @@ class KeyboardLayout
   void ReleaseDeadKeyTables ();
 
 public:
-  KeyboardLayout ();
-  ~KeyboardLayout ();
+  nsKeyboardLayout ();
+  ~nsKeyboardLayout ();
 
   static PRBool IsPrintableCharKey (PRUint8 aVirtualKey);
   static PRBool IsNumpadKey (PRUint8 aVirtualKey);
