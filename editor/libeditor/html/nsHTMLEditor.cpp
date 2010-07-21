@@ -5839,6 +5839,8 @@ nsHTMLEditor::ShouldReplaceRootElement()
 void
 nsHTMLEditor::ResetRootElementAndEventTarget()
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
   // Need to remove the event listeners first because BeginningOfDocument
   // could set a new root (and event target is set by InstallEventListeners())
   // and we won't be able to remove them from the old event target then.

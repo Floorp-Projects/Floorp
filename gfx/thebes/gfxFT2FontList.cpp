@@ -55,9 +55,9 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsISimpleEnumerator.h"
-#include "nsIWindowsRegKey.h"
 
 #ifdef XP_WIN
+#include "nsIWindowsRegKey.h"
 #include <windows.h>
 #endif
 
@@ -67,14 +67,23 @@
 static PRLogModuleInfo *gFontInfoLog = PR_NewLogModule("fontInfoLog");
 #endif /* PR_LOGGING */
 
+#ifdef ANDROID
+#include "gfxAndroidPlatform.h"
+#include <dirent.h>
+#include <android/log.h>
+#define ALOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gecko" , ## args)
+
+#endif
 #define LOG(args) PR_LOG(gFontInfoLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gFontInfoLog, PR_LOG_DEBUG)
 
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
 {
+#ifdef XP_WIN
     if (aName.Length() >= LF_FACESIZE)
         aName.Truncate(LF_FACESIZE - 1);
+#endif
     ToLowerCase(aName);
 }
 
@@ -102,14 +111,22 @@ gfxFT2FontList::gfxFT2FontList()
 void
 gfxFT2FontList::AppendFacesFromFontFile(const PRUnichar *aFileName)
 {
-    char fileName[MAX_PATH];
-    WideCharToMultiByte(CP_ACP, 0, aFileName, -1, fileName, MAX_PATH, NULL, NULL);
+    AppendFacesFromFontFile(NS_ConvertUTF16toUTF8(aFileName).get());
+}
+
+void
+gfxFT2FontList::AppendFacesFromFontFile(const char *aFileName)
+{
+#ifdef XP_WIN
     FT_Library ftLibrary = gfxWindowsPlatform::GetPlatform()->GetFTLibrary();
+#elif defined(ANDROID)
+    FT_Library ftLibrary = gfxAndroidPlatform::GetPlatform()->GetFTLibrary();
+#endif
     FT_Face dummy;
-    if (FT_Err_Ok == FT_New_Face(ftLibrary, fileName, -1, &dummy)) {
+    if (FT_Err_Ok == FT_New_Face(ftLibrary, aFileName, -1, &dummy)) {
         for (FT_Long i = 0; i < dummy->num_faces; i++) {
             FT_Face face;
-            if (FT_Err_Ok != FT_New_Face(ftLibrary, fileName, i, &face))
+            if (FT_Err_Ok != FT_New_Face(ftLibrary, aFileName, i, &face))
                 continue;
 
             FontEntry* fe = FontEntry::CreateFontEntryFromFace(face);
@@ -147,6 +164,7 @@ gfxFT2FontList::AppendFacesFromFontFile(const PRUnichar *aFileName)
 void
 gfxFT2FontList::FindFonts()
 {
+#ifdef XP_WIN
     nsTArray<nsString> searchPaths(3);
     nsTArray<nsString> fontPatterns(3);
     fontPatterns.AppendElement(NS_LITERAL_STRING("\\*.ttf"));
@@ -189,6 +207,32 @@ gfxFT2FontList::FindFonts()
                 FindClose(handle);
         }
     }
+#elif defined(ANDROID)
+    gfxFontCache *fc = gfxFontCache::GetCache();
+    if (fc)
+        fc->AgeAllGenerations();
+    mPrefFonts.Clear();
+    mCodepointsWithNoFonts.reset();
+
+    DIR *d = opendir("/system/fonts");
+    struct dirent *ent = NULL;
+    while(d && (ent = readdir(d)) != NULL) {
+        int namelen = strlen(ent->d_name);
+        if (namelen > 4 &&
+            strcasecmp(ent->d_name + namelen - 4, ".ttf") == 0)
+        {
+            nsCString s("/system/fonts");
+            s.Append("/");
+            s.Append(nsDependentCString(ent->d_name));
+
+            AppendFacesFromFontFile(nsPromiseFlatCString(s).get());
+        }
+    }
+
+    mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
+    mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
+
+#endif // XP_WIN && ANDROID
 }
 
 void
@@ -263,6 +307,11 @@ gfxFT2FontList::GetDefaultFont(const gfxFontStyle* aStyle, PRBool& aNeedsBold)
             return FindFontForFamily(resolvedName, aStyle, aNeedsBold);
         }
     }
+#elif defined(ANDROID)
+    nsAutoString resolvedName;
+    if (ResolveFontName(nsDependentString(NS_LITERAL_STRING("Droid Sans")), 
+                        resolvedName))
+        return FindFontForFamily(resolvedName, aStyle, aNeedsBold);
 #endif
     /* TODO: what about Qt or other platforms that may use this? */
     return nsnull;

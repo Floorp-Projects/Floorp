@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -67,11 +67,27 @@ class ThebesLayer;
  */
 class ThebesLayerBuffer {
 public:
-  ThebesLayerBuffer() : mBufferRotation(0,0)
+  typedef gfxASurface::gfxContentType ContentType;
+
+  /**
+   * Controls the size of the backing buffer of this.
+   * - SizedToVisibleBounds: the backing buffer is exactly the same
+   *   size as the bounds of ThebesLayer's visible region
+   * - ContainsVisibleBounds: the backing buffer is large enough to
+   *   fit visible bounds.  May be larger.
+   */
+  enum BufferSizePolicy {
+    SizedToVisibleBounds,
+    ContainsVisibleBounds
+  };
+
+  ThebesLayerBuffer(BufferSizePolicy aBufferSizePolicy)
+    : mBufferRotation(0,0)
+    , mBufferSizePolicy(aBufferSizePolicy)
   {
     MOZ_COUNT_CTOR(ThebesLayerBuffer);
   }
-  ~ThebesLayerBuffer()
+  virtual ~ThebesLayerBuffer()
   {
     MOZ_COUNT_DTOR(ThebesLayerBuffer);
   }
@@ -99,13 +115,7 @@ public:
     nsIntRegion mRegionToDraw;
     nsIntRegion mRegionToInvalidate;
   };
-  /**
-   * Pass OPAQUE_CONTENT when we have determined that everything visible
-   * in the buffer will be rendered with opaque pixels.
-   */
-  enum {
-    OPAQUE_CONTENT = 0x01
-  };
+
   /**
    * Start a drawing operation. This returns a PaintState describing what
    * needs to be drawn to bring the buffer up to date in the visible region.
@@ -113,16 +123,14 @@ public:
    * The returned mContext may be null if mRegionToDraw is empty.
    * Otherwise it must not be null.
    * mRegionToInvalidate will contain mRegionToDraw.
-   * @param aReferenceSurface if we need to create a buffer, we'll create
-   * a surface that's similar to aReferenceSurface
    */
-  PaintState BeginPaint(ThebesLayer* aLayer, gfxASurface* aReferenceSurface,
-                        PRUint32 aFlags);
+  PaintState BeginPaint(ThebesLayer* aLayer, ContentType aContentType);
+
   /**
-   * Complete the drawing operation. The region to draw must have been drawn
-   * before this is called. The contents of the buffer are drawn to aTarget.
+   * Return a new surface of |aSize| and |aType|.
    */
-  void DrawTo(ThebesLayer* aLayer, PRUint32 aFlags, gfxContext* aTarget, float aOpacity);
+  virtual already_AddRefed<gfxASurface>
+  CreateBuffer(ContentType aType, const nsIntSize& aSize) = 0;
 
   /**
    * Get the underlying buffer, if any. This is useful because we can pass
@@ -132,6 +140,9 @@ public:
   gfxASurface* GetBuffer() { return mBuffer; }
 
 protected:
+  // XXX make me a general utility
+  static void ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion);
+
   enum XSide {
     LEFT, RIGHT
   };
@@ -142,7 +153,17 @@ protected:
   void DrawBufferQuadrant(gfxContext* aTarget, XSide aXSide, YSide aYSide, float aOpacity);
   void DrawBufferWithRotation(gfxContext* aTarget, float aOpacity);
 
+  const nsIntRect& BufferRect() const { return mBufferRect; }
+  const nsIntPoint& BufferRotation() const { return mBufferRotation; }
+
 private:
+  PRBool BufferSizeOkFor(const nsIntSize& aSize)
+  {
+    return (aSize == mBufferRect.Size() ||
+            (SizedToVisibleBounds != mBufferSizePolicy &&
+             aSize < mBufferRect.Size()));
+  }
+
   nsRefPtr<gfxASurface> mBuffer;
   /** The area of the ThebesLayer that is covered by the buffer as a whole */
   nsIntRect             mBufferRect;
@@ -157,6 +178,7 @@ private:
    * buffer at the other end, not 2D rotation!
    */
   nsIntPoint            mBufferRotation;
+  BufferSizePolicy      mBufferSizePolicy;
 };
 
 }

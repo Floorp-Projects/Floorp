@@ -92,6 +92,7 @@
 #include "nsIContentURIGrouper.h"
 #include "mozilla/Services.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsCharSeparatedTokenizer.h"
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
@@ -855,21 +856,41 @@ nsFileControlFrame::CreateAccessible()
 }
 #endif
 
-PRInt32
-nsFileControlFrame::GetFileFilterFromAccept() const
+void 
+nsFileControlFrame::ParseAcceptAttribute(AcceptAttrCallback aCallback,
+                                         void* aClosure) const
 {
   nsAutoString accept;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accept, accept);
 
-  if (accept.EqualsLiteral("image/*")) {
-    return nsIFilePicker::filterImages;
-  } else if (accept.EqualsLiteral("audio/*")) {
-    return nsIFilePicker::filterAudio;
-  } else if (accept.EqualsLiteral("video/*")) {
-    return nsIFilePicker::filterVideo;
+  nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
+    tokenizer(accept, ',');
+  // Empty loop body because aCallback is doing the work
+  while (tokenizer.hasMoreTokens() &&
+         (*aCallback)(tokenizer.nextToken(), aClosure));
+}
+
+PRBool FileFilterCallback(const nsAString& aVal, void* aClosure)
+{
+  PRInt32* filter = (PRInt32*)aClosure;
+
+  if (aVal.EqualsLiteral("image/*")) {
+    *filter |= nsIFilePicker::filterImages;
+  } else if (aVal.EqualsLiteral("audio/*")) {
+    *filter |= nsIFilePicker::filterAudio;
+  } else if (aVal.EqualsLiteral("video/*")) {
+    *filter |= nsIFilePicker::filterVideo;
   }
 
-  return 0;
+  return PR_TRUE;
+}
+
+PRInt32
+nsFileControlFrame::GetFileFilterFromAccept() const
+{
+  PRInt32 filterVal = 0;
+  this->ParseAcceptAttribute(&FileFilterCallback, (void*)&filterVal);
+  return filterVal;
 }
 ////////////////////////////////////////////////////////////
 // Mouse listener implementation
