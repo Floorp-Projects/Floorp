@@ -256,6 +256,15 @@ class FrameState
     inline RegisterID tempRegForType(FrameEntry *fe);
 
     /*
+     * Try to use a register already allocated for fe's type, but if one
+     * is not already available, use fallback.
+     *
+     * Note: this does NOT change fe's type-register remat info. It's supposed
+     * to be a super lightweight/transparent operation.
+     */
+    inline RegisterID tempRegForType(FrameEntry *fe, RegisterID fallback);
+
+    /*
      * Returns a register that is guaranteed to contain the frame entry's
      * data payload. The compiler may not modify the contents of the register.
      * The compiler should NOT explicitly free it.
@@ -464,10 +473,16 @@ class FrameState
     inline Jump testDouble(Assembler::Condition cond, FrameEntry *fe);
 
     /*
-     * Helper function. Tests if a slot's type is an integer. Condition should
+     * Helper function. Tests if a slot's type is a boolean. Condition should
      * be Equal or NotEqual.
      */
     inline Jump testBoolean(Assembler::Condition cond, FrameEntry *fe);
+
+    /*
+     * Helper function. Tests if a slot's type is a string. Condition should
+     * be Equal or NotEqual.
+     */
+    inline Jump testString(Assembler::Condition cond, FrameEntry *fe);
 
     /*
      * Helper function. Tests if a slot's type is a non-funobj. Condition should

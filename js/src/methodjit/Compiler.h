@@ -110,13 +110,31 @@ class Compiler
         Label slowPathStart;
         RegisterID shapeReg;
         RegisterID objReg;
+        RegisterID idReg;
         RegisterID typeReg;
         Label shapeGuard;
         JSAtom *atom;
         StateRemat objRemat;
+        StateRemat idRemat;
         Call callReturn;
         bool hasTypeCheck;
         ValueRemat vr;
+
+        void copySimpleMembersTo(ic::PICInfo &pi) const {
+            pi.kind = kind;
+            pi.shapeReg = shapeReg;
+            pi.objReg = objReg;
+            pi.atom = atom;
+            if (kind == ic::PICInfo::SET) {
+                pi.u.vr = vr;
+            } else if (kind != ic::PICInfo::NAME) {
+                pi.u.get.idReg = idReg;
+                pi.u.get.typeReg = typeReg;
+                pi.u.get.hasTypeCheck = hasTypeCheck;
+                pi.u.get.objRemat = objRemat.offset;
+            }
+        }
+
     };
 #endif
 
@@ -131,6 +149,10 @@ class Compiler
       public:
         MaybeRegisterID()
           : reg(Registers::ReturnReg), set(false)
+        { }
+
+        MaybeRegisterID(RegisterID reg)
+          : reg(reg), set(true)
         { }
 
         inline RegisterID getReg() const { JS_ASSERT(set); return reg; }
@@ -276,6 +298,13 @@ class Compiler
     void jsop_localinc(JSOp op, uint32 slot, bool popped);
     void jsop_setelem();
     void jsop_getelem();
+    void jsop_getelem_known_type(FrameEntry *obj, FrameEntry *id, RegisterID tmpReg);
+    void jsop_getelem_with_pic(FrameEntry *obj, FrameEntry *id, RegisterID tmpReg);
+    void jsop_getelem_nopic(FrameEntry *obj, FrameEntry *id, RegisterID tmpReg);
+    void jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID objReg, RegisterID idReg,
+                          RegisterID shapeReg);
+    void jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID objReg,
+                            MaybeRegisterID &idReg, RegisterID shapeReg);
     void jsop_stricteq(JSOp op);
     void jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_pos();

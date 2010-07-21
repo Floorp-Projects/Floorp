@@ -308,15 +308,12 @@ mjit::Compiler::finishThisUp()
     }
 
     for (size_t i = 0; i < pics.length(); i++) {
-        script->pics[i].kind = pics[i].kind;
+        pics[i].copySimpleMembersTo(script->pics[i]);
         script->pics[i].fastPathStart = fullCode.locationOf(pics[i].hotPathBegin);
         script->pics[i].storeBack = fullCode.locationOf(pics[i].storeBack);
         script->pics[i].slowPathStart = stubCode.locationOf(pics[i].slowPathStart);
         script->pics[i].callReturn = uint16((uint8*)stubCode.locationOf(pics[i].callReturn).executableAddress() -
                                            (uint8*)script->pics[i].slowPathStart.executableAddress());
-        script->pics[i].shapeReg = pics[i].shapeReg;
-        script->pics[i].objReg = pics[i].objReg;
-        script->pics[i].atom = pics[i].atom;
         script->pics[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
                                      masm.distanceOf(pics[i].hotPathBegin);
         script->pics[i].shapeRegHasBaseShape = true;
@@ -324,15 +321,12 @@ mjit::Compiler::finishThisUp()
         if (pics[i].kind == ic::PICInfo::SET) {
             script->pics[i].u.vr = pics[i].vr;
         } else if (pics[i].kind != ic::PICInfo::NAME) {
-            script->pics[i].u.get.typeReg = pics[i].typeReg;
             if (pics[i].hasTypeCheck) {
                 int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
                                  stubcc.masm.distanceOf(pics[i].slowPathStart);
                 script->pics[i].u.get.typeCheckOffset = uint16(-distance);
                 JS_ASSERT(script->pics[i].u.get.typeCheckOffset == -distance);
             }
-            script->pics[i].u.get.hasTypeCheck = pics[i].hasTypeCheck;
-            script->pics[i].u.get.objRemat = pics[i].objRemat.offset;
         }
         new (&script->pics[i].execPools) ic::PICInfo::ExecPoolVector(SystemAllocPolicy());
     }
@@ -1960,6 +1954,56 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
 
     pics.append(pic);
 }
+
+#ifdef JS_POLYIC
+void
+mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID objReg,
+                                 RegisterID idReg, RegisterID shapeReg)
+{
+    PICGenInfo pic(ic::PICInfo::GETELEM);
+
+    pic.objRemat = frame.dataRematInfo(obj);
+    pic.idRemat = frame.dataRematInfo(id);
+    pic.shapeReg = shapeReg;
+    pic.hasTypeCheck = false;
+
+    pic.hotPathBegin = masm.label();
+
+    /* Guard on shape. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
+    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    pic.shapeGuard = masm.label();
+    Jump shapeGuard = masm.branch32(Assembler::NotEqual, shapeReg,
+                                    Imm32(int32(JSObjectMap::INVALID_SHAPE)));
+
+    /* Guard on id identity. */
+    static const int32 BOGUS_ATOM = 0xdeadbeef;
+    // :FIXME: x64
+    Jump idGuard = masm.branch32(Assembler::NotEqual, idReg, Imm32(BOGUS_ATOM));
+    pic.slowPathStart = stubcc.masm.label();
+    stubcc.linkExit(idGuard, Uses(2));
+    stubcc.linkExitDirect(shapeGuard, pic.slowPathStart);
+
+    stubcc.leave();
+    stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
+    pic.callReturn = stubcc.call(ic::GetElem);
+
+    /* Load dslots. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+
+    /* Copy the slot value to the expression stack. */
+    Address slot(objReg, 1 << 24);
+    masm.loadTypeTag(slot, shapeReg);
+    masm.loadData32(slot, objReg);
+    pic.storeBack = masm.label();
+    pic.objReg = objReg;
+    pic.idReg = idReg;
+    JS_ASSERT(pic.idReg != pic.objReg);
+    JS_ASSERT(pic.idReg != pic.shapeReg);
+    JS_ASSERT(pic.objReg != pic.shapeReg);
+    pics.append(pic);
+}
+#endif
 
 bool
 mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
