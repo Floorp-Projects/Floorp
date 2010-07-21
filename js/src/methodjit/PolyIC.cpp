@@ -296,10 +296,10 @@ class SetPropCompiler : public PICStubCompiler
             masm.storeValue(Valueify(pic.u.vr.u.v), address);
         } else {
             if (pic.u.vr.u.s.isTypeKnown)
-                masm.storeTypeTag(ImmTag(pic.u.vr.u.s.type.tag), address);
+                masm.storeTypeTag(ImmType(pic.u.vr.u.s.type.knownType), address);
             else
                 masm.storeTypeTag(pic.u.vr.u.s.type.reg, address);
-            masm.storeData32(pic.u.vr.u.s.data, address);
+            masm.storePayload(pic.u.vr.u.s.data, address);
         }
     }
 
@@ -334,7 +334,7 @@ class SetPropCompiler : public PICStubCompiler
             if (scope->brandedOrHasMethodBarrier()) {
                 masm.loadTypeTag(address, pic.shapeReg);
                 Jump skip = masm.testObject(Assembler::NotEqual, pic.shapeReg);
-                masm.loadData32(address, pic.shapeReg);
+                masm.load32(address, pic.shapeReg);
                 rebrand = masm.testFunction(Assembler::Equal, pic.shapeReg);
                 skip.linkTo(masm.label(), &masm);
                 pic.shapeRegHasBaseShape = false;
@@ -347,7 +347,7 @@ class SetPropCompiler : public PICStubCompiler
             /* Guard that the call object has a frame. */
             Address privSlot(pic.objReg, offsetof(JSObject, fslots) +
                                          JSSLOT_PRIVATE * sizeof(Value));
-            masm.loadData32(privSlot, pic.shapeReg);
+            masm.load32(privSlot, pic.shapeReg);
             Jump escapedFrame = masm.branchTestPtr(Assembler::Zero, pic.shapeReg, pic.shapeReg);
 
             {
@@ -525,8 +525,8 @@ class GetPropCompiler : public PICStubCompiler
         Address clasp(pic.objReg, offsetof(JSObject, clasp));
         Jump notArgs = masm.branchPtr(Assembler::NotEqual, clasp, ImmPtr(&js_SlowArrayClass));
 
-        masm.loadData32(Address(pic.objReg, offsetof(JSObject, fslots) +
-                                            JSObject::JSSLOT_ARGS_LENGTH * sizeof(Value)),
+        masm.load32(Address(pic.objReg, offsetof(JSObject, fslots) +
+                                        JSObject::JSSLOT_ARGS_LENGTH * sizeof(Value)),
                         pic.objReg);
         masm.move(pic.objReg, pic.shapeReg);
         masm.and32(Imm32(1), pic.shapeReg);
@@ -570,8 +570,8 @@ class GetPropCompiler : public PICStubCompiler
                                        ImmPtr(&js_SlowArrayClass));
 
         isDense.linkTo(masm.label(), &masm);
-        masm.loadData32(Address(pic.objReg, offsetof(JSObject, fslots) +
-                                            JSObject::JSSLOT_ARRAY_LENGTH * sizeof(Value)),
+        masm.load32(Address(pic.objReg, offsetof(JSObject, fslots) +
+                                        JSObject::JSSLOT_ARRAY_LENGTH * sizeof(Value)),
                         pic.objReg);
         Jump oob = masm.branch32(Assembler::Above, pic.objReg, Imm32(JSVAL_INT_MAX));
         masm.move(ImmTag(JSVAL_TAG_INT32), pic.shapeReg);
@@ -650,8 +650,8 @@ class GetPropCompiler : public PICStubCompiler
          */
         uint32 thisvOffset = uint32(f.regs.sp - f.fp->slots()) - 1;
         Address thisv(JSFrameReg, sizeof(JSStackFrame) + thisvOffset * sizeof(Value));
-        masm.storeTypeTag(ImmTag(JSVAL_TAG_STRING), thisv);
-        masm.storeData32(pic.objReg, thisv);
+        masm.storeTypeTag(ImmType(JSVAL_TYPE_STRING), thisv);
+        masm.storePayload(pic.objReg, thisv);
 
         /*
          * Clobber objReg with String.prototype and do some PIC stuff. Well,
@@ -786,7 +786,7 @@ class GetPropCompiler : public PICStubCompiler
 
         if (pic.objNeedsRemat()) {
             if (pic.objRemat() >= sizeof(JSStackFrame))
-                masm.loadData32(Address(JSFrameReg, pic.objRemat()), pic.objReg);
+                masm.load32(Address(JSFrameReg, pic.objRemat()), pic.objReg);
             else
                 masm.move(RegisterID(pic.objRemat()), pic.objReg);
             pic.u.get.objNeedsRemat = false;
@@ -1038,7 +1038,7 @@ class GetElemCompiler : public PICStubCompiler
 
         if (pic.objNeedsRemat()) {
             if (pic.objRemat() >= sizeof(JSStackFrame))
-                masm.loadData32(Address(JSFrameReg, pic.objRemat()), pic.objReg);
+                masm.load32(Address(JSFrameReg, pic.objRemat()), pic.objReg);
             else
                 masm.move(RegisterID(pic.objRemat()), pic.objReg);
             pic.u.get.objNeedsRemat = false;
@@ -1046,7 +1046,7 @@ class GetElemCompiler : public PICStubCompiler
 
         if (pic.idNeedsRemat()) {
             if (pic.idRemat() >= sizeof(JSStackFrame))
-                masm.loadData32(Address(JSFrameReg, pic.idRemat()), pic.u.get.idReg);
+                masm.load32(Address(JSFrameReg, pic.idRemat()), pic.u.get.idReg);
             else
                 masm.move(RegisterID(pic.idRemat()), pic.u.get.idReg);
             pic.u.get.idNeedsRemat = false;
@@ -1253,7 +1253,7 @@ class ScopeNameCompiler : public PICStubCompiler
         Assembler masm;
         Vector<Jump, 8, ContextAllocPolicy> fails(f.cx);
 
-        masm.loadData32(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+        masm.load32(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
 
         JS_ASSERT(obj == holder);
         JS_ASSERT(holder != scopeChain->getGlobal());
@@ -1290,7 +1290,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
             /* Load the next link in the scope chain. */
             Address parent(pic.objReg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(Value));
-            masm.loadData32(parent, pic.objReg);
+            masm.load32(parent, pic.objReg);
 
             tobj = tobj->getParent();
         }
@@ -1304,7 +1304,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
         /* Get callobj's stack frame. */
         Address privSlot(pic.objReg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
-        masm.loadData32(privSlot, pic.shapeReg);
+        masm.load32(privSlot, pic.shapeReg);
 
         uint16 slot = uint16(sprop->shortid);
 
@@ -1319,7 +1319,7 @@ class ScopeNameCompiler : public PICStubCompiler
             else
                 bias = sizeof(JSStackFrame);
             Address addr(pic.shapeReg, bias + slot * sizeof(Value));
-            masm.loadData32(addr, pic.objReg);
+            masm.loadPayload(addr, pic.objReg);
             masm.loadTypeTag(addr, pic.shapeReg);
             skipOver = masm.jump();
         }
@@ -1334,7 +1334,7 @@ class ScopeNameCompiler : public PICStubCompiler
                 slot += fun->nargs;
             Address dslot(pic.objReg, slot * sizeof(Value));
             masm.loadTypeTag(dslot, pic.shapeReg);
-            masm.loadData32(dslot, pic.objReg);
+            masm.loadPayload(dslot, pic.objReg);
         }
 
         skipOver.linkTo(masm.label(), &masm);
@@ -1445,7 +1445,7 @@ class BindNameCompiler : public PICStubCompiler
         js::Vector<Jump, 8, ContextAllocPolicy> fails(f.cx);
 
         /* Guard on the shape of the scope chain. */
-        masm.loadData32(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+        masm.load32(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump firstShape = masm.branch32(Assembler::NotEqual, pic.shapeReg,
                                         Imm32(scopeChain->shape()));
@@ -1456,7 +1456,7 @@ class BindNameCompiler : public PICStubCompiler
         while (tobj && tobj != obj) {
             if (!js_IsCacheableNonGlobalScope(tobj))
                 return disable("non-cacheable obj in scope chain");
-            masm.loadData32(parent, pic.objReg);
+            masm.load32(parent, pic.objReg);
             Jump nullTest = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
             if (!fails.append(nullTest))
                 return false;
