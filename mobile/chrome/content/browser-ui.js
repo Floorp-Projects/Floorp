@@ -1822,6 +1822,11 @@ var SelectHelperUI = {
     return this._panel = document.getElementById("select-container");
   },
 
+  get _textbox() {
+    delete this._textbox;
+    return this._textbox = document.getElementById("select-helper-textbox");
+  },
+
   show: function(aList) {
     this._list = aList;
 
@@ -1858,6 +1863,7 @@ var SelectHelperUI = {
     }
 
     this._panel.hidden = false;
+    this._panel.height = this._panel.getBoundingClientRect().height;
 
     if (!this._docked)
       BrowserUI.pushPopup(this, this._panel);
@@ -1870,6 +1876,8 @@ var SelectHelperUI = {
   dock: function dock(aContainer) {
     aContainer.insertBefore(this._panel, aContainer.lastChild);
     this._panel.style.maxHeight = (window.innerHeight / 1.8) + "px";
+    this._textbox.hidden = false;
+
     this._docked = true;
   },
 
@@ -1887,11 +1895,13 @@ var SelectHelperUI = {
     this._container = empty;
     this._list = null;
     this._selectedIndexes = null;
+    this._panel.height = "";
+    this._textbox.value = "";
   },
 
   hide: function() {
     this._container.removeEventListener("click", this, false);
-    this._panel.hidden = true;
+    this._panel.hidden = this._textbox.hidden = true;
 
     if (this._docked)
       this.undock();
@@ -1899,6 +1909,16 @@ var SelectHelperUI = {
       BrowserUI.popPopup();
 
     this.reset();
+  },
+
+  filter: function(aValue) {
+    let reg = new RegExp(aValue, "gi");
+    let options = this._container.childNodes;
+    for (let i = 0; i < options.length; i++) {
+      let option = options[i];
+      option.getAttribute("label").match(reg) ? option.removeAttribute("filtered")
+                                              : option.setAttribute("filtered", "true");
+    }
   },
 
   unselectAll: function() {
@@ -2077,7 +2097,7 @@ var ContextHelper = {
       this.popupState = null;
       return;
     }
-    
+
     first.setAttribute("selector", "first-child");
     last.setAttribute("selector", "last-child");
 

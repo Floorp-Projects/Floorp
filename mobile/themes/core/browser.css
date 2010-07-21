@@ -1114,6 +1114,7 @@ pageaction .pageaction-desc[value=""] {
 }
 
 #content-navigator:not([type="form"]) > #select-container,
+#content-navigator:not([type="form"]) > #select-helper-textbox,
 #content-navigator:not([type="find"]) > #find-helper-textbox {
   display: none;
 }
@@ -1250,6 +1251,10 @@ pageaction .pageaction-desc[value=""] {
   min-height: 70px; /* row size */
   max-height: 70px; /* row size */
   -moz-box-align: center;
+}
+
+#select-list > option[filtered="true"] {
+  display: none;
 }
 
 #select-list > option[selected="true"] {
