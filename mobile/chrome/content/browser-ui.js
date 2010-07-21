@@ -1445,6 +1445,9 @@ var FindHelperUI = {
     this._textbox = document.getElementById("find-helper-textbox");
     this._container = document.getElementById("content-navigator");
 
+    this._cmdPrevious = document.getElementById(this.commands.previous);
+    this._cmdNext = document.getElementById(this.commands.next);
+
     // Listen for form assistant messages from content
     messageManager.addMessageListener("FindAssist:Show", this);
 
@@ -1470,8 +1473,8 @@ var FindHelperUI = {
 
   show: function findHelperShow() {
     Browser._browserView.ignorePageScroll(true);
-    Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Find", { searchString: "" });
     this._container.show(this);
+    this.search("");
     this._textbox.focus();
   },
 
@@ -1490,7 +1493,13 @@ var FindHelperUI = {
   },
 
   search: function findHelperSearch(aValue) {
+    this.updateCommands(aValue);
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Find", { searchString: aValue });
+  },
+
+  updateCommands: function findHelperUpdateCommands(aValue) {
+    this._cmdPrevious.setAttribute("disabled", aValue == "");
+    this._cmdNext.setAttribute("disabled", aValue == "");
   },
 
   updateFindInPage: function findHelperUpdateFindInPage() {
