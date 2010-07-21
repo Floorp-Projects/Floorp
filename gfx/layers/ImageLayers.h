@@ -198,7 +198,7 @@ public:
   ImageContainer* GetContainer() { return mContainer; }
   gfxPattern::GraphicsFilter GetFilter() { return mFilter; }
 
-  NS_LAYER_DECL_NAME("ImageLayer", TYPE_IMAGE)
+  MOZ_LAYER_DECL_NAME("ImageLayer", TYPE_IMAGE)
 
 protected:
   ImageLayer(LayerManager* aManager, void* aImplData)
