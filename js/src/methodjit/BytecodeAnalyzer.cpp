@@ -40,6 +40,7 @@
 #include "BytecodeAnalyzer.h"
 #include "jsautooplen.h"
 #include "jsemit.h"
+#include "Retcon.h"
 
 using namespace js;
 
@@ -68,6 +69,7 @@ BytecodeAnalyzer::addEdge(jsbytecode *pc, int32 offset, uint32 stackDepth)
 bool
 BytecodeAnalyzer::analyze(uint32 index)
 {
+    mjit::AutoScriptRetrapper trapper(cx, script);
     jsbytecode *pc = doList[index];
     uint32 stackDepth = ops[pc - script->code].stackDepth;
 
@@ -80,6 +82,13 @@ BytecodeAnalyzer::analyze(uint32 index)
 
         status.visited = true;
         status.stackDepth = stackDepth;
+
+        if (op == JSOP_TRAP) {
+            status.trap = true;
+            if (!trapper.untrap(pc))
+                return false;
+            op = JSOp(pc[0]);
+        }
 
         uint32 nuses, ndefs;
         if (js_CodeSpec[op].nuses == -1)

@@ -319,6 +319,8 @@ CPPSRCS += 	Assertions.cpp \
 		PolyIC.cpp \
 		ImmutableSync.cpp \
 		InvokeHelpers.cpp \
+		Retcon.cpp \
+		TrampolineCompiler.cpp \
 		$(NULL)
 #		PICStubCompiler.cpp \
 
