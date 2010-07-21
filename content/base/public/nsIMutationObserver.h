@@ -210,6 +210,12 @@ public:
    * @param aFirstNewContent the node at aIndexInContainer in aContainer.
    * @param aNewIndexInContainer the index in the container of the first
    *                   new child
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void ContentAppended(nsIDocument *aDocument,
                                nsIContent* aContainer,

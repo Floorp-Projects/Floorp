@@ -306,6 +306,8 @@ PRBool nsXMLEventsManager::RemoveListener(nsIContent * aContent)
 
 void nsXMLEventsManager::AddListeners(nsIDocument* aDocument)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
   nsIContent *cur;
   for (int i = 0; i < mIncomplete.Count(); ++i) {
     cur = mIncomplete[i];
