@@ -1,4 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -40,8 +43,8 @@
  * or reinterpretation of established facts. 
  */
 
-#if !defined retcon_h___ && defined JS_METHODJIT
-#define retcon_h___
+#if !defined jsjaeger_retcon_h___ && defined JS_METHODJIT
+#define jsjaeger_retcon_h___
 
 #include "jscntxt.h"
 #include "jsscript.h"
@@ -133,7 +136,8 @@ private:
     CallStack *curcs;    
 };
 
-}
-}
+} /* mjit */
+} /* js */
 
 #endif
+
