@@ -65,19 +65,27 @@ nsNodeIterator::NodePointer::NodePointer(nsINode *aNode,
 
 PRBool nsNodeIterator::NodePointer::MoveToNext(nsINode *aRoot)
 {
-    NS_ASSERTION(mNode, "Iterating an uninitialized NodePointer");
+    if (!mNode)
+      return PR_FALSE;
 
     if (mBeforeNode) {
         mBeforeNode = PR_FALSE;
         return PR_TRUE;
     }
 
-    return MoveForward(aRoot, mNode, -1);
+    nsINode* child = mNode->GetFirstChild();
+    if (child) {
+        mNode = child;
+        return PR_TRUE;
+    }
+
+    return MoveForward(aRoot, mNode);
 }
 
 PRBool nsNodeIterator::NodePointer::MoveToPrevious(nsINode *aRoot)
 {
-    NS_ASSERTION(mNode, "Iterating an uninitialized NodePointer");
+    if (!mNode)
+      return PR_FALSE;
 
     if (!mBeforeNode) {
         mBeforeNode = PR_TRUE;
@@ -87,44 +95,19 @@ PRBool nsNodeIterator::NodePointer::MoveToPrevious(nsINode *aRoot)
     if (mNode == aRoot)
         return PR_FALSE;
 
-    NS_ASSERTION(mNodeParent == mNode->GetNodeParent(), "Parent node incorrect in MoveToPrevious");
-    NS_ASSERTION(mIndexInParent == mNodeParent->IndexOf(mNode), "Index mismatch in MoveToPrevious");
-    MoveBackward(mNodeParent, mIndexInParent);
+    MoveBackward(mNode->GetNodeParent(), mNode->GetPreviousSibling());
 
     return PR_TRUE;
-}
-
-void nsNodeIterator::NodePointer::AdjustAfterInsertion(nsINode *aRoot,
-                                                       nsINode *aContainer,
-                                                       PRInt32 aIndexInContainer)
-{
-    // If mNode is null or the root there is nothing to do. This also prevents
-    // valgrind from complaining about consuming uninitialized memory for
-    // mNodeParent and mIndexInParent
-    if (!mNode || mNode == aRoot)
-        return;
-
-    // check if earlier sibling was added
-    if (aContainer == mNodeParent && aIndexInContainer <= mIndexInParent)
-        mIndexInParent++;
 }
 
 void nsNodeIterator::NodePointer::AdjustAfterRemoval(nsINode *aRoot,
                                                      nsINode *aContainer,
                                                      nsIContent *aChild,
-                                                     PRInt32 aIndexInContainer)
+                                                     nsIContent *aPreviousSibling)
 {
-    // If mNode is null or the root there is nothing to do. This also prevents
-    // valgrind from complaining about consuming uninitialized memory for
-    // mNodeParent and mIndexInParent
+    // If mNode is null or the root there is nothing to do.
     if (!mNode || mNode == aRoot)
         return;
-
-    // Check if earlier sibling was removed.
-    if (aContainer == mNodeParent && aIndexInContainer < mIndexInParent) {
-        --mIndexInParent;
-        return;
-    }
 
     // check if ancestor was removed
     if (!nsContentUtils::ContentIsDescendantOf(mNode, aChild))
@@ -132,64 +115,52 @@ void nsNodeIterator::NodePointer::AdjustAfterRemoval(nsINode *aRoot,
 
     if (mBeforeNode) {
 
-        if (MoveForward(aRoot, aContainer, aIndexInContainer-1))
+        // Try the next sibling
+        nsINode *nextSibling = aPreviousSibling ? aPreviousSibling->GetNextSibling()
+                                                : aContainer->GetFirstChild();
+
+        if (nextSibling) {
+            mNode = nextSibling;
+            return;
+        }
+
+        // Next try siblings of ancestors
+        if (MoveForward(aRoot, aContainer))
             return;
 
         // No suitable node was found so try going backwards
         mBeforeNode = PR_FALSE;
     }
 
-    MoveBackward(aContainer, aIndexInContainer);
+    MoveBackward(aContainer, aPreviousSibling);
 }
 
-PRBool nsNodeIterator::NodePointer::MoveForward(nsINode *aRoot, nsINode *aParent, PRInt32 aChildNum)
+PRBool nsNodeIterator::NodePointer::MoveForward(nsINode *aRoot, nsINode *aNode)
 {
     while (1) {
-        nsINode *node = aParent->GetChildAt(aChildNum+1);
-        if (node) {
-            mNode = node;
-            mIndexInParent = aChildNum+1;
-            mNodeParent = aParent;
-            return PR_TRUE;
-        }
-
-        if (aParent == aRoot)
+        if (aNode == aRoot)
             break;
 
-        node = aParent;
-
-        if (node == mNode) {
-            NS_ASSERTION(mNodeParent == mNode->GetNodeParent(), "Parent node incorrect in MoveForward");
-            NS_ASSERTION(mIndexInParent == mNodeParent->IndexOf(mNode), "Index mismatch in MoveForward");
-
-            aParent = mNodeParent;
-            aChildNum = mIndexInParent;
-        } else {
-            aParent = node->GetNodeParent();
-            aChildNum = aParent->IndexOf(node);
+        nsINode *sibling = aNode->GetNextSibling();
+        if (sibling) {
+            mNode = sibling;
+            return PR_TRUE;
         }
+        aNode = aNode->GetNodeParent();
     }
 
     return PR_FALSE;
 }
 
-void nsNodeIterator::NodePointer::MoveBackward(nsINode *aParent, PRInt32 aChildNum)
+void nsNodeIterator::NodePointer::MoveBackward(nsINode *aParent, nsINode *aNode)
 {
-    nsINode *sibling = aParent->GetChildAt(aChildNum-1);
-    mNode = aParent;
-    if (sibling) {
+    if (aNode) {
         do {
-            mIndexInParent = aChildNum-1;
-            mNodeParent = mNode;
-            mNode = sibling;
-
-            aChildNum = mNode->GetChildCount();
-            sibling = mNode->GetChildAt(aChildNum-1);
-        } while (sibling);
+            mNode = aNode;
+            aNode = aNode->GetLastChild();
+        } while (aNode);
     } else {
-        mNodeParent = mNode->GetNodeParent();
-        if (mNodeParent)
-            mIndexInParent = mNodeParent->IndexOf(mNode);
+        mNode = aParent;
     }
 }
 
@@ -267,8 +238,7 @@ NS_IMETHODIMP nsNodeIterator::GetFilter(nsIDOMNodeFilter **aFilter)
 {
     NS_ENSURE_ARG_POINTER(aFilter);
 
-    nsCOMPtr<nsIDOMNodeFilter> filter = mFilter;
-    filter.swap((*aFilter = nsnull));
+    NS_IF_ADDREF(*aFilter = mFilter);
 
     return NS_OK;
 }
@@ -364,18 +334,6 @@ NS_IMETHODIMP nsNodeIterator::GetPointerBeforeReferenceNode(PRBool *aBeforeNode)
  * nsIMutationObserver interface
  */
 
-void nsNodeIterator::ContentInserted(nsIDocument *aDocument,
-                                     nsIContent *aContainer,
-                                     nsIContent *aChild,
-                                     PRInt32 aIndexInContainer)
-{
-    nsINode *container = NODE_FROM(aContainer, aDocument);
-
-    mPointer.AdjustAfterInsertion(mRoot, container, aIndexInContainer);
-    mWorkingPointer.AdjustAfterInsertion(mRoot, container, aIndexInContainer);
-}
-
-
 void nsNodeIterator::ContentRemoved(nsIDocument *aDocument,
                                     nsIContent *aContainer,
                                     nsIContent *aChild,
@@ -384,6 +342,6 @@ void nsNodeIterator::ContentRemoved(nsIDocument *aDocument,
 {
     nsINode *container = NODE_FROM(aContainer, aDocument);
 
-    mPointer.AdjustAfterRemoval(mRoot, container, aChild, aIndexInContainer);
-    mWorkingPointer.AdjustAfterRemoval(mRoot, container, aChild, aIndexInContainer);
+    mPointer.AdjustAfterRemoval(mRoot, container, aChild, aPreviousSibling);
+    mWorkingPointer.AdjustAfterRemoval(mRoot, container, aChild, aPreviousSibling);
 }
