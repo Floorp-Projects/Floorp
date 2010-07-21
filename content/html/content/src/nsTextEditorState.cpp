@@ -1610,15 +1610,6 @@ nsTextEditorState::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
     } else {
       aValue = NS_ConvertUTF8toUTF16(*mValue);
     }
-
-    if (IsSingleLineTextControl()) {
-      // If the value is not owned by the frame, then we should handle any
-      // existing newline characters inside it, instead of relying on the
-      // editor to do it for us.
-      nsString value(aValue);
-      nsTextEditRules::HandleNewLines(value, -1);
-      aValue.Assign(value);
-    }
   }
 }
 
