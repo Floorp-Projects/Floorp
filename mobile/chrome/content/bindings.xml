@@ -1082,13 +1082,11 @@
 
   <binding id="content-navigator">
     <content pack="end">
-      <children includes="arrowscrollbox|vbox"/>
-      <xul:hbox class="panel-dark" pack="center">
-        <children includes="textbox"/>
-        <xul:button anonid="previous-button" class="button-dark" label="&contentNavigator.previous;" xbl:inherits="command=previous"/>
-        <xul:button anonid="next-button" class="button-dark" label="&contentNavigator.next;" xbl:inherits="command=next"/>
-        <xul:spacer flex="1"/>
-        <xul:toolbarbutton class="close-button" xbl:inherits="command=close"/>
+      <children includes="vbox"/>
+      <xul:hbox class="panel-dark" pack="end">
+        <children includes="textbox|arrowscrollbox"/>
+        <xul:toolbarbutton anonid="previous-button" class="button-image previous-button" xbl:inherits="command=previous"/>
+        <xul:toolbarbutton anonid="next-button" class="button-image next-button" xbl:inherits="command=next"/>
       </xul:hbox>
     </content>
 

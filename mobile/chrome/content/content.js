@@ -490,6 +490,7 @@ Content.prototype = {
           if (uri)
             sendAsyncMessage("Browser:OpenURI", { uri: uri });
         } else if (!this._formAssistant.open(element)) {
+          sendAsyncMessage("FindAssist:Hide", { });
           this._sendMouseEvent("mousedown", element, x, y);
           this._sendMouseEvent("mouseup", element, x, y);
         }

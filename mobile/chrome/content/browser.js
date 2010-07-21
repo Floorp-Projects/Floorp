@@ -452,7 +452,7 @@ var Browser = {
         Browser.tabs[i].updateViewportSize();
 
       bv.commitBatchOperation();
-      
+
       let curEl = document.activeElement;
       if (curEl && curEl.scrollIntoView)
         curEl.scrollIntoView(false);
