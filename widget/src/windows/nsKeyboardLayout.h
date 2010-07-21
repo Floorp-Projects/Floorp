@@ -41,6 +41,7 @@
 #include "nscore.h"
 #include <windows.h>
 
+#define NS_NUM_OF_KEYS 50
 
 #define VK_OEM_1                0xBA   // ';:' for US
 #define VK_OEM_PLUS             0xBB   // '+' any country
@@ -137,11 +138,9 @@ class nsKeyboardLayout
     PRUint8 data[1];
   };
 
-  #define NUM_OF_KEYS   50
-
   HKL mKeyboardLayout;
 
-  nsVirtualKey mVirtualKeys[NUM_OF_KEYS];
+  nsVirtualKey mVirtualKeys[NS_NUM_OF_KEYS];
   DeadKeyTableListEntry* mDeadKeyTableListHead;
   PRInt32 mActiveDeadKey;                 // -1 = no active dead-key
   PRUint8 mDeadKeyShiftState;
