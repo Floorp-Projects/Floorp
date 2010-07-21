@@ -5128,19 +5128,72 @@ lastIndex_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return SetRegExpLastIndex(cx, obj, lastIndex);
 }
 
-#define REGEXP_PROP_ATTRS     (JSPROP_PERMANENT | JSPROP_SHARED)
-#define RO_REGEXP_PROP_ATTRS  (REGEXP_PROP_ATTRS | JSPROP_READONLY)
-
-static JSPropertySpec regexp_props[] = {
-    {"source",     0, RO_REGEXP_PROP_ATTRS, source_getter,     NULL},
-    {"global",     0, RO_REGEXP_PROP_ATTRS, global_getter,     NULL},
-    {"ignoreCase", 0, RO_REGEXP_PROP_ATTRS, ignoreCase_getter, NULL},
-    {"lastIndex",  0, REGEXP_PROP_ATTRS,    lastIndex_getter,
-                                            lastIndex_setter},
-    {"multiline",  0, RO_REGEXP_PROP_ATTRS, multiline_getter,  NULL},
-    {"sticky",     0, RO_REGEXP_PROP_ATTRS, sticky_getter,     NULL},
-    {0,0,0,0,0}
+static const struct LazyProp {
+    const char *name;
+    uint16 atomOffset;
+    JSPropertyOp getter;
+} lazyRegExpProps[] = {
+    { js_source_str,     ATOM_OFFSET(source),     source_getter },
+    { js_global_str,     ATOM_OFFSET(global),     global_getter },
+    { js_ignoreCase_str, ATOM_OFFSET(ignoreCase), ignoreCase_getter },
+    { js_multiline_str,  ATOM_OFFSET(multiline),  multiline_getter },
+    { js_sticky_str,     ATOM_OFFSET(sticky),     sticky_getter }
 };
+
+static JSBool
+regexp_enumerate(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->isRegExp());
+
+    jsval v;
+    if (!JS_LookupPropertyById(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.lastIndexAtom), &v))
+        return false;
+
+    for (size_t i = 0; i < JS_ARRAY_LENGTH(lazyRegExpProps); i++) {
+        const LazyProp &lazy = lazyRegExpProps[i];
+        jsid id = ATOM_TO_JSID(OFFSET_TO_ATOM(cx->runtime, lazy.atomOffset));
+        if (!JS_LookupPropertyById(cx, obj, id, &v))
+            return false;
+    }
+
+    return true;
+}
+
+static JSBool
+regexp_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
+{
+    JS_ASSERT(obj->isRegExp());
+
+    if (!JSID_IS_ATOM(id))
+        return JS_TRUE;
+
+    if (id == ATOM_TO_JSID(cx->runtime->atomState.lastIndexAtom)) {
+        if (!js_DefineNativeProperty(cx, obj, id, JSVAL_VOID,
+                                     lastIndex_getter, lastIndex_setter,
+                                     JSPROP_PERMANENT | JSPROP_SHARED, 0, 0, NULL)) {
+            return JS_FALSE;
+        }
+        *objp = obj;
+        return JS_TRUE;
+    }
+
+    for (size_t i = 0; i < JS_ARRAY_LENGTH(lazyRegExpProps); i++) {
+        const LazyProp &lazy = lazyRegExpProps[i];
+        JSAtom *atom = OFFSET_TO_ATOM(cx->runtime, lazy.atomOffset);
+        if (id == ATOM_TO_JSID(atom)) {
+            if (!js_DefineNativeProperty(cx, obj, id, JSVAL_VOID,
+                                         lazy.getter, NULL,
+                                         JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_READONLY,
+                                         0, 0, NULL)) {
+                return JS_FALSE;
+            }
+            *objp = obj;
+            return JS_TRUE;
+        }
+    }
+
+    return JS_TRUE;
+}
 
 /*
  * RegExp class static properties and their Perl counterparts:
@@ -5266,12 +5319,11 @@ DEFINE_STATIC_SETTER(static_multiline_setter,
                          return false;
                      res->multiline = JSVAL_TO_BOOLEAN(*vp))
 
-#define REGEXP_STATIC_PROP_ATTRS    (REGEXP_PROP_ATTRS | JSPROP_ENUMERATE)
-#define RO_REGEXP_STATIC_PROP_ATTRS (REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY)
+const uint8 REGEXP_STATIC_PROP_ATTRS    = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_ENUMERATE;
+const uint8 RO_REGEXP_STATIC_PROP_ATTRS = REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY;
 
 static JSPropertySpec regexp_static_props[] = {
-    {"input",        0, REGEXP_STATIC_PROP_ATTRS,    static_input_getter,
-                                                     static_input_setter},
+    {"input",        0, REGEXP_STATIC_PROP_ATTRS,    static_input_getter, static_input_setter},
     {"multiline",    0, REGEXP_STATIC_PROP_ATTRS,    static_multiline_getter,
                                                      static_multiline_setter},
     {"lastMatch",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastMatch_getter,    NULL},
@@ -5307,8 +5359,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool
 regexp_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return regexp_exec_sub(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv,
-                           JS_FALSE, rval);
+    return regexp_exec_sub(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv, JS_FALSE, rval);
 }
 
 #if JS_HAS_XDR
@@ -5335,7 +5386,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         return JS_FALSE;
     }
     if (xdr->mode == JSXDR_DECODE) {
-        obj = NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
+        obj = NewBuiltinClassInstance(xdr->cx, &js_RegExpClass);
         if (!obj)
             return JS_FALSE;
         obj->clearParent();
@@ -5366,12 +5417,12 @@ regexp_trace(JSTracer *trc, JSObject *obj)
 
 JSClass js_RegExpClass = {
     js_RegExp_str,
-    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_FIXED_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     JS_PropertyStub,    JS_PropertyStub,
     JS_PropertyStub,    JS_PropertyStub,
-    JS_EnumerateStub,   JS_ResolveStub,
+    regexp_enumerate,   reinterpret_cast<JSResolveOp>(regexp_resolve),
     JS_ConvertStub,     regexp_finalize,
     NULL,               NULL,
     regexp_call,        NULL,
@@ -5701,7 +5752,7 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
 
         /* Otherwise, replace obj with a new RegExp object. */
-        obj = NewObject(cx, &js_RegExpClass, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
         if (!obj)
             return JS_FALSE;
 
@@ -5718,8 +5769,7 @@ JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto = js_InitClass(cx, obj, NULL, &js_RegExpClass, RegExp, 1,
-                                   regexp_props, regexp_methods,
-                                   regexp_static_props, NULL);
+                                   NULL, regexp_methods, regexp_static_props, NULL);
     if (!proto)
         return NULL;
 
@@ -5757,7 +5807,7 @@ js_NewRegExpObject(JSContext *cx, TokenStream *ts,
     re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
     if (!re)
         return NULL;
-    obj = NewObject(cx, &js_RegExpClass, NULL, NULL);
+    obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
     if (!obj) {
         js_DestroyRegExp(cx, re);
         return NULL;
@@ -5773,7 +5823,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     JS_ASSERT(obj->getClass() == &js_RegExpClass);
     JS_ASSERT(proto);
     JS_ASSERT(proto->getClass() == &js_RegExpClass);
-    JSObject *clone = NewObjectWithGivenProto(cx, &js_RegExpClass, proto, NULL);
+    JSObject *clone = NewNativeClassInstance(cx, &js_RegExpClass, proto, proto->getParent());
     if (!clone)
         return NULL;
     JSRegExp *re = static_cast<JSRegExp *>(obj->getPrivate());

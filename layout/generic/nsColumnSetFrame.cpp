@@ -1086,7 +1086,8 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(this, ::PaintColumnRule, "ColumnRule"));
+      nsDisplayGeneric(this, ::PaintColumnRule, "ColumnRule",
+                       nsDisplayItem::TYPE_COLUMN_RULE));
   
   nsIFrame* kid = mFrames.FirstChild();
   // Our children won't have backgrounds so it doesn't matter where we put them.

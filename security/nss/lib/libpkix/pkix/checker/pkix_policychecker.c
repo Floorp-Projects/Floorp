@@ -425,6 +425,7 @@ pkix_PolicyCheckerState_Create(
         PKIX_PolicyCheckerState *checkerState = NULL;
         PKIX_PolicyNode *policyNode = NULL;
         PKIX_List *anyPolicyList = NULL;
+        PKIX_Boolean initialPoliciesIsEmpty = PKIX_FALSE;
 
         PKIX_ENTER(CERTPOLICYCHECKERSTATE, "pkix_PolicyCheckerState_Create");
         PKIX_NULLCHECK_TWO(initialPolicies, pCheckerState);
@@ -474,12 +475,21 @@ pkix_PolicyCheckerState_Create(
         PKIX_INCREF(initialPolicies);
         checkerState->mappedUserInitialPolicySet = initialPolicies;
 
-        PKIX_CHECK(pkix_List_Contains
+        PKIX_CHECK(PKIX_List_IsEmpty
                 (initialPolicies,
-                (PKIX_PL_Object *)(checkerState->anyPolicyOID),
-                &(checkerState->initialIsAnyPolicy),
+                &initialPoliciesIsEmpty,
                 plContext),
-                PKIX_LISTCONTAINSFAILED);
+                PKIX_LISTISEMPTYFAILED);
+        if (initialPoliciesIsEmpty) {
+                checkerState->initialIsAnyPolicy = PKIX_TRUE;
+        } else {
+                PKIX_CHECK(pkix_List_Contains
+                        (initialPolicies,
+                        (PKIX_PL_Object *)(checkerState->anyPolicyOID),
+                        &(checkerState->initialIsAnyPolicy),
+                        plContext),
+                        PKIX_LISTCONTAINSFAILED);
+        }
 
         checkerState->policyQualifiersRejected =
                 policyQualifiersRejected;
@@ -872,7 +882,7 @@ pkix_PolicyChecker_MakeMutableCopy(
         PKIX_List *newList = NULL;
         PKIX_UInt32 listLen = 0;
         PKIX_UInt32 listIx = 0;
-        PKIX_PL_Object *object;
+        PKIX_PL_Object *object = NULL;
 
         PKIX_ENTER(CERTCHAINCHECKER, "pkix_PolicyChecker_MakeMutableCopy");
         PKIX_NULLCHECK_TWO(list, pMutableCopy);
@@ -1666,6 +1676,14 @@ pkix_PolicyChecker_CalculateIntersection(
                 (CERTCHAINCHECKER,
                 "pkix_PolicyChecker_CalculateIntersection");
 
+        /*
+         * We call this function if the valid_policy_tree is not NULL and
+         * the user-initial-policy-set is not any-policy.
+         */
+        if (!state->validPolicyTree || state->initialIsAnyPolicy) {
+                PKIX_ERROR(PKIX_PRECONDITIONFAILED);
+        }
+
         PKIX_NULLCHECK_FOUR(currentNode, state, nominees, pShouldBePruned);
 
         PKIX_CHECK(PKIX_PolicyNode_GetValidPolicy
@@ -1915,7 +1933,10 @@ pkix_PolicyChecker_PolicyMapProcessing(
         PKIX_ENTER
                 (CERTCHAINCHECKER,
                 "pkix_PolicyChecker_PolicyMapProcessing");
-        PKIX_NULLCHECK_THREE(policyMaps, state, state->userInitialPolicySet);
+        PKIX_NULLCHECK_THREE
+                (policyMaps,
+                state,
+                state->mappedUserInitialPolicySet);
 
         /*
          * For each policy in mappedUserInitialPolicySet, if it is not mapped,

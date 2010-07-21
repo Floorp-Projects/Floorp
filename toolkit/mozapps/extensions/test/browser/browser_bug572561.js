@@ -6,6 +6,7 @@
 // installed but some are pending install
 
 var gManagerWindow;
+var gCategoryUtilities;
 var gProvider;
 var gInstallProperties = [{
   name: "Locale Category Test",
@@ -41,6 +42,7 @@ function test() {
 
   open_manager(null, function(aWindow) {
     gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
     run_next_test();
   });
 }
@@ -52,8 +54,8 @@ function end_test() {
 }
 
 function check_hidden(aExpectedHidden) {
-  var category = gManagerWindow.gCategories.get("addons://list/locale");
-  is(category.hidden, aExpectedHidden, "Should have correct hidden state");
+  var hidden = !gCategoryUtilities.isTypeVisible("locale");
+  is(hidden, aExpectedHidden, "Should have correct hidden state");
 }
 
 // Tests that a non-active install does not make the locale category show
@@ -70,6 +72,7 @@ add_test(function() {
 add_test(function() {
   restart_manager(gManagerWindow, null, function(aWindow) {
     gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
     check_hidden(true);
     run_next_test();
   });
@@ -85,6 +88,7 @@ add_test(function() {
 add_test(function() {
   restart_manager(gManagerWindow, null, function(aWindow) {
     gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
     check_hidden(false);
 
     gExpectedCancel = true;

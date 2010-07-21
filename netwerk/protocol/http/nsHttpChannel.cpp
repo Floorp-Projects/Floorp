@@ -3130,9 +3130,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         LOG(("Calling AsyncAbort [rv=%x mCanceled=%i]\n", rv, mCanceled));
         CloseCacheEntry(PR_TRUE);
         AsyncAbort(rv);
-    }
-
-    if (mLoadFlags & LOAD_CLASSIFY_URI) {
+    } else if (mLoadFlags & LOAD_CLASSIFY_URI) {
         nsRefPtr<nsChannelClassifier> classifier = new nsChannelClassifier();
         if (!classifier) {
             Cancel(NS_ERROR_OUT_OF_MEMORY);

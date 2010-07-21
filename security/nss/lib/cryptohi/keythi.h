@@ -42,6 +42,20 @@
 #include "secmodt.h"
 #include "prclist.h"
 
+/*
+** RFC 4055 specifies three different RSA key types.
+**
+** rsaKey maps to keys with SEC_OID_PKCS1_RSA_ENCRYPTION and can be used for
+** both encryption and signatures with old (PKCS #1 v1.5) and new (PKCS #1
+** v2.1) padding schemes.
+**
+** rsaPssKey maps to keys with SEC_OID_PKCS1_RSA_PSS_SIGNATURE and may only
+** be used for signatures with PSS padding (PKCS #1 v2.1).
+**
+** rsaOaepKey maps to keys with SEC_OID_PKCS1_RSA_OAEP_ENCRYPTION and may only
+** be used for encryption with OAEP padding (PKCS #1 v2.1).
+*/ 
+
 typedef enum { 
     nullKey = 0, 
     rsaKey = 1, 
@@ -49,7 +63,9 @@ typedef enum {
     fortezzaKey = 3,
     dhKey = 4, 
     keaKey = 5,
-    ecKey = 6
+    ecKey = 6,
+    rsaPssKey = 7,
+    rsaOaepKey = 8
 } KeyType;
 
 /*
@@ -158,6 +174,8 @@ struct SECKEYFortezzaPublicKeyStr {
     SECKEYPQGParams keaParams;
 };
 typedef struct SECKEYFortezzaPublicKeyStr SECKEYFortezzaPublicKey;
+#define KEAprivilege KEApriviledge /* corrected spelling */
+#define DSSprivilege DSSpriviledge /* corrected spelling */
 
 struct SECKEYDiffPQGParamsStr {
     SECKEYPQGParams DiffKEAParams;

@@ -19,6 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435296
 // Boilerplate
 SimpleTest.waitForExplicitFinish();
 
+// Assert that discarding isn't enabled, which might make this test go orange.
+ok(!getImagePref(DISCARD_ENABLED_PREF), "discarding should NOT be enabled here");
+
 // We want to make sure d-o-d is enabled, since that's what we're testing
 var oldDODPref = getImagePref(DECODEONDRAW_ENABLED_PREF);
 setImagePref(DECODEONDRAW_ENABLED_PREF, true);
@@ -69,8 +72,8 @@ function tryToFinish()
   SimpleTest.finish();
 }
 
-// Set our onload handler
-window.onload = windowLoadHandler;
+// Set our onload handler, making sure we have focus
+window.onload = SimpleTest.waitForFocus(windowLoadHandler);
 
 </script>
 </pre>

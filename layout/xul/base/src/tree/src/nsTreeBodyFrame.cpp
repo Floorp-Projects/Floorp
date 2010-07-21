@@ -2823,7 +2823,8 @@ nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(this, ::PaintTreeBody, "XULTreeBody"));
+      nsDisplayGeneric(this, ::PaintTreeBody, "XULTreeBody",
+                       nsDisplayItem::TYPE_XUL_TREE_BODY));
 }
 
 void

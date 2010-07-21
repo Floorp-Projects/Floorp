@@ -38,7 +38,7 @@
  * PKCS7 implementation -- the exported parts that are used whether
  * creating or decoding.
  *
- * $Id: p7common.c,v 1.7 2008/02/03 06:08:48 nelson%bolyard.com Exp $
+ * $Id: p7common.c,v 1.8 2010/04/04 20:50:52 nelson%bolyard.com Exp $
  */
 
 #include "p7local.h"
@@ -341,6 +341,7 @@ SEC_PKCS7SetContent(SEC_PKCS7ContentInfo *cinfo,
     SECItem content;
     SECOidData *contentTypeTag = NULL;
 
+    content.type = siBuffer;
     content.data = (unsigned char *)buf;
     content.len = len;
 

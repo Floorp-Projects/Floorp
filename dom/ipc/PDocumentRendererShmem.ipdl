@@ -35,14 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PIFrameEmbedding;
+include protocol PBrowser;
 
 namespace mozilla {
 namespace ipc {
 
 protocol PDocumentRendererShmem
 {
-  manager PIFrameEmbedding;
+  manager PBrowser;
 
 parent:
     // Returns the offset, width and height, in pixels, of the area in the

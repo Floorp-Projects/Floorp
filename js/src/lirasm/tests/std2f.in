@@ -1,0 +1,7 @@
+ptr = allocp 8
+d = immd -1
+; Store the value twice in consecutive slots to check that it's really stored as 32 bits.
+std2f d ptr 4
+std2f d ptr 0
+d2 = ldf2d ptr 4
+retd d2

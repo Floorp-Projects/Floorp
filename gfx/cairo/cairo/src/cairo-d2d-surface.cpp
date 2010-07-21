@@ -1012,6 +1012,14 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	     */
 	    cairo_d2d_surface_t *srcSurf = 
 		reinterpret_cast<cairo_d2d_surface_t*>(surfacePattern->surface);
+	    
+	    if (srcSurf == d2dsurf) {
+		/* D2D cannot deal with self-copy. We should add an optimized
+		 * codepath for self-copy in the easy cases that does ping-pong like
+		 * scroll does. See bug 579215. For now fallback.
+		 */
+		return NULL;
+	    }
 
 	    _cairo_d2d_update_surface_bitmap(srcSurf);
 	    sourceBitmap = srcSurf->surfaceBitmap;

@@ -75,7 +75,7 @@ class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIFrame;
 class nsIDOMNamedNodeMap;
-class nsDOMCSSDeclaration;
+class nsICSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsIURI;
 class nsINodeInfo;
@@ -925,13 +925,13 @@ public:
      * The .style attribute (an interface that forwards to the actual
      * style rules)
      * @see nsGenericHTMLElement::GetStyle */
-    nsRefPtr<nsDOMCSSDeclaration> mStyle;
+    nsCOMPtr<nsICSSDeclaration> mStyle;
 
     /**
      * SMIL Overridde style rules (for SMIL animation of CSS properties)
      * @see nsIContent::GetSMILOverrideStyle
      */
-    nsRefPtr<nsDOMCSSDeclaration> mSMILOverrideStyle;
+    nsCOMPtr<nsICSSDeclaration> mSMILOverrideStyle;
 
     /**
      * Holds any SMIL override style rules for this element.

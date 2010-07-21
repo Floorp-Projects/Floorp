@@ -561,7 +561,7 @@ let TestPilotSetup = {
 	    this._showNotification(
 	      task, false,
 	      this._stringBundle.formatStringFromName(
-		"testpilot.notification.newTestPilotStudy.message",
+		"testpilot.notification.newTestPilotStudy.pre.message",
 		[task.title], 1),
 	      this._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotStudy"),
@@ -678,7 +678,7 @@ let TestPilotSetup = {
   _isNewerThanFirefox: function TPS__isNewerThanFirefox(versionString) {
     let result = Cc["@mozilla.org/xpcom/version-comparator;1"]
                    .getService(Ci.nsIVersionComparator)
-                   .compare(self._application.version, versionString);
+                   .compare(this._application.version, versionString);
     if (result < 0) {
       return true; // versionString is newer than Firefox
     } else {
@@ -729,7 +729,7 @@ let TestPilotSetup = {
         return false;
       }
     } catch (e) {
-      logger.warn("Error in requirements check " + expName + ": " +  e);
+      logger.warn("Error in requirements check " +  e);
     }
     return true;
   },

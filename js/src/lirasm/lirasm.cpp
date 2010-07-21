@@ -329,29 +329,13 @@ private:
     LIns *assemble_ret(ReturnType rt);
     LIns *assemble_guard(bool isCond);
     LIns *assemble_guard_xov();
+    LIns *assemble_jump_jov();
     void bad(const string &msg);
     void nyi(const string &opname);
     void extract_any_label(string &lab, char lab_delim);
+    void resolve_forward_jumps(string &lab, LIns *ins);
     void endFragment();
 };
-
-// Meaning: arg 'm' of 'n' has type 'ty'.
-static int argMask(int ty, int m, int n)
-{
-    // Order examples, from MSB to LSB:  
-    // - 3 args: 000 | 000 | 000 | 000 | 000 | arg1| arg2| arg3| ret
-    // - 8 args: arg1| arg2| arg3| arg4| arg5| arg6| arg7| arg8| ret
-    // If the mask encoding reversed the arg order the 'n' parameter wouldn't
-    // be necessary, as argN would always be in the same place in the
-    // bitfield.
-    return ty << ((1 + n - m) * ARGTYPE_SHIFT);
-}
-
-// Return value has type 'ty'.
-static int retMask(int ty)
-{
-    return ty;
-}
 
 // 'sin' is overloaded on some platforms, so taking its address
 // doesn't quite work. Provide a do-nothing function here
@@ -362,10 +346,10 @@ double sinFn(double d) {
 #define sin sinFn
 
 Function functions[] = {
-    FN(puts,   argMask(ARGTYPE_P, 1, 1) | retMask(ARGTYPE_I)),
-    FN(sin,    argMask(ARGTYPE_D, 1, 1) | retMask(ARGTYPE_D)),
-    FN(malloc, argMask(ARGTYPE_P, 1, 1) | retMask(ARGTYPE_P)),
-    FN(free,   argMask(ARGTYPE_P, 1, 1) | retMask(ARGTYPE_V))
+    FN(puts,   CallInfo::typeSig1(ARGTYPE_I, ARGTYPE_P)),
+    FN(sin,    CallInfo::typeSig1(ARGTYPE_D, ARGTYPE_D)),
+    FN(malloc, CallInfo::typeSig1(ARGTYPE_P, ARGTYPE_P)),
+    FN(free,   CallInfo::typeSig1(ARGTYPE_V, ARGTYPE_P)),
 };
 
 template<typename out, typename in> out
@@ -685,32 +669,28 @@ FragmentAssembler::assemble_call(const string &op)
     } else {
         // User-defined function:  infer CallInfo details (ABI, arg types, ret
         // type) from the call site.
-        int ty;
-
         ci->_abi = _abi;
-
-        ci->_typesig = 0;
         size_t argc = mTokens.size();
+        ArgType argTypes[MAXARGS];
         for (size_t i = 0; i < argc; ++i) {
+            NanoAssert(i < MAXARGS);    // should give a useful error msg if this fails
             args[i] = ref(mTokens[mTokens.size() - (i+1)]);
-            if      (args[i]->isD()) ty = ARGTYPE_D;
+            if      (args[i]->isD()) argTypes[i] = ARGTYPE_D;
 #ifdef NANOJIT_64BIT
-            else if (args[i]->isQ()) ty = ARGTYPE_Q;
+            else if (args[i]->isQ()) argTypes[i] = ARGTYPE_Q;
 #endif
-            else                       ty = ARGTYPE_I;
-            // Nb: i+1 because argMask() uses 1-based arg counting.
-            ci->_typesig |= argMask(ty, i+1, argc);
+            else                     argTypes[i] = ARGTYPE_I;
         }
 
         // Select return type from opcode.
-        ty = 0;
-        if      (mOpcode == LIR_calli) ty = ARGTYPE_I;
-        else if (mOpcode == LIR_calld) ty = ARGTYPE_D;
+        ArgType retType = ARGTYPE_V;
+        if      (mOpcode == LIR_calli) retType = ARGTYPE_I;
+        else if (mOpcode == LIR_calld) retType = ARGTYPE_D;
 #ifdef NANOJIT_64BIT
-        else if (mOpcode == LIR_callq) ty = ARGTYPE_Q;
+        else if (mOpcode == LIR_callq) retType = ARGTYPE_Q;
 #endif
         else                           nyi("callh");
-        ci->_typesig |= retMask(ty);
+        ci->_typesig = CallInfo::typeSigN(retType, argc, argTypes);
     }
 
     return mLir->insCall(ci, args);
@@ -745,7 +725,6 @@ FragmentAssembler::createGuardRecord(LasmSideExit *exit)
     return rec;
 }
 
-
 LIns *
 FragmentAssembler::assemble_guard(bool isCond)
 {
@@ -778,6 +757,29 @@ FragmentAssembler::assemble_guard_xov()
     mReturnTypeBits |= RT_GUARD;
 
     return mLir->insGuardXov(mOpcode, ref(mTokens[0]), ref(mTokens[1]), guard);
+}
+
+LIns *
+FragmentAssembler::assemble_jump_jov()
+{
+    need(3);
+
+    LIns *a = ref(mTokens[0]);
+    LIns *b = ref(mTokens[1]);
+    string name = mTokens[2];
+
+    if (mLabels.find(name) != mLabels.end()) {
+        LIns *target = ref(name);
+        return mLir->insBranchJov(mOpcode, a, b, target);
+    } else {
+        LIns *ins = mLir->insBranchJov(mOpcode, a, b, NULL);
+#ifdef __SUNPRO_CC
+        mFwdJumps.insert(make_pair<const string, LIns *>(name, ins));
+#else
+        mFwdJumps.insert(make_pair(name, ins));
+#endif
+        return ins;
+    }
 }
 
 void
@@ -859,6 +861,22 @@ FragmentAssembler::extract_any_label(string &lab, char lab_delim)
 }
 
 void
+FragmentAssembler::resolve_forward_jumps(string &lab, LIns *ins)
+{
+    typedef multimap<string, LIns *> mulmap;
+#ifdef __SUNPRO_CC
+    typedef mulmap::iterator ci;
+#else
+    typedef mulmap::const_iterator ci;
+#endif
+    pair<ci, ci> range = mFwdJumps.equal_range(lab);
+    for (ci i = range.first; i != range.second; ++i) {
+        i->second->setTarget(ins);
+    }
+    mFwdJumps.erase(lab);
+}
+
+void
 FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, const LirToken *firstToken)
 {
     LirToken token;
@@ -897,17 +915,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
         /* Save label and do any back-patching of deferred forward-jumps. */
         if (!lab.empty()) {
             ins = mLir->ins0(LIR_label);
-            typedef multimap<string, LIns *> mulmap;
-#ifdef __SUNPRO_CC
-            typedef mulmap::iterator ci;
-#else
-            typedef mulmap::const_iterator ci;
-#endif
-            pair<ci, ci> range = mFwdJumps.equal_range(lab);
-            for (ci i = range.first; i != range.second; ++i) {
-                i->second->setTarget(ins);
-            }
-            mFwdJumps.erase(lab);
+            resolve_forward_jumps(lab, ins);
             lab.clear();
         }
         extract_any_label(lab, '=');
@@ -1101,6 +1109,14 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             ins = assemble_guard_xov();
             break;
 
+          case LIR_addjovi:
+          case LIR_subjovi:
+          case LIR_muljovi:
+          CASE64(LIR_addjovq:)
+          CASE64(LIR_subjovq:)
+            ins = assemble_jump_jov();
+            break;
+
           case LIR_calli:
           CASESF(LIR_hcalli:)
           case LIR_calld:
@@ -1117,6 +1133,12 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             break;
 
           case LIR_label:
+            ins = mLir->ins0(LIR_label);
+            if (!lab.empty()) {
+                resolve_forward_jumps(lab, ins);
+            }
+            break;
+
           case LIR_file:
           case LIR_line:
           case LIR_xtbl:
@@ -1239,52 +1261,23 @@ static void f_V_IQF(int32_t, uint64_t, double)
 }
 #endif
 
-const CallInfo ci_I_I1 = CI(f_I_I1, argMask(ARGTYPE_I, 1, 1) |
-                                    retMask(ARGTYPE_I));
-
-const CallInfo ci_I_I6 = CI(f_I_I6, argMask(ARGTYPE_I, 1, 6) |
-                                    argMask(ARGTYPE_I, 2, 6) |
-                                    argMask(ARGTYPE_I, 3, 6) |
-                                    argMask(ARGTYPE_I, 4, 6) |
-                                    argMask(ARGTYPE_I, 5, 6) |
-                                    argMask(ARGTYPE_I, 6, 6) |
-                                    retMask(ARGTYPE_I));
+const CallInfo ci_I_I1 = CI(f_I_I1, CallInfo::typeSig1(ARGTYPE_I, ARGTYPE_I));
+const CallInfo ci_I_I6 = CI(f_I_I6, CallInfo::typeSig6(ARGTYPE_I, ARGTYPE_I, ARGTYPE_I, ARGTYPE_I,
+                                                       ARGTYPE_I, ARGTYPE_I, ARGTYPE_I));
 
 #ifdef NANOJIT_64BIT
-const CallInfo ci_Q_Q2 = CI(f_Q_Q2, argMask(ARGTYPE_Q, 1, 2) |
-                                    argMask(ARGTYPE_Q, 2, 2) |
-                                    retMask(ARGTYPE_Q));
-
-const CallInfo ci_Q_Q7 = CI(f_Q_Q7, argMask(ARGTYPE_Q, 1, 7) |
-                                    argMask(ARGTYPE_Q, 2, 7) |
-                                    argMask(ARGTYPE_Q, 3, 7) |
-                                    argMask(ARGTYPE_Q, 4, 7) |
-                                    argMask(ARGTYPE_Q, 5, 7) |
-                                    argMask(ARGTYPE_Q, 6, 7) |
-                                    argMask(ARGTYPE_Q, 7, 7) |
-                                    retMask(ARGTYPE_Q));
+const CallInfo ci_Q_Q2 = CI(f_Q_Q2, CallInfo::typeSig2(ARGTYPE_Q, ARGTYPE_Q, ARGTYPE_Q));
+const CallInfo ci_Q_Q7 = CI(f_Q_Q7, CallInfo::typeSig7(ARGTYPE_Q, ARGTYPE_Q, ARGTYPE_Q, ARGTYPE_Q,
+                                                       ARGTYPE_Q, ARGTYPE_Q, ARGTYPE_Q, ARGTYPE_Q));
 #endif
 
-const CallInfo ci_F_F3 = CI(f_F_F3, argMask(ARGTYPE_D, 1, 3) |
-                                    argMask(ARGTYPE_D, 2, 3) |
-                                    argMask(ARGTYPE_D, 3, 3) |
-                                    retMask(ARGTYPE_D));
-
-const CallInfo ci_F_F8 = CI(f_F_F8, argMask(ARGTYPE_D, 1, 8) |
-                                    argMask(ARGTYPE_D, 2, 8) |
-                                    argMask(ARGTYPE_D, 3, 8) |
-                                    argMask(ARGTYPE_D, 4, 8) |
-                                    argMask(ARGTYPE_D, 5, 8) |
-                                    argMask(ARGTYPE_D, 6, 8) |
-                                    argMask(ARGTYPE_D, 7, 8) |
-                                    argMask(ARGTYPE_D, 8, 8) |
-                                    retMask(ARGTYPE_D));
+const CallInfo ci_F_F3 = CI(f_F_F3, CallInfo::typeSig3(ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D));
+const CallInfo ci_F_F8 = CI(f_F_F8, CallInfo::typeSig8(ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D,
+                                                       ARGTYPE_D, ARGTYPE_D, ARGTYPE_D, ARGTYPE_D,
+                                                       ARGTYPE_D));
 
 #ifdef NANOJIT_64BIT
-const CallInfo ci_V_IQF = CI(f_V_IQF, argMask(ARGTYPE_I, 1, 3) |
-                                      argMask(ARGTYPE_Q, 2, 3) |
-                                      argMask(ARGTYPE_D, 3, 3) |
-                                      retMask(ARGTYPE_V));
+const CallInfo ci_V_IQF = CI(f_V_IQF, CallInfo::typeSig3(ARGTYPE_V, ARGTYPE_I, ARGTYPE_Q, ARGTYPE_D));
 #endif
 
 // Generate a random block containing nIns instructions, plus a few more
@@ -2219,7 +2212,13 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
     avmplus::AvmCore::config.i386_use_cmov = avmplus::AvmCore::config.i386_sse2 = i386_sse;
     avmplus::AvmCore::config.i386_fixed_esp = true;
 #elif defined NANOJIT_ARM
-    // Note that we don't check for sensible configurations here!
+    // Warn about untested configurations.
+    if ( ((arm_arch == 5) && (arm_vfp)) || ((arm_arch >= 6) && (!arm_vfp)) ) {
+        char const * vfp_string = (arm_vfp) ? ("VFP") : ("no VFP");
+        cerr << "Warning: This configuration (ARMv" << arm_arch << ", " << vfp_string << ") " <<
+                "is not regularly tested." << endl;
+    }
+
     avmplus::AvmCore::config.arm_arch = arm_arch;
     avmplus::AvmCore::config.arm_vfp = arm_vfp;
     avmplus::AvmCore::config.soft_float = !arm_vfp;

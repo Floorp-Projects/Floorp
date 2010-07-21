@@ -136,6 +136,8 @@ fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
 == anim-targethref-8.svg anim-standard-ref.svg
 == anim-targethref-9.svg anim-standard-ref.svg
 
+random == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
+
 == anim-width-done-1a.svg anim-standard-ref.svg
 == anim-width-done-1b.svg anim-standard-ref.svg
 

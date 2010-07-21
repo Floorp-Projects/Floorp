@@ -257,7 +257,7 @@ IDBCursor::~IDBCursor()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (mJSRuntime) {
-    JS_RemoveRootRT(mJSRuntime, &mCachedValue);
+    js_RemoveRoot(mJSRuntime, &mCachedValue);
   }
 }
 
@@ -346,9 +346,8 @@ IDBCursor::GetValue(JSContext* aCx,
 
     if (!mJSRuntime) {
       JSRuntime* rt = JS_GetRuntime(aCx);
-
-      JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
-                                   "IDBCursor::mCachedValue");
+      JSBool ok = js_AddRootRT(rt, &mCachedValue,
+                               "IDBCursor::mCachedValue");
       NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
       mJSRuntime = rt;

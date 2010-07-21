@@ -74,6 +74,9 @@ public:
   // be significant.  This method should be used when displaying a
   // time to humans.
   double ToSecondsSigDigits() const;
+  double ToMilliseconds() const {
+    return ToSeconds() * 1000.0;
+  }
 
   static TimeDuration FromSeconds(PRInt32 aSeconds);
   static TimeDuration FromMilliseconds(PRInt32 aMilliseconds);

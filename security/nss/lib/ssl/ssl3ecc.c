@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.23 2010/01/28 16:14:25 kaie%kuix.de Exp $ */
+/* $Id: ssl3ecc.c,v 1.24 2010/03/15 08:03:14 nelson%bolyard.com Exp $ */
 
 #include "nss.h"
 #include "cert.h"
@@ -288,7 +288,7 @@ ssl3_ComputeECDHKeyHash(SECItem ec_params, SECItem server_ecpoint,
     PRINT_BUF(95, (NULL, "ECDHkey hash: MD5 result", hashes->md5, MD5_LENGTH));
     PRINT_BUF(95, (NULL, "ECDHkey hash: SHA1 result", hashes->sha, SHA1_LENGTH));
 
-    if (hashBuf != buf && hashBuf != NULL)
+    if (hashBuf != buf)
     	PORT_Free(hashBuf);
     return rv;
 }

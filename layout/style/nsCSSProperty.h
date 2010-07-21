@@ -101,6 +101,8 @@ enum nsCSSFontDesc {
   eCSSFontDesc_Stretch,
   eCSSFontDesc_Src,
   eCSSFontDesc_UnicodeRange,
+  eCSSFontDesc_FontFeatureSettings,
+  eCSSFontDesc_FontLanguageOverride,
   eCSSFontDesc_COUNT
 };
 

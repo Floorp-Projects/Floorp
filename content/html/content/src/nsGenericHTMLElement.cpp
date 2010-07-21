@@ -111,6 +111,9 @@
 #include "mozAutoDocUpdate.h"
 #include "nsHtml5Module.h"
 #include "nsITextControlElement.h"
+#include "mozilla/dom/Element.h"
+
+using namespace mozilla::dom;
 
 #include "nsThreadUtils.h"
 
@@ -697,7 +700,7 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 
   docEncoder->SetNativeContainerNode(this);
   rv = docEncoder->EncodeToString(aInnerHTML);
-  doc->SetCachedEncoder(docEncoder);
+  doc->SetCachedEncoder(docEncoder.forget());
   return rv;
 }
 
@@ -2379,7 +2382,13 @@ nsGenericHTMLFormElement::ClearForm(PRBool aRemoveFromForm,
   mForm = nsnull;
 }
 
-NS_IMETHODIMP
+Element*
+nsGenericHTMLFormElement::GetFormElement()
+{
+  return mForm;
+}
+
+nsresult
 nsGenericHTMLFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   NS_ENSURE_ARG_POINTER(aForm);

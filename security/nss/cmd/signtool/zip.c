@@ -74,7 +74,7 @@ JzipOpen(char *filename, char *comment)
         PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0777)) == NULL) {
 	char	*nsprErr;
 	if (PR_GetErrorTextLength()) {
-	    nsprErr = PR_Malloc(PR_GetErrorTextLength());
+	    nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 	    PR_GetErrorText(nsprErr);
 	} else {
 	    nsprErr = NULL;
@@ -194,7 +194,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
     if ( (readfp = PR_Open(fullname, PR_RDONLY, 0777)) == NULL) {
 	char	*nsprErr;
 	if (PR_GetErrorTextLength()) {
-	    nsprErr = PR_Malloc(PR_GetErrorTextLength());
+	    nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 	    PR_GetErrorText(nsprErr);
 	} else {
 	    nsprErr = NULL;
@@ -225,7 +225,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
 	    char	*nsprErr;
 
 	    if (PR_GetErrorTextLength()) {
-		nsprErr = PR_Malloc(PR_GetErrorTextLength());
+		nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 		PR_GetErrorText(nsprErr);
 	    } else {
 		nsprErr = NULL;
@@ -315,7 +315,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
          < sizeof(struct ZipLocal )) {
 	char	*nsprErr;
 	if (PR_GetErrorTextLength()) {
-	    nsprErr = PR_Malloc(PR_GetErrorTextLength());
+	    nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 	    PR_GetErrorText(nsprErr);
 	} else {
 	    nsprErr = NULL;
@@ -332,7 +332,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
     if ( PR_Write(zipfp, filename, strlen(filename)) < strlen(filename)) {
 	char	*nsprErr;
 	if (PR_GetErrorTextLength()) {
-	    nsprErr = PR_Malloc(PR_GetErrorTextLength());
+	    nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 	    PR_GetErrorText(nsprErr);
 	} else {
 	    nsprErr = NULL;
@@ -382,7 +382,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
 		if ( PR_Write(zipfp, outbuf, BUFSIZ) < BUFSIZ) {
 		    char	*nsprErr;
 		    if (PR_GetErrorTextLength()) {
-			nsprErr = PR_Malloc(PR_GetErrorTextLength());
+			nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 			PR_GetErrorText(nsprErr);
 		    } else {
 			nsprErr = NULL;
@@ -414,7 +414,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
 	if ( PR_Write(zipfp, outbuf, BUFSIZ) < BUFSIZ) {
 	    char	*nsprErr;
 	    if (PR_GetErrorTextLength()) {
-		nsprErr = PR_Malloc(PR_GetErrorTextLength());
+		nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 		PR_GetErrorText(nsprErr);
 	    } else {
 		nsprErr = NULL;
@@ -436,7 +436,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
 	    zstream.next_out - outbuf) {
 	    char	*nsprErr;
 	    if (PR_GetErrorTextLength()) {
-		nsprErr = PR_Malloc(PR_GetErrorTextLength());
+		nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 		PR_GetErrorText(nsprErr);
 	    } else {
 		nsprErr = NULL;
@@ -458,7 +458,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
     if (PR_Seek(zipfp, local_size_pos, PR_SEEK_SET) == -1) {
 	char	*nsprErr;
 	if (PR_GetErrorTextLength()) {
-	    nsprErr = PR_Malloc(PR_GetErrorTextLength());
+	    nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 	    PR_GetErrorText(nsprErr);
 	} else {
 	    nsprErr = NULL;
@@ -472,7 +472,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
     if ( PR_Write(zipfp, entry->local.size, 8) != 8) {
 	char	*nsprErr;
 	if (PR_GetErrorTextLength()) {
-	    nsprErr = PR_Malloc(PR_GetErrorTextLength());
+	    nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 	    PR_GetErrorText(nsprErr);
 	} else {
 	    nsprErr = NULL;
@@ -486,7 +486,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
     if (PR_Seek(zipfp, 0L, PR_SEEK_END) == -1) {
 	char	*nsprErr;
 	if (PR_GetErrorTextLength()) {
-	    nsprErr = PR_Malloc(PR_GetErrorTextLength());
+	    nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 	    PR_GetErrorText(nsprErr);
 	} else {
 	    nsprErr = NULL;
@@ -559,7 +559,7 @@ JzipClose(ZIPfile *zipfile)
 	     < sizeof(struct ZipCentral )) {
 	    char	*nsprErr;
 	    if (PR_GetErrorTextLength()) {
-		nsprErr = PR_Malloc(PR_GetErrorTextLength());
+		nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 		PR_GetErrorText(nsprErr);
 	    } else {
 		nsprErr = NULL;
@@ -577,7 +577,7 @@ JzipClose(ZIPfile *zipfile)
 	     < strlen(pe->filename)) {
 	    char	*nsprErr;
 	    if (PR_GetErrorTextLength()) {
-		nsprErr = PR_Malloc(PR_GetErrorTextLength());
+		nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 		PR_GetErrorText(nsprErr);
 	    } else {
 		nsprErr = NULL;
@@ -596,7 +596,7 @@ JzipClose(ZIPfile *zipfile)
 	         < strlen(pe->comment)) {
 		char	*nsprErr;
 		if (PR_GetErrorTextLength()) {
-		    nsprErr = PR_Malloc(PR_GetErrorTextLength());
+		    nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 		    PR_GetErrorText(nsprErr);
 		} else {
 		    nsprErr = NULL;
@@ -639,7 +639,7 @@ JzipClose(ZIPfile *zipfile)
     if ( PR_Write(zipfp, &zipend, sizeof(zipend)) < sizeof(zipend)) {
 	char	*nsprErr;
 	if (PR_GetErrorTextLength()) {
-	    nsprErr = PR_Malloc(PR_GetErrorTextLength());
+	    nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 	    PR_GetErrorText(nsprErr);
 	} else {
 	    nsprErr = NULL;
@@ -658,7 +658,7 @@ JzipClose(ZIPfile *zipfile)
 	     < strlen(zipfile->comment)) {
 	    char	*nsprErr;
 	    if (PR_GetErrorTextLength()) {
-		nsprErr = PR_Malloc(PR_GetErrorTextLength());
+		nsprErr = PR_Malloc(PR_GetErrorTextLength() + 1);
 		PR_GetErrorText(nsprErr);
 	    } else {
 		nsprErr = NULL;

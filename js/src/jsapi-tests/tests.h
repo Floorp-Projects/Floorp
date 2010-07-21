@@ -52,13 +52,13 @@ public:
     explicit jsvalRoot(JSContext *context, jsval value = JSVAL_NULL)
         : cx(context), v(value)
     {
-        if (!JS_AddRoot(cx, &v)) {
+        if (!JS_AddValueRoot(cx, &v)) {
             fprintf(stderr, "Out of memory in jsvalRoot constructor, aborting\n");
             abort();
         }
     }
 
-    ~jsvalRoot() { JS_RemoveRoot(cx, &v); }
+    ~jsvalRoot() { JS_RemoveValueRoot(cx, &v); }
 
     operator jsval() const { return value(); }
 
@@ -141,7 +141,7 @@ public:
             cx = NULL;
         }
         if (rt) {
-            JS_DestroyRuntime(rt);
+            destroyRuntime();
             rt = NULL;
         }
     }
@@ -210,8 +210,39 @@ public:
     JSAPITestString messages() const { return msgs; }
 
 protected:
+    static JSBool
+    print(JSContext *cx, uintN argc, jsval *vp)
+    {
+        jsval *argv = JS_ARGV(cx, vp);
+        for (uintN i = 0; i < argc; i++) {
+            JSString *str = JS_ValueToString(cx, argv[i]);
+            if (!str)
+                return JS_FALSE;
+            char *bytes = JS_EncodeString(cx, str);
+            if (!bytes)
+                return JS_FALSE;
+            printf("%s%s", i ? " " : "", bytes);
+            JS_free(cx, bytes);
+        }
+
+        putchar('\n');
+        fflush(stdout);
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
+        return JS_TRUE;
+    }
+
+    bool definePrint() {
+        return JS_DefineFunction(cx, global, "print", (JSNative) print, 0, 0);
+    }
+
     virtual JSRuntime * createRuntime() {
         return JS_NewRuntime(8L * 1024 * 1024);
+    }
+
+    virtual void destroyRuntime() {
+        JS_ASSERT(!cx);
+        JS_ASSERT(rt);
+        JS_DestroyRuntime(rt);
     }
 
     static void reportError(JSContext *cx, const char *message, JSErrorReport *report) {

@@ -1031,8 +1031,12 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
             principalEqual = PR_TRUE;
     }
 
+    PRBool native = IS_WRAPPER_CLASS(obj->getClass());
+    XPCWrappedNative *wrapper = (native && IS_WN_WRAPPER_OBJECT(obj))
+                                ? (XPCWrappedNative *) xpc_GetJSPrivate(obj)
+                                : nsnull;
     if(wn)
-        *wn = nsnull;
+        *wn = wrapper;
 
     // XXX The isSystem checks shouldn't be needed, but are needed because we
     // can get here before nsGlobalChromeWindows have a non-about:blank
@@ -1053,25 +1057,19 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
             XPCCrossOriginWrapper::ClassNeedsXOW(obj->getClass()->name);
 
         // Is other a chrome object?
-        JSObject *obj2;
-        XPCWrappedNative *wrapper =
-            XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nsnull, &obj2);
         if(principalEqual || obj->isSystem())
         {
             if(hint & XPCNW)
-                return (wrapper || obj2) ? hint : NONE;
+                return native ? hint : NONE;
             return wantsXOW ? SJOW : NONE;
         }
 
         // Other isn't a chrome object: we need to wrap it in a SJOW or an
         // XPCNW.
 
-        if(!wrapper && !obj2)
+        if(!native)
             hint = SJOW;
-
-        if(wn)
-            *wn = wrapper;
-        if(hint == UNKNOWN)
+        else if(hint == UNKNOWN)
             hint = XPCNW_IMPLICIT;
 
         NS_ASSERTION(hint <= SJOW, "returning the wrong wrapper for chrome code");
@@ -1080,12 +1078,6 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
 
     // We're content code. We must never return XPCNW_IMPLICIT from here (but
     // might return XPCNW_EXPLICIT if hint is already XPCNW_EXPLICIT).
-
-    JSObject *obj2;
-    XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nsnull, &obj2);
-    if(wn)
-        *wn = wrapper;
 
     nsIPrincipal *otherprincipal = other->GetPrincipal();
     XPCWrapper::GetSecurityManager()->IsSystemPrincipal(otherprincipal, &system);
@@ -1096,9 +1088,9 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
 
         if(wrapper)
         {
-            NS_ASSERTION(!wrapper->IsDoubleWrapper(),
+            NS_ASSERTION(!wrapper->NeedsCOW(),
                          "chrome object that's double wrapped makes no sense");
-            if(wrapper->NeedsChromeWrapper())
+            if(wrapper->NeedsSOW())
                 return WrapperType(SOW | hint);
         }
 
@@ -1107,7 +1099,7 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
 
     // If this object isn't an XPCWrappedNative, then we don't need to create
     // any other types of wrapper than the hint.
-    if(!wrapper && !obj2)
+    if(!native)
     {
 #if 0
         // XXX Re-enable these assertions when we have a better mochitest
@@ -1124,9 +1116,9 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
     // NB: obj2 controls whether or not this is actually a "wrapped native".
     if(wrapper)
     {
-        if(wrapper->NeedsChromeWrapper())
+        if(wrapper->NeedsSOW())
             return WrapperType(SOW | (hint & (SJOW | XPCNW_EXPLICIT | COW)));
-        if(wrapper->IsDoubleWrapper())
+        if(wrapper->NeedsCOW())
         {
 #ifdef DEBUG
             {

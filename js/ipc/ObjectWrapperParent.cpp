@@ -41,6 +41,7 @@
 #include "mozilla/jsipc/ObjectWrapperParent.h"
 #include "mozilla/jsipc/ContextWrapperParent.h"
 #include "mozilla/jsipc/CPOWTypes.h"
+#include "mozilla/unused.h"
 
 #include "jsobj.h"
 #include "jsfun.h"
@@ -566,6 +567,7 @@ ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSObject *obj,
 
     switch (enum_op) {
     case JSENUMERATE_INIT:
+    case JSENUMERATE_INIT_ALL:
         self->Manager()->RequestRunToCompletion();
         return self->NewEnumerateInit(cx, statep, idp);
     case JSENUMERATE_NEXT:
@@ -639,7 +641,7 @@ ObjectWrapperParent::CPOW_Finalize(JSContext* cx, JSObject* obj)
     ObjectWrapperParent* self = Unwrap(cx, obj);
     if (self) {
         self->mObj = NULL;
-        ObjectWrapperParent::Send__delete__(self);
+        unused << ObjectWrapperParent::Send__delete__(self);
     }
 }
 

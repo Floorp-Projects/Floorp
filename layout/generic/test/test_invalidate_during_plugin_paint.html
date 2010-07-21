@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test handling plugins invalidating during paint</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>    
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+  embed { width:200px; height:200px; display:block; }
+  </style>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: block">
+  <embed id="p1" type="application/x-test" drawmode="solid" color="80808080"></embed>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var p1 = document.getElementById("p1");
+var initialPaintCount;
+
+function checkEnded() {
+  var paints = p1.getPaintCount() - initialPaintCount;
+  if (paints > 20) {
+    ok(true, "Got " + paints + " paints");
+    SimpleTest.finish();
+    return;
+  }
+
+  setTimeout(checkEnded, 30);  
+}
+
+function doTest() {
+  initialPaintCount = p1.getPaintCount();
+
+  // Tell the plugin to invalidate every time it paints
+  p1.setInvalidateDuringPaint(true);
+  // Trigger an invalidation to get painting started
+  p1.setColor("FFFFFFFF");
+  // Now we should have an infinite cycle of painting and invalidations.
+
+  // Poll for more than 20 paints to happen.
+  checkEnded();
+}
+
+// Need to run 'doTest' after painting is unsuppressed, or we'll set clip
+// regions to empty.
+addLoadEvent(doTest);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

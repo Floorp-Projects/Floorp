@@ -165,7 +165,7 @@ void nsMenuGroupOwnerX::ContentRemoved(nsIDocument * aDocument,
   nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
   if (obs)
     obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
-  else if (aContainer != mContent) {
+  else if (aContainer && (aContainer != mContent)) {
     // We do a lookup on the parent container in case things were removed
     // under a "menupopup" item. That is basically a wrapper for the contents
     // of a "menu" node.

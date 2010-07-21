@@ -67,7 +67,7 @@ public:
     
 private:
 
-    JSObject* const mObj;
+    JSObject* mObj;
 
     bool JSObject_to_JSVariant(JSContext* cx, JSObject* from, JSVariant* to);
     bool jsval_to_JSVariant(JSContext* cx, jsval from, JSVariant* to);

@@ -2500,9 +2500,17 @@ nsNativeThemeCocoa::ThemeNeedsComboboxDropmarker()
 nsITheme::Transparency
 nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
 {
-  if (aWidgetType == NS_THEME_MENUPOPUP ||
-      aWidgetType == NS_THEME_TOOLTIP)
+  switch (aWidgetType) {
+  case NS_THEME_MENUPOPUP:
+  case NS_THEME_TOOLTIP:
     return eTransparent;
 
-  return eUnknownTransparency;
+  case NS_THEME_SCROLLBAR_SMALL:
+  case NS_THEME_SCROLLBAR:
+    // Scrollbars are drawn opaque. Knowing this improves performance.
+    return eOpaque;
+
+  default:
+    return eUnknownTransparency;
+  }
 }
