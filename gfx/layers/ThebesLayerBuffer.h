@@ -156,6 +156,17 @@ protected:
   const nsIntRect& BufferRect() const { return mBufferRect; }
   const nsIntPoint& BufferRotation() const { return mBufferRotation; }
 
+  already_AddRefed<gfxASurface>
+  SetBuffer(gfxASurface* aBuffer,
+            const nsIntRect& aBufferRect, const nsIntPoint& aBufferRotation)
+  {
+    gfxASurface* tmp = mBuffer;
+    mBuffer = aBuffer;
+    mBufferRect = aBufferRect;
+    mBufferRotation = aBufferRotation;
+    return tmp;
+  }
+
 private:
   PRBool BufferSizeOkFor(const nsIntSize& aSize)
   {
