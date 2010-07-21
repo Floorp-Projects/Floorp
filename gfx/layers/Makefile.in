@@ -98,6 +98,11 @@ endif
 endif
 
 ifdef MOZ_IPC #{
+EXPORTS_NAMESPACES = mozilla/layers
+EXPORTS_mozilla/layers =\
+        ShadowLayers.h \
+        $(NULL)
+
 CPPSRCS += \
         ShadowLayers.cpp \
         ShadowLayerParent.cpp \
