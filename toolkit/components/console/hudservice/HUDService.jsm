@@ -1125,8 +1125,14 @@ HUD_SERVICE.prototype =
     var _msgLogLevel = this.scriptMsgLogLevel[aActivityObject.flags];
     var msgLogLevel = this.getStr(_msgLogLevel);
 
+    var logLevel = "warn";
+
+    if (aActivityObject.flags in this.scriptErrorFlags) {
+      logLevel = this.scriptErrorFlags[aActivityObject.flags];
+    }
+
     // check if we should be logging this message:
-    var filterState = this.getFilterState(hudId, msgLogLevel);
+    var filterState = this.getFilterState(hudId, logLevel);
 
     if (!filterState) {
       // Ignore log message
@@ -1141,12 +1147,6 @@ HUD_SERVICE.prototype =
       hudId: hudId,
     };
 
-    try {
-      var logLevel = this.scriptErrorFlags[aActivityObject.flags];
-    }
-    catch (ex) {
-      var logLevel = "warn";
-    }
     var lineColSubs = [aActivityObject.columnNumber,
                        aActivityObject.lineNumber];
     var lineCol = this.getFormatStr("errLineCol", lineColSubs);
