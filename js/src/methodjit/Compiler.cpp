@@ -86,7 +86,8 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObj
 #if defined JS_POLYIC
     pics(ContextAllocPolicy(cx)), 
 #endif
-    stubcc(cx, *this, frame, script)
+    stubcc(cx, *this, frame, script),
+    addTraceHints(cx->jitEnabled)
 {
 #ifdef DEBUG
     masm.setSpewPath(false);
@@ -126,15 +127,6 @@ mjit::Compiler::Compile()
 #ifdef DEBUG
     for (uint32 i = 0; i < script->length; i++)
         jumpMap[i] = Label();
-#endif
-
-#if 0 /* def JS_TRACER */
-    if (script->tracePoints) {
-        script->trees = (TraceTreeCache*)cx->malloc(script->tracePoints * sizeof(TraceTreeCache));
-        if (!script->trees)
-            return Compile_Abort;
-        memset(script->trees, 0, script->tracePoints * sizeof(TraceTreeCache));
-    }
 #endif
 
 #ifdef JS_METHODJIT_SPEW
@@ -184,7 +176,7 @@ CompileStatus
 mjit::Compiler::generatePrologue()
 {
     invokeLabel = masm.label();
-    restoreFrameRegs();
+    restoreFrameRegs(masm);
 
     /*
      * If there is no function, then this can only be called via JaegerShot(),
@@ -193,7 +185,7 @@ mjit::Compiler::generatePrologue()
     if (fun) {
         Jump j = masm.jump();
         invokeLabel = masm.label();
-        restoreFrameRegs();
+        restoreFrameRegs(masm);
 
         /* Set locals to undefined. */
         for (uint32 i = 0; i < script->nslots; i++) {
@@ -282,15 +274,22 @@ mjit::Compiler::finishThisUp()
     JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
 #if defined JS_MONOIC
     for (size_t i = 0; i < mics.length(); i++) {
-        script->mics[i].entry = fullCode.locationOf(mics[i].entry);
-        script->mics[i].load = fullCode.locationOf(mics[i].load);
-        script->mics[i].shape = fullCode.locationOf(mics[i].shapeVal);
-        script->mics[i].stubCall = stubCode.locationOf(mics[i].call);
-        script->mics[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
         script->mics[i].kind = mics[i].kind;
-        script->mics[i].typeConst = mics[i].typeConst;
-        script->mics[i].dataConst = mics[i].dataConst;
-        script->mics[i].dataWrite = mics[i].dataWrite;
+        script->mics[i].entry = fullCode.locationOf(mics[i].entry);
+        if (mics[i].kind != ic::MICInfo::TRACER) {
+            script->mics[i].load = fullCode.locationOf(mics[i].load);
+            script->mics[i].shape = fullCode.locationOf(mics[i].shapeVal);
+            script->mics[i].stubCall = stubCode.locationOf(mics[i].call);
+            script->mics[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
+            script->mics[i].u.name.typeConst = mics[i].u.name.typeConst;
+            script->mics[i].u.name.dataConst = mics[i].u.name.dataConst;
+            script->mics[i].u.name.dataWrite = mics[i].u.name.dataWrite;
+        } else {
+            uint32 offs = uint32(mics[i].jumpTarget - script->code);
+            JS_ASSERT(jumpMap[offs].isValid());
+            script->mics[i].traceHint = fullCode.locationOf(mics[i].traceHint);
+            script->mics[i].load = fullCode.locationOf(jumpMap[offs]);
+        }
     }
 #endif /* JS_MONOIC */
 
@@ -385,9 +384,10 @@ mjit::Compiler::generateMethod()
         JSOp op = JSOp(*PC);
 
         OpcodeStatus &opinfo = analysis[PC];
-        if (opinfo.nincoming)
+        if (opinfo.nincoming) {
             frame.forgetEverything(opinfo.stackDepth);
-        opinfo.safePoint = true;
+            opinfo.safePoint = true;
+        }
         frame.setInTryBlock(opinfo.inTryBlock);
         jumpMap[uint32(PC - script->code)] = masm.label();
 
@@ -427,7 +427,6 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_RETURN)
           {
-            /* Safe point! */
             FrameEntry *fe = frame.peek(-1);
             frame.storeTo(fe, Address(JSFrameReg, offsetof(JSStackFrame, rval)), true);
             frame.pop();
@@ -440,7 +439,7 @@ mjit::Compiler::generateMethod()
             /* :XXX: this isn't really necessary if we follow the branch. */
             frame.forgetEverything();
             Jump j = masm.jump();
-            jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
+            jumpAndTrace(j, PC + GET_JUMP_OFFSET(PC));
           }
           END_CASE(JSOP_GOTO)
 
@@ -543,7 +542,7 @@ mjit::Compiler::generateMethod()
                         if (result) {
                             frame.forgetEverything();
                             Jump j = masm.jump();
-                            jumpInScript(j, target);
+                            jumpAndTrace(j, target);
                         }
                     }
                 } else {
@@ -1215,7 +1214,7 @@ mjit::Compiler::generateMethod()
             // that value here to FpReg so that FpReg also has the correct sp.
             // Otherwise, we would simply be using a stale FpReg value.
             if (analysis[PC].exceptionEntry)
-                restoreFrameRegs();
+                restoreFrameRegs(masm);
 
             /* For now, don't bother doing anything for this opcode. */
             JSObject *obj = script->getObject(fullAtomIndex(PC));
@@ -1717,7 +1716,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
 }
 
 void
-mjit::Compiler::restoreFrameRegs()
+mjit::Compiler::restoreFrameRegs(Assembler &masm)
 {
     masm.loadPtr(FrameAddress(offsetof(VMFrame, fp)), JSFrameReg);
 }
@@ -1803,7 +1802,7 @@ mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
                                     : Assembler::NonZero;
         Jump j = masm.branchTest32(cond, Registers::ReturnReg,
                                    Registers::ReturnReg);
-        jumpInScript(j, target);
+        jumpAndTrace(j, target);
     }
 }
 
@@ -2710,7 +2709,7 @@ mjit::Compiler::iterMore()
     frame.forgetEverything();
     masm.loadPtr(Address(T1, offsetof(NativeIterator, props_cursor)), T2);
     masm.loadPtr(Address(T1, offsetof(NativeIterator, props_end)), T1);
-    Jump j = masm.branchPtr(Assembler::LessThan, T2, T1);
+    Jump jFast = masm.branchPtr(Assembler::LessThan, T2, T1);
 
     jsbytecode *target = &PC[JSOP_MOREITER_LENGTH];
     JSOp next = JSOp(*target);
@@ -2719,17 +2718,21 @@ mjit::Compiler::iterMore()
     target += (next == JSOP_IFNE)
               ? GET_JUMP_OFFSET(target)
               : GET_JUMPX_OFFSET(target);
-    jumpInScript(j, target);
 
     stubcc.leave();
     stubcc.call(stubs::IterMore);
-    j = stubcc.masm.branchTest32(Assembler::NonZero, Registers::ReturnReg, Registers::ReturnReg);
+    Jump j = stubcc.masm.branchTest32(Assembler::NonZero, Registers::ReturnReg,
+                                      Registers::ReturnReg);
+
+    /* :TODO: use jumpAndTrace */
     stubcc.jumpInScript(j, target);
 
     PC += JSOP_MOREITER_LENGTH;
     PC += js_CodeSpec[next].length;
 
     stubcc.rejoin(Changes(1));
+
+    jumpAndTrace(jFast, target);
 }
 
 void
@@ -2891,13 +2894,13 @@ mjit::Compiler::jsop_setgname(uint32 index)
     RegisterID dataReg = Registers::ReturnReg;
     JSValueType typeTag = JSVAL_TYPE_INT32;
 
-    mic.typeConst = fe->isTypeKnown();
-    mic.dataConst = fe->isConstant();
-    mic.dataWrite = !mic.dataConst || !fe->getValue().isUndefined();
+    mic.u.name.typeConst = fe->isTypeKnown();
+    mic.u.name.dataConst = fe->isConstant();
+    mic.u.name.dataWrite = !mic.u.name.dataConst || !fe->getValue().isUndefined();
 
-    if (!mic.dataConst) {
+    if (!mic.u.name.dataConst) {
         dataReg = frame.ownRegForData(fe);
-        if (!mic.typeConst)
+        if (!mic.u.name.typeConst)
             typeReg = frame.ownRegForType(fe);
         else
             typeTag = fe->getKnownType();
@@ -2909,10 +2912,10 @@ mjit::Compiler::jsop_setgname(uint32 index)
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
     Address address(objReg, slot);
 
-    if (mic.dataConst) {
+    if (mic.u.name.dataConst) {
         masm.storeValue(v, address);
     } else {
-        if (mic.typeConst)
+        if (mic.u.name.typeConst)
             masm.storeTypeTag(ImmType(typeTag), address);
         else
             masm.storeTypeTag(typeReg, address);
@@ -2922,10 +2925,10 @@ mjit::Compiler::jsop_setgname(uint32 index)
     if (objFe->isConstant())
         frame.freeReg(objReg);
     frame.popn(2);
-    if (mic.dataConst) {
+    if (mic.u.name.dataConst) {
         frame.push(v);
     } else {
-        if (mic.typeConst)
+        if (mic.u.name.typeConst)
             frame.pushTypedPayload(typeTag, dataReg);
         else
             frame.pushRegs(typeReg, dataReg);
@@ -3047,5 +3050,58 @@ mjit::Compiler::jsop_instanceof()
     if (firstSlow.isSet())
         firstSlow.getJump().linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.rejoin(Changes(1));
+}
+
+/*
+ * Note: This function emits tracer hooks into the OOL path. This means if
+ * used in the middle of an in-progress slow path, the stream will be
+ * hopelessly corrupted. Take care to only call this before linkExits() and
+ * after rejoin()s.
+ */
+void
+mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target)
+{
+#ifndef JS_TRACER
+    jumpInScript(j, target);
+#else
+    if (!addTraceHints || target >= PC || JSOp(*target) != JSOP_TRACE) {
+        jumpInScript(j, target);
+        return;
+    }
+
+# if JS_MONOIC
+    MICGenInfo mic(ic::MICInfo::TRACER);
+
+    mic.entry = masm.label();
+    mic.jumpTarget = target;
+    mic.traceHint = j;
+# endif
+
+    stubcc.linkExitDirect(j, stubcc.masm.label());
+# if JS_MONOIC
+    stubcc.masm.move(Imm32(mics.length()), Registers::ArgReg1);
+# endif
+
+    /* Save and restore compiler-tracked PC, so cx->regs is right in InvokeTracer. */
+    {
+        jsbytecode* pc = PC;
+        PC = target;
+
+        stubcc.call(stubs::InvokeTracer);
+
+        PC = pc;
+    }
+
+    Jump no = stubcc.masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg,
+                                        Registers::ReturnReg);
+    restoreFrameRegs(stubcc.masm);
+    stubcc.masm.jump(Registers::ReturnReg);
+    no.linkTo(stubcc.masm.label(), &stubcc.masm);
+    stubcc.jumpInScript(stubcc.masm.jump(), target);
+
+# if JS_MONOIC
+    mics.append(mic);
+# endif
+#endif
 }
 

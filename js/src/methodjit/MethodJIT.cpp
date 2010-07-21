@@ -270,9 +270,11 @@ asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerFromTracer)   "\n"
 SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
-    /* Restore frame regs. */
+    "movl 0x28(%ebx), %edx"                 "\n"
+    "movl 0x2C(%ebx), %ecx"                 "\n"
+    "movl 0x3C(%ebx), %eax"                 "\n"
     "movl 0x20(%esp), %ebx"                 "\n"
-    "jmp *%eax"                             "\n"
+    "ret"                                   "\n"
 );
 
 # elif defined(JS_CPU_ARM)
@@ -432,8 +434,11 @@ extern "C" {
     __declspec(naked) void JaegerFromTracer()
     {
         __asm {
+            mov edx, [ebx + 0x28];
+            mov ecx, [ebx + 0x2C];
+            mov eax, [ebx + 0x3C];
             mov ebx, [esp + 0x20];
-            jmp eax;
+            ret;
         }
     }
 

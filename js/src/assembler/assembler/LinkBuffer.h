@@ -124,6 +124,11 @@ public:
         return CodeLocationCall(MacroAssembler::getLinkerAddress(code(), call.m_jmp));
     }
 
+    CodeLocationJump locationOf(Jump j)
+    {
+        return CodeLocationJump(MacroAssembler::getLinkerAddress(code(), j.m_jmp));
+    }
+
     CodeLocationNearCall locationOfNearCall(Call call)
     {
         ASSERT(call.isFlagSet(Call::Linkable));

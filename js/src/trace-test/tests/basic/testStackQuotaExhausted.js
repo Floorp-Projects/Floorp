@@ -27,7 +27,9 @@ try {
     exception = true;
 }
 assertEq(exception, true);
-checkStats({traceCompleted:1});
+
+// No more trace recursion w/ JM
+checkStats({traceCompleted:0});
 
 // This tests that, without tracing, we exhaust stack space.
 trace = false;

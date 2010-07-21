@@ -1370,7 +1370,7 @@ stubs::NewInitObject(VMFrame &f, uint32 empty)
 {
     JSContext *cx = f.cx;
 
-    JSObject *obj = NewObject(cx, &js_ObjectClass, NULL, NULL);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass); 
     if (!obj)
         THROWV(NULL);
 

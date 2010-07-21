@@ -388,13 +388,13 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
             if ((op == JSOP_EQ && fused == JSOP_IFNE) ||
                 (op == JSOP_NE && fused == JSOP_IFEQ)) {
                 Jump j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_UNDEFINED));
-                jumpInScript(j, target);
+                jumpAndTrace(j, target);
                 j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_NULL));
-                jumpInScript(j, target);
+                jumpAndTrace(j, target);
             } else {
                 Jump j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_UNDEFINED));
                 Jump j2 = masm.branch32(Assembler::NotEqual, reg, ImmTag(JSVAL_TAG_NULL));
-                jumpInScript(j2, target);
+                jumpAndTrace(j2, target);
                 j.linkTo(masm.label(), &masm);
             }
         } else {
@@ -552,13 +552,11 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
             }
         }
 
-        Jump j;
+        Jump j, fast;
         if (!rhsConst)
-            j = masm.branch32(cond, lr, rr);
+            fast = masm.branch32(cond, lr, rr);
         else
-            j = masm.branch32(cond, lr, Imm32(rval));
-
-        jumpInScript(j, target);
+            fast = masm.branch32(cond, lr, Imm32(rval));
 
         JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW RESTORE CODE ---- \n");
         /*
@@ -570,10 +568,18 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
                                     : Assembler::NonZero;
         j = stubcc.masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
         stubcc.jumpInScript(j, target);
+        /* ^-- :TODO: use jumpAndTrace */
 
         /* Rejoin unnecessary - state is flushed. */
         j = stubcc.masm.jump();
         stubcc.crossJump(j, masm.label());
+
+        /*
+         * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
+         * in the middle of an in-progress slow path.
+         */
+        jumpAndTrace(fast, target);
+
         JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
     } else {
         /* No fusing. Compare, set, and push a boolean. */
@@ -859,7 +865,6 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
     Label lblAfterScript = masm.label();
 
     /* Patch up jumps. */
-    jumpInScript(j, target);
     if (jmpNotBool.isSet())
         stubcc.linkExitDirect(jmpNotBool.getJump(), lblCvtPath);
     if (jmpNotExecScript.isSet())
@@ -871,6 +876,8 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
         stubcc.crossJump(jmpCvtRejoin.getJump(), lblAfterScript);
 
     frame.pop();
+
+    jumpAndTrace(j, target);
 }
 
 void
@@ -881,13 +888,14 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
     if (fe->isConstant()) {
         JSBool b = js_ValueToBoolean(fe->getValue());
 
+        frame.pop();
+
         if (op == JSOP_IFEQ)
             b = !b;
         if (b) {
             frame.forgetEverything();
-            jumpInScript(masm.jump(), target);
+            jumpAndTrace(masm.jump(), target);
         }
-        frame.pop();
         return;
     }
 
@@ -906,7 +914,7 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
         if ((op == JSOP_OR && b == JS_TRUE) ||
             (op == JSOP_AND && b == JS_FALSE)) {
             frame.forgetEverything();
-            jumpInScript(masm.jump(), target);
+            jumpAndTrace(masm.jump(), target);
         }
 
         frame.pop();

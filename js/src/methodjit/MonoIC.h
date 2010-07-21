@@ -59,7 +59,8 @@ struct MICInfo {
 
     enum Kind {
         GET,
-        SET
+        SET,
+        TRACER
     };
 
     JSC::CodeLocationLabel entry;
@@ -67,11 +68,16 @@ struct MICInfo {
     JSC::CodeLocationLabel load;
     JSC::CodeLocationDataLabelPtr shape;
     JSC::CodeLocationCall stubCall;
-    bool touched : 1;
-    bool typeConst : 1;
-    bool dataConst : 1;
-    bool dataWrite : 1;
+    JSC::CodeLocationJump traceHint;
     Kind kind : 2;
+    union {
+        struct {
+            bool touched : 1;
+            bool typeConst : 1;
+            bool dataConst : 1;
+            bool dataWrite : 1;
+        } name;
+    } u;
 };
 
 void JS_FASTCALL GetGlobalName(VMFrame &f, uint32 index);

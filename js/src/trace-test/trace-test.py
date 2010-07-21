@@ -114,7 +114,7 @@ def get_test_cmd(path, lib_dir):
     if OPTIONS.methodjit_only:
         jit_flags = [ '-m' ]
     else:
-        jit_flags = [ '-m' ]
+        jit_flags = [ '-m', '-j' ]
     return [ JS ] + jit_flags + [ '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'),
              '-f', path ]
 
@@ -148,6 +148,7 @@ def run_test(test, lib_dir):
     if OPTIONS.show_output:
         sys.stdout.write(out)
         sys.stdout.write(err)
+	sys.stdout.write('Exit code: ' + str(p.returncode) + "\n")
     if test.valgrind:
         sys.stdout.write(err)
     return (check_output(out, err, p.returncode, test.allow_oom, test.error), 

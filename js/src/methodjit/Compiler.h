@@ -84,9 +84,18 @@ class Compiler
         Label load;
         Call call;
         ic::MICInfo::Kind kind;
-        bool typeConst;
-        bool dataConst;
-        bool dataWrite;
+        jsbytecode *jumpTarget;
+        Jump traceHint;
+        union {
+            struct {
+                bool typeConst;
+                bool dataConst;
+                bool dataWrite;
+            } name;
+            struct {
+                uint32 pcOffs;
+            } tracer;
+        } u;
     };
 #endif
 
@@ -169,6 +178,7 @@ class Compiler
 #endif
     StubCompiler stubcc;
     Label invokeLabel;
+    bool addTraceHints;
 
   public:
     // Special atom index used to indicate that the atom is 'length'. This
@@ -198,12 +208,13 @@ class Compiler
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
 
     /* Emitting helpers. */
-    void restoreFrameRegs();
+    void restoreFrameRegs(Assembler &masm);
     void emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     void iterNext();
     void iterMore();
 
     /* Opcode handlers. */
+    void jumpAndTrace(Jump j, jsbytecode *target);
     void jsop_bindname(uint32 index);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
