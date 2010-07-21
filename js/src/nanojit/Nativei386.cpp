@@ -1133,7 +1133,7 @@ namespace nanojit
         uint8_t arg = ins->paramArg();
         if (ins->paramKind() == 0) {
             uint32_t max_regs = max_abi_regs[_thisfrag->lirbuf->abi];
-            if (arg < max_regs) 
+            if (arg < max_regs)
                 prefer = rmask(argRegs[arg]);
         } else {
             if (arg < NumSavedRegs)
