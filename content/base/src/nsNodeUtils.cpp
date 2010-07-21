@@ -158,7 +158,7 @@ nsNodeUtils::ContentAppended(nsIContent* aContainer,
 {
   nsIDocument* doc = aContainer->GetOwnerDoc();
 
-  IMPL_STRONGREF_MUTATION_NOTIFICATION(ContentAppended, aContainer,
+  IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer,
                              (doc, aContainer, aFirstNewContent,
                               aNewIndexInContainer));
 }

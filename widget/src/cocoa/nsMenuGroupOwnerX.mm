@@ -185,6 +185,7 @@ void nsMenuGroupOwnerX::ContentInserted(nsIDocument * aDocument,
                                         nsIContent * aChild,
                                         PRInt32 aIndexInContainer)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
   if (obs)
     obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
