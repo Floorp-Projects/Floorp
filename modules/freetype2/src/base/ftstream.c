@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    I/O stream support (body).                                           */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2004, 2005, 2006, 2008, 2009 by             */
+/*  Copyright 2000-2001, 2002, 2004, 2005, 2006, 2008, 2009, 2010 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -245,6 +245,18 @@
     {
       /* allocate the frame in memory */
       FT_Memory  memory = stream->memory;
+
+
+      /* simple sanity check */
+      if ( count > stream->size )
+      {
+        FT_ERROR(( "FT_Stream_EnterFrame:"
+                   " frame size (%lu) larger than stream size (%lu)\n",
+                   count, stream->size ));
+
+        error = FT_Err_Invalid_Stream_Operation;
+        goto Exit;
+      }
 
 #ifdef FT_DEBUG_MEMORY
       /* assume _ft_debug_file and _ft_debug_lineno are already set */
