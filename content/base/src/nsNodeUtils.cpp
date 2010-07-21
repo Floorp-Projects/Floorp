@@ -123,7 +123,7 @@ nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
                                   CharacterDataChangeInfo* aInfo)
 {
   nsIDocument* doc = aContent->GetOwnerDoc();
-  IMPL_STRONGREF_MUTATION_NOTIFICATION(CharacterDataChanged, aContent,
+  IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent,
                              (doc, aContent, aInfo));
 }
 

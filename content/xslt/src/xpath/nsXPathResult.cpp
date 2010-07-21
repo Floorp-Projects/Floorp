@@ -381,11 +381,12 @@ nsXPathResult::Invalidate(const nsIContent* aChangeRoot)
         }
     }
 
+    mInvalidIteratorState = PR_TRUE;
+    // Make sure nulling out mDocument is the last thing we do.
     if (mDocument) {
         mDocument->RemoveMutationObserver(this);
         mDocument = nsnull;
     }
-    mInvalidIteratorState = PR_TRUE;
 }
 
 nsresult
