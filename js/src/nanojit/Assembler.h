@@ -174,7 +174,7 @@ namespace nanojit
     }
 
     #ifndef AVMPLUS_ALIGN16
-        #ifdef _MSC_VER
+        #ifdef AVMPLUS_WIN32
             #define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
         #else
             #define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
