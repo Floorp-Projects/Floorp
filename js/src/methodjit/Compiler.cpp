@@ -86,8 +86,10 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObj
 #if defined JS_POLYIC
     pics(ContextAllocPolicy(cx)), 
 #endif
-    stubcc(cx, *this, frame, script),
-    addTraceHints(cx->jitEnabled)
+    stubcc(cx, *this, frame, script)
+#if defined JS_TRACER
+    ,addTraceHints(cx->jitEnabled)
+#endif
 {
 #ifdef DEBUG
     masm.setSpewPath(false);

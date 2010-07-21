@@ -878,7 +878,8 @@ RunTracer(VMFrame &f)
 
 #endif /* JS_TRACER */
 
-#if JS_MONOIC
+#if defined JS_TRACER
+# if defined JS_MONOIC
 void *JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f, uint32 index)
 {
@@ -890,12 +891,13 @@ stubs::InvokeTracer(VMFrame &f, uint32 index)
     return RunTracer(f, mic);
 }
 
-#else
+# else
 
 void *JS_FASTCALL
 stubs::InvokeTracer(VMFrame &f)
 {
     return RunTracer(f);
 }
-#endif
+# endif /* JS_MONOIC */
+#endif /* JS_TRACER */
 
