@@ -97,6 +97,12 @@ CPPSRCS += \
 endif
 endif
 
+ifdef MOZ_IPC #{
+CPPSRCS += \
+        ShadowLayers.cpp \
+        $(NULL)
+endif #}
+
 # Enable GLES2.0 under maemo
 ifdef MOZ_X11
 ifdef MOZ_PLATFORM_MAEMO
