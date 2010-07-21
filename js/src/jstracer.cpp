@@ -11392,7 +11392,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
          */
         if (!(fun->flags & JSFUN_FAST_NATIVE)) {
             if (vp[1].isNull()) {
-                JSObject* thisObj = ComputeThisFromVp(cx, vp + 2);
+                JSObject* thisObj = ComputeThisFromVp(cx, vp);
                 if (!thisObj)
                     RETURN_ERROR("error in js_ComputeGlobalThis");
                 this_ins = INS_CONSTOBJ(thisObj);
