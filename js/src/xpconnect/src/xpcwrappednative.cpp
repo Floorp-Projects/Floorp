@@ -428,8 +428,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     jsval newParentVal = JSVAL_NULL;
     XPCMarkableJSVal newParentVal_markable(&newParentVal);
     AutoMarkingJSVal newParentVal_automarker(ccx, &newParentVal_markable);
-    JSBool chromeOnly = JS_FALSE;
-    JSBool crossDoubleWrapped = JS_FALSE;
+    JSBool needsSOW = JS_FALSE;
+    JSBool needsCOW = JS_FALSE;
+    JSBool needsXOW = JS_FALSE;
 
     if(sciWrapper.GetFlags().WantPreCreate())
     {
@@ -439,7 +440,10 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         if(NS_FAILED(rv))
             return rv;
 
-        chromeOnly = (rv == NS_SUCCESS_CHROME_ACCESS_ONLY);
+        if(rv == NS_SUCCESS_CHROME_ACCESS_ONLY)
+            needsSOW = JS_TRUE;
+        else if(rv == NS_SUCCESS_NEEDS_XOW)
+            needsXOW = JS_TRUE;
         rv = NS_OK;
 
         NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
@@ -513,7 +517,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
                 JS_GetGlobalForObject(ccx, obj)->isSystem()) &&
                !Scope->GetGlobalJSObject()->isSystem())
             {
-                crossDoubleWrapped = JS_TRUE;
+                needsCOW = JS_TRUE;
             }
         }
     }
@@ -535,7 +539,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
         proto->CacheOffsets(identity);
 
-        wrapper = new XPCWrappedNative(identity.get(), proto);
+        wrapper = needsXOW
+                  ? new XPCWrappedNativeWithXOW(identity.get(), proto)
+                  : new XPCWrappedNative(identity.get(), proto);
         if(!wrapper)
             return NS_ERROR_FAILURE;
     }
@@ -551,7 +557,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         if(!set)
             return NS_ERROR_FAILURE;
 
-        wrapper = new XPCWrappedNative(identity.get(), Scope, set);
+        wrapper = needsXOW
+                  ? new XPCWrappedNativeWithXOW(identity.get(), Scope, set)
+                  : new XPCWrappedNative(identity.get(), Scope, set);
         if(!wrapper)
             return NS_ERROR_FAILURE;
 
@@ -582,10 +590,10 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         return rv;
     }
 
-    if(chromeOnly)
-        wrapper->SetNeedsChromeWrapper();
-    if(crossDoubleWrapped)
-        wrapper->SetIsDoubleWrapper();
+    if(needsSOW)
+        wrapper->SetNeedsSOW();
+    if(needsCOW)
+        wrapper->SetNeedsCOW();
 
     return FinishCreate(ccx, Scope, Interface, cache, wrapper, resultWrapper);
 }
@@ -850,6 +858,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
       mScriptableInfo(nsnull),
       mWrapperWord(0)
 {
+    PR_STATIC_ASSERT(LAST_FLAG & JSVAL_TAGMASK);
     mIdentity = aIdentity.get();
 
     NS_ASSERTION(mMaybeProto, "bad ctor param");
@@ -1356,6 +1365,25 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
 
     // This makes IsValid return false from now on...
     mFlatJSObject = nsnull;
+
+    // Because order of finalization is random, we need to be careful here: if
+    // we're getting finalized, then it means that any XOWs in our cache are
+    // also getting finalized (or else we would be marked). But it's possible
+    // for us to outlive our cached XOW. So, in order to make it safe for the
+    // cached XOW to clear the cache, we need to finalize it first.
+    if(NeedsXOW())
+    {
+        XPCWrappedNativeWithXOW* wnxow =
+            static_cast<XPCWrappedNativeWithXOW *>(this);
+        if(JSObject* wrapper = wnxow->GetXOW())
+        {
+            wrapper->getClass()->finalize(cx, wrapper);
+            NS_ASSERTION(!XPCWrapper::UnwrapGeneric(cx,
+                                                    &XPCCrossOriginWrapper::XOWClass,
+                                                    wrapper),
+                         "finalize didn't do its job");
+        }
+    }
 
     NS_ASSERTION(mIdentity, "bad pointer!");
 #ifdef XP_WIN
@@ -2385,7 +2413,7 @@ CallMethodHelper::~CallMethodHelper()
             else if(dp->IsValCString())
                 delete (nsCString*) p;
             else if(dp->IsValJSRoot())
-                JS_RemoveRoot(mCallContext, (jsval*)dp->ptr);
+                JS_RemoveValueRoot(mCallContext, (jsval*)dp->ptr);
         }   
     }
 
@@ -2769,7 +2797,7 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
                     jsval *rootp = (jsval *)&dp->val.p;
                     dp->ptr = rootp;
                     *rootp = JSVAL_VOID;
-                    if (!JS_AddRoot(mCallContext, rootp))
+                    if (!JS_AddValueRoot(mCallContext, rootp))
                         return JS_FALSE;
                 }
             }

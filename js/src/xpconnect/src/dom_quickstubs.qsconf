@@ -173,9 +173,11 @@ members = [
     # dom/interfaces/css
     'nsIDOMElementCSSInlineStyle.*',
     'nsIDOMCSS2Properties.*',
+    'nsIDOMSVGCSS2Properties.*',
     'nsIDOMNSCSS2Properties.*',
     'nsIDOMRect.*',
     'nsIDOMViewCSS.getComputedStyle',
+    'nsIDOMCSSStyleDeclaration.*',
 
     # dom/interfaces/events
     'nsIDOMEventTarget.dispatchEvent',
@@ -433,6 +435,9 @@ members = [
     # nsIXMLHttpRequestUpload doesn't live in its own IDL file, so
     # can't be quickstubbed
     '-nsIXMLHttpRequest.upload',
+
+    # WebSocket
+    'nsIWebSocket.*',
 
     # webgl
     'nsICanvasRenderingContextWebGL.*',

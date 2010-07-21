@@ -1,0 +1,14 @@
+	ptr = allocp 8
+
+	a = immi 2147483647
+	b = immi 1
+	c = addjovi a b ovf
+	sti c ptr 0
+
+	j done
+
+ovf:	i = immi 12345678
+	sti i ptr 0
+
+done:	res = ldi ptr 0
+	reti res

@@ -40,7 +40,7 @@
  * encoding/creation side *and* the decoding/decryption side.  Anything
  * else should be static routines in the appropriate file.
  *
- * $Id: p7local.c,v 1.13 2008/05/30 03:39:46 nelson%bolyard.com Exp $
+ * $Id: p7local.c,v 1.14 2010/03/15 07:25:14 nelson%bolyard.com Exp $
  */
 
 #include "p7local.h"
@@ -104,8 +104,8 @@ sec_PKCS7CreateDecryptObject (PK11SymKey *key, SECAlgorithmID *algid)
     SECOidTag algtag;
     void *ciphercx;
     CK_MECHANISM_TYPE cryptoMechType;
-    SECItem *param;
     PK11SlotInfo *slot;
+    SECItem *param = NULL;
 
     result = (struct sec_pkcs7_cipher_object*)
       PORT_ZAlloc (sizeof(struct sec_pkcs7_cipher_object));
@@ -127,6 +127,7 @@ sec_PKCS7CreateDecryptObject (PK11SymKey *key, SECAlgorithmID *algid)
 	cryptoMechType = PK11_GetPBECryptoMechanism(algid, &param, pwitem);
 	if (cryptoMechType == CKM_INVALID_MECHANISM) {
 	    PORT_Free(result);
+	    SECITEM_FreeItem(param,PR_TRUE);
 	    return NULL;
 	}
     } else {
@@ -178,11 +179,11 @@ sec_PKCS7CreateEncryptObject (PRArenaPool *poolp, PK11SymKey *key,
 {
     sec_PKCS7CipherObject *result;
     void *ciphercx;
-    SECItem *param;
     SECStatus rv;
     CK_MECHANISM_TYPE cryptoMechType;
-    PRBool needToEncodeAlgid = PR_FALSE;
     PK11SlotInfo *slot;
+    SECItem *param = NULL;
+    PRBool needToEncodeAlgid = PR_FALSE;
 
     result = (struct sec_pkcs7_cipher_object*)
 	      PORT_ZAlloc (sizeof(struct sec_pkcs7_cipher_object));
@@ -202,6 +203,7 @@ sec_PKCS7CreateEncryptObject (PRArenaPool *poolp, PK11SymKey *key,
 	cryptoMechType = PK11_GetPBECryptoMechanism(algid, &param, pwitem);
 	if (cryptoMechType == CKM_INVALID_MECHANISM) {
 	    PORT_Free(result);
+	    SECITEM_FreeItem(param,PR_TRUE);
 	    return NULL;
 	}
     } else {

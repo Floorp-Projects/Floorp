@@ -270,7 +270,7 @@ GetLine(char *bufp,
         const char *prompt)
 {
     char line[256];
-    fprintf(stdout, prompt);
+    fputs(prompt, stdout);
     fflush(stdout);
     if (!fgets(line, sizeof line, file))
         return JS_FALSE;

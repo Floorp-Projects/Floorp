@@ -2188,9 +2188,7 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
         // HTML form controls implements nsIFormControl interface.
         nsCOMPtr<nsIFormControl> control(do_QueryInterface(mContent));
         if (control) {
-          nsCOMPtr<nsIDOMHTMLFormElement> htmlform;
-          control->GetForm(getter_AddRefs(htmlform));
-          nsCOMPtr<nsIForm> form(do_QueryInterface(htmlform));
+          nsCOMPtr<nsIForm> form(do_QueryInterface(control->GetFormElement()));
           if (form) {
             nsCOMPtr<nsIContent> formContent =
               do_QueryInterface(form->GetDefaultSubmitElement());
@@ -2746,6 +2744,14 @@ nsAccessible::BindToParent(nsAccessible* aParent, PRUint32 aIndexInParent)
 
   mParent = aParent;
   mIndexInParent = aIndexInParent;
+}
+
+void
+nsAccessible::UnbindFromParent()
+{
+  mParent = nsnull;
+  mIndexInParent = -1;
+  mGroupInfo = nsnull;
 }
 
 void

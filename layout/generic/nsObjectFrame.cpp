@@ -769,7 +769,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
 
   if (mWidget) {
     rpc->RegisterPluginForGeometryUpdates(this);
-    rpc->UpdatePluginGeometry(this);
+    rpc->RequestUpdatePluginGeometry(this);
 
     // Here we set the background color for this widget because some plugins will use 
     // the child window background color when painting. If it's not set, it may default to gray
@@ -969,9 +969,7 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
   nsresult rv;
   if (fullPageMode) {  /* full-page mode */
     nsCOMPtr<nsIStreamListener> stream;
-    rv = aPluginHost->InstantiateFullPagePlugin(aMimeType, aURI,
-          /* resulting stream listener */       *getter_AddRefs(stream),
-                                                mInstanceOwner);
+    rv = aPluginHost->InstantiateFullPagePlugin(aMimeType, aURI, mInstanceOwner, getter_AddRefs(stream));
     if (NS_SUCCEEDED(rv))
       pDoc->SetStreamListener(stream);
   } else {   /* embedded mode */
@@ -1193,8 +1191,7 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove)
 {
-  NS_ASSERTION((aVisibleRegionBeforeMove != nsnull) == aBuilder->HasMovingFrames(),
-               "Should have aVisibleRegionBeforeMove when there are moving frames");
+  NS_ASSERTION(!aVisibleRegionBeforeMove, "not supported anymore");
 
   mVisibleRegion.And(*aVisibleRegion, GetBounds(aBuilder));  
   return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
@@ -1238,7 +1235,7 @@ nsObjectFrame::ComputeWidgetGeometry(const nsRegion& aRegion,
 
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsIFrame* rootFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
-  nsRect bounds = GetContentRect() + GetParent()->GetOffsetTo(rootFrame);
+  nsRect bounds = GetContentRect() + GetParent()->GetOffsetToCrossDoc(rootFrame);
   configuration->mBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
 
   // This should produce basically the same rectangle (but not relative
@@ -1353,7 +1350,8 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // determine if we are printing
   if (type == nsPresContext::eContext_Print)
     return aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(this, PaintPrintPlugin, "PrintPlugin"));
+        nsDisplayGeneric(this, PaintPrintPlugin, "PrintPlugin",
+                         nsDisplayItem::TYPE_PRINT_PLUGIN));
 
   return aLists.Content()->AppendNewToTop(new (aBuilder)
       nsDisplayPlugin(this));
@@ -5819,8 +5817,19 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           mFlash10Quirks = StringBeginsWith(description, flash10Head);
 #endif
         } else if (mWidget) {
-          mWidget->Resize(mPluginWindow->width, mPluginWindow->height,
-                          PR_FALSE);
+          nsIWidget* parent = mWidget->GetParent();
+          NS_ASSERTION(parent, "Plugin windows must not be toplevel");
+          // Set the plugin window to have an empty cliprect. The cliprect
+          // will be reset when nsRootPresContext::UpdatePluginGeometry
+          // runs later. The plugin window does need to have the correct
+          // size here.
+          nsAutoTArray<nsIWidget::Configuration,1> configuration;
+          if (configuration.AppendElement()) {
+            configuration[0].mChild = mWidget;
+            configuration[0].mBounds =
+              nsIntRect(0, 0, mPluginWindow->width, mPluginWindow->height);
+            parent->ConfigureChildren(configuration);
+          }
 
           // mPluginWindow->type is used in |GetPluginPort| so it must
           // be initialized first

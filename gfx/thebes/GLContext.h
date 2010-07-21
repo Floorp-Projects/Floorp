@@ -57,6 +57,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRegion.h"
+#include "nsAutoPtr.h"
 
 #ifndef GLAPIENTRY
 #ifdef XP_WIN
@@ -249,19 +250,110 @@ protected:
     nsIntRect mUpdateRect;
 };
 
+struct THEBES_API ContextFormat {
+    static const ContextFormat BasicRGBA32Format;
+
+    enum StandardContextFormat {
+        Empty,
+        BasicRGBA32,
+        StrictBasicRGBA32,
+        BasicRGB24,
+        StrictBasicRGB24,
+        BasicRGB16_565,
+        StrictBasicRGB16_565
+    };
+
+    ContextFormat() {
+        memset(this, 0, sizeof(ContextFormat));
+    }
+
+    ContextFormat(const StandardContextFormat cf) {
+        memset(this, 0, sizeof(ContextFormat));
+
+        switch (cf) {
+        case BasicRGBA32:
+            red = green = blue = alpha = 8;
+            minRed = minGreen = minBlue = minAlpha = 1;
+            break;
+
+        case StrictBasicRGBA32:
+            red = green = blue = alpha = 8;
+            minRed = minGreen = minBlue = minAlpha = 8;
+            break;
+
+        case BasicRGB24:
+            red = green = blue = 8;
+            minRed = minGreen = minBlue = 1;
+            break;
+
+        case StrictBasicRGB24:
+            red = green = blue = 8;
+            minRed = minGreen = minBlue = 8;
+            break;
+
+        case StrictBasicRGB16_565:
+            red = minRed = 5;
+            green = minGreen = 6;
+            blue = minBlue = 5;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    int depth, minDepth;
+    int stencil, minStencil;
+    int red, minRed;
+    int green, minGreen;
+    int blue, minBlue;
+    int alpha, minAlpha;
+
+    int colorBits() const { return red + green + blue; }
+};
+
 class GLContext
     : public LibrarySymbolLoader
 {
     THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
 public:
-    GLContext()
-      : mInitialized(PR_FALSE)
+    GLContext(const ContextFormat& aFormat,
+              PRBool aIsOffscreen = PR_FALSE,
+              GLContext *aSharedContext = nsnull)
+      : mInitialized(PR_FALSE),
+        mCreationFormat(aFormat),
+        mIsOffscreen(aIsOffscreen),
+        mSharedContext(aSharedContext),
+        mOffscreenTexture(0),
+        mOffscreenFBO(0),
+        mOffscreenDepthRB(0),
+        mOffscreenStencilRB(0)
     {
         mUserData.Init();
     }
 
-    virtual ~GLContext() { }
+    virtual ~GLContext() {
+#ifdef DEBUG
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->SharedContextDestroyed(this);
+            tip->ReportOutstandingNames();
+        }
+#endif
+    }
 
+    enum GLContextType {
+        ContextTypeUnknown,
+        ContextTypeWGL,
+        ContextTypeCGL,
+        ContextTypeGLX,
+        ContextTypeEGL,
+        ContextTypeOSMesa
+    };
+
+    virtual GLContextType GetContextType() { return ContextTypeUnknown; }
     virtual PRBool MakeCurrent() = 0;
     virtual PRBool SetupLookupFunction() = 0;
 
@@ -279,23 +371,22 @@ public:
 
     enum NativeDataType {
       NativeGLContext,
-      NativeCGLContext,
-      NativePBuffer,
       NativeImageSurface,
+      NativeThebesSurface,
       NativeDataTypeMax
     };
 
     virtual void *GetNativeData(NativeDataType aType) { return NULL; }
+    GLContext *GetSharedContext() { return mSharedContext; }
 
-    /* If this is a PBuffer context, resize the pbufer to the given dimensions,
-     * keping the same format and attributes.  If the resize succeeds, return
-     * PR_TRUE.  Otherwise, or if this is not a pbuffer, return PR_FALSE.
-     *
-     * On a successful resize, the previous contents of the pbuffer are cleared,
-     * and the new contents are undefined.
+    const ContextFormat& CreationFormat() { return mCreationFormat; }
+    const ContextFormat& ActualFormat() { return mActualFormat; }
+
+    /**
+     * If this context is double-buffered, returns TRUE.
      */
-    virtual PRBool Resize(const gfxIntSize& aNewSize) { return PR_FALSE; }
-
+    virtual PRBool IsDoubleBuffered() { return PR_FALSE; }
+ 
     /**
      * If this context wraps a double-buffered target, swap the back
      * and front buffers.  It should be assumed that after a swap, the
@@ -326,6 +417,99 @@ public:
         fDeleteTextures(1, &tex); 
     }
 
+    /*
+     * Offscreen support API
+     */
+
+    /*
+     * Bind aOffscreen's color buffer as a texture to the TEXTURE_2D
+     * target.  Returns TRUE on success, otherwise FALSE.  If
+     * aOffscreen is not an offscreen context, returns FALSE.  If
+     * BindOffscreenNeedsTexture() returns TRUE, then you should have
+     * a 2D texture name bound whose image will be replaced by the
+     * contents of the offscreen context.  If it returns FALSE,
+     * the current 2D texture binding will be replaced.
+     *
+     * After a successul call to BindTex2DOffscreen, UnbindTex2DOffscreen
+     * *must* be called once rendering is complete.
+     *
+     * The same texture unit must be active for Bind/Unbind of a given
+     * context.
+     */
+    virtual PRBool BindOffscreenNeedsTexture(GLContext *aOffscreen) {
+        return aOffscreen->mOffscreenTexture == 0;
+    }
+
+    virtual PRBool BindTex2DOffscreen(GLContext *aOffscreen) {
+        if (aOffscreen->GetContextType() != GetContextType()) {
+          return PR_FALSE;
+        }
+
+        if (!aOffscreen->mOffscreenFBO) {
+            return PR_FALSE;
+        }
+
+        if (!aOffscreen->mSharedContext ||
+            aOffscreen->mSharedContext != mSharedContext)
+        {
+            return PR_FALSE;
+        }
+
+        fBindTexture(LOCAL_GL_TEXTURE_2D, aOffscreen->mOffscreenTexture);
+
+        return PR_TRUE;
+    }
+
+    virtual void UnbindTex2DOffscreen(GLContext *aOffscreen) { }
+
+    PRBool IsOffscreen() {
+        return mIsOffscreen;
+    }
+
+    /*
+     * All the methods below are only valid if IsOffscreen() returns
+     * true.
+     */
+
+    /*
+     * Resize the current offscreen buffer.  Returns true on success.
+     * If it returns false, the context should be treated as unusable
+     * and should be recreated.  After the resize, the viewport is not
+     * changed; glViewport should be called as appropriate.
+     */
+    virtual PRBool ResizeOffscreen(const gfxIntSize& aNewSize) {
+        if (mOffscreenFBO)
+            return ResizeOffscreenFBO(aNewSize);
+        return PR_FALSE;
+    }
+
+    /*
+     * Return size of this offscreen context.
+     */
+    gfxIntSize OffscreenSize() {
+        return mOffscreenSize;
+    }
+
+    /*
+     * In some cases, we have to allocate a bigger offscreen buffer
+     * than what's requested.  This is the bigger size.
+     */
+    gfxIntSize OffscreenActualSize() {
+        return mOffscreenActualSize;
+    }
+
+    /*
+     * If this context is FBO-backed, return the FBO or the color
+     * buffer texture.  If the context is not FBO-backed, 0 is
+     * returned (which is also a valid FBO binding).
+     */
+    GLuint GetOffscreenFBO() {
+        return mOffscreenFBO;
+    }
+    GLuint GetOffscreenTexture() {
+        return mOffscreenTexture;
+    }
+
     /**
      * Return a valid, allocated TextureImage of |aSize| with
      * |aContentType|.  The TextureImage's texture is configured to
@@ -346,8 +530,31 @@ public:
                        PRBool aUseNearestFilter=PR_FALSE);
 
 protected:
+    PRPackedBool mInitialized;
+    ContextFormat mCreationFormat;
+    PRPackedBool mIsOffscreen;
+    nsRefPtr<GLContext> mSharedContext;
 
-    PRBool mInitialized;
+    void UpdateActualFormat();
+    ContextFormat mActualFormat;
+
+    gfxIntSize mOffscreenSize;
+    gfxIntSize mOffscreenActualSize;
+    GLuint mOffscreenTexture;
+
+    // helper to create/resize an offscreen FBO,
+    // for offscreen implementations that use FBOs.
+    PRBool ResizeOffscreenFBO(const gfxIntSize& aSize);
+    void DeleteOffscreenFBO();
+    GLuint mOffscreenFBO;
+    GLuint mOffscreenDepthRB;
+    GLuint mOffscreenStencilRB;
+
+    // Clear to transparent black, with 0 depth and stencil,
+    // while preserving current ClearColor etc. values.
+    // Useful for resizing offscreen buffers.
+    void ClearSafely();
+
     nsDataHashtable<nsVoidPtrHashKey, void*> mUserData;
 
     PRBool InitWithPrefix(const char *prefix, PRBool trygl);
@@ -408,20 +615,8 @@ public:
     PFNGLCLEARSTENCILPROC fClearStencil;
     typedef void (GLAPIENTRY * PFNGLCOLORMASKPROC) (realGLboolean red, realGLboolean green, realGLboolean blue, realGLboolean alpha);
     PFNGLCOLORMASKPROC fColorMask;
-    typedef GLuint (GLAPIENTRY * PFNGLCREATEPROGRAMPROC) (void);
-    PFNGLCREATEPROGRAMPROC fCreateProgram;
-    typedef GLuint (GLAPIENTRY * PFNGLCREATESHADERPROC) (GLenum type);
-    PFNGLCREATESHADERPROC fCreateShader;
     typedef void (GLAPIENTRY * PFNGLCULLFACEPROC) (GLenum mode);
     PFNGLCULLFACEPROC fCullFace;
-    typedef void (GLAPIENTRY * PFNGLDELETEBUFFERSPROC) (GLsizei n, const GLuint* buffers);
-    PFNGLDELETEBUFFERSPROC fDeleteBuffers;
-    typedef void (GLAPIENTRY * PFNGLDELETETEXTURESPROC) (GLsizei n, const GLuint* textures);
-    PFNGLDELETETEXTURESPROC fDeleteTextures;
-    typedef void (GLAPIENTRY * PFNGLDELETEPROGRAMPROC) (GLuint program);
-    PFNGLDELETEPROGRAMPROC fDeleteProgram;
-    typedef void (GLAPIENTRY * PFNGLDELETESHADERPROC) (GLuint shader);
-    PFNGLDELETESHADERPROC fDeleteShader;
     typedef void (GLAPIENTRY * PFNGLDETACHSHADERPROC) (GLuint program, GLuint shader);
     PFNGLDETACHSHADERPROC fDetachShader;
     typedef void (GLAPIENTRY * PFNGLDEPTHFUNCPROC) (GLenum);
@@ -473,10 +668,6 @@ public:
     PFNGLGETBOOLEANBPROC fGetBooleanv;
     typedef void (GLAPIENTRY * PFNGLGETBUFFERPARAMETERIVPROC) (GLenum target, GLenum pname, GLint* params);
     PFNGLGETBUFFERPARAMETERIVPROC fGetBufferParameteriv;
-    typedef void (GLAPIENTRY * PFNGLGENBUFFERSPROC) (GLsizei n, GLuint* buffers);
-    PFNGLGENBUFFERSPROC fGenBuffers;
-    typedef void (GLAPIENTRY * PFNGLGENTEXTURESPROC) (GLsizei n, GLuint *textures);
-    PFNGLGENTEXTURESPROC fGenTextures;
     typedef void (GLAPIENTRY * PFNGLGENERATEMIPMAPPROC) (GLenum target);
     PFNGLGENERATEMIPMAPPROC fGenerateMipmap;
     typedef GLenum (GLAPIENTRY * PFNGLGETERRORPROC) (void);
@@ -523,12 +714,6 @@ public:
     PFNGLLINEWIDTHPROC fLineWidth;
     typedef void (GLAPIENTRY * PFNGLLINKPROGRAMPROC) (GLuint program);
     PFNGLLINKPROGRAMPROC fLinkProgram;
-#if 0
-    typedef void * (GLAPIENTRY * PFNGLMAPBUFFERPROC) (GLenum target, GLenum access);
-    PFNGLMAPBUFFERPROC fMapBuffer;
-    typedef realGLboolean (GLAPIENTRY * PFNGLUNAMPBUFFERPROC) (GLenum target);
-    PFNGLUNAMPBUFFERPROC fUnmapBuffer;
-#endif
     typedef void (GLAPIENTRY * PFNGLPIXELSTOREIPROC) (GLenum pname, GLint param);
     PFNGLPIXELSTOREIPROC fPixelStorei;
     typedef void (GLAPIENTRY * PFNGLPOLYGONOFFSETPROC) (GLfloat factor, GLfloat bias);
@@ -650,10 +835,6 @@ public:
     PFNGLBINDRENDERBUFFER fBindRenderbuffer;
     typedef GLenum (GLAPIENTRY * PFNGLCHECKFRAMEBUFFERSTATUS) (GLenum target);
     PFNGLCHECKFRAMEBUFFERSTATUS fCheckFramebufferStatus;
-    typedef void (GLAPIENTRY * PFNGLDELETEFRAMEBUFFERS) (GLsizei n, const GLuint* ids);
-    PFNGLDELETEFRAMEBUFFERS fDeleteFramebuffers;
-    typedef void (GLAPIENTRY * PFNGLDELETERENDERBUFFERS) (GLsizei n, const GLuint* ids);
-    PFNGLDELETERENDERBUFFERS fDeleteRenderbuffers;
     typedef void (GLAPIENTRY * PFNGLFRAMEBUFFERRENDERBUFFER) (GLenum target, GLenum attachmentPoint, GLenum renderbufferTarget, GLuint renderbuffer);
     PFNGLFRAMEBUFFERRENDERBUFFER fFramebufferRenderbuffer;
     typedef void (GLAPIENTRY * PFNGLFRAMEBUFFERTEXTURE2D) (GLenum target, GLenum attachmentPoint, GLenum textureTarget, GLuint texture, GLint level);
@@ -662,10 +843,6 @@ public:
     PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIV fGetFramebufferAttachmentParameteriv;
     typedef void (GLAPIENTRY * PFNGLGETRENDERBUFFERPARAMETERIV) (GLenum target, GLenum pname, GLint* value);
     PFNGLGETRENDERBUFFERPARAMETERIV fGetRenderbufferParameteriv;
-    typedef void (GLAPIENTRY * PFNGLGENFRAMEBUFFERS) (GLsizei n, GLuint* ids);
-    PFNGLGENFRAMEBUFFERS fGenFramebuffers;
-    typedef void (GLAPIENTRY * PFNGLGENRENDERBUFFERS) (GLsizei n, GLuint* ids);
-    PFNGLGENRENDERBUFFERS fGenRenderbuffers;
     typedef realGLboolean (GLAPIENTRY * PFNGLISFRAMEBUFFER) (GLuint framebuffer);
     PFNGLISFRAMEBUFFER fIsFramebuffer;
     typedef realGLboolean (GLAPIENTRY * PFNGLISRENDERBUFFER) (GLuint renderbuffer);
@@ -673,15 +850,273 @@ public:
     typedef void (GLAPIENTRY * PFNGLRENDERBUFFERSTORAGE) (GLenum target, GLenum internalFormat, GLsizei width, GLsizei height);
     PFNGLRENDERBUFFERSTORAGE fRenderbufferStorage;
 
+protected:
+    /* These are special -- they create or delete GL resources that can live
+     * in a shared namespace.  In DEBUG, we wrap these calls so that we can
+     * check when we have something that failed to do cleanup at the time the
+     * final context is destroyed.
+     */
+
+    typedef GLuint (GLAPIENTRY * PFNGLCREATEPROGRAMPROC) (void);
+    PFNGLCREATEPROGRAMPROC priv_fCreateProgram;
+    typedef GLuint (GLAPIENTRY * PFNGLCREATESHADERPROC) (GLenum type);
+    PFNGLCREATESHADERPROC priv_fCreateShader;
+    typedef void (GLAPIENTRY * PFNGLGENBUFFERSPROC) (GLsizei n, GLuint* buffers);
+    PFNGLGENBUFFERSPROC priv_fGenBuffers;
+    typedef void (GLAPIENTRY * PFNGLGENTEXTURESPROC) (GLsizei n, GLuint *textures);
+    PFNGLGENTEXTURESPROC priv_fGenTextures;
+    typedef void (GLAPIENTRY * PFNGLGENFRAMEBUFFERS) (GLsizei n, GLuint* ids);
+    PFNGLGENFRAMEBUFFERS priv_fGenFramebuffers;
+    typedef void (GLAPIENTRY * PFNGLGENRENDERBUFFERS) (GLsizei n, GLuint* ids);
+    PFNGLGENRENDERBUFFERS priv_fGenRenderbuffers;
+
+    typedef void (GLAPIENTRY * PFNGLDELETEPROGRAMPROC) (GLuint program);
+    PFNGLDELETEPROGRAMPROC priv_fDeleteProgram;
+    typedef void (GLAPIENTRY * PFNGLDELETESHADERPROC) (GLuint shader);
+    PFNGLDELETESHADERPROC priv_fDeleteShader;
+    typedef void (GLAPIENTRY * PFNGLDELETEBUFFERSPROC) (GLsizei n, const GLuint* buffers);
+    PFNGLDELETEBUFFERSPROC priv_fDeleteBuffers;
+    typedef void (GLAPIENTRY * PFNGLDELETETEXTURESPROC) (GLsizei n, const GLuint* textures);
+    PFNGLDELETETEXTURESPROC priv_fDeleteTextures;
+    typedef void (GLAPIENTRY * PFNGLDELETEFRAMEBUFFERS) (GLsizei n, const GLuint* ids);
+    PFNGLDELETEFRAMEBUFFERS priv_fDeleteFramebuffers;
+    typedef void (GLAPIENTRY * PFNGLDELETERENDERBUFFERS) (GLsizei n, const GLuint* ids);
+    PFNGLDELETERENDERBUFFERS priv_fDeleteRenderbuffers;
+
+public:
+#ifndef DEBUG
+    GLuint GLAPIENTRY fCreateProgram() {
+        return priv_fCreateProgram();
+    }
+
+    GLuint GLAPIENTRY fCreateShader(GLenum t) {
+        return priv_fCreateShader(t);
+    }
+
+    void GLAPIENTRY fGenBuffers(GLsizei n, GLuint* names) {
+        priv_fGenBuffers(n, names);
+    }
+
+    void GLAPIENTRY fGenTextures(GLsizei n, GLuint* names) {
+        priv_fGenTextures(n, names);
+    }
+
+    void GLAPIENTRY fGenFramebuffers(GLsizei n, GLuint* names) {
+        priv_fGenFramebuffers(n, names);
+    }
+
+    void GLAPIENTRY fGenRenderbuffers(GLsizei n, GLuint* names) {
+        priv_fGenRenderbuffers(n, names);
+    }
+
+    void GLAPIENTRY fDeleteProgram(GLuint program) {
+        priv_fDeleteProgram(program);
+    }
+
+    void GLAPIENTRY fDeleteShader(GLuint shader) {
+        priv_fDeleteShader(shader);
+    }
+
+    void GLAPIENTRY fDeleteBuffers(GLsizei n, GLuint *names) {
+        priv_fDeleteBuffers(n, names);
+    }
+
+    void GLAPIENTRY fDeleteTextures(GLsizei n, GLuint *names) {
+        priv_fDeleteTextures(n, names);
+    }
+
+    void GLAPIENTRY fDeleteFramebuffers(GLsizei n, GLuint *names) {
+        priv_fDeleteFramebuffers(n, names);
+    }
+
+    void GLAPIENTRY fDeleteRenderbuffers(GLsizei n, GLuint *names) {
+        priv_fDeleteRenderbuffers(n, names);
+    }
+#else
+    GLuint GLAPIENTRY fCreateProgram() {
+        GLuint ret = priv_fCreateProgram();
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->CreatedProgram(this, ret);
+        }
+        return ret;
+    }
+
+    GLuint GLAPIENTRY fCreateShader(GLenum t) {
+        GLuint ret = priv_fCreateShader(t);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->CreatedShader(this, ret);
+        }
+        return ret;
+    }
+
+    void GLAPIENTRY fGenBuffers(GLsizei n, GLuint* names) {
+        priv_fGenBuffers(n, names);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->CreatedBuffers(this, n, names);
+        }
+    }
+
+    void GLAPIENTRY fGenTextures(GLsizei n, GLuint* names) {
+        priv_fGenTextures(n, names);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->CreatedTextures(this, n, names);
+        }
+    }
+
+    void GLAPIENTRY fGenFramebuffers(GLsizei n, GLuint* names) {
+        priv_fGenFramebuffers(n, names);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->CreatedFramebuffers(this, n, names);
+        }
+    }
+
+    void GLAPIENTRY fGenRenderbuffers(GLsizei n, GLuint* names) {
+        priv_fGenRenderbuffers(n, names);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->CreatedRenderbuffers(this, n, names);
+        }
+    }
+
+    void GLAPIENTRY fDeleteProgram(GLuint program) {
+        priv_fDeleteProgram(program);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->DeletedProgram(this, program);
+        }
+    }
+
+    void GLAPIENTRY fDeleteShader(GLuint shader) {
+        priv_fDeleteShader(shader);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->DeletedShader(this, shader);
+        }
+    }
+
+    void GLAPIENTRY fDeleteBuffers(GLsizei n, GLuint *names) {
+        priv_fDeleteBuffers(n, names);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->DeletedBuffers(this, n, names);
+        }
+    }
+
+    void GLAPIENTRY fDeleteTextures(GLsizei n, GLuint *names) {
+        priv_fDeleteTextures(n, names);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->DeletedTextures(this, n, names);
+        }
+    }
+
+    void GLAPIENTRY fDeleteFramebuffers(GLsizei n, GLuint *names) {
+        priv_fDeleteFramebuffers(n, names);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->DeletedFramebuffers(this, n, names);
+        }
+
+    }
+
+    void GLAPIENTRY fDeleteRenderbuffers(GLsizei n, GLuint *names) {
+        priv_fDeleteRenderbuffers(n, names);
+        if (mSharedContext) {
+            GLContext *tip = mSharedContext;
+            while (tip->mSharedContext)
+                tip = tip->mSharedContext;
+            tip->DeletedRenderbuffers(this, n, names);
+        }
+    }
+
+    void THEBES_API CreatedProgram(GLContext *aOrigin, GLuint aName);
+    void THEBES_API CreatedShader(GLContext *aOrigin, GLuint aName);
+    void THEBES_API CreatedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API CreatedTextures(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API CreatedFramebuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API CreatedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API DeletedProgram(GLContext *aOrigin, GLuint aName);
+    void THEBES_API DeletedShader(GLContext *aOrigin, GLuint aName);
+    void THEBES_API DeletedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API DeletedTextures(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API DeletedFramebuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void THEBES_API DeletedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+
+    void SharedContextDestroyed(GLContext *aChild);
+    void ReportOutstandingNames();
+
+    struct NamedResource {
+        NamedResource()
+            : origin(nsnull), name(0), originDeleted(PR_FALSE)
+        { }
+
+        NamedResource(GLContext *aOrigin, GLuint aName)
+            : origin(aOrigin), name(aName), originDeleted(PR_FALSE)
+        { }
+
+        GLContext *origin;
+        GLuint name;
+        PRBool originDeleted;
+
+        // for sorting
+        bool operator<(const NamedResource& aOther) const {
+            if (intptr_t(origin) < intptr_t(aOther.origin))
+                return true;
+            if (name < aOther.name)
+                return true;
+            return false;
+        }
+        bool operator==(const NamedResource& aOther) const {
+            return origin == aOther.origin &&
+                name == aOther.name &&
+                originDeleted == aOther.originDeleted;
+        }
+    };
+
+    nsTArray<NamedResource> mTrackedPrograms;
+    nsTArray<NamedResource> mTrackedShaders;
+    nsTArray<NamedResource> mTrackedTextures;
+    nsTArray<NamedResource> mTrackedFramebuffers;
+    nsTArray<NamedResource> mTrackedRenderbuffers;
+    nsTArray<NamedResource> mTrackedBuffers;
+#endif
+    
 };
 
 inline void
 GLDebugPrintError(GLContext* aCx, const char* const aFile, int aLine)
 {
-  GLenum err = aCx->fGetError();
-  if (err) {
-    fprintf(stderr, "GL ERROR: 0x%04x at %s:%d\n", err, aFile, aLine);
-  }
+    GLenum err = aCx->fGetError();
+    if (err) {
+        printf_stderr("GL ERROR: 0x%04x at %s:%d\n", err, aFile, aLine);
+    }
 }
 
 #ifdef DEBUG

@@ -295,6 +295,13 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
     }
 #  endif
 
+#elif defined NANOJIT_ARM && defined VMCFG_SYMBIAN
+    void CodeAlloc::flushICache(void *ptr, size_t len) {
+        uint32_t start = (uint32_t)ptr;
+        uint32_t rangeEnd = start + len;
+        User::IMB_Range((TAny*)start, (TAny*)rangeEnd);
+    }
+
 #elif defined AVMPLUS_SPARC
     // fixme: sync_instruction_memory is a solaris api, test for solaris not sparc
     void CodeAlloc::flushICache(void *start, size_t len) {
@@ -427,6 +434,18 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
             addBlock(blocks, b1);
         }
     }
+
+#ifdef PERFM
+    // This method is used only for profiling purposes.
+    // See CodegenLIR::emitMD() in Tamarin for an example.
+
+    size_t CodeAlloc::size(const CodeList* blocks) {
+        size_t size = 0;
+        for (const CodeList* b = blocks; b != 0; b = b->next)
+            size += int((uintptr_t)b->end - (uintptr_t)b);
+        return size;
+    }
+#endif
 
     size_t CodeAlloc::size() {
         return totalAllocated;

@@ -160,7 +160,7 @@ class XPCShellTests(object):
     elif sys.platform in ('os2emx', 'os2knix'):
       os.environ["BEGINLIBPATH"] = self.xrePath + ";" + self.env["BEGINLIBPATH"]
       os.environ["LIBPATHSTRICT"] = "T"
-    elif sys.platform == 'osx':
+    elif sys.platform == 'osx' or sys.platform == "darwin":
       self.env["DYLD_LIBRARY_PATH"] = self.xrePath
     else: # unix or linux?
       self.env["LD_LIBRARY_PATH"] = self.xrePath

@@ -39,7 +39,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.64 2010/02/01 20:09:31 wtc%google.com Exp $
+ * $Id: ocsp.c,v 1.65 2010/06/07 19:03:27 kaie%kuix.de Exp $
  */
 
 #include "prerror.h"
@@ -5189,7 +5189,7 @@ cert_ProcessOCSPResponse(CERTCertDBHandle *handle,
                          SECStatus        *cacheUpdateStatus)
 {
     SECStatus rv;
-    SECStatus rv_cache;
+    SECStatus rv_cache = SECSuccess;
     CERTOCSPSingleResponse *single = NULL;
 
     rv = ocsp_GetVerifiedSingleResponseForCertID(handle, response, certID, 

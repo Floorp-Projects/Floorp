@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "TestShellParent.h"
-#include "mozilla/dom/ContentProcessParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/jsipc/ContextWrapperParent.h"
 
 #include "nsAutoPtr.h"
@@ -43,7 +43,7 @@
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::PTestShellCommandParent;
-using mozilla::dom::ContentProcessParent;
+using mozilla::dom::ContentParent;
 using mozilla::jsipc::PContextWrapperParent;
 using mozilla::jsipc::ContextWrapperParent;
 
@@ -74,8 +74,7 @@ TestShellParent::CommandDone(TestShellCommandParent* command,
 PContextWrapperParent*
 TestShellParent::AllocPContextWrapper()
 {
-    ContentProcessParent* cpp =
-        static_cast<ContentProcessParent*>(Manager());
+    ContentParent* cpp = static_cast<ContentParent*>(Manager());
     return new ContextWrapperParent(cpp);
 }
 

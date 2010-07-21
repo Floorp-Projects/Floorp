@@ -37,7 +37,7 @@
 CORE_DEPTH = ..
 DEPTH      = ..
 
-IMPORTS =	nspr20/v4.7 \
+IMPORTS =	nspr20/v4.8 \
 		$(NULL)
 
 RELEASE = nss

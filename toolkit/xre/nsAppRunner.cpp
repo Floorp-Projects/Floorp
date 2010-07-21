@@ -259,6 +259,11 @@ static const char gToolkitBuildID[] = NS_STRINGIFY(GRE_BUILDID);
 static int    gRestartArgc;
 static char **gRestartArgv;
 
+#ifdef MOZ_WIDGET_QT
+static int    gQtOnlyArgc;
+static char **gQtOnlyArgv;
+#endif
+
 #if defined(MOZ_WIDGET_GTK2)
 #if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) \
   || defined(NS_TRACE_MALLOC)
@@ -1726,8 +1731,14 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   // if supported by the platform.  Otherwise, use NSPR.
  
   if (aBlankCommandLine) {
+#if defined(MOZ_WIDGET_QT)
+    // Remove only arguments not given to Qt
+    gRestartArgc = gQtOnlyArgc;
+    gRestartArgv = gQtOnlyArgv;
+#else
     gRestartArgc = 1;
     gRestartArgv[gRestartArgc] = nsnull;
+#endif
   }
 
   SaveToEnv("MOZ_LAUNCHED_CHILD=1");
@@ -3102,6 +3113,22 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (ar == ARG_FOUND)
       PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
     QApplication app(gArgc, gArgv);
+
+    QStringList nonQtArguments = app.arguments();
+    gQtOnlyArgc = 1;
+    gQtOnlyArgv = (char**) malloc(sizeof(char*) 
+                  * (gRestartArgc - nonQtArguments.size() + 2));
+
+    // copy binary path
+    gQtOnlyArgv[0] = gRestartArgv[0];
+
+    for (int i = 1; i < gRestartArgc; ++i) {
+      if (!nonQtArguments.contains(gRestartArgv[i])) {
+        // copy arguments used by Qt for later
+        gQtOnlyArgv[gQtOnlyArgc++] = gRestartArgv[i];
+      }
+    }
+    gQtOnlyArgv[gQtOnlyArgc] = nsnull;
 #endif
 #if defined(MOZ_WIDGET_GTK2)
 #ifdef MOZ_MEMORY
@@ -3266,8 +3293,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         MakeOrSetMinidumpPath(profD);
 #endif
 
-    PRBool upgraded = PR_FALSE;
-
     nsCAutoString version;
     BuildVersion(version);
 
@@ -3342,11 +3367,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // troublesome incompatible XPCOM components). 
       RemoveComponentRegistries(profD, profLD, PR_TRUE);
 
-      // Tell the Extension Manager it should check for incompatible 
-      // Extensions and re-write the "extensions.ini" file with a list of 
-      // directories for compatible extensions
-      upgraded = PR_TRUE;
-
       // Write out version
       WriteVersion(profD, version, osABI,
                    dirProvider.GetGREDir(), gAppData->directory);
@@ -3357,7 +3377,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       flagFile->Remove(PR_TRUE);
     }
 #endif
-    PRBool needsRestart = PR_FALSE;
     PRBool appInitiatedRestart = PR_FALSE;
 
     MOZ_SPLASHSCREEN_UPDATE(30);
@@ -3516,160 +3535,128 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           NS_TIME_FUNCTION_MARK("Early command line init");
 
           NS_TIME_FUNCTION_MARK("Next: prepare for Run");
-
-          if (!upgraded)
-            appStartup->GetNeedsRestart(&needsRestart);
-
-          // We want to restart no more than 2 times. The first restart,
-          // NO_EM_RESTART == "0" , and the second time, "1".
-          char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
-          if (noEMRestart && *noEMRestart && *noEMRestart == '1') {
-            if (upgraded || needsRestart) {
-              NS_WARNING("EM tried to force us to restart twice! Forcefully preventing that.");
-            }
-            needsRestart = upgraded = PR_FALSE;
-          }
         }
 
-        if (!upgraded && !needsRestart) {
-          SaveStateForAppInitiatedRestart();
+        SaveStateForAppInitiatedRestart();
 
-          // clear out any environment variables which may have been set 
-          // during the relaunch process now that we know we won't be relaunching.
-          SaveToEnv("XRE_PROFILE_PATH=");
-          SaveToEnv("XRE_PROFILE_LOCAL_PATH=");
-          SaveToEnv("XRE_PROFILE_NAME=");
-          SaveToEnv("XRE_START_OFFLINE=");
-          SaveToEnv("XRE_IMPORT_PROFILES=");
-          SaveToEnv("NO_EM_RESTART=");
-          SaveToEnv("XUL_APP_FILE=");
-          SaveToEnv("XRE_BINARY_PATH=");
-    
-          NS_TIME_FUNCTION_MARK("env munging");
+        // clear out any environment variables which may have been set 
+        // during the relaunch process now that we know we won't be relaunching.
+        SaveToEnv("XRE_PROFILE_PATH=");
+        SaveToEnv("XRE_PROFILE_LOCAL_PATH=");
+        SaveToEnv("XRE_PROFILE_NAME=");
+        SaveToEnv("XRE_START_OFFLINE=");
+        SaveToEnv("XRE_IMPORT_PROFILES=");
+        SaveToEnv("NO_EM_RESTART=");
+        SaveToEnv("XUL_APP_FILE=");
+        SaveToEnv("XRE_BINARY_PATH=");
 
-          if (!shuttingDown) {
-            NS_TIME_FUNCTION_MARK("Next: CreateHiddenWindow");
+        NS_TIME_FUNCTION_MARK("env munging");
 
-            NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");
-            rv = appStartup->CreateHiddenWindow();
-            NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
-            NS_ENSURE_SUCCESS(rv, 1);
+        if (!shuttingDown) {
+          NS_TIME_FUNCTION_MARK("Next: CreateHiddenWindow");
 
-            MOZ_SPLASHSCREEN_UPDATE(50);
+          NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");
+          rv = appStartup->CreateHiddenWindow();
+          NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
+          NS_ENSURE_SUCCESS(rv, 1);
+
+          MOZ_SPLASHSCREEN_UPDATE(50);
 
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
-            nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
-            if (toolkit && !desktopStartupID.IsEmpty()) {
-              toolkit->SetDesktopStartupID(desktopStartupID);
-            }
+          nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
+          if (toolkit && !desktopStartupID.IsEmpty()) {
+            toolkit->SetDesktopStartupID(desktopStartupID);
+          }
 #endif
 
 #ifdef XP_MACOSX
-            // we re-initialize the command-line service and do appleevents munging
-            // after we are sure that we're not restarting
-            cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
-            NS_ENSURE_TRUE(cmdLine, 1);
+          // we re-initialize the command-line service and do appleevents munging
+          // after we are sure that we're not restarting
+          cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
+          NS_ENSURE_TRUE(cmdLine, 1);
 
-            CommandLineServiceMac::SetupMacCommandLine(gArgc, gArgv, PR_FALSE);
+          CommandLineServiceMac::SetupMacCommandLine(gArgc, gArgv, PR_FALSE);
 
-            rv = cmdLine->Init(gArgc, gArgv,
-                               workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
-            NS_ENSURE_SUCCESS(rv, 1);
-            
-            // Set up ability to respond to system (Apple) events.
-            SetupMacApplicationDelegate();
+          rv = cmdLine->Init(gArgc, gArgv,
+                             workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
+          NS_ENSURE_SUCCESS(rv, 1);
+          
+          // Set up ability to respond to system (Apple) events.
+          SetupMacApplicationDelegate();
 #endif
 
-            MOZ_SPLASHSCREEN_UPDATE(70);
+          MOZ_SPLASHSCREEN_UPDATE(70);
 
-            nsCOMPtr<nsIObserverService> obsService =
-              mozilla::services::GetObserverService();
-            if (obsService)
-              obsService->NotifyObservers(nsnull, "final-ui-startup", nsnull);
+          nsCOMPtr<nsIObserverService> obsService =
+            mozilla::services::GetObserverService();
+          if (obsService)
+            obsService->NotifyObservers(nsnull, "final-ui-startup", nsnull);
 
-            NS_TIME_FUNCTION_MARK("final-ui-startup done");
+          NS_TIME_FUNCTION_MARK("final-ui-startup done");
 
-            appStartup->GetShuttingDown(&shuttingDown);
-          }
+          appStartup->GetShuttingDown(&shuttingDown);
+        }
 
-          if (!shuttingDown) {
-            rv = cmdLine->Run();
-            NS_ENSURE_SUCCESS_LOG(rv, 1);
+        if (!shuttingDown) {
+          rv = cmdLine->Run();
+          NS_ENSURE_SUCCESS_LOG(rv, 1);
 
-            appStartup->GetShuttingDown(&shuttingDown);
-          }
+          appStartup->GetShuttingDown(&shuttingDown);
+        }
 
 #ifdef MOZ_ENABLE_XREMOTE
-          nsCOMPtr<nsIRemoteService> remoteService;
+        nsCOMPtr<nsIRemoteService> remoteService;
 #endif /* MOZ_ENABLE_XREMOTE */
-          if (!shuttingDown) {
+        if (!shuttingDown) {
 #ifdef MOZ_ENABLE_XREMOTE
-            // if we have X remote support, start listening for requests on the
-            // proxy window.
-            remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
-            if (remoteService)
-              remoteService->Startup(gAppData->name,
-                                     PromiseFlatCString(profileName).get());
+          // if we have X remote support, start listening for requests on the
+          // proxy window.
+          remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
+          if (remoteService)
+            remoteService->Startup(gAppData->name,
+                                   PromiseFlatCString(profileName).get());
 #endif /* MOZ_ENABLE_XREMOTE */
 
-            nativeApp->Enable();
+          nativeApp->Enable();
+        }
+
+        NS_TIME_FUNCTION_MARK("Next: Run");
+
+        NS_TIME_FUNCTION_MARK("appStartup->Run");
+
+        MOZ_SPLASHSCREEN_UPDATE(90);
+        {
+          NS_TIMELINE_ENTER("appStartup->Run");
+          rv = appStartup->Run();
+          NS_TIMELINE_LEAVE("appStartup->Run");
+          if (NS_FAILED(rv)) {
+            NS_ERROR("failed to run appstartup");
+            gLogConsoleErrors = PR_TRUE;
           }
+        }
 
-          NS_TIME_FUNCTION_MARK("Next: Run");
+        NS_TIME_FUNCTION_MARK("Next: Finish");
 
-          NS_TIME_FUNCTION_MARK("appStartup->Run");
+        NS_TIME_FUNCTION_MARK("appStartup->Run done");
 
-          MOZ_SPLASHSCREEN_UPDATE(90);
-          {
-            NS_TIMELINE_ENTER("appStartup->Run");
-            rv = appStartup->Run();
-            NS_TIMELINE_LEAVE("appStartup->Run");
-            if (NS_FAILED(rv)) {
-              NS_ERROR("failed to run appstartup");
-              gLogConsoleErrors = PR_TRUE;
-            }
-          }
+        // Check for an application initiated restart.  This is one that
+        // corresponds to nsIAppStartup.quit(eRestart)
+        if (rv == NS_SUCCESS_RESTART_APP)
+          appInitiatedRestart = PR_TRUE;
 
-          NS_TIME_FUNCTION_MARK("Next: Finish");
-
-          NS_TIME_FUNCTION_MARK("appStartup->Run done");
-
-          // Check for an application initiated restart.  This is one that
-          // corresponds to nsIAppStartup.quit(eRestart)
-          if (rv == NS_SUCCESS_RESTART_APP) {
-            needsRestart = PR_TRUE;
-            appInitiatedRestart = PR_TRUE;
-          }
-
-          if (!shuttingDown) {
+        if (!shuttingDown) {
 #ifdef MOZ_ENABLE_XREMOTE
-            // shut down the x remote proxy window
-            if (remoteService)
-              remoteService->Shutdown();
+          // shut down the x remote proxy window
+          if (remoteService)
+            remoteService->Shutdown();
 #endif /* MOZ_ENABLE_XREMOTE */
-          }
+        }
 
 #ifdef MOZ_TIMELINE
-          // Make sure we print this out even if timeline is runtime disabled
-          if (NS_FAILED(NS_TIMELINE_LEAVE("main1")))
-            NS_TimelineForceMark("...main1");
+        // Make sure we print this out even if timeline is runtime disabled
+        if (NS_FAILED(NS_TIMELINE_LEAVE("main1")))
+          NS_TimelineForceMark("...main1");
 #endif
-        }
-        else {
-          // Upgrade condition (build id changes), but the restart hint was 
-          // not set by the Extension Manager. This is because the compatibility
-          // resolution for Extensions is different than for the component 
-          // registry - major milestone vs. build id. 
-          needsRestart = PR_TRUE;
-
-#ifdef XP_WIN
-          ProcessDDE(nativeApp, PR_TRUE);
-#endif
-
-#ifdef XP_MACOSX
-          CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv, PR_TRUE);
-#endif
-        }
       }
     }
 
@@ -3678,21 +3665,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     profileLock->Unlock();
 
     // Restart the app after XPCOM has been shut down cleanly. 
-    if (needsRestart) {
+    if (appInitiatedRestart) {
       MOZ_SPLASHSCREEN_UPDATE(90);
 
-      if (appInitiatedRestart) {
-        RestoreStateForAppInitiatedRestart();
-      }
-      else {
-        char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
-        if (noEMRestart && *noEMRestart) {
-          SaveToEnv("NO_EM_RESTART=1");
-        }
-        else {
-          SaveToEnv("NO_EM_RESTART=0");
-        }
-      }
+      RestoreStateForAppInitiatedRestart();
 
       // Ensure that these environment variables are set:
       SaveFileToEnvIfUnset("XRE_PROFILE_PATH", profD);
@@ -3721,7 +3697,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       MOZ_gdk_display_close(display);
 #endif
 
-      rv = LaunchChild(nativeApp, appInitiatedRestart);
+      rv = LaunchChild(nativeApp, PR_TRUE);
 
 #ifdef MOZ_CRASHREPORTER
       if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)

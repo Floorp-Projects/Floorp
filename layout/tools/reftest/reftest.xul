@@ -46,8 +46,6 @@
         id="reftest-window"
         onload="OnRefTestLoad();"
         onunload="OnRefTestUnload();"
-        width="800"
-        height="1000"
         style="background:white; overflow:hidden"
         >
     <script type="application/ecmascript" src="quit.js" />

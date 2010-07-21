@@ -1509,7 +1509,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JS_AddNamedRoot(cx, aGlobal, *aLocation);
+    JS_AddNamedObjectRoot(cx, aGlobal, *aLocation);
     return NS_OK;
 }
 

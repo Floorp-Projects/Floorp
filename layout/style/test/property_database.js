@@ -1471,7 +1471,7 @@ var gCSSProperties = {
 		domProp: "font",
 		inherited: true,
 		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "font-style", "font-variant", "font-weight", "font-size", "line-height", "font-family", "font-stretch", "font-size-adjust" ],
+		subproperties: [ "font-style", "font-variant", "font-weight", "font-size", "line-height", "font-family", "font-stretch", "font-size-adjust", "-moz-font-feature-settings", "-moz-font-language-override" ],
 		/* XXX could be sans-serif */
 		initial_values: [ "medium serif" ],
 		other_values: [ "large serif", "9px fantasy", "bold italic small-caps 24px/1.4 Times New Roman, serif", "caption", "icon", "menu", "message-box", "small-caption", "status-bar" ],
@@ -1484,6 +1484,22 @@ var gCSSProperties = {
 		initial_values: [ "serif" ],
 		other_values: [ "sans-serif", "Times New Roman, serif", "'Times New Roman', serif", "cursive", "fantasy", "\"Times New Roman", "Times, \"Times New Roman" ],
 		invalid_values: [ "\"Times New\" Roman" ]
+	},
+	"-moz-font-feature-settings": {
+		domProp: "MozFontFeatureSettings",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "normal" ],
+		other_values: [ "'liga=1'", "\"liga=1\"", "'foo,bar=\"hello\"'" ],
+		invalid_values: [ "liga=1", "foo,bar=\"hello\"" ]
+	},
+	"-moz-font-language-override": {
+		domProp: "MozFontLanguageOverride",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "normal" ],
+		other_values: [ "'TRK'", "\"TRK\"", "'N\\'Ko'" ],
+		invalid_values: [ "TRK" ]
 	},
 	"font-size": {
 		domProp: "fontSize",

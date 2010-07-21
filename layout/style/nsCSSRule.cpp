@@ -61,32 +61,29 @@ nsCSSRule::~nsCSSRule(void)
 NS_IMPL_ADDREF(nsCSSRule)
 NS_IMPL_RELEASE(nsCSSRule)
 
-NS_IMETHODIMP
-nsCSSRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+/* virtual */ already_AddRefed<nsIStyleSheet>
+nsCSSRule::GetStyleSheet() const
 {
   NS_IF_ADDREF(mSheet);
-  aSheet = mSheet;
-  return NS_OK;
+  return mSheet;
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsCSSRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   // We don't reference count this up reference. The style sheet
   // will tell us when it's going away or when we're detached from
   // it.
   mSheet = aSheet;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsCSSRule::SetParentRule(nsICSSGroupRule* aRule)
 {
   // We don't reference count this up reference. The group rule
   // will tell us when it's going away or when we're detached from
   // it.
   mParentRule = aRule;
-  return NS_OK;
 }
 
 /* virtual */ void

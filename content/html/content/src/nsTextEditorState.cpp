@@ -969,6 +969,36 @@ nsTextEditorState::GetSelectionController() const
   return mSelCon;
 }
 
+// Helper class, used below in BindToFrame().
+class PrepareEditorEvent : public nsRunnable {
+public:
+  PrepareEditorEvent(nsTextEditorState &aState,
+                     nsIContent *aOwnerContent,
+                     const nsAString &aCurrentValue)
+    : mState(aState)
+    , mOwnerContent(aOwnerContent)
+    , mCurrentValue(aCurrentValue)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    // Transfer the saved value to the editor if we have one
+    const nsAString *value = nsnull;
+    if (!mCurrentValue.IsEmpty()) {
+      value = &mCurrentValue;
+    }
+
+    mState.PrepareEditor(value);
+
+    return NS_OK;
+  }
+
+private:
+  nsTextEditorState &mState;
+  nsCOMPtr<nsIContent> mOwnerContent; // strong reference
+  nsAutoString mCurrentValue;
+};
+
 nsresult
 nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
 {
@@ -1029,35 +1059,6 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
 
   // If an editor exists from before, prepare it for usage
   if (mEditor) {
-    class PrepareEditorEvent : public nsRunnable {
-    public:
-      PrepareEditorEvent(nsTextEditorState &aState,
-                         nsIContent *aOwnerContent,
-                         const nsAString &aCurrentValue)
-        : mState(aState)
-        , mOwnerContent(aOwnerContent)
-        , mCurrentValue(aCurrentValue)
-      {
-      }
-
-      NS_IMETHOD Run() {
-        // Transfer the saved value to the editor if we have one
-        const nsAString *value = nsnull;
-        if (!mCurrentValue.IsEmpty()) {
-          value = &mCurrentValue;
-        }
-
-        mState.PrepareEditor(value);
-
-        return NS_OK;
-      }
-
-    private:
-      nsTextEditorState &mState;
-      nsCOMPtr<nsIContent> mOwnerContent; // strong reference
-      nsAutoString mCurrentValue;
-    };
-
     nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
     NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
@@ -1126,7 +1127,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   } else {
     if (aValue) {
       // Set the correct value in the root node
-      rv = mBoundFrame->UpdateValueDisplay(PR_FALSE, PR_FALSE, aValue);
+      rv = mBoundFrame->UpdateValueDisplay(PR_TRUE, PR_FALSE, aValue);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 

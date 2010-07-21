@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=0 ft=C:
+ * vim: set ts=8 sw=4 et tw=0 ft=c:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -270,30 +270,30 @@ OP___(rshi,     90, Op2,  I,    1)  // right shift int (>>)
 OP___(rshui,    91, Op2,  I,    1)  // right shift unsigned int (>>>)
 
 OP_64(addq,     92, Op2,  Q,    1)  // add quad
+OP_64(subq,     93, Op2,  Q,    1)  // subtract quad
 
-OP_64(andq,     93, Op2,  Q,    1)  // bitwise-AND quad
-OP_64(orq,      94, Op2,  Q,    1)  // bitwise-OR quad
-OP_64(xorq,     95, Op2,  Q,    1)  // bitwise-XOR quad
+OP_64(andq,     94, Op2,  Q,    1)  // bitwise-AND quad
+OP_64(orq,      95, Op2,  Q,    1)  // bitwise-OR quad
+OP_64(xorq,     96, Op2,  Q,    1)  // bitwise-XOR quad
 
-OP_64(lshq,     96, Op2,  Q,    1)  // left shift quad;           2nd operand is an int
-OP_64(rshq,     97, Op2,  Q,    1)  // right shift quad;          2nd operand is an int
-OP_64(rshuq,    98, Op2,  Q,    1)  // right shift unsigned quad; 2nd operand is an int
+OP_64(lshq,     97, Op2,  Q,    1)  // left shift quad;           2nd operand is an int
+OP_64(rshq,     98, Op2,  Q,    1)  // right shift quad;          2nd operand is an int
+OP_64(rshuq,    99, Op2,  Q,    1)  // right shift unsigned quad; 2nd operand is an int
 
-OP___(negd,     99, Op1,  D,    1)  // negate double
-OP___(addd,    100, Op2,  D,    1)  // add double
-OP___(subd,    101, Op2,  D,    1)  // subtract double
-OP___(muld,    102, Op2,  D,    1)  // multiply double
-OP___(divd,    103, Op2,  D,    1)  // divide double
+OP___(negd,    100, Op1,  D,    1)  // negate double
+OP___(addd,    101, Op2,  D,    1)  // add double
+OP___(subd,    102, Op2,  D,    1)  // subtract double
+OP___(muld,    103, Op2,  D,    1)  // multiply double
+OP___(divd,    104, Op2,  D,    1)  // divide double
 // LIR_modd is just a place-holder opcode, ie. the back-ends cannot generate
 // code for it.  It's used in TraceMonkey briefly but is always demoted to a
 // LIR_modl or converted to a function call before Nanojit has to do anything
 // serious with it.
-OP___(modd,    104, Op2,  D,    1)  // modulo double
+OP___(modd,    105, Op2,  D,    1)  // modulo double
 
-OP___(cmovi,   105, Op3,  I,    1)  // conditional move int
-OP_64(cmovq,   106, Op3,  Q,    1)  // conditional move quad
+OP___(cmovi,   106, Op3,  I,    1)  // conditional move int
+OP_64(cmovq,   107, Op3,  Q,    1)  // conditional move quad
 
-OP_UN(107)
 OP_UN(108)
 
 //---------------------------------------------------------------------------
@@ -307,35 +307,36 @@ OP___(i2d,     112, Op1,  D,    1)  // convert int to double
 OP___(ui2d,    113, Op1,  D,    1)  // convert unsigned int to double
 OP___(d2i,     114, Op1,  I,    1)  // convert double to int (no exceptions raised, platform rounding rules)
 
-OP_UN(115)
-OP_UN(116)
-
 //---------------------------------------------------------------------------
 // Overflow arithmetic
 //---------------------------------------------------------------------------
-// These all exit if overflow occurred.  The results is valid on either path.
-OP___(addxovi, 117, Op3,  I,    1)  // add int and exit on overflow
-OP___(subxovi, 118, Op3,  I,    1)  // sub int and exit on overflow
-OP___(mulxovi, 119, Op3,  I,    1)  // multiply int and exit on overflow
+// These all exit if overflow occurred.  The result is valid on either path.
+OP___(addxovi, 115, Op3,  I,    1)  // add int and exit on overflow
+OP___(subxovi, 116, Op3,  I,    1)  // subtract int and exit on overflow
+OP___(mulxovi, 117, Op3,  I,    1)  // multiply int and exit on overflow
 
-OP_UN(120)
+// These all branch if overflow occurred.  The result is valid on either path.
+OP___(addjovi, 118, Op3,  I,    1)  // add int and branch on overflow
+OP___(subjovi, 119, Op3,  I,    1)  // subtract int and branch on overflow
+OP___(muljovi, 120, Op3,  I,    1)  // multiply int and branch on overflow
+
+OP_64(addjovq, 121, Op3,  Q,    1)  // add quad and branch on overflow
+OP_64(subjovq, 122, Op3,  Q,    1)  // subtract quad and branch on overflow
 
 //---------------------------------------------------------------------------
 // SoftFloat
 //---------------------------------------------------------------------------
-OP_SF(dlo2i,   121, Op1,  I,    1)  // get the low  32 bits of a double as an int
-OP_SF(dhi2i,   122, Op1,  I,    1)  // get the high 32 bits of a double as an int
-OP_SF(ii2d,    123, Op2,  D,    1)  // join two ints (1st arg is low bits, 2nd is high)
+OP_SF(dlo2i,   123, Op1,  I,    1)  // get the low  32 bits of a double as an int
+OP_SF(dhi2i,   124, Op1,  I,    1)  // get the high 32 bits of a double as an int
+OP_SF(ii2d,    125, Op2,  D,    1)  // join two ints (1st arg is low bits, 2nd is high)
 
 // LIR_hcalli is a hack that's only used on 32-bit platforms that use
 // SoftFloat.  Its operand is always a LIR_calli, but one that specifies a
 // function that returns a double.  It indicates that the double result is
 // returned via two 32-bit integer registers.  The result is always used as the
 // second operand of a LIR_ii2d.
-OP_SF(hcalli,  124, Op1,  I,    1)
+OP_SF(hcalli,  126, Op1,  I,    1)
 
-OP_UN(125)
-OP_UN(126)
 OP_UN(127)
 
 #undef OP_UN

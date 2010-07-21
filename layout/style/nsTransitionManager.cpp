@@ -187,7 +187,7 @@ struct ElementTransitions : public PRCList
   }
 
   void DropStyleRule();
-  PRBool EnsureStyleRuleFor(TimeStamp aRefreshTime);
+  void EnsureStyleRuleFor(TimeStamp aRefreshTime);
 
 
   // Either zero or one for each CSS property:
@@ -291,7 +291,7 @@ ElementTransitions::DropStyleRule()
   }
 }
 
-PRBool
+void
 ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 {
   if (!mStyleRule || mStyleRule->RefreshTime() != aRefreshTime) {
@@ -299,15 +299,9 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 
     ElementTransitionsStyleRule *newRule =
       new ElementTransitionsStyleRule(this, aRefreshTime);
-    if (!newRule) {
-      NS_WARNING("out of memory");
-      return PR_FALSE;
-    }
 
     mStyleRule = newRule;
   }
-
-  return PR_TRUE;
 }
 
 NS_IMPL_ISUPPORTS1(CoverTransitionStartStyleRule, nsIStyleRule)
@@ -830,14 +824,14 @@ NS_IMPL_ISUPPORTS1(nsTransitionManager, nsIStyleRuleProcessor)
  * nsIStyleRuleProcessor implementation
  */
 
-nsresult
+void
 nsTransitionManager::WalkTransitionRule(RuleProcessorData* aData,
                                         nsCSSPseudoElements::Type aPseudoType)
 {
   ElementTransitions *et =
     GetElementTransitions(aData->mElement, aPseudoType, PR_FALSE);
   if (!et) {
-    return NS_OK;
+    return;
   }
 
   if (aData->mPresContext->IsProcessingRestyles() &&
@@ -855,29 +849,25 @@ nsTransitionManager::WalkTransitionRule(RuleProcessorData* aData,
         eRestyle_Self : eRestyle_Subtree;
       mPresContext->PresShell()->RestyleForAnimation(aData->mElement, hint);
     }
-    return NS_OK;
+    return;
   }
 
-  if (!et->EnsureStyleRuleFor(
-        aData->mPresContext->RefreshDriver()->MostRecentRefresh())) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  et->EnsureStyleRuleFor(
+    aData->mPresContext->RefreshDriver()->MostRecentRefresh());
 
   aData->mRuleWalker->Forward(et->mStyleRule);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsTransitionManager::RulesMatching(ElementRuleProcessorData* aData)
 {
   NS_ABORT_IF_FALSE(aData->mPresContext == mPresContext,
                     "pres context mismatch");
-  return WalkTransitionRule(aData,
-                            nsCSSPseudoElements::ePseudo_NotPseudoElement);
+  WalkTransitionRule(aData,
+                     nsCSSPseudoElements::ePseudo_NotPseudoElement);
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsTransitionManager::RulesMatching(PseudoElementRuleProcessorData* aData)
 {
   NS_ABORT_IF_FALSE(aData->mPresContext == mPresContext,
@@ -886,20 +876,18 @@ nsTransitionManager::RulesMatching(PseudoElementRuleProcessorData* aData)
   // Note:  If we're the only thing keeping a pseudo-element frame alive
   // (per ProbePseudoStyleContext), we still want to keep it alive, so
   // this is ok.
-  return WalkTransitionRule(aData, aData->mPseudoType);
+  WalkTransitionRule(aData, aData->mPseudoType);
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsTransitionManager::RulesMatching(AnonBoxRuleProcessorData* aData)
 {
-  return NS_OK;
 }
 
 #ifdef MOZ_XUL
-NS_IMETHODIMP
+/* virtual */ void
 nsTransitionManager::RulesMatching(XULTreeRuleProcessorData* aData)
 {
-  return NS_OK;
 }
 #endif
 
@@ -921,12 +909,10 @@ nsTransitionManager::HasAttributeDependentStyle(AttributeRuleProcessorData* aDat
   return nsRestyleHint(0);
 }
 
-NS_IMETHODIMP
-nsTransitionManager::MediumFeaturesChanged(nsPresContext* aPresContext,
-                                           PRBool* aRulesChanged)
+/* virtual */ PRBool
+nsTransitionManager::MediumFeaturesChanged(nsPresContext* aPresContext)
 {
-  *aRulesChanged = PR_FALSE;
-  return NS_OK;
+  return PR_FALSE;
 }
 
 struct TransitionEventInfo {

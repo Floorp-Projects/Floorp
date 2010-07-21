@@ -145,8 +145,7 @@ template<class KeyClass, class Interface>
 already_AddRefed<Interface>
 nsInterfaceHashtable<KeyClass,Interface>::Get(KeyType aKey) const
 {
-  typename nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
-    GetEntry(aKey);
+  typename base_type::EntryType* ent = this->GetEntry(aKey);
   if (!ent)
     return NULL;
 

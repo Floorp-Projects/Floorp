@@ -152,10 +152,6 @@
                 label="&setDesktopBackgroundCmd.label;"
                 accesskey="&setDesktopBackgroundCmd.accesskey;"
                 oncommand="gContextMenu.setDesktopBackground();"/>
-      <menuitem id="context-blockimage"
-                type="checkbox"
-                accesskey="&blockImageCmd.accesskey;"
-                oncommand="gContextMenu.toggleImageBlocking(this.getAttribute('checked') == 'true');"/>
       <menuitem id="context-viewimageinfo"
                 label="&viewImageInfoCmd.label;"
                 accesskey="&viewImageInfoCmd.accesskey;"
