@@ -283,8 +283,9 @@ ShadowLayerForwarder::EndTransaction(nsTArray<EditReply>* aReplies)
   }
 
   nsAutoTArray<Edit, 10> cset;
+  NS_ABORT_IF_FALSE(mTxn->mCset.size() > 0, "should have bailed by now");
   cset.SetCapacity(mTxn->mCset.size());
-  cset.AppendElements(mTxn->mCset.data(), mTxn->mCset.size());
+  cset.AppendElements(&mTxn->mCset.front(), mTxn->mCset.size());
 
   if (!mShadowManager->SendUpdate(cset, aReplies)) {
     MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
