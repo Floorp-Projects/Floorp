@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.12 API Reference</title>
+<title>FreeType-2.4.1 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.12 API Reference</h1></center>
+<center><h1>FreeType-2.4.1 API Reference</h1></center>
 
 <center><h1>
 TrueType Tables
@@ -86,7 +86,7 @@ Defined in FT_TRUETYPE_IDS_H (freetype/ttnameid.h).
 <p>Used by Apple to indicate a MacOS-specific charmap and/or name entry. See <a href="ft2-truetype_tables.html#TT_MAC_ID_XXX">TT_MAC_ID_XXX</a> for corresponding &lsquo;encoding_id&rsquo; values. Note that most TrueType fonts contain an Apple roman charmap to be usable on MacOS systems (even if they contain a Microsoft charmap as well).</p>
 </td></tr>
 <tr valign=top><td><b>TT_PLATFORM_ISO</b></td><td>
-<p>This value was used to specify Unicode charmaps. It is however now deprecated. See <a href="ft2-truetype_tables.html#TT_ISO_ID_XXX">TT_ISO_ID_XXX</a> for a list of corresponding &lsquo;encoding_id&rsquo; values.</p>
+<p>This value was used to specify ISO/IEC 10646 charmaps. It is however now deprecated. See <a href="ft2-truetype_tables.html#TT_ISO_ID_XXX">TT_ISO_ID_XXX</a> for a list of corresponding &lsquo;encoding_id&rsquo; values.</p>
 </td></tr>
 <tr valign=top><td><b>TT_PLATFORM_MICROSOFT</b></td><td>
 <p>Used by Microsoft to indicate Windows-specific charmaps. See <a href="ft2-truetype_tables.html#TT_MS_ID_XXX">TT_MS_ID_XXX</a> for a list of corresponding &lsquo;encoding_id&rsquo; values. Note that most fonts contain a Unicode charmap using (TT_PLATFORM_MICROSOFT, <a href="ft2-truetype_tables.html#TT_MS_ID_XXX">TT_MS_ID_UNICODE_CS</a>).</p>
@@ -945,13 +945,13 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  FT_Sfnt_Tag_
   {
-    ft_sfnt_head = 0,
-    ft_sfnt_maxp = 1,
-    ft_sfnt_os2  = 2,
-    ft_sfnt_hhea = 3,
-    ft_sfnt_vhea = 4,
-    ft_sfnt_post = 5,
-    ft_sfnt_pclt = 6,
+    ft_sfnt_head = 0,    /* <a href="ft2-truetype_tables.html#TT_Header">TT_Header</a>     */
+    ft_sfnt_maxp = 1,    /* <a href="ft2-truetype_tables.html#TT_MaxProfile">TT_MaxProfile</a> */
+    ft_sfnt_os2  = 2,    /* <a href="ft2-truetype_tables.html#TT_OS2">TT_OS2</a>        */
+    ft_sfnt_hhea = 3,    /* <a href="ft2-truetype_tables.html#TT_HoriHeader">TT_HoriHeader</a> */
+    ft_sfnt_vhea = 4,    /* <a href="ft2-truetype_tables.html#TT_VertHeader">TT_VertHeader</a> */
+    ft_sfnt_post = 5,    /* <a href="ft2-truetype_tables.html#TT_Postscript">TT_Postscript</a> */
+    ft_sfnt_pclt = 6,    /* <a href="ft2-truetype_tables.html#TT_PCLT">TT_PCLT</a>       */
 
     sfnt_max   /* internal end mark */
 
@@ -995,6 +995,7 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
 <p>A type-less pointer to the table. This will be&nbsp;0 in case of error, or if the corresponding table was not found <b>OR</b> loaded from the file.</p>
+<p>Use a typecast according to &lsquo;tag&rsquo; to access the structure elements.</p>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>The table is owned by the face object and disappears with it.</p>

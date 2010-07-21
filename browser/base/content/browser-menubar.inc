@@ -42,16 +42,16 @@
             <menu id="file-menu" label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
               <menupopup id="menu_FilePopup">
-                <menuitem id="menu_newNavigator"
-                          label="&newNavigatorCmd.label;"
-                          accesskey="&newNavigatorCmd.accesskey;"
-                          key="key_newNavigator"
-                          command="cmd_newNavigator"/>
                 <menuitem id="menu_newNavigatorTab"
                           label="&tabCmd.label;"
                           command="cmd_newNavigatorTab"
                           key="key_newNavigatorTab"
                           accesskey="&tabCmd.accesskey;"/>
+                <menuitem id="menu_newNavigator"
+                          label="&newNavigatorCmd.label;"
+                          accesskey="&newNavigatorCmd.accesskey;"
+                          key="key_newNavigator"
+                          command="cmd_newNavigator"/>
                 <menuitem id="menu_openLocation"
                           label="&openLocationCmd.label;"
                           command="Browser:OpenLocation"
@@ -62,17 +62,17 @@
                           command="Browser:OpenFile"
                           key="openFileKb"
                           accesskey="&openFileCmd.accesskey;"/>
+                <menuitem id="menu_close"
+                          label="&closeCmd.label;"
+                          key="key_close"
+                          accesskey="&closeCmd.accesskey;"
+                          command="cmd_close"/>
                 <menuitem id="menu_closeWindow"
                           hidden="true"
                           command="cmd_closeWindow"
                           key="key_closeWindow"
                           label="&closeWindow.label;"
                           accesskey="&closeWindow.accesskey;"/>
-                <menuitem id="menu_close"
-                          label="&closeCmd.label;"
-                          key="key_close"
-                          accesskey="&closeCmd.accesskey;"
-                          command="cmd_close"/>
                 <menuseparator/>
                 <menuitem id="menu_savePage"
                           label="&savePageCmd.label;"

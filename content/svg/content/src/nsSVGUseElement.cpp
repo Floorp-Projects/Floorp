@@ -241,6 +241,7 @@ nsSVGUseElement::ContentRemoved(nsIDocument *aDocument,
 void
 nsSVGUseElement::NodeWillBeDestroyed(const nsINode *aNode)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   UnlinkSource();
 }
 
