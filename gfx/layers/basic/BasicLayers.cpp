@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Robert O'Callahan <robert@ocallahan.org>
+ *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,6 +35,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#ifdef MOZ_IPC
+#  include "mozilla/layers/PLayerChild.h"
+#  include "mozilla/layers/PLayersChild.h"
+#endif
 
 #include "BasicLayers.h"
 #include "ImageLayers.h"
@@ -55,6 +61,7 @@ namespace mozilla {
 namespace layers {
 
 class BasicContainerLayer;
+class ShadowableLayer;
 
 /**
  * This is the ImplData for all Basic layers. It also exposes methods
@@ -84,7 +91,7 @@ public:
   {
     MOZ_COUNT_CTOR(BasicImplData);
   }
-  ~BasicImplData()
+  virtual ~BasicImplData()
   {
     MOZ_COUNT_DTOR(BasicImplData);
   }
@@ -99,6 +106,8 @@ public:
                      LayerManager::DrawThebesLayerCallback aCallback,
                      void* aCallbackData,
                      float aOpacity) {}
+
+  virtual ShadowableLayer* AsShadowableLayer() { return NULL; }
 };
 
 static BasicImplData*
@@ -657,6 +666,9 @@ BasicCanvasLayer::Paint(gfxContext* aContext,
                         void* aCallbackData,
                         float aOpacity)
 {
+  NS_ASSERTION(BasicManager()->InDrawing(),
+               "Can only draw in drawing phase");
+
   nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
 
   pat->SetFilter(mFilter);
@@ -755,10 +767,10 @@ MayHaveOverlappingOrTransparentLayers(Layer* aLayer,
 }
 
 BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
-  mWidget(aWidget)
 #ifdef DEBUG
-  , mPhase(PHASE_NONE)
+  mPhase(PHASE_NONE),
 #endif
+  mWidget(aWidget)
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(PR_FALSE)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
@@ -766,10 +778,10 @@ BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
 }
 
 BasicLayerManager::BasicLayerManager() :
-  mWidget(nsnull)
 #ifdef DEBUG
-  , mPhase(PHASE_NONE)
+  mPhase(PHASE_NONE),
 #endif
+  mWidget(nsnull)
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(PR_FALSE)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
@@ -855,8 +867,8 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
 {
 #ifdef MOZ_LAYERS_HAVE_LOG
+  MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
   Log();
-  MOZ_LAYERS_LOG(("]----- EndTransaction"));
 #endif
 
   NS_ASSERTION(InConstruction(), "Should be in construction phase");
@@ -891,6 +903,11 @@ BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 
     mTarget = nsnull;
   }
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  Log();
+  MOZ_LAYERS_LOG(("]----- EndTransaction"));
+#endif
 
 #ifdef DEBUG
   mPhase = PHASE_NONE;
@@ -1031,6 +1048,446 @@ BasicLayerManager::CreateCanvasLayer()
   nsRefPtr<CanvasLayer> layer = new BasicCanvasLayer(this);
   return layer.forget();
 }
+
+
+#ifdef MOZ_IPC
+
+class BasicShadowableLayer : public ShadowableLayer
+{
+public:
+  BasicShadowableLayer()
+  {
+    MOZ_COUNT_CTOR(BasicShadowableLayer);
+  }
+
+  ~BasicShadowableLayer()
+  {
+    if (HasShadow()) {
+      PLayerChild::Send__delete__(GetShadow());
+    }
+    MOZ_COUNT_DTOR(BasicShadowableLayer);
+  }
+
+  void SetShadow(PLayerChild* aShadow)
+  {
+    NS_ABORT_IF_FALSE(!mShadow, "can't have two shadows (yet)");
+    mShadow = aShadow;
+  }
+};
+
+static ShadowableLayer*
+ToShadowable(Layer* aLayer)
+{
+  return ToData(aLayer)->AsShadowableLayer();
+}
+
+class BasicShadowableContainerLayer : public BasicContainerLayer,
+                                      public BasicShadowableLayer {
+public:
+  BasicShadowableContainerLayer(BasicShadowLayerManager* aManager) :
+    BasicContainerLayer(aManager)
+  {
+    MOZ_COUNT_CTOR(BasicShadowableContainerLayer);
+  }
+  virtual ~BasicShadowableContainerLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowableContainerLayer);
+  }
+
+  virtual void InsertAfter(Layer* aChild, Layer* aAfter);
+  virtual void RemoveChild(Layer* aChild);
+
+  virtual Layer* AsLayer() { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() { return this; }
+
+private:
+  BasicShadowLayerManager* ShadowManager()
+  {
+    return static_cast<BasicShadowLayerManager*>(mManager);
+  }
+};
+
+void
+BasicShadowableContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
+{
+  if (HasShadow()) {
+    ShadowManager()->InsertAfter(ShadowManager()->Hold(this),
+                                 ShadowManager()->Hold(aChild),
+                                 aAfter ? ShadowManager()->Hold(aAfter) : NULL);
+  }
+  BasicContainerLayer::InsertAfter(aChild, aAfter);
+}
+
+void
+BasicShadowableContainerLayer::RemoveChild(Layer* aChild)
+{
+  if (HasShadow()) {
+    ShadowManager()->RemoveChild(ShadowManager()->Hold(this),
+                                 ShadowManager()->Hold(aChild));
+  }
+  BasicContainerLayer::RemoveChild(aChild);
+}
+
+class BasicShadowableThebesLayer : public BasicThebesLayer,
+                                   public BasicShadowableLayer
+{
+public:
+  BasicShadowableThebesLayer(BasicShadowLayerManager* aManager) :
+    BasicThebesLayer(aManager)
+  {
+    MOZ_COUNT_CTOR(BasicShadowableThebesLayer);
+  }
+  virtual ~BasicShadowableThebesLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowableThebesLayer);
+  }
+
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
+  {
+    aAttrs = ThebesLayerAttributes(GetValidRegion());
+  }
+
+  virtual Layer* AsLayer() { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() { return this; }
+};
+
+class BasicShadowableImageLayer : public BasicImageLayer,
+                                  public BasicShadowableLayer
+{
+public:
+  BasicShadowableImageLayer(BasicShadowLayerManager* aManager) :
+    BasicImageLayer(aManager)
+  {
+    MOZ_COUNT_CTOR(BasicShadowableImageLayer);
+  }
+  virtual ~BasicShadowableImageLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowableImageLayer);
+  }
+
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
+  {
+    aAttrs = ImageLayerAttributes(mFilter);
+  }
+
+  virtual Layer* AsLayer() { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() { return this; }
+};
+
+class BasicShadowableColorLayer : public BasicColorLayer,
+                                  public BasicShadowableLayer
+{
+public:
+  BasicShadowableColorLayer(BasicShadowLayerManager* aManager) :
+    BasicColorLayer(aManager)
+  {
+    MOZ_COUNT_CTOR(BasicShadowableColorLayer);
+  }
+  virtual ~BasicShadowableColorLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowableColorLayer);
+  }
+
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
+  {
+    aAttrs = ColorLayerAttributes(GetColor());
+  }
+
+  virtual Layer* AsLayer() { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() { return this; }
+};
+
+class BasicShadowableCanvasLayer : public BasicCanvasLayer,
+                                   public BasicShadowableLayer
+{
+public:
+  BasicShadowableCanvasLayer(BasicShadowLayerManager* aManager) :
+    BasicCanvasLayer(aManager)
+  {
+    MOZ_COUNT_CTOR(BasicShadowableCanvasLayer);
+  }
+  virtual ~BasicShadowableCanvasLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowableCanvasLayer);
+  }
+
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
+  {
+    aAttrs = CanvasLayerAttributes(mFilter);
+  }
+
+  virtual Layer* AsLayer() { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() { return this; }
+};
+
+class BasicShadowThebesLayer : public ShadowThebesLayer, BasicImplData {
+public:
+  BasicShadowThebesLayer(BasicShadowLayerManager* aLayerManager) :
+    ShadowThebesLayer(aLayerManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicShadowThebesLayer);
+  }
+  virtual ~BasicShadowThebesLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowThebesLayer);
+  }
+
+  virtual already_AddRefed<gfxSharedImageSurface>
+  Swap(gfxSharedImageSurface* aNewFront,
+       const nsIntRect& aBufferRect,
+       const nsIntPoint& aRotation)
+  { return NULL; }
+
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData,
+                     float aOpacity)
+  {}
+
+  MOZ_LAYER_DECL_NAME("BasicShadowThebesLayer", TYPE_SHADOW)
+};
+
+class BasicShadowImageLayer : public ShadowImageLayer, BasicImplData {
+public:
+  BasicShadowImageLayer(BasicShadowLayerManager* aLayerManager) :
+    ShadowImageLayer(aLayerManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicShadowImageLayer);
+  }
+  virtual ~BasicShadowImageLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowImageLayer);
+  }
+
+  virtual PRBool Init(gfxSharedImageSurface* front, const nsIntSize& size)
+  { return PR_TRUE; }
+
+  virtual already_AddRefed<gfxSharedImageSurface>
+  Swap(gfxSharedImageSurface* newFront)
+  { return NULL; }
+
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData,
+                     float aOpacity)
+  {}
+
+  MOZ_LAYER_DECL_NAME("BasicShadowImageLayer", TYPE_SHADOW)
+};
+
+class BasicShadowCanvasLayer : public ShadowCanvasLayer,
+                               BasicImplData
+{
+public:
+  BasicShadowCanvasLayer(BasicShadowLayerManager* aLayerManager) :
+    ShadowCanvasLayer(aLayerManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicShadowCanvasLayer);
+  }
+  virtual ~BasicShadowCanvasLayer()
+  {
+    MOZ_COUNT_DTOR(BasicShadowCanvasLayer);
+  }
+
+  virtual void Initialize(const Data& aData)
+  {}
+
+  virtual void Updated(const nsIntRect& aRect)
+  {}
+
+  virtual already_AddRefed<gfxSharedImageSurface>
+  Swap(gfxSharedImageSurface* newFront)
+  { return NULL; }
+
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData,
+                     float aOpacity)
+  {}
+
+  MOZ_LAYER_DECL_NAME("BasicShadowCanvasLayer", TYPE_SHADOW)
+};
+
+// Create a shadow layer (PLayerChild) for aLayer, if we're forwarding
+// our layer tree to a parent process.  Record the new layer creation
+// in the current open transaction as a side effect.
+template<typename CreatedMethod>
+static void
+MaybeCreateShadowFor(BasicShadowableLayer* aLayer,
+                     BasicShadowLayerManager* aMgr,
+                     CreatedMethod aMethod)
+{
+  if (!aMgr->HasShadowManager()) {
+    return;
+  }
+
+  PLayerChild* shadow = aMgr->ConstructShadowFor(aLayer);
+  // XXX error handling
+  NS_ABORT_IF_FALSE(shadow, "failed to create shadow");
+
+  aLayer->SetShadow(shadow);
+  (aMgr->*aMethod)(aLayer);
+}
+#define MAYBE_CREATE_SHADOW(_type)                                      \
+  MaybeCreateShadowFor(layer, this,                                     \
+                       &ShadowLayerForwarder::Created ## _type ## Layer)
+
+already_AddRefed<ThebesLayer>
+BasicShadowLayerManager::CreateThebesLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<BasicShadowableThebesLayer> layer =
+    new BasicShadowableThebesLayer(this);
+  MAYBE_CREATE_SHADOW(Thebes);
+  return layer.forget();
+}
+
+already_AddRefed<ContainerLayer>
+BasicShadowLayerManager::CreateContainerLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<BasicShadowableContainerLayer> layer =
+    new BasicShadowableContainerLayer(this);
+  MAYBE_CREATE_SHADOW(Container);
+  return layer.forget();
+}
+
+already_AddRefed<ImageLayer>
+BasicShadowLayerManager::CreateImageLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<BasicShadowableImageLayer> layer =
+    new BasicShadowableImageLayer(this);
+  MAYBE_CREATE_SHADOW(Image);
+  return layer.forget();
+}
+
+already_AddRefed<ColorLayer>
+BasicShadowLayerManager::CreateColorLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<BasicShadowableColorLayer> layer =
+    new BasicShadowableColorLayer(this);
+  MAYBE_CREATE_SHADOW(Color);
+  return layer.forget();
+}
+
+already_AddRefed<CanvasLayer>
+BasicShadowLayerManager::CreateCanvasLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<BasicShadowableCanvasLayer> layer =
+    new BasicShadowableCanvasLayer(this);
+  MAYBE_CREATE_SHADOW(Canvas);
+  return layer.forget();
+}
+already_AddRefed<ShadowThebesLayer>
+BasicShadowLayerManager::CreateShadowThebesLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<ShadowThebesLayer> layer = new BasicShadowThebesLayer(this);
+  return layer.forget();
+}
+
+already_AddRefed<ShadowImageLayer>
+BasicShadowLayerManager::CreateShadowImageLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<ShadowImageLayer> layer = new BasicShadowImageLayer(this);
+  return layer.forget();
+}
+
+already_AddRefed<ShadowCanvasLayer>
+BasicShadowLayerManager::CreateShadowCanvasLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<ShadowCanvasLayer> layer = new BasicShadowCanvasLayer(this);
+  return layer.forget();
+}
+
+BasicShadowLayerManager::BasicShadowLayerManager(nsIWidget* aWidget) :
+  BasicLayerManager(aWidget)
+{
+  MOZ_COUNT_CTOR(BasicShadowLayerManager);
+}
+
+BasicShadowLayerManager::~BasicShadowLayerManager()
+{
+  // FIXME/bug 570294: shadow forwarders don't have __delete__ until
+  // they have manager protocols
+  //
+  //if (HasShadowManager())
+  //  PLayersChild::Send__delete__(mShadow);
+  MOZ_COUNT_DTOR(BasicShadowLayerManager);
+}
+
+void
+BasicShadowLayerManager::SetRoot(Layer* aLayer)
+{
+  if (mRoot != aLayer) {
+    if (HasShadowManager()) {
+      ShadowLayerForwarder::SetRoot(Hold(aLayer));
+    }
+    BasicLayerManager::SetRoot(aLayer);
+  }
+}
+
+void
+BasicShadowLayerManager::Mutated(Layer* aLayer)
+{
+  NS_ASSERTION(InConstruction() || InDrawing(), "wrong phase");
+  if (HasShadowManager()) {
+    ShadowLayerForwarder::Mutated(Hold(aLayer));
+  }
+}
+
+void
+BasicShadowLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
+{
+  NS_ABORT_IF_FALSE(mKeepAlive.IsEmpty(), "uncommitted txn?");
+  if (HasShadowManager()) {
+    ShadowLayerForwarder::BeginTransaction();
+  }
+  BasicLayerManager::BeginTransactionWithTarget(aTarget);
+}
+
+void
+BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
+                                        void* aCallbackData)
+{
+  BasicLayerManager::EndTransaction(aCallback, aCallbackData);
+#ifdef DEBUG
+  mPhase = PHASE_FORWARD;
+#endif
+
+  // forward this transaction's changeset to our ShadowLayerManager
+  nsAutoTArray<EditReply, 10> replies;
+  if (HasShadowManager() && !ShadowLayerForwarder::EndTransaction(&replies)) {
+    NS_WARNING("failed to forward Layers transaction");
+  }
+
+  // this may result in Layers being deleted, which results in
+  // PLayer::Send__delete__()
+  mKeepAlive.Clear();
+
+#ifdef DEBUG
+  mPhase = PHASE_NONE;
+#endif
+}
+
+ShadowableLayer*
+BasicShadowLayerManager::Hold(Layer* aLayer)
+{
+  NS_ABORT_IF_FALSE(HasShadowManager(),
+                    "top-level tree, no shadow tree to remote to");
+
+  ShadowableLayer* shadowable = ToShadowable(aLayer);
+  NS_ABORT_IF_FALSE(shadowable, "trying to remote an unshadowable layer");
+
+  mKeepAlive.AppendElement(aLayer);
+  return shadowable;
+}
+#endif  // MOZ_IPC
 
 }
 }
