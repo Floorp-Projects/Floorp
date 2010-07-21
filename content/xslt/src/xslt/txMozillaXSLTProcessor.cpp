@@ -1208,6 +1208,7 @@ txMozillaXSLTProcessor::ensureStylesheet()
 void
 txMozillaXSLTProcessor::NodeWillBeDestroyed(const nsINode* aNode)
 {
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
     if (NS_FAILED(mCompileResult)) {
         return;
     }

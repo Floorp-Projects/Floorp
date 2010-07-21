@@ -234,7 +234,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   nsINode::nsSlots* slots = aNode->GetExistingSlots();
   if (slots) {
     if (!slots->mMutationObservers.IsEmpty()) {
-      NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(slots->mMutationObservers,
+      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
                                          nsIMutationObserver,
                                          NodeWillBeDestroyed, (aNode));
     }
