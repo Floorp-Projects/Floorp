@@ -353,6 +353,8 @@ nsRange::ParentChainChanged(nsIContent *aContent)
   NS_ASSERTION(newRoot, "No valid boundary or root found!");
   NS_ASSERTION(newRoot == IsValidBoundary(mEndParent),
                "Start parent and end parent give different root!");
+  // This is safe without holding a strong ref to self as long as the change
+  // of mRoot is the last thing in DoSetRange.
   DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset, newRoot);
 }
 
@@ -473,6 +475,8 @@ nsRange::DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
   mEndParent = aEndN;
   mEndOffset = aEndOffset;
   mIsPositioned = !!mStartParent;
+  // This needs to be the last thing this function does.  See comment
+  // in ParentChainChanged.
   mRoot = aRoot;
 }
 
