@@ -71,8 +71,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x1450010b, 0xcdca, 0x451c, \
-  { 0xba, 0xdc, 0x07, 0x90, 0x89, 0x7b, 0xce, 0xb8 } }
+{ 0x2ac19ac3, 0x1dac, 0x42dc, \
+  { 0xb2, 0x43, 0x78, 0x46, 0xed, 0x6f, 0x1c, 0x89 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -927,6 +927,19 @@ public:
   PRBool IsEqual(nsIContent *aOther);
 
   virtual PRBool IsEqualNode(nsINode* aOther);
+
+  /**
+   * If this content has independent selection, e.g., if this is input field
+   * or textarea, this return TRUE.  Otherwise, false.
+   */
+  PRBool HasIndependentSelection();
+
+  /**
+   * If the content is a part of HTML editor, this returns editing
+   * host content.  When the content is in designMode, this returns its body
+   * element.  Also, when the content isn't editable, this returns null.
+   */
+  nsIContent* GetEditingHost();
 
 protected:
   /**
