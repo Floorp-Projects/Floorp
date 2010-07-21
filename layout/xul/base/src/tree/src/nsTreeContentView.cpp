@@ -1076,9 +1076,10 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
 
 void
 nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
-                                     nsIContent* aContainer,
-                                     nsIContent* aChild,
-                                     PRInt32 aIndexInContainer)
+                                  nsIContent* aContainer,
+                                  nsIContent* aChild,
+                                  PRInt32 aIndexInContainer,
+                                  nsIContent* aPreviousSibling)
 {
   NS_ASSERTION(aChild, "null ptr");
 

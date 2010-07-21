@@ -379,7 +379,8 @@ void nsNodeIterator::ContentInserted(nsIDocument *aDocument,
 void nsNodeIterator::ContentRemoved(nsIDocument *aDocument,
                                     nsIContent *aContainer,
                                     nsIContent *aChild,
-                                    PRInt32 aIndexInContainer)
+                                    PRInt32 aIndexInContainer,
+                                    nsIContent *aPreviousSibling)
 {
     nsINode *container = NODE_FROM(aContainer, aDocument);
 
