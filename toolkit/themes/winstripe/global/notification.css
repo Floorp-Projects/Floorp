@@ -40,17 +40,17 @@ notification[type="critical"] .messageImage {
 .messageCloseButton {
   list-style-image: url("chrome://global/skin/icons/close.png");
   -moz-appearance: none;
-  -moz-image-region: rect(0px, 14px, 14px, 0px);
+  -moz-image-region: rect(0, 16px, 16px, 0);
   padding: 4px 2px;
   border: none !important;
 }
 
 .messageCloseButton:hover {
-  -moz-image-region: rect(0px, 28px, 14px, 14px);
+  -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .messageCloseButton:hover:active {
-  -moz-image-region: rect(0px, 42px, 14px, 28px);
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 .messageCloseButton > .toolbarbutton-icon {

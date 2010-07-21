@@ -438,8 +438,8 @@ cert_VerifyFortezzaV1Cert(CERTCertDBHandle *handle, CERTCertificate *cert,
     }
 
     /* get the privilege mask */
-    if (key->u.fortezza.DSSpriviledge.len > 0) {
-	priv = key->u.fortezza.DSSpriviledge.data[0];
+    if (key->u.fortezza.DSSprivilege.len > 0) {
+	priv = key->u.fortezza.DSSprivilege.data[0];
     }
 
     /*
@@ -603,7 +603,10 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    CERTGeneralName *subjectNameList;
 	    int subjectNameListLen;
 	    int i;
-	    subjectNameList    = CERT_GetCertificateNames(subjectCert, arena);
+	    PRBool getSubjectCN = (!count && certUsage == certUsageSSLServer);
+	    subjectNameList = 
+	    	CERT_GetConstrainedCertificateNames(subjectCert, arena,
+		                                    getSubjectCN);
 	    if (!subjectNameList)
 		goto loser;
 	    subjectNameListLen = CERT_GetNamesLength(subjectNameList);

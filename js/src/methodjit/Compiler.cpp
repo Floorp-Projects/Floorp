@@ -44,6 +44,7 @@
 #include "Compiler.h"
 #include "StubCalls.h"
 #include "MonoIC.h"
+#include "Retcon.h"
 #include "assembler/jit/ExecutableAllocator.h"
 #include "assembler/assembler/LinkBuffer.h"
 #include "FrameState-inl.h"
@@ -53,6 +54,8 @@
 
 using namespace js;
 using namespace js::mjit;
+
+#define ADD_CALLSITE(stub) addCallSite(__LINE__, (stub))
 
 #if defined(JS_METHODJIT_SPEW)
 static const char *OpcodeNames[] = {
@@ -86,12 +89,11 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObj
 #if defined JS_POLYIC
     pics(ContextAllocPolicy(cx)), 
 #endif
-    stubcc(cx, *this, frame, script),
-    addTraceHints(cx->jitEnabled)
-{
-#ifdef DEBUG
-    masm.setSpewPath(false);
+    callSites(ContextAllocPolicy(cx)), stubcc(cx, *this, frame, script)
+#if defined JS_TRACER
+    ,addTraceHints(cx->jitEnabled)
 #endif
+{
 }
 
 #define CHECK_STATUS(expr)              \
@@ -306,15 +308,12 @@ mjit::Compiler::finishThisUp()
     }
 
     for (size_t i = 0; i < pics.length(); i++) {
-        script->pics[i].kind = pics[i].kind;
+        pics[i].copySimpleMembersTo(script->pics[i]);
         script->pics[i].fastPathStart = fullCode.locationOf(pics[i].hotPathBegin);
         script->pics[i].storeBack = fullCode.locationOf(pics[i].storeBack);
         script->pics[i].slowPathStart = stubCode.locationOf(pics[i].slowPathStart);
         script->pics[i].callReturn = uint16((uint8*)stubCode.locationOf(pics[i].callReturn).executableAddress() -
                                            (uint8*)script->pics[i].slowPathStart.executableAddress());
-        script->pics[i].shapeReg = pics[i].shapeReg;
-        script->pics[i].objReg = pics[i].objReg;
-        script->pics[i].atom = pics[i].atom;
         script->pics[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
                                      masm.distanceOf(pics[i].hotPathBegin);
         script->pics[i].shapeRegHasBaseShape = true;
@@ -322,15 +321,12 @@ mjit::Compiler::finishThisUp()
         if (pics[i].kind == ic::PICInfo::SET) {
             script->pics[i].u.vr = pics[i].vr;
         } else if (pics[i].kind != ic::PICInfo::NAME) {
-            script->pics[i].u.get.typeReg = pics[i].typeReg;
             if (pics[i].hasTypeCheck) {
                 int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
                                  stubcc.masm.distanceOf(pics[i].slowPathStart);
                 script->pics[i].u.get.typeCheckOffset = uint16(-distance);
                 JS_ASSERT(script->pics[i].u.get.typeCheckOffset == -distance);
             }
-            script->pics[i].u.get.hasTypeCheck = pics[i].hasTypeCheck;
-            script->pics[i].u.get.objRemat = pics[i].objRemat.offset;
         }
         new (&script->pics[i].execPools) ic::PICInfo::ExecPoolVector(SystemAllocPolicy());
     }
@@ -347,10 +343,27 @@ mjit::Compiler::finishThisUp()
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
 
     script->ncode = (uint8 *)(result + masm.distanceOf(invokeLabel));
-#ifdef DEBUG
-    script->jitLength = masm.size() + stubcc.size();
-#endif
+    script->inlineLength = masm.size();
+    script->outOfLineLength = stubcc.size();
     script->execPool = execPool;
+
+    /* Build the table of call sites. */
+    CallSite *callSiteList = (CallSite *)cx->calloc(sizeof(CallSite) * (callSites.length() + 1));
+    if (!callSiteList) {
+        execPool->release();
+        return Compile_Error;
+    }
+
+    (callSiteList++)->nCallSites = callSites.length();
+    for (size_t i = 0; i < callSites.length(); i++) {
+        if (callSites[i].stub)
+            callSiteList[i].c.codeOffset = masm.size() + stubcc.masm.distanceOf(callSites[i].location);
+        else
+            callSiteList[i].c.codeOffset = masm.distanceOf(callSites[i].location);
+        callSiteList[i].c.pcOffset = callSites[i].pc - script->code;
+        callSiteList[i].c.id = callSites[i].id;
+    }
+    script->callSites = callSiteList;
 
     return Compile_Okay;
 }
@@ -378,18 +391,25 @@ mjit::Compiler::finishThisUp()
 CompileStatus
 mjit::Compiler::generateMethod()
 {
+    mjit::AutoScriptRetrapper trapper(cx, script);
     PC = script->code;
 
     for (;;) {
         JSOp op = JSOp(*PC);
 
         OpcodeStatus &opinfo = analysis[PC];
-        if (opinfo.nincoming) {
+        if (opinfo.nincoming || opinfo.trap) {
             frame.forgetEverything(opinfo.stackDepth);
             opinfo.safePoint = true;
         }
         frame.setInTryBlock(opinfo.inTryBlock);
         jumpMap[uint32(PC - script->code)] = masm.label();
+
+        if (opinfo.trap) {
+            if (!trapper.untrap(PC))
+                return Compile_Error;
+            op = JSOp(*PC);
+        }
 
         if (!opinfo.visited) {
             if (op == JSOP_STOP)
@@ -403,6 +423,13 @@ mjit::Compiler::generateMethod()
 
         SPEW_OPCODE();
         JS_ASSERT(frame.stackDepth() == opinfo.stackDepth);
+
+        if (opinfo.trap) {
+            prepareStubCall(Uses(0));
+            masm.move(ImmPtr(PC), Registers::ArgReg1);
+            stubCall(stubs::Trap);
+        }
+        ADD_CALLSITE(false);
 
     /**********************
      * BEGIN COMPILER OPS *
@@ -1281,7 +1308,9 @@ mjit::Compiler::generateMethod()
                 frame.freeReg(cxreg);
                 stubcc.linkExit(jump, Uses(0));
                 stubcc.leave();
+                stubcc.masm.move(ImmPtr(PC), Registers::ArgReg1);
                 stubcc.call(stubs::Interrupt);
+                ADD_CALLSITE(true);
                 stubcc.rejoin(Changes(0));
             }
           }
@@ -1402,6 +1431,28 @@ bool
 mjit::Compiler::knownJump(jsbytecode *pc)
 {
     return pc < PC;
+}
+
+void *
+mjit::Compiler::findCallSite(const CallSite &callSite)
+{
+    JS_ASSERT(callSite.c.pcOffset < script->length);
+
+    for (uint32 i = 0; i < callSites.length(); i++) {
+        if (callSites[i].pc == script->code + callSite.c.pcOffset &&
+            callSites[i].id == callSite.c.id) {
+            if (callSites[i].stub) {
+                return (uint8*)script->nmap[-1] + masm.size() +
+                       stubcc.masm.distanceOf(callSites[i].location);
+            }
+            return (uint8*)script->nmap[-1] +
+                stubcc.masm.distanceOf(callSites[i].location);
+        }
+    }
+
+    /* We have no idea where to patch up to. */
+    JS_NOT_REACHED("Call site vanished.");
+    return NULL;
 }
 
 void
@@ -1561,6 +1612,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
         VoidPtrStubUInt32 stub = callingNew ? stubs::SlowNew : stubs::SlowCall;
         masm.move(Imm32(argc), Registers::ArgReg1);
         masm.stubCall(stub, PC, frame.stackDepth() + script->nfixed);
+        ADD_CALLSITE(false);
         frame.popn(argc + 2);
         frame.pushSynced();
         return;
@@ -1605,6 +1657,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     stubcc.leave();
     stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
     stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
+    ADD_CALLSITE(true);
 
     /* Get function private pointer. */
     Address funPrivate(data, offsetof(JSObject, fslots) +
@@ -1632,6 +1685,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
             stubcc.leave();
             stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
             stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
+            ADD_CALLSITE(true);
         }
     }
 
@@ -1680,6 +1734,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     masm.addPtr(Imm32(sizeof(void*)), Registers::StackPointer);
 #endif
     masm.call(Registers::ReturnReg);
+    ADD_CALLSITE(false);
 
     /*
      * The scripted call returns a register triplet, containing the jsval and
@@ -1713,6 +1768,22 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
 
     stubcc.rejoin(Changes(0));
+}
+
+/*
+ * This function must be called immediately after any instruction which could
+ * cause a new JSStackFrame to be pushed and could lead to a new debug trap
+ * being set. This includes any API callbacks and any scripted or native call.
+ */
+void
+mjit::Compiler::addCallSite(uint32 id, bool stub)
+{
+    InternalCallSite site;
+    site.stub = stub;
+    site.location = stub ? stubcc.masm.label() : masm.label();
+    site.pc = PC;
+    site.id = id;
+    callSites.append(site);
 }
 
 void
@@ -1958,6 +2029,56 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
 
     pics.append(pic);
 }
+
+#ifdef JS_POLYIC
+void
+mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID objReg,
+                                 RegisterID idReg, RegisterID shapeReg)
+{
+    PICGenInfo pic(ic::PICInfo::GETELEM);
+
+    pic.objRemat = frame.dataRematInfo(obj);
+    pic.idRemat = frame.dataRematInfo(id);
+    pic.shapeReg = shapeReg;
+    pic.hasTypeCheck = false;
+
+    pic.hotPathBegin = masm.label();
+
+    /* Guard on shape. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
+    masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
+    pic.shapeGuard = masm.label();
+    Jump shapeGuard = masm.branch32(Assembler::NotEqual, shapeReg,
+                                    Imm32(int32(JSObjectMap::INVALID_SHAPE)));
+
+    /* Guard on id identity. */
+    static const int32 BOGUS_ATOM = 0xdeadbeef;
+    // :FIXME: x64
+    Jump idGuard = masm.branch32(Assembler::NotEqual, idReg, Imm32(BOGUS_ATOM));
+    pic.slowPathStart = stubcc.masm.label();
+    stubcc.linkExit(idGuard, Uses(2));
+    stubcc.linkExitDirect(shapeGuard, pic.slowPathStart);
+
+    stubcc.leave();
+    stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
+    pic.callReturn = stubcc.call(ic::GetElem);
+
+    /* Load dslots. */
+    masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+
+    /* Copy the slot value to the expression stack. */
+    Address slot(objReg, 1 << 24);
+    masm.loadTypeTag(slot, shapeReg);
+    masm.loadData32(slot, objReg);
+    pic.storeBack = masm.label();
+    pic.objReg = objReg;
+    pic.idReg = idReg;
+    JS_ASSERT(pic.idReg != pic.objReg);
+    JS_ASSERT(pic.idReg != pic.shapeReg);
+    JS_ASSERT(pic.objReg != pic.shapeReg);
+    pics.append(pic);
+}
+#endif
 
 bool
 mjit::Compiler::jsop_callprop_generic(JSAtom *atom)

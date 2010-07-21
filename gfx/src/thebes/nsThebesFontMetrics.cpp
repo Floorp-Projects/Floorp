@@ -83,7 +83,9 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                                   size, aLanguage,
                                   aFont.sizeAdjust, aFont.systemFont,
                                   aFont.familyNameQuirks,
-                                  printerFont);
+                                  printerFont,
+                                  aFont.featureSettings,
+                                  aFont.languageOverride);
 
     mFontGroup =
         gfxPlatform::GetPlatform()->CreateFontGroup(aFont.name, mFontStyle, 

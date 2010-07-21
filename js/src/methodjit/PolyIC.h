@@ -69,11 +69,12 @@ struct PICInfo {
         CALL,
         SET,
         NAME,
-        BIND
+        BIND,
+        GETELEM
     };
 
     union {
-        // This struct comes out to 61 bits.
+        // This struct comes out to 70 bits.
         struct {
             RegisterID typeReg  : 5;  // reg used for checking type
             bool hasTypeCheck   : 1;  // type check and reg are present
@@ -82,8 +83,11 @@ struct PICInfo {
             uint16 typeCheckOffset : 9;
 
             // Remat info for the object reg.
-            uint32 objRemat    : 20;
-            bool objNeedsRemat : 1;
+            uint32 objRemat     : 20;
+            bool objNeedsRemat  : 1;
+            RegisterID idReg    : 5;  // only used in GETELEM PICs.
+            uint32 idRemat      : 20;
+            bool idNeedsRemat   : 1;
 
             // Offset from start of stub to jump target of second shape guard as Nitro
             // asm data location. This is 0 if there is only one shape guard in the
@@ -106,8 +110,20 @@ struct PICInfo {
     RegisterID shapeReg : 5;        // also the out type reg
     RegisterID objReg   : 5;        // also the out data reg
 
+    // Number of stubs generated.
+    uint32 stubsGenerated : 5;
+
+    // Offset from start of fast path to initial shape guard.
+    int shapeGuard : 8;
+    
+    // Return address of slow path call, as an offset from slowPathStart.
+    uint16 callReturn : 9;
+
+    unsigned unused : 24;
+
+
     inline bool isGet() {
-        return kind == GET || kind == CALL;
+        return kind == GET || kind == CALL || kind == GETELEM;
     }
     inline RegisterID typeReg() {
         JS_ASSERT(isGet());
@@ -121,9 +137,17 @@ struct PICInfo {
         JS_ASSERT(isGet());
         return u.get.objRemat;
     }
+    inline uint32 idRemat() {
+        JS_ASSERT(isGet());
+        return u.get.idRemat;
+    }
     inline bool objNeedsRemat() {
         JS_ASSERT(isGet());
         return u.get.objNeedsRemat;
+    }
+    inline bool idNeedsRemat() {
+        JS_ASSERT(isGet());
+        return u.get.idNeedsRemat;
     }
     inline bool shapeNeedsRemat() {
         return !shapeRegHasBaseShape;
@@ -133,12 +157,6 @@ struct PICInfo {
         return !hasTypeCheck();
     }
 
-    // Number of stubs generated.
-    uint32 stubsGenerated : 5;
-
-    // Offset from start of fast path to initial shape guard.
-    int shapeGuard : 8;
-    
     // Index into the script's atom table.
     JSAtom *atom;
 
@@ -147,9 +165,6 @@ struct PICInfo {
 
     // Address of store back at the end of the inline fast-path.
     JSC::CodeLocationLabel storeBack;
-
-    // Return address of slow path call, as an offset from slowPathStart.
-    uint16 callReturn : 9;
 
     // Offset from callReturn to the start of the slow case.
     JSC::CodeLocationLabel slowPathStart;
@@ -200,6 +215,7 @@ struct PICInfo {
 
 void PurgePICs(JSContext *cx, JSScript *script);
 void JS_FASTCALL GetProp(VMFrame &f, uint32 index);
+void JS_FASTCALL GetElem(VMFrame &f, uint32 index);
 void JS_FASTCALL SetProp(VMFrame &f, uint32 index);
 void JS_FASTCALL CallProp(VMFrame &f, uint32 index);
 void JS_FASTCALL Name(VMFrame &f, uint32 index);

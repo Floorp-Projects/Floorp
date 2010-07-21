@@ -54,14 +54,26 @@
  *  }
  *  MyComponent.prototype = {
  *    // properties required for XPCOM registration:
- *    classDescription: "unique text description",
  *    classID:          Components.ID("{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}"),
- *    contractID:       "@example.com/xxx;1",
  *
  *    // [optional] custom factory (an object implementing nsIFactory). If not
  *    // provided, the default factory is used, which returns
  *    // |(new MyComponent()).QueryInterface(iid)| in its createInstance().
  *    _xpcom_factory: { ... },
+ *
+ *    // QueryInterface implementation, e.g. using the generateQI helper
+ *    QueryInterface: XPCOMUtils.generateQI(
+ *      [Components.interfaces.nsIObserver,
+ *       Components.interfaces.nsIMyInterface,
+ *       "nsIFoo",
+ *       "nsIBar" ]),
+ *
+ *    // The following properties were used prior to Mozilla 2, but are no
+ *    // longer supported. They may still be included for compatibility with
+ *    // prior versions of XPCOMUtils. In Mozilla 2, this information is
+ *    // included in the .manifest file which registers this JS component.
+ *    classDescription: "unique text description",
+ *    contractID:       "@example.com/xxx;1",
  *
  *    // [optional] an array of categories to register this component in.
  *    _xpcom_categories: [{
@@ -85,13 +97,6 @@
  *      apps: [...]
  *    }],
  *
- *    // QueryInterface implementation, e.g. using the generateQI helper
- *    QueryInterface: XPCOMUtils.generateQI(
- *      [Components.interfaces.nsIObserver,
- *       Components.interfaces.nsIMyInterface,
- *       "nsIFoo",
- *       "nsIBar" ]),
- *
  *    // ...component implementation...
  *  };
  *
@@ -99,11 +104,8 @@
  * created in step 1):
  *  var components = [MyComponent];
  *
- * 3. Define the NSGetModule entry point:
- *  function NSGetModule(compMgr, fileSpec) {
- *    // components is the array created in step 2.
- *    return XPCOMUtils.generateModule(components);
- *  }
+ * 3. Define the NSGetFactory entry point:
+ *  const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
  */
 
 

@@ -1416,10 +1416,10 @@ class TraceRecorder
     JS_REQUIRES_STACK VMSideExit* downSnapshot(FrameInfo* downFrame);
     JS_REQUIRES_STACK TreeFragment* findNestedCompatiblePeer(TreeFragment* f);
     JS_REQUIRES_STACK AbortableRecordingStatus attemptTreeCall(TreeFragment* inner,
-                                                               uintptr_t& inlineCallCount);
+                                                               uintN& inlineCallCount);
 
     static JS_REQUIRES_STACK MonitorResult recordLoopEdge(JSContext* cx, TraceRecorder* r,
-                                                          uintptr_t& inlineCallCount);
+                                                          uintN& inlineCallCount);
 
     /* Allocators associated with this recording session. */
     VMAllocator& tempAlloc() const { return *traceMonitor->tempAlloc; }
@@ -1459,7 +1459,7 @@ class TraceRecorder
     friend class RecursiveSlotMap;
     friend class UpRecursiveSlotMap;
     friend MonitorResult MonitorLoopEdge(JSContext*, uintN&, RecordReason);
-    friend TracePointAction MonitorTracePoint(JSContext*, uintptr_t &,
+    friend TracePointAction MonitorTracePoint(JSContext*, uintN &inlineCallCount,
                                               bool &blacklist);
     friend void AbortRecording(JSContext*, const char*);
 
@@ -1479,7 +1479,7 @@ public:
 
     /* Entry points / callbacks from the interpreter. */
     JS_REQUIRES_STACK AbortableRecordingStatus monitorRecording(JSOp op);
-    JS_REQUIRES_STACK AbortableRecordingStatus record_EnterFrame(uintptr_t& inlineCallCount);
+    JS_REQUIRES_STACK AbortableRecordingStatus record_EnterFrame(uintN& inlineCallCount);
     JS_REQUIRES_STACK AbortableRecordingStatus record_LeaveFrame();
     JS_REQUIRES_STACK AbortableRecordingStatus record_SetPropHit(PropertyCacheEntry* entry,
                                                                  JSScopeProperty* sprop);
@@ -1541,10 +1541,10 @@ public:
 #define TRACE_2(x,a,b)          TRACE_ARGS(x, (a, b))
 
 extern JS_REQUIRES_STACK MonitorResult
-MonitorLoopEdge(JSContext* cx, uintptr_t& inlineCallCount, RecordReason reason);
+MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason);
 
 extern JS_REQUIRES_STACK TracePointAction
-MonitorTracePoint(JSContext*, uintptr_t &, bool& blacklist);
+MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool& blacklist);
 
 extern JS_REQUIRES_STACK void
 AbortRecording(JSContext* cx, const char* reason);

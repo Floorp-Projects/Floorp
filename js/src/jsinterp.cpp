@@ -2083,7 +2083,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 namespace js {
 
 JS_REQUIRES_STACK bool
-Interpret(JSContext *cx, JSStackFrame *entryFrame, uintptr_t inlineCallCount)
+Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_INTERP);
@@ -5075,11 +5075,11 @@ BEGIN_CASE(JSOP_TABLESWITCH)
     int32_t i;
     if (rref.isInt32()) {
         i = rref.toInt32();
-    } else if (rref.isDouble() && rref.toDouble() == 0) {
-        /* Treat -0 (double) as 0. */
-        i = 0;
     } else {
-        DO_NEXT_OP(len);
+        double d;
+        /* Don't use JSDOUBLE_IS_INT32; treat -0 (double) as 0. */
+        if (!rref.isDouble() || (d = rref.toDouble()) != (i = int32_t(rref.toDouble())))
+            DO_NEXT_OP(len);
     }
 
     pc2 += JUMP_OFFSET_LEN;

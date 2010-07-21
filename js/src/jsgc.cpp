@@ -2869,13 +2869,11 @@ struct GCTimer {
                 if (!gcFile) {
                     gcFile = fopen("gcTimer.dat", "w");
 
-                    fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep,");
-                    fprintf(gcFile, " FinObj, FinStr, FinDbl,");
-                    fprintf(gcFile, " Destroy,  newChunks, destoyChunks\n");
+                    fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj,");
+                    fprintf(gcFile, " FinStr,  Destroy,  newChunks, destoyChunks\n");
                 }
                 JS_ASSERT(gcFile);
-                fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f,"\
-                                 " %6.1f, %7.1f, ",
+                fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f,  %7.1f, ",
                         (double)(enter - getFirstEnter()) / 1e6,
                         (double)(end - enter) / 1e6,
                         (double)(startSweep - startMark) / 1e6,

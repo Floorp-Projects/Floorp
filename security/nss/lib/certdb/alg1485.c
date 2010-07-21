@@ -601,7 +601,7 @@ typedef enum {
 } EQMode;
 
 /* Some characters must be escaped as a hex string, e.g. c -> \nn .
- * Others must be escaped by preceeding with a '\', e.g. c -> \c , but
+ * Others must be escaped by preceding with a '\', e.g. c -> \c , but
  * there are certain "special characters" that may be handled by either
  * escaping them, or by enclosing the entire attribute value in quotes.
  * A NULL value for pEQMode implies selecting minimalEscape mode.

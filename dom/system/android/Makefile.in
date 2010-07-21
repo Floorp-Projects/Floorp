@@ -50,10 +50,15 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
 include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CPPSRCS     = \
         nsAccelerometerSystem.cpp \
+        AndroidLocationProvider.cpp \
         $(NULL)
+
+        LOCAL_INCLUDES  += -I$(topsrcdir)/dom/src/geolocation \
+                           $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

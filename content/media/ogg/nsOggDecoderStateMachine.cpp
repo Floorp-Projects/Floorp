@@ -66,6 +66,5 @@ void nsOggDecoderStateMachine::LoadMetadata()
     mDecoder->StopProgressUpdates();
     FindEndTime();
     mDecoder->StartProgressUpdates();
-    mDecoder->UpdatePlaybackRate();
   }
 }

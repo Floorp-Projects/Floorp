@@ -132,6 +132,16 @@ nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
     filterBundle->GetStringFromName(NS_LITERAL_STRING("imageFilter").get(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
+  if (aFilterMask & filterAudio) {
+    titleBundle->GetStringFromName(NS_LITERAL_STRING("audioTitle").get(), getter_Copies(title));
+    filterBundle->GetStringFromName(NS_LITERAL_STRING("audioFilter").get(), getter_Copies(filter));
+    AppendFilter(title,filter);
+  }
+  if (aFilterMask & filterVideo) {
+    titleBundle->GetStringFromName(NS_LITERAL_STRING("videoTitle").get(), getter_Copies(title));
+    filterBundle->GetStringFromName(NS_LITERAL_STRING("videoFilter").get(), getter_Copies(filter));
+    AppendFilter(title,filter);
+  }
   if (aFilterMask & filterXML) {
     titleBundle->GetStringFromName(NS_LITERAL_STRING("xmlTitle").get(), getter_Copies(title));
     filterBundle->GetStringFromName(NS_LITERAL_STRING("xmlFilter").get(), getter_Copies(filter));

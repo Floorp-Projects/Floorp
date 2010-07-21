@@ -418,7 +418,7 @@ PK11_NewSlotInfo(SECMODModule *mod)
 PK11SlotInfo *
 PK11_ReferenceSlot(PK11SlotInfo *slot)
 {
-    PR_AtomicIncrement(&slot->refCount);
+    PR_ATOMIC_INCREMENT(&slot->refCount);
     return slot;
 }
 
@@ -460,7 +460,7 @@ PK11_DestroySlot(PK11SlotInfo *slot)
 void
 PK11_FreeSlot(PK11SlotInfo *slot)
 {
-    if (PR_AtomicDecrement(&slot->refCount) == 0) {
+    if (PR_ATOMIC_DECREMENT(&slot->refCount) == 0) {
 	PK11_DestroySlot(slot);
     }
 }

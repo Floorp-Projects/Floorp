@@ -44,7 +44,7 @@
 #        Runs the javahcmd on all files that are different.
 #
 # Returns: list of headers which are OLDER than corresponding class
-#          files (non-existant class files are considered to be real old :-)
+#          files (non-existent class files are considered to be real old :-)
 
 my $javah = "";
 my $classdir = "";

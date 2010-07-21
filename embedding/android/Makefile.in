@@ -69,6 +69,8 @@ GARBAGE += \
 
 GARBAGE_DIRS += res libs dist classes
 
+DIRS = utils
+
 # Bug 567884 - Need a way to find appropriate icons during packaging
 ifeq ($(MOZ_APP_NAME),fennec)
 ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_48x48.png
@@ -78,7 +80,7 @@ ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon48.png
 ICON_PATH_HI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon64.png
 endif
 
-NATIVE_LIBS = $(shell cat $(DIST)/bin/dependentlibs.list) libxpcom.so libnssckbi.so libfreebl3.so
+NATIVE_LIBS = $(shell cat $(DIST)/bin/dependentlibs.list) libxpcom.so libnssckbi.so libfreebl3.so libmozutils.so
 FULL_LIBS = $(addprefix libs/armeabi/,$(NATIVE_LIBS))
 
 # We'll strip all the libs by default, due to size, but we might
@@ -145,16 +147,16 @@ libs/armeabi/%: $(DIST)/lib/%
 # Bug 567873 - Android packaging should use standard packaging code
 dist: FORCE
 	$(NSINSTALL) -D dist/components
-	rm -f dist/components/*
-	@(for f in $(DIST)/bin/components/* ; do ln -sf ../../$$f dist/components ; done)
+	rm -rf dist/components/*
+	@(for f in $(DIST)/bin/components/* ; do $(NSINSTALL) $$f dist/components ; done)
 	$(NSINSTALL) -D dist/chrome
-	rm -f dist/chrome/*
-	@(for f in $(DIST)/bin/chrome/* ; do ln -sf ../../$$f dist/chrome ; done)
+	rm -rf dist/chrome/*
+	@(for f in $(DIST)/bin/chrome/* ; do $(NSINSTALL) $$f dist/chrome ; done)
 	$(NSINSTALL) -D dist/defaults
-	rm -f dist/defaults/*
-	@(for f in $(DIST)/bin/defaults/* ; do ln -sf ../../$$f dist/defaults ; done )
+	rm -rf dist/defaults/*
+	@(for f in $(DIST)/bin/defaults/* ; do $(NSINSTALL) $$f dist/defaults ; done )
 	@(for PREF in $(DIST)/bin/defaults/pref/*.js ; do cat "$$PREF" >> dist/defaults/prefs.js ; echo >> dist/defaults/prefs.js ; done )
-	rm dist/defaults/pref
+	rm -rf dist/defaults/pref
 	@(for f in $(DIST_LINK_FILES) ; do if [ -e $(DIST)/bin/$$f ] ; then echo $$f ; ln -sf ../$(DIST)/bin/$$f dist ; fi ; done)
 
 gecko-unsigned-unaligned.apk: gecko.ap_ classes.dex dist $(FULL_LIBS)

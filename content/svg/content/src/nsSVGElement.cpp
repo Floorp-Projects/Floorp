@@ -58,7 +58,7 @@
 #include "nsGkAtoms.h"
 #include "nsICSSStyleRule.h"
 #include "nsRuleWalker.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
 #include "nsGenericHTMLElement.h"
@@ -74,15 +74,12 @@
 #include "nsSVGEnum.h"
 #include "nsSVGViewBox.h"
 #include "nsSVGString.h"
+#include "SVGAnimatedLengthList.h"
 #include "nsIDOMSVGUnitTypes.h"
-#include "nsIDOMSVGLengthList.h"
-#include "nsIDOMSVGAnimatedLengthList.h"
 #include "nsIDOMSVGNumberList.h"
 #include "nsIDOMSVGAnimatedNumberList.h"
 #include "nsIDOMSVGPointList.h"
 #include "nsIDOMSVGAnimatedPoints.h"
-#include "nsIDOMSVGPresAspectRatio.h"
-#include "nsIDOMSVGAnimPresAspRatio.h"
 #include "nsIDOMSVGTransformList.h"
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGAnimatedRect.h"
@@ -172,6 +169,12 @@ nsSVGElement::Init()
 
   if (preserveAspectRatio) {
     preserveAspectRatio->Init();
+  }
+
+  LengthListAttributesInfo lengthListInfo = GetLengthListInfo();
+
+  for (i = 0; i < lengthListInfo.mLengthListCount; i++) {
+    lengthListInfo.Reset(i);
   }
 
   StringAttributesInfo stringInfo = GetStringInfo();
@@ -349,6 +352,22 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
         }
         foundMatch = PR_TRUE;
         break;
+      }
+    }
+
+    if (!foundMatch) {
+      // Check for SVGAnimatedLengthList attribute
+      LengthListAttributesInfo lengthListInfo = GetLengthListInfo();
+      for (i = 0; i < lengthListInfo.mLengthListCount; i++) {
+        if (aAttribute == *lengthListInfo.mLengthListInfo[i].mName) {
+          rv = lengthListInfo.mLengthLists[i].SetBaseValueString(aValue);
+          if (NS_FAILED(rv)) {
+            // ReportToConsole
+            lengthListInfo.Reset(i);
+          }
+          foundMatch = PR_TRUE;
+          break;
+        }
       }
     }
 
@@ -534,6 +553,20 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     }
 
     if (!foundMatch) {
+      // Check if this is a length list attribute going away
+      LengthListAttributesInfo lengthListInfo = GetLengthListInfo();
+
+      for (PRUint32 i = 0; i < lengthListInfo.mLengthListCount; i++) {
+        if (aName == *lengthListInfo.mLengthListInfo[i].mName) {
+          lengthListInfo.Reset(i);
+          DidChangeLengthList(i, PR_FALSE);
+          foundMatch = PR_TRUE;
+          break;
+        }
+      }
+    }
+
+    if (!foundMatch) {
       // Check if this is a number attribute going away
       NumberAttributesInfo numInfo = GetNumberInfo();
 
@@ -669,12 +702,6 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 void
 nsSVGElement::ResetOldStyleBaseType(nsISVGValue *svg_value)
 {
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> ll = do_QueryInterface(svg_value);
-  if (ll) {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthlist;
-    ll->GetBaseVal(getter_AddRefs(lengthlist));
-    lengthlist->Clear();
-  }
   nsCOMPtr<nsIDOMSVGAnimatedNumberList> nl = do_QueryInterface(svg_value);
   if (nl) {
     nsCOMPtr<nsIDOMSVGNumberList> numberlist;
@@ -1067,9 +1094,12 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
 
 //------------------------------------------------------------------------
 // Helper class: MappedAttrParser, for parsing values of mapped attributes
+
+namespace {
+
 class MappedAttrParser {
 public:
-  MappedAttrParser(mozilla::css::Loader* aLoader,
+  MappedAttrParser(css::Loader* aLoader,
                    nsIURI* aDocURI,
                    already_AddRefed<nsIURI> aBaseURI,
                    nsIPrincipal* aNodePrincipal);
@@ -1081,7 +1111,7 @@ public:
 
   // If we've parsed any values for mapped attributes, this method returns
   // a new already_AddRefed nsICSSStyleRule that incorporates the parsed
-  // values. Otherwise, this method returns null. 
+  // values. Otherwise, this method returns null.
   already_AddRefed<nsICSSStyleRule> CreateStyleRule();
 
 private:
@@ -1095,10 +1125,10 @@ private:
   nsIPrincipal*     mNodePrincipal;
 
   // Declaration for storing parsed values (lazily initialized)
-  nsCSSDeclaration* mDecl;
+  css::Declaration* mDecl;
 };
 
-MappedAttrParser::MappedAttrParser(mozilla::css::Loader* aLoader,
+MappedAttrParser::MappedAttrParser(css::Loader* aLoader,
                                    nsIURI* aDocURI,
                                    already_AddRefed<nsIURI> aBaseURI,
                                    nsIPrincipal* aNodePrincipal)
@@ -1131,8 +1161,7 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
                                        nsAString& aMappedAttrValue)
 {
   if (!mDecl) {
-    // Need to do lazy initializion of declaration.
-    mDecl = new nsCSSDeclaration();
+    mDecl = new css::Declaration();
     mDecl->InitializeEmpty();
   }
 
@@ -1159,6 +1188,8 @@ MappedAttrParser::CreateStyleRule()
   mDecl = nsnull; // We no longer own the declaration -- drop our pointer to it
   return rule.forget();
 }
+
+} // anonymous namespace
 
 //----------------------------------------------------------------------
 // Implementation Helpers:
@@ -1428,6 +1459,85 @@ nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
   }
 
   va_end(args);
+}
+
+nsSVGElement::LengthListAttributesInfo
+nsSVGElement::GetLengthListInfo()
+{
+  return LengthListAttributesInfo(nsnull, nsnull, 0);
+}
+
+void
+nsSVGElement::LengthListAttributesInfo::Reset(PRUint8 aAttrEnum)
+{
+  mLengthLists[aAttrEnum].ClearBaseValue(aAttrEnum);
+  // caller notifies
+}
+
+void
+nsSVGElement::DidChangeLengthList(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  LengthListAttributesInfo info = GetLengthListInfo();
+
+  NS_ASSERTION(info.mLengthListCount > 0,
+               "DidChangeLengthList on element with no length list attribs");
+  NS_ASSERTION(aAttrEnum < info.mLengthListCount, "aAttrEnum out of range");
+
+  nsAutoString newStr;
+  info.mLengthLists[aAttrEnum].GetBaseValue().GetValueAsString(newStr);
+
+  SetAttr(kNameSpaceID_None, *info.mLengthListInfo[aAttrEnum].mName,
+          newStr, PR_TRUE);
+}
+
+void
+nsSVGElement::DidAnimateLengthList(PRUint8 aAttrEnum)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+
+  if (frame) {
+    LengthListAttributesInfo info = GetLengthListInfo();
+    frame->AttributeChanged(kNameSpaceID_None,
+                            *info.mLengthListInfo[aAttrEnum].mName,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
+void
+nsSVGElement::GetAnimatedLengthListValues(SVGUserUnitList *aFirst, ...)
+{
+  LengthListAttributesInfo info = GetLengthListInfo();
+
+  NS_ASSERTION(info.mLengthListCount > 0,
+               "GetAnimatedLengthListValues on element with no length list attribs");
+
+  SVGUserUnitList *list = aFirst;
+  PRUint32 i = 0;
+
+  va_list args;
+  va_start(args, aFirst);
+
+  while (list && i < info.mLengthListCount) {
+    list->Init(&(info.mLengthLists[i].GetAnimValue()), this, info.mLengthListInfo[i].mAxis);
+    ++i;
+    list = va_arg(args, SVGUserUnitList*);
+  }
+
+  va_end(args);
+}
+
+SVGAnimatedLengthList*
+nsSVGElement::GetAnimatedLengthList(PRUint8 aAttrEnum)
+{
+  LengthListAttributesInfo info = GetLengthListInfo();
+  if (aAttrEnum < info.mLengthListCount) {
+    return &(info.mLengthLists[aAttrEnum]);
+  }
+  NS_NOTREACHED("Bad attrEnum");
+  return nsnull;
 }
 
 nsSVGElement::NumberAttributesInfo
@@ -2057,6 +2167,20 @@ nsSVGElement::GetAnimatedAttr(nsIAtom* aName)
   if (aName == nsGkAtoms::preserveAspectRatio) {
     nsSVGPreserveAspectRatio *preserveAspectRatio = GetPreserveAspectRatio();
     return preserveAspectRatio ? preserveAspectRatio->ToSMILAttr(this) : nsnull;
+  }
+
+  // LengthLists:
+  {
+    LengthListAttributesInfo info = GetLengthListInfo();
+    for (PRUint32 i = 0; i < info.mLengthListCount; i++) {
+      if (aName == *info.mLengthListInfo[i].mName) {
+        NS_ABORT_IF_FALSE(i <= UCHAR_MAX, "Too many attributes");
+        return info.mLengthLists[i].ToSMILAttr(this,
+                                               PRUint8(i),
+                                               info.mLengthListInfo[i].mAxis,
+                                               info.mLengthListInfo[i].mCouldZeroPadList);
+      }
+    }
   }
 
   // Mapped attributes:

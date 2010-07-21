@@ -79,6 +79,24 @@ CPPSRCS += \
 	NativeJSContext.cpp \
 	$(NULL)
 
+# We can't build ANGLE on linux-64 until build bug 560894 and related
+# are fixed.
+ifneq ($(OS_ARCH)_$(OS_TEST),Linux_x86_64)
+DEFINES += -DUSE_ANGLE
+endif
+
+ifndef MOZ_ENABLE_LIBXUL
+
+ifdef USE_ANGLE
+
+SHARED_LIBRARY_LIBS += \
+	$(DEPTH)/gfx/angle/$(LIB_PREFIX)angle.$(LIB_SUFFIX) \
+	$(NULL)
+
+endif
+
+endif
+
 else
 
 CPPSRCS += WebGLContextNotSupported.cpp

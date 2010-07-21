@@ -58,7 +58,9 @@ var all_but_one = {
   "font-weight": "bold",
   "font-size": "small",
   "font-size-adjust": "none", // has to be default value
-  "font-stretch": "normal" // has to be default value
+  "font-stretch": "normal", // has to be default value
+  "-moz-font-feature-settings": "normal", // has to be default value
+  "-moz-font-language-override": "normal" // has to be default value
 };
 for (var prop in all_but_one) {
   s.setProperty(prop, all_but_one[prop], "");

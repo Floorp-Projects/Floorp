@@ -747,8 +747,7 @@ jar_listzip(JAR *jar, JAR_FILE fp)
 	    /* We will index any file that comes our way, but when it comes
 	       to actually extraction, compression must be 0 or 8 */
 	    compression = x86ShortToUint32(Local->method);
-	    phy->compression = 
-	    	(compression >= 0 && compression <= 255) ? compression : 222;
+	    phy->compression = (compression <= 255) ? compression : 222;
 		/* XXX 222 is bad magic. */
 
 	    phy->offset = pos + (sizeof *Local) + filename_len + extra_len;

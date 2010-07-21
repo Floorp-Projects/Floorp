@@ -53,7 +53,7 @@ namespace mozilla {
 namespace net {
 
 // C++ file contents
-HttpChannelParent::HttpChannelParent(PIFrameEmbeddingParent* iframeEmbedding)
+HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding)
 : mIPCClosed(false)
 {
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
