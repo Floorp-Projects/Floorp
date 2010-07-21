@@ -57,13 +57,14 @@ IPDLDIRS =  \
   dom/src/geolocation \
   dom/plugins  \
   dom/ipc  \
-  netwerk/ipc  \
-  netwerk/protocol/http  \
-  netwerk/cookie  \
-  js/jetpack \
+  gfx/layers/ipc \
   ipc/ipdl/test/cxx  \
   ipc/testshell  \
   js/ipc  \
+  js/jetpack \
+  netwerk/ipc  \
+  netwerk/protocol/http  \
+  netwerk/cookie  \
   $(NULL)
 ##-----------------------------------------------------------------------------
 
