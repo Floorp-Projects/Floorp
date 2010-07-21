@@ -86,29 +86,6 @@ using namespace mozilla::dom;
   } while (node);                                                 \
   PR_END_MACRO
 
-// This macro expects the ownerDocument of content_ to be in scope as
-// |nsIDocument* doc|
-#define IMPL_STRONGREF_MUTATION_NOTIFICATION(func_, content_, params_)      \
-  PR_BEGIN_MACRO                                                  \
-  nsINode* node = content_;                                       \
-  NS_ASSERTION(node->GetOwnerDoc() == doc, "Bogus document");     \
-  if (doc) {                                                      \
-    static_cast<nsIMutationObserver*>(doc->BindingManager())->    \
-      func_ params_;                                              \
-  }                                                               \
-  do {                                                            \
-    nsINode::nsSlots* slots = node->GetExistingSlots();           \
-    if (slots && !slots->mMutationObservers.IsEmpty()) {          \
-      /* No need to explicitly notify the first observer first    \
-         since that'll happen anyway. */                          \
-      NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(                         \
-        slots->mMutationObservers, nsIMutationObserver,           \
-        func_, params_);                                          \
-    }                                                             \
-    node = node->GetNodeParent();                                 \
-  } while (node);                                                 \
-  PR_END_MACRO
-
 void
 nsNodeUtils::CharacterDataWillChange(nsIContent* aContent,
                                      CharacterDataChangeInfo* aInfo)
@@ -207,7 +184,7 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
     document = static_cast<nsIDocument*>(aContainer);
   }
 
-  IMPL_STRONGREF_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
+  IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
                              (document, container, aChild, aIndexInContainer));
 }
 

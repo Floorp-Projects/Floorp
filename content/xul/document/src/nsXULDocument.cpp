@@ -1135,6 +1135,9 @@ nsXULDocument::ContentRemoved(nsIDocument* aDocument,
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
 
+    // Might not need this, but be safe for now.
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
     RemoveSubtreeFromDocument(aChild);
 }
 
