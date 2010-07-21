@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.53 $ $Date: 2010/01/08 02:00:58 $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.54 $ $Date: 2010/04/03 18:27:30 $";
 #endif /* DEBUG */
 
 #include "pkcs11.h"
@@ -65,7 +65,7 @@ nssToken_Destroy (
 )
 {
     if (tok) {
-	if (PR_AtomicDecrement(&tok->base.refCount) == 0) {
+	if (PR_ATOMIC_DECREMENT(&tok->base.refCount) == 0) {
 	    PZ_DestroyLock(tok->base.lock);
 	    nssTokenObjectCache_Destroy(tok->cache);
 	    /* The token holds the first/last reference to the slot.
@@ -99,7 +99,7 @@ nssToken_AddRef (
   NSSToken *tok
 )
 {
-    PR_AtomicIncrement(&tok->base.refCount);
+    PR_ATOMIC_INCREMENT(&tok->base.refCount);
     return tok;
 }
 

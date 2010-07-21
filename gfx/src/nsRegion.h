@@ -178,6 +178,11 @@ public:
   PRBool IsEqual (const nsRegion& aRegion) const;
   PRUint32 GetNumRects () const { return mRectCount; }
   const nsRect& GetBounds () const { return mBoundRect; }
+  // Converts this region from aFromAPP, an appunits per pixel ratio, to
+  // aToAPP. This applies nsRect::ConvertAppUnitsRoundOut/In to each rect of
+  // the region.
+  nsRegion ConvertAppUnitsRoundOut (PRInt32 aFromAPP, PRInt32 aToAPP) const;
+  nsRegion ConvertAppUnitsRoundIn (PRInt32 aFromAPP, PRInt32 aToAPP) const;
   nsIntRegion ToOutsidePixels (nscoord aAppUnitsPerPixel) const;
   nsRect GetLargestRectangle () const;
 

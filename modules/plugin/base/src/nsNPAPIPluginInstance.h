@@ -42,19 +42,18 @@
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsIPlugin.h"
 #include "nsIPluginInstance.h"
-#include "nsIPluginTagInfo.h"
 #include "nsPIDOMWindow.h"
-#include "nsIPluginInstanceOwner.h"
 #include "nsITimer.h"
-#include "mozilla/TimeStamp.h"
+#include "nsIPluginTagInfo.h"
+#include "nsIURI.h"
 
-#include "npfunctions.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/PluginLibrary.h"
 
-class nsNPAPIPluginStreamListener;
-class nsPIDOMWindow;
+class nsPluginStreamListenerPeer; // browser-initiated stream class
+class nsNPAPIPluginStreamListener; // plugin-initiated stream class
+class nsIPluginInstanceOwner;
 
 class nsNPAPITimer
 {
@@ -74,10 +73,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGININSTANCE
 
+  nsNPAPIPlugin* GetPlugin();
+
   nsresult GetNPP(NPP * aNPP);
 
-  // Return the callbacks for the plugin instance.
-  nsresult GetCallbacks(const NPPluginFuncs ** aCallbacks);
+  void SetURI(nsIURI* uri);
+  nsIURI* GetURI();
 
   NPError SetWindowless(PRBool aWindowless);
 
@@ -97,10 +98,12 @@ public:
                            PRBool aCallNotify,
                            const char * aURL);
 
-  nsNPAPIPluginInstance(NPPluginFuncs* callbacks, PluginLibrary* aLibrary);
-
-  // Use Release() to destroy this
+  nsNPAPIPluginInstance(nsNPAPIPlugin* plugin);
   virtual ~nsNPAPIPluginInstance();
+
+  // To be called when an instance becomes orphaned, when
+  // it's plugin is no longer guaranteed to be around.
+  void Destroy();
 
   // Indicates whether the plugin is running normally.
   bool IsRunning() {
@@ -129,6 +132,12 @@ public:
   void          UnscheduleTimer(uint32_t timerID);
   NPError       PopUpContextMenu(NPMenu* menu);
   NPBool        ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
+
+  // Returns the array of plugin-initiated streams.
+  nsTArray<nsNPAPIPluginStreamListener*> *PStreamListeners();
+  // Returns the array of browser-initiated streams.
+  nsTArray<nsPluginStreamListenerPeer*> *BStreamListeners();
+
 protected:
   nsresult InitializePlugin();
 
@@ -138,11 +147,6 @@ protected:
   nsresult GetParameters(PRUint16& n, const char*const*& names,
                          const char*const*& values);
   nsresult GetMode(PRInt32 *result);
-
-  // A pointer to the plugin's callback functions. This information
-  // is actually stored in the plugin class (<b>nsPluginClass</b>),
-  // and is common for all plugins of the class.
-  NPPluginFuncs* mCallbacks;
 
   // The structure used to communicate between the plugin instance and
   // the browser.
@@ -170,10 +174,16 @@ protected:
 public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.
   PRPackedBool mInPluginInitCall;
-  PluginLibrary* mLibrary;
-  nsTArray<nsNPAPIPluginStreamListener*> mStreamListeners;
 
 private:
+  nsNPAPIPlugin* mPlugin;
+
+  // array of plugin-initiated stream listeners
+  nsTArray<nsNPAPIPluginStreamListener*> mPStreamListeners;
+  
+  // array of browser-initiated stream listeners
+  nsTArray<nsPluginStreamListenerPeer*> mBStreamListeners;
+
   nsTArray<PopupControlState> mPopupStates;
 
   char* mMIMEType;
@@ -190,6 +200,8 @@ private:
   // Timestamp for the last time this plugin was stopped.
   // This is only valid when the plugin is actually stopped!
   mozilla::TimeStamp mStopTime;
+
+  nsCOMPtr<nsIURI> mURI;
 };
 
 #endif // nsNPAPIPluginInstance_h_

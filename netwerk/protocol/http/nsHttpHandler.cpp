@@ -613,7 +613,6 @@ nsHttpHandler::BuildUserAgent()
                            mPlatform.Length() + 
                            mOscpu.Length() +
                            mDeviceType.Length() +
-                           mLanguage.Length() +
                            mMisc.Length() +
                            mProduct.Length() +
                            mProductSub.Length() +
@@ -635,10 +634,6 @@ nsHttpHandler::BuildUserAgent()
     mUserAgent += mPlatform;
     mUserAgent.AppendLiteral("; ");
     mUserAgent += mOscpu;
-    if (!mLanguage.IsEmpty()) {
-        mUserAgent.AppendLiteral("; ");
-        mUserAgent += mLanguage;
-    }
     if (!mMisc.IsEmpty()) {
         mUserAgent.AppendLiteral("; ");
         mUserAgent += mMisc;
@@ -1733,13 +1728,6 @@ NS_IMETHODIMP
 nsHttpHandler::GetLanguage(nsACString &value)
 {
     value = mLanguage;
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsHttpHandler::SetLanguage(const nsACString &value)
-{
-    mLanguage = value;
-    mUserAgentIsDirty = PR_TRUE;
     return NS_OK;
 }
 

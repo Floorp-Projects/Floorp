@@ -124,18 +124,4 @@ private:
   nsresult EnsureMembersAreUTF8();
 };
 
-struct nsPluginInstanceTag
-{
-  char*                  mURL;
-  nsRefPtr<nsPluginTag>  mPluginTag;
-  nsNPAPIPluginInstance* mInstance; // this must always be valid
-  // Array holding all opened stream listeners for this entry
-  nsCOMArray<nsIPluginStreamInfo> mStreams; 
-  
-  nsPluginInstanceTag(nsPluginTag* aPluginTag,
-                      nsIPluginInstance* aInstance, 
-                      const char * url);
-  ~nsPluginInstanceTag();
-};
-
 #endif // nsPluginTags_h_

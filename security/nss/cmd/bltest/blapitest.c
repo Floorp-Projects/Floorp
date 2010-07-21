@@ -61,7 +61,7 @@ SECStatus EC_CopyParams(PRArenaPool *arena, ECParams *dstParams,
 	      const ECParams *srcParams);
 #endif
 
-/* Temporary - add debugging ouput on windows for RSA to track QA failure */
+/* Temporary - add debugging output on windows for RSA to track QA failure */
 #ifdef _WIN32
 #define TRACK_BLTEST_BUG
     char __bltDBG[] = "BLTEST DEBUG";

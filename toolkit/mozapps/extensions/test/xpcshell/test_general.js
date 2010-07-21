@@ -14,7 +14,7 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   var count = 0;
-  startupManager(1);
+  startupManager();
   AddonManager.getAddonsByTypes(null, function(list) {
     gCount = list.length;
 
@@ -23,7 +23,7 @@ function run_test() {
 }
 
 function run_test_1() {
-  restartManager(0);
+  restartManager();
 
   AddonManager.getAddonsByTypes(null, function(addons) {
     do_check_eq(gCount, addons.length);
@@ -39,7 +39,7 @@ function run_test_1() {
 function run_test_2() {
   shutdownManager();
 
-  startupManager(0, false);
+  startupManager(false);
 
   AddonManager.getAddonsByTypes(null, function(addons) {
     do_check_eq(gCount, addons.length);
@@ -49,7 +49,7 @@ function run_test_2() {
 }
 
 function run_test_3() {
-  restartManager(0);
+  restartManager();
 
   AddonManager.getAddonsByTypes(null, function(addons) {
     do_check_eq(gCount, addons.length);

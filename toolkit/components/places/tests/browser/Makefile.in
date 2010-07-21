@@ -47,6 +47,10 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
 	browser_bug399606.js \
+	browser_visituri.js \
+	browser_visituri_nohistory.js \
+	browser_visituri_privatebrowsing.js \
+	browser_settitle.js \
 	$(NULL)
 
 # These are files that need to be loaded via the HTTP proxy server
@@ -58,6 +62,12 @@ _HTTP_FILES = \
 	bug_399606/399606-window.location.href.html \
 	bug_399606/399606-window.location.html \
 	bug_399606/399606-history.go-0.html \
+	visituri/begin.html \
+	visituri/redirect_twice.sjs \
+	visituri/redirect_once.sjs \
+	visituri/final.html \
+	settitle/title1.html \
+	settitle/title2.html \
 	$(NULL)
 
 libs:: $(_BROWSER_FILES)

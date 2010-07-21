@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.39 2010/02/04 03:08:44 wtc%google.com Exp $ */
+/* $Id: sslcon.c,v 1.40 2010/04/25 23:37:38 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -1861,7 +1861,7 @@ ssl2_ChooseSessionCypher(sslSocket *ss,
     }
     preferred = ss->preferredCipher ? ss->preferredCipher : noneSuch;
     /*
-    ** Scan list of ciphers recieved from peer and look for a match in
+    ** Scan list of ciphers received from peer and look for a match in
     ** our list.  
     *  Note: Our list may contain SSL v3 ciphers.  
     *  We MUST NOT match on any of those.  

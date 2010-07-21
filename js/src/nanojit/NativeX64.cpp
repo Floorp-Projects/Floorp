@@ -1039,7 +1039,7 @@ namespace nanojit
         endOpRegs(ins, rr, ra);
     }
 
-    void Assembler::asm_promote(LIns *ins) {
+    void Assembler::asm_ui2uq(LIns *ins) {
         Register rr, ra;
         beginOp1Regs(ins, GpRegs, rr, ra);
         NanoAssert(IsGpReg(ra));
@@ -1050,6 +1050,20 @@ namespace nanojit
             MOVSXDR(rr, ra);    // sign extend 32->64
         }
         endOpRegs(ins, rr, ra);
+    }
+
+    void Assembler::asm_dasq(LIns *ins) {
+        Register rr = prepareResultReg(ins, GpRegs);
+        Register ra = findRegFor(ins->oprnd1(), FpRegs);
+        asm_nongp_copy(rr, ra);
+        freeResourcesOf(ins);
+    }
+
+    void Assembler::asm_qasd(LIns *ins) {
+        Register rr = prepareResultReg(ins, FpRegs);
+        Register ra = findRegFor(ins->oprnd1(), GpRegs);
+        asm_nongp_copy(rr, ra);
+        freeResourcesOf(ins);
     }
 
     // The CVTSI2SD instruction only writes to the low 64bits of the target

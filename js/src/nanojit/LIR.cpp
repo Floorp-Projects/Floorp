@@ -550,6 +550,14 @@ namespace nanojit
             if (oprnd->isImmI())
                 return insImmQ(uint64_t(uint32_t(oprnd->immI())));
             break;
+        case LIR_dasq:
+            if (oprnd->isop(LIR_qasd))
+                return oprnd->oprnd1();
+            break;
+        case LIR_qasd:
+            if (oprnd->isop(LIR_dasq))
+                return oprnd->oprnd1();
+            break;
 #endif
 #if NJ_SOFTFLOAT_SUPPORTED
         case LIR_dlo2i:
@@ -587,10 +595,13 @@ namespace nanojit
         case LIR_i2d:
             if (oprnd->isImmI())
                 return insImmD(oprnd->immI());
+            // Nb: i2d(d2i(x)) != x
             break;
         case LIR_d2i:
             if (oprnd->isImmD())
                 return insImmI(int32_t(oprnd->immD()));
+            if (oprnd->isop(LIR_i2d))
+                return oprnd->oprnd1();
             break;
         case LIR_ui2d:
             if (oprnd->isImmI())
@@ -1393,6 +1404,8 @@ namespace nanojit
                 case LIR_ui2d:
                 CASE64(LIR_q2i:)
                 case LIR_d2i:
+                CASE64(LIR_dasq:)
+                CASE64(LIR_qasd:)
                 CASE86(LIR_modi:)
                     live.add(ins->oprnd1(), 0);
                     break;
@@ -1812,6 +1825,8 @@ namespace nanojit
             CASE64(LIR_ui2uq:)
             CASE64(LIR_q2i:)
             case LIR_d2i:
+            CASE64(LIR_dasq:)
+            CASE64(LIR_qasd:)
                 VMPI_snprintf(s, n, "%s = %s %s", formatRef(&b1, i), lirNames[op],
                              formatRef(&b2, i->oprnd1()));
                 break;
@@ -2976,6 +2991,7 @@ namespace nanojit
             break;
 
         case LIR_q2i:
+        case LIR_qasd:
         case LIR_retq:
         case LIR_liveq:
             formals[0] = LTy_Q;
@@ -3007,6 +3023,7 @@ namespace nanojit
         case LIR_retd:
         case LIR_lived:
         case LIR_d2i:
+        CASE64(LIR_dasq:)
             formals[0] = LTy_D;
             break;
 

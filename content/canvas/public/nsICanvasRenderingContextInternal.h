@@ -104,7 +104,8 @@ public:
 
   // Return the CanvasLayer for this context, creating
   // one for the given layer manager if not available.
-  virtual already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *mgr) = 0;
+  virtual already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
+                                                       LayerManager *aManager) = 0;
 
   virtual void MarkContextClean() = 0;
 

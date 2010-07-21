@@ -2147,18 +2147,24 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
                                             displayData->mAppearance)) {
-      nsRect dirty;
-      dirty.IntersectRect(aDirtyRect, aBorderArea);
+      nsRect drawing(aBorderArea);
+      theme->GetWidgetOverflow(aPresContext->DeviceContext(),
+                               aForFrame, displayData->mAppearance, &drawing);
+      drawing.IntersectRect(drawing, aDirtyRect);
       theme->DrawWidgetBackground(&aRenderingContext, aForFrame,
-                                  displayData->mAppearance, aBorderArea, dirty);
+                                  displayData->mAppearance, aBorderArea,
+                                  drawing);
       return;
     }
   }
 
   // For canvas frames (in the CSS sense) we draw the background color using
   // a solid color item that gets added in nsLayoutUtils::PaintFrame,
-  // PresShell::RenderDocument, or nsSubDocumentFrame::BuildDisplayList
-  // (bug 488242).
+  // or nsSubDocumentFrame::BuildDisplayList (bug 488242). (The solid
+  // color may be moved into nsDisplayCanvasBackground by
+  // nsPresShell::AddCanvasBackgroundColorItem, and painted by
+  // nsDisplayCanvasBackground directly.) Either way we don't need to
+  // paint the background color here.
   PRBool isCanvasFrame = IsCanvasFrame(aForFrame);
 
   // Determine whether we are drawing background images and/or
@@ -2449,6 +2455,8 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   // of aForFrame's border-box will be rendered)
   nsPoint imageTopLeft, anchor;
   if (NS_STYLE_BG_ATTACHMENT_FIXED == aLayer.mAttachment) {
+    aPresContext->SetHasFixedBackgroundFrame();
+
     // If it's a fixed background attachment, then the image is placed
     // relative to the viewport, which is the area of the root frame
     // in a screen context or the page content frame in a print context.

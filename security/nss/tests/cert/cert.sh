@@ -393,7 +393,7 @@ cert_add_cert()
 ################################# cert_all_CA ################################
 # local shell function to build the additional Temp. Certificate Authority (CA)
 # used for the "real life" ssl test with 2 different CA's in the
-# client and in teh server's dir
+# client and in the server's dir
 ##########################################################################
 cert_all_CA()
 {

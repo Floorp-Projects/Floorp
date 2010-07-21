@@ -112,6 +112,7 @@ nsICanvasRenderingContextWebGL_BufferData(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     if (!JSVAL_IS_PRIMITIVE(argv[1])) {
+
         JSObject *arg2 = JSVAL_TO_OBJECT(argv[1]);
         if (js_IsArrayBuffer(arg2)) {
             wb = js::ArrayBuffer::fromJSObject(arg2);
@@ -275,10 +276,9 @@ nsICanvasRenderingContextWebGL_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE; // return here to be unaffected by the *vp = JSVAL_VOID; below
 
         /*** END old API deprecated code ***/
-    } else if (   argc == 7
-               && JSVAL_IS_OBJECT(argv[6])
-               && !JSVAL_IS_PRIMITIVE(argv[6]))
-        {
+    } else if (argc == 7 &&
+               !JSVAL_IS_PRIMITIVE(argv[6]))
+    {
         JSObject *argv6 = JSVAL_TO_OBJECT(argv[6]);
         if (js_IsArrayBuffer(argv6)) {
             rv = self->ReadPixels_buf(argv0, argv1, argv2, argv3,
@@ -349,7 +349,10 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
         GET_OPTIONAL_UINT32_ARG(argv4, 4);
 
         rv = self->TexImage2D_dom_old_API_deprecated(argv0, argv1, elt, argv3, argv4);
-    } else if (argc > 5 && JSVAL_IS_OBJECT(argv[5])) {
+    } else if (argc > 5 &&
+               !JSVAL_IS_PRIMITIVE(argv[5]))
+    {
+
         // implement the variants taking a DOMElement as argv[5]
         GET_UINT32_ARG(argv2, 2);
         GET_UINT32_ARG(argv3, 3);
@@ -365,6 +368,7 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
         if (NS_FAILED(rv)) {
             // failed to interprete argv[5] as a DOMElement, now try to interprete it as ImageData
             JSObject *argv5 = JSVAL_TO_OBJECT(argv[5]);
+
             jsval js_width, js_height, js_data;
             JS_GetProperty(cx, argv5, "width", &js_width);
             JS_GetProperty(cx, argv5, "height", &js_height);
@@ -379,8 +383,11 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
             int32 int_width, int_height;
             JSObject *obj_data = JSVAL_TO_OBJECT(js_data);
             if (!JS_ValueToECMAInt32(cx, js_width, &int_width) ||
-                !JS_ValueToECMAInt32(cx, js_height, &int_height) ||
-                !js_IsTypedArray(obj_data))
+                !JS_ValueToECMAInt32(cx, js_height, &int_height))
+            {
+                return JS_FALSE;
+            }
+            if (!js_IsTypedArray(obj_data))
             {
                 xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 5);
                 return JS_FALSE;
@@ -389,7 +396,9 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
                                         int_width, int_height, 0,
                                         argv3, argv4, js::TypedArray::fromJSObject(obj_data));
         }
-    } else if (argc > 8 && JSVAL_IS_OBJECT(argv[8])) {
+    } else if (argc > 8 &&
+               JSVAL_IS_OBJECT(argv[8])) // here, we allow null !
+    {
         // implement the variants taking a buffer/array as argv[8]
         GET_UINT32_ARG(argv2, 2);
         GET_INT32_ARG(argv3, 3);
@@ -461,7 +470,9 @@ nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *v
     GET_INT32_ARG(argv2, 2);
     GET_INT32_ARG(argv3, 3);
 
-    if (argc > 6 && JSVAL_IS_OBJECT(argv[6])) {
+    if (argc > 6 &&
+        !JSVAL_IS_PRIMITIVE(argv[6]))
+    {
         // implement the variants taking a DOMElement as argv[6]
         GET_UINT32_ARG(argv4, 4);
         GET_UINT32_ARG(argv5, 5);
@@ -490,8 +501,11 @@ nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *v
             int32 int_width, int_height;
             JSObject *obj_data = JSVAL_TO_OBJECT(js_data);
             if (!JS_ValueToECMAInt32(cx, js_width, &int_width) ||
-                !JS_ValueToECMAInt32(cx, js_height, &int_height) ||
-                !js_IsTypedArray(obj_data))
+                !JS_ValueToECMAInt32(cx, js_height, &int_height))
+            {
+                return JS_FALSE;
+            }
+            if (!js_IsTypedArray(obj_data))
             {
                 xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 6);
                 return JS_FALSE;
@@ -501,7 +515,9 @@ nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *v
                                            argv4, argv5,
                                            js::TypedArray::fromJSObject(obj_data));
         }
-    } else if (argc > 8 && JSVAL_IS_OBJECT(argv[8])) {
+    } else if (argc > 8 &&
+               !JSVAL_IS_PRIMITIVE(argv[8]))
+    {
         // implement the variants taking a buffer/array as argv[8]
         GET_INT32_ARG(argv4, 4);
         GET_INT32_ARG(argv5, 5);

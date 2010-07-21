@@ -2417,14 +2417,18 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
             (length == 0 || !obj->getDenseArrayElement(length - 1).isMagic(JS_ARRAY_HOLE))) {
             if (!obj->ensureDenseArrayElements(cx, length + delta))
                 return JS_FALSE;
-            /* (uint) end could be 0, so we can't use a vanilla >= test. */
-            while (last-- > end) {
-                const Value &srcval = obj->getDenseArrayElement(last);
-                const Value &dest = obj->getDenseArrayElement(last + delta);
-                if (dest.isMagic(JS_ARRAY_HOLE) && !srcval.isMagic(JS_ARRAY_HOLE))
+
+            Value *arraybeg = obj->getDenseArrayElements();
+            Value *srcbeg = arraybeg + last - 1;
+            Value *srcend = arraybeg + end - 1;
+            Value *dstbeg = srcbeg + delta;
+            for (Value *src = srcbeg, *dst = dstbeg; src > srcend; --src, --dst) {
+                Value srcval = *src;
+                if (JS_UNLIKELY(!srcval.isMagic(JS_ARRAY_HOLE) && dst->isMagic(JS_ARRAY_HOLE)))
                     obj->incDenseArrayCountBy(1);
-                obj->setDenseArrayElement(last + delta, srcval);
+                *dst = srcval;
             }
+
             obj->setDenseArrayLength(obj->getArrayLength() + delta);
         } else {
             /* (uint) end could be 0, so we can't use a vanilla >= test. */
@@ -2441,13 +2445,16 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
         delta = count - (jsuint)argc;
         if (obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj) &&
             length <= obj->getDenseArrayCapacity()) {
-            /* (uint) end could be 0, so we can't use a vanilla >= test. */
-            for (last = end; last < length; last++) {
-                const Value &srcval = obj->getDenseArrayElement(last);
-                const Value &dest = obj->getDenseArrayElement(last - delta);
-                if (dest.isMagic(JS_ARRAY_HOLE) && !srcval.isMagic(JS_ARRAY_HOLE))
+
+            Value *arraybeg = obj->getDenseArrayElements();
+            Value *srcbeg = arraybeg + end;
+            Value *srcend = arraybeg + length;
+            Value *dstbeg = srcbeg - delta;
+            for (Value *src = srcbeg, *dst = dstbeg; src < srcend; ++src, ++dst) {
+                Value srcval = *src;
+                if (JS_UNLIKELY(!srcval.isMagic(JS_ARRAY_HOLE) && dst->isMagic(JS_ARRAY_HOLE)))
                     obj->incDenseArrayCountBy(1);
-                obj->setDenseArrayElement(last - delta, srcval);
+                *dst = srcval;
             }
         } else {
             for (last = end; last < length; last++) {

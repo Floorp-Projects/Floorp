@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3prot.h,v 1.18 2010/02/03 02:25:35 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: ssl3prot.h,v 1.19 2010/06/24 09:24:18 nelson%bolyard.com Exp $ */
 
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
@@ -108,7 +108,7 @@ typedef enum {
     close_notify            = 0,
     unexpected_message      = 10,
     bad_record_mac          = 20,
-    decryption_failed       = 21,	/* TLS only */
+    decryption_failed_RESERVED = 21,	/* do not send; see RFC 5246 */
     record_overflow         = 22,	/* TLS only */
     decompression_failure   = 30,
     handshake_failure       = 40,

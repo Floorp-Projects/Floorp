@@ -51,6 +51,7 @@
 inline JSEmptyScope *
 JSScope::createEmptyScope(JSContext *cx, js::Class *clasp)
 {
+    JS_ASSERT(!isSharedEmpty());
     JS_ASSERT(!emptyScope);
     emptyScope = cx->create<JSEmptyScope>(cx, ops, clasp);
     return emptyScope;

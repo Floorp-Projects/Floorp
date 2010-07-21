@@ -452,6 +452,7 @@ static JSFunctionSpec sUInt64Functions[] = {
 static JSFunctionSpec sModuleFunctions[] = {
   JS_FN("open", Library::Open, 1, CTYPESFN_FLAGS),
   JS_FN("cast", CData::Cast, 2, CTYPESFN_FLAGS),
+  JS_FN("libraryName", Library::Name, 1, CTYPESFN_FLAGS),
   JS_FS_END
 };
 
@@ -4029,7 +4030,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
       if (!JS_GetElement(cx, fieldsObj, i, item.jsval_addr()))
         return JS_FALSE;
 
-      JSObject* fieldType;
+      JSObject* fieldType = NULL;
       JSString* name = ExtractStructField(cx, item.jsval_value(), &fieldType);
       if (!name)
         return JS_FALSE;

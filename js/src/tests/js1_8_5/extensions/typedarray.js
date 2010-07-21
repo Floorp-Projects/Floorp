@@ -221,6 +221,9 @@ function test()
 
     checkThrows(function() new Float32Array(null));
 
+    a = new Uint8Array(0x100);
+    checkThrows(function() Uint32Array.prototype.slice.apply(a, [0, 0x100]));
+
     print ("done");
 
     reportCompare(0, TestFailCount, "typed array tests");

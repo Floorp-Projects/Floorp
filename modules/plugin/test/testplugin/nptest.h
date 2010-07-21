@@ -102,6 +102,7 @@ typedef struct InstanceData {
   uint32_t timerID[2];
   bool timerTestResult;
   bool asyncCallbackResult;
+  bool invalidateDuringPaint;
   int32_t winX;
   int32_t winY;
   int32_t lastMouseX;

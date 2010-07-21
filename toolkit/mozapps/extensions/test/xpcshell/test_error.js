@@ -12,7 +12,7 @@ profileDir.append("extensions");
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  startupManager(1);
+  startupManager();
 
   do_test_pending();
   run_test_1();

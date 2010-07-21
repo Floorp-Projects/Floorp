@@ -254,7 +254,7 @@ const EXPIRATION_QUERIES = {
        + "WHERE v.id IS NULL "
        +   "AND v_t.id IS NULL "
        +   "AND b.id IS NULL "
-       +   "AND h.ROWID <> IFNULL(:null_skips_last, last_insert_rowid()) "
+       +   "AND h.ROWID <> IFNULL(:null_skips_last, (SELECT MAX(ROWID) FROM moz_places_temp)) "
        +   "AND SUBSTR(h.url, 1, 6) <> 'place:' "
        + "UNION ALL "
        + "SELECT h.id, h.url, h.last_visit_date AS visit_date, "
@@ -266,7 +266,6 @@ const EXPIRATION_QUERIES = {
        + "WHERE v.id IS NULL "
        +   "AND v_t.id IS NULL "
        +   "AND b.id IS NULL "
-       +   "AND h.ROWID <> IFNULL(:null_skips_last, last_insert_rowid()) "
        +   "AND SUBSTR(h.url, 1, 6) <> 'place:' "
        + "LIMIT :limit_uris",
     actions: ACTION.TIMED | ACTION.SHUTDOWN | ACTION.IDLE | ACTION.DEBUG
@@ -514,8 +513,7 @@ nsPlacesExpiration.prototype = {
 
       this._prefBranch.removeObserver("", this);
 
-      if (this._isIdleObserver)
-        this._idle.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+      this.expireOnIdle = false;
 
       if (this._timer) {
         this._timer.cancel();
@@ -527,13 +525,14 @@ nsPlacesExpiration.prototype = {
       let self = this;
       Services.tm.mainThread.dispatch({
         run: function() {
-          // If we ran a clearHistory recently, we don't want to spend time
-          // expiring on shutdown, we can just expire session annotations.
+          // If we ran a clearHistory recently, or database id not dirty, we don't want to spend
+          // time expiring on shutdown.  In such a case just expire session annotations.
           let hasRecentClearHistory =
             Date.now() - self._lastClearHistoryTime <
               SHUTDOWN_WITH_RECENT_CLEARHISTORY_TIMEOUT_SECONDS * 1000;
-          let action = hasRecentClearHistory ? ACTION.CLEAN_SHUTDOWN
-                                             : ACTION.SHUTDOWN;
+          let action = hasRecentClearHistory ||
+                       self.status != STATUS.DIRTY ? ACTION.CLEAN_SHUTDOWN
+                                                   : ACTION.SHUTDOWN;
           self._expireWithActionAndLimit(action, LIMIT.LARGE);
 
           self._finalizeInternalStatements();
@@ -594,7 +593,8 @@ nsPlacesExpiration.prototype = {
   _lastClearHistoryTime: 0,
   onClearHistory: function PEX_onClearHistory() {
     this._lastClearHistoryTime = Date.now();
-    // Expire orphans.
+    // Expire orphans.  History status is clean after a clear history.
+    this.status = STATUS.CLEAN;
     this._expireWithActionAndLimit(ACTION.CLEAR_HISTORY, LIMIT.UNLIMITED);
   },
 
@@ -610,14 +610,6 @@ nsPlacesExpiration.prototype = {
 
   notify: function PEX_timerCallback()
   {
-    // We don't start observing idle in the constructor because unit tests
-    // will run with a large idle, and notify it immediately, instead we start
-    // observing idle at the first timer notification.
-    if (!this._isIdleObserver) {
-      this._idle.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
-      this._isIdleObserver = true;
-    }
-
     this._expireWithActionAndLimit(ACTION.TIMED, LIMIT.SMALL);
   },
 
@@ -632,16 +624,16 @@ nsPlacesExpiration.prototype = {
 
     let row;
     while (row = aResultSet.getNextRow()) {
-
       if (!("_expectedResultsCount" in this))
         this._expectedResultsCount = row.getResultByName("expected_results");
+      if (this._expectedResultsCount > 0)
+        this._expectedResultsCount--;
 
       let uri = Services.io.newURI(row.getResultByName("url"), null, null);
       let visitDate = row.getResultByName("visit_date");
       let wholeEntry = row.getResultByName("whole_entry");
       // Dispatch expiration notifications to history.
       this._hsn.notifyOnPageExpired(uri, visitDate, wholeEntry);
-      this._expectedResultsCount--;
     }
   },
 
@@ -654,19 +646,13 @@ nsPlacesExpiration.prototype = {
   handleCompletion: function PEX_handleCompletion(aReason)
   {
     if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-      // Adapt the aggressivity of partial steps based on the status of history.
-      // A dirty history will return all the entries we are expecting, while a
-      // clean one will return less results or no results at all.
-      this._status = STATUS.UNKNOWN;
       if ("_expectedResultsCount" in this) {
-        let isClean = this._expectedResultsCount > 0;
+        // Adapt the aggressivity of steps based on the status of history.
+        // A dirty history will return all the entries we are expecting bringing
+        // our countdown to zero, while a clean one will not.
+        this.status = this._expectedResultsCount == 0 ? STATUS.DIRTY
+                                                      : STATUS.CLEAN;
         delete this._expectedResultsCount;
-        let status = isClean ? STATUS.CLEAN : STATUS.DIRTY;
-        // If status changes we should restart the timer.
-        if (this._status != status) {
-          this._newTimer();
-          this._status = status;
-        }
       }
 
       // Dispatch a notification that expiration has finished.
@@ -679,9 +665,40 @@ nsPlacesExpiration.prototype = {
 
   _urisLimit: PREF_MAX_URIS_NOTSET,
   _interval: PREF_INTERVAL_SECONDS_NOTSET,
-  _status: STATUS.UNKNOWN,
-  _isIdleObserver: false,
   _shuttingDown: false,
+
+  _status: STATUS.UNKNOWN,
+  set status(aNewStatus) {
+    if (aNewStatus != this._status) {
+      // If status changes we should restart the timer.
+      this._status = aNewStatus;
+      this._newTimer();
+      // If needed add/remove the cleanup step on idle.  We want to expire on
+      // idle only if history is dirty, to preserve mobile devices batteries.
+      this.expireOnIdle = aNewStatus == STATUS.DIRTY;
+    }
+    return aNewStatus;
+  },
+  get status() this._status,
+
+  _isIdleObserver: false,
+  set expireOnIdle(aObserveIdle) {
+    if (aObserveIdle != this._isIdleObserver) {
+      // If running a debug expiration we need full control of what happens
+      // but idle cleanup could activate in the middle, since tinderboxes are
+      // permanently idle.  That would cause unexpected oranges, so disable it.
+      if (aObserveIdle && !this._shuttingDown &&
+          this._debugLimit === undefined) {
+        this._idle.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+        this._isIdleObserver = true;
+      }
+      else if (this._isIdleObserver) {
+        this._idle.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+        this._isIdleObserver = false;
+      }
+    }
+    return aObserveIdle;
+  },
 
   _loadPrefs: function PEX__loadPrefs() {
     // Get the user's limit, if it was set.
@@ -804,7 +821,7 @@ nsPlacesExpiration.prototype = {
         baseLimit = this._debugLimit;
         break;
     }
-    if (this._status == STATUS.DIRTY && aLimit != LIMIT.DEBUG)
+    if (this.status == STATUS.DIRTY && aLimit != LIMIT.DEBUG)
       baseLimit *= EXPIRE_AGGRESSIVITY_MULTIPLIER;
 
     // Bind the appropriate parameters.
@@ -874,7 +891,9 @@ nsPlacesExpiration.prototype = {
   {
     if (this._timer)
       this._timer.cancel();
-    let interval = (this._status == STATUS.CLEAN) ?
+    if (this._shuttingDown)
+      return;
+    let interval = (this.status == STATUS.CLEAN) ?
       this._interval * EXPIRE_AGGRESSIVITY_MULTIPLIER : this._interval;
 
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);

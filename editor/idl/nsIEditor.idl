@@ -57,12 +57,11 @@ interface nsITransferable;
 
 %{C++
 class nsIPresShell;
-typedef short EDirection;
 %}
 
 [ptr] native nsIPresShellPtr(nsIPresShell);
 
-[scriptable, uuid(63084019-4cd0-45f8-8b10-d9f0231b2f63)]
+[scriptable, uuid(972e54e1-dec3-4e3f-87ec-408a7dbcfd92)]
 
 interface nsIEditor  : nsISupports
 {

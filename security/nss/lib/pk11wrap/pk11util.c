@@ -1440,7 +1440,7 @@ SECMOD_OpenNewSlot(SECMODModule *mod, const char *moduleSpec)
  *         CK_TOKEN_INFO structure with an internationalize string (UTF8). 
  *         This value will be truncated at 32 bytes (no NULL, partial UTF8 
  *         characters dropped). You should specify a user friendly name here
- *         as this is the value the token will be refered to in most 
+ *         as this is the value the token will be referred to in most 
  *         application UI's. You should make sure tokenDescription is unique.
  *   slotDescription - The slotDescription value for this token returned 
  *         in the CK_SLOT_INFO structure with an internationalize string 

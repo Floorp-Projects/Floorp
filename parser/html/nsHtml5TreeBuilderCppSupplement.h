@@ -494,24 +494,13 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
     return;
   }
   if (aNamespace == kNameSpaceID_SVG) {
-#if 0
-    if (aElement->HasAttr(kNameSpaceID_None, nsHtml5Atoms::onload)) {
-      nsEvent event(PR_TRUE, NS_SVG_LOAD);
-      event.eventStructType = NS_SVG_EVENT;
-      event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-      // Do we care about forcing presshell creation if it hasn't happened yet?
-      // That is, should this code flush or something?  Does it really matter?
-      // For that matter, do we really want to try getting the prescontext?  Does
-      // this event ever want one?
-      nsRefPtr<nsPresContext> ctx;
-      nsCOMPtr<nsIPresShell> shell = parser->GetDocument()->GetShell();
-      if (shell) {
-        ctx = shell->GetPresContext();
-      }
-      nsEventDispatcher::Dispatch(aElement, ctx, &event);
+#ifdef MOZ_SVG
+    if (aName == nsHtml5Atoms::svg) {
+      nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+      NS_ASSERTION(treeOp, "Tree op allocation failed.");
+      treeOp->Init(eTreeOpSvgLoad, aElement);
     }
 #endif
-    // TODO soft flush the op queue every now and then
     return;
   }
   // we now have only HTML

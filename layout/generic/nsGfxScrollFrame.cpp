@@ -191,6 +191,11 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
     if (aForChild == mInner.mScrolledFrame) {
       // restrict aDamageRect to the scrollable view's bounds
       nsRect damage = aDamageRect + nsPoint(aX, aY);
+      // damage is now in our coordinate system, which means it was
+      // translated using the current scroll position. Adjust it to
+      // reflect the scroll position at last paint, since that's what
+      // the layer system wants us to invalidate.
+      damage += GetScrollPosition() - mInner.mScrollPosAtLastPaint;
       nsRect r;
       if (r.IntersectRect(damage, mInner.mScrollPort)) {
         nsHTMLContainerFrame::InvalidateInternal(r, 0, 0, aForChild, aFlags);
@@ -1041,8 +1046,10 @@ nsXULScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
 {
   if (aForChild == mInner.mScrolledFrame) {
     // restrict aDamageRect to the scrollable view's bounds
+    nsRect damage = aDamageRect + nsPoint(aX, aY) +
+      GetScrollPosition() - mInner.mScrollPosAtLastPaint;
     nsRect r;
-    if (r.IntersectRect(aDamageRect + nsPoint(aX, aY), mInner.mScrollPort)) {
+    if (r.IntersectRect(damage, mInner.mScrollPort)) {
       nsBoxFrame::InvalidateInternal(r, 0, 0, aForChild, aFlags);
     }
     return;
@@ -1265,6 +1272,26 @@ IsSmoothScrollingEnabled()
   return PR_FALSE;
 }
 
+class ScrollFrameActivityTracker : public nsExpirationTracker<nsGfxScrollFrameInner,4> {
+public:
+  // Wait for 75-100ms between scrolls before we switch the appearance back to
+  // subpixel AA. That's 4 generations of 25ms each.
+  enum { TIMEOUT_MS = 25 };
+  ScrollFrameActivityTracker()
+    : nsExpirationTracker<nsGfxScrollFrameInner,4>(TIMEOUT_MS) {}
+  ~ScrollFrameActivityTracker() {
+    AgeAllGenerations();
+  }
+
+  virtual void NotifyExpired(nsGfxScrollFrameInner *aObject) {
+    RemoveObject(aObject);
+    aObject->mScrollingActive = PR_FALSE;
+    aObject->mOuter->InvalidateOverflowRect();
+  }
+};
+
+static ScrollFrameActivityTracker *gScrollFrameActivityTracker = nsnull;
+
 nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
                                              PRBool aIsRoot,
                                              PRBool aIsXUL)
@@ -1275,6 +1302,7 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
     mOuter(aOuter),
     mAsyncScroll(nsnull),
     mDestination(0, 0),
+    mScrollPosAtLastPaint(0, 0),
     mRestorePos(-1, -1),
     mLastPos(-1, -1),
     mNeverHasVerticalScrollbar(PR_FALSE),
@@ -1292,12 +1320,21 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
     mVerticalOverflow(PR_FALSE),
     mPostedReflowCallback(PR_FALSE),
     mMayHaveDirtyFixedChildren(PR_FALSE),
-    mUpdateScrollbarAttributes(PR_FALSE)
+    mUpdateScrollbarAttributes(PR_FALSE),
+    mScrollingActive(PR_FALSE)
 {
 }
 
 nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
 {
+  if (mActivityExpirationState.IsTracked()) {
+    gScrollFrameActivityTracker->RemoveObject(this);
+  }
+  if (gScrollFrameActivityTracker &&
+      gScrollFrameActivityTracker->IsEmpty()) {
+    delete gScrollFrameActivityTracker;
+    gScrollFrameActivityTracker = nsnull;
+  }
   delete mAsyncScroll;
 }
 
@@ -1489,135 +1526,11 @@ static void AdjustViewsAndWidgets(nsIFrame* aFrame,
   } while (childListName);
 }
 
-/**
- * Given aBlitRegion in appunits, create and return an nsRegion in
- * device pixels that represents the device pixels whose centers are
- * contained in aBlitRegion. Whatever appunit area was removed from
- * aBlitRegion in that process is added to aRepaintRegion. An appunits
- * version of the result is placed in aAppunitsBlitRegion.
- * 
- * We convert the blit region to pixels this way because in general
- * frames touch the pixels whose centers are contained in the
- * (possibly not pixel-aligned) frame bounds.
- */
-static void
-ConvertBlitRegionToPixelRects(const nsRegion& aBlitRegion,
-                              nscoord aAppUnitsPerPixel,
-                              nsTArray<nsIntRect>* aPixelRects,
-                              nsRegion* aRepaintRegion,
-                              nsRegion* aAppunitsBlitRegion)
-{
-  const nsRect* r;
-
-  aPixelRects->Clear();
-  aAppunitsBlitRegion->SetEmpty();
-  // The rectangles in aBlitRegion don't overlap so converting them via
-  // ToNearestPixels also produces a sequence of non-overlapping rectangles
-  for (nsRegionRectIterator iter(aBlitRegion); (r = iter.Next());) {
-    nsIntRect pixRect = r->ToNearestPixels(aAppUnitsPerPixel);
-    aPixelRects->AppendElement(pixRect);
-    aAppunitsBlitRegion->Or(*aAppunitsBlitRegion,
-                            pixRect.ToAppUnits(aAppUnitsPerPixel));
-  }
-
-  nsRegion repaint;
-  repaint.Sub(aBlitRegion, *aAppunitsBlitRegion);
-  aRepaintRegion->Or(*aRepaintRegion, repaint);
-}
-
-/**
- * An nsTArray comparator that lets us sort nsIntRects by their right edge.
- */
-class RightEdgeComparator {
-public:
-  /** @return True if the elements are equals; false otherwise. */
-  PRBool Equals(const nsIntRect& aA, const nsIntRect& aB) const
-  {
-    return aA.XMost() == aB.XMost();
-  }
-  /** @return True if (a < b); false otherwise. */
-  PRBool LessThan(const nsIntRect& aA, const nsIntRect& aB) const
-  {
-    return aA.XMost() < aB.XMost();
-  }
-};
-
-// If aPixDelta has a negative component, flip aRect across the
-// axis in that direction. We do this so we can assume all scrolling is
-// down and to the right to simplify SortBlitRectsForCopy
-static nsIntRect
-FlipRect(const nsIntRect& aRect, nsIntPoint aPixDelta)
-{
-  nsIntRect r = aRect;
-  if (aPixDelta.x < 0) {
-    r.x = -r.XMost();
-  }
-  if (aPixDelta.y < 0) {
-    r.y = -r.YMost();
-  }
-  return r;
-}
-
-// Sort aRects so that moving rectangle aRects[i] - aPixDelta to aRects[i]
-// will not cause the rectangle to overlap any rectangles that haven't
-// moved yet.
-// See http://weblogs.mozillazine.org/roc/archives/2009/08/homework_answer.html
-static void
-SortBlitRectsForCopy(nsIntPoint aPixDelta, nsTArray<nsIntRect>* aRects)
-{
-  nsTArray<nsIntRect> rects;
-
-  for (PRUint32 i = 0; i < aRects->Length(); ++i) {
-    nsIntRect* r = &aRects->ElementAt(i);
-    nsIntRect rect =
-      FlipRect(nsIntRect(r->x, r->y, r->width, r->height), aPixDelta);
-    rects.AppendElement(rect);
-  }
-  rects.Sort(RightEdgeComparator());
-
-  aRects->Clear();
-  // This could probably be improved a bit for some worst-case scenarios.
-  // But in common cases this should be very fast, and we shouldn't
-  // make it more complex unless we really need to.
-  while (!rects.IsEmpty()) {
-    PRInt32 i = rects.Length() - 1;
-    PRBool overlappedBelow;
-    do {
-      overlappedBelow = PR_FALSE;
-      const nsIntRect& rectI = rects[i];
-      // see if any rectangle < i overlaps rectI horizontally and is below
-      // rectI
-      for (PRInt32 j = i - 1; j >= 0; --j) {
-        if (rects[j].XMost() <= rectI.x) {
-          // No rectangle with index <= j can overlap rectI horizontally
-          break;
-        }
-        // Rectangle j overlaps rectI horizontally.
-        if (rects[j].y >= rectI.y) {
-          // Rectangle j is below rectangle i. This is the rightmost such
-          // rectangle, so set i to this rectangle and continue.
-          i = j;
-          overlappedBelow = PR_TRUE;
-          break;
-        }
-      }
-    } while (overlappedBelow); 
-
-    // Rectangle i has no rectangles to the right or below.
-    // Flip it back before saving the result.
-    aRects->AppendElement(FlipRect(rects[i], aPixDelta));
-    rects.RemoveElementAt(i);
-  }
-}
-
 static PRBool
-CanScrollWithBlitting(nsIFrame* aFrame, nsIFrame* aDisplayRoot, nsRect* aClippedScrollPort)
+CanScrollWithBlitting(nsIFrame* aFrame, nsIFrame* aDisplayRoot)
 {
-  nsPoint offset(0, 0);
-  *aClippedScrollPort = nsRect(nsPoint(0, 0), aFrame->GetSize());
-
   for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetCrossDocParentFrame(f, &offset)) {
+       f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     if (f->GetStyleDisplay()->HasTransform()) {
       return PR_FALSE;
     }
@@ -1627,129 +1540,118 @@ CanScrollWithBlitting(nsIFrame* aFrame, nsIFrame* aDisplayRoot, nsRect* aClipped
       return PR_FALSE;
     }
 #endif
-
-    nsIScrollableFrame* sf = do_QueryFrame(f);
-    if (sf) {
-      // Note that this will always happen on the first iteration of the loop,
-      // ensuring that we clip to our own scrollframe's scrollport
-      aClippedScrollPort->IntersectRect(*aClippedScrollPort,
-                                        sf->GetScrollPortRect() - offset);
-    }
-
-    offset += f->GetPosition();
     if (f == aDisplayRoot)
       break;
   }
   return PR_TRUE;
 }
 
+static void
+InvalidateFixedBackgroundFramesFromList(nsDisplayListBuilder* aBuilder,
+                                        const nsDisplayList& aList)
+{
+  for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
+    nsDisplayList* sublist = item->GetList();
+    if (sublist) {
+      InvalidateFixedBackgroundFramesFromList(aBuilder, *sublist);
+      continue;
+    }
+    nsIFrame* f = item->GetUnderlyingFrame();
+    if (f && aBuilder->IsMovingFrame(f) &&
+        item->IsVaryingRelativeToMovingFrame(aBuilder)) {
+      if (item->IsFixedAndCoveringViewport(aBuilder)) {
+        // FrameLayerBuilder takes care of scrolling these
+      } else {
+        f->Invalidate(item->GetVisibleRect() - aBuilder->ToReferenceFrame(f));
+      }
+    }
+  }
+}
+
+static void
+InvalidateFixedBackgroundFrames(nsIFrame* aRootFrame,
+                                nsIFrame* aMovingFrame,
+                                const nsRect& aUpdateRect)
+{
+  if (!aMovingFrame->PresContext()->MayHaveFixedBackgroundFrames())
+    return;
+
+  NS_ASSERTION(aRootFrame != aMovingFrame,
+               "The root frame shouldn't be the one that's moving, that makes no sense");
+
+  // Build the 'after' display list over the whole area of interest.
+  nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
+  builder.EnterPresShell(aRootFrame, aUpdateRect);
+  builder.SetMovingFrame(aMovingFrame);
+  nsDisplayList list;
+  nsresult rv =
+    aRootFrame->BuildDisplayListForStackingContext(&builder, aUpdateRect, &list);
+  builder.LeavePresShell(aRootFrame, aUpdateRect);
+  if (NS_FAILED(rv))
+    return;
+
+  nsRegion visibleRegion(aUpdateRect);
+  list.ComputeVisibility(&builder, &visibleRegion, nsnull);
+
+  InvalidateFixedBackgroundFramesFromList(&builder, list);
+  list.DeleteAll();
+}
+
+PRBool nsGfxScrollFrameInner::IsAlwaysActive() const
+{
+  // The root scrollframe for a non-chrome document which is the direct
+  // child of a chrome document is always treated as "active".
+  // XXX maybe we should extend this so that IFRAMEs which are fill the
+  // entire viewport (like GMail!) are always active
+  return mIsRoot &&
+    !nsContentUtils::IsChildOfSameType(mOuter->GetContent()->GetCurrentDoc());
+}
+
+PRBool nsGfxScrollFrameInner::IsScrollingActive() const
+{
+  return mScrollingActive || IsAlwaysActive();
+}
+
+void nsGfxScrollFrameInner::MarkActive()
+{
+  if (IsAlwaysActive())
+    return;
+
+  mScrollingActive = PR_TRUE;
+  if (mActivityExpirationState.IsTracked()) {
+    gScrollFrameActivityTracker->MarkUsed(this);
+  } else {
+    if (!gScrollFrameActivityTracker) {
+      gScrollFrameActivityTracker = new ScrollFrameActivityTracker();
+    }
+    gScrollFrameActivityTracker->AddObject(this);
+  }
+}
+
 void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
 {
-  nsRootPresContext* rootPresContext =
-    mOuter->PresContext()->GetRootPresContext();
+  nsRootPresContext* rootPresContext = mOuter->PresContext()->GetRootPresContext();
   if (!rootPresContext) {
     return;
   }
 
-  nsPoint offsetToView;
-  nsPoint offsetToWidget;
-  nsIWidget* nearestWidget =
-    mOuter->GetClosestView(&offsetToView)->GetNearestWidget(&offsetToWidget);
-  nsPoint nearestWidgetOffset = offsetToView + offsetToWidget;
+  rootPresContext->RequestUpdatePluginGeometry(mOuter);
 
-  nsTArray<nsIWidget::Configuration> configurations;
-  // Only update plugin configurations if we're going to scroll the
-  // root widget. Otherwise we must be in a popup or some other situation
-  // where we don't actually support windows plugins.
-  if (rootPresContext->FrameManager()->GetRootFrame()->GetNearestWidget() ==
-        nearestWidget) {
-    rootPresContext->GetPluginGeometryUpdates(mOuter, &configurations);
-  }
-
+  AdjustViewsAndWidgets(mScrolledFrame, PR_FALSE);
+  // We need to call this after fixing up the widget and view positions
+  // to be consistent with the view and frame hierarchy.
+  PRUint32 flags = nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT;
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
-  nsRect clippedScrollPort;
-  if (!nearestWidget ||
-      nearestWidget->GetTransparencyMode() == eTransparencyTransparent ||
-      !CanScrollWithBlitting(mOuter, displayRoot, &clippedScrollPort)) {
-    // Just invalidate the frame and adjust child widgets
-    // Recall that our widget's origin is at our bounds' top-left
-    if (nearestWidget) {
-      nearestWidget->ConfigureChildren(configurations);
-    }
-    AdjustViewsAndWidgets(mScrolledFrame, PR_FALSE);
-    // We need to call this after fixing up the widget and view positions
-    // to be consistent with the view and frame hierarchy.
-    mOuter->InvalidateWithFlags(mScrollPort,
-                                nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT);
-  } else {
-    nsRegion blitRegion;
-    nsRegion repaintRegion;
-    nsPresContext* presContext = mOuter->PresContext();
-    nsPoint delta(presContext->DevPixelsToAppUnits(aPixDelta.x),
-                  presContext->DevPixelsToAppUnits(aPixDelta.y));
-    nsPoint offsetToDisplayRoot = mOuter->GetOffsetTo(displayRoot);
-    nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-    nsRect scrollPort =
-      (clippedScrollPort + offsetToDisplayRoot).ToNearestPixels(appUnitsPerDevPixel).
-      ToAppUnits(appUnitsPerDevPixel);
-    nsresult rv =
-      nsLayoutUtils::ComputeRepaintRegionForCopy(displayRoot, mScrolledFrame,
-                                                 delta, scrollPort,
-                                                 &blitRegion,
-                                                 &repaintRegion);
-    if (NS_FAILED(rv)) {
-      nearestWidget->ConfigureChildren(configurations);
-      AdjustViewsAndWidgets(mScrolledFrame, PR_FALSE);
-      mOuter->InvalidateWithFlags(mScrollPort,
-                                  nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT);
-      return;
-    }
+  if (IsScrollingActive() && CanScrollWithBlitting(mOuter, displayRoot)) {
+    flags |= nsIFrame::INVALIDATE_NO_THEBES_LAYERS;
+  }
+  MarkActive();
+  mOuter->InvalidateWithFlags(mScrollPort, flags);
 
-    blitRegion.MoveBy(nearestWidgetOffset - offsetToDisplayRoot);
-    repaintRegion.MoveBy(nearestWidgetOffset - offsetToDisplayRoot);
-
-    // We're going to bit-blit.  Let the viewmanager know so it can
-    // adjust dirty regions appropriately.
-    nsIView* view = displayRoot->GetView();
-    NS_ASSERTION(view, "Display root has no view?");
-    nsIViewManager* vm = view->GetViewManager();
-    vm->WillBitBlit(view, mScrollPort + offsetToDisplayRoot, -delta);
-
-    // innerPixRegion is in device pixels
-    nsTArray<nsIntRect> blitRects;
-    nsRegion blitRectsRegion;
-    ConvertBlitRegionToPixelRects(blitRegion,
-                                  appUnitsPerDevPixel,
-                                  &blitRects, &repaintRegion,
-                                  &blitRectsRegion);
-    SortBlitRectsForCopy(aPixDelta, &blitRects);
-
-    nearestWidget->Scroll(aPixDelta, blitRects, configurations);
-    AdjustViewsAndWidgets(mScrolledFrame, PR_TRUE);
-    repaintRegion.MoveBy(-nearestWidgetOffset + offsetToDisplayRoot);
-
-    {
-      // Block script execution. This suppresses event dispatching in
-      // PresShell::HandleEvent. We need to do this because Windows
-      // is evil and can dispatch WM_MOUSEACTIVATE messages during
-      // our call to ::UpdateWindow (in the presence of out-of-process
-      // plugins, it seems). We are not able to handle event dispatch
-      // here.
-      // No script runners should be added as we paint!
-      nsContentUtils::AddScriptBlockerAndPreventAddingRunners();
-      vm->UpdateViewAfterScroll(view, repaintRegion);
-      nsContentUtils::RemoveScriptBlocker();
-      // Nothing should run here on removing the blocker, since we
-      // prevented the addition of any script runners.
-    }
-
-    nsIFrame* presContextRootFrame = presContext->FrameManager()->GetRootFrame();
-    if (nearestWidget == presContextRootFrame->GetNearestWidget()) {
-      nsPoint offsetToPresContext = mOuter->GetOffsetTo(presContextRootFrame);
-      blitRectsRegion.MoveBy(-nearestWidgetOffset + offsetToPresContext);
-      repaintRegion.MoveBy(-offsetToDisplayRoot + offsetToPresContext);
-      presContext->NotifyInvalidateForScrolling(blitRectsRegion, repaintRegion);
-    }
+  if (flags & nsIFrame::INVALIDATE_NO_THEBES_LAYERS) {
+    // XXX fix this to transform rectangle properly
+    InvalidateFixedBackgroundFrames(displayRoot, mScrolledFrame,
+      GetScrollPortRect() + mOuter->GetOffsetToCrossDoc(displayRoot));
   }
 }
 
@@ -1825,6 +1727,17 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt)
   }
 }
 
+static void
+AppendToTop(nsDisplayListBuilder* aBuilder, nsDisplayList* aDest,
+            nsDisplayList* aSource, nsIFrame* aSourceFrame, PRBool aOwnLayer)
+{
+  if (aOwnLayer) {
+    aDest->AppendNewToTop(new (aBuilder) nsDisplayOwnLayer(aSourceFrame, aSource));
+  } else {
+    aDest->AppendToTop(aSource);
+  }  
+}
+
 nsresult
 nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
@@ -1832,6 +1745,10 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   nsresult rv = mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aBuilder->IsPaintingToWindow()) {
+    mScrollPosAtLastPaint = GetScrollPosition();
+  }
 
   if (aBuilder->GetIgnoreScrollFrame() == mOuter) {
     // Don't clip the scrolled child, and don't paint scrollbars/scrollcorner.
@@ -1847,6 +1764,16 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // in the tree.
   PRBool hasResizer = HasResizer();
   nsDisplayListCollection scrollParts;
+  // We put scrollbars in their own layers when this is the root scroll
+  // frame and we are a toplevel content document. In this situation, the
+  // scrollbar(s) would normally be assigned their own layer anyway, since
+  // they're not scrolled with the rest of the document. But when both
+  // scrollbars are visible, the layer's visible rectangle would be the size
+  // of the viewport, so most layer implementations would create a layer buffer
+  // that's much larger than necessary. Creating independent layers for each
+  // scrollbar works around the problem.
+  PRBool createLayersForScrollbars = mIsRoot &&
+      !nsContentUtils::IsChildOfSameType(mOuter->GetContent()->GetCurrentDoc());
   for (nsIFrame* kid = mOuter->GetFirstChild(nsnull); kid; kid = kid->GetNextSibling()) {
     if (kid != mScrolledFrame) {
       if (kid == mScrollCornerBox && hasResizer) {
@@ -1856,11 +1783,14 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       rv = mOuter->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, scrollParts,
                                             nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
       NS_ENSURE_SUCCESS(rv, rv);
+      // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into the
+      // PositionedDescendants list.
+      ::AppendToTop(aBuilder, aLists.BorderBackground(),
+                    scrollParts.PositionedDescendants(), kid,
+                    createLayersForScrollbars);
     }
   }
-  // DISPLAY_CHILD_FORCE_STACKING_CONTEXT puts everything into the
-  // PositionedDescendants list.
-  aLists.BorderBackground()->AppendToTop(scrollParts.PositionedDescendants());
+
 
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
@@ -1895,7 +1825,9 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
     // DISPLAY_CHILD_FORCE_STACKING_CONTEXT puts everything into the
     // PositionedDescendants list.
-    aLists.Content()->AppendToTop(scrollParts.PositionedDescendants());
+    ::AppendToTop(aBuilder, aLists.Content(),
+                  scrollParts.PositionedDescendants(), mScrollCornerBox,
+                  createLayersForScrollbars);
   }
 
   return NS_OK;
@@ -2266,6 +2198,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     NS_ENSURE_SUCCESS(rv, rv);
     mHScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                 NS_LITERAL_STRING("horizontal"), PR_FALSE);
+    mHScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
+                                NS_LITERAL_STRING("always"), PR_FALSE);
     if (!aElements.AppendElement(mHScrollbarContent))
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2276,6 +2210,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     NS_ENSURE_SUCCESS(rv, rv);
     mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                 NS_LITERAL_STRING("vertical"), PR_FALSE);
+    mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
+                                NS_LITERAL_STRING("always"), PR_FALSE);
     if (!aElements.AppendElement(mVScrollbarContent))
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2311,6 +2247,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     mScrollCornerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, dir, PR_FALSE);
     mScrollCornerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::element,
                                   NS_LITERAL_STRING("_parent"), PR_FALSE);
+    mScrollCornerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
+                                  NS_LITERAL_STRING("always"), PR_FALSE);
 
     if (!aElements.AppendElement(mScrollCornerContent))
       return NS_ERROR_OUT_OF_MEMORY;
@@ -3038,7 +2976,8 @@ nsGfxScrollFrameInner::ReflowCallbackCanceled()
 }
 
 static void LayoutAndInvalidate(nsBoxLayoutState& aState,
-                                nsIFrame* aBox, const nsRect& aRect)
+                                nsIFrame* aBox, const nsRect& aRect,
+                                PRBool aScrollbarIsBeingHidden)
 {
   // When a child box changes shape of position, the parent
   // is responsible for invalidation; the overflow rect must be invalidated
@@ -3048,13 +2987,23 @@ static void LayoutAndInvalidate(nsBoxLayoutState& aState,
   // mHasVScrollbar/mHasHScrollbar is false, and this is called after those
   // flags have been set ... if a scrollbar is being hidden, we still need
   // to invalidate the scrollbar area here.
+  // But we also need to invalidate the scrollbar itself in case it has
+  // its own layer; we need to ensure that layer is updated.
   PRBool rectChanged = aBox->GetRect() != aRect;
   if (rectChanged) {
-    aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
+    if (aScrollbarIsBeingHidden) {
+      aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
+    } else {
+      aBox->InvalidateOverflowRect();
+    }
   }
   nsBoxFrame::LayoutChildAt(aState, aBox, aRect);
   if (rectChanged) {
-    aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
+    if (aScrollbarIsBeingHidden) {
+      aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
+    } else {
+      aBox->InvalidateOverflowRect();
+    }
   }
 }
 
@@ -3073,11 +3022,8 @@ nsGfxScrollFrameInner::AdjustScrollbarRectForResizer(
     resizerRect = mScrollCornerBox->GetRect();
   }
   else {
-    nsPoint offsetToView;
-    nsPoint offsetToWidget;
-    nsIWidget* widget =
-      aFrame->GetClosestView(&offsetToView)->GetNearestWidget(&offsetToWidget);
-    nsPoint offset = offsetToView + offsetToWidget;
+    nsPoint offset;
+    nsIWidget* widget = aFrame->GetNearestWidget(offset);
     nsIntRect widgetRect;
     if (!widget || !widget->ShowsResizeIndicator(&widgetRect))
       return;
@@ -3146,7 +3092,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
       r.y = aContentArea.YMost() - r.height;
       NS_ASSERTION(r.height >= 0, "Scroll area should be inside client rect");
     }
-    LayoutAndInvalidate(aState, mScrollCornerBox, r);
+    LayoutAndInvalidate(aState, mScrollCornerBox, r, PR_FALSE);
   }
 
   nsPresContext* presContext = mScrolledFrame->PresContext();
@@ -3159,7 +3105,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     mVScrollbarBox->GetMargin(margin);
     vRect.Deflate(margin);
     AdjustScrollbarRectForResizer(mOuter, presContext, vRect, hasResizer, PR_TRUE);
-    LayoutAndInvalidate(aState, mVScrollbarBox, vRect);
+    LayoutAndInvalidate(aState, mVScrollbarBox, vRect, !mHasVerticalScrollbar);
   }
 
   if (mHScrollbarBox) {
@@ -3171,7 +3117,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     mHScrollbarBox->GetMargin(margin);
     hRect.Deflate(margin);
     AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer, PR_FALSE);
-    LayoutAndInvalidate(aState, mHScrollbarBox, hRect);
+    LayoutAndInvalidate(aState, mHScrollbarBox, hRect, !mHasHorizontalScrollbar);
   }
 
   // may need to update fixed position children of the viewport,
