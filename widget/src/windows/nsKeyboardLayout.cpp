@@ -84,8 +84,8 @@ public:
   PRBool IsEqual(const DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries) const
   {
     return (mEntries == aEntries &&
-            memcmp(mTable, aDeadKeyArray,
-                   aEntries * sizeof(DeadKeyEntry)) == 0);
+            !memcmp(mTable, aDeadKeyArray,
+                    aEntries * sizeof(DeadKeyEntry)));
   }
 
   PRUnichar GetCompositeChar(PRUnichar aBaseChar) const;
@@ -159,36 +159,38 @@ nsVirtualKey::GetUniChars(PRUint8 aShiftState,
 {
   *aFinalShiftState = aShiftState;
   PRUint32 numOfChars = GetNativeUniChars(aShiftState, aUniChars);
-  
-  if (aShiftState & (eAlt | eCtrl)) {
-    PRUnichar unshiftedChars[5];
-    PRUint32 numOfUnshiftedChars =
-      GetNativeUniChars(aShiftState & ~(eAlt | eCtrl), unshiftedChars);
 
-    if (numOfChars) {
-      if ((aShiftState & (eAlt | eCtrl)) == (eAlt | eCtrl)) {
-        // Even if the shifted chars and the unshifted chars are same, we
-        // should consume the Alt key state and the Ctrl key state when
-        // AltGr key is pressed. Because if we don't consume them, the input
-        // events are ignored on nsEditor. (I.e., Users cannot input the
-        // characters with this key combination.)
-        *aFinalShiftState &= ~(eAlt | eCtrl);
-      } else if (!(numOfChars == numOfUnshiftedChars &&
-                   memcmp(aUniChars, unshiftedChars,
-                          numOfChars * sizeof(PRUnichar)) == 0)) {
-        // Otherwise, we should consume the Alt key state and the Ctrl key state
-        // only when the shifted chars and unshifted chars are different.
-        *aFinalShiftState &= ~(eAlt | eCtrl);
-      }
-    } else {
-      if (numOfUnshiftedChars) {
-        memcpy(aUniChars, unshiftedChars,
-               numOfUnshiftedChars * sizeof(PRUnichar));
-        numOfChars = numOfUnshiftedChars;
-      }
-    }
+  if (!(aShiftState & (eAlt | eCtrl))) {
+    return numOfChars;
   }
 
+  PRUnichar unshiftedChars[5];
+  PRUint32 numOfUnshiftedChars =
+    GetNativeUniChars(aShiftState & ~(eAlt | eCtrl), unshiftedChars);
+
+  if (!numOfChars) {
+    if (!numOfUnshiftedChars) {
+      return 0;
+    }
+    memcpy(aUniChars, unshiftedChars,
+           numOfUnshiftedChars * sizeof(PRUnichar));
+    return numOfUnshiftedChars;
+  }
+
+  if ((aShiftState & (eAlt | eCtrl)) == (eAlt | eCtrl)) {
+    // Even if the shifted chars and the unshifted chars are same, we
+    // should consume the Alt key state and the Ctrl key state when
+    // AltGr key is pressed. Because if we don't consume them, the input
+    // events are ignored on nsEditor. (I.e., Users cannot input the
+    // characters with this key combination.)
+    *aFinalShiftState &= ~(eAlt | eCtrl);
+  } else if (!(numOfChars == numOfUnshiftedChars &&
+               !memcmp(aUniChars, unshiftedChars,
+                       numOfChars * sizeof(PRUnichar)))) {
+    // Otherwise, we should consume the Alt key state and the Ctrl key state
+    // only when the shifted chars and unshifted chars are different.
+    *aFinalShiftState &= ~(eAlt | eCtrl);
+  }
   return numOfChars;
 }
 
@@ -250,74 +252,78 @@ nsKeyboardLayout::OnKeyDown(PRUint8 aVirtualKey)
     // Does not produce any printable characters, but still preserves the
     // dead-key state.
     mNumOfChars = 0;
-  } else {
-    BYTE kbdState[256];
-
-    if (::GetKeyboardState(kbdState)) {
-      mLastShiftState = GetShiftState(kbdState);
-
-      if (mVirtualKeys[mLastVirtualKeyIndex].IsDeadKey(mLastShiftState)) {
-        if (mActiveDeadKey >= 0) {
-          // Dead-key followed by another dead-key. Reset dead-key state and
-          // return both dead-key characters.
-          PRInt32 activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
-          mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState,
-                                                       mChars, mShiftStates);
-          mVirtualKeys[mLastVirtualKeyIndex].GetUniChars(mLastShiftState,
-                                                         &mChars[1],
-                                                         &mShiftStates[1]);
-          mNumOfChars = 2;
-
-          DeactivateDeadKeyState();
-        } else {
-          // Dead-key state activated. No characters generated.
-          mActiveDeadKey = aVirtualKey;
-          mDeadKeyShiftState = mLastShiftState;
-          mNumOfChars = 0;
-        }
-      } else {
-        PRUint8 finalShiftState;
-        PRUnichar uniChars[5];
-        PRUint32 numOfBaseChars =
-          mVirtualKeys[mLastVirtualKeyIndex].GetUniChars(mLastShiftState,
-                                                         uniChars,
-                                                         &finalShiftState);
-
-        if (mActiveDeadKey >= 0) {
-          PRInt32 activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
-
-          // Dead-key was active. See if pressed base character does produce
-          // valid composite character.
-          PRUnichar compositeChar = (numOfBaseChars == 1 && uniChars[0]) ?
-            mVirtualKeys[activeDeadKeyIndex].
-              GetCompositeChar(mDeadKeyShiftState, uniChars[0]) : 0;
-
-          if (compositeChar) {
-            // Active dead-key and base character does produce exactly one
-            // composite character.
-            mChars[0] = compositeChar;
-            mShiftStates[0] = finalShiftState;
-            mNumOfChars = 1;
-          } else {
-            // There is no valid dead-key and base character combination.
-            // Return dead-key character followed by base character.
-            mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState,
-                                                         mChars, mShiftStates);
-            memcpy(&mChars[1], uniChars, numOfBaseChars * sizeof(PRUnichar));
-            memset(&mShiftStates[1], finalShiftState, numOfBaseChars);
-            mNumOfChars = numOfBaseChars + 1;
-          }
-
-          DeactivateDeadKeyState();
-        } else {
-          // No dead-keys are active. Just return the produced characters.
-          memcpy(mChars, uniChars, numOfBaseChars * sizeof(PRUnichar));
-          memset(mShiftStates, finalShiftState, numOfBaseChars);
-          mNumOfChars = numOfBaseChars;
-        }
-      }
-    }
+    return;
   }
+
+  BYTE kbdState[256];
+  if (!::GetKeyboardState(kbdState)) {
+    return;
+  }
+
+  mLastShiftState = GetShiftState(kbdState);
+
+  if (mVirtualKeys[mLastVirtualKeyIndex].IsDeadKey(mLastShiftState)) {
+    if (mActiveDeadKey < 0) {
+      // Dead-key state activated. No characters generated.
+      mActiveDeadKey = aVirtualKey;
+      mDeadKeyShiftState = mLastShiftState;
+      mNumOfChars = 0;
+      return;
+    }
+
+    // Dead-key followed by another dead-key. Reset dead-key state and
+    // return both dead-key characters.
+    PRInt32 activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
+    mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState,
+                                                 mChars, mShiftStates);
+    mVirtualKeys[mLastVirtualKeyIndex].GetUniChars(mLastShiftState,
+                                                   &mChars[1],
+                                                   &mShiftStates[1]);
+    mNumOfChars = 2;
+
+    DeactivateDeadKeyState();
+    return;
+  }
+
+  PRUint8 finalShiftState;
+  PRUnichar uniChars[5];
+  PRUint32 numOfBaseChars =
+    mVirtualKeys[mLastVirtualKeyIndex].GetUniChars(mLastShiftState, uniChars,
+                                                   &finalShiftState);
+
+  if (mActiveDeadKey < 0) {
+    // No dead-keys are active. Just return the produced characters.
+    memcpy(mChars, uniChars, numOfBaseChars * sizeof(PRUnichar));
+    memset(mShiftStates, finalShiftState, numOfBaseChars);
+    mNumOfChars = numOfBaseChars;
+    return;
+  }
+
+
+  // Dead-key was active. See if pressed base character does produce
+  // valid composite character.
+  PRInt32 activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
+  PRUnichar compositeChar = (numOfBaseChars == 1 && uniChars[0]) ?
+    mVirtualKeys[activeDeadKeyIndex].GetCompositeChar(mDeadKeyShiftState,
+                                                      uniChars[0]) : 0;
+
+  if (compositeChar) {
+    // Active dead-key and base character does produce exactly one
+    // composite character.
+    mChars[0] = compositeChar;
+    mShiftStates[0] = finalShiftState;
+    mNumOfChars = 1;
+  } else {
+    // There is no valid dead-key and base character combination.
+    // Return dead-key character followed by base character.
+    mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState,
+                                                 mChars, mShiftStates);
+    memcpy(&mChars[1], uniChars, numOfBaseChars * sizeof(PRUnichar));
+    memset(&mShiftStates[1], finalShiftState, numOfBaseChars);
+    mNumOfChars = numOfBaseChars + 1;
+  }
+
+  DeactivateDeadKeyState();
 }
 
 PRUint32
@@ -718,11 +724,10 @@ nsKeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
 
             NS_ASSERTION(rv == 1, "One base character expected");
 
-            if (rv == 1 && entries < aMaxEntries) {
-              if (AddDeadKeyEntry(baseChars[0], compositeChars[0],
-                                  aDeadKeyArray, entries)) {
-                entries++;
-              }
+            if (rv == 1 && entries < aMaxEntries &&
+                AddDeadKeyEntry(baseChars[0], compositeChars[0],
+                                aDeadKeyArray, entries)) {
+              entries++;
             }
             deadKeyActive = PR_FALSE;
             break;
