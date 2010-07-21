@@ -5468,13 +5468,9 @@ nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocument::Normalize()
 {
-  PRInt32 count = mChildren.ChildCount();
-  for (PRInt32 i = 0; i < count; ++i) {
+  for (PRInt32 i = 0; i < mChildren.ChildCount(); ++i) {
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mChildren.ChildAt(i)));
-
-    if (node) {
-      node->Normalize();
-    }
+    node->Normalize();
   }
 
   return NS_OK;
