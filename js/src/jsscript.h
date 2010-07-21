@@ -241,11 +241,6 @@ struct JSScript {
     }
 # endif
 #endif
-#if 0 /* def JS_TRACER */
-    js::TraceTreeCache  *trees; /* trace tree info. */
-    uint32          tmGen;      /* generation number from the TraceMonitor */
-#endif
-    uint32          tracePoints; /* number of trace points in the script */
 
     /* Script notes are allocated right after the code. */
     jssrcnote *notes() { return (jssrcnote *)(code + length); }

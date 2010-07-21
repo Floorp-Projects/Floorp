@@ -71,6 +71,11 @@ void JS_FASTCALL PutArgsObject(VMFrame &f);
 void JS_FASTCALL CopyThisv(VMFrame &f);
 void JS_FASTCALL GetCallObject(VMFrame &f);
 void JS_FASTCALL WrapPrimitiveThis(VMFrame &f);
+#if JS_MONOIC
+void * JS_FASTCALL InvokeTracer(VMFrame &f, uint32 index);
+#else
+void * JS_FASTCALL InvokeTracer(VMFrame &f);
+#endif
 
 void JS_FASTCALL BindName(VMFrame &f);
 JSObject * JS_FASTCALL BindGlobalName(VMFrame &f);
