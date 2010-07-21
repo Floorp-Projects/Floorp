@@ -330,6 +330,12 @@ protected:
    */
   void HandleTypeChange(PRUint8 aNewType);
 
+  /**
+   * Sanitize the value of the element depending of its current type.
+   * See: http://www.whatwg.org/specs/web-apps/current-work/#value-sanitization-algorithm
+   */
+  void SanitizeValue(nsAString& aValue);
+
   nsCOMPtr<nsIControllers> mControllers;
 
   /**
