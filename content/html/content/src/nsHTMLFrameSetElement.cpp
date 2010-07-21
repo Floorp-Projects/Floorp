@@ -322,10 +322,12 @@ nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
   spec.StripChars(" \n\r\t\"\'");
   spec.Trim(",");
   
-  // Count the commas 
+#define MAX_FRAMESET_SPEC_COUNT 100000
+  // Count the commas. Don't count more than X commas (bug 576447).
+  PR_STATIC_ASSERT(MAX_FRAMESET_SPEC_COUNT * sizeof(nsFramesetSpec) < 2^30);
   PRInt32 commaX = spec.FindChar(sComma);
   PRInt32 count = 1;
-  while (commaX != kNotFound) {
+  while (commaX != kNotFound && count < MAX_FRAMESET_SPEC_COUNT) {
     count++;
     commaX = spec.FindChar(sComma, commaX + 1);
   }
