@@ -45,7 +45,6 @@
 #include "jstl.h"
 #include "MethodJIT.h"
 #include "methodjit/FrameState.h"
-#include "methodjit/nunbox/Assembler.h"
 #include "CodeGenIncludes.h"
 
 namespace js {
