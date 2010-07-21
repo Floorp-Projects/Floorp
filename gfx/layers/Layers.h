@@ -49,6 +49,10 @@
 #include "gfxColor.h"
 #include "gfxPattern.h"
 
+#if defined(DEBUG) || defined(PR_LOGGING)
+#  define MOZ_LAYERS_HAVE_LOG
+#endif
+
 class gfxContext;
 class nsPaintEvent;
 
@@ -67,9 +71,9 @@ class ColorLayer;
 class ImageContainer;
 class CanvasLayer;
 
-#define NS_LAYER_DECL_NAME(n, e) \
-  virtual const char* Name() { return n; } \
-  virtual LayerType GetType() { return e; }
+#define MOZ_LAYER_DECL_NAME(n, e)                           \
+  virtual const char* Name() const { return n; }            \
+  virtual LayerType GetType() const { return e; }
 
 /*
  * Motivation: For truly smooth animation and video playback, we need to
@@ -242,6 +246,10 @@ public:
   void SetUserData(void* aData) { mUserData = aData; }
   void* GetUserData() { return mUserData; }
 
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() const { return "???"; }
+#endif // MOZ_LAYERS_HAVE_LOG
+
 protected:
   nsRefPtr<Layer> mRoot;
   void* mUserData;
@@ -365,10 +373,10 @@ public:
    */
   virtual ThebesLayer* AsThebesLayer() { return nsnull; }
 
-#ifdef DEBUG
-  virtual const char* Name() = 0;
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() const =0;
 #endif
-  virtual LayerType GetType() = 0;
+  virtual LayerType GetType() const =0;
 
   /**
    * Only the implementation should call this. This is per-implementation
@@ -439,7 +447,7 @@ public:
 
   virtual ThebesLayer* AsThebesLayer() { return this; }
 
-  NS_LAYER_DECL_NAME("ThebesLayer", TYPE_THEBES)
+  MOZ_LAYER_DECL_NAME("ThebesLayer", TYPE_THEBES)
 
 protected:
   ThebesLayer(LayerManager* aManager, void* aImplData)
@@ -472,7 +480,7 @@ public:
   // This getter can be used anytime.
   virtual Layer* GetFirstChild() { return mFirstChild; }
 
-  NS_LAYER_DECL_NAME("ContainerLayer", TYPE_CONTAINER)
+  MOZ_LAYER_DECL_NAME("ContainerLayer", TYPE_CONTAINER)
 
 protected:
   ContainerLayer(LayerManager* aManager, void* aImplData)
@@ -502,7 +510,7 @@ public:
   // This getter can be used anytime.
   virtual const gfxRGBA& GetColor() { return mColor; }
 
-  NS_LAYER_DECL_NAME("ColorLayer", TYPE_COLOR)
+  MOZ_LAYER_DECL_NAME("ColorLayer", TYPE_COLOR)
 
 protected:
   ColorLayer(LayerManager* aManager, void* aImplData)
@@ -570,7 +578,7 @@ public:
   void SetFilter(gfxPattern::GraphicsFilter aFilter) { mFilter = aFilter; }
   gfxPattern::GraphicsFilter GetFilter() const { return mFilter; }
 
-  NS_LAYER_DECL_NAME("CanvasLayer", TYPE_CANVAS)
+  MOZ_LAYER_DECL_NAME("CanvasLayer", TYPE_CANVAS)
 
 protected:
   CanvasLayer(LayerManager* aManager, void* aImplData)
