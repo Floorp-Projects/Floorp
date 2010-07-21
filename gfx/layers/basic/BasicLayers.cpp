@@ -111,7 +111,7 @@ public:
                      void* aCallbackData,
                      float aOpacity) {}
 
-  virtual ShadowableLayer* AsShadowableLayer() { return NULL; }
+  virtual ShadowableLayer* AsShadowableLayer() { return nsnull; }
 };
 
 static BasicImplData*
@@ -425,11 +425,22 @@ public:
                      void* aCallbackData,
                      float aOpacity);
 
+  static void PaintContext(gfxPattern* aPattern,
+                           const gfxIntSize& aSize,
+                           float aOpacity,
+                           gfxContext* aContext);
+
 protected:
   BasicLayerManager* BasicManager()
   {
     return static_cast<BasicLayerManager*>(mManager);
   }
+
+  already_AddRefed<gfxPattern>
+  GetAndPaintCurrentImage(gfxContext* aContext,
+                          float aOpacity);
+
+  gfxIntSize mSize;
 };
 
 void
@@ -438,22 +449,38 @@ BasicImageLayer::Paint(gfxContext* aContext,
                        void* aCallbackData,
                        float aOpacity)
 {
-  if (!mContainer)
-    return;
+  nsRefPtr<gfxPattern> dontcare = GetAndPaintCurrentImage(aContext, aOpacity);
+}
 
-  gfxIntSize size;
-  nsRefPtr<gfxASurface> surface = mContainer->GetCurrentAsSurface(&size);
+already_AddRefed<gfxPattern>
+BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
+                                         float aOpacity)
+{
+  if (!mContainer)
+    return nsnull;
+
+  nsRefPtr<gfxASurface> surface = mContainer->GetCurrentAsSurface(&mSize);
   if (!surface) {
-    return;
+    return nsnull;
   }
 
   nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
   if (!pat) {
-    return;
+    return nsnull;
   }
 
   pat->SetFilter(mFilter);
 
+  PaintContext(pat, mSize, aOpacity, aContext); 
+  return pat.forget();
+}
+
+/*static*/ void
+BasicImageLayer::PaintContext(gfxPattern* aPattern,
+                              const gfxIntSize& aSize,
+                              float aOpacity,
+                              gfxContext* aContext)
+{
   // Set PAD mode so that when the video is being scaled, we do not sample
   // outside the bounds of the video image.
   gfxPattern::GraphicsExtend extend = gfxPattern::EXTEND_PAD;
@@ -468,12 +495,12 @@ BasicImageLayer::Paint(gfxContext* aContext,
     extend = gfxPattern::EXTEND_NONE;
   }
 
-  pat->SetExtend(extend);
+  aPattern->SetExtend(extend);
 
   /* Draw RGB surface onto frame */
   aContext->NewPath();
   aContext->PixelSnappedRectangleAndSetPattern(
-      gfxRect(0, 0, size.width, size.height), pat);
+      gfxRect(0, 0, aSize.width, aSize.height), aPattern);
   if (aOpacity != 1.0) {
     aContext->Save();
     aContext->Clip();
@@ -1133,7 +1160,7 @@ BasicShadowableContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
   if (HasShadow()) {
     ShadowManager()->InsertAfter(ShadowManager()->Hold(this),
                                  ShadowManager()->Hold(aChild),
-                                 aAfter ? ShadowManager()->Hold(aAfter) : NULL);
+                                 aAfter ? ShadowManager()->Hold(aAfter) : nsnull);
   }
   BasicContainerLayer::InsertAfter(aChild, aAfter);
 }
@@ -1182,8 +1209,16 @@ public:
   }
   virtual ~BasicShadowableImageLayer()
   {
+    if (mBackSurface) {
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackSurface);
+    }
     MOZ_COUNT_DTOR(BasicShadowableImageLayer);
   }
+
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData,
+                     float aOpacity);
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
@@ -1192,7 +1227,54 @@ public:
 
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
+
+  virtual void SetBackBuffer(gfxSharedImageSurface* aBuffer)
+  {
+    mBackSurface = aBuffer;
+  }
+
+private:
+  BasicShadowLayerManager* BasicManager()
+  {
+    return static_cast<BasicShadowLayerManager*>(mManager);
+  }
+
+  nsRefPtr<gfxSharedImageSurface> mBackSurface;
 };
+ 
+void
+BasicShadowableImageLayer::Paint(gfxContext* aContext,
+                                 LayerManager::DrawThebesLayerCallback aCallback,
+                                 void* aCallbackData,
+                                 float aOpacity)
+{
+  gfxIntSize oldSize = mSize;
+  nsRefPtr<gfxPattern> pat = GetAndPaintCurrentImage(aContext, aOpacity);
+  if (!pat || !HasShadow())
+    return;
+
+  if (oldSize != mSize) {
+    NS_ASSERTION(oldSize == gfxIntSize(0, 0), "video changed size?");
+
+    nsRefPtr<gfxSharedImageSurface> tmpFrontSurface;
+    // XXX error handling?
+    if (!BasicManager()->AllocDoubleBuffer(
+          mSize, gfxASurface::ImageFormatARGB32,
+          getter_AddRefs(tmpFrontSurface), getter_AddRefs(mBackSurface)))
+      NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
+
+    BasicManager()->CreatedImageBuffer(BasicManager()->Hold(this),
+                                       nsIntSize(mSize.width, mSize.height),
+                                       tmpFrontSurface);
+  }
+
+  nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackSurface);
+  PaintContext(pat, mSize, 1.0, tmpCtx);
+
+  BasicManager()->PaintedImage(BasicManager()->Hold(this),
+                               mBackSurface);
+}
+
 
 class BasicShadowableColorLayer : public BasicColorLayer,
                                   public BasicShadowableLayer
@@ -1228,8 +1310,9 @@ public:
   }
   virtual ~BasicShadowableCanvasLayer()
   {
-    if (mBackBuffer)
+    if (mBackBuffer) {
       BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBuffer);
+    }
     MOZ_COUNT_DTOR(BasicShadowableCanvasLayer);
   }
 
@@ -1317,7 +1400,7 @@ public:
   Swap(gfxSharedImageSurface* aNewFront,
        const nsIntRect& aBufferRect,
        const nsIntPoint& aRotation)
-  { return NULL; }
+  { return nsnull; }
 
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
@@ -1337,24 +1420,62 @@ public:
   }
   virtual ~BasicShadowImageLayer()
   {
+    if (mFrontSurface) {
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
+    }
     MOZ_COUNT_DTOR(BasicShadowImageLayer);
   }
 
-  virtual PRBool Init(gfxSharedImageSurface* front, const nsIntSize& size)
-  { return PR_TRUE; }
+  virtual PRBool Init(gfxSharedImageSurface* front, const nsIntSize& size);
 
   virtual already_AddRefed<gfxSharedImageSurface>
-  Swap(gfxSharedImageSurface* newFront)
-  { return NULL; }
+  Swap(gfxSharedImageSurface* newFront);
 
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
                      void* aCallbackData,
-                     float aOpacity)
-  {}
+                     float aOpacity);
 
   MOZ_LAYER_DECL_NAME("BasicShadowImageLayer", TYPE_SHADOW)
+
+protected:
+  BasicShadowLayerManager* BasicManager()
+  {
+    return static_cast<BasicShadowLayerManager*>(mManager);
+  }
+
+  // XXX ShmemImage?
+  nsRefPtr<gfxSharedImageSurface> mFrontSurface;
+  gfxIntSize mSize;
 };
+
+PRBool
+BasicShadowImageLayer::Init(gfxSharedImageSurface* front,
+                            const nsIntSize& size)
+{
+  mFrontSurface = front;
+  mSize = gfxIntSize(size.width, size.height);
+  return PR_TRUE;
+}
+
+already_AddRefed<gfxSharedImageSurface>
+BasicShadowImageLayer::Swap(gfxSharedImageSurface* newFront)
+{
+  already_AddRefed<gfxSharedImageSurface> tmp = mFrontSurface.forget();
+  mFrontSurface = newFront;
+  return tmp;
+}
+
+void
+BasicShadowImageLayer::Paint(gfxContext* aContext,
+                             LayerManager::DrawThebesLayerCallback aCallback,
+                             void* aCallbackData,
+                             float aOpacity)
+{
+  nsRefPtr<gfxPattern> pat = new gfxPattern(mFrontSurface);
+  pat->SetFilter(mFilter);
+  BasicImageLayer::PaintContext(pat, mSize, aOpacity, aContext);
+}
 
 class BasicShadowCanvasLayer : public ShadowCanvasLayer,
                                BasicImplData
@@ -1367,8 +1488,9 @@ public:
   }
   virtual ~BasicShadowCanvasLayer()
   {
-    if (mFrontSurface)
+    if (mFrontSurface) {
       BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
+    }
     MOZ_COUNT_DTOR(BasicShadowCanvasLayer);
   }
 
