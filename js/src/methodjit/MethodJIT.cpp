@@ -583,8 +583,8 @@ ThreadData::purge(JSContext *cx)
         return;
 
     for (ThreadData::ScriptSet::Enum e(picScripts); !e.empty(); e.popFront()) {
-        JSScript *script = e.front();
 #if defined JS_POLYIC
+        JSScript *script = e.front();
         ic::PurgePICs(cx, script);
 #endif
 #if defined JS_MONOIC
