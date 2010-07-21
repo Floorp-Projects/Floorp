@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Anti-aliasing renderer interface (body).                             */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2009 by             */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2009, 2010 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -200,7 +200,7 @@
 
     /* Required check is ( pitch * height < FT_ULONG_MAX ),     */
     /* but we care realistic cases only. Always pitch <= width. */
-    if ( width > 0xFFFFU || height > 0xFFFFU )
+    if ( width > 0x7FFFU || height > 0x7FFFU )
     {
       FT_ERROR(( "ft_smooth_render_generic: glyph too large: %d x %d\n",
                  width, height ));
