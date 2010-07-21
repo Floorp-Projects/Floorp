@@ -86,13 +86,35 @@ using namespace mozilla::dom;
   } while (node);                                                 \
   PR_END_MACRO
 
+// This macro expects the ownerDocument of content_ to be in scope as
+// |nsIDocument* doc|
+#define IMPL_STRONGREF_MUTATION_NOTIFICATION(func_, content_, params_)      \
+  PR_BEGIN_MACRO                                                  \
+  nsINode* node = content_;                                       \
+  NS_ASSERTION(node->GetOwnerDoc() == doc, "Bogus document");     \
+  if (doc) {                                                      \
+    static_cast<nsIMutationObserver*>(doc->BindingManager())->    \
+      func_ params_;                                              \
+  }                                                               \
+  do {                                                            \
+    nsINode::nsSlots* slots = node->GetExistingSlots();           \
+    if (slots && !slots->mMutationObservers.IsEmpty()) {          \
+      /* No need to explicitly notify the first observer first    \
+         since that'll happen anyway. */                          \
+      NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(                         \
+        slots->mMutationObservers, nsIMutationObserver,           \
+        func_, params_);                                          \
+    }                                                             \
+    node = node->GetNodeParent();                                 \
+  } while (node);                                                 \
+  PR_END_MACRO
 
 void
 nsNodeUtils::CharacterDataWillChange(nsIContent* aContent,
                                      CharacterDataChangeInfo* aInfo)
 {
   nsIDocument* doc = aContent->GetOwnerDoc();
-  IMPL_MUTATION_NOTIFICATION(CharacterDataWillChange, aContent,
+  IMPL_STRONGREF_MUTATION_NOTIFICATION(CharacterDataWillChange, aContent,
                              (doc, aContent, aInfo));
 }
 
@@ -101,7 +123,7 @@ nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
                                   CharacterDataChangeInfo* aInfo)
 {
   nsIDocument* doc = aContent->GetOwnerDoc();
-  IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent,
+  IMPL_STRONGREF_MUTATION_NOTIFICATION(CharacterDataChanged, aContent,
                              (doc, aContent, aInfo));
 }
 
@@ -112,7 +134,7 @@ nsNodeUtils::AttributeWillChange(nsIContent* aContent,
                                  PRInt32 aModType)
 {
   nsIDocument* doc = aContent->GetOwnerDoc();
-  IMPL_MUTATION_NOTIFICATION(AttributeWillChange, aContent,
+  IMPL_STRONGREF_MUTATION_NOTIFICATION(AttributeWillChange, aContent,
                              (doc, aContent, aNameSpaceID, aAttribute,
                               aModType));
 }
@@ -124,7 +146,7 @@ nsNodeUtils::AttributeChanged(nsIContent* aContent,
                               PRInt32 aModType)
 {
   nsIDocument* doc = aContent->GetOwnerDoc();
-  IMPL_MUTATION_NOTIFICATION(AttributeChanged, aContent,
+  IMPL_STRONGREF_MUTATION_NOTIFICATION(AttributeChanged, aContent,
                              (doc, aContent, aNameSpaceID, aAttribute,
                               aModType));
 }
@@ -136,7 +158,7 @@ nsNodeUtils::ContentAppended(nsIContent* aContainer,
 {
   nsIDocument* doc = aContainer->GetOwnerDoc();
 
-  IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer,
+  IMPL_STRONGREF_MUTATION_NOTIFICATION(ContentAppended, aContainer,
                              (doc, aContainer, aFirstNewContent,
                               aNewIndexInContainer));
 }
@@ -161,7 +183,7 @@ nsNodeUtils::ContentInserted(nsINode* aContainer,
     document = static_cast<nsIDocument*>(aContainer);
   }
 
-  IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer,
+  IMPL_STRONGREF_MUTATION_NOTIFICATION(ContentInserted, aContainer,
                              (document, container, aChild, aIndexInContainer));
 }
 
@@ -185,7 +207,7 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
     document = static_cast<nsIDocument*>(aContainer);
   }
 
-  IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
+  IMPL_STRONGREF_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
                              (document, container, aChild, aIndexInContainer));
 }
 
@@ -198,7 +220,7 @@ nsNodeUtils::ParentChainChanged(nsIContent *aContent)
 
   nsINode::nsSlots* slots = aContent->GetExistingSlots();
   if (slots && !slots->mMutationObservers.IsEmpty()) {
-    NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(
+    NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(
         slots->mMutationObservers,
         nsIMutationObserver,
         ParentChainChanged,
@@ -212,7 +234,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   nsINode::nsSlots* slots = aNode->GetExistingSlots();
   if (slots) {
     if (!slots->mMutationObservers.IsEmpty()) {
-      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
+      NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(slots->mMutationObservers,
                                          nsIMutationObserver,
                                          NodeWillBeDestroyed, (aNode));
     }
