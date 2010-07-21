@@ -1706,6 +1706,13 @@ nsFtpState::Init(nsFtpChannel *channel)
     nsresult rv;
     nsCAutoString path;
     nsCOMPtr<nsIURL> url = do_QueryInterface(mChannel->URI());
+	
+    nsCString host;
+    url->GetAsciiHost(host);
+    if (host.IsEmpty()) {
+        return NS_ERROR_MALFORMED_URI;
+    }
+  
     if (url) {
         rv = url->GetFilePath(path);
     } else {
