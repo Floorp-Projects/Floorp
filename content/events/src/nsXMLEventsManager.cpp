@@ -318,6 +318,7 @@ void nsXMLEventsManager::AddListeners(nsIDocument* aDocument)
 void 
 nsXMLEventsManager::NodeWillBeDestroyed(const nsINode* aNode)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   mIncomplete.Clear();
   mListeners.Enumerate(EnumAndUnregisterListener, this);
   mListeners.Clear();
