@@ -43,6 +43,7 @@
 #include "BaseAssembler.h"
 #include "MonoIC.h"
 #include "PolyIC.h"
+#include "TrampolineCompiler.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -51,6 +52,20 @@ using namespace js::mjit;
 static const size_t STUB_CALLS_FOR_OP_COUNT = 255;
 static uint32 StubCallsForOp[STUB_CALLS_FOR_OP_COUNT];
 #endif
+
+extern "C" void JS_FASTCALL
+PushActiveVMFrame(VMFrame &f)
+{
+    f.previous = JS_METHODJIT_DATA(f.cx).activeFrame;
+    JS_METHODJIT_DATA(f.cx).activeFrame = &f;
+}
+
+extern "C" void JS_FASTCALL
+PopActiveVMFrame(VMFrame &f)
+{
+    JS_ASSERT(JS_METHODJIT_DATA(f.cx).activeFrame);
+    JS_METHODJIT_DATA(f.cx).activeFrame = JS_METHODJIT_DATA(f.cx).activeFrame->previous;    
+}
 
 extern "C" void JS_FASTCALL
 SetVMFrameRegs(VMFrame &f)
@@ -135,10 +150,12 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     /* Space for the rest of the VMFrame. */
     "subq  $0x38, %rsp"                  "\n"
 
-    /* Set cx->regs (requires saving rdx). */
+    /* Set cx->regs and set the active frame (requires saving rdx). */
     "pushq %rdx"                         "\n"
     "movq  %rsp, %rdi"                   "\n"
     "call " SYMBOL_STRING_RELOC(SetVMFrameRegs) "\n"
+    "movq  %rsp, %rdi"                   "\n"
+    "call " SYMBOL_STRING_RELOC(PushActiveVMFrame) "\n"
     "popq  %rdx"                         "\n"
 
     /*
@@ -146,6 +163,8 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
      * the precious f.scriptedReturn member of VMFrame.
      */
     "call *%rdx"                         "\n"
+    "leaq -8(%rsp), %rdi"                "\n"
+    "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
     "leaq -8(%rsp), %rdi"                "\n"
     "call " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
 
@@ -170,6 +189,8 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "je   throwpoline_exit"                 "\n"
     "jmp  *%rax"                            "\n"
   "throwpoline_exit:"                       "\n"
+    "movq %rsp, %rdi"                       "\n"
+    "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
     "addq $0x58, %rsp"                      "\n"
     "popq %rbx"                             "\n"
     "popq %r15"                             "\n"
@@ -225,9 +246,13 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "pushl 16(%ebp)"                     "\n"
     "movl  %esp, %ecx"                   "\n"
     "call " SYMBOL_STRING_RELOC(SetVMFrameRegs) "\n"
+    "movl  %esp, %ecx"                   "\n"
+    "call " SYMBOL_STRING_RELOC(PushActiveVMFrame) "\n"
     "popl  %edx"                         "\n"
 
     "call  *%edx"                        "\n"
+    "leal  -4(%esp), %ecx"               "\n"
+    "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
     "leal  -4(%esp), %ecx"               "\n"
     "call " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
 
@@ -258,6 +283,8 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "je   throwpoline_exit"              "\n"
     "jmp  *%eax"                         "\n"
   "throwpoline_exit:"                    "\n"
+    "movl %esp, %ecx"                    "\n"
+    "call " SYMBOL_STRING_RELOC(PopActiveVMFrame) "\n"
     "addl $0x2c, %esp"                   "\n"
     "popl %ebx"                          "\n"
     "popl %edi"                          "\n"
@@ -538,6 +565,12 @@ ThreadData::Initialize()
     if (!execPool)
         return false;
     
+    TrampolineCompiler tc(execPool, &trampolines);
+    if (!tc.compile()) {
+        delete execPool;
+        return false;
+    }
+
     if (!picScripts.init()) {
         delete execPool;
         return false;
@@ -548,12 +581,15 @@ ThreadData::Initialize()
         StubCallsForOp[i] = 0;
 #endif
 
+    activeFrame = NULL;
+
     return true;
 }
 
 void
 ThreadData::Finish()
 {
+    TrampolineCompiler::release(&trampolines);
     delete execPool;
 #ifdef JS_METHODJIT_PROFILE_STUBS
     FILE *fp = fopen("/tmp/stub-profiling", "wt");
@@ -672,13 +708,15 @@ void
 mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 {
     if (script->execPool) {
+#if defined DEBUG && (defined JS_CPU_X86 || defined JS_CPU_X64) 
+        memset(script->nmap[-1], 0xcc, script->inlineLength + script->outOfLineLength);
+#endif
         script->execPool->release();
         script->execPool = NULL;
         // Releasing the execPool takes care of releasing the code.
         script->ncode = NULL;
-#ifdef DEBUG
-        script->jitLength = 0;
-#endif
+        script->inlineLength = 0;
+        script->outOfLineLength = 0;
         
 #if defined JS_POLYIC
         if (script->pics) {
@@ -696,6 +734,10 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
     if (script->nmap) {
         cx->free(script->nmap - 1);
         script->nmap = NULL;
+    }
+    if (script->callSites) {
+        cx->free(script->callSites - 1);
+        script->callSites = NULL;
     }
 #if defined JS_MONOIC
     if (script->mics) {
