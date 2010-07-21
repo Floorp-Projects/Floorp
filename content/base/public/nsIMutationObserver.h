@@ -241,6 +241,10 @@ public:
    * removed from the observed node, use the ContentRemoved notification.
    * 
    * @param aNode The node being destroyed.
+   *
+   * @note Callers of this method might not hold a strong reference to
+   *       the observer.  The observer is responsible for making sure it
+   *       stays alive for the duration of the call as needed.
    */
   virtual void NodeWillBeDestroyed(const nsINode *aNode) = 0;
 

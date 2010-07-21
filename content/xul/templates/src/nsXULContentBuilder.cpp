@@ -1590,6 +1590,7 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
 void
 nsXULContentBuilder::NodeWillBeDestroyed(const nsINode* aNode)
 {
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
     // Break circular references
     mContentSupportMap.Clear();
 
