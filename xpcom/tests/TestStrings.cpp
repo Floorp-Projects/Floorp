@@ -1039,6 +1039,36 @@ static PRBool test_parse_string()
          test_parse_string_helper1("  foo", ' ', "foo");
 }
 
+static PRBool test_strip_chars_helper(const PRUnichar* str, const PRUnichar* strip, const nsAString& result, PRUint32 offset=0)
+{
+  nsAutoString tmp(str);
+  nsAString& data = tmp;
+  data.StripChars(strip, offset);
+  return data.Equals(result);
+}
+
+static PRBool test_strip_chars()
+{
+  return test_strip_chars_helper(NS_LITERAL_STRING("foo \r \nbar").get(),
+                                 NS_LITERAL_STRING(" \n\r").get(),
+                                 NS_LITERAL_STRING("foobar"));
+         test_strip_chars_helper(NS_LITERAL_STRING("\r\nfoo\r\n").get(),
+                                 NS_LITERAL_STRING(" \n\r").get(),
+                                 NS_LITERAL_STRING("foo")) &&
+         test_strip_chars_helper(NS_LITERAL_STRING("foo").get(),
+                                 NS_LITERAL_STRING(" \n\r").get(),
+                                 NS_LITERAL_STRING("foo")) &&
+         test_strip_chars_helper(NS_LITERAL_STRING("foo").get(),
+                                 NS_LITERAL_STRING("fo").get(),
+                                 NS_LITERAL_STRING("")) &&
+         test_strip_chars_helper(NS_LITERAL_STRING("foo").get(),
+                                 NS_LITERAL_STRING("foo").get(),
+                                 NS_LITERAL_STRING("")) &&
+         test_strip_chars_helper(NS_LITERAL_STRING("foo").get(),
+                                 NS_LITERAL_STRING(" ").get(),
+                                 NS_LITERAL_STRING(" foo"), 1);
+}
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -1088,6 +1118,7 @@ tests[] =
     { "test_empty_assignment", test_empty_assignment },
     { "test_string_tointeger", test_string_tointeger },
     { "test_parse_string", test_parse_string },
+    { "test_strip_chars", test_strip_chars },
     { nsnull, nsnull }
   };
 
