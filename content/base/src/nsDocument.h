@@ -1019,9 +1019,9 @@ protected:
   virtual nsPIDOMWindow *GetInnerWindowInternal();
   virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const;
 
-#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                  \
-  NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIDocumentObserver, \
-                                     func_, params_);
+#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                        \
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
+                                           func_, params_);
   
 #ifdef DEBUG
   void VerifyRootContentState();
@@ -1143,6 +1143,7 @@ private:
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();
 
+  nsresult CheckFrameOptions();
   nsresult InitCSP();
 
   /**

@@ -58,6 +58,8 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 #include "gfxFT2Fonts.h"
+#include "gfxPlatformFontList.h"
+#include "gfxFT2FontList.h"
 
 static FT_Library gPlatformFTLibrary = NULL;
 
@@ -225,6 +227,15 @@ gfxAndroidPlatform::ResolveFontName(const nsAString& aFontName,
     if (aFontName.IsEmpty())
         return NS_ERROR_FAILURE;
 
+    nsAutoString resolvedName;
+    gfxPlatformFontList* platformFontList = gfxPlatformFontList::PlatformFontList();
+    if (platformFontList) {
+        if (!platformFontList->ResolveFontName(aFontName, resolvedName)) {
+            aAborted = PR_FALSE;
+            return NS_OK;
+        }
+    }
+
     nsAutoString keyName(aFontName);
     ToLowerCase(keyName);
 
@@ -256,12 +267,40 @@ gfxAndroidPlatform::GetStandardFamilyName(const nsAString& aFontName, nsAString&
     return ResolveFontName(aFontName, SimpleResolverCallback, &aFamilyName, aborted);
 }
 
+gfxPlatformFontList*
+gfxAndroidPlatform::CreatePlatformFontList()
+{
+    return new gfxFT2FontList();
+}
+
+PRBool
+gfxAndroidPlatform::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
+{
+    // check for strange format flags
+    NS_ASSERTION(!(aFormatFlags & gfxUserFontSet::FLAG_FORMAT_NOT_USED),
+                 "strange font format hint set");
+
+    // accept supported formats
+    if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_OPENTYPE | 
+                        gfxUserFontSet::FLAG_FORMAT_TRUETYPE)) {
+        return PR_TRUE;
+    }
+
+    // reject all other formats, known and unknown
+    if (aFormatFlags != 0) {
+        return PR_FALSE;
+    }
+
+    // no format hint set, need to look at data
+    return PR_TRUE;
+}
+
 gfxFontGroup *
 gfxAndroidPlatform::CreateFontGroup(const nsAString &aFamilies,
                                const gfxFontStyle *aStyle,
                                gfxUserFontSet* aUserFontSet)
 {
-    return new gfxFT2FontGroup(aFamilies, aStyle);
+    return new gfxFT2FontGroup(aFamilies, aStyle, aUserFontSet);
 }
 
 FT_Library
@@ -330,6 +369,15 @@ gfxAndroidPlatform::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
     mCodepointsWithNoFonts.set(aCh);
 
     return nsnull;
+}
+
+gfxFontEntry* 
+gfxAndroidPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
+                                     const PRUint8 *aFontData, PRUint32 aLength)
+{
+    return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aProxyEntry,
+                                                                     aFontData,
+                                                                     aLength);
 }
 
 PRBool

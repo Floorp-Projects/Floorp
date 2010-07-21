@@ -986,6 +986,9 @@ nsHTMLTextAreaElement::ContentChanged(nsIContent* aContent)
 {
   if (!mValueChanged && mDoneAddingChildren &&
       nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
+    // Hard to say what the reset can trigger, so be safe pending
+    // further auditing.
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
     Reset();
   }
 }

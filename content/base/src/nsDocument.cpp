@@ -2162,8 +2162,78 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
   mChannel = aChannel;
   
-  nsresult rv = InitCSP();
+  nsresult rv = CheckFrameOptions();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = InitCSP();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+// Check if X-Frame-Options permits this document to be loaded as a subdocument.
+nsresult nsDocument::CheckFrameOptions()
+{
+  nsAutoString xfoHeaderValue;
+  this->GetHeaderData(nsGkAtoms::headerXFO, xfoHeaderValue);
+
+  // return early if header does not have one of the two values with meaning
+  if (!xfoHeaderValue.LowerCaseEqualsLiteral("deny") &&
+      !xfoHeaderValue.LowerCaseEqualsLiteral("sameorigin"))
+    return NS_OK;
+
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
+
+  if (docShell) {
+    PRBool framingAllowed = true;
+
+    // We need to check the location of this window and the location of the top
+    // window, if we're not the top.  X-F-O: SAMEORIGIN requires that the
+    // document must be same-origin with top window.  X-F-O: DENY requires that
+    // the document must never be framed.
+    nsCOMPtr<nsIDOMWindow> thisWindow = do_GetInterface(docShell);
+    nsCOMPtr<nsIDOMWindow> topWindow;
+    thisWindow->GetTop(getter_AddRefs(topWindow));
+
+    // if the document is in the top window, it's not in a frame.
+    if (thisWindow == topWindow)
+      return NS_OK;
+
+    // If the value of the header is DENY, then the document
+    // should never be permitted to load as a subdocument.
+    if (xfoHeaderValue.LowerCaseEqualsLiteral("deny")) {
+      framingAllowed = false;
+    }
+
+    else if (xfoHeaderValue.LowerCaseEqualsLiteral("sameorigin")) {
+      // If the X-Frame-Options value is SAMEORIGIN, then the top frame in the
+      // parent chain must be from the same origin as this document.
+      nsCOMPtr<nsIURI> uri = static_cast<nsIDocument*>(this)->GetDocumentURI();
+      nsCOMPtr<nsIDOMDocument> topDOMDoc;
+      topWindow->GetDocument(getter_AddRefs(topDOMDoc));
+      nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDOMDoc);
+      if (topDoc) {
+        nsCOMPtr<nsIURI> topUri = topDoc->GetDocumentURI();
+        nsresult rv = nsContentUtils::GetSecurityManager()->
+          CheckSameOriginURI(uri, topUri, PR_TRUE);
+
+        if (NS_FAILED(rv)) {
+          framingAllowed = false;
+        }
+      }
+    }
+
+    if (!framingAllowed) {
+      // cancel the load and display about:blank
+      mChannel->Cancel(NS_BINDING_ABORTED);
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
+      if (webNav) {
+        webNav->LoadURI(NS_LITERAL_STRING("about:blank").get(),
+                        0, nsnull, nsnull, nsnull);
+      }
+      return NS_ERROR_CONTENT_BLOCKED;
+    }
+  }
 
   return NS_OK;
 }
@@ -5468,13 +5538,9 @@ nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocument::Normalize()
 {
-  PRInt32 count = mChildren.ChildCount();
-  for (PRInt32 i = 0; i < count; ++i) {
+  for (PRInt32 i = 0; i < mChildren.ChildCount(); ++i) {
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mChildren.ChildAt(i)));
-
-    if (node) {
-      node->Normalize();
-    }
+    node->Normalize();
   }
 
   return NS_OK;
@@ -6442,6 +6508,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
       "x-dns-prefetch-control",
       "x-content-security-policy",
       "x-content-security-policy-report-only",
+      "x-frame-options",
       // add more http headers if you need
       // XXXbz don't add content-location support without reading bug
       // 238654 and its dependencies/dups first.

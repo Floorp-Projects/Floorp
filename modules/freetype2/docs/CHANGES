@@ -1,3 +1,38 @@
+
+CHANGES BETWEEN 2.4.0 and 2.4.1
+
+  I. IMPORTANT CHANGES
+
+    - A serious bug in the  CFF font module prevented  display of many
+      glyphs in CFF fonts like `MinionPro-Regular.otf'.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.3.12 and 2.4.0
+
+  I. IMPORTANT CHANGES
+
+    - Since May  2010, all  patents  regarding  the TrueType  bytecode
+      interpreter have expired worldwide.  Consequently, we now define
+      TT_CONFIG_OPTION_BYTECODE_INTERPRETER by  default (and  undefine
+      TT_CONFIG_OPTION_UNPATENTED_HINTING).
+
+    - A new function `FT_Library_SetLcdFilterWeights' is available  to
+      adjust the filter weights set by `FT_Library_SetLcdFilter'.
+
+
+  II. MISCELLANEOUS
+
+    - Thanks to many reports from Robert Święcki, FreeType's stability
+      in handling broken or damaged fonts is much improved.
+
+    - Support  for LCD  filter  control has  been  added to  the  demo
+      programs `ftdiff' and `ftview'.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.3.11 and 2.3.12
 
   I. IMPORTANT CHANGES
@@ -5,6 +40,7 @@ CHANGES BETWEEN 2.3.11 and 2.3.12
     - For  `FT_Open_Face',  new  parameters  are  available  to ignore
       preferred family names: FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY and
       FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY.
+
 
   II. MISCELLANEOUS
 
@@ -3378,7 +3414,8 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by
+Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+          2010 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,

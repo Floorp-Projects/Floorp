@@ -243,36 +243,40 @@ function testConsoleLoggingAPI(aMethod)
 
 function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
 {
-  executeSoon(function (){
-                var msgs = aOutputNode.childNodes;
-                for (var i = 0; i < msgs.length; i++) {
-                  var message = msgs[i].innerHTML.indexOf(aMatchString);
-                  if (message > -1) {
-                    ok(true, aSuccessErrObj.success);
-                    return;
-                  }
-                  else {
-                    throw new Error(aSuccessErrObj.err);
-                  }
-                }
-              });
+  var msgs = aOutputNode.childNodes;
+  for (var i = 0; i < msgs.length; i++) {
+    var message = msgs[i].innerHTML.indexOf(aMatchString);
+    if (message > -1) {
+      ok(true, aSuccessErrObj.success);
+      return;
+    }
+  }
+  throw new Error(aSuccessErrObj.err);
 }
 
 // test network logging
 function testNet()
 {
-  HUDService.activateHUDForContext(tab);
-  content.location = TEST_NETWORK_URI;
-  executeSoon(function () {
-    HUDService.setFilterState(hudId, "network", true);
-    filterBox.value = "";
+  HUDService.setFilterState(hudId, "network", true);
+  filterBox.value = "";
+
+  browser.addEventListener("DOMContentLoaded", function onTestNetLoad () {
+    browser.removeEventListener("DOMContentLoaded", onTestNetLoad, false);
+
     var successMsg =
       "Found the loggged network message referencing a js file";
     var errMsg = "Could not get logged network message for js file";
-    testLogEntry(outputNode,
-                 "Network:", { success: successMsg, err: errMsg });
-                 content.location.href = noCacheUriSpec(TEST_NETWORK_URI);
-  });
+
+    var display = HUDService.getDisplayByURISpec(TEST_NETWORK_URI);
+    var outputNode = display.querySelectorAll(".hud-output-node")[0];
+
+    testLogEntry(outputNode, "Network:",
+      { success: successMsg, err: errMsg });
+
+    testPageReload();
+  }, false);
+
+  content.location = TEST_NETWORK_URI;
 }
 
 function testOutputOrder()
@@ -631,8 +635,6 @@ function test() {
       testConsoleLoggingAPI("error");
       testConsoleLoggingAPI("exception");
 
-      testNet();
-
       // ConsoleStorageTests
       testCreateDisplay();
       testRecordEntry();
@@ -644,7 +646,7 @@ function test() {
       testExecutionScope();
       testCompletion();
       testPropertyProvider();
-      testPageReload();
+      testNet();
     });
   }, false);
 }

@@ -988,6 +988,8 @@ nsXULDocument::AttributeWillChange(nsIDocument* aDocument,
     // See if we need to update our ref map.
     if (aAttribute == nsGkAtoms::ref ||
         (aAttribute == nsGkAtoms::id && !aContent->GetIDAttributeName())) {
+        // Might not need this, but be safe for now.
+        nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
         RemoveElementFromRefMap(aContent->AsElement());
     }
 }
@@ -998,6 +1000,9 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
                                 nsIAtom* aAttribute, PRInt32 aModType)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
+
+    // Might not need this, but be safe for now.
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
     // XXXbz once we change AttributeChanged to take Element, we can nix this line
     Element* aElement = aElementContent->AsElement();
@@ -1097,6 +1102,9 @@ nsXULDocument::ContentAppended(nsIDocument* aDocument,
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
     
+    // Might not need this, but be safe for now.
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
     // Update our element map
     nsresult rv = NS_OK;
     for (nsIContent* cur = aFirstNewContent; cur && NS_SUCCEEDED(rv);
@@ -1113,6 +1121,9 @@ nsXULDocument::ContentInserted(nsIDocument* aDocument,
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
 
+    // Might not need this, but be safe for now.
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
     AddSubtreeToDocument(aChild);
 }
 
@@ -1123,6 +1134,9 @@ nsXULDocument::ContentRemoved(nsIDocument* aDocument,
                               PRInt32 aIndexInContainer)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
+
+    // Might not need this, but be safe for now.
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
     RemoveSubtreeFromDocument(aChild);
 }

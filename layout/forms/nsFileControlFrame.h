@@ -115,6 +115,9 @@ public:
    */
   PRInt32 GetFileFilterFromAccept() const;
 
+  typedef PRBool (*AcceptAttrCallback)(const nsAString&, void*);
+  void ParseAcceptAttribute(AcceptAttrCallback aCallback, void* aClosure) const;
+
 protected:
   class MouseListener;
   friend class MouseListener;

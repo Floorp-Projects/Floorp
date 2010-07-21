@@ -86,7 +86,6 @@ using namespace mozilla::dom;
   } while (node);                                                 \
   PR_END_MACRO
 
-
 void
 nsNodeUtils::CharacterDataWillChange(nsIContent* aContent,
                                      CharacterDataChangeInfo* aInfo)

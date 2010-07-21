@@ -214,32 +214,11 @@ BasicContainerLayer::RemoveChildInternal(Layer* aChild)
   NS_RELEASE(aChild);
 }
 
-// Returns true if it's OK to save the contents of aLayer in an
-// opaque surface (a surface without an alpha channel).
-// If we can use a surface without an alpha channel, we should, because
-// it will often make painting of antialiased text faster and higher
-// quality.
-static PRBool
-UseOpaqueSurface(Layer* aLayer)
-{
-  // If the visible content in the layer is opaque, there is no need
-  // for an alpha channel.
-  if (aLayer->IsOpaqueContent())
-    return PR_TRUE;
-  // Also, if this layer is the bottommost layer in a container which
-  // doesn't need an alpha channel, we can use an opaque surface for this
-  // layer too. Any transparent areas must be covered by something else
-  // in the container.
-  BasicContainerLayer* parent =
-    static_cast<BasicContainerLayer*>(aLayer->GetParent());
-  return parent && parent->GetFirstChild() == aLayer &&
-         UseOpaqueSurface(parent);
-}
-
 class BasicThebesLayer : public ThebesLayer, BasicImplData {
 public:
   BasicThebesLayer(BasicLayerManager* aLayerManager) :
-    ThebesLayer(aLayerManager, static_cast<BasicImplData*>(this))
+    ThebesLayer(aLayerManager, static_cast<BasicImplData*>(this)),
+    mBuffer(this)
   {
     MOZ_COUNT_CTOR(BasicThebesLayer);
   }
@@ -272,7 +251,52 @@ protected:
     return static_cast<BasicLayerManager*>(mManager);
   }
 
-  ThebesLayerBuffer mBuffer;
+  class Buffer : public ThebesLayerBuffer {
+  public:
+    Buffer(BasicThebesLayer* aLayer)
+      : ThebesLayerBuffer(ContainsVisibleBounds)
+      , mLayer(aLayer)
+    {}
+
+    /**
+     * Complete the drawing operation. The region to draw must have been
+     * drawn before this is called. The contents of the buffer are drawn
+     * to aTarget.
+     */
+    void DrawTo(PRBool aIsOpaqueContent, gfxContext* aTarget, float aOpacity);
+
+    virtual already_AddRefed<gfxASurface>
+    CreateBuffer(ContentType aType, const nsIntSize& aSize)
+    {
+      return mLayer->CreateBuffer(aType, aSize);
+    }
+
+  private:
+    BasicThebesLayer* mLayer;
+  };
+  
+  virtual already_AddRefed<gfxASurface>
+  CreateBuffer(Buffer::ContentType aType, const nsIntSize& aSize)
+  {
+    nsRefPtr<gfxASurface> referenceSurface = mBuffer.GetBuffer();
+    if (!referenceSurface) {
+      gfxContext* defaultTarget = BasicManager()->GetDefaultTarget();
+      if (defaultTarget) {
+        referenceSurface = defaultTarget->CurrentSurface();
+      } else {
+        nsIWidget* widget = BasicManager()->GetRetainerWidget();
+        if (widget) {
+          referenceSurface = widget->GetThebesSurface();
+        } else {
+          referenceSurface = BasicManager()->GetTarget()->CurrentSurface();
+        }
+      }
+    }
+    return referenceSurface->CreateSimilarSurface(
+      aType, gfxIntSize(aSize.width, aSize.height));
+  }
+
+  Buffer mBuffer;
 };
 
 static void
@@ -318,28 +342,16 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     return;
   }
 
-  PRUint32 flags = 0;
-  if (UseOpaqueSurface(this)) {
-    flags |= ThebesLayerBuffer::OPAQUE_CONTENT;
-  }
-
+  nsRefPtr<gfxASurface> targetSurface = aContext->CurrentSurface();
+  PRBool isOpaqueContent =
+    (targetSurface->AreSimilarSurfacesSensitiveToContentType() &&
+     aOpacity == 1.0 &&
+     CanUseOpaqueSurface());
   {
-    nsRefPtr<gfxASurface> referenceSurface = mBuffer.GetBuffer();
-    if (!referenceSurface) {
-      gfxContext* defaultTarget = BasicManager()->GetDefaultTarget();
-      if (defaultTarget) {
-        referenceSurface = defaultTarget->CurrentSurface();
-      } else {
-        nsIWidget* widget = BasicManager()->GetRetainerWidget();
-        if (widget) {
-          referenceSurface = widget->GetThebesSurface();
-        } else {
-          referenceSurface = aContext->CurrentSurface();
-        }
-      }
-    }
-    ThebesLayerBuffer::PaintState state =
-      mBuffer.BeginPaint(this, referenceSurface, flags);
+    Buffer::ContentType contentType =
+      isOpaqueContent ? gfxASurface::CONTENT_COLOR :
+                        gfxASurface::CONTENT_COLOR_ALPHA;
+    Buffer::PaintState state = mBuffer.BeginPaint(this, contentType);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
     if (state.mContext) {
@@ -359,7 +371,21 @@ BasicThebesLayer::Paint(gfxContext* aContext,
     }
   }
 
-  mBuffer.DrawTo(this, flags, target, aOpacity);
+  mBuffer.DrawTo(isOpaqueContent, target, aOpacity);
+}
+
+void
+BasicThebesLayer::Buffer::DrawTo(PRBool aIsOpaqueContent,
+                                 gfxContext* aTarget,
+                                 float aOpacity)
+{
+  aTarget->Save();
+  ClipToRegion(aTarget, mLayer->GetVisibleRegion());
+  if (aIsOpaqueContent) {
+    aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
+  }
+  DrawBufferWithRotation(aTarget, aOpacity);
+  aTarget->Restore();
 }
 
 class BasicImageLayer : public ImageLayer, BasicImplData {
@@ -812,6 +838,11 @@ BasicLayerManager::PopGroupWithCachedSurface(gfxContext *aTarget,
 void
 BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
+#ifdef MOZ_LAYERS_HAVE_LOG
+  MOZ_LAYERS_LOG(("[----- BeginTransaction"));
+  Log();
+#endif
+
   NS_ASSERTION(!InTransaction(), "Nested transactions not allowed");
 #ifdef DEBUG
   mPhase = PHASE_CONSTRUCTION;
@@ -823,6 +854,11 @@ void
 BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
                                   void* aCallbackData)
 {
+#ifdef MOZ_LAYERS_HAVE_LOG
+  Log();
+  MOZ_LAYERS_LOG(("]----- EndTransaction"));
+#endif
+
   NS_ASSERTION(InConstruction(), "Should be in construction phase");
 #ifdef DEBUG
   mPhase = PHASE_DRAWING;
@@ -925,7 +961,7 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
       // area first to minimize the size of the temporary surface.
       ClipToContain(mTarget, aLayer->GetVisibleRegion().GetBounds());
 
-      gfxASurface::gfxContentType type = UseOpaqueSurface(aLayer)
+      gfxASurface::gfxContentType type = aLayer->CanUseOpaqueSurface()
           ? gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA;
       mTarget->PushGroup(type);
     }
