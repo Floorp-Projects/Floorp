@@ -37,8 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef MOZ_IPC
+#  include "gfxSharedImageSurface.h"
+
 #  include "mozilla/layers/PLayerChild.h"
 #  include "mozilla/layers/PLayersChild.h"
+#  include "mozilla/layers/PLayersParent.h"
+#  include "ipc/ShadowLayerChild.h"
 #endif
 
 #include "BasicLayers.h"
@@ -790,6 +794,9 @@ BasicLayerManager::BasicLayerManager() :
 BasicLayerManager::~BasicLayerManager()
 {
   NS_ASSERTION(!InTransaction(), "Died during transaction?");
+
+  mRoot = nsnull;
+
   MOZ_COUNT_DTOR(BasicLayerManager);
 }
 
@@ -1073,12 +1080,25 @@ public:
     NS_ABORT_IF_FALSE(!mShadow, "can't have two shadows (yet)");
     mShadow = aShadow;
   }
+
+  virtual void SetBackBuffer(gfxSharedImageSurface* aBuffer)
+  {
+    NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
+  }
 };
 
 static ShadowableLayer*
 ToShadowable(Layer* aLayer)
 {
   return ToData(aLayer)->AsShadowableLayer();
+}
+
+template<class OpT>
+static BasicShadowableLayer*
+GetBasicShadowable(const OpT& op)
+{
+  return static_cast<BasicShadowableLayer*>(
+    static_cast<const ShadowLayerChild*>(op.layerChild())->layer());
 }
 
 class BasicShadowableContainerLayer : public BasicContainerLayer,
@@ -1208,8 +1228,16 @@ public:
   }
   virtual ~BasicShadowableCanvasLayer()
   {
+    if (mBackBuffer)
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBuffer);
     MOZ_COUNT_DTOR(BasicShadowableCanvasLayer);
   }
+
+  virtual void Initialize(const Data& aData);
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData,
+                     float aOpacity);
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
@@ -1218,7 +1246,60 @@ public:
 
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
+
+  virtual void SetBackBuffer(gfxSharedImageSurface* aBuffer)
+  {
+    mBackBuffer = aBuffer;
+  }
+
+private:
+  BasicShadowLayerManager* BasicManager()
+  {
+    return static_cast<BasicShadowLayerManager*>(mManager);
+  }
+
+  nsRefPtr<gfxSharedImageSurface> mBackBuffer;
 };
+
+void
+BasicShadowableCanvasLayer::Initialize(const Data& aData)
+{
+  BasicCanvasLayer::Initialize(aData);
+  if (!HasShadow())
+      return;
+
+  nsRefPtr<gfxSharedImageSurface> tmpFrontBuffer;
+  // XXX error handling?
+  if (!BasicManager()->AllocDoubleBuffer(
+        gfxIntSize(aData.mSize.width, aData.mSize.height),
+        gfxASurface::ImageFormatARGB32,
+        getter_AddRefs(tmpFrontBuffer), getter_AddRefs(mBackBuffer)))
+    NS_RUNTIMEABORT("creating CanvasLayer back buffer failed!");
+
+  BasicManager()->CreatedCanvasBuffer(BasicManager()->Hold(this),
+                                      aData.mSize,
+                                      tmpFrontBuffer);
+}
+
+void
+BasicShadowableCanvasLayer::Paint(gfxContext* aContext,
+                                  LayerManager::DrawThebesLayerCallback aCallback,
+                                  void* aCallbackData,
+                                  float aOpacity)
+{
+  BasicCanvasLayer::Paint(aContext, aCallback, aCallbackData, aOpacity);
+  if (!HasShadow())
+    return;
+
+  // XXX this is yucky and slow.  It'd be nice to draw directly into
+  // the shmem back buffer
+  nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackBuffer);
+  tmpCtx->DrawSurface(mSurface, gfxSize(mBounds.width, mBounds.height));
+
+  BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
+                                mBackBuffer);
+}
+
 
 class BasicShadowThebesLayer : public ShadowThebesLayer, BasicImplData {
 public:
@@ -1286,27 +1367,76 @@ public:
   }
   virtual ~BasicShadowCanvasLayer()
   {
+    if (mFrontSurface)
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface);
     MOZ_COUNT_DTOR(BasicShadowCanvasLayer);
   }
 
-  virtual void Initialize(const Data& aData)
-  {}
+  virtual void Initialize(const Data& aData);
 
   virtual void Updated(const nsIntRect& aRect)
   {}
 
   virtual already_AddRefed<gfxSharedImageSurface>
-  Swap(gfxSharedImageSurface* newFront)
-  { return NULL; }
+  Swap(gfxSharedImageSurface* newFront);
 
   virtual void Paint(gfxContext* aContext,
                      LayerManager::DrawThebesLayerCallback aCallback,
                      void* aCallbackData,
-                     float aOpacity)
-  {}
+                     float aOpacity);
 
   MOZ_LAYER_DECL_NAME("BasicShadowCanvasLayer", TYPE_SHADOW)
+
+private:
+  BasicShadowLayerManager* BasicManager()
+  {
+    return static_cast<BasicShadowLayerManager*>(mManager);
+  }
+
+  nsRefPtr<gfxSharedImageSurface> mFrontSurface;
+  nsIntRect mBounds;
 };
+
+void
+BasicShadowCanvasLayer::Initialize(const Data& aData)
+{
+  NS_ASSERTION(mFrontSurface == nsnull,
+               "BasicCanvasLayer::Initialize called twice!");
+  NS_ASSERTION(aData.mSurface && !aData.mGLContext, "no comprende OpenGL!");
+
+  mFrontSurface = static_cast<gfxSharedImageSurface*>(aData.mSurface);
+  mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
+}
+
+already_AddRefed<gfxSharedImageSurface>
+BasicShadowCanvasLayer::Swap(gfxSharedImageSurface* newFront)
+{
+  already_AddRefed<gfxSharedImageSurface> tmp = mFrontSurface.forget();
+  mFrontSurface = newFront;
+  return tmp;
+}
+
+void
+BasicShadowCanvasLayer::Paint(gfxContext* aContext,
+                              LayerManager::DrawThebesLayerCallback aCallback,
+                              void* aCallbackData,
+                              float aOpacity)
+{
+  MOZ_LAYERS_LOG(("[ShadowLayersChild] %s()", __FUNCTION__));
+
+  NS_ASSERTION(BasicManager()->InDrawing(),
+               "Can only draw in drawing phase");
+
+  nsRefPtr<gfxPattern> pat = new gfxPattern(mFrontSurface);
+
+  pat->SetFilter(mFilter);
+  pat->SetExtend(gfxPattern::EXTEND_PAD);
+
+  gfxRect r(0, 0, mBounds.width, mBounds.height);
+  aContext->NewPath();
+  aContext->PixelSnappedRectangleAndSetPattern(r, pat);
+  aContext->Fill();
+}
 
 // Create a shadow layer (PLayerChild) for aLayer, if we're forwarding
 // our layer tree to a parent process.  Record the new layer creation
@@ -1462,12 +1592,30 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 
   // forward this transaction's changeset to our ShadowLayerManager
   nsAutoTArray<EditReply, 10> replies;
-  if (HasShadowManager() && !ShadowLayerForwarder::EndTransaction(&replies)) {
+  if (HasShadowManager() && ShadowLayerForwarder::EndTransaction(&replies)) {
+    for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
+      const EditReply& reply = replies[i];
+
+      switch (reply.type()) {
+      case EditReply::TOpBufferSwap: {
+        MOZ_LAYERS_LOG(("[LayersForwarder] BufferSwap"));
+
+        const OpBufferSwap& obs = reply.get_OpBufferSwap();
+        GetBasicShadowable(obs)->SetBackBuffer(
+          new gfxSharedImageSurface(obs.newBackBuffer()));
+        break;
+      }
+
+      default:
+        NS_RUNTIMEABORT("not reached");
+      }
+    }
+  } else if (HasShadowManager()) {
     NS_WARNING("failed to forward Layers transaction");
   }
 
   // this may result in Layers being deleted, which results in
-  // PLayer::Send__delete__()
+  // PLayer::Send__delete__() and DeallocShmem()
   mKeepAlive.Clear();
 
 #ifdef DEBUG
