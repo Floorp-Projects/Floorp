@@ -138,10 +138,26 @@ AppendToString(nsACString& s, const nsIntRegion& r,
 
 namespace mozilla {
 namespace layers {
- 
+
 //--------------------------------------------------
 // Layer
- 
+
+PRBool
+Layer::CanUseOpaqueSurface()
+{
+  // If the visible content in the layer is opaque, there is no need
+  // for an alpha channel.
+  if (IsOpaqueContent())
+    return PR_TRUE;
+  // Also, if this layer is the bottommost layer in a container which
+  // doesn't need an alpha channel, we can use an opaque surface for this
+  // layer too. Any transparent areas must be covered by something else
+  // in the container.
+  ContainerLayer* parent = GetParent();
+  return parent && parent->GetFirstChild() == this &&
+    parent->CanUseOpaqueSurface();
+}
+
 #ifdef MOZ_LAYERS_HAVE_LOG
 
 void

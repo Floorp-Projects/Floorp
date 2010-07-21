@@ -406,6 +406,13 @@ public:
   virtual Layer* GetFirstChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
 
+  // Returns true if it's OK to save the contents of aLayer in an
+  // opaque surface (a surface without an alpha channel).
+  // If we can use a surface without an alpha channel, we should, because
+  // it will often make painting of antialiased text faster and higher
+  // quality.
+  PRBool CanUseOpaqueSurface();
+
   // This setter and getter can be used anytime. The user data is initially
   // null.
   void SetUserData(void* aData) { mUserData = aData; }
