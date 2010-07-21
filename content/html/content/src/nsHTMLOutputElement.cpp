@@ -261,7 +261,8 @@ void nsHTMLOutputElement::ContentInserted(nsIDocument* aDocument,
 void nsHTMLOutputElement::ContentRemoved(nsIDocument* aDocument,
                                          nsIContent* aContainer,
                                          nsIContent* aChild,
-                                         PRInt32 aIndexInContainer)
+                                         PRInt32 aIndexInContainer,
+                                         nsIContent* aPreviousSibling)
 {
   DescendantsChanged();
 }

@@ -912,7 +912,9 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
 }
 
 void
-inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer, nsIContent* aChild, PRInt32 aIndexInContainer)
+inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
+                          nsIContent* aChild, PRInt32 aIndexInContainer,
+                          nsIContent* aPreviousSibling)
 {
   if (!mTree)
     return;

@@ -45,8 +45,8 @@ class nsIDocument;
 class nsINode;
 
 #define NS_IMUTATION_OBSERVER_IID \
-{0x365d600b, 0x868a, 0x452a, \
-  {0x8d, 0xe8, 0xf4, 0x6f, 0xad, 0x8f, 0xee, 0x53 } }
+{ 0x85eea794, 0xed8e, 0x4e1b, \
+  { 0xa1, 0x28, 0xd0, 0x93, 0x00, 0xae, 0x51, 0xaa } }
 
 /**
  * Information details about a characterdata change.  Basically, we
@@ -259,6 +259,8 @@ public:
    * @param aChild     The child that was removed.
    * @param aIndexInContainer The index in the container which the child used
    *                          to have.
+   * @param aPreviousSibling The previous sibling to the child that was removed.
+   *                         Can be null if there was no previous sibling.
    *
    * @note Callers of this method might not hold a strong reference to the
    *       observer.  The observer is responsible for making sure it stays
@@ -269,7 +271,8 @@ public:
   virtual void ContentRemoved(nsIDocument *aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
-                              PRInt32 aIndexInContainer) = 0;
+                              PRInt32 aIndexInContainer,
+                              nsIContent* aPreviousSibling) = 0;
 
  /**
    * The node is in the process of being destroyed. Calling QI on the node is
@@ -351,7 +354,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
     virtual void ContentRemoved(nsIDocument* aDocument,                      \
                                 nsIContent* aContainer,                      \
                                 nsIContent* aChild,                          \
-                                PRInt32 aIndexInContainer);
+                                PRInt32 aIndexInContainer,                   \
+                                nsIContent* aPreviousSibling);
 
 #define NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED                      \
     virtual void NodeWillBeDestroyed(const nsINode* aNode);
@@ -423,7 +427,8 @@ void                                                                      \
 _class::ContentRemoved(nsIDocument* aDocument,                            \
                        nsIContent* aContainer,                            \
                        nsIContent* aChild,                                \
-                       PRInt32 aIndexInContainer)                         \
+                       PRInt32 aIndexInContainer,                         \
+                       nsIContent* aPreviousSibling)                      \
 {                                                                         \
 }                                                                         \
 void                                                                      \
