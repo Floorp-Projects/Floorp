@@ -1404,95 +1404,11 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
 }
 
 #ifdef DEBUG
-static void
-DumpIntRegion(FILE* aStream, const char* aName, const nsIntRegion& aRegion)
-{
-  if (aRegion.IsEmpty())
-    return;
-
-  fprintf(aStream, " [%s=", aName);
-  nsIntRegionRectIterator iter(aRegion);
-  const nsIntRect* r;
-  PRBool first = PR_TRUE;
-  while ((r = iter.Next()) != nsnull) {
-    if (!first) {
-      fputs(";", aStream);
-    } else {
-      first = PR_FALSE;
-    }
-    fprintf(aStream, "%d,%d,%d,%d", r->x, r->y, r->width, r->height);
-  }
-  fputs("]", aStream);
-}
-
-static void
-DumpLayer(FILE* aStream, Layer* aLayer, PRUint32 aIndent)
-{
-  if (!aLayer)
-    return;
-
-  for (PRUint32 i = 0; i < aIndent; ++i) {
-    fputs("  ", aStream);
-  }
-  const char* name = aLayer->Name();
-  ThebesLayer* thebes = aLayer->AsThebesLayer();
-  fprintf(aStream, "%s(%p)", name, aLayer);
-
-  DumpIntRegion(aStream, "visible", aLayer->GetVisibleRegion());
-
-  gfx3DMatrix transform = aLayer->GetTransform();
-  if (!transform.IsIdentity()) {
-    gfxMatrix matrix;
-    if (transform.Is2D(&matrix)) {
-      fprintf(aStream, " [transform=%g,%g; %g,%g; %g,%g]",
-              matrix.xx, matrix.yx, matrix.xy, matrix.yy, matrix.x0, matrix.y0);
-    } else {
-      fprintf(aStream, " [transform=%g,%g,%g,%g; %g,%g,%g,%g; %g,%g,%g,%g; %g,%g,%g,%g]",
-              transform._11, transform._12, transform._13, transform._14,
-              transform._21, transform._22, transform._23, transform._24,
-              transform._31, transform._32, transform._33, transform._34,
-              transform._41, transform._42, transform._43, transform._44);
-    }
-  }
-
-  const nsIntRect* clip = aLayer->GetClipRect();
-  if (clip) {
-    fprintf(aStream, " [clip=%d,%d,%d,%d]",
-            clip->x, clip->y, clip->width, clip->height);
-  }
-
-  float opacity = aLayer->GetOpacity();
-  if (opacity != 1.0) {
-    fprintf(aStream, " [opacity=%f]", opacity);
-  }
-
-  if (aLayer->IsOpaqueContent()) {
-    fputs(" [opaqueContent]", aStream);
-  }
-
-  if (thebes) {
-    DumpIntRegion(aStream, "valid", thebes->GetValidRegion());
-  }
-
-  fputs("\n", aStream);
-
-  for (Layer* child = aLayer->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    DumpLayer(aStream, child, aIndent + 1);
-  }
-}
-
-/* static */ void
-FrameLayerBuilder::DumpLayerTree(LayerManager* aManager)
-{
-  DumpLayer(stderr, aManager->GetRoot(), 0);
-}
-
 void
 FrameLayerBuilder::DumpRetainedLayerTree()
 {
   if (mRetainingManager) {
-    DumpLayerTree(mRetainingManager);
+    mRetainingManager->Dump(stderr);
   }
 }
 #endif

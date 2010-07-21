@@ -202,11 +202,6 @@ public:
 
 #ifdef DEBUG
   /**
-   * Dumps aManager's layer tree to stderr.
-   */
-  static void DumpLayerTree(LayerManager* aManager);
-
-  /**
    * Dumps this FrameLayerBuilder's retained layer manager's retained
    * layer tree to stderr.
    */

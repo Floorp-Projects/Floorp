@@ -204,6 +204,8 @@ protected:
   ImageLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD) {}
 
+  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+
   nsRefPtr<ImageContainer> mContainer;
   gfxPattern::GraphicsFilter mFilter;
 };
