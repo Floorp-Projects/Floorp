@@ -220,7 +220,7 @@ nsNodeUtils::ParentChainChanged(nsIContent *aContent)
 
   nsINode::nsSlots* slots = aContent->GetExistingSlots();
   if (slots && !slots->mMutationObservers.IsEmpty()) {
-    NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(
+    NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(
         slots->mMutationObservers,
         nsIMutationObserver,
         ParentChainChanged,
