@@ -904,14 +904,27 @@ nsEditor::EndPlaceHolderTransaction()
     if (selPrivate) {
       selPrivate->SetCanCacheFrameOffset(PR_TRUE);
     }
-    
-    // time to turn off the batch
-    EndUpdateViewBatch();
-    // make sure selection is in view
 
-    // After ScrollSelectionIntoView(), the pending notifications might be
-    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-    ScrollSelectionIntoView(PR_FALSE);
+    {
+      // Hide the caret here to avoid hiding it twice, once in EndUpdateViewBatch
+      // and once in ScrollSelectionIntoView.
+      nsRefPtr<nsCaret> caret;
+      nsCOMPtr<nsIPresShell> presShell;
+      GetPresShell(getter_AddRefs(presShell));
+
+      if (presShell)
+        caret = presShell->GetCaret();
+
+      StCaretHider caretHider(caret);
+
+      // time to turn off the batch
+      EndUpdateViewBatch();
+      // make sure selection is in view
+
+      // After ScrollSelectionIntoView(), the pending notifications might be
+      // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
+      ScrollSelectionIntoView(PR_FALSE);
+    }
 
     // cached for frame offset are Not available now
     if (selPrivate) {
