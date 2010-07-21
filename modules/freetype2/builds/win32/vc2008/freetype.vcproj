@@ -70,7 +70,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype2312.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype241.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype2312MT.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype241MT.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -220,7 +220,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype2312ST.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype241ST.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -292,7 +292,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype2312_D.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype241_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -365,7 +365,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype2312ST_D.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype241ST_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -439,7 +439,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\win32\vc2008\freetype2312MT_D.lib"
+				OutputFile="..\..\..\objs\win32\vc2008\freetype241MT_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -1317,6 +1317,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\base\ftwinfnt.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\base\ftxf86.c"
 					>
 				</File>
 				<File
