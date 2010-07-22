@@ -611,7 +611,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         {
             const jschar* chars=nsnull;
             JSString* str;
-            if(!(str = JS_ValueToString(cx, s))
+            if(!(str = JS_ValueToString(cx, s)))
             {
                 return JS_FALSE;
             }
