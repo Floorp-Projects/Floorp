@@ -248,6 +248,7 @@ namespace nanojit
     RegisterMask Assembler::nHint(LIns* ins)
     {
         NanoAssert(0);
+        return 0;
     }
 
     bool Assembler::canRemat(LIns* ins)
