@@ -215,9 +215,6 @@ extern void js_FinishLock(JSThinLock *);
 extern void
 js_ShareWaitingTitles(JSContext *cx);
 
-extern void
-js_NudgeOtherContexts(JSContext *cx);
-
 #ifdef DEBUG
 
 #define JS_IS_RUNTIME_LOCKED(rt)        js_IsRuntimeLocked(rt)

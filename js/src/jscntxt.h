@@ -965,6 +965,12 @@ struct JSPendingProxyOperation {
 };
 
 struct JSThreadData {
+    /*
+     * If this flag is set, we were asked to call back the operation callback
+     * as soon as possible.
+     */
+    volatile int32      operationCallbackFlag;
+
     JSGCFreeLists       gcFreeLists;
 
     /* Keeper of the contiguous stack used by all contexts in this thread. */
@@ -1027,6 +1033,16 @@ struct JSThreadData {
     void finish();
     void mark(JSTracer *trc);
     void purge(JSContext *cx);
+
+    void triggerOperationCallback() {
+        /*
+         * Use JS_ATOMIC_SET in the hope that it will make sure the write will
+         * become immediately visible to other processors polling the flag.
+         * Note that we only care about visibility here, not read/write
+         * ordering.
+         */
+        JS_ATOMIC_SET(&operationCallbackFlag, 1);
+    }
 };
 
 #ifdef JS_THREADSAFE
@@ -1677,12 +1693,6 @@ struct JSRegExpStatics {
 struct JSContext
 {
     explicit JSContext(JSRuntime *rt);
-
-    /*
-     * If this flag is set, we were asked to call back the operation callback
-     * as soon as possible.
-     */
-    volatile jsint      operationCallbackFlag;
 
     /* JSRuntime contextList linkage. */
     JSCList             link;
@@ -2942,8 +2952,9 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  * This macro can run the full GC. Return true if it is OK to continue and
  * false otherwise.
  */
-#define JS_CHECK_OPERATION_LIMIT(cx) \
-    (!(cx)->operationCallbackFlag || js_InvokeOperationCallback(cx))
+#define JS_CHECK_OPERATION_LIMIT(cx)                                          \
+    (JS_ASSERT((cx)->requestDepth >= 1),                                      \
+     (!JS_THREAD_DATA(cx)->operationCallbackFlag || js_InvokeOperationCallback(cx)))
 
 /*
  * Invoke the operation callback and return false if the current execution
