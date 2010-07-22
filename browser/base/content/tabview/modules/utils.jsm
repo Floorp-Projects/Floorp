@@ -523,27 +523,6 @@ window.Subscribable.prototype = {
 // Class: Utils
 // Singelton with common utility functions.
 var Utils = {
-  // ___ Windows and Tabs
-
-  // ----------
-  // Variable: activeTab
-  // The <Tabs> tab that represents the active tab in the active window.
-  get activeTab(){
-    try {
-      Utils.assert('tabBrowser', gBrowser);
-
-      var rawTab = gBrowser.selectedTab;
-      for ( var i=0; i<Tabs.length; i++){
-        if (Tabs[i].raw == rawTab)
-          return Tabs[i];
-      }
-    } catch(e) {
-      Utils.log(e);
-    }
-
-    return null;
-  },
-
   // ___ Logging
 
   // ----------
