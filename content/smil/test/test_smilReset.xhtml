@@ -25,7 +25,6 @@ SimpleTest.waitForExplicitFinish();
 
 function main() {
   var svg = document.getElementById("svg");
-  svg.setCurrentTime(0);
   ok(svg.animationsPaused(), "should be paused by <svg> load handler");
   is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 

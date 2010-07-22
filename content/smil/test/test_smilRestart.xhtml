@@ -58,8 +58,6 @@ function tryRestart(elem, state, expected) {
 }
 
 function main() {
-  svg.setCurrentTime(0);  // Workaround for bug 580077
-
   // At first everything should be starting at 1s
   is(always.getStartTime(), 1);
   is(whenNotActive.getStartTime(), 1);
