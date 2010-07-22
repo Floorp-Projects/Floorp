@@ -57,7 +57,7 @@ Storage = {
       // ToDo: the session store doesn't expose any public methods/variables for
       // us to check whether it's loaded or not so using a private one for
       // now.
-      var alreadyReady = Utils.getCurrentWindow().__SSi;
+      var alreadyReady = gWindow.__SSi;
       if (alreadyReady) {
         callback();
       } else {
@@ -68,7 +68,7 @@ Storage = {
           observe: function(subject, topic, data) {
             try {
               if (topic == "browser-delayed-startup-finished") {
-                if (subject == Utils.getCurrentWindow()) {
+                if (subject == gWindow) {
                   callback();
                 }
               }
@@ -100,8 +100,6 @@ Storage = {
   // Cleans out all the stored data, leaving empty objects.
   wipe: function() {
     try {
-      var win = Utils.getCurrentWindow();
-
       var self = this;
 
       // ___ Tabs
@@ -110,11 +108,11 @@ Storage = {
       });
 
       // ___ Other
-      this.saveGroupsData(win, {});
-      this.saveUIData(win, {});
-      this.saveVisibilityData(win, {});
+      this.saveGroupsData(gWindow, {});
+      this.saveUIData(gWindow, {});
+      this.saveVisibilityData(gWindow, {});
 
-      this._sessionStore.setWindowValue(win, this.GROUP_DATA_IDENTIFIER,
+      this._sessionStore.setWindowValue(gWindow, this.GROUP_DATA_IDENTIFIER,
         JSON.stringify({}));
     } catch (e) {
       Utils.log("Error in wipe: "+e);

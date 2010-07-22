@@ -46,6 +46,29 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gWindow", function() {
+  let windows = Services.wm.getEnumerator("navigator:browser");
+  while (windows.hasMoreElements()) {
+    let browser = windows.getNext();
+    let tabCandyFrame = browser.document.getElementById("tab-candy");
+    if (tabCandyFrame.contentWindow == window)
+      return browser;
+  }
+});
+
+XPCOMUtils.defineLazyGetter(this, "gBrowser", function() gWindow.gBrowser);
+
+XPCOMUtils.defineLazyGetter(this, "gTabDeck", function() {
+  return gWindow.document.getElementById("tab-candy-deck");
+});
+
+XPCOMUtils.defineLazyGetter(this, "gTabFrame", function() {
+  return gWindow.document.getElementById("tab-candy");
+});
+
 var consoleService = Cc["@mozilla.org/consoleservice;1"]
     .getService(Components.interfaces.nsIConsoleService);
 
@@ -507,36 +530,15 @@ var Utils = {
   // The <Tabs> tab that represents the active tab in the active window.
   get activeTab(){
     try {
-      var tabBrowser = this.getCurrentWindow().gBrowser;
-      Utils.assert('tabBrowser', tabBrowser);
+      Utils.assert('tabBrowser', gBrowser);
 
-      var rawTab = tabBrowser.selectedTab;
+      var rawTab = gBrowser.selectedTab;
       for ( var i=0; i<Tabs.length; i++){
         if (Tabs[i].raw == rawTab)
           return Tabs[i];
       }
     } catch(e) {
       Utils.log(e);
-    }
-
-    return null;
-  },
-
-  // ----------
-  // Function: getCurrentWindow
-  // Returns the nsIDOMWindowInternal for the currently active window,
-  // i.e. the window belonging to the active page's DOM "window" object.
-  getCurrentWindow: function() {
-    var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-             .getService(Ci.nsIWindowMediator);
-    var browserEnumerator = wm.getEnumerator("navigator:browser");
-    while (browserEnumerator.hasMoreElements()) {
-      var browserWin = browserEnumerator.getNext();
-      var tabbrowser = browserWin.gBrowser;
-      var tabCandyContainer = browserWin.document.getElementById("tab-candy");
-      if (tabCandyContainer && tabCandyContainer.contentWindow == window) {
-        return browserWin;
-      }
     }
 
     return null;

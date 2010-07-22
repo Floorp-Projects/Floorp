@@ -139,8 +139,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
   // Sets up the TabsManager and window.Tabs
   init: function TabsManager_init() {
     var self = this;
-    var chromeWindow = Utils.getCurrentWindow();
-    if (!chromeWindow || !chromeWindow.getBrowser || !chromeWindow.getBrowser()) {
+    if (!gWindow || !gWindow.getBrowser || !gWindow.getBrowser()) {
       iQ.timeout(function TabsManager_init_delayedInit() {
         self.init();
       }, 100);
@@ -149,7 +148,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
 
     var trackedTabs = [];
 
-    chromeWindow.tabcandyBrowserWindow = new BrowserWindow(chromeWindow);
+    gWindow.tabcandyBrowserWindow = new BrowserWindow(gWindow);
 
     var windows = {
       get focused() {

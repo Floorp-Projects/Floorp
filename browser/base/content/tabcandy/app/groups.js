@@ -389,7 +389,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
 
     var data = this.getStorageData();
     if (Groups.groupStorageSanity(data))
-      Storage.saveGroup(Utils.getCurrentWindow(), data);
+      Storage.saveGroup(gWindow, data);
   },
 
   // ----------
@@ -577,7 +577,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       Items.unsquish();
     });
 
-    Storage.deleteGroup(Utils.getCurrentWindow(), this.id);
+    Storage.deleteGroup(gWindow, this.id);
   },
 
   // ----------
@@ -1310,7 +1310,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
                 iQ(tab.container).css({opacity: 1});
                 newTab.focus();
                 Page.showChrome()
-                UI.navBar.urlBar.focus();
+                gWindow.gURLBar.focus();
                 $anim.remove();
                 // We need a timeout here so that there is a chance for the
                 // new tab to get made! Otherwise it won't appear in the list
@@ -1455,7 +1455,7 @@ window.Groups = {
     if (!this._inited) // too soon to save now
       return;
 
-    Storage.saveGroupsData(Utils.getCurrentWindow(), {nextID:this.nextID});
+    Storage.saveGroupsData(gWindow, {nextID:this.nextID});
   },
 
   // ----------
