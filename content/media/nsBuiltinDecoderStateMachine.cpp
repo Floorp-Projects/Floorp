@@ -817,29 +817,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
           // There is at most one frame in the queue and there's
           // more data to load. Let's buffer to make sure we can play a
           // decent amount of video in the future.
-          if (IsPlaying()) {
-            StopPlayback(AUDIO_PAUSE);
-            mDecoder->GetMonitor().NotifyAll();
-          }
-
-          // We need to tell the element that buffering has started.
-          // We can't just directly send an asynchronous runnable that
-          // eventually fires the "waiting" event. The problem is that
-          // there might be pending main-thread events, such as "data
-          // received" notifications, that mean we're not actually still
-          // buffering by the time this runnable executes. So instead
-          // we just trigger UpdateReadyStateForData; when it runs, it
-          // will check the current state and decide whether to tell
-          // the element we're buffering or not.
-          UpdateReadyState();
-
-          mBufferingStart = TimeStamp::Now();
-          PRPackedBool reliable;
-          double playbackRate = mDecoder->ComputePlaybackRate(&reliable);
-          mBufferingEndOffset = mDecoder->mDecoderPosition +
-              BUFFERING_RATE(playbackRate) * BUFFERING_WAIT;
-          mState = DECODER_STATE_BUFFERING;
-          LOG(PR_LOG_DEBUG, ("Changed state from DECODING to BUFFERING"));
+          StartBuffering();
         } else {
           if (mBufferExhausted) {
             // This will wake up the decode thread and force it to try to
@@ -943,10 +921,12 @@ nsresult nsBuiltinDecoderStateMachine::Run()
     case DECODER_STATE_BUFFERING:
       {
         TimeStamp now = TimeStamp::Now();
-        if (now - mBufferingStart < TimeDuration::FromSeconds(BUFFERING_WAIT) &&
-            mDecoder->GetCurrentStream()->GetCachedDataEnd(mDecoder->mDecoderPosition) < mBufferingEndOffset &&
-            !mDecoder->GetCurrentStream()->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
-            !mDecoder->GetCurrentStream()->IsSuspendedByCache()) {
+        nsMediaStream* stream = mDecoder->GetCurrentStream();
+        if (!mDecoder->CanPlayThrough() &&
+            now - mBufferingStart < TimeDuration::FromSeconds(BUFFERING_WAIT) &&
+            stream->GetCachedDataEnd(mDecoder->mDecoderPosition) < mBufferingEndOffset &&
+            !stream->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
+            !stream->IsSuspendedByCache()) {
           LOG(PR_LOG_DEBUG,
               ("In buffering: buffering data until %d bytes available or %f seconds",
                PRUint32(mBufferingEndOffset - mDecoder->GetCurrentStream()->GetCachedDataEnd(mDecoder->mDecoderPosition)),
@@ -1272,4 +1252,33 @@ void nsBuiltinDecoderStateMachine::LoadMetadata()
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
     return;
   }
+}
+
+void nsBuiltinDecoderStateMachine::StartBuffering()
+{
+  mDecoder->GetMonitor().AssertCurrentThreadIn();
+  mBufferExhausted = PR_TRUE;
+  if (IsPlaying()) {
+    StopPlayback(AUDIO_PAUSE);
+    mDecoder->GetMonitor().NotifyAll();
+  }
+
+  // We need to tell the element that buffering has started.
+  // We can't just directly send an asynchronous runnable that
+  // eventually fires the "waiting" event. The problem is that
+  // there might be pending main-thread events, such as "data
+  // received" notifications, that mean we're not actually still
+  // buffering by the time this runnable executes. So instead
+  // we just trigger UpdateReadyStateForData; when it runs, it
+  // will check the current state and decide whether to tell
+  // the element we're buffering or not.
+  UpdateReadyState();
+
+  mBufferingStart = TimeStamp::Now();
+  PRPackedBool reliable;
+  double playbackRate = mDecoder->ComputePlaybackRate(&reliable);
+  mBufferingEndOffset = mDecoder->mDecoderPosition +
+    BUFFERING_RATE(playbackRate) * BUFFERING_WAIT;
+  mState = DECODER_STATE_BUFFERING;
+  LOG(PR_LOG_DEBUG, ("Changed state from DECODING to BUFFERING"));
 }
