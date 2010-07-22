@@ -952,6 +952,10 @@ nsSVGSVGElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   if (aVisitor.mEvent->message == NS_SVG_LOAD) {
     if (mTimedDocumentRoot) {
       mTimedDocumentRoot->Begin();
+      // Set 'resample needed' flag, so that if any script calls a DOM method
+      // that requires up-to-date animations before our first sample callback,
+      // we'll force a synchronous sample.
+      AnimationNeedsResample();
     }
   }
   return nsSVGSVGElementBase::PreHandleEvent(aVisitor);
