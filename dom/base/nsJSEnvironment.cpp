@@ -1577,6 +1577,9 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 
   jsval val;
 
+  rv = sSecurityManager->PushContextPrincipal(mContext, nsnull, principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsJSContext::TerminationFuncHolder holder(this);
 
   // SecurityManager said "ok", but don't compile if aVersion is unknown.
@@ -1628,6 +1631,8 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
       *aIsUndefined = PR_TRUE;
     }
   }
+
+  sSecurityManager->PopContextPrincipal(mContext);
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
   if (NS_FAILED(stack->Pop(nsnull)))
@@ -1765,6 +1770,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   jsval val = JSVAL_VOID;
   jsval* vp = aRetValue ? &val : NULL;
 
+  rv = sSecurityManager->PushContextPrincipal(mContext, nsnull, principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsJSContext::TerminationFuncHolder holder(this);
 
   ++mExecuteDepth;
@@ -1813,6 +1821,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   }
 
   --mExecuteDepth;
+
+  sSecurityManager->PopContextPrincipal(mContext);
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
   if (NS_FAILED(stack->Pop(nsnull)))
@@ -1930,6 +1940,9 @@ nsJSContext::ExecuteScript(void *aScriptObject,
   jsval val;
   JSBool ok;
 
+  rv = sSecurityManager->PushContextPrincipal(mContext, nsnull, principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsJSContext::TerminationFuncHolder holder(this);
   JSAutoRequest ar(mContext);
   ++mExecuteDepth;
@@ -1953,6 +1966,8 @@ nsJSContext::ExecuteScript(void *aScriptObject,
   }
 
   --mExecuteDepth;
+
+  sSecurityManager->PopContextPrincipal(mContext);
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
   if (NS_FAILED(stack->Pop(nsnull)))
