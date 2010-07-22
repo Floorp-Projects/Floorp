@@ -390,7 +390,7 @@ fails-if(!prefs.getBoolPref("html5.enable")) == 311366-unknown-block-3.html 3113
 random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 328829-2.xhtml 328829-2-ref.xhtml
 == 329359-1.html 329359-1-ref.html
-== 331809-1.html 331809-1-ref.html
+== 331809-1.html 331809-1-ref.html # bug 580499 is blacked out
 == 332360.html 332360-ref.html
 == 332360-ltr.html 332360-ltr-ref.html
 == 332360-width.html 332360-ref.html
@@ -1122,7 +1122,7 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 == 446100-1c.html about:blank
 == 446100-1d.html about:blank
 == 446100-1e.html about:blank
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 446100-1f.html about:blank  # Fails due to AA on GTK2
+== 446100-1f.html about:blank
 == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 # == 448193.html 448193-ref.html  # Fails due to 2 small single-pixel differences
