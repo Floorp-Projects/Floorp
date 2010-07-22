@@ -208,7 +208,8 @@ protected:
 
   // Helper method
   nsresult SetValueInternal(const nsAString& aValue,
-                            PRBool aUserInput);
+                            PRBool aUserInput,
+                            PRBool aSetValueChanged);
 
   void ClearFileNames() {
     nsTArray<nsString> fileNames;
