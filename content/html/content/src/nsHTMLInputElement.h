@@ -280,7 +280,7 @@ protected:
    * Do all the work that |SetChecked| does (radio button handling, etc.), but
    * take an |aNotify| parameter.
    */
-  nsresult DoSetChecked(PRBool aValue, PRBool aNotify = PR_TRUE);
+  nsresult DoSetChecked(PRBool aValue, PRBool aNotify, PRBool aSetValueChanged);
 
   /**
    * Do all the work that |SetCheckedChanged| does (radio button handling,
