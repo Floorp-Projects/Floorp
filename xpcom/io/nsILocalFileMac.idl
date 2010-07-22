@@ -50,7 +50,7 @@
 [ptr] native FSRefPtr(FSRef);
       native CFURLRef(CFURLRef);
 
-[scriptable, uuid(86D685E5-EE3F-405A-B521-446529DB82E5)]
+[scriptable, uuid(DE4C75BE-D42B-4F8C-95D9-284C83CF29A4)]
 interface nsILocalFileMac : nsILocalFile
 {
    /**
@@ -77,18 +77,6 @@ interface nsILocalFileMac : nsILocalFile
     *
     */
   [noscript] void initWithFSRef([const] in FSRefPtr aFSRef);
-
-   /**
-    * initToAppWithCreatorCode
-    *
-    * Init this object to point to an application having the given
-    * creator code. If this app is missing, this will fail. It will first
-    * look for running application with the given creator.
-    *
-    * @param   aAppCreator     the signature of the app
-    *
-    */
-  [noscript] void initToAppWithCreatorCode(in OSType aAppCreator);
 
     /**
     * getCFURL
@@ -149,12 +137,7 @@ interface nsILocalFileMac : nsILocalFile
     *
     */
    readonly attribute PRInt64 fileSizeWithResFork;
-    
-   /**
-    * Use with SetFileType() to specify the signature of current process
-    */
-   const unsigned long CURRENT_PROCESS_CREATOR = 0x8000000;
-    
+
    /**
     * fileType, creator
     *
