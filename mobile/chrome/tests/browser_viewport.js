@@ -47,12 +47,25 @@ let testURL = function testURL(n) {
 
 let working_tab;
 function pageLoaded(url) {
+  dump("------- pageLoaded: " + url + "\n")
   return function() {
+    dump("------- waiting for pageLoaded: " + working_tab.browser.currentURI.spec + "\n")
     return !working_tab.isLoading() && working_tab.browser.currentURI.spec == url;
   }
 }
 
-let numberTests = 10;
+let testData = [
+  { width: 800,     scale: 1 },
+  { width: 533.33,  scale: 1.5 },
+  { width: 533.33,  scale: 1.5 },
+  { width: 533.33,  scale: 1.5,    disableZoom: true },
+  { width: 200,     scale: 4.00 },
+  { width: 2000,    scale: 1.125,  minScale: 1.125 },
+  { width: 266.67,  scale: 3,      maxScale: 3 },
+  { width: 2000,    scale: 1.125 },
+  { width: 10000,   scale: 4 },
+  { width: 533.33,  scale: 1.5,    disableZoom: true }
+];
 
 //------------------------------------------------------------------------------
 // Entry point (must be named "test")
@@ -60,9 +73,10 @@ function test() {
   // This test is async
   waitForExplicitFinish();
 
-  working_tab = Browser.addTab("", true);
+  working_tab = Browser.addTab(testURL_blank, true);
   ok(working_tab, "Tab Opened");
-  startTest(0);
+
+  waitFor(function() { startTest(0); }, pageLoaded(testURL_blank));
 }
 
 function startTest(n) {
@@ -108,12 +122,6 @@ function is_approx(actual, expected, fuzz, description) {
      description + " [got " + actual + ", expected " + expected + "]");
 }
 
-function getMetaTag(name) {
-  let doc = working_tab.browser.contentDocument;
-  let elements = doc.querySelectorAll("meta[name=\"" + name + "\"]");
-  return elements[0] ? elements[0].getAttribute("content") : undefined;
-}
-
 function verifyTest(n) {
   return function() {
     is(window.innerWidth, 800, "Test assumes window width is 800px");
@@ -123,22 +131,14 @@ function verifyTest(n) {
     var uri = working_tab.browser.currentURI.spec;
     is(uri, testURL(n), "URL is "+testURL(n));
 
-    // Expected results are grabbed from the test HTML file
-    let data = (function() {
-      let result = {};
-      for (let i = 0; i < arguments.length; i++)
-        result[arguments[i]] = getMetaTag("expected-" + arguments[i]);
-
-      return result;
-    })("width", "scale", "minWidth", "maxWidth", "disableZoom");
-
+    let data = testData[n];
     let style = window.getComputedStyle(working_tab.browser, null);
     let actualWidth = parseFloat(style.width.replace(/[^\d\.]+/, ""));
-    is_approx(actualWidth, parseFloat(data.width), .01, "Viewport width="+data.width);
+    is_approx(actualWidth, parseFloat(data.width), .01, "Viewport width=" + data.width);
 
     let bv = Browser._browserView;
     let zoomLevel = bv.getZoomLevel();
-    is_approx(bv.getZoomLevel(), parseFloat(data.scale), .01, "Viewport scale="+data.scale);
+    is_approx(bv.getZoomLevel(), parseFloat(data.scale), .01, "Viewport scale=" + data.scale);
 
     // Test zooming
     if (data.disableZoom) {
@@ -176,7 +176,7 @@ function verifyTest(n) {
 }
 
 function finishTest(n) {
-  if (n+1 < numberTests) {
+  if (n+1 < testData.length) {
     startTest(n+1);
   } else {
     Browser.closeTab(working_tab);
