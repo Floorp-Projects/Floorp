@@ -144,6 +144,14 @@ SessionStore.prototype = {
         });
         break;
       case "quit-application-granted":
+        // Get a current snapshot of all windows
+        this._forEachBrowserWindow(function(aWindow) {
+          self._collectWindowData(aWindow);
+        });
+
+        // Freeze the data at what we've got (ignoring closing windows)
+        this._loadState = STATE_QUITTING;
+        break;
       case "quit-application":
         // Freeze the data at what we've got (ignoring closing windows)
         this._loadState = STATE_QUITTING;
@@ -159,6 +167,7 @@ SessionStore.prototype = {
         if (this._saveTimer) {
           this._saveTimer.cancel();
           this._saveTimer = null;
+          this.saveState();
         }
         break;
       case "timer-callback":
@@ -265,7 +274,7 @@ SessionStore.prototype = {
   },
   
   onTabAdd: function ss_onTabAdd(aWindow, aBrowser, aNoNotification) {
-    aBrowser.messageManager.addMessageListener("pageshow", this, true);
+    aBrowser.messageManager.addMessageListener("pageshow", this);
     
     if (!aNoNotification)
       this.saveStateDelayed();
@@ -273,7 +282,7 @@ SessionStore.prototype = {
   },
 
   onTabRemove: function ss_onTabRemove(aWindow, aBrowser, aNoNotification) {
-    aBrowser.messageManager.removeMessageListener("pageshow", this, true);
+    aBrowser.messageManager.removeMessageListener("pageshow", this);
     
     delete aBrowser.__SS_data;
     
