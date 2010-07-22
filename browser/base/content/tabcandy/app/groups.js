@@ -1267,7 +1267,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Creates a new tab within this group.
   newTab: function(url) {
     Groups.setActiveGroup(this);
-    var newTab = Tabs.open(url || "about:blank", true);
+    let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
     // Because opening a new tab happens in a different thread(?)
     // calling Page.hideChrome() inline won't do anything. Instead
@@ -1308,7 +1308,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
               duration: 270,
               complete: function(){
                 iQ(tab.container).css({opacity: 1});
-                newTab.focus();
+                gBrowser.selectedTab = newTab;
                 Page.showChrome()
                 gWindow.gURLBar.focus();
                 $anim.remove();
