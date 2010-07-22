@@ -1,9 +1,10 @@
 # NB: Certain files need to evaluate before others
 
+Components.utils.import("resource://gre/modules/tabview/tabs.js");
+
 #include core/profile.js
 #include core/utils.js
 #include core/iq.js
-#include core/tabs.js
 #include app/storage.js
 #include app/items.js
 #include app/groups.js
