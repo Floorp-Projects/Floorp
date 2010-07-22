@@ -112,14 +112,14 @@ window.Group = function Group(listOfEls, options) {
   this.xDensity = 0;
   this.yDensity = 0;
 
-  if (isPoint(options.userSize))
+  if (Utils.isPoint(options.userSize))
     this.userSize = new Point(options.userSize);
 
   var self = this;
 
   var rectToBe;
   if (options.bounds) {
-    Utils.assert("options.bounds must be a Rect",isRect(options.bounds));
+    Utils.assert("options.bounds must be a Rect",Utils.isRect(options.bounds));
     rectToBe = new Rect(options.bounds);
   }
 
@@ -367,7 +367,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
       id: this.id
     };
 
-    if (isPoint(this.userSize))
+    if (Utils.isPoint(this.userSize))
       data.userSize = new Point(this.userSize);
 
     return data;
@@ -457,7 +457,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Possible options:
   //   force - true to always update the DOM even if the bounds haven't changed; default false
   setBounds: function(rect, immediately, options) {
-    if (!isRect(rect)) {
+    if (!Utils.isRect(rect)) {
       Utils.trace('Group.setBounds: rect is not a real rectangle!', rect);
       return;
     }
@@ -1523,7 +1523,7 @@ window.Groups = {
   groupStorageSanity: function(groupData) {
     // TODO: check everything
     var sane = true;
-    if (!isRect(groupData.bounds)) {
+    if (!Utils.isRect(groupData.bounds)) {
       Utils.log('Groups.groupStorageSanity: bad bounds', groupData.bounds);
       sane = false;
     }

@@ -198,7 +198,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   getStorageData: function(getImageData) {
     return {
       bounds: this.getBounds(),
-      userSize: (isPoint(this.userSize) ? new Point(this.userSize) : null),
+      userSize: (Utils.isPoint(this.userSize) ? new Point(this.userSize) : null),
       url: this.tab.url,
       groupID: (this.parent ? this.parent.id : 0),
       imageData: (getImageData && this.tab.mirror.tabCanvas ?
@@ -245,7 +245,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   // Possible options:
   //   force - true to always update the DOM even if the bounds haven't changed; default false
   setBounds: function(rect, immediately, options) {
-    if (!isRect(rect)) {
+    if (!Utils.isRect(rect)) {
       Utils.trace('TabItem.setBounds: rect is not a real rectangle!', rect);
       return;
     }
@@ -378,7 +378,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
     this._updateDebugBounds();
     rect = this.getBounds(); // ensure that it's a <Rect>
 
-    if (!isRect(this.bounds))
+    if (!Utils.isRect(this.bounds))
       Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
 
     if (!this.parent && !this.tab.closed)
@@ -706,7 +706,7 @@ window.TabItems = {
   // TODO: check everything
   storageSanity: function(data) {
     var sane = true;
-    if (!isRect(data.bounds)) {
+    if (!Utils.isRect(data.bounds)) {
       Utils.log('TabItems.storageSanity: bad bounds', data.bounds);
       sane = false;
     }
@@ -737,7 +737,7 @@ window.TabItems = {
 
         item.setBounds(tabData.bounds, true);
 
-        if (isPoint(tabData.userSize))
+        if (Utils.isPoint(tabData.userSize))
           item.userSize = new Point(tabData.userSize);
 
         if (tabData.groupID) {
