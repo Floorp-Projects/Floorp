@@ -187,8 +187,17 @@ public:
     GLuint Texture() { return mTexture; }
 
     /** Can be called safely at any time. */
+
+    /**
+     * If this TextureImage has a permanent gfxASurface backing,
+     * return it.  Otherwise return NULL.
+     */
+    virtual already_AddRefed<gfxASurface> GetBackingSurface()
+    { return NULL; }
+
     const nsIntSize& GetSize() const { return mSize; }
     ContentType GetContentType() const { return mContentType; }
+    virtual PRBool InUpdate() const = 0;
 
 protected:
     /**
@@ -225,6 +234,8 @@ public:
 
     virtual gfxContext* BeginUpdate(nsIntRegion& aRegion);
     virtual PRBool EndUpdate();
+
+    virtual PRBool InUpdate() const { return !!mUpdateContext; }
 
 protected:
     typedef gfxASurface::gfxImageFormat ImageFormat;
