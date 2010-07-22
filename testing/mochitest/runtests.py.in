@@ -690,9 +690,10 @@ overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-t
     return self.installChromeFile(temp_file, options)
 
   def installChromeFile(self, filename, options):
-    (p, file) = os.path.split(filename)
     (path, leaf) = os.path.split(options.app)
-    manifest = os.path.join(path, "chrome", file)
+    manifestdir = os.path.join(path, "distribution", "bundles", "mochitest")
+    os.makedirs(manifestdir)
+    manifest = os.path.join(manifestdir, "chrome.manifest")
     shutil.copy(filename, manifest)
     return manifest
 
