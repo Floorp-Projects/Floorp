@@ -449,7 +449,9 @@ nsHTMLTextAreaElement::BindToFrame(nsTextControlFrame* aFrame)
 NS_IMETHODIMP_(void)
 nsHTMLTextAreaElement::UnbindFromFrame(nsTextControlFrame* aFrame)
 {
-  mState->UnbindFromFrame(aFrame);
+  if (aFrame) {
+    mState->UnbindFromFrame(aFrame);
+  }
 }
 
 NS_IMETHODIMP
