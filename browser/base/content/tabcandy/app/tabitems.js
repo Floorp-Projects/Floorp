@@ -745,7 +745,7 @@ window.TabItems = {
           if (group) {
             group.add(item);
 
-            if (item.tab == Utils.activeTab)
+            if (item.tab.raw == gBrowser.selectedTab)
               Groups.setActiveGroup(item.parent);
           }
         }
