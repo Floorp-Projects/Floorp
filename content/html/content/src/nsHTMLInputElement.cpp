@@ -329,7 +329,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
         nsAutoString value;
         const_cast<nsHTMLInputElement*>(this)->GetValue(value);
         // SetValueInternal handles setting the VALUE_CHANGED bit for us
-        it->SetValueInternal(value, PR_FALSE);
+        it->SetValueInternal(value, PR_FALSE, PR_TRUE);
       }
       break;
     case NS_FORM_INPUT_FILE:
@@ -663,7 +663,7 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
     }
   }
   else {
-    SetValueInternal(aValue, PR_FALSE);
+    SetValueInternal(aValue, PR_FALSE, PR_TRUE);
   }
 
   return NS_OK;
@@ -729,7 +729,7 @@ nsHTMLInputElement::SetUserInput(const nsAString& aValue)
   {
     SetSingleFileName(aValue);
   } else {
-    SetValueInternal(aValue, PR_TRUE);
+    SetValueInternal(aValue, PR_TRUE, PR_TRUE);
   }
   return NS_OK;
 }
@@ -927,7 +927,8 @@ nsHTMLInputElement::UpdateFileList()
 
 nsresult
 nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
-                                     PRBool aUserInput)
+                                     PRBool aUserInput,
+                                     PRBool aSetValueChanged)
 {
   NS_PRECONDITION(mType != NS_FORM_INPUT_FILE,
                   "Don't call SetValueInternal for file inputs");
@@ -943,7 +944,9 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
     nsAutoString value(aValue);
     SanitizeValue(value);
 
-    SetValueChanged(PR_TRUE);
+    if (aSetValueChanged) {
+      SetValueChanged(PR_TRUE);
+    }
     mInputData.mState->SetValue(value, aUserInput);
 
     return NS_OK;
@@ -2028,11 +2031,9 @@ nsHTMLInputElement::HandleTypeChange(PRUint8 aNewType)
   // readability and not so helpful.
   if (IsSingleLineTextControlInternal(PR_FALSE, mType)) {
     nsAutoString value;
-    PRBool valueChanged = ValueChanged();
     GetValue(value);
     // SetValueInternal is going to sanitize the value.
-    SetValueInternal(value, PR_FALSE);
-    SetValueChanged(valueChanged);
+    SetValueInternal(value, PR_FALSE, PR_FALSE);
   }
 }
 
@@ -2389,7 +2390,7 @@ nsHTMLInputElement::SetDefaultValueAsValue()
       nsAutoString resetVal;
       GetDefaultValue(resetVal);
       // SetValueInternal is going to sanitize the value.
-      return SetValueInternal(resetVal, PR_FALSE);
+      return SetValueInternal(resetVal, PR_FALSE, PR_FALSE);
     }
     case NS_FORM_INPUT_FILE:
     {
@@ -2728,7 +2729,7 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
       case NS_FORM_INPUT_TEL:
       case NS_FORM_INPUT_HIDDEN:
         {
-          SetValueInternal(inputState->GetValue(), PR_FALSE);
+          SetValueInternal(inputState->GetValue(), PR_FALSE, PR_TRUE);
           break;
         }
       case NS_FORM_INPUT_FILE:
