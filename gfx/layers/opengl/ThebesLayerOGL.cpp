@@ -36,58 +36,249 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "ThebesLayerBuffer.h"
 #include "ThebesLayerOGL.h"
-#include "ContainerLayerOGL.h"
-#include "gfxContext.h"
-#include "gfxPlatform.h"
-#ifdef XP_WIN
-#include "gfxWindowsSurface.h"
-#endif
-#include "GLContextProvider.h"
 
 namespace mozilla {
 namespace layers {
 
-using namespace mozilla::gl;
+using gl::TextureImage;
+
+class ThebesLayerBufferOGL
+{
+  NS_INLINE_DECL_REFCOUNTING(ThebesLayerBufferOGL)
+public:
+  typedef TextureImage::ContentType ContentType;
+  typedef ThebesLayerBuffer::PaintState PaintState;
+
+  ThebesLayerBufferOGL(ThebesLayerOGL* aLayer, TextureImage* aTexImage)
+    : mLayer(aLayer)
+    , mTexImage(aTexImage)
+  {}
+  virtual ~ThebesLayerBufferOGL() {}
+
+  virtual PaintState BeginPaint(ContentType aContentType) = 0;
+
+  void RenderTo(const nsIntPoint& aOffset, LayerManagerOGL* aManager);
+
+protected:
+  mozilla::gl::GLContext* gl() const { return mLayer->gl(); }
+
+  ThebesLayerOGL* mLayer;
+  nsRefPtr<TextureImage> mTexImage;
+};
+
+void
+ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
+                               LayerManagerOGL* aManager)
+{
+  // Note BGR: Cairo's image surfaces are always in what
+  // OpenGL and our shaders consider BGR format.
+  ColorTextureLayerProgram *program =
+    mLayer->CanUseOpaqueSurface()
+    ? aManager->GetBGRXLayerProgram()
+    : aManager->GetBGRALayerProgram();
+
+  if (!mTexImage->InUpdate() || !mTexImage->EndUpdate()) {
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
+  }
+
+  nsIntRect quadRect = mLayer->GetVisibleRegion().GetBounds();
+  program->Activate();
+  program->SetLayerQuadRect(quadRect);
+  program->SetLayerOpacity(mLayer->GetOpacity());
+  program->SetLayerTransform(mLayer->GetTransform());
+  program->SetRenderOffset(aOffset);
+  program->SetTextureUnit(0);
+  DEBUG_GL_ERROR_CHECK(gl());
+
+  // FIXME/bug 573829: draw with appropriate rotation
+  aManager->BindAndDrawQuad(program);
+  DEBUG_GL_ERROR_CHECK(gl());
+}
+
+
+// This implementation is the fast-path for when our TextureImage is
+// permanently backed with a server-side ASurface.  We can simply
+// reuse the ThebesLayerBuffer logic in its entirety and profit.
+class SurfaceBufferOGL : public ThebesLayerBufferOGL, private ThebesLayerBuffer
+{
+public:
+  typedef ThebesLayerBufferOGL::ContentType ContentType;
+  typedef ThebesLayerBufferOGL::PaintState PaintState;
+
+  SurfaceBufferOGL(ThebesLayerOGL* aLayer, TextureImage* aTexImage)
+    : ThebesLayerBufferOGL(aLayer, aTexImage)
+    , ThebesLayerBuffer(SizedToVisibleBounds)
+  {
+    mTmpSurface = mTexImage->GetBackingSurface();
+    NS_ABORT_IF_FALSE(mTmpSurface, "SurfaceBuffer without backing surface??");
+  }
+  virtual ~SurfaceBufferOGL() {}
+
+  // ThebesLayerBufferOGL interface
+  virtual PaintState BeginPaint(ContentType aContentType)
+  {
+    // Let ThebesLayerBuffer do all the hard work for us! :D
+    return ThebesLayerBuffer::BeginPaint(mLayer, aContentType);
+  }
+
+  // ThebesLayerBuffer interface
+  virtual already_AddRefed<gfxASurface>
+  CreateBuffer(ContentType aType, const nsIntSize& aSize)
+  {
+    NS_ASSERTION(gfxASurface::CONTENT_ALPHA != aType,"ThebesBuffer has color");
+
+    if (mTmpSurface)
+    {
+      NS_ASSERTION(aSize == mTexImage->GetSize(),
+                   "initial TextureImage is the wrong size");
+      NS_ASSERTION(aType == mTexImage->GetContentType(),
+                   "initial TextureImage has the wrong content type");
+      // We were just created, and this is the first buffer paint.
+      // This is the first time ThebesLayerBuffer has asked for a
+      // buffer, so hand it the surface we already created.  From here
+      // on we take the normal path below.
+      return mTmpSurface.forget();
+    }
+
+    mTexImage = gl()->CreateTextureImage(aSize, aType,
+                                         LOCAL_GL_CLAMP_TO_EDGE);
+    return mTexImage ? mTexImage->GetBackingSurface() : nsnull;
+  }
+
+private:
+  nsRefPtr<gfxASurface> mTmpSurface;
+};
+
+
+// This implementation is (currently) the slow-path for when we can't
+// implement pixel retaining using thebes.  This implementation and
+// the above could be unified by abstracting buffer-copy operations
+// and implementing them here using GL hacketry.
+class BasicBufferOGL : public ThebesLayerBufferOGL
+{
+public:
+  BasicBufferOGL(ThebesLayerOGL* aLayer, TextureImage* aTexImage)
+    : ThebesLayerBufferOGL(aLayer, aTexImage)
+  {}
+  virtual ~BasicBufferOGL() {}
+
+  virtual PaintState BeginPaint(ContentType aContentType);
+
+private:
+  nsIntRect mBufferRect;
+};
+
+BasicBufferOGL::PaintState
+BasicBufferOGL::BeginPaint(ContentType aContentType)
+{
+  PaintState state;
+  nsIntRect visibleRect = mLayer->GetVisibleRegion().GetBounds();
+
+  if (aContentType != mTexImage->GetContentType() ||
+      visibleRect.Size() != mTexImage->GetSize())
+  {
+    mBufferRect = nsIntRect();
+    mTexImage = gl()->CreateTextureImage(visibleRect.Size(), aContentType,
+                                         LOCAL_GL_CLAMP_TO_EDGE);
+    DEBUG_GL_ERROR_CHECK(gl());
+    if (!mTexImage) {
+      return state;
+    }
+  }
+  NS_ABORT_IF_FALSE((mTexImage->GetContentType() == aContentType &&
+                     mTexImage->GetSize() == visibleRect.Size()),
+                    "TextureImage matches layer attributes");
+
+  state.mRegionToDraw = mLayer->GetVisibleRegion();
+  if (mBufferRect != visibleRect) {
+    // FIXME/bug 573829: keep some of these pixels, if we can!
+    state.mRegionToInvalidate = mLayer->GetValidRegion();
+    mBufferRect = visibleRect;
+  } else {
+    state.mRegionToDraw.Sub(state.mRegionToDraw, mLayer->GetValidRegion());
+  }
+  if (state.mRegionToDraw.IsEmpty()) {
+    return state;
+  }
+
+  // Offset the region to draw by our visible region's origin, before
+  // passing to BeginUpdate.  The TextureImage has no concept of an
+  // origin, only a size, so it always represents a 0,0 origin area.
+  // The layer however has a position, represented by its visible
+  // region.  So we have to move things around so that we can interact
+  // with the TextureImage.
+  state.mRegionToDraw.MoveBy(-visibleRect.TopLeft());
+
+  // BeginUpdate is allowed to modify the given region,
+  // if it wants more to be repainted than we request.
+  state.mContext = mTexImage->BeginUpdate(state.mRegionToDraw);
+  if (!state.mContext) {
+    NS_WARNING("unable to get context for update");
+    return state;
+  }
+
+  // Move rgnToPaint back into position so that the thebes callback
+  // gets the right coordintes.
+  state.mRegionToDraw.MoveBy(visibleRect.TopLeft());
+
+  // Translate the context so that we're matching the layer's
+  // origin, not the 0,0-based TextureImage
+  state.mContext->Translate(-gfxPoint(visibleRect.x, visibleRect.y));
+
+  //ClipToRegion(ctx, rgnToDraw);
+  if (gfxASurface::CONTENT_COLOR_ALPHA == aContentType) {
+    state.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+    state.mContext->Paint();
+    state.mContext->SetOperator(gfxContext::OPERATOR_OVER);
+  }
+  return state;
+}
+
 
 ThebesLayerOGL::ThebesLayerOGL(LayerManagerOGL *aManager)
   : ThebesLayer(aManager, nsnull)
   , LayerOGL(aManager)
-  , mTexImage(nsnull)
+  , mBuffer(nsnull)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
 
 ThebesLayerOGL::~ThebesLayerOGL()
 {
-  mTexImage = nsnull;
+  mBuffer = nsnull;
   DEBUG_GL_ERROR_CHECK(gl());
 }
 
 PRBool
-ThebesLayerOGL::EnsureSurface()
+ThebesLayerOGL::CreateSurface()
 {
+  NS_ASSERTION(!mBuffer, "buffer already created?");
+
+  if (mVisibleRegion.IsEmpty()) {
+    return PR_FALSE;
+  }
+
   nsIntSize visibleSize = mVisibleRegion.GetBounds().Size();
   TextureImage::ContentType contentType =
     CanUseOpaqueSurface() ? gfxASurface::CONTENT_COLOR :
                             gfxASurface::CONTENT_COLOR_ALPHA;
-  if (!mTexImage ||
-      mTexImage->GetSize() != visibleSize ||
-      mTexImage->GetContentType() != contentType)
-  {
-    mValidRegion.SetEmpty();
-    mTexImage = nsnull;
-    DEBUG_GL_ERROR_CHECK(gl());
+  nsRefPtr<TextureImage> teximage(
+    gl()->CreateTextureImage(visibleSize, contentType,
+                             LOCAL_GL_CLAMP_TO_EDGE));
+  if (!teximage) {
+    return PR_FALSE;
   }
 
-  if (!mTexImage && !mVisibleRegion.IsEmpty())
-  {
-    mTexImage = gl()->CreateTextureImage(visibleSize,
-                                         contentType,
-                                         LOCAL_GL_CLAMP_TO_EDGE);
-    DEBUG_GL_ERROR_CHECK(gl());
+  nsRefPtr<gfxASurface> surf = teximage->GetBackingSurface();
+  if (surf) {
+    // use the ThebesLayerBuffer fast-path
+    mBuffer = new SurfaceBufferOGL(this, teximage);
+  } else {
+    mBuffer = new BasicBufferOGL(this, teximage);
   }
-  return !!mTexImage;
+  return PR_TRUE;
 }
 
 void
@@ -96,8 +287,6 @@ ThebesLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
   if (aRegion.IsEqual(mVisibleRegion))
     return;
   ThebesLayer::SetVisibleRegion(aRegion);
-  // FIXME/bug 573829: keep some of these pixels, if we can!
-  mValidRegion.SetEmpty();
 }
 
 void
@@ -107,78 +296,35 @@ ThebesLayerOGL::InvalidateRegion(const nsIntRegion &aRegion)
 }
 
 void
-ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
+ThebesLayerOGL::RenderLayer(int /*unused aPreviousFrameBuffer*/,
                             const nsIntPoint& aOffset)
 {
-  if (!EnsureSurface())
+  if (!mBuffer && !CreateSurface()) {
     return;
+  }
+  NS_ABORT_IF_FALSE(mBuffer, "should have a buffer here");
 
   mOGLManager->MakeCurrent();
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
-  nsIntRegion rgnToPaint = mVisibleRegion;
-  rgnToPaint.Sub(rgnToPaint, mValidRegion);
-  PRBool textureBound = PR_FALSE;
-  if (!rgnToPaint.IsEmpty()) {
-    nsIntRect visibleRect = mVisibleRegion.GetBounds();
+  TextureImage::ContentType contentType =
++    CanUseOpaqueSurface() ? gfxASurface::CONTENT_COLOR :
+                            gfxASurface::CONTENT_COLOR_ALPHA;
+  Buffer::PaintState state = mBuffer->BeginPaint(contentType);
+  mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
-    // Offset rgnToPaint by our visible region's origin, before
-    // passing to BeginUpdate.  The TextureImage has no concept of an
-    // origin, only a size, so it always represents a 0,0 origin area.
-    // The layer however has a position, represented by its visible
-    // region.  So we have to move things around so that we can
-    // interact with the TextureImage.
-    rgnToPaint.MoveBy(-visibleRect.TopLeft());
+  if (state.mContext) {
+    state.mRegionToInvalidate.And(state.mRegionToInvalidate, mVisibleRegion);
 
-    // BeginUpdate is allowed to modify the given region,
-    // if it wants more to be repainted than we request.
-    nsRefPtr<gfxContext> ctx = mTexImage->BeginUpdate(rgnToPaint);
-    if (!ctx) {
-      NS_WARNING("unable to get context for update");
-      return;
-    }
-
-    // Move rgnToPaint back into position so that the thebes callback
-    // gets the right coordintes.
-    rgnToPaint.MoveBy(visibleRect.TopLeft());
-
-    // Translate the context so that we're matching the layer's
-    // origin, not the 0,0-based TextureImage
-    ctx->Translate(-gfxPoint(visibleRect.x, visibleRect.y));
-
-    TextureImage::ContentType contentType = mTexImage->GetContentType();
-    //ClipToRegion(ctx, rgnToDraw);
-    if (gfxASurface::CONTENT_COLOR_ALPHA == contentType) {
-      ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
-      ctx->Paint();
-      ctx->SetOperator(gfxContext::OPERATOR_OVER);
-    }
-
-    mOGLManager->CallThebesLayerDrawCallback(this, ctx, rgnToPaint);
-
-    textureBound = mTexImage->EndUpdate();
-    mValidRegion.Or(mValidRegion, rgnToPaint);
+    LayerManager::DrawThebesLayerCallback callback =
+      mOGLManager->GetThebesLayerCallback();
+    void* callbackData = mOGLManager->GetThebesLayerCallbackData();
+    callback(this, state.mContext, state.mRegionToDraw,
+             state.mRegionToInvalidate, callbackData);
+    mValidRegion.Or(mValidRegion, state.mRegionToDraw);
   }
 
-  if (!textureBound)
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
-
-  // Note BGR: Cairo's image surfaces are always in what
-  // OpenGL and our shaders consider BGR format.
-  ColorTextureLayerProgram *program =
-    CanUseOpaqueSurface()
-    ? mOGLManager->GetBGRXLayerProgram()
-    : mOGLManager->GetBGRALayerProgram();
-
-  program->Activate();
-  program->SetLayerQuadRect(mVisibleRegion.GetBounds());
-  program->SetLayerOpacity(GetOpacity());
-  program->SetLayerTransform(mTransform);
-  program->SetRenderOffset(aOffset);
-  program->SetTextureUnit(0);
-
-  mOGLManager->BindAndDrawQuad(program);
-
+  mBuffer->RenderTo(aOffset, mOGLManager);
   DEBUG_GL_ERROR_CHECK(gl());
 }
 
@@ -191,7 +337,7 @@ ThebesLayerOGL::GetLayer()
 PRBool
 ThebesLayerOGL::IsEmpty()
 {
-  return !mTexImage;
+  return !mBuffer;
 }
 
 } /* layers */
