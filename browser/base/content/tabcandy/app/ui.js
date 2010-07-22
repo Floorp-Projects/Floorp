@@ -91,7 +91,6 @@ var UIManager = {
   init: function() {
     try {
       Storage.init();
-      TabsManager.init();
       TabMirror.init();
 
       var self = this;
@@ -447,7 +446,7 @@ var UIManager = {
       }, 1);
     });
 
-    Tabs.onFocus(function() {
+    Tabs.onSelect(function() {
       self.tabOnFocus(this);
     });
   },

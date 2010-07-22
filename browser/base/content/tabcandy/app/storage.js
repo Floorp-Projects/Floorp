@@ -103,7 +103,7 @@ Storage = {
       var self = this;
 
       // ___ Tabs
-      Tabs.forEach(function(tab) {
+      Tabs.allTabs.forEach(function(tab) {
         self.saveTab(tab, null);
       });
 
