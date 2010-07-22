@@ -46,21 +46,6 @@
 window.Keys = {meta: false};
 
 // ##########
-// Class: Navbar
-// Singleton for helping with the browser's nav bar.
-Navbar = {
-  // ----------
-  // Variable: urlBar
-  // The URL bar for the window.
-  get urlBar() {
-    var win = Utils.getCurrentWindow();
-    if (win)
-      return win.gURLBar;
-    return null;
-  }
-};
-
-// ##########
 // Class: Tabbar
 // Singleton for managing the tabbar of the browser.
 var Tabbar = {
@@ -99,7 +84,6 @@ var Tabbar = {
       if (!options)
         options = {};
 
-      var tabbrowser = Utils.getCurrentWindow().gBrowser;
       var tabBarTabs = this._getAllTabs();
       var visibleTabs = tabs.map(function(tab) tab.tab.raw);
 
@@ -123,7 +107,7 @@ var Tabbar = {
       // thumbnail order.
       if (!options.dontReorg) {
         visibleTabs.forEach(function(visibleTab) {
-          tabbrowser.moveTabTo(visibleTab, tabBarTabs.length - 1);
+          gBrowser.moveTabTo(visibleTab, tabBarTabs.length - 1);
         });
       }
     } catch(e) {
@@ -153,19 +137,17 @@ window.Page = {
   // Function: isTabCandyVisible
   // Returns true if the TabCandy UI is currently shown.
   isTabCandyVisible: function(){
-    return (Utils.getCurrentWindow().document.getElementById("tab-candy-deck").
-             selectedIndex == 1);
+    return gTabDeck.selectedIndex == 1;
   },
 
   // ----------
   // Function: hideChrome
   // Hides the main browser UI and shows TabCandy.
   hideChrome: function(){
-    var currentWin = Utils.getCurrentWindow();
-    currentWin.document.getElementById("tab-candy-deck").selectedIndex = 1;
-    currentWin.document.getElementById("tab-candy").contentWindow.focus();
+    gTabDeck.selectedIndex = 1;
+    gTabFrame.contentWindow.focus();
 
-    currentWin.gBrowser.updateTitlebar();
+    gBrowser.updateTitlebar();
 #ifdef XP_MACOSX
     this._setActiveTitleColor(true);
 #endif
@@ -175,17 +157,15 @@ window.Page = {
   // Function: showChrome
   // Shows the main browser UI and hides Tab Candy.
   showChrome: function(){
-    var currentWin = Utils.getCurrentWindow();
-    var tabContainer = currentWin.gBrowser.tabContainer;
-    currentWin.document.getElementById("tab-candy-deck").selectedIndex = 0;
-    currentWin.gBrowser.contentWindow.focus();
+    gTabDeck.selectedIndex = 0;
+    gBrowser.contentWindow.focus();
 
     // set the close button on tab
 /*     iQ.timeout(function() { // Marshal event from chrome thread to DOM thread    */
-      tabContainer.adjustTabstrip();
+      gBrowser.tabContainer.adjustTabstrip();
 /*     }, 1); */
 
-    currentWin.gBrowser.updateTitlebar();
+    gBrowser.updateTitlebar();
 #ifdef XP_MACOSX
     this._setActiveTitleColor(false);
 #endif
@@ -201,8 +181,7 @@ window.Page = {
   //   set - true for the special TabCandy color, false for the normal color.
   _setActiveTitleColor: function(set) {
     // Mac Only
-    var mainWindow =
-      Utils.getCurrentWindow().document.getElementById("main-window");
+    var mainWindow = gWindow.document.getElementById("main-window");
     if (set)
       mainWindow.setAttribute("activetitlebarcolor", "#C4C4C4");
     else
@@ -251,10 +230,7 @@ window.Page = {
 
     // When you click on the background/empty part of TabCandy,
     // we create a new group.
-    var tabCandyContentDoc =
-      Utils.getCurrentWindow().document.getElementById("tab-candy").
-        contentDocument;
-    iQ(tabCandyContentDoc).mousedown(function(e){
+    iQ(gTabFrame.contentDocument).mousedown(function(e){
       if ( e.originalTarget.id == "content" )
         self._createGroupOnDrag(e)
     });
@@ -276,7 +252,7 @@ window.Page = {
         // there are no visible tabs.
         if ((group && group._children.length == 1) ||
             (group == null &&
-             Utils.getCurrentWindow().gBrowser.visibleTabs.length == 1)) {
+             gBrowser.visibleTabs.length == 1)) {
           self._closedLastVisibleTab = true;
           // remove the zoom prep.
           if (this && this.mirror) {
@@ -311,7 +287,6 @@ window.Page = {
   tabOnFocus: function(tab) {
     var focusTab = tab;
     var currentTab = UI.currentTab;
-    var currentWindow = Utils.getCurrentWindow();
     var self = this;
 
     UI.currentTab = focusTab;
@@ -349,7 +324,7 @@ window.Page = {
         return;
       }
 
-      var visibleTabCount = currentWindow.gBrowser.visibleTabs.length;
+      var visibleTabCount = gBrowser.visibleTabs.length;
 
       var newItem = null;
       if (focusTab && focusTab.mirror)
@@ -612,7 +587,7 @@ window.Page = {
     }
 
     iQ(window).mousemove(updateSize)
-    iQ(Utils.getCurrentWindow()).one('mouseup', finalize);
+    iQ(gWindow).one('mouseup', finalize);
     e.preventDefault();
     return false;
   },
@@ -661,10 +636,6 @@ window.Page = {
 // Singleton top-level UI manager. TODO: Integrate with <Page>.
 function UIClass() {
   try {
-    // Variable: navBar
-    // A reference to the <Navbar>, for manipulating the browser's nav bar.
-    this.navBar = Navbar;
-
     // Variable: tabBar
     // A reference to the <Tabbar>, for manipulating the browser's tab bar.
     this.tabBar = Tabbar;
@@ -730,16 +701,15 @@ UIClass.prototype = {
       });
 
       // ___ Page
-      var currentWindow = Utils.getCurrentWindow();
       Page.init();
 
-      currentWindow.addEventListener(
+      gWindow.addEventListener(
         "tabcandyshow", function() {
           Page.hideChrome();
           Page.showTabCandy();
         }, false);
 
-      currentWindow.addEventListener(
+      gWindow.addEventListener(
         "tabcandyhide", function() {
           var activeTab = Page.getActiveTab();
           if (activeTab) {
@@ -762,14 +732,12 @@ UIClass.prototype = {
   _delayInit : function() {
     try {
       // ___ Storage
-      var currentWindow = Utils.getCurrentWindow();
-
-      var data = Storage.readUIData(currentWindow);
+      var data = Storage.readUIData(gWindow);
       this._storageSanity(data);
 
-      var groupsData = Storage.readGroupsData(currentWindow);
+      var groupsData = Storage.readGroupsData(gWindow);
       var firstTime = !groupsData || iQ.isEmptyObject(groupsData);
-      var groupData = Storage.readGroupData(currentWindow);
+      var groupData = Storage.readGroupData(gWindow);
       Groups.reconstitute(groupsData, groupData);
 
       TabItems.init();
@@ -827,7 +795,7 @@ UIClass.prototype = {
       });
 
       // ___ show tab candy at startup
-      var visibilityData = Storage.readVisibilityData(currentWindow);
+      var visibilityData = Storage.readVisibilityData(gWindow);
       if (visibilityData && visibilityData.visible) {
         var currentTab = UI.currentTab;
         var item;
@@ -875,10 +843,9 @@ UIClass.prototype = {
   // so they do the right thing in respect to groups.
   _setBrowserKeyHandlers : function() {
     var self = this;
-    var currentWin = Utils.getCurrentWindow();
-    var tabbox = currentWin.gBrowser.mTabBox;
+    var tabbox = gBrowser.mTabBox;
 
-    currentWin.addEventListener("keypress", function(event) {
+    gWindow.addEventListener("keypress", function(event) {
       if (Page.isTabCandyVisible()) {
         return;
       }
@@ -999,7 +966,7 @@ UIClass.prototype = {
   //   index - go to a particular tab; numerical value from 1 to 9
   _advanceSelectedTab : function(reverse, index) {
     Utils.assert('reverse should be false when index exists', !index || !reverse);
-    var tabbox = Utils.getCurrentWindow().gBrowser.mTabBox;
+    var tabbox = gBrowser.mTabBox;
     var tabs = tabbox.tabs;
     var visibleTabs = [];
     var selectedIndex;
@@ -1229,7 +1196,7 @@ UIClass.prototype = {
     };
 
     if (this._storageSanity(data))
-      Storage.saveUIData(Utils.getCurrentWindow(), data);
+      Storage.saveUIData(gWindow, data);
   },
 
   // ----------
@@ -1252,7 +1219,7 @@ UIClass.prototype = {
   // Function: _saveVisibility
   // Saves to storage whether the TabCandy UI is visible (as passed in).
   _saveVisibility: function(isVisible) {
-    Storage.saveVisibilityData(Utils.getCurrentWindow(), { visible: isVisible });
+    Storage.saveVisibilityData(gWindow, { visible: isVisible });
   },
 
   // ----------
