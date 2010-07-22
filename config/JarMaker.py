@@ -52,8 +52,9 @@ from MozZipFile import ZipFile
 from cStringIO import StringIO
 from datetime import datetime
 
-from utils import pushback_iter
+from utils import pushback_iter, lockFile
 from Preprocessor import Preprocessor
+from buildlist import addEntriesToListFile
 
 __all__ = ['JarMaker']
 
@@ -164,7 +165,7 @@ class JarMaker(object):
     pass
 
   def finalizeJar(self, jarPath, chromebasepath, register,
-                   doZip=True):
+                  doZip=True):
     '''Helper method to write out the chrome registration entries to
     jarfile.manifest or chrome.manifest, or both.
 
@@ -173,35 +174,42 @@ class JarMaker(object):
     # rewrite the manifest, if entries given
     if not register:
       return
+
+    chromeManifest = os.path.join(os.path.dirname(jarPath),
+                                  '..', 'chrome.manifest')
+
     if self.useJarfileManifest:
       self.updateManifest(jarPath + '.manifest', chromebasepath % '',
                           register)
+      addEntriesToListFile(chromeManifest, ['manifest chrome/%s.manifest' % (os.path.basename(jarPath),)])
     if self.useChromeManifest:
-      manifestPath = os.path.join(os.path.dirname(jarPath),
-                                  '..', 'chrome.manifest')
-      self.updateManifest(manifestPath, chromebasepath % 'chrome/',
+      self.updateManifest(chromeManifest, chromebasepath % 'chrome/',
                           register)
 
   def updateManifest(self, manifestPath, chromebasepath, register):
     '''updateManifest replaces the % in the chrome registration entries
     with the given chrome base path, and updates the given manifest file.
     '''
-    myregister = dict.fromkeys(map(lambda s: s.replace('%', chromebasepath),
-                                   register.iterkeys()))
-    manifestExists = os.path.isfile(manifestPath)
-    mode = (manifestExists and 'r+b') or 'wb'
-    mf = open(manifestPath, mode)
-    if manifestExists:
-      # import previous content into hash, ignoring empty ones and comments
-      imf = re.compile('(#.*)?$')
-      for l in re.split('[\r\n]+', mf.read()):
-        if imf.match(l):
-          continue
-        myregister[l] = None
-      mf.seek(0)
-    for k in myregister.iterkeys():
-      mf.write(k + os.linesep)
-    mf.close()
+    lock = lockFile(manifestPath + '.lck')
+    try:
+      myregister = dict.fromkeys(map(lambda s: s.replace('%', chromebasepath),
+                                     register.iterkeys()))
+      manifestExists = os.path.isfile(manifestPath)
+      mode = (manifestExists and 'r+b') or 'wb'
+      mf = open(manifestPath, mode)
+      if manifestExists:
+        # import previous content into hash, ignoring empty ones and comments
+        imf = re.compile('(#.*)?$')
+        for l in re.split('[\r\n]+', mf.read()):
+          if imf.match(l):
+            continue
+          myregister[l] = None
+        mf.seek(0)
+      for k in myregister.iterkeys():
+        mf.write(k + os.linesep)
+      mf.close()
+    finally:
+      lock = None
   
   def makeJar(self, infile=None,
                jardir='',
