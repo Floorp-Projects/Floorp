@@ -493,24 +493,11 @@ nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPageURI,
   if (mFaviconsExpirationRunning)
     return NS_OK;
 
-#ifdef LAZY_ADD
-  // Unfortunatly, even if DoSetAndLoadFaviconForPage is completely async,
-  // this method still needs to enqueue a lazy message, because in case of first
-  // visit to a page, the moz_places entry would not yet exists.
-  // So the icon has to wait for visits addition.  Once visits addition will be
-  // async, this can go away.
-  nsNavHistory* historyService = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(historyService, NS_ERROR_OUT_OF_MEMORY);
-  return historyService->AddLazyLoadFaviconMessage(aPageURI,
-                                                   aFaviconURI,
-                                                   aForceReload,
-                                                   aCallback);
-#else
-  return DoSetAndLoadFaviconForPage(aPageURI,
-                                    aFaviconURI,
-                                    aForceReload,
-                                    aCallback);
-#endif
+  nsresult rv = DoSetAndLoadFaviconForPage(aPageURI, aFaviconURI, aForceReload,
+                                           aCallback);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 
