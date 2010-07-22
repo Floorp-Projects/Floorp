@@ -979,18 +979,17 @@ UIClass.prototype = {
           return;
         }
       }
-#ifdef XP_MACOSX
-      // Cmd + { / Cmd + }
-      if (event.metaKey && !event.altKey && !event.ctrlKey &&
-          (charCode == 123 || charCode == 125)) {
+
+      // Control (+ Shift) + `
+      if (event.ctrlKey && !event.metaKey && !event.altKey &&
+          (charCode == 96 || charCode == 126)) {
         event.stopPropagation();
         event.preventDefault();
-        var reverse =
-          (window.getComputedStyle(tabbox, "").direction ==
-            "ltr" ? true : false);
-        self._advanceSelectedTab(charCode == 123 ? reverse : !reverse);
+        var tabBrowser = currentWin.gBrowser;
+        var tabItem = Groups.getNextGroupTab(event.shiftKey);
+        if (tabItem)
+          tabBrowser.selectedTab = tabItem.tab.raw;
       }
-#endif
     }, true);
   },
 
