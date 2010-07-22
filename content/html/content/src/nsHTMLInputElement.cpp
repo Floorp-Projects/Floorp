@@ -780,7 +780,7 @@ NS_IMETHODIMP_(void)
 nsHTMLInputElement::UnbindFromFrame(nsTextControlFrame* aFrame)
 {
   nsTextEditorState *state = GetEditorState();
-  if (state) {
+  if (state && aFrame) {
     state->UnbindFromFrame(aFrame);
   }
 }
