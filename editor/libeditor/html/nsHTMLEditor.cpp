@@ -426,10 +426,7 @@ nsHTMLEditor::FindSelectionRoot(nsINode *aNode)
 
   // For non-readonly editors we want to find the root of the editable subtree
   // containing aContent.
-  nsIContent *parent;
-  while ((parent = content->GetParent()) && parent->HasFlag(NODE_IS_EDITABLE)) {
-    content = parent;
-  }
+  content = content->GetEditingHost();
   return content.forget();
 }
 
@@ -628,17 +625,6 @@ nsHTMLEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
     // When we're not editable, the events are handled on nsEditor, so, we can
     // bypass nsPlaintextEditor.
     return nsEditor::HandleKeyPressEvent(aKeyEvent);
-  }
-
-  // Don't handle events which do not belong to us (by making sure that the
-  // target of the event is actually editable).
-  // XXX we can remove this check after bug 389372
-  nsCOMPtr<nsIDOMEventTarget> target;
-  nsresult rv = aKeyEvent->GetTarget(getter_AddRefs(target));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(target);
-  if (!IsModifiableNode(targetNode)) {
-    return NS_OK;
   }
 
   nsKeyEvent* nativeKeyEvent = GetNativeKeyEvent(aKeyEvent);
@@ -4200,8 +4186,7 @@ nsHTMLEditor::SelectAll()
   
   // If the anchor content has independent selection, we never need to explicitly
   // select its children.
-  nsIFrame* frame = anchorContent->GetPrimaryFrame();
-  if (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) {
+  if (anchorContent->HasIndependentSelection()) {
     nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
     NS_ENSURE_TRUE(selPriv, NS_ERROR_UNEXPECTED);
     rv = selPriv->SetAncestorLimiter(nsnull);
@@ -5804,11 +5789,47 @@ nsHTMLEditor::HasFocus()
   // If the focused content isn't editable, or it has independent selection,
   // we don't have focus.
   if (!focusedContent->HasFlag(NODE_IS_EDITABLE) ||
-      IsIndependentSelectionContent(focusedContent)) {
+      focusedContent->HasIndependentSelection()) {
     return PR_FALSE;
   }
   // If our window is focused, we're focused.
   return OurWindowHasFocus();
+}
+
+PRBool
+nsHTMLEditor::IsActiveInDOMWindow()
+{
+  NS_ENSURE_TRUE(mDocWeak, PR_FALSE);
+
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE(fm, PR_FALSE);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  PRBool inDesignMode = doc->HasFlag(NODE_IS_EDITABLE);
+
+  // If we're in designMode, we're always active in the DOM window.
+  if (inDesignMode) {
+    return PR_TRUE;
+  }
+
+  nsPIDOMWindow* ourWindow = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindow> win;
+  nsIContent* content =
+    nsFocusManager::GetFocusedDescendant(ourWindow, PR_FALSE,
+                                         getter_AddRefs(win));
+  if (!content) {
+    return PR_FALSE;
+  }
+
+  // We're HTML editor for contenteditable
+
+  // If the active content isn't editable, or it has independent selection,
+  // we're not active).
+  if (!content->HasFlag(NODE_IS_EDITABLE) ||
+      content->HasIndependentSelection()) {
+    return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 already_AddRefed<nsPIDOMEventTarget>
@@ -5920,11 +5941,46 @@ nsHTMLEditor::OurWindowHasFocus()
 }
 
 PRBool
-nsHTMLEditor::IsIndependentSelectionContent(nsIContent* aContent)
+nsHTMLEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
 {
-  NS_PRECONDITION(aContent, "aContent must not be null");
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-  return (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION));
+  if (!nsEditor::IsAcceptableInputEvent(aEvent)) {
+    return PR_FALSE;
+  }
+
+  NS_ENSURE_TRUE(mDocWeak, PR_FALSE);
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+  NS_ENSURE_TRUE(target, PR_FALSE);
+
+  nsCOMPtr<nsIDocument> document = do_QueryReferent(mDocWeak);
+  if (document->HasFlag(NODE_IS_EDITABLE)) {
+    // If this editor is in designMode and the event target is the document,
+    // the event is for this editor.
+    nsCOMPtr<nsIDocument> targetDocument = do_QueryInterface(target);
+    if (targetDocument) {
+      return targetDocument == document;
+    }
+    // Otherwise, check whether the event target is in this document or not.
+    nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+    NS_ENSURE_TRUE(targetContent, PR_FALSE);
+    return document == targetContent->GetCurrentDoc();
+  }
+
+  // If this is for contenteditable, we should check whether the target is
+  // editable or not.
+  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+  NS_ENSURE_TRUE(targetContent, PR_FALSE);
+  if (!targetContent->HasFlag(NODE_IS_EDITABLE) ||
+      targetContent->HasIndependentSelection()) {
+    return PR_FALSE;
+  }
+
+  // Finally, check whether we're actually focused or not.  When we're not
+  // focused, we should ignore the dispatched event by script (or something)
+  // because content editable element needs selection in itself for editing.
+  // However, when we're not focused, it's not guaranteed.
+  return IsActiveInDOMWindow();
 }
 
 NS_IMETHODIMP
