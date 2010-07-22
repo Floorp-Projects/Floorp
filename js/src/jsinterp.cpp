@@ -845,14 +845,15 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
         /*
          * We want to call |down->varobj()|, but this requires knowing the
-         * CallStack of |down|. If |down == cx->fp|, the callstack is simply
-         * the context's active callstack, so we can use |down->varobj(cx)|.
-         * When |down != cx->fp|, we need to do a slow linear search. Luckily,
-         * this only happens with indirect eval and JS_EvaluateInStackFrame.
+         * CallStackSegment of |down|. If |down == cx->fp|, the callstack is
+         * simply the context's active callstack, so we can use
+         * |down->varobj(cx)|.  When |down != cx->fp|, we need to do a slow
+         * linear search. Luckily, this only happens with indirect eval and
+         * JS_EvaluateInStackFrame.
          */
         initialVarObj = (down == cx->fp)
                         ? down->varobj(cx)
-                        : down->varobj(cx->containingCallStack(down));
+                        : down->varobj(cx->containingSegment(down));
     } else {
         fp->callobj = NULL;
         fp->argsobj = NULL;
@@ -3948,8 +3949,8 @@ BEGIN_CASE(JSOP_GVARINC)
         DO_OP();
     }
     slot = (uint32)lref.toInt32();
-    JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
-    JSObject *varobj = cx->activeCallStack()->getInitialVarObj();
+    JS_ASSERT(fp->varobj(cx) == cx->activeSegment()->getInitialVarObj());
+    JSObject *varobj = cx->activeSegment()->getInitialVarObj();
 
     /* XXX all this code assumes that varobj is either a callobj or global and
      * that it cannot be accessed in a MT way. This is either true now or
@@ -5309,8 +5310,8 @@ BEGIN_CASE(JSOP_CALLGVAR)
         op = (op == JSOP_GETGVAR) ? JSOP_NAME : JSOP_CALLNAME;
         DO_OP();
     }
-    JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
-    JSObject *varobj = cx->activeCallStack()->getInitialVarObj();
+    JS_ASSERT(fp->varobj(cx) == cx->activeSegment()->getInitialVarObj());
+    JSObject *varobj = cx->activeSegment()->getInitialVarObj();
 
     /* XXX all this code assumes that varobj is either a callobj or global and
      * that it cannot be accessed in a MT way. This is either true now or
@@ -5330,8 +5331,8 @@ BEGIN_CASE(JSOP_SETGVAR)
     JS_ASSERT(slot < GlobalVarCount(fp));
     METER_SLOT_OP(op, slot);
     const Value &rref = regs.sp[-1];
-    JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
-    JSObject *obj = cx->activeCallStack()->getInitialVarObj();
+    JS_ASSERT(fp->varobj(cx) == cx->activeSegment()->getInitialVarObj());
+    JSObject *obj = cx->activeSegment()->getInitialVarObj();
     const Value &lref = fp->slots()[slot];
     if (lref.isNull()) {
         /*

@@ -143,7 +143,7 @@ class InvokeArgsGuard;
 class TraceRecorder;
 struct TraceMonitor;
 class StackSpace;
-class CallStack;
+class CallStackSegment;
 
 class TokenStream;
 struct Token;
