@@ -720,10 +720,6 @@ UIClass.prototype = {
         self._reset();
       });
 
-      iQ("#feedback").click(function(){
-        self._newTab('http://feedback.mozillalabs.com/forums/56804-tabcandy');
-      });
-
       iQ(window).bind('beforeunload', function() {
         // Things may not all be set up by now, so check for everything
         if (self.showChrome)
@@ -1178,11 +1174,6 @@ UIClass.prototype = {
           self._reset();
         }
       }, {
-        name: 'code docs',
-        code: function() {
-          self._newTab('http://hg.mozilla.org/labs/tabcandy/raw-file/tip/content/doc/index.html');
-        }
-      }, {
         name: 'save',
         code: function() {
           self._saveAll();
@@ -1311,21 +1302,6 @@ UIClass.prototype = {
 
     Groups.arrange();
   },
-
-  // ----------
-  // Function: _newTab
-  // Opens a new tab with the given URL.
-  _newTab: function(url) {
-    try {
-      var group = Groups.getNewTabGroup();
-      if (group)
-        group.newTab(url);
-      else
-        Tabs.open(url);
-    } catch(e) {
-      Utils.log(e);
-    }
-  }
 };
 
 // ----------
