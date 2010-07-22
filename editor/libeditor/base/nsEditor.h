@@ -659,19 +659,8 @@ public:
            IsInteractionAllowed();
   }
 
-  // Whether the editor has application level focus or not.
+  // Whether the editor has focus or not.
   virtual PRBool HasFocus();
-
-  // Whether the editor is active on the DOM window.  Note that when this
-  // returns true but HasFocus() returns false, it means that this editor was
-  // focused when the DOM window was active.
-  virtual PRBool IsActiveInDOMWindow();
-
-  // Whether the aEvent should be handled by this editor or not.  When this
-  // returns FALSE, The aEvent shouldn't be handled on this editor,
-  // i.e., The aEvent should be handled by another inner editor or ancestor
-  // elements.
-  virtual PRBool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
 
   // FindSelectionRoot() returns a selection root of this editor when aNode
   // gets focus.  aNode must be a content node or a document node.  When the
