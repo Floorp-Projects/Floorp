@@ -5710,9 +5710,9 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
      * no space (which will try to deep bail, which is bad), however we already
      * check on entry to ExecuteTree that there is enough space.
      */
-    CallStack *cs;
+    CallStackSegment *css;
     JSStackFrame *fp;
-    cx->stack().getSynthesizedSlowNativeFrame(cx, cs, fp);
+    cx->stack().getSynthesizedSlowNativeFrame(cx, css, fp);
 
 #ifdef DEBUG
     JSObject *callee = &state.nativeVp[0].toObject();
@@ -5739,7 +5739,7 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
 
     state.bailedSlowNativeRegs = *cx->regs;
 
-    cx->stack().pushSynthesizedSlowNativeFrame(cx, cs, fp, state.bailedSlowNativeRegs);
+    cx->stack().pushSynthesizedSlowNativeFrame(cx, css, fp, state.bailedSlowNativeRegs);
 
     state.bailedSlowNativeRegs.pc = NULL;
     state.bailedSlowNativeRegs.sp = fp->slots();
