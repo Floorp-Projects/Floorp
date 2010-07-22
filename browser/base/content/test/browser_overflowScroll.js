@@ -1,7 +1,7 @@
-var tabContainer = gBrowser.tabContainer;
-var tabstrip = tabContainer.mTabstrip;
+var tabstrip = gBrowser.tabContainer.mTabstrip;
 var scrollbox = tabstrip._scrollbox;
 var originalSmoothScroll = tabstrip.smoothScroll;
+var tabs = gBrowser.tabs;
 
 function rect(ele)           ele.getBoundingClientRect();
 function width(ele)          rect(ele).width;
@@ -12,6 +12,7 @@ function isRight(ele, msg)   is(right(ele), right(scrollbox), msg);
 function elementFromPoint(x) tabstrip._elementFromPoint(x);
 function nextLeftElement()   elementFromPoint(left(scrollbox) - 1);
 function nextRightElement()  elementFromPoint(right(scrollbox) + 1);
+function firstScrollable()   tabs[gBrowser._numPinnedTabs];
 
 function test() {
   waitForExplicitFinish();
@@ -27,8 +28,9 @@ function doTest() {
 
   var tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
   var tabCountForOverflow = Math.ceil(width(tabstrip) / tabMinWidth * 3);
-  while (tabContainer.childNodes.length < tabCountForOverflow)
+  while (tabs.length < tabCountForOverflow)
     gBrowser.addTab("about:blank", {skipAnimation: true});
+  gBrowser.pinTab(tabs[0]);
 
   tabstrip.addEventListener("overflow", runOverflowTests, false);
 }
@@ -43,15 +45,15 @@ function runOverflowTests(aEvent) {
   var downButton = tabstrip._scrollButtonDown;
   var element;
 
-  gBrowser.selectedTab = tabContainer.firstChild;
-  isLeft(tabContainer.firstChild, "Selecting the first tab scrolls it into view");
+  gBrowser.selectedTab = firstScrollable();
+  isLeft(firstScrollable(), "Selecting the first tab scrolls it into view");
 
   element = nextRightElement();
   EventUtils.synthesizeMouse(downButton, 1, 1, {});
   isRight(element, "Scrolled one tab to the right with a single click");
 
-  gBrowser.selectedTab = tabContainer.lastChild;
-  isRight(tabContainer.lastChild, "Selecting the last tab scrolls it into view");
+  gBrowser.selectedTab = tabs[tabs.length - 1];
+  isRight(gBrowser.selectedTab, "Selecting the last tab scrolls it into view");
 
   element = nextLeftElement();
   EventUtils.synthesizeMouse(upButton, 1, 1, {});
@@ -62,18 +64,18 @@ function runOverflowTests(aEvent) {
   isLeft(element, "Scrolled one page of tabs with a double click");
 
   EventUtils.synthesizeMouse(upButton, 1, 1, {clickCount: 3});
-  isLeft(tabContainer.firstChild, "Scrolled to the start with a triple click");
+  isLeft(firstScrollable(), "Scrolled to the start with a triple click");
 
   for (var i = 2; i; i--)
     EventUtils.synthesizeMouseScroll(scrollbox, 1, 1, {axis: "horizontal", delta: -1});
-  isLeft(tabContainer.firstChild, "Remained at the start with the mouse wheel");
+  isLeft(firstScrollable(), "Remained at the start with the mouse wheel");
 
   element = nextRightElement();
   EventUtils.synthesizeMouseScroll(scrollbox, 1, 1, {axis: "horizontal", delta: 1});
   isRight(element, "Scrolled one tab to the right with the mouse wheel");
 
-  while (tabContainer.childNodes.length > 1)
-    gBrowser.removeTab(tabContainer.lastChild);
+  while (tabs.length > 1)
+    gBrowser.removeTab(tabs[0]);
 
   tabstrip.smoothScroll = originalSmoothScroll;
   finish();
