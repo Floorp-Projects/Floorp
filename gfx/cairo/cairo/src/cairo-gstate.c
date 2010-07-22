@@ -1443,7 +1443,19 @@ _cairo_gstate_clip_extents (cairo_gstate_t *gstate,
 cairo_rectangle_list_t*
 _cairo_gstate_copy_clip_rectangle_list (cairo_gstate_t *gstate)
 {
-    return _cairo_clip_copy_rectangle_list (&gstate->clip, gstate);
+    cairo_clip_t clip;
+    cairo_rectangle_int_t extents;
+    cairo_rectangle_list_t *list;
+
+    _cairo_clip_init_copy (&clip, &gstate->clip);
+
+    if (_cairo_surface_get_extents (gstate->target, &extents))
+        _cairo_clip_rectangle (&clip, &extents);
+
+    list = _cairo_clip_copy_rectangle_list (&clip, gstate);
+    _cairo_clip_fini (&clip);
+
+    return list;
 }
 
 static void
