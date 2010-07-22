@@ -411,11 +411,9 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     // If @value is changed and BF_VALUE_CHANGED is false, @value is the value
     // of the element so we call |Reset| which is getting the default value and
     // sets it to the current value.
-    //
-    // TODO: |Reset| should not be used as it's not really meant for that.
     if (aName == nsGkAtoms::value &&
         !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
-      Reset();
+      SetDefaultValueAsValue();
     }
 
     //
@@ -2372,20 +2370,16 @@ FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 }
 #endif
 
-NS_IMETHODIMP
-nsHTMLInputElement::Reset()
+nsresult
+nsHTMLInputElement::SetDefaultValueAsValue()
 {
-  nsresult rv = NS_OK;
-
   switch (mType) {
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
     {
       PRBool resetVal;
       GetDefaultChecked(&resetVal);
-      rv = DoSetChecked(resetVal);
-      SetCheckedChanged(PR_FALSE);
-      break;
+      return DoSetChecked(resetVal);
     }
     case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_PASSWORD:
@@ -2395,9 +2389,7 @@ nsHTMLInputElement::Reset()
       nsAutoString resetVal;
       GetDefaultValue(resetVal);
       // SetValueInternal is going to sanitize the value.
-      rv = SetValueInternal(resetVal, PR_FALSE);
-      SetValueChanged(PR_FALSE);
-      break;
+      return SetValueInternal(resetVal, PR_FALSE);
     }
     case NS_FORM_INPUT_FILE:
     {
@@ -2411,7 +2403,31 @@ nsHTMLInputElement::Reset()
       break;
   }
 
-  return rv;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::Reset()
+{
+  nsresult rv = SetDefaultValueAsValue();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch (mType) {
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_RADIO:
+      SetCheckedChanged(PR_FALSE);
+      break;
+    case NS_FORM_INPUT_SEARCH:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_TEL:
+      SetValueChanged(PR_FALSE);
+      break;
+    default:
+      break;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
