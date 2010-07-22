@@ -2239,7 +2239,9 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
      */
     JSAtom **atoms = script->atomMap.vector;
 
+#ifdef JS_METHODJIT
     bool leaveOnTracePoint = (fp->flags & JSFRAME_BAILING) && !fp->imacpc;
+#endif
 
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
@@ -2331,7 +2333,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
 #define TRACE_RECORDER(cx) (false)
 #endif
 
-#define LEAVE_ON_TRACE_POINT()                                                \
+#ifdef JS_METHODJIT
+# define LEAVE_ON_TRACE_POINT()                                                \
     do {                                                                      \
         if (leaveOnTracePoint && !fp->imacpc &&                               \
             script->nmap && script->nmap[regs.pc - script->code]) {           \
@@ -2339,6 +2342,9 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
             goto stop_recording;                                              \
         }                                                                     \
     } while (0)
+#else
+# define LEAVE_ON_TRACE_POINT() /* nop */
+#endif
 
 #define BRANCH(n)                                                             \
     JS_BEGIN_MACRO                                                            \
@@ -7143,7 +7149,9 @@ END_CASE(JSOP_ARRAYPUSH)
         goto error;
     }
 
+#ifdef JS_METHODJIT
   stop_recording:
+#endif
     JS_ASSERT(cx->regs == &regs);
     *prevContextRegs = regs;
     cx->setCurrentRegs(prevContextRegs);
