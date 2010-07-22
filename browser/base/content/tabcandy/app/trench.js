@@ -137,14 +137,14 @@ Trench.prototype = {
     var page = Items.getPageBounds( true );
 
     // optionally, set the range.
-    if (isRange(range)) {
+    if (Utils.isRange(range)) {
       this.range = range;
     } else {
       this.range = new Range( 0, (this.xory == 'x' ? page.height : page.width) );
     }
 
     // if there's a minRange, set that too.
-    if (isRange(minRange))
+    if (Utils.isRange(minRange))
       this.minRange = minRange;
 
     // set the appropriate bounds as a rect.
@@ -164,7 +164,7 @@ Trench.prototype = {
   // Parameters:
   //   activeRange - (<Range>)
   setActiveRange: function Trench_setActiveRect(activeRange) {
-    if (!isRange(activeRange))
+    if (!Utils.isRange(activeRange))
       return false;
     this.activeRange = activeRange;
     if ( this.xory == "x" ) { // horizontal
@@ -185,7 +185,7 @@ Trench.prototype = {
   //   rect - (<Rect>)
   setWithRect: function Trench_setWithRect(rect) {
 
-    if (!isRect(rect))
+    if (!Utils.isRect(rect))
       Utils.error('argument must be Rect');
 
     // First, calculate the range for this trench.
@@ -380,8 +380,8 @@ Trench.prototype = {
   //   position - (integer) a position in px
   //   range - (<Range>) the rule's range
   ruleOverlaps: function Trench_ruleOverlaps(position, range) {
-    return (this.position - this.radius <= position && position <= this.position + this.radius
-            && this.activeRange.overlaps(range));
+    return (this.position - this.radius < position && position < this.position + this.radius
+            && this.activeRange.contains(range));
   },
 
   //----------

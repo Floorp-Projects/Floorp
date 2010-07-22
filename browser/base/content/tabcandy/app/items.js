@@ -152,9 +152,9 @@ window.Item.prototype = {
     Utils.assert('Subclass must provide addOnClose', typeof(this.addOnClose) == 'function');
     Utils.assert('Subclass must provide removeOnClose', typeof(this.removeOnClose) == 'function');
     Utils.assert('Subclass must provide save', typeof(this.save) == 'function');
-    Utils.assert('Subclass must provide defaultSize', isPoint(this.defaultSize));
+    Utils.assert('Subclass must provide defaultSize', Utils.isPoint(this.defaultSize));
     Utils.assert('Subclass must provide locked', this.locked);
-    Utils.assert('Subclass must provide bounds', isRect(this.bounds));
+    Utils.assert('Subclass must provide bounds', Utils.isRect(this.bounds));
 
     this.container = container;
 
@@ -235,7 +235,7 @@ window.Item.prototype = {
   // Function: getBounds
   // Returns a copy of the Item's bounds as a <Rect>.
   getBounds: function() {
-    Utils.assert('this.bounds', isRect(this.bounds));
+    Utils.assert('this.bounds', Utils.isRect(this.bounds));
     return new Rect(this.bounds);
   },
 
@@ -264,7 +264,7 @@ window.Item.prototype = {
   //   immediately - if false or omitted, animates to the new position;
   //   otherwise goes there immediately
   setPosition: function(left, top, immediately) {
-    Utils.assert('this.bounds', isRect(this.bounds));
+    Utils.assert('this.bounds', Utils.isRect(this.bounds));
     this.setBounds(new Rect(left, top, this.bounds.width, this.bounds.height), immediately);
   },
 
@@ -278,7 +278,7 @@ window.Item.prototype = {
   //   immediately - if false or omitted, animates to the new size;
   //   otherwise resizes immediately
   setSize: function(width, height, immediately) {
-    Utils.assert('this.bounds', isRect(this.bounds));
+    Utils.assert('this.bounds', Utils.isRect(this.bounds));
     this.setBounds(new Rect(this.bounds.left, this.bounds.top, width, height), immediately);
   },
 
@@ -286,7 +286,7 @@ window.Item.prototype = {
   // Function: setUserSize
   // Remembers the current size as one the user has chosen.
   setUserSize: function() {
-    Utils.assert('this.bounds', isRect(this.bounds));
+    Utils.assert('this.bounds', Utils.isRect(this.bounds));
     this.userSize = new Point(this.bounds.width, this.bounds.height);
     this.save();
   },
@@ -437,8 +437,10 @@ window.Item.prototype = {
         }
 
         var pusher = data.pusher;
-        if (pusher)
-          apply(pusher, posStep.plus(posStep2), posStep2, sizeStep);
+        if (pusher) {
+          var newPosStep = new Point( posStep.x + posStep2.x, posStep.y + posStep2.y );
+          apply(pusher, newPosStep, posStep2, sizeStep);
+        }
       }
 
       var bounds = data.bounds;
@@ -1024,7 +1026,7 @@ window.Items = {
       var newBounds = new Rect(bounds);
 
       var newSize;
-      if (isPoint(item.userSize))
+      if (Utils.isPoint(item.userSize))
         newSize = new Point(item.userSize);
       else
         newSize = new Point(TabItems.tabWidth, TabItems.tabHeight);

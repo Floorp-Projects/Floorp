@@ -81,10 +81,9 @@ var consoleService = Cc["@mozilla.org/consoleservice;1"]
 // and creates a Point with it along with y. If either a or y are omitted,
 // 0 is used in their place.
 window.Point = function(a, y) {
-  if (isPoint(a)) {
+  if (Utils.isPoint(a)) {
     // Variable: x
     this.x = a.x;
-
     // Variable: y
     this.y = a.y;
   } else {
@@ -92,30 +91,14 @@ window.Point = function(a, y) {
     this.y = (Utils.isNumber(y) ? y : 0);
   }
 };
-
-// ----------
-// Function: isPoint
-// Returns true if the given object (p) looks like a <Point>.
-// Note that this is not an actual method of <Point>, but a global routine.
-window.isPoint = function(p) {
-  return (p && Utils.isNumber(p.x) && Utils.isNumber(p.y));
-};
-
 window.Point.prototype = {
   // ----------
   // Function: distance
   // Returns the distance from this point to the given <Point>.
   distance: function(point) {
-    var ax = Math.abs(this.x - point.x);
-    var ay = Math.abs(this.y - point.y);
+    var ax = this.x - point.x;
+    var ay = this.y - point.y;
     return Math.sqrt((ax * ax) + (ay * ay));
-  },
-
-  // ----------
-  // Function: plus
-  // Returns a new point with the result of adding this point to the given <Point>.
-  plus: function(point) {
-    return new Point(this.x + point.x, this.y + point.y);
   }
 };
 
@@ -130,7 +113,7 @@ window.Point.prototype = {
 // and creates a Rect with it along with top, width, and height.
 window.Rect = function(a, top, width, height) {
   // Note: perhaps 'a' should really be called 'rectOrLeft'
-  if (isRect(a)) {
+  if (Utils.isRect(a)) {
     // Variable: left
     this.left = a.left;
 
@@ -148,18 +131,6 @@ window.Rect = function(a, top, width, height) {
     this.width = width;
     this.height = height;
   }
-};
-
-// ----------
-// Function: isRect
-// Returns true if the given object (r) looks like a <Rect>.
-// Note that this is not an actual method of <Rect>, but a global routine.
-window.isRect = function(r) {
-  return (r
-      && Utils.isNumber(r.left)
-      && Utils.isNumber(r.top)
-      && Utils.isNumber(r.width)
-      && Utils.isNumber(r.height));
 };
 
 window.Rect.prototype = {
@@ -224,20 +195,6 @@ window.Rect.prototype = {
   },
 
   // ----------
-  // Function: containsPoint
-  // Returns a boolean denoting if the <Point> is inside of
-  // the bounding rect.
-  //
-  // Paramaters
-  //  - A <Point>
-  containsPoint: function(point){
-    return( point.x > this.left
-         && point.x < this.right
-         && point.y > this.top
-         && point.y < this.bottom )
-  },
-
-  // ----------
   // Function: contains
   // Returns a boolean denoting if the <Rect> is contained inside
   // of the bounding rect.
@@ -287,7 +244,7 @@ window.Rect.prototype = {
   // Paramaters
   //  - A <Point> or two arguments: x and y
   inset: function(a, b) {
-    if (typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
+    if (Utils.isPoint(a)) {
       b = a.y;
       a = a.x;
     }
@@ -305,7 +262,7 @@ window.Rect.prototype = {
   // Paramaters
   //  - A <Point> or two arguments: x and y
   offset: function(a, b) {
-    if (typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
+    if (Utils.isPoint(a)) {
       this.left += a.x;
       this.top += a.y;
     } else {
@@ -317,11 +274,11 @@ window.Rect.prototype = {
   // ----------
   // Function: equals
   // Returns true if this rectangle is identical to the given <Rect>.
-  equals: function(a) {
-    return (a.left == this.left
-        && a.top == this.top
-        && a.width == this.width
-        && a.height == this.height);
+  equals: function(rect) {
+    return (rect.left == this.left
+        && rect.top == this.top
+        && rect.width == this.width
+        && rect.height == this.height);
   },
 
   // ----------
@@ -349,7 +306,8 @@ window.Rect.prototype = {
 
   // ----------
   // Function: css
-  // Returns an object with the dimensions of this rectangle, suitable for passing into iQ.fn.css.
+  // Returns an object with the dimensions of this rectangle, suitable for passing
+  // into iQ.fn.css.
   // You could of course just pass the rectangle straight in, but this is cleaner.
   css: function() {
     return {
@@ -368,23 +326,13 @@ window.Rect.prototype = {
 // Constructor: Range
 // Creates a Range with the given min and max
 window.Range = function(min, max) {
-  if (isRange(min) && !max) { // if the one variable given is a range, copy it.
+  if (Utils.isRange(min) && !max) { // if the one variable given is a range, copy it.
     this.min = min.min;
     this.max = min.max;
   } else {
     this.min = min || 0;
     this.max = max || 0;
   }
-};
-
-// ----------
-// Function: isRange
-// Returns true if the given object (r) looks like a <Range>.
-// Note that this is not an actual method of <Range>, but a global routine.
-window.isRange = function(r) {
-  return (r
-      && Utils.isNumber(r.min)
-      && Utils.isNumber(r.max));
 };
 
 window.Range.prototype = {
@@ -400,36 +348,16 @@ window.Range.prototype = {
 
   // ----------
   // Function: contains
-  // Whether the <Range> contains the given value or not
+  // Whether the <Range> contains the given <Range> or value or not.
   //
   // Paramaters
   //  - a number or <Range>
   contains: function(value) {
     return Utils.isNumber(value) ?
-      ( value >= this.min && value <= this.max ) :
-      ( value.min >= this.min && value.max <= this.max );
-  },
-  // ----------
-  // Function: containsWithin
-  // Whether the <Range>'s interior contains the given value or not
-  //
-  // Paramaters
-  //  - a number or <Range>
-  containsWithin: function(value) {
-    return Utils.isNumber(value) ?
-      ( value > this.min && value < this.max ) :
-      ( value.min > this.min && value.max < this.max );
-  },
-  // ----------
-  // Function: overlaps
-  // Whether the <Range> overlaps with the given <Range> or not.
-  //
-  // Paramaters
-  //  - a number or <Range>
-  overlaps: function(value) {
-    return Utils.isNumber(value) ?
-      this.contains(value) :
-      ( value.min <= this.max && this.min <= value.max );
+      value >= this.min && value <= this.max :
+      Utils.isRange(value) ? 
+        ( value.min <= this.max && this.min <= value.max ) :
+        false;
   },
 };
 
@@ -671,6 +599,33 @@ var Utils = {
   // Returns true if the argument is a valid number.
   isNumber: function(n) {
     return (typeof(n) == 'number' && !isNaN(n));
+  },
+  
+  // ----------
+  // Function: isRect
+  // Returns true if the given object (r) looks like a <Rect>.
+  isRect: function(r) {
+    return (r
+        && this.isNumber(r.left)
+        && this.isNumber(r.top)
+        && this.isNumber(r.width)
+        && this.isNumber(r.height));
+  },
+  
+  // ----------
+  // Function: isRange
+  // Returns true if the given object (r) looks like a <Range>.
+  isRange: function(r) {
+    return (r
+        && this.isNumber(r.min)
+        && this.isNumber(r.max));
+  },
+
+  // ----------
+  // Function: isPoint
+  // Returns true if the given object (p) looks like a <Point>.
+  isPoint: function(p) {
+    return (p && this.isNumber(p.x) && this.isNumber(p.y));
   },
 
   // ----------
