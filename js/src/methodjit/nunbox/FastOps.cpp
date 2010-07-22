@@ -387,19 +387,19 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
 
             if ((op == JSOP_EQ && fused == JSOP_IFNE) ||
                 (op == JSOP_NE && fused == JSOP_IFEQ)) {
-                Jump j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_UNDEFINED));
+                Jump j = masm.branch32(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
                 jumpAndTrace(j, target);
-                j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_NULL));
+                j = masm.branch32(Assembler::Equal, reg, ImmType(JSVAL_TYPE_NULL));
                 jumpAndTrace(j, target);
             } else {
-                Jump j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_UNDEFINED));
-                Jump j2 = masm.branch32(Assembler::NotEqual, reg, ImmTag(JSVAL_TAG_NULL));
+                Jump j = masm.branch32(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
+                Jump j2 = masm.branch32(Assembler::NotEqual, reg, ImmType(JSVAL_TYPE_NULL));
                 jumpAndTrace(j2, target);
                 j.linkTo(masm.label(), &masm);
             }
         } else {
-            Jump j = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_UNDEFINED));
-            Jump j2 = masm.branch32(Assembler::Equal, reg, ImmTag(JSVAL_TAG_NULL));
+            Jump j = masm.branch32(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
+            Jump j2 = masm.branch32(Assembler::Equal, reg, ImmType(JSVAL_TYPE_NULL));
             masm.move(Imm32(op == JSOP_NE), reg);
             Jump j3 = masm.jump();
             j2.linkTo(masm.label(), &masm);
@@ -1085,7 +1085,7 @@ mjit::Compiler::jsop_setelem()
 
         /* guard not a hole */
         Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
+        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
         stubcc.linkExit(notHole, Uses(3));
 
         stubcc.leave();
@@ -1114,7 +1114,7 @@ mjit::Compiler::jsop_setelem()
 
         /* guard not a hole */
         BaseIndex slot(objReg, idReg, Assembler::JSVAL_SCALE);
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
+        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
         stubcc.linkExit(notHole, Uses(3));
 
         stubcc.leave();
@@ -1167,7 +1167,7 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
 
         /* guard not a hole */
         Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
+        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
         stubcc.linkExit(notHole, Uses(2));
 
         /* Load slot address into regs. */
@@ -1182,7 +1182,7 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
 
         /* guard not a hole */
         BaseIndex slot(objReg, idReg.getReg(), Assembler::JSVAL_SCALE);
-        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmTag(JSVAL_TAG_MAGIC));
+        Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
         stubcc.linkExit(notHole, Uses(2));
 
         masm.loadTypeTag(slot, tmpReg);
