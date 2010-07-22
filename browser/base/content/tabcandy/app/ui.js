@@ -625,7 +625,7 @@ function UIClass() {
     // Variable: currentTab
     // Keeps track of which <Tabs> tab we are currently on.
     // Used to facilitate zooming down from a previous tab.
-    this.currentTab = Utils.activeTab;
+    this.currentTab = gBrowser.selectedTab.tabcandyBrowserTab;
   } catch(e) {
     Utils.log(e);
   }

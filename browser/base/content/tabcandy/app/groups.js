@@ -696,7 +696,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         if (typeof(item.setResizable) == 'function')
           item.setResizable(false);
 
-        if (item.tab == Utils.activeTab)
+        if (item.tab.raw == gBrowser.selectedTab)
           Groups.setActiveGroup(this);
       }
 
