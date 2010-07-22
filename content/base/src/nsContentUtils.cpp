@@ -5967,6 +5967,7 @@ AllocClassMatchingInfo(nsINode* aRootNode,
   }
 
   info->mCaseTreatment =
+    aRootNode->GetOwnerDoc() &&
     aRootNode->GetOwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks ?
     eIgnoreCase : eCaseMatters;
   return info;
