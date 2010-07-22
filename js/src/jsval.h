@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99 ft=cpp:
+ * vim: set ts=4 sw=4 et tw=99 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -63,6 +63,10 @@ JS_BEGIN_EXTERN_C
 # define JSVAL_ALIGNMENT
 #elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 # define JSVAL_ALIGNMENT
+#endif
+
+#if JS_BITS_PER_WORD == 64
+# define JSVAL_TAG_SHIFT 47
 #endif
 
 /*
@@ -140,9 +144,23 @@ JS_ENUM_HEADER(JSValueTag, uint32)
     JSVAL_TAG_MAGIC                = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_MAGIC,
     JSVAL_TAG_NULL                 = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL,
     JSVAL_TAG_OBJECT               = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_OBJECT
-} JS_ENUM_FOOTER(JSValueType);
+} JS_ENUM_FOOTER(JSValueTag);
 
-JS_STATIC_ASSERT(sizeof(JSValueTag) == 4);
+JS_STATIC_ASSERT(sizeof(JSValueTag) == sizeof(uint32));
+
+JS_ENUM_HEADER(JSValueShiftedTag, uint64)
+{
+    JSVAL_SHIFTED_TAG_MAX_DOUBLE   = (((uint64)JSVAL_TAG_MAX_DOUBLE) << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_INT32        = (((uint64)JSVAL_TAG_INT32)      << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_UNDEFINED    = (((uint64)JSVAL_TAG_UNDEFINED)  << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_STRING       = (((uint64)JSVAL_TAG_STRING)     << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_BOOLEAN      = (((uint64)JSVAL_TAG_BOOLEAN)    << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_MAGIC        = (((uint64)JSVAL_TAG_MAGIC)      << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_NULL         = (((uint64)JSVAL_TAG_NULL)       << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_OBJECT       = (((uint64)JSVAL_TAG_OBJECT)     << JSVAL_TAG_SHIFT)
+} JS_ENUM_FOOTER(JSValueShiftedTag);
+
+JS_STATIC_ASSERT(sizeof(JSValueShiftedTag) == sizeof(uint64));
 
 #endif
 
@@ -190,6 +208,16 @@ typedef uint32 JSValueTag;
 #define JSVAL_TAG_NULL               (uint32)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL)
 #define JSVAL_TAG_OBJECT             (uint32)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_OBJECT)
 
+typedef uint64 JSValueShiftedTag;
+#define JSVAL_SHIFTED_TAG_MAX_DOUBLE (((uint64)JSVAL_TAG_MAX_DOUBLE) << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_INT32      (((uint64)JSVAL_TAG_INT32)      << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_UNDEFINED  (((uint64)JSVAL_TAG_UNDEFINED)  << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_STRING     (((uint64)JSVAL_TAG_STRING)     << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_BOOLEAN    (((uint64)JSVAL_TAG_BOOLEAN)    << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_MAGIC      (((uint64)JSVAL_TAG_MAGIC)      << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_NULL       (((uint64)JSVAL_TAG_NULL)       << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_OBJECT     (((uint64)JSVAL_TAG_OBJECT)     << JSVAL_TAG_SHIFT)
+
 #endif  /* JS_BITS_PER_WORD */
 #endif  /* defined(__cplusplus) */
 
@@ -211,19 +239,10 @@ typedef uint32 JSValueTag;
 
 #elif JS_BITS_PER_WORD == 64
 
-#define JSVAL_TAG_SHIFT              47
 #define JSVAL_PAYLOAD_MASK           0x00007FFFFFFFFFFFLL
+#define JSVAL_TAG_MASK               0xFFFF800000000000LL
 #define JSVAL_TYPE_TO_TAG(type)      ((JSValueTag)(JSVAL_TAG_MAX_DOUBLE | (type)))
 #define JSVAL_TYPE_TO_SHIFTED_TAG(type) (((uint64)JSVAL_TYPE_TO_TAG(type)) << JSVAL_TAG_SHIFT)
-
-#define JSVAL_SHIFTED_TAG_MAX_DOUBLE (((uint64)JSVAL_TAG_MAX_DOUBLE) << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_INT32      (((uint64)JSVAL_TAG_INT32)      << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_UNDEFINED  (((uint64)JSVAL_TAG_UNDEFINED)  << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_STRING     (((uint64)JSVAL_TAG_STRING)     << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_BOOLEAN    (((uint64)JSVAL_TAG_BOOLEAN)    << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_MAGIC      (((uint64)JSVAL_TAG_MAGIC)      << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_NULL       (((uint64)JSVAL_TAG_NULL)       << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_OBJECT     (((uint64)JSVAL_TAG_OBJECT)     << JSVAL_TAG_SHIFT)
 
 #define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET  JSVAL_SHIFTED_TAG_NULL
 #define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET    JSVAL_SHIFTED_TAG_OBJECT
