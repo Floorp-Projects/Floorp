@@ -107,7 +107,6 @@
 #endif
 
 #ifdef MOZ_OMNIJAR
-#include "nsManifestZIPLoader.h"
 #include "mozilla/Omnijar.h"
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 #endif
@@ -370,25 +369,16 @@ nsresult nsComponentManagerImpl::Init()
     InitializeStaticModules();
     InitializeModuleLocations();
 
-    NS_NAMED_LITERAL_CSTRING(strComponents, "components");
-    NS_NAMED_LITERAL_CSTRING(strChrome, "chrome");
-
-    ComponentLocation appLocations[2] = {
-        { NS_COMPONENT_LOCATION, CloneAndAppend(appDir, strComponents) },
-        { NS_COMPONENT_LOCATION, CloneAndAppend(appDir, strChrome) },
-    };
-    sModuleLocations->
-        InsertElementsAt(0, appLocations, NS_ARRAY_LENGTH(appLocations));
+    ComponentLocation* cl = sModuleLocations->InsertElementAt(0);
+    cl->type = NS_COMPONENT_LOCATION;
+    cl->location = CloneAndAppend(appDir, NS_LITERAL_CSTRING("chrome.manifest"));
 
     PRBool equals = PR_FALSE;
     appDir->Equals(greDir, &equals);
     if (!equals) {
-        ComponentLocation greLocations[2] = {
-            { NS_COMPONENT_LOCATION, CloneAndAppend(greDir, strComponents) },
-            { NS_COMPONENT_LOCATION, CloneAndAppend(greDir, strChrome) },
-        };
-        sModuleLocations->
-            InsertElementsAt(0, greLocations, NS_ARRAY_LENGTH(greLocations));
+        cl = sModuleLocations->InsertElementAt(0);
+        cl->type = NS_COMPONENT_LOCATION;
+        cl->location = CloneAndAppend(greDir, NS_LITERAL_CSTRING("chrome.manifest"));
     }
 
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
@@ -407,12 +397,14 @@ nsresult nsComponentManagerImpl::Init()
         RegisterModule((*sStaticModules)[i], NULL);
 
 #ifdef MOZ_OMNIJAR
-    RegisterOmnijar(false);
+    mManifestLoader = new nsManifestZIPLoader();
+
+    RegisterOmnijar("chrome.manifest", false);
 #endif
 
     for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
         ComponentLocation& l = sModuleLocations->ElementAt(i);
-        RegisterLocation(l.type, l.location, false);
+        RegisterManifestFile(l.type, l.location, false);
     }
 
     nsCategoryManager::GetSingleton()->SuppressNotifications(false);
@@ -530,47 +522,14 @@ GetExtension(nsILocalFile* file)
     return extension;
 }
 
-void
-nsComponentManagerImpl::RegisterLocation(NSLocationType aType,
-                                         nsILocalFile* aLocation,
-                                         bool aChromeOnly)
-{
-    nsCOMArray<nsILocalFile> manifests;
-
-    PRBool directory = PR_FALSE;
-    aLocation->IsDirectory(&directory);
-    if (directory)
-        GetManifestsInDirectory(aLocation, manifests);
-    else if (GetExtension(aLocation).LowerCaseEqualsLiteral("manifest"))
-        manifests.AppendObject(aLocation);
-
-    for (PRInt32 i = 0; i < manifests.Count(); ++i)
-        RegisterManifestFile(aType, manifests[i], aChromeOnly);
-}
-
 #ifdef MOZ_OMNIJAR
 void
-nsComponentManagerImpl::RegisterOmnijar(bool aChromeOnly)
+nsComponentManagerImpl::RegisterOmnijar(const char* aPath, bool aChromeOnly)
 {
-    nsCOMPtr<nsIManifestLoader> loader = new nsManifestZIPLoader();
-
-    mManifestLoader = loader;
-    mRegisterJARChromeOnly = aChromeOnly;
-
-    loader->EnumerateEntries(mozilla::OmnijarPath(), this);
-
-    mManifestLoader = NULL;
-}
-
-NS_IMETHODIMP
-nsComponentManagerImpl::FoundEntry(const char* aPath,
-                                   PRInt32 aIndex,
-                                   nsIInputStream* aStream)
-{
-    NS_ASSERTION(mManifestLoader, "Not registering a JAR.");
+    nsCOMPtr<nsIInputStream> is = mManifestLoader->LoadEntry(aPath);
 
     PRUint32 flen;
-    aStream->Available(&flen);
+    is->Available(&flen);
 
     nsAutoArrayPtr<char> whole(new char[flen + 1]);
     if (!whole)
@@ -580,13 +539,13 @@ nsComponentManagerImpl::FoundEntry(const char* aPath,
         PRUint32 avail;
         PRUint32 read;
 
-        if (NS_FAILED(aStream->Available(&avail)))
+        if (NS_FAILED(is->Available(&avail)))
             return NS_ERROR_FAILURE;
 
         if (avail > flen)
             return NS_ERROR_FAILURE;
 
-        if (NS_FAILED(aStream->Read(whole + totalRead, avail, &read)))
+        if (NS_FAILED(is->Read(whole + totalRead, avail, &read)))
             return NS_ERROR_FAILURE;
 
         totalRead += read;
@@ -594,32 +553,10 @@ nsComponentManagerImpl::FoundEntry(const char* aPath,
 
     whole[flen] = '\0';
 
-    ParseManifest(NS_COMPONENT_LOCATION, aPath, whole, mRegisterJARChromeOnly);
+    ParseManifest(NS_COMPONENT_LOCATION, aPath, whole, aChromeOnly);
     return NS_OK;
 }
 #endif // MOZ_OMNIJAR
-
-void
-nsComponentManagerImpl::GetManifestsInDirectory(nsILocalFile* aDirectory,
-                                                nsCOMArray<nsILocalFile>& aManifests)
-{
-    nsCOMPtr<nsISimpleEnumerator> entries;
-    aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-    if (!entries)
-        return;
-
-    PRBool more;
-    while (NS_SUCCEEDED(entries->HasMoreElements(&more)) && more) {
-        nsCOMPtr<nsISupports> supp;
-        entries->GetNext(getter_AddRefs(supp));
-        nsCOMPtr<nsILocalFile> f = do_QueryInterface(supp);
-        if (!f)
-            continue;
-
-        if (GetExtension(f).LowerCaseEqualsLiteral("manifest"))
-            aManifests.AppendObject(f);
-    }
-}
 
 namespace {
 struct AutoCloseFD
@@ -654,8 +591,12 @@ nsComponentManagerImpl::RegisterManifestFile(NSLocationType aType,
 
     AutoCloseFD fd;
     rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &fd);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+        nsCAutoString path;
+        aFile->GetNativePath(path);
+        LogMessage("Could not read chrome manifest file '%s'.", path.get());
         return;
+    }
 
     PRFileInfo64 fileInfo;
     if (PR_SUCCESS != PR_GetOpenFileInfo64(fd, &fileInfo))
@@ -688,6 +629,39 @@ TranslateSlashes(char* path)
     }
 }
 #endif
+
+void
+nsComponentManagerImpl::ManifestManifest(ManifestProcessingContext& cx, int lineno, char *const * argv)
+{
+    char* file = argv[0];
+
+#ifdef TRANSLATE_SLASHES
+    TranslateSlashes(file);
+#endif
+
+#ifdef MOZ_OMNIJAR
+    if (cx.mPath) {
+        nsCAutoString manifest(cx.mPath);
+        AppendFileToManifestPath(manifest, file);
+
+        RegisterOmnijar(manifest.get(), cx.mChromeOnly);
+    }
+    else
+#endif
+    {
+        nsCOMPtr<nsIFile> cfile;
+        cx.mFile->GetParent(getter_AddRefs(cfile));
+        nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
+
+        nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Couldn't append relative path?");
+            return;
+        }
+
+        RegisterManifestFile(cx.mType, clfile, cx.mChromeOnly);
+    }
+}
 
 void
 nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, int lineno, char *const * argv)
@@ -906,12 +880,12 @@ void
 nsComponentManagerImpl::RereadChromeManifests()
 {
 #ifdef MOZ_OMNIJAR
-    RegisterOmnijar(true);
+    RegisterOmnijar("chrome.manifest", true);
 #endif
 
     for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
         ComponentLocation& l = sModuleLocations->ElementAt(i);
-        RegisterLocation(l.type, l.location, true);
+        RegisterManifestFile(l.type, l.location, true);
     }
 }
 
@@ -2019,7 +1993,7 @@ XRE_AddManifestLocation(NSLocationType aType, nsILocalFile* aLocation)
 
     if (nsComponentManagerImpl::gComponentManager &&
         nsComponentManagerImpl::NORMAL == nsComponentManagerImpl::gComponentManager->mStatus)
-        nsComponentManagerImpl::gComponentManager->RegisterLocation(aType, aLocation, false);
+        nsComponentManagerImpl::gComponentManager->RegisterManifestFile(aType, aLocation, false);
 
     return NS_OK;
 }
