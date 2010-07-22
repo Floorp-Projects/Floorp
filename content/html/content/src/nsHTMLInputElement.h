@@ -336,6 +336,11 @@ protected:
    */
   void SanitizeValue(nsAString& aValue);
 
+  /**
+   * Set the current default value to the value of the input element.
+   */
+  nsresult SetDefaultValueAsValue();
+
   nsCOMPtr<nsIControllers> mControllers;
 
   /**
