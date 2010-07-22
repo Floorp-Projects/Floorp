@@ -46,10 +46,10 @@ interface nsIDOMRange;
  * Interface for manipulating and querying the current selected range
  * of nodes within the document.
  *
- * @version 1.1
+ * @version 1.0
  */
 
-[scriptable, uuid(24bb8c1c-407c-4a97-b652-af767d847716)]
+[scriptable, uuid(B2C7ED59-8634-4352-9E37-5484C8B6E4E1)]
 interface nsISelection : nsISupports
 {
     /**
@@ -153,27 +153,6 @@ interface nsISelection : nsISupports
      * Deletes this selection from document the nodes belong to.
      */
     void deleteFromDocument();
-
-    /**
-     * Modifies the selection.  Note that the parameters are case-insensitive.
-     *
-     * @param alter can be one of { "move", "extend" }
-     *   - "move" collapses the selection to the end of the selection and
-     *      applies the movement direction/granularity to the collapsed
-     *      selection.
-     *   - "extend" leaves the start of the selection unchanged, and applies
-     *      movement direction/granularity to the end of the selection.
-     * @param direction can be one of { "forward", "backward", "left", "right" }
-     * @param granularity can be one of { "character", "word",
-     *                                    "line", "lineboundary" }
-     *
-     * @returns NS_ERROR_NOT_IMPLEMENTED if the granularity is "sentence",
-     * "sentenceboundary", "paragraph", "paragraphboundary", or
-     * "documentboundary".  Returns NS_ERROR_INVALID_ARG if alter, direction,
-     * or granularity has an unrecognized value.
-     */
-    void modify(in DOMString alter, in DOMString direction,
-                in DOMString granularity);
 
     /**
      * Modifies the cursor Bidi level after a change in keyboard direction
