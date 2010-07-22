@@ -5494,11 +5494,27 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
       testResult = HTRIGHT;
   }
 
-  // There's no HTTOP in maximized state (bug 575493)
-  if (mSizeMode == nsSizeMode_Maximized && testResult == HTTOP)
-    testResult = HTCAPTION;
+  PRBool contentOverlap = PR_TRUE;
+
+  if (mSizeMode == nsSizeMode_Maximized) {
+    // There's no HTTOP in maximized state (bug 575493)
+    if (testResult == HTTOP) {
+      testResult = HTCAPTION;
+    }
+  } else {
+    PRInt32 leftMargin   = mNonClientMargins.left   == -1 ? mHorResizeMargin  : mNonClientMargins.left;
+    PRInt32 rightMargin  = mNonClientMargins.right  == -1 ? mHorResizeMargin  : mNonClientMargins.right;
+    PRInt32 topMargin    = mNonClientMargins.top    == -1 ? mVertResizeMargin : mNonClientMargins.top;
+    PRInt32 bottomMargin = mNonClientMargins.bottom == -1 ? mVertResizeMargin : mNonClientMargins.bottom;
+
+    contentOverlap = mx >= winRect.left + leftMargin &&
+                     mx <= winRect.right - rightMargin &&
+                     my >= winRect.top + topMargin &&
+                     my <= winRect.bottom - bottomMargin;
+  }
 
   if (!mIsInMouseCapture && 
+      contentOverlap &&
       (testResult == HTCLIENT ||
        testResult == HTTOP ||
        testResult == HTTOPLEFT ||
