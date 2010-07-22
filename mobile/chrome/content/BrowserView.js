@@ -154,7 +154,7 @@ BrowserView.Util = {
   },
 
   createBrowserViewportState: function createBrowserViewportState() {
-    return new BrowserView.BrowserViewportState(new Rect(0, 0, 1, 1), 0, 0, 1);
+    return new BrowserView.BrowserViewportState(new Rect(0, 0, 800, 800), 0, 0, 1);
   },
 
   getViewportStateFromBrowser: function getViewportStateFromBrowser(browser) {
