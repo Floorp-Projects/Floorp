@@ -5654,7 +5654,7 @@ CData::ReadString(JSContext* cx, uintN argc, jsval *vp)
       return JS_FALSE;
 
     jschar* dst =
-      static_cast<jschar*>(JS_malloc(cx, (dstlen + 1) * sizeof(jschar)));
+      static_cast<jschar*>(JS_malloc(cx, dstlen * sizeof(jschar)));
     if (!dst)
       return JS_FALSE;
 
