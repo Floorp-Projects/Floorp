@@ -59,7 +59,7 @@
 //   dontPush - true if this group shouldn't push away on creation; default is false
 window.InfoItem = function(bounds, options) {
   try {
-    Utils.assertThrow('bounds', isRect(bounds));
+    Utils.assertThrow('bounds', Utils.isRect(bounds));
 
     if (typeof(options) == 'undefined')
       options = {};
@@ -175,7 +175,7 @@ window.InfoItem.prototype = iQ.extend(new Item(), new Subscribable(), {
   // Sets the bounds with the given <Rect>, animating unless "immediately" is false.
   setBounds: function(rect, immediately) {
     try {
-      Utils.assertThrow('Group.setBounds: rect must be a real rectangle!', isRect(rect));
+      Utils.assertThrow('Group.setBounds: rect must be a real rectangle!', Utils.isRect(rect));
 
       // ___ Determine what has changed
       var css = {};
@@ -196,7 +196,8 @@ window.InfoItem.prototype = iQ.extend(new Item(), new Subscribable(), {
         return;
 
       this.bounds = new Rect(rect);
-      Utils.assertThrow('Group.setBounds: this.bounds must be a real rectangle!', isRect(this.bounds));
+      Utils.assertThrow('Group.setBounds: this.bounds must be a real rectangle!', 
+                        Utils.isRect(this.bounds));
 
       // ___ Update our representation
       if (immediately) {

@@ -1183,7 +1183,7 @@ UIClass.prototype = {
     if (iQ.isEmptyObject(data))
       return true;
 
-    if (!isRect(data.pageBounds)) {
+    if (!Utils.isRect(data.pageBounds)) {
       Utils.log('UI.storageSanity: bad pageBounds', data.pageBounds);
       data.pageBounds = null;
       return false;
