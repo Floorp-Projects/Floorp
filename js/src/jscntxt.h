@@ -226,6 +226,7 @@ struct TracerState
     ~TracerState();
 };
 
+#ifdef JS_METHODJIT
 namespace mjit {
     struct Trampolines
     {
@@ -254,6 +255,7 @@ namespace mjit {
         void purge(JSContext *cx);
     };
 }
+#endif /* JS_METHODJIT */
 
 /*
  * Storage for the execution state and store during trace execution. Generated
