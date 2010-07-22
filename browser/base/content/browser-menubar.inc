@@ -612,10 +612,10 @@
                         accesskey="&errorConsoleCmd.accesskey;"
                         key="key_errorConsole"
                         oncommand="toJavaScriptConsole();"/>
-              <menuitem id="headsUpDisplayConsole"
-                        label="&hudConsoleCmd.label;"
-                        accesskey="&hudConsoleCmd.accesskey;"
-                        key="key_hudConsole"
+              <menuitem id="webConsole"
+                        label="&webConsoleCmd.label;"
+                        accesskey="&webConsoleCmd.accesskey;"
+                        key="key_webConsole"
                         oncommand="HUDConsoleUI.toggleHUD();"/>
               <menuitem id="menu_pageInfo"
                         accesskey="&pageInfoCmd.accesskey;"
