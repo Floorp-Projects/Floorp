@@ -1216,8 +1216,9 @@
       <body>
         <![CDATA[
           var tabsToClose = this.tabs.length;
+
           if (!aAll)
-            --tabsToClose;
+            tabsToClose -= 1 + gBrowser._numPinnedTabs;
           if (tabsToClose <= 1)
             return true;
 
@@ -1264,11 +1265,14 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
+            if (aTab.pinned)
+              return;
+
             if (this.warnAboutClosingTabs(false)) {
               this.selectedTab = aTab;
 
               for (let i = this.tabs.length - 1; i >= 0; --i) {
-                if (this.tabs[i] != aTab)
+                if (this.tabs[i] != aTab && !this.tabs[i].pinned)
                   this.removeTab(this.tabs[i]);
               }
             }
