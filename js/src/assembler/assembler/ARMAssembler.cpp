@@ -338,20 +338,23 @@ void ARMAssembler::doubleTransfer(bool isLoad, FPRegisterID srcDst, RegisterID b
         offset = -offset;
     }
 
+    // TODO: This is broken in the case that offset is unaligned. VFP can never
+    // perform unaligned accesses, even from an unaligned register base. (NEON
+    // can, but VFP isn't NEON. It is not advisable to interleave a NEON load
+    // with VFP code, so the best solution here is probably to perform an
+    // unaligned integer load, then move the result into VFP using VMOV.)
+    ASSERT((offset & 0x3) == 0);
+
     ldr_un_imm(ARMRegisters::S0, offset);
     add_r(ARMRegisters::S0, ARMRegisters::S0, base);
     fdtr_u(isLoad, srcDst, ARMRegisters::S0, 0);
 }
 
-void* ARMAssembler::executableCopy(ExecutablePool* allocator)
+// Fix up the offsets and literal-pool loads in buffer. The buffer should
+// already contain the code from m_buffer.
+inline void ARMAssembler::fixUpOffsets(void * buffer)
 {
-    // 64-bit alignment is required for next constant pool and JIT code as well
-    m_buffer.flushWithoutBarrier(true);
-    if (m_buffer.uncheckedSize() & 0x7)
-        bkpt(0);
-
-    char* data = reinterpret_cast<char*>(m_buffer.executableCopy(allocator));
-
+    char * data = reinterpret_cast<char *>(buffer);
     for (Jumps::Iterator iter = m_jumps.begin(); iter != m_jumps.end(); ++iter) {
         // The last bit is set if the constant must be placed on constant pool.
         int pos = (*iter) & (~0x1);
@@ -369,8 +372,31 @@ void* ARMAssembler::executableCopy(ExecutablePool* allocator)
             *addr = reinterpret_cast<ARMWord>(data + *addr);
         }
     }
+}
 
+void* ARMAssembler::executableCopy(ExecutablePool* allocator)
+{
+    // 64-bit alignment is required for next constant pool and JIT code as well
+    m_buffer.flushWithoutBarrier(true);
+    if (m_buffer.uncheckedSize() & 0x7)
+        bkpt(0);
+
+    void * data = m_buffer.executableCopy(allocator);
+    fixUpOffsets(data);
     return data;
+}
+
+// This just dumps the code into the specified buffer, fixing up absolute
+// offsets and literal pool loads as it goes. The buffer is assumed to be large
+// enough to hold the code, and any pre-existing literal pool is assumed to
+// have been flushed.
+void* ARMAssembler::executableCopy(void * buffer)
+{
+    ASSERT(m_buffer.sizeOfConstantPool() == 0);
+
+    memcpy(buffer, m_buffer.data(), m_buffer.size());
+    fixUpOffsets(buffer);
+    return buffer;
 }
 
 } // namespace JSC

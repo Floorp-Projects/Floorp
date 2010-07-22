@@ -235,14 +235,20 @@ mjit::Compiler::finishThisUp()
         branchPatches[i].jump.linkTo(label, &masm);
     }
 
+#ifdef JS_CPU_ARM
+    masm.forceFlushConstantPool();
+    stubcc.masm.forceFlushConstantPool();
+#endif
+    JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %u, Slow code (stubcc) size = %u.\n", masm.size(), stubcc.size());
+
     JSC::ExecutablePool *execPool = getExecPool(masm.size() + stubcc.size());
     if (!execPool)
         return Compile_Abort;
 
     uint8 *result = (uint8 *)execPool->alloc(masm.size() + stubcc.size());
     JSC::ExecutableAllocator::makeWritable(result, masm.size() + stubcc.size());
-    memcpy(result, masm.buffer(), masm.size());
-    memcpy(result + masm.size(), stubcc.buffer(), stubcc.size());
+    masm.executableCopy(result);
+    stubcc.masm.executableCopy(result + masm.size());
 
     /* Build the pc -> ncode mapping. */
     void **nmap = (void **)cx->calloc(sizeof(void *) * (script->length + 1));

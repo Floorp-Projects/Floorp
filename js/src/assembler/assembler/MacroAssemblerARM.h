@@ -933,7 +933,6 @@ public:
 
     void convertInt32ToDouble(Address src, FPRegisterID dest)
     {
-        ASSERT_NOT_REACHED(); // Untested
         // flds does not worth the effort here
         load32(src, ARMRegisters::S1);
         convertInt32ToDouble(ARMRegisters::S1, dest);
@@ -990,6 +989,11 @@ public:
     {
         m_assembler.mov_r(ARMRegisters::S0, ARMAssembler::getOp2(0));
         convertInt32ToDouble(ARMRegisters::S0, srcDest);
+    }
+
+    void forceFlushConstantPool()
+    {
+        m_assembler.forceFlushConstantPool();
     }
 
 protected:
