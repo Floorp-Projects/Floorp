@@ -43,6 +43,7 @@
 #include "gfxHarfBuzzShaper.h"
 #include "gfxPlatformMac.h"
 #include "gfxContext.h"
+#include "gfxUnicodeProperties.h"
 
 #include "cairo-quartz.h"
 
@@ -147,6 +148,64 @@ gfxMacFont::~gfxMacFont()
 
     // this is documented to be safe if mCGFont is null
     ::CGFontRelease(mCGFont);
+}
+
+PRBool
+gfxMacFont::InitTextRun(gfxContext *aContext,
+                        gfxTextRun *aTextRun,
+                        const PRUnichar *aString,
+                        PRUint32 aRunStart,
+                        PRUint32 aRunLength,
+                        PRInt32 aRunScript)
+{
+    if (!mIsValid) {
+        NS_WARNING("invalid font! expect incorrect text rendering");
+        return PR_FALSE;
+    }
+
+    PRBool ok = PR_FALSE;
+
+    if (mHarfBuzzShaper &&
+        !static_cast<MacOSFontEntry*>(GetFontEntry())->RequiresAATLayout())
+    {
+        if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
+            gfxUnicodeProperties::ScriptShapingLevel(aRunScript)) {
+            ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
+                                              aRunStart, aRunLength, 
+                                              aRunScript);
+#if DEBUG
+            if (!ok) {
+                NS_ConvertUTF16toUTF8 name(GetName());
+                char msg[256];
+                sprintf(msg, "HarfBuzz shaping failed for font: %s",
+                        name.get());
+                NS_WARNING(msg);
+            }
+#endif
+        }
+    }
+
+    if (!ok) {
+        // fallback to Core Text shaping
+        if (!mPlatformShaper) {
+            CreatePlatformShaper();
+        }
+
+        ok = mPlatformShaper->InitTextRun(aContext, aTextRun, aString,
+                                          aRunStart, aRunLength, 
+                                          aRunScript);
+#if DEBUG
+        if (!ok) {
+            NS_ConvertUTF16toUTF8 name(GetName());
+            char msg[256];
+            sprintf(msg, "Core Text shaping failed for font: %s",
+                    name.get());
+            NS_WARNING(msg);
+        }
+#endif
+    }
+
+    return ok;
 }
 
 void
