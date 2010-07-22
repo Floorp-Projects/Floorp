@@ -1141,7 +1141,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-PsSwWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-r manifest]... [-PsSwWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -1815,6 +1815,22 @@ main(int argc, char **argv)
             printf("SetGREDir failed.\n");
             return 1;
         }
+        argc -= 2;
+        argv += 2;
+    }
+
+    while (argc > 1 && !strcmp(argv[1], "-r")) {
+        if (argc < 3)
+            return usage();
+
+        nsCOMPtr<nsILocalFile> lf;
+        rv = XRE_GetFileFromPath(argv[2], getter_AddRefs(lf));
+        if (NS_FAILED(rv)) {
+            printf("Couldn't get manifest file.\n");
+            return 1;
+        }
+        XRE_AddManifestLocation(NS_COMPONENT_LOCATION, lf);
+
         argc -= 2;
         argv += 2;
     }
