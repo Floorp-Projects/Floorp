@@ -300,7 +300,7 @@ TabMirror.prototype = {
   // Function: _heartbeat
   _heartbeat: function() {
     try {
-      var now = Utils.getMilliseconds();
+      var now = + new Date; // current time in milliseconds
       var count = Tabs.length;
       if (count && this.paintingPaused <= 0) {
         this.heartbeatIndex++;
@@ -353,7 +353,8 @@ TabMirror.prototype = {
             if (mirror.isShowingCachedData && mirror.okayToHideCache) 
               mirror.hideCachedData();
 
-            if (Utils.getMilliseconds() - mirror.needsPaint > 5000)
+						// + new Date = current time in milliseconds
+            if ((+ new Date) - mirror.needsPaint > 5000) 
               mirror.needsPaint = 0;
           }
         }

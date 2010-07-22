@@ -646,17 +646,6 @@ var Utils = {
     return s;
   },
 
-  // ----------
-  // Funtion: testLogging
-  // Prints some test messages with the various logging methods.
-  testLogging: function() {
-    this.log('beginning logging test');
-    this.error('this is an error');
-    this.trace('this is a trace');
-    this.log(1, null, {'foo': 'hello', 'bar': 2}, 'whatever');
-    this.log('ending logging test');
-  },
-
   // ___ Misc
 
   // ----------
@@ -667,16 +656,7 @@ var Utils = {
       return (event.which == 3);
     if (event.button)
       return (event.button == 2);
-
     return false;
-  },
-
-  // ----------
-  // Function: getMilliseconds
-  // Returns the total milliseconds on the system clock right now.
-  getMilliseconds: function() {
-    var date = new Date();
-    return date.getTime();
   },
 
   // ----------
