@@ -1311,9 +1311,14 @@ _cairo_clip_combine_with_surface (cairo_clip_t *clip,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static const cairo_rectangle_int_t _cairo_empty_rectangle_int = { 0, 0, 0, 0 };
+
 const cairo_rectangle_int_t *
 _cairo_clip_get_extents (const cairo_clip_t *clip)
 {
+    if (clip->all_clipped)
+	return &_cairo_empty_rectangle_int;
+
     if (clip->path == NULL)
 	return NULL;
 
@@ -1453,7 +1458,7 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
 cairo_rectangle_list_t *
 _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 {
-#define ERROR_LIST(S) _cairo_rectangle_list_create_in_error (_cairo_error (S));
+#define ERROR_LIST(S) _cairo_rectangle_list_create_in_error (_cairo_error (S))
 
     cairo_rectangle_list_t *list;
     cairo_rectangle_t *rectangles = NULL;
@@ -1462,57 +1467,40 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
     int n_rects = 0;
     int i;
 
-    if (clip != NULL && clip->path != NULL) {
-	status = _cairo_clip_get_region (clip, &region);
-	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO) {
-	    goto DONE;
-	} else if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	    return ERROR_LIST (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE)
-	} else if (unlikely (status)) {
-	    return ERROR_LIST (status);
-	}
+    if (clip->all_clipped)
+	goto DONE;
+
+    if (!clip->path)
+	return ERROR_LIST (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
+
+    status = _cairo_clip_get_region (clip, &region);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO) {
+	goto DONE;
+    } else if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	return ERROR_LIST (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
+    } else if (unlikely (status)) {
+	return ERROR_LIST (status);
     }
 
-    if (region != NULL) {
-	n_rects = cairo_region_num_rectangles (region);
-	if (n_rects) {
-	    rectangles = _cairo_malloc_ab (n_rects, sizeof (cairo_rectangle_t));
-	    if (unlikely (rectangles == NULL)) {
-		return ERROR_LIST (CAIRO_STATUS_NO_MEMORY);
-	    }
-
-	    for (i = 0; i < n_rects; ++i) {
-		cairo_rectangle_int_t clip_rect;
-
-		cairo_region_get_rectangle (region, i, &clip_rect);
-
-		if (! _cairo_clip_int_rect_to_user (gstate,
-						    &clip_rect,
-						    &rectangles[i]))
-		{
-		    free (rectangles);
-		    return ERROR_LIST (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
-		}
-	    }
-	}
-    } else {
-        cairo_rectangle_int_t extents;
-
-	if (! _cairo_surface_get_extents (_cairo_gstate_get_target (gstate),
-					  &extents))
-	{
-	    /* unbounded surface -> unclipped */
-	    goto DONE;
-	}
-
-	n_rects = 1;
-	rectangles = malloc(sizeof (cairo_rectangle_t));
-	if (unlikely (rectangles == NULL))
+    n_rects = cairo_region_num_rectangles (region);
+    if (n_rects) {
+	rectangles = _cairo_malloc_ab (n_rects, sizeof (cairo_rectangle_t));
+	if (unlikely (rectangles == NULL)) {
 	    return ERROR_LIST (CAIRO_STATUS_NO_MEMORY);
+	}
 
-	if (! _cairo_clip_int_rect_to_user (gstate, &extents, rectangles)) {
-	    free (rectangles);
-	    return ERROR_LIST (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
+	for (i = 0; i < n_rects; ++i) {
+	    cairo_rectangle_int_t clip_rect;
+
+	    cairo_region_get_rectangle (region, i, &clip_rect);
+
+	    if (! _cairo_clip_int_rect_to_user (gstate,
+						&clip_rect,
+						&rectangles[i]))
+	    {
+		free (rectangles);
+		return ERROR_LIST (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
+	    }
 	}
     }
 
