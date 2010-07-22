@@ -519,43 +519,6 @@ FinishSharingTitle(JSContext *cx, JSTitle *title)
 }
 
 /*
- * Notify all contexts that are currently in a request, which will give them a
- * chance to yield their current request.
- */
-void
-js_NudgeOtherContexts(JSContext *cx)
-{
-    JSRuntime *rt = cx->runtime;
-    JSContext *acx = NULL;
-
-    while ((acx = js_NextActiveContext(rt, acx)) != NULL) {
-        if (cx != acx)
-            JS_TriggerOperationCallback(acx);
-    }
-}
-
-/*
- * Notify all contexts that are currently in a request and execute on this
- * specific thread.
- */
-static void
-NudgeThread(JSRuntime *rt, JSThread *thread)
-{
-    JS_ASSERT(thread);
-
-    /*
-     * We cannot walk here over thread->contextList as that is manipulated
-     * outside the GC lock and must be accessed only from the the thread that
-     * owns JSThread.
-     */
-    JSContext *acx = NULL;
-    while ((acx = js_NextActiveContext(rt, acx)) != NULL) {
-        if (acx->thread == thread)
-            JS_TriggerOperationCallback(acx);
-    }
-}
-
-/*
  * Given a title with apparently non-null ownercx different from cx, try to
  * set ownercx to cx, claiming exclusive (single-threaded) ownership of title.
  * If we claim ownership, return true.  Otherwise, we wait for ownercx to be
@@ -647,7 +610,7 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          * But before waiting, we force the operation callback for that other
          * thread so it can quickly suspend.
          */
-        NudgeThread(rt, ownercx->thread);
+        JS_THREAD_DATA(ownercx)->triggerOperationCallback();
 
         JS_ASSERT(!cx->thread->titleToShare);
         cx->thread->titleToShare = title;

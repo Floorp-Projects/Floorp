@@ -3327,12 +3327,16 @@ BeginGCSession(JSContext *cx)
     rt->gcThread = cx->thread;
 
     /*
-     * Notify all operation callbacks, which will give them a chance to yield
-     * their current request. Contexts that are not currently executing will
-     * perform their callback at some later point, which then will be
-     * unnecessary, but harmless.
+     * Notify operation callbacks on other threads, which will give them a
+     * chance to yield their requests. Threads without requests perform their
+     * callback at some later point, which then will be unnecessary, but
+     * harmless.
      */
-    js_NudgeOtherContexts(cx);
+    for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
+        JSThread *thread = r.front().value;
+        if (thread != cx->thread)
+            thread->data.triggerOperationCallback();
+    }
 
     /*
      * Discount the request on the current thread from contributing to
