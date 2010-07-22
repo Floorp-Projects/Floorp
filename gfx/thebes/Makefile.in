@@ -396,7 +396,11 @@ endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+ifdef MOZ_PLATFORM_MAEMO
 GL_PROVIDER = EGL
+else
+GL_PROVIDER = GLX
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
