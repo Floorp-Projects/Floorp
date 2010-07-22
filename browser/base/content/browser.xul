@@ -115,7 +115,6 @@
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.reloadAllTabs();"/>
       <menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
-                tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
       <menuseparator/>
       <menuitem id="context_openTabInWindow" label="&openTabInNewWindow.label;"
