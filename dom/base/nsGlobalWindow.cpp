@@ -2167,7 +2167,9 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       mDoc = nsnull;
     }
 
-    mContext->ClearScope(mJSObject, PR_TRUE);
+    if (mContext) {
+      mContext->ClearScope(mJSObject, PR_TRUE);
+    }
 
     ClearControllers();
 
@@ -2181,9 +2183,11 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       mArgumentsOrigin = nsnull;
     }
 
-    mContext->GC();
-    mContext->FinalizeContext();
-    mContext = nsnull;
+    if (mContext) {
+      mContext->GC();
+      mContext->FinalizeContext();
+      mContext = nsnull;
+    }
 
 #ifdef DEBUG
     nsCycleCollector_DEBUG_shouldBeFreed(mContext);
