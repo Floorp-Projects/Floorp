@@ -500,7 +500,7 @@ var BrowserUI = {
     let currentURI = getBrowser().currentURI;
     let useLocal = Util.isLocalScheme(uri.spec);
     let hasLocal = Util.isLocalScheme(currentURI.spec);
-    if (useLocal || hasLocal != useLocal) {
+    if (hasLocal != useLocal) {
       Browser.addTab(uri.spec, true);
     } else {
       let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
