@@ -366,7 +366,8 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
     return nsnull;
   }
 
-  if (static_cast<nsIContent*>(this)->HasIndependentSelection()) {
+  nsIFrame* frame = static_cast<nsIContent*>(this)->GetPrimaryFrame();
+  if (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) {
     // This node should be a descendant of input/textarea editor.
     nsIContent* content = GetTextEditorRootContent();
     if (content)
@@ -387,9 +388,15 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
                  editorRoot :
                  GetRootForContentSubtree(static_cast<nsIContent*>(this));
       }
-      // If the document isn't editable but this is editable, this is in
-      // contenteditable.  Use the editing host element for selection root.
-      return static_cast<nsIContent*>(this)->GetEditingHost();
+      // If the current document is not editable, but current content is
+      // editable, we should assume that the child of the nearest non-editable
+      // ancestor is selection root.
+      nsIContent* content = static_cast<nsIContent*>(this);
+      for (nsIContent* parent = GetParent();
+           parent && parent->HasFlag(NODE_IS_EDITABLE);
+           parent = content->GetParent())
+        content = parent;
+      return content;
     }
   }
 
@@ -823,13 +830,14 @@ nsIContent::GetDesiredIMEState()
   if (!IsEditableInternal()) {
     return IME_STATUS_DISABLE;
   }
-  // NOTE: The content for independent editors (e.g., input[type=text],
-  // textarea) must override this method, so, we don't need to worry about
-  // that here.
-  nsIContent *editableAncestor = GetEditingHost();
-
+  nsIContent *editableAncestor = nsnull;
+  for (nsIContent* parent = GetParent();
+       parent && parent->HasFlag(NODE_IS_EDITABLE);
+       parent = parent->GetParent()) {
+    editableAncestor = parent;
+  }
   // This is in another editable content, use the result of it.
-  if (editableAncestor && editableAncestor != this) {
+  if (editableAncestor) {
     return editableAncestor->GetDesiredIMEState();
   }
   nsIDocument* doc = GetCurrentDoc();
@@ -855,35 +863,6 @@ nsIContent::GetDesiredIMEState()
   nsresult rv = imeEditor->GetPreferredIMEState(&state);
   NS_ENSURE_SUCCESS(rv, IME_STATUS_ENABLE);
   return state;
-}
-
-PRBool
-nsIContent::HasIndependentSelection()
-{
-  nsIFrame* frame = GetPrimaryFrame();
-  return (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION);
-}
-
-nsIContent*
-nsIContent::GetEditingHost()
-{
-  // If this isn't editable, return NULL.
-  NS_ENSURE_TRUE(HasFlag(NODE_IS_EDITABLE), nsnull);
-
-  nsIDocument* doc = GetCurrentDoc();
-  NS_ENSURE_TRUE(doc, nsnull);
-  // If this is in designMode, we should return <body>
-  if (doc->HasFlag(NODE_IS_EDITABLE)) {
-    return doc->GetBodyElement();
-  }
-
-  nsIContent* content = this;
-  for (nsIContent* parent = GetParent();
-       parent && parent->HasFlag(NODE_IS_EDITABLE);
-       parent = content->GetParent()) {
-    content = parent;
-  }
-  return content;
 }
 
 nsresult

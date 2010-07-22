@@ -149,10 +149,8 @@ public:
   NS_IMETHODIMP BeginningOfDocument();
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
   virtual PRBool HasFocus();
-  virtual PRBool IsActiveInDOMWindow();
   virtual already_AddRefed<nsPIDOMEventTarget> GetPIDOMEventTarget();
   virtual already_AddRefed<nsIContent> FindSelectionRoot(nsINode *aNode);
-  virtual PRBool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
 
   /* ------------ nsStubMutationObserver overrides --------- */
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
@@ -453,9 +451,6 @@ protected:
   PRBool ShouldReplaceRootElement();
   void ResetRootElementAndEventTarget();
   nsresult GetBodyElement(nsIDOMHTMLElement** aBody);
-  // Get the focused node of this editor.
-  // @return    If the editor has focus, this returns the focused node.
-  //            Otherwise, returns null.
   already_AddRefed<nsINode> GetFocusedNode();
 
   // Return TRUE if aElement is a table-related elemet and caret was set
@@ -750,6 +745,9 @@ protected:
 
   // Whether the outer window of the DOM event target has focus or not.
   PRBool   OurWindowHasFocus();
+  // Whether the content has independent selection or not.  E.g., input field,
+  // password field and textarea element.  At that time, this returns TRUE.
+  PRBool IsIndependentSelectionContent(nsIContent* aContent);
 
 // Data members
 protected:

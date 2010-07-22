@@ -7,7 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=468167
   <title>Test for Bug 468167</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -20,35 +19,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=468167
 
 /** Test for Bug 468167 **/
 
-SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(runTests);
-
-function runTests()
-{
-  var ta = document.getElementById("ta");
-  ta.focus();
-  is(ta.scrollTop, 0, "initially scrolled to top");
-  var s = "";
-  for (var i = 0; i < 40; ++i) {
-    // three characters per line
-    if (i < 10)
-      s += "0";
-    s += i + "\n";
-  }
-  ta.value = s;
-  is(ta.scrollTop, 0, "scrolled to top after adding content");
-  ta.scrollTop = 9999; // scroll down as far as we can
-  isnot(ta.scrollTop, 0, "scrolled down after scrolling down");
-
-  ta.setSelectionRange(0, 99); // 33 lines out of 40
-
-  // Send a backspace key event to delete the selection
-  synthesizeKey("VK_BACK_SPACE", { });
-
-  is(ta.scrollTop, 0, "scrolled to top after deleting selection");
-
-  SimpleTest.finish();
+var ta = document.getElementById("ta");
+is(ta.scrollTop, 0, "initially scrolled to top");
+var s = "";
+for (var i = 0; i < 40; ++i) {
+  // three characters per line
+  if (i < 10)
+    s += "0";
+  s += i + "\n";
 }
+ta.value = s;
+is(ta.scrollTop, 0, "scrolled to top after adding content");
+ta.scrollTop = 9999; // scroll down as far as we can
+isnot(ta.scrollTop, 0, "scrolled down after scrolling down");
+
+ta.setSelectionRange(0, 99); // 33 lines out of 40
+
+// Send a backspace key event to delete the selection
+var e = document.createEvent("KeyEvents");
+e.initKeyEvent("keypress", true, true, document.defaultView,
+               false, false, false, false,
+               KeyEvent.DOM_VK_BACK_SPACE, 0);
+ta.dispatchEvent(e);
+
+is(ta.scrollTop, 0, "scrolled to top after deleting selection");
+
 
 </script>
 </pre>
