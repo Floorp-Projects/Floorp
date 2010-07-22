@@ -57,11 +57,17 @@ class THEBES_API gfxXlibNativeRenderer {
 public:
     /**
      * Perform the native drawing.
+     * @param surface the drawable for drawing.
+     *                The extents of this surface do not necessarily cover the
+     *                entire rectangle with size provided to Draw().
      * @param offsetX draw at this offset into the given drawable
      * @param offsetY draw at this offset into the given drawable
-     * @param clipRects an array of rects; clip to the union
+     * @param clipRects an array of rectangles; clip to the union.
+     *                  Any rectangles provided will be contained by the
+     *                  rectangle with size provided to Draw and by the
+     *                  surface extents.
      * @param numClipRects the number of rects in the array, or zero if
-     * no clipping is required
+     *                     no clipping is required.
      */
     virtual nsresult DrawWithXlib(gfxXlibSurface* surface,
                                   nsIntPoint offset,
@@ -116,7 +122,7 @@ private:
                       PRUint32 flags, Screen *screen, Visual *visual);
 
     PRBool DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
-                               double background_gray_value);
+                               nsIntPoint offset);
 
 };
 
