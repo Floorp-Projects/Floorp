@@ -148,28 +148,9 @@ window.TabsManager = iQ.extend(new Subscribable(), {
 
     var trackedTabs = [];
 
-    gWindow.tabcandyBrowserWindow = new BrowserWindow(gWindow);
-
-    var windows = {
-      get focused() {
-        var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-                 .getService(Ci.nsIWindowMediator);
-        var chromeWindow = wm.getMostRecentWindow("navigator:browser");
-        if (chromeWindow)
-          return chromeWindow.tabcandyBrowserWindow;
-        return null;
-      }
-    };
+    new BrowserWindow(gWindow);
 
     window.Tabs = {
-      // ----------
-      get focused() {
-        var browserWindow = windows.focused;
-        if (browserWindow)
-          return browserWindow.getFocusedTab();
-        return null;
-      },
-
       // ----------
       toString: function toString() {
         return "[Tabs]";
@@ -259,10 +240,6 @@ window.TabsManager = iQ.extend(new Subscribable(), {
         function(eventType) {
           tabbrowser.tabContainer.addEventListener(eventType, onEvent, true);
         });
-
-      this.getFocusedTab = function getFocusedTab() {
-        return tabbrowser.selectedTab.tabcandyBrowserTab;
-      };
     }
 
     function BrowserTab(tabbrowser, chromeTab) {
