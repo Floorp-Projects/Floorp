@@ -9138,7 +9138,7 @@ nsGlobalWindow::SuspendTimeouts(PRUint32 aIncrease,
     for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
       // Set mTimeRemaining to be the time remaining for this timer.
       if (t->mWhen > now)
-        t->mTimeRemaining = now - t->mWhen;
+        t->mTimeRemaining = t->mWhen - now;
       else
         t->mTimeRemaining = TimeDuration(0);
   
