@@ -50,29 +50,6 @@ window.Keys = {meta: false};
 // Singleton for managing the tabbar of the browser.
 var Tabbar = {
   // ----------
-  // Variable: el
-  // The tab bar's element.
-  get el() {
-    return window.Tabs[0].raw.parentNode;
-  },
-
-  // ----------
-  // Function: _getAllTabs
-  // Returns an array of all tabs which exist in the current window
-  // tabbrowser. Returns an Array.
-  _getAllTabs: function() {
-    var tabBarTabs = [];
-    if (this.el) {
-      // this.el.children is not a real array and does contain
-      // useful functions like filter or forEach. Convert it into a real array.
-      for (var i = 0; i < this.el.children.length; i++) {
-        tabBarTabs.push(this.el.children[i]);
-      }
-    }
-    return tabBarTabs;
-  },
-
-  // ----------
   // Function: showOnlyTheseTabs
   // Hides all of the tabs in the tab bar which are not passed into this function.
   //
@@ -84,7 +61,7 @@ var Tabbar = {
       if (!options)
         options = {};
 
-      var tabBarTabs = this._getAllTabs();
+      let tabBarTabs = Array.slice(gBrowser.tabs);
       var visibleTabs = tabs.map(function(tab) tab.tab.raw);
 
       // Show all of the tabs in the group.
@@ -119,7 +96,7 @@ var Tabbar = {
   // Function: showAllTabs
   // Shows all of the tabs in the tab bar.
   showAllTabs: function(){
-    this._getAllTabs().forEach(function(tab) {
+    Array.forEach(gBrowser.tabs, function(tab) {
       tab.collapsed = false;
     });
   }
