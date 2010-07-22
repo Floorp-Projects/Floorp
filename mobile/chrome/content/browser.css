@@ -193,6 +193,7 @@ richlistitem[isDisabled="true"] .show-on-disable {
 
 richlistitem[opType="needs-restart"] .hide-on-restart,
 richlistitem[opType="needs-uninstall"] .hide-on-uninstall,
+richlistitem[isDisabled="true"][opType="needs-uninstall"],
 richlistitem[opType="needs-install"] .hide-on-install,
 richlistitem[opType="needs-enable"] .hide-on-enable,
 richlistitem[opType="needs-disable"] .hide-on-disable {
