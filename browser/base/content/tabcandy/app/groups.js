@@ -112,7 +112,6 @@ window.Group = function Group(listOfEls, options) {
   this.xDensity = 0;
   this.yDensity = 0;
 
-
   if (isPoint(options.userSize))
     this.userSize = new Point(options.userSize);
 
@@ -1731,6 +1730,67 @@ window.Groups = {
       return tab.parent == null;
     });
     return tabs;
+  },
+
+  // ----------
+  // Function: getNextGroupTab
+  // Paramaters:
+  //  reverse - the boolean indicates the direction to look for the next group.
+  // Returns the <tabItem>. If nothing is found, return null.
+  getNextGroupTab: function(reverse){
+    var groups = Groups.groups.map(function(group) group);
+    var activeGroup = Groups.getActiveGroup();
+    var tabItem = null;
+
+    if (!activeGroup) {
+      if (groups.length > 0) {
+        if (reverse)
+          groups = groups.reverse();
+
+        groups.some(function(group) {
+          var child = group.getChild(0);
+          if (child) {
+            tabItem = child;
+            return true;
+          }
+        });
+      }
+    } else {
+      if (reverse)
+        groups = groups.reverse();
+
+      var currentIndex;
+      groups.some(function(group, index) {
+        if (group == activeGroup) {
+          currentIndex = index;
+          return true;
+        }
+      });
+      var firstGroups = groups.slice(currentIndex + 1);
+      firstGroups.some(function(group) {
+        var child = group.getChild(0);
+        if (child) {
+          tabItem = child;
+          return true;
+        }
+      });
+      if (!tabItem) {
+        var orphanedTabs = Groups.getOrphanedTabs();
+        if (orphanedTabs.length > 0)
+          tabItem = orphanedTabs[0];
+      }
+      if (!tabItem) {
+        var secondGroups = groups.slice(0, currentIndex);
+        secondGroups.some(function(group) {
+          var child = group.getChild(0);
+          if (child) {
+            tabItem = child;
+            return true;
+          }
+        });
+      }
+    }
+    return tabItem;
   }
 };
 
