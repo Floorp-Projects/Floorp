@@ -2343,12 +2343,13 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     if (fragment == fragment->root) {
         /*
          * We poll the operation callback request flag. It is updated asynchronously whenever
-         * the callback is to be invoked.
+         * the callback is to be invoked. We can use INS_CONSTPTR here as JIT-ed code is per
+         * thread and cannot outlive the corresponding JSThreaData.
          */
         // XXX: this load is volatile.  If bug 545406 (loop-invariant code
         // hoisting) is implemented this fact will need to be made explicit.
-        LIns* x =
-            lir->insLoad(LIR_ldi, cx_ins, offsetof(JSContext, operationCallbackFlag), ACC_LOAD_ANY);
+        LIns* flagptr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->operationCallbackFlag);
+        LIns* x = lir->insLoad(LIR_ldi, flagptr, 0, ACC_LOAD_ANY);
         guard(true, lir->insEqI_0(x), snapshot(TIMEOUT_EXIT));
     }
 
@@ -7124,7 +7125,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
     }
 
     /* Do not enter the JIT code with a pending operation callback. */
-    if (cx->operationCallbackFlag) {
+    if (JS_THREAD_DATA(cx)->operationCallbackFlag) {
 #ifdef MOZ_TRACEVIS
         tvso.r = R_CALLBACK_PENDING;
 #endif

@@ -4854,12 +4854,21 @@ JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSContext *cx)
 {
     /*
-     * Use JS_ATOMIC_SET in the hope that it will make sure the write
-     * will become immediately visible to other processors polling
-     * cx->operationCallbackFlag. Note that we only care about
-     * visibility here, not read/write ordering.
+     * We allow for cx to come from another thread. Thus we must deal with
+     * possible JS_ClearContextThread calls when accessing cx->thread. But we
+     * assume that the calling thread is in a request so JSThread cannot be
+     * GC-ed.
      */
-    JS_ATOMIC_SET(&cx->operationCallbackFlag, 1);
+    JSThreadData *td;
+#ifdef JS_THREADSAFE
+    JSThread *thread = cx->thread;
+    if (!thread)
+        return;
+    td = &thread->data;
+#else
+    td = JS_THREAD_DATA(cx);
+#endif
+    td->triggerOperationCallback();
 }
 
 JS_PUBLIC_API(void)
