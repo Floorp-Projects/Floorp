@@ -42,16 +42,15 @@
 
 #include "nsIZipReader.h"
 
-class nsManifestZIPLoader : public nsIManifestLoader
+class nsManifestZIPLoader
 {
  public:
     nsManifestZIPLoader();
-    virtual ~nsManifestZIPLoader() {}
-    
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIMANIFESTLOADER
+    ~nsManifestZIPLoader();
+
+    already_AddRefed<nsIInputStream> LoadEntry(const char* name);
 
  private:
-    already_AddRefed<nsIZipReader> GetZipReader(nsILocalFile* aFile);
+    nsCOMPtr<nsIZipReader> mZipReader;
 };
 
