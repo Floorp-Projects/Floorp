@@ -121,6 +121,10 @@ JS_PUBLIC_DATA(jsval) JSVAL_TRUE  = { BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_TRUE) 
 JS_PUBLIC_DATA(jsval) JSVAL_VOID  = { BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0) };
 #endif
 
+/* Make sure that jschar is two bytes unsigned integer */
+JS_STATIC_ASSERT((jschar)-1 > 0);
+JS_STATIC_ASSERT(sizeof(jschar) == 2);
+
 JS_PUBLIC_API(int64)
 JS_Now()
 {
