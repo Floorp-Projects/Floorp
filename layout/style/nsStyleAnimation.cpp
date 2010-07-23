@@ -1609,7 +1609,7 @@ BuildStyleRule(nsCSSProperty aProperty,
                PRBool aUseSVGMode)
 {
   // Set up an empty CSS Declaration
-  css::Declaration* declaration = new css::Declaration();
+  nsAutoPtr<css::Declaration> declaration(new css::Declaration());
   declaration->InitializeEmpty();
 
   PRBool changed; // ignored, but needed as outparam for ParseProperty
@@ -1638,11 +1638,10 @@ BuildStyleRule(nsCSSProperty aProperty,
       // check whether property parsed without CSS parsing errors
       !declaration->HasNonImportantValueFor(propertyToCheck)) {
     NS_WARNING("failure in BuildStyleRule");
-    declaration->RuleAbort();  // deletes declaration
     return nsnull;
   }
 
-  return NS_NewCSSStyleRule(nsnull, declaration);
+  return NS_NewCSSStyleRule(nsnull, declaration.forget());
 }
 
 inline

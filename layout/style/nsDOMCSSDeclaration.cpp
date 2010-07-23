@@ -146,18 +146,17 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), PR_TRUE);
 
-  css::Declaration* decl = new css::Declaration();
+  nsAutoPtr<css::Declaration> decl(new css::Declaration());
   decl->InitializeEmpty();
   nsCSSParser cssParser(cssLoader);
   PRBool changed;
   result = cssParser.ParseDeclarations(aCssText, sheetURI, baseURI,
                                        sheetPrincipal, decl, &changed);
   if (NS_FAILED(result) || !changed) {
-    decl->RuleAbort();
     return result;
   }
 
-  return SetCSSDeclaration(decl);
+  return SetCSSDeclaration(decl.forget());
 }
 
 NS_IMETHODIMP
@@ -310,7 +309,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
                                    aIsImportant);
   if (NS_FAILED(result) || !changed) {
     if (decl != olddecl) {
-      decl->RuleAbort();
+      delete decl;
     }
     return result;
   }
