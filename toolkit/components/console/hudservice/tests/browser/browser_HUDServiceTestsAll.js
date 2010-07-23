@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -203,6 +204,14 @@ function testUnregister()  {
 function getHUDById() {
   let hud = HUDService.getHeadsUpDisplay(hudId);
   ok(hud.getAttribute("id") == hudId, "found HUD node by Id.");
+}
+
+// Tests to ensure that the input box is focused when the console opens. See
+// bug 579412.
+function testInputFocus() {
+  let hud = HUDService.getHeadsUpDisplay(hudId);
+  let inputNode = hud.querySelectorAll(".jsterm-input-node")[0];
+  is(inputNode.getAttribute("focused"), "true", "input node is focused");
 }
 
 function testGetContentWindowFromHUDId() {
@@ -624,6 +633,7 @@ function test() {
       introspectLogNodes();
       getAllHUDS();
       getHUDById();
+      testInputFocus();
       testGetDisplayByLoadGroup();
       testGetContentWindowFromHUDId();
 
