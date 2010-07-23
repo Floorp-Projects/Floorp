@@ -547,6 +547,9 @@ Content.prototype = {
       case "Browser:ZoomToPoint": {
         let rect = null;
         let element = elementFromPoint(x, y);
+        let win = element.ownerDocument.defaultView;
+        while (element && win.getComputedStyle(element,null).display == "inline")
+          element = element.parentNode;
         if (element)
           rect = getBoundingContentRect(element);
         sendAsyncMessage("Browser:ZoomToPoint:Return", { x: x, y: y, rect: rect });
