@@ -96,11 +96,16 @@ class FrameEntry
         return v_.s.payload.u32;
     }
 
+    bool isCachedNumber() const {
+        return isNumber;
+    }
+
   private:
     void setType(JSValueType type_) {
         type.setConstant();
         v_.s.tag = JSVAL_TYPE_TO_TAG(type_);
         knownType = type_;
+        JS_ASSERT(!isNumber);
     }
 
     void track(uint32 index) {
@@ -111,6 +116,7 @@ class FrameEntry
     void clear() {
         copied = false;
         copy = NULL;
+        isNumber = false;
     }
 
     uint32 trackerIndex() {
@@ -195,7 +201,8 @@ class FrameEntry
     uint32     index_;
     FrameEntry *copy;
     bool       copied;
-    char       padding[3];
+    bool       isNumber;
+    char       padding[2];
 };
 
 } /* namespace mjit */
