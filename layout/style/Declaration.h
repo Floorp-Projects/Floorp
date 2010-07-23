@@ -83,11 +83,11 @@ public:
    * |mOrder| whenever a property is parsed into an expanded data block
    * for this declaration.  aProperty must not be a shorthand.
    */
-  nsresult ValueAppended(nsCSSProperty aProperty);
+  void ValueAppended(nsCSSProperty aProperty);
 
-  nsresult RemoveProperty(nsCSSProperty aProperty);
+  void RemoveProperty(nsCSSProperty aProperty);
 
-  nsresult GetValue(nsCSSProperty aProperty, nsAString& aValue) const;
+  void GetValue(nsCSSProperty aProperty, nsAString& aValue) const;
 
   PRBool HasImportantData() const { return mImportantData != nsnull; }
   PRBool GetValueIsImportant(nsCSSProperty aProperty) const;
@@ -96,9 +96,9 @@ public:
   PRUint32 Count() const {
     return mOrder.Length();
   }
-  nsresult GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const;
+  void GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const;
 
-  nsresult ToString(nsAString& aString) const;
+  void ToString(nsAString& aString) const;
 
   Declaration* Clone() const;
 
@@ -106,10 +106,9 @@ public:
   nsCSSCompressedDataBlock* GetImportantBlock() const { return mImportantData; }
 
   /**
-   * Initialize this declaration as holding no data.  Return false on
-   * out-of-memory.
+   * Initialize this declaration as holding no data.  Cannot fail.
    */
-  PRBool InitializeEmpty();
+  void InitializeEmpty();
 
   /**
    * Transfer all of the state from |aExpandedData| into this declaration.

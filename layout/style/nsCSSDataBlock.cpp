@@ -560,10 +560,7 @@ nsCSSCompressedDataBlock::Destroy()
 nsCSSCompressedDataBlock::CreateEmptyBlock()
 {
     nsCSSCompressedDataBlock *result = new(0) nsCSSCompressedDataBlock();
-    if (!result)
-        return nsnull;
     result->mBlockEnd = result->Block();
-
     result->AddRef();
     return result;
 }

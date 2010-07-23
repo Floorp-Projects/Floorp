@@ -1006,16 +1006,8 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
   css::Declaration* declaration = ParseDeclarationBlock(haveBraces);
   if (declaration) {
     // Create a style rule for the declaration
-    nsICSSStyleRule* rule = nsnull;
-    nsresult rv = NS_NewCSSStyleRule(&rule, nsnull, declaration);
-    if (NS_FAILED(rv)) {
-      declaration->RuleAbort();
-      ReleaseScanner();
-      return rv;
-    }
-    *aResult = rule;
-  }
-  else {
+    *aResult = NS_NewCSSStyleRule(nsnull, declaration).get();
+  } else {
     *aResult = nsnull;
   }
 
@@ -2436,13 +2428,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
 
   // Translate the selector list and declaration block into style data
 
-  nsCOMPtr<nsICSSStyleRule> rule;
-  NS_NewCSSStyleRule(getter_AddRefs(rule), slist, declaration);
-  if (!rule) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    delete slist;
-    return PR_FALSE;
-  }
+  nsCOMPtr<nsICSSStyleRule> rule = NS_NewCSSStyleRule(slist, declaration);
   rule->SetLineNumber(linenum);
   (*aAppendFunc)(rule, aData);
 
