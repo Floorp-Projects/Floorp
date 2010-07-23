@@ -697,7 +697,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
         if (typeof(item.setResizable) == 'function')
           item.setResizable(false);
 
-        if (item.tab.raw == gBrowser.selectedTab)
+        if (item.tab == gBrowser.selectedTab)
           Groups.setActiveGroup(this);
       }
 
@@ -1271,12 +1271,12 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
     // Because opening a new tab happens in a different thread(?)
-    // calling Page.hideChrome() inline won't do anything. Instead
+    // calling UI.showTabCandy() inline won't do anything. Instead
     // we have to marshal it. A value of 0 wait time doesn't seem
     // to work. Instead, we use a value of 1 which seems to be the
     // minimum amount of time required.
     iQ.timeout(function(){
-      Page.hideChrome()
+      UI.showTabCandy()
     }, 1);
 
     var self = this;
@@ -1310,7 +1310,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
               complete: function(){
                 iQ(tab.container).css({opacity: 1});
                 gBrowser.selectedTab = newTab;
-                Page.showChrome()
+                UI.hideTabCandy()
                 gWindow.gURLBar.focus();
                 $anim.remove();
                 // We need a timeout here so that there is a chance for the
@@ -1342,7 +1342,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
   // of the group by the positions of their respective tabs in the
   // tab bar.
   reorderBasedOnTabOrder: function(){
-    this._children.sort(function(a,b) a.tab.raw._tPos - b.tab.raw._tPos);
+    this._children.sort(function(a,b) a.tab._tPos - b.tab._tPos);
 
     this.arrange({animate: false});
     // this.arrange calls this.save for us

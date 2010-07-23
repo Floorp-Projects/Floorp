@@ -138,17 +138,8 @@ window.TabsManager = iQ.extend(new Subscribable(), {
   // Function: init
   // Sets up the TabsManager and window.Tabs
   init: function TabsManager_init() {
-    var self = this;
-    if (!gWindow || !gWindow.getBrowser || !gWindow.getBrowser()) {
-      iQ.timeout(function TabsManager_init_delayedInit() {
-        self.init();
-      }, 100);
-      return;
-    }
-
     var trackedTabs = [];
-
-    new BrowserWindow(gWindow);
+    new BrowserWindow();
 
     window.Tabs = {
       // ----------
@@ -167,32 +158,22 @@ window.TabsManager = iQ.extend(new Subscribable(), {
     tabsMixIns.add({name: "onOpen"});
     tabsMixIns.add({name: "onMove"});
 
-  /*   Utils.log(tabs); */
-
-    function newBrowserTab(tabbrowser, chromeTab) {
-      var browserTab = new BrowserTab(tabbrowser, chromeTab);
-      chromeTab.tabcandyBrowserTab = browserTab;
-      trackedTabs.push(browserTab);
-      return browserTab;
+    function newBrowserTab(chromeTab) {
+      new BrowserTab(chromeTab);
+      trackedTabs.push(chromeTab);
     }
 
     function unloadBrowserTab(chromeTab) {
-      var browserTab = chromeTab.tabcandyBrowserTab;
-      var index = trackedTabs.indexOf(browserTab);
+      let index = trackedTabs.indexOf(chromeTab);
       if (index > -1) {
         trackedTabs.splice(index,1);
       } else {
         Utils.assert("unloadBrowserTab: browserTab not found in trackedTabs",false);
       }
-      browserTab._unload();
     }
 
-    function BrowserWindow(chromeWindow) {
-      var tabbrowser = chromeWindow.getBrowser();
-
-      for (var i = 0; i < tabbrowser.tabContainer.itemCount; i++)
-        newBrowserTab(tabbrowser,
-                      tabbrowser.tabContainer.getItemAtIndex(i));
+    function BrowserWindow() {
+      Array.forEach(gBrowser.tabs, function(tab) newBrowserTab(tab));
 
       const EVENTS_TO_WATCH = ["TabOpen", "TabMove", "TabClose", "TabSelect"];
 
@@ -207,26 +188,26 @@ window.TabsManager = iQ.extend(new Subscribable(), {
           switch (event.type) {
             case "TabSelect":
               tabsMixIns.bubble("onFocus",
-                               chromeTab.tabcandyBrowserTab,
+                               chromeTab,
                                true);
               break;
 
             case "TabOpen":
-              newBrowserTab(tabbrowser, chromeTab);
+              newBrowserTab(chromeTab);
               tabsMixIns.bubble("onOpen",
-                                chromeTab.tabcandyBrowserTab,
+                                chromeTab,
                                 true);
               break;
 
             case "TabMove":
               tabsMixIns.bubble("onMove",
-                               chromeTab.tabcandyBrowserTab,
+                               chromeTab,
                                true);
               break;
 
             case "TabClose":
               tabsMixIns.bubble("onClose",
-                                chromeTab.tabcandyBrowserTab,
+                                chromeTab,
                                 true);
               unloadBrowserTab(chromeTab);
               break;
@@ -238,16 +219,13 @@ window.TabsManager = iQ.extend(new Subscribable(), {
 
       EVENTS_TO_WATCH.forEach(
         function(eventType) {
-          tabbrowser.tabContainer.addEventListener(eventType, onEvent, true);
+          gBrowser.tabContainer.addEventListener(eventType, onEvent, true);
         });
     }
 
-    function BrowserTab(tabbrowser, chromeTab) {
+    function BrowserTab(chromeTab) {
       var browser = chromeTab.linkedBrowser;
-
       var mixIns = new EventListenerMixIns(this);
-      var self = this;
-
       mixIns.add(
         {name: "onReady",
          observe: browser,
@@ -256,7 +234,7 @@ window.TabsManager = iQ.extend(new Subscribable(), {
          bubbleTo: tabsMixIns,
          filter: function(event) {
            // Return the document that just loaded.
-           event.tab = self;
+           event.tab = chromeTab;
            return event;
          }});
 
@@ -268,57 +246,9 @@ window.TabsManager = iQ.extend(new Subscribable(), {
          bubbleTo: tabsMixIns,
          filter: function(event) {
            // Return the document that just loaded.
-           event.tab = self;
+           event.tab = chromeTab;
            return event;
          }});
-
-      /* ToDo: do we need this?  onFocus is fired twice if this is uncommented.
-      mixIns.add(
-        {name: "onFocus",
-         observe: chromeTab,
-         eventName: "TabSelect",
-         useCapture: true,
-         bubbleTo: tabsMixIns,
-         filter: function(event) {
-           // There's not really much to report here other
-           // than the Tab itself, but that's already the
-           // 'this' variable, so just return true for now.
-           return true;
-         }});
-        */
-      this.__proto__ = {
-
-        get closed() !browser,
-        get url() browser && browser.currentURI ? browser.currentURI.spec : null,
-        get favicon() chromeTab && chromeTab.image ? chromeTab.image : null,
-
-        get contentWindow() browser && browser.contentWindow ? browser.contentWindow : null,
-        get contentDocument() browser && browser.contentDocument ? browser.contentDocument : null,
-
-        get raw() chromeTab,
-        get tabbrowser() tabbrowser,
-
-        isFocused: function() browser && tabbrowser.selectedTab == chromeTab,
-
-        focus: function focus() {
-          if (browser)
-            tabbrowser.selectedTab = chromeTab;
-        },
-
-        close: function close() {
-          if (browser)
-            tabbrowser.removeTab(chromeTab);
-        },
-
-        toString: function toString() !browser ? "[Closed Browser Tab]" : "[Browser Tab]",
-
-        _unload: function _unload() {
-          mixIns = null;
-          tabbrowser = null;
-          chromeTab = null;
-          browser = null;
-        }
-      };
     }
 
     this._sendToSubscribers('load');
