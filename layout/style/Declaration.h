@@ -61,11 +61,16 @@
 #include "nsCSSDataBlock.h"
 #include "nsCSSStruct.h"
 
-// must be forward-declared in root namespace
-class CSSStyleRuleImpl;
-
 namespace mozilla {
 namespace css {
+
+// Declaration objects have unusual lifetime rules.  Every declaration
+// begins life in an invalid state which ends when InitializeEmpty or
+// CompressFrom is called upon it.  After that, it can be attached to
+// exactly one style rule, and will be destroyed when that style rule
+// is destroyed.  A declaration becomes immutable when its style rule's
+// |RuleMatched| method is called; after that, it must be copied before
+// it can be modified, which is taken care of by |EnsureMutable|.
 
 class Declaration {
 public:
@@ -77,6 +82,8 @@ public:
   Declaration();
 
   Declaration(const Declaration& aCopy);
+
+  ~Declaration();
 
   /**
    * |ValueAppended| must be called to maintain this declaration's
@@ -100,8 +107,6 @@ public:
 
   void ToString(nsAString& aString) const;
 
-  Declaration* Clone() const;
-
   nsCSSCompressedDataBlock* GetNormalBlock() const { return mData; }
   nsCSSCompressedDataBlock* GetImportantBlock() const { return mImportantData; }
 
@@ -117,8 +122,8 @@ public:
   void CompressFrom(nsCSSExpandedDataBlock *aExpandedData) {
     NS_ASSERTION(!mData, "oops");
     NS_ASSERTION(!mImportantData, "oops");
-    aExpandedData->Compress(getter_AddRefs(mData),
-                            getter_AddRefs(mImportantData));
+    aExpandedData->Compress(getter_Transfers(mData),
+                            getter_Transfers(mImportantData));
     aExpandedData->AssertInitialState();
   }
 
@@ -134,9 +139,21 @@ public:
     aExpandedData->AssertInitialState();
 
     NS_ASSERTION(mData, "oops");
-    aExpandedData->Expand(&mData, &mImportantData);
-    NS_ASSERTION(!mData && !mImportantData,
-                 "Expand didn't null things out");
+    aExpandedData->Expand(mData.forget(), mImportantData.forget());
+  }
+
+  /**
+   * Do what |nsIStyleRule::MapRuleInfoInto| needs to do for a style
+   * rule using this declaration for storage.
+   */
+  void MapNormalRuleInfoInto(nsRuleData *aRuleData) const {
+    NS_ABORT_IF_FALSE(mData, "called while expanded");
+    mData->MapRuleInfoInto(aRuleData);
+  }
+  void MapImportantRuleInfoInto(nsRuleData *aRuleData) const {
+    NS_ABORT_IF_FALSE(mData, "called while expanded");
+    NS_ABORT_IF_FALSE(mImportantData, "must have important data");
+    mImportantData->MapRuleInfoInto(aRuleData);
   }
 
   /**
@@ -177,16 +194,28 @@ public:
   }
 
   /**
+   * Return whether |this| may be modified.
+   */
+  bool IsMutable() const {
+    return !mImmutable;
+  }
+
+  /**
    * Copy |this|, if necessary to ensure that it can be modified.
    */
   Declaration* EnsureMutable();
 
   /**
-   * Crash if |this| is not mutable.
+   * Crash if |this| cannot be modified.
    */
   void AssertMutable() const {
     NS_ABORT_IF_FALSE(IsMutable(), "someone forgot to call EnsureMutable");
   }
+
+  /**
+   * Mark this declaration as unmodifiable.
+   */
+  void SetImmutable() { mImmutable = PR_TRUE; }
 
   /**
    * Clear the data, in preparation for its replacement with entirely
@@ -210,67 +239,27 @@ private:
 
   static void AppendImportanceToString(PRBool aIsImportant, nsAString& aString);
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
-  PRBool   AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  PRBool AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
   // Helper for ToString with strange semantics regarding aValue.
-  void     AppendPropertyAndValueToString(nsCSSProperty aProperty,
-                                          nsAutoString& aValue,
-                                          nsAString& aResult) const;
-
-private:
-    //
-    // Specialized ref counting.
-    // We do not want everyone to ref count us, only the rules which hold
-    //  onto us (our well defined lifetime is when the last rule releases
-    //  us).
-    // It's worth a comment here that the main css::Declaration is
-    //  refcounted, but its |mImportant| is not refcounted, just owned
-    //  by the non-important declaration.
-    //
-    friend class ::CSSStyleRuleImpl;
-    void AddRef(void) {
-      if (mRefCnt == PR_UINT32_MAX) {
-        NS_WARNING("refcount overflow, leaking object");
-        return;
-      }
-      ++mRefCnt;
-    }
-    void Release(void) {
-      if (mRefCnt == PR_UINT32_MAX) {
-        NS_WARNING("refcount overflow, leaking object");
-        return;
-      }
-      NS_ASSERTION(0 < mRefCnt, "bad Release");
-      if (0 == --mRefCnt) {
-        delete this;
-      }
-    }
-public:
-    void RuleAbort(void) {
-      NS_ASSERTION(0 == mRefCnt, "bad RuleAbort");
-      delete this;
-    }
-private:
-  // Block everyone, except us or a derivative, from deleting us.
-  ~Declaration();
+  void AppendPropertyAndValueToString(nsCSSProperty aProperty,
+                                      nsAutoString& aValue,
+                                      nsAString& aResult) const;
 
   nsCSSProperty OrderValueAt(PRUint32 aValue) const {
     return nsCSSProperty(mOrder.ElementAt(aValue));
   }
 
-private:
-    bool IsMutable() const {
-      return ((!mData || mData->IsMutable()) &&
-              (!mImportantData || mImportantData->IsMutable()));
-    }
+  nsAutoTArray<PRUint8, 8> mOrder;
 
-    nsAutoTArray<PRUint8, 8> mOrder;
-    nsAutoRefCnt mRefCnt;
+  // never null, except while expanded, or before the first call to
+  // InitializeEmpty or CompressFrom.
+  nsAutoPtr<nsCSSCompressedDataBlock> mData;
 
-    // never null, except while expanded
-    nsRefPtr<nsCSSCompressedDataBlock> mData;
+  // may be null
+  nsAutoPtr<nsCSSCompressedDataBlock> mImportantData;
 
-    // may be null
-    nsRefPtr<nsCSSCompressedDataBlock> mImportantData;
+  // set by style rules when |RuleMatched| is called
+  PRPackedBool mImmutable;
 };
 
 } // namespace css

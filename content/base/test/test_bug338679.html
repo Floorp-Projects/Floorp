@@ -36,7 +36,7 @@ New:            width: auto;
 function attr_modified(ev) {
     $("out").textContent = "Previous:\t" + ev.prevValue + "\nNew:\t\t" + ev.newValue;
     is(ev.newValue, "width: auto;", "DOMAttrModified event reports correct newValue");
-    todo(ev.prevValue == "width: 20em;", "DOMAttrModified event reports correct prevValue");
+    is(ev.prevValue == "width: 20em;", "DOMAttrModified event reports correct prevValue");
     SimpleTest.finish(); // trigger the end of our test sequence
 }
 
