@@ -82,7 +82,7 @@ public:
   }
 
 protected:
-  virtual nsresult DeclarationChanged();
+  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl);
   virtual nsIDocument* DocToUpdate();
 
   nsCOMPtr<nsIContent> mContent;

@@ -959,12 +959,12 @@ public:
 
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
   void DropReference(void);
-  virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool aAllocate);
+  virtual css::Declaration* GetCSSDeclaration(PRBool aAllocate);
+  virtual nsresult SetCSSDeclaration(css::Declaration* aDecl);
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
                                             nsIPrincipal** aSheetPrincipal,
                                             mozilla::css::Loader** aCSSLoader);
-  virtual nsresult DeclarationChanged();
   virtual nsIDocument* DocToUpdate();
 
   // Override |AddRef| and |Release| for being a member of
@@ -1116,7 +1116,7 @@ DOMCSSDeclarationImpl::GetParentRule(nsIDOMCSSRule **aParent)
 }
 
 nsresult
-DOMCSSDeclarationImpl::DeclarationChanged()
+DOMCSSDeclarationImpl::SetCSSDeclaration(css::Declaration* aDecl)
 {
   NS_PRECONDITION(mRule,
          "can only be called when |GetCSSDeclaration| returned a declaration");
@@ -1130,7 +1130,7 @@ DOMCSSDeclarationImpl::DeclarationChanged()
   mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, PR_TRUE);
 
   nsCOMPtr<nsICSSStyleRule> oldRule = mRule;
-  mRule = oldRule->DeclarationChanged(PR_TRUE).get();
+  mRule = oldRule->DeclarationChanged(aDecl, PR_TRUE).get();
   if (!mRule)
     return NS_ERROR_OUT_OF_MEMORY;
   nsrefcnt cnt = mRule->Release();
@@ -1275,10 +1275,10 @@ public:
                    css::Declaration *aDeclaration);
 private:
   // for |Clone|
-  CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy); 
+  CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy);
   // for |DeclarationChanged|
   CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
-                   css::Declaration *aDeclaration); 
+                   css::Declaration *aDeclaration);
 public:
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -1295,7 +1295,7 @@ public:
 
   virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const;
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
-  
+
   virtual void SetParentRule(nsICSSGroupRule* aRule);
 
   virtual nsresult GetCssText(nsAString& aCssText);
@@ -1311,7 +1311,7 @@ public:
   nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
 
   virtual already_AddRefed<nsICSSStyleRule>
-    DeclarationChanged(PRBool aHandleContainer);
+  DeclarationChanged(css::Declaration* aDecl, PRBool aHandleContainer);
 
   // The new mapping function.
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);
@@ -1320,9 +1320,9 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-private: 
-  // These are not supported and are not implemented! 
-  CSSStyleRuleImpl& operator=(const CSSStyleRuleImpl& aCopy); 
+private:
+  // These are not supported and are not implemented!
+  CSSStyleRuleImpl& operator=(const CSSStyleRuleImpl& aCopy);
 
 protected:
   virtual ~CSSStyleRuleImpl(void);
@@ -1362,7 +1362,7 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
   // rest is constructed lazily on existing data
 }
 
-// for |DeclarationChanged|
+// for |SetCSSDeclaration|
 CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
                                    css::Declaration* aDeclaration)
   : nsCSSRule(aCopy),
@@ -1376,7 +1376,6 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
   // the reverse pointer as well (and transfer ownership).
   aCopy.mDOMRule = nsnull;
 
-  NS_ASSERTION(aDeclaration == aCopy.mDeclaration, "declaration mismatch");
   // Transfer ownership of selector and declaration:
   // NOTE that transferring ownership of the declaration relies on the
   // code in RuleMatched caching what we need from mDeclaration so that
@@ -1387,10 +1386,13 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
   // necessary data blocks from its declaration, so any later
   // MapRuleInfoInto calls (see stack in bug 209575; also needed for CSS
   // Transitions) and GetImportantRule calls will also work.
+  if (mDeclaration != aCopy.mDeclaration) {
+    NS_ADDREF(mDeclaration);
+    NS_RELEASE(aCopy.mDeclaration);
+  }
   aCopy.mSelector = nsnull;
   aCopy.mDeclaration = nsnull;
 }
-
 
 CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
 {
@@ -1524,9 +1526,10 @@ CSSStyleRuleImpl::GetDOMRuleWeak(nsresult *aResult)
 }
 
 /* virtual */ already_AddRefed<nsICSSStyleRule>
-CSSStyleRuleImpl::DeclarationChanged(PRBool aHandleContainer)
+CSSStyleRuleImpl::DeclarationChanged(css::Declaration* aDecl,
+                                     PRBool aHandleContainer)
 {
-  CSSStyleRuleImpl* clone = new CSSStyleRuleImpl(*this, mDeclaration);
+  CSSStyleRuleImpl* clone = new CSSStyleRuleImpl(*this, aDecl);
   if (!clone) {
     return nsnull;
   }

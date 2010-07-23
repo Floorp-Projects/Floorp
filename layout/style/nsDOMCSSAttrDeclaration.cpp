@@ -85,7 +85,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCSSAttributeDeclaration)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCSSAttributeDeclaration)
 
 nsresult
-nsDOMCSSAttributeDeclaration::DeclarationChanged()
+nsDOMCSSAttributeDeclaration::SetCSSDeclaration(css::Declaration* aDecl)
 {
   NS_ASSERTION(mContent, "Must have content node to set the decl!");
   nsICSSStyleRule* oldRule =
@@ -95,11 +95,12 @@ nsDOMCSSAttributeDeclaration::DeclarationChanged()
     mContent->GetInlineStyleRule();
   NS_ASSERTION(oldRule, "content must have rule");
 
-  nsCOMPtr<nsICSSStyleRule> newRule = oldRule->DeclarationChanged(PR_FALSE);
+  nsCOMPtr<nsICSSStyleRule> newRule =
+    oldRule->DeclarationChanged(aDecl, PR_FALSE);
   if (!newRule) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-    
+
   return
 #ifdef MOZ_SMIL
     mIsSMILOverride ? mContent->SetSMILOverrideStyleRule(newRule, PR_TRUE) :
