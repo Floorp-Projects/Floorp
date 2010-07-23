@@ -126,6 +126,7 @@ function InputHandler(browserViewContainer) {
   window.addEventListener("mouseup", this, true);
   window.addEventListener("mousemove", this, true);
   window.addEventListener("click", this, true);
+  window.addEventListener("contextmenu", this, false);
   window.addEventListener("MozMagnifyGestureStart", this, true);
   window.addEventListener("MozMagnifyGestureUpdate", this, true);
   window.addEventListener("MozMagnifyGesture", this, true);
@@ -346,7 +347,7 @@ function MouseModule(owner, browserViewContainer) {
 
 MouseModule.prototype = {
   handleEvent: function handleEvent(aEvent) {
-    if (aEvent.button !== 0)
+    if (aEvent.button !== 0 && aEvent.type != "contextmenu")
       return;
 
     switch (aEvent.type) {
@@ -358,6 +359,10 @@ MouseModule.prototype = {
         break;
       case "mouseup":
         this._onMouseUp(aEvent);
+        break;
+      case "contextmenu":
+        if (ContextHelper.popupState && this._dragData.dragging)
+          this._doDragStop(0, 0, true);
         break;
       case "MozMagnifyGestureStart":
       case "MozMagnifyGesture":
@@ -494,7 +499,7 @@ MouseModule.prototype = {
         this._cleanClickBuffer();
     }
     else if (dragData.isPan()) {
-      // User was panning around, do not allow chrome click
+      // User was panning around or contextmenu was open, do not allow chrome click
       // XXX Instead of having suppressNextClick, we could grab until click is seen
       // and THEN ungrab so that owner does not need to know anything about clicking.
       let generatesClick = aEvent.detail;
@@ -843,12 +848,8 @@ DragData.prototype = {
     if (!this._isPan) {
       let distanceSquared = (Math.pow(sX - this._originX, 2) + Math.pow(sY - this._originY, 2));
       this._isPan = (distanceSquared > Math.pow(this._dragRadius, 2));
-      if (this._isPan) {
-        // dismiss the active state of the pan element
-        let target = document.documentElement;
-        let state = this._domUtils.getContentState(target);
-        this._domUtils.setContentState(target, state & kStateActive);
-      }
+      if (this._isPan)
+        this._resetActive();
     }
 
     // If now a pan, mark previous position where panning was.
@@ -905,6 +906,7 @@ DragData.prototype = {
   },
 
   endDrag: function endDrag() {
+    this._resetActive();
     this.dragging = false;
   },
 
@@ -924,6 +926,13 @@ DragData.prototype = {
    */
   panPosition: function panPosition() {
     return this._lockAxis(this.sX, this.sY);
+  },
+
+  _resetActive: function _resetActive() {
+    // dismiss the active state of the pan element
+    let target = document.documentElement;
+    let state = this._domUtils.getContentState(target);
+    this._domUtils.setContentState(target, state & kStateActive);
   },
 
   toString: function toString() {

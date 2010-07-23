@@ -490,8 +490,6 @@
     <vbox id="bookmarklist-container" class="panel-dark" hidden="true">
       <hbox id="bookmarklist-header">
         <description flex="1">&bookmarksHeader.label;</description>
-        <toolbarbutton id="tool-bookmarks-manage" class="urlbar-button show-text button-dark" type="checkbox" autocheck="true"
-                       label="&bookmarksManage.label;" oncommand="BookmarkList.toggleManage();"/>
         <toolbarbutton id="tool-bookmarks-close" class="urlbar-button button-image" command="cmd_close"/>
       </hbox>
       <placelist id="bookmark-items" type="bookmarks" flex="1" onopen="BookmarkList.openBookmark();" autoedit="true"/>
@@ -519,6 +517,12 @@
         </richlistitem>
         <richlistitem id="context-saveimage" type="image-loaded" onclick="ContextCommands.saveImage(event);">
           <label value="&contextSaveImage.label;"/>
+        </richlistitem>
+        <richlistitem id="context-editbookmark" type="edit-bookmark" onclick="ContextCommands.editBookmark(event);">
+          <label value="&contextEditBookmark.label;"/>
+        </richlistitem>
+        <richlistitem id="context-removebookmark" type="edit-bookmark" onclick="ContextCommands.removeBookmark(event);">
+          <label value="&contextRemoveBookmark.label;"/>
         </richlistitem>
       </richlistbox>
     </vbox>

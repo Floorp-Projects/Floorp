@@ -1364,7 +1364,6 @@ var BookmarkHelper = {
 var BookmarkList = {
   _panel: null,
   _bookmarks: null,
-  _manageButtton: null,
 
   get mobileRoot() {
     let items = PlacesUtils.annotations.getItemsWithAnnotation("mobile/bookmarksRoot", {});
@@ -1383,29 +1382,15 @@ var BookmarkList = {
     BrowserUI.pushDialog(this);
 
     this._bookmarks = document.getElementById("bookmark-items");
-    this._bookmarks.addEventListener("BookmarkRemove", this, true);
-    this._bookmarks.manageUI = false;
     this._bookmarks.openFolder();
-
-    this._manageButton = document.getElementById("tool-bookmarks-manage");
-    this._manageButton.disabled = (this._bookmarks.items.length == 0);
   },
 
   close: function() {
     BrowserUI.updateStar();
 
-    if (this._bookmarks.manageUI)
-      this.toggleManage();
     this._bookmarks.blur();
-    this._bookmarks.removeEventListener("BookmarkRemove", this, true);
-
     this._panel.hidden = true;
     BrowserUI.popDialog();
-  },
-
-  toggleManage: function() {
-    this._bookmarks.manageUI = !(this._bookmarks.manageUI);
-    this._manageButton.checked = this._bookmarks.manageUI;
   },
 
   openBookmark: function() {
@@ -1413,15 +1398,6 @@ var BookmarkList = {
     if (item.spec) {
       this.close();
       BrowserUI.goToURI(item.spec);
-    }
-  },
-
-  handleEvent: function(aEvent) {
-    if (aEvent.type == "BookmarkRemove") {
-      if (this._bookmarks.isRootFolder && this._bookmarks.items.length == 1) {
-        this._manageButton.disabled = true;
-        this.toggleManage();
-      }
     }
   }
 };
@@ -2042,14 +2018,15 @@ var SelectHelperUI = {
   }
 };
 
-const kXLinkNamespace = "http://www.w3.org/1999/xlink";
-
 var ContextHelper = {
   popupState: null,
+  showPopup: function ch_showPopup(aData) {
+    this.receiveMessage(aData);
+  },
 
   receiveMessage: function ch_receiveMessage(aMessage) {
     this.popupState = aMessage.json;
-    this.popupState.browser = aMessage.target;
+    this.popupState.target = aMessage.target;
 
     let first = null;
     let last = null;
@@ -2058,27 +2035,12 @@ var ContextHelper = {
       let command = commands.children[i];
       let types = command.getAttribute("type").split(/\s+/);
       command.removeAttribute("selector");
-      if (types.indexOf("image") != -1 && this.popupState.onImage) {
-        first = (first ? first : command);
-        last = command;
-        command.hidden = false;
-        continue;
-      } else if (types.indexOf("image-loaded") != -1 && this.popupState.onLoadedImage) {
-        first = (first ? first : command);
-        last = command;
-        command.hidden = false;
-        continue;
-      } else if (types.indexOf("link") != -1 && this.popupState.onSaveableLink) {
-        first = (first ? first : command);
-        last = command;
-        command.hidden = false;
-        continue;
-      } else if (types.indexOf("callto") != -1 && this.popupState.onVoiceLink) {
-        first = (first ? first : command);
-        last = command;
-        command.hidden = false;
-        continue;
-      } else if (types.indexOf("mailto") != -1 && this.popupState.onLink && this.popupState.linkProtocol == "mailto") {
+      if ((types.indexOf("image") != -1 && this.popupState.onImage) ||
+         (types.indexOf("image-loaded") != -1 && this.popupState.onLoadedImage) ||
+         (types.indexOf("link") != -1 && this.popupState.onSaveableLink) ||
+         (types.indexOf("callto") != -1 && this.popupState.onVoiceLink) ||
+         (types.indexOf("mailto") != -1 && this.popupState.onLink && this.popupState.linkProtocol == "mailto") ||
+         (types.indexOf("edit-bookmark") != -1 && this.popupState.onBookmark)) {
         first = (first ? first : command);
         last = command;
         command.hidden = false;
@@ -2100,6 +2062,8 @@ var ContextHelper = {
       label.value = this.popupState.mediaURL;
     if (this.popupState.onLink)
       label.value = this.popupState.linkURL;
+    if (this.popupState.onBookmark)
+      label.value = this.popupState.bookmarkURL;
 
     let container = document.getElementById("context-popup");
     container.hidden = false;
@@ -2138,8 +2102,18 @@ var ContextCommands = {
   },
 
   saveImage: function cc_saveImage(aEvent) {
-    let browser = ContextHelper.popupState.browser;
+    let browser = ContextHelper.popupState.target;
     saveImageURL(ContextHelper.popupState.mediaURL, null, "SaveImageTitle", false, false, browser.documentURI);
+  },
+
+  editBookmark: function cc_editBookmark(aEvent) {
+    let target = ContextHelper.popupState.target;
+    target.startEditing();
+  },
+
+  removeBookmark: function cc_removeBookmark(aEvent) {
+    let target = ContextHelper.popupState.target;
+    target.remove();
   }
 }
 
