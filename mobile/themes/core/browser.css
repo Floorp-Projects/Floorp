@@ -1261,6 +1261,11 @@ pageaction .pageaction-desc[value=""] {
   background-color: #8db8d8;
 }
 
+#select-list > option[disabled="true"] {
+  pointer-events: none;
+  color: #aaa !important;
+}
+
 #select-list > option.optgroup {
   font-weight: bold;
   font-style: italic;
