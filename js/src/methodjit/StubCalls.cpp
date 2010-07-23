@@ -2259,16 +2259,15 @@ stubs::InstanceOf(VMFrame &f)
     JSFrameRegs &regs = f.regs;
 
     const Value &rref = regs.sp[-1];
-    JSObject *obj;
-    if (rref.isPrimitive() ||
-        !(obj = &rref.toObject())->map->ops->hasInstance) {
+    if (rref.isPrimitive()) {
         js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                             -1, rref, NULL);
         THROWV(JS_FALSE);
     }
+    JSObject *obj = &rref.toObject();
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
-    if (!obj->map->ops->hasInstance(cx, obj, &lref, &cond))
+    if (!js_HasInstance(cx, obj, &lref, &cond))
         THROWV(JS_FALSE);
     f.regs.sp[-2].setBoolean(cond);
     return cond;
