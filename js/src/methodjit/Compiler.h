@@ -181,13 +181,6 @@ class Compiler
         bool set;
     };
 
-    struct InternalCallSite {
-        bool stub;
-        Label location;
-        jsbytecode *pc;
-        uint32 id;
-    };
-
     JSContext *cx;
     JSScript *script;
     JSObject *scopeChain;
@@ -205,7 +198,6 @@ class Compiler
 #if defined JS_POLYIC
     js::Vector<PICGenInfo, 64> pics;
 #endif
-    js::Vector<InternalCallSite, 64> callSites;
     StubCompiler stubcc;
     Label invokeLabel;
     bool addTraceHints;
@@ -224,7 +216,6 @@ class Compiler
     Label getLabel() { return masm.label(); }
     bool knownJump(jsbytecode *pc);
     Label labelOf(jsbytecode *target);
-    void *findCallSite(const CallSite &callSite);
 
   private:
     CompileStatus generatePrologue();
@@ -237,7 +228,6 @@ class Compiler
     void jumpInScript(Jump j, jsbytecode *pc);
     JSC::ExecutablePool *getExecPool(size_t size);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
-    void addCallSite(uint32 id, bool stub);
 
     /* Emitting helpers. */
     void restoreFrameRegs(Assembler &masm);
@@ -339,7 +329,6 @@ class Compiler
     STUB_CALL_TYPE(VoidStubJSObj);
     STUB_CALL_TYPE(VoidPtrStubPC);
     STUB_CALL_TYPE(VoidVpStub);
-    STUB_CALL_TYPE(VoidStubPC);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall(Uses uses);

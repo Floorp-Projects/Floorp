@@ -341,9 +341,6 @@ public:
     };
 
     X86Assembler()
-#ifdef DEBUG
-      : isOOLPath(false)
-#endif
     {
     }
 
