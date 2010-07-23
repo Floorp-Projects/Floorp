@@ -142,7 +142,7 @@ Drag.prototype = {
     if (newRect) {
       update = true;
       bounds = newRect;
-      iQ.extend(snappedTrenches,newRect.snappedTrenches);
+      Utils.extend(snappedTrenches,newRect.snappedTrenches);
     }
 
     Trenches.hideGuides();
