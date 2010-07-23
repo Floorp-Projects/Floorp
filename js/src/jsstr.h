@@ -752,15 +752,18 @@ extern const bool js_alnum[];
 
 #define JS_ISDIGIT(c)   (JS_CTYPE(c) == JSCT_DECIMAL_DIGIT_NUMBER)
 
+const jschar BYTE_ORDER_MARK = 0xFEFF;
+const jschar NO_BREAK_SPACE  = 0x00A0;
+
 static inline bool
 JS_ISSPACE(jschar c)
 {
     unsigned w = c;
 
     if (w < 256)
-        return (w <= ' ' && (w == ' ' || (9 <= w && w <= 0xD))) || w == 0xA0;
+        return (w <= ' ' && (w == ' ' || (9 <= w && w <= 0xD))) || w == NO_BREAK_SPACE;
 
-    return (JS_CCODE(w) & 0x00070000) == 0x00040000;
+    return w == BYTE_ORDER_MARK || (JS_CCODE(w) & 0x00070000) == 0x00040000;
 }
 
 #define JS_ISPRINT(c)   ((c) < 128 && isprint(c))
