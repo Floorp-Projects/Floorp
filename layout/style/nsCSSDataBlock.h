@@ -251,9 +251,14 @@ public:
 
     /**
      * Clear the data for the given property (including the set and
-     * important bits).
+     * important bits).  Can be used with shorthand properties.
      */
     void ClearProperty(nsCSSProperty aPropID);
+
+    /**
+     * Same as ClearProperty, but faster and cannot be used with shorthands.
+     */
+    void ClearLonghandProperty(nsCSSProperty aPropID);
 
     void AssertInitialState() {
 #ifdef DEBUG
@@ -273,7 +278,6 @@ private:
 
     void DoExpand(nsRefPtr<nsCSSCompressedDataBlock> *aBlock,
                   PRBool aImportant);
-
 #ifdef DEBUG
     void DoAssertInitialState();
 #endif
