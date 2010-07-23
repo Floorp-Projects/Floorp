@@ -823,7 +823,7 @@ FrameState::uncopy(FrameEntry *original)
             moveOwnership(fe->type.reg(), fe);
     } else {
         JS_ASSERT(fe->isTypeKnown());
-        JS_ASSERT(fe->getKnownTag() == original->getKnownTag());
+        JS_ASSERT(fe->getKnownType() == original->getKnownType());
     }
     if (original->data.inMemory() && !fe->data.synced())
         tempRegForData(original);

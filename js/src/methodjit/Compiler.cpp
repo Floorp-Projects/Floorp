@@ -68,7 +68,7 @@ JSC::MacroAssemblerX86Common::SSE2CheckState JSC::MacroAssemblerX86Common::s_sse
 NotCheckedSSE2; 
 #endif 
 
-#ifdef JS_CPU_X86
+#if defined(JS_CPU_X86) or defined(JS_CPU_X64)
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::X86Registers::ecx;
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::X86Registers::edx;
 #elif defined(JS_CPU_ARM)
@@ -1513,14 +1513,21 @@ mjit::Compiler::emitReturn()
     masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ArgReg1);
     masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, fp)));
     masm.storePtr(Registers::ReturnReg, Address(Registers::ArgReg1, offsetof(JSContext, fp)));
+#if defined(JS_CPU_X86) or defined(JS_CPU_ARM)
     masm.subPtr(ImmIntPtr(1), FrameAddress(offsetof(VMFrame, inlineCallCount)));
+#elif defined (JS_CPU_X64)
+    /* Register is clobbered later, so it's safe to use. */
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, inlineCallCount)), JSReturnReg_Data);
+    masm.subPtr(ImmIntPtr(1), JSReturnReg_Data);
+    masm.storePtr(JSReturnReg_Data, FrameAddress(offsetof(VMFrame, inlineCallCount)));
+#endif
 
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Data);
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Type);
 
     Address rval(JSFrameReg, offsetof(JSStackFrame, rval));
-    masm.load32(masm.payloadOf(rval), JSReturnReg_Data);
-    masm.load32(masm.tagOf(rval), JSReturnReg_Type);
+    masm.loadPayload(rval, JSReturnReg_Data);
+    masm.loadTypeTag(rval, JSReturnReg_Type);
     masm.move(Registers::ReturnReg, JSFrameReg);
     masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, ncode)), Registers::ReturnReg);
 #ifdef DEBUG
@@ -2392,10 +2399,15 @@ mjit::Compiler::jsop_bindname(uint32 index)
     pic.hotPathBegin = masm.label();
 
     Address parent(pic.objReg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
-    masm.loadPayload(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+    masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
 
     pic.shapeGuard = masm.label();
+#if defined JS_32BIT
     Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(parent), ImmPtr(0));
+#elif defined JS_64BIT
+    masm.loadPayload(parent, Registers::ValueReg);
+    Jump j = masm.branchPtr(Assembler::NotEqual, Registers::ValueReg, ImmPtr(0));
+#endif
     {
         pic.slowPathStart = stubcc.masm.label();
         stubcc.linkExit(j, Uses(0));
@@ -2446,11 +2458,16 @@ mjit::Compiler::jsop_bindname(uint32 index)
 {
     RegisterID reg = frame.allocReg();
     Address scopeChain(JSFrameReg, offsetof(JSStackFrame, scopeChain));
-    masm.loadPayload(scopeChain, reg);
+    masm.loadPtr(scopeChain, reg);
 
     Address address(reg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
 
+#if defined JS_32BIT
     Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(address), ImmPtr(0));
+#elif defined JS_64BIT
+    masm.loadPayload(address, Registers::ValueReg);
+    Jump j = masm.branchPtr(Assembler::NotEqual, Registers::ValueReg, ImmPtr(0));
+#endif
 
     stubcc.linkExit(j, Uses(0));
     stubcc.leave();
