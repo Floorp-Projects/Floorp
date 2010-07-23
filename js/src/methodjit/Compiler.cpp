@@ -600,7 +600,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_DIV)
 
           BEGIN_CASE(JSOP_MOD)
-            jsop_binary(op, stubs::Mod);
+            jsop_mod();
           END_CASE(JSOP_MOD)
 
           BEGIN_CASE(JSOP_NOT)

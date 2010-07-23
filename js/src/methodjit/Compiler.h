@@ -269,6 +269,7 @@ class Compiler
     void jsop_bitop(JSOp op);
     void jsop_globalinc(JSOp op, uint32 index);
     void jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    void jsop_mod();
     void jsop_neg();
     void jsop_bitnot();
     void jsop_objtostr();

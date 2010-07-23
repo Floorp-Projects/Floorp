@@ -247,7 +247,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
         } else {
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
             /* Grosssssss! RHS _must_ be in ECX, on x86 */
-            RegisterID rr = frame.tempRegForData(rhs, JSC::X86Registers::ecx);
+            RegisterID rr = frame.tempRegInMaskForData(rhs, Registers::maskReg(JSC::X86Registers::ecx));
 #else
             RegisterID rr = frame.tempRegForData(rhs);
 #endif
