@@ -333,7 +333,9 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
     if (mode != 0) {
       mCaptureMouseListener->mMode = mode;
-      NS_NewHTMLElement(getter_AddRefs(mCapture), nodeInfo, PR_FALSE);
+      nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nsnull,
+                                                     kNameSpaceID_XHTML);
+      NS_NewHTMLElement(getter_AddRefs(mCapture), nodeInfo.forget(), PR_FALSE);
       if (!mCapture)
         return NS_ERROR_OUT_OF_MEMORY;
 
