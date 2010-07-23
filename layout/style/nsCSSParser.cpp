@@ -405,9 +405,7 @@ protected:
                           PRBool aCheckForBraces,
                           PRBool aMustCallValueAppended,
                           PRBool* aChanged);
-  // After a parse error parsing |aPropID|, clear the data in
-  // |mTempData|.
-  void ClearTempData(nsCSSProperty aPropID);
+
   // After a successful parse of |aPropID|, transfer data from
   // |mTempData| to |mData|.  Set |*aChanged| to true if something
   // changed, but leave it unmodified otherwise.  If aMustCallValueAppended
@@ -1150,7 +1148,8 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     REPORT_UNEXPECTED_P(PEValueParsingError, params);
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
-    ClearTempData(aPropID);
+    mTempData.ClearProperty(aPropID);
+    mTempData.AssertInitialState();
   } else {
 
     // We know we don't need to force a ValueAppended call for the new
@@ -4020,7 +4019,8 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
     REPORT_UNEXPECTED_P(PEValueParsingError, params);
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
-    ClearTempData(propID);
+    mTempData.ClearProperty(propID);
+    mTempData.AssertInitialState();
     return PR_FALSE;
   }
   CLEAR_ERROR();
@@ -4053,26 +4053,14 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
     }
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
-    ClearTempData(propID);
+    mTempData.ClearProperty(propID);
+    mTempData.AssertInitialState();
     return PR_FALSE;
   }
 
   TransferTempData(aDeclaration, propID, status == ePriority_Important,
                    PR_FALSE, aMustCallValueAppended, aChanged);
   return PR_TRUE;
-}
-
-void
-CSSParserImpl::ClearTempData(nsCSSProperty aPropID)
-{
-  if (nsCSSProps::IsShorthand(aPropID)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
-      mTempData.ClearProperty(*p);
-    }
-  } else {
-    mTempData.ClearProperty(aPropID);
-  }
-  mTempData.AssertInitialState();
 }
 
 void
@@ -4119,7 +4107,7 @@ CSSParserImpl::DoTransferTempData(css::Declaration* aDeclaration,
       // come through here too, and in that case we do want to
       // overwrite the property.
       if (!aOverrideImportant) {
-        mTempData.ClearProperty(aPropID);
+        mTempData.ClearLonghandProperty(aPropID);
         return;
       }
       *aChanged = PR_TRUE;

@@ -889,7 +889,7 @@ nsCSSExpandedDataBlock::Clear()
             if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
                 continue;
             nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
-            ClearProperty(iProp);
+            ClearLonghandProperty(iProp);
         }
     }
 
@@ -899,8 +899,21 @@ nsCSSExpandedDataBlock::Clear()
 void
 nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
 {
-    NS_ASSERTION(0 <= aPropID && aPropID < eCSSProperty_COUNT_no_shorthands,
-                 "out of range");
+  if (nsCSSProps::IsShorthand(aPropID)) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
+      ClearLonghandProperty(*p);
+    }
+  } else {
+    ClearLonghandProperty(aPropID);
+  }
+}
+
+void
+nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
+{
+    NS_ABORT_IF_FALSE(0 <= aPropID &&
+                      aPropID < eCSSProperty_COUNT_no_shorthands,
+                      "out of range");
 
     ClearPropertyBit(aPropID);
     ClearImportantBit(aPropID);
