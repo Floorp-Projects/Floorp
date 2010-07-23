@@ -339,9 +339,8 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSStyleRule, NS_ICSS_STYLE_RULE_IID)
 
-nsresult
-NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult,
-                   nsCSSSelectorList* aSelector,
+already_AddRefed<nsICSSStyleRule>
+NS_NewCSSStyleRule(nsCSSSelectorList* aSelector,
                    mozilla::css::Declaration* aDeclaration);
 
 #endif /* nsICSSStyleRule_h___ */

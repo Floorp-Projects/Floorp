@@ -87,7 +87,7 @@ Declaration::~Declaration()
   MOZ_COUNT_DTOR(mozilla::css::Declaration);
 }
 
-nsresult
+void
 Declaration::ValueAppended(nsCSSProperty aProperty)
 {
   NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
@@ -95,10 +95,9 @@ Declaration::ValueAppended(nsCSSProperty aProperty)
   // order IS important for CSS, so remove and add to the end
   mOrder.RemoveElement(aProperty);
   mOrder.AppendElement(aProperty);
-  return NS_OK;
 }
 
-nsresult
+void
 Declaration::RemoveProperty(nsCSSProperty aProperty)
 {
   nsCSSExpandedDataBlock data;
@@ -116,7 +115,6 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
   }
 
   CompressFrom(&data);
-  return NS_OK;
 }
 
 PRBool Declaration::AppendValueToString(nsCSSProperty aProperty,
@@ -158,7 +156,7 @@ PRBool Declaration::AppendValueToString(nsCSSProperty aProperty,
   return PR_TRUE;
 }
 
-nsresult
+void
 Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
 {
   aValue.Truncate(0);
@@ -166,7 +164,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   // simple properties are easy.
   if (!nsCSSProps::IsShorthand(aProperty)) {
     AppendValueToString(aProperty, aValue);
-    return NS_OK;
+    return;
   }
 
   // DOM Level 2 Style says (when describing CSS2Properties, although
@@ -208,7 +206,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     }
     if (!storage) {
       // Case (1) above: some subproperties not specified.
-      return NS_OK;
+      return;
     }
     nsCSSUnit unit;
     switch (nsCSSProps::kTypeTable[*p]) {
@@ -245,21 +243,21 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   }
   if (importantCount != 0 && importantCount != totalCount) {
     // Case (3), no consistent importance.
-    return NS_OK;
+    return;
   }
   if (initialCount == totalCount) {
     // Simplify serialization below by serializing initial up-front.
     nsCSSValue(eCSSUnit_Initial).AppendToString(eCSSProperty_UNKNOWN, aValue);
-    return NS_OK;
+    return;
   }
   if (inheritCount == totalCount) {
     // Simplify serialization below by serializing inherit up-front.
     nsCSSValue(eCSSUnit_Inherit).AppendToString(eCSSProperty_UNKNOWN, aValue);
-    return NS_OK;
+    return;
   }
   if (initialCount != 0 || inheritCount != 0) {
     // Case (2): partially initial or inherit.
-    return NS_OK;
+    return;
   }
 
   nsCSSCompressedDataBlock *data = importantCount ? mImportantData : mData;
@@ -465,7 +463,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
             size->mYValue.GetUnit() != eCSSUnit_Auto) {
           // Non-default background-size, so can't be serialized as shorthand.
           aValue.Truncate();
-          return NS_OK;
+          return;
         }
         image->mValue.AppendToString(eCSSProperty_background_image, aValue);
         aValue.Append(PRUnichar(' '));
@@ -497,7 +495,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
           // shorthand.
           if (clip->mValue != origin->mValue) {
             aValue.Truncate();
-            return NS_OK;
+            return;
           }
 
           aValue.Append(PRUnichar(' '));
@@ -516,14 +514,14 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
           if (repeat || attachment || position || clip || origin || size) {
             // Uneven length lists, so can't be serialized as shorthand.
             aValue.Truncate();
-            return NS_OK;
+            return;
           }
           break;
         }
         if (!repeat || !attachment || !position || !clip || !origin || !size) {
           // Uneven length lists, so can't be serialized as shorthand.
           aValue.Truncate();
-          return NS_OK;
+          return;
         }
         aValue.Append(PRUnichar(','));
         aValue.Append(PRUnichar(' '));
@@ -581,7 +579,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
             featureSettings.GetUnit() != eCSSUnit_System_Font ||
             languageOverride.GetUnit() != eCSSUnit_System_Font) {
           // This can't be represented as a shorthand.
-          return NS_OK;
+          return;
         }
         systemFont->AppendToString(eCSSProperty__x_system_font, aValue);
       } else {
@@ -594,7 +592,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
             sizeAdjust.GetUnit() != eCSSUnit_None ||
             featureSettings.GetUnit() != eCSSUnit_Normal ||
             languageOverride.GetUnit() != eCSSUnit_Normal) {
-          return NS_OK;
+          return;
         }
 
         if (style.GetUnit() != eCSSUnit_Enumerated ||
@@ -704,7 +702,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       NS_NOTREACHED("no other shorthands");
       break;
   }
-  return NS_OK;
 }
 
 PRBool
@@ -769,7 +766,7 @@ Declaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
   aResult.AppendLiteral("; ");
 }
 
-nsresult
+void
 Declaration::ToString(nsAString& aString) const
 {
   nsCSSCompressedDataBlock *systemFontData =
@@ -862,7 +859,6 @@ Declaration::ToString(nsAString& aString) const
     // if the string is not empty, we have a trailing whitespace we should remove
     aString.Truncate(aString.Length() - 1);
   }
-  return NS_OK;
 }
 
 #ifdef DEBUG
@@ -878,7 +874,7 @@ void Declaration::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-nsresult
+void
 Declaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const
 {
   aReturn.Truncate();
@@ -888,8 +884,6 @@ Declaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const
       AppendASCIItoUTF16(nsCSSProps::GetStringValue(property), aReturn);
     }
   }
-
-  return NS_OK;
 }
 
 Declaration*
@@ -898,12 +892,11 @@ Declaration::Clone() const
   return new Declaration(*this);
 }
 
-PRBool
+void
 Declaration::InitializeEmpty()
 {
   NS_ASSERTION(!mData && !mImportantData, "already initialized");
   mData = nsCSSCompressedDataBlock::CreateEmptyBlock();
-  return mData != nsnull;
 }
 
 PRBool

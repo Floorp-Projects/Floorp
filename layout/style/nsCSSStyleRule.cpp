@@ -959,8 +959,7 @@ public:
 
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
   void DropReference(void);
-  virtual nsresult GetCSSDeclaration(css::Declaration **aDecl,
-                                     PRBool aAllocate);
+  virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool aAllocate);
   virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                             nsIURI** aBaseURI,
                                             nsIPrincipal** aSheetPrincipal,
@@ -1048,18 +1047,14 @@ DOMCSSDeclarationImpl::DropReference(void)
   mRule = nsnull;
 }
 
-nsresult
-DOMCSSDeclarationImpl::GetCSSDeclaration(css::Declaration **aDecl,
-                                         PRBool aAllocate)
+css::Declaration*
+DOMCSSDeclarationImpl::GetCSSDeclaration(PRBool aAllocate)
 {
   if (mRule) {
-    *aDecl = mRule->GetDeclaration();
+    return mRule->GetDeclaration();
+  } else {
+    return nsnull;
   }
-  else {
-    *aDecl = nsnull;
-  }
-
-  return NS_OK;
 }
 
 /*
@@ -1643,17 +1638,12 @@ CSSStyleRuleImpl::SetSelectorText(const nsAString& aSelectorText)
   return NS_OK;
 }
 
-nsresult
-NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult,
-                   nsCSSSelectorList* aSelector,
+already_AddRefed<nsICSSStyleRule>
+NS_NewCSSStyleRule(nsCSSSelectorList* aSelector,
                    css::Declaration* aDeclaration)
 {
   NS_PRECONDITION(aDeclaration, "must have a declaration");
   CSSStyleRuleImpl *it = new CSSStyleRuleImpl(aSelector, aDeclaration);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aInstancePtrResult = it);
-  return NS_OK;
+  NS_ADDREF(it);
+  return it;
 }
