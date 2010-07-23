@@ -278,15 +278,9 @@ private:
     void DoAssertInitialState();
 #endif
 
-    struct PropertyOffsetInfo {
-        // XXX These could probably be pointer-to-member, if the casting can
-        // be done correctly.
-        size_t block_offset; // offset of value in nsCSSExpandedDataBlock
-        size_t ruledata_struct_offset; // offset of nsRuleData* in nsRuleData
-        size_t ruledata_member_offset; // offset of value in nsRuleData*
-    };
-
-    static const PropertyOffsetInfo kOffsetTable[];
+    // XXX These could probably be pointer-to-member, if the casting can
+    // be done correctly.
+    static const size_t kOffsetTable[];
 
     /*
      * mPropertiesSet stores a bit for every property that is present,
@@ -307,28 +301,8 @@ public:
      * |nsCSSValueList**| (etc.).
      */
     void* PropertyAt(nsCSSProperty aProperty) {
-        const PropertyOffsetInfo& offsets =
-            nsCSSExpandedDataBlock::kOffsetTable[aProperty];
-        return reinterpret_cast<void*>(reinterpret_cast<char*>(this) +
-                                          offsets.block_offset);
-    }
-
-    /*
-     * Return the storage location within |aRuleData| of the value of
-     * the property (i.e., either an |nsCSSValue*|, |nsCSSRect*|, or
-     * |nsCSSValueList**| (etc.).
-     */
-    static void* RuleDataPropertyAt(nsRuleData *aRuleData,
-                                    nsCSSProperty aProperty) {
-        const PropertyOffsetInfo& offsets =
-            nsCSSExpandedDataBlock::kOffsetTable[aProperty];
-        NS_ASSERTION(offsets.ruledata_struct_offset != size_t(-1),
-                     "property should not use CSS_PROP_BACKENDONLY");
-        char* cssstruct = *reinterpret_cast<char**>
-                                           (reinterpret_cast<char*>(aRuleData) +
-                              offsets.ruledata_struct_offset);
-        return reinterpret_cast<void*>
-                               (cssstruct + offsets.ruledata_member_offset);
+        size_t offset = nsCSSExpandedDataBlock::kOffsetTable[aProperty];
+        return reinterpret_cast<void*>(reinterpret_cast<char*>(this) + offset);
     }
 
     void SetPropertyBit(nsCSSProperty aProperty) {
