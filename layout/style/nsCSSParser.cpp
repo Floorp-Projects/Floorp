@@ -202,14 +202,12 @@ public:
                                nsIPrincipal*     aNodePrincipal,
                                nsICSSStyleRule** aResult);
 
-  nsresult ParseAndAppendDeclaration(const nsAString&  aBuffer,
-                                     nsIURI*           aSheetURL,
-                                     nsIURI*           aBaseURL,
-                                     nsIPrincipal*     aSheetPrincipal,
-                                     css::Declaration* aDeclaration,
-                                     PRBool            aParseOnlyOneDecl,
-                                     PRBool*           aChanged,
-                                     PRBool            aClearOldDecl);
+  nsresult ParseDeclarations(const nsAString&  aBuffer,
+                             nsIURI*           aSheetURL,
+                             nsIURI*           aBaseURL,
+                             nsIPrincipal*     aSheetPrincipal,
+                             css::Declaration* aDeclaration,
+                             PRBool*           aChanged);
 
   nsresult ParseRule(const nsAString&        aRule,
                      nsIURI*                 aSheetURL,
@@ -1028,14 +1026,12 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
 }
 
 nsresult
-CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
-                                         nsIURI*           aSheetURI,
-                                         nsIURI*           aBaseURI,
-                                         nsIPrincipal*     aSheetPrincipal,
-                                         css::Declaration* aDeclaration,
-                                         PRBool            aParseOnlyOneDecl,
-                                         PRBool*           aChanged,
-                                         PRBool            aClearOldDecl)
+CSSParserImpl::ParseDeclarations(const nsAString&  aBuffer,
+                                 nsIURI*           aSheetURI,
+                                 nsIURI*           aBaseURI,
+                                 nsIPrincipal*     aSheetPrincipal,
+                                 css::Declaration* aDeclaration,
+                                 PRBool*           aChanged)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
   AssertInitialState();
@@ -1046,20 +1042,16 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
 
   mSection = eCSSSection_General;
 
-  if (aClearOldDecl) {
-    mData.AssertInitialState();
-    aDeclaration->ClearData();
-    // We could check if it was already empty, but...
-    *aChanged = PR_TRUE;
-  } else {
-    aDeclaration->ExpandTo(&mData);
-  }
+  mData.AssertInitialState();
+  aDeclaration->ClearData();
+  // We could check if it was already empty, but...
+  *aChanged = PR_TRUE;
 
   nsresult rv = NS_OK;
-  do {
+  for (;;) {
     // If we cleared the old decl, then we want to be calling
     // ValueAppended as we parse.
-    if (!ParseDeclaration(aDeclaration, PR_FALSE, aClearOldDecl, aChanged)) {
+    if (!ParseDeclaration(aDeclaration, PR_FALSE, PR_TRUE, aChanged)) {
       rv = mScanner.GetLowLevelError();
       if (NS_FAILED(rv))
         break;
@@ -1069,9 +1061,9 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
         break;
       }
     }
-  } while (!aParseOnlyOneDecl);
-  aDeclaration->CompressFrom(&mData);
+  }
 
+  aDeclaration->CompressFrom(&mData);
   ReleaseScanner();
   return rv;
 }
@@ -9655,19 +9647,16 @@ nsCSSParser::ParseStyleAttribute(const nsAString&  aAttributeValue,
 }
 
 nsresult
-nsCSSParser::ParseAndAppendDeclaration(const nsAString&  aBuffer,
-                                       nsIURI*           aSheetURI,
-                                       nsIURI*           aBaseURI,
-                                       nsIPrincipal*     aSheetPrincipal,
-                                       css::Declaration* aDeclaration,
-                                       PRBool            aParseOnlyOneDecl,
-                                       PRBool*           aChanged,
-                                       PRBool            aClearOldDecl)
+nsCSSParser::ParseDeclarations(const nsAString&  aBuffer,
+                               nsIURI*           aSheetURI,
+                               nsIURI*           aBaseURI,
+                               nsIPrincipal*     aSheetPrincipal,
+                               css::Declaration* aDeclaration,
+                               PRBool*           aChanged)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
-    ParseAndAppendDeclaration(aBuffer, aSheetURI, aBaseURI, aSheetPrincipal,
-                              aDeclaration, aParseOnlyOneDecl, aChanged,
-                              aClearOldDecl);
+    ParseDeclarations(aBuffer, aSheetURI, aBaseURI, aSheetPrincipal,
+                      aDeclaration, aChanged);
 }
 
 nsresult

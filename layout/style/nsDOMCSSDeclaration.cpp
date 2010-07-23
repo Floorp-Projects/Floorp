@@ -121,7 +121,42 @@ nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
 NS_IMETHODIMP
 nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 {
-  return ParseDeclaration(aCssText, PR_FALSE, PR_TRUE);
+  css::Declaration* decl;
+  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
+  if (!decl) {
+    return result;
+  }
+
+  nsRefPtr<css::Loader> cssLoader;
+  nsCOMPtr<nsIURI> baseURI, sheetURI;
+  nsCOMPtr<nsIPrincipal> sheetPrincipal;
+
+  result = GetCSSParsingEnvironment(getter_AddRefs(sheetURI),
+                                    getter_AddRefs(baseURI),
+                                    getter_AddRefs(sheetPrincipal),
+                                    getter_AddRefs(cssLoader));
+
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  // For nsDOMCSSAttributeDeclaration, DeclarationChanged will lead to
+  // Attribute setting code, which leads in turn to BeginUpdate.  We
+  // need to start the update now so that the old rule doesn't get used
+  // between when we mutate the declaration and when we set the new
+  // rule (see stack in bug 209575).
+  mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), PR_TRUE);
+
+  nsCSSParser cssParser(cssLoader);
+  PRBool changed;
+  result = cssParser.ParseDeclarations(aCssText, sheetURI, baseURI,
+                                       sheetPrincipal, decl, &changed);
+
+  if (NS_SUCCEEDED(result) && changed) {
+    result = DeclarationChanged();
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP
@@ -275,52 +310,6 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
   result = cssParser.ParseProperty(aPropID, aPropValue, sheetURI, baseURI,
                                    sheetPrincipal, decl, &changed,
                                    aIsImportant);
-  if (NS_SUCCEEDED(result) && changed) {
-    result = DeclarationChanged();
-  }
-
-  return result;
-}
-
-nsresult
-nsDOMCSSDeclaration::ParseDeclaration(const nsAString& aDecl,
-                                      PRBool aParseOnlyOneDecl,
-                                      PRBool aClearOldDecl)
-{
-  css::Declaration* decl;
-  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
-  if (!decl) {
-    return result;
-  }
-
-  nsRefPtr<css::Loader> cssLoader;
-  nsCOMPtr<nsIURI> baseURI, sheetURI;
-  nsCOMPtr<nsIPrincipal> sheetPrincipal;
-
-  result = GetCSSParsingEnvironment(getter_AddRefs(sheetURI),
-                                    getter_AddRefs(baseURI),
-                                    getter_AddRefs(sheetPrincipal),
-                                    getter_AddRefs(cssLoader));
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  // For nsDOMCSSAttributeDeclaration, DeclarationChanged will lead to
-  // Attribute setting code, which leads in turn to BeginUpdate.  We
-  // need to start the update now so that the old rule doesn't get used
-  // between when we mutate the declaration and when we set the new
-  // rule (see stack in bug 209575).
-  mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), PR_TRUE);
-
-  nsCSSParser cssParser(cssLoader);
-  PRBool changed;
-  result = cssParser.ParseAndAppendDeclaration(aDecl, sheetURI, baseURI,
-                                               sheetPrincipal, decl,
-                                               aParseOnlyOneDecl,
-                                               &changed,
-                                               aClearOldDecl);
-
   if (NS_SUCCEEDED(result) && changed) {
     result = DeclarationChanged();
   }
