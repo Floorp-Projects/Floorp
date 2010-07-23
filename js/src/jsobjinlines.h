@@ -150,7 +150,8 @@ inline uint32
 JSObject::getDenseArrayCapacity() const
 {
     JS_ASSERT(isDenseArray());
-    return dslots ? dslots[-1].toPrivateUint32() : 0;
+    JS_ASSERT(dslots);
+    return dslots[-1].toPrivateUint32();
 }
 
 inline void
