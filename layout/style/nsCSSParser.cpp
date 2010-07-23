@@ -437,6 +437,13 @@ protected:
   PRBool ParseSingleValueProperty(nsCSSValue& aValue,
                                   nsCSSProperty aPropID);
 
+  enum PriorityParsingStatus {
+    ePriority_None,
+    ePriority_Important,
+    ePriority_Error
+  };
+  PriorityParsingStatus ParsePriority();
+
 #ifdef MOZ_XUL
   PRBool ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs);
 #endif
@@ -1417,6 +1424,34 @@ CSSParserImpl::ExpectEndProperty()
   return PR_FALSE;
 }
 
+// Parses the priority suffix on a property, which at present may be
+// either '!important' or nothing.
+CSSParserImpl::PriorityParsingStatus
+CSSParserImpl::ParsePriority()
+{
+  if (!GetToken(PR_TRUE)) {
+    return ePriority_None; // properties may end with EOF
+  }
+  if (!mToken.IsSymbol('!')) {
+    UngetToken();
+    return ePriority_None; // dunno what it is, but it's not a priority
+  }
+
+  if (!GetToken(PR_TRUE)) {
+    // EOF is not ok after !
+    REPORT_UNEXPECTED_EOF(PEImportantEOF);
+    return ePriority_Error;
+  }
+
+  if (mToken.mType != eCSSToken_Ident ||
+      !mToken.mIdent.LowerCaseEqualsLiteral("important")) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedImportant);
+    UngetToken();
+    return ePriority_Error;
+  }
+
+  return ePriority_Important;
+}
 
 nsSubstring*
 CSSParserImpl::NextIdent()
@@ -3999,70 +4034,41 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   }
   CLEAR_ERROR();
 
-  // See if the declaration is followed by a "!important" declaration
-  PRBool isImportant = PR_FALSE;
-  if (!GetToken(PR_TRUE)) {
-    // EOF is a perfectly good way to end a declaration and declaration block
-    TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
-                     aMustCallValueAppended, aChanged);
-    return PR_TRUE;
-  }
+  // Look for "!important".
+  PriorityParsingStatus status = ParsePriority();
 
-  if (eCSSToken_Symbol == tk->mType && '!' == tk->mSymbol) {
-    // Look for important ident
+  // Look for a semicolon or close brace.
+  if (status != ePriority_Error) {
     if (!GetToken(PR_TRUE)) {
-      // Premature eof is not ok
-      REPORT_UNEXPECTED_EOF(PEImportantEOF);
-      ClearTempData(propID);
-      return PR_FALSE;
-    }
-    if ((eCSSToken_Ident != tk->mType) ||
-        !tk->mIdent.LowerCaseEqualsLiteral("important")) {
-      REPORT_UNEXPECTED_TOKEN(PEExpectedImportant);
-      OUTPUT_ERROR();
+      // EOF is always ok
+    } else if (mToken.IsSymbol(';')) {
+      // semicolon is always ok
+    } else if (mToken.IsSymbol('}')) {
+      // brace is ok if aCheckForBraces, but don't eat it
       UngetToken();
-      ClearTempData(propID);
-      return PR_FALSE;
+      if (!aCheckForBraces) {
+        status = ePriority_Error;
+      }
+    } else {
+      status = ePriority_Error;
     }
-    isImportant = PR_TRUE;
-  }
-  else {
-    // Not a !important declaration
-    UngetToken();
   }
 
-  // Make sure valid property declaration is terminated with either a
-  // semicolon, EOF or a right-curly-brace (this last only when
-  // aCheckForBraces is true).
-  if (!GetToken(PR_TRUE)) {
-    // EOF is a perfectly good way to end a declaration and declaration block
-    TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
-                     aMustCallValueAppended, aChanged);
-    return PR_TRUE;
-  }
-  if (eCSSToken_Symbol == tk->mType) {
-    if (';' == tk->mSymbol) {
-      TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
-                       aMustCallValueAppended, aChanged);
-      return PR_TRUE;
+  if (status == ePriority_Error) {
+    if (aCheckForBraces) {
+      REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd2);
+    } else {
+      REPORT_UNEXPECTED(PEBadDeclEnd);
     }
-    if (aCheckForBraces && '}' == tk->mSymbol) {
-      // Unget the '}' so we'll be able to tell that this is the end
-      // of the declaration block when we unwind from here.
-      UngetToken();
-      TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
-                       aMustCallValueAppended, aChanged);
-      return PR_TRUE;
-    }
+    REPORT_UNEXPECTED(PEDeclDropped);
+    OUTPUT_ERROR();
+    ClearTempData(propID);
+    return PR_FALSE;
   }
-  if (aCheckForBraces)
-    REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd2);
-  else
-    REPORT_UNEXPECTED_TOKEN(PEBadDeclEnd);
-  REPORT_UNEXPECTED(PEDeclDropped);
-  OUTPUT_ERROR();
-  ClearTempData(propID);
-  return PR_FALSE;
+
+  TransferTempData(aDeclaration, propID, status == ePriority_Important,
+                   PR_FALSE, aMustCallValueAppended, aChanged);
+  return PR_TRUE;
 }
 
 void
