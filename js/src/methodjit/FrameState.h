@@ -304,7 +304,7 @@ class FrameState
     /*
      * Same as above, except register must match identically.
      */
-    inline RegisterID tempRegForData(FrameEntry *fe, RegisterID reg);
+    inline RegisterID tempRegInMaskForData(FrameEntry *fe, uint32 mask);
 
     /*
      * Forcibly loads the type tag for the specified FrameEntry
@@ -352,6 +352,7 @@ class FrameState
      * can modify it in-place. The actual FE is not modified.
      */
     RegisterID copyDataIntoReg(FrameEntry *fe);
+    void copyDataIntoReg(FrameEntry *fe, RegisterID exact);
     RegisterID copyDataIntoReg(Assembler &masm, FrameEntry *fe);
 
     /*

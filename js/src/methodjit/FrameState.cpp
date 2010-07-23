@@ -112,8 +112,8 @@ FrameState::takeReg(RegisterID reg)
     } else {
         JS_ASSERT(regstate[reg].fe);
         evictReg(reg);
-        regstate[reg].fe = NULL;
     }
+    regstate[reg].fe = NULL;
 }
 
 void
@@ -490,6 +490,38 @@ JSC::MacroAssembler::RegisterID
 FrameState::copyDataIntoReg(FrameEntry *fe)
 {
     return copyDataIntoReg(this->masm, fe);
+}
+
+void
+FrameState::copyDataIntoReg(FrameEntry *fe, RegisterID hint)
+{
+    JS_ASSERT(!fe->data.isConstant());
+
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    if (!fe->data.inRegister())
+        tempRegForData(fe);
+
+    RegisterID reg = fe->data.reg();
+    if (reg == hint) {
+        if (freeRegs.empty()) {
+            if (!fe->data.synced())
+                syncData(fe, addressOf(fe), masm);
+            fe->data.setMemory();
+        } else {
+            reg = allocReg();
+            masm.move(hint, reg);
+            fe->data.setRegister(reg);
+            regstate[reg] = regstate[hint];
+        }
+        regstate[hint].fe = NULL;
+    } else {
+        pinReg(reg);
+        takeReg(hint);
+        unpinReg(reg);
+        masm.move(reg, hint);
+    }
 }
 
 JSC::MacroAssembler::RegisterID

@@ -958,7 +958,9 @@ public:
 
     void idivl_r(RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "idivl      %s\n", MAYBE_PAD, 
+                       nameIReg(4, dst));
         m_formatter.oneByteOp(OP_GROUP3_Ev, GROUP3_OP_IDIV, dst);
     }
 
@@ -1285,7 +1287,8 @@ public:
 
     void cdq()
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cdq              \n", MAYBE_PAD);
         m_formatter.oneByteOp(OP_CDQ);
     }
 

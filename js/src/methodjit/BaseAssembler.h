@@ -141,6 +141,13 @@ class BaseAssembler : public JSC::MacroAssembler
         return Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value));
     }
 
+#ifdef JS_CPU_X86
+    void idiv(RegisterID reg) {
+        m_assembler.cdq();
+        m_assembler.idivl_r(reg);
+    }
+#endif
+
     /*
      * Prepares for a stub call.
      */
