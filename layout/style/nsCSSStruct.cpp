@@ -80,26 +80,29 @@ nsCSSValueList::~nsCSSValueList()
 }
 
 nsCSSValueList*
-nsCSSValueList::Clone(PRBool aDeep) const
+nsCSSValueList::Clone() const
 {
   nsCSSValueList* result = new nsCSSValueList(*this);
-  if (NS_UNLIKELY(!result))
-    return result;
-  if (aDeep)
-    NS_CSS_CLONE_LIST_MEMBER(nsCSSValueList, this, mNext, result, (PR_FALSE));
+  nsCSSValueList* dest = result;
+  const nsCSSValueList* src = this->mNext;
+  while (src) {
+    dest->mNext = new nsCSSValueList(*src);
+    dest = dest->mNext;
+    src = src->mNext;
+  }
   return result;
 }
 
-/* static */ PRBool
-nsCSSValueList::Equal(nsCSSValueList* aList1, nsCSSValueList* aList2)
+bool
+nsCSSValueList::operator==(const nsCSSValueList& aOther) const
 {
-  if (aList1 == aList2)
-    return PR_TRUE;
+  if (this == &aOther)
+    return true;
 
-  nsCSSValueList *p1 = aList1, *p2 = aList2;
+  const nsCSSValueList *p1 = this, *p2 = &aOther;
   for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
     if (p1->mValue != p2->mValue)
-      return PR_FALSE;
+      return false;
   }
   return !p1 && !p2; // true if same length, false otherwise
 }
@@ -356,29 +359,30 @@ nsCSSValuePairList::~nsCSSValuePairList()
 }
 
 nsCSSValuePairList*
-nsCSSValuePairList::Clone(PRBool aDeep) const
+nsCSSValuePairList::Clone() const
 {
   nsCSSValuePairList* result = new nsCSSValuePairList(*this);
-  if (NS_UNLIKELY(!result))
-    return result;
-  if (aDeep)
-    NS_CSS_CLONE_LIST_MEMBER(nsCSSValuePairList, this, mNext, result,
-                             (PR_FALSE));
+  nsCSSValuePairList* dest = result;
+  const nsCSSValuePairList* src = this->mNext;
+  while (src) {
+    dest->mNext = new nsCSSValuePairList(*src);
+    dest = dest->mNext;
+    src = src->mNext;
+  }
   return result;
 }
 
-/* static */ PRBool
-nsCSSValuePairList::Equal(nsCSSValuePairList* aList1,
-                          nsCSSValuePairList* aList2)
+bool
+nsCSSValuePairList::operator==(const nsCSSValuePairList& aOther) const
 {
-  if (aList1 == aList2)
-    return PR_TRUE;
+  if (this == &aOther)
+    return true;
 
-  nsCSSValuePairList *p1 = aList1, *p2 = aList2;
+  const nsCSSValuePairList *p1 = this, *p2 = &aOther;
   for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
     if (p1->mXValue != p2->mXValue ||
         p1->mYValue != p2->mYValue)
-      return PR_FALSE;
+      return false;
   }
   return !p1 && !p2; // true if same length, false otherwise
 }
