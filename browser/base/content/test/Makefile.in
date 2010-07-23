@@ -147,7 +147,6 @@ _BROWSER_FILES = \
                  browser_inspector_treeSelection.js \
                  browser_inspector_highlighter.js \
                  browser_inspector_stylePanel.js \
-                 browser_overflowScroll.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \
@@ -182,9 +181,19 @@ _BROWSER_FILES = \
     $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-_BROWSER_FILES += browser_bug462289.js
+_BROWSER_FILES += \
+		browser_bug462289.js \
+		$(NULL)
 else
-_BROWSER_FILES += browser_customize.js
+_BROWSER_FILES += \
+		browser_customize.js \
+		$(NULL)
+endif
+
+ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+_BROWSER_FILES += \
+		browser_overflowScroll.js \
+		$(NULL)
 endif
 
 libs:: $(_TEST_FILES)
