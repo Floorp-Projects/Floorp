@@ -2953,13 +2953,19 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 # define JS_CHECK_STACK_SIZE(cx, lval)  ((jsuword)&(lval) > (cx)->stackLimit)
 #endif
 
+#ifdef JS_THREADSAFE
+# define JS_ASSERT_REQUEST_DEPTH(cx)  JS_ASSERT((cx)->requestDepth >= 1)
+#else
+# define JS_ASSERT_REQUEST_DEPTH(cx)  ((void) 0)
+#endif
+
 /*
  * If the operation callback flag was set, call the operation callback.
  * This macro can run the full GC. Return true if it is OK to continue and
  * false otherwise.
  */
 #define JS_CHECK_OPERATION_LIMIT(cx)                                          \
-    (JS_ASSERT((cx)->requestDepth >= 1),                                      \
+    (JS_ASSERT_REQUEST_DEPTH(cx),                                             \
      (!JS_THREAD_DATA(cx)->operationCallbackFlag || js_InvokeOperationCallback(cx)))
 
 /*
