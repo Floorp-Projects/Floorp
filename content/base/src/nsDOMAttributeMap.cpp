@@ -179,7 +179,9 @@ nsDOMAttributeMap::RemoveAttribute(nsINodeInfo* aNodeInfo, nsIDOMNode** aReturn)
     // As we are removing the attribute we need to set the current value in
     // the attribute node.
     mContent->GetAttr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom(), value);
-    nsCOMPtr<nsIDOMNode> newAttr = new nsDOMAttribute(nsnull, aNodeInfo, value);
+    nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+    nsCOMPtr<nsIDOMNode> newAttr =
+      new nsDOMAttribute(nsnull, ni.forget(), value);
     if (!newAttr) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -207,8 +209,9 @@ nsDOMAttributeMap::GetAttribute(nsINodeInfo* aNodeInfo)
 
   nsDOMAttribute* node = mAttributeCache.GetWeak(attr);
   if (!node) {
+    nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
     nsRefPtr<nsDOMAttribute> newAttr =
-      new nsDOMAttribute(this, aNodeInfo, EmptyString());
+      new nsDOMAttribute(this, ni.forget(), EmptyString());
     if (newAttr && mAttributeCache.Put(attr, newAttr)) {
       node = newAttr;
     }

@@ -58,8 +58,8 @@ class nsSVGImageElement : public nsSVGImageElementBase,
 
 protected:
   friend nsresult NS_NewSVGImageElement(nsIContent **aResult,
-                                        nsINodeInfo *aNodeInfo);
-  nsSVGImageElement(nsINodeInfo *aNodeInfo);
+                                        already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsSVGImageElement();
 
 public:
@@ -93,6 +93,8 @@ public:
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
   void MaybeLoadSVGImage();
+
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   nsresult LoadSVGImage(PRBool aForce, PRBool aNotify);
 

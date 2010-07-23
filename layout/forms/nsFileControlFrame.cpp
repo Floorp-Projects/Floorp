@@ -207,7 +207,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                                  kNameSpaceID_XHTML);
 
   // Create the text content
-  NS_NewHTMLElement(getter_AddRefs(mTextContent), nodeInfo, PR_FALSE);
+  NS_NewHTMLElement(getter_AddRefs(mTextContent), nodeInfo.forget(), PR_FALSE);
   if (!mTextContent)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -247,7 +247,9 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                            systemGroup);
 
   // Create the browse button
-  NS_NewHTMLElement(getter_AddRefs(mBrowse), nodeInfo, PR_FALSE);
+  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nsnull,
+                                                 kNameSpaceID_XHTML);
+  NS_NewHTMLElement(getter_AddRefs(mBrowse), nodeInfo.forget(), PR_FALSE);
   if (!mBrowse)
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -383,8 +383,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsCOMPtr<nsINodeInfo> nodeInfo = aBuilder->GetNodeInfoManager()->GetNodeInfo(name, nsnull, ns);
       NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
       NS_NewElement(getter_AddRefs(newContent),
-                    nodeInfo->NamespaceID(),
-                    nodeInfo,
+                    ns, nodeInfo.forget(),
                     (mOpCode == eTreeOpCreateElementNetwork ?
                      NS_FROM_PARSER_NETWORK
                      : (aBuilder->IsFragmentMode() ?
@@ -426,9 +425,10 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                                                       
         for (PRUint32 i = 0; i < theContent.Length(); ++i) {
           nsCOMPtr<nsIContent> optionElt;
+          nsCOMPtr<nsINodeInfo> ni = optionNodeInfo;
           NS_NewElement(getter_AddRefs(optionElt), 
                         optionNodeInfo->NamespaceID(), 
-                        optionNodeInfo, 
+                        ni.forget(),
                         PR_TRUE);
           nsCOMPtr<nsIContent> optionText;
           NS_NewTextNode(getter_AddRefs(optionText), 

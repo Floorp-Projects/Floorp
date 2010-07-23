@@ -46,7 +46,7 @@ class nsHTMLMetaElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLMetaElement
 {
 public:
-  nsHTMLMetaElement(nsINodeInfo *aNodeInfo);
+  nsHTMLMetaElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLMetaElement();
 
   // nsISupports
@@ -72,13 +72,15 @@ public:
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Meta)
 
 
-nsHTMLMetaElement::nsHTMLMetaElement(nsINodeInfo *aNodeInfo)
+nsHTMLMetaElement::nsHTMLMetaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -92,7 +94,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLMetaElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLMetaElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLMetaElement, nsHTMLMetaElement)
+DOMCI_NODE_DATA(HTMLMetaElement, nsHTMLMetaElement)
 
 // QueryInterface implementation for nsHTMLMetaElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLMetaElement)

@@ -1401,7 +1401,7 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
     nsCOMPtr<nsINodeInfo> nodeInfo;
     nodeInfo = doc->NodeInfoManager()->GetNodeInfo(aTag, nsnull, aNameSpaceID);
 
-    rv = NS_NewElement(getter_AddRefs(result), aNameSpaceID, nodeInfo,
+    rv = NS_NewElement(getter_AddRefs(result), aNameSpaceID, nodeInfo.forget(),
                        PR_FALSE);
     if (NS_FAILED(rv))
         return rv;

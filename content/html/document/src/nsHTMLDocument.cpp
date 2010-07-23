@@ -275,7 +275,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLDocument, nsDocument)
 NS_IMPL_RELEASE_INHERITED(nsHTMLDocument, nsDocument)
 
 
-DOMCI_DATA(HTMLDocument, nsHTMLDocument)
+DOMCI_NODE_DATA(HTMLDocument, nsHTMLDocument)
 
 // QueryInterface implementation for nsHTMLDocument
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
@@ -1253,24 +1253,7 @@ NS_IMETHODIMP
 nsHTMLDocument::CreateElement(const nsAString& aTagName,
                               nsIDOMElement** aReturn)
 {
-  *aReturn = nsnull;
-  nsresult rv = nsContentUtils::CheckQName(aTagName, PR_FALSE);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsAutoString tagName(aTagName);
-  if (IsHTML()) {
-    ToLowerCase(tagName);
-  }
-
-  nsCOMPtr<nsIAtom> name = do_GetAtom(tagName);
-
-  nsCOMPtr<nsIContent> content;
-  rv = CreateElem(name, nsnull, kNameSpaceID_XHTML, PR_TRUE,
-                  getter_AddRefs(content));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return CallQueryInterface(content, aReturn);
+  return nsDocument::CreateElement(aTagName, aReturn);
 }
 
 NS_IMETHODIMP

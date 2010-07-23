@@ -71,7 +71,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Video)
 NS_IMPL_ADDREF_INHERITED(nsHTMLVideoElement, nsHTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLVideoElement, nsHTMLMediaElement)
 
-DOMCI_DATA(HTMLVideoElement, nsHTMLVideoElement)
+DOMCI_NODE_DATA(HTMLVideoElement, nsHTMLVideoElement)
 
 NS_INTERFACE_TABLE_HEAD(nsHTMLVideoElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLVideoElement, nsIDOMHTMLMediaElement, nsIDOMHTMLVideoElement)
@@ -100,7 +100,8 @@ NS_IMETHODIMP nsHTMLVideoElement::GetVideoHeight(PRUint32 *aVideoHeight)
   return NS_OK;
 }
 
-nsHTMLVideoElement::nsHTMLVideoElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
+nsHTMLVideoElement::nsHTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                                       PRUint32 aFromParser)
   : nsHTMLMediaElement(aNodeInfo, aFromParser)
 {
 }

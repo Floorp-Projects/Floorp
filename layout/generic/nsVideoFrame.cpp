@@ -100,7 +100,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                             nsnull,
                                             kNameSpaceID_XHTML);
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
-    mPosterImage = NS_NewHTMLImageElement(nodeInfo);
+    mPosterImage = NS_NewHTMLImageElement(nodeInfo.forget());
     NS_ENSURE_TRUE(mPosterImage, NS_ERROR_OUT_OF_MEMORY);
 
     // Set the nsImageLoadingContent::ImageState() to 0. This means that the
@@ -128,7 +128,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   nsresult rv = NS_NewElement(getter_AddRefs(mVideoControls),
                               kNameSpaceID_XUL,
-                              nodeInfo,
+                              nodeInfo.forget(),
                               PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!aElements.AppendElement(mVideoControls))

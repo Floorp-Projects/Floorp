@@ -63,7 +63,7 @@ class nsHTMLTableElement :  public nsGenericHTMLElement,
                             public nsIDOMHTMLTableElement
 {
 public:
-  nsHTMLTableElement(nsINodeInfo *aNodeInfo);
+  nsHTMLTableElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLTableElement();
 
   // nsISupports
@@ -89,6 +89,8 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLTableElement,
                                                      nsGenericHTMLElement)
@@ -383,7 +385,7 @@ TableRowsCollection::ParentDestroyed()
 NS_IMPL_NS_NEW_HTML_ELEMENT(Table)
 
 
-nsHTMLTableElement::nsHTMLTableElement(nsINodeInfo *aNodeInfo)
+nsHTMLTableElement::nsHTMLTableElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -408,7 +410,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTableElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLTableElement, nsHTMLTableElement)
+DOMCI_NODE_DATA(HTMLTableElement, nsHTMLTableElement)
 
 // QueryInterface implementation for nsHTMLTableElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTableElement)
@@ -623,7 +625,7 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::thead,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIContent> newHead = NS_NewHTMLTableSectionElement(nodeInfo);
+    nsCOMPtr<nsIContent> newHead = NS_NewHTMLTableSectionElement(nodeInfo.forget());
 
     if (newHead) {
       nsCOMPtr<nsIDOMNode> child;
@@ -679,7 +681,7 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tfoot,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIContent> newFoot = NS_NewHTMLTableSectionElement(nodeInfo);
+    nsCOMPtr<nsIContent> newFoot = NS_NewHTMLTableSectionElement(nodeInfo.forget());
 
     if (newFoot) {
       rv = AppendChildTo(newFoot, PR_TRUE);
@@ -725,7 +727,7 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::caption,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIContent> newCaption = NS_NewHTMLTableCaptionElement(nodeInfo);
+    nsCOMPtr<nsIContent> newCaption = NS_NewHTMLTableCaptionElement(nodeInfo.forget());
 
     if (newCaption) {
       rv = AppendChildTo(newCaption, PR_TRUE);
@@ -801,7 +803,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIContent> newRow = NS_NewHTMLTableRowElement(nodeInfo);
+    nsCOMPtr<nsIContent> newRow = NS_NewHTMLTableRowElement(nodeInfo.forget());
 
     if (newRow) {
       nsCOMPtr<nsIDOMNode> newRowNode(do_QueryInterface(newRow));
@@ -851,7 +853,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
                                   getter_AddRefs(nodeInfo));
 
       nsCOMPtr<nsIContent> newRowGroup =
-        NS_NewHTMLTableSectionElement(nodeInfo);
+        NS_NewHTMLTableSectionElement(nodeInfo.forget());
 
       if (newRowGroup) {
         rv = AppendChildTo(newRowGroup, PR_TRUE);
@@ -865,7 +867,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
       nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
                                   getter_AddRefs(nodeInfo));
 
-      nsCOMPtr<nsIContent> newRow = NS_NewHTMLTableRowElement(nodeInfo);
+      nsCOMPtr<nsIContent> newRow = NS_NewHTMLTableRowElement(nodeInfo.forget());
       if (newRow) {
         nsCOMPtr<nsIDOMNode> firstRow;
 

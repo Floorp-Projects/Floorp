@@ -45,7 +45,8 @@ class nsHTMLVideoElement : public nsHTMLMediaElement,
                            public nsIDOMHTMLVideoElement
 {
 public:
-  nsHTMLVideoElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser = 0);
+  nsHTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                     PRUint32 aFromParser = 0);
   virtual ~nsHTMLVideoElement();
 
   // nsISupports
@@ -78,6 +79,8 @@ public:
   // Returns the current video frame width and height.
   // If there is no video frame, returns the given default size.
   nsIntSize GetVideoSize(nsIntSize defaultSize);
+
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 #endif
