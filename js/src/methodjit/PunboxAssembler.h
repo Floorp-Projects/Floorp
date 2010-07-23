@@ -93,36 +93,6 @@ class Assembler : public BaseAssembler
         return address;
     }
 
-#if 0
-    /* This does not work with 64-bit boxing format, since tag is not byte-aligned. */
-    Address tagOf(Address address) {
-        return Address(address.base, address.offset + TAG_OFFSET);
-    }
-
-    BaseIndex tagOf(BaseIndex address) {
-        return BaseIndex(address.base, address.index, address.scale, address.offset + TAG_OFFSET);
-    }
-#endif /* 0 */
-
-#if 0
-    /* type and data need to be unified. */
-    void loadSlot(RegisterID obj, RegisterID clobber, uint32 slot, RegisterID type, RegisterID data) {
-        JS_ASSERT(type != data);
-        Address address(obj, offsetof(JSObject, fslots) + slot * sizeof(Value));
-        if (slot >= JS_INITIAL_NSLOTS) {
-            loadPtr(Address(obj, offsetof(JSObject, dslots)), clobber);
-            address = Address(obj, (slot - JS_INITIAL_NSLOTS) * sizeof(Value));
-        }
-        if (obj == type) {
-            loadData32(address, data);
-            loadTypeTag(address, type);
-        } else {
-            loadTypeTag(address, type);
-            loadData32(address, data);
-        }
-    }
-#endif
-
     /* TODO: Don't really need this..? */
     void loadValue(Address address, RegisterID dst) {
         loadPtr(address, dst);
