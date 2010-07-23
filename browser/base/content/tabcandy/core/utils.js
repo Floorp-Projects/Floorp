@@ -355,10 +355,55 @@ window.Range.prototype = {
   contains: function(value) {
     return Utils.isNumber(value) ?
       value >= this.min && value <= this.max :
-      Utils.isRange(value) ? 
+      Utils.isRange(value) ?
         ( value.min <= this.max && this.min <= value.max ) :
         false;
   },
+
+  // ----------
+  // Function: proportion
+  // Maps the given value to the range [0,1], so that it returns 0 if the value is <= the min,
+  // returns 1 if the value >= the max, and returns an interpolated "proportion" in (min, max).
+  //
+  // Paramaters
+  //  - a number
+  //  - (bool) smooth? If true, a smooth tanh-based function will be used instead of the linear.
+  proportion: function(value, smooth) {
+    if (value <= this.min)
+      return 0;
+    if (this.max <= value)
+      return 1;
+
+    var proportion = (value - this.min) / this.extent;
+
+    if (smooth) {
+      // The ease function ".5+.5*Math.tanh(4*x-2)" is a pretty
+      // little graph. It goes from near 0 at x=0 to near 1 at x=1
+      // smoothly and beautifully.
+      // http://www.wolframalpha.com/input/?i=.5+%2B+.5+*+tanh%28%284+*+x%29+-+2%29
+      function tanh(x){
+        var e = Math.exp(x);
+        return (e - 1/e) / (e + 1/e);
+      }
+      return .5 - .5 * tanh(2 - 4 * proportion);
+    }
+
+    return proportion;
+  },
+
+  // ----------
+  // Function: scale
+  // Takes the given value in [0,1] and maps it to the associated value on the Range.
+  //
+  // Paramaters
+  //  - a number in [0,1]
+  scale: function(value) {
+    if (value > 1)
+      value = 1;
+    if (value < 0)
+      value = 0;
+    return this.min + this.extent * value;
+  }
 };
 
 // ##########
@@ -600,7 +645,7 @@ var Utils = {
   isNumber: function(n) {
     return (typeof(n) == 'number' && !isNaN(n));
   },
-  
+
   // ----------
   // Function: isRect
   // Returns true if the given object (r) looks like a <Rect>.
@@ -611,7 +656,7 @@ var Utils = {
         && this.isNumber(r.width)
         && this.isNumber(r.height));
   },
-  
+
   // ----------
   // Function: isRange
   // Returns true if the given object (r) looks like a <Range>.
@@ -645,10 +690,5 @@ var Utils = {
 };
 
 window.Utils = Utils;
-
-window.Math.tanh = function tanh(x){
-  var e = Math.exp(x);
-  return (e - 1/e) / (e + 1/e);
-}
 
 })();
