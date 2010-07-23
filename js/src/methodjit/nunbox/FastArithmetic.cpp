@@ -778,6 +778,7 @@ mjit::Compiler::jsop_mod()
         prepareStubCall(Uses(2));
         stubCall(stubs::Mod);
         frame.popn(2);
+        frame.pushSynced();
         return;
     }
 
