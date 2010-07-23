@@ -242,7 +242,7 @@ mjit::Compiler::loadDouble(FrameEntry *fe, FPRegisterID fpReg)
     if (fe->isConstant()) {
         slowLoadConstantDouble(masm, fe, fpReg);
     } else if (!fe->isTypeKnown()) {
-        //frame.tempRegForType(fe);
+        frame.tempRegForType(fe);
         Jump j = frame.testDouble(Assembler::Equal, fe);
         notNumber = frame.testInt32(Assembler::NotEqual, fe);
         frame.convertInt32ToDouble(masm, fe, fpReg);
@@ -251,6 +251,7 @@ mjit::Compiler::loadDouble(FrameEntry *fe, FPRegisterID fpReg)
         frame.loadDouble(fe, fpReg, masm);
         converted.linkTo(masm.label(), &masm);
     } else if (fe->getKnownType() == JSVAL_TYPE_INT32) {
+        frame.tempRegForData(fe);
         frame.convertInt32ToDouble(masm, fe, fpReg);
     } else {
         JS_ASSERT(fe->getKnownType() == JSVAL_TYPE_DOUBLE);
@@ -290,7 +291,7 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Vo
     stubcc.call(stub);
 
     frame.popn(2);
-    frame.pushSynced();
+    frame.pushNumber(MaybeRegisterID());
 
     stubcc.rejoin(Changes(1));
 }
@@ -308,7 +309,7 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
         loadDouble(fe, FPRegisters::First);
         EmitDoubleOp(op, FPRegisters::First, FPRegisters::First, masm);
         frame.popn(2);
-        frame.pushSynced();
+        frame.pushNumber(MaybeRegisterID());
         return;
     }
 
@@ -394,9 +395,11 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
     stubcc.leave();
     stubcc.call(stub);
 
+    masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), frame.addressOf(lhs));
+
     /* Finish up stack operations. */
     frame.popn(2);
-    frame.pushUntypedPayload(JSVAL_TYPE_INT32, regs.result);
+    frame.pushNumber(regs.result);
 
     /* Merge back OOL double paths. */
     if (doublePathDone.isSet())
@@ -644,9 +647,11 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
     stubcc.leave();
     stubcc.call(stub);
 
+    masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), frame.addressOf(lhs));
+
     /* Finish up stack operations. */
     frame.popn(2);
-    frame.pushUntypedPayload(JSVAL_TYPE_INT32, regs.result);
+    frame.pushNumber(regs.result);
 
     /* Merge back OOL double paths. */
     if (doublePathDone.isSet())

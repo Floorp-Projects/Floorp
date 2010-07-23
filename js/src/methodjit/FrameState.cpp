@@ -714,6 +714,7 @@ FrameState::pushCopyOf(uint32 index)
             fe->setType(backing->getKnownType());
         else
             fe->type.invalidate();
+        fe->isNumber = backing->isNumber;
         fe->data.invalidate();
         if (backing->isCopy()) {
             backing = backing->copyOf();
@@ -872,6 +873,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
             else
                 localFe->type.invalidate();
             localFe->data.invalidate();
+            localFe->isNumber = backing->isNumber;
             return;
         }
 
@@ -938,6 +940,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
         backing->type.invalidate();
     backing->data.invalidate();
     backing->setCopyOf(localFe);
+    backing->isNumber = localFe->isNumber;
     localFe->setCopied();
 
     JS_ASSERT(top->copyOf() == localFe);
