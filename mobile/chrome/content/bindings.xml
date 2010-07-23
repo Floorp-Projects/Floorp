@@ -378,8 +378,27 @@
 
     <handlers>
       <handler event="click" button="0">
-        if (this.control)
+        <![CDATA[
+          let popupState = ContextHelper.popupState;
+          if (!this.control || (popupState && popupState.target == event.originalTarget))
+            return;
+
           this.control._fireOpen(event, this);
+        ]]>
+      </handler>
+      <handler event="contextmenu" phase="capturing">
+        <![CDATA[
+          if (!this.uri)
+            return;
+
+          let data = {
+            target: this,
+            json: {
+              onBookmark: true,
+              bookmarkURL: this.uri.spec
+          }};
+          ContextHelper.showPopup(data);
+        ]]>
       </handler>
     </handlers>
 
@@ -485,7 +504,7 @@
               this.save();
 
             this._isEditing = false;
-            if (this.control) {
+            if (this.control && this.control.activeItem) {
               this.control.activeItem.removeAttribute("selected");
               this.control.activeItem = null;
             }
@@ -616,10 +635,8 @@
             <xul:textbox anonid="uri" xbl:inherits="value=uri"/>
             <xul:textbox anonid="tags" xbl:inherits="value=tags" emptytext="&editBookmarkTags.label;"/>
           </xul:vbox>
-        
+
          <xul:hbox class="bookmark-controls" align="center">
-            <xul:button anonid="remove-button" class="bookmark-remove" label="&editBookmarkRemove.label;"
-                        oncommand="document.getBindingParent(this).remove()"/>
             <xul:spacer flex="1"/>
             <xul:button anonid="done-button" class="bookmark-done" label="&editBookmarkDone.label;"
                         oncommand="document.getBindingParent(this).stopEditing(true)"/>
@@ -715,7 +732,7 @@
             title: PlacesUtils.bookmarks.getItemTitle(PlacesUtils.bookmarksMenuFolderId),
             type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
           },
-          { 
+          {
             itemId: PlacesUtils.toolbarFolderId, tags: "", uri: "",
             title: PlacesUtils.bookmarks.getItemTitle(PlacesUtils.toolbarFolderId),
             type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
@@ -736,7 +753,6 @@
       <field name="_mode"/>
       <field name="_activeItem">null</field>
       <field name="_ignoreEditing">false</field>
-      <field name="_manageUI">false</field>
       <field name="_parents">
         document.getAnonymousElementByAttribute(this, "anonid", "parent-items");
       </field>
@@ -777,35 +793,6 @@
               }
 
               this._activeItem = val;
-            }
-            return val;
-          ]]>
-        </setter>
-      </property>
-
-      <property name="manageUI">
-        <getter>
-          <![CDATA[
-            return this._manageUI;
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            if (this._manageUI != val) {
-              this._manageUI = val;
-              if (this._manageUI) {
-                this.setAttribute("ui", "manage");
-                if (this.getAttribute("autoedit") == "true" && this._children.hasChildNodes()) {
-                  let first = this._getFirstVisibleChild();
-                  if (first)
-                    first.startEditing();
-                }
-              }
-              else {
-                if (this._activeItem && this._activeItem.isEditing)
-                  this._activeItem.stopEditing();
-                this.removeAttribute("ui");
-              }
             }
             return val;
           ]]>
@@ -980,11 +967,6 @@
             let target = aEvent.originalTarget;
             if (target.localName == "button" || this._activeItem == aItem)
               return;
-
-            if (this._manageUI && this._readOnlyFolders.indexOf(parseInt(aItem.itemId)) == -1) {
-              aItem.startEditing();
-              return;
-            }
 
             if (aItem.type == "folder") {
               this.openFolder(aItem.itemId);

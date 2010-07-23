@@ -21,9 +21,7 @@
 <!ENTITY addToDictionary.label "Add to Dictionary">
 
 <!ENTITY bookmarksHeader.label     "Bookmarks">
-<!ENTITY bookmarksManage.label     "Manage">
 
-<!ENTITY editBookmarkRemove.label  "Remove">
 <!ENTITY editBookmarkDone.label    "Done">
 <!ENTITY editBookmarkTags.label    "Add tags here">
 
@@ -86,5 +84,7 @@
 <!ENTITY consoleErrLine.label      "Line:">
 <!ENTITY consoleErrColumn.label    "Column:">
 
-<!ENTITY contextOpenInNewTab.label "Open Link in New Tab">
-<!ENTITY contextSaveImage.label    "Save Image">
+<!ENTITY contextOpenInNewTab.label    "Open Link in New Tab">
+<!ENTITY contextSaveImage.label       "Save Image">
+<!ENTITY contextEditBookmark.label    "Edit">
+<!ENTITY contextRemoveBookmark.label  "Remove">

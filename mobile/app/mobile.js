@@ -59,7 +59,7 @@ pref("zoom.dpiScale", 150);
 pref("ui.use_native_popup_windows", true);
 
 /* use long press to display a context menu */
-pref("ui.click_hold_context_menus", false);
+pref("ui.click_hold_context_menus", true);
 
 /* cache prefs */
 pref("browser.cache.disk.enable", false);
