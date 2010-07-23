@@ -155,6 +155,19 @@ public:
         return mRefCnt < 2;
     }
 
+    /**
+     * Does a fast move of aSource to aDest.  The previous value in
+     * aDest is cleanly destroyed, and aSource is cleared.  *aChanged
+     * is set true if, before the copy, the value at aSource compares
+     * unequal to the value at aDest.
+     *
+     * This can only be used for non-shorthand properties.  The caller
+     * must make sure that the source and destination locations point
+     * to the right kind of objects for the property id.
+     */
+    static void MoveValue(void *aSource, void *aDest, nsCSSProperty aPropID,
+                          PRBool* aChanged);
+
 private:
     PRInt32 mStyleBits; // the structs for which we have data, according to
                         // |nsCachedStyleData::GetBitForSID|.
@@ -260,6 +273,26 @@ public:
      */
     void ClearLonghandProperty(nsCSSProperty aPropID);
 
+    /**
+     * Transfer the state for |aPropID| (which may be a shorthand)
+     * from |aFromBlock| to this block.  The property being transferred
+     * is !important if |aIsImportant| is true, and should replace an
+     * existing !important property regardless of its own importance
+     * if |aOverrideImportant| is true.
+     *
+     * Sets |*aChanged| to true if something changed, leaves it
+     * unmodified otherwise.  Calls |ValueAppended| on |aDeclaration|
+     * if the property was not previously set, or in any case if
+     * |aMustCallValueAppended| is true.
+     */
+    void TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
+                           nsCSSProperty aPropID,
+                           PRBool aIsImportant,
+                           PRBool aOverrideImportant,
+                           PRBool aMustCallValueAppended,
+                           mozilla::css::Declaration* aDeclaration,
+                           PRBool* aChanged);
+
     void AssertInitialState() {
 #ifdef DEBUG
         DoAssertInitialState();
@@ -278,6 +311,18 @@ private:
 
     void DoExpand(nsRefPtr<nsCSSCompressedDataBlock> *aBlock,
                   PRBool aImportant);
+
+    /**
+     * Worker for TransferFromBlock; cannot be used with shorthands.
+     */
+    void DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
+                             nsCSSProperty aPropID,
+                             PRBool aIsImportant,
+                             PRBool aOverrideImportant,
+                             PRBool aMustCallValueAppended,
+                             mozilla::css::Declaration* aDeclaration,
+                             PRBool* aChanged);
+
 #ifdef DEBUG
     void DoAssertInitialState();
 #endif
