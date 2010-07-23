@@ -69,7 +69,7 @@ union Variant {
   CompVariant;
 };
 
-sync protocol PJetpack
+rpc protocol PJetpack
 {
   manages PHandle;
 both:
@@ -81,8 +81,8 @@ child:
   async EvalScript(nsString code);
 
 parent:
-  sync CallMessage(nsString messageName,
-                   Variant[] data)
+  rpc CallMessage(nsString messageName,
+                  Variant[] data)
     returns (Variant[] results);
 
 };
