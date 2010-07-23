@@ -1907,11 +1907,13 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
     for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
       nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
 
+      nsIContent* previousSibling = content->GetPreviousSibling();
+
       if (nsINode::GetFirstChild() == content) {
         mFirstChild = content->GetNextSibling();
       }
       mChildren.RemoveChildAt(i);
-      nsNodeUtils::ContentRemoved(this, content, i);
+      nsNodeUtils::ContentRemoved(this, content, i, previousSibling);
       content->UnbindFromTree();
     }
   }

@@ -55,8 +55,8 @@
 #include "nsIAtom.h"
 
 #define NS_IPARSER_IID \
-{ 0x3db442c2, 0x8a4d, 0x4ce4, \
-{ 0x86, 0x58, 0x48, 0xee, 0x55, 0x4b, 0xbb, 0xd4 } }
+{ 0xcbc0cbd8, 0xbbb7, 0x46d6, \
+  { 0xa5, 0x51, 0x37, 0x8a, 0x69, 0x53, 0xa7, 0x14 } }
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -69,6 +69,7 @@ class nsIParserFilter;
 class nsString;
 class nsIURI;
 class nsIChannel;
+class nsIContent;
 
 enum eParserCommands {
   eViewNormal,
@@ -263,7 +264,7 @@ class nsIParser : public nsISupports {
                              nsDTDMode aMode = eDTDMode_autodetect) = 0;
 
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
-                             nsISupports* aTargetNode,
+                             nsIContent* aTargetNode,
                              nsIAtom* aContextLocalName,
                              PRInt32 aContextNamespace,
                              PRBool aQuirks) = 0;

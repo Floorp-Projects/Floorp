@@ -750,7 +750,8 @@ void
 nsContentList::ContentRemoved(nsIDocument *aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
-                              PRInt32 aIndexInContainer)
+                              PRInt32 aIndexInContainer,
+                              nsIContent* aPreviousSibling)
 {
   // Note that aContainer can be null here if we are removing from
   // the document itself; any attempted optimizations to this method

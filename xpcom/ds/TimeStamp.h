@@ -41,6 +41,7 @@
 
 #include "prinrval.h"
 #include "nsDebug.h"
+#include "prlong.h"
 
 namespace mozilla {
 
@@ -78,8 +79,15 @@ public:
     return ToSeconds() * 1000.0;
   }
 
-  static TimeDuration FromSeconds(PRInt32 aSeconds);
-  static TimeDuration FromMilliseconds(PRInt32 aMilliseconds);
+  // Using a double here is safe enough; with 53 bits we can represent
+  // durations up to over 280,000 years exactly.  If the units of
+  // mValue do not allow us to represent durations of that length,
+  // long durations are clamped to the max/min representable value
+  // instead of overflowing.
+  static inline TimeDuration FromSeconds(double aSeconds) {
+    return FromMilliseconds(aSeconds * 1000.0);
+  }
+  static TimeDuration FromMilliseconds(double aMilliseconds);
 
   TimeDuration operator+(const TimeDuration& aOther) const {
     return TimeDuration::FromTicks(mValue + aOther.mValue);
@@ -129,6 +137,19 @@ private:
     TimeDuration t;
     t.mValue = aTicks;
     return t;
+  }
+
+  static TimeDuration FromTicks(double aTicks) {
+    // NOTE: this MUST be a >= test, because PRInt64(double(LL_MAXINT))
+    // overflows and gives LL_MININT.
+    if (aTicks >= double(LL_MAXINT))
+      return TimeDuration::FromTicks(LL_MAXINT);
+
+    // This MUST be a <= test.
+    if (aTicks <= double(LL_MININT))
+      return TimeDuration::FromTicks(LL_MININT);
+
+    return TimeDuration::FromTicks(PRInt64(aTicks));
   }
 
   // Duration in PRIntervalTime units
@@ -184,7 +205,19 @@ public:
   TimeDuration operator-(const TimeStamp& aOther) const {
     NS_ASSERTION(!IsNull(), "Cannot compute with a null value");
     NS_ASSERTION(!aOther.IsNull(), "Cannot compute with aOther null value");
-    return TimeDuration::FromTicks(mValue - aOther.mValue);
+    PR_STATIC_ASSERT(-LL_MAXINT > LL_MININT);
+    PRInt64 ticks = PRInt64(mValue - aOther.mValue);
+    // Check for overflow.
+    if (mValue > aOther.mValue) {
+      if (ticks < 0) {
+        ticks = LL_MAXINT;
+      }
+    } else {
+      if (ticks > 0) {
+        ticks = LL_MININT;
+      }
+    }
+    return TimeDuration::FromTicks(ticks);
   }
 
   TimeStamp operator+(const TimeDuration& aOther) const {

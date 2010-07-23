@@ -64,6 +64,39 @@ namespace mozilla {
 namespace storage {
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Memory Reporting
+
+static PRInt64
+GetStorageSQLitePageCacheMemoryUsed(void *)
+{
+  int current, high;
+  int rc = ::sqlite3_status(SQLITE_STATUS_PAGECACHE_OVERFLOW, &current, &high,
+                            0);
+  return rc == SQLITE_OK ? current : 0;
+}
+
+static PRInt64
+GetStorageSQLiteOtherMemoryUsed(void *)
+{
+  int pageCacheCurrent, pageCacheHigh;
+  int rc = ::sqlite3_status(SQLITE_STATUS_PAGECACHE_OVERFLOW, &pageCacheCurrent,
+                            &pageCacheHigh, 0);
+  return rc == SQLITE_OK ? ::sqlite3_memory_used() - pageCacheCurrent : 0;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLitePageCacheMemoryUsed,
+                             "storage/sqlite/pagecache",
+                             "Memory in use by SQLite for the page cache",
+                             GetStorageSQLitePageCacheMemoryUsed,
+                             nsnull)
+
+NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLiteOtherMemoryUsed,
+                             "storage/sqlite/other",
+                             "Memory in use by SQLite for other various reasons",
+                             GetStorageSQLiteOtherMemoryUsed,
+                             nsnull)
+
+////////////////////////////////////////////////////////////////////////////////
 //// Service
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(
@@ -73,16 +106,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(
 )
 
 Service *Service::gService = nsnull;
-
-static PRInt64 GetStorageSQLiteMemoryUsed(void *) {
-  return sqlite3_memory_used();
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLiteMemoryUsed,
-                             "storage/sqlite",
-                             "Memory in use by SQLite",
-                             GetStorageSQLiteMemoryUsed,
-                             nsnull)
 
 Service *
 Service::getSingleton()
@@ -115,7 +138,8 @@ Service::getSingleton()
       NS_RELEASE(gService);
   }
 
-  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLiteMemoryUsed));
+  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLitePageCacheMemoryUsed));
+  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLiteOtherMemoryUsed));
 
   return gService;
 }

@@ -119,6 +119,7 @@
 #include "nsFocusManager.h"
 #include "nsTextEditRules.h"
 #include "nsIFontMetrics.h"
+#include "nsIDOMNSHTMLElement.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -443,8 +444,17 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   rv = UpdateValueDisplay(PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!IsSingleLineTextControl()) {
-    // textareas are eagerly initialized
+  // textareas are eagerly initialized
+  PRBool initEagerly = !IsSingleLineTextControl();
+  if (!initEagerly) {
+    nsCOMPtr<nsIDOMNSHTMLElement> element = do_QueryInterface(txtCtrl);
+    if (element) {
+      // so are input text controls with spellcheck=true
+      element->GetSpellcheck(&initEagerly);
+    }
+  }
+
+  if (initEagerly) {
     NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                  "Someone forgot a script blocker?");
 
@@ -1303,9 +1313,8 @@ nsTextControlFrame::GetText(nsString& aText)
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");
   if (IsSingleLineTextControl()) {
-    // If we're going to remove newlines anyway, ignore the wrap property
+    // There will be no line breaks so we can ignore the wrap property.
     txtCtrl->GetTextEditorValue(aText, PR_TRUE);
-    nsContentUtils::RemoveNewlines(aText);
   } else {
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mContent);
     if (textArea) {
@@ -1486,7 +1495,6 @@ nsTextControlFrame::UpdateValueDisplay(PRBool aNotify,
     return NS_OK;
   }
 
-  nsTextEditRules::HandleNewLines(value, -1);
   if (!value.IsEmpty() && IsPasswordTextControl()) {
     nsTextEditRules::FillBufWithPWChars(&value, value.Length());
   }
