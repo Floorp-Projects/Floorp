@@ -52,6 +52,7 @@ let EXPORTED_SYMBOLS = [
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
+const Cu = Components.utils;
 
 const PR_UINT32_MAX = 0xffffffff;
 
@@ -130,15 +131,20 @@ const NetUtil = {
     /**
      * Asynchronously opens a source and fetches the response.  A source can be
      * an nsIURI, nsIFile, string spec, or nsIChannel.  The provided callback
-     * will get an input stream containing the response, and the result code.
+     * will get an input stream containing the response, the result code, and a
+     * reference to the request.
      *
      * @param aSource
      *        The nsIURI, nsIFile, string spec, or nsIChannel to open.
+     *        Note: If passing an nsIChannel whose notificationCallbacks is
+     *              already set, callers are responsible for implementations
+     *              of nsIBadCertListener/nsISSLErrorListener.
      * @param aCallback
      *        The callback function that will be notified upon completion.  It
      *        will get two arguments:
      *        1) An nsIInputStream containing the data from the channel, if any.
      *        2) The status code from opening the source.
+     *        3) Reference to the channel (as an nsIRequest).
      */
     asyncFetch: function NetUtil_asyncOpen(aSource, aCallback)
     {
@@ -164,13 +170,20 @@ const NetUtil = {
             onStartRequest: function(aRequest, aContext) {},
             onStopRequest: function(aRequest, aContext, aStatusCode) {
                 pipe.outputStream.close();
-                aCallback(pipe.inputStream, aStatusCode);
+                aCallback(pipe.inputStream, aStatusCode, aRequest);
             }
         });
 
         let channel = aSource;
         if (!(channel instanceof Ci.nsIChannel)) {
             channel = this.newChannel(aSource);
+        }
+
+        // Add a BadCertHandler to suppress SSL/cert error dialogs, but only if
+        // the channel doesn't already have a notificationCallbacks.
+        if (!channel.notificationCallbacks) {
+          // Pass true to avoid optional redirect-cert-checking behavior.
+          channel.notificationCallbacks = new BadCertHandler(true);
         }
 
         channel.asyncOpen(listener, null);
@@ -265,3 +278,9 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 // Define our lazy getters.
 XPCOMUtils.defineLazyServiceGetter(this, "ioUtil", "@mozilla.org/io-util;1",
                                    "nsIIOUtil");
+
+XPCOMUtils.defineLazyGetter(this, "BadCertHandler", "@mozilla.org/io-util;1", function () {
+  var obj = {};
+  Cu.import("resource://gre/modules/CertUtils.jsm", obj);
+  return obj.BadCertHandler;
+});
