@@ -333,23 +333,6 @@ FrameState::pushUntypedPayload(JSValueType type, RegisterID payload,
 }
 
 inline JSC::MacroAssembler::RegisterID
-FrameState::predictRegForType(FrameEntry *fe)
-{
-    JS_ASSERT(!fe->type.isConstant());
-    if (fe->isCopy())
-        fe = fe->copyOf();
-
-    if (fe->type.inRegister())
-        return fe->type.reg();
-
-    /* :XXX: X64 */
-
-    RegisterID reg = allocReg(fe, RematInfo::TYPE);
-    fe->type.setRegister(reg);
-    return reg;
-}
-
-inline JSC::MacroAssembler::RegisterID
 FrameState::tempRegForType(FrameEntry *fe, RegisterID fallback)
 {
     JS_ASSERT(regstate[fallback].fe == NULL);
@@ -739,6 +722,37 @@ FrameState::giveOwnRegs(FrameEntry *fe)
         pop();
         pushRegs(type, data);
     }
+}
+
+inline void
+FrameState::loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const
+{
+    if (fe->type.synced() && fe->data.synced()) {
+        masm.loadDouble(addressOf(fe), fpReg);
+        return;
+    }
+
+    if (fe->isCopy()) {
+        FrameEntry *backing = fe->copyOf();
+        if (backing->type.synced() && backing->data.synced()) {
+            masm.loadDouble(addressOf(backing), fpReg);
+            return;
+        }
+        fe = backing;
+    }
+
+    Address address = addressOf(fe);
+    do {
+        if (!fe->data.synced()) {
+            syncData(fe, address, masm);
+            if (fe->isConstant())
+                break;
+        }
+        if (!fe->type.synced())
+            syncType(fe, address, masm);
+    } while (0);
+
+    masm.loadDouble(address, fpReg);
 }
 
 } /* namspace mjit */

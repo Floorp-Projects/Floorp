@@ -961,3 +961,188 @@ FrameState::shift(int32 n)
     pop();
 }
 
+static inline bool
+AllocHelper(RematInfo &info, MaybeRegisterID &maybe)
+{
+    if (info.inRegister()) {
+        maybe = info.reg();
+        return true;
+    }
+    return false;
+}
+
+void
+FrameState::allocForSameBinary(FrameEntry *fe, JSOp op, BinaryAlloc &alloc)
+{
+    JS_ASSERT(fe->isCopy());
+
+    if (!fe->isTypeKnown()) {
+        alloc.lhsType = tempRegForType(fe);
+        pinReg(alloc.lhsType.reg());
+    }
+
+    alloc.lhsData = tempRegForData(fe);
+
+    if (!freeRegs.empty()) {
+        alloc.result = allocReg();
+        masm.move(alloc.lhsData.reg(), alloc.result);
+        alloc.lhsNeedsRemat = false;
+    } else {
+        alloc.result = alloc.lhsData.reg();
+        takeReg(alloc.result);
+        alloc.lhsNeedsRemat = true;
+    }
+
+    if (alloc.lhsType.isSet())
+        unpinReg(alloc.lhsType.reg());
+}
+
+void
+FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAlloc &alloc)
+{
+    FrameEntry *backingLeft = lhs;
+    FrameEntry *backingRight = rhs;
+
+    if (backingLeft->isCopy())
+        backingLeft = backingLeft->copyOf();
+    if (backingRight->isCopy())
+        backingRight = backingRight->copyOf();
+
+    /*
+     * For each remat piece of both FEs, if a register is assigned, get it now
+     * and pin it. This is safe - constants and known types will be avoided.
+     */
+    if (AllocHelper(backingLeft->type, alloc.lhsType))
+        pinReg(alloc.lhsType.reg());
+    if (AllocHelper(backingLeft->data, alloc.lhsData))
+        pinReg(alloc.lhsData.reg());
+    if (AllocHelper(backingRight->type, alloc.rhsType))
+        pinReg(alloc.rhsType.reg());
+    if (AllocHelper(backingRight->data, alloc.rhsData))
+        pinReg(alloc.rhsData.reg());
+
+    /* For each type without a register, give it a register if needed. */
+    if (!alloc.lhsType.isSet() && backingLeft->type.inMemory()) {
+        alloc.lhsType = tempRegForType(lhs);
+        pinReg(alloc.lhsType.reg());
+    }
+    if (!alloc.rhsType.isSet() && backingRight->type.inMemory()) {
+        alloc.rhsType = tempRegForType(rhs);
+        pinReg(alloc.rhsType.reg());
+    }
+
+    bool commu;
+    switch (op) {
+      case JSOP_ADD:
+      case JSOP_MUL:
+      case JSOP_SUB:
+        commu = true;
+        break;
+
+      case JSOP_DIV:
+        commu = false;
+        break;
+
+      default:
+        JS_NOT_REACHED("unknown op");
+        return;
+    }
+
+    /*
+     * Data is a little more complicated. If the op is MUL, not all CPUs
+     * have multiplication on immediates, so a register is needed. Also,
+     * if the op is not commutative, the LHS _must_ be in a register.
+     */
+    JS_ASSERT_IF(lhs->isConstant(), !rhs->isConstant());
+    JS_ASSERT_IF(rhs->isConstant(), !lhs->isConstant());
+
+    if (!alloc.lhsData.isSet()) {
+        if (backingLeft->data.inMemory()) {
+            alloc.lhsData = tempRegForData(lhs);
+            pinReg(alloc.lhsData.reg());
+        } else if (op == JSOP_MUL || !commu) {
+            JS_ASSERT(lhs->isConstant());
+            alloc.lhsData = allocReg();
+            alloc.extraFree = alloc.lhsData;
+            masm.move(Imm32(lhs->getValue().toInt32()), alloc.lhsData.reg());
+        }
+    }
+    if (!alloc.rhsData.isSet()) {
+        if (backingRight->data.inMemory()) {
+            alloc.rhsData = tempRegForData(rhs);
+            pinReg(alloc.rhsData.reg());
+        } else if (op == JSOP_MUL) {
+            JS_ASSERT(rhs->isConstant());
+            alloc.rhsData = allocReg();
+            alloc.extraFree = alloc.rhsData;
+            masm.move(Imm32(rhs->getValue().toInt32()), alloc.rhsData.reg());
+        }
+    }
+
+    alloc.lhsNeedsRemat = false;
+    alloc.rhsNeedsRemat = false;
+
+    /*
+     * Now a result register is needed. It must contain a mutable copy of the
+     * LHS. For commutative operations, we can opt to use the RHS instead. At
+     * this point, if for some reason either must be in a register, that has
+     * already been guaranteed at this point.
+     */
+    if (!freeRegs.empty()) {
+        /* Free reg - just grab it. */
+        alloc.result = allocReg();
+        if (!alloc.lhsData.isSet()) {
+            JS_ASSERT(alloc.rhsData.isSet());
+            JS_ASSERT(commu);
+            masm.move(alloc.rhsData.reg(), alloc.result);
+            alloc.resultHasRhs = true;
+        } else {
+            masm.move(alloc.lhsData.reg(), alloc.result);
+            alloc.resultHasRhs = false;
+        }
+    } else {
+        /*
+         * No free regs. Find a good candidate to re-use. Best candidates don't
+         * require syncs on the inline path.
+         */
+        bool leftInReg = backingLeft->data.inRegister();
+        bool rightInReg = backingRight->data.inRegister();
+        bool leftSynced = backingLeft->data.synced();
+        bool rightSynced = backingRight->data.synced();
+        if (!commu || (leftInReg && (leftSynced || (!rightInReg || !rightSynced)))) {
+            JS_ASSERT(backingLeft->data.inRegister() || !commu);
+            JS_ASSERT_IF(backingLeft->data.inRegister(),
+                         backingLeft->data.reg() == alloc.lhsData.reg());
+            if (backingLeft->data.inRegister()) {
+                alloc.result = backingLeft->data.reg();
+                unpinReg(alloc.result);
+                takeReg(alloc.result);
+                alloc.lhsNeedsRemat = true;
+            } else {
+                /* For now, just spill... */
+                alloc.result = allocReg();
+                masm.move(alloc.lhsData.reg(), alloc.result);
+            }
+            alloc.resultHasRhs = false;
+        } else {
+            JS_ASSERT(commu);
+            JS_ASSERT(!leftInReg || (rightInReg && rightSynced));
+            alloc.result = backingRight->data.reg();
+            unpinReg(alloc.result);
+            takeReg(alloc.result);
+            alloc.resultHasRhs = true;
+            alloc.rhsNeedsRemat = true;
+        }
+    }
+
+    /* Unpin everything that was pinned. */
+    if (backingLeft->type.inRegister())
+        unpinReg(backingLeft->type.reg());
+    if (backingRight->type.inRegister())
+        unpinReg(backingRight->type.reg());
+    if (backingLeft->data.inRegister())
+        unpinReg(backingLeft->data.reg());
+    if (backingRight->data.inRegister())
+        unpinReg(backingRight->data.reg());
+}
+
