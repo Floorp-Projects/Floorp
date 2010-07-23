@@ -446,12 +446,9 @@ var BrowserUI = {
   },
 
   getDisplayURI: function(browser) {
-    if (!this._URIFixup)
-      this._URIFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-
     let uri = browser.currentURI;
     try {
-      uri = this._URIFixup.createExposableURI(uri);
+      uri = gURIFixup.createExposableURI(uri);
     } catch (ex) {}
 
     return uri.spec;
@@ -492,21 +489,22 @@ var BrowserUI = {
 
     this._edit.value = aURI;
 
-    let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-    let uri = gURIFixup.createFixupURI(aURI, fixupFlags);
-
     // We need to keep about: pages opening in new "local" tabs. We also want to spawn
     // new "remote" tabs if opening web pages from a "local" about: page.
     let currentURI = getBrowser().currentURI;
-    let useLocal = Util.isLocalScheme(uri.spec);
+    let useLocal = Util.isLocalScheme(aURI);
     let hasLocal = Util.isLocalScheme(currentURI.spec);
     if (hasLocal != useLocal) {
-      Browser.addTab(uri.spec, true);
+      Browser.addTab(aURI, true);
     } else {
       let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-      getBrowser().loadURIWithFlags(uri.spec, loadFlags, null, null);
+      getBrowser().loadURIWithFlags(aURI, loadFlags, null, null);
     }
 
+    // Delay doing the fixup so the raw URI is passed to loadURIWithFlags
+    // and the proper third-party fixup can be done
+    let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    let uri = gURIFixup.createFixupURI(aURI, fixupFlags);
     gHistSvc.markPageAsTyped(uri);
   },
 
