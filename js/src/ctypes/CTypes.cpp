@@ -5038,16 +5038,16 @@ FunctionType::ArgTypesGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp
   size_t len = fninfo->mArgTypes.length();
 
   // Prepare a new array.
-  jsval* vec;
-  JSObject* argTypes =
-    js_NewArrayObjectWithCapacity(cx, len, &vec);
-  if (!argTypes)
+  Array<jsval, 16> vec;
+  if (!vec.resize(len))
     return JS_FALSE;
-  js::AutoObjectRooter argsroot(cx, argTypes);
-  JS_ASSERT(len == 0 || vec);
 
   for (size_t i = 0; i < len; ++i)
     vec[i] = OBJECT_TO_JSVAL(fninfo->mArgTypes[i]);
+
+  JSObject* argTypes = JS_NewArrayObject(cx, len, vec.begin());
+  if (!argTypes)
+    return JS_FALSE;
 
   // Seal and cache it.
   if (!JS_SealObject(cx, argTypes, JS_FALSE) ||
