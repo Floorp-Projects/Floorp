@@ -66,17 +66,17 @@ var Tabbar = {
 
       // Show all of the tabs in the group.
       tabBarTabs.forEach(function(tab){
-        var collapsed = true;
+        let hidden = true;
         visibleTabs.some(function(visibleTab, i) {
           if (visibleTab == tab) {
-            collapsed = false;
+            hidden = false;
             // remove the element to speed up the next loop.
             if (options.dontReorg)
               visibleTabs.splice(i, 1);
             return true;
           }
         });
-        tab.collapsed = collapsed;
+        tab.hidden = hidden;
       });
 
       // Move them (in order) that they appear in the group to the end of the
@@ -97,7 +97,7 @@ var Tabbar = {
   // Shows all of the tabs in the tab bar.
   showAllTabs: function(){
     Array.forEach(gBrowser.tabs, function(tab) {
-      tab.collapsed = false;
+      tab.hidden = false;
     });
   }
 }
@@ -823,58 +823,6 @@ UIClass.prototype = {
       if (Page.isTabCandyVisible()) {
         return;
       }
-      var handled = false;
-      // based on http://mxr.mozilla.org/mozilla1.9.2/source/toolkit/content/widgets/tabbox.xml#145
-      switch (event.keyCode) {
-        case event.DOM_VK_TAB:
-          if (event.ctrlKey && !event.altKey && !event.metaKey)
-            if (tabbox.tabs && tabbox.handleCtrlTab) {
-              event.stopPropagation();
-              event.preventDefault();
-              self._advanceSelectedTab(event.shiftKey);
-              handled = true;
-            }
-          break;
-        case event.DOM_VK_PAGE_UP:
-          if (event.ctrlKey && !event.shiftKey && !event.altKey &&
-              !event.metaKey)
-            if (tabbox.tabs && tabbox.handleCtrlPageUpDown) {
-              event.stopPropagation();
-              event.preventDefault();
-              self._advanceSelectedTab(true);
-              handled = true;
-            }
-            break;
-        case event.DOM_VK_PAGE_DOWN:
-          if (event.ctrlKey && !event.shiftKey && !event.altKey &&
-              !event.metaKey)
-            if (tabbox.tabs && tabbox.handleCtrlPageUpDown) {
-              event.stopPropagation();
-              event.preventDefault();
-              self._advanceSelectedTab(false);
-              handled = true;
-            }
-            break;
-#ifdef XP_MACOSX
-        case event.DOM_VK_LEFT:
-        case event.DOM_VK_RIGHT:
-          if (event.metaKey && event.altKey && !event.shiftKey &&
-              !event.ctrlKey)
-            if (tabbox.tabs && tabbox._handleMetaAltArrows) {
-              event.stopPropagation();
-              event.preventDefault();
-              var reverse =
-                (window.getComputedStyle(tabbox, "").direction ==
-                  "ltr" ? true : false);
-              self._advanceSelectedTab(
-                event.keyCode == event.DOM_VK_LEFT ? reverse : !reverse);
-              handled = true;
-            }
-            break;
-#endif
-      }
-      if (handled)
-        return;
 
       var charCode = event.charCode;
 #ifdef XP_MACOSX
@@ -893,30 +841,6 @@ UIClass.prototype = {
         return;
       }
 
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-      if (event.altKey && !event.metaKey && !event.shiftKey && !event.ctrlKey) {
-#else
-      if (event.metaKey && !event.altKey && !event.shiftKey && !event.ctrlKey) {
-#endif
-#else
-      if (event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey) {
-#endif
-        // ToDo: the "tabs" binding implements the nsIDOMXULSelectControlElement,
-        // we might need to rewrite the tabs without using the
-        // nsIDOMXULSelectControlElement.
-        // http://mxr.mozilla.org/mozilla1.9.2/source/toolkit/content/widgets/tabbox.xml#246
-        // The below handles the ctrl/meta + number key and prevent the default
-        // actions.
-        // 1 to 9
-        if (48 < charCode && charCode < 58) {
-          event.stopPropagation();
-          event.preventDefault();
-          self._advanceSelectedTab(false, (charCode - 48));
-          return;
-        }
-      }
-
       // Control (+ Shift) + `
       if (event.ctrlKey && !event.metaKey && !event.altKey &&
           (charCode == 96 || charCode == 126)) {
@@ -927,55 +851,6 @@ UIClass.prototype = {
           gBrowser.selectedTab = tabItem.tab;
       }
     }, true);
-  },
-
-  // ----------
-  // Function: _advanceSelectedTab
-  // Moves you to the next tab in the current group's tab strip
-  // (outside the TabCandy UI).
-  //
-  // Parameters:
-  //   reverse - true to go to previous instead of next
-  //   index - go to a particular tab; numerical value from 1 to 9
-  _advanceSelectedTab : function(reverse, index) {
-    Utils.assert('reverse should be false when index exists', !index || !reverse);
-    var tabbox = gBrowser.mTabBox;
-    var tabs = tabbox.tabs;
-    var visibleTabs = [];
-    var selectedIndex;
-
-    for (var i = 0; i < tabs.childNodes.length ; i++) {
-      var tab = tabs.childNodes[i];
-      if (!tab.collapsed) {
-        visibleTabs.push(tab);
-        if (tabs.selectedItem == tab) {
-          selectedIndex = (visibleTabs.length - 1);
-        }
-      }
-    }
-
-    // reverse should be false when index exists.
-    if (index && index > 0) {
-      if (visibleTabs.length > 1) {
-        if (visibleTabs.length >= index && index < 9) {
-          tabs.selectedItem = visibleTabs[index - 1];
-        } else {
-          tabs.selectedItem = visibleTabs[visibleTabs.length - 1];
-        }
-      }
-    } else {
-      if (visibleTabs.length > 1) {
-        if (reverse) {
-          tabs.selectedItem =
-            (selectedIndex == 0) ? visibleTabs[visibleTabs.length - 1] :
-              visibleTabs[selectedIndex - 1]
-        } else {
-          tabs.selectedItem =
-            (selectedIndex == (visibleTabs.length - 1)) ? visibleTabs[0] :
-              visibleTabs[selectedIndex + 1];
-        }
-      }
-    }
   },
 
   // ----------

@@ -89,7 +89,7 @@
         this.tabContainer.childNodes;
       </field>
       <property name="visibleTabs" readonly="true"
-                onget="return Array.filter(this.tabs, function(tab) !tab.collapsed);"/>
+                onget="return Array.filter(this.tabs, function(tab) !tab.hidden);"/>
       <field name="mURIFixup" readonly="true">
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
@@ -1694,14 +1694,17 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
+          let tabs = this.visibleTabs;
+
           // count backwards for aIndex < 0
           if (aIndex < 0)
-            aIndex += this.tabs.length;
+            aIndex += tabs.length;
 
-          if (aIndex >= 0 &&
-              aIndex < this.tabs.length &&
-              aIndex != this.tabContainer.selectedIndex)
-            this.selectedTab = this.tabs[aIndex];
+          if (aIndex >= 0 && aIndex < this.tabs.length) {
+            let nextTab = tabs[aIndex];
+            if (nextTab != this.selectedTab)
+              this.selectedTab = nextTab;
+          }
 
           if (aEvent) {
             aEvent.preventDefault();
@@ -2504,9 +2507,8 @@
               this.setAttribute("closebuttons", "noclose");
             else {
               let tab = this.childNodes.item(this.tabbrowser._numPinnedTabs);
-              if (tab && tab.collapsed) {
+              if (tab && tab.hidden)
                 tab = this.tabbrowser.visibleTabs[0];
-              }
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
               else
