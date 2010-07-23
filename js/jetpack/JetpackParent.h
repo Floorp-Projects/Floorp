@@ -68,9 +68,9 @@ public:
 protected:
   NS_OVERRIDE virtual bool RecvSendMessage(const nsString& messageName,
                                            const nsTArray<Variant>& data);
-  NS_OVERRIDE virtual bool RecvCallMessage(const nsString& messageName,
-                                           const nsTArray<Variant>& data,
-                                           nsTArray<Variant>* results);
+  NS_OVERRIDE virtual bool AnswerCallMessage(const nsString& messageName,
+                                             const nsTArray<Variant>& data,
+                                             nsTArray<Variant>* results);
 
   NS_OVERRIDE virtual PHandleParent* AllocPHandle();
   NS_OVERRIDE virtual bool DeallocPHandle(PHandleParent* actor);
