@@ -1157,7 +1157,7 @@ pageaction .pageaction-desc[value=""] {
 
 #content-navigator > hbox > toolbarbutton.previous-button {
   height: 64px;
-  margin-right: 4px;
+  margin-right: 0;
   list-style-image: url("chrome://browser/skin/images/previous-default-64.png");
 }
 
@@ -1171,7 +1171,7 @@ pageaction .pageaction-desc[value=""] {
 
 #content-navigator > hbox > toolbarbutton.next-button {
   height: 64px;
-  margin-left: 4px;
+  margin-left: 0;
   list-style-image: url("chrome://browser/skin/images/next-default-64.png");
 }
 
