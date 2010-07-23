@@ -51,6 +51,11 @@ struct Registers {
 
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
+// TODO: Eliminate scratch register (requires rewriting register allocation mechanism)
+#if defined(JS_CPU_X64)
+    static const RegisterID ValueReg = JSC::X86Registers::r15;
+#endif
+
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     static const RegisterID ReturnReg = JSC::X86Registers::eax;
 # if defined(JS_CPU_X86) || defined(_MSC_VER)
@@ -98,10 +103,11 @@ struct Registers {
 
 # if defined(JS_CPU_X64)
     static const uint32 SavedRegs =
+        /* r11 is scratchRegister, used by JSC. */
           (1 << JSC::X86Registers::r12)
         | (1 << JSC::X86Registers::r13)
         | (1 << JSC::X86Registers::r14)
-        | (1 << JSC::X86Registers::r15)
+        // TODO: Remove ValueReg | (1 << JSC::X86Registers::r15)
 #  if defined(_MSC_VER)
         | (1 << JSC::X86Registers::esi)
         | (1 << JSC::X86Registers::edi)

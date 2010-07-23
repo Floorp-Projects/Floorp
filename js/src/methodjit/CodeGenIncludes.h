@@ -41,7 +41,13 @@
 #if !defined jsjaeger_codegenincs_h__ && defined JS_METHODJIT
 #define jsjaeger_codegenincs_h__
 
-#include "nunbox/Assembler.h"
+#if defined JS_32BIT
+# include "nunbox/Assembler.h"
+#elif defined JS_64BIT
+# include "nunbox/Assembler64.h"
+#else
+# error "Neither JS_32BIT or JS_64BIT is defined."
+#endif
 
 #endif
 
