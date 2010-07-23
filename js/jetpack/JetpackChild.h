@@ -91,7 +91,11 @@ private:
   static JSBool CreateSandbox(JSContext* cx, uintN argc, jsval *vp);
   static JSBool EvalInSandbox(JSContext* cx, uintN argc, jsval *vp);
 
+  static void ReportError(JSContext* cx, const char* message,
+                          JSErrorReport* report);
+
   static const JSClass sGlobalClass;
+  static bool sReportingError;
 
   DISALLOW_EVIL_CONSTRUCTORS(JetpackChild);
 };
