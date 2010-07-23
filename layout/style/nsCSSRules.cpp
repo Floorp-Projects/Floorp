@@ -73,8 +73,6 @@
 #include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
 
-namespace css = mozilla::css;
-
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 /* virtual */ already_AddRefed<nsIStyleSheet> _class::GetStyleSheet() const { return super::GetStyleSheet(); }  \
 /* virtual */ void _class::SetStyleSheet(nsCSSStyleSheet* aSheet) { super::SetStyleSheet(aSheet); }  \
@@ -1614,7 +1612,7 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
 
   switch (aFontDescID) {
   case eCSSFontDesc_Family: {
-      // we don't use AppendCSSValueToString here because it doesn't
+      // we don't use nsCSSValue::AppendToString here because it doesn't
       // canonicalize the way we want, and anyway it's overkill when
       // we know we have eCSSUnit_String
       NS_ASSERTION(val.GetUnit() == eCSSUnit_String, "unexpected unit");
@@ -1624,18 +1622,15 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     }
 
   case eCSSFontDesc_Style:
-    css::Declaration::AppendCSSValueToString(eCSSProperty_font_style, val,
-                                             aResult);
+    val.AppendToString(eCSSProperty_font_style, aResult);
     return NS_OK;
 
   case eCSSFontDesc_Weight:
-    css::Declaration::AppendCSSValueToString(eCSSProperty_font_weight, val,
-                                             aResult);
+    val.AppendToString(eCSSProperty_font_weight, aResult);
     return NS_OK;
-    
+
   case eCSSFontDesc_Stretch:
-    css::Declaration::AppendCSSValueToString(eCSSProperty_font_stretch, val,
-                                             aResult);
+    val.AppendToString(eCSSProperty_font_stretch, aResult);
     return NS_OK;
 
   case eCSSFontDesc_Src:
