@@ -516,12 +516,12 @@ protected:
 #ifdef MOZ_IPC
     PRPackedBool mIPC;
 
+    // for rendering with NativeID protocol, we should track backbuffer ownership
+    PRPackedBool mIsBackSurfaceReadable;
     // We always have a front buffer. We hand the mBackSurface to the other
     // process to render to,
     // and then sync data from mBackSurface to mSurface when it finishes.
     nsRefPtr<gfxASurface> mBackSurface;
-    // for rendering with NativeID protocol, we should track backbuffer ownership
-    PRPackedBool mIsBackSurfaceReadable;
 #endif
 
     // the canvas element we're a context of
