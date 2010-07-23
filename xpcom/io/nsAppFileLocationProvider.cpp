@@ -224,17 +224,23 @@ nsAppFileLocationProvider::GetFile(const char *prop, bool *persistent, nsIFile *
                  "Use nsAppFileLocationProvider::GetFiles(...).");
         const char *pathVar = PR_GetEnv("MOZ_PLUGIN_PATH");
         if (pathVar && *pathVar)
-            rv = NS_NewNativeLocalFile(nsDependentCString(pathVar), true, getter_AddRefs(localFile));
+            rv = NS_NewNativeLocalFile(nsDependentCString(pathVar), true,
+                                       getter_AddRefs(localFile));
     }
     else if (nsCRT::strcmp(prop, NS_USER_PLUGINS_DIR) == 0)
     {
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
         rv = GetProductDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
+#else
+        rv = NS_ERROR_FAILURE;
+#endif
     }
 #ifdef XP_UNIX
     else if (nsCRT::strcmp(prop, NS_SYSTEM_PLUGINS_DIR) == 0) {
-        static const char *const sysLPlgDir = 
+#ifdef ENABLE_SYSTEM_EXTENSION_DIRS
+        static const char *const sysLPlgDir =
 #if defined(HAVE_USR_LIB64_DIR) && defined(__LP64__)
           "/usr/lib64/mozilla/plugins";
 #else
@@ -242,6 +248,9 @@ nsAppFileLocationProvider::GetFile(const char *prop, bool *persistent, nsIFile *
 #endif
         rv = NS_NewNativeLocalFile(nsDependentCString(sysLPlgDir),
                                    false, getter_AddRefs(localFile));
+#else
+        rv = NS_ERROR_FAILURE;
+#endif
     }
 #endif
 #endif
