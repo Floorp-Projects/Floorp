@@ -304,10 +304,11 @@ window.Group = function Group(listOfEls, options) {
   Groups.register(this);
 
   // ___ Position
-  this.setBounds(rectToBe);
+  var immediately = $container ? true : false;
+  this.setBounds(rectToBe, immediately);
   this.snap();
   if ($container)
-    this.setBounds(rectToBe);
+    this.setBounds(rectToBe, immediately);
 
   // ___ Push other objects away
   if (!options.dontPush)
