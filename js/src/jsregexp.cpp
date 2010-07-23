@@ -5643,11 +5643,14 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
     sticky = (re->flags & JSREG_STICKY) != 0;
     if (re->flags & (JSREG_GLOB | JSREG_STICKY)) {
         const Value &v = obj->getRegExpLastIndex();
-        if (v.isNumber()) {
-            lastIndex = v.toNumber();
+        if (v.isInt32()) {
+            lastIndex = v.toInt32();
         } else {
-            if (!ValueToNumber(cx, v, &lastIndex))
+            if (v.isDouble())
+                lastIndex = v.toDouble();
+            else if (!ValueToNumber(cx, v, &lastIndex))
                 return JS_FALSE;
+            lastIndex = js_DoubleToInteger(lastIndex);
         }
     } else {
         lastIndex = 0;
