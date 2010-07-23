@@ -241,7 +241,7 @@ JetpackChild::CallMessage(JSContext* cx, uintN argc, jsval* vp)
     return JS_FALSE;
 
   nsTArray<Variant> results;
-  if (!GetThis(cx)->SendCallMessage(smr.msgName, smr.data, &results)) {
+  if (!GetThis(cx)->CallCallMessage(smr.msgName, smr.data, &results)) {
     JS_ReportError(cx, "Failed to callMessage");
     return JS_FALSE;
   }
