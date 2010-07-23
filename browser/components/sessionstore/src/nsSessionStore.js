@@ -1941,7 +1941,7 @@ SessionStoreService.prototype = {
       // collapse all unselected tabs to prevent flickering when showing the
       // tabs in the active group by tabcandy
       if (!tabs[t].selected) {
-        tabs[t].setAttribute("collapsed", "true");
+        tabs[t].hidden = true;
       }
       // when resuming at startup: add additionally requested pages to the end
       if (!aOverwriteTabs && root._firstTabs) {

@@ -104,7 +104,7 @@ Storage = {
 
       // ___ Tabs
       Tabs.forEach(function(tab) {
-        self.saveTab(tab.raw, null);
+        self.saveTab(tab, null);
       });
 
       // ___ Other
@@ -204,14 +204,14 @@ Storage = {
 
   // ----------
   // Function: saveUIData
-  // Saves the global data for the <UIClass> singleton for the given window.
+  // Saves the global data for the <UIManager> singleton for the given window.
   saveUIData: function(win, data) {
     this.saveData(win, this.UI_DATA_IDENTIFIER, data);
   },
 
   // ----------
   // Function: readUIData
-  // Reads the global data for the <UIClass> singleton for the given window.
+  // Reads the global data for the <UIManager> singleton for the given window.
   readUIData: function(win) {
     return this.readData(win, this.UI_DATA_IDENTIFIER);
   },

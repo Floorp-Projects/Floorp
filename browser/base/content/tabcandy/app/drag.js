@@ -86,13 +86,13 @@ var Drag = function(item, event, isResizing, isFauxDrag) {
     if (!isFauxDrag) {
       // When a tab drag starts, make it the focused tab.
       if (this.item.isAGroup) {
-        var tab = Page.getActiveTab();
+        var tab = UI.getActiveTab();
         if (!tab || tab.parent != this.item) {
           if (this.item._children.length)
-            Page.setActiveTab(this.item._children[0]);
+            UI.setActiveTab(this.item._children[0]);
         }
       } else if (this.item.isATabItem) {
-        Page.setActiveTab(this.item);
+        UI.setActiveTab(this.item);
       }
     }
   } catch(e) {
