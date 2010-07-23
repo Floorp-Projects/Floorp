@@ -100,8 +100,8 @@ window.TabItem = function(container, tab) {
 
     $target.removeClass("acceptsDrop");
 
-    var groupBounds = Groups.getBoundingBox( [drag.info.$el, $target] );
-    groupBounds.inset( -20, -20 );
+    var groupBounds = this.getBoundsWithTitle();
+    groupBounds.inset( -40, -40 );
 
     iQ(".phantom").remove();
     var phantom = iQ("<div>")
@@ -279,7 +279,8 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         // The ease function ".5+.5*Math.tanh(2*x-2)" is a pretty
         // little graph. It goes from near 0 at x=0 to near 1 at x=2
         // smoothly and beautifully.
-        css.fontSize = minFontSize + (maxFontSize-minFontSize)*(.5+.5*Math.tanh(2*scale-2))
+        css.fontSize = Math.round(minFontSize + (maxFontSize-minFontSize)*(.5+.5*Math.tanh(2*scale-2)));
+        css.fontSize += 'px';
       }
 
       if (rect.height != this.bounds.height || options.force)
@@ -385,6 +386,16 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       this.setTrenches(rect);
 
     this.save();
+  },
+
+  // ----------
+  // Function: getBoundsWithTitle
+  // Returns a <Rect> for the group's bounds, including the title
+  getBoundsWithTitle: function() {
+    var b = this.getBounds();
+    var $container = iQ(this.container);
+    var $title = iQ('.tab-title', $container);
+    return new Rect( b.left, b.top, b.width, b.height + $title.height() );
   },
 
   // ----------
