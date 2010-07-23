@@ -65,6 +65,8 @@ struct VMFrame
     void *scriptedReturn;
 
 #if defined(JS_CPU_X86)
+    uintptr_t               padding[2];
+#elif defined(JS_CPU_ARM)
     uintptr_t               padding;
 #endif
 
@@ -75,7 +77,6 @@ struct VMFrame
         } x;
     } u;
 
-    VMFrame      *previous;
     JSFrameRegs  *oldRegs;
     JSFrameRegs  regs;
     JSStackFrame *fp;
@@ -90,12 +91,20 @@ struct VMFrame
     void *savedEIP;
 
 #ifdef JS_NO_FASTCALL
-    inline void** returnAddressLocation() {
-        return reinterpret_cast<void**>(this) - 3;
+    inline void setReturnAddress(JSC::ReturnAddressPtr addr) {
+        *(reinterpret_cast<JSC::ReturnAddressPtr*>(this)-3) = addr;
+    }
+
+    inline JSC::ReturnAddressPtr getReturnAddress() const {
+        return *(reinterpret_cast<const JSC::ReturnAddressPtr*>(this)-3);
     }
 #else
-    inline void** returnAddressLocation() {
-        return reinterpret_cast<void**>(this) - 1;
+    inline void setReturnAddress(JSC::ReturnAddressPtr addr) {
+        *(reinterpret_cast<JSC::ReturnAddressPtr*>(this)-1) = addr;
+    }
+
+    inline JSC::ReturnAddressPtr getReturnAddress() const {
+        return *(reinterpret_cast<const JSC::ReturnAddressPtr*>(this)-1);
     }
 #endif
 #elif defined(JS_CPU_X64)
@@ -112,12 +121,20 @@ struct VMFrame
     void *savedRIP;
 
 #ifdef _MSC_VER
-    inline void** returnAddressLocation() {
-        return reinterpret_cast<void**>(this) - 5;
+    inline void setReturnAddress(JSC::ReturnAddressPtr addr) {
+        *(reinterpret_cast<JSC::ReturnAddressPtr*>(this)-5) = addr;
+    }
+
+    inline JSC::ReturnAddressPtr getReturnAddress() const {
+        return *(reinterpret_cast<const JSC::ReturnAddressPtr*>(this)-5);
     }
 #else
-    inline void** returnAddressLocation() {
-        return reinterpret_cast<void**>(this) - 1;
+    inline void setReturnAddress(JSC::ReturnAddressPtr addr) {
+        *(reinterpret_cast<JSC::ReturnAddressPtr*>(this)-1) = addr;
+    }
+
+    inline JSC::ReturnAddressPtr getReturnAddress() const {
+        return *(reinterpret_cast<const JSC::ReturnAddressPtr*>(this)-1);
     }
 #endif
 
@@ -132,9 +149,14 @@ struct VMFrame
     void *savedR11;
     void *savedLR;
 
-    inline void** returnAddressLocation() {
-        return reinterpret_cast<void**>(&this->veneerReturn);
+    inline void setReturnAddress(JSC::ReturnAddressPtr addr) {
+        this->veneerReturn = addr;
     }
+
+    inline JSC::ReturnAddressPtr getReturnAddress() {
+        return this->veneerReturn;
+    }
+
 #else
 # error "The VMFrame layout isn't defined for your processor architecture!"
 #endif
@@ -162,7 +184,6 @@ typedef void (JS_FASTCALL *VoidStubAtom)(VMFrame &, JSAtom *);
 typedef JSString * (JS_FASTCALL *JSStrStub)(VMFrame &);
 typedef JSString * (JS_FASTCALL *JSStrStubUInt32)(VMFrame &, uint32);
 typedef void (JS_FASTCALL *VoidStubJSObj)(VMFrame &, JSObject *);
-typedef void (JS_FASTCALL *VoidStubPC)(VMFrame &, jsbytecode *);
 
 #define JS_UNJITTABLE_METHOD (reinterpret_cast<void*>(1))
 
@@ -199,16 +220,6 @@ CanMethodJIT(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeCh
 
 void
 PurgeShapeDependencies(JSContext *cx);
-
-union CallSite
-{
-    struct {
-        uint32 codeOffset;
-        uint32 pcOffset;
-        uint32 id;
-    }          c;
-    uint32     nCallSites;
-};
 
 } /* namespace mjit */
 
