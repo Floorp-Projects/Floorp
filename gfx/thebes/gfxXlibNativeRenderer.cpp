@@ -40,6 +40,7 @@
 #include "gfxXlibNativeRenderer.h"
 
 #include "gfxXlibSurface.h"
+#include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "cairo-xlib.h"
 #include "cairo-xlib-xrender.h"
@@ -60,18 +61,38 @@
 #define NATIVE_DRAWING_NOTE(m) do {} while (0)
 #endif
 
-/* We have three basic strategies available:
-   1) 'direct': cr targets an xlib surface, and other conditions are met: we can
-      pass the underlying drawable directly to the callback
-   2) 'opaque': the image is opaque: we can create a temporary cairo xlib surface,
-      pass its underlying drawable to the callback, and paint the result
-      using cairo
-   3) 'default': create a temporary cairo xlib surface, fill with black, pass its
-      underlying drawable to the callback, copy the results to a cairo
-      image surface, repeat with a white background, update the on-black
+/* We have four basic strategies available:
+
+   1) 'direct': If the target is an xlib surface, and other conditions are met,
+      we can pass the underlying drawable directly to the callback.
+
+   2) 'simple': If the drawing is opaque, or we can draw to a surface with an
+      alpha channel, then we can create a temporary xlib surface, pass its
+      underlying drawable to the callback, and composite the result using
+      cairo.
+
+   3) 'copy-background': If the drawing is not opaque but the target is
+      opaque, and we can draw to a surface with format such that pixel
+      conversion to and from the target format is exact, we can create a
+      temporary xlib surface, copy the background from the target, pass the
+      underlying drawable to the callback, and copy back to the target.
+
+      This strategy is not used if the pixel format conversion is not exact,
+      because that would mean that drawing intended to be very transparent
+      messes with other content.
+
+      The strategy is prefered over simple for non-opaque drawing and opaque
+      targets on the same screen as compositing without alpha is a simpler
+      operation.
+
+   4) 'alpha-extraction': create a temporary xlib surface, fill with black,
+      pass its underlying drawable to the callback, copy the results to a
+      cairo image surface, repeat with a white background, update the on-black
       image alpha values by comparing the two images, then paint the on-black
-      image using cairo
-   Sure would be nice to have an X extension to do 3 for us on the server...
+      image using cairo.
+
+      Sure would be nice to have an X extension or GL to do this for us on the
+      server...
 */
 
 static cairo_bool_t
@@ -82,89 +103,61 @@ _convert_coord_to_int (double coord, PRInt32 *v)
     return *v == coord;
 }
 
-static cairo_bool_t
-_intersect_interval (double a_begin, double a_end, double b_begin, double b_end,
-                     double *out_begin, double *out_end)
-{
-    *out_begin = a_begin;
-    if (*out_begin < b_begin) {
-        *out_begin = b_begin;
-    }
-    *out_end = a_end;
-    if (*out_end > b_end) {
-        *out_end = b_end;
-    }
-    return *out_begin < *out_end;
-}
-
-static cairo_bool_t
+static PRBool
 _get_rectangular_clip (cairo_t *cr,
                        const nsIntRect& bounds,
-                       cairo_bool_t *need_clip,
+                       PRBool *need_clip,
                        nsIntRect *rectangles, int max_rectangles,
                        int *num_rectangles)
 {
     cairo_rectangle_list_t *cliplist;
     cairo_rectangle_t *clips;
     int i;
-    double b_x = bounds.x;
-    double b_y = bounds.y;
-    double b_x_most = bounds.XMost();
-    double b_y_most = bounds.YMost();
-    int rect_count = 0;
-    cairo_bool_t retval = True;
+    PRBool retval = PR_TRUE;
 
     cliplist = cairo_copy_clip_rectangle_list (cr);
     if (cliplist->status != CAIRO_STATUS_SUCCESS) {
-        retval = False;
+        retval = PR_FALSE;
+        NATIVE_DRAWING_NOTE("FALLBACK: non-rectangular clip");
         goto FINISH;
     }
 
-    if (cliplist->num_rectangles == 0) {
-        *num_rectangles = 0;
-        *need_clip = True;
-        goto FINISH;
-    }
-
+    /* the clip is always in surface backend coordinates (i.e. native backend coords) */
     clips = cliplist->rectangles;
 
     for (i = 0; i < cliplist->num_rectangles; ++i) {
-        double intersect_x, intersect_y, intersect_x_most, intersect_y_most;
         
-        /* the clip is always in surface backend coordinates (i.e. native backend coords) */
-        if (b_x >= clips[i].x && b_x_most <= clips[i].x + clips[i].width &&
-            b_y >= clips[i].y && b_y_most <= clips[i].y + clips[i].height) {
-            /* the bounds are entirely inside the clip region so we don't need to clip. */
-            *need_clip = False;
+        nsIntRect rect;
+        if (!_convert_coord_to_int (clips[i].x, &rect.x) ||
+            !_convert_coord_to_int (clips[i].y, &rect.y) ||
+            !_convert_coord_to_int (clips[i].width, &rect.width) ||
+            !_convert_coord_to_int (clips[i].height, &rect.height))
+        {
+            retval = PR_FALSE;
+            NATIVE_DRAWING_NOTE("FALLBACK: non-integer clip");
             goto FINISH;
         }
-        
-        if (_intersect_interval (b_x, b_x_most, clips[i].x, clips[i].x + clips[i].width,
-                                 &intersect_x, &intersect_x_most) &&
-            _intersect_interval (b_y, b_y_most, clips[i].y, clips[i].y + clips[i].height,
-                                 &intersect_y, &intersect_y_most)) {
-            nsIntRect *rect = &rectangles[rect_count];
 
-            if (rect_count >= max_rectangles) {
-                retval = False;
-                goto FINISH;
-            }
+        if (rect == bounds) {
+            /* the bounds are entirely inside the clip region so we don't need to clip. */
+            *need_clip = PR_FALSE;
+            goto FINISH;
+        }            
 
-            if (!_convert_coord_to_int (intersect_x, &rect->x) ||
-                !_convert_coord_to_int (intersect_y, &rect->y) ||
-                !_convert_coord_to_int (intersect_x_most - intersect_x, &rect->width) ||
-                !_convert_coord_to_int (intersect_y_most - intersect_y, &rect->height))
-            {
-                retval = False;
-                goto FINISH;
-            }
+        NS_ASSERTION(bounds.Contains(rect),
+                     "Was expecting to be clipped to bounds");
 
-            ++rect_count;
+        if (i >= max_rectangles) {
+            retval = PR_FALSE;
+            NATIVE_DRAWING_NOTE("FALLBACK: unsupported clip rectangle count");
+            goto FINISH;
         }
+
+        rectangles[i] = rect;
     }
   
-    *need_clip = True;
-    *num_rectangles = rect_count;
+    *need_clip = PR_TRUE;
+    *num_rectangles = cliplist->num_rectangles;
 
 FINISH:
     cairo_rectangle_list_destroy (cliplist);
@@ -179,81 +172,16 @@ FINISH:
  * @return True if we took the direct path
  */
 PRBool
-gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize bounds,
+gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
                                   PRUint32 flags,
                                   Screen *screen, Visual *visual)
 {
-    cairo_surface_t *target;
-    cairo_matrix_t matrix;
-    cairo_bool_t needs_clip;
-    nsIntRect rectangles[MAX_STATIC_CLIP_RECTANGLES];
-    int rect_count;
-    double device_offset_x, device_offset_y;
-    int max_rectangles;
-    cairo_bool_t have_rectangular_clip;
-
     cairo_t *cr = ctx->GetCairo();
-    target = cairo_get_group_target (cr);
-    cairo_surface_get_device_offset (target, &device_offset_x, &device_offset_y);
-    cairo_get_matrix (cr, &matrix);
-    
-    /* Check that the matrix is a pure translation */
-    /* XXX test some approximation to == 1.0 here? */
-    if (matrix.xx != 1.0 || matrix.yy != 1.0 || matrix.xy != 0.0 || matrix.yx != 0.0) {
-        NATIVE_DRAWING_NOTE("TAKING SLOW PATH: matrix not a pure translation\n");
-        return PR_FALSE;
-    }
-    /* Check that the matrix translation offsets (adjusted for
-       device offset) are integers */
-    nsIntPoint offset;
-    if (!_convert_coord_to_int (matrix.x0 + device_offset_x, &offset.x) ||
-        !_convert_coord_to_int (matrix.y0 + device_offset_y, &offset.y)) {
-        NATIVE_DRAWING_NOTE("TAKING SLOW PATH: non-integer offset\n");
-        return PR_FALSE;
-    }
-    
-    max_rectangles = 0;
-    if (flags & DRAW_SUPPORTS_CLIP_RECT) {
-      max_rectangles = 1;
-    }
-    if (flags & DRAW_SUPPORTS_CLIP_LIST) {
-      max_rectangles = MAX_STATIC_CLIP_RECTANGLES;
-    }
-    
-    /* Check that the clip is rectangular and aligned on unit boundaries. */
-    /* Temporarily set the matrix for _get_rectangular_clip. It's basically
-       the identity matrix, but we must adjust for the fact that our
-       offset-rect is in device coordinates. */
-    cairo_identity_matrix (cr);
-    cairo_translate (cr, -device_offset_x, -device_offset_y);
-    have_rectangular_clip =
-        _get_rectangular_clip (cr,
-                               nsIntRect(offset, bounds),
-                               &needs_clip,
-                               rectangles, max_rectangles, &rect_count);
-    cairo_set_matrix (cr, &matrix);
-    if (!have_rectangular_clip) {
-        NATIVE_DRAWING_NOTE("TAKING SLOW PATH: unsupported clip\n");
-        return PR_FALSE;
-    }
 
-    /* Stop now if everything is clipped out */
-    if (needs_clip && rect_count == 0) {
-        NATIVE_DRAWING_NOTE("TAKING FAST PATH: all clipped\n");
-        return PR_TRUE;
-    }
-      
-    /* Check that the operator is OVER */
-    if (cairo_get_operator (cr) != CAIRO_OPERATOR_OVER) {
-        NATIVE_DRAWING_NOTE("TAKING SLOW PATH: non-OVER operator\n");
-        return PR_FALSE;
-    }
-    
-    /* Check that the target surface is an xlib surface. Do this late because
-       we might complete early above when when the object to be drawn is
-       completely clipped out. */
+    /* Check that the target surface is an xlib surface. */
+    cairo_surface_t *target = cairo_get_group_target (cr);
     if (cairo_surface_get_type (target) != CAIRO_SURFACE_TYPE_XLIB) {
-        NATIVE_DRAWING_NOTE("TAKING SLOW PATH: non-X surface\n");
+        NATIVE_DRAWING_NOTE("FALLBACK: non-X surface");
         return PR_FALSE;
     }
     
@@ -262,18 +190,18 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize bounds,
        then alternate screens cannot be supported. */  
     PRBool supports_alternate_visual =
         (flags & DRAW_SUPPORTS_ALTERNATE_VISUAL) != 0;
-    PRBool supports_alternate_screen = supports_alternate_visual
-        && (flags & DRAW_SUPPORTS_ALTERNATE_SCREEN);
+    PRBool supports_alternate_screen = supports_alternate_visual &&
+        (flags & DRAW_SUPPORTS_ALTERNATE_SCREEN);
     if (!supports_alternate_screen &&
         cairo_xlib_surface_get_screen (target) != screen) {
-        NATIVE_DRAWING_NOTE("TAKING SLOW PATH: non-default screen\n");
+        NATIVE_DRAWING_NOTE("FALLBACK: non-default screen");
         return PR_FALSE;
     }
         
     /* Check that there is a visual */
     Visual *target_visual = cairo_xlib_surface_get_visual (target);
     if (!target_visual) {
-        NATIVE_DRAWING_NOTE("TAKING SLOW PATH: no Visual for surface\n");
+        NATIVE_DRAWING_NOTE("FALLBACK: no Visual for surface");
         return PR_FALSE;
     }        
     /* Check that the visual is supported */
@@ -285,11 +213,62 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize bounds,
         if (!target_format ||
             (target_format !=
              XRenderFindVisualFormat (DisplayOfScreen(screen), visual))) {
-            NATIVE_DRAWING_NOTE("TAKING SLOW PATH: unsupported Visual\n");
+            NATIVE_DRAWING_NOTE("FALLBACK: unsupported Visual");
             return PR_FALSE;
         }
     }
   
+    cairo_matrix_t matrix;
+    cairo_get_matrix (cr, &matrix);
+    double device_offset_x, device_offset_y;
+    cairo_surface_get_device_offset (target, &device_offset_x, &device_offset_y);
+
+    /* Draw() checked that the matrix contained only a very-close-to-integer
+       translation.  Here (and in several other places and thebes) device
+       offsets are assumed to be integer. */
+    NS_ASSERTION(PRUint32(device_offset_x) == device_offset_x &&
+                 PRUint32(device_offset_y) == device_offset_y,
+                 "Expected integer device offsets");
+    nsIntPoint offset(NS_lroundf(matrix.x0 + device_offset_x),
+                      NS_lroundf(matrix.y0 + device_offset_y));
+    
+    int max_rectangles = 0;
+    if (flags & DRAW_SUPPORTS_CLIP_RECT) {
+      max_rectangles = 1;
+    }
+    if (flags & DRAW_SUPPORTS_CLIP_LIST) {
+      max_rectangles = MAX_STATIC_CLIP_RECTANGLES;
+    }
+
+    /* The client won't draw outside the surface so consider this when
+       analysing clip rectangles. */
+    nsIntRect bounds(offset, size);
+    bounds.IntersectRect(bounds,
+                         nsIntRect(0, 0,
+                                   cairo_xlib_surface_get_width(target),
+                                   cairo_xlib_surface_get_height(target)));
+
+    PRBool needs_clip;
+    nsIntRect rectangles[MAX_STATIC_CLIP_RECTANGLES];
+    int rect_count;
+
+    /* Check that the clip is rectangular and aligned on unit boundaries. */
+    /* Temporarily set the matrix for _get_rectangular_clip. It's basically
+       the identity matrix, but we must adjust for the fact that our
+       offset-rect is in device coordinates. */
+    cairo_identity_matrix (cr);
+    cairo_translate (cr, -device_offset_x, -device_offset_y);
+    PRBool have_rectangular_clip =
+        _get_rectangular_clip (cr, bounds, &needs_clip,
+                               rectangles, max_rectangles, &rect_count);
+    cairo_set_matrix (cr, &matrix);
+    if (!have_rectangular_clip)
+        return PR_FALSE;
+
+    /* Draw only calls this function when the clip region is not empty. */
+    NS_ASSERTION(!needs_clip || rect_count != 0,
+                 "Where did the clip region go?");
+      
     /* we're good to go! */
     NATIVE_DRAWING_NOTE("TAKING FAST PATH\n");
     cairo_surface_flush (target);
@@ -305,76 +284,185 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize bounds,
 }
 
 static PRBool
-FormatHasAlpha(const XRenderPictFormat *format) {
-    if (!format)
-        return false;
-
-    if (format->type != PictTypeDirect)
-        return false;
-
-    return format->direct.alphaMask != 0;
+VisualHasAlpha(Screen *screen, Visual *visual) {
+    // There may be some other visuals format with alpha but usually this is
+    // the only one we care about.
+    return visual->c_class == TrueColor &&
+        visual->bits_per_rgb == 8 &&
+        visual->red_mask == 0xff0000 &&
+        visual->green_mask == 0xff00 &&
+        visual->blue_mask == 0xff &&
+        gfxXlibSurface::DepthOfVisual(screen, visual) == 32;
 }
 
+// Returns whether pixel conversion between visual and format is exact (in
+// both directions).
+static PRBool
+FormatConversionIsExact(Screen *screen, Visual *visual, XRenderPictFormat *format) {
+    if (!format ||
+        visual->c_class != TrueColor ||
+        format->type != PictTypeDirect ||
+        gfxXlibSurface::DepthOfVisual(screen, visual) != format->depth)
+        return PR_FALSE;
+
+    XRenderPictFormat *visualFormat =
+        XRenderFindVisualFormat(DisplayOfScreen(screen), visual);
+
+    if (visualFormat->type != PictTypeDirect )
+        return PR_FALSE;
+
+    const XRenderDirectFormat& a = visualFormat->direct;
+    const XRenderDirectFormat& b = format->direct;
+    return a.redMask == b.redMask &&
+        a.greenMask == b.greenMask &&
+        a.blueMask == b.blueMask;
+}
+
+// The 3 non-direct strategies described above.
+// The surface format and strategy are inter-dependent.
+enum DrawingMethod {
+    eSimple,
+    eCopyBackground,
+    eAlphaExtraction
+};
+
 static already_AddRefed<gfxXlibSurface>
-_create_temp_xlib_surface (cairo_t *cr, nsIntSize size,
-                           PRUint32 flags, Screen *screen, Visual *visual)
+CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
+                       PRBool canDrawOverBackground,
+                       PRUint32 flags, Screen *screen, Visual *visual,
+                       DrawingMethod *method)
 {
-    Drawable drawable = None;
+    PRBool drawIsOpaque = (flags & gfxXlibNativeRenderer::DRAW_IS_OPAQUE) != 0;
+    PRBool supportsAlternateVisual =
+        (flags & gfxXlibNativeRenderer::DRAW_SUPPORTS_ALTERNATE_VISUAL) != 0;
+    PRBool supportsAlternateScreen = supportsAlternateVisual &&
+        (flags & gfxXlibNativeRenderer::DRAW_SUPPORTS_ALTERNATE_SCREEN);
 
-    // For opaque drawing, set up the temp surface for copying to the target.
-    // For non-opaque drawing we read back anyway so just use the
-    // prefered screen and visual.
-    cairo_surface_t *target = cairo_get_group_target (cr);
-    if ((flags & gfxXlibNativeRenderer::DRAW_IS_OPAQUE)
-        && cairo_surface_get_type (target) == CAIRO_SURFACE_TYPE_XLIB) {
+    cairo_surface_t *target = destination->CairoSurface();
+    cairo_surface_type_t target_type = cairo_surface_get_type (target);
+    cairo_content_t target_content = cairo_surface_get_content (target);
 
-        Screen *target_screen = cairo_xlib_surface_get_screen (target);
-        PRBool supports_alternate_visual =
-            (flags & gfxXlibNativeRenderer::DRAW_SUPPORTS_ALTERNATE_VISUAL) != 0;
-        PRBool supports_alternate_screen = supports_alternate_visual
-            && (flags & gfxXlibNativeRenderer::DRAW_SUPPORTS_ALTERNATE_SCREEN);
-        if (target_screen == screen || supports_alternate_screen) {
+    Screen *target_screen = target_type == CAIRO_SURFACE_TYPE_XLIB ?
+        cairo_xlib_surface_get_screen (target) : screen;
 
-            if (supports_alternate_visual) {
-                Visual *target_visual = cairo_xlib_surface_get_visual (target);
-                if (target_visual &&
-                    (!FormatHasAlpha(cairo_xlib_surface_get_xrender_format (target)))) {
-                    visual = target_visual;
-                } else if (target_screen != screen) {
-                    visual = DefaultVisualOfScreen (target_screen);
-                }
+    // When the background has an alpha channel, we need to draw with an alpha
+    // channel anyway, so there is no need to copy the background.  If
+    // doCopyBackground is set here, we'll also need to check below that the
+    // background can copied without any loss in format conversions.
+    PRBool doCopyBackground = !drawIsOpaque && canDrawOverBackground &&
+        target_content == CAIRO_CONTENT_COLOR;
+
+    if (supportsAlternateScreen && screen != target_screen && drawIsOpaque) {
+        // Prefer a visual on the target screen.
+        // (If !drawIsOpaque, we'll need doCopyBackground or an alpha channel.)
+        visual = DefaultVisualOfScreen(target_screen);
+        screen = target_screen;
+
+    } else if (doCopyBackground || (supportsAlternateVisual && drawIsOpaque)) {
+        // Analyse the pixel formats either to check whether we can
+        // doCopyBackground or to see if we can find a better visual for
+        // opaque drawing.
+        Visual *target_visual = NULL;
+        XRenderPictFormat *target_format = NULL;
+        switch (target_type) {
+        case CAIRO_SURFACE_TYPE_XLIB:
+            target_visual = cairo_xlib_surface_get_visual (target);
+            target_format = cairo_xlib_surface_get_xrender_format (target);
+            break;
+        case CAIRO_SURFACE_TYPE_IMAGE: {
+            gfxASurface::gfxImageFormat imageFormat =
+                static_cast<gfxImageSurface*>(destination)->Format();
+            target_visual = gfxXlibSurface::FindVisual(screen, imageFormat);
+            Display *dpy = DisplayOfScreen(screen);
+            if (target_visual) {
+                target_format = XRenderFindVisualFormat(dpy, visual);
+            } else {
+                target_format =
+                    gfxXlibSurface::FindRenderFormat(dpy, imageFormat);
+            }                
+            break;
+        }
+        default:
+            break;
+        }
+
+        if (supportsAlternateVisual &&
+            (supportsAlternateScreen || screen == target_screen)) {
+            if (target_visual) {
+                visual = target_visual;
+                screen = target_screen;
             }
+        }
+        // Could try harder to match formats across screens for background
+        // copying when !supportsAlternateScreen, if we cared.  Preferably
+        // we'll find a visual below with an alpha channel anyway; if so, the
+        // background won't need to be copied.
 
-            drawable = cairo_xlib_surface_get_drawable (target);
-            screen = target_screen;
+        if (doCopyBackground && visual != target_visual &&
+            !FormatConversionIsExact(screen, visual, target_format)) {
+            doCopyBackground = PR_FALSE;
         }
     }
 
-    if (!drawable) {
-        drawable = RootWindowOfScreen (screen);
+    if (supportsAlternateVisual && !drawIsOpaque &&
+        (screen != target_screen ||
+         !(doCopyBackground || VisualHasAlpha(screen, visual)))) {
+        // Try to find a visual with an alpha channel.
+        Screen *visualScreen =
+            supportsAlternateScreen ? target_screen : screen;
+        Visual *argbVisual =
+            gfxXlibSurface::FindVisual(visualScreen,
+                                       gfxASurface::ImageFormatARGB32);
+        if (argbVisual) {
+            visual = argbVisual;
+            screen = visualScreen;
+        } else if (!doCopyBackground &&
+                   gfxXlibSurface::DepthOfVisual(screen, visual) != 24) {
+            // Will need to do alpha extraction; prefer a 24-bit visual.
+            // No advantage in using the target screen.
+            Visual *rgb24Visual =
+                gfxXlibSurface::FindVisual(screen,
+                                           gfxASurface::ImageFormatRGB24);
+            if (rgb24Visual) {
+                visual = rgb24Visual;
+            }
+        }
     }
-    return gfxXlibSurface::Create(screen, visual,
-                                  gfxIntSize(size.width, size.height),
-                                  drawable);
+
+    Drawable drawable =
+        (screen == target_screen && target_type == CAIRO_SURFACE_TYPE_XLIB) ?
+        cairo_xlib_surface_get_drawable (target) : RootWindowOfScreen(screen);
+
+    nsRefPtr<gfxXlibSurface> surface =
+        gfxXlibSurface::Create(screen, visual,
+                               gfxIntSize(size.width, size.height),
+                               drawable);
+
+    if (drawIsOpaque ||
+        surface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
+        NATIVE_DRAWING_NOTE(drawIsOpaque ?
+                            ", SIMPLE OPAQUE\n" : ", SIMPLE WITH ALPHA");
+        *method = eSimple;
+    } else if (doCopyBackground) {
+        NATIVE_DRAWING_NOTE(", COPY BACKGROUND\n");
+        *method = eCopyBackground;
+    } else {
+        NATIVE_DRAWING_NOTE(", SLOW ALPHA EXTRACTION\n");
+        *method = eAlphaExtraction;
+    }
+
+    return surface.forget();
 }
 
 PRBool
 gfxXlibNativeRenderer::DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
-                                           double background_gray_value)
+                                           nsIntPoint offset)
 {
     cairo_surface_t *temp_xlib_surface = tempXlibSurface->CairoSurface();
-
-    cairo_t *cr = cairo_create (temp_xlib_surface);
-    cairo_set_source_rgb (cr, background_gray_value, background_gray_value,
-                          background_gray_value);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-    cairo_paint (cr);
-    cairo_destroy (cr);
-    
     cairo_surface_flush (temp_xlib_surface);
     /* no clipping is needed because the callback can't draw outside the native
        surface anyway */
-    nsresult rv = DrawWithXlib(tempXlibSurface, nsIntPoint(0, 0), NULL, 0);
+    nsresult rv = DrawWithXlib(tempXlibSurface, offset, NULL, 0);
     cairo_surface_mark_dirty (temp_xlib_surface);
     return NS_SUCCEEDED(rv);
 }
@@ -500,30 +588,106 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         result->mUniformAlpha = PR_FALSE;
         result->mUniformColor = PR_FALSE;
     }
-    
-    /* exit early if there's no work to do. This is actually important
-       because we'll die with an X error if we try to create an empty temporary
-       pixmap */
-    if (size.width == 0 || size.height == 0)
-        return;
 
-    if (DrawDirect(ctx, size, flags, screen, visual))
-        return;
+    PRBool drawIsOpaque = (flags & DRAW_IS_OPAQUE) != 0;
+    gfxMatrix matrix = ctx->CurrentMatrix();
 
-    cairo_t *cr = ctx->GetCairo();
+    // We can only draw direct or onto a copied background if pixels align and
+    // native drawing is compatible with the current operator.  (The matrix is
+    // actually also pixel-exact for flips and right-angle rotations, which
+    // would permit copying the background but not drawing direct.)
+    PRBool matrixIsIntegerTranslation = !matrix.HasNonIntegerTranslation();
+    PRBool canDrawOverBackground = matrixIsIntegerTranslation &&
+        ctx->CurrentOperator() == gfxContext::OPERATOR_OVER;
+
+    // The padding of 0.5 for non-pixel-exact transformations used here is
+    // the same as what _cairo_pattern_analyze_filter uses.
+    const gfxFloat filterRadius = 0.5;
+    gfxRect affectedRect(0.0, 0.0, size.width, size.height);
+    if (!matrixIsIntegerTranslation) {
+        // The filter footprint means that the affected rectangle is a
+        // little larger than the drawingRect;
+        affectedRect.Outset(filterRadius);
+
+        NATIVE_DRAWING_NOTE("FALLBACK: matrix not integer translation");
+    } else if (!canDrawOverBackground) {
+        NATIVE_DRAWING_NOTE("FALLBACK: unsupported operator");
+    }
+
+    // Clipping to the region affected by drawing allows us to consider only
+    // the portions of the clip region that will be affected by drawing.
+    gfxRect clipExtents;
+    {
+        gfxContextAutoSaveRestore autoSR(ctx);
+        ctx->Clip(affectedRect);
+
+        clipExtents = ctx->GetClipExtents();
+        if (clipExtents.IsEmpty())
+            return; // nothing to do
+
+        if (canDrawOverBackground &&
+            DrawDirect(ctx, size, flags, screen, visual))
+            return;
+    }
+
+    nsIntRect drawingRect(nsIntPoint(0, 0), size);
+    // Drawing need only be performed within the clip extents
+    // (and padding for the filter).
+    if (!matrixIsIntegerTranslation) {
+        // The source surface may need to be a little larger than the clip
+        // extents due to the filter footprint.
+        clipExtents.Outset(filterRadius);
+    }
+    clipExtents.RoundOut();
+
+    nsIntRect intExtents(PRInt32(clipExtents.X()),
+                         PRInt32(clipExtents.Y()),
+                         PRInt32(clipExtents.Width()),
+                         PRInt32(clipExtents.Height()));
+    drawingRect.IntersectRect(drawingRect, intExtents);
+    gfxPoint offset(drawingRect.x, drawingRect.y);
+
+    DrawingMethod method;
+    nsRefPtr<gfxASurface> target = ctx->CurrentSurface();
     nsRefPtr<gfxXlibSurface> tempXlibSurface = 
-        _create_temp_xlib_surface (cr, size, flags, screen, visual);
-    if (tempXlibSurface == NULL)
+        CreateTempXlibSurface(target, drawingRect.Size(),
+                              canDrawOverBackground, flags, screen, visual,
+                              &method);
+    if (!tempXlibSurface)
         return;
   
-    if (!DrawOntoTempSurface(tempXlibSurface, 0.0)) {
+    if (drawingRect.Size() != size || method == eCopyBackground) {
+        // Only drawing a portion, or copying background,
+        // so won't return a result.
+        result = NULL;
+    }
+
+    nsRefPtr<gfxContext> tmpCtx;
+    if (!drawIsOpaque) {
+        tmpCtx = new gfxContext(tempXlibSurface);
+        if (method == eCopyBackground) {
+            tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+            tmpCtx->SetSource(target, -(offset + matrix.GetTranslation()));
+            // The copy from the tempXlibSurface to the target context should
+            // use operator SOURCE, but that would need a mask to bound the
+            // operation.  Here we only copy opaque backgrounds so operator
+            // OVER will behave like SOURCE masked by the surface.
+            NS_ASSERTION(tempXlibSurface->GetContentType()
+                         == gfxASurface::CONTENT_COLOR,
+                         "Don't copy background with a transparent surface");
+        } else {
+            tmpCtx->SetOperator(gfxContext::OPERATOR_CLEAR);
+        }
+        tmpCtx->Paint();
+    }
+
+    if (!DrawOntoTempSurface(tempXlibSurface, -drawingRect.TopLeft())) {
         return;
     }
   
-    if (flags & DRAW_IS_OPAQUE) {
-        cairo_set_source_surface (cr, tempXlibSurface->CairoSurface(),
-                                  0.0, 0.0);
-        cairo_paint (cr);
+    if (method != eAlphaExtraction) {
+        ctx->SetSource(tempXlibSurface, offset);
+        ctx->Paint();
         if (result) {
             result->mSurface = tempXlibSurface;
             /* fill in the result with what we know, which is really just what our
@@ -534,13 +698,16 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         return;
     }
     
-    int width = size.width;
-    int height = size.height;
+    int width = drawingRect.width;
+    int height = drawingRect.height;
     black_image_surface =
         _copy_xlib_surface_to_image (tempXlibSurface, CAIRO_FORMAT_ARGB32,
                                      width, height, &black_data);
     
-    DrawOntoTempSurface(tempXlibSurface, 1.0);
+    tmpCtx->SetDeviceColor(gfxRGBA(1.0, 1.0, 1.0));
+    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    tmpCtx->Paint();
+    DrawOntoTempSurface(tempXlibSurface, -drawingRect.TopLeft());
     white_image_surface =
         _copy_xlib_surface_to_image (tempXlibSurface, CAIRO_FORMAT_RGB24,
                                      width, height, &white_data);
@@ -554,7 +721,8 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         _compute_alpha_values ((uint32_t*)black_data, (uint32_t*)white_data, width, height, result);
         cairo_surface_mark_dirty (black_image_surface);
         
-        cairo_set_source_surface (cr, black_image_surface, 0.0, 0.0);
+        cairo_t *cr = ctx->GetCairo();
+        cairo_set_source_surface (cr, black_image_surface, offset.x, offset.y);
         /* if the caller wants to retrieve the rendered image, put it into
            a 'similar' surface, and use that as the source for the drawing right
            now. This means we always return a surface similar to the surface

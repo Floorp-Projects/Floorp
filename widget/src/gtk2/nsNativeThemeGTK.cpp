@@ -655,6 +655,12 @@ ThemeRenderer::DrawWithGDK(GdkDrawable * drawable, gint offsetX,
   GdkRectangle gdk_clip = mGDKClip;
   gdk_clip.x += offsetX;
   gdk_clip.y += offsetY;
+
+  GdkRectangle surfaceRect;
+  surfaceRect.x = 0;
+  surfaceRect.y = 0;
+  gdk_drawable_get_size(drawable, &surfaceRect.width, &surfaceRect.height);
+  gdk_rectangle_intersect(&gdk_clip, &surfaceRect, &gdk_clip);
   
   NS_ASSERTION(numClipRects == 0, "We don't support clipping!!!");
   moz_gtk_widget_paint(mGTKWidgetType, drawable, &gdk_rect, &gdk_clip,

@@ -1382,3 +1382,27 @@ nsDOMWindowUtils::GetCurrentInnerWindowID(PRUint64 *aWindowID)
   *aWindowID = inner->mWindowID;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SuspendTimeouts()
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  mWindow->SuspendTimeouts();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::ResumeTimeouts()
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  mWindow->ResumeTimeouts();
+
+  return NS_OK;
+}
