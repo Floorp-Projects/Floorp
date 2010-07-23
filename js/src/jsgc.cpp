@@ -3162,6 +3162,16 @@ GC(JSContext *cx  GCTIMER_PARAM)
     js_SweepScriptFilenames(rt);
 
     /*
+     * Slowify arrays we have accumulated.
+     */
+    while (!trc.arraysToSlowify.empty()) {
+        JSObject *obj = trc.arraysToSlowify.back();
+        trc.arraysToSlowify.popBack();
+        if (IsMarkedGCThing(obj))
+            obj->makeDenseArraySlow(cx);
+    }
+
+    /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
      * use js_IsAboutToBeFinalized().
      */
