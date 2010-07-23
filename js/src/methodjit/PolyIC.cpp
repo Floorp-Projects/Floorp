@@ -345,9 +345,7 @@ class SetPropCompiler : public PICStubCompiler
             uint16 slot = uint16(sprop->shortid);
 
             /* Guard that the call object has a frame. */
-            Address privSlot(pic.objReg, offsetof(JSObject, fslots) +
-                                         JSSLOT_PRIVATE * sizeof(Value));
-            masm.load32(privSlot, pic.shapeReg);
+            masm.loadFunctionPrivate(pic.objReg, pic.shapeReg);
             Jump escapedFrame = masm.branchTestPtr(Assembler::Zero, pic.shapeReg, pic.shapeReg);
 
             {
@@ -1303,8 +1301,7 @@ class ScopeNameCompiler : public PICStubCompiler
         Jump finalShape = masm.branch32(Assembler::NotEqual, pic.shapeReg, Imm32(holder->shape()));
 
         /* Get callobj's stack frame. */
-        Address privSlot(pic.objReg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
-        masm.load32(privSlot, pic.shapeReg);
+        masm.loadFunctionPrivate(pic.objReg, pic.shapeReg);
 
         uint16 slot = uint16(sprop->shortid);
 
