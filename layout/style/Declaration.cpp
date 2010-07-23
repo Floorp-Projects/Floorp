@@ -122,110 +122,40 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
 PRBool Declaration::AppendValueToString(nsCSSProperty aProperty,
                                         nsAString& aResult) const
 {
+  NS_ABORT_IF_FALSE(0 <= aProperty &&
+                    aProperty < eCSSProperty_COUNT_no_shorthands,
+                    "property ID out of range");
+
   nsCSSCompressedDataBlock *data = GetValueIsImportant(aProperty)
                                       ? mImportantData : mData;
   const void *storage = data->StorageFor(aProperty);
-  return Declaration::AppendStorageToString(aProperty, storage, aResult);
-}
-
-/* static */ PRBool
-Declaration::AppendStorageToString(nsCSSProperty aProperty,
-                                   const void* aStorage,
-                                   nsAString& aResult)
-{
-  if (aStorage) {
-    switch (nsCSSProps::kTypeTable[aProperty]) {
-      case eCSSType_Value: {
-        const nsCSSValue *val = static_cast<const nsCSSValue*>(aStorage);
-        val->AppendToString(aProperty, aResult);
-      } break;
-      case eCSSType_Rect: {
-        const nsCSSRect *rect = static_cast<const nsCSSRect*>(aStorage);
-        const nsCSSUnit topUnit = rect->mTop.GetUnit();
-        if (topUnit == eCSSUnit_Inherit ||
-            topUnit == eCSSUnit_Initial ||
-            topUnit == eCSSUnit_RectIsAuto) {
-          NS_ASSERTION(rect->mRight.GetUnit() == topUnit &&
-                       rect->mBottom.GetUnit() == topUnit &&
-                       rect->mLeft.GetUnit() == topUnit,
-                       "parser should make all sides have the same unit");
-          if (topUnit == eCSSUnit_RectIsAuto)
-            aResult.AppendLiteral("auto");
-          else
-            rect->mTop.AppendToString(aProperty, aResult);
-        } else {
-          aResult.AppendLiteral("rect(");
-          rect->mTop.AppendToString(aProperty, aResult);
-          NS_NAMED_LITERAL_STRING(comma, ", ");
-          aResult.Append(comma);
-          rect->mRight.AppendToString(aProperty, aResult);
-          aResult.Append(comma);
-          rect->mBottom.AppendToString(aProperty, aResult);
-          aResult.Append(comma);
-          rect->mLeft.AppendToString(aProperty, aResult);
-          aResult.Append(PRUnichar(')'));
-        }
-      } break;
-      case eCSSType_ValuePair: {
-        const nsCSSValuePair *pair = static_cast<const nsCSSValuePair*>(aStorage);
-        pair->mXValue.AppendToString(aProperty, aResult);
-        if (pair->mYValue != pair->mXValue ||
-            ((aProperty == eCSSProperty_background_position ||
-              aProperty == eCSSProperty__moz_transform_origin) &&
-             pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
-             pair->mXValue.GetUnit() != eCSSUnit_Initial) ||
-            (aProperty == eCSSProperty_background_size &&
-             pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
-             pair->mXValue.GetUnit() != eCSSUnit_Initial &&
-             pair->mXValue.GetUnit() != eCSSUnit_Enumerated)) {
-          // Only output a Y value if it's different from the X value,
-          // or if it's a background-position value other than 'initial'
-          // or 'inherit', or if it's a -moz-transform-origin value other
-          // than 'initial' or 'inherit', or if it's a background-size
-          // value other than 'initial' or 'inherit' or 'contain' or 'cover'.
-          aResult.Append(PRUnichar(' '));
-          pair->mYValue.AppendToString(aProperty, aResult);
-        }
-      } break;
-      case eCSSType_ValueList: {
-        const nsCSSValueList* val =
-            *static_cast<nsCSSValueList*const*>(aStorage);
-        do {
-          val->mValue.AppendToString(aProperty, aResult);
-          val = val->mNext;
-          if (val) {
-            if (nsCSSProps::PropHasFlags(aProperty,
-                                         CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
-              aResult.Append(PRUnichar(','));
-            aResult.Append(PRUnichar(' '));
-          }
-        } while (val);
-      } break;
-      case eCSSType_ValuePairList: {
-        const nsCSSValuePairList* item =
-            *static_cast<nsCSSValuePairList*const*>(aStorage);
-        do {
-          NS_ASSERTION(item->mXValue.GetUnit() != eCSSUnit_Null,
-                       "unexpected null unit");
-          item->mXValue.AppendToString(aProperty, aResult);
-          if (item->mXValue.GetUnit() != eCSSUnit_Inherit &&
-              item->mXValue.GetUnit() != eCSSUnit_Initial &&
-              item->mYValue.GetUnit() != eCSSUnit_Null) {
-            aResult.Append(PRUnichar(' '));
-            item->mYValue.AppendToString(aProperty, aResult);
-          }
-          item = item->mNext;
-          if (item) {
-            if (nsCSSProps::PropHasFlags(aProperty,
-                                         CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
-              aResult.Append(PRUnichar(','));
-            aResult.Append(PRUnichar(' '));
-          }
-        } while (item);
-      } break;
-    }
+  if (!storage) {
+    return PR_FALSE;
   }
-  return aStorage != nsnull;
+
+  switch (nsCSSProps::kTypeTable[aProperty]) {
+    case eCSSType_Value:
+      static_cast<const nsCSSValue*>(storage)->
+        AppendToString(aProperty, aResult);
+      break;
+    case eCSSType_Rect:
+      static_cast<const nsCSSRect*>(storage)->
+        AppendToString(aProperty, aResult);
+      break;
+    case eCSSType_ValuePair:
+      static_cast<const nsCSSValuePair*>(storage)->
+        AppendToString(aProperty, aResult);
+      break;
+    case eCSSType_ValueList:
+      (*static_cast<nsCSSValueList*const*>(storage))->
+        AppendToString(aProperty, aResult);
+      break;
+    case eCSSType_ValuePairList:
+      (*static_cast<nsCSSValuePairList*const*>(storage))->
+        AppendToString(aProperty, aResult);
+      break;
+  }
+  return PR_TRUE;
 }
 
 nsresult
