@@ -11037,9 +11037,6 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, Value* argv, Value* rval)
         for (uint32 i = 0; i < argc && !outOfMemory(); i++) {
             stobj_set_dslot(arr_ins, i, dslots_ins, argv[i], get(&argv[i]));
         }
-
-        if (argc > 0)
-            set_array_fslot(arr_ins, JSObject::JSSLOT_DENSE_ARRAY_COUNT, argc);
     }
 
     set(rval, arr_ins);
@@ -13654,23 +13651,27 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     LIns* idx_ins = makeNumberInt32(get(&ival));
 
     VMSideExit* exit = snapshot(BRANCH_EXIT);
-    /* check that the index is within bounds */
+
+    /*
+     * Arrays have both a length and a capacity, but we only need to check
+     * |index < capacity|;  in the case where |length < index < capacity|
+     * the entries [length..capacity-1] will have already been marked as
+     * holes by resizeDenseArrayElements() so we can read them and get
+     * the correct value.
+     */
     LIns* dslots_ins =
         addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACC_OTHER), "dslots");
     jsuint capacity = obj->getDenseArrayCapacity();
-    bool within = (jsuint(idx) < obj->getArrayLength() && jsuint(idx) < capacity);
+    bool within = (jsuint(idx) < capacity);
     if (!within) {
-        /* If not idx < min(length, capacity), stay on trace (and read value as undefined). */
-        JS_ASSERT(obj->isDenseArrayMinLenCapOk());
-        LIns* minLenCap =
-            addName(stobj_get_fslot_uint32(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
-        LIns* br = lir->insBranch(LIR_jf,
-                                  lir->ins2(LIR_ltui, idx_ins, minLenCap),
-                                  NULL);
+        /* Also stay on trace if dslots is NULL. */
+        LIns *br = lir->insBranch(LIR_jt, lir->insEqP_0(dslots_ins), NULL);
 
-        lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
-        LIns* label = lir->ins0(LIR_label);
-        br->setTarget(label);
+        /* If not idx < capacity, stay on trace (and read value as undefined). */
+        LIns* capacity_ins = addName(lir->insLoad(LIR_ldi, dslots_ins, -int(sizeof(jsval)), ACC_OTHER), "capacity");
+        guard(true, lir->ins2(LIR_geui, idx_ins, capacity_ins), exit);
+
+        br->setTarget(lir->ins0(LIR_label));
 
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
 
@@ -13680,11 +13681,10 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
         return RECORD_CONTINUE;
     }
 
-    /* Guard array min(length, capacity). */
-    JS_ASSERT(obj->isDenseArrayMinLenCapOk());
-    LIns* minLenCap =
-        addName(stobj_get_fslot_uint32(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
-    guard(true, lir->ins2(LIR_ltui, idx_ins, minLenCap), exit);
+    /* Guard that index is within capacity. */
+    guard(false, lir->insEqP_0(dslots_ins), exit);
+    LIns* capacity_ins = addName(lir->insLoad(LIR_ldi, dslots_ins, -int(sizeof(jsval)), ACC_OTHER), "capacity");
+    guard(true, lir->ins2(LIR_ltui, idx_ins, capacity_ins), exit);
 
     /* Load the value and guard on its type to unbox it. */
     vp = &obj->dslots[jsuint(idx)];
@@ -15809,9 +15809,6 @@ TraceRecorder::record_JSOP_NEWARRAY()
             count++;
         stobj_set_dslot(v_ins, i, dslots_ins, v, get(&v));
     }
-
-    if (count > 0)
-        set_array_fslot(v_ins, JSObject::JSSLOT_DENSE_ARRAY_COUNT, count);
 
     stack(-int(len), v_ins);
     return ARECORD_CONTINUE;
