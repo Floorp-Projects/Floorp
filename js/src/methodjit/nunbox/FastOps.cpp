@@ -809,7 +809,7 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
 
     if (!fe->isTypeKnown() && !frame.shouldAvoidTypeRemat(fe)) {
         type.setReg(frame.tempRegForType(fe));
-        frame.pinReg(type.getReg());
+        frame.pinReg(type.reg());
     }
     data.setReg(frame.tempRegForData(fe));
 
@@ -827,7 +827,7 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
     MaybeJump jmpNotBool;
     MaybeJump jmpNotExecScript;
     if (type.isSet()) {
-        jmpNotBool.setJump(masm.testBoolean(Assembler::NotEqual, type.getReg()));
+        jmpNotBool.setJump(masm.testBoolean(Assembler::NotEqual, type.reg()));
     } else {
         if (!fe->isTypeKnown()) {
             jmpNotBool.setJump(masm.testBoolean(Assembler::NotEqual,
@@ -841,7 +841,7 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
      * TODO: We don't need the second jump if
      * jumpInScript() can go from ool path to inline path.
      */
-    jmpNotExecScript.setJump(masm.branchTest32(ncond, data.getReg(), data.getReg()));
+    jmpNotExecScript.setJump(masm.branchTest32(ncond, data.reg(), data.reg()));
     Label lblExecScript = masm.label();
     Jump j = masm.jump();
 
@@ -1176,12 +1176,12 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
     } else {
         JS_ASSERT(idReg.isSet());
         Jump inRange = masm.branch32(Assembler::AboveOrEqual,
-                                     idReg.getReg(),
+                                     idReg.reg(),
                                      masm.payloadOf(Address(objReg, -int(sizeof(Value)))));
         stubcc.linkExit(inRange, Uses(2));
 
         /* guard not a hole */
-        BaseIndex slot(objReg, idReg.getReg(), Assembler::JSVAL_SCALE);
+        BaseIndex slot(objReg, idReg.reg(), Assembler::JSVAL_SCALE);
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
         stubcc.linkExit(notHole, Uses(2));
 
@@ -1212,7 +1212,7 @@ mjit::Compiler::jsop_getelem_known_type(FrameEntry *obj, FrameEntry *id, Registe
 
         /* Epilogue. */
         if (idReg.isSet())
-            frame.freeReg(idReg.getReg());
+            frame.freeReg(idReg.reg());
         frame.popn(2);
         frame.pushRegs(tmpReg, objReg);
         stubcc.rejoin(Changes(1));
@@ -1267,11 +1267,11 @@ mjit::Compiler::jsop_getelem_with_pic(FrameEntry *obj, FrameEntry *id, RegisterI
     stubcc.call(stubs::GetElem);
     Jump toFinalMerge = stubcc.masm.jump();
 
-    jsop_getelem_pic(obj, id, objReg, idReg.getReg(), tmpReg);
+    jsop_getelem_pic(obj, id, objReg, idReg.reg(), tmpReg);
     performedDense.linkTo(masm.label(), &masm);
     frame.popn(2);
     frame.pushRegs(tmpReg, objReg);
-    frame.freeReg(idReg.getReg());
+    frame.freeReg(idReg.reg());
     toFinalMerge.linkTo(stubcc.masm.label(), &stubcc.masm);
     stubcc.rejoin(Changes(1));
 }
@@ -1293,7 +1293,7 @@ mjit::Compiler::jsop_getelem_nopic(FrameEntry *obj, FrameEntry *id, RegisterID t
     stubcc.call(stubs::GetElem);
 
     /* Epilogue. */
-    frame.freeReg(idReg.getReg());
+    frame.freeReg(idReg.reg());
     frame.popn(2);
     frame.pushRegs(tmpReg, objReg);
     stubcc.rejoin(Changes(1));

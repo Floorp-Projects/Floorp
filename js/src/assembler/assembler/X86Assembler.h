@@ -592,7 +592,8 @@ public:
 
     void negl_r(RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "negl       %s\n", MAYBE_PAD, nameIReg(4,dst));
         m_formatter.oneByteOp(OP_GROUP3_Ev, GROUP3_OP_NEG, dst);
     }
 
@@ -937,7 +938,8 @@ public:
 
     void imull_rr(RegisterID src, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "imull       %s, %s\n", MAYBE_PAD, nameIReg(4,src), nameIReg(4, dst));
         m_formatter.twoByteOp(OP2_IMUL_GvEv, dst, src);
     }
 

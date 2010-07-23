@@ -145,25 +145,6 @@ class Compiler
         uint32 ndefs;
     };
 
-    class MaybeRegisterID {
-      public:
-        MaybeRegisterID()
-          : reg(Registers::ReturnReg), set(false)
-        { }
-
-        MaybeRegisterID(RegisterID reg)
-          : reg(reg), set(true)
-        { }
-
-        inline RegisterID getReg() const { JS_ASSERT(set); return reg; }
-        inline void setReg(const RegisterID r) { reg = r; set = true; }
-        inline bool isSet() const { return set; }
-
-      private:
-        RegisterID reg;
-        bool set;
-    };
-
     class MaybeJump {
       public:
         MaybeJump()
@@ -171,6 +152,7 @@ class Compiler
         { }
 
         inline Jump getJump() const { JS_ASSERT(set); return jump; }
+        inline Jump get() const { JS_ASSERT(set); return jump; }
         inline void setJump(const Jump &j) { jump = j; set = true; }
         inline bool isSet() const { return set; }
 
@@ -234,6 +216,7 @@ class Compiler
     void emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     void iterNext();
     void iterMore();
+    MaybeJump loadDouble(FrameEntry *fe, FPRegisterID fpReg);
 
     /* Opcode handlers. */
     void jumpAndTrace(Jump j, jsbytecode *target);
@@ -272,9 +255,9 @@ class Compiler
 
     /* Fast arithmetic. */
     void jsop_binary(JSOp op, VoidStub stub);
-    void jsop_binary_intmath(JSOp op, RegisterID *returnReg,
-                             MaybeJump &jmpOverflow);
-    void jsop_binary_dblmath(JSOp op, FPRegisterID rfp, FPRegisterID lfp);
+    void jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, VoidStub stub);
+    void jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub);
+    void jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, VoidStub stub);
     void slowLoadConstantDouble(Assembler &masm, FrameEntry *fe,
                                 FPRegisterID fpreg);
     void maybeJumpIfNotInt32(Assembler &masm, MaybeJump &mj, FrameEntry *fe,
