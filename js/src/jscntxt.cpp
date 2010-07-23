@@ -1879,7 +1879,7 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 JSBool
 js_InvokeOperationCallback(JSContext *cx)
 {
-    JS_ASSERT(cx->requestDepth >= 1);
+    JS_ASSERT_REQUEST_DEPTH(cx);
     JS_ASSERT(JS_THREAD_DATA(cx)->operationCallbackFlag);
 
     /*
