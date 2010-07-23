@@ -137,7 +137,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
     return result;
   }
 
-  // For nsDOMCSSAttributeDeclaration, DeclarationChanged will lead to
+  // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
   // Attribute setting code, which leads in turn to BeginUpdate.  We
   // need to start the update now so that the old rule doesn't get used
   // between when we mutate the declaration and when we set the new
@@ -152,7 +152,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
     return result;
   }
 
-  return DeclarationChanged();
+  return SetCSSDeclaration(decl);
 }
 
 NS_IMETHODIMP
@@ -290,7 +290,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
     return result;
   }
 
-  // For nsDOMCSSAttributeDeclaration, DeclarationChanged will lead to
+  // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
   // Attribute setting code, which leads in turn to BeginUpdate.  We
   // need to start the update now so that the old rule doesn't get used
   // between when we mutate the declaration and when we set the new
@@ -306,7 +306,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
     return result;
   }
 
-  return DeclarationChanged();
+  return SetCSSDeclaration(decl);
 }
 
 nsresult
@@ -317,7 +317,7 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
     return NS_OK; // no decl, so nothing to remove
   }
 
-  // For nsDOMCSSAttributeDeclaration, DeclarationChanged will lead to
+  // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
   // Attribute setting code, which leads in turn to BeginUpdate.  We
   // need to start the update now so that the old rule doesn't get used
   // between when we mutate the declaration and when we set the new
@@ -325,7 +325,7 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), PR_TRUE);
 
   decl->RemoveProperty(aPropID);
-  return DeclarationChanged();
+  return SetCSSDeclaration(decl);
 }
 
 // nsIDOMCSS2Properties

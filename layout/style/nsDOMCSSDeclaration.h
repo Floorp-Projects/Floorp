@@ -95,9 +95,9 @@ protected:
   // however, a null return should only be considered a failure
   // if aAllocate is true.
   virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool aAllocate) = 0;
-  virtual nsresult DeclarationChanged() = 0;
+  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl) = 0;
   // Document that we must call BeginUpdate/EndUpdate on around the
-  // calls to DeclarationChanged and the style rule mutation that leads
+  // calls to SetCSSDeclaration and the style rule mutation that leads
   // to it.
   virtual nsIDocument* DocToUpdate() = 0;
 

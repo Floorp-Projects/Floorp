@@ -105,7 +105,7 @@ public:
   // on a nsComputedDOMStyle object, but must be defined to avoid
   // compile errors.
   virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool);
-  virtual nsresult DeclarationChanged();
+  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration*);
   virtual nsIDocument* DocToUpdate();
   virtual nsresult GetCSSParsingEnvironment(nsIURI**, nsIURI**, nsIPrincipal**,
                                             mozilla::css::Loader**);
