@@ -1863,7 +1863,7 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
     }
 
     JS_ASSERT(props.length() <= UINT32_MAX);
-    JSObject *aobj = js_NewArrayObject(cx, jsuint(vals.length()), vals.begin(), false);
+    JSObject *aobj = js_NewArrayObject(cx, jsuint(vals.length()), vals.begin());
     if (!aobj)
         return JS_FALSE;
     vp->setObject(*aobj);
@@ -2342,7 +2342,7 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
         if (index >= oldLen) {
             JS_ASSERT(index != UINT32_MAX);
-            obj->setSlowArrayLength(index + 1);
+            obj->setArrayLength(index + 1);
         }
 
         *rval = true;

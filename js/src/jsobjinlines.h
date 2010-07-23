@@ -132,96 +132,25 @@ JSObject::staticAssertArrayLengthIsInPrivateSlot()
     JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH == JSSLOT_PRIVATE);
 }
 
-inline bool
-JSObject::isDenseArrayMinLenCapOk(bool strictAboutLength) const
-{
-    JS_ASSERT(isDenseArray());
-
-    // This function can be called while the LENGTH and MINLENCAP slots are
-    // still set to JSVAL_VOID and there are no dslots (ie. the capacity is
-    // zero).  If 'strictAboutLength' is false we allow this.
-    if (!strictAboutLength &&
-        fslots[JSSLOT_ARRAY_LENGTH].isUndefined() &&
-        uncheckedGetDenseArrayCapacity() == 0) {
-        return true;
-    }
-
-    uint32 length = uncheckedGetArrayLength();
-    uint32 capacity = uncheckedGetDenseArrayCapacity();
-    uint32 minLenCap = fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].toPrivateUint32();
-    return minLenCap == JS_MIN(length, capacity);
-}
-
-inline uint32
-JSObject::uncheckedGetArrayLength() const
-{
-    return fslots[JSSLOT_ARRAY_LENGTH].toPrivateUint32();
-}
-
 inline uint32
 JSObject::getArrayLength() const
 {
     JS_ASSERT(isArray());
-    JS_ASSERT_IF(isDenseArray(), isDenseArrayMinLenCapOk());
-    return uncheckedGetArrayLength();
+    return fslots[JSSLOT_ARRAY_LENGTH].toPrivateUint32();
 }
 
 inline void 
-JSObject::setDenseArrayLength(uint32 length)
+JSObject::setArrayLength(uint32 length)
 {
-    JS_ASSERT(isDenseArray());
+    JS_ASSERT(isArray());
     fslots[JSSLOT_ARRAY_LENGTH].setPrivateUint32(length);
-    uint32 capacity = uncheckedGetDenseArrayCapacity();
-    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].setPrivateUint32(JS_MIN(length, capacity));
-}
-
-inline void 
-JSObject::setSlowArrayLength(uint32 length)
-{
-    JS_ASSERT(isSlowArray());
-    fslots[JSSLOT_ARRAY_LENGTH].setPrivateUint32(length);
-}
-
-inline uint32 
-JSObject::getDenseArrayCount() const
-{
-    JS_ASSERT(isDenseArray());
-    return fslots[JSSLOT_DENSE_ARRAY_COUNT].toPrivateUint32();
-}
-
-inline void 
-JSObject::setDenseArrayCount(uint32 count)
-{
-    JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_DENSE_ARRAY_COUNT].setPrivateUint32(count);
-}
-
-inline void 
-JSObject::incDenseArrayCountBy(uint32 posDelta)
-{
-    JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_DENSE_ARRAY_COUNT].getPrivateUint32Ref() += posDelta;
-}
-
-inline void 
-JSObject::decDenseArrayCountBy(uint32 negDelta)
-{
-    JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_DENSE_ARRAY_COUNT].getPrivateUint32Ref() -= negDelta;
-}
-
-inline uint32
-JSObject::uncheckedGetDenseArrayCapacity() const
-{
-    return dslots ? dslots[-1].toPrivateUint32() : 0;
 }
 
 inline uint32
 JSObject::getDenseArrayCapacity() const
 {
     JS_ASSERT(isDenseArray());
-    JS_ASSERT(isDenseArrayMinLenCapOk(/* strictAboutLength = */false));
-    return uncheckedGetDenseArrayCapacity();
+    return dslots ? dslots[-1].toPrivateUint32() : 0;
 }
 
 inline void
@@ -230,8 +159,6 @@ JSObject::setDenseArrayCapacity(uint32 capacity)
     JS_ASSERT(isDenseArray());
     JS_ASSERT(dslots);
     dslots[-1].setPrivateUint32(capacity);
-    uint32 length = uncheckedGetArrayLength();
-    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].setPrivateUint32(JS_MIN(length, capacity));
 }
 
 inline const js::Value &
@@ -273,16 +200,12 @@ JSObject::freeDenseArrayElements(JSContext *cx)
         cx->free(dslots - 1);
         dslots = NULL;
     }
-    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].setPrivateUint32(0);
-    JS_ASSERT(isDenseArrayMinLenCapOk(/* strictAboutLength = */false));
 }
 
 inline void 
 JSObject::voidDenseOnlyArraySlots()
 {
     JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_DENSE_ARRAY_COUNT].setUndefined();
-    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].setUndefined();
 }
 
 inline void

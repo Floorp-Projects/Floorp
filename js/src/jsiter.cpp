@@ -277,7 +277,7 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
         return false;
     }
 
-    if (pobj->getDenseArrayCount() > 0) {
+    if (pobj->getArrayLength() > 0) {
         size_t capacity = pobj->getDenseArrayCapacity();
         Value *vp = pobj->dslots;
         for (size_t i = 0; i < capacity; ++i, ++vp) {

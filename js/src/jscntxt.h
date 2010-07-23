@@ -1203,6 +1203,7 @@ struct JSCompartment {
 
 struct JSGCTracer : public JSTracer {
     uint32 color;
+    js::Vector<JSObject *, 0, js::SystemAllocPolicy> arraysToSlowify;
 };
 
 struct JSRuntime {
