@@ -900,7 +900,7 @@ class CSSStyleRuleImpl;
 
 class CSSImportantRule : public nsIStyleRule {
 public:
-  CSSImportantRule(nsCSSCompressedDataBlock *aImportantBlock);
+  CSSImportantRule(css::Declaration *aDeclaration);
 
   NS_DECL_ISUPPORTS
 
@@ -913,13 +913,16 @@ public:
 protected:
   virtual ~CSSImportantRule(void);
 
-  nsRefPtr<nsCSSCompressedDataBlock> mImportantBlock;
+  // Not an owning reference; the CSSStyleRuleImpl that owns this
+  // CSSImportantRule also owns the mDeclaration, and any rule node
+  // pointing to this rule keeps that CSSStyleRuleImpl alive as well.
+  css::Declaration* mDeclaration;
 
   friend class CSSStyleRuleImpl;
 };
 
-CSSImportantRule::CSSImportantRule(nsCSSCompressedDataBlock* aImportantBlock)
-  : mImportantBlock(aImportantBlock)
+CSSImportantRule::CSSImportantRule(css::Declaration* aDeclaration)
+  : mDeclaration(aDeclaration)
 {
 }
 
@@ -932,7 +935,7 @@ NS_IMPL_ISUPPORTS1(CSSImportantRule, nsIStyleRule)
 /* virtual */ void
 CSSImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  mImportantBlock->MapRuleInfoInto(aRuleData);
+  mDeclaration->MapImportantRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG
@@ -942,8 +945,8 @@ CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "! Important rule block=%p\n",
-          static_cast<void*>(mImportantBlock.get()));
+  fprintf(out, "! Important declaration=%p\n",
+          static_cast<void*>(mDeclaration));
 }
 #endif
 
@@ -1330,8 +1333,7 @@ protected:
 protected:
   nsCSSSelectorList*      mSelector; // null for style attribute
   css::Declaration*       mDeclaration;
-  nsRefPtr<nsCSSCompressedDataBlock> mNormalBlock;
-  CSSImportantRule*       mImportantRule;
+  CSSImportantRule*       mImportantRule; // initialized by RuleMatched
   DOMCSSStyleRuleImpl*    mDOMRule;
   PRUint32                mLineNumber;
 };
@@ -1345,20 +1347,17 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(nsCSSSelectorList* aSelector,
     mDOMRule(nsnull),
     mLineNumber(0)
 {
-  mDeclaration->AddRef();
 }
 
 // for |Clone|
 CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
   : nsCSSRule(aCopy),
     mSelector(aCopy.mSelector ? aCopy.mSelector->Clone() : nsnull),
-    mDeclaration(aCopy.mDeclaration->Clone()),
+    mDeclaration(new css::Declaration(*aCopy.mDeclaration)),
     mImportantRule(nsnull),
     mDOMRule(nsnull),
     mLineNumber(aCopy.mLineNumber)
 {
-  if (mDeclaration)
-    mDeclaration->AddRef();
   // rest is constructed lazily on existing data
 }
 
@@ -1376,38 +1375,24 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
   // the reverse pointer as well (and transfer ownership).
   aCopy.mDOMRule = nsnull;
 
-  // Transfer ownership of selector and declaration:
-  // NOTE that transferring ownership of the declaration relies on the
-  // code in RuleMatched caching what we need from mDeclaration so that
-  // mDeclaration is unused in CSSStyleRuleImpl::GetImportantRule,
-  // CSSStyleRuleImpl::MapRuleInfoInto, and
-  // CSSImportantRule::MapRuleInfoInto.  This means that any style rule
-  // that has become part of the rule tree has already retrieved the
-  // necessary data blocks from its declaration, so any later
-  // MapRuleInfoInto calls (see stack in bug 209575; also needed for CSS
-  // Transitions) and GetImportantRule calls will also work.
-  if (mDeclaration != aCopy.mDeclaration) {
-    NS_ADDREF(mDeclaration);
-    NS_RELEASE(aCopy.mDeclaration);
-  }
+  // Similarly for the selector.
   aCopy.mSelector = nsnull;
-  aCopy.mDeclaration = nsnull;
+
+  // We are probably replacing the old declaration with |aDeclaration|
+  // instead of taking ownership of the old declaration; only null out
+  // aCopy.mDeclaration if we are taking ownership.
+  if (mDeclaration == aCopy.mDeclaration) {
+    // This should only ever happen if the declaration was modifiable.
+    mDeclaration->AssertMutable();
+    aCopy.mDeclaration = nsnull;
+  }
 }
 
 CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
 {
-  if (mSelector) {
-    delete mSelector;
-    mSelector = nsnull;
-  }
-  if (nsnull != mDeclaration) {
-    mDeclaration->Release();
-    mDeclaration = nsnull;
-  }
-  if (nsnull != mImportantRule) {
-    NS_RELEASE(mImportantRule);
-    mImportantRule = nsnull;
-  }
+  delete mSelector;
+  delete mDeclaration;
+  NS_IF_RELEASE(mImportantRule);
   if (mDOMRule) {
     mDOMRule->DOMDeclaration()->DropReference();
     NS_RELEASE(mDOMRule);
@@ -1453,17 +1438,13 @@ nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
 /* virtual */ void
 CSSStyleRuleImpl::RuleMatched()
 {
-  if (mNormalBlock) {
-    // This method has already been called.
-    return;
-  }
-  NS_ABORT_IF_FALSE(!mImportantRule, "should not have important rule either");
+  if (mDeclaration->IsMutable()) {
+    NS_ABORT_IF_FALSE(!mImportantRule, "should not have important rule yet");
 
-  mNormalBlock = mDeclaration->GetNormalBlock();
-
-  if (mDeclaration->HasImportantData()) {
-    mImportantRule = new CSSImportantRule(mDeclaration->GetImportantBlock());
-    NS_IF_ADDREF(mImportantRule);
+    mDeclaration->SetImmutable();
+    if (mDeclaration->HasImportantData()) {
+      NS_ADDREF(mImportantRule = new CSSImportantRule(mDeclaration));
+    }
   }
 }
 
@@ -1551,9 +1532,9 @@ CSSStyleRuleImpl::DeclarationChanged(css::Declaration* aDecl,
 /* virtual */ void
 CSSStyleRuleImpl::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  NS_ABORT_IF_FALSE(mNormalBlock,
+  NS_ABORT_IF_FALSE(!mDeclaration->IsMutable(),
                     "somebody forgot to call nsICSSStyleRule::RuleMatched");
-  mNormalBlock->MapRuleInfoInto(aRuleData);
+  mDeclaration->MapNormalRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG

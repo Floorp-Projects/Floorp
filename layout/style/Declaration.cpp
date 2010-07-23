@@ -62,22 +62,22 @@
 namespace mozilla {
 namespace css {
 
-Declaration::Declaration()
-{
-  // check that we can fit all the CSS properties into a PRUint8
-  // for the mOrder array - if not, might need to use PRUint16!
-  PR_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands - 1 <= PR_UINT8_MAX);
+// check that we can fit all the CSS properties into a PRUint8
+// for the mOrder array - if not, might need to use PRUint16!
+PR_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands - 1 <= PR_UINT8_MAX);
 
+Declaration::Declaration()
+  : mImmutable(PR_FALSE)
+{
   MOZ_COUNT_CTOR(mozilla::css::Declaration);
 }
 
 Declaration::Declaration(const Declaration& aCopy)
   : mOrder(aCopy.mOrder),
-    mData(aCopy.mData ? aCopy.mData->Clone()
-                      : already_AddRefed<nsCSSCompressedDataBlock>(nsnull)),
+    mData(aCopy.mData ? aCopy.mData->Clone() : nsnull),
     mImportantData(aCopy.mImportantData
-                      ? aCopy.mImportantData->Clone()
-                      : already_AddRefed<nsCSSCompressedDataBlock>(nsnull))
+                   ? aCopy.mImportantData->Clone() : nsnull),
+    mImmutable(PR_FALSE)
 {
   MOZ_COUNT_CTOR(mozilla::css::Declaration);
 }
@@ -888,12 +888,6 @@ Declaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const
   }
 }
 
-Declaration*
-Declaration::Clone() const
-{
-  return new Declaration(*this);
-}
-
 void
 Declaration::InitializeEmpty()
 {
@@ -906,7 +900,7 @@ Declaration::EnsureMutable()
 {
   NS_ASSERTION(mData, "should only be called when not expanded");
   if (!IsMutable()) {
-    return Clone();
+    return new Declaration(*this);
   } else {
     return this;
   }
