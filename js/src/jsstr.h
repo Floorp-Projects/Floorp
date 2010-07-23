@@ -995,15 +995,6 @@ extern JSBool
 js_str_escape(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
               js::Value *rval);
 
-/*
- * The String.prototype.replace fast-native entry point is exported for joined
- * function optimization in js{interp,tracer}.cpp.
- */
-namespace js {
-extern JSBool
-str_replace(JSContext *cx, uintN argc, js::Value *vp);
-}
-
 extern JSBool
 js_str_toString(JSContext *cx, uintN argc, js::Value *vp);
 

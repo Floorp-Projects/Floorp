@@ -1774,8 +1774,8 @@ sort_compare_strings(void *arg, const void *a, const void *b, int *result)
     return JS_TRUE;
 }
 
-JSBool
-js::array_sort(JSContext *cx, uintN argc, Value *vp)
+static JSBool
+array_sort(JSContext *cx, uintN argc, Value *vp)
 {
     jsuint len, newlen, i, undefs;
     size_t elemsize;

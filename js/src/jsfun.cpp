@@ -1272,102 +1272,6 @@ JS_PUBLIC_DATA(Class) js_CallClass = {
     JS_CLASS_TRACE(args_or_call_trace), NULL
 };
 
-bool
-JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
-{
-    if (!fun) {
-        vp->setObjectOrNull(callee());
-        return true;
-    }
-
-    /*
-     * See the equivalent condition in args_getProperty for ARGS_CALLEE, but
-     * note that here we do not want to throw, since this escape can happen via
-     * a foo.caller reference alone, without any debugger or indirect eval. And
-     * alas, it seems foo.caller is still used on the Web.
-     */
-    if (fun->needsWrapper()) {
-        JSObject *wrapper = WrapEscapingClosure(cx, this, fun, fun);
-        if (!wrapper)
-            return false;
-        vp->setObject(*wrapper);
-        return true;
-    }
-
-    JSObject *funobj = &calleeObject();
-    vp->setObject(*funobj);
-
-    /*
-     * Check for an escape attempt by a joined function object, which must go
-     * through the frame's |this| object's method read barrier for the method
-     * atom by which it was uniquely associated with a property.
-     */
-    if (thisv.isObject()) {
-        JS_ASSERT(GET_FUNCTION_PRIVATE(cx, funobj) == fun);
-
-        if (fun == funobj && fun->methodAtom()) {
-            JSObject *thisp = &thisv.toObject();
-            JS_ASSERT(thisp->canHaveMethodBarrier());
-
-            JSScope *scope = thisp->scope();
-            if (scope->hasMethodBarrier()) {
-                JSScopeProperty *sprop = scope->lookup(ATOM_TO_JSID(fun->methodAtom()));
-
-                /*
-                 * The method property might have been deleted while the method
-                 * barrier scope flag stuck, so we must lookup and test here.
-                 *
-                 * Two cases follow: the method barrier was not crossed yet, so
-                 * we cross it here; the method barrier *was* crossed, in which
-                 * case we must fetch and validate the cloned (unjoined) funobj
-                 * in the method property's slot.
-                 *
-                 * In either case we must allow for the method property to have
-                 * been replaced, or its value to have been overwritten.
-                 */
-                if (sprop) {
-                    if (sprop->isMethod() && &sprop->methodObject() == funobj) {
-                        if (!scope->methodReadBarrier(cx, sprop, vp))
-                            return false;
-                        setCalleeObject(vp->toObject());
-                        return true;
-                    }
-                    if (sprop->hasSlot()) {
-                        Value v = thisp->getSlot(sprop->slot);
-                        JSObject *clone;
-
-                        if (IsFunctionObject(v, &clone) &&
-                            GET_FUNCTION_PRIVATE(cx, clone) == fun &&
-                            clone->hasMethodObj(*thisp)) {
-                            JS_ASSERT(clone != funobj);
-                            *vp = v;
-                            setCalleeObject(*clone);
-                            return true;
-                        }
-                    }
-                }
-
-                /*
-                 * If control flows here, we can't find an already-existing
-                 * clone (or force to exist a fresh clone) created via thisp's
-                 * method read barrier, so we must clone fun and store it in
-                 * fp's callee to avoid re-cloning upon repeated foo.caller
-                 * access. It seems that there are no longer any properties
-                 * referring to fun.
-                 */
-                funobj = CloneFunctionObject(cx, fun, fun->getParent());
-                if (!funobj)
-                    return false;
-                funobj->setMethodObj(*thisp);
-                setCalleeObject(*funobj);
-                return true;
-            }
-        }
-    }
-
-    return true;
-}
-
 /* Generic function tinyids. */
 enum {
     FUN_ARGUMENTS   = -1,       /* predefined arguments local variable */
@@ -1381,7 +1285,7 @@ static JSBool
 fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     if (!JSID_IS_INT(id))
-        return true;
+        return JS_TRUE;
 
     jsint slot = JSID_TO_INT(id);
 
@@ -1409,10 +1313,10 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     while (!(fun = (JSFunction *)
                    GetInstancePrivate(cx, obj, &js_FunctionClass, NULL))) {
         if (slot != FUN_LENGTH)
-            return true;
+            return JS_TRUE;
         obj = obj->getProto();
         if (!obj)
-            return true;
+            return JS_TRUE;
     }
 
     /* Find fun's top-most activation record. */
@@ -1431,11 +1335,11 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                                           js_GetErrorMessage, NULL,
                                           JSMSG_DEPRECATED_USAGE,
                                           js_arguments_str)) {
-            return false;
+            return JS_FALSE;
         }
         if (fp) {
             if (!js_GetArgsValue(cx, fp, vp))
-                return false;
+                return JS_FALSE;
         } else {
             vp->setNull();
         }
@@ -1452,12 +1356,30 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         break;
 
       case FUN_CALLER:
-        vp->setNull();
-        if (fp && fp->down && !fp->down->getValidCalleeObject(cx, vp))
-            return false;
+        if (fp && fp->down && fp->down->fun) {
+            JSFunction *caller = fp->down->fun;
+            /*
+             * See equivalent condition in args_getProperty for ARGS_CALLEE,
+             * but here we do not want to throw, since this escape can happen
+             * via foo.caller alone, without any debugger or indirect eval. And
+             * it seems foo.caller is still used on the Web.
+             */
+            if (caller->needsWrapper()) {
+                JSObject *wrapper = WrapEscapingClosure(cx, fp->down, FUN_OBJECT(caller), caller);
+                if (!wrapper)
+                    return JS_FALSE;
+                vp->setObject(*wrapper);
+                return JS_TRUE;
+            }
 
+            JS_ASSERT(fp->down->argv);
+            *vp = fp->down->calleeValue();
+        } else {
+            vp->setNull();
+        }
+
+        /* Censor the caller if it is from another compartment. */
         if (vp->isObject()) {
-            /* Censor the caller if it is from another compartment. */
             if (vp->toObject().getCompartment(cx) != cx->compartment)
                 vp->setNull();
         }
@@ -1470,7 +1392,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         break;
     }
 
-    return true;
+    return JS_TRUE;
 }
 
 struct LazyFunctionProp {
@@ -1902,8 +1824,7 @@ JSFunction::countInterpretedReservedSlots() const
  */
 JS_PUBLIC_DATA(Class) js_FunctionClass = {
     js_Function_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
-    JSCLASS_HAS_RESERVED_SLOTS(JSObject::FUN_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(2) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     PropertyStub,     PropertyStub,
     PropertyStub,     PropertyStub,
@@ -2228,7 +2149,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
      * js_CheckContentSecurityPolicy is defined in jsobj.cpp
      */
     if (!js_CheckContentSecurityPolicy(cx)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, 
+                             JSMSG_CSP_BLOCKED_FUNCTION);
         return JS_FALSE;
     }
 
