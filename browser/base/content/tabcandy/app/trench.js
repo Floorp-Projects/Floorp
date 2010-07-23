@@ -134,13 +134,13 @@ Trench.prototype = {
   setPosition: function Trench_setPos(position, range, minRange) {
     this.position = position;
 
-    var page = Items.getPageBounds( true );
+    var page = Items.getPageBounds(true);
 
     // optionally, set the range.
     if (Utils.isRange(range)) {
       this.range = range;
     } else {
-      this.range = new Range( 0, (this.xory == 'x' ? page.height : page.width) );
+      this.range = new Range(0, (this.xory == 'x' ? page.height : page.width));
     }
 
     // if there's a minRange, set that too.

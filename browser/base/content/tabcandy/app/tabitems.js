@@ -473,7 +473,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         TabMirror.resumePainting();
         // If it's not focused, the onFocus lsitener would handle it.
         if (gBrowser.selectedTab == tab) {
-          Page.tabOnFocus(tab);
+          UI.tabOnFocus(tab);
         } else {
           gBrowser.selectedTab = tab;
         }
