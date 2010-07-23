@@ -110,7 +110,6 @@ Storage = {
       // ___ Other
       this.saveGroupsData(gWindow, {});
       this.saveUIData(gWindow, {});
-      this.saveVisibilityData(gWindow, {});
 
       this._sessionStore.setWindowValue(gWindow, this.GROUP_DATA_IDENTIFIER,
         JSON.stringify({}));
@@ -218,20 +217,6 @@ Storage = {
   },
 
   // ----------
-  // Function: saveVisibilityData
-  // TODO: fold into saveUIData
-  saveVisibilityData: function(win, data) {
-    this.saveData(win, this.VISIBILITY_DATA_IDENTIFIER, data);
-  },
-
-  // ----------
-  // Function: readVisibilityData
-  // TODO: fold into readUIData
-  readVisibilityData: function(win) {
-    return this.readData(win, this.VISIBILITY_DATA_IDENTIFIER);
-  },
-
-  // ----------
   // Function: saveData
   // Generic routine for saving data to a window.
   saveData: function(win, id, data) {
@@ -264,4 +249,3 @@ Storage = {
 
 // ----------
 Storage.init();
-

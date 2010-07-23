@@ -772,8 +772,7 @@ UIClass.prototype = {
       });
 
       // ___ show tab candy at startup
-      var visibilityData = Storage.readVisibilityData(gWindow);
-      if (visibilityData && visibilityData.visible) {
+      if (data.tabCandyVisible) {
         var currentTab = UI.currentTab;
         var item;
 
@@ -796,10 +795,8 @@ UIClass.prototype = {
           if (topic == "quit-application-requested") {
             if (Page.isTabCandyVisible()) {
               TabItems.saveAll(true);
-              self._saveVisibility(true);
-            } else {
-              self._saveVisibility(false);
             }
+            self._save();
           }
         }
       };
@@ -1152,16 +1149,6 @@ UIClass.prototype = {
   },
 
   // ----------
-  // Function: _saveAll
-  // Saves all data associated with TabCandy.
-  // TODO: Save info items
-  _saveAll: function() {
-    this._save();
-    Groups.saveAll();
-    TabItems.saveAll();
-  },
-
-  // ----------
   // Function: _save
   // Saves the data for this object to persistent storage
   _save: function() {
@@ -1169,6 +1156,7 @@ UIClass.prototype = {
       return;
 
     var data = {
+      tabCandyVisible: Page.isTabCandyVisible(),
       pageBounds: this.pageBounds
     };
 
@@ -1193,10 +1181,13 @@ UIClass.prototype = {
   },
 
   // ----------
-  // Function: _saveVisibility
-  // Saves to storage whether the TabCandy UI is visible (as passed in).
-  _saveVisibility: function(isVisible) {
-    Storage.saveVisibilityData(gWindow, { visible: isVisible });
+  // Function: _saveAll
+  // Saves all data associated with TabCandy.
+  // TODO: Save info items
+  _saveAll: function() {
+    this._save();
+    Groups.saveAll();
+    TabItems.saveAll();
   },
 
   // ----------
