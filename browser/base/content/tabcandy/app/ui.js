@@ -114,15 +114,15 @@ window.Page = {
   // Function: isTabCandyVisible
   // Returns true if the TabCandy UI is currently shown.
   isTabCandyVisible: function(){
-    return gTabDeck.selectedIndex == 1;
+    return gTabViewDeck.selectedIndex == 1;
   },
 
   // ----------
   // Function: hideChrome
   // Hides the main browser UI and shows TabCandy.
   hideChrome: function(){
-    gTabDeck.selectedIndex = 1;
-    gTabFrame.contentWindow.focus();
+    gTabViewDeck.selectedIndex = 1;
+    gTabViewFrame.contentWindow.focus();
 
     gBrowser.updateTitlebar();
 #ifdef XP_MACOSX
@@ -134,7 +134,7 @@ window.Page = {
   // Function: showChrome
   // Shows the main browser UI and hides Tab Candy.
   showChrome: function(){
-    gTabDeck.selectedIndex = 0;
+    gTabViewDeck.selectedIndex = 0;
     gBrowser.contentWindow.focus();
 
     // set the close button on tab
@@ -207,7 +207,7 @@ window.Page = {
 
     // When you click on the background/empty part of TabCandy,
     // we create a new group.
-    iQ(gTabFrame.contentDocument).mousedown(function(e){
+    iQ(gTabViewFrame.contentDocument).mousedown(function(e){
       if ( e.originalTarget.id == "content" )
         self._createGroupOnDrag(e)
     });
