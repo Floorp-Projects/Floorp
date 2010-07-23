@@ -429,7 +429,9 @@
           goForward: function() { this._sendMessage("WebNavigation:GoForward", {}); },
           gotoIndex: function(aIndex) { this._sendMessage("WebNavigation:GotoIndex", {index: aIndex}); },
           loadURI: function(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
-            this._currentURI = this._browser._ios.newURI(aURI, null, null);
+            try {
+              this._currentURI = this._browser._ios.newURI(aURI, null, null);
+            } catch(e) {}
             this._browser._contentTitle = "";
             this._sendMessage("WebNavigation:LoadURI", {uri: aURI, flags: aLoadFlags});
           },
