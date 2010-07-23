@@ -393,7 +393,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
   // Closes this item (actually closes the tab associated with it, which automatically
   // closes the item.
   close: function() {
-    this.tab.close();
+    gBrowser.removeTab(this.tab);
 
     // No need to explicitly delete the tab data, becasue sessionstore data
     // associated with the tab will automatically go away
