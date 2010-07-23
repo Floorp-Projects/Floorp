@@ -50,7 +50,6 @@
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jsiter.h"
 #include "jstypes.h"
-#include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
 #include "jstracer.h"
 #include "jspropertycache.h"
@@ -1313,36 +1312,10 @@ stubs::NewArray(VMFrame &f, uint32 len)
 }
 
 void JS_FASTCALL
-stubs::Interrupt(VMFrame &f, jsbytecode *pc)
+stubs::Interrupt(VMFrame &f)
 {
-    if (!js_HandleExecutionInterrupt(f.cx))
+    if (!js_HandleExecutionInterrupt(f.cx)) {
         THROW();
-}
-
-void JS_FASTCALL
-stubs::Trap(VMFrame &f, jsbytecode *pc)
-{
-    Value rval;
-
-    switch (JS_HandleTrap(f.cx, f.cx->fp->script, pc, Jsvalify(&rval))) {
-      case JSTRAP_THROW:
-        f.cx->throwing = JS_TRUE;
-        f.cx->exception = rval;
-        THROW();
-
-      case JSTRAP_RETURN:
-        f.cx->throwing = JS_FALSE;
-        f.cx->fp->rval = rval;
-        *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
-                                     JS_METHODJIT_DATA(f.cx).trampolines.forceReturn);
-        break;
-
-      case JSTRAP_ERROR:
-        f.cx->throwing = JS_FALSE;
-        THROW();
-
-      default:
-        break;
     }
 }
 
