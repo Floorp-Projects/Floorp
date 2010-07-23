@@ -206,10 +206,10 @@ struct JSStackFrame
 
     /*
      * Get the object associated with the Execution Context's
-     * VariableEnvironment (ES5 10.3). The given CallStack must contain this
-     * stack frame.
+     * VariableEnvironment (ES5 10.3). The given CallStackSegment must contain
+     * this stack frame.
      */
-    JSObject *varobj(js::CallStack *cs) const;
+    JSObject *varobj(js::CallStackSegment *css) const;
 
     /* Short for: varobj(cx->activeCallStack()). */
     JSObject *varobj(JSContext *cx) const;
@@ -399,6 +399,9 @@ InstanceOf(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
     extern bool InstanceOfSlow(JSContext *, JSObject *, Class *, Value *);
     return InstanceOfSlow(cx, obj, clasp, argv);
 }
+
+extern JSBool
+js_HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
 
 inline void *
 GetInstancePrivate(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)

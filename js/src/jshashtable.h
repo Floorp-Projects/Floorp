@@ -593,7 +593,7 @@ class HashTable : AllocPolicy
 #endif
     }
 
-    bool add(AddPtr &p, const T &t)
+    bool add(AddPtr &p)
     {
         ReentrancyGuard g(*this);
         JS_ASSERT(mutationCount == p.mutationCount);
@@ -630,12 +630,32 @@ class HashTable : AllocPolicy
             }
         }
 
-        p.entry->t = t;
         p.entry->setLive(p.keyHash);
         entryCount++;
 #ifdef DEBUG
         mutationCount++;
 #endif
+        return true;
+    }
+
+    /*
+     * There is an important contract between the caller and callee for this
+     * function: if add() returns true, the caller must assign the T value
+     * which produced p before using the hashtable again.
+     */
+    bool add(AddPtr &p, T** pentry)
+    {
+        if (!add(p))
+            return false;
+        *pentry = &p.entry->t;
+        return true;
+    }
+
+    bool add(AddPtr &p, const T &t)
+    {
+        if (!add(p))
+            return false;
+        p.entry->t = t;
         return true;
     }
 
@@ -842,8 +862,27 @@ class HashMap
      *    char val = p->value;
      */
     typedef typename Impl::AddPtr AddPtr;
-    AddPtr lookupForAdd(const Lookup &l) const        { return impl.lookupForAdd(l); }
-    bool add(AddPtr &p, const Key &k, const Value &v) { return impl.add(p,Entry(k,v)); }
+    AddPtr lookupForAdd(const Lookup &l) const {
+        return impl.lookupForAdd(l);
+    }
+
+    bool add(AddPtr &p, const Key &k, const Value &v) {
+        Entry *pentry;
+        if (!impl.add(p, &pentry))
+            return false;
+        const_cast<Key &>(pentry->key) = k;
+        pentry->value = v;
+        return true;
+    }
+
+    bool add(AddPtr &p, const Key &k) {
+        Entry *pentry;
+        if (!impl.add(p, &pentry))
+            return false;
+        const_cast<Key &>(pentry->key) = k;
+        return true;
+    }
+
     bool relookupOrAdd(AddPtr &p, const Key &k, const Value &v) {
         return impl.relookupOrAdd(p, k, Entry(k, v));
     }
@@ -989,8 +1028,11 @@ class HashSet
      * Also see the definition of AddPtr in HashTable above.
      */
     typedef typename Impl::AddPtr AddPtr;
-    AddPtr lookupForAdd(const Lookup &l) const        { return impl.lookupForAdd(l); }
-    bool add(AddPtr &p, const T &t)                   { return impl.add(p,t); }
+    AddPtr lookupForAdd(const Lookup &l) const {
+        return impl.lookupForAdd(l);
+    }
+
+    bool add(AddPtr &p, const T &t) { return impl.add(p, t); }
 
     /*
      * |all()| returns a Range containing |count()| elements:

@@ -266,70 +266,67 @@ struct GlobalState {
 };
 
 /*
- * Callstacks
+ * A CallStackSegment (henceforth referred to as a 'segment') logically
+ * contains the (possibly empty) set of stack frames associated with a single
+ * activation of the VM and the slots associated with each frame. A segment may
+ * or may not be "in" a context and a segment is in a context iff its set of
+ * stack frames is nonempty. A segment and its contained frames/slots also have
+ * an implied memory layout, as described in the js::StackSpace comment.
  *
- * A callstack logically contains the (possibly empty) set of stack frames
- * associated with a single activation of the VM and the slots associated with
- * each frame. A callstack may or may not be "in" a context and a callstack is
- * in a context iff its set of stack frames is nonempty. A callstack and its
- * contained frames/slots also have an implied memory layout, as described in
- * the js::StackSpace comment.
- *
- * The set of stack frames in a non-empty callstack start at the callstack's
+ * The set of stack frames in a non-empty segment start at the segment's
  * "current frame", which is the most recently pushed frame, and ends at the
- * callstack's "initial frame". Note that, while all stack frames in a
- * callstack are down-linked, not all down-linked frames are in the same
- * callstack. Hence, for a callstack |cs|, |cs->getInitialFrame()->down| may be
- * non-null and in a different callstack. This occurs when the VM reenters
- * itself (via js_Invoke or js_Execute). In full generality, a single context
- * may contain a forest of trees of stack frames. With respect to this forest,
- * a callstack contains a linear path along a single tree, not necessarily to
- * the root.
+ * segment's "initial frame". Note that, while all stack frames in a segment
+ * are down-linked, not all down-linked frames are in the same segment. Hence,
+ * for a segment |css|, |css->getInitialFrame()->down| may be non-null and in a
+ * different segment. This occurs when the VM reenters itself (via js_Invoke or
+ * js_Execute). In full generality, a single context may contain a forest of
+ * trees of stack frames. With respect to this forest, a segment contains a
+ * linear path along a single tree, not necessarily to the root.
  *
- * A callstack in a context may additionally be "active" or "suspended". A
- * suspended callstack |cs| has a "suspended frame" which serves as the current
- * frame of |cs|. Additionally, a suspended callstack has "suspended regs",
- * which is a snapshot of |cx->regs| when |cs| was suspended. There is at most
- * one active callstack in a given context.  Callstacks in a context execute
- * LIFO and are maintained in a stack. The top of this stack is the context's
- * "current callstack". If a context |cx| has an active callstack |cs|, then:
- *   1. |cs| is |cx|'s current callstack,
+ * A segment in a context may additionally be "active" or "suspended". A
+ * suspended segment |css| has a "suspended frame" which serves as the current
+ * frame of |css|. Additionally, a suspended segment has "suspended regs",
+ * which is a snapshot of |cx->regs| when |css| was suspended. There is at most
+ * one active segment in a given context. Segments in a context execute LIFO
+ * and are maintained in a stack. The top of this stack is the context's
+ * "current segment". If a context |cx| has an active segment |css|, then:
+ *   1. |css| is |cx|'s current segment,
  *   2. |cx->fp != NULL|, and
- *   3. |cs|'s current frame is |cx->fp|.
- * Moreover, |cx->fp != NULL| iff |cx| has an active callstack.
+ *   3. |css|'s current frame is |cx->fp|.
+ * Moreover, |cx->fp != NULL| iff |cx| has an active segment.
  *
  * Finally, (to support JS_SaveFrameChain/JS_RestoreFrameChain) a suspended
- * callstack may or may not be "saved". Normally, when the active callstack is
- * popped, the previous callstack (which is necessarily suspended) becomes
- * active. If the previous callstack was saved, however, then it stays
- * suspended until it is made active by a call to JS_RestoreFrameChain. This is
- * why a context may have a current callstack, but not an active callstack.
+ * segment may or may not be "saved". Normally, when the active segment is
+ * popped, the previous segment (which is necessarily suspended) becomes
+ * active. If the previous segment was saved, however, then it stays suspended
+ * until it is made active by a call to JS_RestoreFrameChain. This is why a
+ * context may have a current segment, but not an active segment.
  */
-class CallStack
+class CallStackSegment
 {
-    /* The context to which this callstack belongs. */
+    /* The context to which this segment belongs. */
     JSContext           *cx;
 
-    /* Link for JSContext callstack stack mentioned in big comment above. */
-    CallStack           *previousInContext;
+    /* Link for JSContext segment stack mentioned in big comment above. */
+    CallStackSegment    *previousInContext;
 
-    /* Link for StackSpace callstack stack mentioned in StackSpace comment. */
-    CallStack           *previousInThread;
+    /* Link for StackSpace segment stack mentioned in StackSpace comment. */
+    CallStackSegment    *previousInMemory;
 
-    /* The first frame executed in this callstack. null iff cx is null */
+    /* The first frame executed in this segment. null iff cx is null */
     JSStackFrame        *initialFrame;
 
-    /* If this callstack is suspended, the top of the callstack. */
+    /* If this segment is suspended, the top of the segment. */
     JSStackFrame        *suspendedFrame;
 
     /*
-     * To achieve a sizeof(CallStack) that is a multiple of sizeof(Value), we
-     * compress two fields into one word:
+     * To achieve a sizeof(CallStackSegment) that is a multiple of
+     * sizeof(Value), we compress two fields into one word:
      *
-     *  suspendedRegs: If this callstack is suspended, |cx->regs| when it was
+     *  suspendedRegs: If this segment is suspended, |cx->regs| when it was
      *  suspended.
      *
-     *  saved: Whether this callstack was suspended by JS_SaveFrameChain.
+     *  saved: Whether this segment was suspended by JS_SaveFrameChain.
      */
     AlignedPtrAndFlag<JSFrameRegs> suspendedRegsAndSaved;
 
@@ -340,8 +337,8 @@ class CallStack
     JSObject            *initialVarObj;
 
   public:
-    CallStack()
-      : cx(NULL), previousInContext(NULL), previousInThread(NULL),
+    CallStackSegment()
+      : cx(NULL), previousInContext(NULL), previousInMemory(NULL),
         initialFrame(NULL), suspendedFrame(NULL),
         suspendedRegsAndSaved(NULL, false), initialArgEnd(NULL),
         initialVarObj(NULL)
@@ -349,7 +346,7 @@ class CallStack
 
     /* Safe casts guaranteed by the contiguous-stack layout. */
 
-    Value *previousCallStackEnd() const {
+    Value *previousSegmentEnd() const {
         return (Value *)this;
     }
 
@@ -358,12 +355,12 @@ class CallStack
     }
 
     /*
-     * As described in the comment at the beginning of the class, a callstack
+     * As described in the comment at the beginning of the class, a segment
      * is in one of three states:
      *
-     *  !inContext:  the callstack has been created to root arguments for a
+     *  !inContext:  the segment has been created to root arguments for a
      *               future call to js_Invoke.
-     *  isActive:    the callstack describes a set of stack frames in a context,
+     *  isActive:    the segment describes a set of stack frames in a context,
      *               where the top frame currently executing.
      *  isSuspended: like isActive, but the top frame has been suspended.
      */
@@ -478,20 +475,20 @@ class CallStack
 
     /* JSContext / js::StackSpace bookkeeping. */
 
-    void setPreviousInContext(CallStack *cs) {
-        previousInContext = cs;
+    void setPreviousInContext(CallStackSegment *css) {
+        previousInContext = css;
     }
 
-    CallStack *getPreviousInContext() const  {
+    CallStackSegment *getPreviousInContext() const  {
         return previousInContext;
     }
 
-    void setPreviousInThread(CallStack *cs) {
-        previousInThread = cs;
+    void setPreviousInThread(CallStackSegment *css) {
+        previousInMemory = css;
     }
 
-    CallStack *getPreviousInThread() const  {
-        return previousInThread;
+    CallStackSegment *getPreviousInMemory() const  {
+        return previousInMemory;
     }
 
     void setInitialVarObj(JSObject *obj) {
@@ -510,8 +507,8 @@ class CallStack
 
 };
 
-static const size_t VALUES_PER_CALL_STACK = sizeof(CallStack) / sizeof(Value);
-JS_STATIC_ASSERT(sizeof(CallStack) % sizeof(Value) == 0);
+static const size_t VALUES_PER_CALL_STACK = sizeof(CallStackSegment) / sizeof(Value);
+JS_STATIC_ASSERT(sizeof(CallStackSegment) % sizeof(Value) == 0);
 
 /*
  * The ternary constructor is used when arguments are already pushed on the
@@ -521,10 +518,10 @@ JS_STATIC_ASSERT(sizeof(CallStack) % sizeof(Value) == 0);
 class InvokeArgsGuard
 {
     friend class StackSpace;
-    JSContext       *cx;
-    CallStack       *cs;  /* null implies nothing pushed */
-    Value           *vp;
-    uintN           argc;
+    JSContext        *cx;
+    CallStackSegment *css;  /* null implies nothing pushed */
+    Value            *vp;
+    uintN            argc;
   public:
     inline InvokeArgsGuard();
     inline InvokeArgsGuard(Value *vp, uintN argc);
@@ -537,9 +534,9 @@ class InvokeArgsGuard
 class InvokeFrameGuard
 {
     friend class StackSpace;
-    JSContext       *cx;  /* null implies nothing pushed */
-    CallStack       *cs;
-    JSStackFrame    *fp;
+    JSContext        *cx;  /* null implies nothing pushed */
+    CallStackSegment *css;
+    JSStackFrame     *fp;
   public:
     InvokeFrameGuard();
     JS_REQUIRES_STACK ~InvokeFrameGuard();
@@ -550,11 +547,11 @@ class InvokeFrameGuard
 class ExecuteFrameGuard
 {
     friend class StackSpace;
-    JSContext       *cx;  /* null implies nothing pushed */
-    CallStack       *cs;
-    Value           *vp;
-    JSStackFrame    *fp;
-    JSStackFrame    *down;
+    JSContext        *cx;  /* null implies nothing pushed */
+    CallStackSegment *css;
+    Value            *vp;
+    JSStackFrame     *fp;
+    JSStackFrame     *down;
   public:
     ExecuteFrameGuard();
     JS_REQUIRES_STACK ~ExecuteFrameGuard();
@@ -566,69 +563,69 @@ class ExecuteFrameGuard
  * Thread stack layout
  *
  * Each JSThreadData has one associated StackSpace object which allocates all
- * callstacks for the thread. StackSpace performs all such allocations in a
+ * segments for the thread. StackSpace performs all such allocations in a
  * single, fixed-size buffer using a specific layout scheme that allows some
- * associations between callstacks, frames, and slots to be implicit, rather
+ * associations between segments, frames, and slots to be implicit, rather
  * than explicitly stored as pointers. To maintain useful invariants, stack
  * space is not given out arbitrarily, but rather allocated/deallocated for
  * specific purposes. The use cases currently supported are: calling a function
  * with arguments (e.g. js_Invoke), executing a script (e.g. js_Execute) and
  * inline interpreter calls. See associated member functions below.
  *
- * First, we consider the layout of individual callstacks. (See the
- * js::CallStack comment for terminology.) A non-empty callstack (i.e., a
- * callstack in a context) has the following layout:
+ * First, we consider the layout of individual segments. (See the
+ * js::CallStackSegment comment for terminology.) A non-empty segment (i.e., a
+ * segment in a context) has the following layout:
  *
- *            initial frame                 current frame -------.  if regs,
- *           .------------.                           |          |  regs->sp
- *           |            V                           V          V
- *   |callstack| slots |frame| slots |frame| slots |frame| slots |
+ *           initial frame                 current frame -------.  if regs,
+ *          .------------.                           |          |  regs->sp
+ *          |            V                           V          V
+ *   |segment| slots |frame| slots |frame| slots |frame| slots |
  *                       |  ^          |  ^          |
  *          ? <----------'  `----------'  `----------'
  *                down          down          down
  *
  * Moreover, the bytes in the following ranges form a contiguous array of
  * Values that are marked during GC:
- *   1. between a callstack and its first frame
- *   2. between two adjacent frames in a callstack
- *   3. between a callstack's current frame and (if fp->regs) fp->regs->sp
+ *   1. between a segment and its first frame
+ *   2. between two adjacent frames in a segment
+ *   3. between a segment's current frame and (if fp->regs) fp->regs->sp
  * Thus, the VM must ensure that all such Values are safe to be marked.
  *
- * An empty callstack roots the initial slots before the initial frame is
+ * An empty segment roots the initial slots before the initial frame is
  * pushed and after the initial frame has been popped (perhaps to be followed
  * by subsequent initial frame pushes/pops...).
  *
- *           initialArgEnd
- *           .---------.
- *           |         V
- *   |callstack| slots |
+ *         initialArgEnd
+ *          .---------.
+ *          |         V
+ *   |segment| slots |
  *
- * Above the level of callstacks, a StackSpace is simply a contiguous sequence
- * of callstacks kept in a linked list:
+ * Above the level of segments, a StackSpace is simply a contiguous sequence
+ * of segments kept in a linked list:
  *
- *   base                         currentCallStack firstUnused           end
- *    |                                 |             |                   |
- *    V                                 V             V                   V
- *    |callstack| --- |callstack| --- |callstack| --- |                   |
- *          |  ^            |  ^            |
- *   0 <----'  `------------'  `------------'
- *   previous     previous        previous
+ *   base                       currentSegment  firstUnused            end
+ *    |                               |             |                   |
+ *    V                               V             V                   V
+ *    |segment| --- |segment| --- |segment| ------- |                   |
+ *         | ^           | ^           |
+ *   0 <---' `-----------' `-----------'
+ *   previous    previous       previous
  *
- * Both js::StackSpace and JSContext maintain a stack of callstacks, the top of
- * which is the "current callstack" for that thread or context, respectively.
+ * Both js::StackSpace and JSContext maintain a stack of segments, the top of
+ * which is the "current segment" for that thread or context, respectively.
  * Since different contexts can arbitrarily interleave execution in a single
- * thread, these stacks are different enough that a callstack needs both
- * "previousInThread" and "previousInContext".
+ * thread, these stacks are different enough that a segment needs both
+ * "previousInMemory" and "previousInContext".
  *
- * For example, in a single thread, a function in callstack C1 in a context CX1
+ * For example, in a single thread, a function in segment C1 in a context CX1
  * may call out into C++ code that reenters the VM in a context CX2, which
- * creates a new callstack C2 in CX2, and CX1 may or may not equal CX2.
+ * creates a new segment C2 in CX2, and CX1 may or may not equal CX2.
  *
- * Note that there is some structure to this interleaving of callstacks:
- *   1. the inclusion from callstacks in a context to callstacks in a thread
- *      preserves order (in terms of previousInContext and previousInThread,
+ * Note that there is some structure to this interleaving of segments:
+ *   1. the inclusion from segments in a context to segments in a thread
+ *      preserves order (in terms of previousInContext and previousInMemory,
  *      respectively).
- *   2. the mapping from stack frames to their containing callstack preserves
+ *   2. the mapping from stack frames to their containing segment preserves
  *      order (in terms of down and previousInContext, respectively).
  */
 class StackSpace
@@ -638,13 +635,13 @@ class StackSpace
     mutable Value *commitEnd;
 #endif
     Value *end;
-    CallStack *currentCallStack;
+    CallStackSegment *currentSegment;
 
     /* Although guards are friends, XGuard should only call popX(). */
     friend class InvokeArgsGuard;
     JS_REQUIRES_STACK inline void popInvokeArgs(JSContext *cx, Value *vp);
     friend class InvokeFrameGuard;
-    JS_REQUIRES_STACK void popInvokeFrame(JSContext *cx, CallStack *maybecs);
+    JS_REQUIRES_STACK void popInvokeFrame(JSContext *cx, CallStackSegment *maybecs);
     friend class ExecuteFrameGuard;
     JS_REQUIRES_STACK void popExecuteFrame(JSContext *cx);
 
@@ -654,7 +651,7 @@ class StackSpace
 
     inline void assertIsCurrent(JSContext *cx) const;
 #ifdef DEBUG
-    CallStack *getCurrentCallStack() const { return currentCallStack; }
+    CallStackSegment *getCurrentSegment() const { return currentSegment; }
 #endif
 
     /*
@@ -700,7 +697,7 @@ class StackSpace
       MAX_NATIVE_STACK_SLOTS + MAX_CALL_STACK_ENTRIES * VALUES_PER_STACK_FRAME +
       (VALUES_PER_CALL_STACK + VALUES_PER_STACK_FRAME /* synthesized slow native */);
 
-    /* Mark all callstacks, frames, and slots on the stack. */
+    /* Mark all segments, frames, and slots on the stack. */
     JS_REQUIRES_STACK void mark(JSTracer *trc);
 
     /*
@@ -770,10 +767,10 @@ class StackSpace
      * tracing deep bail logic.
      */
     JS_REQUIRES_STACK
-    void getSynthesizedSlowNativeFrame(JSContext *cx, CallStack *&cs, JSStackFrame *&fp);
+    void getSynthesizedSlowNativeFrame(JSContext *cx, CallStackSegment *&css, JSStackFrame *&fp);
 
     JS_REQUIRES_STACK
-    void pushSynthesizedSlowNativeFrame(JSContext *cx, CallStack *cs, JSStackFrame *fp,
+    void pushSynthesizedSlowNativeFrame(JSContext *cx, CallStackSegment *css, JSStackFrame *fp,
                                         JSFrameRegs &regs);
 
     JS_REQUIRES_STACK
@@ -798,7 +795,7 @@ JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
  */
 class FrameRegsIter
 {
-    CallStack         *curcs;
+    CallStackSegment  *curcs;
     JSStackFrame      *curfp;
     Value             *cursp;
     jsbytecode        *curpc;
@@ -1823,58 +1820,58 @@ struct JSContext
     void                *data2;
 
   private:
-    /* Linked list of callstacks. See CallStack. */
-    js::CallStack       *currentCallStack;
+    /* Linked list of segments. See CallStackSegment. */
+    js::CallStackSegment *currentSegment;
 
   public:
-    void assertCallStacksInSync() const {
+    void assertSegmentsInSync() const {
 #ifdef DEBUG
         if (fp) {
-            JS_ASSERT(currentCallStack->isActive());
-            if (js::CallStack *prev = currentCallStack->getPreviousInContext())
+            JS_ASSERT(currentSegment->isActive());
+            if (js::CallStackSegment *prev = currentSegment->getPreviousInContext())
                 JS_ASSERT(!prev->isActive());
         } else {
-            JS_ASSERT_IF(currentCallStack, !currentCallStack->isActive());
+            JS_ASSERT_IF(currentSegment, !currentSegment->isActive());
         }
 #endif
     }
 
-    /* Return whether this context has an active callstack. */
-    bool hasActiveCallStack() const {
-        assertCallStacksInSync();
+    /* Return whether this context has an active segment. */
+    bool hasActiveSegment() const {
+        assertSegmentsInSync();
         return !!fp;
     }
 
-    /* Assuming there is an active callstack, return it. */
-    js::CallStack *activeCallStack() const {
-        JS_ASSERT(hasActiveCallStack());
-        return currentCallStack;
+    /* Assuming there is an active segment, return it. */
+    js::CallStackSegment *activeSegment() const {
+        JS_ASSERT(hasActiveSegment());
+        return currentSegment;
     }
 
-    /* Return the current callstack, which may or may not be active. */
-    js::CallStack *getCurrentCallStack() const {
-        assertCallStacksInSync();
-        return currentCallStack;
+    /* Return the current segment, which may or may not be active. */
+    js::CallStackSegment *getCurrentSegment() const {
+        assertSegmentsInSync();
+        return currentSegment;
     }
 
-    /* Add the given callstack to the list as the new active callstack. */
-    void pushCallStackAndFrame(js::CallStack *newcs, JSStackFrame *newfp,
-                               JSFrameRegs &regs);
+    /* Add the given segment to the list as the new active segment. */
+    void pushSegmentAndFrame(js::CallStackSegment *newcs, JSStackFrame *newfp,
+                             JSFrameRegs &regs);
 
-    /* Remove the active callstack and make the next callstack active. */
-    void popCallStackAndFrame();
+    /* Remove the active segment and make the next segment active. */
+    void popSegmentAndFrame();
 
-    /* Mark the top callstack as suspended, without pushing a new one. */
-    void saveActiveCallStack();
+    /* Mark the top segment as suspended, without pushing a new one. */
+    void saveActiveSegment();
 
-    /* Undoes calls to suspendTopCallStack. */
-    void restoreCallStack();
+    /* Undoes calls to suspendActiveSegment. */
+    void restoreSegment();
 
     /*
-     * Perform a linear search of all frames in all callstacks in the given context
-     * for the given frame, returning the callstack, if found, and null otherwise.
+     * Perform a linear search of all frames in all segments in the given context
+     * for the given frame, returning the segment, if found, and null otherwise.
      */
-    js::CallStack *containingCallStack(const JSStackFrame *target);
+    js::CallStackSegment *containingSegment(const JSStackFrame *target);
 
 #ifdef JS_THREADSAFE
     JSThread            *thread;
@@ -2134,23 +2131,23 @@ private:
 };
 
 JS_ALWAYS_INLINE JSObject *
-JSStackFrame::varobj(js::CallStack *cs) const
+JSStackFrame::varobj(js::CallStackSegment *css) const
 {
-    JS_ASSERT(cs->contains(this));
-    return fun ? callobj : cs->getInitialVarObj();
+    JS_ASSERT(css->contains(this));
+    return fun ? callobj : css->getInitialVarObj();
 }
 
 JS_ALWAYS_INLINE JSObject *
 JSStackFrame::varobj(JSContext *cx) const
 {
-    JS_ASSERT(cx->activeCallStack()->contains(this));
-    return fun ? callobj : cx->activeCallStack()->getInitialVarObj();
+    JS_ASSERT(cx->activeSegment()->contains(this));
+    return fun ? callobj : cx->activeSegment()->getInitialVarObj();
 }
 
 JS_ALWAYS_INLINE jsbytecode *
 JSStackFrame::pc(JSContext *cx) const
 {
-    JS_ASSERT(cx->containingCallStack(this) != NULL);
+    JS_ASSERT(cx->containingSegment(this) != NULL);
     return cx->fp == this ? cx->regs->pc : savedPC;
 }
 
@@ -2163,26 +2160,26 @@ namespace js {
 JS_ALWAYS_INLINE void
 StackSpace::popInvokeArgs(JSContext *cx, Value *vp)
 {
-    JS_ASSERT(!currentCallStack->inContext());
-    currentCallStack = currentCallStack->getPreviousInThread();
+    JS_ASSERT(!currentSegment->inContext());
+    currentSegment = currentSegment->getPreviousInMemory();
 }
 
 JS_ALWAYS_INLINE
 InvokeArgsGuard::InvokeArgsGuard()
-  : cx(NULL), cs(NULL), vp(NULL)
+  : cx(NULL), css(NULL), vp(NULL)
 {}
 
 JS_ALWAYS_INLINE
 InvokeArgsGuard::InvokeArgsGuard(Value *vp, uintN argc)
-  : cx(NULL), cs(NULL), vp(vp), argc(argc)
+  : cx(NULL), css(NULL), vp(vp), argc(argc)
 {}
 
 JS_ALWAYS_INLINE
 InvokeArgsGuard::~InvokeArgsGuard()
 {
-    if (!cs)
+    if (!css)
         return;
-    JS_ASSERT(cs == cx->stack().getCurrentCallStack());
+    JS_ASSERT(css == cx->stack().getCurrentSegment());
     cx->stack().popInvokeArgs(cx, vp);
 }
 

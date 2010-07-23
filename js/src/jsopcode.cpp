@@ -2876,7 +2876,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * jp->script is the eval-compiled script.
                      *
                      * However, it's possible that a js_Invoke already
-                     * pushed a frame trying to call js_Construct on an
+                     * pushed a frame trying to call Construct on an
                      * object that's not a constructor, causing us to be
                      * called with an intervening frame on the stack.
                      */

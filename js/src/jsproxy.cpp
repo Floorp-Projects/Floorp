@@ -936,9 +936,6 @@ JSObjectOps js_ObjectProxyObjectOps = {
     proxy_TypeOf_obj,
     proxy_TraceObject,
     NULL,   /* thisObject */
-    NULL,   /* call */
-    NULL,   /* construct */
-    js_HasInstance,
     proxy_Finalize
 };
 
@@ -951,10 +948,22 @@ obj_proxy_getObjectOps(JSContext *cx, Class *clasp)
 JS_FRIEND_API(Class) ObjectProxyClass = {
     "Proxy",
     JSCLASS_HAS_RESERVED_SLOTS(2),
-    PropertyStub,           PropertyStub,    PropertyStub,    PropertyStub,
-    EnumerateStub,          ResolveStub,     ConvertStub,     NULL,
-    obj_proxy_getObjectOps, NULL,            NULL,            NULL,
-    NULL,                   NULL,            NULL,            NULL
+    PropertyStub,
+    PropertyStub,
+    PropertyStub,
+    PropertyStub,
+    EnumerateStub,
+    ResolveStub,
+    ConvertStub,
+    NULL,
+    obj_proxy_getObjectOps,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 
 JSBool
@@ -997,11 +1006,8 @@ JSObjectOps js_FunctionProxyObjectOps = {
     js_Enumerate,
     proxy_TypeOf_fun,
     proxy_TraceObject,
-    NULL,   /* thisObject */
-    proxy_Call,
-    proxy_Construct,
-    proxy_HasInstance,
-    NULL
+    NULL, /* thisObject */
+    NULL  /* clear */
 };
 
 static JSObjectOps *
@@ -1012,16 +1018,28 @@ fun_proxy_getObjectOps(JSContext *cx, Class *clasp)
 
 JS_FRIEND_API(Class) FunctionProxyClass = {
     "Proxy",
-    JSCLASS_HAS_RESERVED_SLOTS(4),
-    PropertyStub,           PropertyStub,    PropertyStub,    PropertyStub,
-    EnumerateStub,          ResolveStub,     ConvertStub,     NULL,
-    fun_proxy_getObjectOps, NULL,            NULL,            NULL,
-    NULL,                   NULL,            NULL,            NULL
+    JSCLASS_HAS_RESERVED_SLOTS(4) | CLASS_CALL_IS_FAST,
+    PropertyStub,
+    PropertyStub,
+    PropertyStub,
+    PropertyStub,
+    EnumerateStub,
+    ResolveStub,
+    ConvertStub,
+    NULL,
+    fun_proxy_getObjectOps,
+    NULL,
+    CastCallOpAsNative(proxy_Call),
+    proxy_Construct,
+    NULL,
+    proxy_HasInstance,
+    NULL,
+    NULL
 };
 
 JS_FRIEND_API(JSObject *)
-NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObject *proto, JSObject *parent,
-               JSObject *call, JSObject *construct)
+NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObject *proto,
+               JSObject *parent, JSObject *call, JSObject *construct)
 {
     bool fun = call || construct;
     Class *clasp = fun ? &FunctionProxyClass : &ObjectProxyClass;
