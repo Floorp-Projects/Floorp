@@ -478,7 +478,6 @@ var Trenches = {
   preferTop: true,
   preferLeft: true,
 
-  activeTrenches: {},
   trenches: [],
 
   // ---------
@@ -606,14 +605,8 @@ var Trenches = {
   //   (<Rect>) - the updated bounds, if they were updated
   //   false - if the bounds were not updated
   snap: function Trenches_snap(rect,stationaryCorner,assumeConstantSize,keepProportional) {
-    var aT = this.activeTrenches;
-
     // hide all the guide trenches, because the correct ones will be turned on later.
     Trenches.hideGuides();
-
-    // if we're currently dragging over a drop-site, don't snap at all.
-    if (iQ(".acceptsDrop").length)
-      return;
 
     var updated = false;
     var updatedX = false;
@@ -623,7 +616,7 @@ var Trenches = {
 
     for (var i in this.trenches) {
       var t = this.trenches[i];
-      if (!t.active)
+      if (!t.active || t.parentItem.isDropTarget)
         continue;
       // newRect will be a new rect, or false
       var newRect = t.rectOverlaps(rect,stationaryCorner,assumeConstantSize,keepProportional);

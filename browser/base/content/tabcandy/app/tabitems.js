@@ -100,8 +100,10 @@ window.TabItem = function(container, tab) {
 
     $target.removeClass("acceptsDrop");
 
+    var phantomMargin = 40;
+
     var groupBounds = this.getBoundsWithTitle();
-    groupBounds.inset( -40, -40 );
+    groupBounds.inset( -phantomMargin, -phantomMargin );
 
     iQ(".phantom").remove();
     var phantom = iQ("<div>")
@@ -114,7 +116,12 @@ window.TabItem = function(container, tab) {
       .hide()
       .appendTo("body");
 
+    var defaultRadius = Trenches.defaultRadius;
+    // Extend the margin so that it covers the case where the target tab item
+    // is right next to a trench.
+    Trenches.defaultRadius = phantomMargin + 1;
     var updatedBounds = drag.info.snapBounds(groupBounds,'none');
+    Trenches.defaultRadius = defaultRadius;
 
     // Utils.log('updatedBounds:',updatedBounds);
     if (updatedBounds)
