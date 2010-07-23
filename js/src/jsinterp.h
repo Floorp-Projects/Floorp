@@ -116,8 +116,8 @@ struct JSStackFrame
     static jsbytecode *const sInvalidPC;
 #endif
 
-#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
     void                *ncode;         /* jit return pc */
+#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
     /* Guh. Align. */
     void                *align_[3];
 #endif
