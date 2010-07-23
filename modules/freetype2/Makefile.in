@@ -138,6 +138,7 @@ CSRCS = \
 	sfntpic.c	\
 	ftspic.c	\
 	ttpic.c		\
+	moz_ft_shim.c   \
 	$(NULL)
 
 

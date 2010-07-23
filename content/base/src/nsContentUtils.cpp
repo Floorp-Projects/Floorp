@@ -3793,15 +3793,16 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
       }
     }
     
+    nsCOMPtr<nsIContent> fragment = do_QueryInterface(frag);
     if (contextAsContent) {
       parser->ParseFragment(aFragment, 
-                            frag, 
+                            fragment, 
                             contextAsContent->Tag(), 
                             contextAsContent->GetNameSpaceID(), 
                             (document->GetCompatibilityMode() == eCompatibility_NavQuirks));    
     } else {
       parser->ParseFragment(aFragment, 
-                            frag, 
+                            fragment,
                             nsGkAtoms::body, 
                             kNameSpaceID_XHTML, 
                             (document->GetCompatibilityMode() == eCompatibility_NavQuirks));
@@ -5966,6 +5967,7 @@ AllocClassMatchingInfo(nsINode* aRootNode,
   }
 
   info->mCaseTreatment =
+    aRootNode->GetOwnerDoc() &&
     aRootNode->GetOwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks ?
     eIgnoreCase : eCaseMatters;
   return info;

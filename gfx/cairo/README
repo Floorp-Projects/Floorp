@@ -128,6 +128,12 @@ win32-transparent-surface.patch: add API so we can create a win32 surface for an
 
 cairo_qt_glyphs.patch: Drop X surface from Qt surface, add support for new qt glyphs api
 
+empty-clip-rectangles.patch: f2fa15680ec3ac95cb68d4957557f06561a7dc55
+
+empty-clip-extents.patch: b79ea8a6cab8bd28aebecf6e1e8229d5ac017264
+
+clip-rects-surface-extents.patch: 108b1c7825116ed3f93aa57384bbd3290cdc9181
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

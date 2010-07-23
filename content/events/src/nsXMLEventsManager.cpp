@@ -396,10 +396,11 @@ nsXMLEventsManager::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-nsXMLEventsManager::ContentRemoved(nsIDocument* aDocument, 
+nsXMLEventsManager::ContentRemoved(nsIDocument* aDocument,
                                    nsIContent* aContainer,
                                    nsIContent* aChild,
-                                   PRInt32 aIndexInContainer)
+                                   PRInt32 aIndexInContainer,
+                                   nsIContent* aPreviousSibling)
 {
   if (!aChild || !aChild->IsElement())
     return;
@@ -420,6 +421,6 @@ nsXMLEventsManager::ContentRemoved(nsIDocument* aDocument,
 
   PRUint32 count = aChild->GetChildCount();
   for (PRUint32 i = 0; i < count; ++i) {
-    ContentRemoved(aDocument, aChild, aChild->GetChildAt(i), i);
+    ContentRemoved(aDocument, aChild, aChild->GetChildAt(i), i, aChild->GetPreviousSibling());
   }
 }

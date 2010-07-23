@@ -243,6 +243,9 @@ function unwrapToolbarItems()
     if (paletteItem.hasAttribute("itemdisabled"))
       toolbarItem.disabled = true;
 
+    if (paletteItem.hasAttribute("itemchecked"))
+      toolbarItem.checked = true;
+
     if (paletteItem.hasAttribute("itemcommand")) {
       let commandID = paletteItem.getAttribute("itemcommand");
       toolbarItem.setAttribute("command", commandID);
@@ -489,6 +492,11 @@ function cleanupItemForToolbar(aItem, aWrapper)
   if (aItem.hasAttribute("command")) {
     aWrapper.setAttribute("itemcommand", aItem.getAttribute("command"));
     aItem.removeAttribute("command");
+  }
+
+  if (aItem.checked) {
+    aWrapper.setAttribute("itemchecked", "true");
+    aItem.checked = false;
   }
 
   if (aItem.disabled) {
