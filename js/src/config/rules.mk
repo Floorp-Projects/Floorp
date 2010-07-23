@@ -1401,12 +1401,15 @@ host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
+# DEFINES and ACDEFINES are needed here to enable conditional compilation of Q_OBJECTs:
+# 'moc' only knows about #defines it gets on the command line (-D...), not in 
+# included headers like mozilla-config.h
 moc_%.cpp: %.h $(GLOBAL_DEPS)
-	$(MOC) $< $(OUTOPTION)$@ 
+	$(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@ 
 
 moc_%.cc: %.cc $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
-	$(ELOG) $(MOC) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
+	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
 
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
