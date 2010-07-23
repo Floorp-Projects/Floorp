@@ -1610,11 +1610,11 @@ BuildStyleRule(nsCSSProperty aProperty,
 {
   // Set up an empty CSS Declaration
   css::Declaration* declaration = new css::Declaration();
+  declaration->InitializeEmpty();
 
   PRBool changed; // ignored, but needed as outparam for ParseProperty
   nsIDocument* doc = aTargetElement->GetOwnerDoc();
   nsCOMPtr<nsIURI> baseURI = aTargetElement->GetBaseURI();
-  nsCOMPtr<nsICSSStyleRule> styleRule;
   nsCSSParser parser(doc->CSSLoader());
 
   if (aUseSVGMode) {
@@ -1628,26 +1628,21 @@ BuildStyleRule(nsCSSProperty aProperty,
   nsCSSProperty propertyToCheck = nsCSSProps::IsShorthand(aProperty) ?
     nsCSSProps::SubpropertyEntryFor(aProperty)[0] : aProperty;
 
-  // The next clause performs the following, in sequence: Initialize our
-  // declaration, get a parser, parse property, check that parsing succeeded,
-  // and build a rule for the resulting declaration.  If any of these steps
-  // fails, we bail out and delete the declaration.
-  if (!declaration->InitializeEmpty() ||
-      !parser ||
+  // Get a parser, parse the property, and check for CSS parsing errors.
+  // If any of these steps fails, we bail out and delete the declaration.
+  if (!parser ||
       NS_FAILED(parser.ParseProperty(aProperty, aSpecifiedValue,
                                      doc->GetDocumentURI(), baseURI,
                                      aTargetElement->NodePrincipal(),
                                      declaration, &changed, PR_FALSE)) ||
       // check whether property parsed without CSS parsing errors
-      !declaration->HasNonImportantValueFor(propertyToCheck) ||
-      NS_FAILED(NS_NewCSSStyleRule(getter_AddRefs(styleRule), nsnull,
-                                   declaration))) {
+      !declaration->HasNonImportantValueFor(propertyToCheck)) {
     NS_WARNING("failure in BuildStyleRule");
     declaration->RuleAbort();  // deletes declaration
     return nsnull;
   }
 
-  return styleRule.forget();
+  return NS_NewCSSStyleRule(nsnull, declaration);
 }
 
 inline
