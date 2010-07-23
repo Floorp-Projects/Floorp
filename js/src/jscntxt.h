@@ -2224,11 +2224,17 @@ class AutoGCRooter {
       : down(cx->autoGCRooters), tag(tag), context(cx)
     {
         JS_ASSERT(this != cx->autoGCRooters);
+#ifdef JS_THREADSAFE
+        JS_ASSERT(cx->requestDepth != 0);
+#endif
         cx->autoGCRooters = this;
     }
 
     ~AutoGCRooter() {
         JS_ASSERT(this == context->autoGCRooters);
+#ifdef JS_THREADSAFE
+        JS_ASSERT(context->requestDepth != 0);
+#endif
         context->autoGCRooters = down;
     }
 
