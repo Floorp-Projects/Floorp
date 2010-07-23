@@ -3911,16 +3911,15 @@ ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
   return name;
 }
 
-// For a struct field with 'name' and 'type', add an element to field
-// descriptor array 'arrayObj' of the form { name : type }.
+// For a struct field with 'name' and 'type', add an element of the form
+// { name : type }.
 static JSBool
 AddFieldToArray(JSContext* cx,
-                JSObject* arrayObj,
                 jsval* element,
                 JSString* name,
                 JSObject* typeObj)
 {
-  JSObject* fieldObj = JS_NewObject(cx, NULL, NULL, arrayObj);
+  JSObject* fieldObj = JS_NewObject(cx, NULL, NULL, NULL);
   if (!fieldObj)
     return false;
 
@@ -4325,21 +4324,21 @@ StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
   size_t len = fields->count();
 
   // Prepare a new array for the 'fields' property of the StructType.
-  jsval* fieldsVec;
-  JSObject* fieldsProp =
-    js_NewArrayObjectWithCapacity(cx, len, &fieldsVec);
-  if (!fieldsProp)
+  Array<jsval, 16> fieldsVec;
+  if (!fieldsVec.resize(len))
     return NULL;
-  js::AutoObjectRooter root(cx, fieldsProp);
-  JS_ASSERT(len == 0 || fieldsVec);
 
   for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
     const FieldInfoHash::Entry& entry = r.front();
     // Add the field descriptor to the array.
-    if (!AddFieldToArray(cx, fieldsProp, &fieldsVec[entry.value.mIndex],
-           entry.key, entry.value.mType))
+    if (!AddFieldToArray(cx, &fieldsVec[entry.value.mIndex],
+                         entry.key, entry.value.mType))
       return NULL;
   }
+
+  JSObject* fieldsProp = JS_NewArrayObject(cx, len, fieldsVec.begin());
+  if (!fieldsProp)
+    return NULL;
 
   // Seal the fields array.
   if (!JS_SealObject(cx, fieldsProp, JS_FALSE))
