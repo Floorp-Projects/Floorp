@@ -1609,9 +1609,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
 
     /* Get function private pointer. */
-    Address funPrivate(data, offsetof(JSObject, fslots) +
-                             JSSLOT_PRIVATE * sizeof(Value));
-    masm.loadPayload(funPrivate, data);
+    masm.loadFunctionPrivate(data, data);
 
     frame.takeReg(data);
     RegisterID t0 = frame.allocReg();
@@ -2131,8 +2129,7 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
     Jump notFun1 = frame.testObject(Assembler::NotEqual, funFe);
     Jump notFun2 = masm.testFunction(Assembler::NotEqual, funReg);
 
-    Address fslot(funReg, offsetof(JSObject, fslots) + JSSLOT_PRIVATE * sizeof(Value));
-    masm.loadPayload(fslot, temp);
+    masm.loadFunctionPrivate(funReg, temp);
     masm.load16(Address(temp, offsetof(JSFunction, flags)), temp);
     masm.and32(Imm32(JSFUN_THISP_STRING), temp);
     Jump noPrim = masm.branchTest32(Assembler::Zero, temp, temp);
@@ -2696,8 +2693,7 @@ mjit::Compiler::iterNext()
     stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. :FIXME: X64 */
-    Address privSlot(reg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
-    masm.loadPayload(privSlot, T1);
+    masm.loadFunctionPrivate(reg, T1);
 
     RegisterID T3 = frame.allocReg();
     RegisterID T4 = frame.allocReg();
@@ -2753,8 +2749,7 @@ mjit::Compiler::iterMore()
     stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. :FIXME: X64 */
-    Address privSlot(reg, offsetof(JSObject, fslots) + sizeof(Value) * JSSLOT_PRIVATE);
-    masm.loadPayload(privSlot, T1);
+    masm.loadFunctionPrivate(reg, T1);
 
     /* Get props_cursor, test */
     RegisterID T2 = frame.allocReg();
