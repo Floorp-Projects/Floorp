@@ -2962,7 +2962,6 @@ public:
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
     visitGlobalSlot(Value *vp, unsigned n, unsigned slot) {
         debug_only_printf(LC_TMTracer, "global%d=", n);
-        JS_ASSERT(JS_THREAD_DATA(mCx)->waiveGCQuota);
         NativeToValue(mCx, *vp, *mTypeMap++, &mGlobal[slot]);
     }
 };
@@ -2996,7 +2995,6 @@ public:
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
     visitStackSlots(Value *vp, size_t count, JSStackFrame* fp) {
-        JS_ASSERT(JS_THREAD_DATA(mCx)->waiveGCQuota);
         for (size_t i = 0; i < count; ++i) {
             if (vp == mStop)
                 return false;
@@ -3012,7 +3010,6 @@ public:
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
     visitFrameObjPtr(JSObject **p, JSStackFrame* fp) {
-        JS_ASSERT(JS_THREAD_DATA(mCx)->waiveGCQuota);
         if ((Value *)p == mStop)
             return false;
         debug_only_printf(LC_TMTracer, "%s%u=", stackSlotKind(), 0);
@@ -6714,30 +6711,12 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     return ok;
 }
 
-class Guardian {
-    bool *flagp;
-public:
-    Guardian(bool *flagp) {
-        this->flagp = flagp;
-        JS_ASSERT(!*flagp);
-        *flagp = true;
-    }
-
-    ~Guardian() {
-        JS_ASSERT(*flagp);
-        *flagp = false;
-    }
-};
-
 static JS_FORCES_STACK void
 LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
 {
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     JSContext* cx = state.cx;
-
-    /* Temporary waive the soft GC quota to make sure LeaveTree() doesn't fail. */
-    Guardian waiver(&JS_THREAD_DATA(cx)->waiveGCQuota);
 
     FrameInfo** callstack = state.callstackBase;
     double* stack = state.stackBase;
