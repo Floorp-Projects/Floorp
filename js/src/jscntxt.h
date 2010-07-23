@@ -1975,7 +1975,7 @@ struct JSContext
     inline void triggerGC() {
         if (!runtime->gcIsNeeded) {
             runtime->gcIsNeeded = true;
-            JS_TriggerOperationCallback(this);
+            JS_TriggerAllOperationCallbacks(runtime);
         }
     }
 
