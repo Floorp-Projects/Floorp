@@ -1522,6 +1522,7 @@ function HeadsUpDisplay(aConfig)
     this.contentWindow = aConfig.contentWindow;
     this.uriSpec = aConfig.contentWindow.location.href;
     this.reattachConsole();
+    this.jsterm.inputNode.focus();
     return;
   }
 
@@ -1627,6 +1628,7 @@ function HeadsUpDisplay(aConfig)
   // create the JSTerm input element
   try {
     this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
+    this.jsterm.inputNode.focus();
   }
   catch (ex) {
     Cu.reportError(ex);
