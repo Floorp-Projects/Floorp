@@ -72,4 +72,9 @@ JSString::intString(jsint i)
     return &JSString::intStringTable[u];
 }
 
+inline
+JSRopeBuilder::JSRopeBuilder(JSContext *cx) {
+    mStr = cx->runtime->emptyString;
+}
+
 #endif /* jsstrinlines_h___ */
