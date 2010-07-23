@@ -406,31 +406,6 @@ protected:
                           PRBool aMustCallValueAppended,
                           PRBool* aChanged);
 
-  // After a successful parse of |aPropID|, transfer data from
-  // |mTempData| to |mData|.  Set |*aChanged| to true if something
-  // changed, but leave it unmodified otherwise.  If aMustCallValueAppended
-  // is false, will not call ValueAppended on aDeclaration if the property
-  // is already set in it.  If aOverrideImportant is true, new data will
-  // replace old settings of the same properties, even if the old settings
-  // are !important and the new data aren't.
-  void TransferTempData(css::Declaration* aDeclaration,
-                        nsCSSProperty aPropID,
-                        PRBool aIsImportant,
-                        PRBool aOverrideImportant,
-                        PRBool aMustCallValueAppended,
-                        PRBool* aChanged);
-  void DoTransferTempData(css::Declaration* aDeclaration,
-                          nsCSSProperty aPropID,
-                          PRBool aIsImportant,
-                          PRBool aOverrideImportant,
-                          PRBool aMustCallValueAppended,
-                          PRBool* aChanged);
-  // Used to do a fast copy of a property value from source location to
-  // destination location.  It's the caller's responsibility to make sure that
-  // the source and destination locations point to the right kind of objects
-  // for the property id.  This can only be used for non-shorthand properties.
-  void CopyValue(void *aSource, void *aDest, nsCSSProperty aPropID,
-                 PRBool* aChanged);
   PRBool ParseProperty(nsCSSProperty aPropID);
   PRBool ParseSingleValueProperty(nsCSSValue& aValue,
                                   nsCSSProperty aPropID);
@@ -1149,7 +1124,6 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
     mTempData.ClearProperty(aPropID);
-    mTempData.AssertInitialState();
   } else {
 
     // We know we don't need to force a ValueAppended call for the new
@@ -1164,16 +1138,19 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     }
     void* valueSlot = aDeclaration->SlotForValue(aPropID, aIsImportant);
     if (valueSlot) {
-      CopyValue(mTempData.PropertyAt(aPropID), valueSlot, aPropID, aChanged);
+      nsCSSCompressedDataBlock::MoveValue(mTempData.PropertyAt(aPropID),
+                                          valueSlot, aPropID, aChanged);
       mTempData.ClearPropertyBit(aPropID);
     } else {
       aDeclaration->ExpandTo(&mData);
-      TransferTempData(aDeclaration, aPropID, aIsImportant, PR_TRUE, PR_FALSE,
-                       aChanged);
+      mData.TransferFromBlock(mTempData, aPropID, aIsImportant, PR_TRUE,
+                              PR_FALSE, aDeclaration, aChanged);
       aDeclaration->CompressFrom(&mData);
     }
     CLEAR_ERROR();
   }
+
+  mTempData.AssertInitialState();
 
   nsresult result = mScanner.GetLowLevelError();
   ReleaseScanner();
@@ -4058,137 +4035,10 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
     return PR_FALSE;
   }
 
-  TransferTempData(aDeclaration, propID, status == ePriority_Important,
-                   PR_FALSE, aMustCallValueAppended, aChanged);
+  mData.TransferFromBlock(mTempData, propID, status == ePriority_Important,
+                          PR_FALSE, aMustCallValueAppended,
+                          aDeclaration, aChanged);
   return PR_TRUE;
-}
-
-void
-CSSParserImpl::TransferTempData(css::Declaration* aDeclaration,
-                                nsCSSProperty aPropID,
-                                PRBool aIsImportant,
-                                PRBool aOverrideImportant,
-                                PRBool aMustCallValueAppended,
-                                PRBool* aChanged)
-{
-  if (nsCSSProps::IsShorthand(aPropID)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
-      DoTransferTempData(aDeclaration, *p, aIsImportant, aOverrideImportant,
-                         aMustCallValueAppended, aChanged);
-    }
-  } else {
-    DoTransferTempData(aDeclaration, aPropID, aIsImportant, aOverrideImportant,
-                       aMustCallValueAppended, aChanged);
-  }
-  mTempData.AssertInitialState();
-}
-
-// Perhaps the transferring code should be in nsCSSExpandedDataBlock, in
-// case some other caller wants to use it in the future (although I
-// can't think of why).
-void
-CSSParserImpl::DoTransferTempData(css::Declaration* aDeclaration,
-                                  nsCSSProperty aPropID,
-                                  PRBool aIsImportant,
-                                  PRBool aOverrideImportant,
-                                  PRBool aMustCallValueAppended,
-                                  PRBool* aChanged)
-{
-  NS_ASSERTION(mTempData.HasPropertyBit(aPropID), "oops");
-  if (aIsImportant) {
-    if (!mData.HasImportantBit(aPropID))
-      *aChanged = PR_TRUE;
-    mData.SetImportantBit(aPropID);
-  } else {
-    if (mData.HasImportantBit(aPropID)) {
-      // When parsing a declaration block, an !important declaration
-      // is not overwritten by an ordinary declaration of the same
-      // property later in the block.  However, CSSOM manipulations
-      // come through here too, and in that case we do want to
-      // overwrite the property.
-      if (!aOverrideImportant) {
-        mTempData.ClearLonghandProperty(aPropID);
-        return;
-      }
-      *aChanged = PR_TRUE;
-      mData.ClearImportantBit(aPropID);
-    }
-  }
-
-  if (aMustCallValueAppended || !mData.HasPropertyBit(aPropID)) {
-    aDeclaration->ValueAppended(aPropID);
-  }
-
-  mData.SetPropertyBit(aPropID);
-  mTempData.ClearPropertyBit(aPropID);
-
-  /*
-   * Save needless copying and allocation by calling the destructor in
-   * the destination, copying memory directly, and then using placement
-   * new.
-   */
-  void *v_source = mTempData.PropertyAt(aPropID);
-  void *v_dest = mData.PropertyAt(aPropID);
-  CopyValue(v_source, v_dest, aPropID, aChanged);
-}
-
-void
-CSSParserImpl::CopyValue(void *aSource, void *aDest, nsCSSProperty aPropID,
-                         PRBool* aChanged)
-{
-  switch (nsCSSProps::kTypeTable[aPropID]) {
-    case eCSSType_Value: {
-      nsCSSValue *source = static_cast<nsCSSValue*>(aSource);
-      nsCSSValue *dest = static_cast<nsCSSValue*>(aDest);
-      if (*source != *dest)
-        *aChanged = PR_TRUE;
-      dest->~nsCSSValue();
-      memcpy(dest, source, sizeof(nsCSSValue));
-      new (source) nsCSSValue();
-    } break;
-
-    case eCSSType_Rect: {
-      nsCSSRect *source = static_cast<nsCSSRect*>(aSource);
-      nsCSSRect *dest = static_cast<nsCSSRect*>(aDest);
-      if (*source != *dest)
-        *aChanged = PR_TRUE;
-      dest->~nsCSSRect();
-      memcpy(dest, source, sizeof(nsCSSRect));
-      new (source) nsCSSRect();
-    } break;
-
-    case eCSSType_ValuePair: {
-      nsCSSValuePair *source = static_cast<nsCSSValuePair*>(aSource);
-      nsCSSValuePair *dest = static_cast<nsCSSValuePair*>(aDest);
-      if (*source != *dest)
-        *aChanged = PR_TRUE;
-      dest->~nsCSSValuePair();
-      memcpy(dest, source, sizeof(nsCSSValuePair));
-      new (source) nsCSSValuePair();
-    } break;
-
-    case eCSSType_ValueList: {
-      nsCSSValueList **source = static_cast<nsCSSValueList**>(aSource);
-      nsCSSValueList **dest = static_cast<nsCSSValueList**>(aDest);
-      if (**source != **dest)
-        *aChanged = PR_TRUE;
-      delete *dest;
-      *dest = *source;
-      *source = nsnull;
-    } break;
-
-    case eCSSType_ValuePairList: {
-      nsCSSValuePairList **source =
-        static_cast<nsCSSValuePairList**>(aSource);
-      nsCSSValuePairList **dest =
-        static_cast<nsCSSValuePairList**>(aDest);
-      if (**source != **dest)
-        *aChanged = PR_TRUE;
-      delete *dest;
-      *dest = *source;
-      *source = nsnull;
-    } break;
-  }
 }
 
 static const nsCSSProperty kBorderTopIDs[] = {
