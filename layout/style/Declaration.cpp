@@ -106,11 +106,11 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
 
   if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
-      data.ClearProperty(*p);
+      data.ClearLonghandProperty(*p);
       mOrder.RemoveElement(*p);
     }
   } else {
-    data.ClearProperty(aProperty);
+    data.ClearLonghandProperty(aProperty);
     mOrder.RemoveElement(aProperty);
   }
 
