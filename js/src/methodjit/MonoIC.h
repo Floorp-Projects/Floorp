@@ -57,7 +57,11 @@ struct MICInfo {
     static const uint32 SET_DATA_TYPE_OFFSET = 15;
 #endif
 
-    enum Kind {
+    enum Kind
+#ifdef _MSC_VER
+    : uint8_t
+#endif
+    {
         GET,
         SET,
         TRACER
