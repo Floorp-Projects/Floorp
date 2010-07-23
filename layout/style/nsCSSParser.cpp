@@ -1090,6 +1090,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   AssertInitialState();
   mData.AssertInitialState();
   mTempData.AssertInitialState();
+  aDeclaration->AssertMutable();
 
   InitScanner(aPropValue, aSheetURI, 0, aBaseURI, aSheetPrincipal);
   mSection = eCSSSection_General;
@@ -1132,10 +1133,6 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     // same importance level, then we can just copy our parsed value
     // directly into the declaration without going through the whole
     // expand/compress thing.
-    if (!aDeclaration->EnsureMutable()) {
-      NS_WARNING("out of memory");
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     void* valueSlot = aDeclaration->SlotForValue(aPropID, aIsImportant);
     if (valueSlot) {
       nsCSSCompressedDataBlock::MoveValue(mTempData.PropertyAt(aPropID),

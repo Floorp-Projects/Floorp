@@ -118,8 +118,10 @@ nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
 NS_IMETHODIMP
 nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 {
-  css::Declaration* decl = GetCSSDeclaration(PR_TRUE);
-  if (!decl) {
+  // We don't need to *do* anything with the old declaration, but we need
+  // to ensure that it exists, or else SetCSSDeclaration may crash.
+  css::Declaration* olddecl = GetCSSDeclaration(PR_TRUE);
+  if (!olddecl) {
     return NS_ERROR_FAILURE;
   }
 
@@ -144,11 +146,14 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), PR_TRUE);
 
+  css::Declaration* decl = new css::Declaration();
+  decl->InitializeEmpty();
   nsCSSParser cssParser(cssLoader);
   PRBool changed;
   result = cssParser.ParseDeclarations(aCssText, sheetURI, baseURI,
                                        sheetPrincipal, decl, &changed);
   if (NS_FAILED(result) || !changed) {
+    decl->RuleAbort();
     return result;
   }
 
@@ -272,8 +277,8 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
                                         const nsAString& aPropValue,
                                         PRBool aIsImportant)
 {
-  css::Declaration* decl = GetCSSDeclaration(PR_TRUE);
-  if (!decl) {
+  css::Declaration* olddecl = GetCSSDeclaration(PR_TRUE);
+  if (!olddecl) {
     return NS_ERROR_FAILURE;
   }
 
@@ -296,6 +301,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
   // between when we mutate the declaration and when we set the new
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), PR_TRUE);
+  css::Declaration* decl = olddecl->EnsureMutable();
 
   nsCSSParser cssParser(cssLoader);
   PRBool changed;
@@ -303,6 +309,9 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
                                    sheetPrincipal, decl, &changed,
                                    aIsImportant);
   if (NS_FAILED(result) || !changed) {
+    if (decl != olddecl) {
+      decl->RuleAbort();
+    }
     return result;
   }
 
@@ -324,6 +333,7 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), PR_TRUE);
 
+  decl = decl->EnsureMutable();
   decl->RemoveProperty(aPropID);
   return SetCSSDeclaration(decl);
 }
