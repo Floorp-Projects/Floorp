@@ -1940,6 +1940,12 @@ nsJSContext::ExecuteScript(void *aScriptObject,
   jsval val;
   JSBool ok;
 
+  JSObject *scriptObj = (JSObject*)aScriptObject;
+  nsCOMPtr<nsIPrincipal> principal;
+
+  rv = sSecurityManager->GetObjectPrincipal(mContext, scriptObj, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = sSecurityManager->PushContextPrincipal(mContext, nsnull, principal);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1948,8 +1954,7 @@ nsJSContext::ExecuteScript(void *aScriptObject,
   ++mExecuteDepth;
   ok = ::JS_ExecuteScript(mContext,
                           (JSObject *)aScopeObject,
-                          (JSScript*)::JS_GetPrivate(mContext,
-                          (JSObject*)aScriptObject),
+                          (JSScript*)::JS_GetPrivate(mContext, scriptObj),
                           &val);
 
   if (ok) {
