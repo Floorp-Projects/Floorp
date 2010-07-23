@@ -187,11 +187,6 @@ public:
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  // return whether there was a value in |aStorage| (i.e., it was non-null)
-  static PRBool AppendStorageToString(nsCSSProperty aProperty,
-                                      const void* aStorage,
-                                      nsAString& aResult);
-
 private:
   // Not implemented, and not supported.
   Declaration& operator=(const Declaration& aCopy);

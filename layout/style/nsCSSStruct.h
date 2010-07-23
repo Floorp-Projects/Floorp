@@ -54,6 +54,7 @@ struct nsCSSValueList {
   ~nsCSSValueList();
 
   nsCSSValueList* Clone() const;  // makes a deep copy
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
 
   bool operator==(nsCSSValueList const& aOther) const; // deep comparison
   bool operator!=(const nsCSSValueList& aOther) const
@@ -74,6 +75,8 @@ struct nsCSSRect {
   nsCSSRect(void);
   nsCSSRect(const nsCSSRect& aCopy);
   ~nsCSSRect();
+
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
 
   PRBool operator==(const nsCSSRect& aOther) const {
     return mTop == aOther.mTop &&
@@ -160,6 +163,8 @@ struct nsCSSValuePair {
            mYValue.GetUnit() != eCSSUnit_Null;
   }
 
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+
   nsCSSValue mXValue;
   nsCSSValue mYValue;
 };
@@ -243,6 +248,7 @@ struct nsCSSValuePairList {
   ~nsCSSValuePairList();
 
   nsCSSValuePairList* Clone() const; // makes a deep copy
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
 
   bool operator==(const nsCSSValuePairList& aOther) const; // deep comparison
   bool operator!=(const nsCSSValuePairList& aOther) const

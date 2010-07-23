@@ -1872,7 +1872,8 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
   }
   nsCSSValuePair vp;
   nsCSSRect rect;
-  void *ptr = nsnull;
+  nsCSSValueList* vl = nsnull;
+  nsCSSValuePairList* vpl = nsnull;
   void *storage;
   switch (nsCSSProps::kTypeTable[aProperty]) {
     case eCSSType_Value:
@@ -1885,8 +1886,10 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
       storage = &vp;
       break;
     case eCSSType_ValueList:
+      storage = &vl;
+      break;
     case eCSSType_ValuePairList:
-      storage = &ptr;
+      storage = &vpl;
       break;
     default:
       NS_ABORT_IF_FALSE(PR_FALSE, "unexpected case");
@@ -1894,13 +1897,32 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
       break;
   }
 
-  nsCSSValue value;
   if (!nsStyleAnimation::UncomputeValue(aProperty, aPresContext,
                                         aComputedValue, storage)) {
     return PR_FALSE;
   }
-  return css::Declaration::AppendStorageToString(aProperty, storage,
-                                                 aSpecifiedValue);
+
+  switch (nsCSSProps::kTypeTable[aProperty]) {
+    case eCSSType_Value:
+      vp.mXValue.AppendToString(aProperty, aSpecifiedValue);
+      break;
+    case eCSSType_Rect:
+      rect.AppendToString(aProperty, aSpecifiedValue);
+      break;
+    case eCSSType_ValuePair:
+      vp.AppendToString(aProperty, aSpecifiedValue);
+      break;
+    case eCSSType_ValueList:
+      vl->AppendToString(aProperty, aSpecifiedValue);
+      break;
+    case eCSSType_ValuePairList:
+      vpl->AppendToString(aProperty, aSpecifiedValue);
+      break;
+    default:
+      NS_ABORT_IF_FALSE(PR_FALSE, "unexpected case");
+      return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 inline const void*
