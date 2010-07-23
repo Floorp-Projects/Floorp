@@ -50,8 +50,8 @@ class nsSVGCircleElement : public nsSVGCircleElementBase,
 {
 protected:
   friend nsresult NS_NewSVGCircleElement(nsIContent **aResult,
-                                         nsINodeInfo *aNodeInfo);
-  nsSVGCircleElement(nsINodeInfo *aNodeInfo);
+                                         already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGCircleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -68,6 +68,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
@@ -92,7 +93,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Circle)
 NS_IMPL_ADDREF_INHERITED(nsSVGCircleElement,nsSVGCircleElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGCircleElement,nsSVGCircleElementBase)
 
-DOMCI_DATA(SVGCircleElement, nsSVGCircleElement)
+DOMCI_NODE_DATA(SVGCircleElement, nsSVGCircleElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGCircleElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGCircleElement, nsIDOMNode, nsIDOMElement,
@@ -103,7 +104,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGCircleElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGCircleElement::nsSVGCircleElement(nsINodeInfo *aNodeInfo)
+nsSVGCircleElement::nsSVGCircleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGCircleElementBase(aNodeInfo)
 {
 }

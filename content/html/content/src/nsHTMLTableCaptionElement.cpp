@@ -46,7 +46,7 @@ class nsHTMLTableCaptionElement :  public nsGenericHTMLElement,
                                    public nsIDOMHTMLTableCaptionElement
 {
 public:
-  nsHTMLTableCaptionElement(nsINodeInfo *aNodeInfo);
+  nsHTMLTableCaptionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLTableCaptionElement();
 
   // nsISupports
@@ -72,13 +72,15 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCaption)
 
 
-nsHTMLTableCaptionElement::nsHTMLTableCaptionElement(nsINodeInfo *aNodeInfo)
+nsHTMLTableCaptionElement::nsHTMLTableCaptionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -92,7 +94,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTableCaptionElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableCaptionElement, nsGenericElement)
 
 
-DOMCI_DATA(HTMLTableCaptionElement, nsHTMLTableCaptionElement)
+DOMCI_NODE_DATA(HTMLTableCaptionElement, nsHTMLTableCaptionElement)
 
 // QueryInterface implementation for nsHTMLTableCaptionElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLTableCaptionElement)

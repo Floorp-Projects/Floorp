@@ -210,7 +210,8 @@ ShouldBeInElements(nsIFormControl* aFormControl)
 
 // construction, destruction
 nsGenericHTMLElement*
-NS_NewHTMLFormElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
+NS_NewHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                      PRUint32 aFromParser)
 {
   nsHTMLFormElement* it = new nsHTMLFormElement(aNodeInfo);
   if (!it) {
@@ -227,7 +228,7 @@ NS_NewHTMLFormElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
   return it;
 }
 
-nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
+nsHTMLFormElement::nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mGeneratingSubmit(PR_FALSE),
     mGeneratingReset(PR_FALSE),
@@ -300,7 +301,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLFormElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLFormElement, nsHTMLFormElement)
+DOMCI_NODE_DATA(HTMLFormElement, nsHTMLFormElement)
 
 // QueryInterface implementation for nsHTMLFormElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLFormElement)

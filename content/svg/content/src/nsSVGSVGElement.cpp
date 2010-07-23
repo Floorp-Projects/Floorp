@@ -176,7 +176,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsSVGSVGElement,nsSVGSVGElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGSVGElement,nsSVGSVGElementBase)
 
-DOMCI_DATA(SVGSVGElement, nsSVGSVGElement)
+DOMCI_NODE_DATA(SVGSVGElement, nsSVGSVGElement)
 
 #ifdef MOZ_SMIL
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsSVGSVGElement)
@@ -193,7 +193,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGSVGElement::nsSVGSVGElement(nsINodeInfo* aNodeInfo, PRUint32 aFromParser)
+nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                                 PRUint32 aFromParser)
   : nsSVGSVGElementBase(aNodeInfo),
     mCoordCtx(nsnull),
     mViewportWidth(0),
@@ -218,8 +219,8 @@ nsresult
 nsSVGSVGElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
-
-  nsSVGSVGElement *it = new nsSVGSVGElement(aNodeInfo, PR_FALSE);
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsSVGSVGElement *it = new nsSVGSVGElement(ni.forget(), PR_FALSE);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

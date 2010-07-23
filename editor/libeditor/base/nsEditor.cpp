@@ -4881,10 +4881,7 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIAtom> tag = do_GetAtom(aTag);
-  NS_ENSURE_TRUE(tag, NS_ERROR_OUT_OF_MEMORY);
-
-  return doc->CreateElem(tag, nsnull, kNameSpaceID_XHTML, PR_FALSE, aContent);
+  return doc->CreateElem(aTag, nsnull, kNameSpaceID_XHTML, PR_FALSE, aContent);
 }
 
 nsresult

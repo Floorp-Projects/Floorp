@@ -45,7 +45,7 @@ class nsHTMLLegendElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLLegendElement
 {
 public:
-  nsHTMLLegendElement(nsINodeInfo *aNodeInfo);
+  nsHTMLLegendElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLLegendElement();
 
   static nsHTMLLegendElement* FromContent(nsIContent *aContent)
@@ -108,6 +108,7 @@ public:
     return fieldsetControl ? fieldsetControl->GetFormElement() : nsnull;
   }
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   /**
    * Get the fieldset content element that contains this legend.
