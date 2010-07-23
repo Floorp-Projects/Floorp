@@ -402,7 +402,7 @@ FrameState::syncAndKill(Registers kill, Uses uses)
             fe->data.setMemory();
         }
         bool killType = fe->type.inRegister() && kill.hasReg(fe->type.reg());
-        if (!fe->type.synced() && (killType || fe >= bottom)) {
+        if (!fe->type.synced() && (killType || killData || fe >= bottom)) {
             if (backing != fe && backing->type.inMemory())
                 tempRegForType(backing);
             syncType(backing, address, masm);
