@@ -11329,6 +11329,7 @@ nsDocShell::GetCanExecuteScripts(PRBool *aResult)
               // The parent docshell was not explicitly set to design
               // mode, so js on the child docshell was disabled for
               // another reason.  Therefore, we need to disable js.
+              *aResult = PR_FALSE;
               return NS_OK;
           }
           firstPass = PR_FALSE;
