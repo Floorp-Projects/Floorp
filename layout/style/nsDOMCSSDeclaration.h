@@ -113,8 +113,6 @@ protected:
   nsresult ParsePropertyValue(const nsCSSProperty aPropID,
                               const nsAString& aPropValue,
                               PRBool aIsImportant);
-  nsresult ParseDeclaration(const nsAString& aDecl,
-                            PRBool aParseOnlyOneDecl, PRBool aClearOldDecl);
 
   // Prop-id based version of RemoveProperty.  Note that this does not
   // return the old value; it just does a straight removal.
