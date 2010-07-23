@@ -270,8 +270,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       var $fav   = iQ('.favicon', $container);
       var css = {};
 
-      const minFontSize = 8;
-      const maxFontSize = 15;
+      const fontSizeRange = new Range(8,15);
 
       if (rect.left != this.bounds.left || options.force)
         css.left = rect.left;
@@ -281,12 +280,10 @@ window.TabItem.prototype = iQ.extend(new Item(), {
 
       if (rect.width != this.bounds.width || options.force) {
         css.width = rect.width - this.sizeExtra.x;
-        var scale = css.width / TabItems.tabWidth;
+        let widthRange = new Range(0,TabItems.tabWidth);
+        let proportion = widthRange.proportion(css.width, true); // in [0,1]
 
-        // The ease function ".5+.5*Math.tanh(2*x-2)" is a pretty
-        // little graph. It goes from near 0 at x=0 to near 1 at x=2
-        // smoothly and beautifully.
-        css.fontSize = Math.round(minFontSize + (maxFontSize-minFontSize)*(.5+.5*Math.tanh(2*scale-2)));
+        css.fontSize = fontSizeRange.scale(proportion); // returns a value in the fontSizeRange
         css.fontSize += 'px';
       }
 
@@ -317,66 +314,37 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       }
 
       if (css.fontSize && !this.inStack()) {
-        if (css.fontSize < minFontSize )
+        if (css.fontSize < fontSizeRange.min )
           $title.fadeOut();//.dequeue();
         else
           $title.fadeIn();//.dequeue();
       }
 
+      if (css.width) {
 
-      // Usage
-      // slide({60:0, 70:1}, 66);
-      // @60- return 0; at @70+ return 1; @65 return 0.5
-      function slider(bounds, val){
-        var keys = [];
-        for (var key in bounds){ keys.push(key); bounds[key] = parseFloat(bounds[key]); };
-        keys.sort(function(a,b){return a-b});
-        var min = keys[0], max = keys[1];
+        let widthRange, proportion;
 
-        function slide(value){
-          if ( value >= max ) return bounds[max];
-          if ( value <= min ) return bounds[min];
-          var rise = bounds[max] - bounds[min];
-          var run = max-min;
-          var value = rise * (value-min)/run;
-          if ( value >= bounds[max] ) return bounds[max];
-          if ( value <= bounds[min] ) return bounds[min];
-          return value;
+        if (this.inStack()) {
+          $fav.css({top:0, left:0});
+          widthRange = new Range(70, 90);
+          proportion = widthRange.proportion(css.width); // between 0 and 1
+        } else {
+          $fav.css({top:4,left:4});
+          widthRange = new Range(60, 70);
+          proportion = widthRange.proportion(css.width); // between 0 and 1
+          $close.show().css({opacity:proportion});
+          if ( proportion <= .1 )
+            $close.hide()
         }
 
-        if ( val == undefined )
-          return slide;
-        return slide(val);
-      };
-
-      if (css.width && !this.inStack()) {
-        $fav.css({top:4,left:4});
-
-        var opacity = slider({70:1, 60:0}, css.width);
-        $close.show().css({opacity:opacity});
-        if ( opacity <= .1 ) $close.hide()
-
-        var pad = slider({70:6, 60:1}, css.width);
+        var pad = 1 + 5 * proportion;
+        var alphaRange = new Range(0.1,0.2);
         $fav.css({
          "padding-left": pad + "px",
          "padding-right": pad + 2 + "px",
          "padding-top": pad + "px",
          "padding-bottom": pad + "px",
-         "border-color": "rgba(0,0,0,"+ slider({70:.2, 60:.1}, css.width) +")",
-        });
-      }
-
-      if (css.width && this.inStack()){
-        $fav.css({top:0, left:0});
-        var opacity = slider({90:1, 70:0}, css.width);
-
-        var pad = slider({90:6, 70:1}, css.width);
-        $fav.css({
-         "padding-left": pad + "px",
-         "padding-right": pad + 2 + "px",
-         "padding-top": pad + "px",
-         "padding-bottom": pad + "px",
-         "border-color": "rgba(0,0,0,"+ slider({90:.2, 70:.1}, css.width) +")",
+         "border-color": "rgba(0,0,0,"+ alphaRange.scale(proportion) +")",
         });
       }
 

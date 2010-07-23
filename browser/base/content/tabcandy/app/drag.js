@@ -112,7 +112,7 @@ Drag.prototype = {
   //   assumeConstantSize - (boolean) whether the bounds' dimensions are sacred or not.
   //   keepProportional   - (boolean) if assumeConstantSize is false, whether we should resize
   //                        proportionally or not
-  //   checkItemStatus    - (boolean) make sure this is a 
+  //   checkItemStatus    - (boolean) make sure this is a valid item which should be snapped
   snapBounds: function Drag_snapBounds(bounds, stationaryCorner, assumeConstantSize, keepProportional, checkItemStatus) {
     var stationaryCorner = stationaryCorner || 'topleft';
     var update = false; // need to update
