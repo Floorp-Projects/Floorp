@@ -238,8 +238,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                      "out of range");
         if (nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]) &
             aRuleData->mSIDs) {
-            void *prop =
-                nsCSSExpandedDataBlock::RuleDataPropertyAt(aRuleData, iProp);
+            void *prop = aRuleData->StorageFor(iProp);
             switch (nsCSSProps::kTypeTable[iProp]) {
                 case eCSSType_Value: {
                     nsCSSValue* target = static_cast<nsCSSValue*>(prop);
@@ -581,21 +580,13 @@ nsCSSExpandedDataBlock::~nsCSSExpandedDataBlock()
     AssertInitialState();
 }
 
-const nsCSSExpandedDataBlock::PropertyOffsetInfo
-nsCSSExpandedDataBlock::kOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_,     \
-                                 member_, type_, kwtable_)                     \
-        { offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),            \
-          size_t(-1),                                                          \
-          size_t(-1) },
+const size_t
+nsCSSExpandedDataBlock::kOffsetTable[] = {
     #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, \
                      kwtable_, stylestruct_, stylestructoffset_, animtype_)    \
-        { offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),            \
-          offsetof(nsRuleData, m##datastruct_##Data),                          \
-          offsetof(nsRuleData##datastruct_, member_) },
+        offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),
     #include "nsCSSPropList.h"
     #undef CSS_PROP
-    #undef CSS_PROP_BACKENDONLY
 };
 
 void
