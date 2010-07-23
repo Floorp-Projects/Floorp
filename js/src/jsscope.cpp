@@ -86,7 +86,7 @@ js_GenerateShape(JSContext *cx, bool gcLocked)
          */
         rt->shapeGen = SHAPE_OVERFLOW_BIT;
         shape = SHAPE_OVERFLOW_BIT;
-        js_TriggerGC(cx, gcLocked);
+        cx->triggerGC();
     }
     return shape;
 }
@@ -200,7 +200,7 @@ JSScope::createTable(JSContext *cx, bool report)
         METER(tableAllocFails);
         return false;
     }
-    cx->updateMallocCounter(JS_BIT(sizeLog2) * sizeof(JSScopeProperty *));
+    cx->runtime->updateMallocCounter(JS_BIT(sizeLog2) * sizeof(JSScopeProperty *));
 
     hashShift = JS_DHASH_BITS - sizeLog2;
     for (sprop = lastProp; sprop; sprop = sprop->parent) {
@@ -516,7 +516,7 @@ JSScope::changeTable(JSContext *cx, int change)
     table = newtable;
 
     /* Treat the above calloc as a JS_malloc, to match CreateScopeTable. */
-    cx->updateMallocCounter(nbytes);
+    cx->runtime->updateMallocCounter(nbytes);
 
     /* Copy only live entries, leaving removed and free ones behind. */
     for (oldspp = oldtable; oldsize != 0; oldspp++) {
