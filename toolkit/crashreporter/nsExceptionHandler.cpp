@@ -581,7 +581,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
 bool GetEnabled()
 {
-  return gExceptionHandler != nsnull;
+  return gExceptionHandler != nsnull && !gExceptionHandler->IsOutOfProcess();
 }
 
 bool GetMinidumpPath(nsAString& aPath)
