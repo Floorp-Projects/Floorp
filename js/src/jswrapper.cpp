@@ -504,40 +504,46 @@ AutoCompartment::AutoCompartment(JSContext *cx, JSObject *target)
       target(target),
       destination(target->getCompartment(cx)),
       statics(cx),
-      input(cx)
+      input(cx),
+      entered(false)
 {
-    JS_ASSERT(origin != destination);  // necessary for entered() implementation
 }
 
 AutoCompartment::~AutoCompartment()
 {
-    if (entered())
+    if (entered)
         leave();
 }
 
 bool
 AutoCompartment::enter()
 {
-    JS_ASSERT(!entered());
-    context->compartment = destination;
-    frame.construct();
-    bool ok = SetupFakeFrame(context, frame.ref(), regs, target);
-    if (!ok) {
-        frame.destroy();
-        context->compartment = origin;
+    JS_ASSERT(!entered);
+    if (origin != destination) {
+        context->compartment = destination;
+        frame.construct();
+        if (!SetupFakeFrame(context, frame.ref(), regs, target)) {
+            frame.destroy();
+            context->compartment = origin;
+            return false;
+        }
+        js_SaveAndClearRegExpStatics(context, &statics, &input);
     }
-    js_SaveAndClearRegExpStatics(context, &statics, &input);
-    return ok;
+    entered = true;
+    return true;
 }
 
 void
 AutoCompartment::leave()
 {
-    JS_ASSERT(entered());
-    js_RestoreRegExpStatics(context, &statics, &input);
-    frame.destroy();
-    context->compartment = origin;
-    origin->wrapException(context);
+    JS_ASSERT(entered);
+    if (origin != destination) {
+        js_RestoreRegExpStatics(context, &statics, &input);
+        frame.destroy();
+        context->compartment = origin;
+        origin->wrapException(context);
+    }
+    entered = false;
 }
 
 /* Cross compartment wrappers. */

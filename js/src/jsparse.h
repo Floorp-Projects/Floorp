@@ -961,7 +961,7 @@ struct Parser : private js::AutoGCRooter
     Parser(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
       : js::AutoGCRooter(cx, PARSER), context(cx),
         aleFreeList(NULL), tokenStream(cx), principals(NULL), callerFrame(cfp),
-        callerVarObj(cfp ? cfp->varobj(cx->containingCallStack(cfp)) : NULL),
+        callerVarObj(cfp ? cfp->varobj(cx->containingSegment(cfp)) : NULL),
         nodeList(NULL), functionCount(0), traceListHead(NULL), tc(NULL),
         keepAtoms(cx->runtime)
     {

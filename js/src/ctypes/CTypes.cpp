@@ -4484,7 +4484,8 @@ struct AutoValue
 
   bool SizeToType(JSContext* cx, JSObject* type)
   {
-    size_t size = CType::GetSize(cx, type);
+    // Allocate a minimum of sizeof(ffi_arg) to handle small integers.
+    size_t size = Align(CType::GetSize(cx, type), sizeof(ffi_arg));
     mData = new char[size];
     if (mData)
       memset(mData, 0, size);
@@ -4958,7 +4959,8 @@ FunctionType::Call(JSContext* cx,
 
   // initialize a pointer to an appropriate location, for storing the result
   AutoValue returnValue;
-  if (CType::GetTypeCode(cx, fninfo->mReturnType) != TYPE_void_t &&
+  TypeCode typeCode = CType::GetTypeCode(cx, fninfo->mReturnType);
+  if (typeCode != TYPE_void_t &&
       !returnValue.SizeToType(cx, fninfo->mReturnType)) {
     JS_ReportAllocationOverflow(cx);
     return false;
@@ -4974,6 +4976,25 @@ FunctionType::Call(JSContext* cx,
     reinterpret_cast<void**>(values.begin()));
 
   JS_ResumeRequest(cx, rc);
+
+  // Small integer types get returned as a word-sized ffi_arg. Coerce it back
+  // into the correct size for ConvertToJS.
+  switch (typeCode) {
+#define DEFINE_INT_TYPE(name, type, ffiType)                                   \
+  case TYPE_##name:                                                            \
+    if (sizeof(type) < sizeof(ffi_arg)) {                                      \
+      ffi_arg data = *static_cast<ffi_arg*>(returnValue.mData);                \
+      *static_cast<type*>(returnValue.mData) = static_cast<type>(data);        \
+    }                                                                          \
+    break;
+#define DEFINE_WRAPPED_INT_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#define DEFINE_BOOL_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#define DEFINE_CHAR_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#define DEFINE_JSCHAR_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#include "typedefs.h"
+  default:
+    break;
+  }
 
   // prepare a JS object from the result
   return ConvertToJS(cx, fninfo->mReturnType, NULL, returnValue.mData,
@@ -5216,10 +5237,6 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   JS_ASSERT(args);
   JS_ASSERT(userData);
 
-  // Initialize the result to zero, in case something fails.
-  if (cif->rtype != &ffi_type_void)
-    memset(result, 0, cif->rtype->size);
-
   // Retrieve the essentials from our closure object.
   ClosureInfo* cinfo = static_cast<ClosureInfo*>(userData);
   JSContext* cx = cinfo->cx;
@@ -5237,6 +5254,29 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   // Assert that our CIFs agree.
   FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, typeObj);
   JS_ASSERT(cif == &fninfo->mCIF);
+
+  TypeCode typeCode = CType::GetTypeCode(cx, fninfo->mReturnType);
+
+  // Initialize the result to zero, in case something fails. Small integer types
+  // are promoted to a word-sized ffi_arg, so we must be careful to zero the
+  // whole word.
+  if (cif->rtype != &ffi_type_void) {
+    size_t size = cif->rtype->size;
+    switch (typeCode) {
+#define DEFINE_INT_TYPE(name, type, ffiType)                                   \
+    case TYPE_##name:
+#define DEFINE_WRAPPED_INT_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#define DEFINE_BOOL_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#define DEFINE_CHAR_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#define DEFINE_JSCHAR_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#include "typedefs.h"
+      size = Align(size, sizeof(ffi_arg));
+      break;
+    default:
+      break;
+    }
+    memset(result, 0, size);
+  }
 
   // Get a death grip on 'closureObj'.
   js::AutoObjectRooter root(cx, cinfo->closureObj);
@@ -5272,7 +5312,27 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   // type, which would require an allocation that we can't track. The JS
   // function must perform this conversion itself and return a PointerType
   // CData; thusly, the burden of freeing the data is left to the user.
-  ImplicitConvert(cx, rval, fninfo->mReturnType, result, false, NULL);
+  if (!ImplicitConvert(cx, rval, fninfo->mReturnType, result, false, NULL))
+    return;
+
+  // Small integer types must be returned as a word-sized ffi_arg. Coerce it
+  // back into the size libffi expects.
+  switch (typeCode) {
+#define DEFINE_INT_TYPE(name, type, ffiType)                                   \
+  case TYPE_##name:                                                            \
+    if (sizeof(type) < sizeof(ffi_arg)) {                                      \
+      ffi_arg data = *static_cast<type*>(result);                              \
+      *static_cast<ffi_arg*>(result) = data;                                   \
+    }                                                                          \
+    break;
+#define DEFINE_WRAPPED_INT_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#define DEFINE_BOOL_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#define DEFINE_CHAR_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#define DEFINE_JSCHAR_TYPE(x, y, z) DEFINE_INT_TYPE(x, y, z)
+#include "typedefs.h"
+  default:
+    break;
+  }
 }
 
 /*******************************************************************************
@@ -5594,7 +5654,7 @@ CData::ReadString(JSContext* cx, uintN argc, jsval *vp)
       return JS_FALSE;
 
     jschar* dst =
-      static_cast<jschar*>(JS_malloc(cx, (dstlen + 1) * sizeof(jschar)));
+      static_cast<jschar*>(JS_malloc(cx, dstlen * sizeof(jschar)));
     if (!dst)
       return JS_FALSE;
 

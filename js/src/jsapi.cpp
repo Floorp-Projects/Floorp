@@ -4901,7 +4901,7 @@ JS_SaveFrameChain(JSContext *cx)
     JSStackFrame *fp = js_GetTopStackFrame(cx);
     if (!fp)
         return NULL;
-    cx->saveActiveCallStack();
+    cx->saveActiveSegment();
     return fp;
 }
 
@@ -4913,7 +4913,7 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
     JS_ASSERT(!cx->fp);
     if (!fp)
         return;
-    cx->restoreCallStack();
+    cx->restoreSegment();
 }
 
 /************************************************************************/

@@ -67,11 +67,14 @@ enum {
 extern jschar *
 js_GetDependentStringChars(JSString *str);
 
+extern JSString * JS_FASTCALL
+js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
+
 JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
 
 struct JSRopeBufferInfo {
     /* Number of jschars we can hold, not including null terminator. */
-    size_t  capacity;
+    size_t capacity;
 };
 
 /*
@@ -421,7 +424,7 @@ struct JSString {
     }
 
     inline void ropeIncrementTraversalCount() {
-        JS_ASSERT(isInteriorNode());
+        JS_ASSERT(isRope());
         mLengthAndFlags += ROPE_TRAVERSAL_COUNT_UNIT;
     }
 
@@ -555,6 +558,58 @@ class JSRopeNodeIterator {
     }
 };
 
+/*
+ * An iterator that returns the leaves of a rope (which hold the actual string
+ * data) in order. The usage is the same as JSRopeNodeIterator.
+ */
+class JSRopeLeafIterator {
+  private:
+    JSRopeNodeIterator mNodeIterator;
+
+  public:
+
+    JSRopeLeafIterator(JSString *topNode) :
+        mNodeIterator(topNode) {
+        JS_ASSERT(topNode->isTopNode());
+    }
+
+    inline JSString *init() {
+        JSString *str = mNodeIterator.init();
+        while (str->isRope()) {
+            str = mNodeIterator.next();
+            JS_ASSERT(str);
+        }
+        return str;
+    }
+
+    inline JSString *next() {
+        JSString *str;
+        do {
+            str = mNodeIterator.next();
+        } while (str && str->isRope());
+        return str;
+    }
+};
+
+class JSRopeBuilder {
+  private:
+    JSString *mStr;
+
+  public:
+    JSRopeBuilder(JSContext *cx);
+
+    inline bool append(JSContext *cx, JSString *str) {
+        mStr = js_ConcatStrings(cx, mStr, str);
+        if (!mStr)
+            return false;
+        return true;
+    }
+
+    inline JSString *getStr() {
+        return mStr;
+    }
+};
+     
 JS_STATIC_ASSERT(JSString::INTERIOR_NODE & JSString::ROPE_BIT);
 JS_STATIC_ASSERT(JSString::TOP_NODE & JSString::ROPE_BIT);
 
@@ -565,9 +620,6 @@ JS_STATIC_ASSERT(sizeof(JSString) % JS_GCTHING_ALIGN == 0);
 
 extern const jschar *
 js_GetStringChars(JSContext *cx, JSString *str);
-
-extern JSString * JS_FASTCALL
-js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
 
 extern const jschar *
 js_UndependString(JSContext *cx, JSString *str);

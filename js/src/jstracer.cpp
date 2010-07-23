@@ -5703,9 +5703,9 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
      * no space (which will try to deep bail, which is bad), however we already
      * check on entry to ExecuteTree that there is enough space.
      */
-    CallStack *cs;
+    CallStackSegment *css;
     JSStackFrame *fp;
-    cx->stack().getSynthesizedSlowNativeFrame(cx, cs, fp);
+    cx->stack().getSynthesizedSlowNativeFrame(cx, css, fp);
 
 #ifdef DEBUG
     JSObject *callee = &state.nativeVp[0].toObject();
@@ -5731,7 +5731,7 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
 
     state.bailedSlowNativeRegs = *cx->regs;
 
-    cx->stack().pushSynthesizedSlowNativeFrame(cx, cs, fp, state.bailedSlowNativeRegs);
+    cx->stack().pushSynthesizedSlowNativeFrame(cx, css, fp, state.bailedSlowNativeRegs);
 
     state.bailedSlowNativeRegs.pc = NULL;
     state.bailedSlowNativeRegs.sp = fp->slots();
@@ -9900,10 +9900,7 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
                              lir->ins1(LIR_ui2uq, demote(lir, v_ins)),
                              INS_CONSTQWORD(JSVAL_SHIFTED_TAG_INT32));
         }
-        // TODO: this is very sad; remove when there is a LIR_d2q
-        LIns *tmp = lir->insAlloc(sizeof(Value));
-        lir->insStore(v_ins, tmp, 0, ACC_OTHER);
-        return lir->insLoad(LIR_ldq, tmp, 0, ACC_OTHER);
+        return lir->ins1(LIR_dasq, v_ins);
     }
 
     if (v.isNull())
@@ -14678,7 +14675,7 @@ HasInstance(JSContext* cx, JSObject* ctor, ValueArgType arg)
 {
     const Value &argref = ValueArgToConstRef(arg);
     JSBool result = JS_FALSE;
-    if (!ctor->map->ops->hasInstance(cx, ctor, &argref, &result))
+    if (!js_HasInstance(cx, ctor, &argref, &result))
         SetBuiltinError(cx);
     return result;
 }

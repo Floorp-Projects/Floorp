@@ -256,10 +256,7 @@ JSObject::isFunction() const
 inline bool
 JSObject::isCallable()
 {
-    if (isNative())
-        return isFunction() || getClass()->call;
-
-    return !!map->ops->call;
+    return isFunction() || getClass()->call;
 }
 
 static inline bool

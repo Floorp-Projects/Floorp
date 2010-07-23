@@ -57,7 +57,7 @@ JSContext::ensureGeneratorStackSpace()
 namespace js {
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
-CallStack::getCurrentFrame() const
+CallStackSegment::getCurrentFrame() const
 {
     JS_ASSERT(inContext());
     return isSuspended() ? getSuspendedFrame() : cx->fp;
@@ -66,7 +66,7 @@ CallStack::getCurrentFrame() const
 JS_REQUIRES_STACK inline Value *
 StackSpace::firstUnused() const
 {
-    CallStack *ccs = currentCallStack;
+    CallStackSegment *ccs = currentSegment;
     if (!ccs)
         return base;
     if (JSContext *cx = ccs->maybeContext()) {
@@ -82,9 +82,9 @@ JS_ALWAYS_INLINE void
 StackSpace::assertIsCurrent(JSContext *cx) const
 {
 #ifdef DEBUG
-    JS_ASSERT(cx == currentCallStack->maybeContext());
-    JS_ASSERT(cx->getCurrentCallStack() == currentCallStack);
-    cx->assertCallStacksInSync();
+    JS_ASSERT(cx == currentSegment->maybeContext());
+    JS_ASSERT(cx->getCurrentSegment() == currentSegment);
+    cx->assertSegmentsInSync();
 #endif
 }
 
@@ -131,7 +131,7 @@ StackSpace::getInlineFrame(JSContext *cx, Value *sp,
                            uintN nmissing, uintN nfixed) const
 {
     assertIsCurrent(cx);
-    JS_ASSERT(cx->hasActiveCallStack());
+    JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(cx->regs->sp == sp);
 
     ptrdiff_t nvals = nmissing + VALUES_PER_STACK_FRAME + nfixed;
@@ -147,7 +147,7 @@ StackSpace::pushInlineFrame(JSContext *cx, JSStackFrame *fp, jsbytecode *pc,
                             JSStackFrame *newfp)
 {
     assertIsCurrent(cx);
-    JS_ASSERT(cx->hasActiveCallStack());
+    JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(cx->fp == fp && cx->regs->pc == pc);
 
     fp->savedPC = pc;
@@ -162,7 +162,7 @@ JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
 {
     assertIsCurrent(cx);
-    JS_ASSERT(cx->hasActiveCallStack());
+    JS_ASSERT(cx->hasActiveSegment());
     JS_ASSERT(cx->fp == up && up->down == down);
     JS_ASSERT(up->savedPC == JSStackFrame::sInvalidPC);
 

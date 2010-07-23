@@ -1315,9 +1315,6 @@ template<> JSObjectOps _typedArray::fastObjectOps = {                          \
     _typedArray::obj_typeOf,                                                   \
     _typedArray::obj_trace,                                                    \
     NULL,   /* thisObject */                                                   \
-    NULL,   /* call */                                                         \
-    NULL,   /* construct */                                                    \
-    NULL,   /* hasInstance */                                                  \
     NULL    /* clear */                                                        \
 };                                                                             \
 template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \

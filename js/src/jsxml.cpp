@@ -5044,9 +5044,6 @@ JS_FRIEND_DATA(JSObjectOps) js_XMLObjectOps = {
     xml_typeOf,
     js_TraceObject,
     NULL,   /* thisObject */
-    NULL,   /* call */
-    NULL,   /* construct */
-    xml_hasInstance,
     xml_clear
 };
 
@@ -5063,7 +5060,7 @@ JS_FRIEND_DATA(Class) js_XMLClass = {
     PropertyStub,      PropertyStub,      PropertyStub,      PropertyStub,
     EnumerateStub,     ResolveStub,       xml_convert,       xml_finalize,
     xml_getObjectOps,  NULL,              NULL,              NULL,
-    NULL,              NULL,              JS_CLASS_TRACE(xml_trace), NULL
+    NULL,              xml_hasInstance,   JS_CLASS_TRACE(xml_trace), NULL
 };
 
 static JSXML *

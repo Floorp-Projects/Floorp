@@ -144,7 +144,7 @@ class JSCrossCompartmentWrapper : public JSWrapper {
 
 namespace js {
 
-class JS_FRIEND_API(AutoCompartment)
+class AutoCompartment
 {
   public:
     JSContext * const context;
@@ -156,17 +156,17 @@ class JS_FRIEND_API(AutoCompartment)
     JSFrameRegs regs;
     JSRegExpStatics statics;
     AutoStringRooter input;
+    bool entered;
 
   public:
     AutoCompartment(JSContext *cx, JSObject *target);
     ~AutoCompartment();
 
-    bool entered() const { return context->compartment == destination; }
     bool enter();
     void leave();
 
     js::Value *getvp() {
-        JS_ASSERT(entered());
+        JS_ASSERT(entered);
         return frame.ref().getvp();
     }
 
