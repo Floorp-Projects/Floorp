@@ -72,6 +72,38 @@ struct Changes {
     uint32 nchanges;
 };
 
+class MaybeRegisterID {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+  public:
+    MaybeRegisterID()
+      : reg_(Registers::ReturnReg), set(false)
+    { }
+
+    MaybeRegisterID(RegisterID reg)
+      : reg_(reg), set(true)
+    { }
+
+    inline RegisterID reg() const { JS_ASSERT(set); return reg_; }
+    inline void setReg(const RegisterID r) { reg_ = r; set = true; }
+    inline bool isSet() const { return set; }
+
+    MaybeRegisterID & operator =(const MaybeRegisterID &other) {
+        set = other.set;
+        reg_ = other.reg_;
+        return *this;
+    }
+
+    MaybeRegisterID & operator =(RegisterID r) {
+        setReg(r);
+        return *this;
+    }
+
+  private:
+    RegisterID reg_;
+    bool set;
+};
+
 /*
  * The FrameState keeps track of values on the frame during compilation.
  * The compiler can query FrameState for information about arguments, locals,
@@ -242,13 +274,6 @@ class FrameState
     void pushLocal(uint32 n);
 
     /*
-     * Allocates a temporary register for a FrameEntry's type, but does not
-     * output the bytecode to load the value into the register. The semantics
-     * are the same as with tempRegForType().
-     */
-    inline RegisterID predictRegForType(FrameEntry *fe);
-
-    /*
      * Allocates a temporary register for a FrameEntry's type. The register
      * can be spilled or clobbered by the frame. The compiler may only operate
      * on it temporarily, and must take care not to clobber it.
@@ -346,6 +371,41 @@ class FrameState
      */
     RegisterID copyInt32ConstantIntoReg(FrameEntry *fe);
     RegisterID copyInt32ConstantIntoReg(Assembler &masm, FrameEntry *fe);
+
+    struct BinaryAlloc {
+        MaybeRegisterID lhsType;
+        MaybeRegisterID lhsData;
+        MaybeRegisterID rhsType;
+        MaybeRegisterID rhsData;
+        MaybeRegisterID extraFree;
+        RegisterID result;  // mutable result reg
+        bool resultHasRhs;  // whether the result has the RHS instead of the LHS
+        bool lhsNeedsRemat; // whether LHS needs memory remat
+        bool rhsNeedsRemat; // whether RHS needs memory remat
+    };
+
+    /*
+     * Ensures that the two given FrameEntries have registers for both their
+     * type and data. The register allocations are returned in a struct.
+     *
+     * One mutable register is allocated as well, holding the LHS payload. If
+     * this would cause a spill that could be avoided by using a mutable RHS,
+     * and the operation is commutative, then the resultHasRhs is set to true.
+     */
+    void allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAlloc &alloc);
+
+    /*
+     * Similar to allocForBinary, except works when the LHS and RHS have the
+     * same backing FE. Only a reduced subset of BinaryAlloc is used:
+     *   lhsType
+     *   lhsData
+     *   result
+     *   lhsNeedsRemat
+     */
+    void allocForSameBinary(FrameEntry *fe, JSOp op, BinaryAlloc &alloc);
+
+    /* Loads an FE into an fp reg . */
+    inline void loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const;
 
     /*
      * Types don't always have to be in registers, sometimes the compiler
