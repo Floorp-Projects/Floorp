@@ -54,6 +54,9 @@
 # define FIXME_INSN_PRINTING ((void) 0)
 #endif
 
+// TODO: We don't print the condition code in our JaegerSpew lines. Doing this
+// is awkward whilst maintaining a consistent field width.
+
 namespace JSC {
 
     typedef uint32_t ARMWord;
@@ -177,6 +180,7 @@ namespace JSC {
             MVN = (0xf << 21),
             MUL = 0x00000090,
             MULL = 0x00c00090,
+            FCPYD = 0x0eb00b40,
             FADDD = 0x0e300b00,
             FNEGD = 0x0eb10b40,
             FDIVD = 0x0e800b00,
@@ -503,6 +507,15 @@ namespace JSC {
             js::JaegerSpew(js::JSpew_Insns,
                     IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "mull", nameGpReg(rdlo), nameGpReg(rdhi), nameGpReg(rn), nameGpReg(rm));
             m_buffer.putInt(static_cast<ARMWord>(cc) | MULL | RN(rdhi) | RD(rdlo) | RS(rn) | RM(rm));
+        }
+
+        void fcpyd_r(int dd, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s\n", MAYBE_PAD, "vmov.f64", nameFpRegD(dd), nameFpRegD(dm));
+            // TODO: emitInst doesn't work for VFP instructions, though it
+            // seems to work for current usage.
+            emitInst(static_cast<ARMWord>(cc) | FCPYD, dd, dd, dm);
         }
 
         void faddd_r(int dd, int dn, int dm, Condition cc = AL)

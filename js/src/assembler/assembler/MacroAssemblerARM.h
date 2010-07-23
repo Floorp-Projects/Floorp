@@ -854,6 +854,11 @@ public:
         return s_isVFPPresent;
     }
 
+    void moveDouble(FPRegisterID src, FPRegisterID dest)
+    {
+        m_assembler.fcpyd_r(dest, src);
+    }
+
     void loadDouble(ImplicitAddress address, FPRegisterID dest)
     {
         m_assembler.doubleTransfer(true, dest, address.base, address.offset);
