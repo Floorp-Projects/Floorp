@@ -167,7 +167,7 @@ function Mirror(tab, manager) {
 /*   Utils.log('done creating mirror'); */
 }
 
-Mirror.prototype = iQ.extend(new Subscribable(), {
+Mirror.prototype = Utils.extend(new Subscribable(), {
   // ----------
   // Function: triggerPaint
   // Forces the mirror in question to update its thumbnail.
@@ -247,7 +247,7 @@ TabMirror.prototype = {
     // When a tab is opened, create the mirror
     Tabs.onOpen(function() {
       var tab = this;
-      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.update(tab);
       }, 1);
     });
@@ -255,7 +255,7 @@ TabMirror.prototype = {
     // When a tab is updated, update the mirror
     Tabs.onReady(function(evt) {
       var tab = evt.tab;
-      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.update(tab);
       }, 1);
     });
@@ -264,7 +264,7 @@ TabMirror.prototype = {
     // if necessary.
     Tabs.onLoad(function(evt) {
       var tab = evt.tab;
-      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
         tab.mirror.okayToHideCache = true;
         self.update(tab);
       }, 1);
@@ -273,7 +273,7 @@ TabMirror.prototype = {
     // When a tab is closed, unlink.
     Tabs.onClose( function(){
       var tab = this;
-      iQ.timeout(function() { // Marshal event from chrome thread to DOM thread
+      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
         self.unlink(tab);
       }, 1);
     });
@@ -362,7 +362,7 @@ TabMirror.prototype = {
   // Function: _fireNextHeartbeat
   _fireNextHeartbeat: function() {
     var self = this;
-    iQ.timeout(function() {
+    Utils.timeout(function() {
       self._heartbeat();
     }, 100);
   },
