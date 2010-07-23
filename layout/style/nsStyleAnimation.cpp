@@ -2779,11 +2779,9 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
     case eUnit_Dasharray:
     case eUnit_Shadow:
     case eUnit_Transform:
-      return nsCSSValueList::Equal(mValue.mCSSValueList,
-                                   aOther.mValue.mCSSValueList);
+      return *mValue.mCSSValueList == *aOther.mValue.mCSSValueList;
     case eUnit_CSSValuePairList:
-      return nsCSSValuePairList::Equal(mValue.mCSSValuePairList,
-                                       aOther.mValue.mCSSValuePairList);
+      return *mValue.mCSSValuePairList == *aOther.mValue.mCSSValuePairList;
     case eUnit_UnparsedString:
       return (NS_strcmp(GetStringBufferValue(),
                         aOther.GetStringBufferValue()) == 0);

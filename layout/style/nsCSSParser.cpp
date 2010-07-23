@@ -4199,7 +4199,7 @@ CSSParserImpl::CopyValue(void *aSource, void *aDest, nsCSSProperty aPropID,
     case eCSSType_ValueList: {
       nsCSSValueList **source = static_cast<nsCSSValueList**>(aSource);
       nsCSSValueList **dest = static_cast<nsCSSValueList**>(aDest);
-      if (!nsCSSValueList::Equal(*source, *dest))
+      if (**source != **dest)
         *aChanged = PR_TRUE;
       delete *dest;
       *dest = *source;
@@ -4211,7 +4211,7 @@ CSSParserImpl::CopyValue(void *aSource, void *aDest, nsCSSProperty aPropID,
         static_cast<nsCSSValuePairList**>(aSource);
       nsCSSValuePairList **dest =
         static_cast<nsCSSValuePairList**>(aDest);
-      if (!nsCSSValuePairList::Equal(*source, *dest))
+      if (**source != **dest)
         *aChanged = PR_TRUE;
       delete *dest;
       *dest = *source;

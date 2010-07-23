@@ -53,9 +53,11 @@ struct nsCSSValueList {
   nsCSSValueList() : mNext(nsnull) { MOZ_COUNT_CTOR(nsCSSValueList); }
   ~nsCSSValueList();
 
-  nsCSSValueList* Clone() const { return Clone(PR_TRUE); }
+  nsCSSValueList* Clone() const;  // makes a deep copy
 
-  static PRBool Equal(nsCSSValueList* aList1, nsCSSValueList* aList2);
+  bool operator==(nsCSSValueList const& aOther) const; // deep comparison
+  bool operator!=(const nsCSSValueList& aOther) const
+  { return !(*this == aOther); }
 
   nsCSSValue      mValue;
   nsCSSValueList* mNext;
@@ -66,7 +68,6 @@ private:
   {
     MOZ_COUNT_CTOR(nsCSSValueList);
   }
-  nsCSSValueList* Clone(PRBool aDeep) const;
 };
 
 struct nsCSSRect {
@@ -104,7 +105,7 @@ struct nsCSSRect {
       mBottom.GetUnit() != eCSSUnit_Null ||
       mLeft.GetUnit() != eCSSUnit_Null;
   }
-  
+
   nsCSSValue mTop;
   nsCSSValue mRight;
   nsCSSValue mBottom;
@@ -119,10 +120,14 @@ struct nsCSSValuePair {
   {
     MOZ_COUNT_CTOR(nsCSSValuePair);
   }
+  nsCSSValuePair(const nsCSSValue& aXValue, const nsCSSValue& aYValue)
+    : mXValue(aXValue), mYValue(aYValue)
+  {
+    MOZ_COUNT_CTOR(nsCSSValuePair);
+  }
   nsCSSValuePair(const nsCSSValuePair& aCopy)
-    : mXValue(aCopy.mXValue),
-      mYValue(aCopy.mYValue)
-  { 
+    : mXValue(aCopy.mXValue), mYValue(aCopy.mYValue)
+  {
     MOZ_COUNT_CTOR(nsCSSValuePair);
   }
   ~nsCSSValuePair()
@@ -181,7 +186,7 @@ struct nsCSSCornerSizes {
     nsCSSValuePair& fc = this->*corners[NS_HALF_TO_FULL_CORNER(hc)];
     return NS_HALF_CORNER_IS_X(hc) ? fc.mXValue : fc.mYValue;
   }
-  
+
   PRBool operator==(const nsCSSCornerSizes& aOther) const {
     NS_FOR_CSS_FULL_CORNERS(corner) {
       if (this->GetFullCorner(corner) != aOther.GetFullCorner(corner))
@@ -237,9 +242,11 @@ struct nsCSSValuePairList {
   nsCSSValuePairList() : mNext(nsnull) { MOZ_COUNT_CTOR(nsCSSValuePairList); }
   ~nsCSSValuePairList();
 
-  nsCSSValuePairList* Clone() const { return Clone(PR_TRUE); }
+  nsCSSValuePairList* Clone() const; // makes a deep copy
 
-  static PRBool Equal(nsCSSValuePairList* aList1, nsCSSValuePairList* aList2);
+  bool operator==(const nsCSSValuePairList& aOther) const; // deep comparison
+  bool operator!=(const nsCSSValuePairList& aOther) const
+  { return !(*this == aOther); }
 
   nsCSSValue          mXValue;
   nsCSSValue          mYValue;
@@ -251,7 +258,6 @@ private:
   {
     MOZ_COUNT_CTOR(nsCSSValuePairList);
   }
-  nsCSSValuePairList* Clone(PRBool aDeep) const;
 };
 
 /****************************************************************************/
