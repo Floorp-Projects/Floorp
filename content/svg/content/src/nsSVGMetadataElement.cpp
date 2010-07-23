@@ -46,8 +46,8 @@ class nsSVGMetadataElement : public nsSVGMetadataElementBase,
 {
 protected:
   friend nsresult NS_NewSVGMetadataElement(nsIContent **aResult,
-                                           nsINodeInfo *aNodeInfo);
-  nsSVGMetadataElement(nsINodeInfo* aNodeInfo);
+                                           already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGMetadataElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
 
 public:
@@ -62,6 +62,8 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Metadata)
@@ -73,7 +75,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Metadata)
 NS_IMPL_ADDREF_INHERITED(nsSVGMetadataElement, nsSVGMetadataElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGMetadataElement, nsSVGMetadataElementBase)
 
-DOMCI_DATA(SVGMetadataElement, nsSVGMetadataElement)
+DOMCI_NODE_DATA(SVGMetadataElement, nsSVGMetadataElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGMetadataElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGMetadataElement, nsIDOMNode, nsIDOMElement,
@@ -85,7 +87,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMetadataElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGMetadataElement::nsSVGMetadataElement(nsINodeInfo *aNodeInfo)
+nsSVGMetadataElement::nsSVGMetadataElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGMetadataElementBase(aNodeInfo)
 {
 }

@@ -50,8 +50,8 @@ class nsSVGRectElement : public nsSVGRectElementBase,
 {
 protected:
   friend nsresult NS_NewSVGRectElement(nsIContent **aResult,
-                                       nsINodeInfo *aNodeInfo);
-  nsSVGRectElement(nsINodeInfo* aNodeInfo);
+                                       already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGRectElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -68,6 +68,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
@@ -95,7 +96,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Rect)
 NS_IMPL_ADDREF_INHERITED(nsSVGRectElement,nsSVGRectElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGRectElement,nsSVGRectElementBase)
 
-DOMCI_DATA(SVGRectElement, nsSVGRectElement)
+DOMCI_NODE_DATA(SVGRectElement, nsSVGRectElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGRectElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGRectElement, nsIDOMNode, nsIDOMElement,
@@ -106,7 +107,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGRectElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGRectElement::nsSVGRectElement(nsINodeInfo *aNodeInfo)
+nsSVGRectElement::nsSVGRectElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGRectElementBase(aNodeInfo)
 {
 }

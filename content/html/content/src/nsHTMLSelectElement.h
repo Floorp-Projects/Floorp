@@ -239,7 +239,8 @@ class nsHTMLSelectElement : public nsGenericHTMLFormElement,
                             public nsISelectElement
 {
 public:
-  nsHTMLSelectElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser = 0);
+  nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                      PRUint32 aFromParser = 0);
   virtual ~nsHTMLSelectElement();
 
   // nsISupports
@@ -314,6 +315,7 @@ public:
     return static_cast<nsHTMLSelectElement*>(static_cast<nsINode*>(aSupports));
   }
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   friend class nsSafeOptionListMutation;
 

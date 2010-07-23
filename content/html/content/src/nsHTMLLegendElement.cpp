@@ -51,7 +51,7 @@
 NS_IMPL_NS_NEW_HTML_ELEMENT(Legend)
 
 
-nsHTMLLegendElement::nsHTMLLegendElement(nsINodeInfo *aNodeInfo)
+nsHTMLLegendElement::nsHTMLLegendElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -65,7 +65,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLLegendElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLLegendElement, nsHTMLLegendElement)
+DOMCI_NODE_DATA(HTMLLegendElement, nsHTMLLegendElement)
 
 // QueryInterface implementation for nsHTMLLegendElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLLegendElement)

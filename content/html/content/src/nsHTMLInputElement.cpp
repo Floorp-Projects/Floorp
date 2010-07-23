@@ -222,7 +222,7 @@ static nsresult FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
 
-nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo,
+nsHTMLInputElement::nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                        PRUint32 aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mType(kInputDefaultType->value),
@@ -282,7 +282,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLInputElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLInputElement, nsHTMLInputElement)
+DOMCI_NODE_DATA(HTMLInputElement, nsHTMLInputElement)
 
 // QueryInterface implementation for nsHTMLInputElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLInputElement)
@@ -308,7 +308,8 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
 
-  nsHTMLInputElement *it = new nsHTMLInputElement(aNodeInfo, PR_FALSE);
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsHTMLInputElement *it = new nsHTMLInputElement(ni.forget(), PR_FALSE);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

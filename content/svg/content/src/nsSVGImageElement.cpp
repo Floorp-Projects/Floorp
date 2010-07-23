@@ -65,7 +65,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Image)
 NS_IMPL_ADDREF_INHERITED(nsSVGImageElement,nsSVGImageElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGImageElement,nsSVGImageElementBase)
 
-DOMCI_DATA(SVGImageElement, nsSVGImageElement)
+DOMCI_NODE_DATA(SVGImageElement, nsSVGImageElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGImageElement)
   NS_NODE_INTERFACE_TABLE7(nsSVGImageElement, nsIDOMNode, nsIDOMElement,
@@ -78,7 +78,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGImageElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGImageElement::nsSVGImageElement(nsINodeInfo *aNodeInfo)
+nsSVGImageElement::nsSVGImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGImageElementBase(aNodeInfo)
 {
 }

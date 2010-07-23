@@ -4092,23 +4092,43 @@ nsDocument::CreateElement(const nsAString& aTagName,
                           nsIDOMElement** aReturn)
 {
   *aReturn = nsnull;
+  nsCOMPtr<nsIContent> content;
+  nsresult rv = CreateElement(aTagName, getter_AddRefs(content));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return CallQueryInterface(content, aReturn);
+}
+
+PRBool IsLowercaseASCII(const nsAString& aValue)
+{
+  PRInt32 len = aValue.Length();
+  for (PRInt32 i = 0; i < len; ++i) {
+    PRUnichar c = aValue[i];
+    if (!(0x0061 <= (c) && ((c) <= 0x007a))) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
+nsresult
+nsDocument::CreateElement(const nsAString& aTagName,
+                          nsIContent** aReturn)
+{
+  *aReturn = nsnull;
 
   nsresult rv = nsContentUtils::CheckQName(aTagName, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ASSERTION(!IsHTML(),
-               "nsDocument::CreateElement() called on document that is not "
-               "case sensitive. Fix caller, or fix "
-               "nsDocument::CreateElement()!");
+  PRBool needsLowercase = IsHTML() && !IsLowercaseASCII(aTagName);
+  nsAutoString lcTagName;
+  if (needsLowercase) {
+    ToLowerCase(aTagName, lcTagName);
+  }
 
-  nsCOMPtr<nsIAtom> name = do_GetAtom(aTagName);
-
-  nsCOMPtr<nsIContent> content;
-  rv = CreateElem(name, nsnull, GetDefaultNamespaceID(), PR_TRUE,
-                  getter_AddRefs(content));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return CallQueryInterface(content, aReturn);
+  rv = CreateElem(needsLowercase ? lcTagName : aTagName, nsnull,
+                  IsHTML() ? kNameSpaceID_XHTML : GetDefaultNamespaceID(),
+                  PR_TRUE, aReturn);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -4126,8 +4146,8 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content;
-  NS_NewElement(getter_AddRefs(content), nodeInfo->NamespaceID(), nodeInfo,
-                PR_FALSE);
+  PRInt32 ns = nodeInfo->NamespaceID();
+  NS_NewElement(getter_AddRefs(content), ns, nodeInfo.forget(), PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(content, aReturn);
@@ -4137,17 +4157,20 @@ NS_IMETHODIMP
 nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
 {
   *aReturn = nsnull;
+  nsCOMPtr<nsIContent> content;
+  nsresult rv = CreateTextNode(aData, getter_AddRefs(content));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return CallQueryInterface(content, aReturn);
+}
 
-  nsCOMPtr<nsIContent> text;
-  nsresult rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfoManager);
-
+nsresult
+nsDocument::CreateTextNode(const nsAString& aData, nsIContent** aReturn)
+{
+  nsresult rv = NS_NewTextNode(aReturn, mNodeInfoManager);
   if (NS_SUCCEEDED(rv)) {
     // Don't notify; this node is still being created.
-    text->SetText(aData, PR_FALSE);
-
-    rv = CallQueryInterface(text, aReturn);
+    (*aReturn)->SetText(aData, PR_FALSE);
   }
-
   return rv;
 }
 
@@ -4247,7 +4270,7 @@ nsDocument::CreateAttribute(const nsAString& aName,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
+  attribute = new nsDOMAttribute(nsnull, nodeInfo.forget(), value);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aReturn);
@@ -4269,7 +4292,8 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
-  nsDOMAttribute* attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
+  nsDOMAttribute* attribute =
+    new nsDOMAttribute(nsnull, nodeInfo.forget(), value);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aResult);
@@ -4982,7 +5006,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
                                                 kNameSpaceID_XHTML);
       if (!titleInfo)
         return NS_OK;
-      title = NS_NewHTMLTitleElement(titleInfo);
+      title = NS_NewHTMLTitleElement(titleInfo.forget());
       if (!title)
         return NS_OK;
     }
@@ -6579,7 +6603,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 }
 
 nsresult
-nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
+nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
                        PRBool aDocumentDefaultType, nsIContent **aResult)
 {
 #ifdef DEBUG
@@ -6588,7 +6612,7 @@ nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
     aPrefix->ToString(qName);
     qName.Append(':');
   }
-  qName.Append(nsAtomString(aName));
+  qName.Append(aName);
 
   // Note: "a:b:c" is a valid name in non-namespaces XML, and
   // nsDocument::CreateElement can call us with such a name and no prefix,
@@ -6605,10 +6629,11 @@ nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
     aNamespaceID;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID);
+  mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
+                                getter_AddRefs(nodeInfo));
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  return NS_NewElement(aResult, elementType, nodeInfo, PR_FALSE);
+  return NS_NewElement(aResult, elementType, nodeInfo.forget(), PR_FALSE);
 }
 
 PRBool

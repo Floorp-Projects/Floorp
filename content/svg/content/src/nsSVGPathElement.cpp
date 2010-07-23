@@ -60,7 +60,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
 NS_IMPL_ADDREF_INHERITED(nsSVGPathElement,nsSVGPathElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGPathElement,nsSVGPathElementBase)
 
-DOMCI_DATA(SVGPathElement, nsSVGPathElement)
+DOMCI_NODE_DATA(SVGPathElement, nsSVGPathElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGPathElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGPathElement, nsIDOMNode, nsIDOMElement,
@@ -72,7 +72,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPathElement::nsSVGPathElement(nsINodeInfo* aNodeInfo)
+nsSVGPathElement::nsSVGPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGPathElementBase(aNodeInfo)
 {
 }

@@ -63,7 +63,8 @@ class nsDOMAttribute : public nsIAttribute,
                        public nsStubMutationObserver
 {
 public:
-  nsDOMAttribute(nsDOMAttributeMap* aAttrMap, nsINodeInfo *aNodeInfo,
+  nsDOMAttribute(nsDOMAttributeMap* aAttrMap,
+                 already_AddRefed<nsINodeInfo> aNodeInfo,
                  const nsAString& aValue);
   virtual ~nsDOMAttribute();
 
@@ -122,6 +123,7 @@ public:
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   virtual mozilla::dom::Element* GetNameSpaceElement()
   {

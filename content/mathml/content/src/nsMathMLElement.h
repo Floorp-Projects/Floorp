@@ -54,7 +54,7 @@ class nsMathMLElement : public nsMathMLElementBase
                       , public nsIDOMElement
 {
 public:
-  nsMathMLElement(nsINodeInfo* aNodeInfo)
+  nsMathMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsMathMLElementBase(aNodeInfo), mIncrementScriptLevel(PR_FALSE)
   {}
 
@@ -100,6 +100,7 @@ public:
     return mIncrementScriptLevel;
   }
 
+  virtual nsXPCClassInfo* GetClassInfo();
 private:
   PRPackedBool mIncrementScriptLevel;
 };

@@ -52,7 +52,7 @@ class nsHTMLOptionElement : public nsGenericHTMLElement,
                             public nsIJSNativeInitializer
 {
 public:
-  nsHTMLOptionElement(nsINodeInfo *aNodeInfo);
+  nsHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLOptionElement();
 
   /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
@@ -100,6 +100,7 @@ public:
 
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   /**
    * Get the select content element that contains this option, this

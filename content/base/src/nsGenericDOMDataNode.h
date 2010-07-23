@@ -86,7 +86,7 @@ class nsGenericDOMDataNode : public nsIContent
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  nsGenericDOMDataNode(nsINodeInfo *aNodeInfo);
+  nsGenericDOMDataNode(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsGenericDOMDataNode();
 
   // Implementation for nsIDOMNode
@@ -366,7 +366,8 @@ private:
 class nsGenericTextNode : public nsGenericDOMDataNode
 {
 public:
-  nsGenericTextNode(nsINodeInfo *aNodeInfo) : nsGenericDOMDataNode(aNodeInfo)
+  nsGenericTextNode(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : nsGenericDOMDataNode(aNodeInfo)
   {
   }
 

@@ -240,6 +240,7 @@ public:
     return nsDocument::GetElementById(aElementId);
   }
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   nsresult GetBodySize(PRInt32* aWidth,
                        PRInt32* aHeight);

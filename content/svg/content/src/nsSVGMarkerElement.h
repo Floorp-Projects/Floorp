@@ -107,8 +107,8 @@ class nsSVGMarkerElement : public nsSVGMarkerElementBase,
 
 protected:
   friend nsresult NS_NewSVGMarkerElement(nsIContent **aResult,
-                                         nsINodeInfo *aNodeInfo);
-  nsSVGMarkerElement(nsINodeInfo* aNodeInfo);
+                                         already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGMarkerElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -144,6 +144,7 @@ public:
 
   nsSVGOrientType* GetOrientType() { return &mOrientType; }
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
 
   virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,

@@ -68,7 +68,8 @@
 #include "nsHTMLMediaError.h"
 
 nsGenericHTMLElement*
-NS_NewHTMLAudioElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
+NS_NewHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                       PRUint32 aFromParser)
 {
   /*
    * nsHTMLAudioElement's will be created without a nsINodeInfo passed in
@@ -86,25 +87,26 @@ NS_NewHTMLAudioElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
     NS_ENSURE_TRUE(nodeInfo, nsnull);
   }
 
-  return new nsHTMLAudioElement(nodeInfo, aFromParser);
+  return new nsHTMLAudioElement(nodeInfo.forget(), aFromParser);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
 
-DOMCI_DATA(HTMLAudioElement, nsHTMLAudioElement)
+DOMCI_NODE_DATA(HTMLAudioElement, nsHTMLAudioElement)
 
 NS_INTERFACE_TABLE_HEAD(nsHTMLAudioElement)
 NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLAudioElement, nsIDOMHTMLMediaElement,
                                  nsIDOMHTMLAudioElement, nsIJSNativeInitializer)
-  NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLAudioElement,
+NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLAudioElement,
                                                nsHTMLMediaElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAudioElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLAudioElement)
 
 
-nsHTMLAudioElement::nsHTMLAudioElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
+nsHTMLAudioElement::nsHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                                       PRUint32 aFromParser)
   : nsHTMLMediaElement(aNodeInfo, aFromParser)
 {
 }

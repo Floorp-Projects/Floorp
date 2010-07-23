@@ -53,6 +53,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsLayoutStatics.h"
 #include "nsBindingManager.h"
+#include "nsHashKeys.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -72,8 +73,10 @@ nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
   const nsINodeInfo::nsNodeInfoInner *node =
     reinterpret_cast<const nsINodeInfo::nsNodeInfoInner *>(key);
 
-  // Is this an acceptable hash value?
-  return (PLHashNumber(NS_PTR_TO_INT32(node->mName)) & 0xffff) >> 8;
+  if (node->mName) {
+    return HashString(nsAtomString(node->mName));
+  }
+  return HashString(*(node->mNameString));
 }
 
 
@@ -87,9 +90,21 @@ nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
   const nsINodeInfo::nsNodeInfoInner *node2 =
     reinterpret_cast<const nsINodeInfo::nsNodeInfoInner *>(key2);
 
-  return (node1->mName == node2->mName &&
-          node1->mPrefix == node2->mPrefix &&
-          node1->mNamespaceID == node2->mNamespaceID);
+  if (node1->mPrefix != node2->mPrefix ||
+      node1->mNamespaceID != node2->mNamespaceID) {
+    return 0;
+  }
+
+  if (node1->mName) {
+    if (node2->mName) {
+      return (node1->mName == node2->mName);
+    }
+    return (node1->mName->Equals(*(node2->mNameString)));
+  }
+  if (node2->mName) {
+    return (node2->mName->Equals(*(node1->mNameString)));
+  }
+  return (node1->mNameString->Equals(*(node2->mNameString)));
 }
 
 
@@ -229,9 +244,35 @@ nsresult
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
 {
-  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
-  *aNodeInfo = nsNodeInfoManager::GetNodeInfo(name, aPrefix, aNamespaceID).get();
-  return *aNodeInfo ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  NS_ASSERTION(!aName.IsEmpty(),
+               "Don't pass an empty string to GetNodeInfo, fix caller.");
+
+  nsINodeInfo::nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID);
+
+  void *node = PL_HashTableLookup(mNodeInfoHash, &tmpKey);
+
+  if (node) {
+    nsINodeInfo* nodeInfo = static_cast<nsINodeInfo *>(node);
+
+    NS_ADDREF(*aNodeInfo = nodeInfo);
+
+    return NS_OK;
+  }
+
+  nsRefPtr<nsNodeInfo> newNodeInfo = nsNodeInfo::Create();
+  NS_ENSURE_TRUE(newNodeInfo, nsnull);
+  
+  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
+  nsresult rv = newNodeInfo->Init(nameAtom, aPrefix, aNamespaceID, this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PLHashEntry *he;
+  he = PL_HashTableAdd(mNodeInfoHash, &newNodeInfo->mInner, newNodeInfo);
+  NS_ENSURE_TRUE(he, NS_ERROR_FAILURE);
+
+  newNodeInfo.forget(aNodeInfo);
+
+  return NS_OK;
 }
 
 
