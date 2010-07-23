@@ -558,10 +558,12 @@ colorpicker > vbox {
 /* textbox ----------------------------------------------------------------- */
 .textbox-search-icon {
   list-style-image: url("chrome://browser/skin/images/search-glass-30.png");
+  -moz-image-region: auto;
 }
 
 .textbox-search-clear {
   list-style-image: url("chrome://browser/skin/images/search-clear-30.png");
+  -moz-image-region: auto;
 }
 
 /* menulist ---------------------------------------------------------------- */
