@@ -20,14 +20,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=519928
 
 var iframe = document.getElementById("load-frame");
 
-function enableJS() allowJS(true);
-function disableJS() allowJS(false);
-function allowJS(allow) {
+function enableJS() allowJS(true, iframe);
+function disableJS() allowJS(false, iframe);
+function allowJS(allow, frame) {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  iframe.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                      .getInterface(Components.interfaces.nsIWebNavigation)
-                      .QueryInterface(Components.interfaces.nsIDocShell)
-                      .allowJavascript = allow;
+  frame.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                     .getInterface(Components.interfaces.nsIWebNavigation)
+                     .QueryInterface(Components.interfaces.nsIDocShell)
+                     .allowJavascript = allow;
 }
 function expectJSAllowed(allowed, testCondition, callback) {
   window.ICanRunMyJS = false;
@@ -70,7 +70,7 @@ addLoadEvent(function() {
                             expectJSAllowed(true, enterDesignMode, function() {
                               expectJSAllowed(false, leaveDesignMode, function() {
                                 expectJSAllowed(true, enableJS, function() {
-                                  SimpleTest.finish();
+                                  testDocumentDisabledJS();
                                 });
                               });
                             });
@@ -88,6 +88,35 @@ addLoadEvent(function() {
     });
   });
 });
+
+function testDocumentDisabledJS() {
+  window.ICanRunMyJS = false;
+  var self_ = window;
+  // Ensure design modes are disabled
+  document.designMode = "off";
+  iframe.contentDocument.designMode = "off";
+
+  // Javascriont enabled on the main iframe
+  enableJS();
+
+  var doc = iframe.contentDocument;
+  doc.body.innerHTML = "<iframe></iframe>";
+  var innerFrame = doc.querySelector("iframe");
+
+  // Javascript disabled on the innerFrame.
+  allowJS(false, innerFrame);
+
+  innerFrame.addEventListener("load", function() {
+    innerFrame.removeEventListener("load", arguments.callee, false);
+
+    var msg = "The inner iframe should not be able to run Javascript";
+    is(self_.ICanRunMyJS, false, msg);
+    SimpleTest.finish();
+    endTest();
+  }, false);
+  var iframeSrc = "data:text/html,<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
+  innerFrame.src = iframeSrc;
+}
 
 </script>
 </pre>
