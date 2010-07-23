@@ -176,6 +176,12 @@ class Assembler : public BaseAssembler
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
     }
 
+    void loadFunctionPrivate(RegisterID base, RegisterID to) {
+        Address privSlot(base, offsetof(JSObject, fslots) +
+                               JSSLOT_PRIVATE * sizeof(Value));
+        loadPtr(privSlot, to);
+    }
+
     Jump testNull(Assembler::Condition cond, RegisterID reg) {
         return branch32(cond, reg, ImmTag(JSVAL_TAG_NULL));
     }
