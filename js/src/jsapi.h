@@ -1700,6 +1700,8 @@ struct JSExtendedClass {
 /* Indicates that JSClass.mark is a tracer with JSTraceOp type. */
 #define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
 
+#define JSCLASS_LAST_API_FLAG_SHIFT     (JSCLASS_HIGH_FLAGS_SHIFT+3)
+
 /*
  * ECMA-262 requires that most constructors used internally create objects
  * with "the original Foo.prototype value" as their [[Prototype]] (__proto__)

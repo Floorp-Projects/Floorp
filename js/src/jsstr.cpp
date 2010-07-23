@@ -1424,6 +1424,91 @@ StringMatch(const jschar *text, jsuint textlen,
                           UnrolledMatch<ManualCmp>(text, textlen, pat, patlen);
 }
 
+static const size_t sRopeMatchThresholdRatioLog2 = 5;
+
+static jsint
+RopeMatch(JSString *textstr, const jschar *pat, jsuint patlen)
+{
+    JS_ASSERT(textstr->isTopNode());
+
+    if (patlen == 0)
+        return 0;
+    if (textstr->length() < patlen)
+        return -1;
+
+    /*
+     * List of leaf nodes in the rope. If we run out of memory when trying to
+     * append to this list, we can still fall back to StringMatch, so use the
+     * system allocator so we don't report OOM in that case.
+     */
+    Vector<JSString *, 16, SystemAllocPolicy> strs;
+
+    /*
+     * We don't want to do rope matching if there is a poor node-to-char ratio,
+     * since this means spending a lot of time in the match loop below. We also
+     * need to build the list of leaf nodes. Do both here: iterate over the
+     * nodes so long as there are not too many.
+     */
+    size_t textstrlen = textstr->length();
+    size_t threshold = textstrlen >> sRopeMatchThresholdRatioLog2;
+    JSRopeLeafIterator iter(textstr);
+    for (JSString *str = iter.init(); str; str = iter.next()) {
+        if (threshold-- == 0 || !strs.append(str))
+            return StringMatch(textstr->chars(), textstrlen, pat, patlen);
+    }
+
+    /* Absolute offset from the beginning of the logical string textstr. */
+    jsint pos = 0;
+
+    // TODO: consider branching to a simple loop if patlen == 1
+
+    for (JSString **outerp = strs.begin(); outerp != strs.end(); ++outerp) {
+        /* First try to match without spanning two nodes. */
+        const jschar *chars;
+        size_t len;
+        (*outerp)->getCharsAndLength(chars, len);
+        jsint matchResult = StringMatch(chars, len, pat, patlen);
+        if (matchResult != -1)
+            return pos + matchResult;
+
+        /* Test the overlap. */
+        JSString **innerp = outerp;
+
+        /*
+         * Start searching at the first place where StringMatch wouldn't have
+         * found the match.
+         */
+        const jschar *const text = chars + (patlen > len ? 0 : len - patlen + 1);
+        const jschar *const textend = chars + len;
+        const jschar p0 = *pat;
+        const jschar *const p1 = pat + 1;
+        const jschar *const patend = pat + patlen;
+        for (const jschar *t = text; t != textend; ) {
+            if (*t++ != p0)
+                continue;
+            const jschar *ttend = textend;
+            for (const jschar *pp = p1, *tt = t; pp != patend; ++pp, ++tt) {
+                while (tt == ttend) {
+                    if (++innerp == strs.end())
+                        return -1;
+                    (*innerp)->getCharsAndEnd(tt, ttend);
+                }
+                if (*pp != *tt)
+                    goto break_continue;
+            }
+
+            /* Matched! */
+            return pos + (t - chars) - 1;  /* -1 because of *t++ above */
+
+          break_continue:;
+        }
+
+        pos += len;
+    }
+
+    return -1;
+}
+
 static JSBool
 str_indexOf(JSContext *cx, uintN argc, Value *vp)
 {
@@ -1674,8 +1759,18 @@ class RegExpGuard
              (patlen > sMaxFlatPatLen || js_ContainsRegExpMetaChars(pat, patlen)))) {
             return false;
         }
-        textstr->getCharsAndLength(text, textlen);
-        match = StringMatch(text, textlen, pat, patlen);
+        /*
+         * textstr could be a rope, so we want to avoid flattening it for as
+         * long as possible.
+         */
+        if (textstr->isTopNode()) {
+            match = RopeMatch(textstr, pat, patlen);
+        } else {
+            const jschar *text;
+            size_t textlen;
+            textstr->getCharsAndLength(text, textlen);
+            match = StringMatch(text, textlen, pat, patlen);
+        }
         return true;
     }
 
@@ -1683,8 +1778,6 @@ class RegExpGuard
     JSString *patstr;
     const jschar *pat;
     size_t patlen;
-    const jschar *text;
-    size_t textlen;
     jsint match;
 
     /* If the pattern is not already a regular expression, make it so. */
@@ -2140,22 +2233,71 @@ BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
         return true;
     }
 
-    const jschar *rep;
-    size_t replen;
-    repstr->getCharsAndLength(rep, replen);
+    JSRopeBuilder builder(cx);
+    size_t match = g.match; /* Avoid signed/unsigned warnings. */
+    size_t matchEnd = match + g.patlen;
 
-    JSCharBuffer cb(cx);
-    if (!cb.reserve(g.textlen - g.patlen + replen) ||
-        !cb.append(g.text, static_cast<size_t>(g.match)) ||
-        !cb.append(rep, replen) ||
-        !cb.append(g.text + g.match + g.patlen, g.text + g.textlen)) {
-        return false;
+    if (textstr->isTopNode()) {
+        /*
+         * If we are replacing over a rope, avoid flattening it by iterating
+         * through it, building a new rope.
+         */
+        JSRopeLeafIterator iter(textstr);
+        size_t pos = 0;
+        for (JSString *str = iter.init(); str; str = iter.next()) {
+            size_t len = str->length();
+            size_t strEnd = pos + len;
+            if (pos < matchEnd && strEnd > match) {
+                /*
+                 * We need to special-case any part of the rope that overlaps
+                 * with the replacement string.
+                 */
+                if (match >= pos) {
+                    /*
+                     * If this part of the rope overlaps with the left side of
+                     * the pattern, then it must be the only one to overlap with
+                     * the first character in the pattern, so we include the
+                     * replacement string here.
+                     */
+                    JSString *leftSide = js_NewDependentString(cx, str, 0, match - pos);
+                    if (!leftSide ||
+                        !builder.append(cx, leftSide) ||
+                        !builder.append(cx, repstr)) {
+                        return false;
+                    }
+                }
+
+                /*
+                 * If str runs off the end of the matched string, append the
+                 * last part of str.
+                 */
+                if (strEnd > matchEnd) {
+                    JSString *rightSide = js_NewDependentString(cx, str, matchEnd - pos,
+                                                                strEnd - matchEnd);
+                    if (!rightSide || !builder.append(cx, rightSide))
+                        return false;
+                }
+            } else {
+                if (!builder.append(cx, str))
+                    return false;
+            }
+            pos += str->length();
+        }
+    } else {
+        JSString *leftSide = js_NewDependentString(cx, textstr, 0, match);
+        if (!leftSide)
+            return false;
+        JSString *rightSide = js_NewDependentString(cx, textstr, match + g.patlen,
+                                                    textstr->length() - match - g.patlen);
+        if (!rightSide ||
+            !builder.append(cx, leftSide) ||
+            !builder.append(cx, repstr) ||
+            !builder.append(cx, rightSide)) {
+            return false;
+        }
     }
 
-    JSString *str = js_NewStringFromCharBuffer(cx, cb);
-    if (!str)
-        return false;
-    vp->setString(str);
+    vp->setString(builder.getStr());
     return true;
 }
 
