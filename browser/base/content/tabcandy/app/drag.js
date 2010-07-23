@@ -59,7 +59,8 @@ var drag = {
 //   item - The <Item> being dragged
 //   event - The DOM event that kicks off the drag
 //   isResizing - (boolean) is this a resizing instance? or (if false) dragging?
-var Drag = function(item, event, isResizing) {
+//   isFauxDrag - (boolean) true if a faux drag, which is used when simply snapping.
+var Drag = function(item, event, isResizing, isFauxDrag) {
   try {
     Utils.assert('must be an item, or at least a faux item',
                  item && (item.isAnItem || item.isAFauxItem));
@@ -82,15 +83,17 @@ var Drag = function(item, event, isResizing) {
 
     Trenches.activateOthersTrenches(this.el);
 
-    // When a tab drag starts, make it the focused tab.
-    if (this.item.isAGroup) {
-      var tab = Page.getActiveTab();
-      if (!tab || tab.parent != this.item) {
-        if (this.item._children.length)
-          Page.setActiveTab(this.item._children[0]);
+    if (!isFauxDrag) {
+      // When a tab drag starts, make it the focused tab.
+      if (this.item.isAGroup) {
+        var tab = Page.getActiveTab();
+        if (!tab || tab.parent != this.item) {
+          if (this.item._children.length)
+            Page.setActiveTab(this.item._children[0]);
+        }
+      } else if (this.item.isATabItem) {
+        Page.setActiveTab(this.item);
       }
-    } else if (this.item.isATabItem) {
-      Page.setActiveTab(this.item);
     }
   } catch(e) {
     Utils.log(e);
@@ -109,7 +112,8 @@ Drag.prototype = {
   //   assumeConstantSize - (boolean) whether the bounds' dimensions are sacred or not.
   //   keepProportional   - (boolean) if assumeConstantSize is false, whether we should resize
   //                        proportionally or not
-  snapBounds: function Drag_snapBounds(bounds, stationaryCorner, assumeConstantSize, keepProportional) {
+  //   checkItemStatus    - (boolean) make sure this is a 
+  snapBounds: function Drag_snapBounds(bounds, stationaryCorner, assumeConstantSize, keepProportional, checkItemStatus) {
     var stationaryCorner = stationaryCorner || 'topleft';
     var update = false; // need to update
     var updateX = false;
@@ -120,8 +124,11 @@ Drag.prototype = {
     // OH SNAP!
     if ( // if we aren't holding down the meta key...
          !Keys.meta
-         // and we aren't a tab on top of something else...
-         && !(this.item.isATabItem && this.item.overlapsWithOtherItems()) ) {
+         && ( !checkItemStatus // don't check the item status...
+              // OR we aren't a tab on top of something else, and there's no drop site...
+              || ( !( this.item.isATabItem && this.item.overlapsWithOtherItems() )
+                 && !iQ(".acceptsDrop").length ) )
+        ) {
       newRect = Trenches.snap(bounds,stationaryCorner,assumeConstantSize,keepProportional);
       if (newRect) { // might be false if no changes were made
         update = true;
@@ -166,7 +173,7 @@ Drag.prototype = {
   //                        proportionally or not
   snap: function Drag_snap(stationaryCorner, assumeConstantSize, keepProportional) {
     var bounds = this.item.getBounds();
-    bounds = this.snapBounds(bounds, stationaryCorner, assumeConstantSize, keepProportional);
+    bounds = this.snapBounds(bounds, stationaryCorner, assumeConstantSize, keepProportional, true);
     if (bounds) {
       this.item.setBounds(bounds,true);
       return true;
