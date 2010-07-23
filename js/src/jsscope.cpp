@@ -1214,7 +1214,7 @@ JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop)
         const Value &prev = object->lockedGetSlot(sprop->slot);
         JS_ASSERT(&sprop->methodObject() == &prev.toObject());
         JS_ASSERT(hasMethodBarrier());
-        JS_ASSERT(object->canHaveMethodBarrier());
+        JS_ASSERT(object->getClass() == &js_ObjectClass);
         JS_ASSERT(!sprop->rawSetter || sprop->rawSetter == js_watch_set);
 #endif
 

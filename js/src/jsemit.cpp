@@ -6634,7 +6634,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 bool lambda = PN_OP(init) == JSOP_LAMBDA;
                 if (lambda)
                     ++methodInits;
-                if (op == JSOP_INITPROP && lambda && init->pn_funbox->joinable()) {
+                if (op == JSOP_INITPROP && lambda && init->pn_funbox->joinable())
+                {
                     op = JSOP_INITMETHOD;
                     pn2->pn_op = uint8(op);
                 } else {
