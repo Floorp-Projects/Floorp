@@ -222,7 +222,7 @@ nsFrameMessageManager::SendSyncMessage()
       JSAutoRequest ar(ctx);
 
       PRUint32 len = retval.Length();
-      JSObject* dataArray = js_NewArrayObject(ctx, len, NULL);
+      JSObject* dataArray = JS_NewArrayObject(ctx, len, NULL);
       NS_ENSURE_TRUE(dataArray, NS_ERROR_OUT_OF_MEMORY);
 
       for (PRUint32 i = 0; i < len; ++i) {
@@ -346,7 +346,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         if (!aObjectsArray) {
           // Because we want JS messages to have always the same properties,
           // create array even if len == 0.
-          aObjectsArray = js_NewArrayObject(ctx, 0, NULL);
+          aObjectsArray = JS_NewArrayObject(ctx, 0, NULL);
           if (!aObjectsArray) {
             return false;
           }
