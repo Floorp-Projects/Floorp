@@ -42,7 +42,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsICapturePicker.h"
 #include "nsCOMPtr.h"
 
 #include "nsTextControlFrame.h"
@@ -138,28 +137,14 @@ protected:
     // and textfield.
     NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent) { return NS_OK; }
     NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-    NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) = 0;
+    NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
     NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
     NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
     NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
     NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
-  protected:
+  private:
     nsFileControlFrame* mFrame;
-  };
-  
-  class CaptureMouseListener: public MouseListener {
-  public:
-    CaptureMouseListener(nsFileControlFrame* aFrame) : MouseListener(aFrame),
-                                                       mMode(0) {};
-    NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
-    PRUint32 mMode;
-  };
-  
-  class BrowseMouseListener: public MouseListener {
-  public:
-    BrowseMouseListener(nsFileControlFrame* aFrame) : MouseListener(aFrame) {};
-     NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
   };
   
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
@@ -187,16 +172,9 @@ protected:
   nsCOMPtr<nsIContent> mBrowse;
 
   /**
-   * The capture button input.
-   * @see nsFileControlFrame::CreateAnonymousContent
-   */
-  nsCOMPtr<nsIContent> mCapture;
-
-  /**
    * Our mouse listener.  This makes sure we don't get used after destruction.
    */
-  nsRefPtr<BrowseMouseListener> mMouseListener;
-  nsRefPtr<CaptureMouseListener> mCaptureMouseListener;
+  nsRefPtr<MouseListener> mMouseListener;
 
 private:
   /**
