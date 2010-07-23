@@ -130,6 +130,7 @@ public:
    * |ValueAppended| should be called.
    */
   void ExpandTo(nsCSSExpandedDataBlock *aExpandedData) {
+    AssertMutable();
     aExpandedData->AssertInitialState();
 
     NS_ASSERTION(mData, "oops");
@@ -147,6 +148,7 @@ public:
    * EnsureMutable first.
    */
   void* SlotForValue(nsCSSProperty aProperty, PRBool aIsImportant) {
+    AssertMutable();
     NS_ABORT_IF_FALSE(mData, "called while expanded");
 
     if (nsCSSProps::IsShorthand(aProperty)) {
@@ -175,17 +177,23 @@ public:
   }
 
   /**
-   * Ensures that IsMutable on both data blocks will return true by
-   * cloning data blocks if needed.  Returns false on out-of-memory
-   * (which means IsMutable won't return true).
+   * Copy |this|, if necessary to ensure that it can be modified.
    */
-  PRBool EnsureMutable();
+  Declaration* EnsureMutable();
+
+  /**
+   * Crash if |this| is not mutable.
+   */
+  void AssertMutable() const {
+    NS_ABORT_IF_FALSE(IsMutable(), "someone forgot to call EnsureMutable");
+  }
 
   /**
    * Clear the data, in preparation for its replacement with entirely
    * new data by a call to |CompressFrom|.
    */
   void ClearData() {
+    AssertMutable();
     mData = nsnull;
     mImportantData = nsnull;
     mOrder.Clear();
@@ -250,6 +258,11 @@ private:
   }
 
 private:
+    bool IsMutable() const {
+      return ((!mData || mData->IsMutable()) &&
+              (!mImportantData || mImportantData->IsMutable()));
+    }
+
     nsAutoTArray<PRUint8, 8> mOrder;
     nsAutoRefCnt mRefCnt;
 

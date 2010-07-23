@@ -90,6 +90,8 @@ Declaration::~Declaration()
 void
 Declaration::ValueAppended(nsCSSProperty aProperty)
 {
+  NS_ABORT_IF_FALSE(!mData && !mImportantData,
+                    "should only be called while expanded");
   NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
                     "shorthands forbidden");
   // order IS important for CSS, so remove and add to the end
@@ -899,24 +901,15 @@ Declaration::InitializeEmpty()
   mData = nsCSSCompressedDataBlock::CreateEmptyBlock();
 }
 
-PRBool
+Declaration*
 Declaration::EnsureMutable()
 {
-  if (!mData->IsMutable()) {
-    nsRefPtr<nsCSSCompressedDataBlock> newBlock = mData->Clone();
-    if (!newBlock) {
-      return PR_FALSE;
-    }
-    newBlock.swap(mData);
+  NS_ASSERTION(mData, "should only be called when not expanded");
+  if (!IsMutable()) {
+    return Clone();
+  } else {
+    return this;
   }
-  if (mImportantData && !mImportantData->IsMutable()) {
-    nsRefPtr<nsCSSCompressedDataBlock> newBlock = mImportantData->Clone();
-    if (!newBlock) {
-      return PR_FALSE;
-    }
-    newBlock.swap(mImportantData);
-  }
-  return PR_TRUE;
 }
 
 } // namespace mozilla::css
