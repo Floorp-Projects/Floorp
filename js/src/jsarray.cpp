@@ -1077,7 +1077,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     if (!scope)
         return JS_FALSE;
 
-    /* For a brief moment the class object has NULL dslots until we slowify it during construction. */
+    /* For a brief moment the object has NULL dslots until we slowify it during construction. */
     uint32 capacity = dslots ? obj->getDenseArrayCapacity() : 0;
     if (capacity) {
         scope->freeslot = obj->numSlots() + JS_INITIAL_NSLOTS;
@@ -1771,8 +1771,8 @@ sort_compare_strings(void *arg, const void *a, const void *b, int *result)
     return JS_TRUE;
 }
 
-static JSBool
-array_sort(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::array_sort(JSContext *cx, uintN argc, Value *vp)
 {
     jsuint len, newlen, i, undefs;
     size_t elemsize;
