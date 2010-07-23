@@ -1072,109 +1072,67 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
         return JS_TRUE;
     }
 
-    /* Accept an optional trailing argument that overrides the scope object. */
-    JSObject *scopeobj = NULL;
-    if (argc >= 2) {
-        if (!js_ValueToObjectOrNull(cx, argv[1], &scopeobj))
+    /*
+     * We once supported a second argument to eval to use as the scope chain
+     * when evaluating the code string.  Warn when such uses are seen so that
+     * authors will know that support for eval(s, o) has been removed.
+     */
+    if (argc > 1 && !caller->script->warnedAboutTwoArgumentEval) {
+        static const char TWO_ARGUMENT_WARNING[] =
+            "Support for eval(code, scopeObject) has been removed. "
+            "Use |with (scopeObject) eval(code);| instead.";
+        if (!JS_ReportWarning(cx, TWO_ARGUMENT_WARNING))
             return JS_FALSE;
-        argv[1].setObjectOrNull(scopeobj);
-        JSObject *obj = scopeobj;
-        while (obj) {
-            if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
-                return false;
-            JSObject *parent = obj->getParent();
-            if (!obj->isNative() ||
-                (!parent && !(obj->getClass()->flags & JSCLASS_IS_GLOBAL))) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_INVALID_EVAL_SCOPE_ARG);
-                return false;
-            }
-            obj = parent;
-        }
+        caller->script->warnedAboutTwoArgumentEval = true;
     }
-
-    /* Guard for conditionally-created with object below. */
-    struct WithGuard {
-        JSObject *obj;
-        WithGuard() : obj(NULL) {}
-        ~WithGuard() { if (obj) obj->setPrivate(NULL); }
-    } withGuard;
 
     /* From here on, control must exit through label out with ok set. */
     MUST_FLOW_THROUGH("out");
     uintN staticLevel = caller->script->staticLevel + 1;
-    if (!scopeobj) {
-        /*
-         * Bring fp->scopeChain up to date. We're either going to use
-         * it (direct call) or save it and restore it (indirect call).
-         */
-        JSObject *callerScopeChain = js_GetScopeChain(cx, caller);
-        if (!callerScopeChain)
-            return JS_FALSE;
+
+    /*
+     * Bring fp->scopeChain up to date. We're either going to use
+     * it (direct call) or save it and restore it (indirect call).
+     */
+    JSObject *callerScopeChain = js_GetScopeChain(cx, caller);
+    if (!callerScopeChain)
+        return JS_FALSE;
+
+    JSObject *scopeobj = NULL;
 
 #if JS_HAS_EVAL_THIS_SCOPE
-        /*
-         * If we see an indirect call, then run eval in the global scope. We do
-         * this so the compiler can make assumptions about what bindings may or
-         * may not exist in the current frame if it doesn't see 'eval'.
-         */
-        if (indirectCall) {
-            /* Pretend that we're top level. */
-            staticLevel = 0;
-
-            OBJ_TO_INNER_OBJECT(cx, obj);
-            if (!obj)
-                return JS_FALSE;
-
-            if (!js_CheckPrincipalsAccess(cx, obj,
-                                          JS_StackFramePrincipals(cx, caller),
-                                          cx->runtime->atomState.evalAtom)) {
-                return JS_FALSE;
-            }
-
-            /* NB: We know inner is a global object here. */
-            JS_ASSERT(!obj->getParent());
-            scopeobj = obj;
-        } else {
-            /*
-             * Compile using the caller's current scope object.
-             *
-             * NB: This means that native callers (who reach this point through
-             * the C API) must use the two parameter form.
-             */
-            JS_ASSERT_IF(caller->argv, caller->callobj);
-            scopeobj = callerScopeChain;
-        }
-#endif
-    } else {
-        scopeobj = scopeobj->wrappedObject(cx);
-        OBJ_TO_INNER_OBJECT(cx, scopeobj);
-        if (!scopeobj)
-            return JS_FALSE;
-
-        if (!js_CheckPrincipalsAccess(cx, scopeobj,
-                                      JS_StackFramePrincipals(cx, caller),
-                                      cx->runtime->atomState.evalAtom))
-            return JS_FALSE;
-
-        /*
-         * If scopeobj is not a global object, then we need to wrap it in a
-         * with object to maintain invariants in the engine (see bug 520164).
-         */
-        if (scopeobj->getParent()) {
-            JSObject *global = scopeobj->getGlobal();
-            withGuard.obj = js_NewWithObject(cx, scopeobj, global, 0);
-            if (!withGuard.obj)
-                return JS_FALSE;
-
-            scopeobj = withGuard.obj;
-            JS_ASSERT(argc >= 2);
-            argv[1].setObject(*withGuard.obj);
-        }
-
-        /* We're pretending that we're in global code. */
+    /*
+     * If we see an indirect call, then run eval in the global scope. We do
+     * this so the compiler can make assumptions about what bindings may or
+     * may not exist in the current frame if it doesn't see 'eval'.
+     */
+    if (indirectCall) {
+        /* Pretend that we're top level. */
         staticLevel = 0;
+
+        OBJ_TO_INNER_OBJECT(cx, obj);
+        if (!obj)
+            return JS_FALSE;
+
+        if (!js_CheckPrincipalsAccess(cx, obj,
+                                      JS_StackFramePrincipals(cx, caller),
+                                      cx->runtime->atomState.evalAtom)) {
+            return JS_FALSE;
+        }
+
+        /* NB: We know inner is a global object here. */
+        JS_ASSERT(!obj->getParent());
+        scopeobj = obj;
+    } else {
+        /*
+         * Compile using the caller's current scope object.
+         *
+         * NB: This means that the C API must not be used to call eval.
+         */
+        JS_ASSERT_IF(caller->argv, caller->callobj);
+        scopeobj = callerScopeChain;
     }
+#endif
 
     /* Ensure we compile this eval with the right object in the scope chain. */
     JSObject *result = js_CheckScopeChainValidity(cx, scopeobj, js_eval_str);
