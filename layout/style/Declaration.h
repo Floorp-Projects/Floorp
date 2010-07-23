@@ -139,24 +139,33 @@ public:
   }
 
   /**
-   * Return a pointer to our current value for this property.  This only
-   * returns non-null if the property is set and it not !important.  This
-   * should only be called when not expanded.  Always returns null for
-   * shorthand properties.
+   * Return a pointer to our current value for this property.
+   * Only returns non-null if the property is longhand, set, and
+   * has the indicated importance level.
    *
-   * The caller must call EnsureMutable first.
+   * May only be called when not expanded, and the caller must call
+   * EnsureMutable first.
    */
-  void* SlotForValue(nsCSSProperty aProperty) {
-    NS_PRECONDITION(mData, "How did that happen?");
+  void* SlotForValue(nsCSSProperty aProperty, PRBool aIsImportant) {
+    NS_ABORT_IF_FALSE(mData, "called while expanded");
+
     if (nsCSSProps::IsShorthand(aProperty)) {
       return nsnull;
     }
+    nsCSSCompressedDataBlock *block = aIsImportant ? mImportantData : mData;
+    // mImportantData might be null
+    if (!block) {
+      return nsnull;
+    }
 
-    void* slot = mData->SlotForValue(aProperty);
-
-    NS_ASSERTION(!slot || !mImportantData ||
-                 !mImportantData->StorageFor(aProperty),
-                 "Property both important and not?");
+    void *slot = block->SlotForValue(aProperty);
+#ifdef DEBUG
+    {
+      nsCSSCompressedDataBlock *other = aIsImportant ? mData : mImportantData;
+      NS_ABORT_IF_FALSE(!slot || !other || !other->StorageFor(aProperty),
+                        "Property both important and not?");
+    }
+#endif
     return slot;
   }
 

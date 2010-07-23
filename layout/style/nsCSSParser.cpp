@@ -1112,15 +1112,16 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              PRBool aIsImportant)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  NS_PRECONDITION(aBaseURI, "need base URI");
+  NS_PRECONDITION(aDeclaration, "Need declaration to parse into!");
   AssertInitialState();
-
-  NS_ASSERTION(nsnull != aBaseURI, "need base URI");
-  NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
-  *aChanged = PR_FALSE;
+  mData.AssertInitialState();
+  mTempData.AssertInitialState();
 
   InitScanner(aPropValue, aSheetURI, 0, aBaseURI, aSheetPrincipal);
-
   mSection = eCSSSection_General;
+
+  *aChanged = PR_FALSE;
 
   if (eCSSProperty_UNKNOWN == aPropID) { // unknown property
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
@@ -1134,42 +1135,14 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     return NS_OK;
   }
 
-  mData.AssertInitialState();
-  mTempData.AssertInitialState();
-
-  // We know we don't need to force a ValueAppended call for the new
-  // value.  So if we are not processing an !important decl or a
-  // shorthand, there's already a value for this property in the
-  // declaration, it's not !important, and we parse successfully, then
-  // we can just directly copy our parsed value into the declaration
-  // without going through the whole expand/compress thing.
-  if (!aDeclaration->EnsureMutable()) {
-    NS_WARNING("out of memory");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  void* valueSlot = nsnull;
-  if (!aIsImportant) {
-    valueSlot = aDeclaration->SlotForValue(aPropID);
-  }
-  if (!valueSlot) {
-    // Do it the slow way
-    aDeclaration->ExpandTo(&mData);
-  }
-  nsresult result = NS_OK;
   PRBool parsedOK = ParseProperty(aPropID);
-  if (parsedOK && !GetToken(PR_TRUE)) {
-    if (valueSlot) {
-      CopyValue(mTempData.PropertyAt(aPropID), valueSlot, aPropID, aChanged);
-      mTempData.ClearPropertyBit(aPropID);
-    } else {
-      TransferTempData(aDeclaration, aPropID, aIsImportant,
-                       PR_TRUE, PR_FALSE, aChanged);
-    }
-  } else {
-    if (parsedOK) {
-      // Junk at end of property value.
-      REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
-    }
+  // We should now be at EOF
+  if (parsedOK && GetToken(PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
+    parsedOK = PR_FALSE;
+  }
+
+  if (!parsedOK) {
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
     const PRUnichar *params[] = {
       propName.get()
@@ -1178,14 +1151,32 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
     ClearTempData(aPropID);
-    result = mScanner.GetLowLevelError();
-  }
-  CLEAR_ERROR();
+  } else {
 
-  if (!valueSlot) {
-    aDeclaration->CompressFrom(&mData);
+    // We know we don't need to force a ValueAppended call for the new
+    // value.  So if we are not processing a shorthand, and there's
+    // already a value for this property in the declaration at the
+    // same importance level, then we can just copy our parsed value
+    // directly into the declaration without going through the whole
+    // expand/compress thing.
+    if (!aDeclaration->EnsureMutable()) {
+      NS_WARNING("out of memory");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    void* valueSlot = aDeclaration->SlotForValue(aPropID, aIsImportant);
+    if (valueSlot) {
+      CopyValue(mTempData.PropertyAt(aPropID), valueSlot, aPropID, aChanged);
+      mTempData.ClearPropertyBit(aPropID);
+    } else {
+      aDeclaration->ExpandTo(&mData);
+      TransferTempData(aDeclaration, aPropID, aIsImportant, PR_TRUE, PR_FALSE,
+                       aChanged);
+      aDeclaration->CompressFrom(&mData);
+    }
+    CLEAR_ERROR();
   }
 
+  nsresult result = mScanner.GetLowLevelError();
   ReleaseScanner();
   return result;
 }
