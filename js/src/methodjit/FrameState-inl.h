@@ -297,6 +297,28 @@ FrameState::pushTypedPayload(JSValueType type, RegisterID payload)
 }
 
 inline void
+FrameState::pushNumber(MaybeRegisterID payload)
+{
+    JS_ASSERT_IF(payload.isSet(), !freeRegs.hasReg(payload.reg()));
+
+    FrameEntry *fe = rawPush();
+    fe->clear();
+
+    JS_ASSERT(!fe->isNumber);
+
+    fe->type.setMemory();
+    fe->isNumber = true;
+
+    if (payload.isSet()) {
+        fe->data.unsync();
+        fe->data.setRegister(payload.reg());
+        regstate[payload.reg()] = RegisterState(fe, RematInfo::DATA);
+    } else {
+        fe->data.setMemory();
+    }
+}
+
+inline void
 FrameState::pushUntypedPayload(JSValueType type, RegisterID payload,
                                bool popGuaranteed, bool fastType)
 {
@@ -478,6 +500,9 @@ FrameState::learnType(FrameEntry *fe, JSValueType type)
 {
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());
+#ifdef DEBUG
+    fe->isNumber = false;
+#endif
     fe->setType(type);
 }
 
@@ -727,18 +752,18 @@ FrameState::giveOwnRegs(FrameEntry *fe)
 inline void
 FrameState::loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const
 {
-    if (fe->type.synced() && fe->data.synced()) {
-        masm.loadDouble(addressOf(fe), fpReg);
-        return;
-    }
-
     if (fe->isCopy()) {
         FrameEntry *backing = fe->copyOf();
-        if (backing->type.synced() && backing->data.synced()) {
+        if (backing->isCachedNumber() || (backing->type.synced() && backing->data.synced())) {
             masm.loadDouble(addressOf(backing), fpReg);
             return;
         }
         fe = backing;
+    }
+
+    if ((fe->type.synced() && fe->data.synced()) || fe->isCachedNumber()) {
+        masm.loadDouble(addressOf(fe), fpReg);
+        return;
     }
 
     Address address = addressOf(fe);

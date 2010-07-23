@@ -247,6 +247,11 @@ class FrameState
                                    bool fastTyped = false);
 
     /*
+     * Pushes a number onto the operation stack.
+     */
+    inline void pushNumber(MaybeRegisterID payload);
+
+    /*
      * Pops a value off the operation stack, freeing any of its resources.
      */
     inline void pop();
