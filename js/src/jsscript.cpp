@@ -74,7 +74,7 @@ static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
 
 /* static */ const JSScript JSScript::emptyScriptConst = {
     const_cast<jsbytecode*>(emptyScriptCode),
-    1, JSVERSION_DEFAULT, 0, 0, 0, 0, 0, 0, true, false, false, false,
+    1, JSVERSION_DEFAULT, 0, 0, 0, 0, 0, 0, true, false, false, false, true,
     const_cast<jsbytecode*>(emptyScriptCode),
     {0, NULL}, NULL, 0, 0, 0, NULL
 };
