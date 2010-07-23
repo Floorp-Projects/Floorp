@@ -1271,12 +1271,12 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
     // Because opening a new tab happens in a different thread(?)
-    // calling Page.hideChrome() inline won't do anything. Instead
+    // calling UI.showTabCandy() inline won't do anything. Instead
     // we have to marshal it. A value of 0 wait time doesn't seem
     // to work. Instead, we use a value of 1 which seems to be the
     // minimum amount of time required.
     iQ.timeout(function(){
-      Page.hideChrome()
+      UI.showTabCandy()
     }, 1);
 
     var self = this;
@@ -1310,7 +1310,7 @@ window.Group.prototype = iQ.extend(new Item(), new Subscribable(), {
               complete: function(){
                 iQ(tab.container).css({opacity: 1});
                 gBrowser.selectedTab = newTab;
-                Page.showChrome()
+                UI.hideTabCandy()
                 gWindow.gURLBar.focus();
                 $anim.remove();
                 // We need a timeout here so that there is a chance for the
