@@ -495,11 +495,12 @@ var BrowserUI = {
     let useLocal = Util.isLocalScheme(aURI);
     let hasLocal = Util.isLocalScheme(currentURI.spec);
     if (hasLocal != useLocal) {
-      Browser.addTab(aURI, true);
-    } else {
-      let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-      getBrowser().loadURIWithFlags(aURI, loadFlags, null, null);
+      let tab = Browser.addTab("about:blank", true);
+      tab.browser.stop();
     }
+
+    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    getBrowser().loadURIWithFlags(aURI, loadFlags, null, null);
 
     // Delay doing the fixup so the raw URI is passed to loadURIWithFlags
     // and the proper third-party fixup can be done
