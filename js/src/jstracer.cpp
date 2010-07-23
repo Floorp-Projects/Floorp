@@ -9908,10 +9908,7 @@ TraceRecorder::box_value_for_native_call(const Value &v, LIns *v_ins)
                              lir->ins1(LIR_ui2uq, demote(lir, v_ins)),
                              INS_CONSTQWORD(JSVAL_SHIFTED_TAG_INT32));
         }
-        // TODO: this is very sad; remove when there is a LIR_d2q
-        LIns *tmp = lir->insAlloc(sizeof(Value));
-        lir->insStore(v_ins, tmp, 0, ACC_OTHER);
-        return lir->insLoad(LIR_ldq, tmp, 0, ACC_OTHER);
+        return lir->ins1(LIR_dasq, v_ins);
     }
 
     if (v.isNull())
