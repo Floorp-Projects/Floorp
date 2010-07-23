@@ -202,6 +202,28 @@ js_NumberValueToCharBuffer(JSContext *cx, const js::Value &v, JSCharBuffer &cb);
 namespace js {
 
 /*
+ * The largest positive integer such that all positive integers less than it
+ * may be precisely represented using the IEEE-754 double-precision format.
+ */
+const double DOUBLE_INTEGRAL_PRECISION_LIMIT = uint64(1) << 53;
+
+/*
+ * Compute the positive integer of the given base described immediately at the
+ * start of the range [start, end) -- no whitespace-skipping, no magical
+ * leading-"0" octal or leading-"0x" hex behavior, no "+"/"-" parsing, just
+ * reading the digits of the integer.  Return the index one past the end of the
+ * digits of the integer in *endp, and return the integer itself in *dp.  If
+ * base is 10 or a power of two the returned integer is the closest possible
+ * double; otherwise extremely large integers may be slightly inaccurate.
+ *
+ * If [start, end) does not begin with a number with the specified base,
+ * *dp == 0 and *endp == start upon return.
+ */
+extern bool
+GetPrefixInteger(JSContext *cx, const jschar *start, const jschar *end, int base,
+                 const jschar **endp, jsdouble *dp);
+
+/*
  * Convert a value to a number, returning the converted value in 'out' if the
  * conversion succeeds.
  */
@@ -558,19 +580,6 @@ extern JSBool
 js_strtod(JSContext *cx, const jschar *s, const jschar *send,
           const jschar **ep, jsdouble *dp);
 
-/*
- * Similar to strtol except that it handles integers of arbitrary size.
- * Guaranteed to return the closest double number to the given input when radix
- * is 10 or a power of 2.  Callers may see round-off errors for very large
- * numbers of a different radix than 10 or a power of 2.
- *
- * If the string does not contain a number, set *ep to s and return 0.0 in dp.
- * Return false if out of memory.
- */
-extern JSBool
-js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
-                const jschar **ep, jsint radix, jsdouble *dp);
-
 namespace js {
 
 static JS_ALWAYS_INLINE bool
@@ -619,8 +628,9 @@ StringToNumberType(JSContext *cx, JSString *str)
     /* ECMA doesn't allow signed hex numbers (bug 273467). */
     if (end - bp >= 2 && bp[0] == '0' && (bp[1] == 'x' || bp[1] == 'X')) {
         /* Looks like a hex number. */
-        if (!js_strtointeger(cx, bp, end, &ep, 16, &d) ||
-            js_SkipWhiteSpace(ep, end) != end) {
+        const jschar *endptr;
+        if (!GetPrefixInteger(cx, bp + 2, end, 16, &endptr, &d) ||
+            js_SkipWhiteSpace(endptr, end) != end) {
             return NumberTraits<T>::NaN();
         }
         return NumberTraits<T>::toSelfType(d);

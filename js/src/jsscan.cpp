@@ -1080,20 +1080,12 @@ TokenStream::getTokenInternal()
     }
 
     if (JS7_ISDEC(c) || (c == '.' && JS7_ISDEC(peekChar()))) {
-        jsint radix;
-        const jschar *endptr;
-        jsdouble dval;
-
-        radix = 10;
+        int radix = 10;
         tokenbuf.clear();
 
         if (c == '0') {
-            if (!tokenbuf.append(c))
-                goto error;
             c = getChar();
             if (JS_TOLOWER(c) == 'x') {
-                if (!tokenbuf.append(c))
-                    goto error;
                 c = getChar();
                 radix = 16;
             } else if (JS7_ISDEC(c)) {
@@ -1170,17 +1162,14 @@ TokenStream::getTokenInternal()
         if (!tokenbuf.append(0))
             goto error;
 
+        jsdouble dval;
+        const jschar *dummy;
         if (radix == 10) {
-            if (!js_strtod(cx, tokenbuf.begin(), tokenbuf.end(), &endptr, &dval)) {
-                ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, JSMSG_OUT_OF_MEMORY);
+            if (!js_strtod(cx, tokenbuf.begin(), tokenbuf.end(), &dummy, &dval))
                 goto error;
-            }
         } else {
-            if (!js_strtointeger(cx, tokenbuf.begin(), tokenbuf.end(),
-                                 &endptr, radix, &dval)) {
-                ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR, JSMSG_OUT_OF_MEMORY);
+            if (!GetPrefixInteger(cx, tokenbuf.begin(), tokenbuf.end(), radix, &dummy, &dval))
                 goto error;
-            }
         }
         tp->t_dval = dval;
         tt = TOK_NUMBER;
