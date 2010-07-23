@@ -1,9 +1,0 @@
-var x = "notset";
-function main() { x = "failure"; }
-function success() { x = "success"; }
-
-/* The JSOP_STOP in a. */
-trap(main, 8, "success()");
-main();
-
-assertEq(x, "success");

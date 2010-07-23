@@ -69,11 +69,6 @@
 
 #include "jsautooplen.h"
 
-#ifdef JS_METHODJIT
-# include "methodjit/MethodJIT.h"
-# include "methodjit/Retcon.h"
-#endif
-
 using namespace js;
 
 typedef struct JSTrap {
@@ -195,15 +190,6 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     DBG_UNLOCK(rt);
     if (junk)
         cx->free(junk);
-
-#ifdef JS_METHODJIT
-    if (script->ncode != NULL && script->ncode != JS_UNJITTABLE_METHOD) {
-        mjit::Recompiler recompiler(cx, script);
-        if (!recompiler.recompile())
-            return JS_FALSE;
-    }
-#endif
-
     return JS_TRUE;
 }
 
@@ -248,13 +234,6 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
         DestroyTrapAndUnlock(cx, trap);
     else
         DBG_UNLOCK(cx->runtime);
-
-#ifdef JS_METHODJIT
-    if (script->ncode != NULL && script->ncode != JS_UNJITTABLE_METHOD) {
-        mjit::Recompiler recompiler(cx, script);
-        recompiler.recompile();
-    }
-#endif
 }
 
 JS_PUBLIC_API(void)
