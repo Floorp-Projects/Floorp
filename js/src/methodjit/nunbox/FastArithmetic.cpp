@@ -48,6 +48,7 @@
 
 using namespace js;
 using namespace js::mjit;
+using namespace JSC;
 
 typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
 
@@ -762,5 +763,110 @@ mjit::Compiler::jsop_neg()
         stubcc.crossJump(jmpIntRejoin.getJump(), masm.label());
 
     stubcc.rejoin(Changes(1));
+}
+
+void
+mjit::Compiler::jsop_mod()
+{
+#if defined(JS_CPU_X86)
+    FrameEntry *lhs = frame.peek(-2);
+    FrameEntry *rhs = frame.peek(-1);
+    if ((lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_INT32) ||
+        (rhs->isTypeKnown() && rhs->getKnownType() != JSVAL_TYPE_INT32))
+#endif
+    {
+        prepareStubCall(Uses(2));
+        stubCall(stubs::Mod);
+        frame.popn(2);
+        return;
+    }
+
+#if defined(JS_CPU_X86)
+    if (!lhs->isTypeKnown()) {
+        Jump j = frame.testInt32(Assembler::NotEqual, lhs);
+        stubcc.linkExit(j, Uses(2));
+    }
+    if (!rhs->isTypeKnown()) {
+        Jump j = frame.testInt32(Assembler::NotEqual, rhs);
+        stubcc.linkExit(j, Uses(2));
+    }
+
+    /* LHS must be in EAX:EDX */
+    if (!lhs->isConstant()) {
+        frame.copyDataIntoReg(lhs, X86Registers::eax);
+    } else {
+        frame.takeReg(X86Registers::eax);
+        masm.move(Imm32(lhs->getValue().toInt32()), X86Registers::eax);
+    }
+
+    /* Get RHS into anything but EDX - could avoid more spilling? */
+    MaybeRegisterID temp;
+    RegisterID rhsReg;
+    if (!rhs->isConstant()) {
+        uint32 mask = Registers::AvailRegs & ~Registers::maskReg(X86Registers::edx);
+        rhsReg = frame.tempRegInMaskForData(rhs, mask);
+        JS_ASSERT(rhsReg != X86Registers::edx);
+    } else {
+        rhsReg = frame.allocReg(Registers::AvailRegs & ~Registers::maskReg(X86Registers::edx));
+        JS_ASSERT(rhsReg != X86Registers::edx);
+        masm.move(Imm32(rhs->getValue().toInt32()), rhsReg);
+        temp = rhsReg;
+    }
+    frame.takeReg(X86Registers::edx);
+    frame.freeReg(X86Registers::eax);
+
+    if (temp.isSet())
+        frame.freeReg(temp.reg());
+
+    bool slowPath = !(lhs->isTypeKnown() && rhs->isTypeKnown());
+    if (rhs->isConstant() && rhs->getValue().toInt32() != 0) {
+        if (rhs->getValue().toInt32() == -1) {
+            /* Guard against -1 / INT_MIN which throws a hardware exception. */
+            Jump checkDivExc = masm.branch32(Assembler::Equal, X86Registers::eax,
+                                             Imm32(0x80000000));
+            stubcc.linkExit(checkDivExc, Uses(2));
+            slowPath = true;
+        }
+    } else {
+        Jump checkDivExc = masm.branch32(Assembler::Equal, X86Registers::eax, Imm32(0x80000000));
+        stubcc.linkExit(checkDivExc, Uses(2));
+        Jump checkZero = masm.branchTest32(Assembler::Zero, rhsReg, rhsReg);
+        stubcc.linkExit(checkZero, Uses(2));
+        slowPath = true;
+    }
+
+    /* Perform division. */
+    masm.idiv(rhsReg);
+
+    /* Test for negative 0. */
+    RegisterID lhsData = frame.tempRegForData(lhs);
+    Jump negZero1 = masm.branchTest32(Assembler::NonZero, X86Registers::edx);
+    Jump negZero2 = masm.branchTest32(Assembler::Zero, lhsData, Imm32(0x80000000));
+
+    /* Darn, negative 0. */
+    jsval_layout jv;
+    jv.asDouble = -0.0;
+    masm.storeLayout(jv, frame.addressOf(lhs));
+
+    Jump done = masm.jump();
+    negZero1.linkTo(masm.label(), &masm);
+    negZero2.linkTo(masm.label(), &masm);
+
+    /* Better - integer. */
+    masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), frame.addressOf(lhs));
+
+    done.linkTo(masm.label(), &masm);
+
+    if (slowPath) {
+        stubcc.leave();
+        stubcc.call(stubs::Mod);
+    }
+
+    frame.popn(2);
+    frame.pushNumber(X86Registers::edx);
+
+    if (slowPath)
+        stubcc.rejoin(Changes(1));
+#endif
 }
 

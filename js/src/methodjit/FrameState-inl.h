@@ -410,31 +410,26 @@ FrameState::tempRegForData(FrameEntry *fe)
 }
 
 inline JSC::MacroAssembler::RegisterID
-FrameState::tempRegForData(FrameEntry *fe, RegisterID reg)
+FrameState::tempRegInMaskForData(FrameEntry *fe, uint32 mask)
 {
     JS_ASSERT(!fe->data.isConstant());
 
     if (fe->isCopy())
         fe = fe->copyOf();
 
+    RegisterID reg;
     if (fe->data.inRegister()) {
         RegisterID old = fe->data.reg();
-        if (old == reg)
-            return reg;
+        if (Registers::maskReg(old) & mask)
+            return old;
 
         /* Keep the old register pinned. */
         regstate[old].fe = NULL;
-        if (!freeRegs.hasReg(reg))
-            evictReg(reg);
-        else
-            freeRegs.takeReg(reg);
+        reg = allocReg(mask);
         masm.move(old, reg);
         freeReg(old);
     } else {
-        if (!freeRegs.hasReg(reg))
-            evictReg(reg);
-        else
-            freeRegs.takeReg(reg);
+        reg = allocReg(mask);
         masm.loadPayload(addressOf(fe), reg);
     }
     regstate[reg] = RegisterState(fe, RematInfo::DATA);
