@@ -249,6 +249,13 @@ public:
         m_assembler.subq_rr(scratchRegister, dest);
     }
 
+    void subPtr(ImmPtr imm, Address address)
+    {
+        loadPtr(address, scratchRegister);
+        subPtr(imm, scratchRegister);
+        storePtr(scratchRegister, address);
+    }
+
     void xorPtr(RegisterID src, RegisterID dest)
     {
         m_assembler.xorq_rr(src, dest);
