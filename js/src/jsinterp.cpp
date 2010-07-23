@@ -1031,7 +1031,7 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
 }
 
 JSBool
-js_HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
+HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)
@@ -6319,7 +6319,7 @@ BEGIN_CASE(JSOP_INSTANCEOF)
     JSObject *obj = &rref.toObject();
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
-    if (!js_HasInstance(cx, obj, &lref, &cond))
+    if (!HasInstance(cx, obj, &lref, &cond))
         goto error;
     regs.sp--;
     regs.sp[-1].setBoolean(cond);
