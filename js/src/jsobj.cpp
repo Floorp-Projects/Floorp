@@ -5141,13 +5141,13 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
          * Check for Object class here to avoid defining a method on a class
          * with magic resolve, addProperty, getProperty, etc. hooks.
          */
-        if ((defineHow & JSDNP_SET_METHOD) && obj->canHaveMethodBarrier()) {
+        if ((defineHow & JSDNP_SET_METHOD) &&
+            obj->getClass() == &js_ObjectClass) {
             JS_ASSERT(IsFunctionObject(*vp));
             JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
             JSObject *funobj = &vp->toObject();
-            JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-            if (fun == funobj) {
+            if (FUN_OBJECT(GET_FUNCTION_PRIVATE(cx, funobj)) == funobj) {
                 flags |= JSScopeProperty::METHOD;
                 getter = CastAsPropertyOp(funobj);
             }
@@ -5298,39 +5298,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     }
 
     scope = obj->scope();
-    if (SPROP_HAS_VALID_SLOT(sprop, scope)) {
-        const Value &v = obj->lockedGetSlot(sprop->slot);
-        GC_POKE(cx, v);
-
-        /*
-         * Delete is rare enough that we can take the hit of checking for an
-         * active cloned method function object that must be homed to a callee
-         * slot on the active stack frame before this delete completes, in case
-         * someone saved the clone and checks it against foo.caller for a foo
-         * called from the active method.
-         *
-         * We do not check suspended frames. They can't be reached via caller,
-         * so the only way they could have the method's joined function object
-         * as callee is through an API abusage. We break any such edge case.
-         */
-        if (scope->hasMethodBarrier()) {
-            JSObject *funobj;
-
-            if (IsFunctionObject(v, &funobj)) {
-                JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-
-                if (fun != funobj) {
-                    for (JSStackFrame *fp = cx->fp; fp; fp = fp->down) {
-                        if (fp->callee() == fun &&
-                            fp->thisv.isObject() &&
-                            &fp->thisv.toObject() == obj) {
-                            fp->setCalleeObject(*funobj);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    if (SPROP_HAS_VALID_SLOT(sprop, scope))
+        GC_POKE(cx, obj->lockedGetSlot(sprop->slot));
 
     ok = scope->removeProperty(cx, id);
     JS_UNLOCK_OBJ(cx, obj);
@@ -6254,7 +6223,7 @@ dumpValue(const Value &v)
         Class *clasp = obj->getClass();
         fprintf(stderr, "<%s%s at %p>",
                 clasp->name,
-                (clasp == &js_ObjectClass) ? "" : " object",
+                clasp == &js_ObjectClass ? "" : " object",
                 (void *) obj);
     } else if (v.isBoolean()) {
         if (v.toBoolean())

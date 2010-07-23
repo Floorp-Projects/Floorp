@@ -959,83 +959,69 @@ private:
 static void
 DumpEvalCacheMeter(JSContext *cx)
 {
-    if (const char *filename = getenv("JS_EVALCACHE_STATFILE")) {
-        struct {
-            const char *name;
-            ptrdiff_t  offset;
-        } table[] = {
+    struct {
+        const char *name;
+        ptrdiff_t  offset;
+    } table[] = {
 #define frob(x) { #x, offsetof(JSEvalCacheMeter, x) }
-            EVAL_CACHE_METER_LIST(frob)
+        EVAL_CACHE_METER_LIST(frob)
 #undef frob
-        };
-        JSEvalCacheMeter *ecm = &JS_THREAD_DATA(cx)->evalCacheMeter;
+    };
+    JSEvalCacheMeter *ecm = &JS_THREAD_DATA(cx)->evalCacheMeter;
 
-        static JSAutoFile fp;
-        if (!fp && !fp.open(filename, "w"))
+    static JSAutoFile fp;
+    if (!fp) {
+        fp.open("/tmp/evalcache.stats", "w");
+        if (!fp)
             return;
-
-        fprintf(fp, "eval cache meter (%p):\n",
-#ifdef JS_THREADSAFE
-                (void *) cx->thread
-#else
-                (void *) cx->runtime
-#endif
-                );
-        for (uintN i = 0; i < JS_ARRAY_LENGTH(table); ++i) {
-            fprintf(fp, "%-8.8s  %llu\n",
-                    table[i].name,
-                    (unsigned long long int) *(uint64 *)((uint8 *)ecm + table[i].offset));
-        }
-        fprintf(fp, "hit ratio %g%%\n", ecm->hit * 100. / ecm->probe);
-        fprintf(fp, "avg steps %g\n", double(ecm->step) / ecm->probe);
-        fflush(fp);
     }
+
+    fprintf(fp, "eval cache meter (%p):\n",
+#ifdef JS_THREADSAFE
+            (void *) cx->thread
+#else
+            (void *) cx->runtime
+#endif
+            );
+    for (uintN i = 0; i < JS_ARRAY_LENGTH(table); ++i) {
+        fprintf(fp, "%-8.8s  %llu\n",
+                table[i].name,
+                (unsigned long long int) *(uint64 *)((uint8 *)ecm + table[i].offset));
+    }
+    fprintf(fp, "hit ratio %g%%\n", ecm->hit * 100. / ecm->probe);
+    fprintf(fp, "avg steps %g\n", double(ecm->step) / ecm->probe);
+    fflush(fp);
 }
 # define DUMP_EVAL_CACHE_METER(cx) DumpEvalCacheMeter(cx)
 #endif
 
 #ifdef JS_FUNCTION_METERING
 static void
-DumpFunctionCountMap(const char *title, JSRuntime::FunctionCountMap &map, FILE *fp)
-{
-    fprintf(fp, "\n%s count map:\n", title);
-
-    for (JSRuntime::FunctionCountMap::Range r = map.all(); !r.empty(); r.popFront()) {
-        JSFunction *fun = r.front().key;
-        int32 count = r.front().value;
-
-        fprintf(fp, "%10d %s:%u\n", count, fun->u.i.script->filename, fun->u.i.script->lineno);
-    }
-}
-
-static void
 DumpFunctionMeter(JSContext *cx)
 {
-    if (const char *filename = getenv("JS_FUNCTION_STATFILE")) {
-        struct {
-            const char *name;
-            ptrdiff_t  offset;
-        } table[] = {
+    struct {
+        const char *name;
+        ptrdiff_t  offset;
+    } table[] = {
 #define frob(x) { #x, offsetof(JSFunctionMeter, x) }
-            FUNCTION_KIND_METER_LIST(frob)
+        FUNCTION_KIND_METER_LIST(frob)
 #undef frob
-        };
-        JSFunctionMeter *fm = &cx->runtime->functionMeter;
+    };
+    JSFunctionMeter *fm = &cx->runtime->functionMeter;
 
-        static JSAutoFile fp;
-        if (!fp && !fp.open(filename, "w"))
+    static JSAutoFile fp;
+    if (!fp) {
+        fp.open("/tmp/function.stats", "a");
+        if (!fp)
             return;
-
-        fprintf(fp, "function meter (%s):\n", cx->runtime->lastScriptFilename);
-        for (uintN i = 0; i < JS_ARRAY_LENGTH(table); ++i)
-            fprintf(fp, "%-19.19s %d\n", table[i].name, *(int32 *)((uint8 *)fm + table[i].offset));
-
-        DumpFunctionCountMap("method read barrier", cx->runtime->methodReadBarrierCountMap, fp);
-        DumpFunctionCountMap("unjoined function", cx->runtime->unjoinedFunctionCountMap, fp);
-
-        putc('\n', fp);
-        fflush(fp);
     }
+
+    fprintf(fp, "function meter (%s):\n", cx->runtime->lastScriptFilename);
+    for (uintN i = 0; i < JS_ARRAY_LENGTH(table); ++i) {
+        fprintf(fp, "%-11.11s %d\n",
+                table[i].name, *(int32 *)((uint8 *)fm + table[i].offset));
+    }
+    fflush(fp);
 }
 # define DUMP_FUNCTION_METER(cx)   DumpFunctionMeter(cx)
 #endif

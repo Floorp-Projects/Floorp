@@ -107,12 +107,6 @@ JSObject::getReservedSlot(uintN index) const
 }
 
 inline bool
-JSObject::canHaveMethodBarrier() const
-{
-    return isObject() || isFunction() || isPrimitive() || isDate();
-}
-
-inline bool
 JSObject::isPrimitive() const
 {
     return isNumber() || isString() || isBoolean();
@@ -311,19 +305,6 @@ JSObject::setDateUTCTime(const js::Value &time)
 {
     JS_ASSERT(isDate());
     fslots[JSSLOT_DATE_UTC_TIME] = time;
-}
-
-inline bool
-JSObject::hasMethodObj(const JSObject& obj) const
-{
-    return fslots[JSSLOT_FUN_METHOD_OBJ].isObject() &&
-           &fslots[JSSLOT_FUN_METHOD_OBJ].toObject() == &obj;
-}
-
-inline void
-JSObject::setMethodObj(JSObject& obj)
-{
-    fslots[JSSLOT_FUN_METHOD_OBJ].setObject(obj);
 }
 
 inline const js::Value &

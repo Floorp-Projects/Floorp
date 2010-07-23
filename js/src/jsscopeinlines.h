@@ -122,35 +122,17 @@ JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, js::Value *vp)
     JS_ASSERT(hasProperty(sprop));
     JS_ASSERT(sprop->isMethod());
     JS_ASSERT(&vp->toObject() == &sprop->methodObject());
-    JS_ASSERT(object->canHaveMethodBarrier());
+    JS_ASSERT(object->getClass() == &js_ObjectClass);
 
     JSObject *funobj = &vp->toObject();
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
-    JS_ASSERT(fun == funobj && FUN_NULL_CLOSURE(fun));
+    JS_ASSERT(FUN_OBJECT(fun) == funobj && FUN_NULL_CLOSURE(fun));
 
     funobj = CloneFunctionObject(cx, fun, funobj->getParent());
     if (!funobj)
         return false;
-    funobj->setMethodObj(*object);
-
     vp->setObject(*funobj);
-    if (!js_SetPropertyHelper(cx, object, sprop->id, 0, vp))
-        return false;
-
-#ifdef JS_FUNCTION_METERING
-    JS_FUNCTION_METER(cx, mreadbarrier);
-
-    typedef JSRuntime::FunctionCountMap HM;
-    HM &h = cx->runtime->methodReadBarrierCountMap;
-    HM::AddPtr p = h.lookupForAdd(fun);
-    if (!p) {
-        h.add(p, fun, 1);
-    } else {
-        JS_ASSERT(p->key == fun);
-        ++p->value;
-    }
-#endif
-    return true;
+    return !!js_SetPropertyHelper(cx, object, sprop->id, 0, vp);
 }
 
 static JS_ALWAYS_INLINE bool
@@ -167,10 +149,8 @@ JSScope::methodWriteBarrier(JSContext *cx, JSScopeProperty *sprop,
 {
     if (flags & (BRANDED | METHOD_BARRIER)) {
         const js::Value &prev = object->lockedGetSlot(sprop->slot);
-        if (ChangesMethodValue(prev, v)) {
-            JS_FUNCTION_METER(cx, mwritebarrier);
+        if (ChangesMethodValue(prev, v))
             return methodShapeChange(cx, sprop);
-        }
     }
     return true;
 }
@@ -180,10 +160,8 @@ JSScope::methodWriteBarrier(JSContext *cx, uint32 slot, const js::Value &v)
 {
     if (flags & (BRANDED | METHOD_BARRIER)) {
         const js::Value &prev = object->lockedGetSlot(slot);
-        if (ChangesMethodValue(prev, v)) {
-            JS_FUNCTION_METER(cx, mwslotbarrier);
+        if (ChangesMethodValue(prev, v))
             return methodShapeChange(cx, slot);
-        }
     }
     return true;
 }

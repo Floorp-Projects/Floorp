@@ -612,9 +612,7 @@ struct JSScopeProperty {
     union {
         js::PropertyOp  rawGetter;      /* getter and setter hooks or objects */
         JSObject        *getterObj;     /* user-defined callable "get" object or
-                                           null if sprop->hasGetterValue(); or
-                                           joined function object if METHOD flag
-                                           is set. */
+                                           null if sprop->hasGetterValue() */
         JSScopeProperty *next;          /* next node in freelist */
     };
 
