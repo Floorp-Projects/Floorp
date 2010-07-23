@@ -14654,15 +14654,16 @@ TraceRecorder::record_JSOP_IN()
 }
 
 static JSBool FASTCALL
-HasInstance(JSContext* cx, JSObject* ctor, ValueArgType arg)
+HasInstanceOnTrace(JSContext* cx, JSObject* ctor, ValueArgType arg)
 {
     const Value &argref = ValueArgToConstRef(arg);
     JSBool result = JS_FALSE;
-    if (!js_HasInstance(cx, ctor, &argref, &result))
+    if (!HasInstance(cx, ctor, &argref, &result))
         SetBuiltinError(cx);
     return result;
 }
-JS_DEFINE_CALLINFO_3(static, BOOL_FAIL, HasInstance, CONTEXT, OBJECT, VALUE, 0, ACC_STORE_ANY)
+JS_DEFINE_CALLINFO_3(static, BOOL_FAIL, HasInstanceOnTrace, CONTEXT, OBJECT, VALUE, 0,
+                     ACC_STORE_ANY)
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INSTANCEOF()
@@ -14677,7 +14678,7 @@ TraceRecorder::record_JSOP_INSTANCEOF()
 
     enterDeepBailCall();
     LIns* args[] = {val_ins, get(&ctor), cx_ins};
-    stack(-2, lir->insCall(&HasInstance_ci, args));
+    stack(-2, lir->insCall(&HasInstanceOnTrace_ci, args));
     LIns* status_ins = lir->insLoad(LIR_ldi,
                                     lirbuf->state,
                                     offsetof(TracerState, builtinStatus), ACC_OTHER);
