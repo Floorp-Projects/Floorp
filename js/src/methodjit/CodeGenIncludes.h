@@ -42,9 +42,9 @@
 #define jsjaeger_codegenincs_h__
 
 #if defined JS_32BIT
-# include "nunbox/Assembler.h"
+# include "NunboxAssembler.h"
 #elif defined JS_64BIT
-# include "nunbox/Assembler64.h"
+# include "PunboxAssembler.h"
 #else
 # error "Neither JS_32BIT or JS_64BIT is defined."
 #endif

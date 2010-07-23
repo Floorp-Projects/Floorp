@@ -298,8 +298,7 @@ VPATH += 	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
 		$(srcdir)/assembler/jit \
 		$(srcdir)/assembler/assembler \
-		$(srcdir)/methodjit \
-		$(srcdir)/methodjit/nunbox
+		$(srcdir)/methodjit
 
 CPPSRCS += 	Assertions.cpp \
 		ExecutableAllocatorPosix.cpp \
