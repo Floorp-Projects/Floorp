@@ -24,6 +24,7 @@
  *   David Dahl <ddahl@mozilla.com> (original author)
  *   Rob Campbell <rcampbell@mozilla.com>
  *   Johnathan Nightingale <jnightingale@mozilla.com>
+ *   Patrick Walton <pcwalton@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1522,6 +1523,7 @@ function HeadsUpDisplay(aConfig)
     this.contentWindow = aConfig.contentWindow;
     this.uriSpec = aConfig.contentWindow.location.href;
     this.reattachConsole();
+    this.HUDBox.querySelectorAll(".jsterm-input-node")[0].focus();
     return;
   }
 
@@ -1627,6 +1629,7 @@ function HeadsUpDisplay(aConfig)
   // create the JSTerm input element
   try {
     this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
+    this.HUDBox.querySelectorAll(".jsterm-input-node")[0].focus();
   }
   catch (ex) {
     Cu.reportError(ex);
