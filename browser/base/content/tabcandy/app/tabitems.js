@@ -195,7 +195,7 @@ window.TabItem = function(container, tab) {
   });
 };
 
-window.TabItem.prototype = iQ.extend(new Item(), {
+window.TabItem.prototype = Utils.extend(new Item(), {
   // ----------
   // Function: getStorageData
   // Get data to be used for persistent storage of this object.
@@ -283,7 +283,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
       if (rect.height != this.bounds.height || options.force)
         css.height = rect.height - this.sizeExtra.y;
 
-      if (iQ.isEmptyObject(css))
+      if (Utils.isEmptyObject(css))
         return;
 
       this.bounds.copy(rect);
@@ -570,7 +570,7 @@ window.TabItem.prototype = iQ.extend(new Item(), {
         self._zoomPrep = false;
         self.setBounds(self.getBounds(), true, {force: true});
 
-        if (iQ.isFunction(complete))
+        if (Utils.isFunction(complete))
            complete();
       }
     });
@@ -734,7 +734,7 @@ window.TabItems = {
           mirror.showCachedData(tabData);
           // the code in the progress listener doesn't fire sometimes because
           // tab is being restored so need to catch that.
-          iQ.timeout(function() {
+          Utils.timeout(function() {
             if (mirror && mirror.isShowingCachedData) {
               mirror.hideCachedData();
             }

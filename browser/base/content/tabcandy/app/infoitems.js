@@ -120,7 +120,7 @@ window.InfoItem = function(bounds, options) {
 };
 
 // ----------
-window.InfoItem.prototype = iQ.extend(new Item(), new Subscribable(), {
+window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
   // Accepts a callback that will be called when this item closes.
   // The referenceObject is used to facilitate removal if necessary.
@@ -192,7 +192,7 @@ window.InfoItem.prototype = iQ.extend(new Item(), new Subscribable(), {
       if (rect.height != this.bounds.height)
         css.height = rect.height;
 
-      if (iQ.isEmptyObject(css))
+      if (Utils.isEmptyObject(css))
         return;
 
       this.bounds = new Rect(rect);

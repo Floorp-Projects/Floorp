@@ -70,10 +70,6 @@ var iQ = function(selector, context) {
   // Match a standalone tag
   rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>)?$/,
 
-  // Save a reference to some core methods
-  toString = Object.prototype.toString,
-  hasOwnProperty = Object.prototype.hasOwnProperty,
-
   rclass = /[\n\t]/g,
   rspace = /\s+/;
 
@@ -128,7 +124,7 @@ iQ.fn = iQ.prototype = {
           ret = rsingleTag.exec( selector );
 
           if ( ret ) {
-            if ( iQ.isPlainObject( context ) ) {
+            if ( Utils.isPlainObject( context ) ) {
               Utils.assert('does not support HTML creation with context', false);
             } else {
               selector = [ doc.createElement( ret[1] ) ];
@@ -138,7 +134,7 @@ iQ.fn = iQ.prototype = {
               Utils.assert('does not support complex HTML creation', false);
           }
 
-          return iQ.merge( this, selector );
+          return Utils.merge( this, selector );
 
         // HANDLE $("#id")
         } else {
@@ -159,7 +155,7 @@ iQ.fn = iQ.prototype = {
         this.selector = selector;
         this.context = document;
         selector = document.getElementsByTagName( selector );
-        return iQ.merge( this, selector );
+        return Utils.merge( this, selector );
 
       // HANDLE $(expr, $(...))
       } else if ( !context || context.iq ) {
@@ -173,7 +169,7 @@ iQ.fn = iQ.prototype = {
 
     // HANDLE $(function)
     // Shortcut for document ready
-    } else if ( iQ.isFunction( selector ) ) {
+    } else if ( Utils.isFunction( selector ) ) {
       Utils.log('iQ does not support ready functions');
       return null;
     }
@@ -189,10 +185,10 @@ iQ.fn = iQ.prototype = {
       // The window, strings (and functions) also have 'length'
       // The extra typeof function check is to prevent crashes
       // in Safari 2 (See: #3039)
-      if ( selector.length == null || typeof selector === "string" || iQ.isFunction(selector) || (typeof selector !== "function" && selector.setInterval) ) {
+      if ( selector.length == null || typeof selector === "string" || Utils.isFunction(selector) || (typeof selector !== "function" && selector.setInterval) ) {
         Array.prototype.push.call( ret, selector );
       } else {
-        iQ.merge( ret, selector );
+        Utils.merge( ret, selector );
       }
     }
     return ret;
@@ -227,7 +223,7 @@ iQ.fn = iQ.prototype = {
   // Function: each
   // Execute a callback for every element in the matched set.
   each: function( callback ) {
-    if ( !iQ.isFunction(callback) ) {
+    if ( !Utils.isFunction(callback) ) {
       Utils.assert("each's argument must be a function", false);
       return null;
     }
@@ -241,7 +237,7 @@ iQ.fn = iQ.prototype = {
   // Function: addClass
   // Adds the given class(es) to the receiver.
   addClass: function( value ) {
-    if ( iQ.isFunction(value) ) {
+    if ( Utils.isFunction(value) ) {
       Utils.assert('does not support function argument', false);
       return null;
     }
@@ -264,7 +260,7 @@ iQ.fn = iQ.prototype = {
   // Function: removeClass
   // Removes the given class(es) from the receiver.
   removeClass: function( value ) {
-    if ( iQ.isFunction(value) ) {
+    if ( Utils.isFunction(value) ) {
       Utils.assert('does not support function argument', false);
       return null;
     }
@@ -309,7 +305,7 @@ iQ.fn = iQ.prototype = {
     for ( var i = 0, l = this.length; i < l; i++ ) {
       length = ret.length;
       try {
-        iQ.merge(ret, this[i].querySelectorAll( selector ) );
+        Utils.merge(ret, this[i].querySelectorAll( selector ) );
       } catch(e) {
         Utils.log('iQ.find error (bad selector)', e);
       }
@@ -602,14 +598,14 @@ iQ.fn = iQ.prototype = {
       this.css(css);
 
       var self = this;
-      iQ.timeout(function() {
+      Utils.timeout(function() {
         self.css({
           '-moz-transition-property': 'none',
           '-moz-transition-duration': '',
           '-moz-transition-timing-function': ''
         });
 
-        if (iQ.isFunction(options.complete))
+        if (Utils.isFunction(options.complete))
           options.complete.apply(self);
       }, duration);
     } catch(e) {
@@ -624,14 +620,14 @@ iQ.fn = iQ.prototype = {
   // Animates the receiver to full transparency. Calls callback on completion.
   fadeOut: function(callback) {
     try {
-      Utils.assert('does not yet support duration', iQ.isFunction(callback) || callback === undefined);
+      Utils.assert('does not yet support duration', Utils.isFunction(callback) || callback === undefined);
       this.animate({
         opacity: 0
       }, {
         duration: 400,
         complete: function() {
           iQ(this).css({display: 'none'});
-          if (iQ.isFunction(callback))
+          if (Utils.isFunction(callback))
             callback.apply(this);
         }
       });
@@ -691,7 +687,7 @@ iQ.fn = iQ.prototype = {
   // Binds the given function to the given event type. Also wraps the function
   // in a try/catch block that does a Utils.log on any errors.
   bind: function(type, func) {
-    Utils.assert('does not support eventData argument', iQ.isFunction(func));
+    Utils.assert('does not support eventData argument', Utils.isFunction(func));
 
     var handler = function(event) {
       try {
@@ -724,7 +720,7 @@ iQ.fn = iQ.prototype = {
   // Binds the given function to the given event type, but only for one call;
   // automatically unbinds after the event fires once.
   one: function(type, func) {
-    Utils.assert('does not support eventData argument', iQ.isFunction(func));
+    Utils.assert('does not support eventData argument', Utils.isFunction(func));
 
     var handler = function(e) {
       iQ(this).unbind(type, handler);
@@ -738,7 +734,7 @@ iQ.fn = iQ.prototype = {
   // Function: unbind
   // Unbinds the given function from the given event type.
   unbind: function(type, func) {
-    Utils.assert('Must provide a function', iQ.isFunction(func));
+    Utils.assert('Must provide a function', Utils.isFunction(func));
 
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       var handler = func;
@@ -763,157 +759,6 @@ iQ.fn = iQ.prototype = {
 // ----------
 // Give the init function the iQ prototype for later instantiation
 iQ.fn.init.prototype = iQ.fn;
-
-// ##########
-// Class: iQ
-// Additional utility functions.
-
-// ----------
-// Function: extend
-// Pass several objects in and it will combine them all into the first object and return it.
-iQ.extend = iQ.fn.extend = function() {
-  // copy reference to target object
-  var target = arguments[0] || {}, i = 1, length = arguments.length, deep = false, options, name, src, copy;
-
-  // Handle a deep copy situation
-  if ( typeof target === "boolean" ) {
-    deep = target;
-    target = arguments[1] || {};
-    // skip the boolean and the target
-    i = 2;
-  }
-
-  // Handle case when target is a string or something (possible in deep copy)
-  if ( typeof target !== "object" && !iQ.isFunction(target) ) {
-    target = {};
-  }
-
-  // extend iQ itself if only one argument is passed
-  if ( length === i ) {
-    target = this;
-    --i;
-  }
-
-  for ( ; i < length; i++ ) {
-    // Only deal with non-null/undefined values
-    if ( (options = arguments[ i ]) != null ) {
-      // Extend the base object
-      for ( name in options ) {
-        src = target[ name ];
-        copy = options[ name ];
-
-        // Prevent never-ending loop
-        if ( target === copy ) {
-          continue;
-        }
-
-        // Recurse if we're merging object literal values or arrays
-        if ( deep && copy && ( iQ.isPlainObject(copy) || iQ.isArray(copy) ) ) {
-          var clone = src && ( iQ.isPlainObject(src) || iQ.isArray(src) ) ? src
-            : iQ.isArray(copy) ? [] : {};
-
-          // Never move original objects, clone them
-          target[ name ] = iQ.extend( deep, clone, copy );
-
-        // Don't bring in undefined values
-        } else if ( copy !== undefined ) {
-          target[ name ] = copy;
-        }
-      }
-    }
-  }
-
-  // Return the modified object
-  return target;
-};
-
-iQ.extend({
-  // -----------
-  // Function: isFunction
-  // Returns true if the given object is a function.
-  isFunction: function( obj ) {
-    return toString.call(obj) === "[object Function]";
-  },
-
-  // ----------
-  // Function: isArray
-  // Returns true if the given object is an array.
-  isArray: function( obj ) {
-    return toString.call(obj) === "[object Array]";
-  },
-
-  // ----------
-  // Function: isPlainObject
-  // Check to see if an object is a plain object (created using "{}" or "new Object").
-  isPlainObject: function( obj ) {
-    // Must be an Object.
-    // Because of IE, we also have to check the presence of the constructor property.
-    // Make sure that DOM nodes and window objects don't pass through, as well
-    if ( !obj || toString.call(obj) !== "[object Object]" || obj.nodeType || obj.setInterval ) {
-      return false;
-    }
-
-    // Not own constructor property must be Object
-    if ( obj.constructor
-      && !hasOwnProperty.call(obj, "constructor")
-      && !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf") ) {
-      return false;
-    }
-
-    // Own properties are enumerated firstly, so to speed up,
-    // if last one is own, then all properties are own.
-
-    var key;
-    for ( key in obj ) {}
-
-    return key === undefined || hasOwnProperty.call( obj, key );
-  },
-
-  // ----------
-  // Function: isEmptyObject
-  // Returns true if the given object has no members.
-  isEmptyObject: function( obj ) {
-    for ( var name in obj ) {
-      return false;
-    }
-    return true;
-  },
-
-  // ----------
-  // Function: merge
-  // Merge two arrays and return the result.
-  merge: function( first, second ) {
-    var i = first.length, j = 0;
-
-    if ( typeof second.length === "number" ) {
-      for ( var l = second.length; j < l; j++ ) {
-        first[ i++ ] = second[ j ];
-      }
-
-    } else {
-      while ( second[j] !== undefined ) {
-        first[ i++ ] = second[ j++ ];
-      }
-    }
-
-    first.length = i;
-
-    return first;
-  },
-
-  // ----------
-  // Function: timeout
-  // wraps setTimeout with try/catch
-  timeout: function(func, delay) {
-    setTimeout(function() {
-      try {
-        func();
-      } catch(e) {
-        Utils.log(e);
-      }
-    }, delay);
-  }
-});
 
 // ----------
 // Create various event aliases

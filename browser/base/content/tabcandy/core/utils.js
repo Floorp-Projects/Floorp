@@ -22,6 +22,13 @@
  * Ian Gilman <ian@iangilman.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
+ * Some portions copied from:
+ * jQuery JavaScript Library v1.4.2
+ * http://jquery.com/
+ * Copyright 2010, John Resig
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -45,6 +52,10 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
+
+// Save a reference to some core methods
+const toString = Object.prototype.toString;
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -421,7 +432,7 @@ window.Subscribable.prototype = {
   addSubscriber: function(refObject, eventName, callback) {
     try {
       Utils.assertThrow("refObject", refObject);
-      Utils.assertThrow("callback must be a function", iQ.isFunction(callback));
+      Utils.assertThrow("callback must be a function", Utils.isFunction(callback));
       Utils.assertThrow("eventName must be a non-empty string",
           eventName && typeof(eventName) == "string");
 
@@ -482,7 +493,7 @@ window.Subscribable.prototype = {
         return;
 
       var self = this;
-      var subsCopy = iQ.merge([], this.subscribers[eventName]);
+      var subsCopy = Utils.merge([], this.subscribers[eventName]);
       subsCopy.forEach(function(object) {
         object.callback(self, eventInfo);
       });
@@ -524,16 +535,12 @@ var Utils = {
   // Pass as many arguments as you want, it'll print them all.
   trace: function() {
     var text = this.expandArgumentsForLog(arguments);
-    try { // coerce an error
-      throw new Error("error");
-    } catch (e) {
-      // cut off the first two lines of the stack trace, because they're just this function.
-      var stack = e.stack.replace(/^.*?\n.*?\n/,'');
-      // if the caller was assert, cut out the line for the assert function as well.
-      if (this.trace.caller.name == 'Utils_assert')
-        stack = stack.replace(/^.*?\n/,'');
-      this.log('trace: ' + text + '\n' + stack);
-    }
+    // cut off the first two lines of the stack trace, because they're just this function.
+    var stack = Error().stack.replace(/^.*?\n.*?\n/,'');
+    // if the caller was assert, cut out the line for the assert function as well.
+    if (this.trace.caller.name == 'Utils_assert')
+      stack = stack.replace(/^.*?\n/,'');
+    this.log('trace: ' + text + '\n' + stack);
   },
 
   // ----------
@@ -562,12 +569,8 @@ var Utils = {
       else
         text = 'tabcandy assert: ' + label;
 
-      try { // coerce an error
-        throw new Error("error");
-      } catch (e) {
-        // cut off the first two lines of the stack trace, because they're just this function.
-        text += e.stack.replace(/^.*?\n.*?\n/,'');
-      }
+      // cut off the first two lines of the stack trace, because they're just this function.
+      text += Error().stack.replace(/^.*?\n.*?\n/,'');
 
       throw text;
     }
@@ -646,6 +649,20 @@ var Utils = {
     return (typeof(n) == 'number' && !isNaN(n));
   },
 
+  // -----------
+  // Function: isFunction
+  // Returns true if the given object is a function.
+  isFunction: function( obj ) {
+    return toString.call(obj) === "[object Function]";
+  },
+
+  // ----------
+  // Function: isArray
+  // Returns true if the given object is an array.
+  isArray: function( obj ) {
+    return toString.call(obj) === "[object Array]";
+  },
+
   // ----------
   // Function: isRect
   // Returns true if the given object (r) looks like a <Rect>.
@@ -674,19 +691,139 @@ var Utils = {
   },
 
   // ----------
+  // Function: isPlainObject
+  // Check to see if an object is a plain object (created using "{}" or "new Object").
+  isPlainObject: function( obj ) {
+    // Must be an Object.
+    // Because of IE, we also have to check the presence of the constructor property.
+    // Make sure that DOM nodes and window objects don't pass through, as well
+    if ( !obj || toString.call(obj) !== "[object Object]" || obj.nodeType || obj.setInterval ) {
+      return false;
+    }
+
+    // Not own constructor property must be Object
+    if ( obj.constructor
+      && !hasOwnProperty.call(obj, "constructor")
+      && !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf") ) {
+      return false;
+    }
+
+    // Own properties are enumerated firstly, so to speed up,
+    // if last one is own, then all properties are own.
+
+    var key;
+    for ( key in obj ) {}
+
+    return key === undefined || hasOwnProperty.call( obj, key );
+  },
+  
+  // ----------
+  // Function: isEmptyObject
+  // Returns true if the given object has no members.
+  isEmptyObject: function( obj ) {
+    for ( var name in obj )
+      return false;
+    return true;
+  },
+
+  // ----------
   // Function: copy
   // Returns a copy of the argument. Note that this is a shallow copy; if the argument
   // has properties that are themselves objects, those properties will be copied by reference.
   copy: function(value) {
     if (value && typeof(value) == 'object') {
-      if (iQ.isArray(value))
-        return iQ.extend([], value);
+      if (this.isArray(value))
+        return this.extend([], value);
+      return this.extend({}, value);
+    }
+    return value;
+  },
+  
+  // ----------
+  // Function: merge
+  // Merge two arrays and return the result.
+  merge: function( first, second ) {
+    var i = first.length, j = 0;
 
-      return iQ.extend({}, value);
+    if ( typeof second.length === "number" ) {
+      for ( var l = second.length; j < l; j++ ) {
+        first[ i++ ] = second[ j ];
+      }
+    } else {
+      while ( second[j] !== undefined ) {
+        first[ i++ ] = second[ j++ ];
+      }
     }
 
-    return value;
+    first.length = i;
+
+    return first;
+  },
+  
+  // ----------
+  // Function: extend
+  // Pass several objects in and it will combine them all into the first object and return it.
+  extend: function() {
+    // copy reference to target object
+    var target = arguments[0] || {}, i = 1, length = arguments.length, options, name, src, copy;
+  
+    // Deep copy is not supported
+    if ( typeof target === "boolean" ) {
+      this.assert("The first argument of extend cannot be a boolean."
+                   +"Deep copy is not supported.",false);
+      return target;
+    }
+
+    // Back when this was in iQ + iQ.fn, so you could extend iQ objects with it.
+    // This is no longer supported.
+    if ( length === 1 ) {
+      this.assert("Extending the iQ prototype using extend is not supported.",false);
+      return target;
+    }
+
+    // Handle case when target is a string or something
+    if ( typeof target !== "object" && !this.isFunction(target) ) {
+      target = {};
+    }
+  
+    for ( ; i < length; i++ ) {
+      // Only deal with non-null/undefined values
+      if ( (options = arguments[ i ]) != null ) {
+        // Extend the base object
+        for ( name in options ) {
+          src = target[ name ];
+          copy = options[ name ];
+  
+          // Prevent never-ending loop
+          if ( target === copy )
+            continue;
+  
+          if ( copy !== undefined )
+            target[ name ] = copy;
+        }
+      }
+    }
+  
+    // Return the modified object
+    return target;
+  },
+  
+  // ----------
+  // Function: timeout
+  // wraps setTimeout with try/catch
+  //
+  // Note to our beloved reviewers: we are keeping this trivial wrapper in case we 
+  // make Utils a JSM.
+  timeout: function(func, delay) {
+    setTimeout(function() {
+      try {
+        func();
+      } catch(e) {
+        Utils.log(e);
+      }
+    }, delay);
   }
+
 };
 
 window.Utils = Utils;

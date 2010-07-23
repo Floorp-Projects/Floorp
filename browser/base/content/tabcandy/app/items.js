@@ -596,7 +596,7 @@ window.Item.prototype = {
 
         // drag events
         if (!startSent) {
-          if (iQ.isFunction(self.dragOptions.start)) {
+          if (Utils.isFunction(self.dragOptions.start)) {
             self.dragOptions.start.apply(self,
                 [startEvent, {position: {left: startPos.x, top: startPos.y}}]);
           }
@@ -604,7 +604,7 @@ window.Item.prototype = {
           startSent = true;
         }
 
-        if (iQ.isFunction(self.dragOptions.drag))
+        if (Utils.isFunction(self.dragOptions.drag))
           self.dragOptions.drag.apply(self, [e, {position: box.position()}]);
 
         // drop events
@@ -620,7 +620,7 @@ window.Item.prototype = {
             var accept = true;
             if (possibleDropTarget != dropTarget) {
               var dropOptions = possibleDropTarget.dropOptions;
-              if (dropOptions && iQ.isFunction(dropOptions.accept))
+              if (dropOptions && Utils.isFunction(dropOptions.accept))
                 accept = dropOptions.accept.apply(possibleDropTarget, [self]);
             }
 
@@ -635,7 +635,7 @@ window.Item.prototype = {
           var dropOptions;
           if (dropTarget) {
             dropOptions = dropTarget.dropOptions;
-            if (dropOptions && iQ.isFunction(dropOptions.out))
+            if (dropOptions && Utils.isFunction(dropOptions.out))
               dropOptions.out.apply(dropTarget, [e]);
           }
 
@@ -643,7 +643,7 @@ window.Item.prototype = {
 
           if (dropTarget) {
             dropOptions = dropTarget.dropOptions;
-            if (dropOptions && iQ.isFunction(dropOptions.over))
+            if (dropOptions && Utils.isFunction(dropOptions.over))
               dropOptions.over.apply(dropTarget, [e]);
           }
         }
@@ -659,11 +659,11 @@ window.Item.prototype = {
 
         if (dropTarget) {
           var dropOptions = dropTarget.dropOptions;
-          if (dropOptions && iQ.isFunction(dropOptions.drop))
+          if (dropOptions && Utils.isFunction(dropOptions.drop))
             dropOptions.drop.apply(dropTarget, [e]);
         }
 
-        if (startSent && iQ.isFunction(self.dragOptions.stop))
+        if (startSent && Utils.isFunction(self.dragOptions.stop))
           self.dragOptions.stop.apply(self, [e]);
 
         e.preventDefault();
@@ -769,7 +769,7 @@ window.Item.prototype = {
 
           self.setBounds(box, true);
 
-          if (iQ.isFunction(self.resizeOptions.resize))
+          if (Utils.isFunction(self.resizeOptions.resize))
             self.resizeOptions.resize.apply(self, [e]);
 
           e.preventDefault();
@@ -782,7 +782,7 @@ window.Item.prototype = {
             .unbind('mousemove', handleMouseMove)
             .unbind('mouseup', handleMouseUp);
 
-          if (iQ.isFunction(self.resizeOptions.stop))
+          if (Utils.isFunction(self.resizeOptions.stop))
             self.resizeOptions.stop.apply(self, [e]);
 
           e.preventDefault();
@@ -801,7 +801,7 @@ window.Item.prototype = {
             startSize = self.getBounds().size();
             startAspect = startSize.y / startSize.x;
 
-            if (iQ.isFunction(self.resizeOptions.start))
+            if (Utils.isFunction(self.resizeOptions.start))
               self.resizeOptions.start.apply(self, [e]);
 
             iQ(gWindow)
