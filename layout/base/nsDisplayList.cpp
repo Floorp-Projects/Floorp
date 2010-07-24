@@ -58,6 +58,7 @@
 #endif
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
+#include "nsThemeConstants.h"
 
 #include "imgIContainer.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -604,6 +605,51 @@ void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
                                 nsIRenderingContext* aCtx) {
   aCtx->SetColor(mColor);
   aCtx->FillRect(mVisibleRect);
+}
+
+static void
+RegisterThemeWidgetGeometry(nsIFrame* aFrame)
+{
+  nsPresContext* presContext = aFrame->PresContext();
+  nsITheme* theme = presContext->GetTheme();
+  if (!theme)
+    return;
+
+  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
+  nsIWidget* widget = displayRoot->GetNearestWidget();
+  // If the display root doesn't have a widget, just bail. Something
+  // weird is going on, maybe we're printing?
+  if (!widget)
+    return;
+
+  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
+    // Bail out if we're in a transformed subtree
+    if (f->IsTransformed())
+      return;
+    // Bail out if we're not in the displayRoot's document
+    if (!f->GetParent() && f != displayRoot)
+      return;
+  }
+
+  nsRect borderBox(aFrame->GetOffsetTo(displayRoot), aFrame->GetSize());
+  theme->RegisterWidgetGeometry(widget,
+      aFrame->GetStyleDisplay()->mAppearance,
+      borderBox.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
+}
+
+nsDisplayBackground::nsDisplayBackground(nsIFrame* aFrame)
+  : nsDisplayItem(aFrame)
+{
+  MOZ_COUNT_CTOR(nsDisplayBackground);
+  const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+  mIsThemed = mFrame->IsThemed(disp, &mThemeTransparency);
+
+  // Perform necessary RegisterWidgetGeometry
+  if (mIsThemed &&
+      (disp->mAppearance == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
+       disp->mAppearance == NS_THEME_TOOLBAR)) {
+    RegisterThemeWidgetGeometry(aFrame);
+  }
 }
 
 // Returns TRUE if aContainedRect is guaranteed to be contained in
