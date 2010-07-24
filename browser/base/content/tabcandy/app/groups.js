@@ -1319,7 +1319,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
                 // TODO: This is probably a terrible hack that sets up a race
                 // condition. We need a better solution.
                 Utils.timeout(function(){
-                  UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
+                  UI.showOnlyTheseTabs(Groups.getActiveGroup()._children);
                 }, 400);
               }
             });
@@ -1708,9 +1708,9 @@ window.Groups = {
       return; // called too soon
 
     if (this._activeGroup)
-      UI.tabBar.showOnlyTheseTabs( this._activeGroup._children );
+      UI.showOnlyTheseTabs( this._activeGroup._children );
     else if ( this._activeGroup == null)
-      UI.tabBar.showOnlyTheseTabs( this.getOrphanedTabs(), {dontReorg: true});
+      UI.showOnlyTheseTabs( this.getOrphanedTabs(), {dontReorg: true});
   },
 
   // ----------
