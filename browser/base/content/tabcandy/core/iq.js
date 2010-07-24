@@ -169,7 +169,7 @@ iQ.fn = iQ.prototype = {
 
     // HANDLE $(function)
     // Shortcut for document ready
-    } else if ( Utils.isFunction( selector ) ) {
+    } else if (typeof selector == "function") {
       Utils.log('iQ does not support ready functions');
       return null;
     }
@@ -185,7 +185,7 @@ iQ.fn = iQ.prototype = {
       // The window, strings (and functions) also have 'length'
       // The extra typeof function check is to prevent crashes
       // in Safari 2 (See: #3039)
-      if ( selector.length == null || typeof selector === "string" || Utils.isFunction(selector) || (typeof selector !== "function" && selector.setInterval) ) {
+      if (selector.length == null || typeof selector == "string" || typeof selector == "function" || (typeof selector != "function" && selector.setInterval)) {
         Array.prototype.push.call( ret, selector );
       } else {
         Utils.merge( ret, selector );
@@ -223,7 +223,7 @@ iQ.fn = iQ.prototype = {
   // Function: each
   // Execute a callback for every element in the matched set.
   each: function( callback ) {
-    if ( !Utils.isFunction(callback) ) {
+    if (typeof callback != "function") {
       Utils.assert("each's argument must be a function", false);
       return null;
     }
@@ -237,7 +237,7 @@ iQ.fn = iQ.prototype = {
   // Function: addClass
   // Adds the given class(es) to the receiver.
   addClass: function( value ) {
-    if ( Utils.isFunction(value) ) {
+    if (typeof value == "function") {
       Utils.assert('does not support function argument', false);
       return null;
     }
@@ -260,7 +260,7 @@ iQ.fn = iQ.prototype = {
   // Function: removeClass
   // Removes the given class(es) from the receiver.
   removeClass: function( value ) {
-    if ( Utils.isFunction(value) ) {
+    if (typeof value == "function") {
       Utils.assert('does not support function argument', false);
       return null;
     }
@@ -605,7 +605,7 @@ iQ.fn = iQ.prototype = {
           '-moz-transition-timing-function': ''
         });
 
-        if (Utils.isFunction(options.complete))
+        if (typeof options.complete == "function")
           options.complete.apply(self);
       }, duration);
     } catch(e) {
@@ -620,14 +620,14 @@ iQ.fn = iQ.prototype = {
   // Animates the receiver to full transparency. Calls callback on completion.
   fadeOut: function(callback) {
     try {
-      Utils.assert('does not yet support duration', Utils.isFunction(callback) || callback === undefined);
+      Utils.assert('does not yet support duration', typeof callback == "function" || callback === undefined);
       this.animate({
         opacity: 0
       }, {
         duration: 400,
         complete: function() {
           iQ(this).css({display: 'none'});
-          if (Utils.isFunction(callback))
+          if (typeof callback == "function")
             callback.apply(this);
         }
       });
@@ -687,7 +687,7 @@ iQ.fn = iQ.prototype = {
   // Binds the given function to the given event type. Also wraps the function
   // in a try/catch block that does a Utils.log on any errors.
   bind: function(type, func) {
-    Utils.assert('does not support eventData argument', Utils.isFunction(func));
+    Utils.assert('does not support eventData argument', typeof func == "function");
 
     var handler = function(event) {
       try {
@@ -720,7 +720,7 @@ iQ.fn = iQ.prototype = {
   // Binds the given function to the given event type, but only for one call;
   // automatically unbinds after the event fires once.
   one: function(type, func) {
-    Utils.assert('does not support eventData argument', Utils.isFunction(func));
+    Utils.assert('does not support eventData argument', typeof func == "function");
 
     var handler = function(e) {
       iQ(this).unbind(type, handler);
@@ -734,7 +734,7 @@ iQ.fn = iQ.prototype = {
   // Function: unbind
   // Unbinds the given function from the given event type.
   unbind: function(type, func) {
-    Utils.assert('Must provide a function', Utils.isFunction(func));
+    Utils.assert('Must provide a function', typeof func == "function");
 
     for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       var handler = func;
