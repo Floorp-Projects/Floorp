@@ -554,9 +554,9 @@ FeedWriter.prototype = {
     var url = makeURI(aURL);
     url.QueryInterface(Ci.nsIURL);
     if (url == null || url.fileName.length == 0)
-      return aURL;
+      return decodeURIComponent(aURL);
 
-    return decodeURI(url.fileName);
+    return decodeURIComponent(url.fileName);
   },
 
   /**

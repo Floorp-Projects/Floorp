@@ -62,7 +62,7 @@ public:
 
 protected:
 
-  nsSVGTextPositioningElement(nsINodeInfo *aNodeInfo)
+  nsSVGTextPositioningElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsSVGTextPositioningElementBase(aNodeInfo)
   {}
 

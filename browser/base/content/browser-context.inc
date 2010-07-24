@@ -48,14 +48,14 @@
                 label="&openLinkCmdInCurrent.label;"
                 accesskey="&openLinkCmdInCurrent.accesskey;"
                 oncommand="gContextMenu.openLinkInCurrent();"/>
-      <menuitem id="context-openlink"
-                label="&openLinkCmd.label;"
-                accesskey="&openLinkCmd.accesskey;"
-                oncommand="gContextMenu.openLink();"/>
       <menuitem id="context-openlinkintab"
                 label="&openLinkCmdInTab.label;"
                 accesskey="&openLinkCmdInTab.accesskey;"
                 oncommand="gContextMenu.openLinkInTab();"/>
+      <menuitem id="context-openlink"
+                label="&openLinkCmd.label;"
+                accesskey="&openLinkCmd.accesskey;"
+                oncommand="gContextMenu.openLink();"/>
       <menuseparator id="context-sep-open"/>
       <menuitem id="context-bookmarklink"
                 label="&bookmarkThisLinkCmd.label;"
@@ -250,14 +250,14 @@
                     label="&showOnlyThisFrameCmd.label;"
                     accesskey="&showOnlyThisFrameCmd.accesskey;"
                     oncommand="gContextMenu.showOnlyThisFrame();"/>
-          <menuitem id="context-openframe"
-                    label="&openFrameCmd.label;"
-                    accesskey="&openFrameCmd.accesskey;"
-                    oncommand="gContextMenu.openFrame();"/>
           <menuitem id="context-openframeintab"
                     label="&openFrameCmdInTab.label;"
                     accesskey="&openFrameCmdInTab.accesskey;"
                     oncommand="gContextMenu.openFrameInTab();"/>
+          <menuitem id="context-openframe"
+                    label="&openFrameCmd.label;"
+                    accesskey="&openFrameCmd.accesskey;"
+                    oncommand="gContextMenu.openFrame();"/>
           <menuseparator/>
           <menuitem id="context-reloadframe"
                     label="&reloadFrameCmd.label;"

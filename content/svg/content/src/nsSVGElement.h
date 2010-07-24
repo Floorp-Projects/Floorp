@@ -84,7 +84,7 @@ class nsSVGElement : public nsSVGElementBase,    // nsIContent
                      public nsISVGValueObserver  // :nsISupportsWeakReference
 {
 protected:
-  nsSVGElement(nsINodeInfo *aNodeInfo);
+  nsSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
   virtual ~nsSVGElement();
 
@@ -443,7 +443,7 @@ private:
 #define NS_IMPL_NS_NEW_SVG_ELEMENT(_elementName)                             \
 nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
-                                 nsINodeInfo *aNodeInfo)                     \
+                                 already_AddRefed<nsINodeInfo> aNodeInfo)    \
 {                                                                            \
   nsRefPtr<nsSVG##_elementName##Element> it =                                \
     new nsSVG##_elementName##Element(aNodeInfo);                             \
@@ -464,7 +464,7 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
 #define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)                \
 nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
-                                 nsINodeInfo *aNodeInfo,                     \
+                                 already_AddRefed<nsINodeInfo> aNodeInfo,    \
                                  PRUint32 aFromParser)                       \
 {                                                                            \
   nsRefPtr<nsSVG##_elementName##Element> it =                                \

@@ -155,7 +155,7 @@ png_default_flush(png_structp png_ptr)
  *                 arguments a pointer to a png_struct.  After a call to
  *                 the flush function, there should be no data in any buffers
  *                 or pending transmission.  If the output method doesn't do
- *                 any buffering of ouput, a function prototype must still be
+ *                 any buffering of output, a function prototype must still be
  *                 supplied although it doesn't have to do anything.  If
  *                 PNG_WRITE_FLUSH_SUPPORTED is not defined at libpng compile
  *                 time, output_flush_fn will be ignored, although it must be

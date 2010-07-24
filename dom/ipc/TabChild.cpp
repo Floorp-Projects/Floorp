@@ -466,10 +466,25 @@ TabChild::DestroyWidget()
     return true;
 }
 
+void
+TabChild::ActorDestroy(ActorDestroyReason why)
+{
+  // The messageManager relays messages via the TabChild which
+  // no longer exists.
+  static_cast<nsFrameMessageManager*>
+    (mTabChildGlobal->mMessageManager.get())->Disconnect();
+  mTabChildGlobal->mMessageManager = nsnull;
+}
+
 TabChild::~TabChild()
 {
-    DestroyWidget();
     nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(mWebNav);
+    nsCOMPtr<nsIWeakReference> weak =
+      do_GetWeakReference(static_cast<nsSupportsWeakReference*>(this));
+    webBrowser->RemoveWebBrowserListener(weak, NS_GET_IID(nsIWebProgressListener));
+
+    DestroyWidget();
+
     if (webBrowser) {
       webBrowser->SetContainerWindow(nsnull);
     }
@@ -1073,6 +1088,8 @@ NS_IMETHODIMP
 TabChildGlobal::GetContent(nsIDOMWindow** aContent)
 {
   *aContent = nsnull;
+  if (!mTabChild)
+    return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMWindow> window = do_GetInterface(mTabChild->WebNavigation());
   window.swap(*aContent);
   return NS_OK;

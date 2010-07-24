@@ -99,7 +99,7 @@ public:
   };
 
 protected:
-  nsSVGFE(nsINodeInfo *aNodeInfo) : nsSVGFEBase(aNodeInfo) {}
+  nsSVGFE(already_AddRefed<nsINodeInfo> aNodeInfo) : nsSVGFEBase(aNodeInfo) {}
 
   struct ScaleInfo {
     nsRefPtr<gfxImageSurface> mRealTarget;

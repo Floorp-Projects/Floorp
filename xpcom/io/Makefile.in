@@ -77,6 +77,12 @@ CPPSRCS		= \
 		SpecialSystemDirectory.cpp \
 		$(NULL)
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+CMMSRCS		+= \
+		CocoaFileUtils.mm \
+		$(NULL)
+endif
+
 ifndef MOZ_NO_FAST_LOAD
 CPPSRCS += \
 		nsFastLoadFile.cpp \
@@ -87,15 +93,11 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS		+= nsLocalFileOS2.cpp
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS		= nsLocalFileOSX.mm
-else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		+= nsLocalFileWin.cpp
 else
 CPPSRCS		+= nsLocalFileUnix.cpp
 endif # windows
-endif # mac
 endif # OS2
 
 EXPORTS		= \
@@ -118,15 +120,11 @@ EXPORTS		= \
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORTS		+= nsLocalFileOS2.h
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXPORTS		+= nsLocalFileOSX.h
-else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXPORTS		+= nsLocalFileWin.h
 else
 EXPORTS		+= nsLocalFileUnix.h
 endif # windows
-endif # cocoa
 endif # os2
 
 XPIDLSRCS	= \

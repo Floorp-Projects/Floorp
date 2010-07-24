@@ -39,7 +39,7 @@
 #include "nsXMLElement.h"
 
 nsresult
-NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
+NS_NewXMLElement(nsIContent** aInstancePtrResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 {
   nsXMLElement* it = new nsXMLElement(aNodeInfo);
   if (!it) {
@@ -51,7 +51,7 @@ NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
   return NS_OK;
 }
 
-DOMCI_DATA(Element, nsXMLElement)
+DOMCI_NODE_DATA(Element, nsXMLElement)
 
 // QueryInterface implementation for nsXMLElement
 NS_INTERFACE_TABLE_HEAD(nsXMLElement)

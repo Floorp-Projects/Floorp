@@ -1224,8 +1224,8 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     if (!xpc)
         return JS_FALSE;
 
-    JS_SetNativeStackQuota(cx, 512 * 1024);
-    JS_SetScriptStackQuota(cx, 100 * 1024 * 1024);
+    JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
+    JS_SetScriptStackQuota(cx, 25 * sizeof(size_t) * 1024 * 1024);
     return JS_TRUE;
 }
 

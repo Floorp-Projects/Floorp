@@ -5045,7 +5045,8 @@ void
 PresShell::ContentRemoved(nsIDocument *aDocument,
                           nsIContent* aContainer,
                           nsIContent* aChild,
-                          PRInt32     aIndexInContainer)
+                          PRInt32     aIndexInContainer,
+                          nsIContent* aPreviousSibling)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentRemoved");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");

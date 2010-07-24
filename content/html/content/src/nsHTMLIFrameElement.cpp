@@ -55,7 +55,7 @@ class nsHTMLIFrameElement : public nsGenericHTMLFrameElement,
 #endif
 {
 public:
-  nsHTMLIFrameElement(nsINodeInfo *aNodeInfo);
+  nsHTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLIFrameElement();
 
   // nsISupports
@@ -87,13 +87,14 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(IFrame)
 
 
-nsHTMLIFrameElement::nsHTMLIFrameElement(nsINodeInfo *aNodeInfo)
+nsHTMLIFrameElement::nsHTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFrameElement(aNodeInfo)
 {
 }
@@ -106,7 +107,7 @@ nsHTMLIFrameElement::~nsHTMLIFrameElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameElement,nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameElement,nsGenericElement)
 
-DOMCI_DATA(HTMLIFrameElement, nsHTMLIFrameElement)
+DOMCI_NODE_DATA(HTMLIFrameElement, nsHTMLIFrameElement)
 
 // QueryInterface implementation for nsHTMLIFrameElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLIFrameElement)
