@@ -5086,13 +5086,6 @@ out:
 
 /************************************************************************/
 
-static void
-SetRegExpLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
-{
-    JS_ASSERT(obj->isRegExp());
-    obj->setRegExpLastIndex(NumberValue(lastIndex));
-}
-
 #define DEFINE_GETTER(name, code)                                              \
     static JSBool                                                              \
     name(JSContext *cx, JSObject *obj, jsid id, Value *vp)                     \
@@ -5125,11 +5118,7 @@ lastIndex_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (!obj)
             return true;
     }
-    jsdouble lastIndex;
-    if (!ValueToNumber(cx, *vp, &lastIndex))
-        return false;
-    lastIndex = js_DoubleToInteger(lastIndex);
-    SetRegExpLastIndex(cx, obj, lastIndex);
+    obj->setRegExpLastIndex(*vp);
     return true;
 }
 
@@ -5653,7 +5642,16 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
     HOLD_REGEXP(cx, re);
     sticky = (re->flags & JSREG_STICKY) != 0;
     if (re->flags & (JSREG_GLOB | JSREG_STICKY)) {
-        lastIndex = obj->getRegExpLastIndex().toNumber();
+        const Value &v = obj->getRegExpLastIndex();
+        if (v.isInt32()) {
+            lastIndex = v.toInt32();
+        } else {
+            if (v.isDouble())
+                lastIndex = v.toDouble();
+            else if (!ValueToNumber(cx, v, &lastIndex))
+                return JS_FALSE;
+            lastIndex = js_DoubleToInteger(lastIndex);
+        }
     } else {
         lastIndex = 0;
     }
@@ -5697,7 +5695,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
             if (rval->isNull())
                 obj->zeroRegExpLastIndex();
             else
-                SetRegExpLastIndex(cx, obj, i);
+                obj->setRegExpLastIndex(i);
         }
     }
 

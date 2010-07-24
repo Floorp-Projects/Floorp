@@ -615,27 +615,24 @@ stubs::SetElem(VMFrame &f)
     if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
         THROW();
 
-    if (obj->isDenseArray() && JSID_IS_INT(id)) {
-        jsuint length = obj->getDenseArrayCapacity();
-        jsint i = JSID_TO_INT(id);
-        
-        if ((jsuint)i < length) {
-            if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
-                if (js_PrototypeHasIndexedProperties(cx, obj))
-                    goto mid_setelem;
-                if ((jsuint)i >= obj->getArrayLength())
-                    obj->setDenseArrayLength(i + 1);
-                obj->incDenseArrayCountBy(1);
+    do {
+        if (obj->isDenseArray() && JSID_IS_INT(id)) {
+            jsuint length = obj->getDenseArrayCapacity();
+            jsint i = JSID_TO_INT(id);
+            if ((jsuint)i < length) {
+                if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
+                    if (js_PrototypeHasIndexedProperties(cx, obj))
+                        break;
+                    if ((jsuint)i >= obj->getArrayLength())
+                        obj->setArrayLength(i + 1);
+                }
+                obj->setDenseArrayElement(i, regs.sp[-1]);
+                goto end_setelem;
             }
-            obj->setDenseArrayElement(i, regs.sp[-1]);
-            goto end_setelem;
         }
-    }
-
-  mid_setelem:
+    } while (0);
     if (!obj->setProperty(cx, id, &regs.sp[-1]))
         THROW();
-
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
      * is a temporary hack. What we actually want is an implementation
@@ -1305,7 +1302,7 @@ stubs::Mod(VMFrame &f)
 JSObject *JS_FASTCALL
 stubs::NewArray(VMFrame &f, uint32 len)
 {
-    JSObject *obj = js_NewArrayObject(f.cx, len, f.regs.sp - len, JS_TRUE);
+    JSObject *obj = js_NewArrayObject(f.cx, len, f.regs.sp - len);
     if (!obj)
         THROWV(NULL);
     return obj;
@@ -2267,7 +2264,7 @@ stubs::InstanceOf(VMFrame &f)
     JSObject *obj = &rref.toObject();
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
-    if (!js_HasInstance(cx, obj, &lref, &cond))
+    if (!HasInstance(cx, obj, &lref, &cond))
         THROWV(JS_FALSE);
     f.regs.sp[-2].setBoolean(cond);
     return cond;

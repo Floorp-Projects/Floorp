@@ -121,6 +121,10 @@ JS_PUBLIC_DATA(jsval) JSVAL_TRUE  = { BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   JS_TRUE) 
 JS_PUBLIC_DATA(jsval) JSVAL_VOID  = { BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0) };
 #endif
 
+/* Make sure that jschar is two bytes unsigned integer */
+JS_STATIC_ASSERT((jschar)-1 > 0);
+JS_STATIC_ASSERT(sizeof(jschar) == 2);
+
 JS_PUBLIC_API(int64)
 JS_Now()
 {
@@ -1845,7 +1849,7 @@ JS_free(JSContext *cx, void *p)
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 {
-    return cx->updateMallocCounter(nbytes);
+    cx->runtime->updateMallocCounter(nbytes);
 }
 
 JS_PUBLIC_API(char *)
@@ -2441,65 +2445,16 @@ JS_MaybeGC(JSContext *cx)
 
     rt = cx->runtime;
 
-#ifdef JS_GC_ZEAL
-    if (rt->gcZeal > 0) {
-        JS_GC(cx);
-        return;
-    }
-#endif
-
     bytes = rt->gcBytes;
     lastBytes = rt->gcLastBytes;
 
-    /*
-     * We run the GC if we used all available free GC cells and had to
-     * allocate extra 1/3 of GC arenas since the last run of GC, or if
-     * we have malloc'd more bytes through JS_malloc than we were told
-     * to allocate by JS_NewRuntime.
-     *
-     * The reason for
-     *   bytes > 4/3 lastBytes
-     * condition is the following. Bug 312238 changed bytes and lastBytes
-     * to mean the total amount of memory that the GC uses now and right
-     * after the last GC.
-     *
-     * Before the bug the variables meant the size of allocated GC things
-     * now and right after the last GC. That size did not include the
-     * memory taken by free GC cells and the condition was
-     *   bytes > 3/2 lastBytes.
-     * That is, we run the GC if we have half again as many bytes of
-     * GC-things as the last time we GC'd. To be compatible we need to
-     * express that condition through the new meaning of bytes and
-     * lastBytes.
-     *
-     * We write the original condition as
-     *   B*(1-F) > 3/2 Bl*(1-Fl)
-     * where B is the total memory size allocated by GC and F is the free
-     * cell density currently and Sl and Fl are the size and the density
-     * right after GC. The density by definition is memory taken by free
-     * cells divided by total amount of memory. In other words, B and Bl
-     * are bytes and lastBytes with the new meaning and B*(1-F) and
-     * Bl*(1-Fl) are bytes and lastBytes with the original meaning.
-     *
-     * Our task is to exclude F and Fl from the last statement. According
-     * to the stats from bug 331966 comment 23, Fl is about 10-25% for a
-     * typical run of the browser. It means that the original condition
-     * implied that we did not run GC unless we exhausted the pool of
-     * free cells. Indeed if we still have free cells, then B == Bl since
-     * we did not yet allocated any new arenas and the condition means
-     *   1 - F > 3/2 (1-Fl) or 3/2Fl > 1/2 + F
-     * That implies 3/2 Fl > 1/2 or Fl > 1/3. That cannot be fulfilled
-     * for the state described by the stats. So we can write the original
-     * condition as:
-     *   F == 0 && B > 3/2 Bl(1-Fl)
-     * Again using the stats we see that Fl is about 11% when the browser
-     * starts up and when we are far from hitting rt->gcMaxBytes. With
-     * this F we have
-     * F == 0 && B > 3/2 Bl(1-0.11)
-     * or approximately F == 0 && B > 4/3 Bl.
-     */
-    if ((bytes > 8192 && bytes > lastBytes + lastBytes / 3) ||
-        rt->isGCMallocLimitReached()) {
+    if (rt->gcIsNeeded ||
+#ifdef JS_GC_ZEAL
+        rt->gcZeal > 0 ||
+#endif
+        (bytes > 8192 && bytes > lastBytes * 16) ||
+        bytes >= rt->gcTriggerBytes ||
+        rt->overQuota()) {
         JS_GC(cx);
     }
 }
@@ -2620,7 +2575,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     if (!str)
         return NULL;
     str->initFlat(chars, length);
-    cx->updateMallocCounter((length + 1) * sizeof(jschar));
+    cx->runtime->updateMallocCounter((length + 1) * sizeof(jschar));
     return str;
 }
 
@@ -2773,7 +2728,7 @@ JS_PUBLIC_API(JSBool)
 JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     assertSameCompartment(cx, obj, v);
-    return js_HasInstance(cx, obj, Valueify(&v), bp);
+    return HasInstance(cx, obj, Valueify(&v), bp);
 }
 
 JS_PUBLIC_API(void *)
@@ -4854,13 +4809,21 @@ JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSContext *cx)
 {
     /*
-     * Use JS_ATOMIC_SET_MASK in the hope that it will make sure the write
-     * will become immediately visible to other processors polling
-     * cx->interruptFlag. Note that we only care about visibility here,
-     * not read/write ordering.
+     * We allow for cx to come from another thread. Thus we must deal with
+     * possible JS_ClearContextThread calls when accessing cx->thread. But we
+     * assume that the calling thread is in a request so JSThread cannot be
+     * GC-ed.
      */
-    JS_ATOMIC_SET_MASK(const_cast<jsword*>(&cx->interruptFlags),
-                       JSContext::INTERRUPT_OPERATION_CALLBACK);
+    JSThreadData *td;
+#ifdef JS_THREADSAFE
+    JSThread *thread = cx->thread;
+    if (!thread)
+        return;
+    td = &thread->data;
+#else
+    td = JS_THREAD_DATA(cx);
+#endif
+    td->triggerOperationCallback();
 }
 
 JS_PUBLIC_API(void)

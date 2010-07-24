@@ -1278,7 +1278,13 @@ mjit::Compiler::generateMethod()
             if (analysis[PC].nincoming > 0) {
                 RegisterID cxreg = frame.allocReg();
                 masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxreg);
-                Address flag(cxreg, offsetof(JSContext, interruptFlags));
+#ifdef JS_THREADSAFE
+                masm.loadPtr(Address(cxreg, offsetof(JSContext, thread)), cxreg);
+                Address flag(cxreg, offsetof(JSThread, data.interruptFlags));
+#else
+                masm.loadPtr(Address(cxreg, offsetof(JSContext, runtime)), cxreg);
+                Address flag(cxreg, offsetof(JSRuntime, threadData.interruptFlags));
+#endif
                 Jump jump = masm.branchTest32(Assembler::NonZero, flag);
                 frame.freeReg(cxreg);
                 stubcc.linkExit(jump, Uses(0));

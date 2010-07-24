@@ -1072,7 +1072,7 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
 }
 
 JSBool
-js_HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
+HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 {
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)
@@ -2347,7 +2347,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
      */
 #define CHECK_BRANCH()                                                        \
     JS_BEGIN_MACRO                                                            \
-        if (cx->interruptFlags && !js_HandleExecutionInterrupt(cx))           \
+        if (JS_THREAD_DATA(cx)->interruptFlags && !js_HandleExecutionInterrupt(cx)) \
             goto error;                                                       \
     JS_END_MACRO
 
@@ -4523,8 +4523,7 @@ BEGIN_CASE(JSOP_GETELEM)
         if (obj->isDenseArray()) {
             jsuint idx = jsuint(i);
 
-            if (idx < obj->getArrayLength() &&
-                idx < obj->getDenseArrayCapacity()) {
+            if (idx < obj->getDenseArrayCapacity()) {
                 copyFrom = obj->addressOfDenseArrayElement(idx);
                 if (!copyFrom->isMagic())
                     goto end_getelem;
@@ -4615,8 +4614,7 @@ BEGIN_CASE(JSOP_SETELEM)
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
                     if ((jsuint)i >= obj->getArrayLength())
-                        obj->setDenseArrayLength(i + 1);
-                    obj->incDenseArrayCountBy(1);
+                        obj->setArrayLength(i + 1);
                 }
                 obj->setDenseArrayElement(i, regs.sp[-1]);
                 goto end_setelem;
@@ -6035,7 +6033,7 @@ BEGIN_CASE(JSOP_NEWARRAY)
 {
     len = GET_UINT16(regs.pc);
     cx->assertValidStackDepth(len);
-    JSObject *obj = js_NewArrayObject(cx, len, regs.sp - len, JS_TRUE);
+    JSObject *obj = js_NewArrayObject(cx, len, regs.sp - len);
     if (!obj)
         goto error;
     regs.sp -= len - 1;
@@ -6432,7 +6430,7 @@ BEGIN_CASE(JSOP_INSTANCEOF)
     JSObject *obj = &rref.toObject();
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
-    if (!js_HasInstance(cx, obj, &lref, &cond))
+    if (!HasInstance(cx, obj, &lref, &cond))
         goto error;
     regs.sp--;
     regs.sp[-1].setBoolean(cond);

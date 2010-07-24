@@ -474,45 +474,28 @@ struct JSObject {
     // Used by dense and slow arrays.
     static const uint32 JSSLOT_ARRAY_LENGTH = JSSLOT_PRIVATE;
 
-  private:
-    // Used only by dense arrays.
-    static const uint32 JSSLOT_DENSE_ARRAY_COUNT     = JSSLOT_PRIVATE + 1;
-    static const uint32 JSSLOT_DENSE_ARRAY_MINLENCAP = JSSLOT_PRIVATE + 2;
-
     // This assertion must remain true;  see comment in js_MakeArraySlow().
     // (Nb: This method is never called, it just contains a static assertion.
     // The static assertion isn't inline because that doesn't work on Mac.)
     inline void staticAssertArrayLengthIsInPrivateSlot();
 
-    inline uint32 uncheckedGetArrayLength() const;
-    inline uint32 uncheckedGetDenseArrayCapacity() const;
-
   public:
     static const uint32 DENSE_ARRAY_FIXED_RESERVED_SLOTS = 3;
 
     inline uint32 getArrayLength() const;
-    inline void setDenseArrayLength(uint32 length);
-    inline void setSlowArrayLength(uint32 length);
-
-    inline uint32 getDenseArrayCount() const;
-    inline void setDenseArrayCount(uint32 count);
-    inline void incDenseArrayCountBy(uint32 posDelta);
-    inline void decDenseArrayCountBy(uint32 negDelta);
+    inline void setArrayLength(uint32 length);
 
     inline uint32 getDenseArrayCapacity() const;
     inline void setDenseArrayCapacity(uint32 capacity); // XXX: bug 558263 will remove this
-
-    inline bool isDenseArrayMinLenCapOk(bool strictAboutLength = true) const;
 
     inline const js::Value &getDenseArrayElement(uint32 i) const;
     inline js::Value *addressOfDenseArrayElement(uint32 i);
     inline void setDenseArrayElement(uint32 i, const js::Value &v);
 
     inline js::Value *getDenseArrayElements() const;   // returns pointer to the Array's elements array
-    bool resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
-                               bool initializeAllSlots = true);
-    bool ensureDenseArrayElements(JSContext *cx, uint32 newcap,
-                               bool initializeAllSlots = true);
+    bool growDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap);
+    bool ensureDenseArrayElements(JSContext *cx, uint32 newcap);
+    bool shrinkDenseArrayElements(JSContext *cx, uint32 newcap);
     inline void freeDenseArrayElements(JSContext *cx);
 
     inline void voidDenseOnlyArraySlots();  // used when converting a dense array to a slow array
@@ -586,6 +569,7 @@ struct JSObject {
 
     inline const js::Value &getRegExpLastIndex() const;
     inline void setRegExpLastIndex(const js::Value &v);
+    inline void setRegExpLastIndex(jsdouble d);
     inline void zeroRegExpLastIndex();
 
     /*

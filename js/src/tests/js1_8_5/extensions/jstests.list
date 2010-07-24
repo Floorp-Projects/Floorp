@@ -10,3 +10,4 @@ skip-if(!xulRuntime.shell) script worker-terminate.js
 skip-if(!xulRuntime.shell) script worker-timeout.js
 script scripted-proxies.js
 script array-length-protochange.js
+script proxy-enumerateOwn-duplicates.js

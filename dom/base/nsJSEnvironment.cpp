@@ -903,20 +903,6 @@ DumpString(const nsAString &str)
 }
 #endif
 
-static void
-MaybeGC(JSContext *cx)
-{
-  size_t bytes = cx->runtime->gcBytes;
-  size_t lastBytes = cx->runtime->gcLastBytes;
-  if ((bytes > 8192 && bytes > lastBytes * 16)
-#ifdef DEBUG
-      || cx->runtime->gcZeal > 0
-#endif
-      ) {
-    JS_GC(cx);
-  }
-}
-
 static already_AddRefed<nsIPrompt>
 GetPromptFromContext(nsJSContext* ctx)
 {
@@ -955,7 +941,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   PRTime callbackTime = ctx->mOperationCallbackTime;
   PRTime modalStateTime = ctx->mModalStateTime;
 
-  MaybeGC(cx);
+  JS_MaybeGC(cx);
 
   // Now restore the callback time and count, in case they got reset.
   ctx->mOperationCallbackTime = callbackTime;
@@ -2184,6 +2170,8 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
   NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME,
                        __LINE__, JS_GetFunctionName(static_cast<JSFunction *>(JS_GetPrivate(mContext, static_cast<JSObject *>(aHandler)))));
 
+ 
+  JSAutoRequest ar(mContext);
   JSObject* target = nsnull;
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2227,7 +2215,6 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     }
 
     jsval funval = OBJECT_TO_JSVAL(static_cast<JSObject *>(aHandler));
-    JSAutoRequest ar(mContext);
     JSAutoCrossCompartmentCall accc;
     if (!accc.enter(mContext, target)) {
       stack->Pop(nsnull);
@@ -2259,7 +2246,6 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 
   // Convert to variant before calling ScriptEvaluated, as it may GC, meaning
   // we would need to root rval.
-  JSAutoRequest ar(mContext);
   if (NS_SUCCEEDED(rv)) {
     if (rval == JSVAL_NULL)
       *arv = nsnull;
@@ -3523,12 +3509,12 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
 
 #ifdef JS_GC_ZEAL
   if (mContext->runtime->gcZeal >= 2) {
-    MaybeGC(mContext);
+    JS_MaybeGC(mContext);
   } else
 #endif
   if (mNumEvaluations > 20) {
     mNumEvaluations = 0;
-    MaybeGC(mContext);
+    JS_MaybeGC(mContext);
   }
 
   if (aTerminated) {
