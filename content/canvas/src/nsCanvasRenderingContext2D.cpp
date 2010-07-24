@@ -74,6 +74,7 @@
 
 #include "nsCSSParser.h"
 #include "nsICSSStyleRule.h"
+#include "mozilla/css/Declaration.h"
 #include "nsComputedDOMStyle.h"
 #include "nsStyleSet.h"
 
@@ -2307,6 +2308,23 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
     if (NS_FAILED(rv))
         return rv;
 
+    css::Declaration *declaration = rule->GetDeclaration();
+    // The easiest way to see whether we got a syntax error or whether
+    // we got 'inherit' or 'initial' is to look at font-size-adjust,
+    // which the shorthand resets to either 'none' or
+    // '-moz-system-font'.
+    // We know the declaration is not !important, so we can use
+    // GetNormalBlock().
+    const nsCSSValue *fsaVal =
+      declaration->GetNormalBlock()->
+        ValueStorageFor(eCSSProperty_font_size_adjust);
+    if (!fsaVal || (fsaVal->GetUnit() != eCSSUnit_None &&
+                    fsaVal->GetUnit() != eCSSUnit_System_Font)) {
+        // We got an all-property value or a syntax error.  The spec says
+        // this value must be ignored.
+        return NS_OK;
+    }
+
     rules.AppendObject(rule);
 
     nsStyleSet* styleSet = presShell->StyleSet();
@@ -2375,7 +2393,13 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                                                     &style,
                                                     presShell->GetPresContext()->GetUserFontSet());
     NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
-    CurrentState().font = font;
+
+    // The font getter is required to be reserialized based on what we
+    // parsed (including having line-height removed).  (Older drafts of
+    // the spec required font sizes be converted to pixels, but that no
+    // longer seems to be required.)
+    declaration->GetValue(eCSSProperty_font, CurrentState().font);
+
     return NS_OK;
 }
 
