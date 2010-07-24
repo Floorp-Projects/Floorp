@@ -570,7 +570,7 @@ window.TabItem.prototype = Utils.extend(new Item(), {
         self._zoomPrep = false;
         self.setBounds(self.getBounds(), true, {force: true});
 
-        if (Utils.isFunction(complete))
+        if (typeof complete == "function")
            complete();
       }
     });

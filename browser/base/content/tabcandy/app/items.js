@@ -596,7 +596,7 @@ window.Item.prototype = {
 
         // drag events
         if (!startSent) {
-          if (Utils.isFunction(self.dragOptions.start)) {
+          if (typeof self.dragOptions.start == "function") {
             self.dragOptions.start.apply(self,
                 [startEvent, {position: {left: startPos.x, top: startPos.y}}]);
           }
@@ -604,7 +604,7 @@ window.Item.prototype = {
           startSent = true;
         }
 
-        if (Utils.isFunction(self.dragOptions.drag))
+        if (typeof self.dragOptions.drag == "function")
           self.dragOptions.drag.apply(self, [e, {position: box.position()}]);
 
         // drop events
@@ -620,7 +620,7 @@ window.Item.prototype = {
             var accept = true;
             if (possibleDropTarget != dropTarget) {
               var dropOptions = possibleDropTarget.dropOptions;
-              if (dropOptions && Utils.isFunction(dropOptions.accept))
+              if (dropOptions && typeof dropOptions.accept == "function")
                 accept = dropOptions.accept.apply(possibleDropTarget, [self]);
             }
 
@@ -635,7 +635,7 @@ window.Item.prototype = {
           var dropOptions;
           if (dropTarget) {
             dropOptions = dropTarget.dropOptions;
-            if (dropOptions && Utils.isFunction(dropOptions.out))
+            if (dropOptions && typeof dropOptions.out == "function")
               dropOptions.out.apply(dropTarget, [e]);
           }
 
@@ -643,7 +643,7 @@ window.Item.prototype = {
 
           if (dropTarget) {
             dropOptions = dropTarget.dropOptions;
-            if (dropOptions && Utils.isFunction(dropOptions.over))
+            if (dropOptions && typeof dropOptions.over == "function")
               dropOptions.over.apply(dropTarget, [e]);
           }
         }
@@ -659,11 +659,11 @@ window.Item.prototype = {
 
         if (dropTarget) {
           var dropOptions = dropTarget.dropOptions;
-          if (dropOptions && Utils.isFunction(dropOptions.drop))
+          if (dropOptions && typeof dropOptions.drop == "function")
             dropOptions.drop.apply(dropTarget, [e]);
         }
 
-        if (startSent && Utils.isFunction(self.dragOptions.stop))
+        if (startSent && typeof self.dragOptions.stop == "function")
           self.dragOptions.stop.apply(self, [e]);
 
         e.preventDefault();
@@ -769,7 +769,7 @@ window.Item.prototype = {
 
           self.setBounds(box, true);
 
-          if (Utils.isFunction(self.resizeOptions.resize))
+          if (typeof self.resizeOptions.resize == "function")
             self.resizeOptions.resize.apply(self, [e]);
 
           e.preventDefault();
@@ -782,7 +782,7 @@ window.Item.prototype = {
             .unbind('mousemove', handleMouseMove)
             .unbind('mouseup', handleMouseUp);
 
-          if (Utils.isFunction(self.resizeOptions.stop))
+          if (typeof self.resizeOptions.stop == "function")
             self.resizeOptions.stop.apply(self, [e]);
 
           e.preventDefault();
@@ -801,7 +801,7 @@ window.Item.prototype = {
             startSize = self.getBounds().size();
             startAspect = startSize.y / startSize.x;
 
-            if (Utils.isFunction(self.resizeOptions.start))
+            if (typeof self.resizeOptions.start == "function")
               self.resizeOptions.start.apply(self, [e]);
 
             iQ(gWindow)
