@@ -1175,7 +1175,6 @@ out_of_range:
 static JSBool
 str_charCodeAt(JSContext *cx, uintN argc, Value *vp)
 {
-    Value t;
     JSString *str;
     jsint i;
     jsdouble d;
