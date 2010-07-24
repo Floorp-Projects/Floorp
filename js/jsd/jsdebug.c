@@ -138,21 +138,10 @@ JSD_SetContextFlags(JSDContext *jsdc, uint32 flags)
     uint32 oldFlags = jsdc->flags;
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     jsdc->flags = flags;
-    if ((flags & JSD_COLLECT_PROFILE_DATA) ||
-        !(flags & JSD_DISABLE_OBJECT_TRACE)) {
+    if (flags & JSD_COLLECT_PROFILE_DATA) {
         /* Need to reenable our call hooks now */
         JS_SetExecuteHook(jsdc->jsrt, jsd_TopLevelCallHook, jsdc);
         JS_SetCallHook(jsdc->jsrt, jsd_FunctionCallHook, jsdc);
-    }
-    if ((oldFlags ^ flags) & JSD_DISABLE_OBJECT_TRACE) {
-        /* Changing our JSD_DISABLE_OBJECT_TRACE flag */
-        if (!(flags & JSD_DISABLE_OBJECT_TRACE)) {
-            /* Need to reenable our object hooks now */
-            JS_SetObjectHook(jsdc->jsrt, jsd_ObjectHook, jsdc);
-        } else {
-            jsd_DestroyObjects(jsdc);
-            JS_SetObjectHook(jsdc->jsrt, NULL, NULL);
-        }
     }
 }
 

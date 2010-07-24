@@ -263,9 +263,6 @@ typedef void *
 (* JSInterpreterHook)(JSContext *cx, JSStackFrame *fp, JSBool before,
                       JSBool *ok, void *closure);
 
-typedef void
-(* JSObjectHook)(JSContext *cx, JSObject *obj, JSBool isNew, void *closure);
-
 typedef JSBool
 (* JSDebugErrorHook)(JSContext *cx, const char *message, JSErrorReport *report,
                      void *closure);
@@ -285,8 +282,6 @@ typedef struct JSDebugHooks {
     void                *executeHookData;
     JSInterpreterHook   callHook;
     void                *callHookData;
-    JSObjectHook        objectHook;
-    void                *objectHookData;
     JSThrowHook         throwHook;
     void                *throwHookData;
     JSDebugErrorHook    debugErrorHook;
