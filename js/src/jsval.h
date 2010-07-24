@@ -291,10 +291,13 @@ typedef union jsval_layout
 typedef union jsval_layout
 {
     uint64 asBits;
+#ifndef _MSC_VER
+    /* MSVC does not pack these correctly :-( */
     struct {
         uint64             payload47 : 47;
         JSValueTag         tag : 17;
     } debugView;
+#endif
     struct {
         union {
             int32          i32;
