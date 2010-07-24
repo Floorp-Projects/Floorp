@@ -224,7 +224,6 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
         ok = JS_TRUE;
         for (i = 0, length = ida->length; i < length; i++) {
             id = ida->vector[i];
-            js::Value val;
             ok = obj->lookupProperty(cx, id, &obj2, &prop);
             if (!ok)
                 break;

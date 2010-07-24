@@ -315,10 +315,10 @@ namespace js {
 class Value
 {
   public:
-    /*** Constructors ***/
-
-    /* N.B. the default constructor creates a double. */
-    Value() { data.asBits = 0; }
+    /*
+     * N.B. the default constructor leaves Value unitialized. Adding a default
+     * constructor prevents Value from being stored in a union.
+     */
 
     /*** Mutatators ***/
 

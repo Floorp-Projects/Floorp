@@ -279,7 +279,6 @@ Class js_NumberClass = {
 static JSBool
 Number(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
-    Value v;
     if (argc != 0) {
         if (!ValueToNumber(cx, &argv[0]))
             return JS_FALSE;
