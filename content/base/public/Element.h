@@ -84,7 +84,7 @@ class Element : public nsIContent
 {
 public:
 #ifdef MOZILLA_INTERNAL_API
-  Element(nsINodeInfo* aNodeInfo) : nsIContent(aNodeInfo) {}
+  Element(already_AddRefed<nsINodeInfo> aNodeInfo) : nsIContent(aNodeInfo) {}
 #endif // MOZILLA_INTERNAL_API
 };
 

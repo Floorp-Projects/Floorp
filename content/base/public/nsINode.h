@@ -69,6 +69,7 @@ class nsIEditor;
 class nsIVariant;
 class nsIDOMUserDataHandler;
 class nsAttrAndChildArray;
+class nsXPCClassInfo;
 
 namespace mozilla {
 namespace dom {
@@ -293,8 +294,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x58695b2f, 0x39bd, 0x434d, \
-  { 0xa2, 0x0b, 0xde, 0xd3, 0xa8, 0xa0, 0xb6, 0x95 } } 
+{ 0x2a8dc794, 0x9178, 0x400e, \
+  { 0x81, 0xff, 0x55, 0x30, 0x30, 0xb6, 0x74, 0x3b } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -313,15 +314,16 @@ public:
   friend class nsAttrAndChildArray;
 
 #ifdef MOZILLA_INTERNAL_API
-  nsINode(nsINodeInfo* aNodeInfo)
-    : mNodeInfo(aNodeInfo),
-      mParentPtrBits(0),
-      mFlagsOrSlots(NODE_DOESNT_HAVE_SLOTS),
-      mNextSibling(nsnull),
-      mPreviousSibling(nsnull),
-      mFirstChild(nsnull)
+  nsINode(already_AddRefed<nsINodeInfo> aNodeInfo)
+  : mNodeInfo(aNodeInfo),
+    mParentPtrBits(0),
+    mFlagsOrSlots(NODE_DOESNT_HAVE_SLOTS),
+    mNextSibling(nsnull),
+    mPreviousSibling(nsnull),
+    mFirstChild(nsnull)
   {
   }
+
 #endif
 
   virtual ~nsINode();
@@ -1145,6 +1147,8 @@ public:
     NS_NOTREACHED("How did we get here?");
   }
 
+  // Optimized way to get classinfo. May return null.
+  virtual nsXPCClassInfo* GetClassInfo() = 0;
 protected:
 
   // Override this function to create a custom slots class.

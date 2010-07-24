@@ -39,6 +39,7 @@
 
 #include "TestHarness.h"
 #include "nsMemory.h"
+#include "nsThreadUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
@@ -72,11 +73,19 @@ static int gPassedTests = 0;
 #define do_check_eq(aFirst, aSecond) \
   do_check_true(aFirst == aSecond)
 
-already_AddRefed<mozIStorageConnection>
-getMemoryDatabase()
+already_AddRefed<mozIStorageService>
+getService()
 {
   nsCOMPtr<mozIStorageService> ss =
     do_GetService("@mozilla.org/storage/service;1");
+  do_check_true(ss);
+  return ss.forget();
+}
+
+already_AddRefed<mozIStorageConnection>
+getMemoryDatabase()
+{
+  nsCOMPtr<mozIStorageService> ss = getService();
   nsCOMPtr<mozIStorageConnection> conn;
   nsresult rv = ss->OpenSpecialDatabase("memory", getter_AddRefs(conn));
   do_check_success(rv);
@@ -94,8 +103,7 @@ getDatabase()
   nsresult rv = dbFile->Append(NS_LITERAL_STRING("storage_test_db.sqlite"));
   do_check_success(rv);
 
-  nsCOMPtr<mozIStorageService> ss =
-    do_GetService("@mozilla.org/storage/service;1");
+  nsCOMPtr<mozIStorageService> ss = getService();
   nsCOMPtr<mozIStorageConnection> conn;
   rv = ss->OpenDatabase(dbFile, getter_AddRefs(conn));
   do_check_success(rv);

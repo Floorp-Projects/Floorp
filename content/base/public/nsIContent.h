@@ -71,8 +71,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x1450010b, 0xcdca, 0x451c, \
-  { 0xba, 0xdc, 0x07, 0x90, 0x89, 0x7b, 0xce, 0xb8 } }
+{ 0xdd254504, 0xe273, 0x4923, \
+  { 0x9e, 0xc1, 0xd8, 0x42, 0x1a, 0x66, 0x35, 0xf1 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -84,11 +84,11 @@ public:
   // If you're using the external API, the only thing you can know about
   // nsIContent is that it exists with an IID
 
-  nsIContent(nsINodeInfo *aNodeInfo)
+  nsIContent(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsINode(aNodeInfo),
       mPrimaryFrame(nsnull)
   {
-    NS_ASSERTION(aNodeInfo,
+    NS_ASSERTION(mNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
   }
 #endif // MOZILLA_INTERNAL_API
@@ -927,6 +927,19 @@ public:
   PRBool IsEqual(nsIContent *aOther);
 
   virtual PRBool IsEqualNode(nsINode* aOther);
+
+  /**
+   * If this content has independent selection, e.g., if this is input field
+   * or textarea, this return TRUE.  Otherwise, false.
+   */
+  PRBool HasIndependentSelection();
+
+  /**
+   * If the content is a part of HTML editor, this returns editing
+   * host content.  When the content is in designMode, this returns its body
+   * element.  Also, when the content isn't editable, this returns null.
+   */
+  nsIContent* GetEditingHost();
 
 protected:
   /**

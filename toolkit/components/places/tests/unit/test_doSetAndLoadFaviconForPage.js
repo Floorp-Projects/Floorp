@@ -40,16 +40,12 @@
  * Tests for nsIFaviconService::SetAndLoadFaviconForPage()
  */
 
-var iconsvc = Cc["@mozilla.org/browser/favicon-service;1"].
-              getService(Ci.nsIFaviconService);
+var iconsvc = PlacesUtils.favicons;
 
 function addBookmark(aURI) {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-  return bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
-                              aURI,
-                              bmsvc.DEFAULT_INDEX,
-                              aURI.spec);
+  var bs = PlacesUtils.bookmarks;
+  return bs.insertBookmark(bs.unfiledBookmarksFolder, aURI,
+                           bs.DEFAULT_INDEX, aURI.spec);
 }
 
 function checkAddSucceeded(pageURI, mimetype, data) {
@@ -194,9 +190,7 @@ function run_test() {
   // check that the favicon loaded correctly
   do_check_eq(favicons[0].data.length, 344);
 
-  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsINavHistoryService);
-  hs.addObserver(historyObserver, false);
+  PlacesUtils.history.addObserver(historyObserver, false);
 
   // Start the tests
   tests[currentTestIndex].go();

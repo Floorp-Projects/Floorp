@@ -45,8 +45,8 @@ class nsIDocument;
 class nsINode;
 
 #define NS_IMUTATION_OBSERVER_IID \
-{0x365d600b, 0x868a, 0x452a, \
-  {0x8d, 0xe8, 0xf4, 0x6f, 0xad, 0x8f, 0xee, 0x53 } }
+{ 0x85eea794, 0xed8e, 0x4e1b, \
+  { 0xa1, 0x28, 0xd0, 0x93, 0x00, 0xae, 0x51, 0xaa } }
 
 /**
  * Information details about a characterdata change.  Basically, we
@@ -117,6 +117,12 @@ public:
    * @param aDocument The owner-document of aContent. Can be null.
    * @param aContent  The piece of content that changed. Is never null.
    * @param aInfo     The structure with information details about the change.
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void CharacterDataWillChange(nsIDocument *aDocument,
                                        nsIContent* aContent,
@@ -133,6 +139,12 @@ public:
    * @param aDocument The owner-document of aContent. Can be null.
    * @param aContent  The piece of content that changed. Is never null.
    * @param aInfo     The structure with information details about the change.
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void CharacterDataChanged(nsIDocument *aDocument,
                                     nsIContent* aContent,
@@ -152,6 +164,12 @@ public:
    * @param aModType     Whether or not the attribute will be added, changed, or
    *                     removed. The constants are defined in
    *                     nsIDOMMutationEvent.h.
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void AttributeWillChange(nsIDocument* aDocument,
                                    nsIContent*  aContent,
@@ -169,6 +187,12 @@ public:
    * @param aModType     Whether or not the attribute was added, changed, or
    *                     removed. The constants are defined in
    *                     nsIDOMMutationEvent.h.
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void AttributeChanged(nsIDocument* aDocument,
                                 nsIContent*  aContent,
@@ -186,6 +210,12 @@ public:
    * @param aFirstNewContent the node at aIndexInContainer in aContainer.
    * @param aNewIndexInContainer the index in the container of the first
    *                   new child
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void ContentAppended(nsIDocument *aDocument,
                                nsIContent* aContainer,
@@ -204,6 +234,12 @@ public:
    *                   aDocument
    * @param aChild     The newly inserted child.
    * @param aIndexInContainer The index in the container of the new child.
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void ContentInserted(nsIDocument *aDocument,
                                nsIContent* aContainer,
@@ -223,11 +259,20 @@ public:
    * @param aChild     The child that was removed.
    * @param aIndexInContainer The index in the container which the child used
    *                          to have.
+   * @param aPreviousSibling The previous sibling to the child that was removed.
+   *                         Can be null if there was no previous sibling.
+   *
+   * @note Callers of this method might not hold a strong reference to the
+   *       observer.  The observer is responsible for making sure it stays
+   *       alive for the duration of the call as needed.  The observer may
+   *       assume that this call will happen when there are script blockers on
+   *       the stack.
    */
   virtual void ContentRemoved(nsIDocument *aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
-                              PRInt32 aIndexInContainer) = 0;
+                              PRInt32 aIndexInContainer,
+                              nsIContent* aPreviousSibling) = 0;
 
  /**
    * The node is in the process of being destroyed. Calling QI on the node is
@@ -241,6 +286,10 @@ public:
    * removed from the observed node, use the ContentRemoved notification.
    * 
    * @param aNode The node being destroyed.
+   *
+   * @note Callers of this method might not hold a strong reference to
+   *       the observer.  The observer is responsible for making sure it
+   *       stays alive for the duration of the call as needed.
    */
   virtual void NodeWillBeDestroyed(const nsINode *aNode) = 0;
 
@@ -254,6 +303,10 @@ public:
    * parent chain changed.
    *
    * @param aContent  The piece of content that had its parent changed.
+   *
+   * @note Callers of this method might not hold a strong reference to
+   *       the observer.  The observer is responsible for making sure it
+   *       stays alive for the duration of the call as needed.
    */
 
   virtual void ParentChainChanged(nsIContent *aContent) = 0;
@@ -301,7 +354,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
     virtual void ContentRemoved(nsIDocument* aDocument,                      \
                                 nsIContent* aContainer,                      \
                                 nsIContent* aChild,                          \
-                                PRInt32 aIndexInContainer);
+                                PRInt32 aIndexInContainer,                   \
+                                nsIContent* aPreviousSibling);
 
 #define NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED                      \
     virtual void NodeWillBeDestroyed(const nsINode* aNode);
@@ -373,7 +427,8 @@ void                                                                      \
 _class::ContentRemoved(nsIDocument* aDocument,                            \
                        nsIContent* aContainer,                            \
                        nsIContent* aChild,                                \
-                       PRInt32 aIndexInContainer)                         \
+                       PRInt32 aIndexInContainer,                         \
+                       nsIContent* aPreviousSibling)                      \
 {                                                                         \
 }                                                                         \
 void                                                                      \

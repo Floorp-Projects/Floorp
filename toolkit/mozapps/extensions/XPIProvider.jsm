@@ -1722,6 +1722,8 @@ var XPIProvider = {
           Services.perms.add(NetUtil.newURI("http://" + aHost), XPI_PERMISSION,
                              aAction);
         });
+
+        Services.prefs.setCharPref(aPref, "");
       });
     }
 

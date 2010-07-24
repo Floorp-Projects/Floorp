@@ -1183,9 +1183,9 @@ png_read_destroy(png_structp png_ptr, png_infop info_ptr,
    png_free(png_ptr, png_ptr->big_row_buf);
    png_free(png_ptr, png_ptr->prev_row);
    png_free(png_ptr, png_ptr->chunkdata);
-#ifdef PNG_READ_DITHER_SUPPORTED
+#ifdef PNG_READ_QUANTIZE_SUPPORTED
    png_free(png_ptr, png_ptr->palette_lookup);
-   png_free(png_ptr, png_ptr->dither_index);
+   png_free(png_ptr, png_ptr->quantize_index);
 #endif
 #ifdef PNG_READ_GAMMA_SUPPORTED
    png_free(png_ptr, png_ptr->gamma_table);
@@ -1360,7 +1360,7 @@ png_read_png(png_structp png_ptr, png_infop info_ptr,
          png_set_expand(png_ptr);
 #endif
 
-   /* We don't handle background color or gamma transformation or dithering.
+   /* We don't handle background color or gamma transformation or quantizing.
     */
 
 #ifdef PNG_READ_INVERT_SUPPORTED

@@ -390,7 +390,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
       NS_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
     }
 
-    content = CreateHTMLElement(nodeType, nodeInfo, PR_FALSE).get();
+    content = CreateHTMLElement(nodeType, nodeInfo.forget(), PR_FALSE).get();
     NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
     result = AddAttributes(aNode, content);
@@ -477,7 +477,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
           NS_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
         }
 
-        content = CreateHTMLElement(nodeType, nodeInfo, PR_FALSE);
+        content = CreateHTMLElement(nodeType, nodeInfo.forget(), PR_FALSE);
         NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
         result = AddAttributes(aNode, content);

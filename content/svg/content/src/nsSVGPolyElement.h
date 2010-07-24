@@ -52,7 +52,7 @@ class nsSVGPolyElement : public nsSVGPolyElementBase,
                          public nsIDOMSVGAnimatedPoints
 {
 protected:
-  nsSVGPolyElement(nsINodeInfo* aNodeInfo);
+  nsSVGPolyElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
 
 public:

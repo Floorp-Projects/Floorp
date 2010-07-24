@@ -310,14 +310,26 @@ protected:
   class nsNodeInfoInner
   {
   public:
+    nsNodeInfoInner()
+      : mName(nsnull), mPrefix(nsnull), mNamespaceID(kNameSpaceID_Unknown),
+        mNameString(nsnull)
+    {
+    }
     nsNodeInfoInner(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID)
-      : mName(aName), mPrefix(aPrefix), mNamespaceID(aNamespaceID)
+      : mName(aName), mPrefix(aPrefix), mNamespaceID(aNamespaceID),
+        mNameString(nsnull)
+    {
+    }
+    nsNodeInfoInner(const nsAString& aTmpName, nsIAtom *aPrefix, PRInt32 aNamespaceID)
+      : mName(nsnull), mPrefix(aPrefix), mNamespaceID(aNamespaceID),
+        mNameString(&aTmpName)
     {
     }
 
     nsIAtom*            mName;
     nsIAtom*            mPrefix;
     PRInt32             mNamespaceID;
+    const nsAString*    mNameString;
   };
 
   // nsNodeInfoManager needs to pass mInner to the hash table.

@@ -1,0 +1,22 @@
+diff --git a/security/coreconf/WIN32.mk b/security/coreconf/WIN32.mk
+--- a/security/coreconf/WIN32.mk
++++ b/security/coreconf/WIN32.mk
+@@ -126,17 +126,17 @@ else # !NS_USE_GCC
+     ifdef BUILD_OPT
+ 	OS_CFLAGS  += -MD
+ 	ifeq (11,$(ALLOW_OPT_CODE_SIZE)$(OPT_CODE_SIZE))
+ 		OPTIMIZER += -O1
+ 	else
+ 		OPTIMIZER += -O2
+ 	endif
+ 	DEFINES    += -UDEBUG -U_DEBUG -DNDEBUG
+-	DLLFLAGS   += -OUT:"$@"
++	DLLFLAGS   += -DYNAMICBASE -OUT:"$@"
+ 	ifdef MOZ_DEBUG_SYMBOLS
+ 		OPTIMIZER += -Zi -Fd$(OBJDIR)/
+ 		DLLFLAGS += -DEBUG -OPT:REF
+ 		LDFLAGS += -DEBUG -OPT:REF
+ 	endif
+     else
+ 	#
+ 	# Define USE_DEBUG_RTL if you want to use the debug runtime library

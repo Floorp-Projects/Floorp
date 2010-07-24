@@ -49,7 +49,7 @@ class nsHTMLParagraphElement : public nsGenericHTMLElement,
                                public nsIDOMHTMLParagraphElement
 {
 public:
-  nsHTMLParagraphElement(nsINodeInfo *aNodeInfo);
+  nsHTMLParagraphElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLParagraphElement();
 
   // nsISupports
@@ -75,13 +75,15 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Paragraph)
 
 
-nsHTMLParagraphElement::nsHTMLParagraphElement(nsINodeInfo *aNodeInfo)
+nsHTMLParagraphElement::nsHTMLParagraphElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -94,7 +96,7 @@ nsHTMLParagraphElement::~nsHTMLParagraphElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLParagraphElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLParagraphElement, nsGenericElement)
 
-DOMCI_DATA(HTMLParagraphElement, nsHTMLParagraphElement)
+DOMCI_NODE_DATA(HTMLParagraphElement, nsHTMLParagraphElement)
 
 // QueryInterface implementation for nsHTMLParagraphElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLParagraphElement)

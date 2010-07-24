@@ -1622,7 +1622,8 @@ void
 nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                  nsIContent* aContainer,
                                  nsIContent* aChild,
-                                 PRInt32 aIndexInContainer)
+                                 PRInt32 aIndexInContainer,
+                                 nsIContent* aPreviousSibling)
 {
   if (aContainer && aIndexInContainer != -1 &&
       (mContentListTable.ops || mAnonymousNodesTable.ops)) {

@@ -945,7 +945,8 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(PRBool aMuted)
   return NS_OK;
 }
 
-nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
+nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                                       PRUint32 aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mCurrentLoadID(0),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),
@@ -1010,7 +1011,7 @@ void nsHTMLMediaElement::StopSuspendingAfterFirstFrame()
     return;
   mSuspendedAfterFirstFrame = PR_FALSE;
   if (mDecoder) {
-    mDecoder->Resume();
+    mDecoder->Resume(PR_TRUE);
   }
 }
 
@@ -1662,11 +1663,6 @@ PRBool nsHTMLMediaElement::ShouldCheckAllowOrigin()
                                      PR_TRUE);
 }
 
-// Number of bytes to add to the download size when we're computing
-// when the download will finish --- a safety margin in case bandwidth
-// or other conditions are worse than expected
-static const PRInt32 gDownloadSizeSafetyMargin = 1000000;
-
 void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
 {
   if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
@@ -1676,8 +1672,6 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
     // The arrival of more data can't change us out of this readyState.
     return;
   }
-
-  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
 
   if (aNextFrame != NEXT_FRAME_AVAILABLE) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
@@ -1693,25 +1687,17 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
   // make a real estimate, so we go straight to HAVE_ENOUGH_DATA once
   // we've downloaded enough data that our download rate is considered
   // reliable. We have to move to HAVE_ENOUGH_DATA at some point or
-  // autoplay elements for live streams will never play.
+  // autoplay elements for live streams will never play. Otherwise we
+  // move to HAVE_ENOUGH_DATA if we can play through the entire media
+  // without stopping to buffer.
+  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
   if (stats.mTotalBytes < 0 ? stats.mDownloadRateReliable :
-                              stats.mTotalBytes == stats.mDownloadPosition) {
+                              stats.mTotalBytes == stats.mDownloadPosition ||
+      mDecoder->CanPlayThrough())
+  {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
   }
-
-  if (stats.mDownloadRateReliable && stats.mPlaybackRateReliable) {
-    PRInt64 bytesToDownload = stats.mTotalBytes - stats.mDownloadPosition;
-    PRInt64 bytesToPlayback = stats.mTotalBytes - stats.mPlaybackPosition;
-    double timeToDownload =
-      (bytesToDownload + gDownloadSizeSafetyMargin)/stats.mDownloadRate;
-    double timeToPlay = bytesToPlayback/stats.mPlaybackRate;
-    if (timeToDownload <= timeToPlay) {
-      ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
-      return;
-    }
-  }
-
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA);
 }
 
@@ -1951,7 +1937,7 @@ void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
         mDecoder->Pause();
         mDecoder->Suspend();
       } else {
-        mDecoder->Resume();
+        mDecoder->Resume(PR_FALSE);
         if (!mPaused && !mDecoder->IsEnded()) {
           mDecoder->Play();
         }

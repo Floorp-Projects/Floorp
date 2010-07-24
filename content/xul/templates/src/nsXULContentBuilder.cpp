@@ -1401,7 +1401,7 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
     nsCOMPtr<nsINodeInfo> nodeInfo;
     nodeInfo = doc->NodeInfoManager()->GetNodeInfo(aTag, nsnull, aNameSpaceID);
 
-    rv = NS_NewElement(getter_AddRefs(result), aNameSpaceID, nodeInfo,
+    rv = NS_NewElement(getter_AddRefs(result), aNameSpaceID, nodeInfo.forget(),
                        PR_FALSE);
     if (NS_FAILED(rv))
         return rv;
@@ -1562,6 +1562,8 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
                                       nsIAtom*     aAttribute,
                                       PRInt32      aModType)
 {
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
     // Handle "open" and "close" cases. We do this handling before
     // we've notified the observer, so that content is already created
     // for the frame system to walk.
@@ -1590,6 +1592,7 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
 void
 nsXULContentBuilder::NodeWillBeDestroyed(const nsINode* aNode)
 {
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
     // Break circular references
     mContentSupportMap.Clear();
 

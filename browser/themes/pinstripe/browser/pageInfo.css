@@ -122,6 +122,11 @@ groupbox.treebox .groupbox-body {
 /* Media Tab */
 #imagetree {
   min-height: 10em;
+  margin-bottom: 0;
+}
+
+#mediaSplitter {
+  background: none;
 }
 
 #mediaGrid {

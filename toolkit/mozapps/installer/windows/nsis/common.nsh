@@ -1244,12 +1244,12 @@
       StrCmp $R3 "" +1 +3  ; Only add EditFlags if a value doesn't exist
       DeleteRegValue SHCTX "$R4" "EditFlags"
       WriteRegDWord SHCTX "$R4" "EditFlags" 0x00000002
-      
+
       StrCmp "$R6" "" +2 +1
       WriteRegStr SHCTX "$R4\DefaultIcon" "" "$R6"
-      
+
       StrCmp "$R5" "" +2 +1
-      WriteRegStr SHCTX "$R4\shell\open\command" "" "$R5"      
+      WriteRegStr SHCTX "$R4\shell\open\command" "" "$R5"
 
 !ifdef DDEApplication
       StrCmp "$R9" "true" +1 +11
@@ -1396,10 +1396,11 @@
       StrCmp $R1 "" +1 +3  ; Only add EditFlags if a value doesn't exist
       DeleteRegValue SHCTX "$R0\$R2" "EditFlags"
       WriteRegDWord SHCTX "$R0\$R2" "EditFlags" 0x00000002
-      
+
       StrCmp "$R4" "" +2 +1
       WriteRegStr SHCTX "$R0\$R2\DefaultIcon" "" "$R4"
 
+      WriteRegStr SHCTX "$R0\$R2\shell" "" "open"
       WriteRegStr SHCTX "$R0\$R2\shell\open\command" "" "$R3"
 
       WriteRegStr SHCTX "$R0\$R2\shell\open\ddeexec" "" "$R8"
@@ -2219,7 +2220,7 @@
 
       ; If this is the first \ found we want to swap R9 with R5 so a \ will
       ; be appended to the drive letter and colon (e.g. C: will become C:\).
-      StrCmp $R4 0 +1 +3     
+      StrCmp $R4 0 +1 +3
       StrCpy $R9 $R5
       StrCpy $R5 ""
 
@@ -5373,7 +5374,7 @@
       Push $R4
       Push $R3
       Push $R2
-      
+
       ${WriteLogSeparator}
       ${GetTime} "" "L" $R2 $R3 $R4 $R5 $R6 $R7 $R8
       FileWriteUTF16LE $fhInstallLog "$R9 Installation Finished: $R4-$R3-$R2 $R6:$R7:$R8$\r$\n"

@@ -50,7 +50,7 @@ class nsHTMLPreElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLPreElement
 {
 public:
-  nsHTMLPreElement(nsINodeInfo *aNodeInfo);
+  nsHTMLPreElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLPreElement();
 
   // nsISupports
@@ -77,13 +77,15 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Pre)
 
 
-nsHTMLPreElement::nsHTMLPreElement(nsINodeInfo *aNodeInfo)
+nsHTMLPreElement::nsHTMLPreElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -97,7 +99,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLPreElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLPreElement, nsGenericElement)
 
 
-DOMCI_DATA(HTMLPreElement, nsHTMLPreElement)
+DOMCI_NODE_DATA(HTMLPreElement, nsHTMLPreElement)
 
 // QueryInterface implementation for nsHTMLPreElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLPreElement)

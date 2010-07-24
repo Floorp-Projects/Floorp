@@ -102,6 +102,9 @@ include floats/reftest.list
 # font-face
 include font-face/reftest.list
 
+# font features (opentype)
+include font-features/reftest.list
+
 # font matching
 include font-matching/reftest.list
 

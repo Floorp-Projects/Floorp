@@ -59,7 +59,8 @@ class nsHTMLObjectElement : public nsGenericHTMLFormElement,
 #endif
 {
 public:
-  nsHTMLObjectElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser = 0);
+  nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                      PRUint32 aFromParser = 0);
   virtual ~nsHTMLObjectElement();
 
   // nsISupports
@@ -130,6 +131,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLObjectElement,
                                                      nsGenericHTMLFormElement)
 
+  virtual nsXPCClassInfo* GetClassInfo();
 private:
   /**
    * Calls LoadObject with the correct arguments to start the plugin load.
@@ -143,7 +145,7 @@ private:
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Object)
 
 
-nsHTMLObjectElement::nsHTMLObjectElement(nsINodeInfo *aNodeInfo,
+nsHTMLObjectElement::nsHTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                          PRUint32 aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mIsDoneAddingChildren(!aFromParser)
@@ -185,7 +187,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsHTMLObjectElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement) 
 
-DOMCI_DATA(HTMLObjectElement, nsHTMLObjectElement)
+DOMCI_NODE_DATA(HTMLObjectElement, nsHTMLObjectElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLObjectElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_BEGIN(nsHTMLObjectElement)

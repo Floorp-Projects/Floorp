@@ -66,6 +66,8 @@ public:
     ATSFontRef GetFontRef();
     nsresult ReadCMAP();
 
+    PRBool RequiresAATLayout() const { return mRequiresAAT; }
+
     virtual nsresult GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer);
 
 protected:
@@ -78,6 +80,7 @@ protected:
 
     ATSFontRef mATSFontRef;
     PRPackedBool mATSFontRefInitialized;
+    PRPackedBool mRequiresAAT;
 };
 
 class gfxMacPlatformFontList : public gfxPlatformFontList {

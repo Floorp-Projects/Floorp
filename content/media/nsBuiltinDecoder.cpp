@@ -446,7 +446,8 @@ NS_IMETHODIMP nsBuiltinDecoder::Observe(nsISupports *aSubjet,
 nsMediaDecoder::Statistics
 nsBuiltinDecoder::GetStatistics()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  NS_ASSERTION(NS_IsMainThread() || OnStateMachineThread(),
+               "Should be on main or state machine thread.");
   Statistics result;
 
   MonitorAutoEnter mon(mMonitor);
@@ -788,11 +789,15 @@ void nsBuiltinDecoder::Suspend()
   }
 }
 
-void nsBuiltinDecoder::Resume()
+void nsBuiltinDecoder::Resume(PRBool aForceBuffering)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mStream) {
     mStream->Resume();
+  }
+  if (aForceBuffering) {
+    MonitorAutoEnter mon(mMonitor);
+    mDecoderStateMachine->StartBuffering();
   }
 }
 

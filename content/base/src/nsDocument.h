@@ -834,10 +834,15 @@ public:
   
   virtual nsresult AddXMLEventsContent(nsIContent * aXMLEventsElement);
 
-  virtual nsresult CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
+  virtual nsresult CreateElem(const nsAString& aName, nsIAtom *aPrefix,
                               PRInt32 aNamespaceID,
                               PRBool aDocumentDefaultType,
                               nsIContent **aResult);
+
+  nsresult CreateElement(const nsAString& aTagName,
+                         nsIContent** aReturn);
+
+  nsresult CreateTextNode(const nsAString& aData, nsIContent** aReturn);
 
   virtual NS_HIDDEN_(nsresult) Sanitize();
 
@@ -1019,9 +1024,9 @@ protected:
   virtual nsPIDOMWindow *GetInnerWindowInternal();
   virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const;
 
-#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                  \
-  NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIDocumentObserver, \
-                                     func_, params_);
+#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                        \
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
+                                           func_, params_);
   
 #ifdef DEBUG
   void VerifyRootContentState();
@@ -1143,6 +1148,7 @@ private:
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();
 
+  nsresult CheckFrameOptions();
   nsresult InitCSP();
 
   /**

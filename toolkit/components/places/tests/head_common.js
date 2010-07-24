@@ -287,8 +287,7 @@ function check_no_bookmarks() {
 
 
 /**
- * Sets title synchronously for a page in moz_places synchronously.
- * History.SetPageTitle uses LAZY_ADD so we can't rely on it.
+ * Sets title synchronously for a page in moz_places.
  *
  * @param aURI
  *        An nsIURI to set the title for.
@@ -296,37 +295,10 @@ function check_no_bookmarks() {
  *        The title to set the page to.
  * @throws if the page is not found in the database.
  *
- * @note this function only exists because we have no API to do this. It should
- *       be added in bug 421897.
+ * @note This is just a test compatibility mock.
  */
 function setPageTitle(aURI, aTitle) {
-  // Check that the page exists.
-  let stmt = DBConn().createStatement(
-    "SELECT id FROM moz_places_view WHERE url = :url"
-  );
-  stmt.params.url = aURI.spec;
-  try {
-    if (!stmt.executeStep()) {
-      do_throw("Unable to find page " + aURI.spec);
-      return;
-    }
-  }
-  finally {
-    stmt.finalize();
-  }
-
-  // Update the title
-  stmt = DBConn().createStatement(
-    "UPDATE moz_places_view SET title = :title WHERE url = :url"
-  );
-  stmt.params.title = aTitle;
-  stmt.params.url = aURI.spec;
-  try {
-    stmt.execute();
-  }
-  finally {
-    stmt.finalize();
-  }
+  PlacesUtils.history.setPageTitle(aURI, aTitle);
 }
 
 

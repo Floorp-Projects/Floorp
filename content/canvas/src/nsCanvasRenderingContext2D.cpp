@@ -74,6 +74,7 @@
 
 #include "nsCSSParser.h"
 #include "nsICSSStyleRule.h"
+#include "mozilla/css/Declaration.h"
 #include "nsComputedDOMStyle.h"
 #include "nsStyleSet.h"
 
@@ -2243,28 +2244,36 @@ CreateFontStyleRule(const nsAString& aFont,
     nsCSSParser parser;
     NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
-    // aFont is to be parsed as the value of a CSS 'font' shorthand,
-    // and then any line-height setting in that shorthand is to be
-    // overridden with "normal".  Because of the way style rules are
-    // stored, it is more efficient to fabricate a text string that
-    // can be processed in one go with ParseStyleAttribute than to
-    // make two calls to ParseDeclaration.
-
-    nsAutoString styleAttr(NS_LITERAL_STRING("font:"));
-    styleAttr.Append(aFont);
-    styleAttr.AppendLiteral(";line-height:normal");
+    nsCOMPtr<nsICSSStyleRule> rule;
+    PRBool changed;
 
     nsIPrincipal* principal = aNode->NodePrincipal();
     nsIDocument* document = aNode->GetOwnerDoc();
+
     nsIURI* docURL = document->GetDocumentURI();
     nsIURI* baseURL = document->GetDocBaseURI();
 
-    nsresult rv = parser.ParseStyleAttribute(styleAttr, docURL, baseURL,
-                                             principal, aResult);
+    nsresult rv = parser.ParseStyleAttribute(EmptyString(), docURL, baseURL,
+                                             principal, getter_AddRefs(rule));
     if (NS_FAILED(rv))
         return rv;
 
-    (*aResult)->RuleMatched();
+    rv = parser.ParseProperty(eCSSProperty_font, aFont, docURL, baseURL,
+                              principal, rule->GetDeclaration(), &changed,
+                              PR_FALSE);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = parser.ParseProperty(eCSSProperty_line_height,
+                              NS_LITERAL_STRING("normal"), docURL, baseURL,
+                              principal, rule->GetDeclaration(), &changed,
+                              PR_FALSE);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rule->RuleMatched();
+
+    rule.forget(aResult);
     return NS_OK;
 }
 
@@ -2298,6 +2307,23 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
     rv = CreateFontStyleRule(font, document, getter_AddRefs(rule));
     if (NS_FAILED(rv))
         return rv;
+
+    css::Declaration *declaration = rule->GetDeclaration();
+    // The easiest way to see whether we got a syntax error or whether
+    // we got 'inherit' or 'initial' is to look at font-size-adjust,
+    // which the shorthand resets to either 'none' or
+    // '-moz-system-font'.
+    // We know the declaration is not !important, so we can use
+    // GetNormalBlock().
+    const nsCSSValue *fsaVal =
+      declaration->GetNormalBlock()->
+        ValueStorageFor(eCSSProperty_font_size_adjust);
+    if (!fsaVal || (fsaVal->GetUnit() != eCSSUnit_None &&
+                    fsaVal->GetUnit() != eCSSUnit_System_Font)) {
+        // We got an all-property value or a syntax error.  The spec says
+        // this value must be ignored.
+        return NS_OK;
+    }
 
     rules.AppendObject(rule);
 
@@ -2367,7 +2393,13 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                                                     &style,
                                                     presShell->GetPresContext()->GetUserFontSet());
     NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
-    CurrentState().font = font;
+
+    // The font getter is required to be reserialized based on what we
+    // parsed (including having line-height removed).  (Older drafts of
+    // the spec required font sizes be converted to pixels, but that no
+    // longer seems to be required.)
+    declaration->GetValue(eCSSProperty_font, CurrentState().font);
+
     return NS_OK;
 }
 

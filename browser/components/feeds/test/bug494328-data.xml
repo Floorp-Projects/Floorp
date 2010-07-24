@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Channel title</title>
+    <description>Channel description</description>
+    <link>Channel link</link>
+    <item>
+      <title>Episode 1</title>
+      <enclosure url="http://www.example.com/podcasts/Episode%201" length="0" type="audio/x-m4a" />
+    </item>
+    <item>
+      <title>Episode 2</title>
+      <enclosure url="http://www.example.com/podcasts/Episode%20%232" length="0" type="audio/x-m4a" />
+    </item>
+    <item>
+      <title>Episode 3</title>
+      <enclosure url="http://www.example.com/podcasts/Episode%20%233/" length="0" type="audio/x-m4a" />
+    </item>
+    <item>
+      <title>Episode 4</title>
+      <enclosure url="http://www.example.com/podcasts/Is%20This%20Episode%20%234%3F" length="0" type="audio/x-m4a" />
+    </item>
+  </channel>
+</rss>

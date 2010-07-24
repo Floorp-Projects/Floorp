@@ -83,7 +83,7 @@ class nsHTMLBodyElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLBodyElement
 {
 public:
-  nsHTMLBodyElement(nsINodeInfo *aNodeInfo);
+  nsHTMLBodyElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLBodyElement();
 
   // nsISupports
@@ -112,6 +112,7 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual already_AddRefed<nsIEditor> GetAssociatedEditor();
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsXPCClassInfo* GetClassInfo();
 private:
   nsresult GetColorHelper(nsIAtom* aAtom, nsAString& aColor);
 
@@ -276,7 +277,7 @@ BodyRule::List(FILE* out, PRInt32 aIndent) const
 NS_IMPL_NS_NEW_HTML_ELEMENT(Body)
 
 
-nsHTMLBodyElement::nsHTMLBodyElement(nsINodeInfo *aNodeInfo)
+nsHTMLBodyElement::nsHTMLBodyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mContentStyleRule(nsnull)
 {
@@ -294,7 +295,7 @@ nsHTMLBodyElement::~nsHTMLBodyElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLBodyElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLBodyElement, nsGenericElement) 
 
-DOMCI_DATA(HTMLBodyElement, nsHTMLBodyElement)
+DOMCI_NODE_DATA(HTMLBodyElement, nsHTMLBodyElement)
 
 // QueryInterface implementation for nsHTMLBodyElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLBodyElement)

@@ -278,6 +278,8 @@ public:
     nsIPrincipal* GetPrincipal() { return mPrincipal; }
 
 private:
+    void ActorDestroy(ActorDestroyReason why);
+
     bool InitTabChildGlobal();
 
     nsCOMPtr<nsIWebNavigation> mWebNav;

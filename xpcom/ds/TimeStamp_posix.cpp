@@ -56,6 +56,7 @@ static PRUint64 sResolutionSigDigs;
 static const PRUint16 kNsPerUs   =       1000;
 static const PRUint64 kNsPerMs   =    1000000;
 static const PRUint64 kNsPerSec  = 1000000000; 
+static const double kNsPerMsd    =    1000000.0;
 static const double kNsPerSecd   = 1000000000.0;
 
 static PRUint64
@@ -146,21 +147,15 @@ TimeDuration::ToSecondsSigDigits() const
 }
 
 TimeDuration
-TimeDuration::FromSeconds(PRInt32 aSeconds)
+TimeDuration::FromMilliseconds(double aMilliseconds)
 {
-  return TimeDuration::FromTicks((PRInt64(aSeconds) * PRInt64(kNsPerSec)));
-}
-
-TimeDuration
-TimeDuration::FromMilliseconds(PRInt32 aMilliseconds)
-{
-  return TimeDuration::FromTicks(PRInt64(aMilliseconds) * PRInt64(kNsPerMs));
+  return TimeDuration::FromTicks(aMilliseconds * kNsPerMsd);
 }
 
 TimeDuration
 TimeDuration::Resolution()
 {
-  return TimeDuration::FromTicks(sResolution);
+  return TimeDuration::FromTicks(PRInt64(sResolution));
 }
 
 struct TimeStampInitialization

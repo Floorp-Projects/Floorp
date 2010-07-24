@@ -196,7 +196,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   nsCOMPtr<nsINodeInfo> hrInfo;
   hrInfo = nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_XHTML);
 
-  NS_NewHTMLElement(getter_AddRefs(mPreHr), hrInfo, PR_FALSE);
+  NS_NewHTMLElement(getter_AddRefs(mPreHr), hrInfo.forget(), PR_FALSE);
   if (!mPreHr || !aElements.AppendElement(mPreHr))
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -214,7 +214,8 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   nsCOMPtr<nsINodeInfo> inputInfo;
   inputInfo = nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_XHTML);
 
-  NS_NewHTMLElement(getter_AddRefs(mInputContent), inputInfo, PR_FALSE);
+  NS_NewHTMLElement(getter_AddRefs(mInputContent), inputInfo.forget(),
+                    PR_FALSE);
   if (!mInputContent)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -229,7 +230,8 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   mInputContent->AddEventListenerByIID(mListener, NS_GET_IID(nsIDOMKeyListener));
 
   // Create an hr
-  NS_NewHTMLElement(getter_AddRefs(mPostHr), hrInfo, PR_FALSE);
+  hrInfo = nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_XHTML);
+  NS_NewHTMLElement(getter_AddRefs(mPostHr), hrInfo.forget(), PR_FALSE);
   if (!mPostHr || !aElements.AppendElement(mPostHr))
     return NS_ERROR_OUT_OF_MEMORY;
 

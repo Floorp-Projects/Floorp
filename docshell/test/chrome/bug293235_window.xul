@@ -92,16 +92,35 @@
       ok(snapshotsEqual(refLink, snapshotWindow(TestWindow.getWindow())),
          "link should initially be blue");
 
+      let observedVisit = false, observedPageShow = false;
+      function maybeRunNextTest() {
+        ok(true, "maybe run next test? visited: " + observedVisit + " pageShow: " + observedPageShow);
+        if (observedVisit && observedPageShow)
+          nextTest();
+      }
+
+      // Because adding visits is async, we will not be notified imemdiately.
+      let visitObserver = {
+        observe: function(aSubject, aTopic, aData)
+        {
+          if (!testURI.equals(aSubject.QueryInterface(Ci.nsIURI))) {
+            return;
+          }
+          os.removeObserver(this, aTopic);
+          observedVisit = true;
+          maybeRunNextTest();
+        },
+      };
+      os.addObserver(visitObserver, "uri-visit-saved", false);
+
       // Load the page that the link on the previous page points to.
       doPageNavigation({
         uri: getHttpUrl("bug293235_p2.html"),
-        onNavComplete: nextTest
+        onNavComplete: function() {
+          observedPageShow = true;
+          maybeRunNextTest();
+        }
       });
-      yield;
-
-      // Because of LAZY_ADD, we will not be notified for three seconds
-      // Wait for four seconds just to be safe.
-      setTimeout(nextTest, 4000);
       yield;
 
       // And the nodes get notified after the "link-visited" topic, so

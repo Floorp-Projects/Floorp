@@ -366,8 +366,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
     return nsnull;
   }
 
-  nsIFrame* frame = static_cast<nsIContent*>(this)->GetPrimaryFrame();
-  if (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) {
+  if (static_cast<nsIContent*>(this)->HasIndependentSelection()) {
     // This node should be a descendant of input/textarea editor.
     nsIContent* content = GetTextEditorRootContent();
     if (content)
@@ -388,15 +387,9 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
                  editorRoot :
                  GetRootForContentSubtree(static_cast<nsIContent*>(this));
       }
-      // If the current document is not editable, but current content is
-      // editable, we should assume that the child of the nearest non-editable
-      // ancestor is selection root.
-      nsIContent* content = static_cast<nsIContent*>(this);
-      for (nsIContent* parent = GetParent();
-           parent && parent->HasFlag(NODE_IS_EDITABLE);
-           parent = content->GetParent())
-        content = parent;
-      return content;
+      // If the document isn't editable but this is editable, this is in
+      // contenteditable.  Use the editing host element for selection root.
+      return static_cast<nsIContent*>(this)->GetEditingHost();
     }
   }
 
@@ -830,14 +823,13 @@ nsIContent::GetDesiredIMEState()
   if (!IsEditableInternal()) {
     return IME_STATUS_DISABLE;
   }
-  nsIContent *editableAncestor = nsnull;
-  for (nsIContent* parent = GetParent();
-       parent && parent->HasFlag(NODE_IS_EDITABLE);
-       parent = parent->GetParent()) {
-    editableAncestor = parent;
-  }
+  // NOTE: The content for independent editors (e.g., input[type=text],
+  // textarea) must override this method, so, we don't need to worry about
+  // that here.
+  nsIContent *editableAncestor = GetEditingHost();
+
   // This is in another editable content, use the result of it.
-  if (editableAncestor) {
+  if (editableAncestor && editableAncestor != this) {
     return editableAncestor->GetDesiredIMEState();
   }
   nsIDocument* doc = GetCurrentDoc();
@@ -863,6 +855,35 @@ nsIContent::GetDesiredIMEState()
   nsresult rv = imeEditor->GetPreferredIMEState(&state);
   NS_ENSURE_SUCCESS(rv, IME_STATUS_ENABLE);
   return state;
+}
+
+PRBool
+nsIContent::HasIndependentSelection()
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  return (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION);
+}
+
+nsIContent*
+nsIContent::GetEditingHost()
+{
+  // If this isn't editable, return NULL.
+  NS_ENSURE_TRUE(HasFlag(NODE_IS_EDITABLE), nsnull);
+
+  nsIDocument* doc = GetCurrentDoc();
+  NS_ENSURE_TRUE(doc, nsnull);
+  // If this is in designMode, we should return <body>
+  if (doc->HasFlag(NODE_IS_EDITABLE)) {
+    return doc->GetBodyElement();
+  }
+
+  nsIContent* content = this;
+  for (nsIContent* parent = GetParent();
+       parent && parent->HasFlag(NODE_IS_EDITABLE);
+       parent = content->GetParent()) {
+    content = parent;
+  }
+  return content;
 }
 
 nsresult
@@ -2067,7 +2088,7 @@ nsGenericElement::nsDOMSlots::~nsDOMSlots()
   }
 }
 
-nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
+nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : Element(aNodeInfo)
 {
   // Set the default scriptID to JS - but skip SetScriptTypeID as it
@@ -3676,6 +3697,8 @@ nsINode::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
     }
   }
 
+  nsIContent* previousSibling = aKid->GetPreviousSibling();
+
   if (GetFirstChild() == aKid) {
     mFirstChild = aKid->GetNextSibling();
   }
@@ -3683,7 +3706,7 @@ nsINode::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   aChildArray.RemoveChildAt(aIndex);
 
   if (aNotify) {
-    nsNodeUtils::ContentRemoved(this, aKid, aIndex);
+    nsNodeUtils::ContentRemoved(this, aKid, aIndex, previousSibling);
   }
 
   aKid->UnbindFromTree();

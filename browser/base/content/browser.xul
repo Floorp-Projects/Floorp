@@ -112,17 +112,11 @@
     <menupopup id="tabContextMenu"
                onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
                onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
-      <menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
-                command="cmd_newNavigatorTab"/>
-      <menuseparator/>
       <menuitem id="context_reloadTab" label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                 oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
       <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.reloadAllTabs();"/>
-      <menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
-                tbattr="tabbrowser-multiple"
-                oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
       <menuseparator/>
       <menuitem id="context_openTabInWindow" label="&openTabInNewWindow.label;"
                 accesskey="&openTabInNewWindow.accesskey;"
@@ -143,11 +137,13 @@
                 label="&bookmarkAllTabs.label;"
                 accesskey="&bookmarkAllTabs.accesskey;"
                 command="Browser:BookmarkAllTabs"/>
+      <menuseparator/>
+      <menuitem id="context_closeOtherTabs" label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
+                oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
       <menuitem id="context_undoCloseTab"
                 label="&undoCloseTab.label;"
                 accesskey="&undoCloseTab.accesskey;"
                 command="History:UndoCloseTab"/>
-      <menuseparator/>
       <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                 oncommand="gBrowser.removeTab(TabContextMenu.contextTab);"/>
     </menupopup>

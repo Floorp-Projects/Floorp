@@ -1,6 +1,6 @@
 libpng.txt - A description on how to use and modify libpng
 
- libpng version 1.4.1 - February 25, 2010
+ libpng version 1.4.3 - June 26, 2010
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2009 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.4.1 - February 25, 2010
+ libpng versions 0.97, January 1998, through 1.4.3 - June 26, 2010
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2009 Glenn Randers-Pehrson
 
@@ -241,8 +241,12 @@ free any memory.
     }
 
 If you would rather avoid the complexity of setjmp/longjmp issues,
-you can compile libpng with PNG_SETJMP_NOT_SUPPORTED, in which case
+you can compile libpng with PNG_NO_SETJMP, in which case
 errors will result in a call to PNG_ABORT() which defaults to abort().
+
+You can #define PNG_ABORT() to a function that does something
+more useful than abort(), as long as your function does not
+return.
 
 Now you need to set up the input code.  The default for libpng is to
 use the C function fread().  If you use this, you will need to pass a
@@ -475,7 +479,7 @@ you want to do are limited to the following set:
                                 to RGB (or GA to RGBA)
 
 (This excludes setting a background color, doing gamma transformation,
-dithering, and setting filler.)  If this is the case, simply do this:
+quantizing, and setting filler.)  If this is the case, simply do this:
 
     png_read_png(png_ptr, info_ptr, png_transforms, NULL)
 
@@ -899,7 +903,7 @@ things.
 As of libpng version 1.2.9, png_set_expand_gray_1_2_4_to_8() was
 added.  It expands the sample depth without changing tRNS to alpha.
 
-As of libpng version 1.4.1, not all possible expansions are supported.
+As of libpng version 1.4.3, not all possible expansions are supported.
 
 In the following table, the 01 means grayscale with depth<8, 31 means
 indexed with depth<8, other numerals represent the color type, "T" means
@@ -1158,6 +1162,40 @@ recommended that PNG viewers support gamma correction.
       png_set_gamma(png_ptr, screen_gamma, gamma);
    else
       png_set_gamma(png_ptr, screen_gamma, 0.45455);
+
+If you need to reduce an RGB file to a paletted file, or if a paletted
+file has more entries then will fit on your screen, png_set_quantize()
+will do that.  Note that this is a simple match dither that merely
+finds the closest color available.  This should work fairly well with
+optimized palettes, and fairly badly with linear color cubes.  If you
+pass a palette that is larger then maximum_colors, the file will
+reduce the number of colors in the palette so it will fit into
+maximum_colors.  If there is a histogram, it will use it to make
+more intelligent choices when reducing the palette.  If there is no
+histogram, it may not do as good a job.
+
+   if (color_type & PNG_COLOR_MASK_COLOR)
+   {
+      if (png_get_valid(png_ptr, info_ptr,
+         PNG_INFO_PLTE))
+      {
+         png_uint_16p histogram = NULL;
+
+         png_get_hIST(png_ptr, info_ptr,
+            &histogram);
+         png_set_quantize(png_ptr, palette, num_palette,
+            max_screen_colors, histogram, 1);
+      }
+      else
+      {
+         png_color std_color_cube[MAX_SCREEN_COLORS] =
+            { ... colors ... };
+
+         png_set_quantize(png_ptr, std_color_cube,
+            MAX_SCREEN_COLORS, MAX_SCREEN_COLORS,
+            NULL,0);
+      }
+   }
 
 PNG files describe monochrome as black being zero and white being one.
 The following code will reverse this (make black be one and white be
@@ -1688,8 +1726,12 @@ section below for more information on the libpng error handling.
     return;
 
 If you would rather avoid the complexity of setjmp/longjmp issues,
-you can compile libpng with PNG_SETJMP_NOT_SUPPORTED, in which case
+you can compile libpng with PNG_NO_SETJMP, in which case
 errors will result in a call to PNG_ABORT() which defaults to abort().
+
+You can #define PNG_ABORT() to a function that does something
+more useful than abort(), as long as your function does not
+return.
 
 Now you need to set up the output code.  The default for libpng is to
 use the C function fwrite().  If you use this, you will need to pass a
@@ -2551,8 +2593,9 @@ Error handling in libpng is done through png_error() and png_warning().
 Errors handled through png_error() are fatal, meaning that png_error()
 should never return to its caller.  Currently, this is handled via
 setjmp() and longjmp() (unless you have compiled libpng with
-PNG_SETJMP_NOT_SUPPORTED, in which case it is handled via PNG_ABORT()),
-but you could change this to do things like exit() if you should wish.
+PNG_NO_SETJMP, in which case it is handled via PNG_ABORT()),
+but you could change this to do things like exit() if you should wish,
+as long as your function does not return.
 
 On non-fatal errors, png_warning() is called
 to print a warning message, and then control returns to the calling code.
@@ -3105,6 +3148,15 @@ The png_zalloc() and png_zfree() functions are no longer exported.
 The png_zalloc() function no longer zeroes out the memory that it
 allocates.
 
+Support for dithering was disabled by default in libpng-1.4.0, because
+been well tested and doesn't actually "dither".  The code was not
+removed, however, and could be enabled by building libpng with
+PNG_READ_DITHER_SUPPORTED defined.  In libpng-1.4.2, this support
+was reenabled, but the function was renamed png_set_quantize() to
+reflect more accurately what it actually does.  At the same time,
+the PNG_DITHER_[RED,GREEN_BLUE]_BITS macros were also renamed to
+PNG_QUANTIZE_[RED,GREEN,BLUE]_BITS.
+
 We removed the trailing '.' from the warning and error messages.
 
 X. Detecting libpng
@@ -3174,12 +3226,12 @@ the statement that follows the comment:
     /* Single-line comment */
     statement;
 
-    /* Multiple-line
-     * comment
+    /* This is a multiple-line
+     * comment.
      */
     statement;
 
-Very short comments can be placed at the end of the statement
+Very short comments can be placed after the end of the statement
 to which they pertain:
 
     statement;    /* comment */
@@ -3226,9 +3278,9 @@ macros begin with "PNG_".
 
 We put a space after each comma and after each semicolon
 in "for" statments, and we put spaces before and after each
-C binary operator and after "for" or "while".  We don't
-put a space between a typecast and the expression being
-cast, nor do we put one between a function name and the
+C binary operator and after "for" or "while", and before
+"?".  We don't put a space between a typecast and the expression
+being cast, nor do we put one between a function name and the
 left parenthesis that follows it:
 
     for (i = 2; i > 0; --i)
@@ -3245,13 +3297,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XIII. Y2K Compliance in libpng
 
-February 25, 2010
+June 26, 2010
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.4.1 are Y2K compliant.  It is my belief that earlier
+upward through 1.4.3 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has three year fields.  One is a 2-byte unsigned integer that

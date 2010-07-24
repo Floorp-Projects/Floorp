@@ -529,6 +529,16 @@ class nsTSubstring_CharT
       NS_COM void StripChar( char_type aChar, PRInt32 aOffset=0 );
 
         /**
+         *  This method is used to remove all occurrences of aChars from this
+         * string.
+         *
+         *  @param  aChars -- chars to be stripped
+         *  @param  aOffset -- where in this string to start stripping chars
+         */
+
+      NS_COM void StripChars( const char_type* aChars, PRUint32 aOffset=0 );
+
+        /**
          * If the string uses a shared buffer, this method
          * clears the pointer without releasing the buffer.
          */

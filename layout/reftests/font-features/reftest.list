@@ -1,0 +1,45 @@
+# Tests for opentype font feature control (bug 511339)
+#
+# These rely on the Linux Libertine font (loaded via @font-face)
+# to ensure that features are present.
+
+# Feature support is currently enabled only on Mac OS X by default
+
+# check that Turkish language causes a change in rendering (no fi ligature)
+# (also works via Pango)
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) != font-features-turkish.html font-features-ref.html
+
+# check that disabling ligatures causes a change
+fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) != font-features-noliga.html font-features-ref.html
+
+# check that enabling optional ligatures causes a change
+fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) != font-features-hlig.html font-features-ref.html
+
+# compare Turkish rendering with reference using ZWNJ to break the ligature
+# (also works via Pango)
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == font-features-turkish.html font-features-turkish-ref.html
+
+# compare Turkish rendering with explicitly disabled ligatures
+# (fails on Linux because Pango recognizes the Turkish lang but not the feature setting)
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == font-features-turkish.html font-features-noliga.html
+
+# The following should pass even if feature support isn't available,
+# because both testcase and reference will have the default rendering,
+# though they're not really meaningful unless the tests above passed already.
+
+# compare feature specified within @font-face to same feature in style rule
+HTTP(..) == font-features-hlig-2.html font-features-hlig.html
+
+# check that feature in style rule overrides @font-face
+HTTP(..) == font-features-hlig-3.html font-features-noliga.html
+
+# compare -moz-font-language-override rendering to lang-tagged rendering
+# these fail on Linux because the Pango backend recognizes lang=tr but not -moz-font-language-override
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == font-features-turkish-override-1.html font-features-turkish.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == font-features-turkish-override-2.html font-features-turkish.html
+
+# check use of -moz-font-language-override to override explicit lang tag
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == font-features-turkish-override-3.html font-features-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == font-features-turkish-override-4.html font-features-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == font-features-turkish-override-5.html font-features-turkish.html
+

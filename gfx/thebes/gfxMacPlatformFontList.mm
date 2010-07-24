@@ -136,7 +136,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
                                PRBool aIsStandardFace)
     : gfxFontEntry(aPostscriptName, aFamily, aIsStandardFace),
       mATSFontRef(0),
-      mATSFontRefInitialized(PR_FALSE)
+      mATSFontRefInitialized(PR_FALSE),
+      mRequiresAAT(PR_FALSE)
 {
     mWeight = aWeight;
 }
@@ -146,7 +147,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFon
                                gfxUserFontData *aUserFontData)
     : gfxFontEntry(aPostscriptName),
       mATSFontRef(aFontRef),
-      mATSFontRefInitialized(PR_TRUE)
+      mATSFontRefInitialized(PR_TRUE),
+      mRequiresAAT(PR_FALSE)
 {
     // xxx - stretch is basically ignored for now
 
@@ -198,7 +200,6 @@ const ScriptRange gScriptsThatRequireShaping[] = {
 nsresult
 MacOSFontEntry::ReadCMAP()
 {
-    OSStatus status;
     ByteCount size;
 
     // attempt this once, if errors occur leave a blank cmap
@@ -214,20 +215,37 @@ MacOSFontEntry::ReadCMAP()
 
     PRPackedBool  unicodeFont, symbolFont; // currently ignored
     nsresult rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
-                                         mCharacterMap, mUVSOffset, unicodeFont, symbolFont);
+                                         mCharacterMap, mUVSOffset,
+                                         unicodeFont, symbolFont);
     if (NS_FAILED(rv)) {
         mCharacterMap.reset();
         return rv;
     }
     mHasCmapTable = PR_TRUE;
 
-    // for complex scripts, check for the presence of mort/morx
-    PRBool checkedForMorphTable = PR_FALSE, hasMorphTable = PR_FALSE;
-
     ATSFontRef fontRef = GetFontRef();
-    PRUint32 s, numScripts = sizeof(gScriptsThatRequireShaping) / sizeof(ScriptRange);
 
-    for (s = 0; s < numScripts; s++) {
+    // for layout support, check for the presence of mort/morx and GSUB/GPOS
+    PRBool hasAATLayout =
+        (::ATSFontGetTable(fontRef, TRUETYPE_TAG('m','o','r','x'),
+                           0, 0, 0, &size) == noErr) ||
+        (::ATSFontGetTable(fontRef, TRUETYPE_TAG('m','o','r','t'),
+                           0, 0, 0, &size) == noErr);
+
+    PRBool hasOTLayout =
+        (::ATSFontGetTable(fontRef, TRUETYPE_TAG('G','S','U','B'),
+                           0, 0, 0, &size) == noErr) ||
+        (::ATSFontGetTable(fontRef, TRUETYPE_TAG('G','P','O','S'),
+                           0, 0, 0, &size) == noErr);
+
+    if (hasAATLayout && !hasOTLayout) {
+        mRequiresAAT = PR_TRUE;
+    }
+
+    PRUint32 numScripts =
+        sizeof(gScriptsThatRequireShaping) / sizeof(ScriptRange);
+
+    for (PRUint32 s = 0; s < numScripts; s++) {
         eComplexScript  whichScript = gScriptsThatRequireShaping[s].script;
 
         // check to see if the cmap includes complex script codepoints
@@ -235,41 +253,16 @@ MacOSFontEntry::ReadCMAP()
                                     gScriptsThatRequireShaping[s].rangeEnd)) {
             PRBool omitRange = PR_TRUE;
 
-            // check for mort/morx table, if haven't already
-            if (!checkedForMorphTable) {
-                status = ::ATSFontGetTable(fontRef, TRUETYPE_TAG('m','o','r','x'), 0, 0, 0, &size);
-                if (status == noErr) {
-                    checkedForMorphTable = PR_TRUE;
-                    hasMorphTable = PR_TRUE;
-                } else {
-                    // check for a mort table
-                    status = ::ATSFontGetTable(fontRef, TRUETYPE_TAG('m','o','r','t'), 0, 0, 0, &size);
-                    checkedForMorphTable = PR_TRUE;
-                    if (status == noErr) {
-                        hasMorphTable = PR_TRUE;
-                    }
-                }
-            }
-
-            if (hasMorphTable) {
+            if (hasAATLayout) {
                 omitRange = PR_FALSE;
-            }
-
-            // special-cases for Arabic:
-            if (whichScript == eComplexScriptArabic) {
+            } else if (whichScript == eComplexScriptArabic) {
+                // special-case for Arabic:
                 // even if there's no morph table, CoreText can shape Arabic
-                // if there's GSUB support
-                status = ::ATSFontGetTable(fontRef, TRUETYPE_TAG('G','S','U','B'), 0, 0, 0, &size);
-                if (status == noErr) {
-                    // TODO: to be really thorough, we could check that the GSUB table
-                    // actually supports the 'arab' script tag.
+                // using OpenType layout
+                if (hasOTLayout) {
+                    // TODO: to be really thorough, we could check that the
+                    // GSUB table actually supports the 'arab' script tag.
                     omitRange = PR_FALSE;
-                }
-
-                // rude hack - the Chinese STxxx fonts on 10.4 contain morx tables and Arabic glyphs but
-                // lack the proper info for shaping Arabic, so exclude explicitly, ick
-                if (mName.CharAt(0) == 'S' && mName.CharAt(1) == 'T') {
-                    omitRange = PR_TRUE;
                 }
             }
 
@@ -281,7 +274,8 @@ MacOSFontEntry::ReadCMAP()
     }
 
     PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-cmap) psname: %s, size: %d\n",
-                                        NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
+                                        NS_ConvertUTF16toUTF8(mName).get(),
+                                        mCharacterMap.GetSize()));
 
     return rv;
 }

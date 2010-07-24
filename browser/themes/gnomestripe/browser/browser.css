@@ -1259,15 +1259,6 @@ statusbarpanel#statusbar-display {
   -moz-image-region: rect(0, 144px, 16px, 128px);
 }
 
-#context_newTab {
-  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
-  -moz-image-region: rect(0px 64px 16px 48px);
-}
-
-#context_newTab[disabled] {
-  -moz-image-region: rect(16px 64px 32px 48px);
-}
-
 #context_reloadTab {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }

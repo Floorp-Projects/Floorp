@@ -53,8 +53,8 @@ friend class nsSVGTextPathFrame;
 
 protected:
   friend nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
-                                        nsINodeInfo *aNodeInfo);
-  nsSVGTextPathElement(nsINodeInfo* aNodeInfo);
+                                           already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   
 public:
   // interfaces:
@@ -75,6 +75,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
