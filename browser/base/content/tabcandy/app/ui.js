@@ -46,63 +46,6 @@
 window.Keys = { meta: false };
 
 // ##########
-// Class: Tabbar
-// Singleton for managing the tabbar of the browser.
-var Tabbar = {
-  // ----------
-  // Function: showOnlyTheseTabs
-  // Hides all of the tabs in the tab bar which are not passed into this function.
-  //
-  // Paramaters
-  //  - An array of <TabItem> objects.
-  //  - Some options
-  showOnlyTheseTabs: function(tabs, options) {
-    try {
-      if (!options)
-        options = {};
-
-      let tabBarTabs = Array.slice(gBrowser.tabs);
-      let visibleTabs = tabs.map(function(tab) tab.tab);
-
-      // Show all of the tabs in the group.
-      tabBarTabs.forEach(function(tab){
-        let hidden = true;
-        visibleTabs.some(function(visibleTab, i) {
-          if (visibleTab == tab) {
-            hidden = false;
-            // remove the element to speed up the next loop.
-            if (options.dontReorg)
-              visibleTabs.splice(i, 1);
-            return true;
-          }
-        });
-        tab.hidden = hidden;
-      });
-
-      // Move them (in order) that they appear in the group to the end of the
-      // tab strip. This way the tab order is matched up to the group's
-      // thumbnail order.
-      if (!options.dontReorg) {
-        visibleTabs.forEach(function(visibleTab) {
-          gBrowser.moveTabTo(visibleTab, tabBarTabs.length - 1);
-        });
-      }
-    } catch(e) {
-      Utils.log(e);
-    }
-  },
-
-  // ----------
-  // Function: showAllTabs
-  // Shows all of the tabs in the tab bar.
-  showAllTabs: function() {
-    Array.forEach(gBrowser.tabs, function(tab) {
-      tab.hidden = false;
-    });
-  }
-}
-
-// ##########
 // Class: UIManager
 // Singleton top-level UI manager.
 var UIManager = {
@@ -131,10 +74,6 @@ var UIManager = {
   // Keeps track of which <Tabs> tab we are currently on.
   // Used to facilitate zooming down from a previous tab.
   _currentTab : gBrowser.selectedTab,
-
-  // Variable: tabBar
-  // A reference to the <Tabbar>, for manipulating the browser's tab bar.
-  get tabBar() { return Tabbar; },
 
   // ----------
   // Function: init
@@ -179,7 +118,9 @@ var UIManager = {
       });
 
       iQ(window).bind("beforeunload", function() {
-        self.tabBar.showAllTabs();
+        Array.forEach(gBrowser.tabs, function(tab) {
+          tab.hidden = false;
+        });
       });
 
       gWindow.addEventListener("tabcandyshow", function() {
@@ -924,6 +865,49 @@ var UIManager = {
 
     this._pageBounds = Items.getPageBounds();
     this._save();
+  },
+
+  // ----------
+  // Function: showOnlyTheseTabs
+  // Hides all of the tabs in the tab bar which are not passed into this function.
+  //
+  // Paramaters
+  //  - An array of <TabItem> objects.
+  //  - Some options
+  showOnlyTheseTabs: function(tabs, options) {
+    try {
+      if (!options)
+        options = {};
+
+      let tabBarTabs = Array.slice(gBrowser.tabs);
+      let visibleTabs = tabs.map(function(tab) tab.tab);
+
+      // Show all of the tabs in the group.
+      tabBarTabs.forEach(function(tab){
+        let hidden = true;
+        visibleTabs.some(function(visibleTab, i) {
+          if (visibleTab == tab) {
+            hidden = false;
+            // remove the element to speed up the next loop.
+            if (options.dontReorg)
+              visibleTabs.splice(i, 1);
+            return true;
+          }
+        });
+        tab.hidden = hidden;
+      });
+
+      // Move them (in order) that they appear in the group to the end of the
+      // tab strip. This way the tab order is matched up to the group's
+      // thumbnail order.
+      if (!options.dontReorg) {
+        visibleTabs.forEach(function(visibleTab) {
+          gBrowser.moveTabTo(visibleTab, tabBarTabs.length - 1);
+        });
+      }
+    } catch(e) {
+      Utils.log(e);
+    }
   },
 
   // ----------
