@@ -72,14 +72,20 @@ class FrameEntry
         return type.isConstant();
     }
 
-    JSValueTag getKnownTag() const {
-        return v_.s.tag;
-    }
-
     JSValueType getKnownType() const {
         JS_ASSERT(isTypeKnown());
         return knownType;
     }
+
+#if defined JS_32BIT
+    JSValueTag getKnownTag() const {
+        return v_.s.tag;
+    }
+#elif defined JS_64BIT
+    JSValueShiftedTag getKnownShiftedTag() const {
+        return JSValueShiftedTag(v_.asBits & JSVAL_TAG_MASK);
+    }
+#endif
 
     // Return true iff the type of this value is definitely known to be type_.
     bool isType(JSValueType type_) const {
@@ -91,10 +97,16 @@ class FrameEntry
         return isTypeKnown() && getKnownType() != type_;
     }
 
+#if defined JS_32BIT
     uint32 getPayload32() const {
         //JS_ASSERT(!Valueify(v_.asBits).isDouble() || type.synced());
         return v_.s.payload.u32;
     }
+#elif defined JS_64BIT
+    uint64 getPayload64() const {
+        return v_.asBits & JSVAL_PAYLOAD_MASK;
+    }
+#endif
 
     bool isCachedNumber() const {
         return isNumber;
@@ -103,7 +115,11 @@ class FrameEntry
   private:
     void setType(JSValueType type_) {
         type.setConstant();
+#if defined JS_32BIT
         v_.s.tag = JSVAL_TYPE_TO_TAG(type_);
+#elif defined JS_64BIT
+        v_.debugView.tag = JSVAL_TYPE_TO_TAG(type_);
+#endif
         knownType = type_;
         JS_ASSERT(!isNumber);
     }

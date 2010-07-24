@@ -473,10 +473,14 @@ FrameState::syncData(const FrameEntry *fe, Address to, Assembler &masm) const
     JS_ASSERT(fe->data.inRegister() || fe->data.isConstant());
 
     if (fe->data.isConstant()) {
-       if (!fe->type.synced())
-           masm.storeValue(fe->getValue(), to);
-       else
-           masm.storePayload(Imm32(fe->getPayload32()), to);
+        if (!fe->type.synced())
+            masm.storeValue(fe->getValue(), to);
+        else
+#if defined JS_32BIT
+            masm.storePayload(Imm32(fe->getPayload32()), to);
+#elif defined JS_64BIT
+            masm.storePayload(Imm64(fe->getPayload64()), to);
+#endif
     } else {
         masm.storePayload(fe->data.reg(), to);
     }
