@@ -324,11 +324,11 @@ FrameState::sync(Assembler &masm, Uses uses) const
             /* Sync. */
             if (!fe->data.synced() && (fe->data.inRegister() || fe >= bottom)) {
                 syncData(fe, address, masm);
-                if (fe->isConstant())
-                    continue;
-            }
-            if (!fe->type.synced() && (fe->type.inRegister() || fe >= bottom))
+                if (!fe->type.synced() && !fe->data.isConstant())
+                    syncType(fe, addressOf(fe), masm);
+            } else if (!fe->type.synced() && (fe->type.inRegister() || fe >= bottom)) {
                 syncType(fe, addressOf(fe), masm);
+            }
         } else if (fe >= bottom) {
             FrameEntry *backing = fe->copyOf();
             JS_ASSERT(backing != fe);
