@@ -33,8 +33,6 @@
 
 namespace JSC {
 
-#if !(WTF_PLATFORM_DARWIN && WTF_CPU_X86_64)
-
 void ExecutableAllocator::intializePageSize()
 {
     ExecutableAllocator::pageSize = getpagesize();
@@ -54,8 +52,6 @@ void ExecutablePool::systemRelease(const ExecutablePool::Allocation& alloc)
     int result = munmap(alloc.pages, alloc.size);
     ASSERT_UNUSED(result, !result);
 }
-
-#endif // !(OS(DARWIN) && CPU(X86_64))
 
 #if WTF_ENABLE_ASSEMBLER_WX_EXCLUSIVE
 void ExecutableAllocator::reprotectRegion(void* start, size_t size, ProtectionSeting setting)

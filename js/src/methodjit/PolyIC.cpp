@@ -1216,6 +1216,7 @@ class ScopeNameCompiler : public PICStubCompiler
     JSObject *obj;
     JSObject *holder;
     JSProperty *prop;
+    JSScopeProperty *sprop;
 
   public:
     ScopeNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
@@ -1241,33 +1242,13 @@ class ScopeNameCompiler : public PICStubCompiler
         repatcher.relinkCallerToTrampoline(retPtr, target);
     }
 
-    enum CallObjPropKind {
-        ARG,
-        VAR
-    };
+    typedef Vector<Jump, 8, ContextAllocPolicy> JumpList;
 
-    bool generateCallStub()
+    bool walkScopeChain(Assembler &masm, JumpList &fails, bool &found)
     {
-        Assembler masm;
-        Vector<Jump, 8, ContextAllocPolicy> fails(f.cx);
-
-        masm.load32(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
-
-        JS_ASSERT(obj == holder);
-        JS_ASSERT(holder != scopeChain->getGlobal());
-
-        CallObjPropKind kind;
-        JSScopeProperty *sprop = (JSScopeProperty *)prop;
-        if (sprop->getterOp() == js_GetCallArg) {
-            kind = ARG;
-        } else if (sprop->getterOp() == js_GetCallVar) {
-            kind = VAR;
-        } else {
-            return disable("unhandled callobj sprop getter");
-        }
-
         /* Walk the scope chain. */
         JSObject *tobj = scopeChain;
+
         while (tobj && tobj != holder) {
             if (!js_IsCacheableNonGlobalScope(tobj))
                 return disable("non-cacheable scope chain object");
@@ -1293,8 +1274,105 @@ class ScopeNameCompiler : public PICStubCompiler
             tobj = tobj->getParent();
         }
 
-        if (tobj != holder)
-            return disable("scope chain walk terminated early?");
+        found = tobj == holder;
+
+        return true;
+    }
+
+    bool generateGlobalStub()
+    {
+        Assembler masm;
+        JumpList fails(f.cx);
+
+        masm.load32(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+
+        JS_ASSERT(obj == holder);
+        JS_ASSERT(holder == scopeChain->getGlobal());
+
+        bool found = false;
+        if (!walkScopeChain(masm, fails, found))
+            return false;
+        if (!found)
+            return disable("scope chain walk terminated early");
+
+        Jump finalNull = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
+        masm.loadShape(pic.objReg, pic.shapeReg);
+        Jump finalShape = masm.branch32(Assembler::NotEqual, pic.shapeReg, Imm32(holder->shape()));
+
+        masm.loadSlot(pic.objReg, pic.objReg, sprop->slot, pic.shapeReg, pic.objReg);
+
+        Jump done = masm.jump();
+
+        // All failures flow to here, so there is a common point to patch.
+        for (Jump *pj = fails.begin(); pj != fails.end(); ++pj)
+            pj->linkTo(masm.label(), &masm);
+        finalNull.linkTo(masm.label(), &masm);
+        finalShape.linkTo(masm.label(), &masm);
+        Label failLabel = masm.label();
+        Jump failJump = masm.jump();
+
+        JSC::ExecutablePool *ep = getExecPool(masm.size());
+        if (!ep) {
+            js_ReportOutOfMemory(f.cx);
+            return false;
+        }
+
+        // :TODO: this can OOM 
+        JSC::LinkBuffer buffer(&masm, ep);
+
+        if (!pic.execPools.append(ep)) {
+            ep->release();
+            js_ReportOutOfMemory(f.cx);
+            return false;
+        }
+
+        buffer.link(failJump, pic.slowPathStart);
+        buffer.link(done, pic.storeBack);
+        CodeLocationLabel cs = buffer.finalizeCodeAddendum();
+        JaegerSpew(JSpew_PICs, "generated %s global stub at %p\n", type, cs.executableAddress());
+        spew("NAME stub", "global");
+
+        PICRepatchBuffer repatcher(pic, pic.lastPathStart()); 
+        repatcher.relink(JUMP_OFFSET, cs);
+
+        pic.stubsGenerated++;
+        pic.lastStubStart = buffer.locationOf(failLabel);
+
+        if (pic.stubsGenerated == MAX_STUBS)
+            disable("max stubs reached");
+
+        return true;
+    }
+
+    enum CallObjPropKind {
+        ARG,
+        VAR
+    };
+
+    bool generateCallStub()
+    {
+        Assembler masm;
+        Vector<Jump, 8, ContextAllocPolicy> fails(f.cx);
+
+        masm.load32(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
+
+        JS_ASSERT(obj == holder);
+        JS_ASSERT(holder != scopeChain->getGlobal());
+
+        CallObjPropKind kind;
+        if (sprop->getterOp() == js_GetCallArg) {
+            kind = ARG;
+        } else if (sprop->getterOp() == js_GetCallVar) {
+            kind = VAR;
+        } else {
+            return disable("unhandled callobj sprop getter");
+        }
+
+        bool found = false;
+        if (!walkScopeChain(masm, fails, found))
+            return false;
+        if (!found)
+            return disable("scope chain walk terminated early");
 
         Jump finalNull = masm.branchTestPtr(Assembler::Zero, pic.objReg, pic.objReg);
         masm.loadShape(pic.objReg, pic.shapeReg);
@@ -1363,7 +1441,7 @@ class ScopeNameCompiler : public PICStubCompiler
         buffer.link(failJump, pic.slowPathStart);
         buffer.link(done, pic.storeBack);
         CodeLocationLabel cs = buffer.finalizeCodeAddendum();
-        JaegerSpew(JSpew_PICs, "generated %s stub at %p\n", type, cs.executableAddress());
+        JaegerSpew(JSpew_PICs, "generated %s call stub at %p\n", type, cs.executableAddress());
 
         PICRepatchBuffer repatcher(pic, pic.lastPathStart()); 
         repatcher.relink(JUMP_OFFSET, cs);
@@ -1394,9 +1472,14 @@ class ScopeNameCompiler : public PICStubCompiler
             return disable("non-native scope object");
         if (obj != holder)
             return disable("property is on proto of a scope object");
+        
+        sprop = (JSScopeProperty *)prop;
 
         if (obj->getClass() == &js_CallClass)
             return generateCallStub();
+
+        if (!obj->getParent())
+            return generateGlobalStub();
 
         return disable("scope object not handled yet");
     }

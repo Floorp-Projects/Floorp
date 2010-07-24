@@ -104,8 +104,8 @@ JS_STATIC_ASSERT(sizeof(VMFrame) % 16 == 0);
  * If these assertions break, update the constants below.
  *    *** DANGER ***
  */
-JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x48);
-JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x30);
+JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x58);
+JS_STATIC_ASSERT(offsetof(VMFrame, fp) == 0x40);
 
 asm volatile (
 ".text\n"
@@ -133,7 +133,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "movq  %rsi, %rbx"                   "\n"
 
     /* Space for the rest of the VMFrame. */
-    "subq  $0x28, %rsp"                  "\n"
+    "subq  $0x38, %rsp"                  "\n"
 
     /* Set cx->regs (requires saving rdx). */
     "pushq %rdx"                         "\n"
@@ -149,7 +149,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "leaq -8(%rsp), %rdi"                "\n"
     "call " SYMBOL_STRING_RELOC(UnsetVMFrameRegs) "\n"
 
-    "addq $0x40, %rsp"                   "\n"
+    "addq $0x50, %rsp"                   "\n"
     "popq %rbx"                          "\n"
     "popq %r15"                          "\n"
     "popq %r14"                          "\n"
@@ -170,7 +170,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "je   throwpoline_exit"                 "\n"
     "jmp  *%rax"                            "\n"
   "throwpoline_exit:"                       "\n"
-    "addq $0x48, %rsp"                      "\n"
+    "addq $0x58, %rsp"                      "\n"
     "popq %rbx"                             "\n"
     "popq %r15"                             "\n"
     "popq %r14"                             "\n"
@@ -185,7 +185,7 @@ asm volatile (
 ".globl " SYMBOL_STRING(JaegerFromTracer)   "\n"
 SYMBOL_STRING(JaegerFromTracer) ":"         "\n"
     /* Restore fp reg. */
-    "movq 0x30(%rsp), %rbx"                 "\n"
+    "movq 0x40(%rsp), %rbx"                 "\n"
     "jmp *%rax"                             "\n"
 );
 
