@@ -222,7 +222,7 @@ window.TabItem.prototype = Utils.extend(new Item(), {
   //   saveImageData - true to include thumbnail pixels (and page title as well); default false
   save: function(saveImageData) {
     try{
-      if (!this.tab || !this.reconnected) // too soon/late to save
+      if (!this.tab || this.tab.parentNode == null || !this.reconnected) // too soon/late to save
         return;
 
       var data = this.getStorageData(saveImageData);
