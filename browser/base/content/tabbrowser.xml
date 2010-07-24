@@ -1228,11 +1228,7 @@
           var tabsToClose = this.tabs.length;
 
           if (!aAll)
-<<<<<<< local
-            tabsToClose = this.visibleTabs.length - 1;
-=======
-            tabsToClose -= 1 + gBrowser._numPinnedTabs;
->>>>>>> other
+            tabsToClose = this.visibleTabs.length - (1 + this._numPinnedTabs);
           if (tabsToClose <= 1)
             return true;
 
@@ -1286,15 +1282,9 @@
               var tabs = this.visibleTabs;
               this.selectedTab = aTab;
 
-<<<<<<< local
               for (let i = tabs.length - 1; i >= 0; --i) {
-                if (tabs[i] != aTab)
+                if (tabs[i] != aTab && !tabs[i].pinned)
                   this.removeTab(tabs[i]);
-=======
-              for (let i = this.tabs.length - 1; i >= 0; --i) {
-                if (this.tabs[i] != aTab && !this.tabs[i].pinned)
-                  this.removeTab(this.tabs[i]);
->>>>>>> other
               }
             }
           ]]>
