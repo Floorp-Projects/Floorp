@@ -98,17 +98,32 @@ StubCompiler::syncExitAndJump(Uses uses)
     return l;
 }
 
-/*
- * The "slow path" generation is interleaved with the main compilation phase,
- * though it is generated into a separate buffer. The fast path can "exit"
- * into the slow path, and the slow path rejoins into the fast path. The slow
- * path is kept in a separate buffer, but appended to the main one, for ideal
- * icache locality.
- */
+// Link an exit from the fast path to a slow path. This does two main things:
+// (a) links the given jump to the slow path, and (b) generates a prolog for
+// the slow path that syncs frame state for a slow call that uses |uses|
+// values from the top of the stack.
+//
+// Note 1: Slow path generation is interleaved with fast path generation, but
+// the slow path goes into a separate buffer. The slow path code is appended
+// to the fast path code to keep it nearby in code memory.
+//
+// Note 2: A jump from the fast path to the slow path is called an "exit".
+//         A jump from the slow path to the fast path is called a "rejoin".
 void
 StubCompiler::linkExit(Jump j, Uses uses)
 {
     Label l = syncExit(uses);
+    linkExitDirect(j, l);
+}
+
+// Special version of linkExit that is used when there is a JavaScript
+// control-flow branch after the slow path. Our compilation strategy
+// requires the JS frame to be fully materialized in memory across branches.
+// This function does a linkExit and also fully materializes the frame.
+void
+StubCompiler::linkExitForBranch(Jump j)
+{
+    Label l = syncExit(Uses(frame.frameDepth()));
     linkExitDirect(j, l);
 }
 
