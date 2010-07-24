@@ -46,6 +46,7 @@
 #include "nsColor.h"
 
 struct nsRect;
+struct nsIntRect;
 struct nsIntSize;
 struct nsFont;
 struct nsIntMargin;
@@ -55,6 +56,7 @@ class nsIDeviceContext;
 class nsIFrame;
 class nsIContent;
 class nsIAtom;
+class nsIWidget;
 
 // IID for the nsITheme interface
 // {887e8902-db6b-41b4-8481-a80f49c5a93a}
@@ -83,12 +85,44 @@ enum nsTransparencyMode {
 class nsITheme: public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITHEME_IID)
-  
+
+  /**
+   * Draw the actual theme background.
+   * @param aContext the context to draw into
+   * @param aFrame the frame for the widget that we're drawing
+   * @param aWidgetType the -moz-appearance value to draw
+   * @param aRect the rectangle defining the area occupied by the widget
+   * @param aDirtyRect the rectangle that needs to be drawn
+   */
   NS_IMETHOD DrawWidgetBackground(nsIRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aDirtyRect)=0;
+                                  const nsRect& aDirtyRect) = 0;
+
+  /**
+   * Notifies the theme engine that a particular themed widget exists
+   * at the given rectangle within the window aWindow.
+   * For certain appearance values (currently only
+   * NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR and NS_THEME_TOOLBAR) this gets
+   * called during every paint to a window, for every themed widget of
+   * the right type within the
+   * window, except for themed widgets which are transformed or have
+   * effects applied to them (e.g. CSS opacity or filters).
+   * Note that a DrawWidgetBackground for the widget might not be called
+   * during the paint, since ThebesLayers can cache rendered content.
+   * This could sometimes be called during display list construction
+   * outside of painting.
+   * If called during painting, it will be called before we actually
+   * paint anything.
+   * 
+   * @param aWidgetType the -moz-appearance value for the themed widget
+   * @param aRect the device-pixel rect within aWindow for the themed
+   * widget
+   */
+  virtual void RegisterWidgetGeometry(nsIWidget* aWindow,
+                                      PRUint8 aWidgetType,
+                                      const nsIntRect& aRect) {}
 
   /**
    * Get the computed CSS border for the widget, in pixels.
