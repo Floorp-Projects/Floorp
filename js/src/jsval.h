@@ -696,12 +696,6 @@ JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
 
 #endif
 
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(jsval_layout l)
-{
-    return JSVAL_IS_DOUBLE_IMPL(l);
-}
-
 /* See JS_USE_JSVAL_JSID_STRUCT_TYPES comment in jsapi.h. */
 #if defined(DEBUG) && !defined(JS_NO_JSVAL_JSID_STRUCT_TYPES)
 # define JS_USE_JSVAL_JSID_STRUCT_TYPES
