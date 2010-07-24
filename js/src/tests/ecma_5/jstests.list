@@ -3,6 +3,7 @@ include Date/jstests.list
 include Expressions/jstests.list
 include JSON/jstests.list
 include Object/jstests.list
+include RegExp/jstests.list
 include Types/jstests.list
 include extensions/jstests.list
 include misc/jstests.list

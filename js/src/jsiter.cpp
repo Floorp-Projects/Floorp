@@ -206,7 +206,7 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
     JS_ASSERT(JSID_IS_INT(id) || JSID_IS_ATOM(id));
 
     IdSet::AddPtr p = ht.lookupForAdd(id);
-    JS_ASSERT_IF(obj == pobj, !p);
+    JS_ASSERT_IF(obj == pobj && !obj->isProxy(), !p);
 
     /* If we've already seen this, we definitely won't add it. */
     if (JS_UNLIKELY(!!p))
@@ -214,9 +214,10 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
 
     /*
      * It's not necessary to add properties to the hash table at the end of the
-     * prototype chain.
+     * prototype chain -- but a proxy might return duplicated properties, so
+     * always add for them.
      */
-    if (pobj->getProto() && !ht.add(p, id))
+    if ((pobj->getProto() || pobj->isProxy()) && !ht.add(p, id))
         return false;
 
     if (JS_UNLIKELY(flags & JSITER_OWNONLY)) {
@@ -277,7 +278,7 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
         return false;
     }
 
-    if (pobj->getDenseArrayCount() > 0) {
+    if (pobj->getArrayLength() > 0) {
         size_t capacity = pobj->getDenseArrayCapacity();
         Value *vp = pobj->dslots;
         for (size_t i = 0; i < capacity; ++i, ++vp) {
