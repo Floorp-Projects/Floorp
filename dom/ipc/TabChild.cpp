@@ -478,8 +478,13 @@ TabChild::ActorDestroy(ActorDestroyReason why)
 
 TabChild::~TabChild()
 {
-    DestroyWidget();
     nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(mWebNav);
+    nsCOMPtr<nsIWeakReference> weak =
+      do_GetWeakReference(static_cast<nsSupportsWeakReference*>(this));
+    webBrowser->RemoveWebBrowserListener(weak, NS_GET_IID(nsIWebProgressListener));
+
+    DestroyWidget();
+
     if (webBrowser) {
       webBrowser->SetContainerWindow(nsnull);
     }
