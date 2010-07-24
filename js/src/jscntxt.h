@@ -1202,6 +1202,9 @@ struct JSGCTracer : public JSTracer {
     js::Vector<JSObject *, 0, js::SystemAllocPolicy> arraysToSlowify;
 };
 
+extern JS_FRIEND_API(void)
+js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked);
+
 struct JSRuntime {
     /* Default compartment. */
     JSCompartment       *defaultCompartment;
@@ -1563,6 +1566,13 @@ struct JSRuntime {
 
     bool init(uint32 maxbytes);
 
+    inline void triggerGC(bool gcLocked) {
+        if (!gcIsNeeded) {
+            gcIsNeeded = true;
+            js_TriggerAllOperationCallbacks(this, gcLocked);
+        }
+    }
+
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
 
@@ -1571,7 +1581,9 @@ struct JSRuntime {
     }
 
     void updateMallocCounter(size_t bytes) {
-        gcMallocBytes -= bytes; /* We tolerate races and lost counts here. */
+        /* We tolerate races and lost counts here. */
+        if ((gcMallocBytes -= bytes) <= 0)
+            triggerGC(false);
     }
 
     bool mallocQuotaReached() {
@@ -1690,9 +1702,6 @@ struct JSRegExpStatics {
 
 extern JS_FRIEND_API(void)
 js_ReportOutOfMemory(JSContext *cx);
-
-extern JS_FRIEND_API(void)
-js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked);
 
 struct JSContext
 {
@@ -1974,21 +1983,10 @@ struct JSContext
     js::BackgroundSweepTask *gcSweepTask;
 #endif
 
-    inline void triggerGC(bool gcLocked) {
-        if (!runtime->gcIsNeeded) {
-            runtime->gcIsNeeded = true;
-            js_TriggerAllOperationCallbacks(runtime, gcLocked);
-        }
-    }
-
     inline void *reportIfOutOfMemory(void *p) {
-        if (p) {
-            if (runtime->mallocQuotaReached())
-                triggerGC(false);
-            return p;
-        }
-        js_ReportOutOfMemory(this);
-        return NULL;
+        if (!p)
+            js_ReportOutOfMemory(this);
+        return p;
     }
 
     inline void* malloc(size_t bytes) {
