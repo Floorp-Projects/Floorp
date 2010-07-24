@@ -188,6 +188,13 @@ groupbox tree {
 /* Media Tab */
 #imagetree {
   min-height: 10em;
+  margin-bottom: 0;
+}
+
+#mediaSplitter {
+  border-style: none;
+  background: none;
+  height: .8em;
 }
 
 #mediaGrid {
