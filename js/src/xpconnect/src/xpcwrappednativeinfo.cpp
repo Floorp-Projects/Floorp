@@ -97,9 +97,9 @@ XPCNativeMember::GetCallInfo(XPCCallContext& ccx,
     jsval memberVal;
 
     if(!JS_GetReservedSlot(ccx, funobj, 0, &ifaceVal) ||
+       JSVAL_IS_VOID(ifaceVal) ||
        !JS_GetReservedSlot(ccx, funobj, 1, &memberVal) ||
-       !JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(ifaceVal) ||
-       !JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(memberVal))
+       JSVAL_IS_VOID(memberVal))
     {
         return JS_FALSE;
     }
