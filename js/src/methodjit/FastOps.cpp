@@ -129,13 +129,13 @@ mjit::Compiler::jsop_bitop(JSOp op)
     bool stubNeeded = false;
     if (!rhs->isTypeKnown()) {
         Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
-        stubcc.linkExit(rhsFail, Uses(2));
+        stubcc.linkExitForBranch(rhsFail);
         frame.learnType(rhs, JSVAL_TYPE_INT32);
         stubNeeded = true;
     }
     if (!lhs->isTypeKnown() && !frame.haveSameBacking(lhs, rhs)) {
         Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
-        stubcc.linkExit(lhsFail, Uses(2));
+        stubcc.linkExitForBranch(lhsFail);
         stubNeeded = true;
     }
 
