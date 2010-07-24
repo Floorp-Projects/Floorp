@@ -1745,7 +1745,7 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
          * against our GC heap quota. If so, request a GC to happen soon.
          */
         if (rt->gcQuotaReached())
-            cx->triggerGC();
+            cx->triggerGC(true);
 
         a = NewGCArena(cx);
         if (!a)

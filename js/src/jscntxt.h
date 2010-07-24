@@ -1691,6 +1691,9 @@ struct JSRegExpStatics {
 extern JS_FRIEND_API(void)
 js_ReportOutOfMemory(JSContext *cx);
 
+extern JS_FRIEND_API(void)
+js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked);
+
 struct JSContext
 {
     explicit JSContext(JSRuntime *rt);
@@ -1971,17 +1974,17 @@ struct JSContext
     js::BackgroundSweepTask *gcSweepTask;
 #endif
 
-    inline void triggerGC() {
+    inline void triggerGC(bool gcLocked) {
         if (!runtime->gcIsNeeded) {
             runtime->gcIsNeeded = true;
-            JS_TriggerAllOperationCallbacks(runtime);
+            js_TriggerAllOperationCallbacks(runtime, gcLocked);
         }
     }
 
     inline void *reportIfOutOfMemory(void *p) {
         if (p) {
             if (runtime->mallocQuotaReached())
-                triggerGC();
+                triggerGC(false);
             return p;
         }
         js_ReportOutOfMemory(this);
@@ -2926,14 +2929,6 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  */
 extern JSBool
 js_InvokeOperationCallback(JSContext *cx);
-
-#ifndef JS_THREADSAFE
-# define js_TriggerAllOperationCallbacks(rt, gcLocked) \
-    js_TriggerAllOperationCallbacks (rt)
-#endif
-
-void
-js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked);
 
 extern JSStackFrame *
 js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
