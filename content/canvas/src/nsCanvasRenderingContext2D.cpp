@@ -2243,28 +2243,36 @@ CreateFontStyleRule(const nsAString& aFont,
     nsCSSParser parser;
     NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
-    // aFont is to be parsed as the value of a CSS 'font' shorthand,
-    // and then any line-height setting in that shorthand is to be
-    // overridden with "normal".  Because of the way style rules are
-    // stored, it is more efficient to fabricate a text string that
-    // can be processed in one go with ParseStyleAttribute than to
-    // make two calls to ParseDeclaration.
-
-    nsAutoString styleAttr(NS_LITERAL_STRING("font:"));
-    styleAttr.Append(aFont);
-    styleAttr.AppendLiteral(";line-height:normal");
+    nsCOMPtr<nsICSSStyleRule> rule;
+    PRBool changed;
 
     nsIPrincipal* principal = aNode->NodePrincipal();
     nsIDocument* document = aNode->GetOwnerDoc();
+
     nsIURI* docURL = document->GetDocumentURI();
     nsIURI* baseURL = document->GetDocBaseURI();
 
-    nsresult rv = parser.ParseStyleAttribute(styleAttr, docURL, baseURL,
-                                             principal, aResult);
+    nsresult rv = parser.ParseStyleAttribute(EmptyString(), docURL, baseURL,
+                                             principal, getter_AddRefs(rule));
     if (NS_FAILED(rv))
         return rv;
 
-    (*aResult)->RuleMatched();
+    rv = parser.ParseProperty(eCSSProperty_font, aFont, docURL, baseURL,
+                              principal, rule->GetDeclaration(), &changed,
+                              PR_FALSE);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = parser.ParseProperty(eCSSProperty_line_height,
+                              NS_LITERAL_STRING("normal"), docURL, baseURL,
+                              principal, rule->GetDeclaration(), &changed,
+                              PR_FALSE);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rule->RuleMatched();
+
+    rule.forget(aResult);
     return NS_OK;
 }
 
