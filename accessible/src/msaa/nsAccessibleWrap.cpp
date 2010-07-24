@@ -219,10 +219,16 @@ __try {
         nsIView *rootView;
         viewManager->GetRootView(rootView);
         if (rootView == view) {
-          // If the current object has a widget but was created by an
-          // outer object with its own outer window, then
-          // we want the native accessible for that outer window
-          hwnd = ::GetParent(hwnd);
+          // If the client accessible (OBJID_CLIENT) has a window but its window
+          // was created by an outer window then we want the native accessible
+          // for that outer window. If the accessible was created for outer
+          // window (if the outer window has inner windows then they share the
+          // same client accessible with it) then return native accessible for
+          // the outer window.
+          HWND parenthwnd = ::GetParent(hwnd);
+          if (parenthwnd)
+            hwnd = parenthwnd;
+
           NS_ASSERTION(hwnd, "No window handle for window");
         }
       }

@@ -58,7 +58,7 @@ class nsStyledElement : public nsStyledElementBase
 
 protected:
 
-  inline nsStyledElement(nsINodeInfo *aNodeInfo)
+  inline nsStyledElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsStyledElementBase(aNodeInfo)
   {}
 

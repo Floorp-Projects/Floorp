@@ -1672,7 +1672,7 @@ version 1.2.15rc2 [December 21, 2006]
   Added scripts/makefile.nommx
 
 version 1.2.15rc3 [December 25, 2006]
-  Fixed shared library numbering error that was intruduced in 1.2.15beta6.
+  Fixed shared library numbering error that was introduced in 1.2.15beta6.
 
 version 1.2.15rc4 [December 27, 2006]
   Fixed handling of rgb_to_gray when png_ptr->color.gray isn't set.
@@ -2054,7 +2054,10 @@ version 1.4.0beta46 [December 10, 2008]
     PNG_TRANSFORM_STRIP_FILLER (Jim Barry).
 
 version 1.4.0beta47 [December 15, 2008]
-  Turned off PNG_READ_DITHER_SUPPORTED by default.
+  Support for dithering was disabled by default, because it has never
+    been well tested and doesn't work very well.  The code has not
+    been removed, however, and can be enabled by building libpng with
+    PNG_READ_DITHER_SUPPORTED defined.
 
 version 1.4.0beta48 [February 14, 2009]
   Added new exported function png_calloc().
@@ -2122,7 +2125,7 @@ version 1.4.0beta57 [May 2, 2009]
   Removed pngprefs.h and MMX from makefiles
 
 version 1.4.0beta58 [May 14, 2009]
-  Changed pngw32.def to pngwin.def in makefile.mingw (typo was intruduced
+  Changed pngw32.def to pngwin.def in makefile.mingw (typo was introduced
     in beta57).
   Clarified usage of sig_bit versus sig_bit_p in example.c (Vincent Torri)
 
@@ -2534,11 +2537,82 @@ version 1.4.1rc04 [February 19, 2010]
 
 version 1.4.1 [February 25, 2010]
 
-Send comments/corrections/commendations to png-mng-implement at lists.sf.net
-(subscription required; visit
-https://lists.sourceforge.net/lists/listinfo/png-mng-implement
-to subscribe)
-or to glennrp at users.sourceforge.net
+version 1.4.2beta01 [April 1, 2010]
+  Conditionally compile an "else" statement in png_decompress_chunk().
+  Restored the macro definition of png_check_sig().
+
+version 1.4.2rc01 [April 10, 2010]
+  No changes.
+
+version 1.4.2rc02 [April 16, 2010]
+  Documented the fact that png_set_dither() was disabled since libpng-1.4.0.
+  Reenabled png_set_dither() but renamed it to png_set_quantize() to reflect
+    more accurately what it actually does.  At the same time, renamed
+    the PNG_DITHER_[RED,GREEN_BLUE]_BITS macros to
+    PNG_QUANTIZE_[RED,GREEN,BLUE]_BITS.
+
+version 1.4.2rc03 [April 24, 2010]
+  Added some "(long)" typecasts to printf calls in png_handle_cHRM().
+  Relaxed the overly-restrictive permissions of some files.
+
+version 1.4.2rc04 [April 28, 2010]
+  Added the "vstudio" project to replace "visualc6" and "visualc71" which
+    will be removed from libpng-1.5.0.
+  Demonstrate in example.c that lang_key should be initialized.
+  Set PNG_NO_READ_BGR, PNG_NO_IO_STATE, and PNG_NO_TIME_RFC1123 in
+    contrib/pngminim/decoder/pngusr.h to make a smaller decoder application.
+
+version 1.4.2rc05 [April 29, 2010]
+  Include png_reset_zstream() in png.c only when PNG_READ_SUPPORTED is defined.
+  Removed dummy_inflate.c and uncompr.c from contrib/pngminim/encoder
+  Corrected PNG_UNKNOWN_CHUNKS_SUPPORTED to PNG_HANDLE_AS_UNKNOWN_SUPPORTED
+    in gregbook/readpng2.c
+  Corrected protection of png_get_user_transform_ptr. The API declaration in
+    png.h is removed if both READ and WRITE USER_TRANSFORM are turned off
+    but was left defined in pngtrans.c
+
+version 1.4.2rc06 [May 3, 2010]
+  Moved declarations of umsg[] inside the proper #ifdef blocks in pngrutil.c
+
+version 1.4.2 [May 6, 2010]
+
+version 1.4.3beta01 [June 18, 2010]
+  Added missing quotation marks in the aix block of configure.ac
+  The new "vstudio" project was missing from the zip and 7z distributions.
+  In pngpread.c: png_push_have_row() add check for new_row > height
+
+version 1.4.3beta02 [June 18, 2010]
+  Removed the now-redundant check for out-of-bounds new_row from example.c
+
+version 1.4.3beta03 [June 18, 2010]
+  In pngpread.c: png_push_finish_row() add check for too many rows.
+
+version 1.4.3beta04 [June 19, 2010]
+  In pngpread.c: png_push_process_row() add check for too many rows.
+  Removed the checks added in beta01 and beta03, as they are now redundant.
+
+version 1.4.3beta05 [June 20, 2010]
+  Rewrote png_process_IDAT_data to consistently treat extra data as warnings
+    and handle end conditions more cleanly.
+  Removed the new (beta04) check in png_push_process_row().
+
+version 1.4.3rc01 [June 21, 2010]
+  Revised some comments in png_process_IDAT_data().
+
+version 1.4.3rc02 [June 22, 2010]
+  Changed char *msg to PNG_CONST char *msg in pngrutil.c
+  Stop memory leak when reading a malformed sCAL chunk.
+  Removed some trailing blanks.
+
+version 1.4.3rc03 [June 23, 2010]
+  Revised pngpread.c patch of beta05 to avoid an endless loop.
+
+version 1.4.3 [June 26, 2010]
+  Updated some of the "last changed" dates.
+
+Send comments/corrections/commendations to glennrp at users.sourceforge.net
+or to png-mng-implement at lists.sf.net (subscription required; visit
+https://lists.sourceforge.net/lists/listinfo/png-mng-implement).
 
 Glenn R-P
 */ }

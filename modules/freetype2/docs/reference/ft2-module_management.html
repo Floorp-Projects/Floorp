@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.12 API Reference</title>
+<title>FreeType-2.4.1 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.12 API Reference</h1></center>
+<center><h1>FreeType-2.4.1 API Reference</h1></center>
 
 <center><h1>
 Module Management
@@ -341,6 +341,7 @@ Defined in FT_MODULE_H (freetype/ftmodapi.h).
 <table align=center width="87%"><tr><td>
 <p>This function is used to create a new FreeType library instance from a given memory object. It is thus possible to use libraries with distinct memory allocators within the same program.</p>
 <p>Normally, you would call this function (followed by a call to <a href="ft2-module_management.html#FT_Add_Default_Modules">FT_Add_Default_Modules</a> or a series of calls to <a href="ft2-module_management.html#FT_Add_Module">FT_Add_Module</a>) instead of <a href="ft2-base_interface.html#FT_Init_FreeType">FT_Init_FreeType</a> to initialize the FreeType library.</p>
+<p>Don't use <a href="ft2-base_interface.html#FT_Done_FreeType">FT_Done_FreeType</a> but <a href="ft2-module_management.html#FT_Done_Library">FT_Done_Library</a> to destroy a library instance.</p>
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
 <p></p>
@@ -520,9 +521,6 @@ Defined in FT_RENDER_H (freetype/ftrender.h).
 </td></tr>
 <tr valign=top><td><b>raster_class</b></td><td>
 <p>For <a href="ft2-basic_types.html#FT_Glyph_Format">FT_GLYPH_FORMAT_OUTLINE</a> renderers only. This is a pointer to its raster's class.</p>
-</td></tr>
-<tr valign=top><td><b>raster</b></td><td>
-<p>For <a href="ft2-basic_types.html#FT_Glyph_Format">FT_GLYPH_FORMAT_OUTLINE</a> renderers only. This is a pointer to the corresponding raster object, if any.</p>
 </td></tr>
 </table>
 </td></tr></table>

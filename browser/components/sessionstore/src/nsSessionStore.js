@@ -1015,12 +1015,12 @@ SessionStoreService.prototype = {
     // create a new tab
     let browser = aWindow.gBrowser;
     let tab = browser.addTab();
-      
-    // restore the tab's position
-    browser.moveTabTo(tab, closedTab.pos);
 
     // restore tab content
     this.restoreHistoryPrecursor(aWindow, [tab], [closedTabState], 1, 0, 0);
+      
+    // restore the tab's position
+    browser.moveTabTo(tab, closedTab.pos);
 
     // focus the tab's content area
     let content = browser.getBrowserForTab(tab).contentWindow;

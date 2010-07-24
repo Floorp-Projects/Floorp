@@ -80,8 +80,8 @@
         <menulist id="openWhereList">
           <menupopup>
             <menuitem value="0" id="currentWindow" label="&topTab.label;"/>
-            <menuitem value="1" label="&newWindow.label;"/>
             <menuitem value="3" label="&newTab.label;"/>
+            <menuitem value="1" label="&newWindow.label;"/>
           </menupopup>
         </menulist>
         <spacer flex="1"/>

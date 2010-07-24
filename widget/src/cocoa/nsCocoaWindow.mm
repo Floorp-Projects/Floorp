@@ -1995,10 +1995,12 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 //
 // Drawing the unified gradient in the titlebar and the toolbar works like this:
 // 1) In the style sheet we set the toolbar's -moz-appearance to -moz-mac-unified-toolbar.
-// 2) When the toolbar is drawn, Gecko calls nsNativeThemeCocoa::DrawWidgetBackground
-//    for the widget type NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR.
-// 3) This calls DrawUnifiedToolbar which finds the toolbar frame's ToolbarWindow
-//    and passes the toolbar frame's height to setUnifiedToolbarHeight.
+// 2) When the toolbar is visible and we paint the application chrome
+//    window in nsChildView::drawRect, Gecko calls
+//    nsNativeThemeCocoa::RegisterWidgetGeometry for the widget type
+//    NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR.
+// 3) This finds the toolbar frame's ToolbarWindow and passes the toolbar
+//    frame's height to setUnifiedToolbarHeight.
 // 4) If the toolbar height has changed, a titlebar redraw is triggered by
 //    [self display] and the upper part of the unified gradient is drawn in the
 //    titlebar.
@@ -2025,7 +2027,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     mBackgroundColor = [NSColor whiteColor];
 
     mUnifiedToolbarHeight = 0.0f;
-    mWaitingForUnifiedToolbarHeight = NO;
+    mInUnifiedToolbarReset = NO;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -2069,21 +2071,18 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   return mBackgroundColor;
 }
 
-// This is called by nsNativeThemeCocoa.mm's DrawUnifiedToolbar.
+// This is called by nsNativeThemeCocoa.mm's RegisterWidgetGeometry.
 // We need to know the toolbar's height in order to draw the correct
 // unified gradient in the titlebar.
-- (void)setUnifiedToolbarHeight:(float)aToolbarHeight
+- (void)notifyToolbarAt:(float)aY height:(float)aHeight
 {
-  mWaitingForUnifiedToolbarHeight = NO;
-  if (mUnifiedToolbarHeight == aToolbarHeight)
+  // Ignore unexpected notifications about the toolbar height
+  if (!mInUnifiedToolbarReset)
     return;
-  mUnifiedToolbarHeight = aToolbarHeight;
 
-  [self setContentBorderThickness:aToolbarHeight forEdge:NSMaxYEdge];
-
-  // Since this function is only called inside painting, the repaint needs to
-  // be synchronous.
-  [self setTitlebarNeedsDisplayInRect:[self titlebarRect] sync:YES];
+  if (aY <= 0.0 && aY + aHeight > mUnifiedToolbarHeight) {
+    mUnifiedToolbarHeight = aY + aHeight;
+  }
 }
 
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect
@@ -2126,16 +2125,26 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
 }
 
-- (void)beginMaybeResetUnifiedToolbar
+- (float)beginMaybeResetUnifiedToolbar
 {
-  mWaitingForUnifiedToolbarHeight = YES;
+  mInUnifiedToolbarReset = YES;
+  float old = mUnifiedToolbarHeight;
+  mUnifiedToolbarHeight = 0.0;
+  return old;
 }
 
-- (void)endMaybeResetUnifiedToolbar
+- (void)endMaybeResetUnifiedToolbar:(float)aOldHeight
 {
-  if (mWaitingForUnifiedToolbarHeight) {
-    // No toolbar was drawn, so set the height to zero.
-    [self setUnifiedToolbarHeight:0.0f];
+  if (mInUnifiedToolbarReset) {
+    mInUnifiedToolbarReset = NO;
+    if (mUnifiedToolbarHeight == aOldHeight)
+      return;
+
+    [self setContentBorderThickness:mUnifiedToolbarHeight forEdge:NSMaxYEdge];
+
+    // Since this function is only called inside painting, the repaint needs to
+    // be synchronous.
+    [self setTitlebarNeedsDisplayInRect:[self titlebarRect] sync:YES];
   }
 }
 

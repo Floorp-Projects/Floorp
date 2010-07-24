@@ -1512,21 +1512,16 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
   if (!appBundle)
     return NS_ERROR_FAILURE;
 
-  CFURLRef bundleURL = CFBundleCopyExecutableURL(appBundle);
-  if (!bundleURL)
+  CFURLRef executableURL = CFBundleCopyExecutableURL(appBundle);
+  if (!executableURL)
     return NS_ERROR_FAILURE;
-
-  FSRef fileRef;
-  if (!CFURLGetFSRef(bundleURL, &fileRef)) {
-    CFRelease(bundleURL);
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = lfm->InitWithFSRef(&fileRef);
-  CFRelease(bundleURL);
-
+  rv = lfm->InitWithCFURL(executableURL);
+  CFRelease(executableURL);
   if (NS_FAILED(rv))
     return rv;
+
+  // Callers expect a normalized path.
+  lfm->Normalize();
 
 #elif defined(XP_UNIX)
   struct stat fileStat;

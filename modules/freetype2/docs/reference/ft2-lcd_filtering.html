@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.12 API Reference</title>
+<title>FreeType-2.4.1 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,14 +35,15 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.12 API Reference</h1></center>
+<center><h1>FreeType-2.4.1 API Reference</h1></center>
 
 <center><h1>
 LCD Filtering
 </h1></center>
 <h2>Synopsis</h2>
 <table align=center cellspacing=5 cellpadding=0 border=0>
-<tr><td></td><td><a href="#FT_LcdFilter">FT_LcdFilter</a></td><td></td><td><a href="#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a></td><td></td><td></td></tr>
+<tr><td></td><td><a href="#FT_LcdFilter">FT_LcdFilter</a></td><td></td><td><a href="#FT_Library_SetLcdFilterWeights">FT_Library_SetLcdFilterWeights</a></td></tr>
+<tr><td></td><td><a href="#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a></td><td></td><td></td></tr>
 </table><br><br>
 
 <table align=center width="87%"><tr><td>
@@ -138,6 +139,48 @@ Defined in FT_LCD_FILTER_H (freetype/ftlcdfil.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>since</b></em></td></tr><tr><td>
 <p>2.3.0</p>
+</td></tr></table>
+</td></tr></table>
+<hr width="75%">
+<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
+<td width="100%"></td>
+<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
+
+<table align=center width="75%"><tr><td>
+<h4><a name="FT_Library_SetLcdFilterWeights">FT_Library_SetLcdFilterWeights</a></h4>
+<table align=center width="87%"><tr><td>
+Defined in FT_LCD_FILTER_H (freetype/ftlcdfil.h).
+</td></tr></table><br>
+<table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
+
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
+  <b>FT_Library_SetLcdFilterWeights</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>      library,
+                                  <span class="keyword">unsigned</span> <span class="keyword">char</span>  *weights );
+
+</pre></table><br>
+<table align=center width="87%"><tr><td>
+<p>Use this function to override the filter weights selected by <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a>. By default, FreeType uses the quintuple (0x00, 0x55, 0x56, 0x55, 0x00) for FT_LCD_FILTER_LIGHT, and (0x10, 0x40, 0x70, 0x40, 0x10) for FT_LCD_FILTER_DEFAULT and FT_LCD_FILTER_LEGACY.</p>
+</td></tr></table><br>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>input</b></em></td></tr><tr><td>
+<p></p>
+<table cellpadding=3 border=0>
+<tr valign=top><td><b>library</b></td><td>
+<p>A handle to the target library instance.</p>
+</td></tr>
+<tr valign=top><td><b>weights</b></td><td>
+<p>A pointer to an array; the function copies the first five bytes and uses them to specify the filter weights.</p>
+</td></tr>
+</table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
+<p>FreeType error code. 0&nbsp;means success.</p>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>Due to <b>PATENTS</b> covering subpixel rendering, this function doesn't do anything except returning &lsquo;FT_Err_Unimplemented_Feature&rsquo; if the configuration macro FT_CONFIG_OPTION_SUBPIXEL_RENDERING is not defined in your build of the library, which should correspond to all default builds of FreeType.</p>
+<p>This function must be called after <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a> to have any effect.</p>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>since</b></em></td></tr><tr><td>
+<p>2.4.0</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

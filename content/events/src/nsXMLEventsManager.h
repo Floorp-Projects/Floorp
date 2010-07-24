@@ -46,6 +46,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIAtom.h"
+#include "nsStubDocumentObserver.h"
 
 /*
  * The implementation of the XML Events Basic profile
@@ -89,12 +90,18 @@ private:
   
 };
 
-class nsXMLEventsManager : public nsIDocumentObserver {
+class nsXMLEventsManager : public nsStubDocumentObserver {
 public:
   nsXMLEventsManager();
   ~nsXMLEventsManager();
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOCUMENTOBSERVER
+
+  NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
+  virtual void EndLoad(nsIDocument* aDocument);
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   void AddXMLEventsContent(nsIContent * aContent);
   void RemoveXMLEventsContent(nsIContent * aContent);

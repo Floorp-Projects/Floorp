@@ -204,6 +204,7 @@ public:
 
     NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULDocument, nsXMLDocument)
 
+    virtual nsXPCClassInfo* GetClassInfo();
 protected:
     // Implementation methods
     friend nsresult

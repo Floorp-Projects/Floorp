@@ -695,9 +695,13 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
                     % jsvalPtr)
             return
         else:
-            f.write("    return xpc_qsXPCOMObjectToJsval(lccx, "
-                    "ToSupports(result), xpc_qsGetWrapperCache(result), "
-                    "&NS_GET_IID(%s), &interfaces[k_%s], %s);\n"
+            f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
+                    "    qsObjectHelper helper(ToSupports(result));\n"
+                    "    helper.SetNode(result);\n"
+                    "    helper.SetCanonical(ToCanonicalSupports(result));\n"
+                    "    // After this point do not use 'result'!\n"
+                    "    return xpc_qsXPCOMObjectToJsval(lccx, "
+                    "&helper, cache, &NS_GET_IID(%s), &interfaces[k_%s], %s);\n"
                     % (type.name, type.name, jsvalPtr))
             return
 
@@ -1200,9 +1204,14 @@ def writeTraceableResultConv(f, type):
             f.write("    JSBool ok = xpc_qsVariantToJsval(lccx, result, "
                     "&vp.array[0]);\n")
         else:
-            f.write("    JSBool ok = xpc_qsXPCOMObjectToJsval(lccx, "
-                    "ToSupports(result), xpc_qsGetWrapperCache(result), "
-                    "&NS_GET_IID(%s), &interfaces[k_%s], &vp.array[0]);\n"
+            f.write("    nsWrapperCache* cache = xpc_qsGetWrapperCache(result);\n"
+                    "    qsObjectHelper helper(ToSupports(result));\n"
+                    "    helper.SetNode(result);\n"
+                    "    helper.SetCanonical(ToCanonicalSupports(result));\n"
+                    "    // After this point do not use 'result'!\n"
+                    "    JSBool ok = xpc_qsXPCOMObjectToJsval(lccx, "
+                    "&helper, cache, &NS_GET_IID(%s), &interfaces[k_%s], "
+                    "&vp.array[0]);\n"
                     % (type.name, type.name))
         f.write("    if (!ok) {\n");
         writeFailure(f, getTraceInfoDefaultReturn(type), 2)
