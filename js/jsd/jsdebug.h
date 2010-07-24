@@ -240,11 +240,12 @@ JSD_ClearAllProfileData(JSDContext* jsdc);
 * If JSD_HIDE_DISABLED_FRAMES is set, this is effectively set as well.
 */
 #define JSD_MASK_TOP_FRAME_ONLY   0x20
+
 /*
-* When this flag is set, object creation will not be tracked.  This will
-* reduce the performance price you pay by enabling the debugger.
+* 0x40 was formerly used to hook into object creation.
 */
-#define JSD_DISABLE_OBJECT_TRACE  0x40
+#define JSD_DISABLE_OBJECT_TRACE_RETIRED 0x40
+
 
 extern JSD_PUBLIC_API(void)
 JSD_SetContextFlags (JSDContext* jsdc, uint32 flags);

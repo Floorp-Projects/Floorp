@@ -559,18 +559,6 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto, JSObject *p
             obj = NULL;
         } else {
             obj->map = scope;
-
-            /*
-             * Do not call debug hooks on trace, because we might be in a non-_FAIL
-             * builtin. See bug 481444.
-             */
-            if (cx->debugHooks->objectHook && !JS_ON_TRACE(cx)) {
-                AutoObjectRooter tvr(cx, obj);
-                AutoKeepAtoms keep(cx->runtime);
-                cx->debugHooks->objectHook(cx, obj, JS_TRUE,
-                                           cx->debugHooks->objectHookData);
-                cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = obj;
-            }
         }
     }
 
@@ -673,18 +661,6 @@ NewObjectWithGivenProto(JSContext *cx, Class *clasp, JSObject *proto, JSObject *
     } else {
         JS_ASSERT(ops->objectMap->ops == ops);
         obj->map = const_cast<JSObjectMap *>(ops->objectMap);
-    }
-
-    /*
-     * Do not call debug hooks on trace, because we might be in a non-_FAIL
-     * builtin. See bug 481444.
-     */
-    if (cx->debugHooks->objectHook && !JS_ON_TRACE(cx)) {
-        AutoObjectRooter tvr(cx, obj);
-        AutoKeepAtoms keep(cx->runtime);
-        cx->debugHooks->objectHook(cx, obj, JS_TRUE,
-                                   cx->debugHooks->objectHookData);
-        cx->weakRoots.finalizableNewborns[FINALIZE_OBJECT] = obj;
     }
 
 out:

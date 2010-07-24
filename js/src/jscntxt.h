@@ -1331,8 +1331,7 @@ struct JSRuntime {
     /* True if any debug hooks not supported by the JIT are enabled. */
     bool debuggerInhibitsJIT() const {
         return (globalDebugHooks.interruptHook ||
-                globalDebugHooks.callHook ||
-                globalDebugHooks.objectHook);
+                globalDebugHooks.callHook);
     }
 #endif
 
