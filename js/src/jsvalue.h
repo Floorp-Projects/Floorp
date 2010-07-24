@@ -602,16 +602,12 @@ class Value
      * Privates values are given a type type which ensures they are not marked.
      */
 
-    bool isUnderlyingTypeOfPrivate() const {
-        return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data);
-    }
-
     void setPrivate(void *ptr) {
         data = PRIVATE_PTR_TO_JSVAL_IMPL(ptr);
     }
 
     void *toPrivate() const {
-        JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
+        JS_ASSERT(JSVAL_IS_DOUBLE_IMPL(data));
         return JSVAL_TO_PRIVATE_PTR_IMPL(data);
     }
 
@@ -620,7 +616,7 @@ class Value
     }
 
     uint32 toPrivateUint32() const {
-        JS_ASSERT(JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(data));
+        JS_ASSERT(JSVAL_IS_DOUBLE_IMPL(data));
         return JSVAL_TO_PRIVATE_UINT32_IMPL(data);
     }
 
