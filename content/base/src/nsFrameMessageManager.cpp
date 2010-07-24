@@ -222,26 +222,20 @@ nsFrameMessageManager::SendSyncMessage()
       JSAutoRequest ar(ctx);
 
       PRUint32 len = retval.Length();
-      jsval* dest = nsnull;
-      JSObject* dataArray = js_NewArrayObjectWithCapacity(ctx, len, &dest);
+      JSObject* dataArray = JS_NewArrayObject(ctx, len, NULL);
       NS_ENSURE_TRUE(dataArray, NS_ERROR_OUT_OF_MEMORY);
-      nsAutoGCRoot arrayGCRoot(&dataArray, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
 
       for (PRUint32 i = 0; i < len; ++i) {
-        dest[i] = JSVAL_NULL;
         if (!retval[i].Length())
           continue;
 
         jsval ret = JSVAL_VOID;
-        nsAutoGCRoot root(&ret, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
         JSONParser* parser = JS_BeginJSONParse(ctx, &ret);
         JSBool ok = JS_ConsumeJSONText(ctx, parser, (jschar*)retval[i].get(),
                                        (uint32)retval[i].Length());
         ok = JS_FinishJSONParse(ctx, parser, JSVAL_NULL) && ok;
         if (ok) {
-          dest[i] = ret;
+          NS_ENSURE_TRUE(JS_SetElement(ctx, dataArray, i, &ret), NS_ERROR_OUT_OF_MEMORY);
         }
       }
 
@@ -350,10 +344,9 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         // To keep compatibility with e10s message manager,
         // define empty objects array.
         if (!aObjectsArray) {
-          jsval* dest = nsnull;
           // Because we want JS messages to have always the same properties,
           // create array even if len == 0.
-          aObjectsArray = js_NewArrayObjectWithCapacity(ctx, 0, &dest);
+          aObjectsArray = JS_NewArrayObject(ctx, 0, NULL);
           if (!aObjectsArray) {
             return false;
           }

@@ -989,17 +989,16 @@ struct JSPendingProxyOperation {
 };
 
 struct JSThreadData {
+    /*
+     * If this flag is set, we were asked to call back the operation callback
+     * as soon as possible.
+     */
+    volatile int32      interruptFlags;
+
     JSGCFreeLists       gcFreeLists;
 
     /* Keeper of the contiguous stack used by all contexts in this thread. */
     js::StackSpace      stackSpace;
-
-    /*
-     * Flag indicating that we are waiving any soft limits on the GC heap
-     * because we want allocations to be infallible (except when we hit
-     * a hard quota).
-     */
-    bool                waiveGCQuota;
 
     /*
      * The GSN cache is per thread since even multi-cx-per-thread embeddings
@@ -1055,6 +1054,18 @@ struct JSThreadData {
     void finish();
     void mark(JSTracer *trc);
     void purge(JSContext *cx);
+
+    static const jsword INTERRUPT_OPERATION_CALLBACK = 0x1;
+
+    void triggerOperationCallback() {
+        /*
+         * Use JS_ATOMIC_SET in the hope that it will make sure the write will
+         * become immediately visible to other processors polling the flag.
+         * Note that we only care about visibility here, not read/write
+         * ordering.
+         */
+        JS_ATOMIC_SET_MASK((jsword *) (&interruptFlags), INTERRUPT_OPERATION_CALLBACK);
+    }
 };
 
 #ifdef JS_THREADSAFE
@@ -1079,12 +1090,6 @@ struct JSThread {
     JSTitle             *titleToShare;
 
     /*
-     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
-     * locks on each JS_malloc.
-     */
-    ptrdiff_t           gcThreadMallocBytes;
-
-    /*
      * This thread is inside js_GC, either waiting until it can start GC, or
      * waiting for GC to finish on another thread. This thread holds no locks;
      * other threads may steal titles from it.
@@ -1101,13 +1106,6 @@ struct JSThread {
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
 };
-
-/*
- * Only when JSThread::gcThreadMallocBytes exhausts the following limit we
- * update JSRuntime::gcMallocBytes.
- * .
- */
-const size_t JS_GC_THREAD_MALLOC_LIMIT = 1 << 19;
 
 #define JS_THREAD_DATA(cx)      (&(cx)->thread->data)
 
@@ -1231,6 +1229,7 @@ struct JSCompartment {
 
 struct JSGCTracer : public JSTracer {
     uint32 color;
+    js::Vector<JSObject *, 0, js::SystemAllocPolicy> arraysToSlowify;
 };
 
 struct JSRuntime {
@@ -1316,7 +1315,7 @@ struct JSRuntime {
      * Malloc counter to measure memory pressure for GC scheduling. It runs
      * from gcMaxMallocBytes down to zero.
      */
-    ptrdiff_t           gcMallocBytes;
+    volatile ptrdiff_t  gcMallocBytes;
 
     /* See comments before DelayMarkingChildren is jsgc.cpp. */
     JSGCArena           *gcUnmarkedArenaStackTop;
@@ -1598,15 +1597,34 @@ struct JSRuntime {
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
 
-    void* malloc(size_t bytes) { return ::js_malloc(bytes); }
+    bool gcQuotaReached() {
+        return gcBytes >= gcMaxBytes;
+    }
 
-    void* calloc(size_t bytes) { return ::js_calloc(bytes); }
+    void updateMallocCounter(size_t bytes) {
+        gcMallocBytes -= bytes; /* We tolerate races and lost counts here. */
+    }
 
-    void* realloc(void* p, size_t bytes) { return ::js_realloc(p, bytes); }
+    bool mallocQuotaReached() {
+        return gcMallocBytes <= 0;
+    }
+
+    bool overQuota() {
+        return gcQuotaReached() || mallocQuotaReached();
+    }
+
+    void* malloc(size_t bytes) { updateMallocCounter(bytes); return ::js_malloc(bytes); }
+
+    void* calloc(size_t bytes) { updateMallocCounter(bytes); return ::js_calloc(bytes); }
+
+    void* realloc(void* p, size_t bytes) {
+        void* q = ::js_realloc(p, bytes);
+        if (p != q)
+            updateMallocCounter(bytes);
+        return q;
+    }
 
     void free(void* p) { ::js_free(p); }
-
-    bool isGCMallocLimitReached() const { return gcMallocBytes <= 0; }
 
     void resetGCMallocBytes() { gcMallocBytes = ptrdiff_t(gcMaxMallocBytes); }
 
@@ -1702,17 +1720,12 @@ struct JSRegExpStatics {
     void clear();
 };
 
+extern JS_FRIEND_API(void)
+js_ReportOutOfMemory(JSContext *cx);
+
 struct JSContext
 {
     explicit JSContext(JSRuntime *rt);
-
-    /*
-     * If this flag is non-zero, we were asked to interrupt execution as soon
-     * as possible. The bits below describe the reason.
-     */
-    volatile jsword     interruptFlags;
-
-    static const jsword INTERRUPT_OPERATION_CALLBACK = 0x1;
 
     /* JSRuntime contextList linkage. */
     JSCList             link;
@@ -1982,76 +1995,40 @@ struct JSContext
     js::BackgroundSweepTask *gcSweepTask;
 #endif
 
-    ptrdiff_t &getMallocCounter() {
-#ifdef JS_THREADSAFE
-        return thread->gcThreadMallocBytes;
-#else
-        return runtime->gcMallocBytes;
-#endif
-    }
-
-    /*
-     * Call this after allocating memory held by GC things, to update memory
-     * pressure counters or report the OOM error if necessary.
-     */
-    inline void updateMallocCounter(void *p, size_t nbytes) {
-        JS_ASSERT(ptrdiff_t(nbytes) >= 0);
-        ptrdiff_t &counter = getMallocCounter();
-        counter -= ptrdiff_t(nbytes);
-        if (!p || counter <= 0)
-            checkMallocGCPressure(p);
-    }
-
-    /*
-     * Call this after successfully allocating memory held by GC things, to
-     * update memory pressure counters.
-     */
-    inline void updateMallocCounter(size_t nbytes) {
-        JS_ASSERT(ptrdiff_t(nbytes) >= 0);
-        ptrdiff_t &counter = getMallocCounter();
-        counter -= ptrdiff_t(nbytes);
-        if (counter <= 0) {
-            /*
-             * Use 1 as an arbitrary non-null pointer indicating successful
-             * allocation.
-             */
-            checkMallocGCPressure(reinterpret_cast<void *>(jsuword(1)));
+    inline void triggerGC() {
+        if (!runtime->gcIsNeeded) {
+            runtime->gcIsNeeded = true;
+            JS_TriggerAllOperationCallbacks(runtime);
         }
+    }
+
+    inline void *reportIfOutOfMemory(void *p) {
+        if (p) {
+            if (runtime->mallocQuotaReached())
+                triggerGC();
+            return p;
+        }
+        js_ReportOutOfMemory(this);
+        return NULL;
     }
 
     inline void* malloc(size_t bytes) {
         JS_ASSERT(bytes != 0);
-        void *p = runtime->malloc(bytes);
-        updateMallocCounter(p, bytes);
-        return p;
+        return reportIfOutOfMemory(runtime->malloc(bytes));
     }
 
     inline void* mallocNoReport(size_t bytes) {
         JS_ASSERT(bytes != 0);
-        void *p = runtime->malloc(bytes);
-        if (!p)
-            return NULL;
-        updateMallocCounter(bytes);
-        return p;
+        return runtime->malloc(bytes);
     }
 
     inline void* calloc(size_t bytes) {
         JS_ASSERT(bytes != 0);
-        void *p = runtime->calloc(bytes);
-        updateMallocCounter(p, bytes);
-        return p;
+        return reportIfOutOfMemory(runtime->calloc(bytes));
     }
 
     inline void* realloc(void* p, size_t bytes) {
-        void *orig = p;
-        p = runtime->realloc(p, bytes);
-
-        /*
-         * For compatibility we do not account for realloc that increases
-         * previously allocated memory.
-         */
-        updateMallocCounter(p, orig ? 0 : bytes);
-        return p;
+        return reportIfOutOfMemory(runtime->realloc(p, bytes));
     }
 
     inline void free(void* p) {
@@ -2118,16 +2095,6 @@ struct JSContext
 #else
     void assertValidStackDepth(uintN /*depth*/) {}
 #endif
-
-private:
-
-    /*
-     * The allocation code calls the function to indicate either OOM failure
-     * when p is null or that a memory pressure counter has reached some
-     * threshold when p is not null. The function takes the pointer and not
-     * a boolean flag to minimize the amount of code in its inlined callers.
-     */
-    JS_FRIEND_API(void) checkMallocGCPressure(void *p);
 };
 
 JS_ALWAYS_INLINE JSObject *
@@ -2236,11 +2203,17 @@ class AutoGCRooter {
       : down(cx->autoGCRooters), tag(tag), context(cx)
     {
         JS_ASSERT(this != cx->autoGCRooters);
+#ifdef JS_THREADSAFE
+        JS_ASSERT(cx->requestDepth != 0);
+#endif
         cx->autoGCRooters = this;
     }
 
     ~AutoGCRooter() {
         JS_ASSERT(this == context->autoGCRooters);
+#ifdef JS_THREADSAFE
+        JS_ASSERT(context->requestDepth != 0);
+#endif
         context->autoGCRooters = down;
     }
 
@@ -2880,9 +2853,6 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         bool charArgs, va_list ap);
 #endif
 
-extern void
-js_ReportOutOfMemory(JSContext *cx);
-
 /*
  * Report that cx->scriptStackQuota is exhausted.
  */
@@ -2959,14 +2929,20 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 # define JS_CHECK_STACK_SIZE(cx, lval)  ((jsuword)&(lval) > (cx)->stackLimit)
 #endif
 
+#ifdef JS_THREADSAFE
+# define JS_ASSERT_REQUEST_DEPTH(cx)  JS_ASSERT((cx)->requestDepth >= 1)
+#else
+# define JS_ASSERT_REQUEST_DEPTH(cx)  ((void) 0)
+#endif
+
 /*
  * If the operation callback flag was set, call the operation callback.
  * This macro can run the full GC. Return true if it is OK to continue and
  * false otherwise.
  */
-#define JS_CHECK_OPERATION_LIMIT(cx) \
-    (!((cx)->interruptFlags & JSContext::INTERRUPT_OPERATION_CALLBACK) || \
-     js_InvokeOperationCallback(cx))
+#define JS_CHECK_OPERATION_LIMIT(cx)                                          \
+    (JS_ASSERT_REQUEST_DEPTH(cx),                                             \
+     (!(JS_THREAD_DATA(cx)->interruptFlags & JSThreadData::INTERRUPT_OPERATION_CALLBACK) || js_InvokeOperationCallback(cx)))
 
 /*
  * Invoke the operation callback and return false if the current execution
