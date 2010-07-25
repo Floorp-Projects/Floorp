@@ -168,7 +168,6 @@ StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
 
     JSFrameRegs *regs = cx->regs;
     regs->pc = down->savedPC;
-    regs->sp = up->argv - 1;
 #ifdef DEBUG
     down->savedPC = JSStackFrame::sInvalidPC;
 #endif
