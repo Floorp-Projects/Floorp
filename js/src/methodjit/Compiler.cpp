@@ -2696,75 +2696,80 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
 {
     JSAtom *atom = script->getAtom(index);
 #if defined JS_POLYIC
-    jsbytecode *next = &PC[JSOP_PROPINC_LENGTH];
-    bool pop = (JSOp(*next) == JSOP_POP) && !analysis[next].nincoming;
-    int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
+    FrameEntry *objFe = frame.peek(-1);
+    if (!objFe->isTypeKnown() || objFe->getKnownType() == JSVAL_TYPE_OBJECT) {
+        jsbytecode *next = &PC[JSOP_PROPINC_LENGTH];
+        bool pop = (JSOp(*next) == JSOP_POP) && !analysis[next].nincoming;
+        int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
 
-    if (pop || (op == JSOP_INCPROP || op == JSOP_DECPROP)) {
-        /* These cases are easy, the original value is not observed. */
+        if (pop || (op == JSOP_INCPROP || op == JSOP_DECPROP)) {
+            /* These cases are easy, the original value is not observed. */
 
-        frame.dup();
-        // OBJ OBJ
+            frame.dup();
+            // OBJ OBJ
 
-        jsop_getprop(atom);
-        // OBJ V
+            jsop_getprop(atom);
+            // OBJ V
 
-        frame.push(Int32Value(amt));
-        // OBJ V 1
+            frame.push(Int32Value(amt));
+            // OBJ V 1
 
-        /* Use sub since it calls ValueToNumber instead of string concat. */
-        jsop_binary(JSOP_SUB, stubs::Sub);
-        // OBJ V+1
+            /* Use sub since it calls ValueToNumber instead of string concat. */
+            jsop_binary(JSOP_SUB, stubs::Sub);
+            // OBJ V+1
 
-        jsop_setprop(atom);
-        // V+1
+            jsop_setprop(atom);
+            // V+1
 
+            if (pop)
+                frame.pop();
+        } else {
+            /* The pre-value is observed, making this more tricky. */
+
+            frame.dup();
+            // OBJ OBJ 
+
+            jsop_getprop(atom);
+            // OBJ V
+
+            jsop_pos();
+            // OBJ N
+
+            frame.dup();
+            // OBJ N N
+
+            frame.push(Int32Value(-amt));
+            // OBJ N N 1
+
+            jsop_binary(JSOP_ADD, stubs::Add);
+            // OBJ N N+1
+
+            frame.dupAt(-3);
+            // OBJ N N+1 OBJ
+
+            frame.dupAt(-2);
+            // OBJ N N+1 OBJ N+1
+
+            jsop_setprop(atom);
+            // OBJ N N+1 N+1
+
+            frame.popn(2);
+            // OBJ N
+
+            frame.shimmy(1);
+            // N
+        }
         if (pop)
-            frame.pop();
-    } else {
-        /* The pre-value is observed, making this more tricky. */
-
-        frame.dup();
-        // OBJ OBJ 
-
-        jsop_getprop(atom);
-        // OBJ V
-
-        jsop_pos();
-        // OBJ N
-
-        frame.dup();
-        // OBJ N N
-
-        frame.push(Int32Value(-amt));
-        // OBJ N N 1
-
-        jsop_binary(JSOP_ADD, stubs::Add);
-        // OBJ N N+1
-
-        frame.dupAt(-3);
-        // OBJ N N+1 OBJ
-
-        frame.dupAt(-2);
-        // OBJ N N+1 OBJ N+1
-
-        jsop_setprop(atom);
-        // OBJ N N+1 N+1
-
-        frame.popn(2);
-        // OBJ N
-
-        frame.shimmy(1);
-        // N
-    }
-    if (pop)
-        PC += JSOP_POP_LENGTH;
+            PC += JSOP_POP_LENGTH;
+    } else
 #else
-    prepareStubCall(Uses(1));
-    masm.move(ImmPtr(atom), Registers::ArgReg1);
-    stubCall(stub);
-    frame.pop();
-    frame.pushSynced();
+    {
+        prepareStubCall(Uses(1));
+        masm.move(ImmPtr(atom), Registers::ArgReg1);
+        stubCall(stub);
+        frame.pop();
+        frame.pushSynced();
+    }
 #endif
 
     PC += JSOP_PROPINC_LENGTH;
