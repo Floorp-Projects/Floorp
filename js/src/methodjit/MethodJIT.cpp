@@ -198,6 +198,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "popq %r13"                             "\n"
     "popq %r12"                             "\n"
     "popq %rbp"                             "\n"
+    "xorq %rax,%rax"                        "\n"
     "ret"                                   "\n"
 );
 
@@ -494,9 +495,13 @@ extern "C" {
             push [ebp+16];
             mov  ecx, esp;
             call SetVMFrameRegs;
+            mov  ecx, esp;
+            call PushActiveVMFrame;
             pop  edx;
 
             call edx;
+            lea  ecx, [esp-4];
+            call PopActiveVMFrame;
             lea  ecx, [esp-4];
             call UnsetVMFrameRegs;
 
@@ -529,6 +534,8 @@ extern "C" {
             je throwpoline_exit;
             jmp eax;
         throwpoline_exit:
+            mov ecx, esp;
+            call PopActiveVMFrame;
             add esp, 0x2c;
             pop ebx;
             pop edi;
