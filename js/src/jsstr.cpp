@@ -83,47 +83,8 @@
 
 using namespace js;
 
-#define JSSTRDEP_RECURSION_LIMIT        100
-
 JS_STATIC_ASSERT(size_t(JSString::MAX_LENGTH) <= size_t(JSVAL_INT_MAX));
 JS_STATIC_ASSERT(JSString::MAX_LENGTH <= JSVAL_INT_MAX);
-
-static size_t
-MinimizeDependentStrings(JSString *str, int level, JSString **basep)
-{
-    JSString *base;
-    size_t start, length;
-
-    JS_ASSERT(str->isDependent());
-    base = str->dependentBase();
-    start = str->dependentStart();
-    if (base->isDependent()) {
-        if (level < JSSTRDEP_RECURSION_LIMIT) {
-            start += MinimizeDependentStrings(base, level + 1, &base);
-        } else {
-            do {
-                start += base->dependentStart();
-                base = base->dependentBase();
-            } while (base->isDependent());
-        }
-        length = str->dependentLength();
-        str->initDependent(base, start, length);
-    }
-    *basep = base;
-    return start;
-}
-
-jschar *
-js_GetDependentStringChars(JSString *str)
-{
-    size_t start;
-    JSString *base;
-
-    start = MinimizeDependentStrings(str, 0, &base);
-    JS_ASSERT(base->isFlat());
-    JS_ASSERT(start < base->flatLength());
-    return base->flatChars() + start;
-}
 
 const jschar *
 js_GetStringChars(JSContext *cx, JSString *str)
@@ -179,7 +140,7 @@ JSString::flatten()
              * not later, so store it early. We have to be careful with this:
              * mLeft is replaced by mOffset.
              */
-            str->startTraversalConversion(pos);
+            str->startTraversalConversion(chars, pos);
             str->ropeIncrementTraversalCount();
             if (next->isInteriorNode()) {
                 str = next;
@@ -201,7 +162,7 @@ JSString::flatten()
           case 2:
             next = str->interiorNodeParent();
             /* Make the string a dependent string dependent with the right fields. */
-            str->finishTraversalConversion(topNode, pos);
+            str->finishTraversalConversion(topNode, chars, pos);
             str = next;
             break;
           default:
@@ -335,7 +296,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         if (!res)
             return NULL;
         res->initFlatMutable(chars, length, left->flatCapacity());
-        left->initDependent(res, 0, leftLen);
+        left->initDependent(res, res->flatChars(), leftLen);
         return res;
     }
 
@@ -2991,9 +2952,9 @@ static const jschar UnitStringData[] = {
     C(0xf8), C(0xf9), C(0xfa), C(0xfb), C(0xfc), C(0xfd), C(0xfe), C(0xff)
 };
 
-#define U(c) { {0}, {0},                                                       \
+#define U(c) { {0}, {(jschar *)UnitStringData + (c) * 2},                      \
     JSString::FLAT | JSString::ATOMIZED | (1 << JSString::FLAGS_LENGTH_SHIFT), \
-    {(jschar *)UnitStringData + (c) * 2} }
+    {0} }
 
 #ifdef __SUNPRO_CC
 #pragma pack(8)
@@ -3100,17 +3061,17 @@ static const jschar Hundreds[] = {
     O25(0x30), O25(0x31), O25(0x32), O25(0x33), O25(0x34), O25(0x35)
 };
 
-#define L1(c) { {0}, {0},                                                      \
+#define L1(c) { {0}, {(jschar *)Hundreds + 2 + (c) * 4},                       \
     JSString::FLAT | JSString::ATOMIZED | (1 << JSString::FLAGS_LENGTH_SHIFT), \
-    {(jschar *)Hundreds + 2 + (c) * 4} } /* length 1: 0..9 */
+    {0} } /* length 1: 0..9 */
 
-#define L2(c) { {0}, {0},                                                      \
+#define L2(c) { {0}, {(jschar *)Hundreds + 41 + (c - 10) * 4},                 \
     JSString::FLAT | JSString::ATOMIZED | (2 << JSString::FLAGS_LENGTH_SHIFT), \
-    {(jschar *)Hundreds + 41 + (c - 10) * 4} } /* length 2: 10..99 */
+    {0} } /* length 2: 10..99 */
                 
-#define L3(c) { {0}, {0},                                                      \
+#define L3(c) { {0}, {(jschar *)Hundreds + (c - 100) * 4},                     \
     JSString::FLAT | JSString::ATOMIZED | (3 << JSString::FLAGS_LENGTH_SHIFT), \
-    {(jschar *)Hundreds + (c - 100) * 4} } /* length 3: 100..255 */
+    {0} } /* length 3: 100..255 */
 
 #ifdef __SUNPRO_CC
 #pragma pack(8)
@@ -3478,16 +3439,18 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
     if (start == 0 && length == base->length())
         return base;
 
-    /*
-     * To avoid weird recursion cases, we're not allowed to have a string
-     * depend on a rope.
-     */
-    base->ensureNotRope();
+    jschar *chars = base->chars() + start;
+
+    /* Try to avoid long chains of dependent strings. */
+    while (base->isDependent())
+        base = base->dependentBase();
+
+    JS_ASSERT(base->isFlat());
 
     ds = js_NewGCString(cx);
     if (!ds)
         return NULL;
-    ds->initDependent(base, start, length);
+    ds->initDependent(base, chars, length);
 #ifdef DEBUG
   {
     JSRuntime *rt = cx->runtime;
