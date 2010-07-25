@@ -118,7 +118,8 @@ class FrameEntry
 #if defined JS_32BIT
         v_.s.tag = JSVAL_TYPE_TO_TAG(type_);
 #elif defined JS_64BIT
-        v_.debugView.tag = JSVAL_TYPE_TO_TAG(type_);
+        v_.asBits &= JSVAL_PAYLOAD_MASK;
+        v_.asBits |= JSVAL_TYPE_TO_SHIFTED_TAG(type_);
 #endif
         knownType = type_;
         JS_ASSERT(!isNumber);
