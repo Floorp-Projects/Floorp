@@ -85,7 +85,6 @@ endif
 CPPSRCS = \
         nsColor.cpp \
         nsFont.cpp \
-        nsPoint.cpp \
         nsRect.cpp \
         nsRegion.cpp \
         nsTransform2D.cpp \
