@@ -478,7 +478,9 @@ void nsHTMLMediaElement::AbortExistingLoads()
   // with a different load ID to silently be cancelled.
   mCurrentLoadID++;
 
+  PRBool fireTimeUpdate = PR_FALSE;
   if (mDecoder) {
+    fireTimeUpdate = mDecoder->GetCurrentTime() != 0.0;
     mDecoder->Shutdown();
     mDecoder = nsnull;
   }
@@ -505,7 +507,13 @@ void nsHTMLMediaElement::AbortExistingLoads()
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
     mPaused = PR_TRUE;
 
-    // TODO: The current playback position must be set to 0.
+    if (fireTimeUpdate) {
+      // Since we destroyed the decoder above, the current playback position
+      // will now be reported as 0. The playback position was non-zero when
+      // we destroyed the decoder, so fire a timeupdate event so that the
+      // change will be reflected in the controls.
+      DispatchAsyncSimpleEvent(NS_LITERAL_STRING("timeupdate"));
+    }
     DispatchSimpleEvent(NS_LITERAL_STRING("emptied"));
   }
 
