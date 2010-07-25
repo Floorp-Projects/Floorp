@@ -80,7 +80,7 @@ struct VMFrame
     JSFrameRegs  regs;
     JSStackFrame *fp;
     JSContext    *cx;
-    uintptr_t    inlineCallCount;
+    uint32       inlineCallCount;
 
 #if defined(JS_CPU_X86)
     void *savedEBX;
@@ -89,21 +89,21 @@ struct VMFrame
     void *savedEBP;
     void *savedEIP;
 
-#ifdef JS_NO_FASTCALL
+# ifdef JS_NO_FASTCALL
     inline void** returnAddressLocation() {
         return reinterpret_cast<void**>(this) - 3;
     }
-#else
+# else
     inline void** returnAddressLocation() {
         return reinterpret_cast<void**>(this) - 1;
     }
-#endif
+# endif
 #elif defined(JS_CPU_X64)
     void *savedRBX;
-#ifdef _MSC_VER
+# ifdef _MSC_VER
     void *savedRSI;
     void *savedRDI;
-#endif
+# endif
     void *savedR15;
     void *savedR14;
     void *savedR13;
@@ -111,15 +111,15 @@ struct VMFrame
     void *savedRBP;
     void *savedRIP;
 
-#ifdef _MSC_VER
+# ifdef _MSC_VER
     inline void** returnAddressLocation() {
         return reinterpret_cast<void**>(this) - 5;
     }
-#else
+# else
     inline void** returnAddressLocation() {
         return reinterpret_cast<void**>(this) - 1;
     }
-#endif
+# endif
 
 #elif defined(JS_CPU_ARM)
     void *savedR4;
