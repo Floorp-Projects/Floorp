@@ -242,14 +242,20 @@ class FrameState
      * the value it replaces on the stack had the same tag if the fast-path
      * was taken.
      */
-    inline void pushUntypedPayload(JSValueType type, RegisterID payload,
-                                   bool popGuaranteed = false,
-                                   bool fastTyped = false);
+    inline void pushUntypedPayload(JSValueType type, RegisterID payload);
 
     /*
      * Pushes a number onto the operation stack.
+     *
+     * If asInt32 is set to true, then the FS will attempt to optimize
+     * syncing the type as int32. Only use this parameter when the fast-path
+     * guaranteed that the stack slot was guarded to be an int32 originally.
+     *
+     * For example, checking LHS and RHS as ints guarantees that if the LHS
+     * was synced, then popping both and pushing a maybe-int32 does not need
+     * to be synced.
      */
-    inline void pushNumber(MaybeRegisterID payload);
+    inline void pushNumber(MaybeRegisterID payload, bool asInt32 = false);
 
     /*
      * Pops a value off the operation stack, freeing any of its resources.
