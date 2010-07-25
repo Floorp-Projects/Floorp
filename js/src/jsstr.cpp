@@ -267,6 +267,18 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 
     length = leftLen + rightLen;
 
+    if (JSShortString::fitsIntoShortString(length)) {
+        JSShortString *shortStr = js_NewGCShortString(cx);
+        if (!shortStr)
+            return NULL;
+
+        jschar *buf = shortStr->init(length);
+        js_short_strncpy(buf, left->chars(), leftLen);
+        js_short_strncpy(buf + leftLen, right->chars(), rightLen);
+        buf[length] = 0;
+        return shortStr->header();
+    }
+
     /*
      * We need to enforce a tree structure in ropes: every node needs to have a
      * unique parent. So, we can't have the left or right child be in the middle
@@ -2952,9 +2964,9 @@ static const jschar UnitStringData[] = {
     C(0xf8), C(0xf9), C(0xfa), C(0xfb), C(0xfc), C(0xfd), C(0xfe), C(0xff)
 };
 
-#define U(c) { {0}, {(jschar *)UnitStringData + (c) * 2},                      \
+#define U(c) {                                                                 \
     JSString::FLAT | JSString::ATOMIZED | (1 << JSString::FLAGS_LENGTH_SHIFT), \
-    {0} }
+    {(jschar *)UnitStringData + (c) * 2}, {0}, {0} }
 
 #ifdef __SUNPRO_CC
 #pragma pack(8)
@@ -3061,17 +3073,17 @@ static const jschar Hundreds[] = {
     O25(0x30), O25(0x31), O25(0x32), O25(0x33), O25(0x34), O25(0x35)
 };
 
-#define L1(c) { {0}, {(jschar *)Hundreds + 2 + (c) * 4},                       \
+#define L1(c) {                                                                \
     JSString::FLAT | JSString::ATOMIZED | (1 << JSString::FLAGS_LENGTH_SHIFT), \
-    {0} } /* length 1: 0..9 */
+    {(jschar *)Hundreds + 2 + (c) * 4}, {0}, {0} } /* length 1: 0..9 */
 
-#define L2(c) { {0}, {(jschar *)Hundreds + 41 + (c - 10) * 4},                 \
+#define L2(c) {                                                                \
     JSString::FLAT | JSString::ATOMIZED | (2 << JSString::FLAGS_LENGTH_SHIFT), \
-    {0} } /* length 2: 10..99 */
+    {(jschar *)Hundreds + 41 + (c - 10) * 4}, {0}, {0} } /* length 2: 10..99 */
                 
-#define L3(c) { {0}, {(jschar *)Hundreds + (c - 100) * 4},                     \
+#define L3(c) {                                                                \
     JSString::FLAT | JSString::ATOMIZED | (3 << JSString::FLAGS_LENGTH_SHIFT), \
-    {0} } /* length 3: 100..255 */
+    {(jschar *)Hundreds + (c - 100) * 4}, {0}, {0} } /* length 3: 100..255 */
 
 #ifdef __SUNPRO_CC
 #pragma pack(8)
@@ -3491,8 +3503,52 @@ void printJSStringStats(JSRuntime *rt)
 #endif
 
 JSString *
+NewShortString(JSContext *cx, const jschar *chars, size_t length)
+{
+    JS_ASSERT(JSShortString::fitsIntoShortString(length));
+    JSShortString *str = js_NewGCShortString(cx);
+    if (!str)
+        return NULL;
+    jschar *storage = str->init(length);
+    js_short_strncpy(storage, chars, length);
+    storage[length] = 0;
+    return str->header();
+}
+
+JSString *
+NewShortString(JSContext *cx, const char *chars, size_t length)
+{
+    JS_ASSERT(JSShortString::fitsIntoShortString(length));
+    JSShortString *str = js_NewGCShortString(cx);
+    if (!str)
+        return NULL;
+    jschar *storage = str->init(length);
+
+    if (js_CStringsAreUTF8) {
+#ifdef DEBUG
+        size_t oldLength = length;
+#endif
+        if (!js_InflateStringToBuffer(cx, chars, length, storage, &length))
+            return NULL;
+        JS_ASSERT(length <= oldLength);
+        storage[length] = 0;
+        str->resetLength(length);
+    } else {
+        size_t n = length;
+        jschar *p = storage;
+        while (n--)
+            *p++ = jschar(*chars++);
+        *p = 0;
+    }
+    return str->header();
+}
+
+JSString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
 {
+    if (JSShortString::fitsIntoShortString(n))
+        return NewShortString(cx, s, n);
+
     jschar *news;
     JSString *str;
 
@@ -3508,6 +3564,14 @@ js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n)
 }
 
 JSString *
+js_NewStringCopyN(JSContext *cx, const char *s, size_t n)
+{
+    if (JSShortString::fitsIntoShortString(n))
+        return NewShortString(cx, s, n);
+    return JS_NewStringCopyN(cx, s, n);
+}
+
+JSString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s)
 {
     size_t n, m;
@@ -3515,6 +3579,10 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s)
     JSString *str;
 
     n = js_strlen(s);
+
+    if (JSShortString::fitsIntoShortString(n))
+        return NewShortString(cx, s, n);
+
     m = (n + 1) * sizeof(jschar);
     news = (jschar *) cx->malloc(m);
     if (!news)
@@ -3524,6 +3592,12 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s)
     if (!str)
         cx->free(news);
     return str;
+}
+
+JSString *
+js_NewStringCopyZ(JSContext *cx, const char *s)
+{
+    return js_NewStringCopyN(cx, s, strlen(s));
 }
 
 JS_FRIEND_API(const char *)
