@@ -1297,6 +1297,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") ==
 == 488649-1.html 488649-1-ref.html
 == 488685-1.html 488685-1-ref.html
 == 488692-1.html 488692-1-ref.html
+== 489868-1.svg 489868-1-ref.svg 
 == 490176-1.html 490176-1-ref.html
 == 490177-1.svg 490177-1-ref.svg
 == 490182-1a.html 490182-1-ref.html
