@@ -841,7 +841,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
                      entries[localIndex(n)].data.inMemory());
         Address local(JSFrameReg, sizeof(JSStackFrame) + n * sizeof(Value));
         storeTo(peek(-1), local, false);
-        getLocal(n)->resetSynced();
+        forgetAllRegs(getLocal(n));
         return;
     }
 
