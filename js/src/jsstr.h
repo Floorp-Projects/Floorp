@@ -125,12 +125,11 @@ struct JSString {
         JSRopeBufferInfo    *mBufferWithInfo; /* in rope top nodes */
     };
     union {
-        size_t              mOffset; /* in dependent strings */
+        jschar              *mChars; /* in flat and dependent strings */
         JSString            *mLeft;  /* in rope interior and top nodes */
     };
     size_t                  mLengthAndFlags;  /* in all strings */
     union {
-        jschar              *mChars; /* in flat strings */
         JSString            *mBase;  /* in dependent strings */
         JSString            *mRight; /* in rope interior and top nodes */
     };
@@ -213,20 +212,9 @@ struct JSString {
     }
 
     JS_ALWAYS_INLINE jschar *chars() {
-        return isFlat() ? flatChars() : nonFlatChars();
-    }
-
-    JS_ALWAYS_INLINE jschar *nonFlatChars() {
-        if (isDependent())
-            return dependentChars();
-        else {
+        if (JS_UNLIKELY(isRope()))
             flatten();
-            JS_ASSERT(isFlat() || isDependent());
-            if (isFlat())
-                return flatChars();
-            else
-                return dependentChars();
-        }
+        return mChars;
     }
 
     JS_ALWAYS_INLINE size_t length() const {
@@ -249,7 +237,7 @@ struct JSString {
     /* Specific flat string initializer and accessor methods. */
     JS_ALWAYS_INLINE void initFlat(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
-        mOffset = 0;
+        mBase = NULL;
         mCapacity = 0;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT;
         mChars = chars;
@@ -257,7 +245,7 @@ struct JSString {
 
     JS_ALWAYS_INLINE void initFlatMutable(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
-        mOffset = 0;
+        mBase = NULL;
         mCapacity = cap;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT | MUTABLE;
         mChars = chars;
@@ -321,10 +309,14 @@ struct JSString {
         mLengthAndFlags &= ~MUTABLE;
     }
 
-    inline void initDependent(JSString *bstr, size_t off, size_t len) {
+    /*
+     * The chars pointer should point somewhere inside the buffer owned by bstr.
+     * The caller still needs to pass bstr for GC purposes.
+     */
+    inline void initDependent(JSString *bstr, jschar *chars, size_t len) {
         JS_ASSERT(len <= MAX_LENGTH);
         mParent = NULL;
-        mOffset = off;
+        mChars = chars;
         mLengthAndFlags = DEPENDENT | (len << FLAGS_LENGTH_SHIFT);
         mBase = bstr;
     }
@@ -335,13 +327,7 @@ struct JSString {
     }
 
     JS_ALWAYS_INLINE jschar *dependentChars() {
-        return dependentBase()->isFlat()
-               ? dependentBase()->flatChars() + dependentStart()
-               : js_GetDependentStringChars(this);
-    }
-
-    inline size_t dependentStart() const {
-        return mOffset;
+        return mChars;
     }
 
     inline size_t dependentLength() const {
@@ -395,22 +381,23 @@ struct JSString {
         mBufferWithInfo = NULL;
     }
 
-    /*   
+    /*
      * When flattening a rope, we need to convert a rope node to a dependent
      * string in two separate parts instead of calling initDependent.
      */
-    inline void startTraversalConversion(size_t offset) {
+    inline void startTraversalConversion(jschar *chars, size_t offset) {
         JS_ASSERT(isInteriorNode());
-        mOffset = offset;
+        mChars = chars + offset;
     }    
 
-    inline void finishTraversalConversion(JSString *base, size_t end) {
+    inline void finishTraversalConversion(JSString *base, jschar *chars,
+                                          size_t end) {
         JS_ASSERT(isInteriorNode());
         /* Note that setting flags also clears the traversal count. */
         mLengthAndFlags = JSString::DEPENDENT |
-            ((end - mOffset) << JSString::FLAGS_LENGTH_SHIFT);
+            ((chars + end - mChars) << JSString::FLAGS_LENGTH_SHIFT);
         mBase = base;
-    }    
+    }
 
     inline void ropeClearTraversalCount() {
         JS_ASSERT(isRope());

@@ -7255,44 +7255,31 @@ JSString *
 js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
 {
     size_t len, len2, newlen;
-    jschar *chars;
-    const jschar *chars2;
+    const jschar *chars, *chars2;
+    jschar *newchars;
 
-    str->getCharsAndLength(const_cast<const jschar *&>(chars), len);
-    if (!str->isMutable()) {
-        str = js_NewStringCopyN(cx, chars, len);
-        if (!str)
-            return NULL;
-        chars = str->chars();
-    } else {
-        /*
-         * Reallocating str (because we know it has no other references)
-         * requires purging any deflated string cached for it.
-         */
-        cx->runtime->deflatedStringCache->remove(str);
-    }
-
+    str->getCharsAndLength(chars, len);
     str2->getCharsAndLength(chars2, len2);
     newlen = (isName) ? len + 1 + len2 : len + 2 + len2 + 1;
-    chars = (jschar *) cx->realloc(chars, (newlen+1) * sizeof(jschar));
-    if (!chars)
+    newchars = (jschar *) cx->malloc((newlen+1) * sizeof(jschar));
+    if (!newchars)
         return NULL;
 
-    str->initFlat(chars, newlen);
-    chars += len;
+    js_strncpy(newchars, chars, len);
+    newchars += len;
     if (isName) {
-        *chars++ = ' ';
-        js_strncpy(chars, chars2, len2);
-        chars += len2;
+        *newchars++ = ' ';
+        js_strncpy(newchars, chars2, len2);
+        newchars += len2;
     } else {
-        *chars++ = '=';
-        *chars++ = '"';
-        js_strncpy(chars, chars2, len2);
-        chars += len2;
-        *chars++ = '"';
+        *newchars++ = '=';
+        *newchars++ = '"';
+        js_strncpy(newchars, chars2, len2);
+        newchars += len2;
+        *newchars++ = '"';
     }
-    *chars = 0;
-    return str;
+    *newchars = 0;
+    return js_NewString(cx, newchars - newlen, newlen);
 }
 
 JSString *
