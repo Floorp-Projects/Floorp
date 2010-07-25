@@ -85,7 +85,7 @@ struct nsPoint {
   inline nsIntPoint ToNearestPixels(nscoord aAppUnitsPerPixel) const;
 
   // Converts this point from aFromAPP, an appunits per pixel ratio, to aToAPP.
-  inline nsPoint ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const;
+  nsPoint ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const;
 };
 
 struct nsIntPoint {
@@ -129,17 +129,6 @@ nsPoint::ToNearestPixels(nscoord aAppUnitsPerPixel) const {
   return nsIntPoint(
       NSToIntRound(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel))),
       NSToIntRound(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel))));
-}
-
-inline nsPoint
-nsPoint::ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const {
-  if (aFromAPP != aToAPP) {
-    nsPoint point;
-    point.x = NSToCoordRound(NSCoordScale(x, aFromAPP, aToAPP));
-    point.y = NSToCoordRound(NSCoordScale(y, aFromAPP, aToAPP));
-    return point;
-  }
-  return *this;
 }
 
 #endif /* NSPOINT_H */
