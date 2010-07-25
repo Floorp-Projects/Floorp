@@ -1574,14 +1574,7 @@ mjit::Compiler::emitReturn()
     masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ArgReg1);
     masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, fp)));
     masm.storePtr(Registers::ReturnReg, Address(Registers::ArgReg1, offsetof(JSContext, fp)));
-#if defined(JS_CPU_X86) or defined(JS_CPU_ARM)
-    masm.subPtr(ImmIntPtr(1), FrameAddress(offsetof(VMFrame, inlineCallCount)));
-#elif defined (JS_CPU_X64)
-    /* Register is clobbered later, so it's safe to use. */
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, inlineCallCount)), JSReturnReg_Data);
-    masm.subPtr(ImmIntPtr(1), JSReturnReg_Data);
-    masm.storePtr(JSReturnReg_Data, FrameAddress(offsetof(VMFrame, inlineCallCount)));
-#endif
+    masm.sub32(Imm32(1), FrameAddress(offsetof(VMFrame, inlineCallCount)));
 
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Data);
     JS_STATIC_ASSERT(Registers::ReturnReg != JSReturnReg_Type);
@@ -2794,7 +2787,7 @@ mjit::Compiler::iterNext()
     Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass.base));
     stubcc.linkExit(notFast, Uses(1));
 
-    /* Get private from iter obj. :FIXME: X64 */
+    /* Get private from iter obj. */
     masm.loadFunctionPrivate(reg, T1);
 
     RegisterID T3 = frame.allocReg();
@@ -2850,7 +2843,7 @@ mjit::Compiler::iterMore()
     Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass.base));
     stubcc.linkExit(notFast, Uses(1));
 
-    /* Get private from iter obj. :FIXME: X64 */
+    /* Get private from iter obj. */
     masm.loadFunctionPrivate(reg, T1);
 
     /* Get props_cursor, test */
