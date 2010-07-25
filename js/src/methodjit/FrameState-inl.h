@@ -173,15 +173,11 @@ FrameState::freeReg(RegisterID reg)
 inline void
 FrameState::forgetReg(RegisterID reg)
 {
-#ifdef DEBUG
-    if (regstate[reg].fe) {
-        JS_ASSERT(!regstate[reg].fe->isCopy());
-        if (regstate[reg].type == RematInfo::TYPE)
-            regstate[reg].fe->type.invalidate();
-        else
-            regstate[reg].fe->data.invalidate();
-    }
-#endif
+    /*
+     * Important: Do not touch the fe here. We can peephole optimize away
+     * loads and stores by re-using the contents of old FEs.
+     */
+    JS_ASSERT_IF(regstate[reg].fe, !regstate[reg].fe->isCopy());
     freeRegs.putReg(reg);
 }
 
@@ -297,7 +293,7 @@ FrameState::pushTypedPayload(JSValueType type, RegisterID payload)
 }
 
 inline void
-FrameState::pushNumber(MaybeRegisterID payload)
+FrameState::pushNumber(MaybeRegisterID payload, bool asInt32)
 {
     JS_ASSERT_IF(payload.isSet(), !freeRegs.hasReg(payload.reg()));
 
@@ -306,9 +302,15 @@ FrameState::pushNumber(MaybeRegisterID payload)
 
     JS_ASSERT(!fe->isNumber);
 
-    fe->type.setMemory();
-    fe->isNumber = true;
+    if (asInt32) {
+        if (!fe->type.synced())
+            masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), addressOf(fe));
+        fe->type.setMemory();
+    } else {
+        fe->type.setMemory();
+    }
 
+    fe->isNumber = true;
     if (payload.isSet()) {
         fe->data.unsync();
         fe->data.setRegister(payload.reg());
@@ -319,8 +321,7 @@ FrameState::pushNumber(MaybeRegisterID payload)
 }
 
 inline void
-FrameState::pushUntypedPayload(JSValueType type, RegisterID payload,
-                               bool popGuaranteed, bool fastType)
+FrameState::pushUntypedPayload(JSValueType type, RegisterID payload)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
 
@@ -328,25 +329,13 @@ FrameState::pushUntypedPayload(JSValueType type, RegisterID payload,
 
     fe->clear();
 
-    /*
-     * This is a hack, but it's safe. Callers of pushUntypedPayload use this
-     * because they type checked the fast-path for the given type. It's even
-     * valid to re-use the old |fe| to detect synced-ness, because the |fe|
-     * is not mutated in between pop() and now. And this is always used when
-     * consuming values, so the value has been properly initialized.
-     */
-    if (popGuaranteed) {
-        fe->setType(type);
-    } else {
-        if (!fastType || !fe->type.synced())
-            masm.storeTypeTag(ImmType(type), addressOf(fe));
+    masm.storeTypeTag(ImmType(type), addressOf(fe));
 
-        /* The forceful type sync will assert otherwise. */
+    /* The forceful type sync will assert otherwise. */
 #ifdef DEBUG
-        fe->type.unsync();
+    fe->type.unsync();
 #endif
-        fe->type.setMemory();
-    }
+    fe->type.setMemory();
     fe->data.unsync();
     fe->setNotCopied();
     fe->setCopyOf(NULL);

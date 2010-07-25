@@ -335,7 +335,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     masm.storePayload(data, addr);
 
     if (!post && !popped)
-        frame.pushUntypedPayload(JSVAL_TYPE_INT32, data);
+        frame.pushNumber(data);
     else
         frame.freeReg(data);
 
@@ -980,11 +980,13 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
                        Registers::ArgReg1);
     stubcc.vpInc(op, depth);
 
-    frame.pushUntypedPayload(JSVAL_TYPE_INT32, reg, true, true);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
     frame.storeLocal(slot, post || popped, false);
 
     if (post || popped)
         frame.pop();
+    else
+        frame.forgetType(frame.peek(-1));
 
     stubcc.rejoin(Changes((post || popped) ? 0 : 1));
 }
