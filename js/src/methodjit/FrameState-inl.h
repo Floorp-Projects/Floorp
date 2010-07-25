@@ -706,7 +706,6 @@ FrameState::eviscerate(FrameEntry *fe)
 inline void
 FrameState::addEscaping(uint32 local)
 {
-    JS_ASSERT(!escaping[local]);
     escaping[local] = 1;
 }
 
