@@ -322,7 +322,11 @@ InlineReturn(JSContext *cx, JSBool ok)
     if (fp->flags & JSFRAME_CONSTRUCTING && fp->rval.isPrimitive())
         fp->rval = fp->thisv;
 
+    Value *newsp = fp->argv - 1;
+
     cx->stack().popInlineFrame(cx, fp, fp->down);
+
+    cx->regs->sp = newsp;
     cx->regs->sp[-1] = fp->rval;
 
     return ok;
