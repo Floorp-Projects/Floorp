@@ -2047,7 +2047,7 @@ stubs::Length(VMFrame &f)
         JSObject *obj = &vp->toObject();
         if (obj->isArray()) {
             jsuint length = obj->getArrayLength();
-            regs.sp[-1].setDouble(length);
+            regs.sp[-1].setNumber(length);
             return;
         } else if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
             uint32 length = obj->getArgsLength();
