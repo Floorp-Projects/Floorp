@@ -1,4 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -34,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "TrampolineCompiler.h"
 #include "StubCalls.h"
 #include "assembler/assembler/LinkBuffer.h"
@@ -132,14 +136,7 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
     masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), Registers::ArgReg1);
     masm.storePtr(Registers::ReturnReg, FrameAddress(offsetof(VMFrame, fp)));
     masm.storePtr(Registers::ReturnReg, Address(Registers::ArgReg1, offsetof(JSContext, fp)));
-#if defined(JS_CPU_X86) or defined(JS_CPU_ARM)
-    masm.subPtr(ImmIntPtr(1), FrameAddress(offsetof(VMFrame, inlineCallCount)));
-#elif defined (JS_CPU_X64)
-    /* Register is clobbered later, so it's safe to use. */
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, inlineCallCount)), JSReturnReg_Data);
-    masm.subPtr(ImmIntPtr(1), JSReturnReg_Data);
-    masm.storePtr(JSReturnReg_Data, FrameAddress(offsetof(VMFrame, inlineCallCount)));
-#endif
+    masm.sub32(Imm32(1), FrameAddress(offsetof(VMFrame, inlineCallCount)));
 
     Address rval(JSFrameReg, offsetof(JSStackFrame, rval));
     masm.loadPayload(rval, JSReturnReg_Data);
@@ -161,3 +158,4 @@ TrampolineCompiler::generateForceReturn(Assembler &masm)
 
 } /* namespace mjit */
 } /* namespace js */
+
