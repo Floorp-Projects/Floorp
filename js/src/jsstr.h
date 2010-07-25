@@ -119,16 +119,17 @@ struct JSString {
 
     // Not private because we want to be able to use static
     // initializers for them.  Don't use these directly!
-    union {
-        size_t              mCapacity; /* in flat strings (optional) */
-        JSString            *mParent; /* in rope interior nodes */
-        JSRopeBufferInfo    *mBufferWithInfo; /* in rope top nodes */
-    };
+    size_t                  mLengthAndFlags;  /* in all strings */
     union {
         jschar              *mChars; /* in flat and dependent strings */
         JSString            *mLeft;  /* in rope interior and top nodes */
     };
-    size_t                  mLengthAndFlags;  /* in all strings */
+    union {
+        size_t              mCapacity; /* in mutable flat strings (optional) */
+        JSString            *mParent; /* in rope interior nodes */
+        JSRopeBufferInfo    *mBufferWithInfo; /* in rope top nodes */
+        jschar              mInlineStorage[1]; /* In short strings. */
+    };
     union {
         JSString            *mBase;  /* in dependent strings */
         JSString            *mRight; /* in rope interior and top nodes */
@@ -232,6 +233,11 @@ struct JSString {
 
     JS_ALWAYS_INLINE void getCharsAndEnd(const jschar *&chars, const jschar *&end) {
         end = length() + (chars = this->chars());
+    }
+
+    JS_ALWAYS_INLINE jschar *inlineStorage() {
+        JS_ASSERT(isFlat());
+        return mInlineStorage;
     }
 
     /* Specific flat string initializer and accessor methods. */
@@ -468,6 +474,53 @@ struct JSString {
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
     static JSString *intString(jsint i);
 };
+
+/*
+ * Short strings should be created in cases where it's worthwhile to avoid
+ * mallocing the string buffer for a small string. We keep 2 string headers'
+ * worth of space in short strings so that more strings can be stored this way.
+ */
+struct JSShortString {
+    JSString mHeader;
+    JSString mDummy;
+
+    /*
+     * Set the length of the string, and return a buffer for the caller to write
+     * to. This buffer must be written immediately, and should not be modified
+     * afterward.
+     */
+    inline jschar *init(size_t length) {
+        JS_ASSERT(length <= MAX_SHORT_STRING_LENGTH);
+        mHeader.initFlat(mHeader.inlineStorage(), length);
+        return mHeader.inlineStorage();
+    }
+
+    inline void resetLength(size_t length) {
+        mHeader.initFlat(mHeader.flatChars(), length);
+    }
+
+    inline JSString *header() {
+        return &mHeader;
+    }
+
+    static const size_t MAX_SHORT_STRING_LENGTH =
+            ((sizeof(JSString) + 2 * sizeof(size_t)) / sizeof(jschar)) - 1;
+
+    static inline bool fitsIntoShortString(size_t length) {
+        return length <= MAX_SHORT_STRING_LENGTH;
+    }
+};
+
+/*
+ * We're doing some tricks to give us more space for short strings, so make
+ * sure that space is ordered in the way we expect.
+ */
+JS_STATIC_ASSERT(offsetof(JSString, mInlineStorage) == 2 * sizeof(void *));
+JS_STATIC_ASSERT(offsetof(JSString, mBase) == 3 * sizeof(void *));
+JS_STATIC_ASSERT(offsetof(JSShortString, mDummy) == sizeof(JSString));
+JS_STATIC_ASSERT(offsetof(JSString, mInlineStorage) +
+                 sizeof(jschar) * (JSShortString::MAX_SHORT_STRING_LENGTH + 1) ==
+                 sizeof(JSShortString));
 
 /*
  * An iterator that iterates through all nodes in a rope (the top node, the
@@ -815,9 +868,15 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
 extern JSString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n);
 
+extern JSString *
+js_NewStringCopyN(JSContext *cx, const char *s, size_t n);
+
 /* Copy a C string and GC-allocate a descriptor for it. */
 extern JSString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s);
+
+extern JSString *
+js_NewStringCopyZ(JSContext *cx, const char *s);
 
 /*
  * Convert a value to a printable C string.
@@ -900,6 +959,32 @@ extern jschar *
 js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 
 #define js_strncpy(t, s, n)     memcpy((t), (s), (n) * sizeof(jschar))
+
+inline void
+js_short_strncpy(jschar *dest, const jschar *src, size_t num)
+{
+    /*
+     * It isn't strictly necessary here for |num| to be small, but this function
+     * is currently only called on buffers for short strings.
+     */
+    JS_ASSERT(JSShortString::fitsIntoShortString(num));
+    switch (num) {
+      case 1:
+        *dest = *src;
+        break;
+      case 2:
+        JS_ASSERT(sizeof(uint32) == 2 * sizeof(jschar));
+        *(uint32 *)dest = *(uint32 *)src;
+        break;
+      case 4:
+        JS_ASSERT(sizeof(uint64) == 4 * sizeof(jschar));
+        *(uint64 *)dest = *(uint64 *)src;
+        break;
+      default:
+        for (size_t i = 0; i < num; i++)
+            dest[i] = src[i];
+    }
+}
 
 /*
  * Return s advanced past any Unicode white space characters.

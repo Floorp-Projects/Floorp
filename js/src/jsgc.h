@@ -215,6 +215,7 @@ enum JSFinalizeGCThingKind {
 #if JS_HAS_XML_SUPPORT
     FINALIZE_XML,
 #endif
+    FINALIZE_SHORT_STRING,
     FINALIZE_STRING,
     FINALIZE_EXTERNAL_STRING0,
     FINALIZE_EXTERNAL_STRING1,
@@ -231,7 +232,7 @@ enum JSFinalizeGCThingKind {
 static inline bool
 IsFinalizableStringKind(unsigned thingKind)
 {
-    return unsigned(FINALIZE_STRING) <= thingKind &&
+    return unsigned(FINALIZE_SHORT_STRING) <= thingKind &&
            thingKind <= unsigned(FINALIZE_EXTERNAL_STRING_LAST);
 }
 
@@ -254,6 +255,14 @@ static inline JSString *
 js_NewGCString(JSContext *cx)
 {
     return (JSString *) js_NewFinalizableGCThing(cx, FINALIZE_STRING);
+}
+
+struct JSShortString;
+
+static inline JSShortString *
+js_NewGCShortString(JSContext *cx)
+{
+    return (JSShortString *) js_NewFinalizableGCThing(cx, FINALIZE_SHORT_STRING);
 }
 
 static inline JSString *
