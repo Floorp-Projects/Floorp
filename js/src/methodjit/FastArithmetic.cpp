@@ -396,11 +396,9 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub)
     stubcc.leave();
     stubcc.call(stub);
 
-    masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), frame.addressOf(lhs));
-
     /* Finish up stack operations. */
     frame.popn(2);
-    frame.pushNumber(regs.result);
+    frame.pushNumber(regs.result, true);
 
     /* Merge back OOL double paths. */
     if (doublePathDone.isSet())
@@ -648,11 +646,9 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Void
     stubcc.leave();
     stubcc.call(stub);
 
-    masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), frame.addressOf(lhs));
-
     /* Finish up stack operations. */
     frame.popn(2);
-    frame.pushNumber(regs.result);
+    frame.pushNumber(regs.result, true);
 
     /* Merge back OOL double paths. */
     if (doublePathDone.isSet())
@@ -848,6 +844,8 @@ mjit::Compiler::jsop_mod()
     jsval_layout jv;
     jv.asDouble = -0.0;
     masm.storeLayout(jv, frame.addressOf(lhs));
+
+    /* :TODO: This is wrong, must load into EDX as well. */
 
     Jump done = masm.jump();
     negZero1.linkTo(masm.label(), &masm);
