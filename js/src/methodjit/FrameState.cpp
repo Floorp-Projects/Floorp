@@ -835,6 +835,8 @@ FrameState::uncopy(FrameEntry *original)
 void
 FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
 {
+    FrameEntry *localFe = getLocal(n);
+
     if (!popGuaranteed && (eval || escaping[n])) {
         JS_ASSERT_IF(base[localIndex(n)] && (!eval || n < script->nfixed),
                      entries[localIndex(n)].type.inMemory() &&
@@ -842,10 +844,9 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
         Address local(JSFrameReg, sizeof(JSStackFrame) + n * sizeof(Value));
         storeTo(peek(-1), local, false);
         forgetAllRegs(getLocal(n));
+        localFe->resetSynced();
         return;
     }
-
-    FrameEntry *localFe = getLocal(n);
 
     bool wasSynced = localFe->type.synced();
 
