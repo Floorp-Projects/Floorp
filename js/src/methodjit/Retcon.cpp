@@ -198,7 +198,7 @@ CallStackIterator::bottom() const {
     return FrameIterator(curcs->getInitialFrame()->down);
 }
 
-}
-}
+} /* namespace mjit */
+} /* namespace js */
 
 #endif
