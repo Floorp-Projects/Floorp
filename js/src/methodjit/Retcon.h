@@ -133,7 +133,7 @@ private:
     CallStackSegment *curcs;    
 };
 
-}
-}
+} /* namespace mjit */
+} /* namespace js */
 
 #endif
