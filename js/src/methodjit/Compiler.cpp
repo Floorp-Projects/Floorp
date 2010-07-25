@@ -2762,7 +2762,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
         if (pop)
             PC += JSOP_POP_LENGTH;
     } else
-#else
+#endif
     {
         prepareStubCall(Uses(1));
         masm.move(ImmPtr(atom), Registers::ArgReg1);
@@ -2770,7 +2770,6 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.pop();
         frame.pushSynced();
     }
-#endif
 
     PC += JSOP_PROPINC_LENGTH;
 }
