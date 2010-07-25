@@ -894,7 +894,7 @@ var UIManager = {
             return true;
           }
         });
-        tab.hidden = hidden;
+        tab.hidden = hidden && !tab.pinned;
       });
 
       // Move them (in order) that they appear in the group to the end of the
