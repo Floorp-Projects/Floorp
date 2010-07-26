@@ -142,8 +142,8 @@ nanojit::LInsPrinter::accNames[] = {
 #ifdef DEBUG
 void ValidateWriter::checkAccSet(LOpcode op, LIns* base, AccSet accSet)
 {
+    (void)op;
     (void)base;
-    (void)accSet;
     NanoAssert(accSet == ACCSET_OTHER);
 }
 #endif
