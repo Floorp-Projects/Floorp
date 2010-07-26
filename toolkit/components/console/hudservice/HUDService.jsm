@@ -1807,6 +1807,7 @@ HeadsUpDisplay.prototype = {
     this.filterBox = this.makeXULNode("textbox");
     this.filterBox.setAttribute("class", "hud-filter-box");
     this.filterBox.setAttribute("hudId", this.hudId);
+    this.filterBox.setAttribute("placeholder", this.getStr("stringFilter"));
 
     this.filterClearButton = this.makeXULNode("button");
     this.filterClearButton.setAttribute("class", "hud-filter-clear");
