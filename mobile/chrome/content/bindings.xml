@@ -379,11 +379,8 @@
     <handlers>
       <handler event="click" button="0">
         <![CDATA[
-          let popupState = ContextHelper.popupState;
-          if (!this.control || (popupState && popupState.target == event.originalTarget))
-            return;
-
-          this.control._fireOpen(event, this);
+          if (this.control)
+            this.control._fireOpen(event, this);
         ]]>
       </handler>
       <handler event="contextmenu" phase="capturing">
