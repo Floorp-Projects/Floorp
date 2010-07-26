@@ -95,10 +95,6 @@ nanojit::StackFilter::getTop(LIns*)
     return 0;
 }
 
-// We lump everything into a single access region for lirasm.
-static const AccSet ACCSET_OTHER = (1 << 0);
-static const uint8_t LIRASM_NUM_USED_ACCS = 1;
-
 #if defined NJ_VERBOSE
 void
 nanojit::LInsPrinter::formatGuard(InsBuf *buf, LIns *ins)
@@ -128,24 +124,6 @@ nanojit::LInsPrinter::formatGuardXov(InsBuf *buf, LIns *ins)
             (long)x->line,
             ins->record()->profGuardID);
 }
-
-const char*
-nanojit::LInsPrinter::accNames[] = {
-    "o",    // (1 << 0) == ACCSET_OTHER
-    "?", "?", "?", "?", "?", "?", "?", "?", "?", "?",   //  1..10 (unused)
-    "?", "?", "?", "?", "?", "?", "?", "?", "?", "?",   // 11..20 (unused)
-    "?", "?", "?", "?", "?", "?", "?", "?", "?", "?",   // 21..30 (unused)
-    "?"                                                 //     31 (unused)
-};
-#endif
-
-#ifdef DEBUG
-void ValidateWriter::checkAccSet(LOpcode op, LIns* base, AccSet accSet)
-{
-    (void)op;
-    (void)base;
-    NanoAssert(accSet == ACCSET_OTHER);
-}
 #endif
 
 typedef int32_t (FASTCALL *RetInt)();
@@ -170,7 +148,7 @@ enum ReturnType {
 #endif
 
 #define CI(name, args) \
-    {(uintptr_t) (&name), args, nanojit::ABI_CDECL, /*isPure*/0, ACCSET_STORE_ANY \
+    {(uintptr_t) (&name), args, nanojit::ABI_CDECL, /*isPure*/0, ACC_STORE_ANY \
      DEBUG_ONLY_NAME(name)}
 
 #define FN(name, args) \
@@ -526,7 +504,7 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
     }
 #endif
     if (optimize) {
-        mLir = mCseFilter = new CseFilter(mLir, LIRASM_NUM_USED_ACCS, mParent.mAlloc);
+        mLir = mCseFilter = new CseFilter(mLir, mParent.mAlloc);
     }
 #if NJ_SOFTFLOAT_SUPPORTED
     if (avmplus::AvmCore::config.soft_float) {
@@ -632,7 +610,7 @@ FragmentAssembler::assemble_load()
         mTokens[1].find_first_of("0123456789") == 0) {
         return mLir->insLoad(mOpcode,
                              ref(mTokens[0]),
-                             immI(mTokens[1]), ACCSET_OTHER);
+                             immI(mTokens[1]), ACC_LOAD_ANY);
     }
     bad("immediate offset required for load");
     return NULL;  // not reached
@@ -1083,7 +1061,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             need(3);
             ins = mLir->insStore(mOpcode, ref(mTokens[0]),
                                   ref(mTokens[1]),
-                                  immI(mTokens[2]), ACCSET_OTHER);
+                                  immI(mTokens[2]), ACC_STORE_ANY);
             break;
 
 #if NJ_EXPANDED_LOADSTORE_SUPPORTED 
@@ -1335,8 +1313,8 @@ const CallInfo ci_V_IQF = CI(f_V_IQF, CallInfo::typeSig3(ARGTYPE_V, ARGTYPE_I, A
 // - LIR_modd (not implemented in NJ backends)
 //
 // Other limitations:
-// - Loads always use accSet==ACCSET_OTHER
-// - Stores always use accSet==ACCSET_OTHER
+// - Loads always use accSet==ACC_LOAD_ANY
+// - Stores always use accSet==ACC_STORE_ANY
 //
 void
 FragmentAssembler::assembleRandomFragment(int nIns)
@@ -1839,7 +1817,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             vector<LIns*> Ms = rnd(2) ? M4s : M8ps;
             if (!Ms.empty()) {
                 LIns* base = rndPick(Ms);
-                ins = mLir->insLoad(rndPick(I_loads), base, rndOffset32(base->size()), ACCSET_OTHER);
+                ins = mLir->insLoad(rndPick(I_loads), base, rndOffset32(base->size()), ACC_LOAD_ANY);
                 addOrReplace(Is, ins);
                 n++;
             }
@@ -1850,7 +1828,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LLD_Q:
             if (!M8ps.empty()) {
                 LIns* base = rndPick(M8ps);
-                ins = mLir->insLoad(rndPick(Q_loads), base, rndOffset64(base->size()), ACCSET_OTHER);
+                ins = mLir->insLoad(rndPick(Q_loads), base, rndOffset64(base->size()), ACC_LOAD_ANY);
                 addOrReplace(Qs, ins);
                 n++;
             }
@@ -1860,7 +1838,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LLD_D:
             if (!M8ps.empty()) {
                 LIns* base = rndPick(M8ps);
-                ins = mLir->insLoad(rndPick(D_loads), base, rndOffset64(base->size()), ACCSET_OTHER);
+                ins = mLir->insLoad(rndPick(D_loads), base, rndOffset64(base->size()), ACC_LOAD_ANY);
                 addOrReplace(Ds, ins);
                 n++;
             }
@@ -1870,7 +1848,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             vector<LIns*> Ms = rnd(2) ? M4s : M8ps;
             if (!Ms.empty() && !Is.empty()) {
                 LIns* base = rndPick(Ms);
-                mLir->insStore(rndPick(Is), base, rndOffset32(base->size()), ACCSET_OTHER);
+                mLir->insStore(rndPick(Is), base, rndOffset32(base->size()), ACC_STORE_ANY);
                 n++;
             }
             break;
@@ -1880,7 +1858,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LST_Q:
             if (!M8ps.empty() && !Qs.empty()) {
                 LIns* base = rndPick(M8ps);
-                mLir->insStore(rndPick(Qs), base, rndOffset64(base->size()), ACCSET_OTHER);
+                mLir->insStore(rndPick(Qs), base, rndOffset64(base->size()), ACC_STORE_ANY);
                 n++;
             }
             break;
@@ -1889,7 +1867,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LST_D:
             if (!M8ps.empty() && !Ds.empty()) {
                 LIns* base = rndPick(M8ps);
-                mLir->insStore(rndPick(Ds), base, rndOffset64(base->size()), ACCSET_OTHER);
+                mLir->insStore(rndPick(Ds), base, rndOffset64(base->size()), ACC_STORE_ANY);
                 n++;
             }
             break;
@@ -1999,7 +1977,7 @@ Lirasm::Lirasm(bool verbose) :
 #ifdef DEBUG
     if (mVerbose) {
         mLogc.lcbits = LC_ReadLIR | LC_AfterDCE | LC_Native | LC_RegAlloc | LC_Activation;
-        mLirbuf->printer = new (mAlloc) LInsPrinter(mAlloc, LIRASM_NUM_USED_ACCS);
+        mLirbuf->printer = new (mAlloc) LInsPrinter(mAlloc);
     }
 #endif
 
@@ -2038,13 +2016,13 @@ Lirasm::lookupFunction(const string &name, CallInfo *&ci)
         // The ABI, arg types and ret type will be overridden by the caller.
         if (func->second.mReturnType == RT_FLOAT) {
             CallInfo target = {(uintptr_t) func->second.rfloat,
-                               0, ABI_FASTCALL, /*isPure*/0, ACCSET_STORE_ANY
+                               0, ABI_FASTCALL, /*isPure*/0, ACC_STORE_ANY
                                verbose_only(, func->first.c_str()) };
             *ci = target;
 
         } else {
             CallInfo target = {(uintptr_t) func->second.rint,
-                               0, ABI_FASTCALL, /*isPure*/0, ACCSET_STORE_ANY
+                               0, ABI_FASTCALL, /*isPure*/0, ACC_STORE_ANY
                                verbose_only(, func->first.c_str()) };
             *ci = target;
         }
