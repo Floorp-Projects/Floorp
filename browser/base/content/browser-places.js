@@ -44,15 +44,6 @@ var StarUI = {
   uri: null,
   _batching: false,
 
-  // nsISupports
-  QueryInterface: function SU_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIDOMEventListener) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_NOINTERFACE;
-  },
-
   _element: function(aID) {
     return document.getElementById(aID);
   },
