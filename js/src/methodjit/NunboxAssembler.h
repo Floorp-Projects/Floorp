@@ -158,16 +158,6 @@ class Assembler : public BaseAssembler
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
     }
 
-    /*
-     * FIXME: This is only used by slowLoadConstantDouble().
-     * It should disappear when that function can generate
-     * constants into the opstream.
-     */
-    void storeLayout(const jsval_layout &jv, Address address) {
-        store32(ImmTag(jv.s.tag), tagOf(address));
-        store32(Imm32(jv.s.payload.u32), payloadOf(address));
-    }
-
     void storeValue(const Value &v, BaseIndex address) {
         jsval_layout jv;
         jv.asBits = JSVAL_BITS(Jsvalify(v));

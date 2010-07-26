@@ -836,9 +836,7 @@ mjit::Compiler::jsop_mod()
     Jump negZero2 = masm.branchTest32(Assembler::Zero, lhsData, Imm32(0x80000000));
 
     /* Darn, negative 0. */
-    jsval_layout jv;
-    jv.asDouble = -0.0;
-    masm.storeLayout(jv, frame.addressOf(lhs));
+    masm.storeValue(DoubleValue(-0.0), frame.addressOf(lhs));
 
     /* :TODO: This is wrong, must load into EDX as well. */
 
