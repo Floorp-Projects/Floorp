@@ -9841,8 +9841,7 @@ TraceRecorder::unbox_value(const Value &v, LIns *vaddr_ins, ptrdiff_t offset, VM
 
     if (v.isDouble()) {
         guard(true, lir->ins2(LIR_leuq, v_ins, INS_CONSTQWORD(JSVAL_SHIFTED_TAG_MAX_DOUBLE)), exit);
-        /* Without LIR_q2d, we need to re-load the value. */
-        return lir->insLoad(LIR_ldd, vaddr_ins, offset, accSet);
+        return lir->ins1(LIR_qasd, v_ins);
     }
 
     if (v.isObject()) {
