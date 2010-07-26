@@ -1395,14 +1395,16 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
 }
 
 const Value &
-js::GetUpvar(JSContext *cx, uint16 closureLevel, UpvarCookie cookie)
+js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
 {
     JS_ASSERT(closureLevel >= cookie.level() && cookie.level() > 0);
-    const uint16 targetLevel = closureLevel - cookie.level();
-    JSStackFrame *fp = FindFrameAtLevel(cx, targetLevel);
+    const uintN targetLevel = closureLevel - cookie.level();
+    JS_ASSERT(targetLevel < UpvarCookie::UPVAR_LEVEL_LIMIT);
 
-    uint16 slot = cookie.slot();
+    JSStackFrame *fp = cx->findFrameAtLevel(targetLevel);
+    uintN slot = cookie.slot();
     Value *vp;
+
     if (!fp->fun || (fp->flags & JSFRAME_EVAL)) {
         vp = fp->slots() + fp->script->nfixed;
     } else if (slot < fp->fun->nargs) {
@@ -2412,7 +2414,6 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount)
     JSVersion originalVersion = (JSVersion) cx->version;
     if (currentVersion != originalVersion)
         js_SetVersion(cx, currentVersion);
-
 #define CHECK_INTERRUPT_HANDLER()                                             \
     JS_BEGIN_MACRO                                                            \
         if (cx->debugHooks->interruptHook)                                    \
@@ -2737,7 +2738,6 @@ BEGIN_CASE(JSOP_STOP)
     {
         JS_ASSERT(!fp->blockChain);
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
-
         void *hookData = fp->hookData;
         if (JS_UNLIKELY(hookData != NULL)) {
             if (JSInterpreterHook hook = cx->debugHooks->callHook) {
