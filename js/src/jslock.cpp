@@ -421,7 +421,7 @@ WillDeadlock(JSContext *ownercx, JSThread *thread)
 
      for (;;) {
         JS_ASSERT(ownercx->thread);
-        JS_ASSERT(ownercx->requestDepth > 0);
+        JS_ASSERT(ownercx->thread->requestContext);
         JSTitle *title = ownercx->thread->titleToShare;
         if (!title || !title->ownercx) {
             /*
@@ -530,7 +530,7 @@ static JSBool
 ClaimTitle(JSTitle *title, JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    JS_ASSERT_IF(cx->requestDepth == 0,
+    JS_ASSERT_IF(!cx->thread->requestContext,
                  cx->thread == rt->gcThread && rt->gcRunning);
 
     JS_RUNTIME_METER(rt, claimAttempts);
@@ -559,12 +559,13 @@ ClaimTitle(JSTitle *title, JSContext *cx)
         bool canClaim;
         if (title->u.link) {
             JS_ASSERT(js_ValidContextPointer(rt, ownercx));
-            JS_ASSERT(ownercx->requestDepth > 0);
+            JS_ASSERT(ownercx->thread->requestContext);
             JS_ASSERT(!rt->gcRunning);
             canClaim = (ownercx->thread == cx->thread);
         } else {
             canClaim = (!js_ValidContextPointer(rt, ownercx) ||
-                        !ownercx->requestDepth ||
+                        !ownercx->thread ||
+                        !ownercx->thread->requestContext ||
                         cx->thread == ownercx->thread  ||
                         cx->thread == rt->gcThread ||
                         ownercx->thread->gcWaiting);
