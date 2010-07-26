@@ -74,7 +74,7 @@ class RecursiveSlotMap : public SlotMap
         ptrdiff_t retOffset = downPostSlots * sizeof(double) -
                               mRecorder.tree->nativeStackBase;
         mRecorder.lir->insStore(mRecorder.addName(rval_ins, "rval_ins"),
-                                 mRecorder.lirbuf->sp, retOffset, ACCSET_STACK);
+                                 mRecorder.lirbuf->sp, retOffset, ACC_STACK);
     }
 };
 
@@ -111,14 +111,14 @@ class UpRecursiveSlotMap : public RecursiveSlotMap
          * This makes sense because this slot is just above the highest sp for
          * the down frame.
          */
-        lir->insStore(rval_ins, lirbuf->sp, -mRecorder.tree->nativeStackBase, ACCSET_STACK);
+        lir->insStore(rval_ins, lirbuf->sp, -mRecorder.tree->nativeStackBase, ACC_STACK);
 
         lirbuf->sp = lir->ins2(LIR_addp, lirbuf->sp,
                                lir->insImmWord(-int(downPostSlots) * sizeof(double)));
-        lir->insStore(lirbuf->sp, lirbuf->state, offsetof(TracerState, sp), ACCSET_OTHER);
+        lir->insStore(lirbuf->sp, lirbuf->state, offsetof(TracerState, sp), ACC_OTHER);
         lirbuf->rp = lir->ins2(LIR_addp, lirbuf->rp,
                                lir->insImmWord(-int(sizeof(FrameInfo*))));
-        lir->insStore(lirbuf->rp, lirbuf->state, offsetof(TracerState, rp), ACCSET_OTHER);
+        lir->insStore(lirbuf->rp, lirbuf->state, offsetof(TracerState, rp), ACC_OTHER);
     }
 };
 
@@ -300,7 +300,7 @@ TraceRecorder::upRecursion()
               lir->ins2(LIR_gep, lirbuf->rp,
                         lir->ins2(LIR_addp,
                                   lir->insLoad(LIR_ldp, lirbuf->state,
-                                               offsetof(TracerState, sor), ACCSET_OTHER),
+                                               offsetof(TracerState, sor), ACC_OTHER),
                                   INS_CONSTWORD(sizeof(FrameInfo*)))),
               exit);
     }
@@ -309,7 +309,7 @@ TraceRecorder::upRecursion()
 
     /* Guard that the FrameInfo above is the same FrameInfo pointer. */
     VMSideExit* exit = snapshot(RECURSIVE_MISMATCH_EXIT);
-    LIns* prev_rp = lir->insLoad(LIR_ldp, lirbuf->rp, -int32_t(sizeof(FrameInfo*)), ACCSET_RSTACK);
+    LIns* prev_rp = lir->insLoad(LIR_ldp, lirbuf->rp, -int32_t(sizeof(FrameInfo*)), ACC_RSTACK);
     guard(true, lir->ins2(LIR_eqp, prev_rp, INS_CONSTPTR(fi)), exit);
 
     /*
@@ -399,7 +399,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
 
     FrameRegsIter i(cx);
     LIns* fp_ins =
-        addName(lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACCSET_OTHER), "fp");
+        addName(lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACC_OTHER), "fp");
 
     /*
      * When first emitting slurp code, do so against the down frame. After
@@ -408,11 +408,11 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
      * anchoring off such an exit.
      */
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
-        fp_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, down), ACCSET_OTHER),
+        fp_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, down), ACC_OTHER),
                          "downFp");
         ++i;
 
-        argv_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, argv), ACCSET_OTHER),
+        argv_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, argv), ACC_OTHER),
                            "argv");
 
         /* If recovering from a SLURP_MISMATCH, all of this is unnecessary. */
@@ -432,7 +432,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
             guard(true,
                   lir->ins2(LIR_eqp,
                             addName(lir->insLoad(LIR_ldp, fp_ins,
-                                                 offsetof(JSStackFrame, script), ACCSET_OTHER),
+                                                 offsetof(JSStackFrame, script), ACC_OTHER),
                                     "script"),
                             INS_CONSTPTR(cx->fp->down->script)),
                   RECURSIVE_LOOP_EXIT);
@@ -442,7 +442,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
         guard(true,
               lir->ins2(LIR_eqp,
                         addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, savedPC),  
-                                             ACCSET_OTHER),
+                                             ACC_OTHER),
                                 "savedPC"),
                         INS_CONSTPTR(return_pc)),
               RECURSIVE_SLURP_MISMATCH_EXIT);
@@ -451,7 +451,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
         guard(true,
               lir->ins2(LIR_eqi,
                         addName(lir->insLoad(LIR_ldi, fp_ins, offsetof(JSStackFrame, argc),
-                                             ACCSET_OTHER),
+                                             ACC_OTHER),
                                 "argc"),
                         INS_CONST(cx->fp->argc)),
               MISMATCH_EXIT);
@@ -465,7 +465,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
         frameDepth = 1;
     } else {
         /* Note: loading argv from fp, not fp->down. */
-        argv_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, argv), ACCSET_OTHER),
+        argv_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, argv), ACC_OTHER),
                            "argv");
 
         /* Slots for this frame, minus the return value. */
@@ -552,23 +552,23 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
          * The return value must be written out early, before slurping can fail,
          * otherwise it will not be available when there's a type mismatch.
          */
-        lir->insStore(rval_ins, lirbuf->sp, offset, ACCSET_STACK);
+        lir->insStore(rval_ins, lirbuf->sp, offset, ACC_STACK);
     } else {
         switch (returnType)
         {
           case JSVAL_TYPE_BOOLEAN:
           case JSVAL_TYPE_UNDEFINED:
           case JSVAL_TYPE_INT32:
-            rval_ins = lir->insLoad(LIR_ldi, lirbuf->sp, offset, ACCSET_STACK);
+            rval_ins = lir->insLoad(LIR_ldi, lirbuf->sp, offset, ACC_STACK);
             break;
           case JSVAL_TYPE_DOUBLE:
-            rval_ins = lir->insLoad(LIR_ldd, lirbuf->sp, offset, ACCSET_STACK);
+            rval_ins = lir->insLoad(LIR_ldd, lirbuf->sp, offset, ACC_STACK);
             break;
           case JSVAL_TYPE_FUNOBJ:
           case JSVAL_TYPE_NONFUNOBJ:
           case JSVAL_TYPE_STRING:
           case JSVAL_TYPE_NULL:
-            rval_ins = lir->insLoad(LIR_ldp, lirbuf->sp, offset, ACCSET_STACK);
+            rval_ins = lir->insLoad(LIR_ldp, lirbuf->sp, offset, ACC_STACK);
             break;
           default:
             JS_NOT_REACHED("unknown type");
@@ -706,9 +706,9 @@ TraceRecorder::downRecursion()
 
     /* Add space for a new JIT frame. */
     lirbuf->sp = lir->ins2(LIR_addp, lirbuf->sp, lir->insImmWord(slots * sizeof(double)));
-    lir->insStore(lirbuf->sp, lirbuf->state, offsetof(TracerState, sp), ACCSET_OTHER);
+    lir->insStore(lirbuf->sp, lirbuf->state, offsetof(TracerState, sp), ACC_OTHER);
     lirbuf->rp = lir->ins2(LIR_addp, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
-    lir->insStore(lirbuf->rp, lirbuf->state, offsetof(TracerState, rp), ACCSET_OTHER);
+    lir->insStore(lirbuf->rp, lirbuf->state, offsetof(TracerState, rp), ACC_OTHER);
     --callDepth;
     clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
 
@@ -737,42 +737,42 @@ TraceRecorder::downRecursion()
 JS_REQUIRES_STACK inline LIns*
 TraceRecorder::slurpDoubleSlot(LIns* addr_ins, ptrdiff_t offset, VMSideExit* exit)
 {
-    LIns* tag_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACCSET_OTHER);
-    return unbox_number_as_double(addr_ins, offset, tag_ins, exit, ACCSET_OTHER);
+    LIns* tag_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACC_OTHER);
+    return unbox_number_as_double(addr_ins, offset, tag_ins, exit, ACC_OTHER);
 }
 
 JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpObjectSlot(LIns* addr_ins, ptrdiff_t offset, JSValueType type, VMSideExit* exit)
 {
-    LIns* tag_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACCSET_OTHER);
-    return unbox_object(addr_ins, offset, tag_ins, type, exit, ACCSET_OTHER);
+    LIns* tag_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACC_OTHER);
+    return unbox_object(addr_ins, offset, tag_ins, type, exit, ACC_OTHER);
 }
 
 JS_REQUIRES_STACK inline LIns*
 TraceRecorder::slurpNonDoubleObjectSlot(LIns* addr_ins, ptrdiff_t offset, JSValueType type, VMSideExit* exit)
 {
-    LIns* tag_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACCSET_OTHER);
-    return unbox_non_double_object(addr_ins, offset, tag_ins, type, exit, ACCSET_OTHER);
+    LIns* tag_ins = lir->insLoad(LIR_ldi, addr_ins, offset + sTagOffset, ACC_OTHER);
+    return unbox_non_double_object(addr_ins, offset, tag_ins, type, exit, ACC_OTHER);
 }
 #elif JS_BITS_PER_WORD == 64
 JS_REQUIRES_STACK inline LIns*
 TraceRecorder::slurpDoubleSlot(LIns* addr_ins, ptrdiff_t offset, VMSideExit* exit)
 {
-    LIns* v_ins = lir->insLoad(LIR_ldq, addr_ins, offset, ACCSET_OTHER);
+    LIns* v_ins = lir->insLoad(LIR_ldq, addr_ins, offset, ACC_OTHER);
     return unbox_number_as_double(v_ins, exit);
 }
 
 JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpObjectSlot(LIns* addr_ins, ptrdiff_t offset, JSValueType type, VMSideExit* exit)
 {
-    LIns* v_ins = lir->insLoad(LIR_ldq, addr_ins, offset, ACCSET_OTHER);
+    LIns* v_ins = lir->insLoad(LIR_ldq, addr_ins, offset, ACC_OTHER);
     return unbox_object(v_ins, type, exit);
 }
 
 JS_REQUIRES_STACK inline LIns*
 TraceRecorder::slurpNonDoubleObjectSlot(LIns* addr_ins, ptrdiff_t offset, JSValueType type, VMSideExit* exit)
 {
-    LIns* v_ins = lir->insLoad(LIR_ldq, addr_ins, offset, ACCSET_OTHER);
+    LIns* v_ins = lir->insLoad(LIR_ldq, addr_ins, offset, ACC_OTHER);
     return unbox_non_double_object(v_ins, type, exit);
 }
 #endif
@@ -809,7 +809,7 @@ TraceRecorder::slurpSlot(LIns* addr_ins, ptrdiff_t offset, Value* vp, SlurpInfo*
     lir->insStore(val,
                   lirbuf->sp,
                   -tree->nativeStackBase + ptrdiff_t(info->curSlot) * sizeof(double),
-                  ACCSET_STACK);
+                  ACC_STACK);
     info->curSlot++;
 }
 
@@ -831,7 +831,7 @@ TraceRecorder::slurpFrameObjPtrSlot(LIns* addr_ins, ptrdiff_t offset, JSObject**
                  anchor->slurpType != exit->slurpType);
 
     LIns *val;
-    LIns *ptr_val = lir->insLoad(LIR_ldp, addr_ins, offset, ACCSET_OTHER);
+    LIns *ptr_val = lir->insLoad(LIR_ldp, addr_ins, offset, ACC_OTHER);
     LIns *ptr_is_null_ins = lir->insEqP_0(ptr_val);
     if (exit->slurpType == JSVAL_TYPE_NULL) {
         guard(true, ptr_is_null_ins, exit);
@@ -845,6 +845,6 @@ TraceRecorder::slurpFrameObjPtrSlot(LIns* addr_ins, ptrdiff_t offset, JSObject**
     lir->insStore(val,
                   lirbuf->sp,
                   -tree->nativeStackBase + ptrdiff_t(info->curSlot) * sizeof(double),
-                  ACCSET_STACK);
+                  ACC_STACK);
     info->curSlot++;
 }
