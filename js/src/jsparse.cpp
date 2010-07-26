@@ -2538,15 +2538,6 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
 JSParseNode *
 Parser::functionDef(uintN lambda, bool namePermitted)
 {
-    JSParseNode *pn, *body, *result;
-    TokenKind tt;
-    JSAtomListElement *ale;
-#if JS_HAS_DESTRUCTURING
-    JSParseNode *item, *list = NULL;
-    bool destructuringArg = false;
-    JSAtom *duplicatedArg = NULL;
-#endif
-
     /*
      * Save the current op for later so we can tag the created function as a
      * getter/setter if necessary.
@@ -2554,7 +2545,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
     JSOp op = tokenStream.currentToken().t_op;
 
     /* Make a TOK_FUNCTION node. */
-    pn = FunctionNode::create(tc);
+    JSParseNode *pn = FunctionNode::create(tc);
     if (!pn)
         return NULL;
     pn->pn_body = NULL;
@@ -2574,7 +2565,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
     /* Scan the optional function name into funAtom. */
     JSAtom *funAtom = NULL;
     if (namePermitted) {
-        tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
+        TokenKind tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
         if (tt == TOK_NAME) {
             funAtom = tokenStream.currentToken().t_atom;
         } else {
@@ -2591,8 +2582,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
      * avoid optimizing variable references that might name a function.
      */
     if (lambda == 0 && funAtom) {
-        ale = tc->decls.lookup(funAtom);
-        if (ale) {
+        if (JSAtomListElement *ale = tc->decls.lookup(funAtom)) {
             JSDefinition *dn = ALE_DEFN(ale);
             JSDefinition::Kind dn_kind = dn->kind();
 
@@ -2706,10 +2696,17 @@ Parser::functionDef(uintN lambda, bool namePermitted)
         fun->flags |= (op == JSOP_GETTER) ? JSPROP_GETTER : JSPROP_SETTER;
 
     /* Now parse formal argument list and compute fun->nargs. */
+#if JS_HAS_DESTRUCTURING
+    JSParseNode *list = NULL;
+#endif
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_FORMAL);
     if (!tokenStream.matchToken(TOK_RP)) {
+#if JS_HAS_DESTRUCTURING
+        JSAtom *duplicatedArg = NULL;
+        bool destructuringArg = false;
+#endif
         do {
-            tt = tokenStream.getToken();
+            TokenKind tt = tokenStream.getToken();
             switch (tt) {
 #if JS_HAS_DESTRUCTURING
               case TOK_LB:
@@ -2758,7 +2755,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
                 rhs->pn_cookie.set(funtc.staticLevel, uint16(slot));
                 rhs->pn_dflags |= PND_BOUND;
 
-                item = JSParseNode::newBinaryOrAppend(TOK_ASSIGN, JSOP_NOP, lhs, rhs, &funtc);
+                JSParseNode *item = JSParseNode::newBinaryOrAppend(TOK_ASSIGN, JSOP_NOP, lhs, rhs, &funtc);
                 if (!item)
                     return NULL;
                 if (!list) {
@@ -2819,7 +2816,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
     }
 
 #if JS_HAS_EXPR_CLOSURES
-    tt = tokenStream.getToken(TSF_OPERAND);
+    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
     if (tt != TOK_LC) {
         tokenStream.ungetToken();
         fun->flags |= JSFUN_EXPR_CLOSURE;
@@ -2828,7 +2825,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_BODY);
 #endif
 
-    body = functionBody();
+    JSParseNode *body = functionBody();
     if (!body)
         return NULL;
 
@@ -2870,7 +2867,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
             body = block;
         }
 
-        item = UnaryNode::create(outertc);
+        JSParseNode *item = UnaryNode::create(outertc);
         if (!item)
             return NULL;
 
@@ -2905,7 +2902,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
             outertc->flags |= TCF_FUN_HEAVYWEIGHT;
     }
 
-    result = pn;
+    JSParseNode *result = pn;
     if (lambda != 0) {
         /*
          * ECMA ed. 3 standard: function expression, possibly anonymous.
