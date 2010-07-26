@@ -1320,7 +1320,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
                 // of the group's tab.
                 // TODO: This is probably a terrible hack that sets up a race
                 // condition. We need a better solution.
-                Utils.timeout(Groups.updateTabBarForActiveGroup, 400);
+                Utils.timeout(function() Groups.updateTabBarForActiveGroup(), 400);
               }
             });
           }
