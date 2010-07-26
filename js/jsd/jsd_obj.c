@@ -128,59 +128,8 @@ _createJSDObject(JSDContext* jsdc, JSContext *cx, JSObject *obj)
         JS_APPEND_LINK(&jsdobj->links, &jsdc->objectsList);
         jsdobj->obj = obj;
         JS_HashTableAdd(jsdc->objectsTable, obj, jsdobj);
-
-        if (jsdc->flags & JSD_DISABLE_OBJECT_TRACE)
-            return jsdobj;
-        
-        /* walk the stack to find js frame (if any) causing creation */
-        while (NULL != (fp = JS_FrameIterator(cx, &iter)))
-        {
-            if( !JS_IsNativeFrame(cx, fp) )
-            {
-                JSScript* script = JS_GetFrameScript(cx, fp);
-                if( !script )
-                    continue;
-
-                newURL = JS_GetScriptFilename(cx, script);
-                if( newURL )
-                    jsdobj->newURL = jsd_AddAtom(jsdc, newURL);
-
-                pc = JS_GetFramePC(cx, fp);
-                if( pc )
-                    jsdobj->newLineno = JS_PCToLineNumber(cx, script, pc);
-
-                break;
-            }
-        }
     }
     return jsdobj;
-}
-
-void
-jsd_ObjectHook(JSContext *cx, JSObject *obj, JSBool isNew, void *closure)
-{
-    JSDObject* jsdobj;
-    JSDContext* jsdc = (JSDContext*) closure;
-
-    if( ! jsdc || ! jsdc->inited )
-        return;
-
-    JSD_LOCK_OBJECTS(jsdc);
-    if(isNew)
-    {
-        jsdobj = _createJSDObject(jsdc, cx, obj);
-        TRACEOBJ(jsdc, jsdobj, 0);
-    }
-    else
-    {
-        jsdobj = jsd_GetJSDObjectForJSObject(jsdc, obj);
-        if( jsdobj )
-        {
-            TRACEOBJ(jsdc, jsdobj, 1);
-            _destroyJSDObject(jsdc, jsdobj);
-        }
-    }
-    JSD_UNLOCK_OBJECTS(jsdc);
 }
 
 void

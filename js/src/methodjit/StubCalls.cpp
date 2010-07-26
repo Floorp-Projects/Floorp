@@ -488,7 +488,6 @@ stubs::GetElem(VMFrame &f)
     int i;
 
     if (lval.isString() && rval.isInt32()) {
-        Value retval;
         JSString *str = lval.toString();
         i = rval.toInt32();
 

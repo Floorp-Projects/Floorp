@@ -3280,7 +3280,7 @@ jsdASObserver::Observe (nsISupports *aSubject, const char *aTopic,
     if (NS_FAILED(rv))
         return rv;
     
-    return jsds->SetFlags(JSD_DISABLE_OBJECT_TRACE);
+    return NS_OK;
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(jsdASObserver)
