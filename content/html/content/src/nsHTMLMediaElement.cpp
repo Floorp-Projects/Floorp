@@ -96,6 +96,9 @@
 #ifdef MOZ_WEBM
 #include "nsWebMDecoder.h"
 #endif
+#ifdef MOZ_RAW
+#include "nsRawDecoder.h"
+#endif
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gMediaElementLog;
@@ -1195,6 +1198,36 @@ void nsHTMLMediaElement::UnbindFromTree(PRBool aDeep,
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
+#ifdef MOZ_RAW
+static const char gRawTypes[][16] = {
+  "video/x-raw",
+  "video/x-raw-yuv"
+};
+
+static const char* gRawCodecs[] = {
+  nsnull
+};
+
+static const char* gRawMaybeCodecs[] = {
+  nsnull
+};
+
+static PRBool IsRawEnabled()
+{
+  return nsContentUtils::GetBoolPref("media.raw.enabled");
+}
+
+static PRBool IsRawType(const nsACString& aType)
+{
+  if (!IsRawEnabled())
+    return PR_FALSE;
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gRawTypes); ++i) {
+    if (aType.EqualsASCII(gRawTypes[i]))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+#endif
 #ifdef MOZ_OGG
 // See http://www.rfc-editor.org/rfc/rfc5334.txt for the definitions
 // of Ogg media types and codec types
@@ -1301,6 +1334,12 @@ nsHTMLMediaElement::CanPlayStatus
 nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
                                        char const *const ** aCodecList)
 {
+#ifdef MOZ_RAW
+  if (IsRawType(nsDependentCString(aMIMEType))) {
+    *aCodecList = gRawCodecs;
+    return CANPLAY_MAYBE;
+  }
+#endif
 #ifdef MOZ_OGG
   if (IsOggType(nsDependentCString(aMIMEType))) {
     *aCodecList = gOggCodecs;
@@ -1325,6 +1364,10 @@ nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
 /* static */
 PRBool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
 {
+#ifdef MOZ_RAW
+  if (IsRawType(nsDependentCString(aMIMEType)))
+    return PR_TRUE;
+#endif
 #ifdef MOZ_OGG
   if (IsOggType(nsDependentCString(aMIMEType)))
     return PR_TRUE;
@@ -1411,6 +1454,14 @@ nsHTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
 already_AddRefed<nsMediaDecoder>
 nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 {
+#ifdef MOZ_RAW
+  if (IsRawType(aType)) {
+    nsRefPtr<nsRawDecoder> decoder = new nsRawDecoder();
+    if (decoder && decoder->Init(this)) {
+      return decoder.forget().get();
+    }
+  }
+#endif
 #ifdef MOZ_OGG
   if (IsOggType(aType)) {
     nsRefPtr<nsOggDecoder> decoder = new nsOggDecoder();
