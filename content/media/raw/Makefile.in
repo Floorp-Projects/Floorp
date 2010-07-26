@@ -11,14 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla code.
+# The Original Code is Mozilla Raw Decoder code.
 #
-# The Initial Developer of the Original Code is the Mozilla Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# The Initial Developer of the Original Code is
+#   Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Chris Double <chris.double@double.co.nz>
+#   Brad Lassey <blassey@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,70 +35,33 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = content
-LIBRARY_NAME = gkconmedia_s
-LIBXUL_LIBRARY = 1
+MODULE		= content
+LIBRARY_NAME	= gkconraw_s
+LIBXUL_LIBRARY  = 1
 
-EXPORTS = \
-  nsMediaDecoder.h \
-  nsMediaStream.h \
-  nsMediaCache.h \
-  nsBuiltinDecoder.h \
-  nsBuiltinDecoderStateMachine.h \
-  nsBuiltinDecoderReader.h \
-  VideoUtils.h \
-  $(NULL)
+EXPORTS		+= \
+		nsRawDecoder.h \
+                nsRawReader.h \
+		$(NULL)
 
-CPPSRCS = \
-  nsMediaDecoder.cpp \
-  nsMediaCache.cpp \
-  nsMediaStream.cpp \
-  nsBuiltinDecoder.cpp \
-  nsBuiltinDecoderStateMachine.cpp \
-  nsBuiltinDecoderReader.cpp \
-  $(NULL)
-
-ifdef MOZ_SYDNEYAUDIO
-EXPORTS += \
-  nsAudioStream.h \
-  $(NULL)
-CPPSRCS += \
-  nsAudioStream.cpp \
-  $(NULL)
-endif
-
-ifdef MOZ_RAW
-PARALLEL_DIRS += raw
-endif
-
-ifdef MOZ_OGG
-PARALLEL_DIRS += ogg
-endif
-
-ifdef MOZ_WAVE
-PARALLEL_DIRS += wave
-endif
-
-ifdef MOZ_WEBM
-PARALLEL_DIRS += webm
-endif
-
-ifdef ENABLE_TESTS
-PARALLEL_DIRS += test
-endif
+CPPSRCS		+= \
+		nsRawDecoder.cpp \
+                nsRawReader.cpp \
+		$(NULL)
 
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += \
-  -I$(srcdir)/../base/src \
-  -I$(srcdir)/../html/content/src \
-  $(NULL)
+INCLUDES	+= \
+		-I$(srcdir)/../../base/src \
+		-I$(srcdir)/../../html/content/src \
+		$(NULL)

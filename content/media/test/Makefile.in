@@ -195,6 +195,7 @@ _TEST_FILES += \
 		dirac.ogg \
 		seek.ogv \
 		seek.webm \
+		seek.yuv \
 		short-video.ogv \
 		small-shot.ogg \
 		sound.ogg \
