@@ -538,7 +538,7 @@ var Trenches = {
   // Parameters:
   //   ids - (integer) a single <Trench> ID or (array) a list of <Trench> IDs.
   unregister: function Trenches_unregister(ids) {
-    if (!Utils.isArray(ids))
+    if (!Array.isArray(ids))
       ids = [ids];
     var self = this;
     ids.forEach(function(id){
