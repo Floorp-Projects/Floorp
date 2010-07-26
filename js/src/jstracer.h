@@ -55,22 +55,6 @@
 
 namespace js {
 
-/*
- * TM-specific access regions:
- *
- * - STACK: the stack.  STACK loads/stores always use 'sp' or 'sp+k' as the
- *   base pointer.
- *
- * - RSTACK: the return stack.  RSTACK loads/stores always use 'rp' as the
- *   base pointer.
- *
- * - OTHER: all other regions of memory.
- */
-static const nanojit::AccSet ACCSET_STACK   = (1 << 0);
-static const nanojit::AccSet ACCSET_RSTACK  = (1 << 1);
-static const nanojit::AccSet ACCSET_OTHER   = (1 << 2);
-static const uint8_t TM_NUM_USED_ACCS = 3;  // number of access regions used by TraceMonkey
-
 #if defined(DEBUG) && !defined(JS_JIT_SPEW)
 #define JS_JIT_SPEW
 #endif
@@ -1301,18 +1285,18 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus setElem(int lval_spindex, int idx_spindex,
                                                        int v_spindex);
 
-    void box_undefined_into(nanojit::LIns *dstaddr_ins, ptrdiff_t offset, nanojit::AccSet accSet);
+    void box_undefined_into(nanojit::LIns *dstaddr_ins, ptrdiff_t offset, nanojit::AccSet);
 #if JS_BITS_PER_WORD == 32
-    void box_null_into(nanojit::LIns *dstaddr_ins, ptrdiff_t offset, nanojit::AccSet accSet);
+    void box_null_into(nanojit::LIns *dstaddr_ins, ptrdiff_t offset, nanojit::AccSet);
     nanojit::LIns* unbox_number_as_double(nanojit::LIns* vaddr_ins, ptrdiff_t offset,
                                           nanojit::LIns* tag_ins, VMSideExit* exit,
-                                          nanojit::AccSet accSet);
+                                          nanojit::AccSet);
     nanojit::LIns* unbox_object(nanojit::LIns* vaddr_ins, ptrdiff_t offset,
                                 nanojit::LIns* tag_ins, JSValueType type, VMSideExit* exit,
-                                nanojit::AccSet accSet);
+                                nanojit::AccSet);
     nanojit::LIns* unbox_non_double_object(nanojit::LIns* vaddr_ins, ptrdiff_t offset,
                                            nanojit::LIns* tag_ins, JSValueType type,
-                                           VMSideExit* exit, nanojit::AccSet accSet);
+                                           VMSideExit* exit, nanojit::AccSet);
 #elif JS_BITS_PER_WORD == 64
     nanojit::LIns* non_double_object_value_has_type(nanojit::LIns* v_ins, JSValueType type);
     nanojit::LIns* unpack_ptr(nanojit::LIns* v_ins);
@@ -1325,8 +1309,8 @@ class TraceRecorder
                                ptrdiff_t offset, VMSideExit* exit,
                                bool force_double=false);
     void unbox_any_object(nanojit::LIns* vaddr_ins, nanojit::LIns** obj_ins,
-                          nanojit::LIns** is_obj_ins, nanojit::AccSet accSet);
-    nanojit::LIns* is_boxed_true(nanojit::LIns* vaddr_ins, nanojit::AccSet accSet);
+                          nanojit::LIns** is_obj_ins, nanojit::AccSet);
+    nanojit::LIns* is_boxed_true(nanojit::LIns* vaddr_ins, nanojit::AccSet);
 
     nanojit::LIns* is_string_id(nanojit::LIns* id_ins);
     nanojit::LIns* unbox_string_id(nanojit::LIns* id_ins);
@@ -1335,7 +1319,7 @@ class TraceRecorder
     /* Box a slot on trace into the given address at the given offset. */
     void box_value_into(const Value& v, nanojit::LIns* v_ins,
                         nanojit::LIns* dstaddr_ins, ptrdiff_t offset,
-                        nanojit::AccSet accSet);
+                        nanojit::AccSet);
 
     /*
      * Box a slot so that it may be passed with value semantics to a native. On
@@ -1349,11 +1333,11 @@ class TraceRecorder
     nanojit::LIns* box_value_into_alloc(const Value& v, nanojit::LIns* v_ins);
 
     JS_REQUIRES_STACK void guardClassHelper(bool cond, nanojit::LIns* obj_ins, Class* clasp,
-                                            VMSideExit* exit, nanojit::LoadQual loadQual);
+                                            VMSideExit* exit, nanojit::AccSet accSet);
     JS_REQUIRES_STACK void guardClass(nanojit::LIns* obj_ins, Class* clasp,
-                                      VMSideExit* exit, nanojit::LoadQual loadQual);
+                                      VMSideExit* exit, nanojit::AccSet accSet);
     JS_REQUIRES_STACK void guardNotClass(nanojit::LIns* obj_ins, Class* clasp,
-                                         VMSideExit* exit, nanojit::LoadQual loadQual);
+                                         VMSideExit* exit, nanojit::AccSet accSet);
     JS_REQUIRES_STACK void guardDenseArray(nanojit::LIns* obj_ins, ExitType exitType);
     JS_REQUIRES_STACK void guardDenseArray(nanojit::LIns* obj_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardHasPrototype(JSObject* obj, nanojit::LIns* obj_ins,
