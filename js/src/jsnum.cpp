@@ -252,11 +252,11 @@ const char js_parseInt_str[]   = "parseInt";
 #ifdef JS_TRACER
 
 JS_DEFINE_TRCINFO_2(num_parseInt,
-    (2, (static, DOUBLE, ParseInt, CONTEXT, STRING,     1, nanojit::ACC_NONE)),
-    (1, (static, DOUBLE, ParseIntDouble, DOUBLE,        1, nanojit::ACC_NONE)))
+    (2, (static, DOUBLE, ParseInt, CONTEXT, STRING,     1, nanojit::ACCSET_NONE)),
+    (1, (static, DOUBLE, ParseIntDouble, DOUBLE,        1, nanojit::ACCSET_NONE)))
 
 JS_DEFINE_TRCINFO_1(num_parseFloat,
-    (2, (static, DOUBLE, ParseFloat, CONTEXT, STRING,   1, nanojit::ACC_NONE)))
+    (2, (static, DOUBLE, ParseFloat, CONTEXT, STRING,   1, nanojit::ACCSET_NONE)))
 
 #endif /* JS_TRACER */
 
@@ -598,10 +598,10 @@ num_toPrecision(JSContext *cx, uintN argc, Value *vp)
 #ifdef JS_TRACER
 
 JS_DEFINE_TRCINFO_2(num_toString,
-    (2, (extern, STRING_RETRY, js_NumberToString,         CONTEXT, THIS_DOUBLE,        1,
-         nanojit::ACC_NONE)),
-    (3, (static, STRING_RETRY, js_NumberToStringWithBase, CONTEXT, THIS_DOUBLE, INT32, 1,
-         nanojit::ACC_NONE)))
+    (2, (extern, STRING_RETRY, js_NumberToString,         CONTEXT, THIS_DOUBLE,
+         1, nanojit::ACCSET_NONE)),
+    (3, (static, STRING_RETRY, js_NumberToStringWithBase, CONTEXT, THIS_DOUBLE, INT32,
+         1, nanojit::ACCSET_NONE)))
 
 #endif /* JS_TRACER */
 
