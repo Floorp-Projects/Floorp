@@ -1012,11 +1012,9 @@ array_trace(JSTracer *trc, JSObject *obj)
             MarkValue(trc, obj->getDenseArrayElement(i), "dense_array_elems");
     }
 
-    if (trc == trc->context->runtime->gcMarkingTracer &&
-        holes > MIN_SPARSE_INDEX &&
-        holes > capacity / 4 * 3) {
+    if (IS_GC_MARKING_TRACER(trc) && holes > MIN_SPARSE_INDEX && holes > capacity / 4 * 3) {
         /* This might fail, in which case we don't slowify it. */
-        reinterpret_cast<JSGCTracer *>(trc)->arraysToSlowify.append(obj);
+        static_cast<GCMarker *>(trc)->arraysToSlowify.append(obj);
     }
 }
 

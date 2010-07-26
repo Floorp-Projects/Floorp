@@ -1171,6 +1171,50 @@ typedef HashMap<Value, Value, WrapperHasher, SystemAllocPolicy> WrapperMap;
 class AutoValueVector;
 class AutoIdVector;
 
+struct GCMarker : public JSTracer {
+  private:
+    /* The color is only applied to objects, functions and xml. */
+    uint32 color;
+
+    /* See comments before delayMarkingChildren is jsgc.cpp. */
+    JSGCArena           *unmarkedArenaStackTop;
+#ifdef DEBUG
+    size_t              markLaterCount;
+#endif
+
+  public:
+    js::Vector<JSObject *, 0, js::SystemAllocPolicy> arraysToSlowify;
+
+  public:
+    explicit GCMarker(JSContext *cx)
+      : color(0), unmarkedArenaStackTop(NULL)
+    {
+        JS_TRACER_INIT(this, cx, NULL);
+#ifdef DEBUG
+        markLaterCount = 0;
+#endif
+    }
+
+    uint32 getMarkColor() const {
+        return color;
+    }
+
+    void setMarkColor(uint32 newColor) {
+        /*
+         * We must process any delayed marking here, otherwise we confuse
+         * colors.
+         */
+        markDelayedChildren();
+        color = newColor;
+    }
+
+    void delayMarkingChildren(void *thing);
+
+    JS_FRIEND_API(void) markDelayedChildren();
+
+    void slowifyArrays();
+};
+
 } /* namespace js */
 
 struct JSCompartment {
@@ -1195,11 +1239,6 @@ struct JSCompartment {
     bool wrapException(JSContext *cx);
 
     void sweep(JSContext *cx);
-};
-
-struct JSGCTracer : public JSTracer {
-    uint32 color;
-    js::Vector<JSObject *, 0, js::SystemAllocPolicy> arraysToSlowify;
 };
 
 extern JS_FRIEND_API(void)
@@ -1251,7 +1290,7 @@ struct JSRuntime {
     size_t              gcMaxMallocBytes;
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcNumber;
-    JSGCTracer          *gcMarkingTracer;
+    js::GCMarker        *gcMarkingTracer;
     uint32              gcTriggerFactor;
     size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
@@ -1289,12 +1328,6 @@ struct JSRuntime {
      * from gcMaxMallocBytes down to zero.
      */
     volatile ptrdiff_t  gcMallocBytes;
-
-    /* See comments before DelayMarkingChildren is jsgc.cpp. */
-    JSGCArena           *gcUnmarkedArenaStackTop;
-#ifdef DEBUG
-    size_t              gcMarkLaterCount;
-#endif
 
 #ifdef JS_THREADSAFE
     JSBackgroundThread  gcHelperThread;
