@@ -53,17 +53,18 @@ gTests.push({
     this._currenttab = Browser.addTab(testURL_01, true);
 
     // Need to wait until the page is loaded
-    this._currenttab.browser.addEventListener("load", 
+    messageManager.addMessageListener("pageshow",
     function() {
-      gCurrentTest._currenttab.browser.removeEventListener("load", arguments.callee, true);
-      gCurrentTest.onPageReady();
-    }, 
-    true);
+      if (gCurrentTest._currenttab.browser.currentURI.spec != "about:blank") {
+        messageManager.removeMessageListener("pageshow", arguments.callee);
+        gCurrentTest.onPageReady();
+      }
+    });
   },
   
   onPageReady: function() {
     var starbutton = document.getElementById("tool-star");
-    starbutton.click();    
+    starbutton.click();
     
     var bookmarkItem = PlacesUtils.getMostRecentBookmarkForURI(makeURI(testURL_01));
     ok(bookmarkItem != -1, testURL_01 + " should be added.");
@@ -84,12 +85,11 @@ gTests.push({
     this._currenttab = Browser.addTab("about:blank", true);
 
     // Need to wait until the page is loaded
-    this._currenttab.browser.addEventListener("load", 
+    messageManager.addMessageListener("pageshow",
     function() {
-      gCurrentTest._currenttab.browser.removeEventListener("load", arguments.callee, true);
+      messageManager.removeMessageListener("pageshow", arguments.callee);
       gCurrentTest.onPageReady();
-    }, 
-    true);
+    });
   },
 
   onPageReady: function() {
@@ -101,9 +101,9 @@ gTests.push({
   
   onBookmarksReady: function() {
     // Create a listener for the opening bookmark  
-    gCurrentTest._currenttab.browser.addEventListener("pageshow", 
+    messageManager.addMessageListener("pageshow", 
       function() {
-        gCurrentTest._currenttab.browser.removeEventListener("pageshow", arguments.callee, true);
+        messageManager.removeMessageListener("pageshow", arguments.callee);
         todo_is(gCurrentTest._currenttab.browser.currentURI.spec, testURL_01, "Opened the right bookmark");      
 
         Browser.closeTab(gCurrentTest._currenttab);
