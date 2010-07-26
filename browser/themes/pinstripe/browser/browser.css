@@ -137,7 +137,6 @@
 #navigator-toolbox[tabsontop="true"]:not([customizing]) > #nav-bar[collapsed="true"] + #customToolbars + #PersonalToolbar {
   padding-top: 4px !important;
   background-image: -moz-linear-gradient(rgba(255,255,255,.58), rgba(255,255,255,0)) !important; /* override lwtheme style */
-  -moz-background-origin: border !important;
 }
 
 /* ----- BOOKMARK TOOLBAR ----- */

@@ -95,6 +95,10 @@
 #ifdef XP_MACOSX
 #include <Carbon/Carbon.h>
 #include "CocoaFileUtils.h"
+#include "prmem.h"
+#include "plbase64.h"
+
+static nsresult MacErrorMapper(OSErr inErr);
 #endif
 
 #if (MOZ_PLATFORM_MAEMO == 5)
@@ -1720,7 +1724,56 @@ nsLocalFile::GetPersistentDescriptor(nsACString &aPersistentDescriptor)
 NS_IMETHODIMP
 nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 {
+#ifdef XP_MACOSX
+    if (aPersistentDescriptor.IsEmpty())
+        return NS_ERROR_INVALID_ARG;
+
+    // Support pathnames as user-supplied descriptors if they begin with '/'
+    // or '~'.  These characters do not collide with the base64 set used for
+    // encoding alias records.
+    char first = aPersistentDescriptor.First();
+    if (first == '/' || first == '~')
+        return InitWithNativePath(aPersistentDescriptor);
+
+    PRUint32 dataSize = aPersistentDescriptor.Length();    
+    char* decodedData = PL_Base64Decode(PromiseFlatCString(aPersistentDescriptor).get(), dataSize, nsnull);
+    if (!decodedData) {
+        NS_ERROR("SetPersistentDescriptor was given bad data");
+        return NS_ERROR_FAILURE;
+    }
+
+    // Cast to an alias record and resolve.
+    AliasRecord aliasHeader = *(AliasPtr)decodedData;
+    PRInt32 aliasSize = ::GetAliasSizeFromPtr(&aliasHeader);
+    if (aliasSize > ((PRInt32)dataSize * 3) / 4) { // be paranoid about having too few data
+        PR_Free(decodedData);
+        return NS_ERROR_FAILURE;
+    }
+
+    nsresult rv = NS_OK;
+
+    // Move the now-decoded data into the Handle.
+    // The size of the decoded data is 3/4 the size of the encoded data. See plbase64.h
+    Handle  newHandle = nsnull;
+    if (::PtrToHand(decodedData, &newHandle, aliasSize) != noErr)
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    PR_Free(decodedData);
+    if (NS_FAILED(rv))
+        return rv;
+
+    Boolean changed;
+    FSRef resolvedFSRef;
+    OSErr err = ::FSResolveAlias(nsnull, (AliasHandle)newHandle, &resolvedFSRef, &changed);
+
+    rv = MacErrorMapper(err);
+    DisposeHandle(newHandle);
+    if (NS_FAILED(rv))
+        return rv;
+
+    return InitWithFSRef(&resolvedFSRef);  
+#else
     return InitWithNativePath(aPersistentDescriptor);
+#endif
 }
 
 #ifdef XP_BEOS
