@@ -476,7 +476,7 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
   if (mLastBuffer->getEnd() == NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE) {
     mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE));
   }
-  PRUint32 totalByteCount = 0;
+  PRInt32 totalByteCount = 0;
   for (;;) {
     PRInt32 end = mLastBuffer->getEnd();
     PRInt32 byteCount = aCount - totalByteCount;
@@ -491,19 +491,31 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
     totalByteCount += byteCount;
     aFromSegment += byteCount;
 
-    NS_ASSERTION(mLastBuffer->getEnd() <= NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE, "The Unicode decoder wrote too much data.");
+    NS_ASSERTION(end <= NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE,
+        "The Unicode decoder wrote too much data.");
+    NS_ASSERTION(byteCount >= -1, "The decoder consumed fewer than -1 bytes.");
+    NS_ASSERTION(byteCount > 0 || NS_FAILED(convResult),
+        "The decoder consumed too few bytes but did not signal an error.");
 
     if (NS_FAILED(convResult)) {
+      // Using the more generic NS_FAILED test above in case there are still
+      // decoders around that don't use NS_ERROR_ILLEGAL_INPUT properly.
+      NS_ASSERTION(convResult == NS_ERROR_ILLEGAL_INPUT,
+          "The decoder signaled an error other than NS_ERROR_ILLEGAL_INPUT.");
+
       // There's an illegal byte in the input. It's now the responsibility
       // of this calling code to output a U+FFFD REPLACEMENT CHARACTER and
       // reset the decoder.
 
-      NS_ASSERTION(totalByteCount < aCount,
-                   "The decoder signaled an error but consumed all input.");
-      if (totalByteCount < aCount) {
+      if (totalByteCount < (PRInt32)aCount) {
         // advance over the bad byte
         ++totalByteCount;
         ++aFromSegment;
+      } else {
+        NS_NOTREACHED("The decoder signaled an error but consumed all input.");
+        // Recovering from this situation in case there are still broken
+        // decoders, since nsScanner had recovery code, too.
+        totalByteCount = (PRInt32)aCount;
       }
 
       // Emit the REPLACEMENT CHARACTER
@@ -515,16 +527,18 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
       }
 
       mUnicodeDecoder->Reset();
-      if (totalByteCount == aCount) {
-        *aWriteCount = totalByteCount;
+      if (totalByteCount == (PRInt32)aCount) {
+        *aWriteCount = (PRUint32)totalByteCount;
         return NS_OK;
       }
     } else if (convResult == NS_PARTIAL_MORE_OUTPUT) {
       mLastBuffer = mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
-      NS_ASSERTION(totalByteCount < aCount, "The Unicode decoder has consumed too many bytes.");
+      NS_ASSERTION(totalByteCount < (PRInt32)aCount,
+          "The Unicode decoder consumed too many bytes.");
     } else {
-      NS_ASSERTION(totalByteCount == aCount, "The Unicode decoder consumed the wrong number of bytes.");
-      *aWriteCount = totalByteCount;
+      NS_ASSERTION(totalByteCount == (PRInt32)aCount,
+          "The Unicode decoder consumed the wrong number of bytes.");
+      *aWriteCount = (PRUint32)totalByteCount;
       return NS_OK;
     }
   }
