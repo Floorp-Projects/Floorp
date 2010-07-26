@@ -58,8 +58,8 @@ class nsSVGFilterElement : public nsSVGFilterElementBase,
 
 protected:
   friend nsresult NS_NewSVGFilterElement(nsIContent **aResult,
-                                         nsINodeInfo *aNodeInfo);
-  nsSVGFilterElement(nsINodeInfo* aNodeInfo);
+                                         already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGFilterElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -80,6 +80,7 @@ public:
   // Invalidate users of this filter
   void Invalidate();
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();

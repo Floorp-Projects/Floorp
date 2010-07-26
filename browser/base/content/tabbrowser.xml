@@ -88,6 +88,8 @@
       <field name="tabs" readonly="true">
         this.tabContainer.childNodes;
       </field>
+      <property name="visibleTabs" readonly="true"
+                onget="return Array.filter(this.tabs, function(tab) !tab.hidden);"/>
       <field name="mURIFixup" readonly="true">
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
@@ -263,6 +265,53 @@
         </body>
       </method>
 
+      <method name="_callProgressListeners">
+        <parameter name="aBrowser"/>
+        <parameter name="aMethod"/>
+        <parameter name="aArguments"/>
+        <parameter name="aCallGlobalListeners"/>
+        <parameter name="aCallTabsListeners"/>
+        <body><![CDATA[
+          var rv = true;
+
+          if (!aBrowser)
+            aBrowser = this.mCurrentBrowser;
+
+          if (aCallGlobalListeners != false &&
+              aBrowser == this.mCurrentBrowser) {
+            this.mProgressListeners.forEach(function (p) {
+              if (aMethod in p) {
+                try {
+                  if (!p[aMethod].apply(p, aArguments))
+                    rv = false;
+                } catch (e) {
+                  // don't inhibit other listeners
+                  Components.utils.reportError(e);
+                }
+              }
+            });
+          }
+
+          if (aCallTabsListeners != false) {
+            aArguments.unshift(aBrowser);
+
+            this.mTabsProgressListeners.forEach(function (p) {
+              if (aMethod in p) {
+                try {
+                  if (!p[aMethod].apply(p, aArguments))
+                    rv = false;
+                } catch (e) {
+                  // don't inhibit other listeners
+                  Components.utils.reportError(e);
+                }
+              }
+            });
+          }
+
+          return rv;
+        ]]></body>
+      </method>
+
       <!-- A web progress listener object definition for a given tab. -->
       <method name="mTabProgressListener">
         <parameter name="aTab"/>
@@ -293,10 +342,14 @@
               delete this.mTabBrowser;
             },
 
-            onProgressChange : function (aWebProgress, aRequest,
-                                         aCurSelfProgress, aMaxSelfProgress,
-                                         aCurTotalProgress, aMaxTotalProgress)
-            {
+            _callProgressListeners: function () {
+              Array.unshift(arguments, this.mBrowser);
+              return this.mTabBrowser._callProgressListeners.apply(this.mTabBrowser, arguments);
+            },
+
+            onProgressChange: function (aWebProgress, aRequest,
+                                        aCurSelfProgress, aMaxSelfProgress,
+                                        aCurTotalProgress, aMaxTotalProgress) {
               this.mTotalProgress = aMaxTotalProgress ? aCurTotalProgress / aMaxTotalProgress : 0;
 
               if (this.mBlank)
@@ -312,46 +365,21 @@
                 }
               }
 
-              if (this.mTabBrowser.mCurrentTab == this.mTab) {
-                for (let i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
-                  let p = this.mTabBrowser.mProgressListeners[i];
-                  if (p)
-                    try {
-                      p.onProgressChange(aWebProgress, aRequest,
-                                         aCurSelfProgress, aMaxSelfProgress,
-                                         aCurTotalProgress, aMaxTotalProgress);
-                    } catch (e) {
-                      // don't inhibit other listeners
-                      Components.utils.reportError(e);
-                    }
-                }
-              }
-
-              for (let i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
-                let p = this.mTabBrowser.mTabsProgressListeners[i];
-                if (p)
-                  try {
-                    p.onProgressChange(this.mBrowser, aWebProgress, aRequest,
-                                       aCurSelfProgress, aMaxSelfProgress,
-                                       aCurTotalProgress, aMaxTotalProgress);
-                  } catch (e) {
-                    // don't inhibit other listeners
-                    Components.utils.reportError(e);
-                  }
-              }
+              this._callProgressListeners("onProgressChange",
+                                          [aWebProgress, aRequest,
+                                           aCurSelfProgress, aMaxSelfProgress,
+                                           aCurTotalProgress, aMaxTotalProgress]);
             },
 
-            onProgressChange64 : function (aWebProgress, aRequest,
-                                         aCurSelfProgress, aMaxSelfProgress,
-                                         aCurTotalProgress, aMaxTotalProgress)
-            {
+            onProgressChange64: function (aWebProgress, aRequest,
+                                          aCurSelfProgress, aMaxSelfProgress,
+                                          aCurTotalProgress, aMaxTotalProgress) {
               return this.onProgressChange(aWebProgress, aRequest,
                 aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress,
                 aMaxTotalProgress);
             },
 
-            onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
-            {
+            onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus) {
               if (!aRequest)
                 return;
 
@@ -436,33 +464,19 @@
                   this.mTabBrowser.mIsBusy = false;
               }
 
-              if (this.mTabBrowser.mCurrentTab == this.mTab) {
-                for (let i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
-                  let p = this.mTabBrowser.mProgressListeners[i];
-                  if (p)
-                    try {
-                      if (!oldBlank)
-                        p.onStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
-                      // make sure that the visible status of new blank tabs is correctly set
-                      else if ("onUpdateCurrentBrowser" in p)
-                        p.onUpdateCurrentBrowser(aStateFlags, aStatus, "", 0);
-                    } catch (e) {
-                      // don't inhibit other listeners
-                      Components.utils.reportError(e);
-                    }
-                }
+              if (oldBlank) {
+                this._callProgressListeners("onUpdateCurrentBrowser",
+                                            [aStateFlags, aStatus, "", 0],
+                                            true, false);
+              } else {
+                this._callProgressListeners("onStateChange",
+                                            [aWebProgress, aRequest, aStateFlags, aStatus],
+                                            true, false);
               }
 
-              for (let i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
-                let p = this.mTabBrowser.mTabsProgressListeners[i];
-                if (p)
-                  try {
-                    p.onStateChange(this.mBrowser, aWebProgress, aRequest, aStateFlags, aStatus);
-                  } catch (e) {
-                    // don't inhibit other listeners
-                    Components.utils.reportError(e);
-                  }
-              }
+              this._callProgressListeners("onStateChange",
+                                          [aWebProgress, aRequest, aStateFlags, aStatus],
+                                          false);
 
               if (aStateFlags & (nsIWebProgressListener.STATE_START |
                                  nsIWebProgressListener.STATE_STOP)) {
@@ -474,8 +488,7 @@
               this.mStatus = aStatus;
             },
 
-            onLocationChange : function(aWebProgress, aRequest, aLocation)
-            {
+            onLocationChange: function (aWebProgress, aRequest, aLocation) {
               // The document loaded correctly, clear the value if we should
               if (this.mBrowser.userTypedClear > 0)
                 this.mBrowser.userTypedValue = null;
@@ -497,129 +510,35 @@
               browserHistory.registerOpenPage(aLocation);
 
               if (!this.mBlank) {
-                if (this.mTabBrowser.mCurrentTab == this.mTab) {
-                  for (let i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
-                    let p = this.mTabBrowser.mProgressListeners[i];
-                    if (p)
-                      try {
-                        p.onLocationChange(aWebProgress, aRequest, aLocation);
-                      } catch (e) {
-                        // don't inhibit other listeners
-                        Components.utils.reportError(e);
-                      }
-                  }
-                }
-
-                for (let i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
-                  let p = this.mTabBrowser.mTabsProgressListeners[i];
-                  if (p)
-                    try {
-                      p.onLocationChange(this.mBrowser, aWebProgress, aRequest, aLocation);
-                    } catch (e) {
-                      // don't inhibit other listeners
-                      Components.utils.reportError(e);
-                    }
-                }
+                this._callProgressListeners("onLocationChange",
+                                            [aWebProgress, aRequest, aLocation]);
               }
 
               this.mBrowser.lastURI = aLocation;
 
             },
 
-            onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
-            {
+            onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage) {
               if (this.mBlank)
                 return;
 
-              if (this.mTabBrowser.mCurrentTab == this.mTab) {
-                for (let i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
-                  let p = this.mTabBrowser.mProgressListeners[i];
-                  if (p)
-                    try {
-                      p.onStatusChange(aWebProgress, aRequest, aStatus, aMessage);
-                    } catch (e) {
-                      // don't inhibit other listeners
-                      Components.utils.reportError(e);
-                    }
-                }
-              }
-
-              for (let i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
-                let p = this.mTabBrowser.mTabsProgressListeners[i];
-                if (p)
-                  try {
-                    p.onStatusChange(this.mBrowser, aWebProgress, aRequest, aStatus, aMessage);
-                  } catch (e) {
-                    // don't inhibit other listeners
-                    Components.utils.reportError(e);
-                  }
-              }
+              this._callProgressListeners("onStatusChange",
+                                          [aWebProgress, aRequest, aStatus, aMessage]);
 
               this.mMessage = aMessage;
             },
 
-            onSecurityChange : function(aWebProgress, aRequest, aState)
-            {
-              if (this.mTabBrowser.mCurrentTab == this.mTab) {
-                for (let i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
-                  let p = this.mTabBrowser.mProgressListeners[i];
-                  if (p)
-                    try {
-                      p.onSecurityChange(aWebProgress, aRequest, aState);
-                    } catch (e) {
-                      // don't inhibit other listeners
-                      Components.utils.reportError(e);
-                    }
-                }
-              }
-
-              for (let i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
-                let p = this.mTabBrowser.mTabsProgressListeners[i];
-                if (p)
-                  try {
-                    p.onSecurityChange(this.mBrowser, aWebProgress, aRequest, aState);
-                  } catch (e) {
-                    // don't inhibit other listeners
-                    Components.utils.reportError(e);
-                  }
-              }
+            onSecurityChange: function (aWebProgress, aRequest, aState) {
+              this._callProgressListeners("onSecurityChange",
+                                          [aWebProgress, aRequest, aState]);
             },
 
-            onRefreshAttempted : function(aWebProgress, aURI, aDelay, aSameURI)
-            {
-              var allowRefresh = true;
-              if (this.mTabBrowser.mCurrentTab == this.mTab) {
-                for (let i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
-                  let p = this.mTabBrowser.mProgressListeners[i];
-                  if (p && "onRefreshAttempted" in p) {
-                    try {
-                      if (!p.onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI))
-                        allowRefresh = false;
-                     } catch (e) {
-                       // don't inhibit other listeners
-                       Components.utils.reportError(e);
-                     }
-                  }
-                }
-              }
-
-              for (let i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
-                let p = this.mTabBrowser.mTabsProgressListeners[i];
-                if (p && "onRefreshAttempted" in p) {
-                  try {
-                    if (!p.onRefreshAttempted(this.mBrowser, aWebProgress, aURI, aDelay, aSameURI))
-                      allowRefresh = false;
-                   } catch (e) {
-                     // don't inhibit other listeners
-                     Components.utils.reportError(e);
-                   }
-                }
-              }
-              return allowRefresh;
+            onRefreshAttempted: function (aWebProgress, aURI, aDelay, aSameURI) {
+              return this._callProgressListeners("onRefreshAttempted",
+                                                 [aWebProgress, aURI, aDelay, aSameURI]);
             },
 
-            QueryInterface : function(aIID)
-            {
+            QueryInterface: function (aIID) {
               if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
                   aIID.equals(Components.interfaces.nsIWebProgressListener2) ||
                   aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
@@ -663,29 +582,7 @@
 
             this.updateIcon(aTab);
 
-            if (browser == this.mCurrentBrowser) {
-              for (let i = 0; i < this.mProgressListeners.length; i++) {
-                let p = this.mProgressListeners[i];
-                if ('onLinkIconAvailable' in p)
-                  try {
-                    p.onLinkIconAvailable(browser, browser.mIconURL);
-                  } catch (e) {
-                    // don't inhibit other listeners
-                    Components.utils.reportError(e);
-                  }
-              }
-            }
-
-            for (let i = 0; i < this.mTabsProgressListeners.length; i++) {
-              let p = this.mTabsProgressListeners[i];
-              if ('onLinkIconAvailable' in p)
-                try {
-                  p.onLinkIconAvailable(browser, browser.mIconURL);
-                } catch (e) {
-                  // don't inhibit other listeners
-                  Components.utils.reportError(e);
-                }
-            }
+            this._callProgressListeners(browser, "onLinkIconAvailable", [browser.mIconURL]);
           ]]>
         </body>
       </method>
@@ -820,7 +717,12 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+            if (TabCandy.isVisible()) {
+              // ToDo: this will be removed when we gain ability to draw o the menu bar. 
+              this.ownerDocument.title = TabCandy.getWindowTitle();
+            } else {
+              this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+            }
           ]]>
         </body>
       </method>
@@ -864,26 +766,20 @@
             var webProgress = this.mCurrentBrowser.webProgress;
             var securityUI = this.mCurrentBrowser.securityUI;
 
-            var i, p;
-            for (i = 0; i < this.mProgressListeners.length; i++) {
-              p = this.mProgressListeners[i];
-              if (p)
-                try {
-                  p.onLocationChange(webProgress, null, loc);
-                  if (securityUI)
-                    p.onSecurityChange(webProgress, null, securityUI.state);
+            this._callProgressListeners(null, "onLocationChange",
+                                        [webProgress, null, loc], true, false);
 
-                  // make sure that all status indicators are properly updated
-                  if ("onUpdateCurrentBrowser" in p) {
-                    let listener = this.mTabListeners[this.tabContainer.selectedIndex] || null;
-                    if (listener && listener.mStateFlags)
-                      p.onUpdateCurrentBrowser(listener.mStateFlags, listener.mStatus,
-                                               listener.mMessage, listener.mTotalProgress);
-                  }
-                } catch (e) {
-                  // don't inhibit other listeners or following code
-                  Components.utils.reportError(e);
-                }
+            if (securityUI) {
+              this._callProgressListeners(null, "onSecurityChange",
+                                          [webProgress, null, securityUI.state], true, false);
+            }
+
+            var listener = this.mTabListeners[this.tabContainer.selectedIndex] || null;
+            if (listener && listener.mStateFlags) {
+              this._callProgressListeners(null, "onUpdateCurrentBrowser",
+                                          [listener.mStateFlags, listener.mStatus,
+                                           listener.mMessage, listener.mTotalProgress],
+                                          true, false);
             }
 
             // Don't switch the fast find or update the titlebar (bug 540248) - this tab switch is temporary
@@ -897,32 +793,22 @@
             const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
             if (this.mCurrentTab.hasAttribute("busy") && !this.mIsBusy) {
               this.mIsBusy = true;
-              for (i = 0; i < this.mProgressListeners.length; i++) {
-                p = this.mProgressListeners[i];
-                if (p)
-                  try {
-                    p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_START | nsIWebProgressListener.STATE_IS_NETWORK, 0);
-                  } catch (e) {
-                    // don't inhibit other listeners or following code
-                    Components.utils.reportError(e);
-                  }
-              }
+              this._callProgressListeners(null, "onStateChange",
+                                          [webProgress, null,
+                                           nsIWebProgressListener.STATE_START |
+                                           nsIWebProgressListener.STATE_IS_NETWORK, 0],
+                                          true, false);
             }
 
             // If the new tab is not busy, and our current state is busy, then
             // we need to fire a stop to all progress listeners.
             if (!this.mCurrentTab.hasAttribute("busy") && this.mIsBusy) {
               this.mIsBusy = false;
-              for (i = 0; i < this.mProgressListeners.length; i++) {
-                p = this.mProgressListeners[i];
-                if (p)
-                  try {
-                    p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_STOP | nsIWebProgressListener.STATE_IS_NETWORK, 0);
-                  } catch (e) {
-                    // don't inhibit other listeners or following code
-                    Components.utils.reportError(e);
-                  }
-              }
+              this._callProgressListeners(null, "onStateChange",
+                                          [webProgress, null,
+                                           nsIWebProgressListener.STATE_STOP |
+                                           nsIWebProgressListener.STATE_IS_NETWORK, 0],
+                                          true, false);
             }
 
             // TabSelect events are suppressed during preview mode to avoid confusing extensions and other bits of code
@@ -1053,11 +939,7 @@
             }
 
             // Remove all our progress listeners from the active browser's filter.
-            for (var i = 0; i < this.mProgressListeners.length; i++) {
-              var p = this.mProgressListeners[i];
-              if (p)
-                filter.removeProgressListener(p);
-            }
+            this.mProgressListeners.forEach(filter.removeProgressListener, filter);
 
             // Wire up a progress listener to our filter.
             const listener = this.mTabProgressListener(this.mCurrentTab,
@@ -1209,9 +1091,6 @@
               t.setAttribute("label", aURI);
 
             t.setAttribute("crop", "end");
-            t.style.maxWidth = this.tabContainer.mTabMaxWidth + "px";
-            t.style.minWidth = this.tabContainer.mTabMinWidth + "px";
-            t.width = 0;
             t.setAttribute("validate", "never");
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
@@ -1343,8 +1222,9 @@
       <body>
         <![CDATA[
           var tabsToClose = this.tabs.length;
+
           if (!aAll)
-            --tabsToClose;
+            tabsToClose = this.visibleTabs.length - (1 + this._numPinnedTabs);
           if (tabsToClose <= 1)
             return true;
 
@@ -1391,12 +1271,16 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
+            if (aTab.pinned)
+              return;
+
             if (this.warnAboutClosingTabs(false)) {
+              var tabs = this.visibleTabs;
               this.selectedTab = aTab;
 
-              for (let i = this.tabs.length - 1; i >= 0; --i) {
-                if (this.tabs[i] != aTab)
-                  this.removeTab(this.tabs[i]);
+              for (let i = tabs.length - 1; i >= 0; --i) {
+                if (tabs[i] != aTab && !tabs[i].pinned)
+                  this.removeTab(tabs[i]);
               }
             }
           ]]>
@@ -1452,7 +1336,7 @@
             var closeWindow = false;
             var newTab = false;
             if (this.tabs.length - this._removingTabs.length == 1) {
-              if (!isTabCandyVisible()) {
+              if (!TabCandy.isVisible()) {
                 closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                               !window.toolbar.visible ||
                                 this.tabContainer._closeWindowWithLastTab;
@@ -1704,10 +1588,11 @@
       <method name="reloadAllTabs">
         <body>
           <![CDATA[
-            var l = this.mPanelContainer.childNodes.length;
+            var tabs = this.visibleTabs;
+            var l = tabs.length;
             for (var i = 0; i < l; i++) {
               try {
-                this.getBrowserAtIndex(i).reload();
+                this.getBrowserForTab(tabs[i]).reload();
               } catch (e) {
                 // ignore failure to reload so others will be reloaded
               }
@@ -1767,12 +1652,8 @@
         <parameter name="aListener"/>
         <body>
           <![CDATA[
-            for (var i = 0; i < this.mProgressListeners.length; i++) {
-              if (this.mProgressListeners[i] == aListener) {
-                this.mProgressListeners.splice(i, 1);
-                break;
-              }
-            }
+            this.mProgressListeners =
+              this.mProgressListeners.filter(function (l) l != aListener);
 
             if (!this.mTabbedMode)
               // Don't forget to remove it from the filter we hooked it up to
@@ -1793,9 +1674,8 @@
         <parameter name="aListener"/>
         <body>
         <![CDATA[
-          var pos = this.mTabsProgressListeners.indexOf(aListener);
-          if (pos >= 0)
-            this.mTabsProgressListeners.splice(pos, 1);
+          this.mTabsProgressListeners =
+            this.mTabsProgressListeners.filter(function (l) l != aListener);
         ]]>
         </body>
       </method>
@@ -1809,19 +1689,33 @@
         </body>
       </method>
 
+      <method name="showOnlyTheseTabs">
+        <parameter name="aTabs"/>
+        <body>
+        <![CDATA[
+          Array.forEach(this.tabs, function(tab) {
+            tab.hidden = aTabs.indexOf(tab) == -1 && !tab.pinned;
+          });
+        ]]>
+        </body>
+      </method>
+
       <method name="selectTabAtIndex">
         <parameter name="aIndex"/>
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
+          let tabs = this.visibleTabs;
+
           // count backwards for aIndex < 0
           if (aIndex < 0)
-            aIndex += this.tabs.length;
+            aIndex += tabs.length;
 
-          if (aIndex >= 0 &&
-              aIndex < this.tabs.length &&
-              aIndex != this.tabContainer.selectedIndex)
-            this.selectedTab = this.tabs[aIndex];
+          if (aIndex >= 0 && aIndex < this.tabs.length) {
+            let nextTab = tabs[aIndex];
+            if (nextTab != this.selectedTab)
+              this.selectedTab = nextTab;
+          }
 
           if (aEvent) {
             aEvent.preventDefault();
@@ -2443,7 +2337,8 @@
            inherited from the binding parent -->
       <method name="_getScrollableElements">
         <body><![CDATA[
-          return document.getBindingParent(this).childNodes;
+          return Array.filter(document.getBindingParent(this).childNodes,
+                              this._canScrollToElement, this);
         ]]></body>
       </method>
       <method name="_canScrollToElement">
@@ -2506,8 +2401,6 @@
     <implementation implements="nsIDOMEventListener">
       <constructor>
         <![CDATA[
-          this.mTabMinWidth = Services.prefs.getIntPref("browser.tabs.tabMinWidth");
-          this.mTabMaxWidth = Services.prefs.getIntPref("browser.tabs.tabMaxWidth");
           this.mTabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
           this.mCloseButtons = Services.prefs.getIntPref("browser.tabs.closeButtons");
           this._closeWindowWithLastTab = Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
@@ -2515,27 +2408,19 @@
           var tab = this.firstChild;
           tab.setAttribute("label",
                            this.tabbrowser.mStringBundle.getString("tabs.emptyTabTitle"));
-          tab.style.minWidth = this.mTabMinWidth + "px";
-          tab.style.maxWidth = this.mTabMaxWidth + "px";
-          tab.width = 0;
           tab.setAttribute("crop", "end");
           tab.setAttribute("validate", "never");
           tab.setAttribute("onerror", "this.removeAttribute('image');");
           this.adjustTabstrip();
 
-          Services.prefs.addObserver("browser.tabs.closeButtons", this._prefObserver, false);
-          Services.prefs.addObserver("browser.tabs.autoHide", this._prefObserver, false);
-          Services.prefs.addObserver("browser.tabs.closeWindowWithLastTab", this._prefObserver, false);
-
+          Services.prefs.addObserver("browser.tabs.", this._prefObserver, false);
           window.addEventListener("resize", this, false);
         ]]>
       </constructor>
 
       <destructor>
         <![CDATA[
-          Services.prefs.removeObserver("browser.tabs.closeButtons", this._prefObserver);
-          Services.prefs.removeObserver("browser.tabs.autoHide", this._prefObserver);
-          Services.prefs.removeObserver("browser.tabs.closeWindowWithLastTab", this._prefObserver);
+          Services.prefs.removeObserver("browser.tabs.", this._prefObserver);
         ]]>
       </destructor>
 
@@ -2548,7 +2433,7 @@
       </field>
 
       <field name="contextMenu" readonly="true">
-        document.getElementById(this.getAttribute("context"));
+        document.getElementById("tabContextMenu");
       </field>
 
       <field name="mTabstripWidth">0</field>
@@ -2634,6 +2519,8 @@
               this.setAttribute("closebuttons", "noclose");
             else {
               let tab = this.childNodes.item(this.tabbrowser._numPinnedTabs);
+              if (tab && tab.hidden)
+                tab = this.tabbrowser.visibleTabs[0];
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
               else
@@ -2707,7 +2594,7 @@
       <field name="_animateElement">
         this.mTabstrip._scrollButtonDown;
       </field>
-      
+
       <method name="_notifyBackgroundTab">
         <parameter name="aTab"/>
         <body><![CDATA[
@@ -2930,7 +2817,7 @@
         // otherwise trying to deatch the tab by dropping it on the desktop
         // may result in an "internet shortcut"
         dt.mozSetDataAt("text/x-moz-text-internal", spec, 0);
-        
+
         // Set the cursor to an arrow during tab drags.
         dt.mozCursor = "default";
 
@@ -3235,7 +3122,7 @@
       <stylesheet src="chrome://browser/content/tabbrowser.css"/>
     </resources>
 
-    <content closetabtext="&closeTab.label;">
+    <content context="tabContextMenu" closetabtext="&closeTab.label;">
       <xul:image xbl:inherits="validate,src=image"
                  class="tab-icon-image"
                  role="presentation"/>
@@ -3245,6 +3132,7 @@
                  role="presentation"/>
       <xul:toolbarbutton anonid="close-button"
                          tabindex="-1"
+                         clickthrough="never"
                          class="tab-close-button"/>
     </content>
 
@@ -3418,7 +3306,7 @@
       <![CDATA[
         // set up the menu popup
         var tabcontainer = gBrowser.tabContainer;
-        var tabs = tabcontainer.childNodes;
+        var tabs = gBrowser.visibleTabs;
 
         // Listen for changes in the tab bar.
         tabcontainer.addEventListener("TabOpen", this, false);

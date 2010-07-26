@@ -80,7 +80,9 @@ class THEBES_API LayerManagerOGL : public LayerManager {
 public:
   LayerManagerOGL(nsIWidget *aWidget);
   virtual ~LayerManagerOGL();
-  
+
+  void CleanupResources();
+
   /**
    * Initializes the layer manager, this is when the layer manager will
    * actually access the device and attempt to create the swap chain used
@@ -174,6 +176,12 @@ public:
 
   GLContext *gl() const { return mGLContext; }
 
+  DrawThebesLayerCallback GetThebesLayerCallback() const
+  { return mThebesLayerCallback; }
+
+  void* GetThebesLayerCallbackData() const
+  { return mThebesLayerCallbackData; }
+
   /*
    * Helper functions for our layers
    */
@@ -184,7 +192,8 @@ public:
     NS_ASSERTION(mThebesLayerCallback,
                  "CallThebesLayerDrawCallback without callback!");
     mThebesLayerCallback(aLayer, aContext,
-                         aRegionToDraw, mThebesLayerCallbackData);
+                         aRegionToDraw, nsIntRegion(),
+                         mThebesLayerCallbackData);
   }
 
   GLenum FBOTextureTarget() { return mFBOTextureTarget; }
@@ -358,16 +367,6 @@ public:
     : mOGLManager(aManager)
   { }
 
-  enum LayerType {
-    TYPE_THEBES,
-    TYPE_CONTAINER,
-    TYPE_IMAGE,
-    TYPE_COLOR,
-    TYPE_CANVAS
-  };
-  
-  virtual LayerType GetType() = 0;
-
   virtual LayerOGL *GetFirstChildOGL() {
     return nsnull;
   }
@@ -383,16 +382,6 @@ public:
 protected:
   LayerManagerOGL *mOGLManager;
 };
-
-#ifdef DEBUG
-#define DEBUG_GL_ERROR_CHECK(cx) do {           \
-    /*fprintf (stderr, "trace %s %d\n", __FILE__, __LINE__);*/          \
-    GLenum err = (cx)->fGetError();             \
-    if (err) { fprintf (stderr, "GL ERROR: 0x%04x at %s:%d\n", err, __FILE__, __LINE__); } \
-  } while (0)
-#else
-#define DEBUG_GL_ERROR_CHECK(cx) do { } while (0)
-#endif
 
 } /* layers */
 } /* mozilla */

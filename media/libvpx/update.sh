@@ -245,3 +245,4 @@ patch -p3 < splitmv-bounds.patch
 patch -p3 < subpixel-qword.patch
 # Patch to make asm globals symbol hidden so linking succeeds on x86-64.
 patch -p3 < subpixel-hidden.patch
+patch -p3 < emptyif_warning.patch

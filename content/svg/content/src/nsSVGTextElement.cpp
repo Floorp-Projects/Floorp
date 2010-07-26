@@ -44,10 +44,13 @@
 #include "nsSVGTextPositioningElement.h"
 #include "nsIFrame.h"
 #include "nsDOMError.h"
-#include "nsSVGLengthList.h"
-#include "nsSVGAnimatedLengthList.h"
+#include "SVGAnimatedLengthList.h"
+#include "DOMSVGAnimatedLengthList.h"
+#include "SVGLengthList.h"
 #include "nsSVGNumberList.h"
 #include "nsSVGAnimatedNumberList.h"
+
+using namespace mozilla;
 
 typedef nsSVGGraphicElement nsSVGTextElementBase;
 
@@ -68,8 +71,8 @@ class nsSVGTextElement : public nsSVGTextElementBase,
 {
 protected:
   friend nsresult NS_NewSVGTextElement(nsIContent **aResult,
-                                       nsINodeInfo *aNodeInfo);
-  nsSVGTextElement(nsINodeInfo* aNodeInfo);
+                                       already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGTextElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
   
 public:
@@ -91,16 +94,20 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   nsSVGTextContainerFrame* GetTextContainerFrame() {
     return do_QueryFrame(GetPrimaryFrame(Flush_Layout));
   }
 
+  virtual LengthListAttributesInfo GetLengthListInfo();
+
   // nsIDOMSVGTextPositioning properties:
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mX;
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mY;
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mdX;
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mdY;
+
+  enum { X, Y, DX, DY };
+  SVGAnimatedLengthList mLengthListAttributes[4];
+  static LengthListInfo sLengthListInfo[4];
+
   nsCOMPtr<nsIDOMSVGAnimatedNumberList> mRotate;
 };
 
@@ -114,7 +121,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Text)
 NS_IMPL_ADDREF_INHERITED(nsSVGTextElement,nsSVGTextElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGTextElement,nsSVGTextElementBase)
 
-DOMCI_DATA(SVGTextElement, nsSVGTextElement)
+DOMCI_NODE_DATA(SVGTextElement, nsSVGTextElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGTextElement)
   NS_NODE_INTERFACE_TABLE6(nsSVGTextElement, nsIDOMNode, nsIDOMElement,
@@ -127,7 +134,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTextElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGTextElement::nsSVGTextElement(nsINodeInfo* aNodeInfo)
+nsSVGTextElement::nsSVGTextElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGTextElementBase(aNodeInfo)
 {
 
@@ -138,54 +145,6 @@ nsSVGTextElement::Init()
 {
   nsresult rv = nsSVGTextElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
-
-  // DOM property: nsIDOMSVGTextPositioningElement::x, #IMPLIED attrib: x
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::X);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mX),
-                                     lengthList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::x, mX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: nsIDOMSVGTextPositioningElement::y, #IMPLIED attrib: y
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::Y);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mY),
-                                     lengthList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::y, mY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: nsIDOMSVGTextPositioningElement::dx, #IMPLIED attrib: dx
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::X);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdX),
-                                     lengthList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::dx, mdX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: nsIDOMSVGTextPositioningElement::dy, #IMPLIED attrib: dy
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::Y);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdY),
-                                     lengthList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::dy, mdY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
 
   // DOM property: nsIDOMSVGTextPositioningElement::rotate, #IMPLIED attrib: rotate
   {
@@ -222,8 +181,8 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGTextElement)
 NS_IMETHODIMP
 nsSVGTextElement::GetX(nsIDOMSVGAnimatedLengthList * *aX)
 {
-  *aX = mX;
-  NS_IF_ADDREF(*aX);
+  *aX = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[X],
+                                                this, X, nsSVGUtils::X).get();
   return NS_OK;
 }
 
@@ -231,8 +190,8 @@ nsSVGTextElement::GetX(nsIDOMSVGAnimatedLengthList * *aX)
 NS_IMETHODIMP
 nsSVGTextElement::GetY(nsIDOMSVGAnimatedLengthList * *aY)
 {
-  *aY = mY;
-  NS_IF_ADDREF(*aY);
+  *aY = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[Y],
+                                                this, Y, nsSVGUtils::Y).get();
   return NS_OK;
 }
 
@@ -240,8 +199,8 @@ nsSVGTextElement::GetY(nsIDOMSVGAnimatedLengthList * *aY)
 NS_IMETHODIMP
 nsSVGTextElement::GetDx(nsIDOMSVGAnimatedLengthList * *aDx)
 {
-  *aDx = mdX;
-  NS_IF_ADDREF(*aDx);
+  *aDx = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[DX],
+                                                 this, DX, nsSVGUtils::X).get();
   return NS_OK;
 }
 
@@ -249,8 +208,8 @@ nsSVGTextElement::GetDx(nsIDOMSVGAnimatedLengthList * *aDx)
 NS_IMETHODIMP
 nsSVGTextElement::GetDy(nsIDOMSVGAnimatedLengthList * *aDy)
 {
-  *aDy = mdY;
-  NS_IF_ADDREF(*aDy);
+  *aDy = DOMSVGAnimatedLengthList::GetDOMWrapper(&mLengthListAttributes[DY],
+                                                 this, DY, nsSVGUtils::Y).get();
   return NS_OK;
 }
 
@@ -417,3 +376,22 @@ nsSVGTextElement::IsAttributeMapped(const nsIAtom* name) const
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGTextElementBase::IsAttributeMapped(name);
 }
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::LengthListInfo nsSVGTextElement::sLengthListInfo[4] =
+{
+  { &nsGkAtoms::x,  nsSVGUtils::X, PR_FALSE },
+  { &nsGkAtoms::y,  nsSVGUtils::Y, PR_FALSE },
+  { &nsGkAtoms::dx, nsSVGUtils::X, PR_TRUE },
+  { &nsGkAtoms::dy, nsSVGUtils::Y, PR_TRUE }
+};
+
+nsSVGElement::LengthListAttributesInfo
+nsSVGTextElement::GetLengthListInfo()
+{
+  return LengthListAttributesInfo(mLengthListAttributes, sLengthListInfo,
+                                  NS_ARRAY_LENGTH(sLengthListInfo));
+}
+

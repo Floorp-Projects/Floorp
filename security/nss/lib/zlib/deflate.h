@@ -8,7 +8,7 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: deflate.h,v 1.5 2009/11/07 01:13:10 wtchang%redhat.com Exp $ */
+/* @(#) $Id: deflate.h,v 1.6 2010/04/25 23:37:31 nelson%bolyard.com Exp $ */
 
 #ifndef DEFLATE_H
 #define DEFLATE_H
@@ -188,7 +188,7 @@ typedef struct internal_state {
     int nice_match; /* Stop searching when current match exceeds this */
 
                 /* used by trees.c: */
-    /* Didn't use ct_data typedef below to supress compiler warning */
+    /* Didn't use ct_data typedef below to suppress compiler warning */
     struct ct_data_s dyn_ltree[HEAP_SIZE];   /* literal and length tree */
     struct ct_data_s dyn_dtree[2*D_CODES+1]; /* distance tree */
     struct ct_data_s bl_tree[2*BL_CODES+1];  /* Huffman tree for bit lengths */

@@ -255,6 +255,21 @@ JSObject::isFunction() const
     return getClass() == &js_FunctionClass;
 }
 
+inline bool
+JSObject::isCallable()
+{
+    if (isNative())
+        return isFunction() || getClass()->call;
+
+    return !!map->ops->call;
+}
+
+static inline bool
+js_IsCallable(jsval v)
+{
+    return !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isCallable();
+}
+
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
@@ -500,5 +515,12 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp);
 
 
 JS_END_EXTERN_C
+
+namespace js {
+
+extern JSString *
+fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
+
+}
 
 #endif /* jsfun_h___ */

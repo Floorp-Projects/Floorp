@@ -90,7 +90,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF_INHERITED(nsSVGMarkerElement,nsSVGMarkerElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGMarkerElement,nsSVGMarkerElementBase)
 
-DOMCI_DATA(SVGMarkerElement, nsSVGMarkerElement)
+DOMCI_NODE_DATA(SVGMarkerElement, nsSVGMarkerElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGMarkerElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGMarkerElement, nsIDOMNode, nsIDOMElement,
@@ -131,7 +131,7 @@ nsSVGOrientType::ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
   return NS_OK;
 }
 
-nsSVGMarkerElement::nsSVGMarkerElement(nsINodeInfo *aNodeInfo)
+nsSVGMarkerElement::nsSVGMarkerElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGMarkerElementBase(aNodeInfo), mCoordCtx(nsnull)
 {
 }
@@ -421,8 +421,7 @@ nsSVGMarkerElement::GetViewBoxTransform()
                                       viewportWidth, viewportHeight,
                                       viewbox.x, viewbox.y,
                                       viewbox.width, viewbox.height,
-                                      mPreserveAspectRatio,
-                                      PR_TRUE);
+                                      mPreserveAspectRatio);
 
     gfxPoint ref = viewBoxTM.Transform(gfxPoint(refX, refY));
 

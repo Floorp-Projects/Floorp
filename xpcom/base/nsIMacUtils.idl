@@ -41,7 +41,7 @@
  * nsIMacUtils: Generic globally-available Mac-specific utilities.
  */
 
-[scriptable, uuid(F6FC107C-5CBA-4C5C-A35E-B69D580D1DB6)]
+[scriptable, uuid(5E9072D7-FF95-455E-9466-8AF9841A72EC)]
 interface nsIMacUtils : nsISupports
 {
   /**
@@ -49,6 +49,13 @@ interface nsIMacUtils : nsISupports
    * ppc and x86 (universal binary).
    */
   readonly attribute boolean isUniversalBinary;
+
+  /**
+   * Returns a string containing a list of architectures delimited
+   * by "-". Architecture sets are always in the same order:
+   * ppc > i386 > ppc64 > x86_64 > (future additions)
+   */
+  readonly attribute AString architecturesInBinary;
 
   /**
    * True when running under binary translation (Rosetta).

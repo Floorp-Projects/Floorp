@@ -155,7 +155,7 @@ _class::Internal::Release(void)                                             \
     NS_LOG_RELEASE(this, agg->mRefCnt, #_class);                            \
     if (agg->mRefCnt == 0) {                                                \
         agg->mRefCnt = 1; /* stabilize */                                   \
-        NS_DELETEXPCOM(agg);                                                \
+        delete agg;                                                         \
         return 0;                                                           \
     }                                                                       \
     return agg->mRefCnt;                                                    \
@@ -188,7 +188,7 @@ _class::Internal::Release(void)                                             \
     NS_LOG_RELEASE(this, count, #_class);                                   \
     if (count == 0) {                                                       \
         agg->mRefCnt.stabilizeForDeletion(this);                            \
-        NS_DELETEXPCOM(agg);                                                \
+        delete agg;                                                         \
         return 0;                                                           \
     }                                                                       \
     return count;                                                           \
@@ -312,7 +312,7 @@ _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \
         NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class, tmp->mRefCnt.get())
 
 #define NS_GENERIC_AGGREGATED_CONSTRUCTOR(_InstanceClass)                   \
-static NS_METHOD                                                            \
+static nsresult                                                             \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
                             void **aResult)                                 \
 {                                                                           \
@@ -335,7 +335,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
 }                                                                           \
 
 #define NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(_InstanceClass, _InitMethod) \
-static NS_METHOD                                                            \
+static nsresult                                                             \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
                             void **aResult)                                 \
 {                                                                           \

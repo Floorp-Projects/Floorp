@@ -127,7 +127,8 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                           nsnull, kNameSpaceID_XUL);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = NS_NewXULElement(getter_AddRefs(mPopupgroupContent), nodeInfo);
+  nsresult rv = NS_NewXULElement(getter_AddRefs(mPopupgroupContent),
+                                 nodeInfo.forget());
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aElements.AppendElement(mPopupgroupContent))
@@ -138,7 +139,7 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                           kNameSpaceID_XUL);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = NS_NewXULElement(getter_AddRefs(mTooltipContent), nodeInfo);
+  rv = NS_NewXULElement(getter_AddRefs(mTooltipContent), nodeInfo.forget());
   NS_ENSURE_SUCCESS(rv, rv);
 
   mTooltipContent->SetAttr(nsnull, nsGkAtoms::_default,

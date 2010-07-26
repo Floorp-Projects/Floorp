@@ -4391,7 +4391,7 @@ public class Tokenizer implements Locator {
                          */
                         int hilo = 0;
                         if (c <= 'z') {
-                            @Const @NoLength int[] row = NamedCharacters.HILO_ACCEL[c];
+                            @Const @NoLength int[] row = NamedCharactersAccel.HILO_ACCEL[c];
                             if (row != null) {
                                 hilo = row[firstCharKey];
                             }
@@ -5860,7 +5860,7 @@ public class Tokenizer implements Locator {
     private void emitReplacementCharacter(@NoLength char[] buf, int pos)
             throws SAXException {
         flushChars(buf, pos);
-        tokenHandler.characters(Tokenizer.REPLACEMENT_CHARACTER, 0, 1);
+        tokenHandler.zeroOriginatingReplacementCharacter();
         cstart = pos + 1;
     }
 

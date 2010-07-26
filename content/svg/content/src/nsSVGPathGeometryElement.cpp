@@ -36,7 +36,7 @@
 
 #include "nsSVGPathGeometryElement.h"
 
-nsSVGPathGeometryElement::nsSVGPathGeometryElement(nsINodeInfo *aNodeInfo)
+nsSVGPathGeometryElement::nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGPathGeometryElementBase(aNodeInfo)
 {
 }

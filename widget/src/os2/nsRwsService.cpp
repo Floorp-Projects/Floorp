@@ -38,7 +38,7 @@
 //------------------------------------------------------------------------
 
 #include "nsIFile.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -1217,7 +1217,7 @@ static nsresult nsRwsServiceInit(nsRwsService **aClass)
     }
 
   // create an instance of nsRwsService
-  NS_NEWXPCOM(sRwsInstance, nsRwsService);
+  sRwsInstance = new nsRwsService();
   if (sRwsInstance == 0)
     return NS_ERROR_OUT_OF_MEMORY;
 

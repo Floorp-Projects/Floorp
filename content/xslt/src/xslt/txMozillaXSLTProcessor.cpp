@@ -1208,6 +1208,7 @@ txMozillaXSLTProcessor::ensureStylesheet()
 void
 txMozillaXSLTProcessor::NodeWillBeDestroyed(const nsINode* aNode)
 {
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
     if (NS_FAILED(mCompileResult)) {
         return;
     }
@@ -1257,7 +1258,8 @@ void
 txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
                                        nsIContent* aContainer,
                                        nsIContent* aChild,
-                                       PRInt32 aIndexInContainer)
+                                       PRInt32 aIndexInContainer,
+                                       nsIContent* aPreviousSibling)
 {
     mStylesheet = nsnull;
 }

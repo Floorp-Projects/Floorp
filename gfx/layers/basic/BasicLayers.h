@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,40 +41,85 @@
 #include "Layers.h"
 
 #include "gfxContext.h"
+#include "gfxCachedTempSurface.h"
 #include "nsAutoRef.h"
 #include "nsThreadUtils.h"
+
+#ifdef MOZ_IPC
+#include "mozilla/layers/ShadowLayers.h"
+#endif
+
+class nsIWidget;
 
 namespace mozilla {
 namespace layers {
 
-class BasicThebesLayer;
+class BasicShadowableLayer;
+class ShadowThebesLayer;
+class ShadowImageLayer;
+class ShadowCanvasLayer;
 
 /**
  * This is a cairo/Thebes-only, main-thread-only implementation of layers.
- * Currently it only supports immediate mode but we will probably
- * extend it to support retained buffers. In other words, currently,
- * no buffers are retained between transactions.
  * 
  * In each transaction, the client sets up the layer tree and then during
  * the drawing phase, each ThebesLayer is painted directly into the target
  * context (with appropriate clipping and Push/PopGroups performed
  * between layers).
  */
-class THEBES_API BasicLayerManager : public LayerManager {
+class THEBES_API BasicLayerManager :
+#ifdef MOZ_IPC
+    public ShadowLayerManager
+#else
+    public LayerManager
+#endif
+{
 public:
   /**
-   * Construct a BasicLayerManager which will render to aContext when
-   * BeginTransaction is called. This can be null, in which case
-   * transactions started with BeginTransaction will not do any painting.
+   * Construct a BasicLayerManager which will have no default
+   * target context. SetDefaultTarget or BeginTransactionWithTarget
+   * must be called for any rendering to happen. ThebesLayers will not
+   * be retained.
    */
-  BasicLayerManager(gfxContext* aContext);
+  BasicLayerManager();
+  /**
+   * Construct a BasicLayerManager which will have no default
+   * target context. SetDefaultTarget or BeginTransactionWithTarget
+   * must be called for any rendering to happen. ThebesLayers will be
+   * retained; that is, we will try to retain the visible contents of
+   * ThebesLayers as cairo surfaces. We create ThebesLayer buffers by
+   * creating similar surfaces to the default target context, or to
+   * aWidget's GetThebesSurface if there is no default target context, or
+   * to the passed-in context if there is no widget and no default
+   * target context.
+   * 
+   * This does not keep a strong reference to the widget, so the caller
+   * must ensure that the widget outlives the layer manager or call
+   * ClearWidget before the widget dies.
+   */
+  BasicLayerManager(nsIWidget* aWidget);
   virtual ~BasicLayerManager();
 
   /**
    * Set the default target context that will be used when BeginTransaction
    * is called. This can only be called outside a transaction.
+   * 
+   * aDoubleBuffering can request double-buffering for drawing to the
+   * default target. When BUFFERED, the layer manager avoids blitting
+   * temporary results to aContext and then overpainting them with final
+   * results, by using a temporary buffer when necessary. In BUFFERED
+   * mode we always completely overwrite the contents of aContext's
+   * destination surface (within the clip region) using OPERATOR_SOURCE.
    */
-  void SetDefaultTarget(gfxContext* aContext);
+  enum BufferMode {
+    BUFFER_NONE,
+    BUFFER_BUFFERED
+  };
+  void SetDefaultTarget(gfxContext* aContext, BufferMode aDoubleBuffering);
+  gfxContext* GetDefaultTarget() { return mDefaultTarget; }
+
+  nsIWidget* GetRetainerWidget() { return mWidget; }
+  void ClearRetainerWidget() { mWidget = nsnull; }
 
   virtual void BeginTransaction();
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
@@ -89,30 +134,100 @@ public:
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
+  virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer()
+  { return NULL; }
+  virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer()
+  { return NULL; }
+  virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer()
+  { return NULL; }
+
   virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }
 
 #ifdef DEBUG
   PRBool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
   PRBool InDrawing() { return mPhase == PHASE_DRAWING; }
+  PRBool InForward() { return mPhase == PHASE_FORWARD; }
+  PRBool InTransaction() { return mPhase != PHASE_NONE; }
 #endif
   gfxContext* GetTarget() { return mTarget; }
+  PRBool IsRetained() { return mWidget != nsnull; }
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() const { return "Basic"; }
+#endif // MOZ_LAYERS_HAVE_LOG
+
+protected:
+#ifdef DEBUG
+  enum TransactionPhase {
+    PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
+  };
+  TransactionPhase mPhase;
+#endif
 
 private:
   // Paints aLayer to mTarget.
   void PaintLayer(Layer* aLayer,
                   DrawThebesLayerCallback aCallback,
-                  void* aCallbackData);
+                  void* aCallbackData,
+                  float aOpacity);
 
+  already_AddRefed<gfxContext> PushGroupWithCachedSurface(gfxContext *aTarget,
+                                                          gfxASurface::gfxContentType aContent,
+                                                          gfxPoint *aSavedOffset);
+  void PopGroupWithCachedSurface(gfxContext *aTarget,
+                                 const gfxPoint& aSavedOffset);
+
+  // Widget whose surface should be used as the basis for ThebesLayer
+  // buffers.
+  nsIWidget* mWidget;
   // The default context for BeginTransaction.
   nsRefPtr<gfxContext> mDefaultTarget;
   // The context to draw into.
   nsRefPtr<gfxContext> mTarget;
 
-#ifdef DEBUG
-  enum TransactionPhase { PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING };
-  TransactionPhase mPhase;
-#endif
+  // Cached surface for double buffering
+  gfxCachedTempSurface mCachedSurface;
+
+  BufferMode   mDoubleBuffering;
+  PRPackedBool mUsingDefaultTarget;
 };
+ 
+
+#ifdef MOZ_IPC
+class BasicShadowLayerManager : public BasicLayerManager,
+                                public ShadowLayerForwarder
+{
+  typedef nsTArray<nsRefPtr<Layer> > LayerRefArray;
+
+public:
+  BasicShadowLayerManager(nsIWidget* aWidget);
+  virtual ~BasicShadowLayerManager();
+
+  virtual void BeginTransactionWithTarget(gfxContext* aTarget);
+  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+                              void* aCallbackData);
+
+  virtual void SetRoot(Layer* aLayer);
+
+  virtual void Mutated(Layer* aLayer);
+
+  virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
+  virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
+  virtual already_AddRefed<ImageLayer> CreateImageLayer();
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
+  virtual already_AddRefed<ColorLayer> CreateColorLayer();
+  virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer();
+  virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer();
+  virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer();
+
+  virtual const char* Name() const { return "BasicShadowLayerManager"; }
+
+  ShadowableLayer* Hold(Layer* aLayer);
+
+private:
+  LayerRefArray mKeepAlive;
+};
+#endif  // MOZ_IPC
 
 }
 }

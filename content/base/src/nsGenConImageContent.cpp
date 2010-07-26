@@ -52,7 +52,7 @@ class nsGenConImageContent : public nsXMLElement,
                              public nsImageLoadingContent
 {
 public:
-  nsGenConImageContent(nsINodeInfo* aNodeInfo)
+  nsGenConImageContent(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsXMLElement(aNodeInfo)
   {
   }
@@ -77,7 +77,7 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsGenConImageContent, nsXMLElement,
                              nsIImageLoadingContent, imgIContainerObserver, imgIDecoderObserver)
 
 nsresult
-NS_NewGenConImageContent(nsIContent** aResult, nsINodeInfo* aNodeInfo,
+NS_NewGenConImageContent(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
                          imgIRequest* aImageRequest)
 {
   NS_PRECONDITION(aImageRequest, "Must have request!");

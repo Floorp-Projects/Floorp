@@ -149,34 +149,63 @@ NewKeyValuePair(JSContext *cx, jsid key, jsval val, jsval *rval)
     return true;
 }
 
+static bool
+IdToIteratorValue(JSContext *cx, JSObject *obj, jsid id, uintN flags, jsval *vp)
+{
+    if (!(flags & JSITER_FOREACH)) {
+        *vp = ID_TO_VALUE(id);
+        return true;
+    }
+
+    /* Do the lookup on the original object instead of the prototype. */
+    if (!obj->getProperty(cx, id, vp))
+        return false;
+    if ((flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *vp, vp))
+        return false;
+    return true;
+}
+
 static inline bool
 Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
-          bool enumerable, uintN flags, HashSet<jsid>& ht,
+          bool enumerable, bool sharedPermanent, uintN flags, HashSet<jsid>& ht,
           AutoValueVector& vec)
 {
     JS_ASSERT(JSVAL_IS_INT(id) || JSVAL_IS_STRING(id));
 
-    if (JS_LIKELY(!(flags & JSITER_OWNONLY))) {
-        HashSet<jsid>::AddPtr p = ht.lookupForAdd(id);
-        /* property already encountered, done. */
-        if (JS_UNLIKELY(!!p))
-            return true;
-        /* no need to add properties to the hash table at the end of the prototype chain */
-        if (pobj->getProto() && !ht.add(p, id))
-            return false;
-    }
-    if (enumerable || (flags & JSITER_HIDDEN)) {
-        if (!vec.append(ID_TO_VALUE(id)))
-            return false;
-        if (flags & JSITER_FOREACH) {
-            jsval *vp = vec.end() - 1;
+    HashSet<jsid>::AddPtr p = ht.lookupForAdd(id);
+    JS_ASSERT_IF(obj == pobj, !p);
 
-            /* Do the lookup on the original object instead of the prototype. */
-            if (!obj->getProperty(cx, id, vp))
-                return false;
-            if ((flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *vp, vp))
-                return false;
-        }
+    /* If we've already seen this, we definitely won't add it. */
+    if (JS_UNLIKELY(!!p))
+        return true;
+
+    /*
+     * It's not necessary to add properties to the hash table at the end of the
+     * prototype chain.
+     */
+    if (pobj->getProto() && !ht.add(p, id))
+        return false;
+
+    if (JS_UNLIKELY(flags & JSITER_OWNONLY)) {
+        /*
+         * Shared-permanent hack: If this property is shared permanent
+         * and pobj and obj have the same class, then treat it as an own
+         * property of obj, even if pobj != obj. (But see bug 575997.)
+         *
+         * Omit the magic __proto__ property so that JS code can use
+         * Object.getOwnPropertyNames without worrying about it.
+         */
+        if (!pobj->getProto() && id == ATOM_TO_JSID(cx->runtime->atomState.protoAtom))
+            return true;
+        if (pobj != obj && !(sharedPermanent && pobj->getClass() == obj->getClass()))
+            return true;
+    }
+
+    if (enumerable || (flags & JSITER_HIDDEN)) {
+        if (!vec.append(JSVAL_VOID))
+            return false;
+        if (!IdToIteratorValue(cx, obj, id, flags, vec.end() - 1))
+            return false;
     }
     return true;
 }
@@ -194,7 +223,9 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
     for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
         if (sprop->id != JSVAL_VOID &&
             !sprop->isAlias() &&
-            !Enumerate(cx, obj, pobj, sprop->id, sprop->enumerable(), flags, ht, sprops)) {
+            !Enumerate(cx, obj, pobj, sprop->id, sprop->enumerable(), sprop->isSharedPermanent(),
+                       flags, ht, sprops))
+        {
             return false;
         }
     }
@@ -214,26 +245,31 @@ static bool
 EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags,
                               HashSet<jsid> &ht, AutoValueVector& props)
 {
-    size_t count = pobj->getDenseArrayCount();
+    if (!Enumerate(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false, true,
+                   flags, ht, props)) {
+        return false;
+    }
 
-    if (count) {
+    if (pobj->getDenseArrayCount() > 0) {
         size_t capacity = pobj->getDenseArrayCapacity();
         jsval *vp = pobj->dslots;
         for (size_t i = 0; i < capacity; ++i, ++vp) {
             if (*vp != JSVAL_HOLE) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
-                if (!Enumerate(cx, obj, pobj, INT_TO_JSVAL(i), true, flags, ht, props))
+                if (!Enumerate(cx, obj, pobj, INT_TO_JSVAL(i), true, false, flags, ht, props))
                     return false;
             }
         }
     }
+
     return true;
 }
 
 NativeIterator *
 NativeIterator::allocate(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, uint32 slength,
-                         uint32 key, jsval *parray, uint32 plength)
+                         uint32 key, AutoValueVector &props)
 {
+    size_t plength = props.length();
     NativeIterator *ni = (NativeIterator *)
         cx->malloc(sizeof(NativeIterator) + plength * sizeof(jsval) + slength * sizeof(uint32));
     if (!ni)
@@ -242,7 +278,7 @@ NativeIterator::allocate(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarr
     ni->props_array = ni->props_cursor = (jsval *) (ni + 1);
     ni->props_end = ni->props_array + plength;
     if (plength)
-        memcpy(ni->props_array, parray, plength * sizeof(jsval));
+        memcpy(ni->props_array, props.begin(), plength * sizeof(jsval));
     ni->shapes_array = (uint32 *) ni->props_end;
     ni->shapes_length = slength;
     ni->shapes_key = key;
@@ -252,96 +288,96 @@ NativeIterator::allocate(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarr
     return ni;
 }
 
-static NativeIterator *
-Snapshot(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, uint32 slength, uint32 key)
+static bool
+Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
 {
+    /*
+     * FIXME: Bug 575997 - We won't need to initialize this hash table if
+     *        (flags & JSITER_OWNONLY) when we eliminate inheritance of
+     *        shared-permanent properties as own properties.
+     */
     HashSet<jsid> ht(cx);
-    if (!(flags & JSITER_OWNONLY) && !ht.init(32))
-        return NULL;
-
-    AutoValueVector props(cx);
+    if (!ht.init(32))
+        return false;
 
     JSObject *pobj = obj;
-    while (pobj) {
+    do {
         JSClass *clasp = pobj->getClass();
         if (pobj->isNative() &&
             pobj->map->ops->enumerate == js_Enumerate &&
             !(clasp->flags & JSCLASS_NEW_ENUMERATE)) {
             if (!clasp->enumerate(cx, pobj))
-                return NULL;
+                return false;
             if (!EnumerateNativeProperties(cx, obj, pobj, flags, ht, props))
-                return NULL;
+                return false;
         } else if (pobj->isDenseArray()) {
             if (!EnumerateDenseArrayProperties(cx, obj, pobj, flags, ht, props))
-                return NULL;
+                return false;
         } else {
             if (pobj->isProxy()) {
-                JSIdArray *ida;
+                AutoValueVector proxyProps(cx);
                 if (flags & JSITER_OWNONLY) {
-                    if (!JSProxy::enumerateOwn(cx, pobj, &ida))
-                        return NULL;
+                    if (!JSProxy::enumerateOwn(cx, pobj, proxyProps))
+                        return false;
                 } else {
-                    if (!JSProxy::enumerate(cx, pobj, &ida))
-                        return NULL;
+                    if (!JSProxy::enumerate(cx, pobj, proxyProps))
+                        return false;
                 }
-                AutoIdArray idar(cx, ida);
-                for (size_t n = 0; n < size_t(ida->length); ++n) {
-                    if (!Enumerate(cx, obj, pobj, ida->vector[n], true, flags, ht, props))
-                        return NULL;
+                for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
+                    if (!Enumerate(cx, obj, pobj, (jsid) proxyProps[n], true, false, flags, ht, props))
+                        return false;
                 }
                 /* Proxy objects enumerate the prototype on their own, so we are done here. */
                 break;
             }
             jsval state;
-            if (!pobj->enumerate(cx, JSENUMERATE_INIT, &state, NULL))
-                return NULL;
+            JSIterateOp op = (flags & JSITER_HIDDEN) ? JSENUMERATE_INIT_ALL : JSENUMERATE_INIT;
+            if (!pobj->enumerate(cx, op, &state, NULL))
+                return false;
             if (state == JSVAL_NATIVE_ENUMERATE_COOKIE) {
                 if (!EnumerateNativeProperties(cx, obj, pobj, flags, ht, props))
-                    return NULL;
+                    return false;
             } else {
                 while (true) {
                     jsid id;
                     if (!pobj->enumerate(cx, JSENUMERATE_NEXT, &state, &id))
-                        return NULL;
+                        return false;
                     if (state == JSVAL_NULL)
                         break;
-                    if (!Enumerate(cx, obj, pobj, id, true, flags, ht, props))
-                        return NULL;
+                    if (!Enumerate(cx, obj, pobj, id, true, false, flags, ht, props))
+                        return false;
                 }
             }
         }
 
-        if (JS_UNLIKELY(pobj->isXML() || (flags & JSITER_OWNONLY)))
+        if (JS_UNLIKELY(pobj->isXML()))
             break;
+    } while ((pobj = pobj->getProto()) != NULL);
 
-        pobj = pobj->getProto();
-    }
-
-    return NativeIterator::allocate(cx, obj, flags, sarray, slength, key, props.begin(), props.length());
+    return true;
 }
 
 bool
-NativeIteratorToJSIdArray(JSContext *cx, NativeIterator *ni, JSIdArray **idap)
+VectorToIdArray(JSContext *cx, AutoValueVector &props, JSIdArray **idap)
 {
-    /* Morph the NativeIterator into a JSIdArray. The caller will deallocate it. */
-    JS_ASSERT(sizeof(NativeIterator) > sizeof(JSIdArray));
-    JS_ASSERT(ni->props_array == (jsid *) (ni + 1));
-    size_t length = size_t(ni->props_end - ni->props_array);
-    JSIdArray *ida = (JSIdArray *) (uintptr_t(ni->props_array) - (sizeof(JSIdArray) - sizeof(jsid)));
-    ida->self = ni;
-    ida->length = length;
-    JS_ASSERT(&ida->vector[0] == &ni->props_array[0]);
+    JS_STATIC_ASSERT(sizeof(JSIdArray) > sizeof(jsid));
+    size_t len = props.length();
+    size_t idsz = len * sizeof(jsid);
+    size_t sz = (sizeof(JSIdArray) - sizeof(jsid)) + idsz;
+    JSIdArray *ida = static_cast<JSIdArray *>(cx->malloc(sz));
+    if (!ida)
+        return false;
+
+    ida->length = static_cast<jsint>(len);
+    memcpy(ida->vector, props.begin(), idsz);
     *idap = ida;
     return true;
 }
 
 bool
-GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, JSIdArray **idap)
+GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props)
 {
-    NativeIterator *ni = Snapshot(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), NULL, 0, true);
-    if (!ni)
-        return false;
-    return NativeIteratorToJSIdArray(cx, ni, idap);
+    return Snapshot(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props);
 }
 
 static inline bool
@@ -393,12 +429,27 @@ Compare(T *a, T *b, size_t c)
     return true;
 }
 
-static JSObject *
+static inline JSObject *
 NewIteratorObject(JSContext *cx, uintN flags)
 {
-    return !(flags & JSITER_ENUMERATE)
-           ? NewObject(cx, &js_IteratorClass.base, NULL, NULL)
-           : NewObjectWithGivenProto(cx, &js_IteratorClass.base, NULL, NULL);
+    if (flags & JSITER_ENUMERATE) {
+        /*
+         * Non-escaping native enumerator objects do not need map, proto, or
+         * parent. However, code in jstracer.cpp and elsewhere may find such a
+         * native enumerator object via the stack and (as for all objects that
+         * are not stillborn, with the exception of "NoSuchMethod" internal
+         * helper objects) expect it to have a non-null map pointer, so we
+         * share an empty Enumerator scope in the runtime.
+         */
+        JSObject *obj = js_NewGCObject(cx);
+        if (!obj)
+            return false;
+        obj->map = cx->runtime->emptyEnumeratorScope->hold();
+        obj->init(&js_IteratorClass.base, NULL, NULL, JSVAL_NULL);
+        return obj;
+    }
+
+    return NewBuiltinClassInstance(cx, &js_IteratorClass.base);
 }
 
 static inline void
@@ -412,7 +463,7 @@ RegisterEnumerator(JSContext *cx, JSObject *iterobj, NativeIterator *ni)
 }
 
 bool
-JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, jsval *vp)
+IdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, AutoValueVector &props, jsval *vp)
 {
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
@@ -420,10 +471,19 @@ JSIdArrayToIterator(JSContext *cx, JSObject *obj, uintN flags, JSIdArray *ida, j
 
     *vp = OBJECT_TO_JSVAL(iterobj);
 
-    NativeIterator *ni = NativeIterator::allocate(cx, obj, flags, NULL, 0, 0,
-                                                  ida->vector, ida->length);
+    NativeIterator *ni = NativeIterator::allocate(cx, obj, flags, NULL, 0, 0, props);
     if (!ni)
         return false;
+
+    /* If this is a for-each iteration, fetch the values or key/value pairs. */
+    if (flags & JSITER_FOREACH) {
+        size_t length = props.length();
+        for (size_t n = 0; n < length; ++n) {
+            jsval *vp = &ni->begin()[n];
+            if (!IdToIteratorValue(cx, obj, *vp, flags, vp))
+                return false;
+        }
+    }
 
     iterobj->setNativeIterator(ni);
 
@@ -497,7 +557,13 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
     /* Store in *vp to protect it from GC (callers must root vp). */
     *vp = OBJECT_TO_JSVAL(iterobj);
 
-    NativeIterator *ni = Snapshot(cx, obj, flags, shapes.begin(), shapes.length(), key);
+    /* NB: for (var p in null) succeeds by iterating over no properties. */
+    AutoValueVector props(cx);
+    if (JS_LIKELY(obj != NULL) && !Snapshot(cx, obj, flags, props))
+        return false;
+
+    NativeIterator *ni =
+        NativeIterator::allocate(cx, obj, flags, shapes.begin(), shapes.length(), key, props);
     if (!ni)
         return false;
 
@@ -686,10 +752,13 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
 {
     JSObject *iterobj = cx->enumerators;
     while (iterobj) {
+      again:
         NativeIterator *ni = iterobj->getNativeIterator();
         if (ni->obj == obj && ni->props_cursor < ni->props_end) {
             /* Check whether id is still to come. */
-            for (jsid *idp = ni->props_cursor; idp < ni->props_end; ++idp) {
+            jsid *props_cursor = ni->props_cursor;
+            jsid *props_end = ni->props_end;
+            for (jsid *idp = props_cursor; idp < props_end; ++idp) {
                 if (*idp == id) {
                     /*
                      * Check whether another property along the prototype chain
@@ -715,14 +784,21 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
                     }
 
                     /*
+                     * If lookupProperty or getAttributes above removed a property from
+                     * ni, start over.
+                     */
+                    if (props_end != ni->props_end || props_cursor != ni->props_cursor)
+                        goto again;
+
+                    /*
                      * No property along the prototype chain steppeded in to take the
                      * property's place, so go ahead and delete id from the list.
                      * If it is the next property to be enumerated, just skip it.
                      */
-                    if (idp == ni->props_cursor) {
+                    if (idp == props_cursor) {
                         ni->props_cursor++;
                     } else {
-                        memmove(idp, idp + 1, (ni->props_end - (idp + 1)) * sizeof(jsid));
+                        memmove(idp, idp + 1, (props_end - (idp + 1)) * sizeof(jsid));
                         ni->props_end--;
                     }
                     break;
@@ -902,7 +978,7 @@ JSExtendedClass js_GeneratorClass = {
 JS_REQUIRES_STACK JSObject *
 js_NewGenerator(JSContext *cx)
 {
-    JSObject *obj = NewObject(cx, &js_GeneratorClass.base, NULL, NULL);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_GeneratorClass.base);
     if (!obj)
         return NULL;
 

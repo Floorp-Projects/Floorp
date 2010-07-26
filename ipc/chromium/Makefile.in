@@ -204,6 +204,13 @@ CPPSRCS += \
   process_watcher_posix_sigchld.cc \
   $(NULL)
 
+ifeq ($(OS_TARGET),Android)
+DEFINES += -DANDROID -D_POSIX_MONOTONIC_CLOCK=0
+CPPSRCS += \
+  message_pump_android.cc \
+  $(NULL)
+endif # Android
+
 endif # } OS_POSIX
 
 ifdef OS_MACOSX # {

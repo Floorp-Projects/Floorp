@@ -68,6 +68,8 @@
 
 #include "nsCRT.h"
 
+using namespace mozilla;
+
 gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
 
 static PRLogModuleInfo *gFontSelection = PR_NewLogModule("fontSelectionLog");
@@ -92,6 +94,9 @@ gfxFontEntry::~gfxFontEntry()
 {
     if (mUserFontData) {
         delete mUserFontData;
+    }
+    if (mFeatureSettings) {
+        delete mFeatureSettings;
     }
 }
 
@@ -156,7 +161,7 @@ nsresult gfxFontEntry::ReadCMAP()
     return NS_OK;
 }
 
-const nsString& gfxFontEntry::FamilyName()
+const nsString& gfxFontEntry::FamilyName() const
 {
     NS_ASSERTION(mFamily, "gfxFontEntry is not a member of a family");
     return mFamily->Name();
@@ -166,7 +171,7 @@ already_AddRefed<gfxFont>
 gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, PRBool aNeedsBold)
 {
     // the font entry name is the psname, not the family name
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(Name(), aStyle);
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(this, aStyle);
 
     if (!font) {
         gfxFont *newFont = CreateFontInstance(aStyle, aNeedsBold);
@@ -834,15 +839,15 @@ gfxFontCache::Shutdown()
 PRBool
 gfxFontCache::HashEntry::KeyEquals(const KeyTypePointer aKey) const
 {
-    return aKey->mString.Equals(mFont->GetName()) &&
+    return aKey->mFontEntry == mFont->GetFontEntry() &&
            aKey->mStyle->Equals(*mFont->GetStyle());
 }
 
 already_AddRefed<gfxFont>
-gfxFontCache::Lookup(const nsAString &aName,
+gfxFontCache::Lookup(const gfxFontEntry *aFontEntry,
                      const gfxFontStyle *aStyle)
 {
-    Key key(aName, aStyle);
+    Key key(aFontEntry, aStyle);
     HashEntry *entry = mFonts.GetEntry(key);
     if (!entry)
         return nsnull;
@@ -855,7 +860,7 @@ gfxFontCache::Lookup(const nsAString &aName,
 void
 gfxFontCache::AddNew(gfxFont *aFont)
 {
-    Key key(aFont->GetName(), aFont->GetStyle());
+    Key key(aFont->GetFontEntry(), aFont->GetStyle());
     HashEntry *entry = mFonts.PutEntry(key);
     if (!entry)
         return;
@@ -896,7 +901,7 @@ gfxFontCache::NotifyExpired(gfxFont *aFont)
 void
 gfxFontCache::DestroyFont(gfxFont *aFont)
 {
-    Key key(aFont->GetName(), aFont->GetStyle());
+    Key key(aFont->GetFontEntry(), aFont->GetStyle());
     HashEntry *entry = mFonts.GetEntry(key);
     if (entry && entry->mFont == aFont)
         mFonts.RemoveEntry(key);
@@ -1399,6 +1404,152 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID, PRBool aNeed
     aExtents->SetTightGlyphExtents(aGlyphID, bounds);
 }
 
+// Try to initialize font metrics by reading sfnt tables directly;
+// set mIsValid=TRUE and return TRUE on success.
+// Return FALSE if the gfxFontEntry subclass does not
+// implement GetFontTable(), or for non-sfnt fonts where tables are
+// not available.
+PRBool
+gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
+{
+    mIsValid = PR_FALSE; // font is NOT valid in case of early return
+
+    const PRUint32 kHeadTableTag = TRUETYPE_TAG('h','e','a','d');
+    const PRUint32 kHheaTableTag = TRUETYPE_TAG('h','h','e','a');
+    const PRUint32 kPostTableTag = TRUETYPE_TAG('p','o','s','t');
+    const PRUint32 kOS_2TableTag = TRUETYPE_TAG('O','S','/','2');
+
+    if (mFUnitsConvFactor == 0.0) {
+        // If the conversion factor from FUnits is not yet set,
+        // 'head' table is required; otherwise we cannot read any metrics
+        // because we don't know unitsPerEm
+        nsAutoTArray<PRUint8,sizeof(HeadTable)> headData;
+        if (NS_FAILED(mFontEntry->GetFontTable(kHeadTableTag, headData)) ||
+            headData.Length() < sizeof(HeadTable)) {
+            return PR_FALSE; // no 'head' table -> not an sfnt
+        }
+        HeadTable *head = reinterpret_cast<HeadTable*>(headData.Elements());
+        PRUint32 unitsPerEm = head->unitsPerEm;
+        if (!unitsPerEm) {
+            return PR_TRUE; // is an sfnt, but not valid
+        }
+        mFUnitsConvFactor = mAdjustedSize / unitsPerEm;
+    }
+
+    // 'hhea' table is required to get vertical extents
+    nsAutoTArray<PRUint8,sizeof(HheaTable)> hheaData;
+    if (NS_FAILED(mFontEntry->GetFontTable(kHheaTableTag, hheaData)) ||
+        hheaData.Length() < sizeof(HheaTable)) {
+        return PR_FALSE; // no 'hhea' table -> not an sfnt
+    }
+    HheaTable *hhea = reinterpret_cast<HheaTable*>(hheaData.Elements());
+
+#define SET_UNSIGNED(field,src) aMetrics.field = PRUint16(src) * mFUnitsConvFactor
+#define SET_SIGNED(field,src)   aMetrics.field = PRInt16(src) * mFUnitsConvFactor
+
+    SET_UNSIGNED(maxAdvance, hhea->advanceWidthMax);
+    SET_SIGNED(maxAscent, hhea->ascender);
+    SET_SIGNED(maxDescent, -PRInt16(hhea->descender));
+    SET_SIGNED(externalLeading, hhea->lineGap);
+
+    // 'post' table is required for underline metrics
+    nsAutoTArray<PRUint8,sizeof(PostTable)> postData;
+    if (NS_FAILED(mFontEntry->GetFontTable(kPostTableTag, postData))) {
+        return PR_TRUE; // no 'post' table -> sfnt is not valid
+    }
+    if (postData.Length() <
+        offsetof(PostTable, underlineThickness) + sizeof(PRUint16)) {
+        return PR_TRUE; // bad post table -> sfnt is not valid
+    }
+    PostTable *post = reinterpret_cast<PostTable*>(postData.Elements());
+
+    SET_SIGNED(underlineOffset, post->underlinePosition);
+    SET_UNSIGNED(underlineSize, post->underlineThickness);
+
+    // 'OS/2' table is optional, if not found we'll estimate xHeight
+    // and aveCharWidth by measuring glyphs
+    nsAutoTArray<PRUint8,sizeof(OS2Table)> os2data;
+    if (NS_SUCCEEDED(mFontEntry->GetFontTable(kOS_2TableTag, os2data))) {
+        OS2Table *os2 = reinterpret_cast<OS2Table*>(os2data.Elements());
+
+        if (os2data.Length() >= offsetof(OS2Table, sxHeight) +
+                                sizeof(PRInt16) &&
+            PRUint16(os2->version) >= 2) {
+            // version 2 and later includes the x-height field
+            SET_SIGNED(xHeight, os2->sxHeight);
+            // PR_ABS because of negative xHeight seen in Kokonor (Tibetan) font
+            aMetrics.xHeight = PR_ABS(aMetrics.xHeight);
+        }
+        // this should always be present
+        if (os2data.Length() >= offsetof(OS2Table, yStrikeoutPosition) +
+                                sizeof(PRInt16)) {
+            SET_SIGNED(aveCharWidth, os2->xAvgCharWidth);
+            SET_SIGNED(subscriptOffset, os2->ySubscriptYOffset);
+            SET_SIGNED(superscriptOffset, os2->ySuperscriptYOffset);
+            SET_SIGNED(strikeoutSize, os2->yStrikeoutSize);
+            SET_SIGNED(strikeoutOffset, os2->yStrikeoutPosition);
+        }
+    }
+
+    mIsValid = PR_TRUE;
+
+    return PR_TRUE;
+}
+
+static double
+RoundToNearestMultiple(double aValue, double aFraction)
+{
+    return floor(aValue/aFraction + 0.5) * aFraction;
+}
+
+void gfxFont::CalculateDerivedMetrics(Metrics& aMetrics)
+{
+    aMetrics.maxAscent =
+        NS_ceil(RoundToNearestMultiple(aMetrics.maxAscent, 1/1024.0));
+    aMetrics.maxDescent =
+        NS_ceil(RoundToNearestMultiple(aMetrics.maxDescent, 1/1024.0));
+
+    if (aMetrics.xHeight <= 0) {
+        // only happens if we couldn't find either font metrics
+        // or a char to measure;
+        // pick an arbitrary value that's better than zero
+        aMetrics.xHeight = aMetrics.maxAscent * DEFAULT_XHEIGHT_FACTOR;
+    }
+
+    aMetrics.maxHeight = aMetrics.maxAscent + aMetrics.maxDescent;
+
+    if (aMetrics.maxHeight - aMetrics.emHeight > 0.0) {
+        aMetrics.internalLeading = aMetrics.maxHeight - aMetrics.emHeight;
+    } else {
+        aMetrics.internalLeading = 0.0;
+    }
+
+    aMetrics.emAscent = aMetrics.maxAscent * aMetrics.emHeight
+                            / aMetrics.maxHeight;
+    aMetrics.emDescent = aMetrics.emHeight - aMetrics.emAscent;
+
+    if (GetFontEntry()->IsFixedPitch()) {
+        // Some Quartz fonts are fixed pitch, but there's some glyph with a bigger
+        // advance than the average character width... this forces
+        // those fonts to be recognized like fixed pitch fonts by layout.
+        aMetrics.maxAdvance = aMetrics.aveCharWidth;
+    }
+
+    if (!aMetrics.subscriptOffset) {
+        aMetrics.subscriptOffset = aMetrics.xHeight;
+    }
+    if (!aMetrics.superscriptOffset) {
+        aMetrics.superscriptOffset = aMetrics.xHeight;
+    }
+
+    if (!aMetrics.strikeoutOffset) {
+        aMetrics.strikeoutOffset = aMetrics.xHeight * 0.5;
+    }
+    if (!aMetrics.strikeoutSize) {
+        aMetrics.strikeoutSize = aMetrics.underlineSize;
+    }
+}
+
 void
 gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
 {
@@ -1613,7 +1764,7 @@ gfxFontGroup::BuildFontList()
 {
 // "#if" to be removed once all platforms are moved to gfxPlatformFontList interface
 // and subclasses of gfxFontGroup eliminated
-#if defined(XP_MACOSX) || (defined(XP_WIN) && !defined(WINCE))
+#if defined(XP_MACOSX) || (defined(XP_WIN) && !defined(WINCE)) || defined(ANDROID)
     ForEachFont(FindPlatformFont, this);
 
     if (mFonts.Length() == 0) {
@@ -2117,8 +2268,20 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
     // Is this actually necessary? Without it, gfxTextRun::CopyGlyphDataFrom may assert
     // "Glyphruns not coalesced", but does that matter?
     aTextRun->SortGlyphRuns();
-}
 
+#ifdef DUMP_TEXT_RUNS
+    nsCAutoString lang;
+    style->language->ToUTF8String(lang);
+    PR_LOG(gFontSelection, PR_LOG_DEBUG,\
+           ("InitTextRun %p fontgroup %p (%s) lang: %s len %d features: %s "
+            "TEXTRUN \"%s\" ENDTEXTRUN\n",
+            aTextRun, this,
+            NS_ConvertUTF16toUTF8(mFamilies).get(),
+            lang.get(), aLength,
+            NS_ConvertUTF16toUTF8(mStyle.featureSettings).get(),
+            NS_ConvertUTF16toUTF8(aString, aLength).get()) );
+#endif
+}
 
 
 already_AddRefed<gfxFont>
@@ -2401,11 +2564,74 @@ nsILanguageAtomService* gfxFontGroup::gLangService = nsnull;
 
 #define DEFAULT_PIXEL_FONT_SIZE 16.0f
 
+/*static*/ void
+gfxFontStyle::ParseFontFeatureSettings(const nsString& aFeatureString,
+                                       nsTArray<gfxFontFeature>& aFeatures)
+{
+  aFeatures.Clear();
+  PRUint32 offset = 0;
+  while (offset < aFeatureString.Length()) {
+    // skip whitespace
+    while (offset < aFeatureString.Length() &&
+           nsCRT::IsAsciiSpace(aFeatureString[offset])) {
+      ++offset;
+    }
+    PRInt32 limit = aFeatureString.FindChar(',', offset);
+    if (limit < 0) {
+      limit = aFeatureString.Length();
+    }
+    // check that we have enough text for a 4-char tag,
+    // the '=' sign, and at least one digit
+    if (offset + 6 <= PRUint32(limit) &&
+      aFeatureString[offset+4] == '=') {
+      gfxFontFeature setting;
+      setting.mTag =
+        ((aFeatureString[offset] & 0xff) << 24) +
+        ((aFeatureString[offset+1] & 0xff) << 16) +
+        ((aFeatureString[offset+2] & 0xff) << 8) +
+         (aFeatureString[offset+3] & 0xff);
+      nsString valString;
+      aFeatureString.Mid(valString, offset+5, limit-offset-5);
+      PRInt32 rv;
+      setting.mValue = valString.ToInteger(&rv);
+      if (rv == NS_OK) {
+        // we keep the features array sorted so that we can
+        // use nsTArray<>::Equals() to compare feature lists
+        aFeatures.InsertElementSorted(setting);
+      }
+    }
+    offset = limit + 1;
+  }
+}
+
+/*static*/ PRUint32
+gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
+{
+  if (!aLangTag.Length() || aLangTag.Length() > 4) {
+    return NO_FONT_LANGUAGE_OVERRIDE;
+  }
+  PRUint32 index, result = 0;
+  for (index = 0; index < aLangTag.Length(); ++index) {
+    PRUnichar ch = aLangTag[index];
+    if (!nsCRT::IsAscii(ch)) { // valid tags are pure ASCII
+      return NO_FONT_LANGUAGE_OVERRIDE;
+    }
+    result = (result << 8) + ch;
+  }
+  while (index++ < 4) {
+    result = (result << 8) + 0x20;
+  }
+  return result;
+}
+
 gfxFontStyle::gfxFontStyle() :
     style(FONT_STYLE_NORMAL), systemFont(PR_TRUE), printerFont(PR_FALSE), 
     familyNameQuirks(PR_FALSE), weight(FONT_WEIGHT_NORMAL),
     stretch(NS_FONT_STRETCH_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
-    language(gfxAtoms::x_western), sizeAdjust(0.0f)
+    sizeAdjust(0.0f),
+    language(gfxAtoms::x_western),
+    languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    featureSettings(nsnull)
 {
 }
 
@@ -2413,11 +2639,25 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
                            gfxFloat aSize, nsIAtom *aLanguage,
                            float aSizeAdjust, PRPackedBool aSystemFont,
                            PRPackedBool aFamilyNameQuirks,
-                           PRPackedBool aPrinterFont):
+                           PRPackedBool aPrinterFont,
+                           const nsString& aFeatureSettings,
+                           const nsString& aLanguageOverride):
     style(aStyle), systemFont(aSystemFont), printerFont(aPrinterFont),
     familyNameQuirks(aFamilyNameQuirks), weight(aWeight), stretch(aStretch),
-    size(aSize), language(aLanguage), sizeAdjust(aSizeAdjust)
+    size(aSize), sizeAdjust(aSizeAdjust),
+    language(aLanguage),
+    languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
+    featureSettings(nsnull)
 {
+    if (!aFeatureSettings.IsEmpty()) {
+        featureSettings = new nsTArray<gfxFontFeature>;
+        ParseFontFeatureSettings(aFeatureSettings, *featureSettings);
+        if (featureSettings->Length() == 0) {
+            delete featureSettings;
+            featureSettings = nsnull;
+        }
+    }
+
     if (weight > 900)
         weight = 900;
     if (weight < 100)
@@ -2440,9 +2680,16 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
 gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     style(aStyle.style), systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
     familyNameQuirks(aStyle.familyNameQuirks), weight(aStyle.weight),
-    stretch(aStyle.stretch), size(aStyle.size), language(aStyle.language),
-    sizeAdjust(aStyle.sizeAdjust)
+    stretch(aStyle.stretch), size(aStyle.size),
+    sizeAdjust(aStyle.sizeAdjust),
+    language(aStyle.language),
+    languageOverride(aStyle.languageOverride),
+    featureSettings(nsnull)
 {
+    if (aStyle.featureSettings) {
+        featureSettings = new nsTArray<gfxFontFeature>;
+        featureSettings->AppendElements(*aStyle.featureSettings);
+    }
 }
 
 void

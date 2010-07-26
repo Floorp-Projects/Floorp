@@ -35,13 +35,10 @@ var progressListener = {
     if (aBrowser == tab.linkedBrowser)
       record(arguments.callee.name);
   },
-  onProgressChange: function () {},
-  onSecurityChange: function () {},
   onStateChange: function onStateChange(aBrowser) {
     if (aBrowser == tab.linkedBrowser)
       record(arguments.callee.name);
   },
-  onStatusChange: function () {},
   onLinkIconAvailable: function onLinkIconAvailable(aBrowser) {
     if (aBrowser == tab.linkedBrowser)
       record(arguments.callee.name);

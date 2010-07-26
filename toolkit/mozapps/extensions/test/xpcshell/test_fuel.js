@@ -55,7 +55,7 @@ function run_test() {
            getService(AM_Ci.nsICategoryManager);
 
   try {
-    var contract = cm.getCategoryEntry("JavaScript global privileged property",
+    var contract = cm.getCategoryEntry("JavaScript-global-privileged-property",
                                        "Application");
     Application = AM_Cc[contract].getService(AM_Ci.extIApplication);
   }
@@ -83,7 +83,7 @@ function run_test() {
     }],
   }, dest);
 
-  startupManager(1);
+  startupManager();
 
   Application.getExtensions(function(extensions) {
     // test to see if the extensions object is available

@@ -46,7 +46,7 @@
 #include "nsScriptLoader.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsStyleConsts.h"
 #include "nsStyleLinkElement.h"
 #include "nsINodeInfo.h"
@@ -1600,12 +1600,10 @@ nsContentSink::DropParserAndPerfHint(void)
   // Do this hack to make sure that the parser
   // doesn't get destroyed, accidently, before
   // the circularity, between sink & parser, is
-  // actually borken.
-  nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
-
+  // actually broken.
   // Drop our reference to the parser to get rid of a circular
   // reference.
-  mParser = nsnull;
+  nsCOMPtr<nsIParser> kungFuDeathGrip(mParser.forget());
 
   if (mDynamicLowerValue) {
     // Reset the performance hint which was set to FALSE

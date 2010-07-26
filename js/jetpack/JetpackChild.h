@@ -65,23 +65,20 @@ public:
   void CleanUp();
 
 protected:
+  NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
+
   NS_OVERRIDE virtual bool RecvSendMessage(const nsString& messageName,
                                            const nsTArray<Variant>& data);
-  NS_OVERRIDE virtual bool RecvLoadImplementation(const nsCString& code);
-  NS_OVERRIDE virtual bool RecvLoadUserScript(const nsCString& code);
+  NS_OVERRIDE virtual bool RecvEvalScript(const nsString& script);
 
   NS_OVERRIDE virtual PHandleChild* AllocPHandle();
   NS_OVERRIDE virtual bool DeallocPHandle(PHandleChild* actor);
 
 private:
   JSRuntime* mRuntime;
-  JSContext *mImplCx, *mUserCx;
+  JSContext *mCx;
 
   static JetpackChild* GetThis(JSContext* cx);
-
-  static const JSPropertySpec sImplProperties[];
-  static JSBool UserJetpackGetter(JSContext* cx, JSObject* obj, jsval idval,
-                                  jsval* vp);
 
   static const JSFunctionSpec sImplMethods[];
   static JSBool SendMessage(JSContext* cx, uintN argc, jsval *vp);
@@ -91,8 +88,14 @@ private:
   static JSBool UnregisterReceivers(JSContext* cx, uintN argc, jsval *vp);
   static JSBool Wrap(JSContext* cx, uintN argc, jsval *vp);
   static JSBool CreateHandle(JSContext* cx, uintN argc, jsval *vp);
+  static JSBool CreateSandbox(JSContext* cx, uintN argc, jsval *vp);
+  static JSBool EvalInSandbox(JSContext* cx, uintN argc, jsval *vp);
+
+  static void ReportError(JSContext* cx, const char* message,
+                          JSErrorReport* report);
 
   static const JSClass sGlobalClass;
+  static bool sReportingError;
 
   DISALLOW_EVIL_CONSTRUCTORS(JetpackChild);
 };

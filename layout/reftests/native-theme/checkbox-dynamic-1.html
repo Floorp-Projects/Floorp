@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <style>
+    #checkbox {
+       position: absolute;
+       left: 0px;
+       top: 0px;
+       background: -moz-linear-gradient(left, white, brown);
+    }
+    #toremove {
+       position: absolute;
+       left: 0px;
+       top: 0px;
+       width: 100px;
+       height: 0px;
+       background: black;
+    }
+  </style>
+</head>
+<body>
+  <div id="checkbox">
+    <input type="checkbox">
+  </div>
+  <div id="toremove">
+  </div>
+</body>
+<script type="text/javascript">
+  var checkBox = document.getElementById("checkbox");
+  var toRemove = document.getElementById("toremove");
+  toRemove.style.height = checkBox.offsetHeight / 2 + 0.2 + "px";
+  function boom()
+  {
+    toRemove.parentNode.removeChild(toRemove);
+    document.documentElement.className = "";
+  }
+  window.addEventListener("MozReftestInvalidate", boom, false);
+</script>
+</html>

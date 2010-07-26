@@ -306,6 +306,8 @@ PRBool nsXMLEventsManager::RemoveListener(nsIContent * aContent)
 
 void nsXMLEventsManager::AddListeners(nsIDocument* aDocument)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
   nsIContent *cur;
   for (int i = 0; i < mIncomplete.Count(); ++i) {
     cur = mIncomplete[i];
@@ -316,40 +318,20 @@ void nsXMLEventsManager::AddListeners(nsIDocument* aDocument)
 }
 
 void 
-nsXMLEventsManager::BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType) {}
-void 
-nsXMLEventsManager::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType) {}
-void 
 nsXMLEventsManager::NodeWillBeDestroyed(const nsINode* aNode)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   mIncomplete.Clear();
   mListeners.Enumerate(EnumAndUnregisterListener, this);
   mListeners.Clear();
 }
 
 void 
-nsXMLEventsManager::BeginLoad(nsIDocument* aDocument) {}
-
-void 
 nsXMLEventsManager::EndLoad(nsIDocument* aDocument)
 {
   AddListeners(aDocument);
 }
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXMLEventsManager)
-void
-nsXMLEventsManager::CharacterDataWillChange(nsIDocument* aDocument,
-                                            nsIContent* aContent,
-                                            CharacterDataChangeInfo* aInfo) {}
-void 
-nsXMLEventsManager::CharacterDataChanged(nsIDocument* aDocument,
-                                         nsIContent* aContent,
-                                         CharacterDataChangeInfo* aInfo) {}
-void
-nsXMLEventsManager::AttributeWillChange(nsIDocument* aDocument,
-                                        nsIContent* aContent,
-                                        PRInt32 aNameSpaceID,
-                                        nsIAtom* aAttribute,
-                                        PRInt32 aModType) {}
+
 void
 nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
                                      nsIContent* aContent,
@@ -357,6 +339,8 @@ nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
                                      nsIAtom* aAttribute,
                                      PRInt32 aModType)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
   if (aNameSpaceID == kNameSpaceID_XMLEvents &&
       (aAttribute == nsGkAtoms::event ||
        aAttribute == nsGkAtoms::handler ||
@@ -412,16 +396,19 @@ nsXMLEventsManager::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-nsXMLEventsManager::ContentRemoved(nsIDocument* aDocument, 
+nsXMLEventsManager::ContentRemoved(nsIDocument* aDocument,
                                    nsIContent* aContainer,
                                    nsIContent* aChild,
-                                   PRInt32 aIndexInContainer)
+                                   PRInt32 aIndexInContainer,
+                                   nsIContent* aPreviousSibling)
 {
   if (!aChild || !aChild->IsElement())
     return;
   //Note, we can't use IDs here, the observer may not always have an ID.
   //And to remember: the same observer can be referenced by many 
   //XMLEventsListeners
+
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
   //If the content was an XML Events observer or handler
   mListeners.Enumerate(EnumAndSetIncomplete, aChild);
@@ -434,14 +421,6 @@ nsXMLEventsManager::ContentRemoved(nsIDocument* aDocument,
 
   PRUint32 count = aChild->GetChildCount();
   for (PRUint32 i = 0; i < count; ++i) {
-    ContentRemoved(aDocument, aChild, aChild->GetChildAt(i), i);
+    ContentRemoved(aDocument, aChild, aChild->GetChildAt(i), i, aChild->GetPreviousSibling());
   }
 }
-
-void
-nsXMLEventsManager::ParentChainChanged(nsIContent *aContent)
-{
-}
-
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXMLEventsManager)
-

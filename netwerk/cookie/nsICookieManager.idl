@@ -42,8 +42,6 @@
 /** 
  * An optional interface for accessing or removing the cookies
  * that are in the cookie list
- * 
- * @status FROZEN
  */
 
 [scriptable, uuid(AAAB6710-0F2C-11d5-A53B-0010A401EB10)]

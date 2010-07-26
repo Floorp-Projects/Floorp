@@ -59,7 +59,6 @@
 #include "nsISupports.h"
 #include "nsQueryFrame.h"
 #include "nsCoord.h"
-#include "nsRect.h"
 #include "nsColor.h"
 #include "nsEvent.h"
 #include "nsCompatibility.h"
@@ -68,6 +67,7 @@
 #include "nsWeakReference.h"
 #include <stdio.h> // for FILE definition
 #include "nsRefreshDriver.h"
+#include "nsChangeHint.h"
 
 class nsIContent;
 class nsIDocument;
@@ -96,6 +96,11 @@ class gfxContext;
 class nsIDOMEvent;
 class nsDisplayList;
 class nsDisplayListBuilder;
+class nsPIDOMWindow;
+struct nsPoint;
+struct nsIntPoint;
+struct nsRect;
+struct nsIntRect;
 
 typedef short SelectionType;
 typedef PRUint64 nsFrameState;
@@ -128,8 +133,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0x7ae0e29f, 0x4d2e, 0x4acd, \
-    { 0xb5, 0x74, 0xb6, 0x40, 0x8a, 0xca, 0xb8, 0x4d } }
+  { 0x318f7b6c, 0x56be, 0x4256, \
+    { 0xa3, 0x09, 0xff, 0xdc, 0xde, 0x04, 0x63, 0xf6 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -434,7 +439,8 @@ public:
   virtual NS_HIDDEN_(nsresult) RecreateFramesFor(nsIContent* aContent) = 0;
 
   void PostRecreateFramesFor(mozilla::dom::Element* aElement);
-  void RestyleForAnimation(mozilla::dom::Element* aElement);
+  void RestyleForAnimation(mozilla::dom::Element* aElement,
+                           nsRestyleHint aHint);
 
   /**
    * Determine if it is safe to flush all pending notifications
@@ -925,14 +931,13 @@ public:
    * Add a solid color item to the bottom of aList with frame aFrame and
    * bounds aBounds. Checks first if this needs to be done by checking if
    * aFrame is a canvas frame (if aForceDraw is true then this check is
-   * skipped). If aBounds is null (the default) then the bounds will be derived
-   * from the frame. aBackstopColor is composed behind the background color of
+   * skipped). aBackstopColor is composed behind the background color of
    * the canvas, it is transparent by default.
    */
   virtual nsresult AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
                                                 nsDisplayList& aList,
                                                 nsIFrame* aFrame,
-                                                nsRect* aBounds = nsnull,
+                                                const nsRect& aBounds,
                                                 nscolor aBackstopColor = NS_RGBA(0,0,0,0),
                                                 PRBool aForceDraw = PR_FALSE) = 0;
 
@@ -999,6 +1004,11 @@ public:
    */
   PRUint64 GetPaintCount() { return mPaintCount; }
   void IncrementPaintCount() { ++mPaintCount; }
+
+  /**
+   * Get the root DOM window of this presShell.
+   */
+  virtual already_AddRefed<nsPIDOMWindow> GetRootWindow() = 0;
 
   /**
    * Refresh observer management.

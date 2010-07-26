@@ -49,7 +49,7 @@ class nsHTMLHRElement : public nsGenericHTMLElement,
                         public nsIDOMNSHTMLHRElement
 {
 public:
-  nsHTMLHRElement(nsINodeInfo *aNodeInfo);
+  nsHTMLHRElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLHRElement();
 
   // nsISupports
@@ -77,13 +77,14 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(HR)
 
 
-nsHTMLHRElement::nsHTMLHRElement(nsINodeInfo *aNodeInfo)
+nsHTMLHRElement::nsHTMLHRElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -97,7 +98,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLHRElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLHRElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLHRElement, nsHTMLHRElement)
+DOMCI_NODE_DATA(HTMLHRElement, nsHTMLHRElement)
 
 // QueryInterface implementation for nsHTMLHRElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLHRElement)
@@ -142,7 +143,7 @@ nsHTMLHRElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseEnumValue(aValue, kAlignTable, PR_FALSE);
     }
     if (aAttribute == nsGkAtoms::color) {
-      return aResult.ParseColor(aValue, GetOwnerDoc());
+      return aResult.ParseColor(aValue);
     }
   }
 

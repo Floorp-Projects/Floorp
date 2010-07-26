@@ -29,7 +29,6 @@
 #include FT_TRUETYPE_TABLES_H
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_IDS_H
-#include FT_OUTLINE_H
 
 #include FT_SERVICE_SFNT_H
 #include FT_SERVICE_POSTSCRIPT_NAME_H
@@ -230,11 +229,11 @@
   static FT_Error
   ft_glyphslot_init( FT_GlyphSlot  slot )
   {
-    FT_Driver         driver = slot->face->driver;
-    FT_Driver_Class   clazz  = driver->clazz;
-    FT_Memory         memory = driver->root.memory;
-    FT_Error          error  = FT_Err_Ok;
-    FT_Slot_Internal  internal;
+    FT_Driver         driver   = slot->face->driver;
+    FT_Driver_Class   clazz    = driver->clazz;
+    FT_Memory         memory   = driver->root.memory;
+    FT_Error          error    = FT_Err_Ok;
+    FT_Slot_Internal  internal = NULL;
 
 
     slot->library = driver->root.library;
@@ -992,6 +991,14 @@
              ( cur[0]->platform_id == TT_PLATFORM_APPLE_UNICODE &&
                cur[0]->encoding_id == TT_APPLE_ID_UNICODE_32    ) )
         {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+          if ( cur - first > FT_MAX_CHARMAP_CACHEABLE )
+          {
+            FT_ERROR(( "find_unicode_charmap: UCS-4 cmap is found "
+                       "at too late position (%d)\n", cur - first ));
+            continue;
+          }
+#endif
           face->charmap = cur[0];
           return FT_Err_Ok;
         }
@@ -1006,6 +1013,14 @@
     {
       if ( cur[0]->encoding == FT_ENCODING_UNICODE )
       {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - first > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "find_unicode_charmap: UCS-2 cmap is found "
+                     "at too late position (%d)\n", cur - first ));
+          continue;
+        }
+#endif
         face->charmap = cur[0];
         return FT_Err_Ok;
       }
@@ -1047,6 +1062,14 @@
       if ( cur[0]->platform_id == TT_PLATFORM_APPLE_UNICODE    &&
            cur[0]->encoding_id == TT_APPLE_ID_VARIANT_SELECTOR &&
            FT_Get_CMap_Format( cur[0] ) == 14                  )
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - first > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "find_unicode_charmap: UVS cmap is found "
+                     "at too late position (%d)\n", cur - first ));
+          continue;
+        }
+#endif
         return cur[0];
     }
 
@@ -1548,11 +1571,25 @@
         goto Exit;
       if ( FT_READ_USHORT( flags ) )
         goto Exit;
-      rlen -= 2;                    /* the flags are part of the resource */
+      FT_TRACE3(( "POST fragment[%d]: offsets=0x%08x, rlen=0x%08x, flags=0x%04x\n",
+                   i, offsets[i], rlen, flags ));
+
+      if ( ( flags >> 8 ) == 0 )        /* Comment, should not be loaded */
+        continue;
+
+      /* the flags are part of the resource, so rlen >= 2.  */
+      /* but some fonts declare rlen = 0 for empty fragment */
+      if ( rlen > 2 )
+        rlen -= 2;
+      else
+        rlen = 0;
+
       if ( ( flags >> 8 ) == type )
         len += rlen;
       else
       {
+        if ( pfb_lenpos + 3 > pfb_len + 2 )
+          goto Exit2;
         pfb_data[pfb_lenpos    ] = (FT_Byte)( len );
         pfb_data[pfb_lenpos + 1] = (FT_Byte)( len >> 8 );
         pfb_data[pfb_lenpos + 2] = (FT_Byte)( len >> 16 );
@@ -1561,6 +1598,8 @@
         if ( ( flags >> 8 ) == 5 )      /* End of font mark */
           break;
 
+        if ( pfb_pos + 6 > pfb_len + 2 )
+          goto Exit2;
         pfb_data[pfb_pos++] = 0x80;
 
         type = flags >> 8;
@@ -1575,12 +1614,18 @@
       }
 
       error = FT_Stream_Read( stream, (FT_Byte *)pfb_data + pfb_pos, rlen );
+      if ( error )
+        goto Exit2;
       pfb_pos += rlen;
     }
 
+    if ( pfb_pos + 2 > pfb_len + 2 )
+      goto Exit2;
     pfb_data[pfb_pos++] = 0x80;
     pfb_data[pfb_pos++] = 3;
 
+    if ( pfb_lenpos + 3 > pfb_len + 2 )
+      goto Exit2;
     pfb_data[pfb_lenpos    ] = (FT_Byte)( len );
     pfb_data[pfb_lenpos + 1] = (FT_Byte)( len >> 8 );
     pfb_data[pfb_lenpos + 2] = (FT_Byte)( len >> 16 );
@@ -2901,6 +2946,15 @@
     {
       if ( cur[0]->encoding == encoding )
       {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - face->charmaps > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "FT_Select_Charmap: requested charmap is found (%d), "
+                     "but in too late position to cache\n",
+                     cur - face->charmaps ));
+          continue;
+        }
+#endif
         face->charmap = cur[0];
         return 0;
       }
@@ -2935,6 +2989,15 @@
     {
       if ( cur[0] == charmap )
       {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - face->charmaps > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "FT_Set_Charmap: requested charmap is found (%d), "
+                     "but in too late position to cache\n",
+                     cur - face->charmaps ));
+          continue;
+        }
+#endif
         face->charmap = cur[0];
         return 0;
       }
@@ -2951,12 +3014,24 @@
     FT_Int  i;
 
 
+    if ( !charmap || !charmap->face )
+      return -1;
+
     for ( i = 0; i < charmap->face->num_charmaps; i++ )
       if ( charmap->face->charmaps[i] == charmap )
         break;
 
     FT_ASSERT( i < charmap->face->num_charmaps );
 
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+    if ( i > FT_MAX_CHARMAP_CACHEABLE )
+    {
+      FT_ERROR(( "FT_Get_Charmap_Index: requested charmap is found (%d), "
+                 "but in too late position to cache\n",
+                 i ));
+      return -i;
+    }
+#endif
     return i;
   }
 
@@ -3095,7 +3170,7 @@
       }
       result = cmap->clazz->char_index( cmap, (FT_UInt32)charcode );
     }
-    return  result;
+    return result;
   }
 
 
@@ -3109,14 +3184,14 @@
     FT_UInt   gindex = 0;
 
 
-    if ( face && face->charmap )
+    if ( face && face->charmap && face->num_glyphs )
     {
       gindex = FT_Get_Char_Index( face, 0 );
-      if ( gindex == 0 )
+      if ( gindex == 0 || gindex >= (FT_UInt)face->num_glyphs )
         result = FT_Get_Next_Char( face, 0, &gindex );
     }
 
-    if ( agindex  )
+    if ( agindex )
       *agindex = gindex;
 
     return result;
@@ -3134,13 +3209,16 @@
     FT_UInt   gindex = 0;
 
 
-    if ( face && face->charmap )
+    if ( face && face->charmap && face->num_glyphs )
     {
       FT_UInt32  code = (FT_UInt32)charcode;
       FT_CMap    cmap = FT_CMAP( face->charmap );
 
 
-      gindex = cmap->clazz->char_next( cmap, &code );
+      do {
+        gindex = cmap->clazz->char_next( cmap, &code );
+      } while ( gindex >= (FT_UInt)face->num_glyphs );
+
       result = ( gindex == 0 ) ? 0 : code;
     }
 
@@ -3645,7 +3723,7 @@
     FT_Library   library = module->library;
     FT_Memory    memory  = library->memory;
     FT_Error     error;
-    FT_ListNode  node;
+    FT_ListNode  node    = NULL;
 
 
     if ( FT_NEW( node ) )
@@ -3661,7 +3739,7 @@
 
       /* allocate raster object if needed */
       if ( clazz->glyph_format == FT_GLYPH_FORMAT_OUTLINE &&
-           clazz->raster_class->raster_new )
+           clazz->raster_class->raster_new                )
       {
         error = clazz->raster_class->raster_new( memory, &render->raster );
         if ( error )
@@ -3702,7 +3780,8 @@
 
 
       /* release raster object, if any */
-      if ( render->raster )
+      if ( render->clazz->glyph_format == FT_GLYPH_FORMAT_OUTLINE &&
+           render->raster                                         )
         render->clazz->raster_class->raster_done( render->raster );
 
       /* remove from list */
@@ -3842,7 +3921,7 @@
     FT_Library  library;
 
 
-    if ( !slot )
+    if ( !slot || !slot->face )
       return FT_Err_Invalid_Argument;
 
     library = FT_FACE_LIBRARY( slot->face );
@@ -4029,7 +4108,8 @@
       FT_Renderer  renderer = FT_RENDERER( module );
 
 
-      if ( renderer->raster )
+      if ( renderer->clazz->glyph_format == FT_GLYPH_FORMAT_OUTLINE && 
+           renderer->raster                                         )
         renderer->clazz->raster_class->raster_done( renderer->raster );
     }
 
@@ -4467,6 +4547,8 @@
 #endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
+  /* documentation is in freetype.h */
+
   FT_EXPORT_DEF( FT_Error )
   FT_Get_SubGlyph_Info( FT_GlyphSlot  glyph,
                         FT_UInt       sub_index,
@@ -4479,7 +4561,8 @@
     FT_Error  error = FT_Err_Invalid_Argument;
 
 
-    if ( glyph != NULL                              &&
+    if ( glyph                                      &&
+         glyph->subglyphs                           &&
          glyph->format == FT_GLYPH_FORMAT_COMPOSITE &&
          sub_index < glyph->num_subglyphs           )
     {

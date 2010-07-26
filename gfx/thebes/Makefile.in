@@ -11,19 +11,12 @@ LIBRARY_NAME	= thebes
 LIBXUL_LIBRARY	= 1
 EXPORT_LIBRARY	= 1
 
-ifdef ENABLE_TESTS
-DIRS = mochitest
-ifndef MOZ_ENABLE_LIBXUL
-ifndef BUILD_STATIC_LIBS
-TOOL_DIRS = test
-endif
-endif
-endif
-
 EXPORTS	= \
 	gfx3DMatrix.h \
 	gfxASurface.h \
 	gfxAlphaRecovery.h \
+	gfxBlur.h \
+	gfxCachedTempSurface.h \
 	gfxColor.h \
 	gfxContext.h \
 	gfxFont.h \
@@ -41,11 +34,14 @@ EXPORTS	= \
 	gfxTypes.h \
 	gfxTextRunCache.h \
 	gfxTextRunWordCache.h \
+	gfxThebesUtils.h \
 	gfxUtils.h \
 	gfxUserFontSet.h \
 	GLDefs.h \
 	GLContext.h \
 	GLContextProvider.h \
+	GLContextProviderImpl.h \
+	nsCoreAnimationSupport.h \
 	$(NULL)
 
 ifdef MOZ_IPC
@@ -94,6 +90,7 @@ EXPORTS += \
 ifdef MOZ_X11
 EXPORTS += \
 	gfxXlibSurface.h \
+        gfxXlibNativeRenderer.h \
 	GLXLibrary.h \
 	$(NULL)
 endif
@@ -166,6 +163,8 @@ endif
 CPPSRCS	= \
 	gfxASurface.cpp \
 	gfxAlphaRecovery.cpp \
+	gfxBlur.cpp \
+	gfxCachedTempSurface.cpp \
 	gfxContext.cpp \
 	gfxImageSurface.cpp \
 	gfxFont.cpp \
@@ -182,6 +181,7 @@ CPPSRCS	= \
 	gfxSkipChars.cpp \
 	gfxTextRunCache.cpp \
 	gfxTextRunWordCache.cpp \
+	gfxThebesUtils.cpp \
 	gfxUserFontSet.cpp \
 	gfxUtils.cpp \
 	gfxUnicodeProperties.cpp \
@@ -277,6 +277,7 @@ CPPSRCS += \
 	gfxFT2Fonts.cpp \
 	gfxFT2FontBase.cpp \
 	gfxFT2Utils.cpp \
+	gfxFT2FontList.cpp \
 	nsUnicodeRange.cpp \
 	$(NULL)
 endif
@@ -300,7 +301,7 @@ CPPSRCS += gfxFT2Fonts.cpp
 endif
 
 ifdef MOZ_X11
-CPPSRCS += gfxXlibSurface.cpp
+CPPSRCS += gfxXlibSurface.cpp gfxXlibNativeRenderer.cpp
 endif
 
 CPPSRCS +=  gfxPlatformGtk.cpp gfxGdkNativeRenderer.cpp
@@ -309,10 +310,6 @@ CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	gfxFT2FontBase.cpp
 CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
-
-ifdef MOZ_X11
-CSRCS = cairo-xlib-utils.c
-endif
 
 ifdef MOZ_DFB
 CSRCS = cairo-gdk-utils.c
@@ -337,7 +334,6 @@ CPPSRCS +=	gfxFT2FontBase.cpp
 CPPSRCS +=	gfxFT2Utils.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
-#CSRCS = cairo-xlib-utils.c
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS) $(XEXT_LIBS)
 endif
 
@@ -365,10 +361,13 @@ CPPSRCS	+= \
 CPPSRCS +=      nsUnicodeRange.cpp
 CPPSRCS +=      gfxQuartzNativeDrawing.cpp
 
-CMMSRCS = gfxMacPlatformFontList.mm
+CMMSRCS = \
+	gfxMacPlatformFontList.mm \
+	nsCoreAnimationSupport.mm \
+	$(NULL)
 
 # Always link with OpenGL/AGL
-EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit
+EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit -framework QuartzCore
 endif
 
 CSRCS += woff.c
@@ -397,7 +396,11 @@ endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+ifdef MOZ_PLATFORM_MAEMO
 GL_PROVIDER = EGL
+else
+GL_PROVIDER = GLX
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)

@@ -153,8 +153,7 @@ NS_IMETHODIMP nsXMLContentBuilder::BeginElement(const nsAString & tagname)
   nsCOMPtr<nsIContent> node;
   {
     EnsureDoc();
-    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(tagname);
-    mDocument->CreateElem(nameAtom, nsnull, mNamespaceId, PR_FALSE, getter_AddRefs(node));
+    mDocument->CreateElem(tagname, nsnull, mNamespaceId, PR_FALSE, getter_AddRefs(node));
   }
   if (!node) {
     NS_ERROR("could not create node");

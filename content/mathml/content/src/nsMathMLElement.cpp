@@ -56,7 +56,7 @@
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-DOMCI_DATA(MathMLElement, nsMathMLElement)
+DOMCI_NODE_DATA(MathMLElement, nsMathMLElement)
 
 NS_INTERFACE_TABLE_HEAD(nsMathMLElement)
   NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsMathMLElement)
@@ -112,7 +112,7 @@ nsMathMLElement::ParseAttribute(PRInt32 aNamespaceID,
         aAttribute == nsGkAtoms::mathcolor_ ||
         aAttribute == nsGkAtoms::background ||
         aAttribute == nsGkAtoms::mathbackground_) {
-      return aResult.ParseColor(aValue, GetOwnerDoc());
+      return aResult.ParseColor(aValue);
     }
   }
 

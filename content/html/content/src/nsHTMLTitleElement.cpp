@@ -49,7 +49,7 @@ class nsHTMLTitleElement : public nsGenericHTMLElement,
                            public nsStubMutationObserver
 {
 public:
-  nsHTMLTitleElement(nsINodeInfo *aNodeInfo);
+  nsHTMLTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLTitleElement();
 
   // nsISupports
@@ -84,6 +84,7 @@ public:
 
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
 
+  virtual nsXPCClassInfo* GetClassInfo();
 private:
   void SendTitleChangeEvent(PRBool aBound);
 };
@@ -92,7 +93,7 @@ private:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Title)
 
 
-nsHTMLTitleElement::nsHTMLTitleElement(nsINodeInfo *aNodeInfo)
+nsHTMLTitleElement::nsHTMLTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   AddMutationObserver(this);
@@ -107,7 +108,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTitleElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTitleElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLTitleElement, nsHTMLTitleElement)
+DOMCI_NODE_DATA(HTMLTitleElement, nsHTMLTitleElement)
 
 // QueryInterface implementation for nsHTMLTitleElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLTitleElement)
@@ -165,7 +166,8 @@ void
 nsHTMLTitleElement::ContentRemoved(nsIDocument *aDocument,
                                    nsIContent *aContainer,
                                    nsIContent *aChild,
-                                   PRInt32 aIndexInContainer)
+                                   PRInt32 aIndexInContainer,
+                                   nsIContent *aPreviousSibling)
 {
   SendTitleChangeEvent(PR_FALSE);
 }

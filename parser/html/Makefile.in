@@ -50,6 +50,12 @@ EXPORTS		= \
 		nsHtml5Module.h \
 		$(NULL)
 
+ifdef MOZ_SVG
+EXPORTS += \
+		nsHtml5SVGLoadDispatcher.h \
+		$(NULL)
+endif
+
 CPPSRCS		= \
 		nsHtml5Atoms.cpp \
 		nsHtml5Atom.cpp \
@@ -61,6 +67,7 @@ CPPSRCS		= \
 		nsHtml5StackNode.cpp \
 		nsHtml5UTF16Buffer.cpp \
 		nsHtml5NamedCharacters.cpp \
+		nsHtml5NamedCharactersAccel.cpp \
 		nsHtml5Tokenizer.cpp \
 		nsHtml5TreeBuilder.cpp \
 		nsHtml5Portability.cpp \
@@ -76,6 +83,12 @@ CPPSRCS		= \
 		nsHtml5Speculation.cpp \
 		nsHtml5SpeculativeLoad.cpp \
 		$(NULL)
+
+ifdef MOZ_SVG
+CPPSRCS += \
+		nsHtml5SVGLoadDispatcher.cpp \
+		$(NULL)
+endif
 
 FORCE_STATIC_LIB = 1
 

@@ -296,8 +296,6 @@ private:
     nsXPIDLCString mAppVersion;
     nsCString      mPlatform;
     nsCString      mOscpu;
-    nsCString      mDeviceType;
-    nsXPIDLCString mSecurity;
     nsCString      mLanguage;
     nsCString      mMisc;
     nsXPIDLCString mVendor;

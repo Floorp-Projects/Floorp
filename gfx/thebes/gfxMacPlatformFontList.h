@@ -66,18 +66,21 @@ public:
     ATSFontRef GetFontRef();
     nsresult ReadCMAP();
 
+    PRBool RequiresAATLayout() const { return mRequiresAAT; }
+
+    virtual nsresult GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer);
+
 protected:
     // for use with data fonts
     MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFontRef,
                    PRUint16 aWeight, PRUint16 aStretch, PRUint32 aItalicStyle,
                    gfxUserFontData *aUserFontData);
 
-    virtual nsresult GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer);
-
     virtual gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
 
     ATSFontRef mATSFontRef;
     PRPackedBool mATSFontRefInitialized;
+    PRPackedBool mRequiresAAT;
 };
 
 class gfxMacPlatformFontList : public gfxPlatformFontList {

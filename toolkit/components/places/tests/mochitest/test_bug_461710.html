@@ -19,12 +19,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=461710
 /** Test for Bug 461710 **/
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+SimpleTest.waitForExplicitFinish();
+
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
-const LAZY_ADD_TIMER = 3000;
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+var gIframe = document.getElementById("iframe");
 
 /**
  * Helper function which waits until another function returns true, and
@@ -68,13 +72,12 @@ var subtests = [
                    "link_page-3.html"     // 4
                ];
 
-
 var testNum = 0;
 function loadNextTest() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   // run the initialization code for each test
-  switch (++ testNum) {
+  switch (++testNum) {
     case 1:
       // nothing to do here
       break;
@@ -97,19 +100,18 @@ function loadNextTest() {
       ok(false, "Unexpected call to loadNextTest for test #" + testNum);
   }
 
-  if (testNum == 1) {
-    // Because of LAZY_ADD, the page won't be marked as visited until three seconds,
-    // so wait for four seconds to be safe
-    setTimeout(handleLoad, LAZY_ADD_TIMER * 2);
-  } else {
+  if (testNum == 1)
+    observer.expectURL(prefix + subtests[0], "uri-visit-saved");
+  else
     observer.expectURL(prefix + subtests[0]);
-    waitForTrue(function() observer.resolved, function() {
-      // And the nodes get notified after the "link-visited" topic, so
-      // we need to execute soon...
-      SimpleTest.executeSoon(handleLoad);
-    });
-  }
-  iframe.src = prefix + subtests[testNum-1];
+
+  waitForTrue(function() observer.resolved, function() {
+    // And the nodes get notified after the "link-visited" topic, so
+    // we need to execute soon...
+    SimpleTest.executeSoon(handleLoad);
+  });
+
+  gIframe.src = prefix + subtests[testNum-1];
 }
 
 function getColor(doc, win, id) {
@@ -128,21 +130,21 @@ function checkTest() {
 
     case 2:
       // run outside of private mode, link should appear as visited
-      var doc = iframe.contentDocument;
+      var doc = gIframe.contentDocument;
       var win = doc.defaultView;
       is(getColor(doc, win, "link"), kRed, "Visited link coloring should work outside of private mode");
       break;
 
     case 3:
       // run inside of private mode, link should appear as not visited
-      var doc = iframe.contentDocument;
+      var doc = gIframe.contentDocument;
       var win = doc.defaultView;
       is(getColor(doc, win, "link"), kBlue, "Visited link coloring should not work inside of private mode");
       break;
 
     case 4:
       // run outside of private mode, link should appear as visited
-      var doc = iframe.contentDocument;
+      var doc = gIframe.contentDocument;
       var win = doc.defaultView;
       is(getColor(doc, win, "link"), kRed, "Visited link coloring should work outside of private mode");
       break;
@@ -176,34 +178,35 @@ function handleLoad() {
   if (testNum < subtests.length) {
     loadNextTest();
   } else {
-    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+    try {
+      Services.prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
+    } catch(ex) {}
     SimpleTest.finish();
   }
 }
 
 const URI_VISITED_RESOLUTION_TOPIC = "visited-status-resolution";
-var os, observer = {
+var observer = {
   uri: null,
   resolved: true,
   observe: function (aSubject, aTopic, aData) {
-    SimpleTest.is(aTopic, URI_VISITED_RESOLUTION_TOPIC, "Unexpected topic");
-
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
     if (this.uri.equals(aSubject.QueryInterface(Ci.nsIURI))) {
       this.resolved = true;
 
-      os.removeObserver(this, URI_VISITED_RESOLUTION_TOPIC);
+      Services.obs.removeObserver(this, aTopic);
     }
   },
-  expectURL: function (url) {
+  expectURL: function (url, aOverrideTopic) {
     ok(this.resolved, "Can't set the expected URL when another is yet to be resolved");
     this.resolved = false;
 
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
     this.uri = NetUtil.newURI(url);
-    os.addObserver(this, URI_VISITED_RESOLUTION_TOPIC, false);
+    var topic = aOverrideTopic || URI_VISITED_RESOLUTION_TOPIC;
+    Services.obs.addObserver(this, topic, false);
   }
 };
 
@@ -212,19 +215,7 @@ if (!pb) { // Private Browsing might not be available
   ok(true, "Private Browsing is not available");
   SimpleTest.finish();
 } else {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
-
-  os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-
-  var iframe = document.getElementById("iframe");
-
-  SimpleTest.waitForExplicitFinish();
-
+  Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
   loadNextTest();
 }
 

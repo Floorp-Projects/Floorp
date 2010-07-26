@@ -56,8 +56,8 @@ class nsSVGAElement : public nsSVGAElementBase,
 {
 protected:
   friend nsresult NS_NewSVGAElement(nsIContent **aResult,
-                                    nsINodeInfo *aNodeInfo);
-  nsSVGAElement(nsINodeInfo *aNodeInfo);
+                                    already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGAElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -104,6 +104,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
 
   virtual StringAttributesInfo GetStringInfo();

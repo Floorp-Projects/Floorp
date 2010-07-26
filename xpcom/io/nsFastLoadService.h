@@ -57,7 +57,7 @@ class nsFastLoadService : public nsIFastLoadService
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFASTLOADSERVICE
 
-    static NS_METHOD
+    static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   private:

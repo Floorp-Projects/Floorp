@@ -198,9 +198,13 @@ public:
   ImageContainer* GetContainer() { return mContainer; }
   gfxPattern::GraphicsFilter GetFilter() { return mFilter; }
 
+  MOZ_LAYER_DECL_NAME("ImageLayer", TYPE_IMAGE)
+
 protected:
   ImageLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD) {}
+
+  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
   nsRefPtr<ImageContainer> mContainer;
   gfxPattern::GraphicsFilter mFilter;

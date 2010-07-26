@@ -55,8 +55,8 @@ class nsSVGMaskElement : public nsSVGMaskElementBase,
 
 protected:
   friend nsresult NS_NewSVGMaskElement(nsIContent **aResult,
-                                         nsINodeInfo *aNodeInfo);
-  nsSVGMaskElement(nsINodeInfo* aNodeInfo);
+                                       already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGMaskElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -73,6 +73,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();

@@ -143,6 +143,7 @@ static void dumpProfile (void)
     entries = reverse(entries);
     vprof_printf ("event avg [min : max] total count\n");
     for (e = entries; e; e = e->next) {
+        if (e->count == 0) continue;  // ignore entries with zero count.
         vprof_printf ("%s", e->file); 
         if (e->line >= 0) {
             vprof_printf (":%d", e->line);
@@ -179,23 +180,6 @@ static void dumpProfile (void)
     entries = reverse(entries);
 }
 
-
-int _profileEntryValue (void* id, int64_t value)
-{
-    entry_t e = (entry_t) id;
-    long* lock = &(e->lock);
-    LOCK (lock);
-       e->value = value;
-       e->sum += value;
-       e->count ++;
-       e->min = MIN (e->min, value);
-       e->max = MAX (e->max, value);
-       if (e->func) e->func (e);
-    UNLOCK (lock);
-
-    return 0;
-}
-
 inline static entry_t findEntry (char* file, int line)
 {
     for (entry_t e =  entries; e; e = e->next) {
@@ -206,7 +190,11 @@ inline static entry_t findEntry (char* file, int line)
     return NULL;
 }
 
-int profileValue(void** id, char* file, int line, int64_t value, ...)
+// Initialize the location pointed to by 'id' to a new value profile entry
+// associated with 'file' and 'line', or do nothing if already initialized.
+// An optional final argument provides a user-defined probe function.
+
+int initValueProfile(void** id, char* file, int line, ...)
 {
     DO_LOCK (&glock);
         entry_t e = (entry_t) *id;
@@ -220,7 +208,7 @@ int profileValue(void** id, char* file, int line, int64_t value, ...)
             if (e) {
                 *id = e;
             }
-        } 
+        }
 
         if (e == NULL) {
             va_list va;
@@ -228,72 +216,58 @@ int profileValue(void** id, char* file, int line, int64_t value, ...)
             e->lock = LOCK_IS_FREE;
             e->file = file;
             e->line = line;
-            e->value = value;
-            e->sum = value;
-            e->count = 1;
-            e->min = value;
-            e->max = value;
-
-            va_start (va, value);
+            e->value = 0;
+            e->sum = 0;
+            e->count = 0;
+            e->min = 0;
+            e->max = 0;
+            // optional probe function argument
+            va_start (va, line);
             e->func = (void (__cdecl*)(void*)) va_arg (va, void*);
             va_end (va);
-
             e->h = NULL;
-
             e->genptr = NULL;
-
             VMPI_memset (&e->ivar,   0, sizeof(e->ivar));
             VMPI_memset (&e->i64var, 0, sizeof(e->i64var));
             VMPI_memset (&e->dvar,   0, sizeof(e->dvar));
-
             e->next = entries;
             entries = e;
-
-            if (e->func) e->func (e);
-
             *id = e;
-        } else {
-            long* lock = &(e->lock);
-            LOCK (lock);
-                e->value = value;
-                e->sum += value;
-                e->count ++;
-                e->min = MIN (e->min, value);
-                e->max = MAX (e->max, value);
-                if (e->func) e->func (e);
-            UNLOCK (lock);
         }
     DO_UNLOCK (&glock);
 
     return 0;
 }
 
-int _histEntryValue (void* id, int64_t value)
+// Record a value profile event.
+
+int profileValue(void* id, int64_t value)
 {
     entry_t e = (entry_t) id;
     long* lock = &(e->lock);
-    hist_t h = e->h;
-    int nbins = h->nbins;
-    int64_t* lb = h->lb;
-    int b;
-
-    for (b = 0; b < nbins; b ++) {
-        if (value < lb[b]) break;
-    }
-
     LOCK (lock);
-       e->value = value;
-       e->sum += value;
-       e->count ++;
-       e->min = MIN (e->min, value);
-       e->max = MAX (e->max, value);
-       h->count[b] ++;
+        e->value = value;
+        if (e->count == 0) {
+            e->sum = value;
+            e->count = 1;
+            e->min = value;
+            e->max = value;
+        } else {
+            e->sum += value;
+            e->count ++;
+            e->min = MIN (e->min, value);
+            e->max = MAX (e->max, value);
+        }
+        if (e->func) e->func (e);
     UNLOCK (lock);
 
     return 0;
 }
 
-int histValue(void** id, char* file, int line, int64_t value, int nbins, ...)
+// Initialize the location pointed to by 'id' to a new histogram profile entry
+// associated with 'file' and 'line', or do nothing if already initialized.
+
+int initHistProfile(void** id, char* file, int line, int nbins, ...)
 {
     DO_LOCK (&glock);
         entry_t e = (entry_t) *id;
@@ -319,11 +293,11 @@ int histValue(void** id, char* file, int line, int64_t value, int nbins, ...)
             e->lock = LOCK_IS_FREE;
             e->file = file;
             e->line = line;
-            e->value = value;
-            e->sum = value;
-            e->count = 1;
-            e->min = value;
-            e->max = value;
+            e->value = 0;
+            e->sum = 0;
+            e->count = 0;
+            e->min = 0;
+            e->max = 0;
             e->func = NULL;
             e->h = h = (hist_t) malloc (sizeof(hist));
             n = 1+MAX(nbins,0);
@@ -343,51 +317,60 @@ int histValue(void** id, char* file, int line, int64_t value, int nbins, ...)
             lb[b] = MAXINT64;
             va_end (va);
 
-            for (b = 0; b < nbins; b ++) {
-                if (value < lb[b]) break;
-            }
-            h->count[b] ++;
-
             e->genptr = NULL;
-
             VMPI_memset (&e->ivar,   0, sizeof(e->ivar));
             VMPI_memset (&e->i64var, 0, sizeof(e->i64var));
             VMPI_memset (&e->dvar,   0, sizeof(e->dvar));
-
             e->next = entries;
             entries = e;
             *id = e;
-        } else {
-            int b;
-            long* lock = &(e->lock);
-            hist_t h=e->h;
-            int64_t* lb = h->lb;
-            
-            LOCK (lock);
-                e->value = value;
-                e->sum += value;
-                e->count ++;
-                e->min = MIN (e->min, value);
-                e->max = MAX (e->max, value);
-                for (b = 0; b < nbins; b ++) {
-                    if (value < lb[b]) break;
-                }
-                h->count[b] ++;
-            UNLOCK (lock);
         }
     DO_UNLOCK (&glock);
 
     return 0;
 }
 
+// Record a histogram profile event.
+
+int histValue(void* id, int64_t value)
+{
+    entry_t e = (entry_t) id;
+    long* lock = &(e->lock);
+    hist_t h = e->h;
+    int nbins = h->nbins;
+    int64_t* lb = h->lb;
+    int b;
+
+    LOCK (lock);
+        e->value = value;
+        if (e->count == 0) {
+            e->sum = value;
+            e->count = 1;
+            e->min = value;
+            e->max = value;
+        } else {
+            e->sum += value;
+            e->count ++;
+            e->min = MIN (e->min, value);
+            e->max = MAX (e->max, value);
+        }
+        for (b = 0; b < nbins; b ++) {
+            if (value < lb[b]) break;
+        }
+        h->count[b] ++;
+    UNLOCK (lock);
+
+    return 0;
+}
+
 #if defined(_MSC_VER) && defined(_M_IX86)
-inline uint64_t _rdtsc() 
+uint64_t readTimestampCounter()
 {
 	// read the cpu cycle counter.  1 tick = 1 cycle on IA32
 	_asm rdtsc;
 }
 #elif defined(__GNUC__) && (__i386__ || __x86_64__)
-inline uint64_t _rdtsc() 
+uint64_t readTimestampCounter()
 {
    uint32_t lo, hi;
    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
@@ -395,16 +378,6 @@ inline uint64_t _rdtsc()
 }
 #else
 // add stub for platforms without it, so fat builds don't fail
-inline uint64_t _rdtsc() { return 0; }
+uint64_t readTimestampCounter() { return 0; }
 #endif
-
-void* _tprof_before_id=0;
-static uint64_t _tprof_before = 0;
-int64_t _tprof_time() 
-{
-    uint64_t now = _rdtsc();
-    uint64_t v = _tprof_before ? now-_tprof_before : 0;
-    _tprof_before = now;
-    return v/2600; // v = microseconds on a 2.6ghz cpu
-}
 

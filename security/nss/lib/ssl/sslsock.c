@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.66 2010/02/26 20:44:54 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: sslsock.c,v 1.67 2010/04/25 23:37:38 nelson%bolyard.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -327,7 +327,7 @@ ssl_DupSocket(sslSocket *os)
 	    ss->ephemeralECDHKeyPair = !os->ephemeralECDHKeyPair ? NULL :
 		                  ssl3_GetKeyPairRef(os->ephemeralECDHKeyPair);
 /*
- * XXX the preceeding CERT_ and SECKEY_ functions can fail and return NULL.
+ * XXX the preceding CERT_ and SECKEY_ functions can fail and return NULL.
  * XXX We should detect this, and not just march on with NULL pointers.
  */
 	    ss->authCertificate       = os->authCertificate;

@@ -63,7 +63,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDocumentTransformer.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsICharsetAlias.h"
 #include "nsIHTMLContentSink.h"
 #include "nsContentUtils.h"
@@ -535,7 +535,7 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
     ni = mNodeInfoManager->GetNodeInfo(aLocalName, aPrefix, aNsID);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_NewElement(getter_AddRefs(mOpenedElement), aNsID, ni, PR_FALSE);
+    NS_NewElement(getter_AddRefs(mOpenedElement), aNsID, ni.forget(), PR_FALSE);
 
     // Set up the element and adjust state
     if (!mNoFixup) {
@@ -627,7 +627,7 @@ txMozillaXMLOutput::createTxWrapper()
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIContent> wrapper;
-    rv = mDocument->CreateElem(nsGkAtoms::result, nsGkAtoms::transformiix,
+    rv = mDocument->CreateElem(nsAtomString(nsGkAtoms::result), nsGkAtoms::transformiix,
                                namespaceID, PR_FALSE, getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -944,7 +944,7 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
                                        kNameSpaceID_XHTML);
     NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-    return NS_NewHTMLElement(aResult, ni, PR_FALSE);
+    return NS_NewHTMLElement(aResult, ni.forget(), PR_FALSE);
 }
 
 txTransformNotifier::txTransformNotifier()

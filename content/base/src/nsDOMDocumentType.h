@@ -57,7 +57,7 @@ class nsDOMDocumentType : public nsGenericDOMDataNode,
                           public nsIDOMDocumentType
 {
 public:
-  nsDOMDocumentType(nsINodeInfo* aNodeInfo,
+  nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
                     nsIAtom *aName,
                     nsIDOMNamedNodeMap *aEntities,
                     nsIDOMNamedNodeMap *aNotations,
@@ -83,7 +83,7 @@ public:
                               nsIContent *aBindingParent,
                               PRBool aCompileEventHandlers);
 
-
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   nsCOMPtr<nsIAtom> mName;
   nsCOMPtr<nsIDOMNamedNodeMap> mEntities;

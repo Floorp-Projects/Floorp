@@ -263,6 +263,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 283686-1.html about:blank
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
+== 289384-1.xhtml 289384-ref.xhtml
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
 asserts(1) == 290129-1.html 290129-1-ref.html # bug 315549/460637
 == 291078-1.html 291078-1-ref.html
@@ -389,7 +390,7 @@ fails-if(!prefs.getBoolPref("html5.enable")) == 311366-unknown-block-3.html 3113
 random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 328829-2.xhtml 328829-2-ref.xhtml
 == 329359-1.html 329359-1-ref.html
-== 331809-1.html 331809-1-ref.html
+== 331809-1.html 331809-1-ref.html # bug 580499 is blacked out
 == 332360.html 332360-ref.html
 == 332360-ltr.html 332360-ltr-ref.html
 == 332360-width.html 332360-ref.html
@@ -999,7 +1000,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 425972-2.html 425972-2-ref.html
 != 425972-1.html 425972-2.html
 == 426629-1.html 426629-1-ref.html
-asserts(3) != 427017-1.xhtml about:blank    # crash test (needs reftest-print)
+asserts(3) != 427017-1.xhtml about:blank # crash test (needs reftest-print). existing assertions are bug 457400.
 == 427129-scrollframe.html 427129-ref.html
 == 427129-table.html 427129-ref.html
 == 427129-image.html 427129-ref.html
@@ -1296,6 +1297,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") ==
 == 488649-1.html 488649-1-ref.html
 == 488685-1.html 488685-1-ref.html
 == 488692-1.html 488692-1-ref.html
+== 489868-1.svg 489868-1-ref.svg 
 == 490176-1.html 490176-1-ref.html
 == 490177-1.svg 490177-1-ref.svg
 == 490182-1a.html 490182-1-ref.html
@@ -1356,8 +1358,7 @@ asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 507762-2.html 507762-2-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
-# see bug 556124
-random == 508908-1.xul 508908-1-ref.xul
+== 508908-1.xul 508908-1-ref.xul
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
 == 512410.html 512410-ref.html
@@ -1394,7 +1395,7 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 528038-1d.html 528038-1-ref.html
 == 528038-1e.html 528038-1-ref.html
 == 528038-1f.html 528038-1-ref.html
-asserts(5) == 528038-2.html 528038-2-ref.html
+asserts(5) == 528038-2.html 528038-2-ref.html # bug 512749
 == 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
 == 531098-1.html 531098-1-ref.html
@@ -1430,6 +1431,7 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 556661-1.html 556661-1-ref.html
 == 557736-1.html 557736-1-ref.html
 == 559284-1.html 559284-1-ref.html
+== 560455-1.xul 560455-1-ref.xul
 == 561981-1.html 561981-1-ref.html
 == 561981-2.html 561981-2-ref.html
 == 561981-3.html 561981-3-ref.html
@@ -1441,11 +1443,19 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 562835-1.html 562835-ref.html
 == 562835-2.html 562835-ref.html
 == 564054-1.html 564054-1-ref.html
+== 564991-1.html 564991-1-ref.html
 == 565819-1.html 565819-ref.html
 == 565819-2.html 565819-ref.html
 == 569006-1.html 569006-1-ref.html
 == 571281-1a.html 571281-1-ref.html
 == 571281-1b.html 571281-1-ref.html
 == 571281-1c.html 571281-1-ref.html
+== 571347-1a.html 571347-1-ref.html
+== 571347-1b.html 571347-1-ref.html
+== 571347-2a.html 571347-2-ref.html
+== 571347-2b.html 571347-2-ref.html
+== 571347-2c.html 571347-2-ref.html
+== 571347-2d.html 571347-2-ref.html
+== 571347-3.html 571347-3-ref.html
 == 572598-1.html 572598-ref.html
 == 574898-1.html 574898-ref.html

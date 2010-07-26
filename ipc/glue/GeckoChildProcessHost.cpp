@@ -53,8 +53,11 @@
 
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
+#include "nsILocalFile.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+#include "mozilla/Omnijar.h"
+#include <sys/stat.h>
 
 #ifdef XP_WIN
 #include "nsIWinTaskbar.h"
@@ -104,9 +107,36 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
     );
 }
 
+#ifdef XP_WIN
+void GeckoChildProcessHost::InitWindowsGroupID()
+{
+  // On Win7+, pass the application user model to the child, so it can
+  // register with it. This insures windows created by the container
+  // properly group with the parent app on the Win7 taskbar.
+  nsCOMPtr<nsIWinTaskbar> taskbarInfo =
+    do_GetService(NS_TASKBAR_CONTRACTID);
+  if (taskbarInfo) {
+    PRBool isSupported = PR_FALSE;
+    taskbarInfo->GetAvailable(&isSupported);
+    nsAutoString appId;
+    if (isSupported && NS_SUCCEEDED(taskbarInfo->GetDefaultGroupId(appId))) {
+      mGroupId.Assign(PRUnichar('\"'));
+      mGroupId.Append(appId);
+      mGroupId.Append(PRUnichar('\"'));
+    } else {
+      mGroupId.AssignLiteral("-");
+    }
+  }
+}
+#endif
+
 bool
 GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
 {
+#ifdef XP_WIN
+  InitWindowsGroupID();
+#endif
+
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   NS_ASSERTION(MessageLoop::current() != ioLoop, "sync launch from the IO thread NYI");
 
@@ -128,6 +158,10 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
 bool
 GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 {
+#ifdef XP_WIN
+  InitWindowsGroupID();
+#endif
+
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this,
@@ -185,7 +219,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   // we split the logic here.
 
   FilePath exePath;
-#ifdef OS_LINUX
+#if defined(OS_LINUX) || defined(OS_MACOSX)
   base::environment_map newEnvVars;
 #endif
 
@@ -197,14 +231,39 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     greDir->GetNativePath(path);
     exePath = FilePath(path.get());
 #ifdef OS_LINUX
+#ifdef ANDROID
+    path += "/lib";
+#endif
     newEnvVars["LD_LIBRARY_PATH"] = path.get();
+#elif OS_MACOSX
+    newEnvVars["DYLD_LIBRARY_PATH"] = path.get();
+#endif
+#ifdef MOZ_OMNIJAR
+    // Make sure the child process can find the omnijar
+    // See ScopedXPCOMStartup::Initialize in nsAppRunner.cpp
+    nsCAutoString omnijarPath;
+    if (mozilla::OmnijarPath())
+      mozilla::OmnijarPath()->GetNativePath(omnijarPath);
+    newEnvVars["OMNIJAR_PATH"] = omnijarPath.get();
 #endif
   }
   else {
     exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
     exePath = exePath.DirName();
   }
+
+#ifdef OS_MACOSX
+  // We need to use an App Bundle on OS X so that we can hide
+  // the dock icon. See Bug 557225
+  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_BUNDLE);
+#endif
+
   exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+
+#ifdef ANDROID
+  // The java wrapper unpacks this for us but can't make it executable
+  chmod(exePath.value().c_str(), 0700);
+#endif
 
   // remap the IPC socket fd to a well-known int, as the OS does for
   // STDOUT_FILENO, for example
@@ -247,7 +306,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 #endif
 
   base::LaunchApp(childArgv, mFileMap,
-#ifdef OS_LINUX
+#if defined(OS_LINUX) || defined(OS_MACOSX)
                   newEnvVars,
 #endif
                   false, &process);
@@ -270,31 +329,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
       cmdLine.AppendLooseValue(UTF8ToWide(*it));
   }
 
-  // On Win7+, pass the application user model to the child, so it can
-  // register with it. This insures windows created by the container
-  // properly group with the parent app on the Win7 taskbar.
-  nsCOMPtr<nsIWinTaskbar> taskbarInfo =
-    do_GetService(NS_TASKBAR_CONTRACTID);
-  PRBool set = PR_FALSE;
-  if (taskbarInfo) {
-    PRBool isSupported = PR_FALSE;
-    taskbarInfo->GetAvailable(&isSupported);
-    if (isSupported) {
-      // Set the id for the container.
-      nsAutoString appId, param;
-      param.Append(PRUnichar('\"'));
-      if (NS_SUCCEEDED(taskbarInfo->GetDefaultGroupId(appId))) {
-        param.Append(appId);
-        param.Append(PRUnichar('\"'));
-        cmdLine.AppendLooseValue(std::wstring(param.get()));
-        set = PR_TRUE;
-      }
-    }
-  }
-  if (!set) {
-    cmdLine.AppendLooseValue(std::wstring(L"-"));
-  }
-
+  cmdLine.AppendLooseValue(std::wstring(mGroupId.get()));
   cmdLine.AppendLooseValue(UTF8ToWide(pidstring));
   cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));
 #if defined(MOZ_CRASHREPORTER)

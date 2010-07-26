@@ -70,17 +70,10 @@ TimeDuration::ToSecondsSigDigits() const
 }
 
 TimeDuration
-TimeDuration::FromSeconds(PRInt32 aSeconds)
+TimeDuration::FromMilliseconds(double aMilliseconds)
 {
-  // No overflow is possible here
-  return TimeDuration::FromTicks(PRInt64(aSeconds)*PR_TicksPerSecond());
-}
-
-TimeDuration
-TimeDuration::FromMilliseconds(PRInt32 aMilliseconds)
-{
-  // No overflow is possible here
-  return TimeDuration::FromTicks(PRInt64(aMilliseconds)*PR_TicksPerSecond()/1000);
+  static double kTicksPerMs = double(PR_TicksPerSecond()) / 1000.0;
+  return TimeDuration::FromTicks(aMilliseconds * kTicksPerMs);
 }
 
 TimeDuration
@@ -88,7 +81,7 @@ TimeDuration::Resolution()
 {
   // This is grossly nonrepresentative of actual system capabilities
   // on some platforms
-  return TimeDuration::FromTicks(1);
+  return TimeDuration::FromTicks(PRInt64(1));
 }
 
 nsresult

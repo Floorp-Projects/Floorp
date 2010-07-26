@@ -56,8 +56,8 @@ class nsSVGMpathElement : public nsSVGMpathElementBase,
 {
 protected:
   friend nsresult NS_NewSVGMpathElement(nsIContent **aResult,
-                                        nsINodeInfo *aNodeInfo);
-  nsSVGMpathElement(nsINodeInfo* aNodeInfo);
+                                        already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGMpathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   ~nsSVGMpathElement();
 
 
@@ -97,6 +97,7 @@ public:
   // this returns nsnull.
   nsSVGPathElement* GetReferencedPath();
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   class PathReference : public nsReferencedElement {
   public:

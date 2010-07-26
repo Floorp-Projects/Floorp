@@ -58,9 +58,7 @@ ContentPrefService.prototype = {
   //**************************************************************************//
   // XPCOM Plumbing
 
-  classDescription: "Content Pref Service",
   classID:          Components.ID("{e6a3f533-4ffa-4615-8eb4-d4e72d883fa7}"),
-  contractID:       "@mozilla.org/content-pref/service;1",
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentPrefService]),
 
 
@@ -1024,11 +1022,8 @@ HostnameGrouper.prototype = {
   //**************************************************************************//
   // XPCOM Plumbing
   
-  classDescription: "Hostname Grouper",
   classID:          Components.ID("{8df290ae-dcaa-4c11-98a5-2429a4dc97bb}"),
-  contractID:       "@mozilla.org/content-pref/hostname-grouper;1",
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentURIGrouper]),
-
 
   //**************************************************************************//
   // nsIContentURIGrouper
@@ -1103,6 +1098,4 @@ AsyncStatement.prototype = {
 // XPCOM Plumbing
 
 var components = [ContentPrefService, HostnameGrouper];
-var NSGetModule = function ContentPrefService_NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule(components);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

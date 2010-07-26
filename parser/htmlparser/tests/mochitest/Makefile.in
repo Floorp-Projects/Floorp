@@ -59,10 +59,17 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug460437.xhtml \
 		test_bug502091.html \
 		bug_502091_iframe.html \
+		test_bug552938.html \
+		test_bug552938-2.html \
 		test_bug566879.html \
 		test_compatmode.html \
 		invalidchar.xml \
 		$(NULL)
+
+# Disabled test due to orange on Linux
+#		test_bug568470.html \
+#		file_bug568470.sjs \
+#		file_bug568470-script.sjs \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

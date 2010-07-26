@@ -4,6 +4,8 @@ toolkit.jar:
 # NOTE: If you add a new file here, you'll need to add it to the aero
 # section at the bottom of this file
         skin/classic/global/about.css
+        skin/classic/global/aboutCache.css
+        skin/classic/global/aboutCacheEntry.css
         skin/classic/global/aboutMemory.css
         skin/classic/global/aboutSupport.css
         skin/classic/global/appPicker.css
@@ -94,7 +96,6 @@ toolkit.jar:
         skin/classic/global/icons/blacklist_large.png            (icons/blacklist_large.png)
         skin/classic/global/icons/Close.gif                      (icons/Close.gif)
         skin/classic/global/icons/close.png                      (icons/close.png)
-        skin/classic/global/icons/closeSidebar.png               (icons/closeSidebar.png)
         skin/classic/global/icons/collapse.png                   (icons/collapse.png)
         skin/classic/global/icons/Error.png                      (icons/Error.png)
         skin/classic/global/icons/error-16.png                   (icons/error-16.png)
@@ -170,6 +171,8 @@ toolkit.jar:
 toolkit.jar:
 % skin global classic/1.0 %skin/classic/aero/global/ os=WINNT osversion>=6
         skin/classic/aero/global/about.css
+        skin/classic/aero/global/aboutCache.css
+        skin/classic/aero/global/aboutCacheEntry.css
         skin/classic/aero/global/aboutMemory.css
         skin/classic/aero/global/aboutSupport.css
         skin/classic/aero/global/appPicker.css
@@ -259,8 +262,7 @@ toolkit.jar:
         skin/classic/aero/global/icons/blacklist_favicon.png             (icons/blacklist_favicon-aero.png)
         skin/classic/aero/global/icons/blacklist_large.png               (icons/blacklist_large-aero.png)
         skin/classic/aero/global/icons/Close.gif                         (icons/Close.gif)
-        skin/classic/aero/global/icons/close.png                         (icons/close-aero.png)
-        skin/classic/aero/global/icons/closeSidebar.png                  (icons/closeSidebar-aero.png)
+        skin/classic/aero/global/icons/close.png                         (icons/close.png)
         skin/classic/aero/global/icons/collapse.png                      (icons/collapse.png)
         skin/classic/aero/global/icons/Error.png                         (icons/Error-aero.png)
         skin/classic/aero/global/icons/error-16.png                      (icons/error-16-aero.png)

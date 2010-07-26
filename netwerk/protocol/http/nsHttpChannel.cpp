@@ -28,6 +28,8 @@
  *   Jan Odvarko <odvarko@gmail.com>
  *   Dave Camp <dcamp@mozilla.com>
  *   Honza Bambas <honzab@firemni.cz>
+ *   Daniel Witte <dwitte@mozilla.com>
+ *   Jason Duell <jduell.mcbugs@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,38 +45,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "base/basictypes.h"
+#endif 
+
 #include "nsHttpChannel.h"
-#include "nsHttpTransaction.h"
-#include "nsHttpConnection.h"
 #include "nsHttpHandler.h"
-#include "nsHttpAuthCache.h"
-#include "nsHttpResponseHead.h"
-#include "nsHttp.h"
 #include "nsIApplicationCacheService.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIAuthInformation.h"
 #include "nsIStringBundle.h"
-#include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIURL.h"
 #include "nsIIDNService.h"
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
 #include "nsMimeTypes.h"
-#include "nsNetUtil.h"
-#include "nsString.h"
 #include "nsPrintfCString.h"
-#include "nsReadableUtils.h"
-#include "nsUnicharUtils.h"
-#include "nsAutoPtr.h"
-#include "plstr.h"
+#include "nsNetUtil.h"
 #include "prprf.h"
 #include "nsEscape.h"
-#include "nsICookieService.h"
-#include "nsIResumableChannel.h"
 #include "nsInt64.h"
-#include "nsIVariant.h"
-#include "nsChannelProperties.h"
 #include "nsStreamUtils.h"
 #include "nsIOService.h"
 #include "nsICacheService.h"
@@ -93,32 +82,18 @@ static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 //-----------------------------------------------------------------------------
 
 nsHttpChannel::nsHttpChannel()
-    : mResponseHead(nsnull)
-    , mTransaction(nsnull)
-    , mConnectionInfo(nsnull)
-    , mLoadFlags(LOAD_NORMAL)
-    , mStatus(NS_OK)
-    , mLogicalOffset(0)
-    , mCaps(0)
-    , mPriority(PRIORITY_NORMAL)
-    , mCachedResponseHead(nsnull)
+    : mLogicalOffset(0)
     , mCacheAccess(0)
     , mPostID(0)
     , mRequestTime(0)
     , mStartPos(LL_MAXUINT)
     , mPendingAsyncCallOnResume(nsnull)
     , mSuspendCount(0)
-    , mRedirectionLimit(gHttpHandler->RedirectionLimit())
-    , mIsPending(PR_FALSE)
-    , mWasOpened(PR_FALSE)
     , mApplyConversion(PR_TRUE)
-    , mAllowPipelining(PR_TRUE)
     , mCachedContentIsValid(PR_FALSE)
     , mCachedContentIsPartial(PR_FALSE)
-    , mResponseHeadersModified(PR_FALSE)
     , mCanceled(PR_FALSE)
     , mTransactionReplaced(PR_FALSE)
-    , mUploadStreamHasHeaders(PR_FALSE)
     , mAuthRetryPending(PR_FALSE)
     , mResuming(PR_FALSE)
     , mInitedCacheEntry(PR_FALSE)
@@ -129,34 +104,18 @@ nsHttpChannel::nsHttpChannel()
     , mChooseApplicationCache(PR_FALSE)
     , mLoadedFromApplicationCache(PR_FALSE)
     , mTracingEnabled(PR_TRUE)
-    , mForceAllowThirdPartyCookie(PR_FALSE)
     , mCustomConditionalRequest(PR_FALSE)
+    , mRemoteChannel(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
-
-    // grab a reference to the handler to ensure that it doesn't go away.
-    nsHttpHandler *handler = gHttpHandler;
-    NS_ADDREF(handler);
 }
 
 nsHttpChannel::~nsHttpChannel()
 {
     LOG(("Destroying nsHttpChannel [this=%p]\n", this));
 
-    if (mAuthProvider) {
+    if (mAuthProvider) 
         mAuthProvider->Disconnect(NS_ERROR_ABORT);
-        mAuthProvider = nsnull;
-    }
-    
-    NS_IF_RELEASE(mConnectionInfo);
-    NS_IF_RELEASE(mTransaction);
-
-    delete mResponseHead;
-    delete mCachedResponseHead;
-
-    // release our reference to the handler
-    nsHttpHandler *handler = gHttpHandler;
-    NS_RELEASE(handler);
 }
 
 nsresult
@@ -164,83 +123,21 @@ nsHttpChannel::Init(nsIURI *uri,
                     PRUint8 caps,
                     nsProxyInfo *proxyInfo)
 {
+    nsresult rv = HttpBaseChannel::Init(uri, caps, proxyInfo);
+    if (NS_FAILED(rv)) 
+        return rv;
+
     LOG(("nsHttpChannel::Init [this=%p]\n", this));
-
-    NS_PRECONDITION(uri, "null uri");
-
-    nsresult rv = nsHashPropertyBag::Init();
-    if (NS_FAILED(rv))
-        return rv;
-
-    mURI = uri;
-    mOriginalURI = uri;
-    mDocumentURI = nsnull;
-    mCaps = caps;
-
-    //
-    // Construct connection info object
-    //
-    nsCAutoString host;
-    PRInt32 port = -1;
-    PRBool usingSSL = PR_FALSE;
-    
-    rv = mURI->SchemeIs("https", &usingSSL);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mURI->GetAsciiHost(host);
-    if (NS_FAILED(rv)) return rv;
-
-    // reject the URL if it doesn't specify a host
-    if (host.IsEmpty())
-        return NS_ERROR_MALFORMED_URI;
-
-    rv = mURI->GetPort(&port);
-    if (NS_FAILED(rv)) return rv;
-
-    LOG(("host=%s port=%d\n", host.get(), port));
-
-    rv = mURI->GetAsciiSpec(mSpec);
-    if (NS_FAILED(rv)) return rv;
-
-    LOG(("uri=%s\n", mSpec.get()));
-
-    mConnectionInfo = new nsHttpConnectionInfo(host, port,
-                                               proxyInfo, usingSSL);
-    if (!mConnectionInfo)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mConnectionInfo);
-
-    // Set default request method
-    mRequestHead.SetMethod(nsHttp::Get);
-
-    //
-    // Set request headers
-    //
-    nsCAutoString hostLine;
-    rv = nsHttpHandler::GenerateHostPort(host, port, hostLine);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = gHttpHandler->
-        AddStandardRequestHeaders(&mRequestHead.Headers(), caps,
-                                  !mConnectionInfo->UsingSSL() &&
-                                  mConnectionInfo->UsingHttpProxy());
-    if (NS_FAILED(rv)) return rv;
 
     mAuthProvider =
         do_CreateInstance("@mozilla.org/network/http-channel-auth-provider;1",
                           &rv);
-    if (NS_FAILED(rv)) return rv;
-
+    if (NS_FAILED(rv)) 
+        return rv;
     rv = mAuthProvider->Init(this);
-    if (NS_FAILED(rv)) return rv;
-    
+
     return rv;
 }
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel <private>
 //-----------------------------------------------------------------------------
@@ -651,7 +548,6 @@ nsHttpChannel::SetupTransaction()
     mTransaction = new nsHttpTransaction();
     if (!mTransaction)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mTransaction);
 
     // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
     if (mLoadFlags & LOAD_ANONYMOUS)
@@ -665,39 +561,13 @@ nsHttpChannel::SetupTransaction()
                             NS_GetCurrentThread(), callbacks, this,
                             getter_AddRefs(responseStream));
     if (NS_FAILED(rv)) {
-        NS_RELEASE(mTransaction);
+        mTransaction = nsnull;
         return rv;
     }
 
     rv = nsInputStreamPump::Create(getter_AddRefs(mTransactionPump),
                                    responseStream);
     return rv;
-}
-
-void
-nsHttpChannel::AddCookiesToRequest()
-{
-    if (mLoadFlags & LOAD_ANONYMOUS) {
-      return;
-    }
-
-    nsXPIDLCString cookie;
-
-    nsICookieService *cs = gHttpHandler->GetCookieService();
-    if (cs)
-        cs->GetCookieStringFromHttp(mURI,
-                                    mDocumentURI ? mDocumentURI : mOriginalURI,
-                                    this,
-                                    getter_Copies(cookie));
-    if (cookie.IsEmpty())
-        cookie = mUserSetCookieHeader;
-    else if (!mUserSetCookieHeader.IsEmpty())
-        cookie.Append(NS_LITERAL_CSTRING("; ") + mUserSetCookieHeader);
-
-    // overwrite any existing cookie headers.  be sure to clear any
-    // existing cookies if we have no cookies to set or if the cookie
-    // service is unavailable.
-    mRequestHead.SetHeader(nsHttp::Cookie, cookie, PR_FALSE);
 }
 
 nsresult
@@ -963,9 +833,12 @@ nsHttpChannel::ProcessResponse()
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
 
-    // set cookies, if any exist; done after OnExamineResponse to allow those
-    // observers to modify the cookie response headers
-    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+    if (!mRemoteChannel) {
+      // For non-remote channels, we are responsible for cookies.
+      // Set cookies, if any exist; done after OnExamineResponse to allow those
+      // observers to modify the cookie response headers.
+      SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+    }
 
     // handle unused username and password in url (see bug 232567)
     if (httpStatus != 401 && httpStatus != 407) {
@@ -1433,9 +1306,7 @@ nsHttpChannel::ProcessPartialContent()
     if (NS_FAILED(rv)) return rv;
 
     // make the cached response be the current response
-    delete mResponseHead;
     mResponseHead = mCachedResponseHead;
-    mCachedResponseHead = 0;
 
     rv = UpdateExpirationTime();
     if (NS_FAILED(rv)) return rv;
@@ -1516,9 +1387,7 @@ nsHttpChannel::ProcessNotModified()
     if (NS_FAILED(rv)) return rv;
 
     // make the cached response be the current response
-    delete mResponseHead;
     mResponseHead = mCachedResponseHead;
-    mCachedResponseHead = 0;
 
     rv = UpdateExpirationTime();
     if (NS_FAILED(rv)) return rv;
@@ -2046,7 +1915,6 @@ nsHttpChannel::CheckCache()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Parse the cached HTTP response headers
-    NS_ASSERTION(!mCachedResponseHead, "memory leak detected");
     mCachedResponseHead = new nsHttpResponseHead();
     if (!mCachedResponseHead)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -2341,11 +2209,8 @@ nsHttpChannel::ReadFromCache()
     LOG(("nsHttpChannel::ReadFromCache [this=%p] "
          "Using cached copy of: %s\n", this, mSpec.get()));
 
-    if (mCachedResponseHead) {
-        NS_ASSERTION(!mResponseHead, "memory leak");
+    if (mCachedResponseHead)
         mResponseHead = mCachedResponseHead;
-        mCachedResponseHead = 0;
-    }
 
     // if we don't already have security info, try to get it from the cache 
     // entry. there are two cases to consider here: 1) we are just reading
@@ -2427,10 +2292,7 @@ nsHttpChannel::CloseCacheEntry(PRBool doomOnFailure)
         mCacheEntry->Doom();
     }
 
-    if (mCachedResponseHead) {
-        delete mCachedResponseHead;
-        mCachedResponseHead = 0;
-    }
+    mCachedResponseHead = nsnull;
 
     mCachePump = 0;
     mCacheEntry = 0;
@@ -2855,6 +2717,9 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     // convey the new redirection limit
     httpChannel->SetRedirectionLimit(mRedirectionLimit - 1);
 
+    nsHttpChannel *httpChannelImpl = static_cast<nsHttpChannel*>(httpChannel.get());
+    httpChannelImpl->SetRemoteChannel(mRemoteChannel);
+
     nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
     if (httpInternal) {
         // convey the mForceAllowThirdPartyCookie flag
@@ -3088,8 +2953,8 @@ NS_IMETHODIMP nsHttpChannel::OnAuthCancelled(PRBool userCancel)
 // nsHttpChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ADDREF_INHERITED(nsHttpChannel, nsHashPropertyBag)
-NS_IMPL_RELEASE_INHERITED(nsHttpChannel, nsHashPropertyBag)
+NS_IMPL_ADDREF_INHERITED(nsHttpChannel, HttpBaseChannel)
+NS_IMPL_RELEASE_INHERITED(nsHttpChannel, HttpBaseChannel)
 
 NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIRequest)
@@ -3097,6 +2962,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
     NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
+    NS_INTERFACE_MAP_ENTRY(nsICacheInfoChannel)
     NS_INTERFACE_MAP_ENTRY(nsICachingChannel)
     NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
     NS_INTERFACE_MAP_ENTRY(nsIUploadChannel2)
@@ -3112,34 +2978,11 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
-NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
+NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIRequest
 //-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::GetName(nsACString &aName)
-{
-    aName = mSpec;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::IsPending(PRBool *value)
-{
-    NS_ENSURE_ARG_POINTER(value);
-    *value = mIsPending;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetStatus(nsresult *aStatus)
-{
-    NS_ENSURE_ARG_POINTER(aStatus);
-    *aStatus = mStatus;
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHttpChannel::Cancel(nsresult status)
@@ -3202,93 +3045,9 @@ nsHttpChannel::Resume()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHttpChannel::GetLoadGroup(nsILoadGroup **aLoadGroup)
-{
-    NS_ENSURE_ARG_POINTER(aLoadGroup);
-    *aLoadGroup = mLoadGroup;
-    NS_IF_ADDREF(*aLoadGroup);
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsHttpChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
-{
-    mLoadGroup = aLoadGroup;
-    mProgressSink = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
-{
-    NS_ENSURE_ARG_POINTER(aLoadFlags);
-    *aLoadFlags = mLoadFlags;
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsHttpChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
-{
-    mLoadFlags = aLoadFlags;
-    return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIChannel
 //-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::GetOriginalURI(nsIURI **originalURI)
-{
-    NS_ENSURE_ARG_POINTER(originalURI);
-    *originalURI = mOriginalURI;
-    NS_ADDREF(*originalURI);
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsHttpChannel::SetOriginalURI(nsIURI *originalURI)
-{
-    NS_ENSURE_ARG_POINTER(originalURI);
-    mOriginalURI = originalURI;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetURI(nsIURI **URI)
-{
-    NS_ENSURE_ARG_POINTER(URI);
-    *URI = mURI;
-    NS_IF_ADDREF(*URI);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetOwner(nsISupports **owner)
-{
-    NS_ENSURE_ARG_POINTER(owner);
-    *owner = mOwner;
-    NS_IF_ADDREF(*owner);
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsHttpChannel::SetOwner(nsISupports *owner)
-{
-    mOwner = owner;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetNotificationCallbacks(nsIInterfaceRequestor **callbacks)
-{
-    NS_IF_ADDREF(*callbacks = mCallbacks);
-    return NS_OK;
-}
-NS_IMETHODIMP
-nsHttpChannel::SetNotificationCallbacks(nsIInterfaceRequestor *callbacks)
-{
-    mCallbacks = callbacks;
-    mProgressSink = nsnull;
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHttpChannel::GetSecurityInfo(nsISupports **securityInfo)
@@ -3297,103 +3056,6 @@ nsHttpChannel::GetSecurityInfo(nsISupports **securityInfo)
     *securityInfo = mSecurityInfo;
     NS_IF_ADDREF(*securityInfo);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetContentType(nsACString &value)
-{
-    if (!mResponseHead) {
-        // We got no data, we got no headers, we got nothing
-        value.Truncate();
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    if (!mResponseHead->ContentType().IsEmpty()) {
-        value = mResponseHead->ContentType();
-        return NS_OK;
-    }
-
-    
-    value.AssignLiteral(UNKNOWN_CONTENT_TYPE);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetContentType(const nsACString &value)
-{
-    if (mListener || mWasOpened) {
-        if (!mResponseHead)
-            return NS_ERROR_NOT_AVAILABLE;
-
-        nsCAutoString contentTypeBuf, charsetBuf;
-        PRBool hadCharset;
-        net_ParseContentType(value, contentTypeBuf, charsetBuf, &hadCharset);
-
-        mResponseHead->SetContentType(contentTypeBuf);
-
-        // take care not to stomp on an existing charset
-        if (hadCharset)
-            mResponseHead->SetContentCharset(charsetBuf);
-    } else {
-        // We are being given a content-type hint.
-        PRBool dummy;
-        net_ParseContentType(value, mContentTypeHint, mContentCharsetHint,
-                             &dummy);
-    }
-    
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetContentCharset(nsACString &value)
-{
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    value = mResponseHead->ContentCharset();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetContentCharset(const nsACString &value)
-{
-    if (mListener) {
-        if (!mResponseHead)
-            return NS_ERROR_NOT_AVAILABLE;
-
-        mResponseHead->SetContentCharset(value);
-    } else {
-        // Charset hint
-        mContentCharsetHint = value;
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetContentLength(PRInt32 *value)
-{
-    NS_ENSURE_ARG_POINTER(value);
-
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    // XXX truncates to 32 bit
-    LL_L2I(*value, mResponseHead->ContentLength());
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetContentLength(PRInt32 value)
-{
-    NS_NOTYETIMPLEMENTED("nsHttpChannel::SetContentLength");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::Open(nsIInputStream **_retval)
-{
-    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
-    return NS_ImplementChannelOpen(this, _retval);
 }
 
 NS_IMETHODIMP
@@ -3421,13 +3083,17 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         }
     }
     
-    // Remember the cookie header that was set, if any
-    const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
-    if (cookieHeader)
-        mUserSetCookieHeader = cookieHeader;
+    if (!mRemoteChannel) {
+      // For non-remote channels, we are responsible for cookies.
 
-    // fetch cookies, and add them to the request header
-    AddCookiesToRequest();
+      // Remember the cookie header that was set, if any
+      const char *cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
+      if (cookieHeader) {
+        mUserSetCookieHeader = cookieHeader;
+      }
+
+      AddCookiesToRequest();
+    }
 
     // notify "http-on-modify-request" observers
     gHttpHandler->OnModifyRequest(this);
@@ -3464,9 +3130,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         LOG(("Calling AsyncAbort [rv=%x mCanceled=%i]\n", rv, mCanceled));
         CloseCacheEntry(PR_TRUE);
         AsyncAbort(rv);
-    }
-
-    if (mLoadFlags & LOAD_CLASSIFY_URI) {
+    } else if (mLoadFlags & LOAD_CLASSIFY_URI) {
         nsRefPtr<nsChannelClassifier> classifier = new nsChannelClassifier();
         if (!classifier) {
             Cancel(NS_ERROR_OUT_OF_MEMORY);
@@ -3481,413 +3145,24 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     return NS_OK;
 }
+
 //-----------------------------------------------------------------------------
-// nsHttpChannel::nsIHttpChannel
+// nsHttpChannel::nsIHttpChannelInternal
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::GetRequestMethod(nsACString &method)
+nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
 {
-    method = mRequestHead.Method();
+    LOG(("nsHttpChannel::SetupFallbackChannel [this=%x, key=%s]",
+         this, aFallbackKey));
+    mFallbackChannel = PR_TRUE;
+    mFallbackKey = aFallbackKey;
+
     return NS_OK;
 }
-NS_IMETHODIMP
-nsHttpChannel::SetRequestMethod(const nsACString &method)
-{
-    NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
-
-    const nsCString &flatMethod = PromiseFlatCString(method);
-
-    // Method names are restricted to valid HTTP tokens.
-    if (!nsHttp::IsValidToken(flatMethod))
-        return NS_ERROR_INVALID_ARG;
-
-    nsHttpAtom atom = nsHttp::ResolveAtom(flatMethod.get());
-    if (!atom)
-        return NS_ERROR_FAILURE;
-
-    mRequestHead.SetMethod(atom);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetReferrer(nsIURI **referrer)
-{
-    NS_ENSURE_ARG_POINTER(referrer);
-    *referrer = mReferrer;
-    NS_IF_ADDREF(*referrer);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetReferrer(nsIURI *referrer)
-{
-    NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
-
-    // clear existing referrer, if any
-    mReferrer = nsnull;
-    mRequestHead.ClearHeader(nsHttp::Referer);
-
-    if (!referrer)
-        return NS_OK;
-
-    // check referrer blocking pref
-    PRUint32 referrerLevel;
-    if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI)
-        referrerLevel = 1; // user action
-    else
-        referrerLevel = 2; // inline content
-    if (gHttpHandler->ReferrerLevel() < referrerLevel)
-        return NS_OK;
-
-    nsCOMPtr<nsIURI> referrerGrip;
-    nsresult rv;
-    PRBool match;
-
-    //
-    // Strip off "wyciwyg://123/" from wyciwyg referrers.
-    //
-    // XXX this really belongs elsewhere since wyciwyg URLs aren't part of necko.
-    //     perhaps some sort of generic nsINestedURI could be used.  then, if an URI
-    //     fails the whitelist test, then we could check for an inner URI and try
-    //     that instead.  though, that might be too automatic.
-    // 
-    rv = referrer->SchemeIs("wyciwyg", &match);
-    if (NS_FAILED(rv)) return rv;
-    if (match) {
-        nsCAutoString path;
-        rv = referrer->GetPath(path);
-        if (NS_FAILED(rv)) return rv;
-
-        PRUint32 pathLength = path.Length();
-        if (pathLength <= 2) return NS_ERROR_FAILURE;
-
-        // Path is of the form "//123/http://foo/bar", with a variable number of digits.
-        // To figure out where the "real" URL starts, search path for a '/', starting at 
-        // the third character.
-        PRInt32 slashIndex = path.FindChar('/', 2);
-        if (slashIndex == kNotFound) return NS_ERROR_FAILURE;
-
-        // Get the charset of the original URI so we can pass it to our fixed up URI.
-        nsCAutoString charset;
-        referrer->GetOriginCharset(charset);
-
-        // Replace |referrer| with a URI without wyciwyg://123/.
-        rv = NS_NewURI(getter_AddRefs(referrerGrip),
-                       Substring(path, slashIndex + 1, pathLength - slashIndex - 1),
-                       charset.get());
-        if (NS_FAILED(rv)) return rv;
-
-        referrer = referrerGrip.get();
-    }
-
-    //
-    // block referrer if not on our white list...
-    //
-    static const char *const referrerWhiteList[] = {
-        "http",
-        "https",
-        "ftp",
-        nsnull
-    };
-    match = PR_FALSE;
-    const char *const *scheme = referrerWhiteList;
-    for (; *scheme && !match; ++scheme) {
-        rv = referrer->SchemeIs(*scheme, &match);
-        if (NS_FAILED(rv)) return rv;
-    }
-    if (!match)
-        return NS_OK; // kick out....
-
-    //
-    // Handle secure referrals.
-    //
-    // Support referrals from a secure server if this is a secure site
-    // and (optionally) if the host names are the same.
-    //
-    rv = referrer->SchemeIs("https", &match);
-    if (NS_FAILED(rv)) return rv;
-    if (match) {
-        rv = mURI->SchemeIs("https", &match);
-        if (NS_FAILED(rv)) return rv;
-        if (!match)
-            return NS_OK;
-
-        if (!gHttpHandler->SendSecureXSiteReferrer()) {
-            nsCAutoString referrerHost;
-            nsCAutoString host;
-
-            rv = referrer->GetAsciiHost(referrerHost);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = mURI->GetAsciiHost(host);
-            if (NS_FAILED(rv)) return rv;
-
-            // GetAsciiHost returns lowercase hostname.
-            if (!referrerHost.Equals(host))
-                return NS_OK;
-        }
-    }
-
-    nsCOMPtr<nsIURI> clone;
-    //
-    // we need to clone the referrer, so we can:
-    //  (1) modify it
-    //  (2) keep a reference to it after returning from this function
-    //
-    rv = referrer->Clone(getter_AddRefs(clone));
-    if (NS_FAILED(rv)) return rv;
-
-    // strip away any userpass; we don't want to be giving out passwords ;-)
-    clone->SetUserPass(EmptyCString());
-
-    // strip away any fragment per RFC 2616 section 14.36
-    nsCOMPtr<nsIURL> url = do_QueryInterface(clone);
-    if (url)
-        url->SetRef(EmptyCString());
-
-    nsCAutoString spec;
-    rv = clone->GetAsciiSpec(spec);
-    if (NS_FAILED(rv)) return rv;
-
-    // finally, remember the referrer URI and set the Referer header.
-    mReferrer = clone;
-    mRequestHead.SetHeader(nsHttp::Referer, spec);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetRequestHeader(const nsACString &header, nsACString &value)
-{
-    // XXX might be better to search the header list directly instead of
-    // hitting the http atom hash table.
-
-    nsHttpAtom atom = nsHttp::ResolveAtom(header);
-    if (!atom)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    return mRequestHead.GetHeader(atom, value);
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetRequestHeader(const nsACString &header,
-                                const nsACString &value,
-                                PRBool merge)
-{
-    NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
-
-    const nsCString &flatHeader = PromiseFlatCString(header);
-    const nsCString &flatValue  = PromiseFlatCString(value);
-
-    LOG(("nsHttpChannel::SetRequestHeader [this=%p header=\"%s\" value=\"%s\" merge=%u]\n",
-        this, flatHeader.get(), flatValue.get(), merge));
-
-    // Header names are restricted to valid HTTP tokens.
-    if (!nsHttp::IsValidToken(flatHeader))
-        return NS_ERROR_INVALID_ARG;
-    
-    // Header values MUST NOT contain line-breaks.  RFC 2616 technically
-    // permits CTL characters, including CR and LF, in header values provided
-    // they are quoted.  However, this can lead to problems if servers do not
-    // interpret quoted strings properly.  Disallowing CR and LF here seems
-    // reasonable and keeps things simple.  We also disallow a null byte.
-    if (flatValue.FindCharInSet("\r\n") != kNotFound ||
-        flatValue.Length() != strlen(flatValue.get()))
-        return NS_ERROR_INVALID_ARG;
-
-    nsHttpAtom atom = nsHttp::ResolveAtom(flatHeader.get());
-    if (!atom) {
-        NS_WARNING("failed to resolve atom");
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    return mRequestHead.SetHeader(atom, flatValue, merge);
-}
-
-NS_IMETHODIMP
-nsHttpChannel::VisitRequestHeaders(nsIHttpHeaderVisitor *visitor)
-{
-    return mRequestHead.Headers().VisitHeaders(visitor);
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetUploadStream(nsIInputStream **stream)
-{
-    NS_ENSURE_ARG_POINTER(stream);
-    *stream = mUploadStream;
-    NS_IF_ADDREF(*stream);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetUploadStream(nsIInputStream *stream,
-                               const nsACString &contentType,
-                               PRInt32 contentLength)
-{
-    // NOTE: for backwards compatibility and for compatibility with old style
-    // plugins, |stream| may include headers, specifically Content-Type and
-    // Content-Length headers.  in this case, |contentType| and |contentLength|
-    // would be unspecified.  this is traditionally the case of a POST request,
-    // and so we select POST as the request method if contentType and
-    // contentLength are unspecified.
-    
-    if (stream) {
-        if (!contentType.IsEmpty()) {
-            if (contentLength < 0) {
-                stream->Available((PRUint32 *) &contentLength);
-                if (contentLength < 0) {
-                    NS_ERROR("unable to determine content length");
-                    return NS_ERROR_FAILURE;
-                }
-            }
-            mRequestHead.SetHeader(nsHttp::Content_Length,
-                                   nsPrintfCString("%d", contentLength));
-            mRequestHead.SetHeader(nsHttp::Content_Type, contentType);
-            mUploadStreamHasHeaders = PR_FALSE;
-            mRequestHead.SetMethod(nsHttp::Put); // PUT request
-        }
-        else {
-            mUploadStreamHasHeaders = PR_TRUE;
-            mRequestHead.SetMethod(nsHttp::Post); // POST request
-        }
-    }
-    else {
-        mUploadStreamHasHeaders = PR_FALSE;
-        mRequestHead.SetMethod(nsHttp::Get); // revert to GET request
-    }
-    mUploadStream = stream;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
-                                       const nsACString &aContentType,
-                                       PRInt64 aContentLength,
-                                       const nsACString &aMethod,
-                                       PRBool aStreamHasHeaders)
-{
-    // Ensure stream is set and method is valid 
-    NS_ENSURE_TRUE(aStream, NS_ERROR_FAILURE);
-
-    if (aContentLength < 0 && !aStreamHasHeaders) {
-        PRUint32 streamLength;
-        aStream->Available(&streamLength);
-        aContentLength = streamLength;
-        if (aContentLength < 0) {
-            NS_ERROR("unable to determine content length");
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    nsresult rv = SetRequestMethod(aMethod);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!aStreamHasHeaders) {
-        mRequestHead.SetHeader(nsHttp::Content_Length,
-                               nsPrintfCString("%lld", aContentLength));
-        mRequestHead.SetHeader(nsHttp::Content_Type, aContentType);
-    }
-
-    mUploadStreamHasHeaders = aStreamHasHeaders;
-    mUploadStream = aStream;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetResponseStatus(PRUint32 *value)
-{
-    NS_ENSURE_ARG_POINTER(value);
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-    *value = mResponseHead->Status();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetResponseStatusText(nsACString &value)
-{
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-    value = mResponseHead->StatusText();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetRequestSucceeded(PRBool *value)
-{
-    NS_PRECONDITION(value, "Don't ever pass a null arg to this function");
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-    PRUint32 status = mResponseHead->Status();
-    *value = (status / 100 == 2);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetResponseHeader(const nsACString &header, nsACString &value)
-{
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-    nsHttpAtom atom = nsHttp::ResolveAtom(header);
-    if (!atom)
-        return NS_ERROR_NOT_AVAILABLE;
-    return mResponseHead->GetHeader(atom, value);
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetResponseHeader(const nsACString &header,
-                                 const nsACString &value,
-                                 PRBool merge)
-{
-    LOG(("nsHttpChannel::SetResponseHeader [this=%p header=\"%s\" value=\"%s\" merge=%u]\n",
-        this, PromiseFlatCString(header).get(), PromiseFlatCString(value).get(), merge));
-
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-    nsHttpAtom atom = nsHttp::ResolveAtom(header);
-    if (!atom)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    // these response headers must not be changed 
-    if (atom == nsHttp::Content_Type ||
-        atom == nsHttp::Content_Length ||
-        atom == nsHttp::Content_Encoding ||
-        atom == nsHttp::Trailer ||
-        atom == nsHttp::Transfer_Encoding)
-        return NS_ERROR_ILLEGAL_VALUE;
-
-    mResponseHeadersModified = PR_TRUE;
-
-    return mResponseHead->SetHeader(atom, value, merge);
-}
-
-NS_IMETHODIMP
-nsHttpChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *visitor)
-{
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-    return mResponseHead->Headers().VisitHeaders(visitor);
-}
-
-NS_IMETHODIMP
-nsHttpChannel::IsNoStoreResponse(PRBool *value)
-{
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-    *value = mResponseHead->NoStore();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::IsNoCacheResponse(PRBool *value)
-{
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-    *value = mResponseHead->NoCache();
-    if (!*value)
-        *value = mResponseHead->ExpiresInPast();
-    return NS_OK;
-}
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIEncodedChannel
+//-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
 nsHttpChannel::GetApplyConversion(PRBool *value)
@@ -3902,38 +3177,6 @@ nsHttpChannel::SetApplyConversion(PRBool value)
 {
     LOG(("nsHttpChannel::SetApplyConversion [this=%p value=%d]\n", this, value));
     mApplyConversion = value;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetAllowPipelining(PRBool *value)
-{
-    NS_ENSURE_ARG_POINTER(value);
-    *value = mAllowPipelining;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetAllowPipelining(PRBool value)
-{
-    if (mIsPending)
-        return NS_ERROR_FAILURE;
-    mAllowPipelining = value;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetRedirectionLimit(PRUint32 *value)
-{
-    NS_ENSURE_ARG_POINTER(value);
-    *value = PRUint32(mRedirectionLimit);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetRedirectionLimit(PRUint32 value)
-{
-    mRedirectionLimit = PR_MIN(value, 0xff);
     return NS_OK;
 }
 
@@ -3960,113 +3203,8 @@ nsHttpChannel::GetContentEncodings(nsIUTF8StringEnumerator** aEncodings)
 }
 
 //-----------------------------------------------------------------------------
-// nsHttpChannel::nsIHttpChannelInternal
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::GetDocumentURI(nsIURI **aDocumentURI)
-{
-    NS_ENSURE_ARG_POINTER(aDocumentURI);
-    *aDocumentURI = mDocumentURI;
-    NS_IF_ADDREF(*aDocumentURI);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetDocumentURI(nsIURI *aDocumentURI)
-{
-    mDocumentURI = aDocumentURI;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetForceAllowThirdPartyCookie(PRBool *aForceAllowThirdPartyCookie)
-{
-    *aForceAllowThirdPartyCookie = mForceAllowThirdPartyCookie;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetForceAllowThirdPartyCookie(PRBool aForceAllowThirdPartyCookie)
-{
-    mForceAllowThirdPartyCookie = aForceAllowThirdPartyCookie;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetRequestVersion(PRUint32 *major, PRUint32 *minor)
-{
-  int version = mRequestHead.Version();
-
-  if (major) { *major = version / 10; }
-  if (minor) { *minor = version % 10; }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetResponseVersion(PRUint32 *major, PRUint32 *minor)
-{
-  if (!mResponseHead)
-  {
-    *major = *minor = 0;                   // we should at least be kind about it
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  int version = mResponseHead->Version();
-
-  if (major) { *major = version / 10; }
-  if (minor) { *minor = version % 10; }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetCookie(const char *aCookieHeader)
-{
-    if (mLoadFlags & LOAD_ANONYMOUS) {
-      return NS_OK;
-    }
-
-    // empty header isn't an error
-    if (!(aCookieHeader && *aCookieHeader))
-        return NS_OK;
-
-    nsICookieService *cs = gHttpHandler->GetCookieService();
-    NS_ENSURE_TRUE(cs, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIPrompt> prompt;
-    GetCallback(prompt);
-
-    return cs->SetCookieStringFromHttp(mURI,
-                                       mDocumentURI ? mDocumentURI : mOriginalURI,
-                                       prompt,
-                                       aCookieHeader,
-                                       mResponseHead->PeekHeader(nsHttp::Date),
-                                       this);
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
-{
-    LOG(("nsHttpChannel::SetupFallbackChannel [this=%p, key=%s]",
-         this, aFallbackKey));
-    mFallbackChannel = PR_TRUE;
-    mFallbackKey = aFallbackKey;
-
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::GetPriority(PRInt32 *value)
-{
-    *value = mPriority;
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHttpChannel::SetPriority(PRInt32 value)
@@ -4078,12 +3216,6 @@ nsHttpChannel::SetPriority(PRInt32 value)
     if (mTransaction)
         gHttpHandler->RescheduleTransaction(mTransaction, mPriority);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::AdjustPriority(PRInt32 delta)
-{
-    return SetPriority(mPriority + delta);
 }
 
 //-----------------------------------------------------------------------------
@@ -4181,6 +3313,42 @@ nsHttpChannel::SetWWWCredentials(const nsACString &value)
 }
 
 //-----------------------------------------------------------------------------
+// Methods that nsIHttpAuthenticableChannel dupes from other IDLs, which we
+// get from HttpBaseChannel, must be explicitly forwarded, because C++ sucks.
+//
+
+NS_IMETHODIMP
+nsHttpChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
+{
+    return HttpBaseChannel::GetLoadFlags(aLoadFlags);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetURI(nsIURI **aURI)
+{
+    return HttpBaseChannel::GetURI(aURI);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
+{
+    return HttpBaseChannel::GetNotificationCallbacks(aCallbacks);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetLoadGroup(nsILoadGroup **aLoadGroup)
+{
+    return HttpBaseChannel::GetLoadGroup(aLoadGroup);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetRequestMethod(nsACString& aMethod)
+{
+    return HttpBaseChannel::GetRequestMethod(aMethod);
+}
+
+
+//-----------------------------------------------------------------------------
 // nsHttpChannel::nsIRequestObserver
 //-----------------------------------------------------------------------------
 
@@ -4210,8 +3378,6 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
     // don't enter this block if we're reading from the cache...
     if (NS_SUCCEEDED(mStatus) && !mCachePump && mTransaction) {
-        NS_ASSERTION(mResponseHead == nsnull, "leaking mResponseHead");
-
         // all of the response headers have been acquired, so we can take ownership
         // of them from the transaction.
         mResponseHead = mTransaction->TakeResponseHead();
@@ -4306,7 +3472,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
 
         // at this point, we're done with the transaction
-        NS_RELEASE(mTransaction);
+        mTransaction = nsnull;
         mTransactionPump = 0;
 
         // handle auth retry...
@@ -4463,6 +3629,62 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
 
     return NS_OK;
 } 
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsICacheInfoChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::IsFromCache(PRBool *value)
+{
+    if (!mIsPending)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    // return false if reading a partial cache entry; the data isn't entirely
+    // from the cache!
+
+    *value = (mCachePump || (mLoadFlags & LOAD_ONLY_IF_MODIFIED)) &&
+              mCachedContentIsValid && !mCachedContentIsPartial;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetCacheTokenExpirationTime(PRUint32 *_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    if (!mCacheEntry)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    return mCacheEntry->GetExpirationTime(_retval);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetCacheTokenCachedCharset(nsACString &_retval)
+{
+    nsresult rv;
+
+    if (!mCacheEntry)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsXPIDLCString cachedCharset;
+    rv = mCacheEntry->GetMetaDataElement("charset",
+                                         getter_Copies(cachedCharset));
+    if (NS_SUCCEEDED(rv))
+        _retval = cachedCharset;
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetCacheTokenCachedCharset(const nsACString &aCharset)
+{
+    if (!mCacheEntry)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    return mCacheEntry->SetMetaDataElement("charset",
+                                           PromiseFlatCString(aCharset).get());
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsICachingChannel
@@ -4685,21 +3907,6 @@ nsHttpChannel::GetCacheFile(nsIFile **cacheFile)
     return mCacheEntry->GetFile(cacheFile);
 }
 
-NS_IMETHODIMP
-nsHttpChannel::IsFromCache(PRBool *value)
-{
-    if (!mIsPending)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    // return false if reading a partial cache entry; the data isn't entirely
-    // from the cache!
-
-    *value = (mCachePump || (mLoadFlags & LOAD_ONLY_IF_MODIFIED)) &&
-              mCachedContentIsValid && !mCachedContentIsPartial;
-
-    return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIResumableChannel
 //-----------------------------------------------------------------------------
@@ -4822,7 +4029,11 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     // fetch cookies, and add them to the request header.
     // the server response could have included cookies that must be sent with
     // this authentication attempt (bug 84794).
-    AddCookiesToRequest();
+    // TODO: save cookies from auth response and send them here (bug 572151).
+    if (!mRemoteChannel) {
+      // For non-remote channels, we are responsible for cookies.
+      AddCookiesToRequest();
+    }
 
     // notify "http-on-modify-request" observers
     gHttpHandler->OnModifyRequest(this);
@@ -4830,7 +4041,6 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     mIsPending = PR_TRUE;
 
     // get rid of the old response headers
-    delete mResponseHead;
     mResponseHead = nsnull;
 
     // set sticky connection flag and disable pipelining.

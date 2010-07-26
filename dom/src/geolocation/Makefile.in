@@ -59,28 +59,33 @@ EXTRA_DSO_LDOPTS = \
 
 LOCAL_INCLUDES = \
 		-I$(topsrcdir)/dom/base \
+		-I$(topsrcdir)/dom/ipc \
+		-I$(topsrcdir)/content/base/src \
+		-I$(topsrcdir)/content/events/src \
 		$(NULL)
 
 ifdef WINCE_WINDOWS_MOBILE
-CPPSRCS         += WinMobileLocationProvider.cpp nsGeoPosition.cpp
+CPPSRCS         += nsGeoPosition.cpp
+LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/windows \
+                   $(NULL)
 endif
 
 ifdef MOZ_MAEMO_LIBLOCATION
-CPPSRCS         += MaemoLocationProvider.cpp nsGeoPosition.cpp
-LOCAL_INCLUDES	+= $(MOZ_PLATFORM_MAEMO_CFLAGS)
+CPPSRCS         += nsGeoPosition.cpp
+LOCAL_INCLUDES  += $(MOZ_PLATFORM_MAEMO_CFLAGS) \
+                   -I$(topsrcdir)/dom/system/unix \
+                   $(NULL)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-CPPSRCS         += AndroidLocationProvider.cpp nsGeoPosition.cpp
+CPPSRCS         += nsGeoPosition.cpp
 EXPORTS         += nsGeoPosition.h
+LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/android \
+                   $(NULL)
 endif
 
-EXTRA_COMPONENTS = \
-                 NetworkGeolocationProvider.js \
-                 GPSDGeolocationProvider.js \
-                 $(NULL)
-
-
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -D_IMPL_NS_LAYOUT

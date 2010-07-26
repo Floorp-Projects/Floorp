@@ -39,6 +39,10 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+EXTRA_COMPONENTS = \
+  nsSessionStore.manifest \
+  $(NULL)
+
 EXTRA_PP_COMPONENTS = \
 	nsSessionStore.js \
 	nsSessionStartup.js \

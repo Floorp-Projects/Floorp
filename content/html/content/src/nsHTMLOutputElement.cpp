@@ -47,7 +47,7 @@ class nsHTMLOutputElement : public nsGenericHTMLFormElement,
                             public nsStubMutationObserver
 {
 public:
-  nsHTMLOutputElement(nsINodeInfo *aNodeInfo);
+  nsHTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLOutputElement();
 
   // nsISupports
@@ -89,6 +89,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLOutputElement,
                                                      nsGenericHTMLFormElement)
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   enum ValueModeFlag {
     eModeDefault,
@@ -104,7 +105,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Output)
 
 
-nsHTMLOutputElement::nsHTMLOutputElement(nsINodeInfo *aNodeInfo)
+nsHTMLOutputElement::nsHTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
   , mValueModeFlag(eModeDefault)
 {
@@ -122,7 +123,7 @@ nsHTMLOutputElement::~nsHTMLOutputElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLOutputElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLOutputElement, nsGenericElement)
 
-DOMCI_DATA(HTMLOutputElement, nsHTMLOutputElement)
+DOMCI_NODE_DATA(HTMLOutputElement, nsHTMLOutputElement)
 
 NS_INTERFACE_TABLE_HEAD(nsHTMLOutputElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLOutputElement,
@@ -261,7 +262,8 @@ void nsHTMLOutputElement::ContentInserted(nsIDocument* aDocument,
 void nsHTMLOutputElement::ContentRemoved(nsIDocument* aDocument,
                                          nsIContent* aContainer,
                                          nsIContent* aChild,
-                                         PRInt32 aIndexInContainer)
+                                         PRInt32 aIndexInContainer,
+                                         nsIContent* aPreviousSibling)
 {
   DescendantsChanged();
 }

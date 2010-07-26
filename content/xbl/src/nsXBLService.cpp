@@ -69,7 +69,7 @@
 #include "nsXBLContentSink.h"
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
-#include "nsIXBLDocumentInfo.h"
+#include "nsXBLDocumentInfo.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsSyncLoadService.h"
@@ -446,7 +446,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
 
     // Put our doc info in the doc table.
     nsBindingManager *xblDocBindingManager = bindingDocument->BindingManager();
-    nsCOMPtr<nsIXBLDocumentInfo> info =
+    nsRefPtr<nsXBLDocumentInfo> info =
       xblDocBindingManager->GetXBLDocumentInfo(documentURI);
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
     if (!info) {
@@ -867,7 +867,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   nsCOMPtr<nsIDocument> boundDocument = aBoundElement->GetOwnerDoc();
 
-  nsCOMPtr<nsIXBLDocumentInfo> docInfo;
+  nsRefPtr<nsXBLDocumentInfo> docInfo;
   nsresult rv = LoadBindingDocumentInfo(aBoundElement, boundDocument, aURI,
                                         aOriginPrincipal,
                                         PR_FALSE, getter_AddRefs(docInfo));
@@ -877,13 +877,10 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
     return NS_ERROR_FAILURE;
 
   // Get our doc info and determine our script access.
-  nsCOMPtr<nsIDocument> doc;
-  docInfo->GetDocument(getter_AddRefs(doc));
-  PRBool allowScripts;
-  docInfo->GetScriptAccess(&allowScripts);
+  nsCOMPtr<nsIDocument> doc = docInfo->GetDocument();
+  PRBool allowScripts = docInfo->GetScriptAccess();
 
-  nsXBLPrototypeBinding* protoBinding;
-  docInfo->GetPrototypeBinding(ref, &protoBinding);
+  nsXBLPrototypeBinding* protoBinding = docInfo->GetPrototypeBinding(ref);
 
   NS_ASSERTION(protoBinding, "Unable to locate an XBL binding.");
   if (!protoBinding)
@@ -1073,7 +1070,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                                       nsIURI* aBindingURI,
                                       nsIPrincipal* aOriginPrincipal,
                                       PRBool aForceSyncLoad,
-                                      nsIXBLDocumentInfo** aResult)
+                                      nsXBLDocumentInfo** aResult)
 {
   NS_PRECONDITION(aBindingURI, "Must have a binding URI");
   NS_PRECONDITION(!aOriginPrincipal || aBoundDocument,
@@ -1114,7 +1111,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
   }
 
   *aResult = nsnull;
-  nsCOMPtr<nsIXBLDocumentInfo> info;
+  nsRefPtr<nsXBLDocumentInfo> info;
 
   nsCOMPtr<nsIURI> documentURI;
   rv = aBindingURI->Clone(getter_AddRefs(documentURI));

@@ -47,8 +47,8 @@ class nsSVGPolygonElement : public nsSVGPolygonElementBase,
 {
 protected:
   friend nsresult NS_NewSVGPolygonElement(nsIContent **aResult,
-                                          nsINodeInfo *aNodeInfo);
-  nsSVGPolygonElement(nsINodeInfo* aNodeInfo);
+                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGPolygonElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -66,6 +66,8 @@ public:
   virtual void ConstructPath(gfxContext *aCtx);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Polygon)
@@ -76,7 +78,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Polygon)
 NS_IMPL_ADDREF_INHERITED(nsSVGPolygonElement,nsSVGPolygonElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGPolygonElement,nsSVGPolygonElementBase)
 
-DOMCI_DATA(SVGPolygonElement, nsSVGPolygonElement)
+DOMCI_NODE_DATA(SVGPolygonElement, nsSVGPolygonElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGPolygonElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGPolygonElement, nsIDOMNode, nsIDOMElement,
@@ -87,7 +89,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPolygonElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPolygonElement::nsSVGPolygonElement(nsINodeInfo* aNodeInfo)
+nsSVGPolygonElement::nsSVGPolygonElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGPolygonElementBase(aNodeInfo)
 {
 
@@ -112,6 +114,10 @@ nsSVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 
     endMark->angle = nsSVGUtils::AngleBisect(angle, endMark->angle);
     startMark->angle = nsSVGUtils::AngleBisect(angle, startMark->angle);
+    // for a polygon (as opposed to a polyline) there's an implicit extra point
+    // co-located with the start point that nsSVGPolyElement::GetMarkPoints
+    // doesn't return
+    aMarks->AppendElement(nsSVGMark(startMark->x, startMark->y, startMark->angle));
   }
 }
 

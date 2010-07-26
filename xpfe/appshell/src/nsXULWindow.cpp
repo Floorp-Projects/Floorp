@@ -96,6 +96,8 @@
 
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
+#include "prenv.h"
+
 #define SIZEMODE_NORMAL     NS_LITERAL_STRING("normal")
 #define SIZEMODE_MAXIMIZED  NS_LITERAL_STRING("maximized")
 #define SIZEMODE_MINIMIZED  NS_LITERAL_STRING("minimized")
@@ -146,6 +148,7 @@ nsXULWindow::nsXULWindow(PRUint32 aChromeFlags)
     mLockedUntilChromeLoad(PR_FALSE),
     mIgnoreXULSize(PR_FALSE),
     mIgnoreXULPosition(PR_FALSE),
+    mChromeFlagsFrozen(PR_FALSE),
     mContextFlags(0),
     mBlurSuppressionLevel(0),
     mPersistentAttributesDirty(0),
@@ -330,9 +333,18 @@ NS_IMETHODIMP nsXULWindow::GetChromeFlags(PRUint32 *aChromeFlags)
 
 NS_IMETHODIMP nsXULWindow::SetChromeFlags(PRUint32 aChromeFlags)
 {
+  NS_ASSERTION(!mChromeFlagsFrozen,
+               "SetChromeFlags() after AssumeChromeFlagsAreFrozen()!");
+
   mChromeFlags = aChromeFlags;
   if (mChromeLoaded)
     NS_ENSURE_SUCCESS(ApplyChromeFlags(), NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::AssumeChromeFlagsAreFrozen()
+{
+  mChromeFlagsFrozen = PR_TRUE;
   return NS_OK;
 }
 
@@ -992,16 +1004,6 @@ void nsXULWindow::OnChromeLoaded()
     mChromeLoaded = PR_TRUE;
     ApplyChromeFlags();
     SyncAttributesToWidget();
-    if (!mIgnoreXULSize)
-      LoadSizeFromXUL();
-    if (mIntrinsicallySized) {
-      // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
-      nsCOMPtr<nsIContentViewer> cv;
-      mDocShell->GetContentViewer(getter_AddRefs(cv));
-      nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
-      if (markupViewer)
-        markupViewer->SizeToContent();
-    }
 
     PRBool positionSet = !mIgnoreXULPosition;
     nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
@@ -1014,6 +1016,19 @@ void nsXULWindow::OnChromeLoaded()
 #endif
     if (positionSet)
       positionSet = LoadPositionFromXUL();
+
+    if (!mIgnoreXULSize)
+      LoadSizeFromXUL();
+
+    if (mIntrinsicallySized) {
+      // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
+      nsCOMPtr<nsIContentViewer> cv;
+      mDocShell->GetContentViewer(getter_AddRefs(cv));
+      nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
+      if (markupViewer)
+        markupViewer->SizeToContent();
+    }
+
     LoadMiscPersistentAttributesFromXUL();
 
     if (mCenterAfterLoad && !positionSet)
@@ -1166,7 +1181,7 @@ PRBool nsXULWindow::LoadSizeFromXUL()
 
     mIntrinsicallySized = PR_FALSE;
     if (specWidth != currWidth || specHeight != currHeight)
-      SetSize(specWidth, specHeight, PR_FALSE);
+      SetSize(specWidth, specHeight, PR_TRUE);
   }
 
   return gotSize;
@@ -1387,7 +1402,13 @@ void nsXULWindow::SyncAttributesToWidget()
 
   // "accelerated" attribute
   PRBool isAccelerated;
-  rv = windowElement->HasAttribute(NS_LITERAL_STRING("accelerated"), &isAccelerated);
+  static const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
+  if (acceleratedEnv && *acceleratedEnv) {
+    isAccelerated = *acceleratedEnv != '0';
+    rv = NS_OK;
+  } else
+    rv = windowElement->HasAttribute(NS_LITERAL_STRING("accelerated"), &isAccelerated);
+
   if (NS_SUCCEEDED(rv)) {
     mWindow->SetAcceleratedRendering(isAccelerated);
   }
@@ -2053,12 +2074,6 @@ NS_IMETHODIMP nsXULWindow::ApplyChromeFlags()
   // so no need to compare to the old value.
   window->SetAttribute(NS_LITERAL_STRING("chromehidden"), newvalue);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULWindow::WillShowWindow(PRBool *aRetval)
-{
-  *aRetval = mShowAfterLoad && !mChromeLoaded;
   return NS_OK;
 }
 

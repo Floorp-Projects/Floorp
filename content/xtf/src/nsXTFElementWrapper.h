@@ -57,7 +57,7 @@ class nsXTFElementWrapper : public nsXTFElementWrapperBase,
                             public nsIClassInfo
 {
 public:
-  nsXTFElementWrapper(nsINodeInfo* aNodeInfo, nsIXTFElement* aXTFElement);
+  nsXTFElementWrapper(already_AddRefed<nsINodeInfo> aNodeInfo, nsIXTFElement* aXTFElement);
   virtual ~nsXTFElementWrapper();
   nsresult Init();
 
@@ -131,6 +131,9 @@ public:
   }
   nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  // XTF elements have special classinfo,
+  // so this optimization needs to be disabled.
+  virtual nsXPCClassInfo* GetClassInfo() { return nsnull; }
 protected:
   virtual nsIXTFElement* GetXTFElement() const
   {
@@ -164,7 +167,7 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXTFElementWrapper, NS_XTFELEMENTWRAPPER_IID)
 
 nsresult
-NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement, nsINodeInfo* aNodeInfo,
+NS_NewXTFElementWrapper(nsIXTFElement* aXTFElement, already_AddRefed<nsINodeInfo> aNodeInfo,
                         nsIContent** aResult);
 
 #endif // __NS_XTFELEMENTWRAPPER_H__

@@ -1,0 +1,3 @@
+component {6ebc941a-f2ff-4d56-b3b6-f7d0b9d73344} nsDefaultCLH.js
+contract @mozilla.org/toolkit/default-clh;1 {6ebc941a-f2ff-4d56-b3b6-f7d0b9d73344}
+category command-line-handler y-default @mozilla.org/toolkit/default-clh;1

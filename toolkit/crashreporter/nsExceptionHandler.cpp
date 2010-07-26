@@ -529,6 +529,16 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 #error "Implement this for your platform"
 #endif
 
+#ifdef XP_UNIX
+  // During a crash we must not enter the dynamic loader for symbol
+  // resolution. The symbols used from within the exception handler
+  // which might not be called by the application during normal run
+  // should be early-resolved by calling them from here. See bug 573290.
+  int fd = open("/dev/null", O_RDONLY);
+  close(fd);
+  write(-1, NULL, 0);
+#endif
+
   // now set the exception handler
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(tempPath.get(),
@@ -571,7 +581,11 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
 bool GetEnabled()
 {
+#if defined(XP_MACOSX)
   return gExceptionHandler != nsnull;
+#else
+  return gExceptionHandler != nsnull && !gExceptionHandler->IsOutOfProcess();
+#endif
 }
 
 bool GetMinidumpPath(nsAString& aPath)

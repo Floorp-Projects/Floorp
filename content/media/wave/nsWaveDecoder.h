@@ -219,7 +219,7 @@ class nsWaveDecoder : public nsMediaDecoder
   // Resume any media downloads that have been suspended. Called by the
   // media element when it is restored from the bfcache. Call on the
   // main thread only.
-  virtual void Resume();
+  virtual void Resume(PRBool aForceBuffering);
 
   // Calls mElement->UpdateReadyStateForData, telling it which state we have
   // entered.  Main thread only.

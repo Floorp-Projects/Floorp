@@ -470,10 +470,11 @@ nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
   }
   PRInt64 time = (aPacket->granulepos != -1)
     ? mTheoraState->StartTime(aPacket->granulepos) : -1;
+  PRInt64 endTime = time != -1 ? time + mTheoraState->mFrameDuration : -1;
   if (ret == TH_DUPFRAME) {
     aFrames.AppendElement(VideoData::CreateDuplicate(mPageOffset,
                                                      time,
-                                                     time + mTheoraState->mFrameDuration,
+                                                     endTime,
                                                      aPacket->granulepos));
   } else if (ret == 0) {
     th_ycbcr_buffer buffer;
@@ -491,7 +492,7 @@ nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
                                      mDecoder->GetImageContainer(),
                                      mPageOffset,
                                      time,
-                                     time + mTheoraState->mFrameDuration,
+                                     endTime,
                                      b,
                                      isKeyframe,
                                      aPacket->granulepos);
@@ -607,6 +608,8 @@ PRBool nsOggReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                      th_granule_frame(mTheoraState->mCtx, granulepos) + 1,
                      "Granulepos calculation is incorrect!");
         frames[i]->mTime = mTheoraState->StartTime(granulepos);
+        frames[i]->mEndTime = frames[i]->mTime + mTheoraState->mFrameDuration;
+        NS_ASSERTION(frames[i]->mEndTime >= frames[i]->mTime, "Frame must start before it ends.");
         frames[i]->mTimecode = granulepos;
         succGranulepos = granulepos;
         NS_ASSERTION(frames[i]->mTime < frames[i+1]->mTime, "Times should increase");      
@@ -904,10 +907,11 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
       // This page is from a bitstream which we haven't encountered yet.
       // It's probably from a new "link" in a "chained" ogg. Don't
       // bother even trying to find a duration...
+      endTime = -1;
       break;
     }
 
-    PRInt64 t = codecState ? codecState->Time(granulepos) : -1;
+    PRInt64 t = codecState->Time(granulepos);
     if (t != -1) {
       endTime = t;
     }
@@ -1364,16 +1368,14 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
 
     if (granuleTime >= seekTarget) {
       // We've landed after the seek target.
-      ogg_int64_t old_offset_end = endOffset;
+      NS_ASSERTION(pageOffset < endOffset, "offset_end must decrease");
       endOffset = pageOffset;
-      NS_ASSERTION(endOffset < old_offset_end, "offset_end must decrease");
       endTime = granuleTime;
     } else if (granuleTime < seekTarget) {
       // Landed before seek target.
-      ogg_int64_t old_offset_start = startOffset;
+      NS_ASSERTION(pageOffset > startOffset, "offset_start must increase");
       startOffset = pageOffset;
       startLength = pageLength;
-      NS_ASSERTION(startOffset > old_offset_start, "offset_start must increase");
       startTime = granuleTime;
     }
     NS_ASSERTION(startTime < seekTarget, "Must be before seek target");

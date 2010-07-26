@@ -13,7 +13,8 @@ browser.jar:
 *       skin/classic/browser/browser.css                             (browser.css)
 *       skin/classic/browser/engineManager.css                       (engineManager.css)
         skin/classic/browser/fullscreen-video.css
-        skin/classic/browser/Geo.png                                 (Geo.png)
+        skin/classic/browser/Geolocation-16.png
+        skin/classic/browser/Geolocation-64.png
         skin/classic/browser/Info.png                                (Info.png)
         skin/classic/browser/identity.png                            (identity.png)
         skin/classic/browser/keyhole-forward-mask.svg
@@ -82,8 +83,13 @@ browser.jar:
         skin/classic/browser/tabbrowser/progress-pulsing.png                    (tabbrowser/progress-pulsing.png)
         skin/classic/browser/tabbrowser/tab.png                                 (tabbrowser/tab.png)
         skin/classic/browser/tabbrowser/tab-arrow-left.png                      (tabbrowser/tab-arrow-left.png)
-        skin/classic/browser/tabbrowser/tab-arrow-right.png                     (tabbrowser/tab-arrow-right.png)
         skin/classic/browser/tabbrowser/tabDragIndicator.png                    (tabbrowser/tabDragIndicator.png)
+        skin/classic/browser/tabcandy/edit-light.png                 (tabcandy/edit-light.png)
+        skin/classic/browser/tabcandy/edit.png                       (tabcandy/edit.png)
+        skin/classic/browser/tabcandy/new-tab.png                    (tabcandy/new-tab.png)
+        skin/classic/browser/tabcandy/platform.css                   (tabcandy/platform.css)
+        skin/classic/browser/tabcandy/stack-expander.png             (tabcandy/stack-expander.png)
+        skin/classic/browser/tabcandy/tabcandy.png                   (tabcandy/tabcandy.png)
 
 #ifdef XP_WIN
 browser.jar:
@@ -98,7 +104,8 @@ browser.jar:
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
 *       skin/classic/aero/browser/engineManager.css                  (engineManager.css)
         skin/classic/aero/browser/fullscreen-video.css
-        skin/classic/aero/browser/Geo.png                            (Geo-aero.png)
+        skin/classic/aero/browser/Geolocation-16.png
+        skin/classic/aero/browser/Geolocation-64.png
         skin/classic/aero/browser/Info.png                           (Info-aero.png)
         skin/classic/aero/browser/identity.png                       (identity-aero.png)
         skin/classic/aero/browser/keyhole-forward-mask.svg
@@ -163,12 +170,17 @@ browser.jar:
         skin/classic/aero/browser/preferences/saveFile.png           (preferences/saveFile-aero.png)
         skin/classic/aero/browser/preferences/preferences.css        (preferences/preferences.css)
         skin/classic/aero/browser/preferences/applications.css       (preferences/applications.css)
-        skin/classic/aero/browser/tabbrowser/alltabs.png                        (tabbrowser/alltabs-aero.png)
-        skin/classic/aero/browser/tabbrowser/newtab.png                         (tabbrowser/newtab-aero.png)
+        skin/classic/aero/browser/tabbrowser/alltabs.png                        (tabbrowser/alltabs.png)
+        skin/classic/aero/browser/tabbrowser/newtab.png                         (tabbrowser/newtab.png)
         skin/classic/aero/browser/tabbrowser/progress.png                       (tabbrowser/progress.png)
         skin/classic/aero/browser/tabbrowser/progress-pulsing.png               (tabbrowser/progress-pulsing.png)
         skin/classic/aero/browser/tabbrowser/tab.png                            (tabbrowser/tab.png)
-        skin/classic/aero/browser/tabbrowser/tab-arrow-left.png                 (tabbrowser/tab-arrow-left-aero.png)
-        skin/classic/aero/browser/tabbrowser/tab-arrow-right.png                (tabbrowser/tab-arrow-right-aero.png)
-        skin/classic/aero/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator-aero.png)
+        skin/classic/aero/browser/tabbrowser/tab-arrow-left.png                 (tabbrowser/tab-arrow-left.png)
+        skin/classic/aero/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator.png)
+        skin/classic/aero/browser/tabcandy/edit-light.png            (tabcandy/edit-light.png)
+        skin/classic/aero/browser/tabcandy/edit.png                  (tabcandy/edit.png)
+        skin/classic/aero/browser/tabcandy/new-tab.png               (tabcandy/new-tab.png)
+        skin/classic/aero/browser/tabcandy/platform.css              (tabcandy/platform.css)
+        skin/classic/aero/browser/tabcandy/stack-expander.png        (tabcandy/stack-expander.png)
+        skin/classic/aero/browser/tabcandy/tabcandy.png              (tabcandy/tabcandy.png)
 #endif

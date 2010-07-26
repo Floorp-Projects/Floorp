@@ -10,7 +10,8 @@ browser.jar:
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/feed-icons.png
   skin/classic/browser/fullscreen-video.css
-  skin/classic/browser/Geo.png
+  skin/classic/browser/Geolocation-16.png
+  skin/classic/browser/Geolocation-64.png
   skin/classic/browser/Go-arrow.png
   skin/classic/browser/home.png
   skin/classic/browser/hud-panel.png
@@ -109,6 +110,6 @@ browser.jar:
   skin/classic/browser/tabcandy/edit-light.png              (tabcandy/edit-light.png)
   skin/classic/browser/tabcandy/edit.png                    (tabcandy/edit.png)
   skin/classic/browser/tabcandy/new-tab.png                 (tabcandy/new-tab.png)
+  skin/classic/browser/tabcandy/platform.css                (tabcandy/platform.css)
   skin/classic/browser/tabcandy/stack-expander.png          (tabcandy/stack-expander.png)
-  skin/classic/browser/tabcandy/tabcandy.css                (tabcandy/tabcandy.css)
   skin/classic/browser/tabcandy/tabcandy.png                (tabcandy/tabcandy.png)

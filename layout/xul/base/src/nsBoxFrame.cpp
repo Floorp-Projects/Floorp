@@ -1054,6 +1054,12 @@ nsBoxFrame::InsertFrames(nsIAtom*        aListName,
    if (mLayoutManager)
      mLayoutManager->ChildrenInserted(this, state, aPrevFrame, newFrames);
 
+   // Make sure to check box order _after_ notifying the layout
+   // manager; otherwise the slice we give the layout manager will
+   // just be bogus.  If the layout manager cares about the order, we
+   // just lose.
+   CheckBoxOrder(state);
+
 #ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.
    if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
@@ -1080,6 +1086,12 @@ nsBoxFrame::AppendFrames(nsIAtom*        aListName,
    // notify the layout manager
    if (mLayoutManager)
      mLayoutManager->ChildrenAppended(this, state, newFrames);
+
+   // Make sure to check box order _after_ notifying the layout
+   // manager; otherwise the slice we give the layout manager will
+   // just be bogus.  If the layout manager cares about the order, we
+   // just lose.
+   CheckBoxOrder(state);
 
 #ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.
@@ -1270,7 +1282,7 @@ public:
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder
                      nsIRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("XULDebug")
+  NS_DISPLAY_DECL_NAME("XULDebug", TYPE_XUL_DEBUG)
 };
 
 void
@@ -2136,7 +2148,7 @@ public:
     : nsDisplayWrapList(aFrame, aList), mTargetFrame(aTargetFrame) {}
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
-  NS_DISPLAY_DECL_NAME("XULEventRedirector")
+  NS_DISPLAY_DECL_NAME("XULEventRedirector", TYPE_XUL_EVENT_REDIRECTOR)
 private:
   nsIFrame* mTargetFrame;
 };

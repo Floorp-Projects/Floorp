@@ -43,7 +43,6 @@
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
-#include "nsHtml5NamedCharacters.h"
 #include "nsHtml5Parser.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
@@ -70,6 +69,7 @@ class nsHtml5Portability;
 class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 {
   private:
+    static PRUnichar REPLACEMENT_CHARACTER[];
     static jArray<const char*,PRInt32> QUIRKY_PUBLIC_IDS;
     PRInt32 mode;
     PRInt32 originalMode;
@@ -100,6 +100,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void doctype(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier, PRBool forceQuirks);
     void comment(PRUnichar* buf, PRInt32 start, PRInt32 length);
     void characters(const PRUnichar* buf, PRInt32 start, PRInt32 length);
+    void zeroOriginatingReplacementCharacter();
     void eof();
     void endTokenization();
     void startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes, PRBool selfClosing);
@@ -239,6 +240,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 };
 
 #ifdef nsHtml5TreeBuilder_cpp__
+PRUnichar nsHtml5TreeBuilder::REPLACEMENT_CHARACTER[] = { 0xfffd };
 jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #endif
 
@@ -258,7 +260,7 @@ jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #define NS_HTML5TREE_BUILDER_INPUT 13
 #define NS_HTML5TREE_BUILDER_ISINDEX 14
 #define NS_HTML5TREE_BUILDER_LI 15
-#define NS_HTML5TREE_BUILDER_LINK 16
+#define NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND 16
 #define NS_HTML5TREE_BUILDER_MATH 17
 #define NS_HTML5TREE_BUILDER_META 18
 #define NS_HTML5TREE_BUILDER_SVG 19
@@ -290,7 +292,7 @@ jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #define NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL 46
 #define NS_HTML5TREE_BUILDER_IFRAME 47
 #define NS_HTML5TREE_BUILDER_EMBED_OR_IMG 48
-#define NS_HTML5TREE_BUILDER_AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR 49
+#define NS_HTML5TREE_BUILDER_AREA_OR_SPACER_OR_WBR 49
 #define NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU 50
 #define NS_HTML5TREE_BUILDER_ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_HGROUP_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION 51
 #define NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR 52

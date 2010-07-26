@@ -68,7 +68,7 @@
 
 // radio buttons
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIRadioControlElement.h"
+#include "nsHTMLInputElement.h"
 #include "nsIRadioVisitor.h"
 
 #include "nsLayoutUtils.h"
@@ -102,20 +102,23 @@ public:
   // nsIDOMHTMLCollection interface
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual nsISupports* GetNodeAt(PRUint32 aIndex, nsresult* aResult)
+  virtual nsIContent* GetNodeAt(PRUint32 aIndex, nsresult* aResult)
   {
     FlushPendingNotifications();
 
     *aResult = NS_OK;
 
-    // XXXbz this should start returning nsINode* or something!
-    return static_cast<nsIFormControl*>(mElements.SafeElementAt(aIndex, nsnull));
+    return mElements.SafeElementAt(aIndex, nsnull);
   }
-  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult)
+  virtual nsISupports* GetNamedItem(const nsAString& aName,
+                                    nsWrapperCache **aCache,
+                                    nsresult* aResult)
   {
     *aResult = NS_OK;
 
-    return NamedItemInternal(aName, PR_TRUE);
+    nsISupports *item = NamedItemInternal(aName, PR_TRUE);
+    *aCache = nsnull;
+    return item;
   }
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
@@ -210,7 +213,8 @@ ShouldBeInElements(nsIFormControl* aFormControl)
 
 // construction, destruction
 nsGenericHTMLElement*
-NS_NewHTMLFormElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
+NS_NewHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                      PRUint32 aFromParser)
 {
   nsHTMLFormElement* it = new nsHTMLFormElement(aNodeInfo);
   if (!it) {
@@ -227,7 +231,7 @@ NS_NewHTMLFormElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
   return it;
 }
 
-nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
+nsHTMLFormElement::nsHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mGeneratingSubmit(PR_FALSE),
     mGeneratingReset(PR_FALSE),
@@ -300,7 +304,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLFormElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLFormElement, nsHTMLFormElement)
+DOMCI_NODE_DATA(HTMLFormElement, nsHTMLFormElement)
 
 // QueryInterface implementation for nsHTMLFormElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLFormElement)
@@ -1081,10 +1085,9 @@ nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   //
   PRInt32 type = aChild->GetType();
   if (type == NS_FORM_INPUT_RADIO) {
-    nsCOMPtr<nsIRadioControlElement> radio;
-    CallQueryInterface(aChild, getter_AddRefs(radio));
-    nsresult rv = radio->AddedToRadioGroup();
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<nsHTMLInputElement> radio =
+      static_cast<nsHTMLInputElement*>(aChild);
+    radio->AddedToRadioGroup();
   }
 
   //
@@ -1172,10 +1175,9 @@ nsHTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   //
   nsresult rv = NS_OK;
   if (aChild->GetType() == NS_FORM_INPUT_RADIO) {
-    nsCOMPtr<nsIRadioControlElement> radio;
-    CallQueryInterface(aChild, getter_AddRefs(radio));
-    rv = radio->WillRemoveFromRadioGroup();
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<nsHTMLInputElement> radio =
+      static_cast<nsHTMLInputElement*>(aChild);
+    radio->WillRemoveFromRadioGroup();
   }
 
   // Determine whether to remove the child from the elements list

@@ -179,6 +179,19 @@ static GtkTextDirection GetTextDirection(nsIFrame* aFrame)
   return GTK_TEXT_DIR_NONE;
 }
 
+// Returns positive for negative margins (otherwise 0).
+gint
+nsNativeThemeGTK::GetTabMarginPixels(nsIFrame* aFrame)
+{
+  nscoord margin =
+    IsBottomTab(aFrame) ? aFrame->GetUsedMargin().top
+    : aFrame->GetUsedMargin().bottom;
+
+  return PR_MIN(MOZ_GTK_TAB_MARGIN_MASK,
+                PR_MAX(0,
+                       aFrame->PresContext()->AppUnitsToDevPixels(-margin)));
+}
+
 PRBool
 nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
                                        GtkThemeWidgetType& aGtkWidgetType,
@@ -556,18 +569,13 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         /* First bits will be used to store max(0,-bmargin) where bmargin
          * is the bottom margin of the tab in pixels  (resp. top margin,
          * for bottom tabs). */
-        nscoord margin;
         if (IsBottomTab(aFrame)) {
             *aWidgetFlags = MOZ_GTK_TAB_BOTTOM;
-            margin = aFrame->GetUsedMargin().top;
         } else {
             *aWidgetFlags = 0;
-            margin = aFrame->GetUsedMargin().bottom;
         }
 
-        *aWidgetFlags |= PR_MIN(MOZ_GTK_TAB_MARGIN_MASK,
-                                PR_MAX(0, aFrame->PresContext()->
-                                   AppUnitsToDevPixels(-margin) ));
+        *aWidgetFlags |= GetTabMarginPixels(aFrame);
 
         if (IsSelectedTab(aFrame))
           *aWidgetFlags |= MOZ_GTK_TAB_SELECTED;
@@ -624,8 +632,8 @@ public:
                 const GdkRectangle& aGDKRect, const GdkRectangle& aGDKClip)
     : mState(aState), mGTKWidgetType(aGTKWidgetType), mFlags(aFlags),
       mDirection(aDirection), mGDKRect(aGDKRect), mGDKClip(aGDKClip) {}
-  nsresult NativeDraw(GdkDrawable * drawable, short offsetX, short offsetY,
-                      GdkRectangle * clipRects, PRUint32 numClipRects);
+  nsresult DrawWithGDK(GdkDrawable * drawable, gint offsetX, gint offsetY,
+                       GdkRectangle * clipRects, PRUint32 numClipRects);
 private:
   GtkWidgetState mState;
   GtkThemeWidgetType mGTKWidgetType;
@@ -637,8 +645,8 @@ private:
 };
 
 nsresult
-ThemeRenderer::NativeDraw(GdkDrawable * drawable, short offsetX, 
-        short offsetY, GdkRectangle * clipRects, PRUint32 numClipRects)
+ThemeRenderer::DrawWithGDK(GdkDrawable * drawable, gint offsetX, 
+        gint offsetY, GdkRectangle * clipRects, PRUint32 numClipRects)
 {
   GdkRectangle gdk_rect = mGDKRect;
   gdk_rect.x += offsetX;
@@ -647,6 +655,12 @@ ThemeRenderer::NativeDraw(GdkDrawable * drawable, short offsetX,
   GdkRectangle gdk_clip = mGDKClip;
   gdk_clip.x += offsetX;
   gdk_clip.y += offsetY;
+
+  GdkRectangle surfaceRect;
+  surfaceRect.x = 0;
+  surfaceRect.y = 0;
+  gdk_drawable_get_size(drawable, &surfaceRect.width, &surfaceRect.height);
+  gdk_rectangle_intersect(&gdk_clip, &surfaceRect, &gdk_clip);
   
   NS_ASSERTION(numClipRects == 0, "We don't support clipping!!!");
   moz_gtk_widget_paint(mGTKWidgetType, drawable, &gdk_rect, &gdk_clip,
@@ -655,14 +669,14 @@ ThemeRenderer::NativeDraw(GdkDrawable * drawable, short offsetX,
   return NS_OK;
 }
 
-static PRBool
-GetExtraSizeForWidget(PRUint8 aWidgetType, PRBool aWidgetIsDefault,
-                      nsIntMargin* aExtra)
+PRBool
+nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, PRUint8 aWidgetType,
+                                        nsIntMargin* aExtra)
 {
   *aExtra = nsIntMargin(0,0,0,0);
   // Allow an extra one pixel above and below the thumb for certain
   // GTK2 themes (Ximian Industrial, Bluecurve, Misty, at least);
-  // see moz_gtk_scrollbar_thumb_paint in gtk2drawing.c
+  // We modify the frame's overflow area.  See bug 297508.
   switch (aWidgetType) {
   case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     aExtra->top = aExtra->bottom = 1;
@@ -691,7 +705,7 @@ GetExtraSizeForWidget(PRUint8 aWidgetType, PRBool aWidgetIsDefault,
     }
   case NS_THEME_BUTTON :
     {
-      if (aWidgetIsDefault) {
+      if (IsDefaultButton(aFrame)) {
         // Some themes draw a default indicator outside the widget,
         // include that in overflow
         gint top, left, bottom, right;
@@ -701,6 +715,23 @@ GetExtraSizeForWidget(PRUint8 aWidgetType, PRBool aWidgetIsDefault,
         aExtra->bottom = bottom;
         aExtra->left = left;
         return PR_TRUE;
+      }
+    }
+  case NS_THEME_TAB :
+    {
+      if (!IsSelectedTab(aFrame))
+        return PR_FALSE;
+
+      gint gap_height = moz_gtk_get_tab_thickness();
+
+      PRInt32 extra = gap_height - GetTabMarginPixels(aFrame);
+      if (extra <= 0)
+        return PR_FALSE;
+
+      if (IsBottomTab(aFrame)) {
+        aExtra->top = extra;
+      } else {
+        aExtra->bottom = extra;
       }
     }
   default:
@@ -748,22 +779,20 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   // GTK themes can only draw an integer number of pixels
   // (even when not snapped).
   nsIntRect widgetRect(0, 0, NS_lround(rect.Width()), NS_lround(rect.Height()));
+  nsIntRect overflowRect(widgetRect);
+  nsIntMargin extraSize;
+  if (GetExtraSizeForWidget(aFrame, aWidgetType, &extraSize)) {
+    overflowRect.Inflate(extraSize);
+  }
 
   // This is the rectangle that will actually be drawn, in gdk pixels
   nsIntRect drawingRect(PRInt32(dirtyRect.X()),
                         PRInt32(dirtyRect.Y()),
                         PRInt32(dirtyRect.Width()),
                         PRInt32(dirtyRect.Height()));
-  if (!drawingRect.IntersectRect(widgetRect, drawingRect))
+  if (widgetRect.IsEmpty()
+      || !drawingRect.IntersectRect(overflowRect, drawingRect))
     return NS_OK;
-
-  nsIntMargin extraSize;
-  // The margin should be applied to the widget rect rather than the dirty
-  // rect but nsCSSRendering::PaintBackgroundWithSC has already intersected
-  // the dirty rect with the uninflated widget rect.
-  if (GetExtraSizeForWidget(aWidgetType, state.isDefault, &extraSize)) {
-    drawingRect.Inflate(extraSize);
-  }
 
   // gdk rectangles are wrt the drawing rect.
 
@@ -777,12 +806,10 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   ThemeRenderer renderer(state, gtkWidgetType, flags, direction,
                          gdk_rect, gdk_clip);
 
-  // We require the use of the default screen and visual
-  // because I'm afraid that otherwise the GTK theme may explode.
   // Some themes (e.g. Clearlooks) just don't clip properly to any
   // clip rect we provide, so we cannot advertise support for clipping within
   // the widget bounds.
-  PRUint32 rendererFlags = gfxGdkNativeRenderer::DRAW_SUPPORTS_OFFSET;
+  PRUint32 rendererFlags = 0;
   if (GetWidgetTransparency(aFrame, aWidgetType) == eOpaque) {
     rendererFlags |= gfxGdkNativeRenderer::DRAW_IS_OPAQUE;
   }
@@ -804,7 +831,11 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     gdk_error_trap_push ();
   }
 
-  renderer.Draw(ctx, drawingRect.width, drawingRect.height, rendererFlags, nsnull);
+  // GtkStyles (used by the widget drawing backend) are created for a
+  // particular colormap/visual.
+  GdkColormap* colormap = moz_gtk_widget_get_colormap();
+
+  renderer.Draw(ctx, drawingRect.Size(), rendererFlags, colormap);
 
   if (!safeState) {
     gdk_flush();
@@ -912,32 +943,15 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
 {
   nsMargin m;
   PRInt32 p2a;
-  if (aWidgetType == NS_THEME_TAB)
-  {
-    if (!IsSelectedTab(aFrame))
-      return PR_FALSE;
+  nsIntMargin extraSize;
+  if (!GetExtraSizeForWidget(aFrame, aWidgetType, &extraSize))
+    return PR_FALSE;
 
-    p2a = aContext->AppUnitsPerDevPixel();
-
-    if (IsBottomTab(aFrame)) {
-      m = nsMargin(0, NSIntPixelsToAppUnits(moz_gtk_get_tab_thickness(), p2a)
-                      + PR_MIN(0, aFrame->GetUsedMargin().top), 0, 0);
-    } else {
-      m = nsMargin(0, 0, 0,
-                   NSIntPixelsToAppUnits(moz_gtk_get_tab_thickness(), p2a)
-                   + PR_MIN(0, aFrame->GetUsedMargin().bottom));
-    }
-  } else {
-    nsIntMargin extraSize;
-    if (!GetExtraSizeForWidget(aWidgetType, IsDefaultButton(aFrame), &extraSize))
-      return PR_FALSE;
-
-    p2a = aContext->AppUnitsPerDevPixel();
-    m = nsMargin(NSIntPixelsToAppUnits(extraSize.left, p2a),
-                 NSIntPixelsToAppUnits(extraSize.top, p2a),
-                 NSIntPixelsToAppUnits(extraSize.right, p2a),
-                 NSIntPixelsToAppUnits(extraSize.bottom, p2a));
-  }
+  p2a = aContext->AppUnitsPerDevPixel();
+  m = nsMargin(NSIntPixelsToAppUnits(extraSize.left, p2a),
+               NSIntPixelsToAppUnits(extraSize.top, p2a),
+               NSIntPixelsToAppUnits(extraSize.right, p2a),
+               NSIntPixelsToAppUnits(extraSize.bottom, p2a));
 
   aOverflowRect->Inflate(m);
   return PR_TRUE;

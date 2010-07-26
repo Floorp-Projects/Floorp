@@ -731,6 +731,36 @@ nsTSubstring_CharT::StripChar( char_type aChar, PRInt32 aOffset )
     mLength = to - mData;
   }
 
+void
+nsTSubstring_CharT::StripChars( const char_type* aChars, PRUint32 aOffset )
+  {
+    if (aOffset >= PRUint32(mLength))
+      return;
+
+    EnsureMutable(); // XXX do this lazily?
+
+    // XXX(darin): this code should defer writing until necessary.
+
+    char_type* to   = mData + aOffset;
+    char_type* from = mData + aOffset;
+    char_type* end  = mData + mLength;
+
+    while (from < end)
+      {
+        char_type theChar = *from++;
+        const char_type* test = aChars;
+
+        for (; *test && *test != theChar; ++test);
+
+        if (!*test) {
+          // Not stripped, copy this char.
+          *to++ = theChar;
+        }
+      }
+    *to = char_type(0); // add the null
+    mLength = to - mData;
+  }
+
 void nsTSubstring_CharT::AppendPrintf( const char* format, ...)
   {
     char buf[32];

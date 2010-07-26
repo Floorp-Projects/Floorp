@@ -77,7 +77,7 @@ let gFunctions = [
   // 3: Latvian
   [3, function(n) n%10==1&&n%100!=11?1:n!=0?2:0],
   // 4: Scottish Gaelic
-  [3, function(n) n==1?0:n==2?1:2],
+  [4, function(n) n==1||n==11?0:n==2||n==12?1:n>0&&n<20?2:3],
   // 5: Romanian
   [3, function(n) n==1?0:n==0||n%100>0&&n%100<20?1:2],
   // 6: Lithuanian

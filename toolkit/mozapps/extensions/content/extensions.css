@@ -75,12 +75,21 @@
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#install-status");
 }
 
+#header-searching:not([active]) {
+  visibility: hidden;
+}
+
 .addon[active="true"] .disabled-postfix {
   display: none;
 }
 
 .addon[incompatible="false"] .incompatible-warning {
   display: none;
+}
+
+#search-list[local="false"]  > .addon[remote="false"],
+#search-list[remote="false"] > .addon[remote="true"] {
+  visibility: collapse;
 }
 
 #detail-view[loading] > .detail-view-container {

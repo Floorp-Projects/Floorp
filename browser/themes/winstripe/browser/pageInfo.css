@@ -40,12 +40,28 @@
 @import "chrome://global/skin/";
 
 /* View buttons */
+#viewGroup {
+  -moz-padding-start: 10px;
+}
+
 #viewGroup > radio {
   list-style-image: url("chrome://browser/skin/pageInfo.png");
   -moz-box-orient: vertical;
   -moz-box-align: center;
   -moz-appearance: none;
   padding: 5px 3px 1px 3px;
+  margin: 0 1px;
+  min-width: 4.5em;
+}
+
+#viewGroup > radio:hover {
+  background-color: #E0E8F6;
+  color: black;
+}
+
+#viewGroup > radio[selected="true"] {
+  background-color: #C1D2EE;
+  color: black;
 }
 
 #topBar {
@@ -172,6 +188,13 @@ groupbox tree {
 /* Media Tab */
 #imagetree {
   min-height: 10em;
+  margin-bottom: 0;
+}
+
+#mediaSplitter {
+  border-style: none;
+  background: none;
+  height: .8em;
 }
 
 #mediaGrid {

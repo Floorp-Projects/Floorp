@@ -929,7 +929,7 @@ getIndexInParentCB(AtkObject *aAtkObj)
     // ignored.
     nsRefPtr<nsHyperTextAccessible> hyperTextParent(do_QueryObject(parent));
     return hyperTextParent ?
-        hyperTextParent->GetLinkIndex(accWrap) : parent->GetIndexOf(accWrap);
+        hyperTextParent->GetLinkIndex(accWrap) : accWrap->GetIndexInParent();
 }
 
 static void TranslateStates(PRUint32 aState, const AtkStateMap *aStateMap,

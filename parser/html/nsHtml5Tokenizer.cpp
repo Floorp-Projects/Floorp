@@ -42,6 +42,7 @@
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsHtml5NamedCharacters.h"
+#include "nsHtml5NamedCharactersAccel.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
@@ -2304,7 +2305,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           }
           PRInt32 hilo = 0;
           if (c <= 'z') {
-            const PRInt32* row = nsHtml5NamedCharacters::HILO_ACCEL[c];
+            const PRInt32* row = nsHtml5NamedCharactersAccel::HILO_ACCEL[c];
             if (row) {
               hilo = row[firstCharKey];
             }
@@ -3339,7 +3340,7 @@ void
 nsHtml5Tokenizer::emitReplacementCharacter(PRUnichar* buf, PRInt32 pos)
 {
   flushChars(buf, pos);
-  tokenHandler->characters(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, 0, 1);
+  tokenHandler->zeroOriginatingReplacementCharacter();
   cstart = pos + 1;
 }
 

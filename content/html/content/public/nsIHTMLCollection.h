@@ -40,10 +40,13 @@
 
 #include "nsIDOMHTMLCollection.h"
 
+class nsIContent;
+class nsWrapperCache;
+
 // IID for the nsIHTMLCollection interface
 #define NS_IHTMLCOLLECTION_IID \
-{ 0x5709485b, 0xc057, 0x4ba7, \
- { 0x95, 0xbd, 0x98, 0xb7, 0x94, 0x4f, 0x13, 0xe7 } }
+{ 0xf38b43dc, 0x74d4, 0x4b11, \
+ { 0xa6, 0xc9, 0xf8, 0xf4, 0xb5, 0xd3, 0x84, 0xe3 } }
 
 /**
  * An internal interface that allows QI-less getting of nodes from HTML
@@ -57,12 +60,13 @@ public:
   /**
    * Get the node at the index.  Returns null if the index is out of bounds.
    */
-  virtual nsISupports* GetNodeAt(PRUint32 aIndex, nsresult* aResult) = 0;
+  virtual nsIContent* GetNodeAt(PRUint32 aIndex, nsresult* aResult) = 0;
 
   /**
    * Get the node for the name.  Returns null if no node exists for the name.
    */
   virtual nsISupports* GetNamedItem(const nsAString& aName,
+                                    nsWrapperCache** aCache,
                                     nsresult* aResult) = 0;
 };
 

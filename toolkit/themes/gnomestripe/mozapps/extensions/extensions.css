@@ -164,6 +164,10 @@
   -moz-margin-end: 6px;
 }
 
+#header-searching {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
 .view-header {
   background: -moz-linear-gradient(top, #FFF, #E8E8E8 50%, #FFF);
   padding: 4px;
@@ -332,7 +336,8 @@
   -moz-box-align: end;
 }
 
-.addon .name {
+.addon .name,
+.addon .version {
   font-size: 150%;
   margin-bottom: 0px;
 }

@@ -1,7 +1,7 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Last changed in libpng 1.4.1 [February 25, 2010]
+ * Last changed in libpng 1.4.2 [May 6, 2010]
  * Copyright (c) 1998-2010 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -17,7 +17,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef version_1_4_1 Your_png_h_is_not_version_1_4_1;
+typedef version_1_4_3 Your_png_h_is_not_version_1_4_3;
 
 /* Version information for C files.  This had better match the version
  * string defined in png.h.
@@ -551,13 +551,13 @@ png_get_copyright(png_structp png_ptr)
 #else
 #ifdef __STDC__
    return ((png_charp) PNG_STRING_NEWLINE \
-     "libpng version 1.4.1 - February 25, 2010" PNG_STRING_NEWLINE \
+     "libpng version 1.4.3 - June 26, 2010" PNG_STRING_NEWLINE \
      "Copyright (c) 1998-2010 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
      "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
      "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
      PNG_STRING_NEWLINE);
 #else
-      return ((png_charp) "libpng version 1.4.1 - February 25, 2010\
+      return ((png_charp) "libpng version 1.4.3 - June 26, 2010\
       Copyright (c) 1998-2010 Glenn Randers-Pehrson\
       Copyright (c) 1996-1997 Andreas Dilger\
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.");
@@ -622,7 +622,9 @@ png_handle_as_unknown(png_structp png_ptr, png_bytep chunk_name)
    return 0;
 }
 #endif
+#endif /* defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED) */
 
+#ifdef PNG_READ_SUPPORTED
 /* This function, added to libpng-1.0.6g, is untested. */
 int PNGAPI
 png_reset_zstream(png_structp png_ptr)
@@ -631,7 +633,7 @@ png_reset_zstream(png_structp png_ptr)
       return Z_STREAM_ERROR;
    return (inflateReset(&png_ptr->zstream));
 }
-#endif /* defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED) */
+#endif /* PNG_READ_SUPPORTED */
 
 /* This function was added to libpng-1.0.7 */
 png_uint_32 PNGAPI

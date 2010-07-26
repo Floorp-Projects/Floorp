@@ -55,6 +55,7 @@
 #include "jspubtd.h"
 #include "xptinfo.h"
 #include "nsAXPCNativeCallContext.h"
+#include "nsWrapperCache.h"
 %}
 
 /***************************************************************************/
@@ -72,6 +73,7 @@
 [ptr] native nsScriptObjectTracerPtr(nsScriptObjectTracer);
 [ref] native nsCCTraversalCallbackRef(nsCycleCollectionTraversalCallback);
 [ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
+[ptr] native nsWrapperCachePtr(nsWrapperCache);
 
 /***************************************************************************/
 
@@ -397,7 +399,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(0332b12a-8103-4601-aed3-b9933a0d9441)]
+[uuid(7a30abb6-349c-4bb5-b395-78f8a860d6e3)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -498,6 +500,7 @@ interface nsIXPConnect : nsISupports
     wrapNativeToJSVal(in JSContextPtr aJSContext,
                       in JSObjectPtr  aScope,
                       in nsISupports  aCOMObj,
+                      in nsWrapperCachePtr aCache,
                       in nsIIDPtr     aIID,
                       in boolean      aAllowWrapper,
                       out jsval       aVal,
@@ -751,6 +754,7 @@ interface nsIXPConnect : nsISupports
      * Tells updateXOWs to clear the scope of all of the XOWs it finds.
      */
     const PRUint32 XPC_XOW_CLEARSCOPE = 1;
+    const PRUint32 XPC_XOW_NAVIGATED = 2;
 
     /**
      * Performs an operation over all of |object|'s XOWs such as clearing
@@ -870,4 +874,5 @@ interface nsIXPConnect : nsISupports
 %}
 
     [notxpcom] void getNativeWrapperGetPropertyOp(out JSPropertyOp getProperty);
+    [notxpcom] void getXrayWrapperPropertyHolderGetPropertyOp(out JSPropertyOp getProperty);
 };

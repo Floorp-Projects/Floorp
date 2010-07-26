@@ -38,9 +38,9 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const Cr = Components.results;
+const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 var EXPORTED_SYMBOLS = [ "AddonRepository" ];
@@ -144,6 +144,12 @@ AddonSearchResult.prototype = {
   userDisabled: false,
 
   /**
+   * The size of the add-on's files in bytes. For an add-on that have not yet
+   * been downloaded this may be an estimated value.
+   */
+  size: null,
+
+  /**
    * Indicates what scope the add-on is installed in, per profile, user,
    * system or application
    */
@@ -221,9 +227,8 @@ var AddonRepository = {
    * string.
    */
   get homepageURL() {
-    return Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-           getService(Ci.nsIURLFormatter).
-           formatURLPref(PREF_GETADDONS_BROWSEADDONS);
+    var url = this._formatURLPref(PREF_GETADDONS_BROWSEADDONS, {});
+    return (url != null) ? url : "about:blank";
   },
 
   /**
@@ -238,10 +243,8 @@ var AddonRepository = {
    * The url that can be visited to see recommended add-ons in this repository.
    */
   getRecommendedURL: function() {
-    var urlf = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-               getService(Ci.nsIURLFormatter);
-
-    return urlf.formatURLPref(PREF_GETADDONS_BROWSERECOMMENDED);
+    var url = this._formatURLPref(PREF_GETADDONS_BROWSERECOMMENDED, {});
+    return (url != null) ? url : "about:blank";
   },
 
   /**
@@ -251,14 +254,10 @@ var AddonRepository = {
    * @param  aSearchTerms  search terms used to search the repository
    */
   getSearchURL: function(aSearchTerms) {
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    var urlf = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-               getService(Ci.nsIURLFormatter);
-
-    var url = prefs.getCharPref(PREF_GETADDONS_BROWSESEARCHRESULTS);
-    url = url.replace(/%TERMS%/g, encodeURIComponent(aSearchTerms));
-    return urlf.formatURL(url);
+    var url = this._formatURLPref(PREF_GETADDONS_BROWSESEARCHRESULTS, {
+      TERMS : encodeURIComponent(aSearchTerms)
+    });
+    return (url != null) ? url : "about:blank";
   },
 
   /**
@@ -292,15 +291,14 @@ var AddonRepository = {
     this._recommended = true;
     this._maxResults = aMaxResults;
 
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    var urlf = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-               getService(Ci.nsIURLFormatter);
+    var url = this._formatURLPref(PREF_GETADDONS_GETRECOMMENDED, {
+      API_VERSION : API_VERSION,
 
-    var uri = prefs.getCharPref(PREF_GETADDONS_GETRECOMMENDED);
-    uri = uri.replace(/%API_VERSION%/g, API_VERSION);
-    uri = urlf.formatURL(uri);
-    this._loadList(uri);
+      // Get twice as many results to account for potential filtering
+      MAX_RESULTS : 2 * aMaxResults
+    });
+
+    (url != null) ? this._loadList(url) : this.reportFailure();
   },
 
   /**
@@ -321,17 +319,18 @@ var AddonRepository = {
     this._recommended = false;
     this._maxResults = aMaxResults;
 
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    var urlf = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-               getService(Ci.nsIURLFormatter);
+    // Get twice as many results to account for potential filtering
+    var url = this._formatURLPref(PREF_GETADDONS_GETSEARCHRESULTS, {
+      API_VERSION : API_VERSION,
 
-    var uri = prefs.getCharPref(PREF_GETADDONS_GETSEARCHRESULTS);
-    uri = uri.replace(/%API_VERSION%/g, API_VERSION);
-    // We double encode due to bug 427155
-    uri = uri.replace(/%TERMS%/g, encodeURIComponent(encodeURIComponent(aSearchTerms)));
-    uri = urlf.formatURL(uri);
-    this._loadList(uri);
+      // Get twice as many results to account for potential filtering
+      MAX_RESULTS : 2 * aMaxResults,
+
+      // We double encode due to bug 427155
+      TERMS : encodeURIComponent(encodeURIComponent(aSearchTerms))
+    });
+
+    (url != null) ? this._loadList(url) : this.reportFailure();
   },
 
   // Posts results to the callback
@@ -359,10 +358,6 @@ var AddonRepository = {
 
   // Parses an add-on entry from an <addon> element
   _parseAddon: function(aElement, aSkip) {
-    var app = Cc["@mozilla.org/xre/app-info;1"].
-              getService(Ci.nsIXULAppInfo).
-              QueryInterface(Ci.nsIXULRuntime);
-
     var guidList = aElement.getElementsByTagName("guid");
     if (guidList.length != 1)
       return;
@@ -393,7 +388,7 @@ var AddonRepository = {
       var i = 0;
       while (i < osList.length && !compatible) {
         var os = osList[i].textContent.trim();
-        if (os == "ALL" || os == app.OS) {
+        if (os == "ALL" || os == Services.appinfo.OS) {
           compatible = true;
           break;
         }
@@ -408,17 +403,16 @@ var AddonRepository = {
     var tags = aElement.getElementsByTagName("compatible_applications");
     if (tags.length != 1)
       return;
-    var vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
-             getService(Ci.nsIVersionComparator);
+
     var apps = tags[0].getElementsByTagName("appID");
     var i = 0;
     while (i < apps.length) {
-      if (apps[i].textContent.trim() == app.ID) {
+      if (apps[i].textContent.trim() == Services.appinfo.ID) {
         var parent = apps[i].parentNode;
         var minversion = parent.getElementsByTagName("min_version")[0].textContent.trim();
         var maxversion = parent.getElementsByTagName("max_version")[0].textContent.trim();
-        if ((vc.compare(minversion, app.version) > 0) ||
-            (vc.compare(app.version, maxversion) > 0))
+        if ((Services.vc.compare(minversion, Services.appinfo.version) > 0) ||
+            (Services.vc.compare(Services.appinfo.version, maxversion) > 0))
           return;
         compatible = true;
         break;
@@ -474,13 +468,15 @@ var AddonRepository = {
             if (node.hasAttribute("os")) {
               var os = node.getAttribute("os").toLowerCase();
               // If the os is not ALL and not the current OS then ignore this xpi
-              if (os != "all" && os != app.OS.toLowerCase())
+              if (os != "all" && os != Services.appinfo.OS.toLowerCase())
                 break;
             }
             result.xpiURL = node.textContent.trim();
+            if (node.hasAttribute("size"))
+              addon.size = node.getAttribute("size");
 
             // Ignore add-on installs
-            if (aSkip.sourceURLs.indexOf(result.xpiURL) != -1)
+            if (aSkip.sourceURIs.indexOf(result.xpiURL) != -1)
               return;
 
             result.xpiHash = node.hasAttribute("hash") ? node.getAttribute("hash") : null;
@@ -540,19 +536,19 @@ var AddonRepository = {
       var totalResults = elements.length;
 
     var self = this;
-    var skip = {ids: null, sourceURLs: null};
+    var skip = {ids: null, sourceURIs: null};
 
     AddonManager.getAllAddons(function(aAddons) {
       skip.ids  = [a.id for each (a in aAddons)];
-      if (skip.sourceURLs)
+      if (skip.sourceURIs)
         self._parseAddons(elements, totalResults, skip);
     });
 
     AddonManager.getAllInstalls(function(aInstalls) {
-      skip.sourceURLs = [];
+      skip.sourceURIs = [];
       aInstalls.forEach(function(aInstall) {
         if (aInstall.state != AddonManager.STATE_AVAILABLE)
-          skip.sourceURLs.push(aInstall.sourceURL);
+          skip.sourceURIs.push(aInstall.sourceURI.spec);
       });
 
       if (skip.ids)
@@ -571,6 +567,23 @@ var AddonRepository = {
     this._request.onerror = function(aEvent) { self._reportFailure(); };
     this._request.onload = function(aEvent) { self._listLoaded(aEvent); };
     this._request.send(null);
+  },
+
+  // Create url from pref, returning null if pref does not exist
+  _formatURLPref: function(aPref, aSubstitutions) {
+    var url = null;
+    try {
+      url = Services.prefs.getCharPref(aPref);
+    } catch(e) {
+      Cu.reportError("_formatURLPref: Couldn't get pref: " + aPref);
+      return null;
+    }
+
+    url = url.replace(/%([A-Z_]+)%/g, function(aMatch, aKey) {
+      return (aKey in aSubstitutions) ? aSubstitutions[aKey] : aMatch;
+    });
+    
+    return Services.urlFormatter.formatURL(url);
   }
 }
 

@@ -50,6 +50,7 @@
 #include "nsFrameSelection.h"
 #include "nsISelection.h"
 #include "nsISelection2.h"
+#include "nsISelection3.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionListener.h"
 #include "nsIComponentManager.h"
@@ -176,6 +177,7 @@ static RangeData sEmptyData(nsnull);
 // nsTypedSelections.
 
 class nsTypedSelection : public nsISelection2,
+                         public nsISelection3,
                          public nsISelectionPrivate,
                          public nsSupportsWeakReference
 {
@@ -188,6 +190,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsTypedSelection, nsISelection)
   NS_DECL_NSISELECTION
   NS_DECL_NSISELECTION2
+  NS_DECL_NSISELECTION3
   NS_DECL_NSISELECTIONPRIVATE
 
   // utility methods for scrolling the selection into view
@@ -462,6 +465,7 @@ public:
       if (!frame.IsAlive())
         return NS_OK;
 
+      NS_ASSERTION(frame->PresContext() == mPresContext, "document mismatch?");
       nsPoint pt = mPoint -
         frame->GetOffsetTo(mPresContext->PresShell()->FrameManager()->GetRootFrame());
       mSelection->DoAutoScroll(frame, pt);
@@ -3422,6 +3426,7 @@ DOMCI_DATA(Selection, nsTypedSelection)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTypedSelection)
   NS_INTERFACE_MAP_ENTRY(nsISelection)
   NS_INTERFACE_MAP_ENTRY(nsISelection2)
+  NS_INTERFACE_MAP_ENTRY(nsISelection3)
   NS_INTERFACE_MAP_ENTRY(nsISelectionPrivate)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelection)
@@ -4663,7 +4668,9 @@ nsTypedSelection::DoAutoScroll(nsIFrame *aFrame, nsPoint& aPoint)
   if (!rootPC)
     return NS_OK;
   nsIFrame* rootmostFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
-  nsPoint globalPoint = aPoint + aFrame->GetOffsetTo(rootmostFrame);
+  // Get the point relative to the root most frame because the scroll we are
+  // about to do will change the coordinates of aFrame.
+  nsPoint globalPoint = aPoint + aFrame->GetOffsetToCrossDoc(rootmostFrame);
 
   PRBool didScroll = presContext->PresShell()->
     ScrollFrameRectIntoView(aFrame, nsRect(aPoint, nsSize(1,1)),
@@ -4677,7 +4684,7 @@ nsTypedSelection::DoAutoScroll(nsIFrame *aFrame, nsPoint& aPoint)
   if (didScroll && mAutoScrollTimer)
   {
     nsPoint presContextPoint = globalPoint -
-      presContext->PresShell()->FrameManager()->GetRootFrame()->GetOffsetTo(rootmostFrame);
+      presContext->PresShell()->FrameManager()->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);
     mAutoScrollTimer->Start(presContext, presContextPoint);
   }
 

@@ -71,6 +71,10 @@ class nsSVGViewBox;
 class nsSVGPreserveAspectRatio;
 class nsSVGString;
 struct gfxMatrix;
+namespace mozilla {
+class SVGAnimatedLengthList;
+class SVGUserUnitList;
+}
 
 typedef nsStyledElement nsSVGElementBase;
 
@@ -78,7 +82,7 @@ class nsSVGElement : public nsSVGElementBase,    // nsIContent
                      public nsISVGValueObserver  // :nsISupportsWeakReference
 {
 protected:
-  nsSVGElement(nsINodeInfo *aNodeInfo);
+  nsSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
   virtual ~nsSVGElement();
 
@@ -159,6 +163,7 @@ public:
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeViewBox(PRBool aDoSetAttr);
   virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
+  virtual void DidChangeLengthList(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeString(PRUint8 aAttrEnum) {}
 
   virtual void DidAnimateLength(PRUint8 aAttrEnum);
@@ -169,11 +174,14 @@ public:
   virtual void DidAnimateEnum(PRUint8 aAttrEnum);
   virtual void DidAnimateViewBox();
   virtual void DidAnimatePreserveAspectRatio();
+  virtual void DidAnimateLengthList(PRUint8 aAttrEnum);
   virtual void DidAnimateTransform();
 
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
   void GetAnimatedIntegerValues(PRInt32 *aFirst, ...);
+  void GetAnimatedLengthListValues(mozilla::SVGUserUnitList *aFirst, ...);
+  mozilla::SVGAnimatedLengthList* GetAnimatedLengthList(PRUint8 aAttrEnum);
 
 #ifdef MOZ_SMIL
   virtual nsISMILAttr* GetAnimatedAttr(nsIAtom* aName);
@@ -330,6 +338,36 @@ protected:
     void Reset(PRUint8 aAttrEnum);
   };
 
+  struct LengthListInfo {
+    nsIAtom** mName;
+    PRUint8   mAxis;
+    /**
+     * Flag to indicate whether appending zeros to the end of the list would
+     * change the rendering of the SVG for the attribute in question. For x and
+     * y on the <text> element this is true, but for dx and dy on <text> this
+     * is false. This flag is fed down to SVGLengthListSMILType so it can
+     * determine if it can sensibly animate from-to lists of different lengths,
+     * which is desirable in the case of dx and dy.
+     */
+    PRPackedBool mCouldZeroPadList;
+  };
+
+  struct LengthListAttributesInfo {
+    mozilla::SVGAnimatedLengthList* mLengthLists;
+    LengthListInfo*        mLengthListInfo;
+    PRUint32               mLengthListCount;
+
+    LengthListAttributesInfo(mozilla::SVGAnimatedLengthList *aLengthLists,
+                             LengthListInfo *aLengthListInfo,
+                             PRUint32 aLengthListCount)
+      : mLengthLists(aLengthLists)
+      , mLengthListInfo(aLengthListInfo)
+      , mLengthListCount(aLengthListCount)
+    {}
+
+    void Reset(PRUint8 aAttrEnum);
+  };
+
   struct StringInfo {
     nsIAtom**    mName;
     PRInt32      mNamespaceID;
@@ -359,6 +397,7 @@ protected:
   // so we don't need to wrap the class
   virtual nsSVGViewBox *GetViewBox();
   virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
+  virtual LengthListAttributesInfo GetLengthListInfo();
   virtual StringAttributesInfo GetStringInfo();
 
   static nsSVGEnumMapping sSVGUnitTypesMap[];
@@ -402,7 +441,7 @@ private:
 #define NS_IMPL_NS_NEW_SVG_ELEMENT(_elementName)                             \
 nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
-                                 nsINodeInfo *aNodeInfo)                     \
+                                 already_AddRefed<nsINodeInfo> aNodeInfo)    \
 {                                                                            \
   nsRefPtr<nsSVG##_elementName##Element> it =                                \
     new nsSVG##_elementName##Element(aNodeInfo);                             \
@@ -423,7 +462,7 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
 #define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)                \
 nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
-                                 nsINodeInfo *aNodeInfo,                     \
+                                 already_AddRefed<nsINodeInfo> aNodeInfo,    \
                                  PRUint32 aFromParser)                       \
 {                                                                            \
   nsRefPtr<nsSVG##_elementName##Element> it =                                \

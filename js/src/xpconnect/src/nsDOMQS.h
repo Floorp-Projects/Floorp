@@ -145,4 +145,22 @@ ToSupports(nsContentList *p)
     return static_cast<nsINodeList*>(p);
 }
 
+inline nsISupports*
+ToCanonicalSupports(nsINode* p)
+{
+    return p;
+}
+
+inline nsISupports*
+ToCanonicalSupports(nsContentList *p)
+{
+    return static_cast<nsINodeList*>(p);
+}
+
+inline already_AddRefed<nsISupports>
+ToCanonicalSupports(nsCOMPtr<nsIContent>& p)
+{
+    return p.forget().get();
+}
+
 #endif /* nsDOMQS_h__ */

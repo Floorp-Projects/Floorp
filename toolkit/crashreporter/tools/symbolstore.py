@@ -608,8 +608,8 @@ class Dumper_Win32(Dumper):
         # try compressing it
         compressed_file = os.path.splitext(full_path)[0] + ".pd_"
         # ignore makecab's output
-        success = call(["makecab.exe", full_path, compressed_file],
-                       stdout=open("NUL:","w"), stderr=STDOUT)
+        success = call(["makecab.exe", "/D", "CompressionType=LZX", "/D", "CompressionMemory=21",
+                       full_path, compressed_file], stdout=open("NUL:","w"), stderr=STDOUT)
         if success == 0 and os.path.exists(compressed_file):
             os.unlink(full_path)
             print os.path.splitext(rel_path)[0] + ".pd_"
@@ -710,6 +710,9 @@ class Dumper_Mac(Dumper):
         # dsymutil takes --arch=foo instead of -a foo like everything else
         os.system("dsymutil %s %s >/dev/null" % (' '.join([a.replace('-a ', '--arch=') for a in self.archs]),
                                       file))
+        if not os.path.exists(dsymbundle):
+            # dsymutil won't produce a .dSYM for files without symbols
+            return False
         res = Dumper.ProcessFile(self, dsymbundle)
         # CopyDebug will already have been run from Dumper.ProcessFile
         shutil.rmtree(dsymbundle)

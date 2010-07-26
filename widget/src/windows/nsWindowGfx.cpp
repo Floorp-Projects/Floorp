@@ -71,6 +71,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "prmem.h"
 
 #include "LayerManagerOGL.h"
+#include "BasicLayers.h"
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
 #endif
@@ -83,6 +84,8 @@ using mozilla::plugins::PluginInstanceParent;
 extern "C" {
 #include "pixman.h"
 }
+
+using namespace mozilla::layers;
 
 /**************************************************************
  **************************************************************
@@ -297,9 +300,16 @@ EnsureSharedSurfaceSize(gfxIntSize size)
   return (sSharedSurfaceData != nsnull);
 }
 
-PRBool nsWindow::OnPaint(HDC aDC)
+PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 {
 #ifdef MOZ_IPC
+  // We never have reentrant paint events, except when we're running our RPC
+  // windows event spin loop. If we don't trap for this, we'll try to paint,
+  // but view manager will refuse to paint the surface, resulting is black
+  // flashes on the plugin rendering surface.
+  if (mozilla::ipc::RPCChannel::IsSpinLoopActive() && mPainting)
+    return PR_FALSE;
+
   if (mWindowType == eWindowType_plugin) {
 
     /**
@@ -338,6 +348,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #endif
 
   nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
+  willPaintEvent.willSendDidPaint = PR_TRUE;
   DispatchWindowEvent(&willPaintEvent);
 
 #ifdef CAIRO_HAS_DDRAW_SURFACE
@@ -395,6 +406,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
   PRBool forceRepaint = NULL != aDC;
 #endif
   event.region = GetRegionToPaint(forceRepaint, ps, hDC);
+  event.willSendDidPaint = PR_TRUE;
 
   if (!event.region.IsEmpty() && mEventCallback)
   {
@@ -429,7 +441,9 @@ PRBool nsWindow::OnPaint(HDC aDC)
           if (!targetSurface &&
               IsRenderMode(gfxWindowsPlatform::RENDER_GDI))
           {
-            targetSurfaceWin = new gfxWindowsSurface(hDC);
+            PRUint32 flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
+                gfxWindowsSurface::FLAG_IS_TRANSPARENT;
+            targetSurfaceWin = new gfxWindowsSurface(hDC, flags);
             targetSurface = targetSurfaceWin;
           }
 #ifdef CAIRO_HAS_D2D_SURFACE
@@ -523,11 +537,13 @@ DDRAW_FAILED:
 #endif
 
           // don't need to double buffer with anything but GDI
+          BasicLayerManager::BufferMode doubleBuffering =
+            BasicLayerManager::BUFFER_NONE;
           if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
 # if defined(MOZ_XUL) && !defined(WINCE)
             if (eTransparencyGlass == mTransparencyMode && nsUXThemeData::sHaveCompositor) {
-              thebesContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
-            } else if (eTransparencyTransparent == mTransparencyMode) {
+              doubleBuffering = BasicLayerManager::BUFFER_BUFFERED;
+           } else if (eTransparencyTransparent == mTransparencyMode) {
               // If we're rendering with translucency, we're going to be
               // rendering the whole window; make sure we clear it first
               thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -537,12 +553,13 @@ DDRAW_FAILED:
 #endif
             {
               // If we're not doing translucency, then double buffer
-              thebesContext->PushGroup(gfxASurface::CONTENT_COLOR);
+              doubleBuffering = BasicLayerManager::BUFFER_BUFFERED;
             }
           }
 
           {
-            AutoLayerManagerSetup setupLayerManager(this, thebesContext);
+            AutoLayerManagerSetup
+                setupLayerManager(this, thebesContext, doubleBuffering);
             result = DispatchWindowEvent(&event, eventStatus);
           }
 
@@ -564,13 +581,7 @@ DDRAW_FAILED:
           }
 #endif
           if (result) {
-            if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
-              // Only update if DispatchWindowEvent returned TRUE; otherwise, nothing handled
-              // this, and we'll just end up painting with black.
-              thebesContext->PopGroupToSource();
-              thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-              thebesContext->Paint();
-            } else if (IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW) ||
+            if (IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW) ||
                        IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW_GL))
             {
 #ifdef CAIRO_HAS_DDRAW_SURFACE
@@ -729,6 +740,13 @@ DDRAW_FAILED:
 #endif // WIDGET_DEBUG_OUTPUT && !WINCE
 
   mPainting = PR_FALSE;
+
+  nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, this);
+  DispatchWindowEvent(&didPaintEvent);
+
+  if (aNestingLevel == 0 && ::GetUpdateRect(mWnd, NULL, PR_FALSE)) {
+    OnPaint(aDC, 1);
+  }
 
   return result;
 }

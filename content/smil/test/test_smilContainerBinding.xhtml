@@ -60,11 +60,11 @@ function main() {
   is(anim.getStartTime(), 6);
 
   // Rebind
-  // At this point all the old intervals should be re-added to anim. If they're
-  // not and only the current interval is added to anim we'll get a start time
-  // of 4s instead of 2s.
+  // At this point only the current interval will be re-added to anim (this is
+  // for consistency since old intervals may or may not have been filtered).
+  // Therefore the start time should be 4s instead of 2s.
   circle.appendChild(anim);
-  is(anim.getStartTime(), 2);
+  is(anim.getStartTime(), 4);
 
   SimpleTest.finish();
 }

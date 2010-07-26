@@ -219,10 +219,16 @@ __try {
         nsIView *rootView;
         viewManager->GetRootView(rootView);
         if (rootView == view) {
-          // If the current object has a widget but was created by an
-          // outer object with its own outer window, then
-          // we want the native accessible for that outer window
-          hwnd = ::GetParent(hwnd);
+          // If the client accessible (OBJID_CLIENT) has a window but its window
+          // was created by an outer window then we want the native accessible
+          // for that outer window. If the accessible was created for outer
+          // window (if the outer window has inner windows then they share the
+          // same client accessible with it) then return native accessible for
+          // the outer window.
+          HWND parenthwnd = ::GetParent(hwnd);
+          if (parenthwnd)
+            hwnd = parenthwnd;
+
           NS_ASSERTION(hwnd, "No window handle for window");
         }
       }
@@ -231,7 +237,7 @@ __try {
         // not an extra parent window for just the scrollbars
         nsIScrollableFrame *scrollFrame = do_QueryFrame(frame);
         if (scrollFrame) {
-          hwnd = (HWND)scrollFrame->GetScrolledFrame()->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+          hwnd = (HWND)scrollFrame->GetScrolledFrame()->GetNearestWidget()->GetNativeData(NS_NATIVE_WINDOW);
           NS_ASSERTION(hwnd, "No window handle for window");
         }
       }
@@ -367,67 +373,8 @@ __try {
   if (!xpAccessible)
     return E_FAIL;
 
-  // For items that are a choice in a list of choices, use MSAA description
-  // field to shoehorn positional info, it's becoming a defacto standard use for
-  // the field.
-
   nsAutoString description;
-
-  // Try to get group position to make a positional description string.
-  PRInt32 groupLevel = 0;
-  PRInt32 itemsInGroup = 0;
-  PRInt32 positionInGroup = 0;
-  GroupPosition(&groupLevel, &itemsInGroup, &positionInGroup);
-
-  if (positionInGroup > 0) {
-    if (groupLevel > 0) {
-      // XXX: How do we calculate the number of children? Now we append
-      // " with [numChildren]c" for tree item. In the future we may need to
-      // use the ARIA owns property to calculate that if it's present.
-      PRInt32 numChildren = 0;
-
-      PRUint32 currentRole = nsAccUtils::Role(xpAccessible);
-      if (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
-        PRInt32 childCount = xpAccessible->GetChildCount();
-        for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-          nsAccessible *child = xpAccessible->GetChildAt(childIdx);
-          currentRole = nsAccUtils::Role(child);
-          if (currentRole == nsIAccessibleRole::ROLE_GROUPING) {
-            PRInt32 groupChildCount = child->GetChildCount();
-            for (PRInt32 groupChildIdx = 0; groupChildIdx < groupChildCount;
-                 groupChildIdx++) {
-              nsAccessible *groupChild = child->GetChildAt(groupChildIdx);
-              currentRole = nsAccUtils::Role(groupChild);
-              numChildren +=
-                (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM);
-            }
-            break;
-          }
-        }
-      }
-
-      if (numChildren) {
-        nsTextFormatter::ssprintf(description,
-                                  NS_LITERAL_STRING("L%d, %d of %d with %d").get(),
-                                  groupLevel, positionInGroup, itemsInGroup,
-                                  numChildren);
-      } else {
-        nsTextFormatter::ssprintf(description,
-                                  NS_LITERAL_STRING("L%d, %d of %d").get(),
-                                  groupLevel, positionInGroup, itemsInGroup);
-      }
-    } else { // Position has no level
-      nsTextFormatter::ssprintf(description,
-                                NS_LITERAL_STRING("%d of %d").get(),
-                                positionInGroup, itemsInGroup);
-    }
-  } else if (groupLevel > 0) {
-    nsTextFormatter::ssprintf(description, NS_LITERAL_STRING("L%d").get(),
-                              groupLevel);
-  }
-
-  if (description.IsEmpty())
-    xpAccessible->GetDescription(description);
+  xpAccessible->GetDescription(description);
 
   *pszDescription = ::SysAllocStringLen(description.get(),
                                         description.Length());
@@ -1681,7 +1628,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
   if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
     // Don't use frame from current accessible when we're hiding that
     // accessible.
-    newAccessible = accessible->GetParent();
+    newAccessible = accessible->GetCachedParent();
   } else {
     newAccessible = accessible;
   }
@@ -1735,7 +1682,7 @@ nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
 
   nsIFrame *frame = aAccessible->GetFrame();
   if (frame) {
-    nsIWidget *window = frame->GetWindow();
+    nsIWidget *window = frame->GetNearestWidget();
     PRBool isVisible;
     window->IsVisible(isVisible);
     if (isVisible) {
@@ -1753,7 +1700,7 @@ nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
       // JAWS doesn't echo the current option as it changes in a closed
       // combo box, we need to use an ensure that we never fire an event with
       // an HWND for a hidden window.
-      hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+      hWnd = (HWND)frame->GetNearestWidget()->GetNativeData(NS_NATIVE_WINDOW);
     }
   }
 

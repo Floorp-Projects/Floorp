@@ -117,7 +117,7 @@
     <command id="Browser:NextTab" oncommand="gBrowser.tabContainer.advanceSelectedTab(1, true);"/>
     <command id="Browser:PrevTab" oncommand="gBrowser.tabContainer.advanceSelectedTab(-1, true);"/>
     <command id="Browser:ShowAllTabs" oncommand="allTabs.open();"/>
-    <command id="Browser:ShowTabCandy" oncommand="BrowserShowTabCandy();"/>
+    <command id="Browser:ToggleTabCandy" oncommand="TabCandy.toggle();"/>
     <command id="cmd_fullZoomReduce"  oncommand="FullZoom.reduce()"/>
     <command id="cmd_fullZoomEnlarge" oncommand="FullZoom.enlarge()"/>
     <command id="cmd_fullZoomReset"   oncommand="FullZoom.reset()"/>
@@ -140,6 +140,19 @@
              oncommand="PlacesCommandHook.showPlacesOrganizer('AllBookmarks');"/>
     <command id="Browser:ShowAllHistory"
              oncommand="PlacesCommandHook.showPlacesOrganizer('History');"/>
+  </commandset>
+
+  <commandset id="inspectorCommands">
+    <command id="Inspector:Inspect"
+             oncommand="InspectorUI.toggleInspection();"/>
+    <command id="Inspector:Previous"
+             oncommand="InspectorUI.inspectPrevious();"
+             disabled="true"/>
+    <command id="Inspector:Next"
+             oncommand="InspectorUI.inspectNext();"
+             disabled="true"/>
+    <command id="Inspector:Style"
+             oncommand="InspectorUI.toggleStylePanel();"/>
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
@@ -223,7 +236,7 @@
     <key id="key_openDownloads" key="&downloads.commandkey;" command="Tools:Downloads" modifiers="accel"/>
 #endif
     <key id="key_errorConsole" key="&errorConsoleCmd.commandkey;" oncommand="toJavaScriptConsole();" modifiers="accel,shift"/>
-    <key id="key_hudConsole" key="&hudConsoleCmd.commandkey;" oncommand="HUDConsoleUI.toggleHUD();" modifiers="accel,shift"/>
+    <key id="key_webConsole" key="&webConsoleCmd.commandkey;" oncommand="HUDConsoleUI.toggleHUD();" modifiers="accel,shift"/>
     <key id="key_inspect" key="&inspectMenu.commandkey;" command="Tools:Inspect" modifiers="accel,shift"/>
     <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
@@ -326,8 +339,6 @@
     <key                          key="&fullZoomResetCmd.commandkey2;"   command="cmd_fullZoomReset"   modifiers="accel"/>
 
     <key id="key_showAllTabs" command="Browser:ShowAllTabs" keycode="VK_TAB" modifiers="control,shift"/>
-
-    <key id="key_tabcandy" command="Browser:ShowTabCandy" key="&showTabCandy.commandkey;" modifiers="accel" />
 
     <key id="key_switchTextDirection" key="&bidiSwitchTextDirectionItem.commandkey;" command="cmd_switchTextDirection" modifiers="accel,shift" />
 

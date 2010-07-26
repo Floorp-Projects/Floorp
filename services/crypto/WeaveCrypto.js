@@ -1125,7 +1125,12 @@ WeaveCrypto.prototype = {
     }
 };
 
+// Gecko <2.0
 let component = typeof Services == "undefined" || typeof ctypes == "undefined" ? [] : [WeaveCrypto];
 function NSGetModule (compMgr, fileSpec) {
     return XPCOMUtils.generateModule(component);
 }
+
+// Gecko >=2.0
+if (typeof XPCOMUtils.generateNSGetFactory == "function")
+    const NSGetFactory = XPCOMUtils.generateNSGetFactory([WeaveCrypto]);

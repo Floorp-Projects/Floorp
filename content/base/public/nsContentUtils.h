@@ -130,6 +130,7 @@ class nsIMIMEHeaderParam;
 class nsIObserver;
 class nsPresContext;
 class nsIChannel;
+struct nsIntMargin;
 
 #ifndef have_PrefChangedFunc_typedef
 typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
@@ -220,6 +221,11 @@ public:
    * checks for UniversalXPConnect in addition to aCapability.
    */
   static PRBool   IsCallerTrustedForCapability(const char* aCapability);
+
+  /**
+   * Returns the parent node of aChild crossing document boundaries.
+   */
+  static nsINode* GetCrossDocParentNode(nsINode* aChild);
 
   /**
    * Do not ever pass null pointers to this method.  If one of your
@@ -485,6 +491,8 @@ public:
 
   static imgILoader* GetImgLoader()
   {
+    if (!sImgLoaderInitialized)
+      InitImgLoader();
     return sImgLoader;
   }
 
@@ -1565,17 +1573,33 @@ public:
                              // If non-null aHolder will keep the jsval alive
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nsnull,
-                             PRBool aAllowWrapping = PR_FALSE);
+                             PRBool aAllowWrapping = PR_FALSE)
+  {
+    return WrapNative(cx, scope, native, nsnull, aIID, vp, aHolder,
+                      aAllowWrapping);
+  }
 
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                             nsISupports *native,  jsval *vp,
+                             nsISupports *native, jsval *vp,
                              // If non-null aHolder will keep the jsval alive
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nsnull,
                              PRBool aAllowWrapping = PR_FALSE)
   {
-    return WrapNative(cx, scope, native, nsnull, vp, aHolder, aAllowWrapping);
+    return WrapNative(cx, scope, native, nsnull, nsnull, vp, aHolder,
+                      aAllowWrapping);
+  }
+  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+                             nsISupports *native, nsWrapperCache *cache,
+                             jsval *vp,
+                             // If non-null aHolder will keep the jsval alive
+                             // while there's a ref to it
+                             nsIXPConnectJSObjectHolder** aHolder = nsnull,
+                             PRBool aAllowWrapping = PR_FALSE)
+  {
+    return WrapNative(cx, scope, native, cache, nsnull, vp, aHolder,
+                      aAllowWrapping);
   }
 
   static void StripNullChars(const nsAString& aInStr, nsAString& aOutStr);
@@ -1666,6 +1690,12 @@ private:
   static PRBool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
                                 nsIPrincipal* aPrincipal);
 
+  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+                             nsISupports *native, nsWrapperCache *cache,
+                             const nsIID* aIID, jsval *vp,
+                             nsIXPConnectJSObjectHolder** aHolder,
+                             PRBool aAllowWrapping);
+
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
 
   static nsIXPConnect *sXPConnect;
@@ -1688,6 +1718,10 @@ private:
   // For old compatibility of RegisterPrefCallback
   static nsCOMArray<nsPrefOldCallback> *sPrefCallbackList;
 
+  static bool sImgLoaderInitialized;
+  static void InitImgLoader();
+
+  // The following two members are initialized lazily
   static imgILoader* sImgLoader;
   static imgICache* sImgCache;
 
@@ -1779,46 +1813,39 @@ public:
   // aPtr should be the pointer to the jsval we want to protect
   nsAutoGCRoot(jsval* aPtr, nsresult* aResult
                MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
-    mPtr(aPtr)
+    mPtr(aPtr), mRootType(RootType_JSVal)
   {
     MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-    mResult = *aResult = AddJSGCRoot(aPtr, "nsAutoGCRoot");
+    mResult = *aResult = AddJSGCRoot(aPtr, RootType_JSVal, "nsAutoGCRoot");
   }
 
   // aPtr should be the pointer to the JSObject* we want to protect
   nsAutoGCRoot(JSObject** aPtr, nsresult* aResult
                MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
-    mPtr(aPtr)
+    mPtr(aPtr), mRootType(RootType_Object)
   {
     MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-    mResult = *aResult = AddJSGCRoot(aPtr, "nsAutoGCRoot");
-  }
-
-  // aPtr should be the pointer to the thing we want to protect
-  nsAutoGCRoot(void* aPtr, nsresult* aResult
-               MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
-    mPtr(aPtr)
-  {
-    MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
-    mResult = *aResult = AddJSGCRoot(aPtr, "nsAutoGCRoot");
+    mResult = *aResult = AddJSGCRoot(aPtr, RootType_Object, "nsAutoGCRoot");
   }
 
   ~nsAutoGCRoot() {
     if (NS_SUCCEEDED(mResult)) {
-      RemoveJSGCRoot(mPtr);
+      RemoveJSGCRoot(mPtr, mRootType);
     }
   }
 
   static void Shutdown();
 
 private:
-  static nsresult AddJSGCRoot(void *aPtr, const char* aName);
-  static nsresult RemoveJSGCRoot(void *aPtr);
+  enum RootType { RootType_JSVal, RootType_Object };
+  static nsresult AddJSGCRoot(void *aPtr, RootType aRootType, const char* aName);
+  static nsresult RemoveJSGCRoot(void *aPtr, RootType aRootType);
 
   static nsIJSRuntimeService* sJSRuntimeService;
   static JSRuntime* sJSScriptRuntime;
 
   void* mPtr;
+  RootType mRootType;
   nsresult mResult;
   MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

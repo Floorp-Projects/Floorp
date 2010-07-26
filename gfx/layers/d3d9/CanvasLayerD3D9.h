@@ -68,7 +68,6 @@ public:
   virtual void Updated(const nsIntRect& aRect);
 
   // LayerD3D9 implementation
-  virtual LayerType GetType();
   virtual Layer* GetLayer();
   virtual void RenderLayer();
 
@@ -77,6 +76,9 @@ protected:
 
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<GLContext> mGLContext;
+
+  PRUint32 mCanvasFramebuffer;
+
   nsRefPtr<IDirect3DTexture9> mTexture;
 
   nsIntRect mBounds;

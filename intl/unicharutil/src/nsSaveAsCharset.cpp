@@ -396,16 +396,3 @@ const char * nsSaveAsCharset::GetNextCharset()
   // bump the index and return the next charset
   return mCharsetList[++mCharsetListIndex].get();
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-nsresult 
-NS_NewSaveAsCharset(nsISupports **inst)
-{
-  if(nsnull == inst )
-    return NS_ERROR_NULL_POINTER;
-  *inst = (nsISupports *) new nsSaveAsCharset;
-   if(*inst)
-      NS_ADDREF(*inst);
-   return (*inst) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}

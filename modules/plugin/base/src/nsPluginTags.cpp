@@ -412,16 +412,104 @@ nsPluginTag::SetBlocklisted(PRBool aBlocklisted)
   return NS_OK;
 }
 
+void
+nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
+                                         nsPluginTag::nsRegisterType aType)
+{
+  if (!mMimeTypeArray)
+    return;
+  
+  PLUGIN_LOG(PLUGIN_LOG_NORMAL,
+             ("nsPluginTag::RegisterWithCategoryManager plugin=%s, removing = %s\n",
+              mFileName.get(), aType == ePluginUnregister ? "yes" : "no"));
+  
+  nsCOMPtr<nsICategoryManager> catMan = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  if (!catMan)
+    return;
+  
+  const char *contractId = "@mozilla.org/content/plugin/document-loader-factory;1";
+  
+  nsCOMPtr<nsIPrefBranch> psvc(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!psvc)
+    return; // NS_ERROR_OUT_OF_MEMORY
+  
+  // A preference controls whether or not the full page plugin is disabled for
+  // a particular type. The string must be in the form:
+  //   type1,type2,type3,type4
+  // Note: need an actual interface to control this and subsequent disabling 
+  // (and other plugin host settings) so applications can reliably disable 
+  // plugins - without relying on implementation details such as prefs/category
+  // manager entries.
+  nsXPIDLCString overrideTypes;
+  psvc->GetCharPref("plugin.disable_full_page_plugin_for_types", getter_Copies(overrideTypes));
+  nsCAutoString overrideTypesFormatted;
+  overrideTypesFormatted.Assign(',');
+  overrideTypesFormatted += overrideTypes;
+  overrideTypesFormatted.Append(',');
+  
+  nsACString::const_iterator start, end;
+  for (int i = 0; i < mVariants; i++) {
+    if (aType == ePluginUnregister) {
+      nsXPIDLCString value;
+      if (NS_SUCCEEDED(catMan->GetCategoryEntry("Gecko-Content-Viewers",
+                                                mMimeTypeArray[i],
+                                                getter_Copies(value)))) {
+        // Only delete the entry if a plugin registered for it
+        if (strcmp(value, contractId) == 0) {
+          catMan->DeleteCategoryEntry("Gecko-Content-Viewers",
+                                      mMimeTypeArray[i],
+                                      PR_TRUE);
+        }
+      }
+    } else {
+      overrideTypesFormatted.BeginReading(start);
+      overrideTypesFormatted.EndReading(end);
+      
+      nsDependentCString mimeType(mMimeTypeArray[i]);
+      nsCAutoString commaSeparated; 
+      commaSeparated.Assign(',');
+      commaSeparated += mimeType;
+      commaSeparated.Append(',');
+      if (!FindInReadable(commaSeparated, start, end)) {
+        catMan->AddCategoryEntry("Gecko-Content-Viewers",
+                                 mMimeTypeArray[i],
+                                 contractId,
+                                 PR_FALSE, /* persist: broken by bug 193031 */
+                                 aOverrideInternalTypes, /* replace if we're told to */
+                                 nsnull);
+      }
+    }
+    
+    PLUGIN_LOG(PLUGIN_LOG_NOISY,
+               ("nsPluginTag::RegisterWithCategoryManager mime=%s, plugin=%s\n",
+                mMimeTypeArray[i], mFileName.get()));
+  }
+}
+
 void nsPluginTag::Mark(PRUint32 mask)
 {
   PRBool wasEnabled = IsEnabled();
   mFlags |= mask;
+  // Update entries in the category manager if necessary.
+  if (mPluginHost && wasEnabled != IsEnabled()) {
+    if (wasEnabled)
+      RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
+    else
+      RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginRegister);
+  }
 }
 
 void nsPluginTag::UnMark(PRUint32 mask)
 {
   PRBool wasEnabled = IsEnabled();
   mFlags &= ~mask;
+  // Update entries in the category manager if necessary.
+  if (mPluginHost && wasEnabled != IsEnabled()) {
+    if (wasEnabled)
+      RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
+    else
+      RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginRegister);
+  }
 }
 
 PRBool nsPluginTag::HasFlag(PRUint32 flag)
@@ -475,34 +563,10 @@ void nsPluginTag::TryUnloadPlugin()
   // again so the calling code should not be fooled and reload
   // the library fresh
   mLibrary = nsnull;
-}
-
-/* nsPluginInstanceTag */
-
-nsPluginInstanceTag::nsPluginInstanceTag(nsPluginTag* aPluginTag,
-                                         nsIPluginInstance* aInstance,
-                                         const char * url)
-{
-  NS_ASSERTION(aInstance, "Must have a valid plugin instance when creating an nsPluginInstanceTag");
-  NS_ADDREF(aInstance);
-  mInstance = static_cast<nsNPAPIPluginInstance*>(aInstance);
-
-  mPluginTag = aPluginTag;
   
-  mURL = PL_strdup(url);
-}
-
-nsPluginInstanceTag::~nsPluginInstanceTag()
-{
-  mPluginTag = nsnull;
-
-  nsCOMPtr<nsIPluginInstanceOwner> owner;
-  mInstance->GetOwner(getter_AddRefs(owner));
-  if (owner)
-    owner->SetInstance(nsnull);
-  mInstance->InvalidateOwner();
-
-  NS_RELEASE(mInstance);
-
-  PL_strfree(mURL);
+  // Remove mime types added to the category manager
+  // only if we were made 'active' by setting the host
+  if (mPluginHost) {
+    RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
+  }
 }

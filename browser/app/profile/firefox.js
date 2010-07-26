@@ -56,6 +56,10 @@ pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul
 // Enables some extra Extension System Logging (can reduce performance)
 pref("extensions.logging.enabled", false);
 
+// Preferences for the Get Add-ons pane
+pref("extensions.getAddons.maxResults", 15);
+pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%");
+
 // Preferences for AMO integration
 pref("extensions.webservice.discoverURL", "https://services.addons.mozilla.org/%LOCALE%/%APP%/discovery/%VERSION%/%OS%");
 
@@ -320,8 +324,6 @@ pref("browser.tabs.loadInBackground", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
-pref("browser.tabs.tabMinWidth", 100);
-pref("browser.tabs.tabMaxWidth", 250);
 pref("browser.tabs.tabClipWidth", 140);
 
 // Where to show tab close buttons:

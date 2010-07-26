@@ -57,7 +57,7 @@ class nsTextNode : public nsGenericTextNode,
                    public nsIDOMText
 {
 public:
-  nsTextNode(nsINodeInfo *aNodeInfo);
+  nsTextNode(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsTextNode();
 
   // nsISupports
@@ -77,6 +77,8 @@ public:
 
   nsresult BindToAttribute(nsIAttribute* aAttr);
   nsresult UnbindFromAttribute();
+
+  virtual nsXPCClassInfo* GetClassInfo();
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;

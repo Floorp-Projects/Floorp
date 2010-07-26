@@ -709,7 +709,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                          ? js_InternalCall(cx, obj,
                                            CastAsObjectJSVal(wp->setter),
                                            1, vp, vp)
-                         : wp->setter(cx, obj, userid, vp));
+                         : callJSPropertyOpSetter(cx, wp->setter, obj, userid, vp));
 
             /* Evil code can cause us to have an arguments object. */
             if (frame.getFrame())
@@ -814,7 +814,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
      * If, by unwrapping and innerizing, we changed the object, check
      * again to make sure that we're allowed to set a watch point.
      */
-    if (origobj != obj && !obj->checkAccess(cx, propid, JSACC_WATCH, &v, &attrs))
+    if (origobj != obj && !CheckAccess(cx, obj, propid, JSACC_WATCH, &v, &attrs))
         return JS_FALSE;
 
     if (!obj->isNative()) {

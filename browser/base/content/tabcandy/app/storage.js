@@ -36,36 +36,39 @@
  * ***** END LICENSE BLOCK ***** */
 
 // **********
-// Title: storage.js 
+// Title: storage.js
 
 // ##########
+// Class: Storage
+// Singleton for permanent storage of TabCandy data.
 Storage = {
   GROUP_DATA_IDENTIFIER:  "tabcandy-group",
   GROUPS_DATA_IDENTIFIER: "tabcandy-groups",
   TAB_DATA_IDENTIFIER:    "tabcandy-tab",
   UI_DATA_IDENTIFIER:    "tabcandy-ui",
+  VISIBILITY_DATA_IDENTIFIER:    "tabcandy-visibility",
 
   // ----------
   // Function: onReady
   // Calls callback when Storage is ready for business. Could be immediately if it's already ready
-  // or later if needed. 
+  // or later if needed.
   onReady: function(callback) {
     try {
       // ToDo: the session store doesn't expose any public methods/variables for
       // us to check whether it's loaded or not so using a private one for
       // now.
-      var alreadyReady = Utils.getCurrentWindow().__SSi;
-      if(alreadyReady)
+      var alreadyReady = gWindow.__SSi;
+      if (alreadyReady) {
         callback();
-      else {    
+      } else {
         var obsService =
           Components.classes["@mozilla.org/observer-service;1"]
           .getService(Components.interfaces.nsIObserverService);
-        var observer = {      
+        var observer = {
           observe: function(subject, topic, data) {
             try {
               if (topic == "browser-delayed-startup-finished") {
-                if (subject == Utils.getCurrentWindow()) {
+                if (subject == gWindow) {
                   callback();
                 }
               }
@@ -74,16 +77,18 @@ Storage = {
             }
           }
         };
-          
+
         obsService.addObserver(
           observer, "browser-delayed-startup-finished", false);
       }
     } catch(e) {
       Utils.log(e);
-    }  
+    }
   },
 
   // ----------
+  // Function: init
+  // Sets up the object.
   init: function() {
     this._sessionStore =
       Components.classes["@mozilla.org/browser/sessionstore;1"]
@@ -91,29 +96,31 @@ Storage = {
   },
 
   // ----------
+  // Function: wipe
+  // Cleans out all the stored data, leaving empty objects.
   wipe: function() {
     try {
-      var win = Utils.getCurrentWindow();
-      
       var self = this;
-      
+
       // ___ Tabs
       Tabs.forEach(function(tab) {
-        self.saveTab(tab.raw, null);
+        self.saveTab(tab, null);
       });
-      
+
       // ___ Other
-      this.saveGroupsData(win, {});
-      this.saveUIData(win, {});
-      
-      this._sessionStore.setWindowValue(win, this.GROUP_DATA_IDENTIFIER,
+      this.saveGroupsData(gWindow, {});
+      this.saveUIData(gWindow, {});
+
+      this._sessionStore.setWindowValue(gWindow, this.GROUP_DATA_IDENTIFIER,
         JSON.stringify({}));
     } catch (e) {
       Utils.log("Error in wipe: "+e);
     }
   },
-  
+
   // ----------
+  // Function: saveTab
+  // Saves the data for a single tab.
   saveTab: function(tab, data) {
     Utils.assert('tab', tab);
 
@@ -122,6 +129,8 @@ Storage = {
   },
 
   // ----------
+  // Function: getTabData
+  // Returns the data object associated with a single tab.
   getTabData: function(tab) {
     Utils.assert('tab', tab);
 
@@ -136,12 +145,14 @@ Storage = {
       // getWindowValue will fail if the property doesn't exist
       Utils.log(e);
     }
-    
+
 /*     Utils.log('tab', existingData); */
     return existingData;
   },
 
   // ----------
+  // Function: saveGroup
+  // Saves the data for a single group, associated with a specific window.
   saveGroup: function(win, data) {
     var id = data.id;
     var existingData = this.readGroupData(win);
@@ -151,6 +162,8 @@ Storage = {
   },
 
   // ----------
+  // Function: deleteGroup
+  // Deletes the data for a single group from the given window.
   deleteGroup: function(win, id) {
     var existingData = this.readGroupData(win);
     delete existingData[id];
@@ -159,6 +172,8 @@ Storage = {
   },
 
   // ----------
+  // Function: readGroupData
+  // Returns the data for all groups associated with the given window.
   readGroupData: function(win) {
     var existingData = {};
     try {
@@ -174,51 +189,63 @@ Storage = {
   },
 
   // ----------
+  // Function: saveGroupsData
+  // Saves the global data for the <Groups> singleton for the given window.
   saveGroupsData: function(win, data) {
     this.saveData(win, this.GROUPS_DATA_IDENTIFIER, data);
   },
 
   // ----------
+  // Function: readGroupsData
+  // Reads the global data for the <Groups> singleton for the given window.
   readGroupsData: function(win) {
     return this.readData(win, this.GROUPS_DATA_IDENTIFIER);
   },
-  
+
   // ----------
+  // Function: saveUIData
+  // Saves the global data for the <UIManager> singleton for the given window.
   saveUIData: function(win, data) {
     this.saveData(win, this.UI_DATA_IDENTIFIER, data);
   },
 
   // ----------
+  // Function: readUIData
+  // Reads the global data for the <UIManager> singleton for the given window.
   readUIData: function(win) {
     return this.readData(win, this.UI_DATA_IDENTIFIER);
   },
-  
+
   // ----------
+  // Function: saveData
+  // Generic routine for saving data to a window.
   saveData: function(win, id, data) {
     try {
       this._sessionStore.setWindowValue(win, id, JSON.stringify(data));
     } catch (e) {
       Utils.log("Error in saveData: "+e);
     }
-    
+
 /*     Utils.log('save data', id, data); */
   },
 
   // ----------
+  // Function: readData
+  // Generic routine for reading data from a window.
   readData: function(win, id) {
     var existingData = {};
     try {
       var data = this._sessionStore.getWindowValue(win, id);
-      if(data)
+      if (data)
         existingData = JSON.parse(data);
     } catch (e) {
       Utils.log("Error in readData: "+e);
     }
-    
+
 /*     Utils.log('read data', id, existingData); */
     return existingData;
   }
 };
 
+// ----------
 Storage.init();
-
