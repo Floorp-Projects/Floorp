@@ -705,7 +705,7 @@ mjit::Compiler::jsop_neg()
         masm.loadDouble(&DoubleNegMask, FPRegisters::Second);
         masm.xorDouble(FPRegisters::Second, fpreg);
 #elif defined JS_CPU_ARM
-        masm.negDouble(fpreg);
+        masm.negDouble(fpreg, fpreg);
 #endif
 
         /* Overwrite pushed frame's memory (before push). */

@@ -3124,8 +3124,8 @@ GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, 
      * If we did not find the upvar in the frames for the active traces,
      * then we simply get the value from the interpreter state.
      */
-    JS_ASSERT(upvarLevel < UpvarCookie::FREE_LEVEL);
-    JSStackFrame* fp = FindFrameAtLevel(cx, upvarLevel);
+    JS_ASSERT(upvarLevel < UpvarCookie::UPVAR_LEVEL_LIMIT);
+    JSStackFrame* fp = cx->findFrameAtLevel(upvarLevel);
     Value v = T::interp_get(fp, slot);
     JSValueType type = getCoercedType(v);
     ValueToNative(v, type, result);
@@ -12915,7 +12915,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, Value& v)
      */
     uint32 level = script->staticLevel - cookie.level();
     uint32 cookieSlot = cookie.slot();
-    JSStackFrame* fp = FindFrameAtLevel(cx, level);
+    JSStackFrame* fp = cx->findFrameAtLevel(level);
     const CallInfo* ci;
     int32 slot;
     if (!fp->fun || (fp->flags & JSFRAME_EVAL)) {
