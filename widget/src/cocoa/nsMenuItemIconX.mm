@@ -443,7 +443,7 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   
   nsRefPtr<gfxImageSurface> frame;
   nsresult rv = imageContainer->CopyFrame(  imgIContainer::FRAME_CURRENT,
-                                            imgIContainer::FLAG_SYNC_DECODE,
+                                            imgIContainer::FLAG_NONE,
                                             getter_AddRefs(frame));
   if (NS_FAILED(rv) || !frame) {
     [mNativeMenuItem setImage:nil];
