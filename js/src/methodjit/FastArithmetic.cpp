@@ -117,24 +117,19 @@ JSOpBinaryTryConstantFold(JSContext *cx, FrameState &frame, JSOp op, FrameEntry 
     return true;
 }
 
-/*
- * TODO: Replace with fast constant loading.
- * This is not part of the FrameState because fast constant loading
- * is inherently a Compiler task, and this code should not be used
- * except temporarily.
- */
 void
 mjit::Compiler::slowLoadConstantDouble(Assembler &masm,
                                        FrameEntry *fe, FPRegisterID fpreg)
 {
-    jsval_layout jv;
+    DoublePatch patch;
     if (fe->getKnownType() == JSVAL_TYPE_INT32)
-        jv.asDouble = (double)fe->getValue().toInt32();
+        patch.d = (double)fe->getValue().toInt32();
     else
-        jv.asDouble = fe->getValue().toDouble();
-
-    masm.storeLayout(jv, frame.addressOf(fe));
-    masm.loadDouble(frame.addressOf(fe), fpreg);
+        patch.d = fe->getValue().toDouble();
+    patch.label = masm.loadDouble(NULL, fpreg);
+    patch.ool = &masm != &this->masm;
+    JS_ASSERT_IF(patch.ool, &masm == &stubcc.masm);
+    doubleList.append(patch);
 }
 
 void

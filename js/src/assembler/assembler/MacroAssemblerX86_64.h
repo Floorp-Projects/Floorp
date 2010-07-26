@@ -91,10 +91,11 @@ public:
         }
     }
 
-    void loadDouble(const void* address, FPRegisterID dest)
+    DataLabelPtr loadDouble(const void* address, FPRegisterID dest)
     {
-        move(ImmPtr(address), scratchRegister);
+        DataLabelPtr label = moveWithPatch(ImmPtr(address), scratchRegister);
         loadDouble(scratchRegister, dest);
+        return label;
     }
 
     void convertInt32ToDouble(AbsoluteAddress src, FPRegisterID dest)
