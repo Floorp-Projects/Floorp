@@ -85,8 +85,8 @@ public:
   gfxFloat GetPathScale();
 protected:
 
-  virtual void GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY);
-  virtual void GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy);
+  virtual void GetXY(mozilla::SVGUserUnitList *aX, mozilla::SVGUserUnitList *aY);
+  virtual void GetDxDy(mozilla::SVGUserUnitList *aDx, mozilla::SVGUserUnitList *aDy);
   virtual already_AddRefed<nsIDOMSVGNumberList> GetRotate();
 
 private:

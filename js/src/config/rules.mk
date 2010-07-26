@@ -1913,9 +1913,9 @@ chrome::
 $(FINAL_TARGET)/chrome:
 	$(NSINSTALL) -D $@
 
+libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
 ifneq (,$(wildcard $(JAR_MANIFEST)))
 ifndef NO_DIST_INSTALL
-libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
 	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
 	  $(QUIET) -j $(FINAL_TARGET)/chrome \
 	  $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \

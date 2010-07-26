@@ -66,6 +66,8 @@ const TEST_FILTER_URI = "http://example.com/browser/toolkit/components/console/h
 
 const TEST_PROPERTY_PROVIDER_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-property-provider.html";
 
+const TEST_ERROR_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-error.html";
+
 function noCacheUriSpec(aUriSpec) {
   return aUriSpec + "?_=" + Date.now();
 }
@@ -591,10 +593,53 @@ function testPageReload() {
     is(typeof console.error, "function", "console.error is a function");
     is(typeof console.exception, "function", "console.exception is a function");
 
-    testEnd();
+    testErrorOnPageReload();
   }, false);
 
   content.location.reload();
+}
+
+function testErrorOnPageReload() {
+  // see bug 580030: the error handler fails silently after page reload.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=580030
+
+  var pageReloaded = false;
+  browser.addEventListener("DOMContentLoaded", function onDOMLoad() {
+    if (!pageReloaded) {
+      pageReloaded = true;
+      content.location.reload();
+      return;
+    }
+
+    browser.removeEventListener("DOMContentLoaded", onDOMLoad, false);
+
+    // dispatch a click event to the button in the test page.
+    var contentDocument = browser.contentDocument.wrappedJSObject;
+    var button = contentDocument.getElementsByTagName("button")[0];
+    var clickEvent = contentDocument.createEvent("MouseEvents");
+    clickEvent.initMouseEvent("click", true, true,
+      browser.contentWindow.wrappedJSObject, 0, 0, 0, 0, 0, false, false,
+      false, false, 0, null);
+
+    var successMsg = "Found the error message after page reload";
+    var errMsg = "Could not get the error message after page reload";
+
+    var display = HUDService.getDisplayByURISpec(content.location.href);
+    var outputNode = display.querySelectorAll(".hud-output-node")[0];
+
+    button.addEventListener("click", function onClickHandler() {
+      button.removeEventListener("click", onClickHandler, false);
+
+      testLogEntry(outputNode, "fooBazBaz",
+        { success: successMsg, err: errMsg });
+
+      testEnd();
+    }, false);
+
+    button.dispatchEvent(clickEvent);
+  }, false);
+
+  content.location.href = TEST_ERROR_URI;
 }
 
 function testEnd() {

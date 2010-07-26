@@ -373,67 +373,8 @@ __try {
   if (!xpAccessible)
     return E_FAIL;
 
-  // For items that are a choice in a list of choices, use MSAA description
-  // field to shoehorn positional info, it's becoming a defacto standard use for
-  // the field.
-
   nsAutoString description;
-
-  // Try to get group position to make a positional description string.
-  PRInt32 groupLevel = 0;
-  PRInt32 itemsInGroup = 0;
-  PRInt32 positionInGroup = 0;
-  GroupPosition(&groupLevel, &itemsInGroup, &positionInGroup);
-
-  if (positionInGroup > 0) {
-    if (groupLevel > 0) {
-      // XXX: How do we calculate the number of children? Now we append
-      // " with [numChildren]c" for tree item. In the future we may need to
-      // use the ARIA owns property to calculate that if it's present.
-      PRInt32 numChildren = 0;
-
-      PRUint32 currentRole = nsAccUtils::Role(xpAccessible);
-      if (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
-        PRInt32 childCount = xpAccessible->GetChildCount();
-        for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-          nsAccessible *child = xpAccessible->GetChildAt(childIdx);
-          currentRole = nsAccUtils::Role(child);
-          if (currentRole == nsIAccessibleRole::ROLE_GROUPING) {
-            PRInt32 groupChildCount = child->GetChildCount();
-            for (PRInt32 groupChildIdx = 0; groupChildIdx < groupChildCount;
-                 groupChildIdx++) {
-              nsAccessible *groupChild = child->GetChildAt(groupChildIdx);
-              currentRole = nsAccUtils::Role(groupChild);
-              numChildren +=
-                (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM);
-            }
-            break;
-          }
-        }
-      }
-
-      if (numChildren) {
-        nsTextFormatter::ssprintf(description,
-                                  NS_LITERAL_STRING("L%d, %d of %d with %d").get(),
-                                  groupLevel, positionInGroup, itemsInGroup,
-                                  numChildren);
-      } else {
-        nsTextFormatter::ssprintf(description,
-                                  NS_LITERAL_STRING("L%d, %d of %d").get(),
-                                  groupLevel, positionInGroup, itemsInGroup);
-      }
-    } else { // Position has no level
-      nsTextFormatter::ssprintf(description,
-                                NS_LITERAL_STRING("%d of %d").get(),
-                                positionInGroup, itemsInGroup);
-    }
-  } else if (groupLevel > 0) {
-    nsTextFormatter::ssprintf(description, NS_LITERAL_STRING("L%d").get(),
-                              groupLevel);
-  }
-
-  if (description.IsEmpty())
-    xpAccessible->GetDescription(description);
+  xpAccessible->GetDescription(description);
 
   *pszDescription = ::SysAllocStringLen(description.get(),
                                         description.Length());

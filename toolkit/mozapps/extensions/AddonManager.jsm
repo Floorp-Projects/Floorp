@@ -880,6 +880,18 @@ var AddonManager = {
   PENDING_INSTALL: 8,
   PENDING_UPGRADE: 16,
 
+  // Constants for operations in Addon.operationsRequiringRestart
+  // Indicates that restart isn't required for any operation.
+  OP_NEEDS_RESTART_NONE: 0,
+  // Indicates that restart is required for enabling the addon.
+  OP_NEEDS_RESTART_ENABLE: 1,
+  // Indicates that restart is required for disabling the addon.
+  OP_NEEDS_RESTART_DISABLE: 2,
+  // Indicates that restart is required for uninstalling the addon.
+  OP_NEEDS_RESTART_UNINSTALL: 4,
+  // Indicates that restart is required for installing the addon.
+  OP_NEEDS_RESTART_INSTALL: 8,
+
   // Constants for permissions in Addon.permissions.
   // Indicates that the Addon can be uninstalled.
   PERM_CAN_UNINSTALL: 1,

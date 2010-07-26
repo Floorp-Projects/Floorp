@@ -72,6 +72,8 @@ function run_test_1() {
   });
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+    do_check_neq(a1.operationsRequiringRestart &
+                 AddonManager.OP_NEEDS_RESTART_DISABLE, 0);
     a1.userDisabled = true;
     do_check_eq(a1.aboutURL, "chrome://foo/content/about.xul");
     do_check_eq(a1.optionsURL, "chrome://foo/content/options.xul");

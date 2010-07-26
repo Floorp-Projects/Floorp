@@ -71,4 +71,5 @@ load 508927-1.xul
 load 508927-2.xul
 load 514300-1.xul
 load 536931-1.xhtml
+asserts(1) load 538308-1.xul
 load menulist-focused.xhtml

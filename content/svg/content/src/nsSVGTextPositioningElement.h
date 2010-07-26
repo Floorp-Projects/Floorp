@@ -73,7 +73,7 @@ protected:
   // nsIDOMSVGTextPositioning properties:
 
   enum { X, Y, DX, DY };
-  SVGAnimatedLengthList mLengthListAttributes[4];
+  mozilla::SVGAnimatedLengthList mLengthListAttributes[4];
   static LengthListInfo sLengthListInfo[4];
 
   nsCOMPtr<nsIDOMSVGAnimatedNumberList> mRotate;

@@ -65,7 +65,8 @@ function run_test_1() {
     do_check_true(install.addon.hasResource("install.rdf"));
     do_check_eq(install.addon.install, install);
     do_check_eq(install.addon.size, ADDON1_SIZE);
-
+    do_check_neq(install.addon.operationsRequiringRestart &
+                 AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
     let file = do_get_addon("test_install1");
     let uri = Services.io.newFileURI(file).spec;
     do_check_eq(install.addon.getResourceURI("install.rdf").spec, "jar:" + uri + "!/install.rdf");

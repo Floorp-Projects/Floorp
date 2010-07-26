@@ -1229,7 +1229,7 @@ qcms_transform* qcms_transform_create(
 	if (out_type != QCMS_DATA_RGB_8 &&
                 out_type != QCMS_DATA_RGBA_8) {
             assert(0 && "output type");
-	    free(transform);
+	    transform_free(transform);
             return NULL;
         }
 
@@ -1259,7 +1259,7 @@ qcms_transform* qcms_transform_create(
             if (in_type != QCMS_DATA_RGB_8 &&
                     in_type != QCMS_DATA_RGBA_8){
                 assert(0 && "input type");
-		free(transform);
+                transform_free(transform);
                 return NULL;
             }
 	    if (precache) {
@@ -1331,7 +1331,7 @@ qcms_transform* qcms_transform_create(
             if (in_type != QCMS_DATA_GRAY_8 &&
                     in_type != QCMS_DATA_GRAYA_8){
                 assert(0 && "input type");
-		free(transform);
+                transform_free(transform);
                 return NULL;
             }
 
@@ -1356,6 +1356,8 @@ qcms_transform* qcms_transform_create(
 	    }
 	} else {
 		assert(0 && "unexpected colorspace");
+		qcms_transform_release(transform);
+		return NO_MEM_TRANSFORM;
 	}
 	return transform;
 }

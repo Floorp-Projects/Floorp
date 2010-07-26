@@ -133,8 +133,8 @@ function shutdown() {
 }
 
 // Used by external callers to load a specific view into the manager
-function loadView(url) {
-  gViewController.loadView(url);
+function loadView(aViewId, aCallback) {
+  gViewController.loadView(aViewId, aCallback);
 }
 
 var gEventManager = {
@@ -253,6 +253,7 @@ var gViewController = {
   currentViewRequest: 0,
   previousViewId: "",
   viewObjects: {},
+  viewChangeCallback: null,
 
   initialize: function() {
     this.viewPort = document.getElementById("view-port");
@@ -269,6 +270,8 @@ var gViewController = {
   },
 
   shutdown: function() {
+    if (this.currentViewObj)
+      this.currentViewObj.hide();
     this.currentViewRequest = 0;
   },
 
@@ -282,7 +285,7 @@ var gViewController = {
     return this.currentViewObj.node.hasAttribute("loading");
   },
 
-  loadView: function(aViewId) {
+  loadView: function(aViewId, aCallback) {
     if (aViewId == this.currentViewId)
       return;
 
@@ -314,6 +317,8 @@ var gViewController = {
     this.currentViewId = aViewId;
     this.currentViewObj = viewObj;
 
+    this.viewChangeCallback = aCallback;
+
     this.viewPort.selectedPanel = this.currentViewObj.node;
     this.viewPort.selectedPanel.setAttribute("loading", "true");
     this.currentViewObj.show(view.param, ++this.currentViewRequest);
@@ -321,6 +326,10 @@ var gViewController = {
 
   notifyViewChanged: function() {
     this.viewPort.selectedPanel.removeAttribute("loading");
+
+    if (this.viewChangeCallback)
+      this.viewChangeCallback();
+
     var event = document.createEvent("Events");
     event.initEvent("ViewChanged", true, true);
     this.currentViewObj.node.dispatchEvent(event);
@@ -527,7 +536,14 @@ var gViewController = {
         return hasPermission(aAddon, "uninstall");
       },
       doCommand: function(aAddon) {
-        aAddon.uninstall();
+        if (gViewController.currentViewObj != gDetailView) {
+          aAddon.uninstall();
+          return;
+        }
+
+        gViewController.loadView(gViewController.previousViewId, function() {
+          gViewController.currentViewObj.getListItemForID(aAddon.id).uninstall();
+        });
       }
     },
 
@@ -1077,7 +1093,15 @@ var gSearchView = {
     gViewController.updateCommands();
   },
 
-  hide: function() { },
+  hide: function() {
+    var listitem = this._listBox.firstChild;
+    while (listitem) {
+      if (listitem.getAttribute("status") == "uninstalled" &&
+          !listitem.isPending("uninstall"))
+        listitem.mAddon.uninstall();
+      listitem = listitem.nextSibling;
+    }
+  },
 
   getMatchScore: function(aObj, aQuery) {
     var score = 0;
@@ -1144,8 +1168,16 @@ var gSearchView = {
     if (item)
       return item.mAddon;
     return null;
-  }
+  },
 
+  getListItemForID: function(aId) {
+    var listitem = this._listBox.firstChild;
+    while (listitem) {
+      if (listitem.getAttribute("status") == "installed" && listitem.mAddon.id == aId)
+        return listitem;
+      listitem = listitem.nextSibling;
+    }
+  }
 };
 
 
@@ -1213,6 +1245,14 @@ var gListView = {
 
   hide: function() {
     gEventManager.unregisterInstallListener(this);
+
+    var listitem = this._listBox.firstChild;
+    while (listitem) {
+      if (listitem.getAttribute("status") == "uninstalled" &&
+          !listitem.isPending("uninstall"))
+        listitem.mAddon.uninstall();
+      listitem = listitem.nextSibling;
+    }
   },
 
   showEmptyNotice: function(aShow) {
@@ -1266,6 +1306,15 @@ var gListView = {
     if (item)
       return item.mAddon;
     return null;
+  },
+
+  getListItemForID: function(aId) {
+    var listitem = this._listBox.firstChild;
+    while (listitem) {
+      if (listitem.getAttribute("status") == "installed" && listitem.mAddon.id == aId)
+        return listitem;
+      listitem = listitem.nextSibling;
+    }
   }
 };
 

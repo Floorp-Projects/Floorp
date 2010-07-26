@@ -448,6 +448,7 @@
                             this.maxCurrentTimeSeen = 0;
                             this.statusIcon.setAttribute("type", "throbber");
                             this.isAudioOnly = (this.video instanceof HTMLAudioElement);
+                            this.setPlayButtonState(true);
                             break;
                         case "durationchange":
                             var duration = Math.round(this.video.duration * 1000); // in ms

@@ -76,8 +76,6 @@ class SVGAnimatedLengthList;
 class SVGUserUnitList;
 }
 
-using namespace mozilla;
-
 typedef nsStyledElement nsSVGElementBase;
 
 class nsSVGElement : public nsSVGElementBase,    // nsIContent
@@ -182,8 +180,8 @@ public:
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
   void GetAnimatedIntegerValues(PRInt32 *aFirst, ...);
-  void GetAnimatedLengthListValues(SVGUserUnitList *aFirst, ...);
-  SVGAnimatedLengthList* GetAnimatedLengthList(PRUint8 aAttrEnum);
+  void GetAnimatedLengthListValues(mozilla::SVGUserUnitList *aFirst, ...);
+  mozilla::SVGAnimatedLengthList* GetAnimatedLengthList(PRUint8 aAttrEnum);
 
 #ifdef MOZ_SMIL
   virtual nsISMILAttr* GetAnimatedAttr(nsIAtom* aName);
@@ -355,11 +353,11 @@ protected:
   };
 
   struct LengthListAttributesInfo {
-    SVGAnimatedLengthList* mLengthLists;
+    mozilla::SVGAnimatedLengthList* mLengthLists;
     LengthListInfo*        mLengthListInfo;
     PRUint32               mLengthListCount;
 
-    LengthListAttributesInfo(SVGAnimatedLengthList *aLengthLists,
+    LengthListAttributesInfo(mozilla::SVGAnimatedLengthList *aLengthLists,
                              LengthListInfo *aLengthListInfo,
                              PRUint32 aLengthListCount)
       : mLengthLists(aLengthLists)

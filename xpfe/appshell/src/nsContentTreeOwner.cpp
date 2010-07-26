@@ -868,30 +868,30 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
   }
 
   if (aCalledFromJS) {
-  /* Now check our restriction pref.  The restriction pref is a power-user's
-     fine-tuning pref. values:     
-     0: no restrictions - divert everything
-     1: don't divert window.open at all
-     2: don't divert window.open with features
-  */
-  PRInt32 restrictionPref;
-  if (NS_FAILED(branch->GetIntPref("open_newwindow.restriction",
-                                   &restrictionPref)) ||
-      restrictionPref < 0 ||
-      restrictionPref > 2) {
-    restrictionPref = 2; // Sane default behavior
-  }
+    /* Now check our restriction pref.  The restriction pref is a power-user's
+       fine-tuning pref. values:     
+       0: no restrictions - divert everything
+       1: don't divert window.open at all
+       2: don't divert window.open with features
+    */
+    PRInt32 restrictionPref;
+    if (NS_FAILED(branch->GetIntPref("open_newwindow.restriction",
+                                     &restrictionPref)) ||
+        restrictionPref < 0 ||
+        restrictionPref > 2) {
+      restrictionPref = 2; // Sane default behavior
+    }
 
-  if (restrictionPref == 1) {
-    return NS_OK;
-  }
+    if (restrictionPref == 1) {
+      return NS_OK;
+    }
 
-  if (restrictionPref == 2 &&
-      // Only continue if there are no size/position features and no special
-      // chrome flags.
-      (aChromeFlags != nsIWebBrowserChrome::CHROME_ALL ||
-       aPositionSpecified || aSizeSpecified)) {
-    return NS_OK;
+    if (restrictionPref == 2 &&
+        // Only continue if there are no size/position features and no special
+        // chrome flags.
+        (aChromeFlags != nsIWebBrowserChrome::CHROME_ALL ||
+         aPositionSpecified || aSizeSpecified)) {
+      return NS_OK;
     }
   }
 
