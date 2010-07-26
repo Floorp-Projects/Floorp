@@ -170,7 +170,7 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns* base, AccSet accSet)
     if (!ok) {
         InsBuf b1, b2;
         printer->formatIns(&b1, base);
-        snprintf(b2.buf, b2.len, "but the base pointer (%s) doesn't match", b1.buf);
+        JS_snprintf(b2.buf, b2.len, "but the base pointer (%s) doesn't match", b1.buf);
         errorAccSet(lirNames[op], accSet, b2.buf);
      }
 }
