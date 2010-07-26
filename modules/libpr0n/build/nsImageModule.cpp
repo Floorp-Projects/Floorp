@@ -47,9 +47,7 @@
 #endif
 
 #include "nsIDeviceContext.h"
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
-#include "nsICategoryManager.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsXPCOMCID.h"
 #include "nsServiceManagerUtils.h"
 
@@ -58,6 +56,7 @@
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
 #include "imgTools.h"
+#include "imgDiscardTracker.h"
 
 #ifdef IMG_BUILD_DECODER_gif
 // gif
@@ -126,160 +125,116 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPNGDecoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPNGEncoder)
 #endif
 
-static const char* gImageMimeTypes[] = {
+NS_DEFINE_NAMED_CID(NS_IMGLOADER_CID);
+NS_DEFINE_NAMED_CID(NS_IMGCONTAINER_CID);
+NS_DEFINE_NAMED_CID(NS_IMGREQUESTPROXY_CID);
+NS_DEFINE_NAMED_CID(NS_IMGTOOLS_CID);
 #ifdef IMG_BUILD_DECODER_gif
-  "image/gif",
+NS_DEFINE_NAMED_CID(NS_GIFDECODER2_CID);
 #endif
 #ifdef IMG_BUILD_DECODER_jpeg
-  "image/jpeg",
-  "image/pjpeg",
-  "image/jpg",
-#endif
-#ifdef IMG_BUILD_DECODER_bmp
-  "image/x-icon",
-  "image/vnd.microsoft.icon",
-  "image/bmp",
-  "image/x-ms-bmp",
-#endif
-#ifdef IMG_BUILD_DECODER_png
-  "image/png",
-  "image/x-png",
-#endif
-};
-
-static NS_METHOD ImageRegisterProc(nsIComponentManager *aCompMgr,
-                                   nsIFile *aPath,
-                                   const char *registryLocation,
-                                   const char *componentType,
-                                   const nsModuleComponentInfo *info) {
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  for (unsigned i = 0; i < sizeof(gImageMimeTypes)/sizeof(*gImageMimeTypes); i++) {
-    catMan->AddCategoryEntry("Gecko-Content-Viewers", gImageMimeTypes[i],
-                             "@mozilla.org/content/document-loader-factory;1",
-                             PR_TRUE, PR_TRUE, nsnull);
-  }
-
-  catMan->AddCategoryEntry("content-sniffing-services", "@mozilla.org/image/loader;1",
-                           "@mozilla.org/image/loader;1", PR_TRUE, PR_TRUE,
-                           nsnull);
-  return NS_OK;
-}
-
-static NS_METHOD ImageUnregisterProc(nsIComponentManager *aCompMgr,
-                                     nsIFile *aPath,
-                                     const char *registryLocation,
-                                     const nsModuleComponentInfo *info) {
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  for (unsigned i = 0; i < sizeof(gImageMimeTypes)/sizeof(*gImageMimeTypes); i++)
-    catMan->DeleteCategoryEntry("Gecko-Content-Viewers", gImageMimeTypes[i], PR_TRUE);
-
-  return NS_OK;
-}
-
-static const nsModuleComponentInfo components[] =
-{
-  { "image cache",
-    NS_IMGLOADER_CID,
-    "@mozilla.org/image/cache;1",
-    imgLoaderConstructor, },
-  { "image container",
-    NS_IMGCONTAINER_CID,
-    "@mozilla.org/image/container;3",
-    imgContainerConstructor, },
-  { "image loader",
-    NS_IMGLOADER_CID,
-    "@mozilla.org/image/loader;1",
-    imgLoaderConstructor,
-    ImageRegisterProc, /* register the decoder mime types here */
-    ImageUnregisterProc, },
-  { "image request proxy",
-    NS_IMGREQUESTPROXY_CID,
-    "@mozilla.org/image/request;1",
-    imgRequestProxyConstructor, },
-  { "image tools",
-    NS_IMGTOOLS_CID,
-    "@mozilla.org/image/tools;1",
-    imgToolsConstructor, },
-
-#ifdef IMG_BUILD_DECODER_gif
-  // gif
-  { "GIF Decoder",
-     NS_GIFDECODER2_CID,
-     "@mozilla.org/image/decoder;3?type=image/gif",
-     nsGIFDecoder2Constructor, },
-#endif
-
-#ifdef IMG_BUILD_DECODER_jpeg
-  // jpeg
-  { "JPEG decoder",
-    NS_JPEGDECODER_CID,
-    "@mozilla.org/image/decoder;3?type=image/jpeg",
-    nsJPEGDecoderConstructor, },
-  { "JPEG decoder",
-    NS_JPEGDECODER_CID,
-    "@mozilla.org/image/decoder;3?type=image/pjpeg",
-    nsJPEGDecoderConstructor, },
-  { "JPEG decoder",
-    NS_JPEGDECODER_CID,
-    "@mozilla.org/image/decoder;3?type=image/jpg",
-    nsJPEGDecoderConstructor, },
+NS_DEFINE_NAMED_CID(NS_JPEGDECODER_CID);
 #endif
 #ifdef IMG_BUILD_ENCODER_jpeg
-  // jpeg (encoder)
-  { "JPEG Encoder",
-    NS_JPEGENCODER_CID,
-    "@mozilla.org/image/encoder;2?type=image/jpeg",
-    nsJPEGEncoderConstructor, },
+NS_DEFINE_NAMED_CID(NS_JPEGENCODER_CID);
 #endif
-
 #ifdef IMG_BUILD_DECODER_bmp
-  // bmp
-  { "ICO Decoder",
-     NS_ICODECODER_CID,
-     "@mozilla.org/image/decoder;3?type=image/x-icon",
-     nsICODecoderConstructor, },
-  { "ICO Decoder",
-     NS_ICODECODER_CID,
-     "@mozilla.org/image/decoder;3?type=image/vnd.microsoft.icon",
-     nsICODecoderConstructor, },
-  { "BMP Decoder",
-     NS_BMPDECODER_CID,
-     "@mozilla.org/image/decoder;3?type=image/bmp",
-     nsBMPDecoderConstructor, },
-  { "BMP Decoder",
-     NS_BMPDECODER_CID,
-     "@mozilla.org/image/decoder;3?type=image/x-ms-bmp",
-     nsBMPDecoderConstructor, },
+NS_DEFINE_NAMED_CID(NS_ICODECODER_CID);
+NS_DEFINE_NAMED_CID(NS_BMPDECODER_CID);
 #endif
-
 #ifdef IMG_BUILD_DECODER_png
-  // png
-  { "PNG Decoder",
-    NS_PNGDECODER_CID,
-    "@mozilla.org/image/decoder;3?type=image/png",
-    nsPNGDecoderConstructor, },
-  { "PNG Decoder",
-    NS_PNGDECODER_CID,
-    "@mozilla.org/image/decoder;3?type=image/x-png",
-    nsPNGDecoderConstructor, },
+NS_DEFINE_NAMED_CID(NS_PNGDECODER_CID);
 #endif
 #ifdef IMG_BUILD_ENCODER_png
-  // png
-  { "PNG Encoder",
-    NS_PNGENCODER_CID,
-    "@mozilla.org/image/encoder;2?type=image/png",
-    nsPNGEncoderConstructor, },
+NS_DEFINE_NAMED_CID(NS_PNGENCODER_CID);
 #endif
+
+
+static const mozilla::Module::CIDEntry kImageCIDs[] = {
+  { &kNS_IMGLOADER_CID, false, NULL, imgLoaderConstructor, },
+  { &kNS_IMGCONTAINER_CID, false, NULL, imgContainerConstructor, },
+  { &kNS_IMGREQUESTPROXY_CID, false, NULL, imgRequestProxyConstructor, },
+  { &kNS_IMGTOOLS_CID, false, NULL, imgToolsConstructor, },
+#ifdef IMG_BUILD_DECODER_gif
+  { &kNS_GIFDECODER2_CID, false, NULL, nsGIFDecoder2Constructor, },
+#endif
+#ifdef IMG_BUILD_DECODER_jpeg
+  { &kNS_JPEGDECODER_CID, false, NULL, nsJPEGDecoderConstructor, },
+#endif
+#ifdef IMG_BUILD_ENCODER_jpeg
+  { &kNS_JPEGENCODER_CID, false, NULL, nsJPEGEncoderConstructor, },
+#endif
+#ifdef IMG_BUILD_DECODER_bmp
+  { &kNS_ICODECODER_CID, false, NULL, nsICODecoderConstructor, },
+  { &kNS_BMPDECODER_CID, false, NULL, nsBMPDecoderConstructor, },
+#endif
+#ifdef IMG_BUILD_DECODER_png
+  { &kNS_PNGDECODER_CID, false, NULL, nsPNGDecoderConstructor, },
+#endif
+#ifdef IMG_BUILD_ENCODER_png
+  { &kNS_PNGENCODER_CID, false, NULL, nsPNGEncoderConstructor, },
+#endif
+  { NULL }
+};
+
+static const mozilla::Module::ContractIDEntry kImageContracts[] = {
+  { "@mozilla.org/image/cache;1", &kNS_IMGLOADER_CID },
+  { "@mozilla.org/image/container;3", &kNS_IMGCONTAINER_CID },
+  { "@mozilla.org/image/loader;1", &kNS_IMGLOADER_CID },
+  { "@mozilla.org/image/request;1", &kNS_IMGREQUESTPROXY_CID },
+  { "@mozilla.org/image/tools;1", &kNS_IMGTOOLS_CID },
+#ifdef IMG_BUILD_DECODER_gif
+  { "@mozilla.org/image/decoder;3?type=image/gif", &kNS_GIFDECODER2_CID },
+#endif
+#ifdef IMG_BUILD_DECODER_jpeg
+  { "@mozilla.org/image/decoder;3?type=image/jpeg", &kNS_JPEGDECODER_CID },
+  { "@mozilla.org/image/decoder;3?type=image/pjpeg", &kNS_JPEGDECODER_CID },
+  { "@mozilla.org/image/decoder;3?type=image/jpg", &kNS_JPEGDECODER_CID },
+#endif
+#ifdef IMG_BUILD_ENCODER_jpeg
+  { "@mozilla.org/image/encoder;2?type=image/jpeg", &kNS_JPEGENCODER_CID },
+#endif
+#ifdef IMG_BUILD_DECODER_bmp
+  { "@mozilla.org/image/decoder;3?type=image/x-icon", &kNS_ICODECODER_CID },
+  { "@mozilla.org/image/decoder;3?type=image/vnd.microsoft.icon", &kNS_ICODECODER_CID },
+  { "@mozilla.org/image/decoder;3?type=image/bmp", &kNS_BMPDECODER_CID },
+  { "@mozilla.org/image/decoder;3?type=image/x-ms-bmp", &kNS_BMPDECODER_CID },
+#endif
+#ifdef IMG_BUILD_DECODER_png
+  { "@mozilla.org/image/decoder;3?type=image/png", &kNS_PNGDECODER_CID },
+  { "@mozilla.org/image/decoder;3?type=image/x-png", &kNS_PNGDECODER_CID },
+#endif
+#ifdef IMG_BUILD_ENCODER_png
+  { "@mozilla.org/image/encoder;2?type=image/png", &kNS_PNGENCODER_CID },
+#endif
+  { NULL }
+};
+
+static const mozilla::Module::CategoryEntry kImageCategories[] = {
+#ifdef IMG_BUILD_DECODER_gif
+  { "Gecko-Content-Viewers", "image/gif", "@mozilla.org/content/document-loader-factory;1" },
+#endif
+#ifdef IMG_BUILD_DECODER_jpeg
+  { "Gecko-Content-Viewers", "image/jpeg", "@mozilla.org/content/document-loader-factory;1" },
+  { "Gecko-Content-Viewers", "image/pjpeg", "@mozilla.org/content/document-loader-factory;1" },
+  { "Gecko-Content-Viewers", "image/jpg", "@mozilla.org/content/document-loader-factory;1" },
+#endif
+#ifdef IMG_BUILD_DECODER_bmp
+  { "Gecko-Content-Viewers", "image/x-icon", "@mozilla.org/content/document-loader-factory;1" },
+  { "Gecko-Content-Viewers", "image/vnd.microsoft.icon", "@mozilla.org/content/document-loader-factory;1" },
+  { "Gecko-Content-Viewers", "image/bmp", "@mozilla.org/content/document-loader-factory;1" },
+  { "Gecko-Content-Viewers", "image/x-ms-bmp", "@mozilla.org/content/document-loader-factory;1" },
+#endif
+#ifdef IMG_BUILD_DECODER_png
+  { "Gecko-Content-Viewers", "image/png", "@mozilla.org/content/document-loader-factory;1" },
+  { "Gecko-Content-Viewers", "image/x-png", "@mozilla.org/content/document-loader-factory;1" },
+#endif
+  { "content-sniffing-services", "@mozilla.org/image/loader;1", "@mozilla.org/image/loader;1" },
+  { NULL }
 };
 
 static nsresult
-imglib_Initialize(nsIModule* aSelf)
+imglib_Initialize()
 {
   // Hack: We need the gfx module to be initialized because we use gfxPlatform
   // in imgFrame. Request something from the gfx module to ensure that
@@ -292,11 +247,20 @@ imglib_Initialize(nsIModule* aSelf)
 }
 
 static void
-imglib_Shutdown(nsIModule* aSelf)
+imglib_Shutdown()
 {
   imgLoader::Shutdown();
+  imgDiscardTracker::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsImageLib2Module, components,
-                                   imglib_Initialize, imglib_Shutdown)
+static const mozilla::Module kImageModule = {
+  mozilla::Module::kVersion,
+  kImageCIDs,
+  kImageContracts,
+  kImageCategories,
+  NULL,
+  imglib_Initialize,
+  imglib_Shutdown
+};
 
+NSMODULE_DEFN(nsImageLib2Module) = &kImageModule;

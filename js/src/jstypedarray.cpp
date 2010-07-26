@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define __STDC_LIMIT_MACROS
-
 #include <string.h>
 
 #include "jstypes.h"
@@ -77,7 +75,8 @@ using namespace js;
 ArrayBuffer *
 ArrayBuffer::fromJSObject(JSObject *obj)
 {
-    JS_ASSERT(obj->getClass() == &ArrayBuffer::jsclass);
+    while (!js_IsArrayBuffer(obj))
+        obj = obj->getProto();
     return reinterpret_cast<ArrayBuffer*>(obj->getPrivate());
 }
 
@@ -107,7 +106,7 @@ ArrayBuffer::class_constructor(JSContext *cx, JSObject *obj,
                                uintN argc, jsval *argv, jsval *rval)
 {
     if (!JS_IsConstructing(cx)) {
-        obj = NewObject(cx, &ArrayBuffer::jsclass, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &ArrayBuffer::jsclass);
         if (!obj)
             return false;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -121,7 +120,7 @@ ArrayBuffer::create(JSContext *cx, JSObject *obj,
                     uintN argc, jsval *argv, jsval *rval)
 {
     if (!obj) {
-        obj = NewObject(cx, &ArrayBuffer::jsclass, NULL, NULL);
+        obj = NewBuiltinClassInstance(cx, &ArrayBuffer::jsclass);
         if (!obj)
             return false;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -207,6 +206,8 @@ ArrayBuffer::~ArrayBuffer()
 TypedArray *
 TypedArray::fromJSObject(JSObject *obj)
 {
+    while (!js_IsTypedArray(obj))
+        obj = obj->getProto();
     return reinterpret_cast<TypedArray*>(obj->getPrivate());
 }
 
@@ -669,8 +670,18 @@ class TypedArrayTemplate
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         JS_ASSERT(tarray);
 
-        jsint curVal;
+        /*
+         * Iteration is "length" (if JSENUMERATE_INIT_ALL), then [0, length).
+         * *statep is JSVAL_TRUE if enumerating "length" and
+         * JSVAL_TO_INT(index) when enumerating index.
+         */
         switch (enum_op) {
+          case JSENUMERATE_INIT_ALL:
+            *statep = JSVAL_TRUE;
+            if (idp)
+                *idp = INT_TO_JSID(tarray->length + 1);
+            break;
+
           case JSENUMERATE_INIT:
             *statep = JSVAL_ZERO;
             if (idp)
@@ -678,11 +689,19 @@ class TypedArrayTemplate
             break;
 
           case JSENUMERATE_NEXT:
-            curVal = JSVAL_TO_INT(*statep);
-            *idp = INT_TO_JSID(curVal);
-            *statep = (curVal == int32(tarray->length))
-                      ? JSVAL_NULL
-                      : INT_TO_JSVAL(curVal+1);
+            if (*statep == JSVAL_TRUE) {
+                *idp = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+                *statep = JSVAL_ZERO;
+            } else {
+                uint32 index = JSVAL_TO_INT(*statep);
+                if (index < uint32(tarray->length)) {
+                    *idp = *statep;
+                    *statep = INT_TO_JSID(JSVAL_TO_INT(*statep) + 1);
+                } else {
+                    JS_ASSERT(index == tarray->length);
+                    *statep = JSVAL_NULL;
+                }
+            }
             break;
 
           case JSENUMERATE_DESTROY:
@@ -714,7 +733,7 @@ class TypedArrayTemplate
         //
 
         if (!JS_IsConstructing(cx)) {
-            obj = NewObject(cx, slowClass(), NULL, NULL);
+            obj = NewBuiltinClassInstance(cx, slowClass());
             if (!obj)
                 return false;
             *rval = OBJECT_TO_JSVAL(obj);
@@ -727,7 +746,7 @@ class TypedArrayTemplate
     create(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     {
         if (!obj) {
-            obj = NewObject(cx, slowClass(), NULL, NULL);
+            obj = NewBuiltinClassInstance(cx, slowClass());
             if (!obj)
                 return false;
             *rval = OBJECT_TO_JSVAL(obj);
@@ -822,6 +841,17 @@ class TypedArrayTemplate
 
         argv = JS_ARGV(cx, vp);
         obj = JS_THIS_OBJECT(cx, vp);
+
+        if (!JS_InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp+2))
+            return false;
+
+        if (obj->getClass() != fastClass()) {
+            // someone tried to apply this slice() to the wrong class
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_INCOMPATIBLE_METHOD,
+                                 fastClass()->name, "slice", obj->getClass()->name);
+            return false;
+        }
 
         ThisTypeArray *tarray = ThisTypeArray::fromJSObject(obj);
         if (!tarray)
@@ -1307,9 +1337,7 @@ template<> JSObjectOps _typedArray::fastObjectOps = {                          \
     _typedArray::obj_getAttributes,                                            \
     _typedArray::obj_setAttributes,                                            \
     _typedArray::obj_deleteProperty,                                           \
-    js_DefaultValue,                                                           \
     _typedArray::obj_enumerate,                                                \
-    js_CheckAccess,                                                            \
     _typedArray::obj_typeOf,                                                   \
     _typedArray::obj_trace,                                                    \
     NULL,   /* thisObject */                                                   \

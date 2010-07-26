@@ -515,10 +515,13 @@ struct JSScope : public JSObjectMap
     static void finishRuntimeState(JSContext *cx);
 
     enum {
-        EMPTY_ARGUMENTS_SHAPE = 1,
-        EMPTY_BLOCK_SHAPE     = 2,
-        EMPTY_CALL_SHAPE      = 3,
-        LAST_RESERVED_SHAPE   = 3
+        EMPTY_ARGUMENTS_SHAPE   = 1,
+        EMPTY_BLOCK_SHAPE       = 2,
+        EMPTY_CALL_SHAPE        = 3,
+        EMPTY_DECL_ENV_SHAPE    = 4,
+        EMPTY_ENUMERATOR_SHAPE  = 5,
+        EMPTY_WITH_SHAPE        = 6,
+        LAST_RESERVED_SHAPE     = 6
     };
 };
 
@@ -978,54 +981,6 @@ JSScope::canProvideEmptyScope(JSObjectOps *ops, JSClass *clasp)
     if (!object)
         return false;
     return this->ops == ops && (!emptyScope || emptyScope->clasp == clasp);
-}
-
-inline bool
-JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
-{
-    JS_ASSERT(!JSVAL_IS_NULL(this->id));
-    JS_ASSERT(!hasDefaultGetter());
-
-    if (hasGetterValue()) {
-        JS_ASSERT(!isMethod());
-        jsval fval = getterValue();
-        return js_InternalGetOrSet(cx, obj, id, fval, JSACC_READ, 0, 0, vp);
-    }
-
-    if (isMethod()) {
-        *vp = methodValue();
-
-        JSScope *scope = pobj->scope();
-        JS_ASSERT(scope->object == pobj);
-        return scope->methodReadBarrier(cx, this, vp);
-    }
-
-    /*
-     * |with (it) color;| ends up here, as do XML filter-expressions.
-     * Avoid exposing the With object to native getters.
-     */
-    if (obj->getClass() == &js_WithClass)
-        obj = js_UnwrapWithObject(cx, obj);
-    return getterOp()(cx, obj, SPROP_USERID(this), vp);
-}
-
-inline bool
-JSScopeProperty::set(JSContext* cx, JSObject* obj, jsval* vp)
-{
-    JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
-
-    if (attrs & JSPROP_SETTER) {
-        jsval fval = setterValue();
-        return js_InternalGetOrSet(cx, obj, id, fval, JSACC_WRITE, 1, vp, vp);
-    }
-
-    if (attrs & JSPROP_GETTER)
-        return !!js_ReportGetterOnlyAssignment(cx);
-
-    /* See the comment in JSScopeProperty::get as to why we check for With. */
-    if (obj->getClass() == &js_WithClass)
-        obj = js_UnwrapWithObject(cx, obj);
-    return setterOp()(cx, obj, SPROP_USERID(this), vp);
 }
 
 inline bool

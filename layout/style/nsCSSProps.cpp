@@ -86,7 +86,9 @@ static const char* const kCSSRawFontDescs[] = {
   "font-weight",
   "font-stretch",
   "src",
-  "unicode-range"
+  "unicode-range",
+  "-moz-font-feature-settings",
+  "-moz-font-language-override"
 };
 
 struct PropertyAndCount {
@@ -1859,6 +1861,8 @@ static const nsCSSProperty gFontSubpropTable[] = {
   eCSSProperty_font_size_adjust, // XXX Added LDB.
   eCSSProperty_font_stretch, // XXX Added LDB.
   eCSSProperty__x_system_font,
+  eCSSProperty_font_feature_settings,
+  eCSSProperty_font_language_override,
   eCSSProperty_UNKNOWN
 };
 

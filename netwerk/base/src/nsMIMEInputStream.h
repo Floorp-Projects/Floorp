@@ -56,8 +56,8 @@
     {0xa3, 0xf6, 0xd3, 0x69, 0x49, 0xd4, 0x82, 0x68} \
 }
 
-extern NS_METHOD nsMIMEInputStreamConstructor(nsISupports *outer,
-                                              REFNSIID iid,
-                                              void **result);
+extern nsresult nsMIMEInputStreamConstructor(nsISupports *outer,
+                                             REFNSIID iid,
+                                             void **result);
 
 #endif // _nsMIMEInputStream_h_

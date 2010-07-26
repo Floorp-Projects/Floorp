@@ -49,8 +49,6 @@ interface nsIObserver;
  * XUL dialogs need to create a component which implements
  * this interface and registers with the Contract ID
  * "@mozilla.org/embedui/xpinstall-dialog-service;1"
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(8cdd8baa-1dd2-11b2-909a-f0178da5c5ff)]
 interface nsIXPIDialogService : nsISupports

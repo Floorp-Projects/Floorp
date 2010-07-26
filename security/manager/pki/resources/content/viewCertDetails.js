@@ -54,6 +54,13 @@ const nsASN1Tree = "@mozilla.org/security/nsASN1Tree;1"
 
 var bundle;
 
+function doPrompt(msg)
+{
+  let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+    getService(Components.interfaces.nsIPromptService);
+  prompts.alert(window, null, msg);
+}
+
 function AddCertChain(node, chain, idPrefix)
 {
   var idfier = idPrefix+"chain_";
@@ -297,7 +304,7 @@ function updateCertDump()
 
   var tree = document.getElementById('treesetDump');
   if (tree.currentIndex < 0) {
-    alert("No items are selected."); //This should never happen.
+    doPrompt("No items are selected."); //This should never happen.
   } else {
     var item = tree.contentView.getItemAtIndex(tree.currentIndex);
     var dbKey = item.firstChild.firstChild.getAttribute('display');

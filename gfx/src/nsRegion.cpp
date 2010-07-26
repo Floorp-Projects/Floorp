@@ -1289,6 +1289,44 @@ void nsRegion::MoveBy (nsPoint aPt)
   }
 }
 
+nsRegion nsRegion::ConvertAppUnitsRoundOut (PRInt32 aFromAPP, PRInt32 aToAPP) const
+{
+  if (aFromAPP == aToAPP) {
+    return *this;
+  }
+  // Do it in a simplistic and slow way to avoid any weird behaviour with
+  // rounding causing rects to overlap. Should be fast enough for what we need.
+  nsRegion region;
+  nsRegionRectIterator iter(*this);
+  for (;;) {
+    const nsRect* r = iter.Next();
+    if (!r)
+      break;
+    nsRect rect = r->ConvertAppUnitsRoundOut(aFromAPP, aToAPP);
+    region.Or(region, rect);
+  }
+  return region;
+}
+
+nsRegion nsRegion::ConvertAppUnitsRoundIn (PRInt32 aFromAPP, PRInt32 aToAPP) const
+{
+  if (aFromAPP == aToAPP) {
+    return *this;
+  }
+  // Do it in a simplistic and slow way to avoid any weird behaviour with
+  // rounding causing rects to overlap. Should be fast enough for what we need.
+  nsRegion region;
+  nsRegionRectIterator iter(*this);
+  for (;;) {
+    const nsRect* r = iter.Next();
+    if (!r)
+      break;
+    nsRect rect = r->ConvertAppUnitsRoundIn(aFromAPP, aToAPP);
+    region.Or(region, rect);
+  }
+  return region;
+}
+
 nsIntRegion nsRegion::ToOutsidePixels (nscoord aAppUnitsPerPixel) const
 {
   nsIntRegion result;

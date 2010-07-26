@@ -53,8 +53,6 @@ interface nsIDOMCSSPrimitiveValue;
  * has a one to one relationship to the DOM tree.
  * If the DOM node for this access node is "accessible",
  * then a QueryInterface to nsIAccessible will succeed.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(ef16ff42-0256-4b48-ae87-b18a95b7f7d6)]
 interface nsIAccessNode : nsISupports

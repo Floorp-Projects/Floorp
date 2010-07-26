@@ -311,7 +311,7 @@ nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType
   return eq;
 }
 
-// Strip a handler command string of it's quotes and paramters.
+// Strip a handler command string of its quotes and parameters.
 static void CleanupHandlerPath(nsString& aPath)
 {
   // Example command strings passed into this routine:

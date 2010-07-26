@@ -59,12 +59,6 @@ NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const PRUnichar * aSrc,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF8::FillInfo(PRUint32 *aInfo)
-{
-  memset(aInfo, 0xFF, (0x10000L >> 3));
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc, 
                                 PRInt32 * aSrcLength, 
                                 char * aDest, 

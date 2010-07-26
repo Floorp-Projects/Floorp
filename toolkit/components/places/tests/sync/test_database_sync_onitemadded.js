@@ -85,7 +85,7 @@ bs.addObserver(bookmarksObserver, false);
 function run_test()
 {
   // dynamic container sample
-  do_load_module("../unit/nsDynamicContainerServiceSample.js");
+  do_load_manifest("../unit/nsDynamicContainerServiceSample.manifest");
 
   // First set the preference for the timer to a large value, so it won't sync
   prefs.setIntPref(kSyncPrefName, SYNC_INTERVAL);

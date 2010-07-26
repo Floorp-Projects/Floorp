@@ -50,8 +50,8 @@ class nsSVGStopElement : public nsSVGStopElementBase,
 {
 protected:
   friend nsresult NS_NewSVGStopElement(nsIContent **aResult,
-                                       nsINodeInfo *aNodeInfo);
-  nsSVGStopElement(nsINodeInfo* aNodeInfo);
+                                       already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGStopElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -72,6 +72,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
 
   virtual NumberAttributesInfo GetNumberInfo();
@@ -90,7 +91,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Stop)
 NS_IMPL_ADDREF_INHERITED(nsSVGStopElement,nsSVGStopElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGStopElement,nsSVGStopElementBase)
 
-DOMCI_DATA(SVGStopElement, nsSVGStopElement)
+DOMCI_NODE_DATA(SVGStopElement, nsSVGStopElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGStopElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGStopElement, nsIDOMNode, nsIDOMElement,
@@ -101,7 +102,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGStopElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGStopElement::nsSVGStopElement(nsINodeInfo* aNodeInfo)
+nsSVGStopElement::nsSVGStopElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGStopElementBase(aNodeInfo)
 {
 
@@ -115,7 +116,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGStopElement)
 //----------------------------------------------------------------------
 // nsIDOMSVGStopElement methods
 
-/* readonly attribute nsIDOMSVGAnimatedLengthList x; */
+/* readonly attribute nsIDOMSVGAnimatedNumber offset; */
 NS_IMETHODIMP nsSVGStopElement::GetOffset(nsIDOMSVGAnimatedNumber * *aOffset)
 {
   return mOffset.ToDOMAnimatedNumber(aOffset,this);

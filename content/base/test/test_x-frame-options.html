@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for X-Frame-Options response header</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<iframe style="width:100%;height:300px;" id="harness"></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/content/base/test/";
+// contains { test_frame_id : expected_result }
+var testExpectedResults = { "control1": true,
+                            "control2": true,
+                            "deny": false,
+                            "sameorigin1": true,
+                            "sameorigin2": false
+                          };
+
+var testFramesLoaded = function() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var harness = document.getElementById("harness");
+
+  for (var t in testExpectedResults) {
+    var frame = harness.contentDocument.getElementById(t);
+    // test if frame loaded by checking for a contentDocument we can access
+    test = frame.contentDocument.getElementById("test");
+    is(test != null, testExpectedResults[t], "test "+t);
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// load the test harness
+document.getElementById("harness").src = "file_x-frame-options_main.html";
+
+</script>
+</pre>
+
+</body>
+</html>

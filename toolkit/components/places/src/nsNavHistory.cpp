@@ -88,11 +88,6 @@
 
 using namespace mozilla::places;
 
-// Microsecond timeout for "recent" events such as typed and bookmark following.
-// If you typed it more than this time ago, it's not recent.
-// This is 15 minutes           m    s/m  us/s
-#define RECENT_EVENT_THRESHOLD PRTime((PRInt64)15 * 60 * PR_USEC_PER_SEC)
-
 // The maximum number of things that we will store in the recent events list
 // before calling ExpireNonrecentEvents. This number should be big enough so it
 // is very difficult to get that many unconsumed events (for example, typed but
@@ -140,13 +135,6 @@ using namespace mozilla::places;
 // corresponding migrateVxx method below.
 #define DATABASE_SCHEMA_VERSION 10
 
-// We set the default database page size to be larger. sqlite's default is 1K.
-// This gives good performance when many small parts of the file have to be
-// loaded for each statement. Because we try to keep large chunks of the file
-// in memory, a larger page size should give better I/O performance. 32K is
-// sqlite's default max page size.
-#define DATABASE_PAGE_SIZE 4096
-
 // Filename of the database.
 #define DATABASE_FILENAME NS_LITERAL_STRING("places.sqlite")
 
@@ -174,17 +162,6 @@ using namespace mozilla::places;
 // USECS_PER_DAY == PR_USEC_PER_SEC * 60 * 60 * 24;
 static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 
-#ifdef LAZY_ADD
-
-// time that we'll wait before committing messages
-#define LAZY_MESSAGE_TIMEOUT (3 * PR_MSEC_PER_SEC)
-
-// the maximum number of times we'll postpone a lazy timer before committing
-// See StartLazyTimer()
-#define MAX_LAZY_TIMER_DEFERMENTS 2
-
-#endif // LAZY_ADD
-
 // character-set annotation
 #define CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
 
@@ -210,6 +187,8 @@ static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 NS_IMPL_THREADSAFE_ADDREF(nsNavHistory)
 NS_IMPL_THREADSAFE_RELEASE(nsNavHistory)
 
+NS_IMPL_CLASSINFO(nsNavHistory, NULL, nsIClassInfo::SINGLETON,
+                  NS_NAVHISTORYSERVICE_CID)
 NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIGlobalHistory2, nsIGlobalHistory3)
@@ -237,20 +216,11 @@ NS_IMPL_CI_INTERFACE_GETTER5(
 
 namespace {
 
-static nsresult GetReversedHostname(nsIURI* aURI, nsAString& host);
-static void GetReversedHostname(const nsString& aForward, nsAString& aReversed);
 static PRInt64 GetSimpleBookmarksQueryFolder(
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions);
 static void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                         nsTArray<nsTArray<nsString>*>* aTerms);
-
-inline void ReverseString(const nsString& aInput, nsAString& aReversed)
-{
-  aReversed.Truncate(0);
-  for (PRInt32 i = aInput.Length() - 1; i >= 0; i --)
-    aReversed.Append(aInput[i]);
-}
 
 } // anonymous namespace
 
@@ -396,10 +366,6 @@ nsNavHistory::nsNavHistory()
 , mCanNotify(true)
 , mCacheObservers("history-observers")
 {
-#ifdef LAZY_ADD
-  mLazyTimerSet = PR_TRUE;
-  mLazyTimerDeferments = 0;
-#endif
   NS_ASSERTION(!gHistoryService,
                "Attempting to create two instances of the service!");
   gHistoryService = this;
@@ -634,37 +600,23 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
 nsresult
 nsNavHistory::InitDB()
 {
-  PRInt32 pageSize = DATABASE_PAGE_SIZE;
-
   // Get the database schema version.
   PRInt32 currentSchemaVersion = 0;
   nsresult rv = mDBConn->GetSchemaVersion(&currentSchemaVersion);
   NS_ENSURE_SUCCESS(rv, rv);
-  bool databaseInitialized = (currentSchemaVersion > 0);
 
-  if (!databaseInitialized) {
-    // First of all we must set page_size since it will only have effect on
-    // empty files.  For existing databases we could get a different page size,
-    // trying to change it would be uneffective.
-    // See bug 401985 for details.
-    nsCAutoString pageSizePragma("PRAGMA page_size = ");
-    pageSizePragma.AppendInt(pageSize);
-    rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    // Get the page size.  This may be different than the default if the
-    // database file already existed with a different page size.
-    nsCOMPtr<mozIStorageStatement> statement;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_size"),
-                                  getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Get the page size.  This may be different than the default if the
+  // database file already existed with a different page size.
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA page_size"),
+                                getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool hasResult;
-    rv = statement->ExecuteStep(&hasResult);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
-    pageSize = statement->AsInt32(0);
-  }
+  PRBool hasResult;
+  mozStorageStatementScoper scoper(statement);
+  rv = statement->ExecuteStep(&hasResult);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
+  PRInt32 pageSize = statement->AsInt32(0);
 
   // Ensure that temp tables are held in memory, not on disk.  We use temp
   // tables mainly for fsync and I/O reduction.
@@ -726,6 +678,7 @@ nsNavHistory::InitDB()
   rv = nsAnnotationService::InitTables(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  bool databaseInitialized = (currentSchemaVersion > 0);
   if (!databaseInitialized) {
     // This is the first run, so we set schema version to the latest one, since
     // we don't need to migrate anything.  We will create tables from scratch.
@@ -906,6 +859,27 @@ nsresult
 nsNavHistory::UpdateSchemaVersion()
 {
   return mDBConn->SetSchemaVersion(DATABASE_SCHEMA_VERSION);
+}
+
+
+PRUint32
+nsNavHistory::GetRecentFlags(nsIURI *aURI)
+{
+  PRUint32 result = 0;
+  nsCAutoString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Unable to get aURI's spec");
+
+  if (NS_SUCCEEDED(rv)) {
+    if (CheckIsRecentEvent(&mRecentTyped, spec))
+      result |= RECENT_TYPED;
+    if (CheckIsRecentEvent(&mRecentLink, spec))
+      result |= RECENT_ACTIVATED;
+    if (CheckIsRecentEvent(&mRecentBookmark, spec))
+      result |= RECENT_BOOKMARKED;
+  }
+
+  return result;
 }
 
 
@@ -1865,6 +1839,9 @@ nsNavHistory::GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
 //    THIS SHOULD BE THE ONLY PLACE NEW moz_places ROWS ARE
 //    CREATED. This allows us to maintain better consistency.
 //
+//    XXX this functionality is being moved to History.cpp, so
+//    in fact there *are* two places where new pages are added.
+//
 //    If non-null, the new page ID will be placed into aPageID.
 
 nsresult
@@ -2044,17 +2021,6 @@ nsNavHistory::FindLastVisit(nsIURI* aURI,
 
 PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 {
-#ifdef LAZY_ADD
-  // check the lazy list to see if this has recently been added
-  for (PRUint32 i = 0; i < mLazyMessages.Length(); i ++) {
-    if (mLazyMessages[i].type == LazyMessage::Type_AddURI) {
-      if (aURIString.Equals(mLazyMessages[i].uriSpec))
-        return PR_TRUE;
-    }
-  }
-#endif
-
-  // check the main DB
   mozStorageStatementScoper scoper(mDBIsPageVisited);
   nsresult rv = URIBinder::Bind(mDBIsPageVisited, 0, aURIString);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
@@ -2161,6 +2127,28 @@ nsNavHistory::GetNewSessionID()
   return mLastSessionID;
 }
 
+
+void
+nsNavHistory::NotifyOnVisit(nsIURI* aURI,
+                          PRInt64 aVisitID,
+                          PRTime aTime,
+                          PRInt64 aSessionID,
+                          PRInt64 referringVisitID,
+                          PRInt32 aTransitionType)
+{
+  PRUint32 added = 0;
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver,
+                   OnVisit(aURI, aVisitID, aTime, aSessionID,
+                           referringVisitID, aTransitionType, &added));
+}
+
+void
+nsNavHistory::NotifyTitleChange(nsIURI* aURI, const nsString& aTitle)
+{
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
+}
 
 PRInt32
 nsNavHistory::GetDaysOfHistory() {
@@ -2626,7 +2614,6 @@ nsNavHistory::CalculateFullVisitCount(PRInt64 aPlaceId, PRInt32 *aVisitCount)
 // transition type of the visit.
 // Later, in AddVisitChain() the next visit to this page will be associated to
 // TRANSITION_BOOKMARK.
-// Note, AddVisitChain() is not called immediately if LAZY_ADD is enabled.
 //
 // @see MarkPageAsTyped
 
@@ -2672,8 +2659,8 @@ nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(canAdd);
 
-  // If the user is in private browsing mode, don't add any entry.
-  if (InPrivateBrowsingMode()) {
+  // If history is disabled (included privatebrowsing), don't add any entry.
+  if (IsHistoryDisabled()) {
     *canAdd = PR_FALSE;
     return NS_OK;
   }
@@ -2866,12 +2853,9 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // Notify observers: The hidden detection code must match that in
   // GetQueryResults to maintain consistency.
   // FIXME bug 325241: make a way to observe hidden URLs
-  PRUint32 added = 0;
   if (!hidden) {
-    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                     nsINavHistoryObserver,
-                     OnVisit(aURI, *aVisitID, aTime, aSessionID,
-                             referringVisitID, aTransitionType, &added));
+    NotifyOnVisit(aURI, *aVisitID, aTime, aSessionID, referringVisitID,
+                  aTransitionType);
   }
 
   // Normally docshell sends the link visited observer notification for us (this
@@ -4605,11 +4589,6 @@ nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotif
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURIs);
 
-#ifdef LAZY_ADD
-  // We must ensure to remove pages from the lazy messages queue too.
-  CommitLazyMessages();
-#endif
-
   nsresult rv;
   // build a list of place ids to delete
   nsCString deletePlaceIdsQueryString;
@@ -4678,11 +4657,6 @@ NS_IMETHODIMP
 nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-
-#ifdef LAZY_ADD
-  // We must ensure to remove pages from the lazy messages queue too.
-  CommitLazyMessages();
-#endif
 
   nsresult rv;
   // Local files don't have any host name. We don't want to delete all files in
@@ -4772,11 +4746,6 @@ nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
-#ifdef LAZY_ADD
-  // We must ensure to remove pages from the lazy messages queue too.
-  CommitLazyMessages();
-#endif
-
   nsresult rv;
   // build a list of place ids to delete
   nsCString deletePlaceIdsQueryString;
@@ -4847,11 +4816,6 @@ NS_IMETHODIMP
 nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-
-#ifdef LAZY_ADD
-  // We must ensure to remove pages from the lazy messages queue too.
-  CommitLazyMessages();
-#endif
 
   nsresult rv;
 
@@ -4945,11 +4909,6 @@ nsNavHistory::RemoveAllPages()
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-#ifdef LAZY_ADD
-  // We must ensure to remove pages from the lazy messages queue too.
-  CommitLazyMessages();
-#endif
-
   // reset frecency for all items that will _not_ be deleted
   // Note, we set frecency to -visit_count since we use that value in our
   // idle query to figure out which places to recalcuate frecency first.
@@ -5023,7 +4982,6 @@ nsNavHistory::HidePage(nsIURI *aURI)
 // transition type of the visit.
 // Later, in AddVisitChain() the next visit to this page will be associated to
 // TRANSITION_TYPED.
-// Note, AddVisitChain() is not called immediately if LAZY_ADD is enabled.
 //
 // @see MarkPageAsFollowedBookmark
 
@@ -5058,7 +5016,6 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 // transition type of the visit.
 // Later, in AddVisitChain() the next visit to this page will be associated to
 // TRANSITION_FRAMED_LINK or TRANSITION_LINK.
-// Note, AddVisitChain() is not called immediately if LAZY_ADD is enabled.
 //
 // @see MarkPageAsTyped
 
@@ -5107,7 +5064,7 @@ nsNavHistory::RegisterOpenPage(nsIURI* aURI)
 
   PRInt64 placeId;
   // Note: If the URI has never been added to history (but can be added),
-  // LAZY_ADD will cause this to add an orphan page, until the visit is added.
+  // this could add an orphan page, until the visit is added.
   rv = GetUrlIdFor(aURI, &placeId, canAdd);
   NS_ENSURE_SUCCESS(rv, rv);
   if (placeId == 0)
@@ -5232,10 +5189,6 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 
-  // don't add when history is disabled
-  if (IsHistoryDisabled())
-    return NS_OK;
-
   // filter out any unwanted URIs
   PRBool canAdd = PR_FALSE;
   nsresult rv = CanAddURI(aURI, &canAdd);
@@ -5245,23 +5198,8 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
 
   PRTime now = PR_Now();
 
-#ifdef LAZY_ADD
-  LazyMessage message;
-  rv = message.Init(LazyMessage::Type_AddURI, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  message.isRedirect = aRedirect;
-  message.isToplevel = aToplevel;
-  if (aReferrer) {
-    rv = aReferrer->Clone(getter_AddRefs(message.referrer));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  message.time = now;
-  rv = AddLazyMessage(message);
-  NS_ENSURE_SUCCESS(rv, rv);
-#else
   rv = AddURIInternal(aURI, now, aRedirect, aToplevel, aReferrer);
   NS_ENSURE_SUCCESS(rv, rv);
-#endif
 
   return NS_OK;
 }
@@ -5496,22 +5434,19 @@ nsNavHistory::SetPageTitle(nsIURI* aURI,
   // We don't want to set it to an empty string, but to a NULL value,
   // so we use SetIsVoid and SetPageTitleInternal will take care of that
 
-#ifdef LAZY_ADD
-  LazyMessage message;
-  nsresult rv = message.Init(LazyMessage::Type_Title, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  message.title = aTitle;
-  if (aTitle.IsEmpty())
-    message.title.SetIsVoid(PR_TRUE);
-  return AddLazyMessage(message);
-#else
+  nsresult rv;
   if (aTitle.IsEmpty()) {
+    // Using a void string to bind a NULL in the database.
     nsString voidString;
     voidString.SetIsVoid(PR_TRUE);
-    return SetPageTitleInternal(aURI, voidString);
+    rv = SetPageTitleInternal(aURI, voidString);
   }
-  return SetPageTitleInternal(aURI, aTitle);
-#endif
+  else {
+    rv = SetPageTitleInternal(aURI, aTitle);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5746,33 +5681,12 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     (void)os->RemoveObserver(this, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING);
 #endif
 
-    // If shutdown happens in the same scope as the service init, we should
-    // immediately serve the places-init topic, this way topic observers
-    // won't try to access the database after xpcom-shutdown.
-    nsCOMPtr<nsISimpleEnumerator> e;
-    nsresult rv = os->EnumerateObservers(TOPIC_PLACES_INIT_COMPLETE,
-                                         getter_AddRefs(e));
-    if (NS_SUCCEEDED(rv) && e) {
-      // This covers a special case that can happen in tests, if the test
-      // does never interrupt the main thread we could shutdown
-      // before we fire any notification.  That means that if we notify from now
-      // on, we could init the category cache after xpcom-shutdown and leak.
-      mCanNotify = false;
-
-      nsCOMPtr<nsIObserver> observer;
-      PRBool loop = PR_TRUE;
-      while(NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) {
-        e->GetNext(getter_AddRefs(observer));
-        (void)observer->Observe(observer, TOPIC_PLACES_INIT_COMPLETE, nsnull);
-      }
-    }
-
     // Notify all Places users that we are about to shutdown.  The notification
     // is enqueued because there is network work on profile-before-change that
     // should run before us.
     nsRefPtr<PlacesEvent> shutdownEvent =
       new PlacesEvent(TOPIC_PLACES_SHUTDOWN);
-    rv = NS_DispatchToMainThread(shutdownEvent);
+    nsresult rv = NS_DispatchToMainThread(shutdownEvent);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Unable to shutdown Places: message dispatch failed.");
 
@@ -5786,6 +5700,11 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   }
 
   else if (strcmp(aTopic, TOPIC_PLACES_TEARDOWN) == 0) {
+    // Don't even try to notify observers from this point on, the category
+    // cache would init services that could not shutdown correctly or try to
+    // use our APIs.
+    mCanNotify = false;
+
     // Operations that are unlikely to create issues to implementers should go
     // in global shutdown.  Any other thing that must run really late must be
     // here instead.
@@ -5801,18 +5720,6 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(mPrefBranch);
     if (prefService)
       prefService->SavePrefFile(nsnull);
-
-#ifdef LAZY_ADD
-    // Commit all pending lazy messages.
-    CommitLazyMessages(PR_TRUE);
-
-    // Kill lazy timer or it could fire later when statements won't be valid
-    // anymore.
-    if (mLazyTimer) {
-      mLazyTimer->Cancel();
-      mLazyTimer = 0;
-    }
-#endif
 
     // Finalize all statements.
     nsresult rv = FinalizeInternalStatements();
@@ -5873,25 +5780,9 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
   else if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
     if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
-#ifdef LAZY_ADD
-      // Commit all lazy messages in order to protect against edge cases where a
-      // lazy message which is not allowed in private browsing mode has been
-      // added before entering the private browsing mode, and is going to be
-      // scheduled to be processed after entering the private browsing mode.
-      CommitLazyMessages();
-#endif
-
       mInPrivateBrowsing = PR_TRUE;
     }
     else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
-#ifdef LAZY_ADD
-      // Commit all lazy messages in order to protect against edge cases where a
-      // lazy message which should be processed in private browsing mode has been
-      // added before leaving the private browsing mode, and is going to be
-      // scheduled to be processed after leaving the private browsing mode.
-      CommitLazyMessages();
-#endif
-
       mInPrivateBrowsing = PR_FALSE;
     }
   }
@@ -6066,124 +5957,6 @@ nsNavHistory::DecayFrecency()
 
   return NS_OK;
 }
-
-// Lazy stuff ******************************************************************
-
-#ifdef LAZY_ADD
-
-nsresult
-nsNavHistory::AddLazyLoadFaviconMessage(nsIURI* aPageURI,
-                                        nsIURI* aFaviconURI,
-                                        PRBool aForceReload,
-                                        nsIFaviconDataCallback* aCallback)
-{
-  LazyMessage message;
-  nsresult rv = message.Init(LazyMessage::Type_Favicon, aPageURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aFaviconURI->Clone(getter_AddRefs(message.favicon));
-  NS_ENSURE_SUCCESS(rv, rv);
-  message.alwaysLoadFavicon = aForceReload;
-  message.callback = aCallback;
-  return AddLazyMessage(message);
-}
-
-
-// nsNavHistory::StartLazyTimer
-//
-//    This schedules flushing of the lazy message queue for the future.
-//
-//    If we already have timer set, we canel it and schedule a new timer in
-//    the future. This saves you from having to wait if you open a bunch of
-//    pages in a row. However, we don't want to defer too long, so we'll only
-//    push it back MAX_LAZY_TIMER_DEFERMENTS times. After that we always
-//    let the timer go the next time.
-
-nsresult
-nsNavHistory::StartLazyTimer()
-{
-  if (! mLazyTimer) {
-    mLazyTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (! mLazyTimer)
-      return NS_ERROR_OUT_OF_MEMORY;
-  } else {
-    if (mLazyTimerSet) {
-      if (mLazyTimerDeferments >= MAX_LAZY_TIMER_DEFERMENTS) {
-        // already set and we don't want to push it back any later, use that one
-        return NS_OK;
-      } else {
-        // push back the active timer
-        mLazyTimer->Cancel();
-        mLazyTimerDeferments ++;
-      }
-    }
-  }
-  nsresult rv = mLazyTimer->InitWithFuncCallback(LazyTimerCallback, this,
-                                                 LAZY_MESSAGE_TIMEOUT,
-                                                 nsITimer::TYPE_ONE_SHOT);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mLazyTimerSet = PR_TRUE;
-  return NS_OK;
-}
-
-
-// nsNavHistory::AddLazyMessage
-
-nsresult
-nsNavHistory::AddLazyMessage(const LazyMessage& aMessage)
-{
-  if (! mLazyMessages.AppendElement(aMessage))
-    return NS_ERROR_OUT_OF_MEMORY;
-  return StartLazyTimer();
-}
-
-
-// nsNavHistory::LazyTimerCallback
-
-void // static
-nsNavHistory::LazyTimerCallback(nsITimer* aTimer, void* aClosure)
-{
-  nsNavHistory* that = static_cast<nsNavHistory*>(aClosure);
-  that->mLazyTimerSet = PR_FALSE;
-  that->mLazyTimerDeferments = 0;
-  that->CommitLazyMessages();
-}
-
-// nsNavHistory::CommitLazyMessages
-
-void
-nsNavHistory::CommitLazyMessages(PRBool aIsShutdown)
-{
-  mozStorageTransaction transaction(mDBConn, PR_TRUE);
-  for (PRUint32 i = 0; i < mLazyMessages.Length(); i ++) {
-    LazyMessage& message = mLazyMessages[i];
-    switch (message.type) {
-      case LazyMessage::Type_AddURI:
-        AddURIInternal(message.uri, message.time, message.isRedirect,
-                       message.isToplevel, message.referrer);
-        break;
-      case LazyMessage::Type_Title:
-        SetPageTitleInternal(message.uri, message.title);
-        break;
-      case LazyMessage::Type_Favicon: {
-        // Favicons cannot use async channels after shutdown.
-        if (aIsShutdown)
-          continue;
-        nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
-        if (faviconService) {
-          faviconService->DoSetAndLoadFaviconForPage(message.uri,
-                                                     message.favicon,
-                                                     message.alwaysLoadFavicon,
-                                                     message.callback);
-        }
-        break;
-      }
-      default:
-        NS_NOTREACHED("Invalid lazy message type");
-    }
-  }
-  mLazyMessages.Clear();
-}
-#endif // LAZY_ADD
 
 
 // Query stuff *****************************************************************
@@ -7335,7 +7108,6 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
   rv = mDBSetPlaceTitle->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // observers (have to check first if it's bookmarked)
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
 
@@ -7546,52 +7318,6 @@ nsNavHistory::RemoveDuplicateURIs()
 
 
 namespace {
-
-// GetReversedHostname
-//
-//    This extracts the hostname from the URI and reverses it in the
-//    form that we use (always ending with a "."). So
-//    "http://microsoft.com/" becomes "moc.tfosorcim."
-//
-//    The idea behind this is that we can create an index over the items in
-//    the reversed host name column, and then query for as much or as little
-//    of the host name as we feel like.
-//
-//    For example, the query "host >= 'gro.allizom.' AND host < 'gro.allizom/'
-//    Matches all host names ending in '.mozilla.org', including
-//    'developer.mozilla.org' and just 'mozilla.org' (since we define all
-//    reversed host names to end in a period, even 'mozilla.org' matches).
-//    The important thing is that this operation uses the index. Any substring
-//    calls in a select statement (even if it's for the beginning of a string)
-//    will bypass any indices and will be slow).
-
-nsresult
-GetReversedHostname(nsIURI* aURI, nsAString& aRevHost)
-{
-  nsCString forward8;
-  nsresult rv = aURI->GetHost(forward8);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // can't do reversing in UTF8, better use 16-bit chars
-  NS_ConvertUTF8toUTF16 forward(forward8);
-  GetReversedHostname(forward, aRevHost);
-  return NS_OK;
-}
-
-
-// GetReversedHostname
-//
-//    Same as previous but for strings
-
-void
-GetReversedHostname(const nsString& aForward, nsAString& aRevHost)
-{
-  ReverseString(aForward, aRevHost);
-  aRevHost.Append(PRUnichar('.'));
-}
-
 
 // GetSimpleBookmarksQueryFolder
 //

@@ -37,10 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsChromeRegistry_h
+#define nsChromeRegistry_h
+
 #include "nsIChromeRegistry.h"
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsIPrefBranch.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULOverlayProvider.h"
@@ -52,20 +56,20 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 #include "nsURIHashKey.h"
-#include "nsVoidArray.h"
-#include "nsTArray.h"
 #include "nsInterfaceHashtable.h"
+#include "nsXULAppAPI.h"
+#include "nsIResProtocolHandler.h"
+#include "nsIXPConnect.h"
 
-struct PRFileDesc;
-class nsIAtom;
+#include "mozilla/Omnijar.h"
+
 class nsIDOMWindowInternal;
-class nsILocalFile;
-class nsIPrefBranch;
-class nsIRDFDataSource;
-class nsIRDFResource;
-class nsIRDFService;
-class nsISimpleEnumerator;
 class nsIURL;
+
+// The chrome registry is actually split between nsChromeRegistryChrome and
+// nsChromeRegistryContent. The work/data that is common to both resides in
+// the shared nsChromeRegistry implementation, with operations that only make
+// sense for one side erroring out in the other.
 
 // for component registration
 // {47049e42-1d87-482a-984d-56ae185e367a}
@@ -82,180 +86,126 @@ class nsChromeRegistry : public nsIToolkitChromeRegistry,
 public:
   NS_DECL_ISUPPORTS
 
+  // nsIXULChromeRegistry methods:
+  NS_IMETHOD ReloadChrome();
+  NS_IMETHOD RefreshSkins();
+  NS_IMETHOD AllowScriptsForPackage(nsIURI* url,
+                                    PRBool* _retval NS_OUTPARAM);
+  NS_IMETHOD AllowContentToAccess(nsIURI* url,
+                                  PRBool* _retval NS_OUTPARAM);
+
   // nsIChromeRegistry methods:
-  NS_DECL_NSICHROMEREGISTRY
-  NS_DECL_NSIXULCHROMEREGISTRY
-  NS_DECL_NSITOOLKITCHROMEREGISTRY
-
-#ifdef MOZ_XUL
-  NS_DECL_NSIXULOVERLAYPROVIDER
-#endif
-
-  NS_DECL_NSIOBSERVER
+  NS_IMETHOD_(PRBool) WrappersEnabled(nsIURI *aURI);
+  NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult);
 
   // nsChromeRegistry methods:
-  nsChromeRegistry() : mInitialized(PR_FALSE), mProfileLoaded(PR_FALSE) {
-    mPackagesHash.ops = nsnull;
-  }
-  ~nsChromeRegistry();
+  nsChromeRegistry() : mInitialized(PR_FALSE) { }
+  virtual ~nsChromeRegistry();
 
-  nsresult Init();
+  virtual nsresult Init();
+
+  static already_AddRefed<nsIChromeRegistry> GetService();
 
   static nsChromeRegistry* gChromeRegistry;
 
   static nsresult Canonify(nsIURL* aChromeURL);
 
 protected:
-  nsresult GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay, nsISimpleEnumerator **aResult);
-
-  nsresult LoadInstallDataSource();
-  nsresult LoadProfileDataSource();
-
   void FlushSkinCaches();
   void FlushAllCaches();
 
-private:
+  static void LogMessage(const char* aMsg, ...);
+  static void LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,
+                                    const char* aMsg, ...);
+
+  virtual nsresult GetBaseURIFromPackage(const nsCString& aPackage,
+                                         const nsCString& aProvider,
+                                         const nsCString& aPath,
+                                         nsIURI* *aResult) = 0;
+  virtual nsresult GetFlagsFromPackage(const nsCString& aPackage,
+                                       PRUint32* aFlags) = 0;
+
   nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
-#ifdef MOZ_OMNIJAR
-  nsresult CheckOmnijarChrome();
-#endif
 
   static nsresult RefreshWindow(nsIDOMWindowInternal* aWindow);
   static nsresult GetProviderAndPath(nsIURL* aChromeURL,
                                      nsACString& aProvider, nsACString& aPath);
 
-#ifdef MOZ_XUL
-  NS_HIDDEN_(void) ProcessProvider(PRFileDesc *fd, nsIRDFService* aRDFs,
-                                   nsIRDFDataSource* ds, nsIRDFResource* aRoot,
-                                   PRBool aIsLocale, const nsACString& aBaseURL);
-  NS_HIDDEN_(void) ProcessOverlays(PRFileDesc *fd, nsIRDFDataSource* ds,
-                                   nsIRDFResource* aRoot,
-                                   const nsCSubstring& aType);
+public:
+  static already_AddRefed<nsChromeRegistry> GetSingleton();
+
+  struct ManifestProcessingContext
+  {
+    ManifestProcessingContext(NSLocationType aType, nsILocalFile* aFile)
+      : mType(aType)
+      , mFile(aFile)
+      , mPath(NULL)
+    { }
+
+#ifdef MOZ_OMNIJAR
+    ManifestProcessingContext(NSLocationType aType, const char* aPath)
+      : mType(aType)
+      , mFile(mozilla::OmnijarPath())
+      , mPath(aPath)
+    { }
 #endif
 
-  NS_HIDDEN_(nsresult) ProcessManifest(nsILocalFile* aManifest, PRBool aSkinOnly);
-  NS_HIDDEN_(nsresult) ProcessManifestBuffer(char *aBuffer, PRInt32 aLength, nsIURI* aManifest, PRBool aSkinOnly);
-  NS_HIDDEN_(nsresult) ProcessNewChromeFile(nsILocalFile *aListFile, nsIURI* aManifest);
-  NS_HIDDEN_(nsresult) ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength, nsIURI* aManifest);
+    ~ManifestProcessingContext()
+    { }
 
-public:
-  struct ProviderEntry
-  {
-    ProviderEntry(const nsACString& aProvider, nsIURI* aBase) :
-      provider(aProvider),
-      baseURI(aBase) { }
+    nsIURI* GetManifestURI();
+    nsIXPConnect* GetXPConnect();
 
-    nsCString        provider;
-    nsCOMPtr<nsIURI> baseURI;
+    already_AddRefed<nsIURI> ResolveURI(const char* uri);
+
+    NSLocationType mType;
+    nsILocalFile* mFile;
+    const char* mPath;
+    nsCOMPtr<nsIURI> mManifestURI;
+    nsCOMPtr<nsIXPConnect> mXPConnect;
   };
 
-  class nsProviderArray
-  {
-  public:
-    nsProviderArray() :
-      mArray(1) { }
-    ~nsProviderArray()
-      { Clear(); }
+  virtual void ManifestContent(ManifestProcessingContext& cx, int lineno,
+                               char *const * argv, bool platform,
+                               bool contentaccessible) = 0;
+  virtual void ManifestLocale(ManifestProcessingContext& cx, int lineno,
+                              char *const * argv, bool platform,
+                              bool contentaccessible) = 0;
+  virtual void ManifestSkin(ManifestProcessingContext& cx, int lineno,
+                            char *const * argv, bool platform,
+                            bool contentaccessible) = 0;
+  virtual void ManifestOverlay(ManifestProcessingContext& cx, int lineno,
+                               char *const * argv, bool platform,
+                               bool contentaccessible) = 0;
+  virtual void ManifestStyle(ManifestProcessingContext& cx, int lineno,
+                             char *const * argv, bool platform,
+                             bool contentaccessible) = 0;
+  virtual void ManifestOverride(ManifestProcessingContext& cx, int lineno,
+                                char *const * argv, bool platform,
+                                bool contentaccessible) = 0;
+  virtual void ManifestResource(ManifestProcessingContext& cx, int lineno,
+                                char *const * argv, bool platform,
+                                bool contentaccessible) = 0;
 
-    // When looking up locales and skins, the "selected" locale is not always
-    // available. This enum identifies what kind of match is desired/found.
-    enum MatchType {
-      EXACT = 0,
-      LOCALE = 1, // "en-GB" is selected, we found "en-US"
-      ANY = 2
-    };
+  // Available flags
+  enum {
+    // This is a "platform" package (e.g. chrome://global-platform/).
+    // Appends one of win/ unix/ mac/ to the base URI.
+    PLATFORM_PACKAGE = 1 << 0,
 
-    nsIURI* GetBase(const nsACString& aPreferred, MatchType aType);
-    const nsACString& GetSelected(const nsACString& aPreferred, MatchType aType);
-    void    SetBase(const nsACString& aProvider, nsIURI* base);
-    void    EnumerateToArray(nsTArray<nsCString> *a);
-    void    Clear();
+    // This package should use the new XPCNativeWrappers to separate
+    // content from chrome. This flag is currently unused (because we call
+    // into xpconnect at registration time).
+    XPCNATIVEWRAPPERS = 1 << 1,
 
-  private:
-    ProviderEntry* GetProvider(const nsACString& aPreferred, MatchType aType);
-
-    nsVoidArray mArray;
+    // Content script may access files in this package
+    CONTENT_ACCESSIBLE = 1 << 2
   };
 
-  struct PackageEntry : public PLDHashEntryHdr
-  {
-    PackageEntry(const nsACString& package);
-    ~PackageEntry() { }
-
-    // Available flags
-    enum {
-      // This is a "platform" package (e.g. chrome://global-platform/).
-      // Appends one of win/ unix/ mac/ to the base URI.
-      PLATFORM_PACKAGE = 1 << 0,
-
-      // Content script may access files in this package
-      CONTENT_ACCESSIBLE = 1 << 1
-    };
-
-    nsCString        package;
-    nsCOMPtr<nsIURI> baseURI;
-    PRUint32         flags;
-    nsProviderArray  locales;
-    nsProviderArray  skins;
-  };
-
-private:
-  static PLDHashNumber HashKey(PLDHashTable *table, const void *key);
-  static PRBool        MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
-                                const void *key);
-  static void          ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry);
-  static PRBool        InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
-                                 const void *key);
-
-  static const PLDHashTableOps kTableOps;
-
-public:
-  class OverlayListEntry : public nsURIHashKey
-  {
-  public:
-    typedef nsURIHashKey::KeyType        KeyType;
-    typedef nsURIHashKey::KeyTypePointer KeyTypePointer;
-
-    OverlayListEntry(KeyTypePointer aKey) : nsURIHashKey(aKey) { }
-    OverlayListEntry(OverlayListEntry& toCopy) : nsURIHashKey(toCopy),
-                                                 mArray(toCopy.mArray) { }
-    ~OverlayListEntry() { }
-
-    void AddURI(nsIURI* aURI);
-
-    nsCOMArray<nsIURI> mArray;
-  };
-
-  class OverlayListHash
-  {
-  public:
-    OverlayListHash() { }
-    ~OverlayListHash() { }
-
-    PRBool Init() { return mTable.Init(); }
-    void Add(nsIURI* aBase, nsIURI* aOverlay);
-    void Clear() { mTable.Clear(); }
-    const nsCOMArray<nsIURI>* GetArray(nsIURI* aBase);
-
-  private:
-    nsTHashtable<OverlayListEntry> mTable;
-  };
-
-private:
   PRBool mInitialized;
-  PRBool mProfileLoaded;
-
-  // Hash of package names ("global") to PackageEntry objects
-  PLDHashTable mPackagesHash;
-
-  // Hashes on the file to be overlaid (chrome://browser/content/browser.xul)
-  // to a list of overlays/stylesheets
-  OverlayListHash mOverlayHash;
-  OverlayListHash mStyleHash;
 
   // "Override" table (chrome URI string -> real URI)
   nsInterfaceHashtable<nsURIHashKey, nsIURI> mOverrideTable;
-
-  nsCString mSelectedLocale;
-  nsCString mSelectedSkin;
 };
+
+#endif // nsChromeRegistry_h

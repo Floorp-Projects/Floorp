@@ -94,7 +94,8 @@ CPPSRCS += SharedMemory_posix.cpp
 endif
 
 include $(topsrcdir)/ipc/app/defs.mk
-DEFINES += -DMOZ_CHILD_PROCESS_NAME="\"$(MOZ_CHILD_PROCESS_NAME)\""
+DEFINES += -DMOZ_CHILD_PROCESS_NAME=\"$(MOZ_CHILD_PROCESS_NAME)\"
+DEFINES += -DMOZ_CHILD_PROCESS_BUNDLE=\"$(MOZ_CHILD_PROCESS_BUNDLE)\"
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

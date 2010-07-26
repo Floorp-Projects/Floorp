@@ -4,6 +4,7 @@
 <!ENTITY places.library.height "500">
 <!ENTITY organize.label        "Organize">
 <!ENTITY organize.accesskey    "O">
+<!ENTITY organize.tooltip      "Organize your bookmarks">
 
 <!ENTITY file.accesskey                 "F">
 <!ENTITY file.close.label               "Close">
@@ -13,6 +14,7 @@
 <!ENTITY edit.accesskey                 "E">
 <!ENTITY views.label                    "Views">
 <!ENTITY views.accesskey                "V">
+<!ENTITY views.tooltip                  "Change your view">
 <!ENTITY view.columns.label             "Show Columns">
 <!ENTITY view.columns.accesskey         "C">
 <!ENTITY view.sort.label                "Sort">
@@ -107,6 +109,7 @@
 
 <!ENTITY maintenance.label      "Import and Backup">
 <!ENTITY maintenance.accesskey  "I">
+<!ENTITY maintenance.tooltip    "Import and backup your bookmarks">
 
 <!ENTITY backCmd.label       "Back">
 <!ENTITY backButton.tooltip  "Go back">

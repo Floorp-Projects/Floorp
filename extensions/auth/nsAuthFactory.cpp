@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsAuth.h"
 
 //-----------------------------------------------------------------------------
@@ -71,7 +71,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNegotiateAuth)
 #if defined( USE_SSPI )
 #include "nsAuthSSPI.h"
 
-static NS_METHOD
+static nsresult
 nsSysNTLMAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
   if (outer)
@@ -87,7 +87,7 @@ nsSysNTLMAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
   return rv;
 }
 
-static NS_METHOD
+static nsresult
 nsKerbSSPIAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
   if (outer)
@@ -138,7 +138,7 @@ nsKerbSSPIAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
 }
 
 #include "nsAuthSambaNTLM.h"
-static NS_METHOD
+static nsresult
 nsSambaNTLMAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
   if (outer)
@@ -159,7 +159,7 @@ nsSambaNTLMAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
 
 #endif
 
-static NS_METHOD
+static nsresult
 nsKerbGSSAPIAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
   if (outer)
@@ -175,7 +175,7 @@ nsKerbGSSAPIAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
   return rv;
 }
 
-static NS_METHOD
+static nsresult
 nsGSSAPIAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
   if (outer)
@@ -207,52 +207,47 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAuthSSPI)
 #include "nsAuthSASL.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAuthSASL)
 
-//-----------------------------------------------------------------------------
-
-static const nsModuleComponentInfo components[] = {
-  { "nsAuthKerbGSS", 
-    NS_GSSAUTH_CID,
-    NS_AUTH_MODULE_CONTRACTID_PREFIX "kerb-gss",
-    nsKerbGSSAPIAuthConstructor
-  },
-  { "nsAuthNegoGSSAPI", 
-    NS_NEGOTIATEAUTH_CID,
-    NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate-gss",
-    nsGSSAPIAuthConstructor
-  },
+NS_DEFINE_NAMED_CID(NS_GSSAUTH_CID);
+NS_DEFINE_NAMED_CID(NS_NEGOTIATEAUTH_CID);
 #if defined( USE_SSPI )
-  { "nsAuthNegoSSPI", 
-    NS_NEGOTIATEAUTHSSPI_CID,
-    NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate-sspi",
-    nsAuthSSPIConstructor
-  },
-  { "nsAuthKerbSSPI", 
-    NS_KERBAUTHSSPI_CID,
-    NS_AUTH_MODULE_CONTRACTID_PREFIX "kerb-sspi",
-    nsKerbSSPIAuthConstructor
-  },
-  { "nsAuthSYSNTLM", 
-    NS_SYSNTLMAUTH_CID,
-    NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm",
-    nsSysNTLMAuthConstructor
-  },
+NS_DEFINE_NAMED_CID(NS_NEGOTIATEAUTHSSPI_CID);
+NS_DEFINE_NAMED_CID(NS_KERBAUTHSSPI_CID);
+NS_DEFINE_NAMED_CID(NS_SYSNTLMAUTH_CID);
 #else
-  { "nsAuthSambaNTLM", 
-    NS_SAMBANTLMAUTH_CID,
-    NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm",
-    nsSambaNTLMAuthConstructor
-  },
+NS_DEFINE_NAMED_CID(NS_SAMBANTLMAUTH_CID);
 #endif
-  { "nsHttpNegotiateAuth", 
-    NS_HTTPNEGOTIATEAUTH_CID,
-    NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "negotiate",
-    nsHttpNegotiateAuthConstructor
-  },
-  { "nsAuthSASL",
-    NS_AUTHSASL_CID,
-    NS_AUTH_MODULE_CONTRACTID_PREFIX "sasl-gssapi",
-    nsAuthSASLConstructor
-  }
+NS_DEFINE_NAMED_CID(NS_HTTPNEGOTIATEAUTH_CID);
+NS_DEFINE_NAMED_CID(NS_AUTHSASL_CID);
+
+
+static const mozilla::Module::CIDEntry kAuthCIDs[] = {
+  { &kNS_GSSAUTH_CID, false, NULL, nsKerbGSSAPIAuthConstructor },
+  { &kNS_NEGOTIATEAUTH_CID, false, NULL, nsGSSAPIAuthConstructor },
+#if defined( USE_SSPI )
+  { &kNS_NEGOTIATEAUTHSSPI_CID, false, NULL, nsAuthSSPIConstructor },
+  { &kNS_KERBAUTHSSPI_CID, false, NULL, nsKerbSSPIAuthConstructor },
+  { &kNS_SYSNTLMAUTH_CID, false, NULL, nsSysNTLMAuthConstructor },
+#else
+  { &kNS_SAMBANTLMAUTH_CID, false, NULL, nsSambaNTLMAuthConstructor },
+#endif
+  { &kNS_HTTPNEGOTIATEAUTH_CID, false, NULL, nsHttpNegotiateAuthConstructor },
+  { &kNS_AUTHSASL_CID, false, NULL, nsAuthSASLConstructor },
+  { NULL }
+};
+
+static const mozilla::Module::ContractIDEntry kAuthContracts[] = {
+  { NS_AUTH_MODULE_CONTRACTID_PREFIX "kerb-gss", &kNS_GSSAUTH_CID },
+  { NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate-gss", &kNS_NEGOTIATEAUTH_CID },
+#if defined( USE_SSPI )
+  { NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate-sspi", &kNS_NEGOTIATEAUTHSSPI_CID },
+  { NS_AUTH_MODULE_CONTRACTID_PREFIX "kerb-sspi", &kNS_KERBAUTHSSPI_CID },
+  { NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm", &kNS_SYSNTLMAUTH_CID },
+#else
+  { NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm", &kNS_SAMBANTLMAUTH_CID },
+#endif
+  { NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "negotiate", &kNS_HTTPNEGOTIATEAUTH_CID },
+  { NS_AUTH_MODULE_CONTRACTID_PREFIX "sasl-gssapi", &kNS_AUTHSASL_CID },
+  { NULL }
 };
 
 //-----------------------------------------------------------------------------
@@ -261,7 +256,7 @@ PRLogModuleInfo *gNegotiateLog;
 
 // setup nspr logging ...
 static nsresult
-InitNegotiateAuth(nsIModule *self)
+InitNegotiateAuth()
 {
   gNegotiateLog = PR_NewLogModule("negotiateauth");
   return NS_OK;
@@ -271,10 +266,19 @@ InitNegotiateAuth(nsIModule *self)
 #endif
 
 static void
-DestroyNegotiateAuth(nsIModule *self)
+DestroyNegotiateAuth()
 {
   nsAuthGSSAPI::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsAuthModule, components,
-                                   InitNegotiateAuth, DestroyNegotiateAuth)
+static const mozilla::Module kAuthModule = {
+  mozilla::Module::kVersion,
+  kAuthCIDs,
+  kAuthContracts,
+  NULL,
+  NULL,
+  InitNegotiateAuth,
+  DestroyNegotiateAuth
+};
+
+NSMODULE_DEFN(nsAuthModule) = &kAuthModule;

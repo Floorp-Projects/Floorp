@@ -296,7 +296,7 @@ sec_pkcs12_convert_old_auth_safe(SEC_PKCS12AuthenticatedSafe *asafe)
 }    
 
 /* decodes the authenticated safe item.  a return of NULL indicates
- * an error.  however, the error will have occured either in memory
+ * an error.  however, the error will have occurred either in memory
  * allocation or in decoding the authenticated safe.
  *
  * if an old PFX item has been found, we want to convert the
@@ -460,7 +460,7 @@ sec_pkcs12_validate_auth_safe(SEC_PKCS12AuthenticatedSafe *asafe)
 /* retrieves the authenticated safe item from the PFX item
  *  before returning the authenticated safe, the validity of the
  *  authenticated safe is checked and if valid, returned.
- * a return of NULL indicates that an error occured.
+ * a return of NULL indicates that an error occurred.
  */
 static SEC_PKCS12AuthenticatedSafe *
 sec_pkcs12_get_auth_safe(SEC_PKCS12PFXItem *pfx)

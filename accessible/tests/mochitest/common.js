@@ -96,6 +96,8 @@ const WIN = (navigator.platform.indexOf("Win") != -1)? true : false;
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible general
 
+const kEmbedChar = String.fromCharCode(0xfffc);
+
 /**
  * nsIAccessibleRetrieval, initialized when test is loaded.
  */

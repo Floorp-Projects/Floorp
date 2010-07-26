@@ -339,19 +339,8 @@ typedef void (*_gdk_window_set_urgency_hint_fn)(GdkWindow *window,
 // cursor cache
 static GdkCursor *gCursorCache[eCursorCount];
 
-// Global update pixmap
-static PRBool gUseBufferPixmap = PR_FALSE;
-static GdkPixmap *gBufferPixmap = nsnull;
-static gfxIntSize gBufferPixmapSize(0,0);
-static gfxIntSize gBufferPixmapMaxSize(0,0);
-static int gBufferPixmapUsageCount = 0;
-
 // imported in nsWidgetFactory.cpp
 PRBool gDisableNativeTheme = PR_FALSE;
-
-// If this is 1, then a 24bpp buffer surface is always
-// created for exposes, even if the display has a different depth
-static PRBool gForce24bpp = PR_FALSE;
 
 static GtkWidget *gInvisibleContainer = NULL;
 
@@ -458,16 +447,6 @@ nsWindow::nsWindow()
     mDFB            = NULL;
     mDFBLayer       = NULL;
 #endif
-
-
-    if (gUseBufferPixmap) {
-        if (gBufferPixmapMaxSize.width == 0) {
-            gBufferPixmapMaxSize.width = gdk_screen_width();
-            gBufferPixmapMaxSize.height = gdk_screen_height();
-        }
-
-        gBufferPixmapUsageCount++;
-    }
 }
 
 nsWindow::~nsWindow()
@@ -734,18 +713,6 @@ nsWindow::Destroy(void)
 
     /** Need to clean our LayerManager up while still alive */
     mLayerManager = NULL;
-
-    if (gUseBufferPixmap &&
-        gBufferPixmapUsageCount &&
-        --gBufferPixmapUsageCount == 0)
-    {
-        if (gBufferPixmap)
-            g_object_unref(G_OBJECT(gBufferPixmap));
-
-        gBufferPixmap = nsnull;
-        gBufferPixmapSize.width = 0;
-        gBufferPixmapSize.height = 0;
-    }
 
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),
                                          FuncToGpointer(theme_changed_cb),
@@ -2323,6 +2290,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     event.refPoint.x = aEvent->area.x;
     event.refPoint.y = aEvent->area.y;
+    event.willSendDidPaint = PR_TRUE;
 
     GdkRectangle *rects;
     gint nrects;
@@ -2390,13 +2358,9 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         return FALSE;
     }
 
-    // The context that we'll actually paint into. When we're double-
-    // buffering, this can be different from ctx.
-    nsRefPtr<gfxContext> paintCtx = ctx;
-
 #ifdef MOZ_DFB
-    gfxPlatformGtk::GetPlatform()->SetGdkDrawable(ctx->OriginalSurface(),
-                                                  GDK_DRAWABLE(mGdkWindow));
+    gfxPlatformGtk::SetGdkDrawable(ctx->OriginalSurface(),
+                                   GDK_DRAWABLE(mGdkWindow));
 
     // clip to the update region
     ctx->NewPath();
@@ -2404,15 +2368,13 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         ctx->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
     }
     ctx->Clip();
+
+    BasicLayerManager::BufferMode layerBuffering =
+        BasicLayerManager::BUFFER_NONE;
 #endif
 
 #ifdef MOZ_X11
-    nsIntRect boundsRect = event.region.GetBounds();
-
-    GdkPixmap* bufferPixmap = nsnull;
-    gfxIntSize bufferPixmapSize;
-
-    nsRefPtr<gfxASurface> bufferPixmapSurface;
+    nsIntRect boundsRect; // for translucent only
 
     ctx->NewPath();
     if (translucent) {
@@ -2420,6 +2382,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         // call UpdateTranslucentWindowAlpha once. After we have dropped
         // support for non-Thebes graphics, UpdateTranslucentWindowAlpha will be
         // our private interface so we can rework things to avoid this.
+        boundsRect = event.region.GetBounds();
         ctx->Rectangle(gfxRect(boundsRect.x, boundsRect.y,
                                boundsRect.width, boundsRect.height));
     } else {
@@ -2429,82 +2392,16 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
     ctx->Clip();
 
-    // double buffer
+    BasicLayerManager::BufferMode layerBuffering;
     if (translucent) {
+        // The double buffering is done here to extract the shape mask.
+        // (The shape mask won't be necessary when a visual with an alpha
+        // channel is used on compositing window managers.)
+        layerBuffering = BasicLayerManager::BUFFER_NONE;
         ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
     } else {
-        // Instead of just doing PushGroup we're going to do a little dance
-        // to ensure that GDK creates the pixmap, so it doesn't go all
-        // XGetGeometry on us in gdk_pixmap_foreign_new_for_display when we
-        // paint native themes
-        gint depth;
-
-        if (gForce24bpp) {
-            depth = 24; // 24 always
-        } else {
-            depth = gdk_drawable_get_depth(GDK_DRAWABLE(mGdkWindow));
-        }
-
-        // Make sure we won't create something that will overload the X server
-        nsIntSize safeSize = GetSafeWindowSize(boundsRect.Size());
-        boundsRect.width = safeSize.width;
-        boundsRect.height = safeSize.height;
-
-        if (!gUseBufferPixmap ||
-            boundsRect.width > gBufferPixmapMaxSize.width ||
-            boundsRect.height > gBufferPixmapMaxSize.height)
-        {
-            // create a one-off always if we're not using the global pixmap
-            // if gUseBufferPixmap == TRUE, who's redrawing an area bigger than the screen?
-            bufferPixmap = gdk_pixmap_new(GDK_DRAWABLE(mGdkWindow),
-                                          boundsRect.width, boundsRect.height,
-                                          depth);
-            bufferPixmapSize.width = boundsRect.width;
-            bufferPixmapSize.height = boundsRect.height;
-        } else if (boundsRect.width > gBufferPixmapSize.width ||
-                   boundsRect.height > gBufferPixmapSize.height)
-        {
-            // grow the global pixmap
-            if (gBufferPixmap)
-                g_object_unref(G_OBJECT(gBufferPixmap));
-
-            gBufferPixmapSize.width = PR_MAX(gBufferPixmapSize.width, boundsRect.width);
-            gBufferPixmapSize.height = PR_MAX(gBufferPixmapSize.height, boundsRect.height);
-
-            gBufferPixmap = gdk_pixmap_new(GDK_DRAWABLE(mGdkWindow),
-                                           gBufferPixmapSize.width, gBufferPixmapSize.height,
-                                           depth);
-
-            // use the newly-resized global
-            bufferPixmap = gBufferPixmap;
-            bufferPixmapSize = gBufferPixmapSize;
-        }  else {
-            // global's big enough, just use it
-            bufferPixmap = gBufferPixmap;
-            bufferPixmapSize = gBufferPixmapSize;
-        }
-
-        if (bufferPixmap) {
-            bufferPixmapSurface = GetSurfaceForGdkDrawable(GDK_DRAWABLE(bufferPixmap),
-                                                           nsIntSize(bufferPixmapSize.width, bufferPixmapSize.height));
-
-            if (bufferPixmapSurface && bufferPixmapSurface->CairoStatus()) {
-                bufferPixmapSurface = nsnull;
-            }
-            if (bufferPixmapSurface) {
-                gfxPlatformGtk::GetPlatform()->SetGdkDrawable(
-                        static_cast<gfxASurface *>(bufferPixmapSurface),
-                        GDK_DRAWABLE(bufferPixmap));
-
-                bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
-                nsRefPtr<gfxContext> newCtx = new gfxContext(bufferPixmapSurface);
-                if (newCtx) {
-                    paintCtx = newCtx.forget();
-                } else {
-                    bufferPixmapSurface = nsnull;
-                }
-            }
-        }
+        // Get the layer manager to do double buffering (if necessary).
+        layerBuffering = BasicLayerManager::BUFFER_BUFFERED;
     }
 
 #if 0
@@ -2521,16 +2418,16 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
     nsEventStatus status;
     {
-      AutoLayerManagerSetup setupLayerManager(this, paintCtx);
+      AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
       DispatchEvent(&event, status);
     }
 
 #ifdef MOZ_X11
     // DispatchEvent can Destroy us (bug 378273), avoid doing any paint
     // operations below if that happened - it will lead to XError and exit().
-    if (NS_LIKELY(!mIsDestroyed)) {
-        if (status != nsEventStatus_eIgnore) {
-            if (translucent) {
+    if (translucent) {
+        if (NS_LIKELY(!mIsDestroyed)) {
+            if (status != nsEventStatus_eIgnore) {
                 nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
                 ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
                 ctx->SetPattern(pattern);
@@ -2553,26 +2450,23 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                                                                    boundsRect.width, boundsRect.height),
                                                          img->Data(), img->Stride());
                 }
-            } else {
-                if (bufferPixmapSurface) {
-                    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-                    ctx->SetSource(bufferPixmapSurface);
-                    ctx->Paint();
-                }
             }
-        } else {
-            // ignore
-            if (translucent)
-                ctx->PopGroup();
         }
-
-        // if we had to allocate a local pixmap, free it here
-        if (bufferPixmap && bufferPixmap != gBufferPixmap)
-            g_object_unref(G_OBJECT(bufferPixmap));
     }
 #endif // MOZ_X11
 
     g_free(rects);
+
+    nsPaintEvent didPaintEvent(PR_TRUE, NS_DID_PAINT, this);
+    DispatchEvent(&didPaintEvent, status);
+
+    // Synchronously flush any new dirty areas
+    GdkRegion* dirtyArea = gdk_window_get_update_area(mGdkWindow);
+    if (dirtyArea) {
+        gdk_window_invalidate_region(mGdkWindow, dirtyArea, PR_FALSE);
+        gdk_region_destroy(dirtyArea);
+        gdk_window_process_updates(mGdkWindow, PR_FALSE);
+    }
 
     // check the return value!
     return TRUE;
@@ -3443,8 +3337,21 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         DispatchEvent(&contextMenuEvent, status);
     }
     else {
-        // send the key press event
-        DispatchEvent(&event, status);
+        // If the character code is in the BMP, send the key press event.
+        // Otherwise, send a text event with the equivalent UTF-16 string.
+        if (IS_IN_BMP(event.charCode)) {
+            DispatchEvent(&event, status);
+        }
+        else {
+            nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
+            PRUnichar textString[3];
+            textString[0] = H_SURROGATE(event.charCode);
+            textString[1] = L_SURROGATE(event.charCode);
+            textString[2] = 0;
+            textEvent.theText = textString;
+            textEvent.time = event.time;
+            DispatchEvent(&textEvent, status);
+        }
     }
 
     // If the event was consumed, return.
@@ -6350,14 +6257,6 @@ initialize_prefs(void)
     if (NS_SUCCEEDED(rv))
         gRaiseWindows = val;
 
-    rv = prefs->GetBoolPref("mozilla.widget.force-24bpp", &val);
-    if (NS_SUCCEEDED(rv))
-        gForce24bpp = val;
-
-    rv = prefs->GetBoolPref("mozilla.widget.use-buffer-pixmap", &val);
-    if (NS_SUCCEEDED(rv))
-        gUseBufferPixmap = val;
-
     rv = prefs->GetBoolPref("mozilla.widget.disable-native-theme", &val);
     if (NS_SUCCEEDED(rv))
         gDisableNativeTheme = val;
@@ -6743,7 +6642,9 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
                                    const nsIntSize& aSize)
 {
     GdkVisual* visual = gdk_drawable_get_visual(aDrawable);
-    Display* xDisplay = gdk_x11_drawable_get_xdisplay(aDrawable);
+    Screen* xScreen =
+        gdk_x11_screen_get_xscreen(gdk_drawable_get_screen(aDrawable));
+    Display* xDisplay = DisplayOfScreen(xScreen);
     Drawable xDrawable = gdk_x11_drawable_get_xid(aDrawable);
 
     gfxASurface* result = nsnull;
@@ -6769,7 +6670,7 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
                 break;
         }
 
-        result = new gfxXlibSurface(xDisplay, xDrawable, pf,
+        result = new gfxXlibSurface(xScreen, xDrawable, pf,
                                     gfxIntSize(aSize.width, aSize.height));
     }
 
@@ -6836,21 +6737,83 @@ nsWindow::GetThebesSurface()
     return mThebesSurface;
 }
 
+// Code shared begin BeginMoveDrag and BeginResizeDrag
+PRBool
+nsWindow::GetDragInfo(nsMouseEvent* aMouseEvent,
+                      GdkWindow** aWindow, gint* aButton,
+                      gint* aRootX, gint* aRootY)
+{
+    if (aMouseEvent->button != nsMouseEvent::eLeftButton) {
+        // we can only begin a move drag with the left mouse button
+        return PR_FALSE;
+    }
+    *aButton = 1;
+
+    // get the gdk window for this widget
+    GdkWindow* gdk_window = mGdkWindow;
+    if (!gdk_window) {
+        return PR_FALSE;
+    }
+    NS_ABORT_IF_FALSE(GDK_IS_WINDOW(gdk_window), "must really be window");
+
+    // find the top-level window
+    gdk_window = gdk_window_get_toplevel(gdk_window);
+    NS_ABORT_IF_FALSE(gdk_window,
+                      "gdk_window_get_toplevel should not return null");
+    *aWindow = gdk_window;
+
+    if (!aMouseEvent->widget) {
+        return PR_FALSE;
+    }
+
+    // FIXME: It would be nice to have the widget position at the time
+    // of the event, but it's relatively unlikely that the widget has
+    // moved since the mousedown.  (On the other hand, it's quite likely
+    // that the mouse has moved, which is why we use the mouse position
+    // from the event.)
+    nsIntPoint offset = aMouseEvent->widget->WidgetToScreenOffset();
+    *aRootX = aMouseEvent->refPoint.x + offset.x;
+    *aRootY = aMouseEvent->refPoint.y + offset.y;
+
+    return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsWindow::BeginMoveDrag(nsMouseEvent* aEvent)
+{
+    NS_ABORT_IF_FALSE(aEvent, "must have event");
+    NS_ABORT_IF_FALSE(aEvent->eventStructType == NS_MOUSE_EVENT,
+                      "event must have correct struct type");
+
+    GdkWindow *gdk_window;
+    gint button, screenX, screenY;
+    if (!GetDragInfo(aEvent, &gdk_window, &button, &screenX, &screenY)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    // tell the window manager to start the move
+    gdk_window_begin_move_drag(gdk_window, button, screenX, screenY,
+                               aEvent->time);
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical)
 {
     NS_ENSURE_ARG_POINTER(aEvent);
 
     if (aEvent->eventStructType != NS_MOUSE_EVENT) {
-      // you can only begin a resize drag with a mouse event
-      return NS_ERROR_INVALID_ARG;
+        // you can only begin a resize drag with a mouse event
+        return NS_ERROR_INVALID_ARG;
     }
 
     nsMouseEvent* mouse_event = static_cast<nsMouseEvent*>(aEvent);
 
-    if (mouse_event->button != nsMouseEvent::eLeftButton) {
-      // you can only begin a resize drag with the left mouse button
-      return NS_ERROR_INVALID_ARG;
+    GdkWindow *gdk_window;
+    gint button, screenX, screenY;
+    if (!GetDragInfo(mouse_event, &gdk_window, &button, &screenX, &screenY)) {
+        return NS_ERROR_FAILURE;
     }
 
     // work out what GdkWindowEdge we're talking about
@@ -6881,39 +6844,9 @@ nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVert
         }
     }
 
-    // get the gdk window for this widget
-    GdkWindow* gdk_window = mGdkWindow;
-    if (!GDK_IS_WINDOW(gdk_window)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // find the top-level window
-    gdk_window = gdk_window_get_toplevel(gdk_window);
-    if (!GDK_IS_WINDOW(gdk_window)) {
-      return NS_ERROR_FAILURE;
-    }
-
-
-    // get the current (default) display
-    GdkDisplay* display = gdk_display_get_default();
-    if (!GDK_IS_DISPLAY(display)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // get the current pointer position and button state
-    GdkScreen* screen = NULL;
-    gint screenX, screenY;
-    GdkModifierType mask;
-    gdk_display_get_pointer(display, &screen, &screenX, &screenY, &mask);
-
-    // we only support resizing with button 1
-    if (!(mask & GDK_BUTTON1_MASK)) {
-        return NS_ERROR_FAILURE;
-    }
-
     // tell the window manager to start the resize
-    gdk_window_begin_resize_drag(gdk_window, window_edge, 1,
-            screenX, screenY, aEvent->time);
+    gdk_window_begin_resize_drag(gdk_window, window_edge, button,
+                                 screenX, screenY, aEvent->time);
 
     return NS_OK;
 }

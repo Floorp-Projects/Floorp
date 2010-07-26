@@ -20,9 +20,10 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alexey Chernyak <alexeyc@bigfoot.com> (XHTML 1.1 conversion)
  *   Henrik Gemal <mozilla@gemal.dk>
  *   Darin Fisher <darin@netscape.com>
+ *   Alexey Chernyak <alexeyc@bigfoot.com> (XHTML 1.1 conversion)
+ *   Steffen Wilberg <steffen.wilberg@web.de> (new layout)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -96,12 +97,17 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (NS_FAILED(rv)) return rv;
 
     mBuffer.AssignLiteral(
-                   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                   "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"\n"
-                   "    \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"
-                   "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
-                   "<head>\n<title>Information about the Cache Service</title>\n</head>\n"
-                   "<body>\n<div>\n");
+      "<!DOCTYPE html>\n"
+      "<html>\n"
+      "<head>\n"
+      "  <title>Information about the Cache Service</title>\n"
+      "  <link rel=\"stylesheet\" "
+      "href=\"chrome://global/skin/about.css\" type=\"text/css\"/>\n"
+      "  <link rel=\"stylesheet\" "
+      "href=\"chrome://global/skin/aboutCache.css\" type=\"text/css\"/>\n"
+      "</head>\n"
+      "<body class=\"aboutPageWideContainer\">\n"
+      "<h1>Information about the Cache Service</h1>\n");
 
     outputStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
 
@@ -109,6 +115,12 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (NS_FAILED(rv)) return rv;
 
     mStream = outputStream;
+
+    // nsCacheService::VisitEntries calls nsMemoryCacheDevice::Visit,
+    // nsDiskCacheDevice::Visit and nsOfflineCacheDevice::Visit,
+    // each of which call
+    //   1. VisitDevice (for about:cache),
+    //   2. VisitEntry in a loop (for about:cache?device=disk etc.)
     rv = cacheService->VisitEntries(this);
     mBuffer.Truncate();
     if (rv == NS_ERROR_NOT_AVAILABLE) {
@@ -119,11 +131,12 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     }
 
     if (!mDeviceID.IsEmpty()) {
-        mBuffer.AppendLiteral("</pre>\n");
+        mBuffer.AppendLiteral("</table>\n");
     }
-    mBuffer.AppendLiteral("</div>\n</body>\n</html>\n");
+    mBuffer.AppendLiteral("</body>\n"
+                          "</html>\n");
     outputStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
-        
+
     nsCOMPtr<nsIInputStream> inStr;
 
     rv = storageStream->NewInputStream(0, getter_AddRefs(inStr));
@@ -151,7 +164,7 @@ nsAboutCache::VisitDevice(const char *deviceID,
                           nsICacheDeviceInfo *deviceInfo,
                           PRBool *visitEntries)
 {
-    PRUint32 bytesWritten, value;
+    PRUint32 bytesWritten, value, entryCount;
     nsXPIDLCString str;
 
     *visitEntries = PR_FALSE;
@@ -167,44 +180,79 @@ nsAboutCache::VisitDevice(const char *deviceID,
 
         mBuffer.AssignLiteral("<h2>");
         mBuffer.Append(str);
-        mBuffer.AppendLiteral("</h2>\n<br />\n"
-                              "<table>\n");
+        mBuffer.AppendLiteral("</h2>\n"
+                              "<table id=\"");
+        mBuffer.Append(deviceID);
+        mBuffer.AppendLiteral("\">\n");
 
         // Write out cache info
+        // Number of entries
+        mBuffer.AppendLiteral("  <tr>\n"
+                              "    <th>Number of entries:</th>\n"
+                              "    <td>");
+        entryCount = 0;
+        deviceInfo->GetEntryCount(&entryCount);
+        mBuffer.AppendInt(entryCount);
+        mBuffer.AppendLiteral("</td>\n"
+                              "  </tr>\n");
 
-        mBuffer.AppendLiteral("\n<tr>\n<td><b>Number of entries:</b></td>\n");
-        value = 0;
-        deviceInfo->GetEntryCount(&value);
-        mBuffer.AppendLiteral("<td><tt>");
-        mBuffer.AppendInt(value);
-        mBuffer.AppendLiteral("</tt></td>\n</tr>\n"
-                              "\n<tr>\n<td><b>Maximum storage size:</b></td>\n");
+        // Maximum storage size
+        mBuffer.AppendLiteral("  <tr>\n"
+                              "    <th>Maximum storage size:</th>\n"
+                              "    <td>");
         value = 0;
         deviceInfo->GetMaximumSize(&value);
-        mBuffer.AppendLiteral("<td><tt>");
         mBuffer.AppendInt(value/1024);
-        mBuffer.AppendLiteral(" KiB</tt></td>\n</tr>\n"
-                              "\n<tr>\n<td><b>Storage in use:</b></td>\n"
-                              "<td><tt>");
+        mBuffer.AppendLiteral(" KiB</td>\n"
+                              "  </tr>\n");
+
+        // Storage in use
+        mBuffer.AppendLiteral("  <tr>\n"
+                              "    <th>Storage in use:</th>\n"
+                              "    <td>");
         value = 0;
         deviceInfo->GetTotalSize(&value);
         mBuffer.AppendInt(value/1024);
-        mBuffer.AppendLiteral(" KiB</tt></td>\n</tr>\n");
+        mBuffer.AppendLiteral(" KiB</td>\n"
+                              "  </tr>\n");
 
         deviceInfo->GetUsageReport(getter_Copies(str));
         mBuffer.Append(str);
-        mBuffer.AppendLiteral("</table>\n\n<br />");
 
-        if (mDeviceID.IsEmpty()) {
-            mBuffer.AppendLiteral("\n<a href=\"about:cache?device=");
-            mBuffer.Append(deviceID);
-            mBuffer.AppendLiteral("\">List Cache Entries</a>\n"
-                                  "<hr />\n");
-        } else {
-            *visitEntries = PR_TRUE;
-            mBuffer.AppendLiteral("<hr />\n<pre>\n");
+        if (mDeviceID.IsEmpty()) { // The about:cache case
+            if (entryCount != 0) { // Add the "List Cache Entries" link
+                mBuffer.AppendLiteral("  <tr>\n"
+                                      "    <th><a href=\"about:cache?device=");
+                mBuffer.Append(deviceID);
+                mBuffer.AppendLiteral("\">List Cache Entries</a></th>\n"
+                                      "  </tr>\n");
+            }
+            mBuffer.AppendLiteral("</table>\n");
+        } else { // The about:cache?device=disk etc. case
+            mBuffer.AppendLiteral("</table>\n");
+            if (entryCount != 0) {
+                *visitEntries = PR_TRUE;
+                mBuffer.AppendLiteral("<hr/>\n"
+                                      "<table id=\"entries\">\n"
+                                      "  <colgroup>\n"
+                                      "   <col id=\"col-key\">\n"
+                                      "   <col id=\"col-dataSize\">\n"
+                                      "   <col id=\"col-fetchCount\">\n"
+                                      "   <col id=\"col-lastModified\">\n"
+                                      "   <col id=\"col-expires\">\n"
+                                      "  </colgroup>\n"
+                                      "  <thead>\n"
+                                      "    <tr>\n"
+                                      "      <th>Key</th>\n"
+                                      "      <th>Data size</th>\n"
+                                      "      <th>Fetch count</th>\n"
+                                      "      <th>Last modified</th>\n"
+                                      "      <th>Expires</th>\n"
+                                      "    </tr>\n"
+                                      "  </thead>\n");
+            }
         }
-        
+
         mStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
     }
 
@@ -246,45 +294,46 @@ nsAboutCache::VisitEntry(const char *deviceID,
     url += escapedKey; // key
 
     // Entry start...
+    mBuffer.AssignLiteral("  <tr>\n");
 
     // URI
-    mBuffer.AssignLiteral("<b>           Key:</b> <a href=\"");
+    mBuffer.AppendLiteral("    <td><a href=\"");
     mBuffer.Append(url);
     mBuffer.AppendLiteral("\">");
     mBuffer.Append(escapedKey);
     nsMemory::Free(escapedKey);
-    mBuffer.AppendLiteral("</a>");
+    mBuffer.AppendLiteral("</a></td>\n");
 
     // Content length
     PRUint32 length = 0;
     entryInfo->GetDataSize(&length);
-
-    mBuffer.AppendLiteral("\n<b>     Data size:</b> ");
+    mBuffer.AppendLiteral("    <td>");
     mBuffer.AppendInt(length);
-    mBuffer.AppendLiteral(" bytes");
+    mBuffer.AppendLiteral(" bytes</td>\n");
 
     // Number of accesses
     PRInt32 fetchCount = 0;
     entryInfo->GetFetchCount(&fetchCount);
-
-    mBuffer.AppendLiteral("\n<b>   Fetch count:</b> ");
+    mBuffer.AppendLiteral("    <td>");
     mBuffer.AppendInt(fetchCount);
+    mBuffer.AppendLiteral("</td>\n");
 
     // vars for reporting time
     char buf[255];
     PRUint32 t;
 
     // Last modified time
-    mBuffer.AppendLiteral("\n<b> Last modified:</b> ");
+    mBuffer.AppendLiteral("    <td>");
     entryInfo->GetLastModified(&t);
     if (t) {
         PrintTimeString(buf, sizeof(buf), t);
         mBuffer.Append(buf);
     } else
         mBuffer.AppendLiteral("No last modified time");
+    mBuffer.AppendLiteral("</td>\n");
 
     // Expires time
-    mBuffer.AppendLiteral("\n<b>       Expires:</b> ");
+    mBuffer.AppendLiteral("    <td>");
     entryInfo->GetExpirationTime(&t);
     if (t < 0xFFFFFFFF) {
         PrintTimeString(buf, sizeof(buf), t);
@@ -292,9 +341,10 @@ nsAboutCache::VisitEntry(const char *deviceID,
     } else {
         mBuffer.AppendLiteral("No expiration time");
     }
+    mBuffer.AppendLiteral("</td>\n");
 
     // Entry is done...
-    mBuffer.AppendLiteral("\n\n");
+    mBuffer.AppendLiteral("  </tr>\n");
 
     mStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
 
@@ -330,7 +380,7 @@ nsAboutCache::ParseURI(nsIURI * uri, nsCString &deviceID)
 }
 
 
-NS_METHOD
+nsresult
 nsAboutCache::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsAboutCache* about = new nsAboutCache();

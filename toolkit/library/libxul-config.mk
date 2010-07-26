@@ -93,9 +93,12 @@ endif
 # dependent libraries
 ifdef MOZ_IPC
 STATIC_LIBS += \
+  jsipc_s \
+  domipc_s \
   domplugins_s \
   mozipc_s \
   mozipdlgen_s \
+  ipcshell_s \
   gfxipc_s \
   $(NULL)
 
@@ -104,7 +107,9 @@ STATIC_LIBS += ipdlunittest_s
 endif
 
 ifeq (Linux,$(OS_ARCH))
+ifneq (Android,$(OS_TARGET))
 OS_LIBS += -lrt
+endif
 endif
 ifeq (WINNT,$(OS_ARCH))
 OS_LIBS += dbghelp.lib
@@ -115,7 +120,6 @@ STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \
 	gkgfx \
-	gfxutils \
 	$(NULL)
 
 ifdef MOZ_IPC
@@ -144,7 +148,6 @@ COMPONENT_LIBS += \
 	webbrwsr \
 	nsappshell \
 	txmgr \
-	chrome \
 	commandlines \
 	extensions \
 	toolkitcomps \
@@ -299,6 +302,11 @@ COMPONENT_LIBS += widget_android
 endif
 
 STATIC_LIBS += thebes ycbcr
+
+ifneq ($(OS_ARCH)_$(OS_TEST),Linux_x86_64)
+STATIC_LIBS += angle
+endif
+
 COMPONENT_LIBS += gkgfxthebes
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))

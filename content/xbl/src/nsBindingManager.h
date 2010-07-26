@@ -56,7 +56,7 @@ class nsIAtom;
 class nsIDOMNodeList;
 class nsIDocument;
 class nsIURI;
-class nsIXBLDocumentInfo;
+class nsXBLDocumentInfo;
 class nsIStreamListener;
 class nsStyleSet;
 class nsXBLBinding;
@@ -199,9 +199,9 @@ public:
 
   void ExecuteDetachedHandlers();
 
-  nsresult PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
-  nsIXBLDocumentInfo* GetXBLDocumentInfo(nsIURI* aURI);
-  void RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
+  nsresult PutXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo);
+  nsXBLDocumentInfo* GetXBLDocumentInfo(nsIURI* aURI);
+  void RemoveXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo);
 
   nsresult PutLoadingDocListener(nsIURI* aURL, nsIStreamListener* aListener);
   nsIStreamListener* GetLoadingDocListener(nsIURI* aURL);
@@ -225,6 +225,8 @@ public:
    */
   nsresult MediumFeaturesChanged(nsPresContext* aPresContext,
                                  PRBool* aRulesChanged);
+
+  void AppendAllSheets(nsTArray<nsCSSStyleSheet*>& aArray);
 
   NS_HIDDEN_(void) Traverse(nsIContent *aContent,
                             nsCycleCollectionTraversalCallback &cb);
@@ -314,10 +316,10 @@ protected:
   // both implement an XPIDL interface).
   PLDHashTable mWrapperTable;
 
-  // A mapping from a URL (a string) to nsIXBLDocumentInfo*.  This table
+  // A mapping from a URL (a string) to nsXBLDocumentInfo*.  This table
   // is the cache of all binding documents that have been loaded by a
   // given bound document.
-  nsInterfaceHashtable<nsURIHashKey,nsIXBLDocumentInfo> mDocumentTable;
+  nsRefPtrHashtable<nsURIHashKey,nsXBLDocumentInfo> mDocumentTable;
 
   // A mapping from a URL (a string) to a nsIStreamListener. This
   // table is the currently loading binding docs.  If they're in this

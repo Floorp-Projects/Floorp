@@ -36,45 +36,35 @@
  * ***** END LICENSE BLOCK *****
  */
 
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsDeflateConverter.h"
 #include "nsZipWriter.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeflateConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsZipWriter)
 
-static const nsModuleComponentInfo components[] =
-{
-  {
-    DEFLATECONVERTER_CLASSNAME,
-    DEFLATECONVERTER_CID,
-    "@mozilla.org/streamconv;1?from=uncompressed&to=deflate",
-    nsDeflateConverterConstructor,
-  },
-  {
-    DEFLATECONVERTER_CLASSNAME,
-    DEFLATECONVERTER_CID,
-    "@mozilla.org/streamconv;1?from=uncompressed&to=gzip",
-    nsDeflateConverterConstructor,
-  },
-  {
-    DEFLATECONVERTER_CLASSNAME,
-    DEFLATECONVERTER_CID,
-    "@mozilla.org/streamconv;1?from=uncompressed&to=x-gzip",
-    nsDeflateConverterConstructor,
-  },
-  {
-    DEFLATECONVERTER_CLASSNAME,
-    DEFLATECONVERTER_CID,
-    "@mozilla.org/streamconv;1?from=uncompressed&to=rawdeflate",
-    nsDeflateConverterConstructor,
-  },
-  {
-    ZIPWRITER_CLASSNAME,
-    ZIPWRITER_CID,
-    ZIPWRITER_CONTRACTID,
-    nsZipWriterConstructor,
-  }
+NS_DEFINE_NAMED_CID(DEFLATECONVERTER_CID);
+NS_DEFINE_NAMED_CID(ZIPWRITER_CID);
+
+static const mozilla::Module::CIDEntry kZipWriterCIDs[] = {
+  { &kDEFLATECONVERTER_CID, false, NULL, nsDeflateConverterConstructor },
+  { &kZIPWRITER_CID, false, NULL, nsZipWriterConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(ZipWriterModule, components)
+static const mozilla::Module::ContractIDEntry kZipWriterContracts[] = {
+  { "@mozilla.org/streamconv;1?from=uncompressed&to=deflate", &kDEFLATECONVERTER_CID },
+  { "@mozilla.org/streamconv;1?from=uncompressed&to=gzip", &kDEFLATECONVERTER_CID },
+  { "@mozilla.org/streamconv;1?from=uncompressed&to=x-gzip", &kDEFLATECONVERTER_CID },
+  { "@mozilla.org/streamconv;1?from=uncompressed&to=rawdeflate", &kDEFLATECONVERTER_CID },
+  { ZIPWRITER_CONTRACTID, &kZIPWRITER_CID },
+  { NULL }
+};
+
+static const mozilla::Module kZipWriterModule = {
+  mozilla::Module::kVersion,
+  kZipWriterCIDs,
+  kZipWriterContracts
+};
+
+NSMODULE_DEFN(ZipWriterModule) = &kZipWriterModule;

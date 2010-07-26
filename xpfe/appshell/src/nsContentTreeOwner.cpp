@@ -43,7 +43,6 @@
 #include "nsXULWindow.h"
 
 // Helper Classes
-#include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsAutoPtr.h"
 
@@ -818,6 +817,7 @@ private:
 NS_IMETHODIMP
 nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
                                   PRUint32 aChromeFlags,
+                                  PRBool aCalledFromJS,
                                   PRBool aPositionSpecified,
                                   PRBool aSizeSpecified,
                                   nsIURI* aURI,
@@ -867,30 +867,32 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
     return NS_OK;
   }
 
-  /* Now check our restriction pref.  The restriction pref is a power-user's
-     fine-tuning pref. values:     
-     0: no restrictions - divert everything
-     1: don't divert window.open at all
-     2: don't divert window.open with features
-  */
-  PRInt32 restrictionPref;
-  if (NS_FAILED(branch->GetIntPref("open_newwindow.restriction",
-                                   &restrictionPref)) ||
-      restrictionPref < 0 ||
-      restrictionPref > 2) {
-    restrictionPref = 2; // Sane default behavior
-  }
+  if (aCalledFromJS) {
+    /* Now check our restriction pref.  The restriction pref is a power-user's
+       fine-tuning pref. values:     
+       0: no restrictions - divert everything
+       1: don't divert window.open at all
+       2: don't divert window.open with features
+    */
+    PRInt32 restrictionPref;
+    if (NS_FAILED(branch->GetIntPref("open_newwindow.restriction",
+                                     &restrictionPref)) ||
+        restrictionPref < 0 ||
+        restrictionPref > 2) {
+      restrictionPref = 2; // Sane default behavior
+    }
 
-  if (restrictionPref == 1) {
-    return NS_OK;
-  }
+    if (restrictionPref == 1) {
+      return NS_OK;
+    }
 
-  if (restrictionPref == 2 &&
-      // Only continue if there are no size/position features and no special
-      // chrome flags.
-      (aChromeFlags != nsIWebBrowserChrome::CHROME_ALL ||
-       aPositionSpecified || aSizeSpecified)) {
-    return NS_OK;
+    if (restrictionPref == 2 &&
+        // Only continue if there are no size/position features and no special
+        // chrome flags.
+        (aChromeFlags != nsIWebBrowserChrome::CHROME_ALL ||
+         aPositionSpecified || aSizeSpecified)) {
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<nsIDOMWindowInternal> domWin;

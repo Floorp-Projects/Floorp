@@ -248,3 +248,9 @@ PORT_LoadLibraryFromOrigin;
 ;+    local:
 ;+       *;
 ;+};
+;+NSSUTIL_3.12.7 {       # NSS Utilities 3.12.7 release
+;+    global:
+PORT_RegExpSearch;
+;+    local:
+;+       *;
+;+};

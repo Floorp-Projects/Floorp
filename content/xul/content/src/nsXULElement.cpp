@@ -122,7 +122,6 @@
 #include "nsRuleWalker.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
-#include "nsCSSDeclaration.h"
 #include "nsCSSParser.h"
 #include "nsIListBoxObject.h"
 #include "nsContentUtils.h"
@@ -131,7 +130,6 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMAttributeMap.h"
-#include "nsDOMCSSDeclaration.h"
 #include "nsGkAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsNodeUtils.h"
@@ -235,7 +233,7 @@ NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 // nsXULElement
 //
 
-nsXULElement::nsXULElement(nsINodeInfo* aNodeInfo)
+nsXULElement::nsXULElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsStyledElement(aNodeInfo),
       mBindingParent(nsnull)
 {
@@ -266,7 +264,8 @@ already_AddRefed<nsXULElement>
 nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
                      PRBool aIsScriptable)
 {
-    nsXULElement *element = new nsXULElement(aNodeInfo);
+    nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+    nsXULElement *element = new nsXULElement(ni.forget());
     if (element) {
         NS_ADDREF(element);
 
@@ -338,9 +337,9 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 }
 
 nsresult
-NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
+NS_NewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 {
-    NS_PRECONDITION(aNodeInfo, "need nodeinfo for non-proto Create");
+    NS_PRECONDITION(aNodeInfo.get(), "need nodeinfo for non-proto Create");
 
     *aResult = nsnull;
 
@@ -366,7 +365,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsXULElement, nsStyledElement)
 NS_IMPL_RELEASE_INHERITED(nsXULElement, nsStyledElement)
 
-DOMCI_DATA(XULElement, nsXULElement)
+DOMCI_NODE_DATA(XULElement, nsXULElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
     NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsXULElement)
@@ -400,7 +399,8 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
                      "Didn't get the default language from proto?");
     }
     else {
-        element = new nsXULElement(aNodeInfo);
+        nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+        element = new nsXULElement(ni.forget());
         if (element) {
         	// If created from a prototype, we will already have the script
         	// language specified by the proto - otherwise copy it directly
@@ -1134,7 +1134,7 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                       aName == nsGkAtoms::inactivetitlebarcolor)) {
                 nscolor color = NS_RGBA(0, 0, 0, 0);
                 nsAttrValue attrValue;
-                attrValue.ParseColor(*aValue, document);
+                attrValue.ParseColor(*aValue);
                 attrValue.GetColorValue(color);
                 SetTitlebarColor(color, aName == nsGkAtoms::activetitlebarcolor);
             }
@@ -2041,7 +2041,6 @@ nsXULElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner)
                                                     ourSlots->mFrameLoader,
                                                     otherSlots->mFrameLoader);
 }
-
 
 NS_IMETHODIMP
 nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)

@@ -83,11 +83,11 @@ extern SECStatus
  * OUTPUT:
  *    The function fn will be called, probably multiple times whenever 
  *    the ASN1 encoder wants to write out DER-encoded bytes.  Look at the 
- *    comments in crmft.h where the CRMFEncoderOuputCallback type is
+ *    comments in crmft.h where the CRMFEncoderOutputCallback type is
  *    defined for information on proper behavior of the funciton fn.
  * RETURN:
  *    SECSuccess if encoding was successful.  Any other return value 
- *    indicates an error occured during encoding.
+ *    indicates an error occurred during encoding.
  */
 extern SECStatus CRMF_EncodeCertRequest (CRMFCertRequest           *inCertReq,
 					 CRMFEncoderOutputCallback  fn,
@@ -115,7 +115,7 @@ extern SECStatus CRMF_EncodeCertRequest (CRMFCertRequest           *inCertReq,
  *
  * OUTPUT:
  *    The function fn will be called, probably multiple times.  Look at the 
- *    comments in crmft.h where the CRMFEncoderOuputCallback type is
+ *    comments in crmft.h where the CRMFEncoderOutputCallback type is
  *    defined for information on proper behavior of the funciton fn.
  *
  * RETURN:

@@ -48,8 +48,6 @@ function LoginManagerCrypto_SDR() {
 
 LoginManagerCrypto_SDR.prototype = {
 
-    classDescription  : "LoginManagerCrypto_SDR",
-    contractID : "@mozilla.org/login-manager/crypto/SDR;1",
     classID : Components.ID("{dc6c2976-0f73-4f1f-b9ff-3d72b4e28309}"),
     QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerCrypto]),
 
@@ -183,6 +181,4 @@ LoginManagerCrypto_SDR.prototype = {
 }; // end of nsLoginManagerCrypto_SDR implementation
 
 let component = [LoginManagerCrypto_SDR];
-function NSGetModule(compMgr, fileSpec) {
-    return XPCOMUtils.generateModule(component);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

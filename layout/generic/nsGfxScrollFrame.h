@@ -54,6 +54,7 @@
 #ifdef MOZ_SVG
 #include "nsSVGIntegrationUtils.h"
 #endif
+#include "nsExpirationTracker.h"
 
 class nsPresContext;
 class nsIPresShell;
@@ -213,6 +214,7 @@ public:
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   PRBool IsLTR() const;
   PRBool IsScrollbarOnRight() const;
+  PRBool IsScrollingActive() const;
   // adjust the scrollbar rectangle aRect to account for any visible resizer.
   // aHasResizer specifies if there is a content resizer, however this method
   // will also check if a widget resizer is present as well.
@@ -225,6 +227,10 @@ public:
   void LayoutScrollbars(nsBoxLayoutState& aState,
                         const nsRect& aContentArea,
                         const nsRect& aOldScrollArea);
+
+  PRBool IsAlwaysActive() const;
+  void MarkActive();
+  nsExpirationState* GetExpirationState() { return &mActivityExpirationState; }
 
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<nsIContent> mHScrollbarContent;
@@ -247,9 +253,12 @@ public:
   // just the current scroll position. ScrollBy will choose its
   // destination based on this value.
   nsPoint mDestination;
+  nsPoint mScrollPosAtLastPaint;
 
   nsPoint mRestorePos;
   nsPoint mLastPos;
+
+  nsExpirationState mActivityExpirationState;
 
   PRPackedBool mNeverHasVerticalScrollbar:1;
   PRPackedBool mNeverHasHorizontalScrollbar:1;
@@ -281,6 +290,9 @@ public:
   // If true, need to actually update our scrollbar attributes in the
   // reflow callback.
   PRPackedBool mUpdateScrollbarAttributes:1;
+  // If true, we should be prepared to scroll using this scrollframe
+  // by placing descendant content into its own layer(s)
+  PRPackedBool mScrollingActive:1;
 };
 
 /**
@@ -439,6 +451,9 @@ public:
   NS_IMETHOD PostScrolledAreaEventForCurrentArea() {
     mInner.PostScrolledAreaEvent();
     return NS_OK;
+  }
+  virtual PRBool IsScrollingActive() {
+    return mInner.IsScrollingActive();
   }
 
   // nsIStatefulFrame
@@ -665,6 +680,9 @@ public:
   NS_IMETHOD PostScrolledAreaEventForCurrentArea() {
     mInner.PostScrolledAreaEvent();
     return NS_OK;
+  }
+  virtual PRBool IsScrollingActive() {
+    return mInner.IsScrollingActive();
   }
 
   // nsIStatefulFrame

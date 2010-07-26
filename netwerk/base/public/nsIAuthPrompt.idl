@@ -39,9 +39,6 @@
 
 interface nsIPrompt;
 
-/**
- * @status UNDER_REVIEW
- */
 [scriptable, uuid(358089f9-ee4b-4711-82fd-bcd07fc62061)]
 interface nsIAuthPrompt : nsISupports
 {         

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.61 $ $Date: 2010/02/10 02:04:32 $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.62 $ $Date: 2010/05/21 00:02:48 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -45,10 +45,6 @@ static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.61 $
 #ifndef PKIM_H
 #include "pkim.h"
 #endif /* PKIM_H */
-
-#ifndef PKI1T_H
-#include "pki1t.h"
-#endif /* PKI1T_H */
 
 #include "cert.h"
 #include "pki3hack.h"

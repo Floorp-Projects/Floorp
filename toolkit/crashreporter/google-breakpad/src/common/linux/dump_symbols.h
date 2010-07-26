@@ -35,8 +35,9 @@
 #ifndef COMMON_LINUX_DUMP_SYMBOLS_H__
 #define COMMON_LINUX_DUMP_SYMBOLS_H__
 
+#include <stdio.h>
+
 #include <string>
-#include <cstdio>
 
 namespace google_breakpad {
 

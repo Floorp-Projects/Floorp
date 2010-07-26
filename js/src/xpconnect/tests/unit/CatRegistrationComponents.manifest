@@ -1,0 +1,2 @@
+category test-cat CatRegisteredComponent @unit.test.com/cat-registered-component;1
+category test-cat CatAppRegisteredComponent @unit.test.com/cat-app-registered-component;1 application={adb42a9a-0d19-4849-bf4d-627614ca19be}

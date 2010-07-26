@@ -164,7 +164,7 @@ static NSWindow* NativeWindowForFrame(nsIFrame* aFrame,
   if (!aFrame)
     return nil;  
 
-  nsIWidget* widget = aFrame->GetWindow();
+  nsIWidget* widget = aFrame->GetNearestWidget();
   if (!widget)
     return nil;
 
@@ -1338,24 +1338,18 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
   return scrollbarFrame;
 }
 
-static BOOL DrawingAtWindowTop(CGContextRef cgContext, float viewHeight, float yPos)
-{
-  // Ignore all non-trivial transforms.
-  CGAffineTransform ctm = CGContextGetCTM(cgContext);
-  if (ctm.a != 1.0f || ctm.b != 0.0f || ctm.c != 0.0f || ctm.d != -1.0f)
-    return NO;
-
-  // ctm.ty contains the vertical offset from the window's bottom edge.
-  return ctm.ty - yPos >= viewHeight;
-}
-
-static BOOL
+static PRBool
 ToolbarCanBeUnified(CGContextRef cgContext, const HIRect& inBoxRect, NSWindow* aWindow)
 {
-  return [aWindow isKindOfClass:[ToolbarWindow class]] &&
-    ![(ToolbarWindow*)aWindow drawsContentsIntoWindowFrame] &&
-    DrawingAtWindowTop(cgContext, [[aWindow contentView] bounds].size.height,
-                       inBoxRect.origin.y);
+  if (![aWindow isKindOfClass:[ToolbarWindow class]] ||
+      [(ToolbarWindow*)aWindow drawsContentsIntoWindowFrame])
+    return PR_FALSE;
+
+  float unifiedToolbarHeight = [(ToolbarWindow*)aWindow unifiedToolbarHeight];
+  return inBoxRect.origin.x == 0 &&
+         inBoxRect.size.width == [aWindow frame].size.width &&
+         inBoxRect.origin.y <= 0.0 &&
+         inBoxRect.origin.y + inBoxRect.size.height <= unifiedToolbarHeight;
 }
 
 void
@@ -1364,16 +1358,8 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  float titlebarHeight = 0;
+  float titlebarHeight = [(ToolbarWindow*)aWindow titlebarHeight];
 
-  if (ToolbarCanBeUnified(cgContext, inBoxRect, aWindow)) {
-    // Consider the titlebar height when calculating the gradient.
-    titlebarHeight = [(ToolbarWindow*)aWindow titlebarHeight];
-    // Notify the window about the toolbar's height so that it can draw the
-    // correct gradient in the titlebar.
-    [(ToolbarWindow*)aWindow setUnifiedToolbarHeight:inBoxRect.size.height];
-  }
-  
   BOOL isMain = [aWindow isMainWindow] || ![NSView focusView];
 
   // Draw the gradient
@@ -1491,6 +1477,25 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
                                   IsFrameRTL(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+static PRBool
+IsWindowSpanningToolbar(nsIWidget* aWindow,
+                        PRUint8 aWidgetType,
+                        const nsIntRect& aRect,
+                        ToolbarWindow** aCocoaWindow)
+{
+  nsIWidget* topLevelWidget = aWindow->GetTopLevelWidget();
+  if (!topLevelWidget)
+    return PR_FALSE;
+  NSWindow* win = (NSWindow*)topLevelWidget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!win || ![win isKindOfClass:[ToolbarWindow class]])
+    return PR_FALSE;
+
+  *aCocoaWindow = (ToolbarWindow*)win;
+  return (aWidgetType == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
+          aWidgetType == NS_THEME_TOOLBAR) &&
+         aRect.x == 0 && aRect.width == [win frame].size.width;
 }
 
 NS_IMETHODIMP
@@ -1677,9 +1682,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
-      DrawUnifiedToolbar(cgContext, macRect, NativeWindowForFrame(aFrame));
-      break;
-
     case NS_THEME_TOOLBAR: {
       NSWindow* win = NativeWindowForFrame(aFrame);
       if (ToolbarCanBeUnified(cgContext, macRect, win)) {
@@ -1924,6 +1926,18 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+void
+nsNativeThemeCocoa::RegisterWidgetGeometry(nsIWidget* aWindow,
+                                           PRUint8 aWidgetType,
+                                           const nsIntRect& aRect)
+{
+  ToolbarWindow* cocoaWindow;
+  if (IsWindowSpanningToolbar(aWindow, aWidgetType, aRect, &cocoaWindow) &&
+      ![cocoaWindow drawsContentsIntoWindowFrame]) {
+    [cocoaWindow notifyToolbarAt:aRect.y height:aRect.height];
+  }
+}
+                                         
 nsIntMargin
 nsNativeThemeCocoa::RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame)
 {
@@ -2500,9 +2514,17 @@ nsNativeThemeCocoa::ThemeNeedsComboboxDropmarker()
 nsITheme::Transparency
 nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
 {
-  if (aWidgetType == NS_THEME_MENUPOPUP ||
-      aWidgetType == NS_THEME_TOOLTIP)
+  switch (aWidgetType) {
+  case NS_THEME_MENUPOPUP:
+  case NS_THEME_TOOLTIP:
     return eTransparent;
 
-  return eUnknownTransparency;
+  case NS_THEME_SCROLLBAR_SMALL:
+  case NS_THEME_SCROLLBAR:
+    // Scrollbars are drawn opaque. Knowing this improves performance.
+    return eOpaque;
+
+  default:
+    return eUnknownTransparency;
+  }
 }

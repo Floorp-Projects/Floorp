@@ -51,8 +51,6 @@ interface nsIWeakReference;
  * the new web browser instance with the embedders chrome and
  * to register any listeners. The interface may also be used at runtime
  * to obtain the content DOM window and from that the rest of the DOM.
- *
- * @status FROZEN
  */
 [scriptable, uuid(69E5DF00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIWebBrowser : nsISupports

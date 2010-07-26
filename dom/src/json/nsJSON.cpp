@@ -514,7 +514,7 @@ nsJSON::DecodeInternal(nsIInputStream *aStream,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsJSON* json = new nsJSON();

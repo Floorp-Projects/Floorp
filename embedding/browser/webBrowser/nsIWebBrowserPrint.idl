@@ -47,8 +47,6 @@ interface nsIWebProgressListener;
 /**
  * nsIWebBrowserPrint corresponds to the main interface
  * for printing an embedded Gecko web browser window/document
- *
- * @status FROZEN
  */
 [scriptable, uuid(9A7CA4B0-FBBA-11d4-A869-00105A183419)]
 interface nsIWebBrowserPrint : nsISupports

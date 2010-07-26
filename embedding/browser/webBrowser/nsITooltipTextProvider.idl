@@ -58,8 +58,6 @@ interface nsIDOMNode;
  * @see nsITooltipListener
  * @see nsIComponentManager
  * @see nsIDOMNode
- *
- * @status FROZEN
  */
 [scriptable, uuid(b128a1e6-44f3-4331-8fbe-5af360ff21ee)]
 interface nsITooltipTextProvider : nsISupports

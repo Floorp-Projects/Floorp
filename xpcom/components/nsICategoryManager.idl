@@ -40,7 +40,6 @@
 
 /*
  * nsICategoryManager
- * @status FROZEN
  */
 
 [scriptable, uuid(3275b2cd-af6d-429a-80d7-f0c5120342ac)]

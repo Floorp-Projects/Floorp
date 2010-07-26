@@ -1,0 +1,2 @@
+component {6ec5f479-8e13-4403-b6ca-fe4c2dca14fd} nsINIProcessor.js
+contract @mozilla.org/xpcom/ini-processor-factory;1 {6ec5f479-8e13-4403-b6ca-fe4c2dca14fd}

@@ -47,7 +47,7 @@
 $found = 1;
 
 # GLOBALS
-$SEP = 0; # the paltform independent path separator
+$SEP = 0; # the platform independent path separator
 $CFG = 0; # the value of the -cfg flag
 
 # determine the path separator

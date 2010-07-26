@@ -46,6 +46,7 @@
 #include "nsAutoPtr.h"
 #include "nsCollationCID.h"
 #include "nsEmbedCID.h"
+#include "nsThreadUtils.h"
 #include "mozStoragePrivateHelpers.h"
 #include "nsILocale.h"
 #include "nsILocaleService.h"
@@ -64,6 +65,87 @@ namespace mozilla {
 namespace storage {
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Memory Reporting
+
+static PRInt64
+GetStorageSQLitePageCacheMemoryUsed(void *)
+{
+  int current, high;
+  int rc = ::sqlite3_status(SQLITE_STATUS_PAGECACHE_OVERFLOW, &current, &high,
+                            0);
+  return rc == SQLITE_OK ? current : 0;
+}
+
+static PRInt64
+GetStorageSQLiteOtherMemoryUsed(void *)
+{
+  int pageCacheCurrent, pageCacheHigh;
+  int rc = ::sqlite3_status(SQLITE_STATUS_PAGECACHE_OVERFLOW, &pageCacheCurrent,
+                            &pageCacheHigh, 0);
+  return rc == SQLITE_OK ? ::sqlite3_memory_used() - pageCacheCurrent : 0;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLitePageCacheMemoryUsed,
+                             "storage/sqlite/pagecache",
+                             "Memory in use by SQLite for the page cache",
+                             GetStorageSQLitePageCacheMemoryUsed,
+                             nsnull)
+
+NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLiteOtherMemoryUsed,
+                             "storage/sqlite/other",
+                             "Memory in use by SQLite for other various reasons",
+                             GetStorageSQLiteOtherMemoryUsed,
+                             nsnull)
+
+////////////////////////////////////////////////////////////////////////////////
+//// Helpers
+
+class ServiceMainThreadInitializer : public nsRunnable
+{
+public:
+  ServiceMainThreadInitializer(nsIObserver *aObserver,
+                               nsIXPConnect **aXPConnectPtr)
+  : mObserver(aObserver)
+  , mXPConnectPtr(aXPConnectPtr)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_PRECONDITION(NS_IsMainThread(), "Must be running on the main thread!");
+
+    // NOTE:  All code that can only run on the main thread and needs to be run
+    //        during initialization should be placed here.  During the off-
+    //        chance that storage is initialized on a background thread, this
+    //        will ensure everything that isn't threadsafe is initialized in
+    //        the right place.
+
+    // Register for xpcom-shutdown so we can cleanup after ourselves.  The
+    // observer service can only be used on the main thread.
+    nsCOMPtr<nsIObserverService> os =
+      mozilla::services::GetObserverService();
+    NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
+    nsresult rv = os->AddObserver(mObserver, "xpcom-shutdown", PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // We cache XPConnect for our language helpers.  XPConnect can only be
+    // used on the main thread.
+    (void)CallGetService(nsIXPConnect::GetCID(), mXPConnectPtr);
+
+    // Register our SQLite memory reporters.  Registration can only happen on
+    // the main thread (otherwise you'll get cryptic crashes).
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLitePageCacheMemoryUsed));
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLiteOtherMemoryUsed));
+
+    return NS_OK;
+  }
+
+private:
+  nsIObserver *mObserver;
+  nsIXPConnect **mXPConnectPtr;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 //// Service
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(
@@ -73,16 +155,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(
 )
 
 Service *Service::gService = nsnull;
-
-static PRInt64 GetStorageSQLiteMemoryUsed(void *) {
-  return sqlite3_memory_used();
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLiteMemoryUsed,
-                             "storage/sqlite",
-                             "Memory in use by SQLite",
-                             GetStorageSQLiteMemoryUsed,
-                             nsnull)
 
 Service *
 Service::getSingleton()
@@ -115,8 +187,6 @@ Service::getSingleton()
       NS_RELEASE(gService);
   }
 
-  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLiteMemoryUsed));
-
   return gService;
 }
 
@@ -125,8 +195,10 @@ nsIXPConnect *Service::sXPConnect = nsnull;
 already_AddRefed<nsIXPConnect>
 Service::getXPConnect()
 {
-  NS_ASSERTION(gService,
-               "Can not get XPConnect without an instance of our service!");
+  NS_PRECONDITION(NS_IsMainThread(),
+                  "Must only get XPConnect on the main thread!");
+  NS_PRECONDITION(gService,
+                  "Can not get XPConnect without an instance of our service!");
 
   // If we've been shutdown, sXPConnect will be null.  To prevent leaks, we do
   // not cache the service after this point.
@@ -149,6 +221,9 @@ Service::~Service()
   int rc = ::sqlite3_shutdown();
   if (rc != SQLITE_OK)
     NS_WARNING("sqlite3 did not shutdown cleanly.");
+
+  bool shutdownObserved = !sXPConnect;
+  NS_ASSERTION(shutdownObserved, "Shutdown was not observed!");
 
   gService = nsnull;
 }
@@ -182,15 +257,16 @@ Service::initialize()
   if (rc != SQLITE_OK)
     return convertResultCode(rc);
 
-  nsCOMPtr<nsIObserverService> os =
-    mozilla::services::GetObserverService();
-  NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
+  // Run the things that need to run on the main thread there.
+  nsCOMPtr<nsIRunnable> event =
+    new ServiceMainThreadInitializer(this, &sXPConnect);
+  if (event && ::NS_IsMainThread()) {
+    (void)event->Run();
+  }
+  else {
+    (void)::NS_DispatchToMainThread(event);
+  }
 
-  nsresult rv = os->AddObserver(this, "xpcom-shutdown", PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // We cache XPConnect for our language helpers.
-  (void)CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
   return NS_OK;
 }
 

@@ -1714,29 +1714,12 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 
 #undef STACK_GLYPH_SIZE
 
-/**
- * cairo_win32_surface_create:
- * @hdc: the DC to create a surface for
- *
- * Creates a cairo surface that targets the given DC.  The DC will be
- * queried for its initial clip extents, and this will be used as the
- * size of the cairo surface.  The resulting surface will always be of
- * format %CAIRO_FORMAT_RGB24; should you need another surface format,
- * you will need to create one through
- * cairo_win32_surface_create_with_dib().
- *
- * Return value: the newly created surface
- **/
-cairo_surface_t *
-cairo_win32_surface_create (HDC hdc)
+static cairo_surface_t *
+cairo_win32_surface_create_internal (HDC hdc, cairo_format_t format)
 {
     cairo_win32_surface_t *surface;
 
-    cairo_format_t format;
     RECT rect;
-
-    /* Assume that everything coming in as a HDC is RGB24 */
-    format = CAIRO_FORMAT_RGB24;
 
     surface = malloc (sizeof (cairo_win32_surface_t));
     if (surface == NULL)
@@ -1770,7 +1753,48 @@ cairo_win32_surface_create (HDC hdc)
     _cairo_surface_init (&surface->base, &cairo_win32_surface_backend,
 			 _cairo_content_from_format (format));
 
-    return (cairo_surface_t *)surface;
+    return &surface->base;
+}
+
+/**
+ * cairo_win32_surface_create:
+ * @hdc: the DC to create a surface for
+ *
+ * Creates a cairo surface that targets the given DC.  The DC will be
+ * queried for its initial clip extents, and this will be used as the
+ * size of the cairo surface.  The resulting surface will always be of
+ * format %CAIRO_FORMAT_RGB24; should you need another surface format,
+ * you will need to create one through
+ * cairo_win32_surface_create_with_dib() or call
+ * cairo_win32_surface_create_with_alpha.
+ *
+ * Return value: the newly created surface
+ **/
+cairo_surface_t *
+cairo_win32_surface_create (HDC hdc)
+{
+    /* Assume everything comes in as RGB24 */
+    return cairo_win32_surface_create_internal(hdc, CAIRO_FORMAT_RGB24);
+}
+
+/**
+ * cairo_win32_surface_create_with_alpha:
+ * @hdc: the DC to create a surface for
+ *
+ * Creates a cairo surface that targets the given DC.  The DC will be
+ * queried for its initial clip extents, and this will be used as the
+ * size of the cairo surface.  The resulting surface will always be of
+ * format %CAIRO_FORMAT_ARGB32; this format is used when drawing into
+ * transparent windows.
+ *
+ * Return value: the newly created surface
+ *
+ * Since: 1.10
+ **/
+cairo_surface_t *
+cairo_win32_surface_create_with_alpha (HDC hdc)
+{
+    return cairo_win32_surface_create_internal(hdc, CAIRO_FORMAT_ARGB32);
 }
 
 /**

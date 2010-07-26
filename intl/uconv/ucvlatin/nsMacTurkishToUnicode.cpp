@@ -45,7 +45,7 @@ static const PRUint16 g_MacTurkishMappingTable[] = {
 #include "macturki.ut"
 };
 
-NS_METHOD
+nsresult
 nsMacTurkishToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                  void **aResult) 
 {

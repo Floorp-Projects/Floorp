@@ -58,8 +58,6 @@ const NS_ERROR_DOM_BAD_URI = NS_ERROR_MODULE_DOM + 1012;
 
 // How often to check for microsummaries that need updating, in milliseconds.
 const CHECK_INTERVAL = 15 * 1000; // 15 seconds
-// How often to check for generator updates, in seconds
-const GENERATOR_INTERVAL = 7 * 86400; // 1 week
 
 // The default value of the update interval, used if there is no user's pref.
 const DEFAULT_UPDATE_INTERVAL_MINUTES = 30;
@@ -127,14 +125,7 @@ MicrosummaryService.prototype = {
   _timer: null,
 
   // XPCOM registration
-  classDescription: "Microsummary Service",
-  contractID: "@mozilla.org/microsummary/service;1",
   classID: Components.ID("{460a9792-b154-4f26-a922-0f653e2c8f91}"),
-  _xpcom_categories: [{ category: "update-timer",
-                        value: "@mozilla.org/microsummary/service;1," +
-                               "getService,microsummary-generator-update-timer," +
-                               "browser.microsummary.generatorUpdateInterval," +
-                               GENERATOR_INTERVAL }],
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIMicrosummaryService, 
                                          Ci.nsITimerCallback,
                                          Ci.nsISupportsWeakReference,
@@ -2156,6 +2147,4 @@ function sanitizeName(aName) {
   return name.substring(0, MAX_GENERATOR_NAME_LENGTH);
 }
 
-function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule([MicrosummaryService]);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([MicrosummaryService]);

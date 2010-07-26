@@ -45,6 +45,8 @@
 #include "gfxMatrix.h"
 #include "nsRect.h"
 
+struct nsCSSValueList;
+
 /**
  * A class representing a style transformation matrix.  The class actually
  * wraps three different matrices, a constant matrix and two matrices
@@ -106,6 +108,12 @@ class nsStyleTransformMatrix
     operator * (const nsStyleTransformMatrix &aOther) const;
 
   /**
+   * Return the transform function, as an nsCSSKeyword, for the given
+   * nsCSSValue::Array from a transform list.
+   */
+  static nsCSSKeyword TransformFunctionOf(const nsCSSValue::Array* aData);
+
+  /**
    * Given an nsCSSValue::Array* containing a -moz-transform function,
    * updates this matrix to hold the value of that function.
    *
@@ -114,12 +122,24 @@ class nsStyleTransformMatrix
    * @param aPresContext The presentation context, used for unit conversion.
    * @param aCanStoreInRuleTree Set to false if the result cannot be cached
    *                            in the rule tree, otherwise untouched.
+   *
+   * aContext and aPresContext may be null if all of the (non-percent)
+   * length values in aData are already known to have been converted to
+   * eCSSUnit_Pixel (as they are in an nsStyleAnimation::Value)
    */
   void SetToTransformFunction(const nsCSSValue::Array* aData,
                               nsStyleContext* aContext,
                               nsPresContext* aPresContext,
                               PRBool& aCanStoreInRuleTree);
 
+  /**
+   * The same as SetToTransformFunction, but for a list of transform
+   * functions.
+   */
+  static nsStyleTransformMatrix ReadTransforms(const nsCSSValueList* aList,
+                                               nsStyleContext* aContext,
+                                               nsPresContext* aPresContext,
+                                               PRBool &aCanStoreInRuleTree);
   /**
    * Sets this matrix to be the identity matrix.
    */
@@ -150,6 +170,16 @@ class nsStyleTransformMatrix
    */
   nscoord GetXTranslation(const nsRect& aBounds) const;
   nscoord GetYTranslation(const nsRect& aBounds) const;
+
+  /**
+   * Get the raw components used for GetXTranslation and GetYTranslation.
+   */
+  nscoord GetCoordXTranslation() const { return mDelta[0]; }
+  nscoord GetCoordYTranslation() const { return mDelta[1]; }
+  float GetWidthRelativeXTranslation() const { return mX[0]; }
+  float GetWidthRelativeYTranslation() const { return mX[1]; }
+  float GetHeightRelativeXTranslation() const { return mY[0]; }
+  float GetHeightRelativeYTranslation() const { return mY[1]; }
 
   /**
    * Returns whether the two matrices are equal or not.

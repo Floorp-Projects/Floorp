@@ -11,16 +11,20 @@ child:
 
     Test(PTestDescSubsub a);
 
+    __delete__();
+
 parent:
     Ok(PTestDescSubsub a);
 
 
-state START:
+state CONSTRUCT:
+    call PTestDescSub goto TEST;
+state TEST:
     send Test goto ACK;
-
 state ACK:
-    recv Ok goto ACK;
-    // delete
+    recv Ok goto DEAD;
+state DEAD:
+    send __delete__;
 };
 
 }

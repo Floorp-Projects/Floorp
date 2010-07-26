@@ -115,9 +115,6 @@ xptiInterfaceEntry::ResolveLocked()
     if(resolvedState == RESOLVE_FAILED)
         return PR_FALSE;
 
-    xptiInterfaceInfoManager* mgr = xptiInterfaceInfoManager::GetSingleton();
-    
-
     NS_ASSERTION(GetResolveState() == PARTIALLY_RESOLVED, "bad state!");    
 
     // Finish out resolution by finding parent and Resolving it so
@@ -702,7 +699,7 @@ xptiInterfaceInfo::Release(void)
             mEntry = nsnull;
         }
 
-        NS_DELETEXPCOM(this);
+        delete this;
         return 0;    
     }
     return cnt;

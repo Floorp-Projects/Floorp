@@ -301,7 +301,7 @@ public:
     }
     ThisClass& operator=(RawRef aRefToCopy)
     {
-        own(aRefToCopy);
+        this->own(aRefToCopy);
         SafeAddRef();
         return *this;
     }
@@ -323,7 +323,7 @@ protected:
     void SafeAddRef()
     {
         if (this->HaveResource())
-            AddRef(this->get());
+            this->AddRef(this->get());
     }
 };
 
@@ -690,7 +690,7 @@ protected:
     void SafeRelease()
     {
         if (this->HaveResource())
-            Release(this->get());
+            this->Release(this->get());
     }
 };
 

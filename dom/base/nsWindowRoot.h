@@ -98,6 +98,12 @@ public:
   virtual void GetPopupNode(nsIDOMNode** aNode);
   virtual void SetPopupNode(nsIDOMNode* aNode);
 
+  virtual void SetParentTarget(nsPIDOMEventTarget* aTarget)
+  {
+    mParent = aTarget;
+  }
+  virtual nsPIDOMEventTarget* GetParentTarget() { return mParent; }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWindowRoot, nsIDOMEventTarget)
 
 protected:
@@ -107,6 +113,8 @@ protected:
                                                       // to us.
 
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
+
+  nsCOMPtr<nsPIDOMEventTarget> mParent;
 };
 
 extern nsresult

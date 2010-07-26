@@ -79,6 +79,38 @@ static JSFunctionSpec sLibraryFunctions[] = {
   JS_FS_END
 };
 
+JSBool
+Library::Name(JSContext* cx, uintN argc, jsval *vp)
+{
+  if (argc != 1) {
+    JS_ReportError(cx, "libraryName takes one argument");
+    return JS_FALSE;
+  }
+
+  jsval arg = JS_ARGV(cx, vp)[0];
+  JSString* str = NULL;
+  if (JSVAL_IS_STRING(arg)) {
+    str = JSVAL_TO_STRING(arg);
+  }
+  else {
+    JS_ReportError(cx, "name argument must be a string");
+      return JS_FALSE;
+  }
+
+  AutoString resultString;
+  AppendString(resultString, DLL_PREFIX);
+  AppendString(resultString, str);
+  AppendString(resultString, DLL_SUFFIX);
+
+  JSString *result = JS_NewUCStringCopyN(cx, resultString.begin(),
+                                         resultString.length());
+  if (!result)
+    return JS_FALSE;
+
+  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(result));
+  return JS_TRUE;
+}
+
 JSObject*
 Library::Create(JSContext* cx, jsval aPath)
 {

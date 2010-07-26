@@ -38,12 +38,7 @@
 
 #include "nsISupports.idl"
 
-/**
- * @status UNDER_REVIEW
- */
-
 interface nsIDOMWindow;
-
 
 [scriptable, uuid(731C6C50-67D6-11d4-9529-0020183BF181)]
 interface nsICommandHandlerInit : nsISupports

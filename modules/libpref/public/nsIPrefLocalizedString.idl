@@ -48,8 +48,6 @@
  *
  * @see nsIPrefBranch
  * @see nsISupportsString
- * 
- * @status FROZEN
  */
 
 [scriptable, uuid(ae419e24-1dd1-11b2-b39a-d3e5e7073802)]

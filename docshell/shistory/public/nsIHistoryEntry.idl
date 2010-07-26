@@ -42,8 +42,6 @@
  * it. nsIHistoryEntry provides access to information like URI, 
  * title and frame traversal status for that document.
  * This interface is accessible from javascript.
- * 
- * @status FROZEN
  */
 #include "nsISupports.idl"
 

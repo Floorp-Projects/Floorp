@@ -45,7 +45,7 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "tcvn5712.uf"
 };
 
-NS_METHOD
+nsresult
 nsUnicodeToTCVN5712Constructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult) 
 {

@@ -57,9 +57,7 @@ function nsContentDispatchChooser()
 
 nsContentDispatchChooser.prototype =
 {
-  classDescription: "Used to handle different types of content",
   classID: Components.ID("e35d5067-95bc-4029-8432-e8f1e431148d"),
-  contractID: "@mozilla.org/content-dispatch-chooser;1",
 
   //////////////////////////////////////////////////////////////////////////////
   //// nsIContentDispatchChooser
@@ -123,8 +121,4 @@ nsContentDispatchChooser.prototype =
 
 let components = [nsContentDispatchChooser];
 
-function NSGetModule(compMgr, fileSpec)
-{
-  return XPCOMUtils.generateModule(components);
-}
-
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

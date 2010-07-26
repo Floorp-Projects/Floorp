@@ -33,15 +33,16 @@
 //
 // Author: Mark Mentovai
 
+#include "processor/simple_symbol_supplier.h"
+
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
 #include <algorithm>
-#include <cassert>
 #include <iostream>
 #include <fstream>
 
-#include "processor/simple_symbol_supplier.h"
 #include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/system_info.h"
 #include "processor/logging.h"

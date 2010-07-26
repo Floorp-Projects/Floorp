@@ -46,6 +46,8 @@
  * httpd.js.
  */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -400,6 +402,8 @@ function nsHttpServer()
 }
 nsHttpServer.prototype =
 {
+  classID: Components.ID("{54ef6f81-30af-4b1d-ac55-8ba811293e41}"),
+
   // NSISERVERSOCKETLISTENER
 
   /**
@@ -5111,104 +5115,7 @@ Request.prototype =
 
 // XPCOM trappings
 
-/**
- * Creates a factory for instances of an object created using the passed-in
- * constructor.
- */
-function makeFactory(ctor)
-{
-  function ci(outer, iid)
-  {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return (new ctor()).QueryInterface(iid);
-  } 
-
-  return {
-           createInstance: ci,
-           lockFactory: function(lock) { },
-           QueryInterface: function(aIID)
-           {
-             if (Ci.nsIFactory.equals(aIID) ||
-                 Ci.nsISupports.equals(aIID))
-               return this;
-             throw Cr.NS_ERROR_NO_INTERFACE;
-           }
-         };
-}
-
-/** The XPCOM module containing the HTTP server. */
-const module =
-{
-  // nsISupports
-  QueryInterface: function(aIID)
-  {
-    if (Ci.nsIModule.equals(aIID) ||
-        Ci.nsISupports.equals(aIID))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  // nsIModule
-  registerSelf: function(compMgr, fileSpec, location, type)
-  {
-    compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    
-    for (var key in this._objects)
-    {
-      var obj = this._objects[key];
-      compMgr.registerFactoryLocation(obj.CID, obj.className, obj.contractID,
-                                               fileSpec, location, type);
-    }
-  },
-  unregisterSelf: function (compMgr, location, type)
-  {
-    compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
-
-    for (var key in this._objects)
-    {
-      var obj = this._objects[key];
-      compMgr.unregisterFactoryLocation(obj.CID, location);
-    }
-  },
-  getClassObject: function(compMgr, cid, iid)
-  {
-    if (!iid.equals(Ci.nsIFactory))
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-
-    for (var key in this._objects)
-    {
-      if (cid.equals(this._objects[key].CID))
-        return this._objects[key].factory;
-    }
-    
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  canUnload: function(compMgr)
-  {
-    return true;
-  },
-
-  // private implementation
-  _objects:
-  {
-    server:
-    {
-      CID:         Components.ID("{54ef6f81-30af-4b1d-ac55-8ba811293e41}"),
-      contractID:  "@mozilla.org/server/jshttp;1",
-      className:   "httpd.js server",
-      factory:     makeFactory(nsHttpServer)
-    }
-  }
-};
-
-
-/** NSGetModule, so this code can be used as a JS component. */
-function NSGetModule(compMgr, fileSpec)
-{
-  return module;
-}
-
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsHttpServer]);
 
 /**
  * Creates a new HTTP server listening for loopback traffic on the given port,

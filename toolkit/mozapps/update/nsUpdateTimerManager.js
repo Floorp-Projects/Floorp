@@ -269,14 +269,10 @@ TimerManager.prototype = {
                          lastUpdateTime : lastUpdateTime };
   },
 
-  classDescription: "Timer Manager",
-  contractID: "@mozilla.org/updates/timer-manager;1",
   classID: Components.ID("{B322A5C0-A419-484E-96BA-D7182163899F}"),
-  _xpcom_categories: [{ category: "profile-after-change" }],
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateTimerManager,
                                          Ci.nsITimerCallback,
                                          Ci.nsIObserver])
 };
 
-function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([TimerManager]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([TimerManager]);

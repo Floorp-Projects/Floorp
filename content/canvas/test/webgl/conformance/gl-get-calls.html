@@ -71,7 +71,7 @@ else {
     shouldBe('context.getParameter(context.BLEND_SRC_ALPHA)', '1');
     shouldBe('context.getParameter(context.BLEND_SRC_RGB)', '1');
     shouldBe('context.getParameter(context.COLOR_CLEAR_VALUE)', '[0, 0, 0, 0]');
-    shouldBe('context.getParameter(context.COLOR_WRITEMASK)', '[1, 1, 1, 1]');
+    shouldBe('context.getParameter(context.COLOR_WRITEMASK)', '[true, true, true, true]');
     shouldBe('context.getParameter(context.CULL_FACE)', 'false');
     shouldBe('context.getParameter(context.CULL_FACE_MODE)', 'context.BACK');
     shouldBe('context.getParameter(context.CURRENT_PROGRAM)', 'null');
@@ -98,9 +98,12 @@ else {
     shouldBe('context.getParameter(context.STENCIL_BACK_PASS_DEPTH_FAIL)', 'context.KEEP');
     shouldBe('context.getParameter(context.STENCIL_BACK_PASS_DEPTH_PASS)', 'context.KEEP');
     shouldBe('context.getParameter(context.STENCIL_BACK_REF)', '0');
+
     shouldBe('context.getParameter(context.STENCIL_BACK_VALUE_MASK)', '0xFFFFFFFF');
     shouldBe('context.getParameter(context.STENCIL_BACK_WRITEMASK)', '0xFFFFFFFF');
-    shouldBe('context.getParameter(context.STENCIL_BITS)', '0');
+
+    // If EXT_packed_depth_stencil is supported, STENCIL_BITS > 0; otherwise, STENCIL_BITS == 0.
+    shouldBe('context.getParameter(context.STENCIL_BITS) >= 0', 'true');
     shouldBe('context.getParameter(context.STENCIL_CLEAR_VALUE)', '0');
     shouldBe('context.getParameter(context.STENCIL_FAIL)', 'context.KEEP');
     shouldBe('context.getParameter(context.STENCIL_FUNC)', 'context.ALWAYS');
@@ -108,19 +111,21 @@ else {
     shouldBe('context.getParameter(context.STENCIL_PASS_DEPTH_PASS)', 'context.KEEP');
     shouldBe('context.getParameter(context.STENCIL_REF)', '0');
     shouldBe('context.getParameter(context.STENCIL_TEST)', 'false');
+
     shouldBe('context.getParameter(context.STENCIL_VALUE_MASK)', '0xFFFFFFFF');
     shouldBe('context.getParameter(context.STENCIL_WRITEMASK)', '0xFFFFFFFF');
+
     shouldBe('context.getParameter(context.TEXTURE_BINDING_2D)', 'null');
     shouldBe('context.getParameter(context.TEXTURE_BINDING_CUBE_MAP)', 'null');
+    shouldBe('context.getParameter(context.UNPACK_ALIGNMENT)', '4');
+    shouldBe('context.getParameter(context.UNPACK_FLIP_Y_WEBGL)', 'false');
+    shouldBe('context.getParameter(context.UNPACK_PREMULTIPLY_ALPHA_WEBGL)', 'false');
     shouldBe('context.getParameter(context.VIEWPORT)', '[0, 0, 2, 2]');
     shouldBeTrue('context.getParameter(context.MAX_FRAGMENT_UNIFORM_VECTORS) >= 16');
     shouldBeTrue('context.getParameter(context.MAX_VERTEX_UNIFORM_VECTORS) >= 128');
     shouldBeTrue('context.getParameter(context.MAX_VARYING_VECTORS) >= 8');
     shouldBe('context.getParameter(context.NUM_COMPRESSED_TEXTURE_FORMATS)', '0');
     shouldBe('context.getParameter(context.SHADER_COMPILER)', 'true');
-    shouldBe('context.getParameter(context.IMPLEMENTATION_COLOR_READ_FORMAT)', 'context.RGBA');
-    shouldBe('context.getParameter(context.IMPLEMENTATION_COLOR_READ_TYPE)', 'context.UNSIGNED_BYTE');
-    shouldBe('context.getParameter(context.COMPRESSED_TEXTURE_FORMATS)', '[]');
 }
 
 debug("");

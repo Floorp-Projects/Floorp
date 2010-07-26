@@ -70,19 +70,21 @@
 #include "nsStyleConsts.h"
 #include "nsDOMError.h"
 #include "nsStyleUtil.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
 
+namespace css = mozilla::css;
+
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
-NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
-NS_IMETHODIMP _class::SetStyleSheet(nsCSSStyleSheet* aSheet) { return super::SetStyleSheet(aSheet); }  \
-NS_IMETHODIMP _class::SetParentRule(nsICSSGroupRule* aRule) { return super::SetParentRule(aRule); }  \
+/* virtual */ already_AddRefed<nsIStyleSheet> _class::GetStyleSheet() const { return super::GetStyleSheet(); }  \
+/* virtual */ void _class::SetStyleSheet(nsCSSStyleSheet* aSheet) { super::SetStyleSheet(aSheet); }  \
+/* virtual */ void _class::SetParentRule(nsICSSGroupRule* aRule) { super::SetParentRule(aRule); }  \
 nsIDOMCSSRule* _class::GetDOMRuleWeak(nsresult *aResult) { *aResult = NS_OK; return this; }  \
 /* virtual */ void _class::MapRuleInfoInto(nsRuleData* aRuleData) { }
 
 #define IMPL_STYLE_RULE_INHERIT2(_class, super) \
-NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
-NS_IMETHODIMP _class::SetParentRule(nsICSSGroupRule* aRule) { return super::SetParentRule(aRule); }  \
+/* virtual */ already_AddRefed<nsIStyleSheet> _class::GetStyleSheet() const { return super::GetStyleSheet(); }  \
+/* virtual */ void  _class::SetParentRule(nsICSSGroupRule* aRule) { super::SetParentRule(aRule); }  \
 /* virtual */ void _class::MapRuleInfoInto(nsRuleData* aRuleData) { }
 
 // -------------------------------
@@ -179,7 +181,8 @@ CSSGroupRuleRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
     return rv;
   }
 
-  return CallQueryInterface(rule, aReturn);
+  NS_ADDREF(*aReturn = rule);
+  return NS_OK;
 }
 
 // -------------------------------------------
@@ -204,8 +207,8 @@ public:
 #endif
 
   // nsICSSRule methods
-  NS_IMETHOD GetType(PRInt32& aType) const;
-  NS_IMETHOD Clone(nsICSSRule*& aClone) const;
+  virtual PRInt32 GetType() const;
+  virtual nsresult Clone(nsICSSRule*& aClone) const;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -264,19 +267,19 @@ CSSCharsetRuleImpl::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-NS_IMETHODIMP
-CSSCharsetRuleImpl::GetType(PRInt32& aType) const
+/* virtual */ PRInt32
+CSSCharsetRuleImpl::GetType() const
 {
-  aType = nsICSSRule::CHARSET_RULE;
-  return NS_OK;
+  return nsICSSRule::CHARSET_RULE;
 }
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 CSSCharsetRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSCharsetRuleImpl* clone = new CSSCharsetRuleImpl(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -306,11 +309,12 @@ NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult, const nsAString& aEncoding
 
   CSSCharsetRuleImpl* it = new CSSCharsetRuleImpl(aEncoding);
 
-  if (! it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = it);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -378,8 +382,8 @@ public:
 #endif
 
   // nsICSSRule methods
-  NS_IMETHOD GetType(PRInt32& aType) const;
-  NS_IMETHOD Clone(nsICSSRule*& aClone) const;
+  virtual PRInt32 GetType() const;
+  virtual nsresult Clone(nsICSSRule*& aClone) const;
 
   // nsICSSImportRule methods
   NS_IMETHOD SetURLSpec(const nsString& aURLSpec);
@@ -467,19 +471,19 @@ CSSImportRuleImpl::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-NS_IMETHODIMP
-CSSImportRuleImpl::GetType(PRInt32& aType) const
+/* virtual */ PRInt32
+CSSImportRuleImpl::GetType() const
 {
-  aType = nsICSSRule::IMPORT_RULE;
-  return NS_OK;
+  return nsICSSRule::IMPORT_RULE;
 }
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 CSSImportRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSImportRuleImpl* clone = new CSSImportRuleImpl(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -548,12 +552,13 @@ NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult,
 
   CSSImportRuleImpl* it = new CSSImportRuleImpl(aMedia);
 
-  if (! it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   it->SetURLSpec(aURLSpec);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = it);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -618,12 +623,9 @@ NS_IMETHODIMP
 CSSImportRuleImpl::GetMedia(nsIDOMMediaList * *aMedia)
 {
   NS_ENSURE_ARG_POINTER(aMedia);
-  if (!mMedia) {
-    *aMedia = nsnull;
-    return NS_OK;
-  }
 
-  return CallQueryInterface(mMedia.get(), aMedia);
+  NS_IF_ADDREF(*aMedia = mMedia);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -688,11 +690,11 @@ SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsCSSGroupRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   mRules.EnumerateForwards(SetStyleSheetReference, aSheet);
-  return nsCSSRule::SetStyleSheet(aSheet);
+  nsCSSRule::SetStyleSheet(aSheet);
 }
 
 #ifdef DEBUG
@@ -843,7 +845,8 @@ nsCSSGroupRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
     NS_ADDREF(mRuleCollection);
   }
 
-  return CallQueryInterface(mRuleCollection, aRuleList);
+  NS_ADDREF(*aRuleList = mRuleCollection);
+  return NS_OK;
 }
 
 nsresult
@@ -916,7 +919,7 @@ NS_INTERFACE_MAP_BEGIN(nsCSSMediaRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMediaRule)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
+/* virtual */ void
 nsCSSMediaRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   if (mMedia) {
@@ -925,7 +928,7 @@ nsCSSMediaRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
     mMedia->SetStyleSheet(aSheet);
   }
 
-  return nsCSSGroupRule::SetStyleSheet(aSheet);
+  nsCSSGroupRule::SetStyleSheet(aSheet);
 }
 
 #ifdef DEBUG
@@ -948,19 +951,19 @@ nsCSSMediaRule::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-NS_IMETHODIMP
-nsCSSMediaRule::GetType(PRInt32& aType) const
+/* virtual */ PRInt32
+nsCSSMediaRule::GetType() const
 {
-  aType = nsICSSRule::MEDIA_RULE;
-  return NS_OK;
+  return nsICSSRule::MEDIA_RULE;
 }
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsCSSMediaRule::Clone(nsICSSRule*& aClone) const
 {
   nsCSSMediaRule* clone = new nsCSSMediaRule(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1020,12 +1023,8 @@ NS_IMETHODIMP
 nsCSSMediaRule::GetMedia(nsIDOMMediaList* *aMedia)
 {
   NS_ENSURE_ARG_POINTER(aMedia);
-  if (!mMedia) {
-    *aMedia = nsnull;
-    return NS_OK;
-  }
-
-  return CallQueryInterface(mMedia.get(), aMedia);
+  NS_IF_ADDREF(*aMedia = mMedia);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1120,19 +1119,19 @@ nsCSSDocumentRule::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-NS_IMETHODIMP
-nsCSSDocumentRule::GetType(PRInt32& aType) const
+/* virtual */ PRInt32
+nsCSSDocumentRule::GetType() const
 {
-  aType = nsICSSRule::DOCUMENT_RULE;
-  return NS_OK;
+  return nsICSSRule::DOCUMENT_RULE;
 }
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsCSSDocumentRule::Clone(nsICSSRule*& aClone) const
 {
   nsCSSDocumentRule* clone = new nsCSSDocumentRule(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1275,8 +1274,8 @@ public:
 #endif
 
   // nsICSSRule methods
-  NS_IMETHOD GetType(PRInt32& aType) const;
-  NS_IMETHOD Clone(nsICSSRule*& aClone) const;
+  virtual PRInt32 GetType() const;
+  virtual nsresult Clone(nsICSSRule*& aClone) const;
 
   // nsICSSNameSpaceRule methods
   NS_IMETHOD GetPrefix(nsIAtom*& aPrefix) const;
@@ -1352,19 +1351,19 @@ CSSNameSpaceRuleImpl::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-NS_IMETHODIMP
-CSSNameSpaceRuleImpl::GetType(PRInt32& aType) const
+/* virtual */ PRInt32
+CSSNameSpaceRuleImpl::GetType() const
 {
-  aType = nsICSSRule::NAMESPACE_RULE;
-  return NS_OK;
+  return nsICSSRule::NAMESPACE_RULE;
 }
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 CSSNameSpaceRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSNameSpaceRuleImpl* clone = new CSSNameSpaceRuleImpl(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1411,13 +1410,14 @@ NS_NewCSSNameSpaceRule(nsICSSNameSpaceRule** aInstancePtrResult,
 
   CSSNameSpaceRuleImpl* it = new CSSNameSpaceRuleImpl();
 
-  if (! it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   it->SetPrefix(aPrefix);
   it->SetURLSpec(aURLSpec);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = it);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1576,7 +1576,9 @@ nsCSSFontFaceStyleDecl::Fields[] = {
     &nsCSSFontFaceStyleDecl::mWeight,
     &nsCSSFontFaceStyleDecl::mStretch,
     &nsCSSFontFaceStyleDecl::mSrc,
-    &nsCSSFontFaceStyleDecl::mUnicodeRange
+    &nsCSSFontFaceStyleDecl::mUnicodeRange,
+    &nsCSSFontFaceStyleDecl::mFontFeatureSettings,
+    &nsCSSFontFaceStyleDecl::mFontLanguageOverride
 };
 
 DOMCI_DATA(CSSFontFaceStyleDecl, nsCSSFontFaceStyleDecl)
@@ -1622,17 +1624,17 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     }
 
   case eCSSFontDesc_Style:
-    nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_font_style, val,
+    css::Declaration::AppendCSSValueToString(eCSSProperty_font_style, val,
                                              aResult);
     return NS_OK;
 
   case eCSSFontDesc_Weight:
-    nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_font_weight, val,
+    css::Declaration::AppendCSSValueToString(eCSSProperty_font_weight, val,
                                              aResult);
     return NS_OK;
     
   case eCSSFontDesc_Stretch:
-    nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_font_stretch, val,
+    css::Declaration::AppendCSSValueToString(eCSSProperty_font_stretch, val,
                                              aResult);
     return NS_OK;
 
@@ -1790,12 +1792,13 @@ nsCSSFontFaceStyleDecl::GetParentRule(nsIDOMCSSRule** aParentRule)
 // nsCSSFontFaceRule
 // 
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsCSSFontFaceRule::Clone(nsICSSRule*& aClone) const
 {
   nsCSSFontFaceRule* clone = new nsCSSFontFaceRule(*this);
   if (clone) {
-    return CallQueryInterface(clone, &aClone);
+    NS_ADDREF(aClone = clone);
+    return NS_OK;
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1849,11 +1852,10 @@ nsCSSFontFaceRule::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-NS_IMETHODIMP
-nsCSSFontFaceRule::GetType(PRInt32& aType) const
+/* virtual */ PRInt32
+nsCSSFontFaceRule::GetType() const
 {
-  aType = nsICSSRule::FONT_FACE_RULE;
-  return NS_OK;
+  return nsICSSRule::FONT_FACE_RULE;
 }
 
 NS_IMETHODIMP
@@ -1901,7 +1903,8 @@ nsCSSFontFaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
 NS_IMETHODIMP
 nsCSSFontFaceRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
-  return CallQueryInterface(&mDecl, aStyle);
+  NS_IF_ADDREF(*aStyle = &mDecl);
+  return NS_OK;
 }
 
 // Arguably these should forward to nsCSSFontFaceStyleDecl methods.

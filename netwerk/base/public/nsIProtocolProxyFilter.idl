@@ -46,8 +46,6 @@ interface nsIURI;
  * This interface is used to apply filters to the proxies selected for a given
  * URI.  Use nsIProtocolProxyService::registerFilter to hook up instances of
  * this interface.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(f424abd3-32b4-456c-9f45-b7e3376cb0d1)]
 interface nsIProtocolProxyFilter : nsISupports

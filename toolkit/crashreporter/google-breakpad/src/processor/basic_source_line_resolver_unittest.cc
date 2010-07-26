@@ -27,8 +27,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <cstdio>
+#include <stdio.h>
+
 #include <string>
+
+#include "breakpad_googletest_includes.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/stack_frame.h"
@@ -38,16 +41,6 @@
 #include "processor/scoped_ptr.h"
 #include "processor/windows_frame_info.h"
 #include "processor/cfi_frame_info.h"
-
-#define ASSERT_TRUE(cond) \
-  if (!(cond)) {                                                        \
-    fprintf(stderr, "FAILED: %s at %s:%d\n", #cond, __FILE__, __LINE__); \
-    return false; \
-  }
-
-#define ASSERT_FALSE(cond) ASSERT_TRUE(!(cond))
-
-#define ASSERT_EQ(e1, e2) ASSERT_TRUE((e1) == (e2))
 
 namespace {
 
@@ -120,9 +113,11 @@ static bool VerifyRegisters(
     const CFIFrameInfo::RegisterValueMap<u_int32_t> &actual) {
   CFIFrameInfo::RegisterValueMap<u_int32_t>::const_iterator a;
   a = actual.find(".cfa");
-  ASSERT_TRUE(a != actual.end());
+  if (a == actual.end())
+    return false;
   a = actual.find(".ra");
-  ASSERT_TRUE(a != actual.end());
+  if (a == actual.end())
+    return false;
   for (a = actual.begin(); a != actual.end(); a++) {
     CFIFrameInfo::RegisterValueMap<u_int32_t>::const_iterator e =
       expected.find(a->first);
@@ -146,10 +141,11 @@ static bool VerifyRegisters(
 
 
 static bool VerifyEmpty(const StackFrame &frame) {
-  ASSERT_TRUE(frame.function_name.empty());
-  ASSERT_TRUE(frame.source_file_name.empty());
-  ASSERT_EQ(frame.source_line, 0);
-  return true;
+  if (frame.function_name.empty() &&
+      frame.source_file_name.empty() &&
+      frame.source_line == 0)
+    return true;
+  return false;
 }
 
 static void ClearSourceLineInfo(StackFrame *frame) {
@@ -159,17 +155,26 @@ static void ClearSourceLineInfo(StackFrame *frame) {
   frame->source_line = 0;
 }
 
-static bool RunTests() {
-  string testdata_dir = string(getenv("srcdir") ? getenv("srcdir") : ".") +
-                        "/src/processor/testdata";
+class TestBasicSourceLineResolver : public ::testing::Test {
+public:
+  void SetUp() {
+    testdata_dir = string(getenv("srcdir") ? getenv("srcdir") : ".") +
+                         "/src/processor/testdata";
+  }
 
   BasicSourceLineResolver resolver;
-  ASSERT_TRUE(resolver.LoadModule("module1", testdata_dir + "/module1.out"));
-  ASSERT_TRUE(resolver.HasModule("module1"));
-  ASSERT_TRUE(resolver.LoadModule("module2", testdata_dir + "/module2.out"));
-  ASSERT_TRUE(resolver.HasModule("module2"));
+  string testdata_dir;
+};
 
+TEST_F(TestBasicSourceLineResolver, TestLoadAndResolve)
+{
   TestCodeModule module1("module1");
+  ASSERT_TRUE(resolver.LoadModule(&module1, testdata_dir + "/module1.out"));
+  ASSERT_TRUE(resolver.HasModule(&module1));
+  TestCodeModule module2("module2");
+  ASSERT_TRUE(resolver.LoadModule(&module2, testdata_dir + "/module2.out"));
+  ASSERT_TRUE(resolver.HasModule(&module2));
+
 
   StackFrame frame;
   scoped_ptr<WindowsFrameInfo> windows_frame_info;
@@ -271,8 +276,8 @@ static bool RunTests() {
   ASSERT_TRUE(cfi_frame_info.get()
               ->FindCallerRegs<u_int32_t>(current_registers, memory,
                                           &caller_registers));
-  VerifyRegisters(__FILE__, __LINE__,
-                  expected_caller_registers, caller_registers);
+  ASSERT_TRUE(VerifyRegisters(__FILE__, __LINE__,
+                              expected_caller_registers, caller_registers));
 
   frame.instruction = 0x3d41;
   current_registers["$esp"] = 0x10014;
@@ -281,8 +286,8 @@ static bool RunTests() {
   ASSERT_TRUE(cfi_frame_info.get()
               ->FindCallerRegs<u_int32_t>(current_registers, memory,
                                           &caller_registers));
-  VerifyRegisters(__FILE__, __LINE__,
-                  expected_caller_registers, caller_registers);
+  ASSERT_TRUE(VerifyRegisters(__FILE__, __LINE__,
+                              expected_caller_registers, caller_registers));
 
   frame.instruction = 0x3d43;
   current_registers["$ebp"] = 0x10014;
@@ -334,8 +339,6 @@ static bool RunTests() {
   resolver.FillSourceLineInfo(&frame);
   ASSERT_EQ(frame.function_name, string("LargeFunction"));
 
-  TestCodeModule module2("module2");
-
   frame.instruction = 0x2181;
   frame.module = &module2;
   resolver.FillSourceLineInfo(&frame);
@@ -364,27 +367,41 @@ static bool RunTests() {
   frame.module = &module2;
   resolver.FillSourceLineInfo(&frame);
   ASSERT_EQ(frame.function_name, "Public2_2");
+}
 
-  ASSERT_FALSE(resolver.LoadModule("module3",
+TEST_F(TestBasicSourceLineResolver, TestInvalidLoads)
+{
+  TestCodeModule module3("module3");
+  ASSERT_FALSE(resolver.LoadModule(&module3,
                                    testdata_dir + "/module3_bad.out"));
-  ASSERT_FALSE(resolver.HasModule("module3"));
-  ASSERT_FALSE(resolver.LoadModule("module4",
+  ASSERT_FALSE(resolver.HasModule(&module3));
+  TestCodeModule module4("module4");
+  ASSERT_FALSE(resolver.LoadModule(&module4,
                                    testdata_dir + "/module4_bad.out"));
-  ASSERT_FALSE(resolver.HasModule("module4"));
-  ASSERT_FALSE(resolver.LoadModule("module5",
+  ASSERT_FALSE(resolver.HasModule(&module4));
+  TestCodeModule module5("module5");
+  ASSERT_FALSE(resolver.LoadModule(&module5,
                                    testdata_dir + "/invalid-filename"));
-  ASSERT_FALSE(resolver.HasModule("module5"));
-  ASSERT_FALSE(resolver.HasModule("invalid-module"));
-  return true;
+  ASSERT_FALSE(resolver.HasModule(&module5));
+  TestCodeModule invalidmodule("invalid-module");
+  ASSERT_FALSE(resolver.HasModule(&invalidmodule));
+}
+
+TEST_F(TestBasicSourceLineResolver, TestUnload)
+{
+  TestCodeModule module1("module1");
+  ASSERT_FALSE(resolver.HasModule(&module1));
+  ASSERT_TRUE(resolver.LoadModule(&module1, testdata_dir + "/module1.out"));
+  ASSERT_TRUE(resolver.HasModule(&module1));
+  resolver.UnloadModule(&module1);
+  ASSERT_FALSE(resolver.HasModule(&module1));
+  ASSERT_TRUE(resolver.LoadModule(&module1, testdata_dir + "/module1.out"));
+  ASSERT_TRUE(resolver.HasModule(&module1));
 }
 
 }  // namespace
 
-int main(int argc, char **argv) {
-  BPLOG_INIT(&argc, &argv);
-
-  if (!RunTests()) {
-    return 1;
-  }
-  return 0;
+int main(int argc, char *argv[]) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

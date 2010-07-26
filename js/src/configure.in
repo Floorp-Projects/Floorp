@@ -220,10 +220,12 @@ MOZ_ARG_WITH_STRING(android-toolchain,
                           location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
     android_toolchain=$withval)
 
-MOZ_ARG_WITH_STRING(android-platform,
-[  --with-android-platform=DIR
-                          location of platform dir, default NDK/build/platforms/android-5/arch-arm],
-    android_platform=$withval)
+
+MOZ_ARG_WITH_STRING(android-version,
+[  --with-android-version=VER
+                          android platform version, default 5],
+    android_version=$withval,
+    android_version=5)
 
 if test "$target" = "arm-android-eabi" ; then
     if test -z "$android_ndk" ; then
@@ -235,9 +237,8 @@ if test "$target" = "arm-android-eabi" ; then
     fi
 
     if test -z "$android_platform" ; then
-        android_platform="$android_ndk"/build/platforms/android-5/arch-arm
+       android_platform="$android_ndk"/build/platforms/android-"$android_version"/arch-"$target_cpu"
     fi
-
     dnl set up compilers
     AS="$android_toolchain"/bin/arm-eabi-as
     CC="$android_toolchain"/bin/arm-eabi-gcc
@@ -274,6 +275,7 @@ if test "$target" = "arm-android-eabi" ; then
     ANDROID_LDFLAGS="$LDFLAGS"
 
     AC_DEFINE(ANDROID)
+    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
     AC_DEFINE(FORCE_LITTLE_ENDIAN)
 fi
 
@@ -724,7 +726,7 @@ if test -n "$SBCONF"; then
     _sb_version_major=`echo $_sb_version | cut -f1 -d.`
     _sb_version_minor=`echo $_sb_version | cut -f2 -d.`
     _sb_version_point=`echo $_sb_version | cut -f3 -d.`
-    if test $_sb_version_major -eq 1 && test $_sb_version_minor -eq 0 && test $_sb_version_point -le 16; then
+    if test $_sb_version_major -eq 1 -a $_sb_version_minor -eq 0 -a $_sb_version_point -le 16; then
         QEMU_CANT_RUN_JS_SHELL=1
     fi
 fi
@@ -745,7 +747,7 @@ dnl ========================================================
 AC_PROG_INSTALL
 AC_PROG_LN_S
 MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
-if test -z "$PERL" || test "$PERL" = ":"; then
+if test -z "$PERL" -o "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
 
@@ -784,12 +786,12 @@ MOZ_PATH_PROG(DOXYGEN, doxygen, :)
 MOZ_PATH_PROG(AUTOCONF, autoconf, :)
 MOZ_PATH_PROG(UNZIP, unzip, :)
 MOZ_PATH_PROGS(ZIP, zip)
-if test -z "$ZIP" || test "$ZIP" = ":"; then
+if test -z "$ZIP" -o "$ZIP" = ":"; then
     AC_MSG_ERROR([zip not found in \$PATH])
 fi
 MOZ_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
 MOZ_PATH_PROG(XARGS, xargs)
-if test -z "$XARGS" || test "$XARGS" = ":"; then
+if test -z "$XARGS" -o "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
 fi
 
@@ -832,7 +834,7 @@ from building Mozilla. Upgrade to Xcode 2.1 or later.])
         changequote(,)
         XCODEBUILD_VERSION=`$PBBUILD -version 2>/dev/null | xargs | sed -e 's/.*DevToolsCore-\([0-9]*\).*/\1/'`
         changequote([,])
-        if test -n "$XCODEBUILD_VERSION" && test "$XCODEBUILD_VERSION" -ge 620 ; then
+        if test -n "$XCODEBUILD_VERSION" -a "$XCODEBUILD_VERSION" -ge 620 ; then
           HAS_XCODE_2_1=1;
         fi
       ;;
@@ -1275,7 +1277,7 @@ x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
     ;;
 
-arm)
+arm*)
     CPU_ARCH=arm
     ;;
 esac
@@ -1304,8 +1306,8 @@ if test "$GNU_CC"; then
     ASFLAGS="$ASFLAGS -fPIC"
     _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
     _MOZ_RTTI_FLAGS_OFF=${_COMPILER_PREFIX}-fno-rtti
-    _MOZ_EXCEPTIONS_FLAGS_ON='-fhandle-exceptions'
-    _MOZ_EXCEPTIONS_FLAGS_OFF='-fno-handle-exceptions'
+    _MOZ_EXCEPTIONS_FLAGS_ON='-fexceptions'
+    _MOZ_EXCEPTIONS_FLAGS_OFF='-fno-exceptions'
 
     # Turn on GNU specific features
     # -Wall - turn on all warnings
@@ -1756,12 +1758,6 @@ case "$target" in
     if test ! "$GNU_CC"; then
 	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
     fi
-# Can't have force w/o an unforce.
-#    # Hack for FreeBSD 2.2
-#    if test -z "$MKSHLIB_FORCE_ALL"; then
-#	MKSHLIB_FORCE_ALL='-Wl,-Bforcearchive'
-#	MKSHLIB_UNFORCE_ALL=''
-#    fi
     ;; 
 
 ia64*-hpux*)
@@ -1871,8 +1867,8 @@ ia64*-hpux*)
     elif test "$GNU_CXX"; then
         GCC_VERSION=`$CXX -v 2>&1 | awk '/^gcc version/ { print $3 }'`
         case $GCC_VERSION in
-        4.1.*|4.2.*)
-            # -Os is broken on gcc 4.1.x and 4.2.x, we need to tweak it to get good results.
+        4.1.*|4.2.*|4.5.*)
+            # -Os is broken on gcc 4.1.x 4.2.x, 4.5.x we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
         MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
@@ -2147,7 +2143,7 @@ ia64*-hpux*)
     fi
 
     MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd`
-    if test "$?" != "0" || test -z "$MOZ_TOOLS_DIR"; then
+    if test "$?" != "0" -o -z "$MOZ_TOOLS_DIR"; then
         AC_MSG_ERROR([cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS])
     fi
     if test `echo ${PATH}: | grep -ic "$MOZ_TOOLS_DIR/bin:"` = 0; then
@@ -2230,8 +2226,8 @@ ia64*-hpux*)
 	USE_PTHREADS=1
 	_PEDANTIC=
 	LIBS="$LIBS -lsocket -lstdc++"
-	_DEFINES_CFLAGS='-Wp,-include -Wp,$(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
-	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -Wp,-include -Wp,$(DEPTH)/js-confdefs.h -D_POSIX_C_SOURCE=199506'
+	_DEFINES_CFLAGS='-include $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
+	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/js-confdefs.h -D_POSIX_C_SOURCE=199506'
 	if test "$with_x" != "yes"
 	then
 		_PLATFORM_DEFAULT_TOOLKIT="photon"
@@ -2409,7 +2405,7 @@ alpha*-*-osf*)
        _MOZ_EXCEPTIONS_FLAGS_ON='-features=except'
        _MOZ_EXCEPTIONS_FLAGS_OFF='-features=no%except'
        LDFLAGS="-xildoff $LDFLAGS"
-       if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
+       if test -z "$CROSS_COMPILE" -a -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
            LDFLAGS="-M /usr/lib/ld/map.noexstk $LDFLAGS" 
            AC_TRY_LINK([#include <stdio.h>],
@@ -2515,7 +2511,7 @@ dnl they can link in the static libs that provide the missing
 dnl symbols.
 dnl ========================================================
 NO_LD_ARCHIVE_FLAGS=
-if test -z "$MKSHLIB_FORCE_ALL" || test -z "$MKSHLIB_UNFORCE_ALL"; then
+if test -z "$MKSHLIB_FORCE_ALL" -o -z "$MKSHLIB_UNFORCE_ALL"; then
     NO_LD_ARCHIVE_FLAGS=1
 fi
 case "$target" in
@@ -3294,7 +3290,7 @@ fi
 
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================
-if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
+if test -z "$MACOS_DEPLOYMENT_TARGET" -o "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_CACHE_CHECK(for wcrtomb,
@@ -3550,32 +3546,6 @@ EOF
 esac
 
 dnl ===================================================================
-dnl ========================================================
-dnl By default, turn rtti and exceptions off on g++/egcs
-dnl ========================================================
-if test "$GNU_CXX"; then
-
-  AC_MSG_CHECKING(for C++ exceptions flag)
-
-  dnl They changed -f[no-]handle-exceptions to -f[no-]exceptions in g++ 2.8
-  AC_CACHE_VAL(ac_cv_cxx_exceptions_flags,
-  [echo "int main() { return 0; }" | cat > conftest.C
-
-  ${CXX-g++} ${CXXFLAGS} -c -fno-handle-exceptions conftest.C > conftest.out 2>&1
-
-  if egrep "warning.*renamed" conftest.out >/dev/null; then
-    ac_cv_cxx_exceptions_flags=${_COMPILER_PREFIX}-fno-exceptions
-  else
-    ac_cv_cxx_exceptions_flags=${_COMPILER_PREFIX}-fno-handle-exceptions
-  fi
-
-  rm -f conftest*])
-
-  AC_MSG_RESULT($ac_cv_cxx_exceptions_flags)
-  _MOZ_EXCEPTIONS_FLAGS_OFF=$ac_cv_cxx_exceptions_flags
-  _MOZ_EXCEPTIONS_FLAGS_ON=`echo $ac_cv_cxx_exceptions_flags | sed 's|no-||'`
-fi
-
 dnl ========================================================
 dnl Put your C++ language/feature checks below
 dnl ========================================================
@@ -3986,7 +3956,7 @@ AC_SUBST(NSPR_LIBS)
 
 dnl Pass either --with-system-nspr or (--with-nspr-cflags and
 dnl --with-nspr-libs), but not both.
-if test "$_USE_SYSTEM_NSPR" && (test "$NSPR_CFLAGS" || test "$NSPR_LIBS"); then
+if test "$_USE_SYSTEM_NSPR" && (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
     AC_MSG_ERROR([--with-system-nspr and --with-nspr-libs/cflags are mutually exclusive.
 See 'configure --help'.])
 fi
@@ -4181,7 +4151,7 @@ MOZ_ARG_ENABLE_STRING(optimize,
   --enable-optimize=[OPT] Specify compiler optimization flags [OPT=-O]],
 [ if test "$enableval" != "no"; then
     MOZ_OPTIMIZE=1
-    if test -n "$enableval" && test "$enableval" != "yes"; then
+    if test -n "$enableval" -a "$enableval" != "yes"; then
         MOZ_OPTIMIZE_FLAGS=`echo "$enableval" | sed -e 's|\\\ | |g'`
         MOZ_OPTIMIZE=2
     fi
@@ -4380,7 +4350,7 @@ MOZ_ARG_ENABLE_BOOL(ctypes,
     JS_HAS_CTYPES= )
 AC_SUBST(JS_HAS_CTYPES)
 if test "$JS_HAS_CTYPES"; then
-  if test "$_MSC_VER" && test -z $AS; then
+  if test "$_MSC_VER" -a -z $AS; then
     # Error out if we're on MSVC and MASM is unavailable.
     AC_MSG_ERROR([No suitable assembler found. An assembler is required to build js-ctypes. If you are building with MS Visual Studio 8 Express, you may download the MASM 8.0 package, upgrade to Visual Studio 9 Express, or install the Vista SDK.])
   fi
@@ -4481,6 +4451,19 @@ if test -n "$JS_GC_ZEAL"; then
     AC_DEFINE(JS_GC_ZEAL)
 fi
 
+dnl ======================================================
+dnl = Enable compiling with ccache
+dnl ======================================================
+MOZ_ARG_WITH_STRING(ccache,
+[  --with-ccache=path/to/ccache
+                          Enable compiling with ccache],
+    CCACHE_PATH=$withval,)
+
+if test -n "$CCACHE_PATH"; then
+  CC="$CCACHE_PATH $CC"
+  CXX="$CCACHE_PATH $CXX"
+fi
+
 dnl ========================================================
 dnl = Enable static checking using gcc-dehydra
 dnl ========================================================
@@ -4564,7 +4547,7 @@ AC_SUBST(MOZ_DEMANGLE_SYMBOLS)
 dnl ========================================================
 dnl = Support for gcc stack unwinding (from gcc 3.3)
 dnl ========================================================
-if test "$HAVE_GCC3_ABI" && test -z "$SKIP_LIBRARY_CHECKS"; then
+if test "$HAVE_GCC3_ABI" -a -z "$SKIP_LIBRARY_CHECKS"; then
     AC_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
 fi
 
@@ -4595,7 +4578,7 @@ dnl ========================================================
 dnl Check for gcc -pipe support
 dnl ========================================================
 AC_MSG_CHECKING([for gcc -pipe support])
-if test -n "$GNU_CC" && test -n "$GNU_CXX" && test -n "$GNU_AS"; then
+if test -n "$GNU_CC" -a -n "$GNU_CXX" -a -n "$GNU_AS"; then
     echo '#include <stdio.h>' > dummy-hello.c
     echo 'int main() { printf("Hello World\n"); exit(0); }' >> dummy-hello.c
     ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
@@ -4614,7 +4597,7 @@ if test -n "$GNU_CC" && test -n "$GNU_CXX" && test -n "$GNU_AS"; then
             [_res_gcc_pipe="no"] )
         CFLAGS=$_SAVE_CFLAGS
     fi
-    if test "$_res_as_stdin" = "yes" && test "$_res_gcc_pipe" = "yes"; then
+    if test "$_res_as_stdin" = "yes" -a "$_res_gcc_pipe" = "yes"; then
         _res="yes";
         CFLAGS="$CFLAGS -pipe"
         CXXFLAGS="$CXXFLAGS -pipe"
@@ -4631,7 +4614,6 @@ dnl ========================================================
 dnl Profile guided optimization
 dnl ========================================================
 dnl Test for profiling options
-dnl Under gcc 3.3, use -fprofile-arcs/-fbranch-probabilities
 dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
 
 dnl Provide a switch to disable PGO even when called via profiledbuild.
@@ -4656,19 +4638,6 @@ if test $result = "yes"; then
   PROFILE_GEN_LDFLAGS="-fprofile-generate"
   PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freorder-blocks-and-partition"
   PROFILE_USE_LDFLAGS="-fprofile-use"
-else
-  CFLAGS="$_SAVE_CFLAGS -fprofile-arcs"
-  AC_MSG_CHECKING([whether C compiler supports -fprofile-arcs])
-  AC_TRY_COMPILE([], [return 0;],
-                 [ PROFILE_GEN_CFLAGS="-fprofile-arcs"
-                   result="yes" ], result="no")
-  AC_MSG_RESULT([$result])
-  if test $result = "yes"; then
-    PROFILE_USE_CFLAGS="-fbranch-probabilities"
-  fi
-  # don't really care, this is an old GCC
-  PROFILE_GEN_LDFLAGS=
-  PROFILE_USE_LDFLAGS=
 fi
 
 CFLAGS="$_SAVE_CFLAGS"
@@ -4891,7 +4860,7 @@ if test "$_cpp_md_flag"; then
   if test "$OS_ARCH" = "OpenVMS"; then
     _DEPEND_CFLAGS='$(subst =, ,$(filter-out %/.pp,-MM=-MD=-MF=$(MDDEPDIR)/$(basename $(@F)).pp))'
   else
-    _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(basename $(@F)).pp)'
+    _DEPEND_CFLAGS='$(filter-out %/.pp,-MD -MF $(MDDEPDIR)/$(basename $(@F)).pp)'
   fi
   dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
   if test "$SOLARIS_SUNPRO_CC"; then
@@ -4975,7 +4944,7 @@ dnl ========================================================
 MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 
 dnl ========================================================
-if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"; then
+if test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 fi
 
@@ -5417,7 +5386,11 @@ if test "$JS_HAS_CTYPES"; then
   fi
   if test "$SOLARIS_SUNPRO_CC"; then
     # Always use gcc for libffi on Solaris
-    ac_configure_args="$ac_configure_args CC=gcc"
+    if test ! "$HAVE_64BIT_OS"; then
+      ac_configure_args="$ac_configure_args CC=gcc CFLAGS=-m32"
+    else
+      ac_configure_args="$ac_configure_args CC=gcc CFLAGS=-m64"
+    fi
   fi
   if test "$OS_ARCH" = "OS2"; then
     ac_configure_args="$ac_configure_args CFLAGS=-Zomf AR=emxomfar"

@@ -335,9 +335,22 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
       nsTableColFrame* col = colFrame->GetNextCol();
       nsTableColFrame* nextCol;
       while (col && col->GetColType() == eColAnonymousCol) {
-        NS_ASSERTION(col->GetStyleContext() == colFrame->GetStyleContext() &&
-                     col->GetContent() == colFrame->GetContent(),
-                     "How did that happen??");
+#ifdef DEBUG
+        nsIFrame* providerFrame;
+        PRBool isChild;
+        colFrame->GetParentStyleContextFrame(PresContext(), &providerFrame,
+                                             &isChild);
+        if (colFrame->GetStyleContext()->GetParent() ==
+            providerFrame->GetStyleContext()) {
+          NS_ASSERTION(col->GetStyleContext() == colFrame->GetStyleContext() &&
+                       col->GetContent() == colFrame->GetContent(),
+                       "How did that happen??");
+        }
+        // else colFrame is being removed because of a frame
+        // reconstruct on it, and its style context is still the old
+        // one, so we can't assert anything about how it compares to
+        // col's style context.
+#endif
         nextCol = col->GetNextCol();
         RemoveFrame(nsnull, col);
         col = nextCol;

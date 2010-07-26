@@ -488,20 +488,6 @@ class Mochitest(object):
 
     return browserEnv
 
-  def runExtensionRegistration(self, options, browserEnv):
-    """ run once with -silent to let the extension manager do its thing
-        and then exit the app
-    """
-    self.automation.log.info("INFO | runtests.py | Performing extension manager registration: start.\n")
-    # Don't care about this |status|: |runApp()| reporting it should be enough.
-    status = self.automation.runApp(None, browserEnv, options.app,
-                                options.profilePath, ["-silent"],
-                                utilityPath = options.utilityPath,
-                                xrePath = options.xrePath,
-                                symbolsPath=options.symbolsPath)
-    # We don't care to call |processLeakLog()| for this step.
-    self.automation.log.info("\nINFO | runtests.py | Performing extension manager registration: end.")
-
   def buildURLOptions(self, options):
     """ Add test control options from the command line to the url 
 
@@ -594,8 +580,6 @@ class Mochitest(object):
     self.buildURLOptions(options)
     if (len(self.urlOpts) > 0):
       testURL += "?" + "&".join(self.urlOpts)
-
-    self.runExtensionRegistration(options, browserEnv)
 
     # Remove the leak detection file so it can't "leak" to the tests run.
     # The file is not there if leak logging was not enabled in the application build.

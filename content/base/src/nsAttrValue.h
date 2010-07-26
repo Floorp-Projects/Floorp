@@ -283,10 +283,9 @@ public:
    * "rules for parsing a legacy color value".
    *
    * @param aString the string to parse
-   * @param aDocument the document (to find out whether we're in quirks mode)
    * @return whether the value could be parsed
    */
-  PRBool ParseColor(const nsAString& aString, nsIDocument* aDocument);
+  PRBool ParseColor(const nsAString& aString);
 
   /**
    * Parse a string value into a float.

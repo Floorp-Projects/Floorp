@@ -40,19 +40,16 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 menupopup,
-popup,
 panel {
   -moz-appearance: menupopup;
   background-color: Menu;
 }
 
-menupopup > menu > menupopup,
-popup > menu > menupopup {
+menupopup > menu > menupopup {
   margin-top: -4px;
 }
 
 .popup-internal-box {
-  -moz-appearance: none;
   padding: 4px 0;
 }
 

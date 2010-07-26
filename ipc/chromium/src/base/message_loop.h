@@ -442,7 +442,8 @@ class MessageLoopForUI : public MessageLoop {
 #ifdef CHROMIUM_MOZILLA_BUILD
     Type type = loop->type();
     DCHECK(type == MessageLoop::TYPE_UI ||
-           type == MessageLoop::TYPE_MOZILLA_UI);
+           type == MessageLoop::TYPE_MOZILLA_UI ||
+           type == MessageLoop::TYPE_MOZILLA_CHILD);
 #else
     DCHECK_EQ(MessageLoop::TYPE_UI, loop->type());
 #endif

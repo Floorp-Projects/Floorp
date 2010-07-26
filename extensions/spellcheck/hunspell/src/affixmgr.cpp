@@ -68,10 +68,6 @@
 
 #include "csutil.hxx"
 
-#ifdef MOZILLA_CLIENT
-#include "nscore.h" // for mozalloc headers
-#endif
-
 AffixMgr::AffixMgr(const char * affpath, HashMgr** ptr, int * md, const char * key) 
 {
   // register hash manager and load affix data from aff file
@@ -3790,7 +3786,7 @@ int  AffixMgr::parse_defcpdtable(char * line, FileMgr * af)
                           }
                   case 1: { // handle parenthesized flags
                             if (strchr(piece, '(')) {
-                                defcpdtable[j].def = (FLAG *) malloc(sizeof(piece) * sizeof(FLAG));
+                                defcpdtable[j].def = (FLAG *) malloc(strlen(piece) * sizeof(FLAG));
                                 defcpdtable[j].len = 0;
                                 int end = 0;
                                 FLAG * conv;

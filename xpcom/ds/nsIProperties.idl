@@ -39,7 +39,6 @@
 
 /*
  * Simple mapping service interface.
- * @status FROZEN
  */
 
 [scriptable, uuid(78650582-4e93-4b60-8e85-26ebd3eb14ca)]

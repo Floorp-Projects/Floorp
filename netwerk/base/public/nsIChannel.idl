@@ -55,8 +55,6 @@ interface nsIStreamListener;
  * response headers to be retrieved for the corresponding http transaction.
  *
  * This interface must be used only from the XPCOM main thread.
- *
- * @status FROZEN
  */
 [scriptable, uuid(c63a055a-a676-4e71-bf3c-6cfa11082018)]
 interface nsIChannel : nsIRequest

@@ -94,8 +94,6 @@ CPPSRCS		= \
 		nsDocShellEnumerator.cpp  \
 		nsDSURIContentListener.cpp		\
 		nsDefaultURIFixup.cpp		\
-		nsGlobalHistoryAdapter.cpp \
-		nsGlobalHistory2Adapter.cpp \
 		nsWebNavigationInfo.cpp \
 		nsAboutRedirector.cpp \
 		nsDownloadHistory.cpp \

@@ -95,10 +95,8 @@ nsHTMLWin32ObjectOwnerAccessible::GetStateInternal(PRUint32 *aState,
 void
 nsHTMLWin32ObjectOwnerAccessible::CacheChildren()
 {
-  if (mNativeAccessible) {
-    mChildren.AppendElement(mNativeAccessible);
-    mNativeAccessible->SetParent(this);
-  }
+  if (mNativeAccessible)
+    AppendChild(mNativeAccessible);
 }
 
 

@@ -66,9 +66,6 @@ public:
   virtual PRInt32 NextWord(const PRUnichar* aText, PRUint32 aLen, 
                            PRUint32 aPos) = 0;
                            
-  virtual PRInt32 PrevWord(const PRUnichar* aText, PRUint32 aLen, 
-                           PRUint32 aPos) = 0;
-
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWordBreaker, NS_IWORDBREAKER_IID)

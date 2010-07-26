@@ -381,16 +381,7 @@ nsPlacesDBFlush.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsISupports
 
-  classDescription: "Used to synchronize the temporary and permanent tables of Places",
   classID: Components.ID("c1751cfc-e8f1-4ade-b0bb-f74edfb8ef6a"),
-  contractID: "@mozilla.org/places/sync;1",
-
-  // Registering in these categories makes us get initialized when either of
-  // those listeners would be notified.
-  _xpcom_categories: [
-    { category: "bookmark-observers" },
-    { category: "history-observers" },
-  ],
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIObserver,
@@ -405,7 +396,4 @@ nsPlacesDBFlush.prototype = {
 //// Module Registration
 
 let components = [nsPlacesDBFlush];
-function NSGetModule(compMgr, fileSpec)
-{
-  return XPCOMUtils.generateModule(components);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

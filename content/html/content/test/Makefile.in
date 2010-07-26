@@ -151,6 +151,7 @@ _TEST_FILES = 	test_bug589.html \
 		bug514856_iframe.html \
 		test_bug518122.html \
 		test_bug519987.html \
+		test_bug579079.html \
 		test_bug523771.html \
 		form_submit_server.sjs \
 		test_bug529819.html \
@@ -183,6 +184,8 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug567938-3.html \
 		test_bug567938-4.html \
 		test_bug569955.html \
+		test_bug573969.html \
+		test_bug549475.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

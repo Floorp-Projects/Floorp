@@ -61,6 +61,7 @@ SDK_XPIDLSRCS   = \
 XPIDLSRCS	    = \
                 nsIWindowCreator2.idl \
                 nsIWindowProvider.idl \
+                nsIDialogCreator.idl \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk

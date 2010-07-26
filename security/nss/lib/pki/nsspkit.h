@@ -38,7 +38,7 @@
 #define NSSPKIT_H
 
 #ifdef DEBUG
-static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.6 $ $Date: 2005/01/20 02:25:49 $";
+static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.8 $ $Date: 2010/05/21 00:02:48 $";
 #endif /* DEBUG */
 
 /*
@@ -82,7 +82,7 @@ typedef struct NSSCertificateStr NSSCertificate;
  *
  * The current design only weakly distinguishes between certificates
  * and user certificates: as far as the compiler goes they're 
- * interchangable; debug libraries only have one common pointer-tracker;
+ * interchangeable; debug libraries only have one common pointer-tracker;
  * etc.  However, attempts to do private-key operations on a certificate
  * for which the private key is not available will fail.
  *
@@ -168,6 +168,15 @@ typedef struct NSSCryptoContextStr NSSCryptoContext;
 /*
  * fgmr others
  */
+
+/*
+ * OBJECT IDENTIFIER
+ *
+ * This is the basic OID that crops up everywhere.
+ */
+
+struct NSSOIDStr;  /* unused opaque structure */
+typedef struct NSSOIDStr NSSOID;
 
 /* 
  * NSSTime

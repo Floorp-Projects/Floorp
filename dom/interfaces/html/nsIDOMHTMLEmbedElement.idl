@@ -45,8 +45,6 @@
  *
  * Note that this is not a W3C standard interface, it is Mozilla
  * proprietary.
- *
- * @status FROZEN
  */
 
 [scriptable, uuid(123f90ab-15b3-11d2-456e-00805f8add32)]

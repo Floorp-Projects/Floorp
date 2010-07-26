@@ -2879,7 +2879,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     }
 #endif
                     uva = jp->script->upvars();
-                    index = UPVAR_FRAME_SLOT(uva->vector[index]);
+                    index = uva->vector[index].slot();
                 }
                 atom = GetArgOrVarAtom(jp, index);
                 goto do_name;
@@ -4746,11 +4746,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 PROPAGATE_CALLNESS();
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, "%s..%s", lval, rval);
-                break;
-
-              case JSOP_XMLOBJECT:
-                LOAD_OBJECT(0);
-                todo = Sprint(&ss->sprinter, "<xml address='%p'>", obj);
                 break;
 
               case JSOP_XMLCDATA:

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 DOMCI_CLASS(Window)
+DOMCI_CLASS(InnerWindow)
 DOMCI_CLASS(Location)
 DOMCI_CLASS(Navigator)
 DOMCI_CLASS(Plugin)
@@ -142,7 +143,6 @@ DOMCI_CLASS(HTMLTextAreaElement)
 DOMCI_CLASS(HTMLTitleElement)
 DOMCI_CLASS(HTMLUListElement)
 DOMCI_CLASS(HTMLUnknownElement)
-DOMCI_CLASS(HTMLWBRElement)
 
 // CSS classes
 DOMCI_CLASS(CSSStyleRule)
@@ -188,6 +188,7 @@ DOMCI_CLASS(CSSRect)
 
 // DOM Chrome Window class, almost identical to Window
 DOMCI_CLASS(ChromeWindow)
+DOMCI_CLASS(InnerChromeWindow)
 
 // RGBColor object used by getComputedStyle
 DOMCI_CLASS(CSSRGBColor)
@@ -406,6 +407,7 @@ DOMCI_CLASS(FileReader)
 
 // DOM modal content window class, almost identical to Window
 DOMCI_CLASS(ModalContentWindow)
+DOMCI_CLASS(InnerModalContentWindow)
 
 // Data Events
 DOMCI_CLASS(DataContainerEvent)

@@ -321,7 +321,7 @@ test_closure_cdecl(PRInt8 i, test_func_ptr f)
 
 #if defined(_WIN32) && !defined(_WIN64)
 PRInt32
-test_closure_cdecl(PRInt8 i, test_func_ptr_stdcall f)
+test_closure_stdcall(PRInt8 i, test_func_ptr_stdcall f)
 {
   return f(i);
 }

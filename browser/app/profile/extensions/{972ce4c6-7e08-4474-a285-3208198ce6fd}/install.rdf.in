@@ -23,19 +23,12 @@
     <em:name>Default</em:name>
     <em:description>The default theme.</em:description>
 
-    <!-- EXTENSION AUTHORS!
-         DO NOT COPY THIS PROPERTY INTO YOUR INSTALL RDF FILES
-         It will cause users not to be informed of incompatibilities 
-         with your extension when they are updated with Software Update
-         and your extension will become unavailable to them!
-         -->
-    <em:appManaged>true</em:appManaged>
-
-    <em:locked>true</em:locked>
-
     <!-- Front End Integration Hooks (used by Theme Manager)-->
     <em:creator>Mozilla</em:creator>
     <em:contributor>Mozilla Contributors</em:contributor>
+
+    <!-- Allow lightweight themes to apply to this theme -->
+    <em:skinnable>true</em:skinnable>
 
     <em:internalName>classic/1.0</em:internalName>
   </Description>      

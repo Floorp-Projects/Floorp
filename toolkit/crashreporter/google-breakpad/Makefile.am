@@ -74,6 +74,7 @@ src_libbreakpad_la_SOURCES = \
 	src/google_breakpad/processor/memory_region.h \
 	src/google_breakpad/processor/minidump.h \
 	src/google_breakpad/processor/minidump_processor.h \
+	src/google-breakpad/processor/network_source_line_resolver.h \
 	src/google_breakpad/processor/process_state.h \
 	src/google_breakpad/processor/source_line_resolver_interface.h \
 	src/google_breakpad/processor/stack_frame.h \
@@ -87,6 +88,8 @@ src_libbreakpad_la_SOURCES = \
 	src/processor/basic_code_modules.cc \
 	src/processor/basic_code_modules.h \
 	src/processor/basic_source_line_resolver.cc \
+	src/processor/binarystream.h \
+	src/processor/binarystream.cc \
 	src/processor/call_stack.cc \
 	src/processor/cfi_frame_info.cc \
 	src/processor/cfi_frame_info.h \
@@ -97,6 +100,10 @@ src_libbreakpad_la_SOURCES = \
 	src/processor/logging.cc \
 	src/processor/minidump.cc \
 	src/processor/minidump_processor.cc \
+	src/processor/network_interface.h \
+	src/processor/network_source_line_resolver.cc \
+	src/processor/network_source_line_server.cc \
+	src/processor/network_source_line_server.h \
 	src/processor/pathname_stripper.cc \
 	src/processor/pathname_stripper.h \
 	src/processor/postfix_evaluator-inl.h \
@@ -118,32 +125,41 @@ src_libbreakpad_la_SOURCES = \
 	src/processor/stackwalker_sparc.cc \
 	src/processor/stackwalker_sparc.h \
 	src/processor/stackwalker_x86.cc \
-	src/processor/stackwalker_x86.h
+	src/processor/stackwalker_x86.h \
+	src/processor/tokenize.cc \
+	src/processor/tokenize.h \
+	src/processor/udp_network.cc \
+	src/processor/udp_network.h
 
 
 ## Programs
 bin_PROGRAMS = \
 	src/client/linux/linux_dumper_unittest_helper \
 	src/processor/minidump_dump \
-	src/processor/minidump_stackwalk
+	src/processor/minidump_stackwalk \
+	src/processor/source_daemon 
 
 ## Tests
 check_PROGRAMS = \
 	src/client/linux/linux_client_unittest \
+	src/common/test_assembler_unittest \
 	src/processor/address_map_unittest \
+	src/processor/binarystream_unittest \
 	src/processor/basic_source_line_resolver_unittest \
 	src/processor/cfi_frame_info_unittest \
 	src/processor/contained_range_map_unittest \
 	src/processor/minidump_processor_unittest \
 	src/processor/minidump_unittest \
+	src/processor/network_source_line_resolver_unittest \
+	src/processor/network_source_line_resolver_server_unittest \
+	src/processor/network_source_line_server_unittest \
 	src/processor/pathname_stripper_unittest \
 	src/processor/postfix_evaluator_unittest \
 	src/processor/range_map_unittest \
 	src/processor/stackwalker_amd64_unittest \
 	src/processor/stackwalker_arm_unittest \
 	src/processor/stackwalker_x86_unittest \
-	src/processor/synth_minidump_unittest \
-	src/processor/test_assembler_unittest
+	src/processor/synth_minidump_unittest
 
 if SELFTEST
 check_PROGRAMS += \
@@ -198,13 +214,33 @@ src_processor_address_map_unittest_LDADD = \
 	src/processor/logging.lo \
 	src/processor/pathname_stripper.lo
 
+src_processor_binarystream_unittest_SOURCES = \
+	src/processor/binarystream_unittest.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/src/gmock-all.cc
+src_processor_binarystream_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+src_processor_binarystream_unittest_LDADD = \
+	src/processor/binarystream.lo
+
 src_processor_basic_source_line_resolver_unittest_SOURCES = \
-	src/processor/basic_source_line_resolver_unittest.cc
+	src/processor/basic_source_line_resolver_unittest.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/src/gmock-all.cc
+src_processor_basic_source_line_resolver_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
 src_processor_basic_source_line_resolver_unittest_LDADD = \
 	src/processor/basic_source_line_resolver.lo \
 	src/processor/cfi_frame_info.lo \
 	src/processor/pathname_stripper.lo \
-	src/processor/logging.lo
+	src/processor/logging.lo \
+	src/processor/tokenize.lo
 
 src_processor_cfi_frame_info_unittest_SOURCES = \
 	src/processor/cfi_frame_info_unittest.cc \
@@ -251,12 +287,13 @@ src_processor_minidump_processor_unittest_LDADD = \
 	src/processor/stackwalker_arm.lo \
 	src/processor/stackwalker_ppc.lo \
 	src/processor/stackwalker_sparc.lo \
-	src/processor/stackwalker_x86.lo
+	src/processor/stackwalker_x86.lo \
+	src/processor/tokenize.lo
 
 src_processor_minidump_unittest_SOURCES = \
+	src/common/test_assembler.cc \
 	src/processor/minidump_unittest.cc \
 	src/processor/synth_minidump.cc \
-	src/processor/test_assembler.cc \
 	src/testing/gtest/src/gtest-all.cc \
 	src/testing/gtest/src/gtest_main.cc \
 	src/testing/src/gmock-all.cc
@@ -270,6 +307,74 @@ src_processor_minidump_unittest_LDADD = \
 	src/processor/logging.lo \
 	src/processor/minidump.lo \
 	src/processor/pathname_stripper.lo
+
+src_processor_network_source_line_resolver_unittest_SOURCES = \
+	src/processor/network_source_line_resolver_unittest.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/src/gmock-all.cc
+src_processor_network_source_line_resolver_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+src_processor_network_source_line_resolver_unittest_LDADD = \
+	src/processor/basic_code_modules.lo \
+	src/processor/binarystream.lo \
+	src/processor/cfi_frame_info.lo \
+	src/processor/logging.lo \
+	src/processor/network_source_line_resolver.lo \
+	src/processor/pathname_stripper.lo \
+	src/processor/tokenize.lo \
+	src/processor/udp_network.lo
+
+src_processor_network_source_line_resolver_server_unittest_SOURCES = \
+	src/processor/network_source_line_resolver_server_unittest.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/src/gmock-all.cc
+src_processor_network_source_line_resolver_server_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+src_processor_network_source_line_resolver_server_unittest_LDADD = \
+	src/processor/basic_code_modules.lo \
+	src/processor/basic_source_line_resolver.lo \
+	src/processor/binarystream.lo \
+	src/processor/call_stack.lo \
+	src/processor/cfi_frame_info.lo \
+	src/processor/logging.lo \
+	src/processor/minidump_processor.lo \
+	src/processor/minidump.lo \
+	src/processor/network_source_line_resolver.lo \
+	src/processor/network_source_line_server.lo \
+	src/processor/pathname_stripper.lo \
+	src/processor/process_state.lo \
+	src/processor/simple_symbol_supplier.lo \
+	src/processor/stackwalker.lo \
+	src/processor/stackwalker_amd64.lo \
+	src/processor/stackwalker_arm.lo \
+	src/processor/stackwalker_ppc.lo \
+	src/processor/stackwalker_sparc.lo \
+	src/processor/stackwalker_x86.lo \
+	src/processor/tokenize.lo \
+	src/processor/udp_network.lo
+
+src_processor_network_source_line_server_unittest_SOURCES = \
+	src/processor/network_source_line_server_unittest.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/src/gmock-all.cc
+src_processor_network_source_line_server_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+src_processor_network_source_line_server_unittest_LDADD = \
+	src/processor/binarystream.lo \
+	src/processor/cfi_frame_info.lo \
+	src/processor/logging.lo \
+	src/processor/network_source_line_server.lo \
+	src/processor/pathname_stripper.lo \
+	src/processor/udp_network.lo
 
 src_processor_pathname_stripper_unittest_SOURCES = \
 	src/processor/pathname_stripper_unittest.cc
@@ -302,11 +407,12 @@ src_processor_stackwalker_selftest_LDADD = \
 	src/processor/stackwalker_arm.lo \
 	src/processor/stackwalker_ppc.lo \
 	src/processor/stackwalker_sparc.lo \
-	src/processor/stackwalker_x86.lo
+	src/processor/stackwalker_x86.lo \
+	src/processor/tokenize.lo
 
 src_processor_stackwalker_amd64_unittest_SOURCES = \
+	src/common/test_assembler.cc \
 	src/processor/stackwalker_amd64_unittest.cc \
-	src/processor/test_assembler.cc \
 	src/testing/gtest/src/gtest-all.cc \
 	src/testing/gtest/src/gtest_main.cc \
 	src/testing/src/gmock-all.cc
@@ -319,8 +425,8 @@ src_processor_stackwalker_amd64_unittest_CPPFLAGS = \
 	-I$(top_srcdir)/src/testing
 
 src_processor_stackwalker_arm_unittest_SOURCES = \
+	src/common/test_assembler.cc \
 	src/processor/stackwalker_arm_unittest.cc \
-	src/processor/test_assembler.cc \
 	src/testing/gtest/src/gtest-all.cc \
 	src/testing/gtest/src/gtest_main.cc \
 	src/testing/src/gmock-all.cc
@@ -333,8 +439,8 @@ src_processor_stackwalker_arm_unittest_CPPFLAGS = \
 	-I$(top_srcdir)/src/testing
 
 src_processor_stackwalker_x86_unittest_SOURCES = \
+	src/common/test_assembler.cc \
 	src/processor/stackwalker_x86_unittest.cc \
-	src/processor/test_assembler.cc \
 	src/testing/gtest/src/gtest-all.cc \
 	src/testing/gtest/src/gtest_main.cc \
 	src/testing/src/gmock-all.cc
@@ -347,28 +453,28 @@ src_processor_stackwalker_x86_unittest_CPPFLAGS = \
 	-I$(top_srcdir)/src/testing
 
 src_processor_synth_minidump_unittest_SOURCES = \
+	src/common/test_assembler.cc \
+	src/common/test_assembler.h \
 	src/processor/synth_minidump_unittest.cc \
 	src/testing/gtest/src/gtest-all.cc \
 	src/testing/gtest/src/gtest_main.cc \
 	src/testing/src/gmock-all.cc \
 	src/processor/synth_minidump.cc \
-	src/processor/synth_minidump.h \
-	src/processor/test_assembler.cc \
-	src/processor/test_assembler.h
+	src/processor/synth_minidump.h
 src_processor_synth_minidump_unittest_CPPFLAGS = \
 	-I$(top_srcdir)/src/testing/include \
         -I$(top_srcdir)/src/testing/gtest/include \
 	-I$(top_srcdir)/src/testing/gtest \
 	-I$(top_srcdir)/src/testing
 
-src_processor_test_assembler_unittest_SOURCES = \
-	src/processor/test_assembler_unittest.cc \
+src_common_test_assembler_unittest_SOURCES = \
+	src/common/test_assembler.cc \
+	src/common/test_assembler.h \
+	src/common/test_assembler_unittest.cc \
 	src/testing/gtest/src/gtest-all.cc \
 	src/testing/gtest/src/gtest_main.cc \
-	src/testing/src/gmock-all.cc \
-	src/processor/test_assembler.cc \
-	src/processor/test_assembler.h
-src_processor_test_assembler_unittest_CPPFLAGS = \
+	src/testing/src/gmock-all.cc
+src_common_test_assembler_unittest_CPPFLAGS = \
 	-I$(top_srcdir)/src/testing/include \
         -I$(top_srcdir)/src/testing/gtest/include \
 	-I$(top_srcdir)/src/testing/gtest \
@@ -391,6 +497,7 @@ src_processor_minidump_stackwalk_SOURCES = \
 src_processor_minidump_stackwalk_LDADD = \
 	src/processor/basic_code_modules.lo \
 	src/processor/basic_source_line_resolver.lo \
+	src/processor/binarystream.lo \
 	src/processor/call_stack.lo \
 	src/processor/cfi_frame_info.lo \
 	src/processor/logging.lo \
@@ -398,14 +505,30 @@ src_processor_minidump_stackwalk_LDADD = \
 	src/processor/minidump_processor.lo \
 	src/processor/pathname_stripper.lo \
 	src/processor/process_state.lo \
+	src/processor/network_source_line_resolver.lo \
 	src/processor/simple_symbol_supplier.lo \
 	src/processor/stackwalker.lo \
 	src/processor/stackwalker_amd64.lo \
 	src/processor/stackwalker_arm.lo \
 	src/processor/stackwalker_ppc.lo \
 	src/processor/stackwalker_sparc.lo \
-	src/processor/stackwalker_x86.lo
+	src/processor/stackwalker_x86.lo \
+	src/processor/tokenize.lo \
+	src/processor/udp_network.lo
 
+src_processor_source_daemon_SOURCES = \
+	src/processor/source_daemon.cc
+src_processor_source_daemon_LDADD = \
+	src/processor/basic_code_modules.lo \
+	src/processor/basic_source_line_resolver.lo \
+	src/processor/binarystream.lo \
+	src/processor/cfi_frame_info.lo \
+	src/processor/logging.lo \
+	src/processor/network_source_line_server.lo \
+	src/processor/pathname_stripper.lo \
+	src/processor/simple_symbol_supplier.lo \
+	src/processor/tokenize.lo \
+	src/processor/udp_network.lo
 
 ## Additional files to be included in a source distribution
 ##

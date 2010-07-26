@@ -42,8 +42,6 @@
 /**
  * The nsIDOMWindowCollection interface is an interface for a
  * collection of DOM window objects.
- *
- * @status FROZEN
  */
 
 [scriptable, uuid(a6cf906f-15b3-11d2-932e-00805f8add32)]

@@ -40,9 +40,10 @@
 
 interface nsIBrowserDOMWindow;
 interface nsIDOMElement;
+interface nsIDOMEvent;
 interface nsIChromeFrameMessageManager;
 
-[scriptable, uuid(adf6b19f-459f-4892-93eb-71c527bae2af)]
+[scriptable, uuid(ec38cbaf-372f-4874-bc7a-dbf1f0b3d755)]
 interface nsIDOMChromeWindow : nsISupports
 {
   const unsigned short STATE_MAXIMIZED = 1;
@@ -76,4 +77,15 @@ interface nsIDOMChromeWindow : nsISupports
   void notifyDefaultButtonLoaded(in nsIDOMElement defaultButton);
 
   readonly attribute nsIChromeFrameMessageManager messageManager;
+
+  /**
+   * On some operating systems, we must allow the window manager to
+   * handle window dragging. This function tells the window manager to
+   * start dragging the window. This function will fail unless called
+   * while the left mouse button is held down, callers must check this.
+   *
+   * Returns NS_ERROR_NOT_IMPLEMENTED (and thus throws in JS) if the OS
+   * doesn't support this.
+   */
+  void beginWindowMove(in nsIDOMEvent mouseDownEvent);
 };

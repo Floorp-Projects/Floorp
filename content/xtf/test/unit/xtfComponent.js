@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 // Utility function.
 function NOT_IMPLEMENTED() {
   throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -52,8 +54,6 @@ const nsIComponentRegistrar       = C_i.nsIComponentRegistrar;
 const nsIFactory                  = C_i.nsIFactory;
 const nsIModule                   = C_i.nsIModule;
 const nsISupports                 = C_i.nsISupports;
-
-const xtfClass = "@mozilla.org/xtf/element-factory;1?namespace=";
 
 /**
  * Wrap a JavaScript object for passing to components code.
@@ -143,6 +143,8 @@ FooElement.prototype =
 function FooElementFactory() {}
 FooElementFactory.prototype =
 {
+  classID: Components.ID("{f367b65d-6b7f-4a7f-9a4b-8bde0ff4ef10}"),
+
   // nsIXTFElementFactory
   createElement: function createElement(aLocalName) {
     var rv = null;
@@ -180,73 +182,6 @@ FooElementFactory.prototype =
   }
 };
 
-const FooComponentFactory = {
-  // nsIFactory
-  createInstance: function createInstance(outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-    return (new FooElementFactory()).QueryInterface(iid);
-  },
-
-  // nsISupports
-  QueryInterface: function QueryInterface(aIID) {
-    if (aIID.equals(nsIFactory) ||
-       (aIID.equals(nsISupports)))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-    return null;
-  }
-};
-
-const fooClassID    = Components.ID("{f367b65d-6b7f-4a7f-9a4b-8bde0ff4ef10}");
-const fooClassDesc  = "XTF unit test: Foo element factory";
-const fooContractID = xtfClass + "xtf-tests;foo";
-
 /* </foo:element> */
 
-const Module = {
-  // nsIModule
-  registerSelf: function registerSelf(compMgr, fileSpec, location, type) {
-    var compReg = compMgr.QueryInterface(nsIComponentRegistrar);
-
-    compReg.registerFactoryLocation(fooClassID,
-                                    fooClassDesc,
-                                    fooContractID,
-                                    fileSpec,
-                                    location,
-                                    type);
-  },
-
-  // nsIModule
-  getClassObject: function getClassObject(compMgr, aCID, aIID) {
-    if (!aIID.equals(nsIFactory)) {
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    }
-    if (aCID.equals(fooClassID)) {
-      return FooComponentFactory;
-    }
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
-  // nsIModule
-  canUnload: function canUnload() {
-    return true;
-  },
-
-  // nsISupports
-  QueryInterface: function QueryInterface(aIID) {
-    if (aIID.equals(nsIModule) ||
-       (aIID.equals(nsISupports)))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-    return null;
-  }
-};
-
-function NSGetModule(compMgr, fileSpec) {
-  return Module;
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([FooElementFactory]);

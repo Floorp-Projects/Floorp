@@ -92,7 +92,8 @@ class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
                               public nsStubMutationObserver
 {
 public:
-  nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser = 0);
+  nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                        PRUint32 aFromParser = 0);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -194,6 +195,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLTextAreaElement,
                                            nsGenericHTMLFormElement)
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   using nsGenericHTMLFormElement::IsSingleLineTextControl; // get rid of the compiler warning
 
@@ -246,7 +248,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(TextArea)
 
 
-nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo,
+nsHTMLTextAreaElement::nsHTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                              PRUint32 aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mValueChanged(PR_FALSE),
@@ -275,7 +277,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTextAreaElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTextAreaElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLTextAreaElement, nsHTMLTextAreaElement)
+DOMCI_NODE_DATA(HTMLTextAreaElement, nsHTMLTextAreaElement)
 
 // QueryInterface implementation for nsHTMLTextAreaElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTextAreaElement)
@@ -449,7 +451,9 @@ nsHTMLTextAreaElement::BindToFrame(nsTextControlFrame* aFrame)
 NS_IMETHODIMP_(void)
 nsHTMLTextAreaElement::UnbindFromFrame(nsTextControlFrame* aFrame)
 {
-  mState->UnbindFromFrame(aFrame);
+  if (aFrame) {
+    mState->UnbindFromFrame(aFrame);
+  }
 }
 
 NS_IMETHODIMP
@@ -976,7 +980,8 @@ void
 nsHTMLTextAreaElement::ContentRemoved(nsIDocument* aDocument,
                                       nsIContent* aContainer,
                                       nsIContent* aChild,
-                                      PRInt32 aIndexInContainer)
+                                      PRInt32 aIndexInContainer,
+                                      nsIContent* aPreviousSibling)
 {
   ContentChanged(aChild);
 }
@@ -986,6 +991,9 @@ nsHTMLTextAreaElement::ContentChanged(nsIContent* aContent)
 {
   if (!mValueChanged && mDoneAddingChildren &&
       nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
+    // Hard to say what the reset can trigger, so be safe pending
+    // further auditing.
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
     Reset();
   }
 }

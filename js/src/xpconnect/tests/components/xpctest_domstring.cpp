@@ -95,7 +95,7 @@ xpcTestDOMString::PassDOMStringThroughTo(const nsAString &str,
 }
 
 
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestDOMString(nsISupports *aOuter, REFNSIID aIID,
                                    void **aResult)
 {

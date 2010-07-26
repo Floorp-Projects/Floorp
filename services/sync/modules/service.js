@@ -131,6 +131,7 @@ WeaveSvc.prototype = {
 
   get passphrase() ID.get("WeaveCryptoID").password,
   set passphrase(value) ID.get("WeaveCryptoID").password = value,
+  get passphraseUTF8() ID.get("WeaveCryptoID").passwordUTF8,
 
   get serverURL() Svc.Prefs.get("serverURL"),
   set serverURL(value) {
@@ -609,10 +610,22 @@ WeaveSvc.prototype = {
       try {
         let pubkey = PubKeys.getDefaultKey();
         let privkey = PrivKeys.get(pubkey.privateKeyUri);
-        return Svc.Crypto.verifyPassphrase(
+        let result = Svc.Crypto.verifyPassphrase(
+          privkey.payload.keyData, this.passphraseUTF8,
+          privkey.payload.salt, privkey.payload.iv
+        );
+        if (result)
+          return true;
+
+        // Passphrase validation failed. Perhaps because the keys are
+        // based on an old low-byte only passphrase?
+        result = Svc.Crypto.verifyPassphrase(
           privkey.payload.keyData, this.passphrase,
           privkey.payload.salt, privkey.payload.iv
         );
+        if (result)
+          this._needUpdatedKeys = true;
+        return result;
       } catch (e) {
         // this means no keys are present (or there's a network error)
         return true;
@@ -1049,6 +1062,9 @@ WeaveSvc.prototype = {
       return;
     }
 
+    if (this._needUpdatedKeys)
+      this._updateKeysToUTF8Passphrase();
+
     // Only set the wait time to 0 if we need to sync right away
     let wait;
     if (this.globalScore > this.syncThreshold) {
@@ -1056,6 +1072,62 @@ WeaveSvc.prototype = {
       wait = 0;
     }
     this._scheduleNextSync(wait);
+  },
+
+  _updateKeysToUTF8Passphrase: function _updateKeysToUTF8Passphrase() {
+    // Rewrap private key in UTF-8 encoded passphrase.
+    let pubkey = PubKeys.getDefaultKey();
+    let privkey = PrivKeys.get(pubkey.privateKeyUri);
+
+    this._log.debug("Rewrapping private key with UTF-8 encoded passphrase.");
+    let oldPrivKeyData = privkey.payload.keyData;
+    privkey.payload.keyData = Svc.Crypto.rewrapPrivateKey(
+      oldPrivKeyData, this.passphrase,
+      privkey.payload.salt, privkey.payload.iv, this.passphraseUTF8
+    );
+    let response = new Resource(privkey.uri).put(privkey);
+    if (!response.success) {
+      this._log("Uploading rewrapped private key failed!");
+      this._needUpdatedKeys = false;
+      return;
+    }
+
+    // Recompute HMAC for symmetric bulk keys based on UTF-8 encoded passphrase.
+    let oldHmacKey = Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC,
+                                                  this.passphrase);
+    let enginesToWipe = [];
+
+    for each (let engine in Engines.getAll()) {
+      let meta = CryptoMetas.get(engine.cryptoMetaURL);
+      if (!meta)
+        continue;
+
+      this._log.debug("Recomputing HMAC for key at " + engine.cryptoMetaURL
+                      + " with UTF-8 encoded passphrase.");
+      for each (key in meta.keyring) {
+        if (key.hmac != Utils.sha256HMAC(key.wrapped, oldHmacKey)) {
+          this._log.debug("Key SHA256 HMAC mismatch! Wiping server.");
+          enginesToWipe.push(engine.name);
+          meta = null;
+          break;
+        }
+        key.hmac = Utils.sha256HMAC(key.wrapped, meta.hmacKey);
+      }
+
+      if (!meta)
+        continue;
+
+      response = new Resource(meta.uri).put(meta);
+      if (!response.success) {
+        this._log.debug("Key upload failed: " + response);
+      }
+    }
+
+    if (enginesToWipe.length) {
+      this._log.debug("Wiping engines " + enginesToWipe.join(", "));
+      this.wipeRemote(enginesToWipe);
+    }
+    this._needUpdatedKeys = false;
   },
 
   /**

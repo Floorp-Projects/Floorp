@@ -27,8 +27,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef CLIENT_WINDOWS_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H__
-#define CLIENT_WINDOWS_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H__
+#ifndef CLIENT_WINDOWS_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H_
+#define CLIENT_WINDOWS_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H_
 
 #include <windows.h>
 #include <dbghelp.h>
@@ -72,6 +72,9 @@ class CrashGenerationClient {
   //
   // Returns true if the registration is successful; false otherwise.
   bool Register();
+
+  bool RequestDump(EXCEPTION_POINTERS* ex_info,
+                   MDRawAssertionInfo* assert_info);
 
   // Requests the crash server to generate a dump with the given
   // exception information.
@@ -156,4 +159,4 @@ class CrashGenerationClient {
 
 }  // namespace google_breakpad
 
-#endif  // CLIENT_WINDOWS_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H__
+#endif  // CLIENT_WINDOWS_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H_

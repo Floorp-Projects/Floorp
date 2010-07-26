@@ -67,10 +67,6 @@
 // For seting scrollbar visibilty
 #include "nsIDOMBarProp.h"
 
-// app component registration
-#include "nsIGenericFactory.h"
-#include "nsIComponentRegistrar.h"
-
 // all of our local includes
 #include "EmbedPrivate.h"
 #include "EmbedWindow.h"
@@ -79,6 +75,8 @@
 #include "EmbedEventListener.h"
 #include "EmbedWindowCreator.h"
 #include "GtkPromptService.h"
+
+#include "mozilla/ModuleUtils.h"
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 #include "nsIAccessibilityService.h"
@@ -161,18 +159,23 @@ GTKEmbedDirectoryProvider::GetFiles(const char *aKey,
  {0x95611356, 0xf583, 0x46f5, {0x81, 0xff, 0x4b, 0x3e, 0x01, 0x62, 0xc6, 0x19}}
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(GtkPromptService)
+NS_DEFINE_NAMED_CID(NS_PROMPTSERVICE_CID);
 
-static const nsModuleComponentInfo defaultAppComps[] = {
-  {
-    "Prompt Service",
-    NS_PROMPTSERVICE_CID,
-    "@mozilla.org/embedcomp/prompt-service;1",
-    GtkPromptServiceConstructor
-  }
+static const mozilla::Module::CIDEntry kDefaultPromptCIDs[] = {
+  { &kNS_PROMPTSERVICE_CID, false, NULL, GtkPromptServiceConstructor },
+  { NULL }
 };
 
-const nsModuleComponentInfo *EmbedPrivate::sAppComps = defaultAppComps;
-int   EmbedPrivate::sNumAppComps = sizeof(defaultAppComps) / sizeof(nsModuleComponentInfo);
+static const mozilla::Module::ContractIDEntry kDefaultPromptContracts[] = {
+  { "@mozilla.org/embedcomp/prompt-service;1", &kNS_PROMPTSERVICE_CID },
+  { NULL }
+};
+
+static const mozilla::Module kDefaultPromptModule = {
+  mozilla::Module::kVersion,
+  kDefaultPromptCIDs,
+  kDefaultPromptContracts
+};
 
 EmbedPrivate::EmbedPrivate(void)
 {
@@ -531,17 +534,15 @@ EmbedPrivate::PushStartup(void)
       if (NS_FAILED(rv)) return;
     }
 
-    rv = XRE_InitEmbedding(greDir, binDir,
-                           const_cast<GTKEmbedDirectoryProvider*>(&kDirectoryProvider),
-                           nsnull, nsnull);
+    rv = XRE_InitEmbedding2(greDir, binDir,
+                            const_cast<GTKEmbedDirectoryProvider*>(&kDirectoryProvider));
     if (NS_FAILED(rv))
       return;
 
     if (sProfileDir)
       XRE_NotifyProfile();
 
-    rv = RegisterAppComponents();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
+    RegisterAppComponents();
   }
 }
 
@@ -590,15 +591,6 @@ EmbedPrivate::SetCompPath(const char *aPath)
     sCompPath = strdup(aPath);
   else
     sCompPath = nsnull;
-}
-
-/* static */
-void
-EmbedPrivate::SetAppComponents(const nsModuleComponentInfo* aComps,
-                               int aNumComponents)
-{
-  sAppComps = aComps;
-  sNumAppComps = aNumComponents;
 }
 
 /* static */
@@ -961,39 +953,10 @@ EmbedPrivate::GetAtkObjectForCurrentDocument()
 #endif /* MOZ_ACCESSIBILITY_ATK */
 
 /* static */
-nsresult
+void
 EmbedPrivate::RegisterAppComponents(void)
 {
-  nsCOMPtr<nsIComponentRegistrar> cr;
-  nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(cr));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIComponentManager> cm;
-  rv = NS_GetComponentManager (getter_AddRefs (cm));
-  NS_ENSURE_SUCCESS (rv, rv);
-
-  for (int i = 0; i < sNumAppComps; ++i) {
-    nsCOMPtr<nsIGenericFactory> componentFactory;
-    rv = NS_NewGenericFactory(getter_AddRefs(componentFactory),
-                              &(sAppComps[i]));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Unable to create factory for component");
-      continue;  // don't abort registering other components
-    }
-
-    rv = cr->RegisterFactory(sAppComps[i].mCID, sAppComps[i].mDescription,
-                             sAppComps[i].mContractID, componentFactory);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to register factory for component");
-
-    // Call the registration hook of the component, if any
-    if (sAppComps[i].mRegisterSelfProc) {
-      rv = sAppComps[i].mRegisterSelfProc(cm, nsnull, nsnull, nsnull,
-                                          &(sAppComps[i]));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to self-register component");
-    }
-  }
-
-  return rv;
+  XRE_AddStaticComponent(&kDefaultPromptModule);
 }
 
 /* static */

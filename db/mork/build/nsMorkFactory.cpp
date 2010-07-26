@@ -36,10 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIServiceManager.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsCOMPtr.h"
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
 #include "mdb.h"
@@ -59,16 +57,25 @@ protected:
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMorkFactoryService)
 
-static const nsModuleComponentInfo components[] =
-{
-    { "Mork Factory Service", 
-      NS_MORK_CID, 
-      NS_MORK_CONTRACTID,
-      nsMorkFactoryServiceConstructor 
-    }
+NS_DEFINE_NAMED_CID(NS_MORK_CID);
+
+const mozilla::Module::CIDEntry kMorkCIDs[] = {
+  { &kNS_MORK_CID, false, NULL, nsMorkFactoryServiceConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsMorkModule, components)
+const mozilla::Module::ContractIDEntry kMorkContracts[] = {
+  { NS_MORK_CONTRACTID, &kNS_MORK_CID },
+  { NULL }
+};
+
+static const mozilla::Module kMorkModule = {
+  mozilla::Module::kVersion,
+  kMorkCIDs,
+  kMorkContracts
+};
+
+NSMODULE_DEFN(nsMorkModule) = &kMorkModule;
 
 NS_IMPL_ISUPPORTS1(nsMorkFactoryService, nsIMdbFactoryService)
 

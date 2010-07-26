@@ -76,16 +76,7 @@ DummyObserver.prototype = {
   onItemVisited: function() {},
   onItemMoved: function() {},
 
-  classDescription: "Dummy observer used to test category observers",
   classID: Components.ID("62e221d3-68c3-4e1a-8943-a27beb5005fe"),
-  contractID: "@mozilla.org/places/test/dummy-observer;1",
-
-  // Registering in these categories makes us get initialized when either of
-  // those listeners would be notified.
-  _xpcom_categories: [
-    { category: "bookmark-observers" },
-    { category: "history-observers" }
-  ],
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavBookmarkObserver,
@@ -93,6 +84,4 @@ DummyObserver.prototype = {
   ])
 };
 
-function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule([DummyObserver]);
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([DummyObserver]);

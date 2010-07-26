@@ -812,7 +812,7 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
     // For line selection with needsStart, set start of line exactly to line break
     if (pos.mContentOffset == 0 && firstChild &&
         nsAccUtils::Role(firstChild) == nsIAccessibleRole::ROLE_STATICTEXT &&
-        nsAccUtils::TextLength(firstChild) == hyperTextOffset) {
+        static_cast<PRInt32>(nsAccUtils::TextLength(firstChild)) == hyperTextOffset) {
       // XXX Bullet hack -- we should remove this once list bullets use anonymous content
       hyperTextOffset = 0;
     }
@@ -2044,6 +2044,8 @@ void
 nsHyperTextAccessible::InvalidateChildren()
 {
   mLinks = nsnull;
+  mOffsets.Clear();
+
   nsAccessibleWrap::InvalidateChildren();
 }
 
@@ -2104,6 +2106,37 @@ nsresult nsHyperTextAccessible::RenderedToContentOffset(nsIFrame *aFrame, PRUint
   return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsHyperTextAccessible public
+
+PRInt32
+nsHyperTextAccessible::GetChildOffset(nsAccessible* aChild,
+                                      PRBool aInvalidateAfter)
+{
+  PRInt32 index = GetIndexOf(aChild);
+  if (index == -1 || index == 0)
+    return index;
+
+  PRInt32 count = mOffsets.Length() - index;
+  if (count > 0) {
+    if (aInvalidateAfter)
+      mOffsets.RemoveElementsAt(index, count);
+
+    return mOffsets[index - 1];
+  }
+
+  PRUint32 lastOffset = mOffsets.IsEmpty() ?
+    0 : mOffsets[mOffsets.Length() - 1];
+
+  EnsureChildren();
+  while (mOffsets.Length() < index) {
+    nsAccessible* child = mChildren[mOffsets.Length()];
+    lastOffset += nsAccUtils::TextLength(child);
+    mOffsets.AppendElement(lastOffset);
+  }
+
+  return mOffsets[index - 1];
+}
 ////////////////////////////////////////////////////////////////////////////////
 // nsHyperTextAccessible protected
 

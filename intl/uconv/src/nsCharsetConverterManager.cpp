@@ -55,6 +55,7 @@
 #include "mozilla/Services.h"
 
 #include "nsXPCOM.h"
+#include "nsComponentManagerUtils.h"
 #include "nsISupportsPrimitives.h"
 
 // just for CONTRACTIDs
@@ -82,30 +83,6 @@ nsCharsetConverterManager::~nsCharsetConverterManager()
 {
   NS_IF_RELEASE(mDataBundle);
   NS_IF_RELEASE(mTitleBundle);
-}
-
-nsresult nsCharsetConverterManager::RegisterConverterManagerData()
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  RegisterConverterCategory(catman, NS_TITLE_BUNDLE_CATEGORY,
-                            "chrome://global/locale/charsetTitles.properties");
-  RegisterConverterCategory(catman, NS_DATA_BUNDLE_CATEGORY,
-                            "resource://gre-resources/charsetData.properties");
-
-  return NS_OK;
-}
-
-nsresult
-nsCharsetConverterManager::RegisterConverterCategory(nsICategoryManager* catman,
-                                                     const char* aCategory,
-                                                     const char* aURL)
-{
-  return catman->AddCategoryEntry(aCategory, aURL, "",
-                                  PR_TRUE, PR_TRUE, nsnull);
 }
 
 nsresult nsCharsetConverterManager::LoadExtensibleBundle(

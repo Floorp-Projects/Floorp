@@ -100,6 +100,10 @@ class CFIFrameInfo {
                       const MemoryRegion &memory,
                       RegisterValueMap<ValueType> *caller_registers) const;
 
+  // Serialize the rules in this object into a string in the format
+  // of STACK CFI records.
+  string Serialize() const;
+
  private:
 
   // A map from register names onto evaluation rules. 

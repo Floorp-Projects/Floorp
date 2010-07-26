@@ -39,11 +39,12 @@
 #ifndef PROCESSOR_POSTFIX_EVALUATOR_INL_H__
 #define PROCESSOR_POSTFIX_EVALUATOR_INL_H__
 
+#include "processor/postfix_evaluator.h"
 
-#include <cstdio>
+#include <stdio.h>
+
 #include <sstream>
 
-#include "processor/postfix_evaluator.h"
 #include "google_breakpad/processor/memory_region.h"
 #include "processor/logging.h"
 

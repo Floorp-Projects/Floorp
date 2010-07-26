@@ -260,7 +260,7 @@ struct nsCSSStruct {
   // EMPTY on purpose.  ABSTRACT with no virtuals (typedef void nsCSSStruct?)
 };
 
-// We use the nsCSS* structures for storing nsCSSDeclaration's
+// We use the nsCSS* structures for storing css::Declaration's
 // *temporary* data during parsing and modification.  (They are too big
 // for permanent storage.)  We also use them for nsRuleData, with some
 // additions of things that the style system must cascade, but that
@@ -283,6 +283,8 @@ struct nsCSSFont : public nsCSSStruct {
   nsCSSValue mSize;
   nsCSSValue mSizeAdjust; // NEW
   nsCSSValue mStretch; // NEW
+  nsCSSValue mFontFeatureSettings;
+  nsCSSValue mFontLanguageOverride;
 
 #ifdef MOZ_MATHML
   nsCSSValue mScriptLevel; // Integer values mean "relative", Number values mean "absolute" 

@@ -57,6 +57,13 @@ public:
     ATSFontRef GetATSFontRef() const { return mATSFont; }
     CGFontRef GetCGFontRef() const { return mCGFont; }
 
+    virtual PRBool InitTextRun(gfxContext *aContext,
+                               gfxTextRun *aTextRun,
+                               const PRUnichar *aString,
+                               PRUint32 aRunStart,
+                               PRUint32 aRunLength,
+                               PRInt32 aRunScript);
+
     /* overrides for the pure virtual methods in gfxFont */
     virtual const gfxFont::Metrics& GetMetrics() {
         return mMetrics;
@@ -76,9 +83,12 @@ protected:
     virtual void CreatePlatformShaper();
 
     void InitMetrics();
+    void InitMetricsFromATSMetrics();
 
-    gfxFloat GetCharWidth(CFDataRef aCmap, PRUint32 aUpem, gfxFloat aSize,
-                          PRUnichar aUniChar, PRUint32 *aGlyphID);
+    // Get width and glyph ID for a character; requires that
+    // mFUnitsConvFactor has been set before this is called
+    gfxFloat GetCharWidth(CFDataRef aCmap, PRUnichar aUniChar,
+                          PRUint32 *aGlyphID);
 
     static void DestroyBlobFunc(void* aUserData);
 

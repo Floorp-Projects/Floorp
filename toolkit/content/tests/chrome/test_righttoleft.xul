@@ -35,8 +35,7 @@
       const UI_DIRECTION_PREF = "intl.uidirection.ar";
       prefs.setCharPref(UI_DIRECTION_PREF, "rtl");
 
-      registerCustomChrome("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtltest/",
-                           true, true);
+      registerManifestPermanently("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtltest/righttoleft.manifest");
 
       function runTest()
       {
@@ -114,7 +113,6 @@
           if (prefs.prefHasUserValue(UI_DIRECTION_PREF + "-QA"))
             prefs.clearUserPref(UI_DIRECTION_PREF + "-QA");
 
-          cleanupCustomChrome();
           if (prefs.prefHasUserValue(UI_DIRECTION_PREF))
             prefs.clearUserPref(UI_DIRECTION_PREF);
 

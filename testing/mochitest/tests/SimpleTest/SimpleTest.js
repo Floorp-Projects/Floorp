@@ -55,12 +55,18 @@ SimpleTest.ok = function (condition, name, diag) {
 **/
 SimpleTest.is = function (a, b, name) {
     var repr = MochiKit.Base.repr;
-    SimpleTest.ok(a == b, name, repr(a) + " should equal " + repr(b));
+    var pass = (a == b);
+    var diag = pass ? repr(a) + " should equal " + repr(b)
+                    : "got " + repr(a) + ", expected " + repr(b)
+    SimpleTest.ok(pass, name, diag);
 };
 
 SimpleTest.isnot = function (a, b, name) {
     var repr = MochiKit.Base.repr;
-    SimpleTest.ok(a != b, name, repr(a) + " should not equal " + repr(b));
+    var pass = (a != b);
+    var diag = pass ? repr(a) + " should not equal " + repr(b)
+                    : "didn't expect " + repr(a) + ", but got it";
+    SimpleTest.ok(pass, name, diag);
 };
 
 //  --------------- Test.Builder/Test.More todo() -----------------
@@ -99,12 +105,18 @@ SimpleTest._logResult = function(test, passString, failString) {
 
 SimpleTest.todo_is = function (a, b, name) {
     var repr = MochiKit.Base.repr;
-    SimpleTest.todo(a == b, name, repr(a) + " should equal " + repr(b));
+    var pass = (a == b);
+    var diag = pass ? repr(a) + " should equal " + repr(b)
+                    : "got " + repr(a) + ", expected " + repr(b);
+    SimpleTest.todo(pass, name, diag);
 };
 
 SimpleTest.todo_isnot = function (a, b, name) {
     var repr = MochiKit.Base.repr;
-    SimpleTest.todo(a != b, name, repr(a) + " should not equal " + repr(b));
+    var pass = (a != b);
+    var diag = pass ? repr(a) + " should not equal " + repr(b)
+                    : "didn't expect " + repr(a) + ", but got it";
+    SimpleTest.todo(pass, name, diag);
 };
 
 

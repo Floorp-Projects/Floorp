@@ -204,14 +204,7 @@ nsFastStartupCLH.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
 
   // XPCOMUtils factory
-  classDescription: "Fast Startup Component",
-  contractID: "@mozilla.org/browser/faststart;1",
   classID: Components.ID("{580c6c51-f690-4ce1-9ecc-b678e0c031c7}"),
-  _xpcom_categories: [{ category: "command-line-handler", entry: "00-faststart" }],
 };
 
-var components = [ nsFastStartupCLH ];
-
-function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule(components);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsFastStartupCLH]);

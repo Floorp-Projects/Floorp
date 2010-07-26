@@ -43,8 +43,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SUBMAKEFILES	+= cairo-features.h
-
 ifndef MOZ_ENABLE_LIBXUL
 VISIBILITY_FLAGS =
 endif
@@ -243,6 +241,11 @@ FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
 
+# Disable spammy "missing initializer" GCC warning
+ifdef GNU_CC
+CFLAGS += -Wno-missing-field-initializers
+endif # GNU_CC
+
 DEFINES += -DPACKAGE_VERSION="\"moz\"" -DPACKAGE_BUGREPORT="\"http://bugzilla.mozilla.org/\""
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
@@ -252,3 +255,6 @@ endif
 ifdef MOZ_TREE_CAIRO
 DEFINES += -DMOZ_TREE_CAIRO
 endif
+
+cairo-features.h: $(srcdir)/cairo-features.h.in $(GLOBAL_DEPS)
+	$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) ./$@

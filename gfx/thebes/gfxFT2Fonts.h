@@ -94,6 +94,8 @@ public:
         // aFontData is NS_Malloc'ed data that aFace depends on, to be freed
         // after the face is destroyed; null if there is no such buffer
 
+    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
+
     cairo_font_face_t *CairoFontFace();
     nsresult ReadCMAP();
 
@@ -159,22 +161,9 @@ protected:
 class THEBES_API gfxFT2FontGroup : public gfxFontGroup {
 public: // new functions
     gfxFT2FontGroup (const nsAString& families,
-                    const gfxFontStyle *aStyle);
+                    const gfxFontStyle *aStyle,
+                    gfxUserFontSet *aUserFontSet);
     virtual ~gfxFT2FontGroup ();
-
-    inline gfxFT2Font *GetFontAt (PRInt32 i) {
-        // If it turns out to be hard for all clients that cache font
-        // groups to call UpdateFontList at appropriate times, we could
-        // instead consider just calling UpdateFontList from someplace
-        // more central (such as here).
-        NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
-                     "Whoever was caching this font group should have "
-                     "called UpdateFontList on it");
-        NS_ASSERTION(mFonts.Length() > PRUint32(i), 
-                     "Requesting a font index that doesn't exist");
-
-        return static_cast <gfxFT2Font *>(static_cast <gfxFont *>(mFonts[i]));
-    }
 
 protected: // from gfxFontGroup
     virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, 

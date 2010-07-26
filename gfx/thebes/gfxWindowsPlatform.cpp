@@ -75,6 +75,36 @@
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
+
+#include "nsIMemoryReporter.h"
+#include "nsMemory.h"
+
+class D2DCacheReporter :
+    public nsIMemoryReporter
+{
+public:
+    D2DCacheReporter()
+    { }
+
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD GetPath(char **memoryPath) {
+        *memoryPath = strdup("gfx/d2d/surfacecache");
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetDescription(char **desc) {
+        *desc = strdup("Memory used by Direct2D internal surface cache.");
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetMemoryUsed(PRInt64 *memoryUsed) {
+        *memoryUsed = cairo_d2d_get_image_surface_cache_usage();
+        return NS_OK;
+    }
+}; 
+
+NS_IMPL_ISUPPORTS1(D2DCacheReporter, nsIMemoryReporter)
 #endif
 
 #ifdef WINCE
@@ -138,6 +168,9 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
+#ifdef CAIRO_HAS_D2D_SURFACE
+    NS_RegisterMemoryReporter(new D2DCacheReporter());
+#endif
 #ifdef CAIRO_HAS_DWRITE_FONT
     nsresult rv;
     PRBool useDirectWrite = PR_FALSE;

@@ -1,0 +1,33 @@
+<!--
+Copyright (c) 2010 The Chromium Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+ -->
+<html>
+<head>
+<link rel="stylesheet" href="../resources/js-test-style.css"/>
+<script src="../resources/js-test-pre.js"></script>
+<script src="resources/webgl-test.js"></script>
+</head>
+<body>
+<div id="description"></div>
+<div id="console"></div>
+
+<script>
+
+description('Test ArrayBuffer.byteLength');
+
+<!-- The following used to cause a crash in Chrome -->
+new ArrayBuffer().byteLength;
+
+testPassed("new ArrayBuffer().byteLength did not crash");
+successfullyParsed = true;
+
+</script>
+<script src="../resources/js-test-post.js"></script>
+
+<script>
+</script>
+
+</body>
+</html>

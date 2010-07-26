@@ -72,10 +72,10 @@ typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 class nsGenericHTMLElement : public nsGenericHTMLElementBase
 {
 public:
-  nsGenericHTMLElement(nsINodeInfo *aNodeInfo)
+  nsGenericHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElementBase(aNodeInfo)
   {
-    NS_ASSERTION(aNodeInfo->NamespaceID() == kNameSpaceID_XHTML,
+    NS_ASSERTION(mNodeInfo->NamespaceID() == kNameSpaceID_XHTML,
                  "Unexpected namespace");
   }
 
@@ -253,8 +253,8 @@ public:
    * @param aResult the resulting HTMLValue
    * @return whether the value was parsed
    */
-  PRBool ParseDivAlignValue(const nsAString& aString,
-                            nsAttrValue& aResult) const;
+  static PRBool ParseDivAlignValue(const nsAString& aString,
+                                   nsAttrValue& aResult);
 
   /**
    * Convert a table halign string to value (left/right/center/char/justify)
@@ -794,7 +794,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
                                  public nsIFormControl
 {
 public:
-  nsGenericHTMLFormElement(nsINodeInfo *aNodeInfo);
+  nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsGenericHTMLFormElement();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
@@ -803,9 +803,11 @@ public:
   virtual void SaveSubtreeState();
 
   // nsIFormControl
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
+  virtual mozilla::dom::Element* GetFormElement();
   virtual void SetForm(nsIDOMHTMLFormElement* aForm);
   virtual void ClearForm(PRBool aRemoveFromForm, PRBool aNotify);
+
+  nsresult GetForm(nsIDOMHTMLFormElement** aForm);
 
   NS_IMETHOD SaveState()
   {
@@ -910,7 +912,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsIFrameLoaderOwner
 {
 public:
-  nsGenericHTMLFrameElement(nsINodeInfo *aNodeInfo)
+  nsGenericHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }
@@ -968,14 +970,16 @@ protected:
  */
 #define NS_IMPL_NS_NEW_HTML_ELEMENT(_elementName)                            \
 nsGenericHTMLElement*                                                        \
-NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)\
+NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo,   \
+                                  PRUint32 aFromParser)                      \
 {                                                                            \
   return new nsHTML##_elementName##Element(aNodeInfo);                       \
 }
 
 #define NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(_elementName)               \
 nsGenericHTMLElement*                                                        \
-NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)\
+NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo,   \
+                                  PRUint32 aFromParser)                      \
 {                                                                            \
   return new nsHTML##_elementName##Element(aNodeInfo, aFromParser);          \
 }
@@ -1210,15 +1214,14 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)\
                                      mNodeInfo->Equals(nsGkAtoms::_tag))
 
 
-#define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(_class, _tag)             \
-  if (mNodeInfo->Equals(nsGkAtoms::_tag) &&                                   \
-      (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||                               \
-       aIID.Equals(NS_GET_IID(nsXPCClassInfo)))) {                            \
-    foundInterface = NS_GetDOMClassInfoInstance(eDOMClassInfo_##_class##_id); \
-    if (!foundInterface) {                                                    \
-      *aInstancePtr = nsnull;                                                 \
-      return NS_ERROR_OUT_OF_MEMORY;                                          \
-    }                                                                         \
+#define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_GETTER(_getter) \
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||               \
+      aIID.Equals(NS_GET_IID(nsXPCClassInfo))) {             \
+    foundInterface = _getter ();                             \
+    if (!foundInterface) {                                   \
+      *aInstancePtr = nsnull;                                \
+      return NS_ERROR_OUT_OF_MEMORY;                         \
+    }                                                        \
   } else
 
 #define NS_HTML_CONTENT_INTERFACE_TABLE0(_class)                              \
@@ -1303,28 +1306,24 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)\
 
 // Element class factory methods
 
-#define NS_DECLARE_NS_NEW_HTML_ELEMENT(_elementName)              \
-nsGenericHTMLElement*                                             \
-NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
+#define NS_DECLARE_NS_NEW_HTML_ELEMENT(_elementName)                       \
+nsGenericHTMLElement*                                                      \
+NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo, \
                                   PRUint32 aFromParser = 0);
 
-#define NS_DECLARE_NS_NEW_HTML_ELEMENT_AS_SHARED(_elementName)    \
-inline nsGenericHTMLElement*                                      \
-NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
-                                  PRUint32 aFromParser = 0)       \
-{                                                                 \
-  return NS_NewHTMLSharedElement(aNodeInfo, aFromParser);         \
+#define NS_DECLARE_NS_NEW_HTML_ELEMENT_AS_SHARED(_elementName)             \
+inline nsGenericHTMLElement*                                               \
+NS_NewHTML##_elementName##Element(already_AddRefed<nsINodeInfo> aNodeInfo, \
+                                  PRUint32 aFromParser = 0)                \
+{                                                                          \
+  return NS_NewHTMLSharedElement(aNodeInfo, aFromParser);                  \
 }
 
-// Disable MSVC warning that spams when we pass empty string as only macro arg.
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4003)
-#endif
-NS_DECLARE_NS_NEW_HTML_ELEMENT() // HTMLElement
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+// Here, we expand 'NS_DECLARE_NS_NEW_HTML_ELEMENT()' by hand.
+// (Calling the macro directly (with no args) produces compiler warnings.)
+nsGenericHTMLElement*
+NS_NewHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                  PRUint32 aFromParser = 0);
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Shared)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedList)

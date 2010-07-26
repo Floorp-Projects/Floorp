@@ -50,11 +50,6 @@
 /**
  * Application-specific data needed to start the apprunner.
  *
- * @status FROZEN - This API is stable. Additional fields may be added to the
- *                  end of the structure in the future. Runtime detection
- *                  of the version of nsXREAppData can be determined by
- *                  examining the "size" field.
- *
  * @note When this structure is allocated and manipulated by XRE_CreateAppData,
  *       string fields will be allocated with NS_Alloc, and interface pointers
  *       are strong references.
@@ -305,11 +300,10 @@ XRE_API(nsresult,
         XRE_GetBinaryPath, (const char *argv0, nsILocalFile* *aResult))
 
 /**
- * Get the static components built in to libxul.
+ * Get the static module built in to libxul.
  */
-XRE_API(void,
-        XRE_GetStaticComponents, (nsStaticModuleInfo const **aStaticComponents,
-                                  PRUint32 *aComponentCount))
+XRE_API(const mozilla::Module*,
+        XRE_GetStaticModule, ())
 
 /**
  * Lock a profile directory using platform-specific semantics.
@@ -334,12 +328,6 @@ XRE_API(nsresult,
  * @param aAppDirProvider    A directory provider for the application. This
  *                           provider will be aggregated by a libxul provider
  *                           which will provide the base required GRE keys.
- * @param aStaticComponents  Static components provided by the embedding
- *                           application. This should *not* include the
- *                           components from XRE_GetStaticComponents. May be
- *                           null if there are no static components.
- * @param aStaticComponentCount the number of static components in
- *                           aStaticComponents
  *
  * @note This function must be called from the "main" thread.
  *
@@ -349,11 +337,42 @@ XRE_API(nsresult,
  */
 
 XRE_API(nsresult,
-        XRE_InitEmbedding, (nsILocalFile *aLibXULDirectory,
-                            nsILocalFile *aAppDirectory,
-                            nsIDirectoryServiceProvider *aAppDirProvider,
-                            nsStaticModuleInfo const *aStaticComponents,
-                            PRUint32 aStaticComponentCount))
+        XRE_InitEmbedding2, (nsILocalFile *aLibXULDirectory,
+                             nsILocalFile *aAppDirectory,
+                             nsIDirectoryServiceProvider *aAppDirProvider))
+
+/**
+ * Register static XPCOM component information.
+ * This method may be called at any time before or after XRE_main or
+ * XRE_InitEmbedding.
+ */
+XRE_API(nsresult,
+        XRE_AddStaticComponent, (const mozilla::Module* aComponent))
+
+/**
+ * Register XPCOM components found in an array of files/directories.
+ * This method may be called at any time before or after XRE_main or
+ * XRE_InitEmbedding.
+ *
+ * @param aFiles An array of files or directories.
+ * @param aFileCount the number of items in the aFiles array.
+ * @note appdir/components is registered automatically.
+ *
+ * NS_COMPONENT_LOCATION specifies a location to search for binary XPCOM
+ * components as well as component/chrome manifest files.
+ *
+ * NS_SKIN_LOCATION specifies a location to search for chrome manifest files
+ * which are only allowed to register only skin packages and style overlays.
+ */
+enum NSLocationType
+{
+  NS_COMPONENT_LOCATION,
+  NS_SKIN_LOCATION
+};
+
+XRE_API(nsresult,
+        XRE_AddManifestLocation, (NSLocationType aType,
+                                  nsILocalFile* aLocation))
 
 /**
  * Fire notifications to inform the toolkit about a new profile. This
@@ -505,6 +524,12 @@ XRE_API(bool,
         XRE_SendTestShellCommand, (JSContext* aCx,
                                    JSString* aCommand,
                                    void* aCallback))
+struct JSObject;
+
+XRE_API(bool,
+        XRE_GetChildGlobalObject, (JSContext* aCx,
+                                   JSObject** globalp))
+
 XRE_API(bool,
         XRE_ShutdownTestShell, ())
 

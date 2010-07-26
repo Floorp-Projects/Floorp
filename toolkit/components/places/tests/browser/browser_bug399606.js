@@ -38,10 +38,10 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+gBrowser.selectedTab = gBrowser.addTab();
+
 function test() {
-  // Due to LAZY_ADD this is an async test.
   waitForExplicitFinish();
-  const LAZY_ADD_TIMER = 3000;
 
   var URIs = [
     "http://example.com/tests/toolkit/components/places/tests/browser/399606-window.location.href.html",
@@ -77,14 +77,30 @@ function test() {
   };
   hs.addObserver(historyObserver, false);
 
+  /**
+   * Clears history invoking callback when done.
+   */
+  function waitForClearHistory(aCallback)
+  {
+    let observer = {
+      observe: function(aSubject, aTopic, aData)
+      {
+        Services.obs.removeObserver(this, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+        aCallback(aSubject, aTopic, aData);
+      }
+    };
+    Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+    PlacesUtils.bhistory.removeAllPages();
+  }
+
   function confirm_results() {
+    gBrowser.removeCurrentTab();
     hs.removeObserver(historyObserver, false);
     for (let aURI in historyObserver.visitCount) {
       is(historyObserver.visitCount[aURI], 1,
          "onVisit has been received right number of times for " + aURI);
     }
-    hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
-    finish();
+    waitForClearHistory(finish);
   }
 
   var loadCount = 0;
@@ -107,7 +123,7 @@ function test() {
       content.location.href = uri;
     }
     else {
-      setTimeout(confirm_results, LAZY_ADD_TIMER * 2.5);
+      confirm_results();
     }
   }
   executeSoon(check_next_uri);

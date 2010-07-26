@@ -127,7 +127,7 @@ textarea {
   letter-spacing: normal;
   vertical-align: text-bottom;
   cursor: text;
-  -moz-resize: both;
+  resize: both;
   -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
   -moz-appearance: textfield-multiline;
   text-indent: 0;
@@ -152,7 +152,7 @@ input > .anonymous-div {
      but it's needed to make 'text-decoration' "work" on text inputs. */
   text-decoration: inherit;
   ime-mode: inherit;
-  -moz-resize: inherit;
+  resize: inherit;
 }
 
 textarea > .anonymous-div.wrap,
@@ -169,7 +169,7 @@ textarea > .placeholder {
   color: GrayText;
   overflow: hidden;
   pointer-events: none;
-  -moz-resize: none;
+  resize: none;
 }
 
 textarea > .placeholder {

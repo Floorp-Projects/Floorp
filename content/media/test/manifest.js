@@ -8,6 +8,7 @@ var gSmallTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233 },
   { name:"small-shot.ogg", type:"audio/ogg", duration:0.276 },
+  { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -18,6 +19,7 @@ var gProgressTests = [
   { name:"big.wav", type:"audio/x-wav", duration:9.0, size:102444 },
   { name:"seek.ogv", type:"video/ogg", duration:3.966, size:285310 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.233, size:28942 },
+  { name:"seek.webm", type:"video/webm", duration:3.966, size:215529 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -150,11 +152,20 @@ var gInfoLeakTests = [
     type: 'audio/ogg',
     src: fileUriToSrc("tests/content/media/test/404.ogg", false),
   }, {
+    type: 'video/webm',
+    src: fileUriToSrc("tests/content/media/test/seek.webm", true),
+  }, {
+    type: 'video/webm',
+    src: fileUriToSrc("tests/content/media/test/404.webm", false),
+  }, {
     type: 'video/ogg',
     src: 'http://localhost/404.ogv',
   }, {
     type: 'audio/x-wav',
     src: 'http://localhost/404.wav',
+  }, {
+    type: 'video/webm',
+    src: 'http://localhost/404.webm',
   }, {
     type: 'video/ogg',
     src: 'http://example.com/tests/content/media/test/test_info_leak.html'
@@ -184,6 +195,7 @@ var gSeekTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"seek.ogv", type:"video/ogg", duration:3.966 },
   { name:"320x240.ogv", type:"video/ogg", duration:0.233 },
+  { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 

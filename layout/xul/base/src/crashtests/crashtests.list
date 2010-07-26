@@ -12,7 +12,7 @@ load 291702-2.xul
 load 291702-3.xul
 load 294371-1.xul
 load 311457-1.html
-asserts(1) load 321056-1.xhtml
+asserts(1) load 321056-1.xhtml # Bug 385845
 load 326834-1.html
 load 322786-1.xul
 load 326879-1.xul
@@ -49,11 +49,11 @@ load 400779-1.xhtml
 load 402912-1.xhtml
 load 408904-1.xul
 load 412479-1.xhtml
-asserts(2) load 415394-1.xhtml
+asserts(2) load 415394-1.xhtml # Bug 163838
 load 420424-1.xul
 load 430356-1.xhtml
 load 431738.xhtml
-asserts(1) load 432058-1.xul
+asserts(1) load 432058-1.xul # Bug 576174
 load 432068-1.xul
 load 432068-2.xul
 load 433296-1.xul
@@ -71,4 +71,5 @@ load 508927-1.xul
 load 508927-2.xul
 load 514300-1.xul
 load 536931-1.xhtml
+asserts(1) load 538308-1.xul
 load menulist-focused.xhtml

@@ -48,7 +48,7 @@ let wasCollapsed = toolbar.collapsed;
 function test() {
   // Uncollapse the personal toolbar if needed.
   if (wasCollapsed)
-    toolbar.collapsed = false;
+    setToolbarVisibility(toolbar, true);
 
   waitForExplicitFinish();
 
@@ -104,7 +104,7 @@ function startTest() {
                          PlacesUtils._uri("place:"),
                          bs.DEFAULT_INDEX,
                          "bm2");
-  bs.setItemTitle(id, "bm2_edited");
+  bs.setItemTitle(id, "");
   addedBookmarks.push(id);
   id = bs.insertSeparator(bs.bookmarksMenuFolder, bs.DEFAULT_INDEX);
   addedBookmarks.push(id);
@@ -135,7 +135,7 @@ function startTest() {
                          PlacesUtils._uri("place:"),
                          bs.DEFAULT_INDEX,
                          "tb2");
-  bs.setItemTitle(id, "tb2_edited");
+  bs.setItemTitle(id, "");
   addedBookmarks.push(id);
   id = bs.insertSeparator(bs.toolbarFolder, bs.DEFAULT_INDEX);
   addedBookmarks.push(id);
@@ -204,7 +204,7 @@ function finishTest() {
 
   // Collapse the personal toolbar if needed.
   if (wasCollapsed)
-    toolbar.collapsed = true;
+    setToolbarVisibility(toolbar, false);
 
   finish();
 }
@@ -285,9 +285,13 @@ var bookmarksObserver = {
         var tree = sidebar.contentDocument.getElementById("bookmarks-view");
         let cellText = tree.view.getCellText(aElementOrTreeIndex,
                                              tree.columns.getColumnAt(0));
+        if (!aNewValue)
+          return cellText == PlacesUIUtils.getBestTitle(tree.view.nodeForTreeIndex(aElementOrTreeIndex));
         return cellText == aNewValue;
       }
       else {
+        if (!aNewValue && aElementOrTreeIndex.localName != "toolbarbutton")
+          return aElementOrTreeIndex.label == PlacesUIUtils.getBestTitle(aElementOrTreeIndex._placesNode);
         return aElementOrTreeIndex.label == aNewValue;
       }
     };

@@ -2186,7 +2186,8 @@ do {
 
   // Init the Layers manager then dispatch the event.
   // If it returns false there's nothing to paint, so exit.
-  AutoLayerManagerSetup setupLayerManager(this, thebesContext);
+  AutoLayerManagerSetup
+      setupLayerManager(this, thebesContext, BasicLayerManager::BUFFER_NONE);
   if (!DispatchWindowEvent(&event, eventStatus)) {
     break;
   }

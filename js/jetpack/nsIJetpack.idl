@@ -39,7 +39,7 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(563afdf8-5d2f-4bb2-9ac0-fb82461d2922)]
+[scriptable, uuid(61A5BE65-FAF2-4FD1-96DF-B13A7AD7D88D)]
 interface nsIJetpack : nsISupports
 {
   void sendMessage(in AString aMessageName
@@ -53,8 +53,9 @@ interface nsIJetpack : nsISupports
                           in jsval aReceiver);
   void unregisterReceivers(in AString aMessageName);
 
-  void loadImplementation(in AString aURI);
-  void loadUserScript(in AString aURI);
+  void evalScript(in AString aScript);
 
   nsIVariant createHandle();
+
+  void destroy();
 };

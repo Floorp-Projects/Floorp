@@ -4,6 +4,7 @@
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 const RELATIVE_DIR = "browser/toolkit/mozapps/extensions/test/browser/";
 
@@ -59,6 +60,18 @@ function wait_for_view_load(aManagerWindow, aCallback) {
   }, false);
 }
 
+function wait_for_manager_load(aManagerWindow, aCallback) {
+  if (!aManagerWindow.gIsInitializing) {
+    aCallback(aManagerWindow);
+    return;
+  }
+
+  aManagerWindow.document.addEventListener("Initialized", function() {
+    aManagerWindow.document.removeEventListener("Initialized", arguments.callee, false);
+    aCallback(aManagerWindow);
+  }, false);
+}
+
 function open_manager(aView, aCallback) {
   function setup_manager(aManagerWindow) {
     if (aView)
@@ -67,15 +80,9 @@ function open_manager(aView, aCallback) {
     ok(aManagerWindow != null, "Should have an add-ons manager window");
     is(aManagerWindow.location, MANAGER_URI, "Should be displaying the correct UI");
 
-    if (!aManagerWindow.gIsInitializing) {
+    wait_for_manager_load(aManagerWindow, function() {
       wait_for_view_load(aManagerWindow, aCallback);
-      return;
-    }
-
-    aManagerWindow.document.addEventListener("Initialized", function() {
-      aManagerWindow.document.removeEventListener("Initialized", arguments.callee, false);
-      wait_for_view_load(aManagerWindow, aCallback);
-    }, false);
+    });
   }
 
   if ("switchToTabHavingURI" in window) {
@@ -105,6 +112,79 @@ function close_manager(aManagerWindow, aCallback) {
 
 function restart_manager(aManagerWindow, aView, aCallback) {
   close_manager(aManagerWindow, function() { open_manager(aView, aCallback); });
+}
+
+function CategoryUtilities(aManagerWindow) {
+  this.window = aManagerWindow;
+
+  var self = this;
+  this.window.addEventListener("unload", function() {
+    self.removeEventListener("unload", arguments.callee, false);
+    self.window = null;
+  }, false);
+}
+
+CategoryUtilities.prototype = {
+  window: null,
+
+  get selectedCategory() {
+    isnot(this.window, null, "Should not get selected category when manager window is not loaded");
+    var selectedItem = this.window.document.getElementById("categories").selectedItem;
+    isnot(selectedItem, null, "A category should be selected");
+    var view = this.window.gViewController.parseViewId(selectedItem.value);
+    return (view.type == "list") ? view.param : view.type;
+  },
+
+  get: function(aCategoryType) {
+    isnot(this.window, null, "Should not get category when manager window is not loaded");
+    var categories = this.window.document.getElementById("categories");
+
+    var viewId = "addons://list/" + aCategoryType;
+    var items = categories.getElementsByAttribute("value", viewId);
+    if (items.length)
+      return items[0];
+
+    viewId = "addons://" + aCategoryType + "/";
+    items = categories.getElementsByAttribute("value", viewId);
+    if (items.length)
+      return items[0];
+
+    ok(false, "Should have found a category with type " + aCategoryType);
+    return null;
+  },
+
+  getViewId: function(aCategoryType) {
+    isnot(this.window, null, "Should not get view id when manager window is not loaded");
+    return this.get(aCategoryType).value;
+  },
+
+  isVisible: function(aCategory) {
+    isnot(this.window, null, "Should not check visible state when manager window is not loaded");
+    if (aCategory.hasAttribute("disabled") &&
+        aCategory.getAttribute("disabled") == "true")
+      return false;
+
+    var style = this.window.document.defaultView.getComputedStyle(aCategory, "");
+    return style.display != "none" && style.visibility == "visible";
+  },
+
+  isTypeVisible: function(aCategoryType) {
+    return this.isVisible(this.get(aCategoryType));
+  },
+
+  open: function(aCategory, aCallback) {
+    isnot(this.window, null, "Should not open category when manager window is not loaded");
+    ok(this.isVisible(aCategory), "Category should be visible if attempting to open it");
+
+    EventUtils.synthesizeMouse(aCategory, 2, 2, { }, this.window);
+
+    if (aCallback)
+      wait_for_view_load(this.window, aCallback);
+  },
+
+  openType: function(aCategoryType, aCallback) {
+    this.open(this.get(aCategoryType), aCallback);
+  }
 }
 
 function CertOverrideListener(host, bits) {
@@ -202,12 +282,37 @@ MockProvider.prototype = {
    */
   addAddon: function MP_addAddon(aAddon) {
     this.addons.push(aAddon);
+    aAddon._provider = this;
 
     if (!this.started)
       return;
 
+    let requiresRestart = (aAddon.operationsRequiringRestart &
+                           AddonManager.OP_NEEDS_RESTART_INSTALL) != 0;
     AddonManagerPrivate.callInstallListeners("onExternalInstall", null, aAddon,
-                                             null, false)
+                                             null, requiresRestart)
+  },
+
+  /**
+   * Removes an add-on from the list of add-ons that this provider exposes to
+   * the AddonManager, dispatching the onUninstalled event in the process.
+   *
+   * @param  aAddon
+   *         The add-on to add
+   */
+  removeAddon: function MP_removeAddon(aAddon) {
+    var pos = this.addons.indexOf(aAddon);
+    if (pos == -1) {
+      ok(false, "Tried to remove an add-on that wasn't registered with the mock provider");
+      return;
+    }
+
+    this.addons.splice(pos, 1);
+
+    if (!this.started)
+      return;
+
+    AddonManagerPrivate.callAddonListeners("onUninstalled", aAddon);
   },
 
   /**
@@ -263,6 +368,11 @@ MockProvider.prototype = {
     aInstallProperties.forEach(function(aInstallProp) {
       var install = new MockInstall();
       for (var prop in aInstallProp) {
+        if (prop == "sourceURI") {
+          install[prop] = NetUtil.newURI(aInstallProp[prop]);
+          continue;
+        }
+
         install[prop] = aInstallProp[prop];
       }
       this.addInstall(install);
@@ -308,6 +418,8 @@ MockProvider.prototype = {
         return;
       }
     }
+
+    aCallback(null);
   },
 
   /**
@@ -489,8 +601,8 @@ MockProvider.prototype = {
 
 /***** Mock Addon object for the Mock Provider *****/
 
-function MockAddon(aId, aName, aType, aRestartless) {
-  // Only set required attributes
+function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
+  // Only set required attributes.
   this.id = aId || "";
   this.name = aName || "";
   this.type = aType || "extension";
@@ -499,17 +611,43 @@ function MockAddon(aId, aName, aType, aRestartless) {
   this.providesUpdatesSecurely = true;
   this.blocklistState = 0;
   this.appDisabled = false;
-  this.userDisabled = false;
+  this._userDisabled = false;
   this.scope = AddonManager.SCOPE_PROFILE;
   this.isActive = true;
   this.creator = "";
   this.pendingOperations = 0;
-  this.permissions = 0;
-
-  this._restartless = aRestartless || false;
+  this.permissions = AddonManager.PERM_CAN_UNINSTALL |
+                     AddonManager.PERM_CAN_ENABLE |
+                     AddonManager.PERM_CAN_DISABLE |
+                     AddonManager.PERM_CAN_UPGRADE;
+  this.operationsRequiringRestart = aOperationsRequiringRestart ||
+    (AddonManager.OP_NEEDS_RESTART_INSTALL |
+     AddonManager.OP_NEEDS_RESTART_UNINSTALL |
+     AddonManager.OP_NEEDS_RESTART_ENABLE |
+     AddonManager.OP_NEEDS_RESTART_DISABLE);
 }
 
 MockAddon.prototype = {
+  get shouldBeActive() {
+    return !this.appDisabled && !this._userDisabled;
+  },
+
+  get userDisabled() {
+    return this._userDisabled;
+  },
+
+  set userDisabled(val) {
+    if (val == this._userDisabled)
+      return val;
+
+    var currentActive = this.shouldBeActive;
+    this._userDisabled = val;
+    var newActive = this.shouldBeActive;
+    this._updateActiveState(currentActive, newActive);
+
+    return val;
+  },
+
   isCompatibleWith: function(aAppVersion, aPlatformVersion) {
     return true;
   },
@@ -519,17 +657,59 @@ MockAddon.prototype = {
   },
 
   uninstall: function() {
-    // To be implemented when needed
+    if (this.pendingOperations & AddonManager.PENDING_UNINSTALL)
+      throw new Error("Add-on is already pending uninstall");
+
+    var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL);
+    this.pendingOperations |= AddonManager.PENDING_UNINSTALL;
+    AddonManagerPrivate.callAddonListeners("onUninstalling", this, needsRestart);
+    if (!needsRestart) {
+      this.pendingOperations -= AddonManager.PENDING_UNINSTALL;
+      this._provider.removeAddon(this);
+    }
   },
 
   cancelUninstall: function() {
-    // To be implemented when needed
+    if (!(this.pendingOperations & AddonManager.PENDING_UNINSTALL))
+      throw new Error("Add-on is not pending uninstall");
+
+    this.pendingOperations -= AddonManager.PENDING_UNINSTALL;
+    AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
+  },
+
+  _updateActiveState: function(currentActive, newActive) {
+    if (currentActive == newActive)
+      return;
+
+    if (newActive == this.isActive) {
+      AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
+    }
+    else if (newActive) {
+      var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE);
+      this.pendingOperations |= AddonManager.PENDING_ENABLE;
+      AddonManagerPrivate.callAddonListeners("onEnabling", this, needsRestart);
+      if (!needsRestart) {
+        this.isActive = newActive;
+        this.pendingOperations -= AddonManager.PENDING_ENABLE;
+        AddonManagerPrivate.callAddonListeners("onEnabled", this);
+      }
+    }
+    else {
+      var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_DISABLE);
+      this.pendingOperations |= AddonManager.PENDING_DISABLE;
+      AddonManagerPrivate.callAddonListeners("onDisabling", this, needsRestart);
+      if (!needsRestart) {
+        this.isActive = newActive;
+        this.pendingOperations -= AddonManager.PENDING_DISABLE;
+        AddonManagerPrivate.callAddonListeners("onDisabled", this);
+      }
+    }
   }
 };
 
 /***** Mock AddonInstall object for the Mock Provider *****/
 
-function MockInstall(aName, aType) {
+function MockInstall(aName, aType, aAddonToInstall) {
   this.name = aName || "";
   this.type = aType || "extension";
   this.version = "1.0";
@@ -537,7 +717,7 @@ function MockInstall(aName, aType) {
   this.infoURL = "";
   this.state = AddonManager.STATE_AVAILABLE;
   this.error = 0;
-  this.sourceURL = "";
+  this.sourceURI = null;
   this.file = null;
   this.progress = 0;
   this.maxProgress = -1;
@@ -545,6 +725,7 @@ function MockInstall(aName, aType) {
   this.certName = "";
   this.existingAddon = null;
   this.addon = null;
+  this._addonToInstall = aAddonToInstall;
   this.listeners = [];
 
   // Another type of install listener for tests that want to check the results
@@ -568,7 +749,13 @@ MockInstall.prototype = {
         }
 
         // Adding addon to MockProvider to be implemented when needed
-        this.addon = new MockAddon("", this.name, this.type);
+        if (this._addonToInstall)
+          this.addon = this._addonToInstall;
+        else {
+          this.addon = new MockAddon("", this.name, this.type);
+          this.addon.pendingOperations = AddonManager.PENDING_INSTALL;
+        }
+
         this.state = AddonManager.STATE_INSTALLED;
         this.callListeners("onInstallEnded");
         break;

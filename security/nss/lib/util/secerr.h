@@ -228,6 +228,9 @@ SEC_ERROR_PKCS11_DEVICE_ERROR              =	(SEC_ERROR_BASE + 169),
 SEC_ERROR_BAD_INFO_ACCESS_METHOD           =    (SEC_ERROR_BASE + 170),
 SEC_ERROR_CRL_IMPORT_FAILED                =    (SEC_ERROR_BASE + 171),
 
+SEC_ERROR_EXPIRED_PASSWORD                 =    (SEC_ERROR_BASE + 172),
+SEC_ERROR_LOCKED_PASSWORD                  =    (SEC_ERROR_BASE + 173),
+
 /* Add new error codes above here. */
 SEC_ERROR_END_OF_LIST 
 } SECErrorCodes;

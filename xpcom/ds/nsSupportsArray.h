@@ -54,7 +54,7 @@ public:
   nsSupportsArray(void);
   ~nsSupportsArray(void); // nonvirtual since we're not subclassed
 
-  static NS_METHOD
+  static nsresult
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   NS_DECL_ISUPPORTS

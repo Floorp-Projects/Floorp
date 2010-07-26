@@ -37,9 +37,7 @@
 
 #include "amInstallTrigger.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
-#include "nsIComponentRegistrar.h"
 #include "nsICategoryManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXPIDLString.h"
@@ -51,6 +49,7 @@
 #include "nsIDOMDocument.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
+#include "mozilla/ModuleUtils.h"
 
 //
 // Helper function for URI verification
@@ -82,6 +81,8 @@ CheckLoadURIFromScript(JSContext *aCx, const nsACString& aUriStr)
   return rv;
 }
 
+NS_IMPL_CLASSINFO(amInstallTrigger, NULL, nsIClassInfo::DOM_OBJECT,
+                  AM_InstallTrigger_CID)
 NS_IMPL_ISUPPORTS1_CI(amInstallTrigger, amIInstallTrigger)
 
 amInstallTrigger::amInstallTrigger()
@@ -350,49 +351,30 @@ amInstallTrigger::StartSoftwareUpdate(const nsAString & aUrl,
   return rv;
 }
 
-NS_DECL_CLASSINFO(amInstallTrigger)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(amInstallTrigger)
 
-static NS_METHOD
-RegisterInstallTrigger(nsIComponentManager *aCompMgr,
-                       nsIFile *aPath,
-                       const char *aRegistryLocation,
-                       const char *aComponentType,
-                       const nsModuleComponentInfo *aInfo)
-{
-  nsresult rv = NS_OK;
+NS_DEFINE_NAMED_CID(AM_InstallTrigger_CID);
 
-  nsCOMPtr<nsICategoryManager> catman = 
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsXPIDLCString previous;
-  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
-                                "InstallTrigger",
-                                AM_INSTALLTRIGGER_CONTRACTID,
-                                PR_TRUE, PR_TRUE, getter_Copies(previous));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-// The list of components we register
-static const nsModuleComponentInfo components[] =
-{
-    { "InstallTrigger Component",
-       AM_InstallTrigger_CID,
-       AM_INSTALLTRIGGER_CONTRACTID,
-       amInstallTriggerConstructor,
-       RegisterInstallTrigger,
-       nsnull, // unregister
-       nsnull, // factory destructor
-       NS_CI_INTERFACE_GETTER_NAME(amInstallTrigger),
-       nsnull, // language helper
-       &NS_CLASSINFO_NAME(amInstallTrigger),
-       nsIClassInfo::DOM_OBJECT // flags
-    }
+static const mozilla::Module::CIDEntry kInstallTriggerCIDs[] = {
+  { &kAM_InstallTrigger_CID, false, NULL, amInstallTriggerConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(AddonsModule, components)
+static const mozilla::Module::ContractIDEntry kInstallTriggerContracts[] = {
+  { AM_INSTALLTRIGGER_CONTRACTID, &kAM_InstallTrigger_CID },
+  { NULL }
+};
+
+static const mozilla::Module::CategoryEntry kInstallTriggerCategories[] = {
+  { JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY, "InstallTrigger", AM_INSTALLTRIGGER_CONTRACTID },
+  { NULL }
+};
+
+static const mozilla::Module kInstallTriggerModule = {
+  mozilla::Module::kVersion,
+  kInstallTriggerCIDs,
+  kInstallTriggerContracts,
+  kInstallTriggerCategories
+};
+
+NSMODULE_DEFN(AddonsModule) = &kInstallTriggerModule;

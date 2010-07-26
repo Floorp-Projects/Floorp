@@ -36,10 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
+#include "mozilla/ModuleUtils.h"
 
-#include "nsRDFModule.h"
 #include "nsIFactory.h"
 #include "nsRDFService.h"
 #include "nsIRDFContainer.h"
@@ -66,7 +64,7 @@
 // generic factory.
 
 #define MAKE_CTOR(_func,_new,_ifname)                                \
-static NS_IMETHODIMP                                                 \
+static nsresult                                                      \
 CreateNew##_func(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
 {                                                                    \
     if (!aResult) {                                                  \
@@ -103,7 +101,7 @@ MAKE_CTOR(RDFContentSink,RDFContentSink,RDFContentSink)
 MAKE_CTOR(RDFDefaultResource,DefaultResource,RDFResource)
 
 #define MAKE_RDF_CTOR(_func,_new,_ifname)                            \
-static NS_IMETHODIMP                                                 \
+static nsresult                                                      \
 CreateNew##_func(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
 {                                                                    \
     if (!aResult) {                                                  \
@@ -132,93 +130,57 @@ NS_NewTriplesSerializer(rdfISerializer** aResult);
 
 MAKE_RDF_CTOR(TriplesSerializer, TriplesSerializer, Serializer)
 
-// The list of components we register
-static const nsModuleComponentInfo components[] = 
-{   // register our build-in datasources:
-    { 
-     "RDF Composite Data Source", 
-     NS_RDFCOMPOSITEDATASOURCE_CID,
-     NS_RDF_DATASOURCE_CONTRACTID_PREFIX "composite-datasource", 
-     CreateNewRDFCompositeDataSource
-    },
+NS_DEFINE_NAMED_CID(NS_RDFCOMPOSITEDATASOURCE_CID);
+NS_DEFINE_NAMED_CID(NS_RDFFILESYSTEMDATASOURCE_CID);
+NS_DEFINE_NAMED_CID(NS_RDFINMEMORYDATASOURCE_CID);
+NS_DEFINE_NAMED_CID(NS_RDFXMLDATASOURCE_CID);
+NS_DEFINE_NAMED_CID(NS_RDFDEFAULTRESOURCE_CID);
+NS_DEFINE_NAMED_CID(NS_RDFCONTENTSINK_CID);
+NS_DEFINE_NAMED_CID(NS_RDFCONTAINER_CID);
+NS_DEFINE_NAMED_CID(NS_RDFCONTAINERUTILS_CID);
+NS_DEFINE_NAMED_CID(NS_RDFSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_RDFXMLPARSER_CID);
+NS_DEFINE_NAMED_CID(NS_RDFXMLSERIALIZER_CID);
+NS_DEFINE_NAMED_CID(NS_RDFNTRIPLES_SERIALIZER_CID);
+NS_DEFINE_NAMED_CID(NS_LOCALSTORE_CID);
 
-    { 
-     "RDF File System Data Source", 
-     NS_RDFFILESYSTEMDATASOURCE_CID,
-     NS_RDF_DATASOURCE_CONTRACTID_PREFIX "files", 
-     FileSystemDataSource::Create
-    },
-    
-    { "RDF In-Memory Data Source", 
-      NS_RDFINMEMORYDATASOURCE_CID,
-      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource", 
-      NS_NewRDFInMemoryDataSource
-    },
 
-    { "RDF XML Data Source", 
-      NS_RDFXMLDATASOURCE_CID,
-      NS_RDF_DATASOURCE_CONTRACTID_PREFIX "xml-datasource", 
-      CreateNewRDFXMLDataSource
-    },
+static const mozilla::Module::CIDEntry kRDFCIDs[] = {
+    { &kNS_RDFCOMPOSITEDATASOURCE_CID, false, NULL, CreateNewRDFCompositeDataSource },
+    { &kNS_RDFFILESYSTEMDATASOURCE_CID, false, NULL, FileSystemDataSource::Create },
+    { &kNS_RDFINMEMORYDATASOURCE_CID, false, NULL, NS_NewRDFInMemoryDataSource },
+    { &kNS_RDFXMLDATASOURCE_CID, false, NULL, CreateNewRDFXMLDataSource },
+    { &kNS_RDFDEFAULTRESOURCE_CID, false, NULL, CreateNewRDFDefaultResource },
+    { &kNS_RDFCONTENTSINK_CID, false, NULL, CreateNewRDFContentSink },
+    { &kNS_RDFCONTAINER_CID, false, NULL, CreateNewRDFContainer },
+    { &kNS_RDFCONTAINERUTILS_CID, false, NULL, CreateNewRDFContainerUtils },
+    { &kNS_RDFSERVICE_CID, false, NULL, RDFServiceImpl::CreateSingleton },
+    { &kNS_RDFXMLPARSER_CID, false, NULL, nsRDFXMLParser::Create },
+    { &kNS_RDFXMLSERIALIZER_CID, false, NULL, nsRDFXMLSerializer::Create },
+    { &kNS_RDFNTRIPLES_SERIALIZER_CID, false, NULL, CreateNewTriplesSerializer },
+    { &kNS_LOCALSTORE_CID, false, NULL, NS_NewLocalStore },
+    { NULL }
+};
 
-    // register our built-in resource factories:
-    { "RDF Default Resource Factory", 
-      NS_RDFDEFAULTRESOURCE_CID,
-      // Note: default resource factory has no name= part
-      NS_RDF_RESOURCE_FACTORY_CONTRACTID, 
-      CreateNewRDFDefaultResource
-    },
-
-    // register all the other rdf components:
-    { "RDF Content Sink", 
-      NS_RDFCONTENTSINK_CID,
-      NS_RDF_CONTRACTID "/content-sink;1", 
-      CreateNewRDFContentSink
-    },
-    
-    { "RDF Container", 
-      NS_RDFCONTAINER_CID,
-      NS_RDF_CONTRACTID "/container;1", 
-      CreateNewRDFContainer
-    },
-    
-    { "RDF Container Utilities", 
-      NS_RDFCONTAINERUTILS_CID,
-      NS_RDF_CONTRACTID "/container-utils;1", 
-      CreateNewRDFContainerUtils
-    },
-    
-    { "RDF Service", 
-      NS_RDFSERVICE_CID,
-      NS_RDF_CONTRACTID "/rdf-service;1",
-      RDFServiceImpl::CreateSingleton
-    },
-
-    { "RDF/XML Parser",
-      NS_RDFXMLPARSER_CID,
-      NS_RDF_CONTRACTID "/xml-parser;1",
-      nsRDFXMLParser::Create
-    },
-
-    { "RDF/XML Serializer",
-      NS_RDFXMLSERIALIZER_CID,
-      NS_RDF_CONTRACTID "/xml-serializer;1",
-      nsRDFXMLSerializer::Create
-    },
-
-    { "RDF/NTriples Serializer",
-      NS_RDFNTRIPLES_SERIALIZER_CID,
-      NS_RDF_SERIALIZER "ntriples",
-      CreateNewTriplesSerializer
-    },
-
-    // XXX move this to XPFE at some point.
-    { "Local Store", NS_LOCALSTORE_CID,
-      NS_LOCALSTORE_CONTRACTID, NS_NewLocalStore },
+static const mozilla::Module::ContractIDEntry kRDFContracts[] = {
+    { NS_RDF_DATASOURCE_CONTRACTID_PREFIX "composite-datasource", &kNS_RDFCOMPOSITEDATASOURCE_CID },
+    { NS_RDF_DATASOURCE_CONTRACTID_PREFIX "files", &kNS_RDFFILESYSTEMDATASOURCE_CID },
+    { NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource", &kNS_RDFINMEMORYDATASOURCE_CID },
+    { NS_RDF_DATASOURCE_CONTRACTID_PREFIX "xml-datasource", &kNS_RDFXMLDATASOURCE_CID },
+    { NS_RDF_RESOURCE_FACTORY_CONTRACTID, &kNS_RDFDEFAULTRESOURCE_CID },
+    { NS_RDF_CONTRACTID "/content-sink;1", &kNS_RDFCONTENTSINK_CID },
+    { NS_RDF_CONTRACTID "/container;1", &kNS_RDFCONTAINER_CID },
+    { NS_RDF_CONTRACTID "/container-utils;1", &kNS_RDFCONTAINERUTILS_CID },
+    { NS_RDF_CONTRACTID "/rdf-service;1", &kNS_RDFSERVICE_CID },
+    { NS_RDF_CONTRACTID "/xml-parser;1", &kNS_RDFXMLPARSER_CID },
+    { NS_RDF_CONTRACTID "/xml-serializer;1", &kNS_RDFXMLSERIALIZER_CID },
+    { NS_RDF_SERIALIZER "ntriples", &kNS_RDFNTRIPLES_SERIALIZER_CID },
+    { NS_LOCALSTORE_CONTRACTID, &kNS_LOCALSTORE_CID },
+    { NULL }
 };
 
 static nsresult
-StartupRDFModule(nsIModule* unused)
+StartupRDFModule()
 {
     if (RDFServiceImpl::gRDFService) {
         NS_ERROR("Leaked the RDF service from a previous startup.");
@@ -229,7 +191,7 @@ StartupRDFModule(nsIModule* unused)
 }
 
 static void
-ShutdownRDFModule(nsIModule* unused)
+ShutdownRDFModule()
 {
     if (RDFServiceImpl::gRDFService) {
         // XXX make this an assertion!
@@ -237,5 +199,14 @@ ShutdownRDFModule(nsIModule* unused)
     }
 }
 
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsRDFModule, components,
-                                   StartupRDFModule, ShutdownRDFModule)
+static const mozilla::Module kRDFModule = {
+    mozilla::Module::kVersion,
+    kRDFCIDs,
+    kRDFContracts,
+    NULL,
+    NULL,
+    StartupRDFModule,
+    ShutdownRDFModule
+};
+
+NSMODULE_DEFN(nsRDFModule) = &kRDFModule;

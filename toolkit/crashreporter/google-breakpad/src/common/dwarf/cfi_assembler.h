@@ -31,7 +31,7 @@
 
 // Original author: Jim Blandy <jimb@mozilla.com> <jimb@red-bean.com>
 
-// cfi-assembler.h: Define CFISection, a class for creating properly
+// cfi_assembler.h: Define CFISection, a class for creating properly
 // (and improperly) formatted DWARF CFI data for unit tests.
 
 #ifndef PROCESSOR_CFI_ASSEMBLER_H_
@@ -40,15 +40,15 @@
 #include <string>
 
 #include "common/dwarf/dwarf2enums.h"
+#include "common/test_assembler.h"
 #include "google_breakpad/common/breakpad_types.h"
-#include "processor/test_assembler.h"
 
 namespace google_breakpad {
 
 using dwarf2reader::DwarfPointerEncoding;
-using google_breakpad::TestAssembler::Endianness;
-using google_breakpad::TestAssembler::Label;
-using google_breakpad::TestAssembler::Section;
+using google_breakpad::test_assembler::Endianness;
+using google_breakpad::test_assembler::Label;
+using google_breakpad::test_assembler::Section;
 using std::string;
 
 class CFISection: public Section {
@@ -218,6 +218,19 @@ class CFISection: public Section {
     Label length;
     Label start;
   };
+
+  // Constants used in CFI/.eh_frame data:
+
+  // If the first four bytes of an "initial length" are this constant, then
+  // the data uses the 64-bit DWARF format, and the length itself is the
+  // subsequent eight bytes.
+  static const u_int32_t kDwarf64InitialLengthMarker = 0xffffffffU;
+
+  // The CIE identifier for 32- and 64-bit DWARF CFI and .eh_frame data.
+  static const u_int32_t kDwarf32CIEIdentifier = ~(u_int32_t)0;
+  static const u_int64_t kDwarf64CIEIdentifier = ~(u_int64_t)0;
+  static const u_int32_t kEHFrame32CIEIdentifier = 0;
+  static const u_int64_t kEHFrame64CIEIdentifier = 0;
 
   // The size of a machine address for the data in this section.
   size_t address_size_;

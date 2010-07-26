@@ -45,7 +45,7 @@ static const PRUint16 g_utMappingTable[] = {
 #include "macgujarati.ut"
 };
 
-NS_METHOD
+nsresult
 nsMacGujaratiToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                   void **aResult) 
 {

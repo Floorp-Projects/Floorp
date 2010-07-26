@@ -145,30 +145,28 @@ nsSVGGradientFrame::GetStopInformation(PRInt32 aIndex,
 }
 
 gfxMatrix
-nsSVGGradientFrame::GetGradientTransform(nsSVGGeometryFrame *aSource)
+nsSVGGradientFrame::GetGradientTransform(nsIFrame *aSource,
+                                         const gfxRect *aOverrideBounds)
 {
   gfxMatrix bboxMatrix;
 
   PRUint16 gradientUnits = GetGradientUnits();
-  nsIAtom *callerType = aSource->GetType();
   if (gradientUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
     // If this gradient is applied to text, our caller
     // will be the glyph, which is not a container, so we
     // need to get the parent
-    if (callerType ==  nsGkAtoms::svgGlyphFrame)
-      mSourceContent = static_cast<nsSVGElement*>
-                                  (aSource->GetContent()->GetParent());
+    if (aSource->GetContent()->IsNodeOfType(nsINode::eTEXT))
+      mSource = aSource->GetParent();
     else
-      mSourceContent = static_cast<nsSVGElement*>(aSource->GetContent());
-    NS_ASSERTION(mSourceContent, "Can't get content for gradient");
+      mSource = aSource;
   } else {
     NS_ASSERTION(gradientUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
                  "Unknown gradientUnits type");
     // objectBoundingBox is the default anyway
 
-    nsIFrame *frame = (callerType == nsGkAtoms::svgGlyphFrame) ?
+    nsIFrame *frame = aSource->GetContent()->IsNodeOfType(nsINode::eTEXT) ?
                         aSource->GetParent() : aSource;
-    gfxRect bbox = nsSVGUtils::GetBBox(frame);
+    gfxRect bbox = aOverrideBounds ? *aOverrideBounds : nsSVGUtils::GetBBox(frame);
     bboxMatrix = gfxMatrix(bbox.Width(), 0, 0, bbox.Height(), bbox.X(), bbox.Y());
   }
 
@@ -201,31 +199,31 @@ nsSVGGradientFrame::GetSpreadMethod()
 //----------------------------------------------------------------------
 // nsSVGPaintServerFrame methods:
 
-PRBool
-nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
-                                     nsSVGGeometryFrame *aSource,
-                                     float aGraphicOpacity)
+already_AddRefed<gfxPattern>
+nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
+                                           float aGraphicOpacity,
+                                           const gfxRect *aOverrideBounds)
 {
   // Get the transform list (if there is one)
-  gfxMatrix patternMatrix = GetGradientTransform(aSource);
+  gfxMatrix patternMatrix = GetGradientTransform(aSource, aOverrideBounds);
 
   if (patternMatrix.IsSingular())
-    return PR_FALSE;
+    return nsnull;
 
   PRUint32 nStops = GetStopCount();
 
   // SVG specification says that no stops should be treated like
   // the corresponding fill or stroke had "none" specified.
   if (nStops == 0) {
-    aContext->SetColor(gfxRGBA(0, 0, 0, 0));
-    return PR_TRUE;
+    nsRefPtr<gfxPattern> pattern = new gfxPattern(gfxRGBA(0, 0, 0, 0));
+    return pattern.forget();
   }
 
   patternMatrix.Invert();
 
   nsRefPtr<gfxPattern> gradient = CreateGradient();
   if (!gradient || gradient->CairoStatus())
-    return PR_FALSE;
+    return nsnull;
 
   PRUint16 aSpread = GetSpreadMethod();
   if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD)
@@ -259,9 +257,7 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
                                      stopOpacity * aGraphicOpacity));
   }
 
-  aContext->SetPattern(gradient);
-
-  return PR_TRUE;
+  return gradient.forget();
 }
 
 // Private (helper) methods
@@ -463,7 +459,7 @@ nsSVGLinearGradientFrame::GradientLookupAttribute(nsIAtom *aAtomName,
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
-    return nsSVGUtils::UserSpace(mSourceContent,
+    return nsSVGUtils::UserSpace(mSource,
                                  &element->mLengthAttributes[aEnumName]);
   }
 
@@ -551,7 +547,7 @@ nsSVGRadialGradientFrame::GradientLookupAttribute(nsIAtom *aAtomName,
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
-    return nsSVGUtils::UserSpace(mSourceContent,
+    return nsSVGUtils::UserSpace(mSource,
                                  &element->mLengthAttributes[aEnumName]);
   }
 
@@ -587,14 +583,11 @@ nsSVGRadialGradientFrame::CreateGradient()
     // The focal point (fFx and fFy) must be clamped to be *inside* - not on -
     // the circumference of the gradient or we'll get rendering anomalies. We
     // calculate the distance from the focal point to the gradient center and
-    // make sure it is *less* than the gradient radius. 0.99 is used as the
-    // factor of the radius because it's close enough to 1 that we won't get a
-    // fringe at the edge of the gradient if we clamp, but not so close to 1
-    // that rounding error will give us the same results as using fR itself.
-    // Also note that .99 < 255/256/2 which is the limit of the fractional part
-    // of cairo's 24.8 fixed point representation divided by 2 to ensure that
-    // we get different cairo fractions
-    double dMax = 0.99 * r;
+    // make sure it is *less* than the gradient radius.
+    // 1/128 is the limit of the fractional part of cairo's 24.8 fixed point
+    // representation divided by 2 to ensure that we get different cairo
+    // fractions
+    double dMax = NS_MAX(0.0, r - 1.0/128);
     float dx = fx - cx;
     float dy = fy - cy;
     double d = sqrt((dx * dx) + (dy * dy));

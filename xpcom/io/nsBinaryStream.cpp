@@ -56,7 +56,6 @@
 #include "nsIStreamBufferAccess.h"
 #include "nsMemory.h"
 #include "prlong.h"
-#include "nsGenericFactory.h"
 #include "nsString.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"

@@ -168,7 +168,7 @@ nsAboutBloat::GetURIFlags(nsIURI *aURI, PRUint32 *result)
     return NS_OK;
 }
 
-NS_METHOD
+nsresult
 nsAboutBloat::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsAboutBloat* about = new nsAboutBloat();

@@ -1,0 +1,104 @@
+<!--
+Copyright (c) 2009 The Chromium Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+ -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>WebGL ReadPixels conformance test.</title>
+    <link rel="stylesheet" href="../resources/js-test-style.css"/>
+    <script src="../resources/js-test-pre.js"></script>
+    <script src="resources/webgl-test.js"> </script>
+</head>
+<body>
+<canvas id="example" width="200" height="200"></canvas>
+<div id="description"></div>
+<div id="console"></div>
+<script>
+description("Checks that ReadPixels works as expected.");
+
+var canvas = document.getElementById("example");
+var gl = create3DContext(canvas);
+
+if (window.initNonKhronosFramework) {
+   window.initNonKhronosFramework(false);
+}
+
+var width = 2;
+var height = 2;
+
+gl.clearColor(1, 1, 1, 1);
+gl.clear(gl.COLOR_BUFFER_BIT);
+
+// Resize the canvas to 2x2. This is an attempt to get stuff in the backbuffer.
+// that shouldn't be there.
+canvas.width = width;
+canvas.height = height;
+
+gl.clearColor(0.5, 0.7, 1.0, 1);
+gl.clear(gl.COLOR_BUFFER_BIT);
+
+var innerColor = [0.5, 0.7, 1.0, 1];
+var outerColor = [0, 0, 0, 0];
+
+var tests = [
+  { msg: 'in range', checkColor: innerColor, x:  0, y:  0,
+    oneColor: innerColor, oneX: 0, oneY: 0},
+  { msg: 'off top left', checkColor: outerColor, x: -1, y: -1,
+    oneColor: innerColor, oneX: 1, oneY: 1},
+  { msg: 'off bottom right', checkColor: outerColor, x:  1, y:  1,
+    oneColor: innerColor, oneX: 0, oneY: 0},
+  { msg: 'completely off top ', checkColor: outerColor, x:  0, y: -2,
+    oneColor: outerColor, oneX: 0, oneY: 0},
+  { msg: 'completely off bottom', checkColor: outerColor, x:  0, y:  2,
+    oneColor: outerColor, oneX: 0, oneY: 0},
+  { msg: 'completely off left', checkColor: outerColor, x: -2, y:  0,
+    oneColor: outerColor, oneX: 0, oneY: 0},
+  { msg: 'completeley off right', checkColor: outerColor, x:  2, y:  0,
+    oneColor: outerColor, oneX: 0, oneY: 0}
+];
+
+for (var tt = 0; tt < tests.length; ++tt) {
+  var test = tests[tt];
+  debug("");
+  debug("checking: " + test.msg);
+  checkBuffer(test.checkColor, test.x, test.y,
+              test.oneColor, test.oneX, test.oneY);
+}
+
+assertMsg(gl.getError() == gl.NO_ERROR,
+          "there should be no GL errors");
+
+function checkBuffer(checkColor, x, y, oneColor, oneX, oneY) {
+  var buf = new Uint8Array(width * height * 4);
+  gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+  for (var yy = 0; yy < height; ++yy) {
+    for (var xx = 0; xx < width; ++xx) {
+      var offset = (yy * width + xx) * 4;
+      var expectedColors = (oneX == xx && oneY == yy) ? oneColor : checkColor;
+      for (var cc = 0; cc < 4; ++cc) {
+        var expectedColor = expectedColors[cc] * 255;
+        var color = buf[offset + cc];
+        var diff = Math.abs(expectedColor - color);
+        assertMsg(diff < 3,
+                  "color pixel at " + xx + ", " + yy + " should be about " +
+                  expectedColor + " was " + color);
+      }
+    }
+  }
+}
+
+debug("");
+successfullyParsed = true;
+</script>
+</body>
+<script src="../resources/js-test-post.js"></script>
+
+<script>
+</script>
+
+</body>
+</html>
+

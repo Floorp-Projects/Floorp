@@ -55,7 +55,7 @@
 #include "nsChannelProperties.h"
 
 /* Keeps track of whether or not CSP is enabled */
-static PRBool gCSPEnabled = PR_TRUE;
+PRBool CSPService::sCSPEnabled = PR_TRUE;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gCspPRLog;
@@ -63,7 +63,7 @@ static PRLogModuleInfo* gCspPRLog;
 
 CSPService::CSPService()
 {
-  nsContentUtils::AddBoolPrefVarCache("security.csp.enable", &gCSPEnabled);
+  nsContentUtils::AddBoolPrefVarCache("security.csp.enable", &sCSPEnabled);
 
 #ifdef PR_LOGGING
   if (!gCspPRLog)
@@ -102,7 +102,7 @@ CSPService::ShouldLoad(PRUint32 aContentType,
     *aDecision = nsIContentPolicy::ACCEPT;
 
     // No need to continue processing if CSP is disabled
-    if (!gCSPEnabled)
+    if (!sCSPEnabled)
         return NS_OK;
 
     // find the principal of the document that initiated this request and see
@@ -160,7 +160,7 @@ CSPService::ShouldProcess(PRUint32         aContentType,
     *aDecision = nsIContentPolicy::ACCEPT;
 
     // No need to continue processing if CSP is disabled
-    if (!gCSPEnabled)
+    if (!sCSPEnabled)
         return NS_OK;
 
     // find the nsDocument that initiated this request and see if it has a

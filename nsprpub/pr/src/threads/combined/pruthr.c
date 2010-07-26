@@ -1165,9 +1165,9 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             if (type == PR_SYSTEM_THREAD)
             {
                 thread->flags |= _PR_SYSTEM;
-                PR_AtomicIncrement(&_pr_systemActive);
+                PR_ATOMIC_INCREMENT(&_pr_systemActive);
             }
-            else PR_AtomicIncrement(&_pr_userActive);
+            else PR_ATOMIC_INCREMENT(&_pr_userActive);
 
             if (state == PR_JOINABLE_THREAD) {
                 if (!thread->term) 

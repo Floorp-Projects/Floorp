@@ -17,7 +17,7 @@ load 399289-1.svg
 load 404470-1.html
 load 411603-1.html
 load 412588-1.html
-asserts-if(MOZ_WIDGET_TOOLKIT=="windows",2) load 413274-1.xhtml
+asserts-if(MOZ_WIDGET_TOOLKIT=="windows",2) load 413274-1.xhtml # Bug 576435
 load 416461-1.xul
 load 418007-1.xhtml
 load 431705-1.xul
@@ -59,3 +59,4 @@ load 565248-1.html
 load 558943-1.xhtml
 load 571105-1.xhtml
 load 573127-1.html
+load 580685.html

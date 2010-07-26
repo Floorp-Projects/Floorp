@@ -1576,7 +1576,7 @@ morkParser::ParseMore( // return count of bytes consumed now
     // HerePos is only updated for groups. I'd like it to be more accurate.
 
     mork_pos here;
-    nsresult rv = mParser_Stream->Tell(ev, &here);
+    mParser_Stream->Tell(ev, &here);
 
     if ( outDone )
       *outDone = mParser_IsDone;

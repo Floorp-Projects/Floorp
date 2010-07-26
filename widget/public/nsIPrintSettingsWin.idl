@@ -49,8 +49,6 @@
 
 /**
  * Simplified PrintSettings for Windows interface 
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(f13b225d-473e-4372-b11f-b6dff9fe0c5b)]
 

@@ -39,7 +39,7 @@
  *
  * The interface to global history.
  *
- * @status FROZEN & DEPRECATED. This interface is still accepted, but new
+ * @status DEPRECATED. This interface is still accepted, but new
  *         implementations should use nsIGlobalHistory2.
  * @version 1.0
  */

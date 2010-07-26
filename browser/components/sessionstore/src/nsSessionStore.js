@@ -148,8 +148,6 @@ function SessionStoreService() {
 }
 
 SessionStoreService.prototype = {
-  classDescription: "Browser Session Store Service",
-  contractID: "@mozilla.org/browser/sessionstore;1",
   classID: Components.ID("{5280606b-2510-4fe0-97ef-9b5a22eafe6b}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISessionStore,
                                          Ci.nsIDOMEventListener,
@@ -1017,12 +1015,12 @@ SessionStoreService.prototype = {
     // create a new tab
     let browser = aWindow.gBrowser;
     let tab = browser.addTab();
-      
-    // restore the tab's position
-    browser.moveTabTo(tab, closedTab.pos);
 
     // restore tab content
     this.restoreHistoryPrecursor(aWindow, [tab], [closedTabState], 1, 0, 0);
+      
+    // restore the tab's position
+    browser.moveTabTo(tab, closedTab.pos);
 
     // focus the tab's content area
     let content = browser.getBrowserForTab(tab).contentWindow;
@@ -1211,6 +1209,9 @@ SessionStoreService.prototype = {
       tabData.userTypedValue = browser.userTypedValue;
       tabData.userTypedClear = browser.userTypedClear;
     }
+
+    if (aTab.pinned)
+      tabData.pinned = true;
 
     var disallow = [];
     for (var i = 0; i < CAPABILITIES.length; i++)
@@ -1937,10 +1938,20 @@ SessionStoreService.prototype = {
       tabs.push(t < openTabCount ?
                 tabbrowser.tabs[t] :
                 tabbrowser.addTab("about:blank", {skipAnimation: true}));
+      // collapse all unselected tabs to prevent flickering when showing the
+      // tabs in the active group by tabcandy
+      if (!tabs[t].selected) {
+        tabs[t].hidden = true;
+      }
       // when resuming at startup: add additionally requested pages to the end
       if (!aOverwriteTabs && root._firstTabs) {
         tabbrowser.moveTabTo(tabs[t], t);
       }
+
+      if (winData.tabs[t].pinned)
+        tabbrowser.pinTab(tabs[t]);
+      else
+        tabbrowser.unpinTab(tabs[t]);
     }
 
     // when overwriting tabs, remove all superflous ones
@@ -2017,11 +2028,17 @@ SessionStoreService.prototype = {
     
     // mark the tabs as loading
     for (t = 0; t < aTabs.length; t++) {
-      var tab = aTabs[t];
-      var browser = tabbrowser.getBrowserForTab(tab);
-      
-      aTabData[t]._tabStillLoading = true;
-      if (!aTabData[t].entries || aTabData[t].entries.length == 0) {
+      let tab = aTabs[t];
+      let browser = tabbrowser.getBrowserForTab(tab);
+      let tabData = aTabData[t];
+
+      if (tabData.pinned)
+        tabbrowser.pinTab(tab);
+      else
+        tabbrowser.unpinTab(tab);
+
+      tabData._tabStillLoading = true;
+      if (!tabData.entries || tabData.entries.length == 0) {
         // make sure to blank out this tab's content
         // (just purging the tab's history won't be enough)
         browser.contentDocument.location = "about:blank";
@@ -2036,19 +2053,19 @@ SessionStoreService.prototype = {
       
       // wall-paper fix for bug 439675: make sure that the URL to be loaded
       // is always visible in the address bar
-      let activeIndex = (aTabData[t].index || aTabData[t].entries.length) - 1;
-      let activePageData = aTabData[t].entries[activeIndex] || null;
+      let activeIndex = (tabData.index || tabData.entries.length) - 1;
+      let activePageData = tabData.entries[activeIndex] || null;
       browser.userTypedValue = activePageData ? activePageData.url || null : null;
       
       // keep the data around to prevent dataloss in case
       // a tab gets closed before it's been properly restored
-      browser.__SS_data = aTabData[t];
+      browser.__SS_data = tabData;
     }
     
     if (aTabs.length > 0) {
       // Determine if we can optimize & load visible tabs first
       let maxVisibleTabs = Math.ceil(tabbrowser.tabContainer.mTabstrip.scrollClientSize /
-                                     aTabs[0].clientWidth);
+                                     aTabs[aTabs.length - 1].clientWidth);
 
       // make sure we restore visible tabs first, if there are enough
       if (maxVisibleTabs < aTabs.length && aSelectTab > 1) {
@@ -3089,5 +3106,4 @@ String.prototype.hasRootDomain = function hasRootDomain(aDomain)
          (prevChar == "." || prevChar == "/");
 }
 
-function NSGetModule(aComMgr, aFileSpec)
-  XPCOMUtils.generateModule([SessionStoreService]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStoreService]);

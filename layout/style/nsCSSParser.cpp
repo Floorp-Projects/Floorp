@@ -50,14 +50,14 @@
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsCSSScanner.h"
-#include "nsCSSLoader.h"
+#include "mozilla/css/Loader.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSImportRule.h"
 #include "nsCSSRules.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
 #include "nsCSSStyleSheet.h"
-#include "nsCSSDeclaration.h"
+#include "mozilla/css/Declaration.h"
 #include "nsStyleConsts.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -90,6 +90,8 @@
 #include "CSSCalc.h"
 #include "nsMediaFeatures.h"
 
+namespace css = mozilla::css;
+
 // Flags for ParseVariant method
 #define VARIANT_KEYWORD         0x000001  // K
 #define VARIANT_LENGTH          0x000002  // L
@@ -117,6 +119,7 @@
 // This is an extra bit that says that a VARIANT_ANGLE allows unitless zero:
 #define VARIANT_ZERO_ANGLE    0x02000000  // unitless zero for angles
 #define VARIANT_CALC          0x04000000  // eCSSUnit_Calc
+#define VARIANT_CALC_NO_MIN_MAX 0x08000000 // no min() and max() for calc()
 
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
@@ -153,6 +156,8 @@
 #define VARIANT_TIMING_FUNCTION (VARIANT_KEYWORD | VARIANT_CUBIC_BEZIER)
 #define VARIANT_UK   (VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_ANGLE_OR_ZERO (VARIANT_ANGLE | VARIANT_ZERO_ANGLE)
+#define VARIANT_TRANSFORM_LPCALC (VARIANT_LP | VARIANT_CALC | \
+                                  VARIANT_CALC_NO_MIN_MAX)
 
 //----------------------------------------------------------------------
 
@@ -201,7 +206,7 @@ public:
                                      nsIURI*           aSheetURL,
                                      nsIURI*           aBaseURL,
                                      nsIPrincipal*     aSheetPrincipal,
-                                     nsCSSDeclaration* aDeclaration,
+                                     css::Declaration* aDeclaration,
                                      PRBool            aParseOnlyOneDecl,
                                      PRBool*           aChanged,
                                      PRBool            aClearOldDecl);
@@ -217,7 +222,7 @@ public:
                          nsIURI* aSheetURL,
                          nsIURI* aBaseURL,
                          nsIPrincipal* aSheetPrincipal,
-                         nsCSSDeclaration* aDeclaration,
+                         css::Declaration* aDeclaration,
                          PRBool* aChanged,
                          PRBool aIsImportant);
 
@@ -397,8 +402,8 @@ protected:
   PRBool ParseSelectorGroup(nsCSSSelectorList*& aListHead);
   PRBool ParseSelector(nsCSSSelectorList* aList, PRUnichar aPrevCombinator);
 
-  nsCSSDeclaration* ParseDeclarationBlock(PRBool aCheckForBraces);
-  PRBool ParseDeclaration(nsCSSDeclaration* aDeclaration,
+  css::Declaration* ParseDeclarationBlock(PRBool aCheckForBraces);
+  PRBool ParseDeclaration(css::Declaration* aDeclaration,
                           PRBool aCheckForBraces,
                           PRBool aMustCallValueAppended,
                           PRBool* aChanged);
@@ -412,13 +417,13 @@ protected:
   // is already set in it.  If aOverrideImportant is true, new data will
   // replace old settings of the same properties, even if the old settings
   // are !important and the new data aren't.
-  void TransferTempData(nsCSSDeclaration* aDeclaration,
+  void TransferTempData(css::Declaration* aDeclaration,
                         nsCSSProperty aPropID,
                         PRBool aIsImportant,
                         PRBool aOverrideImportant,
                         PRBool aMustCallValueAppended,
                         PRBool* aChanged);
-  void DoTransferTempData(nsCSSDeclaration* aDeclaration,
+  void DoTransferTempData(css::Declaration* aDeclaration,
                           nsCSSProperty aPropID,
                           PRBool aIsImportant,
                           PRBool aOverrideImportant,
@@ -910,9 +915,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
     nsICSSRule* lastRule = nsnull;
     mSheet->GetStyleRuleAt(ruleCount - 1, lastRule);
     if (lastRule) {
-      PRInt32 type;
-      lastRule->GetType(type);
-      switch (type) {
+      switch (lastRule->GetType()) {
         case nsICSSRule::CHARSET_RULE:
         case nsICSSRule::IMPORT_RULE:
           mSection = eCSSSection_Import;
@@ -1002,7 +1005,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
     haveBraces = PR_FALSE;
   }
 
-  nsCSSDeclaration* declaration = ParseDeclarationBlock(haveBraces);
+  css::Declaration* declaration = ParseDeclarationBlock(haveBraces);
   if (declaration) {
     // Create a style rule for the declaration
     nsICSSStyleRule* rule = nsnull;
@@ -1029,7 +1032,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                          nsIURI*           aSheetURI,
                                          nsIURI*           aBaseURI,
                                          nsIPrincipal*     aSheetPrincipal,
-                                         nsCSSDeclaration* aDeclaration,
+                                         css::Declaration* aDeclaration,
                                          PRBool            aParseOnlyOneDecl,
                                          PRBool*           aChanged,
                                          PRBool            aClearOldDecl)
@@ -1113,7 +1116,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              nsIURI* aSheetURI,
                              nsIURI* aBaseURI,
                              nsIPrincipal* aSheetPrincipal,
-                             nsCSSDeclaration* aDeclaration,
+                             css::Declaration* aDeclaration,
                              PRBool* aChanged,
                              PRBool aIsImportant)
 {
@@ -2425,7 +2428,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
   CLEAR_ERROR();
 
   // Next parse the declaration block
-  nsCSSDeclaration* declaration = ParseDeclarationBlock(PR_TRUE);
+  css::Declaration* declaration = ParseDeclarationBlock(PR_TRUE);
   if (nsnull == declaration) {
     // XXX skip something here
     delete slist;
@@ -3546,7 +3549,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
   return PR_TRUE;
 }
 
-nsCSSDeclaration*
+css::Declaration*
 CSSParserImpl::ParseDeclarationBlock(PRBool aCheckForBraces)
 {
   if (aCheckForBraces) {
@@ -3556,7 +3559,7 @@ CSSParserImpl::ParseDeclarationBlock(PRBool aCheckForBraces)
       return nsnull;
     }
   }
-  nsCSSDeclaration* declaration = new nsCSSDeclaration();
+  css::Declaration* declaration = new css::Declaration();
   mData.AssertInitialState();
   if (declaration) {
     for (;;) {
@@ -3948,7 +3951,7 @@ CSSParserImpl::ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs)
 //----------------------------------------------------------------------
 
 PRBool
-CSSParserImpl::ParseDeclaration(nsCSSDeclaration* aDeclaration,
+CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
                                 PRBool aCheckForBraces,
                                 PRBool aMustCallValueAppended,
                                 PRBool* aChanged)
@@ -4098,7 +4101,7 @@ CSSParserImpl::ClearTempData(nsCSSProperty aPropID)
 }
 
 void
-CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
+CSSParserImpl::TransferTempData(css::Declaration* aDeclaration,
                                 nsCSSProperty aPropID,
                                 PRBool aIsImportant,
                                 PRBool aOverrideImportant,
@@ -4121,7 +4124,7 @@ CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
 // case some other caller wants to use it in the future (although I
 // can't think of why).
 void
-CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
+CSSParserImpl::DoTransferTempData(css::Declaration* aDeclaration,
                                   nsCSSProperty aPropID,
                                   PRBool aIsImportant,
                                   PRBool aOverrideImportant,
@@ -4397,7 +4400,8 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
   VARIANT_GRADIENT | \
   VARIANT_CUBIC_BEZIER | \
   VARIANT_ALL | \
-  VARIANT_CALC
+  VARIANT_CALC | \
+  VARIANT_CALC_NO_MIN_MAX
 
 // Note that callers passing VARIANT_CALC in aVariantMask will get
 // full-range parsing inside the calc() expression, and the code that
@@ -4671,7 +4675,8 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
        tk->mIdent.LowerCaseEqualsLiteral("-moz-min") ||
        tk->mIdent.LowerCaseEqualsLiteral("-moz-max"))) {
     // calc() currently allows only lengths and percents inside it.
-    return ParseCalc(aValue, aVariantMask & VARIANT_LP);
+    return ParseCalc(aValue,
+                     aVariantMask & (VARIANT_LP | VARIANT_CALC_NO_MIN_MAX));
   }
 
   UngetToken();
@@ -5958,6 +5963,10 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
                         nsCSSProps::kFloatEdgeKTable);
   case eCSSProperty_font_family:
     return ParseFamily(aValue);
+  case eCSSProperty_font_feature_settings:
+  case eCSSProperty_font_language_override:
+    return ParseVariant(aValue, VARIANT_NORMAL | VARIANT_INHERIT |
+                                VARIANT_STRING, nsnull);
   case eCSSProperty_font_size:
     return ParseNonNegativeVariant(aValue,
                                    VARIANT_HKLP | VARIANT_SYSFONT |
@@ -6235,6 +6244,10 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
 
   case eCSSFontDesc_UnicodeRange:
     return ParseFontRanges(aValue);
+
+  case eCSSFontDesc_FontFeatureSettings:
+  case eCSSFontDesc_FontLanguageOverride:
+    return ParseVariant(aValue, VARIANT_NORMAL | VARIANT_STRING, nsnull);
 
   case eCSSFontDesc_UNKNOWN:
   case eCSSFontDesc_COUNT:
@@ -7150,6 +7163,21 @@ CSSParserImpl::ParseBorderColors(nsCSSValueList** aResult,
   return PR_FALSE;
 }
 
+static PRBool
+HasMinMax(const nsCSSValue::Array *aArray)
+{
+  for (PRUint32 i = 0, i_end = aArray->Count(); i != i_end; ++i) {
+    const nsCSSValue &v = aArray->Item(i);
+    if (v.IsCalcUnit() &&
+        (v.GetUnit() == eCSSUnit_Calc_Minimum ||
+         v.GetUnit() == eCSSUnit_Calc_Maximum ||
+         HasMinMax(v.GetArrayValue()))) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 // Parse the top level of a calc() expression, which can be calc(),
 // min(), or max().
 PRBool
@@ -7161,6 +7189,9 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
   // values cannot themselves be numbers.
   NS_ASSERTION(!(aVariantMask & VARIANT_NUMBER), "unexpected variant mask");
   NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
+
+  PRBool noMinMax = aVariantMask & VARIANT_CALC_NO_MIN_MAX;
+  aVariantMask &= ~VARIANT_CALC_NO_MIN_MAX;
 
   nsCSSUnit unit;
   if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-min")) {
@@ -7174,6 +7205,10 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
   }
 
   if (unit != eCSSUnit_Calc) {
+    if (noMinMax) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
     return ParseCalcMinMax(aValue, unit, aVariantMask);
   }
 
@@ -7191,6 +7226,10 @@ CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
 
     if (!ExpectSymbol(')', PR_TRUE))
       break;
+
+    if (noMinMax && HasMinMax(arr)) {
+      return PR_FALSE;
+    }
 
     aValue.SetArrayValue(arr, eCSSUnit_Calc);
     return PR_TRUE;
@@ -7249,7 +7288,8 @@ CSSParserImpl::ParseCalcAdditiveExpression(nsCSSValue& aValue,
   }
 }
 
-struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps
+struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps,
+                             public mozilla::css::CSSValueInputCalcOps
 {
   result_type ComputeLeafValue(const nsCSSValue& aValue)
   {
@@ -7793,6 +7833,8 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_line_height, family);
         AppendValue(eCSSProperty_font_stretch, family);
         AppendValue(eCSSProperty_font_size_adjust, family);
+        AppendValue(eCSSProperty_font_feature_settings, family);
+        AppendValue(eCSSProperty_font_language_override, family);
       }
       else {
         AppendValue(eCSSProperty__x_system_font, family);
@@ -7805,6 +7847,8 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_line_height, systemFont);
         AppendValue(eCSSProperty_font_stretch, systemFont);
         AppendValue(eCSSProperty_font_size_adjust, systemFont);
+        AppendValue(eCSSProperty_font_feature_settings, systemFont);
+        AppendValue(eCSSProperty_font_language_override, systemFont);
       }
       return PR_TRUE;
     }
@@ -7866,6 +7910,8 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_stretch,
                   nsCSSValue(NS_FONT_STRETCH_NORMAL, eCSSUnit_Enumerated));
       AppendValue(eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None));
+      AppendValue(eCSSProperty_font_feature_settings, nsCSSValue(eCSSUnit_Normal));
+      AppendValue(eCSSProperty_font_language_override, nsCSSValue(eCSSUnit_Normal));
       return PR_TRUE;
     }
   }
@@ -8066,8 +8112,8 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
    * parse out the individual functions.  The order in the enumeration
    * must match the order in which the masks are declared.
    */
-  enum { eLengthPercent,
-         eTwoLengthPercents,
+  enum { eLengthPercentCalc,
+         eTwoLengthPercentCalcs,
          eAngle,
          eTwoAngles,
          eNumber,
@@ -8076,14 +8122,14 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
          eNumVariantMasks };
   static const PRInt32 kMaxElemsPerFunction = 6;
   static const PRInt32 kVariantMasks[eNumVariantMasks][kMaxElemsPerFunction] = {
-    {VARIANT_LENGTH | VARIANT_PERCENT},
-    {VARIANT_LENGTH | VARIANT_PERCENT, VARIANT_LENGTH | VARIANT_PERCENT},
+    {VARIANT_TRANSFORM_LPCALC},
+    {VARIANT_TRANSFORM_LPCALC, VARIANT_TRANSFORM_LPCALC},
     {VARIANT_ANGLE_OR_ZERO},
     {VARIANT_ANGLE_OR_ZERO, VARIANT_ANGLE_OR_ZERO},
     {VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
-     VARIANT_LENGTH | VARIANT_PERCENT, VARIANT_LENGTH | VARIANT_PERCENT}};
+     VARIANT_TRANSFORM_LPCALC, VARIANT_TRANSFORM_LPCALC}};
 
 #ifdef DEBUG
   static const PRUint8 kVariantMaskLengths[eNumVariantMasks] =
@@ -8094,14 +8140,9 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
 
   switch (aToken) {
   case eCSSKeyword_translatex:
-    /* Exactly one length or percent. */
-    variantIndex = eLengthPercent;
-    aMinElems = 1U;
-    aMaxElems = 1U;
-    break;
   case eCSSKeyword_translatey:
     /* Exactly one length or percent. */
-    variantIndex = eLengthPercent;
+    variantIndex = eLengthPercentCalc;
     aMinElems = 1U;
     aMaxElems = 1U;
     break;
@@ -8125,7 +8166,7 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
     break;
   case eCSSKeyword_translate:
     /* One or two lengths or percents. */
-    variantIndex = eTwoLengthPercents;
+    variantIndex = eTwoLengthPercentCalcs;
     aMinElems = 1U;
     aMaxElems = 2U;
     break;
@@ -9618,7 +9659,7 @@ nsCSSParser::ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                        nsIURI*           aSheetURI,
                                        nsIURI*           aBaseURI,
                                        nsIPrincipal*     aSheetPrincipal,
-                                       nsCSSDeclaration* aDeclaration,
+                                       css::Declaration* aDeclaration,
                                        PRBool            aParseOnlyOneDecl,
                                        PRBool*           aChanged,
                                        PRBool            aClearOldDecl)
@@ -9646,7 +9687,7 @@ nsCSSParser::ParseProperty(const nsCSSProperty aPropID,
                            nsIURI*             aSheetURI,
                            nsIURI*             aBaseURI,
                            nsIPrincipal*       aSheetPrincipal,
-                           nsCSSDeclaration*   aDeclaration,
+                           css::Declaration*   aDeclaration,
                            PRBool*             aChanged,
                            PRBool              aIsImportant)
 {

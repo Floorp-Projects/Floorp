@@ -77,13 +77,13 @@ public:
 };
 
 
-NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+nsresult NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 class nsXULControllers : public nsIControllers,
                          public nsISecurityCheckedComponent
 {
 public:
-    friend NS_IMETHODIMP
+    friend nsresult
     NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS

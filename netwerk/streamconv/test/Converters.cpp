@@ -112,62 +112,9 @@ TestConverter::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     return mListener->OnStopRequest(request, ctxt, aStatus);
 }
 
-
-////////////////////////////////////////////////////////////////////////
-// TestConverterFactory
-////////////////////////////////////////////////////////////////////////
-TestConverterFactory::TestConverterFactory(const nsCID &aClass, 
-                                   const char* className,
-                                   const char* contractID)
-    : mClassID(aClass), mClassName(className), mContractID(contractID)
+nsresult
+CreateTestConverter(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
+  nsCOMPtr<nsISupports> conv = new TestConverter();
+  return conv->QueryInterface(aIID, aResult);
 }
-
-TestConverterFactory::~TestConverterFactory()
-{
-}
-
-NS_IMPL_ISUPPORTS1(TestConverterFactory, nsIFactory)
-
-NS_IMETHODIMP
-TestConverterFactory::CreateInstance(nsISupports *aOuter,
-                                 const nsIID &aIID,
-                                 void **aResult)
-{
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *aResult = nsnull;
-
-    nsresult rv = NS_OK;
-
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kTestConverterCID)) {
-        TestConverter *conv = new TestConverter();
-        if (!conv) return NS_ERROR_OUT_OF_MEMORY;
-        conv->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
-    }
-    else {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(inst);
-    *aResult = inst;
-    NS_RELEASE(inst);
-    return rv;
-}
-
-nsresult TestConverterFactory::LockFactory(PRBool aLock)
-{
-    // Not implemented in simplest case.
-    return NS_OK;
-}
-////////////////////////////////////////////////////////////////////////
-// TestConverterFactory END
-////////////////////////////////////////////////////////////////////////
-

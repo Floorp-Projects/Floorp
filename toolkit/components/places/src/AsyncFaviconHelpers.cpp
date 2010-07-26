@@ -291,7 +291,7 @@ GetEffectivePageStep::Run()
 
   // If history is disabled or the page isn't addable to history, only load
   // favicons if the page is bookmarked.
-  if (!canAddToHistory || history->IsHistoryDisabled()) {
+  if (!canAddToHistory) {
     // Get place id associated with this page.
     mozIStorageStatement* stmt = history->GetStatementById(DB_GET_PAGE_INFO_BY_URL);
     // Statement is null if we are shutting down.
@@ -332,7 +332,7 @@ GetEffectivePageStep::HandleResult(mozIStorageResultSet* aResultSet)
     rv = row->GetUTF8String(0, spec);
     FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
     // We always want to use the bookmark uri.
-    rv = mStepper->mPageURI->SetSpec(spec);
+    rv = NS_NewURI(getter_AddRefs(mStepper->mPageURI), spec);
     FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
     // Since we got a result, this is a bookmark.
     mIsBookmarked = true;

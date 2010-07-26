@@ -49,7 +49,7 @@ public:
   nsSocketProviderService() {}
   virtual ~nsSocketProviderService() {}
 
-  static NS_METHOD Create(nsISupports *, REFNSIID aIID, void **aResult);
+  static nsresult Create(nsISupports *, REFNSIID aIID, void **aResult);
 };
 
 #endif /* nsSocketProviderService_h__ */

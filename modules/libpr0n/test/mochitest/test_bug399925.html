@@ -7,9 +7,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=399925
   <title>Test for Bug 399925</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="imgutils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="drawCanvas(); setTimeout('drawCanvas(); allDone();', 20000)">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=399925">Mozilla Bug 399925</a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -19,10 +20,40 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=399925
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for Bug 399925 **/
-SimpleTest.waitForExplicitFinish();
-
+/** Test for Bug 399925. **/
 var pngResults = new Array();
+var oldTimeoutPref;
+var oldDiscardPref;
+SimpleTest.waitForExplicitFinish();
+window.onload = runTest;
+
+function runTest()
+{
+  // Get the old discard timeout
+  oldTimeoutPref = getImagePref(DISCARD_TIMEOUT_PREF);
+
+  // We're testing discarding here, so we should make sure it's flipped on
+  oldDiscardPref = getImagePref(DISCARD_ENABLED_PREF);
+
+  // Enable Discarding
+  setImagePref(DISCARD_ENABLED_PREF, true);
+
+  // Sets the discard timer to 500ms so we don't have to wait so long. The
+  // actual time is nondeterministic, but is bounded by 2 * timer = 1 second.
+  setImagePref(DISCARD_TIMEOUT_PREF, 1000);
+
+  // Create the image _after_ setting the discard timer pref
+  var image = new Image();
+  image.setAttribute("id", "gif");
+  image.src = "bug399925.gif";
+  document.getElementById("content").appendChild(image);
+
+  // draw the canvas once
+  drawCanvas();
+
+  // Set the timeout to draw it after discard
+  setTimeout('drawCanvas(); allDone();', 3000);
+}
 
 function drawCanvas()
 {
@@ -38,6 +69,8 @@ function drawCanvas()
 function allDone()
 {
     is(pngResults[0], pngResults[1], "got different rendered results");
+    setImagePref(DISCARD_TIMEOUT_PREF, oldTimeoutPref);
+    setImagePref(DISCARD_ENABLED_PREF, oldDiscardPref);
     SimpleTest.finish();
 }
 

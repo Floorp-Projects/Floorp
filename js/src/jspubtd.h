@@ -125,9 +125,17 @@ typedef enum JSAccessMode {
  * iterator function that has type JSNewEnumerate.
  */
 typedef enum JSIterateOp {
-    JSENUMERATE_INIT,       /* Create new iterator state */
-    JSENUMERATE_NEXT,       /* Iterate once */
-    JSENUMERATE_DESTROY     /* Destroy iterator state */
+    /* Create new iterator state over enumerable properties. */
+    JSENUMERATE_INIT,
+
+    /* Create new iterator state over all properties. */
+    JSENUMERATE_INIT_ALL,
+
+    /* Iterate once. */
+    JSENUMERATE_NEXT,
+
+    /* Destroy iterator state. */
+    JSENUMERATE_DESTROY
 } JSIterateOp;
 
 /* Struct typedefs. */
@@ -155,6 +163,11 @@ typedef struct JSLocaleCallbacks JSLocaleCallbacks;
 typedef struct JSSecurityCallbacks JSSecurityCallbacks;
 typedef struct JSONParser        JSONParser;
 typedef struct JSCompartment     JSCompartment;
+typedef struct JSCrossCompartmentCall JSCrossCompartmentCall;
+#ifdef __cplusplus
+typedef class JSWrapper          JSWrapper;
+typedef class JSCrossCompartmentWrapper JSCrossCompartmentWrapper;
+#endif
 
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 
@@ -182,6 +195,10 @@ typedef JSBool
  *    enumerable properties can't be computed in advance, *idp should be set
  *    to JSVAL_ZERO.
  *
+ *  JSENUMERATE_INIT_ALL
+ *    Used identically to JSENUMERATE_INIT, but exposes all properties of the
+ *    object regardless of enumerability.
+ *
  *  JSENUMERATE_NEXT
  *    A previously allocated opaque iterator state is passed in via statep.
  *    Return the next jsid in the iteration using *idp.  The opaque iterator
@@ -190,7 +207,8 @@ typedef JSBool
  *
  *  JSENUMERATE_DESTROY
  *    Destroy the opaque iterator state previously allocated in *statep by a
- *    call to this function when enum_op was JSENUMERATE_INIT.
+ *    call to this function when enum_op was JSENUMERATE_INIT or
+ *    JSENUMERATE_INIT_ALL.
  *
  * The return value is used to indicate success, with a value of JS_FALSE
  * indicating failure.
@@ -310,12 +328,6 @@ typedef JSObjectOps *
  * returning false on error/exception, true on success with obj[id]'s last-got
  * value in *vp, and its attributes in *attrsp.  As for JSPropertyOp above, id
  * is either a string or an int jsval.
- *
- * See JSCheckAccessIdOp, below, for the JSObjectOps counterpart, which takes
- * a jsid (a tagged int or aligned, unique identifier pointer) rather than a
- * jsval.  The native js_ObjectOps.checkAccess simply forwards to the object's
- * clasp->checkAccess, so that both JSClass and JSObjectOps implementors may
- * specialize access checks.
  */
 typedef JSBool
 (* JSCheckAccessOp)(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
@@ -402,21 +414,6 @@ typedef void
  */
 typedef void
 (* JSTraceNamePrinter)(JSTracer *trc, char *buf, size_t bufsize);
-
-/*
- * The optional JSClass.reserveSlots hook allows a class to make computed
- * per-instance object slots reservations, in addition to or instead of using
- * JSCLASS_HAS_RESERVED_SLOTS(n) in the JSClass.flags initializer to reserve
- * a constant-per-class number of slots.  Implementations of this hook should
- * return the number of slots to reserve, not including any reserved by using
- * JSCLASS_HAS_RESERVED_SLOTS(n) in JSClass.flags.
- *
- * NB: called with obj locked by the JSObjectOps-specific mutual exclusion
- * mechanism appropriate for obj, so don't nest other operations that might
- * also lock obj.
- */
-typedef uint32
-(* JSReserveSlotsOp)(JSContext *cx, JSObject *obj);
 
 /* JSExtendedClass function pointer typedefs. */
 
@@ -591,6 +588,14 @@ typedef JSPrincipals *
  */
 typedef JSBool
 (* JSCSPEvalChecker)(JSContext *cx);
+
+/*
+ * Callback used to ask the embedding for the cross compartment wrapper handler
+ * that implements the desired prolicy for this kind of object in the
+ * destination compartment.
+ */
+typedef JSObject *
+(* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto, uintN flags);
 
 JS_END_EXTERN_C
 

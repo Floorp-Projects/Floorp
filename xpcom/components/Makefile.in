@@ -46,27 +46,26 @@ MODULE		= xpcom
 XPIDL_MODULE	= xpcom_components
 LIBRARY_NAME	= xpcomcomponents_s
 GRE_MODULE	= 1
+LIBXUL_LIBRARY = 1
 MOZILLA_INTERNAL_API = 1
 
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS	= \
+  nsCategoryManagerUtils.h \
+  $(NULL)
+
+EXPORTS_mozilla = \
+  Module.h \
+  ModuleLoader.h \
+  ModuleUtils.h \
+  $(NULL)
 
 CPPSRCS		= \
 		nsCategoryManager.cpp \
 		nsComponentManager.cpp \
+		ManifestParser.cpp \
 		nsNativeComponentLoader.cpp \
-		nsStaticComponentLoader.cpp \
-		nsServiceManagerObsolete.cpp \
-		$(NULL)
-
-EXPORTS		= \
-		nsCategoryManagerUtils.h \
-		nsIServiceManagerObsolete.h \
-		nsModule.h \
-		nsObsoleteModuleLoading.h \
-		$(NULL)
-
-XPIDLSRCS	= \
-		nsIModuleLoader.idl \
-		nsIComponentManagerObsolete.idl \
 		$(NULL)
 
 SDK_XPIDLSRCS	= \
@@ -77,9 +76,8 @@ SDK_XPIDLSRCS	= \
 		nsIServiceManager.idl	      \
 		nsIComponentManager.idl       \
 		nsICategoryManager.idl        \
+		nsIManifestLoader.idl         \
 		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../reflect/xptinfo/src \
@@ -88,6 +86,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../ds \
 	-I$(srcdir)/../build \
 	-I.. \
+	-I$(topsrcdir)/chrome/src \
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -98,3 +97,7 @@ FORCE_USE_PIC	= 1
 include $(topsrcdir)/config/rules.mk
 
 DEFINES	+= -D_IMPL_NS_COM
+
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
+CXXFLAGS += $(MOZ_GTK2_CFLAGS)
+endif

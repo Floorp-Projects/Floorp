@@ -311,8 +311,6 @@ IDBIndex::Get(nsIVariant* aKey,
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_WARNING("Using a slow path for Get! Fix this now!");
-
   Key key;
   nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -339,8 +337,6 @@ IDBIndex::GetObject(nsIVariant* aKey,
                     nsIIDBRequest** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_WARNING("Using a slow path for Get! Fix this now!");
 
   Key key;
   nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);

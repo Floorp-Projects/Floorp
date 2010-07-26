@@ -14,7 +14,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=377624
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=377624">Mozilla Bug 377624</a>
 <p id="display"></p>
 <div id="content">
-  <input id='i' type='file' accept="image/*">
+  <input id='a' type='file' accept="image/*">
+  <input id='b' type='file' accept="audio/*">
+  <input id='c' type='file' accept="video/*">
+  <input id='d' type='file' accept="image/*, audio/* ">
+  <input id='e' type='file' accept=" image/*,video/*">
+  <input id='f' type='file' accept="audio/*,video/*">
+  <input id='g' type='file' accept="image/*, audio/* ,video/*">
+  <input id='h' type='file' accept="foo/baz,image/*,bogus/duh">
+  <input id='i' type='file' accept="mime/type;parameter,video/*">
+  <input id='z' type='file' accept="i/am,a,pathological,;,,,,test/case">
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -32,10 +41,8 @@ const Cu = Components.utils;
 
 const FILE_PICKER_CID = "@mozilla.org/filepicker;1";
 const FILE_PICKER_ID = Components.ID(Cc[FILE_PICKER_CID].number);
+const CUSTOM_FILE_PICKER_ID = Components.ID("d63dee33-fb6d-4547-a8d1-c12197655cce");
 const FILE_PICKER_DESCRIPTION = "File Picker Test Service";
-
-const kDefaultFilePicker = Cm.getClassObject(Cc[FILE_PICKER_CID],
-                                             Ci.nsIFactory);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -63,6 +70,9 @@ FilePickerService.prototype = {
   filterXML: 16,
   filterXUL: 32,
   filterApps: 64,
+  filterAllowURLs: 128,
+  filterAudio: 256,
+  filterVideo: 512,
 
   // properties
   defaultExtension: "",
@@ -102,18 +112,46 @@ factory = {
   }
 };
 
-document.getElementById('i').addEventListener("focus", function (aEvent) {
+var testData = [["a", FilePickerService.prototype.filterImages, 1],
+                ["b", FilePickerService.prototype.filterAudio, 1],
+                ["c", FilePickerService.prototype.filterVideo, 1],
+                ["d", FilePickerService.prototype.filterImages +
+                      FilePickerService.prototype.filterAudio, 1],
+                ["e", FilePickerService.prototype.filterImages +
+                      FilePickerService.prototype.filterVideo, 1],
+                ["f", FilePickerService.prototype.filterAudio +
+                      FilePickerService.prototype.filterVideo, 1],
+                ["g", FilePickerService.prototype.filterImages +
+                      FilePickerService.prototype.filterAudio +
+                      FilePickerService.prototype.filterVideo, 1],
+                ["h", FilePickerService.prototype.filterImages, 1],
+                ["i", FilePickerService.prototype.filterVideo, 1],
+                ["z", 0, 0]];
+
+testData.forEach(function (datum) {
+document.getElementById(datum[0]).addEventListener("focus", function (aEvent) {
     aEvent.target.removeEventListener("focus", arguments.callee, false);
     synthesizeKey('VK_SPACE', {});
   }, false);
+});
+
+var currentTest = 0;
+
+function launchNextTest(aObserver)
+{
+  aObserver.shown = false;
+  aObserver.appendFilterCalled = false;
+  aObserver.filters = [];
+  aObserver.filterIndex = 0;
+
+  document.getElementById(testData[currentTest][0]).focus();
+}
 
 function runTests()
 {
-  var i = document.getElementById('i');
-
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-  Cm.registerFactory(FILE_PICKER_ID,
+  Cm.registerFactory(CUSTOM_FILE_PICKER_ID,
                      FILE_PICKER_DESCRIPTION,
                      FILE_PICKER_CID,
                      factory);
@@ -137,26 +175,33 @@ function runTests()
           SimpleTest.executeSoon(function () {
             netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-            ok(observer.shown, "File picker show method should have been called");
-            ok(!observer.appendFilterCalled, "appendFilter should not have been called");
-            is(observer.filters.length, 1, "AppendFilters should have been called once");
+            ok(observer.shown,
+               "File picker show method should have been called");
+            ok(!observer.appendFilterCalled,
+               "appendFilter should not have been called");
+            is(observer.filters.length, 1,
+               "appendFilters should have been called once");
             is(observer.filters[0], FilePickerService.prototype.filterAll +
-               FilePickerService.prototype.filterImages,
-              "All and Images filters should have been added");
-            is(observer.filterIndex, 1,
-               "File picker should show the second filter index (first is zero)");
+               testData[currentTest][1],
+               "Correct filters should have been added");
+            is(observer.filterIndex, testData[currentTest][2],
+               "File picker should show the correct filter index");
 
-            obs.removeObserver(observer, "TEST_FILEPICKER_APPENDFILTER", false);
-            obs.removeObserver(observer, "TEST_FILEPICKER_APPENDFILTERS", false);
-            obs.removeObserver(observer, "TEST_FILEPICKER_SHOW", false);
-            Cm.unregisterFactory(FILE_PICKER_ID, factory);
+            if (++currentTest == testData.length) {
+              obs.removeObserver(observer, "TEST_FILEPICKER_APPENDFILTER", false);
+              obs.removeObserver(observer, "TEST_FILEPICKER_APPENDFILTERS", false);
+              obs.removeObserver(observer, "TEST_FILEPICKER_SHOW", false);
+              Cm.unregisterFactory(CUSTOM_FILE_PICKER_ID, factory);
 
-            Cm.registerFactory(FILE_PICKER_ID,
-                               "File Picker Service",
-                               FILE_PICKER_CID,
-                               kDefaultFilePicker);
+              Cm.registerFactory(FILE_PICKER_ID,
+                                 "File Picker Service",
+                                 FILE_PICKER_CID,
+                                 null);
 
-            SimpleTest.finish();
+              SimpleTest.finish();
+            } else {
+              launchNextTest(observer);
+            }
           } );
           break;
       }
@@ -173,7 +218,7 @@ function runTests()
 
   // We are simulating a focus then a SPACE key press to open the file picker.
   // We were not able to do this with |synthesizeMouse|.
-  i.focus();
+  launchNextTest(observer);
 }
 
 </script>

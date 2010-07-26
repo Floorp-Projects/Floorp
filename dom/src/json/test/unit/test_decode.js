@@ -181,11 +181,6 @@ function test_files() {
         // [[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]]
         var t = x[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0];
         do_check_eq(t, "Too deep");
-      } else if (i == 25) {
-        // ["	tab	character	in	string	"]
-        do_check_eq(x[0], "\ttab\tcharacter\tin\tstring\t");
-      } else if (i == 27) {
-        do_check_eq(x[0], "line\nbreak");
       } else {
 
         do_throw("UNREACHED");
@@ -194,6 +189,9 @@ function test_files() {
 
     } catch (ex) {
       // expected from parsing invalid JSON
+      if (i == 4 || i == 9 || i == 13 || i == 18) {
+        do_throw("Unexpected pass in " + path);
+      }
     }
   }
   

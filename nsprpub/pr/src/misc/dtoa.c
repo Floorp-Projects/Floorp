@@ -2478,6 +2478,9 @@ strtod
 #ifdef SET_INEXACT
 	int oldinexact;
 #endif
+#ifndef NO_STRTOD_BIGCOMP
+	int req_bigcomp = 0;
+#endif
 #ifdef Honor_FLT_ROUNDS /*{*/
 #ifdef Trust_FLT_ROUNDS /*{{ only define this if FLT_ROUNDS really works! */
 	bc.rounding = Flt_Rounds;
@@ -3031,12 +3034,17 @@ strtod
 		i = cmp(delta, bs);
 #ifndef NO_STRTOD_BIGCOMP /*{*/
 		if (bc.nd > nd && i <= 0) {
-			if (bc.dsign)
-				break;	/* Must use bigcomp(). */
+			if (bc.dsign) {
+				/* Must use bigcomp(). */
+				req_bigcomp = 1;
+				break;
+				}
 #ifdef Honor_FLT_ROUNDS
 			if (bc.rounding != 1) {
-				if (i < 0)
+				if (i < 0) {
+					req_bigcomp = 1;
 					break;
+					}
 				}
 			else
 #endif
@@ -3465,7 +3473,7 @@ strtod
 	Bfree(bd0);
 	Bfree(delta);
 #ifndef NO_STRTOD_BIGCOMP
-	if (bc.nd > nd && bc.dsign) {
+	if (req_bigcomp) {
 		bd0 = 0;
 		bc.e0 += nz1;
 		bigcomp(&rv, s0, &bc);

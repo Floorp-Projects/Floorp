@@ -42,6 +42,7 @@
 #include "nsNetUtil.h"
 #include "nsIVariant.h"
 #include "nsIXPConnect.h"
+#include "nsIJSContextStack.h"
 
 namespace mozilla {
 namespace jetpack {
@@ -57,43 +58,11 @@ JetpackParent::JetpackParent(JSContext* cx)
 
 JetpackParent::~JetpackParent()
 {
-  XRE_GetIOMessageLoop()
-    ->PostTask(FROM_HERE, new DeleteTask<JetpackProcessParent>(mSubprocess));
+  if (mSubprocess)
+    Destroy();
 }
 
 NS_IMPL_ISUPPORTS1(JetpackParent, nsIJetpack)
-
-static nsresult
-ReadFromURI(const nsAString& aURI,
-            nsCString* content)
-{
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                          NS_ConvertUTF16toUTF8(aURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIChannel> channel;
-  NS_NewChannel(getter_AddRefs(channel), uri);
-  NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIInputStream> input;
-  rv = channel->Open(getter_AddRefs(input));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(input, "Channel opened successfully but stream was null?");
-
-  char buffer[256];
-  PRUint32 avail = 0;
-  input->Available(&avail);
-  if (avail) {
-    PRUint32 read = 0;
-    while (NS_SUCCEEDED(input->Read(buffer, sizeof(buffer), &read)) && read) {
-      content->Append(buffer, read);
-      read = 0;
-    }
-  }
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 JetpackParent::SendMessage(const nsAString& aMessageName)
@@ -159,46 +128,49 @@ JetpackParent::UnregisterReceivers(const nsAString& aMessageName)
 }
 
 NS_IMETHODIMP
-JetpackParent::LoadImplementation(const nsAString& aURI)
+JetpackParent::EvalScript(const nsAString& aScript)
 {
-  nsCString code;
-  nsresult rv = ReadFromURI(aURI, &code);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!SendEvalScript(nsString(aScript)))
+    return NS_ERROR_FAILURE;
 
-  if (!code.IsEmpty() &&
-      !SendLoadImplementation(code))
-    rv = NS_ERROR_FAILURE;
-
-  return rv;
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-JetpackParent::LoadUserScript(const nsAString& aURI)
+class AutoCXPusher
 {
-  nsCString code;
-  nsresult rv = ReadFromURI(aURI, &code);
-  NS_ENSURE_SUCCESS(rv, rv);
+public:
+  AutoCXPusher(JSContext* cx)
+    : mCXStack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"))
+  {
+    if (mCXStack)
+      mCXStack->Push(cx);
+  }
+  ~AutoCXPusher()
+  {
+    if (mCXStack)
+      mCXStack->Pop(NULL);
+  }
 
-  if (!code.IsEmpty() &&
-      !SendLoadUserScript(code))
-    rv = NS_ERROR_FAILURE;
-
-  return rv;
-}
+private:
+  nsCOMPtr<nsIJSContextStack> mCXStack;
+  JSContext* mCX;
+};
 
 bool
 JetpackParent::RecvSendMessage(const nsString& messageName,
                                const nsTArray<Variant>& data)
 {
+  AutoCXPusher cxp(mContext);
   JSAutoRequest request(mContext);
   return JetpackActorCommon::RecvMessage(mContext, messageName, data, NULL);
 }
 
 bool
-JetpackParent::RecvCallMessage(const nsString& messageName,
-                               const nsTArray<Variant>& data,
-                               nsTArray<Variant>* results)
+JetpackParent::AnswerCallMessage(const nsString& messageName,
+                                 const nsTArray<Variant>& data,
+                                 nsTArray<Variant>* results)
 {
+  AutoCXPusher cxp(mContext);
   JSAutoRequest request(mContext);
   return JetpackActorCommon::RecvMessage(mContext, messageName, data, results);
 }
@@ -221,6 +193,20 @@ JetpackParent::CreateHandle(nsIVariant** aResult)
     return NS_ERROR_FAILURE;
 
   return xpc->JSToVariant(mContext, OBJECT_TO_JSVAL(hobj), aResult);
+}
+
+NS_IMETHODIMP
+JetpackParent::Destroy()
+{
+  if (!mSubprocess)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  Close();
+  XRE_GetIOMessageLoop()
+    ->PostTask(FROM_HERE, new DeleteTask<JetpackProcessParent>(mSubprocess));
+  mSubprocess = NULL;
+
+  return NS_OK;
 }
 
 PHandleParent*

@@ -433,9 +433,15 @@ void Channel::Close() {
   channel_impl_->Close();
 }
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+Channel::Listener* Channel::set_listener(Listener* listener) {
+  return channel_impl_->set_listener(listener);
+}
+#else
 void Channel::set_listener(Listener* listener) {
   channel_impl_->set_listener(listener);
 }
+#endif
 
 bool Channel::Send(Message* message) {
   return channel_impl_->Send(message);

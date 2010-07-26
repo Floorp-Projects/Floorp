@@ -69,6 +69,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS += nptest_gtk2.cpp
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CPPSRCS += nptest_droid.cpp
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS += nptest_os2.cpp
 endif

@@ -101,8 +101,7 @@ nsAppStartup::nsAppStartup() :
   mRunning(PR_FALSE),
   mShuttingDown(PR_FALSE),
   mAttemptingQuit(PR_FALSE),
-  mRestart(PR_FALSE),
-  mNeedsRestart(PR_FALSE)
+  mRestart(PR_FALSE)
 { }
 
 
@@ -410,23 +409,6 @@ NS_IMETHODIMP
 nsAppStartup::GetShuttingDown(PRBool *aResult)
 {
   *aResult = mShuttingDown;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAppStartup::GetNeedsRestart(PRBool *aResult)
-{
-  *aResult = mNeedsRestart;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAppStartup::SetNeedsRestart(PRBool aNeedsRestart)
-{
-  if (mRunning)
-    return NS_ERROR_UNEXPECTED;
-
-  mNeedsRestart = aNeedsRestart;
   return NS_OK;
 }
 

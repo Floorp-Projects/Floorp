@@ -149,7 +149,7 @@ NS_IMETHODIMP xpcTestInOut :: EchoVoid(void) {
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestInOut(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;

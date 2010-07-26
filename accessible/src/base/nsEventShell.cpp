@@ -146,10 +146,16 @@ void
 nsAccEventQueue::Push(nsAccEvent *aEvent)
 {
   mEvents.AppendElement(aEvent);
-  
+
   // Filter events.
   CoalesceEvents();
-  
+
+  // Associate text change with hide event if it wasn't stolen from hiding
+  // siblings during coalescence.
+  AccHideEvent* hideEvent = downcast_accEvent(aEvent);
+  if (hideEvent && !hideEvent->mTextChangeEvent)
+    CreateTextChangeEventFor(hideEvent);
+
   // Process events.
   PrepareFlush();
 }
@@ -205,8 +211,15 @@ nsAccEventQueue::WillRefresh(mozilla::TimeStamp aTime)
   for (PRUint32 index = 0; index < length; index ++) {
 
     nsAccEvent *accEvent = events[index];
-    if (accEvent->mEventRule != nsAccEvent::eDoNotEmit)
+    if (accEvent->mEventRule != nsAccEvent::eDoNotEmit) {
       mDocument->ProcessPendingEvent(accEvent);
+
+      AccHideEvent* hideEvent = downcast_accEvent(accEvent);
+      if (hideEvent) {
+        if (hideEvent->mTextChangeEvent)
+          mDocument->ProcessPendingEvent(hideEvent->mTextChangeEvent);
+      }
+    }
 
     // No document means it was shut down during event handling by AT
     if (!mDocument)
@@ -244,15 +257,41 @@ nsAccEventQueue::CoalesceEvents()
           continue; // Different type
 
         // Skip event for application accessible since no coalescence for it
-        // is supported. Ignore events unattached from DOM and events from
-        // different documents since we can't coalesce them.
-        if (!thisEvent->mNode || !thisEvent->mNode->IsInDoc() ||
+        // is supported. Ignore events from different documents since we don't
+        // coalesce them.
+        if (!thisEvent->mNode ||
             thisEvent->mNode->GetOwnerDoc() != tailEvent->mNode->GetOwnerDoc())
           continue;
 
         // If event queue contains an event of the same type and having target
         // that is sibling of target of newly appended event then apply its
         // event rule to the newly appended event.
+
+        // XXX: deal with show events separately because they can't be
+        // coalesced by accessible tree the same as hide events since target
+        // accessibles can't be created at this point because of lazy frame
+        // construction (bug 570275).
+
+        // Coalesce hide events for sibling targets.
+        if (tailEvent->mEventType == nsIAccessibleEvent::EVENT_HIDE) {
+          AccHideEvent* tailHideEvent = downcast_accEvent(tailEvent);
+          AccHideEvent* thisHideEvent = downcast_accEvent(thisEvent);
+          if (thisHideEvent->mParent == tailHideEvent->mParent) {
+            tailEvent->mEventRule = thisEvent->mEventRule;
+
+            // Coalesce text change events for hide events.
+            if (tailEvent->mEventRule != nsAccEvent::eDoNotEmit)
+              CoalesceTextChangeEventsFor(tailHideEvent, thisHideEvent);
+
+            return;
+          }
+        }
+
+        // Ignore events unattached from DOM since we don't coalesce them.
+        if (!thisEvent->mNode->IsInDoc())
+          continue;
+
+        // Coalesce show and reorder events by sibling targets.
         if (thisEvent->mNode->GetNodeParent() ==
             tailEvent->mNode->GetNodeParent()) {
           tailEvent->mEventRule = thisEvent->mEventRule;
@@ -461,4 +500,64 @@ nsAccEventQueue::CoalesceReorderEventsFromSameTree(nsAccEvent *aAccEvent,
   nsAccReorderEvent *reorderEvent = downcast_accEvent(aAccEvent);
   if (reorderEvent->IsUnconditionalEvent())
     aDescendantAccEvent->mEventRule = nsAccEvent::eDoNotEmit;
+}
+
+void
+nsAccEventQueue::CoalesceTextChangeEventsFor(AccHideEvent* aTailEvent,
+                                             AccHideEvent* aThisEvent)
+{
+  // XXX: we need a way to ignore SplitNode and JoinNode() when they do not
+  // affect the text within the hypertext.
+
+  nsAccTextChangeEvent* textEvent = aThisEvent->mTextChangeEvent;
+  if (!textEvent)
+    return;
+
+  if (aThisEvent->mNextSibling == aTailEvent->mAccessible) {
+    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText,
+                                          0, PR_UINT32_MAX);
+
+  } else if (aThisEvent->mPrevSibling == aTailEvent->mAccessible) {
+    PRUint32 oldLen = textEvent->GetLength();
+    aTailEvent->mAccessible->AppendTextTo(textEvent->mModifiedText,
+                                          0, PR_UINT32_MAX);
+    textEvent->mStart -= textEvent->GetLength() - oldLen;
+  }
+
+  aTailEvent->mTextChangeEvent.swap(aThisEvent->mTextChangeEvent);
+}
+
+void
+nsAccEventQueue::CreateTextChangeEventFor(AccHideEvent* aEvent)
+{
+  nsRefPtr<nsHyperTextAccessible> textAccessible = do_QueryObject(
+    GetAccService()->GetContainerAccessible(aEvent->mNode,
+                                            aEvent->mAccessible->GetWeakShell()));
+  if (!textAccessible)
+    return;
+
+  // Don't fire event for the first html:br in an editor.
+  if (nsAccUtils::Role(aEvent->mAccessible) ==
+      nsIAccessibleRole::ROLE_WHITESPACE) {
+    nsCOMPtr<nsIEditor> editor;
+    textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
+    if (editor) {
+      PRBool isEmpty = PR_FALSE;
+      editor->GetDocumentIsEmpty(&isEmpty);
+      if (isEmpty)
+        return;
+    }
+  }
+
+  PRInt32 offset = textAccessible->GetChildOffset(aEvent->mAccessible);
+
+  nsAutoString text;
+  aEvent->mAccessible->AppendTextTo(text, 0, PR_UINT32_MAX);
+  if (text.IsEmpty())
+    return;
+
+  aEvent->mTextChangeEvent =
+    new nsAccTextChangeEvent(textAccessible, offset, text, PR_FALSE,
+                             aEvent->mIsAsync,
+                             aEvent->mIsFromUserInput ? eFromUserInput : eNoUserInput);
 }

@@ -1,0 +1,26 @@
+# nsLivemarkService.js
+component {dca61eb5-c7cd-4df1-b0fb-d0722baba251} nsLivemarkService.js
+contract @mozilla.org/browser/livemark-service;2 {dca61eb5-c7cd-4df1-b0fb-d0722baba251}
+
+# nsTaggingService.js
+component {bbc23860-2553-479d-8b78-94d9038334f7} nsTaggingService.js
+contract @mozilla.org/browser/tagging-service;1 {bbc23860-2553-479d-8b78-94d9038334f7}
+component {1dcc23b0-d4cb-11dc-9ad6-479d56d89593} nsTaggingService.js
+contract @mozilla.org/autocomplete/search;1?name=places-tag-autocomplete {1dcc23b0-d4cb-11dc-9ad6-479d56d89593}
+
+# nsPlacesDBFlush.js
+component {c1751cfc-e8f1-4ade-b0bb-f74edfb8ef6a} nsPlacesDBFlush.js
+contract @mozilla.org/places/sync;1 {c1751cfc-e8f1-4ade-b0bb-f74edfb8ef6a}
+category bookmark-observers nsPlacesDBFlush @mozilla.org/places/sync;1
+category history-observers nsPlacesDBFlush @mozilla.org/places/sync;1
+
+# nsPlacesExpiration.js
+component {705a423f-2f69-42f3-b9fe-1517e0dee56f} nsPlacesExpiration.js
+contract @mozilla.org/places/expiration;1 {705a423f-2f69-42f3-b9fe-1517e0dee56f}
+category history-observers nsPlacesExpiration @mozilla.org/places/expiration;1
+
+# nsMicrosummaryService.js
+component {460a9792-b154-4f26-a922-0f653e2c8f91} nsMicrosummaryService.js
+contract @mozilla.org/microsummary/service;1 {460a9792-b154-4f26-a922-0f653e2c8f91}
+# How often to check for generator updates, in seconds 7 * 86400 == 1 week
+category update-timer nsMicrosummaryService @mozilla.org/microsummary/service;1,getService,microsummary-generator-update-timer,browser.microsummary.generatorUpdateInterval,604800

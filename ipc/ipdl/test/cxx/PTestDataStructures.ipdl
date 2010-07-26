@@ -188,9 +188,9 @@ parent:
     // (nsIntRegion isn't memmove()able)
     sync Test18(nsIntRegion[] ops);
 
-state START:
+state CONSTRUCTING:
+    send PTestDataStructuresSub goto CONSTRUCTING;
     send Start goto TEST1;
-
 state TEST1:   recv Test1 goto TEST2;
 state TEST2:   recv Test2 goto TEST3;
 state TEST3:   recv Test3 goto TEST4;

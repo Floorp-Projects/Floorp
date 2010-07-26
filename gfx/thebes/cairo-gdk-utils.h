@@ -61,18 +61,6 @@ typedef cairo_bool_t (* cairo_gdk_drawing_callback)
      GdkRectangle * clip_rects, unsigned int num_rects);
 
 /**
- * This structure captures the result of the native drawing, in case the
- * caller may wish to reapply the drawing efficiently later.
- */
-typedef struct {
-    cairo_surface_t *surface;
-    cairo_bool_t    uniform_alpha;
-    cairo_bool_t    uniform_color;
-    double          alpha; /* valid only if uniform_alpha is TRUE */
-    double          r, g, b; /* valid only if uniform_color is TRUE */
-} cairo_gdk_drawing_result_t;
-
-/**
  * This type specifies whether the native drawing callback draws all pixels
  * in its bounds opaquely, independent of the contents of the target drawable,
  * or whether it leaves pixels transparent/translucent or depends on the
@@ -86,29 +74,12 @@ typedef enum _cairo_gdk_drawing_opacity {
 /**
  * This type encodes the capabilities of the native drawing callback.
  * 
- * If CAIRO_GDK_DRAWING_SUPPORTS_OFFSET is set, 'offset_x' and 'offset_y'
- * can be nonzero in the call to the callback; otherwise they will be zero.
- * 
  * If CAIRO_GDK_DRAWING_SUPPORTS_CLIP_RECT is set, then 'num_rects' can be
- * zero or one in the call to the callback. If
- * CAIRO_GDK_DRAWING_SUPPORTS_CLIP_LIST is set, then 'num_rects' can be
- * anything in the call to the callback. Otherwise 'num_rects' will be zero.
- * Do not set both of these values.
- * 
- * If CAIRO_GDK_DRAWING_SUPPORTS_ALTERNATE_DISPLAY is set, then 'dpy' can be
- * any display, otherwise it will be the display passed into
- * cairo_draw_with_gdk.
- * 
- * If CAIRO_GDK_DRAWING_SUPPORTS_NONDEFAULT_VISUAL is set, then 'visual' can be
- * any visual, otherwise it will be equal to
- * DefaultVisual (dpy, DefaultScreen (dpy)).
+ * zero or one in the call to the callback. Otherwise 'num_rects' will be
+ * zero.
  */
 typedef enum {
-    CAIRO_GDK_DRAWING_SUPPORTS_OFFSET = 0x01,
     CAIRO_GDK_DRAWING_SUPPORTS_CLIP_RECT = 0x02,
-    CAIRO_GDK_DRAWING_SUPPORTS_CLIP_LIST = 0x04,
-    CAIRO_GDK_DRAWING_SUPPORTS_ALTERNATE_SCREEN = 0x08,
-    CAIRO_GDK_DRAWING_SUPPORTS_NONDEFAULT_VISUAL = 0x10
 } cairo_gdk_drawing_support_t;
 
 /**

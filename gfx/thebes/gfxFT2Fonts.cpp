@@ -108,6 +108,12 @@ FontEntry::~FontEntry()
 #endif
 }
 
+gfxFont*
+FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold) {
+    already_AddRefed<gfxFT2Font> font = gfxFT2Font::GetOrMakeFont(this, aFontStyle);
+    return font.get();
+}
+
 /* static */
 FontEntry*
 FontEntry::CreateFontEntry(const gfxProxyFontEntry &aProxyEntry,
@@ -325,8 +331,9 @@ gfxFT2FontGroup::FontCallback(const nsAString& fontName,
 }
 
 gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
-                                 const gfxFontStyle *aStyle)
-    : gfxFontGroup(families, aStyle)
+                                 const gfxFontStyle *aStyle,
+                                 gfxUserFontSet *aUserFontSet)
+    : gfxFontGroup(families, aStyle, aUserFontSet)
 {
 #ifdef DEBUG_pavlov
     printf("Looking for %s\n", NS_ConvertUTF16toUTF8(families).get());
@@ -385,7 +392,7 @@ gfxFT2FontGroup::~gfxFT2FontGroup()
 gfxFontGroup *
 gfxFT2FontGroup::Copy(const gfxFontStyle *aStyle)
 {
-     return new gfxFT2FontGroup(mFamilies, aStyle);
+    return new gfxFT2FontGroup(mFamilies, aStyle, nsnull);
 }
 
 /**
@@ -699,7 +706,7 @@ gfxFT2FontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
     }
 #else
     nsRefPtr<gfxFont> selectedFont;
-    nsRefPtr<gfxFT2Font> refFont = GetFontAt(0);
+    nsRefPtr<gfxFont> refFont = GetFontAt(0);
     gfxToolkitPlatform *platform = gfxToolkitPlatform::GetPlatform();
     selectedFont = platform->FindFontForChar(aCh, refFont);
     if (selectedFont)
@@ -915,7 +922,7 @@ gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
 already_AddRefed<gfxFT2Font>
 gfxFT2Font::GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
 {
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->Name(), aStyle);
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry, aStyle);
     if (!font) {
         cairo_scaled_font_t *scaledFont = CreateScaledFont(aFontEntry, aStyle);
         font = new gfxFT2Font(scaledFont, aFontEntry, aStyle);

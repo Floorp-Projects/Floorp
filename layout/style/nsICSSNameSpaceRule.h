@@ -44,9 +44,9 @@
 
 class nsIAtom;
 
-// IID for the nsICSSNameSpaceRule interface {153392d4-90bb-424e-b737-1bf5bc775394}
+// IID for the nsICSSNameSpaceRule interface {ec064d33-a6f1-459c-8f31-8289eed877de}
 #define NS_ICSS_NAMESPACE_RULE_IID     \
-{0x153392d4, 0x90bb, 0x424e, {0xb7, 0x37, 0x1b, 0xf5, 0xbc, 0x77, 0x53, 0x94}}
+{0xec064d33, 0xa6f1, 0x459c, {0x8f, 0x31, 0x82, 0x89, 0xee, 0xd8, 0x77, 0xde}}
 
 
 class nsICSSNameSpaceRule : public nsICSSRule {

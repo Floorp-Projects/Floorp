@@ -53,8 +53,6 @@
  * "page", "homepage", or "homepage_override" to the various Get/Set methods.
  *
  * @see nsIPrefService
- * 
- * @status FROZEN
  */
 
 [scriptable, uuid(56c35506-f14b-11d3-99d3-ddbfac2ccf65)]

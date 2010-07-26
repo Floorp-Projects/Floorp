@@ -33,7 +33,9 @@
 //
 // Author: Mark Mentovai
 
+#include "google_breakpad/processor/minidump.h"
 
+#include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -49,7 +51,6 @@ typedef SSIZE_T ssize_t;
 #define O_BINARY 0
 #endif  // _WIN32
 
-#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -58,7 +59,6 @@ typedef SSIZE_T ssize_t;
 
 #include "processor/range_map-inl.h"
 
-#include "google_breakpad/processor/minidump.h"
 #include "processor/basic_code_module.h"
 #include "processor/basic_code_modules.h"
 #include "processor/logging.h"

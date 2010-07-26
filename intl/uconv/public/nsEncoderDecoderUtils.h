@@ -51,111 +51,21 @@
 #define NS_DATA_BUNDLE_CATEGORY     "uconv-charset-data"
 #define NS_TITLE_BUNDLE_CATEGORY    "uconv-charset-titles"
 
-struct nsConverterRegistryInfo {
-  PRBool isEncoder;             // PR_TRUE = encoder, PR_FALSE = decoder
-  const char *charset;
-  nsCID cid;
-};
-
 #define NS_CONVERTER_REGISTRY_START \
-  static const nsConverterRegistryInfo gConverterRegistryInfo[] = {
+  static const mozilla::Module::CategoryEntry kUConvCategories[] = {
 
 #define NS_CONVERTER_REGISTRY_END \
+  { NULL } \
   };
 
-
-#define NS_IMPL_NSUCONVERTERREGSELF                                     \
-static NS_IMETHODIMP                                                    \
-nsUConverterRegSelf(nsIComponentManager *aCompMgr,                      \
-                    nsIFile *aPath,                                     \
-                    const char* registryLocation,                       \
-                    const char* componentType,                          \
-                    const nsModuleComponentInfo *info)                  \
-{                                                                       \
-  nsresult rv;                                                          \
-  nsCOMPtr<nsICategoryManager> catman =                                 \
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);                  \
-  if (NS_FAILED(rv)) return rv;                                         \
-                                                                        \
-  nsXPIDLCString previous;                                              \
-  PRUint32 i;                                                           \
-  for (i=0; i<sizeof(gConverterRegistryInfo)/sizeof(gConverterRegistryInfo[0]); i++) { \
-    const nsConverterRegistryInfo* entry = &gConverterRegistryInfo[i];         \
-    const char *category;                                               \
-    const char *key;                                                    \
-                                                                        \
-    if (entry->isEncoder) {                                             \
-      category = NS_UNICODEENCODER_NAME;                                \
-    } else {                                                            \
-      category = NS_UNICODEDECODER_NAME;                                \
-    }                                                                   \
-    key = entry->charset;                                               \
-                                                                        \
-    rv = catman->AddCategoryEntry(category, key, "",                    \
-                                  PR_TRUE,                              \
-                                  PR_TRUE,                              \
-                                  getter_Copies(previous));             \
-  }                                                                     \
-  return rv;                                                            \
-} \
-static NS_IMETHODIMP \
-nsUConverterUnregSelf(nsIComponentManager *aCompMgr,                        \
-                      nsIFile *aPath,                                       \
-                      const char*,                                          \
-                      const nsModuleComponentInfo *info)                    \
-{ \
-  nsresult rv;                                                          \
-  nsCOMPtr<nsICategoryManager> catman =                                 \
-  do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);                    \
-  if (NS_FAILED(rv)) return rv;                                         \
-                                                                        \
-  nsXPIDLCString previous;                                              \
-  PRUint32 i;                                                           \
-  for (i=0; i<sizeof(gConverterRegistryInfo)/sizeof(gConverterRegistryInfo[0]); i++) { \
-    const nsConverterRegistryInfo* entry = &gConverterRegistryInfo[i];         \
-    const char *category;                                               \
-    const char *key;                                                    \
-                                                                        \
-    if (entry->isEncoder) {                                             \
-      category = NS_UNICODEDECODER_NAME;                                \
-    } else {                                                            \
-      category = NS_UNICODEENCODER_NAME;                                \
-    }                                                                   \
-    key = entry->charset;                                               \
-                                                                        \
-    rv = catman->DeleteCategoryEntry(category, key, PR_TRUE);           \
-  }                                                                     \
-  return rv;                                                            \
-}
-
-
 #define NS_UCONV_REG_UNREG_DECODER(_Charset, _CID)          \
-  {                                                         \
-    PR_FALSE,                                                \
-    _Charset,                                               \
-    _CID,                                                   \
-  },
+  { NS_UNICODEDECODER_NAME, _Charset, "" },
   
 #define NS_UCONV_REG_UNREG_ENCODER(_Charset, _CID)          \
-  {                                                         \
-    PR_TRUE,                                               \
-    _Charset,                                               \
-    _CID,                                                   \
-  }, 
+  { NS_UNICODEENCODER_NAME, _Charset, "" },
 
-  // this needs to be written out per some odd cpp behavior that
-  // I could not work around - the behavior is document in the cpp
-  // info page however, so I'm not the only one to hit this!
 #define NS_UCONV_REG_UNREG(_Charset, _DecoderCID, _EncoderCID) \
-  {                                                         \
-    PR_FALSE,                                               \
-    _Charset,                                               \
-    _DecoderCID,                                            \
-  },                                                        \
-  {                                                         \
-    PR_TRUE,                                                \
-    _Charset,                                               \
-    _EncoderCID,                                            \
-  },
-  
+  NS_UCONV_REG_UNREG_DECODER(_Charset, *) \
+  NS_UCONV_REG_UNREG_ENCODER(_Charset, *)
+
 #endif

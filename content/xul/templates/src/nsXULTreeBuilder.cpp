@@ -92,7 +92,7 @@ public:
     virtual void NodeWillBeDestroyed(const nsINode* aNode);
 
 protected:
-    friend NS_IMETHODIMP
+    friend nsresult
     NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
     nsXULTreeBuilder();
@@ -277,7 +277,7 @@ protected:
 
 //----------------------------------------------------------------------
 
-NS_IMETHODIMP
+nsresult
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
     *aResult = nsnull;
@@ -1086,6 +1086,7 @@ nsXULTreeBuilder::PerformActionOnCell(const PRUnichar* aAction, PRInt32 aRow, ns
 void
 nsXULTreeBuilder::NodeWillBeDestroyed(const nsINode* aNode)
 {
+    nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
     if (mObservers)
         mObservers->Clear();
 

@@ -62,7 +62,7 @@
 
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
-#include "nsIXBLDocumentInfo.h"
+#include "nsXBLDocumentInfo.h"
 #include "nsXBLInsertionPoint.h"
 
 #include "nsIStyleRuleProcessor.h"
@@ -397,13 +397,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 static PLDHashOperator
 DocumentInfoHashtableTraverser(nsIURI* key,
-                               nsIXBLDocumentInfo* di,
+                               nsXBLDocumentInfo* di,
                                void* userArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(userArg);
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mDocumentTable value");
-  cb->NoteXPCOMChild(di);
+  nsCOMPtr<nsISupports> iface = do_QueryObject(di);
+  cb->NoteXPCOMChild(iface);
   return PL_DHASH_NEXT;
 }
 
@@ -932,7 +933,7 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
     return rv;
 
   // Load the binding doc.
-  nsCOMPtr<nsIXBLDocumentInfo> info;
+  nsRefPtr<nsXBLDocumentInfo> info;
   xblService->LoadBindingDocumentInfo(nsnull, aBoundDoc, aURL,
                                       aOriginPrincipal, PR_TRUE,
                                       getter_AddRefs(info));
@@ -1062,7 +1063,7 @@ nsBindingManager::ExecuteDetachedHandlers()
 }
 
 nsresult
-nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
+nsBindingManager::PutXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo)
 {
   NS_PRECONDITION(aDocumentInfo, "Must have a non-null documentinfo!");
   
@@ -1077,14 +1078,14 @@ nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 }
 
 void
-nsBindingManager::RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
+nsBindingManager::RemoveXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo)
 {
   if (mDocumentTable.IsInitialized()) {
     mDocumentTable.Remove(aDocumentInfo->DocumentURI());
   }
 }
 
-nsIXBLDocumentInfo*
+nsXBLDocumentInfo*
 nsBindingManager::GetXBLDocumentInfo(nsIURI* aURL)
 {
   if (!mDocumentTable.IsInitialized())
@@ -1376,8 +1377,7 @@ EnumMediumFeaturesChanged(nsVoidPtrHashKey *aKey, void* aClosure)
   MediumFeaturesChangedData *data =
     static_cast<MediumFeaturesChangedData*>(aClosure);
 
-  PRBool thisChanged = PR_FALSE;
-  ruleProcessor->MediumFeaturesChanged(data->mPresContext, &thisChanged);
+  PRBool thisChanged = ruleProcessor->MediumFeaturesChanged(data->mPresContext);
   *data->mRulesChanged = *data->mRulesChanged || thisChanged;
 
   return PL_DHASH_NEXT;
@@ -1399,6 +1399,33 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
   MediumFeaturesChangedData data = { aPresContext, aRulesChanged };
   set.EnumerateEntries(EnumMediumFeaturesChanged, &data);
   return NS_OK;
+}
+
+static PLDHashOperator
+EnumAppendAllSheets(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
+{
+  nsTArray<nsCSSStyleSheet*>* array =
+    static_cast<nsTArray<nsCSSStyleSheet*>*>(aClosure);
+  for (nsXBLBinding *binding = aBinding; binding;
+       binding = binding->GetBaseBinding()) {
+    nsXBLPrototypeResources::sheet_array_type* sheets =
+      binding->PrototypeBinding()->GetStyleSheets();
+    if (sheets) {
+      // Copy from nsTArray<nsRefPtr<nsCSSStyleSheet> > to
+      // nsTArray<nsCSSStyleSheet*>.
+      array->AppendElements(*sheets);
+    }
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+nsBindingManager::AppendAllSheets(nsTArray<nsCSSStyleSheet*>& aArray)
+{
+  if (!mBindingTable.IsInitialized())
+    return;
+
+  mBindingTable.EnumerateRead(EnumAppendAllSheets, &aArray);
 }
 
 nsIContent*
@@ -1595,7 +1622,8 @@ void
 nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                  nsIContent* aContainer,
                                  nsIContent* aChild,
-                                 PRInt32 aIndexInContainer)
+                                 PRInt32 aIndexInContainer,
+                                 nsIContent* aPreviousSibling)
 {
   if (aContainer && aIndexInContainer != -1 &&
       (mContentListTable.ops || mAnonymousNodesTable.ops)) {

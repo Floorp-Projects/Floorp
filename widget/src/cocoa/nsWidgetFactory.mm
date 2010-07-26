@@ -38,7 +38,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 
 #include "nsWidgetsCID.h"
 
@@ -99,105 +99,96 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacDockSupport)
 #include "nsStandaloneNativeMenu.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStandaloneNativeMenu)
 
-static const nsModuleComponentInfo gComponents[] =
-{
-  { "nsWindow",
-    NS_WINDOW_CID,
-    "@mozilla.org/widgets/window/mac;1",
-    nsCocoaWindowConstructor },
-  { "Popup nsWindow",
-    NS_POPUP_CID,
-    "@mozilla.org/widgets/popup/mac;1",
-    nsCocoaWindowConstructor },
-  { "Child nsWindow",
-    NS_CHILD_CID,
-    "@mozilla.org/widgets/childwindow/mac;1",
-    nsChildViewConstructor },
-  { "File Picker",
-    NS_FILEPICKER_CID,
-    "@mozilla.org/filepicker;1",
-    nsFilePickerConstructor },
-  { "AppShell",
-    NS_APPSHELL_CID,
-    "@mozilla.org/widget/appshell/mac;1",
-    nsAppShellConstructor },
-  { "Toolkit",
-    NS_TOOLKIT_CID,
-    "@mozilla.org/widget/toolkit/mac;1",
-    nsToolkitConstructor },
-  { "Look And Feel",
-    NS_LOOKANDFEEL_CID,
-    "@mozilla.org/widget/lookandfeel;1",
-    nsLookAndFeelConstructor },
-  { "Sound",
-    NS_SOUND_CID,
-    "@mozilla.org/sound;1",
-    nsSoundConstructor },
-  { "Transferable",
-    NS_TRANSFERABLE_CID,
-    "@mozilla.org/widget/transferable;1",
-    nsTransferableConstructor },
-  { "HTML Format Converter",
-    NS_HTMLFORMATCONVERTER_CID,
-    "@mozilla.org/widget/htmlformatconverter;1",
-    nsHTMLFormatConverterConstructor },
-  { "Clipboard",
-    NS_CLIPBOARD_CID,
-    "@mozilla.org/widget/clipboard;1",
-    nsClipboardConstructor },
-  { "Clipboard Helper",
-    NS_CLIPBOARDHELPER_CID,
-    "@mozilla.org/widget/clipboardhelper;1",
-    nsClipboardHelperConstructor },
-  { "Drag Service",
-    NS_DRAGSERVICE_CID,
-    "@mozilla.org/widget/dragservice;1",
-    nsDragServiceConstructor },
-  { "Cocoa Bidi Keyboard",
-    NS_BIDIKEYBOARD_CID,
-    "@mozilla.org/widget/bidikeyboard;1",
-    nsBidiKeyboardConstructor },
-  { "Native Theme Renderer", 
-    NS_THEMERENDERER_CID,
-    "@mozilla.org/chrome/chrome-native-theme;1",
-    nsNativeThemeCocoaConstructor },
-  { "nsScreenManager",
-    NS_SCREENMANAGER_CID,
-    "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerCocoaConstructor },
-  { "nsDeviceContextSpec",
-     NS_DEVICE_CONTEXT_SPEC_CID,
-     "@mozilla.org/gfx/devicecontextspec;1",
-     nsDeviceContextSpecXConstructor },
-  { "Print Session",
-    NS_PRINTSESSION_CID,
-    "@mozilla.org/gfx/printsession;1",
-    nsPrintSessionConstructor },
-  { "PrintSettings Service",
-     NS_PRINTSETTINGSSERVICE_CID,
-     "@mozilla.org/gfx/printsettings-service;1",
-     nsPrintOptionsXConstructor },
-  { "Native Print Dialog",
-    NS_PRINTDIALOGSERVICE_CID,
-    NS_PRINTDIALOGSERVICE_CONTRACTID,
-    nsPrintDialogServiceXConstructor },
-  { "User Idle Service",
-    NS_IDLE_SERVICE_CID,
-    "@mozilla.org/widget/idleservice;1",
-    nsIdleServiceXConstructor },
-  { "Native Menu Service",
-    NS_NATIVEMENUSERVICE_CID,
-    "@mozilla.org/widget/nativemenuservice;1",
-    nsNativeMenuServiceXConstructor },
-  { "Mac Dock Support Service",
-    NS_MACDOCKSUPPORT_CID,
-    "@mozilla.org/widget/macdocksupport;1",
-    nsMacDockSupportConstructor },
-  { "Standalone Native Menu",
-    NS_STANDALONENATIVEMENU_CID,
-    "@mozilla.org/widget/standalonenativemenu;1",
-    nsStandaloneNativeMenuConstructor },
+NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
+NS_DEFINE_NAMED_CID(NS_POPUP_CID);
+NS_DEFINE_NAMED_CID(NS_CHILD_CID);
+NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
+NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
+NS_DEFINE_NAMED_CID(NS_TOOLKIT_CID);
+NS_DEFINE_NAMED_CID(NS_LOOKANDFEEL_CID);
+NS_DEFINE_NAMED_CID(NS_SOUND_CID);
+NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
+NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
+NS_DEFINE_NAMED_CID(NS_CLIPBOARD_CID);
+NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
+NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_BIDIKEYBOARD_CID);
+NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
+NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
+NS_DEFINE_NAMED_CID(NS_PRINTSESSION_CID);
+NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_PRINTDIALOGSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_NATIVEMENUSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_MACDOCKSUPPORT_CID);
+NS_DEFINE_NAMED_CID(NS_STANDALONENATIVEMENU_CID);
+
+
+static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
+  { &kNS_WINDOW_CID, false, NULL, nsCocoaWindowConstructor },
+  { &kNS_POPUP_CID, false, NULL, nsCocoaWindowConstructor },
+  { &kNS_CHILD_CID, false, NULL, nsChildViewConstructor },
+  { &kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor },
+  { &kNS_APPSHELL_CID, false, NULL, nsAppShellConstructor },
+  { &kNS_TOOLKIT_CID, false, NULL, nsToolkitConstructor },
+  { &kNS_LOOKANDFEEL_CID, false, NULL, nsLookAndFeelConstructor },
+  { &kNS_SOUND_CID, false, NULL, nsSoundConstructor },
+  { &kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor },
+  { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
+  { &kNS_CLIPBOARD_CID, false, NULL, nsClipboardConstructor },
+  { &kNS_CLIPBOARDHELPER_CID, false, NULL, nsClipboardHelperConstructor },
+  { &kNS_DRAGSERVICE_CID, false, NULL, nsDragServiceConstructor },
+  { &kNS_BIDIKEYBOARD_CID, false, NULL, nsBidiKeyboardConstructor },
+  { &kNS_THEMERENDERER_CID, false, NULL, nsNativeThemeCocoaConstructor },
+  { &kNS_SCREENMANAGER_CID, false, NULL, nsScreenManagerCocoaConstructor },
+  { &kNS_DEVICE_CONTEXT_SPEC_CID, false, NULL, nsDeviceContextSpecXConstructor },
+  { &kNS_PRINTSESSION_CID, false, NULL, nsPrintSessionConstructor },
+  { &kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintOptionsXConstructor },
+  { &kNS_PRINTDIALOGSERVICE_CID, false, NULL, nsPrintDialogServiceXConstructor },
+  { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceXConstructor },
+  { &kNS_NATIVEMENUSERVICE_CID, false, NULL, nsNativeMenuServiceXConstructor },
+  { &kNS_MACDOCKSUPPORT_CID, false, NULL, nsMacDockSupportConstructor },
+  { &kNS_STANDALONENATIVEMENU_CID, false, NULL, nsStandaloneNativeMenuConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetMacModule, gComponents,
-                                   nsAppShellInit, nsAppShellShutdown)
+static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
+  { "@mozilla.org/widgets/window/mac;1", &kNS_WINDOW_CID },
+  { "@mozilla.org/widgets/popup/mac;1", &kNS_POPUP_CID },
+  { "@mozilla.org/widgets/childwindow/mac;1", &kNS_CHILD_CID },
+  { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID },
+  { "@mozilla.org/widget/appshell/mac;1", &kNS_APPSHELL_CID },
+  { "@mozilla.org/widget/toolkit/mac;1", &kNS_TOOLKIT_CID },
+  { "@mozilla.org/widget/lookandfeel;1", &kNS_LOOKANDFEEL_CID },
+  { "@mozilla.org/sound;1", &kNS_SOUND_CID },
+  { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
+  { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
+  { "@mozilla.org/widget/clipboard;1", &kNS_CLIPBOARD_CID },
+  { "@mozilla.org/widget/clipboardhelper;1", &kNS_CLIPBOARDHELPER_CID },
+  { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID },
+  { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID },
+  { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
+  { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
+  { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID },
+  { "@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID },
+  { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },
+  { NS_PRINTDIALOGSERVICE_CONTRACTID, &kNS_PRINTDIALOGSERVICE_CID },
+  { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
+  { "@mozilla.org/widget/nativemenuservice;1", &kNS_NATIVEMENUSERVICE_CID },
+  { "@mozilla.org/widget/macdocksupport;1", &kNS_MACDOCKSUPPORT_CID },
+  { "@mozilla.org/widget/standalonenativemenu;1", &kNS_STANDALONENATIVEMENU_CID },
+  { NULL }
+};
+
+static const mozilla::Module kWidgetModule = {
+  mozilla::Module::kVersion,
+  kWidgetCIDs,
+  kWidgetContracts,
+  NULL,
+  NULL,
+  nsAppShellInit,
+  nsAppShellShutdown
+};
+
+NSMODULE_DEFN(nsWidgetMacModule) = &kWidgetModule;

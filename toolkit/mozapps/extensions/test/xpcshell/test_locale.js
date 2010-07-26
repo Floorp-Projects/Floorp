@@ -41,7 +41,7 @@ function run_test_1() {
 
 // Tests that the localized properties are visible after installation
 function run_test_2() {
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
@@ -50,7 +50,7 @@ function run_test_2() {
     do_check_eq(addon.description, "fr-FR Description");
 
     addon.userDisabled = true;
-    restartManager(0);
+    restartManager();
 
     run_test_3();
   });
@@ -71,7 +71,7 @@ function run_test_4() {
   Services.prefs.setCharPref("extensions.addon1@tests.mozilla.org.name", "Name from prefs");
   Services.prefs.setCharPref("extensions.addon1@tests.mozilla.org.contributor.1", "Contributor 1");
   Services.prefs.setCharPref("extensions.addon1@tests.mozilla.org.contributor.2", "Contributor 2");
-  restartManager(0);
+  restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
@@ -89,7 +89,7 @@ function run_test_4() {
 // Test that changing locale works
 function run_test_5() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "de-DE");
-  restartManager(0);
+  restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
@@ -104,7 +104,7 @@ function run_test_5() {
 // Test that missing locales use the fallbacks
 function run_test_6() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "nl-NL");
-  restartManager(0);
+  restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
@@ -113,7 +113,7 @@ function run_test_6() {
     do_check_eq(addon.description, "Fallback Description");
 
     addon.userDisabled = false;
-    restartManager(0);
+    restartManager();
     run_test_7();
   });
 }
@@ -132,7 +132,7 @@ function run_test_7() {
 // Test that the prefs will override localized values from the manifest
 function run_test_8() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
-  restartManager(0);
+  restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);

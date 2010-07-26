@@ -55,8 +55,6 @@ public:
   }
 
   // LayerOGL Implementation
-  virtual LayerType GetType();
-
   virtual Layer* GetLayer();
 
   virtual void RenderLayer(int aPreviousFrameBuffer,

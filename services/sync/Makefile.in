@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = locales
 
 EXTRA_COMPONENTS = \
+  SyncComponents.manifest \
   FormNotifier.js \
   Weave.js \
   $(NULL)

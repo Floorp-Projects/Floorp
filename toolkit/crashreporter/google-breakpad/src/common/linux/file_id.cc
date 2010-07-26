@@ -33,21 +33,22 @@
 //
 
 #include "common/linux/file_id.h"
-#include "common/linux/linux_libc_support.h"
-#include "common/linux/linux_syscall_support.h"
 
 #include <arpa/inet.h>
+#include <assert.h>
 #include <elf.h>
 #include <fcntl.h>
 #include <link.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include <algorithm>
-#include <cassert>
-#include <cstdio>
+
+#include "common/linux/linux_libc_support.h"
+#include "common/linux/linux_syscall_support.h"
 
 namespace google_breakpad {
 

@@ -66,6 +66,11 @@ struct nsPluginInfo;
 class nsPluginTag : public nsIPluginTag
 {
 public:
+  enum nsRegisterType {
+    ePluginRegister,
+    ePluginUnregister
+  };
+  
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGINTAG
   
@@ -93,6 +98,8 @@ public:
   PRUint32 Flags();
   PRBool Equals(nsPluginTag* aPluginTag);
   PRBool IsEnabled();
+  void RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
+                                   nsRegisterType aType = ePluginRegister);
   
   nsRefPtr<nsPluginTag> mNext;
   nsPluginHost *mPluginHost;
@@ -115,20 +122,6 @@ private:
   PRUint32      mFlags;
   
   nsresult EnsureMembersAreUTF8();
-};
-
-struct nsPluginInstanceTag
-{
-  char*                  mURL;
-  nsRefPtr<nsPluginTag>  mPluginTag;
-  nsNPAPIPluginInstance* mInstance; // this must always be valid
-  // Array holding all opened stream listeners for this entry
-  nsCOMArray<nsIPluginStreamInfo> mStreams; 
-  
-  nsPluginInstanceTag(nsPluginTag* aPluginTag,
-                      nsIPluginInstance* aInstance, 
-                      const char * url);
-  ~nsPluginInstanceTag();
 };
 
 #endif // nsPluginTags_h_

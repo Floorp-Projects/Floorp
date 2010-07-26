@@ -51,6 +51,7 @@ XPIDLSRCS = \
 
 EXTRA_COMPONENTS = \
   WeaveCrypto.js \
+  WeaveCrypto.manifest \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

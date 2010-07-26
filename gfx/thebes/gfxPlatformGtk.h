@@ -118,9 +118,9 @@ public:
     FT_Library GetFTLibrary();
 #endif
 
-    void SetGdkDrawable(gfxASurface *target,
-                        GdkDrawable *drawable);
-    GdkDrawable *GetGdkDrawable(gfxASurface *target);
+    static void SetGdkDrawable(gfxASurface *target,
+                               GdkDrawable *drawable);
+    static GdkDrawable *GetGdkDrawable(gfxASurface *target);
 
 protected:
     void InitDisplayCaps();

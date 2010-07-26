@@ -65,7 +65,7 @@ include svg-integration/reftest.list
 == dynamic-textPath-01.svg dynamic-textPath-01-ref.svg
 == dynamic-use-01.svg pass.svg
 == dynamic-use-02.svg pass.svg
-== dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg
+random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == dynamic-use-remove-width.svg dynamic-use-remove-width-ref.svg
 == linked-pattern-01.svg pass.svg
 == use-01-extref.svg pass.svg
@@ -104,6 +104,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == linearGradient-basic-02.svg pass.svg
 == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
+== marker-viewBox-01.svg marker-viewBox-01-ref.svg
 == mask-containing-masked-content-01.svg pass.svg
 # Bug 456323
 # == mask-transformed-01.svg mask-transformed-01-ref.svg
@@ -124,6 +125,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == pattern-live-01a.svg pattern-live-01-ref.svg
 == pattern-live-01b.svg pattern-live-01-ref.svg
 == pattern-live-01c.svg pattern-live-01-ref.svg
+== polygon-marker-01.svg pass.svg
 == pseudo-classes-01.svg pass.svg
 # This test depends on :visited styles (which are asynchronous), so we run
 # it in layout/style/test/test_visited_reftests.html instead of using the

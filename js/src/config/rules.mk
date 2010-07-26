@@ -168,6 +168,7 @@ xpcshell-tests:
           -I$(topsrcdir)/build \
           $(testxpcsrcdir)/runxpcshelltests.py \
           --symbols-path=$(DIST)/crashreporter-symbols \
+          $(EXTRA_TEST_ARGS) \
           $(DIST)/bin/xpcshell \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
@@ -193,6 +194,8 @@ check-one:
           --symbols-path=$(DIST)/crashreporter-symbols \
           --test-path=$(SOLO_FILE) \
           --profile-name=$(MOZ_APP_NAME) \
+          --verbose \
+          $(EXTRA_TEST_ARGS) \
           $(DIST)/bin/xpcshell \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
@@ -884,7 +887,9 @@ ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/components
 	$(ELF_DYNSTR_GC) $(FINAL_TARGET)/components/$(SHARED_LIBRARY)
-	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/components.list $(SHARED_LIBRARY)
+ifndef NO_COMPONENTS_MANIFEST
+	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/components.manifest "binary-component $(SHARED_LIBRARY)"
+endif
 ifdef BEOS_ADDON_WORKAROUND
 	( cd $(FINAL_TARGET)/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
@@ -1199,7 +1204,7 @@ ifndef MOZ_OS2_USE_DECLSPEC
 	$(FILTER) $(OBJS) $(SHARED_LIBRARY_LIBS) >> $@
 endif	
 else
-	echo    _NSGetModule >> $@
+	echo    _NSModule >> $@
 endif
 else
 ifndef MOZ_OS2_USE_DECLSPEC
@@ -1354,7 +1359,7 @@ _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 define MAKE_DEPS_AUTO
 if test -d $(@D); then \
 	echo "Building deps for $<"; \
-	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f- $(DEFINES) $(ACDEFINES) $(INCLUDES) $< 2>/dev/null | sed -e "s|^[^ ]*/||" > $(_MDDEPFILE) ; \
+	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f- $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(INCLUDES) $< 2>/dev/null | sed -e "s|^[^ ]*/||" > $(_MDDEPFILE) ; \
 fi
 endef
 
@@ -1396,12 +1401,15 @@ host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
+# DEFINES and ACDEFINES are needed here to enable conditional compilation of Q_OBJECTs:
+# 'moc' only knows about #defines it gets on the command line (-D...), not in 
+# included headers like mozilla-config.h
 moc_%.cpp: %.h $(GLOBAL_DEPS)
-	$(MOC) $< $(OUTOPTION)$@ 
+	$(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@ 
 
 moc_%.cc: %.cc $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
-	$(ELOG) $(MOC) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
+	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
 
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
@@ -1722,6 +1730,9 @@ endif # XPIDL_MODULE.xpt != XPIDLSRCS
 libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(FINAL_TARGET)/components
+ifndef NO_INTERFACES_MANIFEST
+	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/interfaces.manifest "interfaces $(XPIDL_MODULE).xpt"
+endif
 endif
 
 endif # NO_GEN_XPT
@@ -1808,11 +1819,18 @@ endif # MOZ_JAVAXPCOM
 
 ################################################################################
 # Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components
+ifneq (,$(filter %.js,$(EXTRA_COMPONENTS) $(EXTRA_PP_COMPONENTS)))
+ifeq (,$(filter %.manifest,$(EXTRA_COMPONENTS) $(EXTRA_PP_COMPONENTS)))
+ifndef NO_JS_MANIFEST
+$(error .js component without matching .manifest)
+endif
+endif
+endif
+
 ifdef EXTRA_COMPONENTS
 libs:: $(EXTRA_COMPONENTS)
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/components
-	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/components.list $(notdir $^)
 endif
 
 endif
@@ -1827,7 +1845,6 @@ ifndef NO_DIST_INSTALL
 	  dest=$(FINAL_TARGET)/components/$${fname}; \
 	  $(RM) -f $$dest; \
 	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
-	  $(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/components.list $$fname; \
 	done
 endif
 
@@ -1896,9 +1913,9 @@ chrome::
 $(FINAL_TARGET)/chrome:
 	$(NSINSTALL) -D $@
 
+libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
 ifneq (,$(wildcard $(JAR_MANIFEST)))
 ifndef NO_DIST_INSTALL
-libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
 	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
 	  $(QUIET) -j $(FINAL_TARGET)/chrome \
 	  $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
@@ -2280,3 +2297,6 @@ CHECK_FROZEN_VARIABLES = $(foreach var,$(FREEZE_VARIABLES), \
 
 libs export libs::
 	$(CHECK_FROZEN_VARIABLES)
+
+default::
+	if test -d $(DIST)/bin ; then touch $(DIST)/bin/.purgecaches ; fi

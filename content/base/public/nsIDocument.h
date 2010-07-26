@@ -118,8 +118,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0x1d8bd3d4, 0x6f6d, 0x49fe, \
-  { 0xaf, 0xda, 0xc9, 0x4a, 0xef, 0x8f, 0xcf, 0x1f } }
+{ 0xda512fdc, 0x2d83, 0x44b0, \
+  { 0xb0, 0x99, 0x00, 0xc6, 0xbb, 0x72, 0x39, 0xed } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -830,7 +830,7 @@ public:
    * for that document (currently XHTML in HTML documents and XUL in XUL
    * documents), otherwise we use the type specified by the namespace ID.
    */
-  virtual nsresult CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
+  virtual nsresult CreateElem(const nsAString& aName, nsIAtom *aPrefix,
                               PRInt32 aNamespaceID,
                               PRBool aDocumentDefaultType,
                               nsIContent** aResult) = 0;
@@ -1120,7 +1120,7 @@ public:
     return mCachedEncoder.forget();
   }
 
-  void SetCachedEncoder(nsIDocumentEncoder* aEncoder)
+  void SetCachedEncoder(already_AddRefed<nsIDocumentEncoder> aEncoder)
   {
     mCachedEncoder = aEncoder;
   }
@@ -1275,6 +1275,16 @@ public:
   virtual void UnsuppressEventHandlingAndFireEvents(PRBool aFireEvents) = 0;
 
   PRUint32 EventHandlingSuppressed() const { return mEventsSuppressed; }
+
+  /**
+   * Increment the number of external scripts being evaluated.
+   */
+  void BeginEvaluatingExternalScript() { ++mExternalScriptsBeingEvaluated; }
+
+  /**
+   * Decrement the number of external scripts being evaluated.
+   */
+  void EndEvaluatingExternalScript() { --mExternalScriptsBeingEvaluated; }
 
   PRBool IsDNSPrefetchAllowed() const { return mAllowDNSPrefetch; }
 
@@ -1577,6 +1587,12 @@ protected:
   nsCOMPtr<nsIDocument> mDisplayDocument;
 
   PRUint32 mEventsSuppressed;
+
+  /**
+   * The number number of external scripts (ones with the src attribute) that
+   * have this document as their owner and that are being evaluated right now.
+   */
+  PRUint32 mExternalScriptsBeingEvaluated;
 
   nsString mPendingStateObject;
 

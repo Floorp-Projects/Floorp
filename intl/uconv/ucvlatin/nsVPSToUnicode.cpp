@@ -45,7 +45,7 @@ static const PRUint16 g_utMappingTable[] = {
 #include "vps.ut"
 };
 
-NS_METHOD
+nsresult
 nsVPSToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                           void **aResult) 
 {

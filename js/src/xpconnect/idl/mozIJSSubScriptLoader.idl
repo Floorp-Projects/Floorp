@@ -40,10 +40,6 @@
 
 #include "nsISupports.idl"
 
-/*
- * @status FROZEN
- */
-
 [scriptable, uuid(8792d77e-1dd2-11b2-ac7f-9bc9be4f2916)]
 interface mozIJSSubScriptLoader : nsISupports
 {

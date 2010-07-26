@@ -58,8 +58,6 @@ interface nsIDOMNode;
  *     do_GetService("@mozilla.org/observer-service;1", &rv);
  *   if (NS_SUCCEEDED(rv)) 
  *     rv = observerService->AddObserver(this, "accessible-event", PR_TRUE);
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(c68b4386-dca7-4b88-8988-7a95ce7be92f)]
 interface nsIAccessibleEvent : nsISupports

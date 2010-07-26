@@ -49,7 +49,7 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsSOCKSSocketProvider, nsISocketProvider)
 
-NS_METHOD
+nsresult
 nsSOCKSSocketProvider::CreateV4(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
@@ -62,7 +62,7 @@ nsSOCKSSocketProvider::CreateV4(nsISupports *aOuter, REFNSIID aIID, void **aResu
     return rv;
 }
 
-NS_METHOD
+nsresult
 nsSOCKSSocketProvider::CreateV5(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;

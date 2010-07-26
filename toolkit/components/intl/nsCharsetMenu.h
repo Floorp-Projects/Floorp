@@ -43,7 +43,7 @@
 
 #define NS_CHARSETMENU_PID "charset-menu"
 
-NS_IMETHODIMP
+nsresult
 NS_NewCharsetMenu(nsISupports* aOuter, const nsIID& aIID,
                   void** aResult);
 

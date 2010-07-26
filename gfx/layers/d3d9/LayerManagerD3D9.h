@@ -212,11 +212,6 @@ class LayerD3D9
 public:
   LayerD3D9(LayerManagerD3D9 *aManager);
 
-  enum LayerType { TYPE_THEBES, TYPE_CONTAINER, TYPE_IMAGE, TYPE_COLOR,
-                   TYPE_CANVAS };
-
-  virtual LayerType GetType() = 0;
-
   virtual LayerD3D9 *GetFirstChildD3D9() { return nsnull; }
 
   void SetFirstChild(LayerD3D9 *aParent);

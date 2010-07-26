@@ -120,9 +120,8 @@ let MetadataCollector = {
   },
 
   getLocation: function MetadataCollector_getLocation() {
-    //navitagor.geolocation; // or nsIDOMGeoGeolocation
     // we don't want the lat/long, we just want the country
-
+    // so use the Locale.
     return Application.prefs.getValue(LOCALE_PREF, "");
   },
 

@@ -56,6 +56,17 @@ CPPSRCS	= \
 	nsCanvasRenderingContext2D.cpp \
 	$(NULL)
 
+ifdef MOZ_IPC
+CPPSRCS += \
+	DocumentRendererParent.cpp \
+	DocumentRendererChild.cpp \
+	DocumentRendererNativeIDParent.cpp \
+	DocumentRendererNativeIDChild.cpp \
+	DocumentRendererShmemParent.cpp \
+	DocumentRendererShmemChild.cpp \
+	$(NULL)
+endif
+
 # Canvas 3D Pieces
 
 ifdef MOZ_WEBGL
@@ -68,6 +79,24 @@ CPPSRCS += \
 	NativeJSContext.cpp \
 	$(NULL)
 
+# We can't build ANGLE on linux-64 until build bug 560894 and related
+# are fixed.
+ifneq ($(OS_ARCH)_$(OS_TEST),Linux_x86_64)
+DEFINES += -DUSE_ANGLE
+endif
+
+ifndef MOZ_ENABLE_LIBXUL
+
+ifdef USE_ANGLE
+
+SHARED_LIBRARY_LIBS += \
+	$(DEPTH)/gfx/angle/$(LIB_PREFIX)angle.$(LIB_SUFFIX) \
+	$(NULL)
+
+endif
+
+endif
+
 else
 
 CPPSRCS += WebGLContextNotSupported.cpp
@@ -78,6 +107,7 @@ endif
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 

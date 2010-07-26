@@ -53,6 +53,7 @@ EXPORT_LIBRARY = 1
 EXTRA_COMPONENTS = \
 	nsFormHistory.js \
 	nsFormAutoComplete.js \
+	satchel.manifest \
 	$(NULL)
 
 

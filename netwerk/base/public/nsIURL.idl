@@ -53,8 +53,6 @@
  *                ----------------------------
  *                            |
  *                        filePath
- *
- * @status FROZEN
  */
 [scriptable, uuid(d6116970-8034-11d3-9399-00104ba0fd40)]
 interface nsIURL : nsIURI

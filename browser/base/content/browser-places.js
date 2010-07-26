@@ -486,9 +486,9 @@ var PlacesCommandHook = {
     var tabList = [];
     var seenURIs = {};
 
-    var browsers = gBrowser.browsers;
-    for (var i = 0; i < browsers.length; ++i) {
-      let uri = browsers[i].currentURI;
+    var tabs = gBrowser.visibleTabs;
+    for (var i = 0; i < tabs.length; ++i) {
+      let uri = tabs[i].linkedBrowser.currentURI;
 
       // skip redundant entries
       if (uri.spec in seenURIs)
@@ -1067,30 +1067,34 @@ var PlacesStarButton = {
 // after closing the toolbar customization dialog.
 let PlacesToolbarHelper = {
   _place: "place:folder=TOOLBAR",
-  _cachedElt: null,
 
-  onBrowserWindowClose: function PTH_onBrowserWindowClose() {
-    if (this._cachedElt)
-      this._cachedElt._placesView.uninit();
+  get _viewElt() {
+    return document.getElementById("PlacesToolbar");
   },
 
-  updateState: function PTH_updateState() {
-    let currentElt = document.getElementById("PlacesToolbar");
-
-    // Bail out if the state has not changed.
-    if (currentElt == this._cachedElt)
+  init: function PTH_init() {
+    let viewElt = this._viewElt;
+    if (!viewElt || viewElt._placesView)
       return;
 
-    if (!this._cachedElt) {
-      // The toolbar has been added.
-      new PlacesToolbar(this._place);
-      this._cachedElt = currentElt;
-    }
-    else {
-      // The toolbar has been removed.
-      this._cachedElt._placesView.uninit();
-      this._cachedElt = null;
-    }
+    // If the bookmarks toolbar item is hidden because the parent toolbar is
+    // collapsed or hidden (i.e. in a popup), spare the initialization.
+    let toolbar = viewElt.parentNode.parentNode;
+    if (toolbar.collapsed ||
+        getComputedStyle(toolbar, "").display == "none")
+      return;
+
+    new PlacesToolbar(this._place);
+  },
+
+  customizeStart: function PTH_customizeStart() {
+    let viewElt = this._viewElt;
+    if (viewElt && viewElt._placesView)
+      viewElt._placesView.uninit();
+  },
+
+  customizeDone: function PTH_customizeDone() {
+    this.init();
   }
 };
 
@@ -1098,14 +1102,11 @@ let PlacesToolbarHelper = {
 // Handles the bookmarks menu button shown when the main menubar is hidden.
 let BookmarksMenuButton = {
   get button() {
-    delete this.button;
-    return this.button = document.getElementById("bookmarks-menu-button");
+    return document.getElementById("bookmarks-menu-button");
   },
 
-  get navbarButtonContainer() {
-    delete this.navbarButtonContainer;
-    return this.navbarButtonContainer =
-             document.getElementById("bookmarks-menu-button-container");
+  get buttonContainer() {
+    return document.getElementById("bookmarks-menu-button-container");
   },
 
   get personalToolbar() {
@@ -1152,50 +1153,92 @@ let BookmarksMenuButton = {
 
     // Hide Bookmarks Toolbar menu if the button is next to the bookmarks
     // toolbar item, show them otherwise.
-    let bookmarksToolbarElt =
-      document.getElementById("BMB_bookmarksToolbarFolderMenu");
-    bookmarksToolbarElt.collapsed =
-      this.button.parentNode == this.bookmarksToolbarItem;
+    let button = this.button;
+    document.getElementById("BMB_bookmarksToolbarFolderMenu").collapsed =
+      button && button.parentNode == this.bookmarksToolbarItem;
   },
 
   updatePosition: function BMB_updatePosition() {
     this._popupNeedsUpdating = true;
 
+    let button = this.button;
+    if (!button)
+      return;
+
+    // If the toolbar containing bookmarks is visible, we want to move the
+    // button to bookmarksToolbarItem.
     let bookmarksToolbarItem = this.bookmarksToolbarItem;
-    if (isElementVisible(bookmarksToolbarItem)) {
-      if (this.button.parentNode != bookmarksToolbarItem) {
-        this.resetView();
-        bookmarksToolbarItem.appendChild(this.button);
+    let bookmarksOnVisibleToolbar = bookmarksToolbarItem &&
+                                    !bookmarksToolbarItem.parentNode.collapsed &&
+                                    bookmarksToolbarItem.parentNode.getAttribute("autohide") != "true";
+
+    // If the container has been moved by the user to the toolbar containing
+    // bookmarks, we want to preserve the desired position.
+    let container = this.buttonContainer;
+    let containerNearBookmarks = container && bookmarksToolbarItem &&
+                                 container.parentNode == bookmarksToolbarItem.parentNode;
+
+    if (bookmarksOnVisibleToolbar && !containerNearBookmarks) {
+      if (button.parentNode != bookmarksToolbarItem) {
+        this._uninitView();
+        bookmarksToolbarItem.appendChild(button);
       }
-      this.button.classList.add("bookmark-item");
-      this.button.classList.remove("toolbarbutton-1");
     }
     else {
-      if (this.button.parentNode != this.navbarButtonContainer) {
-        this.resetView();
-        this.navbarButtonContainer.appendChild(this.button);
+      if (container && button.parentNode != container) {
+        this._uninitView();
+        container.appendChild(button);
       }
-      this.button.classList.remove("bookmark-item");
-      this.button.classList.add("toolbarbutton-1");
+    }
+    this._updateStyle();
+  },
+
+  _updateStyle: function BMB__updateStyle() {
+    let button = this.button;
+    if (!button)
+      return;
+
+    let container = this.buttonContainer;
+    let containerOnPersonalToolbar = container &&
+                                     (container.parentNode == this.personalToolbar ||
+                                      container.parentNode.parentNode == this.personalToolbar);
+
+    if (button.parentNode == this.bookmarksToolbarItem ||
+        containerOnPersonalToolbar) {
+      button.classList.add("bookmark-item");
+      button.classList.remove("toolbarbutton-1");
+    }
+    else {
+      button.classList.remove("bookmark-item");
+      button.classList.add("toolbarbutton-1");
     }
   },
 
-  resetView: function BMB_resetView() {
+  _uninitView: function BMB__uninitView() {
     // When an element with a placesView attached is removed and re-inserted,
     // XBL reapplies the binding causing any kind of issues and possible leaks,
     // so kill current view and let popupshowing generate a new one.
-    if (this.button._placesView)
-      this.button._placesView.uninit();
+    let button = this.button;
+    if (button && button._placesView)
+      button._placesView.uninit();
   },
 
   customizeStart: function BMB_customizeStart() {
-    var bmToolbarItem = this.bookmarksToolbarItem;
-    if (this.button.parentNode == bmToolbarItem)
-      bmToolbarItem.removeChild(this.button);
+    this._uninitView();
+    let button = this.button;
+    let container = this.buttonContainer;
+    if (button && container && button.parentNode != container) {
+      // Move button back to the container, so user can move or remove it.
+      container.appendChild(button);
+      this._updateStyle();
+    }
+  },
+
+  customizeChange: function BMB_customizeChange() {
+    this._updateStyle();
   },
 
   customizeDone: function BMB_customizeDone() {
-    this.resetView();
     this.updatePosition();
   }
 };

@@ -37,39 +37,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// XXX remove once we can get jsvals out of XPIDL
-#include "jscntxt.h"
-#include "jsapi.h"
-#include "nsContentUtils.h"
-#include "nsJSON.h"
-#include "IDBEvents.h"
-
 #include "IDBObjectStore.h"
-#include "IDBIndex.h"
 
 #include "nsIIDBDatabaseException.h"
 #include "nsIJSContextStack.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIVariant.h"
 
+#include "jscntxt.h"
+#include "mozilla/storage.h"
+#include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsJSON.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "mozilla/storage.h"
 
 #include "AsyncConnectionHelper.h"
 #include "IDBCursor.h"
+#include "IDBEvents.h"
+#include "IDBIndex.h"
 #include "IDBKeyRange.h"
 #include "IDBTransaction.h"
 #include "DatabaseInfo.h"
 #include "Savepoint.h"
 
 USING_INDEXEDDB_NAMESPACE
-
-BEGIN_INDEXEDDB_NAMESPACE
-
-END_INDEXEDDB_NAMESPACE
 
 namespace {
 
@@ -289,33 +282,10 @@ GetKeyFromObject(JSContext* aCx,
   JSBool ok = JS_GetUCProperty(aCx, aObj, keyPathChars, keyPathLen, &key);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  if (JSVAL_IS_VOID(key)) {
-    aKey = Key::UNSETKEY;
-    return NS_OK;
-  }
+  nsresult rv = IDBObjectStore::GetKeyFromJSVal(key, aKey);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (JSVAL_IS_NULL(key)) {
-    aKey = Key::NULLKEY;
-    return NS_OK;
-  }
-
-  if (JSVAL_IS_INT(key)) {
-    aKey = JSVAL_TO_INT(key);
-    return NS_OK;
-  }
-
-  if (JSVAL_IS_DOUBLE(key)) {
-    aKey = *JSVAL_TO_DOUBLE(key);
-    return NS_OK;
-  }
-
-  if (JSVAL_IS_STRING(key)) {
-    aKey = nsDependentJSString(key);
-    return NS_OK;
-  }
-
-  // We only support those types.
-  return NS_ERROR_INVALID_ARG;
+  return NS_OK;
 }
 
 } // anonymous namespace
@@ -383,6 +353,71 @@ IDBObjectStore::GetKeyFromVariant(nsIVariant* aKeyVariant,
   }
 
   return NS_OK;
+}
+
+// static
+nsresult
+IDBObjectStore::GetKeyFromJSVal(jsval aKeyVal,
+                                Key& aKey)
+{
+  if (JSVAL_IS_VOID(aKeyVal)) {
+    aKey = Key::UNSETKEY;
+  }
+  else if (JSVAL_IS_NULL(aKeyVal)) {
+    aKey = Key::NULLKEY;
+  }
+  else if (JSVAL_IS_STRING(aKeyVal)) {
+    aKey = nsDependentJSString(aKeyVal);
+  }
+  else if (JSVAL_IS_INT(aKeyVal)) {
+    aKey = JSVAL_TO_INT(aKeyVal);
+  }
+  else if (JSVAL_IS_DOUBLE(aKeyVal)) {
+    aKey = *JSVAL_TO_DOUBLE(aKeyVal);
+  }
+  else {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+IDBObjectStore::GetJSValFromKey(const Key& aKey,
+                                JSContext* aCx,
+                                jsval* aKeyVal)
+{
+  if (aKey.IsUnset()) {
+    *aKeyVal = JSVAL_VOID;
+    return NS_OK;
+  }
+
+  if (aKey.IsNull()) {
+    *aKeyVal = JSVAL_NULL;
+    return NS_OK;
+  }
+
+  if (aKey.IsInt()) {
+    JSBool ok = JS_NewNumberValue(aCx, aKey.IntValue(), aKeyVal);
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+    return NS_OK;
+  }
+
+  if (aKey.IsString()) {
+    const nsString& keyString = aKey.StringValue();
+    JSString* str =
+      JS_NewUCStringCopyN(aCx,
+                          reinterpret_cast<const jschar*>(keyString.get()),
+                          keyString.Length());
+    NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
+
+    *aKeyVal = STRING_TO_JSVAL(str);
+    return NS_OK;
+  }
+
+  NS_NOTREACHED("Unknown key type!");
+  return NS_ERROR_INVALID_ARG;
 }
 
 // static
@@ -473,17 +508,10 @@ IDBObjectStore::GetKeyPathValueFromJSON(const nsAString& aJSON,
                                value.addr());
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  if (JSVAL_IS_INT(value.value())) {
-    aValue = JSVAL_TO_INT(value.value());
-  }
-  else if (JSVAL_IS_DOUBLE(value.value())) {
-    aValue = *JSVAL_TO_DOUBLE(value.value());
-  }
-  else if (JSVAL_IS_STRING(value.value())) {
-    aValue = nsDependentJSString(value.value());
-  }
-  else {
-    // If the object doesn't have a value for our index then we leave it unset.
+  rv = GetKeyFromJSVal(value.value(), aValue);
+  if (NS_FAILED(rv) || aValue.IsNull()) {
+    // If the object doesn't have a value that we can use for our index then we
+    // leave it unset.
     aValue = Key::UNSETKEY;
   }
 
@@ -521,26 +549,8 @@ IDBObjectStore::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
       NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
       Key value;
-
-      if (JSVAL_IS_INT(keyPathValue)) {
-        value = JSVAL_TO_INT(keyPathValue);
-      }
-      else if (JSVAL_IS_DOUBLE(keyPathValue)) {
-        value = *JSVAL_TO_DOUBLE(keyPathValue);
-      }
-      else if (JSVAL_IS_STRING(keyPathValue)) {
-        JSString* str = JSVAL_TO_STRING(keyPathValue);
-        size_t len = JS_GetStringLength(str);
-        if (len) {
-          const PRUnichar* chars =
-            reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
-          value = nsDependentString(chars, len);
-        }
-        else {
-          value = EmptyString();
-        }
-      }
-      else {
+      nsresult rv = GetKeyFromJSVal(keyPathValue, value);
+      if (NS_FAILED(rv) || value.IsUnset() || value.IsNull()) {
         // Not a value we can do anything with, ignore it.
         continue;
       }
@@ -708,58 +718,25 @@ IDBObjectStore::~IDBObjectStore()
 }
 
 nsresult
-IDBObjectStore::GetAddInfo(/* jsval aValue, */
-                           nsIVariant* aKeyVariant,
+IDBObjectStore::GetAddInfo(JSContext* aCx,
+                           jsval aValue,
+                           jsval aKeyVal,
                            nsString& aJSON,
                            Key& aKey,
                            nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
 {
-  // This is the slow path, need to do this better once XPIDL can have raw
-  // jsvals as arguments.
-  NS_WARNING("Using a slow path for Add! Fix this now!");
+  JSAutoRequest ar(aCx);
 
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-
-  nsAXPCNativeCallContext* cc;
-  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
-
-  PRUint32 argc;
-  rv = cc->GetArgc(&argc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (argc < 1) {
-    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
-  }
-
-  jsval* argv;
-  rv = cc->GetArgvPtr(&argv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSContext* cx;
-  rv = cc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSAutoRequest ar(cx);
-
-  js::AutoValueRooter clone(cx);
-  rv = nsContentUtils::CreateStructuredClone(cx, argv[0], clone.addr());
+  js::AutoValueRooter clone(aCx);
+  nsresult rv = nsContentUtils::CreateStructuredClone(aCx, aValue,
+                                                      clone.addr());
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   if (mKeyPath.IsEmpty()) {
-    // Key was passed in.
-    if (argc < 2) {
-      // Actually, nothing was passed in, and we can skip this.
-      aKey = Key::UNSETKEY;
-    }
-    else {
-      rv = GetKeyFromVariant(aKeyVariant, aKey);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = GetKeyFromJSVal(aKeyVal, aKey);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
     // Inline keys live on the object. Make sure it is an object.
@@ -767,12 +744,12 @@ IDBObjectStore::GetAddInfo(/* jsval aValue, */
       return NS_ERROR_INVALID_ARG;
     }
 
-    rv = GetKeyFromObject(cx, JSVAL_TO_OBJECT(clone.value()), mKeyPath, aKey);
+    rv = GetKeyFromObject(aCx, JSVAL_TO_OBJECT(clone.value()), mKeyPath, aKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Except if null was passed, in which case we're supposed to generate the
     // key.
-    if (aKey.IsUnset() && argc >= 2 && JSVAL_IS_NULL(argv[1])) {
+    if (aKey.IsUnset() && JSVAL_IS_NULL(aKeyVal)) {
       aKey = Key::NULLKEY;
     }
   }
@@ -785,11 +762,11 @@ IDBObjectStore::GetAddInfo(/* jsval aValue, */
   ObjectStoreInfo* objectStoreInfo = GetObjectStoreInfo();
   NS_ENSURE_TRUE(objectStoreInfo, NS_ERROR_FAILURE);
 
-  rv = GetIndexUpdateInfo(objectStoreInfo, cx, clone.value(), aUpdateInfoArray);
+  rv = GetIndexUpdateInfo(objectStoreInfo, aCx, clone.value(), aUpdateInfoArray);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
-  rv = json->EncodeFromJSVal(clone.addr(), cx, aJSON);
+  rv = json->EncodeFromJSVal(clone.addr(), aCx, aJSON);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -927,8 +904,10 @@ IDBObjectStore::GetAll(nsIIDBKeyRange* aKeyRange,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::Add(nsIVariant* /* aValue */,
-                    nsIVariant* aKey,
+IDBObjectStore::Add(jsval aValue,
+                    jsval aKey,
+                    JSContext* aCx,
+                    PRUint8 aOptionalArgCount,
                     nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -941,11 +920,15 @@ IDBObjectStore::Add(nsIVariant* /* aValue */,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
+  if (aOptionalArgCount < 1) {
+    aKey = JSVAL_VOID;
+  }
+
   nsString jsonValue;
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetAddInfo(aKey, jsonValue, key, updateInfo);
+  nsresult rv = GetAddInfo(aCx, aValue, aKey, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -968,8 +951,10 @@ IDBObjectStore::Add(nsIVariant* /* aValue */,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::Modify(nsIVariant* /* aValue */,
-                       nsIVariant* aKey,
+IDBObjectStore::Modify(jsval aValue,
+                       jsval aKey,
+                       JSContext* aCx,
+                       PRUint8 aOptionalArgCount,
                        nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -982,11 +967,15 @@ IDBObjectStore::Modify(nsIVariant* /* aValue */,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
+  if (aOptionalArgCount < 1) {
+    aKey = JSVAL_VOID;
+  }
+
   nsString jsonValue;
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetAddInfo(aKey, jsonValue, key, updateInfo);
+  nsresult rv = GetAddInfo(aCx, aValue, aKey, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1009,8 +998,10 @@ IDBObjectStore::Modify(nsIVariant* /* aValue */,
 }
 
 NS_IMETHODIMP
-IDBObjectStore::AddOrModify(nsIVariant* /* aValue */,
-                            nsIVariant* aKey,
+IDBObjectStore::AddOrModify(jsval aValue,
+                            jsval aKey,
+                            JSContext* aCx,
+                            PRUint8 aOptionalArgCount,
                             nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -1023,11 +1014,15 @@ IDBObjectStore::AddOrModify(nsIVariant* /* aValue */,
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
 
+  if (aOptionalArgCount < 1) {
+    aKey = JSVAL_VOID;
+  }
+
   nsString jsonValue;
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
 
-  nsresult rv = GetAddInfo(aKey, jsonValue, key, updateInfo);
+  nsresult rv = GetAddInfo(aCx, aValue, aKey, jsonValue, key, updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
