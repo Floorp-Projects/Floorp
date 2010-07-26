@@ -559,7 +559,6 @@ var UIManager = {
   // TabCandy UI) so they do the right thing in respect to groups.
   _setBrowserKeyHandlers : function() {
     var self = this;
-    var tabbox = gBrowser.mTabBox;
 
     gWindow.addEventListener("keypress", function(event) {
       if (self._isTabCandyVisible())
