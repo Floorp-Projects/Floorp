@@ -136,11 +136,11 @@ class Assembler : public BaseAssembler
      * be performing register allocation.
      */
     void loadTypeTag(Address address, RegisterID reg) {
-        loadValueThenType(valueOf(address), Registers::ValueReg, reg);
+        loadValueThenType(valueOf(address), reg, reg);
     }
 
     void loadTypeTag(BaseIndex address, RegisterID reg) {
-        loadValueThenType(valueOf(address), Registers::ValueReg, reg);
+        loadValueThenType(valueOf(address), reg, reg);
     }
 
     void storeTypeTag(ImmShiftedTag imm, Address address) {
@@ -203,11 +203,6 @@ class Assembler : public BaseAssembler
         storePtr(imm, valueOf(address));
     }
 
-#if 0
-    void storePayload(Imm32 imm, Address address) {
-    }
-#endif
-
     void storeValue(const Value &v, Address address) {
         jsval_layout jv;
         jv.asBits = JSVAL_BITS(Jsvalify(v));
@@ -220,15 +215,6 @@ class Assembler : public BaseAssembler
         jv.asBits = JSVAL_BITS(Jsvalify(v));
 
         storePtr(Imm64(jv.asBits), valueOf(address));        
-    }
-
-    /*
-     * FIXME: This is only used by slowLoadConstantDouble().
-     * It should disappear when that function can generate
-     * constants into the opstream.
-     */
-    void storeLayout(const jsval_layout &jv, Address address) {
-        storePtr(Imm64(jv.asBits), valueOf(address));
     }
 
     void loadFunctionPrivate(RegisterID base, RegisterID to) {
