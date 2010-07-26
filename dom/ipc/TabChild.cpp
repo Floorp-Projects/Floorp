@@ -41,6 +41,7 @@
 #include "mozilla/dom/PContentDialogChild.h"
 
 #include "nsIWebBrowser.h"
+#include "nsIWebBrowserSetup.h"
 #include "nsEmbedCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIBaseWindow.h"
@@ -452,6 +453,17 @@ TabChild::RecvCreateWidget(const MagicWindowHandle& parentWidget)
     baseWindow->Create();
     baseWindow->SetVisibility(PR_TRUE);
 #endif
+
+    // IPC uses a WebBrowser object for which DNS prefetching is turned off
+    // by default. But here we really want it, so enable it explicitly
+    nsCOMPtr<nsIWebBrowserSetup> webBrowserSetup = do_QueryInterface(baseWindow);
+    if (webBrowserSetup) {
+      webBrowserSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_DNS_PREFETCH,
+                                   PR_TRUE);
+    } else {
+        NS_WARNING("baseWindow doesn't QI to nsIWebBrowserSetup, skipping "
+                   "DNS prefetching enable step.");
+    }
 
     return InitTabChildGlobal();
 }

@@ -59,6 +59,8 @@ parent:
 
   PHttpChannel(nullable PBrowser iframeEmbedding);
   PCookieService();
+
+  HTMLDNSPrefetch(nsString hostname, PRUint16 flags);
 };
 
 
