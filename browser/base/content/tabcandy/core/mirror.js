@@ -140,9 +140,9 @@ function Mirror(tab, manager) {
   var $div = iQ('<div>')
     .data("tab", this.tab)
     .addClass('tab')
-    .html("<div class='favicon'><img/></div>" +
-          "<div class='thumb'><div class='thumb-shadow'></div>" +
+    .html("<div class='thumb'><div class='thumb-shadow'></div>" +
           "<img class='cached-thumb' style='display:none'/><canvas/></div>" +
+          "<div class='favicon'><img/></div>" +
           "<span class='tab-title'>&nbsp;</span>"
     )
     .appendTo('body');
