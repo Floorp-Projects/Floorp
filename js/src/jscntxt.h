@@ -1077,7 +1077,7 @@ struct JSThreadData {
          * Note that we only care about visibility here, not read/write
          * ordering.
          */
-        JS_ATOMIC_SET_MASK((jsword *) (&interruptFlags), INTERRUPT_OPERATION_CALLBACK);
+        JS_ATOMIC_SET_MASK((&interruptFlags), INTERRUPT_OPERATION_CALLBACK);
     }
 };
 
