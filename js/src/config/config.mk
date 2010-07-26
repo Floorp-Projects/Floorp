@@ -323,29 +323,35 @@ ifdef MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 
+# No sense in profiling tools
+ifdef INTERNAL_TOOLS
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
+
+# Don't build SIMPLE_PROGRAMS with PGO, since they don't need it anyway,
+# and we don't have the same build logic to re-link them in the second pass.
+ifdef SIMPLE_PROGRAMS
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
+
 # Enable profile-based feedback
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifdef MOZ_PROFILE_GENERATE
-# No sense in profiling tools
-ifndef INTERNAL_TOOLS
 OS_CFLAGS += $(PROFILE_GEN_CFLAGS)
 OS_CXXFLAGS += $(PROFILE_GEN_CFLAGS)
 OS_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
 ifeq (WINNT,$(OS_ARCH))
 AR_FLAGS += -LTCG
 endif
-endif # INTERNAL_TOOLS
 endif # MOZ_PROFILE_GENERATE
 
 ifdef MOZ_PROFILE_USE
-ifndef INTERNAL_TOOLS
 OS_CFLAGS += $(PROFILE_USE_CFLAGS)
 OS_CXXFLAGS += $(PROFILE_USE_CFLAGS)
 OS_LDFLAGS += $(PROFILE_USE_LDFLAGS)
 ifeq (WINNT,$(OS_ARCH))
 AR_FLAGS += -LTCG
 endif
-endif # INTERNAL_TOOLS
 endif # MOZ_PROFILE_USE
 endif # NO_PROFILE_GUIDED_OPTIMIZE
 
