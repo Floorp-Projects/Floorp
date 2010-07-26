@@ -711,11 +711,25 @@
         ]]></body>
       </method>
 
+      <method name="opRequiresRestart">
+        <parameter name="aOperation"/>
+        <body><![CDATA[
+          var operation = AddonManager["OP_NEEDS_RESTART_" + aOperation.toUpperCase()];
+          return !!(this.mAddon.operationsRequiringRestart & operation);
+        ]]></body>
+      </method>
+
       <method name="isPending">
         <parameter name="aAction"/>
         <body><![CDATA[
           var action = AddonManager["PENDING_" + aAction.toUpperCase()];
           return !!(this.mAddon.pendingOperations & action);
+        ]]></body>
+      </method>
+
+      <method name="onUninstalled">
+        <body><![CDATA[
+          this.parentNode.removeChild(this);
         ]]></body>
       </method>
     </implementation>
@@ -1031,8 +1045,18 @@
 
       <method name="uninstall">
         <body><![CDATA[
-          this.mAddon.uninstall();
-        ]]></body>
+          // If uninstalling does not require a restart then just disable it
+          // and show the undo UI.
+          if (!this.opRequiresRestart("uninstall")) {
+            // This won't update any other add-on manager views (bug 582002)
+            this.setAttribute("wasDisabled", this.mAddon.userDisabled);
+            this.setAttribute("restartrequired", false);
+            this.setAttribute("status", "uninstalled");
+            this.mAddon.userDisabled = true;
+          } else {
+            this.mAddon.uninstall();
+          }
+          ]]></body>
       </method>
 
       <method name="showPreferences">
@@ -1175,9 +1199,17 @@
 
       <method name="cancelUninstall">
         <body><![CDATA[
+          // This assumes that disabling does not require a restart when
+          // uninstalling doesn't. Things will still work if not, the add-on
+          // will just still be active until finally getting uninstalled.
+
+          if (this.isPending("uninstall"))
+            this.mAddon.cancelUninstall();
+          else if (this.getAttribute("wasDisabled") != "true")
+            this.mAddon.userDisabled = false;
+
           this.removeAttribute("restartrequired");
-          this.mAddon.userDisabled = false;
-          this.mAddon.cancelUninstall();
+          this.setAttribute("status", "installed");
         ]]></body>
       </method>
 
