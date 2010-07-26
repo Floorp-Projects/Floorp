@@ -323,9 +323,9 @@ struct ClosureVarInfo;
  *   Multiple calls to a pure function can be merged during CSE.
  *
  * - The storeAccSet.  This indicates which memory access regions the function
- *   accesses.  It must be ACC_NONE if the function is pure;  use
- *   ACC_STORE_ANY if you're not sure.  Used to determine if each call site of
- *   the function aliases any loads.
+ *   accesses.  It must be ACCSET_NONE if the function is pure;  use
+ *   ACCSET_STORE_ANY if you're not sure.  Used to determine if each call site
+ *   of the function aliases any loads.
  */
 #define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, isPure, storeAccSet)                           \
     _JS_DEFINE_CALLINFO(linkage, op,                                                              \
