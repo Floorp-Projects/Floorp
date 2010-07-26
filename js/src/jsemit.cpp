@@ -2114,7 +2114,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return MakeUpvarForEval(pn, cg);
         }
 
-        if (cg->compileAndGo()) { 
+        if (cg->compileAndGo() && cg->compiler()->globalScope->globalObj) { 
             switch (op) {
               case JSOP_NAME:     op = JSOP_GETGNAME; break;
               case JSOP_SETNAME:  op = JSOP_SETGNAME; break;
