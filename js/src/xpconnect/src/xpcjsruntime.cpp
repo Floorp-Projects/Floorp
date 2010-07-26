@@ -337,9 +337,15 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
         static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
 
     // Mark these roots as gray so the CC can walk them later.
-    uint32 oldColor = js_SetMarkColor(trc, XPC_GC_COLOR_GRAY);
+    js::GCMarker *gcmarker = NULL;
+    if (IS_GC_MARKING_TRACER(trc)) {
+        gcmarker = static_cast<js::GCMarker *>(trc);
+        JS_ASSERT(gcmarker->getMarkColor() == XPC_GC_COLOR_BLACK);
+        gcmarker->setMarkColor(XPC_GC_COLOR_GRAY);
+    }
     self->TraceXPConnectRoots(trc);
-    js_SetMarkColor(trc, oldColor);
+    if (gcmarker)
+        gcmarker->setMarkColor(XPC_GC_COLOR_BLACK);
 }
 
 static void
