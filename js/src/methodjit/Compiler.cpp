@@ -89,7 +89,9 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObj
 #if defined JS_POLYIC
     pics(ContextAllocPolicy(cx)), 
 #endif
-    callSites(ContextAllocPolicy(cx)), stubcc(cx, *this, frame, script)
+    callSites(ContextAllocPolicy(cx)), 
+    doubleList(ContextAllocPolicy(cx)),
+    stubcc(cx, *this, frame, script)
 #if defined JS_TRACER
     ,addTraceHints(cx->jitEnabled)
 #endif
@@ -241,12 +243,16 @@ mjit::Compiler::finishThisUp()
 #endif
     JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %u, Slow code (stubcc) size = %u.\n", masm.size(), stubcc.size());
 
-    JSC::ExecutablePool *execPool = getExecPool(masm.size() + stubcc.size());
+    size_t totalSize = masm.size() +
+                       stubcc.size() +
+                       doubleList.length() * sizeof(double);
+
+    JSC::ExecutablePool *execPool = getExecPool(totalSize);
     if (!execPool)
         return Compile_Abort;
 
-    uint8 *result = (uint8 *)execPool->alloc(masm.size() + stubcc.size());
-    JSC::ExecutableAllocator::makeWritable(result, masm.size() + stubcc.size());
+    uint8 *result = (uint8 *)execPool->alloc(totalSize);
+    JSC::ExecutableAllocator::makeWritable(result, totalSize);
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
 
@@ -278,7 +284,7 @@ mjit::Compiler::finishThisUp()
     }
 #endif
 
-    JSC::LinkBuffer fullCode(result, masm.size() + stubcc.size());
+    JSC::LinkBuffer fullCode(result, totalSize);
     JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
 #if defined JS_MONOIC
     for (size_t i = 0; i < mics.length(); i++) {
@@ -340,6 +346,18 @@ mjit::Compiler::finishThisUp()
 
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
+
+    /* Patch all double references. */
+    size_t doubleOffset = masm.size() + stubcc.size();
+    double *doubleVec = (double *)(result + doubleOffset);
+    for (size_t i = 0; i < doubleList.length(); i++) {
+        DoublePatch &patch = doubleList[i];
+        doubleVec[i] = patch.d;
+        if (patch.ool)
+            stubCode.patch(patch.label, &doubleVec[i]);
+        else
+            fullCode.patch(patch.label, &doubleVec[i]);
+    }
 
     /* Patch all outgoing calls. */
     masm.finalize(result);

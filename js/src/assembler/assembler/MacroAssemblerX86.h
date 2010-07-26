@@ -100,10 +100,11 @@ public:
         m_assembler.movl_mr(address, dest);
     }
 
-    void loadDouble(const void* address, FPRegisterID dest)
+    DataLabelPtr loadDouble(const void* address, FPRegisterID dest)
     {
         ASSERT(isSSE2Present());
         m_assembler.movsd_mr(address, dest);
+	return DataLabelPtr(this);
     }
 
     void convertInt32ToDouble(AbsoluteAddress src, FPRegisterID dest)

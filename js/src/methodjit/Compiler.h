@@ -170,6 +170,12 @@ class Compiler
         uint32 id;
     };
 
+    struct DoublePatch {
+        double d;
+        DataLabelPtr label;
+        bool ool;
+    };
+
     JSContext *cx;
     JSScript *script;
     JSObject *scopeChain;
@@ -188,6 +194,7 @@ class Compiler
     js::Vector<PICGenInfo, 64> pics;
 #endif
     js::Vector<InternalCallSite, 64> callSites;
+    js::Vector<DoublePatch, 16> doubleList;
     StubCompiler stubcc;
     Label invokeLabel;
     bool addTraceHints;
