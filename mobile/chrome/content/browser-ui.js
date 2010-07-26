@@ -2020,6 +2020,17 @@ var SelectHelperUI = {
 
 var ContextHelper = {
   popupState: null,
+
+  get _panel() {
+    delete this._panel;
+    return this._panel = document.getElementById("context-container");
+  },
+
+  get _popup() {
+    delete this._popup;
+    return this._popup = document.getElementById("context-popup");
+  },
+
   showPopup: function ch_showPopup(aData) {
     this.receiveMessage(aData);
   },
@@ -2065,32 +2076,28 @@ var ContextHelper = {
     if (this.popupState.onBookmark)
       label.value = this.popupState.bookmarkURL;
 
-    let container = document.getElementById("context-popup");
-    container.hidden = false;
+    this._panel.hidden = false;
 
     // Make sure the container is at least sized to the content
+    let popup = this._popup;
     let preferredHeight = 0;
-    for (let i=0; i<container.childElementCount; i++) {
-      preferredHeight += container.children[i].getBoundingClientRect().height;
+    for (let i=0; i<popup.childElementCount; i++) {
+      preferredHeight += popup.children[i].getBoundingClientRect().height;
     }
 
-    let rect = container.getBoundingClientRect();
+    let rect = popup.getBoundingClientRect();
     let height = Math.min(preferredHeight, 0.75 * window.innerWidth);
     let width = Math.min(rect.width, 0.75 * window.innerWidth);
 
-    container.height = height;
-    container.width = width;
-    container.top = (window.innerHeight - height) / 2;
-    container.left = (window.innerWidth - width) / 2;
+    popup.height = height;
+    popup.width = width;
 
-    BrowserUI.pushPopup(this, [container]);
+    BrowserUI.pushPopup(this, [popup]);
   },
 
   hide: function ch_hide() {
     this.popupState = null;
-
-    let container = document.getElementById("context-popup");
-    container.hidden = true;
+    this._panel.hidden = true;
 
     BrowserUI.popPopup();
   }
