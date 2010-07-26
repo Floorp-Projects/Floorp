@@ -41,8 +41,6 @@ interface nsIInputStream;
 
 /**
  * nsIStreamListener
- *
- * @status FROZEN
  */
 [scriptable, uuid(1a637020-1482-11d3-9333-00104ba0fd40)]
 interface nsIStreamListener : nsIRequestObserver

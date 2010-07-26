@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   }
 
   function loadScript() {
-    // Async should be prosessed first!
+    // Async should be processed first!
     messageManager.loadFrameScript("data:,sendAsyncMessage('async', { data: 1234 }); sendSyncMessage('sync', { data: 1234 });", false);
   }
 

@@ -45,7 +45,7 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "macdevanaga.uf"
 };
 
-NS_METHOD
+nsresult
 nsUnicodeToMacDevanagariConstructor(nsISupports *aOuter, REFNSIID aIID,
                                     void **aResult) 
 {

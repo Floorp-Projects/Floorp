@@ -46,6 +46,7 @@ browser.jar:
         content/browser/sanitizeDialog.css            (content/sanitizeDialog.css)
 *       content/browser/tabbrowser.css                (content/tabbrowser.css)
 *       content/browser/tabbrowser.xml                (content/tabbrowser.xml)
+        content/browser/tabcandy.css                  (content/tabcandy/tabcandy.css)
 *       content/browser/tabcandy.js                   (content/tabcandy/tabcandy.js)
         content/browser/tabcandy.html                 (content/tabcandy/tabcandy.html)
 *       content/browser/urlbarBindings.xml            (content/urlbarBindings.xml)

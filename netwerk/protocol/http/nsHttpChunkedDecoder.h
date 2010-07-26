@@ -39,6 +39,7 @@
 #ifndef nsHttpChunkedDecoder_h__
 #define nsHttpChunkedDecoder_h__
 
+#include "nsHttp.h"
 #include "nsError.h"
 #include "nsString.h"
 #include "nsHttpHeaderArray.h"

@@ -393,7 +393,7 @@ int
 nsMemoryCacheDevice::EvictionList(nsCacheEntry * entry, PRInt32  deltaSize)
 {
     // favor items which never expire by putting them in the lowest-index queue
-    if (entry->ExpirationTime() == NO_EXPIRATION_TIME)
+    if (entry->ExpirationTime() == nsICache::NO_EXPIRATION_TIME)
         return 0;
 
     // compute which eviction queue this entry should go into,
@@ -537,10 +537,13 @@ nsMemoryCacheDeviceInfo::GetUsageReport(char ** result)
     NS_ENSURE_ARG_POINTER(result);
     nsCString  buffer;
 
-    buffer.AssignLiteral("\n<tr>\n<td><b>Inactive storage:</b></td>\n<td><tt> ");
+    buffer.AssignLiteral("  <tr>\n"
+                         "    <th>Inactive storage:</th>\n"
+                         "    <td>");
     buffer.AppendInt(mDevice->mInactiveSize / 1024);
-    buffer.AppendLiteral(" KiB</tt></td>\n</tr>\n");
-    
+    buffer.AppendLiteral(" KiB</td>\n"
+                         "  </tr>\n");
+
     *result = ToNewCString(buffer);
     if (!*result) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;

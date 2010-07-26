@@ -64,10 +64,6 @@
 #include "htypes.hxx"
 #include "csutil.hxx"
 
-#ifdef MOZILLA_CLIENT
-#include "nscore.h" // for mozalloc headers
-#endif
-
 const w_char W_VLINE = { '\0', '|' };
 
 SuggestMgr::SuggestMgr(const char * tryme, int maxn, 
@@ -1145,7 +1141,7 @@ int SuggestMgr::ngsuggest(char** wlst, char * w, int ns, HashMgr** pHMgr, int md
     }
   }}
 
-  // find minimum threshhold for a passable suggestion
+  // find minimum threshold for a passable suggestion
   // mangle original word three differnt ways
   // and score them to generate a minimum acceptable score
   int thresh = 0;

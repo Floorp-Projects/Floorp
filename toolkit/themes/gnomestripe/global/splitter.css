@@ -49,7 +49,6 @@ splitter {
   -moz-box-align: center;
   -moz-box-pack: center;
   cursor: ew-resize;
-
 }
 
 splitter[state="collapsed"][collapse="before"],

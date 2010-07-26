@@ -210,12 +210,6 @@ interface jsdIDebuggerService : nsISupports
     readonly attribute AUTF8String implementationString;
     
     /**
-     * |true| if the debugger should register an app-start observer in order
-     * to begin collecting debug information when mozilla is launched.
-     */
-    attribute boolean initAtStartup;
-
-    /**
      * |true| if the debugger service has been turned on.  This does not
      * necessarily mean another app is actively using the service, as the 
      * autostart pref may have turned the service on.

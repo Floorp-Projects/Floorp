@@ -148,12 +148,3 @@ NS_IMETHODIMP nsUnicodeToHZ::FinishNoBuff(char * aDest, PRInt32 * aDestLength)
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP nsUnicodeToHZ::FillInfo(PRUint32 *aInfo)
-{
-  mUtil.FillGB2312Info(aInfo);
-  //GB2312 font lib also have single byte ASCII characters, set them here
-  for ( PRUint16 u = 0x0000; u <= 0x007F; u++)
-    SET_REPRESENTABLE(aInfo, u);
-  return NS_OK;
-}

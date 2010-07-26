@@ -412,6 +412,28 @@ nsXULTreeGridAccessible::GetRowIndexAt(PRInt32 aCellIndex, PRInt32 *aRowIndex)
 }
 
 NS_IMETHODIMP
+nsXULTreeGridAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
+                                                  PRInt32* aRowIndex,
+                                                  PRInt32* aColumnIndex)
+{
+  NS_ENSURE_ARG_POINTER(aRowIndex);
+  *aRowIndex = -1;
+  NS_ENSURE_ARG_POINTER(aColumnIndex);
+  *aColumnIndex = -1;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  PRInt32 columnCount = 0;
+  nsresult rv = GetColumnCount(&columnCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aColumnIndex = aCellIndex % columnCount;
+  *aRowIndex = aCellIndex / columnCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULTreeGridAccessible::GetColumnExtentAt(PRInt32 aRowIndex,
                                            PRInt32 aColumnIndex,
                                            PRInt32 *aExtentCount)
@@ -696,17 +718,6 @@ nsXULTreeGridRowAccessible::GetChildCount()
     return -1;
 
   return nsCoreUtils::GetSensibleColumnCount(mTree);
-}
-
-PRInt32
-nsXULTreeGridRowAccessible::GetIndexOf(nsIAccessible *aChild)
-{
-  if (IsDefunct())
-    return -1;
-
-  nsRefPtr<nsXULTreeGridCellAccessible> cell = do_QueryObject(aChild);
-
-  return cell ? cell->GetColumnIndex() : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1200,12 +1211,6 @@ nsXULTreeGridCellAccessible::GetStateInternal(PRUint32 *aStates,
   }
 
   return NS_OK;
-}
-
-nsAccessible*
-nsXULTreeGridCellAccessible::GetParent()
-{
-  return IsDefunct() ? nsnull : mParent.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

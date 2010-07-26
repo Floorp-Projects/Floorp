@@ -46,36 +46,44 @@
 
 class THEBES_API gfxXlibSurface : public gfxASurface {
 public:
-    // create a surface for the specified dpy/drawable/visual.
+    // construct a wrapper around the specified drawable with dpy/visual.
     // Will use XGetGeometry to query the window/pixmap size.
     gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual);
 
-    // create a surface for the specified dpy/drawable/visual,
-    // with explicitly provided width/height.
+    // construct a wrapper around the specified drawable with dpy/visual,
+    // and known width/height.
     gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfxIntSize& size);
 
-    // create a new Pixmap on the display dpy, with the root window as
-    // the parent and the default depth for the default screen, and
-    // attach the given visual.  The depth argument is optional, and
-    // if not specified (or 0), the default depth of the default
-    // screen of dpy is used.
-    gfxXlibSurface(Display *dpy, Visual *visual, const gfxIntSize& size, int depth = 0);
-
-    gfxXlibSurface(Display* dpy, Drawable drawable, XRenderPictFormat *format,
-                   const gfxIntSize& size);
-
-    gfxXlibSurface(Display* dpy, XRenderPictFormat *format,
+    // construct a wrapper around the specified drawable with dpy/format,
+    // and known width/height.
+    gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFormat *format,
                    const gfxIntSize& size);
 
     gfxXlibSurface(cairo_surface_t *csurf);
 
+    // create a new Pixmap and wrapper surface.
+    // |relatedDrawable| provides a hint to the server for determining whether
+    // the pixmap should be in video or system memory.  It must be on
+    // |screen| (if specified).
+    static already_AddRefed<gfxXlibSurface>
+    Create(Screen *screen, Visual *visual, const gfxIntSize& size,
+           Drawable relatedDrawable = None);
+    static already_AddRefed<gfxXlibSurface>
+    Create(Screen* screen, XRenderPictFormat *format, const gfxIntSize& size,
+           Drawable relatedDrawable = None);
+
     virtual ~gfxXlibSurface();
+
+    virtual already_AddRefed<gfxASurface>
+    CreateSimilarSurface(gfxContentType aType, const gfxIntSize& aSize);
 
     const gfxIntSize& GetSize() { return mSize; }
 
     Display* XDisplay() { return mDisplay; }
     Drawable XDrawable() { return mDrawable; }
 
+    static int DepthOfVisual(const Screen* screen, const Visual* visual);
+    static Visual* FindVisual(Screen* screen, gfxImageFormat format);
     static XRenderPictFormat *FindRenderFormat(Display *dpy, gfxImageFormat format);
 
     // take ownership of a passed-in Pixmap, calling XFreePixmap on it
@@ -84,6 +92,9 @@ public:
         NS_ASSERTION(!mPixmapTaken, "I already own the Pixmap!");
         mPixmapTaken = PR_TRUE;
     }
+
+    // Find a visual and colormap pair suitable for rendering to this surface.
+    PRBool GetColormapAndVisual(Colormap* colormap, Visual **visual);
 
 protected:
     // if TakePixmap() has been called on this

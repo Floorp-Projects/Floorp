@@ -97,6 +97,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
   NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,    \
                               const nsAString& aValue);
 
-  
-
 #endif // nsICSSDeclaration_h__

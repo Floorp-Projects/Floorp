@@ -45,9 +45,6 @@
 extern "C" {
 #endif
 
-void	uFillInfo(const uTable *uT, 
-                    PRUint32 *info);
-
 PRBool	uMapCode(const uTable *uT, 
                     PRUint16 in, 
                     PRUint16* out);

@@ -52,6 +52,20 @@ function uri(spec) {
   return ios.newURI(spec, null, null);
 }
 
+/**
+ * Clears history invoking callback when done.
+ */
+function waitForClearHistory(aCallback) {
+  let observer = {
+    observe: function(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(this, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+      aCallback(aSubject, aTopic, aData);
+    }
+  };
+  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+  PlacesUtils.bhistory.removeAllPages();
+}
+
 var sidebar = document.getElementById("sidebar");
 
 function add_visit(aURI, aDate) {
@@ -78,8 +92,10 @@ function test() {
   waitForExplicitFinish();
 
   // Cleanup.
-  bh.removeAllPages();
+  waitForClearHistory(continue_test);
+}
 
+function continue_test() {
   // Add some visited page.
   var time = Date.now();
   for (var i = 0; i < pages.length; i++) {
@@ -103,9 +119,7 @@ function test() {
 
       // Cleanup.
       toggleSidebar("viewHistorySidebar", false);
-      bh.removeAllPages();
-
-      finish();
+      waitForClearHistory(finish);
     });
   }, true);
   toggleSidebar("viewHistorySidebar", true);
@@ -115,11 +129,17 @@ function check_sidebar_tree_order(aExpectedRows) {
   var tree = sidebar.contentDocument.getElementById("historyTree");
   var treeView = tree.view;
   var rc = treeView.rowCount;
-  is(rc, aExpectedRows, "All expected tree rows are present");
   var columns = tree.columns;
   is(columns.count, 1, "There should be only 1 column in the sidebar");
+  var found = 0;
   for (var r = 0; r < rc; r++) {
     var node = treeView.nodeForTreeIndex(r);
+    // We could inherit visits from previous tests, skip them since they are
+    // not interesting for us.
+    if (pages.indexOf(node.uri) == -1)
+      continue;
     is(node.uri, pages[r], "Node is in correct position based on its visit date");
+    found++;
   }
+  ok(found, aExpectedRows, "Found all expected results");
 }

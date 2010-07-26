@@ -37,6 +37,7 @@
 
 #include "nsOSHelperAppService.h"
 #include "nsMIMEInfoAndroid.h"
+#include "AndroidBridge.h"
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
@@ -51,6 +52,10 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                         const nsACString& aFileExt,
                                         PRBool* aFound)
 {
+    // XXX Bug 579388 - need to remote this
+    if (!mozilla::AndroidBridge::Bridge())
+        return nsnull;
+
     *aFound = PR_FALSE;
     already_AddRefed<nsIMIMEInfo> mimeInfo = 
             nsMIMEInfoAndroid::GetMimeInfoForMimeType(aMIMEType);

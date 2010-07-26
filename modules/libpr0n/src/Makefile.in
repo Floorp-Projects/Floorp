@@ -58,6 +58,7 @@ CPPSRCS		= \
 			imgRequestProxy.cpp \
 			imgTools.cpp \
 			imgContainerRequest.cpp \
+			imgDiscardTracker.cpp \
 			$(NULL)
 
 include $(topsrcdir)/config/rules.mk

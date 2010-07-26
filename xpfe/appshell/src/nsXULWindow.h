@@ -171,6 +171,7 @@ protected:
    PRPackedBool            mLockedUntilChromeLoad;
    PRPackedBool            mIgnoreXULSize;
    PRPackedBool            mIgnoreXULPosition;
+   PRPackedBool            mChromeFlagsFrozen;
    PRUint32                mContextFlags;
    PRUint32                mBlurSuppressionLevel;
    PRUint32                mPersistentAttributesDirty; // persistentAttributes

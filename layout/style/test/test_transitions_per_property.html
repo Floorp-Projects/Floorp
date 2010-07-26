@@ -68,6 +68,7 @@ var supported_properties = {
     "-moz-outline-radius-bottomright": [ test_radius_transition ],
     "-moz-outline-radius-topleft": [ test_radius_transition ],
     "-moz-outline-radius-topright": [ test_radius_transition ],
+    "-moz-transform": [ test_transform_transition ],
     "-moz-transform-origin": [ test_length_pair_transition,
                                test_length_percent_pair_transition ],
     "background-color": [ test_color_transition ],
@@ -644,6 +645,259 @@ function test_background_position_size_common(prop) {
   div.style.setProperty(prop, "50px 20%, 70% 50px, 30% 40%", "");
   is(cs.getPropertyValue(prop), "20px 35%, 55% 50px, 30% 25%",
      "property " + prop + ": interpolation of lists of lengths and percents");
+}
+
+function test_transform_transition(prop) {
+  function c(v) {
+    div.style.setProperty(prop, v, "");
+    var result = cs.getPropertyValue(prop);
+    div.style.removeProperty(prop);
+    return result;
+  }
+  var c_rot_15 = c("rotate(15deg)");
+  is(c_rot_15.substring(0,6), "matrix", "should compute to matrix value");
+  var c_rot_60 = c("rotate(60deg)");
+  is(c_rot_60.substring(0,6), "matrix", "should compute to matrix value");
+
+  var tests = [
+    // rotate
+    { start: 'none', end: 'rotate(60deg)',
+      expected: c_rot_15 },
+    { start: 'rotate(0)', end: 'rotate(60deg)',
+      expected: c_rot_15 },
+    { start: 'rotate(0deg)', end: 'rotate(60deg)',
+      expected: c_rot_15 },
+    { start: 'none', end: c_rot_60,
+      expected: c_rot_15 },
+    { start: 'none', end: 'rotate(360deg)', expected: c('rotate(90deg)') },
+    { start: 'none', end: 'rotate(720deg)', expected: c('rotate(180deg)') },
+    { start: 'none', end: 'rotate(1080deg)', expected: c('rotate(270deg)') },
+    { start: 'none', end: 'rotate(1440deg)', expected: c('scale(1)'),
+      round_error_ok: true },
+
+    // translate
+    { start: 'translate(20px)', end: 'none',
+      expected: 'matrix(1, 0, 0, 1, 15px, 0px)' },
+    { start: 'translate(20px, 12px)', end: 'none',
+      expected: 'matrix(1, 0, 0, 1, 15px, 9px)' },
+    { start: 'translateX(-20px)', end: 'none',
+      expected: 'matrix(1, 0, 0, 1, -15px, 0px)' },
+    { start: 'translateY(-40px)', end: 'none',
+      expected: 'matrix(1, 0, 0, 1, 0px, -30px)' },
+    // percentages are relative to 300px (width) and 50px (height)
+    // per the prerequisites in property_database.js
+    { start: 'translate(20%)', end: 'none',
+      expected: 'matrix(1, 0, 0, 1, 45px, 0px)' },
+    { start: 'translate(20%, 12%)', end: 'none',
+      expected: 'matrix(1, 0, 0, 1, 45px, 4.5px)' },
+    { start: 'translateX(-20%)', end: 'none',
+      expected: 'matrix(1, 0, 0, 1, -45px, 0px)' },
+    { start: 'translateY(-40%)', end: 'none',
+      expected: 'matrix(1, 0, 0, 1, 0px, -15px)' },
+    { start: 'none', end: 'rotate(90deg) translate(20%, 20%) rotate(-90deg)',
+      expected: c('rotate(22.5deg) translate(5%, 5%) rotate(-22.5deg)') },
+    { start: 'none', end: 'rotate(-90deg) translate(20%, 20%) rotate(90deg)',
+      expected: c('rotate(-22.5deg) translate(5%, 5%) rotate(22.5deg)') },
+    // test percent translation using matrix decomposition
+    { start: 'rotate(45deg) rotate(-45deg)',
+      end: 'rotate(90deg) translate(20%, 20%) rotate(-90deg)',
+      expected: 'matrix(1, 0, 0, 1, -2.5px, 15px)' },
+    { start: 'rotate(45deg) rotate(-45deg)',
+      end: 'rotate(-90deg) translate(20%, 20%) rotate(90deg)',
+      expected: 'matrix(1, 0, 0, 1, 2.5px, -15px)' },
+    // test calc() in translate
+    // Note that font-size: is 20px, and that percentages are relative
+    // to 300px (width) and 50px (height) per the prerequisites in
+    // property_database.js
+    { start: 'translateX(20%)', /* 60px */
+      end: 'translateX(-moz-calc(10% + 1em))', /* 30px + 20px = 50px */
+      expected: 'matrix(1, 0, 0, 1, 57.5px, 0px)' },
+    { start: 'translate(-moz-calc(0.75 * 3em + 1.5 * 10%), -moz-calc(0.5 * 5em + 0.5 * 8%))', /* 90px, 52px */
+      end: 'rotate(90deg) translateY(20%) rotate(90deg) translateY(-moz-calc(10% + 0.5em)) rotate(180deg)', /* -10px, -15px */
+      expected: 'matrix(1, 0, 0, 1, 65px, 35.25px)' },
+
+    // scale
+    { start: 'scale(2)', end: 'none',
+      expected: 'matrix(1.75, 0, 0, 1.75, 0px, 0px)' },
+    { start: 'none', end: 'scale(0.4)',
+      expected: 'matrix(0.85, 0, 0, 0.85, 0px, 0px)' },
+    { start: 'scale(2)', end: 'scale(-2)',
+      expected: 'matrix(1, 0, 0, 1, 0px, 0px)' },
+    { start: 'scale(2)', end: 'scale(-6)',
+      expected: 'matrix(0, 0, 0, 0, 0px, 0px)' },
+    { start: 'scale(2, 0.4)', end: 'none',
+      expected: 'matrix(1.75, 0, 0, 0.55, 0px, 0px)' },
+    { start: 'scaleX(3)', end: 'none',
+      expected: 'matrix(2.5, 0, 0, 1, 0px, 0px)' },
+    { start: 'scaleY(5)', end: 'none',
+      expected: 'matrix(1, 0, 0, 4, 0px, 0px)' },
+
+    // skew
+    { start: 'skewX(45deg)', end: 'none',
+      expected: 'matrix(1, 0, 0.75, 1, 0px, 0px)' },
+    { start: 'skewY(45deg)', end: 'none',
+      expected: 'matrix(1, 0.75, 0, 1, 0px, 0px)' },
+    { start: 'skew(45deg)', end: 'none',
+      expected: 'matrix(1, 0, 0.75, 1, 0px, 0px)' },
+    { start: 'skew(45deg, 45deg)', end: 'none',
+      expected: 'matrix(1, 0.75, 0.75, 1, 0px, 0px)' },
+    { start: 'skewX(45deg)', end: 'skewX(-45deg)',
+      expected: 'matrix(1, 0, 0.5, 1, 0px, 0px)' },
+    { start: 'skewX(0)', end: 'skewX(-45deg)',
+      expected: 'matrix(1, 0, -0.25, 1, 0px, 0px)' },
+    { start: 'skewY(45deg)', end: 'skewY(-45deg)',
+      expected: 'matrix(1, 0.5, 0, 1, 0px, 0px)' },
+
+    // matrix : skewX
+    { start: 'matrix(1, 0, 3, 1, 0px, 0px)', end: 'none',
+      expected: 'matrix(1, 0, 2.25, 1, 0px, 0px)' },
+    { start: 'skewX(0)', end: 'skewX(-45deg) translate(0)',
+      expected: 'matrix(1, 0, -0.25, 1, 0px, 0px)' },
+    // matrix : rotate
+    { start: 'rotate(-30deg)', end: 'matrix(0, 1, -1, 0, 0px, 0px)',
+      expected: 'matrix(1, 0, 0, 1, 0px, 0px)' },
+    { start: 'rotate(-30deg) translateX(0)',
+      end: 'translateX(0) rotate(-90deg)',
+      expected: c('rotate(-45deg)') },
+    // matrix decomposition of skewY
+    { start: 'skewY(60deg)', end: 'skewY(-60deg) translateX(0)',
+      expected: c('rotate(30deg) skewX(' + Math.atan(Math.tan(Math.PI / 3) / 2) + 'rad) scale(2, 0.5)') },
+
+    // matrix decomposition
+
+    // Four pairs of the same matrix expressed different ways.
+    { start: 'matrix(-1, 0, 0, -1, 0pt, 0pt)', /* rotate(180deg) */
+      end: 'matrix(1, 0, 0, 1, 0, 0)',
+      expected: c('rotate(135deg)') },
+    { start: 'scale(-1)', end: 'none',
+      expected: 'matrix(-0.5, 0, 0, -0.5, 0px, 0px)' },
+    { start: 'rotate(180deg)', end: 'none',
+      expected: c('rotate(135deg)') },
+    { start: 'rotate(-180deg)', end: 'none',
+      expected: c('rotate(225deg)') },
+
+    // ... and a bunch of similar possibilities.  The spec isn't settled
+    // here; there are multiple options.  See:
+    // http://lists.w3.org/Archives/Public/www-style/2010Jun/0602.html
+    { start: 'matrix(-1, 0, 0, 1, 0pt, 0pt)', /* scaleX(-1) */
+      end: 'matrix(1, 0, 0, 1, 0, 0)',
+      expected: c('scaleX(-0.5)') },
+
+    { start: 'matrix(1, 0, 0, -1, 0pt, 0pt)', /* rotate(-180deg) scaleX(-1) */
+      end: 'matrix(1, 0, 0, 1, 0, 0)',
+      expected: c('rotate(-135deg) scaleX(-0.5)') },
+
+    { start: 'matrix(0, 1, 1, 0, 0pt, 0pt)', /* rotate(-90deg) scaleX(-1) */
+      end: 'matrix(1, 0, 0, 1, 0, 0)',
+      expected: c('rotate(-67.5deg) scaleX(-0.5)') },
+
+    { start: 'matrix(0, -1, 1, 0, 0pt, 0pt)', /* rotate(-90deg) */
+      end: 'matrix(1, 0, 0, 1, 0, 0)',
+      expected: c('rotate(-67.5deg)') },
+
+    { start: 'matrix(0, 1, -1, 0, 0pt, 0pt)', /* rotate(90deg) */
+      end: 'matrix(1, 0, 0, 1, 0, 0)',
+      expected: c('rotate(67.5deg)') },
+
+    { start: 'matrix(0, -1, -1, 0, 0pt, 0pt)', /* rotate(90deg) scaleX(-1) */
+      end: 'matrix(1, 0, 0, 1, 0, 0)',
+      expected: c('rotate(67.5deg) scaleX(-0.5)') },
+
+    // Similar decomposition tests, but with skewX.  I checked visually
+    // that the sign of the skew was correct by checking visually that
+    // the animations in
+    // http://dbaron.org/css/test/2010/transition-negative-determinant
+    // don't flip when they finish, and then wrote tests corresponding
+    // to the current code's behavior.
+    // ... start with four with positive determinants
+    { start: 'none',
+      end: 'matrix(1, 0, 1.5, 1, 0pt, 0pt)',
+              /* skewX(atan(1.5)) */
+      expected: c('matrix(1, 0, 0.375, 1, 0, 0)') },
+    { start: 'none',
+      end: 'matrix(-1, 0, 2, -1, 0pt, 0pt)',
+              /* rotate(180deg) skewX(atan(-2)) */
+      expected: c('rotate(45deg) matrix(1, 0, -0.5, 1, 0, 0)') },
+    { start: 'none',
+      end: 'matrix(0, -1, 1, -3, 0pt, 0pt)',
+              /* rotate(-90deg) skewX(atan(3)) */
+      expected: c('rotate(-22.5deg) matrix(1, 0, 0.75, 1, 0, 0)') },
+    { start: 'none',
+      end: 'matrix(0, 1, -1, 4, 0pt, 0pt)',
+              /* rotate(90deg) skewX(atan(4)) */
+      expected: c('rotate(22.5deg) matrix(1, 0, 1, 1, 0, 0)') },
+    // and then four with negative determinants
+    { start: 'none',
+      end: 'matrix(1, 0, 1, -1, 0pt, 0pt)',
+              /* rotate(-180deg) skewX(atan(-1)) scaleX(-1) */
+      expected: c('rotate(-45deg) matrix(1, 0, -0.25, 1, 0, 0) scaleX(0.5)'),
+      round_error_ok: true },
+    { start: 'none',
+      end: 'matrix(-1, 0, -1, 1, 0pt, 0pt)',
+              /* skewX(atan(-1)) scaleX(-1) */
+      expected: c('matrix(1, 0, -0.25, 1, 0, 0) scaleX(0.5)') },
+    { start: 'none',
+      end: 'matrix(0, 1, 1, -2, 0pt, 0pt)',
+              /* rotate(-90deg) skewX(atan(2)) scaleX(-1) */
+      expected: c('rotate(-22.5deg) matrix(1, 0, 0.5, 1, 0, 0) scaleX(0.5)') },
+    { start: 'none',
+      end: 'matrix(0, -1, -1, 0.5, 0pt, 0pt)',
+              /* rotate(90deg) skewX(atan(0.5)) scaleX(-1) */
+      expected: c('rotate(22.5deg) matrix(1, 0, 0.125, 1, 0, 0) scaleX(0.5)') },
+
+    // lists vs. matrix decomposition
+    { start: 'translate(10px) skewY(45deg)',
+      end: 'translate(30px) skewY(-45deg)',
+      expected: 'matrix(1, 0.5, 0, 1, 15px, 0px)' },
+    { start: 'skewY(45deg) rotate(90deg)',
+      end: 'skewY(-45deg) rotate(90deg)',
+      expected: c('matrix(1, 0.5, 0, 1, 0px, 0px) rotate(90deg)') },
+    { start: 'skewY(45deg) rotate(90deg) translate(0)',
+      end: 'skewY(-45deg) rotate(90deg)',
+      expected: c('matrix(1, 0.5, 0, 1, 0px, 0px) rotate(90deg)') },
+    { start: 'skewX(45deg) rotate(90deg)',
+      end: 'skewX(-45deg) rotate(90deg)',
+      expected: c('matrix(1, 0, 0.5, 1, 0px, 0px) rotate(90deg)') },
+    { start: 'skewX(-60deg) rotate(90deg) translate(0)',
+      end: 'skewX(60deg) rotate(90deg)',
+      expected: c('rotate(120deg) skewX(' +
+                   Math.atan(Math.tan(Math.PI / 3) / 2) +
+                  'rad) scale(2, 0.5)') },
+  ];
+
+  for (var i in tests) {
+    var test = tests[i];
+    div.style.setProperty("-moz-transition-property", "none", "");
+    div.style.setProperty(prop, test.start, "");
+    cs.getPropertyValue(prop);
+    div.style.setProperty("-moz-transition-property", prop, "");
+    div.style.setProperty(prop, test.end, "");
+    var actual = cs.getPropertyValue(prop);
+    if (!test.round_error_ok || actual == test.expected) {
+      // In most cases, we'll get an exact match, but in some cases
+      // there can be a small amount of rounding error.
+      is(actual, test.expected,
+         "interpolation of transitions: " + test.start + " to " + test.end);
+    } else {
+      function s(mat) {
+        return mat.match(/^matrix\(([^,]*), ([^,]*), ([^,]*), ([^,]*), ([^,]*)px, ([^,]*)px\)$/).slice(1,7);
+      }
+      var pass = true;
+      var actual_split = s(actual);
+      var expected_split = s(test.expected);
+      for (var i = 0; i < 6; ++i) {
+        // Allow differences of 1 at the sixth decimal place, and allow
+        // a drop extra for floating point error from the subtraction.
+        if (Math.abs(Number(actual_split[i]) - Number(expected_split[i])) >
+              0.0000011) {
+          pass = false;
+        }
+      }
+      ok(pass,
+         "interpolation of transitions: " + test.start + " to " + test.end +
+         ": " + actual + " should approximately equal " + test.expected);
+    }
+  }
 }
 
 </script>

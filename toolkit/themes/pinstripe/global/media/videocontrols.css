@@ -1,196 +1,198 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .controlBar {
-    height: 28px;
-    background-color: rgba(35,31,32,0.74);
+  height: 28px;
+  background-color: rgba(35,31,32,.74);
 }
 
 .playButton {
-    background: url(chrome://global/skin/media/pauseButton.png) no-repeat center;
-    /* Remove the native button appearance and styling */
-    -moz-appearance: none;
-    margin: 0px;
-    padding: 0px;
-    min-height: 28px;
-    min-width: 28px;
-    margin-right: -22px; /* 1/2 of scrubber thumb width, for overhang. */
-    position: relative; /* Trick to work around negative margin interfering with clicking on the button. */
+  background: url(chrome://global/skin/media/pauseButton.png) no-repeat center;
+  /* Remove the native button appearance and styling */
+  -moz-appearance: none;
+  margin: 0;
+  padding: 0;
+  min-height: 28px;
+  min-width: 28px;
+  margin-right: -22px; /* 1/2 of scrubber thumb width, for overhang. */
+  position: relative; /* Trick to work around negative margin interfering with clicking on the button. */
 }
 .playButton[paused="true"] {
-    background: url(chrome://global/skin/media/playButton.png) no-repeat center;
+  background: url(chrome://global/skin/media/playButton.png) no-repeat center;
 }
 
 .muteButton {
-    background: url(chrome://global/skin/media/muteButton.png) no-repeat center;
-    /* Remove the native button appearance and styling */
-    -moz-appearance: none;
-    margin: 0px;
-    padding: 0px;
-    min-height: 28px;
-    min-width: 33px;
+  background: url(chrome://global/skin/media/muteButton.png) no-repeat center;
+  /* Remove the native button appearance and styling */
+  -moz-appearance: none;
+  margin: 0;
+  padding: 0;
+  min-height: 28px;
+  min-width: 33px;
 }
 .muteButton[muted="true"] {
-    background: url(chrome://global/skin/media/unmuteButton.png) no-repeat center;
+  background: url(chrome://global/skin/media/unmuteButton.png) no-repeat center;
 }
 
 .volumeStack {
-    width: 28px;
-    height: 70px;
-    background-color: rgba(35,31,32,0.74);
-    /* use negative margin to place stack over the mute button to its left. */
-    margin: -70px 3px 28px -31px;
-    overflow: hidden; /* crop it when sliding down, don't grow the control bar */
-    position: relative; /* Trick to work around negative margin interfering with dragging the thumb. */
-    padding-top: 6px;
+  width: 28px;
+  height: 70px;
+  background-color: rgba(35,31,32,.74);
+  /* use negative margin to place stack over the mute button to its left. */
+  margin: -70px 3px 28px -31px;
+  overflow: hidden; /* crop it when sliding down, don't grow the control bar */
+  position: relative; /* Trick to work around negative margin interfering with dragging the thumb. */
+  padding-top: 6px;
 }
 
 .volumeControl {
-    min-height: 64px;
+  min-height: 64px;
 }
 
 /* .scale-thumb is an element inside the <scale> implementation. */
 .volumeControl .scale-thumb {
-    /* Override the default thumb appearance with a custom image. */
-    -moz-appearance: none;
-    background: url(chrome://global/skin/media/volumeThumb.png) no-repeat center;
-    border: none;
-    min-width: 16px;
-    min-height: 11px;
+  /* Override the default thumb appearance with a custom image. */
+  -moz-appearance: none;
+  background: url(chrome://global/skin/media/volumeThumb.png) no-repeat center;
+  border: none;
+  min-width: 16px;
+  min-height: 11px;
 }
 
 .volumeBackgroundBar {
-    /* margin left/right: make bar 8px wide (control width = 28, minus 2 * 10 margin) */
-    margin: 0px 10px 0px 10px;
-    background-color: rgba(255,255,255,0.5);
-    -moz-border-radius: 4px 4px;
+  /* margin left/right: make bar 8px wide (control width = 28, minus 2 * 10 margin) */
+  margin: 0 10px;
+  background-color: rgba(255,255,255,.5);
+  -moz-border-radius: 4px 4px;
 }
 
 .durationBox {
-    -moz-box-pack: center;
+  -moz-box-pack: center;
 }
 
 .durationLabel {
-    margin-left: -22px; /* 1/2 of scrubber thumb width, for overhang. */
-    padding-left: 8px; /* don't bump into the scrubber bar */
-    padding-top: 2px; /* center vertically with scrubber bar */
-    color: rgba(255,255,255,0.75);
-    font-size: 11px;
-    font-family: Helvetica, sans-serif;
+  margin-left: -22px; /* 1/2 of scrubber thumb width, for overhang. */
+  padding-left: 8px; /* don't bump into the scrubber bar */
+  padding-top: 2px; /* center vertically with scrubber bar */
+  color: rgba(255,255,255,.75);
+  font-size: 11px;
+  font-family: Helvetica, sans-serif;
 }
 
 .backgroundBar {
-    /* margin top/bottom: make bar 8px tall (control height = 28, minus 2 * 10 margin) */
-    /* margin left/right: 1/2 of scrubber thumb width, for overhang. */
-    margin: 10px 22px 10px 22px;
-    background-color: rgba(255,255,255,0.5);
-    -moz-border-radius: 4px 4px;
+  /* margin top/bottom: make bar 8px tall (control height = 28, minus 2 * 10 margin) */
+  /* margin left/right: 1/2 of scrubber thumb width, for overhang. */
+  margin: 10px 22px;
+  background-color: rgba(255,255,255,.5);
+  -moz-border-radius: 4px;
 }
 
-.bufferBar, .progressBar {
-    /* margin top/bottom: make bar 8px tall (control height = 28, minus 2 * 10 margin) */
-    /* margin left/right: 1/2 of scrubber thumb width, for overhang. */
-    margin: 10px 22px 10px 22px;
-    -moz-appearance: none;
-    min-width: 0px;
+.bufferBar,
+.progressBar {
+  /* margin top/bottom: make bar 8px tall (control height = 28, minus 2 * 10 margin) */
+  /* margin left/right: 1/2 of scrubber thumb width, for overhang. */
+  margin: 10px 22px;
+  -moz-appearance: none;
+  min-width: 0;
 }
 
 /* .progress-bar is an element inside the <progressmeter> implementation. */
 .bufferBar .progress-bar {
-    /*
-     * Note that this is drawn on top of the .backgroundBar. So although this
-     * has the same background-color specified, the semitransparent
-     * compositing gives it a different visual appearance.
-     */
-    background-color: rgba(255,255,255,0.5);
-    -moz-border-radius: 4px 4px;
+  /*
+   * Note that this is drawn on top of the .backgroundBar. So although this
+   * has the same background-color specified, the semitransparent
+   * compositing gives it a different visual appearance.
+   */
+  background-color: rgba(255,255,255,.5);
+  -moz-border-radius: 4px;
 }
 
 .progressBar .progress-bar {
-    background-color: white;
-    -moz-border-radius: 4px 0px 0px 4px;
+  background-color: white;
+  -moz-border-radius: 4px 0 0 4px;
 }
 
 /* .scale-slider is an element inside the <scale> implementation. */
-.scrubber .scale-slider, .volumeControl .scale-slider {
-    /* Hide the default horizontal bar. */
-    -moz-appearance: none;
-    background: none;
-    margin: 0;
+.scrubber .scale-slider,
+.volumeControl .scale-slider {
+  /* Hide the default horizontal bar. */
+  -moz-appearance: none;
+  background: none;
+  margin: 0;
 }
 
 .scrubber .scale-slider {
-    /* abs(margin-top) + margin-bottom + bar height == timeThumb height */
-    margin-top: -10px;
-    margin-bottom: 10px;
+  /* abs(margin-top) + margin-bottom + bar height == timeThumb height */
+  margin-top: -10px;
+  margin-bottom: 10px;
 }
 /* .scale-thumb is an element inside the <scale> implementation. */
 .scrubber .scale-thumb {
-    /* Override the default thumb appearance with a custom image. */
-    -moz-appearance: none;
-    background: transparent;
-    border: none;
+  /* Override the default thumb appearance with a custom image. */
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
 }
 
 .timeThumb {
-    background: url(chrome://global/skin/media/scrubberThumb.png) no-repeat center;
-    min-width: 45px;
-    min-height: 28px;
-    -moz-box-pack: center;
+  background: url(chrome://global/skin/media/scrubberThumb.png) no-repeat center;
+  min-width: 45px;
+  min-height: 28px;
+  -moz-box-pack: center;
 }
 
 .timeThumb[showhours="true"] {
-    background: url(chrome://global/skin/media/scrubberThumbWide.png) no-repeat center;
+  background: url(chrome://global/skin/media/scrubberThumbWide.png) no-repeat center;
 }
 
 .timeLabel {
-    color: rgba(255,255,255,0.75);
-    font-size: 10px;
-    font-family: Helvetica, sans-serif;
-    text-shadow: rgba(0,0,0, 0.3) 0 1px;
-    padding-top: 4px;
+  color: rgba(255,255,255,.75);
+  font-size: 10px;
+  font-family: Helvetica, sans-serif;
+  text-shadow: rgba(0,0,0,.3) 0 1px;
+  padding-top: 4px;
 }
 
 .statusOverlay {
-    -moz-box-align: center;
-    -moz-box-pack: center;
-    background-color: rgba(0,0,0,0.55);
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  background-color: rgba(0,0,0,.55);
 }
 
 .statusIcon {
-    margin-bottom: 28px; /* same height as .controlBar, to keep icon centered above it */
-    width: 36px;
-    height: 36px;
+  margin-bottom: 28px; /* same height as .controlBar, to keep icon centered above it */
+  width: 36px;
+  height: 36px;
 }
 
 .statusIcon[type="throbber"] {
-    background: url(chrome://global/skin/media/throbber.png) no-repeat center;
+  background: url(chrome://global/skin/media/throbber.png) no-repeat center;
 }
 
 .statusIcon[type="error"] {
-    background: url(chrome://global/skin/media/error.png) no-repeat center;
+  background: url(chrome://global/skin/media/error.png) no-repeat center;
 }
 
 /* CSS Transitions */
 .controlBar:not([immediate]) {
-    -moz-transition-property: opacity;
-    -moz-transition-duration: 200ms;
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 200ms;
 }
 .controlBar[fadeout] {
-    opacity: 0.0;
+  opacity: 0;
 }
 .volumeStack:not([immediate]) {
-    -moz-transition-property: opacity, margin-top;
-    -moz-transition-duration: 200ms, 200ms;
+  -moz-transition-property: opacity, margin-top;
+  -moz-transition-duration: 200ms, 200ms;
 }
 .volumeStack[fadeout] {
-    opacity: 0.0;
-    margin-top: 0px;
+  opacity: 0;
+  margin-top: 0;
 }
 .statusOverlay:not([immediate]) {
-    -moz-transition-property: opacity;
-    -moz-transition-duration: 300ms;
-    -moz-transition-delay: 750ms;
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 300ms;
+  -moz-transition-delay: 750ms;
 }
 .statusOverlay[fadeout] {
-    opacity: 0.0;
+  opacity: 0;
 }

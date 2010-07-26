@@ -219,6 +219,34 @@ exports.RemoteExperimentLoader.prototype = {
       });
   },
 
+  getLocalizedStudyInfo: function(studiesIndex) {
+    let prefs = require("preferences-service");
+    let myLocale = prefs.get("general.useragent.locale", "");
+    let studiesToLoad = [];
+    for each (let set in studiesIndex) {
+      // First try for specific locale, e.g. pt-BR for brazillian portugese
+      if (set[myLocale]) {
+        studiesToLoad.push(set[myLocale]);
+        continue;
+      }
+      // If that's not there, look for the language, e.g. just "pt":
+      let hyphen = myLocale.indexOf("-");
+      if (hyphen > -1) {
+        let lang = myLocale.slice(0, hyphen);
+        if (set[lang]) {
+          studiesToLoad.push(set[lang]);
+          continue;
+        }
+      }
+      // If that's not there either, look for one called "default":
+      if(set["default"]) {
+        studiesToLoad.push(set["default"]);
+      }
+      // If none of those are there, load nothing.
+    }
+    return studiesToLoad;
+  },
+
   checkForUpdates: function(callback) {
     /* Callback will be called with true or false
      * to let us know whether there are any updates, so that client code can
@@ -244,14 +272,14 @@ exports.RemoteExperimentLoader.prototype = {
           return;
         }
 
-        // Cache study results...
+        // Cache study results and legacy studies.
         self._studyResults = data.results;
         self._legacyStudies = data.legacy;
 
-        /* Go through each file indicated in index.json, attempt to load it into
-         * codeStorage (replacing any older version there).
+        /* Go through each record indicated in index.json for our locale;
+         * download the specified .jar file (replacing any version on disk)
          */
-        let jarFiles = data.experiment_jars;
+        let jarFiles = self.getLocalizedStudyInfo(data.new_experiments);
         let numFilesToDload = jarFiles.length;
 
         for each (let j in jarFiles) {

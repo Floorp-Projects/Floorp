@@ -95,7 +95,7 @@ nsObserverService::Shutdown()
         mObserverTopicTable.Clear();
 }
 
-NS_METHOD
+nsresult
 nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
     LOG(("nsObserverService::Create()"));

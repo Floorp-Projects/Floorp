@@ -1146,6 +1146,33 @@ NS_NewPostDataStream(nsIInputStream  **result,
 }
 
 inline nsresult
+NS_ReadInputStreamToString(nsIInputStream *aInputStream, 
+                           nsACString &aDest,
+                           PRUint32 aCount)
+{
+    nsresult rv;
+
+    aDest.SetLength(aCount);
+    if (aDest.Length() != aCount)
+        return NS_ERROR_OUT_OF_MEMORY;
+    char * p = aDest.BeginWriting();
+    PRUint32 bytesRead;
+    PRUint32 totalRead = 0;
+    while (1) {
+        rv = aInputStream->Read(p + totalRead, aCount - totalRead, &bytesRead);
+        if (!NS_SUCCEEDED(rv)) 
+            return rv;
+        totalRead += bytesRead;
+        if (totalRead == aCount)
+            break;
+        // if Read reads 0 bytes, we've hit EOF 
+        if (bytesRead == 0)
+            return NS_ERROR_UNEXPECTED;
+    }
+    return rv; 
+}
+
+inline nsresult
 NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **result,
                                    nsIURI                   *uri,
                                    nsIIOService             *ioService = nsnull)

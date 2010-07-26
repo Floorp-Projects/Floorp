@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<hbox style="display: block">
+  <button style="-moz-binding: none; width: 0; display: block;
+		 overflow: hidden; padding: 10px; border: 1px solid black; ">Correct</button>
+</hbox>
+</window>

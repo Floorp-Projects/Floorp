@@ -93,7 +93,10 @@ endif
 # static lib.
 FORCE_STATIC_LIB = 1
 
-EXTRA_COMPONENTS = $(srcdir)/txEXSLTRegExFunctions.js
+EXTRA_COMPONENTS = \
+  txEXSLTRegExFunctions.js \
+  txEXSLTRegExFunctions.manifest \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

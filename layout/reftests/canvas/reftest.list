@@ -2,6 +2,8 @@
 
 == image-rendering-test.html image-rendering-ref.html
 
+== size-change-1.html size-change-1-ref.html
+
 != text-ltr-left.html text-blank.html
 != text-ltr-right.html text-blank.html
 != text-rtl-left.html text-blank.html

@@ -51,7 +51,7 @@ interface nsIDocShellTreeItem;
 interface nsIAppShell;
 interface nsIXULBrowserWindow;
 
-[scriptable, uuid(c175a596-ee13-420a-aa74-13ad3a14deb1)]
+[scriptable, uuid(5869c5e5-743d-473c-bb71-41752146d373)]
 interface nsIXULWindow : nsISupports
 {
   /**
@@ -132,6 +132,13 @@ interface nsIXULWindow : nsISupports
   attribute PRUint32 contextFlags;
 
   attribute PRUint32 chromeFlags;
+
+  /**
+   * Begin assuming |chromeFlags| don't change hereafter, and assert
+   * if they do change.  The state change is one-way and idempotent.
+   */
+  void assumeChromeFlagsAreFrozen();
+
   /**
    * Create a new window.
    * @param aChromeFlags see nsIWebBrowserChrome
@@ -149,10 +156,4 @@ interface nsIXULWindow : nsISupports
    * docshell could cause problems.
    */
   [noscript] void applyChromeFlags();
-
-  /**
-   * This will return true if this nsIXULWindow will call show on its
-   * widget once it has finished loading chrome.
-   */
-  PRBool willShowWindow();
 };

@@ -60,10 +60,10 @@ static char *type_array[32] =
             {"int8",        "int16",       "int32",       "int64",
              "uint8",       "uint16",      "uint32",      "uint64",
              "float",       "double",      "boolean",     "char",
-             "wchar_t",     "void",        "reserved",    "reserved",
+             "wchar_t",     "void",        "nsIID",       "reserved",
              "reserved",    "reserved",    "reserved",    "reserved",
              "reserved",    "reserved",    "reserved",    "reserved",
-             "reserved",    "reserved",    "reserved",    "reserved",
+             "reserved",    "reserved",    "jsval",       "reserved",
              "reserved",    "reserved",    "reserved",    "reserved"};
 
 static char *ptype_array[32] = 
@@ -73,7 +73,7 @@ static char *ptype_array[32] =
              "wchar_t *",   "void *",      "nsIID *",     "DOMString *",
              "string",      "wstring",     "Interface *", "InterfaceIs *",
              "array",       "string_s",    "wstring_s",   "UTF8String *",
-             "CString *",   "AString *",    "reserved",    "reserved",
+             "CString *",   "AString *",   "jsval *",     "reserved",
              "reserved",    "reserved",    "reserved",    "reserved"};
 
 static char *rtype_array[32] = 
@@ -83,7 +83,7 @@ static char *rtype_array[32] =
              "wchar_t &",   "void &",      "nsIID &",     "DOMString &",
              "string &",    "wstring &",   "Interface &", "InterfaceIs &",
              "array &",     "string_s &",  "wstring_s &", "UTF8String &",
-             "CString &",   "AString &",    "reserved",    "reserved",
+             "CString &",   "AString &",   "jsval &",     "reserved",
              "reserved",    "reserved",    "reserved",    "reserved"};
 
 PRBool param_problems = PR_FALSE;
@@ -579,6 +579,12 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
         else 
             fprintf(stdout, "FALSE\n");
 
+        fprintf(stdout, "%*sWants JSContext?        ", indent, " ");
+        if (XPT_MD_WANTS_CONTEXT(md->flags))
+            fprintf(stdout, "TRUE\n");
+        else 
+            fprintf(stdout, "FALSE\n");
+
         fprintf(stdout, "%*s# of arguments:   %d\n", indent, " ", md->num_args);
         fprintf(stdout, "%*sParameter Descriptors:\n", indent, " ");
         
@@ -602,13 +608,14 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
         if (!XPT_GetStringForType(header, &md->result->type, id, &param_type)) {
             return PR_FALSE;
         }
-        fprintf(stdout, "%*s%c%c%c%c%c%c %s %s(", indent - 6, " ",
+        fprintf(stdout, "%*s%c%c%c%c%c%c%c %s %s(", indent - 6, " ",
                 XPT_MD_IS_GETTER(md->flags) ? 'G' : ' ',
                 XPT_MD_IS_SETTER(md->flags) ? 'S' : ' ',
                 XPT_MD_IS_HIDDEN(md->flags) ? 'H' : ' ',
                 XPT_MD_IS_NOTXPCOM(md->flags) ? 'N' : ' ',
                 XPT_MD_IS_CTOR(md->flags) ? 'C' : ' ',
                 XPT_MD_WANTS_OPT_ARGC(md->flags) ? 'O' : ' ',
+                XPT_MD_WANTS_CONTEXT(md->flags) ? 'J' : ' ',
                 param_type, md->name);
         for (i=0; i<md->num_args; i++) {
             if (i!=0) {

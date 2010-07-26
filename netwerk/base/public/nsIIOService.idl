@@ -50,8 +50,6 @@ interface nsIFile;
  * also provides a set of URL parsing utility functions.  These are provided
  * as a convenience to the programmer and in some cases to improve performance
  * by eliminating intermediate data structures and interfaces.
- *
- * @status FROZEN
  */
 [scriptable, uuid(bddeda3f-9020-4d12-8c70-984ee9f7935e)]
 interface nsIIOService : nsISupports

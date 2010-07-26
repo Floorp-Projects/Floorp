@@ -227,7 +227,9 @@ FindElementCallback(void *aElement, void* aClosure)
     return PR_TRUE;
 }
 
-NS_METHOD nsArrayConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult) {
+nsresult
+nsArrayConstructor(nsISupports *aOuter, const nsIID& aIID, void **aResult)
+{
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 

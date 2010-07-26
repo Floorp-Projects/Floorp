@@ -27,13 +27,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <cassert>
+#include "common/linux/http_upload.h"
+
+#include <assert.h>
 #include <dlfcn.h>
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include <curl/types.h>
-
-#include "common/linux/http_upload.h"
 
 namespace {
 

@@ -1,0 +1,20 @@
+; It's very difficult to test that the 'lo' part is actually doing anything
+; because it tends to get lost when lirasm dumps the result to the console.
+; By far the easiest way to check this is to use dlo2i and dhi2i to see if we
+; get what we started with (assuming that those instructions work).
+
+hi = immi 1127219201    ; 0x43300001 (positive, exponent of +52 ...
+lo = immi -1            ; 0xffffffff (... mantissa of 0x100001ffffffff)
+d = ii2d lo hi
+hi2 = dhi2i d
+lo2 = dlo2i d
+
+; XOR to check for differences, then OR the two results. 0 indicates success,
+; but anything else indicates some kind of loss of data.
+rhi = xori hi hi2
+rlo = xori lo lo2
+
+res = ori rhi rlo
+
+reti res
+

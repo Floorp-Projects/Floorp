@@ -39,8 +39,6 @@
 
 /**
  * Interface to display XPInstall download and install status.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(ce8f744e-d5a5-41b3-911f-0fee3008b64e)]
 interface nsIXPIProgressDialog : nsISupports

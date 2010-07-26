@@ -1485,7 +1485,7 @@ nsNativeThemeWin::GetWidgetOverflow(nsIDeviceContext* aContext,
                                     nsRect* aResult)
 {
   /* This is disabled for now, because it causes invalidation problems --
-   * see bug 402381.  The effect of not updating the overflow area is that
+   * see bug 420381.  The effect of not updating the overflow area is that
    * for dropdown buttons in content areas, there is a 1px border on 3 sides
    * where, if invalidated, the dropdown control probably won't be repainted.
    * This is fairly minor, as by default there is nothing in that area, and
@@ -2942,7 +2942,7 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(PRUint8 aWidgetType)
 // from nsWindow.cpp
 extern PRBool gDisableNativeTheme;
 
-NS_METHOD NS_NewNativeTheme(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+nsresult NS_NewNativeTheme(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   if (gDisableNativeTheme)
     return NS_ERROR_NO_INTERFACE;

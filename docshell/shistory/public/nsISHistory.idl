@@ -49,9 +49,7 @@ interface nsISimpleEnumerator;
  * nsIWebNavigation. In a non-embedded situation, the  owner of the
  * session history component must create a instance of it and set
  * it in the nsIWebNavigation object.
- * This interface is accessible from javascript. 
- *
- * @status FROZEN
+ * This interface is accessible from javascript.
  */
  
 

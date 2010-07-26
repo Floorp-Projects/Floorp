@@ -554,9 +554,9 @@ FeedWriter.prototype = {
     var url = makeURI(aURL);
     url.QueryInterface(Ci.nsIURL);
     if (url == null || url.fileName.length == 0)
-      return aURL;
+      return decodeURIComponent(aURL);
 
-    return decodeURI(url.fileName);
+    return decodeURIComponent(url.fileName);
   },
 
   /**
@@ -1416,17 +1416,12 @@ FeedWriter.prototype = {
     return interfaces;
   },
   getHelperForLanguage: function FW_getHelperForLanguage(language) null,
-  contractID: "@mozilla.org/browser/feeds/result-writer;1",
-  classDescription: "Feed Writer",
   classID: Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}"),
   implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
   flags: Ci.nsIClassInfo.DOM_OBJECT,
-  _xpcom_categories: [{ category: "JavaScript global constructor",
-                        entry: "BrowserFeedWriter"}],
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedWriter, Ci.nsIClassInfo,
                                          Ci.nsIDOMEventListener, Ci.nsIObserver,
                                          Ci.nsINavHistoryObserver])
 };
 
-function NSGetModule(cm, file)
-  XPCOMUtils.generateModule([FeedWriter]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([FeedWriter]);

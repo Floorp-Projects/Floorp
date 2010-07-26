@@ -491,10 +491,10 @@ protected:
   nsString mDomain;
 };
 
-NS_IMETHODIMP
+nsresult
 NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-NS_IMETHODIMP
+nsresult
 NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 nsresult

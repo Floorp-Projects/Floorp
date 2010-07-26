@@ -44,27 +44,28 @@
        - Gagan Saksena 04/24/00 
 */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const kDNS_CONTRACTID = "@mozilla.org/network/dns-service;1";
-const kPAC_CONTRACTID = "@mozilla.org/network/proxy-auto-config;1";
-const kPAC_CID = Components.ID("{63ac8c66-1dd2-11b2-b070-84d00d3eaece}");
 
 const nsISupports        = Components.interfaces.nsISupports;
 const nsIProxyAutoConfig = Components.interfaces.nsIProxyAutoConfig;
 const nsIDNSService      = Components.interfaces.nsIDNSService;
 
+var dns;
+
 // implementor of nsIProxyAutoConfig
-function nsProxyAutoConfig() {};
+function nsProxyAutoConfig() {
+    dns = Components.classes[kDNS_CONTRACTID].getService(nsIDNSService);
+};
 
 nsProxyAutoConfig.prototype = {
+    classID: Components.ID("63ac8c66-1dd2-11b2-b070-84d00d3eaece"),
+
     // sandbox in which we eval loaded autoconfig js file
     _sandBox: null, 
 
-    QueryInterface: function(iid) {
-        if (iid.Equals(nsIProxyAutoConfig) ||
-            iid.Equals(nsISupports))
-            return this;
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: XPCOMUtils.generateQI([nsIProxyAutoConfig]),
 
     init: function(pacURI, pacText) {
         // remove PAC configuration if requested
@@ -129,54 +130,7 @@ function dnsResolve(host) {
     }
 }
 
-var pacModule = new Object();
-
-pacModule.registerSelf =
-    function (compMgr, fileSpec, location, type) {
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-        compMgr.registerFactoryLocation(kPAC_CID,
-                                        "nsProxyAutoConfig",
-                                        kPAC_CONTRACTID,
-                                        fileSpec, 
-                                        location, 
-                                        type);
-    }
-
-pacModule.getClassObject =
-function (compMgr, cid, iid) {
-        if (!cid.equals(kPAC_CID))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-
-        if (!iid.equals(Components.interfaces.nsIFactory))
-            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-        return pacFactory;
-    }
-
-pacModule.canUnload =
-    function (compMgr) {
-        return true;
-    }
-
-var pacFactory = new Object();
-pacFactory.createInstance =
-    function (outer, iid) {
-        if (outer != null)
-            throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-        if (!iid.equals(nsIProxyAutoConfig) &&
-            !iid.equals(Components.interfaces.nsISupports)) {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-        return pac;
-    }
-
-function NSGetModule(compMgr, fileSpec) {
-    return pacModule;
-}
-
-var pac = new nsProxyAutoConfig() ;
-var dns = Components.classes[kDNS_CONTRACTID].getService(nsIDNSService);
+NSGetFactory = XPCOMUtils.generateNSGetFactory([nsProxyAutoConfig]);
 
 var pacUtils = 
 "function dnsDomainIs(host, domain) {\n" +

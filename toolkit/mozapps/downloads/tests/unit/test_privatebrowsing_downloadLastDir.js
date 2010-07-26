@@ -43,7 +43,7 @@ const Cr = Components.results;
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 const FILE_PICKER_CID = "@mozilla.org/filepicker;1";
-const FILE_PICKER_ID = Components.ID(Cc[FILE_PICKER_CID].number);
+const FILE_PICKER_ID = Components.ID("fa71ce55-6524-4744-ba75-71a4c126cfa3");
 const FILE_PICKER_DESCRIPTION = "File Picker Test Service";
 
 // Code borrowed from toolkit/components/downloadmgr/test/unit/head_download_manager.js
@@ -259,5 +259,4 @@ function run_test()
   dirSvc.QueryInterface(Ci.nsIDirectoryService).unregisterProvider(provider);
   obs.removeObserver(observer, "TEST_FILEPICKER_GETFILE", false);
   obs.removeObserver(observer, "TEST_FILEPICKER_SETDISPLAYDIRECTORY", false);
-  Cm.unregisterFactory(FILE_PICKER_ID, factory);
 }

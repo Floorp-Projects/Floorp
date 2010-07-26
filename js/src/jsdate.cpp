@@ -2322,20 +2322,32 @@ js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto;
-
     /* set static LocalTZA */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
-    proto = js_InitClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
-                         NULL, date_methods, NULL, date_static_methods);
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
+                                   NULL, date_methods, NULL, date_static_methods);
     if (!proto)
         return NULL;
 
+    AutoObjectRooter tvr(cx, proto);
+
     SetDateToNaN(cx, proto);
 
-    /* Alias toUTCString with toGMTString.  (ECMA B.2.6) */
-    if (!JS_AliasProperty(cx, proto, "toUTCString", "toGMTString"))
+    /*
+     * ES5 B.2.6:
+     *   The Function object that is the initial value of
+     *   Date.prototype.toGMTString is the same Function
+     *   object that is the initial value of
+     *   Date.prototype.toUTCString.
+     */
+    AutoValueRooter toUTCStringFun(cx);
+    jsid toUTCStringId = ATOM_TO_JSID(cx->runtime->atomState.toUTCStringAtom);
+    jsid toGMTStringId = ATOM_TO_JSID(cx->runtime->atomState.toGMTStringAtom);
+    if (!js_GetProperty(cx, proto, toUTCStringId, toUTCStringFun.addr()) ||
+        !js_DefineProperty(cx, proto, toGMTStringId, toUTCStringFun.value(),
+                           JS_PropertyStub, JS_PropertyStub, 0)) {
         return NULL;
+    }
 
     return proto;
 }
@@ -2343,7 +2355,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
 {
-    JSObject *obj = NewObject(cx, &js_DateClass, NULL, NULL);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_DateClass);
     if (!obj || !SetUTCTime(cx, obj, msec_time))
         return NULL;
     return obj;

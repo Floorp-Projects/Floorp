@@ -87,6 +87,10 @@ core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURD
 # XPI-contents staging directory for ambitious and right-thinking extensions.
 FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)
 
+ifdef XPI_NAME
+DEFINES += -DXPI_NAME=$(XPI_NAME)
+endif
+
 # MAKE_JARS_TARGET is a staging area for make-jars.pl.  When packaging in
 # the jar format, make-jars leaves behind a directory structure that's not
 # needed in $(FINAL_TARGET).  For both, flat, and symlink, the directory

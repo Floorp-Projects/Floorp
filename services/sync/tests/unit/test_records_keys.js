@@ -4,7 +4,9 @@ try {
   Cu.import("resource://services-sync/log4moz.js");
   Cu.import("resource://services-sync/identity.js");
   Cu.import("resource://services-sync/util.js");
-} catch (e) { do_throw(e); }
+} catch (e) {
+  do_throw(e);
+}
 
 function pubkey_handler(metadata, response) {
   let obj = {id: "asdf-1234-asdf-1234",
@@ -24,7 +26,7 @@ function privkey_handler(metadata, response) {
   return httpd_basic_auth_handler(JSON.stringify(obj), metadata, response);
 }
 
-function run_test() {
+function test_get() {
   let server;
 
   try {
@@ -55,4 +57,36 @@ function run_test() {
   }
   catch (e) { do_throw(e); }
   finally { server.stop(function() {}); }
+}
+
+
+function test_createKeypair() {
+  let passphrase = "moneyislike$\u20ac\u00a5\u5143";
+  let id = ID.set('foo', new Identity('foo', 'luser'));
+  id.password = passphrase;
+
+  _("Generate a key pair.");
+  let result = PubKeys.createKeypair(id, "http://pub/key", "http://priv/key");
+
+  _("Check that salt and IV are of correct length.");
+  // 16 bytes = 24 base64 encoded characters
+  do_check_eq(result.privkey.salt.length, 24);
+  do_check_eq(result.privkey.iv.length, 24);
+
+  _("URIs are set.");
+  do_check_eq(result.pubkey.uri.spec, "http://pub/key");
+  do_check_eq(result.pubkey.privateKeyUri.spec, "http://priv/key");
+  do_check_eq(result.privkey.uri.spec, "http://priv/key");
+  do_check_eq(result.privkey.publicKeyUri.spec, "http://pub/key");
+
+  _("UTF8 encoded passphrase was used.");
+  do_check_true(Svc.Crypto.verifyPassphrase(result.privkey.keyData,
+                                            Utils.encodeUTF8(passphrase),
+                                            result.privkey.salt,
+                                            result.privkey.payload.iv));
+}
+
+function run_test() {
+  test_get();
+  test_createKeypair();
 }

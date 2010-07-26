@@ -47,18 +47,41 @@
 #include "nsIDocShell.h"
 #include "nsStringFwd.h"
 #include "nsIFrameLoader.h"
+#include "nsSize.h"
 #include "nsIURI.h"
+#include "nsAutoPtr.h"
 #include "nsFrameMessageManager.h"
 
 class nsIContent;
 class nsIURI;
 class nsIFrameFrame;
+class nsIView;
 class nsIInProcessContentFrameMessageManager;
 class AutoResetInShow;
+
+#ifdef MOZ_IPC
+namespace mozilla {
+namespace dom {
+class PBrowserParent;
+class TabParent;
+}
+}
+
+#ifdef MOZ_WIDGET_GTK2
+typedef struct _GtkWidget GtkWidget;
+#endif
+#ifdef MOZ_WIDGET_QT
+class QX11EmbedContainer;
+#endif
+#endif
 
 class nsFrameLoader : public nsIFrameLoader
 {
   friend class AutoResetInShow;
+#ifdef MOZ_IPC
+  typedef mozilla::dom::PBrowserParent PBrowserParent;
+  typedef mozilla::dom::TabParent TabParent;
+#endif
 
 protected:
   nsFrameLoader(nsIContent *aOwner) :
@@ -70,11 +93,23 @@ protected:
     mInSwap(PR_FALSE),
     mInShow(PR_FALSE),
     mHideCalled(PR_FALSE)
+#ifdef MOZ_IPC
+    , mDelayRemoteDialogs(PR_FALSE)
+    , mRemoteWidgetCreated(PR_FALSE)
+    , mRemoteFrame(false)
+    , mRemoteBrowser(nsnull)
+#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)
+    , mRemoteSocket(nsnull)
+#endif
+#endif
   {}
 
 public:
   ~nsFrameLoader() {
     mNeedsAsyncDestroy = PR_TRUE;
+    if (mMessageManager) {
+      mMessageManager->Disconnect();
+    }
     nsFrameLoader::Destroy();
   }
 
@@ -113,14 +148,47 @@ public:
   nsresult SwapWithOtherLoader(nsFrameLoader* aOther,
                                nsRefPtr<nsFrameLoader>& aFirstToSwap,
                                nsRefPtr<nsFrameLoader>& aSecondToSwap);
+
+  // When IPC is enabled, destroy any associated child process.
+  void DestroyChild();
+
+#ifdef MOZ_IPC
+  PBrowserParent* GetRemoteBrowser();
+#endif
+  nsFrameMessageManager* GetFrameMessageManager() { return mMessageManager; }
+
 private:
 
-  NS_HIDDEN_(nsresult) EnsureDocShell();
+#ifdef MOZ_IPC
+  bool ShouldUseRemoteProcess();
+#endif
+
+  /**
+   * If we are an IPC frame, set mRemoteFrame. Otherwise, create and
+   * initialize mDocShell.
+   */
+  nsresult MaybeCreateDocShell();
   nsresult EnsureMessageManager();
   NS_HIDDEN_(void) GetURL(nsString& aURL);
+
+  // Properly retrieves documentSize of any subdocument type.
+  NS_HIDDEN_(nsIntSize) GetSubDocumentSize(const nsIFrame *aIFrame);
+
+  // Updates the subdocument position and size. This gets called only
+  // when we have our own in-process DocShell.
+  NS_HIDDEN_(nsresult) UpdateBaseWindowPositionAndSize(nsIFrame *aIFrame);
   nsresult CheckURILoad(nsIURI* aURI);
   void FireErrorEvent();
   nsresult ReallyStartLoadingInternal();
+
+#ifdef MOZ_IPC
+  // True means new process started; nothing else to do
+  bool TryNewProcess();
+
+  // Do the hookup necessary to actually show a remote frame once the view and
+  // widget are available.
+  bool ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view);
+#endif
 
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
@@ -137,6 +205,22 @@ private:
   PRPackedBool mInSwap : 1;
   PRPackedBool mInShow : 1;
   PRPackedBool mHideCalled : 1;
+
+#ifdef MOZ_IPC
+  PRPackedBool mDelayRemoteDialogs : 1;
+  PRPackedBool mRemoteWidgetCreated : 1;
+  bool mRemoteFrame;
+  // XXX leaking
+  nsCOMPtr<nsIObserver> mChildHost;
+  TabParent* mRemoteBrowser;
+
+#ifdef MOZ_WIDGET_GTK2
+  GtkWidget* mRemoteSocket;
+#elif defined(MOZ_WIDGET_QT)
+  QX11EmbedContainer* mRemoteSocket;
+#endif
+#endif
+
 };
 
 #endif

@@ -953,19 +953,20 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    var migration = 0;
+    const UI_VERSION = 2;
+    let currentUIVersion = 0;
     try {
-      migration = Services.prefs.getIntPref("browser.migration.version");
+      currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
     } catch(ex) {}
+    if (currentUIVersion >= UI_VERSION)
+      return;
 
-    if (migration == 0) {
+    this._rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
+    this._dataSource = this._rdf.GetDataSource("rdf:local-store");
+    this._dirty = false;
+
+    if (currentUIVersion < 1) {
       // this code should always migrate pre-FF3 profiles to the current UI state
-
-      // grab the localstore.rdf and make changes needed for new UI
-      this._rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
-      this._dataSource = this._rdf.GetDataSource("rdf:local-store");
-      this._dirty = false;
-
       let currentsetResource = this._rdf.GetResource("currentset");
       let toolbars = ["nav-bar", "toolbar-menubar", "PersonalToolbar"];
       for (let i = 0; i < toolbars.length; i++) {
@@ -989,18 +990,35 @@ BrowserGlue.prototype = {
           break;
         }
       }
-
-      // force the RDF to be saved
-      if (this._dirty)
-        this._dataSource.QueryInterface(Ci.nsIRDFRemoteDataSource).Flush();
-
-      // free up the RDF service
-      this._rdf = null;
-      this._dataSource = null;
-
-      // update the migration version
-      Services.prefs.setIntPref("browser.migration.version", 1);
     }
+
+    if (currentUIVersion < 2) {
+      // This code adds the customizable bookmarks button.
+      let currentsetResource = this._rdf.GetResource("currentset");
+      let toolbarResource = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
+      let currentset = this._getPersist(toolbarResource, currentsetResource);
+      // Need to migrate only if toolbar is customized and the element is not found.
+      if (currentset &&
+          currentset.indexOf("bookmarks-menu-button-container") == -1) {
+        if (currentset.indexOf("fullscreenflex") != -1) {
+          currentset = currentset.replace(/(^|,)fullscreenflex($|,)/,
+                                          "$1bookmarks-menu-button-container,fullscreenflex$2")
+        }
+        else {
+          currentset += ",bookmarks-menu-button-container";
+        }
+        this._setPersist(toolbarResource, currentsetResource, currentset);
+      }
+    }
+
+    if (this._dirty)
+      this._dataSource.QueryInterface(Ci.nsIRDFRemoteDataSource).Flush();
+
+    delete this._rdf;
+    delete this._dataSource;
+
+    // Update the migration version.
+    Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
 
   _getPersist: function BG__getPersist(aSource, aProperty) {
@@ -1234,9 +1252,7 @@ BrowserGlue.prototype = {
 
 
   // for XPCOM
-  classDescription: "Firefox Browser Glue Service",
   classID:          Components.ID("{eab9012e-5f74-4cbc-b2b5-a590235513cc}"),
-  contractID:       "@mozilla.org/browser/browserglue;1",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference,
@@ -1244,21 +1260,12 @@ BrowserGlue.prototype = {
 
   // redefine the default factory for XPCOMUtils
   _xpcom_factory: BrowserGlueServiceFactory,
-
-  // get this contractID registered for certain categories via XPCOMUtils
-  _xpcom_categories: [
-    // make BrowserGlue a startup observer
-    { category: "app-startup", service: true,
-      apps: [ /* Firefox */ "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}" ] }
-  ]
 }
 
 function GeolocationPrompt() {}
 
 GeolocationPrompt.prototype = {
-  classDescription: "Geolocation Prompting Component",
   classID:          Components.ID("{C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}"),
-  contractID:       "@mozilla.org/geolocation/prompt;1",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIGeolocationPrompt]),
 
@@ -1353,8 +1360,5 @@ GeolocationPrompt.prototype = {
   },
 };
 
-
-//module initialization
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([BrowserGlue, GeolocationPrompt]);
-}
+var components = [BrowserGlue, GeolocationPrompt];
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

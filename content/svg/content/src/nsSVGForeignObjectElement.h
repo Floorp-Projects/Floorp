@@ -52,8 +52,8 @@ class nsSVGForeignObjectElement : public nsSVGForeignObjectElementBase,
 
 protected:
   friend nsresult NS_NewSVGForeignObjectElement(nsIContent **aResult,
-                                                nsINodeInfo *aNodeInfo);
-  nsSVGForeignObjectElement(nsINodeInfo *aNodeInfo);
+                                                already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGForeignObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -74,6 +74,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();

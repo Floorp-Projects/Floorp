@@ -43,6 +43,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = contentprefs
 
-EXTRA_COMPONENTS = nsContentPrefService.js
+EXTRA_COMPONENTS = nsContentPrefService.js nsContentPrefService.manifest
 
 include $(topsrcdir)/config/rules.mk

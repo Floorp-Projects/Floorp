@@ -43,35 +43,86 @@
 #include "xpctest_private.h"
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsCRT.h"
 #include "nsIClassInfoImpl.h"
 
-NS_DECL_CLASSINFO(xpcTestCallJS)
-NS_DECL_CLASSINFO(xpcTestChild2)
+NS_DEFINE_NAMED_CID(NS_ECHO_CID);
+NS_DEFINE_NAMED_CID(NS_CHILD_CID);
+NS_DEFINE_NAMED_CID(NS_NOISY_CID);
+NS_DEFINE_NAMED_CID(NS_STRING_TEST_CID);
+NS_DEFINE_NAMED_CID(NS_OVERLOADED_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTOBJECTREADONLY_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTOBJECTREADWRITE_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTIN_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTOUT_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTINOUT_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTCONST_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTCALLJS_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTPARENTONE_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTPARENTTWO_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTCHILD2_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTCHILD3_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTCHILD4_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTCHILD5_CID);
+NS_DEFINE_NAMED_CID(NS_ARRAY_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTDOMSTRING_CID);
+NS_DEFINE_NAMED_CID(NS_XPCTESTVARIANT_CID);
 
-static const nsModuleComponentInfo components[] = {
-  {nsnull, NS_ECHO_CID,                   "@mozilla.org/js/xpc/test/Echo;1",                 xpctest::ConstructEcho                  },
-  {nsnull, NS_CHILD_CID,                  "@mozilla.org/js/xpc/test/Child;1",                xpctest::ConstructChild                 },
-  {nsnull, NS_NOISY_CID,                  "@mozilla.org/js/xpc/test/Noisy;1",                xpctest::ConstructNoisy                 },
-  {nsnull, NS_STRING_TEST_CID,            "@mozilla.org/js/xpc/test/StringTest;1",           xpctest::ConstructStringTest            },
-  {nsnull, NS_OVERLOADED_CID,             "@mozilla.org/js/xpc/test/Overloaded;1",           xpctest::ConstructOverloaded            },
-  {nsnull, NS_XPCTESTOBJECTREADONLY_CID,  "@mozilla.org/js/xpc/test/ObjectReadOnly;1",  xpctest::ConstructXPCTestObjectReadOnly },
-  {nsnull, NS_XPCTESTOBJECTREADWRITE_CID, "@mozilla.org/js/xpc/test/ObjectReadWrite;1", xpctest::ConstructXPCTestObjectReadWrite},
-  {nsnull, NS_XPCTESTIN_CID,              "@mozilla.org/js/xpc/test/In;1",              xpctest::ConstructXPCTestIn             },
-  {nsnull, NS_XPCTESTOUT_CID,             "@mozilla.org/js/xpc/test/Out;1",             xpctest::ConstructXPCTestOut            },
-  {nsnull, NS_XPCTESTINOUT_CID,           "@mozilla.org/js/xpc/test/InOut;1",           xpctest::ConstructXPCTestInOut          },
-  {nsnull, NS_XPCTESTCONST_CID,           "@mozilla.org/js/xpc/test/Const;1",           xpctest::ConstructXPCTestConst          },
-  {nsnull, NS_XPCTESTCALLJS_CID,          "@mozilla.org/js/xpc/test/CallJS;1",          xpctest::ConstructXPCTestCallJS, NULL, NULL, NULL, NS_CI_INTERFACE_GETTER_NAME(xpcTestCallJS), NULL, &NS_CLASSINFO_NAME(xpcTestCallJS) },
-  {nsnull, NS_XPCTESTPARENTONE_CID,       "@mozilla.org/js/xpc/test/ParentOne;1",       xpctest::ConstructXPCTestParentOne      },
-  {nsnull, NS_XPCTESTPARENTTWO_CID,       "@mozilla.org/js/xpc/test/ParentTwo;1",       xpctest::ConstructXPCTestParentTwo      },
-  {nsnull, NS_XPCTESTCHILD2_CID,          "@mozilla.org/js/xpc/test/Child2;1",          xpctest::ConstructXPCTestChild2, NULL, NULL, NULL, NS_CI_INTERFACE_GETTER_NAME(xpcTestChild2), NULL, &NS_CLASSINFO_NAME(xpcTestChild2) },
-  {nsnull, NS_XPCTESTCHILD3_CID,          "@mozilla.org/js/xpc/test/Child3;1",          xpctest::ConstructXPCTestChild3         },
-  {nsnull, NS_XPCTESTCHILD4_CID,          "@mozilla.org/js/xpc/test/Child4;1",          xpctest::ConstructXPCTestChild4         },
-  {nsnull, NS_XPCTESTCHILD5_CID,          "@mozilla.org/js/xpc/test/Child5;1",          xpctest::ConstructXPCTestChild5         },
-  {nsnull, NS_ARRAY_CID,                  "@mozilla.org/js/xpc/test/ArrayTest;1",       xpctest::ConstructArrayTest             },
-  {nsnull, NS_XPCTESTDOMSTRING_CID,       "@mozilla.org/js/xpc/test/DOMString;1",       xpctest::ConstructXPCTestDOMString      },
-  {nsnull, NS_XPCTESTVARIANT_CID,         "@mozilla.org/js/xpc/test/TestVariant;1",     xpctest::ConstructXPCTestVariant        }
+static const mozilla::Module::CIDEntry kXPCTestCIDs[] = {
+    { &kNS_ECHO_CID, false, NULL, xpctest::ConstructEcho },
+    { &kNS_CHILD_CID, false, NULL, xpctest::ConstructChild },
+    { &kNS_NOISY_CID, false, NULL, xpctest::ConstructNoisy },
+    { &kNS_STRING_TEST_CID, false, NULL, xpctest::ConstructStringTest },
+    { &kNS_OVERLOADED_CID, false, NULL, xpctest::ConstructOverloaded },
+    { &kNS_XPCTESTOBJECTREADONLY_CID, false, NULL, xpctest::ConstructXPCTestObjectReadOnly },
+    { &kNS_XPCTESTOBJECTREADWRITE_CID, false, NULL, xpctest::ConstructXPCTestObjectReadWrite },
+    { &kNS_XPCTESTIN_CID, false, NULL, xpctest::ConstructXPCTestIn },
+    { &kNS_XPCTESTOUT_CID, false, NULL, xpctest::ConstructXPCTestOut },
+    { &kNS_XPCTESTINOUT_CID, false, NULL, xpctest::ConstructXPCTestInOut },
+    { &kNS_XPCTESTCONST_CID, false, NULL, xpctest::ConstructXPCTestConst },
+    { &kNS_XPCTESTCALLJS_CID, false, NULL, xpctest::ConstructXPCTestCallJS },
+    { &kNS_XPCTESTPARENTONE_CID, false, NULL, xpctest::ConstructXPCTestParentOne },
+    { &kNS_XPCTESTPARENTTWO_CID, false, NULL, xpctest::ConstructXPCTestParentTwo },
+    { &kNS_XPCTESTCHILD2_CID, false, NULL, xpctest::ConstructXPCTestChild2 },
+    { &kNS_XPCTESTCHILD3_CID, false, NULL, xpctest::ConstructXPCTestChild3 },
+    { &kNS_XPCTESTCHILD4_CID, false, NULL, xpctest::ConstructXPCTestChild4 },
+    { &kNS_XPCTESTCHILD5_CID, false, NULL, xpctest::ConstructXPCTestChild5 },
+    { &kNS_ARRAY_CID, false, NULL, xpctest::ConstructArrayTest },
+    { &kNS_XPCTESTDOMSTRING_CID, false, NULL, xpctest::ConstructXPCTestDOMString },
+    { &kNS_XPCTESTVARIANT_CID, false, NULL, xpctest::ConstructXPCTestVariant },
+    { NULL }
 };
-                                                               
-NS_IMPL_NSGETMODULE(xpconnect_test, components)
+
+static const mozilla::Module::ContractIDEntry kXPCTestContracts[] = {
+    { "@mozilla.org/js/xpc/test/Echo;1", &kNS_ECHO_CID },
+    { "@mozilla.org/js/xpc/test/Child;1", &kNS_CHILD_CID },
+    { "@mozilla.org/js/xpc/test/Noisy;1", &kNS_NOISY_CID },
+    { "@mozilla.org/js/xpc/test/StringTest;1", &kNS_STRING_TEST_CID },
+    { "@mozilla.org/js/xpc/test/Overloaded;1", &kNS_OVERLOADED_CID },
+    { "@mozilla.org/js/xpc/test/ObjectReadOnly;1", &kNS_XPCTESTOBJECTREADONLY_CID },
+    { "@mozilla.org/js/xpc/test/ObjectReadWrite;1", &kNS_XPCTESTOBJECTREADWRITE_CID },
+    { "@mozilla.org/js/xpc/test/In;1", &kNS_XPCTESTIN_CID },
+    { "@mozilla.org/js/xpc/test/Out;1", &kNS_XPCTESTOUT_CID },
+    { "@mozilla.org/js/xpc/test/InOut;1", &kNS_XPCTESTINOUT_CID },
+    { "@mozilla.org/js/xpc/test/Const;1", &kNS_XPCTESTCONST_CID },
+    { "@mozilla.org/js/xpc/test/CallJS;1", &kNS_XPCTESTCALLJS_CID },
+    { "@mozilla.org/js/xpc/test/ParentOne;1", &kNS_XPCTESTPARENTONE_CID },
+    { "@mozilla.org/js/xpc/test/ParentTwo;1", &kNS_XPCTESTPARENTTWO_CID },
+    { "@mozilla.org/js/xpc/test/Child2;1", &kNS_XPCTESTCHILD2_CID },
+    { "@mozilla.org/js/xpc/test/Child3;1", &kNS_XPCTESTCHILD3_CID },
+    { "@mozilla.org/js/xpc/test/Child4;1", &kNS_XPCTESTCHILD4_CID },
+    { "@mozilla.org/js/xpc/test/Child5;1", &kNS_XPCTESTCHILD5_CID },
+    { "@mozilla.org/js/xpc/test/ArrayTest;1", &kNS_ARRAY_CID },
+    { "@mozilla.org/js/xpc/test/DOMString;1", &kNS_XPCTESTDOMSTRING_CID },
+    { "@mozilla.org/js/xpc/test/TestVariant;1", &kNS_XPCTESTVARIANT_CID },
+    { NULL }
+};
+
+static const mozilla::Module kXPCTestModule = {
+    mozilla::Module::kVersion,
+    kXPCTestCIDs,
+    kXPCTestContracts
+};
+
+NSMODULE_DEFN(xpconnect_test) = &kXPCTestModule;

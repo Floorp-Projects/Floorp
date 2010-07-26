@@ -136,10 +136,6 @@ main(int argc, char* argv[])
     {
         nsCOMPtr<nsIServiceManager> servMan;
         NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-        if (registrar)
-            registrar->AutoRegister(nsnull);
 
 #if defined(PR_LOGGING)
         gTestLog = PR_NewLogModule("Test");

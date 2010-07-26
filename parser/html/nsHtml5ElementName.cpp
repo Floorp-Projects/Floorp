@@ -39,6 +39,7 @@
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsHtml5NamedCharacters.h"
+#include "nsHtml5NamedCharactersAccel.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
@@ -224,10 +225,10 @@ nsHtml5ElementName::initializeStatics()
   ELT_TAN = new nsHtml5ElementName(nsHtml5Atoms::tan, nsHtml5Atoms::tan, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_USE = new nsHtml5ElementName(nsHtml5Atoms::use, nsHtml5Atoms::use, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_VAR = new nsHtml5ElementName(nsHtml5Atoms::var, nsHtml5Atoms::var, NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR, PR_FALSE, PR_FALSE, PR_FALSE);
-  ELT_WBR = new nsHtml5ElementName(nsHtml5Atoms::wbr, nsHtml5Atoms::wbr, NS_HTML5TREE_BUILDER_AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR, PR_TRUE, PR_FALSE, PR_FALSE);
+  ELT_WBR = new nsHtml5ElementName(nsHtml5Atoms::wbr, nsHtml5Atoms::wbr, NS_HTML5TREE_BUILDER_AREA_OR_SPACER_OR_WBR, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_XMP = new nsHtml5ElementName(nsHtml5Atoms::xmp, nsHtml5Atoms::xmp, NS_HTML5TREE_BUILDER_XMP, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_XOR = new nsHtml5ElementName(nsHtml5Atoms::xor_, nsHtml5Atoms::xor_, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
-  ELT_AREA = new nsHtml5ElementName(nsHtml5Atoms::area, nsHtml5Atoms::area, NS_HTML5TREE_BUILDER_AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR, PR_TRUE, PR_FALSE, PR_FALSE);
+  ELT_AREA = new nsHtml5ElementName(nsHtml5Atoms::area, nsHtml5Atoms::area, NS_HTML5TREE_BUILDER_AREA_OR_SPACER_OR_WBR, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_ABBR = new nsHtml5ElementName(nsHtml5Atoms::abbr, nsHtml5Atoms::abbr, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_BASE = new nsHtml5ElementName(nsHtml5Atoms::base, nsHtml5Atoms::base, NS_HTML5TREE_BUILDER_BASE, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_BVAR = new nsHtml5ElementName(nsHtml5Atoms::bvar, nsHtml5Atoms::bvar, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
@@ -248,7 +249,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_HEAD = new nsHtml5ElementName(nsHtml5Atoms::head, nsHtml5Atoms::head, NS_HTML5TREE_BUILDER_HEAD, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_HTML = new nsHtml5ElementName(nsHtml5Atoms::html, nsHtml5Atoms::html, NS_HTML5TREE_BUILDER_HTML, PR_FALSE, PR_TRUE, PR_FALSE);
   ELT_LINE = new nsHtml5ElementName(nsHtml5Atoms::line, nsHtml5Atoms::line, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
-  ELT_LINK = new nsHtml5ElementName(nsHtml5Atoms::link, nsHtml5Atoms::link, NS_HTML5TREE_BUILDER_LINK, PR_TRUE, PR_FALSE, PR_FALSE);
+  ELT_LINK = new nsHtml5ElementName(nsHtml5Atoms::link, nsHtml5Atoms::link, NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_LIST = new nsHtml5ElementName(nsHtml5Atoms::list, nsHtml5Atoms::list, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_META = new nsHtml5ElementName(nsHtml5Atoms::meta, nsHtml5Atoms::meta, NS_HTML5TREE_BUILDER_META, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_MSUB = new nsHtml5ElementName(nsHtml5Atoms::msub, nsHtml5Atoms::msub, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
@@ -369,7 +370,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_STRONG = new nsHtml5ElementName(nsHtml5Atoms::strong, nsHtml5Atoms::strong, NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_SWITCH = new nsHtml5ElementName(nsHtml5Atoms::switch_, nsHtml5Atoms::switch_, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_SYMBOL = new nsHtml5ElementName(nsHtml5Atoms::symbol, nsHtml5Atoms::symbol, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
-  ELT_SPACER = new nsHtml5ElementName(nsHtml5Atoms::spacer, nsHtml5Atoms::spacer, NS_HTML5TREE_BUILDER_AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR, PR_TRUE, PR_FALSE, PR_FALSE);
+  ELT_SPACER = new nsHtml5ElementName(nsHtml5Atoms::spacer, nsHtml5Atoms::spacer, NS_HTML5TREE_BUILDER_AREA_OR_SPACER_OR_WBR, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_SELECT = new nsHtml5ElementName(nsHtml5Atoms::select, nsHtml5Atoms::select, NS_HTML5TREE_BUILDER_SELECT, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_SUBSET = new nsHtml5ElementName(nsHtml5Atoms::subset, nsHtml5Atoms::subset, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_SCRIPT = new nsHtml5ElementName(nsHtml5Atoms::script, nsHtml5Atoms::script, NS_HTML5TREE_BUILDER_SCRIPT, PR_TRUE, PR_FALSE, PR_FALSE);
@@ -385,7 +386,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_ARCCOTH = new nsHtml5ElementName(nsHtml5Atoms::arccoth, nsHtml5Atoms::arccoth, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_ACRONYM = new nsHtml5ElementName(nsHtml5Atoms::acronym, nsHtml5Atoms::acronym, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_ADDRESS = new nsHtml5ElementName(nsHtml5Atoms::address, nsHtml5Atoms::address, NS_HTML5TREE_BUILDER_ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_HGROUP_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION, PR_TRUE, PR_FALSE, PR_FALSE);
-  ELT_BGSOUND = new nsHtml5ElementName(nsHtml5Atoms::bgsound, nsHtml5Atoms::bgsound, NS_HTML5TREE_BUILDER_AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR, PR_TRUE, PR_FALSE, PR_FALSE);
+  ELT_BGSOUND = new nsHtml5ElementName(nsHtml5Atoms::bgsound, nsHtml5Atoms::bgsound, NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_COMMAND = new nsHtml5ElementName(nsHtml5Atoms::command, nsHtml5Atoms::command, NS_HTML5TREE_BUILDER_COMMAND, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_COMPOSE = new nsHtml5ElementName(nsHtml5Atoms::compose, nsHtml5Atoms::compose, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_CEILING = new nsHtml5ElementName(nsHtml5Atoms::ceiling, nsHtml5Atoms::ceiling, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
@@ -423,7 +424,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_TENDSTO = new nsHtml5ElementName(nsHtml5Atoms::tendsto, nsHtml5Atoms::tendsto, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_UPLIMIT = new nsHtml5ElementName(nsHtml5Atoms::uplimit, nsHtml5Atoms::uplimit, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_ALTGLYPH = new nsHtml5ElementName(nsHtml5Atoms::altglyph, nsHtml5Atoms::altGlyph, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
-  ELT_BASEFONT = new nsHtml5ElementName(nsHtml5Atoms::basefont, nsHtml5Atoms::basefont, NS_HTML5TREE_BUILDER_AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR, PR_TRUE, PR_FALSE, PR_FALSE);
+  ELT_BASEFONT = new nsHtml5ElementName(nsHtml5Atoms::basefont, nsHtml5Atoms::basefont, NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_CLIPPATH = new nsHtml5ElementName(nsHtml5Atoms::clippath, nsHtml5Atoms::clipPath, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_CODOMAIN = new nsHtml5ElementName(nsHtml5Atoms::codomain, nsHtml5Atoms::codomain, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_COLGROUP = new nsHtml5ElementName(nsHtml5Atoms::colgroup, nsHtml5Atoms::colgroup, NS_HTML5TREE_BUILDER_COLGROUP, PR_TRUE, PR_FALSE, PR_FALSE);

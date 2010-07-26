@@ -266,7 +266,11 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
   event.time = PR_IntervalNow();
   event.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
 
-  float appPerDev = float(widget->GetDeviceContext()->AppUnitsPerDevPixel());
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
   event.refPoint.x =
     NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aX) + offset.x,
                           appPerDev);
@@ -318,7 +322,11 @@ nsDOMWindowUtils::SendMouseScrollEvent(const nsAString& aType,
 
   event.time = PR_IntervalNow();
 
-  float appPerDev = float(widget->GetDeviceContext()->AppUnitsPerDevPixel());
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
   event.refPoint.x =
     NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aX) + offset.x,
                           appPerDev);
@@ -486,7 +494,7 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
       frame = presShell->GetRootFrame();
     }
     if (frame)
-      return frame->GetWindow();
+      return frame->GetNearestWidget();
   }
 
   return nsnull;
@@ -596,7 +604,11 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
   event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? PR_TRUE : PR_FALSE;
   event.time = PR_IntervalNow();
 
-  float appPerDev = float(widget->GetDeviceContext()->AppUnitsPerDevPixel());
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
   event.refPoint.x =
     NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aX) + offset.x,
                           appPerDev);
@@ -1098,7 +1110,7 @@ nsDOMWindowUtils::SendQueryContentEvent(PRUint32 aType,
 
     // Fire the event on the widget at the point
     if (popupFrame) {
-      targetWidget = popupFrame->GetWindow();
+      targetWidget = popupFrame->GetNearestWidget();
     }
   }
 
@@ -1268,6 +1280,27 @@ nsDOMWindowUtils::GetVisitedDependentComputedStyle(
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::EnterModalState()
+{
+  mWindow->EnterModalState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::LeaveModalState()
+{
+  mWindow->LeaveModalState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::IsInModalState(PRBool *retval)
+{
+  *retval = mWindow->IsInModalState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetParent()
 {
   // This wasn't privileged in the past, but better to expose less than more.
@@ -1347,5 +1380,29 @@ nsDOMWindowUtils::GetCurrentInnerWindowID(PRUint64 *aWindowID)
     return NS_ERROR_NOT_AVAILABLE;
   }
   *aWindowID = inner->mWindowID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SuspendTimeouts()
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  mWindow->SuspendTimeouts();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::ResumeTimeouts()
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  mWindow->ResumeTimeouts();
+
   return NS_OK;
 }

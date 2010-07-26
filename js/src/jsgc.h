@@ -42,6 +42,9 @@
 /*
  * JS Garbage Collector.
  */
+#include <setjmp.h>
+
+#include "jstypes.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsdhash.h"
@@ -99,13 +102,10 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
                                  JSStringFinalizeOp newop);
 
 extern JSBool
-js_AddRoot(JSContext *cx, void *rp, const char *name);
+js_AddRoot(JSContext *cx, jsval *vp, const char *name);
 
 extern JSBool
-js_AddRootRT(JSRuntime *rt, void *rp, const char *name);
-
-extern JSBool
-js_RemoveRoot(JSRuntime *rt, void *rp);
+js_AddGCThingRoot(JSContext *cx, void **rp, const char *name);
 
 #ifdef DEBUG
 extern void
@@ -214,18 +214,6 @@ typedef enum JSGCInvocationKind {
 
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
-
-/*
- * Set object's prototype or parent slot while checking that doing so would
- * not create a cycle in the proto or parent chain. The cycle check and slot
- * change are done only when all other requests are finished or suspended to
- * ensure exclusive access to the chain. If there is a cycle, return false
- * without reporting an error. Otherwise, set the proto or parent and return
- * true.
- */
-extern bool
-js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
-                                     uint32 slot, JSObject *pobj);
 
 #ifdef JS_THREADSAFE
 /*
@@ -374,9 +362,9 @@ struct JSWeakRoots {
 
 #define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
 
-#ifdef JS_THREADSAFE
-
 namespace js {
+
+#ifdef JS_THREADSAFE
 
 /*
  * During the finalization we do not free immediately. Rather we add the
@@ -420,8 +408,31 @@ class BackgroundSweepTask : public JSBackgroundTask {
     virtual void run();
 };
 
-}
-#endif
+#endif /* JS_THREADSAFE */
+
+struct ConservativeGCThreadData {
+
+    /*
+     * The GC scans conservatively between JSThreadData::nativeStackBase and
+     * nativeStackTop unless the latter is NULL.
+     */
+    jsuword             *nativeStackTop;
+
+    union {
+        jmp_buf         jmpbuf;
+        jsuword         words[JS_HOWMANY(sizeof(jmp_buf), sizeof(jsuword))];
+    } registerSnapshot;
+
+    int                 enableCount;
+
+    JS_NEVER_INLINE JS_FRIEND_API(void) enable(bool knownStackBoundary = false);
+    JS_FRIEND_API(void) disable();
+    bool isEnabled() const { return enableCount > 0; }
+};
+
+} /* namespace js */
+
+#define JS_DUMP_CONSERVATIVE_GC_ROOTS 1
 
 extern void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str);
@@ -431,6 +442,25 @@ const bool JS_WANT_GC_METER_PRINT = true;
 #elif defined DEBUG
 # define JS_GCMETER 1
 const bool JS_WANT_GC_METER_PRINT = false;
+#endif
+
+#if defined JS_GCMETER || defined JS_DUMP_CONSERVATIVE_GC_ROOTS
+
+struct JSConservativeGCStats {
+    uint32  words;      /* number of words on native stacks */
+    uint32  oddaddress; /* excluded because low bit was set */
+    uint32  special;    /* excluded because a special value */
+    uint32  notarena;   /* not within arena range in a chunk */
+    uint32  notchunk;   /* not within a valid chunk */
+    uint32  freearena;  /* not within non-free arena */
+    uint32  wrongtag;   /* tagged pointer but wrong type */
+    uint32  notlive;    /* gcthing is not allocated */
+    uint32  gcthings;   /* number of live gcthings */
+    uint32  raw;        /* number of raw pointers marked */
+    uint32  unmarked;   /* number of unmarked gc things discovered on the
+                           stack */
+};
+
 #endif
 
 #ifdef JS_GCMETER
@@ -481,6 +511,8 @@ struct JSGCStats {
 
     JSGCArenaStats  arenaStats[FINALIZE_LIMIT];
     JSGCArenaStats  doubleArenaStats;
+
+    JSConservativeGCStats conservative;
 };
 
 extern JS_FRIEND_API(void)
@@ -496,6 +528,16 @@ extern void
 js_MarkTraps(JSTracer *trc);
 
 namespace js {
+
+/*
+ * Set object's prototype while checking that doing so would not create
+ * a cycle in the proto chain. The cycle check and proto change are done
+ * only when all other requests are finished or suspended to ensure exclusive
+ * access to the chain. If there is a cycle, return false without reporting
+ * an error. Otherwise, set the proto and return true.
+ */
+extern bool
+SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto);
 
 void
 TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len);
@@ -519,10 +561,7 @@ TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
 }
 
 JSCompartment *
-NewCompartment(JSContext *cx);
-
-void
-SweepCompartments(JSContext *cx);
+NewCompartment(JSContext *cx, JSPrincipals *principals);
 
 } /* namespace js */
 

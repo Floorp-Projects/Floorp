@@ -112,7 +112,11 @@ EXTRA_JS_MODULES = \
   $(NULL)
 
 ifdef ENABLE_TESTS
+
+# Temporarily disable the tests on x86-Linux, see bug 573290.
+ifneq ($(OS_ARCH)_$(TARGET_XPCOM_ABI),Linux_x86-gcc3)
 TOOL_DIRS = test
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

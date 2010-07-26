@@ -902,12 +902,12 @@ static void nssdbg_finish_time(PRInt32 fun_number, PRIntervalTime start)
 
     ival = end-start;
     /* sigh, lie to PRAtomic add and say we are using signed values */
-    PR_AtomicAdd((PRInt32 *)&nssdbg_prof_data[fun_number].time, (PRInt32)ival);
+    PR_ATOMIC_ADD((PRInt32 *)&nssdbg_prof_data[fun_number].time, (PRInt32)ival);
 }
 
 static void nssdbg_start_time(PRInt32 fun_number, PRIntervalTime *start)
 {
-    PR_AtomicIncrement((PRInt32 *)&nssdbg_prof_data[fun_number].calls);
+    PR_ATOMIC_INCREMENT((PRInt32 *)&nssdbg_prof_data[fun_number].calls);
     *start = PR_IntervalNow();
 }
 
@@ -1212,7 +1212,7 @@ CK_RV NSSDBGC_OpenSession(
 {
     COMMON_DEFINITIONS;
 
-    PR_AtomicIncrement((PRInt32 *)&numOpenSessions);
+    PR_ATOMIC_INCREMENT((PRInt32 *)&numOpenSessions);
     maxOpenSessions = PR_MAX(numOpenSessions, maxOpenSessions);
     PR_LOG(modlog, 1, ("C_OpenSession"));
     PR_LOG(modlog, 3, (fmt_slotID, slotID));
@@ -1238,7 +1238,7 @@ CK_RV NSSDBGC_CloseSession(
 {
     COMMON_DEFINITIONS;
 
-    PR_AtomicDecrement((PRInt32 *)&numOpenSessions);
+    PR_ATOMIC_DECREMENT((PRInt32 *)&numOpenSessions);
     PR_LOG(modlog, 1, ("C_CloseSession"));
     log_handle(3, fmt_hSession, hSession);
     nssdbg_start_time(FUNC_C_CLOSESESSION,&start);

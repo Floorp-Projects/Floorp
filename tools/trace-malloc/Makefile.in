@@ -86,8 +86,8 @@ LIBS		+= \
 		$(LIBS_DIR) \
 		tmreader.$(OBJ_SUFFIX) \
 		adreader.$(OBJ_SUFFIX) \
-		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_GLUE_LDOPTS) \
+		$(EXTRA_DSO_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

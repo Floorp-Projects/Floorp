@@ -311,7 +311,11 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
   pt = pt * nsPresContext::AppUnitsPerCSSPixel();
   nsPoint point = nsPoint(NSToIntRound(pt.x), NSToIntRound(pt.y));
 
-  return nsLayoutUtils::GetFrameForPoint(kid, point);
+  nsIFrame *frame = nsLayoutUtils::GetFrameForPoint(kid, point);
+  if (frame && nsSVGUtils::HitTestClip(this, aPoint))
+    return frame;
+
+  return nsnull;
 }
 
 NS_IMETHODIMP_(nsRect)

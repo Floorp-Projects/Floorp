@@ -45,8 +45,6 @@ interface nsICancelable;
 /**
  * This interface serves as a closure for nsIProtocolProxyService's
  * asyncResolve method.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(a9967200-f95e-45c2-beb3-9b060d874bfd)]
 interface nsIProtocolProxyCallback : nsISupports

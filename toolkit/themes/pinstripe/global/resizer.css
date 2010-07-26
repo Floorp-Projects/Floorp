@@ -8,6 +8,10 @@ resizer {
   height: 15px;
 }
 
+resizer[type="window"] {
+  display: none;
+}
+
 resizer[rtl="true"],
 resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
   background: url("chrome://global/skin/icons/resizer-rtl.png") no-repeat;

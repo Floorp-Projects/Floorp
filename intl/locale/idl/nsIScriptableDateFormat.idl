@@ -69,7 +69,7 @@ enum
 
 #define NS_SCRIPTABLEDATEFORMAT_CONTRACTID "@mozilla.org/intl/scriptabledateformat;1"
 
-extern NS_IMETHODIMP
+extern nsresult
 NS_NewScriptableDateFormat(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 %}
 

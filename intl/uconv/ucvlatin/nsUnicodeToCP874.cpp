@@ -45,7 +45,7 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "cp874.uf"
 };
 
-NS_METHOD
+nsresult
 nsUnicodeToCP874Constructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult) 
 {

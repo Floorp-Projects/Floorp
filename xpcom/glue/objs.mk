@@ -47,6 +47,7 @@ XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsCOMPtr.cpp                   \
   nsCOMArray.cpp                 \
   nsCRTGlue.cpp                  \
+  nsClassInfoImpl.cpp            \
   nsComponentManagerUtils.cpp    \
   nsEnumeratorUtils.cpp          \
   nsID.cpp                       \
@@ -69,10 +70,6 @@ XPCOM_GLUE_SRC_LCPPSRCS =        \
 
 XPCOM_GLUE_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCPPSRCS))
 
-# nsGenericFactory is not really all that helpful in the standalone glue,
-# and it has a bad dependency on the NSPR AtomicIncrement function, so we
-# only build it for the dependent XPCOM glue and builtin to xpcom-core.
-
 # TODO nsAutoLock.cpp should die soon
 
 XPCOM_GLUENS_SRC_LCPPSRCS =      \
@@ -81,9 +78,9 @@ XPCOM_GLUENS_SRC_LCPPSRCS =      \
   SSE.cpp                        \
   unused.cpp                     \
   nsAutoLock.cpp                 \
-  nsGenericFactory.cpp           \
   nsProxyRelease.cpp             \
   nsTextFormatter.cpp            \
+  GenericFactory.cpp             \
   $(NULL)
 
 XPCOM_GLUENS_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/,$(XPCOM_GLUENS_SRC_LCPPSRCS))

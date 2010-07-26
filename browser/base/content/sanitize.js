@@ -122,6 +122,12 @@ Sanitizer.prototype = {
           // facility for timespan-based eviction.  Wipe it.
           cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
         } catch(er) {}
+
+        var imageCache = Cc["@mozilla.org/image/cache;1"].
+                         getService(Ci.imgICache);
+        try {
+          imageCache.clearCache(false); // true=chrome, false=content
+        } catch(er) {}
       },
       
       get canClear()

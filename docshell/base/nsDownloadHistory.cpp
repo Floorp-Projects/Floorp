@@ -52,35 +52,6 @@
 
 NS_IMPL_ISUPPORTS1(nsDownloadHistory, nsIDownloadHistory)
 
-nsresult
-nsDownloadHistory::RegisterSelf(nsIComponentManager *aCompMgr,
-                                nsIFile *aPath,
-                                const char *aLoaderStr,
-                                const char *aType,
-                                const nsModuleComponentInfo *aInfo)
-{
-  nsCOMPtr<nsIComponentRegistrar> compReg(do_QueryInterface(aCompMgr));
-  if (!compReg)
-    return NS_ERROR_UNEXPECTED;
-  
-  PRBool registered;
-  nsresult rv = compReg->IsContractIDRegistered(NS_DOWNLOADHISTORY_CONTRACTID,
-                                                &registered);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // If someone has already registered the contractID, we don't want to register
-  // it ourselves.  We do want to register though in case someone wants to access
-  // this implementation (by CID).
-  if (registered) {
-    return compReg->RegisterFactoryLocation(GetCID(), "nsDownloadHistory",
-                                            nsnull, aPath, aLoaderStr, aType);
-  }
-
-  return compReg->RegisterFactoryLocation(GetCID(), "nsDownloadHistory",
-                                          NS_DOWNLOADHISTORY_CONTRACTID,
-                                          aPath, aLoaderStr, aType);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIDownloadHistory
 

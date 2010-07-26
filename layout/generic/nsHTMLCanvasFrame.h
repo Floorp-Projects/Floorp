@@ -48,6 +48,7 @@
 #include "ImageLayers.h"
 
 class nsPresContext;
+class nsDisplayItem;
 
 nsIFrame* NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -66,8 +67,9 @@ public:
                               const nsDisplayListSet& aLists);
 
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                     LayerManager* aManager);
-                              
+                                     LayerManager* aManager,
+                                     nsDisplayItem* aItem);
+
   /* get the size of the canvas's image */
   nsIntSize GetCanvasSize();
 

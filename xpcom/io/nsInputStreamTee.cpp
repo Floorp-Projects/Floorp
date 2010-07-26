@@ -306,8 +306,7 @@ NS_NewInputStreamTeeAsync(nsIInputStream **result,
 {
     nsresult rv;
     
-    nsCOMPtr<nsIInputStreamTee> tee;
-    NS_NEWXPCOM(tee, nsInputStreamTee);
+    nsCOMPtr<nsIInputStreamTee> tee = new nsInputStreamTee();
     if (!tee)
         return NS_ERROR_OUT_OF_MEMORY;
 

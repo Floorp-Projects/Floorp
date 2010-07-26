@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+body {
+  width: 1500px;
+  overflow: hidden;
+}
+div#bottom {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 200px;
+  width: 200px;
+  background: green;
+}
+</style>
+</head>
+<body>
+<div id="bottom"></div>
+<div style="width:600px; height:100px; background:pink;"></div>
+<script>
+document.documentElement.scrollLeft = 200;
+function doTest() {
+  document.documentElement.removeAttribute("class");
+  document.documentElement.scrollLeft = 0;
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

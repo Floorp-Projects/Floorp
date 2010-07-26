@@ -83,6 +83,25 @@ static void localtime_r(const time_t* secs, struct tm* time) {
 }
 #endif
 
+/* 
+ * The COUNT_LEAPS macro counts the number of leap years passed by
+ * till the start of the given year Y.  At the start of the year 4
+ * A.D. the number of leap years passed by is 0, while at the start of
+ * the year 5 A.D. this count is 1. The number of years divisible by
+ * 100 but not divisible by 400 (the non-leap years) is deducted from
+ * the count to get the correct number of leap years.
+ *
+ * The COUNT_DAYS macro counts the number of days since 01/01/01 till the
+ * start of the given year Y. The number of days at the start of the year
+ * 1 is 0 while the number of days at the start of the year 2 is 365
+ * (which is ((2)-1) * 365) and so on. The reference point is 01/01/01
+ * midnight 00:00:00.
+ */
+
+#define COUNT_LEAPS(Y)   ( ((Y)-1)/4 - ((Y)-1)/100 + ((Y)-1)/400 )
+#define COUNT_DAYS(Y)  ( ((Y)-1)*365 + COUNT_LEAPS(Y) )
+#define DAYS_BETWEEN_YEARS(A, B)  (COUNT_DAYS(B) - COUNT_DAYS(A))
+
 /*
  *------------------------------------------------------------------------
  *
@@ -151,6 +170,45 @@ PR_ImplodeTime(const PRExplodedTime *exploded)
     result *= kSecondsToMicroseconds;
     result += exploded->tm_usec;
     return result;
+#elif defined(ANDROID)
+#define LL_ADD(r, a, b)     ((r) = (a) + (b))
+#define LL_SUB(r, a, b)     ((r) = (a) - (b))
+
+    PRExplodedTime copy;
+    PRTime retVal;
+    PRInt64 secPerDay, usecPerSec;
+    PRInt64 temp;
+    PRInt64 numSecs64;
+    PRInt32 numDays;
+    PRInt32 numSecs;
+
+    /* Normalize first.  Do this on our copy */
+    copy = *exploded;
+    PR_NormalizeTime(&copy, PR_GMTParameters);
+
+    numDays = DAYS_BETWEEN_YEARS(1970, copy.tm_year);
+
+    numSecs = copy.tm_yday * 86400 + copy.tm_hour * 3600
+            + copy.tm_min * 60 + copy.tm_sec;
+
+    LL_I2L(temp, numDays);
+    LL_I2L(secPerDay, 86400);
+    LL_MUL(temp, temp, secPerDay);
+    LL_I2L(numSecs64, numSecs);
+    LL_ADD(numSecs64, numSecs64, temp);
+
+    /* apply the GMT and DST offsets */
+    LL_I2L(temp,  copy.tm_params.tp_gmt_offset);
+    LL_SUB(numSecs64, numSecs64, temp);
+    LL_I2L(temp,  copy.tm_params.tp_dst_offset);
+    LL_SUB(numSecs64, numSecs64, temp);
+
+    LL_I2L(usecPerSec, 1000000L);
+    LL_MUL(temp, numSecs64, usecPerSec);
+    LL_I2L(retVal, copy.tm_usec);
+    LL_ADD(retVal, retVal, temp);
+
+    return retVal;
 #elif defined(OS_LINUX)
     struct tm exp_tm = {0};
     exp_tm.tm_sec  = exploded->tm_sec;
@@ -188,25 +246,6 @@ PR_ImplodeTime(const PRExplodedTime *exploded)
 #error No PR_ImplodeTime implemented on your platform.
 #endif
 }
-
-/* 
- * The COUNT_LEAPS macro counts the number of leap years passed by
- * till the start of the given year Y.  At the start of the year 4
- * A.D. the number of leap years passed by is 0, while at the start of
- * the year 5 A.D. this count is 1. The number of years divisible by
- * 100 but not divisible by 400 (the non-leap years) is deducted from
- * the count to get the correct number of leap years.
- *
- * The COUNT_DAYS macro counts the number of days since 01/01/01 till the
- * start of the given year Y. The number of days at the start of the year
- * 1 is 0 while the number of days at the start of the year 2 is 365
- * (which is ((2)-1) * 365) and so on. The reference point is 01/01/01
- * midnight 00:00:00.
- */
-
-#define COUNT_LEAPS(Y)   ( ((Y)-1)/4 - ((Y)-1)/100 + ((Y)-1)/400 )
-#define COUNT_DAYS(Y)  ( ((Y)-1)*365 + COUNT_LEAPS(Y) )
-#define DAYS_BETWEEN_YEARS(A, B)  (COUNT_DAYS(B) - COUNT_DAYS(A))
 
 /*
  * Static variables used by functions in this file

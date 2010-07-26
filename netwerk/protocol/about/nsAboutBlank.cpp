@@ -72,7 +72,7 @@ nsAboutBlank::GetURIFlags(nsIURI *aURI, PRUint32 *result)
     return NS_OK;
 }
 
-NS_METHOD
+nsresult
 nsAboutBlank::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsAboutBlank* about = new nsAboutBlank();

@@ -56,8 +56,6 @@ interface nsIContextMenuInfo;
  *
  * @see nsIContextMenuListener
  * @see nsIContextMenuInfo
- *
- * @status UNDER_REVIEW
  */
  
 [scriptable, uuid(7fb719b3-d804-4964-9596-77cf924ee314)]
@@ -109,8 +107,6 @@ interface nsIContextMenuListener2 : nsISupports
  * nsIContextMenuInfo
  *
  * A helper object for implementors of nsIContextMenuListener2.
- *
- * @status UNDER_REVIEW
  */
  
 [scriptable, uuid(2f977d56-5485-11d4-87e2-0010a4e75ef2)]

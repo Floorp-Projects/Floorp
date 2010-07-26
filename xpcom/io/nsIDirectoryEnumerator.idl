@@ -44,8 +44,6 @@ interface nsIFile;
  * It is similar to nsISimpleEnumerator except the retrieved entries are QI'ed 
  * to nsIFile, and there is a mechanism for closing the directory when the 
  * enumeration is complete.
- * 
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(31f7f4ae-6916-4f2d-a81e-926a4e3022ee)]
 interface nsIDirectoryEnumerator : nsISupports

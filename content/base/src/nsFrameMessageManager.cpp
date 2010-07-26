@@ -229,6 +229,10 @@ nsFrameMessageManager::SendSyncMessage()
       NS_ENSURE_SUCCESS(rv, rv);
 
       for (PRUint32 i = 0; i < len; ++i) {
+        dest[i] = JSVAL_NULL;
+        if (!retval[i].Length())
+          continue;
+
         jsval ret = JSVAL_VOID;
         nsAutoGCRoot root(&ret, &rv);
         NS_ENSURE_SUCCESS(rv, rv);

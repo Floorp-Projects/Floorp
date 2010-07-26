@@ -170,7 +170,9 @@ sub parse_arguments {
   foreach $makefile (@args) {
     $makefile =~ s/\.in$//;
     $makefile =~ s/\/$//;
-    $makefile =~ /Makefile$/ or $makefile .= "/Makefile";
+    $makefile =~ /Makefile$/
+	or $makefile =~ /^\.\//
+	or $makefile .= "/Makefile";
     push @makefiles, "$makefile";
   }
   @makefiles = "Makefile" unless @args;

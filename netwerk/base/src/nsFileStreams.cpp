@@ -179,7 +179,7 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsFileInputStream,
                              nsIFileInputStream,
                              nsILineInputStream)
 
-NS_METHOD
+nsresult
 nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     NS_ENSURE_NO_AGGREGATION(aOuter);
@@ -367,7 +367,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsFileOutputStream,
                              nsIOutputStream,
                              nsIFileOutputStream)
  
-NS_METHOD
+nsresult
 nsFileOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     NS_ENSURE_NO_AGGREGATION(aOuter);

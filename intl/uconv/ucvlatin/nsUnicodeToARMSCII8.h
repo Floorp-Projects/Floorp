@@ -46,7 +46,7 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-NS_METHOD
+nsresult
 nsUnicodeToARMSCII8Constructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult);
 

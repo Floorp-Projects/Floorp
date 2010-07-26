@@ -278,8 +278,9 @@ NS_IMETHODIMP
 nsOfflineCacheDeviceInfo::GetUsageReport(char ** usageReport)
 {
   nsCAutoString buffer;
-  buffer.AppendLiteral("\n<tr>\n<td><b>Cache Directory:</b></td>\n<td><tt> ");
-  
+  buffer.AssignLiteral("  <tr>\n"
+                       "    <th>Cache Directory:</th>\n"
+                       "    <td>");
   nsILocalFile *cacheDir = mDevice->CacheDirectory();
   if (!cacheDir)
     return NS_OK;
@@ -290,7 +291,9 @@ nsOfflineCacheDeviceInfo::GetUsageReport(char ** usageReport)
     AppendUTF16toUTF8(path, buffer);
   else
     buffer.AppendLiteral("directory unavailable");
-  buffer.AppendLiteral("</tt></td>\n</tr>\n");
+  
+  buffer.AppendLiteral("</td>\n"
+                       "  </tr>\n");
 
   *usageReport = ToNewCString(buffer);
   if (!*usageReport)

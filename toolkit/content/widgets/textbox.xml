@@ -232,8 +232,16 @@
         <![CDATA[
           if (!this.mIgnoreClick && this.clickSelectsAll &&
               document.activeElement == this.inputField &&
-              this.inputField.selectionStart == this.inputField.selectionEnd)
+              this.inputField.selectionStart == this.inputField.selectionEnd) {
             this.editor.selectAll();
+#ifndef XP_WIN
+            // see bug 576135 comment 4
+            let box = this.inputField.parentNode;
+            let menu = document.getAnonymousElementByAttribute(box, "anonid", "input-box-contextmenu");
+            if ((menu.state == "open" || menu.state == "showing") && box._doPopupItemEnabling)
+              box._doPopupItemEnabling(menu);
+#endif
+          }
         ]]>
       </handler>
     </handlers>

@@ -62,6 +62,8 @@ struct nsRuleDataFont;
 class nsCSSValue;
 struct nsCSSRect;
 
+class nsStyleCoord;
+
 struct nsInheritedStyleData
 {
 
@@ -755,6 +757,17 @@ public:
                             nsStyleContext* aStyleContext,
                             nsPresContext* aPresContext,
                             PRBool& aCanStoreInRuleTree);
+
+  // Compute the value of an nsStyleCoord that IsCalcUnit().
+  // (Values that don't require aPercentageBasis should be handled
+  // inside nsRuleNode rather than through this API.)
+  static nscoord ComputeComputedCalc(const nsStyleCoord& aCoord,
+                                     nscoord aPercentageBasis);
+
+  // Compute the value of an nsStyleCoord that is either a coord, a
+  // percent, or a calc expression.
+  static nscoord ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
+                                         nscoord aPercentageBasis);
 
   // Return whether the rule tree for which this node is the root has
   // cached data such that we need to do dynamic change handling for

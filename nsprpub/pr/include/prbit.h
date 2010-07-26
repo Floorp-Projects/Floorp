@@ -62,7 +62,7 @@ PR_BEGIN_EXTERN_C
 # define pr_bitscan_clz32(val)  __prBitScanReverse32(val)
 # define  PR_HAVE_BUILTIN_BITSCAN32
 #elif ((__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)) && \
-       (defined(__i386__) || defined(__x86_64__))
+       (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
 # define pr_bitscan_ctz32(val)  __builtin_ctz(val)
 # define pr_bitscan_clz32(val)  __builtin_clz(val)
 # define  PR_HAVE_BUILTIN_BITSCAN32

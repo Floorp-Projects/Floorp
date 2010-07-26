@@ -996,12 +996,10 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
 
   // the anchor may be in a different document with a different scale,
   // so adjust the size so that it is in the app units of the popup instead
-  // of the anchor. This is done by converting to device pixels by dividing
-  // by the anchor's app units per device pixel and then converting back to
-  // app units by multiplying by the popup's app units per device pixel.
-  float adj = float(presContext->AppUnitsPerDevPixel()) /
-              aAnchorFrame->PresContext()->AppUnitsPerDevPixel();
-  parentRect.ScaleRoundOut(adj);
+  // of the anchor.
+  parentRect = parentRect.ConvertAppUnitsRoundOut(
+    aAnchorFrame->PresContext()->AppUnitsPerDevPixel(),
+    presContext->AppUnitsPerDevPixel());
 
   // Set the popup's size to the preferred size. Below, this size will be
   // adjusted to fit on the screen or within the content area. If the anchor

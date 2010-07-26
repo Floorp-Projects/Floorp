@@ -42,8 +42,6 @@ interface nsIWebNavigation;
 /**
  * The nsIWebNavigationInfo interface exposes a way to get information
  * on the capabilities of Gecko webnavigation objects.
- *
- * @status UNDER_REVIEW
  */
 [scriptable, uuid(62a93afb-93a1-465c-84c8-0432264229de)]
 interface nsIWebNavigationInfo : nsISupports

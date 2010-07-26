@@ -39,7 +39,7 @@ var uninitializedTests = {
 			// this can be quite undeterministic so to improve odds of seeing uninitialized data write bits
 			// into tex then delete texture then re-create one with same characteristics (driver will likely reuse mem)
 			// with this trick on r59046 WebKit/OSX I get FAIL 100% of the time instead of ~15% of the time.
-			var badData = new WebGLUnsignedByteArray(this._expectedDataLength);
+			var badData = new Uint8Array(this._expectedDataLength);
 			for (var i = 0; i < badData.length; ++i) badData[i] = i % 255;
 			gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this._width, this._height, gl.RGBA, gl.UNSIGNED_BYTE, badData);
 			gl.finish(); // make sure it has been uploaded
@@ -54,7 +54,8 @@ var uninitializedTests = {
 			gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
 
-			this.data = gl.readPixels(0, 0, this._width, this._height, gl.RGBA, gl.UNSIGNED_BYTE);
+      this.data = new Uint8Array(this._width * this._height * 4);
+			gl.readPixels(0, 0, this._width, this._height, gl.RGBA, gl.UNSIGNED_BYTE, this.data);
 		};
 
 		this.expects = function () {

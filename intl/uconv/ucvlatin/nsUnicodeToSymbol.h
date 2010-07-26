@@ -44,7 +44,7 @@
  * A character set converter from Unicode to Symbol.
  *
  */
-NS_METHOD
+nsresult
 nsUnicodeToSymbolConstructor(nsISupports *aOuter, REFNSIID aIID,
                              void **aResult);
 

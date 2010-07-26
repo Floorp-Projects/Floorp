@@ -68,8 +68,6 @@ public:
    */
   nsUnicodeToUTF8() {mHighSurrogate = 0;}
 
-  NS_IMETHOD FillInfo(PRUint32* aInfo);
-
   NS_IMETHOD Convert(const PRUnichar * aSrc, 
                      PRInt32 * aSrcLength, 
                      char * aDest, 

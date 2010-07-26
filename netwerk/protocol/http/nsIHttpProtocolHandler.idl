@@ -39,7 +39,7 @@
 
 #include "nsIProxiedProtocolHandler.idl"
 
-[scriptable, uuid(415D4087-79D3-40FE-B194-0ADA8471F895)]
+[scriptable, uuid(cf549f80-9423-11df-981c-0800200c9a66)]
 interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 {
     /**
@@ -111,20 +111,12 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
      * is usually a 2-letter code such as "en" and occasionally a 
      * five-character code to indicate a language subtype, such as "zh_CN". 
      */
-    attribute ACString language;
+    readonly attribute ACString language;
 
     /**
      * Get/Set the application comment misc portion.
      */
     attribute ACString misc;
-
-    /**
-     * Get the current device type.
-     *
-     * @return The device type this application is running on.  Maybe
-     * be null.
-     */
-    readonly attribute ACString deviceType;
 
 };
 

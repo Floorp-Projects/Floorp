@@ -127,7 +127,8 @@ public:
   static PRBool IsShutdown() { return gIsShutdown; }
 
   /**
-   * Return an accessible for the given DOM node.
+   * Return an accessible for the given DOM node from the cache or create new
+   * one.
    *
    * @param  aNode       [in] the given node
    * @param  aPresShell  [in] the pres shell of the node
@@ -136,57 +137,52 @@ public:
    *                       hidden
    */
   already_AddRefed<nsAccessible>
-    GetAccessible(nsINode *aNode, nsIPresShell *aPresShell,
-                  nsIWeakReference *aWeakShell, PRBool *aIsHidden = nsnull);
+    GetOrCreateAccessible(nsINode* aNode, nsIPresShell* aPresShell,
+                          nsIWeakReference* aWeakShell,
+                          PRBool* aIsHidden = nsnull);
 
   /**
    * Return an accessible for the given DOM node.
    */
-  nsAccessible *GetAccessible(nsINode *aNode);
+  nsAccessible* GetAccessible(nsINode* aNode);
 
   /**
-   * Return an accessible for a DOM node in the given pres shell.
-   * 
-   * @param aNode       [in] the given node.
-   * @param aPresShell  [in] the presentation shell of the given node.
+   * Return an accessible for a DOM node in the given presshell.
+   *
+   * @param aNode       [in] the given node
+   * @param aWeakShell  [in] the presentation shell for the given node
    */
-  nsAccessible *GetAccessibleInWeakShell(nsINode *aNode,
-                                         nsIWeakReference *aPresShell);
+  inline nsAccessible* GetAccessibleInWeakShell(nsINode* aNode,
+                                                nsIWeakReference* aWeakShell)
+  {
+    return GetAccessibleByRule(aNode, aWeakShell, eGetAccForNode);
+  }
 
   /**
-   * Return the first accessible parent of a DOM node.
+   * Return an accessible for the given DOM node or container accessible if
+   * the node is not accessible.
+   */
+  inline nsAccessible* GetAccessibleOrContainer(nsINode* aNode,
+                                                nsIWeakReference* aWeakShell)
+  {
+    return GetAccessibleByRule(aNode, aWeakShell, eGetAccForNodeOrContainer);
+  }
+
+  /**
+   * Return a container accessible for the given DOM node.
+   */
+  inline nsAccessible* GetContainerAccessible(nsINode* aNode,
+                                              nsIWeakReference* aWeakShell)
+  {
+    return GetAccessibleByRule(aNode, aWeakShell, eGetAccForContainer);
+  }
+
+  /**
+   * Return the first cached accessible parent of a DOM node.
    *
    * @param aDOMNode    [in] the DOM node to get an accessible for
-   * @param aCanCreate  [in] specifies if accessible can be created if it didn't
-   *                     exist
    */
-  nsAccessible *GetContainerAccessible(nsINode *aNode, PRBool aCanCreate);
-
-  /**
-   * The same as getAccessibleFor method except it returns accessible only if
-   * it is attached, i.e. accessible is certified to be a descendant of the root
-   * accessible.
-   *
-   * XXX: this method must go away once we'll implement correct accessible tree.
-   *
-   * @param  aNode  [in] the DOM node to get an accessible for
-   * @return         the accessible for the given DOM node
-   */
-  nsAccessible *GetAttachedAccessibleFor(nsINode *aNode);
-
-  /**
-   * Return an DOM node that is relevant to attached accessible check. This
-   * node is either from bindings chain if given node is anonymous and owner
-   * binding denies accessible in anonymous content or given node (it's not
-   * important whether it is accessible or not). This method doesn't create
-   * accessible object for returned node.
-   *
-   * XXX: this method must go away once we'll implement correct accessible tree.
-   *
-   * @param  aNode  [in] the DOM node to get relevant content node
-   * @return         the DOM node for parent attached accessible
-   */
-  nsINode *GetRelevantContentNodeFor(nsINode *aNode);
+  nsAccessible* GetCachedContainerAccessible(nsINode *aNode);
 
   /**
    * Initialize an accessible and cache it. The method should be called for
@@ -231,11 +227,30 @@ private:
    */
   void Shutdown();
 
+  enum EWhatAccToGet {
+    eGetAccForNode = 0x1,
+    eGetAccForContainer = 0x2,
+    eGetAccForNodeOrContainer = eGetAccForNode | eGetAccForContainer
+  };
+
+  /**
+   * Return accessible or accessible container for the given node in presshell.
+   */
+  nsAccessible* GetAccessibleByRule(nsINode* aNode,
+                                    nsIWeakReference* aWeakShell,
+                                    EWhatAccToGet aWhatToGet);
+
   /**
    * Return accessible for HTML area element associated with an image map.
+   *
+   * @param  aImageFrame       [in] image frame
+   * @param  aAreaNode         [in] area node
+   * @param  aWeakShell        [in] presshell of image frame
+   * @param  aImageAccessible  [out, optional] image accessible, isn't addrefed
    */
   nsAccessible* GetAreaAccessible(nsIFrame* aImageFrame, nsINode* aAreaNode,
-                                  nsIWeakReference* aWeakShell);
+                                  nsIWeakReference* aWeakShell,
+                                  nsAccessible** aImageAccessible = nsnull);
 
   /**
    * Create accessible for the element implementing nsIAccessibleProvider

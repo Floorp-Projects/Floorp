@@ -64,7 +64,7 @@ class nsHTMLSharedElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLHtmlElement
 {
 public:
-  nsHTMLSharedElement(nsINodeInfo *aNodeInfo);
+  nsHTMLSharedElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLSharedElement();
 
   // nsISupports
@@ -131,12 +131,18 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo()
+  {
+    return static_cast<nsXPCClassInfo*>(GetClassInfoInternal());
+  }
+  nsIClassInfo* GetClassInfoInternal();
 };
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
 
 
-nsHTMLSharedElement::nsHTMLSharedElement(nsINodeInfo *aNodeInfo)
+nsHTMLSharedElement::nsHTMLSharedElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -151,7 +157,6 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSharedElement, nsGenericElement)
 
 
 DOMCI_DATA(HTMLParamElement, nsHTMLSharedElement)
-DOMCI_DATA(HTMLWBRElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLIsIndexElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLBaseElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLSpacerElement, nsHTMLSharedElement)
@@ -160,6 +165,42 @@ DOMCI_DATA(HTMLMenuElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLQuoteElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLHeadElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLHtmlElement, nsHTMLSharedElement)
+
+nsIClassInfo*
+nsHTMLSharedElement::GetClassInfoInternal()
+{
+  if (mNodeInfo->Equals(nsGkAtoms::param)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLParamElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::isindex)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLIsIndexElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::base)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLBaseElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::spacer)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLSpacerElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::dir)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLDirectoryElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::menu)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLMenuElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::q)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLQuoteElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::blockquote)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLQuoteElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::head)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLHeadElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::html)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLHtmlElement_id);
+  }
+  return nsnull;
+}
 
 // QueryInterface implementation for nsHTMLSharedElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLSharedElement)
@@ -179,17 +220,7 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLSharedElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLHeadElement, head)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLHtmlElement, html)
 
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLParamElement, param)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLWBRElement, wbr)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLIsIndexElement, isindex)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLBaseElement, base)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLSpacerElement, spacer)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLDirectoryElement, dir)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLMenuElement, menu)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLQuoteElement, q)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLQuoteElement, blockquote)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLHeadElement, head)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLHtmlElement, html)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_GETTER(GetClassInfoInternal)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 

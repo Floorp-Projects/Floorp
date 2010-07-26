@@ -37,7 +37,8 @@ if (!gl) {
 
 function checkPrefix(expected, enum) {
   var s = gl.getParameter(gl[enum]);
-  if (s.length >= expected.length &&
+  if (s != null &&
+      s.length >= expected.length &&
       s.substring(0, expected.length) == expected) {
     testPassed("getParameter(gl." + enum + ") correctly started with " + expected);
   } else {

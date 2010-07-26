@@ -1,0 +1,33 @@
+# nsBrowserContentHandler.js
+component {5d0ce354-df01-421a-83fb-7ead0990c24e} nsBrowserContentHandler.js application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/browser/clh;1 {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+component {47cd0651-b1be-4a0f-b5c4-10e5a573ef71} nsBrowserContentHandler.js application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/browser/final-clh;1 {47cd0651-b1be-4a0f-b5c4-10e5a573ef71} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=text/html {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=application/vnd.mozilla.xul+xml {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+#ifdef MOZ_SVG
+contract @mozilla.org/uriloader/content-handler;1?type=image/svg+xml {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+#endif
+contract @mozilla.org/uriloader/content-handler;1?type=text/rdf {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=text/xml {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=application/xhtml+xml {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=text/css {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=text/plain {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=image/gif {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=image/jpeg {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=image/jpg {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=image/png {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=image/bmp {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=image/x-icon {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=image/vnd.microsoft.icon {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+contract @mozilla.org/uriloader/content-handler;1?type=application/http-index-format {5d0ce354-df01-421a-83fb-7ead0990c24e} application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+category command-line-handler m-browser @mozilla.org/browser/clh;1 application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+category command-line-handler x-default @mozilla.org/browser/final-clh;1 application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+category command-line-validator b-browser @mozilla.org/browser/clh;1 application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+
+# nsBrowserGlue.js
+component {eab9012e-5f74-4cbc-b2b5-a590235513cc} nsBrowserGlue.js
+contract @mozilla.org/browser/browserglue;1 {eab9012e-5f74-4cbc-b2b5-a590235513cc}
+category app-startup nsBrowserGlue service,@mozilla.org/browser/browserglue;1
+component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} nsBrowserGlue.js
+contract @mozilla.org/geolocation/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}

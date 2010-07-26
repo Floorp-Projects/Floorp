@@ -1,9 +1,10 @@
 # include the XUL reftests
 include xul/reftest.list
 
-== newline-1.html newline-ref.html
+!= newline-1.html newline-ref.html
 == newline-2.html newline-ref.html
 == newline-3.html newline-ref.html
+== newline-4.html newline-ref.html
 == dynamic-1.html dynamic-ref.html
 == dynamic-type-1.html dynamic-ref.html
 == dynamic-type-2.html dynamic-ref.html
@@ -16,3 +17,4 @@ include xul/reftest.list
 == emptypasswd-1.html emptypasswd-ref.html
 == emptypasswd-2.html emptypasswd-ref.html
 == caret_on_positioned.html caret_on_positioned-ref.html
+== spellcheck-1.html spellcheck-ref.html

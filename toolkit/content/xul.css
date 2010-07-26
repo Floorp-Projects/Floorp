@@ -718,11 +718,11 @@ textbox[multiline="true"] {
 }
 
 html|textarea.textbox-textarea {
-  -moz-resize: none;
+  resize: none;
 }
 
 textbox[resizable="true"] > .textbox-input-box > html|textarea.textbox-textarea {
-  -moz-resize: both;
+  resize: both;
 }
 
 .textbox-input-box[spellcheck="true"] {

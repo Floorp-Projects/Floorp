@@ -92,11 +92,6 @@ function test() {
       Services.ww.registerNotification(observer);
 
       gBrowser.addTabsProgressListener({
-        onLocationChange: function() {},
-        onProgressChange: function() {},
-        onSecurityChange: function() {},
-        onStatusChange: function() {},
-        onRefreshAttempted: function() {},
         onStateChange: function(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
           if (aStateFlags & (Ci.nsIWebProgressListener.STATE_STOP |
                              Ci.nsIWebProgressListener.STATE_IS_WINDOW)) {

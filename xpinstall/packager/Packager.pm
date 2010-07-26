@@ -230,7 +230,15 @@ sub do_copyfile
 
   # set the destination path, if alternate destination given, use it.
   if ($flat) {
-    if ($srcsuffix eq ".xpt" && $srcpath =~ m|/components/$|) {
+    if ($srcsuffix eq ".manifest" && $srcpath =~ m|/components/$|) {
+      if ($component eq "") {
+        die ("Manifest file was not part of a component.");
+      }
+
+      $destpathcomp = "$srcdir/manifests/$component";
+      $altdest = "$srcname$srcsuffix";
+    }
+    elsif ($srcsuffix eq ".xpt" && $srcpath =~ m|/components/$|) {
       if ($component eq "") {
         die ("XPT file was not part of a component.");
       }

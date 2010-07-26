@@ -60,11 +60,13 @@ static PRUint64 sFontSetGeneration = LL_INIT(0, 0);
 
 // TODO: support for unicode ranges not yet implemented
 
-gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, 
+gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
              gfxMixedFontFamily *aFamily,
-             PRUint32 aWeight, 
-             PRUint32 aStretch, 
-             PRUint32 aItalicStyle, 
+             PRUint32 aWeight,
+             PRUint32 aStretch,
+             PRUint32 aItalicStyle,
+             const nsTArray<gfxFontFeature> *aFeatureSettings,
+             PRUint32 aLanguageOverride,
              gfxSparseBitSet *aUnicodeRanges)
     : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily), mIsLoading(PR_FALSE)
 {
@@ -74,6 +76,11 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
     mWeight = aWeight;
     mStretch = aStretch;
     mItalic = (aItalicStyle & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
+    if (aFeatureSettings) {
+        mFeatureSettings = new nsTArray<gfxFontFeature>;
+        mFeatureSettings->AppendElements(*aFeatureSettings);
+    }
+    mLanguageOverride = aLanguageOverride;
     mIsUserFont = PR_TRUE;
 }
 
@@ -99,11 +106,13 @@ gfxUserFontSet::~gfxUserFontSet()
 }
 
 void
-gfxUserFontSet::AddFontFace(const nsAString& aFamilyName, 
-                            const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList, 
-                            PRUint32 aWeight, 
-                            PRUint32 aStretch, 
-                            PRUint32 aItalicStyle, 
+gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
+                            const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
+                            PRUint32 aWeight,
+                            PRUint32 aStretch,
+                            PRUint32 aItalicStyle,
+                            const nsString& aFeatureSettings,
+                            const nsString& aLanguageOverride,
                             gfxSparseBitSet *aUnicodeRanges)
 {
     nsAutoString key(aFamilyName);
@@ -124,9 +133,18 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
 
     // construct a new face and add it into the family
     if (family) {
+        nsTArray<gfxFontFeature> featureSettings;
+        gfxFontStyle::ParseFontFeatureSettings(aFeatureSettings,
+                                               featureSettings);
+        PRUint32 languageOverride =
+            gfxFontStyle::ParseFontLanguageOverride(aLanguageOverride);
         gfxProxyFontEntry *proxyEntry = 
             new gfxProxyFontEntry(aFontFaceSrcList, family, aWeight, aStretch, 
-                                  aItalicStyle, aUnicodeRanges);
+                                  aItalicStyle,
+                                  featureSettings.Length() > 0 ?
+                                      &featureSettings : nsnull,
+                                  languageOverride,
+                                  aUnicodeRanges);
         family->AddFontEntry(proxyEntry);
 #ifdef PR_LOGGING
         if (LOG_ENABLED()) {
@@ -261,6 +279,13 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
             fe = gfxPlatform::GetPlatform()->MakePlatformFont(pe,
                                                               aFontData,
                                                               aLength);
+            if (fe) {
+                if (pe->mFeatureSettings) {
+                    fe->mFeatureSettings = new nsTArray<gfxFontFeature>;
+                    fe->mFeatureSettings->AppendElements(*pe->mFeatureSettings);
+                }
+                fe->mLanguageOverride = pe->mLanguageOverride;
+            }
             aFontData = nsnull; // the platform may have freed the data now!
         } else {
             // the data was unusable, so just discard it
@@ -356,6 +381,11 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(), 
                      NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get(), 
                      PRUint32(mGeneration)));
+                if (aProxyEntry->mFeatureSettings) {
+                    fe->mFeatureSettings = new nsTArray<gfxFontFeature>;
+                    fe->mFeatureSettings->AppendElements(*aProxyEntry->mFeatureSettings);
+                }
+                fe->mLanguageOverride = aProxyEntry->mLanguageOverride;
                 static_cast<gfxMixedFontFamily*>(aProxyEntry->mFamily)->ReplaceFontEntry(aProxyEntry, fe);
                 return STATUS_LOADED;
             } else {

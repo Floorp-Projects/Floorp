@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2001, 2003, 2006, 2008, 2009 by
+# Copyright 1996-2000, 2001, 2003, 2006, 2008, 2009, 2010 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -230,7 +230,8 @@ dist:
 
 
 # The locations of the latest `config.guess' and `config.sub' versions (from
-# GNU `config' CVS), relative to the `tmp' directory used during `make dist'.
+# GNU `config' git repository), relative to the `tmp' directory used during
+# `make dist'.
 #
 CONFIG_GUESS = ~/git/config/config.guess
 CONFIG_SUB   = ~/git/config/config.sub

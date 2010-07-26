@@ -100,6 +100,13 @@ class GeckoSurfaceView
                 Log.w("GeckoAppJava", "surfaceChanged while mInDrawing is true!");
             }
 
+            if (width == 0 || height == 0)
+                mSoftwareBuffer = null;
+            else if (mSoftwareBuffer == null ||
+                     mSoftwareBuffer.capacity() < (width * height * 2) ||
+                     mWidth != width || mHeight != height)
+                mSoftwareBuffer = ByteBuffer.allocateDirect(width * height * 2);
+
             mFormat = format;
             mWidth = width;
             mHeight = height;
@@ -122,8 +129,6 @@ class GeckoSurfaceView
             }
 
             mSurfaceChanged = true;
-
-            //Log.i("GeckoAppJava", "<< surfaceChanged");
         } finally {
             mSurfaceLock.unlock();
         }
@@ -137,14 +142,10 @@ class GeckoSurfaceView
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.i("GeckoAppJava", "surface destroyed");
         mSurfaceValid = false;
+        mSoftwareBuffer = null;
     }
 
     public ByteBuffer getSoftwareDrawBuffer() {
-        //#ifdef DEBUG
-        if (!mSurfaceLock.isHeldByCurrentThread())
-            Log.e("GeckoAppJava", "getSoftwareDrawBuffer called outside of mSurfaceLock!");
-        //#endif
-
         return mSoftwareBuffer;
     }
 
@@ -154,42 +155,8 @@ class GeckoSurfaceView
 
     public static final int DRAW_ERROR = 0;
     public static final int DRAW_GLES_2 = 1;
-    public static final int DRAW_SOFTWARE = 2;
-
-    int innerBeginDrawing() {
-        /*
-         * Software (non-GL) rendering
-         */
-        if (GeckoApp.useSoftwareDrawing) {
-            if (mWidth != mBufferWidth ||
-                mHeight != mBufferHeight ||
-                mSurfaceChanged)
-            {
-                if (mWidth*mHeight != mBufferWidth*mBufferHeight)
-                    mSoftwareBuffer = ByteBuffer.allocateDirect(mWidth*mHeight*4);
-
-                mSoftwareBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
-
-                mBufferWidth = mWidth;
-                mBufferHeight = mHeight;
-                mSurfaceChanged = false;
-            }
-
-            mSoftwareCanvas = getHolder().lockCanvas(null);
-            if (mSoftwareCanvas == null) {
-                Log.e("GeckoAppJava", "lockCanvas failed! << beginDrawing");
-                return DRAW_ERROR;
-            }
-
-            return DRAW_SOFTWARE;
-        }
-
-        return DRAW_GLES_2;
-    }
 
     public int beginDrawing() {
-        //Log.i("GeckoAppJava", ">> beginDrawing");
-
         if (mInDrawing) {
             Log.e("GeckoAppJava", "Recursive beginDrawing call!");
             return DRAW_ERROR;
@@ -214,21 +181,11 @@ class GeckoSurfaceView
             return DRAW_ERROR;
         }
 
-        // call the inner function to do the work, so we can sanely unlock on error
-        int result = innerBeginDrawing();
-
-        if (result == DRAW_ERROR) {
-            mSurfaceLock.unlock();
-            return DRAW_ERROR;
-        }
-
         mInDrawing = true;
-        return result;
+        return DRAW_GLES_2;
     }
 
     public void endDrawing() {
-        //Log.w("GeckoAppJava", ">> endDrawing");
-
         if (!mInDrawing) {
             Log.e("GeckoAppJava", "endDrawing without beginDrawing!");
             return;
@@ -239,28 +196,34 @@ class GeckoSurfaceView
                 Log.e("GeckoAppJava", "endDrawing with false mSurfaceValid");
                 return;
             }
-
-            if (GeckoApp.useSoftwareDrawing) {
-                if (!mSurfaceChanged) {
-                    mSoftwareBitmap.copyPixelsFromBuffer(mSoftwareBuffer);
-                    mSoftwareCanvas.drawBitmap(mSoftwareBitmap, 0, 0, null);
-
-                    getHolder().unlockCanvasAndPost(mSoftwareCanvas);
-                    mSoftwareCanvas = null;
-                }
-            }
         } catch (java.lang.IllegalArgumentException ex) {
             mSurfaceChanged = true;
         } finally {
             mInDrawing = false;
 
-            //#ifdef DEBUG
             if (!mSurfaceLock.isHeldByCurrentThread())
                 Log.e("GeckoAppJava", "endDrawing while mSurfaceLock not held by current thread!");
-            //#endif
 
             mSurfaceLock.unlock();
         }
+    }
+
+    public void draw2D(ByteBuffer buffer) {
+        Canvas c = getHolder().lockCanvas();
+        if (c == null)
+            return;
+        if (buffer != mSoftwareBuffer) {
+            getHolder().unlockCanvasAndPost(c);
+            return;
+        }
+        if (mSoftwareBitmap == null ||
+            mSoftwareBitmap.getHeight() != mHeight ||
+            mSoftwareBitmap.getWidth() != mWidth) {
+            mSoftwareBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.RGB_565);
+        }
+        mSoftwareBitmap.copyPixelsFromBuffer(mSoftwareBuffer);
+        c.drawBitmap(mSoftwareBitmap, 0, 0, null);
+        getHolder().unlockCanvasAndPost(c);
     }
 
     @Override
@@ -347,134 +310,4 @@ class GeckoSurfaceView
     // Software rendering
     ByteBuffer mSoftwareBuffer;
     Bitmap mSoftwareBitmap;
-    Canvas mSoftwareCanvas;
-}
-
-class GeckoInputConnection
-    extends BaseInputConnection
-{
-    public GeckoInputConnection (View targetView) {
-        super(targetView, true);
-        mQueryResult = new SynchronousQueue<String>();
-        mExtractedText.partialStartOffset = -1;
-        mExtractedText.partialEndOffset = -1;
-    }
-
-    @Override
-    public Editable getEditable() {
-        Log.i("GeckoAppJava", "getEditable");
-        return null;
-    }
-
-    @Override
-    public boolean beginBatchEdit() {
-        if (mComposing)
-            return true;
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(true, null));
-        mComposing = true;
-        return true;
-    }
-    @Override
-    public boolean commitCompletion(CompletionInfo text) {
-        Log.i("GeckoAppJava", "Stub: commitCompletion");
-        return true;
-    }
-    @Override
-    public boolean commitText(CharSequence text, int newCursorPosition) {
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(true, text.toString()));
-        endBatchEdit();
-        return true;
-    }
-    @Override
-    public boolean deleteSurroundingText(int leftLength, int rightLength) {
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(leftLength, rightLength));
-        updateExtractedText();
-        return true;
-    }
-    @Override
-    public boolean endBatchEdit() {
-        updateExtractedText();
-        if (!mComposing)
-            return true;
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(false, null));
-        mComposing = false;
-        return true;
-    }
-    @Override
-    public boolean finishComposingText() {
-        endBatchEdit();
-        return true;
-    }
-    @Override
-    public int getCursorCapsMode(int reqModes) {
-        return 0;
-    }
-    @Override
-    public ExtractedText getExtractedText(ExtractedTextRequest req, int flags) {
-        mExtractToken = req.token;
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(false, 0));
-        try {
-            mExtractedText.text = mQueryResult.take();
-            mExtractedText.selectionStart = mSelectionStart;
-            mExtractedText.selectionEnd = mSelectionEnd;
-        } catch (InterruptedException e) {
-            Log.i("GeckoAppJava", "getExtractedText: Interrupted!");
-        }
-        return mExtractedText;
-    }
-    @Override
-    public CharSequence getTextAfterCursor(int length, int flags) {
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(true, length));
-        try {
-            String result = mQueryResult.take();
-            return result;
-        } catch (InterruptedException e) {
-            Log.i("GeckoAppJava", "getTextAfterCursor: Interrupted!");
-        }
-        return null;
-    }
-    @Override
-    public CharSequence getTextBeforeCursor(int length, int flags) {
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(false, length));
-        try {
-            String result = mQueryResult.take();
-            return result;
-        } catch (InterruptedException e) {
-            Log.i("GeckoAppJava", "getTextBeforeCursor: Interrupted!");
-        }
-        return null;
-    }
-    @Override
-    public boolean setComposingText(CharSequence text, int newCursorPosition) {
-        beginBatchEdit();
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(true, text.toString()));
-        return true;
-    }
-    @Override
-    public boolean setSelection(int start, int end) {
-        Log.i("GeckoAppJava", "Stub: setSelection " + start + " " + end);
-        return true;
-    }
-
-    private void updateExtractedText() {
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(false, 0));
-        try {
-            mExtractedText.text = mQueryResult.take();
-            mExtractedText.selectionStart = mSelectionStart;
-            mExtractedText.selectionEnd = mSelectionEnd;
-        } catch (InterruptedException e) {
-            Log.i("GeckoAppJava", "getExtractedText: Interrupted!");
-        }
-
-        InputMethodManager imm = (InputMethodManager)
-            GeckoApp.surfaceView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.updateExtractedText(GeckoApp.surfaceView, mExtractToken, mExtractedText);
-    }
-
-    boolean mComposing;
-    int mExtractToken;
-    final ExtractedText mExtractedText = new ExtractedText();
-
-    int mSelectionStart, mSelectionEnd;
-    SynchronousQueue<String> mQueryResult;
 }

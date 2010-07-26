@@ -45,10 +45,7 @@
 #include "nsISupportsArray.h"
 #include "nsArrayEnumerator.h"
 #include "mozilla/FunctionTimer.h"
-#include "mozilla/Omnijar.h"
-#include "nsXPTZipLoader.h"
-
-#define NS_ZIPLOADER_CONTRACTID NS_XPTLOADER_CONTRACTID_PREFIX "zip"
+#include "nsDirectoryService.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(xptiInterfaceInfoManager, 
                               nsIInterfaceInfoManager,
@@ -68,9 +65,6 @@ xptiInterfaceInfoManager::GetSingleton()
 
         gInterfaceInfoManager = new xptiInterfaceInfoManager();
         NS_ADDREF(gInterfaceInfoManager);
-
-        NS_TIME_FUNCTION_MARK("Next: auto register interfaces");
-        gInterfaceInfoManager->AutoRegisterInterfaces();
     }
     return gInterfaceInfoManager;
 }
@@ -110,67 +104,8 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
 #endif
 }
 
-static nsresult
-GetDirectoryFromDirService(const char* codename, nsILocalFile** aDir)
-{
-    NS_ASSERTION(codename,"loser!");
-    NS_ASSERTION(aDir,"loser!");
-    
-    nsresult rv;
-    nsCOMPtr<nsIProperties> dirService =
-        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    return dirService->Get(codename, NS_GET_IID(nsILocalFile), (void**) aDir);
-}
-
-PRBool 
-xptiInterfaceInfoManager::GetApplicationDir(nsILocalFile** aDir)
-{
-    // We *trust* that this will not change!
-    return NS_SUCCEEDED(GetDirectoryFromDirService(NS_XPCOM_CURRENT_PROCESS_DIR, aDir));
-}
-
-void
-xptiInterfaceInfoManager::RegisterDirectory(nsILocalFile* aDirectory)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsISimpleEnumerator> entries;
-    nsCOMPtr<nsISupports> sup;
-    nsCOMPtr<nsILocalFile> file;
-
-    rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-    if (NS_FAILED(rv) || !entries)
-        return;
-
-    PRBool hasMore;
-    while(NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore) {
-        entries->GetNext(getter_AddRefs(sup));
-        if (!sup)
-            return;
-
-        file = do_QueryInterface(sup);
-        if(!file)
-            return;
-
-        PRBool isFile;
-        if(NS_FAILED(file->IsFile(&isFile)) || !isFile)
-            continue;
-     
-        nsCAutoString name;
-        file->GetNativeLeafName(name);
-        xptiFileType::Type type = xptiFileType::GetType(name);
-        if (xptiFileType::UNKNOWN == type)
-            continue;
-
-        LOG_AUTOREG(("found file: %s\n", name.get()));
-
-        RegisterFile(file, type);
-    }
-}
-
 namespace {
+
 struct AutoCloseFD
 {
     AutoCloseFD()
@@ -287,31 +222,13 @@ xptiInterfaceInfoManager::ReadXPTFileFromInputStream(nsIInputStream *stream)
 }
 
 void
-xptiInterfaceInfoManager::RegisterFile(nsILocalFile* aFile, xptiFileType::Type aType)
+xptiInterfaceInfoManager::RegisterFile(nsILocalFile* aFile)
 {
-    switch (aType) {
-    case xptiFileType::XPT: {
-        XPTHeader* header = ReadXPTFile(aFile);
-        if (!header)
-            return;
+    XPTHeader* header = ReadXPTFile(aFile);
+    if (!header)
+        return;
 
-        RegisterXPTHeader(header);
-        break;
-    }
-
-    case xptiFileType::ZIP: {
-#ifndef MOZ_ENABLE_LIBXUL
-        NS_WARNING("Trying to register XPTs in a JAR in a non-libxul build");
-#else
-        nsCOMPtr<nsIXPTLoader> loader = new nsXPTZipLoader();
-        loader->EnumerateEntries(aFile, this);
-#endif
-        break;
-    }
-
-    default:
-        NS_ERROR("Unexpected enumeration value");
-    }
+    RegisterXPTHeader(header);
 }
 
 void
@@ -328,13 +245,12 @@ xptiInterfaceInfoManager::RegisterXPTHeader(XPTHeader* aHeader)
         VerifyAndAddEntryIfNew(aHeader->interface_directory + k, k, typelib);
 }
 
-NS_IMETHODIMP
-xptiInterfaceInfoManager::FoundEntry(const char* entryName, PRInt32 index, nsIInputStream* aStream)
+void
+xptiInterfaceInfoManager::RegisterInputStream(nsIInputStream* aStream)
 {
     XPTHeader* header = ReadXPTFileFromInputStream(aStream);
     if (header)
         RegisterXPTHeader(header);
-    return NS_OK;
 }
 
 void
@@ -520,46 +436,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
 {
     NS_TIME_FUNCTION;
 
-    nsAutoLock lock(xptiInterfaceInfoManager::GetAutoRegLock(this));
-
-    nsCOMPtr<nsILocalFile> components;
-    GetDirectoryFromDirService(NS_XPCOM_COMPONENT_DIR,
-                               getter_AddRefs(components));
-    if (components)
-        RegisterDirectory(components);
-
-    nsCOMPtr<nsILocalFile> greComponents;
-    GetDirectoryFromDirService(NS_GRE_COMPONENT_DIR, getter_AddRefs(greComponents));
-    PRBool equals = PR_FALSE;
-    if (greComponents &&
-        NS_SUCCEEDED(greComponents->Equals(components, &equals)) && !equals)
-        RegisterDirectory(greComponents);
-
-    nsCOMPtr<nsIProperties> dirService = 
-        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-    nsCOMPtr<nsISimpleEnumerator> fileList;
-    dirService->Get(NS_XPCOM_COMPONENT_DIR_LIST, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(fileList));
-    if (fileList) {
-        PRBool more;
-        nsCOMPtr<nsISupports> supp;
-        while (NS_SUCCEEDED(fileList->HasMoreElements(&more)) && more) {
-            fileList->GetNext(getter_AddRefs(supp));
-            components = do_QueryInterface(supp);
-            if (components)
-                RegisterDirectory(components);
-        }
-    }
-
-#ifdef MOZ_OMNIJAR
-    nsCOMPtr<nsIFile> omniJar(mozilla::OmnijarPath());
-    nsCOMPtr<nsILocalFile> file;
-    if (omniJar)
-        file = do_QueryInterface(omniJar);
-    if (file)
-        RegisterFile(file, xptiFileType::ZIP);
-#endif
-
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /***************************************************************************/

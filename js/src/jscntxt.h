@@ -59,6 +59,7 @@
 #include "jsdhash.h"
 #include "jsdtoa.h"
 #include "jsgc.h"
+#include "jsgcchunk.h"
 #include "jshashtable.h"
 #include "jsinterp.h"
 #include "jsobj.h"
@@ -956,29 +957,6 @@ struct JSFunctionMeter {
 # undef identity
 #endif
 
-struct JSLocalRootChunk;
-
-#define JSLRS_CHUNK_SHIFT       8
-#define JSLRS_CHUNK_SIZE        JS_BIT(JSLRS_CHUNK_SHIFT)
-#define JSLRS_CHUNK_MASK        JS_BITMASK(JSLRS_CHUNK_SHIFT)
-
-struct JSLocalRootChunk {
-    jsval               roots[JSLRS_CHUNK_SIZE];
-    JSLocalRootChunk    *down;
-};
-
-struct JSLocalRootStack {
-    uint32              scopeMark;
-    uint32              rootCount;
-    JSLocalRootChunk    *topChunk;
-    JSLocalRootChunk    firstChunk;
-
-    /* See comments in js_NewFinalizableGCThing. */
-    JSGCFreeLists       gcFreeLists;
-};
-
-const uint32 JSLRS_NULL_MARK = uint32(-1);
-
 #define NATIVE_ITER_CACHE_LOG2  8
 #define NATIVE_ITER_CACHE_MASK  JS_BITMASK(NATIVE_ITER_CACHE_LOG2)
 #define NATIVE_ITER_CACHE_SIZE  JS_BIT(NATIVE_ITER_CACHE_LOG2)
@@ -1009,9 +987,6 @@ struct JSThreadData {
 
     /* Property cache for faster call/get/set invocation. */
     js::PropertyCache   propertyCache;
-
-    /* Optional stack of heap-allocated scoped local GC roots. */
-    JSLocalRootStack    *localRootStack;
 
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
@@ -1048,11 +1023,12 @@ struct JSThreadData {
     /* List of currently pending operations on proxies. */
     JSPendingProxyOperation *pendingProxyOperation;
 
+    js::ConservativeGCThreadData conservativeGC;
+
     bool init();
     void finish();
     void mark(JSTracer *trc);
     void purge(JSContext *cx);
-    void purgeGCFreeLists();
 };
 
 #ifdef JS_THREADSAFE
@@ -1160,7 +1136,7 @@ struct GCPtrHasher
     static HashNumber hash(void *key) {
         return HashNumber(uintptr_t(key) >> JSVAL_TAGBITS);
     }
-    
+
     static bool match(void *l, void *k) {
         return l == k;
     }
@@ -1168,15 +1144,47 @@ struct GCPtrHasher
 
 typedef HashMap<void *, const char *, GCPtrHasher, SystemAllocPolicy> GCRoots;
 typedef HashMap<void *, uint32, GCPtrHasher, SystemAllocPolicy> GCLocks;
-                
+
+struct WrapperHasher
+{
+    typedef jsval Lookup;
+    
+    static HashNumber hash(jsval key) {
+        return GCPtrHasher::hash(JSVAL_TO_GCTHING(key));
+    }
+
+    static bool match(jsval l, jsval k) {
+        return l == k;
+    }
+};
+
+typedef HashMap<jsval, jsval, WrapperHasher, SystemAllocPolicy> WrapperMap;
+
+class AutoValueVector;
+
 } /* namespace js */
 
 struct JSCompartment {
     JSRuntime *rt;
+    JSPrincipals *principals;
     bool marked;
+    js::WrapperMap crossCompartmentWrappers;
 
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();
+
+    bool init();
+
+    bool wrap(JSContext *cx, jsval *vp);
+    bool wrap(JSContext *cx, JSString **strp);
+    bool wrap(JSContext *cx, JSObject **objp);
+    bool wrapId(JSContext *cx, jsid *idp);
+    bool wrap(JSContext *cx, JSPropertyOp *op);
+    bool wrap(JSContext *cx, JSPropertyDescriptor *desc);
+    bool wrap(JSContext *cx, js::AutoValueVector &props);
+    bool wrapException(JSContext *cx);
+
+    void sweep(JSContext *cx);
 };
 
 struct JSRuntime {
@@ -1271,6 +1279,14 @@ struct JSRuntime {
 #ifdef JS_THREADSAFE
     JSBackgroundThread  gcHelperThread;
 #endif
+
+    js::GCChunkAllocator    *gcChunkAllocator;
+    
+    void setCustomGCChunkAllocator(js::GCChunkAllocator *allocator) {
+        JS_ASSERT(allocator);
+        JS_ASSERT(state == JSRTS_DOWN);
+        gcChunkAllocator = allocator;
+    }
 
     /*
      * The trace operation and its data argument to trace embedding-specific
@@ -1429,9 +1445,16 @@ struct JSRuntime {
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
 
+    /*
+     * Runtime-shared empty scopes for well-known built-in objects that lack
+     * class prototypes (the usual locus of an emptyScope). Mnemonic: ABCDEW
+     */
     JSEmptyScope          *emptyArgumentsScope;
     JSEmptyScope          *emptyBlockScope;
     JSEmptyScope          *emptyCallScope;
+    JSEmptyScope          *emptyDeclEnvScope;
+    JSEmptyScope          *emptyEnumeratorScope;
+    JSEmptyScope          *emptyWithScope;
 
     /*
      * Various metering fields are defined at the end of JSRuntime. In this
@@ -1516,6 +1539,8 @@ struct JSRuntime {
     JSFunctionMeter     functionMeter;
     char                lastScriptFilename[1024];
 #endif
+
+    JSWrapObjectCallback wrapObjectCallback;
 
     JSRuntime();
     ~JSRuntime();
@@ -1813,6 +1838,10 @@ struct JSContext
     jsrefcount          requestDepth;
     /* Same as requestDepth but ignoring JS_SuspendRequest/JS_ResumeRequest */
     jsrefcount          outstandingRequests;
+# ifdef DEBUG
+    unsigned            checkRequestDepth;
+# endif    
+
     JSTitle             *lockedSealedTitle; /* weak ref, for low-cost sealed
                                                title locking */
     JSCList             threadLinks;        /* JSThread contextList linkage */
@@ -2056,7 +2085,7 @@ private:
      * threshold when p is not null. The function takes the pointer and not
      * a boolean flag to minimize the amount of code in its inlined callers.
      */
-    void checkMallocGCPressure(void *p);
+    JS_FRIEND_API(void) checkMallocGCPressure(void *p);
 };
 
 JS_ALWAYS_INLINE JSObject *
@@ -2116,8 +2145,29 @@ InvokeArgsGuard::~InvokeArgsGuard()
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
+#endif
+
+#if defined JS_THREADSAFE && defined DEBUG
+
+namespace js {
+
+class AutoCheckRequestDepth {
+    JSContext *cx;
+  public:
+    AutoCheckRequestDepth(JSContext *cx) : cx(cx) { cx->checkRequestDepth++; }
+
+    ~AutoCheckRequestDepth() {
+        JS_ASSERT(cx->checkRequestDepth != 0);
+        cx->checkRequestDepth--;
+    }
+};
+
+}
+
 # define CHECK_REQUEST(cx)                                                  \
-    JS_ASSERT((cx)->requestDepth || (cx)->thread == (cx)->runtime->gcThread)
+    JS_ASSERT((cx)->requestDepth || (cx)->thread == (cx)->runtime->gcThread);\
+    AutoCheckRequestDepth _autoCheckRequestDepth(cx);
+
 #else
 # define CHECK_REQUEST(cx)       ((void)0)
 #endif
@@ -2138,24 +2188,6 @@ FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 
 namespace js {
 
-class AutoNewCompartment {
-    JSContext *cx;
-    JSCompartment *compartment;
-  public:
-    JS_FRIEND_API(AutoNewCompartment(JSContext *cx));
-    JS_FRIEND_API(~AutoNewCompartment());
-
-    JS_FRIEND_API(bool) init();
-};
-
-class AutoCompartment {
-    JSContext *cx;
-    JSCompartment *compartment;
-  public:
-    JS_FRIEND_API(AutoCompartment(JSContext *cx, JSObject *obj));
-    JS_FRIEND_API(~AutoCompartment());
-};
-
 class AutoGCRooter {
   public:
     AutoGCRooter(JSContext *cx, ptrdiff_t tag)
@@ -2170,6 +2202,7 @@ class AutoGCRooter {
         context->autoGCRooters = down;
     }
 
+    /* Implemented in jsgc.cpp. */
     inline void trace(JSTracer *trc);
 
 #ifdef __GNUC__
@@ -2731,29 +2764,6 @@ js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
                  JSResolvingEntry *entry, uint32 generation);
 
 /*
- * Local root set management.
- *
- * NB: the jsval parameters below may be properly tagged jsvals, or GC-thing
- * pointers cast to (jsval).  This relies on JSObject's tag being zero, but
- * on the up side it lets us push int-jsval-encoded scopeMark values on the
- * local root stack.
- */
-extern JSBool
-js_EnterLocalRootScope(JSContext *cx);
-
-#define js_LeaveLocalRootScope(cx) \
-    js_LeaveLocalRootScopeWithResult(cx, JSVAL_NULL)
-
-extern void
-js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval);
-
-extern void
-js_ForgetLocalRoot(JSContext *cx, jsval v);
-
-extern int
-js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v);
-
-/*
  * Report an exception, which is currently realized as a printf-style format
  * string and its arguments.
  */
@@ -2796,7 +2806,7 @@ js_ReportOutOfScriptQuota(JSContext *cx);
 extern void
 js_ReportOverRecursed(JSContext *cx);
 
-extern void
+extern JS_FRIEND_API(void)
 js_ReportAllocationOverflow(JSContext *cx);
 
 #define JS_CHECK_RECURSION(cx, onerror)                                       \

@@ -42,6 +42,7 @@
 #include "gfxWindowsNativeDrawing.h"
 #include "gfxWindowsSurface.h"
 #include "gfxAlphaRecovery.h"
+#include "gfxPattern.h"
 
 enum {
     RENDER_STATE_INIT,

@@ -61,6 +61,10 @@
 #include "nsIFormProcessor.h"
 #include "nsIServiceManager.h"
 
+#ifdef MOZ_SVG
+#include "nsHtml5SVGLoadDispatcher.h"
+#endif
+
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
 /**
@@ -379,8 +383,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsCOMPtr<nsINodeInfo> nodeInfo = aBuilder->GetNodeInfoManager()->GetNodeInfo(name, nsnull, ns);
       NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
       NS_NewElement(getter_AddRefs(newContent),
-                    nodeInfo->NamespaceID(),
-                    nodeInfo,
+                    ns, nodeInfo.forget(),
                     (mOpCode == eTreeOpCreateElementNetwork ?
                      NS_FROM_PARSER_NETWORK
                      : (aBuilder->IsFragmentMode() ?
@@ -422,9 +425,10 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                                                       
         for (PRUint32 i = 0; i < theContent.Length(); ++i) {
           nsCOMPtr<nsIContent> optionElt;
+          nsCOMPtr<nsINodeInfo> ni = optionNodeInfo;
           NS_NewElement(getter_AddRefs(optionElt), 
                         optionNodeInfo->NamespaceID(), 
-                        optionNodeInfo, 
+                        ni.forget(),
                         PR_TRUE);
           nsCOMPtr<nsIContent> optionText;
           NS_NewTextNode(getter_AddRefs(optionText), 
@@ -676,6 +680,16 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       sele->FreezeUriAsyncDefer();
       return rv;
     }
+#ifdef MOZ_SVG
+    case eTreeOpSvgLoad: {
+      nsIContent* node = *(mOne.node);
+      nsCOMPtr<nsIRunnable> event = new nsHtml5SVGLoadDispatcher(node);
+      if (NS_FAILED(NS_DispatchToMainThread(event))) {
+        NS_WARNING("failed to dispatch svg load dispatcher");
+      }
+      return rv;
+    }
+#endif
     default: {
       NS_NOTREACHED("Bogus tree op");
     }

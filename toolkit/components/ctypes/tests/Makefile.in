@@ -81,7 +81,7 @@ chrometestdir = \
 # install the .js.in from the tests srcdir, so remove it when we're done.
 libs:: unit/test_jsctypes.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
-	  -DCTYPES_TEST_LIB=\"$(SHARED_LIBRARY)\" $^ > $(xpctestdir)/test_jsctypes.js
+	  $^ > $(xpctestdir)/test_jsctypes.js
 	$(TEST_INSTALLER) $(SHARED_LIBRARY) $(xpctestdir)
 	$(TEST_INSTALLER) $(xpctestdir)/test_jsctypes.js $(chrometestdir)
 	$(TEST_INSTALLER) $(xpctestdir)/$(SHARED_LIBRARY) $(chrometestdir)

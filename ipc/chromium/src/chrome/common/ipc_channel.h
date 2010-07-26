@@ -72,7 +72,11 @@ class Channel : public Message::Sender {
   void Close();
 
   // Modify the Channel's listener.
+#ifdef CHROMIUM_MOZILLA_BUILD
+  Listener* set_listener(Listener* listener);
+#else
   void set_listener(Listener* listener);
+#endif
 
   // Send a message over the Channel to the listener on the other end.
   //

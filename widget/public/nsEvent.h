@@ -44,6 +44,12 @@
  * header files that are totally unnecessary.
  */
 
+enum UIStateChangeType {
+  UIStateChangeType_NoChange,
+  UIStateChangeType_Set,
+  UIStateChangeType_Clear
+};
+
 /**
  * Return status for event processors.
  */

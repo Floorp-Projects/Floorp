@@ -484,7 +484,9 @@ nsDogbertProfileMigrator::GetHomepage(void* aTransform, nsIPrefBranch* aBranch)
   PRInt32 val;
   nsresult rv = aBranch->GetIntPref(xform->sourcePrefName, &val);
   if (NS_SUCCEEDED(rv) && val == 0) {
-    xform->stringValue = "about:blank";
+    xform->stringValue = ToNewCString(NS_LITERAL_CSTRING("about:blank"));
+    if (!xform->stringValue)
+      rv = NS_ERROR_OUT_OF_MEMORY;
     xform->prefHasValue = PR_TRUE;
   }
   return rv;

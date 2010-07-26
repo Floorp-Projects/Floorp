@@ -50,7 +50,7 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
 NS_IMPL_ISUPPORTS1(nsRDFXMLParser, nsIRDFXMLParser)
 
-NS_IMETHODIMP
+nsresult
 nsRDFXMLParser::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
     if (aOuter)

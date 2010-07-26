@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISystemProxySettings.h"
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIGConfService.h"
 #include "nsIURI.h"
@@ -417,12 +417,22 @@ nsUnixSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
        {0x91, 0x81, 0xa2, 0x85, 0xe7, 0x4c, 0xf1, 0xd4 } }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUnixSystemProxySettings, Init)
+NS_DEFINE_NAMED_CID(NS_UNIXSYSTEMPROXYSERVICE_CID);
 
-static const nsModuleComponentInfo components[] = {
-  { "Unix System Proxy Settings Service",
-    NS_UNIXSYSTEMPROXYSERVICE_CID,
-    NS_SYSTEMPROXYSETTINGS_CONTRACTID,
-    nsUnixSystemProxySettingsConstructor }
+static const mozilla::Module::CIDEntry kUnixProxyCIDs[] = {
+  { &kNS_UNIXSYSTEMPROXYSERVICE_CID, false, NULL, nsUnixSystemProxySettingsConstructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsUnixProxyModule, components)
+static const mozilla::Module::ContractIDEntry kUnixProxyContracts[] = {
+  { NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_UNIXSYSTEMPROXYSERVICE_CID },
+  { NULL }
+};
+
+static const mozilla::Module kUnixProxyModule = {
+  mozilla::Module::kVersion,
+  kUnixProxyCIDs,
+  kUnixProxyContracts
+};
+
+NSMODULE_DEFN(nsUnixProxyModule) = &kUnixProxyModule;

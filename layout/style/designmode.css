@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+:root {
+  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#editor");
+}
+
 *|* {
   -moz-user-modify: read-write;
 }

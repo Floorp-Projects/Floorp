@@ -296,15 +296,19 @@
           if (this._isRTLScrollbox)
             index *= -1;
           while (index < 0 && nextElement) {
-            targetElement = nextElement;
+            if (this._canScrollToElement(nextElement))
+              targetElement = nextElement;
             nextElement = nextElement.previousSibling;
             index++;
           }
           while (index > 0 && nextElement) {
-            targetElement = nextElement;
+            if (this._canScrollToElement(nextElement))
+              targetElement = nextElement;
             nextElement = nextElement.nextSibling;
             index--;
           }
+          if (!targetElement)
+            return;
 
           this.ensureElementIsVisible(targetElement, aSmoothScroll);
         ]]></body>
@@ -312,8 +316,9 @@
 
       <method name="_getScrollableElements">
         <body><![CDATA[
-          return this.hasChildNodes() ?
-                   this.childNodes : document.getBindingParent(this).childNodes;
+          var nodes = this.hasChildNodes() ?
+                        this.childNodes : document.getBindingParent(this).childNodes;
+          return Array.filter(nodes, this._canScrollToElement, this);
         ]]></body>
       </method>
 
@@ -325,10 +330,8 @@
           if (!elements.length)
             return null;
 
-          if (this._isRTLScrollbox) {
-            elements = Array.slice(elements);
+          if (this._isRTLScrollbox)
             elements.reverse();
-          }
 
           var [start, end] = this._startEndProps;
           var low = 0;

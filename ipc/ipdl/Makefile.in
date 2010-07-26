@@ -54,9 +54,17 @@ EXPORT_LIBRARY = 1
 ## When you add IPDL files to a source directory, list the directory here.
 ##
 IPDLDIRS =  \
+  dom/src/geolocation \
   dom/plugins  \
-  js/jetpack \
+  dom/ipc  \
+  gfx/layers/ipc \
   ipc/ipdl/test/cxx  \
+  ipc/testshell  \
+  js/ipc  \
+  js/jetpack \
+  netwerk/ipc  \
+  netwerk/protocol/http  \
+  netwerk/cookie  \
   $(NULL)
 ##-----------------------------------------------------------------------------
 

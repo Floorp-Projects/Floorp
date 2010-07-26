@@ -196,10 +196,14 @@ typedef PRUint16 BCPixelSize;
 // the actual value is computed when needed.
 #define MAX_BORDER_WIDTH nscoord(PR_BITMASK(sizeof(BCPixelSize) * 8))
 
-#define BC_BORDER_TOP_HALF_COORD(p2t,px)    NSToCoordRound(float((px) - (px) / 2) * (p2t) )
-#define BC_BORDER_RIGHT_HALF_COORD(p2t,px)  NSToCoordRound(float(       (px) / 2) * (p2t) )
-#define BC_BORDER_BOTTOM_HALF_COORD(p2t,px) NSToCoordRound(float(       (px) / 2) * (p2t) )
-#define BC_BORDER_LEFT_HALF_COORD(p2t,px)   NSToCoordRound(float((px) - (px) / 2) * (p2t) )
+static inline nscoord
+BC_BORDER_TOP_HALF_COORD(PRInt32 p2t, PRUint16 px)    { return (px - px / 2) * p2t; }
+static inline nscoord
+BC_BORDER_RIGHT_HALF_COORD(PRInt32 p2t, PRUint16 px)  { return (     px / 2) * p2t; }
+static inline nscoord
+BC_BORDER_BOTTOM_HALF_COORD(PRInt32 p2t, PRUint16 px) { return (     px / 2) * p2t; }
+static inline nscoord
+BC_BORDER_LEFT_HALF_COORD(PRInt32 p2t, PRUint16 px)   { return (px - px / 2) * p2t; }
 
 #define BC_BORDER_TOP_HALF(px)    ((px) - (px) / 2)
 #define BC_BORDER_RIGHT_HALF(px)  ((px) / 2)

@@ -49,8 +49,8 @@ class nsSVGSymbolElement : public nsSVGSymbolElementBase,
 {
 protected:
   friend nsresult NS_NewSVGSymbolElement(nsIContent **aResult,
-                                         nsINodeInfo *aNodeInfo);
-  nsSVGSymbolElement(nsINodeInfo* aNodeInfo);
+                                         already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGSymbolElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
 public:
   // interfaces:
@@ -69,6 +69,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   virtual nsSVGViewBox *GetViewBox();
   virtual nsSVGPreserveAspectRatio *GetPreserveAspectRatio();
@@ -85,7 +86,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Symbol)
 NS_IMPL_ADDREF_INHERITED(nsSVGSymbolElement,nsSVGSymbolElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGSymbolElement,nsSVGSymbolElementBase)
 
-DOMCI_DATA(SVGSymbolElement, nsSVGSymbolElement)
+DOMCI_NODE_DATA(SVGSymbolElement, nsSVGSymbolElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGSymbolElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGSymbolElement, nsIDOMNode, nsIDOMElement,
@@ -97,7 +98,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSymbolElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGSymbolElement::nsSVGSymbolElement(nsINodeInfo *aNodeInfo)
+nsSVGSymbolElement::nsSVGSymbolElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGSymbolElementBase(aNodeInfo)
 {
 }

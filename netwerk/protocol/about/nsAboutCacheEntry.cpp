@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Darin Fisher <darin@netscape.com> (original author)
  *   Alexey Chernyak <alexeyc@bigfoot.com> (XHTML 1.1 conversion)
+ *   Steffen Wilberg <steffen.wilberg@web.de> (new layout)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -125,7 +126,7 @@ nsAboutCacheEntry::NewChannel(nsIURI *uri, nsIChannel **result)
     if (NS_FAILED(rv)) return rv;
 
     return NS_NewInputStreamChannel(result, uri, stream,
-                                    NS_LITERAL_CSTRING("application/xhtml+xml"),
+                                    NS_LITERAL_CSTRING("text/html"),
                                     NS_LITERAL_CSTRING("utf-8"));
 }
 
@@ -159,14 +160,17 @@ nsAboutCacheEntry::GetContentStream(nsIURI *uri, nsIInputStream **result)
     if (NS_FAILED(rv)) return rv;
 
     buffer.AssignLiteral(
-                  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                  "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"\n"
-                  "    \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"
-                  "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
-                  "<head>\n<title>Cache entry information</title>\n"
-                  "<style type=\"text/css\">\npre {\n  margin: 0;\n}\n"
-                  "td:first-child {\n  text-align: right;\n  vertical-align: top;\n"
-                  "  line-height: 0.8em;\n}\n</style>\n</head>\n<body>\n");
+      "<!DOCTYPE html>\n"
+      "<html>\n"
+      "<head>\n"
+      "  <title>Cache entry information</title>\n"
+      "  <link rel=\"stylesheet\" "
+      "href=\"chrome://global/skin/about.css\" type=\"text/css\"/>\n"
+      "  <link rel=\"stylesheet\" "
+      "href=\"chrome://global/skin/aboutCacheEntry.css\" type=\"text/css\"/>\n"
+      "</head>\n"
+      "<body>\n"
+      "<h1>Cache entry information</h1>\n");
     outputStream->Write(buffer.get(), buffer.Length(), &n);
 
     if (descriptor)
@@ -177,7 +181,7 @@ nsAboutCacheEntry::GetContentStream(nsIURI *uri, nsIInputStream **result)
 
     buffer.AssignLiteral("</body>\n</html>\n");
     outputStream->Write(buffer.get(), buffer.Length(), &n);
-        
+
     nsCOMPtr<nsIInputStream> inStr;
     PRUint32 size;
 
@@ -238,11 +242,14 @@ static void PrintTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
 
 #define APPEND_ROW(label, value) \
     PR_BEGIN_MACRO \
-    buffer.AppendLiteral("<tr><td><tt><b>"); \
+    buffer.AppendLiteral("  <tr>\n" \
+                         "    <th>"); \
     buffer.AppendLiteral(label); \
-    buffer.AppendLiteral(":</b></tt></td>\n<td><pre>"); \
+    buffer.AppendLiteral(":</th>\n" \
+                         "    <td>"); \
     buffer.Append(value); \
-    buffer.AppendLiteral("</pre></td></tr>\n"); \
+    buffer.AppendLiteral("</td>\n" \
+                         "  </tr>\n"); \
     PR_END_MACRO
 
 nsresult
@@ -259,8 +266,10 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     if (NS_FAILED(rv)) return rv;
 
     buffer.SetCapacity(4096);
-    buffer.AssignLiteral("<table>"
-                         "<tr><td><tt><b>key:</b></tt></td><td>");
+    buffer.AssignLiteral("<table>\n"
+                         "  <tr>\n"
+                         "    <th>key:</th>\n"
+                         "    <td id=\"td-key\">");
 
     // Test if the key is actually a URI
     nsCOMPtr<nsIURI> uri;
@@ -286,8 +295,8 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     else
         buffer.Append(escapedStr);
     nsMemory::Free(escapedStr);
-    buffer.AppendLiteral("</td></tr>\n");
-
+    buffer.AppendLiteral("</td>\n"
+                         "  </tr>\n");
 
     // temp vars for reporting
     char timeBuf[255];
@@ -362,7 +371,8 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     }
 
     buffer.AppendLiteral("</table>\n"
-                         "<hr />\n<table>");
+                         "<hr/>\n"
+                         "<table>\n");
     // Meta Data
     // let's just look for some well known (HTTP) meta data tags, for now.
 
@@ -372,35 +382,41 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     if (!str2.IsEmpty())  APPEND_ROW("Client", str2);
 
 
-    mBuffer = &buffer;  // make it available for VisitMetaDataElement()
+    mBuffer = &buffer;  // make it available for VisitMetaDataElement().
+    // nsCacheEntryDescriptor::VisitMetaData calls
+    // nsCacheEntry.h VisitMetaDataElements, which returns
+    // nsCacheMetaData::VisitElements, which calls
+    // nsAboutCacheEntry::VisitMetaDataElement (below) in a loop.
     descriptor->VisitMetaData(this);
     mBuffer = nsnull;
 
-    buffer.AppendLiteral("</table>\n"
-                         "<hr />\n<pre>");
+    buffer.AppendLiteral("</table>\n");
     outputStream->Write(buffer.get(), buffer.Length(), &n);
 
     buffer.Truncate();
 
     // Provide a hexdump of the data
-    nsCOMPtr<nsIInputStream> stream;
-    descriptor->OpenInputStream(0, getter_AddRefs(stream));
-    if (stream) {
-        PRUint32 hexDumpState = 0;
-        char chunk[4096];
-        while (dataSize) {
-            PRUint32 count = PR_MIN(dataSize, sizeof(chunk));
-            if (NS_FAILED(stream->Read(chunk, count, &n)) || n == 0)
-                break;
-            dataSize -= n;
-            HexDump(&hexDumpState, chunk, n, buffer);
+    if (dataSize) { // don't draw an <hr> if the Data Size is 0.
+        nsCOMPtr<nsIInputStream> stream;
+        descriptor->OpenInputStream(0, getter_AddRefs(stream));
+        if (stream) {
+            buffer.AssignLiteral("<hr/>\n"
+                                 "<pre>");
+            PRUint32 hexDumpState = 0;
+            char chunk[4096];
+            while (dataSize) {
+                PRUint32 count = PR_MIN(dataSize, sizeof(chunk));
+                if (NS_FAILED(stream->Read(chunk, count, &n)) || n == 0)
+                    break;
+                dataSize -= n;
+                HexDump(&hexDumpState, chunk, n, buffer);
+                outputStream->Write(buffer.get(), buffer.Length(), &n);
+                buffer.Truncate();
+            }
+            buffer.AssignLiteral("</pre>\n");
             outputStream->Write(buffer.get(), buffer.Length(), &n);
-            buffer.Truncate();
-        }
+      }
     }
-
-    buffer.AssignLiteral("</pre>");
-    outputStream->Write(buffer.get(), buffer.Length(), &n);
     return NS_OK;
 }
 
@@ -468,15 +484,17 @@ nsAboutCacheEntry::VisitMetaDataElement(const char * key,
                                         const char * value,
                                         PRBool *     keepGoing)
 {
-    mBuffer->AppendLiteral("<tr><td><tt><b>");
+    mBuffer->AppendLiteral("  <tr>\n"
+                           "    <th>");
     mBuffer->Append(key);
-    mBuffer->AppendLiteral(":</b></tt></td>\n<td><pre>");
+    mBuffer->AppendLiteral(":</th>\n"
+                           "    <td>");
     char* escapedValue = nsEscapeHTML(value);
     mBuffer->Append(escapedValue);
     nsMemory::Free(escapedValue);
-    mBuffer->AppendLiteral("</pre></td></tr>\n");
+    mBuffer->AppendLiteral("</td>\n"
+                           "  </tr>\n");
 
     *keepGoing = PR_TRUE;
     return NS_OK;
 }
-

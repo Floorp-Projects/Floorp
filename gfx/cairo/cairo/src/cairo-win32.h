@@ -49,6 +49,9 @@ cairo_public cairo_surface_t *
 cairo_win32_surface_create (HDC hdc);
 
 cairo_public cairo_surface_t *
+cairo_win32_surface_create_with_alpha (HDC hdc);
+
+cairo_public cairo_surface_t *
 cairo_win32_printing_surface_create (HDC hdc);
 
 cairo_public cairo_surface_t *
@@ -197,6 +200,12 @@ HDC cairo_d2d_get_dc(cairo_surface_t *surface, cairo_bool_t retain_contents);
  * be updated.
  */
 void cairo_d2d_release_dc(cairo_surface_t *surcace, const cairo_rectangle_int_t *updated_rect);
+
+/**
+ * Get an estimate of the amount of (video) RAM which is currently in use by the D2D
+ * internal image surface cache.
+ */
+int cairo_d2d_get_image_surface_cache_usage();
 #endif
 
 CAIRO_END_DECLS

@@ -39,7 +39,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIGenericFactory.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"

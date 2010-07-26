@@ -140,8 +140,9 @@ function AllocateCanvas()
         return gRecycledCanvases.shift();
 
     var canvas = document.createElementNS(XHTML_NS, "canvas");
-    canvas.setAttribute("width", windowElem.getAttribute("width"));
-    canvas.setAttribute("height", windowElem.getAttribute("height"));
+    var r = gBrowser.getBoundingClientRect();
+    canvas.setAttribute("width", Math.ceil(r.width));
+    canvas.setAttribute("height", Math.ceil(r.height));
 
     return canvas;
 }
@@ -364,6 +365,9 @@ function BuildConditionSandbox(aURL) {
       getBoolPref: function(p) { return this._prefs.getBoolPref(p); },
       getIntPref:  function(p) { return this._prefs.getIntPref(p); }
     }
+
+    dump("REFTEST INFO | Dumping JSON representation of sandbox \n");
+    dump("REFTEST INFO | " + JSON.stringify(sandbox) + " \n");
 
     return sandbox;
 }
@@ -941,14 +945,17 @@ function DoDrawWindow(ctx, win, x, y, w, h)
         gDrawWindowFlags = ctx.DRAWWINDOW_DRAW_CARET |
                            ctx.DRAWWINDOW_DRAW_VIEW;
         var flags = "DRAWWINDOW_DRAW_CARET | DRAWWINDOW_DRAW_VIEW";
-        if (window.innerWidth == gCurrentCanvas.width &&
-            window.innerHeight == gCurrentCanvas.height) {
+        var r = gBrowser.getBoundingClientRect();
+        if (window.innerWidth >= r.right && window.innerHeight >= r.bottom) {
             // We can use the window's retained layers
-            // because the window is big enough to display the entire reftest
+            // because the window is big enough to display the entire browser element
             gDrawWindowFlags |= ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
             flags += " | DRAWWINDOW_USE_WIDGET_LAYERS";
         }
-        dump("REFTEST INFO | drawWindow flags = " + flags + "\n");
+        dump("REFTEST INFO | drawWindow flags = " + flags +
+             "; window.innerWidth/Height = " + window.innerWidth + "," +
+             window.innerHeight + "; browser.width/height = " +
+             r.width + "," + r.height + "\n");
     }
 
     var scrollX = 0;

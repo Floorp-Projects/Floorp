@@ -71,7 +71,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(e80ec20d-8e9c-405f-a673-cea00aa95b4d)]
+[scriptable, uuid(e6984403-1253-48fa-8a16-a350f76ab6c9)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -171,9 +171,12 @@ interface imgIContainer : nsISupports
    *                  sample from.
    * @param aFlags Flags of the FLAG_* variety
    */
-  [noscript] void draw(in gfxContext aContext, in gfxGraphicsFilter aFilter,
-                       in gfxMatrix aUserSpaceToImageSpace, in gfxRect aFill,
-                       in nsIntRect aSubimage, in PRUint32 aFlags);
+  [noscript] void draw(in gfxContext aContext,
+                       in gfxGraphicsFilter aFilter,
+                       [const] in gfxMatrix aUserSpaceToImageSpace,
+                       [const] in gfxRect aFill,
+                       [const] in nsIntRect aSubimage,
+                       in PRUint32 aFlags);
 
   /*
    * Ensures that an image is decoding. Calling this function guarantees that

@@ -111,7 +111,7 @@ NS_IMETHODIMP xpcTestObjectReadOnly :: GetCharReadOnly(char *aCharReadOnly){
     *aCharReadOnly = charProperty;
     return NS_OK;
 }
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestObjectReadOnly(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
@@ -228,7 +228,7 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: SetCharProperty(char aCharProperty) {
     charProperty = aCharProperty;
     return NS_OK;
 }
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestObjectReadWrite(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
@@ -282,7 +282,7 @@ NS_IMETHODIMP xpcTestAttributes ::SetName(char * aString) {
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 xpctest::ConstructXPCTestAttributes(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;

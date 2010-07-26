@@ -211,6 +211,8 @@ struct JSStackFrame
         }
         return false;
     }
+
+    bool isDummyFrame() const { return !script && !fun; }
 };
 
 namespace js {
@@ -308,13 +310,13 @@ js_Invoke(JSContext *cx, const js::InvokeArgsGuard &args, uintN flags);
  * JS is running (!cx->fp), so they may need to push a dummy JSStackFrame.
  */
 #define js_InternalCall(cx,obj,fval,argc,argv,rval)                           \
-    js_InternalInvoke(cx, obj, fval, 0, argc, argv, rval)
+    js_InternalInvoke(cx, OBJECT_TO_JSVAL(obj), fval, 0, argc, argv, rval)
 
 #define js_InternalConstruct(cx,obj,fval,argc,argv,rval)                      \
-    js_InternalInvoke(cx, obj, fval, JSINVOKE_CONSTRUCT, argc, argv, rval)
+    js_InternalInvoke(cx, OBJECT_TO_JSVAL(obj), fval, JSINVOKE_CONSTRUCT, argc, argv, rval)
 
 extern JSBool
-js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
+js_InternalInvoke(JSContext *cx, jsval thisv, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval);
 
 extern JSBool
@@ -326,7 +328,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN flags, jsval *result);
 
 extern JS_REQUIRES_STACK JSBool
-js_InvokeConstructor(JSContext *cx, const js::InvokeArgsGuard &args, JSBool clampReturn);
+js_InvokeConstructor(JSContext *cx, const js::InvokeArgsGuard &args);
 
 extern JS_REQUIRES_STACK JSBool
 js_Interpret(JSContext *cx);
@@ -351,8 +353,8 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
  * Given an active context, a static scope level, and an upvar cookie, return
  * the value of the upvar.
  */
-extern jsval&
-js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
+extern jsval &
+js_GetUpvar(JSContext *cx, uintN level, js::UpvarCookie cookie);
 
 /*
  * JS_LONE_INTERPRET indicates that the compiler should see just the code for

@@ -40,7 +40,7 @@
 #include "nsILookAndFeel.h"
 #include "nsTextFragment.h"
 #include "nsSVGUtils.h"
-#include "nsIDOMSVGLengthList.h"
+#include "SVGLengthList.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGRect.h"
 #include "nsIDOMSVGPoint.h"
@@ -54,6 +54,8 @@
 #include "gfxMatrix.h"
 #include "gfxPlatform.h"
 #include "gfxTextRunWordCache.h"
+
+using namespace mozilla;
 
 struct CharacterPosition {
   gfxPoint pos;
@@ -656,16 +658,6 @@ nsSVGGlyphFrame::GetCharacterData(nsAString & aCharacterData)
 }
 
 static PRUint32
-GetNumberOfLengthListItems(nsIDOMSVGLengthList *aList)
-{
-  PRUint32 items = 0;
-  if (aList) {
-    aList->GetNumberOfItems(&items);
-  }
-  return items;
-}
-
-static PRUint32
 GetNumberOfNumberListItems(nsIDOMSVGNumberList *aList)
 {
   PRUint32 items = 0;
@@ -673,21 +665,6 @@ GetNumberOfNumberListItems(nsIDOMSVGNumberList *aList)
     aList->GetNumberOfItems(&items);
   }
   return items;
-}
-
-static float
-GetLengthListValue(nsIDOMSVGLengthList *aList, PRUint32 aIndex)
-{
-  if (!aList) {
-    return 0.0f;
-  }
-  nsCOMPtr<nsIDOMSVGLength> length;
-  nsresult rv = aList->GetItem(aIndex, getter_AddRefs(length));
-  float value = 0.0f;
-  if (NS_SUCCEEDED(rv)) {
-    length->GetValue(&value);
-  }
-  return value;
 }
 
 static float
@@ -714,8 +691,8 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
 
   const gfxFloat radPerDeg = M_PI / 180.0;
 
-  nsCOMPtr<nsIDOMSVGLengthList> dxList = GetDx();
-  nsCOMPtr<nsIDOMSVGLengthList> dyList = GetDy();
+  SVGUserUnitList dxList, dyList;
+  GetDxDy(&dxList, &dyList);
   nsCOMPtr<nsIDOMSVGNumberList> rotateList = GetRotate();
 
   PRBool rotateAllGlyphs = (GetNumberOfNumberListItems(rotateList) == 1);
@@ -746,8 +723,8 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
       gfxFloat halfAdvance =
         mTextRun->GetAdvanceWidth(i, 1, nsnull)*aMetricsScale / 2.0;
 
-      pos.x += GetLengthListValue(dxList, i) * pathScale;
-      pos.y += GetLengthListValue(dyList, i) * pathScale;
+      pos.x += i < dxList.Length() ? dxList[i] * pathScale : 0.0;
+      pos.y += i < dyList.Length() ? dyList[i] * pathScale : 0.0;
 
       // check that we're within the path boundaries
       cp[i].draw = (pos.x + halfAdvance >= 0.0 &&
@@ -770,16 +747,16 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
     return PR_TRUE;
   }
 
-  nsCOMPtr<nsIDOMSVGLengthList> xList = GetX();
-  nsCOMPtr<nsIDOMSVGLengthList> yList = GetY();
+  SVGUserUnitList xList, yList;
+  GetXY(&xList, &yList);
 
-  PRUint32 xListCount = GetNumberOfLengthListItems(xList);
-  PRUint32 yListCount = GetNumberOfLengthListItems(yList);
+  PRUint32 xListCount = xList.Length();
+  PRUint32 yListCount = yList.Length();
 
   if (xListCount <= 1 &&
       yListCount <= 1 &&
-      GetNumberOfLengthListItems(dxList) == 0 &&
-      GetNumberOfLengthListItems(dyList) == 0 &&
+      dxList.Length() == 0 &&
+      dyList.Length() == 0 &&
       GetNumberOfNumberListItems(rotateList) == 0) {
     // simple text without individual positioning
     return PR_TRUE;
@@ -797,7 +774,7 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
 
     gfxFloat advance = mTextRun->GetAdvanceWidth(i, 1, nsnull)*aMetricsScale;
     if (xListCount > 1 && i < xListCount) {
-      pos.x = GetLengthListValue(xList, i);
+      pos.x = xList[i];
       // apply text-anchor to character
       if (anchor == NS_STYLE_TEXT_ANCHOR_MIDDLE)
         pos.x -= advance/2.0;
@@ -805,10 +782,10 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
         pos.x -= advance;
     }
     if (yListCount > 1 && i < yListCount) {
-      pos.y = GetLengthListValue(yList, i);
+      pos.y = yList[i];
     }
-    pos.x += GetLengthListValue(dxList, i);
-    pos.y += GetLengthListValue(dyList, i);
+    pos.x += i < dxList.Length() ? dxList[i] : 0.0;
+    pos.y += i < dyList.Length() ? dyList[i] : 0.0;
     cp[i].pos = pos;
     pos.x += advance;
     cp[i].angle = rotateAllGlyphs ? overallGlyphRotation :
@@ -828,8 +805,9 @@ nsSVGGlyphFrame::GetSubStringAdvance(PRUint32 aCharnum,
   gfxFloat advance =
     mTextRun->GetAdvanceWidth(aCharnum, aFragmentChars, nsnull) * aMetricsScale;
 
-  nsCOMPtr<nsIDOMSVGLengthList> dxlist = GetDx();
-  PRUint32 dxcount = GetNumberOfLengthListItems(dxlist);
+  SVGUserUnitList dxlist, notUsed;
+  GetDxDy(&dxlist, &notUsed);
+  PRUint32 dxcount = dxlist.Length();
   if (dxcount) {
     gfxFloat pathScale = 1.0;
     nsSVGTextPathFrame *textPath = FindTextPathParent();
@@ -838,7 +816,7 @@ nsSVGGlyphFrame::GetSubStringAdvance(PRUint32 aCharnum,
     if (dxcount > aFragmentChars) 
       dxcount = aFragmentChars;
     for (PRUint32 i = aCharnum; i < dxcount; i++) {
-      advance += GetLengthListValue(dxlist, i) * pathScale;
+      advance += dxlist[i] * pathScale;
     }
   }
 
@@ -1044,20 +1022,20 @@ nsSVGGlyphFrame::SetGlyphPosition(gfxPoint *aPosition, PRBool aForceGlobalTransf
   if (textPath)
     pathScale = textPath->GetPathScale();
 
-  nsCOMPtr<nsIDOMSVGLengthList> dxList = GetDx();
-  nsCOMPtr<nsIDOMSVGLengthList> dyList = GetDy();
+  SVGUserUnitList dxList, dyList;
+  GetDxDy(&dxList, &dyList);
 
-  PRUint32 dxcount = GetNumberOfLengthListItems(dxList);
+  PRUint32 dxcount = dxList.Length();
   if (dxcount > strLength) 
     dxcount = strLength;
   for (PRUint32 i = 0; i < dxcount; i++) {
-    aPosition->x += GetLengthListValue(dxList, i) * pathScale;
+    aPosition->x += dxList[i] * pathScale;
   }
-  PRUint32 dycount = GetNumberOfLengthListItems(dyList);
+  PRUint32 dycount = dyList.Length();
   if (dycount > strLength) 
     dycount = strLength;
   for (PRUint32 i = 0; i < dycount; i++) {
-    aPosition->y += GetLengthListValue(dyList, i) * pathScale;
+    aPosition->y += dyList[i] * pathScale;
   }
 }
 
@@ -1173,44 +1151,22 @@ nsSVGGlyphFrame::IsStartOfChunk()
   return PR_FALSE;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
-nsSVGGlyphFrame::GetX()
+NS_IMETHODIMP_(void)
+nsSVGGlyphFrame::GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY)
 {
   nsSVGTextContainerFrame *containerFrame;
   containerFrame = static_cast<nsSVGTextContainerFrame *>(mParent);
   if (containerFrame)
-    return containerFrame->GetX();
-  return nsnull;
+    containerFrame->GetXY(aX, aY);
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
-nsSVGGlyphFrame::GetY()
+void
+nsSVGGlyphFrame::GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy)
 {
   nsSVGTextContainerFrame *containerFrame;
   containerFrame = static_cast<nsSVGTextContainerFrame *>(mParent);
   if (containerFrame)
-    return containerFrame->GetY();
-  return nsnull;
-}
-
-already_AddRefed<nsIDOMSVGLengthList>
-nsSVGGlyphFrame::GetDx()
-{
-  nsSVGTextContainerFrame *containerFrame;
-  containerFrame = static_cast<nsSVGTextContainerFrame *>(mParent);
-  if (containerFrame)
-    return containerFrame->GetDx();
-  return nsnull;
-}
-
-already_AddRefed<nsIDOMSVGLengthList>
-nsSVGGlyphFrame::GetDy()
-{
-  nsSVGTextContainerFrame *containerFrame;
-  containerFrame = static_cast<nsSVGTextContainerFrame *>(mParent);
-  if (containerFrame)
-    return containerFrame->GetDy();
-  return nsnull;
+    containerFrame->GetDxDy(aDx, aDy);
 }
 
 already_AddRefed<nsIDOMSVGNumberList>
@@ -1501,7 +1457,9 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
                            mStyleContext->GetStyleVisibility()->mLanguage,
                            font.sizeAdjust, font.systemFont,
                            font.familyNameQuirks,
-                           printerFont);
+                           printerFont,
+                           font.featureSettings,
+                           font.languageOverride);
 
     nsRefPtr<gfxFontGroup> fontGroup =
       gfxPlatform::GetPlatform()->CreateFontGroup(font.name, &fontStyle, presContext->GetUserFontSet());

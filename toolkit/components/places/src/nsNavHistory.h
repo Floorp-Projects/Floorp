@@ -70,9 +70,6 @@
 
 #include "mozilla/storage.h"
 
-// define to enable lazy link adding
-#define LAZY_ADD
-
 #define QUERYUPDATE_TIME 0
 #define QUERYUPDATE_SIMPLE 1
 #define QUERYUPDATE_COMPLEX 2
@@ -87,6 +84,10 @@
 // See bug 319004 for details.
 #define URI_LENGTH_MAX 65536
 #define TITLE_LENGTH_MAX 4096
+
+// Microsecond timeout for "recent" events such as typed and bookmark following.
+// If you typed it more than this time ago, it's not recent.
+#define RECENT_EVENT_THRESHOLD PRTime((PRInt64)15 * 60 * PR_USEC_PER_SEC)
 
 #ifdef MOZ_XUL
 // Fired after autocomplete feedback has been updated.
@@ -112,6 +113,13 @@ namespace places {
     DB_GET_PAGE_INFO_BY_URL = 0
   , DB_GET_TAGS = 1
   , DB_IS_PAGE_VISITED = 2
+  , DB_INSERT_VISIT = 3
+  , DB_RECENT_VISIT_OF_URL = 4
+  , DB_GET_PAGE_VISIT_STATS = 5
+  , DB_UPDATE_PAGE_VISIT_STATS = 6
+  , DB_ADD_NEW_PAGE = 7
+  , DB_GET_URL_PAGE_INFO = 8
+  , DB_SET_PLACE_TITLE = 9
   };
 
 } // namespace places
@@ -181,17 +189,6 @@ public:
     }
     return gHistoryService;
   }
-
-#ifdef LAZY_ADD
-  /**
-   * Adds a lazy message for adding a favicon. Used by the favicon service so
-   * that favicons are handled lazily just like page adds.
-   */
-  nsresult AddLazyLoadFaviconMessage(nsIURI* aPageURI,
-                                     nsIURI* aFaviconURI,
-                                     PRBool aForceReload,
-                                     nsIFaviconDataCallback* aCallback);
-#endif
 
   /**
    * Returns the database ID for the given URI, or 0 if not found and autoCreate
@@ -394,6 +391,19 @@ public:
    */
   bool canNotify() { return mCanNotify; }
 
+  enum RecentEventFlags {
+    RECENT_TYPED      = 1 << 0,    // User typed in URL recently
+    RECENT_ACTIVATED  = 1 << 1,    // User tapped URL link recently
+    RECENT_BOOKMARKED = 1 << 2     // User bookmarked URL recently
+  };
+
+  /**
+   * Returns any recent activity done with a URL.
+   * @return Any recent events associated with this URI.  Each bit is set
+   *         according to RecentEventFlags enum values.
+   */
+  PRUint32 GetRecentFlags(nsIURI *aURI);
+
   mozIStorageStatement* GetStatementById(
     enum mozilla::places::HistoryStatementId aStatementId
   )
@@ -406,9 +416,40 @@ public:
         return mDBGetTags;
       case DB_IS_PAGE_VISITED:
         return mDBIsPageVisited;
+      case DB_INSERT_VISIT:
+        return mDBInsertVisit;
+      case DB_RECENT_VISIT_OF_URL:
+        return mDBRecentVisitOfURL;
+      case DB_GET_PAGE_VISIT_STATS:
+        return mDBGetPageVisitStats;
+      case DB_UPDATE_PAGE_VISIT_STATS:
+        return mDBUpdatePageVisitStats;
+      case DB_ADD_NEW_PAGE:
+        return mDBAddNewPage;
+      case DB_GET_URL_PAGE_INFO:
+        return mDBGetURLPageInfo;
+      case DB_SET_PLACE_TITLE:
+        return mDBSetPlaceTitle;
     }
     return nsnull;
   }
+
+  PRInt64 GetNewSessionID();
+
+  /**
+   * Fires onVisit event to nsINavHistoryService observers
+   */
+  void NotifyOnVisit(nsIURI* aURI,
+                     PRInt64 aVisitID,
+                     PRTime aTime,
+                     PRInt64 aSessionID,
+                     PRInt64 referringVisitID,
+                     PRInt32 aTransitionType);
+
+  /**
+   * Fires onTitleChanged event to nsINavHistoryService observers
+   */
+  void NotifyTitleChange(nsIURI* aURI, const nsString& title);
 
 private:
   ~nsNavHistory();
@@ -565,59 +606,6 @@ protected:
    */
   static void expireNowTimerCallback(nsITimer* aTimer, void* aClosure);
 
-#ifdef LAZY_ADD
-  // lazy add committing
-  struct LazyMessage {
-    enum MessageType { Type_Invalid, Type_AddURI, Type_Title, Type_Favicon };
-    LazyMessage()
-    {
-      type = Type_Invalid;
-      isRedirect = PR_FALSE;
-      isToplevel = PR_FALSE;
-      time = 0;
-      alwaysLoadFavicon = PR_FALSE;
-    }
-
-    // call this with common parms to initialize. Caller is responsible for
-    // setting other elements manually depending on type.
-    nsresult Init(MessageType aType, nsIURI* aURI)
-    {
-      NS_ENSURE_ARG_POINTER(aURI);
-      type = aType;
-      nsresult rv = aURI->Clone(getter_AddRefs(uri));
-      NS_ENSURE_SUCCESS(rv, rv);
-      return uri->GetSpec(uriSpec);
-    }
-
-    // common elements
-    MessageType type;
-    nsCOMPtr<nsIURI> uri;
-    nsCString uriSpec; // stringified version of URI, for quick isVisited
-
-    // valid when type == Type_AddURI
-    nsCOMPtr<nsIURI> referrer;
-    PRBool isRedirect;
-    PRBool isToplevel;
-    PRTime time;
-
-    // valid when type == Type_Title
-    nsString title;
-
-    // valid when type == LAZY_FAVICON
-    nsCOMPtr<nsIURI> favicon;
-    PRBool alwaysLoadFavicon;
-    nsCOMPtr<nsIFaviconDataCallback> callback;
-  };
-  nsTArray<LazyMessage> mLazyMessages;
-  nsCOMPtr<nsITimer> mLazyTimer;
-  PRBool mLazyTimerSet;
-  PRUint32 mLazyTimerDeferments; // see StartLazyTimer
-  nsresult StartLazyTimer();
-  nsresult AddLazyMessage(const LazyMessage& aMessage);
-  static void LazyTimerCallback(nsITimer* aTimer, void* aClosure);
-  void CommitLazyMessages(PRBool aIsShutdown = PR_FALSE);
-#endif
-
   nsresult ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
                                 nsNavHistoryQueryOptions* aOptions,
                                 nsCString& queryString,
@@ -687,7 +675,6 @@ protected:
 
   // Sessions tracking.
   PRInt64 mLastSessionID;
-  PRInt64 GetNewSessionID();
 
 #ifdef MOZ_XUL
   // AutoComplete stuff

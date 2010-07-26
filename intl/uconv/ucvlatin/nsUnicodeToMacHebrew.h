@@ -43,7 +43,7 @@
 /**
  * A character set converter from Unicode to MacHebrew.
  */
-NS_METHOD
+nsresult
 nsUnicodeToMacHebrewConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult);
 

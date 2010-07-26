@@ -55,7 +55,6 @@ EXPORTS		= \
 XPIDLSRCS = \
 	nsIInterfaceInfo.idl          \
 	nsIInterfaceInfoManager.idl   \
-	nsIXPTLoader.idl \
 	$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

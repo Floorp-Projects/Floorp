@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType bytecode interpreter (specification).                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2010 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -237,6 +237,14 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_Error )
   TT_Clear_CodeRange( TT_ExecContext  exec,
                       FT_Int          range );
+
+
+  FT_LOCAL( FT_Error )
+  Update_Max( FT_Memory  memory,
+              FT_ULong*  size,
+              FT_Long    multiplier,
+              void*      _pbuff,
+              FT_ULong   new_max );
 
 
   /*************************************************************************/

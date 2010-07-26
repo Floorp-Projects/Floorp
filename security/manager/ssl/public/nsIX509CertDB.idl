@@ -51,8 +51,6 @@ interface nsIInterfaceRequestor;
 /**
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database.
- *
- * @status FROZEN
  */
 [scriptable, uuid(da48b3c0-1284-11d5-ac67-000064657374)]
 interface nsIX509CertDB : nsISupports {

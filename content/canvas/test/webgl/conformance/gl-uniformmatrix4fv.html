@@ -18,23 +18,25 @@ found in the LICENSE file.
 <div id="description"></div>
 <div id="console"></div>
 <canvas id="example" width="2" height="2"> </canvas>
-    <script id="vshader" type="x-shader/x-vertex">
-        attribute vec4 vPosition;
-        uniform mat4 world4;
-        uniform mat3 world3;
-        uniform mat2 world2;
-        void main()
-        {
-            gl_Position = vec4(vPosition.xyz, world3[0].x + world2[0].x) * world4;
-        }
-    </script>
 
-    <script id="fshader" type="x-shader/x-fragment">
-        void main()
-        {
-            gl_FragColor = vec4(1.0,0.0,0.0,1.0);
-        }
-    </script>
+<script id="vshader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+uniform mat4 world4;
+uniform mat3 world3;
+uniform mat2 world2;
+void main()
+{
+  gl_Position = vec4(vPosition.xyz, world3[0].x + world2[0].x) * world4;
+}
+</script>
+
+<script id="fshader" type="x-shader/x-fragment">
+void main()
+{
+  gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+}
+</script>
+
 <script>
 description("This test ensures WebGL implementations handle uniformMatrix in a OpenGL ES 2.0 spec compliant way");
 
@@ -47,10 +49,15 @@ for (var ii = 2; ii <= 4; ++ii) {
   var mat = [];
   for (var jj = 0; jj < ii; ++jj) {
     for (var ll = 0; ll < ii; ++ll) {
+      if (jj == ii - 1 && ll == ii - 1)
+        continue;
       mat[jj * ii + ll] = (jj == ll) ? 1 : 0;
     }
   }
   name = "uniformMatrix" + ii + "fv";
+  gl[name](loc, false, mat);
+  assertMsg(gl.getError() == gl.INVALID_VALUE, "should fail with insufficient array size for " + name);
+  mat[ii * ii - 1] = 1;
   gl[name](loc, false, mat);
   assertMsg(gl.getError() == gl.NO_ERROR, "can call " + name + "with transpose = false");
   gl[name](loc, true, mat);
@@ -62,9 +69,6 @@ successfullyParsed = true;
 
 </script>
 <script src="../resources/js-test-post.js"></script>
-
-<script>
-</script>
 
 </body>
 </html>

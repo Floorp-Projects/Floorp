@@ -100,7 +100,7 @@ public:
     nsBufferedInputStream() : nsBufferedStream() {}
     virtual ~nsBufferedInputStream() {}
 
-    static NS_METHOD
+    static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsIInputStream* Source() { 
@@ -129,7 +129,7 @@ public:
     nsBufferedOutputStream() : nsBufferedStream() {}
     virtual ~nsBufferedOutputStream() { nsBufferedOutputStream::Close(); }
 
-    static NS_METHOD
+    static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsIOutputStream* Sink() { 

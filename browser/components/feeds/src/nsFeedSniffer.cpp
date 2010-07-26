@@ -423,19 +423,3 @@ nsFeedSniffer::OnStopRequest(nsIRequest* request, nsISupports* context,
 {
   return NS_OK; 
 }
-
-NS_METHOD
-nsFeedSniffer::Register(nsIComponentManager *compMgr, nsIFile *path, 
-                        const char *registryLocation,
-                        const char *componentType, 
-                        const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) 
-    return rv;
-
-  return catman->AddCategoryEntry(NS_CONTENT_SNIFFER_CATEGORY, "Feed Sniffer", 
-                                  NS_FEEDSNIFFER_CONTRACTID, PR_TRUE, PR_TRUE, 
-                                  nsnull);
-}

@@ -30,7 +30,7 @@
 #ifndef GOOGLE_BREAKPAD_PROCESSOR_MINIDUMP_PROCESSOR_H__
 #define GOOGLE_BREAKPAD_PROCESSOR_MINIDUMP_PROCESSOR_H__
 
-#include <cassert>
+#include <assert.h>
 #include <string>
 #include "google_breakpad/common/breakpad_types.h"
 

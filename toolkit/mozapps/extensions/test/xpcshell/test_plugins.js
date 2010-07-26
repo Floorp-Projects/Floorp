@@ -9,30 +9,58 @@ function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  startupManager(1);
+  startupManager();
   AddonManager.addAddonListener(AddonListener);
   AddonManager.addInstallListener(InstallListener);
 
   run_test_1();
 }
 
-function get_unix_test_plugin() {
-  let plugins = Components.classes["@mozilla.org/file/directory_service;1"].
-                getService(Components.interfaces.nsIProperties).
-                get("CurProcD", Components.interfaces.nsILocalFile);
+// Finds the test plugin library
+function get_test_plugin() {
+  var plugins = Services.dirsvc.get("CurProcD", AM_Ci.nsILocalFile);
   plugins.append("plugins");
   do_check_true(plugins.exists());
-  let plugin = plugins.clone();
+
+  var plugin = plugins.clone();
+  // OSX plugin
+  plugin.append("Test.plugin");
+  if (plugin.exists())
+    return plugin;
+
+  plugin = plugins.clone();
   // *nix plugin
   plugin.append("libnptest.so");
+  if (plugin.exists())
+    return plugin;
+
+  // Windows plugin
+  plugin = plugins.clone();
+  plugin.append("nptest.dll");
   if (plugin.exists())
     return plugin;
 
   return null;
 }
 
+function getFileSize(aFile) {
+  if (!aFile.isDirectory())
+    return aFile.fileSize;
+
+  let size = 0;
+  let entries = aFile.directoryEntries.QueryInterface(AM_Ci.nsIDirectoryEnumerator);
+  let entry;
+  while (entry = entries.nextFile)
+    size += getFileSize(entry);
+  entries.close();
+  return size;
+}
+
 // Tests that the test plugin exists
 function run_test_1() {
+  var testPlugin = get_test_plugin();
+  do_check_neq(testPlugin, null);
+
   AddonManager.getAddonsByTypes("plugin", function(addons) {
     do_check_true(addons.length > 0);
 
@@ -58,13 +86,17 @@ function run_test_1() {
       do_check_eq(p.blocklistState, 0);
       do_check_eq(p.permissions, AddonManager.PERM_CAN_DISABLE);
       do_check_eq(p.pendingOperations, 0);
+      do_check_true(p.size > 0);
+      do_check_eq(p.size, getFileSize(testPlugin));
+      do_check_true(p.updateDate > 0);
+      do_check_eq(p.updateDate.getTime(), testPlugin.lastModifiedTime);
+      do_check_eq(p.installDate.getTime(), testPlugin.lastModifiedTime);
 
       // Work around the fact that on Linux source builds, if we're using
       // symlinks (i.e. objdir), then Linux will see these as a different scope
       // to non-symlinks.
       // See Bug 562886 and Bug 568027.
-      let pluginLoc = get_unix_test_plugin();
-      if (pluginLoc && pluginLoc.isSymlink()) {
+      if (testPlugin.isSymlink()) {
         do_check_neq(p.scope, AddonManager.SCOPE_APPLICATION);
         do_check_neq(p.scope, AddonManager.SCOPE_PROFILE);
       } else {

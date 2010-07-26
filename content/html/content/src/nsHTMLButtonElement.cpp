@@ -81,7 +81,7 @@ class nsHTMLButtonElement : public nsGenericHTMLFormElement,
                             public nsIDOMNSHTMLButtonElement
 {
 public:
-  nsHTMLButtonElement(nsINodeInfo *aNodeInfo);
+  nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLButtonElement();
 
   // nsISupports
@@ -139,7 +139,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual void DoneCreatingElement();
-
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   virtual PRBool AcceptAutofocus() const
   {
@@ -164,7 +164,7 @@ private:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Button)
 
 
-nsHTMLButtonElement::nsHTMLButtonElement(nsINodeInfo *aNodeInfo)
+nsHTMLButtonElement::nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo),
     mType(kButtonDefaultType->value),
     mHandlingClick(PR_FALSE),
@@ -183,7 +183,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLButtonElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, nsGenericElement)
 
 
-DOMCI_DATA(HTMLButtonElement, nsHTMLButtonElement)
+DOMCI_NODE_DATA(HTMLButtonElement, nsHTMLButtonElement)
 
 // QueryInterface implementation for nsHTMLButtonElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLButtonElement)
@@ -269,10 +269,6 @@ nsHTMLButtonElement::IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PR
 {
   if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex)) {
     return PR_TRUE;
-  }
-
-  if (aTabIndex && (sTabFocusModel & eTabFocus_formElementsMask) == 0) {
-    *aTabIndex = -1;
   }
 
   *aIsFocusable = 

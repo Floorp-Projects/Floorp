@@ -168,24 +168,21 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
     // XXX we really need a different interface here, something that passes
     // in more context, including the display and/or target surface type that
     // we should try to match
-    Display* display = GDK_DISPLAY();
-    if (!display)
-        return nsnull;
+    GdkScreen *gdkScreen = gdk_screen_get_default();
+    if (gdkScreen) {
 
-    // try to optimize it for 16bpp default screen
-    if (gfxASurface::ImageFormatRGB24 == imageFormat
-        && 16 == gdk_visual_get_system()->depth)
-        imageFormat = gfxASurface::ImageFormatRGB16_565;
+        // try to optimize it for 16bpp default screen
+        if (gfxASurface::ImageFormatRGB24 == imageFormat
+            && 16 == gdk_visual_get_system()->depth)
+            imageFormat = gfxASurface::ImageFormatRGB16_565;
 
-    XRenderPictFormat* xrenderFormat =
-        gfxXlibSurface::FindRenderFormat(display, imageFormat);
+        Screen *screen = gdk_x11_screen_get_xscreen(gdkScreen);
+        XRenderPictFormat* xrenderFormat =
+            gfxXlibSurface::FindRenderFormat(DisplayOfScreen(screen),
+                                             imageFormat);
 
-    if (xrenderFormat) {
-        newSurface = new gfxXlibSurface(display, xrenderFormat, size);
-        if (newSurface && newSurface->CairoStatus() != 0) {
-            // something went wrong with the surface creation.
-            // Ignore and let's fall back to image surfaces.
-            newSurface = nsnull;
+        if (xrenderFormat) {
+            newSurface = gfxXlibSurface::Create(screen, xrenderFormat, size);
         }
     }
 #endif
@@ -199,7 +196,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
 
     if (!newSurface) {
         // We couldn't create a native surface for whatever reason;
-        // e.g., no RENDER, bad size, etc.
+        // e.g., no display, no RENDER, bad size, etc.
         // Fall back to image surface for the data.
         newSurface = new gfxImageSurface(gfxIntSize(size.width, size.height), imageFormat);
     }
@@ -714,39 +711,6 @@ gfxPlatformGtk::SetGdkDrawable(gfxASurface *target,
                                  do_gdk_drawable_unref);
 }
 
-#ifdef MOZ_X11
-// Look for an existing Colormap that is known to be associated with visual.
-static GdkColormap *
-LookupGdkColormapForVisual(GdkScreen* gdkScreen, const Visual* visual)
-{
-    // Common case: the display's default colormap
-    if (visual ==
-        GDK_VISUAL_XVISUAL(gdk_screen_get_system_visual(gdkScreen)))
-        return gdk_screen_get_system_colormap(gdkScreen);    
-
-    // widget/src/gtk2/mozcontainer.c uses gdk_rgb_get_colormap()
-    // which is inherited by child widgets, so this is the visual
-    // expected when drawing directly to widget surfaces or surfaces
-    // created using cairo_surface_create_similar with
-    // CAIRO_CONTENT_COLOR.
-    // gdk_screen_get_rgb_colormap is the generalization of
-    // gdk_rgb_get_colormap for any screen.
-    if (visual ==
-        GDK_VISUAL_XVISUAL(gdk_screen_get_rgb_visual(gdkScreen)))
-        return gdk_screen_get_rgb_colormap(gdkScreen);
-
-    // This is the visual expected on displays with the Composite
-    // extension enabled when the surface has been created using
-    // cairo_surface_create_similar with CAIRO_CONTENT_COLOR_ALPHA,
-    // as happens with non-unit opacity.
-    if (visual ==
-        GDK_VISUAL_XVISUAL(gdk_screen_get_rgba_visual(gdkScreen)))
-        return gdk_screen_get_rgba_colormap(gdkScreen);
-
-    return NULL;
-}
-#endif
-
 GdkDrawable *
 gfxPlatformGtk::GetGdkDrawable(gfxASurface *target)
 {
@@ -772,49 +736,7 @@ gfxPlatformGtk::GetGdkDrawable(gfxASurface *target)
         SetGdkDrawable(target, result);
         return result;
     }
-
-    // If all else fails, try doing a foreign_new
-    // but don't bother if we can't get a colormap.
-    // Without a colormap GDK won't know how to draw.
-    Screen *screen = cairo_xlib_surface_get_screen(xs->CairoSurface());
-    Visual *visual = cairo_xlib_surface_get_visual(xs->CairoSurface());
-    Display* dpy = DisplayOfScreen(screen);
-
-    GdkDisplay* gdkDpy = gdk_x11_lookup_xdisplay(dpy);
-    if (!gdkDpy)
-        return NULL;
-
-    // I wish there were a gdk_x11_display_lookup_screen.
-    gint screen_num = 0;
-    for (int s = 0; s < ScreenCount(dpy); ++s) {
-        if (ScreenOfDisplay(dpy, s) == screen) {
-            screen_num = s;
-            break;
-        }
-    }
-    GdkScreen* gdkScreen = gdk_display_get_screen(gdkDpy, screen_num);
-
-    GdkColormap *cmap = LookupGdkColormapForVisual(gdkScreen, visual);
-    if (cmap == NULL)
-        return NULL;
-
-    gfxIntSize size = xs->GetSize();
-    int depth = cairo_xlib_surface_get_depth(xs->CairoSurface());
-    result = gdk_pixmap_foreign_new_for_screen(gdkScreen, xs->XDrawable(),
-                                               size.width, size.height, depth);
-    if (!result)
-        return NULL;
-
-    gdk_drawable_set_colormap(result, cmap);
-
-    SetGdkDrawable(target, result);
-    // Release our ref.  The object is held by target.  Caller will
-    // only need to ref if it wants to keep the drawable longer than
-    // target.
-    g_object_unref(result);
-
-    return result;
-#else
-    return NULL;
 #endif
+
+    return NULL;
 }

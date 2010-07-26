@@ -59,13 +59,3 @@ interface nsIToolkitChromeRegistry : nsIXULChromeRegistry
    */
   nsIUTF8StringEnumerator getLocalesForPackage(in AUTF8String aPackage);
 };
-
-/**
- * The chrome registry will ask the directory service for this file list and
- * process each file as a manifest. Skin manifests may contain only skin
- * and style overlays.
- */
-%{ C++
-#define NS_CHROME_MANIFESTS_FILE_LIST "ChromeML"
-#define NS_SKIN_MANIFESTS_FILE_LIST "SkinML"
-%}

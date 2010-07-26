@@ -16,6 +16,8 @@ const PARAMS = "?%REQ_VERSION%/%ITEM_ID%/%ITEM_VERSION%/%ITEM_MAXAPPVERSION%/" +
                "%ITEM_STATUS%/%APP_ID%/%APP_VERSION%/%CURRENT_APP_VERSION%/" +
                "%APP_OS%/%APP_ABI%/%APP_LOCALE%/%UPDATE_TYPE%";
 
+var gInstallDate;
+
 do_load_httpd_js();
 var testserver;
 const profileDir = gProfD.clone();
@@ -72,7 +74,7 @@ function run_test() {
     name: "Test Addon 3",
   }, dest);
 
-  startupManager(1);
+  startupManager();
 
   do_test_pending();
   run_test_1();
@@ -88,6 +90,18 @@ function run_test_1() {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
     do_check_true(a1.applyBackgroundUpdates);
+    do_check_eq(a1.releaseNotesURI, null);
+
+    a1.applyBackgroundUpdates = true;
+
+    prepare_test({
+      "addon1@tests.mozilla.org": [
+        ["onPropertyChanged", ["applyBackgroundUpdates"]]
+      ]
+    });
+    a1.applyBackgroundUpdates = false;
+    check_test_completed();
+
     a1.applyBackgroundUpdates = false;
 
     prepare_test({}, [
@@ -107,6 +121,7 @@ function run_test_1() {
         do_check_eq(install.version, "2.0");
         do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
         do_check_eq(install.existingAddon, addon);
+        do_check_eq(install.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
 
         prepare_test({}, [
           "onDownloadStarted",
@@ -152,7 +167,7 @@ function check_test_2() {
 
     do_check_false(isExtensionInAddonsList(profileDir, olda1.id));
 
-    startupManager(1);
+    startupManager();
 
     do_check_true(isExtensionInAddonsList(profileDir, olda1.id));
 
@@ -161,8 +176,10 @@ function check_test_2() {
       do_check_eq(a1.version, "2.0");
       do_check_true(isExtensionInAddonsList(profileDir, a1.id));
       do_check_false(a1.applyBackgroundUpdates);
+      do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
+
       a1.uninstall();
-      restartManager(0);
+      restartManager();
 
       run_test_3();
     });
@@ -192,7 +209,7 @@ function run_test_3() {
 
       onNoUpdateAvailable: function(addon) {
         do_check_eq(addon, a2);
-        restartManager(0);
+        restartManager();
         check_test_3();
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -273,7 +290,7 @@ function run_test_5() {
 
       onNoUpdateAvailable: function(addon) {
         do_check_true(this.sawUpdate);
-        restartManager(0);
+        restartManager();
         check_test_5();
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED, "3.0");
@@ -288,7 +305,7 @@ function check_test_5() {
     do_check_true(a3.appDisabled);
 
     a3.uninstall();
-    restartManager(0);
+    restartManager();
 
     run_test_6();
   });
@@ -309,7 +326,7 @@ function run_test_6() {
     }],
     name: "Test Addon 1",
   }, dest);
-  restartManager(1);
+  restartManager();
 
   prepare_test({}, [
     "onNewInstall",
@@ -339,12 +356,13 @@ function continue_test_6(install) {
 function check_test_6(install) {
   do_check_eq(install.existingAddon.pendingUpgrade.install, install);
 
-  restartManager(1);
+  restartManager();
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "2.0");
+    do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
     a1.uninstall();
-    restartManager(0);
+    restartManager();
 
     run_test_7();
   });
@@ -394,6 +412,14 @@ function run_test_7() {
     do_check_eq(p1.version, "1");
     do_check_eq(p1.name, "Test LW Theme");
     do_check_true(p1.isActive);
+    do_check_eq(p1.installDate.getTime(), p1.updateDate.getTime());
+
+    // 5 seconds leeway seems like a lot, but tests can run slow and really if
+    // this is within 5 seconds it is fine. If it is going to be wrong then it
+    // is likely to be hours out at least
+    do_check_true((Date.now() - p1.installDate.getTime()) < 5000);
+
+    gInstallDate = p1.installDate.getTime();
 
     prepare_test({
       "1@personas.mozilla.org": [
@@ -415,6 +441,15 @@ function check_test_7() {
     do_check_neq(p1, null);
     do_check_eq(p1.version, "2");
     do_check_eq(p1.name, "Updated Theme");
+    do_check_eq(p1.installDate.getTime(), gInstallDate);
+    do_check_true(p1.installDate.getTime() < p1.updateDate.getTime());
+
+    // 5 seconds leeway seems like a lot, but tests can run slow and really if
+    // this is within 5 seconds it is fine. If it is going to be wrong then it
+    // is likely to be hours out at least
+    do_check_true((Date.now() - p1.updateDate.getTime()) < 5000);
+
+    gInstallDate = p1.installDate.getTime();
 
     run_test_8();
   });
@@ -510,11 +545,11 @@ function run_test_8() {
     name: "Test Addon 6",
   }, dest);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
     a2.userDisabled = true;
-    restartManager(0);
+    restartManager();
 
     testserver.registerPathHandler("/data/param_test.rdf", function(request, response) {
       do_check_neq(request.queryString, "");
@@ -599,7 +634,7 @@ function run_test_8() {
         a5.uninstall();
         a6.uninstall();
 
-        restartManager(0);
+        restartManager();
         run_test_9();
       }
 
@@ -648,7 +683,7 @@ function run_test_9() {
     name: "Test Addon 1",
   }, dest);
 
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
     do_check_true(a4.isActive);
@@ -688,7 +723,7 @@ function run_test_11() {
 
 // Check that the decreased maxVersion applied and disables the add-on
 function run_test_12() {
-  restartManager(0);
+  restartManager();
 
   AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
     do_check_false(a4.isActive);
@@ -719,7 +754,7 @@ function run_test_13() {
     }],
     name: "Test Addon 7",
   }, dest);
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonByID("addon7@tests.mozilla.org", function(a7) {
     do_check_neq(a7, null);
@@ -740,7 +775,7 @@ function run_test_13() {
 
       onUpdateFinished: function(addon) {
         do_check_true(addon.isCompatible);
-        restartManager(0);
+        restartManager();
         check_test_13();
       }
     }, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED, "3.0");
@@ -755,7 +790,7 @@ function check_test_13() {
     do_check_false(a7.appDisabled);
 
     a7.uninstall();
-    restartManager(0);
+    restartManager();
 
     run_test_14();
   });
@@ -792,7 +827,7 @@ function run_test_14() {
     }],
     name: "Test Addon 8",
   }, dest);
-  restartManager(1);
+  restartManager();
 
   AddonManager.getAddonByID("addon8@tests.mozilla.org", function(a8) {
     a8.applyBackgroundUpdates = false;
@@ -848,7 +883,7 @@ function run_test_14() {
 function check_test_14(install) {
   do_check_eq(install.existingAddon.pendingUpgrade.install, install);
 
-  restartManager(1);
+  restartManager();
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon8@tests.mozilla.org"], function([a1, a8]) {
     do_check_neq(a1, null);
@@ -859,7 +894,7 @@ function check_test_14(install) {
     do_check_eq(a8.version, "1.0");
     a8.uninstall();
 
-    restartManager(0);
+    restartManager();
 
     end_test();
   });

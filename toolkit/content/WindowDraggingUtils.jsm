@@ -53,10 +53,10 @@ WindowDraggingElement.prototype = {
              "radiogroup", "deck", "scrollbox", "arrowscrollbox", "tabs"],
   shouldDrag: function(aEvent) {
     if (aEvent.button != 0 ||
-      this._window.fullScreen ||
-      !this.mouseDownCheck.call(this._elem, aEvent) ||
-      aEvent.getPreventDefault())
-    return false;
+        this._window.fullScreen ||
+        !this.mouseDownCheck.call(this._elem, aEvent) ||
+        aEvent.getPreventDefault())
+      return false;
 
     // Maybe we have been removed from the document
     if (!this._elem._alive)
@@ -80,29 +80,36 @@ WindowDraggingElement.prototype = {
   },
   handleEvent: function(aEvent) {
 #ifdef XP_WIN
-   if (this.shouldDrag(aEvent)) {
-     aEvent.preventDefault();
-   }
+    if (this.shouldDrag(aEvent))
+      aEvent.preventDefault();
 #else
     switch (aEvent.type) {
       case "mousedown":
         if (!this.shouldDrag(aEvent))
           return;
 
+#ifdef MOZ_WIDGET_GTK2
+        // On GTK, there is a toolkit-level function which handles
+        // window dragging, which must be used.
+        this._window.beginWindowMove(aEvent);
+#else
         this._deltaX = aEvent.screenX - this._window.screenX;
         this._deltaY = aEvent.screenY - this._window.screenY;
         this._draggingWindow = true;
         this._window.addEventListener("mousemove", this, false);
         this._window.addEventListener("mouseup", this, false);
+#endif
         break;
       case "mousemove":
         if (this._draggingWindow)
           this._window.moveTo(aEvent.screenX - this._deltaX, aEvent.screenY - this._deltaY);
         break;
       case "mouseup":
-        this._draggingWindow = false;
-        this._window.removeEventListener("mousemove", this, false);
-        this._window.removeEventListener("mouseup", this, false);
+        if (this._draggingWindow) {
+          this._draggingWindow = false;
+          this._window.removeEventListener("mousemove", this, false);
+          this._window.removeEventListener("mouseup", this, false);
+        }
         break;
     }
 #endif

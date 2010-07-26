@@ -53,8 +53,14 @@ function run_test()
   do_check_true(weak.get().num == 5);
   do_check_true(weak.get().str == 'foo');
 
-  // Clear obj's reference to the object and force garbage collection
-  obj = null;
+  // Clear obj's reference to the object and force garbage collection. To make
+  // sure that there are no instances of obj stored in the registers or on the
+  // native stack and the conservative GC would not find it we force the same
+  // code paths that we used for the initial allocation.
+  obj = { num: 6, str: 'foo2' };
+  var weak2 = Components.utils.getWeakReference(obj);
+  do_check_true(weak2.get() === obj);
+
   Components.utils.forceGC();
 
   // The object should have been garbage collected and so should no longer be

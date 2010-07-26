@@ -62,27 +62,9 @@ interface nsIChannel;
 interface nsIPluginStreamListener;
 
 [ptr] native PRLibraryPtr(PRLibrary);
-[ref] native nsIStreamListenerRef(nsIStreamListener *);
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
-native FullPagePluginEnabledType(FullPagePluginEnabledType);
 
-%{C++
-enum FullPagePluginEnabledType
-{
-    // No plugin was found for this MIME type.
-    NOT_ENABLED,
-
-    // A plugin is available and should take precedence over builtin
-    // content viewers.
-    OVERRIDE_BUILTIN,
-
-    // A plugin is available, but a builtin content viewers should be used if
-    // present.
-    AVAILABLE
-};
-%}    
-
-[scriptable, uuid(D419142E-0571-416B-B797-2A8E6624491D)]
+[scriptable, uuid(C198DEAA-3F93-482D-A47C-85FF6514FE07)]
 interface nsIPluginHost : nsISupports
 {
   [noscript] void init();
@@ -106,8 +88,8 @@ interface nsIPluginHost : nsISupports
 
   [noscript] void instantiateFullPagePlugin(in string aMimeType,
                                             in nsIURI aURI,
-                                            in nsIStreamListenerRef aStreamListener,
-                                            in nsIPluginInstanceOwner aOwner);
+                                            in nsIPluginInstanceOwner aOwner,
+                                            out nsIStreamListener aStreamListener);
 
   /**
    * Instantiate an embedded plugin for an existing channel. The caller is
@@ -122,8 +104,6 @@ interface nsIPluginHost : nsISupports
   // NS_ERROR_PLUGIN_DISABLED if the plugin is explicitly disabled, and
   // NS_ERROR_FAILURE if there is no plugin for this type.
   [noscript] void isPluginEnabledForType(in string aMimeType);
-
-  [noscript] FullPagePluginEnabledType isFullPagePluginEnabledForType(in string aMimeType);
 
   // The return code is NS_OK if the plugin is enabled and NS_ERROR_FAILURE if
   // the plugin is explicitly disabled or there is no plugin.

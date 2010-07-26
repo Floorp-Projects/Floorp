@@ -753,11 +753,16 @@ class StmtSwitch(Block):
         assert not isinstance(case, str)
         assert (isinstance(block, StmtBreak)
                 or isinstance(block, StmtReturn)
+                or isinstance(block, StmtSwitch)
                 or (hasattr(block, 'stmts')
                     and (isinstance(block.stmts[-1], StmtBreak)
                          or isinstance(block.stmts[-1], StmtReturn))))
         self.addstmt(case)
         self.addstmt(block)
+        self.nr_cases += 1
+
+    def addfallthrough(self, case):
+        self.addstmt(case)
         self.nr_cases += 1
 
 class StmtBreak(Node):

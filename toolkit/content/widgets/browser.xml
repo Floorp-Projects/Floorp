@@ -51,6 +51,9 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="browser" extends="xul:browser">
+    <content clickthrough="never">
+      <children/>
+    </content>
     <implementation type="application/javascript" implements="nsIAccessibleProvider, nsIObserver, nsIDOMEventListener">
       <property name="accessibleType" readonly="true">
         <getter>
@@ -315,7 +318,7 @@
       
       <property name="webProgress"
                 readonly="true"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>
+                onget="return this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.webProgress;"/>
 
       <field name="_contentWindow">null</field>
 

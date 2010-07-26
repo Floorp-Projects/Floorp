@@ -35,46 +35,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <QX11Info>
-
 #include "gfxQtNativeRenderer.h"
 #include "gfxContext.h"
 #include "gfxXlibSurface.h"
 
 nsresult
-gfxQtNativeRenderer::Draw(gfxContext* ctx, int width, int height,
-                          PRUint32 flags, DrawOutput* output)
+gfxQtNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
+                          PRUint32 flags, Screen* screen, Visual* visual,
+                          DrawOutput* output)
 {
-    Display *dpy = QX11Info().display();
+    Display *dpy = DisplayOfScreen(screen);
     PRBool isOpaque = (flags & DRAW_IS_OPAQUE) ? PR_TRUE : PR_FALSE;
-    int screen = QX11Info().screen();
-    int depth = QX11Info().depth();
-    Visual *visual = static_cast<Visual*>(QX11Info().visual());
-    Colormap colormap = QX11Info().colormap();
-    PRBool allocColormap = PR_FALSE;
+    int screenNumber = screen - ScreenOfDisplay(dpy, 0);
 
     if (!isOpaque) {
-        depth = 32;
+        int depth = 32;
         XVisualInfo vinfo;
-        int foundVisual = XMatchVisualInfo(dpy, screen,
+        int foundVisual = XMatchVisualInfo(dpy, screenNumber,
                                            depth, TrueColor,
                                            &vinfo);
         if (!foundVisual)
             return NS_ERROR_FAILURE;
 
-        if (visual != vinfo.visual) {
-            allocColormap = PR_TRUE;
-            visual = vinfo.visual;
-            colormap = XCreateColormap(dpy,
-                                       RootWindow(dpy, screen),
-                                       visual, AllocNone);
-        }
+        visual = vinfo.visual;
     }
 
     nsRefPtr<gfxXlibSurface> xsurf =
-        new gfxXlibSurface(dpy, visual,
-                           gfxIntSize(width, height),
-                           depth);
+        gfxXlibSurface::Create(screen, visual,
+                               gfxIntSize(size.width, size.height));
 
     if (!isOpaque) {
         nsRefPtr<gfxContext> tempCtx = new gfxContext(xsurf);
@@ -82,10 +70,7 @@ gfxQtNativeRenderer::Draw(gfxContext* ctx, int width, int height,
         tempCtx->Paint();
     }
 
-    nsresult rv = NativeDraw(xsurf.get(), colormap, 0, 0, NULL, 0);
-
-    if (!allocColormap)
-        XFreeColormap(dpy, colormap);
+    nsresult rv = DrawWithXlib(xsurf.get(), nsIntPoint(0, 0), NULL, 0);
 
     if (NS_FAILED(rv))
         return rv;

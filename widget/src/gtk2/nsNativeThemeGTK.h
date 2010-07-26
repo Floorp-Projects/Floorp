@@ -99,9 +99,12 @@ public:
   virtual ~nsNativeThemeGTK();
 
 private:
+  gint GetTabMarginPixels(nsIFrame* aFrame);
   PRBool GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
                               GtkThemeWidgetType& aGtkWidgetType,
                               GtkWidgetState* aState, gint* aWidgetFlags);
+  PRBool GetExtraSizeForWidget(nsIFrame* aFrame, PRUint8 aWidgetType,
+                               nsIntMargin* aExtra);
 
   void RefreshWidgetWindow(nsIFrame* aFrame);
 

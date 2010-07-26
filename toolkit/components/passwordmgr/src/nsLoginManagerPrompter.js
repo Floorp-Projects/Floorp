@@ -56,8 +56,6 @@ function LoginManagerPromptFactory() {
 
 LoginManagerPromptFactory.prototype = {
 
-    classDescription : "LoginManagerPromptFactory",
-    contractID : "@mozilla.org/passwordmanager/authpromptfactory;1",
     classID : Components.ID("{749e62f4-60ae-4569-a8a2-de78b649660e}"),
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
@@ -183,8 +181,6 @@ function LoginManagerPrompter() {}
 
 LoginManagerPrompter.prototype = {
 
-    classDescription : "LoginManagerPrompter",
-    contractID : "@mozilla.org/login-manager/prompter;1",
     classID : Components.ID("{8aa66d77-1bbb-45a6-991e-b8f47751c291}"),
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIAuthPrompt,
                                             Ci.nsIAuthPrompt2,
@@ -1382,6 +1378,4 @@ LoginManagerPrompter.prototype = {
 
 
 var component = [LoginManagerPromptFactory, LoginManagerPrompter];
-function NSGetModule(compMgr, fileSpec) {
-    return XPCOMUtils.generateModule(component);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

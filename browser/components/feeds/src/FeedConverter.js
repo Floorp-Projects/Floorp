@@ -37,6 +37,7 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/debug.js");
 
 const Cc = Components.classes;
@@ -47,17 +48,9 @@ function LOG(str) {
   dump("*** " + str + "\n");
 }
 
-const FC_CLASSID = Components.ID("{229fa115-9412-4d32-baf3-2fc407f76fb1}");
-const FC_CLASSNAME = "Feed Stream Converter";
-const FS_CLASSID = Components.ID("{2376201c-bbc6-472f-9b62-7548040a61c6}");
-const FS_CLASSNAME = "Feed Result Service";
 const FS_CONTRACTID = "@mozilla.org/browser/feeds/result-service;1";
 const FPH_CONTRACTID = "@mozilla.org/network/protocol;1?name=feed";
-const FPH_CLASSID = Components.ID("{4f91ef2e-57ba-472e-ab7a-b4999e42d6c0}");
-const FPH_CLASSNAME = "Feed Protocol Handler";
 const PCPH_CONTRACTID = "@mozilla.org/network/protocol;1?name=pcast";
-const PCPH_CLASSID = Components.ID("{1c31ed79-accd-4b94-b517-06e0c81999d5}");
-const PCPH_CLASSNAME = "Podcast Protocol Handler";
 
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_MAYBE_VIDEO_FEED = "application/vnd.mozilla.maybe.video.feed";
@@ -148,6 +141,8 @@ function safeGetCharPref(pref, defaultValue) {
 function FeedConverter() {
 }
 FeedConverter.prototype = {
+  classID: Components.ID("{229fa115-9412-4d32-baf3-2fc407f76fb1}"),
+
   /**
    * This is the downloaded text data for the feed.
    */
@@ -368,26 +363,15 @@ FeedConverter.prototype = {
   },
 };
 
-var FeedConverterFactory = {
-  createInstance: function FS_createInstance(outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return new FeedConverter().QueryInterface(iid);
-  },
-
-  QueryInterface: function FS_QueryInterface(iid) {
-    if (iid.equals(Ci.nsIFactory) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-};
-
 /**
  * Keeps parsed FeedResults around for use elsewhere in the UI after the stream
  * converter completes. 
  */
-var FeedResultService = {
+function FeedResultService() {
+}
+
+FeedResultService.prototype = {
+  classID: Components.ID("{2376201c-bbc6-472f-9b62-7548040a61c6}"),
   
   /**
    * A URI spec -> [nsIFeedResult] hash. We have to keep a list as the
@@ -534,15 +518,17 @@ var FeedResultService = {
  * A protocol handler that attempts to deal with the variant forms of feed:
  * URIs that are actually either http or https.
  */
-function FeedProtocolHandler(scheme) {
-  this._scheme = scheme;
-  var ios = 
+function GenericProtocolHandler() {
+}
+GenericProtocolHandler.prototype = {
+  _init: function GPH_init(scheme) {
+    var ios = 
       Cc["@mozilla.org/network/io-service;1"].
       getService(Ci.nsIIOService);
-  this._http = ios.getProtocolHandler("http");
-}
-FeedProtocolHandler.prototype = {
-  _scheme: "",
+    this._http = ios.getProtocolHandler("http");
+    this._scheme = scheme;
+  },
+
   get scheme() {
     return this._scheme;
   },
@@ -555,11 +541,11 @@ FeedProtocolHandler.prototype = {
     return this._http.defaultPort;
   },
   
-  allowPort: function FPH_allowPort(port, scheme) {
+  allowPort: function GPH_allowPort(port, scheme) {
     return this._http.allowPort(port, scheme);
   },
   
-  newURI: function FPH_newURI(spec, originalCharset, baseURI) {
+  newURI: function GPH_newURI(spec, originalCharset, baseURI) {
     // See bug 408599 - feed URIs can be either standard URLs of the form
     // feed://example.com, in which case the real protocol is http, or nested
     // URIs of the form feed:realscheme:. When realscheme is either http or
@@ -585,7 +571,7 @@ FeedProtocolHandler.prototype = {
     return uri;
   },
   
-  newChannel: function FPH_newChannel(aUri) {
+  newChannel: function GPH_newChannel(aUri) {
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
@@ -610,7 +596,7 @@ FeedProtocolHandler.prototype = {
     return channel;
   },
   
-  QueryInterface: function FPH_QueryInterface(iid) {
+  QueryInterface: function GPH_QueryInterface(iid) {
     if (iid.equals(Ci.nsIProtocolHandler) ||
         iid.equals(Ci.nsISupports))
       return this;
@@ -618,72 +604,22 @@ FeedProtocolHandler.prototype = {
   }  
 };
 
-var Module = {
-  QueryInterface: function M_QueryInterface(iid) {
-    if (iid.equals(Ci.nsIModule) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  
-  getClassObject: function M_getClassObject(cm, cid, iid) {
-    if (!iid.equals(Ci.nsIFactory))
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-    
-    if (cid.equals(FS_CLASSID))
-      return FeedResultService;
-    if (cid.equals(FPH_CLASSID))
-      return new GenericComponentFactory(FeedProtocolHandler, "feed");
-    if (cid.equals(PCPH_CLASSID))
-      return new GenericComponentFactory(FeedProtocolHandler, "pcast");
-    if (cid.equals(FC_CLASSID))
-      return new GenericComponentFactory(FeedConverter);
-      
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  
-  registerSelf: function M_registerSelf(cm, file, location, type) {
-    var cr = cm.QueryInterface(Ci.nsIComponentRegistrar);
-    
-    cr.registerFactoryLocation(FS_CLASSID, FS_CLASSNAME, FS_CONTRACTID,
-                               file, location, type);
-    cr.registerFactoryLocation(FPH_CLASSID, FPH_CLASSNAME, FPH_CONTRACTID,
-                               file, location, type);
-    cr.registerFactoryLocation(PCPH_CLASSID, PCPH_CLASSNAME, PCPH_CONTRACTID,
-                               file, location, type);
-
-    // The feed converter is always attached, since parsing must be done to 
-    // determine whether or not auto-handling can occur. 
-    const converterPrefix = "@mozilla.org/streamconv;1?from=";
-    var converterContractID = 
-        converterPrefix + TYPE_MAYBE_FEED + "&to=" + TYPE_ANY;
-    cr.registerFactoryLocation(FC_CLASSID, FC_CLASSNAME, converterContractID,
-                               file, location, type);
-
-    converterContractID = 
-        converterPrefix + TYPE_MAYBE_VIDEO_FEED + "&to=" + TYPE_ANY;
-    cr.registerFactoryLocation(FC_CLASSID, FC_CLASSNAME, converterContractID,
-                               file, location, type);
-
-    converterContractID = 
-        converterPrefix + TYPE_MAYBE_AUDIO_FEED + "&to=" + TYPE_ANY;
-    cr.registerFactoryLocation(FC_CLASSID, FC_CLASSNAME, converterContractID,
-                               file, location, type);
-    },
-  
-  unregisterSelf: function M_unregisterSelf(cm, location, type) {
-    var cr = cm.QueryInterface(Ci.nsIComponentRegistrar);
-    cr.unregisterFactoryLocation(FPH_CLASSID, location);
-    cr.unregisterFactoryLocation(PCPH_CLASSID, location);
-  },
-  
-  canUnload: function M_canUnload(cm) {
-    return true;
-  }
-};
-
-function NSGetModule(cm, file) {
-  return Module;
+function FeedProtocolHandler() {
+  this._init('feed');
 }
+FeedProtocolHandler.prototype = new GenericProtocolHandler();
+FeedProtocolHandler.prototype.classID = Components.ID("{4f91ef2e-57ba-472e-ab7a-b4999e42d6c0}");
 
-#include GenericFactory.js
+function PodCastProtocolHandler() {
+  this._init('pcast');
+}
+PodCastProtocolHandler.prototype = new GenericProtocolHandler();
+PodCastProtocolHandler.prototype.classID = Components.ID("{1c31ed79-accd-4b94-b517-06e0c81999d5}");
+
+var components = [FeedConverter,
+                  FeedResultService,
+                  FeedProtocolHandler,
+                  PodCastProtocolHandler];
+
+
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

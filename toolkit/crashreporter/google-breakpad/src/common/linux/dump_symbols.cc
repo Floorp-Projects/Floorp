@@ -32,39 +32,40 @@
 // dump_symbols.cc: implement google_breakpad::WriteSymbolFile:
 // Find all the debugging info in a file and dump it as a Breakpad symbol file.
 
+#include "common/linux/dump_symbols.h"
+
+#include <assert.h>
 #include <elf.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <link.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <cassert>
-#include <cerrno>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <string>
 
 #include "common/dwarf/bytereader-inl.h"
 #include "common/dwarf/dwarf2diehandler.h"
-#include "common/linux/dump_stabs.h"
-#include "common/linux/dump_symbols.h"
-#include "common/linux/dwarf_cfi_to_module.h"
-#include "common/linux/dwarf_cu_to_module.h"
-#include "common/linux/dwarf_line_to_module.h"
+#include "common/dwarf_cfi_to_module.h"
+#include "common/dwarf_cu_to_module.h"
+#include "common/dwarf_line_to_module.h"
 #include "common/linux/file_id.h"
-#include "common/linux/module.h"
-#include "common/linux/stabs_reader.h"
+#include "common/module.h"
+#include "common/stabs_reader.h"
+#include "common/stabs_to_module.h"
 
 // This namespace contains helper functions.
 namespace {
 
-using google_breakpad::DumpStabsHandler;
 using google_breakpad::DwarfCFIToModule;
 using google_breakpad::DwarfCUToModule;
 using google_breakpad::DwarfLineToModule;
 using google_breakpad::Module;
+using google_breakpad::StabsToModule;
 
 // Fix offset into virtual address by adding the mapped base into offsets.
 // Make life easier when want to find something by offset.
@@ -123,17 +124,32 @@ static const ElfW(Shdr) *FindSectionByName(const char *name,
   return NULL;
 }
 
-static bool LoadStabs(const ElfW(Shdr) *stab_section,
+static bool LoadStabs(const ElfW(Ehdr) *elf_header,
+                      const ElfW(Shdr) *stab_section,
                       const ElfW(Shdr) *stabstr_section,
                       Module *module) {
+  // Figure out what endianness this file is.
+  bool big_endian;
+  if (elf_header->e_ident[EI_DATA] == ELFDATA2LSB)
+    big_endian = false;
+  else if (elf_header->e_ident[EI_DATA] == ELFDATA2MSB)
+    big_endian = true;
+  else {
+    fprintf(stderr, "bad data encoding in ELF header: %d\n",
+            elf_header->e_ident[EI_DATA]);
+    return false;
+  }
   // A callback object to handle data from the STABS reader.
-  DumpStabsHandler handler(module);
+  StabsToModule handler(module);
   // Find the addresses of the STABS data, and create a STABS reader object.
+  // On Linux, STABS entries always have 32-bit values, regardless of the
+  // address size of the architecture whose code they're describing, and
+  // the strings are always "unitized".
   uint8_t *stabs = reinterpret_cast<uint8_t *>(stab_section->sh_offset);
   uint8_t *stabstr = reinterpret_cast<uint8_t *>(stabstr_section->sh_offset);
   google_breakpad::StabsReader reader(stabs, stab_section->sh_size,
                                       stabstr, stabstr_section->sh_size,
-                                      &handler);
+                                      big_endian, 4, true, &handler);
   // Read the STABS data, and do post-processing.
   if (!reader.Process())
     return false;
@@ -169,8 +185,8 @@ static bool LoadDwarf(const string &dwarf_filename,
   else if (elf_header->e_ident[EI_DATA] == ELFDATA2MSB)
     endianness = dwarf2reader::ENDIANNESS_BIG;
   else {
-    fprintf(stderr, "bad data encoding in ELF header: %d\n",
-            elf_header->e_ident[EI_DATA]);
+    fprintf(stderr, "%s: bad data encoding in ELF header: %d\n",
+            dwarf_filename.c_str(), elf_header->e_ident[EI_DATA]);
     return false;
   }
   dwarf2reader::ByteReader byte_reader(endianness);
@@ -224,58 +240,20 @@ static bool LoadDwarf(const string &dwarf_filename,
 // success, or false if we don't recognize HEADER's machine
 // architecture.
 static bool DwarfCFIRegisterNames(const ElfW(Ehdr) *elf_header,
-                                  vector<string> *register_names)
-{
-  static const char *const i386_names[] = {
-    "$eax", "$ecx", "$edx", "$ebx", "$esp", "$ebp", "$esi", "$edi",
-    "$eip", "$eflags", "$unused1",
-    "$st0", "$st1", "$st2", "$st3", "$st4", "$st5", "$st6", "$st7",
-    "$unused2", "$unused3",
-    "$xmm0", "$xmm1", "$xmm2", "$xmm3", "$xmm4", "$xmm5", "$xmm6", "$xmm7",
-    "$mm0", "$mm1", "$mm2", "$mm3", "$mm4", "$mm5", "$mm6", "$mm7",
-    "$fcw", "$fsw", "$mxcsr",
-    "$es", "$cs", "$ss", "$ds", "$fs", "$gs", "$unused4", "$unused5",
-    "$tr", "$ldtr",
-    NULL
-  };
-
-  static const char *const x86_64_names[] = {
-    "$rax", "$rdx", "$rcx", "$rbx", "$rsi", "$rdi", "$rbp", "$rsp",
-    "$r8",  "$r9",  "$r10", "$r11", "$r12", "$r13", "$r14", "$r15",
-    "$rip",
-    "$xmm0","$xmm1","$xmm2", "$xmm3", "$xmm4", "$xmm5", "$xmm6", "$xmm7",
-    "$xmm8","$xmm9","$xmm10","$xmm11","$xmm12","$xmm13","$xmm14","$xmm15",
-    "$st0", "$st1", "$st2", "$st3", "$st4", "$st5", "$st6", "$st7",
-    "$mm0", "$mm1", "$mm2", "$mm3", "$mm4", "$mm5", "$mm6", "$mm7",
-    "$rflags",
-    "$es", "$cs", "$ss", "$ds", "$fs", "$gs", "$unused1", "$unused2",
-    "$fs.base", "$gs.base", "$unused3", "$unused4",
-    "$tr", "$ldtr",
-    "$mxcsr", "$fcw", "$fsw",
-    NULL
-  };
-
-  static const char *const arm_names[] = {
-    "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",
-    "r8",  "r9",  "r10", "r11", "r12", "sp",  "lr",  "pc",
-    "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7",
-    "fps", "cpsr",
-    NULL
-  };
-
-  const char * const *name_table;
+                                  vector<string> *register_names) {
   switch (elf_header->e_machine) {
-    case EM_386:    name_table = i386_names;   break;
-    case EM_ARM:    name_table = arm_names;    break;
-    case EM_X86_64: name_table = x86_64_names; break;
+    case EM_386:
+      *register_names = DwarfCFIToModule::RegisterNames::I386();
+      return true;
+    case EM_ARM:
+      *register_names = DwarfCFIToModule::RegisterNames::ARM();
+      return true;
+    case EM_X86_64:
+      *register_names = DwarfCFIToModule::RegisterNames::X86_64();
+      return true;
     default:
       return false;
   }
-
-  register_names->clear();
-  for (int i = 0; name_table[i]; i++)
-    register_names->push_back(name_table[i]);
-  return true;
 }
 
 static bool LoadDwarfCFI(const string &dwarf_filename,
@@ -334,7 +312,7 @@ static bool LoadDwarfCFI(const string &dwarf_filename,
   if (got_section)
     byte_reader.SetDataBase(got_section->sh_addr);
   if (text_section)
-    byte_reader.SetTextBase(got_section->sh_addr);
+    byte_reader.SetTextBase(text_section->sh_addr);
     
   dwarf2reader::CallFrameInfo::Reporter dwarf_reporter(dwarf_filename,
                                                        section_name);
@@ -367,9 +345,9 @@ static bool LoadSymbols(const std::string &obj_file, ElfW(Ehdr) *elf_header,
     const ElfW(Shdr) *stabstr_section = stab_section->sh_link + sections;
     if (stabstr_section) {
       found_debug_info_section = true;
-      if (!LoadStabs(stab_section, stabstr_section, module))
-        fprintf(stderr, "\".stab\" section found, but failed to load STABS"
-                " debugging information\n");
+      if (!LoadStabs(elf_header, stab_section, stabstr_section, module))
+        fprintf(stderr, "%s: \".stab\" section found, but failed to load STABS"
+                " debugging information\n", obj_file.c_str());
     }
   }
 
@@ -380,8 +358,8 @@ static bool LoadSymbols(const std::string &obj_file, ElfW(Ehdr) *elf_header,
   if (dwarf_section) {
     found_debug_info_section = true;
     if (!LoadDwarf(obj_file, elf_header, module))
-      fprintf(stderr, "\".debug_info\" section found, but failed to load "
-              "DWARF debugging information\n");
+      fprintf(stderr, "%s: \".debug_info\" section found, but failed to load "
+              "DWARF debugging information\n", obj_file.c_str());
   }
 
   // Dwarf Call Frame Information (CFI) is actually independent from
@@ -416,8 +394,9 @@ static bool LoadSymbols(const std::string &obj_file, ElfW(Ehdr) *elf_header,
   }
 
   if (!found_debug_info_section) {
-    fprintf(stderr, "file contains no debugging information"
-            " (no \".stab\" or \".debug_info\" sections)\n");
+    fprintf(stderr, "%s: file contains no debugging information"
+            " (no \".stab\" or \".debug_info\" sections)\n",
+            obj_file.c_str());
     return false;
   }
   return true;
@@ -558,14 +537,15 @@ bool WriteSymbolFile(const std::string &obj_file, FILE *sym_file) {
   unsigned char identifier[16];
   google_breakpad::FileID file_id(obj_file.c_str());
   if (!file_id.ElfFileIdentifier(identifier)) {
-    fprintf(stderr, "Unable to generate file identifier\n");
+    fprintf(stderr, "%s: unable to generate file identifier\n",
+            obj_file.c_str());
     return false;
   }
 
   const char *architecture = ElfArchitecture(elf_header);
   if (!architecture) {
-    fprintf(stderr, "Unrecognized ELF machine architecture: %d\n",
-            elf_header->e_machine);
+    fprintf(stderr, "%s: unrecognized ELF machine architecture: %d\n",
+            obj_file.c_str(), elf_header->e_machine);
     return false;
   }
 

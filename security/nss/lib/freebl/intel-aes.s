@@ -1116,7 +1116,14 @@ intel_aes_encrypt_init_256:
 	.byte 0x66,0x0f,0x3a,0xdf,0xd3,0x20	/* aeskeygenassist $0x20, %xmm3, %xmm2 */
 	call key_expansion256
 	.byte 0x66,0x0f,0x3a,0xdf,0xd3,0x40	/* aeskeygenassist $0x40, %xmm3, %xmm2 */
-	call key_expansion256
+	pxor	%xmm6, %xmm6
+	pshufd	$0xff, %xmm2, %xmm2
+	shufps	$0x10, %xmm1, %xmm6
+	pxor	%xmm6, %xmm1
+	shufps	$0x8c, %xmm1, %xmm6
+	pxor	%xmm2, %xmm1
+	pxor	%xmm6, %xmm1
+	movdqu	%xmm1, (%rsi)
 
 	ret
 	.size intel_aes_encrypt_init_256, .-intel_aes_encrypt_init_256
@@ -1174,7 +1181,14 @@ intel_aes_decrypt_init_256:
 	movdqu	%xmm4, -32(%rsi)
 	movdqu	%xmm5, -16(%rsi)
 	.byte 0x66,0x0f,0x3a,0xdf,0xd3,0x40	/* aeskeygenassist $0x40, %xmm3, %xmm2 */
-	call key_expansion256
+	pxor	%xmm6, %xmm6
+	pshufd	$0xff, %xmm2, %xmm2
+	shufps	$0x10, %xmm1, %xmm6
+	pxor	%xmm6, %xmm1
+	shufps	$0x8c, %xmm1, %xmm6
+	pxor	%xmm2, %xmm1
+	pxor	%xmm6, %xmm1
+	movdqu	%xmm1, (%rsi)
 
 	ret
 	.size intel_aes_decrypt_init_256, .-intel_aes_decrypt_init_256
@@ -1191,9 +1205,9 @@ key_expansion256:
 	pxor	%xmm2, %xmm1
 	pxor	%xmm6, %xmm1
 	movdqu	%xmm1, (%rsi)
+
 	addq	$16, %rsi
 	.byte 0x66,0x0f,0x3a,0xdf,0xe1,0x00	/* aeskeygenassist $0, %xmm1, %xmm4 */
-
 	pshufd	$0xaa, %xmm4, %xmm4
 	shufps	$0x10, %xmm3, %xmm6
 	pxor	%xmm6, %xmm3

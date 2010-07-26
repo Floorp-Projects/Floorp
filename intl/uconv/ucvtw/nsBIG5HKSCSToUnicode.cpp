@@ -72,7 +72,7 @@ static const uRange g_BIG5HKSCSRanges[] = {
 //----------------------------------------------------------------------
 // Class nsBIG5HKSCSToUnicode [implementation]
 
-NS_METHOD
+nsresult
 nsBIG5HKSCSToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult)
 {

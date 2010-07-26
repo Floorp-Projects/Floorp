@@ -380,7 +380,7 @@ PRIVATE PRBool uCheckAndScanAlways2ByteGR128(
    */
   if(inbuflen < 2)    /* will lead to NS_OK_UDEC_MOREINPUT */
     return PR_FALSE;
-  else if (! in[1] & 0x80)     /* 2nd byte range check */
+  else if (!(in[1] & 0x80))     /* 2nd byte range check */
   {
     *inscanlen = 2; 
     *out = 0xFF;  /* for 2-byte table, uMap() is guaranteed to fail for 0xFF. */

@@ -111,12 +111,15 @@ NS_IMPL_ISUPPORTS2(nsCookiePermission,
                    nsICookiePermission,
                    nsIObserver)
 
-nsresult
+bool
 nsCookiePermission::Init()
 {
+  // Initialize nsIPermissionManager and fetch relevant prefs. This is only
+  // required for some methods on nsICookiePermission, so it should be done
+  // lazily.
   nsresult rv;
   mPermMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) return false;
 
   // failure to access the pref service is non-fatal...
   nsCOMPtr<nsIPrefBranch2> prefBranch =
@@ -155,7 +158,7 @@ nsCookiePermission::Init()
     }
   }
 
-  return NS_OK;
+  return true;
 }
 
 void
@@ -184,6 +187,10 @@ NS_IMETHODIMP
 nsCookiePermission::SetAccess(nsIURI         *aURI,
                               nsCookieAccess  aAccess)
 {
+  // Lazily initialize ourselves
+  if (!EnsureInitialized())
+    return NS_ERROR_UNEXPECTED;
+
   //
   // NOTE: nsCookieAccess values conveniently match up with
   //       the permission codes used by nsIPermissionManager.
@@ -206,7 +213,11 @@ nsCookiePermission::CanAccess(nsIURI         *aURI,
     return NS_OK;
   }
 #endif // MOZ_MAIL_NEWS
-  
+
+  // Lazily initialize ourselves
+  if (!EnsureInitialized())
+    return NS_ERROR_UNEXPECTED;
+
   // finally, check with permission manager...
   nsresult rv = mPermMgr->TestPermission(aURI, kPermissionType, (PRUint32 *) aResult);
   if (NS_SUCCEEDED(rv)) {
@@ -243,6 +254,10 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
   NS_ASSERTION(aURI, "null uri");
 
   *aResult = kDefaultPolicy;
+
+  // Lazily initialize ourselves
+  if (!EnsureInitialized())
+    return NS_ERROR_UNEXPECTED;
 
   PRUint32 perm;
   mPermMgr->TestPermission(aURI, kPermissionType, &perm);
@@ -507,7 +522,7 @@ nsCookiePermission::Observe(nsISupports     *aSubject,
   return NS_OK;
 }
 
-PRBool
+bool
 nsCookiePermission::InPrivateBrowsing()
 {
   PRBool inPrivateBrowsingMode = PR_FALSE;

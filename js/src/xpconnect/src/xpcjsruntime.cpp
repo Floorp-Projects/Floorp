@@ -43,6 +43,8 @@
 #include "xpcprivate.h"
 #include "dom_quickstubs.h"
 
+#include "jsgcchunk.h"
+#include "nsIMemoryReporter.h"
 #include "mozilla/FunctionTimer.h"
 
 /***************************************************************************/
@@ -1039,6 +1041,51 @@ XPCJSRuntime::~XPCJSRuntime()
     XPCPerThreadData::ShutDown();
 }
 
+class XPConnectGCChunkAllocator
+    : public js::GCChunkAllocator
+{
+public:
+    XPConnectGCChunkAllocator() {}
+
+    static PRInt64 GetGCChunkBytesInUse(void *data) {
+        XPConnectGCChunkAllocator *allocator =
+            static_cast<XPConnectGCChunkAllocator*>(data);
+        return allocator->mNumGCChunksInUse * js::GC_CHUNK_SIZE;
+    }
+private:
+    virtual void *doAlloc() {
+        void *chunk = 0;
+#ifdef MOZ_MEMORY
+        posix_memalign(&chunk, js::GC_CHUNK_SIZE, js::GC_CHUNK_SIZE);
+#else
+        chunk = js::AllocGCChunk();
+#endif
+        if (chunk)
+            mNumGCChunksInUse++;
+        return chunk;
+    }
+
+    virtual void doFree(void *chunk) {
+        mNumGCChunksInUse--;
+#ifdef MOZ_MEMORY
+        free(chunk);
+#else
+        js::FreeGCChunk(chunk);
+#endif
+    }
+
+protected:
+    PRUint32 mNumGCChunksInUse;
+};
+
+static XPConnectGCChunkAllocator gXPCJSChunkAllocator;
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSRuntimeGCChunks,
+                             "xpconnect/js/gcchunks",
+                             "Memory in use by main JS Runtime GC chunks",
+                             XPConnectGCChunkAllocator::GetGCChunkBytesInUse,
+                             &gXPCJSChunkAllocator)
+
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
  : mXPConnect(aXPConnect),
    mJSRuntime(nsnull),
@@ -1090,6 +1137,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_SetGCCallbackRT(mJSRuntime, GCCallback);
         JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
         mWatchdogWakeup = JS_NEW_CONDVAR(mJSRuntime->gcLock);
+
+        mJSRuntime->setCustomGCChunkAllocator(&gXPCJSChunkAllocator);
+
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSRuntimeGCChunks));
     }
 
     if(!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
@@ -1173,8 +1224,8 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     if (!xpc)
         return JS_FALSE;
 
-    JS_SetNativeStackQuota(cx, 512 * 1024);
-    JS_SetScriptStackQuota(cx, 100 * 1024 * 1024);
+    JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
+    JS_SetScriptStackQuota(cx, 25 * sizeof(size_t) * 1024 * 1024);
     return JS_TRUE;
 }
 

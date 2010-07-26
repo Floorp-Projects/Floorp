@@ -80,7 +80,7 @@ static const PRUint16 *g_CP949MappingTableSet [] ={
 };
 
 
-NS_METHOD
+nsresult
 nsCP949ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult)
 {

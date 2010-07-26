@@ -330,7 +330,7 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   }
 
   nsPoint offset;
-  *aOutWidget = frame->GetWindowOffset(offset);
+  *aOutWidget = frame->GetNearestWidget(offset);
   NS_ENSURE_TRUE(*aOutWidget, nsIntRect());
   rect.MoveBy(offset);
 

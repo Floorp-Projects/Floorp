@@ -1,0 +1,6 @@
+#ifdef XPI_NAME
+httpd.jar:
+%  component {54ef6f81-30af-4b1d-ac55-8ba811293e41} components/httpd.js
+%  contract @mozilla.org/server/jshttp;1 {54ef6f81-30af-4b1d-ac55-8ba811293e41}
+%  interfaces components/test_necko.xpt
+#endif

@@ -199,6 +199,7 @@ sub compareZipArchives($$);
 sub complain($$@);
 sub copyIfIdentical($$$);
 sub slurp($);
+sub get_sorted($);
 sub compare_sorted($$);
 sub copy_sorted($$);
 sub copyIfIdenticalWhenSorted($$$);
@@ -507,6 +508,18 @@ sub slurp($) {
   return @lines;
 }
 
+# get_sorted($file)
+# Get the sorted lines of a file as a list, normalizing a newline on the last line if necessary.
+sub get_sorted($) {
+  my ($file) = @_;
+  my @lines = slurp($file);
+  my $lastline = $lines[-1];
+  if (!($lastline =~ /\n/)) {
+    $lines[-1] = $lastline . "\n";
+  }
+  return sort(@lines);
+}
+
 # compare_sorted($file1, $file2)
 #
 # Read the contents of both files into arrays, sort the arrays,
@@ -516,8 +529,8 @@ sub slurp($) {
 # Returns undef on error.
 sub compare_sorted($$) {
   my ($file1, $file2) = @_;
-  my @lines1 = sort(slurp($file1));
-  my @lines2 = sort(slurp($file2));
+  my @lines1 = get_sorted($file1);
+  my @lines2 = get_sorted($file2);
 
   return undef if !@lines1 || !@lines2;
   return 1 unless scalar @lines1 == scalar @lines2;
@@ -535,7 +548,7 @@ sub compare_sorted($$) {
 # Returns 1 on success, and undef on failure.
 sub copy_sorted($$) {
   my ($src, $dest) = @_;
-  my @lines = sort(slurp($src));
+  my @lines = get_sorted($src);
   return undef unless @lines;
   open FILE, "> $dest" or return undef;
   print FILE @lines;

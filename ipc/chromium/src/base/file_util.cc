@@ -8,6 +8,9 @@
 #include <io.h>
 #endif
 #include <stdio.h>
+#if defined(ANDROID)
+#include <unistd.h>
+#endif
 
 #include <fstream>
 

@@ -163,43 +163,28 @@ function go() {
         gl.bindAttribLocation(prog, 0, "aVertex");
         gl.bindAttribLocation(prog, 1, "aColor");
         gl.linkProgram(prog);
-        if(gl.getError() != gl.NO_ERROR)
+        if (gl.getError() != gl.NO_ERROR)
             assertMsg(false, "unexpected error in linkProgram()");
-        assertMsg(gl.getProgramParameter(prog, gl.LINK_STATUS) == expected_status,
-                  errmsg);
+        assertMsg(gl.getProgramParameter(prog, gl.LINK_STATUS) == expected_status, errmsg);
         if (expected_status == true && gl.getProgramParameter(prog, gl.LINK_STATUS) == false)
             debug(gl.getProgramInfoLog(prog));
-        if(gl.getError() != gl.NO_ERROR)
+        if (gl.getError() != gl.NO_ERROR)
             assertMsg(false, "unexpected error in getProgramParameter()");
         gl.useProgram(prog);
-        if(expected_status == true)
+        if (expected_status == true)
             assertMsg(gl.getError() == gl.NO_ERROR, "using a valid program should succeed");
-        if(expected_status == false)
-            assertMsg(gl.getError() == gl.INVALID_OPERATION,
-                "using an invalid program should generate INVALID_OPERATION");
+        if (expected_status == false)
+            assertMsg(gl.getError() == gl.INVALID_OPERATION, "using an invalid program should generate INVALID_OPERATION");
         return prog;
     }
 
-    var progGood1 = checkLinkAndUse([vs, fs], true,
-                                             "valid program should link");
-
-    var progGood2 = checkLinkAndUse([vs, fs2], true,
-                                             "valid program #2 should link");
-
-    var progBad1 = checkLinkAndUse([vs], false,
-                                            "program with no fragment shader should fail to link");
-
-    var progBad2 = checkLinkAndUse([fs], false,
-                                            "program with no vertex shader should fail to link");
-
-    var progBad3 = checkLinkAndUse([vsBad, fs], false,
-                                            "program with bad vertex shader should fail to link");
-
-    var progBad4 = checkLinkAndUse([vs, fsBad], false,
-                                            "program with bad fragment shader should fail to link");
-
-    var progBad5 = checkLinkAndUse([vsBad, fsBad], false,
-                                            "program with bad shaders should fail to link");
+    var progGood1 = checkLinkAndUse([vs, fs], true, "valid program should link");
+    var progGood2 = checkLinkAndUse([vs, fs2], true, "valid program #2 should link");
+    var progBad1 = checkLinkAndUse([vs], false, "program with no fragment shader should fail to link");
+    var progBad2 = checkLinkAndUse([fs], false, "program with no vertex shader should fail to link");
+    var progBad3 = checkLinkAndUse([vsBad, fs], false, "program with bad vertex shader should fail to link");
+    var progBad4 = checkLinkAndUse([vs, fsBad], false, "program with bad fragment shader should fail to link");
+    var progBad5 = checkLinkAndUse([vsBad, fsBad], false, "program with bad shaders should fail to link");
 
     gl.useProgram(progGood1);
     assertMsg(gl.getError() == gl.NO_ERROR,
@@ -207,10 +192,13 @@ function go() {
 
     var vbuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
-    gl.bufferData(gl.ARRAY_BUFFER, new WebGLFloatArray([0.0, 0.0, 0.0, 1.0,
-							1.0, 0.0, 0.0, 1.0,
-							1.0, 1.0, 0.0, 1.0,
-							0.0, 1.0, 0.0, 1.0]), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER,
+                  new Float32Array([
+                      0.0, 0.0, 0.0, 1.0,
+                      1.0, 0.0, 0.0, 1.0,
+                      1.0, 1.0, 0.0, 1.0,
+                      0.0, 1.0, 0.0, 1.0]),
+                  gl.STATIC_DRAW);
     gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(0);
     gl.vertexAttrib3f(1, 1.0, 0.0, 0.0);
@@ -224,6 +212,8 @@ function go() {
               "drawing with a valid program shouldn't generate a GL error");
 
     gl.useProgram(progBad1);
+    assertMsg(gl.getError() == gl.INVALID_OPERATION,
+              "using an invalid program should generate INVALID_OPERATION");
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     assertMsg(gl.getError() != gl.NO_ERROR,
               "drawing with an invalid program should generate some GL error XXX");

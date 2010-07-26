@@ -88,6 +88,9 @@ JSBool
 WrapperMoved(JSContext *cx, XPCWrappedNative *innerObj,
              XPCWrappedNativeScope *newScope);
 
+void
+WindowNavigated(JSContext *cx, XPCWrappedNative *innerObj);
+
 // Returns 'true' if the current context is same-origin to the wrappedObject.
 // If we are "same origin" because UniversalXPConnect is enabled and
 // privilegeEnabled is non-null, then privilegeEnabled is set to true.
@@ -223,6 +226,32 @@ enum FunctionObjectSlot {
 
 // Helpful for keeping lines short:
 extern const PRUint32 sSecMgrSetProp, sSecMgrGetProp;
+
+inline jsval
+GetFlags(JSContext *cx, JSObject *wrapper)
+{
+  jsval flags;
+  JS_GetReservedSlot(cx, wrapper, sFlagsSlot, &flags);
+  return flags;
+}
+
+inline void
+SetFlags(JSContext *cx, JSObject *wrapper, jsval flags)
+{
+  JS_SetReservedSlot(cx, wrapper, sFlagsSlot, flags);
+}
+
+inline jsval
+AddFlags(jsval origflags, PRInt32 newflags)
+{
+  return INT_TO_JSVAL(JSVAL_TO_INT(origflags) | newflags);
+}
+
+inline jsval
+RemoveFlags(jsval origflags, PRInt32 oldflags)
+{
+  return INT_TO_JSVAL(JSVAL_TO_INT(origflags) & ~oldflags);
+}
 
 /**
  * A useful function that throws an exception onto cx.

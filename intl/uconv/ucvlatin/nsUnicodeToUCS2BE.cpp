@@ -127,12 +127,6 @@ NS_IMETHODIMP nsUnicodeToUTF16BE::SetOutputErrorBehavior(PRInt32 aBehavior,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF16BE::FillInfo(PRUint32 *aInfo)
-{
-  ::memset(aInfo, 0xFF, (0x10000L >> 3));
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsUnicodeToUTF16BE::CopyData(char* aDest, const PRUnichar* aSrc, PRInt32 aLen  )
 {
 #ifdef IS_BIG_ENDIAN

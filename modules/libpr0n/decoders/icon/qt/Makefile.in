@@ -57,6 +57,7 @@ FORCE_USE_PIC = 1
 
 DIRS = public
 
+EXTRA_COMPONENTS = gtkqticonsconverter.manifest
 EXTRA_PP_COMPONENTS = gtkqticonsconverter.js
 
 include $(topsrcdir)/config/rules.mk

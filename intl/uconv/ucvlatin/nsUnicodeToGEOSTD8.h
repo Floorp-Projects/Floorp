@@ -45,7 +45,7 @@
  * A character set converter from Unicode to GEOSTD8.
  *
  */
-NS_METHOD
+nsresult
 nsUnicodeToGEOSTD8Constructor(nsISupports *aOuter, REFNSIID aIID,
                               void **aResult);
 

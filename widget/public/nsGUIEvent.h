@@ -173,6 +173,9 @@ class nsHashKey;
 #define NS_DEACTIVATE                   (NS_WINDOW_START + 8)
 // top-level window z-level change request
 #define NS_SETZLEVEL                    (NS_WINDOW_START + 9)
+// Widget was repainted (dispatched when it's safe to move widgets, but
+// only on some platforms (including GTK2 and Windows))
+#define NS_DID_PAINT                   (NS_WINDOW_START + 28)
 // Widget will need to be painted
 #define NS_WILL_PAINT                   (NS_WINDOW_START + 29)
 // Widget needs to be repainted
@@ -457,12 +460,6 @@ class nsHashKey;
 #define NS_TRANSITION_EVENT_START    4200
 #define NS_TRANSITION_END            (NS_TRANSITION_EVENT_START)
 
-enum UIStateChangeType {
-  UIStateChangeType_NoChange,
-  UIStateChangeType_Set,
-  UIStateChangeType_Clear
-};
-
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.
@@ -644,12 +641,14 @@ class nsPaintEvent : public nsGUIEvent
 {
 public:
   nsPaintEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_PAINT_EVENT)
+    : nsGUIEvent(isTrusted, msg, w, NS_PAINT_EVENT),
+      willSendDidPaint(PR_FALSE)
   {
   }
 
   // area that needs repainting
   nsIntRegion region;
+  PRPackedBool willSendDidPaint;
 };
 
 /**
@@ -1489,7 +1488,17 @@ enum nsDragDropEventStatus {
 #define NS_VK_ALT            nsIDOMKeyEvent::DOM_VK_ALT
 #define NS_VK_PAUSE          nsIDOMKeyEvent::DOM_VK_PAUSE
 #define NS_VK_CAPS_LOCK      nsIDOMKeyEvent::DOM_VK_CAPS_LOCK
+#define NS_VK_KANA           nsIDOMKeyEvent::DOM_VK_KANA
+#define NS_VK_HANGUL         nsIDOMKeyEvent::DOM_VK_HANGUL
+#define NS_VK_JUNJA          nsIDOMKeyEvent::DOM_VK_JUNJA
+#define NS_VK_FINAL          nsIDOMKeyEvent::DOM_VK_FINAL
+#define NS_VK_HANJA          nsIDOMKeyEvent::DOM_VK_HANJA
+#define NS_VK_KANJI          nsIDOMKeyEvent::DOM_VK_KANJI
 #define NS_VK_ESCAPE         nsIDOMKeyEvent::DOM_VK_ESCAPE
+#define NS_VK_CONVERT        nsIDOMKeyEvent::DOM_VK_CONVERT
+#define NS_VK_NONCONVERT     nsIDOMKeyEvent::DOM_VK_NONCONVERT
+#define NS_VK_ACCEPT         nsIDOMKeyEvent::DOM_VK_ACCEPT
+#define NS_VK_MODECHANGE     nsIDOMKeyEvent::DOM_VK_MODECHANGE
 #define NS_VK_SPACE          nsIDOMKeyEvent::DOM_VK_SPACE
 #define NS_VK_PAGE_UP        nsIDOMKeyEvent::DOM_VK_PAGE_UP
 #define NS_VK_PAGE_DOWN      nsIDOMKeyEvent::DOM_VK_PAGE_DOWN
@@ -1499,6 +1508,9 @@ enum nsDragDropEventStatus {
 #define NS_VK_UP             nsIDOMKeyEvent::DOM_VK_UP
 #define NS_VK_RIGHT          nsIDOMKeyEvent::DOM_VK_RIGHT
 #define NS_VK_DOWN           nsIDOMKeyEvent::DOM_VK_DOWN
+#define NS_VK_SELECT         nsIDOMKeyEvent::DOM_VK_SELECT
+#define NS_VK_PRINT          nsIDOMKeyEvent::DOM_VK_PRINT
+#define NS_VK_EXECUTE        nsIDOMKeyEvent::DOM_VK_EXECUTE
 #define NS_VK_PRINTSCREEN    nsIDOMKeyEvent::DOM_VK_PRINTSCREEN
 #define NS_VK_INSERT         nsIDOMKeyEvent::DOM_VK_INSERT
 #define NS_VK_DELETE         nsIDOMKeyEvent::DOM_VK_DELETE
@@ -1547,6 +1559,7 @@ enum nsDragDropEventStatus {
 #define NS_VK_Z              nsIDOMKeyEvent::DOM_VK_Z
 
 #define NS_VK_CONTEXT_MENU   nsIDOMKeyEvent::DOM_VK_CONTEXT_MENU
+#define NS_VK_SLEEP          nsIDOMKeyEvent::DOM_VK_SLEEP
 
 #define NS_VK_NUMPAD0        nsIDOMKeyEvent::DOM_VK_NUMPAD0
 #define NS_VK_NUMPAD1        nsIDOMKeyEvent::DOM_VK_NUMPAD1

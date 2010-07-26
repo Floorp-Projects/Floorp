@@ -141,6 +141,6 @@
               label="&button.close.label;" accesskey="&button.close.accesskey;"/>
 #endif
     </hbox>
-    <resizer dir="bottomend"/>
+    <resizer type="window" dir="bottomend"/>
   </hbox>
 </window>

@@ -19,7 +19,7 @@ found in the LICENSE file.
 <div id="console"></div>
 <canvas id="canvas" width="2" height="2"> </canvas>
 <script>
-description("This test ensures WebGL various functions fail when passed non OpenGL ES 2.0 enums.");
+description("This test ensures various WebGL functions fail when passed non OpenGL ES 2.0 enums.");
 
 debug("");
 debug("Canvas.getContext");
@@ -33,6 +33,8 @@ if (!gl) {
   debug("");
   debug("Checking gl enums.");
 
+  var buffer = new ArrayBuffer(1);
+  var buf = new Uint16Array(buffer);
   var tex = gl.createTexture();
   var tests = [
     "gl.bindTexture(desktopGL['TEXTURE_3D'], tex)",
@@ -52,14 +54,14 @@ if (!gl) {
     "gl.isEnabled(desktopGL['CLIP_PLANE0'])",
     "gl.isEnabled(desktopGL['POINT_SPRITE'])",
     "gl.pixelStorei(desktopGL['PACK_SWAP_BYTES'], 1)",
-    "gl.readPixels(0, 0, 1, 1, gl.ALPHA, gl.SHORT)",
+    "gl.readPixels(0, 0, 1, 1, gl.ALPHA, gl.SHORT, buf)",
     "gl.texParameteri(desktopGL['TEXTURE_3D'], gl.TEXTURE_MAG_FILTER, gl.NEAREST)",
     "gl.texParameteri(gl.TEXTURE_2D, desktopGL['GENERATE_MIPMAP'], 1)"
    ];
    for (var ii = 0; ii < tests.length; ++ii) {
      eval(tests[ii]);
-     assertMsg(gl.getError() != gl.NO_ERROR,
-               tests[ii] + " should fail.");
+     assertMsg(gl.getError() == gl.INVALID_ENUM,
+               tests[ii] + " should return INVALID_ENUM.");
    }
 }
 

@@ -2214,6 +2214,8 @@ struct kernel_statfs {
 #endif
   LSS_INLINE _syscall1(pid_t,   getsid,          pid_t,       p)
   LSS_INLINE _syscall0(pid_t,   _gettid)
+  LSS_INLINE _syscall2(pid_t,   gettimeofday,    struct kernel_timeval*, t,
+                       void*, tz)
   LSS_INLINE _syscall5(int,     setxattr,        const char *,p,
                        const char *,   n,        const void *,v,
                        size_t,         s,        int,         f)

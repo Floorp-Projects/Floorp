@@ -42,7 +42,6 @@ interface nsIComponentManager;
 
 /**
  * The nsIModule interface.
- * @status FROZEN
  */
 
 [scriptable, uuid(7392D032-5371-11d3-994E-00805FD26FEE)]

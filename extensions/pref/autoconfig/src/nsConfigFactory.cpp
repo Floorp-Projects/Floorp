@@ -36,11 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsAutoConfig.h"
 #include "nsReadConfig.h"
 #include "nsIAppStartupNotifier.h"
-#include "nsICategoryManager.h"
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsLDAPSyncQuery.h"
 #endif
@@ -51,70 +50,40 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsReadConfig, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPSyncQuery)
 #endif
 
-// Registering nsReadConfig module as part of the app-startup category to get 
-// it instantiated.
-
-static NS_METHOD 
-RegisterReadConfig(nsIComponentManager *aCompMgr,
-                   nsIFile *aPath,
-                   const char *registryLocation,
-                   const char *componentType,
-                   const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> 
-    categoryManager(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = categoryManager->AddCategoryEntry("pref-config-startup", 
-                                           "ReadConfig Module",
-                                           NS_READCONFIG_CONTRACTID,
-                                           PR_TRUE, PR_TRUE, nsnull);
-  }
-  return rv;
-}
-
-static NS_METHOD 
-UnRegisterReadConfig(nsIComponentManager *aCompMgr,
-                     nsIFile *aPath,
-                     const char *registryLocation,
-                     const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> 
-    categoryManager(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = categoryManager->DeleteCategoryEntry(APPSTARTUP_CATEGORY,
-                                              "ReadConfig Module", PR_TRUE);
-  }
-  return rv;
-}
-
-
-// The list of components we register
-static const nsModuleComponentInfo components[] = 
-{
-  { 
-    NS_AUTOCONFIG_CLASSNAME, 
-    NS_AUTOCONFIG_CID, 
-    NS_AUTOCONFIG_CONTRACTID, 
-    nsAutoConfigConstructor
-  },
-  { 
-    NS_READCONFIG_CLASSNAME,
-    NS_READCONFIG_CID,
-    NS_READCONFIG_CONTRACTID,
-    nsReadConfigConstructor,
-    RegisterReadConfig,
-    UnRegisterReadConfig
-  },
+NS_DEFINE_NAMED_CID(NS_AUTOCONFIG_CID);
+NS_DEFINE_NAMED_CID(NS_READCONFIG_CID);
 #if defined(MOZ_LDAP_XPCOM)
-  { 
-    "LDAPSyncQuery module", 
-    NS_LDAPSYNCQUERY_CID, 
-    "@mozilla.org/ldapsyncquery;1", 
-    nsLDAPSyncQueryConstructor
-  },
+NS_DEFINE_NAMED_CID(NS_LDAPSYNCQUERY_CID);
 #endif
+
+static const mozilla::Module::CIDEntry kAutoConfigCIDs[] = {
+  { &kNS_AUTOCONFIG_CID, false, NULL, nsAutoConfigConstructor },
+  { &kNS_READCONFIG_CID, false, NULL, nsReadConfigConstructor },
+#if defined(MOZ_LDAP_XPCOM)
+  { &kNS_LDAPSYNCQUERY_CID, false, NULL, nsLDAPSyncQueryConstructor },
+#endif
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(nsAutoConfigModule, components)
+static const mozilla::Module::ContractIDEntry kAutoConfigContracts[] = {
+  { NS_AUTOCONFIG_CONTRACTID, &kNS_AUTOCONFIG_CID },
+  { NS_READCONFIG_CONTRACTID, &kNS_READCONFIG_CID },
+#if defined(MOZ_LDAP_XPCOM)
+  { "@mozilla.org/ldapsyncquery;1", &kNS_LDAPSYNCQUERY_CID },
+#endif
+  { NULL }
+};
+
+static const mozilla::Module::CategoryEntry kAutoConfigCategories[] = {
+  { "pref-config-startup", "ReadConfig Module", NS_READCONFIG_CONTRACTID },
+  { NULL }
+};
+
+static const mozilla::Module kAutoConfigModule = {
+  mozilla::Module::kVersion,
+  kAutoConfigCIDs,
+  kAutoConfigContracts,
+  kAutoConfigCategories
+};
+
+NSMODULE_DEFN(nsAutoConfigModule) = &kAutoConfigModule;

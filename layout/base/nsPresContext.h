@@ -960,6 +960,20 @@ public:
     return nsnull;
   }
 
+  void NotifyDestroyingFrame(nsIFrame* aFrame)
+  {
+    PropertyTable()->DeleteAllFor(aFrame);
+  }
+  inline void ForgetUpdatePluginGeometryFrame(nsIFrame* aFrame);
+
+  void SetContainsUpdatePluginGeometryFrame(PRBool aValue)
+  {
+    mContainsUpdatePluginGeometryFrame = aValue;
+  }
+
+  PRBool MayHaveFixedBackgroundFrames() { return mMayHaveFixedBackgroundFrames; }
+  void SetHasFixedBackgroundFrame() { mMayHaveFixedBackgroundFrames = PR_TRUE; }
+
   PRUint32 EstimateMemoryUsed() {
     PRUint32 result = 0;
 
@@ -1126,6 +1140,7 @@ protected:
   unsigned              mPendingThemeChanged : 1;
   unsigned              mPendingMediaFeatureValuesChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
+  unsigned              mMayHaveFixedBackgroundFrames : 1;
 
   // Is the current mUserFontSet valid?
   unsigned              mUserFontSetDirty : 1;
@@ -1142,6 +1157,8 @@ protected:
 
   unsigned              mProcessingRestyles : 1;
   unsigned              mProcessingAnimationStyleChange : 1;
+
+  unsigned              mContainsUpdatePluginGeometryFrame : 1;
 
   // Cache whether we are chrome or not because it is expensive.  
   // mIsChromeIsCached tells us if mIsChrome is valid or we need to get the
@@ -1204,10 +1221,9 @@ public:
   /**
    * Iterate through all plugins that are registered for geometry updates
    * and update their position and clip region to match the current frame
-   * tree. Only frames at or under aChangedRoot can have changed their
-   * geometry.
+   * tree.
    */
-  void UpdatePluginGeometry(nsIFrame* aChangedRoot);
+  void UpdatePluginGeometry();
 
   /**
    * Iterate through all plugins that are registered for geometry updates
@@ -1228,9 +1244,46 @@ public:
 
   virtual PRBool IsRoot() { return PR_TRUE; }
 
+  /**
+   * This method is called off an event to force the plugin geometry to
+   * be updated. First we try to paint, since updating plugin geometry
+   * during paint is best for keeping plugins in sync with content.
+   * But we also force geometry updates in case painting doesn't work.
+   */
+  void ForcePluginGeometryUpdate();
+
+  /**
+   * Call this after reflow and scrolling to ensure that the geometry
+   * of any windowed plugins is updated. aFrame is the root of the
+   * frame subtree whose geometry has changed.
+   */
+  void RequestUpdatePluginGeometry(nsIFrame* aFrame);
+
+  /**
+   * Call this when a frame is being destroyed and
+   * mContainsUpdatePluginGeometryFrame is set in the frame's prescontext.
+   */
+  void RootForgetUpdatePluginGeometryFrame(nsIFrame* aFrame);
+
 private:
   nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
+  // if mNeedsToUpdatePluginGeometry is set, then this is the frame to
+  // use as the root of the subtree to search for plugin updates, or
+  // null to use the root frame of this prescontext
+  nsIFrame* mUpdatePluginGeometryForFrame;
+  PRPackedBool mNeedsToUpdatePluginGeometry;
 };
+
+inline void
+nsPresContext::ForgetUpdatePluginGeometryFrame(nsIFrame* aFrame)
+{
+  if (mContainsUpdatePluginGeometryFrame) {
+    nsRootPresContext* rootPC = GetRootPresContext();
+    if (rootPC) {
+      rootPC->RootForgetUpdatePluginGeometryFrame(aFrame);
+    }
+  }
+}
 
 #ifdef DEBUG
 

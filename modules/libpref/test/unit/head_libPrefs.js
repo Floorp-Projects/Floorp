@@ -40,6 +40,21 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
+function do_check_throws(f, result, stack)
+{
+  if (!stack)
+    stack = Components.stack.caller;
+
+  try {
+    f();
+  } catch (exc) {
+    if (exc.result == result)
+      return;
+    do_throw("expected result " + result + ", caught " + exc, stack);
+  }
+  do_throw("expected result " + result + ", none thrown", stack);
+}
+
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
 // Register current test directory as provider for the profile directory.

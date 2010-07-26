@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// install.rdf size, icon.png size, subfile.txt size
+const ADDON_SIZE = 635 + 15 + 26;
+
 // This verifies the functionality of getResourceURI
 // There are two cases - with a filename it returns an nsIFileURL to the filename
 // and with no parameters, it returns an nsIFileURL to the root of the addon
@@ -14,17 +17,21 @@ function run_test() {
 
   AddonManager.getInstallForFile(do_get_addon("test_getresource"), function(aInstall) {
     do_check_true(aInstall.addon.hasResource("install.rdf"));
-    do_check_eq(aInstall.addon.getResourceURI().spec, aInstall.sourceURL);
+    do_check_eq(aInstall.addon.getResourceURI().spec, aInstall.sourceURI.spec);
 
     do_check_true(aInstall.addon.hasResource("icon.png"));
-    do_check_eq(aInstall.addon.getResourceURI("icon.png").spec, "jar:" + aInstall.sourceURL + "!/icon.png");
+    do_check_eq(aInstall.addon.getResourceURI("icon.png").spec,
+                "jar:" + aInstall.sourceURI.spec + "!/icon.png");
 
     do_check_false(aInstall.addon.hasResource("missing.txt"));
 
     do_check_true(aInstall.addon.hasResource("subdir/subfile.txt"));
-    do_check_eq(aInstall.addon.getResourceURI("subdir/subfile.txt").spec, "jar:" + aInstall.sourceURL + "!/subdir/subfile.txt");
+    do_check_eq(aInstall.addon.getResourceURI("subdir/subfile.txt").spec,
+                "jar:" + aInstall.sourceURI.spec + "!/subdir/subfile.txt");
 
     do_check_false(aInstall.addon.hasResource("subdir/missing.txt"));
+
+    do_check_eq(aInstall.addon.size, ADDON_SIZE);
 
     completeAllInstalls([aInstall], function() {
       restartManager();
@@ -64,6 +71,8 @@ function run_test() {
         do_check_eq(uri.file.path, file.path);
 
         do_check_false(a1.hasResource("subdir/missing.txt"));
+
+        do_check_eq(a1.size, ADDON_SIZE);
 
         a1.uninstall();
 

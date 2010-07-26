@@ -54,8 +54,10 @@ public:
 protected:
   nsRefPtr<nsGlobalWindow> mWindow;
 
-  // If aOffset is non-null, it gets filled in with an offset, in app
-  // units, that should be added to any event offset we're given.
+  // If aOffset is non-null, it gets filled in with the offset of the root
+  // frame of our window to the nearest widget in the app units of our window.
+  // Add this offset to any event offset we're given to make it relative to the
+  // widget returned by GetWidget.
   nsIWidget* GetWidget(nsPoint* aOffset = nsnull);
   nsIWidget* GetWidgetForElement(nsIDOMElement* aElement);
 

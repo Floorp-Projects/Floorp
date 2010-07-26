@@ -53,17 +53,18 @@ class BasicSourceLineResolver : public SourceLineResolverInterface {
   // Adds a module to this resolver, returning true on success.
   // The given map_file is read into memory, and its symbols will be
   // retained until the BasicSourceLineResolver is destroyed.
-  virtual bool LoadModule(const string &module_name, const string &map_file);
+  virtual bool LoadModule(const CodeModule *module, const string &map_file);
 
   // Exactly the same as above, except the given map_buffer is used
   // for symbols. 
-  virtual bool LoadModuleUsingMapBuffer(const string &module_name,
+  virtual bool LoadModuleUsingMapBuffer(const CodeModule *module,
                                         const string &map_buffer);
 
-  virtual bool HasModule(const string &module_name) const;
-  virtual void FillSourceLineInfo(StackFrame *frame) const;
-  virtual WindowsFrameInfo *FindWindowsFrameInfo(const StackFrame *frame) const;
-  virtual CFIFrameInfo *FindCFIFrameInfo(const StackFrame *frame) const;
+  void UnloadModule(const CodeModule *module);
+  virtual bool HasModule(const CodeModule *module);
+  virtual void FillSourceLineInfo(StackFrame *frame);
+  virtual WindowsFrameInfo *FindWindowsFrameInfo(const StackFrame *frame);
+  virtual CFIFrameInfo *FindCFIFrameInfo(const StackFrame *frame);
 
  private:
   template<class T> class MemAddrMap;

@@ -69,7 +69,7 @@ NS_IMETHODIMP_(nsrefcnt) nsPrintProgress::Release(void)
     mRefCnt = 1; /* stabilize */
     /* enable this to find non-threadsafe destructors: */
     /* NS_ASSERT_OWNINGTHREAD(nsPrintProgress); */
-    NS_DELETEXPCOM(this);
+    delete this;
     return 0;
   }
   return count;

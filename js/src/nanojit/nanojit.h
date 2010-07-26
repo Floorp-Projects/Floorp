@@ -111,7 +111,7 @@ namespace nanojit
 
         #define __NanoAssertMsgf(a, file_, line_, f, ...)  \
             if (!(a)) { \
-                avmplus::AvmLog("Assertion failed: " f "%s (%s:%d)\n", __VA_ARGS__, #a, file_, line_); \
+                avmplus::AvmLog("Assertion failure: " f "%s (%s:%d)\n", __VA_ARGS__, #a, file_, line_); \
                 avmplus::AvmAssertFail(""); \
             }
 
@@ -148,9 +148,7 @@ namespace nanojit
 }
 
 #ifdef AVMPLUS_VERBOSE
-    #ifndef NJ_VERBOSE_DISABLED
-        #define NJ_VERBOSE 1
-    #endif
+    #define NJ_VERBOSE 1
 #endif
 
 #ifdef NJ_NO_VARIADIC_MACROS

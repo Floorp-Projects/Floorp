@@ -58,8 +58,8 @@ public:
     nsSOCKSSocketProvider(PRUint32 version) : mVersion(version) {}
     virtual ~nsSOCKSSocketProvider() {}
     
-    static NS_METHOD CreateV4(nsISupports *, REFNSIID aIID, void **aResult);
-    static NS_METHOD CreateV5(nsISupports *, REFNSIID aIID, void **aResult);
+    static nsresult CreateV4(nsISupports *, REFNSIID aIID, void **aResult);
+    static nsresult CreateV5(nsISupports *, REFNSIID aIID, void **aResult);
     
 private:
     PRUint32 mVersion; // NS_SOCKS_VERSION_4 or 5

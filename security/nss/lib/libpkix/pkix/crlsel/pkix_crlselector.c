@@ -331,7 +331,7 @@ pkix_CRLSelector_Duplicate(
         void *plContext)
 {
         PKIX_CRLSelector *old;
-        PKIX_CRLSelector *new;
+        PKIX_CRLSelector *new = NULL;
 
         PKIX_ENTER(CRLSELECTOR, "pkix_CRLSelector_Duplicate");
         PKIX_NULLCHECK_TWO(object, pNewObject);

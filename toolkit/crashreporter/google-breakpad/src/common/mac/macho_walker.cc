@@ -43,6 +43,7 @@ extern "C" {  // necessary for Leopard
   #include <unistd.h>
 }
 
+#include "common/mac/byteswap.h"
 #include "common/mac/macho_walker.h"
 #include "common/mac/macho_utilities.h"
 
@@ -61,20 +62,11 @@ MachoWalker::~MachoWalker() {
 }
 
 int MachoWalker::ValidateCPUType(int cpu_type) {
-  // If the user didn't specify, try to use the local architecture.  If that
-  // fails, use the base type for the executable.
+  // If the user didn't specify, use the local architecture.
   if (cpu_type == 0) {
     const NXArchInfo *arch = NXGetLocalArchInfo();
-    if (arch)
-      cpu_type = arch->cputype;
-    else
-#if __ppc__
-      cpu_type = CPU_TYPE_POWERPC;
-#elif __i386__
-    cpu_type = CPU_TYPE_X86;
-#else
-#error Unknown architecture -- are you on a PDP-11?
-#endif
+    assert(arch);
+    cpu_type = arch->cputype;
   }
 
   return cpu_type;
@@ -134,7 +126,7 @@ bool MachoWalker::FindHeader(int cpu_type, off_t &offset) {
       return false;
 
     if (magic == MH_CIGAM || magic == MH_CIGAM_64)
-      header_cpu_type = NXSwapInt(header_cpu_type);
+      header_cpu_type = ByteSwap(header_cpu_type);
 
     if (valid_cpu_type != header_cpu_type)
       return false;

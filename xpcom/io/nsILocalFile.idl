@@ -55,8 +55,6 @@
  * that is accessible via the local file system.
  *
  * It follows the same string conventions as nsIFile.
- *
- * @status FROZEN
  */
 [scriptable, uuid(aa610f20-a889-11d3-8c81-000064657374)]
 interface nsILocalFile : nsIFile

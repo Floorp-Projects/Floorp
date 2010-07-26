@@ -37,34 +37,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 // This only implements nsICommandLineHandler, since it needs
 // to handle multiple arguments.
 
-const TP_CMDLINE_CONTRACTID     = "@mozilla.org/commandlinehandler/general-startup;1?type=tp";
-const TP_CMDLINE_CLSID          = Components.ID('{8AF052F5-8EFE-4359-8266-E16498A82E8B}');
-const CATMAN_CONTRACTID         = "@mozilla.org/categorymanager;1";
 const nsISupports               = Components.interfaces.nsISupports;
   
-const nsICategoryManager        = Components.interfaces.nsICategoryManager;
 const nsICommandLine            = Components.interfaces.nsICommandLine;
 const nsICommandLineHandler     = Components.interfaces.nsICommandLineHandler;
-const nsIComponentRegistrar     = Components.interfaces.nsIComponentRegistrar;
 const nsISupportsString         = Components.interfaces.nsISupportsString;
 const nsIWindowWatcher          = Components.interfaces.nsIWindowWatcher;
 
 function PageLoaderCmdLineHandler() {}
 PageLoaderCmdLineHandler.prototype =
 {
+  classID: Components.ID('{8AF052F5-8EFE-4359-8266-E16498A82E8B}'),
+
   /* nsISupports */
-  QueryInterface : function handler_QI(iid) {
-    if (iid.equals(nsISupports))
-      return this;
-
-    if (nsICommandLineHandler && iid.equals(nsICommandLineHandler))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface : XPCOMUtils.generateQI([nsICommandLineHandler]),
 
   /* nsICommandLineHandler */
   handle : function handler_handle(cmdLine) {
@@ -125,69 +116,4 @@ PageLoaderCmdLineHandler.prototype =
 
 };
 
-
-var PageLoaderCmdLineFactory =
-{
-  createInstance : function(outer, iid)
-  {
-    if (outer != null) {
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    }
-
-    return new PageLoaderCmdLineHandler().QueryInterface(iid);
-  }
-};
-
-
-var PageLoaderCmdLineModule =
-{
-  registerSelf : function(compMgr, fileSpec, location, type)
-  {
-    compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
-
-    compMgr.registerFactoryLocation(TP_CMDLINE_CLSID,
-                                    "PageLoader CommandLine Service",
-                                    TP_CMDLINE_CONTRACTID,
-                                    fileSpec,
-                                    location,
-                                    type);
-
-    var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
-    catman.addCategoryEntry("command-line-handler",
-                            "m-tp",
-                            TP_CMDLINE_CONTRACTID, true, true);
-  },
-
-  unregisterSelf : function(compMgr, fileSpec, location)
-  {
-    compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
-
-    compMgr.unregisterFactoryLocation(TP_CMDLINE_CLSID, fileSpec);
-    catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
-    catman.deleteCategoryEntry("command-line-handler",
-                               "m-tp", true);
-  },
-
-  getClassObject : function(compMgr, cid, iid)
-  {
-    if (cid.equals(TP_CMDLINE_CLSID)) {
-      return PageLoaderCmdLineFactory;
-    }
-
-    if (!iid.equals(Components.interfaces.nsIFactory)) {
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
-  canUnload : function(compMgr)
-  {
-    return true;
-  }
-};
-
-
-function NSGetModule(compMgr, fileSpec) {
-  return PageLoaderCmdLineModule;
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([PageLoaderCmdLineHandler]);

@@ -53,7 +53,10 @@ ifdef MOZILLA_OFFICIAL
 DEFINES += -DOFFICIAL_BUILD=1
 endif
 
-# EXTRA_COMPONENTS installs components written in JS to dist/bin/components
+EXTRA_COMPONENTS = \
+  src/nsSafebrowsingApplication.manifest \
+  $(NULL)
+
 EXTRA_PP_COMPONENTS = \
          src/nsSafebrowsingApplication.js \
          $(NULL)

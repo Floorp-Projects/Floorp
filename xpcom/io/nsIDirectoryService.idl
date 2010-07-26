@@ -42,8 +42,6 @@
  * nsIDirectoryServiceProvider
  *
  * Used by Directory Service to get file locations.
- *
- * @status FROZEN
  */
 
 [scriptable, uuid(bbf8cab0-d43a-11d3-8cc2-00609792278c)]
@@ -73,8 +71,6 @@ interface nsIDirectoryServiceProvider: nsISupports
  *
  * An extension of nsIDirectoryServiceProvider which allows
  * multiple files to be returned for the given key.
- *
- * @status FROZEN
  */
 
 [scriptable, uuid(2f977d4b-5485-11d4-87e2-0010a4e75ef2)]
@@ -98,8 +94,6 @@ interface nsIDirectoryServiceProvider2: nsIDirectoryServiceProvider
 
 /**
  * nsIDirectoryService
- *
- * @status FROZEN
  */
 
 [scriptable, uuid(57a66a60-d43a-11d3-8cc2-00609792278c)]

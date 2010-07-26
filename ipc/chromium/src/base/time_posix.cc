@@ -8,7 +8,11 @@
 #include <mach/mach_time.h>
 #endif
 #include <sys/time.h>
+#ifdef ANDROID
+#include <time64.h>
+#else
 #include <time.h>
+#endif
 
 #include <limits>
 
@@ -62,10 +66,14 @@ Time Time::FromExploded(bool is_local, const Exploded& exploded) {
   timestruct.tm_zone   = NULL;  // not a POSIX field, so mktime/timegm ignore
 
   time_t seconds;
+#ifdef ANDROID
+    seconds = mktime(&timestruct);
+#else
   if (is_local)
     seconds = mktime(&timestruct);
   else
     seconds = timegm(&timestruct);
+#endif
 
   int64 milliseconds;
   // Handle overflow.  Clamping the range to what mktime and timegm might

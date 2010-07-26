@@ -52,7 +52,8 @@
   /* as Type42 fonts have no Private dict,         */
   /* we set the last argument of T1_FIELD_XXX to 0 */
   static const
-  T1_FieldRec  t42_keywords[] = {
+  T1_FieldRec  t42_keywords[] =
+  {
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  T1_FontInfo
@@ -268,7 +269,8 @@
                                                  temp_scale ) >> 16 );
 
     /* we need to scale the values by 1.0/temp_scale */
-    if ( temp_scale != 0x10000L ) {
+    if ( temp_scale != 0x10000L )
+    {
       temp[0] = FT_DivFix( temp[0], temp_scale );
       temp[1] = FT_DivFix( temp[1], temp_scale );
       temp[2] = FT_DivFix( temp[2], temp_scale );

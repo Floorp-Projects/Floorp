@@ -375,15 +375,18 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
 
     // generate an html html element
     htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::html, 0, kNameSpaceID_XHTML);
-    nsCOMPtr<nsIContent> htmlElement = NS_NewHTMLHtmlElement(htmlNodeInfo);
+    nsCOMPtr<nsIContent> htmlElement =
+      NS_NewHTMLHtmlElement(htmlNodeInfo.forget());
 
     // generate an html head element
     htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::head, 0, kNameSpaceID_XHTML);
-    nsCOMPtr<nsIContent> headElement = NS_NewHTMLHeadElement(htmlNodeInfo);
+    nsCOMPtr<nsIContent> headElement =
+      NS_NewHTMLHeadElement(htmlNodeInfo.forget());
 
-    // generate an html body element
+    // generate an html body elemment
     htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::body, 0, kNameSpaceID_XHTML);
-    nsCOMPtr<nsIContent> bodyElement = NS_NewHTMLBodyElement(htmlNodeInfo);
+    nsCOMPtr<nsIContent> bodyElement =
+      NS_NewHTMLBodyElement(htmlNodeInfo.forget());
 
     // blat in the structure
     if (htmlElement && headElement && bodyElement) {
@@ -513,123 +516,6 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
     NS_IF_ADDREF(*aDocViewer);
   }
    
-  return rv;
-}
-
-static nsresult
-RegisterTypes(nsICategoryManager* aCatMgr,
-              const char* const* aTypes,
-              PRBool aPersist = PR_TRUE)
-{
-  nsresult rv = NS_OK;
-  while (*aTypes) {
-    const char* contentType = *aTypes++;
-#ifdef NOISY_REGISTRY
-    printf("Register %s => %s\n", contractid, aPath);
-#endif
-    // add the MIME types layout can handle to the handlers category.
-    // this allows users of layout's viewers (the docshell for example)
-    // to query the types of viewers layout can create.
-    rv = aCatMgr->AddCategoryEntry("Gecko-Content-Viewers", contentType,
-                                   CONTENT_DLF_CONTRACTID,
-                                   aPersist, PR_TRUE, nsnull);
-    if (NS_FAILED(rv)) break;
-  }
-  return rv;
-}
-
-static nsresult UnregisterTypes(nsICategoryManager* aCatMgr,
-                                const char* const* aTypes)
-{
-  nsresult rv = NS_OK;
-  while (*aTypes) {
-    const char* contentType = *aTypes++;
-    rv = aCatMgr->DeleteCategoryEntry("Gecko-Content-Viewers", contentType, PR_TRUE);
-    if (NS_FAILED(rv)) break;
-  }
-  return rv;
-
-}
-
-#ifdef MOZ_SVG
-NS_IMETHODIMP
-nsContentDLF::RegisterSVG()
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  return RegisterTypes(catmgr, gSVGTypes, PR_FALSE);
-}
-
-NS_IMETHODIMP
-nsContentDLF::UnregisterSVG()
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  return UnregisterTypes(catmgr, gSVGTypes);
-}
-#endif
-
-NS_IMETHODIMP
-nsContentDLF::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
-                                        nsIFile* aPath,
-                                        const char *aLocation,
-                                        const char *aType,
-                                        const nsModuleComponentInfo* aInfo)
-{
-  NS_TIME_FUNCTION;
-
-  nsresult rv;
-
-  nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  do {
-    rv = RegisterTypes(catmgr, gHTMLTypes);
-    if (NS_FAILED(rv))
-      break;
-    rv = RegisterTypes(catmgr, gXMLTypes);
-    if (NS_FAILED(rv))
-      break;
-    rv = RegisterTypes(catmgr, gXULTypes);
-    if (NS_FAILED(rv))
-      break;
-  } while (PR_FALSE);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsContentDLF::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
-                                          nsIFile* aPath,
-                                          const char* aRegistryLocation,
-                                          const nsModuleComponentInfo* aInfo)
-{
-  NS_TIME_FUNCTION;
-
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  do {
-    rv = UnregisterTypes(catmgr, gHTMLTypes);
-    if (NS_FAILED(rv))
-      break;
-    rv = UnregisterTypes(catmgr, gXMLTypes);
-    if (NS_FAILED(rv))
-      break;
-#ifdef MOZ_SVG
-    rv = UnregisterTypes(catmgr, gSVGTypes);
-    if (NS_FAILED(rv))
-      break;
-#endif
-    rv = UnregisterTypes(catmgr, gXULTypes);
-    if (NS_FAILED(rv))
-      break;
-  } while (PR_FALSE);
-
   return rv;
 }
 

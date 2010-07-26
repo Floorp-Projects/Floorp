@@ -563,6 +563,10 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-home?size=toolbar&state=disabled");
 }
 
+#tabcandy-button {
+  list-style-image: url(chrome://browser/skin/tabcandy/tabcandy.png);
+}
+
 #downloads-button {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
@@ -985,7 +989,16 @@ toolbar[iconsize="small"] #fullscreen-button {
 }
 
 .popup-notification-icon[popupid="geolocation"] {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+  list-style-image: url(chrome://browser/skin/Geolocation-64.png);
+}
+
+.popup-notification-icon[popupid="xpinstall-disabled"],
+.popup-notification-icon[popupid="addon-install-blocked"],
+.popup-notification-icon[popupid="addon-install-failed"],
+.popup-notification-icon[popupid="addon-install-complete"] {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
+  width: 32px;
+  height: 32px;
 }
 
 /* Notification icon box */
@@ -993,10 +1006,17 @@ toolbar[iconsize="small"] #fullscreen-button {
   margin: 0 3px;
 }
 
-#geo-notification-icon {
-  list-style-image: url(chrome://browser/skin/Geo.png);
+.notification-anchor-icon {
   width: 16px;
   height: 16px;
+}
+
+#geo-notification-icon {
+  list-style-image: url(chrome://browser/skin/Geolocation-16.png);
+}
+
+#addons-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.png);
 }
 
 /* Feed icon */
@@ -1172,7 +1192,8 @@ statusbarpanel#statusbar-display {
 }
 
 #TabsToolbar > toolbarbutton,
-#TabsToolbar > toolbarpaletteitem > toolbarbutton {
+#TabsToolbar > toolbarpaletteitem > toolbarbutton,
+#TabsToolbar > #bookmarks-menu-button-container > #bookmarks-menu-button {
   margin-bottom: 1px;
 }
 
@@ -1236,15 +1257,6 @@ statusbarpanel#statusbar-display {
 }
 .tabbrowser-tab[busy][progress="8"] > .tab-icon-image {
   -moz-image-region: rect(0, 144px, 16px, 128px);
-}
-
-#context_newTab {
-  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
-  -moz-image-region: rect(0px 64px 16px 48px);
-}
-
-#context_newTab[disabled] {
-  -moz-image-region: rect(16px 64px 32px 48px);
 }
 
 #context_reloadTab {
@@ -1488,3 +1500,26 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 .allTabs-preview-label {
   -moz-transform: translate(0, 2px);
 }
+
+/* Inspector / Highlighter */
+
+#highlighter-panel {
+  -moz-appearance: none;
+  -moz-window-shadow: none;
+}
+
+listitem.style-selector {
+  background-color: DarkGray;
+  color: white;
+}
+
+listitem.style-section {
+  background-color: LightGray;
+  color: black;
+  font-weight: bold;
+}
+
+panel[dimmed="true"] {
+  opacity: 0.5;
+}
+

@@ -152,12 +152,7 @@ int main(int argc, char** argv) {
   ScopedXPCOM xpcom("TestRegion");
   if (xpcom.failed())
     return -1;
-  if (NS_FAILED(nsRegion::InitStatic())) {
-    fail("Could not initialize region statics");
-    return -1;
-  }
   if (!TestLargestRegion::Test())
     return -1;
-  nsRegion::ShutdownStatic();
   return 0;
 }

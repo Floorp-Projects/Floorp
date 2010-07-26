@@ -13,9 +13,7 @@ child:
     __delete__();
 
 state LIVE:
-    send PTestSelfManage goto DEAD;
-
-state DEAD:
+    send PTestSelfManage goto LIVE;
     send __delete__;
 };
 

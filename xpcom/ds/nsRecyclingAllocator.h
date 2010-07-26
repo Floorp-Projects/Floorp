@@ -64,7 +64,6 @@
 #include "nscore.h"
 #include "prlock.h"
 #include "nsIRecyclingAllocator.h"
-#include "nsIGenericFactory.h"
 
 #define NS_DEFAULT_RECYCLE_TIMEOUT 10  // secs
 #define NS_ALLOCATOR_OVERHEAD_BYTES (sizeof(PRSize)) // bytes

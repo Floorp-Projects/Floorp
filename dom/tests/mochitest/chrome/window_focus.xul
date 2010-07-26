@@ -380,8 +380,8 @@ function startTest()
 
   gLastFocusMethod = fm.FLAG_BYKEY;
   if (gPartialTabbing) {
-    var partialTabList = ["t3", "t5", "t9", "t10", "t11", "t12", "t13", "t14",
-                          "t16", "t19", "t27", "t30"];
+    var partialTabList = ["t3", "t5", "t9", "t10", "t11", "t12", "t13", "t14", "t15",
+                          "t16", "t19", "t20", "t21", "t22", "t26", "t27", "t28", "t29", "t30"];
     for (var idx = 0; idx < partialTabList.length; idx++) {
       expectFocusShift(pressTab, null, getById(partialTabList[idx]), true, "partial tab key " + partialTabList[idx]);
     }

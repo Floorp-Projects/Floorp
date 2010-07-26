@@ -41,7 +41,6 @@
 #include "nsCOMPtr.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsICharRepresentable.h"
 #include "uconvutil.h"
 #include "mozilla/Mutex.h"
 
@@ -151,7 +150,6 @@ protected:
       PRUnichar * aDest, PRInt32 * aDestLength) = 0;
 
   void FillBuffer(const char ** aSrc, PRInt32 aSrcLength);
-  void DoubleBuffer();
 
 public:
 
@@ -296,7 +294,7 @@ protected:
 //----------------------------------------------------------------------
 // Class nsBasicEncoder [declaration]
 
-class nsBasicEncoder : public nsIUnicodeEncoder, public nsICharRepresentable
+class nsBasicEncoder : public nsIUnicodeEncoder
 #ifdef NS_DEBUG
                        ,public nsIBasicEncoder
 #endif
@@ -398,10 +396,6 @@ public:
   NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, 
                           PRInt32 aSrcLength, 
                           PRInt32 * aDestLength);
-
-  //--------------------------------------------------------------------
-  // Interface nsICharRepresentable [declaration]
-  NS_IMETHOD FillInfo(PRUint32 *aInfo) = 0;
 };
 
 //----------------------------------------------------------------------
@@ -433,7 +427,6 @@ public:
    * Class destructor.
    */
   virtual ~nsTableEncoderSupport();
-  NS_IMETHOD FillInfo( PRUint32 *aInfo);
 
 protected:
 
@@ -474,7 +467,6 @@ public:
    * Class destructor.
    */
   virtual ~nsMultiTableEncoderSupport();
-  NS_IMETHOD FillInfo( PRUint32 *aInfo);
 
 protected:
 

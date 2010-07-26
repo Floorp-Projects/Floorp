@@ -43,7 +43,7 @@
 /**
  * A character set converter from MacFarsi to Unicode.
  */
-NS_METHOD
+nsresult
 nsMacFarsiToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult);
 

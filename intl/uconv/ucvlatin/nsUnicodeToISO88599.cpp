@@ -45,7 +45,7 @@ static const PRUint16 g_ufMappingTable[] = {
 #include "8859-9.uf"
 };
 
-NS_METHOD
+nsresult
 nsUnicodeToISO88599Constructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult) 
 {

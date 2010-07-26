@@ -54,7 +54,6 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptinfo.h"
-#include "nsIXPTLoader.h"
 
 #include "nsIServiceManager.h"
 #include "nsILocalFile.h"
@@ -426,35 +425,21 @@ private:
 
 /***************************************************************************/
 
-class xptiFileType
-{
-public:
-    enum Type {UNKNOWN = -1, XPT = 0, ZIP = 1 };
-
-    static Type GetType(const nsACString& name);
-private:
-    xptiFileType(); // no implementation
-};
-
-/***************************************************************************/
-
 class xptiInterfaceInfoManager 
     : public nsIInterfaceInfoSuperManager
-    , public nsIXPTLoaderSink
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEINFOMANAGER
     NS_DECL_NSIINTERFACEINFOSUPERMANAGER
-    NS_DECL_NSIXPTLOADERSINK
 
 public:
     static xptiInterfaceInfoManager* GetSingleton();
     static void FreeInterfaceInfoManager();
 
-    xptiWorkingSet*  GetWorkingSet() {return &mWorkingSet;}
+    void RegisterFile(nsILocalFile* aFile);
+    void RegisterInputStream(nsIInputStream* aStream);
 
-    PRBool GetApplicationDir(nsILocalFile** aDir);
-    PRBool GetCloneOfManifestLocation(nsILocalFile** aDir);
+    xptiWorkingSet*  GetWorkingSet() {return &mWorkingSet;}
 
     static PRLock* GetResolveLock(xptiInterfaceInfoManager* self = nsnull) 
         {if(!self && !(self = GetSingleton())) 
@@ -477,8 +462,6 @@ private:
     xptiInterfaceInfoManager();
     ~xptiInterfaceInfoManager();
 
-    void RegisterDirectory(nsILocalFile* aDirectory);
-    void RegisterFile(nsILocalFile* aFile, xptiFileType::Type type);
     void RegisterXPTHeader(XPTHeader* aHeader);
                           
     XPTHeader* ReadXPTFile(nsILocalFile* aFile);

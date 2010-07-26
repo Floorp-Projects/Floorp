@@ -50,9 +50,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsPNGEncoder, imgIEncoder, nsIInputStream, nsIAsyn
 
 nsPNGEncoder::nsPNGEncoder() : mPNG(nsnull), mPNGinfo(nsnull),
                                mIsAnimation(PR_FALSE),
+                               mFinished(PR_FALSE),
                                mImageBuffer(nsnull), mImageBufferSize(0),
                                mImageBufferUsed(0), mImageBufferReadPoint(0),
-                               mFinished(PR_FALSE), mCallback(nsnull),
+                               mCallback(nsnull),
                                mCallbackTarget(nsnull), mNotifyThreshold(0),
                                mMonitor("PNG Encoder Monitor")
 {

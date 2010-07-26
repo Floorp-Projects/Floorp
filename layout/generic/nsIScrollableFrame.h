@@ -202,6 +202,13 @@ public:
    * after being restored from history.
    */
   NS_IMETHOD PostScrolledAreaEventForCurrentArea() = 0;
+
+  /**
+   * Returns true if this scrollframe is being "actively scrolled".
+   * This basically means that we should allocate resources in the
+   * expectation that scrolling is going to happen.
+   */
+  virtual PRBool IsScrollingActive() = 0;
 };
 
 #endif

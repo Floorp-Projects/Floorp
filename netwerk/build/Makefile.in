@@ -66,6 +66,10 @@ SHARED_LIBRARY_LIBS = \
     ../protocol/$(d)/$(LIB_PREFIX)nk$(d)_s.$(LIB_SUFFIX)) \
   $(NULL)
 
+ifdef MOZ_IPC
+SHARED_LIBRARY_LIBS += ../ipc/$(LIB_PREFIX)neckoipc_s.$(LIB_SUFFIX)
+endif
+
 ifeq ($(OS_ARCH),WINNT)
     SHARED_LIBRARY_LIBS += \
         ../system/win32/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
@@ -165,6 +169,8 @@ ifeq ($(OS_ARCH),AIX)
 EXTRA_DSO_LDOPTS += -lodm -lcfg
 endif
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)

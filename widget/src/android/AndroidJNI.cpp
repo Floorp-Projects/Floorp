@@ -56,7 +56,6 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv *, jclass, jobject event);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_setSurfaceView(JNIEnv *jenv, jclass, jobject sv);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_setInitialSize(JNIEnv *jenv, jclass, int width, int height);
-    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_putenv(JNIEnv *jenv, jclass, jstring map);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *, jclass);
 }
 
@@ -91,21 +90,6 @@ NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_setInitialSize(JNIEnv *jenv, jclass, int width, int height)
 {
     nsWindow::SetInitialAndroidBounds(gfxIntSize(width, height));
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_putenv(JNIEnv *jenv, jclass, jstring map)
-{
-    const char* str;
-    str = jenv->GetStringUTFChars(map, NULL);
-    if (str == NULL)
-        return;
-#ifdef DEBUG
-    __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", "putenv(%s)", str);
-#endif
-    putenv(strdup(str));
-    jenv->ReleaseStringUTFChars(map, str);
-    
 }
 
 NS_EXPORT void JNICALL

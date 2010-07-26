@@ -97,7 +97,7 @@ public:
         Close();
     }
 
-    static NS_METHOD
+    static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
@@ -148,7 +148,7 @@ public:
     nsFileOutputStream() : nsFileStream() {}
     virtual ~nsFileOutputStream() { nsFileOutputStream::Close(); }
     
-    static NS_METHOD
+    static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 };
 

@@ -87,8 +87,6 @@ var TestPilotWelcomePage = {
         stringKey: "testpilot.welcomePage.moreIconExplanation" },
       { id: "notification-info-text",
 	stringKey: "testpilot.welcomePage.notificationInfo" },
-      { id: "copyright-text",
-	stringKey: "testpilot.welcomePage.copyright" },
       { id: "privacy-policy-link",
 	stringKey: "testpilot.welcomePage.privacyPolicy" },
       { id: "legal-notices-link",

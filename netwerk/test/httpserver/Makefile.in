@@ -36,6 +36,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+$(warning httpserver XPI_NAME=$(XPI_NAME))
+
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
@@ -44,10 +46,20 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE          = test_necko
+NO_INTERFACES_MANIFEST = 1
 
 EXTRA_COMPONENTS = \
                    httpd.js \
                    $(NULL)
+
+ifdef XPI_NAME
+NO_JS_MANIFEST = 1
+USE_EXTENSION_MANIFEST = 1
+else
+EXTRA_COMPONENTS += \
+                   httpd.manifest \
+                   $(NULL)
+endif
 
 XPIDLSRCS       = \
                   nsIHttpServer.idl \

@@ -51,8 +51,6 @@ function FormHistory() {
 }
 
 FormHistory.prototype = {
-    classDescription : "FormHistory",
-    contractID       : "@mozilla.org/satchel/form-history;1",
     classID          : Components.ID("{0c1bb408-71a2-403f-854a-3a0659829ded}"),
     QueryInterface   : XPCOMUtils.generateQI([Ci.nsIFormHistory2, Ci.nsIObserver, Ci.nsIFormSubmitObserver, Ci.nsISupportsWeakReference]),
 
@@ -934,6 +932,4 @@ FormHistory.prototype = {
 };
 
 let component = [FormHistory];
-function NSGetModule (compMgr, fileSpec) {
-    return XPCOMUtils.generateModule(component);
-}
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

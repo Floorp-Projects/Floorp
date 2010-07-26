@@ -257,7 +257,7 @@ IDBCursor::~IDBCursor()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (mJSRuntime) {
-    JS_RemoveRootRT(mJSRuntime, &mCachedValue);
+    js_RemoveRoot(mJSRuntime, &mCachedValue);
   }
 }
 
@@ -324,87 +324,49 @@ IDBCursor::GetKey(nsIVariant** aKey)
 }
 
 NS_IMETHODIMP
-IDBCursor::GetValue(nsIVariant** aValue)
+IDBCursor::GetValue(JSContext* aCx,
+                    jsval* aValue)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsresult rv;
 
   if (mType == INDEX) {
-    nsCOMPtr<nsIWritableVariant> variant =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
-    if (!variant) {
-      NS_ERROR("Couldn't create variant!");
-      return NS_ERROR_FAILURE;
-    }
-
     const Key& value = mKeyData[mDataIndex].value;
     NS_ASSERTION(!value.IsUnset() && !value.IsNull(), "Bad key!");
-    if (value.IsInt()) {
-      rv = variant->SetAsInt64(value.IntValue());
-    }
-    else if (value.IsString()) {
-      rv = variant->SetAsAString(value.StringValue());
-    }
-    else {
-      NS_NOTREACHED("Bad key type!");
-    }
+
+    rv = IDBObjectStore::GetJSValFromKey(value, aCx, aValue);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = variant->SetWritable(PR_FALSE);;
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsIWritableVariant* result;
-    variant.forget(&result);
-    *aValue = result;
     return NS_OK;
   }
 
-  NS_WARNING("Using a slow path for GetValue! Fix this now!");
-
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-
-  nsAXPCNativeCallContext* cc;
-  rv = xpc->GetCurrentNativeCallContext(&cc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
-
-  jsval* retval;
-  rv = cc->GetRetValPtr(&retval);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (!mHaveCachedValue) {
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JSAutoRequest ar(cx);
+    JSAutoRequest ar(aCx);
 
     if (!mJSRuntime) {
-      JSRuntime* rt = JS_GetRuntime(cx);
-
-      JSBool ok = JS_AddNamedRootRT(rt, &mCachedValue,
-                                   "IDBCursor::mCachedValue");
+      JSRuntime* rt = JS_GetRuntime(aCx);
+      JSBool ok = js_AddRootRT(rt, &mCachedValue,
+                               "IDBCursor::mCachedValue");
       NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
       mJSRuntime = rt;
     }
 
     nsCOMPtr<nsIJSON> json(new nsJSON());
-    rv = json->DecodeToJSVal(mData[mDataIndex].value, cx, &mCachedValue);
+    rv = json->DecodeToJSVal(mData[mDataIndex].value, aCx, &mCachedValue);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mHaveCachedValue = true;
   }
 
-  *retval = mCachedValue;
-  cc->SetReturnValueWasSet(PR_TRUE);
+  *aValue = mCachedValue;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-IDBCursor::Continue(nsIVariant* aKey,
+IDBCursor::Continue(jsval aKey,
+                    JSContext* aCx,
                     PRUint8 aOptionalArgCount,
                     PRBool* _retval)
 {
@@ -419,7 +381,7 @@ IDBCursor::Continue(nsIVariant* aKey,
   }
 
   Key key;
-  nsresult rv = IDBObjectStore::GetKeyFromVariant(aKey, key);
+  nsresult rv = IDBObjectStore::GetKeyFromJSVal(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (key.IsNull()) {
@@ -448,7 +410,8 @@ IDBCursor::Continue(nsIVariant* aKey,
 }
 
 NS_IMETHODIMP
-IDBCursor::Update(nsIVariant* aValue,
+IDBCursor::Update(jsval aValue,
+                  JSContext* aCx,
                   nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -469,38 +432,11 @@ IDBCursor::Update(nsIVariant* aValue,
   const Key& key = mData[mDataIndex].key;
   NS_ASSERTION(!key.IsUnset() && !key.IsNull(), "Bad key!");
 
-  // This is the slow path, need to do this better once XPIDL can have raw
-  // jsvals as arguments.
-  NS_WARNING("Using a slow path for Update! Fix this now!");
+  JSAutoRequest ar(aCx);
 
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-
-  nsAXPCNativeCallContext* cc;
-  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
-
-  PRUint32 argc;
-  rv = cc->GetArgc(&argc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (argc < 1) {
-    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
-  }
-
-  jsval* argv;
-  rv = cc->GetArgvPtr(&argv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSContext* cx;
-  rv = cc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSAutoRequest ar(cx);
-
-  js::AutoValueRooter clone(cx);
-  rv = nsContentUtils::CreateStructuredClone(cx, argv[0], clone.addr());
+  js::AutoValueRooter clone(aCx);
+  nsresult rv = nsContentUtils::CreateStructuredClone(aCx, aValue,
+                                                      clone.addr());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -512,58 +448,26 @@ IDBCursor::Update(nsIVariant* aValue,
     const jschar* keyPathChars = reinterpret_cast<const jschar*>(keyPath.get());
     const size_t keyPathLen = keyPath.Length();
 
-    js::AutoValueRooter prop(cx);
-    JSBool ok = JS_GetUCProperty(cx, JSVAL_TO_OBJECT(clone.value()),
+    js::AutoValueRooter prop(aCx);
+    JSBool ok = JS_GetUCProperty(aCx, JSVAL_TO_OBJECT(clone.value()),
                                  keyPathChars, keyPathLen, prop.addr());
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
     if (JSVAL_IS_VOID(prop.value())) {
-      if (key.IsInt()) {
-        ok = JS_NewNumberValue(cx, key.IntValue(), prop.addr());
-        NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-      }
-      else if (key.IsString()) {
-        const nsString& keyString = key.StringValue();
-        JSString* str =
-          JS_NewUCStringCopyN(cx,
-                              reinterpret_cast<const jschar*>(keyString.get()),
-                              keyString.Length());
-        NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
+      rv = IDBObjectStore::GetJSValFromKey(key, aCx, prop.addr());
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        prop.set(STRING_TO_JSVAL(str));
-      }
-      else {
-        NS_NOTREACHED("Bad key!");
-      }
-
-      ok = JS_DefineUCProperty(cx, JSVAL_TO_OBJECT(clone.value()), keyPathChars,
-                               keyPathLen, prop.value(), nsnull, nsnull,
-                               JSPROP_ENUMERATE);
+      ok = JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(clone.value()),
+                               keyPathChars, keyPathLen, prop.value(), nsnull,
+                               nsnull, JSPROP_ENUMERATE);
       NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
     }
+    else {
+      Key newKey;
+      rv = IDBObjectStore::GetKeyFromJSVal(prop.value(), newKey);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (JSVAL_IS_NULL(prop.value())) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    if (JSVAL_IS_INT(prop.value())) {
-      if (!key.IsInt() || JSVAL_TO_INT(prop.value()) != key.IntValue()) {
-        return NS_ERROR_INVALID_ARG;
-      }
-    }
-
-    if (JSVAL_IS_DOUBLE(prop.value())) {
-      if (!key.IsInt() || *JSVAL_TO_DOUBLE(prop.value()) != key.IntValue()) {
-        return NS_ERROR_INVALID_ARG;
-      }
-    }
-
-    if (JSVAL_IS_STRING(prop.value())) {
-      if (!key.IsString()) {
-        return NS_ERROR_INVALID_ARG;
-      }
-
-      if (key.StringValue() != nsDependentJSString(prop.value())) {
+      if (newKey.IsUnset() || newKey.IsNull() || newKey != key) {
         return NS_ERROR_INVALID_ARG;
       }
     }
@@ -571,14 +475,13 @@ IDBCursor::Update(nsIVariant* aValue,
 
   nsTArray<IndexUpdateInfo> indexUpdateInfo;
   rv = IDBObjectStore::GetIndexUpdateInfo(mObjectStore->GetObjectStoreInfo(),
-                                          cx, clone.value(),
-                                          indexUpdateInfo);
+                                          aCx, clone.value(), indexUpdateInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIJSON> json(new nsJSON());
 
   nsString jsonValue;
-  rv = json->EncodeFromJSVal(clone.addr(), cx, jsonValue);
+  rv = json->EncodeFromJSVal(clone.addr(), aCx, jsonValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<IDBRequest> request = GenerateWriteRequest();

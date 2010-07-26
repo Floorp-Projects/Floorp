@@ -343,9 +343,7 @@ PRInt16
 nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  NS_ENSURE_ARG_POINTER(outFile);
-  *outFile = nsnull;
+  NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
   
   PRInt16 retVal = (PRInt16)returnCancel;
   NSOpenPanel *thePanel = [NSOpenPanel openPanel];
@@ -396,9 +394,7 @@ PRInt16
 nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  NS_ENSURE_ARG_POINTER(outFile);
-  *outFile = nsnull;
+  NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
 
   PRInt16 retVal = returnCancel;
   NSSavePanel *thePanel = [NSSavePanel savePanel];

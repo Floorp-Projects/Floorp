@@ -33,10 +33,10 @@
 //
 // Author: Mark Mentovai
 
-
-#include <cassert>
-
 #include "google_breakpad/processor/stackwalker.h"
+
+#include <assert.h>
+
 #include "google_breakpad/processor/call_stack.h"
 #include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/code_modules.h"
@@ -92,7 +92,7 @@ bool Stackwalker::Walk(CallStack *stack) {
       if (module) {
         frame->module = module;
         if (resolver_ &&
-            !resolver_->HasModule(frame->module->code_file()) &&
+            !resolver_->HasModule(frame->module) &&
             no_symbol_modules_.find(
                 module->code_file()) == no_symbol_modules_.end() &&
             supplier_) {
@@ -103,7 +103,7 @@ bool Stackwalker::Walk(CallStack *stack) {
 
           switch (symbol_result) {
             case SymbolSupplier::FOUND:
-              resolver_->LoadModuleUsingMapBuffer(frame->module->code_file(),
+              resolver_->LoadModuleUsingMapBuffer(frame->module,
                                                   symbol_data);
               break;
             case SymbolSupplier::NOT_FOUND:
@@ -201,14 +201,14 @@ bool Stackwalker::InstructionAddressSeemsValid(u_int64_t address) {
     return true;
   }
 
-  if (!resolver_->HasModule(module->code_file())) {
+  if (!resolver_->HasModule(module)) {
     string symbol_data, symbol_file;
     SymbolSupplier::SymbolResult symbol_result =
       supplier_->GetSymbolFile(module, system_info_,
                                &symbol_file, &symbol_data);
 
     if (symbol_result != SymbolSupplier::FOUND ||
-        !resolver_->LoadModuleUsingMapBuffer(module->code_file(),
+        !resolver_->LoadModuleUsingMapBuffer(module,
                                              symbol_data)) {
       // we don't have symbols, but we're inside a loaded module
       return true;

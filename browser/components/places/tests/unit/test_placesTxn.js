@@ -38,50 +38,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-} catch(ex) {
-  do_throw("Could not get nav-bookmarks-service\n");
-}
-
-// Get livemark service
-try {
-  var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].getService(Ci.nsILivemarkService);
-} catch(ex) {
-  do_throw("Could not get livemark-service\n");
-} 
-
-// Get microsummary service
-try {
-  var mss = Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
-} catch(ex) {
-  do_throw("Could not get microsummary-service\n");
-} 
-
-// Get Places Transaction Manager Service
-try {
-  var ptSvc = Cc["@mozilla.org/browser/placesTransactionsService;1"].
-              getService(Ci.nsIPlacesTransactionsService);
-} catch(ex) {
-  do_throw("Could not get Places Transactions Service\n");
-}
-
-// Get tagging service
-try {
-  var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-                getService(Ci.nsITaggingService);
-} catch(ex) {
-  do_throw("Could not get tagging service\n");
-}
-
-// Get annotations service
-try {
-  var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
-                getService(Ci.nsIAnnotationService);
-} catch(ex) {
-  do_throw("Could not get annotations service\n");
-}
+var bmsvc = PlacesUtils.bookmarks;
+var lmsvc = PlacesUtils.livemarks;
+var mss = PlacesUtils.microsummaries;
+var ptSvc = PlacesUIUtils.ptm;
+var tagssvc = PlacesUtils.tagging;
+var annosvc = PlacesUtils.annotations;
 
 // create and add bookmarks observer
 var observer = {
@@ -143,9 +105,8 @@ function run_test() {
   var root = bmsvc.bookmarksMenuFolder;
 
   //Test creating a folder with a description
-  const DESCRIPTION_ANNO = "bookmarkProperties/description";
   const TEST_DESCRIPTION = "this is my test description";
-  var annos = [{ name: DESCRIPTION_ANNO,
+  var annos = [{ name: PlacesUIUtils.DESCRIPTION_ANNO,
                  type: annosvc.TYPE_STRING,
                 flags: 0,
                 value: TEST_DESCRIPTION,
@@ -165,7 +126,7 @@ function run_test() {
   do_check_eq(observer._itemAddedParent, root);
   do_check_eq(observer._itemAddedId, folderId);
   do_check_eq(TEST_DESCRIPTION, 
-              annosvc.getItemAnnotation(folderId, DESCRIPTION_ANNO));
+              annosvc.getItemAnnotation(folderId, PlacesUIUtils.DESCRIPTION_ANNO));
 
   txn1.undoTransaction();
   do_check_eq(observer._itemRemovedId, folderId);
@@ -415,11 +376,11 @@ function run_test() {
   do_check_eq(observer._itemChangedProperty, "uri");
   do_check_eq(observer._itemChangedValue, "http://www.example3.com/");
   
-  // Test edit item description
+  // Test edit description transaction.
   var txn10 = ptSvc.editItemDescription(bkmk1Id, "Description1");
   txn10.doTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
-  do_check_eq(observer._itemChangedProperty, "bookmarkProperties/description");
+  do_check_eq(observer._itemChangedProperty, PlacesUIUtils.DESCRIPTION_ANNO);
 
   // Testing edit keyword
   var txn11 = ptSvc.editBookmarkKeyword(bkmk1Id, "kw1");
@@ -510,16 +471,15 @@ function run_test() {
   do_check_false(lmsvc.isLivemark(lvmkId));
   do_check_eq(observer._itemRemovedId, lvmkId);
 
-  // Test setLoadInSidebar
-  const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
+  // Test LoadInSidebar transaction.
   var txn16 = ptSvc.setLoadInSidebar(bkmk1Id, true);
   txn16.doTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
-  do_check_eq(observer._itemChangedProperty, LOAD_IN_SIDEBAR_ANNO);
+  do_check_eq(observer._itemChangedProperty, PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO);
   do_check_eq(observer._itemChanged_isAnnotationProperty, true);
   txn16.undoTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
-  do_check_eq(observer._itemChangedProperty, LOAD_IN_SIDEBAR_ANNO);
+  do_check_eq(observer._itemChangedProperty, PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO);
   do_check_eq(observer._itemChanged_isAnnotationProperty, true);
 
   // Test generic item annotation

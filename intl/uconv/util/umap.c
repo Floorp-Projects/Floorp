@@ -90,25 +90,9 @@ PRIVATE const HitFormateFunc m_hit[uNumFormatTag] =
 
 #define uHit(format,in,cell)   (* m_hit[(format)])((in),(cell))
 #define uMap(format,in,uT,cell)  (* m_map[(format)])((in),(uT),(cell))
-#define uFillInfoCell(format,uT,cell,info)  (* m_fillinfo[(format)])((uT),(cell),(info))
 #define uGetMapCell(uT, item) ((uMapCell *)(((PRUint16 *)uT) + (uT)->offsetToMapCellArray + (item)*(UMAPCELL_SIZE/sizeof(PRUint16))))
 #define uGetFormat(uT, item) (((((PRUint16 *)uT) + (uT)->offsetToFormatArray)[(item)>> 2 ] >> (((item)% 4 ) << 2)) & 0x0f)
 
-/*=================================================================================
-
-=================================================================================*/
-MODULE_PRIVATE void uFillInfo(const uTable *uT, PRUint32* aInfo)
-{
-  PRUint16 itemOfList = uT->itemOfList;
-  PRUint16 i;
-  for(i=0;i<itemOfList;i++)
-  {
-    const uMapCell* uCell;
-    PRInt8 format = uGetFormat(uT,i);
-    uCell = uGetMapCell(uT,i);
-    uFillInfoCell(format, uT, uCell, aInfo);
-  }
-}
 /*=================================================================================
 
 =================================================================================*/

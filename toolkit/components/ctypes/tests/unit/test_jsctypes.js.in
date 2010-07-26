@@ -43,7 +43,7 @@ Components.utils.import("resource://gre/modules/ctypes.jsm");
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-#expand const CTYPES_TEST_LIB = __CTYPES_TEST_LIB__;
+CTYPES_TEST_LIB = ctypes.libraryName("jsctypes-test");
 
 function getParent(obj, fun)
 {

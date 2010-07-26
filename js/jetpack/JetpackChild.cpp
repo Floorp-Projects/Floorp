@@ -37,11 +37,14 @@
 
 #include "base/basictypes.h"
 #include "jscntxt.h"
+#include "nsXULAppAPI.h"
 
 #include "mozilla/jetpack/JetpackChild.h"
 #include "mozilla/jetpack/Handle.h"
 
 #include "jsarray.h"
+
+#include <stdio.h>
 
 namespace mozilla {
 namespace jetpack {
@@ -53,18 +56,6 @@ JetpackChild::JetpackChild()
 JetpackChild::~JetpackChild()
 {
 }
-
-#define IMPL_PROP_FLAGS (JSPROP_SHARED | \
-                         JSPROP_ENUMERATE | \
-                         JSPROP_READONLY | \
-                         JSPROP_PERMANENT)
-const JSPropertySpec
-JetpackChild::sImplProperties[] = {
-  { "jetpack", 0, IMPL_PROP_FLAGS, UserJetpackGetter, NULL },
-  { 0, 0, 0, NULL, NULL }
-};
-
-#undef IMPL_PROP_FLAGS
 
 #define IMPL_METHOD_FLAGS (JSFUN_FAST_NATIVE |  \
                            JSPROP_ENUMERATE | \
@@ -79,6 +70,8 @@ JetpackChild::sImplMethods[] = {
   JS_FN("unregisterReceivers", UnregisterReceivers, 1, IMPL_METHOD_FLAGS),
   JS_FN("wrap", Wrap, 1, IMPL_METHOD_FLAGS),
   JS_FN("createHandle", CreateHandle, 0, IMPL_METHOD_FLAGS),
+  JS_FN("createSandbox", CreateSandbox, 0, IMPL_METHOD_FLAGS),
+  JS_FN("evalInSandbox", EvalInSandbox, 2, IMPL_METHOD_FLAGS),
   JS_FS_END
 };
 
@@ -91,7 +84,7 @@ JetpackChild::sGlobalClass = {
   JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  JS_FinalizeStub,
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
-  
+
 bool
 JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
                    MessageLoop* aIOLoop,
@@ -101,31 +94,25 @@ JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
     return false;
 
   if (!(mRuntime = JS_NewRuntime(32L * 1024L * 1024L)) ||
-      !(mImplCx = JS_NewContext(mRuntime, 8192)) ||
-      !(mUserCx = JS_NewContext(mRuntime, 8192)))
+      !(mCx = JS_NewContext(mRuntime, 8192)))
     return false;
 
-  {
-    JSAutoRequest request(mImplCx);
-    JS_SetContextPrivate(mImplCx, this);
-    JSObject* implGlobal =
-      JS_NewGlobalObject(mImplCx, const_cast<JSClass*>(&sGlobalClass));
-    if (!implGlobal ||
-        !JS_InitStandardClasses(mImplCx, implGlobal) ||
-        !JS_DefineProperties(mImplCx, implGlobal,
-                             const_cast<JSPropertySpec*>(sImplProperties)) ||
-        !JS_DefineFunctions(mImplCx, implGlobal,
-                            const_cast<JSFunctionSpec*>(sImplMethods)))
-      return false;
-  }
+  JS_SetVersion(mCx, JSVERSION_LATEST);
+  JS_SetOptions(mCx, JS_GetOptions(mCx) |
+                JSOPTION_DONT_REPORT_UNCAUGHT |
+                JSOPTION_ATLINE |
+                JSOPTION_JIT);
+  JS_SetErrorReporter(mCx, ReportError);
 
   {
-    JSAutoRequest request(mUserCx);
-    JS_SetContextPrivate(mUserCx, this);
-    JSObject* userGlobal =
-      JS_NewGlobalObject(mUserCx, const_cast<JSClass*>(&sGlobalClass));
-    if (!userGlobal ||
-        !JS_InitStandardClasses(mUserCx, userGlobal))
+    JSAutoRequest request(mCx);
+    JS_SetContextPrivate(mCx, this);
+    JSObject* implGlobal =
+      JS_NewGlobalObject(mCx, const_cast<JSClass*>(&sGlobalClass));
+    if (!implGlobal ||
+        !JS_InitStandardClasses(mCx, implGlobal) ||
+        !JS_DefineFunctions(mCx, implGlobal,
+                            const_cast<JSFunctionSpec*>(sImplMethods)))
       return false;
   }
 
@@ -135,40 +122,35 @@ JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
 void
 JetpackChild::CleanUp()
 {
-  JS_DestroyContext(mUserCx);
-  JS_DestroyContext(mImplCx);
+  ClearReceivers();
+  JS_DestroyContext(mCx);
   JS_DestroyRuntime(mRuntime);
   JS_ShutDown();
+}
+
+void
+JetpackChild::ActorDestroy(ActorDestroyReason why)
+{
+  XRE_ShutdownChildProcess();
 }
 
 bool
 JetpackChild::RecvSendMessage(const nsString& messageName,
                               const nsTArray<Variant>& data)
 {
-  JSAutoRequest request(mImplCx);
-  return JetpackActorCommon::RecvMessage(mImplCx, messageName, data, NULL);
+  JSAutoRequest request(mCx);
+  return JetpackActorCommon::RecvMessage(mCx, messageName, data, NULL);
 }
 
-static bool
-Evaluate(JSContext* cx, const nsCString& code)
+bool
+JetpackChild::RecvEvalScript(const nsString& code)
 {
-  JSAutoRequest request(cx);
-  js::AutoValueRooter ignored(cx);
-  JS_EvaluateScript(cx, JS_GetGlobalObject(cx), code.get(),
-                    code.Length(), "", 1, ignored.addr());
+  JSAutoRequest request(mCx);
+
+  js::AutoValueRooter ignored(mCx);
+  (void) JS_EvaluateUCScript(mCx, JS_GetGlobalObject(mCx), code.get(),
+                             code.Length(), "", 1, ignored.addr());
   return true;
-}
-
-bool
-JetpackChild::RecvLoadImplementation(const nsCString& code)
-{
-  return Evaluate(mImplCx, code);
-}
-
-bool
-JetpackChild::RecvLoadUserScript(const nsCString& code)
-{
-  return Evaluate(mUserCx, code);
 }
 
 PHandleChild*
@@ -189,18 +171,8 @@ JetpackChild::GetThis(JSContext* cx)
 {
   JetpackChild* self =
     static_cast<JetpackChild*>(JS_GetContextPrivate(cx));
-  JS_ASSERT(cx == self->mImplCx ||
-            cx == self->mUserCx);
+  JS_ASSERT(cx == self->mCx);
   return self;
-}
-
-JSBool
-JetpackChild::UserJetpackGetter(JSContext* cx, JSObject* obj, jsval id,
-                                jsval* vp)
-{
-  JSObject* userGlobal = JS_GetGlobalObject(GetThis(cx)->mUserCx);
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(userGlobal));
-  return JS_TRUE;
 }
 
 struct MessageResult {
@@ -269,7 +241,7 @@ JetpackChild::CallMessage(JSContext* cx, uintN argc, jsval* vp)
     return JS_FALSE;
 
   nsTArray<Variant> results;
-  if (!GetThis(cx)->SendCallMessage(smr.msgName, smr.data, &results)) {
+  if (!GetThis(cx)->CallCallMessage(smr.msgName, smr.data, &results)) {
     JS_ReportError(cx, "Failed to callMessage");
     return JS_FALSE;
   }
@@ -418,6 +390,90 @@ JetpackChild::CreateHandle(JSContext* cx, uintN argc, jsval* vp)
   JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(hobj));
 
   return JS_TRUE;
+}
+
+JSBool
+JetpackChild::CreateSandbox(JSContext* cx, uintN argc, jsval* vp)
+{
+  if (argc > 0) {
+    JS_ReportError(cx, "createSandbox takes zero arguments");
+    return JS_FALSE;
+  }
+
+  JSObject* obj = JS_NewGlobalObject(cx, const_cast<JSClass*>(&sGlobalClass));
+  if (!obj)
+    return JS_FALSE;
+
+  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
+  return JS_InitStandardClasses(cx, obj);
+}
+
+JSBool
+JetpackChild::EvalInSandbox(JSContext* cx, uintN argc, jsval* vp)
+{
+  if (argc != 2) {
+    JS_ReportError(cx, "evalInSandbox takes two arguments");
+    return JS_FALSE;
+  }
+
+  jsval* argv = JS_ARGV(cx, vp);
+
+  JSObject* obj;
+  if (!JSVAL_IS_OBJECT(argv[0]) ||
+      !(obj = JSVAL_TO_OBJECT(argv[0])) ||
+      &sGlobalClass != JS_GetClass(cx, obj) ||
+      obj == JS_GetGlobalObject(cx)) {
+    JS_ReportError(cx, "The first argument to evalInSandbox must be a global object created using createSandbox.");
+    return JS_FALSE;
+  }
+
+  JSString* str = JS_ValueToString(cx, argv[1]);
+  if (!str)
+    return JS_FALSE;
+
+  js::AutoValueRooter ignored(cx);
+  return JS_EvaluateUCScript(cx, obj, JS_GetStringChars(str), JS_GetStringLength(str), "", 1,
+                             ignored.addr());
+}
+
+bool JetpackChild::sReportingError;
+
+/* static */ void
+JetpackChild::ReportError(JSContext* cx, const char* message,
+                          JSErrorReport* report)
+{
+  if (sReportingError) {
+    NS_WARNING("Recursive error reported.");
+    return;
+  }
+
+  sReportingError = true;
+
+  js::AutoObjectRooter obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
+
+  if (report && report->filename) {
+    jsval filename = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, report->filename));
+    JS_SetProperty(cx, obj.object(), "fileName", &filename);
+  }
+
+  if (report) {
+    jsval lineno = INT_TO_JSVAL(report->lineno);
+    JS_SetProperty(cx, obj.object(), "lineNumber", &lineno);
+  }
+
+  jsval msgstr = JSVAL_NULL;
+  if (report && report->ucmessage)
+    msgstr = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, report->ucmessage));
+  else
+    msgstr = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, message));
+  JS_SetProperty(cx, obj.object(), "message", &msgstr);
+
+  MessageResult smr;
+  Variant* vp = smr.data.AppendElement();
+  JetpackActorCommon::jsval_to_Variant(cx, OBJECT_TO_JSVAL(obj.object()), vp);
+  GetThis(cx)->SendSendMessage(NS_LITERAL_STRING("core:exception"), smr.data);
+
+  sReportingError = false;
 }
 
 } // namespace jetpack
