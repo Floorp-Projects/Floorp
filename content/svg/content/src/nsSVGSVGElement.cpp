@@ -68,6 +68,8 @@
 #include "nsSMILTypes.h"
 #include "nsIContentIterator.h"
 
+using namespace mozilla;
+
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 #endif // MOZ_SMIL
 
