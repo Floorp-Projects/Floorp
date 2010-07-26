@@ -5149,6 +5149,20 @@ function AddonWrapper(aAddon) {
     return pending;
   });
 
+  this.__defineGetter__("operationsRequiringRestart", function() {
+    let ops = 0;
+    if (XPIProvider.installRequiresRestart(aAddon))
+      ops |= AddonManager.OP_NEEDS_RESTART_INSTALL;
+    if (XPIProvider.uninstallRequiresRestart(aAddon))
+      ops |= AddonManager.OP_NEEDS_RESTART_UNINSTALL;
+    if (XPIProvider.enableRequiresRestart(aAddon))
+      ops |= AddonManager.OP_NEEDS_RESTART_ENABLE;
+    if (XPIProvider.disableRequiresRestart(aAddon))
+      ops |= AddonManager.OP_NEEDS_RESTART_DISABLE;
+
+    return ops;
+  });
+
   this.__defineGetter__("permissions", function() {
     let permissions = 0;
     if (!aAddon.appDisabled) {

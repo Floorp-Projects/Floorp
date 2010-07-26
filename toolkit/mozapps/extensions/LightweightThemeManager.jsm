@@ -421,6 +421,10 @@ function AddonWrapper(aTheme, aBeingEnabled) {
     return pending;
   });
 
+  this.__defineGetter__("operationsRequiringRestart", function() {
+    return AddonManager.OP_NEEDS_RESTART_NONE;
+  });
+
   this.__defineGetter__("size", function() {
     // The size changes depending on whether the theme is in use or not, this is
     // probably not worth exposing.
