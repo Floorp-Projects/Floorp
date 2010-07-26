@@ -9290,9 +9290,16 @@ TraceRecorder::guardShape(LIns* obj_ins, JSObject* obj, uint32 shape, const char
     if (p) {
         JS_ASSERT(p->value == obj);
         return RECORD_CONTINUE;
-    } else {
-        if (!guardedShapeTable.add(p, obj_ins, obj))
-            return RECORD_ERROR;
+    }
+    if (!guardedShapeTable.add(p, obj_ins, obj))
+        return RECORD_ERROR;
+
+    if (obj == globalObj) {
+        // In this case checking object identity is equivalent and faster.
+        guard(true,
+              addName(lir->ins2(LIR_eqp, obj_ins, INS_CONSTOBJ(globalObj)), "guard_global"),
+              exit);
+        return RECORD_CONTINUE;
     }
 
 #if defined DEBUG_notme && defined XP_UNIX
@@ -13584,7 +13591,16 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
         obj = obj2;
     }
 
-    LIns *v_ins = unbox_slot(obj, obj_ins, slot, snapshot(BRANCH_EXIT));
+    LIns* v_ins;
+    if (obj2 == globalObj) {
+        if (isMethod)
+            RETURN_STOP("get global method");
+        if (!lazilyImportGlobalSlot(slot))
+            RETURN_STOP("lazy import of global slot failed");
+        v_ins = get(&globalObj->getSlotRef(slot));
+    } else {
+        v_ins = unbox_slot(obj, obj_ins, slot, snapshot(BRANCH_EXIT));
+    }
 
     /*
      * Joined function object stored as a method must be cloned when extracted
