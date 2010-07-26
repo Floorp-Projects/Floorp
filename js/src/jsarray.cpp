@@ -907,16 +907,16 @@ js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, ValueArgType v)
 {
     return dense_grow(cx, obj, i, ValueArgToConstRef(v));
 }
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem, CONTEXT, OBJECT, INT32, VALUE, 0,
-                     nanojit::ACC_STORE_ANY)
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem, CONTEXT, OBJECT, INT32, VALUE,
+                     0, nanojit::ACCSET_STORE_ANY)
 
 JSBool FASTCALL
 js_Array_dense_setelem_int(JSContext* cx, JSObject* obj, jsint i, int32 j)
 {
     return dense_grow(cx, obj, i, Int32Value(j));
 }
-JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem_int, CONTEXT, OBJECT, INT32, INT32, 0,
-                     nanojit::ACC_STORE_ANY)
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem_int, CONTEXT, OBJECT, INT32, INT32,
+                     0, nanojit::ACCSET_STORE_ANY)
 
 JSBool FASTCALL
 js_Array_dense_setelem_double(JSContext* cx, JSObject* obj, jsint i, jsdouble d)
@@ -924,7 +924,7 @@ js_Array_dense_setelem_double(JSContext* cx, JSObject* obj, jsint i, jsdouble d)
     return dense_grow(cx, obj, i, NumberValue(d));
 }
 JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem_double, CONTEXT, OBJECT, INT32, DOUBLE,
-                     0, nanojit::ACC_STORE_ANY)
+                     0, nanojit::ACCSET_STORE_ANY)
 #endif
 
 static JSBool
@@ -2099,8 +2099,8 @@ js_ArrayCompPush_tn(JSContext *cx, JSObject *obj, ValueArgType v)
 {
     return ArrayCompPushImpl(cx, obj, ValueArgToConstRef(v));
 }
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_ArrayCompPush_tn, CONTEXT, OBJECT, VALUE, 0,
-                     nanojit::ACC_STORE_ANY)
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_ArrayCompPush_tn, CONTEXT, OBJECT, VALUE,
+                     0, nanojit::ACCSET_STORE_ANY)
 
 static JSBool
 array_push(JSContext *cx, uintN argc, Value *vp)
@@ -3015,8 +3015,8 @@ js_NewArrayWithSlots(JSContext* cx, JSObject* proto, uint32 len)
     return obj;
 }
 #ifdef JS_TRACER
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewArrayWithSlots, CONTEXT, OBJECT, UINT32, 0,
-                     nanojit::ACC_STORE_ANY)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewArrayWithSlots, CONTEXT, OBJECT, UINT32,
+                     0, nanojit::ACCSET_STORE_ANY)
 #endif
 
 JSObject* JS_FASTCALL
@@ -3025,7 +3025,8 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
     return js_NewArrayWithSlots(cx, proto, 0);
 }
 #ifdef JS_TRACER
-JS_DEFINE_CALLINFO_2(extern, OBJECT, js_NewEmptyArray, CONTEXT, OBJECT, 0, nanojit::ACC_STORE_ANY)
+JS_DEFINE_CALLINFO_2(extern, OBJECT, js_NewEmptyArray, CONTEXT, OBJECT,
+                     0, nanojit::ACCSET_STORE_ANY)
 #endif
 
 JSObject *
