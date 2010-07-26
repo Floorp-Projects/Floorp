@@ -650,13 +650,6 @@ var Utils = {
   },
 
   // ----------
-  // Function: isArray
-  // Returns true if the given object is an array.
-  isArray: function( obj ) {
-    return toString.call(obj) === "[object Array]";
-  },
-
-  // ----------
   // Function: isRect
   // Returns true if the given object (r) looks like a <Rect>.
   isRect: function(r) {
@@ -725,7 +718,7 @@ var Utils = {
   // has properties that are themselves objects, those properties will be copied by reference.
   copy: function(value) {
     if (value && typeof(value) == 'object') {
-      if (this.isArray(value))
+      if (Array.isArray(value))
         return this.extend([], value);
       return this.extend({}, value);
     }
