@@ -60,30 +60,33 @@ var StarUI = {
     return this.panel = element;
   },
 
-  // list of command elements (by id) to disable when the panel is opened
-  _blockedCommands: ["cmd_close", "cmd_closeWindow"],
+  // Array of command elements to disable when the panel is opened.
+  get _blockedCommands() {
+    delete this._blockedCommands;
+    return this._blockedCommands =
+      ["cmd_close", "cmd_closeWindow"].map(function (id) this._element(id), this);
+  },
+
   _blockCommands: function SU__blockCommands() {
-    for each(var key in this._blockedCommands) {
-      var elt = this._element(key);
+    this._blockedCommands.forEach(function (elt) {
       // make sure not to permanently disable this item (see bug 409155)
       if (elt.hasAttribute("wasDisabled"))
-        continue;
-      if (elt.getAttribute("disabled") == "true")
+        return;
+      if (elt.getAttribute("disabled") == "true") {
         elt.setAttribute("wasDisabled", "true");
-      else {
+      } else {
         elt.setAttribute("wasDisabled", "false");
         elt.setAttribute("disabled", "true");
       }
-    }
+    });
   },
 
   _restoreCommandsState: function SU__restoreCommandsState() {
-    for each(var key in this._blockedCommands) {
-      var elt = this._element(key);
+    this._blockedCommands.forEach(function (elt) {
       if (elt.getAttribute("wasDisabled") != "true")
         elt.removeAttribute("disabled");
       elt.removeAttribute("wasDisabled");
-    }
+    });
   },
 
   // nsIDOMEventListener
