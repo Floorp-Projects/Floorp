@@ -36,6 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "base/basictypes.h"
+#include "mozilla/net/NeckoCommon.h"
+#include "mozilla/net/NeckoChild.h"
+#endif
+
 #include "nsHTMLDNSPrefetch.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -129,6 +135,19 @@ nsHTMLDNSPrefetch::IsAllowed (nsIDocument *aDocument)
 nsresult
 nsHTMLDNSPrefetch::Prefetch(Link *aElement, PRUint16 flags)
 {
+#ifdef MOZ_IPC
+  if (mozilla::net::IsNeckoChild()) {
+    // Instead of transporting the Link object to the other process
+    // we are using the hostname based function here, too. Compared to the 
+    // IPC the performance hit should be negligible.
+    nsAutoString hostname;
+    nsresult rv = aElement->GetHostname(hostname);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    return Prefetch(hostname, flags);
+  }
+#endif
+
   if (!(sInitialized && sPrefetches && sDNSService && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -156,6 +175,13 @@ nsHTMLDNSPrefetch::PrefetchHigh(Link *aElement)
 nsresult
 nsHTMLDNSPrefetch::Prefetch(nsAString &hostname, PRUint16 flags)
 {
+#ifdef MOZ_IPC
+  if (mozilla::net::IsNeckoChild()) {
+    mozilla::net::gNeckoChild->SendHTMLDNSPrefetch(nsAutoString(hostname), flags);
+    return NS_OK;
+  }
+#endif
+
   if (!(sInitialized && sDNSService && sPrefetches && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
 
