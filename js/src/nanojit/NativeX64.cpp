@@ -2027,7 +2027,7 @@ namespace nanojit
         RegisterMask prefer = 0;
         uint8_t arg = ins->paramArg();
         if (ins->paramKind() == 0) {
-            if (arg < maxArgRegs) 
+            if (arg < maxArgRegs)
                 prefer = rmask(argRegs[arg]);
         } else {
             if (arg < NumSavedRegs)

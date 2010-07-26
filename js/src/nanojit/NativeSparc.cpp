@@ -247,6 +247,7 @@ namespace nanojit
 
     RegisterMask Assembler::nHint(LIns* ins)
     {
+        // Never called, because no entries in nHints[] == PREFER_SPECIAL.
         NanoAssert(0);
         return 0;
     }
