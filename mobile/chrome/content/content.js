@@ -713,6 +713,8 @@ ViewportHandler.init();
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
 var ContextHandler = {
+  _types: [],
+
   _getLinkURL: function ch_getLinkURL(aLink) {
     let href = aLink.href;  
     if (href)
