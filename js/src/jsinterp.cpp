@@ -524,7 +524,6 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     fp->blockChain = NULL;
     fp->imacpc = NULL;
     fp->flags = flags;
-    fp->displaySave = NULL;
 
     /* Initialize regs. */
     if (script) {
@@ -1354,14 +1353,13 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
 }
 
 const Value &
-js_GetUpvar(JSContext *cx, uintN level, UpvarCookie cookie)
+js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
 {
-    level -= cookie.level();
-    JS_ASSERT(level < JS_DISPLAY_SIZE);
+    JS_ASSERT(closureLevel >= cookie.level() && cookie.level() > 0);
+    const uintN targetLevel = closureLevel - cookie.level();
+    JS_ASSERT(targetLevel < UpvarCookie::UPVAR_LEVEL_LIMIT);
 
-    JSStackFrame *fp = cx->display[level];
-    JS_ASSERT(fp->script);
-
+    JSStackFrame *fp = cx->findFrameAtLevel(targetLevel);
     uintN slot = cookie.slot();
     Value *vp;
 
@@ -2341,13 +2339,6 @@ Interpret(JSContext *cx)
     if (currentVersion != originalVersion)
         js_SetVersion(cx, currentVersion);
 
-    /* Update the static-link display. */
-    if (script->staticLevel < JS_DISPLAY_SIZE) {
-        JSStackFrame **disp = &cx->display[script->staticLevel];
-        fp->displaySave = *disp;
-        *disp = fp;
-    }
-
 #define CHECK_INTERRUPT_HANDLER()                                             \
     JS_BEGIN_MACRO                                                            \
         if (cx->debugHooks->interruptHook)                                    \
@@ -2636,9 +2627,6 @@ BEGIN_CASE(JSOP_STOP)
     {
         JS_ASSERT(!fp->blockChain);
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
-
-        if (JS_LIKELY(script->staticLevel < JS_DISPLAY_SIZE))
-            cx->display[script->staticLevel] = fp->displaySave;
 
         void *hookData = fp->hookData;
         if (JS_UNLIKELY(hookData != NULL)) {
@@ -4677,11 +4665,6 @@ BEGIN_CASE(JSOP_APPLY)
             newfp->scopeChain = obj->getParent();
             newfp->flags = flags;
             newfp->blockChain = NULL;
-            if (JS_LIKELY(newscript->staticLevel < JS_DISPLAY_SIZE)) {
-                JSStackFrame **disp = &cx->display[newscript->staticLevel];
-                newfp->displaySave = *disp;
-                *disp = newfp;
-            }
             JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
             newfp->thisv = vp[1];
             newfp->imacpc = NULL;
@@ -5225,7 +5208,7 @@ BEGIN_CASE(JSOP_CALLUPVAR)
     uintN index = GET_UINT16(regs.pc);
     JS_ASSERT(index < uva->length);
 
-    const Value &rval = js_GetUpvar(cx, script->staticLevel, uva->vector[index]);
+    const Value &rval = GetUpvar(cx, script->staticLevel, uva->vector[index]);
     PUSH_COPY(rval);
 
     if (op == JSOP_CALLUPVAR)
@@ -7041,8 +7024,6 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT_IF(!fp->isGenerator(), !js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
 
     /* Undo the remaining effects committed on entry to Interpret. */
-    if (script->staticLevel < JS_DISPLAY_SIZE)
-        cx->display[script->staticLevel] = fp->displaySave;
     if (cx->version == currentVersion && currentVersion != originalVersion)
         js_SetVersion(cx, originalVersion);
     --cx->interpLevel;

@@ -2452,7 +2452,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
 
     uintN level = fun->u.i.script->staticLevel;
     for (uint32 i = 0, n = uva->length; i < n; i++)
-        closure->dslots[i] = js_GetUpvar(cx, level, uva->vector[i]);
+        closure->dslots[i] = GetUpvar(cx, level, uva->vector[i]);
 
     return closure;
 }
