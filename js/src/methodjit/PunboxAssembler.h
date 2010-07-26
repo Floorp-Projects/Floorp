@@ -93,7 +93,6 @@ class Assembler : public BaseAssembler
         return address;
     }
 
-    /* TODO: Don't really need this..? */
     void loadValue(Address address, RegisterID dst) {
         loadPtr(address, dst);
     }
@@ -102,39 +101,42 @@ class Assembler : public BaseAssembler
         loadPtr(address, dst);
     }
 
+    void convertValueToType(RegisterID val) {
+        andPtr(Imm64(JSVAL_TAG_MASK), val);
+    }
+
+    void convertValueToPayload(RegisterID val) {
+        andPtr(Imm64(JSVAL_PAYLOAD_MASK), val);
+    }
+
     void loadValueThenType(Address address, RegisterID val, RegisterID type) {
         loadValue(valueOf(address), val);
         if (val != type)
             move(val, type);
-        andPtr(Imm64(JSVAL_TAG_MASK), type);
+        convertValueToType(type);
     }
     
     void loadValueThenType(BaseIndex address, RegisterID val, RegisterID type) {
         loadValue(valueOf(address), val);
         if (val != type)
             move(val, type);
-        andPtr(Imm64(JSVAL_TAG_MASK), type);
+        convertValueToType(type);
     }
 
     void loadValueThenPayload(Address address, RegisterID val, RegisterID payload) {
         loadValue(valueOf(address), val);
         if (val != payload)
             move(val, payload);
-        andPtr(Imm64(JSVAL_PAYLOAD_MASK), payload);
+        convertValueToPayload(payload);
     }
 
     void loadValueThenPayload(BaseIndex address, RegisterID val, RegisterID payload) {
         loadValue(valueOf(address), val);
         if (val != payload)
             move(val, payload);
-        andPtr(Imm64(JSVAL_PAYLOAD_MASK), payload);
+        convertValueToPayload(payload);
     }
 
-    /* 
-     * TODO: All this gets to go.
-     * This needs to be part of the FrameState, since it will
-     * be performing register allocation.
-     */
     void loadTypeTag(Address address, RegisterID reg) {
         loadValueThenType(valueOf(address), reg, reg);
     }
@@ -145,14 +147,14 @@ class Assembler : public BaseAssembler
 
     void storeTypeTag(ImmShiftedTag imm, Address address) {
         loadValue(valueOf(address), Registers::ValueReg);
-        andPtr(Imm64(JSVAL_PAYLOAD_MASK), Registers::ValueReg);
+        convertValueToPayload(Registers::ValueReg);
         orPtr(imm, Registers::ValueReg);
         storePtr(Registers::ValueReg, valueOf(address));
     }
 
     void storeTypeTag(ImmShiftedTag imm, BaseIndex address) {
         loadValue(valueOf(address), Registers::ValueReg);
-        andPtr(Imm64(JSVAL_PAYLOAD_MASK), Registers::ValueReg);
+        convertValueToPayload(Registers::ValueReg);
         orPtr(imm, Registers::ValueReg);
         storePtr(Registers::ValueReg, valueOf(address));
     }
@@ -160,7 +162,7 @@ class Assembler : public BaseAssembler
     void storeTypeTag(RegisterID reg, Address address) {
         /* The type tag must be stored in shifted format. */
         loadValue(valueOf(address), Registers::ValueReg);
-        andPtr(Imm64(JSVAL_PAYLOAD_MASK), Registers::ValueReg);
+        convertValueToPayload(Registers::ValueReg);
         orPtr(reg, Registers::ValueReg);
         storePtr(Registers::ValueReg, valueOf(address));
 
@@ -169,7 +171,7 @@ class Assembler : public BaseAssembler
     void storeTypeTag(RegisterID reg, BaseIndex address) {
         /* The type tag must be stored in shifted format. */
         loadValue(valueOf(address), Registers::ValueReg);
-        andPtr(Imm64(JSVAL_PAYLOAD_MASK), Registers::ValueReg);
+        convertValueToPayload(Registers::ValueReg);
         orPtr(reg, Registers::ValueReg);
         storePtr(Registers::ValueReg, valueOf(address));
     }
@@ -185,7 +187,7 @@ class Assembler : public BaseAssembler
     void storePayload(RegisterID reg, Address address) {
         /* Not for doubles. */
         loadValue(valueOf(address), Registers::ValueReg);
-        andPtr(Imm64(JSVAL_TAG_MASK), Registers::ValueReg);
+        convertValueToType(Registers::ValueReg);
         orPtr(reg, Registers::ValueReg);
         storePtr(Registers::ValueReg, valueOf(address));
     }
@@ -193,7 +195,7 @@ class Assembler : public BaseAssembler
     void storePayload(RegisterID reg, BaseIndex address) {
         /* Not for doubles. */
         loadValue(valueOf(address), Registers::ValueReg);
-        andPtr(Imm64(JSVAL_TAG_MASK), Registers::ValueReg);
+        convertValueToType(Registers::ValueReg);
         orPtr(reg, Registers::ValueReg);
         storePtr(Registers::ValueReg, valueOf(address));
     }
