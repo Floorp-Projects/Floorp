@@ -46,6 +46,7 @@ enum eHtml5SpeculativeLoad {
 #ifdef DEBUG
   eSpeculativeLoadUninitialized,
 #endif
+  eSpeculativeLoadBase,
   eSpeculativeLoadImage,
   eSpeculativeLoadScript,
   eSpeculativeLoadStyle,
@@ -57,6 +58,13 @@ class nsHtml5SpeculativeLoad {
     nsHtml5SpeculativeLoad();
     ~nsHtml5SpeculativeLoad();
     
+    inline void InitBase(const nsAString& aUrl) {
+      NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
+                      "Trying to reinitialize a speculative load!");
+      mOpCode = eSpeculativeLoadBase;
+      mUrl.Assign(aUrl);
+    }
+
     inline void InitImage(const nsAString& aUrl) {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
