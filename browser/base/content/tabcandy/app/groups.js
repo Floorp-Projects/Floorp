@@ -701,8 +701,10 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
           Groups.setActiveGroup(this);
       }
 
-      if (!options.dontArrange)
+      if (!options.dontArrange) {
         this.arrange();
+        UI.setReorderTabsOnHide(this);
+      }
 
       if ( this._nextNewTabCallback ){
         this._nextNewTabCallback.apply(this, [item])
@@ -1336,16 +1338,47 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
-  // Function: reorderBasedOnTabOrder
-  // Reorderes the tabs in a group based on the arrangment of the tabs
+  // Function: reorderTabItemsBasedOnTabOrder
+  // Reorders the tabs in a group based on the arrangment of the tabs
   // shown in the tab bar. It does it by sorting the children
   // of the group by the positions of their respective tabs in the
   // tab bar.
-  reorderBasedOnTabOrder: function(){
+  reorderTabItemsBasedOnTabOrder: function() {
     this._children.sort(function(a,b) a.tab._tPos - b.tab._tPos);
 
     this.arrange({animate: false});
     // this.arrange calls this.save for us
+  },
+
+  // Function: reorderTabsBasedOnTabItemOrder
+  // Reorders the tabs in the tab bar based on the arrangment of the tabs
+  // shown in the group.
+  reorderTabsBasedOnTabItemOrder: function() {
+    var tabBarTabs = Array.slice(gBrowser.tabs);
+    var currentIndex;
+
+    // ToDo: optimisation is needed to further reduce the tab move.
+    this._children.forEach(function(tabItem) {
+      tabBarTabs.some(function(tab, i) {
+        if (tabItem.tab == tab) {
+          if (!currentIndex)
+            currentIndex = i;
+          else if (tab.pinned)
+            currentIndex++;
+          else {
+            var removed;
+            if (currentIndex < i)
+              currentIndex = i;
+            else if (currentIndex > i) {
+              removed = tabBarTabs.splice(i, 1);
+              tabBarTabs.splice(currentIndex, 0, removed);
+              gBrowser.moveTabTo(tabItem.tab, currentIndex);
+            }
+          }
+          return true;
+        }
+      });
+    });
   },
 
   // ----------
