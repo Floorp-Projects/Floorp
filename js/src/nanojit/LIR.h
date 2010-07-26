@@ -282,7 +282,7 @@ namespace nanojit
     //
     typedef uint8_t MiniAccSetVal;
     struct MiniAccSet { MiniAccSetVal val; };
-    static const MiniAccSet MINI_ACCSET_MULTIPLE = { 255 };
+    static const MiniAccSet MINI_ACCSET_MULTIPLE = { 99 };
 
     static MiniAccSet compressAccSet(AccSet accSet) {
         // As the number of regions increase, this may become a bottleneck.
@@ -1118,8 +1118,12 @@ namespace nanojit
         // exceeds 16 bits.  This is rare, but does happen occasionally.  We
         // could go to 24 bits but then it would happen so rarely that the
         // handler code would be difficult to test and thus untrustworthy.
-        int16_t     disp;
-        MiniAccSetVal miniAccSetVal;    // not 'MiniAccSet' due to Windows padding;  see above
+        //
+        // Nb: the types of these fields are all 32-bit (and then restricted
+        // as bitfields) to ensure they are fully packed on Windows, sigh.
+        // See LInsSt for the real types.
+        int32_t     disp:16;
+        int32_t     miniAccSetVal:8;
         LoadQual    loadQual:2;
 
         LIns*       oprnd_1;
