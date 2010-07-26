@@ -351,7 +351,7 @@ ContentChild::RecvNotifyRemotePrefObserver(const nsCString& aPref)
 bool
 ContentChild::RecvNotifyVisited(const IPC::URI& aURI)
 {
-    nsCOMPtr<nsIURI> newURI = aURI;
+    nsCOMPtr<nsIURI> newURI(aURI);
     History::GetService()->NotifyVisited(newURI);
     return true;
 }

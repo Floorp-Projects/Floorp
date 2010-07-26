@@ -277,7 +277,7 @@ ContentParent::RecvTestPermission(const IPC::URI&  aUri,
 {
     EnsurePermissionService();
 
-    nsCOMPtr<nsIURI> uri = aUri;
+    nsCOMPtr<nsIURI> uri(aUri);
     if (aExact) {
         mPermissionService->TestExactPermission(uri, aType.get(), retValue);
     } else {
@@ -435,7 +435,7 @@ ContentParent::RequestRunToCompletion()
 bool
 ContentParent::RecvStartVisitedQuery(const IPC::URI& aURI)
 {
-    nsCOMPtr<nsIURI> newURI = aURI;
+    nsCOMPtr<nsIURI> newURI(aURI);
     IHistory *history = nsContentUtils::GetHistory(); 
     history->RegisterVisitedCallback(newURI, nsnull);
     return true;
@@ -447,8 +447,8 @@ ContentParent::RecvVisitURI(const IPC::URI& uri,
                                    const IPC::URI& referrer,
                                    const PRUint32& flags)
 {
-    nsCOMPtr<nsIURI> ourURI = uri;
-    nsCOMPtr<nsIURI> ourReferrer = referrer;
+    nsCOMPtr<nsIURI> ourURI(uri);
+    nsCOMPtr<nsIURI> ourReferrer(referrer);
     IHistory *history = nsContentUtils::GetHistory(); 
     history->VisitURI(ourURI, ourReferrer, flags);
     return true;
@@ -459,7 +459,7 @@ bool
 ContentParent::RecvSetURITitle(const IPC::URI& uri,
                                       const nsString& title)
 {
-    nsCOMPtr<nsIURI> ourURI = uri;
+    nsCOMPtr<nsIURI> ourURI(uri);
     IHistory *history = nsContentUtils::GetHistory(); 
     history->SetURITitle(ourURI, title);
     return true;
