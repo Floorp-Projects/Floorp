@@ -217,6 +217,8 @@ enum CanvasMultiGetterType {
   // lower quality than normal. It will however more accurately reflect
   // the pixels rendered to the screen.
   const unsigned long DRAWWINDOW_USE_WIDGET_LAYERS = 0x08;
+  // Don't synchronously decode images - draw what we have
+  const unsigned long DRAWWINDOW_ASYNC_DECODE_IMAGES = 0x10;
 
   /**
    * Renders a region of a window into the canvas.  The contents of
