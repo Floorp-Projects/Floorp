@@ -1696,6 +1696,9 @@
           Array.forEach(this.tabs, function(tab) {
             tab.hidden = aTabs.indexOf(tab) == -1 && !tab.pinned;
           });
+
+          if (this._numPinnedTabs > 0)
+            this.tabContainer._positionPinnedTabs();
         ]]>
         </body>
       </method>
