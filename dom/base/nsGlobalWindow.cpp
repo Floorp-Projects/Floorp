@@ -103,7 +103,9 @@
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
+#ifndef MOZ_IPC
 #include "nsIDOMCrypto.h"
+#endif
 #include "nsIDOMDocument.h"
 #include "nsIDOM3Document.h"
 #include "nsIDOMNSDocument.h"
@@ -388,10 +390,10 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 
 static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
-
+#ifndef MOZ_IPC
 static const char kCryptoContractID[] = NS_CRYPTO_CONTRACTID;
 static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
-
+#endif
 static const char sPopStatePrefStr[] = "browser.history.allowPopState";
 
 static PRBool
@@ -1640,12 +1642,12 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   NS_ENSURE_TRUE(scx, NS_ERROR_NOT_INITIALIZED);
 
   JSContext *cx = (JSContext *)scx->GetNativeContext();
-
+#ifndef MOZ_IPC
   // clear smartcard events, our document has gone away.
   if (mCrypto) {
     mCrypto->SetEnableSmartCardEvents(PR_FALSE);
   }
-
+#endif
   if (!mDocument) {
     // First document load.
 
@@ -2944,6 +2946,10 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
 NS_IMETHODIMP
 nsGlobalWindow::GetCrypto(nsIDOMCrypto** aCrypto)
 {
+#ifdef MOZ_IPC
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
+   
   FORWARD_TO_OUTER(GetCrypto, (aCrypto), NS_ERROR_NOT_INITIALIZED);
 
   if (!mCrypto) {
@@ -2953,6 +2959,7 @@ nsGlobalWindow::GetCrypto(nsIDOMCrypto** aCrypto)
   NS_IF_ADDREF(*aCrypto = mCrypto);
 
   return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
