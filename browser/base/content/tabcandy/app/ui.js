@@ -917,40 +917,6 @@ var UIManager = {
   },
 
   // ----------
-  // Function: showOnlyTheseTabs
-  // Hides all of the tabs in the tab bar which are not passed into this function.
-  //
-  // Paramaters
-  //  - An array of <TabItem> objects.
-  //  - Some options
-  showOnlyTheseTabs: function(tabs, options) {
-    try {
-      if (!options)
-        options = {};
-
-      let tabBarTabs = Array.slice(gBrowser.tabs);
-      let visibleTabs = tabs.map(function(tab) tab.tab);
-
-      // Show all of the tabs in the group.
-      tabBarTabs.forEach(function(tab){
-        let hidden = true;
-        visibleTabs.some(function(visibleTab, i) {
-          if (visibleTab == tab) {
-            hidden = false;
-            // remove the element to speed up the next loop.
-            if (options.dontReorg)
-              visibleTabs.splice(i, 1);
-            return true;
-          }
-        });
-        tab.hidden = hidden && !tab.pinned;
-      });
-    } catch(e) {
-      Utils.log(e);
-    }
-  },
-
-  // ----------
   // Function: _addDevMenu
   // Fills out the "dev menu" in the TabCandy UI.
   _addDevMenu: function() {

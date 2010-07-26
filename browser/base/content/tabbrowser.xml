@@ -1693,6 +1693,17 @@
         </body>
       </method>
 
+      <method name="showOnlyTheseTabs">
+        <parameter name="aTabs"/>
+        <body>
+        <![CDATA[
+          Array.forEach(this.tabs, function(tab) {
+            tab.hidden = aTabs.indexOf(tab) == -1 && !tab.pinned;
+          });
+        ]]>
+        </body>
+      </method>
+
       <method name="selectTabAtIndex">
         <parameter name="aIndex"/>
         <parameter name="aEvent"/>
