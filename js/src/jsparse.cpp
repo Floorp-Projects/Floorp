@@ -2750,7 +2750,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
                     return NULL;
                 rhs->pn_type = TOK_NAME;
                 rhs->pn_op = JSOP_GETARG;
-                rhs->pn_cookie.set(funtc.staticLevel, slot);
+                rhs->pn_cookie.set(funtc.staticLevel, uint16(slot));
                 rhs->pn_dflags |= PND_BOUND;
 
                 item = JSParseNode::newBinaryOrAppend(TOK_ASSIGN, JSOP_NOP, lhs, rhs, &funtc);
@@ -3170,7 +3170,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
      * include script->nfixed.
      */
     pn->pn_op = JSOP_GETLOCAL;
-    pn->pn_cookie.set(tc->staticLevel, n);
+    pn->pn_cookie.set(tc->staticLevel, uint16(n));
     pn->pn_dflags |= PND_LET | PND_BOUND;
 
     /*
