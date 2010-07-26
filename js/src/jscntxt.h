@@ -1245,6 +1245,9 @@ struct JSGCTracer : public JSTracer {
     js::Vector<JSObject *, 0, js::SystemAllocPolicy> arraysToSlowify;
 };
 
+extern JS_FRIEND_API(void)
+js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked);
+
 struct JSRuntime {
     /* Default compartment. */
     JSCompartment       *defaultCompartment;
@@ -1374,8 +1377,7 @@ struct JSRuntime {
     /* True if any debug hooks not supported by the JIT are enabled. */
     bool debuggerInhibitsJIT() const {
         return (globalDebugHooks.interruptHook ||
-                globalDebugHooks.callHook ||
-                globalDebugHooks.objectHook);
+                globalDebugHooks.callHook);
     }
 #endif
 
@@ -1607,6 +1609,13 @@ struct JSRuntime {
 
     bool init(uint32 maxbytes);
 
+    inline void triggerGC(bool gcLocked) {
+        if (!gcIsNeeded) {
+            gcIsNeeded = true;
+            js_TriggerAllOperationCallbacks(this, gcLocked);
+        }
+    }
+
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
 
@@ -1615,7 +1624,9 @@ struct JSRuntime {
     }
 
     void updateMallocCounter(size_t bytes) {
-        gcMallocBytes -= bytes; /* We tolerate races and lost counts here. */
+        /* We tolerate races and lost counts here. */
+        if ((gcMallocBytes -= bytes) <= 0)
+            triggerGC(false);
     }
 
     bool mallocQuotaReached() {
@@ -2008,21 +2019,10 @@ struct JSContext
     js::BackgroundSweepTask *gcSweepTask;
 #endif
 
-    inline void triggerGC() {
-        if (!runtime->gcIsNeeded) {
-            runtime->gcIsNeeded = true;
-            JS_TriggerAllOperationCallbacks(runtime);
-        }
-    }
-
     inline void *reportIfOutOfMemory(void *p) {
-        if (p) {
-            if (runtime->mallocQuotaReached())
-                triggerGC();
-            return p;
-        }
-        js_ReportOutOfMemory(this);
-        return NULL;
+        if (!p)
+            js_ReportOutOfMemory(this);
+        return p;
     }
 
     inline void* malloc(size_t bytes) {
@@ -2963,14 +2963,6 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  */
 extern JSBool
 js_InvokeOperationCallback(JSContext *cx);
-
-#ifndef JS_THREADSAFE
-# define js_TriggerAllOperationCallbacks(rt, gcLocked) \
-    js_TriggerAllOperationCallbacks (rt)
-#endif
-
-void
-js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked);
 
 extern JSBool
 js_HandleExecutionInterrupt(JSContext *cx);
