@@ -3706,6 +3706,9 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_USE_WIDGET_LAYERS) {
         renderDocFlags |= nsIPresShell::RENDER_USE_WIDGET_LAYERS;
     }
+    if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_ASYNC_DECODE_IMAGES) {
+        renderDocFlags |= nsIPresShell::RENDER_ASYNC_DECODE_IMAGES;
+    }
 
     rv = presShell->RenderDocument(r, renderDocFlags, bgColor, mThebes);
 
