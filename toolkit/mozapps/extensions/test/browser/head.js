@@ -286,8 +286,10 @@ MockProvider.prototype = {
     if (!this.started)
       return;
 
+    let requiresRestart = (aAddon.operationsRequiringRestart &
+                           AddonManager.OP_NEEDS_RESTART_INSTALL) != 0;
     AddonManagerPrivate.callInstallListeners("onExternalInstall", null, aAddon,
-                                             null, false)
+                                             null, requiresRestart)
   },
 
   /**
@@ -576,8 +578,8 @@ MockProvider.prototype = {
 
 /***** Mock Addon object for the Mock Provider *****/
 
-function MockAddon(aId, aName, aType, aRestartless) {
-  // Only set required attributes
+function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
+  // Only set required attributes.
   this.id = aId || "";
   this.name = aName || "";
   this.type = aType || "extension";
@@ -592,8 +594,11 @@ function MockAddon(aId, aName, aType, aRestartless) {
   this.creator = "";
   this.pendingOperations = 0;
   this.permissions = 0;
-
-  this._restartless = aRestartless || false;
+  this.operationsRequiringRestart = aOperationsRequiringRestart ||
+    (AddonManager.OP_NEEDS_RESTART_INSTALL |
+     AddonManager.OP_NEEDS_RESTART_UNINSTALL |
+     AddonManager.OP_NEEDS_RESTART_ENABLE |
+     AddonManager.OP_NEEDS_RESTART_DISABLE);
 }
 
 MockAddon.prototype = {
