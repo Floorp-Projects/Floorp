@@ -668,7 +668,6 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
              * end so that we can put "get" in front of the function definition.
              */
             if (gsop[j] && IsFunctionObject(val[j])) {
-                JSFunction *fun = js_ValueToFunction(cx, &val[j], JSV2F_SEARCH_STACK);
                 const jschar *start = vchars;
                 const jschar *end = vchars + vlength;
 
@@ -676,18 +675,6 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
                 if (vchars[0] == '(') {
                     vchars++;
                     parenChomp = 1;
-                }
-
-                /*
-                 * Try to jump "getter" or "setter" keywords, if we suspect
-                 * they might appear here.  This code can be confused by people
-                 * defining Function.prototype.toString, so let's be cautious.
-                 */
-                if (JSFUN_GETTER_TEST(fun->flags) || JSFUN_SETTER_TEST(fun->flags)) {
-                    /* skip "getter/setter" */
-                    const jschar *tmp = js_strchr_limit(vchars, ' ', end);
-                    if (tmp)
-                        vchars = tmp + 1;
                 }
 
                 /* Try to jump "function" keyword. */
