@@ -290,7 +290,6 @@ Class js_NumberClass = {
 static JSBool
 Number(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
-    Value v;
     if (argc != 0) {
         if (!ValueToNumber(cx, &argv[0]))
             return JS_FALSE;
@@ -323,7 +322,7 @@ num_toSource(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
     }
     JS_snprintf(buf, sizeof buf, "(new %s(%s))", js_NumberClass.name, numStr);
-    str = JS_NewStringCopyZ(cx, buf);
+    str = js_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;
     vp->setString(str);
@@ -573,7 +572,7 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-    JSString *str = JS_NewStringCopyZ(cx, numStr);
+    JSString *str = js_NewStringCopyZ(cx, numStr);
     if (!str)
         return JS_FALSE;
     vp->setString(str);
@@ -808,7 +807,7 @@ js_IntToString(JSContext *cx, jsint i)
         return JSString::intString(i);
 
     char buf[12];
-    return JS_NewStringCopyZ(cx, IntToCString(i, 10, buf, sizeof buf));
+    return js_NewStringCopyZ(cx, IntToCString(i, 10, buf, sizeof buf));
 }
 
 static JSString * JS_FASTCALL
@@ -848,7 +847,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
     numStr = NumberToCString(cx, d, base, buf, sizeof buf);
     if (!numStr)
         return NULL;
-    s = JS_NewStringCopyZ(cx, numStr);
+    s = js_NewStringCopyZ(cx, numStr);
     if (!(numStr >= buf && numStr < buf + sizeof buf))
         js_free(numStr);
     data->dtoaCache.base = base;

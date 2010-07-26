@@ -285,14 +285,6 @@ JSVAL_TO_PRIVATE(jsval v)
     return JSVAL_TO_PRIVATE_PTR_IMPL(l);
 }
 
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE(jsval v)
-{
-    jsval_layout l;
-    l.asBits = JSVAL_BITS(v);
-    return JSVAL_IS_UNDERLYING_TYPE_OF_PRIVATE_IMPL(l);
-}
-
 /************************************************************************/
 
 /*

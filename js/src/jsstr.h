@@ -119,18 +119,18 @@ struct JSString {
 
     // Not private because we want to be able to use static
     // initializers for them.  Don't use these directly!
-    union {
-        size_t              mCapacity; /* in flat strings (optional) */
-        JSString            *mParent; /* in rope interior nodes */
-        JSRopeBufferInfo    *mBufferWithInfo; /* in rope top nodes */
-    };
-    union {
-        size_t              mOffset; /* in dependent strings */
-        JSString            *mLeft;  /* in rope interior and top nodes */
-    };
     size_t                  mLengthAndFlags;  /* in all strings */
     union {
-        jschar              *mChars; /* in flat strings */
+        jschar              *mChars; /* in flat and dependent strings */
+        JSString            *mLeft;  /* in rope interior and top nodes */
+    };
+    union {
+        size_t              mCapacity; /* in mutable flat strings (optional) */
+        JSString            *mParent; /* in rope interior nodes */
+        JSRopeBufferInfo    *mBufferWithInfo; /* in rope top nodes */
+        jschar              mInlineStorage[1]; /* In short strings. */
+    };
+    union {
         JSString            *mBase;  /* in dependent strings */
         JSString            *mRight; /* in rope interior and top nodes */
     };
@@ -213,20 +213,9 @@ struct JSString {
     }
 
     JS_ALWAYS_INLINE jschar *chars() {
-        return isFlat() ? flatChars() : nonFlatChars();
-    }
-
-    JS_ALWAYS_INLINE jschar *nonFlatChars() {
-        if (isDependent())
-            return dependentChars();
-        else {
+        if (JS_UNLIKELY(isRope()))
             flatten();
-            JS_ASSERT(isFlat() || isDependent());
-            if (isFlat())
-                return flatChars();
-            else
-                return dependentChars();
-        }
+        return mChars;
     }
 
     JS_ALWAYS_INLINE size_t length() const {
@@ -246,10 +235,15 @@ struct JSString {
         end = length() + (chars = this->chars());
     }
 
+    JS_ALWAYS_INLINE jschar *inlineStorage() {
+        JS_ASSERT(isFlat());
+        return mInlineStorage;
+    }
+
     /* Specific flat string initializer and accessor methods. */
     JS_ALWAYS_INLINE void initFlat(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
-        mOffset = 0;
+        mBase = NULL;
         mCapacity = 0;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT;
         mChars = chars;
@@ -257,7 +251,7 @@ struct JSString {
 
     JS_ALWAYS_INLINE void initFlatMutable(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
-        mOffset = 0;
+        mBase = NULL;
         mCapacity = cap;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT | MUTABLE;
         mChars = chars;
@@ -321,10 +315,14 @@ struct JSString {
         mLengthAndFlags &= ~MUTABLE;
     }
 
-    inline void initDependent(JSString *bstr, size_t off, size_t len) {
+    /*
+     * The chars pointer should point somewhere inside the buffer owned by bstr.
+     * The caller still needs to pass bstr for GC purposes.
+     */
+    inline void initDependent(JSString *bstr, jschar *chars, size_t len) {
         JS_ASSERT(len <= MAX_LENGTH);
         mParent = NULL;
-        mOffset = off;
+        mChars = chars;
         mLengthAndFlags = DEPENDENT | (len << FLAGS_LENGTH_SHIFT);
         mBase = bstr;
     }
@@ -335,13 +333,7 @@ struct JSString {
     }
 
     JS_ALWAYS_INLINE jschar *dependentChars() {
-        return dependentBase()->isFlat()
-               ? dependentBase()->flatChars() + dependentStart()
-               : js_GetDependentStringChars(this);
-    }
-
-    inline size_t dependentStart() const {
-        return mOffset;
+        return mChars;
     }
 
     inline size_t dependentLength() const {
@@ -395,22 +387,23 @@ struct JSString {
         mBufferWithInfo = NULL;
     }
 
-    /*   
+    /*
      * When flattening a rope, we need to convert a rope node to a dependent
      * string in two separate parts instead of calling initDependent.
      */
-    inline void startTraversalConversion(size_t offset) {
+    inline void startTraversalConversion(jschar *chars, size_t offset) {
         JS_ASSERT(isInteriorNode());
-        mOffset = offset;
+        mChars = chars + offset;
     }    
 
-    inline void finishTraversalConversion(JSString *base, size_t end) {
+    inline void finishTraversalConversion(JSString *base, jschar *chars,
+                                          size_t end) {
         JS_ASSERT(isInteriorNode());
         /* Note that setting flags also clears the traversal count. */
         mLengthAndFlags = JSString::DEPENDENT |
-            ((end - mOffset) << JSString::FLAGS_LENGTH_SHIFT);
+            ((chars + end - mChars) << JSString::FLAGS_LENGTH_SHIFT);
         mBase = base;
-    }    
+    }
 
     inline void ropeClearTraversalCount() {
         JS_ASSERT(isRope());
@@ -481,6 +474,53 @@ struct JSString {
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
     static JSString *intString(jsint i);
 };
+
+/*
+ * Short strings should be created in cases where it's worthwhile to avoid
+ * mallocing the string buffer for a small string. We keep 2 string headers'
+ * worth of space in short strings so that more strings can be stored this way.
+ */
+struct JSShortString {
+    JSString mHeader;
+    JSString mDummy;
+
+    /*
+     * Set the length of the string, and return a buffer for the caller to write
+     * to. This buffer must be written immediately, and should not be modified
+     * afterward.
+     */
+    inline jschar *init(size_t length) {
+        JS_ASSERT(length <= MAX_SHORT_STRING_LENGTH);
+        mHeader.initFlat(mHeader.inlineStorage(), length);
+        return mHeader.inlineStorage();
+    }
+
+    inline void resetLength(size_t length) {
+        mHeader.initFlat(mHeader.flatChars(), length);
+    }
+
+    inline JSString *header() {
+        return &mHeader;
+    }
+
+    static const size_t MAX_SHORT_STRING_LENGTH =
+            ((sizeof(JSString) + 2 * sizeof(size_t)) / sizeof(jschar)) - 1;
+
+    static inline bool fitsIntoShortString(size_t length) {
+        return length <= MAX_SHORT_STRING_LENGTH;
+    }
+};
+
+/*
+ * We're doing some tricks to give us more space for short strings, so make
+ * sure that space is ordered in the way we expect.
+ */
+JS_STATIC_ASSERT(offsetof(JSString, mInlineStorage) == 2 * sizeof(void *));
+JS_STATIC_ASSERT(offsetof(JSString, mBase) == 3 * sizeof(void *));
+JS_STATIC_ASSERT(offsetof(JSShortString, mDummy) == sizeof(JSString));
+JS_STATIC_ASSERT(offsetof(JSString, mInlineStorage) +
+                 sizeof(jschar) * (JSShortString::MAX_SHORT_STRING_LENGTH + 1) ==
+                 sizeof(JSShortString));
 
 /*
  * An iterator that iterates through all nodes in a rope (the top node, the
@@ -828,9 +868,15 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
 extern JSString *
 js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n);
 
+extern JSString *
+js_NewStringCopyN(JSContext *cx, const char *s, size_t n);
+
 /* Copy a C string and GC-allocate a descriptor for it. */
 extern JSString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s);
+
+extern JSString *
+js_NewStringCopyZ(JSContext *cx, const char *s);
 
 /*
  * Convert a value to a printable C string.
@@ -913,6 +959,32 @@ extern jschar *
 js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 
 #define js_strncpy(t, s, n)     memcpy((t), (s), (n) * sizeof(jschar))
+
+inline void
+js_short_strncpy(jschar *dest, const jschar *src, size_t num)
+{
+    /*
+     * It isn't strictly necessary here for |num| to be small, but this function
+     * is currently only called on buffers for short strings.
+     */
+    JS_ASSERT(JSShortString::fitsIntoShortString(num));
+    switch (num) {
+      case 1:
+        *dest = *src;
+        break;
+      case 2:
+        JS_ASSERT(sizeof(uint32) == 2 * sizeof(jschar));
+        *(uint32 *)dest = *(uint32 *)src;
+        break;
+      case 4:
+        JS_ASSERT(sizeof(uint64) == 4 * sizeof(jschar));
+        *(uint64 *)dest = *(uint64 *)src;
+        break;
+      default:
+        for (size_t i = 0; i < num; i++)
+            dest[i] = src[i];
+    }
+}
 
 /*
  * Return s advanced past any Unicode white space characters.

@@ -1675,25 +1675,6 @@ JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetObjectHook(JSRuntime *rt, JSObjectHook hook, void *closure)
-{
-#ifdef JS_TRACER
-    {
-        AutoLockGC lock(rt);
-        bool wasInhibited = rt->debuggerInhibitsJIT();
-#endif
-        rt->globalDebugHooks.objectHook = hook;
-        rt->globalDebugHooks.objectHookData = closure;
-#ifdef JS_TRACER
-        JITInhibitingHookChange(rt, wasInhibited);
-    }
-    if (hook)
-        LeaveTraceRT(rt);
-#endif
-    return JS_TRUE;
-}
-
-JS_PUBLIC_API(JSBool)
 JS_SetThrowHook(JSRuntime *rt, JSThrowHook hook, void *closure)
 {
     rt->globalDebugHooks.throwHook = hook;

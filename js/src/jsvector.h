@@ -411,7 +411,7 @@ class Vector : AllocPolicy
  * care not to append the terminating '\0'.
  */
 template <class T, size_t N, class AP, size_t ArrayLength>
-bool
+JS_ALWAYS_INLINE bool
 js_AppendLiteral(Vector<T,N,AP> &v, const char (&array)[ArrayLength])
 {
     return v.append(array, array + ArrayLength - 1);
@@ -421,7 +421,7 @@ js_AppendLiteral(Vector<T,N,AP> &v, const char (&array)[ArrayLength])
 /* Vector Implementation */
 
 template <class T, size_t N, class AllocPolicy>
-inline
+JS_ALWAYS_INLINE
 Vector<T,N,AllocPolicy>::Vector(AllocPolicy ap)
   : AllocPolicy(ap), mLengthOrCapacity(0)
 #ifdef DEBUG
@@ -430,7 +430,7 @@ Vector<T,N,AllocPolicy>::Vector(AllocPolicy ap)
 {}
 
 template <class T, size_t N, class AP>
-inline
+JS_ALWAYS_INLINE
 Vector<T,N,AP>::~Vector()
 {
     ReentrancyGuard g(*this);
@@ -482,7 +482,7 @@ Vector<T,N,AP>::calculateNewCapacity(size_t curLength, size_t lengthInc,
  * (heapLength() + lengthInc) and fail on OOM or integer overflow.
  */
 template <class T, size_t N, class AP>
-inline bool
+JS_ALWAYS_INLINE bool
 Vector<T,N,AP>::growHeapStorageBy(size_t lengthInc)
 {
     size_t newCap;
@@ -588,14 +588,14 @@ Vector<T,N,AP>::growByImpl(size_t incr)
 }
 
 template <class T, size_t N, class AP>
-inline bool
+JS_ALWAYS_INLINE bool
 Vector<T,N,AP>::growBy(size_t incr)
 {
     return growByImpl<true>(incr);
 }
 
 template <class T, size_t N, class AP>
-inline bool
+JS_ALWAYS_INLINE bool
 Vector<T,N,AP>::growByUninitialized(size_t incr)
 {
     return growByImpl<false>(incr);
@@ -628,7 +628,7 @@ Vector<T,N,AP>::clear()
 }
 
 template <class T, size_t N, class AP>
-inline bool
+JS_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(const T &t)
 {
     ReentrancyGuard g(*this);
@@ -653,7 +653,7 @@ Vector<T,N,AP>::append(const T &t)
 }
 
 template <class T, size_t N, class AP>
-inline bool
+JS_ALWAYS_INLINE bool
 Vector<T,N,AP>::appendN(const T &t, size_t needed)
 {
     ReentrancyGuard g(*this);
@@ -682,7 +682,7 @@ Vector<T,N,AP>::appendN(const T &t, size_t needed)
 
 template <class T, size_t N, class AP>
 template <class U>
-inline bool
+JS_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
 {
     ReentrancyGuard g(*this);
@@ -712,14 +712,14 @@ Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
 
 template <class T, size_t N, class AP>
 template <class U>
-inline bool
+JS_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(const U *insBegin, size_t length)
 {
     return this->append(insBegin, insBegin + length);
 }
 
 template <class T, size_t N, class AP>
-inline void
+JS_ALWAYS_INLINE void
 Vector<T,N,AP>::popBack()
 {
     ReentrancyGuard g(*this);
