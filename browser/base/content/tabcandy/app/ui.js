@@ -70,6 +70,16 @@ var UIManager = {
   // If true, prevent the next zoom preparation.
   _stopZoomPreparation : false,
 
+  // Variable: _reorderTabItemsOnShow
+  // Keeps track of the <Group>s which their tab items' tabs have been moved
+  // and re-orders the tab items when switching to Tab Candy.
+  _reorderTabItemsOnShow : [],
+
+  // Variable: _reorderTabsOnHide
+  // Keeps track of the <Group>s which their tab items have been moved in Tab
+  // Candy UI and re-orders the tabs when switcing back to main browser.
+  _reorderTabsOnHide : [],
+
   // Variable: _currentTab
   // Keeps track of which <Tabs> tab we are currently on.
   // Used to facilitate zooming down from a previous tab.
@@ -234,8 +244,20 @@ var UIManager = {
           self._stopZoomPreparation = true;
 
         self.showTabCandy();
-      } else
-        self.hideTabCandy();
+        // ensure the tabs in the tab strip are in the same order as the tab
+        // items in groups when switching back to main browser UI for the first
+        // time.
+        Groups.groups.forEach(function(group) {
+          self._reorderTabsOnHide.push(group);
+        });
+      } else {
+         self.hideTabCandy();
+        // ensure the tab items in groups are in the same order as tabs in tab
+        // strip when going into Tab Candy for the first time.
+        Groups.groups.forEach(function(group) {
+          self._reorderTabItemsOnShow.push(group);
+        });
+      }
 
       // ___ setup observer to save canvas images
       Components.utils.import("resource://gre/modules/Services.jsm");
@@ -312,6 +334,11 @@ var UIManager = {
     var currentTab = this._currentTab;
     var item = null;
 
+    this._reorderTabItemsOnShow.forEach(function(group) {
+      group.reorderTabItemsBasedOnTabOrder();
+    });
+    this._reorderTabItemsOnShow = [];
+
     gTabViewDeck.selectedIndex = 1;
     gTabViewFrame.contentWindow.focus();
 
@@ -351,6 +378,11 @@ var UIManager = {
   // Function: hideTabCandy
   // Hides Tab candy and shows the main browser UI .
   hideTabCandy: function() {
+    this._reorderTabsOnHide.forEach(function(group) {
+      group.reorderTabsBasedOnTabItemOrder();
+    });
+    this._reorderTabsOnHide = [];
+
     gTabViewDeck.selectedIndex = 0;
     gBrowser.contentWindow.focus();
 
@@ -418,11 +450,14 @@ var UIManager = {
     });
 
     Tabs.onMove(function() {
-      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+      if (!self._isTabCandyVisible()) {
         var activeGroup = Groups.getActiveGroup();
-        if ( activeGroup )
-          activeGroup.reorderBasedOnTabOrder();
-      }, 1);
+        if (activeGroup) {
+          var index = self._reorderTabItemsOnShow.indexOf(activeGroup);
+          if (index == -1)
+            self._reorderTabItemsOnShow.push(activeGroup);
+        }
+      }
     });
 
     Tabs.onFocus(function() {
@@ -502,6 +537,20 @@ var UIManager = {
           oldItem.setZoomPrep(true);
       }
     }, 1);
+  },
+
+  // ----------
+  // Function: setReorderTabsOnHide
+  // Sets the group which the tab items' tabs should be re-ordered when
+  // switching to the main browser UI.
+  // Parameters:
+  //   group - the group which would be used for re-ordering tabs.
+  setReorderTabsOnHide: function(group) {
+    if (this._isTabCandyVisible()) {
+      var index = this._reorderTabsOnHide.indexOf(group);
+      if (index == -1)
+        this._reorderTabsOnHide.push(group);
+    }
   },
 
   // ----------
@@ -896,15 +945,6 @@ var UIManager = {
         });
         tab.hidden = hidden && !tab.pinned;
       });
-
-      // Move them (in order) that they appear in the group to the end of the
-      // tab strip. This way the tab order is matched up to the group's
-      // thumbnail order.
-      if (!options.dontReorg) {
-        visibleTabs.forEach(function(visibleTab) {
-          gBrowser.moveTabTo(visibleTab, tabBarTabs.length - 1);
-        });
-      }
     } catch(e) {
       Utils.log(e);
     }
