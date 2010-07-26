@@ -457,9 +457,10 @@ function AddonWrapper(aTheme, aBeingEnabled) {
       return val;
 
     if (val)
-      throw new Error("Cannot disable the active theme");
+      LightweightThemeManager.currentTheme = null;
+    else
+      LightweightThemeManager.currentTheme = aTheme;
 
-    LightweightThemeManager.currentTheme = aTheme;
     return val;
   });
 

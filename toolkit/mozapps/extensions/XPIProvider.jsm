@@ -5186,13 +5186,19 @@ function AddonWrapper(aAddon) {
     if (val == aAddon.userDisabled)
       return val;
 
-    if (aAddon.type == "theme" && val)
-      throw new Error("Cannot disable the active theme");
-
-    if (aAddon instanceof DBAddonInternal)
-      XPIProvider.updateAddonDisabledState(aAddon, val);
-    else
+    if (aAddon instanceof DBAddonInternal) {
+      if (aAddon.type == "theme" && val) {
+        if (aAddon.internalName == XPIProvider.defaultSkin)
+          throw new Error("Cannot disable the default theme");
+        XPIProvider.enableDefaultTheme();
+      }
+      else {
+        XPIProvider.updateAddonDisabledState(aAddon, val);
+      }
+    }
+    else {
       aAddon.userDisabled = val;
+    }
 
     return val;
   });
