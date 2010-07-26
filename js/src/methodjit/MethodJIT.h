@@ -64,7 +64,7 @@ struct VMFrame
     /* This must be the first entry on CPUs which push return addresses. */
     void *scriptedReturn;
 
-#if defined(JS_CPU_X86) or defined(JS_CPU_X64)
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     uintptr_t               padding;
 #endif
 
