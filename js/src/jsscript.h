@@ -78,13 +78,23 @@ class UpvarCookie
 
     static const uint32 FREE_VALUE = 0xfffffffful;
 
+    void checkInvariants() {
+        JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32));
+        JS_STATIC_ASSERT(UPVAR_LEVEL_LIMIT < FREE_LEVEL);
+    }
+
   public:
     /*
      * All levels above-and-including FREE_LEVEL are reserved so that
      * FREE_VALUE can be used as a special value.
      */
     static const uint16 FREE_LEVEL = 0x3fff;
-    static const uint16 MAX_LEVEL = FREE_LEVEL - 1;
+
+    /*
+     * If a function has a higher static level than this limit, we will not
+     * optimize it using UPVAR opcodes.
+     */
+    static const uint16 UPVAR_LEVEL_LIMIT = 16;
     static const uint16 CALLEE_SLOT = 0xffff;
     static bool isLevelReserved(uint16 level) { return level >= FREE_LEVEL; }
 
@@ -92,14 +102,13 @@ class UpvarCookie
     uint32 asInteger() const { return value; }
     /* isFree check should be performed before using these accessors. */
     uint16 level() const { JS_ASSERT(!isFree()); return value >> 16; }
-    uint16 slot() const { JS_ASSERT(!isFree()); return uint16(value); }
+    uint16 slot() const { JS_ASSERT(!isFree()); return value; }
 
     void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
     void set(uint16 newLevel, uint16 newSlot) { value = (uint32(newLevel) << 16) | newSlot; }
     void makeFree() { set(0xffff, 0xffff); JS_ASSERT(isFree()); }
     void fromInteger(uint32 u32) { value = u32; }
 };
-JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32));
 
 }
 
