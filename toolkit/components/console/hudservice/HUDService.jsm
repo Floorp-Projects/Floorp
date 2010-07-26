@@ -1733,15 +1733,19 @@ HeadsUpDisplay.prototype = {
   makeHTMLNode:
   function HUD_makeHTMLNode(aTag)
   {
-    try {
-      return this.HTMLFactory(aTag);
+    var element;
+
+    if (this.HTMLFactory) {
+      element = this.HTMLFactory(aTag);
     }
-    catch (ex) {
+    else {
       var ns = ELEMENT_NS;
       var nsUri = ELEMENT_NS_URI;
       var tag = ns + aTag;
-      return this.chromeDocument.createElementNS(nsUri, tag);
+      element = this.chromeDocument.createElementNS(nsUri, tag);
     }
+
+    return element;
   },
 
   /**
