@@ -47,7 +47,7 @@
 
 nsRawReader::nsRawReader(nsBuiltinDecoder* aDecoder)
   : nsBuiltinDecoderReader(aDecoder),
-    mCurrentFrame(0)
+    mCurrentFrame(0), mFrameSize(0)
 {
   MOZ_COUNT_CTOR(nsRawReader);
 }
@@ -173,6 +173,9 @@ PRBool nsRawReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   mozilla::MonitorAutoEnter autoEnter(mMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
                "Should be on state machine thread or decode thread.");
+
+  if (!mFrameSize)
+    return PR_FALSE; // Metadata read failed.  We should refuse to play.
 
   PRInt64 currentFrameTime = 1000 * mCurrentFrame / mFrameRate;
   PRUint32 length = mFrameSize - sizeof(nsRawPacketHeader);
