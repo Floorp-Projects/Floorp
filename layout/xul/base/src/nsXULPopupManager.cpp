@@ -907,6 +907,16 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
 }
 
 void
+nsXULPopupManager::HidePopup(nsIView* aView)
+{
+  nsIFrame *frame = static_cast<nsIFrame *>(aView->GetClientData());
+  if (!frame || frame->GetType() != nsGkAtoms::menuPopupFrame)
+    return;
+
+  HidePopup(frame->GetContent(), PR_FALSE, PR_TRUE, PR_FALSE);
+}
+
+void
 nsXULPopupManager::HidePopupAfterDelay(nsMenuPopupFrame* aPopup)
 {
   // Don't close up immediately.
