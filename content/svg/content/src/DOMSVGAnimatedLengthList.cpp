@@ -54,7 +54,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGAnimatedLengthList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGAnimatedLengthList)
 
 }
-DOMCI_DATA(SVGAnimatedLengthList, DOMSVGAnimatedLengthList)
+DOMCI_DATA(SVGAnimatedLengthList, mozilla::DOMSVGAnimatedLengthList)
 namespace mozilla {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGAnimatedLengthList)

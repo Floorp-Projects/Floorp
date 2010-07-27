@@ -264,7 +264,11 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
   });
 
   this.__defineGetter__("pendingOperations", function() {
-    return 0;
+    return AddonManager.PENDING_NONE;
+  });
+
+  this.__defineGetter__("operationsRequiringRestart", function() {
+    return AddonManager.OP_NEEDS_RESTART_NONE;
   });
 
   this.__defineGetter__("permissions", function() {

@@ -5228,8 +5228,7 @@ js_SaveAndClearRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
 }
 
 JS_FRIEND_API(void)
-js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                        AutoStringRooter *tvr)
+js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics)
 {
     /* Clear/free any new JSRegExpStatics data before clobbering. */
     cx->regExpStatics.copy(*statics);

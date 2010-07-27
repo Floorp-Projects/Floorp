@@ -876,6 +876,16 @@ customMethodCalls = {
     'nsIDOMElement_': {
         'thisType': 'nsGenericElement'
         },
+    'nsIDOMDocument_CreateElement': {
+        'thisType': 'nsDocument',
+        'code': '    nsCOMPtr<nsIContent> result;\n'
+                '    rv = self->CreateElement(arg0, getter_AddRefs(result));'
+    },
+    'nsIDOMDocument_CreateTextNode': {
+        'thisType': 'nsDocument',
+        'code': '    nsCOMPtr<nsIContent> result;\n'
+                '    rv = self->CreateTextNode(arg0, getter_AddRefs(result));'
+    },
     # WebGL
     'nsICanvasRenderingContextWebGL_BufferData': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_BufferSubData': CUSTOM_QS,

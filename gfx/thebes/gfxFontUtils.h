@@ -465,6 +465,12 @@ struct HheaTable {
     AutoSwap_PRUint16    numOfLongHorMetrics;
 };
 
+struct MaxpTableHeader {
+    AutoSwap_PRUint32    version; // CFF: 0x00005000; TrueType: 0x00010000
+    AutoSwap_PRUint16    numGlyphs;
+// truetype version has additional fields that we don't currently use
+};
+
 #pragma pack()
 
 // Return just the highest bit of the given value, i.e., the highest

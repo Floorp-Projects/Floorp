@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.3.12 API Reference</title>
+<title>FreeType-2.4.1 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.3.12 API Reference</h1></center>
+<center><h1>FreeType-2.4.1 API Reference</h1></center>
 
 <center><h1>
 Cache Sub-System
@@ -185,7 +185,7 @@ Defined in FT_CACHE_H (freetype/ftcache.h).
 </pre></table><br>
 <table align=center width="87%"><tr><td>
 <p>An opaque handle to a cache node object. Each cache node is reference-counted. A node with a count of&nbsp;0 might be flushed out of a full cache whenever a lookup request is performed.</p>
-<p>If you lookup nodes, you have the ability to &lsquo;acquire&rsquo; them, i.e., to increment their reference count. This will prevent the node from being flushed out of the cache until you explicitly &lsquo;release&rsquo; it (see <a href="ft2-cache_subsystem.html#FTC_Node_Unref">FTC_Node_Unref</a>).</p>
+<p>If you look up nodes, you have the ability to &lsquo;acquire&rsquo; them, i.e., to increment their reference count. This will prevent the node from being flushed out of the cache until you explicitly &lsquo;release&rsquo; it (see <a href="ft2-cache_subsystem.html#FTC_Node_Unref">FTC_Node_Unref</a>).</p>
 <p>See also <a href="ft2-cache_subsystem.html#FTC_SBitCache_Lookup">FTC_SBitCache_Lookup</a> and <a href="ft2-cache_subsystem.html#FTC_ImageCache_Lookup">FTC_ImageCache_Lookup</a>.</p>
 </td></tr></table><br>
 </td></tr></table>

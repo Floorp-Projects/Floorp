@@ -17,6 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=377624
   <input id='a' type='file' accept="image/*">
   <input id='b' type='file' accept="audio/*">
   <input id='c' type='file' accept="video/*">
+  <input id='d' type='file' accept="image/*, audio/* ">
+  <input id='e' type='file' accept=" image/*,video/*">
+  <input id='f' type='file' accept="audio/*,video/*">
+  <input id='g' type='file' accept="image/*, audio/* ,video/*">
+  <input id='h' type='file' accept="foo/baz,image/*,bogus/duh">
+  <input id='i' type='file' accept="mime/type;parameter,video/*">
+  <input id='z' type='file' accept="i/am,a,pathological,;,,,,test/case">
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -105,22 +112,29 @@ factory = {
   }
 };
 
-document.getElementById('a').addEventListener("focus", function (aEvent) {
-    aEvent.target.removeEventListener("focus", arguments.callee, false);
-    synthesizeKey('VK_SPACE', {});
-  }, false);
-document.getElementById('b').addEventListener("focus", function (aEvent) {
-    aEvent.target.removeEventListener("focus", arguments.callee, false);
-    synthesizeKey('VK_SPACE', {});
-  }, false);
-document.getElementById('c').addEventListener("focus", function (aEvent) {
-    aEvent.target.removeEventListener("focus", arguments.callee, false);
-    synthesizeKey('VK_SPACE', {});
-  }, false);
+var testData = [["a", FilePickerService.prototype.filterImages, 1],
+                ["b", FilePickerService.prototype.filterAudio, 1],
+                ["c", FilePickerService.prototype.filterVideo, 1],
+                ["d", FilePickerService.prototype.filterImages +
+                      FilePickerService.prototype.filterAudio, 1],
+                ["e", FilePickerService.prototype.filterImages +
+                      FilePickerService.prototype.filterVideo, 1],
+                ["f", FilePickerService.prototype.filterAudio +
+                      FilePickerService.prototype.filterVideo, 1],
+                ["g", FilePickerService.prototype.filterImages +
+                      FilePickerService.prototype.filterAudio +
+                      FilePickerService.prototype.filterVideo, 1],
+                ["h", FilePickerService.prototype.filterImages, 1],
+                ["i", FilePickerService.prototype.filterVideo, 1],
+                ["z", 0, 0]];
 
-var testData = [["a", FilePickerService.prototype.filterImages],
-                ["b",  FilePickerService.prototype.filterAudio],
-                ["c",  FilePickerService.prototype.filterVideo]];
+testData.forEach(function (datum) {
+document.getElementById(datum[0]).addEventListener("focus", function (aEvent) {
+    aEvent.target.removeEventListener("focus", arguments.callee, false);
+    synthesizeKey('VK_SPACE', {});
+  }, false);
+});
+
 var currentTest = 0;
 
 function launchNextTest(aObserver)
@@ -169,9 +183,9 @@ function runTests()
                "appendFilters should have been called once");
             is(observer.filters[0], FilePickerService.prototype.filterAll +
                testData[currentTest][1],
-               "Incorrect filters have been added");
-            is(observer.filterIndex, 1,
-               "File picker should show the second filter index (first is zero)");
+               "Correct filters should have been added");
+            is(observer.filterIndex, testData[currentTest][2],
+               "File picker should show the correct filter index");
 
             if (++currentTest == testData.length) {
               obs.removeObserver(observer, "TEST_FILEPICKER_APPENDFILTER", false);

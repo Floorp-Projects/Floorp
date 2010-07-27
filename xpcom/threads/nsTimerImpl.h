@@ -50,6 +50,7 @@
 #include "nsCOMPtr.h"
 
 #include "prlog.h"
+#include "mozilla/TimeStamp.h"
 
 #if defined(PR_LOGGING)
 static PRLogModuleInfo *gTimerLog = PR_NewLogModule("nsTimerImpl");
@@ -74,18 +75,10 @@ enum {
   CALLBACK_TYPE_OBSERVER  = 3
 };
 
-// Two timer deadlines must differ by less than half the PRIntervalTime domain.
-#define DELAY_INTERVAL_LIMIT    PR_BIT(8 * sizeof(PRIntervalTime) - 1)
-
-// Maximum possible delay (XXX rework to use ms rather than interval ticks).
-#define DELAY_INTERVAL_MAX      (DELAY_INTERVAL_LIMIT - 1)
-
-// Is interval-time t less than u, even if t has wrapped PRIntervalTime?
-#define TIMER_LESS_THAN(t, u)   ((t) - (u) > DELAY_INTERVAL_LIMIT)
-
 class nsTimerImpl : public nsITimer
 {
 public:
+  typedef mozilla::TimeStamp TimeStamp;
 
   nsTimerImpl();
 
@@ -157,10 +150,10 @@ private:
   PRInt32               mGeneration;
 
   PRUint32              mDelay;
-  PRIntervalTime        mTimeout;
+  TimeStamp             mTimeout;
 
 #ifdef DEBUG_TIMERS
-  PRIntervalTime        mStart, mStart2;
+  TimeStamp             mStart, mStart2;
   static double         sDeltaSum;
   static double         sDeltaSumSquared;
   static double         sDeltaNum;

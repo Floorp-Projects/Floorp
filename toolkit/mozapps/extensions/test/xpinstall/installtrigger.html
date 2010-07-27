@@ -20,6 +20,7 @@ function startInstall() {
   }
   catch (e) {
     document.getElementById("return").textContent = "exception";
+    throw e;
   }
 }
 </script>
