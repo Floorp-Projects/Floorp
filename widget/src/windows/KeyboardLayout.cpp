@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "nsMemory.h"
 #include "KeyboardLayout.h"
 #include "nsToolkit.h"
@@ -110,12 +109,12 @@ VirtualKey::MatchingDeadKeyTable(const DeadKeyEntry* aDeadKeyArray,
   }
 
   for (PRUint32 shiftState = 0; shiftState < 16; shiftState++) {
-    if (IsDeadKey(shiftState)) {
-      const DeadKeyTable* dkt = mShiftStates[shiftState].DeadKey.Table;
-
-      if (dkt && dkt->IsEqual(aDeadKeyArray, aEntries)) {
-        return dkt;
-      }
+    if (!IsDeadKey(shiftState)) {
+      continue;
+    }
+    const DeadKeyTable* dkt = mShiftStates[shiftState].DeadKey.Table;
+    if (dkt && dkt->IsEqual(aDeadKeyArray, aEntries)) {
+      return dkt;
     }
   }
 
@@ -131,15 +130,15 @@ VirtualKey::SetNormalChars(PRUint8 aShiftState,
 
   SetDeadKey(aShiftState, PR_FALSE);
 
-  for (PRUint32 c1 = 0; c1 < aNumOfChars; c1++) {
+  for (PRUint32 index = 0; index < aNumOfChars; index++) {
     // Ignore legacy non-printable control characters
-    mShiftStates[aShiftState].Normal.Chars[c1] =
-      (aChars[c1] >= 0x20) ? aChars[c1] : 0;
+    mShiftStates[aShiftState].Normal.Chars[index] =
+      (aChars[index] >= 0x20) ? aChars[index] : 0;
   }
 
-  for (PRUint32 c2 = aNumOfChars;
-       c2 < NS_ARRAY_LENGTH(mShiftStates[aShiftState].Normal.Chars); c2++) {
-    mShiftStates[aShiftState].Normal.Chars[c2] = 0;
+  PRUint32 len = NS_ARRAY_LENGTH(mShiftStates[aShiftState].Normal.Chars);
+  for (PRUint32 index = aNumOfChars; index < len; index++) {
+    mShiftStates[aShiftState].Normal.Chars[index] = 0;
   }
 }
 
@@ -208,15 +207,15 @@ VirtualKey::GetNativeUniChars(PRUint8 aShiftState,
     return 1;
   }
 
-  PRUint32 cnt = 0;
-  while (cnt < NS_ARRAY_LENGTH(mShiftStates[aShiftState].Normal.Chars) &&
-         mShiftStates[aShiftState].Normal.Chars[cnt]) {
+  PRUint32 index;
+  PRUint32 len = NS_ARRAY_LENGTH(mShiftStates[aShiftState].Normal.Chars);
+  for (index = 0;
+       index < len && mShiftStates[aShiftState].Normal.Chars[index]; index++) {
     if (aUniChars) {
-      aUniChars[cnt] = mShiftStates[aShiftState].Normal.Chars[cnt];
+      aUniChars[index] = mShiftStates[aShiftState].Normal.Chars[index];
     }
-    cnt++;
   }
-  return cnt;
+  return index;
 }
 
 KeyboardLayout::KeyboardLayout() :
@@ -283,7 +282,6 @@ KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey)
                                                    &mChars[1],
                                                    &mShiftStates[1]);
     mNumOfChars = 2;
-
     DeactivateDeadKeyState();
     return;
   }
@@ -293,7 +291,6 @@ KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey)
   PRUint32 numOfBaseChars =
     mVirtualKeys[mLastVirtualKeyIndex].GetUniChars(mLastShiftState, uniChars,
                                                    &finalShiftState);
-
   if (mActiveDeadKey < 0) {
     // No dead-keys are active. Just return the produced characters.
     memcpy(mChars, uniChars, numOfBaseChars * sizeof(PRUnichar));
@@ -302,14 +299,12 @@ KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey)
     return;
   }
 
-
   // Dead-key was active. See if pressed base character does produce
   // valid composite character.
   PRInt32 activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
   PRUnichar compositeChar = (numOfBaseChars == 1 && uniChars[0]) ?
     mVirtualKeys[activeDeadKeyIndex].GetCompositeChar(mDeadKeyShiftState,
                                                       uniChars[0]) : 0;
-
   if (compositeChar) {
     // Active dead-key and base character does produce exactly one
     // composite character.
@@ -357,9 +352,7 @@ KeyboardLayout::GetUniCharsWithShiftState(PRUint8 aVirtualKey,
   PRUint32 numOfBaseChars =
     mVirtualKeys[key].GetUniChars(aShiftStates, uniChars, &finalShiftState);
   PRUint32 chars = PR_MIN(numOfBaseChars, aMaxChars);
-
   memcpy(aUniChars, uniChars, chars * sizeof(PRUnichar));
-
   return chars;
 }
 
@@ -373,15 +366,16 @@ KeyboardLayout::LoadLayout(HKL aLayout)
   mKeyboardLayout = aLayout;
 
   PRUint32 shiftState;
+
   BYTE kbdState[256];
+  memset(kbdState, 0, sizeof(kbdState));
+
   BYTE originalKbdState[256];
   // Bitfield with all shift states that have at least one dead-key.
   PRUint16 shiftStatesWithDeadKeys = 0;
   // Bitfield with all shift states that produce any possible dead-key base
   // characters.
   PRUint16 shiftStatesWithBaseChars = 0;
-
-  memset(kbdState, 0, sizeof(kbdState));
 
   mActiveDeadKey = -1;
   mNumOfChars = 0;
@@ -392,53 +386,41 @@ KeyboardLayout::LoadLayout(HKL aLayout)
 
   // For each shift state gather all printable characters that are produced
   // for normal case when no any dead-key is active.
-  
+
   for (shiftState = 0; shiftState < 16; shiftState++) {
     SetShiftState(kbdState, shiftState);
-
     for (PRUint32 virtualKey = 0; virtualKey < 256; virtualKey++) {
       PRInt32 vki = GetKeyIndex(virtualKey);
       if (vki < 0) {
         continue;
       }
-
-      NS_ASSERTION(vki < NS_ARRAY_LENGTH(mVirtualKeys), "invalid index"); 
-
+      NS_ASSERTION(vki < NS_ARRAY_LENGTH(mVirtualKeys), "invalid index");
       PRUnichar uniChars[5];
-      PRInt32 rv;
-
-      rv = ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)uniChars,
-                         NS_ARRAY_LENGTH(uniChars), 0, mKeyboardLayout);
-
+      PRInt32 ret =
+        ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)uniChars,
+                      NS_ARRAY_LENGTH(uniChars), 0, mKeyboardLayout);
       // dead-key
-      if (rv < 0) {
-        shiftStatesWithDeadKeys |= 1 << shiftState;
-
+      if (ret < 0) {
+        shiftStatesWithDeadKeys |= (1 << shiftState);
         // Repeat dead-key to deactivate it and get its character
         // representation.
         PRUnichar deadChar[2];
-
-        rv = ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)deadChar,
-                           NS_ARRAY_LENGTH(deadChar), 0, mKeyboardLayout);
-
-        NS_ASSERTION(rv == 2, "Expecting twice repeated dead-key character");
-
+        ret = ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)deadChar,
+                            NS_ARRAY_LENGTH(deadChar), 0, mKeyboardLayout);
+        NS_ASSERTION(ret == 2, "Expecting twice repeated dead-key character");
         mVirtualKeys[vki].SetDeadChar(shiftState, deadChar[0]);
       } else {
-        if (rv == 1) {
+        if (ret == 1) {
           // dead-key can pair only with exactly one base character.
-          shiftStatesWithBaseChars |= 1 << shiftState;
+          shiftStatesWithBaseChars |= (1 << shiftState);
         }
-
-        mVirtualKeys[vki].SetNormalChars(shiftState, uniChars, rv);
+        mVirtualKeys[vki].SetNormalChars(shiftState, uniChars, ret);
       }
     }
   }
 
-  
   // Now process each dead-key to find all its base characters and resulting
   // composite characters.
-
   for (shiftState = 0; shiftState < 16; shiftState++) {
     if (!(shiftStatesWithDeadKeys & (1 << shiftState))) {
       continue;
@@ -448,22 +430,17 @@ KeyboardLayout::LoadLayout(HKL aLayout)
 
     for (PRUint32 virtualKey = 0; virtualKey < 256; virtualKey++) {
       PRInt32 vki = GetKeyIndex(virtualKey);
-
       if (vki >= 0 && mVirtualKeys[vki].IsDeadKey(shiftState)) {
         DeadKeyEntry deadKeyArray[256];
-
         PRInt32 n = GetDeadKeyCombinations(virtualKey, kbdState,
-                                           shiftStatesWithBaseChars, 
+                                           shiftStatesWithBaseChars,
                                            deadKeyArray,
                                            NS_ARRAY_LENGTH(deadKeyArray));
-
         const DeadKeyTable* dkt =
           mVirtualKeys[vki].MatchingDeadKeyTable(deadKeyArray, n);
-
         if (!dkt) {
           dkt = AddDeadKeyTable(deadKeyArray, n);
         }
-
         mVirtualKeys[vki].AttachDeadKeyTable(shiftState, dkt);
       }
     }
@@ -523,7 +500,7 @@ KeyboardLayout::SetShiftState(PBYTE aKbdState, PRUint8 aShiftState)
 inline PRInt32
 KeyboardLayout::GetKeyIndex(PRUint8 aVirtualKey)
 {
-// Currently these 50 (NUM_OF_KEYS) virtual keys are assumed
+// Currently these 50 (NS_NUM_OF_KEYS) virtual keys are assumed
 // to produce visible representation:
 // 0x20 - VK_SPACE          ' '
 // 0x30..0x39               '0'..'9'
@@ -540,7 +517,7 @@ KeyboardLayout::GetKeyIndex(PRUint8 aVirtualKey)
 // 0xDC - VK_OEM_5          '\|' for US
 // 0xDD - VK_OEM_6          ']}' for US
 // 0xDE - VK_OEM_7          ''"' for US
-// 0xDF - VK_OEM_8                
+// 0xDF - VK_OEM_8
 
   static const PRInt8 xlat[256] =
   {
@@ -615,13 +592,12 @@ KeyboardLayout::EnsureDeadKeyActive(PRBool aIsActive,
                                     PRUint8 aDeadKey,
                                     const PBYTE aDeadKeyKbdState)
 {
-  PRInt32 rv;
-
+  PRInt32 ret;
   do {
     PRUnichar dummyChars[5];
-
-    rv = ::ToUnicodeEx(aDeadKey, 0, (PBYTE)aDeadKeyKbdState, (LPWSTR)dummyChars,
-                       NS_ARRAY_LENGTH(dummyChars), 0, mKeyboardLayout);
+    ret = ::ToUnicodeEx(aDeadKey, 0, (PBYTE)aDeadKeyKbdState,
+                        (LPWSTR)dummyChars, NS_ARRAY_LENGTH(dummyChars), 0,
+                        mKeyboardLayout);
     // returned values:
     // <0 - Dead key state is active. The keyboard driver will wait for next
     //      character.
@@ -629,9 +605,9 @@ KeyboardLayout::EnsureDeadKeyActive(PRBool aIsActive,
     //      exactly one composite character.
     // >1 - Previous pressed key does not produce any composite characters.
     //      Return dead-key character followed by base character(s).
-  } while ((rv < 0) != aIsActive);
+  } while ((ret < 0) != aIsActive);
 
-  return (rv < 0);
+  return (ret < 0);
 }
 
 void
@@ -642,8 +618,8 @@ KeyboardLayout::DeactivateDeadKeyState()
   }
 
   BYTE kbdState[256];
-
   memset(kbdState, 0, sizeof(kbdState));
+
   SetShiftState(kbdState, mDeadKeyShiftState);
 
   EnsureDeadKeyActive(PR_FALSE, mActiveDeadKey, kbdState);
@@ -656,8 +632,8 @@ KeyboardLayout::AddDeadKeyEntry(PRUnichar aBaseChar,
                                 DeadKeyEntry* aDeadKeyArray,
                                 PRUint32 aEntries)
 {
-  for (PRUint32 cnt = 0; cnt < aEntries; cnt++) {
-    if (aDeadKeyArray[cnt].BaseChar == aBaseChar) {
+  for (PRUint32 index = 0; index < aEntries; index++) {
+    if (aDeadKeyArray[index].BaseChar == aBaseChar) {
       return PR_FALSE;
     }
   }
@@ -678,7 +654,6 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
   PRBool deadKeyActive = PR_FALSE;
   PRUint32 entries = 0;
   BYTE kbdState[256];
-
   memset(kbdState, 0, sizeof(kbdState));
 
   for (PRUint32 shiftState = 0; shiftState < 16; shiftState++) {
@@ -690,7 +665,6 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
 
     for (PRUint32 virtualKey = 0; virtualKey < 256; virtualKey++) {
       PRInt32 vki = GetKeyIndex(virtualKey);
-
       // Dead-key can pair only with such key that produces exactly one base
       // character.
       if (vki >= 0 && mVirtualKeys[vki].GetNativeUniChars(shiftState) == 1) {
@@ -705,29 +679,23 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
         // driver can produce one composite character, or a dead-key character
         // followed by a second character.
         PRUnichar compositeChars[5];
-        PRInt32 rv;
-
-        rv = ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)compositeChars,
-                           NS_ARRAY_LENGTH(compositeChars), 0, mKeyboardLayout);
-
-        switch (rv) {
+        PRInt32 ret =
+          ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)compositeChars,
+                        NS_ARRAY_LENGTH(compositeChars), 0, mKeyboardLayout);
+        switch (ret) {
           case 0:
             // This key combination does not produce any characters. The
             // dead-key is still in active state.
             break;
-
           case 1: {
             // Exactly one composite character produced. Now, when dead-key
             // is not active, repeat the last character one more time to
             // determine the base character.
             PRUnichar baseChars[5];
-
-            rv = ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)baseChars,
-                               NS_ARRAY_LENGTH(baseChars), 0, mKeyboardLayout);
-
-            NS_ASSERTION(rv == 1, "One base character expected");
-
-            if (rv == 1 && entries < aMaxEntries &&
+            ret = ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)baseChars,
+                                NS_ARRAY_LENGTH(baseChars), 0, mKeyboardLayout);
+            NS_ASSERTION(ret == 1, "One base character expected");
+            if (ret == 1 && entries < aMaxEntries &&
                 AddDeadKeyEntry(baseChars[0], compositeChars[0],
                                 aDeadKeyArray, entries)) {
               entries++;
@@ -735,7 +703,6 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
             deadKeyActive = PR_FALSE;
             break;
           }
-
           default:
             // 1. Unexpected dead-key. Dead-key chaining is not supported.
             // 2. More than one character generated. This is not a valid
@@ -753,7 +720,6 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
 
   NS_QuickSort(aDeadKeyArray, entries, sizeof(DeadKeyEntry),
                CompareDeadKeyEntries, nsnull);
-
   return entries;
 }
 
@@ -764,11 +730,11 @@ DeadKeyTable::GetCompositeChar(PRUnichar aBaseChar) const
   // Dead-key table is sorted by BaseChar in ascending order.
   // Usually they are too small to use binary search.
 
-  for (PRUint32 cnt = 0; cnt < mEntries; cnt++) {
-    if (mTable[cnt].BaseChar == aBaseChar) {
-      return mTable[cnt].CompositeChar;
+  for (PRUint32 index = 0; index < mEntries; index++) {
+    if (mTable[index].BaseChar == aBaseChar) {
+      return mTable[index].CompositeChar;
     }
-    if (mTable[cnt].BaseChar > aBaseChar) {
+    if (mTable[index].BaseChar > aBaseChar) {
       break;
     }
   }
