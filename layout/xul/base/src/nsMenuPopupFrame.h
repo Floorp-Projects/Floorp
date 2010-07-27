@@ -311,6 +311,12 @@ public:
   // can be taken into account.
   void CanAdjustEdges(PRInt8 aHorizontalSide, PRInt8 aVerticalSide, nsIntPoint& aChange);
 
+  // Return true if the popup is positioned relative to an anchor.
+  PRBool IsAnchored() const { return mScreenXPos == -1 && mScreenYPos == -1; }
+
+  // Return the screen coordinates of the popup, or (-1, -1) if anchored.
+  nsIntPoint ScreenPosition() const { return nsIntPoint(mScreenXPos, mScreenYPos); }
+
 protected:
 
   // redefine to tell the box system not to move the views.
