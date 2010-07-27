@@ -164,7 +164,6 @@
 #define png_build_grayscale_palette     MOZ_PNG_build_g_p
 #define png_calculate_crc               MOZ_PNG_calc_crc
 #define png_check_chunk_name            MOZ_PNG_ck_chunk_name
-#define png_check_sig                   MOZ_PNG_ck_sig
 #define png_chunk_error                 MOZ_PNG_chunk_err
 #define png_chunk_warning               MOZ_PNG_chunk_warn
 #define png_combine_row                 MOZ_PNG_combine_row
@@ -361,7 +360,7 @@
 #define png_set_compression_strategy    MOZ_PNG_set_comp_strategy
 #define png_set_compression_window_bits MOZ_PNG_set_comp_win_bits
 #define png_set_crc_action              MOZ_PNG_set_crc_action
-#define png_set_dither                  MOZ_PNG_set_dither
+#define png_set_quantize                MOZ_PNG_set_quantize
 #define png_set_error_fn                MOZ_PNG_set_error_fn
 #define png_set_expand                  MOZ_PNG_set_expand
 #define png_set_filler                  MOZ_PNG_set_filler

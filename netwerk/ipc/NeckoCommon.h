@@ -42,6 +42,7 @@
 #define mozilla_net_NeckoCommon_h
 
 #include "nsXULAppAPI.h"
+#include "prenv.h"
 
 #if defined(DEBUG) || defined(ENABLE_TESTS)
 # define NECKO_ERRORS_ARE_FATAL_DEFAULT true

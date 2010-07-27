@@ -282,12 +282,37 @@ MockProvider.prototype = {
    */
   addAddon: function MP_addAddon(aAddon) {
     this.addons.push(aAddon);
+    aAddon._provider = this;
 
     if (!this.started)
       return;
 
+    let requiresRestart = (aAddon.operationsRequiringRestart &
+                           AddonManager.OP_NEEDS_RESTART_INSTALL) != 0;
     AddonManagerPrivate.callInstallListeners("onExternalInstall", null, aAddon,
-                                             null, false)
+                                             null, requiresRestart)
+  },
+
+  /**
+   * Removes an add-on from the list of add-ons that this provider exposes to
+   * the AddonManager, dispatching the onUninstalled event in the process.
+   *
+   * @param  aAddon
+   *         The add-on to add
+   */
+  removeAddon: function MP_removeAddon(aAddon) {
+    var pos = this.addons.indexOf(aAddon);
+    if (pos == -1) {
+      ok(false, "Tried to remove an add-on that wasn't registered with the mock provider");
+      return;
+    }
+
+    this.addons.splice(pos, 1);
+
+    if (!this.started)
+      return;
+
+    AddonManagerPrivate.callAddonListeners("onUninstalled", aAddon);
   },
 
   /**
@@ -576,8 +601,8 @@ MockProvider.prototype = {
 
 /***** Mock Addon object for the Mock Provider *****/
 
-function MockAddon(aId, aName, aType, aRestartless) {
-  // Only set required attributes
+function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
+  // Only set required attributes.
   this.id = aId || "";
   this.name = aName || "";
   this.type = aType || "extension";
@@ -586,17 +611,43 @@ function MockAddon(aId, aName, aType, aRestartless) {
   this.providesUpdatesSecurely = true;
   this.blocklistState = 0;
   this.appDisabled = false;
-  this.userDisabled = false;
+  this._userDisabled = false;
   this.scope = AddonManager.SCOPE_PROFILE;
   this.isActive = true;
   this.creator = "";
   this.pendingOperations = 0;
-  this.permissions = 0;
-
-  this._restartless = aRestartless || false;
+  this.permissions = AddonManager.PERM_CAN_UNINSTALL |
+                     AddonManager.PERM_CAN_ENABLE |
+                     AddonManager.PERM_CAN_DISABLE |
+                     AddonManager.PERM_CAN_UPGRADE;
+  this.operationsRequiringRestart = aOperationsRequiringRestart ||
+    (AddonManager.OP_NEEDS_RESTART_INSTALL |
+     AddonManager.OP_NEEDS_RESTART_UNINSTALL |
+     AddonManager.OP_NEEDS_RESTART_ENABLE |
+     AddonManager.OP_NEEDS_RESTART_DISABLE);
 }
 
 MockAddon.prototype = {
+  get shouldBeActive() {
+    return !this.appDisabled && !this._userDisabled;
+  },
+
+  get userDisabled() {
+    return this._userDisabled;
+  },
+
+  set userDisabled(val) {
+    if (val == this._userDisabled)
+      return val;
+
+    var currentActive = this.shouldBeActive;
+    this._userDisabled = val;
+    var newActive = this.shouldBeActive;
+    this._updateActiveState(currentActive, newActive);
+
+    return val;
+  },
+
   isCompatibleWith: function(aAppVersion, aPlatformVersion) {
     return true;
   },
@@ -606,11 +657,53 @@ MockAddon.prototype = {
   },
 
   uninstall: function() {
-    // To be implemented when needed
+    if (this.pendingOperations & AddonManager.PENDING_UNINSTALL)
+      throw new Error("Add-on is already pending uninstall");
+
+    var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL);
+    this.pendingOperations |= AddonManager.PENDING_UNINSTALL;
+    AddonManagerPrivate.callAddonListeners("onUninstalling", this, needsRestart);
+    if (!needsRestart) {
+      this.pendingOperations -= AddonManager.PENDING_UNINSTALL;
+      this._provider.removeAddon(this);
+    }
   },
 
   cancelUninstall: function() {
-    // To be implemented when needed
+    if (!(this.pendingOperations & AddonManager.PENDING_UNINSTALL))
+      throw new Error("Add-on is not pending uninstall");
+
+    this.pendingOperations -= AddonManager.PENDING_UNINSTALL;
+    AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
+  },
+
+  _updateActiveState: function(currentActive, newActive) {
+    if (currentActive == newActive)
+      return;
+
+    if (newActive == this.isActive) {
+      AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
+    }
+    else if (newActive) {
+      var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE);
+      this.pendingOperations |= AddonManager.PENDING_ENABLE;
+      AddonManagerPrivate.callAddonListeners("onEnabling", this, needsRestart);
+      if (!needsRestart) {
+        this.isActive = newActive;
+        this.pendingOperations -= AddonManager.PENDING_ENABLE;
+        AddonManagerPrivate.callAddonListeners("onEnabled", this);
+      }
+    }
+    else {
+      var needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_DISABLE);
+      this.pendingOperations |= AddonManager.PENDING_DISABLE;
+      AddonManagerPrivate.callAddonListeners("onDisabling", this, needsRestart);
+      if (!needsRestart) {
+        this.isActive = newActive;
+        this.pendingOperations -= AddonManager.PENDING_DISABLE;
+        AddonManagerPrivate.callAddonListeners("onDisabled", this);
+      }
+    }
   }
 };
 

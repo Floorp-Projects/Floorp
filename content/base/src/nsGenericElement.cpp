@@ -2088,7 +2088,7 @@ nsGenericElement::nsDOMSlots::~nsDOMSlots()
   }
 }
 
-nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
+nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : Element(aNodeInfo)
 {
   // Set the default scriptID to JS - but skip SetScriptTypeID as it

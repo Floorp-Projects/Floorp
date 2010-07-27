@@ -45,7 +45,6 @@ class nsIImageMap;
 class nsString;
 class nsIDOMNodeList;
 class nsIDOMHTMLCollection;
-class nsIDOMHTMLFormElement;
 class nsIDOMHTMLMapElement;
 class nsHTMLStyleSheet;
 class nsIStyleSheet;
@@ -54,10 +53,9 @@ class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
 class nsIEditor;
 
-// 56ff0e81-191c-421c-b75c-1727e13091c0
 #define NS_IHTMLDOCUMENT_IID \
-{ 0x56ff0e81, 0x191c, 0x421c, \
-  { 0xb7, 0x5c, 0x17, 0x27, 0xe1, 0x30, 0x91, 0xc0 } }
+{ 0x1e1dc0fa, 0xf13e, 0x4abd, \
+ { 0xa0, 0x95, 0x92, 0xa6, 0x7a, 0x31, 0x3c, 0x50 } }
 
 
 /**
@@ -81,7 +79,8 @@ public:
 
   virtual nsresult ResolveName(const nsAString& aName,
                                nsIDOMHTMLFormElement *aForm,
-                               nsISupports **aResult) = 0;
+                               nsISupports **aResult,
+                               nsWrapperCache **aCache) = 0;
 
   /**
    * Called from the script loader to notify this document that a new
@@ -170,14 +169,6 @@ public:
    * SetDesignMode().
    */
   virtual nsresult SetEditingState(EditingState aState) = 0;
-
-  /**
-   * Returns the result of document.all[aID] which can either be a node
-   * or a nodelist depending on if there are multiple nodes with the same
-   * id.
-   */
-  virtual nsresult GetDocumentAllResult(const nsAString& aID,
-                                        nsISupports** aResult) = 0;
 
   /**
    * Disables getting and setting cookies

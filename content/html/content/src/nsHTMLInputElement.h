@@ -85,7 +85,8 @@ class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsIFileControlElement
 {
 public:
-  nsHTMLInputElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser);
+  nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                     PRUint32 aFromParser);
   virtual ~nsHTMLInputElement();
 
   // nsISupports
@@ -201,6 +202,9 @@ public:
                                                      nsGenericHTMLFormElement)
 
   void MaybeLoadImage();
+
+  virtual nsXPCClassInfo* GetClassInfo();
+
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.

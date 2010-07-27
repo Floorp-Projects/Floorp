@@ -59,7 +59,7 @@ class nsAttributeTextNode : public nsTextNode,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   
-  nsAttributeTextNode(nsINodeInfo *aNodeInfo,
+  nsAttributeTextNode(already_AddRefed<nsINodeInfo> aNodeInfo,
                       PRInt32 aNameSpaceID,
                       nsIAtom* aAttrName) :
     nsTextNode(aNodeInfo),
@@ -87,7 +87,8 @@ public:
   virtual nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,
                                               PRBool aCloneText) const
   {
-    nsAttributeTextNode *it = new nsAttributeTextNode(aNodeInfo,
+    nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+    nsAttributeTextNode *it = new nsAttributeTextNode(ni.forget(),
                                                       mNameSpaceID,
                                                       mAttrName);
     if (it && aCloneText) {
@@ -129,7 +130,7 @@ NS_NewTextNode(nsIContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsIContent *instance = new nsTextNode(ni);
+  nsTextNode *instance = new nsTextNode(ni.forget());
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -139,7 +140,7 @@ NS_NewTextNode(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-nsTextNode::nsTextNode(nsINodeInfo *aNodeInfo)
+nsTextNode::nsTextNode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericTextNode(aNodeInfo)
 {
 }
@@ -151,7 +152,7 @@ nsTextNode::~nsTextNode()
 NS_IMPL_ADDREF_INHERITED(nsTextNode, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(nsTextNode, nsGenericDOMDataNode)
 
-DOMCI_DATA(Text, nsTextNode)
+DOMCI_NODE_DATA(Text, nsTextNode)
 
 // QueryInterface implementation for nsTextNode
 NS_INTERFACE_TABLE_HEAD(nsTextNode)
@@ -197,7 +198,8 @@ nsTextNode::IsNodeOfType(PRUint32 aFlags) const
 nsGenericDOMDataNode*
 nsTextNode::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
-  nsTextNode *it = new nsTextNode(aNodeInfo);
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsTextNode *it = new nsTextNode(ni.forget());
   if (it && aCloneText) {
     it->mText = mText;
   }
@@ -281,7 +283,8 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsAttributeTextNode* textNode = new nsAttributeTextNode(ni, aNameSpaceID,
+  nsAttributeTextNode* textNode = new nsAttributeTextNode(ni.forget(),
+                                                          aNameSpaceID,
                                                           aAttrName);
   if (!textNode) {
     return NS_ERROR_OUT_OF_MEMORY;

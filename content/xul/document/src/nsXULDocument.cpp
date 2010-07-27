@@ -395,7 +395,7 @@ NS_IMPL_ADDREF_INHERITED(nsXULDocument, nsXMLDocument)
 NS_IMPL_RELEASE_INHERITED(nsXULDocument, nsXMLDocument)
 
 
-DOMCI_DATA(XULDocument, nsXULDocument)
+DOMCI_NODE_DATA(XULDocument, nsXULDocument)
 
 // QueryInterface implementation for nsXULDocument
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULDocument)
@@ -3699,14 +3699,16 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                                                     aPrototype->mNodeInfo->NamespaceID());
         if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
         nsCOMPtr<nsIContent> content;
-        rv = NS_NewElement(getter_AddRefs(content), newNodeInfo->NamespaceID(),
-                           newNodeInfo, PR_FALSE);
+        PRInt32 ns = newNodeInfo->NamespaceID();
+        nsCOMPtr<nsINodeInfo> xtfNi = newNodeInfo;
+        rv = NS_NewElement(getter_AddRefs(content), ns, newNodeInfo.forget(),
+                           PR_FALSE);
         if (NS_FAILED(rv)) return rv;
 
         result = content->AsElement();
 
 #ifdef MOZ_XTF
-        if (result && newNodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin) {
+        if (result && xtfNi->NamespaceID() > kNameSpaceID_LastBuiltin) {
             result->BeginAddingChildren();
         }
 #endif
@@ -3840,7 +3842,7 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
                                           getter_AddRefs(bodyContent));
 
         if (! bodyContent) {
-            nsresult rv = document->CreateElem(nsGkAtoms::treechildren,
+            nsresult rv = document->CreateElem(nsAtomString(nsGkAtoms::treechildren),
                                                nsnull, kNameSpaceID_XUL,
                                                PR_FALSE,
                                                getter_AddRefs(bodyContent));

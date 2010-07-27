@@ -1412,8 +1412,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
 
     jsval v;
     nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-    rv = nsContentUtils::WrapNative(jscontext, scope, mRoot,
-                                    &NS_GET_IID(nsIDOMElement), &v,
+    rv = nsContentUtils::WrapNative(jscontext, scope, mRoot, mRoot, &v,
                                     getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 

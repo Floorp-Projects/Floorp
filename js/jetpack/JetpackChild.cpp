@@ -85,20 +85,6 @@ JetpackChild::sGlobalClass = {
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-static void
-ReportJetpackErrors(JSContext* cx, const char* message, JSErrorReport* report)
-{
-  const char* filename = "<unknown>";
-  if (report && report->filename)
-    filename = report->filename;
-  int lineno = -1;
-  if (report)
-    lineno = report->lineno;
-
-  fprintf(stderr, "Jetpack JavaScript Error: %s:%i, %s\n",
-          filename, lineno, message);
-}
-
 bool
 JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
                    MessageLoop* aIOLoop,
@@ -111,7 +97,12 @@ JetpackChild::Init(base::ProcessHandle aParentProcessHandle,
       !(mCx = JS_NewContext(mRuntime, 8192)))
     return false;
 
-  JS_SetErrorReporter(mCx, ReportJetpackErrors);
+  JS_SetVersion(mCx, JSVERSION_LATEST);
+  JS_SetOptions(mCx, JS_GetOptions(mCx) |
+                JSOPTION_DONT_REPORT_UNCAUGHT |
+                JSOPTION_ATLINE |
+                JSOPTION_JIT);
+  JS_SetErrorReporter(mCx, ReportError);
 
   {
     JSAutoRequest request(mCx);
@@ -250,7 +241,7 @@ JetpackChild::CallMessage(JSContext* cx, uintN argc, jsval* vp)
     return JS_FALSE;
 
   nsTArray<Variant> results;
-  if (!GetThis(cx)->SendCallMessage(smr.msgName, smr.data, &results)) {
+  if (!GetThis(cx)->CallCallMessage(smr.msgName, smr.data, &results)) {
     JS_ReportError(cx, "Failed to callMessage");
     return JS_FALSE;
   }
@@ -443,6 +434,46 @@ JetpackChild::EvalInSandbox(JSContext* cx, uintN argc, jsval* vp)
   js::AutoValueRooter ignored(cx);
   return JS_EvaluateUCScript(cx, obj, JS_GetStringChars(str), JS_GetStringLength(str), "", 1,
                              ignored.addr());
+}
+
+bool JetpackChild::sReportingError;
+
+/* static */ void
+JetpackChild::ReportError(JSContext* cx, const char* message,
+                          JSErrorReport* report)
+{
+  if (sReportingError) {
+    NS_WARNING("Recursive error reported.");
+    return;
+  }
+
+  sReportingError = true;
+
+  js::AutoObjectRooter obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
+
+  if (report && report->filename) {
+    jsval filename = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, report->filename));
+    JS_SetProperty(cx, obj.object(), "fileName", &filename);
+  }
+
+  if (report) {
+    jsval lineno = INT_TO_JSVAL(report->lineno);
+    JS_SetProperty(cx, obj.object(), "lineNumber", &lineno);
+  }
+
+  jsval msgstr = JSVAL_NULL;
+  if (report && report->ucmessage)
+    msgstr = STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx, report->ucmessage));
+  else
+    msgstr = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, message));
+  JS_SetProperty(cx, obj.object(), "message", &msgstr);
+
+  MessageResult smr;
+  Variant* vp = smr.data.AppendElement();
+  JetpackActorCommon::jsval_to_Variant(cx, OBJECT_TO_JSVAL(obj.object()), vp);
+  GetThis(cx)->SendSendMessage(NS_LITERAL_STRING("core:exception"), smr.data);
+
+  sReportingError = false;
 }
 
 } // namespace jetpack
