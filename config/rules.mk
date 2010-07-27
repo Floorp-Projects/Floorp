@@ -467,7 +467,7 @@ UPDATE_TITLE = sed -e "s!Y!$(1) in $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$
 endif
 
 define SUBMAKE # $(call SUBMAKE,target,directory)
-@$(UPDATE_TITLE)
++@$(UPDATE_TITLE)
 +@$(MAKE) $(if $(2),-C $(2)) $(1)
 
 endef # The extra line is important here! don't delete it
