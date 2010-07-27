@@ -71,8 +71,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x2ac19ac3, 0x1dac, 0x42dc, \
-  { 0xb2, 0x43, 0x78, 0x46, 0xed, 0x6f, 0x1c, 0x89 } }
+{ 0xdd254504, 0xe273, 0x4923, \
+  { 0x9e, 0xc1, 0xd8, 0x42, 0x1a, 0x66, 0x35, 0xf1 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -84,11 +84,11 @@ public:
   // If you're using the external API, the only thing you can know about
   // nsIContent is that it exists with an IID
 
-  nsIContent(nsINodeInfo *aNodeInfo)
+  nsIContent(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsINode(aNodeInfo),
       mPrimaryFrame(nsnull)
   {
-    NS_ASSERTION(aNodeInfo,
+    NS_ASSERTION(mNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
   }
 #endif // MOZILLA_INTERNAL_API

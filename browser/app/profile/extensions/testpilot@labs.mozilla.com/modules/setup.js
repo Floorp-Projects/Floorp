@@ -570,7 +570,7 @@ let TestPilotSetup = {
 	      task.defaultUrl, false, function() {
                 /* on close callback (Bug 575767) -- when the "new study
                  * starting" popup is dismissed, then the study can start. */
-                task.changeStatus(TaskConstants.STATUS_IN_PROGRESS, true);
+                task.changeStatus(TaskConstants.STATUS_STARTING, true);
                 TestPilotSetup.reloadRemoteExperiments();
               });
             return;

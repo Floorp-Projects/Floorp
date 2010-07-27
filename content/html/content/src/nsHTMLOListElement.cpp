@@ -50,7 +50,7 @@ class nsHTMLSharedListElement : public nsGenericHTMLElement,
                                 public nsIDOMHTMLUListElement
 {
 public:
-  nsHTMLSharedListElement(nsINodeInfo *aNodeInfo);
+  nsHTMLSharedListElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLSharedListElement();
 
   // nsISupports
@@ -81,13 +81,18 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsXPCClassInfo* GetClassInfo()
+  {
+    return static_cast<nsXPCClassInfo*>(GetClassInfoInternal());
+  }
+  nsIClassInfo* GetClassInfoInternal();
 };
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(SharedList)
 
 
-nsHTMLSharedListElement::nsHTMLSharedListElement(nsINodeInfo *aNodeInfo)
+nsHTMLSharedListElement::nsHTMLSharedListElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -105,6 +110,21 @@ DOMCI_DATA(HTMLOListElement, nsHTMLSharedListElement)
 DOMCI_DATA(HTMLDListElement, nsHTMLSharedListElement)
 DOMCI_DATA(HTMLUListElement, nsHTMLSharedListElement)
 
+nsIClassInfo* 
+nsHTMLSharedListElement::GetClassInfoInternal()
+{
+  if (mNodeInfo->Equals(nsGkAtoms::ol)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLOListElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::dl)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLDListElement_id);
+  }
+  if (mNodeInfo->Equals(nsGkAtoms::ul)) {
+    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLUListElement_id);
+  }
+  return nsnull;
+}
+
 // QueryInterface implementation for nsHTMLSharedListElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLSharedListElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(nsHTMLSharedListElement,
@@ -117,9 +137,7 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLSharedListElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLDListElement, dl)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLUListElement, ul)
 
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLOListElement, ol)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLDListElement, dl)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLUListElement, ul)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_GETTER(GetClassInfoInternal)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 

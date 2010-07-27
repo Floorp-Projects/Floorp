@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+  <head>
+    <title>Console error test</title>
+  </head>
+  <body>
+    <h1>Heads Up Display - error test</h1>
+    <p><button>generate error</button></p>
+
+    <script type="text/javascript"><!--
+      var button = document.getElementsByTagName("button")[0];
+
+      button.addEventListener("click", function () {
+        fooBazBaz.bar();
+      }, false);
+    // --></script>
+  </body>
+</html>
+

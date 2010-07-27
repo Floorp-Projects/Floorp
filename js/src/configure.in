@@ -4455,13 +4455,29 @@ dnl ======================================================
 dnl = Enable compiling with ccache
 dnl ======================================================
 MOZ_ARG_WITH_STRING(ccache,
-[  --with-ccache=path/to/ccache
+[  --with-ccache[=path/to/ccache]
                           Enable compiling with ccache],
-    CCACHE_PATH=$withval,)
+    CCACHE=$withval, CCACHE="no")
 
-if test -n "$CCACHE_PATH"; then
-  CC="$CCACHE_PATH $CC"
-  CXX="$CCACHE_PATH $CXX"
+if test "$CCACHE" != "no"; then
+    if test -n "$CCACHE"; then
+        if test "$CCACHE" = "yes"; then
+            CCACHE=
+        else
+            if test ! -e "$CCACHE"; then
+                AC_MSG_ERROR([$CCACHE not found])
+            fi
+        fi
+    fi
+    MOZ_PATH_PROGS(CCACHE, $CCACHE ccache)
+    if test -z "$CCACHE" -o "$CCACHE" = ":"; then
+        AC_MSG_ERROR([ccache not found])
+    elif test -x "$CCACHE"; then
+        CC="$CCACHE $CC"
+        CXX="$CCACHE $CXX"
+    else
+        AC_MSG_ERROR([$CCACHE is not executable])
+    fi
 fi
 
 dnl ========================================================
