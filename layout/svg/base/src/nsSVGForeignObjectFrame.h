@@ -145,9 +145,10 @@ protected:
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
   void UpdateGraphic();
 
-  // Returns GetCanvasTM followed by a scale from CSS px to Dev px. Used for
-  // painting, because children expect to paint to device space, not userspace.
-  gfxMatrix GetCanvasTMForChildren();
+  gfxMatrix GetCanvasTMWithTranslation();
+  // Scale TM from CSS px to Dev px. Used for painting, because children
+  // expect to paint to device space, not userspace.
+  gfxMatrix GetScaledMatrixForChildren(gfxMatrix canvasTMWithTranslation) const;
   void InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
                            const nsRect& aRect, PRUint32 aFlags);
   void FlushDirtyRegion();
