@@ -246,6 +246,3 @@ Storage = {
     return existingData;
   }
 };
-
-// ----------
-Storage.init();

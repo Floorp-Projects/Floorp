@@ -228,7 +228,6 @@ window.Item.prototype = {
         resizeInfo = null;
       }
     };
-
   },
 
   // ----------
@@ -828,12 +827,6 @@ window.Items = {
   defaultGutter: 15,
 
   // ----------
-  // Function: init
-  // Initialize the object
-  init: function() {
-  },
-
-  // ----------
   // Function: item
   // Given a DOM element representing an Item, returns the Item.
   item: function(el) {
@@ -1084,6 +1077,3 @@ window.Items = {
     }
   }
 };
-
-window.Items.init();
-
