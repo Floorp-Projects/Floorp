@@ -379,8 +379,22 @@ var stringBundle;
       window.setTimeout(function() { loadExperimentPage(); }, 2000);
       return;
     }
+
+    // Let the experiment fill in its web content (asynchronous)
     experiment.getWebContent(function(webContent) {
       contentDiv.innerHTML = webContent;
+
+      // Metadata and start/end date should be filled in for every experiment:
+      showMetaData();
+      getTestEndingDate(eid);
+      if (experiment._recursAutomatically &&
+        experiment.status != TaskConstants.STATUS_FINISHED) {
+        showRecurControls(experiment);
+      }
+
+      // Do whatever the experiment's web content wants done on load
+      // (Usually drawing a graph) - must be done after innerHTML is set.
+      experiment.webContent.onPageLoad(experiment, document, jQuery);
     });
 
     experiment.getDataPrivacyContent(function(dataPrivacyContent) {
@@ -389,17 +403,6 @@ var stringBundle;
         dataPrivacyDiv.removeAttribute("hidden");
       }
     });
-
-    // Metadata and start/end date should be filled in for every experiment:
-    showMetaData();
-    getTestEndingDate(eid);
-    if (experiment._recursAutomatically &&
-        experiment.status != TaskConstants.STATUS_FINISHED) {
-      showRecurControls(experiment);
-    }
-
-    // Do whatever the experiment's web content wants done on load:
-    experiment.webContent.onPageLoad(experiment, document, jQuery);
   }
 
   function onStatusPageLoad() {

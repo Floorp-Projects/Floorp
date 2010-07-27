@@ -5149,6 +5149,20 @@ function AddonWrapper(aAddon) {
     return pending;
   });
 
+  this.__defineGetter__("operationsRequiringRestart", function() {
+    let ops = 0;
+    if (XPIProvider.installRequiresRestart(aAddon))
+      ops |= AddonManager.OP_NEEDS_RESTART_INSTALL;
+    if (XPIProvider.uninstallRequiresRestart(aAddon))
+      ops |= AddonManager.OP_NEEDS_RESTART_UNINSTALL;
+    if (XPIProvider.enableRequiresRestart(aAddon))
+      ops |= AddonManager.OP_NEEDS_RESTART_ENABLE;
+    if (XPIProvider.disableRequiresRestart(aAddon))
+      ops |= AddonManager.OP_NEEDS_RESTART_DISABLE;
+
+    return ops;
+  });
+
   this.__defineGetter__("permissions", function() {
     let permissions = 0;
     if (!aAddon.appDisabled) {
@@ -5172,13 +5186,19 @@ function AddonWrapper(aAddon) {
     if (val == aAddon.userDisabled)
       return val;
 
-    if (aAddon.type == "theme" && val)
-      throw new Error("Cannot disable the active theme");
-
-    if (aAddon instanceof DBAddonInternal)
-      XPIProvider.updateAddonDisabledState(aAddon, val);
-    else
+    if (aAddon instanceof DBAddonInternal) {
+      if (aAddon.type == "theme" && val) {
+        if (aAddon.internalName == XPIProvider.defaultSkin)
+          throw new Error("Cannot disable the default theme");
+        XPIProvider.enableDefaultTheme();
+      }
+      else {
+        XPIProvider.updateAddonDisabledState(aAddon, val);
+      }
+    }
+    else {
       aAddon.userDisabled = val;
+    }
 
     return val;
   });

@@ -106,7 +106,9 @@ interface imgIContainer : nsISupports
    * FLAG_NONE: Lack of flags
    *
    * FLAG_SYNC_DECODE: Forces synchronous/non-progressive decode of all
-   * available data before the call returns.
+   * available data before the call returns. It is an error to pass this flag
+   * from a call stack that originates in a decoder (ie, from a decoder
+   * observer event).
    */
 
   const long FLAG_NONE            = 0x0;

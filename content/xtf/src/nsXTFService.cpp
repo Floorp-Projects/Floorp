@@ -61,7 +61,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIXTFService interface
-  nsresult CreateElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
+  nsresult CreateElement(nsIContent** aResult,
+                         already_AddRefed<nsINodeInfo> aNodeInfo);
 
 private:
   nsInterfaceHashtable<nsUint32HashKey, nsIXTFElementFactory> mFactoryHash;
@@ -100,16 +101,17 @@ NS_IMPL_ISUPPORTS1(nsXTFService, nsIXTFService)
 // nsIXTFService methods
 
 nsresult
-nsXTFService::CreateElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
+nsXTFService::CreateElement(nsIContent** aResult,
+                            already_AddRefed<nsINodeInfo> aNodeInfo)
 {
   nsCOMPtr<nsIXTFElementFactory> factory;
 
   // Check if we have an xtf factory for the given namespaceid in our cache:
-  if (!mFactoryHash.Get(aNodeInfo->NamespaceID(), getter_AddRefs(factory))) {
+  if (!mFactoryHash.Get(aNodeInfo.get()->NamespaceID(), getter_AddRefs(factory))) {
     // No. See if there is one registered with the component manager:
     nsCAutoString xtf_contract_id(NS_XTF_ELEMENT_FACTORY_CONTRACTID_PREFIX);
     nsAutoString uri;
-    aNodeInfo->GetNamespaceURI(uri);
+    aNodeInfo.get()->GetNamespaceURI(uri);
     AppendUTF16toUTF8(uri, xtf_contract_id);
 #ifdef DEBUG_xtf_verbose
     printf("Testing for XTF factory at %s\n", xtf_contract_id.get());
@@ -120,7 +122,7 @@ nsXTFService::CreateElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
       printf("We've got an XTF factory: %s \n", xtf_contract_id.get());
 #endif
       // Put into hash:
-      mFactoryHash.Put(aNodeInfo->NamespaceID(), factory);
+      mFactoryHash.Put(aNodeInfo.get()->NamespaceID(), factory);
     }
   }
   if (!factory) return NS_ERROR_FAILURE;
@@ -128,7 +130,7 @@ nsXTFService::CreateElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
   // We have an xtf factory. Now try to create an element for the given tag name:
   nsCOMPtr<nsIXTFElement> elem;
   nsAutoString tagName;
-  aNodeInfo->GetName(tagName);
+  aNodeInfo.get()->GetName(tagName);
   factory->CreateElement(tagName, getter_AddRefs(elem));
   if (!elem) return NS_ERROR_FAILURE;
   

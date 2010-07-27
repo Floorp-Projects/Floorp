@@ -348,6 +348,16 @@ ClipToContain(gfxContext* aContext, const nsIntRect& aRect)
   aContext->SetMatrix(currentMatrix);
 }
 
+static void
+InheritContextFlags(gfxContext* aSource, gfxContext* aDest)
+{
+  if (aSource->GetFlags() & gfxContext::FLAG_DESTINED_FOR_SCREEN) {
+    aDest->SetFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
+  } else {
+    aDest->ClearFlag(gfxContext::FLAG_DESTINED_FOR_SCREEN);
+  }
+}
+
 void
 BasicThebesLayer::Paint(gfxContext* aContext,
                         LayerManager::DrawThebesLayerCallback aCallback,
@@ -394,6 +404,7 @@ BasicThebesLayer::Paint(gfxContext* aContext,
       // from RGB to RGBA, because we might need to repaint with
       // subpixel AA)
       state.mRegionToInvalidate.And(state.mRegionToInvalidate, mVisibleRegion);
+      InheritContextFlags(target, state.mContext);
       PaintBuffer(state.mContext,
                   state.mRegionToDraw, state.mRegionToInvalidate,
                   aCallback, aCallbackData);
@@ -889,6 +900,7 @@ BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
     mCachedSurface.Get(aContent,
                        gfxIntSize(clip.size.width, clip.size.height),
                        currentSurf);
+  InheritContextFlags(aTarget, ctx);
   /* Align our buffer for the original surface */
   ctx->Translate(-clip.pos);
   *aSavedOffset = clip.pos;

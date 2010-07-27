@@ -1453,7 +1453,8 @@ nsTextEditorState::CreateRootNode()
                                                  kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = NS_NewHTMLElement(getter_AddRefs(mRootNode), nodeInfo, PR_FALSE);
+  nsresult rv = NS_NewHTMLElement(getter_AddRefs(mRootNode), nodeInfo.forget(),
+                                  PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the necessary classes on the text control. We use class values
@@ -1515,7 +1516,8 @@ nsTextEditorState::CreatePlaceholderNode()
                                            kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = NS_NewHTMLElement(getter_AddRefs(mPlaceholderDiv), nodeInfo, PR_FALSE);
+  rv = NS_NewHTMLElement(getter_AddRefs(mPlaceholderDiv), nodeInfo.forget(),
+                         PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create the text node for the placeholder text before doing anything else
