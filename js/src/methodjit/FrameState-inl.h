@@ -321,6 +321,22 @@ FrameState::pushNumber(MaybeRegisterID payload, bool asInt32)
 }
 
 inline void
+FrameState::pushInt32(RegisterID payload)
+{
+    FrameEntry *fe = rawPush();
+    fe->clear();
+    JS_ASSERT(!fe->isNumber);
+
+    masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), addressOf(fe));
+    fe->type.setMemory();
+
+    fe->isNumber = true;
+    fe->data.unsync();
+    fe->data.setRegister(payload);
+    regstate[payload] = RegisterState(fe, RematInfo::DATA);
+}
+
+inline void
 FrameState::pushUntypedPayload(JSValueType type, RegisterID payload)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
