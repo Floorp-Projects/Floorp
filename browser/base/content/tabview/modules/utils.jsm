@@ -48,14 +48,11 @@
 
 (function(){
 
+// #########
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
-
-// Save a reference to some core methods
-const toString = Object.prototype.toString;
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -80,9 +77,6 @@ XPCOMUtils.defineLazyGetter(this, "gTabViewFrame", function() {
   return gWindow.document.getElementById("tab-candy");
 });
 
-var consoleService = Cc["@mozilla.org/consoleservice;1"]
-    .getService(Components.interfaces.nsIConsoleService);
-
 // ##########
 // Class: Point
 // A simple point.
@@ -102,6 +96,7 @@ window.Point = function(a, y) {
     this.y = (Utils.isNumber(y) ? y : 0);
   }
 };
+
 window.Point.prototype = {
   // ----------
   // Function: distance
@@ -506,7 +501,9 @@ window.Subscribable.prototype = {
 // ##########
 // Class: Utils
 // Singelton with common utility functions.
-var Utils = {
+window.Utils = {
+  consoleService: null, 
+
   // ___ Logging
 
   // ----------
@@ -514,8 +511,13 @@ var Utils = {
   // Prints the given arguments to the JavaScript error console as a message.
   // Pass as many arguments as you want, it'll print them all.
   log: function() {
+    if (!this.consoleService) {
+      this.consoleService = Cc["@mozilla.org/consoleservice;1"]
+          .getService(Components.interfaces.nsIConsoleService);
+    }
+    
     var text = this.expandArgumentsForLog(arguments);
-    consoleService.logStringMessage(text);
+    this.consoleService.logStringMessage(text);
   },
 
   // ----------
@@ -683,11 +685,14 @@ var Utils = {
     // Must be an Object.
     // Because of IE, we also have to check the presence of the constructor property.
     // Make sure that DOM nodes and window objects don't pass through, as well
-    if ( !obj || toString.call(obj) !== "[object Object]" || obj.nodeType || obj.setInterval ) {
+    if ( !obj || Object.prototype.toString.call(obj) !== "[object Object]" 
+        || obj.nodeType || obj.setInterval ) {
       return false;
     }
 
     // Not own constructor property must be Object
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
+    
     if ( obj.constructor
       && !hasOwnProperty.call(obj, "constructor")
       && !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf") ) {
@@ -809,9 +814,6 @@ var Utils = {
       }
     }, delay);
   }
-
 };
-
-window.Utils = Utils;
 
 })();
