@@ -171,6 +171,18 @@ ParseFloat(JSContext* cx, JSString* str)
 }
 #endif
 
+static inline jsdouble
+DoubleToInteger(jsdouble d)
+{
+    if (!JSDOUBLE_IS_FINITE(d))
+        return js_NaN;
+    if (d > 0)
+        return floor(d);
+    if (d < 0)
+    	return -floor(-d);
+    return 0;
+}
+
 /* See ECMA 15.1.2.2. */
 static JSBool
 num_parseInt(JSContext *cx, uintN argc, Value *vp)
@@ -197,6 +209,11 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
 
     if (vp[2].isInt32() && (radix == 0 || radix == 10)) {
         *vp = vp[2];
+        return JS_TRUE;
+    }
+
+    if (vp[2].isDouble() && (radix == 0 || radix == 10)) {
+        vp->setDouble(DoubleToInteger(vp[2].toDouble()));
         return JS_TRUE;
     }
 
@@ -232,13 +249,7 @@ ParseInt(JSContext* cx, JSString* str)
 static jsdouble FASTCALL
 ParseIntDouble(jsdouble d)
 {
-    if (!JSDOUBLE_IS_FINITE(d))
-        return js_NaN;
-    if (d > 0)
-        return floor(d);
-    if (d < 0)
-    	return -floor(-d);
-    return 0;
+    return DoubleToInteger(d);
 }
 #endif
 

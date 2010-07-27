@@ -2348,7 +2348,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
          */
         // XXX: this load is volatile.  If bug 545406 (loop-invariant code
         // hoisting) is implemented this fact will need to be made explicit.
-        LIns* flagptr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->operationCallbackFlag);
+        LIns* flagptr = INS_CONSTPTR((void *) &JS_THREAD_DATA(cx)->interruptFlags);
         LIns* x = lir->insLoad(LIR_ldi, flagptr, 0, ACC_LOAD_ANY);
         guard(true, lir->insEqI_0(x), snapshot(TIMEOUT_EXIT));
     }
@@ -3414,8 +3414,6 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, 
                         fp->scopeChain->setPrivate(fp);
                 }
                 fp->thisv = fp->argv[-1];
-                if (fp->flags & JSFRAME_CONSTRUCTING) // constructors always compute 'this'
-                    fp->flags |= JSFRAME_COMPUTED_THIS;
             }
         }
     }
@@ -4385,7 +4383,7 @@ ProhibitFlush(JSContext* cx)
 static void
 ResetJITImpl(JSContext* cx)
 {
-    if (!TRACING_ENABLED(cx))
+    if (!(cx->jitEnabled || (cx->options & JSOPTION_METHODJIT)))
         return;
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     debug_only_print0(LC_TMTracer, "Flushing cache.\n");
@@ -6159,7 +6157,7 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
     prepareTreeCall(f);
 
 #ifdef DEBUG
-    unsigned oldInlineCallCount = inlineCallCount;
+    uintN oldInlineCallCount = inlineCallCount;
 #endif
 
     JSContext *localCx = cx;
@@ -7098,7 +7096,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
     }
 
     /* Do not enter the JIT code with a pending operation callback. */
-    if (JS_THREAD_DATA(cx)->operationCallbackFlag) {
+    if (JS_THREAD_DATA(cx)->interruptFlags) {
 #ifdef MOZ_TRACEVIS
         tvso.r = R_CALLBACK_PENDING;
 #endif
@@ -10345,6 +10343,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         setFrameObjPtr(&fp->scopeChain, scopeChain_ins);
     }
 
+#if 0
     /*
      * Check for recursion. This is a special check for recursive cases that can be
      * a trace-tree, just like a loop. If recursion acts weird, for example
@@ -10359,6 +10358,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
             RETURN_STOP_A("recursion does not match original tree");
         return InjectStatus(downRecursion());
     }
+#endif
 
     /* Try inlining one level in case this recursion doesn't go too deep. */
     if (fp->script == fp->down->script &&
@@ -10366,6 +10366,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         RETURN_STOP_A("recursion started inlining");
     }
 
+#if 0
     TreeFragment* first = LookupLoop(&JS_TRACE_MONITOR(cx), cx->regs->pc, tree->globalObj,
                                      tree->globalShape, fp->argc);
     if (!first)
@@ -10405,8 +10406,9 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
             return ARECORD_ABORTED;
         return attemptTreeCall(f, inlineCallCount);
     }
+#endif
 
-   return ARECORD_CONTINUE;
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10470,10 +10472,13 @@ TraceRecorder::record_JSOP_RETURN()
 {
     /* A return from callDepth 0 terminates the current loop, except for recursion. */
     if (callDepth == 0) {
+#if 0
         if (IsTraceableRecursion(cx) && tree->recursion != Recursion_Disallowed &&
             tree->script == cx->fp->script) {
             return InjectStatus(upRecursion());
-        } else {
+        } else
+#endif
+        {
             AUDIT(returnLoopExits);
             return endLoop();
         }
@@ -12075,6 +12080,7 @@ TraceRecorder::record_SetPropHit(PropertyCacheEntry* entry, JSScopeProperty* spr
     switch (*pc) {
       case JSOP_SETPROP:
       case JSOP_SETNAME:
+      case JSOP_SETGNAME:
       case JSOP_SETMETHOD:
         if (pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
             set(&l, v_ins);
@@ -13398,6 +13404,9 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::name(Value*& vp, LIns*& ins, NameResult& nr)
 {
     JSObject* obj = cx->fp->scopeChain;
+    JSOp op = JSOp(*cx->regs->pc);
+    if (js_CodeSpec[op].format & JOF_GNAME)
+        obj = obj->getGlobal();
     if (obj != globalObj)
         return scopeChainProp(obj, vp, ins, nr);
 
@@ -14363,6 +14372,21 @@ TraceRecorder::record_JSOP_FORLOCAL()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_FORGLOBAL()
+{
+    LIns* v_ins;
+    CHECK_STATUS_A(unboxNextValue(v_ins));
+
+    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    if (!lazilyImportGlobalSlot(slot))
+         RETURN_STOP_A("lazy import of global slot failed");
+
+    set(&globalObj->getSlotRef(slot), v_ins);
+    return ARECORD_CONTINUE;
+}
+
+
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_POPN()
 {
     return ARECORD_CONTINUE;
@@ -15133,102 +15157,6 @@ TraceRecorder::record_JSOP_RETRVAL()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_GETGVAR()
-{
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
-    if (slotval.isNull())
-        return ARECORD_CONTINUE; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
-
-    uint32 slot = slotval.toInt32();
-
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    stack(0, get(&globalObj->getSlotRef(slot)));
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_SETGVAR()
-{
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
-    if (slotval.isNull())
-        return ARECORD_CONTINUE; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
-
-    uint32 slot = slotval.toInt32();
-
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    set(&globalObj->getSlotRef(slot), stack(-1));
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_INCGVAR()
-{
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
-    if (slotval.isNull())
-        // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
-        return ARECORD_CONTINUE;
-
-    uint32 slot = slotval.toInt32();
-
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    return InjectStatus(inc(globalObj->getSlotRef(slot), 1));
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_DECGVAR()
-{
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
-    if (slotval.isNull())
-        // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
-        return ARECORD_CONTINUE;
-
-    uint32 slot = slotval.toInt32();
-
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    return InjectStatus(inc(globalObj->getSlotRef(slot), -1));
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_GVARINC()
-{
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
-    if (slotval.isNull())
-        // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
-        return ARECORD_CONTINUE;
-
-    uint32 slot = slotval.toInt32();
-
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    return InjectStatus(inc(globalObj->getSlotRef(slot), 1, false));
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_GVARDEC()
-{
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
-    if (slotval.isNull())
-        // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
-        return ARECORD_CONTINUE;
-
-    uint32 slot = slotval.toInt32();
-
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    return InjectStatus(inc(globalObj->getSlotRef(slot), -1, false));
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_REGEXP()
 {
     JSStackFrame* const fp = cx->fp;
@@ -15514,11 +15442,13 @@ TraceRecorder::record_JSOP_CALLELEM()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_STOP()
 {
+#if 0
     if (callDepth == 0 && IsTraceableRecursion(cx) &&
         tree->recursion != Recursion_Disallowed &&
         tree->script == cx->fp->script) {
         return InjectStatus(upRecursion());
     }
+#endif
     JSStackFrame *fp = cx->fp;
 
     if (fp->imacpc) {
@@ -15656,7 +15586,6 @@ TraceRecorder::record_JSOP_GETTHISPROP()
      * It's safe to just use cx->fp->thisv here because getThis() returns
      * ARECORD_STOP if thisv is not available.
      */
-    JS_ASSERT(cx->fp->flags & JSFRAME_COMPUTED_THIS);
     CHECK_STATUS_A(getProp(&cx->fp->thisv.toObject(), this_ins));
     return ARECORD_CONTINUE;
 }
@@ -15665,6 +15594,12 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETARGPROP()
 {
     return getProp(argval(GET_ARGNO(cx->regs->pc)));
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_DEFUPVAR()
+{
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -15695,25 +15630,6 @@ TraceRecorder::record_JSOP_INDEXBASE3()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_CALLGVAR()
-{
-    Value slotval = cx->fp->slots()[GET_SLOTNO(cx->regs->pc)];
-    if (slotval.isNull())
-        // We will see JSOP_CALLNAME from the interpreter's jump, so no-op here.
-        return ARECORD_CONTINUE;
-
-    uint32 slot = slotval.toInt32();
-
-    if (!lazilyImportGlobalSlot(slot))
-         RETURN_STOP_A("lazy import of global slot failed");
-
-    Value& v = globalObj->getSlotRef(slot);
-    stack(0, get(&v));
-    stack(1, INS_NULL());
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLLOCAL()
 {
     uintN slot = GET_SLOTNO(cx->regs->pc);
@@ -15732,9 +15648,10 @@ TraceRecorder::record_JSOP_CALLARG()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_UNUSED218()
+TraceRecorder::record_JSOP_BINDGNAME()
 {
-    return ARECORD_ABORTED;
+    stack(0, INS_CONSTOBJ(globalObj));
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -15943,6 +15860,123 @@ TraceRecorder::record_JSOP_SHARPINIT()
     return ARECORD_STOP;
 }
 
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_GETGLOBAL()
+{
+    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    if (!lazilyImportGlobalSlot(slot))
+         RETURN_STOP_A("lazy import of global slot failed");
+
+    stack(0, get(&globalObj->getSlotRef(slot)));
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_SETGLOBAL()
+{
+    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    if (!lazilyImportGlobalSlot(slot))
+         RETURN_STOP_A("lazy import of global slot failed");
+
+    set(&globalObj->getSlotRef(slot), stack(-1));
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_CALLGLOBAL()
+{
+    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    if (!lazilyImportGlobalSlot(slot))
+         RETURN_STOP_A("lazy import of global slot failed");
+
+    Value &v = globalObj->getSlotRef(slot);
+    stack(0, get(&v));
+    stack(1, INS_NULL());
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_GLOBALDEC()
+{
+    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    if (!lazilyImportGlobalSlot(slot))
+         RETURN_STOP_A("lazy import of global slot failed");
+
+    return InjectStatus(inc(globalObj->getSlotRef(slot), -1, false));
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_DECGLOBAL()
+{
+    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    if (!lazilyImportGlobalSlot(slot))
+         RETURN_STOP_A("lazy import of global slot failed");
+
+    return InjectStatus(inc(globalObj->getSlotRef(slot), -1, true));
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_INCGLOBAL()
+{
+    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    if (!lazilyImportGlobalSlot(slot))
+         RETURN_STOP_A("lazy import of global slot failed");
+
+    return InjectStatus(inc(globalObj->getSlotRef(slot), 1, true));
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_GLOBALINC()
+{
+    uint32 slot = cx->fp->script->getGlobalSlot(GET_SLOTNO(cx->regs->pc));
+    if (!lazilyImportGlobalSlot(slot))
+         RETURN_STOP_A("lazy import of global slot failed");
+
+    return InjectStatus(inc(globalObj->getSlotRef(slot), 1, false));
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_GETGNAME()
+{
+    return record_JSOP_NAME();
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_SETGNAME()
+{
+    return record_JSOP_SETNAME();
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_GNAMEDEC()
+{
+    return record_JSOP_NAMEDEC();
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_GNAMEINC()
+{
+    return record_JSOP_NAMEINC();
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_DECGNAME()
+{
+    return record_JSOP_DECNAME();
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_INCGNAME()
+{
+    return record_JSOP_INCNAME();
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_CALLGNAME()
+{
+    return record_JSOP_CALLNAME();
+}
+
 #define DBG_STUB(OP)                                                          \
     JS_REQUIRES_STACK AbortableRecordingStatus                                \
     TraceRecorder::record_##OP()                                              \
@@ -16088,6 +16122,128 @@ TraceRecorder::determineGlobalTypes(JSValueType* typeMap)
     DetermineTypesVisitor detVisitor(*this, typeMap);
     VisitGlobalSlots(detVisitor, cx, *tree->globalSlots);
 }
+
+#ifdef JS_METHODJIT
+
+class AutoRetBlacklist
+{
+    jsbytecode* pc;
+    bool& blacklist;
+
+  public:
+    AutoRetBlacklist(jsbytecode* pc, bool& blacklist)
+      : pc(pc), blacklist(blacklist)
+    { }
+
+    ~AutoRetBlacklist()
+    {
+        blacklist = IsBlacklisted(pc);
+    }
+};
+
+JS_REQUIRES_STACK TracePointAction
+MonitorTracePoint(JSContext* cx, uintN& inlineCallCount, bool& blacklist)
+{
+    JSStackFrame* fp = cx->fp;
+    TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    jsbytecode* pc = cx->regs->pc;
+
+    JS_ASSERT(!TRACE_RECORDER(cx));
+
+    JSObject* globalObj = cx->fp->scopeChain->getGlobal();
+    uint32 globalShape = -1;
+    SlotList* globalSlots = NULL;
+
+    AutoRetBlacklist autoRetBlacklist(pc, blacklist);
+
+    if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
+        Backoff(cx, pc);
+        return TPA_Nothing;
+    }
+
+    uint32 argc = cx->fp->argc;
+    TreeFragment* tree = LookupOrAddLoop(tm, pc, globalObj, globalShape, argc);
+
+    debug_only_printf(LC_TMTracer,
+                      "Looking for compat peer %d@%d, from %p (ip: %p)\n",
+                      js_FramePCToLineNumber(cx, cx->fp),
+                      FramePCOffset(cx, cx->fp), (void*)tree, tree->ip);
+
+    if (tree->code() || tree->peer) {
+        uintN count;
+        TreeFragment* match = FindVMCompatiblePeer(cx, globalObj, tree, count);
+        if (match) {
+            JS_ASSERT(match->recursion < Recursion_Unwinds);
+
+            VMSideExit* lr = NULL;
+            VMSideExit* innermostNestedGuard = NULL;
+
+            /* Best case - just go and execute. */
+            if (!ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard, &lr))
+                return TPA_Error;
+
+            if (!lr)
+                return TPA_Nothing;
+
+            switch (lr->exitType) {
+              case UNSTABLE_LOOP_EXIT:
+                if (!AttemptToStabilizeTree(cx, globalObj, lr, NULL, 0))
+                    return TPA_RanStuff;
+                break;
+
+              case OVERFLOW_EXIT:
+                tm->oracle->markInstructionUndemotable(cx->regs->pc);
+                /* FALL THROUGH */
+              case BRANCH_EXIT:
+              case CASE_EXIT:
+                if (!AttemptToExtendTree(cx, lr, NULL, NULL))
+                    return TPA_RanStuff;
+                break;
+
+              case LOOP_EXIT:
+                if (!innermostNestedGuard)
+                    return TPA_RanStuff;
+                if (!AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL))
+                    return TPA_RanStuff;
+                break;
+
+              default:
+                return TPA_RanStuff;
+            }
+
+            JS_ASSERT(TRACE_RECORDER(cx));
+
+            goto interpret;
+        }
+
+        if (count >= MAXPEERS) {
+            debug_only_print0(LC_TMTracer, "Blacklisted: too many peer trees.\n");
+            Blacklist((jsbytecode*)tree->root->ip);
+            return TPA_Nothing;
+        }
+    }
+
+    if (++tree->hits() < HOTLOOP)
+        return TPA_Nothing;
+    if (!ScopeChainCheck(cx, tree))
+        return TPA_Nothing;
+    if (!RecordTree(cx, tree->first, NULL, 0, globalSlots, Record_Branch))
+        return TPA_Nothing;
+
+  interpret:
+    JS_ASSERT(TRACE_RECORDER(cx));
+
+    /* Locked and loaded with a recorder. Ask the interperter to go run some code. */
+    fp->flags |= JSFRAME_RECORDING;
+    if (!Interpret(cx, fp, inlineCallCount))
+        return TPA_Error;
+
+    fp->flags &= ~JSFRAME_RECORDING;
+
+    return TPA_RanStuff;
+}
+
+#endif
 
 #include "jsrecursion.cpp"
 

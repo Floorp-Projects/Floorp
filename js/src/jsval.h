@@ -740,6 +740,7 @@ extern "C++"
 
 /* Internal helper macros */
 #define JSVAL_BITS(v)    (v.asBits)
+#define JSVAL_FROM_LAYOUT(l) (l)
 #define IMPL_TO_JSVAL(v) (v)
 #define JSID_BITS(id)    (id.asBits)
 
@@ -751,6 +752,7 @@ typedef ptrdiff_t              jsid;
 
 /* Internal helper macros */
 #define JSVAL_BITS(v)    (v)
+#define JSVAL_FROM_LAYOUT(l) ((l).asBits)
 #define IMPL_TO_JSVAL(v) ((v).asBits)
 #define JSID_BITS(id)    (id)
 

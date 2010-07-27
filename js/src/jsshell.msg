@@ -54,3 +54,5 @@ MSG_DEF(JSSMSG_TOO_MANY_ARGS,            9, 1, JSEXN_NONE, "{0}: too many argume
 MSG_DEF(JSSMSG_ASSERT_EQ_FAILED,        10, 2, JSEXN_NONE, "Assertion failed: got {0}, expected {1}")
 MSG_DEF(JSSMSG_ASSERT_EQ_FAILED_MSG,    11, 3, JSEXN_NONE, "Assertion failed: got {0}, expected {1}: {2}")
 MSG_DEF(JSSMSG_INVALID_ARGS,            12, 1, JSEXN_NONE, "{0}: invalid arguments")
+MSG_DEF(JSSMSG_ASSERT_JIT_FAILED,       13, 0, JSEXN_NONE, "unexpected failure to JIT")
+
