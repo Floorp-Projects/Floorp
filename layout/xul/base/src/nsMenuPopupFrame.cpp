@@ -280,6 +280,12 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
       widgetData.mBorderStyle = eBorderStyle_title;
 
       mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, title);
+
+      if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::close,
+                                nsGkAtoms::_true, eCaseMatters)) {
+        widgetData.mBorderStyle =
+          static_cast<enum nsBorderStyle>(widgetData.mBorderStyle | eBorderStyle_close);
+      }
     }
   }
 

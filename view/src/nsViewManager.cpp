@@ -790,6 +790,25 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         break;
       }
 
+    case NS_XUL_CLOSE:
+      {
+        // if this is a popup, make a request to hide it. Note that a popuphidden
+        // event listener may cancel the event and the popup will not be hidden.
+        nsIWidget* widget = aView->GetWidget();
+        if (widget) {
+          nsWindowType type;
+          widget->GetWindowType(type);
+          if (type == eWindowType_popup) {
+            nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+            if (pm) {
+              pm->HidePopup(aView);
+              *aStatus = nsEventStatus_eConsumeNoDefault;
+            }
+          }
+        }
+      }
+      break;
+
     case NS_WILL_PAINT:
     case NS_PAINT:
       {

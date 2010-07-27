@@ -876,6 +876,9 @@ DWORD nsWindow::WindowStyle()
 
     if (IsPopupWithTitleBar()) {
       style |= WS_CAPTION;
+      if (mBorderStyle & eBorderStyle_close) {
+        style |= WS_SYSMENU;
+      }
     }
   }
 
