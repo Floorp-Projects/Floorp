@@ -152,11 +152,6 @@ public:
         scene()->addItem(aTopLevel);
     }
 
-    MozQWidget* GetTopLevelWidget()
-    {
-        return mTopLevelWidget;
-    }
-
 protected:
 
     virtual bool event(QEvent* aEvent)
