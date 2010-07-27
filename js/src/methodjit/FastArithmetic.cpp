@@ -650,7 +650,7 @@ mjit::Compiler::jsop_neg()
 
         FPRegisterID fpreg = frame.copyEntryIntoFPReg(fe, FPRegisters::First);
 
-#if defined JS_CPU_X86 or defined JS_CPU_X64
+#if defined JS_CPU_X86 || defined JS_CPU_X64
         masm.loadDouble(&DoubleNegMask, FPRegisters::Second);
         masm.xorDouble(FPRegisters::Second, fpreg);
 #elif defined JS_CPU_ARM
