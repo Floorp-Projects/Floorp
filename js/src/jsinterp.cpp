@@ -1210,14 +1210,10 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp)
 #if JS_HAS_XML_SUPPORT
     if (v.isObject()) {
         JSObject *obj = &v.toObject();
-        if (obj->isXML()) {
+        if (obj->isXMLId()) {
             *idp = OBJECT_TO_JSID(obj);
             return JS_TRUE;
         }
-        if (!js_IsFunctionQName(cx, obj, idp))
-            return JS_FALSE;
-        if (!JSID_IS_VOID(*idp))
-            return JS_TRUE;
     }
 #endif
 
