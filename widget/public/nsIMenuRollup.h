@@ -44,10 +44,11 @@
 
 class nsIWidget;
 class nsIContent;
+class nsPIDOMWindow;
 
 #define NS_IMENUROLLUP_IID \
-  {0x61c9d01f, 0x8a4c, 0x4bb0, \
-    { 0xa9, 0x90, 0xeb, 0xf6, 0x65, 0x4c, 0xda, 0x61 }}
+  {0xa707b588, 0xa564, 0x488d, \
+    { 0x87, 0xb6, 0xdb, 0x71, 0x2d, 0x78, 0x9d, 0x4c }}
 
 class nsIMenuRollup : public nsISupports {
  public: 
@@ -66,7 +67,7 @@ class nsIMenuRollup : public nsISupports {
   /**
    * Adjust the position of open panels when a window is moved or resized.
    */ 
-  virtual void AdjustPopupsOnWindowChange(void) = 0;
+  virtual void AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow) = 0;
 
 };
 
