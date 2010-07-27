@@ -11,6 +11,8 @@
     </resources>
 
     <implementation implements="nsIDOMXULPopupElement">
+      <property name="label" onget="return this.getAttribute('label');"
+                             onset="this.setAttribute('label', val); return val;"/>
       <property name="position" onget="return this.getAttribute('position');"
                                 onset="this.setAttribute('position', val); return val;"/>
       <property name="popupBoxObject">
