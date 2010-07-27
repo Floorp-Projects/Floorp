@@ -218,8 +218,9 @@ nsMenuPopupFrame::PopupLevel(PRBool aIsNoAutoHide) const
   // The popup level is determined as follows, in this order:
   //   1. non-panels (menus and tooltips) are always topmost
   //   2. any specified level attribute
-  //   3. if this is a noautohide panel, use the 'parent' level
-  //   4. use the platform-specific default level
+  //   3. if a titlebar attribute is set, use the 'floating' level
+  //   4. if this is a noautohide panel, use the 'parent' level
+  //   5. use the platform-specific default level
 
   // If this is not a panel, this is always a top-most popup.
   if (mPopupType != ePopupTypePanel)
@@ -237,6 +238,10 @@ nsMenuPopupFrame::PopupLevel(PRBool aIsNoAutoHide) const
     case 2:
       return ePopupLevelFloating;
   }
+
+  // Panels with titlebars most likely want to be floating popups.
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::titlebar))
+    return ePopupLevelFloating;
 
   // If this panel is a noautohide panel, the default is the parent level.
   if (aIsNoAutoHide)
@@ -267,6 +272,13 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   widgetData.clipSiblings = PR_TRUE;
   widgetData.mPopupHint = mPopupType;
   widgetData.mNoAutoHide = IsNoAutoHide();
+  
+  if (mContent && widgetData.mNoAutoHide) {
+    if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::titlebar,
+                              nsGkAtoms::normal, eCaseMatters)) {
+      widgetData.mBorderStyle = eBorderStyle_title;
+    }
+  }
 
   nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(this, this);
   PRBool viewHasTransparentContent = !mInContentShell &&
@@ -374,7 +386,7 @@ nsMenuPopupFrame::IsLeaf() const
   // menu popups generate their child frames lazily only when opened, so
   // behave like a leaf frame. However, generate child frames normally if
   // the parent menu has a sizetopopup attribute. In this case the size of
-  // the parent menu is dependant on the size of the popup, so the frames
+  // the parent menu is dependent on the size of the popup, so the frames
   // need to exist in order to calculate this size.
   nsIContent* parentContent = mContent->GetParent();
   return (parentContent &&
@@ -450,11 +462,27 @@ nsMenuPopupFrame::AdjustView()
   nsIViewManager* viewManager = view->GetViewManager();
   nsRect rect = GetRect();
   rect.x = rect.y = 0;
+
+  // Increase the popup's view size to account for any titlebar or borders.
+  // XXXndeakin this should really be accounted for earlier in
+  // SetPopupPosition so that this extra size is accounted for when flipping
+  // or resizing the popup due to it being too large, but that can be a
+  // followup bug.
+  nsPresContext* pc = PresContext();
+  if (mPopupType == ePopupTypePanel && view) {
+    nsIWidget* widget = view->GetWidget();
+    if (widget) {
+      nsIntSize popupSize = nsIntSize(pc->AppUnitsToDevPixels(rect.width),
+                                      pc->AppUnitsToDevPixels(rect.height));
+      popupSize = widget->ClientToWindowSize(popupSize);
+      rect.width = pc->DevPixelsToAppUnits(popupSize.width);
+      rect.height = pc->DevPixelsToAppUnits(popupSize.height);
+    }
+  }
   viewManager->ResizeView(view, rect);
+
   viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
   mPopupState = ePopupOpenAndVisible;
-
-  nsPresContext* pc = PresContext();
   nsContainerFrame::SyncFrameViewProperties(pc, this, nsnull, view, 0);
 
   // fire popupshown event when the state has changed
@@ -1157,8 +1185,21 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   // determine the x and y position of the view by subtracting the desired
   // screen position from the screen position of the root frame.
   nsPoint viewPoint = screenPoint - rootScreenRect.TopLeft();
+  nsIView* view = GetView();
+  NS_ASSERTION(view, "popup with no view");
   presContext->GetPresShell()->GetViewManager()->
-    MoveViewTo(GetView(), viewPoint.x, viewPoint.y);
+    MoveViewTo(view, viewPoint.x, viewPoint.y);
+
+  // Offset the position by the width and height of the borders and titlebar.
+  // Even though GetClientOffset should return (0, 0) when there is no
+  // titlebar or borders, we skip these calculations anyway for non-panels
+  // to save time since they will never have a titlebar.
+  nsIWidget* widget = view->GetWidget();
+  if (mPopupType == ePopupTypePanel && widget) {
+    nsIntPoint offset = widget->GetClientOffset();
+    viewPoint.x += presContext->DevPixelsToAppUnits(offset.x);
+    viewPoint.y += presContext->DevPixelsToAppUnits(offset.y);
+  }
 
   // Now that we've positioned the view, sync up the frame's origin.
   nsBoxFrame::SetPosition(viewPoint - GetParent()->GetOffsetTo(rootFrame));

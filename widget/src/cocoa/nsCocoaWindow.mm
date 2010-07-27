@@ -326,7 +326,11 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
     case eWindowType_invisible:
     case eWindowType_child:
     case eWindowType_plugin:
+      break;
     case eWindowType_popup:
+      if (aBorderStyle != eBorderStyle_default && mBorderStyle & eBorderStyle_title) {
+        features |= NSTitledWindowMask;
+      }
       break;
     case eWindowType_toplevel:
     case eWindowType_dialog:
@@ -1419,6 +1423,36 @@ nsIntPoint nsCocoaWindow::WidgetToScreenOffset()
   return r.TopLeft();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0,0));
+}
+
+nsIntPoint nsCocoaWindow::GetClientOffset()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  NSSize windowSize = [mWindow frame].size;
+  NSRect contentRect = [mWindow contentRectForFrameRect:[mWindow frame]];
+
+  return nsIntPoint(NSToIntRound(windowSize.width - contentRect.size.width),
+                    NSToIntRound(windowSize.height - contentRect.size.height));
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0, 0));
+}
+
+nsIntSize nsCocoaWindow::ClientToWindowSize(const nsIntSize& aClientSize)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  // this is only called for popups currently. If needed, expand this to support
+  // other types of windows
+  if (!IsPopupWithTitleBar())
+    return aClientSize;
+
+  NSRect rect(NSMakeRect(0.0, 0.0, aClientSize.width, aClientSize.height));
+
+  NSRect inflatedRect = [mWindow frameRectForContentRect:rect];
+  return nsCocoaUtils::CocoaRectToGeckoRect(inflatedRect).Size();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntSize(0,0));
 }
 
 nsMenuBarX* nsCocoaWindow::GetMenuBar()

@@ -826,10 +826,9 @@ NS_METHOD nsBaseWidget::GetScreenBounds(nsIntRect &aRect)
   return GetBounds(aRect);
 }
 
-NS_METHOD nsBaseWidget::GetClientOffset(nsIntPoint &aPt)
+nsIntPoint nsBaseWidget::GetClientOffset()
 {
-  aPt.x = aPt.y = 0;
-  return NS_OK;
+  return nsIntPoint(0, 0);
 }
 
 NS_METHOD nsBaseWidget::SetBounds(const nsIntRect &aRect)
