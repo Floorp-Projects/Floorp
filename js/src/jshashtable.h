@@ -847,8 +847,8 @@ class HashMap
      * N.B. The caller must ensure that no mutating hash table operations
      * occur between a pair of |lookupForAdd| and |add| calls. To avoid
      * looking up the key a second time, the caller may use the more efficient
-     * relookupOrAdd method. This method reuses part of the hashing computation
-     * to more efficiently insert the key if it has not been added. For
+     * relookupOrAdd method. That method relookups the map if necessary and
+     * inserts the new value only if the key still does not exist. For
      * example, a mutation-handling version of the previous example:
      *
      *    HM::AddPtr p = h.lookupForAdd(3);
@@ -1026,37 +1026,13 @@ class HashSet
      *   assert(*p == 3);   // p acts like a pointer to int
      *
      * Also see the definition of AddPtr in HashTable above.
-     *
-     * N.B. The caller must ensure that no mutating hash table operations
-     * occur between a pair of |lookupForAdd| and |add| calls. To avoid
-     * looking up the key a second time, the caller may use the more efficient
-     * relookupOrAdd method. This method reuses part of the hashing computation
-     * to more efficiently insert the key if it has not been added. For
-     * example, a mutation-handling version of the previous example:
-     *
-     *    HS::AddPtr p = h.lookupForAdd(3);
-     *    if (!p) {
-     *      call_that_may_mutate_h();
-     *      if (!h.relookupOrAdd(p, 3, 3))
-     *        return false;
-     *    }
-     *    assert(*p == 3);
-     *
-     * Note that relookupOrAdd(p,l,t) performs Lookup using l and adds the
-     * entry t, where the caller ensures match(l,t).
      */
     typedef typename Impl::AddPtr AddPtr;
     AddPtr lookupForAdd(const Lookup &l) const {
         return impl.lookupForAdd(l);
     }
 
-    bool add(AddPtr &p, const T &t) {
-        return impl.add(p, t);
-    }
-
-    bool relookupOrAdd(AddPtr &p, const Lookup &l, const T &t) {
-        return impl.relookupOrAdd(p, l, t);
-    }
+    bool add(AddPtr &p, const T &t) { return impl.add(p, t); }
 
     /*
      * |all()| returns a Range containing |count()| elements:
