@@ -4037,10 +4037,9 @@ nsWindow::Create(nsIWidget        *aParent,
             }
         }
         else if (mWindowType == eWindowType_popup) {
-            // The value of aParent contains a code: If a popup window has a
-            // non-NULL nsIWidget* aParent, it indicates that it should not be
-            // above all other windows (e.g a noautohide panel).
-            if (!aParent) {
+            // Popups that are not noautohide are only temporary. The are used
+            // for menus and the like and disappear when another window is used.
+            if (!aInitData->mNoAutoHide) {
                 // For most popups, use the standard GtkWindowType
                 // GTK_WINDOW_POPUP, which will use a Window with the
                 // override-redirect attribute (for temporary windows).

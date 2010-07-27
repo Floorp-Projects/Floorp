@@ -416,7 +416,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   if (mWindowType == eWindowType_invisible) {
     [mWindow setLevel:kCGDesktopWindowLevelKey];
   } else if (mWindowType == eWindowType_popup) {
-    [mWindow setLevel:NSPopUpMenuWindowLevel];
+    SetPopupWindowLevel();
     [mWindow setHasShadow:YES];
   }
 
@@ -591,7 +591,7 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
         delete saved; // "window" not ADDREFed
       }
       if (mWindowType == eWindowType_popup)
-        [mWindow setLevel:NSPopUpMenuWindowLevel];
+        SetPopupWindowLevel();
       else
         [mWindow setLevel:NSNormalWindowLevel];
     }
@@ -695,11 +695,12 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
                         object:@"org.mozilla.gecko.PopupWindow"];
       }
 
-      // if a parent was supplied, set its child window. This will cause the
-      // child window to appear above the parent and move when the parent
-      // does. Setting this needs to happen after the _setWindowNumber calls
-      // above, otherwise the window doesn't focus properly.
-      if (nativeParentWindow)
+      // If a parent window was supplied and this is a popup at the parent
+      // level, set its child window. This will cause the child window to
+      // appear above the parent and move when the parent does. Setting this
+      // needs to happen after the _setWindowNumber calls above, otherwise the
+      // window doesn't focus properly.
+      if (nativeParentWindow && mPopupLevel == ePopupLevelParent)
         [nativeParentWindow addChildWindow:mWindow
                             ordered:NSWindowAbove];
     }
@@ -1460,8 +1461,10 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     // "active" one is always above any other non-native popup windows that
     // may be visible.
     if (mWindow && (mWindowType == eWindowType_popup))
-      [mWindow setLevel:NSPopUpMenuWindowLevel];
+      SetPopupWindowLevel();
   } else {
+    // XXXndeakin this doesn't make sense.
+    // Why is the new window assumed to be a modal panel?
     if (mWindow && (mWindowType == eWindowType_popup))
       [mWindow setLevel:NSModalPanelWindowLevel];
   }
@@ -1618,6 +1621,22 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
   aOut[1] = result;
   aOut[2] = result;
   aOut[3] = 1.0f;
+}
+
+void nsCocoaWindow::SetPopupWindowLevel()
+{
+  // Floating popups are at the floating level and hide when the window is
+  // deactivated.
+  if (mPopupLevel == ePopupLevelFloating) {
+    [mWindow setLevel:NSFloatingWindowLevel];
+    [mWindow setHidesOnDeactivate:YES];
+  }
+  else {
+    // Otherwise, this is a top-level or parent popup. Parent popups always
+    // appear just above their parent and essentially ignore the level.
+    [mWindow setLevel:NSPopUpMenuWindowLevel];
+    [mWindow setHidesOnDeactivate:NO];
+  }
 }
 
 @implementation WindowDelegate
@@ -2472,6 +2491,12 @@ ContentPatternDrawCallback(void* aInfo, CGContextRef aContext)
 - (void)setIsContextMenu:(BOOL)flag
 {
   mIsContextMenu = flag;
+}
+
+- (BOOL)canBecomeMainWindow
+{
+  // This is overriden because the default is 'yes' when a titlebar is present.
+  return NO;
 }
 
 @end

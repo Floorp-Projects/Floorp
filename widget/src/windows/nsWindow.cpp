@@ -556,11 +556,7 @@ nsWindow::Create(nsIWidget *aParent,
   }
 
   if (mWindowType == eWindowType_popup) {
-    // if a parent was specified, don't use WS_EX_TOPMOST so that the popup
-    // only appears above the parent, instead of all windows
-    if (aParent)
-      extendedStyle = WS_EX_TOOLWINDOW;
-    else
+    if (!aParent)
       parent = NULL;
   } else if (mWindowType == eWindowType_invisible) {
     // Make sure CreateWindowEx succeeds at creating a toplevel window
@@ -896,12 +892,16 @@ DWORD nsWindow::WindowExStyle()
       return WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
 
     case eWindowType_popup:
-      return
+    {
+      DWORD extendedStyle =
 #if defined(WINCE) && !defined(WINCE_WINDOWS_MOBILE)
         WS_EX_NOACTIVATE |
 #endif
-        WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
-
+        WS_EX_TOOLWINDOW;
+      if (mPopupLevel == ePopupLevelTop)
+        extendedStyle |= WS_EX_TOPMOST;
+      return extendedStyle;
+    }
     default:
       NS_ERROR("unknown border style");
       // fall through
