@@ -193,7 +193,8 @@ public:
     NS_IMETHOD         MakeFullScreen(PRBool aFullScreen);
     NS_IMETHOD         HideWindowChrome(PRBool aShouldHide);
 
-    // utility method
+    // utility method, -1 if no change should be made, otherwise returns a
+    // value that can be passed to gdk_window_set_decorations
     gint               ConvertBorderStyles(nsBorderStyle aStyle);
 
     // event callbacks
