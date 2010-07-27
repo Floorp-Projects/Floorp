@@ -51,15 +51,14 @@
 #include "jsvalue.h"
 
 typedef struct JSFrameRegs {
-    jsbytecode      *pc;            /* program counter */
     js::Value       *sp;            /* stack pointer */
+    jsbytecode      *pc;            /* program counter */
 } JSFrameRegs;
 
 /* JS stack frame flags. */
 enum JSFrameFlags {
     JSFRAME_CONSTRUCTING       =  0x01, /* frame is for a constructor invocation */
-    JSFRAME_COMPUTED_THIS      =  0x02, /* frame.thisv was computed already and
-                                           JSVAL_IS_OBJECT(thisv) */
+    JSFRAME_OVERRIDE_ARGS      =  0x02, /* overridden arguments local variable */
     JSFRAME_ASSIGNING          =  0x04, /* a complex (not simplex JOF_ASSIGNING) op
                                            is currently assigning to a property */
     JSFRAME_DEBUGGER           =  0x08, /* frame for JS_EvaluateInStackFrame */
@@ -67,7 +66,8 @@ enum JSFrameFlags {
     JSFRAME_FLOATING_GENERATOR =  0x20, /* frame copy stored in a generator obj */
     JSFRAME_YIELDING           =  0x40, /* js_Interpret dispatched JSOP_YIELD */
     JSFRAME_GENERATOR          =  0x80, /* frame belongs to generator-iterator */
-    JSFRAME_OVERRIDE_ARGS      = 0x100, /* overridden arguments local variable */
+    JSFRAME_BAILING            = 0x100, /* walking out of a method JIT'd frame */
+    JSFRAME_RECORDING          = 0x200, /* recording a trace */
 
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };
@@ -86,12 +86,27 @@ struct JSStackFrame
     JSObject            *callobj;       /* lazily created Call object */
     JSObject            *argsobj;       /* lazily created arguments object */
     JSScript            *script;        /* script being interpreted */
-    js::Value           thisv;          /* "this" pointer if in method */
     JSFunction          *fun;           /* function being called or null */
+
+    /*
+     * The value of |this| in this stack frame, or JSVAL_NULL if |this|
+     * is to be computed lazily on demand.
+     *
+     * thisv is eagerly initialized for non-function-call frames and
+     * qualified method calls, but lazily initialized in most unqualified
+     * function calls. See getThisObject().
+     *
+     * Usually if argv != NULL then thisv == argv[-1], but natives may
+     * assign to argv[-1]. Also, obj_eval can trigger a special case
+     * where two stack frames have the same argv. If one of the frames fills
+     * in both argv[-1] and thisv, the other frame's thisv is left null.
+     */
+    js::Value           thisv;          /* "this" pointer if in method */
+
     uintN               argc;           /* actual argument count */
     js::Value           *argv;          /* base of argument stack slots */
-    void                *annotation;    /* used by Java security */
     js::Value           rval;           /* function return value */
+    void                *annotation;    /* used by Java security */
 
     /* Maintained by StackSpace operations */
     JSStackFrame        *down;          /* previous frame, part of
@@ -99,6 +114,12 @@ struct JSStackFrame
     jsbytecode          *savedPC;       /* only valid if cx->fp != this */
 #ifdef DEBUG
     static jsbytecode *const sInvalidPC;
+#endif
+
+    void                *ncode;         /* jit return pc */
+#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
+    /* Guh. Align. */
+    void                *align_[3];
 #endif
 
     /*
@@ -141,8 +162,6 @@ struct JSStackFrame
     JSObject        *blockChain;
 
     uint32          flags;          /* frame flags -- see below */
-    JSStackFrame    *displaySave;   /* previous value of display entry for
-                                       script->staticLevel */
 
     /* Members only needed for inline calls. */
     void            *hookData;      /* debugger call hook data */
@@ -223,6 +242,9 @@ struct JSStackFrame
     }
 
     bool isDummyFrame() const { return !script && !fun; }
+
+  private:
+    JSObject *computeThisObject(JSContext *cx);
 };
 
 namespace js {
@@ -269,17 +291,24 @@ namespace js {
 
 /*
  * For a call with arguments argv including argv[-1] (nominal |this|) and
- * argv[-2] (callee) replace null |this| with callee's parent, replace
- * primitive values with the equivalent wrapper objects and censor activation
- * objects as, per ECMA-262, they may not be referred to by |this|. argv[-1]
- * must not be a JSVAL_VOID.
+ * argv[-2] (callee) replace null |this| with callee's parent and replace
+ * primitive values with the equivalent wrapper objects. argv[-1] must
+ * not be JSVAL_VOID or an activation object.
  */
-extern JSObject *
+extern bool
 ComputeThisFromArgv(JSContext *cx, js::Value *argv);
 
 JS_ALWAYS_INLINE JSObject *
 ComputeThisFromVp(JSContext *cx, js::Value *vp)
 {
+    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
+    return ComputeThisFromArgv(cx, vp + 2) ? &vp[1].toObject() : NULL;
+}
+
+JS_ALWAYS_INLINE bool
+ComputeThisFromVpInPlace(JSContext *cx, js::Value *vp)
+{
+    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
     return ComputeThisFromArgv(cx, vp + 2);
 }
 
@@ -360,7 +389,10 @@ extern JS_REQUIRES_STACK bool
 InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args);
 
 extern JS_REQUIRES_STACK bool
-Interpret(JSContext *cx);
+Interpret(JSContext *cx, JSStackFrame *stopFp, uintN inlineCallCount = 0);
+
+extern JS_REQUIRES_STACK bool
+RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
 
 #define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
 
@@ -445,19 +477,6 @@ js_EnterWith(JSContext *cx, jsint stackIndex);
 extern JS_REQUIRES_STACK void
 js_LeaveWith(JSContext *cx);
 
-extern JS_REQUIRES_STACK js::Class *
-js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
-
-/*
- * Unwind block and scope chains to match the given depth. The function sets
- * fp->sp on return to stackDepth.
- */
-extern JS_REQUIRES_STACK JSBool
-js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
-
-extern JSBool
-js_OnUnknownMethod(JSContext *cx, js::Value *vp);
-
 /*
  * Find the results of incrementing or decrementing *vp. For pre-increments,
  * both *vp and *vp2 will contain the result on return. For post-increments,
@@ -485,16 +504,23 @@ js_MeterSlotOpcode(JSOp op, uint32 slot);
 
 #endif /* JS_LONE_INTERPRET */
 
+/*
+ * Unwind block and scope chains to match the given depth. The function sets
+ * fp->sp on return to stackDepth.
+ */
+extern JS_REQUIRES_STACK JSBool
+js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
+
+extern JSBool
+js_OnUnknownMethod(JSContext *cx, js::Value *vp);
+
+extern JS_REQUIRES_STACK js::Class *
+js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
+
 inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)
 {
-    if (flags & JSFRAME_COMPUTED_THIS)
-        return &thisv.toObject();
-    if (!js::ComputeThisFromArgv(cx, argv))
-        return NULL;
-    thisv = argv[-1];
-    flags |= JSFRAME_COMPUTED_THIS;
-    return &thisv.toObject();
+    return thisv.isPrimitive() ? computeThisObject(cx) : &thisv.toObject();
 }
 
 #endif /* jsinterp_h___ */

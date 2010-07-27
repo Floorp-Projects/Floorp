@@ -317,20 +317,22 @@
  * Define JS_64BIT iff we are building in an environment with 64-bit
  * addresses.
  */
-#ifdef _MSC_VER
-# if defined(_M_X64) || defined(_M_AMD64)
-#  define JS_64BIT
+#ifndef JS_64BIT
+# ifdef _MSC_VER
+#  if defined(_M_X64) || defined(_M_AMD64)
+#   define JS_64BIT
+#  endif
+# elif defined(__GNUC__)
+#  ifdef __x86_64__
+#   define JS_64BIT
+#  endif
+# elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#  ifdef __x86_64
+#   define JS_64BIT
+#  endif
+# else
+#  error "Implement me"
 # endif
-#elif defined(__GNUC__)
-# ifdef __x86_64__
-#  define JS_64BIT
-# endif
-#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-# ifdef __x86_64
-#  define JS_64BIT
-# endif
-#else
-# error "Implement me"
 #endif
 
 

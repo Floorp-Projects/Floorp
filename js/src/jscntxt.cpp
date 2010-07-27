@@ -78,7 +78,7 @@
 #include "jscntxtinlines.h"
 
 #ifdef XP_WIN
-# include <windows.h>
+# include "jswin.h"
 #elif defined(XP_OS2)
 # define INCL_DOSMEMMGR
 # include <os2.h>
@@ -517,6 +517,9 @@ JSThreadData::init()
 #ifdef JS_TRACER
     InitJIT(&traceMonitor);
 #endif
+#ifdef JS_METHODJIT
+    jmData.Initialize();
+#endif
     dtoaState = js_NewDtoaState();
     if (!dtoaState) {
         finish();
@@ -544,6 +547,9 @@ JSThreadData::finish()
     propertyCache.~PropertyCache();
 #if defined JS_TRACER
     FinishJIT(&traceMonitor);
+#endif
+#if defined JS_METHODJIT
+    jmData.Finish();
 #endif
     stackSpace.finish();
 }
@@ -574,6 +580,9 @@ JSThreadData::purge(JSContext *cx)
      */
     if (cx->runtime->gcRegenShapes)
         traceMonitor.needFlush = JS_TRUE;
+#endif
+#ifdef JS_METHODJIT
+    jmData.purge(cx);
 #endif
 
     /* Destroy eval'ed scripts. */
@@ -1890,14 +1899,15 @@ JSBool
 js_InvokeOperationCallback(JSContext *cx)
 {
     JS_ASSERT_REQUEST_DEPTH(cx);
-    JS_ASSERT(JS_THREAD_DATA(cx)->operationCallbackFlag);
+    JS_ASSERT(JS_THREAD_DATA(cx)->interruptFlags & JSThreadData::INTERRUPT_OPERATION_CALLBACK);
 
     /*
      * Reset the callback flag first, then yield. If another thread is racing
      * us here we will accumulate another callback request which will be
      * serviced at the next opportunity.
      */
-    JS_THREAD_DATA(cx)->operationCallbackFlag = 0;
+    JS_ATOMIC_CLEAR_MASK((jsword*)&JS_THREAD_DATA(cx)->interruptFlags,
+                         JSThreadData::INTERRUPT_OPERATION_CALLBACK);
 
     /*
      * Ideally this should never be hit. The embedding should call JS_MaybeGC()
@@ -1931,6 +1941,15 @@ js_InvokeOperationCallback(JSContext *cx)
      */
     JSOperationCallback cb = cx->operationCallback;
     return !cb || cb(cx);
+}
+
+JSBool
+js_HandleExecutionInterrupt(JSContext *cx)
+{
+    JSBool result = JS_TRUE;
+    if (JS_THREAD_DATA(cx)->interruptFlags & JSThreadData::INTERRUPT_OPERATION_CALLBACK)
+        result = js_InvokeOperationCallback(cx) && result;
+    return result;
 }
 
 void

@@ -104,7 +104,7 @@
 #endif
 
 #ifdef XP_WIN
-#include <windows.h>
+#include "jswin.h"
 #endif
 
 using namespace js;
@@ -144,7 +144,8 @@ static jsdouble MAX_TIMEOUT_INTERVAL = 1800.0;
 static jsdouble gTimeoutInterval = -1.0;
 static volatile bool gCanceled = false;
 
-static bool enableJit = false;
+static bool enableTraceJit = false;
+static bool enableMethodJit = false;
 
 static JSBool
 SetTimeoutValue(JSContext *cx, jsdouble t);
@@ -575,7 +576,8 @@ static const struct {
 } js_options[] = {
     {"anonfunfix",      JSOPTION_ANONFUNFIX},
     {"atline",          JSOPTION_ATLINE},
-    {"jit",             JSOPTION_JIT},
+    {"tracejit",        JSOPTION_JIT},
+    {"methodjit",       JSOPTION_METHODJIT},
     {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
     {"werror",          JSOPTION_WERROR},
@@ -727,13 +729,18 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
 
         case 'j':
-            enableJit = !enableJit;
+            enableTraceJit = !enableTraceJit;
             JS_ToggleOptions(cx, JSOPTION_JIT);
 #if defined(JS_TRACER) && defined(DEBUG)
             js::InitJITStatsClass(cx, JS_GetGlobalObject(cx));
             JS_DefineObject(cx, JS_GetGlobalObject(cx), "tracemonkey",
                             &js::jitstats_class, NULL, 0);
 #endif
+            break;
+
+        case 'm':
+            enableMethodJit = !enableMethodJit;
+            JS_ToggleOptions(cx, JSOPTION_METHODJIT);
             break;
 
         case 'o':
@@ -1115,6 +1122,22 @@ AssertEq(JSContext *cx, uintN argc, jsval *vp)
         }
         return JS_FALSE;
     }
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
+AssertJit(JSContext *cx, uintN argc, jsval *vp)
+{
+#ifdef JS_METHODJIT
+    if (JS_GetOptions(cx) & JSOPTION_METHODJIT) {
+        if (cx->fp->script->nmap == NULL) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_ASSERT_JIT_FAILED);
+            return JS_FALSE;
+        }
+    }
+#endif
+
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
@@ -3866,6 +3889,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("assertEq",       AssertEq,       2,0),
+    JS_FN("assertJit",      AssertJit,      0,0),
     JS_FN("gc",             ::GC,           0,0),
 #ifdef JS_GCMETER
     JS_FN("gcstats",        GCStats,        0,0),
@@ -3959,6 +3983,7 @@ static const char *const shell_help_messages[] = {
 "assertEq(actual, expected[, msg])\n"
 "  Throw if the first two arguments are not the same (both +0 or both -0,\n"
 "  both NaN, or non-zero and ===)",
+"assertJit()              Throw if the calling function failed to JIT\n",
 "gc()                     Run the garbage collector",
 #ifdef JS_GCMETER
 "gcstats()                Print garbage collector statistics",
@@ -4839,8 +4864,10 @@ NewContext(JSRuntime *rt)
     JS_SetErrorReporter(cx, my_ErrorReporter);
     JS_SetVersion(cx, JSVERSION_LATEST);
     SetContextOptions(cx);
-    if (enableJit)
+    if (enableTraceJit)
         JS_ToggleOptions(cx, JSOPTION_JIT);
+    if (enableMethodJit)
+        JS_ToggleOptions(cx, JSOPTION_METHODJIT);
     return cx;
 }
 
@@ -4989,6 +5016,15 @@ main(int argc, char **argv, char **envp)
     JSBool jsdbc;
 #endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
+#ifdef XP_WIN
+    {
+        const char *crash_option = getenv("XRE_NO_WINDOWS_CRASH_DIALOG");
+        if (crash_option && strncmp(crash_option, "1", 1)) {
+            DWORD oldmode = SetErrorMode(SEM_NOGPFAULTERRORBOX);
+            SetErrorMode(oldmode | SEM_NOGPFAULTERRORBOX);
+        }
+    }
+#endif
 
     CheckHelpMessages();
 #ifdef HAVE_SETLOCALE

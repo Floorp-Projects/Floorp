@@ -12,13 +12,13 @@ if (HAVE_TM) {
     {
         function jit(on)
         {
-          if (on && !options().match(/jit/))
+          if (on && !options().match(/tracejit/))
           {
-            options('jit');
+            options('tracejit');
           }
-          else if (!on && options().match(/jit/))
+          else if (!on && options().match(/tracejit/))
           {
-            options('jit');
+            options('tracejit');
           }
         }
 
