@@ -626,13 +626,6 @@ window.TabItems = {
   items: [],
 
   // ----------
-  // Function: init
-  // Sets the object up.
-  init: function() {
-
-  },
-
-  // ----------
   // Function: register
   // Adds the given <TabItem> to the master list.
   register: function(item) {
