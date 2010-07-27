@@ -29,3 +29,25 @@ EventUtils.synthesizeMouseForContent = function synthesizeMouseForContent(aEleme
 
   EventUtils.synthesizeMouse(aElement, rect.left + aOffsetX, rect.top + aOffsetY, aEvent, aWindow);
 };
+
+let AsyncTests = {
+  _tests: {},
+  waitFor: function(aMessage, aData, aCallback) {
+    messageManager.addMessageListener(aMessage, this);
+    if (!this._tests[aMessage])
+      this._tests[aMessage] = [];
+
+    this._tests[aMessage].push(aCallback || function() {});
+    Browser.selectedBrowser.messageManager.sendAsyncMessage(aMessage, aData || { });
+  },
+
+  receiveMessage: function(aMessage) {
+    let test = this._tests[aMessage.name];
+    let callback = test.shift();
+    if (callback)
+      callback(aMessage.json);
+  }
+};
+
+messageManager.loadFrameScript("chrome://mochikit/content/browser/mobile/chrome/remote_head.js", true);
+messageManager.loadFrameScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", true);

@@ -344,7 +344,6 @@ FormAssistant.prototype = {
     if (!document)
       return;
 
-    let currentIndex = -1;
     let documents = Util.getAllDocuments(document);
 
     let elements = this._elements;
@@ -358,9 +357,6 @@ FormAssistant.prototype = {
           continue;
 
         elements.push(node);
-        if (node == aElement) {
-          currentIndex = elements.length - 1;
-        }
       }
     }
 
@@ -374,6 +370,15 @@ FormAssistant.prototype = {
       return a.tabIndex > b.tabIndex;
     }
     elements = elements.sort(orderByTabIndex);
+
+    // retrieve the correct index
+    let currentIndex = -1;
+    for (let i = 0; i < elements.length; i++) {
+      if (elements[i] == aElement) {
+        currentIndex = i;
+        break;
+      }
+    }
     return currentIndex;
   },
 

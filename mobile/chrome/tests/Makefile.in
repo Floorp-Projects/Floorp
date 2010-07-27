@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
   head.js \
+  remote_head.js \
   browser_mainui.js \
   browser_tabs.js \
   browser_bookmarks.js \
@@ -54,7 +55,8 @@ _BROWSER_FILES = \
   browser_select.js \
   browser_rect.js \
   browser_click_content.js \
-  browser_FormAssistant.js \
+  browser_forms.js \
+  remote_forms.js \
   browser_viewport.js \
   browser_navigation.js \
   browser_preferences_basic.js \
@@ -63,7 +65,7 @@ _BROWSER_FILES = \
   browser_blank_02.html \
   browser_select.html \
   browser_click_content.html \
-  browser_FormAssistant.html \
+  browser_forms.html \
   browser_viewport_00.html \
   browser_viewport_01.html \
   browser_viewport_02.html \
