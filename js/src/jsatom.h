@@ -45,11 +45,12 @@
 #include <stddef.h>
 #include "jsversion.h"
 #include "jstypes.h"
-#include "jshash.h" /* Added by JSIFY */
-#include "jsdhash.h"
+#include "jshash.h"
+#include "jshashtable.h"
 #include "jsapi.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsstr.h"
 #include "jslock.h"
 #include "jsvalue.h"
 
@@ -258,8 +259,43 @@ struct JSAtomMap {
     jsatomid            length;         /* count of (to-be-)indexed atoms */
 };
 
-struct JSAtomState {
-    JSDHashTable        stringAtoms;    /* hash table with shared strings */
+namespace js {
+
+#define ATOM_ENTRY_FLAG_MASK            (ATOM_PINNED | ATOM_INTERNED)
+
+JS_STATIC_ASSERT(ATOM_ENTRY_FLAG_MASK < JS_GCTHING_ALIGN);
+
+typedef uintptr_t AtomEntryType;
+
+static JS_ALWAYS_INLINE JSString *
+AtomEntryToKey(AtomEntryType entry)
+{
+    JS_ASSERT(entry != 0);
+    return (JSString *)(entry & ~ATOM_ENTRY_FLAG_MASK);
+}
+
+struct AtomHasher
+{
+    typedef JSString *Lookup;
+
+    static HashNumber hash(JSString *str) {
+        return js_HashString(str);
+    }
+
+    static bool match(AtomEntryType entry, JSString *lookup) {
+        return entry ? js_EqualStrings(AtomEntryToKey(entry), lookup) : false;
+    }
+};
+
+typedef HashSet<AtomEntryType, AtomHasher, SystemAllocPolicy> AtomSet;
+
+}  /* namespace js */
+
+struct JSAtomState
+{
+    /* We cannot rely on constructors/destructors, so do it manually. */
+    js::AtomSet         atoms;
+
 #ifdef JS_THREADSAFE
     JSThinLock          lock;
 #endif
