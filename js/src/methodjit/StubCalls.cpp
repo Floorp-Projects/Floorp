@@ -106,7 +106,7 @@ mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
 {
     JSContext *cx = f.cx;
 
-    Value &rref = f.regs.sp[-1];
+    Value rval = f.regs.sp[-1];
     Value &lref = f.regs.sp[-2];
     JSObject *obj = ValueToObject(cx, &lref);
     if (!obj)
@@ -177,7 +177,7 @@ mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
                   fast_set_propcache_hit:
                     PCMETER(cache->pchits++);
                     PCMETER(cache->setpchits++);
-                    NATIVE_SET(cx, obj, sprop, entry, &rref);
+                    NATIVE_SET(cx, obj, sprop, entry, &rval);
                     break;
                 }
                 checkForAdd = sprop->hasSlot() && sprop->parent == scope->lastProperty();
@@ -256,7 +256,7 @@ mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
                  * slot's value that might contain a method of a
                  * branded scope.
                  */
-                obj->lockedSetSlot(slot, rref);
+                obj->lockedSetSlot(slot, rval);
 
                 /*
                  * Purge the property cache of the id we may have just
@@ -278,7 +278,7 @@ mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
                 sprop = entry->vword.toSprop();
                 JS_ASSERT(sprop->writable());
                 JS_ASSERT(!obj2->scope()->sealed());
-                NATIVE_SET(cx, obj, sprop, entry, &rref);
+                NATIVE_SET(cx, obj, sprop, entry, &rval);
             }
             if (sprop)
                 break;
@@ -296,10 +296,10 @@ mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
                 defineHow = JSDNP_CACHE_RESULT | JSDNP_UNQUALIFIED;
             else
                 defineHow = JSDNP_CACHE_RESULT;
-            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rref))
+            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval))
                 THROW();
         } else {
-            if (!obj->setProperty(cx, id, &rref))
+            if (!obj->setProperty(cx, id, &rval))
                 THROW();
         }
     } while (0);
@@ -631,7 +631,7 @@ stubs::SetElem(VMFrame &f)
             }
         }
     } while (0);
-    if (!obj->setProperty(cx, id, &regs.sp[-1]))
+    if (!obj->setProperty(cx, id, &retval))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
