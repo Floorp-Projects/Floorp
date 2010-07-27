@@ -110,6 +110,7 @@ nsBaseWidget::nsBaseWidget()
 , mClipRectCount(0)
 , mZIndex(0)
 , mSizeMode(nsSizeMode_Normal)
+, mPopupLevel(ePopupLevelTop)
 {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
@@ -214,6 +215,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
   if (nsnull != aInitData) {
     mWindowType = aInitData->mWindowType;
     mBorderStyle = aInitData->mBorderStyle;
+    mPopupLevel = aInitData->mPopupLevel;
   }
 
   if (aParent) {
