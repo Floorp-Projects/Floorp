@@ -52,6 +52,7 @@
 #  include "mozilla/mozalloc_undef_macro_wrappers.h"
 #endif
 
+#include "jsprvtd.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsclist.h"
 #include "jslong.h"
@@ -65,8 +66,6 @@
 #include "jsobj.h"
 #include "jspropertycache.h"
 #include "jspropertytree.h"
-#include "jsprvtd.h"
-#include "jspubtd.h"
 #include "jsregexp.h"
 #include "jsutil.h"
 #include "jsarray.h"
