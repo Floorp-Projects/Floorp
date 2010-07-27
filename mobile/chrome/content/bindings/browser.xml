@@ -181,10 +181,18 @@
               listener: aListener,
               flags: aNotifyFlags
             });
+
+            this._browser.messageManager.sendAsyncMessage("WebProgress:AddProgressListener", {
+              notifyFlags: aNotifyFlags,
+            });
           },
 
           removeProgressListener: function(aListener) {
             function hasFilter(item) {
+              if (item.listener == aListener)
+                this._browser.messageManager.sendAsyncMessage("WebProgress:RemoveProgressListener", {
+                  notifyFlags: item.flags,
+                });
               return item.listener != aListener;
             }
 
