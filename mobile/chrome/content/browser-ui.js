@@ -2077,7 +2077,21 @@ var ContextHelper = {
       label.value = this.popupState.bookmarkURL;
 
     this._panel.hidden = false;
+    window.addEventListener("resize", this, true);
 
+    this.sizeToContent();
+    BrowserUI.pushPopup(this, [this._popup]);
+  },
+
+  hide: function ch_hide() {
+    this.popupState = null;
+    this._panel.hidden = true;
+    window.removeEventListener("resize", this, true);
+
+    BrowserUI.popPopup();
+  },
+
+  sizeToContent: function sizeToContent() {
     // Make sure the container is at least sized to the content
     let popup = this._popup;
     let preferredHeight = 0;
@@ -2085,21 +2099,20 @@ var ContextHelper = {
       preferredHeight += popup.children[i].getBoundingClientRect().height;
     }
 
+    // Ensure to reset the assigned width/height to have the default's one set
+    // by the content
+    popup.width = popup.height = "";
+
     let rect = popup.getBoundingClientRect();
     let height = Math.min(preferredHeight, 0.75 * window.innerWidth);
     let width = Math.min(rect.width, 0.75 * window.innerWidth);
 
     popup.height = height;
     popup.width = width;
-
-    BrowserUI.pushPopup(this, [popup]);
   },
 
-  hide: function ch_hide() {
-    this.popupState = null;
-    this._panel.hidden = true;
-
-    BrowserUI.popPopup();
+  handleEvent: function handleEvent(aEvent) {
+    this.sizeToContent();
   }
 };
 
