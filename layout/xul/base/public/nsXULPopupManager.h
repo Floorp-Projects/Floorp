@@ -321,7 +321,7 @@ public:
   NS_IMETHOD ShouldRollupOnMouseActivate(PRBool *aShould);
 
   virtual PRUint32 GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain);
-  virtual void AdjustPopupsOnWindowChange(void);
+  virtual void AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow);
 
   static nsXULPopupManager* sInstance;
 

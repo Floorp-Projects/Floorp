@@ -326,8 +326,10 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         // which does this for us.
         nsCOMPtr<nsIMenuRollup> pm =
           do_GetService("@mozilla.org/xul/xul-popup-manager;1");
-        if (pm)
-          pm->AdjustPopupsOnWindowChange();
+        if (pm) {
+          nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(docShell);
+          pm->AdjustPopupsOnWindowChange(window);
+        }
 #endif
 
         // persist position, but not immediately, in case this OS is firing
@@ -339,8 +341,10 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 #ifndef XP_MACOSX
         nsCOMPtr<nsIMenuRollup> pm =
           do_GetService("@mozilla.org/xul/xul-popup-manager;1");
-        if (pm)
-          pm->AdjustPopupsOnWindowChange();
+        if (pm) {
+          nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(docShell);
+          pm->AdjustPopupsOnWindowChange(window);
+        }
 #endif
  
         nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;
