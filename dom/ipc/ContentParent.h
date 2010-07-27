@@ -146,12 +146,10 @@ private:
     void EnsurePrefService();
     void EnsurePermissionService();
 
-    virtual bool RecvStartVisitedQuery(const IPC::URI& uri);
 
     virtual bool RecvVisitURI(const IPC::URI& uri,
                               const IPC::URI& referrer,
                               const PRUint32& flags);
-
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;
