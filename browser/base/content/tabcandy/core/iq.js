@@ -183,9 +183,7 @@ iQ.fn = iQ.prototype = {
     var ret = this || [];
     if ( selector != null ) {
       // The window, strings (and functions) also have 'length'
-      // The extra typeof function check is to prevent crashes
-      // in Safari 2 (See: #3039)
-      if (selector.length == null || typeof selector == "string" || typeof selector == "function" || (typeof selector != "function" && selector.setInterval)) {
+      if (selector.length == null || typeof selector == "string" || typeof selector == "function" || selector.setInterval) {
         Array.prototype.push.call( ret, selector );
       } else {
         Utils.merge( ret, selector );
