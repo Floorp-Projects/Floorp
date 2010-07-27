@@ -93,18 +93,7 @@ var UIManager = {
       Storage.init();
       TabsManager.init();
       TabMirror.init();
-      this._secondaryInit();
-    } catch(e) {
-      Utils.log(e);
-    }
-  },
 
-  // -----------
-  // Function: _secondaryInit
-  // This is the bulk of the initialization, kicked off automatically by init
-  // once the system is ready.
-  _secondaryInit: function() {
-    try {
       var self = this;
 
       this._currentTab = gBrowser.selectedTab;
@@ -159,7 +148,7 @@ var UIManager = {
 
   // ----------
   // Function: _delayInit
-  // Called automatically by _secondaryInit once sessionstore is online.
+  // Called automatically by init once sessionstore is online.
   _delayInit : function() {
     try {
       var self = this;
