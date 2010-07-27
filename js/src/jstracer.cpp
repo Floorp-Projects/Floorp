@@ -10996,20 +10996,13 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, Value* argv, Value* rval)
     CHECK_STATUS(getClassPrototype(ctor, proto_ins));
 
     LIns *arr_ins;
-    if (argc == 0) {
-        // arr_ins = js_NewEmptyArray(cx, Array.prototype)
-        LIns *args[] = { proto_ins, cx_ins };
+    if (argc == 0 || (argc == 1 && argv[0].isNumber())) {
+        LIns *args[] = { argc == 0 ? lir->insImmI(0) : d2i(get(argv)), proto_ins, cx_ins };
         arr_ins = lir->insCall(&js_NewEmptyArray_ci, args);
         guard(false, lir->insEqP_0(arr_ins), OOM_EXIT);
-    } else if (argc == 1 && argv[0].isNumber()) {
-        // arr_ins = js_NewEmptyArray(cx, Array.prototype, length)
-        LIns *args[] = { d2i(get(argv)), proto_ins, cx_ins }; // FIXME: is this 64-bit safe?
-        arr_ins = lir->insCall(&js_NewArrayWithSlots_ci, args);
-        guard(false, lir->insEqP_0(arr_ins), OOM_EXIT);
     } else {
-        // arr_ins = js_NewArrayWithSlots(cx, Array.prototype, argc)
         LIns *args[] = { INS_CONST(argc), proto_ins, cx_ins };
-        arr_ins = lir->insCall(&js_NewArrayWithSlots_ci, args);
+        arr_ins = lir->insCall(&js_NewPreallocatedArray_ci, args);
         guard(false, lir->insEqP_0(arr_ins), OOM_EXIT);
 
         // arr->dslots[i] = box_jsval(vp[i]);  for i in 0..argc
@@ -13649,11 +13642,9 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
      * holes by resizeDenseArrayElements() so we can read them and get
      * the correct value.
      */
-    LIns* dslots_ins =
-        addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACC_OTHER), "dslots");
     LIns* capacity_ins =
-        addName(lir->insLoad(LIR_ldi, dslots_ins, -int(sizeof(jsval)), ACC_OTHER), "capacity");
-
+        addName(stobj_get_fslot_uint32(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_CAPACITY),
+                "capacity");
     jsuint capacity = obj->getDenseArrayCapacity();
     bool within = (jsuint(idx) < capacity);
     if (!within) {
@@ -13672,6 +13663,8 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     guard(true, lir->ins2(LIR_ltui, idx_ins, capacity_ins), exit);
 
     /* Load the value and guard on its type to unbox it. */
+    LIns* dslots_ins =
+        addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACC_OTHER), "dslots");
     vp = &obj->dslots[jsuint(idx)];
 	JS_ASSERT(sizeof(Value) == 8); // The |3| in the following statement requires this.
     addr_ins = lir->ins2(LIR_addp, dslots_ins,
@@ -13975,13 +13968,17 @@ TraceRecorder::record_JSOP_NEWINIT()
     LIns* proto_ins;
     CHECK_STATUS_A(getClassPrototype(key, proto_ins));
 
-    LIns* args[] = { proto_ins, cx_ins };
-    const CallInfo *ci = (key == JSProto_Array)
-                         ? &js_NewEmptyArray_ci
-                         : (cx->regs->pc[JSOP_NEWINIT_LENGTH] != JSOP_ENDINIT)
-                         ? &js_NonEmptyObject_ci
-                         : &js_Object_tn_ci;
-    LIns* v_ins = lir->insCall(ci, args);
+    LIns *v_ins;
+    if (key == JSProto_Array) {
+        LIns *args[] = { lir->insImmI(0), proto_ins, cx_ins };
+        v_ins = lir->insCall(&js_NewEmptyArray_ci, args);
+    } else {
+        LIns *args[] = { proto_ins, cx_ins };
+        v_ins = lir->insCall((cx->regs->pc[JSOP_NEWINIT_LENGTH] != JSOP_ENDINIT)
+                             ? &js_NonEmptyObject_ci
+                             : &js_Object_tn_ci,
+                             args);
+    }
     guard(false, lir->insEqP_0(v_ins), OOM_EXIT);
     stack(0, v_ins);
     return ARECORD_CONTINUE;
@@ -15821,7 +15818,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
     cx->assertValidStackDepth(len);
 
     LIns* args[] = { lir->insImmI(len), proto_ins, cx_ins };
-    LIns* v_ins = lir->insCall(&js_NewArrayWithSlots_ci, args);
+    LIns* v_ins = lir->insCall(&js_NewPreallocatedArray_ci, args);
     guard(false, lir->insEqP_0(v_ins), OOM_EXIT);
 
     LIns* dslots_ins = NULL;

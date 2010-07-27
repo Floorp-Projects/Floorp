@@ -156,16 +156,15 @@ inline uint32
 JSObject::getDenseArrayCapacity() const
 {
     JS_ASSERT(isDenseArray());
-    JS_ASSERT(dslots);
-    return dslots[-1].toPrivateUint32();
+    return fslots[JSSLOT_DENSE_ARRAY_CAPACITY].toPrivateUint32();
 }
 
 inline void
 JSObject::setDenseArrayCapacity(uint32 capacity)
 {
     JS_ASSERT(isDenseArray());
-    JS_ASSERT(dslots);
-    dslots[-1].setPrivateUint32(capacity);
+    JS_ASSERT(!capacity == !dslots);
+    fslots[JSSLOT_DENSE_ARRAY_CAPACITY].setPrivateUint32(capacity);
 }
 
 inline const js::Value &
@@ -213,6 +212,7 @@ inline void
 JSObject::voidDenseOnlyArraySlots()
 {
     JS_ASSERT(isDenseArray());
+    fslots[JSSLOT_DENSE_ARRAY_CAPACITY].setUndefined();
 }
 
 inline void
