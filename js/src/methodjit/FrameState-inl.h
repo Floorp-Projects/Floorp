@@ -711,7 +711,8 @@ FrameState::eviscerate(FrameEntry *fe)
 inline void
 FrameState::addEscaping(uint32 local)
 {
-    escaping[local] = 1;
+    if (!eval)
+        escaping[local] = 1;
 }
 
 inline StateRemat
