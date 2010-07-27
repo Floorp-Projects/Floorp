@@ -125,7 +125,7 @@ include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 ifndef UNIVERSAL_BINARY
 PKG_STAGE = $(DIST)/test-package-stage
-package-tests: stage-mochitest stage-reftest stage-xpcshell stage-jstests stage-mozmill
+package-tests: stage-mochitest stage-reftest stage-xpcshell stage-jstests stage-mozmill 
 else
 # This staging area has been built for us by universal/flight.mk
 PKG_STAGE = $(DIST)/universal/test-package-stage
@@ -136,6 +136,10 @@ package-tests:
 	@rm -f "$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)"
 	cd $(PKG_STAGE) && \
 	  zip -r9D "$(call core_abspath,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE))" *
+
+ifeq (Android, $(OS_TARGET))
+package-tests: stage-android
+endif
 
 make-stage-dir:
 	rm -rf $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE)/bin && $(NSINSTALL) -D $(PKG_STAGE)/bin/components && $(NSINSTALL) -D $(PKG_STAGE)/certs
@@ -155,9 +159,12 @@ stage-jstests: make-stage-dir
 stage-mozmill: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/mozmill stage-package
 
+stage-android: make-stage-dir
+	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/sutAgentAndroid.apk $(PKG_STAGE)/bin
+
 .PHONY: \
   mochitest mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins \
   reftest crashtest \
   xpcshell-tests \
   jstestbrowser \
-  package-tests make-stage-dir stage-mochitest stage-reftest stage-xpcshell stage-jstests stage-mozmill
+  package-tests make-stage-dir stage-mochitest stage-reftest stage-xpcshell stage-jstests stage-mozmill stage-android
