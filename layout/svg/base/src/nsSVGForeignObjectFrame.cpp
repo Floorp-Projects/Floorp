@@ -206,11 +206,12 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   if (!kid)
     return NS_OK;
 
-  gfxMatrix matrix = GetCanvasTMWithTranslation();
+  gfxMatrix matrixForChildren = GetCanvasTMForChildren();
+  gfxMatrix matrix = GetCanvasTM();
 
   nsIRenderingContext *ctx = aContext->GetRenderingContext(this);
 
-  if (!ctx || matrix.IsSingular()) {
+  if (!ctx || matrixForChildren.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
     return NS_ERROR_FAILURE;
   }
@@ -236,7 +237,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
     nsSVGUtils::SetClipRect(gfx, matrix, clipRect);
   }
 
-  gfx->Multiply(GetScaledMatrixForChildren(matrix));
+  gfx->Multiply(matrixForChildren);
 
   // Transform the dirty rect into the rectangle containing the
   // transformed dirty rect.
@@ -276,7 +277,7 @@ nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
   NS_ASSERTION(*aOutAncestor, "How did we end up without an outer frame?");
 
   /* Return the matrix back to the root, factoring in the x and y offsets. */
-  return GetScaledMatrixForChildren(GetCanvasTMWithTranslation());
+  return GetCanvasTMForChildren();
 }
  
 NS_IMETHODIMP_(nsIFrame*)
@@ -289,7 +290,11 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
   if (!kid)
     return nsnull;
 
-  gfxMatrix tm = GetCanvasTMWithTranslation().Invert();
+  float x, y, width, height;
+  static_cast<nsSVGElement*>(mContent)->
+    GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+
+  gfxMatrix tm = GetCanvasTM().Invert();
   if (tm.IsSingular())
     return nsnull;
   
@@ -297,10 +302,6 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
 
   gfxPoint pt = gfxPoint(aPoint.x, aPoint.y) / PresContext()->AppUnitsPerDevPixel();
   pt = tm.Transform(pt);
-
-  float x, y, width, height;
-  static_cast<nsSVGElement*>(mContent)->
-    GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
   if (!gfxRect(0.0f, 0.0f, width, height).Contains(pt))
     return nsnull;
@@ -337,8 +338,8 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
   if (w < 0.0f) w = 0.0f;
   if (h < 0.0f) h = 0.0f;
 
-  mRect = ToCanvasBounds(gfxRect(0.0, 0.0, w, h), GetCanvasTMWithTranslation(),
-                         PresContext());
+  // GetCanvasTM includes the x,y translation
+  mRect = ToCanvasBounds(gfxRect(0.0, 0.0, w, h), GetCanvasTM(), PresContext());
   
   return NS_OK;
 }
@@ -452,9 +453,11 @@ nsSVGForeignObjectFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
   NS_ASSERTION(!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD),
                "Should not be calling this on a non-display child");
 
+  nsSVGForeignObjectElement *content =
+    static_cast<nsSVGForeignObjectElement*>(mContent);
+
   float x, y, w, h;
-  static_cast<nsSVGForeignObjectElement*>(mContent)->
-    GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
+  content->GetAnimatedLengthValues(&x, &y, &w, &h, nsnull);
 
   if (w < 0.0f) w = 0.0f;
   if (h < 0.0f) h = 0.0f;
@@ -489,22 +492,12 @@ nsSVGForeignObjectFrame::GetCanvasTM()
 // Implementation helpers
 
 gfxMatrix
-nsSVGForeignObjectFrame::GetCanvasTMWithTranslation()
-{
-  float x, y;
-  static_cast<nsSVGElement*>(mContent)->
-    GetAnimatedLengthValues(&x, &y, nsnull);
-
-  return (gfxMatrix().Translate(gfxPoint(x, y)) * GetCanvasTM());
-}
-
-gfxMatrix
-nsSVGForeignObjectFrame::GetScaledMatrixForChildren(gfxMatrix canvasTMWithTranslation) const
+nsSVGForeignObjectFrame::GetCanvasTMForChildren()
 {
   float cssPxPerDevPx = PresContext()->
     AppUnitsToFloatCSSPixels(PresContext()->AppUnitsPerDevPixel());
 
-  return canvasTMWithTranslation.Scale(cssPxPerDevPx, cssPxPerDevPx);
+  return GetCanvasTM().Scale(cssPxPerDevPx, cssPxPerDevPx);
 }
 
 void nsSVGForeignObjectFrame::RequestReflow(nsIPresShell::IntrinsicDirty aType)
@@ -637,7 +630,7 @@ nsSVGForeignObjectFrame::InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
   gfxRect r(aRect.x, aRect.y, aRect.width, aRect.height);
   r.Scale(1.0 / nsPresContext::AppUnitsPerCSSPixel());
 
-  nsRect rect = ToCanvasBounds(r, GetCanvasTMWithTranslation(), PresContext());
+  nsRect rect = ToCanvasBounds(r, GetCanvasTM(), PresContext());
 
   // Don't invalidate areas outside our bounds:
   rect.IntersectRect(rect, mRect);

@@ -105,6 +105,21 @@ NS_IMETHODIMP nsSVGForeignObjectElement::GetHeight(nsIDOMSVGAnimatedLength * *aH
 }
 
 //----------------------------------------------------------------------
+// nsSVGElement methods
+
+/* virtual */ gfxMatrix
+nsSVGForeignObjectElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
+{
+  // 'transform' attribute:
+  gfxMatrix matrix = nsSVGForeignObjectElementBase::PrependLocalTransformTo(aMatrix);
+  
+  // now translate by our 'x' and 'y':
+  float x, y;
+  GetAnimatedLengthValues(&x, &y, nsnull);
+  return gfxMatrix().Translate(gfxPoint(x, y)) * matrix;
+}
+
+//----------------------------------------------------------------------
 // nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
