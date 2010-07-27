@@ -335,7 +335,7 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
     masm.storePayload(data, addr);
 
     if (!post && !popped)
-        frame.pushNumber(data);
+        frame.pushInt32(data);
     else
         frame.freeReg(data);
 

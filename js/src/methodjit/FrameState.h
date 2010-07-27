@@ -258,6 +258,14 @@ class FrameState
     inline void pushNumber(MaybeRegisterID payload, bool asInt32 = false);
 
     /*
+     * Pushes an int32 onto the operation stack. This is a specialized version
+     * of pushNumber. The caller must guarantee that (a) an int32 is to be 
+     * pushed on the inline path, and (b) if any slow path pushes a double,
+     * the slow path also stores the double to memory.
+     */
+    inline void pushInt32(RegisterID payload);
+
+    /*
      * Pops a value off the operation stack, freeing any of its resources.
      */
     inline void pop();
