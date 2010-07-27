@@ -406,11 +406,13 @@ public:
 
   /**
    * Get the popup frame of a given native mouse event.
+   * @param aPresContext only check popups within aPresContext or a descendant
    * @param aEvent  the event.
    * @return        Null, if there is no popup frame at the point, otherwise,
    *                returns top-most popup frame at the point.
    */
-  static nsIFrame* GetPopupFrameForEventCoordinates(const nsEvent* aEvent);
+  static nsIFrame* GetPopupFrameForEventCoordinates(nsPresContext* aPresContext,
+                                                    const nsEvent* aEvent);
 
 /**
    * Translate from widget coordinates to the view's coordinates
