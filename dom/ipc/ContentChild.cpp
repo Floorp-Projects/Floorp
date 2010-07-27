@@ -104,7 +104,7 @@ public:
     bool IsDead() const
     {
         nsCOMPtr<nsIObserver> observer = GetObserver();
-        return !!observer;
+        return !observer;
     }
 
     /**
