@@ -319,18 +319,14 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
        * client area of the window...
        */
       case NS_MOVE: {
-#ifndef XP_MACOSX
-        // Move any popups that are attached to their parents. That is, the
-        // popup moves along with the parent window when it moves. This
-        // doesn't need to happen on Mac, as Cocoa provides a nice API
-        // which does this for us.
+        // Adjust any child popups so that their widget offsets and coordinates
+        // are correct with respect to the new position of the window
         nsCOMPtr<nsIMenuRollup> pm =
           do_GetService("@mozilla.org/xul/xul-popup-manager;1");
         if (pm) {
           nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(docShell);
           pm->AdjustPopupsOnWindowChange(window);
         }
-#endif
 
         // persist position, but not immediately, in case this OS is firing
         // repeated move events as the user drags the window
@@ -338,14 +334,12 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         break;
       }
       case NS_SIZE: {
-#ifndef XP_MACOSX
         nsCOMPtr<nsIMenuRollup> pm =
           do_GetService("@mozilla.org/xul/xul-popup-manager;1");
         if (pm) {
           nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(docShell);
           pm->AdjustPopupsOnWindowChange(window);
         }
-#endif
  
         nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;
         nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(docShell));
