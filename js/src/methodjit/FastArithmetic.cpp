@@ -1173,21 +1173,8 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
 
     /* Both double paths will join here. */
     bool hasDoublePath = false;
-    if (!rhs->isTypeKnown() || lhsUnknownDone.isSet()) {
-        /* If the LHS type was not known, link its path here. */
-        if (lhsUnknownDone.isSet())
-            lhsUnknownDone.get().linkTo(stubcc.masm.label(), &stubcc.masm);
-
-        /*
-         * For fusions, spill the tracker state. xmm* remain intact. Note that
-         * frame.sync() must be used directly, to avoid syncExit()'s jumping
-         * logic.
-         */
-        if (target)
-            frame.sync(stubcc.masm, Uses(frame.frameDepth()));
-
+    if (!rhs->isTypeKnown() || lhsUnknownDone.isSet())
         hasDoublePath = true;
-    }
 
     /* Integer path - figure out the immutable side. */
     JSOp cmpOp = op;
@@ -1238,6 +1225,9 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
         MaybeJump doubleTest, doubleFall;
         Assembler::DoubleCondition dblCond = DoubleCondForOp(op, fused);
         if (hasDoublePath) {
+            if (lhsUnknownDone.isSet())
+                lhsUnknownDone.get().linkTo(stubcc.masm.label(), &stubcc.masm);
+            frame.sync(stubcc.masm, Uses(frame.frameDepth()));
             doubleTest = stubcc.masm.branchDouble(dblCond, fpLeft, fpRight);
             doubleFall = stubcc.masm.jump();
 
@@ -1250,8 +1240,12 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
             if (rhsNotNumber2.isSet())
                 rhsNotNumber2.get().linkTo(stubcc.masm.label(), &stubcc.masm);
 
-            /* Emit the slow path - note full frame syncage. */
-            stubcc.syncExit(Uses(frame.frameDepth()));
+            /*
+             * For fusions, spill the tracker state. xmm* remain intact. Note
+             * that frame.sync() must be used directly, to avoid syncExit()'s
+             * jumping logic.
+             */
+            frame.sync(stubcc.masm, Uses(frame.frameDepth()));
             stubcc.leave();
             stubcc.call(stub);
         }
@@ -1327,6 +1321,8 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
         MaybeJump doubleDone;
         Assembler::DoubleCondition dblCond = DoubleCondForOp(op, JSOP_NOP);
         if (hasDoublePath) {
+            if (lhsUnknownDone.isSet())
+                lhsUnknownDone.get().linkTo(stubcc.masm.label(), &stubcc.masm);
             /* :FIXME: Use SET if we can? */
             Jump test = stubcc.masm.branchDouble(dblCond, fpLeft, fpRight);
             stubcc.masm.move(Imm32(0), regs.result);
@@ -1346,7 +1342,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
                 rhsNotNumber2.get().linkTo(stubcc.masm.label(), &stubcc.masm);
 
             /* Emit the slow path - note full frame syncage. */
-            stubcc.syncExit(Uses(frame.frameDepth()));
+            stubcc.syncExit(Uses(2));
             stubcc.leave();
             stubcc.call(stub);
         }
