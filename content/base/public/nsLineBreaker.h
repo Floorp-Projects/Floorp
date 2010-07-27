@@ -98,7 +98,8 @@ public:
   {
     return !((0x0030 <= u && u <= 0x0039) ||
              (0x0041 <= u && u <= 0x005A) ||
-             (0x0061 <= u && u <= 0x007A));
+             (0x0061 <= u && u <= 0x007A) ||
+             (0x000a == u));
   }
 
   static inline PRBool IsComplexChar(PRUnichar u)
