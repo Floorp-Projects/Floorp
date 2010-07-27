@@ -7,24 +7,24 @@ body {
   font-family: Tahoma, sans-serif !important;
   padding: 0px;
   color: rgba(0,0,0,0.4);
-  font-size:12px;
+  font-size: 12px;
   line-height: 16px;
   margin: 0 auto;
 }
 
 #content {
-  position:absolute;
-  top:0;
-  left:0;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
 }
 
 #bg {
   background: -moz-linear-gradient(top,#C4C4C4,#9E9E9E);
-  position:absolute;
-  top:0;
-  left:0;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   z-index: -999999;
@@ -62,11 +62,11 @@ body {
 }
 
 .thumb-shadow {
-    position: absolute;
-    border-bottom: 5px solid rgba(0,0,0,0.05);
-    margin-right: -12px;
-    bottom: 2px;
-    width: 94.5%;
+  position: absolute;
+  border-bottom: 5px solid rgba(0,0,0,0.05);
+  margin-right: -12px;
+  bottom: 2px;
+  width: 94.5%;
 }
 
 .favicon {
@@ -81,8 +81,8 @@ body {
   left: 4px;
   border-right: 1px solid rgba(0,0,0,0.2);
   border-bottom: 1px solid rgba(0,0,0,0.2);
-  height: 17;
-  width: 17;
+  height: 17px;
+  width: 17px;
 }
 
 .favicon img {
@@ -102,7 +102,9 @@ body {
   cursor: pointer;
 }
 
-.close:hover{ opacity: 1.0;}
+.close:hover {
+  opacity: 1.0;
+}
 
 .expander {
   position: absolute;
@@ -114,9 +116,11 @@ body {
   opacity: 0.2;
 }
 
-.expander:hover{opacity:1.0;}
+.expander:hover {
+  opacity: 1.0;
+}
 
-.favicon img:hover, .close img:hover, .expander img:hover{
+.favicon img:hover, .close img:hover, .expander img:hover {
   opacity: 1;
   border: none;
 }
@@ -130,10 +134,21 @@ body {
   overflow: hidden;
 }
 
-.stacked {padding:0;}
-.stacked .tab-title{ display: none; }
-.stacked .thumb-shadow{display: none;}
-.stacked .thumb{-moz-box-shadow: rgba(0,0,0,.2) 1px 1px 6px;}
+.stacked {
+  padding: 0;
+}
+
+.stacked .tab-title {
+  display: none;
+}
+
+.stacked .thumb-shadow {
+  display: none;
+}
+
+.stacked .thumb {
+  -moz-box-shadow: rgba(0,0,0,.2) 1px 1px 6px;
+}
 
 .stack-trayed .tab-title {
   display: block !important;
@@ -141,9 +156,12 @@ body {
   color: #EEE;
   font-size: 11px;
 }
-.stack-trayed .thumb{ -moz-box-shadow: none !important;}
 
-.focus{
+.stack-trayed .thumb {
+  -moz-box-shadow: none !important;
+}
+
+.focus {
   -moz-box-shadow:  rgba(54,79,225,1) 0px 0px 5px -1px !important;
 }
 
@@ -180,22 +198,16 @@ body {
   border: 1px solid rgba(190,190,190,1);
 }
 
-.overlay{
-
+.overlay {
   background-color: rgba(0,0,0,.7) !important;
   -moz-box-shadow: 3px 3px 8px rgba(0,0,0,.5);
   -moz-border-radius: 0.4em;
-
   /*
   border: 1px solid rgba(230,230,230,1);
   background-color: rgba(248,248,248,1);
-  -moz-border-radius: 0.4em;
   -moz-box-shadow:
     rgba(0,0,0, .3) 2px 2px 8px,
-    inset rgba(255, 255, 255, 0.6) 0 2px 0px,
-    inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
-    inset rgba(255, 255, 255, 0.6) 2px 0px 0px,
-    inset rgba(255, 255, 255, 0.6) -2px 0px 0px;  */
+    inset rgba(255, 255, 255, 0.6) 0 0 0 2px; */
 }
 
 /* InfoItems
@@ -257,7 +269,7 @@ body {
 /* Other
 ----------------------------------*/
 
-.newTabButton{
+.newTabButton {
   width: 16px;
   height: 15px;
   bottom: 10px;
@@ -266,17 +278,17 @@ body {
   cursor: pointer;
   opacity: .3;
   background-image: url(chrome://browser/skin/tabcandy/new-tab.png);
-  z-index:99999;
+  z-index: 99999;
 }
 
-.newTabButton:hover{
+.newTabButton:hover {
   opacity: 1;
 }
 
-.newTabButtonAlt{
+.newTabButtonAlt {
   position: absolute;
   cursor: pointer;
-  z-index:99999;
+  z-index: 99999;
   border: none;
   -moz-border-radius: 4px;
   font-size: 50px;
@@ -289,13 +301,13 @@ body {
   -moz-box-shadow: inset 0px 0px 5px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.3);
 }
 
-.newTabButtonAlt>span{
+.newTabButtonAlt > span {
   color: #909090;
   text-shadow: 0px 0px 7px rgba(0,0,0,.4), 0 -1px 0 rgba(255,255,255,.6);
   font-weight: bold;
 }
 
-.newTabGroup{
+.newTabGroup {
   background-color: #8F8F8F;
   border: none;
   border-top: 1px solid rgba(127,127,127,.5);
@@ -303,11 +315,11 @@ body {
   -moz-box-shadow: inset 0px 5px 10px rgba(0,0,0,.1);
 }
 
-.inNewTabGroup{
+.inNewTabGroup {
   background-color: transparent;
 }
 
-.inNewTabGroup .favicon{
+.inNewTabGroup .favicon {
   background-color: #8F8F8F;
   -moz-box-shadow: none;
 }
@@ -318,31 +330,31 @@ body {
 }
 
 
-.newTabGroup .name{
+.newTabGroup .name {
   display: none;
 }
 
-.newTabAnimatee{
+.newTabAnimatee {
   position: absolute;
   background-color: white;
   border: 1px solid #AAA;
 }
 
-.active{
+.active {
   -moz-box-shadow: 5px 5px 4px rgba(0,0,0,.5);
 }
 
-.acceptsDrop{
+.acceptsDrop {
   -moz-box-shadow: 2px 2px 10px -1px rgba(0,0,0,.6);
 }
 
-.titlebar{
+.titlebar {
   font-size: 12px;
   line-height: 18px;
   height: 18px;
 }
 
-input.name{
+input.name {
   background: transparent;
   border: 1px solid transparent;
   color: #999;
@@ -352,58 +364,59 @@ input.name{
   padding-left: 20px;
 }
 
-input.name:hover{
+input.name:hover {
   border: 1px solid #ddd;
 }
 
-input.name-locked:hover{
+input.name-locked:hover {
   border: 1px solid transparent !important;
   cursor: default;
 }
 
-input.name:focus{
+input.name:focus {
   color: #555;
 }
 
-input.defaultName{
+input.defaultName {
   font-style: italic !important;
   background-image-opacity: .1;
   color: transparent;
 }
 
-input.defaultName:hover{
+input.defaultName:hover {
   color: #CCC;
 }
 
-.title-container {
-}
+.title-container { }
 
 .title-shield {
-  position:absolute;
+  position: absolute;
   margin: 3px 0px 0px 3px;
   padding: 1px;
-  left:0;
-  top:0;
-  width:100%;
-  height:100%;
-  z-index:10;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
 }
 
-.transparentBorder{
+.transparentBorder {
   border: 1px solid transparent !important;
 }
 
-.stackExpander{
+.stackExpander {
   position: absolute;
   opacity: .4;
   cursor: pointer;
 }
 
-.stackExpander:hover{ opacity: .7 !important; }
+.stackExpander:hover {
+  opacity: .7 !important;
+}
 
 /* Resizable
 ----------------------------------*/
-.resizer{
+.resizer {
   background-image: url(chrome://global/skin/icons/resizer.png);
   position: absolute;
   bottom: 6px;
@@ -412,14 +425,30 @@ input.defaultName:hover{
 }
 
 .iq-resizable { }
-.iq-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block;}
-.iq-resizable-disabled .iq-resizable-handle, .iq-resizable-autohide .iq-resizable-handle { display: none; }
-.iq-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
+
+.iq-resizable-handle {
+  position: absolute;
+  font-size: 0.1px;
+  z-index: 99999;
+  display: block;
+}
+
+.iq-resizable-disabled .iq-resizable-handle, .iq-resizable-autohide .iq-resizable-handle {
+  display: none;
+}
+
+.iq-resizable-se {
+  cursor: se-resize;
+  width: 12px;
+  height: 12px;
+  right: 1px;
+  bottom: 1px;
+}
 
 /* Utils
 ----------------------------------*/
 
-.front{
+.front {
   z-index: 999999 !important;
   -moz-border-radius: 0 !important;
   -moz-box-shadow: none !important;
@@ -430,7 +459,7 @@ input.defaultName:hover{
 /* Feedback
 ----------------------------------*/
 
-.bottomButton{
+.bottomButton {
   position: absolute;
   bottom: 0px;
   width: 100px;
@@ -444,10 +473,13 @@ input.defaultName:hover{
   -moz-box-shadow: 0px 0px 4px rgba(0,0,0,.3), inset 0px 1px 0px rgba(255,255,255,.4);
 }
 
-.bottomButton:hover{
+.bottomButton:hover {
   cursor: pointer;
   background-color: #A5A5A5;
   -moz-box-shadow: 0px 0px 5px rgba(0,0,0,.6), inset 0px 1px 0px rgba(255,255,255,.4);
 }
 
-#reset{ right: 130px; width: 50px;}
+#reset {
+  right: 130px;
+  width: 50px;
+}
