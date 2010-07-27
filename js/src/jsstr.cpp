@@ -2083,7 +2083,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         /* Push lambda and its 'this' parameter. */
         Value *sp = rdata.args.getvp();
         sp++->setObject(*lambda);
-        sp++->setObjectOrNull(lambda->getParent());
+        sp++->setNull();
 
         /* Push $&, $1, $2, ... */
         if (!PushRegExpSubstr(cx, cx->regExpStatics.lastMatch, sp))

@@ -876,6 +876,13 @@ enum MonitorResult {
     MONITOR_ERROR
 };
 
+enum TracePointAction {
+    TPA_Nothing,
+    TPA_RanStuff,
+    TPA_Recorded,
+    TPA_Error
+};
+
 typedef HashMap<nanojit::LIns*, JSObject*> GuardedShapeTable;
 
 #ifdef DEBUG
@@ -1452,6 +1459,8 @@ class TraceRecorder
     friend class RecursiveSlotMap;
     friend class UpRecursiveSlotMap;
     friend MonitorResult MonitorLoopEdge(JSContext*, uintN&, RecordReason);
+    friend TracePointAction MonitorTracePoint(JSContext*, uintN &inlineCallCount,
+                                              bool &blacklist);
     friend void AbortRecording(JSContext*, const char*);
 
 public:
@@ -1501,6 +1510,7 @@ public:
 };
 
 #define TRACING_ENABLED(cx)       ((cx)->jitEnabled)
+#define REGEX_JIT_ENABLED(cx)     ((cx)->jitEnabled || ((cx)->options & JSOPTION_METHODJIT))
 #define TRACE_RECORDER(cx)        (JS_TRACE_MONITOR(cx).recorder)
 #define SET_TRACE_RECORDER(cx,tr) (JS_TRACE_MONITOR(cx).recorder = (tr))
 
@@ -1532,6 +1542,9 @@ public:
 
 extern JS_REQUIRES_STACK MonitorResult
 MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason);
+
+extern JS_REQUIRES_STACK TracePointAction
+MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool& blacklist);
 
 extern JS_REQUIRES_STACK void
 AbortRecording(JSContext* cx, const char* reason);

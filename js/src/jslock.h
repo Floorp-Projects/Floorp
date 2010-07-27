@@ -300,13 +300,21 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 #ifdef JS_THREADSAFE
 
 extern JSBool
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv);
+js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv);
 
 /* Atomically bitwise-or the mask into the word *w using compare and swap. */
 extern void
 js_AtomicSetMask(jsword *w, jsword mask);
 
+/*
+ * Atomically bitwise-and the complement of the mask into the word *w using
+ * compare and swap.
+ */
+extern void
+js_AtomicClearMask(volatile jsword *w, jsword mask);
+
 #define JS_ATOMIC_SET_MASK(w, mask) js_AtomicSetMask(w, mask)
+#define JS_ATOMIC_CLEAR_MASK(w, mask) js_AtomicClearMask(w, mask)
 
 #else
 
@@ -317,6 +325,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 }
 
 #define JS_ATOMIC_SET_MASK(w, mask) (*(w) |= (mask))
+#define JS_ATOMIC_CLEAR_MASK(w, mask) (*(w) &= ~(mask))
 
 #endif /* JS_THREADSAFE */
 

@@ -229,7 +229,7 @@ struct JSObjectMap {
 
     explicit JSObjectMap(const JSObjectOps *ops, uint32 shape) : ops(ops), shape(shape) {}
 
-    enum { SHAPELESS = 0xffffffff };
+    enum { INVALID_SHAPE = 0x8fffffff, SHAPELESS = 0xffffffff };
 
 private:
     /* No copy or assignment semantics. */
@@ -252,7 +252,7 @@ const uint32 JSSLOT_PARENT  = 0;
  */
 const uint32 JSSLOT_PRIVATE = 1;
 
-class JSFunction;
+struct JSFunction;
 
 /*
  * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
@@ -473,7 +473,6 @@ struct JSObject {
      * Array-specific getters and setters (for both dense and slow arrays).
      */
 
-  private:
     // Used by dense and slow arrays.
     static const uint32 JSSLOT_ARRAY_LENGTH = JSSLOT_PRIVATE;
 
@@ -523,11 +522,11 @@ struct JSObject {
      * Argument index i is stored in dslots[i], accessible via
      * {get,set}ArgsElement().
      */
-    static const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
     static const uint32 JSSLOT_ARGS_CALLEE = JSSLOT_PRIVATE + 2;
 
   public:
     /* Number of extra fixed slots besides JSSLOT_PRIVATE. */
+    static const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
     static const uint32 ARGS_FIXED_RESERVED_SLOTS = 2;
 
     inline uint32 getArgsLength() const;
@@ -565,7 +564,7 @@ struct JSObject {
      */
 
   private:
-    friend class JSFunction;
+    friend struct JSFunction;
 
     static const uint32 JSSLOT_FUN_METHOD_ATOM = JSSLOT_PRIVATE + 1;
     static const uint32 JSSLOT_FUN_METHOD_OBJ  = JSSLOT_PRIVATE + 2;
@@ -1395,6 +1394,7 @@ JS_FRIEND_API(void) js_DumpObject(JSObject *obj);
 JS_FRIEND_API(void) js_DumpValue(const js::Value &val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, JSStackFrame *start = NULL);
+bool IsSaneThisObject(JSObject &obj);
 #endif
 
 extern uintN

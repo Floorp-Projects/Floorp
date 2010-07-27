@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=79 ft=cpp:
+ * vim: set ts=4 sw=4 et tw=79 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -107,6 +107,7 @@ class UpvarCookie
     void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
     void set(uint16 newLevel, uint16 newSlot) { value = (uint32(newLevel) << 16) | newSlot; }
     void makeFree() { set(0xffff, 0xffff); JS_ASSERT(isFree()); }
+    void fromInteger(uint32 u32) { value = u32; }
 };
 
 }
@@ -143,11 +144,43 @@ typedef struct JSConstArray {
     uint32          length;
 } JSConstArray;
 
+namespace js {
+
+struct GlobalSlotArray {
+    struct Entry {
+        uint32      atomIndex;  /* index into atom table */
+        uint32      slot;       /* global obj slot number */
+    };
+    Entry           *vector;
+    uint32          length;
+};
+
+} /* namespace js */
+
 #define JS_OBJECT_ARRAY_SIZE(length)                                          \
     (offsetof(JSObjectArray, vector) + sizeof(JSObject *) * (length))
 
 #if defined DEBUG && defined JS_THREADSAFE
 # define CHECK_SCRIPT_OWNER 1
+#endif
+
+#ifdef JS_METHODJIT
+namespace JSC {
+    class ExecutablePool;
+}
+namespace js {
+namespace mjit {
+namespace ic {
+# if defined JS_POLYIC
+    struct PICInfo;
+# endif
+# if defined JS_MONOIC
+    struct MICInfo;
+# endif
+}
+union CallSite;
+}
+}
 #endif
 
 struct JSScript {
@@ -165,6 +198,8 @@ struct JSScript {
                                        regexps or 0 if none. */
     uint8           trynotesOffset; /* offset to the array of try notes or
                                        0 if none */
+    uint8           globalsOffset;  /* offset to the array of global slots or
+                                       0 if none */
     uint8           constOffset;    /* offset to the array of constants or
                                        0 if none */
     bool            noScriptRval:1; /* no need for result value of last
@@ -172,6 +207,8 @@ struct JSScript {
     bool            savedCallerFun:1; /* object 0 is caller function */
     bool            hasSharps:1;      /* script uses sharp variables */
     bool            strictModeCode:1; /* code is in strict mode */
+    bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
+    bool            usesEval:1;       /* script uses eval() */
     bool            warnedAboutTwoArgumentEval:1; /* have warned about use of
                                                      obsolete eval(s, o) in
                                                      this script */
@@ -189,6 +226,33 @@ struct JSScript {
     } u;
 #ifdef CHECK_SCRIPT_OWNER
     JSThread        *owner;     /* for thread-safe life-cycle assertions */
+#endif
+#ifdef JS_METHODJIT
+    // Note: the other pointers in this group may be non-NULL only if 
+    // |execPool| is non-NULL.
+    void            *ncode;     /* native code compiled by the method JIT */
+    void            **nmap;     /* maps PCs to native code */
+    JSC::ExecutablePool *execPool;  /* pool that contains |ncode|; script owns the pool */
+# if defined JS_POLYIC
+    js::mjit::ic::PICInfo *pics; /* PICs in this script */
+# endif
+# if defined JS_MONOIC
+    js::mjit::ic::MICInfo *mics; /* MICs in this script. */
+# endif
+    js::mjit::CallSite *callSites;
+    uint32          inlineLength;  /* length of inline JIT'd code */
+    uint32          outOfLineLength; /* length of out of line JIT'd code */
+
+    inline bool isValidJitCode(void *jcode) {
+        return (char*)jcode >= (char*)nmap[-1] &&
+               (char*)jcode < (char*)nmap[-1] + inlineLength + outOfLineLength;
+    }
+
+# if defined JS_POLYIC
+    inline uint32 numPICs() {
+        return pics ? *(uint32*)((uint8 *)pics - sizeof(uint32)) : 0;
+    }
+# endif
 #endif
 
     /* Script notes are allocated right after the code. */
@@ -214,6 +278,11 @@ struct JSScript {
         return (JSTryNoteArray *) ((uint8 *) this + trynotesOffset);
     }
 
+    js::GlobalSlotArray *globals() {
+        JS_ASSERT(globalsOffset != 0);
+        return (js::GlobalSlotArray *) ((uint8 *)this + globalsOffset);
+    }
+
     JSConstArray *consts() {
         JS_ASSERT(constOffset != 0);
         return (JSConstArray *) ((uint8 *) this + constOffset);
@@ -228,6 +297,18 @@ struct JSScript {
         JSObjectArray *arr = objects();
         JS_ASSERT(index < arr->length);
         return arr->vector[index];
+    }
+
+    uint32 getGlobalSlot(size_t index) {
+        js::GlobalSlotArray *arr = globals();
+        JS_ASSERT(index < arr->length);
+        return arr->vector[index].slot;
+    }
+
+    JSAtom *getGlobalAtom(size_t index) {
+        js::GlobalSlotArray *arr = globals();
+        JS_ASSERT(index < arr->length);
+        return getAtom(arr->vector[index].atomIndex);
     }
 
     inline JSFunction *getFunction(size_t index);
@@ -256,6 +337,17 @@ struct JSScript {
     static JSScript *emptyScript() {
         return const_cast<JSScript *>(&emptyScriptConst);
     }
+
+#ifdef JS_METHODJIT
+    /*
+     * Map the given PC to the corresponding native code address.
+     */
+    void *pcToNative(jsbytecode *pc) {
+        JS_ASSERT(nmap);
+        JS_ASSERT(nmap[pc - code]);
+        return nmap[pc - code];
+    }
+#endif
 
   private:
     /*
@@ -352,7 +444,7 @@ js_SweepScriptFilenames(JSRuntime *rt);
 extern JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
              uint32 nobjects, uint32 nupvars, uint32 nregexps,
-             uint32 ntrynotes, uint32 nconsts);
+             uint32 ntrynotes, uint32 nconsts, uint32 nglobals);
 
 extern JSScript *
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
