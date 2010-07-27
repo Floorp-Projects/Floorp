@@ -178,7 +178,7 @@
 
 #if !defined(WINCE)
 #include "nsUXThemeConstants.h"
-#include "nsKeyboardLayout.h"
+#include "KeyboardLayout.h"
 #include "nsNativeDragTarget.h"
 #include <mmsystem.h> // needed for WIN32_LEAN_AND_MEAN
 #include <zmouse.h>
@@ -219,6 +219,8 @@
 #endif
 
 #include "mozilla/FunctionTimer.h"
+
+using namespace mozilla::widget;
 
 /**************************************************************
  **************************************************************
