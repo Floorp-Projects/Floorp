@@ -57,7 +57,7 @@ class nsHTMLStyleElement : public nsGenericHTMLElement,
                            public nsStubMutationObserver
 {
 public:
-  nsHTMLStyleElement(nsINodeInfo *aNodeInfo);
+  nsHTMLStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLStyleElement();
 
   // nsISupports
@@ -102,6 +102,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   already_AddRefed<nsIURI> GetStyleSheetURL(PRBool* aIsInline);
   void GetStyleSheetInfo(nsAString& aTitle,
@@ -120,7 +121,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(Style)
 
 
-nsHTMLStyleElement::nsHTMLStyleElement(nsINodeInfo *aNodeInfo)
+nsHTMLStyleElement::nsHTMLStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   AddMutationObserver(this);
@@ -135,7 +136,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLStyleElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLStyleElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLStyleElement, nsHTMLStyleElement)
+DOMCI_NODE_DATA(HTMLStyleElement, nsHTMLStyleElement)
 
 // QueryInterface implementation for nsHTMLStyleElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLStyleElement)
@@ -220,7 +221,8 @@ void
 nsHTMLStyleElement::ContentRemoved(nsIDocument* aDocument,
                                    nsIContent* aContainer,
                                    nsIContent* aChild,
-                                   PRInt32 aIndexInContainer)
+                                   PRInt32 aIndexInContainer,
+                                   nsIContent* aPreviousSibling)
 {
   ContentChanged(aChild);
 }

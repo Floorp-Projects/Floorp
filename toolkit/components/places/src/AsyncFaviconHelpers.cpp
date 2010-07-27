@@ -332,7 +332,7 @@ GetEffectivePageStep::HandleResult(mozIStorageResultSet* aResultSet)
     rv = row->GetUTF8String(0, spec);
     FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
     // We always want to use the bookmark uri.
-    rv = mStepper->mPageURI->SetSpec(spec);
+    rv = NS_NewURI(getter_AddRefs(mStepper->mPageURI), spec);
     FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
     // Since we got a result, this is a bookmark.
     mIsBookmarked = true;

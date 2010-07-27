@@ -192,6 +192,13 @@ function run_test() {
   });
   jetpack.registerReceiver("sandbox done", do_test_finished);
 
+  jetpack.registerReceiver("core:exception",
+			   function(msgName, e) {
+			       do_check_true(/throwing on request/.test(e.message));
+			       do_test_finished();
+			   });
+
+  do_test_pending();
   do_test_pending();
   do_test_pending();
   do_test_pending();
@@ -218,6 +225,7 @@ function run_test() {
   jetpack.sendMessage("duplicate receivers");
 
   jetpack.sendMessage("test sandbox");
+  jetpack.sendMessage("throw");
 
   do_register_cleanup(function() {
     jetpack.destroy();

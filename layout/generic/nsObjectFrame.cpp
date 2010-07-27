@@ -5496,16 +5496,22 @@ nsPluginInstanceOwner::Renderer::DrawWithXlib(gfxXlibSurface* xsurface,
     clipRect.y = clipRects[0].y;
     clipRect.width  = clipRects[0].width;
     clipRect.height = clipRects[0].height;
+    // NPRect members are unsigned, but clip rectangles should be contained by
+    // the surface.
+    NS_ASSERTION(clipRect.x >= 0 && clipRect.y >= 0,
+                 "Clip rectangle offsets are negative!");
   }
   else {
-    // NPRect members are unsigned, but
-    // we should have been given a clip if an offset is -ve.
-    NS_ASSERTION(offset.x >= 0 && offset.y >= 0,
-                 "Clip rectangle offsets are negative!");
     clipRect.x = offset.x;
     clipRect.y = offset.y;
     clipRect.width  = mWindow->width;
     clipRect.height = mWindow->height;
+    // Don't ask the plugin to draw outside the drawable.
+    // This also ensures that the unsigned clip rectangle offsets won't be -ve.
+    gfxIntSize surfaceSize = xsurface->GetSize();
+    clipRect.IntersectRect(clipRect,
+                           nsIntRect(0, 0,
+                                     surfaceSize.width, surfaceSize.height));
   }
 
   NPRect newClipRect;

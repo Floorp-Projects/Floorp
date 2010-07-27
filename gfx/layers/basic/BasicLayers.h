@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,10 +45,19 @@
 #include "nsAutoRef.h"
 #include "nsThreadUtils.h"
 
+#ifdef MOZ_IPC
+#include "mozilla/layers/ShadowLayers.h"
+#endif
+
 class nsIWidget;
 
 namespace mozilla {
 namespace layers {
+
+class BasicShadowableLayer;
+class ShadowThebesLayer;
+class ShadowImageLayer;
+class ShadowCanvasLayer;
 
 /**
  * This is a cairo/Thebes-only, main-thread-only implementation of layers.
@@ -58,7 +67,13 @@ namespace layers {
  * context (with appropriate clipping and Push/PopGroups performed
  * between layers).
  */
-class THEBES_API BasicLayerManager : public LayerManager {
+class THEBES_API BasicLayerManager :
+#ifdef MOZ_IPC
+    public ShadowLayerManager
+#else
+    public LayerManager
+#endif
+{
 public:
   /**
    * Construct a BasicLayerManager which will have no default
@@ -119,15 +134,35 @@ public:
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
+  virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer()
+  { return NULL; }
+  virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer()
+  { return NULL; }
+  virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer()
+  { return NULL; }
+
   virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }
 
 #ifdef DEBUG
   PRBool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
   PRBool InDrawing() { return mPhase == PHASE_DRAWING; }
+  PRBool InForward() { return mPhase == PHASE_FORWARD; }
   PRBool InTransaction() { return mPhase != PHASE_NONE; }
 #endif
   gfxContext* GetTarget() { return mTarget; }
   PRBool IsRetained() { return mWidget != nsnull; }
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() const { return "Basic"; }
+#endif // MOZ_LAYERS_HAVE_LOG
+
+protected:
+#ifdef DEBUG
+  enum TransactionPhase {
+    PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
+  };
+  TransactionPhase mPhase;
+#endif
 
 private:
   // Paints aLayer to mTarget.
@@ -153,14 +188,46 @@ private:
   // Cached surface for double buffering
   gfxCachedTempSurface mCachedSurface;
 
-#ifdef DEBUG
-  enum TransactionPhase { PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING };
-  TransactionPhase mPhase;
-#endif
-
   BufferMode   mDoubleBuffering;
   PRPackedBool mUsingDefaultTarget;
 };
+ 
+
+#ifdef MOZ_IPC
+class BasicShadowLayerManager : public BasicLayerManager,
+                                public ShadowLayerForwarder
+{
+  typedef nsTArray<nsRefPtr<Layer> > LayerRefArray;
+
+public:
+  BasicShadowLayerManager(nsIWidget* aWidget);
+  virtual ~BasicShadowLayerManager();
+
+  virtual void BeginTransactionWithTarget(gfxContext* aTarget);
+  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+                              void* aCallbackData);
+
+  virtual void SetRoot(Layer* aLayer);
+
+  virtual void Mutated(Layer* aLayer);
+
+  virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
+  virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
+  virtual already_AddRefed<ImageLayer> CreateImageLayer();
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
+  virtual already_AddRefed<ColorLayer> CreateColorLayer();
+  virtual already_AddRefed<ShadowThebesLayer> CreateShadowThebesLayer();
+  virtual already_AddRefed<ShadowImageLayer> CreateShadowImageLayer();
+  virtual already_AddRefed<ShadowCanvasLayer> CreateShadowCanvasLayer();
+
+  virtual const char* Name() const { return "BasicShadowLayerManager"; }
+
+  ShadowableLayer* Hold(Layer* aLayer);
+
+private:
+  LayerRefArray mKeepAlive;
+};
+#endif  // MOZ_IPC
 
 }
 }

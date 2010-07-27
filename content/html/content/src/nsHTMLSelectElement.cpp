@@ -138,7 +138,7 @@ nsSafeOptionListMutation::~nsSafeOptionListMutation()
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Select)
 
-nsHTMLSelectElement::nsHTMLSelectElement(nsINodeInfo *aNodeInfo,
+nsHTMLSelectElement::nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                          PRUint32 aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mOptions(new nsHTMLOptionCollection(this)),
@@ -177,7 +177,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLSelectElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement)
 
 
-DOMCI_DATA(HTMLSelectElement, nsHTMLSelectElement)
+DOMCI_NODE_DATA(HTMLSelectElement, nsHTMLSelectElement)
 
 // QueryInterface implementation for nsHTMLSelectElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSelectElement)
@@ -194,7 +194,6 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLSelectElement)
-
 
 NS_IMETHODIMP
 nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
@@ -731,7 +730,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::option,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIContent> element = NS_NewHTMLOptionElement(nodeInfo);
+    nsCOMPtr<nsIContent> element = NS_NewHTMLOptionElement(nodeInfo.forget());
     if (!element) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1945,22 +1944,21 @@ nsHTMLOptionCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(item, aReturn);
 }
 
-nsISupports*
+nsIContent*
 nsHTMLOptionCollection::GetNodeAt(PRUint32 aIndex, nsresult* aResult)
 {
   *aResult = NS_OK;
 
-  return static_cast<Element*>(ItemAsOption(aIndex));
+  return static_cast<nsIContent*>(ItemAsOption(aIndex));
 }
 
-nsISupports*
-nsHTMLOptionCollection::GetNamedItem(const nsAString& aName, nsresult* aResult)
+static nsHTMLOptionElement*
+GetNamedItemHelper(nsTArray<nsRefPtr<nsHTMLOptionElement> > &aElements,
+                   const nsAString& aName)
 {
-  *aResult = NS_OK;
-
-  PRUint32 count = mElements.Length();
+  PRUint32 count = aElements.Length();
   for (PRUint32 i = 0; i < count; i++) {
-    nsIContent *content = ItemAsOption(i);
+    nsHTMLOptionElement *content = aElements.ElementAt(i);
     if (content &&
         (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aName,
                               eCaseMatters) ||
@@ -1973,19 +1971,25 @@ nsHTMLOptionCollection::GetNamedItem(const nsAString& aName, nsresult* aResult)
   return nsnull;
 }
 
+nsISupports*
+nsHTMLOptionCollection::GetNamedItem(const nsAString& aName,
+                                     nsWrapperCache **aCache,
+                                     nsresult* aResult)
+{
+  *aResult = NS_OK;
+
+  nsINode *item = GetNamedItemHelper(mElements, aName);
+  *aCache = item;
+  return item;
+}
+
 NS_IMETHODIMP
 nsHTMLOptionCollection::NamedItem(const nsAString& aName,
                                   nsIDOMNode** aReturn)
 {
-  nsresult rv;
-  nsISupports* item = GetNamedItem(aName, &rv);
-  if (!item) {
-    *aReturn = nsnull;
+  NS_IF_ADDREF(*aReturn = GetNamedItemHelper(mElements, aName));
 
-    return rv;
-  }
-
-  return CallQueryInterface(item, aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

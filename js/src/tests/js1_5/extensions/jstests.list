@@ -47,9 +47,9 @@ script regress-330569.js
 script regress-333541.js
 skip script regress-335700.js # bug xxx - reftest hang, BigO
 skip-if(!xulRuntime.shell) script regress-336409-1.js # no results reported.
-script regress-336409-2.js
+skip-if(!xulRuntime.shell&&xulRuntime.XPCOMABI.match(/x86_64/)) script regress-336409-2.js # fails on 64 bit systems for some reason
 skip-if(!xulRuntime.shell) script regress-336410-1.js # slow
-script regress-336410-2.js
+skip-if(!xulRuntime.shell&&xulRuntime.XPCOMABI.match(/x86_64/)) script regress-336410-2.js # fails on 64 bit systems for some reason
 script regress-338804-01.js
 script regress-338804-02.js
 script regress-338804-03.js

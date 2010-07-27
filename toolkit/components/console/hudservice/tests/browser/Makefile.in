@@ -56,6 +56,7 @@ _BROWSER_TEST_PAGES = \
 	test-observe-http-ajax.html \
 	test-data.json \
 	test-property-provider.html \
+	test-error.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
