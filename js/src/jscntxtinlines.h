@@ -126,6 +126,22 @@ StackSpace::ensureEnoughSpaceToEnterTrace()
     return end - firstUnused() > MAX_TRACE_SPACE_VALS;
 }
 
+JS_ALWAYS_INLINE void
+StackSpace::popInvokeArgs(JSContext *cx, Value *vp)
+{
+    JS_ASSERT(!currentSegment->inContext());
+    currentSegment = currentSegment->getPreviousInMemory();
+}
+
+JS_ALWAYS_INLINE
+InvokeArgsGuard::~InvokeArgsGuard()
+{
+    if (!css)
+        return;
+    JS_ASSERT(css == cx->stack().getCurrentSegment());
+    cx->stack().popInvokeArgs(cx, vp);
+}
+
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
 StackSpace::getInlineFrame(JSContext *cx, Value *sp,
                            uintN nmissing, uintN nfixed) const

@@ -498,8 +498,8 @@ class InvokeArgsGuard
     Value            *vp;
     uintN            argc;
   public:
-    inline InvokeArgsGuard();
-    inline InvokeArgsGuard(Value *vp, uintN argc);
+    inline InvokeArgsGuard() : cx(NULL), css(NULL), vp(NULL) {}
+    inline InvokeArgsGuard(Value *vp, uintN argc) : cx(NULL), css(NULL), vp(vp), argc(argc) {}
     inline ~InvokeArgsGuard();
     Value *getvp() const { return vp; }
     uintN getArgc() const { JS_ASSERT(vp != NULL); return argc; }
@@ -750,10 +750,6 @@ class StackSpace
 
     JS_REQUIRES_STACK
     void popSynthesizedSlowNativeFrame(JSContext *cx);
-
-    /* Our privates leak into xpconnect, which needs a public symbol. */
-    JS_REQUIRES_STACK
-    JS_FRIEND_API(bool) pushInvokeArgsFriendAPI(JSContext *, uintN, InvokeArgsGuard &);
 };
 
 JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
@@ -2180,40 +2176,6 @@ JSStackFrame::pc(JSContext *cx) const
     return (cx->fp == this) ? cx->regs->pc : savedPC;
 }
 
-/*
- * InvokeArgsGuard is used outside the JS engine (where jscntxtinlines.h is
- * not included). To avoid visibility issues, force members inline.
- */
-namespace js {
-
-JS_ALWAYS_INLINE void
-StackSpace::popInvokeArgs(JSContext *cx, Value *vp)
-{
-    JS_ASSERT(!currentSegment->inContext());
-    currentSegment = currentSegment->getPreviousInMemory();
-}
-
-JS_ALWAYS_INLINE
-InvokeArgsGuard::InvokeArgsGuard()
-  : cx(NULL), css(NULL), vp(NULL)
-{}
-
-JS_ALWAYS_INLINE
-InvokeArgsGuard::InvokeArgsGuard(Value *vp, uintN argc)
-  : cx(NULL), css(NULL), vp(vp), argc(argc)
-{}
-
-JS_ALWAYS_INLINE
-InvokeArgsGuard::~InvokeArgsGuard()
-{
-    if (!css)
-        return;
-    JS_ASSERT(css == cx->stack().getCurrentSegment());
-    cx->stack().popInvokeArgs(cx, vp);
-}
-
-} /* namespace js */
-
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
 #endif
@@ -3197,6 +3159,12 @@ class AutoValueVector : private AutoGCRooter
 
     const Value *end() const { return vector.end(); }
     Value *end() { return vector.end(); }
+
+    const jsval *jsval_begin() const { return Jsvalify(begin()); }
+    jsval *jsval_begin() { return Jsvalify(begin()); }
+
+    const jsval *jsval_end() const { return Jsvalify(end()); }
+    jsval *jsval_end() { return Jsvalify(end()); }
 
     const Value &back() const { return vector.back(); }
 
