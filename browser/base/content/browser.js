@@ -7765,13 +7765,11 @@ var TabContextMenu = {
       menuItems[i].disabled = disabled;
 
     // Session store
-    // XXXzeniko should't we just disable this item as we disable
-    // the tabbrowser-multiple items above - for consistency?
-    document.getElementById("context_undoCloseTab").hidden =
+    document.getElementById("context_undoCloseTab").disabled =
       Cc["@mozilla.org/browser/sessionstore;1"].
       getService(Ci.nsISessionStore).
       getClosedTabCount(window) == 0;
-      
+
     // Only one of pin/unpin should be visible
     document.getElementById("context_pinTab").hidden = this.contextTab.pinned;
     document.getElementById("context_unpinTab").hidden = !this.contextTab.pinned;
