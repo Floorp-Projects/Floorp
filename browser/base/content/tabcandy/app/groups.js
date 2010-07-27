@@ -703,8 +703,8 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       if (!options.dontArrange) {
         this.arrange();
-        UI.setReorderTabsOnHide(this);
       }
+      UI.setReorderTabsOnHide(this);
 
       if ( this._nextNewTabCallback ){
         this._nextNewTabCallback.apply(this, [item])

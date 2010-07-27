@@ -108,7 +108,7 @@ var UIManager = {
       var self = this;
 
       this._currentTab = gBrowser.selectedTab;
-    
+
       // ___ Dev Menu
       if (this._devMode)
         this._addDevMenu();
@@ -446,14 +446,16 @@ var UIManager = {
     });
 
     Tabs.onMove(function() {
-      if (!self._isTabCandyVisible()) {
-        var activeGroup = Groups.getActiveGroup();
-        if (activeGroup) {
-          var index = self._reorderTabItemsOnShow.indexOf(activeGroup);
-          if (index == -1)
-            self._reorderTabItemsOnShow.push(activeGroup);
+      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+        if (!self._isTabCandyVisible()) {
+          var activeGroup = Groups.getActiveGroup();
+          if (activeGroup) {
+            var index = self._reorderTabItemsOnShow.indexOf(activeGroup);
+            if (index == -1)
+              self._reorderTabItemsOnShow.push(activeGroup);
+          }
         }
-      }
+      }, 1);
     });
 
     Tabs.onFocus(function() {
