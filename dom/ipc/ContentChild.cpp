@@ -352,8 +352,7 @@ bool
 ContentChild::RecvNotifyVisited(const IPC::URI& aURI)
 {
     nsCOMPtr<nsIURI> newURI = aURI;
-    nsRefPtr<History> history = History::GetSingleton();
-    history->NotifyVisited(newURI);
+    History::GetService()->NotifyVisited(newURI);
     return true;
 }
 
