@@ -665,7 +665,8 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
         if (!fe->isTypeKnown()) {
             jmpNotBool.setJump(masm.testBoolean(Assembler::NotEqual,
                                                 frame.addressOf(fe)));
-        } else if (fe->getKnownType() != JSVAL_TYPE_BOOLEAN) {
+        } else if (fe->isNotType(JSVAL_TYPE_BOOLEAN) &&
+                   fe->isNotType(JSVAL_TYPE_INT32)) {
             jmpNotBool.setJump(masm.jump());
         }
     }
@@ -684,7 +685,8 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
     MaybeJump jmpCvtRejoin;
     Label lblCvtPath = stubcc.masm.label();
 
-    if (!fe->isTypeKnown() || fe->getKnownType() != JSVAL_TYPE_BOOLEAN) {
+    if (!fe->isTypeKnown() ||
+        !(fe->isType(JSVAL_TYPE_BOOLEAN) || fe->isType(JSVAL_TYPE_INT32))) {
         stubcc.masm.fixScriptStack(frame.frameDepth());
         stubcc.masm.setupVMFrame();
         stubcc.masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
