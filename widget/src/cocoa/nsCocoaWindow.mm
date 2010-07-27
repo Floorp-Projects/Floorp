@@ -330,6 +330,9 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
     case eWindowType_popup:
       if (aBorderStyle != eBorderStyle_default && mBorderStyle & eBorderStyle_title) {
         features |= NSTitledWindowMask;
+        if (aBorderStyle & eBorderStyle_close) {
+          features |= NSClosableWindowMask;
+        }
       }
       break;
     case eWindowType_toplevel:

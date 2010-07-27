@@ -4055,9 +4055,16 @@ nsWindow::Create(nsIWidget        *aParent,
                 GtkWindow* gtkWin = GTK_WINDOW(mShell);
                 // ... but the window manager does not decorate this window,
                 // nor provide a separate taskbar icon.
-                PRBool decorated =
-                  (mBorderStyle != eBorderStyle_default && (mBorderStyle & eBorderStyle_title));
-                gtk_window_set_decorated(GTK_WINDOW(mShell), decorated);
+                if (mBorderStyle == eBorderStyle_default) {
+                  gtk_window_set_decorated(GTK_WINDOW(mShell), FALSE);
+                }
+                else {
+                  PRBool decorate = mBorderStyle & eBorderStyle_title;
+                  gtk_window_set_decorated(GTK_WINDOW(mShell), decorate);
+                  if (decorate) {
+                    gtk_window_set_deletable(GTK_WINDOW(mShell), mBorderStyle & eBorderStyle_close);
+                  }
+                }
                 gtk_window_set_skip_taskbar_hint(gtkWin, TRUE);
                 // Element focus is managed by the parent window so the
                 // WM_HINTS input field is set to False to tell the window
