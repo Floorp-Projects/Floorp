@@ -38,7 +38,6 @@ namespace JSC {
 
 class MacroAssemblerX86_64 : public MacroAssemblerX86Common {
 protected:
-    static const X86Registers::RegisterID scratchRegister = X86Registers::r11;
     static const intptr_t MinInt32 = 0xFFFFFFFF80000000;
     static const intptr_t MaxInt32 = 0x000000007FFFFFFF;
 

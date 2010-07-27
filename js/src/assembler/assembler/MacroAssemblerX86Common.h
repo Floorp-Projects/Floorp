@@ -40,6 +40,11 @@ class MacroAssemblerX86Common : public AbstractMacroAssembler<X86Assembler> {
     static const int DoubleConditionBitSpecial = 0x20;
     static const int DoubleConditionBits = DoubleConditionBitInvert | DoubleConditionBitSpecial;
 
+protected:
+#if WTF_CPU_X86_64
+    static const X86Registers::RegisterID scratchRegister = X86Registers::r11;
+#endif
+
 public:
 
     enum Condition {
@@ -618,8 +623,12 @@ public:
 
     void swap(RegisterID reg1, RegisterID reg2)
     {
-        if (reg1 != reg2)
-            m_assembler.xchgq_rr(reg1, reg2);
+        // XCHG is extremely slow. Don't use XCHG.
+        if (reg1 != reg2) {
+            m_assembler.movq_rr(reg1, scratchRegister);
+            m_assembler.movq_rr(reg2, reg1);
+            m_assembler.movq_rr(scratchRegister, reg2);
+        }
     }
 
     void signExtend32ToPtr(RegisterID src, RegisterID dest)
