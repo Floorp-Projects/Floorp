@@ -1272,6 +1272,13 @@ nsXULPopupManager::GetVisiblePopups()
     item = item->GetParent();
   }
 
+  item = mNoHidePanels;
+  while (item) {
+    if (item->Frame()->PopupState() == ePopupOpenAndVisible)
+      popups.AppendElement(static_cast<nsIFrame*>(item->Frame()));
+    item = item->GetParent();
+  }
+
   return popups;
 }
 
