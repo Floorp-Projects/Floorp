@@ -1906,7 +1906,7 @@ js_InvokeOperationCallback(JSContext *cx)
      * us here we will accumulate another callback request which will be
      * serviced at the next opportunity.
      */
-    JS_ATOMIC_CLEAR_MASK((jsword*)&JS_THREAD_DATA(cx)->interruptFlags,
+    JS_ATOMIC_CLEAR_MASK(&JS_THREAD_DATA(cx)->interruptFlags,
                          JSThreadData::INTERRUPT_OPERATION_CALLBACK);
 
     /*
