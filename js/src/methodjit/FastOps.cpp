@@ -434,7 +434,10 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
     }
 
     if (op == JSOP_EQ || op == JSOP_NE) {
-        jsop_relational_int(op, stub, target, fused);
+        if (lhs->isNotType(JSVAL_TYPE_INT32) || rhs->isNotType(JSVAL_TYPE_INT32))
+            emitStubCmpOp(stub, target, fused);
+        else
+            jsop_relational_int(op, stub, target, fused);
         return;
     }
 
