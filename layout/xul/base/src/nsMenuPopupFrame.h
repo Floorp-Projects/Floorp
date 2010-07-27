@@ -183,11 +183,12 @@ public:
 
   // returns true if the popup is a panel with the noautohide attribute set to
   // true. These panels do not roll up automatically.
-  PRBool IsNoAutoHide();
+  PRBool IsNoAutoHide() const;
 
-  // returns true if the popup is a top-most window. Otherwise, the
-  // panel appears in front of the parent window.
-  PRBool IsTopMost();
+  nsPopupLevel PopupLevel() const
+  {
+    return PopupLevel(IsNoAutoHide()); 
+  }
 
   void EnsureWidget();
 
@@ -319,6 +320,9 @@ public:
 
 protected:
 
+  // returns the popup's level.
+  nsPopupLevel PopupLevel(PRBool aIsNoAutoHide) const;
+
   // redefine to tell the box system not to move the views.
   virtual void GetLayoutFlags(PRUint32& aFlags);
 
@@ -400,7 +404,7 @@ protected:
   PRPackedBool mHFlip;
   PRPackedBool mVFlip;
 
-  static PRInt8 sDefaultLevelParent;
+  static PRInt8 sDefaultLevelIsTop;
 }; // class nsMenuPopupFrame
 
 #endif

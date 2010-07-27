@@ -289,6 +289,8 @@ public:
 
     static void UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut);
 
+    void SetPopupWindowLevel();
+
 protected:
 
   nsresult             CreateNativeWindow(const NSRect &aRect,
