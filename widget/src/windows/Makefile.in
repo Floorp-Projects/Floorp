@@ -88,7 +88,7 @@ CPPSRCS += \
 	$(NULL)
 else
 CPPSRCS += \
-	nsKeyboardLayout.cpp \
+	KeyboardLayout.cpp \
 	IEnumFE.cpp  \
 	nsDataObj.cpp  \
 	nsDataObjCollection.cpp  \
