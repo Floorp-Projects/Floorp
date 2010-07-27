@@ -258,13 +258,6 @@ StackSpace::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard &ag)
     return true;
 }
 
-JS_REQUIRES_STACK JS_FRIEND_API(bool)
-StackSpace::pushInvokeArgsFriendAPI(JSContext *cx, uintN argc,
-                                    InvokeArgsGuard &ag)
-{
-    return cx->stack().pushInvokeArgs(cx, argc, ag);
-}
-
 InvokeFrameGuard::InvokeFrameGuard()
   : cx(NULL), css(NULL), fp(NULL)
 {}
