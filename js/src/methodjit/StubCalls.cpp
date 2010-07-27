@@ -1073,6 +1073,8 @@ StubEqualityOp(VMFrame &f)
             } else {
                 cond = (l == r) == EQ;
             }
+        } else if (lval.isNullOrUndefined()) {
+            cond = EQ;
         } else {
             cond = (lval.payloadAsRawUint32() == rval.payloadAsRawUint32()) == EQ;
         }
