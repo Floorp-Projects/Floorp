@@ -1890,8 +1890,9 @@ moz_gtk_combo_box_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
-moz_gtk_downarrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                        GdkRectangle* cliprect, GtkWidgetState* state)
+moz_gtk_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                    GdkRectangle* cliprect, GtkWidgetState* state,
+                    GtkArrowType arrow_type, GtkTextDirection direction)
 {
     GtkStyle* style;
     GtkStateType state_type = ConvertGtkState(state);
@@ -1900,13 +1901,21 @@ moz_gtk_downarrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     ensure_button_arrow_widget();
     style = gButtonArrowWidget->style;
+    gtk_widget_set_direction(gButtonArrowWidget, direction);
 
     calculate_arrow_rect(gButtonArrowWidget, rect, &arrow_rect,
-                         GTK_TEXT_DIR_LTR);
+                         direction);
+
+    if (direction == GTK_TEXT_DIR_RTL) {
+        if (arrow_type == GTK_ARROW_LEFT)
+            arrow_type = GTK_ARROW_RIGHT;
+        else if (arrow_type == GTK_ARROW_RIGHT)
+            arrow_type = GTK_ARROW_LEFT;
+    }
 
     TSOffsetStyleGCs(style, arrow_rect.x, arrow_rect.y);
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
-                    gButtonArrowWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
+                    gButtonArrowWidget, "arrow",  arrow_type, TRUE,
                     arrow_rect.x, arrow_rect.y, arrow_rect.width, arrow_rect.height);
 
     return MOZ_GTK_SUCCESS;
@@ -3008,7 +3017,7 @@ moz_gtk_get_tab_scroll_arrow_size(gint* width, gint* height)
 }
 
 gint
-moz_gtk_get_downarrow_size(gint* width, gint* height)
+moz_gtk_get_arrow_size(gint* width, gint* height)
 {
     GtkRequisition requisition;
     ensure_button_arrow_widget();
@@ -3325,7 +3334,8 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                                         direction);
         break;
     case MOZ_GTK_TOOLBARBUTTON_ARROW:
-        return moz_gtk_downarrow_paint(drawable, rect, cliprect, state);
+        return moz_gtk_arrow_paint(drawable, rect, cliprect, state,
+                                   (GtkArrowType) flags, direction);
         break;
     case MOZ_GTK_CHECKMENUITEM:
     case MOZ_GTK_RADIOMENUITEM:
