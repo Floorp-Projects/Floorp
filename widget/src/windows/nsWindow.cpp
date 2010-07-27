@@ -873,7 +873,12 @@ DWORD nsWindow::WindowStyle()
 
     if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_maximize))
       style &= ~WS_MAXIMIZEBOX;
+
+    if (IsPopupWithTitleBar()) {
+      style |= WS_CAPTION;
+    }
   }
+
   VERIFY_WINDOW_STYLE(style);
   return style;
 }
@@ -1793,8 +1798,7 @@ NS_METHOD nsWindow::GetBounds(nsIntRect &aRect)
       // adjust for chrome
       nsWindow* pWidget = static_cast<nsWindow*>(GetParent());
       if (pWidget && pWidget->IsTopLevelWidget()) {
-        nsIntPoint clientOffset;
-        pWidget->GetClientOffset(clientOffset);
+        nsIntPoint clientOffset = pWidget->GetClientOffset();
         r.left -= clientOffset.x;
         r.top  -= clientOffset.y;
       }
@@ -1846,19 +1850,16 @@ NS_METHOD nsWindow::GetScreenBounds(nsIntRect &aRect)
 
 // return the x,y offset of the client area from the origin
 // of the window. If the window is borderless returns (0,0).
-NS_METHOD nsWindow::GetClientOffset(nsIntPoint &aPt)
+nsIntPoint nsWindow::GetClientOffset()
 {
   if (!mWnd) {
-    aPt.x = aPt.y = 0;
-    return NS_OK;
+    return nsIntPoint(0, 0);
   }
 
   RECT r1;
   GetWindowRect(mWnd, &r1);
   nsIntPoint pt = WidgetToScreenOffset();
-  aPt.x = pt.x - r1.left; 
-  aPt.y = pt.y - r1.top; 
-  return NS_OK;  
+  return nsIntPoint(pt.x - r1.left, pt.y - r1.top);
 }
 
 void
@@ -2328,8 +2329,7 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
 
   ::EnumChildWindows(mWnd, AddClientAreaToRegion, reinterpret_cast<LPARAM>(&childWindowRegion));
 
-  nsIntPoint clientOffset;
-  GetClientOffset(clientOffset);
+  nsIntPoint clientOffset = GetClientOffset();
   childWindowRegion.MoveBy(-clientOffset);
 
   RECT r;
@@ -3005,6 +3005,22 @@ nsIntPoint nsWindow::WidgetToScreenOffset()
   point.y = 0;
   ::ClientToScreen(mWnd, &point);
   return nsIntPoint(point.x, point.y);
+}
+
+nsIntSize nsWindow::ClientToWindowSize(const nsIntSize& aClientSize)
+{
+  if (!IsPopupWithTitleBar())
+    return aClientSize;
+
+  // just use (200, 200) as the position
+  RECT r;
+  r.left = 200;
+  r.top = 200;
+  r.right = 200 + aClientSize.width;
+  r.bottom = 200 + aClientSize.height;
+  ::AdjustWindowRectEx(&r, WindowStyle(), PR_FALSE, WindowExStyle());
+
+  return nsIntSize(r.right - r.left, r.bottom - r.top);
 }
 
 /**************************************************************
@@ -4659,9 +4675,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
     case WM_MOVE: // Window moved
     {
-      PRInt32 x = GET_X_LPARAM(lParam); // horizontal position in screen coordinates
-      PRInt32 y = GET_Y_LPARAM(lParam); // vertical position in screen coordinates
-      result = OnMove(x, y);
+      RECT rect;
+      ::GetWindowRect(mWnd, &rect);
+      result = OnMove(rect.left, rect.top);
     }
     break;
 

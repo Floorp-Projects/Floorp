@@ -1512,10 +1512,12 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
      to mean "OS' choice." */
 
   // default titlebar and closebox to "on," if not mentioned at all
-  if (!PL_strcasestr(aFeatures, "titlebar"))
-    chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
-  if (!PL_strcasestr(aFeatures, "close"))
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
+  if (!(chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_POPUP)) {
+    if (!PL_strcasestr(aFeatures, "titlebar"))
+      chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
+    if (!PL_strcasestr(aFeatures, "close"))
+      chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
+  }
 
   if (aDialog && !presenceFlag)
     chromeFlags = nsIWebBrowserChrome::CHROME_DEFAULT;

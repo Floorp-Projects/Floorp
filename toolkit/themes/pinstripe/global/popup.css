@@ -53,6 +53,10 @@ menupopup > menu > menupopup {
   padding: 4px 0;
 }
 
+panel[titlebar] {
+  -moz-appearance: none; /* to disable rounded corners */
+}
+
 /* ::::: tooltip ::::: */
 
 tooltip {

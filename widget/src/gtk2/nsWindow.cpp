@@ -4051,7 +4051,9 @@ nsWindow::Create(nsIWidget        *aParent,
                 GtkWindow* gtkWin = GTK_WINDOW(mShell);
                 // ... but the window manager does not decorate this window,
                 // nor provide a separate taskbar icon.
-                gtk_window_set_decorated(gtkWin, FALSE);
+                PRBool decorated =
+                  (mBorderStyle != eBorderStyle_default && (mBorderStyle & eBorderStyle_title));
+                gtk_window_set_decorated(GTK_WINDOW(mShell), decorated);
                 gtk_window_set_skip_taskbar_hint(gtkWin, TRUE);
                 // Element focus is managed by the parent window so the
                 // WM_HINTS input field is set to False to tell the window
@@ -4133,6 +4135,12 @@ nsWindow::Create(nsIWidget        *aParent,
                                     // indicates that we already have the
                                     // standard cursor.
             SetCursor(eCursor_standard);
+
+            if (aInitData->mNoAutoHide) {
+                gint wmd = ConvertBorderStyles(mBorderStyle);
+                if (wmd != -1)
+                  gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
+            }
         }
     }
         break;
@@ -5220,6 +5228,7 @@ nsWindow::ConvertBorderStyles(nsBorderStyle aStyle)
     if (aStyle == eBorderStyle_default)
         return -1;
 
+    // note that we don't handle eBorderStyle_close yet
     if (aStyle & eBorderStyle_all)
         w |= GDK_DECOR_ALL;
     if (aStyle & eBorderStyle_border)
@@ -5234,11 +5243,6 @@ nsWindow::ConvertBorderStyles(nsBorderStyle aStyle)
         w |= GDK_DECOR_MINIMIZE;
     if (aStyle & eBorderStyle_maximize)
         w |= GDK_DECOR_MAXIMIZE;
-    if (aStyle & eBorderStyle_close) {
-#ifdef DEBUG
-        printf("we don't handle eBorderStyle_close yet... please fix me\n");
-#endif /* DEBUG */
-    }
 
     return w;
 }
@@ -5298,7 +5302,8 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     else
         wmd = ConvertBorderStyles(mBorderStyle);
 
-    gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
+    if (wmd != -1)
+      gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
 
     if (wasVisible)
         gdk_window_show(mShell->window);
