@@ -4,6 +4,17 @@ let Ci = Components.interfaces;
 dump("!! remote browser loaded\n")
 
 let WebProgressListener = {
+  _notifyFlags: [],
+  _calculatedNotifyFlags: 0,
+
+  init: function() {
+    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
+    webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
+
+    addMessageListener("WebProgress:AddProgressListener", this);
+    addMessageListener("WebProgress:RemoveProgressListener", this);
+  },
+
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     let webProgress = Ci.nsIWebProgressListener;
     let notifyFlags = 0;
@@ -22,6 +33,7 @@ let WebProgressListener = {
       status: aStatus,
       notifyFlags: notifyFlags
     };
+
     sendAsyncMessage("WebProgress:StateChange", json);
   },
 
@@ -33,7 +45,9 @@ let WebProgressListener = {
       curTotal: aCurTotal,
       maxTotal: aMaxTotal
     };
-    sendAsyncMessage("WebProgress:ProgressChange", json);
+
+    if (this._calculatedNotifyFlags & Ci.nsIWebProgress.NOTIFY_PROGRESS)
+      sendAsyncMessage("WebProgress:ProgressChange", json);
   },
 
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
@@ -54,7 +68,9 @@ let WebProgressListener = {
       status: aStatus,
       message: aMessage
     };
-    sendAsyncMessage("WebProgress:StatusChange", json);
+
+    if (this._calculatedNotifyFlags & Ci.nsIWebProgress.NOTIFY_STATUS)
+      sendAsyncMessage("WebProgress:StatusChange", json);
   },
 
   onSecurityChange: function onSecurityChange(aWebProgress, aRequest, aState) {
@@ -71,6 +87,24 @@ let WebProgressListener = {
     sendAsyncMessage("WebProgress:SecurityChange", json);
   },
 
+  receiveMessage: function(aMessage) {
+    switch (aMessage.name) {
+      case "WebProgress:AddProgressListener":
+        this._notifyFlags.push(aMessage.json.notifyFlags);
+        this._calculatedNotifyFlags |= aMessage.json.notifyFlags;
+        break;
+      case "WebProgress.RemoveProgressListener":
+        let index = this._notifyFlags.indexOf(aMessage.json.notifyFlags);
+        if (index != -1) {
+          this._notifyFlags.splice(index, 1);
+          this._calculatedNotifyFlags = this._notifyFlags.reduce(function(a, b) {
+            return a | b;
+          }, 0);
+        }
+        break;
+    }
+  },
+
   QueryInterface: function QueryInterface(aIID) {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
         aIID.equals(Ci.nsISupportsWeakReference) ||
@@ -81,6 +115,8 @@ let WebProgressListener = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 };
+
+WebProgressListener.init();
 
 
 let SecurityUI = {
@@ -143,9 +179,6 @@ let SecurityUI = {
 
 SecurityUI.init();
 
-
-let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
-webProgress.addProgressListener(WebProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
 
 let WebNavigation =  {
   _webNavigation: docShell.QueryInterface(Ci.nsIWebNavigation),
