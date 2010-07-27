@@ -47,7 +47,7 @@ const PREF_LWTHEME_TO_SELECT = "extensions.lwThemeToSelect";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const ADDON_TYPE             = "theme";
 
-const MAX_USED_THEMES_COUNT = 8;
+const DEFAULT_MAX_USED_THEMES_COUNT = 30;
 
 const MAX_PREVIEW_SECONDS = 30;
 
@@ -67,7 +67,8 @@ __defineGetter__("_prefs", function () {
   delete this._prefs;
   return this._prefs =
          Cc["@mozilla.org/preferences-service;1"]
-           .getService(Ci.nsIPrefService).getBranch("lightweightThemes.");
+           .getService(Ci.nsIPrefService).getBranch("lightweightThemes.")
+           .QueryInterface(Ci.nsIPrefBranch2);
 });
 
 __defineGetter__("_observerService", function () {
@@ -80,6 +81,22 @@ __defineGetter__("_ioService", function () {
   delete this._ioService;
   return this._ioService =
          Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+});
+
+__defineGetter__("_maxUsedThemes", function() {
+  delete this._maxUsedThemes;
+  try {
+    this._maxUsedThemes = _prefs.getIntPref("maxUsedThemes");
+  }
+  catch (e) {
+    this._maxUsedThemes = DEFAULT_MAX_USED_THEMES_COUNT;
+  }
+  return this._maxUsedThemes;
+});
+
+__defineSetter__("_maxUsedThemes", function(aVal) {
+  delete this._maxUsedThemes;
+  return this._maxUsedThemes = aVal;
 });
 
 var LightweightThemeManager = {
@@ -266,6 +283,15 @@ var LightweightThemeManager = {
         this.themeChanged(null);
       Services.prefs.clearUserPref(PREF_LWTHEME_TO_SELECT);
     }
+
+    _prefs.addObserver("", _prefObserver, false);
+  },
+
+  /**
+   * Shuts down the provider.
+   */
+  shutdown: function() {
+    _prefs.removeObserver("", _prefObserver);
   },
 
   /**
@@ -646,7 +672,7 @@ function _makeURI(aURL, aBaseURI)
 
 function _updateUsedThemes(aList) {
   // Send uninstall events for all themes that need to be removed.
-  while (aList.length > MAX_USED_THEMES_COUNT) {
+  while (aList.length > _maxUsedThemes) {
     let wrapper = new AddonWrapper(aList[aList.length - 1]);
     AddonManagerPrivate.callAddonListeners("onUninstalling", wrapper, false);
     aList.pop();
@@ -671,6 +697,27 @@ var _previewTimerCallback = {
   notify: function () {
     LightweightThemeManager.resetPreview();
   }
+};
+
+var _prefObserver = {
+  /**
+   * Called when any of the lightweightThemes preferences are changed.
+   * @see nsIObserver
+   */
+  observe: function (aSubject, aTopic, aData) {
+    switch (aData) {
+      case "maxUsedThemes":
+        try {
+          _maxUsedThemes = _prefs.getIntPref(aData);
+        }
+        catch (e) {
+          _maxUsedThemes = DEFAULT_MAX_USED_THEMES_COUNT;
+        }
+        // Update the theme list to remove any themes over the number we keep
+        _updateUsedThemes(LightweightThemeManager.usedThemes);
+        break;
+    }
+  },
 };
 
 function _persistImages(aData) {
