@@ -1251,7 +1251,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
         /* This is only true if the other side is |null|. */
         RegisterID result = frame.allocReg(Registers::SingleByteRegs);
-#if defined JS_CPU_X86 or defined JS_CPU_ARM
+#if defined JS_CPU_X86 || defined JS_CPU_ARM
         JSValueTag mask = known->getKnownTag();
         if (frame.shouldAvoidTypeRemat(test))
             masm.set32(cond, masm.tagOf(frame.addressOf(test)), Imm32(mask), result);
@@ -1297,7 +1297,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
         /* Do a dynamic test. */
         bool val = lhsTest ? lhs->getValue().toBoolean() : rhs->getValue().toBoolean();
-#if defined JS_CPU_X86 or defined JS_CPU_ARM
+#if defined JS_CPU_X86 || defined JS_CPU_ARM
         if (frame.shouldAvoidDataRemat(test))
             masm.set32(cond, masm.payloadOf(frame.addressOf(test)), Imm32(val), result);
         else

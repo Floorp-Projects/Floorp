@@ -71,7 +71,7 @@ JSC::MacroAssemblerX86Common::SSE2CheckState JSC::MacroAssemblerX86Common::s_sse
 NotCheckedSSE2; 
 #endif 
 
-#if defined(JS_CPU_X86) or defined(JS_CPU_X64)
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::X86Registers::ecx;
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::X86Registers::edx;
 #elif defined(JS_CPU_ARM)
