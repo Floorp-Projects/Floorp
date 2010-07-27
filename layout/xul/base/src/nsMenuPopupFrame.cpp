@@ -968,14 +968,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   // might be a different document so its presshell must be used.
   if (!aAnchorFrame) {
     if (mAnchorContent) {
-      nsCOMPtr<nsIDocument> document = mAnchorContent->GetDocument();
-      if (document) {
-        nsIPresShell *shell = document->GetShell();
-        if (!shell)
-          return NS_ERROR_FAILURE;
-
-        aAnchorFrame = mAnchorContent->GetPrimaryFrame();
-      }
+      aAnchorFrame = mAnchorContent->GetPrimaryFrame();
     }
 
     if (!aAnchorFrame) {
@@ -1651,6 +1644,9 @@ nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 void
 nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop, PRBool aUpdateAttrs)
 {
+  if (mScreenXPos == aLeft && mScreenYPos == aTop)
+    return;
+
   // reposition the popup at the specified coordinates. Don't clear the anchor
   // and position, because the popup can be reset to its anchor position by
   // using (-1, -1) as coordinates.

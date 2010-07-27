@@ -262,9 +262,9 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain)
 void
 nsXULPopupManager::AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow)
 {
-  // Panels with noautohide="true" are moved and kept aligned with the anchor
-  // when the parent window moves. Dismissable menus and panels are expected
-  // to roll up when a window is moved, so there is no need to check these.
+  // When the parent window is moved, adjust any child popups. Dismissable
+  // menus and panels are expected to roll up when a window is moved, so there
+  // is no need to check these popups, only the noautohide popups.
   nsMenuChainItem* item = mNoHidePanels;
   while (item) {
     // only move popups that are within the same window and where auto
@@ -287,6 +287,67 @@ nsXULPopupManager::AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow)
     }
 
     item = item->GetParent();
+  }
+}
+
+static
+nsMenuPopupFrame* GetPopupToMoveOrResize(nsIView* aView)
+{
+  nsIFrame *frame = static_cast<nsIFrame *>(aView->GetClientData());
+  if (!frame || frame->GetType() != nsGkAtoms::menuPopupFrame)
+    return nsnull;
+
+  // no point moving or resizing hidden popups
+  nsMenuPopupFrame* menuPopupFrame = static_cast<nsMenuPopupFrame *>(frame);
+  if (menuPopupFrame->PopupState() != ePopupOpenAndVisible)
+    return nsnull;
+
+  return menuPopupFrame;
+}
+
+void
+nsXULPopupManager::PopupMoved(nsIView* aView, nsIntPoint aPnt)
+{
+  nsMenuPopupFrame* menuPopupFrame = GetPopupToMoveOrResize(aView);
+  if (!menuPopupFrame)
+    return;
+
+  // Don't do anything if the popup is already at the specified location. This
+  // prevents recursive calls when a popup is positioned.
+  nsIntPoint currentPnt = menuPopupFrame->ScreenPosition();
+  if (aPnt.x != currentPnt.x || aPnt.y != currentPnt.y) {
+    // Update the popup's position using SetPopupPosition if the popup is
+    // anchored and at the parent level as these maintain their position
+    // relative to the parent window. Otherwise, just update the popup to
+    // the specified screen coordinates.
+    if (menuPopupFrame->IsAnchored()) {
+      menuPopupFrame->SetPopupPosition(nsnull, PR_TRUE);
+    }
+    else {
+      menuPopupFrame->MoveTo(aPnt.x, aPnt.y, PR_FALSE);
+    }
+  }
+}
+
+void
+nsXULPopupManager::PopupResized(nsIView* aView, nsIntSize aSize)
+{
+  nsMenuPopupFrame* menuPopupFrame = GetPopupToMoveOrResize(aView);
+  if (!menuPopupFrame)
+    return;
+
+  nsPresContext* presContext = menuPopupFrame->PresContext();
+
+  nsSize currentSize = menuPopupFrame->GetSize();
+  if (aSize.width != presContext->AppUnitsToDevPixels(currentSize.width) ||
+      aSize.height != presContext->AppUnitsToDevPixels(currentSize.height)) {
+    // for resizes, we just set the width and height attributes
+    nsIContent* popup = menuPopupFrame->GetContent();
+    nsAutoString width, height;
+    width.AppendInt(aSize.width);
+    height.AppendInt(aSize.height);
+    popup->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, PR_FALSE);
+    popup->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, PR_TRUE);
   }
 }
 

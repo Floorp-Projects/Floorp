@@ -59,6 +59,7 @@
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "nsIPluginWidget.h"
+#include "nsXULPopupManager.h"
 
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 
@@ -717,6 +718,19 @@ void nsViewManager::UpdateViews(nsView *aView, PRUint32 aUpdateFlags)
   }
 }
 
+static PRBool
+IsViewForPopup(nsIView* aView)
+{
+  nsIWidget* widget = aView->GetWidget();
+  if (widget) {
+    nsWindowType type;
+    widget->GetWindowType(type);
+    return (type == eWindowType_popup);
+  }
+
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
                                            nsIView* aView, nsEventStatus *aStatus)
 {
@@ -745,8 +759,34 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
                                     NSIntPixelsToAppUnits(height, p2a));
                 *aStatus = nsEventStatus_eConsumeNoDefault;
               }
+            else if (IsViewForPopup(aView))
+              {
+                nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+                if (pm)
+                  {
+                    pm->PopupResized(aView, nsIntSize(width, height));
+                    *aStatus = nsEventStatus_eConsumeNoDefault;
+                  }
+              }
           }
+        }
 
+        break;
+
+    case NS_MOVE:
+      {
+        // A popup's parent view is the root view for the parent window, so when
+        // a popup moves, the popup's frame and view position must be updated
+        // to match.
+        if (aView && IsViewForPopup(aView))
+          {
+            nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+            if (pm)
+              {
+                pm->PopupMoved(aView, aEvent->refPoint);
+                *aStatus = nsEventStatus_eConsumeNoDefault;
+              }
+          }
         break;
       }
 
@@ -890,13 +930,11 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
     case NS_CREATE:
     case NS_DESTROY:
     case NS_SETZLEVEL:
-    case NS_MOVE:
       /* Don't pass these events through. Passing them through
          causes performance problems on pages with lots of views/frames 
          @see bug 112861 */
       *aStatus = nsEventStatus_eConsumeNoDefault;
       break;
-
 
     case NS_DISPLAYCHANGED:
 
