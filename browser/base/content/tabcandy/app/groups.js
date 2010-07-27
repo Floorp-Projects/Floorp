@@ -1429,15 +1429,9 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
 // Class: Groups
 // Singelton for managing all <Group>s.
 window.Groups = {
-
-  // ----------
-  // Function: init
-  // Sets up the object.
-  init: function() {
-    this.groups = [];
-    this.nextID = 1;
-    this._inited = false;
-  },
+  groups: [],
+  nextID: 1,
+  _inited: false,
 
   // ----------
   // Function: getNextID
@@ -1815,8 +1809,5 @@ window.Groups = {
     return tabItem;
   }
 };
-
-// ----------
-Groups.init();
 
 })();

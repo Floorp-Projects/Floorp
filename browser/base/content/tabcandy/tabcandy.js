@@ -1,7 +1,7 @@
 # NB: Certain files need to evaluate before others
 
-#include core/iq.js
 #include core/utils.js
+#include core/iq.js
 #include core/tabs.js
 #include app/storage.js
 #include app/items.js

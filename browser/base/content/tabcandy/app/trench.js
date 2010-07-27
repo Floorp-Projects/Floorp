@@ -107,8 +107,8 @@ var Trench = function(element, xory, type, edge) {
   this.minRange = new Range(0,0);
   this.activeRange = new Range(0,10000);
 };
-Trench.prototype = {
 
+Trench.prototype = {
   //----------
   // Variable: radius
   // (integer) radius is how far away we should snap from
@@ -154,7 +154,6 @@ Trench.prototype = {
       this.rect = new Rect ( this.range.min, this.position - this.radius, this.range.extent, 2 * this.radius );
 
     this.show(); // DEBUG
-
   },
 
   //----------

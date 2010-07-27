@@ -83,21 +83,17 @@ var UIManager = {
   // Variable: _currentTab
   // Keeps track of which <Tabs> tab we are currently on.
   // Used to facilitate zooming down from a previous tab.
-  _currentTab : gBrowser.selectedTab,
+  _currentTab : null,
 
   // ----------
   // Function: init
   // Must be called after the object is created.
   init: function() {
     try {
-      if (window.Tabs)
-        this._secondaryInit();
-      else {
-        var self = this;
-        TabsManager.addSubscriber(this, "load", function() {
-          self._secondaryInit();
-        });
-      }
+      Storage.init();
+      TabsManager.init();
+      TabMirror.init();
+      this._secondaryInit();
     } catch(e) {
       Utils.log(e);
     }
@@ -111,6 +107,8 @@ var UIManager = {
     try {
       var self = this;
 
+      this._currentTab = gBrowser.selectedTab;
+    
       // ___ Dev Menu
       if (this._devMode)
         this._addDevMenu();
@@ -174,8 +172,6 @@ var UIManager = {
       var firstTime = !groupsData || Utils.isEmptyObject(groupsData);
       var groupData = Storage.readGroupData(gWindow);
       Groups.reconstitute(groupsData, groupData);
-
-      TabItems.init();
 
       if (firstTime) {
         var padding = 10;
