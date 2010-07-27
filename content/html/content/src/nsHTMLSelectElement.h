@@ -122,7 +122,7 @@ public:
    */
   nsHTMLOptionElement *ItemAsOption(PRUint32 aIndex)
   {
-    return mElements.SafeElementAt(aIndex, nsRefPtr<nsHTMLOptionElement>());
+    return mElements.SafeElementAt(aIndex, nsnull);
   }
 
   /**
