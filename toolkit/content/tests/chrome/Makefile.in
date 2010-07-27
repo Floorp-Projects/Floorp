@@ -104,6 +104,8 @@ _TEST_FILES = 	findbar_window.xul \
 		frame_subframe_origin_subframe1.xul \
 		frame_subframe_origin_subframe2.xul \
 		RegisterUnregisterChrome.js \
+		test_panel.xul \
+		window_panel.xul \
 		$(NULL)
 
 # test_panel_focus.xul won't work if the Full Keyboard Access preference is set to
