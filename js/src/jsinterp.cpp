@@ -4201,8 +4201,8 @@ BEGIN_CASE(JSOP_SETNAME)
 BEGIN_CASE(JSOP_SETPROP)
 BEGIN_CASE(JSOP_SETMETHOD)
 {
-    Value &rref = regs.sp[-1];
-    JS_ASSERT_IF(op == JSOP_SETMETHOD, IsFunctionObject(rref));
+    Value rval = regs.sp[-1];
+    JS_ASSERT_IF(op == JSOP_SETMETHOD, IsFunctionObject(rval));
     Value &lref = regs.sp[-2];
     JS_ASSERT_IF(op == JSOP_SETNAME, lref.isObject());
     JSObject *obj;
@@ -4273,7 +4273,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                   fast_set_propcache_hit:
                     PCMETER(cache->pchits++);
                     PCMETER(cache->setpchits++);
-                    NATIVE_SET(cx, obj, sprop, entry, &rref);
+                    NATIVE_SET(cx, obj, sprop, entry, &rval);
                     break;
                 }
                 checkForAdd = sprop->hasSlot() && sprop->parent == scope->lastProperty();
@@ -4351,7 +4351,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * branded scope.
                  */
                 TRACE_2(SetPropHit, entry, sprop);
-                obj->lockedSetSlot(slot, rref);
+                obj->lockedSetSlot(slot, rval);
 
                 /*
                  * Purge the property cache of the id we may have just
@@ -4374,7 +4374,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 sprop = entry->vword.toSprop();
                 JS_ASSERT(sprop->writable());
                 JS_ASSERT(!obj2->scope()->sealed());
-                NATIVE_SET(cx, obj, sprop, entry, &rref);
+                NATIVE_SET(cx, obj, sprop, entry, &rval);
             }
             if (sprop)
                 break;
@@ -4391,10 +4391,10 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 defineHow = JSDNP_CACHE_RESULT | JSDNP_UNQUALIFIED;
             else
                 defineHow = JSDNP_CACHE_RESULT;
-            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rref))
+            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval))
                 goto error;
         } else {
-            if (!obj->setProperty(cx, id, &rref))
+            if (!obj->setProperty(cx, id, &rval))
                 goto error;
             ABORT_RECORDING(cx, "Non-native set");
         }
@@ -4513,6 +4513,7 @@ BEGIN_CASE(JSOP_SETELEM)
     FETCH_OBJECT(cx, -3, obj);
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
+    Value rval;
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length = obj->getDenseArrayCapacity();
@@ -4529,7 +4530,8 @@ BEGIN_CASE(JSOP_SETELEM)
             }
         }
     } while (0);
-    if (!obj->setProperty(cx, id, &regs.sp[-1]))
+    rval = regs.sp[-1];
+    if (!obj->setProperty(cx, id, &rval))
         goto error;
   end_setelem:;
 }
@@ -4542,7 +4544,8 @@ BEGIN_CASE(JSOP_ENUMELEM)
     FETCH_OBJECT(cx, -2, obj);
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
-    if (!obj->setProperty(cx, id, &regs.sp[-3]))
+    Value rval = regs.sp[-3];
+    if (!obj->setProperty(cx, id, &rval))
         goto error;
     regs.sp -= 3;
 }
