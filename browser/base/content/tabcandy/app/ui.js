@@ -1085,6 +1085,13 @@ var UIManager = {
 };
 
 // ----------
+Profile.checkpoint("script load");
+Profile.wrap(UIManager, "UIManager");
+Profile.wrap(Storage, "Storage");
+Profile.wrap(Items, "Items");
+Profile.wrap(TabItems, "TabItems");
+Profile.wrap(Groups, "Groups");
+
 window.UI = UIManager;
 window.UI.init();
 
