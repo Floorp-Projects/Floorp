@@ -281,11 +281,21 @@ class Compiler
                              MaybeRegisterID &mreg);
     void maybeJumpIfNotDouble(Assembler &masm, MaybeJump &mj, FrameEntry *fe,
                               MaybeRegisterID &mreg);
+    void jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    void jsop_relational_int(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    void jsop_relational_self(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    void jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    void jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+
+    void emitLeftDoublePath(FrameEntry *lhs, FrameEntry *rhs, FrameState::BinaryAlloc &regs,
+                            MaybeJump &lhsNotDouble, MaybeJump &rhsNotNumber,
+                            MaybeJump &lhsUnknownDone);
+    void emitRightDoublePath(FrameEntry *lhs, FrameEntry *rhs, FrameState::BinaryAlloc &regs,
+                             MaybeJump &rhsNotNumber2);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
     void jsop_globalinc(JSOp op, uint32 index);
-    void jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_mod();
     void jsop_neg();
     void jsop_bitnot();

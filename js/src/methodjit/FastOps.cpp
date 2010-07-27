@@ -129,13 +129,13 @@ mjit::Compiler::jsop_bitop(JSOp op)
     bool stubNeeded = false;
     if (!rhs->isTypeKnown()) {
         Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
-        stubcc.linkExitForBranch(rhsFail);
+        stubcc.linkExit(rhsFail, Uses(2));
         frame.learnType(rhs, JSVAL_TYPE_INT32);
         stubNeeded = true;
     }
     if (!lhs->isTypeKnown() && !frame.haveSameBacking(lhs, rhs)) {
         Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
-        stubcc.linkExitForBranch(lhsFail);
+        stubcc.linkExit(lhsFail, Uses(2));
         stubNeeded = true;
     }
 
@@ -424,8 +424,8 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
     JS_ASSERT(!(rhs->isConstant() && lhs->isConstant()));
 
     /* Always slow path... */
-    if ((rhs->isTypeKnown() && rhs->getKnownType() != JSVAL_TYPE_INT32) ||
-        (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_INT32)) {
+    if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_DOUBLE)) ||
+        (rhs->isNotType(JSVAL_TYPE_INT32) && rhs->isNotType(JSVAL_TYPE_DOUBLE))) {
         if (op == JSOP_EQ || op == JSOP_NE)
             jsop_equality(op, stub, target, fused);
         else
@@ -433,182 +433,17 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
         return;
     }
 
-    /* Test the types. */
-    if (!rhs->isTypeKnown()) {
-        Jump rhsFail = frame.testInt32(Assembler::NotEqual, rhs);
-        stubcc.linkExit(rhsFail, Uses(2));
-        frame.learnType(rhs, JSVAL_TYPE_INT32);
-    }
-    if (!lhs->isTypeKnown() && !frame.haveSameBacking(lhs, rhs)) {
-        Jump lhsFail = frame.testInt32(Assembler::NotEqual, lhs);
-        stubcc.linkExit(lhsFail, Uses(2));
-    }
-
-    Assembler::Condition cond;
-    switch (op) {
-      case JSOP_LT:
-        cond = Assembler::LessThan;
-        break;
-      case JSOP_LE:
-        cond = Assembler::LessThanOrEqual;
-        break;
-      case JSOP_GT:
-        cond = Assembler::GreaterThan;
-        break;
-      case JSOP_GE:
-        cond = Assembler::GreaterThanOrEqual;
-        break;
-      case JSOP_EQ:
-        cond = Assembler::Equal;
-        break;
-      case JSOP_NE:
-        cond = Assembler::NotEqual;
-        break;
-      default:
-        JS_NOT_REACHED("wat");
+    if (op == JSOP_EQ || op == JSOP_NE) {
+        jsop_relational_int(op, stub, target, fused);
         return;
     }
 
-    /* Swap the LHS and RHS if it makes register allocation better... or possible. */
-    bool swapped = false;
-    if (lhs->isConstant() ||
-        (frame.shouldAvoidDataRemat(lhs) && !rhs->isConstant())) {
-        FrameEntry *temp = rhs;
-        rhs = lhs;
-        lhs = temp;
-        swapped = true;
-
-        switch (cond) {
-          case Assembler::LessThan:
-            cond = Assembler::GreaterThan;
-            break;
-          case Assembler::LessThanOrEqual:
-            cond = Assembler::GreaterThanOrEqual;
-            break;
-          case Assembler::GreaterThan:
-            cond = Assembler::LessThan;
-            break;
-          case Assembler::GreaterThanOrEqual:
-            cond = Assembler::LessThanOrEqual;
-            break;
-          case Assembler::Equal: /* fall through */
-          case Assembler::NotEqual:
-            /* Equal and NotEqual are commutative. */
-            break;
-          default:
-            JS_NOT_REACHED("wat");
-            break;
-        }
-    }
-
-    stubcc.leave();
-    stubcc.call(stub);
-
-    if (target) {
-        /* We can do a little better when we know the opcode is fused. */
-        RegisterID lr = frame.ownRegForData(lhs);
-        
-        /* Initialize stuff to quell GCC warnings. */
-        bool rhsConst;
-        int32 rval = 0;
-        RegisterID rr = Registers::ReturnReg;
-        if (!(rhsConst = rhs->isConstant()))
-            rr = frame.ownRegForData(rhs);
-        else
-            rval = rhs->getValue().toInt32();
-
-        frame.pop();
-        frame.pop();
-
-        /*
-         * Note: this resets the regster allocator, so rr and lr don't need
-         * to be freed. We're not going to touch the frame.
-         */
-        frame.forgetEverything();
-
-        /* Invert the test for IFEQ. */
-        if (fused == JSOP_IFEQ) {
-            switch (cond) {
-              case Assembler::LessThan:
-                cond = Assembler::GreaterThanOrEqual;
-                break;
-              case Assembler::LessThanOrEqual:
-                cond = Assembler::GreaterThan;
-                break;
-              case Assembler::GreaterThan:
-                cond = Assembler::LessThanOrEqual;
-                break;
-              case Assembler::GreaterThanOrEqual:
-                cond = Assembler::LessThan;
-                break;
-              case Assembler::Equal:
-                cond = Assembler::NotEqual;
-                break;
-              case Assembler::NotEqual:
-                cond = Assembler::Equal;
-                break;
-              default:
-                JS_NOT_REACHED("hello");
-            }
-        }
-
-        Jump j, fast;
-        if (!rhsConst)
-            fast = masm.branch32(cond, lr, rr);
-        else
-            fast = masm.branch32(cond, lr, Imm32(rval));
-
-        JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW RESTORE CODE ---- \n");
-        /*
-         * The stub call has no need to rejoin, since state is synced.
-         * Instead, we can just test the return value.
-         */
-        Assembler::Condition cond = (fused == JSOP_IFEQ)
-                                    ? Assembler::Zero
-                                    : Assembler::NonZero;
-        j = stubcc.masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
-        stubcc.jumpInScript(j, target);
-        /* ^-- :TODO: use jumpAndTrace */
-
-        /* Rejoin unnecessary - state is flushed. */
-        j = stubcc.masm.jump();
-        stubcc.crossJump(j, masm.label());
-
-        /*
-         * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
-         * in the middle of an in-progress slow path.
-         */
-        jumpAndTrace(fast, target);
-
-        JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
+    if (frame.haveSameBacking(lhs, rhs)) {
+        jsop_relational_self(op, stub, target, fused);
+    } else if (lhs->isType(JSVAL_TYPE_DOUBLE) || rhs->isType(JSVAL_TYPE_DOUBLE)) {
+        jsop_relational_double(op, stub, target, fused);
     } else {
-        /* No fusing. Compare, set, and push a boolean. */
-
-        RegisterID reg = frame.ownRegForData(lhs);
-
-        /* x86/64's SET instruction can only take single-byte regs.*/
-        RegisterID resultReg = reg;
-        if (!(Registers::maskReg(reg) & Registers::SingleByteRegs))
-            resultReg = frame.allocReg(Registers::SingleByteRegs);
-
-        /* Emit the compare & set. */
-        if (rhs->isConstant()) {
-            masm.set32(cond, reg, Imm32(rhs->getValue().toInt32()), resultReg);
-        } else if (frame.shouldAvoidDataRemat(rhs)) {
-            masm.set32(cond, reg,
-                       masm.payloadOf(frame.addressOf(rhs)),
-                       resultReg);
-        } else {
-            masm.set32(cond, reg, frame.tempRegForData(rhs), resultReg);
-        }
-
-        /* Clean up and push a boolean. */
-        frame.pop();
-        frame.pop();
-        if (reg != resultReg)
-            frame.freeReg(reg);
-        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, resultReg);
-        stubcc.rejoin(Changes(1));
+        jsop_relational_full(op, stub, target, fused);
     }
 }
 

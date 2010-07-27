@@ -412,7 +412,8 @@ class FrameState
      * this would cause a spill that could be avoided by using a mutable RHS,
      * and the operation is commutative, then the resultHasRhs is set to true.
      */
-    void allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAlloc &alloc);
+    void allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAlloc &alloc,
+                        bool resultNeeded = true);
 
     /*
      * Similar to allocForBinary, except works when the LHS and RHS have the

@@ -1034,7 +1034,8 @@ FrameState::allocForSameBinary(FrameEntry *fe, JSOp op, BinaryAlloc &alloc)
 }
 
 void
-FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAlloc &alloc)
+FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAlloc &alloc,
+                           bool needsResult)
 {
     FrameEntry *backingLeft = lhs;
     FrameEntry *backingRight = rhs;
@@ -1069,6 +1070,11 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
 
     bool commu;
     switch (op) {
+      case JSOP_GT:
+      case JSOP_GE:
+      case JSOP_LT:
+      case JSOP_LE:
+        /* fall through */
       case JSOP_ADD:
       case JSOP_MUL:
       case JSOP_SUB:
@@ -1117,6 +1123,9 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
 
     alloc.lhsNeedsRemat = false;
     alloc.rhsNeedsRemat = false;
+
+    if (!needsResult)
+        goto skip;
 
     /*
      * Now a result register is needed. It must contain a mutable copy of the
@@ -1171,6 +1180,7 @@ FrameState::allocForBinary(FrameEntry *lhs, FrameEntry *rhs, JSOp op, BinaryAllo
         }
     }
 
+  skip:
     /* Unpin everything that was pinned. */
     if (backingLeft->type.inRegister())
         unpinReg(backingLeft->type.reg());
