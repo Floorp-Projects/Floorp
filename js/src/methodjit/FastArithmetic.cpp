@@ -664,6 +664,7 @@ mjit::Compiler::jsop_neg()
     /* Try an integer path (out-of-line). */
     MaybeJump jmpNotInt;
     MaybeJump jmpIntZero;
+    MaybeJump jmpMinInt;
     MaybeJump jmpIntRejoin;
     Label lblIntPath = stubcc.masm.label();
     {
@@ -671,6 +672,8 @@ mjit::Compiler::jsop_neg()
 
         /* 0 (int) -> -0 (double). */
         jmpIntZero.setJump(stubcc.masm.branch32(Assembler::Equal, reg, Imm32(0)));
+        /* int32 negation on (-2147483648) yields (-2147483648). */
+        jmpMinInt.setJump(stubcc.masm.branch32(Assembler::Equal, reg, Imm32(1 << 31)));
 
         stubcc.masm.neg32(reg);
 
@@ -699,6 +702,8 @@ mjit::Compiler::jsop_neg()
         jmpNotInt.getJump().linkTo(feSyncTarget, &stubcc.masm);
     if (jmpIntZero.isSet())
         jmpIntZero.getJump().linkTo(feSyncTarget, &stubcc.masm);
+    if (jmpMinInt.isSet())
+        jmpMinInt.getJump().linkTo(feSyncTarget, &stubcc.masm);
     if (jmpIntRejoin.isSet())
         stubcc.crossJump(jmpIntRejoin.getJump(), masm.label());
 
