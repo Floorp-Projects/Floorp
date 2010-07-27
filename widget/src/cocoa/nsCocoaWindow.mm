@@ -990,6 +990,8 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
   if (!mWindow || (mBounds.x == aX && mBounds.y == aY))
     return NS_OK;
 
+  mBounds.MoveTo(aX, aY);
+
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
   NSPoint coord = {aX, nsCocoaUtils::FlippedScreenY(aY)};
@@ -1136,8 +1138,8 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   if (IsResizing() || !mWindow || (!isMoving && !isResizing))
     return NS_OK;
 
-  nsIntRect geckoRect(aX, aY, aWidth, aHeight);
-  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(geckoRect);
+  mBounds = nsIntRect(aX, aY, aWidth, aHeight);
+  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(mBounds);
 
   // We have to report the size event -first-, to make sure that content
   // repositions itself.  Cocoa views are anchored at the bottom left,
@@ -1339,6 +1341,21 @@ GetWindowSizeMode(NSWindow* aWindow) {
 }
 
 void
+nsCocoaWindow::ReportMoveEvent()
+{
+  // Dispatch the move event to Gecko
+  nsGUIEvent guiEvent(PR_TRUE, NS_MOVE, this);
+  nsIntRect rect;
+  GetScreenBounds(rect);
+  mBounds.MoveTo(rect.TopLeft());
+  guiEvent.refPoint.x = rect.x;
+  guiEvent.refPoint.y = rect.y;
+  guiEvent.time = PR_IntervalNow();
+  nsEventStatus status = nsEventStatus_eIgnore;
+  DispatchEvent(&guiEvent, status);
+}
+
+void
 nsCocoaWindow::DispatchSizeModeEvent()
 {
   nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
@@ -1358,6 +1375,9 @@ nsCocoaWindow::ReportSizeEvent(NSRect *r)
   if (!r)
     r = &windowFrame;
 
+  mBounds.width  = nscoord(r->size.width);
+  mBounds.height = nscoord(r->size.height);
+
   if ([mWindow isKindOfClass:[ToolbarWindow class]] &&
       [(ToolbarWindow*)mWindow drawsContentsIntoWindowFrame]) {
     // Report the frame rect instead of the content rect. This will make our
@@ -1368,13 +1388,11 @@ nsCocoaWindow::ReportSizeEvent(NSRect *r)
     windowFrame = [mWindow contentRectForFrameRect:(*r)];
   }
 
-  mBounds.width  = nscoord(windowFrame.size.width);
-  mBounds.height = nscoord(windowFrame.size.height);
-
   nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time = PR_IntervalNow();
 
-  sizeEvent.windowSize = &mBounds;
+  nsIntRect rect = nsCocoaUtils::CocoaRectToGeckoRect(windowFrame);
+  sizeEvent.windowSize = &rect;
   sizeEvent.mWinWidth  = mBounds.width;
   sizeEvent.mWinHeight = mBounds.height;
 
@@ -1823,15 +1841,8 @@ void nsCocoaWindow::SetPopupWindowLevel()
 
 - (void)windowDidMove:(NSNotification *)aNotification
 {
-  // Dispatch the move event to Gecko
-  nsGUIEvent guiEvent(PR_TRUE, NS_MOVE, mGeckoWindow);
-  nsIntRect rect;
-  mGeckoWindow->GetScreenBounds(rect);
-  guiEvent.refPoint.x = rect.x;
-  guiEvent.refPoint.y = rect.y;
-  guiEvent.time = PR_IntervalNow();
-  nsEventStatus status = nsEventStatus_eIgnore;
-  mGeckoWindow->DispatchEvent(&guiEvent, status);
+  if (mGeckoWindow)
+    mGeckoWindow->ReportMoveEvent();
 }
 
 - (BOOL)windowShouldClose:(id)sender
