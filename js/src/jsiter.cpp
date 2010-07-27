@@ -203,8 +203,6 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
           bool enumerable, bool sharedPermanent, uintN flags, IdSet& ht,
           typename EnumPolicy::ResultVector &props)
 {
-    JS_ASSERT(JSID_IS_INT(id) || JSID_IS_ATOM(id));
-
     IdSet::AddPtr p = ht.lookupForAdd(id);
     JS_ASSERT_IF(obj == pobj && !obj->isProxy(), !p);
 

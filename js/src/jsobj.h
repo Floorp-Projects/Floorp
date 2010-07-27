@@ -734,6 +734,7 @@ struct JSObject {
     inline bool isFunction() const;
     inline bool isRegExp() const;
     inline bool isXML() const;
+    inline bool isXMLId() const;
     inline bool isNamespace() const;
     inline bool isQName() const;
 
