@@ -520,6 +520,13 @@ Mark(JSTracer *trc, void *thing, uint32 kind, const char *name)
 }
 
 static inline void
+MarkString(JSTracer *trc, JSString *str)
+{
+    JS_ASSERT(str);
+    Mark(trc, str, JSTRACE_STRING);
+}
+
+static inline void
 MarkString(JSTracer *trc, JSString *str, const char *name)
 {
     JS_ASSERT(str);
