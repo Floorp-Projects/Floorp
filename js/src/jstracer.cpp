@@ -11383,6 +11383,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             }
         }
     }
+    set(&vp[1], this_ins);
     box_value_into(vp[1], this_ins, invokevp_ins, 1 * sizeof(Value), ACC_OTHER);
 
     // Populate argv.
