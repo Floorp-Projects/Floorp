@@ -88,8 +88,6 @@ public:
 
     virtual bool RecvSetOffline(const PRBool& offline);
 
-    virtual bool RecvNotifyVisited(const IPC::URI& aURI);
-
     /**
      * Notify |aObserver| of changes to |aPrefRoot|.|aDomain|.  If
      * |aHoldWeak|, only a weak reference to |aObserver| is held.
