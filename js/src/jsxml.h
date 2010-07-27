@@ -233,6 +233,15 @@ JSObject::isXML() const
     return map->ops == &js_XMLObjectOps;
 }
 
+inline bool
+JSObject::isXMLId() const
+{
+    js::Class *clasp = getClass();
+    return clasp == &js_QNameClass.base ||
+           clasp == &js_AttributeNameClass ||
+           clasp == &js_AnyNameClass;
+}
+
 #define VALUE_IS_XML(v)      (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isXML())
 
 inline bool
