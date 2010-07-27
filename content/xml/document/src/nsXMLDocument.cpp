@@ -92,6 +92,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIHTMLDocument.h"
+#include "nsGenericElement.h"
 
 // ==================================================================
 // =
@@ -232,7 +233,7 @@ nsXMLDocument::~nsXMLDocument()
   mLoopingForSyncLoad = PR_FALSE;
 }
 
-DOMCI_DATA(XMLDocument, nsXMLDocument)
+DOMCI_NODE_DATA(XMLDocument, nsXMLDocument)
 
 // QueryInterface implementation for nsXMLDocument
 NS_INTERFACE_TABLE_HEAD(nsXMLDocument)

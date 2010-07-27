@@ -117,6 +117,7 @@ _TEST_FILES	= \
 		test_bug545314.html \
 		test_bug548828.html \
 		test_DOMWindowCreated_chromeonly.html \
+		test_bug581072.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)

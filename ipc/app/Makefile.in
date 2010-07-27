@@ -113,14 +113,6 @@ endif
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-# Create an app bundle
-MOZ_FIX_LINK_PATHS+=-Wl,-headerpad_max_install_names
-# We need to fix the install names for the Gecko libraries we're linked to.
-# They're all @loader_path/libfoo.dylib, but this binary lives in a bundle
-# underneath that.
-paren=\(
-LIST_INSTALL_NAMES=$(shell otool -L $(PROGRAM) | grep "@loader_path" | tr -s '\t ' ' ' | cut -f1 -d$(paren) | xargs echo)
-FIX_INSTALL_NAMES=$(foreach l,$(LIST_INSTALL_NAMES),-change "$l" "$(subst @loader_path,@loader_path/../../..,$l)")
 
 libs::
 	$(NSINSTALL) -D $(DIST)/bin/$(PROGRAM).app
@@ -129,7 +121,6 @@ libs::
 	sed -e "s/%APP_NAME%/$(MOZ_APP_DISPLAYNAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
 	  iconv -f UTF-8 -t UTF-16 > $(DIST)/bin/$(PROGRAM).app/Contents/Resources/English.lproj/InfoPlist.strings
 	$(NSINSTALL) -D $(DIST)/bin/$(PROGRAM).app/Contents/MacOS
-	install_name_tool $(FIX_INSTALL_NAMES) $(PROGRAM)
 	$(NSINSTALL) $(PROGRAM) $(DIST)/bin/$(PROGRAM).app/Contents/MacOS
 	rm -f $(DIST)/bin/$(PROGRAM)
 endif

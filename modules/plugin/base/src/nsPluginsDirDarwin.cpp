@@ -225,11 +225,16 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
 
+  // 64-bit NSPR does not (yet) support bundles.  So in 64-bit builds we need
+  // (for now) to load the bundle's executable.  However this can cause
+  // problems:  CFBundleCreate() doesn't run the bundle's executable's
+  // initialization code, while NSAddImage() and dlopen() do run it.  So using
+  // NSPR's dyld loading mechanisms here (NSAddImage() or dlopen()) can cause
+  // a bundle's initialization code to run earlier than expected, and lead to
+  // crashes.  See bug 577967.
+#ifdef __LP64__
   char executablePath[PATH_MAX];
   executablePath[0] = '\0';
-
-  // We store the path to the plugin bundle, we need the executable path here.
-  // 64-bit NSPR does not support bundles.
   nsCAutoString bundlePath;
   mPlugin->GetNativePath(bundlePath);
   CFStringRef pathRef = ::CFStringCreateWithCString(NULL, bundlePath.get(), kCFStringEncodingUTF8);
@@ -250,6 +255,11 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     }
     ::CFRelease(pathRef); 
   }
+#else
+  nsCAutoString bundlePath;
+  mPlugin->GetNativePath(bundlePath);
+  const char *executablePath = bundlePath.get();
+#endif
 
   outLibrary = PR_LoadLibrary(executablePath);
   pLibrary = outLibrary;

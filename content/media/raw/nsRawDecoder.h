@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,19 +11,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla SVG project.
+ * The Original Code is Mozilla Raw Decoder code.
  *
  * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2002
+ *   Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex@croczilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,27 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_ISVGLENGTH_H__
-#define __NS_ISVGLENGTH_H__
+#if !defined(nsRawDecoder_h_)
+#define nsRawDecoder_h_
 
-#include "nsIDOMSVGLength.h"
-#include "nsWeakPtr.h"
+#include "nsBuiltinDecoder.h"
 
-////////////////////////////////////////////////////////////////////////
-// nsISVGLength: private interface for svg lengths
-
-// {DB02FD38-3C77-4c52-8DBD-C0A47F9DEDAD}
-#define NS_ISVGLENGTH_IID \
-{ 0xdb02fd38, 0x3c77, 0x4c52, { 0x8d, 0xbd, 0xc0, 0xa4, 0x7f, 0x9d, 0xed, 0xad } }
-
-class nsISVGLength : public nsIDOMSVGLength
+class nsRawDecoder : public nsBuiltinDecoder
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGLENGTH_IID)
-
-  NS_IMETHOD SetContext(nsIWeakReference *aContext, PRUint8 aCtxType)=0;
+  virtual nsMediaDecoder* Clone() { return new nsRawDecoder(); }
+  virtual nsDecoderStateMachine* CreateStateMachine();
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGLength, NS_ISVGLENGTH_IID)
-
-#endif // __NS_ISVGLENGTH_H__
+#endif

@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=4 et sw=4 tw=80: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Jonas Sicking <sicking@bigfoot.com> (Original Author)
+ *   Craig Topper  <craig.topper@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -70,108 +71,24 @@ public:
 
 private:
     nsCOMPtr<nsINode> mCurrentNode;
-    
+
     /*
-     * Array with all child indexes up the tree. This should only be
-     * considered a hint and the value could be wrong.
-     */
-    nsAutoTArray<PRInt32, 8> mPossibleIndexes;
-    
-    /*
-     * Position of mCurrentNode in mPossibleIndexes
-     */
-    PRInt32 mPossibleIndexesPos;
-    
-    /*
-     * Finds the first child of aNode and returns it. If a child is
-     * found, mCurrentNode is set to that child.
-     * @param aNode     Node to search for children.
-     * @param aReversed Reverses search to find the last child instead
-     *                  of first.
-     * @param aIndexPos Position of aNode in mPossibleIndexes.
+     * Implements FirstChild and LastChild which only vary in which direction
+     * they search.
+     * @param aReversed Controls whether we search forwards or backwards
      * @param _retval   Returned node. Null if no child is found
      * @returns         Errorcode
      */
-    nsresult FirstChildOf(nsINode* aNode,
-                          PRBool aReversed,
-                          PRInt32 aIndexPos,
-                          nsINode** _retval);
+    nsresult FirstChildInternal(PRBool aReversed, nsIDOMNode **_retval);
 
     /*
-     * Finds the following sibling of aNode and returns it. If a sibling
-     * is found, mCurrentNode is set to that node.
-     * @param aNode     Node to start search at.
-     * @param aReversed Reverses search to find the previous sibling
-     *                  instead of next.
-     * @param aIndexPos Position of aNode in mPossibleIndexes.
-     * @param _retval   Returned node. Null if no sibling is found
-     * @returns         Errorcode
-     */
-    nsresult NextSiblingOf(nsINode* aNode,
-                           PRBool aReversed,
-                           PRInt32 aIndexPos,
-                           nsINode** _retval);
-                           
-    /*
-     * Finds the next node in document order of aNode and returns it.
-     * If a node is found, mCurrentNode is set to that node.
-     * @param aNode     Node to start search at.
-     * @param aReversed Reverses search to find the preceding node
-     *                  instead of next.
-     * @param aIndexPos Position of aNode in mPossibleIndexes.
-     * @param _retval   Returned node. Null if no node is found
-     * @returns         Errorcode
-     */
-    nsresult NextInDocumentOrderOf(nsINode* aNode,
-                                   PRBool aReversed,
-                                   PRInt32 aIndexPos,
-                                   nsINode** _retval);
-
-    /*
-     * Finds the first child of aNode after child N and returns it. If a
-     * child is found, mCurrentNode is set to that child
-     * @param aNode     Node to search for children
-     * @param childNum  Child number to start search from. The child with
-     *                  this number is not searched
-     * @param aReversed Reverses search to find the last child instead
-     *                  of first
-     * @param aIndexPos Position of aNode in mPossibleIndexes
+     * Implements NextSibling and PreviousSibling which only vary in which
+     * direction they search.
+     * @param aReversed Controls whether we search forwards or backwards
      * @param _retval   Returned node. Null if no child is found
      * @returns         Errorcode
      */
-    nsresult ChildOf(nsINode* aNode,
-                     PRInt32 childNum,
-                     PRBool aReversed,
-                     PRInt32 aIndexPos,
-                     nsINode** _retval);
-
-    /*
-     * Gets the child index of a node within its parent. Gets a possible index
-     * from mPossibleIndexes to gain speed. If the value in mPossibleIndexes
-     * isn't correct it'll get the index the usual way.
-     * @param aParent   in which to get the index
-     * @param aChild    node to get the index of
-     * @param aIndexPos position in mPossibleIndexes that contains the possible.
-     *                  index
-     * @returns         resulting index
-     */
-    PRInt32 IndexOf(nsINode* aParent,
-                    nsINode* aChild,
-                    PRInt32 aIndexPos);
-
-    /*
-     * Sets the child index at the specified level. It doesn't matter if this
-     * fails since mPossibleIndexes should only be considered a hint
-     * @param aIndexPos   position in mPossibleIndexes to set
-     * @param aChildIndex child index at specified position
-     */
-    void SetChildIndex(PRInt32 aIndexPos, PRInt32 aChildIndex)
-    {
-        if (aIndexPos >= 0 &&
-            mPossibleIndexes.EnsureLengthAtLeast(aIndexPos+1)) {
-            mPossibleIndexes.ElementAt(aIndexPos) = aChildIndex;
-        }
-    }
+    nsresult NextSiblingInternal(PRBool aReversed, nsIDOMNode **_retval);
 };
 
 #endif

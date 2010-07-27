@@ -151,6 +151,7 @@ void nsMenuGroupOwnerX::AttributeChanged(nsIDocument * aDocument,
                                          nsIAtom * aAttribute,
                                          PRInt32 aModType)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   nsChangeObserver* obs = LookupContentChangeObserver(aContent);
   if (obs)
     obs->ObserveAttributeChanged(aDocument, aContent, aAttribute);
@@ -160,8 +161,10 @@ void nsMenuGroupOwnerX::AttributeChanged(nsIDocument * aDocument,
 void nsMenuGroupOwnerX::ContentRemoved(nsIDocument * aDocument,
                                        nsIContent * aContainer,
                                        nsIContent * aChild,
-                                       PRInt32 aIndexInContainer)
+                                       PRInt32 aIndexInContainer,
+                                       nsIContent * aPreviousSibling)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
   if (obs)
     obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
@@ -184,6 +187,7 @@ void nsMenuGroupOwnerX::ContentInserted(nsIDocument * aDocument,
                                         nsIContent * aChild,
                                         PRInt32 aIndexInContainer)
 {
+  nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
   if (obs)
     obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);

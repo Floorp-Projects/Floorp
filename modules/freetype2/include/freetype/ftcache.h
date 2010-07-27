@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache subsystem (specification).                            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by       */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -263,10 +263,10 @@ FT_BEGIN_HEADER
   /*    reference-counted.  A node with a count of~0 might be flushed      */
   /*    out of a full cache whenever a lookup request is performed.        */
   /*                                                                       */
-  /*    If you lookup nodes, you have the ability to `acquire' them, i.e., */
-  /*    to increment their reference count.  This will prevent the node    */
-  /*    from being flushed out of the cache until you explicitly `release' */
-  /*    it (see @FTC_Node_Unref).                                          */
+  /*    If you look up nodes, you have the ability to `acquire' them,      */
+  /*    i.e., to increment their reference count.  This will prevent the   */
+  /*    node from being flushed out of the cache until you explicitly      */
+  /*    `release' it (see @FTC_Node_Unref).                                */
   /*                                                                       */
   /*    See also @FTC_SBitCache_Lookup and @FTC_ImageCache_Lookup.         */
   /*                                                                       */

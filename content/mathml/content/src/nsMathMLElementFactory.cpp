@@ -43,9 +43,9 @@
 
 // MathML Element Factory (declared in nsContentCreatorFunctions.h)
 nsresult
-NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
+NS_NewMathMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 {
-  aNodeInfo->SetIDAttributeAtom(nsGkAtoms::id);
+  aNodeInfo.get()->SetIDAttributeAtom(nsGkAtoms::id);
 
   nsMathMLElement* it = new nsMathMLElement(aNodeInfo);
   NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);

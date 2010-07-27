@@ -125,6 +125,7 @@ LOCAL_INCLUDES = \
 		-I$(topsrcdir)/content/html/content/src \
 		-I$(topsrcdir)/content/html/document/src \
 		-I$(topsrcdir)/layout/style \
+		-I$(topsrcdir)/layout/base \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \
@@ -223,3 +224,5 @@ GARBAGE += \
 		$(NULL)
 
 GARBAGE_DIRS += $(DEPTH)/xpcom/idl-parser/cache
+
+DEFINES += -D_IMPL_NS_LAYOUT

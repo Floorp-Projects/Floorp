@@ -79,6 +79,8 @@ class RefTest(object):
       prefsFile.write('user_pref("reftest.totalChunks", %d);\n' % options.totalChunks)
     if options.thisChunk != None:
       prefsFile.write('user_pref("reftest.thisChunk", %d);\n' % options.thisChunk)
+    if options.logFile != None:
+      prefsFile.write('user_pref("reftest.logFile", "%s");\n' % options.logFile)
 
     for v in options.extraPrefs:
       thispref = v.split("=")
@@ -221,6 +223,12 @@ class ReftestOptions(OptionParser):
                     help = "which chunk to run between 1 and --total-chunks")
     defaults["thisChunk"] = None
 
+    self.add_option("--log-file",
+                    action = "store", type = "string", dest = "logFile",
+                    default = None,
+                    help = "file to log output to in addition to stdout")
+    defaults["logFile"] = None
+ 
     self.set_defaults(**defaults)
 
 def main():
@@ -258,6 +266,9 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     if not 1 <= options.thisChunk <= options.totalChunks:
       print "thisChunk must be between 1 and totalChunks"
       sys.exit(1)
+  
+  if options.logFile:
+    options.logFile = reftest.getFullPath(options.logFile)
 
   sys.exit(reftest.runTests(args[0], options))
   

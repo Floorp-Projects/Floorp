@@ -76,7 +76,7 @@ public:
 
 protected:
 #ifdef MOZILLA_INTERNAL_API
-  nsIAttribute(nsDOMAttributeMap *aAttrMap, nsINodeInfo *aNodeInfo)
+  nsIAttribute(nsDOMAttributeMap *aAttrMap, already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsINode(aNodeInfo), mAttrMap(aAttrMap)
   {
   }

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+div:first-letter{}
+
+</style>
+<script>
+
+function boom()
+{
+  document.execCommand("selectAll", false, null);
+  document.execCommand("decreasefontsize", false, null);
+}
+
+</script>
+</head>
+
+<body onload="boom();" style="font-size: 0;"><div contenteditable="true" style="-moz-column-width: 1px; white-space: pre-line;">
+<span>T</span>his is text</div></body>
+
+</html>

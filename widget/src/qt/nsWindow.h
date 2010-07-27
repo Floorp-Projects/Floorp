@@ -309,8 +309,6 @@ protected:
     gfxASurface*       GetThebesSurface();
 
 private:
-    void               GetToplevelWidget(MozQWidget **aWidget);
-    nsWindow*          GetTopLevelNsWindow();
     void*              SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);
     void               SetDefaultIcon(void);

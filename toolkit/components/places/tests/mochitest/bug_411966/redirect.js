@@ -156,13 +156,6 @@ function checkDB(data){
   var referrer = this.mChannel.QueryInterface(Ci.nsIHttpChannel).referrer;
   ghist.addURI(this.mChannel.URI, true, true, referrer);
 
-  // We have to wait since we use lazy_add, lazy_timer is 3s
-  setTimeout("checkDBOnTimeout()", 4000);
-}
-
-function checkDBOnTimeout() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   // Get all pages visited from the original typed one
   var sql = "SELECT url FROM moz_historyvisits_view " +
             "JOIN moz_places_view h ON h.id = place_id " +

@@ -55,6 +55,7 @@ CPP_UNIT_TESTS = \
   test_binding_params.cpp \
   test_true_async.cpp \
   test_unlock_notify.cpp \
+  test_service_init_background_thread.cpp \
   $(NULL)
 
 ifdef MOZ_DEBUG

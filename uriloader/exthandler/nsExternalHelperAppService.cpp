@@ -544,6 +544,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { VIDEO_WEBM, "webm", "Web Media Video" },
   { AUDIO_WEBM, "webm", "Web Media Audio" },
 #endif
+  { VIDEO_RAW, "yuv", "Raw YUV Video" },
   { AUDIO_WAV, "wav", "Waveform Audio" },
 };
 

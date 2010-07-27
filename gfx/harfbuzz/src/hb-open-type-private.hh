@@ -228,7 +228,7 @@ struct hb_sanitize_context_t
   inline bool check_array (const void *base, unsigned int record_size, unsigned int len) const
   {
     const char *p = (const char *) base;
-    bool overflows = len >= ((unsigned int) -1) / record_size;
+    bool overflows = record_size > 0 && len >= ((unsigned int) -1) / record_size;
 
     if (HB_DEBUG_SANITIZE && (int) this->debug_depth < (int) HB_DEBUG_SANITIZE)
       fprintf (stderr, "SANITIZE(%p) %-*d-> array [%p..%p] (%d*%d=%ld bytes) in [%p..%p] -> %s\n", \
