@@ -116,6 +116,7 @@ typedef struct _nsCocoaWindowList {
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
 - (BOOL)isContextMenu;
 - (void)setIsContextMenu:(BOOL)flag;
+- (BOOL)canBecomeMainWindow;
 
 @end
 
@@ -221,7 +222,9 @@ public:
     NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE);
     virtual nsIntPoint WidgetToScreenOffset();
-    
+    virtual nsIntPoint GetClientOffset();
+    virtual nsIntSize ClientToWindowSize(const nsIntSize& aClientSize);
+
     virtual void* GetNativeData(PRUint32 aDataType) ;
 
     NS_IMETHOD              ConstrainPosition(PRBool aAllowSlop,
