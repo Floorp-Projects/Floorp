@@ -515,7 +515,7 @@ window.Utils = {
       this.consoleService = Cc["@mozilla.org/consoleservice;1"]
           .getService(Components.interfaces.nsIConsoleService);
     }
-    
+
     var text = this.expandArgumentsForLog(arguments);
     this.consoleService.logStringMessage(text);
   },
@@ -524,7 +524,6 @@ window.Utils = {
   // Function: error
   // Prints the given arguments to the JavaScript error console as an error.
   // Pass as many arguments as you want, it'll print them all.
-  // TODO: Does this still work?
   error: function() {
     var text = this.expandArgumentsForLog(arguments);
     Cu.reportError('tabcandy error: ' + text);
@@ -550,7 +549,7 @@ window.Utils = {
   // Prints a stack trace along with label (as a console message) if condition is false.
   assert: function Utils_assert(label, condition) {
     if (!condition) {
-      var text;
+      let text;
       if (typeof(label) == 'undefined')
         text = 'badly formed assert';
       else
@@ -565,7 +564,7 @@ window.Utils = {
   // Throws label as an exception if condition is false.
   assertThrow: function(label, condition) {
     if (!condition) {
-      var text;
+      let text;
       if (typeof(label) == 'undefined')
         text = 'badly formed assert';
       else
@@ -582,46 +581,36 @@ window.Utils = {
   // Function: expandObject
   // Prints the given object to a string, including all of its properties.
   expandObject: function(obj) {
-      var s = obj + ' = {';
-      for (prop in obj) {
-        var value;
-        try {
-          value = obj[prop];
-        } catch(e) {
-          value = '[!!error retrieving property]';
-        }
-
-        s += prop + ': ';
-        if (typeof(value) == 'string')
-          s += '\'' + value + '\'';
-        else if (typeof(value) == 'function')
-          s += 'function';
-        else
-          s += value;
-
-        s += ", ";
+    var s = obj + ' = {';
+    for (let prop in obj) {
+      let value;
+      try {
+        value = obj[prop];
+      } catch(e) {
+        value = '[!!error retrieving property]';
       }
-      return s + '}';
-    },
+
+      s += prop + ': ';
+      if (typeof(value) == 'string')
+        s += '\'' + value + '\'';
+      else if (typeof(value) == 'function')
+        s += 'function';
+      else
+        s += value;
+
+      s += ', ';
+    }
+    return s + '}';
+  },
 
   // ----------
   // Function: expandArgumentsForLog
   // Expands all of the given args (an array) into a single string.
   expandArgumentsForLog: function(args) {
-    var s = '';
-    var count = args.length;
-    var a;
-    for (a = 0; a < count; a++) {
-      var arg = args[a];
-      if (typeof(arg) == 'object')
-        arg = this.expandObject(arg);
-
-      s += arg;
-      if (a < count - 1)
-        s += '; ';
-    }
-
-    return s;
+    var that = this;
+    return Array.map(args, function(arg) {
+      return typeof(arg) == 'object' ? that.expandObject(arg) : arg;
+    }).join('; ');
   },
 
   // ___ Misc
@@ -630,11 +619,7 @@ window.Utils = {
   // Function: isRightClick
   // Given a DOM mouse event, returns true if it was for the right mouse button.
   isRightClick: function(event) {
-    if (event.which)
-      return (event.which == 3);
-    if (event.button)
-      return (event.button == 2);
-    return false;
+    return event.button == 2;
   },
 
   // ----------
@@ -683,7 +668,6 @@ window.Utils = {
   // Check to see if an object is a plain object (created using "{}" or "new Object").
   isPlainObject: function( obj ) {
     // Must be an Object.
-    // Because of IE, we also have to check the presence of the constructor property.
     // Make sure that DOM nodes and window objects don't pass through, as well
     if ( !obj || Object.prototype.toString.call(obj) !== "[object Object]" 
         || obj.nodeType || obj.setInterval ) {
@@ -692,7 +676,7 @@ window.Utils = {
 
     // Not own constructor property must be Object
     const hasOwnProperty = Object.prototype.hasOwnProperty;
-    
+
     if ( obj.constructor
       && !hasOwnProperty.call(obj, "constructor")
       && !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf") ) {
@@ -707,7 +691,7 @@ window.Utils = {
 
     return key === undefined || hasOwnProperty.call( obj, key );
   },
-  
+
   // ----------
   // Function: isEmptyObject
   // Returns true if the given object has no members.
@@ -729,7 +713,7 @@ window.Utils = {
     }
     return value;
   },
-  
+
   // ----------
   // Function: merge
   // Merge two arrays and return the result.
@@ -737,7 +721,7 @@ window.Utils = {
     var i = first.length, j = 0;
 
     if ( typeof second.length === "number" ) {
-      for ( var l = second.length; j < l; j++ ) {
+      for ( let l = second.length; j < l; j++ ) {
         first[ i++ ] = second[ j ];
       }
     } else {
@@ -750,14 +734,14 @@ window.Utils = {
 
     return first;
   },
-  
+
   // ----------
   // Function: extend
   // Pass several objects in and it will combine them all into the first object and return it.
   extend: function() {
     // copy reference to target object
     var target = arguments[0] || {}, i = 1, length = arguments.length, options, name, src, copy;
-  
+
     // Deep copy is not supported
     if ( typeof target === "boolean" ) {
       this.assert("The first argument of extend cannot be a boolean."
@@ -776,7 +760,7 @@ window.Utils = {
     if (typeof target != "object" && typeof target != "function") {
       target = {};
     }
-  
+
     for ( ; i < length; i++ ) {
       // Only deal with non-null/undefined values
       if ( (options = arguments[ i ]) != null ) {
@@ -784,21 +768,21 @@ window.Utils = {
         for ( name in options ) {
           src = target[ name ];
           copy = options[ name ];
-  
+
           // Prevent never-ending loop
           if ( target === copy )
             continue;
-  
+
           if ( copy !== undefined )
             target[ name ] = copy;
         }
       }
     }
-  
+
     // Return the modified object
     return target;
   },
-  
+
   // ----------
   // Function: timeout
   // wraps setTimeout with try/catch
