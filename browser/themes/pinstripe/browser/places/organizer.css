@@ -108,10 +108,8 @@
   background-image: @toolbarbuttonInactiveBackgroundImage@;
 }
 
-#placesToolbar > toolbarbutton[disabled="true"] > .toolbarbutton-icon,
-#placesToolbar > toolbarbutton > .toolbarbutton-icon:-moz-window-inactive,
-#placesToolbar > toolbarbutton > .toolbarbutton-menu-dropmarker:-moz-window-inactive {
-  opacity: 0.5; /* remove the second and third selector when we support click-through (bug 392188) */
+#placesToolbar > toolbarbutton[disabled="true"] > .toolbarbutton-icon {
+  opacity: 0.5;
 }
 
 #placesToolbar > toolbarbutton > .toolbarbutton-icon {
@@ -173,12 +171,6 @@
 /* maintenance button */
 #maintenanceButton {
   -moz-image-region: rect(0px, 80px, 16px, 64px);
-}
-
-/* Search field */
-
-#searchFilter:-moz-window-inactive {
-  opacity: 0.7; /* remove this when we support click-through (bug 392188) */
 }
 
 /* Root View */
