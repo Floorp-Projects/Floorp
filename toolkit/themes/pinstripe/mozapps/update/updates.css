@@ -58,7 +58,6 @@ wizardpage {
 }
 
 .wizard-buttons button:-moz-window-inactive {
-  color: @toolbarbuttonInactiveFontColor@ !important; /* remove this when we support click-through, bug 392188 */
   border-color: @toolbarbuttonInactiveBorderColor@;
   background-image: @toolbarbuttonInactiveBackgroundImage@;
 }
