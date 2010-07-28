@@ -1324,25 +1324,8 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_TRACE)
           {
-            if (analysis[PC].nincoming > 0) {
-                RegisterID cxreg = frame.allocReg();
-                masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxreg);
-#ifdef JS_THREADSAFE
-                masm.loadPtr(Address(cxreg, offsetof(JSContext, thread)), cxreg);
-                Address flag(cxreg, offsetof(JSThread, data.interruptFlags));
-#else
-                masm.loadPtr(Address(cxreg, offsetof(JSContext, runtime)), cxreg);
-                Address flag(cxreg, offsetof(JSRuntime, threadData.interruptFlags));
-#endif
-                Jump jump = masm.branchTest32(Assembler::NonZero, flag);
-                frame.freeReg(cxreg);
-                stubcc.linkExit(jump, Uses(0));
-                stubcc.leave();
-                stubcc.masm.move(ImmPtr(PC), Registers::ArgReg1);
-                stubcc.call(stubs::Interrupt);
-                ADD_CALLSITE(true);
-                stubcc.rejoin(Changes(0));
-            }
+            if (analysis[PC].nincoming > 0)
+                interruptCheckHelper();
           }
           END_CASE(JSOP_TRACE)
 
@@ -1632,8 +1615,33 @@ mjit::Compiler::stubCall(void *ptr)
 }
 
 void
+mjit::Compiler::interruptCheckHelper()
+{
+    RegisterID cxreg = frame.allocReg();
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, cx)), cxreg);
+#ifdef JS_THREADSAFE
+    masm.loadPtr(Address(cxreg, offsetof(JSContext, thread)), cxreg);
+    Address flag(cxreg, offsetof(JSThread, data.interruptFlags));
+#else
+    masm.loadPtr(Address(cxreg, offsetof(JSContext, runtime)), cxreg);
+    Address flag(cxreg, offsetof(JSRuntime, threadData.interruptFlags));
+#endif
+    Jump jump = masm.branchTest32(Assembler::NonZero, flag);
+    frame.freeReg(cxreg);
+    stubcc.linkExit(jump, Uses(0));
+    stubcc.leave();
+    stubcc.masm.move(ImmPtr(PC), Registers::ArgReg1);
+    stubcc.call(stubs::Interrupt);
+    ADD_CALLSITE(true);
+    stubcc.rejoin(Changes(0));
+}
+
+void
 mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
 {
+    /* Check for interrupts on function call */
+    interruptCheckHelper();
+
     FrameEntry *fe = frame.peek(-int(argc + 2));
     bool typeKnown = fe->isTypeKnown();
 
