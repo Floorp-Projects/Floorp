@@ -1611,15 +1611,17 @@ PluginModuleChild::AllocPPluginIdentifier(const nsCString& aString,
 
     if (aString.IsVoid()) {
         newActor = new PluginIdentifierChildInt(aInt);
-        if (mIntIdentifiers.Get(aInt, &existingActor)) {
+        if (mIntIdentifiers.Get(aInt, &existingActor))
             newActor->SetCanonicalIdentifier(existingActor);
-        }
+        else
+            mIntIdentifiers.Put(aInt, newActor);
     }
     else {
         newActor = new PluginIdentifierChildString(aString);
-        if (mStringIdentifiers.Get(aString, &existingActor)) {
+        if (mStringIdentifiers.Get(aString, &existingActor))
             newActor->SetCanonicalIdentifier(existingActor);
-        }
+        else
+            mStringIdentifiers.Put(aString, newActor);
     }
     return newActor;
 }
