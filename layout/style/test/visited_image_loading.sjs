@@ -20,6 +20,30 @@ function handleRequest(request, response)
       response.setHeader("Location", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12NgYPgPAAEDAQDZqt2zAAAAAElFTkSuQmCC");
       response.setHeader("Content-Type", "text/plain", false);
       break;
+
+    case "waitforresult":
+      response.setHeader("Content-Type", "application/ecmascript", false);
+      response.write("var start = Date.now();\n");
+      // fall through!
+
+    case "waitforresult-internal":
+      response.setHeader("Content-Type", "application/ecmascript", false);
+      response.write("if ('" + getState("1l") + "' == 'load' && '" +
+                     getState("1v") + "' == '' && '" +
+                     getState("2l") + "' == 'load' && '" +
+                     getState("2v") + "' == '') { \n");
+      response.write("setTimeout(function() {\n");
+      response.write("var s = document.createElement('script');\n");
+      response.write("s.src = 'visited_image_loading.sjs?result';\n");
+      response.write("document.body.appendChild(s);");
+      response.write("}, Math.max(100, 2 * (Date.now() - start)));\n");
+      response.write("} else setTimeout(function() {\n");
+      response.write("var s = document.createElement('script');\n");
+      response.write("s.src = 'visited_image_loading.sjs?waitforresult-internal';\n");
+      response.write("document.body.appendChild(s);");
+      response.write("}, 10);\n");
+      break;
+
     case "result":
       response.setHeader("Content-Type", "application/ecmascript", false);
       response.write("is('" + getState("1l") +
