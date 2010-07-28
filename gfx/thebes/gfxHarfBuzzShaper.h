@@ -69,6 +69,9 @@ public:
                          hb_codepoint_t glyph,
                          hb_glyph_metrics_t *metrics) const;
 
+    hb_position_t GetKerning(PRUint16 aFirstGlyph,
+                             PRUint16 aSecondGlyph) const;
+
 protected:
     // extract glyphs from HarfBuzz buffer and store into the gfxTextRun
     nsresult SetGlyphsFromRun(gfxContext *aContext,
@@ -89,6 +92,14 @@ protected:
 
     // language to use for shaping, derived from the style's language
     hb_language_t      mHBLanguage;
+
+    // Following table references etc are declared "mutable" because the
+    // harfbuzz callback functions take a const ptr to the shaper, but
+    // wish to cache tables here to avoid repeatedly looking them up
+    // in the font.
+
+    // Old-style TrueType kern table, if we're not doing GPOS kerning
+    mutable hb_blob_t *mKernTable;
 
     // Cached copy of the hmtx table and numLongMetrics field from hhea,
     // for use when looking up glyph metrics; initialized to 0 by the
