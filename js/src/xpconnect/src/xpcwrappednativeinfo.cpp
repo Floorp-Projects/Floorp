@@ -167,7 +167,6 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
     // This is a method or attribute - we'll be needing a function object
 
     intN argc;
-    intN flags;
     JSNative callback;
 
     if(IsMethod())
@@ -181,15 +180,10 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
         if(argc && info->GetParam((uint8)(argc-1)).IsRetval())
             argc-- ;
 
-        flags = 0;
         callback = XPC_WN_CallMethod;
     }
     else
     {
-        if(IsWritableAttribute())
-            flags = JSFUN_GETTER | JSFUN_SETTER;
-        else
-            flags = JSFUN_GETTER;
         argc = 0;
         callback = XPC_WN_GetterSetter;
     }
@@ -208,7 +202,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
     // Switching contexts, suspend the old and enter the new request.
     {
         JSAutoRequest req(cx);
-        fun = JS_NewFunction(cx, callback, argc, flags, nsnull, memberName);
+        fun = JS_NewFunction(cx, callback, argc, 0, nsnull, memberName);
     }
 
     if(!fun)
