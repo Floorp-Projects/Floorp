@@ -48,137 +48,199 @@
 #include "nsDebug.h"
 
 nsresult
-NS_NewSVGAElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGAElement(nsIContent **aResult,
+                  already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGAltGlyphElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGAltGlyphElement(nsIContent **aResult,
+                         already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGPolylineElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGPolylineElement(nsIContent **aResult,
+                         already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGPolygonElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGPolygonElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGCircleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGCircleElement(nsIContent **aResult,
+                       already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGEllipseElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGEllipseElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGLineElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGLineElement(nsIContent **aResult,
+                     already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGRectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGRectElement(nsIContent **aResult,
+                     already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGGElement(nsIContent **aResult,
+                  already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo,
+NS_NewSVGSVGElement(nsIContent **aResult,
+                    already_AddRefed<nsINodeInfo> aNodeInfo,
                     PRUint32 aFromParser);
 nsresult
-NS_NewSVGForeignObjectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGForeignObjectElement(nsIContent **aResult,
+                              already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGPathElement(nsIContent **aResult,
+                     already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGTextElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGTextElement(nsIContent **aResult,
+                     already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGTSpanElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGTSpanElement(nsIContent **aResult,
+                      already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGImageElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGImageElement(nsIContent **aResult,
+                      already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGStyleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGStyleElement(nsIContent **aResult,
+                      already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGLinearGradientElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGLinearGradientElement(nsIContent **aResult,
+                               already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGMetadataElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGMetadataElement(nsIContent **aResult,
+                         already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGRadialGradientElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGRadialGradientElement(nsIContent **aResult,
+                               already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGStopElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGStopElement(nsIContent **aResult,
+                     already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGDefsElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGDefsElement(nsIContent **aResult,
+                     already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGDescElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGDescElement(nsIContent **aResult,
+                     already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGScriptElement(nsIContent **aResult, nsINodeInfo *aNodeInfo,
+NS_NewSVGScriptElement(nsIContent **aResult,
+                       already_AddRefed<nsINodeInfo> aNodeInfo,
                        PRUint32 aFromParser);
 nsresult
-NS_NewSVGUseElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGUseElement(nsIContent **aResult,
+                    already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGSymbolElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGSymbolElement(nsIContent **aResult,
+                       already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGMarkerElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGMarkerElement(nsIContent **aResult,
+                       already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGTitleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGTitleElement(nsIContent **aResult,
+                      already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGClipPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGClipPathElement(nsIContent **aResult,
+                         already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGTextPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGTextPathElement(nsIContent **aResult,
+                         already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFilterElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFilterElement(nsIContent **aResult,
+                       already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEBlendElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEBlendElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEColorMatrixElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEColorMatrixElement(nsIContent **aResult,
+                              already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEComponentTransferElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEComponentTransferElement(nsIContent **aResult,
+                                    already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFECompositeElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFECompositeElement(nsIContent **aResult,
+                            already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEFuncRElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEFuncRElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEFuncGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEFuncGElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEFuncBElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEFuncBElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEFuncAElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEFuncAElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEGaussianBlurElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEGaussianBlurElement(nsIContent **aResult,
+                               already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEMergeElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEMergeElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEMergeNodeElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEMergeNodeElement(nsIContent **aResult,
+                            already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEMorphologyElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEMorphologyElement(nsIContent **aResult,
+                             already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEOffsetElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEOffsetElement(nsIContent **aResult,
+                         already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGPatternElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGPatternElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGMaskElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGMaskElement(nsIContent **aResult,
+                     already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEFloodElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEFloodElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFETileElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFETileElement(nsIContent **aResult,
+                       already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFETurbulenceElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFETurbulenceElement(nsIContent **aResult,
+                             already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGSwitchElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGSwitchElement(nsIContent **aResult,
+                       already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEConvolveMatrixElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEConvolveMatrixElement(nsIContent **aResult,
+                                 already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEDistantLightElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEDistantLightElement(nsIContent **aResult,
+                               already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEPointLightElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEPointLightElement(nsIContent **aResult,
+                             already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFESpotLightElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFESpotLightElement(nsIContent **aResult,
+                            already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEDiffuseLightingElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEDiffuseLightingElement(nsIContent **aResult,
+                                  already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFESpecularLightingElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
+                                   already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEImageElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEImageElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGFEDisplacementMapElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
+                                  already_AddRefed<nsINodeInfo> aNodeInfo);
 
 #ifdef MOZ_SMIL
 nsresult
-NS_NewSVGAnimateElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGAnimateElement(nsIContent **aResult,
+                        already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGAnimateTransformElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGAnimateTransformElement(nsIContent **aResult,
+                                 already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGAnimateMotionElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGAnimateMotionElement(nsIContent **aResult,
+                              already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGMpathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGMpathElement(nsIContent **aResult,
+                      already_AddRefed<nsINodeInfo> aNodeInfo);
 nsresult
-NS_NewSVGSetElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGSetElement(nsIContent **aResult,
+                    already_AddRefed<nsINodeInfo> aNodeInfo);
 #endif // MOZ_SMIL
 
 nsresult
-NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
+NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
                  PRUint32 aFromParser)
 {
   NS_PRECONDITION(NS_SVGEnabled(),
@@ -187,11 +249,11 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
   static const char kSVGStyleSheetURI[] = "resource://gre/res/svg.css";
 
   // this bit of code is to load svg.css on demand
-  nsIDocument *doc = aNodeInfo->GetDocument();
+  nsIDocument *doc = aNodeInfo.get()->GetDocument();
   if (doc)
     doc->EnsureCatalogStyleSheet(kSVGStyleSheetURI);
 
-  nsIAtom *name = aNodeInfo->NameAtom();
+  nsIAtom *name = aNodeInfo.get()->NameAtom();
   
   if (name == nsGkAtoms::a)
     return NS_NewSVGAElement(aResult, aNodeInfo);

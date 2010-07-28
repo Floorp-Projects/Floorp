@@ -209,8 +209,10 @@ public:
   // media element when it is restored from the bfcache, or when we need
   // to stop throttling the download. Call on the main thread only.
   // The download will only actually resume once as many Resume calls
-  // have been made as Suspend calls.
-  virtual void Resume() = 0;
+  // have been made as Suspend calls. When aForceBuffering is PR_TRUE,
+  // we force the decoder to go into buffering state before resuming
+  // playback.
+  virtual void Resume(PRBool aForceBuffering) = 0;
 
   // Returns a weak reference to the media element we're decoding for,
   // if it's available.
@@ -233,6 +235,10 @@ public:
   void SetVideoData(const gfxIntSize& aSize,
                     float aPixelAspectRatio,
                     Image* aImage);
+
+  // Returns PR_TRUE if we can play the entire media through without stopping
+  // to buffer, given the current download and playback rates.
+  PRBool CanPlayThrough();
 
 protected:
 

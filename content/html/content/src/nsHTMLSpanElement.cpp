@@ -46,7 +46,7 @@ class nsHTMLSpanElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLElement
 {
 public:
-  nsHTMLSpanElement(nsINodeInfo *aNodeInfo);
+  nsHTMLSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLSpanElement();
 
   // nsISupports
@@ -62,13 +62,15 @@ public:
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Span)
 
 
-nsHTMLSpanElement::nsHTMLSpanElement(nsINodeInfo *aNodeInfo)
+nsHTMLSpanElement::nsHTMLSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -82,7 +84,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLSpanElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, nsGenericElement)
 
 
-DOMCI_DATA(HTMLSpanElement, nsHTMLSpanElement)
+DOMCI_NODE_DATA(HTMLSpanElement, nsHTMLSpanElement)
 
 // QueryInterface implementation for nsHTMLSpanElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLSpanElement)
@@ -100,19 +102,21 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLSpanElement)
 class nsHTMLUnknownElement : public nsHTMLSpanElement
 {
 public:
-  nsHTMLUnknownElement(nsINodeInfo *aNodeInfo);
+  nsHTMLUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
-DOMCI_DATA(HTMLUnknownElement, nsHTMLUnknownElement)
+DOMCI_NODE_DATA(HTMLUnknownElement, nsHTMLUnknownElement)
 
 NS_INTERFACE_MAP_BEGIN(nsHTMLUnknownElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLUnknownElement)
 NS_INTERFACE_MAP_END_INHERITING(nsHTMLSpanElement)
 
-nsHTMLUnknownElement::nsHTMLUnknownElement(nsINodeInfo *aNodeInfo)
+nsHTMLUnknownElement::nsHTMLUnknownElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsHTMLSpanElement(aNodeInfo)
 {
 }

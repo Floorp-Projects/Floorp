@@ -422,46 +422,79 @@ gfxXlibSurface::DepthOfVisual(const Screen* screen, const Visual* visual)
 }
     
 /* static */
+Visual*
+gfxXlibSurface::FindVisual(Screen *screen, gfxImageFormat format)
+{
+    int depth;
+    unsigned long red_mask, green_mask, blue_mask;
+    switch (format) {
+        case ImageFormatARGB32:
+            depth = 32;
+            red_mask = 0xff0000;
+            green_mask = 0xff00;
+            blue_mask = 0xff;
+            break;
+        case ImageFormatRGB24:
+            depth = 24;
+            red_mask = 0xff0000;
+            green_mask = 0xff00;
+            blue_mask = 0xff;
+            break;
+        case ImageFormatRGB16_565:
+            depth = 16;
+            red_mask = 0xf800;
+            green_mask = 0x7e0;
+            blue_mask = 0x1f;
+            break;
+        case ImageFormatA8:
+        case ImageFormatA1:
+        default:
+            return NULL;
+    }
+
+    for (int d = 0; d < screen->ndepths; d++) {
+        const Depth& d_info = screen->depths[d];
+        if (d_info.depth != depth)
+            continue;
+
+        for (int v = 0; v < d_info.nvisuals; v++) {
+            Visual* visual = &d_info.visuals[v];
+
+            if (visual->c_class == TrueColor &&
+                visual->red_mask == red_mask &&
+                visual->green_mask == green_mask &&
+                visual->blue_mask == blue_mask)
+                return visual;
+        }
+    }
+
+    return NULL;
+}
+
+/* static */
 XRenderPictFormat*
 gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
 {
     switch (format) {
         case ImageFormatARGB32:
             return XRenderFindStandardFormat (dpy, PictStandardARGB32);
-            break;
         case ImageFormatRGB24:
             return XRenderFindStandardFormat (dpy, PictStandardRGB24);
-            break;
         case ImageFormatRGB16_565: {
             // PictStandardRGB16_565 is not standard Xrender format
             // we should try to find related visual
             // and find xrender format by visual
-            Visual *visual = NULL;
-            Screen *screen = DefaultScreenOfDisplay(dpy);
-            int j;
-            for (j = 0; j < screen->ndepths; j++) {
-                Depth *d = &screen->depths[j];
-                if (d->depth == 16 && d->nvisuals && &d->visuals[0]) {
-                    if (d->visuals[0].red_mask   == 0xf800 &&
-                        d->visuals[0].green_mask == 0x7e0 &&
-                        d->visuals[0].blue_mask  == 0x1f)
-                        visual = &d->visuals[0];
-                    break;
-                }
-            }
+            Visual *visual = FindVisual(DefaultScreenOfDisplay(dpy), format);
             if (!visual)
                 return NULL;
             return XRenderFindVisualFormat(dpy, visual);
-            break;
         }
         case ImageFormatA8:
             return XRenderFindStandardFormat (dpy, PictStandardA8);
-            break;
         case ImageFormatA1:
             return XRenderFindStandardFormat (dpy, PictStandardA1);
-            break;
         default:
-            return NULL;
+            break;
     }
 
     return (XRenderPictFormat*)NULL;

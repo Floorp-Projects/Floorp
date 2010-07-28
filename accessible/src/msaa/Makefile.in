@@ -51,7 +51,6 @@ CPPSRCS = \
   nsAccessibleWrap.cpp \
   nsTextAccessibleWrap.cpp \
   nsDocAccessibleWrap.cpp \
-  nsRootAccessibleWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
   nsARIAGridAccessibleWrap.cpp \
   nsXULMenuAccessibleWrap.cpp \

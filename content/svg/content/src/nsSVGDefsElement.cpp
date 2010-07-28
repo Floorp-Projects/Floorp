@@ -46,8 +46,8 @@ class nsSVGDefsElement : public nsSVGDefsElementBase,
 {
 protected:
   friend nsresult NS_NewSVGDefsElement(nsIContent **aResult,
-                                    nsINodeInfo *aNodeInfo);
-  nsSVGDefsElement(nsINodeInfo *aNodeInfo);
+                                       already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGDefsElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   
 public:
   // interfaces:
@@ -64,6 +64,8 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -79,7 +81,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Defs)
 NS_IMPL_ADDREF_INHERITED(nsSVGDefsElement,nsSVGDefsElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGDefsElement,nsSVGDefsElementBase)
 
-DOMCI_DATA(SVGDefsElement, nsSVGDefsElement)
+DOMCI_NODE_DATA(SVGDefsElement, nsSVGDefsElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGDefsElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGDefsElement, nsIDOMNode, nsIDOMElement,
@@ -90,7 +92,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGDefsElement::nsSVGDefsElement(nsINodeInfo *aNodeInfo)
+nsSVGDefsElement::nsSVGDefsElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGDefsElementBase(aNodeInfo)
 {
 

@@ -1769,8 +1769,6 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) fputs(" " #flag, stdout);
 
             SHOW_FLAG(LAMBDA);
-            SHOW_FLAG(SETTER);
-            SHOW_FLAG(GETTER);
             SHOW_FLAG(BOUND_METHOD);
             SHOW_FLAG(HEAVYWEIGHT);
             SHOW_FLAG(THISP_STRING);

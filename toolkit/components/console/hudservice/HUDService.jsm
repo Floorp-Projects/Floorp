@@ -24,6 +24,7 @@
  *   David Dahl <ddahl@mozilla.com> (original author)
  *   Rob Campbell <rcampbell@mozilla.com>
  *   Johnathan Nightingale <jnightingale@mozilla.com>
+ *   Patrick Walton <pcwalton@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -758,8 +759,6 @@ HUD_SERVICE.prototype =
     switch (aMessage.origin) {
       case "network":
       case "HUDConsole":
-        this.logHUDMessage(aMessage, aConsoleNode, aMessageNode, filterState, filterString);
-        break;
       case "console-listener":
         this.logHUDMessage(aMessage, aConsoleNode, aMessageNode, filterState, filterString);
         break;
@@ -1125,8 +1124,14 @@ HUD_SERVICE.prototype =
     var _msgLogLevel = this.scriptMsgLogLevel[aActivityObject.flags];
     var msgLogLevel = this.getStr(_msgLogLevel);
 
+    var logLevel = "warn";
+
+    if (aActivityObject.flags in this.scriptErrorFlags) {
+      logLevel = this.scriptErrorFlags[aActivityObject.flags];
+    }
+
     // check if we should be logging this message:
-    var filterState = this.getFilterState(hudId, msgLogLevel);
+    var filterState = this.getFilterState(hudId, logLevel);
 
     if (!filterState) {
       // Ignore log message
@@ -1141,12 +1146,6 @@ HUD_SERVICE.prototype =
       hudId: hudId,
     };
 
-    try {
-      var logLevel = this.scriptErrorFlags[aActivityObject.flags];
-    }
-    catch (ex) {
-      var logLevel = "warn";
-    }
     var lineColSubs = [aActivityObject.columnNumber,
                        aActivityObject.lineNumber];
     var lineCol = this.getFormatStr("errLineCol", lineColSubs);
@@ -1524,6 +1523,7 @@ function HeadsUpDisplay(aConfig)
     this.contentWindow = aConfig.contentWindow;
     this.uriSpec = aConfig.contentWindow.location.href;
     this.reattachConsole();
+    this.HUDBox.querySelectorAll(".jsterm-input-node")[0].focus();
     return;
   }
 
@@ -1629,6 +1629,7 @@ function HeadsUpDisplay(aConfig)
   // create the JSTerm input element
   try {
     this.createConsoleInput(this.contentWindow, this.consoleWrap, this.outputNode);
+    this.HUDBox.querySelectorAll(".jsterm-input-node")[0].focus();
   }
   catch (ex) {
     Cu.reportError(ex);
@@ -1732,15 +1733,19 @@ HeadsUpDisplay.prototype = {
   makeHTMLNode:
   function HUD_makeHTMLNode(aTag)
   {
-    try {
-      return this.HTMLFactory(aTag);
+    var element;
+
+    if (this.HTMLFactory) {
+      element = this.HTMLFactory(aTag);
     }
-    catch (ex) {
+    else {
       var ns = ELEMENT_NS;
       var nsUri = ELEMENT_NS_URI;
       var tag = ns + aTag;
-      return this.chromeDocument.createElementNS(nsUri, tag);
+      element = this.chromeDocument.createElementNS(nsUri, tag);
     }
+
+    return element;
   },
 
   /**
@@ -1802,6 +1807,7 @@ HeadsUpDisplay.prototype = {
     this.filterBox = this.makeXULNode("textbox");
     this.filterBox.setAttribute("class", "hud-filter-box");
     this.filterBox.setAttribute("hudId", this.hudId);
+    this.filterBox.setAttribute("placeholder", this.getStr("stringFilter"));
 
     this.filterClearButton = this.makeXULNode("button");
     this.filterClearButton.setAttribute("class", "hud-filter-clear");
@@ -2019,7 +2025,7 @@ function HUDConsole(aHeadsUpDisplay)
       logLevel: aLevel,
       hudId: hud.hudId,
       message: message,
-      timeStamp: ts,
+      timestamp: ts,
       origin: "HUDConsole",
     };
 

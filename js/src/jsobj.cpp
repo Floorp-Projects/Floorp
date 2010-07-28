@@ -668,7 +668,6 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
              * end so that we can put "get" in front of the function definition.
              */
             if (gsop[j] && IsFunctionObject(val[j])) {
-                JSFunction *fun = js_ValueToFunction(cx, &val[j], JSV2F_SEARCH_STACK);
                 const jschar *start = vchars;
                 const jschar *end = vchars + vlength;
 
@@ -676,18 +675,6 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
                 if (vchars[0] == '(') {
                     vchars++;
                     parenChomp = 1;
-                }
-
-                /*
-                 * Try to jump "getter" or "setter" keywords, if we suspect
-                 * they might appear here.  This code can be confused by people
-                 * defining Function.prototype.toString, so let's be cautious.
-                 */
-                if (JSFUN_GETTER_TEST(fun->flags) || JSFUN_SETTER_TEST(fun->flags)) {
-                    /* skip "getter/setter" */
-                    const jschar *tmp = js_strchr_limit(vchars, ' ', end);
-                    if (tmp)
-                        vchars = tmp + 1;
                 }
 
                 /* Try to jump "function" keyword. */
@@ -2617,7 +2604,7 @@ js_Object_tn(JSContext* cx, JSObject* proto)
 
 JS_DEFINE_TRCINFO_1(js_Object,
     (2, (extern, CONSTRUCTOR_RETRY, js_Object_tn, CONTEXT, CALLEE_PROTOTYPE, 0,
-         nanojit::ACC_STORE_ANY)))
+         nanojit::ACCSET_STORE_ANY)))
 
 JSObject* FASTCALL
 js_NonEmptyObject(JSContext* cx, JSObject* proto)
@@ -2642,7 +2629,7 @@ js_NonEmptyObject(JSContext* cx, JSObject* proto)
 }
 
 JS_DEFINE_CALLINFO_2(extern, CONSTRUCTOR_RETRY, js_NonEmptyObject, CONTEXT, CALLEE_PROTOTYPE, 0,
-                     nanojit::ACC_STORE_ANY)
+                     nanojit::ACCSET_STORE_ANY)
 
 JSObject* FASTCALL
 js_NewInstance(JSContext *cx, Class *clasp, JSObject *ctor)
@@ -2702,7 +2689,7 @@ js_NewInstance(JSContext *cx, Class *clasp, JSObject *ctor)
 }
 
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CLASS, OBJECT, 0,
-                     nanojit::ACC_STORE_ANY)
+                     nanojit::ACCSET_STORE_ANY)
 
 #else  /* !JS_TRACER */
 
@@ -3422,9 +3409,12 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         /*
          * Remember the class this function is a constructor for so that
          * we know to create an object of this class when we call the
-         * constructor.
+         * constructor. Arrays are a special case. We have a slow and a
+         * dense array. While the prototype is a slow array (it has
+         * named properties), we want to make dense arrays with the
+         * constructor, so we have to monkey patch that here.
          */
-        FUN_CLASP(fun) = clasp;
+        FUN_CLASP(fun) = (clasp == &js_SlowArrayClass) ? &js_ArrayClass : clasp;
 
         /*
          * Optionally construct the prototype object, before the class has

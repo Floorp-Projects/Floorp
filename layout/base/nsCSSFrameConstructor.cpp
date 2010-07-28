@@ -1560,7 +1560,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
                                                          kNameSpaceID_XHTML);
 
     nsCOMPtr<nsIContent> content;
-    NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo,
+    NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo.forget(),
                              data.mContent.mImage);
     return content.forget();
   }
@@ -1734,7 +1734,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(elemName, nsnull,
                                                        kNameSpaceID_None);
   nsCOMPtr<nsIContent> container;
-  nsresult rv = NS_NewXMLElement(getter_AddRefs(container), nodeInfo);
+  nsresult rv = NS_NewXMLElement(getter_AddRefs(container), nodeInfo.forget());
   if (NS_FAILED(rv))
     return;
   container->SetNativeAnonymous();
@@ -7618,8 +7618,10 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
 
           DoApplyRenderingChangeToTree(outOfFlowFrame, aViewManager,
                                        aFrameManager, aChange);
-        }
-        else {  // regular frame
+        } else if (childList == nsGkAtoms::popupList) {
+          DoApplyRenderingChangeToTree(child, aViewManager,
+                                       aFrameManager, aChange);
+        } else {  // regular frame
           UpdateViewsForTree(child, aViewManager, aFrameManager, aChange);
         }
       }

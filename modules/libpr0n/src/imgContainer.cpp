@@ -289,6 +289,10 @@ NS_IMETHODIMP imgContainer::ExtractFrame(PRUint32 aWhichFrame,
   if (mError)
     return NS_ERROR_FAILURE;
 
+  // Disallowed in the API
+  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
+    return NS_ERROR_FAILURE;
+
   // Make a new container. This should switch to another class with bug 505959.
   nsRefPtr<imgContainer> img(new imgContainer());
   NS_ENSURE_TRUE(img, NS_ERROR_OUT_OF_MEMORY);
@@ -531,6 +535,10 @@ NS_IMETHODIMP imgContainer::CopyFrame(PRUint32 aWhichFrame,
   if (mError)
     return NS_ERROR_FAILURE;
 
+  // Disallowed in the API
+  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
+    return NS_ERROR_FAILURE;
+
   nsresult rv;
 
   // If requested, synchronously flush any data we have lying around to the decoder
@@ -582,6 +590,10 @@ NS_IMETHODIMP imgContainer::GetFrame(PRUint32 aWhichFrame,
     return NS_ERROR_INVALID_ARG;
 
   if (mError)
+    return NS_ERROR_FAILURE;
+
+  // Disallowed in the API
+  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
@@ -2334,12 +2346,9 @@ imgContainer::SyncDecode()
 
   // We really have no good way of forcing a synchronous decode if we're being
   // called in a re-entrant manner (ie, from an event listener fired by a
-  // decoder), because the decoding machinery is already tied up. The best we
-  // can do is assert that it doesn't happen for debug builds (if it does, we
-  // need to rethink the layout code that does it), and fail for release builds.
+  // decoder), because the decoding machinery is already tied up. We thus explicitly
+  // disallow this type of call in the API, and check for it in API methods.
   NS_ABORT_IF_FALSE(!mInDecoder, "Yikes, forcing sync in reentrant call!");
-  if (mInDecoder)
-    return NS_ERROR_FAILURE;
 
   // If we have a header-only decoder open, shut it down
   if (mDecoder && (mDecoderFlags & imgIDecoder::DECODER_FLAG_HEADERONLY)) {
@@ -2384,6 +2393,10 @@ NS_IMETHODIMP imgContainer::Draw(gfxContext *aContext,
                                  PRUint32 aFlags)
 {
   if (mError)
+    return NS_ERROR_FAILURE;
+
+  // Disallowed in the API
+  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
     return NS_ERROR_FAILURE;
 
   NS_ENSURE_ARG_POINTER(aContext);
