@@ -253,7 +253,6 @@
 #include "nsIDOMNSHTMLAnchorElement2.h"
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMNSHTMLAreaElement2.h"
 #include "nsIDOMHTMLBRElement.h"
 #include "nsIDOMHTMLBaseElement.h"
 #include "nsIDOMHTMLBodyElement.h"
@@ -2439,8 +2438,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLAreaElement, nsIDOMHTMLAreaElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAreaElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLAreaElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLAreaElement2)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
