@@ -104,7 +104,7 @@ XPCWrappedNativeProto::Init(
             return JS_FALSE;
     }
 
-    js::Class* jsclazz;
+    JSClass* jsclazz;
 
 
     if(mScriptableInfo)
@@ -132,7 +132,7 @@ XPCWrappedNativeProto::Init(
     JSObject *parent = mScope->GetGlobalJSObject();
 
     mJSProtoObject =
-        xpc_NewSystemInheritingJSObject(ccx, js::Jsvalify(jsclazz),
+        xpc_NewSystemInheritingJSObject(ccx, jsclazz,
                                         mScope->GetPrototypeJSObject(),
                                         parent);
 

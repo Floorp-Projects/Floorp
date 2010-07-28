@@ -1393,7 +1393,7 @@ ValueToScript(JSContext *cx, jsval v)
 
         if (clasp == Jsvalify(&js_ScriptClass)) {
             script = (JSScript *) JS_GetPrivate(cx, obj);
-        } else if (clasp == Jsvalify(&js_GeneratorClass)) {
+        } else if (clasp == Jsvalify(&js_GeneratorClass.base)) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
             fun = gen->getFloatingFrame()->fun;
             script = FUN_SCRIPT(fun);
@@ -2743,6 +2743,18 @@ split_thisObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
+static JSObjectOps split_objectops;
+
+static JSObjectOps *
+split_getObjectOps(JSContext *cx, JSClass *clasp)
+{
+    if (!split_objectops.thisObject) {
+        memcpy(&split_objectops, &js_ObjectOps, sizeof split_objectops);
+        split_objectops.thisObject = split_thisObject;
+    }
+
+    return &split_objectops;
+}
 
 static JSBool
 split_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
@@ -2760,45 +2772,19 @@ split_innerObject(JSContext *cx, JSObject *obj)
     return !cpx->isInner ? cpx->inner : obj;
 }
 
-static Class split_global_class = {
-    "split_global",
-    JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE | JSCLASS_GLOBAL_FLAGS,
-    Valueify(split_addProperty),
-    Valueify(split_delProperty),
-    Valueify(split_getProperty),
-    Valueify(split_setProperty),
+static JSExtendedClass split_global_class = {
+    {"split_global",
+    JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE |
+    JSCLASS_GLOBAL_FLAGS | JSCLASS_IS_EXTENDED,
+    split_addProperty, split_delProperty,
+    split_getProperty, split_setProperty,
     (JSEnumerateOp)split_enumerate,
     (JSResolveOp)split_resolve,
-    ConvertStub,
-    split_finalize,
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    split_mark,
-    {
-        Valueify(split_equality),
-        split_outerObject,
-        split_innerObject,
-        NULL, /* iteratorObject */
-        NULL, /* wrappedObject  */
-    },
-    {
-        NULL, /* lookupProperty */
-        NULL, /* defineProperty */
-        NULL, /* getProperty    */
-        NULL, /* setProperty    */
-        NULL, /* getAttributes  */
-        NULL, /* setAttributes  */
-        NULL, /* deleteProperty */
-        NULL, /* enumerate      */
-        NULL, /* typeOf         */
-        NULL, /* trace          */
-        split_thisObject,
-        NULL, /* clear          */
-    },
+    JS_ConvertStub, split_finalize,
+    split_getObjectOps, NULL, NULL, NULL, NULL, NULL,
+    split_mark, NULL},
+    split_equality, split_outerObject, split_innerObject,
+    NULL, NULL, NULL, NULL, NULL
 };
 
 static JSBool
@@ -2809,7 +2795,7 @@ split_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp)
         return JS_TRUE;
 
     JSObject *obj2 = JSVAL_TO_OBJECT(*v);
-    if (obj2->getClass() != &split_global_class)
+    if (JS_GET_CLASS(cx, obj2) != &split_global_class.base)
         return JS_TRUE;
 
     ComplexObject *cpx = (ComplexObject *) JS_GetPrivate(cx, obj2);
@@ -2836,7 +2822,7 @@ split_create_outer(JSContext *cx)
     cpx->inner = NULL;
     cpx->outer = NULL;
 
-    obj = JS_NewGlobalObject(cx, Jsvalify(&split_global_class));
+    obj = JS_NewGlobalObject(cx, &split_global_class.base);
     if (!obj || !JS_SetParent(cx, obj, NULL)) {
         JS_free(cx, cpx);
         return NULL;
@@ -2856,7 +2842,7 @@ split_create_inner(JSContext *cx, JSObject *outer)
     ComplexObject *cpx, *outercpx;
     JSObject *obj;
 
-    JS_ASSERT(outer->getClass() == &split_global_class);
+    JS_ASSERT(JS_GET_CLASS(cx, outer) == &split_global_class.base);
 
     cpx = (ComplexObject *) JS_malloc(cx, sizeof *cpx);
     if (!cpx)
@@ -2866,7 +2852,7 @@ split_create_inner(JSContext *cx, JSObject *outer)
     cpx->inner = NULL;
     cpx->outer = outer;
 
-    obj = JS_NewGlobalObject(cx, Jsvalify(&split_global_class));
+    obj = JS_NewGlobalObject(cx, &split_global_class.base);
     if (!obj || !JS_SetParent(cx, obj, NULL) || !JS_SetPrivate(cx, obj, cpx)) {
         JS_free(cx, cpx);
         return NULL;
@@ -2883,7 +2869,7 @@ static ComplexObject *
 split_get_private(JSContext *cx, JSObject *obj)
 {
     do {
-        if (obj->getClass() == &split_global_class)
+        if (JS_GET_CLASS(cx, obj) == &split_global_class.base)
             return (ComplexObject *) JS_GetPrivate(cx, obj);
         obj = JS_GetParent(cx, obj);
     } while (obj);
@@ -3668,8 +3654,12 @@ Parent(JSContext *cx, uintN argc, jsval *vp)
 
     /* Outerize if necessary.  Embrace the ugliness! */
     if (parent) {
-        if (JSObjectOp op = parent->getClass()->ext.outerObject)
-            *vp = OBJECT_TO_JSVAL(op(cx, parent));
+        JSClass *clasp = JS_GET_CLASS(cx, parent);
+        if (clasp->flags & JSCLASS_IS_EXTENDED) {
+            JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
+            if (JSObjectOp outerize = xclasp->outerObject)
+                *vp = OBJECT_TO_JSVAL(outerize(cx, parent));
+        }
     }
 
     return JS_TRUE;

@@ -60,8 +60,8 @@ const PRUint32 sSecMgrGetProp = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
 JSObject *
 Unwrap(JSContext *cx, JSObject *wrapper)
 {
-  js::Class *clasp = wrapper->getClass();
-  if (clasp == &XPCCrossOriginWrapper::XOWClass) {
+  JSClass *clasp = wrapper->getJSClass();
+  if (clasp == &XPCCrossOriginWrapper::XOWClass.base) {
     return UnwrapXOW(cx, wrapper);
   }
 
@@ -75,7 +75,7 @@ Unwrap(JSContext *cx, JSObject *wrapper)
     return wrappedObj->GetFlatJSObject();
   }
 
-  if (clasp == &XPCSafeJSObjectWrapper::SJOWClass) {
+  if (clasp == &XPCSafeJSObjectWrapper::SJOWClass.base) {
     JSObject *wrappedObj =
       XPCSafeJSObjectWrapper::GetUnsafeObject(cx, wrapper);
 
@@ -88,10 +88,10 @@ Unwrap(JSContext *cx, JSObject *wrapper)
     return wrappedObj;
   }
 
-  if (clasp == &SystemOnlyWrapper::SOWClass) {
+  if (clasp == &SystemOnlyWrapper::SOWClass.base) {
     return UnwrapSOW(cx, wrapper);
   }
-  if (clasp == &ChromeObjectWrapper::COWClass) {
+  if (clasp == &ChromeObjectWrapper::COWClass.base) {
     return UnwrapCOW(cx, wrapper);
   }
 
@@ -160,33 +160,22 @@ IteratorIterator(JSContext *, JSObject *obj, JSBool)
   return obj;
 }
 
-static js::Class IteratorClass = {
-    "Wrapper iterator",
-    JSCLASS_HAS_RESERVED_SLOTS(3),
-    js::PropertyStub,   // addProperty
-    js::PropertyStub,   // delProperty 
-    js::PropertyStub,   // getProperty
-    js::PropertyStub,   // setProperty
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    js::ConvertStub,
-    IteratorFinalize,
-    nsnull,             // reserved0
-    nsnull,             // checkAccess
-    nsnull,             // call
-    nsnull,             // construct
-    nsnull,             // xdrObject
-    nsnull,             // hasInstance
-    nsnull,             // mark
+static JSExtendedClass IteratorClass = {
+  { "Wrapper iterator",
+    JSCLASS_HAS_RESERVED_SLOTS(3) | JSCLASS_IS_EXTENDED,
+    JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,
+    JS_ConvertStub, IteratorFinalize,
 
-    // ClassExtension
-    {
-      nsnull, // equality
-      nsnull, // outerObject
-      nsnull, // innerObject
-      IteratorIterator,
-      nsnull, // wrappedObject
-    }
+    JSCLASS_NO_OPTIONAL_MEMBERS
+  },
+
+  nsnull,             // equality
+  nsnull, nsnull,     // innerObject/outerObject
+  IteratorIterator,
+  nsnull,             // wrappedObject
+  JSCLASS_NO_RESERVED_MEMBERS
 };
 
 JSBool
@@ -342,7 +331,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
   // delegates (via the __proto__ link) to the wrapper.
 
   JSObject *iterObj =
-    JS_NewObjectWithGivenProto(cx, js::Jsvalify(&IteratorClass), tempWrapper, wrapperObj);
+    JS_NewObjectWithGivenProto(cx, &IteratorClass.base, tempWrapper, wrapperObj);
   if (!iterObj) {
     return nsnull;
   }
@@ -405,7 +394,7 @@ JSObject *
 CreateSimpleIterator(JSContext *cx, JSObject *scope, JSBool keysonly,
                      JSObject *propertyContainer)
 {
-  JSObject *iterObj = JS_NewObjectWithGivenProto(cx, js::Jsvalify(&IteratorClass),
+  JSObject *iterObj = JS_NewObjectWithGivenProto(cx, &IteratorClass.base,
                                                  propertyContainer, scope);
   if (!iterObj) {
     return nsnull;

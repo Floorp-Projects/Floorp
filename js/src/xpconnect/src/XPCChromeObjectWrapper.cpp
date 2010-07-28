@@ -251,34 +251,28 @@ using namespace XPCWrapper;
 
 namespace ChromeObjectWrapper {
 
-js::Class COWClass = {
-    "ChromeObjectWrapper",
-    JSCLASS_NEW_RESOLVE |
+JSExtendedClass COWClass = {
+  // JSClass (JSExtendedClass.base) initialization
+  { "ChromeObjectWrapper",
+    JSCLASS_NEW_RESOLVE | JSCLASS_IS_EXTENDED |
     JSCLASS_HAS_RESERVED_SLOTS(XPCWrapper::sNumSlots + 1),
-    js::Valueify(XPC_COW_AddProperty),
-    js::Valueify(XPC_COW_DelProperty),
-    js::Valueify(XPC_COW_GetProperty),
-    js::Valueify(XPC_COW_SetProperty),
-    XPC_COW_Enumerate,
-    (JSResolveOp)XPC_COW_NewResolve,
-    js::Valueify(XPC_COW_Convert),
-    JS_FinalizeStub,
-    nsnull,   // reserved0
-    js::Valueify(XPC_COW_CheckAccess),
-    nsnull,   // call
-    nsnull,   // construct
-    nsnull,   // xdrObject
-    nsnull,   // hasInstance
-    nsnull,   // mark
+    XPC_COW_AddProperty, XPC_COW_DelProperty,
+    XPC_COW_GetProperty, XPC_COW_SetProperty,
+    XPC_COW_Enumerate,   (JSResolveOp)XPC_COW_NewResolve,
+    XPC_COW_Convert,     JS_FinalizeStub,
+    nsnull,              XPC_COW_CheckAccess,
+    nsnull,              nsnull,
+    nsnull,              nsnull,
+    nsnull,              nsnull
+  },
 
-    // ClassExtension
-    {
-      js::Valueify(XPC_COW_Equality),
-      nsnull, // outerObject
-      nsnull, // innerObject
-      XPC_COW_Iterator,
-      XPC_COW_WrappedObject
-    }
+  // JSExtendedClass initialization
+  XPC_COW_Equality,
+  nsnull,             // outerObject
+  nsnull,             // innerObject
+  XPC_COW_Iterator,
+  XPC_COW_WrappedObject,
+  JSCLASS_NO_RESERVED_MEMBERS
 };
 
 JSBool
@@ -289,7 +283,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp)
   }
 
   JSObject *wrapperObj =
-    JS_NewObjectWithGivenProto(cx, js::Jsvalify(&COWClass), NULL, parent);
+    JS_NewObjectWithGivenProto(cx, &COWClass.base, NULL, parent);
   if (!wrapperObj) {
     return JS_FALSE;
   }
@@ -329,8 +323,13 @@ ThrowException(nsresult rv, JSContext *cx)
 static inline JSObject *
 GetWrappedJSObject(JSContext *cx, JSObject *obj)
 {
-  JSObjectOp op = obj->getClass()->ext.wrappedObject;
-  if (!op) {
+  JSClass *clasp = obj->getJSClass();
+  if (!(clasp->flags & JSCLASS_IS_EXTENDED)) {
+    return obj;
+  }
+
+  JSExtendedClass *xclasp = (JSExtendedClass *)clasp;
+  if (!xclasp->wrappedObject) {
     if (XPCNativeWrapper::IsNativeWrapper(obj)) {
       XPCWrappedNative *wn = XPCNativeWrapper::SafeGetWrappedNative(obj);
       return wn ? wn->GetFlatJSObject() : nsnull;
@@ -339,7 +338,7 @@ GetWrappedJSObject(JSContext *cx, JSObject *obj)
     return obj;
   }
 
-  return op(cx, obj);
+  return xclasp->wrappedObject(cx, obj);
 }
 
 // Get the (possibly nonexistent) COW off of an object
@@ -348,7 +347,7 @@ static inline
 JSObject *
 GetWrapper(JSObject *obj)
 {
-  while (obj->getClass() != &COWClass) {
+  while (obj->getJSClass() != &COWClass.base) {
     obj = obj->getProto();
     if (!obj) {
       break;
@@ -749,7 +748,8 @@ XPC_COW_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
   obj = me->GetFlatJSObject();
   test = other->GetFlatJSObject();
   jsval testVal = OBJECT_TO_JSVAL(test);
-  return js::Jsvalify(obj->getClass()->ext.equality)(cx, obj, &testVal, bp);
+  return ((JSExtendedClass *)obj->getJSClass())->
+    equality(cx, obj, &testVal, bp);
 }
 
 static JSObject *

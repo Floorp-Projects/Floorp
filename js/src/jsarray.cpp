@@ -1004,53 +1004,49 @@ array_trace(JSTracer *trc, JSObject *obj)
     }
 }
 
+extern JSObjectOps js_ArrayObjectOps;
+
+static const JSObjectMap SharedArrayMap(&js_ArrayObjectOps, JSObjectMap::SHAPELESS);
+
+JSObjectOps js_ArrayObjectOps = {
+    &SharedArrayMap,
+    array_lookupProperty,
+    array_defineProperty,
+    array_getProperty,
+    array_setProperty,
+    array_getAttributes,
+    array_setAttributes,
+    array_deleteProperty,
+    js_Enumerate,
+    array_typeOf,
+    array_trace,
+    NULL, /* thisObject */
+    NULL  /* clear */
+};
+
+static JSObjectOps *
+array_getObjectOps(JSContext *cx, Class *clasp)
+{
+    return &js_ArrayObjectOps;
+}
+
 Class js_ArrayClass = {
     "Array",
-    Class::NON_NATIVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::DENSE_ARRAY_FIXED_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    js_TryValueOf,
-    array_finalize,
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    NULL,           /* mark        */
-    JS_NULL_CLASS_EXT,
-    {
-        array_lookupProperty,
-        array_defineProperty,
-        array_getProperty,
-        array_setProperty,
-        array_getAttributes,
-        array_setAttributes,
-        array_deleteProperty,
-        NULL,       /* enumerate      */
-        array_typeOf,
-        array_trace,
-        NULL,       /* thisObject     */
-        NULL,       /* clear          */
-    }
+    PropertyStub,       PropertyStub,    PropertyStub,         PropertyStub,
+    EnumerateStub,      ResolveStub,     js_TryValueOf,        array_finalize,
+    array_getObjectOps, NULL,            NULL,                 NULL,
+    NULL,               NULL,            NULL,                 NULL
 };
 
 Class js_SlowArrayClass = {
     "Array",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
-    slowarray_addProperty,
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    js_TryValueOf
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    slowarray_addProperty,  PropertyStub,   PropertyStub,      PropertyStub,
+    EnumerateStub,          ResolveStub,    js_TryValueOf,     NULL,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 /*
@@ -1076,7 +1072,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
         JS_ASSERT(arrayProto->getClass() == &js_SlowArrayClass);
         emptyShape = arrayProto->scope()->emptyScope->shape;
     }
-    JSScope *scope = JSScope::create(cx, &js_SlowArrayClass, obj, emptyShape);
+    JSScope *scope = JSScope::create(cx, &js_ObjectOps, &js_SlowArrayClass, obj, emptyShape);
     if (!scope)
         return JS_FALSE;
 
@@ -2995,7 +2991,7 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto, int32 len)
         return NULL;
 
     /* Initialize all fields of JSObject. */
-    obj->map = const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative);
+    obj->map = const_cast<JSObjectMap *>(&SharedArrayMap);
     obj->init(&js_ArrayClass, proto, proto->getParent(), NullValue());
     obj->setArrayLength(len);
     obj->setDenseArrayCapacity(0);
