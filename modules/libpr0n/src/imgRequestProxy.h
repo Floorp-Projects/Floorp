@@ -64,6 +64,9 @@
     {0x8f, 0x65, 0x9c, 0x46, 0x2e, 0xe2, 0xbc, 0x95} \
 }
 
+class imgRequestNotifyRunnable;
+class imgStatusNotifyRunnable;
+
 class imgRequestProxy : public imgIRequest, public nsISupportsPriority, public nsISecurityInfoProvider
 {
 public:
@@ -93,11 +96,21 @@ public:
 
   void SetPrincipal(nsIPrincipal *aPrincipal);
 
-  // Notify this proxy's listener of the current state of the request.
+  // Asynchronously notify this proxy's listener of the current state of the
+  // image, and, if we have an imgRequest mOwner, any status changes that
+  // happen between the time this function is called and the time the
+  // notification is scheduled.
   void NotifyListener();
+
+  // Synchronously notify this proxy's listener of the current state of the
+  // image. Only use this function if you are currently servicing an
+  // asynchronously-called function.
+  void SyncNotifyListener();
 
 protected:
   friend class imgStatusTracker;
+  friend class imgStatusNotifyRunnable;
+  friend class imgRequestNotifyRunnable;
 
   class imgCancelRunnable;
   friend class imgCancelRunnable;
@@ -118,6 +131,21 @@ protected:
       nsRefPtr<imgRequestProxy> mOwner;
       nsresult mStatus;
   };
+
+  // The following notification functions are protected to ensure that (friend
+  // class) imgStatusTracker is the only class allowed to send us
+  // notifications.
+
+  // Whether we want notifications from imgStatusTracker to be deferred until
+  // an event it has scheduled has been fired.
+  PRBool NotificationsDeferred() const
+  {
+    return mDeferNotifications;
+  }
+  void SetNotificationsDeferred(PRBool aDeferNotifications)
+  {
+    mDeferNotifications = aDeferNotifications;
+  }
 
   /* non-virtual imgIDecoderObserver methods */
   void OnStartDecode   ();
@@ -180,6 +208,10 @@ private:
   PRPackedBool mIsInLoadGroup;
   PRPackedBool mListenerIsStrongRef;
   PRPackedBool mDecodeRequested;
+
+  // Whether we want to defer our notifications by the non-virtual Observer
+  // interfaces as image loads proceed.
+  PRPackedBool mDeferNotifications;
 };
 
 #endif // imgRequestProxy_h__
