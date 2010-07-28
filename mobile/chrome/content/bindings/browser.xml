@@ -134,6 +134,16 @@
                   break;
               }
               break;
+
+            case "Prompt:Alert":
+              alert(aMessage.json.message);
+              break;
+
+            case "Prompt:Confirm":
+              return confirm(aMessage.json.message);
+
+            case "Prompt:Prompt":
+              return prompt(aMessage.json.text, aMessage.json.value);
          }
         ]]></body>
       </method>
@@ -372,6 +382,11 @@
           messageManager.addMessageListener("pageshow", this);
           messageManager.addMessageListener("pagehide", this);
           messageManager.addMessageListener("DOMPopupBlocked", this);
+
+          // Prompt remoting
+          ["Alert", "Confirm", "Prompt"].forEach(function(name) {
+            messageManager.addMessageListener("Prompt:" + name, this);
+          }, this);
 
           this._webProgress._init();
         ]]>
