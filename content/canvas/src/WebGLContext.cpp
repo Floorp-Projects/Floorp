@@ -252,6 +252,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         // everything's good, we're done here
         mWidth = width;
         mHeight = height;
+        mResetLayer = PR_TRUE;
         return NS_OK;
     }
 
