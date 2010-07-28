@@ -52,6 +52,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsThreadUtils.h"
 
 //-----------------------------------------------------------------------------
@@ -70,6 +71,7 @@ class nsBaseChannel : public nsHashPropertyBag
                     , public nsIChannel
                     , public nsIInterfaceRequestor
                     , public nsITransportEventSink
+                    , public nsIAsyncVerifyRedirectCallback
                     , private nsIStreamListener
 {
 public:
@@ -78,6 +80,7 @@ public:
   NS_DECL_NSICHANNEL
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSITRANSPORTEVENTSINK
+  NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
   nsBaseChannel(); 
 
@@ -246,6 +249,8 @@ private:
   // Handle an async redirect callback.  This will only be called if we
   // returned success from AsyncOpen while posting a redirect runnable.
   void HandleAsyncRedirect(nsIChannel* newChannel);
+  void ContinueHandleAsyncRedirect(nsresult result);
+  nsresult ContinueRedirect();
 
   // start URI classifier if requested
   void ClassifyURI();
@@ -281,6 +286,7 @@ private:
   nsCOMPtr<nsISupports>               mSecurityInfo;
   nsCOMPtr<nsIStreamListener>         mListener;
   nsCOMPtr<nsISupports>               mListenerContext;
+  nsCOMPtr<nsIChannel>                mRedirectChannel;
   nsCString                           mContentType;
   nsCString                           mContentCharset;
   PRUint32                            mLoadFlags;
@@ -289,6 +295,8 @@ private:
   PRPackedBool                        mSynthProgressEvents;
   PRPackedBool                        mWasOpened;
   PRPackedBool                        mWaitingOnAsyncRedirect;
+  PRPackedBool                        mOpenRedirectChannel;
+  PRUint32                            mRedirectFlags;
 };
 
 #endif // !nsBaseChannel_h__
