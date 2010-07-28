@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#include "mozilla/dom/ContentChild.h"
 #include "History.h"
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"

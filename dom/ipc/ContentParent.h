@@ -145,7 +145,6 @@ private:
     void EnsurePrefService();
     void EnsurePermissionService();
 
-
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;

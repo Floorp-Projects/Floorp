@@ -430,9 +430,6 @@ ContentParent::RequestRunToCompletion()
     return !!mRunToCompletionDepth;
 }
 
-    return true;
-}
-
 /* void onDispatchedEvent (in nsIThreadInternal thread); */
 NS_IMETHODIMP
 ContentParent::OnDispatchedEvent(nsIThreadInternal *thread)
