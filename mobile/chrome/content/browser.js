@@ -753,6 +753,7 @@ var Browser = {
     let event = document.createEvent("Events");
     event.initEvent("TabOpen", true, false);
     newTab.chromeTab.dispatchEvent(event);
+    newTab.browser.messageManager.sendAsyncMessage("Browser:TabOpen");
 
     return newTab;
   },
@@ -784,6 +785,7 @@ var Browser = {
     let event = document.createEvent("Events");
     event.initEvent("TabClose", true, false);
     tab.chromeTab.dispatchEvent(event);
+    tab.browser.messageManager.sendAsyncMessage("Browser:TabClose");
 
     this.selectedTab = nextTab;
 
