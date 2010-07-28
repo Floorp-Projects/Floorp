@@ -2538,12 +2538,6 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
 JSParseNode *
 Parser::functionDef(uintN lambda, bool namePermitted)
 {
-    /*
-     * Save the current op for later so we can tag the created function as a
-     * getter/setter if necessary.
-     */
-    JSOp op = tokenStream.currentToken().t_op;
-
     /* Make a TOK_FUNCTION node. */
     JSParseNode *pn = FunctionNode::create(tc);
     if (!pn)
@@ -2691,9 +2685,6 @@ Parser::functionDef(uintN lambda, bool namePermitted)
         return NULL;
 
     JSFunction *fun = (JSFunction *) funbox->object;
-
-    if (op != JSOP_NOP)
-        fun->flags |= (op == JSOP_GETTER) ? JSPROP_GETTER : JSPROP_SETTER;
 
     /* Now parse formal argument list and compute fun->nargs. */
 #if JS_HAS_DESTRUCTURING
@@ -2903,6 +2894,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
     }
 
     JSParseNode *result = pn;
+    JSOp op = JSOP_NOP;
     if (lambda != 0) {
         /*
          * ECMA ed. 3 standard: function expression, possibly anonymous.
@@ -2931,8 +2923,6 @@ Parser::functionDef(uintN lambda, bool namePermitted)
          * sub-statement.
          */
         op = JSOP_DEFFUN;
-    } else {
-        op = JSOP_NOP;
     }
 
     funbox->kids = funtc.functionList;
