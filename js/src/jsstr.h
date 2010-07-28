@@ -61,7 +61,10 @@
 
 enum {
     UNIT_STRING_LIMIT        = 256U,
-    INT_STRING_LIMIT         = 256U
+    SMALL_CHAR_LIMIT         = 128U, /* Bigger chars cannot be in a length-2 string. */
+    NUM_SMALL_CHARS          = 64U,
+    INT_STRING_LIMIT         = 256U,
+    NUM_HUNDRED_STRINGS      = 156U
 };
 
 extern jschar *
@@ -117,22 +120,32 @@ struct JSString {
     friend JSAtom *
     js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
 
-    // Not private because we want to be able to use static
-    // initializers for them.  Don't use these directly!
-    size_t                  mLengthAndFlags;  /* in all strings */
+    /*
+     * Not private because we want to be able to use static
+     * initializers for them. Don't use these directly!
+     */
+    size_t                          mLengthAndFlags;  /* in all strings */
     union {
-        jschar              *mChars; /* in flat and dependent strings */
-        JSString            *mLeft;  /* in rope interior and top nodes */
+        jschar                      *mChars; /* in flat and dependent strings */
+        JSString                    *mLeft;  /* in rope interior and top nodes */
     };
     union {
-        size_t              mCapacity; /* in mutable flat strings (optional) */
-        JSString            *mParent; /* in rope interior nodes */
-        JSRopeBufferInfo    *mBufferWithInfo; /* in rope top nodes */
-        jschar              mInlineStorage[1]; /* In short strings. */
-    };
-    union {
-        JSString            *mBase;  /* in dependent strings */
-        JSString            *mRight; /* in rope interior and top nodes */
+        /*
+         * We may keep more than 4 inline chars, but 4 is necessary for all of
+         * our static initialization.
+         */
+        jschar                      mInlineStorage[4]; /* In short strings. */
+        struct {
+            union {
+                size_t              mCapacity; /* in mutable flat strings (optional) */
+                JSString            *mParent; /* in rope interior nodes */
+                JSRopeBufferInfo    *mBufferWithInfo; /* in rope top nodes */
+            };
+            union {
+                JSString            *mBase;  /* in dependent strings */
+                JSString            *mRight; /* in rope interior and top nodes */
+            };
+        } e;
     };
 
     /*
@@ -243,16 +256,16 @@ struct JSString {
     /* Specific flat string initializer and accessor methods. */
     JS_ALWAYS_INLINE void initFlat(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
-        mBase = NULL;
-        mCapacity = 0;
+        e.mBase = NULL;
+        e.mCapacity = 0;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT;
         mChars = chars;
     }
 
     JS_ALWAYS_INLINE void initFlatMutable(jschar *chars, size_t length, size_t cap) {
         JS_ASSERT(length <= MAX_LENGTH);
-        mBase = NULL;
-        mCapacity = cap;
+        e.mBase = NULL;
+        e.mCapacity = cap;
         mLengthAndFlags = (length << FLAGS_LENGTH_SHIFT) | FLAT | MUTABLE;
         mChars = chars;
     }
@@ -269,7 +282,7 @@ struct JSString {
 
     JS_ALWAYS_INLINE size_t flatCapacity() const {
         JS_ASSERT(isFlat());
-        return mCapacity;
+        return e.mCapacity;
     }
 
     /*
@@ -321,15 +334,15 @@ struct JSString {
      */
     inline void initDependent(JSString *bstr, jschar *chars, size_t len) {
         JS_ASSERT(len <= MAX_LENGTH);
-        mParent = NULL;
+        e.mParent = NULL;
         mChars = chars;
         mLengthAndFlags = DEPENDENT | (len << FLAGS_LENGTH_SHIFT);
-        mBase = bstr;
+        e.mBase = bstr;
     }
 
     inline JSString *dependentBase() const {
         JS_ASSERT(isDependent());
-        return mBase;
+        return e.mBase;
     }
 
     JS_ALWAYS_INLINE jschar *dependentChars() {
@@ -347,19 +360,19 @@ struct JSString {
         JS_ASSERT(left->length() + right->length() <= MAX_LENGTH);
         mLengthAndFlags = TOP_NODE | (len << FLAGS_LENGTH_SHIFT);
         mLeft = left;
-        mRight = right;
-        mBufferWithInfo = buf;
+        e.mRight = right;
+        e.mBufferWithInfo = buf;
     }
 
     inline void convertToInteriorNode(JSString *parent) {
         JS_ASSERT(isTopNode());
-        mParent = parent;
+        e.mParent = parent;
         mLengthAndFlags = INTERIOR_NODE | (length() << FLAGS_LENGTH_SHIFT);
     }
 
     inline JSString *interiorNodeParent() const {
         JS_ASSERT(isInteriorNode());
-        return mParent;
+        return e.mParent;
     }
 
     inline JSString *ropeLeft() const {
@@ -369,22 +382,22 @@ struct JSString {
 
     inline JSString *ropeRight() const {
         JS_ASSERT(isRope());
-        return mRight;
+        return e.mRight;
     }
 
     inline size_t topNodeCapacity() const {
         JS_ASSERT(isTopNode());
-        return mBufferWithInfo->capacity;
+        return e.mBufferWithInfo->capacity;
     }
 
     inline JSRopeBufferInfo *topNodeBuffer() const {
         JS_ASSERT(isTopNode());
-        return mBufferWithInfo;
+        return e.mBufferWithInfo;
     }
 
     inline void nullifyTopNodeBuffer() {
         JS_ASSERT(isTopNode());
-        mBufferWithInfo = NULL;
+        e.mBufferWithInfo = NULL;
     }
 
     /*
@@ -402,7 +415,7 @@ struct JSString {
         /* Note that setting flags also clears the traversal count. */
         mLengthAndFlags = JSString::DEPENDENT |
             ((chars + end - mChars) << JSString::FLAGS_LENGTH_SHIFT);
-        mBase = base;
+        e.mBase = base;
     }
 
     inline void ropeClearTraversalCount() {
@@ -435,6 +448,12 @@ struct JSString {
     /* By design, this is not allowed to fail. */
     void flatten();
 
+    typedef uint8 SmallChar;
+
+    static inline bool fitsInSmallChar(jschar c) {
+        return c < SMALL_CHAR_LIMIT && toSmallChar[c] != INVALID_SMALL_CHAR;
+    }
+
     static inline bool isUnitString(void *ptr) {
         jsuword delta = reinterpret_cast<jsuword>(ptr) -
                         reinterpret_cast<jsuword>(unitStringTable);
@@ -446,10 +465,21 @@ struct JSString {
         return true;
     }
 
-    static inline bool isIntString(void *ptr) {
+    static inline bool isLength2String(void *ptr) {
         jsuword delta = reinterpret_cast<jsuword>(ptr) -
-                        reinterpret_cast<jsuword>(intStringTable);
-        if (delta >= INT_STRING_LIMIT * sizeof(JSString))
+                        reinterpret_cast<jsuword>(length2StringTable);
+        if (delta >= NUM_SMALL_CHARS * NUM_SMALL_CHARS * sizeof(JSString))
+            return false;
+
+        /* If ptr points inside the static array, it must be well-aligned. */
+        JS_ASSERT(delta % sizeof(JSString) == 0);
+        return true;
+    }
+
+    static inline bool isHundredString(void *ptr) {
+        jsuword delta = reinterpret_cast<jsuword>(ptr) -
+                        reinterpret_cast<jsuword>(hundredStringTable);
+        if (delta >= NUM_HUNDRED_STRINGS * sizeof(JSString))
             return false;
 
         /* If ptr points inside the static array, it must be well-aligned. */
@@ -458,20 +488,32 @@ struct JSString {
     }
 
     static inline bool isStatic(void *ptr) {
-        return isUnitString(ptr) || isIntString(ptr);
+        return isUnitString(ptr) || isLength2String(ptr) || isHundredString(ptr);
     }
 
 #ifdef __SUNPRO_CC
 #pragma align 8 (__1cIJSStringPunitStringTable_, __1cIJSStringOintStringTable_)
 #endif
 
+    static const SmallChar INVALID_SMALL_CHAR = -1;
+
+    static jschar fromSmallChar[];
+    static SmallChar toSmallChar[];
     static JSString unitStringTable[];
-    static JSString intStringTable[];
-    static const char *deflatedIntStringTable[];
+    static JSString length2StringTable[];
+    static JSString hundredStringTable[];
+    /*
+     * Since int strings can be unit strings, length-2 strings, or hundred
+     * strings, we keep a table to map from integer to the correct string.
+     */
+    static JSString *intStringTable[];
+    static const char deflatedIntStringTable[];
     static const char deflatedUnitStringTable[];
+    static const char deflatedLength2StringTable[];
 
     static JSString *unitString(jschar c);
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
+    static JSString *length2String(jschar c1, jschar c2);
     static JSString *intString(jsint i);
 };
 
@@ -516,7 +558,6 @@ struct JSShortString {
  * sure that space is ordered in the way we expect.
  */
 JS_STATIC_ASSERT(offsetof(JSString, mInlineStorage) == 2 * sizeof(void *));
-JS_STATIC_ASSERT(offsetof(JSString, mBase) == 3 * sizeof(void *));
 JS_STATIC_ASSERT(offsetof(JSShortString, mDummy) == sizeof(JSString));
 JS_STATIC_ASSERT(offsetof(JSString, mInlineStorage) +
                  sizeof(jschar) * (JSShortString::MAX_SHORT_STRING_LENGTH + 1) ==
