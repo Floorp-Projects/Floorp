@@ -85,31 +85,19 @@ static void iterator_finalize(JSContext *cx, JSObject *obj);
 static void iterator_trace(JSTracer *trc, JSObject *obj);
 static JSObject *iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
 
-Class js_IteratorClass = {
-    "Iterator",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) | JSCLASS_MARK_IS_TRACE,
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub,
-    iterator_finalize,
-    NULL,           /* reserved    */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    JS_CLASS_TRACE(iterator_trace),
-    {
-        NULL,       /* equality       */
-        NULL,       /* outerObject    */
-        NULL,       /* innerObject    */
-        iterator_iterator,
-        NULL        /* wrappedObject  */
-    }
+ExtendedClass js_IteratorClass = {
+  { "Iterator",
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
+    JSCLASS_MARK_IS_TRACE |
+    JSCLASS_IS_EXTENDED,
+    PropertyStub,     PropertyStub,    PropertyStub,     PropertyStub,
+    EnumerateStub,    ResolveStub,     ConvertStub,      iterator_finalize,
+    NULL,             NULL,            NULL,             NULL,
+    NULL,             NULL,            JS_CLASS_TRACE(iterator_trace), NULL },
+    NULL,             NULL,            NULL,             iterator_iterator,
+    NULL,
+    JSCLASS_NO_RESERVED_MEMBERS
 };
 
 void
@@ -130,7 +118,7 @@ NativeIterator::mark(JSTracer *trc)
 static void
 iterator_finalize(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->getClass() == &js_IteratorClass);
+    JS_ASSERT(obj->getClass() == &js_IteratorClass.base);
 
     /* Avoid double work if the iterator was closed by JSOP_ENDITER. */
     NativeIterator *ni = obj->getNativeIterator();
@@ -320,7 +308,7 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, typename EnumPolicy::ResultV
     do {
         Class *clasp = pobj->getClass();
         if (pobj->isNative() &&
-            !pobj->getOps()->enumerate &&
+            pobj->map->ops->enumerate == js_Enumerate &&
             !(clasp->flags & JSCLASS_NEW_ENUMERATE)) {
             if (!clasp->enumerate(cx, pobj))
                 return false;
@@ -461,11 +449,11 @@ NewIteratorObject(JSContext *cx, uintN flags)
         if (!obj)
             return false;
         obj->map = cx->runtime->emptyEnumeratorScope->hold();
-        obj->init(&js_IteratorClass, NULL, NULL, NullValue());
+        obj->init(&js_IteratorClass.base, NULL, NULL, NullValue());
         return obj;
     }
 
-    return NewBuiltinClassInstance(cx, &js_IteratorClass);
+    return NewBuiltinClassInstance(cx, &js_IteratorClass.base);
 }
 
 NativeIterator *
@@ -622,7 +610,7 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
             JSObject *pobj = obj;
             do {
                 if (!pobj->isNative() ||
-                    obj->getOps()->enumerate ||
+                    obj->map->ops->enumerate != js_Enumerate ||
                     pobj->getClass()->enumerate != JS_EnumerateStub) {
                     shapes.clear();
                     goto miss;
@@ -710,7 +698,7 @@ iterator_next(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj;
 
     obj = ComputeThisFromVp(cx, vp);
-    if (!InstanceOf(cx, obj, &js_IteratorClass, vp + 2))
+    if (!InstanceOf(cx, obj, &js_IteratorClass.base, vp + 2))
         return false;
 
     if (!js_IteratorMore(cx, obj, vp))
@@ -772,14 +760,18 @@ js_ValueToIterator(JSContext *cx, uintN flags, Value *vp)
 
     AutoObjectRooter tvr(cx, obj);
 
-    /* Enumerate Iterator.prototype directly. */
-    JSIteratorOp op = obj->getClass()->ext.iteratorObject;
-    if (op && (obj->getClass() != &js_IteratorClass || obj->getNativeIterator())) {
-        JSObject *iterobj = op(cx, obj, !(flags & JSITER_FOREACH));
-        if (!iterobj)
-            return false;
-        vp->setObject(*iterobj);
-        return true;
+    Class *clasp = obj->getClass();
+    ExtendedClass *xclasp;
+    if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
+        (xclasp = (ExtendedClass *) clasp)->iteratorObject) {
+        /* Enumerate Iterator.prototype directly. */
+        if (clasp != &js_IteratorClass.base || obj->getNativeIterator()) {
+            JSObject *iterobj = xclasp->iteratorObject(cx, obj, !(flags & JSITER_FOREACH));
+            if (!iterobj)
+                return false;
+            vp->setObject(*iterobj);
+            return true;
+        }
     }
 
     return GetIterator(cx, obj, flags, vp);
@@ -796,7 +788,7 @@ js_CloseIterator(JSContext *cx, JSObject *obj)
     cx->iterValue.setMagic(JS_NO_ITER_VALUE);
 
     Class *clasp = obj->getClass();
-    if (clasp == &js_IteratorClass) {
+    if (clasp == &js_IteratorClass.base) {
         /* Remove enumerators from the active list, which is a stack. */
         NativeIterator *ni = obj->getNativeIterator();
         if (ni->flags & JSITER_ENUMERATE) {
@@ -816,7 +808,7 @@ js_CloseIterator(JSContext *cx, JSObject *obj)
         }
     }
 #if JS_HAS_GENERATORS
-    else if (clasp == &js_GeneratorClass) {
+    else if (clasp == &js_GeneratorClass.base) {
         return CloseGenerator(cx, obj);
     }
 #endif
@@ -901,7 +893,7 @@ JSBool
 js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     /* Fast path for native iterators */
-    if (iterobj->getClass() == &js_IteratorClass) {
+    if (iterobj->getClass() == &js_IteratorClass.base) {
         /*
          * Implement next directly as all the methods of native iterator are
          * read-only and permanent.
@@ -945,7 +937,7 @@ JSBool
 js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     /* Fast path for native iterators */
-    if (iterobj->getClass() == &js_IteratorClass) {
+    if (iterobj->getClass() == &js_IteratorClass.base) {
         /*
          * Implement next directly as all the methods of the native iterator are
          * read-only and permanent.
@@ -994,20 +986,14 @@ stopiter_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 Class js_StopIterationClass = {
     js_StopIteration_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub,
-    NULL,           /* finalize    */
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    stopiter_hasInstance
+    PropertyStub,     PropertyStub,
+    PropertyStub,     PropertyStub,
+    EnumerateStub,    ResolveStub,
+    ConvertStub,      NULL,
+    NULL,             NULL,
+    NULL,             NULL,
+    NULL,             stopiter_hasInstance,
+    NULL,             NULL
 };
 
 #if JS_HAS_GENERATORS
@@ -1050,32 +1036,20 @@ generator_trace(JSTracer *trc, JSObject *obj)
     MarkValueRange(trc, fp->slots(), gen->savedRegs.sp, "generator slots");
 }
 
-Class js_GeneratorClass = {
-    js_Generator_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Generator) |
-    JSCLASS_IS_ANONYMOUS | JSCLASS_MARK_IS_TRACE,
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub,
-    generator_finalize,
-    NULL,           /* reserved    */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    JS_CLASS_TRACE(generator_trace),
-    {
-        NULL,       /* equality       */
-        NULL,       /* outerObject    */
-        NULL,       /* innerObject    */
-        iterator_iterator,
-        NULL,       /* wrappedObject  */
-    }
+ExtendedClass js_GeneratorClass = {
+  { js_Generator_str,
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Generator) |
+    JSCLASS_IS_ANONYMOUS |
+    JSCLASS_MARK_IS_TRACE |
+    JSCLASS_IS_EXTENDED,
+    PropertyStub,     PropertyStub,    PropertyStub,    PropertyStub,
+    EnumerateStub,    ResolveStub,     ConvertStub,     generator_finalize,
+    NULL,             NULL,            NULL,            NULL,
+    NULL,             NULL,            JS_CLASS_TRACE(generator_trace), NULL },
+    NULL,             NULL,            NULL,            iterator_iterator,
+    NULL,
+    JSCLASS_NO_RESERVED_MEMBERS
 };
 
 /*
@@ -1089,7 +1063,7 @@ Class js_GeneratorClass = {
 JS_REQUIRES_STACK JSObject *
 js_NewGenerator(JSContext *cx)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &js_GeneratorClass);
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_GeneratorClass.base);
     if (!obj)
         return NULL;
 
@@ -1331,7 +1305,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
 static JS_REQUIRES_STACK JSBool
 CloseGenerator(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->getClass() == &js_GeneratorClass);
+    JS_ASSERT(obj->getClass() == &js_GeneratorClass.base);
 
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
     if (!gen) {
@@ -1355,7 +1329,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
     LeaveTrace(cx);
 
     obj = ComputeThisFromVp(cx, vp);
-    if (!InstanceOf(cx, obj, &js_GeneratorClass, vp + 2))
+    if (!InstanceOf(cx, obj, &js_GeneratorClass.base, vp + 2))
         return JS_FALSE;
 
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
@@ -1450,14 +1424,14 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (stop)
         return stop;
 
-    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass, Iterator, 2,
+    proto = js_InitClass(cx, obj, NULL, &js_IteratorClass.base, Iterator, 2,
                          NULL, iterator_methods, NULL, NULL);
     if (!proto)
         return NULL;
 
 #if JS_HAS_GENERATORS
     /* Initialize the generator internals if configured. */
-    if (!js_InitClass(cx, obj, NULL, &js_GeneratorClass, NULL, 0,
+    if (!js_InitClass(cx, obj, NULL, &js_GeneratorClass.base, NULL, 0,
                       NULL, generator_methods, NULL, NULL)) {
         return NULL;
     }

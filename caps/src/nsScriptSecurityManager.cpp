@@ -2417,7 +2417,11 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
         // NOTE: These class and equality hook checks better match
         // what IS_WRAPPER_CLASS() does in xpconnect!
         
-        if (jsClass->ext.equality == js::Valueify(sXPCWrappedNativeEqualityOps)) {
+        JSEqualityOp op =
+            (jsClass->flags & JSCLASS_IS_EXTENDED) ?
+            reinterpret_cast<const JSExtendedClass*>(jsClass)->equality :
+            nsnull;
+        if (op == sXPCWrappedNativeEqualityOps) {
             result = sXPConnect->GetPrincipal(aObj,
 #ifdef DEBUG
                                               aAllowShortCircuit

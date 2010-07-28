@@ -162,10 +162,10 @@ CheckFilename(JSContext *cx, jsid id, JSStackFrame *fp);
 
 }
 
-namespace ChromeObjectWrapper    { extern js::Class COWClass; }
-namespace XPCSafeJSObjectWrapper { extern js::Class SJOWClass; }
-namespace SystemOnlyWrapper      { extern js::Class SOWClass; }
-namespace XPCCrossOriginWrapper  { extern js::Class XOWClass; }
+namespace ChromeObjectWrapper    { extern JSExtendedClass COWClass; }
+namespace XPCSafeJSObjectWrapper { extern JSExtendedClass SJOWClass; }
+namespace SystemOnlyWrapper      { extern JSExtendedClass SOWClass; }
+namespace XPCCrossOriginWrapper  { extern JSExtendedClass XOWClass; }
 
 extern nsIScriptSecurityManager *gScriptSecurityManager;
 
@@ -321,7 +321,9 @@ MaybePreserveWrapper(JSContext *cx, XPCWrappedNative *wn, uintN flags)
 inline JSBool
 IsSecurityWrapper(JSObject *wrapper)
 {
-  return !!wrapper->getClass()->ext.wrappedObject;
+  JSClass *clasp = wrapper->getJSClass();
+  return (clasp->flags & JSCLASS_IS_EXTENDED) &&
+    ((JSExtendedClass*)clasp)->wrappedObject;
 }
 
 /**
@@ -341,9 +343,9 @@ Unwrap(JSContext *cx, JSObject *wrapper);
  * Unwraps objects whose class is |xclasp|.
  */
 inline JSObject *
-UnwrapGeneric(JSContext *cx, const js::Class *xclasp, JSObject *wrapper)
+UnwrapGeneric(JSContext *cx, const JSExtendedClass *xclasp, JSObject *wrapper)
 {
-  if (wrapper->getClass() != xclasp) {
+  if (wrapper->getJSClass() != &xclasp->base) {
     return nsnull;
   }
 

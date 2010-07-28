@@ -627,7 +627,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 
     uint32 traceKind = js_GetGCThingTraceKind(p);
     JSObject *obj;
-    js::Class *clazz;
+    JSClass *clazz;
 
     // We do not want to add wrappers to the cycle collector if they're not
     // explicitly marked as main thread only, because the cycle collector isn't
@@ -640,7 +640,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     if(traceKind == JSTRACE_OBJECT)
     {
         obj = static_cast<JSObject*>(p);
-        clazz = obj->getClass();
+        clazz = obj->getJSClass();
 
         if(clazz == &XPC_WN_Tearoff_JSClass)
         {
@@ -689,7 +689,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         if(traceKind == JSTRACE_OBJECT)
         {
             JSObject *obj = static_cast<JSObject*>(p);
-            js::Class *clazz = obj->getClass();
+            JSClass *clazz = obj->getJSClass();
             if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
             {
                 XPCWrappedNative* wn;
@@ -749,7 +749,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                     JS_snprintf(name, sizeof(name), "JS Object (%s - %s)",
                                 clazz->name, si->GetJSClass()->name);
                 }
-                else if(clazz == &js_ScriptClass)
+                else if(clazz == Jsvalify(&js_ScriptClass))
                 {
                     JSScript* script = (JSScript*) xpc_GetJSPrivate(obj);
                     if(script->filename)
@@ -763,7 +763,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                         JS_snprintf(name, sizeof(name), "JS Object (Script)");
                     }
                 }
-                else if(clazz == &js_FunctionClass)
+                else if(clazz == Jsvalify(&js_FunctionClass))
                 {
                     JSFunction* fun = (JSFunction*) xpc_GetJSPrivate(obj);
                     JSString* str = JS_GetFunctionId(fun);
@@ -1015,6 +1015,9 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     SaveFrame sf(aJSContext);
 
     xpc_InitJSxIDClassObjects();
+
+    if(!xpc_InitWrappedNativeJSOps())
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
     XPCWrappedNativeScope* scope =
         XPCWrappedNativeScope::GetNewOrUsed(ccx, aGlobalJSObj);
@@ -1914,7 +1917,7 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
     if(NS_FAILED(rv))
         return UnexpectedFailure(rv);
 
-    if(!IS_PROTO_CLASS(protoJSObject->getClass()))
+    if(!IS_PROTO_CLASS(protoJSObject->getJSClass()))
         return UnexpectedFailure(NS_ERROR_INVALID_ARG);
 
     XPCWrappedNativeScope* scope =
