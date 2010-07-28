@@ -47,17 +47,16 @@
  * http://www.w3.org/TR/DOM-Level-2-HTML/
  */
 
-[scriptable, uuid(a6cf9092-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(611d00f5-1eb8-4571-b995-2a2019d2d11c)]
 interface nsIDOMHTMLOptionElement : nsIDOMHTMLElement
 {
-  readonly attribute nsIDOMHTMLFormElement form;
-  // Modified in DOM Level 2:
-           attribute boolean               defaultSelected;
-  readonly attribute DOMString             text;
-  // Modified in DOM Level 2:
-  readonly attribute long                  index;
            attribute boolean               disabled;
+  readonly attribute nsIDOMHTMLFormElement form;
            attribute DOMString             label;
+           attribute boolean               defaultSelected;
            attribute boolean               selected;
            attribute DOMString             value;
+
+           attribute DOMString             text;
+  readonly attribute long                  index;
 };

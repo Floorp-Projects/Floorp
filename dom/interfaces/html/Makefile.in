@@ -129,7 +129,6 @@ XPIDLSRCS = 					\
 	nsIDOMNSHTMLImageElement.idl		\
 	nsIDOMNSHTMLInputElement.idl		\
 	nsIDOMNSHTMLOptionCollectn.idl		\
-	nsIDOMNSHTMLOptionElement.idl		\
 	nsIDOMNSHTMLSelectElement.idl		\
 	nsIDOMNSHTMLTextAreaElement.idl		\
 	$(NULL)
