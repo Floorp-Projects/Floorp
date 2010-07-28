@@ -398,6 +398,9 @@ var UIManager = {
     var self = this;
 
     Tabs.onClose(function(){
+      if (this.ownerDocument.defaultView != gWindow)
+        return;
+
       if (self._isTabCandyVisible()) {
         // just closed the selected tab in the tab candy interface.
         if (self._currentTab == this)
@@ -426,6 +429,9 @@ var UIManager = {
     });
 
     Tabs.onMove(function() {
+      if (this.ownerDocument.defaultView != gWindow)
+        return;
+
       Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
         if (!self._isTabCandyVisible()) {
           var activeGroup = Groups.getActiveGroup();
@@ -439,6 +445,9 @@ var UIManager = {
     });
 
     Tabs.onSelect(function() {
+      if (this.ownerDocument.defaultView != gWindow)
+        return;
+
       self.tabOnFocus(this);
     });
   },
