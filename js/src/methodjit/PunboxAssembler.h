@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jsjaeger_assembler64_h__ && defined JS_METHODJIT && defined JS_64BIT
+#if !defined jsjaeger_assembler64_h__ && defined JS_METHODJIT && defined JS_PUNBOX64
 #define jsjaeger_assembler64_h__
 
 #include "methodjit/BaseAssembler.h"

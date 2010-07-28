@@ -49,8 +49,8 @@
 # error "Oh no, you should define a platform so this compiles."
 #endif
 
-#if !defined(JS_32BIT) && !defined(JS_64BIT)
-# error "This processor is UNKNOWN."
+#if !defined(JS_NUNBOX32) && !defined(JS_PUNBOX64)
+# error "No boxing format selected."
 #endif
 
 namespace js {
