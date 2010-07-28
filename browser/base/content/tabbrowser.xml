@@ -88,6 +88,8 @@
       <field name="tabs" readonly="true">
         this.tabContainer.childNodes;
       </field>
+      <property name="visibleTabs" readonly="true"
+                onget="return Array.filter(this.tabs, function(tab) !tab.hidden);"/>
       <field name="mURIFixup" readonly="true">
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
@@ -715,7 +717,12 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+            if (TabCandy.isVisible()) {
+              // ToDo: this will be removed when we gain ability to draw o the menu bar. 
+              this.ownerDocument.title = TabCandy.getWindowTitle();
+            } else {
+              this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
+            }
           ]]>
         </body>
       </method>
@@ -778,7 +785,6 @@
             // Don't switch the fast find or update the titlebar (bug 540248) - this tab switch is temporary
             if (!this._previewMode) {
               this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
-
               this.updateTitlebar();
             }
 
@@ -1160,7 +1166,7 @@
             t.linkedPanel = uniqueId;
             t.linkedBrowser = b;
             t._tPos = position;
-            if (t.previousSibling.selected)
+            if (t.previousSibling && t.previousSibling.selected)
               t.setAttribute("afterselected", true);
 
             this.tabContainer.adjustTabstrip();
@@ -1218,7 +1224,7 @@
           var tabsToClose = this.tabs.length;
 
           if (!aAll)
-            tabsToClose -= 1 + gBrowser._numPinnedTabs;
+            tabsToClose = this.visibleTabs.length - (1 + this._numPinnedTabs);
           if (tabsToClose <= 1)
             return true;
 
@@ -1269,11 +1275,12 @@
               return;
 
             if (this.warnAboutClosingTabs(false)) {
+              var tabs = this.visibleTabs;
               this.selectedTab = aTab;
 
-              for (let i = this.tabs.length - 1; i >= 0; --i) {
-                if (this.tabs[i] != aTab && !this.tabs[i].pinned)
-                  this.removeTab(this.tabs[i]);
+              for (let i = tabs.length - 1; i >= 0; --i) {
+                if (tabs[i] != aTab && !tabs[i].pinned)
+                  this.removeTab(tabs[i]);
               }
             }
           ]]>
@@ -1329,21 +1336,23 @@
             var closeWindow = false;
             var newTab = false;
             if (this.tabs.length - this._removingTabs.length == 1) {
-              closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
-                            !window.toolbar.visible ||
-                              this.tabContainer._closeWindowWithLastTab;
+              if (!TabCandy.isVisible()) {
+                closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
+                              !window.toolbar.visible ||
+                                this.tabContainer._closeWindowWithLastTab;
 
-              // Closing the tab and replacing it with a blank one is notably slower
-              // than closing the window right away. If the caller opts in, take
-              // the fast path.
-              if (closeWindow &&
-                  aCloseWindowFastpath &&
-                  this._removingTabs.length == 0 &&
-                  (this._windowIsClosing = window.closeWindow(true)))
-                return null;
+                // Closing the tab and replacing it with a blank one is notably slower
+                // than closing the window right away. If the caller opts in, take
+                // the fast path.
+                if (closeWindow &&
+                   aCloseWindowFastpath &&
+                   this._removingTabs.length == 0 &&
+                   (this._windowIsClosing = window.closeWindow(true)))
+                  return null;
 
-              newTab = true;
-            }
+                newTab = true;
+              }
+           }
 
             this._removingTabs.push(aTab);
 
@@ -1579,10 +1588,11 @@
       <method name="reloadAllTabs">
         <body>
           <![CDATA[
-            var l = this.mPanelContainer.childNodes.length;
+            var tabs = this.visibleTabs;
+            var l = tabs.length;
             for (var i = 0; i < l; i++) {
               try {
-                this.getBrowserAtIndex(i).reload();
+                this.getBrowserForTab(tabs[i]).reload();
               } catch (e) {
                 // ignore failure to reload so others will be reloaded
               }
@@ -1679,19 +1689,36 @@
         </body>
       </method>
 
+      <method name="showOnlyTheseTabs">
+        <parameter name="aTabs"/>
+        <body>
+        <![CDATA[
+          Array.forEach(this.tabs, function(tab) {
+            tab.hidden = aTabs.indexOf(tab) == -1 && !tab.pinned;
+          });
+
+          if (this._numPinnedTabs > 0)
+            this.tabContainer._positionPinnedTabs();
+        ]]>
+        </body>
+      </method>
+
       <method name="selectTabAtIndex">
         <parameter name="aIndex"/>
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
+          let tabs = this.visibleTabs;
+
           // count backwards for aIndex < 0
           if (aIndex < 0)
-            aIndex += this.tabs.length;
+            aIndex += tabs.length;
 
-          if (aIndex >= 0 &&
-              aIndex < this.tabs.length &&
-              aIndex != this.tabContainer.selectedIndex)
-            this.selectedTab = this.tabs[aIndex];
+          if (aIndex >= 0 && aIndex < this.tabs.length) {
+            let nextTab = tabs[aIndex];
+            if (nextTab != this.selectedTab)
+              this.selectedTab = nextTab;
+          }
 
           if (aEvent) {
             aEvent.preventDefault();
@@ -2495,6 +2522,8 @@
               this.setAttribute("closebuttons", "noclose");
             else {
               let tab = this.childNodes.item(this.tabbrowser._numPinnedTabs);
+              if (tab && tab.hidden)
+                tab = this.tabbrowser.visibleTabs[0];
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
               else
@@ -3280,7 +3309,7 @@
       <![CDATA[
         // set up the menu popup
         var tabcontainer = gBrowser.tabContainer;
-        var tabs = tabcontainer.childNodes;
+        var tabs = gBrowser.visibleTabs;
 
         // Listen for changes in the tab bar.
         tabcontainer.addEventListener("TabOpen", this, false);
