@@ -3156,8 +3156,8 @@ js_IsDensePrimitiveArray(JSObject *obj)
     if (!obj || !obj->isDenseArray())
         return JS_FALSE;
 
-    jsuint length = obj->getArrayLength();
-    for (jsuint i = 0; i < length; i++) {
+    jsuint capacity = obj->getDenseArrayCapacity();
+    for (jsuint i = 0; i < capacity; i++) {
         if (obj->dslots[i].isObject())
             return JS_FALSE;
     }
