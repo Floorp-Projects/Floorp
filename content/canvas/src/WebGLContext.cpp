@@ -319,11 +319,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, gl->GetOffscreenFBO());
     gl->fViewport(0, 0, mWidth, mHeight);
     gl->fClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-#ifdef USE_GLES2
-    gl->fClearDepthf(1.0f);
-#else
     gl->fClearDepth(1.0f);
-#endif
     gl->fClearStencil(0);
     gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
 
