@@ -1009,7 +1009,7 @@ struct JSThreadData {
      * If this flag is set, we were asked to call back the operation callback
      * as soon as possible.
      */
-    volatile int32      interruptFlags;
+    volatile jsword     interruptFlags;
 
     JSGCFreeLists       gcFreeLists;
 
