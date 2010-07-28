@@ -701,15 +701,15 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
     // For simplicity, we read the entire framebuffer for now -- in
     // the future we should use mUpdatedRect, though with WebGL we don't
     // have an easy way to generate one.
-#ifndef USE_GLES2
-    mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
-                            LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
-                            isurf->Data());
-#else
-    mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
-                            LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
-                            isurf->Data());
-#endif
+    if (mGLContext->IsGLES2()) {
+      mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
+                              LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
+                              isurf->Data());
+    } else {
+      mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
+                              LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
+                              isurf->Data());
+    }
 
     // Put back the previous framebuffer binding.
     if (currentFramebuffer != mCanvasFramebuffer)

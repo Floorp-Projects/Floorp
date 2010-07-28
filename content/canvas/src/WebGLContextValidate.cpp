@@ -407,20 +407,27 @@ WebGLContext::InitAndValidateGL()
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, (GLint*) &mGLMaxTextureImageUnits);
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, (GLint*) &mGLMaxVertexTextureImageUnits);
 
-#ifdef USE_GLES2
-    gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS, (GLint*) &mGLMaxFragmentUniformVectors);
-    gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS, (GLint*) &mGLMaxVertexUniformVectors);
-    gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, (GLint*) &mGLMaxVaryingVectors);
-#else
-    gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, (GLint*) &mGLMaxFragmentUniformVectors);
-    mGLMaxFragmentUniformVectors /= 4;
-    gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS, (GLint*) &mGLMaxVertexUniformVectors);
-    mGLMaxVertexUniformVectors /= 4;
-    gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_FLOATS, (GLint*) &mGLMaxVaryingVectors);
-    mGLMaxVaryingVectors /= 4;
-#endif
+    if (gl->IsGLES2()) {
+        gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS, (GLint*) &mGLMaxFragmentUniformVectors);
+        gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS, (GLint*) &mGLMaxVertexUniformVectors);
+        gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, (GLint*) &mGLMaxVaryingVectors);
+    } else {
+        gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, (GLint*) &mGLMaxFragmentUniformVectors);
+        mGLMaxFragmentUniformVectors /= 4;
+        gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS, (GLint*) &mGLMaxVertexUniformVectors);
+        mGLMaxVertexUniformVectors /= 4;
+        gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_FLOATS, (GLint*) &mGLMaxVaryingVectors);
+        mGLMaxVaryingVectors /= 4;
+    }
 
+#if 0
+    // Leaving this code in here, even though it's ifdef'd out, for
+    // when we support more than 1 color attachment.
     gl->fGetIntegerv(LOCAL_GL_MAX_COLOR_ATTACHMENTS, (GLint*) &val);
+#else
+    // Always 1 for GLES2
+    val = 1;
+#endif
     mFramebufferColorAttachments.SetLength(val);
 
 #if defined(DEBUG_vladimir) && defined(USE_GLES2)
@@ -431,11 +438,11 @@ WebGLContext::InitAndValidateGL()
     fprintf(stderr, "GL_IMPLEMENTATION_COLOR_READ_TYPE: 0x%04x\n", val);
 #endif
 
-#ifndef USE_GLES2
-    // gl_PointSize is always available in ES2 GLSL, but has to be
-    // specifically enabled on desktop GLSL.
-    gl->fEnable(LOCAL_GL_VERTEX_PROGRAM_POINT_SIZE);
-#endif
+    if (!gl->IsGLES2()) {
+        // gl_PointSize is always available in ES2 GLSL, but has to be
+        // specifically enabled on desktop GLSL.
+        gl->fEnable(LOCAL_GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
 
 #if !defined(USE_GLES2) && defined(USE_ANGLE)
     // initialize shader translator
