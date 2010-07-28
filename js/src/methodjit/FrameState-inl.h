@@ -771,16 +771,44 @@ FrameState::giveOwnRegs(FrameEntry *fe)
 }
 
 inline void
+FrameState::loadDouble(RegisterID t, RegisterID d, FrameEntry *fe, FPRegisterID fpReg,
+                       Assembler &masm) const
+{
+#ifdef JS_CPU_X86
+    masm.fastLoadDouble(d, t, fpReg);
+#else
+    loadDouble(fe, fpReg, masm);
+#endif
+}
+
+inline bool
+FrameState::tryFastDoubleLoad(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const
+{
+#ifdef JS_CPU_X86
+    if (fe->type.inRegister() && fe->data.inRegister()) {
+        masm.fastLoadDouble(fe->data.reg(), fe->type.reg(), fpReg);
+        return true;
+    }
+#endif
+    return false;
+}
+
+inline void
 FrameState::loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const
 {
     if (fe->isCopy()) {
         FrameEntry *backing = fe->copyOf();
+        if (tryFastDoubleLoad(fe, fpReg, masm))
+            return;
         if (backing->isCachedNumber() || (backing->type.synced() && backing->data.synced())) {
             masm.loadDouble(addressOf(backing), fpReg);
             return;
         }
         fe = backing;
     }
+
+    if (tryFastDoubleLoad(fe, fpReg, masm))
+        return;
 
     if ((fe->type.synced() && fe->data.synced()) || fe->isCachedNumber()) {
         masm.loadDouble(addressOf(fe), fpReg);
