@@ -376,7 +376,8 @@ js_TypedArray_uint8_clamp_double(const double x)
     return y;
 }
 
-JS_DEFINE_CALLINFO_1(extern, INT32, js_TypedArray_uint8_clamp_double, DOUBLE, 1, nanojit::ACC_NONE)
+JS_DEFINE_CALLINFO_1(extern, INT32, js_TypedArray_uint8_clamp_double, DOUBLE,
+                     1, nanojit::ACCSET_NONE)
 
 
 struct uint8_clamped {
