@@ -669,6 +669,27 @@ _cairo_d2d_matrix_from_matrix(const cairo_matrix_t *matrix)
 }
 
 /**
+ * Returns the inverse matrix for a D2D1 matrix. We cannot use the Invert function
+ * on the Matrix3x2F function class since it's statically linked and we'd have to
+ * lookup the symbol in the library. Doing this ourselves is easier.
+ *
+ * \param mat matrix
+ * \return inverse of matrix mat
+ */
+static D2D1::Matrix3x2F
+_cairo_d2d_invert_matrix(const D2D1::Matrix3x2F &mat)
+{
+    float inv_det =  (1 / mat.Determinant());
+
+    return D2D1::Matrix3x2F(mat._22 * inv_det,
+			    -mat._12 * inv_det,
+			    -mat._21 * inv_det,
+			    mat._11 * inv_det,
+			    (mat._21 * mat._32 - mat._22 * mat._31) * inv_det,
+			    -(mat._11 * mat._32 - mat._12 * mat._31) * inv_det);
+}
+
+/**
  * Create a D2D stroke style interface for a cairo stroke style object. Must be
  * released when the calling function is finished with it.
  *
@@ -2027,12 +2048,15 @@ _cairo_d2d_stroke(void			*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
     D2D1::Matrix3x2F mat = _cairo_d2d_matrix_from_matrix(ctm);
-
-    _cairo_path_fixed_transform(path, ctm_inverse);
+    RefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, 
+		    							     CAIRO_FILL_RULE_WINDING, 
+									     D2D1_FIGURE_BEGIN_FILLED);
+    D2D1::Matrix3x2F inverse_mat = _cairo_d2d_invert_matrix(mat);
+    
+    RefPtr<ID2D1TransformedGeometry> trans_geom;
+    D2DSurfFactory::Instance()->CreateTransformedGeometry(d2dpath, &inverse_mat, &trans_geom);
 
     d2dsurf->rt->SetTransform(mat);
-
-    cairo_box_t box;
 
     RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
 								   source);
@@ -2040,28 +2064,8 @@ _cairo_d2d_stroke(void			*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    if (_cairo_path_fixed_is_box(path, &box)) {
-	float x1 = _cairo_fixed_to_float(box.p1.x);    
-	float y1 = _cairo_fixed_to_float(box.p1.y);    
-	float x2 = _cairo_fixed_to_float(box.p2.x);    
-	float y2 = _cairo_fixed_to_float(box.p2.y);
+    d2dsurf->rt->DrawGeometry(trans_geom, brush, (FLOAT)style->line_width, strokeStyle);
 
-	d2dsurf->rt->DrawRectangle(D2D1::RectF(x1,
-					       y1,
-					       x2,
-					       y2),
-				   brush,
-				   (FLOAT)style->line_width,
-				   strokeStyle);
-
-    } else {
-	RefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, 
-			    							 CAIRO_FILL_RULE_WINDING, 
-										 D2D1_FIGURE_BEGIN_HOLLOW);
-	d2dsurf->rt->DrawGeometry(d2dpath, brush, (FLOAT)style->line_width, strokeStyle);
-    }
-
-    _cairo_path_fixed_transform(path, ctm);
     d2dsurf->rt->SetTransform(D2D1::Matrix3x2F::Identity());
     return CAIRO_INT_STATUS_SUCCESS;
 }
