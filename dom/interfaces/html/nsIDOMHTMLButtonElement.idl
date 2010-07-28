@@ -50,14 +50,19 @@
 [scriptable, uuid(a6cf9095-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLButtonElement : nsIDOMHTMLElement
 {
-  readonly attribute nsIDOMHTMLFormElement form;
-           attribute DOMString             accessKey;
+           attribute boolean               autofocus;
            attribute boolean               disabled;
+  readonly attribute nsIDOMHTMLFormElement form;
+
            attribute DOMString             name;
-           attribute long                  tabIndex;
-  // The scriptable version of type is writable and lives on
-  // nsIDOMNSHTMLButtonElement (have to do it this way because this
-  // interface is frozen and we don't want to break binary compat).
-  [noscript] readonly attribute DOMString  type;
+           attribute DOMString             type;
            attribute DOMString             value;
+
+           
+           attribute DOMString             accessKey;
+           attribute long                  tabIndex;
+  void                      blur();
+  void                      focus();
+  void                      click();
 };
+
