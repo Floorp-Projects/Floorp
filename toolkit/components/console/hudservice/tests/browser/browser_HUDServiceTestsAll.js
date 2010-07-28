@@ -336,6 +336,26 @@ function testNullUndefinedOutput()
       "'undefined' printed to output");
 }
 
+function testJSInputAndOutputStyling() {
+  let jsterm = HUDService.hudWeakReferences[hudId].get().jsterm;
+
+  jsterm.clearOutput();
+  jsterm.execute("2 + 2");
+
+  let outputChildren = jsterm.outputNode.childNodes;
+  let jsInputNode = outputChildren[0];
+  isnot(jsInputNode.childNodes[0].nodeValue.indexOf("2 + 2"), -1,
+    "JS input node contains '2 + 2'");
+  isnot(jsInputNode.getAttribute("class").indexOf("jsterm-input-line"), -1,
+    "JS input node is of the CSS class 'jsterm-input-line'");
+
+  let jsOutputNode = outputChildren[1];
+  isnot(jsOutputNode.childNodes[0].nodeValue.indexOf("4"), -1,
+    "JS output node contains '4'");
+  isnot(jsOutputNode.getAttribute("class").indexOf("jsterm-output-line"), -1,
+    "JS output node is of the CSS class 'jsterm-output-line'");
+}
+
 function testCreateDisplay() {
   ok(typeof cs.consoleDisplays == "object",
      "consoledisplays exist");
@@ -698,6 +718,7 @@ function test() {
       testConsoleHistory();
       testOutputOrder();
       testNullUndefinedOutput();
+      testJSInputAndOutputStyling();
       testExecutionScope();
       testCompletion();
       testPropertyProvider();
