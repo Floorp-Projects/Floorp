@@ -41,11 +41,6 @@
 #include "imgLoader.h"
 #include "imgContainer.h"
 
-/* We end up pulling in windows.h because we eventually hit
- * gfxWindowsSurface; it defines some crazy things, like LoadImage.
- * We undefine it here so as to avoid problems later on.
- */
-#undef LoadImage
 
 #include "nsCOMPtr.h"
 
