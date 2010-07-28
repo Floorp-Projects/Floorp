@@ -234,6 +234,7 @@ private:
     typedef enum {
         OP2_MOVSD_VsdWsd    = 0x10,
         OP2_MOVSD_WsdVsd    = 0x11,
+        OP2_UNPCKLPS_VsdWsd = 0x14,
         OP2_CVTSI2SD_VsdEd  = 0x2A,
         OP2_CVTTSD2SI_GdWsd = 0x2C,
         OP2_UCOMISD_VsdWsd  = 0x2E,
@@ -1828,13 +1829,21 @@ public:
         m_formatter.twoByteOp(OP2_CVTTSD2SI_GdWsd, dst, (RegisterID)src);
     }
 
-    void movd_rr(XMMRegisterID src, RegisterID dst)
+    void unpcklps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "unpcklps   %s, %s\n", MAYBE_PAD,
+                       nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_UNPCKLPS_VsdWsd, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void movd_rr(RegisterID src, XMMRegisterID dst)
     {
         js::JaegerSpew(js::JSpew_Insns,
                        IPFX "movd       %s, %s\n", MAYBE_PAD,
-                       nameFPReg(src), nameIReg(dst));
+                       nameIReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
-        m_formatter.twoByteOp(OP2_MOVD_EdVd, (RegisterID)src, dst);
+        m_formatter.twoByteOp(OP2_MOVD_VdEd, (RegisterID)dst, src);
     }
 
 #if WTF_CPU_X86_64

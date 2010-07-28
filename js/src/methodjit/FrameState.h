@@ -435,6 +435,13 @@ class FrameState
     inline void loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const;
 
     /*
+     * Slightly more specialized version when more precise register
+     * information is known.
+     */
+    inline void loadDouble(RegisterID type, RegisterID data, FrameEntry *fe, FPRegisterID fpReg,
+                           Assembler &masm) const;
+
+    /*
      * Types don't always have to be in registers, sometimes the compiler
      * can use addresses and avoid spilling. If this FrameEntry has a synced
      * address and no register, this returns true.
@@ -674,6 +681,7 @@ class FrameState
     void pushCopyOf(uint32 index);
     void syncFancy(Assembler &masm, Registers avail, uint32 resumeAt,
                    FrameEntry *bottom) const;
+    inline bool tryFastDoubleLoad(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const;
 
     /*
      * "Uncopies" the backing store of a FrameEntry that has been copied. The

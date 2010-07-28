@@ -146,6 +146,12 @@ class BaseAssembler : public JSC::MacroAssembler
         m_assembler.cdq();
         m_assembler.idivl_r(reg);
     }
+
+    void fastLoadDouble(RegisterID lo, RegisterID hi, FPRegisterID fpReg) {
+        m_assembler.movd_rr(lo, fpReg);
+        m_assembler.movd_rr(hi, FPRegisters::Temp0);
+        m_assembler.unpcklps_rr(FPRegisters::Temp0, fpReg);
+    }
 #endif
 
     /*
