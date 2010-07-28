@@ -171,6 +171,7 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   _("SyncEngine._syncStartup resets sync and wipes server data if there's no or an oudated global record");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let crypto_steam = new ServerWBO('steam');
 
   // Some server side data that's going to be wiped
@@ -233,6 +234,7 @@ function test_syncStartup_metaGet404() {
   _("SyncEngine._syncStartup resets sync and wipes server data if the symmetric key is missing 404");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
 
   // A symmetric key with an incorrect HMAC
   let crypto_steam = new ServerWBO("steam");
@@ -291,6 +293,7 @@ function test_syncStartup_failedMetaGet() {
   _("SyncEngine._syncStartup non-404 failures for getting cryptometa should stop sync");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let server = httpd_setup({
     "/1.0/foo/storage/crypto/steam": function(request, response) {
       response.setStatusLine(request.httpVersion, 405, "Method Not Allowed");
@@ -322,6 +325,7 @@ function test_syncStartup_serverHasNewerVersion() {
   _("SyncEngine._syncStartup ");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let global = new ServerWBO('global', {engines: {steam: {version: 23456}}});
   let server = httpd_setup({
       "/1.0/foo/storage/meta/global": global.handler()
@@ -353,6 +357,7 @@ function test_syncStartup_syncIDMismatchResetsClient() {
   _("SyncEngine._syncStartup resets sync if syncIDs don't match");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let crypto_steam = new ServerWBO('steam');
   let server = sync_httpd_setup({
       "/1.0/foo/storage/crypto/steam": crypto_steam.handler()
@@ -397,6 +402,7 @@ function test_syncStartup_badKeyWipesServerData() {
   _("SyncEngine._syncStartup resets sync and wipes server data if there's something wrong with the symmetric key");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
 
   // A symmetric key with an incorrect HMAC
   let crypto_steam = new ServerWBO('steam');
@@ -466,6 +472,7 @@ function test_processIncoming_emptyServer() {
   _("SyncEngine._processIncoming working with an empty server backend");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
 
@@ -497,6 +504,7 @@ function test_processIncoming_createFromServer() {
   _("SyncEngine._processIncoming creates new records from server data");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let crypto_steam = new ServerWBO('steam');
 
   // Some server records that will be downloaded
@@ -550,6 +558,7 @@ function test_processIncoming_reconcile() {
   _("SyncEngine._processIncoming updates local records");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
 
@@ -671,6 +680,7 @@ function test_processIncoming_fetchNum() {
   _("SyncEngine._processIncoming doesn't fetch everything at ones on mobile clients");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   Svc.Prefs.set("client.type", "mobile");
   let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
@@ -776,6 +786,7 @@ function test_uploadOutgoing_toEmptyServer() {
   _("SyncEngine._uploadOutgoing uploads new records to server");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
   collection.wbos.flying = new ServerWBO('flying');
@@ -830,6 +841,7 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
   _("SyncEngine._uploadOutgoing uploads in batches of MAX_UPLOAD_RECORDS");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let crypto_steam = new ServerWBO('steam');
   let collection = new ServerCollection();
 
@@ -899,6 +911,7 @@ function test_syncFinish_deleteByIds() {
   _("SyncEngine._syncFinish deletes server records slated for deletion (list of record IDs).");
 
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let collection = new ServerCollection();
   collection.wbos.flying = new ServerWBO(
       'flying', encryptPayload({id: 'flying',
@@ -940,7 +953,8 @@ function test_syncFinish_deleteByIds() {
 function test_syncFinish_deleteLotsInBatches() {
   _("SyncEngine._syncFinish deletes server records in batches of 100 (list of record IDs).");
 
- Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
   let collection = new ServerCollection();
 
   // Let's count how many times the client does a DELETE request to the server
