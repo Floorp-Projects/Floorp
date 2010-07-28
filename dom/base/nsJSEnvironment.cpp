@@ -903,6 +903,20 @@ DumpString(const nsAString &str)
 }
 #endif
 
+static void
+MaybeGC(JSContext *cx)
+{
+  size_t bytes = cx->runtime->gcBytes;
+  size_t lastBytes = cx->runtime->gcLastBytes;
+  if ((bytes > 8192 && bytes > lastBytes * 16)
+#ifdef DEBUG
+      || cx->runtime->gcZeal > 0
+#endif
+      ) {
+    JS_GC(cx);
+  }
+}
+
 static already_AddRefed<nsIPrompt>
 GetPromptFromContext(nsJSContext* ctx)
 {
@@ -941,7 +955,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   PRTime callbackTime = ctx->mOperationCallbackTime;
   PRTime modalStateTime = ctx->mModalStateTime;
 
-  JS_MaybeGC(cx);
+  MaybeGC(cx);
 
   // Now restore the callback time and count, in case they got reset.
   ctx->mOperationCallbackTime = callbackTime;
@@ -3517,12 +3531,12 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
 
 #ifdef JS_GC_ZEAL
   if (mContext->runtime->gcZeal >= 2) {
-    JS_MaybeGC(mContext);
+    MaybeGC(mContext);
   } else
 #endif
   if (mNumEvaluations > 20) {
     mNumEvaluations = 0;
-    JS_MaybeGC(mContext);
+    MaybeGC(mContext);
   }
 
   if (aTerminated) {
