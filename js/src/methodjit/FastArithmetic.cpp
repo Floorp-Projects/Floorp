@@ -784,24 +784,43 @@ mjit::Compiler::jsop_mod()
     /* Perform division. */
     masm.idiv(rhsReg);
 
-    /* Test for negative 0. */
-    RegisterID lhsData = frame.tempRegForData(lhs);
-    Jump negZero1 = masm.branchTest32(Assembler::NonZero, X86Registers::edx);
-    Jump negZero2 = masm.branchTest32(Assembler::Zero, lhsData, Imm32(0x80000000));
+    /* ECMA-262 11.5.3 requires the result to have the same sign as the lhs.
+     * Thus, if the remainder of the div instruction is zero and the lhs is
+     * negative, we must return negative 0. */
 
-    /* Darn, negative 0. */
-    masm.storeValue(DoubleValue(-0.0), frame.addressOf(lhs));
+    bool lhsMaybeNeg = true;
+    bool lhsIsNeg = false;
+    if (lhs->isConstant()) {
+        /* This condition is established at the top of this function. */
+        JS_ASSERT(lhs->getValue().isInt32());
+        lhsMaybeNeg = lhsIsNeg = (lhs->getValue().toInt32() < 0);
+    }
 
-    /* :TODO: This is wrong, must load into EDX as well. */
+    MaybeJump done;
+    if (lhsMaybeNeg) {
+        RegisterID lhsData;
+        if (!lhsIsNeg)
+            lhsData = frame.tempRegForData(lhs);
+        Jump negZero1 = masm.branchTest32(Assembler::NonZero, X86Registers::edx);
+        MaybeJump negZero2;
+        if (!lhsIsNeg)
+            negZero2 = masm.branchTest32(Assembler::Zero, lhsData, Imm32(0x80000000));
+        /* Darn, negative 0. */
+        masm.storeValue(DoubleValue(-0.0), frame.addressOf(lhs));
 
-    Jump done = masm.jump();
-    negZero1.linkTo(masm.label(), &masm);
-    negZero2.linkTo(masm.label(), &masm);
+        /* :TODO: This is wrong, must load into EDX as well. */
+
+        done = masm.jump();
+        negZero1.linkTo(masm.label(), &masm);
+        if (negZero2.isSet())
+            negZero2.getJump().linkTo(masm.label(), &masm);
+    }
 
     /* Better - integer. */
     masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), frame.addressOf(lhs));
 
-    done.linkTo(masm.label(), &masm);
+    if (done.isSet())
+        done.getJump().linkTo(masm.label(), &masm);
 
     if (slowPath) {
         stubcc.leave();
