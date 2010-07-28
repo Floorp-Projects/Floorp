@@ -475,7 +475,7 @@
         <parameter name="autoSelect"/>
         <body>
           <![CDATA[
-            if (!this.itemId)
+            if (!this.itemId || this.control._readOnlyFolders.indexOf(parseInt(this.itemId)) != -1)
               return;
 
             this._isEditing = true;
@@ -497,6 +497,9 @@
         <parameter name="shouldSave"/>
         <body>
           <![CDATA[
+            if (!this.itemId || this.control._readOnlyFolders.indexOf(parseInt(this.itemId)) != -1)
+              return;
+
             if (shouldSave)
               this.save();
 
@@ -853,7 +856,7 @@
             let result = PlacesUtils.history.executeQuery(query, options);
             let rootNode = result.root;
             rootNode.containerOpen = true;
-    
+
             let cc = rootNode.childCount;
             for (var i=0; i<cc; ++i) {
               let node = rootNode.getChild(i);
