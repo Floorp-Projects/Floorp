@@ -75,7 +75,6 @@ parent:
 
     // Services remoting
 
-    async VisitURI(URI uri, URI referrer, PRUint32 flags);
     // PrefService messages
     sync GetPrefType(nsCString prefName) returns (PRInt32 retValue, nsresult rv);
     sync GetBoolPref(nsCString prefName) returns (PRBool retValue, nsresult rv);
