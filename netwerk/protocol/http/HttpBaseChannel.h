@@ -161,6 +161,7 @@ public:
   NS_IMETHOD SetCookie(const char *aCookieHeader);
   NS_IMETHOD GetForceAllowThirdPartyCookie(PRBool *aForce);
   NS_IMETHOD SetForceAllowThirdPartyCookie(PRBool aForce);
+  NS_IMETHOD GetCanceled(PRBool *aCanceled);
 
   // nsISupportsPriority
   NS_IMETHOD GetPriority(PRInt32 *value);
@@ -205,12 +206,13 @@ protected:
   PRUint8                           mCaps;
   PRUint8                           mRedirectionLimit;
 
+  PRUint8                           mCanceled                   : 1;
   PRUint8                           mIsPending                  : 1;
   PRUint8                           mWasOpened                  : 1;
   PRUint8                           mResponseHeadersModified    : 1;
   PRUint8                           mAllowPipelining            : 1;
   PRUint8                           mForceAllowThirdPartyCookie : 1;
-  PRUint32                          mUploadStreamHasHeaders     : 1;
+  PRUint8                           mUploadStreamHasHeaders     : 1;
 };
 
 
