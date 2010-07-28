@@ -800,7 +800,7 @@ gfxFontUtils::MapUVSToGlyphFormat14(const PRUint8 *aBuf, PRUint32 aCh, PRUint32 
 
 PRUint32
 gfxFontUtils::MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength,
-                             PRUnichar aCh)
+                             PRUint32 aCh)
 {
     PRUint32 offset;
     PRBool   symbol;
@@ -810,7 +810,7 @@ gfxFontUtils::MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength,
     switch (format) {
     case 4:
         return aCh < UNICODE_BMP_LIMIT ?
-            MapCharToGlyphFormat4(aBuf + offset, aCh) : 0;
+            MapCharToGlyphFormat4(aBuf + offset, PRUnichar(aCh)) : 0;
     case 12:
         return MapCharToGlyphFormat12(aBuf + offset, aCh);
     default:

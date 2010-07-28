@@ -651,7 +651,7 @@ public:
     MapUVSToGlyphFormat14(const PRUint8 *aBuf, PRUint32 aCh, PRUint32 aVS);
 
     static PRUint32
-    MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength, PRUnichar aCh);
+    MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength, PRUint32 aCh);
 
 #ifdef XP_WIN
 
