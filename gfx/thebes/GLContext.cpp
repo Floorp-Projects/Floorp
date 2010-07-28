@@ -471,12 +471,6 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     int depth = mCreationFormat.depth;
     int stencil = mCreationFormat.stencil;
 
-#ifdef USE_GLES2
-    const bool isMobile = true;
-#else
-    const bool isMobile = false;
-#endif
-
     bool firstTime = (mOffscreenFBO == 0);
 
     GLuint curBoundTexture = 0;
@@ -502,12 +496,16 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
         fGenFramebuffers(1, &mOffscreenFBO);
         fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mOffscreenFBO);
 
-        if (depth) {
+        if (depth && stencil && !mIsGLES2) {
             fGenRenderbuffers(1, &mOffscreenDepthRB);
-        }
+        } else {
+            if (depth) {
+                fGenRenderbuffers(1, &mOffscreenDepthRB);
+            }
 
-        if (stencil) {
-            fGenRenderbuffers(1, &mOffscreenStencilRB);
+            if (stencil) {
+                fGenRenderbuffers(1, &mOffscreenStencilRB);
+            }
         }
     } else {
         fBindTexture(LOCAL_GL_TEXTURE_2D, mOffscreenTexture);
@@ -531,24 +529,31 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
                     aSize.width, aSize.height,
                     0,
                     LOCAL_GL_RGB,
-                    isMobile ? LOCAL_GL_UNSIGNED_SHORT_5_6_5
+                    mIsGLES2 ? LOCAL_GL_UNSIGNED_SHORT_5_6_5
                              : LOCAL_GL_UNSIGNED_BYTE,
                     NULL);
     }
 
-
-    if (depth) {
+    if (depth && stencil && !mIsGLES2) {
         fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenDepthRB);
         fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
-                             LOCAL_GL_DEPTH_COMPONENT16,
+                             LOCAL_GL_DEPTH24_STENCIL8,
                              aSize.width, aSize.height);
-    }
+    } else {
+        if (depth) {
+            fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenDepthRB);
+            fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
+                                 mIsGLES2 ? LOCAL_GL_DEPTH_COMPONENT16
+                                          : LOCAL_GL_DEPTH_COMPONENT24,
+                                 aSize.width, aSize.height);
+        }
 
-    if (stencil) {
-        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenStencilRB);
-        fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
-                             LOCAL_GL_STENCIL_INDEX8,
-                             aSize.width, aSize.height);
+        if (stencil) {
+            fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenStencilRB);
+            fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
+                                 LOCAL_GL_STENCIL_INDEX8,
+                                 aSize.width, aSize.height);
+        }
     }
 
     // Now assemble the FBO, if we're creating one
@@ -559,18 +564,30 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
                               LOCAL_GL_TEXTURE_2D,
                               mOffscreenTexture,
                               0);
-        if (depth) {
+
+        if (depth && stencil && !mIsGLES2) {
             fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                      LOCAL_GL_DEPTH_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER,
                                      mOffscreenDepthRB);
-        }
-
-        if (stencil) {
             fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                      LOCAL_GL_STENCIL_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER,
-                                     mOffscreenStencilRB);
+                                     mOffscreenDepthRB);
+        } else {
+            if (depth) {
+                fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                         LOCAL_GL_DEPTH_ATTACHMENT,
+                                         LOCAL_GL_RENDERBUFFER,
+                                         mOffscreenDepthRB);
+            }
+
+            if (stencil) {
+                fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                         LOCAL_GL_STENCIL_ATTACHMENT,
+                                         LOCAL_GL_RENDERBUFFER,
+                                         mOffscreenStencilRB);
+            }
         }
     }
 
