@@ -177,7 +177,7 @@ function xpcGetFramesByName(name) {
 
 function xpcCleanupWindows() {
   xpcEnumerateContentWindows(function(win) {
-    if (win.location.protocol == "data:")
+    if (win.location && win.location.protocol == "data:")
       win.close();
   });
 }
