@@ -14886,14 +14886,18 @@ TraceRecorder::record_JSOP_LAMBDA()
                  * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
                  * is the callee for this JSOP_CALL.
                  */
-                JSFunction *calleeFun =
-                    GET_FUNCTION_PRIVATE(cx, &cx->regs->sp[1 - (iargc + 2)].toObject());
-                FastNative fastNative = FUN_FAST_NATIVE(calleeFun);
+                const Value &cref = cx->regs->sp[1 - (iargc + 2)];
+                JSObject *callee;
 
-                if ((iargc == 1 && fastNative == array_sort) ||
-                    (iargc == 2 && fastNative == str_replace)) {
-                    stack(0, INS_CONSTOBJ(FUN_OBJECT(fun)));
-                    return ARECORD_CONTINUE;
+                if (IsFunctionObject(cref, &callee)) {
+                    JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
+                    FastNative fastNative = FUN_FAST_NATIVE(calleeFun);
+
+                    if ((iargc == 1 && fastNative == array_sort) ||
+                        (iargc == 2 && fastNative == str_replace)) {
+                        stack(0, INS_CONSTOBJ(FUN_OBJECT(fun)));
+                        return ARECORD_CONTINUE;
+                    }
                 }
             } else if (op2 == JSOP_NULL) {
                 pc2 += JSOP_NULL_LENGTH;
