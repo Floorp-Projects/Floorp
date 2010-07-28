@@ -92,7 +92,7 @@ namespace nanojit
     // Per-opcode register hint table.  Default to no hints for all
     // instructions.  It's not marked const because individual back-ends can
     // install hint values for opcodes of interest in nInit().
-    RegisterMask hints[LIR_sentinel+1] = {
+    RegisterMask Assembler::nHints[LIR_sentinel+1] = {
 #define OP___(op, number, repKind, retType, isCse) \
         0,
 #include "LIRopcode.tbl"
