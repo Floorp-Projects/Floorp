@@ -333,30 +333,20 @@ JSBool XPCDispInterface::Member::GetValue(XPCCallContext& ccx,
             return JS_FALSE;
 
         intN argc;
-        intN flags;
         JSNative callback;
         // Is this a function or a parameterized getter/setter
         if(IsFunction() || IsParameterizedProperty())
         {
             argc = GetParamCount();
-            flags = 0;
             callback = XPC_IDispatch_CallMethod;
         }
         else
         {
-            if(IsSetter())
-            {
-                flags = JSFUN_GETTER | JSFUN_SETTER;
-            }
-            else
-            {
-                flags = JSFUN_GETTER;
-            }
             argc = 0;
             callback = XPC_IDispatch_GetterSetter;
         }
 
-        JSFunction *fun = JS_NewFunction(cx, callback, argc, flags, nsnull,
+        JSFunction *fun = JS_NewFunction(cx, callback, argc, 0, nsnull,
                                          JS_GetStringBytes(JSID_TO_STRING(mName)));
         if(!fun)
             return JS_FALSE;
