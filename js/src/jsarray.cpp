@@ -811,7 +811,8 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     if (!obj->isDenseArray())
         return js_SetProperty(cx, obj, id, vp);
 
-    if (!js_IdIsIndex(id, &i) || INDEX_TOO_SPARSE(obj, i)) {
+    if (!js_IdIsIndex(id, &i) || js_PrototypeHasIndexedProperties(cx, obj) ||
+        INDEX_TOO_SPARSE(obj, i)) {
         if (!obj->makeDenseArraySlow(cx))
             return JS_FALSE;
         return js_SetProperty(cx, obj, id, vp);
