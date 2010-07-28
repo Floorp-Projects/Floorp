@@ -121,18 +121,6 @@ window.InfoItem = function(bounds, options) {
 
 // ----------
 window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
-  // ----------
-  // Accepts a callback that will be called when this item closes.
-  // The referenceObject is used to facilitate removal if necessary.
-  addOnClose: function(referenceObject, callback) {
-    this.addSubscriber(referenceObject, "close", callback);
-  },
-
-  // ----------
-  // Removes the close event callback associated with referenceObject.
-  removeOnClose: function(referenceObject) {
-    this.removeSubscriber(referenceObject, "close");
-  },
 
   // ----------
   // Function: getStorageData
@@ -196,19 +184,19 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         return;
 
       this.bounds = new Rect(rect);
-      Utils.assertThrow('Group.setBounds: this.bounds must be a real rectangle!', 
+      Utils.assertThrow('Group.setBounds: this.bounds must be a real rectangle!',
                         Utils.isRect(this.bounds));
 
       // ___ Update our representation
       if (immediately) {
         iQ(this.container).css(css);
       } else {
-        TabMirror.pausePainting();
+        TabItems.pausePainting();
         iQ(this.container).animate(css, {
           duration: 350,
           easing: 'tabcandyBounce',
           complete: function() {
-            TabMirror.resumePainting();
+            TabItems.resumePainting();
           }
         });
       }

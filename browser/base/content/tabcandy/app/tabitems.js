@@ -43,11 +43,41 @@
 
 // ##########
 // Class: TabItem
-// An <Item> that represents a tab.
-window.TabItem = function(container, tab) {
-  Utils.assert('container', container);
+// An <Item> that represents a tab. Also implements the <Subscribable> interface.
+//
+// Parameters:
+//   tab - a xul:tab
+window.TabItem = function(tab) {
+
   Utils.assert('tab', tab);
-  Utils.assert('tab.mirror', tab.mirror);
+
+  this.tab = tab;
+  // register this as the tab's tabItem
+  this.tab.tabItem = this;
+
+  // ___ set up div
+  var $div = iQ('<div>')
+    .data("tab", this.tab)
+    .addClass('tab')
+    .html("<div class='thumb'><div class='thumb-shadow'></div>" +
+          "<img class='cached-thumb' style='display:none'/><canvas/></div>" +
+          "<div class='favicon'><img/></div>" +
+          "<span class='tab-title'>&nbsp;</span>"
+    )
+    .appendTo('body');
+
+  this.needsPaint = 0;
+  this.canvasSizeForced = false;
+  this.isShowingCachedData = false;
+  this.favEl = iQ('.favicon>img', $div).get(0);
+  this.nameEl = iQ('.tab-title', $div).get(0);
+  this.canvasEl = iQ('.thumb canvas', $div).get(0);
+  this.cachedThumbEl = iQ('img.cached-thumb', $div).get(0);
+  this.okayToHideCache = false;
+
+  this.tabCanvas = new TabCanvas(this.tab, this.canvasEl);
+  this.tabCanvas.attach();
+  this.triggerPaint();
 
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this.locked = {};
@@ -56,11 +86,8 @@ window.TabItem = function(container, tab) {
   this.sizeExtra = new Point();
   this.keepProportional = true;
 
-  // ___ set up div
-  var $div = iQ(container);
   var self = this;
 
-  $div.data('tabItem', this);
   this.isDragging = false;
 
   this.sizeExtra.x = parseInt($div.css('padding-left'))
@@ -74,7 +101,7 @@ window.TabItem = function(container, tab) {
   this.bounds.height += this.sizeExtra.y;
 
   // ___ superclass setup
-  this._init(container);
+  this._init($div.get(0));
 
   // ___ drag/drop
   // override dropOptions with custom tabitem methods
@@ -176,26 +203,85 @@ window.TabItem = function(container, tab) {
   // ___ additional setup
   this.reconnected = false;
   this._hasBeenDrawn = false;
-  this.tab = tab;
   this.setResizable(true);
 
   this._updateDebugBounds();
 
   TabItems.register(this);
-  this.tab.mirror.addSubscriber(this, "close", function(who, info) {
+  this.addSubscriber(this, "close", function(who, info) {
     TabItems.unregister(self);
     self.removeTrenches();
   });
 
-  this.tab.mirror.addSubscriber(this, 'urlChanged', function(who, info) {
+  this.addSubscriber(this, 'urlChanged', function(who, info) {
     if (!self.reconnected && (info.oldURL == 'about:blank' || !info.oldURL))
       TabItems.reconnect(self);
 
     self.save();
   });
+
+  this.addSubscriber(TabItems, "close", function() {
+    Items.unsquish(null, self);
+  });
+
+  if (!TabItems.reconnect(this))
+    Groups.newTab(this);
 };
 
-window.TabItem.prototype = Utils.extend(new Item(), {
+window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
+  // ----------
+  // Function: triggerPaint
+  // Forces the <TabItem> to update its thumbnail.
+  triggerPaint: function() {
+    var date = new Date();
+    this.needsPaint = date.getTime();
+  },
+
+  // ----------
+  // Function: forceCanvasSize
+  // Repaints the thumbnail with the given resolution, and forces it
+  // to stay that resolution until unforceCanvasSize is called.
+  forceCanvasSize: function(w, h) {
+    this.canvasSizeForced = true;
+    this.canvasEl.width = w;
+    this.canvasEl.height = h;
+    this.tabCanvas.paint();
+  },
+
+  // ----------
+  // Function: unforceCanvasSize
+  // Stops holding the thumbnail resolution; allows it to shift to the
+  // size of thumbnail on screen. Note that this call does not nest, unlike
+  // <TabItems.resumePainting>; if you call forceCanvasSize multiple
+  // times, you just need a single unforce to clear them all.
+  unforceCanvasSize: function() {
+    this.canvasSizeForced = false;
+  },
+
+  // ----------
+  // Function: showCachedData
+  // Shows the cached data i.e. image and title.  Note: this method should only
+  // be called at browser startup with the cached data avaliable.
+  showCachedData: function(tabData) {
+    this.isShowingCachedData = true;
+    var $nameElement = iQ(this.nameEl);
+    var $canvasElement = iQ(this.canvasEl);
+    var $cachedThumbElement = iQ(this.cachedThumbEl);
+    $cachedThumbElement.attr("src", tabData.imageData).show();
+    $canvasElement.css({opacity: 0.0});
+    $nameElement.text(tabData.title ? tabData.title : "");
+  },
+
+  // ----------
+  // Function: hideCachedData
+  // Hides the cached data i.e. image and title and show the canvas.
+  hideCachedData: function() {
+    var $canvasElement = iQ(this.canvasEl);
+    var $cachedThumbElement = iQ(this.cachedThumbEl);
+    $cachedThumbElement.hide();
+    $canvasElement.css({opacity: 1.0});
+  },
+
   // ----------
   // Function: getStorageData
   // Get data to be used for persistent storage of this object.
@@ -208,8 +294,8 @@ window.TabItem.prototype = Utils.extend(new Item(), {
       userSize: (Utils.isPoint(this.userSize) ? new Point(this.userSize) : null),
       url: this.tab.linkedBrowser.currentURI.spec,
       groupID: (this.parent ? this.parent.id : 0),
-      imageData: (getImageData && this.tab.mirror.tabCanvas ?
-                  this.tab.mirror.tabCanvas.toImageData() : null),
+      imageData: (getImageData && this.tabCanvas ?
+                  this.tabCanvas.toImageData() : null),
       title: getImageData && this.tab.label || null
     };
   },
@@ -295,12 +381,12 @@ window.TabItem.prototype = Utils.extend(new Item(), {
   /*       $container.stop(true, true); */
         $container.css(css);
       } else {
-        TabMirror.pausePainting();
+        TabItems.pausePainting();
         $container.animate(css, {
           duration: 200,
           easing: 'tabcandyBounce',
           complete: function() {
-            TabMirror.resumePainting();
+            TabItems.resumePainting();
           }
         });
     /*       }).dequeue(); */
@@ -407,21 +493,6 @@ window.TabItem.prototype = Utils.extend(new Item(), {
   },
 
   // ----------
-  // Function: addOnClose
-  // Accepts a callback that will be called when this item closes.
-  // The referenceObject is used to facilitate removal if necessary.
-  addOnClose: function(referenceObject, callback) {
-    this.tab.mirror.addSubscriber(referenceObject, "close", callback);
-  },
-
-  // ----------
-  // Function: removeOnClose
-  // Removes the close event callback associated with referenceObject.
-  removeOnClose: function(referenceObject) {
-    this.tab.mirror.removeSubscriber(referenceObject, "close");
-  },
-
-  // ----------
   // Function: setResizable
   // If value is true, makes this item resizable, otherwise non-resizable.
   // Shows/hides a visible resize handle as appropriate.
@@ -481,7 +552,7 @@ window.TabItem.prototype = Utils.extend(new Item(), {
       var tab = this.tab;
 
       function onZoomDone(){
-        TabMirror.resumePainting();
+        TabItems.resumePainting();
         // If it's not focused, the onFocus lsitener would handle it.
         if (gBrowser.selectedTab == tab) {
           UI.tabOnFocus(tab);
@@ -520,7 +591,7 @@ window.TabItem.prototype = Utils.extend(new Item(), {
       // right animation function so that you don't see a change in percieved
       // animation speed.
       var scaleCheat = 1.7;
-      TabMirror.pausePainting();
+      TabItems.pausePainting();
       $tabEl
         .addClass("front")
         .animate({
@@ -551,7 +622,7 @@ window.TabItem.prototype = Utils.extend(new Item(), {
     box.width -= this.sizeExtra.x;
     box.height -= this.sizeExtra.y;
 
-    TabMirror.pausePainting();
+    TabItems.pausePainting();
 
     var self = this;
     $tab.animate({
@@ -565,7 +636,7 @@ window.TabItem.prototype = Utils.extend(new Item(), {
       complete: function() { // note that this will happen on the DOM thread
         $tab.removeClass('front');
 
-        TabMirror.resumePainting();
+        TabItems.resumePainting();
 
         self._zoomPrep = false;
         self.setBounds(self.getBounds(), true, {force: true});
@@ -625,6 +696,200 @@ window.TabItems = {
   fontSize: 9,
   items: [],
 
+  paintingPaused: 0,
+  heartbeatIndex: 0,
+
+  // ----------
+  // Function: init
+  // Set up the necessary tracking to maintain the <TabItems>s.
+  init: function() {
+    Utils.assert("TabManager must be initialized first", window.Tabs);
+    var self = this;
+
+    // When a tab is opened, create the TabItem
+    Tabs.onOpen(function() {
+      var tab = this;
+      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+        self.update(tab);
+      }, 1);
+    });
+
+    // When a tab is updated, update the TabItem (in other words, its thumbnail)
+    Tabs.onReady(function(evt) {
+      var tab = evt.tab;
+      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+        self.update(tab);
+      }, 1);
+    });
+
+    // When a tab's content is loaded, show the canvas and hide the cached data
+    // if necessary.
+    Tabs.onLoad(function(evt) {
+      var tab = evt.tab;
+      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+        tab.tabItem.okayToHideCache = true;
+        self.update(tab);
+      }, 1);
+    });
+
+    // When a tab is closed, unlink.
+    Tabs.onClose( function(){
+      var tab = this;
+      Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+        self.unlink(tab);
+      }, 1);
+    });
+
+    // For each tab, create the link.
+    Tabs.forEach(function(tab){
+      self.link(tab);
+    });
+
+    this.paintingPaused = 0;
+    this.heartbeatIndex = 0;
+    this._fireNextHeartbeat();
+  },
+
+  // ----------
+  // Function: _heartbeat
+  _heartbeat: function() {
+    try {
+      var now = Date.now();
+      var count = Tabs.length;
+      if (count && this.paintingPaused <= 0) {
+        this.heartbeatIndex++;
+        if (this.heartbeatIndex >= count)
+          this.heartbeatIndex = 0;
+
+        var tab = Tabs[this.heartbeatIndex];
+        var tabItem = tab.tabItem;
+        if (tabItem) {
+          let iconUrl = tab.image;
+          if ( iconUrl == null ){
+            iconUrl = "chrome://mozapps/skin/places/defaultFavicon.png";
+          }
+
+          let label = tab.label;
+          var $name = iQ(tabItem.nameEl);
+          var $canvas = iQ(tabItem.canvasEl);
+
+          if (iconUrl != tabItem.favEl.src) {
+            tabItem.favEl.src = iconUrl;
+            tabItem.triggerPaint();
+          }
+
+          let tabUrl = tab.linkedBrowser.currentURI.spec;
+          if (tabUrl != tabItem.url) {
+            var oldURL = tabItem.url;
+            tabItem.url = tabUrl;
+            tabItem._sendToSubscribers(
+              'urlChanged', {oldURL: oldURL, newURL: tabUrl});
+            tabItem.triggerPaint();
+          }
+
+          if (!tabItem.isShowingCachedData && $name.text() != label) {
+            $name.text(label);
+            tabItem.triggerPaint();
+          }
+
+          if (!tabItem.canvasSizeForced) {
+            var w = $canvas.width();
+            var h = $canvas.height();
+            if (w != tabItem.canvasEl.width || h != tabItem.canvasEl.height) {
+              tabItem.canvasEl.width = w;
+              tabItem.canvasEl.height = h;
+              tabItem.triggerPaint();
+            }
+          }
+
+          if (tabItem.needsPaint) {
+            tabItem.tabCanvas.paint();
+
+            if (tabItem.isShowingCachedData && tabItem.okayToHideCache)
+              tabItem.hideCachedData();
+
+            if (Date.now() - tabItem.needsPaint > 5000)
+              tabItem.needsPaint = 0;
+          }
+        }
+      }
+    } catch(e) {
+      Utils.error('heartbeat', e);
+    }
+
+    this._fireNextHeartbeat();
+  },
+
+  // ----------
+  // Function: _fireNextHeartbeat
+  _fireNextHeartbeat: function() {
+    var self = this;
+    Utils.timeout(function() {
+      self._heartbeat();
+    }, 100);
+  },
+
+  // ----------
+  // Function: update
+  update: function(tab){
+    this.link(tab);
+
+    if (tab.tabItem && tab.tabItem.tabCanvas)
+      tab.tabItem.triggerPaint();
+  },
+
+  // ----------
+  // Function: link
+  link: function(tab){
+    // Don't add duplicates
+    if (tab.tabItem)
+      return false;
+
+    // Add the tab to the page
+    new TabItem(tab); // sets tab.tabItem to itself
+    return true;
+  },
+
+  // ----------
+  // Function: unlink
+  unlink: function(tab){
+    var tabItem = tab.tabItem;
+    if (tabItem) {
+      tabItem._sendToSubscribers("close");
+      var tabCanvas = tabItem.tabCanvas;
+      if (tabCanvas)
+        tabCanvas.detach();
+
+      iQ(tabItem.container).remove();
+
+      tab.tabItem = null;
+    }
+  },
+
+  // Function: pausePainting
+  // Tells TabItems to stop updating thumbnails (so you can do
+  // animations without thumbnail paints causing stutters).
+  // pausePainting can be called multiple times, but every call to
+  // pausePainting needs to be mirrored with a call to <resumePainting>.
+  pausePainting: function() {
+    this.paintingPaused++;
+  },
+
+  // Function: resumePainting
+  // Undoes a call to <pausePainting>. For instance, if you called
+  // pausePainting three times in a row, you'll need to call resumePainting
+  // three times before TabItems will start updating thumbnails again.
+  resumePainting: function() {
+    this.paintingPaused--;
+  },
+
+  // Function: isPaintingPaused
+  // Returns a boolean indicating whether painting
+  // is paused or not.
+  isPaintingPaused: function() {
+    return this.paintingPause > 0;
+  },
+
   // ----------
   // Function: register
   // Adds the given <TabItem> to the master list.
@@ -648,14 +913,6 @@ window.TabItems = {
   // Returns a copy of the master array of <TabItem>s.
   getItems: function() {
     return Utils.copy(this.items);
-  },
-
-  // ----------
-  // Function: getItemByTabElement
-  // Given the DOM element that contains the tab's representation on screen,
-  // returns the <TabItem> it belongs to.
-  getItemByTabElement: function(tabElement) {
-    return iQ(tabElement).data("tabItem");
   },
 
   // ----------
@@ -723,13 +980,12 @@ window.TabItems = {
         }
 
         if (tabData.imageData) {
-          var mirror = item.tab.mirror;
-          mirror.showCachedData(tabData);
+          item.showCachedData(tabData);
           // the code in the progress listener doesn't fire sometimes because
           // tab is being restored so need to catch that.
           Utils.timeout(function() {
-            if (mirror && mirror.isShowingCachedData) {
-              mirror.hideCachedData();
+            if (item && item.isShowingCachedData) {
+              item.hideCachedData();
             }
           }, 15000);
         }
@@ -747,5 +1003,89 @@ window.TabItems = {
     }
 
     return found;
+  }
+};
+
+// ##########
+// Class: TabCanvas
+// Takes care of the actual canvas for the tab thumbnail
+// Does not need to be accessed from outside of tabitems.js
+var TabCanvas = function(tab, canvas){
+  this.init(tab, canvas);
+};
+
+TabCanvas.prototype = {
+  // ----------
+  // Function: init
+  init: function(tab, canvas){
+    this.tab = tab;
+    this.canvas = canvas;
+
+    var $canvas = iQ(canvas).data("link", this);
+
+    var w = $canvas.width();
+    var h = $canvas.height();
+    canvas.width = w;
+    canvas.height = h;
+
+    var self = this;
+    this.paintIt = function(evt) {
+      self.tab.tabItem.triggerPaint();
+    };
+  },
+
+  // ----------
+  // Function: attach
+  attach: function() {
+    this.tab.linkedBrowser.contentWindow.
+      addEventListener("MozAfterPaint", this.paintIt, false);
+  },
+
+  // ----------
+  // Function: detach
+  detach: function() {
+    try {
+      this.tab.linkedBrowser.contentWindow.
+        removeEventListener("MozAfterPaint", this.paintIt, false);
+    } catch(e) {
+      // ignore
+    }
+  },
+
+  // ----------
+  // Function: paint
+  paint: function(evt){
+    var ctx = this.canvas.getContext("2d");
+
+    var w = this.canvas.width;
+    var h = this.canvas.height;
+    if (!w || !h)
+      return;
+
+    let fromWin = this.tab.linkedBrowser.contentWindow;
+    if (fromWin == null) {
+      Utils.log('null fromWin in paint');
+      return;
+    }
+
+    var scaler = w/fromWin.innerWidth;
+
+    // TODO: Potentially only redraw the dirty rect? (Is it worth it?)
+
+    ctx.save();
+    ctx.scale(scaler, scaler);
+    try{
+      ctx.drawWindow( fromWin, fromWin.scrollX, fromWin.scrollY, w/scaler, h/scaler, "#fff" );
+    } catch(e){
+      Utils.error('paint', e);
+    }
+
+    ctx.restore();
+  },
+
+  // ----------
+  // Function: toImageData
+  toImageData: function() {
+    return this.canvas.toDataURL("image/png", "");
   }
 };
