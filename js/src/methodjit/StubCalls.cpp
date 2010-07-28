@@ -491,14 +491,13 @@ stubs::GetElem(VMFrame &f)
         JSString *str = lval.toString();
         i = rval.toInt32();
 
-        if ((size_t)i >= str->length())
-            THROW();
-
-        str = JSString::getUnitString(cx, str, (size_t)i);
-        if (!str)
-            THROW();
-        f.regs.sp[-2].setString(str);
-        return;
+        if ((size_t)i < str->length()) {
+            str = JSString::getUnitString(cx, str, (size_t)i);
+            if (!str)
+                THROW();
+            f.regs.sp[-2].setString(str);
+            return;
+        }
     }
 
     obj = ValueToObject(cx, &lval);
