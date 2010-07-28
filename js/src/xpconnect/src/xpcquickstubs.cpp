@@ -1104,9 +1104,10 @@ xpc_qsStringToJsstring(JSContext *cx, const nsAString &str, JSString **rval)
 }
 
 JSBool
-xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, nsISupports *p,
-                         nsWrapperCache *cache, const nsIID *iid,
-                         XPCNativeInterface **iface, jsval *rval)
+xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, qsObjectHelper* aHelper,
+                         nsWrapperCache *cache,
+                         const nsIID *iid, XPCNativeInterface **iface,
+                         jsval *rval)
 {
     // From the T_INTERFACE case in XPCConvert::NativeData2JS.
     // This is one of the slowest things quick stubs do.
@@ -1122,10 +1123,13 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, nsISupports *p,
     // creating a new XPCNativeScriptableShared.
 
     nsresult rv;
-    if(!XPCConvert::NativeInterface2JSObject(lccx, rval, nsnull, p,
-                                             iid, iface, cache,
+    if(!XPCConvert::NativeInterface2JSObject(lccx, rval, nsnull,
+                                             aHelper->Object(),
+                                             iid, iface,
+                                             cache,
                                              lccx.GetCurrentJSObject(), PR_TRUE,
-                                             OBJ_IS_NOT_GLOBAL, &rv))
+                                             OBJ_IS_NOT_GLOBAL, &rv,
+                                             aHelper))
     {
         // I can't tell if NativeInterface2JSObject throws JS exceptions
         // or not.  This is a sloppy stab at the right semantics; the

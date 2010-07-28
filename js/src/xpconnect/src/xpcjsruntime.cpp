@@ -1217,8 +1217,8 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     if (!xpc)
         return JS_FALSE;
 
-    JS_SetNativeStackQuota(cx, 512 * 1024);
-    JS_SetScriptStackQuota(cx, 100 * 1024 * 1024);
+    JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
+    JS_SetScriptStackQuota(cx, 25 * sizeof(size_t) * 1024 * 1024);
 
     // we want to mark the global object ourselves since we use a different color
     JS_ToggleOptions(cx, JSOPTION_UNROOTED_GLOBAL);

@@ -4391,7 +4391,7 @@ public class Tokenizer implements Locator {
                          */
                         int hilo = 0;
                         if (c <= 'z') {
-                            @Const @NoLength int[] row = NamedCharacters.HILO_ACCEL[c];
+                            @Const @NoLength int[] row = NamedCharactersAccel.HILO_ACCEL[c];
                             if (row != null) {
                                 hilo = row[firstCharKey];
                             }

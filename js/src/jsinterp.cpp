@@ -4291,8 +4291,8 @@ BEGIN_CASE(JSOP_SETNAME)
 BEGIN_CASE(JSOP_SETPROP)
 BEGIN_CASE(JSOP_SETMETHOD)
 {
-    Value &rref = regs.sp[-1];
-    JS_ASSERT_IF(op == JSOP_SETMETHOD, IsFunctionObject(rref));
+    Value rval = regs.sp[-1];
+    JS_ASSERT_IF(op == JSOP_SETMETHOD, IsFunctionObject(rval));
     Value &lref = regs.sp[-2];
     JS_ASSERT_IF(op == JSOP_SETNAME, lref.isObject());
     JSObject *obj;
@@ -4365,7 +4365,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                   fast_set_propcache_hit:
                     PCMETER(cache->pchits++);
                     PCMETER(cache->setpchits++);
-                    NATIVE_SET(cx, obj, sprop, entry, &rref);
+                    NATIVE_SET(cx, obj, sprop, entry, &rval);
                     break;
                 }
                 checkForAdd = sprop->hasSlot() && sprop->parent == scope->lastProperty();
@@ -4443,7 +4443,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * branded scope.
                  */
                 TRACE_2(SetPropHit, entry, sprop);
-                obj->lockedSetSlot(slot, rref);
+                obj->lockedSetSlot(slot, rval);
 
                 /*
                  * Purge the property cache of the id we may have just
@@ -4466,7 +4466,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 sprop = entry->vword.toSprop();
                 JS_ASSERT(sprop->writable());
                 JS_ASSERT(!obj2->scope()->sealed());
-                NATIVE_SET(cx, obj, sprop, entry, &rref);
+                NATIVE_SET(cx, obj, sprop, entry, &rval);
             }
             if (sprop)
                 break;
@@ -4483,10 +4483,10 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 defineHow = JSDNP_CACHE_RESULT | JSDNP_UNQUALIFIED;
             else
                 defineHow = JSDNP_CACHE_RESULT;
-            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rref))
+            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval))
                 goto error;
         } else {
-            if (!obj->setProperty(cx, id, &rref))
+            if (!obj->setProperty(cx, id, &rval))
                 goto error;
             ABORT_RECORDING(cx, "Non-native set");
         }
@@ -4605,6 +4605,7 @@ BEGIN_CASE(JSOP_SETELEM)
     FETCH_OBJECT(cx, -3, obj);
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
+    Value rval;
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length = obj->getDenseArrayCapacity();
@@ -4621,7 +4622,8 @@ BEGIN_CASE(JSOP_SETELEM)
             }
         }
     } while (0);
-    if (!obj->setProperty(cx, id, &regs.sp[-1]))
+    rval = regs.sp[-1];
+    if (!obj->setProperty(cx, id, &rval))
         goto error;
   end_setelem:;
 }
@@ -4634,7 +4636,8 @@ BEGIN_CASE(JSOP_ENUMELEM)
     FETCH_OBJECT(cx, -2, obj);
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
-    if (!obj->setProperty(cx, id, &regs.sp[-3]))
+    Value rval = regs.sp[-3];
+    if (!obj->setProperty(cx, id, &rval))
         goto error;
     regs.sp -= 3;
 }
@@ -5549,12 +5552,6 @@ END_CASE(JSOP_DEFVAR)
 
 BEGIN_CASE(JSOP_DEFFUN)
 {
-    PropertyOp getter, setter;
-    bool doSet;
-    JSObject *pobj;
-    JSProperty *prop;
-    uint32 old;
-
     /*
      * A top-level function defined in Global or Eval code (see ECMA-262
      * Ed. 3), or else a SpiderMonkey extension: a named function statement in
@@ -5623,24 +5620,6 @@ BEGIN_CASE(JSOP_DEFFUN)
                   : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
     /*
-     * Load function flags that are also property attributes.  Getters and
-     * setters do not need a slot, their value is stored elsewhere in the
-     * property itself, not in obj slots.
-     */
-    getter = setter = PropertyStub;
-    uintN flags = JSFUN_GSFLAG2ATTR(fun->flags);
-    if (flags) {
-        /* Function cannot be both getter a setter. */
-        JS_ASSERT(flags == JSPROP_GETTER || flags == JSPROP_SETTER);
-        attrs |= flags | JSPROP_SHARED;
-        rval.setUndefined();
-        if (flags == JSPROP_GETTER)
-            getter = CastAsPropertyOp(obj);
-        else
-            setter = CastAsPropertyOp(obj);
-    }
-
-    /*
      * We define the function as a property of the variable object and not the
      * current scope chain even for the case of function expression statements
      * and functions defined by eval inside let or with blocks.
@@ -5648,13 +5627,17 @@ BEGIN_CASE(JSOP_DEFFUN)
     JSObject *parent = fp->varobj(cx);
     JS_ASSERT(parent);
 
+    uint32 old;
+    bool doSet;
+
     /*
      * Check for a const property of the same name -- or any kind of property
      * if executing with the strict option.  We check here at runtime as well
      * as at compile-time, to handle eval as well as multiple HTML script tags.
      */
     jsid id = ATOM_TO_JSID(fun->atom);
-    prop = NULL;
+    JSProperty *prop = NULL;
+    JSObject *pobj;
     JSBool ok = CheckRedeclaration(cx, parent, id, attrs, &pobj, &prop);
     if (!ok)
         goto restore_scope;
@@ -5684,13 +5667,13 @@ BEGIN_CASE(JSOP_DEFFUN)
              */
             JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE|JSPROP_PERMANENT)));
             JS_ASSERT(!(old & JSPROP_READONLY));
-            doSet = JS_TRUE;
+            doSet = true;
         }
         pobj->dropProperty(cx, prop);
     }
     ok = doSet
          ? parent->setProperty(cx, id, &rval)
-         : parent->defineProperty(cx, id, rval, getter, setter, attrs);
+         : parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs);
 
   restore_scope:
     /* Restore fp->scopeChain now that obj is defined in fp->callobj. */
@@ -5718,37 +5701,18 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
                   ? JSPROP_ENUMERATE
                   : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
-    uintN flags = JSFUN_GSFLAG2ATTR(fun->flags);
-    if (flags) {
-        attrs |= flags | JSPROP_SHARED;
-        rval.setUndefined();
-    }
-
     JSObject *parent = fp->varobj(cx);
     JS_ASSERT(parent);
 
     jsid id = ATOM_TO_JSID(fun->atom);
-    JSBool ok = CheckRedeclaration(cx, parent, id, attrs, NULL, NULL);
-    if (ok) {
-        if (attrs == JSPROP_ENUMERATE) {
-            JS_ASSERT(fp->flags & JSFRAME_EVAL);
-            ok = parent->setProperty(cx, id, &rval);
-        } else {
-            JS_ASSERT(attrs & JSPROP_PERMANENT);
-
-            ok = parent->defineProperty(cx, id, rval,
-                                        (flags & JSPROP_GETTER)
-                                        ? CastAsPropertyOp(obj)
-                                        : PropertyStub,
-                                        (flags & JSPROP_SETTER)
-                                        ? CastAsPropertyOp(obj)
-                                        : PropertyStub,
-                                        attrs);
-        }
-    }
-
-    if (!ok)
+    if (!CheckRedeclaration(cx, parent, id, attrs, NULL, NULL))
         goto error;
+
+    if ((attrs == JSPROP_ENUMERATE)
+        ? !parent->setProperty(cx, id, &rval)
+        : !parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs)) {
+        goto error;
+    }
 }
 END_CASE(JSOP_DEFFUN_FC)
 

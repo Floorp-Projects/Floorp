@@ -96,6 +96,9 @@
 #ifdef MOZ_WEBM
 #include "nsWebMDecoder.h"
 #endif
+#ifdef MOZ_RAW
+#include "nsRawDecoder.h"
+#endif
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gMediaElementLog;
@@ -478,7 +481,9 @@ void nsHTMLMediaElement::AbortExistingLoads()
   // with a different load ID to silently be cancelled.
   mCurrentLoadID++;
 
+  PRBool fireTimeUpdate = PR_FALSE;
   if (mDecoder) {
+    fireTimeUpdate = mDecoder->GetCurrentTime() != 0.0;
     mDecoder->Shutdown();
     mDecoder = nsnull;
   }
@@ -496,6 +501,7 @@ void nsHTMLMediaElement::AbortExistingLoads()
   mIsLoadingFromSrcAttribute = PR_FALSE;
   mSuspendedAfterFirstFrame = PR_FALSE;
   mAllowSuspendAfterFirstFrame = PR_TRUE;
+  mSourcePointer = nsnull;
 
   // TODO: The playback rate must be set to the default playback rate.
 
@@ -504,7 +510,13 @@ void nsHTMLMediaElement::AbortExistingLoads()
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
     mPaused = PR_TRUE;
 
-    // TODO: The current playback position must be set to 0.
+    if (fireTimeUpdate) {
+      // Since we destroyed the decoder above, the current playback position
+      // will now be reported as 0. The playback position was non-zero when
+      // we destroyed the decoder, so fire a timeupdate event so that the
+      // change will be reflected in the controls.
+      DispatchAsyncSimpleEvent(NS_LITERAL_STRING("timeupdate"));
+    }
     DispatchSimpleEvent(NS_LITERAL_STRING("emptied"));
   }
 
@@ -945,7 +957,8 @@ NS_IMETHODIMP nsHTMLMediaElement::SetMuted(PRBool aMuted)
   return NS_OK;
 }
 
-nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
+nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                                       PRUint32 aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mCurrentLoadID(0),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),
@@ -1010,7 +1023,7 @@ void nsHTMLMediaElement::StopSuspendingAfterFirstFrame()
     return;
   mSuspendedAfterFirstFrame = PR_FALSE;
   if (mDecoder) {
-    mDecoder->Resume();
+    mDecoder->Resume(PR_TRUE);
   }
 }
 
@@ -1185,6 +1198,36 @@ void nsHTMLMediaElement::UnbindFromTree(PRBool aDeep,
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
+#ifdef MOZ_RAW
+static const char gRawTypes[][16] = {
+  "video/x-raw",
+  "video/x-raw-yuv"
+};
+
+static const char* gRawCodecs[] = {
+  nsnull
+};
+
+static const char* gRawMaybeCodecs[] = {
+  nsnull
+};
+
+static PRBool IsRawEnabled()
+{
+  return nsContentUtils::GetBoolPref("media.raw.enabled");
+}
+
+static PRBool IsRawType(const nsACString& aType)
+{
+  if (!IsRawEnabled())
+    return PR_FALSE;
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gRawTypes); ++i) {
+    if (aType.EqualsASCII(gRawTypes[i]))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+#endif
 #ifdef MOZ_OGG
 // See http://www.rfc-editor.org/rfc/rfc5334.txt for the definitions
 // of Ogg media types and codec types
@@ -1291,6 +1334,12 @@ nsHTMLMediaElement::CanPlayStatus
 nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
                                        char const *const ** aCodecList)
 {
+#ifdef MOZ_RAW
+  if (IsRawType(nsDependentCString(aMIMEType))) {
+    *aCodecList = gRawCodecs;
+    return CANPLAY_MAYBE;
+  }
+#endif
 #ifdef MOZ_OGG
   if (IsOggType(nsDependentCString(aMIMEType))) {
     *aCodecList = gOggCodecs;
@@ -1315,6 +1364,10 @@ nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
 /* static */
 PRBool nsHTMLMediaElement::ShouldHandleMediaType(const char* aMIMEType)
 {
+#ifdef MOZ_RAW
+  if (IsRawType(nsDependentCString(aMIMEType)))
+    return PR_TRUE;
+#endif
 #ifdef MOZ_OGG
   if (IsOggType(nsDependentCString(aMIMEType)))
     return PR_TRUE;
@@ -1401,6 +1454,14 @@ nsHTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
 already_AddRefed<nsMediaDecoder>
 nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 {
+#ifdef MOZ_RAW
+  if (IsRawType(aType)) {
+    nsRefPtr<nsRawDecoder> decoder = new nsRawDecoder();
+    if (decoder && decoder->Init(this)) {
+      return decoder.forget().get();
+    }
+  }
+#endif
 #ifdef MOZ_OGG
   if (IsOggType(aType)) {
     nsRefPtr<nsOggDecoder> decoder = new nsOggDecoder();
@@ -1662,11 +1723,6 @@ PRBool nsHTMLMediaElement::ShouldCheckAllowOrigin()
                                      PR_TRUE);
 }
 
-// Number of bytes to add to the download size when we're computing
-// when the download will finish --- a safety margin in case bandwidth
-// or other conditions are worse than expected
-static const PRInt32 gDownloadSizeSafetyMargin = 1000000;
-
 void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
 {
   if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
@@ -1676,8 +1732,6 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
     // The arrival of more data can't change us out of this readyState.
     return;
   }
-
-  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
 
   if (aNextFrame != NEXT_FRAME_AVAILABLE) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
@@ -1693,25 +1747,17 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
   // make a real estimate, so we go straight to HAVE_ENOUGH_DATA once
   // we've downloaded enough data that our download rate is considered
   // reliable. We have to move to HAVE_ENOUGH_DATA at some point or
-  // autoplay elements for live streams will never play.
+  // autoplay elements for live streams will never play. Otherwise we
+  // move to HAVE_ENOUGH_DATA if we can play through the entire media
+  // without stopping to buffer.
+  nsMediaDecoder::Statistics stats = mDecoder->GetStatistics();
   if (stats.mTotalBytes < 0 ? stats.mDownloadRateReliable :
-                              stats.mTotalBytes == stats.mDownloadPosition) {
+                              stats.mTotalBytes == stats.mDownloadPosition ||
+      mDecoder->CanPlayThrough())
+  {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
   }
-
-  if (stats.mDownloadRateReliable && stats.mPlaybackRateReliable) {
-    PRInt64 bytesToDownload = stats.mTotalBytes - stats.mDownloadPosition;
-    PRInt64 bytesToPlayback = stats.mTotalBytes - stats.mPlaybackPosition;
-    double timeToDownload =
-      (bytesToDownload + gDownloadSizeSafetyMargin)/stats.mDownloadRate;
-    double timeToPlay = bytesToPlayback/stats.mPlaybackRate;
-    if (timeToDownload <= timeToPlay) {
-      ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
-      return;
-    }
-  }
-
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA);
 }
 
@@ -1951,7 +1997,7 @@ void nsHTMLMediaElement::NotifyOwnerDocumentActivityChanged()
         mDecoder->Pause();
         mDecoder->Suspend();
       } else {
-        mDecoder->Resume();
+        mDecoder->Resume(PR_FALSE);
         if (!mPaused && !mDecoder->IsEnded()) {
           mDecoder->Play();
         }

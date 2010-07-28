@@ -27,6 +27,9 @@ function test() {
                 // branch won't be called and the test will timeout,
                 // resulting in a failure
                 historyService.removeObserver(historyObserver, false);
+
+                gBrowser.removeCurrentTab();
+
                 finish();
             }
         },
@@ -75,11 +78,6 @@ function test() {
         // Now that the page is loaded, click on fragment link
         EventUtils.sendMouseEvent({type:'click'}, 'firefox-link',
                                   gBrowser.selectedBrowser.contentWindow);
-
-        // Give the event system enough time to do its things
-        setTimeout(function() {
-                       gBrowser.removeCurrentTab();
-                   }, 100);
 
         // Test finishes in historyObserver.onTitleChanged() above
     }

@@ -140,9 +140,6 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 extern JS_FRIEND_API(bool)
 js_IsAboutToBeFinalized(void *thing);
 
-extern JS_FRIEND_API(uint32)
-js_SetMarkColor(JSTracer *trc, uint32 color);
-
 extern JS_FRIEND_API(bool)
 js_GCThingIsMarked(void *thing, uint32 color);
 

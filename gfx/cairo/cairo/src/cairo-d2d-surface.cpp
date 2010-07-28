@@ -1585,12 +1585,6 @@ _cairo_d2d_create_similar(void			*surface,
     size.height = sizePixels.height * dpiY;
     D2D1_BITMAP_PROPERTIES bitProps = D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN,
 									       alpha));
-    D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
-								       D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN,
-											 alpha),
-								       dpiX,
-								       dpiY,
-								       D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE);
 
     if (sizePixels.width < 1) {
 	sizePixels.width = 1;
@@ -1615,7 +1609,11 @@ _cairo_d2d_create_similar(void			*surface,
     desc.MipLevels = 1;
     desc.Usage = D3D10_USAGE_DEFAULT;
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
-    desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
+    
+    /* CreateTexture2D does not support D3D10_RESOURCE_MISC_GDI_COMPATIBLE with DXGI_FORMAT_A8_UNORM */
+    if (desc.Format != DXGI_FORMAT_A8_UNORM)
+	desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
+
     RefPtr<ID3D10Texture2D> texture;
     RefPtr<IDXGISurface> dxgiSurface;
 
@@ -1631,8 +1629,18 @@ _cairo_d2d_create_similar(void			*surface,
     if (FAILED(hr)) {
 	goto FAIL_CREATESIMILAR;
     }
+
+    D2D1_RENDER_TARGET_USAGE usage = (desc.MiscFlags & D3D10_RESOURCE_MISC_GDI_COMPATIBLE) ?
+					  D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE
+					: D2D1_RENDER_TARGET_USAGE_NONE;
+
     hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(dxgiSurface,
-								   props,
+								   D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
+								       D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN,
+											 alpha),
+								       dpiX,
+								       dpiY,
+								       usage),
 								   &newSurf->rt);
 
     if (FAILED(hr)) {
@@ -2351,8 +2359,11 @@ cairo_d2d_surface_create(cairo_format_t format,
     desc.MipLevels = 1;
     desc.Usage = D3D10_USAGE_DEFAULT;
     desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
-    desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
-    
+
+    /* CreateTexture2D does not support D3D10_RESOURCE_MISC_GDI_COMPATIBLE with DXGI_FORMAT_A8_UNORM */
+    if (desc.Format != DXGI_FORMAT_A8_UNORM)
+	desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
+
     RefPtr<ID3D10Texture2D> texture;
     RefPtr<IDXGISurface> dxgiSurface;
     D2D1_BITMAP_PROPERTIES bitProps;
@@ -2374,7 +2385,10 @@ cairo_d2d_surface_create(cairo_format_t format,
 
     props = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
 					 D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, alpha));
-    props.usage = D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE;
+
+    if (desc.MiscFlags & D3D10_RESOURCE_MISC_GDI_COMPATIBLE)
+	props.usage = D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE;
+
     hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(dxgiSurface,
 								   props,
 								   &newSurf->rt);
@@ -2510,19 +2524,22 @@ cairo_d2d_get_dc(cairo_surface_t *surface, cairo_bool_t retain_contents)
 
     RefPtr<ID2D1GdiInteropRenderTarget> interopRT;
 
+    /* This QueryInterface call will always succeed even if the
+     * the render target doesn't support the ID2D1GdiInteropRenderTarget
+     * interface */
     d2dsurf->rt->QueryInterface(&interopRT);
 
-    HDC retval;
+    HDC dc;
     HRESULT rv;
 
     rv = interopRT->GetDC(retain_contents ? D2D1_DC_INITIALIZE_MODE_COPY :
-	D2D1_DC_INITIALIZE_MODE_CLEAR, &retval);
+	D2D1_DC_INITIALIZE_MODE_CLEAR, &dc);
 
     if (FAILED(rv)) {
 	return NULL;
     }
 
-    return retval;
+    return dc;
 }
 
 void

@@ -5012,10 +5012,6 @@ js_DecompileFunction(JSPrinter *jp)
         if (!jp->grouped && (fun->flags & JSFUN_LAMBDA))
             js_puts(jp, "(");
     }
-    if (JSFUN_GETTER_TEST(fun->flags))
-        js_printf(jp, "%s ", js_getter_str);
-    else if (JSFUN_SETTER_TEST(fun->flags))
-        js_printf(jp, "%s ", js_setter_str);
 
     js_printf(jp, "%s ", js_function_str);
     if (fun->atom && !QuoteString(&jp->sprinter, ATOM_TO_STRING(fun->atom), 0))

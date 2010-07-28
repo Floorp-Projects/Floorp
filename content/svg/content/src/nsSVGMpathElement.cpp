@@ -66,7 +66,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsSVGMpathElement,nsSVGMpathElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGMpathElement,nsSVGMpathElementBase)
 
-DOMCI_DATA(SVGMpathElement, nsSVGMpathElement)
+DOMCI_NODE_DATA(SVGMpathElement, nsSVGMpathElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsSVGMpathElement)
   NS_NODE_INTERFACE_TABLE6(nsSVGMpathElement, nsIDOMNode, nsIDOMElement,
@@ -83,7 +83,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMpathElementBase)
 #pragma warning(push)
 #pragma warning(disable:4355)
 #endif
-nsSVGMpathElement::nsSVGMpathElement(nsINodeInfo* aNodeInfo)
+nsSVGMpathElement::nsSVGMpathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGMpathElementBase(aNodeInfo),
     mHrefTarget(this)
 #ifdef _MSC_VER

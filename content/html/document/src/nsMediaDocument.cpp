@@ -237,7 +237,7 @@ nsMediaDocument::CreateSyntheticDocument()
                                            kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  nsRefPtr<nsGenericHTMLElement> root = NS_NewHTMLHtmlElement(nodeInfo);
+  nsRefPtr<nsGenericHTMLElement> root = NS_NewHTMLHtmlElement(nodeInfo.forget());
   if (!root) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -251,7 +251,7 @@ nsMediaDocument::CreateSyntheticDocument()
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   // Create a <head> so our title has somewhere to live
-  nsRefPtr<nsGenericHTMLElement> head = NS_NewHTMLHeadElement(nodeInfo);
+  nsRefPtr<nsGenericHTMLElement> head = NS_NewHTMLHeadElement(nodeInfo.forget());
   if (!head) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -262,7 +262,7 @@ nsMediaDocument::CreateSyntheticDocument()
                                            kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  nsRefPtr<nsGenericHTMLElement> body = NS_NewHTMLBodyElement(nodeInfo);
+  nsRefPtr<nsGenericHTMLElement> body = NS_NewHTMLBodyElement(nodeInfo.forget());
   if (!body) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
