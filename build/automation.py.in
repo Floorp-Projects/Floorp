@@ -60,7 +60,6 @@ _DEFAULT_WEB_SERVER = "127.0.0.1"
 _DEFAULT_HTTP_PORT = 8888
 _DEFAULT_SSL_PORT = 4443
 _DEFAULT_WEBSOCKET_PORT = 9988
-_DEFAULT_WEBSOCKET_PROXY_PORT = 7777
 
 #expand _DIST_BIN = __XPC_BIN_PATH__
 #expand _IS_WIN32 = len("__WIN32__") != 0
@@ -155,7 +154,6 @@ class Automation(object):
   DEFAULT_HTTP_PORT = _DEFAULT_HTTP_PORT
   DEFAULT_SSL_PORT = _DEFAULT_SSL_PORT
   DEFAULT_WEBSOCKET_PORT = _DEFAULT_WEBSOCKET_PORT
-  DEFAULT_WEBSOCKET_PROXY_PORT = _DEFAULT_WEBSOCKET_PROXY_PORT
 
   def __init__(self):
     self.log = _log
@@ -165,13 +163,11 @@ class Automation(object):
                     webServer = _DEFAULT_WEB_SERVER, 
                     httpPort = _DEFAULT_HTTP_PORT, 
                     sslPort = _DEFAULT_SSL_PORT,
-                    webSocketPort = _DEFAULT_WEBSOCKET_PORT,
-                    webSocketProxyPort = _DEFAULT_WEBSOCKET_PROXY_PORT):
+                    webSocketPort = _DEFAULT_WEBSOCKET_PORT):
     self.webServer = webServer
     self.httpPort = httpPort
     self.sslPort = sslPort
     self.webSocketPort = webSocketPort
-    self.webSocketProxyPort = webSocketProxyPort
 
   @property
   def __all__(self):
@@ -406,16 +402,13 @@ function FindProxyForURL(url, host)
     return 'DIRECT';
   if (isHttp)
     return 'PROXY %(remote)s:%(httpport)s';
-  if (isHttps)
+  if (isHttps || isWebSocket)
     return 'PROXY %(remote)s:%(sslport)s';
-  if (isWebSocket)
-    return 'PROXY %(remote)s:%(websocketproxyport)s';
   return 'DIRECT';
 }""" % { "origins": origins,
          "remote":  self.webServer,
          "httpport":self.httpPort,
-         "sslport": self.sslPort,
-         "websocketproxyport": self.webSocketProxyPort }
+         "sslport": self.sslPort }
       pacURL = "".join(pacURL.splitlines())
 
       part += """
@@ -462,8 +455,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     sslTunnelConfig.write("httpproxy:1\n")
     sslTunnelConfig.write("certdbdir:%s\n" % certPath)
     sslTunnelConfig.write("forward:127.0.0.1:%s\n" % self.httpPort)
-    sslTunnelConfig.write("proxy:%s:%s:%s\n" % 
-      (self.webSocketProxyPort, self.webServer, self.webSocketPort))
+    sslTunnelConfig.write("websocketserver:%s:%s\n" % (self.webServer, self.webSocketPort))
     sslTunnelConfig.write("listen:*:%s:pgo server certificate\n" % self.sslPort)
 
     # Configure automatic certificate and bind custom certificates, client authentication
