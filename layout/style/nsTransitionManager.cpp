@@ -508,8 +508,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     }
   }
 
-  return already_AddRefed<nsIStyleRule>(
-           static_cast<nsIStyleRule*>(coverRule.forget().get()));
+  return coverRule.forget();
 }
 
 void
