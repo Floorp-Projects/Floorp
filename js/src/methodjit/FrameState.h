@@ -431,7 +431,7 @@ class FrameState
      */
     void allocForSameBinary(FrameEntry *fe, JSOp op, BinaryAlloc &alloc);
 
-    /* Loads an FE into an fp reg . */
+    /* Loads an FE into an fp reg. */
     inline void loadDouble(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const;
 
     /*

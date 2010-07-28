@@ -111,7 +111,7 @@ mjit::Compiler::Compile()
     JS_ASSERT(!script->ncode);
 
     JaegerSpew(JSpew_Scripts, "compiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
-                           script->filename, script->lineno, script->length);
+               script->filename, script->lineno, script->length);
 
     /* Perform bytecode analysis. */
     if (!analysis.analyze()) {
@@ -621,8 +621,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GE)
 
           BEGIN_CASE(JSOP_LSH)
-          BEGIN_CASE(JSOP_RSH)
             jsop_bitop(op);
+          END_CASE(JSOP_LSH)
+
+          BEGIN_CASE(JSOP_RSH)
+            jsop_rsh();
           END_CASE(JSOP_RSH)
 
           BEGIN_CASE(JSOP_URSH)
