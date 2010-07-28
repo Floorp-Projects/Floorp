@@ -328,19 +328,6 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
   // The prompt text for the title field.
   defaultName: "name this group...",
 
-  // ----------
-  // Accepts a callback that will be called when this item closes.
-  // The referenceObject is used to facilitate removal if necessary.
-  addOnClose: function(referenceObject, callback) {
-    this.addSubscriber(referenceObject, "close", callback);
-  },
-
-  // ----------
-  // Removes the close event callback associated with referenceObject.
-  removeOnClose: function(referenceObject) {
-    this.removeSubscriber(referenceObject, "close");
-  },
-
   // -----------
   // Function: setActiveTab
   // Sets the active <TabItem> for this group
@@ -514,12 +501,12 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
       iQ(this.container).css(css);
       this.$titlebar.css(titlebarCSS);
     } else {
-      TabMirror.pausePainting();
+      TabItems.pausePainting();
       iQ(this.container).animate(css, {
         duration: 350,
         easing: 'tabcandyBounce',
         complete: function() {
-          TabMirror.resumePainting();
+          TabItems.resumePainting();
         }
       });
 
@@ -589,7 +576,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (this._children.length) {
       var toClose = Utils.merge([], this._children);
       toClose.forEach(function(child) {
-        child.removeOnClose(self);
+        child.removeSubscriber(self, "close");
         child.close();
       });
     }
@@ -688,7 +675,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
         item.droppable(false);
         item.groupData = {};
 
-        item.addOnClose(this, function() {
+        item.addSubscriber(this, "close", function() {
           self.remove($el);
         });
 
@@ -752,7 +739,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
       item.setSize(item.defaultSize.x, item.defaultSize.y);
 
       item.droppable(true);
-      item.removeOnClose(this);
+      item.removeSubscriber(this, "close");
 
       if (typeof(item.setResizable) == 'function')
         item.setResizable(true);
@@ -1697,9 +1684,7 @@ window.Groups = {
     var group = this.getActiveGroup();
     if ( group == null )
       group = this.getNewTabGroup();
-
-    var $el = iQ(tabItem.container);
-    if (group) group.add($el);
+    if (group) group.add(tabItem);
   },
 
   // ----------
