@@ -2235,7 +2235,7 @@ date_valueOf(JSContext *cx, uintN argc, Value *vp)
 
 // Don't really need an argument here, but we don't support arg-less builtins
 JS_DEFINE_TRCINFO_1(date_now,
-    (1, (static, DOUBLE, date_now_tn, CONTEXT, 0, nanojit::ACC_STORE_ANY)))
+    (1, (static, DOUBLE, date_now_tn, CONTEXT, 0, nanojit::ACCSET_STORE_ANY)))
 
 static JSFunctionSpec date_static_methods[] = {
     JS_FN("UTC",                 date_UTC,                MAXARGS,0),

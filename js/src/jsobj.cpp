@@ -2604,7 +2604,7 @@ js_Object_tn(JSContext* cx, JSObject* proto)
 
 JS_DEFINE_TRCINFO_1(js_Object,
     (2, (extern, CONSTRUCTOR_RETRY, js_Object_tn, CONTEXT, CALLEE_PROTOTYPE, 0,
-         nanojit::ACC_STORE_ANY)))
+         nanojit::ACCSET_STORE_ANY)))
 
 JSObject* FASTCALL
 js_NonEmptyObject(JSContext* cx, JSObject* proto)
@@ -2629,7 +2629,7 @@ js_NonEmptyObject(JSContext* cx, JSObject* proto)
 }
 
 JS_DEFINE_CALLINFO_2(extern, CONSTRUCTOR_RETRY, js_NonEmptyObject, CONTEXT, CALLEE_PROTOTYPE, 0,
-                     nanojit::ACC_STORE_ANY)
+                     nanojit::ACCSET_STORE_ANY)
 
 JSObject* FASTCALL
 js_NewInstance(JSContext *cx, Class *clasp, JSObject *ctor)
@@ -2689,7 +2689,7 @@ js_NewInstance(JSContext *cx, Class *clasp, JSObject *ctor)
 }
 
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CLASS, OBJECT, 0,
-                     nanojit::ACC_STORE_ANY)
+                     nanojit::ACCSET_STORE_ANY)
 
 #else  /* !JS_TRACER */
 
