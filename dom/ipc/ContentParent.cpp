@@ -46,7 +46,7 @@
 #include "nsIPrefBranch2.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIObserverService.h"
-#include "nsContentUtils.h"
+
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
@@ -433,16 +433,6 @@ ContentParent::RequestRunToCompletion()
     return true;
 }
 
-
-bool
-ContentParent::RecvVisitURI(const IPC::URI& uri,
-                                   const IPC::URI& referrer,
-                                   const PRUint32& flags)
-{
-    nsCOMPtr<nsIURI> ourURI = uri;
-    nsCOMPtr<nsIURI> ourReferrer = referrer;
-    IHistory *history = nsContentUtils::GetHistory(); 
-    history->VisitURI(ourURI, ourReferrer, flags);
 /* void onDispatchedEvent (in nsIThreadInternal thread); */
 NS_IMETHODIMP
 ContentParent::OnDispatchedEvent(nsIThreadInternal *thread)
