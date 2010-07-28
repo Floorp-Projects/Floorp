@@ -48,28 +48,31 @@
  * http://www.w3.org/TR/DOM-Level-2-HTML/
  */
 
-[scriptable, uuid(a6cf9090-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(110a4b15-e0a2-48d7-8e59-d8d94ef510ad)]
 interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
 {
-  readonly attribute DOMString             type;
-           attribute long                  selectedIndex;
-           attribute DOMString             value;
-  // Modified in DOM Level 2:
-           attribute unsigned long         length;
-                                             // raises(DOMException) on setting
+           attribute boolean                     autofocus;
+           attribute boolean                     disabled;
+  readonly attribute nsIDOMHTMLFormElement       form;
+           attribute boolean                     multiple;
+           attribute DOMString                   name;
+           attribute long                        size;
 
-  readonly attribute nsIDOMHTMLFormElement form;
-  // Modified in DOM Level 2:
+  readonly attribute DOMString                   type;
+
   readonly attribute nsIDOMHTMLOptionsCollection options;
-           attribute boolean               disabled;
-           attribute boolean               multiple;
-           attribute DOMString             name;
-           attribute long                  size;
-           attribute long                  tabIndex;
+           attribute unsigned long               length;
+  nsIDOMNode                item(in unsigned long index);
+  nsIDOMNode                namedItem(in DOMString name);
   void                      add(in nsIDOMHTMLElement element, 
                                 in nsIDOMHTMLElement before)
-                                                     raises(DOMException);
+                                                     raises(DOMException);   
   void                      remove(in long index);
+
+           attribute long                  selectedIndex;
+           attribute DOMString             value;
+
+           attribute long                  tabIndex;
   void                      blur();
   void                      focus();
 };
