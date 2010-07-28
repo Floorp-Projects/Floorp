@@ -1158,8 +1158,11 @@ KeyModule.prototype = {
   handleEvent: function handleEvent(aEvent) {
     if (aEvent.type == "keydown" || aEvent.type == "keyup" || aEvent.type == "keypress") {
       let keyer = this._browserViewContainer.customKeySender;
-      if (keyer)
+      if (keyer) {
         keyer.dispatchKeyEvent(aEvent);
+        aEvent.stopPropagation();
+        aEvent.preventDefault();
+      }
     }
   },
 
