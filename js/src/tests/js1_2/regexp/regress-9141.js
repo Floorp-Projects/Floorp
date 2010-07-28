@@ -55,8 +55,8 @@ gTestfile = 'regress-9141.js';
  * <SCRIPT type="text/javascript">
  * var s = "x";
  *  for (var i = 0; i != 13; i++) s += s;
- * var a = /(?:xx|x)*[slash](s);
- * var b = /(xx|x)*[slash](s);
+ * var a = /.exec(?:xx|x)*[slash](s);
+ * var b = /.exec(xx|x)*[slash](s);
  * document.write("Results = " + a.length + "," + b.length);
  * </SCRIPT>
  * </BODY>
@@ -89,15 +89,15 @@ startTest();               // leave this alone
 
 var s = "x";
 for (var i = 0; i != 13; i++) s += s;
-var a = /(?:xx|x)*/(s);
-var b = /(xx|x)*/(s);
+var a = /(?:xx|x)*/.exec(s);
+var b = /(xx|x)*/.exec(s);
 
 AddTestCase( "var s = 'x'; for (var i = 0; i != 13; i++) s += s; " +
-	     "a = /(?:xx|x)*/(s); a.length",
+	     "a = /(?:xx|x)*/.exec(s); a.length",
 	     1,
 	     a.length );
 
-AddTestCase( "var b = /(xx|x)*/(s); b.length",
+AddTestCase( "var b = /(xx|x)*/.exec(s); b.length",
 	     2,
 	     b.length );
 
