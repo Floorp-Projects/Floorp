@@ -86,9 +86,6 @@ interface imgIDecoderObserver : imgIContainerObserver
    * called at the same time that nsIRequestObserver::onStartRequest would be
    * (used only for observers of imgIRequest objects, which are nsIRequests,
    * not imgIDecoder objects)
-   *
-   * Unlike nsIRequestObserver::onStartRequest, this can be called
-   * synchronously.
    */
   void onStartRequest(in imgIRequest aRequest);
 
@@ -158,9 +155,6 @@ interface imgIDecoderObserver : imgIContainerObserver
    * called at the same time that nsIRequestObserver::onStopRequest would be
    * (used only for observers of imgIRequest objects, which are nsIRequests,
    * not imgIDecoder objects)
-   *
-   * Unlike nsIRequestObserver::onStartRequest, this can be called
-   * synchronously.
    */
   void onStopRequest(in imgIRequest aRequest, in boolean aIsLastPart);
 

@@ -75,9 +75,77 @@ imgStatusTracker::GetImageStatus() const
   return mImageStatus;
 }
 
-void
-imgStatusTracker::Notify(imgRequestProxy* proxy)
+// A helper class to allow us to call SyncNotify asynchronously.
+class imgRequestNotifyRunnable : public nsRunnable
 {
+  public:
+    imgRequestNotifyRunnable(imgRequest* request, imgRequestProxy* requestproxy)
+      : mRequest(request), mProxy(requestproxy)
+    {}
+
+    NS_IMETHOD Run()
+    {
+      mProxy->SetNotificationsDeferred(PR_FALSE);
+
+      mRequest->mImage->GetStatusTracker().SyncNotify(mProxy);
+      return NS_OK;
+    }
+
+  private:
+    nsRefPtr<imgRequest> mRequest;
+    nsRefPtr<imgRequestProxy> mProxy;
+};
+
+void
+imgStatusTracker::Notify(imgRequest* request, imgRequestProxy* proxy)
+{
+  proxy->SetNotificationsDeferred(PR_TRUE);
+
+  nsCOMPtr<nsIRunnable> ev = new imgRequestNotifyRunnable(request, proxy);
+  NS_DispatchToCurrentThread(ev);
+}
+
+// A helper class to allow us to call SyncNotify asynchronously for a given,
+// fixed, state.
+class imgStatusNotifyRunnable : public nsRunnable
+{
+  public:
+    imgStatusNotifyRunnable(imgStatusTracker status,
+                            imgRequestProxy* requestproxy)
+      : mStatus(status), mImage(status.mImage), mProxy(requestproxy)
+    {}
+
+    NS_IMETHOD Run()
+    {
+      mProxy->SetNotificationsDeferred(PR_FALSE);
+
+      mStatus.SyncNotify(mProxy);
+      return NS_OK;
+    }
+
+  private:
+    imgStatusTracker mStatus;
+    // We have to hold on to a reference to the tracker's image, just in case
+    // it goes away while we're in the event queue.
+    nsRefPtr<imgIContainer> mImage;
+    nsRefPtr<imgRequestProxy> mProxy;
+};
+
+void
+imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
+{
+  proxy->SetNotificationsDeferred(PR_TRUE);
+
+  nsCOMPtr<nsIRunnable> ev = new imgStatusNotifyRunnable(*this, proxy);
+  NS_DispatchToCurrentThread(ev);
+}
+
+void
+imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
+{
+  NS_ABORT_IF_FALSE(!proxy->NotificationsDeferred(),
+    "Calling imgStatusTracker::Notify() on a proxy that doesn't want notifications!");
+
   nsCOMPtr<imgIRequest> kungFuDeathGrip(proxy);
 
   // OnStartRequest
@@ -178,7 +246,8 @@ imgStatusTracker::RecordStartDecode()
 void
 imgStatusTracker::SendStartDecode(imgRequestProxy* aProxy)
 {
-  aProxy->OnStartDecode();
+  if (!aProxy->NotificationsDeferred())
+    aProxy->OnStartDecode();
 }
 
 void
@@ -194,7 +263,7 @@ imgStatusTracker::SendStartContainer(imgRequestProxy* aProxy, imgIContainer* aCo
   // We only want to send onStartContainer once, but we might get multiple
   // OnStartContainer calls (e.g. from multipart/x-mixed-replace).
   PRBool alreadySent = (mState & stateHasSize) != 0;
-  if (!alreadySent)
+  if (!alreadySent && !aProxy->NotificationsDeferred())
     aProxy->OnStartContainer(aContainer);
 }
 
@@ -208,7 +277,8 @@ imgStatusTracker::RecordStartFrame(PRUint32 aFrame)
 void
 imgStatusTracker::SendStartFrame(imgRequestProxy* aProxy, PRUint32 aFrame)
 {
-  aProxy->OnStartFrame(aFrame);
+  if (!aProxy->NotificationsDeferred())
+    aProxy->OnStartFrame(aFrame);
 }
 
 void
@@ -222,7 +292,8 @@ void
 imgStatusTracker::SendDataAvailable(imgRequestProxy* aProxy, PRBool aCurrentFrame,
                                          const nsIntRect* aRect)
 {
-  aProxy->OnDataAvailable(aCurrentFrame, aRect);
+  if (!aProxy->NotificationsDeferred())
+    aProxy->OnDataAvailable(aCurrentFrame, aRect);
 }
 
 
@@ -236,7 +307,8 @@ imgStatusTracker::RecordStopFrame(PRUint32 aFrame)
 void
 imgStatusTracker::SendStopFrame(imgRequestProxy* aProxy, PRUint32 aFrame)
 {
-  aProxy->OnStopFrame(aFrame);
+  if (!aProxy->NotificationsDeferred())
+    aProxy->OnStopFrame(aFrame);
 }
 
 void
@@ -269,8 +341,9 @@ imgStatusTracker::SendStopDecode(imgRequestProxy* aProxy, nsresult aStatus,
 {
   // See imgRequest::OnStopDecode for more information on why we call
   // OnStopContainer from here this, and why imgRequestProxy::OnStopDecode() is
-  // called from OnStopRequest().
-  aProxy->OnStopContainer(mImage);
+  // called from OnStopRequest() and SyncNotify().
+  if (!aProxy->NotificationsDeferred())
+    aProxy->OnStopContainer(mImage);
 }
 
 void
@@ -289,7 +362,8 @@ imgStatusTracker::RecordDiscard()
 void
 imgStatusTracker::SendDiscard(imgRequestProxy* aProxy)
 {
-  aProxy->OnDiscard();
+  if (!aProxy->NotificationsDeferred())
+    aProxy->OnDiscard();
 }
 
 /* non-virtual imgIContainerObserver methods */
@@ -304,7 +378,8 @@ void
 imgStatusTracker::SendFrameChanged(imgRequestProxy* aProxy, imgIContainer* aContainer,
                                    nsIntRect* aDirtyRect)
 {
-  aProxy->FrameChanged(aContainer, aDirtyRect);
+  if (!aProxy->NotificationsDeferred())
+    aProxy->FrameChanged(aContainer, aDirtyRect);
 }
 
 /* non-virtual sort-of-nsIRequestObserver methods */
@@ -327,7 +402,8 @@ imgStatusTracker::RecordStartRequest()
 void
 imgStatusTracker::SendStartRequest(imgRequestProxy* aProxy)
 {
-  aProxy->OnStartRequest();
+  if (!aProxy->NotificationsDeferred())
+    aProxy->OnStartRequest();
 }
 
 void
@@ -346,6 +422,8 @@ imgStatusTracker::SendStopRequest(imgRequestProxy* aProxy, PRBool aLastPart, nsr
 {
   // See bug 505385 and imgRequest::OnStopDecode for more information on why
   // OnStopDecode is called with OnStopRequest.
-  aProxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
-  aProxy->OnStopRequest(aLastPart);
+  if (!aProxy->NotificationsDeferred()) {
+    aProxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
+    aProxy->OnStopRequest(aLastPart);
+  }
 }

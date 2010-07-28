@@ -44,6 +44,7 @@ class nsIntRect;
 class imgIContainer;
 class imgRequest;
 class imgRequestProxy;
+class imgStatusNotifyRunnable;
 
 #include "prtypes.h"
 #include "nscore.h"
@@ -60,22 +61,41 @@ enum {
 /*
  * The image status tracker is a class that encapsulates all the loading and
  * decoding status about an image (imgContainer), and makes it possible to send
- * notifications to imgRequestProxys. When a new proxy needs to be notified of
- * the current state of an image, simply call the Notify() method on this class
- * with the relevant proxy as its argument.
+ * notifications to imgRequestProxys, both synchronously (i.e., the status now)
+ * and asynchronously (the status later).
+ *
+ * When a new proxy needs to be notified of the current state of an image, call
+ * the Notify() method on this class with the relevant proxy as its argument,
+ * and the notifications will be replayed to the proxy asynchronously.
  */
 
 class imgStatusTracker
 {
 public:
   // aImage is the image that this status tracker will pass to the
-  // imgRequestProxys in Notify() and EmulateRequestFinished(), and must be
+  // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
   imgStatusTracker(imgIContainer* aImage);
 
+  // Schedule an asynchronous "replaying" of all the notifications that would
+  // have to happen to put us in the current state.
+  // We will also take note of any notifications that happen between the time
+  // Notify() is called and when we call SyncNotify on |proxy|, and replay them
+  // as well.
+  void Notify(imgRequest* request, imgRequestProxy* proxy);
+
+  // Schedule an asynchronous "replaying" of all the notifications that would
+  // have to happen to put us in the state we are in right now.
+  // Unlike Notify(), does *not* take into account future notifications.
+  // This is only useful if you do not have an imgRequest, e.g., if you are a
+  // static request returned from imgIRequest::GetStaticRequest().
+  void NotifyCurrentState(imgRequestProxy* proxy);
+
   // "Replay" all of the notifications that would have to happen to put us in
   // the state we're currently in.
-  void Notify(imgRequestProxy* proxy);
+  // Only use this if you're already servicing an asynchronous call (e.g.
+  // OnStartRequest).
+  void SyncNotify(imgRequestProxy* proxy);
 
   // Send all notifications that would be necessary to make |proxy| believe the
   // request is finished downloading and decoding.
@@ -135,6 +155,8 @@ public:
   void SendStopRequest(imgRequestProxy* aProxy, PRBool aLastPart, nsresult aStatus);
 
 private:
+  friend class imgStatusNotifyRunnable;
+
   // A weak pointer to the imgIContainer, because the container owns us, and we
   // can't create a cycle.
   imgIContainer* mImage;

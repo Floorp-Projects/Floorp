@@ -41,7 +41,7 @@
 #ifndef imgRequest_h__
 #define imgRequest_h__
 
-#include "imgIContainer.h"
+#include "imgContainer.h"
 #include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
 
@@ -68,6 +68,7 @@ class imgCacheValidator;
 class imgRequestProxy;
 class imgCacheEntry;
 class imgMemoryReporter;
+class imgRequestNotifyRunnable;
 
 class imgRequest : public imgIDecoderObserver,
                    public nsIStreamListener,
@@ -122,6 +123,7 @@ private:
   friend class imgLoader;
   friend class imgCacheValidator;
   friend class imgCacheExpirationTracker;
+  friend class imgRequestNotifyRunnable;
 
   inline void SetLoadId(void *aLoadId) {
     mLoadId = aLoadId;

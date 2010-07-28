@@ -68,7 +68,8 @@ imgRequestProxy::imgRequestProxy() :
   mCanceled(PR_FALSE),
   mIsInLoadGroup(PR_FALSE),
   mListenerIsStrongRef(PR_FALSE),
-  mDecodeRequested(PR_FALSE)
+  mDecodeRequested(PR_FALSE),
+  mDeferNotifications(PR_FALSE)
 {
   /* member initializers and constructor code */
 
@@ -443,7 +444,9 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
   // surprised.
   NS_ADDREF(*aClone = clone);
 
-  clone->NotifyListener();
+  // This is wrong!!! We need to notify asynchronously, but there's code that
+  // assumes that we don't. This will be fixed in bug 580466.
+  clone->SyncNotifyListener();
 
   return NS_OK;
 }
@@ -723,11 +726,27 @@ void imgRequestProxy::SetPrincipal(nsIPrincipal *aPrincipal)
 
 void imgRequestProxy::NotifyListener()
 {
-  // It would be nice to notify the observer directly instead of through the
-  // proxy, but there are several places we do extra processing when we receive
-  // notifications (like OnStopRequest()), and we need to check mCanceled
-  // everywhere too.
+  // It would be nice to notify the observer directly in the status tracker
+  // instead of through the proxy, but there are several places we do extra
+  // processing when we receive notifications (like OnStopRequest()), and we
+  // need to check mCanceled everywhere too.
 
-  if (mListener)
-    mImage->GetStatusTracker().Notify(this);
+  if (mOwner) {
+    // Send the notifications to our listener asynchronously.
+    mImage->GetStatusTracker().Notify(mOwner, this);
+  } else {
+    // We don't have an imgRequest, so we can only notify the clone of our
+    // current state, but we still have to do that asynchronously.
+    mImage->GetStatusTracker().NotifyCurrentState(this);
+  }
+}
+
+void imgRequestProxy::SyncNotifyListener()
+{
+  // It would be nice to notify the observer directly in the status tracker
+  // instead of through the proxy, but there are several places we do extra
+  // processing when we receive notifications (like OnStopRequest()), and we
+  // need to check mCanceled everywhere too.
+
+  mImage->GetStatusTracker().SyncNotify(this);
 }
