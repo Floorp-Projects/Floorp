@@ -925,9 +925,9 @@ mjit::Compiler::jsop_setelem()
 
         /* guard not a hole */
         Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
-#if defined JS_32BIT
+#if defined JS_NUNBOX32
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
-#elif defined JS_64BIT
+#elif defined JS_PUNBOX64
         masm.loadTypeTag(slot, Registers::ValueReg);
         Jump notHole = masm.branchPtr(Assembler::Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
 #endif
@@ -959,9 +959,9 @@ mjit::Compiler::jsop_setelem()
 
         /* guard not a hole */
         BaseIndex slot(objReg, idReg, Assembler::JSVAL_SCALE);
-#if defined JS_32BIT
+#if defined JS_NUNBOX32
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
-#elif defined JS_64BIT
+#elif defined JS_PUNBOX64
         masm.loadTypeTag(slot, Registers::ValueReg);
         Jump notHole = masm.branchPtr(Assembler::Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
 #endif
@@ -1017,9 +1017,9 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
 
         /* guard not a hole */
         Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
-#if defined JS_32BIT
+#if defined JS_NUNBOX32
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
-#elif defined JS_64BIT
+#elif defined JS_PUNBOX64
         masm.loadTypeTag(slot, Registers::ValueReg);
         Jump notHole = masm.branchPtr(Assembler::Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
 #endif
@@ -1037,9 +1037,9 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
 
         /* guard not a hole */
         BaseIndex slot(objReg, idReg.reg(), Assembler::JSVAL_SCALE);
-#if defined JS_32BIT
+#if defined JS_NUNBOX32
         Jump notHole = masm.branch32(Assembler::Equal, masm.tagOf(slot), ImmType(JSVAL_TYPE_MAGIC));
-#elif defined JS_64BIT
+#elif defined JS_PUNBOX64
         masm.loadTypeTag(slot, Registers::ValueReg);
         Jump notHole = masm.branchPtr(Assembler::Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
 #endif

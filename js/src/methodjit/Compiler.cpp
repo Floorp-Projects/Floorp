@@ -2502,9 +2502,9 @@ mjit::Compiler::jsop_bindname(uint32 index)
     masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
 
     pic.shapeGuard = masm.label();
-#if defined JS_32BIT
+#if defined JS_NUNBOX32
     Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(parent), ImmPtr(0));
-#elif defined JS_64BIT
+#elif defined JS_PUNBOX64
     masm.loadPayload(parent, Registers::ValueReg);
     Jump j = masm.branchPtr(Assembler::NotEqual, Registers::ValueReg, ImmPtr(0));
 #endif
@@ -2562,9 +2562,9 @@ mjit::Compiler::jsop_bindname(uint32 index)
 
     Address address(reg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
 
-#if defined JS_32BIT
+#if defined JS_NUNBOX32
     Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(address), ImmPtr(0));
-#elif defined JS_64BIT
+#elif defined JS_PUNBOX64
     masm.loadPayload(address, Registers::ValueReg);
     Jump j = masm.branchPtr(Assembler::NotEqual, Registers::ValueReg, ImmPtr(0));
 #endif
