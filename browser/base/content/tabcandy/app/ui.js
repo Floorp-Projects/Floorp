@@ -411,23 +411,26 @@ var UIManager = {
         if (self._currentTab == this)
           self._closedSelectedTabInTabCandy = true;
       } else {
-        var group = Groups.getActiveGroup();
-        // 1) Only go back to the TabCandy tab when there you close the last
-        // tab of a group.
-        // 2) ake care of the case where you've closed the last tab in
-        // an un-named group, which means that the group is gone (null) and
-        // there are no visible tabs.
-        if ((group && group._children.length == 1) ||
-            (group == null &&
-             gBrowser.visibleTabs.length == 1)) {
-          self._closedLastVisibleTab = true;
-          // remove the zoom prep.
-          if (this && this.mirror) {
-            var item = TabItems.getItemByTabElement(this.mirror.el);
-            if (item)
-              item.setZoomPrep(false);
+        // if not closing the last tab
+        if (gBrowser.tabs.length > 1) {
+          var group = Groups.getActiveGroup();
+          // 1) Only go back to the TabCandy tab when there you close the last
+          // tab of a group.
+          // 2) Take care of the case where you've closed the last tab in
+          // an un-named group, which means that the group is gone (null) and
+          // there are no visible tabs.
+          if ((group && group._children.length == 1) ||
+              (group == null &&
+               gBrowser.visibleTabs.length == 1)) {
+            self._closedLastVisibleTab = true;
+            // remove the zoom prep.
+            if (this && this.mirror) {
+              var item = TabItems.getItemByTabElement(this.mirror.el);
+              if (item)
+                item.setZoomPrep(false);
+            }
+            self.showTabCandy();
           }
-          self.showTabCandy();
         }
       }
       return false;
