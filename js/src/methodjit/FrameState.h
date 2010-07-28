@@ -321,6 +321,12 @@ class FrameState
     inline RegisterID tempRegInMaskForData(FrameEntry *fe, uint32 mask);
 
     /*
+     * Same as above, except loads into reg (using masm) if the entry does not
+     * already have a register, and does not change the frame state in doing so.
+     */
+    inline RegisterID tempRegForData(FrameEntry *fe, RegisterID reg, Assembler &masm) const;
+
+    /*
      * Forcibly loads the type tag for the specified FrameEntry
      * into a register already marked as owning the type.
      */

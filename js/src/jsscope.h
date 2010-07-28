@@ -222,9 +222,7 @@ struct JSScope : public JSObjectMap
 #endif
     JSObject        *object;            /* object that owns this scope */
     uint32          freeslot;           /* index of next free slot in object */
-  protected:
     uint8           flags;              /* flags, see below */
-  public:
     int8            hashShift;          /* multiplicative hash shift */
 
     uint16          spare;              /* reserved */
