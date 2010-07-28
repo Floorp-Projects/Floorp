@@ -188,9 +188,10 @@
           },
 
           removeProgressListener: function(aListener) {
+            let self = this;
             function hasFilter(item) {
               if (item.listener == aListener)
-                this._browser.messageManager.sendAsyncMessage("WebProgress:RemoveProgressListener", {
+                self._browser.messageManager.sendAsyncMessage("WebProgress:RemoveProgressListener", {
                   notifyFlags: item.flags,
                 });
               return item.listener != aListener;
