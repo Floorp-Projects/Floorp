@@ -47,14 +47,16 @@
  * http://www.w3.org/TR/DOM-Level-2-HTML/
  */
 
-[scriptable, uuid(a6cf90b1-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(4af8568c-375c-42fd-a82f-b25a7c03fc3e)]
 interface nsIDOMHTMLScriptElement : nsIDOMHTMLElement
 {
+           attribute DOMString        src;
+           attribute boolean          async;
+           attribute boolean          defer;
+           attribute DOMString        type;
+           attribute DOMString        charset;
            attribute DOMString        text;
+
            attribute DOMString        htmlFor;
            attribute DOMString        event;
-           attribute DOMString        charset;
-           attribute boolean          defer;
-           attribute DOMString        src;
-           attribute DOMString        type;
 };
