@@ -42,6 +42,7 @@
 #include "imgRequest.h"
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
+#include "ImageLogging.h"
 
 static nsresult
 GetResultFromImageStatus(PRUint32 aStatus)
@@ -99,6 +100,14 @@ class imgRequestNotifyRunnable : public nsRunnable
 void
 imgStatusTracker::Notify(imgRequest* request, imgRequestProxy* proxy)
 {
+#ifdef PR_LOGGING
+  nsCOMPtr<nsIURI> uri;
+  request->GetURI(getter_AddRefs(uri));
+  nsCAutoString spec;
+  uri->GetSpec(spec);
+  LOG_FUNC_WITH_PARAM(gImgLog, "imgStatusTracker::Notify async", "uri", spec.get());
+#endif
+
   proxy->SetNotificationsDeferred(PR_TRUE);
 
   nsCOMPtr<nsIRunnable> ev = new imgRequestNotifyRunnable(request, proxy);
@@ -134,6 +143,14 @@ class imgStatusNotifyRunnable : public nsRunnable
 void
 imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
 {
+#ifdef PR_LOGGING
+  nsCOMPtr<nsIURI> uri;
+  proxy->GetURI(getter_AddRefs(uri));
+  nsCAutoString spec;
+  uri->GetSpec(spec);
+  LOG_FUNC_WITH_PARAM(gImgLog, "imgStatusTracker::NotifyCurrentState", "uri", spec.get());
+#endif
+
   proxy->SetNotificationsDeferred(PR_TRUE);
 
   nsCOMPtr<nsIRunnable> ev = new imgStatusNotifyRunnable(*this, proxy);
@@ -145,6 +162,14 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
 {
   NS_ABORT_IF_FALSE(!proxy->NotificationsDeferred(),
     "Calling imgStatusTracker::Notify() on a proxy that doesn't want notifications!");
+
+#ifdef PR_LOGGING
+  nsCOMPtr<nsIURI> uri;
+  proxy->GetURI(getter_AddRefs(uri));
+  nsCAutoString spec;
+  uri->GetSpec(spec);
+  LOG_SCOPE_WITH_PARAM(gImgLog, "imgStatusTracker::SyncNotify", "uri", spec.get());
+#endif
 
   nsCOMPtr<imgIRequest> kungFuDeathGrip(proxy);
 
