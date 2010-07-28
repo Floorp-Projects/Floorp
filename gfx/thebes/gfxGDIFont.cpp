@@ -461,8 +461,10 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize)
     if (fe->mIsUserFont) {
         if (fe->IsItalic())
             italic = PR_FALSE; // avoid synthetic italic
-        if (fe->IsBold()) {
-            weight = 400; // avoid synthetic bold
+        if (fe->IsBold() || !mNeedsBold) {
+            // avoid GDI synthetic bold which occurs when weight
+            // specified is >= font data weight + 200
+            weight = 200; 
         }
     }
 

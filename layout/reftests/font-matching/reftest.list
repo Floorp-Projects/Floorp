@@ -42,3 +42,17 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") != impact-bold.html impact.html # bug 539
 == arial-variations-4.html arial-variations-4-ref.html
 == arial-variations-5.html arial-variations-5-ref.html
 == arial-variations-6.html arial-variations-6-ref.html
+
+# weight mapping tests
+HTTP(..) == normalmedium.html normalmedium-ref.html
+HTTP(..) != normalmedium.html normalmedium-notref.html
+
+# Linux fails due to bolder bug 
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == weightmapping-12.html weightmapping-12-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == weightmapping-25.html weightmapping-25-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == weightmapping-45.html weightmapping-45-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == weightmapping-458.html weightmapping-458-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == weightmapping-478.html weightmapping-478-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == weightmapping-7.html weightmapping-7-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == weightmapping-12579.html weightmapping-12579-ref.html
+
