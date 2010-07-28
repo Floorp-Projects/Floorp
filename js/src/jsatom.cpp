@@ -580,23 +580,31 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
             return STRING_TO_ATOM(JSString::unitString(c));
     }
 
+    if (length == 2) {
+        jschar *chars = str->chars();
+        if (JSString::fitsInSmallChar(chars[0]) &&
+            JSString::fitsInSmallChar(chars[1])) {
+            return STRING_TO_ATOM(JSString::length2String(chars[0], chars[1]));
+        }
+    }
+
     /*
      * Here we know that JSString::intStringTable covers only 256 (or at least
      * not 1000 or more) chars. We rely on order here to resolve the unit vs.
-     * int string atom identity issue by giving priority to unit strings for
-     * '0' through '9' (see JSString::intString in jsstrinlines.h).
+     * int string/length-2 string atom identity issue by giving priority to unit
+     * strings for "0" through "9" and length-2 strings for "10" through "99".
      */
     JS_STATIC_ASSERT(INT_STRING_LIMIT <= 999);
-    if (2 <= length && length <= 3) {
+    if (length == 3) {
         const jschar *chars = str->chars();
 
         if ('1' <= chars[0] && chars[0] <= '9' &&
             '0' <= chars[1] && chars[1] <= '9' &&
-            (length == 2 || ('0' <= chars[2] && chars[2] <= '9'))) {
-            jsint i = (chars[0] - '0') * 10 + chars[1] - '0';
+            '0' <= chars[2] && chars[2] <= '9') {
+            jsint i = (chars[0] - '0') * 100 +
+                      (chars[1] - '0') * 10 +
+                      (chars[2] - '0');
 
-            if (length == 3)
-                i = i * 10 + chars[2] - '0'; 
             if (jsuint(i) < INT_STRING_LIMIT)
                 return STRING_TO_ATOM(JSString::intString(i));
         }
