@@ -905,6 +905,12 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
     }
 }
 
+static JSType
+proxy_TypeOf_obj(JSContext *cx, JSObject *obj)
+{
+    return JSTYPE_OBJECT;
+}
+
 void
 proxy_Finalize(JSContext *cx, JSObject *obj)
 {
@@ -913,39 +919,51 @@ proxy_Finalize(JSContext *cx, JSObject *obj)
         obj->getProxyHandler()->finalize(cx, obj);
 }
 
+extern JSObjectOps js_ObjectProxyObjectOps;
+
+static const JSObjectMap SharedObjectProxyMap(&js_ObjectProxyObjectOps, JSObjectMap::SHAPELESS);
+
+JSObjectOps js_ObjectProxyObjectOps = {
+    &SharedObjectProxyMap,
+    proxy_LookupProperty,
+    proxy_DefineProperty,
+    proxy_GetProperty,
+    proxy_SetProperty,
+    proxy_GetAttributes,
+    proxy_SetAttributes,
+    proxy_DeleteProperty,
+    js_Enumerate,
+    proxy_TypeOf_obj,
+    proxy_TraceObject,
+    NULL,   /* thisObject */
+    proxy_Finalize
+};
+
+static JSObjectOps *
+obj_proxy_getObjectOps(JSContext *cx, Class *clasp)
+{
+    return &js_ObjectProxyObjectOps;
+}
+
 JS_FRIEND_API(Class) ObjectProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(2),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    JSCLASS_HAS_RESERVED_SLOTS(2),
+    PropertyStub,
+    PropertyStub,
+    PropertyStub,
+    PropertyStub,
     EnumerateStub,
     ResolveStub,
     ConvertStub,
-    NULL,           /* finalize */
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    NULL,           /* mark        */
-    JS_NULL_CLASS_EXT,
-    {
-        proxy_LookupProperty,
-        proxy_DefineProperty,
-        proxy_GetProperty,
-        proxy_SetProperty,
-        proxy_GetAttributes,
-        proxy_SetAttributes,
-        proxy_DeleteProperty,
-        NULL,       /* enumerate       */
-        NULL,       /* typeof          */
-        proxy_TraceObject,
-        NULL,       /* thisObject      */
-        proxy_Finalize, /* clear */
-    }
+    NULL,
+    obj_proxy_getObjectOps,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 
 JSBool
@@ -970,41 +988,53 @@ proxy_TypeOf_fun(JSContext *cx, JSObject *obj)
     return JSTYPE_FUNCTION;
 }
 
+extern JSObjectOps js_FunctionProxyObjectOps;
+
+static const JSObjectMap SharedFunctionProxyMap(&js_FunctionProxyObjectOps, JSObjectMap::SHAPELESS);
+
 #define proxy_HasInstance js_FunctionClass.hasInstance
+
+JSObjectOps js_FunctionProxyObjectOps = {
+    &SharedFunctionProxyMap,
+    proxy_LookupProperty,
+    proxy_DefineProperty,
+    proxy_GetProperty,
+    proxy_SetProperty,
+    proxy_GetAttributes,
+    proxy_SetAttributes,
+    proxy_DeleteProperty,
+    js_Enumerate,
+    proxy_TypeOf_fun,
+    proxy_TraceObject,
+    NULL, /* thisObject */
+    NULL  /* clear */
+};
+
+static JSObjectOps *
+fun_proxy_getObjectOps(JSContext *cx, Class *clasp)
+{
+    return &js_FunctionProxyObjectOps;
+}
 
 JS_FRIEND_API(Class) FunctionProxyClass = {
     "Proxy",
-    Class::NON_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(4) | Class::CALL_IS_FAST,
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
+    JSCLASS_HAS_RESERVED_SLOTS(4) | CLASS_CALL_IS_FAST,
+    PropertyStub,
+    PropertyStub,
+    PropertyStub,
+    PropertyStub,
     EnumerateStub,
     ResolveStub,
     ConvertStub,
-    NULL,           /* finalize */
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
+    NULL,
+    fun_proxy_getObjectOps,
+    NULL,
     CastCallOpAsNative(proxy_Call),
     proxy_Construct,
-    NULL,           /* xdrObject   */
+    NULL,
     proxy_HasInstance,
-    NULL,           /* mark */
-    JS_NULL_CLASS_EXT,
-    {
-        proxy_LookupProperty,
-        proxy_DefineProperty,
-        proxy_GetProperty,
-        proxy_SetProperty,
-        proxy_GetAttributes,
-        proxy_SetAttributes,
-        proxy_DeleteProperty,
-        NULL,       /* enumerate       */
-        proxy_TypeOf_fun,
-        proxy_TraceObject,
-        NULL,       /* thisObject      */
-        NULL,       /* clear           */
-    }
+    NULL,
+    NULL
 };
 
 JS_FRIEND_API(JSObject *)
@@ -1213,18 +1243,10 @@ callable_Construct(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value 
 Class CallableObjectClass = {
     "Function",
     JSCLASS_HAS_RESERVED_SLOTS(2),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub,
-    NULL,           /* finalize    */
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    callable_Call,
-    callable_Construct,
+    PropertyStub,           PropertyStub,    PropertyStub,    PropertyStub,
+    EnumerateStub,          ResolveStub,     ConvertStub,     NULL,
+    NULL,                   NULL,            callable_Call,   callable_Construct,
+    NULL,                   NULL,            NULL,            NULL
 };
 
 JS_FRIEND_API(JSBool)
@@ -1282,13 +1304,9 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
 Class js_ProxyClass = {
     "Proxy",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub
+    PropertyStub,           PropertyStub,    PropertyStub,    PropertyStub,
+    EnumerateStub,          ResolveStub,     ConvertStub,     NULL,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 JS_FRIEND_API(JSObject *)

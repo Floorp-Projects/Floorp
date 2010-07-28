@@ -1595,34 +1595,45 @@ JS_SetScriptStackQuota(JSContext *cx, size_t quota);
 /*
  * Classes, objects, and properties.
  */
-typedef void (*JSClassInternal)();
 
 /* For detailed comments on the function pointer types, see jspubtd.h. */
 struct JSClass {
-    const char          *name;                                                \
-    uint32              flags;                                                \
-                                                                              \
-    /* Mandatory non-null function pointer members. */                        \
-    JSPropertyOp        addProperty;                                          \
-    JSPropertyOp        delProperty;                                          \
-    JSPropertyOp        getProperty;                                          \
-    JSPropertyOp        setProperty;                                          \
-    JSEnumerateOp       enumerate;                                            \
-    JSResolveOp         resolve;                                              \
-    JSConvertOp         convert;                                              \
-    JSFinalizeOp        finalize;                                             \
-                                                                              \
-    /* Optionally non-null members start here. */                             \
-    JSClassInternal     reserved0;                                            \
-    JSCheckAccessOp     checkAccess;                                          \
-    JSNative            call;                                                 \
-    JSNative            construct;                                            \
-    JSXDRObjectOp       xdrObject;                                            \
-    JSHasInstanceOp     hasInstance;                                          \
-    JSMarkOp            mark;
+    const char          *name;
+    uint32              flags;
 
-    JSClassInternal     reserved1;
-    void                *reserved[19];
+    /* Mandatory non-null function pointer members. */
+    JSPropertyOp        addProperty;
+    JSPropertyOp        delProperty;
+    JSPropertyOp        getProperty;
+    JSPropertyOp        setProperty;
+    JSEnumerateOp       enumerate;
+    JSResolveOp         resolve;
+    JSConvertOp         convert;
+    JSFinalizeOp        finalize;
+
+    /* Optionally non-null members start here. */
+    JSGetObjectOps      getObjectOps;
+    JSCheckAccessOp     checkAccess;
+    JSNative            call;
+    JSNative            construct;
+    JSXDRObjectOp       xdrObject;
+    JSHasInstanceOp     hasInstance;
+    JSMarkOp            mark;
+    void                (*reserved0)(void);
+};
+
+struct JSExtendedClass {
+    JSClass             base;
+    JSEqualityOp        equality;
+    JSObjectOp          outerObject;
+    JSObjectOp          innerObject;
+    JSIteratorOp        iteratorObject;
+    JSObjectOp          wrappedObject;          /* NB: infallible, null
+                                                   returns are treated as
+                                                   the original object */
+    void                (*reserved0)(void);
+    void                (*reserved1)(void);
+    void                (*reserved2)(void);
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  /* objects have private slot */
@@ -1655,13 +1666,15 @@ struct JSClass {
 #define JSCLASS_HIGH_FLAGS_SHIFT        (JSCLASS_RESERVED_SLOTS_SHIFT +       \
                                          JSCLASS_RESERVED_SLOTS_WIDTH)
 
-#define JSCLASS_INTERNAL_FLAG1          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+0))
+/* True if JSClass is really a JSExtendedClass. */
+#define JSCLASS_IS_EXTENDED             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+0))
 #define JSCLASS_IS_ANONYMOUS            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1))
 #define JSCLASS_IS_GLOBAL               (1<<(JSCLASS_HIGH_FLAGS_SHIFT+2))
 
 /* Indicates that JSClass.mark is a tracer with JSTraceOp type. */
 #define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
-#define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
+
+#define JSCLASS_LAST_API_FLAG_SHIFT     (JSCLASS_HIGH_FLAGS_SHIFT+3)
 
 /*
  * ECMA-262 requires that most constructors used internally create objects
@@ -1691,8 +1704,8 @@ struct JSClass {
                                           & JSCLASS_CACHED_PROTO_MASK))
 
 /* Initializer for unused members of statically initialized JSClass structs. */
-#define JSCLASS_NO_INTERNAL_MEMBERS     0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-#define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,JSCLASS_NO_INTERNAL_MEMBERS
+#define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,0
+#define JSCLASS_NO_RESERVED_MEMBERS     0,0,0
 
 struct JSIdArray {
     jsint length;

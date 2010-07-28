@@ -125,7 +125,7 @@ static inline
 JSObject *
 GetWrapper(JSObject *obj)
 {
-  while (obj->getClass() != &XPCCrossOriginWrapper::XOWClass) {
+  while (obj->getJSClass() != &XPCCrossOriginWrapper::XOWClass.base) {
     obj = obj->getProto();
     if (!obj) {
       break;
@@ -156,34 +156,28 @@ static const PRUint32 FLAG_IS_CACHED = XPCWrapper::LAST_FLAG << 2;
 
 namespace XPCCrossOriginWrapper {
 
-js::Class XOWClass = {
-    "XPCCrossOriginWrapper",
-    JSCLASS_NEW_RESOLVE |
+JSExtendedClass XOWClass = {
+  // JSClass (JSExtendedClass.base) initialization
+  { "XPCCrossOriginWrapper",
+    JSCLASS_NEW_RESOLVE | JSCLASS_IS_EXTENDED |
     JSCLASS_HAS_RESERVED_SLOTS(XPCWrapper::sNumSlots + 2),
-    js::Valueify(XPC_XOW_AddProperty),
-    js::Valueify(XPC_XOW_DelProperty),
-    js::Valueify(XPC_XOW_GetProperty),
-    js::Valueify(XPC_XOW_SetProperty),
-    XPC_XOW_Enumerate,
-    (JSResolveOp)XPC_XOW_NewResolve,
-    js::Valueify(XPC_XOW_Convert),
-    XPC_XOW_Finalize,
-    nsnull,   // reserved0 
-    js::Valueify(XPC_XOW_CheckAccess),
-    js::Valueify(XPC_XOW_Call),
-    js::Valueify(XPC_XOW_Construct),
-    nsnull,   // xdrObject
-    js::Valueify(XPC_XOW_HasInstance),
-    nsnull,   // mark
+    XPC_XOW_AddProperty, XPC_XOW_DelProperty,
+    XPC_XOW_GetProperty, XPC_XOW_SetProperty,
+    XPC_XOW_Enumerate,   (JSResolveOp)XPC_XOW_NewResolve,
+    XPC_XOW_Convert,     XPC_XOW_Finalize,
+    nsnull,              XPC_XOW_CheckAccess,
+    XPC_XOW_Call,        XPC_XOW_Construct,
+    nsnull,              XPC_XOW_HasInstance,
+    nsnull,              nsnull
+  },
 
-    // ClassExtension
-    {
-      js::Valueify(XPC_XOW_Equality),
-      nsnull, // outerObject
-      nsnull, // innerObject
-      XPC_XOW_Iterator,
-      XPC_XOW_WrappedObject
-    }
+  // JSExtendedClass initialization
+  XPC_XOW_Equality,
+  nsnull,             // outerObject
+  nsnull,             // innerObject
+  XPC_XOW_Iterator,
+  XPC_XOW_WrappedObject,
+  JSCLASS_NO_RESERVED_MEMBERS
 };
 
 JSBool
@@ -382,7 +376,7 @@ RewrapIfNeeded(JSContext *cx, JSObject *outerObj, jsval *vp)
   }
 
   XPCWrappedNative *wn = nsnull;
-  if (obj->getClass() == &XOWClass &&
+  if (obj->getJSClass() == &XOWClass.base &&
       outerObj->getParent() != obj->getParent()) {
     *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, obj));
   } else if (!(wn = XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, obj))) {
@@ -403,7 +397,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
   JSObject *wrappedObj;
   if (JSVAL_IS_PRIMITIVE(*vp) ||
       !(wrappedObj = JSVAL_TO_OBJECT(*vp)) ||
-      wrappedObj->getClass() == &XOWClass) {
+      wrappedObj->getJSClass() == &XOWClass.base) {
     return JS_TRUE;
   }
 
@@ -451,7 +445,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
 
   outerObj = map->Find(wrappedObj);
   if (outerObj) {
-    NS_ASSERTION(outerObj->getClass() == &XOWClass,
+    NS_ASSERTION(outerObj->getJSClass() == &XOWClass.base,
                  "What crazy object are we getting here?");
     *vp = OBJECT_TO_JSVAL(outerObj);
 
@@ -464,7 +458,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
     return JS_TRUE;
   }
 
-  outerObj = JS_NewObjectWithGivenProto(cx, js::Jsvalify(&XOWClass), nsnull,
+  outerObj = JS_NewObjectWithGivenProto(cx, &XOWClass.base, nsnull,
                                         parent);
   if (!outerObj) {
     return JS_FALSE;
@@ -596,14 +590,14 @@ WrapSameOriginProp(JSContext *cx, JSObject *outerObj, jsval *vp)
   }
 
   JSObject *wrappedObj = JSVAL_TO_OBJECT(*vp);
-  js::Class *clasp = wrappedObj->getClass();
+  JSClass *clasp = wrappedObj->getJSClass();
   if (ClassNeedsXOW(clasp->name)) {
     return WrapObject(cx, JS_GetGlobalForObject(cx, outerObj), vp);
   }
 
   // Check if wrappedObj is an XOW. If so, verify that it's from the
   // right scope.
-  if (clasp == &XOWClass &&
+  if (clasp == &XOWClass.base &&
       wrappedObj->getParent() != outerObj->getParent()) {
     *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, wrappedObj));
     return WrapObject(cx, outerObj->getParent(), vp);
@@ -626,7 +620,7 @@ XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
   if (!JSVAL_IS_PRIMITIVE(*vp)) {
     JSObject *addedObj = JSVAL_TO_OBJECT(*vp);
-    if (addedObj->getClass() == &XOWClass &&
+    if (addedObj->getJSClass() == &XOWClass.base &&
         addedObj->getParent() != obj->getParent()) {
       *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, addedObj));
       if (!WrapObject(cx, obj->getParent(), vp, nsnull)) {
@@ -848,7 +842,7 @@ XPC_XOW_Enumerate(JSContext *cx, JSObject *obj)
 static JSObject *
 GetUXPCObject(JSContext *cx, JSObject *obj)
 {
-  NS_ASSERTION(obj->getClass() == &XOWClass, "wrong object");
+  NS_ASSERTION(obj->getJSClass() == &XOWClass.base, "wrong object");
 
   jsval v;
   if (!JS_GetReservedSlot(cx, obj, sFlagsSlot, &v)) {
@@ -868,8 +862,7 @@ GetUXPCObject(JSContext *cx, JSObject *obj)
   }
 
   JSObject *uxpco =
-    JS_NewObjectWithGivenProto(cx, js::Jsvalify(&XOWClass), nsnull,
-                               obj->getParent());
+    JS_NewObjectWithGivenProto(cx, &XOWClass.base, nsnull, obj->getParent());
   if (!uxpco) {
     return nsnull;
   }
@@ -1188,7 +1181,7 @@ XPC_XOW_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
   }
 
   JSObject *test = JSVAL_TO_OBJECT(v);
-  if (test->getClass() == &XOWClass) {
+  if (test->getJSClass() == &XOWClass.base) {
     if (!JS_GetReservedSlot(cx, test, sWrappedObjSlot, &v)) {
       return JS_FALSE;
     }
@@ -1216,7 +1209,8 @@ XPC_XOW_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
   obj = me->GetFlatJSObject();
   test = other->GetFlatJSObject();
   jsval testVal = OBJECT_TO_JSVAL(test);
-  return js::Jsvalify(obj->getClass()->ext.equality)(cx, obj, &testVal, bp);
+  return ((JSExtendedClass *)obj->getJSClass())->
+    equality(cx, obj, &testVal, bp);
 }
 
 static JSObject *
@@ -1246,7 +1240,7 @@ XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  JSObject *wrapperIter = JS_NewObject(cx, js::Jsvalify(&XOWClass), nsnull,
+  JSObject *wrapperIter = JS_NewObject(cx, &XOWClass.base, nsnull,
                                        JS_GetGlobalForObject(cx, obj));
   if (!wrapperIter) {
     return nsnull;

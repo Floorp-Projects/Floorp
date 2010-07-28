@@ -1855,8 +1855,7 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
         JSObject *obj = (JSObject *) thing;
         if (!obj->map)
             break;
-        JSTraceOp op = obj->getOps()->trace;
-        (op ? op : js_TraceObject)(trc, obj);
+        obj->map->ops->trace(trc, obj);
         break;
       }
 

@@ -6,7 +6,6 @@
  */
 
 #include "tests.h"
-#include "jsobj.h"
 
 static JSBool
 my_Equality(JSContext *cx, JSObject *obj, const jsval *, JSBool *bp)
@@ -15,37 +14,24 @@ my_Equality(JSContext *cx, JSObject *obj, const jsval *, JSBool *bp)
     return JS_TRUE;
 }
 
-js::Class TestExtendedEq_JSClass = {
-    "TestExtendedEq",
-    0,
-    js::PropertyStub, /* addProperty */
-    js::PropertyStub, /* delProperty */
-    js::PropertyStub, /* getProperty */
-    js::PropertyStub, /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    NULL,           /* convert */
-    NULL,           /* finalize */
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    NULL,           /* mark        */
-    {
-        js::Valueify(my_Equality),
-        NULL, /* outerObject    */
-        NULL, /* innerObject    */
-        NULL, /* iteratorObject */
-        NULL, /* wrappedObject  */
-    }
+JSExtendedClass TestExtendedEq_JSClass = {
+    { "TestExtendedEq",
+        JSCLASS_IS_EXTENDED,
+        JS_PropertyStub,    JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
+        JS_EnumerateStub,   JS_ResolveStub,    NULL,              NULL,
+        NULL,               NULL,              NULL,              NULL,
+        NULL,               NULL,              NULL,              NULL
+    },
+    // JSExtendedClass initialization
+    my_Equality,
+    NULL, NULL, NULL, NULL, JSCLASS_NO_RESERVED_MEMBERS
 };
 
 BEGIN_TEST(testExtendedEq_bug530489)
 {
     JSClass *clasp = (JSClass *) &TestExtendedEq_JSClass;
 
+    JSObject *global = JS_GetGlobalObject(cx);
     CHECK(JS_InitClass(cx, global, global, clasp, NULL, 0, NULL, NULL, NULL, NULL));
 
     CHECK(JS_DefineObject(cx, global, "obj1", clasp, NULL, 0));

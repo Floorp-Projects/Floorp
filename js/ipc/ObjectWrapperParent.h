@@ -43,7 +43,6 @@
 
 #include "mozilla/jsipc/PObjectWrapperParent.h"
 #include "jsapi.h"
-#include "jsvalue.h"
 #include "nsAutoJSValHolder.h"
 
 namespace mozilla {
@@ -76,7 +75,7 @@ public:
     void CheckOperation(JSContext* cx,
                         OperationStatus* status);
 
-    static const js::Class sCPOW_JSClass;
+    static const JSExtendedClass sCPOW_JSClass;
 
 protected:
 

@@ -5417,21 +5417,14 @@ Class js_RegExpClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_FIXED_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    regexp_enumerate,
-    reinterpret_cast<JSResolveOp>(regexp_resolve),
-    ConvertStub,
-    regexp_finalize,
-    NULL,           /* reserved0   */
-    NULL,           /* checkAccess */
-    regexp_call,
-    NULL,           /* construct   */
-    js_XDRRegExpObject,
-    NULL,           /* hasInstance */
-    JS_CLASS_TRACE(regexp_trace)
+    PropertyStub,       PropertyStub,
+    PropertyStub,       PropertyStub,
+    regexp_enumerate,   reinterpret_cast<JSResolveOp>(regexp_resolve),
+    ConvertStub,        regexp_finalize,
+    NULL,               NULL,
+    regexp_call,        NULL,
+    js_XDRRegExpObject, NULL,
+    JS_CLASS_TRACE(regexp_trace), 0
 };
 
 static const jschar empty_regexp_ucstr[] = {'(', '?', ':', ')', 0};

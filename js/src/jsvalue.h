@@ -779,6 +779,8 @@ typedef JSBool
 typedef JSBool
 (* CheckAccessOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                   Value *vp);
+typedef JSObjectOps *
+(* GetObjectOps)(JSContext *cx, Class *clasp);
 typedef JSBool
 (* EqualityOp)(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp);
 typedef JSBool
@@ -803,6 +805,8 @@ static inline HasInstanceOp     Valueify(JSHasInstanceOp f)   { return (HasInsta
 static inline JSHasInstanceOp   Jsvalify(HasInstanceOp f)     { return (JSHasInstanceOp)f; }
 static inline CheckAccessOp     Valueify(JSCheckAccessOp f)   { return (CheckAccessOp)f; }
 static inline JSCheckAccessOp   Jsvalify(CheckAccessOp f)     { return (JSCheckAccessOp)f; }
+static inline GetObjectOps      Valueify(JSGetObjectOps f)    { return (GetObjectOps)f; }
+static inline JSGetObjectOps    Jsvalify(GetObjectOps f)      { return (JSGetObjectOps)f; }
 static inline EqualityOp        Valueify(JSEqualityOp f);     /* Same type as JSHasInstanceOp */
 static inline JSEqualityOp      Jsvalify(EqualityOp f);       /* Same type as HasInstanceOp */
 static inline DefinePropOp      Valueify(JSDefinePropOp f)    { return (DefinePropOp)f; }
@@ -818,91 +822,30 @@ static const JSResolveOp   ResolveStub   = JS_ResolveStub;
 static const ConvertOp     ConvertStub   = (ConvertOp)JS_ConvertStub;
 static const JSFinalizeOp  FinalizeStub  = JS_FinalizeStub;
 
-#define JS_CLASS_MEMBERS                                                      \
-    const char          *name;                                                \
-    uint32              flags;                                                \
-                                                                              \
-    /* Mandatory non-null function pointer members. */                        \
-    PropertyOp          addProperty;                                          \
-    PropertyOp          delProperty;                                          \
-    PropertyOp          getProperty;                                          \
-    PropertyOp          setProperty;                                          \
-    JSEnumerateOp       enumerate;                                            \
-    JSResolveOp         resolve;                                              \
-    ConvertOp           convert;                                              \
-    JSFinalizeOp        finalize;                                             \
-                                                                              \
-    /* Optionally non-null members start here. */                             \
-    JSClassInternal     reserved0;                                            \
-    CheckAccessOp       checkAccess;                                          \
-    Native              call;                                                 \
-    Native              construct;                                            \
-    JSXDRObjectOp       xdrObject;                                            \
-    HasInstanceOp       hasInstance;                                          \
-    JSMarkOp            mark
-
-
-/*
- * The helper struct to measure the size of JS_CLASS_MEMBERS to know how much
- * we have to padd js::Class to match the size of JSClass;
- */
-struct ClassSizeMeasurement {
-    JS_CLASS_MEMBERS;
-};
-
-struct ClassExtension {
-    EqualityOp          equality;
-    JSObjectOp          outerObject;
-    JSObjectOp          innerObject;
-    JSIteratorOp        iteratorObject;
-    JSObjectOp          wrappedObject;  /* NB: infallible, null returns are
-                                           treated as the original object */
-};
-
-#define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL}
-
-struct ObjectOps {
-    JSLookupPropOp      lookupProperty;
-    js::DefinePropOp    defineProperty;
-    js::PropertyIdOp    getProperty;
-    js::PropertyIdOp    setProperty;
-    JSAttributesOp      getAttributes;
-    JSAttributesOp      setAttributes;
-    js::PropertyIdOp    deleteProperty;
-    js::NewEnumerateOp  enumerate;
-    JSTypeOfOp          typeOf;
-    JSTraceOp           trace;
-    JSObjectOp          thisObject;
-    JSFinalizeOp        clear;
-};
-
-#define JS_NULL_OBJECT_OPS  {NULL,NULL,NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,NULL,NULL}
-
 struct Class {
-    JS_CLASS_MEMBERS;
-    ClassExtension      ext;
-    ObjectOps           ops;
-    uint8               pad[sizeof(JSClass) - sizeof(ClassSizeMeasurement) -
-                            sizeof(ClassExtension) - sizeof(ObjectOps)];
+    const char          *name;
+    uint32              flags;
 
-    /* Flag indicating that Class::call is a fast native. */
-    static const uint32 CALL_IS_FAST = JSCLASS_INTERNAL_FLAG1;
+    /* Mandatory non-null function pointer members. */
+    PropertyOp          addProperty;
+    PropertyOp          delProperty;
+    PropertyOp          getProperty;
+    PropertyOp          setProperty;
+    JSEnumerateOp       enumerate;
+    JSResolveOp         resolve;
+    ConvertOp           convert;
+    JSFinalizeOp        finalize;
 
-    /* Class is not native and its map is not a scope. */
-    static const uint32 NON_NATIVE = JSCLASS_INTERNAL_FLAG2;
-
-    bool isNative() const {
-        return !(flags & NON_NATIVE);
-    }
+    /* Optionally non-null members start here. */
+    GetObjectOps        getObjectOps;
+    CheckAccessOp       checkAccess;
+    Native              call;
+    Native              construct;
+    JSXDRObjectOp       xdrObject;
+    HasInstanceOp       hasInstance;
+    JSMarkOp            mark;
+    void                (*reserved0)(void);
 };
-
-/* Helper to initialize Class::call when Class::CALL_IS_FAST. */
-inline Native
-CastCallOpAsNative(CallOp op)
-{
-    return reinterpret_cast<Native>(op);
-}
-
 JS_STATIC_ASSERT(offsetof(JSClass, name) == offsetof(Class, name));
 JS_STATIC_ASSERT(offsetof(JSClass, flags) == offsetof(Class, flags));
 JS_STATIC_ASSERT(offsetof(JSClass, addProperty) == offsetof(Class, addProperty));
@@ -913,14 +856,39 @@ JS_STATIC_ASSERT(offsetof(JSClass, enumerate) == offsetof(Class, enumerate));
 JS_STATIC_ASSERT(offsetof(JSClass, resolve) == offsetof(Class, resolve));
 JS_STATIC_ASSERT(offsetof(JSClass, convert) == offsetof(Class, convert));
 JS_STATIC_ASSERT(offsetof(JSClass, finalize) == offsetof(Class, finalize));
-JS_STATIC_ASSERT(offsetof(JSClass, reserved0) == offsetof(Class, reserved0));
+JS_STATIC_ASSERT(offsetof(JSClass, getObjectOps) == offsetof(Class, getObjectOps));
 JS_STATIC_ASSERT(offsetof(JSClass, checkAccess) == offsetof(Class, checkAccess));
 JS_STATIC_ASSERT(offsetof(JSClass, call) == offsetof(Class, call));
 JS_STATIC_ASSERT(offsetof(JSClass, construct) == offsetof(Class, construct));
 JS_STATIC_ASSERT(offsetof(JSClass, xdrObject) == offsetof(Class, xdrObject));
 JS_STATIC_ASSERT(offsetof(JSClass, hasInstance) == offsetof(Class, hasInstance));
 JS_STATIC_ASSERT(offsetof(JSClass, mark) == offsetof(Class, mark));
+JS_STATIC_ASSERT(offsetof(JSClass, reserved0) == offsetof(Class, reserved0));
 JS_STATIC_ASSERT(sizeof(JSClass) == sizeof(Class));
+
+struct ExtendedClass {
+    Class               base;
+    EqualityOp          equality;
+    JSObjectOp          outerObject;
+    JSObjectOp          innerObject;
+    JSIteratorOp        iteratorObject;
+    JSObjectOp          wrappedObject;          /* NB: infallible, null
+                                                   returns are treated as
+                                                   the original object */
+    void                (*reserved0)(void);
+    void                (*reserved1)(void);
+    void                (*reserved2)(void);
+};
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, base) == offsetof(ExtendedClass, base));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, equality) == offsetof(ExtendedClass, equality));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, outerObject) == offsetof(ExtendedClass, outerObject));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, innerObject) == offsetof(ExtendedClass, innerObject));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, iteratorObject) == offsetof(ExtendedClass, iteratorObject));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, wrappedObject) == offsetof(ExtendedClass, wrappedObject));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, reserved0) == offsetof(ExtendedClass, reserved0));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, reserved1) == offsetof(ExtendedClass, reserved1));
+JS_STATIC_ASSERT(offsetof(JSExtendedClass, reserved2) == offsetof(ExtendedClass, reserved2));
+JS_STATIC_ASSERT(sizeof(JSExtendedClass) == sizeof(ExtendedClass));
 
 struct PropertyDescriptor {
     JSObject     *obj;
@@ -940,6 +908,8 @@ JS_STATIC_ASSERT(sizeof(JSPropertyDescriptor) == sizeof(PropertyDescriptor));
 
 static JS_ALWAYS_INLINE JSClass *              Jsvalify(Class *c)                { return (JSClass *)c; }
 static JS_ALWAYS_INLINE Class *                Valueify(JSClass *c)              { return (Class *)c; }
+static JS_ALWAYS_INLINE JSExtendedClass *      Jsvalify(ExtendedClass *c)        { return (JSExtendedClass *)c; }
+static JS_ALWAYS_INLINE ExtendedClass *        Valueify(JSExtendedClass *c)      { return (ExtendedClass *)c; }
 static JS_ALWAYS_INLINE JSPropertyDescriptor * Jsvalify(PropertyDescriptor *p) { return (JSPropertyDescriptor *) p; }
 static JS_ALWAYS_INLINE PropertyDescriptor *   Valueify(JSPropertyDescriptor *p) { return (PropertyDescriptor *) p; }
 

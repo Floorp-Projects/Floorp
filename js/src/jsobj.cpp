@@ -102,26 +102,29 @@
 
 using namespace js;
 
-JS_FRIEND_DATA(const JSObjectMap) JSObjectMap::sharedNonNative(JSObjectMap::SHAPELESS);
+JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
+    NULL,
+    js_LookupProperty,
+    js_DefineProperty,
+    js_GetProperty,
+    js_SetProperty,
+    js_GetAttributes,
+    js_SetAttributes,
+    js_DeleteProperty,
+    js_Enumerate,
+    js_TypeOf,
+    js_TraceObject,
+    NULL,   /* thisObject */
+    js_Clear
+};
 
 Class js_ObjectClass = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub
+    PropertyStub,     PropertyStub,     PropertyStub,     PropertyStub,
+    EnumerateStub,    ResolveStub,      ConvertStub,      NULL,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
-
-JS_FRIEND_API(JSObject *)
-js_ObjectToOuterObject(JSContext *cx, JSObject *obj)
-{
-    OBJ_TO_OUTER_OBJECT(cx, obj);
-    return obj;
-}
 
 #if JS_HAS_OBJ_PROTO_PROP
 
@@ -914,6 +917,8 @@ js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
 JSObject *
 js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller)
 {
+    Class *clasp;
+    JSExtendedClass *xclasp;
     JSObject *inner;
 
     if (!scopeobj)
@@ -923,12 +928,19 @@ js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller
     if (!scopeobj)
         return NULL;
 
-    /* XXX This is an awful gross hack. */
     inner = scopeobj;
+
+    /* XXX This is an awful gross hack. */
     while (scopeobj) {
-        JSObjectOp op = scopeobj->getClass()->ext.innerObject;
-        if (op && op(cx, scopeobj) != scopeobj)
-            goto bad;
+        clasp = scopeobj->getClass();
+        if (clasp->flags & JSCLASS_IS_EXTENDED) {
+            xclasp = (JSExtendedClass*)clasp;
+            if (xclasp->innerObject &&
+                xclasp->innerObject(cx, scopeobj) != scopeobj) {
+                goto bad;
+            }
+        }
+
         scopeobj = scopeobj->getParent();
     }
 
@@ -1355,7 +1367,7 @@ obj_hasOwnProperty(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = ComputeThisFromVp(cx, vp);
     return obj &&
-           js_HasOwnPropertyHelper(cx, obj->getOps()->lookupProperty, argc, vp);
+           js_HasOwnPropertyHelper(cx, obj->map->ops->lookupProperty, argc, vp);
 }
 
 JSBool
@@ -1394,7 +1406,7 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
                   JSObject **objp, JSProperty **propp)
 {
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING);
-    if (!(lookup ? lookup : js_LookupProperty)(cx, obj, id, objp, propp))
+    if (!lookup(cx, obj, id, objp, propp))
         return false;
     if (!*propp)
         return true;
@@ -1402,10 +1414,14 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
     if (*objp == obj)
         return true;
 
+    JSExtendedClass *xclasp;
+    JSObject *outer;
     Class *clasp = (*objp)->getClass();
-    JSObject *outer = NULL;
-    if (JSObjectOp op = (*objp)->getClass()->ext.outerObject) {
-        outer = op(cx, *objp);
+    if (!(clasp->flags & JSCLASS_IS_EXTENDED) ||
+        !(xclasp = (JSExtendedClass *) clasp)->outerObject) {
+        outer = NULL;
+    } else {
+        outer = xclasp->outerObject(cx, *objp);
         if (!outer)
             return false;
     }
@@ -1691,7 +1707,7 @@ js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
     JSObject *pobj;
     JSProperty *prop;
-    if (!js_HasOwnProperty(cx, obj->getOps()->lookupProperty, obj, id, &pobj, &prop))
+    if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &pobj, &prop))
         return false;
     if (!prop) {
         vp->setUndefined();
@@ -1967,11 +1983,11 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
     /* 8.12.9 step 1. */
     JSProperty *current;
     JSObject *obj2;
-    JS_ASSERT(!obj->getOps()->lookupProperty);
-    if (!js_HasOwnProperty(cx, NULL, obj, desc.id, &obj2, &current))
+    JS_ASSERT(obj->map->ops->lookupProperty == js_LookupProperty);
+    if (!js_HasOwnProperty(cx, js_LookupProperty, obj, desc.id, &obj2, &current))
         return JS_FALSE;
 
-    JS_ASSERT(!obj->getOps()->defineProperty);
+    JS_ASSERT(obj->map->ops->defineProperty == js_DefineProperty);
 
     /* 8.12.9 steps 2-4. */
     JSScope *scope = obj->scope();
@@ -1982,7 +1998,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
         *rval = true;
 
         if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
-            JS_ASSERT(!obj->getOps()->defineProperty);
+            JS_ASSERT(obj->map->ops->defineProperty == js_DefineProperty);
             return js_DefineProperty(cx, obj, desc.id, &desc.value,
                                      PropertyStub, PropertyStub, desc.attrs);
         }
@@ -2287,7 +2303,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const PropDesc &desc, bool throwErr
     if (obj->isArray())
         return DefinePropertyOnArray(cx, obj, desc, throwError, rval);
 
-    if (obj->getOps()->lookupProperty) {
+    if (obj->map->ops->lookupProperty != js_LookupProperty) {
         if (obj->isProxy())
             return JSProxy::defineProperty(cx, obj, desc.id, desc.pd);
         return Reject(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
@@ -2568,7 +2584,8 @@ JSObject*
 js_NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
                            const Value &privateSlotValue)
 {
-    JS_ASSERT(clasp->isNative());
+    JS_ASSERT(!clasp->getObjectOps);
+    JS_ASSERT(proto->map->ops == &js_ObjectOps);
 
     JSObject* obj = js_NewGCObject(cx);
     if (!obj)
@@ -2848,39 +2865,35 @@ with_ThisObject(JSContext *cx, JSObject *obj)
     return obj->getWithThis();
 }
 
+JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
+    NULL,
+    with_LookupProperty,
+    js_DefineProperty,
+    with_GetProperty,
+    with_SetProperty,
+    with_GetAttributes,
+    with_SetAttributes,
+    with_DeleteProperty,
+    with_Enumerate,
+    with_TypeOf,
+    js_TraceObject,
+    with_ThisObject,
+    js_Clear
+};
+
+static JSObjectOps *
+with_getObjectOps(JSContext *cx, Class *clasp)
+{
+    return &js_WithObjectOps;
+}
+
 Class js_WithClass = {
     "With",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub,
-    NULL,           /* finalize */
-    NULL,           /* reserved    */
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* construct   */
-    NULL,           /* xdrObject   */
-    NULL,           /* hasInstance */
-    NULL,           /* mark        */
-    JS_NULL_CLASS_EXT,
-    {
-        with_LookupProperty,
-        NULL,       /* defineProperty */
-        with_GetProperty,
-        with_SetProperty,
-        with_GetAttributes,
-        with_SetAttributes,
-        with_DeleteProperty,
-        with_Enumerate,
-        with_TypeOf,
-        NULL,       /* trace          */
-        with_ThisObject,
-        NULL,       /* clear          */
-    }
+    PropertyStub,     PropertyStub,     PropertyStub,     PropertyStub,
+    EnumerateStub,    ResolveStub,      ConvertStub,      NULL,
+    with_getObjectOps,
+    0,0,0,0,0,0,0
 };
 
 JS_REQUIRES_STACK JSObject *
@@ -3227,13 +3240,9 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 Class js_BlockClass = {
     "Block",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    PropertyStub,   /* getProperty */
-    PropertyStub,   /* setProperty */
-    EnumerateStub,
-    ResolveStub,
-    ConvertStub
+    PropertyStub,     PropertyStub,     PropertyStub,      PropertyStub,
+    EnumerateStub,    ResolveStub,      ConvertStub,       NULL,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 JSObject *
@@ -4462,7 +4471,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
     for (scopeIndex = 0;
          parent
          ? js_IsCacheableNonGlobalScope(obj)
-         : !obj->getOps()->lookupProperty;
+         : obj->map->ops->lookupProperty == js_LookupProperty;
          ++scopeIndex) {
         protoIndex =
             js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
@@ -4843,11 +4852,8 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, Value *vp)
 {
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
 
-    PropertyIdOp op = obj->getOps()->getProperty;
-    if (!op) {
-#if JS_HAS_XML_SUPPORT
-        JS_ASSERT(!obj->isXML());
-#endif
+    if (obj->map->ops == &js_ObjectOps ||
+        obj->map->ops->getProperty == js_GetProperty) {
         return js_GetPropertyHelper(cx, obj, id, getHow, vp);
     }
     JS_ASSERT_IF(getHow & JSGET_CACHE_RESULT, obj->isDenseArray());
@@ -4855,7 +4861,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, Value *vp)
     if (obj->isXML())
         return js_GetXMLMethod(cx, obj, id, vp);
 #endif
-    return op(cx, obj, id, vp);
+    return obj->getProperty(cx, id, vp);
 }
 
 JS_FRIEND_API(bool)
@@ -5375,7 +5381,7 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
 
 } /* namespace js */
 
-JS_FRIEND_API(JSBool)
+JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, Value *statep, jsid *idp)
 {
     /* If the class has a custom JSCLASS_NEW_ENUMERATE hook, call it. */
@@ -5953,7 +5959,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 }
 
 void
-js_ClearNative(JSContext *cx, JSObject *obj)
+js_Clear(JSContext *cx, JSObject *obj)
 {
     JSScope *scope;
     uint32 i, n;
@@ -6042,9 +6048,12 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, const Value &v)
 JSObject *
 JSObject::wrappedObject(JSContext *cx) const
 {
-    if (JSObjectOp op = getClass()->ext.wrappedObject) {
-        if (JSObject *obj = op(cx, const_cast<JSObject *>(this)))
-            return obj;
+    Class *clasp = getClass();
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        if (JSObjectOp wrappedObject = reinterpret_cast<JSExtendedClass *>(clasp)->wrappedObject) {
+            if (JSObject *obj = wrappedObject(cx, const_cast<JSObject *>(this)))
+                return obj;
+        }
     }
     return const_cast<JSObject *>(this);
 }
@@ -6080,7 +6089,7 @@ JSObject::getCompartment(JSContext *cx)
             return cx->runtime->defaultCompartment;
 
         // The magic function namespace object is runtime-wide.
-        if (clasp == &js_NamespaceClass &&
+        if (clasp == &js_NamespaceClass.base &&
             obj->getNameURI() == ATOM_TO_JSVAL(cx->runtime->atomState.lazy.functionNamespaceURIAtom)) {
             return cx->runtime->defaultCompartment;
         }

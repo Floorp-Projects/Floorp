@@ -42,7 +42,20 @@
 #include "jsd.h"
 #include "jsapi.h"
 #include "jspubtd.h"
-#include "jsprvtd.h"
+
+/*
+ * Lifted with slight modification from jsobj.h
+ */
+
+#define OBJ_TO_OUTER_OBJECT(cx, obj)                                \
+do {                                                                \
+    JSClass *clasp_ = JS_GetClass(cx, obj);                         \
+    if (clasp_->flags & JSCLASS_IS_EXTENDED) {                      \
+        JSExtendedClass *xclasp_ = (JSExtendedClass*) clasp_;       \
+        if (xclasp_->outerObject)                                   \
+            obj = xclasp_->outerObject(cx, obj);                    \
+    }                                                               \
+} while(0)
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_VALUE(JSDValue* jsdval)
@@ -301,7 +314,8 @@ jsd_GetValueWrappedJSVal(JSDContext* jsdc, JSDValue* jsdval)
     jsval val = jsdval->val;
     if (!JSVAL_IS_PRIMITIVE(val)) {
         cx = JSD_GetDefaultJSContext(jsdc);
-        obj = js_ObjectToOuterObject(cx, JSVAL_TO_OBJECT(val));
+        obj = JSVAL_TO_OBJECT(val);
+        OBJ_TO_OUTER_OBJECT(cx, obj);
         if (!obj)
         {
             JS_ClearPendingException(cx);

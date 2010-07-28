@@ -346,20 +346,6 @@ typedef JSBool
 (* JSCallOp)(JSContext *cx, uintN argc, jsval *vp);
 
 /*
- * A generic type for functions mapping an object to another object, or null
- * if an error or exception was thrown on cx.
- */
-typedef JSObject *
-(* JSObjectOp)(JSContext *cx, JSObject *obj);
-
-/*
- * Hook that creates an iterator object for a given object. Returns the
- * iterator object or null if an error or exception was thrown on cx.
- */
-typedef JSObject *
-(* JSIteratorOp)(JSContext *cx, JSObject *obj, JSBool keysonly);
-
-/*
  * The following determines whether JS_EncodeCharacters and JS_DecodeBytes
  * treat char[] as utf-8 or simply as bytes that need to be inflated/deflated.
  */
@@ -368,13 +354,6 @@ typedef JSObject *
 #else
 extern JSBool js_CStringsAreUTF8;
 #endif
-
-/*
- * Hack to expose obj->getOps()->outer to the C implementation of the debugger
- * interface.
- */
-extern JS_FRIEND_API(JSObject *)
-js_ObjectToOuterObject(JSContext *cx, JSObject *obj);
 
 JS_END_EXTERN_C
 

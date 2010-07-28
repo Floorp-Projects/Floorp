@@ -150,7 +150,9 @@ struct JSTitle {
 /*
  * NB: The JS_LOCK_OBJ and JS_UNLOCK_OBJ macros work *only* on native objects
  * (objects for which obj->isNative() returns true).  All uses of these macros in
- * the engine are predicated on obj->isNative or equivalent checks.
+ * the engine are predicated on obj->isNative or equivalent checks.  These uses
+ * are for optimizations above the JSObjectOps layer, under which object locks
+ * normally hide.
  */
 #define CX_OWNS_SCOPE_TITLE(cx,scope)   ((scope)->title.ownercx == (cx))
 

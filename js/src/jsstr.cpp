@@ -806,13 +806,9 @@ Class js_StringClass = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_String),
-    PropertyStub,   /* addProperty */
-    PropertyStub,   /* delProperty */
-    str_getProperty,
-    PropertyStub,   /* setProperty */
-    str_enumerate,
-    (JSResolveOp)str_resolve,
-    ConvertStub
+    PropertyStub,    PropertyStub,     str_getProperty,     PropertyStub,
+    str_enumerate,   (JSResolveOp)str_resolve, ConvertStub, NULL,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 #define NORMALIZE_THIS(cx,vp,str)                                             \

@@ -107,7 +107,7 @@ typedef enum JSProtoKey {
     JSProto_LIMIT
 } JSProtoKey;
 
-/* js_CheckAccess mode enumeration. */
+/* JSObjectOps.checkAccess mode enumeration. */
 typedef enum JSAccessMode {
     JSACC_PROTO  = 0,           /* XXXbe redundant w.r.t. id */
     JSACC_PARENT = 1,           /* XXXbe redundant w.r.t. id */
@@ -145,6 +145,7 @@ typedef enum JSIterateOp {
 
 /* Struct typedefs. */
 typedef struct JSClass           JSClass;
+typedef struct JSExtendedClass   JSExtendedClass;
 typedef struct JSConstDoubleSpec JSConstDoubleSpec;
 typedef struct JSContext         JSContext;
 typedef struct JSErrorReport     JSErrorReport;
@@ -155,6 +156,7 @@ typedef struct JSIdArray         JSIdArray;
 typedef struct JSPropertyDescriptor JSPropertyDescriptor;
 typedef struct JSPropertySpec    JSPropertySpec;
 typedef struct JSObjectMap       JSObjectMap;
+typedef struct JSObjectOps       JSObjectOps;
 typedef struct JSRuntime         JSRuntime;
 typedef struct JSScript          JSScript;
 typedef struct JSStackFrame      JSStackFrame;
@@ -302,6 +304,29 @@ typedef void
 (* JSStringFinalizeOp)(JSContext *cx, JSString *str);
 
 /*
+ * The signature for JSClass.getObjectOps, used by JS_NewObject's internals
+ * to discover the set of high-level object operations to use for new objects
+ * of the given class.  All native objects have a JSClass, which is stored as
+ * a private (int-tagged) pointer in obj slots. In contrast, all native and
+ * host objects have a JSObjectMap at obj->map, which may be shared among a
+ * number of objects, and which contains the JSObjectOps *ops pointer used to
+ * dispatch object operations from API calls.
+ *
+ * Thus JSClass (which pre-dates JSObjectOps in the API) provides a low-level
+ * interface to class-specific code and data, while JSObjectOps allows for a
+ * higher level of operation, which does not use the object's class except to
+ * find the class's JSObjectOps struct, by calling clasp->getObjectOps, and to
+ * finalize the object.
+ *
+ * If this seems backwards, that's because it is!  API compatibility requires
+ * a JSClass *clasp parameter to JS_NewObject, etc.  Most host objects do not
+ * need to implement the larger JSObjectOps, and can share the common JSScope
+ * code and data used by the native (js_ObjectOps, see jsobj.c) ops.
+ */
+typedef JSObjectOps *
+(* JSGetObjectOps)(JSContext *cx, JSClass *clasp);
+
+/*
  * JSClass.checkAccess type: check whether obj[id] may be accessed per mode,
  * returning false on error/exception, true on success with obj[id]'s last-got
  * value in *vp, and its attributes in *attrsp.  As for JSPropertyOp above, id
@@ -393,8 +418,25 @@ typedef void
 typedef void
 (* JSTraceNamePrinter)(JSTracer *trc, char *buf, size_t bufsize);
 
+/* JSExtendedClass function pointer typedefs. */
+
 typedef JSBool
 (* JSEqualityOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
+
+/*
+ * A generic type for functions mapping an object to another object, or null
+ * if an error or exception was thrown on cx.  Used by JSObjectOps.thisObject
+ * at present.
+ */
+typedef JSObject *
+(* JSObjectOp)(JSContext *cx, JSObject *obj);
+
+/*
+ * Hook that creates an iterator object for a given object. Returns the
+ * iterator object or null if an error or exception was thrown on cx.
+ */
+typedef JSObject *
+(* JSIteratorOp)(JSContext *cx, JSObject *obj, JSBool keysonly);
 
 /* Typedef for native functions called by the JS VM. */
 
