@@ -85,6 +85,11 @@ treechildren::-moz-tree-image(query, OrganizerQuery_Tags) {
   -moz-image-region: auto;
 }
 
+treechildren::-moz-tree-image(query, OrganizerQuery_Downloads) {
+  list-style-image: url("chrome://browser/skin/places/downloads.png");
+  -moz-image-region: auto;
+}
+
 /* calendar icon for folders grouping items by date */
 treechildren::-moz-tree-image(title, query, dayContainer) {
   list-style-image: url("chrome://browser/skin/places/calendar.png");

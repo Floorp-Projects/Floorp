@@ -65,6 +65,7 @@ _BROWSER_TEST_FILES = \
 	browser_views_liveupdate.js \
 	browser_sidebarpanels_click.js \
 	browser_library_infoBox.js \
+	browser_library_downloads.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
