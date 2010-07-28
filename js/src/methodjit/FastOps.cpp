@@ -885,8 +885,7 @@ mjit::Compiler::jsop_setelem()
     FrameEntry *id = frame.peek(-2);
     FrameEntry *fe = frame.peek(-1);
 
-    if ((obj->isTypeKnown() && obj->getKnownType() != JSVAL_TYPE_OBJECT) ||
-        (id->isTypeKnown() && id->getKnownType() != JSVAL_TYPE_INT32) ||
+    if (obj->isNotType(JSVAL_TYPE_OBJECT) || id->isNotType(JSVAL_TYPE_INT32) ||
         (id->isConstant() && id->getValue().toInt32() < 0)) {
         jsop_setelem_slow();
         return;
@@ -911,6 +910,23 @@ mjit::Compiler::jsop_setelem()
                                       ImmPtr(&js_ArrayClass));
     stubcc.linkExit(guardDense, Uses(3));
 
+    /* guard within capacity */
+    Address capacity(objReg, offsetof(JSObject, fslots) +
+                             JSObject::JSSLOT_DENSE_ARRAY_CAPACITY * sizeof(Value));
+
+    Jump inRange;
+    MaybeRegisterID maybeIdReg;
+    if (id->isConstant()) {
+        inRange = masm.branch32(Assembler::LessThanOrEqual,
+                                masm.payloadOf(capacity),
+                                Imm32(id->getValue().toInt32()));
+    } else {
+        maybeIdReg = frame.copyDataIntoReg(id);
+        inRange = masm.branch32(Assembler::AboveOrEqual, maybeIdReg.reg(),
+                                masm.payloadOf(capacity));
+    }
+    stubcc.linkExit(inRange, Uses(3));
+
     /* dslots non-NULL */
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
     Jump guardSlots = masm.branchTestPtr(Assembler::Zero, objReg, objReg);
@@ -918,11 +934,6 @@ mjit::Compiler::jsop_setelem()
 
     /* guard within capacity */
     if (id->isConstant()) {
-        Jump inRange = masm.branch32(Assembler::LessThanOrEqual,
-                                     masm.payloadOf(Address(objReg, -int(sizeof(Value)))),
-                                     Imm32(id->getValue().toInt32()));
-        stubcc.linkExit(inRange, Uses(3));
-
         /* guard not a hole */
         Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
 #if defined JS_NUNBOX32
@@ -951,11 +962,7 @@ mjit::Compiler::jsop_setelem()
                 masm.storeTypeTag(frame.tempRegForType(fe), slot);
         }
     } else {
-        RegisterID idReg = frame.copyDataIntoReg(id);
-        Jump inRange = masm.branch32(Assembler::AboveOrEqual,
-                                     idReg,
-                                     masm.payloadOf(Address(objReg, -int(sizeof(Value)))));
-        stubcc.linkExit(inRange, Uses(3));
+        RegisterID idReg = maybeIdReg.reg();
 
         /* guard not a hole */
         BaseIndex slot(objReg, idReg, Assembler::JSVAL_SCALE);
@@ -1003,6 +1010,20 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
                                      ImmPtr(&js_ArrayClass));
     stubcc.linkExit(guardDense, Uses(2));
 
+    /* Guard within capacity. */
+    Jump inRange;
+    Address capacity(objReg, offsetof(JSObject, fslots) +
+                             JSObject::JSSLOT_DENSE_ARRAY_CAPACITY * sizeof(Value));
+    if (id->isConstant()) {
+        inRange = masm.branch32(Assembler::LessThanOrEqual,
+                                masm.payloadOf(capacity),
+                                Imm32(id->getValue().toInt32()));
+    } else {
+        inRange = masm.branch32(Assembler::AboveOrEqual, idReg.reg(),
+                                masm.payloadOf(capacity));
+    }
+    stubcc.linkExit(inRange, Uses(2));
+
     /* dslots non-NULL */
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
     Jump guardSlots = masm.branchTestPtr(Assembler::Zero, objReg, objReg);
@@ -1010,11 +1031,6 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
 
     /* guard within capacity */
     if (id->isConstant()) {
-        Jump inRange = masm.branch32(Assembler::LessThanOrEqual,
-                                     masm.payloadOf(Address(objReg, -int(sizeof(Value)))),
-                                     Imm32(id->getValue().toInt32()));
-        stubcc.linkExit(inRange, Uses(2));
-
         /* guard not a hole */
         Address slot(objReg, id->getValue().toInt32() * sizeof(Value));
 #if defined JS_NUNBOX32
@@ -1029,12 +1045,6 @@ mjit::Compiler::jsop_getelem_dense(FrameEntry *obj, FrameEntry *id, RegisterID o
         masm.loadTypeTag(slot, tmpReg);
         masm.loadPayload(slot, objReg);
     } else {
-        JS_ASSERT(idReg.isSet());
-        Jump inRange = masm.branch32(Assembler::AboveOrEqual,
-                                     idReg.reg(),
-                                     masm.payloadOf(Address(objReg, -int(sizeof(Value)))));
-        stubcc.linkExit(inRange, Uses(2));
-
         /* guard not a hole */
         BaseIndex slot(objReg, idReg.reg(), Assembler::JSVAL_SCALE);
 #if defined JS_NUNBOX32
