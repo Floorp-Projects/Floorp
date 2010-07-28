@@ -118,7 +118,6 @@ XPIDLSRCS = 					\
 	nsIDOMHTMLCanvasElement.idl		\
 	nsIDOMNSHTMLAnchorElement.idl		\
 	nsIDOMNSHTMLAnchorElement2.idl		\
-	nsIDOMNSHTMLButtonElement.idl		\
 	nsIDOMNSHTMLDocument.idl		\
 	nsIDOMNSHTMLElement.idl			\
 	nsIDOMNSHTMLFormElement.idl		\
