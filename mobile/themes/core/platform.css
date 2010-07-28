@@ -110,7 +110,11 @@ textbox[isempty="true"] {
 }
 
 /* prompt dialogs ---------------------------------------------------------- */
+.context-block,
 .modal-block {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  background-color: rgba(128, 128, 128, 0.5);
   padding: 64px;
 }
 
@@ -149,6 +153,7 @@ dialog .prompt-title {
 }
 
 @media (max-width: 499px) {
+  .context-block,
   .modal-block {
     padding: 32px;
   }

@@ -507,7 +507,7 @@
       <spacer flex="1000"/>
     </vbox>
 
-    <hbox id="context-container" class="window-width window-height modal-block" top="0" left="0" hidden="true">
+    <hbox id="context-container" class="window-width window-height context-block" top="0" left="0" hidden="true">
       <vbox id="context-popup" class="dialog-dark">
         <hbox id="context-header">
           <label id="context-hint" crop="center" flex="1"/>

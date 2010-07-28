@@ -1323,9 +1323,3 @@ pageaction .pageaction-desc[value=""] {
 #context-commands > richlistitem:hover:active {
   background: #8db8d8;
 }
-
-.modal-block {
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  background-color: rgba(128, 128, 128, 0.5);
-}
