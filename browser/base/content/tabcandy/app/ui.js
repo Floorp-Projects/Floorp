@@ -91,7 +91,7 @@ var UIManager = {
   init: function() {
     try {
       Storage.init();
-      TabMirror.init();
+      TabItems.init();
 
       var self = this;
 
@@ -217,13 +217,9 @@ var UIManager = {
       // ___ show Tab Candy at startup based on last session.
       if (data.tabCandyVisible) {
         var currentTab = self._currentTab;
-        var item;
 
-        if (currentTab && currentTab.mirror)
-          item = TabItems.getItemByTabElement(currentTab.mirror.el);
-
-        if (item)
-          item.setZoomPrep(false);
+        if (currentTab && currentTab.tabItem)
+          currentTab.tabItem.setZoomPrep(false);
         else
           self._stopZoomPreparation = true;
 
@@ -287,13 +283,13 @@ var UIManager = {
 
     if (this._activeTab) {
       this._activeTab.makeDeactive();
-      this._activeTab.removeOnClose(this);
+      this._activeTab.removeSubscriber(this, "close");
     }
     this._activeTab = tab;
 
     if (this._activeTab) {
       var self = this;
-      this._activeTab.addOnClose(this, function() {
+      this._activeTab.addSubscriber(this, "close", function() {
         self._activeTab = null;
       });
 
@@ -331,30 +327,26 @@ var UIManager = {
     this._setActiveTitleColor(true);
 #endif
 
-    if (zoomOut) {
-      if (currentTab && currentTab.mirror)
-        item = TabItems.getItemByTabElement(currentTab.mirror.el);
+    if (zoomOut && currentTab && currentTab.tabItem) {
+      item = currentTab.tabItem;
+      // If there was a previous currentTab we want to animate
+      // its thumbnail (canvas) for the zoom out.
+      // Note that we start the animation on the chrome thread.
 
-      if (item) {
-        // If there was a previous currentTab we want to animate
-        // its mirror for the zoom out.
-        // Note that we start the animation on the chrome thread.
+      // Zoom out!
+      item.zoomOut(function() {
+        if (!currentTab.tabItem) // if the tab's been destroyed
+          item = null;
 
-        // Zoom out!
-        item.zoomOut(function() {
-          if (!currentTab.mirror) // if the tab's been destroyed
-            item = null;
+        self.setActiveTab(item);
 
-          self.setActiveTab(item);
+        var activeGroup = Groups.getActiveGroup();
+        if (activeGroup)
+          activeGroup.setTopChild(item);
 
-          var activeGroup = Groups.getActiveGroup();
-          if (activeGroup)
-            activeGroup.setTopChild(item);
-
-          window.Groups.setActiveGroup(null);
-          self._resize(true);
-        });
-      }
+        window.Groups.setActiveGroup(null);
+        self._resize(true);
+      });
     }
   },
 
@@ -424,11 +416,8 @@ var UIManager = {
                gBrowser.visibleTabs.length == 1)) {
             self._closedLastVisibleTab = true;
             // remove the zoom prep.
-            if (this && this.mirror) {
-              var item = TabItems.getItemByTabElement(this.mirror.el);
-              if (item)
-                item.setZoomPrep(false);
-            }
+            if (this && this.tabItem)
+              this.tabItem.setZoomPrep(false);
             self.showTabCandy();
           }
         }
@@ -484,11 +473,8 @@ var UIManager = {
       // this value is true when tabcandy is open at browser startup.
       if (self._stopZoomPreparation) {
         self._stopZoomPreparation = false;
-        if (focusTab && focusTab.mirror) {
-          var item = TabItems.getItemByTabElement(focusTab.mirror.el);
-          if (item)
-            self.setActiveTab(item);
-        }
+        if (focusTab && focusTab.tabItem)
+          self.setActiveTab(focusTab.tabItem);
         return;
       }
 
@@ -500,16 +486,15 @@ var UIManager = {
       var visibleTabCount = gBrowser.visibleTabs.length;
 
       var newItem = null;
-      if (focusTab && focusTab.mirror)
-        newItem = TabItems.getItemByTabElement(focusTab.mirror.el);
-
-      if (newItem)
+      if (focusTab && focusTab.tabItem) {
+        newItem = focusTab.tabItem;
         Groups.setActiveGroup(newItem.parent);
+      }
 
       // ___ prepare for when we return to TabCandy
       var oldItem = null;
-      if (currentTab && currentTab.mirror)
-        oldItem = TabItems.getItemByTabElement(currentTab.mirror.el);
+      if (currentTab && currentTab.tabItem)
+        oldItem = currentTab.tabItem;
 
       if (newItem != oldItem) {
         if (oldItem)

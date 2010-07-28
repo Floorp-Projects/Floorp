@@ -9,7 +9,6 @@ Components.utils.import("resource://gre/modules/tabview/tabs.js");
 #include app/items.js
 #include app/groups.js
 #include app/tabitems.js
-#include core/mirror.js
 
 #include app/drag.js
 #include app/trench.js
