@@ -51,6 +51,221 @@
 using namespace js;
 using namespace js::mjit;
 
+typedef JSC::MacroAssembler::RegisterID RegisterID;
+
+RegisterID
+mjit::Compiler::rightRegForShift(FrameEntry *rhs)
+{
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    /*
+     * Gross: RHS _must_ be in ECX, on x86.
+     * Note that we take this first so that we can't up with other register
+     * allocations (below) owning ecx before rhs.
+     */
+    RegisterID reg = JSC::X86Registers::ecx;
+    if (!rhs->isConstant())
+        frame.copyDataIntoReg(rhs, reg);
+    return reg;
+#else
+    if (rhs->isConstant())
+        return frame.allocReg();
+    return frame.copyDataIntoReg(rhs);
+#endif
+}
+
+void
+mjit::Compiler::jsop_rsh_const_int(FrameEntry *lhs, FrameEntry *rhs)
+{
+    RegisterID rhsData = rightRegForShift(rhs);
+    RegisterID result = frame.allocReg();
+    masm.move(Imm32(lhs->getValue().toInt32()), result);
+    masm.rshift32(rhsData, result);
+
+    frame.freeReg(rhsData);
+    frame.popn(2);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, result);
+}
+
+void
+mjit::Compiler::jsop_rsh_int_int(FrameEntry *lhs, FrameEntry *rhs)
+{
+    RegisterID rhsData = rightRegForShift(rhs);
+    RegisterID lhsData = frame.copyDataIntoReg(lhs);
+    masm.rshift32(rhsData, lhsData);
+    frame.freeReg(rhsData);
+    frame.popn(2);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, lhsData);
+}
+
+void
+mjit::Compiler::jsop_rsh_int_const(FrameEntry *lhs, FrameEntry *rhs)
+{
+    int32 shiftAmount = rhs->getValue().toInt32();
+
+    if (!shiftAmount) {
+        frame.pop();
+        return;
+    }
+
+    RegisterID result = frame.copyDataIntoReg(lhs);
+    masm.rshift32(Imm32(shiftAmount), result);
+    frame.popn(2);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, result);
+}
+
+void
+mjit::Compiler::jsop_rsh_unknown_const(FrameEntry *lhs, FrameEntry *rhs)
+{
+    int32 shiftAmount = rhs->getValue().toInt32();
+
+    RegisterID lhsType = frame.tempRegForType(lhs);
+    frame.pinReg(lhsType);
+    RegisterID lhsData = frame.copyDataIntoReg(lhs);
+    frame.unpinReg(lhsType);
+
+    Jump lhsIntGuard = masm.testInt32(Assembler::NotEqual, lhsType);
+    stubcc.linkExitDirect(lhsIntGuard, stubcc.masm.label());
+
+    Jump lhsDoubleGuard = stubcc.masm.testDouble(Assembler::NotEqual, lhsType);
+    frame.loadDouble(lhs, FPRegisters::First, stubcc.masm);
+    Jump lhsTruncateGuard = stubcc.masm.branchTruncateDoubleToInt32(FPRegisters::First, lhsData);
+    stubcc.crossJump(stubcc.masm.jump(), masm.label());
+
+    lhsDoubleGuard.linkTo(stubcc.masm.label(), &stubcc.masm);
+    lhsTruncateGuard.linkTo(stubcc.masm.label(), &stubcc.masm);
+
+    frame.sync(stubcc.masm, Uses(2));
+    stubcc.call(stubs::Rsh);
+
+    if (shiftAmount)
+        masm.rshift32(Imm32(shiftAmount), lhsData);
+
+    frame.popn(2);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, lhsData);
+
+    stubcc.rejoin(Changes(1));
+}
+
+void
+mjit::Compiler::jsop_rsh_const_unknown(FrameEntry *lhs, FrameEntry *rhs)
+{
+    RegisterID rhsData = rightRegForShift(rhs);
+    RegisterID rhsType = frame.tempRegForType(rhs);
+    frame.pinReg(rhsType);
+    RegisterID result = frame.allocReg();
+    frame.unpinReg(rhsType);
+
+    Jump rhsIntGuard = masm.testInt32(Assembler::NotEqual, rhsType);
+    stubcc.linkExit(rhsIntGuard, Uses(2));
+    stubcc.leave();
+    stubcc.call(stubs::Rsh);
+    masm.move(Imm32(lhs->getValue().toInt32()), result);
+    masm.rshift32(rhsData, result);
+    frame.freeReg(rhsData);
+
+    frame.popn(2);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, result);
+    stubcc.rejoin(Changes(1));
+}
+
+void
+mjit::Compiler::jsop_rsh_int_unknown(FrameEntry *lhs, FrameEntry *rhs)
+{
+    RegisterID rhsData = rightRegForShift(rhs);
+    RegisterID rhsType = frame.tempRegForType(rhs);
+    frame.pinReg(rhsType);
+    RegisterID lhsData = frame.copyDataIntoReg(lhs);
+    frame.unpinReg(rhsType);
+
+    Jump rhsIntGuard = masm.testInt32(Assembler::NotEqual, rhsType);
+    stubcc.linkExit(rhsIntGuard, Uses(2));
+    stubcc.leave();
+    stubcc.call(stubs::Rsh);
+
+    masm.rshift32(rhsData, lhsData);
+    frame.freeReg(rhsData);
+    frame.popn(2);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, lhsData);
+
+    stubcc.rejoin(Changes(1));
+}
+
+void
+mjit::Compiler::jsop_rsh_unknown_unknown(FrameEntry *lhs, FrameEntry *rhs)
+{
+    RegisterID rhsData = rightRegForShift(rhs);
+    RegisterID rhsType = frame.tempRegForType(rhs);
+    frame.pinReg(rhsType);
+    RegisterID lhsType = frame.tempRegForType(lhs);
+    frame.pinReg(lhsType);
+    RegisterID lhsData = frame.copyDataIntoReg(lhs);
+    frame.unpinReg(lhsType);
+    frame.unpinReg(rhsType);
+
+    Jump rhsIntGuard = masm.testInt32(Assembler::NotEqual, rhsType);
+
+    Jump lhsIntGuard = masm.testInt32(Assembler::NotEqual, lhsType);
+    stubcc.linkExitDirect(lhsIntGuard, stubcc.masm.label());
+
+    Jump lhsDoubleGuard = stubcc.masm.testDouble(Assembler::NotEqual, lhsType);
+    frame.loadDouble(lhs, FPRegisters::First, stubcc.masm);
+    Jump lhsTruncateGuard = stubcc.masm.branchTruncateDoubleToInt32(FPRegisters::First, lhsData);
+    stubcc.crossJump(stubcc.masm.jump(), masm.label());
+
+    lhsDoubleGuard.linkTo(stubcc.masm.label(), &stubcc.masm);
+    lhsTruncateGuard.linkTo(stubcc.masm.label(), &stubcc.masm);
+
+    stubcc.linkExitDirect(rhsIntGuard, stubcc.masm.label());
+    frame.sync(stubcc.masm, Uses(2));
+    stubcc.call(stubs::Rsh);
+
+    masm.rshift32(rhsData, lhsData);
+    frame.freeReg(rhsData);
+    frame.popn(2);
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, lhsData);
+
+    stubcc.rejoin(Changes(1));
+}
+
+void
+mjit::Compiler::jsop_rsh()
+{
+    FrameEntry *rhs = frame.peek(-1);
+    FrameEntry *lhs = frame.peek(-2);
+
+    if (lhs->isNotType(JSVAL_TYPE_INT32) || rhs->isNotType(JSVAL_TYPE_INT32)) {
+        prepareStubCall(Uses(2));
+        stubCall(stubs::Rsh);
+        frame.popn(2);
+        frame.pushSyncedType(JSVAL_TYPE_INT32);
+        return;
+    }
+
+    if (lhs->isConstant() && rhs->isConstant()) {
+        int32 L = lhs->getValue().toInt32();
+        int32 R = lhs->getValue().toInt32();
+        frame.popn(2);
+        frame.push(Int32Value(L >> R));
+    } else if (lhs->isConstant()) {
+        if (rhs->isType(JSVAL_TYPE_INT32))
+            jsop_rsh_const_int(lhs, rhs);
+        else
+            jsop_rsh_const_unknown(lhs, rhs);
+    } else if (rhs->isConstant()) {
+        if (lhs->isType(JSVAL_TYPE_INT32))
+            jsop_rsh_int_const(lhs, rhs);
+        else
+            jsop_rsh_unknown_const(lhs, rhs);
+    } else {
+        if (lhs->isType(JSVAL_TYPE_INT32) && rhs->isType(JSVAL_TYPE_INT32))
+            jsop_rsh_int_int(lhs, rhs);
+        else if (lhs->isType(JSVAL_TYPE_INT32))
+            jsop_rsh_int_unknown(lhs, rhs);
+        else
+            jsop_rsh_unknown_unknown(lhs, rhs);
+    }
+}
+
 void
 mjit::Compiler::jsop_bitnot()
 {
@@ -108,9 +323,6 @@ mjit::Compiler::jsop_bitop(JSOp op)
       case JSOP_LSH:
         stub = stubs::Lsh;
         break;
-      case JSOP_RSH:
-        stub = stubs::Rsh;
-        break;
       default:
         JS_NOT_REACHED("wat");
         return;
@@ -163,9 +375,6 @@ mjit::Compiler::jsop_bitop(JSOp op)
           case JSOP_LSH:
             frame.push(Int32Value(L << R));
             return;
-          case JSOP_RSH:
-            frame.push(Int32Value(L >> R));
-            return;
           default:
             JS_NOT_REACHED("say wat");
         }
@@ -215,13 +424,11 @@ mjit::Compiler::jsop_bitop(JSOp op)
       }
 
       case JSOP_LSH:
-      case JSOP_RSH:
       {
         /* Not commutative. */
         if (rhs->isConstant()) {
-            int32 shift = rhs->getValue().toInt32() & 0x1F;
-
-            reg = frame.ownRegForData(lhs);
+            RegisterID reg = frame.ownRegForData(lhs);
+            int shift = rhs->getValue().toInt32() & 0x1F;
 
             if (!shift) {
                 /*
@@ -235,44 +442,30 @@ mjit::Compiler::jsop_bitop(JSOp op)
                 return;
             }
 
-            switch (op) {
-              case JSOP_LSH:
-                masm.lshift32(Imm32(shift), reg);
-                break;
-              case JSOP_RSH:
-                masm.rshift32(Imm32(shift), reg);
-                break;
-              default:
-                JS_NOT_REACHED("NYI");
-            }
-        } else {
+            masm.lshift32(Imm32(shift), reg);
+
+            frame.popn(2);
+            frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
+            return;
+        }
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-            /* Grosssssss! RHS _must_ be in ECX, on x86 */
-            RegisterID rr = frame.tempRegInMaskForData(rhs, Registers::maskReg(JSC::X86Registers::ecx));
+        /* Grosssssss! RHS _must_ be in ECX, on x86 */
+        RegisterID rr = frame.tempRegInMaskForData(rhs,
+                                                   Registers::maskReg(JSC::X86Registers::ecx));
 #else
-            RegisterID rr = frame.tempRegForData(rhs);
+        RegisterID rr = frame.tempRegForData(rhs);
 #endif
 
-            frame.pinReg(rr);
-            if (lhs->isConstant()) {
-                reg = frame.allocReg();
-                masm.move(Imm32(lhs->getValue().toInt32()), reg);
-            } else {
-                reg = frame.ownRegForData(lhs);
-            }
-            frame.unpinReg(rr);
-
-            switch (op) {
-              case JSOP_LSH:
-                masm.lshift32(rr, reg);
-                break;
-              case JSOP_RSH:
-                masm.rshift32(rr, reg);
-                break;
-              default:
-                JS_NOT_REACHED("NYI");
-            }
+        frame.pinReg(rr);
+        if (lhs->isConstant()) {
+            reg = frame.allocReg();
+            masm.move(Imm32(lhs->getValue().toInt32()), reg);
+        } else {
+            reg = frame.ownRegForData(lhs);
         }
+        frame.unpinReg(rr);
+
+        masm.lshift32(rr, reg);
         break;
       }
 
