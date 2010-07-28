@@ -54,6 +54,7 @@ endif
 CPPSRCS		= \
 		nsTransportUtils.cpp \
 		nsAsyncStreamCopier.cpp \
+		nsAsyncRedirectVerifyHelper.cpp \
 		nsAuthInformationHolder.cpp \
 		nsBaseChannel.cpp \
 		nsBaseContentStream.cpp \

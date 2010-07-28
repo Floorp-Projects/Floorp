@@ -92,7 +92,6 @@ nsHttpChannel::nsHttpChannel()
     , mApplyConversion(PR_TRUE)
     , mCachedContentIsValid(PR_FALSE)
     , mCachedContentIsPartial(PR_FALSE)
-    , mCanceled(PR_FALSE)
     , mTransactionReplaced(PR_FALSE)
     , mAuthRetryPending(PR_FALSE)
     , mResuming(PR_FALSE)
@@ -105,6 +104,8 @@ nsHttpChannel::nsHttpChannel()
     , mLoadedFromApplicationCache(PR_FALSE)
     , mTracingEnabled(PR_TRUE)
     , mCustomConditionalRequest(PR_FALSE)
+    , mFallingBack(PR_FALSE)
+    , mWaitingForRedirectCallback(PR_FALSE)
     , mRemoteChannel(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
@@ -299,6 +300,10 @@ nsHttpChannel::HandleAsyncNotifyListener()
 void
 nsHttpChannel::DoNotifyListener()
 {
+    // Make sure mIsPending is set to PR_FALSE. At this moment we are done from
+    // the point of view of our consumer and we have to report our self
+    // as not-pending.
+    mIsPending = PR_FALSE;
     if (mListener) {
         mListener->OnStartRequest(this, mListenerContext);
         mListener->OnStopRequest(this, mListenerContext, mStatus);
@@ -329,14 +334,27 @@ nsHttpChannel::HandleAsyncRedirect()
     // channel could have been canceled, in which case there would be no point
     // in processing the redirect.
     if (NS_SUCCEEDED(mStatus)) {
-        rv = ProcessRedirection(mResponseHead->Status());
+        PushRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncRedirect);
+        rv = AsyncProcessRedirection(mResponseHead->Status());
         if (NS_FAILED(rv)) {
-            // If ProcessRedirection fails, then we have to send out the
-            // OnStart/OnStop notifications.
-            LOG(("ProcessRedirection failed [rv=%x]\n", rv));
-            mStatus = rv;
-            DoNotifyListener();
+            PopRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncRedirect);
+            ContinueHandleAsyncRedirect(rv);
         }
+    }
+    else {
+        ContinueHandleAsyncRedirect(NS_OK);
+    }
+}
+
+nsresult
+nsHttpChannel::ContinueHandleAsyncRedirect(nsresult rv)
+{
+    if (NS_FAILED(rv)) {
+        // If AsyncProcessRedirection fails, then we have to send out the
+        // OnStart/OnStop notifications.
+        LOG(("ContinueHandleAsyncRedirect got failure result [rv=%x]\n", rv));
+        mStatus = rv;
+        DoNotifyListener();
     }
 
     // close the cache entry.  Blow it away if we couldn't process the redirect
@@ -351,6 +369,8 @@ nsHttpChannel::HandleAsyncRedirect()
 
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+
+    return NS_OK;
 }
 
 void
@@ -396,21 +416,34 @@ nsHttpChannel::HandleAsyncFallback()
     // channel could have been canceled, in which case there would be no point
     // in processing the fallback.
     if (!mCanceled) {
-        PRBool fallingBack;
-        rv = ProcessFallback(&fallingBack);
-        if (NS_FAILED(rv) || !fallingBack) {
-            // If ProcessFallback fails, then we have to send out the
-            // OnStart/OnStop notifications.
-            LOG(("ProcessFallback failed [rv=%x, %d]\n", rv, fallingBack));
-            mStatus = NS_FAILED(rv) ? rv : NS_ERROR_DOCUMENT_NOT_CACHED;
-            DoNotifyListener();
-        }
+        PushRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncFallback);
+        PRBool waitingForRedirectCallback;
+        rv = ProcessFallback(&waitingForRedirectCallback);
+        if (waitingForRedirectCallback)
+            return;
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncFallback);
+    }
+
+    ContinueHandleAsyncFallback(rv);
+}
+
+nsresult
+nsHttpChannel::ContinueHandleAsyncFallback(nsresult rv)
+{
+    if (!mCanceled && (NS_FAILED(rv) || !mFallingBack)) {
+        // If ProcessFallback fails, then we have to send out the
+        // OnStart/OnStop notifications.
+        LOG(("ProcessFallback failed [rv=%x, %d]\n", rv, mFallingBack));
+        mStatus = NS_FAILED(rv) ? rv : NS_ERROR_DOCUMENT_NOT_CACHED;
+        DoNotifyListener();
     }
 
     mIsPending = PR_FALSE;
 
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+
+    return rv;
 }
 
 nsresult
@@ -891,22 +924,12 @@ nsHttpChannel::ProcessResponse()
 #endif
         // don't store the response body for redirects
         MaybeInvalidateCacheEntryForSubsequentGet();
-        rv = ProcessRedirection(httpStatus);
-        if (NS_SUCCEEDED(rv)) {
-            InitCacheEntry();
-            CloseCacheEntry(PR_FALSE);
-
-            if (mCacheForOfflineUse) {
-                // Store response in the offline cache
-                InitOfflineCacheEntry();
-                CloseOfflineCacheEntry();
-            }
-        }    
-        else {
-            LOG(("ProcessRedirection failed [rv=%x]\n", rv));
-            if (mTransaction->SSLConnectFailed())
-                return ProcessFailedSSLConnect(httpStatus);
-            rv = ProcessNormal();
+        PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse);
+        rv = AsyncProcessRedirection(httpStatus);
+        if (NS_FAILED(rv)) {
+            PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse);
+            LOG(("AsyncProcessRedirection failed [rv=%x]\n", rv));
+            rv = ContinueProcessResponse(rv);
         }
         break;
     case 304:
@@ -954,6 +977,28 @@ nsHttpChannel::ProcessResponse()
 }
 
 nsresult
+nsHttpChannel::ContinueProcessResponse(nsresult rv)
+{
+    if (NS_SUCCEEDED(rv)) {
+        InitCacheEntry();
+        CloseCacheEntry(PR_FALSE);
+
+        if (mCacheForOfflineUse) {
+            // Store response in the offline cache
+            InitOfflineCacheEntry();
+            CloseOfflineCacheEntry();
+        }
+        return NS_OK;
+    }
+
+    LOG(("ContinueProcessResponse got failure result [rv=%x]\n", rv));
+    if (mTransaction->SSLConnectFailed()) {
+        return ProcessFailedSSLConnect(mRedirectType);
+    }
+    return ProcessNormal();
+}
+
+nsresult
 nsHttpChannel::ProcessNormal()
 {
     nsresult rv;
@@ -963,18 +1008,34 @@ nsHttpChannel::ProcessNormal()
     PRBool succeeded;
     rv = GetRequestSucceeded(&succeeded);
     if (NS_SUCCEEDED(rv) && !succeeded) {
-        PRBool fallingBack;
-        rv = ProcessFallback(&fallingBack);
-        if (NS_FAILED(rv)) {
-            DoNotifyListener();
-            return rv;
-        }
-
-        if (fallingBack) {
-            // Do not continue with normal processing, fallback is in
-            // progress now.
+        PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessNormal);
+        PRBool waitingForRedirectCallback;
+        rv = ProcessFallback(&waitingForRedirectCallback);
+        if (waitingForRedirectCallback) {
+            // The transaction has been suspended by ProcessFallback.
             return NS_OK;
         }
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessNormal);
+    }
+
+    return ContinueProcessNormal(NS_OK);
+}
+
+nsresult
+nsHttpChannel::ContinueProcessNormal(nsresult rv)
+{
+    if (NS_FAILED(rv)) {
+        // Fill the failure status here, we have failed to fall back, thus we
+        // have to report our status as failed.
+        mStatus = rv;
+        DoNotifyListener();
+        return rv;
+    }
+
+    if (mFallingBack) {
+        // Do not continue with normal processing, fallback is in
+        // progress now.
+        return NS_OK;
     }
 
     // if we're here, then any byte-range requests failed to result in a partial
@@ -1086,7 +1147,7 @@ nsHttpChannel::ProxyFailover()
 
     // XXXbz so where does this codepath remove us from the loadgroup,
     // exactly?
-    return DoReplaceWithProxy(pi);
+    return AsyncDoReplaceWithProxy(pi);
 }
 
 void
@@ -1107,21 +1168,41 @@ nsHttpChannel::HandleAsyncReplaceWithProxy()
     nsCOMPtr<nsIProxyInfo> pi;
     pi.swap(mTargetProxyInfo);
     if (!mCanceled) {
-        status = DoReplaceWithProxy(pi);
-        if (mLoadGroup && NS_SUCCEEDED(status)) {
-            mLoadGroup->RemoveRequest(this, nsnull, mStatus);
-        }
+        PushRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncReplaceWithProxy);
+        status = AsyncDoReplaceWithProxy(pi);
+        if (NS_SUCCEEDED(status))
+            return;
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncReplaceWithProxy);
     }
 
     if (NS_FAILED(status)) {
-        AsyncAbort(status);
+        ContinueHandleAsyncReplaceWithProxy(status);
     }
 }
 
 nsresult
-nsHttpChannel::DoReplaceWithProxy(nsIProxyInfo* pi)
+nsHttpChannel::ContinueHandleAsyncReplaceWithProxy(nsresult status)
 {
-    LOG(("nsHttpChannel::DoReplaceWithProxy [this=%p pi=%p]", this, pi));
+    if (mLoadGroup && NS_SUCCEEDED(status)) {
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+    }
+    else if (NS_FAILED(status)) {
+       AsyncAbort(status);
+    }
+
+    // Return NS_OK here, even it seems to be breaking the async function stack
+    // contract (i.e. passing the result code to a function bellow).
+    // ContinueHandleAsyncReplaceWithProxy will always be at the bottom of the
+    // stack. If we would return the failure code, the async function stack
+    // logic would cancel the channel synchronously, which is undesired after
+    // invoking AsyncAbort above.
+    return NS_OK;
+}
+
+nsresult
+nsHttpChannel::AsyncDoReplaceWithProxy(nsIProxyInfo* pi)
+{
+    LOG(("nsHttpChannel::AsyncDoReplaceWithProxy [this=%p pi=%p]", this, pi));
     nsresult rv;
 
     nsCOMPtr<nsIChannel> newChannel;
@@ -1134,16 +1215,37 @@ nsHttpChannel::DoReplaceWithProxy(nsIProxyInfo* pi)
         return rv;
 
     // Inform consumers about this fake redirect
+    mRedirectChannel = newChannel;
     PRUint32 flags = nsIChannelEventSink::REDIRECT_INTERNAL;
-    rv = gHttpHandler->OnChannelRedirect(this, newChannel, flags);
+
+    PushRedirectAsyncFunc(&nsHttpChannel::ContinueDoReplaceWithProxy);
+    rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, flags);
+
+    if (NS_SUCCEEDED(rv))
+        rv = WaitForRedirectCallback();
+
+    if (NS_FAILED(rv)) {
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueDoReplaceWithProxy);
+        mRedirectChannel = nsnull;
+    }
+
+    return rv;
+}
+
+nsresult
+nsHttpChannel::ContinueDoReplaceWithProxy(nsresult rv)
+{
     if (NS_FAILED(rv))
         return rv;
 
+    NS_PRECONDITION(mRedirectChannel, "No redirect channel?");
+
     // Make sure to do this _after_ calling OnChannelRedirect
-    newChannel->SetOriginalURI(mOriginalURI);
+    mRedirectChannel->SetOriginalURI(mOriginalURI);
 
     // open new channel
-    rv = newChannel->AsyncOpen(mListener, mListenerContext);
+    rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
+    mRedirectChannel = nsnull;
     if (NS_FAILED(rv))
         return rv;
 
@@ -1405,12 +1507,13 @@ nsHttpChannel::ProcessNotModified()
 }
 
 nsresult
-nsHttpChannel::ProcessFallback(PRBool *fallingBack)
+nsHttpChannel::ProcessFallback(PRBool *waitingForRedirectCallback)
 {
     LOG(("nsHttpChannel::ProcessFallback [this=%p]\n", this));
     nsresult rv;
 
-    *fallingBack = PR_FALSE;
+    *waitingForRedirectCallback = PR_FALSE;
+    mFallingBack = PR_FALSE;
 
     // At this point a load has failed (either due to network problems
     // or an error returned on the server).  Perform an application
@@ -1475,15 +1578,40 @@ nsHttpChannel::ProcessFallback(PRBool *fallingBack)
     rv = newChannel->SetLoadFlags(newLoadFlags);
 
     // Inform consumers about this fake redirect
+    mRedirectChannel = newChannel;
     PRUint32 redirectFlags = nsIChannelEventSink::REDIRECT_INTERNAL;
-    rv = gHttpHandler->OnChannelRedirect(this, newChannel, redirectFlags);
+
+    PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessFallback);
+    rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, redirectFlags);
+
+    if (NS_SUCCEEDED(rv))
+        rv = WaitForRedirectCallback();
+
+    if (NS_FAILED(rv)) {
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessFallback);
+        mRedirectChannel = nsnull;
+        return rv;
+    }
+
+    // Indicate we are now waiting for the asynchronous redirect callback
+    // if all went OK.
+    *waitingForRedirectCallback = PR_TRUE;
+    return NS_OK;
+}
+
+nsresult
+nsHttpChannel::ContinueProcessFallback(nsresult rv)
+{
     if (NS_FAILED(rv))
         return rv;
 
+    NS_PRECONDITION(mRedirectChannel, "No redirect channel?");
+
     // Make sure to do this _after_ calling OnChannelRedirect
-    newChannel->SetOriginalURI(mOriginalURI);
-    
-    rv = newChannel->AsyncOpen(mListener, mListenerContext);
+    mRedirectChannel->SetOriginalURI(mOriginalURI);
+
+    rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
+    mRedirectChannel = nsnull;
     NS_ENSURE_SUCCESS(rv, rv);
 
     // close down this channel
@@ -1496,7 +1624,7 @@ nsHttpChannel::ProcessFallback(PRBool *fallingBack)
     mCallbacks = nsnull;
     mProgressSink = nsnull;
 
-    *fallingBack = PR_TRUE;
+    mFallingBack = PR_TRUE;
 
     return NS_OK;
 }
@@ -2768,9 +2896,9 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
 }
 
 nsresult
-nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
+nsHttpChannel::AsyncProcessRedirection(PRUint32 redirectType)
 {
-    LOG(("nsHttpChannel::ProcessRedirection [this=%p type=%u]\n",
+    LOG(("nsHttpChannel::AsyncProcessRedirection [this=%p type=%u]\n",
         this, redirectType));
 
     const char *location = mResponseHead->PeekHeader(nsHttp::Location);
@@ -2792,12 +2920,12 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         return NS_ERROR_REDIRECT_LOOP;
     }
 
+    mRedirectType = redirectType;
+
     LOG(("redirecting to: %s [redirection-limit=%u]\n",
         location, PRUint32(mRedirectionLimit)));
 
     nsresult rv;
-    nsCOMPtr<nsIChannel> newChannel;
-    nsCOMPtr<nsIURI> newURI;
 
     // create a new URI using the location header and the current URL
     // as a base...
@@ -2811,36 +2939,49 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     if (NS_FAILED(rv))
         originCharset.Truncate();
 
-    rv = ioService->NewURI(nsDependentCString(location), originCharset.get(), mURI,
-                           getter_AddRefs(newURI));
+    rv = ioService->NewURI(nsDependentCString(location),
+                           originCharset.get(),
+                           mURI,
+                           getter_AddRefs(mRedirectURI));
     if (NS_FAILED(rv)) return rv;
 
     if (mApplicationCache) {
         // if we are redirected to a different origin check if there is a fallback
         // cache entry to fall back to. we don't care about file strict 
         // checking, at least mURI is not a file URI.
-        if (!NS_SecurityCompareURIs(mURI, newURI, PR_FALSE)) {
-            PRBool fallingBack;
-            rv = ProcessFallback(&fallingBack);
-            if (NS_SUCCEEDED(rv) && fallingBack) {
-                // do not continue with redirect processing, fallback is in
-                // progress now.
+        if (!NS_SecurityCompareURIs(mURI, mRedirectURI, PR_FALSE)) {
+            PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessRedirectionAfterFallback);
+            PRBool waitingForRedirectCallback;
+            rv = ProcessFallback(&waitingForRedirectCallback);
+            if (waitingForRedirectCallback)
                 return NS_OK;
-            }
+            PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessRedirectionAfterFallback);
         }
+    }
+
+    return ContinueProcessRedirectionAfterFallback(NS_OK);
+}
+
+nsresult
+nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
+{
+    if (NS_SUCCEEDED(rv) && mFallingBack) {
+        // do not continue with redirect processing, fallback is in
+        // progress now.
+        return NS_OK;
     }
 
     // Kill the current cache entry if we are redirecting
     // back to ourself.
     PRBool redirectingBackToSameURI = PR_FALSE;
     if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE) &&
-        NS_SUCCEEDED(mURI->Equals(newURI, &redirectingBackToSameURI)) &&
+        NS_SUCCEEDED(mURI->Equals(mRedirectURI, &redirectingBackToSameURI)) &&
         redirectingBackToSameURI)
             mCacheEntry->Doom();
 
     // move the reference of the old location to the new one if the new
     // one has none.
-    nsCOMPtr<nsIURL> newURL = do_QueryInterface(newURI);
+    nsCOMPtr<nsIURL> newURL = do_QueryInterface(mRedirectURI);
     if (newURL) {
         nsCAutoString ref;
         rv = newURL->GetRef(ref);
@@ -2855,31 +2996,56 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     }
 
     // if we need to re-send POST data then be sure to ask the user first.
-    PRBool preserveMethod = (redirectType == 307);
+    PRBool preserveMethod = (mRedirectType == 307);
     if (preserveMethod && mUploadStream) {
         rv = PromptTempRedirect();
         if (NS_FAILED(rv)) return rv;
     }
 
-    rv = ioService->NewChannelFromURI(newURI, getter_AddRefs(newChannel));
+    nsCOMPtr<nsIIOService> ioService;
+    rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetupReplacementChannel(newURI, newChannel, preserveMethod);
+    nsCOMPtr<nsIChannel> newChannel;
+    rv = ioService->NewChannelFromURI(mRedirectURI, getter_AddRefs(newChannel));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetupReplacementChannel(mRedirectURI, newChannel, preserveMethod);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 redirectFlags;
-    if (redirectType == 301) // Moved Permanently
+    if (mRedirectType == 301) // Moved Permanently
         redirectFlags = nsIChannelEventSink::REDIRECT_PERMANENT;
     else
         redirectFlags = nsIChannelEventSink::REDIRECT_TEMPORARY;
 
     // verify that this is a legal redirect
-    rv = gHttpHandler->OnChannelRedirect(this, newChannel, redirectFlags);
+    mRedirectChannel = newChannel;
+
+    PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessRedirection);
+    rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, redirectFlags);
+
+    if (NS_SUCCEEDED(rv))
+        rv = WaitForRedirectCallback();
+
+    if (NS_FAILED(rv)) {
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessRedirection);
+        mRedirectChannel = nsnull;
+    }
+
+    return rv;
+}
+
+nsresult
+nsHttpChannel::ContinueProcessRedirection(nsresult rv)
+{
     if (NS_FAILED(rv))
         return rv;
 
+    NS_PRECONDITION(mRedirectChannel, "No redirect channel?");
+
     // Make sure to do this _after_ calling OnChannelRedirect
-    newChannel->SetOriginalURI(mOriginalURI);    
+    mRedirectChannel->SetOriginalURI(mOriginalURI);
 
     // And now, the deprecated way
     nsCOMPtr<nsIHttpEventSink> httpEventSink;
@@ -2887,15 +3053,19 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     if (httpEventSink) {
         // NOTE: nsIHttpEventSink is only used for compatibility with pre-1.8
         // versions.
-        rv = httpEventSink->OnRedirect(this, newChannel);
-        if (NS_FAILED(rv)) return rv;
+        rv = httpEventSink->OnRedirect(this, mRedirectChannel);
+        if (NS_FAILED(rv))
+            return rv;
     }
     // XXX we used to talk directly with the script security manager, but that
     // should really be handled by the event sink implementation.
 
     // begin loading the new channel
-    rv = newChannel->AsyncOpen(mListener, mListenerContext);
-    if (NS_FAILED(rv)) return rv;
+    rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
+    mRedirectChannel = nsnull;
+
+    if (NS_FAILED(rv))
+        return rv;
 
     // close down this channel
     Cancel(NS_BINDING_REDIRECTED);
@@ -2978,6 +3148,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -2991,6 +3162,9 @@ nsHttpChannel::Cancel(nsresult status)
     if (mCanceled) {
         LOG(("  ignoring; already canceled\n"));
         return NS_OK;
+    }
+    if (mWaitingForRedirectCallback) {
+        LOG(("channel canceled during wait for redirect callback"));
     }
     mCanceled = PR_TRUE;
     mStatus = status;
@@ -3397,21 +3571,51 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
     // on proxy errors, try to failover
     if (mConnectionInfo->ProxyInfo() &&
-           (mStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
-            mStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
-            mStatus == NS_ERROR_NET_TIMEOUT)) {
+       (mStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
+        mStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
+        mStatus == NS_ERROR_NET_TIMEOUT)) {
+
+        PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
         if (NS_SUCCEEDED(ProxyFailover()))
             return NS_OK;
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
     }
 
-    // on other request errors, try to fall back
-    PRBool fallingBack;
-    if (NS_FAILED(mStatus) &&
-        NS_SUCCEEDED(ProcessFallback(&fallingBack)) &&
-        fallingBack) {
+    return ContinueOnStartRequest2(NS_OK);
+}
 
+nsresult
+nsHttpChannel::ContinueOnStartRequest1(nsresult result)
+{
+    // Success indicates we passed ProxyFailover, in that case we must not continue
+    // with this code chain.
+    if (NS_SUCCEEDED(result))
         return NS_OK;
+
+    return ContinueOnStartRequest2(result);
+}
+
+nsresult
+nsHttpChannel::ContinueOnStartRequest2(nsresult result)
+{
+    // on other request errors, try to fall back
+    if (NS_FAILED(mStatus)) {
+        PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
+        PRBool waitingForRedirectCallback;
+        nsresult rv = ProcessFallback(&waitingForRedirectCallback);
+        if (waitingForRedirectCallback)
+            return NS_OK;
+        PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
     }
+
+    return ContinueOnStartRequest3(NS_OK);
+}
+
+nsresult
+nsHttpChannel::ContinueOnStartRequest3(nsresult result)
+{
+    if (mFallingBack)
+        return NS_OK;
 
     return CallOnStartRequest();
 }
@@ -4124,6 +4328,98 @@ nsHttpChannel::SetChooseApplicationCache(PRBool aChoose)
 
     mChooseApplicationCache = aChoose;
     return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIAsyncVerifyRedirectCallback
+//-----------------------------------------------------------------------------
+
+nsresult
+nsHttpChannel::WaitForRedirectCallback()
+{
+    nsresult rv;
+    if (mTransactionPump) {
+        rv = mTransactionPump->Suspend();
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    if (mCachePump) {
+        rv = mCachePump->Suspend();
+        if (NS_FAILED(rv) && mTransactionPump) {
+            nsresult resume = mTransactionPump->Resume();
+            NS_ASSERTION(NS_SUCCEEDED(resume),
+                "Failed to resume transaction pump");
+        }
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    mWaitingForRedirectCallback = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::OnRedirectVerifyCallback(nsresult result)
+{
+    NS_ASSERTION(mWaitingForRedirectCallback,
+                 "Someone forgot to call WaitForRedirectCallback() ?!");
+    mWaitingForRedirectCallback = PR_FALSE;
+
+    if (mCanceled && NS_SUCCEEDED(result))
+        result = NS_BINDING_ABORTED;
+
+    for (PRUint32 i = mRedirectFuncStack.Length(); i > 0;) {
+        --i;
+        // Pop the last function pushed to the stack
+        nsContinueRedirectionFunc func = mRedirectFuncStack[i];
+        mRedirectFuncStack.RemoveElementAt(mRedirectFuncStack.Length() - 1);
+
+        // Call it with the result we got from the callback or the deeper
+        // function call.
+        result = (this->*func)(result);
+
+        // If a new function has been pushed to the stack and placed us in the
+        // waiting state, we need to break the chain and wait for the callback
+        // again.
+        if (mWaitingForRedirectCallback)
+            break;
+    }
+
+    if (NS_FAILED(result) && !mCanceled) {
+        // First, cancel this channel if we are in failure state to set mStatus
+        // and let it be propagated to pumps.
+        Cancel(result);
+    }
+
+    if (!mWaitingForRedirectCallback) {
+        // We are not waiting for the callback. At this moment we must release
+        // reference to the redirect target channel, otherwise we may leak.
+        mRedirectChannel = nsnull;
+    }
+
+    // We always resume the pumps here. If all functions on stack have been
+    // called we need OnStopRequest to be triggered, and if we broke out of the
+    // loop above (and are thus waiting for a new callback) the suspension
+    // count must be balanced in the pumps.
+    if (mTransactionPump)
+        mTransactionPump->Resume();
+    if (mCachePump)
+        mCachePump->Resume();
+
+    return result;
+}
+
+void
+nsHttpChannel::PushRedirectAsyncFunc(nsContinueRedirectionFunc func)
+{
+    mRedirectFuncStack.AppendElement(func);
+}
+
+void
+nsHttpChannel::PopRedirectAsyncFunc(nsContinueRedirectionFunc func)
+{
+    NS_ASSERTION(func == mRedirectFuncStack[mRedirectFuncStack.Length() - 1],
+        "Trying to pop wrong method from redirect async stack!");
+
+    mRedirectFuncStack.TruncateLength(mRedirectFuncStack.Length() - 1);
 }
 
 //-----------------------------------------------------------------------------
