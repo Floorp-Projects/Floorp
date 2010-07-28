@@ -270,8 +270,7 @@ members = [
     'nsIDOMHTMLOptionElement.index',
     'nsIDOMHTMLOptionElement.selected',
     'nsIDOMHTMLOptionElement.form',
-    # Readonly, shadowed by nsIDOMNSHTMLOptionElement.text (below).
-    #'nsIDOMHTMLOptionElement.text',
+    'nsIDOMHTMLOptionElement.text',
     'nsIDOMHTMLOptionElement.defaultSelected',
     'nsIDOMHTMLOptionElement.value',
     'nsIDOMHTMLOptionElement.label',
@@ -351,7 +350,6 @@ members = [
     'nsIDOMNSHTMLInputElement.setSelectionRange',
     'nsIDOMNSHTMLOptionCollection.selectedIndex',
     'nsIDOMNSHTMLOptionCollection.add',
-    'nsIDOMNSHTMLOptionElement.text',
     'nsIDOMNSHTMLSelectElement.item',
     'nsIDOMNSHTMLTextAreaElement.setSelectionRange',
     'nsIDOMNSHTMLTextAreaElement.selectionStart',
