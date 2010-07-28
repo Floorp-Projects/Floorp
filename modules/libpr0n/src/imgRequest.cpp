@@ -40,6 +40,14 @@
 
 #include "imgRequest.h"
 
+/* We end up pulling in windows.h because we eventually hit gfxWindowsSurface;
+ * windows.h defines LoadImage, so we have to #undef it or imgLoader::LoadImage
+ * gets changed.
+ * This #undef needs to be in multiple places because we don't always pull
+ * headers in in the same order.
+ */
+#undef LoadImage
+
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
 #include "imgContainer.h"
