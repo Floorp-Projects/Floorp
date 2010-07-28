@@ -586,7 +586,7 @@ nsContentList::GetNodeAt(PRUint32 aIndex)
   return Item(aIndex, PR_TRUE);
 }
 
-nsISupports*
+nsIContent*
 nsContentList::GetNodeAt(PRUint32 aIndex, nsresult* aResult)
 {
   *aResult = NS_OK;
@@ -594,10 +594,14 @@ nsContentList::GetNodeAt(PRUint32 aIndex, nsresult* aResult)
 }
 
 nsISupports*
-nsContentList::GetNamedItem(const nsAString& aName, nsresult* aResult)
+nsContentList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache,
+                            nsresult* aResult)
 {
   *aResult = NS_OK;
-  return NamedItem(aName, PR_TRUE);
+
+  nsIContent *item;
+  *aCache = item = NamedItem(aName, PR_TRUE);
+  return item;
 }
 
 void
@@ -750,7 +754,8 @@ void
 nsContentList::ContentRemoved(nsIDocument *aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
-                              PRInt32 aIndexInContainer)
+                              PRInt32 aIndexInContainer,
+                              nsIContent* aPreviousSibling)
 {
   // Note that aContainer can be null here if we are removing from
   // the document itself; any attempted optimizations to this method

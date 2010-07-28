@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug </title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<canvas id="display" height="200" width="200"></canvas>
+<pre id="test">
+<script type="application/javascript">
+
+var canvas = document.getElementById("display");
+var cx = canvas.getContext("2d");
+
+is(cx.font, "10px sans-serif", "initial font of canvas context");
+
+cx.font = "italic 16px sans-serif";
+is(cx.font, "italic 16px sans-serif", "valid font should round-trip");
+cx.font = "bold 12px serif; background: green";
+is(cx.font, "italic 16px sans-serif", "invalid font should be ignored");
+
+cx.font = "bold 12px/3.0 serif";
+is(cx.font, "bold 12px serif", "line-height should be dropped");
+cx.font = "inherit";
+is(cx.font, "bold 12px serif", "inherit should be ignored");
+cx.font = "boold 18px sans-serif";
+is(cx.font, "bold 12px serif", "syntax error should be ignored");
+cx.font = "menu";
+todo_is(cx.font, "menu", "system fonts should work");
+
+function textmeas() {
+  return cx.measureText("hello").width;
+}
+
+cx.font = "66px serif";
+var w_at_66 = textmeas();
+cx.font = "20px serif";
+var w_at_20 = textmeas();
+ok(w_at_66 > w_at_20, "text should be wider at 66px than at 20px");
+
+canvas.style.fontSize = "33px";
+cx.font = "2em serif";
+is(cx.font, "2em serif", "serialization of em");
+is(textmeas(), w_at_66, "em should be relative to canvas font size");
+canvas.style.fontSize = "16px";
+is(cx.font, "2em serif", "serialization of em");
+is(textmeas(), w_at_66,
+   "em should be relative to canvas font size at time of setting");
+document.body.removeChild(canvas);
+is(cx.font, "2em serif", "serialization of em");
+is(textmeas(), w_at_66,
+   "em should be relative to canvas font size at time of setting");
+canvas.style.fontSize = "33px";
+cx.font = "2em serif";
+is(cx.font, "2em serif", "serialization of em");
+is(textmeas(), w_at_20,
+   "em should be relative to 10px when canvas not in document");
+document.body.appendChild(canvas);
+
+</script>
+</pre>
+</body>
+</html>

@@ -476,6 +476,8 @@ struct JSObject {
     // Used by dense and slow arrays.
     static const uint32 JSSLOT_ARRAY_LENGTH = JSSLOT_PRIVATE;
 
+    static const uint32 JSSLOT_DENSE_ARRAY_CAPACITY = JSSLOT_PRIVATE + 1;
+
     // This assertion must remain true;  see comment in js_MakeArraySlow().
     // (Nb: This method is never called, it just contains a static assertion.
     // The static assertion isn't inline because that doesn't work on Mac.)
@@ -488,7 +490,7 @@ struct JSObject {
     inline void setArrayLength(uint32 length);
 
     inline uint32 getDenseArrayCapacity() const;
-    inline void setDenseArrayCapacity(uint32 capacity); // XXX: bug 558263 will remove this
+    inline void setDenseArrayCapacity(uint32 capacity);
 
     inline const js::Value &getDenseArrayElement(uint32 i) const;
     inline js::Value *addressOfDenseArrayElement(uint32 i);

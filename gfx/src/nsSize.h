@@ -89,6 +89,13 @@ struct nsIntSize {
   PRBool  operator!=(const nsIntSize& aSize) const {
     return (PRBool) ((width != aSize.width) || (height != aSize.height));
   }
+  PRBool  operator<(const nsIntSize& aSize) const {
+    return (PRBool) (operator<=(aSize) &&
+                     (width < aSize.width || height < aSize.height));
+  }
+  PRBool  operator<=(const nsIntSize& aSize) const {
+    return (PRBool) ((width <= aSize.width) && (height <= aSize.height));
+  }
 
   void SizeTo(PRInt32 aWidth, PRInt32 aHeight) {width = aWidth; height = aHeight;}
 };

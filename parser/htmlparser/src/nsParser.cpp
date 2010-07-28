@@ -2123,7 +2123,7 @@ nsParser::Parse(const nsAString& aSourceBuffer,
 
 NS_IMETHODIMP
 nsParser::ParseFragment(const nsAString& aSourceBuffer,
-                        nsISupports* aTargetNode,
+                        nsIContent* aTargetNode,
                         nsIAtom* aContextLocalName,
                         PRInt32 aContextNamespace,
                         PRBool aQuirks)

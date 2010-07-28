@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>X-Frame-Options tests</title>
+<script type="text/javascript">
+// This frame loading means all subframes have either loaded or errored out.  We
+// can now tell the test harness to check each subframe for the expected result.
+window.addEventListener('load', parent.testFramesLoaded, false);
+</script>
+</head>
+<body>
+
+<iframe id="control1" src="http://mochi.test:8888/tests/content/base/test/file_x-frame-options_page.sjs?testid=control1"></iframe><br>
+<iframe id="control2" src="http://example.com/tests/content/base/test/file_x-frame-options_page.sjs?testid=control2"></iframe><br>
+<iframe id="deny" src="http://mochi.test:8888/tests/content/base/test/file_x-frame-options_page.sjs?testid=deny&xfo=deny"></iframe><br>
+<iframe id="sameorigin1" src="http://mochi.test:8888/tests/content/base/test/file_x-frame-options_page.sjs?testid=sameorigin1&xfo=sameorigin"></iframe><br>
+<iframe id="sameorigin2" src="http://example.com/tests/content/base/test/file_x-frame-options_page.sjs?testid=sameorigin2&xfo=sameorigin"></iframe><br>
+
+</body>
+</html>

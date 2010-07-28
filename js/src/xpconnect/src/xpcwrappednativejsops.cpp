@@ -377,7 +377,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             name = rt->GetStringName(XPCJSRuntime::IDX_WRAPPED_JSOBJECT);
 
             fun = JS_NewFunction(ccx, XPC_WN_DoubleWrappedGetter,
-                                 0, JSFUN_GETTER, obj, name);
+                                 0, 0, obj, name);
 
             if(!fun)
                 return JS_FALSE;

@@ -1,7 +1,7 @@
 
 /* png.h - header file for PNG reference library
  *
- * libpng version 1.4.1 - February 25, 2010
+ * libpng version 1.4.3 - June 26, 2010
  * Copyright (c) 1998-2010 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -11,7 +11,7 @@
  * Authors and maintainers:
  *  libpng versions 0.71, May 1995, through 0.88, January 1996: Guy Schalnat
  *  libpng versions 0.89c, June 1996, through 0.96, May 1997: Andreas Dilger
- *  libpng versions 0.97, January 1998, through 1.4.1 - February 25, 2010: Glenn
+ *  libpng versions 0.97, January 1998, through 1.4.3 - June 26, 2010: Glenn
  *  See also "Contributing Authors", below.
  *
  * Note about libpng version numbers:
@@ -139,6 +139,12 @@
  *    1.4.1beta04-12          14    10401  14.so.14.1[.0]
  *    1.4.1rc02-04            14    10401  14.so.14.1[.0]
  *    1.4.1                   14    10401  14.so.14.1[.0]
+ *    1.4.2beta01             14    10402  14.so.14.2[.0]
+ *    1.4.2rc02-06            14    10402  14.so.14.2[.0]
+ *    1.4.2                   14    10402  14.so.14.2[.0]
+ *    1.4.3beta01-05          14    10403  14.so.14.3[.0]
+ *    1.4.3rc01-03            14    10403  14.so.14.3[.0]
+ *    1.4.3                   14    10403  14.so.14.3[.0]
  *
  *    Henceforth the source version will match the shared-library major
  *    and minor numbers; the shared-library major version number will be
@@ -170,7 +176,7 @@
  *
  * This code is released under the libpng license.
  *
- * libpng versions 1.2.6, August 15, 2004, through 1.4.1, February 25, 2010, are
+ * libpng versions 1.2.6, August 15, 2004, through 1.4.3, June 26, 2010, are
  * Copyright (c) 2004, 2006-2010 Glenn Randers-Pehrson, and are
  * distributed according to the same disclaimer and license as libpng-1.2.5
  * with the following individual added to the list of Contributing Authors:
@@ -282,13 +288,13 @@
  * Y2K compliance in libpng:
  * =========================
  *
- *    February 25, 2010
+ *    June 26, 2010
  *
  *    Since the PNG Development group is an ad-hoc body, we can't make
  *    an official declaration.
  *
  *    This is your unofficial assurance that libpng from version 0.71 and
- *    upward through 1.4.1 are Y2K compliant.  It is my belief that earlier
+ *    upward through 1.4.3 are Y2K compliant.  It is my belief that earlier
  *    versions were also Y2K compliant.
  *
  *    Libpng only has three year fields.  One is a 2-byte unsigned integer
@@ -344,9 +350,9 @@
  */
 
 /* Version information for png.h - this should match the version in png.c */
-#define PNG_LIBPNG_VER_STRING "1.4.1"
+#define PNG_LIBPNG_VER_STRING "1.4.3"
 #define PNG_HEADER_VERSION_STRING \
-   " libpng version 1.4.1 - February 25, 2010\n"
+   " libpng version 1.4.3 - June 26, 2010\n"
 
 #define PNG_LIBPNG_VER_SONUM   14
 #define PNG_LIBPNG_VER_DLLNUM  14
@@ -354,7 +360,7 @@
 /* These should match the first 3 components of PNG_LIBPNG_VER_STRING: */
 #define PNG_LIBPNG_VER_MAJOR   1
 #define PNG_LIBPNG_VER_MINOR   4
-#define PNG_LIBPNG_VER_RELEASE 1
+#define PNG_LIBPNG_VER_RELEASE 3
 /* This should match the numeric part of the final component of
  * PNG_LIBPNG_VER_STRING, omitting any leading zero:
  */
@@ -384,7 +390,7 @@
  * version 1.0.0 was mis-numbered 100 instead of 10000).  From
  * version 1.0.1 it's    xxyyzz, where x=major, y=minor, z=release
  */
-#define PNG_LIBPNG_VER 10401 /* 1.4.1 */
+#define PNG_LIBPNG_VER 10403 /* 1.4.3 */
 
 #ifndef PNG_VERSION_INFO_ONLY
 /* Include the compression library's header */
@@ -1354,13 +1360,13 @@ struct png_struct_def
    png_uint_16 offset_table_count_free PNG_DEPSTRUCT;
 #endif
 
-#ifdef PNG_READ_DITHER_SUPPORTED
-   png_bytep palette_lookup PNG_DEPSTRUCT; /* lookup table for dithering */
-   png_bytep dither_index PNG_DEPSTRUCT;   /* index translation for palette
+#ifdef PNG_READ_QUANTIZE_SUPPORTED
+   png_bytep palette_lookup PNG_DEPSTRUCT; /* lookup table for quantizing */
+   png_bytep quantize_index PNG_DEPSTRUCT; /* index translation for palette
                                               files */
 #endif
 
-#if defined(PNG_READ_DITHER_SUPPORTED) || defined(PNG_hIST_SUPPORTED)
+#if defined(PNG_READ_QUANTIZE_SUPPORTED) || defined(PNG_hIST_SUPPORTED)
    png_uint_16p hist PNG_DEPSTRUCT;                /* histogram */
 #endif
 
@@ -1444,9 +1450,9 @@ struct png_struct_def
    png_bytep big_row_buf PNG_DEPSTRUCT;         /* buffer to save current
                                                    (unfiltered) row */
 
-#ifdef PNG_READ_DITHER_SUPPORTED
+#ifdef PNG_READ_QUANTIZE_SUPPORTED
 /* The following three members were added at version 1.0.14 and 1.2.4 */
-   png_bytep dither_sort PNG_DEPSTRUCT;            /* working sort array */
+   png_bytep quantize_sort PNG_DEPSTRUCT;          /* working sort array */
    png_bytep index_to_palette PNG_DEPSTRUCT;       /* where the original
                                                      index currently is
                                                      in the palette */
@@ -1524,7 +1530,7 @@ struct png_struct_def
 /* This triggers a compiler error in png.c, if png.c and png.h
  * do not agree upon the version number.
  */
-typedef png_structp version_1_4_1;
+typedef png_structp version_1_4_3;
 
 typedef png_struct FAR * FAR * png_structpp;
 
@@ -1550,6 +1556,11 @@ extern PNG_EXPORT(void,png_set_sig_bytes) PNGARG((png_structp png_ptr,
  */
 extern PNG_EXPORT(int,png_sig_cmp) PNGARG((png_bytep sig, png_size_t start,
    png_size_t num_to_check));
+
+/* Simple signature checking function.  This is the same as calling
+ * png_check_sig(sig, n) := !png_sig_cmp(sig, 0, n).
+ */
+#define png_check_sig(sig,n) !png_sig_cmp((sig), 0, (n))
 
 /* Allocate and initialize png_ptr struct for reading, and any other memory. */
 extern PNG_EXPORT(png_structp,png_create_read_struct)
@@ -1588,8 +1599,10 @@ extern PNG_EXPORT(jmp_buf*, png_set_longjmp_fn)
    (LIBPNG_WAS_COMPILED_WITH__PNG_NO_SETJMP)
 #endif
 
+#ifdef PNG_READ_SUPPORTED
 /* Reset the compression stream */
 extern PNG_EXPORT(int,png_reset_zstream) PNGARG((png_structp png_ptr));
+#endif
 
 /* New functions added in libpng-1.0.2 (not enabled by default until 1.2.0) */
 #ifdef PNG_USER_MEM_SUPPORTED
@@ -1766,14 +1779,16 @@ extern PNG_EXPORT(void,png_set_background) PNGARG((png_structp png_ptr,
 extern PNG_EXPORT(void,png_set_strip_16) PNGARG((png_structp png_ptr));
 #endif
 
-#ifdef PNG_READ_DITHER_SUPPORTED
-/* Turn on dithering, and reduce the palette to the number of colors
- * available.
+#ifdef PNG_READ_QUANTIZE_SUPPORTED
+/* Turn on quantizing, and reduce the palette to the number of colors
+ * available.  Prior to libpng-1.4.2, this was png_set_dither().
  */
-extern PNG_EXPORT(void,png_set_dither) PNGARG((png_structp png_ptr,
+extern PNG_EXPORT(void,png_set_quantize) PNGARG((png_structp png_ptr,
    png_colorp palette, int num_palette, int maximum_colors,
-   png_uint_16p histogram, int full_dither));
+   png_uint_16p histogram, int full_quantize));
 #endif
+/* This migration aid will be removed from libpng-1.5.0 */
+#define png_set_dither png_set_quantize
 
 #ifdef PNG_READ_GAMMA_SUPPORTED
 /* Handle gamma correction. Screen_gamma=(display_exponent) */

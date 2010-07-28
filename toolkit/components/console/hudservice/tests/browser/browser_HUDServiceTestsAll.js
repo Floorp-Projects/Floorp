@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,6 +65,8 @@ const TEST_NETWORK_URI = "http://example.com/browser/toolkit/components/console/
 const TEST_FILTER_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-filter.html";
 
 const TEST_PROPERTY_PROVIDER_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-property-provider.html";
+
+const TEST_ERROR_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-error.html";
 
 function noCacheUriSpec(aUriSpec) {
   return aUriSpec + "?_=" + Date.now();
@@ -205,6 +208,14 @@ function getHUDById() {
   ok(hud.getAttribute("id") == hudId, "found HUD node by Id.");
 }
 
+// Tests to ensure that the input box is focused when the console opens. See
+// bug 579412.
+function testInputFocus() {
+  let hud = HUDService.getHeadsUpDisplay(hudId);
+  let inputNode = hud.querySelectorAll(".jsterm-input-node")[0];
+  is(inputNode.getAttribute("focused"), "true", "input node is focused");
+}
+
 function testGetContentWindowFromHUDId() {
   let window = HUDService.getContentWindowFromHUDId(hudId);
   ok(window.document, "we have a contentWindow");
@@ -243,36 +254,40 @@ function testConsoleLoggingAPI(aMethod)
 
 function testLogEntry(aOutputNode, aMatchString, aSuccessErrObj)
 {
-  executeSoon(function (){
-                var msgs = aOutputNode.childNodes;
-                for (var i = 0; i < msgs.length; i++) {
-                  var message = msgs[i].innerHTML.indexOf(aMatchString);
-                  if (message > -1) {
-                    ok(true, aSuccessErrObj.success);
-                    return;
-                  }
-                  else {
-                    throw new Error(aSuccessErrObj.err);
-                  }
-                }
-              });
+  var msgs = aOutputNode.childNodes;
+  for (var i = 0; i < msgs.length; i++) {
+    var message = msgs[i].innerHTML.indexOf(aMatchString);
+    if (message > -1) {
+      ok(true, aSuccessErrObj.success);
+      return;
+    }
+  }
+  throw new Error(aSuccessErrObj.err);
 }
 
 // test network logging
 function testNet()
 {
-  HUDService.activateHUDForContext(tab);
-  content.location = TEST_NETWORK_URI;
-  executeSoon(function () {
-    HUDService.setFilterState(hudId, "network", true);
-    filterBox.value = "";
+  HUDService.setFilterState(hudId, "network", true);
+  filterBox.value = "";
+
+  browser.addEventListener("DOMContentLoaded", function onTestNetLoad () {
+    browser.removeEventListener("DOMContentLoaded", onTestNetLoad, false);
+
     var successMsg =
       "Found the loggged network message referencing a js file";
     var errMsg = "Could not get logged network message for js file";
-    testLogEntry(outputNode,
-                 "Network:", { success: successMsg, err: errMsg });
-                 content.location.href = noCacheUriSpec(TEST_NETWORK_URI);
-  });
+
+    var display = HUDService.getDisplayByURISpec(TEST_NETWORK_URI);
+    var outputNode = display.querySelectorAll(".hud-output-node")[0];
+
+    testLogEntry(outputNode, "Network:",
+      { success: successMsg, err: errMsg });
+
+    testPageReload();
+  }, false);
+
+  content.location = TEST_NETWORK_URI;
 }
 
 function testOutputOrder()
@@ -578,10 +593,53 @@ function testPageReload() {
     is(typeof console.error, "function", "console.error is a function");
     is(typeof console.exception, "function", "console.exception is a function");
 
-    testEnd();
+    testErrorOnPageReload();
   }, false);
 
   content.location.reload();
+}
+
+function testErrorOnPageReload() {
+  // see bug 580030: the error handler fails silently after page reload.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=580030
+
+  var pageReloaded = false;
+  browser.addEventListener("DOMContentLoaded", function onDOMLoad() {
+    if (!pageReloaded) {
+      pageReloaded = true;
+      content.location.reload();
+      return;
+    }
+
+    browser.removeEventListener("DOMContentLoaded", onDOMLoad, false);
+
+    // dispatch a click event to the button in the test page.
+    var contentDocument = browser.contentDocument.wrappedJSObject;
+    var button = contentDocument.getElementsByTagName("button")[0];
+    var clickEvent = contentDocument.createEvent("MouseEvents");
+    clickEvent.initMouseEvent("click", true, true,
+      browser.contentWindow.wrappedJSObject, 0, 0, 0, 0, 0, false, false,
+      false, false, 0, null);
+
+    var successMsg = "Found the error message after page reload";
+    var errMsg = "Could not get the error message after page reload";
+
+    var display = HUDService.getDisplayByURISpec(content.location.href);
+    var outputNode = display.querySelectorAll(".hud-output-node")[0];
+
+    button.addEventListener("click", function onClickHandler() {
+      button.removeEventListener("click", onClickHandler, false);
+
+      testLogEntry(outputNode, "fooBazBaz",
+        { success: successMsg, err: errMsg });
+
+      testEnd();
+    }, false);
+
+    button.dispatchEvent(clickEvent);
+  }, false);
+
+  content.location.href = TEST_ERROR_URI;
 }
 
 function testEnd() {
@@ -620,6 +678,7 @@ function test() {
       introspectLogNodes();
       getAllHUDS();
       getHUDById();
+      testInputFocus();
       testGetDisplayByLoadGroup();
       testGetContentWindowFromHUDId();
 
@@ -630,8 +689,6 @@ function test() {
       testConsoleLoggingAPI("warn");
       testConsoleLoggingAPI("error");
       testConsoleLoggingAPI("exception");
-
-      testNet();
 
       // ConsoleStorageTests
       testCreateDisplay();
@@ -644,7 +701,7 @@ function test() {
       testExecutionScope();
       testCompletion();
       testPropertyProvider();
-      testPageReload();
+      testNet();
     });
   }, false);
 }

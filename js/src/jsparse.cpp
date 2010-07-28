@@ -950,9 +950,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
                 /* Compile-and-go should have chosen scopeChain as the parent. */
                 JS_ASSERT(fun->getParent() == scopeChain);
 
-                /* No named statement getters or setters at global scope. */
-                JS_ASSERT(!JSFUN_GSFLAG2ATTR(fun->flags));
-
                 /*
                  * No need to check for redeclarations or anything, global
                  * optimizations only take place if the property is not

@@ -877,22 +877,6 @@ stubs::DefFun(VMFrame &f, uint32 index)
      * setters do not need a slot, their value is stored elsewhere in the
      * property itself, not in obj slots.
      */
-    PropertyOp getter, setter;
-    uintN flags;
-    
-    getter = setter = PropertyStub;
-    flags = JSFUN_GSFLAG2ATTR(fun->flags);
-    if (flags) {
-        /* Function cannot be both getter a setter. */
-        JS_ASSERT(flags == JSPROP_GETTER || flags == JSPROP_SETTER);
-        attrs |= flags | JSPROP_SHARED;
-        rval.setUndefined();
-        if (flags == JSPROP_GETTER)
-            getter = CastAsPropertyOp(obj);
-        else
-            setter = CastAsPropertyOp(obj);
-    }
-
     jsid id;
     JSBool ok;
     JSObject *parent;
@@ -947,7 +931,7 @@ stubs::DefFun(VMFrame &f, uint32 index)
     }
     ok = doSet
          ? parent->setProperty(cx, id, &rval)
-         : parent->defineProperty(cx, id, rval, getter, setter, attrs);
+         : parent->defineProperty(cx, id, rval, PropertyStub, PropertyStub, attrs);
 
   restore_scope:
     /* Restore fp->scopeChain now that obj is defined in fp->callobj. */

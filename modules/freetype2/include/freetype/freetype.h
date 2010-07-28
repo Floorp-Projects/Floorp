@@ -2997,7 +2997,7 @@ FT_BEGIN_HEADER
    *
    * @return:
    *   The index into the array of character maps within the face to which
-   *   `charmap' belongs.
+   *   `charmap' belongs.  If an error occurs, -1 is returned.
    *
    */
   FT_EXPORT( FT_Int )
@@ -3773,8 +3773,8 @@ FT_BEGIN_HEADER
    *
    */
 #define FREETYPE_MAJOR  2
-#define FREETYPE_MINOR  3
-#define FREETYPE_PATCH  12
+#define FREETYPE_MINOR  4
+#define FREETYPE_PATCH  1
 
 
   /*************************************************************************/
@@ -3834,6 +3834,9 @@ FT_BEGIN_HEADER
   /*    1~if this is a TrueType font that uses one of the patented         */
   /*    opcodes, 0~otherwise.                                              */
   /*                                                                       */
+  /* <Note>                                                                */
+  /*    Since May 2010, TrueType hinting is no longer patented.            */
+  /*                                                                       */
   /* <Since>                                                               */
   /*    2.3.5                                                              */
   /*                                                                       */
@@ -3860,6 +3863,9 @@ FT_BEGIN_HEADER
   /*    The old setting value.  This will always be false if this is not   */
   /*    an SFNT font, or if the unpatented hinter is not compiled in this  */
   /*    instance of the library.                                           */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    Since May 2010, TrueType hinting is no longer patented.            */
   /*                                                                       */
   /* <Since>                                                               */
   /*    2.3.5                                                              */

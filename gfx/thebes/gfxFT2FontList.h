@@ -41,10 +41,12 @@
 #ifndef GFX_FT2FONTLIST_H
 #define GFX_FT2FONTLIST_H
 
+#ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
+#include <windows.h>
+#endif
 #include "gfxPlatformFontList.h"
 
-#include <windows.h>
 #include <bitset>
 
 class gfxFT2FontList : public gfxPlatformFontList
@@ -66,6 +68,7 @@ protected:
     virtual void InitFontList();
 
     void AppendFacesFromFontFile(const PRUnichar *aFileName);
+    void AppendFacesFromFontFile(const char *aFileName);
     void FindFonts();
 };
 

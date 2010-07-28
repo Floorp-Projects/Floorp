@@ -282,14 +282,14 @@ struct ClosureVarInfo;
     _JS_TN_LINKAGE(linkage, crtype) name cargtypes;                                               \
     _JS_CI_LINKAGE(linkage) const nanojit::CallInfo _JS_CALLINFO(name) =                          \
         { (intptr_t) &name, argtypes, nanojit::ABI_CDECL, isPure, storeAccSet _JS_CI_NAME(name) };\
-    JS_STATIC_ASSERT_IF(isPure, storeAccSet == nanojit::ACC_NONE);
+    JS_STATIC_ASSERT_IF(isPure, (storeAccSet) == nanojit::ACCSET_NONE);
 
 #else
 #define _JS_DEFINE_CALLINFO(linkage, name, crtype, cargtypes, argtypes, isPure, storeAccSet)      \
     _JS_TN_LINKAGE(linkage, crtype) FASTCALL name cargtypes;                                      \
     _JS_CI_LINKAGE(linkage) const nanojit::CallInfo _JS_CALLINFO(name) =                          \
         { (intptr_t) &name, argtypes, nanojit::ABI_FASTCALL, isPure, storeAccSet _JS_CI_NAME(name) }; \
-    JS_STATIC_ASSERT_IF(isPure, storeAccSet == nanojit::ACC_NONE);
+    JS_STATIC_ASSERT_IF(isPure, (storeAccSet) == nanojit::ACCSET_NONE);
 #endif
 
 /*
@@ -323,9 +323,9 @@ struct ClosureVarInfo;
  *   Multiple calls to a pure function can be merged during CSE.
  *
  * - The storeAccSet.  This indicates which memory access regions the function
- *   accesses.  It must be ACC_NONE if the function is pure;  use
- *   ACC_STORE_ANY if you're not sure.  Used to determine if each call site of
- *   the function aliases any loads.
+ *   accesses.  It must be ACCSET_NONE if the function is pure;  use
+ *   ACCSET_STORE_ANY if you're not sure.  Used to determine if each call site
+ *   of the function aliases any loads.
  */
 #define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, isPure, storeAccSet)                           \
     _JS_DEFINE_CALLINFO(linkage, op,                                                              \
@@ -577,7 +577,7 @@ JS_DECLARE_CALLINFO(js_Array_dense_setelem)
 JS_DECLARE_CALLINFO(js_Array_dense_setelem_int)
 JS_DECLARE_CALLINFO(js_Array_dense_setelem_double)
 JS_DECLARE_CALLINFO(js_NewEmptyArray)
-JS_DECLARE_CALLINFO(js_NewArrayWithSlots)
+JS_DECLARE_CALLINFO(js_NewPreallocatedArray)
 JS_DECLARE_CALLINFO(js_ArrayCompPush_tn)
 
 /* Defined in jsbuiltins.cpp. */

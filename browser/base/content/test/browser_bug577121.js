@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,19 +11,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is bug 577121 test.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Michael Kohler <michaelkohler@live.com>.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: Aaron Leventhal (aaronl@netscape.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,27 +34,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsRootAccessibleWrap.h"
-#include "nsIAccessible.h"
-#include "nsIAccessibleDocument.h"
-#include "nsIServiceManager.h"
+function test() {
+  // Open 2 other tabs, and pin the second one. Like that, the initial tab
+  // should get closed.
+  let testTab1 = gBrowser.addTab();
+  let testTab2 = gBrowser.addTab();
+  gBrowser.pinTab(testTab2);
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+  // Now execute "Close other Tabs" on the first manually opened tab (tab1).
+  // -> tab2 ist pinned, tab1 should remain open and the initial tab should
+  // get closed.
+  gBrowser.removeAllTabsBut(testTab1);
 
-////////////////////////////////////////////////////////////////////////////////
-// nsRootAccessibleWrap
-////////////////////////////////////////////////////////////////////////////////
-
-nsRootAccessibleWrap::
-  nsRootAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
-                       nsIWeakReference *aShell) :
-  nsRootAccessible(aDocument, aRootContent, aShell)
-{
+  is(gBrowser.tabs.length, 2, "there are two remaining tabs open");
+  is(gBrowser.tabs[0], testTab2, "pinned tab2 stayed open");
+  is(gBrowser.tabs[1], testTab1, "tab1 stayed open");
+  
+  // Cleanup. Close only one tab because we need an opened tab at the end of
+  // the test.
+  gBrowser.removeTab(testTab2);
 }
-
-nsRootAccessibleWrap::~nsRootAccessibleWrap()
-{
-}
-

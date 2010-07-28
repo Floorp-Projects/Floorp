@@ -2385,7 +2385,7 @@ class RegExpNativeCompiler {
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_ltp, pos, cpend), 0);
         if (!fails.append(to_fail))
             return NULL;
-        LIns* text_ch = lir->insLoad(LIR_ldus2ui, pos, 0, ACC_READONLY);
+        LIns* text_ch = lir->insLoad(LIR_ldus2ui, pos, 0, ACCSET_OTHER, LOAD_CONST);
 
         // Extra characters that need to be compared against when doing folding.
         struct extra {
@@ -2524,7 +2524,7 @@ class RegExpNativeCompiler {
                                        0);
         if (!fails.append(to_fail))
             return NULL;
-        LIns* text_word = lir->insLoad(LIR_ldi, pos, 0, ACC_OTHER);
+        LIns* text_word = lir->insLoad(LIR_ldi, pos, 0, ACCSET_OTHER);
         LIns* comp_word = useFastCI ?
             lir->ins2(LIR_ori, text_word, lir->insImmI(mask.i)) :
             text_word;
@@ -2606,7 +2606,7 @@ class RegExpNativeCompiler {
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_ltp, pos, cpend), 0);
         if (!fails.append(to_fail))
             return NULL;
-        LIns* text_ch = lir->insLoad(LIR_ldus2ui, pos, 0, ACC_READONLY);
+        LIns* text_ch = lir->insLoad(LIR_ldus2ui, pos, 0, ACCSET_OTHER, LOAD_CONST);
         if (!fails.append(lir->insBranch(LIR_jf,
                                          lir->ins2(LIR_lei, text_ch, lir->insImmI(charSet->length)),
                                          0))) {
@@ -2615,7 +2615,7 @@ class RegExpNativeCompiler {
         LIns* byteIndex = lir->insI2P(lir->ins2(LIR_rshi, text_ch, lir->insImmI(3)));
         LIns* bitmap = lir->insImmP(bitmapData);
         LIns* byte = lir->insLoad(LIR_lduc2ui, lir->ins2(LIR_addp, bitmap, byteIndex), (int) 0,
-                                  ACC_READONLY);
+                                  ACCSET_OTHER, LOAD_CONST);
         LIns* bitMask = lir->ins2(LIR_lshi, lir->insImmI(1),
                                lir->ins2(LIR_andi, text_ch, lir->insImmI(0x7)));
         LIns* test = lir->ins2(LIR_eqi, lir->ins2(LIR_andi, byte, bitMask), lir->insImmI(0));
@@ -2634,7 +2634,7 @@ class RegExpNativeCompiler {
             chr = lir->ins2(LIR_lshi, chr, sizeLog2);
         }
         LIns *addr = lir->ins2(LIR_addp, lir->insImmP(tbl), lir->insUI2P(chr));
-        return lir->insLoad(LIR_lduc2ui, addr, 0, ACC_READONLY);
+        return lir->insLoad(LIR_lduc2ui, addr, 0, ACCSET_OTHER, LOAD_CONST);
     }
 
     /* Compile a builtin character class. */
@@ -2643,7 +2643,7 @@ class RegExpNativeCompiler {
         /* All the builtins checked below consume one character. */
         if (!fails.append(lir->insBranch(LIR_jf, lir->ins2(LIR_ltp, pos, cpend), 0)))
             return NULL;
-        LIns *chr = lir->insLoad(LIR_ldus2ui, pos, 0, ACC_READONLY);
+        LIns *chr = lir->insLoad(LIR_ldus2ui, pos, 0, ACCSET_OTHER, LOAD_CONST);
 
         switch (node->op) {
           case REOP_DOT:
@@ -2868,7 +2868,7 @@ class RegExpNativeCompiler {
          * memory (REGlobalData::stateStack, since it is unused).
          */
         lir->insStore(branchEnd, state,
-                       offsetof(REGlobalData, stateStack), ACC_OTHER);
+                       offsetof(REGlobalData, stateStack), ACCSET_OTHER);
         LIns *leftSuccess = lir->insBranch(LIR_j, NULL, NULL);
 
         /* Try right branch. */
@@ -2876,12 +2876,12 @@ class RegExpNativeCompiler {
         if (!(branchEnd = compileNode(rightRe, pos, atEnd, fails)))
             return NULL;
         lir->insStore(branchEnd, state,
-                       offsetof(REGlobalData, stateStack), ACC_OTHER);
+                       offsetof(REGlobalData, stateStack), ACCSET_OTHER);
 
         /* Land success on the left branch. */
         targetCurrentPoint(leftSuccess);
         return addName(fragment->lirbuf,
-                       lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, stateStack), ACC_OTHER),
+                       lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, stateStack), ACCSET_OTHER),
                        "pos");
     }
 
@@ -2891,18 +2891,18 @@ class RegExpNativeCompiler {
          * Since there are no phis, simulate by writing to and reading from
          * memory (REGlobalData::stateStack, since it is unused).
          */
-        lir->insStore(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
+        lir->insStore(pos, state, offsetof(REGlobalData, stateStack), ACCSET_OTHER);
 
         /* Try ? body. */
         LInsList kidFails(cx);
         if (!(pos = compileNode(node, pos, atEnd, kidFails)))
             return NULL;
-        lir->insStore(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
+        lir->insStore(pos, state, offsetof(REGlobalData, stateStack), ACCSET_OTHER);
 
         /* Join success and failure and get new position. */
         targetCurrentPoint(kidFails);
         pos = addName(fragment->lirbuf,
-                      lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, stateStack), ACC_OTHER),
+                      lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, stateStack), ACCSET_OTHER),
                       "pos");
 
         return pos;
@@ -2957,13 +2957,13 @@ class RegExpNativeCompiler {
          * Since there are no phis, simulate by writing to and reading from
          * memory (REGlobalData::stateStack, since it is unused).
          */
-        lir->insStore(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
+        lir->insStore(pos, state, offsetof(REGlobalData, stateStack), ACCSET_OTHER);
 
         /* Begin iteration: load loop variables. */
         LIns *loopTop = lir->ins0(LIR_label);
         LIns *iterBegin = addName(fragment->lirbuf,
                                   lir->insLoad(LIR_ldp, state,
-                                               offsetof(REGlobalData, stateStack), ACC_OTHER),
+                                               offsetof(REGlobalData, stateStack), ACCSET_OTHER),
                                   "pos");
 
         /* Match quantifier body. */
@@ -2983,7 +2983,7 @@ class RegExpNativeCompiler {
         }
 
         /* End iteration: store loop variables, increment, jump */
-        lir->insStore(iterEnd, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
+        lir->insStore(iterEnd, state, offsetof(REGlobalData, stateStack), ACCSET_OTHER);
         lir->insBranch(LIR_j, NULL, loopTop);
 
         /*
@@ -3081,7 +3081,7 @@ class RegExpNativeCompiler {
             return false;
 
         /* Fall-through from compileNode means success. */
-        lir->insStore(pos, state, offsetof(REGlobalData, stateStack), ACC_OTHER);
+        lir->insStore(pos, state, offsetof(REGlobalData, stateStack), ACCSET_OTHER);
         lir->ins0(LIR_regfence);
         lir->ins1(LIR_reti, lir->insImmI(1));
 
@@ -3120,7 +3120,7 @@ class RegExpNativeCompiler {
 
         /* Outer loop increment. */
         lir->insStore(lir->ins2(LIR_addp, start, lir->insImmWord(2)), state,
-                       offsetof(REGlobalData, skipped), ACC_OTHER);
+                       offsetof(REGlobalData, skipped), ACCSET_OTHER);
 
         return !outOfMemory();
     }
@@ -3176,7 +3176,7 @@ class RegExpNativeCompiler {
     {
         fragment->lirbuf = lirbuf;
 #ifdef DEBUG
-        lirbuf->printer = new (tempAlloc) LInsPrinter(tempAlloc);
+        lirbuf->printer = new (tempAlloc) LInsPrinter(tempAlloc, TM_NUM_USED_ACCS);
 #endif
     }
 
@@ -3253,7 +3253,7 @@ class RegExpNativeCompiler {
         })
 
         start = addName(lirbuf,
-                      lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, skipped), ACC_OTHER),
+                      lir->insLoad(LIR_ldp, state, offsetof(REGlobalData, skipped), ACCSET_OTHER),
                       "start");
 
         if (cs->flags & JSREG_STICKY) {
@@ -5228,8 +5228,7 @@ js_SaveAndClearRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
 }
 
 JS_FRIEND_API(void)
-js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics,
-                        AutoStringRooter *tvr)
+js_RestoreRegExpStatics(JSContext *cx, JSRegExpStatics *statics)
 {
     /* Clear/free any new JSRegExpStatics data before clobbering. */
     cx->regExpStatics.copy(*statics);
@@ -5832,7 +5831,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
 
 #ifdef JS_TRACER
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneRegExpObject, CONTEXT, OBJECT, OBJECT, 0,
-                     ACC_STORE_ANY)
+                     ACCSET_STORE_ANY)
 #endif
 
 bool

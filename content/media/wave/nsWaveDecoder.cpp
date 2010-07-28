@@ -1639,7 +1639,7 @@ nsWaveDecoder::Suspend()
 }
 
 void
-nsWaveDecoder::Resume()
+nsWaveDecoder::Resume(PRBool aForceBuffering)
 {
   if (mStream) {
     mStream->Resume();
