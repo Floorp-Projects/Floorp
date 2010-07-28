@@ -47,7 +47,7 @@
  * http://www.w3.org/TR/DOM-Level-2-HTML/
  */
 
-[scriptable, uuid(a6cf9095-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(dfed25e8-07e8-41a9-8f9e-9fbf59c539ea)]
 interface nsIDOMHTMLButtonElement : nsIDOMHTMLElement
 {
            attribute boolean               autofocus;
