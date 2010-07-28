@@ -542,7 +542,9 @@ class JSRopeNodeIterator {
     static const size_t DONE_RIGHT = 0x2;
 
   public:
-    JSRopeNodeIterator(JSString *str) {
+    JSRopeNodeIterator(JSString *str)
+      : mUsedFlags(0)
+    {
         mStr = str;
     }
     
@@ -558,7 +560,7 @@ class JSRopeNodeIterator {
             mStr = mStr->interiorNodeParent();
         while (mStr->ropeLeft()->isInteriorNode())
             mStr = mStr->ropeLeft();
-        mUsedFlags = 0;
+        JS_ASSERT(mUsedFlags == 0);
         return mStr;
     }
 
