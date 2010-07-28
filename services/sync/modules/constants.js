@@ -129,7 +129,6 @@ ENGINE_METARECORD_UPLOAD_FAIL:         "error.engine.reason.metarecord_upload_fa
 kSyncWeaveDisabled:                    "Weave is disabled",
 kSyncNotLoggedIn:                      "User is not logged in",
 kSyncNetworkOffline:                   "Network is offline",
-kSyncInPrivateBrowsing:                "Private browsing is enabled",
 kSyncBackoffNotMet:                    "Trying to sync before the server said it's okay",
 kFirstSyncChoiceNotMade:               "User has not selected an action for first sync",
 
