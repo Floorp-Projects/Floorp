@@ -42,7 +42,6 @@
 #include <math.h>
 
 static nsCursorManager *gInstance;
-static NSArray *sSpinCursorFrames = nil;
 static imgIContainer *sCursorImgContainer = nsnull;
 static const nsCursor sCustomCursor = eCursorCount;
 
@@ -88,14 +87,6 @@ static const nsCursor sCustomCursor = eCursorCount;
   if (!gInstance) {
     gInstance = [[nsCursorManager alloc] init];
   }
-
-  if (!sSpinCursorFrames) {
-    NSCursor* cursor1 = [nsMacCursor cocoaCursorWithImageNamed:@"spin1" hotSpot:NSMakePoint(1.0, 1.0)];
-    NSCursor* cursor2 = [nsMacCursor cocoaCursorWithImageNamed:@"spin2" hotSpot:NSMakePoint(1.0, 1.0)];
-    NSCursor* cursor3 = [nsMacCursor cocoaCursorWithImageNamed:@"spin3" hotSpot:NSMakePoint(1.0, 1.0)];
-    NSCursor* cursor4 = [nsMacCursor cocoaCursorWithImageNamed:@"spin4" hotSpot:NSMakePoint(1.0, 1.0)];
-    sSpinCursorFrames = [[NSArray alloc] initWithObjects:cursor1, cursor2, cursor3, cursor4, nil];
-  }
   return gInstance;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -107,9 +98,6 @@ static const nsCursor sCustomCursor = eCursorCount;
 
   [gInstance release];
   gInstance = nil;
-
-  [sSpinCursorFrames release];
-  sSpinCursorFrames = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -125,7 +113,14 @@ static const nsCursor sCustomCursor = eCursorCount;
       return [nsMacCursor cursorWithCursor:[NSCursor arrowCursor] type:aCursor];
     case eCursor_wait:
     case eCursor_spinning:
-      return [nsMacCursor cursorWithFrames:sSpinCursorFrames type:aCursor];
+    {
+      NSCursor* cursor1 = [nsMacCursor cocoaCursorWithImageNamed:@"spin1" hotSpot:NSMakePoint(1.0, 1.0)];
+      NSCursor* cursor2 = [nsMacCursor cocoaCursorWithImageNamed:@"spin2" hotSpot:NSMakePoint(1.0, 1.0)];
+      NSCursor* cursor3 = [nsMacCursor cocoaCursorWithImageNamed:@"spin3" hotSpot:NSMakePoint(1.0, 1.0)];
+      NSCursor* cursor4 = [nsMacCursor cocoaCursorWithImageNamed:@"spin4" hotSpot:NSMakePoint(1.0, 1.0)];
+      NSArray* spinCursorFrames = [[[NSArray alloc] initWithObjects:cursor1, cursor2, cursor3, cursor4, nil] autorelease];
+      return [nsMacCursor cursorWithFrames:spinCursorFrames type:aCursor];
+    }
     case eCursor_select:
       return [nsMacCursor cursorWithCursor:[NSCursor IBeamCursor] type:aCursor];
     case eCursor_hyperlink:
