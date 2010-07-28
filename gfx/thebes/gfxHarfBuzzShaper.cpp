@@ -68,6 +68,7 @@ gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
     : gfxFontShaper(aFont),
       mHBFace(nsnull),
       mHBLanguage(nsnull),
+      mKernTable(nsnull),
       mHmtxTable(nsnull),
       mNumLongMetrics(0),
       mCmapTable(nsnull),
@@ -247,12 +248,398 @@ HBGetContourPoint(hb_font_t *font, hb_face_t *face, const void *user_data,
     return false;
 }
 
+struct KernHeaderFmt0 {
+    AutoSwap_PRUint16 nPairs;
+    AutoSwap_PRUint16 searchRange;
+    AutoSwap_PRUint16 entrySelector;
+    AutoSwap_PRUint16 rangeShift;
+};
+
+struct KernPair {
+    AutoSwap_PRUint16 left;
+    AutoSwap_PRUint16 right;
+    AutoSwap_PRInt16  value;
+};
+
+// Find a kern pair in a Format 0 subtable.
+// The aSubtable parameter points to the subtable itself, NOT its header,
+// as the header structure differs between Windows and Mac (v0 and v1.0)
+// versions of the 'kern' table.
+// aSubtableLen is the length of the subtable EXCLUDING its header.
+// If the pair <aFirstGlyph,aSecondGlyph> is found, the kerning value is
+// added to aValue, so that multiple subtables can accumulate a total
+// kerning value for a given pair.
+static void
+GetKernValueFmt0(const void* aSubtable,
+                 PRUint32 aSubtableLen,
+                 PRUint16 aFirstGlyph,
+                 PRUint16 aSecondGlyph,
+                 PRInt32& aValue,
+                 PRBool   aIsOverride = PR_FALSE,
+                 PRBool   aIsMinimum = PR_FALSE)
+{
+    const KernHeaderFmt0* hdr =
+        reinterpret_cast<const KernHeaderFmt0*>(aSubtable);
+
+    const KernPair *lo = reinterpret_cast<const KernPair*>(hdr + 1);
+    const KernPair *hi = lo + PRUint16(hdr->nPairs);
+
+    if (reinterpret_cast<const char*>(aSubtable) + aSubtableLen <
+        reinterpret_cast<const char*>(hi)) {
+        // subtable is not large enough to contain the claimed number
+        // of kern pairs, so just ignore it
+        return;
+    }
+
+#define KERN_PAIR_KEY(l,r) (PRUint32((PRUint16(l) << 16) + PRUint16(r)))
+
+    PRUint32 key = KERN_PAIR_KEY(aFirstGlyph, aSecondGlyph);
+    while (lo < hi) {
+        const KernPair *mid = lo + (hi - lo) / 2;
+        if (KERN_PAIR_KEY(mid->left, mid->right) < key) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+
+    if (KERN_PAIR_KEY(lo->left, lo->right) == key) {
+        if (aIsOverride) {
+            aValue = PRInt16(lo->value);
+        } else if (aIsMinimum) {
+            aValue = PR_MAX(aValue, PRInt16(lo->value));
+        } else {
+            aValue += PRInt16(lo->value);
+        }
+    }
+}
+
+// Get kerning value from Apple (version 1.0) kern table,
+// subtable format 2 (simple N x M array of kerning values)
+
+// See http://developer.apple.com/fonts/TTRefMan/RM06/Chap6kern.html
+// for details of version 1.0 format 2 subtable.
+
+struct KernHeaderVersion1Fmt2 {
+    KernTableSubtableHeaderVersion1 header;
+    AutoSwap_PRUint16 rowWidth;
+    AutoSwap_PRUint16 leftOffsetTable;
+    AutoSwap_PRUint16 rightOffsetTable;
+    AutoSwap_PRUint16 array;
+};
+
+struct KernClassTableHdr {
+    AutoSwap_PRUint16 firstGlyph;
+    AutoSwap_PRUint16 nGlyphs;
+    AutoSwap_PRUint16 offsets[1]; // actually an array of nGlyphs entries	
+};
+
+static PRInt16
+GetKernValueVersion1Fmt2(const void* aSubtable,
+                         PRUint32 aSubtableLen,
+                         PRUint16 aFirstGlyph,
+                         PRUint16 aSecondGlyph)
+{
+    if (aSubtableLen < sizeof(KernHeaderVersion1Fmt2)) {
+        return 0;
+    }
+
+    const char* base = reinterpret_cast<const char*>(aSubtable);
+    const char* subtableEnd = base + aSubtableLen;
+
+    const KernHeaderVersion1Fmt2* h =
+        reinterpret_cast<const KernHeaderVersion1Fmt2*>(aSubtable);
+    PRUint32 offset = h->array;
+
+    const KernClassTableHdr* leftClassTable =
+        reinterpret_cast<const KernClassTableHdr*>(base +
+                                                   PRUint16(h->leftOffsetTable));
+    if (reinterpret_cast<const char*>(leftClassTable) +
+        sizeof(KernClassTableHdr) > subtableEnd) {
+        return 0;
+    }
+    if (aFirstGlyph >= PRUint16(leftClassTable->firstGlyph)) {
+        aFirstGlyph -= PRUint16(leftClassTable->firstGlyph);
+        if (aFirstGlyph < PRUint16(leftClassTable->nGlyphs)) {
+            if (reinterpret_cast<const char*>(leftClassTable) +
+                sizeof(KernClassTableHdr) +
+                aFirstGlyph * sizeof(PRUint16) >= subtableEnd) {
+                return 0;
+            }
+            offset = PRUint16(leftClassTable->offsets[aFirstGlyph]);
+        }
+    }
+
+    const KernClassTableHdr* rightClassTable =
+        reinterpret_cast<const KernClassTableHdr*>(base +
+                                                   PRUint16(h->rightOffsetTable));
+    if (reinterpret_cast<const char*>(rightClassTable) +
+        sizeof(KernClassTableHdr) > subtableEnd) {
+        return 0;
+    }
+    if (aSecondGlyph >= PRUint16(rightClassTable->firstGlyph)) {
+        aSecondGlyph -= PRUint16(rightClassTable->firstGlyph);
+        if (aSecondGlyph < PRUint16(rightClassTable->nGlyphs)) {
+            if (reinterpret_cast<const char*>(rightClassTable) +
+                sizeof(KernClassTableHdr) +
+                aSecondGlyph * sizeof(PRUint16) >= subtableEnd) {
+                return 0;
+            }
+            offset += PRUint16(rightClassTable->offsets[aSecondGlyph]);
+        }
+    }
+
+    const AutoSwap_PRInt16* pval =
+        reinterpret_cast<const AutoSwap_PRInt16*>(base + offset);
+    if (reinterpret_cast<const char*>(pval + 1) >= subtableEnd) {
+        return 0;
+    }
+    return *pval;
+}
+
+// Get kerning value from Apple (version 1.0) kern table,
+// subtable format 3 (simple N x M array of kerning values)
+
+// See http://developer.apple.com/fonts/TTRefMan/RM06/Chap6kern.html
+// for details of version 1.0 format 3 subtable.
+
+struct KernHeaderVersion1Fmt3 {
+    KernTableSubtableHeaderVersion1 header;
+    AutoSwap_PRUint16 glyphCount;
+    PRUint8 kernValueCount;
+    PRUint8 leftClassCount;
+    PRUint8 rightClassCount;
+    PRUint8 flags;
+};
+
+static PRInt16
+GetKernValueVersion1Fmt3(const void* aSubtable,
+                         PRUint32 aSubtableLen,
+                         PRUint16 aFirstGlyph,
+                         PRUint16 aSecondGlyph)
+{
+    // check that we can safely read the header fields
+    if (aSubtableLen < sizeof(KernHeaderVersion1Fmt3)) {
+        return 0;
+    }
+
+    const KernHeaderVersion1Fmt3* hdr =
+        reinterpret_cast<const KernHeaderVersion1Fmt3*>(aSubtable);
+    if (hdr->flags != 0) {
+        return 0;
+    }
+
+    PRUint16 glyphCount = hdr->glyphCount;
+
+    // check that table is large enough for the arrays
+    if (sizeof(KernHeaderVersion1Fmt3) +
+        hdr->kernValueCount * sizeof(PRInt16) +
+        glyphCount + glyphCount +
+        hdr->leftClassCount * hdr->rightClassCount > aSubtableLen) {
+        return 0;
+    }
+        
+    if (aFirstGlyph >= glyphCount || aSecondGlyph >= glyphCount) {
+        // glyphs are out of range for the class tables
+        return 0;
+    }
+
+    // get pointers to the four arrays within the subtable
+    const AutoSwap_PRInt16* kernValue =
+        reinterpret_cast<const AutoSwap_PRInt16*>(hdr + 1);
+    const PRUint8* leftClass =
+        reinterpret_cast<const PRUint8*>(kernValue + hdr->kernValueCount);
+    const PRUint8* rightClass = leftClass + glyphCount;
+    const PRUint8* kernIndex = rightClass + glyphCount;
+
+    PRUint8 lc = leftClass[aFirstGlyph];
+    PRUint8 rc = rightClass[aSecondGlyph];
+    if (lc >= hdr->leftClassCount || rc >= hdr->rightClassCount) {
+        return 0;
+    }
+
+    PRUint8 ki = kernIndex[leftClass[aFirstGlyph] * hdr->rightClassCount +
+                           rightClass[aSecondGlyph]];
+    if (ki >= hdr->kernValueCount) {
+        return 0;
+    }
+
+    return kernValue[ki];
+}
+
+#define KERN0_COVERAGE_HORIZONTAL   0x0001
+#define KERN0_COVERAGE_MINIMUM      0x0002
+#define KERN0_COVERAGE_CROSS_STREAM 0x0004
+#define KERN0_COVERAGE_OVERRIDE     0x0008
+#define KERN0_COVERAGE_RESERVED     0x00F0
+
+#define KERN1_COVERAGE_VERTICAL     0x8000
+#define KERN1_COVERAGE_CROSS_STREAM 0x4000
+#define KERN1_COVERAGE_VARIATION    0x2000
+#define KERN1_COVERAGE_RESERVED     0x1F00
+
+hb_position_t
+gfxHarfBuzzShaper::GetKerning(PRUint16 aFirstGlyph,
+                              PRUint16 aSecondGlyph) const
+{
+    // We want to ignore any kern pairs involving <space>, because we are
+    // handling words in isolation, the only space characters seen here are
+    // the ones artificially added by the textRun code.
+    PRUint32 spaceGlyph = mFont->GetSpaceGlyph();
+    if (aFirstGlyph == spaceGlyph || aSecondGlyph == spaceGlyph) {
+        return 0;
+    }
+
+    if (!mKernTable) {
+        mKernTable = mFont->GetFontTable(TRUETYPE_TAG('k','e','r','n'));
+        if (!mKernTable) {
+            mKernTable = hb_blob_create_empty();
+        }
+    }
+
+    PRUint32 len = hb_blob_get_length(mKernTable);
+    if (len < sizeof(KernTableVersion0)) {
+        return 0;
+    }
+
+    PRInt32 value = 0;
+    const char* base = reinterpret_cast<const char*>(hb_blob_lock(mKernTable));
+
+    // First try to interpret as "version 0" kern table
+    // (see http://www.microsoft.com/typography/otspec/kern.htm)
+    const KernTableVersion0* kern0 =
+        reinterpret_cast<const KernTableVersion0*>(base);
+    if (PRUint16(kern0->version) == 0) {
+        PRUint16 nTables = kern0->nTables;
+        PRUint32 offs = sizeof(KernTableVersion0);
+        for (PRUint16 i = 0; i < nTables; ++i) {
+            if (offs + sizeof(KernTableSubtableHeaderVersion0) > len) {
+                break;
+            }
+            const KernTableSubtableHeaderVersion0* st0 =
+                reinterpret_cast<const KernTableSubtableHeaderVersion0*>
+                                (base + offs);
+            PRUint16 subtableLen = PRUint16(st0->length);
+            if (offs + subtableLen > len) {
+                break;
+            }
+            offs += subtableLen;
+            PRUint16 coverage = st0->coverage;
+            if (!(coverage & KERN0_COVERAGE_HORIZONTAL)) {
+                // we only care about horizontal kerning (for now)
+                continue;
+            }
+            if (coverage &
+                (KERN0_COVERAGE_CROSS_STREAM | KERN0_COVERAGE_RESERVED)) {
+                // we don't support cross-stream kerning, and
+                // reserved bits should be zero;
+                // ignore the subtable if not
+                continue;
+            }
+            PRUint8 format = (coverage >> 8);
+            switch (format) {
+            case 0:
+                GetKernValueFmt0(st0 + 1, subtableLen - sizeof(*st0),
+                                 aFirstGlyph, aSecondGlyph, value,
+                                 (coverage & KERN0_COVERAGE_OVERRIDE) != 0,
+                                 (coverage & KERN0_COVERAGE_MINIMUM) != 0);
+                break;
+            default:
+                // TODO: implement support for other formats,
+                // if they're ever used in practice
+#if DEBUG
+                {
+                    char buf[1024];
+                    sprintf(buf, "unknown kern subtable in %s: "
+                                 "ver 0 format %d\n",
+                            NS_ConvertUTF16toUTF8(mFont->GetName()).get(),
+                            format);
+                    NS_WARNING(buf);
+                }
+#endif
+                break;
+            }
+        }
+    } else {
+        // It wasn't a "version 0" table; check if it is Apple version 1.0
+        // (see http://developer.apple.com/fonts/TTRefMan/RM06/Chap6kern.html)
+        const KernTableVersion1* kern1 =
+            reinterpret_cast<const KernTableVersion1*>(base);
+        if (PRUint32(kern1->version) == 0x00010000) {
+            PRUint32 nTables = kern1->nTables;
+            PRUint32 offs = sizeof(KernTableVersion1);
+            for (PRUint32 i = 0; i < nTables; ++i) {
+                if (offs + sizeof(KernTableSubtableHeaderVersion1) > len) {
+                    break;
+                }
+                const KernTableSubtableHeaderVersion1* st1 =
+                    reinterpret_cast<const KernTableSubtableHeaderVersion1*>
+                                    (base + offs);
+                PRUint32 subtableLen = PRUint32(st1->length);
+                offs += subtableLen;
+                PRUint16 coverage = st1->coverage;
+                if (coverage &
+                    (KERN1_COVERAGE_VERTICAL     |
+                     KERN1_COVERAGE_CROSS_STREAM |
+                     KERN1_COVERAGE_VARIATION    |
+                     KERN1_COVERAGE_RESERVED)) {
+                    // we only care about horizontal kerning (for now),
+                    // we don't support cross-stream kerning,
+                    // we don't support variations,
+                    // reserved bits should be zero;
+                    // ignore the subtable if not
+                    continue;
+                }
+                PRUint8 format = (coverage & 0xff);
+                switch (format) {
+                case 0:
+                    GetKernValueFmt0(st1 + 1, subtableLen - sizeof(*st1),
+                                     aFirstGlyph, aSecondGlyph, value);
+                    break;
+                case 2:
+                    value = GetKernValueVersion1Fmt2(st1, subtableLen,
+                                                     aFirstGlyph, aSecondGlyph);
+                    break;
+                case 3:
+                    value = GetKernValueVersion1Fmt3(st1, subtableLen,
+                                                     aFirstGlyph, aSecondGlyph);
+                    break;
+                default:
+                    // TODO: implement support for other formats.
+                    // Note that format 1 cannot be supported here,
+                    // as it requires the full glyph array to run the FSM,
+                    // not just the current glyph pair.
+#if DEBUG
+                    {
+                        char buf[1024];
+                        sprintf(buf, "unknown kern subtable in %s: "
+                                     "ver 0 format %d\n",
+                                NS_ConvertUTF16toUTF8(mFont->GetName()).get(),
+                                format);
+                        NS_WARNING(buf);
+                    }
+#endif
+                    break;
+                }
+            }
+        }
+    }
+
+    hb_blob_unlock(mKernTable);
+
+    if (value != 0) {
+        return FloatToFixed(mFont->FUnitsToDevUnitsFactor() * value);
+    }
+    return 0;
+}
+
 static hb_position_t
 HBGetKerning(hb_font_t *font, hb_face_t *face, const void *user_data,
              hb_codepoint_t first_glyph, hb_codepoint_t second_glyph)
 {
-    /* not yet implemented - no support for legacy TrueType kerning */
-    return 0;
+    const FontCallbackData *fcd =
+        static_cast<const FontCallbackData*>(user_data);
+    return fcd->mShaper->GetKerning(first_glyph, second_glyph);
 }
 
 /*
@@ -513,14 +900,16 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
         }
     }
 
-    nsAutoTArray<nsPoint,SMALL_GLYPH_RUN> positions;
-    if (!positions.SetLength(numGlyphs))
-        return NS_ERROR_OUT_OF_MEMORY;
-    float runWidth = GetGlyphPositions(aContext, aBuffer, positions,
-                                       aTextRun->GetAppUnitsPerDevUnit());
-
     PRInt32 glyphStart = 0; // looking for a clump that starts at this glyph
     PRInt32 charStart = 0; // and this char index within the range of the run
+
+    // factor to convert 16.16 fixed-point pixels to app units
+    float hb2appUnits = aTextRun->GetAppUnitsPerDevUnit() / 65536.0;
+
+    // keep track of y-position to set glyph offsets if needed
+    nscoord yPos = 0;
+
+    const hb_glyph_position_t *posInfo = hb_buffer_get_glyph_positions(aBuffer);
 
     while (glyphStart < numGlyphs) {
 
@@ -604,16 +993,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
         // Ensure we won't try to go beyond the valid length of the textRun's text
         endCharIndex = PR_MIN(endCharIndex, aRunLength);
 
-        // Now we're ready to set the glyph info in the textRun;
-        // measure the glyph width of the first (perhaps only) glyph,
-        // to see if it is "Simple"
-        nscoord advance;
-        if (glyphStart < numGlyphs-1) {
-            advance = positions[glyphStart+1].x - positions[glyphStart].x;
-        } else {
-            advance = positions[0].x + runWidth - positions[glyphStart].x;
-        }
-
+        // Now we're ready to set the glyph info in the textRun
         PRInt32 glyphsInClump = glyphEnd - glyphStart;
 
         // Check for default-ignorable char that didn't get filtered, combined,
@@ -627,11 +1007,13 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
         }
 
         // Check if it's a simple one-to-one mapping
+        nscoord advance = NS_roundf(hb2appUnits * posInfo[glyphStart].x_advance);
         if (glyphsInClump == 1 &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(ginfo[glyphStart].codepoint) &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
             aTextRun->IsClusterStart(aTextRunOffset + baseCharIndex) &&
-            positions[glyphStart].y == 0)
+            posInfo[glyphStart].x_offset == 0 &&
+            posInfo[glyphStart].y_offset == 0 && yPos == 0)
         {
             gfxTextRun::CompressedGlyph g;
             aTextRun->SetSimpleGlyph(aTextRunOffset + baseCharIndex,
@@ -646,18 +1028,18 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
                 gfxTextRun::DetailedGlyph* details =
                     detailedGlyphs.AppendElement();
                 details->mGlyphID = ginfo[glyphStart].codepoint;
-                details->mXOffset = 0.0f;
-                details->mYOffset = -positions[glyphStart].y;
+                details->mXOffset = posInfo[glyphStart].x_offset == 0 ?
+                                        0 : hb2appUnits * posInfo[glyphStart].x_offset;
+                details->mYOffset = yPos - (posInfo[glyphStart].y_offset == 0 ?
+                                        0 : hb2appUnits * posInfo[glyphStart].y_offset);
                 details->mAdvance = advance;
-                if (++glyphStart >= glyphEnd)
-                    break;
-                if (glyphStart < numGlyphs-1) {
-                    advance = positions[glyphStart+1].x -
-                                  positions[glyphStart].x;
-                } else {
-                    advance = positions[0].x + runWidth -
-                                  positions[glyphStart].x;
+                if (posInfo[glyphStart].y_advance != 0) {
+                    yPos -= hb2appUnits * posInfo[glyphStart].y_advance;
                 }
+                if (++glyphStart >= glyphEnd) {
+                    break;
+                }
+                advance = NS_roundf(hb2appUnits * posInfo[glyphStart].x_advance);
             }
 
             gfxTextRun::CompressedGlyph g;
@@ -684,35 +1066,4 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext *aContext,
     }
 
     return NS_OK;
-}
-
-nscoord
-gfxHarfBuzzShaper::GetGlyphPositions(gfxContext *aContext,
-                                     hb_buffer_t *aBuffer,
-                                     nsTArray<nsPoint>& aPositions,
-                                     PRUint32 aAppUnitsPerDevUnit)
-{
-    nsPoint *outPos = aPositions.Elements();
-    const nsPoint *limit = outPos + hb_buffer_get_length(aBuffer);
-
-    nsPoint curPos(0, 0);
-
-    // factor to convert 16.16 fixed-point pixels to app units
-    float hb2appUnits = aAppUnitsPerDevUnit / 65536.0;
-
-    const hb_glyph_position_t *posInfo = hb_buffer_get_glyph_positions(aBuffer);
-    while (outPos < limit) {
-        outPos->x = posInfo->x_offset == 0 ? curPos.x :
-            curPos.x + NS_roundf(hb2appUnits * posInfo->x_offset);
-        outPos->y = posInfo->y_offset == 0 ? curPos.y :
-            curPos.y + NS_roundf(hb2appUnits * posInfo->y_offset);
-        curPos.x += NS_roundf(hb2appUnits * posInfo->x_advance);
-        if (posInfo->y_advance) {
-            curPos.y += NS_roundf(hb2appUnits * posInfo->y_advance);
-        }
-        ++posInfo;
-        ++outPos;
-    }
-
-    return curPos.x;
 }
