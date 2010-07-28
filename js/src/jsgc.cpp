@@ -637,8 +637,19 @@ static JSGCArena *
 NewGCArena(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
+    if (!JS_THREAD_DATA(cx)->waiveGCQuota && rt->gcBytes >= rt->gcMaxBytes) {
+        /*
+         * FIXME bug 524051 We cannot run a last-ditch GC on trace for now, so
+         * just pretend we are out of memory which will throw us off trace and
+         * we will re-try this code path from the interpreter.
+         */
+        if (!JS_ON_TRACE(cx))
+            return NULL;
+        js_TriggerGC(cx, true);
+    }
 
     size_t nchunks = rt->gcChunks.length();
+
     JSGCChunkInfo *ci;
     for (;; ++rt->gcChunkCursor) {
         if (rt->gcChunkCursor == nchunks) {
@@ -649,7 +660,6 @@ NewGCArena(JSContext *cx)
         if (ci->numFreeArenas != 0)
             break;
     }
-
     if (!ci) {
         if (!rt->gcChunks.reserve(nchunks + 1))
             return NULL;
@@ -1693,6 +1703,41 @@ JSGCFreeLists::moveTo(JSGCFreeLists *another)
     JS_ASSERT(isEmpty());
 }
 
+static inline bool
+IsGCThresholdReached(JSRuntime *rt)
+{
+#ifdef JS_GC_ZEAL
+    if (rt->gcZeal >= 1)
+        return true;
+#endif
+
+    /*
+     * Since the initial value of the gcLastBytes parameter is not equal to
+     * zero (see the js_InitGC function) the return value is false when
+     * the gcBytes value is close to zero at the JS engine start.
+     */
+    return rt->isGCMallocLimitReached() || rt->gcBytes >= rt->gcTriggerBytes;
+}
+
+static void
+LastDitchGC(JSContext *cx)
+{
+    JS_ASSERT(!JS_ON_TRACE(cx));
+
+    /* The last ditch GC preserves weak roots and all atoms. */
+    AutoPreserveWeakRoots save(cx);
+    AutoKeepAtoms keep(cx->runtime);
+
+    /*
+     * Keep rt->gcLock across the call into the GC so we don't starve and
+     * lose to racing threads who deplete the heap just after the GC has
+     * replenished it (or has synchronized with a racing GC that collected a
+     * bunch of garbage).  This unfair scheduling can happen on certain
+     * operating systems. For the gory details, see bug 162779.
+     */
+    js_GC(cx, GC_LOCK_HELD);
+}
+
 static JSGCThing *
 RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
 {
@@ -1709,27 +1754,44 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
             return NULL;
         }
 
+        bool canGC = !JS_ON_TRACE(cx) && !JS_THREAD_DATA(cx)->waiveGCQuota;
+        bool doGC = canGC && IsGCThresholdReached(rt);
         arenaList = &rt->gcArenaList[thingKind];
-        while ((a = arenaList->cursor) != NULL) {
-            JSGCArenaInfo *ainfo = a->getInfo();
-            arenaList->cursor = ainfo->prev;
-            JSGCThing *freeList = ainfo->freeList;
-            if (freeList) {
-                ainfo->freeList = NULL;
-                return freeList;
+        for (;;) {
+            if (doGC) {
+                LastDitchGC(cx);
+                METER(cx->runtime->gcStats.arenaStats[thingKind].retry++);
+                canGC = false;
+
+                /*
+                 * The JSGC_END callback can legitimately allocate new GC
+                 * things and populate the free list. If that happens, just
+                 * return that list head.
+                 */
+                JSGCThing *freeList = JS_THREAD_DATA(cx)->gcFreeLists.finalizables[thingKind];
+                if (freeList)
+                    return freeList;
             }
+
+            while ((a = arenaList->cursor) != NULL) {
+                JSGCArenaInfo *ainfo = a->getInfo();
+                arenaList->cursor = ainfo->prev;
+                JSGCThing *freeList = ainfo->freeList;
+                if (freeList) {
+                    ainfo->freeList = NULL;
+                    return freeList;
+                }
+            }
+
+            a = NewGCArena(cx);
+            if (a)
+                break;
+            if (!canGC) {
+                METER(cx->runtime->gcStats.arenaStats[thingKind].fail++);
+                return NULL;
+            }
+            doGC = true;
         }
-
-        /*
-         * If we have to allocate a new arena, check whether are bumping
-         * against our GC heap quota. If so, request a GC to happen soon.
-         */
-        if (rt->gcQuotaReached())
-            cx->runtime->triggerGC(true);
-
-        a = NewGCArena(cx);
-        if (!a)
-            return NULL;
 
         /*
          * Do only minimal initialization of the arena inside the GC lock. We
@@ -2455,6 +2517,26 @@ js_TraceRuntime(JSTracer *trc)
         }
     }
 #endif
+}
+
+void
+js_TriggerGC(JSContext *cx, JSBool gcLocked)
+{
+    JSRuntime *rt = cx->runtime;
+
+#ifdef JS_THREADSAFE
+    JS_ASSERT(cx->requestDepth > 0);
+#endif
+    JS_ASSERT(!rt->gcRunning);
+    if (rt->gcIsNeeded)
+        return;
+
+    /*
+     * Trigger the GC when it is safe to call an operation callback on any
+     * thread.
+     */
+    rt->gcIsNeeded = JS_TRUE;
+    js_TriggerAllOperationCallbacks(rt, gcLocked);
 }
 
 void

@@ -900,6 +900,10 @@ JSScope::insertDictionaryProperty(JSScopeProperty *sprop, JSScopeProperty **chil
 #define SLOT_IN_SCOPE(slot,scope)         ((slot) < (scope)->freeslot)
 #define SPROP_HAS_VALID_SLOT(sprop,scope) SLOT_IN_SCOPE((sprop)->slot, scope)
 
+#ifndef JS_THREADSAFE
+# define js_GenerateShape(cx, gcLocked)    js_GenerateShape (cx)
+#endif
+
 extern uint32
 js_GenerateShape(JSContext *cx, bool gcLocked);
 
