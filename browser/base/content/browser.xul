@@ -101,6 +101,9 @@
 
 <script type="application/javascript" src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
+<deck flex="1" id="tab-candy-deck">
+<vbox flex="1">
+
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
@@ -854,7 +857,7 @@
              iconsize="small" defaulticonsize="small" lockiconsize="true"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
-             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
+             defaultset="tabbrowser-tabs,new-tab-button,tabcandy-button,alltabs-button,tabs-closebutton"
              collapsed="true">
 
       <tabs id="tabbrowser-tabs"
@@ -887,6 +890,12 @@
         <menupopup id="alltabs-popup"
                    position="after_end"/>
       </toolbarbutton>
+
+      <toolbarbutton id="tabcandy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&tabCandyButton.label;"
+                     command="Browser:ToggleTabCandy"
+                     tooltiptext="&tabCandyButton.tooltip;" 
+                     removable="true"/>
 
       <toolbarbutton id="tabs-closebutton"
                      class="close-button tabs-closebutton"
@@ -1024,4 +1033,9 @@
     </svg:mask>
   </svg:svg>
 #endif
+
+</vbox>
+<iframe id="tab-candy" transparent="true" flex="1" src="chrome://browser/content/tabcandy.html" />
+</deck>
+
 </window>
