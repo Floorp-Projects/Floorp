@@ -40,6 +40,7 @@
 #include "jsbool.h"
 #include "jslibmath.h"
 #include "jsnum.h"
+#include "jsscope.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -964,6 +965,14 @@ mjit::Compiler::jsop_setelem()
     } else {
         RegisterID idReg = maybeIdReg.reg();
 
+        /*
+         * Register for use only in OOL hole path. TODO: would be nice
+         * for the frame to do any associated spilling in the OOL path.
+         */
+        RegisterID T1 = frame.allocReg();
+
+        Label syncTarget = stubcc.syncExitAndJump(Uses(3));
+
         /* guard not a hole */
         BaseIndex slot(objReg, idReg, Assembler::JSVAL_SCALE);
 #if defined JS_NUNBOX32
@@ -972,7 +981,57 @@ mjit::Compiler::jsop_setelem()
         masm.loadTypeTag(slot, Registers::ValueReg);
         Jump notHole = masm.branchPtr(Assembler::Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
 #endif
-        stubcc.linkExit(notHole, Uses(3));
+
+        /* Make an OOL path for setting array holes. */
+        Label lblHole = stubcc.masm.label();
+        stubcc.linkExitDirect(notHole, lblHole);
+
+        /* Need a new handle on the object, as objReg now holds the dslots. */
+        RegisterID baseReg = frame.tempRegForData(obj, objReg, stubcc.masm);
+
+        /*
+         * Check if the object has a prototype with indexed properties,
+         * in which case it might have a setter for this element. For dense
+         * arrays we only need to check Array.prototype and Object.prototype.
+         */
+
+        /*
+         * Test for indexed properties in Array.prototype. flags is a one byte
+         * quantity, but will be aligned on 4 bytes.
+         */
+        stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
+        stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, map)), T1);
+        stubcc.masm.load32(Address(T1, offsetof(JSScope, flags)), T1);
+        stubcc.masm.and32(Imm32(JSScope::INDEXED_PROPERTIES), T1);
+        Jump extendedArray = stubcc.masm.branchTest32(Assembler::NonZero, T1, T1);
+        extendedArray.linkTo(syncTarget, &stubcc.masm);
+
+        /* Test for indexed properties in Object.prototype. */
+        stubcc.masm.loadPtr(Address(baseReg, offsetof(JSObject, proto)), T1);
+        stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, proto)), T1);
+        stubcc.masm.loadPtr(Address(T1, offsetof(JSObject, map)), T1);
+        stubcc.masm.load32(Address(T1, offsetof(JSScope, flags)), T1);
+        stubcc.masm.and32(Imm32(JSScope::INDEXED_PROPERTIES), T1);
+        Jump extendedObject = stubcc.masm.branchTest32(Assembler::NonZero, T1, T1);
+        extendedObject.linkTo(syncTarget, &stubcc.masm);
+
+        /* Update the array length if needed. Don't worry about overflow. */
+        Address arrayLength(baseReg, offsetof(JSObject, fslots[JSObject::JSSLOT_ARRAY_LENGTH]));
+        stubcc.masm.loadPayload(arrayLength, T1);
+        Jump underLength = stubcc.masm.branch32(Assembler::LessThan, idReg, T1);
+        stubcc.masm.move(idReg, T1);
+        stubcc.masm.add32(Imm32(1), T1);
+        stubcc.masm.storePayload(T1, arrayLength);
+        underLength.linkTo(stubcc.masm.label(), &stubcc.masm);
+
+        /* Restore the dslots register if we clobbered it with the object. */
+        if (baseReg == objReg)
+            stubcc.masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
+
+        /* Rejoin OOL path with inline path to do the store itself. */
+        Jump jmpHoleExit = stubcc.masm.jump();
+        Label lblRejoin = masm.label();
+        stubcc.crossJump(jmpHoleExit, lblRejoin);
 
         stubcc.leave();
         stubcc.call(stubs::SetElem);
@@ -993,6 +1052,7 @@ mjit::Compiler::jsop_setelem()
         }
 
         frame.freeReg(idReg);
+        frame.freeReg(T1);
     }
     frame.freeReg(objReg);
 

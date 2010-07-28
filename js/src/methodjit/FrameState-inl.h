@@ -442,6 +442,23 @@ FrameState::tempRegInMaskForData(FrameEntry *fe, uint32 mask)
     return reg;
 }
 
+inline JSC::MacroAssembler::RegisterID
+FrameState::tempRegForData(FrameEntry *fe, RegisterID reg, Assembler &masm) const
+{
+    JS_ASSERT(!fe->data.isConstant());
+
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
+    if (fe->data.inRegister()) {
+        JS_ASSERT(fe->data.reg() != reg);
+        return fe->data.reg();
+    } else {
+        masm.loadPayload(addressOf(fe), reg);
+        return reg;
+    }
+}
+
 inline bool
 FrameState::shouldAvoidTypeRemat(FrameEntry *fe)
 {
