@@ -738,6 +738,7 @@ js_PurgeThreads(JSContext *cx)
             e.removeFront();
         } else {
             thread->data.purge(cx);
+            thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
         }
     }
 #else
@@ -1900,36 +1901,43 @@ js_InvokeOperationCallback(JSContext *cx)
     JS_THREAD_DATA(cx)->operationCallbackFlag = 0;
 
     /*
-     * Ideally this should never be hit. The embedding should call JS_MaybeGC()
-     * to schedule preemptive GCs.
+     * Unless we are going to run the GC, we automatically yield the current
+     * context every time the operation callback is hit since we might be
+     * called as a result of an impending GC, which would deadlock if we do
+     * not yield. Operation callbacks are supposed to happen rarely (seconds,
+     * not milliseconds) so it is acceptable to yield at every callback.
      */
     JSRuntime *rt = cx->runtime;
-    if (rt->gcIsNeeded || rt->overQuota()) {
-        JS_GC(cx);
-        /* If we are still over quota after the GC, report an error. */
-        if (rt->overQuota()) {
+    if (rt->gcIsNeeded) {
+        js_GC(cx, GC_NORMAL);
+
+        /*
+         * On trace we can exceed the GC quota, see comments in NewGCArena. So
+         * we check the quota and report OOM here when we are off trace.
+         */
+        bool delayedOutOfMemory;
+        JS_LOCK_GC(rt);
+        delayedOutOfMemory = (rt->gcBytes > rt->gcMaxBytes);
+        JS_UNLOCK_GC(rt);
+        if (delayedOutOfMemory) {
             js_ReportOutOfMemory(cx);
             return false;
         }
     }
-
-    /*
-     * Automatically yield the current context every time the operation callback
-     * is hit since we might be called as a result of an impending GC, which
-     * would deadlock if we do not yield. Operation callbacks are supposed to
-     * happen rarely (seconds, not milliseconds) so it is acceptable to yield at
-     * every callback.
-     */
 #ifdef JS_THREADSAFE
-    JS_YieldRequest(cx);
+    else {
+        JS_YieldRequest(cx);
+    }
 #endif
+
+    JSOperationCallback cb = cx->operationCallback;
 
     /*
      * Important: Additional callbacks can occur inside the callback handler
      * if it re-enters the JS engine. The embedding must ensure that the
      * callback is disconnected before attempting such re-entry.
      */
-    JSOperationCallback cb = cx->operationCallback;
+
     return !cb || cb(cx);
 }
 
@@ -2156,6 +2164,47 @@ JSContext::containingSegment(const JSStackFrame *target)
     }
 
     return NULL;
+}
+
+void
+JSContext::checkMallocGCPressure(void *p)
+{
+    if (!p) {
+        js_ReportOutOfMemory(this);
+        return;
+    }
+
+#ifdef JS_THREADSAFE
+    JS_ASSERT(thread);
+    JS_ASSERT(thread->gcThreadMallocBytes <= 0);
+    ptrdiff_t n = JS_GC_THREAD_MALLOC_LIMIT - thread->gcThreadMallocBytes;
+    thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
+
+    AutoLockGC lock(runtime);
+    runtime->gcMallocBytes -= n;
+
+    /*
+     * Trigger the GC on memory pressure but only if we are inside a request
+     * and not inside a GC.
+     */
+    if (runtime->isGCMallocLimitReached() && requestDepth != 0)
+#endif
+    {
+        if (!runtime->gcRunning) {
+            JS_ASSERT(runtime->isGCMallocLimitReached());
+            runtime->gcMallocBytes = -1;
+
+            /*
+             * Empty the GC free lists to trigger a last-ditch GC when any GC
+             * thing is allocated later on this thread. This makes unnecessary
+             * to check for the memory pressure on the fast path of the GC
+             * allocator. We cannot touch the free lists on other threads as
+             * their manipulation is not thread-safe.
+             */
+            JS_THREAD_DATA(this)->gcFreeLists.purge();
+            js_TriggerGC(this, true);
+        }
+    }
 }
 
 bool
