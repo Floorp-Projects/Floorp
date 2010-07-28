@@ -274,7 +274,7 @@ js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
 #endif
 
 void
-js_AtomicSetMask(jsword *w, jsword mask)
+js_AtomicSetMask(volatile jsword *w, jsword mask)
 {
     jsword ov, nv;
 

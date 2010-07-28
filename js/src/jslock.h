@@ -304,7 +304,7 @@ js_CompareAndSwap(volatile jsword *w, jsword ov, jsword nv);
 
 /* Atomically bitwise-or the mask into the word *w using compare and swap. */
 extern void
-js_AtomicSetMask(jsword *w, jsword mask);
+js_AtomicSetMask(volatile jsword *w, jsword mask);
 
 /*
  * Atomically bitwise-and the complement of the mask into the word *w using
