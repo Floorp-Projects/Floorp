@@ -476,7 +476,7 @@ let Utils = {
   // Pass as many arguments as you want, it'll print them all.
   error: function() {
     var text = this.expandArgumentsForLog(arguments);
-    Cu.reportError('tabcandy error: ' + text);
+    Cu.reportError("tabview error: " + text);
   },
 
   // ----------
@@ -503,7 +503,7 @@ let Utils = {
       if (typeof(label) == 'undefined')
         text = 'badly formed assert';
       else
-        text = 'tabcandy assert: ' + label;
+        text = "tabview assert: " + label;
 
       this.trace(text);
     }
@@ -518,7 +518,7 @@ let Utils = {
       if (typeof(label) == 'undefined')
         text = 'badly formed assert';
       else
-        text = 'tabcandy assert: ' + label;
+        text = "tabview assert: " + label;
 
       // cut off the first two lines of the stack trace, because they're just this function.
       text += Error().stack.replace(/^.*?\n.*?\n/, "");
