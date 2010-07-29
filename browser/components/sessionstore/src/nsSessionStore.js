@@ -1939,7 +1939,7 @@ SessionStoreService.prototype = {
                 tabbrowser.tabs[t] :
                 tabbrowser.addTab("about:blank", {skipAnimation: true}));
       // collapse all unselected tabs to prevent flickering when showing the
-      // tabs in the active group by tabcandy
+      // tabs in the active group by TabView
       if (!tabs[t].selected) {
         tabs[t].hidden = true;
       }

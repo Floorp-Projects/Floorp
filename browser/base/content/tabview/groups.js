@@ -63,7 +63,7 @@ function max(list){ return list.slice().sort(numCmp).reverse()[0]; }
 
 // ##########
 // Class: Group
-// A single group in the tab candy window. Descended from <Item>.
+// A single group in the TabView window. Descended from <Item>.
 // Note that it implements the <Subscribable> interface.
 //
 // ----------
@@ -212,7 +212,7 @@ window.Group = function Group(listOfEls, options) {
           "padding-left": "1px"
         }, {
           duration: 200,
-          easing: 'tabcandyBounce'
+          easing: "tabviewBounce"
         });
     }
   };
@@ -272,7 +272,7 @@ window.Group = function Group(listOfEls, options) {
 
   // ___ Stack Expander
   this.$expander = iQ("<img/>")
-    .attr('src', 'chrome://browser/skin/tabcandy/stack-expander.png')
+    .attr("src", "chrome://browser/skin/tabview/stack-expander.png")
     .addClass("stackExpander")
     .appendTo($container)
     .hide();
@@ -504,7 +504,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
       TabItems.pausePainting();
       iQ(this.container).animate(css, {
         duration: 350,
-        easing: 'tabcandyBounce',
+        easing: "tabviewBounce",
         complete: function() {
           TabItems.resumePainting();
         }
@@ -772,7 +772,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
     if (!immediately)
       this.$ntb.animate(box.css(), {
         duration: 320,
-        easing: 'tabcandyBounce'
+        easing: "tabviewBounce"
       });
     else
       this.$ntb.css(box.css());
@@ -1090,7 +1090,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
         left: pos.left
       }, {
         duration: 200,
-        easing: 'tabcandyBounce'
+        easing: "tabviewBounce"
       })
       .addClass("overlay");
 
@@ -1151,7 +1151,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
           opacity: 0
         }, {
           duration: 350,
-          easing: 'tabcandyBounce',
+          easing: "tabviewBounce",
           complete: function() {
             iQ(this).remove();
           }
@@ -1260,12 +1260,12 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
     // Because opening a new tab happens in a different thread(?)
-    // calling UI.showTabCandy() inline won't do anything. Instead
+    // calling UI.showTabView() inline won't do anything. Instead
     // we have to marshal it. A value of 0 wait time doesn't seem
     // to work. Instead, we use a value of 1 which seems to be the
     // minimum amount of time required.
     Utils.timeout(function(){
-      UI.showTabCandy()
+      UI.showTabView()
     }, 1);
 
     var self = this;
@@ -1299,7 +1299,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
               complete: function(){
                 iQ(tab.container).css({opacity: 1});
                 gBrowser.selectedTab = newTab;
-                UI.hideTabCandy()
+                UI.hideTabView()
                 gWindow.gURLBar.focus();
                 $anim.remove();
                 // We need a timeout here so that there is a chance for the
@@ -1691,7 +1691,7 @@ window.Groups = {
   // Function: getActiveGroup
   // Returns the active group. Active means the group where a new
   // tab will live when it is created as well as what tabs are
-  // shown in the tab bar when not in the TabCandy interface.
+  // shown in the tab bar when not in the TabView interface.
   getActiveGroup: function() {
     return this._activeGroup;
   },

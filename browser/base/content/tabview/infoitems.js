@@ -44,7 +44,7 @@
 
 // ##########
 // Class: InfoItem
-// An <Item> in TabCandy used for displaying information, such as the welcome video.
+// An <Item> in TabView used for displaying information, such as the welcome video.
 // Note that it implements the <Subscribable> interface.
 //
 // ----------
@@ -194,7 +194,7 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         TabItems.pausePainting();
         iQ(this.container).animate(css, {
           duration: 350,
-          easing: 'tabcandyBounce',
+          easing: "tabviewBounce",
           complete: function() {
             TabItems.resumePainting();
           }

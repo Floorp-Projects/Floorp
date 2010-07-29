@@ -717,9 +717,9 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            if (TabCandy.isVisible()) {
+            if (TabView.isVisible()) {
               // ToDo: this will be removed when we gain ability to draw o the menu bar. 
-              this.ownerDocument.title = TabCandy.getWindowTitle();
+              this.ownerDocument.title = TabView.getWindowTitle();
             } else {
               this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
             }
@@ -1336,7 +1336,7 @@
             var closeWindow = false;
             var newTab = false;
             if (this.tabs.length - this._removingTabs.length == 1) {
-              if (!TabCandy.isVisible()) {
+              if (!TabView.isVisible()) {
                 closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
                               !window.toolbar.visible ||
                                 this.tabContainer._closeWindowWithLastTab;
