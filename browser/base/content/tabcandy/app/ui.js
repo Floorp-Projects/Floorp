@@ -409,20 +409,31 @@ var UIManager = {
         // if not closing the last tab
         if (gBrowser.tabs.length > 1) {
           var group = Groups.getActiveGroup();
+
           // 1) Only go back to the TabCandy tab when there you close the last
           // tab of a group.
           // 2) Take care of the case where you've closed the last tab in
           // an un-named group, which means that the group is gone (null) and
           // there are no visible tabs.
+          // Can't use timeout here because user would see a flicker of
+          // switching to another tab before the tab candy interface shows up.
           if ((group && group._children.length == 1) ||
-              (group == null &&
-               gBrowser.visibleTabs.length == 1)) {
+              (group == null && gBrowser.visibleTabs.length == 1)) {
+            // for the tab focus event to pick up.
             self._closedLastVisibleTab = true;
             // remove the zoom prep.
             if (this && this.tabItem)
               this.tabItem.setZoomPrep(false);
             self.showTabCandy();
           }
+          // ToDo: When running unit tests, everything happens so quick so
+          // new tabs might be added after a tab is closing. Therefore, this
+          // hack is used. We should look for a better solution.
+          Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
+            if ((group && group._children.length > 0) ||
+              (group == null && gBrowser.visibleTabs.length > 0))
+              self.hideTabCandy();
+          }, 1);
         }
       }
       return false;
@@ -511,13 +522,13 @@ var UIManager = {
 
         // if the last visible tab is removed, don't set zoom prep because
         // we shoud be in the Tab Candy interface.
-        if (visibleTabCount > 0 && newItem)
+        if (visibleTabCount > 0 && newItem && !self._isTabCandyVisible())
           newItem.setZoomPrep(true);
       } else {
         // the tab is already focused so the new and old items are the
         // same.
         if (oldItem)
-          oldItem.setZoomPrep(true);
+          oldItem.setZoomPrep(!self._isTabCandyVisible());
       }
     }, 1);
   },
