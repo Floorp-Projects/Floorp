@@ -76,7 +76,11 @@ FrameState::popn(uint32 n)
 inline bool
 FrameState::haveSameBacking(FrameEntry *lhs, FrameEntry *rhs)
 {
-    return lhs->isCopy() && rhs->isCopy() && lhs->copyOf() == rhs->copyOf();
+    if (lhs->isCopy())
+        lhs = lhs->copyOf();
+    if (rhs->isCopy())
+        rhs = rhs->copyOf();
+    return lhs == rhs;
 }
 
 inline JSC::MacroAssembler::RegisterID
