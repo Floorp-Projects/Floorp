@@ -4569,7 +4569,7 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
       nsAutoString lang;
       displayData.mLang.GetStringValue(lang);
 
-      nsContentUtils::ASCIIToLower(lang);
+      ToLowerCase(lang);
       visibility->mLanguage = do_GetAtom(lang);
     }
   }
