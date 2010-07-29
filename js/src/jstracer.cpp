@@ -2911,7 +2911,7 @@ NativeToValue(JSContext* cx, Value& v, JSValueType type, double* slot)
         debug_only_printf(LC_TMTracer, "nullablestr<%p> ", v.isNull() ? NULL : (void *)&v.toObject());
         break;
       case JSVAL_TYPE_BOXED:
-        debug_only_printf(LC_TMTracer, "box<%llx> ", v.asRawBits());
+        debug_only_printf(LC_TMTracer, "box<%llx> ", (long long unsigned int)v.asRawBits());
         break;
       default:
         JS_NOT_REACHED("unexpected type");
