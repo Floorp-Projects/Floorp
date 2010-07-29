@@ -47,7 +47,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
  * @see PopupNotifications.show()
  */
 function Notification(id, message, anchorID, mainAction, secondaryActions,
-                      browser, owner) {
+                      browser, owner, options) {
   this.id = id;
   this.message = message;
   this.anchorID = anchorID;
@@ -55,6 +55,7 @@ function Notification(id, message, anchorID, mainAction, secondaryActions,
   this.secondaryActions = secondaryActions || [];
   this.browser = browser;
   this.owner = owner;
+  this.options = options || {};
 }
 
 Notification.prototype = {
@@ -163,6 +164,13 @@ PopupNotifications.prototype = {
    *        actions. The array should contain objects with the same properties
    *        as mainAction. These are used to populate the notification button's
    *        dropdown menu.
+   * @param options
+   *        An options JavaScript object holding additional properties for the
+   *        notification. The following properties are currently supported:
+   *        persistence: An integer. The notification will not automatically
+   *                     dismiss for this many page loads.
+   *        timeout:     A time in milliseconds. The notification will not
+   *                     automatically dismiss before this time.
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(browser, id, message, anchorID,
@@ -183,7 +191,7 @@ PopupNotifications.prototype = {
       throw "PopupNotifications_show: invalid secondaryActions";
 
     let notification = new Notification(id, message, anchorID, mainAction,
-                                        secondaryActions, browser, this);
+                                        secondaryActions, browser, this, options);
 
 
     let existingNotification = this.getNotification(id, browser);
@@ -222,8 +230,23 @@ PopupNotifications.prototype = {
    * changed, so that we can update the active notifications accordingly.
    */
   locationChange: function PopupNotifications_locationChange() {
-    // For now, just clear all notifications...
-    this._currentNotifications = [];
+    this._currentNotifications = this._currentNotifications.filter(function(notification) {
+      // The persistence option allows a notification to persist across multiple
+      // page loads
+      if ("persistence" in notification.options &&
+          notification.options.persistence) {
+        notification.options.persistence--;
+        return true;
+      }
+
+      // The timeout option allows a notification to persist until a certain time
+      if ("timeout" in notification.options &&
+          Date.now() <= notification.options.timeout) {
+        return true;
+      }
+
+      return false;
+    });
 
     this._update();
   },

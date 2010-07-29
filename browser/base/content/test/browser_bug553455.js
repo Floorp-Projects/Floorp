@@ -372,6 +372,57 @@ function runNextTest() {
     info("Running " + TESTS[0].name);
     TESTS.shift()();
   });
+},
+
+function test_reload() {
+  var pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+
+  var triggers = encodeURIComponent(JSON.stringify({
+    "Unsigned XPI": "unsigned.xpi"
+  }));
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+
+  // Wait for the install confirmation dialog
+  wait_for_install_dialog(function(aWindow) {
+    aWindow.document.documentElement.acceptDialog();
+
+    // Wait for the complete notification
+    wait_for_notification(function(aPanel) {
+      let notification = aPanel.childNodes[0];
+      is(notification.id, "addon-install-complete", "Should have seen the install complete");
+      is(notification.button.label, "Restart Now", "Should have seen the right button");
+      is(notification.getAttribute("label"),
+         "XPI Test will be installed after you restart " + gApp + ".",
+         "Should have seen the right message");
+
+      function test_fail() {
+        ok(false, "Reloading should not have hidden the notification");
+      }
+
+      PopupNotifications.panel.addEventListener("popuphiding", test_fail, false);
+
+      gBrowser.addEventListener("load", function() {
+        if (gBrowser.currentURI.spec != TESTROOT2 + "enabled.html")
+          return;
+
+        gBrowser.removeEventListener("load", arguments.callee, true);
+
+        PopupNotifications.panel.removeEventListener("popuphiding", test_fail, false);
+
+        AddonManager.getAllInstalls(function(aInstalls) {
+          is(aInstalls.length, 1, "Should be one pending install");
+          aInstalls[0].cancel();
+
+          gBrowser.removeTab(gBrowser.selectedTab);
+          Services.perms.remove("example.com", "install");
+          runNextTest();
+        });
+      }, true);
+      gBrowser.loadURI(TESTROOT2 + "enabled.html");
+    });
+  });
 }
 
 function test() {

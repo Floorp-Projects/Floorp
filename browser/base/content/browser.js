@@ -645,6 +645,10 @@ const gXPInstallObserver = {
     var brandShortName = brandBundle.getString("brandShortName");
 
     var notificationID = aTopic;
+    // Make notifications persist a minimum of 30 seconds
+    var options = {
+      timeout: Date.now() + 30000
+    };
 
     switch (aTopic) {
     case "addon-install-blocked":
@@ -693,7 +697,7 @@ const gXPInstallObserver = {
       }
 
       PopupNotifications.show(browser, notificationID, messageString, anchorID,
-                              action);
+                              action, null, options);
       break;
     case "addon-install-failed":
       // TODO This isn't terribly ideal for the multiple failure case
@@ -720,7 +724,7 @@ const gXPInstallObserver = {
         messageString = messageString.replace("#4", Services.appinfo.version);
 
         PopupNotifications.show(browser, notificationID, messageString, anchorID,
-                                action);
+                                action, null, options);
       });
       break;
     case "addon-install-complete":
@@ -772,7 +776,7 @@ const gXPInstallObserver = {
       messageString = messageString.replace("#3", brandShortName);
 
       PopupNotifications.show(browser, notificationID, messageString, anchorID,
-                              action);
+                              action, null, options);
       break;
     }
   }
