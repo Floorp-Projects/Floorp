@@ -46,7 +46,6 @@
 
 // chardet
 #include "nsISupports.h"
-#include "nsMetaCharsetCID.h"
 #include "nsICharsetDetector.h"
 #include "nsICharsetAlias.h"
 #include "nsDocumentCharsetInfo.h"
