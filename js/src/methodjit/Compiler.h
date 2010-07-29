@@ -305,7 +305,7 @@ class Compiler
     void jsop_rsh_const_const(FrameEntry *lhs, FrameEntry *rhs);
     void jsop_rsh_const_unknown(FrameEntry *lhs, FrameEntry *rhs);
     void jsop_rsh_unknown_const(FrameEntry *lhs, FrameEntry *rhs);
-    void jsop_rsh_unknown_unknown(FrameEntry *lhs, FrameEntry *rhs);
+    void jsop_rsh_unknown_any(FrameEntry *lhs, FrameEntry *rhs);
     void jsop_globalinc(JSOp op, uint32 index);
     void jsop_mod();
     void jsop_neg();
