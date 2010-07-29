@@ -241,7 +241,7 @@ const uint32 JSSLOT_PARENT  = 0;
  */
 const uint32 JSSLOT_PRIVATE = 1;
 
-class JSFunction;
+struct JSFunction;
 
 /*
  * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
@@ -562,7 +562,7 @@ struct JSObject {
      */
 
   private:
-    friend class JSFunction;
+    friend struct JSFunction;
 
     static const uint32 JSSLOT_FUN_METHOD_ATOM = JSSLOT_PRIVATE + 1;
     static const uint32 JSSLOT_FUN_METHOD_OBJ  = JSSLOT_PRIVATE + 2;
