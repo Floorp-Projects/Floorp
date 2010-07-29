@@ -1342,11 +1342,10 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 }
 
 #define CLASP(name)                 (&js_##name##Class)
-#define XCLASP(name)                (&js_##name##Class.base)
+#define TYPED_ARRAY_CLASP(type)     (&TypedArray::fastClasses[TypedArray::type])
 #define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
 #define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
-#define EAGER_ATOM_AND_XCLASP(name) EAGER_CLASS_ATOM(name), XCLASP(name)
 #define LAZY_ATOM(name)             ATOM_OFFSET(lazy.name), js_##name##_str
 
 typedef struct JSStdName {
@@ -1392,8 +1391,8 @@ static JSStdName standard_class_atoms[] = {
     {js_InitRegExpClass,                EAGER_ATOM_AND_CLASP(RegExp)},
 #if JS_HAS_XML_SUPPORT
     {js_InitXMLClass,                   EAGER_ATOM_AND_CLASP(XML)},
-    {js_InitNamespaceClass,             EAGER_ATOM_AND_XCLASP(Namespace)},
-    {js_InitQNameClass,                 EAGER_ATOM_AND_XCLASP(QName)},
+    {js_InitNamespaceClass,             EAGER_ATOM_AND_CLASP(Namespace)},
+    {js_InitQNameClass,                 EAGER_ATOM_AND_CLASP(QName)},
 #endif
 #if JS_HAS_GENERATORS
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
@@ -1448,21 +1447,22 @@ static JSStdName standard_class_names[] = {
 #endif
 
 #if JS_HAS_GENERATORS
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_XCLASP(Iterator)},
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_XCLASP(Generator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Iterator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Generator)},
 #endif
 
     /* Typed Arrays */
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::jsclass},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array), &TypedArray::fastClasses[TypedArray::TYPE_INT8]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array), &TypedArray::fastClasses[TypedArray::TYPE_UINT8]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array), &TypedArray::fastClasses[TypedArray::TYPE_INT16]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint16Array), &TypedArray::fastClasses[TypedArray::TYPE_UINT16]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int32Array), &TypedArray::fastClasses[TypedArray::TYPE_INT32]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint32Array), &TypedArray::fastClasses[TypedArray::TYPE_UINT32]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), &TypedArray::fastClasses[TypedArray::TYPE_FLOAT32]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), &TypedArray::fastClasses[TypedArray::TYPE_FLOAT64]},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray), &TypedArray::fastClasses[TypedArray::TYPE_UINT8_CLAMPED]},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array),    TYPED_ARRAY_CLASP(TYPE_INT8)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array),   TYPED_ARRAY_CLASP(TYPE_UINT8)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array),   TYPED_ARRAY_CLASP(TYPE_INT16)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint16Array),  TYPED_ARRAY_CLASP(TYPE_UINT16)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int32Array),   TYPED_ARRAY_CLASP(TYPE_INT32)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint32Array),  TYPED_ARRAY_CLASP(TYPE_UINT32)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), TYPED_ARRAY_CLASP(TYPE_FLOAT32)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), TYPED_ARRAY_CLASP(TYPE_FLOAT64)},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray),
+                                TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)},
 
     {js_InitProxyClass,         EAGER_ATOM_AND_CLASP(Proxy)},
 
@@ -1859,7 +1859,7 @@ JS_free(JSContext *cx, void *p)
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 {
-    cx->runtime->updateMallocCounter(nbytes);
+    return cx->updateMallocCounter(nbytes);
 }
 
 JS_PUBLIC_API(char *)
@@ -2455,16 +2455,65 @@ JS_MaybeGC(JSContext *cx)
 
     rt = cx->runtime;
 
+#ifdef JS_GC_ZEAL
+    if (rt->gcZeal > 0) {
+        JS_GC(cx);
+        return;
+    }
+#endif
+
     bytes = rt->gcBytes;
     lastBytes = rt->gcLastBytes;
 
-    if (rt->gcIsNeeded ||
-#ifdef JS_GC_ZEAL
-        rt->gcZeal > 0 ||
-#endif
-        (bytes > 8192 && bytes > lastBytes * 16) ||
-        bytes >= rt->gcTriggerBytes ||
-        rt->overQuota()) {
+    /*
+     * We run the GC if we used all available free GC cells and had to
+     * allocate extra 1/3 of GC arenas since the last run of GC, or if
+     * we have malloc'd more bytes through JS_malloc than we were told
+     * to allocate by JS_NewRuntime.
+     *
+     * The reason for
+     *   bytes > 4/3 lastBytes
+     * condition is the following. Bug 312238 changed bytes and lastBytes
+     * to mean the total amount of memory that the GC uses now and right
+     * after the last GC.
+     *
+     * Before the bug the variables meant the size of allocated GC things
+     * now and right after the last GC. That size did not include the
+     * memory taken by free GC cells and the condition was
+     *   bytes > 3/2 lastBytes.
+     * That is, we run the GC if we have half again as many bytes of
+     * GC-things as the last time we GC'd. To be compatible we need to
+     * express that condition through the new meaning of bytes and
+     * lastBytes.
+     *
+     * We write the original condition as
+     *   B*(1-F) > 3/2 Bl*(1-Fl)
+     * where B is the total memory size allocated by GC and F is the free
+     * cell density currently and Sl and Fl are the size and the density
+     * right after GC. The density by definition is memory taken by free
+     * cells divided by total amount of memory. In other words, B and Bl
+     * are bytes and lastBytes with the new meaning and B*(1-F) and
+     * Bl*(1-Fl) are bytes and lastBytes with the original meaning.
+     *
+     * Our task is to exclude F and Fl from the last statement. According
+     * to the stats from bug 331966 comment 23, Fl is about 10-25% for a
+     * typical run of the browser. It means that the original condition
+     * implied that we did not run GC unless we exhausted the pool of
+     * free cells. Indeed if we still have free cells, then B == Bl since
+     * we did not yet allocated any new arenas and the condition means
+     *   1 - F > 3/2 (1-Fl) or 3/2Fl > 1/2 + F
+     * That implies 3/2 Fl > 1/2 or Fl > 1/3. That cannot be fulfilled
+     * for the state described by the stats. So we can write the original
+     * condition as:
+     *   F == 0 && B > 3/2 Bl(1-Fl)
+     * Again using the stats we see that Fl is about 11% when the browser
+     * starts up and when we are far from hitting rt->gcMaxBytes. With
+     * this F we have
+     * F == 0 && B > 3/2 Bl(1-0.11)
+     * or approximately F == 0 && B > 4/3 Bl.
+     */
+    if ((bytes > 8192 && bytes > lastBytes + lastBytes / 3) ||
+        rt->isGCMallocLimitReached()) {
         JS_GC(cx);
     }
 }
@@ -2585,7 +2634,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     if (!str)
         return NULL;
     str->initFlat(chars, length);
-    cx->runtime->updateMallocCounter((length + 1) * sizeof(jschar));
+    cx->updateMallocCounter((length + 1) * sizeof(jschar));
     return str;
 }
 
@@ -3707,8 +3756,12 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    if (obj->map->ops->clear)
-        obj->map->ops->clear(cx, obj);
+    JSFinalizeOp clearOp = obj->getOps()->clear;
+    if (clearOp)
+        clearOp(cx, obj);
+
+    if (obj->isNative())
+        js_ClearNative(cx, obj);
 
     /* Clear cached class objects on the global object. */
     if (obj->getClass()->flags & JSCLASS_IS_GLOBAL) {
@@ -3781,10 +3834,21 @@ static Class prop_iter_class = {
     "PropertyIterator",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_MARK_IS_TRACE,
-    PropertyStub,     PropertyStub,    PropertyStub,    PropertyStub,
-    EnumerateStub,    ResolveStub,     ConvertStub,     prop_iter_finalize,
-    NULL,             NULL,            NULL,            NULL,
-    NULL,             NULL,            JS_CLASS_TRACE(prop_iter_trace), NULL
+    PropertyStub,   /* addProperty */
+    PropertyStub,   /* delProperty */
+    PropertyStub,   /* getProperty */
+    PropertyStub,   /* setProperty */
+    EnumerateStub,
+    ResolveStub,
+    ConvertStub,
+    prop_iter_finalize,
+    NULL,           /* reserved0   */
+    NULL,           /* checkAccess */
+    NULL,           /* call        */
+    NULL,           /* construct   */
+    NULL,           /* xdrObject   */
+    NULL,           /* hasInstance */
+    JS_CLASS_TRACE(prop_iter_trace)
 };
 
 JS_PUBLIC_API(JSObject *)

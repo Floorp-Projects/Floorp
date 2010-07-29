@@ -287,7 +287,7 @@ mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
         if (!atom)
             atom = origAtom;
         jsid id = ATOM_TO_JSID(atom);
-        if (entry && JS_LIKELY(obj->map->ops->setProperty == js_SetProperty)) {
+        if (entry && JS_LIKELY(obj->getOps()->setProperty == js_SetProperty)) {
             uintN defineHow;
             JSOp op = JSOp(*f.regs.pc);
             if (op == JSOP_SETMETHOD)
@@ -429,7 +429,7 @@ stubs::GetGlobalName(VMFrame &f)
 static inline bool
 IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
-    if (iterobj->getClass() == &js_IteratorClass.base) {
+    if (iterobj->getClass() == &js_IteratorClass) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
         if (ni->isKeyIter()) {
@@ -1016,7 +1016,6 @@ template <JSBool EQ, bool IFNAN>
 static inline bool
 StubEqualityOp(VMFrame &f)
 {
-    Class *clasp;
     JSContext *cx = f.cx;
     JSFrameRegs &regs = f.regs;
 
@@ -1048,9 +1047,8 @@ StubEqualityOp(VMFrame &f)
                 cond = JSDOUBLE_COMPARE(l, !=, r, IFNAN);
         } else if (lval.isObject()) {
             JSObject *l = &lval.toObject(), *r = &rval.toObject();
-            if (((clasp = l->getClass())->flags & JSCLASS_IS_EXTENDED) &&
-                ((ExtendedClass  *)clasp)->equality) {
-                if (!((ExtendedClass *)clasp)->equality(cx, l, &rval, &cond))
+            if (EqualityOp eq = l->getClass()->ext.equality) {
+                if (!eq(cx, l, &rval, &cond))
                     return false;
                 cond = cond == EQ;
             } else {
@@ -1871,7 +1869,7 @@ InlineGetProp(VMFrame &f)
         }
 
         jsid id = ATOM_TO_JSID(atom);
-        if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
+        if (JS_LIKELY(!aobj->getOps()->getProperty)
                 ? !js_GetPropertyHelper(cx, obj, id,
                     f.fp->imacpc
                     ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
@@ -1961,7 +1959,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
     regs.sp[-1].setNull();
     if (lval.isObject()) {
         if (!js_GetMethod(cx, &objv.toObject(), id,
-                          JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
+                          JS_LIKELY(!aobj->getOps()->getProperty)
                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                           : JSGET_NO_METHOD_BARRIER,
                           &rval)) {
@@ -1970,7 +1968,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
         regs.sp[-1] = objv;
         regs.sp[-2] = rval;
     } else {
-        JS_ASSERT(objv.toObject().map->ops->getProperty == js_GetProperty);
+        JS_ASSERT(!objv.toObject().getOps()->getProperty);
         if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
                                   JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
                                   &rval)) {

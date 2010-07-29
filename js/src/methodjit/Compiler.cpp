@@ -2488,7 +2488,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     pic.hasTypeCheck = false;
     pic.hotPathBegin = masm.label();
 
-    Address parent(pic.objReg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
+    Address parent(pic.objReg, offsetof(JSObject, parent));
     masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
 
     pic.shapeGuard = masm.label();
@@ -2800,7 +2800,7 @@ mjit::Compiler::iterNext()
 
     /* Test clasp */
     masm.loadPtr(Address(reg, offsetof(JSObject, clasp)), T1);
-    Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass.base));
+    Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass));
     stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. */
@@ -2856,7 +2856,7 @@ mjit::Compiler::iterMore()
 
     /* Test clasp */
     masm.loadPtr(Address(reg, offsetof(JSObject, clasp)), T1);
-    Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass.base));
+    Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass));
     stubcc.linkExit(notFast, Uses(1));
 
     /* Get private from iter obj. */
@@ -3174,8 +3174,8 @@ mjit::Compiler::jsop_instanceof()
 
     /* Quick test to avoid wrapped objects. */
     masm.loadPtr(Address(obj, offsetof(JSObject, clasp)), temp);
-    masm.load32(Address(temp, offsetof(JSClass, flags)), temp);
-    masm.and32(Imm32(JSCLASS_IS_EXTENDED), temp);
+    masm.load32(Address(temp, offsetof(Class, ext)), temp);
+    masm.load32(Address(temp, offsetof(ClassExtension, wrappedObject)), temp);
     j = masm.branchTest32(Assembler::NonZero, temp, temp);
     stubcc.linkExit(j, Uses(3));
 

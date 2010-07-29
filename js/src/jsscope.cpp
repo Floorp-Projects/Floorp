@@ -86,7 +86,7 @@ js_GenerateShape(JSContext *cx, bool gcLocked)
          */
         rt->shapeGen = SHAPE_OVERFLOW_BIT;
         shape = SHAPE_OVERFLOW_BIT;
-        cx->runtime->triggerGC(gcLocked);
+        js_TriggerGC(cx, gcLocked);
     }
     return shape;
 }
@@ -99,7 +99,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
     if (!scope->isSharedEmpty())
         return scope;
 
-    JSScope *newscope = JSScope::create(cx, scope->ops, obj->getClass(), obj, scope->shape);
+    JSScope *newscope = JSScope::create(cx, obj->getClass(), obj, scope->shape);
     if (!newscope)
         return NULL;
 
@@ -200,7 +200,7 @@ JSScope::createTable(JSContext *cx, bool report)
         METER(tableAllocFails);
         return false;
     }
-    cx->runtime->updateMallocCounter(JS_BIT(sizeLog2) * sizeof(JSScopeProperty *));
+    cx->updateMallocCounter(JS_BIT(sizeLog2) * sizeof(JSScopeProperty *));
 
     hashShift = JS_DHASH_BITS - sizeLog2;
     for (sprop = lastProp; sprop; sprop = sprop->parent) {
@@ -211,13 +211,11 @@ JSScope::createTable(JSContext *cx, bool report)
 }
 
 JSScope *
-JSScope::create(JSContext *cx, const JSObjectOps *ops, Class *clasp,
-                JSObject *obj, uint32 shape)
+JSScope::create(JSContext *cx, Class *clasp, JSObject *obj, uint32 shape)
 {
-    JS_ASSERT(ops->isNative());
     JS_ASSERT(obj);
 
-    JSScope *scope = cx->create<JSScope>(ops, obj);
+    JSScope *scope = cx->create<JSScope>(obj);
     if (!scope)
         return NULL;
 
@@ -233,9 +231,8 @@ JSScope::create(JSContext *cx, const JSObjectOps *ops, Class *clasp,
     return scope;
 }
 
-JSEmptyScope::JSEmptyScope(JSContext *cx, const JSObjectOps *ops,
-                           Class *clasp)
-    : JSScope(ops, NULL), clasp(clasp)
+JSEmptyScope::JSEmptyScope(JSContext *cx, Class *clasp)
+    : JSScope(NULL), clasp(clasp)
 {
     /*
      * This scope holds a reference to the new empty scope. Our only caller,
@@ -290,14 +287,14 @@ JSScope::initRuntimeState(JSContext *cx)
 #define SCOPE(Name) rt->empty##Name##Scope
 #define CLASP(Name) &js_##Name##Class
 
-#define INIT_EMPTY_SCOPE(Name,NAME,ops)                                       \
-    INIT_EMPTY_SCOPE_WITH_CLASS(Name, NAME, ops, CLASP(Name))
+#define INIT_EMPTY_SCOPE(Name,NAME)                                           \
+    INIT_EMPTY_SCOPE_WITH_CLASS(Name, NAME, CLASP(Name))
 
-#define INIT_EMPTY_SCOPE_WITH_CLASS(Name,NAME,ops,clasp)                      \
-    INIT_EMPTY_SCOPE_WITH_FREESLOT(Name, NAME, ops, clasp, JSSLOT_FREE(clasp))
+#define INIT_EMPTY_SCOPE_WITH_CLASS(Name,NAME,clasp)                          \
+    INIT_EMPTY_SCOPE_WITH_FREESLOT(Name, NAME, clasp, JSSLOT_FREE(clasp))
 
-#define INIT_EMPTY_SCOPE_WITH_FREESLOT(Name,NAME,ops,clasp,slot)              \
-    SCOPE(Name) = cx->create<JSEmptyScope>(cx, ops, clasp);                   \
+#define INIT_EMPTY_SCOPE_WITH_FREESLOT(Name,NAME,clasp,slot)                  \
+    SCOPE(Name) = cx->create<JSEmptyScope>(cx, clasp);                        \
     if (!SCOPE(Name))                                                         \
         return false;                                                         \
     JS_ASSERT(SCOPE(Name)->shape == JSScope::EMPTY_##NAME##_SHAPE);           \
@@ -323,10 +320,10 @@ JSScope::initRuntimeState(JSContext *cx)
      * arguments objects. This helps ensure that any arguments object needing
      * its own mutable scope (with unique shape) is a rare event.
      */
-    INIT_EMPTY_SCOPE_WITH_FREESLOT(Arguments, ARGUMENTS, &js_ObjectOps, CLASP(Arguments),
+    INIT_EMPTY_SCOPE_WITH_FREESLOT(Arguments, ARGUMENTS, CLASP(Arguments),
                                    JS_INITIAL_NSLOTS + JS_ARGS_LENGTH_MAX);
 
-    INIT_EMPTY_SCOPE(Block, BLOCK, &js_ObjectOps);
+    INIT_EMPTY_SCOPE(Block, BLOCK);
 
     /*
      * Initialize the shared scope for all empty Call objects so gets for args
@@ -335,17 +332,17 @@ JSScope::initRuntimeState(JSContext *cx)
      *
      * See comment above for rt->emptyArgumentsScope->freeslot initialization.
      */
-    INIT_EMPTY_SCOPE_WITH_FREESLOT(Call, CALL, &js_ObjectOps, CLASP(Call),
+    INIT_EMPTY_SCOPE_WITH_FREESLOT(Call, CALL, CLASP(Call),
                                    JS_INITIAL_NSLOTS + JSFunction::MAX_ARGS_AND_VARS);
 
     /* A DeclEnv object holds the name binding for a named function expression. */
-    INIT_EMPTY_SCOPE(DeclEnv, DECL_ENV, &js_ObjectOps);
+    INIT_EMPTY_SCOPE(DeclEnv, DECL_ENV);
 
     /* Non-escaping native enumerator objects share this empty scope. */
-    INIT_EMPTY_SCOPE_WITH_CLASS(Enumerator, ENUMERATOR, &js_ObjectOps, &js_IteratorClass.base);
+    INIT_EMPTY_SCOPE_WITH_CLASS(Enumerator, ENUMERATOR, &js_IteratorClass);
 
     /* Same drill for With objects. */
-    INIT_EMPTY_SCOPE(With, WITH, &js_WithObjectOps);
+    INIT_EMPTY_SCOPE_WITH_CLASS(With, WITH, &js_WithClass);
 
 #undef SCOPE
 #undef CLASP
@@ -516,7 +513,7 @@ JSScope::changeTable(JSContext *cx, int change)
     table = newtable;
 
     /* Treat the above calloc as a JS_malloc, to match CreateScopeTable. */
-    cx->runtime->updateMallocCounter(nbytes);
+    cx->updateMallocCounter(nbytes);
 
     /* Copy only live entries, leaving removed and free ones behind. */
     for (oldspp = oldtable; oldsize != 0; oldspp++) {
