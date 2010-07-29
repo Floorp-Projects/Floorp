@@ -264,13 +264,12 @@ var ViewConfig = {
   },
 
   getIncrementForValue: function getIncrementForValue(aValue) {
-    let count = 0;
-    while (aValue > 10) {
+    let count = 1;
+    while (aValue >= 100) {
       aValue /= 10;
-      count++;
+      count *= 10;
     }
-
-    return Math.max(1, count * 10);
+    return count;
   }
 };
 
