@@ -88,6 +88,8 @@
       <field name="tabs" readonly="true">
         this.tabContainer.childNodes;
       </field>
+      <property name="visibleTabs" readonly="true"
+                onget="return Array.filter(this.tabs, function(tab) !tab.hidden);"/>
       <field name="mURIFixup" readonly="true">
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
@@ -749,6 +751,7 @@
             newBrowser.setAttribute("type", "content-primary");
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
+            this.mCurrentTab.hidden = false;
 
             if (updatePageReport)
               this.mCurrentBrowser.updatePageReport();
@@ -1218,7 +1221,7 @@
           var tabsToClose = this.tabs.length;
 
           if (!aAll)
-            tabsToClose -= 1 + gBrowser._numPinnedTabs;
+            tabsToClose = this.visibleTabs.length - (1 + this._numPinnedTabs);
           if (tabsToClose <= 1)
             return true;
 
@@ -1269,11 +1272,12 @@
               return;
 
             if (this.warnAboutClosingTabs(false)) {
+              let tabs = this.visibleTabs;
               this.selectedTab = aTab;
 
-              for (let i = this.tabs.length - 1; i >= 0; --i) {
-                if (this.tabs[i] != aTab && !this.tabs[i].pinned)
-                  this.removeTab(this.tabs[i]);
+              for (let i = tabs.length - 1; i >= 0; --i) {
+                if (tabs[i] != aTab && !tabs[i].pinned)
+                  this.removeTab(tabs[i]);
               }
             }
           ]]>
@@ -1505,21 +1509,22 @@
               return;
             }
 
-            var tab = aTab;
+            let removing = this._removingTabs;
+            let ignoreRemoving = function(tab) removing.indexOf(tab) == -1;
 
+            // Switch to a visible tab unless there aren't any remaining
+            let remainingTabs = this.visibleTabs.filter(ignoreRemoving);
+            if (remainingTabs.length == 0)
+              remainingTabs = Array.filter(this.tabs, ignoreRemoving);
+
+            // Try to find a remaining tab that comes after the given tab
+            var tab = aTab;
             do {
               tab = tab.nextSibling;
-            } while (tab && this._removingTabs.indexOf(tab) != -1);
+            } while (tab && remainingTabs.indexOf(tab) == -1);
 
-            if (!tab) {
-              tab = aTab;
-
-              do {
-                tab = tab.previousSibling;
-              } while (tab && this._removingTabs.indexOf(tab) != -1);
-            }
-
-            this.selectedTab = tab;
+            // If no tab was found, give the end of the remaining tabs
+            this.selectedTab = tab ? tab : remainingTabs.pop();
           ]]>
         </body>
       </method>
@@ -1592,10 +1597,11 @@
       <method name="reloadAllTabs">
         <body>
           <![CDATA[
-            var l = this.mPanelContainer.childNodes.length;
+            let tabs = this.visibleTabs;
+            let l = tabs.length;
             for (var i = 0; i < l; i++) {
               try {
-                this.getBrowserAtIndex(i).reload();
+                this.getBrowserForTab(tabs[i]).reload();
               } catch (e) {
                 // ignore failure to reload so others will be reloaded
               }
@@ -1692,19 +1698,33 @@
         </body>
       </method>
 
+      <method name="showOnlyTheseTabs">
+        <parameter name="aTabs"/>
+        <body>
+        <![CDATA[
+          Array.forEach(this.tabs, function(tab) {
+            tab.hidden = aTabs.indexOf(tab) == -1 && !tab.pinned && !tab.selected;
+          });
+        ]]>
+        </body>
+      </method>
+
       <method name="selectTabAtIndex">
         <parameter name="aIndex"/>
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
+          let tabs = this.visibleTabs;
+
           // count backwards for aIndex < 0
           if (aIndex < 0)
-            aIndex += this.tabs.length;
+            aIndex += tabs.length;
 
-          if (aIndex >= 0 &&
-              aIndex < this.tabs.length &&
-              aIndex != this.tabContainer.selectedIndex)
-            this.selectedTab = this.tabs[aIndex];
+          if (aIndex >= 0 && aIndex < tabs.length) {
+            let nextTab = tabs[aIndex];
+            if (nextTab != this.selectedTab)
+              this.selectedTab = nextTab;
+          }
 
           if (aEvent) {
             aEvent.preventDefault();
@@ -1746,7 +1766,7 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            if (this.tabs.length == 1)
+            if (this.visibleTabs.length == 1)
               return null;
 
             // tell a new window to take the "dropped" tab
@@ -2508,6 +2528,8 @@
               this.setAttribute("closebuttons", "noclose");
             else {
               let tab = this.childNodes.item(this.tabbrowser._numPinnedTabs);
+              if (tab && tab.hidden)
+                tab = this.tabbrowser.visibleTabs[0];
               if (tab && tab.getBoundingClientRect().width > this.mTabClipWidth)
                 this.setAttribute("closebuttons", "alltabs");
               else
@@ -3288,7 +3310,7 @@
       <![CDATA[
         // set up the menu popup
         var tabcontainer = gBrowser.tabContainer;
-        var tabs = tabcontainer.childNodes;
+        let tabs = gBrowser.visibleTabs;
 
         // Listen for changes in the tab bar.
         tabcontainer.addEventListener("TabOpen", this, false);

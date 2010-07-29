@@ -480,9 +480,9 @@ var PlacesCommandHook = {
     var tabList = [];
     var seenURIs = {};
 
-    var browsers = gBrowser.browsers;
-    for (var i = 0; i < browsers.length; ++i) {
-      let uri = browsers[i].currentURI;
+    let tabs = gBrowser.visibleTabs;
+    for (let i = 0; i < tabs.length; ++i) {
+      let uri = tabs[i].linkedBrowser.currentURI;
 
       // skip redundant entries
       if (uri.spec in seenURIs)
