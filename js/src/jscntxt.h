@@ -241,7 +241,7 @@ struct GlobalState {
 };
 
 /*
- * A CallStackSegment (henceforth referred to as a 'segment') logically
+ * A StackSegment (henceforth referred to as a 'segment') logically
  * contains the (possibly empty) set of stack frames associated with a single
  * activation of the VM and the slots associated with each frame. A segment may
  * or may not be "in" a context and a segment is in a context iff its set of
@@ -252,22 +252,22 @@ struct GlobalState {
  * "current frame", which is the most recently pushed frame, and ends at the
  * segment's "initial frame". Note that, while all stack frames in a segment
  * are down-linked, not all down-linked frames are in the same segment. Hence,
- * for a segment |css|, |css->getInitialFrame()->down| may be non-null and in a
+ * for a segment |seg|, |seg->getInitialFrame()->down| may be non-null and in a
  * different segment. This occurs when the VM reenters itself (via js_Invoke or
  * js_Execute). In full generality, a single context may contain a forest of
  * trees of stack frames. With respect to this forest, a segment contains a
  * linear path along a single tree, not necessarily to the root.
  *
  * A segment in a context may additionally be "active" or "suspended". A
- * suspended segment |css| has a "suspended frame" which serves as the current
- * frame of |css|. Additionally, a suspended segment has "suspended regs",
- * which is a snapshot of |cx->regs| when |css| was suspended. There is at most
+ * suspended segment |seg| has a "suspended frame" which serves as the current
+ * frame of |seg|. Additionally, a suspended segment has "suspended regs",
+ * which is a snapshot of |cx->regs| when |seg| was suspended. There is at most
  * one active segment in a given context. Segments in a context execute LIFO
  * and are maintained in a stack. The top of this stack is the context's
- * "current segment". If a context |cx| has an active segment |css|, then:
- *   1. |css| is |cx|'s current segment,
+ * "current segment". If a context |cx| has an active segment |seg|, then:
+ *   1. |seg| is |cx|'s current segment,
  *   2. |cx->fp != NULL|, and
- *   3. |css|'s current frame is |cx->fp|.
+ *   3. |seg|'s current frame is |cx->fp|.
  * Moreover, |cx->fp != NULL| iff |cx| has an active segment.
  *
  * Finally, (to support JS_SaveFrameChain/JS_RestoreFrameChain) a suspended
@@ -277,16 +277,16 @@ struct GlobalState {
  * until it is made active by a call to JS_RestoreFrameChain. This is why a
  * context may have a current segment, but not an active segment.
  */
-class CallStackSegment
+class StackSegment
 {
     /* The context to which this segment belongs. */
     JSContext           *cx;
 
     /* Link for JSContext segment stack mentioned in big comment above. */
-    CallStackSegment    *previousInContext;
+    StackSegment        *previousInContext;
 
     /* Link for StackSpace segment stack mentioned in StackSpace comment. */
-    CallStackSegment    *previousInMemory;
+    StackSegment        *previousInMemory;
 
     /* The first frame executed in this segment. null iff cx is null */
     JSStackFrame        *initialFrame;
@@ -295,7 +295,7 @@ class CallStackSegment
     JSStackFrame        *suspendedFrame;
 
     /*
-     * To achieve a sizeof(CallStackSegment) that is a multiple of
+     * To achieve a sizeof(StackSegment) that is a multiple of
      * sizeof(Value), we compress two fields into one word:
      *
      *  suspendedRegs: If this segment is suspended, |cx->regs| when it was
@@ -312,7 +312,7 @@ class CallStackSegment
     JSObject            *initialVarObj;
 
   public:
-    CallStackSegment()
+    StackSegment()
       : cx(NULL), previousInContext(NULL), previousInMemory(NULL),
         initialFrame(NULL), suspendedFrame(NULL),
         suspendedRegsAndSaved(NULL, false), initialArgEnd(NULL),
@@ -358,6 +358,7 @@ class CallStackSegment
     }
 
     /* Substate of suspended, queryable in any state. */
+
     bool isSaved() const {
         JS_ASSERT_IF(suspendedRegsAndSaved.flag(), isSuspended());
         return suspendedRegsAndSaved.flag();
@@ -450,19 +451,19 @@ class CallStackSegment
 
     /* JSContext / js::StackSpace bookkeeping. */
 
-    void setPreviousInContext(CallStackSegment *css) {
-        previousInContext = css;
+    void setPreviousInContext(StackSegment *seg) {
+        previousInContext = seg;
     }
 
-    CallStackSegment *getPreviousInContext() const  {
+    StackSegment *getPreviousInContext() const  {
         return previousInContext;
     }
 
-    void setPreviousInThread(CallStackSegment *css) {
-        previousInMemory = css;
+    void setPreviousInMemory(StackSegment *seg) {
+        previousInMemory = seg;
     }
 
-    CallStackSegment *getPreviousInMemory() const  {
+    StackSegment *getPreviousInMemory() const  {
         return previousInMemory;
     }
 
@@ -482,8 +483,8 @@ class CallStackSegment
 
 };
 
-static const size_t VALUES_PER_CALL_STACK = sizeof(CallStackSegment) / sizeof(Value);
-JS_STATIC_ASSERT(sizeof(CallStackSegment) % sizeof(Value) == 0);
+static const size_t VALUES_PER_STACK_SEGMENT = sizeof(StackSegment) / sizeof(Value);
+JS_STATIC_ASSERT(sizeof(StackSegment) % sizeof(Value) == 0);
 
 /*
  * The ternary constructor is used when arguments are already pushed on the
@@ -494,12 +495,12 @@ class InvokeArgsGuard
 {
     friend class StackSpace;
     JSContext        *cx;
-    CallStackSegment *css;  /* null implies nothing pushed */
+    StackSegment     *seg;  /* null implies nothing pushed */
     Value            *vp;
     uintN            argc;
   public:
-    inline InvokeArgsGuard() : cx(NULL), css(NULL), vp(NULL) {}
-    inline InvokeArgsGuard(Value *vp, uintN argc) : cx(NULL), css(NULL), vp(vp), argc(argc) {}
+    inline InvokeArgsGuard() : cx(NULL), seg(NULL), vp(NULL) {}
+    inline InvokeArgsGuard(Value *vp, uintN argc) : cx(NULL), seg(NULL), vp(vp), argc(argc) {}
     inline ~InvokeArgsGuard();
     Value *getvp() const { return vp; }
     uintN getArgc() const { JS_ASSERT(vp != NULL); return argc; }
@@ -510,7 +511,7 @@ class InvokeFrameGuard
 {
     friend class StackSpace;
     JSContext        *cx;  /* null implies nothing pushed */
-    CallStackSegment *css;
+    StackSegment     *seg;
     JSStackFrame     *fp;
   public:
     InvokeFrameGuard();
@@ -523,7 +524,7 @@ class ExecuteFrameGuard
 {
     friend class StackSpace;
     JSContext        *cx;  /* null implies nothing pushed */
-    CallStackSegment *css;
+    StackSegment     *seg;
     Value            *vp;
     JSStackFrame     *fp;
     JSStackFrame     *down;
@@ -548,7 +549,7 @@ class ExecuteFrameGuard
  * inline interpreter calls. See associated member functions below.
  *
  * First, we consider the layout of individual segments. (See the
- * js::CallStackSegment comment for terminology.) A non-empty segment (i.e., a
+ * js::StackSegment comment for terminology.) A non-empty segment (i.e., a
  * segment in a context) has the following layout:
  *
  *           initial frame                 current frame -------.  if regs,
@@ -610,13 +611,13 @@ class StackSpace
     mutable Value *commitEnd;
 #endif
     Value *end;
-    CallStackSegment *currentSegment;
+    StackSegment *currentSegment;
 
     /* Although guards are friends, XGuard should only call popX(). */
     friend class InvokeArgsGuard;
     JS_REQUIRES_STACK inline void popInvokeArgs(JSContext *cx, Value *vp);
     friend class InvokeFrameGuard;
-    JS_REQUIRES_STACK void popInvokeFrame(JSContext *cx, CallStackSegment *maybecs);
+    JS_REQUIRES_STACK void popInvokeFrame(JSContext *cx, StackSegment *maybecs);
     friend class ExecuteFrameGuard;
     JS_REQUIRES_STACK void popExecuteFrame(JSContext *cx);
 
@@ -626,7 +627,7 @@ class StackSpace
 
     inline void assertIsCurrent(JSContext *cx) const;
 #ifdef DEBUG
-    CallStackSegment *getCurrentSegment() const { return currentSegment; }
+    StackSegment *getCurrentSegment() const { return currentSegment; }
 #endif
 
     /*
@@ -670,7 +671,7 @@ class StackSpace
     /* +1 for slow native's stack frame. */
     static const ptrdiff_t MAX_TRACE_SPACE_VALS =
       MAX_NATIVE_STACK_SLOTS + MAX_CALL_STACK_ENTRIES * VALUES_PER_STACK_FRAME +
-      (VALUES_PER_CALL_STACK + VALUES_PER_STACK_FRAME /* synthesized slow native */);
+      (VALUES_PER_STACK_SEGMENT + VALUES_PER_STACK_FRAME /* synthesized slow native */);
 
     /* Mark all segments, frames, and slots on the stack. */
     JS_REQUIRES_STACK void mark(JSTracer *trc);
@@ -742,10 +743,10 @@ class StackSpace
      * tracing deep bail logic.
      */
     JS_REQUIRES_STACK
-    void getSynthesizedSlowNativeFrame(JSContext *cx, CallStackSegment *&css, JSStackFrame *&fp);
+    void getSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *&seg, JSStackFrame *&fp);
 
     JS_REQUIRES_STACK
-    void pushSynthesizedSlowNativeFrame(JSContext *cx, CallStackSegment *css, JSStackFrame *fp,
+    void pushSynthesizedSlowNativeFrame(JSContext *cx, StackSegment *seg, JSStackFrame *fp,
                                         JSFrameRegs &regs);
 
     JS_REQUIRES_STACK
@@ -766,7 +767,7 @@ JS_STATIC_ASSERT(StackSpace::CAPACITY_VALS % StackSpace::COMMIT_VALS == 0);
  */
 class FrameRegsIter
 {
-    CallStackSegment  *curcs;
+    StackSegment      *curseg;
     JSStackFrame      *curfp;
     Value             *cursp;
     jsbytecode        *curpc;
@@ -1818,15 +1819,15 @@ struct JSContext
     void                *data2;
 
   private:
-    /* Linked list of segments. See CallStackSegment. */
-    js::CallStackSegment *currentSegment;
+    /* Linked list of segments. See StackSegment. */
+    js::StackSegment *currentSegment;
 
   public:
     void assertSegmentsInSync() const {
 #ifdef DEBUG
         if (fp) {
             JS_ASSERT(currentSegment->isActive());
-            if (js::CallStackSegment *prev = currentSegment->getPreviousInContext())
+            if (js::StackSegment *prev = currentSegment->getPreviousInContext())
                 JS_ASSERT(!prev->isActive());
         } else {
             JS_ASSERT_IF(currentSegment, !currentSegment->isActive());
@@ -1841,19 +1842,19 @@ struct JSContext
     }
 
     /* Assuming there is an active segment, return it. */
-    js::CallStackSegment *activeSegment() const {
+    js::StackSegment *activeSegment() const {
         JS_ASSERT(hasActiveSegment());
         return currentSegment;
     }
 
     /* Return the current segment, which may or may not be active. */
-    js::CallStackSegment *getCurrentSegment() const {
+    js::StackSegment *getCurrentSegment() const {
         assertSegmentsInSync();
         return currentSegment;
     }
 
     /* Add the given segment to the list as the new active segment. */
-    void pushSegmentAndFrame(js::CallStackSegment *newcs, JSStackFrame *newfp,
+    void pushSegmentAndFrame(js::StackSegment *newseg, JSStackFrame *newfp,
                              JSFrameRegs &regs);
 
     /* Remove the active segment and make the next segment active. */
@@ -1869,7 +1870,7 @@ struct JSContext
      * Perform a linear search of all frames in all segments in the given context
      * for the given frame, returning the segment, if found, and null otherwise.
      */
-    js::CallStackSegment *containingSegment(const JSStackFrame *target);
+    js::StackSegment *containingSegment(const JSStackFrame *target);
 
     /*
      * Search the call stack for the nearest frame with static level targetLevel.
@@ -2156,10 +2157,10 @@ private:
 };
 
 JS_ALWAYS_INLINE JSObject *
-JSStackFrame::varobj(js::CallStackSegment *css) const
+JSStackFrame::varobj(js::StackSegment *seg) const
 {
-    JS_ASSERT(css->contains(this));
-    return fun ? callobj : css->getInitialVarObj();
+    JS_ASSERT(seg->contains(this));
+    return fun ? callobj : seg->getInitialVarObj();
 }
 
 JS_ALWAYS_INLINE JSObject *

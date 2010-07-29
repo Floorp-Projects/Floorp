@@ -57,7 +57,7 @@ JSContext::ensureGeneratorStackSpace()
 namespace js {
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
-CallStackSegment::getCurrentFrame() const
+StackSegment::getCurrentFrame() const
 {
     JS_ASSERT(inContext());
     return isSuspended() ? getSuspendedFrame() : cx->fp;
@@ -66,15 +66,15 @@ CallStackSegment::getCurrentFrame() const
 JS_REQUIRES_STACK inline Value *
 StackSpace::firstUnused() const
 {
-    CallStackSegment *ccs = currentSegment;
-    if (!ccs)
+    StackSegment *seg = currentSegment;
+    if (!seg)
         return base;
-    if (JSContext *cx = ccs->maybeContext()) {
-        if (!ccs->isSuspended())
+    if (JSContext *cx = seg->maybeContext()) {
+        if (!seg->isSuspended())
             return cx->regs->sp;
-        return ccs->getSuspendedRegs()->sp;
+        return seg->getSuspendedRegs()->sp;
     }
-    return ccs->getInitialArgEnd();
+    return seg->getInitialArgEnd();
 }
 
 /* Inline so we don't need the friend API. */
@@ -136,9 +136,9 @@ StackSpace::popInvokeArgs(JSContext *cx, Value *vp)
 JS_ALWAYS_INLINE
 InvokeArgsGuard::~InvokeArgsGuard()
 {
-    if (!css)
+    if (!seg)
         return;
-    JS_ASSERT(css == cx->stack().getCurrentSegment());
+    JS_ASSERT(seg == cx->stack().getCurrentSegment());
     cx->stack().popInvokeArgs(cx, vp);
 }
 
