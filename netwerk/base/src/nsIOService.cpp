@@ -271,9 +271,11 @@ nsIOService::Init()
     NS_TIME_FUNCTION_MARK("Set up the recycling allocator");
 
     gIOService = this;
-    
-    // go into managed mode if we can
-    mNetworkLinkService = do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
+
+    // go into managed mode if we can, and chrome process
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
+        mNetworkLinkService = do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
+
     if (!mNetworkLinkService)
         mManageOfflineStatus = PR_FALSE;
 
