@@ -574,7 +574,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
   closeAll: function() {
     var self = this;
     if (this._children.length) {
-      var toClose = Utils.merge([], this._children);
+      var toClose = this._children.concat();
       toClose.forEach(function(child) {
         child.removeSubscriber(self, "close");
         child.close();
@@ -759,7 +759,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Removes all of the group's children.
   removeAll: function() {
     var self = this;
-    var toRemove = Utils.merge([], this._children);
+    var toRemove = this._children.concat();
     toRemove.forEach(function(child) {
       self.remove(child, {dontArrange: true});
     });
@@ -1671,7 +1671,7 @@ window.Groups = {
   // Function: removeAll
   // Removes all tabs from all groups (which automatically closes all unnamed groups).
   removeAll: function() {
-    var toRemove = Utils.merge([], this.groups);
+    var toRemove = this.groups.concat();
     toRemove.forEach(function(group) {
       group.removeAll();
     });
