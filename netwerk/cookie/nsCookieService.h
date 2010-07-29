@@ -54,7 +54,9 @@
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 #include "mozIStorageStatement.h"
+#include "mozIStoragePendingStatement.h"
 #include "mozIStorageConnection.h"
+#include "mozIStorageRow.h"
 
 class nsICookiePermission;
 class nsIEffectiveTLDService;
@@ -63,9 +65,9 @@ class nsIPrefBranch;
 class nsIObserverService;
 class nsIURI;
 class nsIChannel;
-class DBListenerErrorHandler;
 class mozIStorageStatementCallback;
 class mozIStorageCompletionCallback;
+class ReadCookieDBListener;
 
 struct nsCookieAttributes;
 struct nsListIter;
@@ -135,6 +137,13 @@ class nsCookieEntry : public PLDHashEntryHdr
     ArrayType mCookies;
 };
 
+// encapsulates a (baseDomain, nsCookie) tuple for temporary storage purposes.
+struct CookieDomainTuple
+{
+  nsCString baseDomain;
+  nsRefPtr<nsCookie> cookie;
+};
+
 // encapsulates in-memory and on-disk DB states, so we can
 // conveniently switch state when entering or exiting private browsing.
 struct DBState
@@ -148,6 +157,10 @@ struct DBState
   nsCOMPtr<mozIStorageStatement>  stmtInsert;
   nsCOMPtr<mozIStorageStatement>  stmtDelete;
   nsCOMPtr<mozIStorageStatement>  stmtUpdate;
+
+  nsCOMPtr<mozIStoragePendingStatement> pendingRead;
+  ReadCookieDBListener*                 readListener; // weak ref
+  nsTArray<CookieDomainTuple>           hostArray;
 };
 
 // these constants represent a decision about a cookie based on user prefs.
@@ -193,6 +206,8 @@ class nsCookieService : public nsICookieService
     nsresult                      CreateTable();
     void                          CloseDB();
     nsresult                      Read();
+    void                          ReadRow(mozIStorageRow *aRow, CookieDomainTuple &aCookeTuple);
+    void                          ReadComplete();
     nsresult                      NormalizeHost(nsCString &aHost);
     nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, PRBool &aRequireHostMatch);
     nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
@@ -201,7 +216,7 @@ class nsCookieService : public nsICookieService
     PRBool                        SetCookieInternal(nsIURI *aHostURI, const nsCString& aBaseDomain, PRBool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp);
     void                          AddInternal(const nsCString& aBaseDomain, nsCookie *aCookie, PRInt64 aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp);
     void                          RemoveCookieFromList(const nsListIter &aIter, mozIStorageBindingParamsArray *aParamsArray = NULL);
-    PRBool                        AddCookieToList(const nsCString& aBaseDomain, nsCookie *aCookie, mozIStorageBindingParamsArray *aParamsArray, PRBool aWriteToDB = PR_TRUE);
+    void                          AddCookieToList(const nsCString& aBaseDomain, nsCookie *aCookie, mozIStorageBindingParamsArray *aParamsArray, PRBool aWriteToDB = PR_TRUE);
     void                          UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed, mozIStorageBindingParamsArray *aParamsArray);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
@@ -247,8 +262,9 @@ class nsCookieService : public nsICookieService
     PRUint16                      mMaxCookiesPerHost;
     PRInt64                       mCookiePurgeAge;
 
-    // this callback needs access to member functions
+    // friends!
     friend PLDHashOperator purgeCookiesCallback(nsCookieEntry *aEntry, void *aArg);
+    friend class ReadCookieDBListener;
 
     static nsCookieService*       GetSingleton();
 #ifdef MOZ_IPC
