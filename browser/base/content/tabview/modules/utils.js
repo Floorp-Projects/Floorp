@@ -28,7 +28,7 @@
  * Copyright 2010, John Resig
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
- * 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -46,7 +46,7 @@
 // **********
 // Title: utils.js
 
-(function(){
+let EXPORTED_SYMBOLS = ["Point", "Rect", "Range", "Subscribable", "Utils"];
 
 // #########
 const Cc = Components.classes;
@@ -64,7 +64,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 // If a is a Point, creates a copy of it. Otherwise, expects a to be x,
 // and creates a Point with it along with y. If either a or y are omitted,
 // 0 is used in their place.
-window.Point = function(a, y) {
+function Point(a, y) {
   if (Utils.isPoint(a)) {
     this.x = a.x;
     this.y = a.y;
@@ -74,7 +74,7 @@ window.Point = function(a, y) {
   }
 };
 
-window.Point.prototype = {
+Point.prototype = {
   // ----------
   // Function: distance
   // Returns the distance from this point to the given <Point>.
@@ -94,7 +94,7 @@ window.Point.prototype = {
 // Constructor: Rect
 // If a is a Rect, creates a copy of it. Otherwise, expects a to be left,
 // and creates a Rect with it along with top, width, and height.
-window.Rect = function(a, top, width, height) {
+function Rect(a, top, width, height) {
   // Note: perhaps 'a' should really be called 'rectOrLeft'
   if (Utils.isRect(a)) {
     this.left = a.left;
@@ -109,7 +109,7 @@ window.Rect = function(a, top, width, height) {
   }
 };
 
-window.Rect.prototype = {
+Rect.prototype = {
 
   get right() this.left + this.width,
   set right(value) {
@@ -268,7 +268,7 @@ window.Rect.prototype = {
   // ----------
   // Function: css
   // Returns an object with the dimensions of this rectangle, suitable for
-  // passing into iQ's css method. You could of course just pass the rectangle 
+  // passing into iQ's css method. You could of course just pass the rectangle
   // straight in, but this is cleaner, as it removes all the extraneous
   // properties. If you give a <Rect> to <iQClass.css> without this, it will
   // ignore the extraneous properties, but result in CSS warnings.
@@ -288,7 +288,7 @@ window.Rect.prototype = {
 //
 // Constructor: Range
 // Creates a Range with the given min and max
-window.Range = function(min, max) {
+function Range(min, max) {
   if (Utils.isRange(min) && !max) { // if the one variable given is a range, copy it.
     this.min = min.min;
     this.max = min.max;
@@ -298,7 +298,7 @@ window.Range = function(min, max) {
   }
 };
 
-window.Range.prototype = {
+Range.prototype = {
   // Variable: extent
   // Equivalent to max-min
   get extent() {
@@ -372,11 +372,11 @@ window.Range.prototype = {
 // ##########
 // Class: Subscribable
 // A mix-in for allowing objects to collect subscribers for custom events.
-window.Subscribable = function() {
+function Subscribable() {
   this.subscribers = null;
 };
 
-window.Subscribable.prototype = {
+Subscribable.prototype = {
   // ----------
   // Function: addSubscriber
   // The given callback will be called when the Subscribable fires the given event.
@@ -458,9 +458,7 @@ window.Subscribable.prototype = {
 // ##########
 // Class: Utils
 // Singelton with common utility functions.
-window.Utils = {
-  consoleService: null, 
-
+let Utils = {
   // ___ Logging
 
   // ----------
@@ -468,13 +466,8 @@ window.Utils = {
   // Prints the given arguments to the JavaScript error console as a message.
   // Pass as many arguments as you want, it'll print them all.
   log: function() {
-    if (!this.consoleService) {
-      this.consoleService = Cc["@mozilla.org/consoleservice;1"]
-          .getService(Components.interfaces.nsIConsoleService);
-    }
-
     var text = this.expandArgumentsForLog(arguments);
-    this.consoleService.logStringMessage(text);
+    Services.console.logStringMessage(text);
   },
 
   // ----------
@@ -626,7 +619,7 @@ window.Utils = {
   isPlainObject: function(obj) {
     // Must be an Object.
     // Make sure that DOM nodes and window objects don't pass through, as well
-    if (!obj || Object.prototype.toString.call(obj) !== "[object Object]" 
+    if (!obj || Object.prototype.toString.call(obj) !== "[object Object]"
         || obj.nodeType || obj.setInterval) {
       return false;
     }
@@ -742,19 +735,18 @@ window.Utils = {
 
   // ----------
   // Function: timeout
-  // wraps setTimeout with try/catch
-  //
-  // Note to our beloved reviewers: we are keeping this trivial wrapper in case we 
-  // make Utils a JSM.
+  // wraps a delayed function call with try/catch
   timeout: function(func, delay) {
-    setTimeout(function() {
-      try {
-        func();
-      } catch(e) {
-        Utils.log(e);
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback({
+      notify: function notify() {
+        try {
+          func();
+        }
+        catch(ex) {
+          Utils.log(timer, ex);
+        }
       }
-    }, delay);
+    }, delay, timer.TYPE_ONE_SHOT);
   }
 };
-
-})();
