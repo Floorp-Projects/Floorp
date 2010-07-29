@@ -47,151 +47,141 @@
 // Title: iq.js
 // Various helper functions, in the vein of jQuery.
 
-(function( window, undefined ) {
+// ----------
+// Function: iQ
+// Returns an iQClass object which represents an individual element or a group
+// of elements. It works pretty much like jQuery(), with a few exceptions,
+// most notably that you can't use strings with complex html,
+// just simple tags like '<div>'.
+function iQ(selector, context) {
+  // The iQ object is actually just the init constructor 'enhanced'
+  return new iQClass( selector, context );
+};
 
-var iQ = function(selector, context) {
-    // The iQ object is actually just the init constructor 'enhanced'
-    return new iQ.fn.init( selector, context );
-  },
+// A simple way to check for HTML strings or ID strings
+// (both of which we optimize for)
+let quickExpr = /^[^<]*(<[\w\W]+>)[^>]*$|^#([\w-]+)$/;
 
-  // Map over iQ in case of overwrite
-  _iQ = window.iQ,
-
-  // Use the correct document accordingly with window argument (sandbox)
-  document = window.document,
-
-  // A central reference to the root iQ(document)
-  rootiQ,
-
-  // A simple way to check for HTML strings or ID strings
-  // (both of which we optimize for)
-  quickExpr = /^[^<]*(<[\w\W]+>)[^>]*$|^#([\w-]+)$/,
-
-  // Match a standalone tag
-  rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>)?$/,
-
-  rclass = /[\n\t]/g,
-  rspace = /\s+/;
+// Match a standalone tag
+let rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>)?$/;
 
 // ##########
-// Class: iQ.fn
-// An individual element or group of elements.
-iQ.fn = iQ.prototype = {
-  // ----------
-  // Function: init
-  // You don't call this directly; this is what's called by iQ().
-  // It works pretty much like jQuery(), with a few exceptions,
-  // most notably that you can't use strings with complex html,
-  // just simple tags like '<div>'.
-  init: function( selector, context ) {
-    var match, elem, ret, doc;
+// Class: iQClass
+// The actual class of iQ result objects, representing an individual element
+// or a group of elements.
+//
+// ----------
+// Function: iQClass
+// You don't call this directly; this is what's called by iQ().
+let iQClass = function(selector, context) {
 
-    // Handle $(""), $(null), or $(undefined)
-    if ( !selector ) {
-      return this;
-    }
+  // Handle $(""), $(null), or $(undefined)
+  if ( !selector ) {
+    return this;
+  }
 
-    // Handle $(DOMElement)
-    if ( selector.nodeType ) {
-      this.context = this[0] = selector;
-      this.length = 1;
-      return this;
-    }
+  // Handle $(DOMElement)
+  if ( selector.nodeType ) {
+    this.context = selector;
+    this[0] = selector;
+    this.length = 1;
+    return this;
+  }
 
-    // The body element only exists once, optimize finding it
-    if ( selector === "body" && !context ) {
-      this.context = document;
-      this[0] = document.body;
-      this.selector = "body";
-      this.length = 1;
-      return this;
-    }
+  // The body element only exists once, optimize finding it
+  if ( selector === "body" && !context ) {
+    this.context = document;
+    this[0] = document.body;
+    this.selector = "body";
+    this.length = 1;
+    return this;
+  }
 
-    // Handle HTML strings
-    if ( typeof selector === "string" ) {
-      // Are we dealing with HTML string or an ID?
-      match = quickExpr.exec( selector );
+  // Handle HTML strings
+  if ( typeof selector === "string" ) {
+    // Are we dealing with HTML string or an ID?
 
-      // Verify a match, and that no context was specified for #id
-      if ( match && (match[1] || !context) ) {
+    let match = quickExpr.exec( selector );
 
-        // HANDLE $(html) -> $(array)
-        if ( match[1] ) {
-          doc = (context ? context.ownerDocument || context : document);
+    // Verify a match, and that no context was specified for #id
+    if ( match && (match[1] || !context) ) {
 
-          // If a single string is passed in and it's a single tag
-          // just do a createElement and skip the rest
-          ret = rsingleTag.exec( selector );
+      // HANDLE $(html) -> $(array)
+      if ( match[1] ) {
+        let doc = (context ? context.ownerDocument || context : document);
 
-          if ( ret ) {
-            if ( Utils.isPlainObject( context ) ) {
-              Utils.assert('does not support HTML creation with context', false);
-            } else {
-              selector = [ doc.createElement( ret[1] ) ];
-            }
+        // If a single string is passed in and it's a single tag
+        // just do a createElement and skip the rest
+        let ret = rsingleTag.exec( selector );
 
+        if ( ret ) {
+          if ( Utils.isPlainObject( context ) ) {
+            Utils.assert('does not support HTML creation with context', false);
           } else {
-              Utils.assert('does not support complex HTML creation', false);
+            selector = [ doc.createElement( ret[1] ) ];
           }
 
-          return Utils.merge( this, selector );
-
-        // HANDLE $("#id")
         } else {
-          elem = document.getElementById( match[2] );
-
-          if ( elem ) {
-            this.length = 1;
-            this[0] = elem;
-          }
-
-          this.context = document;
-          this.selector = selector;
-          return this;
+            Utils.assert('does not support complex HTML creation', false);
         }
 
-      // HANDLE $("TAG")
-      } else if ( !context && /^\w+$/.test( selector ) ) {
-        this.selector = selector;
-        this.context = document;
-        selector = document.getElementsByTagName( selector );
         return Utils.merge( this, selector );
 
-      // HANDLE $(expr, $(...))
-      } else if ( !context || context.iq ) {
-        return (context || rootiQ).find( selector );
-
-      // HANDLE $(expr, context)
-      // (which is just equivalent to: $(context).find(expr)
+      // HANDLE $("#id")
       } else {
-        return iQ( context ).find( selector );
+        let elem = document.getElementById( match[2] );
+
+        if ( elem ) {
+          this.length = 1;
+          this[0] = elem;
+        }
+
+        this.context = document;
+        this.selector = selector;
+        return this;
       }
 
-    // HANDLE $(function)
-    // Shortcut for document ready
-    } else if (typeof selector == "function") {
-      Utils.log('iQ does not support ready functions');
-      return null;
+    // HANDLE $("TAG")
+    } else if ( !context && /^\w+$/.test( selector ) ) {
+      this.selector = selector;
+      this.context = document;
+      selector = document.getElementsByTagName( selector );
+      return Utils.merge( this, selector );
+
+    // HANDLE $(expr, $(...))
+    } else if ( !context || context.iq ) {
+      return (context || iQ(document)).find( selector );
+
+    // HANDLE $(expr, context)
+    // (which is just equivalent to: $(context).find(expr)
+    } else {
+      return iQ( context ).find( selector );
     }
 
-    if (selector.selector !== undefined) {
-      this.selector = selector.selector;
-      this.context = selector.context;
-    }
+  // HANDLE $(function)
+  // Shortcut for document ready
+  } else if (typeof selector == "function") {
+    Utils.log('iQ does not support ready functions');
+    return null;
+  }
 
-    // this used to be makeArray:
-    var ret = this || [];
-    if ( selector != null ) {
-      // The window, strings (and functions) also have 'length'
-      if (selector.length == null || typeof selector == "string" || typeof selector == "function" || selector.setInterval) {
-        Array.prototype.push.call( ret, selector );
-      } else {
-        Utils.merge( ret, selector );
-      }
-    }
-    return ret;
+  if (selector.selector !== undefined) {
+    this.selector = selector.selector;
+    this.context = selector.context;
+  }
 
-  },
+  let ret = this || [];
+  if ( selector != null ) {
+    // The window, strings (and functions) also have 'length'
+    if (selector.length == null || typeof selector == "string" || selector.setInterval) {
+      Array.push( ret, selector );
+    } else {
+      Utils.merge( ret, selector );
+    }
+  }
+  return ret;
+}
+iQClass.prototype = {
 
   // Start with an empty selector
   selector: "",
@@ -207,14 +197,12 @@ iQ.fn = iQ.prototype = {
   // Get the Nth element in the matched element set OR
   // Get the whole matched element set as a clean array
   get: function( num ) {
-    return num == null ?
+    if (num == null) // Return a 'clean' array
+      return Array.slice( this, 0 );
 
-      // Return a 'clean' array
-      // was toArray
-      Array.prototype.slice.call( this, 0 ) :
-
-      // Return just the object
-      ( num < 0 ? this[ num + this.length ] : this[ num ] );
+    // Return just the Nth object
+    let index = num < 0 ? num + this.length : num;
+    return this[index];
   },
 
   // ----------
@@ -225,8 +213,8 @@ iQ.fn = iQ.prototype = {
       Utils.assert("each's argument must be a function", false);
       return null;
     }
-    for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-      callback(elem);
+    for ( let i = 0; this[i] != null; i++ ) {
+      callback(this[i]);
     }
     return this;
   },
@@ -235,19 +223,18 @@ iQ.fn = iQ.prototype = {
   // Function: addClass
   // Adds the given class(es) to the receiver.
   addClass: function( value ) {
-    if (typeof value == "function") {
-      Utils.assert('does not support function argument', false);
+    if ( typeof value != "string" || !value ) {
+      Utils.assert('requires a valid string argument', false);
       return null;
     }
 
-    if ( value && typeof value === "string" ) {
-      for ( var i = 0, l = this.length; i < l; i++ ) {
-        var elem = this[i];
-        if ( elem.nodeType === 1 ) {
-          (value || "").split( rspace ).forEach(function(className) {
-            elem.classList.add(className);
-          });
-        }
+    let length = this.length;
+    for ( let i = 0; i < length; i++ ) {
+      let elem = this[i];
+      if ( elem.nodeType === 1 ) {
+        value.split( /\s+/ ).forEach(function(className) {
+          elem.classList.add(className);
+        });
       }
     }
 
@@ -258,23 +245,18 @@ iQ.fn = iQ.prototype = {
   // Function: removeClass
   // Removes the given class(es) from the receiver.
   removeClass: function( value ) {
-    if (typeof value == "function") {
+    if ( typeof value != "string" || !value ) {
       Utils.assert('does not support function argument', false);
       return null;
     }
 
-    if ( (value && typeof value === "string") || value === undefined ) {
-      for ( var i = 0, l = this.length; i < l; i++ ) {
-        var elem = this[i];
-        if ( elem.nodeType === 1 && elem.className ) {
-          if ( value ) {
-            (value || "").split(rspace).forEach(function(className) {
-              elem.classList.remove(className);
-            });
-          } else {
-            elem.className = "";
-          }
-        }
+    let length = this.length;
+    for ( let i = 0; i < length; i++ ) {
+      let elem = this[i];
+      if ( elem.nodeType === 1 && elem.className ) {
+        value.split( /\s+/ ).forEach(function(className) {
+          elem.classList.remove(className);
+        });
       }
     }
 
@@ -284,9 +266,10 @@ iQ.fn = iQ.prototype = {
   // ----------
   // Function: hasClass
   // Returns true is the receiver has the given css class.
-  hasClass: function( selector ) {
-    for ( var i = 0, l = this.length; i < l; i++ ) {
-      if ( this[i].classList.contains( selector ) ) {
+  hasClass: function( singleClassName ) {
+    let length = this.length;
+    for ( let i = 0; i < length; i++ ) {
+      if ( this[i].classList.contains( singleClassName ) ) {
         return true;
       }
     }
@@ -298,9 +281,11 @@ iQ.fn = iQ.prototype = {
   // Searches the receiver and its children, returning a new iQ object with
   // elements that match the given selector.
   find: function( selector ) {
-    var ret = [], length = 0;
+    let ret = [];
+    let length = 0;
 
-    for ( var i = 0, l = this.length; i < l; i++ ) {
+    let l = this.length;
+    for ( let i = 0; i < l; i++ ) {
       length = ret.length;
       try {
         Utils.merge(ret, this[i].querySelectorAll( selector ) );
@@ -310,8 +295,8 @@ iQ.fn = iQ.prototype = {
 
       if ( i > 0 ) {
         // Make sure that the results are unique
-        for ( var n = length; n < ret.length; n++ ) {
-          for ( var r = 0; r < length; r++ ) {
+        for ( let n = length; n < ret.length; n++ ) {
+          for ( let r = 0; r < length; r++ ) {
             if ( ret[r] === ret[n] ) {
               ret.splice(n--, 1);
               break;
@@ -329,12 +314,12 @@ iQ.fn = iQ.prototype = {
   // Removes the receiver from the DOM.
   remove: function(unused) {
     Utils.assert('does not accept a selector', unused === undefined);
-    for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+    for ( let i = 0; this[i] != null; i++ ) {
+      let elem = this[i];
       if ( elem.parentNode ) {
-         elem.parentNode.removeChild( elem );
+        elem.parentNode.removeChild( elem );
       }
     }
-
     return this;
   },
 
@@ -342,12 +327,12 @@ iQ.fn = iQ.prototype = {
   // Function: empty
   // Removes all of the reciever's children and HTML content from the DOM.
   empty: function() {
-    for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+    for ( let i = 0; this[i] != null; i++ ) {
+      let elem = this[i];
       while ( elem.firstChild ) {
         elem.removeChild( elem.firstChild );
       }
     }
-
     return this;
   },
 
@@ -369,7 +354,8 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: position
-  // Returns an object with the receiver's position in left and top properties.
+  // Returns an object with the receiver's position in left and top 
+  // properties.
   position: function(unused) {
     Utils.assert('does not yet support setting', unused === undefined);
     return {
@@ -381,9 +367,8 @@ iQ.fn = iQ.prototype = {
   // ----------
   // Function: bounds
   // Returns a <Rect> with the receiver's bounds.
-  bounds: function(unused) {
-    Utils.assert('does not yet support setting', unused === undefined);
-    var p = this.position();
+  bounds: function() {
+    let p = this.position();
     return new Rect(p.left, p.top, this.width(), this.height());
   },
 
@@ -392,14 +377,18 @@ iQ.fn = iQ.prototype = {
   // Pass in both key and value to attach some data to the receiver;
   // pass in just key to retrieve it.
   data: function(key, value) {
-    var data = null;
+    let data = null;
     if (value === undefined) {
       Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
       data = this[0].iQData;
-      return (data ? data[key] : null);
+      if (data)
+        return data[key];
+      else
+        return null;
     }
 
-    for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+    for ( let i = 0; this[i] != null; i++ ) {
+      let elem = this[i];
       data = elem.iQData;
 
       if (!data)
@@ -413,8 +402,8 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: html
-  // Given a value, sets the receiver's innerHTML to it; otherwise returns what's already there.
-  // TODO: security
+  // Given a value, sets the receiver's innerHTML to it; otherwise returns
+  // what's already there.
   html: function(value) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
     if (value === undefined)
@@ -426,7 +415,8 @@ iQ.fn = iQ.prototype = {
 
   // ----------
   // Function: text
-  // Given a value, sets the receiver's textContent to it; otherwise returns what's already there.
+  // Given a value, sets the receiver's textContent to it; otherwise returns
+  // what's already there.
   text: function(value) {
     Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
     if (value === undefined) {
@@ -462,9 +452,8 @@ iQ.fn = iQ.prototype = {
   // Function: append
   // Appends the result of iQ(selector) to the receiver.
   append: function(selector) {
-    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
-    var object = iQ(selector);
-    Utils.assert('does not yet support multi-objects (or null objects)', object.length == 1);
+    let object = iQ(selector);
+    Utils.assert('does not yet support multi-objects (or null objects)', object.length == 1 && this.length == 1);
     this[0].appendChild(object[0]);
     return this;
   },
@@ -479,8 +468,8 @@ iQ.fn = iQ.prototype = {
         Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);
         return this[0].getAttribute(key);
       }
-      for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-        elem.setAttribute(key, value);
+      for ( let i = 0; this[i] != null; i++ ) {
+        this[i].setAttribute(key, value);
       }
     } catch(e) {
       Utils.log(e);
@@ -499,14 +488,14 @@ iQ.fn = iQ.prototype = {
   //   a: string, b: undefined - gets property specified by a
   //   a: string, b: string/number - sets property specified by a to b
   css: function(a, b) {
-    var properties = null;
+    let properties = null;
 
     if (typeof a === 'string') {
-      var key = a;
+      let key = a;
       if (b === undefined) {
         Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);
 
-        var substitutions = {
+        let substitutions = {
           'MozTransform': '-moz-transform',
           'zIndex': 'z-index'
         };
@@ -519,7 +508,7 @@ iQ.fn = iQ.prototype = {
       properties = a;
     }
 
-    var pixels = {
+    let pixels = {
       'left': true,
       'top': true,
       'right': true,
@@ -528,9 +517,10 @@ iQ.fn = iQ.prototype = {
       'height': true
     };
 
-    for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-      for (var key in properties) {
-        var value = properties[key];
+    for ( let i = 0; this[i] != null; i++ ) {
+      let elem = this[i];
+      for (let key in properties) {
+        let value = properties[key];
         if (pixels[key] && typeof(value) != 'string')
           value += 'px';
 
@@ -554,10 +544,10 @@ iQ.fn = iQ.prototype = {
   //
   // Possible "options" properties:
   //   duration - how long to animate, in milliseconds
-  //   easing - easing function to use. Possibilities include 'tabcandyBounce', 'easeInQuad'.
-  //     Default is 'ease'.
-  //   complete - function to call once the animation is done, takes nothing in, but "this"
-  //     is set to the element that was animated.
+  //   easing - easing function to use. Possibilities include 
+  //     'tabcandyBounce', 'easeInQuad'. Default is 'ease'.
+  //   complete - function to call once the animation is done, takes nothing 
+  //     in, but "this" is set to the element that was animated.
   animate: function(css, options) {
     try {
       Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
@@ -565,27 +555,26 @@ iQ.fn = iQ.prototype = {
       if (!options)
         options = {};
 
-      var easings = {
+      let easings = {
         tabcandyBounce: 'cubic-bezier(0.0, 0.63, .6, 1.29)',
         easeInQuad: 'ease-in', // TODO: make it a real easeInQuad, or decide we don't care
         fast: 'cubic-bezier(0.7,0,1,1)'
       };
 
-      var duration = (options.duration || 400);
-      var easing = (easings[options.easing] || 'ease');
+      let duration = (options.duration || 400);
+      let easing = (easings[options.easing] || 'ease');
 
-      // The latest versions of Firefox do not animate from a non-explicitly set
-      // css properties. So for each element to be animated, go through and
-      // explicitly define 'em.
-      var rupper = /([A-Z])/g;
+      // The latest versions of Firefox do not animate from a non-explicitly 
+      // set css properties. So for each element to be animated, go through 
+      // and explicitly define 'em.
+      let rupper = /([A-Z])/g;
       this.each(function(elem){
-        var cStyle = window.getComputedStyle(elem, null);
-        for (var prop in css){
+        let cStyle = window.getComputedStyle(elem, null);
+        for (let prop in css){
           prop = prop.replace( rupper, "-$1" ).toLowerCase();
           iQ(elem).css(prop, cStyle.getPropertyValue(prop));
         }
       });
-
 
       this.css({
         '-moz-transition-property': 'all', // TODO: just animate the properties we're changing
@@ -595,7 +584,7 @@ iQ.fn = iQ.prototype = {
 
       this.css(css);
 
-      var self = this;
+      let self = this;
       Utils.timeout(function() {
         self.css({
           '-moz-transition-property': 'none',
@@ -617,21 +606,17 @@ iQ.fn = iQ.prototype = {
   // Function: fadeOut
   // Animates the receiver to full transparency. Calls callback on completion.
   fadeOut: function(callback) {
-    try {
-      Utils.assert('does not yet support duration', typeof callback == "function" || callback === undefined);
-      this.animate({
-        opacity: 0
-      }, {
-        duration: 400,
-        complete: function() {
-          iQ(this).css({display: 'none'});
-          if (typeof callback == "function")
-            callback.apply(this);
-        }
-      });
-    } catch(e) {
-      Utils.log(e);
-    }
+    Utils.assert('does not yet support duration', typeof callback == "function" || callback === undefined);
+    this.animate({
+      opacity: 0
+    }, {
+      duration: 400,
+      complete: function() {
+        iQ(this).css({display: 'none'});
+        if (typeof callback == "function")
+          callback.apply(this);
+      }
+    });
 
     return this;
   },
@@ -687,7 +672,7 @@ iQ.fn = iQ.prototype = {
   bind: function(type, func) {
     Utils.assert('does not support eventData argument', typeof func == "function");
 
-    var handler = function(event) {
+    let handler = function(event) {
       try {
         return func.apply(this, [event]);
       } catch(e) {
@@ -695,7 +680,8 @@ iQ.fn = iQ.prototype = {
       }
     };
 
-    for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+    for ( let i = 0; this[i] != null; i++ ) {
+      let elem = this[i];
       if (!elem.iQEventData)
         elem.iQEventData = {};
 
@@ -720,7 +706,7 @@ iQ.fn = iQ.prototype = {
   one: function(type, func) {
     Utils.assert('does not support eventData argument', typeof func == "function");
 
-    var handler = function(e) {
+    let handler = function(e) {
       iQ(this).unbind(type, handler);
       return func.apply(this, [e]);
     };
@@ -734,11 +720,13 @@ iQ.fn = iQ.prototype = {
   unbind: function(type, func) {
     Utils.assert('Must provide a function', typeof func == "function");
 
-    for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-      var handler = func;
+    for ( let i = 0; this[i] != null; i++ ) {
+      let elem = this[i];
+      let handler = func;
       if (elem.iQEventData && elem.iQEventData[type]) {
-        for (var a = 0, count = elem.iQEventData[type].length; a < count; a++) {
-          var pair = elem.iQEventData[type][a];
+        let count = elem.iQEventData[type].length;
+        for (let a = 0; a < count; a++) {
+          let pair = elem.iQEventData[type][a];
           if (pair.original == func) {
             handler = pair.modified;
             elem.iQEventData[type].splice(a, 1);
@@ -755,40 +743,24 @@ iQ.fn = iQ.prototype = {
 };
 
 // ----------
-// Give the init function the iQ prototype for later instantiation
-iQ.fn.init.prototype = iQ.fn;
-
-// ----------
 // Create various event aliases
-(function() {
-  var events = [
-    'keyup',
-    'keydown',
-    'mouseup',
-    'mousedown',
-    'mouseover',
-    'mouseout',
-    'mousemove',
-    'click',
-    'resize',
-    'change',
-    'blur',
-    'focus'
-  ];
+let events = [
+  'keyup',
+  'keydown',
+  'mouseup',
+  'mousedown',
+  'mouseover',
+  'mouseout',
+  'mousemove',
+  'click',
+  'resize',
+  'change',
+  'blur',
+  'focus'
+];
 
-  events.forEach(function(event) {
-    iQ.fn[event] = function(func) {
-      return this.bind(event, func);
-    };
-  });
-})();
-
-// ----------
-// All iQ objects should point back to these
-rootiQ = iQ(document);
-
-// ----------
-// Expose iQ to the global object
-window.iQ = iQ;
-
-})(window);
+events.forEach(function(event) {
+  iQClass.prototype[event] = function(func) {
+    return this.bind(event, func);
+  };
+});

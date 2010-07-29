@@ -87,9 +87,7 @@ XPCOMUtils.defineLazyGetter(this, "gTabViewFrame", function() {
 // 0 is used in their place.
 window.Point = function(a, y) {
   if (Utils.isPoint(a)) {
-    // Variable: x
     this.x = a.x;
-    // Variable: y
     this.y = a.y;
   } else {
     this.x = (Utils.isNumber(a) ? a : 0);
@@ -120,16 +118,9 @@ window.Point.prototype = {
 window.Rect = function(a, top, width, height) {
   // Note: perhaps 'a' should really be called 'rectOrLeft'
   if (Utils.isRect(a)) {
-    // Variable: left
     this.left = a.left;
-
-    // Variable: top
     this.top = a.top;
-
-    // Variable: width
     this.width = a.width;
-
-    // Variable: height
     this.height = a.height;
   } else {
     this.left = a;
@@ -140,24 +131,13 @@ window.Rect = function(a, top, width, height) {
 };
 
 window.Rect.prototype = {
-  // ----------
-  // Variable: right
-  get right() {
-    return this.left + this.width;
-  },
 
-  // ----------
+  get right() this.left + this.width,
   set right(value) {
     this.width = value - this.left;
   },
 
-  // ----------
-  // Variable: bottom
-  get bottom() {
-    return this.top + this.height;
-  },
-
-  // ----------
+  get bottom() this.top + this.height,
   set bottom(value) {
     this.height = value - this.top;
   },
@@ -165,16 +145,12 @@ window.Rect.prototype = {
   // ----------
   // Variable: xRange
   // Gives you a new <Range> for the horizontal dimension.
-  get xRange() {
-    return new Range(this.left,this.right);
-  },
+  get xRange() new Range(this.left,this.right),
 
   // ----------
   // Variable: yRange
   // Gives you a new <Range> for the vertical dimension.
-  get yRange() {
-    return new Range(this.top,this.bottom);
-  },
+  get yRange() new Range(this.top,this.bottom),
 
   // ----------
   // Function: intersects
@@ -312,9 +288,11 @@ window.Rect.prototype = {
 
   // ----------
   // Function: css
-  // Returns an object with the dimensions of this rectangle, suitable for passing
-  // into iQ.fn.css.
-  // You could of course just pass the rectangle straight in, but this is cleaner.
+  // Returns an object with the dimensions of this rectangle, suitable for
+  // passing into iQ's css method. You could of course just pass the rectangle 
+  // straight in, but this is cleaner, as it removes all the extraneous
+  // properties. If you give a <Rect> to <iQClass.css> without this, it will
+  // ignore the extraneous properties, but result in CSS warnings.
   css: function() {
     return {
       left: this.left,
@@ -488,7 +466,7 @@ window.Subscribable.prototype = {
         return;
 
       var self = this;
-      var subsCopy = Utils.merge([], this.subscribers[eventName]);
+      var subsCopy = this.subscribers[eventName].concat();
       subsCopy.forEach(function(object) {
         object.callback(self, eventInfo);
       });
