@@ -2044,20 +2044,18 @@ var ContextHelper = {
     let commands = document.getElementById("context-commands");
     for (let i=0; i<commands.childElementCount; i++) {
       let command = commands.children[i];
-      let types = command.getAttribute("type").split(/\s+/);
       command.removeAttribute("selector");
-      if ((types.indexOf("image") != -1 && this.popupState.onImage) ||
-         (types.indexOf("image-loaded") != -1 && this.popupState.onLoadedImage) ||
-         (types.indexOf("link") != -1 && this.popupState.onSaveableLink) ||
-         (types.indexOf("callto") != -1 && this.popupState.onVoiceLink) ||
-         (types.indexOf("mailto") != -1 && this.popupState.onLink && this.popupState.linkProtocol == "mailto") ||
-         (types.indexOf("edit-bookmark") != -1 && this.popupState.onBookmark)) {
-        first = (first ? first : command);
-        last = command;
-        command.hidden = false;
-        continue;
-      }
       command.hidden = true;
+
+      let types = command.getAttribute("type").split(/\s+/);
+      for (let i=0; i<types.length; i++) {
+        if (this.popupState.types.indexOf(types[i]) != -1) {
+          first = first || command;
+          last = command;
+          command.hidden = false;
+          break;
+        }
+      }
     }
 
     if (!first) {
@@ -2065,16 +2063,12 @@ var ContextHelper = {
       return;
     }
 
+    // Allow the first and last *non-hidden* elements to be selected in CSS.
     first.setAttribute("selector", "first-child");
     last.setAttribute("selector", "last-child");
 
     let label = document.getElementById("context-hint");
-    if (this.popupState.onImage)
-      label.value = this.popupState.mediaURL;
-    if (this.popupState.onLink)
-      label.value = this.popupState.linkURL;
-    if (this.popupState.onBookmark)
-      label.value = this.popupState.bookmarkURL;
+    label.value = this.popupState.label;
 
     this._panel.hidden = false;
     window.addEventListener("resize", this, true);

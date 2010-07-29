@@ -744,16 +744,6 @@ var ContextHandler = {
     return null;
   },
 
-  _isSaveable: function ch_isSaveable(aProtocol) {
-    // We don't do the Right Thing for news/snews yet, so turn them off until we do
-    return aProtocol && !(aProtocol == "mailto" || aProtocol == "javascript" || aProtocol == "news" || aProtocol == "snews");
-  },
-
-  _isVoice: function ch_isVoice(aProtocol) {
-    // Collection of protocols related to voice or data links
-    return aProtocol && (aProtocol == "tel" || aProtocol == "callto" || aProtocol == "sip" || aProtocol == "voipto");
-  },
-
   init: function ch_init() {
     addEventListener("contextmenu", this, false);
   },
@@ -763,11 +753,8 @@ var ContextHandler = {
       return;
 
     let state = {
-      onLink: false,
-      onSaveableLink: false,
-      onVoiceLink: false,
-      onImage: false,
-      onLoadedImage: false,
+      types: [],
+      label: "",
       linkURL: "",
       linkProtocol: null,
       mediaURL: ""
@@ -779,12 +766,9 @@ var ContextHandler = {
     if (popupNode.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
       // See if the user clicked on an image.
       if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
-        state.onImage = true;
+        state.types.push("image");
         state.mediaURL = popupNode.currentURI.spec;
-
-        let request = popupNode.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
-        if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
-          state.onLoadedImage = true;
+        state.label = state.mediaURL;
       }
     }
 
@@ -792,30 +776,67 @@ var ContextHandler = {
     while (elem) {
       if (elem.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
         // Link?
-        if (!this.onLink &&
-             ((elem instanceof Ci.nsIDOMHTMLAnchorElement && elem.href) ||
-              (elem instanceof Ci.nsIDOMHTMLAreaElement && elem.href) ||
-              elem instanceof Ci.nsIDOMHTMLLinkElement ||
-              elem.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
+        if ((elem instanceof Ci.nsIDOMHTMLAnchorElement && elem.href) ||
+            (elem instanceof Ci.nsIDOMHTMLAreaElement && elem.href) ||
+            elem instanceof Ci.nsIDOMHTMLLinkElement ||
+            elem.getAttributeNS(kXLinkNamespace, "type") == "simple") {
 
           // Target is a link or a descendant of a link.
-          state.linkURL = this._getLinkURL(elem);
+          state.types.push("link");
+          state.label = state.linkURL = this._getLinkURL(elem);
           state.linkProtocol = this._getProtocol(this._getURI(state.linkURL));
-          state.onLink = true;
-          state.onSaveableLink = this._isSaveable(state.linkProtocol);
-          state.onVoiceLink = this._isVoice(state.linkProtocol);
+          break;
         }
       }
 
       elem = elem.parentNode;
     }
+
+    for (let i = 0; i < this._types.length; i++)
+      if (this._types[i].handler(state, popupNode))
+        state.types.push(this._types[i].name);
     
     sendAsyncMessage("Browser:ContextMenu", state);
+  },
+
+  /**
+   * For add-ons to add new types and data to the ContextMenu message.
+   * 
+   * @param aName A string to identify the new type.
+   * @param aHandler A function that takes a state object and a target element.
+   *    If aHandler returns true, then aName will be added to the list of types.
+   *    The function may also modify the state object.
+   */
+  registerType: function registerType(aName, aHandler) {
+    this._types.push({name: aName, handler: aHandler});
   }
 };
 
 ContextHandler.init();
 
+ContextHandler.registerType("mailto", function(aState, aElement) {
+  return aState.linkProtocol == "mailto";
+});
+
+ContextHandler.registerType("callto", function(aState, aElement) {
+  let protocol = aState.linkProtocol;
+  return protocol == "tel" || protocol == "callto" || protocol == "sip" || protocol == "voipto";
+});
+
+ContextHandler.registerType("link-saveable", function(aState, aElement) {
+  let protocol = aState.linkProtocol;
+  dump(protocol+"\n");
+  return (protocol && protocol != "mailto" && protocol != "javascript" && protocol != "news" && protocol != "snews");
+});
+
+ContextHandler.registerType("image-loaded", function(aState, aElement) {
+  if (aState.types.indexOf("image") != -1) {
+    let request = aElement.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+    if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
+      return true;
+  }
+  return false;
+});
 
 var FormSubmitObserver = {
   

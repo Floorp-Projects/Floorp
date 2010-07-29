@@ -515,7 +515,7 @@
           <label id="context-hint" crop="center" flex="1"/>
         </hbox>
         <richlistbox id="context-commands" onclick="ContextHelper.hide();">
-          <richlistitem id="context-openinnewtab" type="link" onclick="ContextCommands.openInNewTab(event);">
+          <richlistitem id="context-openinnewtab" type="link-saveable" onclick="ContextCommands.openInNewTab(event);">
             <label value="&contextOpenInNewTab.label;"/>
           </richlistitem>
           <richlistitem id="context-saveimage" type="image-loaded" onclick="ContextCommands.saveImage(event);">
