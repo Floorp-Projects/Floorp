@@ -344,6 +344,80 @@ var tests = [
       this.notification.remove();
     }
   },
+  // Test that persistence allows the notification to persist across reloads
+  { // Test #12
+    run: function () {
+      this.oldSelectedTab = gBrowser.selectedTab;
+      gBrowser.selectedTab = gBrowser.addTab("about:blank");
+
+      let self = this;
+      loadURI("http://example.com/", function() {
+        self.notifyObj = new basicNotification();
+        self.notifyObj.options = {
+          persistence: 2
+        };
+        self.notification = showNotification(self.notifyObj);
+      });
+    },
+    onShown: function (popup) {
+      this.complete = false;
+
+      let self = this;
+      loadURI("http://example.org/", function() {
+        loadURI("http://example.com/", function() {
+
+          // Next load will hide the notification
+          self.complete = true;
+
+          loadURI("http://example.org/");
+        });
+      });
+    },
+    onHidden: function (popup) {
+      ok(this.complete, "Should only have hidden the notification after 3 page loads");
+      this.notification.remove();
+      gBrowser.removeTab(gBrowser.selectedTab);
+      gBrowser.selectedTab = this.oldSelectedTab;
+    }
+  },
+  // Test that a timeout allows the notification to persist across reloads
+  { // Test #13
+    run: function () {
+      this.oldSelectedTab = gBrowser.selectedTab;
+      gBrowser.selectedTab = gBrowser.addTab("about:blank");
+
+      let self = this;
+      loadURI("http://example.com/", function() {
+        self.notifyObj = new basicNotification();
+        // Set a timeout of 10 minutes that should never be hit
+        self.notifyObj.options = {
+          timeout: Date.now() + 600000
+        };
+        self.notification = showNotification(self.notifyObj);
+      });
+    },
+    onShown: function (popup) {
+      this.complete = false;
+
+      let self = this;
+      loadURI("http://example.org/", function() {
+        loadURI("http://example.com/", function() {
+
+          // Next load will hide the notification
+          self.notification.options.timeout = Date.now() - 1;
+          self.complete = true;
+
+          loadURI("http://example.org/");
+        });
+      });
+    },
+    onHidden: function (popup) {
+      ok(this.complete, "Should only have hidden the notification after the timeout was passed");
+      this.notification.remove();
+      gBrowser.removeTab(gBrowser.selectedTab);
+      gBrowser.selectedTab = this.oldSelectedTab;
+    }
+  },
 ];
 
 function showNotification(notifyObj) {
@@ -352,7 +426,8 @@ function showNotification(notifyObj) {
                                  notifyObj.message,
                                  notifyObj.anchorID,
                                  notifyObj.mainAction,
-                                 notifyObj.secondaryActions);
+                                 notifyObj.secondaryActions,
+                                 notifyObj.options);
 }
 
 function checkPopup(popup, notificationObj) {
@@ -407,6 +482,19 @@ function triggerSecondaryCommand(popup, index) {
 
   // One down event to open the popup
   EventUtils.synthesizeKey("VK_DOWN", { altKey: (navigator.platform.indexOf("Mac") == -1) });
+}
+
+function loadURI(uri, callback) {
+  gBrowser.addEventListener("load", function() {
+    // Ignore the about:blank load
+    if (gBrowser.currentURI.spec != uri)
+      return;
+
+    gBrowser.removeEventListener("load", arguments.callee, true);
+
+    callback();
+  }, true);
+  gBrowser.loadURI(uri);
 }
 
 function dismissNotification(popup) {
