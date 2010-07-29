@@ -1010,8 +1010,6 @@ AllocHelper(RematInfo &info, MaybeRegisterID &maybe)
 void
 FrameState::allocForSameBinary(FrameEntry *fe, JSOp op, BinaryAlloc &alloc)
 {
-    JS_ASSERT(fe->isCopy());
-
     if (!fe->isTypeKnown()) {
         alloc.lhsType = tempRegForType(fe);
         pinReg(alloc.lhsType.reg());
