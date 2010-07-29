@@ -1627,7 +1627,7 @@ namespace nanojit
     }
 
     char* LInsPrinter::formatImmI(RefBuf* buf, int32_t c) {
-        if (-10000 < c || c < 10000) {
+        if (-10000 < c && c < 10000) {
             VMPI_snprintf(buf->buf, buf->len, "%d", c);
         } else {
 #if !defined NANOJIT_64BIT
@@ -1639,18 +1639,16 @@ namespace nanojit
         return buf->buf;
     }
 
+#if defined NANOJIT_64BIT
     char* LInsPrinter::formatImmQ(RefBuf* buf, uint64_t c) {
-        if (-10000 < (int64_t)c || c < 10000) {
+        if (-10000 < (int64_t)c && c < 10000) {
             VMPI_snprintf(buf->buf, buf->len, "%dLL", (int)c);
         } else {
-#if defined NANOJIT_64BIT
             formatAddr(buf, (void*)c);
-#else
-            VMPI_snprintf(buf->buf, buf->len, "0x%llxLL", c);
-#endif
         }
         return buf->buf;
     }
+#endif
 
     char* LInsPrinter::formatImmD(RefBuf* buf, double c) {
         VMPI_snprintf(buf->buf, buf->len, "%g", c);
