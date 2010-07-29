@@ -1645,7 +1645,7 @@ CSSParserImpl::ParseMediaQuery(PRUnichar aStopSymbol,
         return PR_FALSE;
       }
       // case insensitive from CSS - must be lower cased
-      ToLowerCase(mToken.mIdent);
+      nsContentUtils::ASCIIToLower(mToken.mIdent);
       mediaType = do_GetAtom(mToken.mIdent);
       if (gotNotOrOnly ||
           (mediaType != nsGkAtoms::_not && mediaType != nsGkAtoms::only))
@@ -1763,7 +1763,7 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   }
 
   // case insensitive from CSS - must be lower cased
-  ToLowerCase(mToken.mIdent);
+  nsContentUtils::ASCIIToLower(mToken.mIdent);
   const PRUnichar *featureString;
   if (StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("min-"))) {
     expr->mRange = nsMediaExpression::eMin;
@@ -2922,7 +2922,7 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
             short i = 0;
             const char* htmlAttr;
             while ((htmlAttr = caseInsensitiveHTMLAttribute[i++])) {
-              if (attr.EqualsIgnoreCase(htmlAttr)) {
+              if (attr.LowerCaseEqualsASCII(htmlAttr)) {
                 isCaseSensitive = PR_FALSE;
                 break;
               }
@@ -2996,7 +2996,7 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
   nsAutoString buffer;
   buffer.Append(PRUnichar(':'));
   buffer.Append(mToken.mIdent);
-  ToLowerCase(buffer);
+  nsContentUtils::ASCIIToLower(buffer);
   nsCOMPtr<nsIAtom> pseudo = do_GetAtom(buffer);
   if (!pseudo) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
@@ -3331,20 +3331,20 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
   }
 
   if (eCSSToken_Ident == mToken.mType) {
-    if (mToken.mIdent.EqualsIgnoreCase("odd")) {
+    if (mToken.mIdent.LowerCaseEqualsLiteral("odd")) {
       numbers[0] = 2;
       numbers[1] = 1;
       lookForB = PR_FALSE;
     }
-    else if (mToken.mIdent.EqualsIgnoreCase("even")) {
+    else if (mToken.mIdent.LowerCaseEqualsLiteral("even")) {
       numbers[0] = 2;
       numbers[1] = 0;
       lookForB = PR_FALSE;
     }
-    else if (mToken.mIdent.EqualsIgnoreCase("n")) {
+    else if (mToken.mIdent.LowerCaseEqualsLiteral("n")) {
       numbers[0] = 1;
     }
-    else if (mToken.mIdent.EqualsIgnoreCase("-n")) {
+    else if (mToken.mIdent.LowerCaseEqualsLiteral("-n")) {
       numbers[0] = -1;
     }
     else {
@@ -3361,7 +3361,7 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     lookForB = PR_FALSE;
   }
   else if (eCSSToken_Dimension == mToken.mType) {
-    if (!mToken.mIntegerValid || !mToken.mIdent.EqualsIgnoreCase("n")) {
+    if (!mToken.mIntegerValid || !mToken.mIdent.LowerCaseEqualsLiteral("n")) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
       return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
