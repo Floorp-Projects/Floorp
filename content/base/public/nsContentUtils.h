@@ -111,7 +111,6 @@ class nsIRunnable;
 class nsIInterfaceRequestor;
 template<class E> class nsCOMArray;
 struct JSRuntime;
-class nsICaseConversion;
 class nsIUGenCategory;
 class nsIWidget;
 class nsIDragSession;
@@ -614,11 +613,6 @@ public:
   static nsIWordBreaker* WordBreaker()
   {
     return sWordBreaker;
-  }
-  
-  static nsICaseConversion* GetCaseConv()
-  {
-    return sCaseConv;
   }
 
   static nsIUGenCategory* GetGenCat()
@@ -1741,7 +1735,6 @@ private:
 
   static nsILineBreaker* sLineBreaker;
   static nsIWordBreaker* sWordBreaker;
-  static nsICaseConversion* sCaseConv;
   static nsIUGenCategory* sGenCat;
 
   // Holds pointers to nsISupports* that should be released at shutdown
