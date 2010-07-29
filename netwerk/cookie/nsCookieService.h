@@ -158,9 +158,20 @@ struct DBState
   nsCOMPtr<mozIStorageStatement>  stmtDelete;
   nsCOMPtr<mozIStorageStatement>  stmtUpdate;
 
+  // Various parts representing asynchronous read state. These are useful
+  // while the background read is taking place.
+  nsCOMPtr<mozIStorageStatement>        stmtReadDomain;
   nsCOMPtr<mozIStoragePendingStatement> pendingRead;
-  ReadCookieDBListener*                 readListener; // weak ref
+  // The asynchronous read listener. This is a weak ref (storage has ownership)
+  // since it may need to outlive the DBState's database connection.
+  ReadCookieDBListener*                 readListener;
+  // An array of (baseDomain, cookie) tuples representing data read in
+  // asynchronously. This is merged into hostTable once read is complete.
   nsTArray<CookieDomainTuple>           hostArray;
+  // A hashset of baseDomains read in synchronously, while the async read is
+  // in flight. This is used to keep track of which data in hostArray is stale
+  // when the time comes to merge.
+  nsTHashtable<nsCStringHashKey>        readSet;
 };
 
 // these constants represent a decision about a cookie based on user prefs.
@@ -206,8 +217,11 @@ class nsCookieService : public nsICookieService
     nsresult                      CreateTable();
     void                          CloseDB();
     nsresult                      Read();
-    void                          ReadRow(mozIStorageRow *aRow, CookieDomainTuple &aCookeTuple);
-    void                          ReadComplete();
+    template<class T> nsCookie*   GetCookieFromRow(T &aRow);
+    void                          AsyncReadComplete();
+    void                          CancelAsyncRead(PRBool aPurgeReadSet);
+    void                          EnsureReadDomain(const nsCString &aBaseDomain);
+    void                          EnsureReadComplete();
     nsresult                      NormalizeHost(nsCString &aHost);
     nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, PRBool &aRequireHostMatch);
     nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
