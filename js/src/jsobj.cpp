@@ -911,8 +911,8 @@ js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
     return JS_TRUE;
 }
 
-JSObject *
-js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller)
+static JSObject *
+CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller)
 {
     JSObject *inner;
 
@@ -1110,7 +1110,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
 #endif
 
     /* Ensure we compile this eval with the right object in the scope chain. */
-    JSObject *result = js_CheckScopeChainValidity(cx, scopeobj, js_eval_str);
+    JSObject *result = CheckScopeChainValidity(cx, scopeobj, js_eval_str);
     JS_ASSERT_IF(result, result == scopeobj);
     if (!result)
         return JS_FALSE;
