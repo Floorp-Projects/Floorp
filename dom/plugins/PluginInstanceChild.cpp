@@ -112,6 +112,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mShColorSpace(nsnull)
     , mShContext(nsnull)
     , mDrawingModel(NPDrawingModelCoreGraphics)
+    , mCurrentEvent(nsnull)
 #endif
 {
     memset(&mWindow, 0, sizeof(mWindow));
@@ -542,6 +543,12 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
 #ifdef XP_MACOSX
     // Mac OS X does not define an NPEvent structure. It defines more specific types.
     NPCocoaEvent evcopy = event.event;
+
+    // Make sure we reset mCurrentEvent in case of an exception
+    AutoRestore<const NPCocoaEvent*> savePreviousEvent(mCurrentEvent);
+
+    // Track the current event for NPN_PopUpContextMenu.
+    mCurrentEvent = &event.event;
 #else
     // Make a copy since we may modify values.
     NPEvent evcopy = event.event;

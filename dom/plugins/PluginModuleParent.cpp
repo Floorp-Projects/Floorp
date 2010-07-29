@@ -38,6 +38,8 @@
 
 #ifdef MOZ_WIDGET_GTK2
 #include <glib.h>
+#elif XP_MACOSX
+#include "PluginUtilsOSX.h"
 #endif
 #ifdef MOZ_WIDGET_QT
 #include <QtCore/QCoreApplication>
@@ -768,6 +770,14 @@ PluginModuleParent::AnswerProcessSomeEvents()
 
     PLUGIN_LOG_DEBUG(("... quitting mini nested loop"));
 
+    return true;
+}
+
+#elif defined(XP_MACOSX)
+bool
+PluginModuleParent::AnswerProcessSomeEvents()
+{
+    mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop();
     return true;
 }
 
