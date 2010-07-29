@@ -140,7 +140,7 @@
       <menuitem id="context_undoCloseTab"
                 label="&undoCloseTab.label;"
                 accesskey="&undoCloseTab.accesskey;"
-                command="History:UndoCloseTab"/>
+                observes="History:UndoCloseTab"/>
       <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                 oncommand="gBrowser.removeTab(TabContextMenu.contextTab);"/>
     </menupopup>
