@@ -382,13 +382,13 @@ bool AdjustWebSocketLocation(relayBuffer& buffer, connection_info_t *ci)
   char* wsloc = strstr(buffer.bufferhead, "Sec-WebSocket-Location:");
   if (!wsloc)
     return true;
-  // advance pointer to the start of the hostname
+  // advance pointer to the start of the url, which will always start with
+  // ws://, since pywebsocket is ignorant of whether SSL is being used or not
   wsloc = strstr(wsloc, "ws://");
   if (!wsloc)
     return false;
-  wsloc += 5;
   // find the end of the hostname
-  char* wslocend = strchr(wsloc + 1, '/');
+  char* wslocend = strchr(wsloc + 5, '/');
   if (!wslocend)
     return false;
   char *crlf = strstr(wsloc, "\r\n");
@@ -397,13 +397,17 @@ bool AdjustWebSocketLocation(relayBuffer& buffer, connection_info_t *ci)
   if (ci->original_host.empty())
     return true;
 
-  int diff = ci->original_host.length() - (wslocend-wsloc);
+  // generate a new hostname, beginning either with ws:// or wss://, 
+  // as appropriate, depending on whether this connection is using SSL
+  string newhost  = (ci->http_proxy_only ? "ws://" : "wss://");
+  newhost.append(ci->original_host);
+  int diff = newhost.length() - (wslocend-wsloc);
   if (diff > 0)
     assert(size_t(diff) <= buffer.margin());
   memmove(wslocend + diff, wslocend, buffer.buffertail - wsloc - diff);
   buffer.buffertail += diff;
 
-  memcpy(wsloc, ci->original_host.c_str(), ci->original_host.length());
+  memcpy(wsloc, newhost.c_str(), newhost.length());
   return true;
 }
 
