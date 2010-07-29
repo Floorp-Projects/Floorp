@@ -58,6 +58,7 @@ include $(srcdir)/../objs.mk
 EXTRA_DEPS += $(srcdir)/../objs.mk
 
 LOCAL_INCLUDES	+= -I$(srcdir)/.. \
+  -I$(srcdir)/../../src
 
 
 CPPSRCS	= $(INTL_UNICHARUTIL_UTIL_LCPPSRCS)

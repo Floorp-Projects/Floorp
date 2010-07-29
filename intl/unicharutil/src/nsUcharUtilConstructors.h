@@ -39,9 +39,9 @@
 #define nsUcharUtilConstructors_h__
 
 #include "nsUnicharUtilCIID.h"
-#include "nsCaseConversionImp2.h"
 #include "nsCategoryImp.h"
 #include "nsICaseConversion.h"
+#include "nsCaseConversionImp2.h"
 #include "nsEntityConverter.h"
 #include "nsSaveAsCharset.h"
 #include "nsUUDll.h"
@@ -76,9 +76,7 @@ CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
     return rv;                                                       \
 }
 
-
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCaseConversionImp2,
-                                         nsCaseConversionImp2::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCaseConversionImp2)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCategoryImp,
                                          nsCategoryImp::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntityConverter)
