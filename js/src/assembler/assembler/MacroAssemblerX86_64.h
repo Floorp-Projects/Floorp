@@ -509,6 +509,18 @@ public:
         return label;
     }
 
+    void pushAllRegs()
+    {
+        for (int i = X86Registers::eax; i <= X86Registers::r15; i++)
+            m_assembler.push_r((RegisterID)i);
+    }
+
+    void popAllRegs()
+    {
+        for (int i = X86Registers::r15; i >= X86Registers::eax; i--)
+            m_assembler.pop_r((RegisterID)i);
+    }
+
     bool supportsFloatingPoint() const { return true; }
     // See comment on MacroAssemblerARMv7::supportsFloatingPointTruncate()
     bool supportsFloatingPointTruncate() const { return true; }
