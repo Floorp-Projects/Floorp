@@ -272,8 +272,10 @@ nsIOService::Init()
 
     gIOService = this;
 
+#ifdef MOZ_IPC
     // go into managed mode if we can, and chrome process
     if (XRE_GetProcessType() == GeckoProcessType_Default)
+#endif
         mNetworkLinkService = do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
 
     if (!mNetworkLinkService)
