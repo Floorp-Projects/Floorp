@@ -287,7 +287,7 @@ mjit::stubs::SetName(VMFrame &f, JSAtom *origAtom)
         if (!atom)
             atom = origAtom;
         jsid id = ATOM_TO_JSID(atom);
-        if (entry && JS_LIKELY(obj->getOps()->setProperty == js_SetProperty)) {
+        if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
             uintN defineHow;
             JSOp op = JSOp(*f.regs.pc);
             if (op == JSOP_SETMETHOD)
