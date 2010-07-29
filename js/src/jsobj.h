@@ -1298,12 +1298,6 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, js::Value *vp);
 extern bool
 js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, const js::Value &v);
 
-/*
- * Precondition: obj must be locked.
- */
-extern JSObject *
-js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller);
-
 extern JSBool
 js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
                          JSPrincipals *principals, JSAtom *caller);
