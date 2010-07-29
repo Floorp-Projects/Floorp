@@ -43,7 +43,6 @@
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsString.h"
-#include "nsICaseConversion.h"
 #include "nsIUGenCategory.h"
 
 #include "mozITXTToHTMLConv.h" 
@@ -69,7 +68,6 @@ protected:
 
   nsString mLanguage;
   nsString mCharset;
-  nsCOMPtr<nsICaseConversion> mCaseConv;
   nsCOMPtr<nsIUGenCategory>   mCategories;
   nsCOMPtr<mozITXTToHTMLConv> mURLDetector; // used to detect urls so the spell checker can skip them.
 };
