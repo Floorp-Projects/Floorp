@@ -1000,9 +1000,7 @@ nsCookieService::Observe(nsISupports     *aSubject,
     if (mDBState->dbConn) {
       if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
         // clear the cookie file
-        nsresult rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_cookies"));
-        if (NS_FAILED(rv))
-          NS_WARNING("db delete failed");
+        RemoveAll();
       }
 
       // Close the DB connection before changing
@@ -1255,16 +1253,15 @@ nsCookieService::RemoveAll()
   if (mDBState->dbConn) {
     NS_ASSERTION(mDBState == &mDefaultDBState, "not in default DB state");
 
-    nsresult rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_cookies"));
-    if (NS_FAILED(rv)) {
-      // Database must be corrupted, so remove it completely.
-      nsCOMPtr<nsIFile> dbFile;
-      mDBState->dbConn->GetDatabaseFile(getter_AddRefs(dbFile));
-      CloseDB();
-      dbFile->Remove(PR_FALSE);
+    // XXX Ignore corruption for now. See bug 547031.
+    nsCOMPtr<mozIStorageStatement> stmt;
+    nsresult rv = mDefaultDBState.dbConn->CreateStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_cookies"), getter_AddRefs(stmt));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      InitDB();
-    }
+    nsCOMPtr<mozIStoragePendingStatement> handle;
+    rv = stmt->ExecuteAsync(mRemoveListener, getter_AddRefs(handle));
+    NS_ASSERT_SUCCESS(rv);
   }
 
   NotifyChanged(nsnull, NS_LITERAL_STRING("cleared").get());
