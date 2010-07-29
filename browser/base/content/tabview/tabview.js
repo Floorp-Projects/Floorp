@@ -1,3 +1,7 @@
+// profile.js starts a timer to see how long this file takes to load, so it needs to be first.
+// The file should be removed before we ship. 
+#include profile.js
+
 Components.utils.import("resource://gre/modules/tabview/tabs.js");
 Components.utils.import("resource://gre/modules/tabview/utils.js");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -21,14 +25,11 @@ XPCOMUtils.defineLazyGetter(this, "gTabViewFrame", function() {
 
 # NB: Certain files need to evaluate before others
 
-#include profile.js
 #include iq.js
-
 #include storage.js
 #include items.js
 #include groups.js
 #include tabitems.js
-
 #include drag.js
 #include trench.js
 #include infoitems.js
