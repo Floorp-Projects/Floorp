@@ -65,6 +65,7 @@ class nsIPrefBranch;
 class nsIObserverService;
 class nsIURI;
 class nsIChannel;
+class mozIStorageService;
 class mozIStorageStatementCallback;
 class mozIStorageCompletionCallback;
 class ReadCookieDBListener;
@@ -160,6 +161,7 @@ struct DBState
 
   // Various parts representing asynchronous read state. These are useful
   // while the background read is taking place.
+  nsCOMPtr<mozIStorageConnection>       syncConn;
   nsCOMPtr<mozIStorageStatement>        stmtReadDomain;
   nsCOMPtr<mozIStoragePendingStatement> pendingRead;
   // The asynchronous read listener. This is a weak ref (storage has ownership)
@@ -220,6 +222,7 @@ class nsCookieService : public nsICookieService
     template<class T> nsCookie*   GetCookieFromRow(T &aRow);
     void                          AsyncReadComplete();
     void                          CancelAsyncRead(PRBool aPurgeReadSet);
+    mozIStorageConnection*        GetSyncDBConn();
     void                          EnsureReadDomain(const nsCString &aBaseDomain);
     void                          EnsureReadComplete();
     nsresult                      NormalizeHost(nsCString &aHost);
@@ -253,6 +256,7 @@ class nsCookieService : public nsICookieService
     nsCOMPtr<nsICookiePermission>    mPermissionService;
     nsCOMPtr<nsIEffectiveTLDService> mTLDService;
     nsCOMPtr<nsIIDNService>          mIDNService;
+    nsCOMPtr<mozIStorageService>     mStorageService;
 
     // we have two separate DB states: one for normal browsing and one for
     // private browsing, switching between them as appropriate. this state
