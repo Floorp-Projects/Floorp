@@ -710,11 +710,11 @@ FrameState::ownRegForData(FrameEntry *fe)
     }
 
     if (fe->isCopied()) {
-        uncopy(fe);
+        FrameEntry *copy = uncopy(fe);
         if (fe->isCopied()) {
-            reg = allocReg();
-            masm.loadPayload(addressOf(fe), reg);
-            return reg;
+            fe->type.invalidate();
+            fe->data.invalidate();
+            return copyDataIntoReg(copy);
         }
     }
     
@@ -763,7 +763,7 @@ FrameState::pushCopyOf(uint32 index)
     }
 }
 
-void
+FrameEntry *
 FrameState::uncopy(FrameEntry *original)
 {
     JS_ASSERT(original->isCopied());
@@ -783,7 +783,7 @@ FrameState::uncopy(FrameEntry *original)
 
     if (firstCopy == InvalidIndex) {
         original->copied = false;
-        return;
+        return NULL;
     }
 
     /* Mark all extra copies as copies of the new backing index. */
@@ -830,6 +830,8 @@ FrameState::uncopy(FrameEntry *original)
     fe->data.inherit(original->data);
     if (fe->data.inRegister())
         moveOwnership(fe->data.reg(), fe);
+
+    return fe;
 }
 
 void
