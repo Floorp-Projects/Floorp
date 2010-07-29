@@ -2379,7 +2379,8 @@ _cairo_d2d_fill(void			*surface,
 
     op = _cairo_d2d_simplify_operator(op, source);
 
-    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD) {
+    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD &&
+	op != CAIRO_OPERATOR_CLEAR) {
 	/** 
 	 * We don't really support ADD yet. True ADD support requires getting
 	 * the tesselated mesh from D2D, and blending that using D3D which has
