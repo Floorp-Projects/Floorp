@@ -1124,7 +1124,9 @@ XPCWrappedNative::Init(XPCCallContext& ccx,
 
     // create our flatJSObject
 
-    JSClass* jsclazz = si ? si->GetJSClass() : &XPC_WN_NoHelper_JSClass.base;
+    js::Class* jsclazz = si
+                         ? js::Valueify(si->GetJSClass())
+                         : &XPC_WN_NoHelper_JSClass;
 
     if(isGlobal)
     {
@@ -1158,8 +1160,8 @@ XPCWrappedNative::Init(XPCCallContext& ccx,
         return JS_FALSE;
     }
 
-    mFlatJSObject = xpc_NewSystemInheritingJSObject(ccx, jsclazz, protoJSObject,
-                                                    parent);
+    mFlatJSObject = xpc_NewSystemInheritingJSObject(ccx, js::Jsvalify(jsclazz),
+                                                    protoJSObject, parent);
     if(!mFlatJSObject)
         return JS_FALSE;
 
@@ -1683,7 +1685,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
         JSObject* funObjParent = funobj->getParent();
         NS_ASSERTION(funObjParent, "funobj has no parent");
 
-        JSClass* funObjParentClass = funObjParent->getJSClass();
+        js::Class* funObjParentClass = funObjParent->getClass();
 
         if(IS_PROTO_CLASS(funObjParentClass))
         {
@@ -1713,8 +1715,8 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
     for(cur = obj; cur; cur = cur->getProto())
     {
         // this is on two lines to make the compiler happy given the goto.
-        JSClass* clazz;
-        clazz = cur->getJSClass();
+        js::Class* clazz;
+        clazz = cur->getClass();
 
         if(IS_WRAPPER_CLASS(clazz))
         {
@@ -1771,12 +1773,9 @@ return_tearoff:
     // If we didn't find a wrapper using the given funobj and obj, try
     // again with obj's outer object, if it's got one.
 
-    JSClass *clazz = obj->getJSClass();
-
-    if((clazz->flags & JSCLASS_IS_EXTENDED) &&
-        ((JSExtendedClass*)clazz)->outerObject)
+    if(JSObjectOp op = obj->getClass()->ext.outerObject)
     {
-        JSObject *outer = ((JSExtendedClass*)clazz)->outerObject(cx, obj);
+        JSObject *outer = op(cx, obj);
         if(outer && outer != obj)
             return GetWrappedNativeOfJSObject(cx, outer, funobj, pobj2,
                                               pTearOff);
@@ -2118,7 +2117,7 @@ XPCWrappedNative::InitTearOffJSObject(XPCCallContext& ccx,
     // This is only called while locked (during XPCWrappedNative::FindTearOff).
 
     JSObject* obj =
-        xpc_NewSystemInheritingJSObject(ccx, &XPC_WN_Tearoff_JSClass,
+        xpc_NewSystemInheritingJSObject(ccx, js::Jsvalify(&XPC_WN_Tearoff_JSClass),
                                         GetScope()->GetPrototypeJSObject(),
                                         mFlatJSObject);
 

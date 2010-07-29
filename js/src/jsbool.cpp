@@ -56,15 +56,18 @@
 
 #include "jsobjinlines.h"
 
-
 using namespace js;
 
 Class js_BooleanClass = {
     "Boolean",
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),
-    PropertyStub,  PropertyStub,  PropertyStub,  PropertyStub,
-    EnumerateStub, ResolveStub,   ConvertStub,   NULL,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    PropertyStub,   /* addProperty */
+    PropertyStub,   /* delProperty */
+    PropertyStub,   /* getProperty */
+    PropertyStub,   /* setProperty */
+    EnumerateStub,
+    ResolveStub,
+    ConvertStub
 };
 
 #if JS_HAS_TOSOURCE

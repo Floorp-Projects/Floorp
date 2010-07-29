@@ -1276,7 +1276,7 @@ class ScopeNameCompiler : public PICStubCompiler
                 return false;
 
             /* Load the next link in the scope chain. */
-            Address parent(pic.objReg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(Value));
+            Address parent(pic.objReg, offsetof(JSObject, parent));
             masm.load32(parent, pic.objReg);
 
             tobj = tobj->getParent();
@@ -1540,7 +1540,7 @@ class BindNameCompiler : public PICStubCompiler
 
         /* Walk up the scope chain. */
         JSObject *tobj = scopeChain;
-        Address parent(pic.objReg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(Value));
+        Address parent(pic.objReg, offsetof(JSObject, parent));
         while (tobj && tobj != obj) {
             if (!js_IsCacheableNonGlobalScope(tobj))
                 return disable("non-cacheable obj in scope chain");
@@ -1869,7 +1869,7 @@ ic::CallProp(VMFrame &f, uint32 index)
     regs.sp[-1].setNull();
     if (lval.isObject()) {
         if (!js_GetMethod(cx, &objv.toObject(), id,
-                          JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
+                          JS_LIKELY(!js_GetProperty)
                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                           : JSGET_NO_METHOD_BARRIER,
                           &rval)) {
@@ -1878,7 +1878,7 @@ ic::CallProp(VMFrame &f, uint32 index)
         regs.sp[-1] = objv;
         regs.sp[-2] = rval;
     } else {
-        JS_ASSERT(objv.toObject().map->ops->getProperty == js_GetProperty);
+        JS_ASSERT(!objv.toObject().getOps()->getProperty);
         if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
                                   JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
                                   &rval)) {

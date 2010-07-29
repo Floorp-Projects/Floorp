@@ -684,7 +684,7 @@ CanReify(Value *vp)
 {
     JSObject *obj;
     return vp->isObject() &&
-           (obj = &vp->toObject())->getClass() == &js_IteratorClass.base &&
+           (obj = &vp->toObject())->getClass() == &js_IteratorClass &&
            (obj->getNativeIterator()->flags & JSITER_ENUMERATE);
 }
 

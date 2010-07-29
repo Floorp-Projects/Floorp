@@ -315,9 +315,13 @@ const uint32 JSSLOT_SAVED_ID        = JSSLOT_PRIVATE + 1;
 Class js_NoSuchMethodClass = {
     "NoSuchMethod",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
-    PropertyStub,     PropertyStub,     PropertyStub,      PropertyStub,
-    EnumerateStub,    ResolveStub,      ConvertStub,       NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    PropertyStub,   /* addProperty */
+    PropertyStub,   /* delProperty */
+    PropertyStub,   /* getProperty */
+    PropertyStub,   /* setProperty */
+    EnumerateStub,
+    ResolveStub,
+    ConvertStub,
 };
 
 /*
@@ -663,7 +667,7 @@ DoSlowCall(JSContext *cx, uintN argc, Value *vp)
 
     JSObject *callee = &JS_CALLEE(cx, vp).toObject();
     Class *clasp = callee->getClass();
-    JS_ASSERT(!(clasp->flags & CLASS_CALL_IS_FAST));
+    JS_ASSERT(!(clasp->flags & Class::CALL_IS_FAST));
     if (!clasp->call) {
         js_ReportIsNotFunction(cx, &vp[0], 0);
         return JS_FALSE;
@@ -765,7 +769,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         }
         return InvokeCommon(cx, NULL, NULL, DoConstruct, args, flags);
     }
-    CallOp callOp = (clasp->flags & CLASS_CALL_IS_FAST) ? (CallOp) clasp->call : DoSlowCall;
+    CallOp callOp = (clasp->flags & Class::CALL_IS_FAST) ? (CallOp) clasp->call : DoSlowCall;
     return InvokeCommon(cx, NULL, NULL, callOp, args, flags);
 }
 
@@ -915,7 +919,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
                         ? chain->getGlobal()
                         : chain;
     }
-    JS_ASSERT(initialVarObj->map->ops->defineProperty == js_DefineProperty);
+    JS_ASSERT(!initialVarObj->getOps()->defineProperty);
 
     fp->script = script;
     fp->imacpc = NULL;
@@ -1154,7 +1158,7 @@ TypeOfValue(JSContext *cx, const Value &vref)
     if (v.isUndefined())
         return JSTYPE_VOID;
     if (v.isObject())
-        return v.toObject().map->ops->typeOf(cx, &v.toObject());
+        return v.toObject().typeOf(cx);
     JS_ASSERT(v.isBoolean());
     return JSTYPE_BOOLEAN;
 }
@@ -2065,7 +2069,7 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 static inline bool
 IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 {
-    if (iterobj->getClass() == &js_IteratorClass.base) {
+    if (iterobj->getClass() == &js_IteratorClass) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         *cond = (ni->props_cursor < ni->props_end);
     } else {
@@ -2079,7 +2083,7 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 static inline bool
 IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
-    if (iterobj->getClass() == &js_IteratorClass.base) {
+    if (iterobj->getClass() == &js_IteratorClass) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
         if (ni->isKeyIter()) {
@@ -3335,9 +3339,8 @@ END_CASE(JSOP_BITAND)
     } else
 
 #define EXTENDED_EQUALITY_OP(OP)                                              \
-    if (((clasp = l->getClass())->flags & JSCLASS_IS_EXTENDED) &&             \
-        ((ExtendedClass *)clasp)->equality) {                                 \
-        if (!((ExtendedClass *)clasp)->equality(cx, l, &rval, &cond))         \
+    if (EqualityOp eq = l->getClass()->ext.equality) {                        \
+        if (!eq(cx, l, &rval, &cond))                                         \
             goto error;                                                       \
         cond = cond OP JS_TRUE;                                               \
     } else
@@ -3348,7 +3351,6 @@ END_CASE(JSOP_BITAND)
 
 #define EQUALITY_OP(OP, IFNAN)                                                \
     JS_BEGIN_MACRO                                                            \
-        Class *clasp;                                                         \
         JSBool cond;                                                          \
         Value rval = regs.sp[-1];                                             \
         Value lval = regs.sp[-2];                                             \
@@ -4135,7 +4137,7 @@ BEGIN_CASE(JSOP_GETXPROP)
             }
 
             jsid id = ATOM_TO_JSID(atom);
-            if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
+            if (JS_LIKELY(!aobj->getOps()->getProperty)
                 ? !js_GetPropertyHelper(cx, obj, id,
                                         (fp->imacpc ||
                                          regs.pc[JSOP_GETPROP_LENGTH + i] == JSOP_IFEQ)
@@ -4239,7 +4241,7 @@ BEGIN_CASE(JSOP_CALLPROP)
     PUSH_NULL();
     if (lval.isObject()) {
         if (!js_GetMethod(cx, &objv.toObject(), id,
-                          JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
+                          JS_LIKELY(!aobj->getOps()->getProperty)
                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                           : JSGET_NO_METHOD_BARRIER,
                           &rval)) {
@@ -4248,7 +4250,7 @@ BEGIN_CASE(JSOP_CALLPROP)
         regs.sp[-1] = objv;
         regs.sp[-2] = rval;
     } else {
-        JS_ASSERT(objv.toObject().map->ops->getProperty == js_GetProperty);
+        JS_ASSERT(!objv.toObject().getOps()->getProperty);
         if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
                                   JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
                                   &rval)) {
@@ -4475,7 +4477,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
         if (!atom)
             LOAD_ATOM(0, atom);
         jsid id = ATOM_TO_JSID(atom);
-        if (entry && JS_LIKELY(obj->map->ops->setProperty == js_SetProperty)) {
+        if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
             uintN defineHow;
             if (op == JSOP_SETMETHOD)
                 defineHow = JSDNP_CACHE_RESULT | JSDNP_SET_METHOD;
@@ -5488,7 +5490,7 @@ BEGIN_CASE(JSOP_DEFVAR)
      */
     index += atoms - script->atomMap.vector;
     JSObject *obj = fp->varobj(cx);
-    JS_ASSERT(obj->map->ops->defineProperty == js_DefineProperty);
+    JS_ASSERT(!obj->getOps()->defineProperty);
     uintN attrs = JSPROP_ENUMERATE;
     if (!(fp->flags & JSFRAME_EVAL))
         attrs |= JSPROP_PERMANENT;

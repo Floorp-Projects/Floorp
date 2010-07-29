@@ -1267,19 +1267,16 @@ private:
 // These are the various JSClasses and callbacks whose use that required
 // visibility from more than one .cpp file.
 
-extern JSExtendedClass XPC_WN_NoHelper_JSClass;
-extern JSClass XPC_WN_NoMods_WithCall_Proto_JSClass;
-extern JSClass XPC_WN_NoMods_NoCall_Proto_JSClass;
-extern JSClass XPC_WN_ModsAllowed_WithCall_Proto_JSClass;
-extern JSClass XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
-extern JSClass XPC_WN_Tearoff_JSClass;
-extern JSClass XPC_WN_NoHelper_Proto_JSClass;
+extern js::Class XPC_WN_NoHelper_JSClass;
+extern js::Class XPC_WN_NoMods_WithCall_Proto_JSClass;
+extern js::Class XPC_WN_NoMods_NoCall_Proto_JSClass;
+extern js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass;
+extern js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
+extern js::Class XPC_WN_Tearoff_JSClass;
+extern js::Class XPC_WN_NoHelper_Proto_JSClass;
 
 extern JSBool
 XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
-
-extern JSObjectOps *
-XPC_WN_Proto_GetObjectOps(JSContext *cx, JSClass *clazz);
 
 extern JSBool
 XPC_WN_CallMethod(JSContext *cx, JSObject *obj,
@@ -1290,16 +1287,62 @@ XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
                     uintN argc, jsval *argv, jsval *vp);
 
 extern JSBool
-xpc_InitWrappedNativeJSOps();
+XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
+                      jsval *statep, jsid *idp);
+
+extern JSType
+XPC_WN_JSOp_TypeOf_Object(JSContext *cx, JSObject *obj);
+
+extern JSType
+XPC_WN_JSOp_TypeOf_Function(JSContext *cx, JSObject *obj);
+
+extern void
+XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj);
+
+extern JSObject*
+XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
+
+// Macros to initialize Object or Function like XPC_WN classes
+#define XPC_WN_WithCall_ObjectOps                                             \
+    {                                                                         \
+        nsnull, /* lookupProperty */                                          \
+        nsnull, /* defineProperty */                                          \
+        nsnull, /* getProperty    */                                          \
+        nsnull, /* setProperty    */                                          \
+        nsnull, /* getAttributes  */                                          \
+        nsnull, /* setAttributes  */                                          \
+        nsnull, /* deleteProperty */                                          \
+        js::Valueify(XPC_WN_JSOp_Enumerate),                                  \
+        XPC_WN_JSOp_TypeOf_Function,                                          \
+        nsnull, /* trace          */                                          \
+        XPC_WN_JSOp_ThisObject,                                               \
+        XPC_WN_JSOp_Clear                                                     \
+    }
+
+#define XPC_WN_NoCall_ObjectOps                                               \
+    {                                                                         \
+        nsnull, /* lookupProperty */                                          \
+        nsnull, /* defineProperty */                                          \
+        nsnull, /* getProperty    */                                          \
+        nsnull, /* setProperty    */                                          \
+        nsnull, /* getAttributes  */                                          \
+        nsnull, /* setAttributes  */                                          \
+        nsnull, /* deleteProperty */                                          \
+        js::Valueify(XPC_WN_JSOp_Enumerate),                                  \
+        XPC_WN_JSOp_TypeOf_Object,                                            \
+        nsnull, /* trace          */                                          \
+        XPC_WN_JSOp_ThisObject,                                               \
+        XPC_WN_JSOp_Clear                                                     \
+    }
 
 // Maybe this macro should check for class->enumerate ==
 // XPC_WN_Shared_Proto_Enumerate or something rather than checking for
 // 4 classes?
 #define IS_PROTO_CLASS(clazz)                                                 \
-          ((clazz) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||                \
-           (clazz) == &XPC_WN_NoMods_NoCall_Proto_JSClass ||                  \
-           (clazz) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||           \
-           (clazz) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass)
+    ((clazz) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||                      \
+     (clazz) == &XPC_WN_NoMods_NoCall_Proto_JSClass ||                        \
+     (clazz) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||                 \
+     (clazz) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass)
 
 // NOTE!!!
 //
@@ -1309,8 +1352,7 @@ xpc_InitWrappedNativeJSOps();
 //
 // NOTE!!!
 #define IS_WRAPPER_CLASS(clazz)                                               \
-    (((clazz)->flags & JSCLASS_IS_EXTENDED) &&                                \
-     reinterpret_cast<JSExtendedClass*>(clazz)->equality == XPC_WN_Equality)
+    (clazz->ext.equality == js::Valueify(XPC_WN_Equality))
 
 inline JSBool
 DebugCheckWrapperClass(JSObject* obj)
@@ -1915,8 +1957,9 @@ public:
 // was a big problem when wrappers are reparented to different scopes (and
 // thus different protos (the DOM does this).
 
-struct XPCNativeScriptableSharedJSClass : public JSExtendedClass
+struct XPCNativeScriptableSharedJSClass
 {
+    js::Class base;
     PRUint32 interfacesBitmap;
 };
 
@@ -1926,7 +1969,8 @@ public:
     const XPCNativeScriptableFlags& GetFlags() const {return mFlags;}
     PRUint32                        GetInterfacesBitmap() const
         {return mJSClass.interfacesBitmap;}
-    JSClass*                        GetJSClass() {return &mJSClass.base;}
+    JSClass*                        GetJSClass()
+        {return js::Jsvalify(&mJSClass.base);}
     JSClass*                        GetSlimJSClass()
         {if(mCanBeSlim) return GetJSClass(); return nsnull;}
 

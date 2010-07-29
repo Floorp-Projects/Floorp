@@ -601,7 +601,6 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             if(nsnull!=(chars = JS_GetStringCharsZ(cx, str)))
             {
                 NS_ASSERTION((! ILLEGAL_RANGE(chars[0])),"U+0080/U+0100 - U+FFFF data lost");
-                return JS_FALSE;
             }
 #endif // DEBUG
             *((char*)d) = bytes[0];
