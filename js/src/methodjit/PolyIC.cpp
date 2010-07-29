@@ -822,9 +822,15 @@ class GetPropCompiler : public PICStubCompiler
                 // FIXME: we should find out why this condition occurs. It is probably
                 // related to PICs on globals.
                 if (!tempObj)
-                    return false;
+                    return disable("null object in prototype chain");
                 JS_ASSERT(tempObj);
-                JS_ASSERT(tempObj->isNative());
+
+                /* 
+                 * If there is a non-native along the prototype chain the shape is technically
+                 * invalid.
+                 */
+                if (!tempObj->isNative())
+                    return disable("non-JS-native in prototype chain");
 
                 masm.loadPtr(proto, pic.objReg);
                 pic.shapeRegHasBaseShape = false;
@@ -843,6 +849,7 @@ class GetPropCompiler : public PICStubCompiler
                 return false;
             pic.u.get.secondShapeGuard = masm.distanceOf(masm.label()) - masm.distanceOf(start);
         } else {
+            JS_ASSERT(holder->isNative()); /* Precondition: already checked. */
             pic.u.get.secondShapeGuard = 0;
         }
 
@@ -1084,15 +1091,15 @@ class GetElemCompiler : public PICStubCompiler
                 // FIXME: we should find out why this condition occurs. It is probably
                 // related to PICs on globals.
                 if (!tempObj)
-                    return false;
+                    return disable("null object in prototype chain");
                 JS_ASSERT(tempObj);
 
                 /* 
-                 * If there is a native along the prototype chain the shape is technically
+                 * If there is a non-native along the prototype chain the shape is technically
                  * invalid.
                  */
                 if (!tempObj->isNative())
-                    return false;
+                    return disable("non-JS-native in prototype chain");
 
                 masm.loadPtr(proto, pic.objReg);
                 pic.shapeRegHasBaseShape = false;
