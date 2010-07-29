@@ -145,12 +145,12 @@ window.Rect.prototype = {
   // ----------
   // Variable: xRange
   // Gives you a new <Range> for the horizontal dimension.
-  get xRange() new Range(this.left,this.right),
+  get xRange() new Range(this.left, this.right),
 
   // ----------
   // Variable: yRange
   // Gives you a new <Range> for the vertical dimension.
-  get yRange() new Range(this.top,this.bottom),
+  get yRange() new Range(this.top, this.bottom),
 
   // ----------
   // Function: intersects
@@ -184,10 +184,10 @@ window.Rect.prototype = {
   // Paramaters
   //  - A <Rect>
   contains: function(rect){
-    return( rect.left > this.left
+    return(rect.left > this.left
          && rect.right < this.right
          && rect.top > this.top
-         && rect.bottom < this.bottom )
+         && rect.bottom < this.bottom)
   },
 
   // ----------
@@ -340,7 +340,7 @@ window.Range.prototype = {
     return Utils.isNumber(value) ?
       value >= this.min && value <= this.max :
       Utils.isRange(value) ?
-        ( value.min <= this.max && this.min <= value.max ) :
+        (value.min <= this.max && this.min <= value.max) :
         false;
   },
 
@@ -515,10 +515,10 @@ window.Utils = {
   trace: function() {
     var text = this.expandArgumentsForLog(arguments);
     // cut off the first two lines of the stack trace, because they're just this function.
-    var stack = Error().stack.replace(/^.*?\n.*?\n/,'');
+    let stack = Error().stack.replace(/^.*?\n.*?\n/, "");
     // if the caller was assert, cut out the line for the assert function as well.
     if (this.trace.caller.name == 'Utils_assert')
-      stack = stack.replace(/^.*?\n/,'');
+      stack = stack.replace(/^.*?\n/, "");
     this.log('trace: ' + text + '\n' + stack);
   },
 
@@ -549,7 +549,7 @@ window.Utils = {
         text = 'tabcandy assert: ' + label;
 
       // cut off the first two lines of the stack trace, because they're just this function.
-      text += Error().stack.replace(/^.*?\n.*?\n/,'');
+      text += Error().stack.replace(/^.*?\n.*?\n/, "");
 
       throw text;
     }
@@ -644,20 +644,20 @@ window.Utils = {
   // ----------
   // Function: isPlainObject
   // Check to see if an object is a plain object (created using "{}" or "new Object").
-  isPlainObject: function( obj ) {
+  isPlainObject: function(obj) {
     // Must be an Object.
     // Make sure that DOM nodes and window objects don't pass through, as well
-    if ( !obj || Object.prototype.toString.call(obj) !== "[object Object]" 
-        || obj.nodeType || obj.setInterval ) {
+    if (!obj || Object.prototype.toString.call(obj) !== "[object Object]" 
+        || obj.nodeType || obj.setInterval) {
       return false;
     }
 
     // Not own constructor property must be Object
     const hasOwnProperty = Object.prototype.hasOwnProperty;
 
-    if ( obj.constructor
+    if (obj.constructor
       && !hasOwnProperty.call(obj, "constructor")
-      && !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf") ) {
+      && !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
       return false;
     }
 
@@ -665,16 +665,16 @@ window.Utils = {
     // if last one is own, then all properties are own.
 
     var key;
-    for ( key in obj ) {}
+    for (key in obj) {}
 
-    return key === undefined || hasOwnProperty.call( obj, key );
+    return key === undefined || hasOwnProperty.call(obj, key);
   },
 
   // ----------
   // Function: isEmptyObject
   // Returns true if the given object has no members.
-  isEmptyObject: function( obj ) {
-    for ( var name in obj )
+  isEmptyObject: function(obj) {
+    for (let name in obj)
       return false;
     return true;
   },
@@ -695,16 +695,16 @@ window.Utils = {
   // ----------
   // Function: merge
   // Merge two arrays and return the result.
-  merge: function( first, second ) {
+  merge: function(first, second) {
     var i = first.length, j = 0;
 
-    if ( typeof second.length === "number" ) {
-      for ( let l = second.length; j < l; j++ ) {
-        first[ i++ ] = second[ j ];
+    if (typeof second.length === "number") {
+      for (let l = second.length; j < l; j++) {
+        first[i++] = second[j];
       }
     } else {
-      while ( second[j] !== undefined ) {
-        first[ i++ ] = second[ j++ ];
+      while (second[j] !== undefined) {
+        first[i++] = second[j++];
       }
     }
 
@@ -721,16 +721,16 @@ window.Utils = {
     var target = arguments[0] || {}, i = 1, length = arguments.length, options, name, src, copy;
 
     // Deep copy is not supported
-    if ( typeof target === "boolean" ) {
+    if (typeof target === "boolean") {
       this.assert("The first argument of extend cannot be a boolean."
-                   +"Deep copy is not supported.",false);
+                   +"Deep copy is not supported.", false);
       return target;
     }
 
     // Back when this was in iQ + iQ.fn, so you could extend iQ objects with it.
     // This is no longer supported.
-    if ( length === 1 ) {
-      this.assert("Extending the iQ prototype using extend is not supported.",false);
+    if (length === 1) {
+      this.assert("Extending the iQ prototype using extend is not supported.", false);
       return target;
     }
 
@@ -739,20 +739,20 @@ window.Utils = {
       target = {};
     }
 
-    for ( ; i < length; i++ ) {
+    for (; i < length; i++) {
       // Only deal with non-null/undefined values
-      if ( (options = arguments[ i ]) != null ) {
+      if ((options = arguments[i]) != null) {
         // Extend the base object
-        for ( name in options ) {
-          src = target[ name ];
-          copy = options[ name ];
+        for (name in options) {
+          src = target[name];
+          copy = options[name];
 
           // Prevent never-ending loop
-          if ( target === copy )
+          if (target === copy)
             continue;
 
-          if ( copy !== undefined )
-            target[ name ] = copy;
+          if (copy !== undefined)
+            target[name] = copy;
         }
       }
     }
