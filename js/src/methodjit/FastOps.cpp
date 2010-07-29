@@ -971,11 +971,17 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
         Value v = fe->getValue();
         double d;
         ValueToNumber(cx, v, &d);
-        d += amt;
-        v.setNumber(d);
-        frame.push(v);
-        frame.storeLocal(slot);
-        frame.pop();
+        if (post) {
+            frame.push(NumberValue(d + amt));
+            frame.storeLocal(slot);
+            frame.pop();
+        } else {
+            frame.pop();
+            frame.push(NumberValue(d + amt));
+            frame.storeLocal(slot);
+        }
+        if (popped)
+            frame.pop();
         return;
     }
 
