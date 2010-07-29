@@ -388,24 +388,21 @@ function FindProxyForURL(url, host)
     return 'DIRECT';
   var isHttp = matches[1] == 'http';
   var isHttps = matches[1] == 'https';
-  var isWs = matches[1] == 'ws';
-  var isWss = matches[1] == 'wss';
+  var isWebSocket = matches[1] == 'ws';
   if (!matches[3])
   {
-    if (isHttp | isWs) matches[3] = '80';
-    if (isHttps | isWss) matches[3] = '443';
+    if (isHttp | isWebSocket) matches[3] = '80';
+    if (isHttps) matches[3] = '443';
   }
-  if (isWs)
+  if (isWebSocket)
     matches[1] = 'http';
-  if (isWss)
-    matches[1] = 'https';
 
   var origin = matches[1] + '://' + matches[2] + ':' + matches[3];
   if (origins.indexOf(origin) < 0)
     return 'DIRECT';
   if (isHttp)
     return 'PROXY %(remote)s:%(httpport)s';
-  if (isHttps || isWs || isWss)
+  if (isHttps || isWebSocket)
     return 'PROXY %(remote)s:%(sslport)s';
   return 'DIRECT';
 }""" % { "origins": origins,
