@@ -193,19 +193,6 @@ iQClass.prototype = {
   length: 0,
 
   // ----------
-  // Function: get
-  // Get the Nth element in the matched element set OR
-  // Get the whole matched element set as a clean array
-  get: function(num) {
-    if (num == null) // Return a 'clean' array
-      return Array.slice(this, 0);
-
-    // Return just the Nth object
-    let index = num < 0 ? num + this.length : num;
-    return this[index];
-  },
-
-  // ----------
   // Function: each
   // Execute a callback for every element in the matched set.
   each: function(callback) {
