@@ -3169,8 +3169,9 @@ mjit::Compiler::jsop_instanceof()
 
     /* Quick test to avoid wrapped objects. */
     masm.loadPtr(Address(obj, offsetof(JSObject, clasp)), temp);
-    masm.load32(Address(temp, offsetof(Class, ext)), temp);
-    masm.load32(Address(temp, offsetof(ClassExtension, wrappedObject)), temp);
+    masm.load32(Address(temp, offsetof(Class, ext) +
+                              offsetof(ClassExtension, wrappedObject)),
+                temp);
     j = masm.branchTest32(Assembler::NonZero, temp, temp);
     stubcc.linkExit(j, Uses(3));
 
