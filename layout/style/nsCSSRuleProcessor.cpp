@@ -147,7 +147,7 @@ RuleHash_CIHashKey(PLDHashTable *table, const void *key)
 
   nsAutoString str;
   atom->ToString(str);
-  nsContentUtils::ASCIIToLower(str);
+  ToUpperCase(str);
   return HashString(str);
 }
 
@@ -1461,7 +1461,7 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
     return PR_FALSE;
 
   const nsDefaultStringComparator defaultComparator;
-  const nsASCIICaseInsensitiveStringComparator ciComparator;
+  const nsCaseInsensitiveStringComparator ciComparator;
   const nsStringComparator& comparator =
       (aAttrSelector->mCaseSensitive || !isHTML)
                 ? static_cast<const nsStringComparator&>(defaultComparator)
@@ -1762,7 +1762,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         if (lang && !lang->IsEmpty()) { // null check for out-of-memory
           if (!nsStyleUtil::DashMatchCompare(*lang,
                                              nsDependentString(pseudoClass->u.mString),
-                                             nsASCIICaseInsensitiveStringComparator())) {
+                                             nsCaseInsensitiveStringComparator())) {
             return PR_FALSE;
           }
           // This pseudo-class matched; move on to the next thing
@@ -1790,7 +1790,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             if (nsStyleUtil::DashMatchCompare(Substring(language, begin,
                                                         end-begin),
                                               langString,
-                                              nsASCIICaseInsensitiveStringComparator())) {
+                                              nsCaseInsensitiveStringComparator())) {
               break;
             }
             begin = end + 1;
