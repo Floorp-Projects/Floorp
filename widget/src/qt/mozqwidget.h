@@ -78,33 +78,32 @@ class MozQGraphicsViewEvents
 {
 public:
 
-    MozQGraphicsViewEvents(QGraphicsView* aView, MozQWidget* aTopLevel)
-     : mTopLevelWidget(aTopLevel)
-     , mView(aView)
+    MozQGraphicsViewEvents(QGraphicsView* aView)
+     : mView(aView)
     { }
 
-    void handleEvent(QEvent* aEvent)
+    void handleEvent(QEvent* aEvent, MozQWidget* aTopLevel)
     {
         if (!aEvent)
             return;
         if (aEvent->type() == QEvent::WindowActivate) {
-            if (mTopLevelWidget)
-                mTopLevelWidget->activate();
+            if (aTopLevel)
+                aTopLevel->activate();
         }
 
         if (aEvent->type() == QEvent::WindowDeactivate) {
-            if (mTopLevelWidget)
-                mTopLevelWidget->deactivate();
+            if (aTopLevel)
+                aTopLevel->deactivate();
         }
     }
 
-    void handleResizeEvent(QResizeEvent* aEvent)
+    void handleResizeEvent(QResizeEvent* aEvent, MozQWidget* aTopLevel)
     {
         if (!aEvent)
             return;
-        if (mTopLevelWidget) {
+        if (aTopLevel) {
             // transfer new size to graphics widget
-            mTopLevelWidget->setGeometry(0.0, 0.0,
+            aTopLevel->setGeometry(0.0, 0.0,
                 static_cast<qreal>(aEvent->size().width()),
                 static_cast<qreal>(aEvent->size().height()));
             // resize scene rect to vieport size,
@@ -114,14 +113,14 @@ public:
         }
     }
 
-    bool handleCloseEvent(QCloseEvent* aEvent)
+    bool handleCloseEvent(QCloseEvent* aEvent, MozQWidget* aTopLevel)
     {
         if (!aEvent)
             return false;
-        if (mTopLevelWidget) {
+        if (aTopLevel) {
             // close graphics widget instead, this view will be discarded
             // automatically
-            QApplication::postEvent(mTopLevelWidget, new QCloseEvent(*aEvent));
+            QApplication::postEvent(aTopLevel, new QCloseEvent(*aEvent));
             aEvent->ignore();
             return true;
         }
@@ -130,7 +129,6 @@ public:
     }
 
 private:
-    MozQWidget* mTopLevelWidget;
     QGraphicsView* mView;
 };
 
@@ -146,7 +144,7 @@ class MozQGraphicsView : public QGraphicsView
 public:
     MozQGraphicsView(MozQWidget* aTopLevel, QWidget * aParent = nsnull)
      : QGraphicsView (new QGraphicsScene(), aParent)
-     , mEventHandler(this, aTopLevel)
+     , mEventHandler(this)
      , mTopLevelWidget(aTopLevel)
     {
         scene()->addItem(aTopLevel);
@@ -156,19 +154,19 @@ protected:
 
     virtual bool event(QEvent* aEvent)
     {
-        mEventHandler.handleEvent(aEvent);
+        mEventHandler.handleEvent(aEvent, mTopLevelWidget);
         return QGraphicsView::event(aEvent);
     }
 
     virtual void resizeEvent(QResizeEvent* aEvent)
     {
-        mEventHandler.handleResizeEvent(aEvent);
+        mEventHandler.handleResizeEvent(aEvent, mTopLevelWidget);
         QGraphicsView::resizeEvent(aEvent);
     }
 
     virtual void closeEvent (QCloseEvent* aEvent)
     {
-        if (!mEventHandler.handleCloseEvent(aEvent))
+        if (!mEventHandler.handleCloseEvent(aEvent, mTopLevelWidget))
             QGraphicsView::closeEvent(aEvent);
     }
 
