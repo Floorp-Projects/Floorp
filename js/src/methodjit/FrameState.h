@@ -688,8 +688,10 @@ class FrameState
      * original FrameEntry is not invalidated; this is the responsibility of
      * the caller. The caller can check isCopied() to see if the registers
      * were moved to a copy.
+     *
+     * Later addition: uncopy() returns the first copy found.
      */
-    void uncopy(FrameEntry *original);
+    FrameEntry *uncopy(FrameEntry *original);
 
     FrameEntry *entryFor(uint32 index) const {
         JS_ASSERT(base[index]);
