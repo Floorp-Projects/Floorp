@@ -981,7 +981,14 @@ nsLocalFile::Remove(PRBool recursive)
             nsCOMPtr<nsIFile> file = do_QueryInterface(item, &rv);
             if (NS_FAILED(rv))
                 return NS_ERROR_FAILURE;
-            if (NS_FAILED(rv = file->Remove(recursive)))
+            rv = file->Remove(recursive);
+
+#ifdef ANDROID
+            // See bug 580434 - Bionic gives us just deleted files
+            if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+                continue;
+#endif
+            if (NS_FAILED(rv))
                 return rv;
         }
     }
