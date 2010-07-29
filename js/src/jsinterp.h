@@ -206,12 +206,12 @@ struct JSStackFrame
 
     /*
      * Get the "variable object" (ES3 term) associated with the Execution
-     * Context's VariableEnvironment (ES5 10.3). The given CallStackSegment
+     * Context's VariableEnvironment (ES5 10.3). The given StackSegment
      * must contain this stack frame.
      */
-    JSObject *varobj(js::CallStackSegment *css) const;
+    JSObject *varobj(js::StackSegment *seg) const;
 
-    /* Short for: varobj(cx->activeCallStack()). */
+    /* Short for: varobj(cx->activeSegment()). */
     JSObject *varobj(JSContext *cx) const;
 
     inline JSObject *getThisObject(JSContext *cx);
