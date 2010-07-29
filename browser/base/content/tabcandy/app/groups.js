@@ -156,7 +156,7 @@ window.Group = function Group(listOfEls, options) {
       self.newTab();
     });
 
-  this.$ntb.get(0).title = 'New tab';
+  (this.$ntb)[0].title = 'New tab';
 
   if ( this.isNewTabsGroup() ) this.$ntb.html("<span>+</span>");
 
@@ -219,7 +219,7 @@ window.Group = function Group(listOfEls, options) {
 
   var handleKeyPress = function(e){
     if ( e.which == 13 ) { // return
-      self.$title.get(0).blur();
+      (self.$title)[0].blur();
       self.$title
         .addClass("transparentBorder")
         .one("mouseout", function(){
@@ -236,10 +236,10 @@ window.Group = function Group(listOfEls, options) {
     .blur(titleUnfocus)
     .focus(function() {
       if (self.locked.title) {
-        self.$title.get(0).blur();
+        (self.$title)[0].blur();
         return;
       }
-      self.$title.get(0).select();
+      (self.$title)[0].select();
       if (!self.getTitle()) {
         self.$title
           .removeClass("defaultName")
@@ -265,7 +265,7 @@ window.Group = function Group(listOfEls, options) {
 
         if (!self.isDragging) {
           self.$titleShield.hide();
-          self.$title.get(0).focus();
+          (self.$title)[0].focus();
         }
       });
   }
@@ -285,7 +285,7 @@ window.Group = function Group(listOfEls, options) {
     $close.hide();
 
   // ___ Superclass initialization
-  this._init($container.get(0));
+  this._init($container[0]);
 
   if (this.$debug)
     this.$debug.css({zIndex: -1000});

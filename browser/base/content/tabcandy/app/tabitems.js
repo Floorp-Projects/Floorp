@@ -69,10 +69,10 @@ window.TabItem = function(tab) {
   this.needsPaint = 0;
   this.canvasSizeForced = false;
   this.isShowingCachedData = false;
-  this.favEl = iQ('.favicon>img', $div).get(0);
-  this.nameEl = iQ('.tab-title', $div).get(0);
-  this.canvasEl = iQ('.thumb canvas', $div).get(0);
-  this.cachedThumbEl = iQ('img.cached-thumb', $div).get(0);
+  this.favEl = (iQ('.favicon>img', $div))[0];
+  this.nameEl = (iQ('.tab-title', $div))[0];
+  this.canvasEl = (iQ('.thumb canvas', $div))[0];
+  this.cachedThumbEl = (iQ('img.cached-thumb', $div))[0];
   this.okayToHideCache = false;
 
   this.tabCanvas = new TabCanvas(this.tab, this.canvasEl);
@@ -101,7 +101,7 @@ window.TabItem = function(tab) {
   this.bounds.height += this.sizeExtra.y;
 
   // ___ superclass setup
-  this._init($div.get(0));
+  this._init($div[0]);
 
   // ___ drag/drop
   // override dropOptions with custom tabitem methods
