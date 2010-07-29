@@ -4950,6 +4950,21 @@ nsContentUtils::GetCurrentJSContext()
 
 /* static */
 void
+nsContentUtils::ASCIIToLower(nsAString& aStr)
+{
+  PRUnichar* iter = aStr.BeginWriting();
+  PRUnichar* end = aStr.EndWriting();
+  while (iter != end) {
+    PRUnichar c = *iter;
+    if (c >= 'A' && c <= 'Z') {
+      *iter = c + ('a' - 'A');
+    }
+    ++iter;
+  }
+}
+
+/* static */
+void
 nsContentUtils::ASCIIToLower(const nsAString& aSource, nsAString& aDest)
 {
   PRUint32 len = aSource.Length();
@@ -4980,6 +4995,26 @@ nsContentUtils::ASCIIToUpper(nsAString& aStr)
       *iter = c + ('A' - 'a');
     }
     ++iter;
+  }
+}
+
+/* static */
+void
+nsContentUtils::ASCIIToUpper(const nsAString& aSource, nsAString& aDest)
+{
+  PRUint32 len = aSource.Length();
+  aDest.SetLength(len);
+  if (aDest.Length() == len) {
+    PRUnichar* dest = aDest.BeginWriting();
+    const PRUnichar* iter = aSource.BeginReading();
+    const PRUnichar* end = aSource.EndReading();
+    while (iter != end) {
+      PRUnichar c = *iter;
+      *dest = (c >= 'a' && c <= 'z') ?
+         c + ('A' - 'a') : c;
+      ++iter;
+      ++dest;
+    }
   }
 }
 
