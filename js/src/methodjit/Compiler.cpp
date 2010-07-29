@@ -1683,14 +1683,13 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     frame.syncAndKill(Registers(Registers::AvailRegs), Uses(argc + 2));
     frame.resetRegState();
 
-    Label invoke;
+    Label invoke = stubcc.masm.label();
     Jump j;
     if (!typeKnown) {
         if (!hasTypeReg)
             j = masm.testObject(Assembler::NotEqual, frame.addressOf(fe));
         else
             j = masm.testObject(Assembler::NotEqual, type);
-        invoke = stubcc.masm.label();
         stubcc.linkExit(j, Uses(argc + 2));
     }
     j = masm.testFunction(Assembler::NotEqual, data);
@@ -1713,19 +1712,7 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
         masm.move(t0, t1);
         masm.and32(Imm32(JSFUN_KINDMASK), t1);
         Jump notInterp = masm.branch32(Assembler::Below, t1, Imm32(JSFUN_INTERPRETED));
-
-        if (!typeKnown) {
-            /* Re-use the existing stub, if possible. */
-            stubcc.linkExitDirect(notInterp, invoke);
-        } else {
-            /* Create a new slow path. */
-            invoke = stubcc.masm.label();
-            stubcc.linkExit(notInterp, Uses(argc + 2));
-            stubcc.leave();
-            stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
-            stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
-            ADD_CALLSITE(true);
-        }
+        stubcc.linkExitDirect(notInterp, invoke);
     }
 
     /* Test if it's not got compiled code. */
