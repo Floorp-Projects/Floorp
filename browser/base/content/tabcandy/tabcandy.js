@@ -1,4 +1,5 @@
 Components.utils.import("resource://gre/modules/tabview/tabs.js");
+Components.utils.import("resource://gre/modules/tabview/utils.js");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gWindow", function() {
@@ -21,7 +22,6 @@ XPCOMUtils.defineLazyGetter(this, "gTabViewFrame", function() {
 # NB: Certain files need to evaluate before others
 
 #include core/profile.js
-#include core/utils.js
 #include core/iq.js
 #include app/storage.js
 #include app/items.js
