@@ -1033,8 +1033,12 @@ private:
      * Additional JS parsers.
      */
     bool recognizeDirectivePrologue(JSParseNode *pn);
+
+    bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunction *fun,
+                           JSParseNode **list);
     JSParseNode *functionBody();
     JSParseNode *functionDef(JSAtom *name, uintN lambda);
+
     JSParseNode *condition();
     JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid,
                                    js::TokenKind type = js::TOK_SEMI, JSOp op = JSOP_NOP);
