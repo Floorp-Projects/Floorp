@@ -643,6 +643,9 @@ nsCookieService::Init()
     PrefChanged(prefBranch);
   }
 
+  mStorageService = do_GetService("@mozilla.org/storage/service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // failure here is non-fatal (we can run fine without
   // persistent storage - e.g. if there's no profile)
   rv = InitDB();
@@ -721,14 +724,10 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<mozIStorageService> storage = do_GetService("@mozilla.org/storage/service;1");
-  if (!storage)
-    return NS_ERROR_UNEXPECTED;
-
   // open a connection to the cookie database, and only cache our connection
   // and statements upon success. The connection is opened shared such that
   // the main and background threads can operate on the db concurrently.
-  rv = storage->OpenDatabase(cookieFile, getter_AddRefs(mDBState->dbConn));
+  rv = mStorageService->OpenDatabase(cookieFile, getter_AddRefs(mDBState->dbConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool tableExists = PR_FALSE;
@@ -971,8 +970,10 @@ nsCookieService::CloseDB()
   if (mDefaultDBState.dbConn) {
     // Cancel any pending read. No further results will be received by our
     // read listener.
-    if (mDefaultDBState.pendingRead)
+    if (mDefaultDBState.pendingRead) {
       CancelAsyncRead(PR_TRUE);
+      mDefaultDBState.syncConn = nsnull;
+    }
 
     mDefaultDBState.dbConn->AsyncClose(mCloseListener);
     mDefaultDBState.dbConn = nsnull;
@@ -1488,6 +1489,7 @@ nsCookieService::AsyncReadComplete()
   mDefaultDBState.stmtReadDomain = nsnull;
   mDefaultDBState.pendingRead = nsnull;
   mDefaultDBState.readListener = nsnull;
+  mDefaultDBState.syncConn = nsnull;
   mDefaultDBState.hostArray.Clear();
   mDefaultDBState.readSet.Clear();
 
@@ -1521,6 +1523,23 @@ nsCookieService::CancelAsyncRead(PRBool aPurgeReadSet)
     mDefaultDBState.readSet.Clear();
 }
 
+mozIStorageConnection*
+nsCookieService::GetSyncDBConn()
+{
+  NS_ASSERTION(!mDefaultDBState.syncConn, "already have sync db connection");
+
+  // Start a new connection for sync reads to reduce contention with the
+  // background thread.
+  nsCOMPtr<nsIFile> cookieFile;
+  mDefaultDBState.dbConn->GetDatabaseFile(getter_AddRefs(cookieFile));
+  NS_ASSERTION(cookieFile, "no cookie file on connection");
+
+  mStorageService->OpenDatabase(cookieFile,
+    getter_AddRefs(mDefaultDBState.syncConn));
+  NS_ASSERTION(mDefaultDBState.syncConn, "can't open sync db connection");
+  return mDefaultDBState.syncConn;
+}
+
 void
 nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
 {
@@ -1538,8 +1557,11 @@ nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
   // Read in the data synchronously.
   nsresult rv;
   if (!mDefaultDBState.stmtReadDomain) {
+    if (!GetSyncDBConn())
+      return;
+
     // Cache the statement, since it's likely to be used again.
-    rv = mDefaultDBState.dbConn->CreateStatement(NS_LITERAL_CSTRING(
+    rv = mDefaultDBState.syncConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT "
         "id, "
         "name, "
@@ -1557,6 +1579,8 @@ nsCookieService::EnsureReadDomain(const nsCString &aBaseDomain)
     // XXX Ignore corruption for now. See bug 547031.
     if (NS_FAILED(rv)) return;
   }
+
+  NS_ASSERTION(mDefaultDBState.syncConn, "should have a sync db connection");
 
   mozStorageStatementScoper scoper(mDefaultDBState.stmtReadDomain);
 
@@ -1600,9 +1624,12 @@ nsCookieService::EnsureReadComplete()
   // Cancel the pending read, so we don't get any more results.
   CancelAsyncRead(PR_FALSE);
 
+  if (!mDefaultDBState.syncConn && !GetSyncDBConn())
+    return;
+
   // Read in the data synchronously.
   nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = mDefaultDBState.dbConn->CreateStatement(NS_LITERAL_CSTRING(
+  nsresult rv = mDefaultDBState.syncConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT "
       "id, "
       "name, "
@@ -1640,6 +1667,7 @@ nsCookieService::EnsureReadComplete()
     ++readCount;
   }
 
+  mDefaultDBState.syncConn = nsnull;
   mDefaultDBState.readSet.Clear();
 
   mObserverService->NotifyObservers(nsnull, "cookie-db-read", nsnull);
