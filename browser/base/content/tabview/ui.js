@@ -101,11 +101,6 @@ var UIManager = {
       if (this._devMode)
         this._addDevMenu();
 
-      // ___ add event listeners
-      iQ("#reset").click(function() {
-        self._reset();
-      });
-
       // When you click on the background/empty part of TabView,
       // we create a new group.
       iQ(gTabViewFrame.contentDocument).mousedown(function(e){
