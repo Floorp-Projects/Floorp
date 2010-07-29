@@ -210,8 +210,6 @@ public:
     static nsresult GenerateHostPort(const nsCString& host, PRInt32 port,
                                      nsCString& hostLine);
 
-    // The thread used to implement async cache-writes
-    nsCOMPtr<nsIThread> mCacheWriteThread;
 private:
 
     //
