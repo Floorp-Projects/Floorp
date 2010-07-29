@@ -277,7 +277,7 @@ body {
   position: absolute !important;
   cursor: pointer;
   opacity: .3;
-  background-image: url(chrome://browser/skin/tabcandy/new-tab.png);
+  background-image: url(chrome://browser/skin/tabview/new-tab.png);
   z-index: 99999;
 }
 
@@ -360,7 +360,7 @@ input.name {
   color: #999;
   margin: 3px 0px 0px 3px;
   padding: 1px;
-  background-image: url(chrome://browser/skin/tabcandy/edit-light.png);
+  background-image: url(chrome://browser/skin/tabview/edit-light.png);
   padding-left: 20px;
 }
 

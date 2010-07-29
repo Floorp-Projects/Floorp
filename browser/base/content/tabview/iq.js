@@ -532,7 +532,7 @@ iQClass.prototype = {
   // Possible "options" properties:
   //   duration - how long to animate, in milliseconds
   //   easing - easing function to use. Possibilities include 
-  //     'tabcandyBounce', 'easeInQuad'. Default is 'ease'.
+  //     "tabviewBounce", "easeInQuad". Default is "ease".
   //   complete - function to call once the animation is done, takes nothing 
   //     in, but "this" is set to the element that was animated.
   animate: function(css, options) {
@@ -543,7 +543,7 @@ iQClass.prototype = {
         options = {};
 
       let easings = {
-        tabcandyBounce: 'cubic-bezier(0.0, 0.63, .6, 1.29)',
+        tabviewBounce: "cubic-bezier(0.0, 0.63, .6, 1.29)",
         easeInQuad: 'ease-in', // TODO: make it a real easeInQuad, or decide we don't care
         fast: 'cubic-bezier(0.7,0,1,1)'
       };

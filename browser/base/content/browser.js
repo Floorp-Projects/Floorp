@@ -166,7 +166,7 @@ let gInitialPages = [
 #include inspector.js
 #include browser-places.js
 #include browser-tabPreviews.js
-#include browser-tabcandy.js
+#include browser-tabview.js
 
 XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
 #ifdef XP_WIN

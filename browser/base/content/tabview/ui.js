@@ -62,9 +62,9 @@ var UIManager = {
   // If true, the last visible tab has just been closed in the tab strip.
   _closedLastVisibleTab : false,
 
-  // Variable: _closedSelectedTabInTabCandy
-  // If true, a select tab has just been closed in tab candy.
-  _closedSelectedTabInTabCandy : false,
+  // Variable: _closedSelectedTabInTabView
+  // If true, a select tab has just been closed in TabView.
+  _closedSelectedTabInTabView : false,
 
   // Variable: _stopZoomPreparation
   // If true, prevent the next zoom preparation.
@@ -72,12 +72,12 @@ var UIManager = {
 
   // Variable: _reorderTabItemsOnShow
   // Keeps track of the <Group>s which their tab items' tabs have been moved
-  // and re-orders the tab items when switching to Tab Candy.
+  // and re-orders the tab items when switching to TabView.
   _reorderTabItemsOnShow : [],
 
   // Variable: _reorderTabsOnHide
-  // Keeps track of the <Group>s which their tab items have been moved in Tab
-  // Candy UI and re-orders the tabs when switcing back to main browser.
+  // Keeps track of the <Group>s which their tab items have been moved in
+  // TabView UI and re-orders the tabs when switcing back to main browser.
   _reorderTabsOnHide : [],
 
   // Variable: _currentTab
@@ -106,7 +106,7 @@ var UIManager = {
         self._reset();
       });
 
-      // When you click on the background/empty part of TabCandy,
+      // When you click on the background/empty part of TabView,
       // we create a new group.
       iQ(gTabViewFrame.contentDocument).mousedown(function(e){
         if ( e.originalTarget.id == "content" )
@@ -119,11 +119,11 @@ var UIManager = {
         });
       });
 
-      gWindow.addEventListener("tabcandyshow", function() {
-        self.showTabCandy(true);
+      gWindow.addEventListener("tabviewshow", function() {
+        self.showTabView(true);
       }, false);
 
-      gWindow.addEventListener("tabcandyhide", function() {
+      gWindow.addEventListener("tabviewhide", function() {
         var activeTab = self.getActiveTab();
         if (activeTab)
           activeTab.zoomIn();
@@ -214,8 +214,8 @@ var UIManager = {
         self._resize();
       });
 
-      // ___ show Tab Candy at startup based on last session.
-      if (data.tabCandyVisible) {
+      // ___ show TabView at startup based on last session.
+      if (data.tabViewVisible) {
         var currentTab = self._currentTab;
 
         if (currentTab && currentTab.tabItem)
@@ -223,7 +223,7 @@ var UIManager = {
         else
           self._stopZoomPreparation = true;
 
-        self.showTabCandy();
+        self.showTabView();
         // ensure the tabs in the tab strip are in the same order as the tab
         // items in groups when switching back to main browser UI for the first
         // time.
@@ -231,9 +231,9 @@ var UIManager = {
           self._reorderTabsOnHide.push(group);
         });
       } else {
-         self.hideTabCandy();
+         self.hideTabView();
         // ensure the tab items in groups are in the same order as tabs in tab
-        // strip when going into Tab Candy for the first time.
+        // strip when going into TabView for the first time.
         Groups.groups.forEach(function(group) {
           self._reorderTabItemsOnShow.push(group);
         });
@@ -244,7 +244,7 @@ var UIManager = {
       var observer = {
         observe : function(subject, topic, data) {
           if (topic == "quit-application-requested") {
-            if (self._isTabCandyVisible())
+            if (self._isTabViewVisible())
               TabItems.saveAll(true);
             self._save();
           }
@@ -298,18 +298,18 @@ var UIManager = {
   },
 
   // ----------
-  // Function: _isTabCandyVisible
-  // Returns true if the TabCandy UI is currently shown.
-  _isTabCandyVisible: function() {
+  // Function: _isTabViewVisible
+  // Returns true if the TabView UI is currently shown.
+  _isTabViewVisible: function() {
     return gTabViewDeck.selectedIndex == 1;
   },
 
   // ----------
-  // Function: showTabCandy
-  // Shows TabCandy and hides the main browser UI.
+  // Function: showTabView
+  // Shows TabView and hides the main browser UI.
   // Parameters:
   //   zoomOut - true for zoom out animation, false for nothing.
-  showTabCandy: function(zoomOut) {
+  showTabView: function(zoomOut) {
     var self = this;
     var currentTab = this._currentTab;
     var item = null;
@@ -351,9 +351,9 @@ var UIManager = {
   },
 
   // ----------
-  // Function: hideTabCandy
-  // Hides Tab candy and shows the main browser UI .
-  hideTabCandy: function() {
+  // Function: hideTabView
+  // Hides TabView and shows the main browser UI.
+  hideTabView: function() {
     this._reorderTabsOnHide.forEach(function(group) {
       group.reorderTabsBasedOnTabItemOrder();
     });
@@ -377,10 +377,10 @@ var UIManager = {
   // ----------
   // Function: _setActiveTitleColor
   // Used on the Mac to make the title bar match the gradient in the rest of the
-  // TabCandy UI.
+  // TabView UI.
   //
   // Parameters:
-  //   set - true for the special TabCandy color, false for the normal color.
+  //   set - true for the special TabView color, false for the normal color.
   _setActiveTitleColor: function(set) {
     // Mac Only
     var mainWindow = gWindow.document.getElementById("main-window");
@@ -401,22 +401,22 @@ var UIManager = {
       if (this.ownerDocument.defaultView != gWindow)
         return;
 
-      if (self._isTabCandyVisible()) {
-        // just closed the selected tab in the tab candy interface.
+      if (self._isTabViewVisible()) {
+        // just closed the selected tab in the TabView interface.
         if (self._currentTab == this)
-          self._closedSelectedTabInTabCandy = true;
+          self._closedSelectedTabInTabView = true;
       } else {
         // if not closing the last tab
         if (gBrowser.tabs.length > 1) {
           var group = Groups.getActiveGroup();
 
-          // 1) Only go back to the TabCandy tab when there you close the last
+          // 1) Only go back to the TabView tab when there you close the last
           // tab of a group.
           // 2) Take care of the case where you've closed the last tab in
           // an un-named group, which means that the group is gone (null) and
           // there are no visible tabs.
           // Can't use timeout here because user would see a flicker of
-          // switching to another tab before the tab candy interface shows up.
+          // switching to another tab before the TabView interface shows up.
           if ((group && group._children.length == 1) ||
               (group == null && gBrowser.visibleTabs.length == 1)) {
             // for the tab focus event to pick up.
@@ -424,7 +424,7 @@ var UIManager = {
             // remove the zoom prep.
             if (this && this.tabItem)
               this.tabItem.setZoomPrep(false);
-            self.showTabCandy();
+            self.showTabView();
           }
           // ToDo: When running unit tests, everything happens so quick so
           // new tabs might be added after a tab is closing. Therefore, this
@@ -432,7 +432,7 @@ var UIManager = {
           Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
             if ((group && group._children.length > 0) ||
               (group == null && gBrowser.visibleTabs.length > 0))
-              self.hideTabCandy();
+              self.hideTabView();
           }, 1);
         }
       }
@@ -444,7 +444,7 @@ var UIManager = {
         return;
 
       Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
-        if (!self._isTabCandyVisible()) {
+        if (!self._isTabViewVisible()) {
           var activeGroup = Groups.getActiveGroup();
           if (activeGroup) {
             var index = self._reorderTabItemsOnShow.indexOf(activeGroup);
@@ -465,7 +465,7 @@ var UIManager = {
 
   // ----------
   // Function: tabOnFocus
-  // Called when the user switches from one tab to another outside of the TabCandy UI.
+  // Called when the user switches from one tab to another outside of the TabView UI.
   tabOnFocus: function(tab) {
     var self = this;
     var focusTab = tab;
@@ -473,24 +473,24 @@ var UIManager = {
 
     this._currentTab = focusTab;
     // if the last visible tab has just been closed, don't show the chrome UI.
-    if (this._isTabCandyVisible() &&
-        (this._closedLastVisibleTab || this._closedSelectedTabInTabCandy)) {
+    if (this._isTabViewVisible() &&
+        (this._closedLastVisibleTab || this._closedSelectedTabInTabView)) {
       this._closedLastVisibleTab = false;
-      this._closedSelectedTabInTabCandy = false;
+      this._closedSelectedTabInTabView = false;
       return;
     }
 
-    // if TabCandy is visible but we didn't just close the last tab or
+    // if TabView is visible but we didn't just close the last tab or
     // selected tab, show chrome.
-    if (this._isTabCandyVisible())
-      this.hideTabCandy();
+    if (this._isTabViewVisible())
+      this.hideTabView();
 
     // reset these vars, just in case.
     this._closedLastVisibleTab = false;
-    this._closedSelectedTabInTabCandy = false;
+    this._closedSelectedTabInTabView = false;
 
     Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
-      // this value is true when tabcandy is open at browser startup.
+      // this value is true when TabView is open at browser startup.
       if (self._stopZoomPreparation) {
         self._stopZoomPreparation = false;
         if (focusTab && focusTab.tabItem)
@@ -511,7 +511,7 @@ var UIManager = {
         Groups.setActiveGroup(newItem.parent);
       }
 
-      // ___ prepare for when we return to TabCandy
+      // ___ prepare for when we return to TabView
       var oldItem = null;
       if (currentTab && currentTab.tabItem)
         oldItem = currentTab.tabItem;
@@ -521,14 +521,14 @@ var UIManager = {
           oldItem.setZoomPrep(false);
 
         // if the last visible tab is removed, don't set zoom prep because
-        // we shoud be in the Tab Candy interface.
-        if (visibleTabCount > 0 && newItem && !self._isTabCandyVisible())
+        // we shoud be in the TabView interface.
+        if (visibleTabCount > 0 && newItem && !self._isTabViewVisible())
           newItem.setZoomPrep(true);
       } else {
         // the tab is already focused so the new and old items are the
         // same.
         if (oldItem)
-          oldItem.setZoomPrep(!self._isTabCandyVisible());
+          oldItem.setZoomPrep(!self._isTabViewVisible());
       }
     }, 1);
   },
@@ -540,7 +540,7 @@ var UIManager = {
   // Parameters:
   //   group - the group which would be used for re-ordering tabs.
   setReorderTabsOnHide: function(group) {
-    if (this._isTabCandyVisible()) {
+    if (this._isTabViewVisible()) {
       var index = this._reorderTabsOnHide.indexOf(group);
       if (index == -1)
         this._reorderTabsOnHide.push(group);
@@ -550,12 +550,12 @@ var UIManager = {
   // ----------
   // Function: _setBrowserKeyHandlers
   // Overrides the browser's keys for navigating between tab (outside of the
-  // TabCandy UI) so they do the right thing in respect to groups.
+  // TabView UI) so they do the right thing in respect to groups.
   _setBrowserKeyHandlers : function() {
     var self = this;
 
     gWindow.addEventListener("keypress", function(event) {
-      if (self._isTabCandyVisible())
+      if (self._isTabViewVisible())
         return;
 
       var charCode = event.charCode;
@@ -570,7 +570,7 @@ var UIManager = {
 #endif
         event.stopPropagation();
         event.preventDefault();
-        self.showTabCandy(true);
+        self.showTabView(true);
         return;
       }
 
@@ -588,7 +588,7 @@ var UIManager = {
 
   // ----------
   // Function: _setTabViewFrameKeyHandlers
-  // Sets up the key handlers for navigating between tabs within the TabCandy UI.
+  // Sets up the key handlers for navigating between tabs within the TabView UI.
   _setTabViewFrameKeyHandlers: function(){
     var self = this;
 
@@ -702,7 +702,7 @@ var UIManager = {
 
   // ----------
   // Function: _createGroupOnDrag
-  // Called in response to a mousedown in empty space in the TabCandy UI;
+  // Called in response to a mousedown in empty space in the TabView UI;
   // creates a new group based on the user's drag.
   _createGroupOnDrag: function(e){
     const minSize = 60;
@@ -821,7 +821,7 @@ var UIManager = {
 
   // ----------
   // Function: _resize
-  // Update the TabCandy UI contents in response to a window size change.
+  // Update the TabView UI contents in response to a window size change.
   // Won't do anything if it doesn't deem the resize necessary.
   // Parameters:
   //   force - true to update even when "unnecessary"; default false
@@ -829,9 +829,9 @@ var UIManager = {
     if (typeof(force) == "undefined")
       force = false;
 
-    // If TabCandy isn't focused and is not showing, don't perform a resize.
+    // If TabView isn't focused and is not showing, don't perform a resize.
     // This resize really slows things down.
-    if (!force && !this._isTabCandyVisible())
+    if (!force && !this._isTabViewVisible())
       return;
 
     var oldPageBounds = new Rect(this._pageBounds);
@@ -911,7 +911,7 @@ var UIManager = {
 
   // ----------
   // Function: _addDevMenu
-  // Fills out the "dev menu" in the TabCandy UI.
+  // Fills out the "dev menu" in the TabView UI.
   _addDevMenu: function() {
     try {
       var self = this;
@@ -947,7 +947,7 @@ var UIManager = {
       }, {
         name: "refresh",
         code: function() {
-          location.href = "tabcandy.html";
+          location.href = "tabview.html";
         }
       }, {
         name: "reset",
@@ -981,7 +981,7 @@ var UIManager = {
 
   // -----------
   // Function: _reset
-  // Wipes all TabCandy storage and refreshes, giving you the "first-run" state.
+  // Wipes all TabView storage and refreshes, giving you the "first-run" state.
   _reset: function() {
     Storage.wipe();
     location.href = "";
@@ -1011,7 +1011,7 @@ var UIManager = {
       return;
 
     var data = {
-      tabCandyVisible: this._isTabCandyVisible(),
+      tabViewVisible: this._isTabViewVisible(),
       pageBounds: this._pageBounds
     };
 
@@ -1021,7 +1021,7 @@ var UIManager = {
 
   // ----------
   // Function: _saveAll
-  // Saves all data associated with TabCandy.
+  // Saves all data associated with TabView.
   // TODO: Save info items
   _saveAll: function() {
     this._save();
