@@ -1599,26 +1599,26 @@ typedef void (*JSClassInternal)();
 
 /* For detailed comments on the function pointer types, see jspubtd.h. */
 struct JSClass {
-    const char          *name;                                                \
-    uint32              flags;                                                \
-                                                                              \
-    /* Mandatory non-null function pointer members. */                        \
-    JSPropertyOp        addProperty;                                          \
-    JSPropertyOp        delProperty;                                          \
-    JSPropertyOp        getProperty;                                          \
-    JSPropertyOp        setProperty;                                          \
-    JSEnumerateOp       enumerate;                                            \
-    JSResolveOp         resolve;                                              \
-    JSConvertOp         convert;                                              \
-    JSFinalizeOp        finalize;                                             \
-                                                                              \
-    /* Optionally non-null members start here. */                             \
-    JSClassInternal     reserved0;                                            \
-    JSCheckAccessOp     checkAccess;                                          \
-    JSNative            call;                                                 \
-    JSNative            construct;                                            \
-    JSXDRObjectOp       xdrObject;                                            \
-    JSHasInstanceOp     hasInstance;                                          \
+    const char          *name;
+    uint32              flags;
+
+    /* Mandatory non-null function pointer members. */
+    JSPropertyOp        addProperty;
+    JSPropertyOp        delProperty;
+    JSPropertyOp        getProperty;
+    JSPropertyOp        setProperty;
+    JSEnumerateOp       enumerate;
+    JSResolveOp         resolve;
+    JSConvertOp         convert;
+    JSFinalizeOp        finalize;
+
+    /* Optionally non-null members start here. */
+    JSClassInternal     reserved0;
+    JSCheckAccessOp     checkAccess;
+    JSNative            call;
+    JSNative            construct;
+    JSXDRObjectOp       xdrObject;
+    JSHasInstanceOp     hasInstance;
     JSMarkOp            mark;
 
     JSClassInternal     reserved1;
