@@ -57,7 +57,6 @@ window.TabItem = function(tab) {
 
   // ___ set up div
   var $div = iQ('<div>')
-    .data("tab", this.tab)
     .addClass('tab')
     .html("<div class='thumb'><div class='thumb-shadow'></div>" +
           "<img class='cached-thumb' style='display:none'/><canvas/></div>" +
@@ -66,18 +65,14 @@ window.TabItem = function(tab) {
     )
     .appendTo('body');
 
-  this.needsPaint = 0;
   this.canvasSizeForced = false;
   this.isShowingCachedData = false;
   this.favEl = (iQ('.favicon>img', $div))[0];
   this.nameEl = (iQ('.tab-title', $div))[0];
   this.canvasEl = (iQ('.thumb canvas', $div))[0];
   this.cachedThumbEl = (iQ('img.cached-thumb', $div))[0];
-  this.okayToHideCache = false;
 
   this.tabCanvas = new TabCanvas(this.tab, this.canvasEl);
-  this.tabCanvas.attach();
-  this.triggerPaint();
 
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this.locked = {};
@@ -230,14 +225,6 @@ window.TabItem = function(tab) {
 
 window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // ----------
-  // Function: triggerPaint
-  // Forces the <TabItem> to update its thumbnail.
-  triggerPaint: function() {
-    var date = new Date();
-    this.needsPaint = date.getTime();
-  },
-
-  // ----------
   // Function: forceCanvasSize
   // Repaints the thumbnail with the given resolution, and forces it
   // to stay that resolution until unforceCanvasSize is called.
@@ -280,6 +267,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var $cachedThumbElement = iQ(this.cachedThumbEl);
     $cachedThumbElement.hide();
     $canvasElement.css({opacity: 1.0});
+    this.isShowingCachedData = false;
   },
 
   // ----------
@@ -695,9 +683,7 @@ window.TabItems = {
   tabHeight: 120,
   fontSize: 9,
   items: [],
-
   paintingPaused: 0,
-  heartbeatIndex: 0,
 
   // ----------
   // Function: init
@@ -713,7 +699,7 @@ window.TabItems = {
 
       var tab = this;
       Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
-        self.update(tab);
+        self.link(tab);
       }, 1);
     });
 
@@ -725,7 +711,6 @@ window.TabItems = {
 
       let tab = this;
       Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
-        tab.tabItem.okayToHideCache = true;
         self.update(tab);
       }, 1);
     });
@@ -750,117 +735,78 @@ window.TabItems = {
     });
 
     this.paintingPaused = 0;
-    this.heartbeatIndex = 0;
-    this._fireNextHeartbeat();
-  },
-
-  // ----------
-  // Function: _heartbeat
-  _heartbeat: function() {
-    try {
-      var now = Date.now();
-      let tabs = Tabs.allTabs;
-      tabs = tabs.filter(function(tab) tab.ownerDocument.defaultView == gWindow);
-      let count = tabs.length;
-      if (count && this.paintingPaused <= 0) {
-        this.heartbeatIndex++;
-        if (this.heartbeatIndex >= count)
-          this.heartbeatIndex = 0;
-
-        let tab = tabs[this.heartbeatIndex];
-        var tabItem = tab.tabItem;
-        if (tabItem) {
-          let iconUrl = tab.image;
-          if ( iconUrl == null ){
-            iconUrl = "chrome://mozapps/skin/places/defaultFavicon.png";
-          }
-
-          let label = tab.label;
-          var $name = iQ(tabItem.nameEl);
-          var $canvas = iQ(tabItem.canvasEl);
-
-          if (iconUrl != tabItem.favEl.src) {
-            tabItem.favEl.src = iconUrl;
-            tabItem.triggerPaint();
-          }
-
-          let tabUrl = tab.linkedBrowser.currentURI.spec;
-          if (tabUrl != tabItem.url) {
-            var oldURL = tabItem.url;
-            tabItem.url = tabUrl;
-            tabItem._sendToSubscribers(
-              'urlChanged', {oldURL: oldURL, newURL: tabUrl});
-            tabItem.triggerPaint();
-          }
-
-          if (!tabItem.isShowingCachedData && $name.text() != label) {
-            $name.text(label);
-            tabItem.triggerPaint();
-          }
-
-          if (!tabItem.canvasSizeForced) {
-            var w = $canvas.width();
-            var h = $canvas.height();
-            if (w != tabItem.canvasEl.width || h != tabItem.canvasEl.height) {
-              tabItem.canvasEl.width = w;
-              tabItem.canvasEl.height = h;
-              tabItem.triggerPaint();
-            }
-          }
-
-          if (tabItem.needsPaint) {
-            tabItem.tabCanvas.paint();
-
-            if (tabItem.isShowingCachedData && tabItem.okayToHideCache)
-              tabItem.hideCachedData();
-
-            if (Date.now() - tabItem.needsPaint > 5000)
-              tabItem.needsPaint = 0;
-          }
-        }
-      }
-    } catch(e) {
-      Utils.error('heartbeat', e);
-    }
-
-    this._fireNextHeartbeat();
-  },
-
-  // ----------
-  // Function: _fireNextHeartbeat
-  _fireNextHeartbeat: function() {
-    var self = this;
-    Utils.timeout(function() {
-      self._heartbeat();
-    }, 100);
   },
 
   // ----------
   // Function: update
+  // Takes in a xul:tab.
   update: function(tab){
-    this.link(tab);
+    try {
+      Utils.assertThrow("must already be linked", tab.tabItem);
+      
+      let tabItem = tab.tabItem;
+  
+      let iconUrl = tab.image;
+      if (iconUrl == null)
+        iconUrl = "chrome://mozapps/skin/places/defaultFavicon.png";
 
-    if (tab.tabItem && tab.tabItem.tabCanvas)
-      tab.tabItem.triggerPaint();
+      let label = tab.label;
+      var $name = iQ(tabItem.nameEl);
+      var $canvas = iQ(tabItem.canvasEl);
+
+      if (iconUrl != tabItem.favEl.src)
+        tabItem.favEl.src = iconUrl;
+
+      let tabUrl = tab.linkedBrowser.currentURI.spec;
+      if (tabUrl != tabItem.url) {
+        var oldURL = tabItem.url;
+        tabItem.url = tabUrl;
+        tabItem._sendToSubscribers(
+          'urlChanged', {oldURL: oldURL, newURL: tabUrl});
+      }
+
+      if (!tabItem.isShowingCachedData && $name.text() != label)
+        $name.text(label);
+
+      if (!tabItem.canvasSizeForced) {
+        var w = $canvas.width();
+        var h = $canvas.height();
+        if (w != tabItem.canvasEl.width || h != tabItem.canvasEl.height) {
+          tabItem.canvasEl.width = w;
+          tabItem.canvasEl.height = h;
+        }
+      }
+
+      // ___ Paint
+      tabItem.tabCanvas.paint();
+
+      // TODO: this logic needs to be better; hiding too soon now
+      if (tabItem.isShowingCachedData && !tab.hasAttribute("busy"))
+        tabItem.hideCachedData();
+    } catch(e) {
+      Utils.log(e);
+    }
   },
 
   // ----------
   // Function: link
+  // Takes in a xul:tab.
   link: function(tab){
-    // Don't add duplicates
-    if (tab.tabItem)
-      return false;
-
-    // Add the tab to the page
-    new TabItem(tab); // sets tab.tabItem to itself
-    return true;
+    try {
+      Utils.assertThrow("shouldn't already be linked", !tab.tabItem);
+      new TabItem(tab); // sets tab.tabItem to itself
+    } catch(e) {
+      Utils.log(e);
+    }
   },
 
   // ----------
   // Function: unlink
+  // Takes in a xul:tab.
   unlink: function(tab){
-    var tabItem = tab.tabItem;
-    if (tabItem) {
+    try {
+      Utils.assertThrow("should already be linked", tab.tabItem);
+      var tabItem = tab.tabItem;
       tabItem._sendToSubscribers("close");
       var tabCanvas = tabItem.tabCanvas;
       if (tabCanvas)
@@ -869,6 +815,8 @@ window.TabItems = {
       iQ(tabItem.container).remove();
 
       tab.tabItem = null;
+    } catch(e) {
+      Utils.log(e);
     }
   },
 
@@ -1027,35 +975,11 @@ TabCanvas.prototype = {
     this.tab = tab;
     this.canvas = canvas;
 
-    var $canvas = iQ(canvas).data("link", this);
-
+    var $canvas = iQ(canvas);
     var w = $canvas.width();
     var h = $canvas.height();
     canvas.width = w;
     canvas.height = h;
-
-    var self = this;
-    this.paintIt = function(evt) {
-      self.tab.tabItem.triggerPaint();
-    };
-  },
-
-  // ----------
-  // Function: attach
-  attach: function() {
-    this.tab.linkedBrowser.contentWindow.
-      addEventListener("MozAfterPaint", this.paintIt, false);
-  },
-
-  // ----------
-  // Function: detach
-  detach: function() {
-    try {
-      this.tab.linkedBrowser.contentWindow.
-        removeEventListener("MozAfterPaint", this.paintIt, false);
-    } catch(e) {
-      // ignore
-    }
   },
 
   // ----------
