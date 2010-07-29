@@ -195,6 +195,10 @@ private:
 #endif
         OP_PUSH_EAX                     = 0x50,
         OP_POP_EAX                      = 0x58,
+#if WTF_CPU_X86
+        OP_PUSHA                        = 0x60,
+        OP_POPA                         = 0x61,
+#endif
 #if WTF_CPU_X86_64
         OP_MOVSXD_GvEv                  = 0x63,
 #endif
@@ -2021,6 +2025,20 @@ public:
         FIXME_INSN_PRINTING;
         m_formatter.prefix(PRE_PREDICT_BRANCH_NOT_TAKEN);
     }
+
+#if WTF_CPU_X86
+    void pusha()
+    {
+        js::JaegerSpew(js::JSpew_Insns, IPFX "pusha\n", MAYBE_PAD);
+        m_formatter.oneByteOp(OP_PUSHA);
+    }
+
+    void popa()
+    {
+        js::JaegerSpew(js::JSpew_Insns, IPFX "popa\n", MAYBE_PAD);
+        m_formatter.oneByteOp(OP_POPA);
+    }
+#endif
 
     // Assembler admin methods:
 
