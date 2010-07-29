@@ -2535,6 +2535,134 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
     return true;
 }
 
+bool
+Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunction *fun,
+                          JSParseNode **listp)
+{
+    if (tokenStream.getToken() != TOK_LP) {
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_BEFORE_FORMAL);
+        return false;
+    }
+
+    if (!tokenStream.matchToken(TOK_RP)) {
+#if JS_HAS_DESTRUCTURING
+        JSAtom *duplicatedArg = NULL;
+        bool destructuringArg = false;
+        JSParseNode *list = NULL;
+#endif
+        do {
+            switch (TokenKind tt = tokenStream.getToken()) {
+#if JS_HAS_DESTRUCTURING
+              case TOK_LB:
+              case TOK_LC:
+              {
+                /* See comment below in the TOK_NAME case. */
+                if (duplicatedArg)
+                    goto report_dup_and_destructuring;
+                destructuringArg = true;
+
+                /*
+                 * A destructuring formal parameter turns into one or more
+                 * local variables initialized from properties of a single
+                 * anonymous positional parameter, so here we must tweak our
+                 * binder and its data.
+                 */
+                BindData data;
+                data.pn = NULL;
+                data.op = JSOP_DEFVAR;
+                data.binder = BindDestructuringArg;
+                JSParseNode *lhs = destructuringExpr(&data, tt);
+                if (!lhs)
+                    return false;
+
+                /*
+                 * Adjust fun->nargs to count the single anonymous positional
+                 * parameter that is to be destructured.
+                 */
+                jsint slot = fun->nargs;
+                if (!js_AddLocal(context, fun, NULL, JSLOCAL_ARG))
+                    return false;
+
+                /*
+                 * Synthesize a destructuring assignment from the single
+                 * anonymous positional parameter into the destructuring
+                 * left-hand-side expression and accumulate it in list.
+                 */
+                JSParseNode *rhs = NameNode::create(context->runtime->atomState.emptyAtom, &funtc);
+                if (!rhs)
+                    return false;
+                rhs->pn_type = TOK_NAME;
+                rhs->pn_op = JSOP_GETARG;
+                rhs->pn_cookie.set(funtc.staticLevel, uint16(slot));
+                rhs->pn_dflags |= PND_BOUND;
+
+                JSParseNode *item = JSParseNode::newBinaryOrAppend(TOK_ASSIGN, JSOP_NOP, lhs, rhs, &funtc);
+                if (!item)
+                    return false;
+                if (!list) {
+                    list = ListNode::create(&funtc);
+                    if (!list)
+                        return false;
+                    list->pn_type = TOK_COMMA;
+                    list->makeEmpty();
+                    *listp = list;
+                }
+                list->append(item);
+                break;
+              }
+#endif /* JS_HAS_DESTRUCTURING */
+
+              case TOK_NAME:
+              {
+                JSAtom *atom = tokenStream.currentToken().t_atom;
+                if (!DefineArg(funbox->node, atom, fun->nargs, &funtc))
+                    return false;
+#ifdef JS_HAS_DESTRUCTURING
+                /*
+                 * ECMA-262 requires us to support duplicate parameter names, but if the
+                 * parameter list includes destructuring, we consider the code to have
+                 * opted in to higher standards, and forbid duplicates. We may see a
+                 * destructuring parameter later, so always note duplicates now.
+                 *
+                 * Duplicates are warned about (strict option) or cause errors (strict
+                 * mode code), but we do those tests in one place below, after having
+                 * parsed the body.
+                 */
+                if (js_LookupLocal(context, fun, atom, NULL) != JSLOCAL_NONE) {
+                    duplicatedArg = atom;
+                    if (destructuringArg)
+                        goto report_dup_and_destructuring;
+                }
+#endif
+                if (!js_AddLocal(context, fun, atom, JSLOCAL_ARG))
+                    return false;
+                break;
+              }
+
+              default:
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_MISSING_FORMAL);
+                /* FALL THROUGH */
+              case TOK_ERROR:
+                return false;
+
+#if JS_HAS_DESTRUCTURING
+              report_dup_and_destructuring:
+                JSDefinition *dn = ALE_DEFN(funtc.decls.lookup(duplicatedArg));
+                reportErrorNumber(dn, JSREPORT_ERROR, JSMSG_DESTRUCT_DUP_ARG);
+                return false;
+#endif
+            }
+        } while (tokenStream.matchToken(TOK_COMMA));
+
+        if (tokenStream.getToken() != TOK_RP) {
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_AFTER_FORMAL);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 JSParseNode *
 Parser::functionDef(JSAtom *funAtom, uintN lambda)
 {
@@ -2673,124 +2801,9 @@ Parser::functionDef(JSAtom *funAtom, uintN lambda)
     JSFunction *fun = (JSFunction *) funbox->object;
 
     /* Now parse formal argument list and compute fun->nargs. */
-#if JS_HAS_DESTRUCTURING
     JSParseNode *list = NULL;
-#endif
-    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_FORMAL);
-    if (!tokenStream.matchToken(TOK_RP)) {
-#if JS_HAS_DESTRUCTURING
-        JSAtom *duplicatedArg = NULL;
-        bool destructuringArg = false;
-#endif
-        do {
-            TokenKind tt = tokenStream.getToken();
-            switch (tt) {
-#if JS_HAS_DESTRUCTURING
-              case TOK_LB:
-              case TOK_LC:
-              {
-                BindData data;
-                JSParseNode *lhs, *rhs;
-                jsint slot;
-
-                /* See comment below in the TOK_NAME case. */
-                if (duplicatedArg)
-                    goto report_dup_and_destructuring;
-                destructuringArg = true;
-
-                /*
-                 * A destructuring formal parameter turns into one or more
-                 * local variables initialized from properties of a single
-                 * anonymous positional parameter, so here we must tweak our
-                 * binder and its data.
-                 */
-                data.pn = NULL;
-                data.op = JSOP_DEFVAR;
-                data.binder = BindDestructuringArg;
-                lhs = destructuringExpr(&data, tt);
-                if (!lhs)
-                    return NULL;
-
-                /*
-                 * Adjust fun->nargs to count the single anonymous positional
-                 * parameter that is to be destructured.
-                 */
-                slot = fun->nargs;
-                if (!js_AddLocal(context, fun, NULL, JSLOCAL_ARG))
-                    return NULL;
-
-                /*
-                 * Synthesize a destructuring assignment from the single
-                 * anonymous positional parameter into the destructuring
-                 * left-hand-side expression and accumulate it in list.
-                 */
-                rhs = NameNode::create(context->runtime->atomState.emptyAtom, &funtc);
-                if (!rhs)
-                    return NULL;
-                rhs->pn_type = TOK_NAME;
-                rhs->pn_op = JSOP_GETARG;
-                rhs->pn_cookie.set(funtc.staticLevel, uint16(slot));
-                rhs->pn_dflags |= PND_BOUND;
-
-                JSParseNode *item = JSParseNode::newBinaryOrAppend(TOK_ASSIGN, JSOP_NOP, lhs, rhs, &funtc);
-                if (!item)
-                    return NULL;
-                if (!list) {
-                    list = ListNode::create(&funtc);
-                    if (!list)
-                        return NULL;
-                    list->pn_type = TOK_COMMA;
-                    list->makeEmpty();
-                }
-                list->append(item);
-                break;
-              }
-#endif /* JS_HAS_DESTRUCTURING */
-
-              case TOK_NAME:
-              {
-                JSAtom *atom = tokenStream.currentToken().t_atom;
-                if (!DefineArg(pn, atom, fun->nargs, &funtc))
-                    return NULL;
-#ifdef JS_HAS_DESTRUCTURING
-                /*
-                 * ECMA-262 requires us to support duplicate parameter names, but if the
-                 * parameter list includes destructuring, we consider the code to have
-                 * opted in to higher standards, and forbid duplicates. We may see a
-                 * destructuring parameter later, so always note duplicates now.
-                 *
-                 * Duplicates are warned about (strict option) or cause errors (strict
-                 * mode code), but we do those tests in one place below, after having
-                 * parsed the body.
-                 */
-                if (js_LookupLocal(context, fun, atom, NULL) != JSLOCAL_NONE) {
-                    duplicatedArg = atom;
-                    if (destructuringArg)
-                        goto report_dup_and_destructuring;
-                }
-#endif
-                if (!js_AddLocal(context, fun, atom, JSLOCAL_ARG))
-                    return NULL;
-                break;
-              }
-
-              default:
-                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_MISSING_FORMAL);
-                /* FALL THROUGH */
-              case TOK_ERROR:
-                return NULL;
-
-#if JS_HAS_DESTRUCTURING
-              report_dup_and_destructuring:
-                JSDefinition *dn = ALE_DEFN(funtc.decls.lookup(duplicatedArg));
-                reportErrorNumber(dn, JSREPORT_ERROR, JSMSG_DESTRUCT_DUP_ARG);
-                return NULL;
-#endif
-            }
-        } while (tokenStream.matchToken(TOK_COMMA));
-
-        MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FORMAL);
-    }
+    if (!functionArguments(funtc, funbox, fun, &list))
+        return NULL;
 
 #if JS_HAS_EXPR_CLOSURES
     TokenKind tt = tokenStream.getToken(TSF_OPERAND);
