@@ -12,23 +12,24 @@ XPCOMUtils.defineLazyGetter(this, "gWindow", function() {
 XPCOMUtils.defineLazyGetter(this, "gBrowser", function() gWindow.gBrowser);
 
 XPCOMUtils.defineLazyGetter(this, "gTabViewDeck", function() {
-  return gWindow.document.getElementById("tab-candy-deck");
+  return gWindow.document.getElementById("tab-view-deck");
 });
 
 XPCOMUtils.defineLazyGetter(this, "gTabViewFrame", function() {
-  return gWindow.document.getElementById("tab-candy");
+  return gWindow.document.getElementById("tab-view");
 });
 
 # NB: Certain files need to evaluate before others
 
-#include core/profile.js
-#include core/iq.js
-#include app/storage.js
-#include app/items.js
-#include app/groups.js
-#include app/tabitems.js
+#include profile.js
+#include iq.js
 
-#include app/drag.js
-#include app/trench.js
-#include app/infoitems.js
-#include app/ui.js
+#include storage.js
+#include items.js
+#include groups.js
+#include tabitems.js
+
+#include drag.js
+#include trench.js
+#include infoitems.js
+#include ui.js

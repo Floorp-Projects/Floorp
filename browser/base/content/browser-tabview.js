@@ -11,10 +11,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Tab Candy
+# The Original Code is the Tab View
 #
-# The Initial Developer of the Original Code is Google Inc.
-# Portions created by the Initial Developer are Copyright (C) 2006
+# The Initial Developer of the Original Code is Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,25 +35,25 @@
 # ***** END LICENSE BLOCK *****
 
 // New API methods can be added to here.
-var TabCandy = {
+let TabView = {
   toggle: function() {
     let event = document.createEvent("Events");
 
     if (this.isVisible()) {
-      event.initEvent("tabcandyhide", false, false);
+      event.initEvent("tabviewhide", false, false);
     } else {
-      event.initEvent("tabcandyshow", false, false);
+      event.initEvent("tabviewshow", false, false);
     }
     dispatchEvent(event);
   },
 
   isVisible: function() {
-    return (window.document.getElementById("tab-candy-deck").selectedIndex == 1);
+    return (window.document.getElementById("tab-view-deck").selectedIndex == 1);
   },
 
   getWindowTitle: function() {
     var brandBundle = document.getElementById("bundle_brand");
     var brandShortName = brandBundle.getString("brandShortName");
-    return gNavigatorBundle.getFormattedString("tabCandy.title", [brandShortName]);
+    return gNavigatorBundle.getFormattedString("tabView.title", [brandShortName]);
   }
 };
