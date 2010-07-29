@@ -5915,42 +5915,43 @@ if test -n "$MOZ_WEBM"; then
       dnl For Darwin x86, Darwin x86_64, Linux x86, and WINNT x86_64
       dnl we can use YASM.
       AC_MSG_CHECKING([for YASM assembler])
-      AC_CHECK_PROGS(VPX_AS, yasm, "")
-      if test -n "$VPX_AS"; then
-        dnl We have YASM, see if we have assembly on this platform.  
-        case "$OS_ARCH:$OS_TEST" in
-        Linux:x86|Linux:i?86)
-          VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+      AC_CHECK_PROGS(VPX_AS, $YASM yasm, "")
+      dnl We have YASM, see if we have assembly on this platform.  
+      case "$OS_ARCH:$OS_TEST" in
+      Linux:x86|Linux:i?86)
+        VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+        VPX_X86_ASM=1
+      ;;
+      Linux:x86_64)
+        VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
+        VPX_X86_ASM=1
+      ;;
+      SunOS:i?86)
+        VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+        VPX_X86_ASM=1
+      ;;
+      SunOS:x86_64)
+        VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
+        VPX_X86_ASM=1
+      ;;
+      Darwin:i?86)
+        VPX_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC"
+        VPX_X86_ASM=1
+      ;;
+      Darwin:x86_64)
+        VPX_ASFLAGS="-f macho64 -rnasm -pnasm -DPIC"
+        VPX_X86_ASM=1
+      ;;
+      WINNT:x86_64)
+        if test -z "$GNU_CC"; then
+          VPX_ASFLAGS="-f x64 -rnasm -pnasm"
           VPX_X86_ASM=1
-        ;;
-        Linux:x86_64)
-          VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
-          VPX_X86_ASM=1
-        ;;
-        SunOS:i?86)
-          VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
-          VPX_X86_ASM=1
-        ;;
-        SunOS:x86_64)
-          VPX_ASFLAGS="-f elf64 -rnasm -pnasm -DPIC"
-          VPX_X86_ASM=1
-        ;;
-        Darwin:i?86)
-          VPX_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC"
-          VPX_X86_ASM=1
-        ;;
-        Darwin:x86_64)
-          VPX_ASFLAGS="-f macho64 -rnasm -pnasm -DPIC"
-          VPX_X86_ASM=1
-        ;;
-        WINNT:x86_64)
-          if test -z "$GNU_CC"; then
-            VPX_ASFLAGS="-f x64 -rnasm -pnasm"
-            VPX_X86_ASM=1
-          fi
-        ;;
-        esac
-      fi # end have YASM
+        fi
+      ;;
+      esac
+      if test -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
+        AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
+      fi
     fi # end !WINNT_x86_MSVC
 
     if test -n "$VPX_X86_ASM"; then
