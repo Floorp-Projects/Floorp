@@ -1,6 +1,24 @@
-# NB: Certain files need to evaluate before others
-
 Components.utils.import("resource://gre/modules/tabview/tabs.js");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gWindow", function() {
+  return window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+    getInterface(Components.interfaces.nsIWebNavigation).
+    QueryInterface(Components.interfaces.nsIDocShell).
+    chromeEventHandler.ownerDocument.defaultView;
+});
+
+XPCOMUtils.defineLazyGetter(this, "gBrowser", function() gWindow.gBrowser);
+
+XPCOMUtils.defineLazyGetter(this, "gTabViewDeck", function() {
+  return gWindow.document.getElementById("tab-candy-deck");
+});
+
+XPCOMUtils.defineLazyGetter(this, "gTabViewFrame", function() {
+  return gWindow.document.getElementById("tab-candy");
+});
+
+# NB: Certain files need to evaluate before others
 
 #include core/profile.js
 #include core/utils.js
