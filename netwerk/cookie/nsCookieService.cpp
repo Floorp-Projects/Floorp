@@ -92,7 +92,7 @@ using namespace mozilla::net;
 static const char kHttpOnlyPrefix[] = "#HttpOnly_";
 
 static const char kCookieFileName[] = "cookies.sqlite";
-#define COOKIES_SCHEMA_VERSION 2
+#define COOKIES_SCHEMA_VERSION 3
 
 static const PRInt64 kCookieStaleThreshold = 60 * PR_USEC_PER_SEC; // 1 minute in microseconds
 static const PRInt64 kCookiePurgeAge = 30 * 24 * 60 * 60 * PR_USEC_PER_SEC; // 30 days in microseconds
@@ -681,16 +681,73 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
     // the upgrading code from the previous version to the new one.
     case 1:
       {
-        // add the lastAccessed column to the table
+        // Add the lastAccessed column to the table.
         rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "ALTER TABLE moz_cookies ADD lastAccessed INTEGER"));
         NS_ENSURE_SUCCESS(rv, rv);
+      }
+      // Fall through to the next upgrade.
 
-        // update the schema version
+    case 2:
+      {
+        mozStorageTransaction transaction(mDBState->dbConn, PR_TRUE);
+
+        // Add the baseDomain column and index to the table.
+        rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "ALTER TABLE moz_cookies ADD baseDomain TEXT"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Compute the baseDomains for the table. This must be done eagerly
+        // otherwise we won't be able to synchronously read in individual
+        // domains on demand.
+        nsCOMPtr<mozIStorageStatement> select;
+        rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT id, host FROM moz_cookies"), getter_AddRefs(select));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<mozIStorageStatement> update;
+        rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
+          "UPDATE moz_cookies SET baseDomain = ?1 WHERE id = ?2"),
+          getter_AddRefs(update));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCString baseDomain, host;
+        PRBool hasResult;
+        while (1) {
+          rv = select->ExecuteStep(&hasResult);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          if (!hasResult)
+            break;
+
+          PRInt64 id = select->AsInt64(0);
+          select->GetUTF8String(1, host);
+
+          rv = GetBaseDomainFromHost(host, baseDomain);
+          if (NS_FAILED(rv))
+            continue;
+
+          mozStorageStatementScoper scoper(update);
+
+          rv = update->BindUTF8StringByIndex(0, baseDomain);
+          NS_ASSERT_SUCCESS(rv);
+          rv = update->BindInt64ByIndex(1, id);
+          NS_ASSERT_SUCCESS(rv);
+
+          rv = update->ExecuteStep(&hasResult);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        // Create an index on baseDomain.
+        rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "CREATE INDEX moz_basedomain ON moz_cookies (baseDomain)"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Update the schema version.
         rv = mDBState->dbConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-      // fall through to the next upgrade
+      // Fall through to the next upgrade.
 
     case COOKIES_SCHEMA_VERSION:
       break;
@@ -722,6 +779,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
         rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
           "SELECT "
             "id, "
+            "baseDomain, "
             "name, "
             "value, "
             "host, "
@@ -754,6 +812,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_cookies ("
       "id, "
+      "baseDomain, "
       "name, "
       "value, "
       "host, "
@@ -762,7 +821,7 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
       "lastAccessed, "
       "isSecure, "
       "isHttpOnly"
-    ") VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"),
+    ") VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"),
     getter_AddRefs(mDBState->stmtInsert));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -802,18 +861,19 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
   return NS_OK;
 }
 
-// sets the schema version and creates the moz_cookies table.
+// Sets the schema version and creates the moz_cookies table.
 nsresult
 nsCookieService::CreateTable()
 {
-  // set the schema version, before creating the table
+  // Set the schema version, before creating the table.
   nsresult rv = mDBState->dbConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
   if (NS_FAILED(rv)) return rv;
 
-  // create the table
-  return mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  // Create the table.
+  rv = mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE moz_cookies ("
       "id INTEGER PRIMARY KEY, "
+      "baseDomain TEXT, "
       "name TEXT, "
       "value TEXT, "
       "host TEXT, "
@@ -823,6 +883,11 @@ nsCookieService::CreateTable()
       "isSecure INTEGER, "
       "isHttpOnly INTEGER"
     ")"));
+  if (NS_FAILED(rv)) return rv;
+
+  // Create an index on baseDomain.
+  return mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX moz_basedomain ON moz_cookies (baseDomain)"));
 }
 
 void
@@ -1295,7 +1360,8 @@ nsCookieService::Read()
       "expiry, "
       "lastAccessed, "
       "isSecure, "
-      "isHttpOnly "
+      "isHttpOnly, "
+      "baseDomain "
     "FROM moz_cookies"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1303,7 +1369,7 @@ nsCookieService::Read()
   PRBool hasResult;
   while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult) {
     PRInt64 creationID = stmt->AsInt64(0);
-    
+
     stmt->GetUTF8String(1, name);
     stmt->GetUTF8String(2, value);
     stmt->GetUTF8String(3, host);
@@ -1314,10 +1380,7 @@ nsCookieService::Read()
     PRBool isSecure = 0 != stmt->AsInt32(7);
     PRBool isHttpOnly = 0 != stmt->AsInt32(8);
 
-    // compute the baseDomain from the host
-    rv = GetBaseDomainFromHost(host, baseDomain);
-    if (NS_FAILED(rv))
-      continue;
+    stmt->GetUTF8String(9, baseDomain);
 
     // create a new nsCookie and assign the data.
     nsCookie* newCookie =
@@ -2903,6 +2966,7 @@ nsCookieService::RemoveCookieFromList(const nsListIter              &aIter,
 
 static void
 bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
+                     const nsCString &aBaseDomain,
                      const nsCookie *aCookie)
 {
   NS_ASSERTION(aParamsArray, "Null params array passed to bindCookieParameters!");
@@ -2919,28 +2983,31 @@ bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
   rv = params->BindInt64ByIndex(0, aCookie->CreationID());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindUTF8StringByIndex(1, aCookie->Name());
+  rv = params->BindUTF8StringByIndex(1, aBaseDomain);
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindUTF8StringByIndex(2, aCookie->Value());
+  rv = params->BindUTF8StringByIndex(2, aCookie->Name());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindUTF8StringByIndex(3, aCookie->Host());
+  rv = params->BindUTF8StringByIndex(3, aCookie->Value());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindUTF8StringByIndex(4, aCookie->Path());
+  rv = params->BindUTF8StringByIndex(4, aCookie->Host());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindInt64ByIndex(5, aCookie->Expiry());
+  rv = params->BindUTF8StringByIndex(5, aCookie->Path());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindInt64ByIndex(6, aCookie->LastAccessed());
+  rv = params->BindInt64ByIndex(6, aCookie->Expiry());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindInt32ByIndex(7, aCookie->IsSecure());
+  rv = params->BindInt64ByIndex(7, aCookie->LastAccessed());
   NS_ASSERT_SUCCESS(rv);
 
-  rv = params->BindInt32ByIndex(8, aCookie->IsHttpOnly());
+  rv = params->BindInt32ByIndex(8, aCookie->IsSecure());
+  NS_ASSERT_SUCCESS(rv);
+
+  rv = params->BindInt32ByIndex(9, aCookie->IsHttpOnly());
   NS_ASSERT_SUCCESS(rv);
 
   // Bind the params to the array.
@@ -2979,7 +3046,7 @@ nsCookieService::AddCookieToList(const nsCString               &aBaseDomain,
     if (!paramsArray) {
       stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
     }
-    bindCookieParameters(paramsArray, aCookie);
+    bindCookieParameters(paramsArray, aBaseDomain, aCookie);
 
     // If we were supplied an array to store parameters, we shouldn't call
     // executeAsync - someone up the stack will do this for us.
