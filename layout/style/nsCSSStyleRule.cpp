@@ -240,7 +240,7 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
   MOZ_COUNT_CTOR(nsAttrSelector);
 
   nsAutoString lowercase;
-  nsContentUtils::ASCIIToLower(aAttr, lowercase);
+  ToLowerCase(aAttr, lowercase);
   
   mCasedAttr = do_GetAtom(aAttr);
   mLowercaseAttr = do_GetAtom(lowercase);
@@ -259,7 +259,7 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint
   MOZ_COUNT_CTOR(nsAttrSelector);
 
   nsAutoString lowercase;
-  nsContentUtils::ASCIIToLower(aAttr, lowercase);
+  ToLowerCase(aAttr, lowercase);
   
   mCasedAttr = do_GetAtom(aAttr);
   mLowercaseAttr = do_GetAtom(lowercase);
@@ -395,7 +395,7 @@ void nsCSSSelector::SetTag(const nsString& aTag)
   mCasedTag = do_GetAtom(aTag);
  
   nsAutoString lowercase;
-  nsContentUtils::ASCIIToLower(aTag, lowercase);
+  ToLowerCase(aTag, lowercase);
   mLowercaseTag = do_GetAtom(lowercase);
 }
 
