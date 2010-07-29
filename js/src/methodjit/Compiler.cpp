@@ -2550,14 +2550,9 @@ mjit::Compiler::jsop_bindname(uint32 index)
     Address scopeChain(JSFrameReg, offsetof(JSStackFrame, scopeChain));
     masm.loadPtr(scopeChain, reg);
 
-    Address address(reg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
+    Address address(reg, offsetof(JSObject, parent));
 
-#if defined JS_NUNBOX32
     Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(address), ImmPtr(0));
-#elif defined JS_PUNBOX64
-    masm.loadPayload(address, Registers::ValueReg);
-    Jump j = masm.branchPtr(Assembler::NotEqual, Registers::ValueReg, ImmPtr(0));
-#endif
 
     stubcc.linkExit(j, Uses(0));
     stubcc.leave();
