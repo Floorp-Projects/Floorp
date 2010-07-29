@@ -156,6 +156,7 @@
     <command id="cmd_findPrevious" oncommand="FindHelperUI.goToPrevious();"/>
     <command id="cmd_findNext" oncommand="FindHelperUI.goToNext();"/>
     <command id="cmd_findClose" oncommand="FindHelperUI.hide();"/>
+    <command id="cmd_find" oncommand="FindHelperUI.show();"/>
   </commandset>
 
   <keyset id="mainKeyset">
@@ -183,6 +184,7 @@
     <!-- misc -->
     <key id="key_zoomin" keycode="VK_UP" modifiers="accel" command="cmd_zoomin"/>
     <key id="key_zoomout" keycode="VK_DOWN" modifiers="accel" command="cmd_zoomout"/>
+    <key id="key_find" key="f" modifiers="accel" command="cmd_find"/>
     <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
     <key id="key_zoomin2" keycode="VK_F7" command="cmd_volumeRight"/>

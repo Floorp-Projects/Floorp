@@ -663,13 +663,13 @@ var BrowserUI = {
       dialog.close();
       return;
     }
-    
+
     // Check open popups
     if (this._popup) {
       this._hidePopup();
       return;
     }
-      
+
     // Check open modal elements
     let modalElementsLength = document.getElementsByClassName("modal-block").length;
     if (modalElementsLength > 0)
