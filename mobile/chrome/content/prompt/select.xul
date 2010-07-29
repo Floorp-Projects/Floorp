@@ -19,10 +19,7 @@
   </commandset>
 
   <vbox class="prompt-header" flex="1">
-    <hbox>
-      <label id="prompt-select-title" class="prompt-title" crop="center" flex="1"/>
-      <toolbarbutton class="close-button" command="cmd_cancel"/>
-    </hbox>
+    <label id="prompt-select-title" class="prompt-title" crop="center"/>
 
     <scrollbox orient="vertical" class="prompt-message" flex="1">
       <description id="prompt-select-message"/>

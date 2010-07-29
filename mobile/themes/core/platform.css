@@ -118,14 +118,14 @@ textbox[isempty="true"] {
   padding: 64px;
 }
 
-.modal-block dialog {
+dialog {
   color: #fff;
   background-color: transparent;
   -moz-border-radius: 8px;
   -moz-box-shadow: black 0 2px 2px;
 }
 
-dialog .prompt-header {
+dialog > .prompt-header {
   padding: 8px;
   font-size: 18px !important;
   -moz-border-radius: 8px 8px 0 0;
@@ -138,17 +138,7 @@ dialog .prompt-header {
   -moz-border-right-colors: black #4a4b4f;
 }
 
-dialog hbox > .close-button {
-  min-height: 0 !important;
-  min-width: 0 !important;
-  display: none;
-}
-
-dialog[closebutton="true"] hbox > .close-button {
-  display: -moz-box;
-}
-
-dialog .prompt-title {
+dialog > .prompt-header > .prompt-title {
   font-size: 24px !important;
 }
 
@@ -158,21 +148,21 @@ dialog .prompt-title {
     padding: 32px;
   }
 
-  dialog .prompt-header {
+  dialog > .prompt-header {
     font-size: 16px !important;
   }
 
-  dialog .prompt-title {
+  dialog > .prompt-header > .prompt-title {
     font-size: 18px !important;
   }
 }
 
-dialog .prompt-message {
+dialog > .prompt-header > .prompt-message {
   margin-top: 8px;
   white-space: pre-wrap;
 }
 
-dialog .button-checkbox {
+dialog > .prompt-header > .button-checkbox {
   margin-left: 24px;
 }
 
@@ -236,7 +226,7 @@ button.button-dark[disabled="true"] {
 }
 
 /* spinbuttons ------------------------------------------------------------- */
-textbox hbox.numberbox-input-box {
+.numberbox-input-box {
   max-width: 128px;
   border: 3px solid #262629;
   border-right: 0px solid transparent;
@@ -247,33 +237,33 @@ textbox hbox.numberbox-input-box {
   -moz-border-left-colors: -moz-initial;
 }
 
-spinbuttons .spinbuttons-box {
+.spinbuttons-box {
   -moz-box-orient: horizontal !important;
   -moz-box-direction: reverse !important;
 }
 
-spinbuttons .spinbuttons-up .button-icon,
-spinbuttons .spinbuttons-down .button-icon {
+.spinbuttons-up .button-icon,
+.spinbuttons-down .button-icon {
   display: block;
 }
 
-spinbuttons .spinbuttons-up {
+.spinbuttons-up {
   border-width: 8px;
   -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-64.png") 8 repeat repeat !important;
   list-style-image: url("chrome://browser/skin/images/arrowup-16.png");
 }
 
-spinbuttons .spinbuttons-up:hover:active:not([disabled=true]) {
+.spinbuttons-up:hover:active:not([disabled=true]) {
   -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-64.png") 8 repeat repeat !important;
 }
 
-spinbuttons .spinbuttons-down {
+.spinbuttons-down {
   border-width: 8px;
   -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-64.png") 8 repeat repeat !important;
   list-style-image: url("chrome://browser/skin/images/arrowdown-16.png");
 }
 
-spinbuttons .spinbuttons-down:hover:active:not([disabled=true]) {
+.spinbuttons-down:hover:active:not([disabled=true]) {
   -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-64.png") 8 repeat repeat !important;
 }
 
@@ -344,12 +334,12 @@ toolbarbutton.button-dark[type="checkbox"][checked="true"] {
   -moz-border-image: none !important;
 }
 
-.button-checkbox .button-image-icon {
+.button-checkbox > .button-image-icon {
   -moz-margin-end: 8px;
   list-style-image: url("chrome://browser/skin/images/check-unselected-30.png");
 }
 
-.button-checkbox[checked="true"] .button-image-icon {
+.button-checkbox[checked="true"] > .button-image-icon {
   list-style-image: url("chrome://browser/skin/images/check-selected-30.png");
 }
 
