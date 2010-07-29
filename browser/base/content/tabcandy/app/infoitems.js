@@ -96,7 +96,7 @@ window.InfoItem = function(bounds, options) {
       $close.hide();
 
     // ___ Superclass initialization
-    this._init($container.get(0));
+    this._init($container[0]);
 
     if (this.$debug)
       this.$debug.css({zIndex: -1000});

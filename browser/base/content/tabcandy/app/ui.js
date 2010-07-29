@@ -958,11 +958,10 @@ var UIManager = {
       var count = commands.length;
       var a;
       for (a = 0; a < count; a++) {
-        commands[a].element = iQ("<option>")
+        commands[a].element = ( iQ("<option>")
           .val(a)
           .html(commands[a].name)
-          .appendTo($select)
-          .get(0);
+          .appendTo($select) )[0];
       }
     } catch(e) {
       Utils.log(e);
