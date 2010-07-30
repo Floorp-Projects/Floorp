@@ -771,6 +771,7 @@ nsXULAppInfo::GetProcessType(PRUint32* aResult)
 NS_IMETHODIMP
 nsXULAppInfo::EnsureContentProcess()
 {
+#ifdef MOZ_IPC
   if (XRE_GetProcessType() != GeckoProcessType_Default)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -778,6 +779,9 @@ nsXULAppInfo::EnsureContentProcess()
   if (!c)
     return NS_ERROR_NOT_AVAILABLE;
   return NS_OK;
+#else
+  return NS_ERROR_NOT_AVIALABLE;
+#endif
 }
 
 NS_IMETHODIMP
