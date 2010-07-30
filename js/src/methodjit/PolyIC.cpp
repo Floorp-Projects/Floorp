@@ -512,7 +512,18 @@ class GetPropCompiler : public PICStubCompiler
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
         ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
-        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, ic::GetProp));
+
+        VoidStubUInt32 stub;
+        if (pic.kind == ic::PICInfo::GET)
+            stub = ic::GetProp;
+        else if (pic.kind == ic::PICInfo::CALL)
+            stub = ic::CallProp;
+        else if (pic.kind == ic::PICInfo::GETELEM)
+            stub = ic::GetElem;
+        else
+            JS_NOT_REACHED("invalid pic kind for GetPropCompiler::reset");
+
+        MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
         repatcher.relinkCallerToTrampoline(retPtr, target);
     }
 
@@ -1867,7 +1878,7 @@ ic::CallProp(VMFrame &f, uint32 index)
     regs.sp[-1].setNull();
     if (lval.isObject()) {
         if (!js_GetMethod(cx, &objv.toObject(), id,
-                          JS_LIKELY(!js_GetProperty)
+                          JS_LIKELY(!objv.toObject().getOps()->getProperty)
                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                           : JSGET_NO_METHOD_BARRIER,
                           &rval)) {
