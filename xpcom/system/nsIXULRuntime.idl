@@ -107,4 +107,7 @@ interface nsIXULRuntime : nsISupports
    * fastload data to be re-created.
    */
   void invalidateCachesOnRestart();
+
+  readonly attribute unsigned long launchTimestamp;
+  readonly attribute unsigned long startupTimestamp;
 };
