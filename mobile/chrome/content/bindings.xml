@@ -391,7 +391,7 @@
           let data = {
             target: this,
             json: {
-              types: ["edit-bookmark"]
+              types: ["edit-bookmark"],
               label: this.uri.spec
           }};
           ContextHelper.showPopup(data);
