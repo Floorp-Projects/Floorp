@@ -579,6 +579,9 @@ MarkValue(JSTracer *trc, const js::Value &v, const char *name)
     MarkValueRaw(trc, v);
 }
 
+void
+ConservativelyMarkValueRange(JSTracer *trc, Value *beg, Value *end);
+
 static inline void
 MarkValueRange(JSTracer *trc, Value *beg, Value *end, const char *name)
 {
