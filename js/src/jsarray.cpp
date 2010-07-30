@@ -983,6 +983,7 @@ static void
 array_trace(JSTracer *trc, JSObject *obj)
 {
     JS_ASSERT(obj->isDenseArray());
+    obj->traceProtoAndParent(trc);
 
     if (!obj->dslots)
         return;
