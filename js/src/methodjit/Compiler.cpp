@@ -336,7 +336,7 @@ mjit::Compiler::finishThisUp()
             if (pics[i].hasTypeCheck) {
                 int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
                                  stubcc.masm.distanceOf(pics[i].slowPathStart);
-                script->pics[i].u.get.typeCheckOffset = uint16(-distance);
+                script->pics[i].u.get.typeCheckOffset = uint32(-distance);
                 JS_ASSERT(script->pics[i].u.get.typeCheckOffset == -distance);
             }
         }
