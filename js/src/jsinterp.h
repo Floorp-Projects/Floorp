@@ -68,6 +68,7 @@ enum JSFrameFlags {
     JSFRAME_GENERATOR          =  0x80, /* frame belongs to generator-iterator */
     JSFRAME_BAILING            = 0x100, /* walking out of a method JIT'd frame */
     JSFRAME_RECORDING          = 0x200, /* recording a trace */
+    JSFRAME_BAILED_AT_RETURN   = 0x400, /* bailed at JSOP_RETURN */
 
     JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
 };

@@ -2812,7 +2812,7 @@ BEGIN_CASE(JSOP_STOP)
     } else {
 #ifdef JS_TRACER
         /* Hack: re-push rval so either JIT will read it properly. */
-        PUSH_COPY(fp->rval);
+        fp->flags |= JSFRAME_BAILED_AT_RETURN;
         if (TRACE_RECORDER(cx)) {
             AbortRecording(cx, "recording out of Interpret");
             interpReturnOK = true;

@@ -855,7 +855,7 @@ RunTracer(VMFrame &f)
     /* Step 3.2. If entryFrame is at a RETURN, then leave slightly differently. */
     if (JSOp op = FrameIsFinished(cx)) {
         /* We're not guaranteed that the RETURN was run. */
-        if (op == JSOP_RETURN)
+        if (op == JSOP_RETURN && !(entryFrame->flags & JSFRAME_BAILED_AT_RETURN))
             entryFrame->rval = f.regs.sp[-1];
 
         /* Don't pop the frame if it's maybe owned by an Invoke. */
