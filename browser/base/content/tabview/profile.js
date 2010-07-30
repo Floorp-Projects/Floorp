@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -37,55 +37,55 @@
 // **********
 // Title: profile.js
 
-(function(){
+(function() {
 // ##########
 // Class: Profile
-// A simple profiling helper. 
+// A simple profiling helper.
 // TODO: remove before shipping.
 window.Profile = {
   // Variable: silent
-  // If true, disables logging of results. 
+  // If true, disables logging of results.
   silent: true,
-  
+
   // Variable: cutoff
   // How many ms a wrapped function needs to take before it gets logged.
-  cutoff: 4, 
-  
+  cutoff: 4,
+
   // Variable: _time
   // Private. The time of the last checkpoint.
   _time: Date.now(),
-    
+
   // ----------
   // Function: wrap
-  // Wraps the given object with profiling for each method. 
+  // Wraps the given object with profiling for each method.
   wrap: function(obj, name) {
     let self = this;
-    [i for (i in Iterator(obj))].forEach(function([key, val]) { 
-      if (typeof val != "function") 
+    [i for (i in Iterator(obj))].forEach(function([key, val]) {
+      if (typeof val != "function")
         return;
-  
+
       obj[key] = function() {
-        let start = Date.now(); 
-        try { 
+        let start = Date.now();
+        try {
           return val.apply(obj, arguments);
-        } finally { 
+        } finally {
           let diff = Date.now() - start;
-          if(diff >= self.cutoff && !self.silent)
-            Utils.log("profile: " + name + "." + key + " = " + diff + "ms"); 
+          if (diff >= self.cutoff && !self.silent)
+            Utils.log("profile: " + name + "." + key + " = " + diff + "ms");
         }
       };
     });
   },
-  
+
   // ----------
   // Function: checkpoint
   // Reset the clock. If label is provided, print the time in milliseconds since the last reset.
   checkpoint: function(label) {
     var now = Date.now();
-    
-    if(label && !this.silent)
+
+    if (label && !this.silent)
       Utils.log("profile checkpoint: " + label + " = " + (now - this._time) + "ms");
-      
+
     this._time = now;
   }
 };
