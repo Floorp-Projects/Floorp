@@ -7,6 +7,8 @@ Local patches:
 
     angle-shared.patch - add declspec dllexport/dllimport support on win32
 
+    angle-sunstudio.patch - Fix compilation with Sun Studio on Solaris
+
 To regenerate the flex/yacc generated files:
 
 flex --noline --nounistd --outfile=generated/glslang.cpp src/compiler/glslang.l
