@@ -1236,7 +1236,6 @@ typedef HashMap<Value, Value, WrapperHasher, SystemAllocPolicy> WrapperMap;
 
 class AutoValueVector;
 class AutoIdVector;
-class ConservativeGCStackMarker;
 
 struct GCMarker : public JSTracer {
   private:
@@ -1251,11 +1250,10 @@ struct GCMarker : public JSTracer {
 
   public:
     js::Vector<JSObject *, 0, js::SystemAllocPolicy> arraysToSlowify;
-    ConservativeGCStackMarker *conservativeMarker;
 
   public:
     explicit GCMarker(JSContext *cx)
-      : color(0), unmarkedArenaStackTop(NULL), conservativeMarker(NULL)
+      : color(0), unmarkedArenaStackTop(NULL)
     {
         JS_TRACER_INIT(this, cx, NULL);
 #ifdef DEBUG
