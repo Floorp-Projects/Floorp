@@ -279,8 +279,8 @@
         <vbox id="content-navigator" class="window-width" top="0" spacer="content-navigator-spacer">
           <arrowscrollbox id="form-helper-autofill" collapsed="true" align="center" flex="1" orient="horizontal"
                           onclick="FormHelperUI.doAutoComplete(event.target);"/>
-          <textbox id="select-helper-textbox" oncommand="SelectHelperUI.filter(this.value)" type="search" flex="1" hidden="true"/>
-          <textbox id="find-helper-textbox" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search" flex="1"/>
+          <textbox id="select-helper-textbox" class="content-navigator-item" oncommand="SelectHelperUI.filter(this.value)" type="search" flex="1" hidden="true"/>
+          <textbox id="find-helper-textbox" class="content-navigator-item" oncommand="FindHelperUI.search(this.value)" oninput="FindHelperUI.updateCommands(this.value);" type="search" flex="1"/>
         </vbox>
       </stack>
 
@@ -499,7 +499,7 @@
 
     <!-- options dialog for select form field -->
     <vbox id="select-container" hidden="true" pack="center">
-      <spacer flex="1000"/>
+      <spacer id="select-spacer" flex="1000"/>
       <vbox id="select-container-inner" class="dialog-dark" flex="1">
         <scrollbox id="select-list" flex="1" orient="vertical"/>
         <hbox id="select-buttons" pack="center">

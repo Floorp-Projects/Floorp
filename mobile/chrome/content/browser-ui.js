@@ -1672,6 +1672,7 @@ var FormHelperUI = {
       let value = aSuggestions[i];
       let button = document.createElement("label");
       button.setAttribute("value", value);
+      button.className = "form-helper-autofill-label";
       fragment.appendChild(button);
     }
     autofill.appendChild(fragment);
@@ -2172,6 +2173,7 @@ var SharingUI = {
     let bbox = document.getElementById("share-buttons-box");
     this._handlers.forEach(function(handler) {
       let button = document.createElement("button");
+      button.className = "prompt-button";
       button.setAttribute("label", handler.name);
       button.addEventListener("command", function() {
         handler.callback(aURL, aTitle);

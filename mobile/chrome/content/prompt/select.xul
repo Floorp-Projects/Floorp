@@ -29,7 +29,7 @@
   </vbox>
 
   <hbox class="prompt-buttons">
-    <button label="&ok.label;" command="cmd_ok"/>
-    <button label="&cancel.label;" command="cmd_cancel"/>
+    <button class="prompt-button" label="&ok.label;" command="cmd_ok"/>
+    <button class="prompt-button" label="&cancel.label;" command="cmd_cancel"/>
   </hbox>
 </dialog>
