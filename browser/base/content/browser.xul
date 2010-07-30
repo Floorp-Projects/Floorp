@@ -495,6 +495,22 @@
           </menupopup>
         </menu>
         <menuseparator/>
+        <menu id="appmenu_developer"
+              label="&developerMenu.label;">
+          <menupopup>
+            <menuitem id="appmenu_pageSource"
+                      label="&pageSourceCmd.label;"
+                      command="View:PageSource"/>
+            <menuseparator/>
+            <menuitem id="appmenu_pageInspect"
+                      label="&inspectMenu.label;"
+                      command="Tools:Inspect"/>
+            <menuitem id="appmenu_webConsole"
+                      label="&webConsoleCmd.label;"
+                      oncommand="HUDConsoleUI.toggleHUD();"/>
+          </menupopup>
+        </menu>
+        <menuseparator/>
         <menu id="appmenu_customize"
               label="&appMenuCustomize.label;">
           <menupopup id="appmenu_customizeMenu"
