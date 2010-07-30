@@ -235,7 +235,6 @@ var UIManager = {
       });
 
       // ___ setup observer to save canvas images
-      Components.utils.import("resource://gre/modules/Services.jsm");
       var observer = {
         observe : function(subject, topic, data) {
           if (topic == "quit-application-requested") {
