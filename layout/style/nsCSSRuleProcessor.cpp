@@ -2395,7 +2395,7 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
       nsTArray<RuleValue>& rules = entry->mRules;
       for (RuleValue *value = rules.Elements(), *end = value + rules.Length();
            value != end; ++value) {
-        if (aData->mComparator->PseudoMatches(aData->mPseudoTag, value->mSelector)) {
+        if (aData->mComparator->PseudoMatches(value->mSelector)) {
           ContentEnumFunc(value->mRule, value->mSelector->mNext,
                           static_cast<RuleProcessorData*>(aData));
         }
