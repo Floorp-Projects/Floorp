@@ -338,7 +338,7 @@ iQClass.prototype = {
 
   // ----------
   // Function: position
-  // Returns an object with the receiver's position in left and top 
+  // Returns an object with the receiver's position in left and top
   // properties.
   position: function() {
     return {
@@ -527,9 +527,9 @@ iQClass.prototype = {
   //
   // Possible "options" properties:
   //   duration - how long to animate, in milliseconds
-  //   easing - easing function to use. Possibilities include 
+  //   easing - easing function to use. Possibilities include
   //     "tabviewBounce", "easeInQuad". Default is "ease".
-  //   complete - function to call once the animation is done, takes nothing 
+  //   complete - function to call once the animation is done, takes nothing
   //     in, but "this" is set to the element that was animated.
   animate: function(css, options) {
     try {
@@ -547,13 +547,13 @@ iQClass.prototype = {
       let duration = (options.duration || 400);
       let easing = (easings[options.easing] || 'ease');
 
-      // The latest versions of Firefox do not animate from a non-explicitly 
-      // set css properties. So for each element to be animated, go through 
+      // The latest versions of Firefox do not animate from a non-explicitly
+      // set css properties. So for each element to be animated, go through
       // and explicitly define 'em.
       let rupper = /([A-Z])/g;
-      this.each(function(elem){
+      this.each(function(elem) {
         let cStyle = window.getComputedStyle(elem, null);
-        for (let prop in css){
+        for (let prop in css) {
           prop = prop.replace(rupper, "-$1").toLowerCase();
           iQ(elem).css(prop, cStyle.getPropertyValue(prop));
         }
@@ -589,9 +589,9 @@ iQClass.prototype = {
   // Function: fadeOut
   // Animates the receiver to full transparency. Calls callback on completion.
   fadeOut: function(callback) {
-    Utils.assert('does not yet support duration', typeof callback == "function" 
+    Utils.assert('does not yet support duration', typeof callback == "function"
         || typeof callback === "undefined");
-      
+
     this.animate({
       opacity: 0
     }, {

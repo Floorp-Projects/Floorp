@@ -162,7 +162,7 @@ Rect.prototype = {
   //
   // Paramaters
   //  - A <Rect>
-  contains: function(rect){
+  contains: function(rect) {
     return(rect.left > this.left
          && rect.right < this.right
          && rect.top > this.top
@@ -245,7 +245,7 @@ Rect.prototype = {
   // ----------
   // Function: union
   // Returns a new <Rect> with the union of this rectangle and the given <Rect>.
-  union: function(a){
+  union: function(a) {
     var newLeft = Math.min(a.left, this.left);
     var newTop = Math.min(a.top, this.top);
     var newWidth = Math.max(a.right, this.right) - newLeft;
@@ -344,7 +344,7 @@ Range.prototype = {
       // little graph. It goes from near 0 at x=0 to near 1 at x=1
       // smoothly and beautifully.
       // http://www.wolframalpha.com/input/?i=.5+%2B+.5+*+tanh%28%284+*+x%29+-+2%29
-      function tanh(x){
+      function tanh(x) {
         var e = Math.exp(x);
         return (e - 1/e) / (e + 1/e);
       }
