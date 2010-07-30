@@ -4,6 +4,7 @@
 
 Components.utils.import("resource://gre/modules/tabview/tabs.js");
 Components.utils.import("resource://gre/modules/tabview/utils.js");
+Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gWindow", function() {
