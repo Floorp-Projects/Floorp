@@ -3073,7 +3073,7 @@ LeaveTrace(JSContext *cx)
 static JS_INLINE void
 LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
 {
-    if (!obj->parent)
+    if (obj->fslots[JSSLOT_PARENT].isNull())
         LeaveTrace(cx);
 }
 

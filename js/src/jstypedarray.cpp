@@ -318,6 +318,9 @@ TypedArray::obj_trace(JSTracer *trc, JSObject *obj)
 {
     TypedArray *tarray = fromJSObject(obj);
     JS_ASSERT(tarray);
+
+    obj->traceProtoAndParent(trc);
+
     JS_CALL_OBJECT_TRACER(trc, tarray->bufferJS, "typedarray.buffer");
 }
 
