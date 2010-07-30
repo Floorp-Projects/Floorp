@@ -72,6 +72,10 @@ ScopedAppData::ScopedAppData(const nsXREAppData* aAppData)
 
   this->size = aAppData->size;
 
+  if (aAppData->size > offsetof(nsXREAppData, startupTimestamp)) {
+    this->startupTimestamp = PR_IntervalNow();
+  }
+
   SetAllocatedString(this->vendor, aAppData->vendor);
   SetAllocatedString(this->name, aAppData->name);
   SetAllocatedString(this->version, aAppData->version);
