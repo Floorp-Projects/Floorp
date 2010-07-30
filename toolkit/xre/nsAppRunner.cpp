@@ -780,7 +780,7 @@ nsXULAppInfo::EnsureContentProcess()
     return NS_ERROR_NOT_AVAILABLE;
   return NS_OK;
 #else
-  return NS_ERROR_NOT_AVIALABLE;
+  return NS_ERROR_NOT_AVAILABLE;
 #endif
 }
 
