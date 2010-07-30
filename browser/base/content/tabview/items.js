@@ -145,10 +145,10 @@ window.Item.prototype = {
   // Parameters:
   //   container - the outermost DOM element that describes this item onscreen.
   _init: function(container) {
-    Utils.assert( 'Subclass must implement the Subscribable interface',
+    Utils.assert('Subclass must implement the Subscribable interface',
       typeof(this.addSubscriber) == 'function' &&
       typeof(this.removeSubscriber) == 'function' &&
-      typeof(this._sendToSubscribers) == 'function' );
+      typeof(this._sendToSubscribers) == 'function');
     Utils.assert('container must be a DOM element', Utils.isDOMElement(container));
     Utils.assert('Subclass must provide setBounds', typeof(this.setBounds) == 'function');
     Utils.assert('Subclass must provide setZ', typeof(this.setZ) == 'function');
@@ -189,8 +189,8 @@ window.Item.prototype = {
 
     // ___ drop
     this.dropOptions = {
-      over: function(){},
-      out: function(){
+      over: function() {},
+      out: function() {
         var group = drag.info.item.parent;
         if (group) {
           group.remove(drag.info.$el, {dontClose: true});
@@ -198,7 +198,7 @@ window.Item.prototype = {
 
         iQ(this.container).removeClass("acceptsDrop");
       },
-      drop: function(event){
+      drop: function(event) {
         iQ(this.container).removeClass("acceptsDrop");
       },
       // Function: dropAcceptFunction
@@ -216,14 +216,14 @@ window.Item.prototype = {
       aspectRatio: self.keepProportional,
       minWidth: 90,
       minHeight: 90,
-      start: function(e,ui){
+      start: function(e,ui) {
         resizeInfo = new Drag(this, e, true); // true = isResizing
       },
-      resize: function(e,ui){
+      resize: function(e,ui) {
         // TODO: maybe the stationaryCorner should be topright for rtl langs?
         resizeInfo.snap('topleft', false, self.keepProportional);
       },
-      stop: function(){
+      stop: function() {
         self.setUserSize();
         self.pushAway();
         resizeInfo.stop();
@@ -320,7 +320,7 @@ window.Item.prototype = {
   // Function: pushAway
   // Pushes all other items away so none overlap this Item.
   pushAway: function() {
-    var buffer = Math.floor( Items.defaultGutter / 2 );
+    var buffer = Math.floor(Items.defaultGutter / 2);
 
     var items = Items.getTopLevelItems();
     // setup each Item's pushAwayData attribute:
@@ -439,7 +439,7 @@ window.Item.prototype = {
 
         var pusher = data.pusher;
         if (pusher) {
-          var newPosStep = new Point( posStep.x + posStep2.x, posStep.y + posStep2.y );
+          var newPosStep = new Point(posStep.x + posStep2.x, posStep.y + posStep2.y);
           apply(pusher, newPosStep, posStep2, sizeStep);
         }
       }
@@ -854,7 +854,7 @@ window.Items = {
   // ----------
   // Function: getPageBounds
   // Returns a <Rect> defining the area of the page <Item>s should stay within.
-  getPageBounds: function( dontCountNewTabGroup ) {
+  getPageBounds: function(dontCountNewTabGroup) {
     var bottom = dontCountNewTabGroup ? 0 : TabItems.tabHeight + Items.defaultGutter;
     var width = Math.max(100, window.innerWidth);
     var height = Math.max(100, window.innerHeight - bottom);
@@ -864,7 +864,7 @@ window.Items = {
   // ----------
   // Function: getSafeWindowBounds
   // Returns the bounds within which it is safe to place all non-stationary <Item>s.
-  getSafeWindowBounds: function( dontCountNewTabGroup ) {
+  getSafeWindowBounds: function(dontCountNewTabGroup) {
     // the safe bounds that would keep it "in the window"
     var gutter = Items.defaultGutter;
     var newTabGroupBounds = Groups.getBoundsForNewTabGroup();
@@ -873,10 +873,10 @@ window.Items = {
     // TODO: set top gutter separately, elsewhere.
     var topGutter = 5;
     if (dontCountNewTabGroup)
-      return new Rect( gutter, topGutter,
-        window.innerWidth - 2 * gutter, window.innerHeight - gutter - topGutter );
-    return new Rect( gutter, topGutter,
-      window.innerWidth - 2 * gutter, newTabGroupBounds.top -  gutter - topGutter );
+      return new Rect(gutter, topGutter,
+        window.innerWidth - 2 * gutter, window.innerHeight - gutter - topGutter);
+    return new Rect(gutter, topGutter,
+      window.innerWidth - 2 * gutter, newTabGroupBounds.top -  gutter - topGutter);
 
   },
 
