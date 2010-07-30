@@ -84,6 +84,8 @@ enum eHtml5TreeOperation {
   eTreeOpSetStyleLineNumber,
   eTreeOpSetScriptLineNumberAndFreeze,
   eTreeOpSvgLoad,
+  eTreeOpAddClass,
+  eTreeOpAddViewSourceHref,
   eTreeOpStartLayout
 };
 
@@ -291,6 +293,17 @@ class nsHtml5TreeOperation {
       mOpCode = aOpCode;
       mOne.node = aNode;
       mInt = aInt;
+    }
+
+    inline void InitAddClass(nsIContent** aNode, const PRUnichar* aClass) {
+      NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
+        "Op code must be uninitialized when initializing.");
+      NS_PRECONDITION(aNode, "Initialized tree op with null node.");
+      NS_PRECONDITION(aClass, "Initialized tree op with null string.");
+      // aClass must be a literal string that does not need freeing
+      mOpCode = eTreeOpAddClass;
+      mOne.node = aNode;
+      mTwo.unicharPtr = (PRUnichar*)aClass;
     }
 
     inline bool IsRunScript() {

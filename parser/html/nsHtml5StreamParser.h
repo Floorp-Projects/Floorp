@@ -60,6 +60,28 @@ class nsHtml5Parser;
 #define NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE 1024
 #define NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE 1024
 
+enum eParserMode {
+  /**
+   * Parse a document normally as HTML.
+   */
+  NORMAL,
+
+  /**
+   * View document as HTML source.
+   */
+  VIEW_SOURCE_HTML,
+
+  /**
+   * View document as XML source
+   */
+  VIEW_SOURCE_XML,
+
+  /**
+   * View document as plain text
+   */
+  PLAIN_TEXT
+};
+
 enum eBomState {
   /**
    * BOM sniffing hasn't started.
@@ -118,7 +140,8 @@ class nsHtml5StreamParser : public nsIStreamListener,
     static void InitializeStatics();
 
     nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
-                        nsHtml5Parser* aOwner);
+                        nsHtml5Parser* aOwner,
+                        eParserMode aMode);
                         
     virtual ~nsHtml5StreamParser();
 
@@ -494,6 +517,11 @@ class nsHtml5StreamParser : public nsIStreamListener,
      * False initially and true after the timer has fired at least once.
      */
     bool                          mFlushTimerEverFired;
+
+    /**
+     * Whether the parser is doing a normal parse, view source or plain text.
+     */
+    eParserMode                   mMode;
 
     /**
      * The pref html5.flushtimer.initialdelay: Time in milliseconds between

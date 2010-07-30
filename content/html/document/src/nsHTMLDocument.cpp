@@ -576,7 +576,8 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
   if (mIsRegularHTML && 
       nsHtml5Module::sEnabled && 
       aCommand && 
-      !nsCRT::strcmp(aCommand, "view")) {
+      (!nsCRT::strcmp(aCommand, "view") ||
+       !nsCRT::strcmp(aCommand, "view-source"))) {
     return; // the HTML5 parser uses chardet directly
   }
   nsCOMPtr <nsIParserFilter> cdetflt;
@@ -675,7 +676,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (loadAsHtml5 && 
       !(contentType.EqualsLiteral("text/html") && 
         aCommand && 
-        !nsCRT::strcmp(aCommand, "view"))) {
+        (!nsCRT::strcmp(aCommand, "view") ||
+         !nsCRT::strcmp(aCommand, "view-source")))) {
     loadAsHtml5 = false;
   }
   
@@ -728,7 +730,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (needsParser) {
     if (loadAsHtml5) {
       mParser = nsHtml5Module::NewHtml5Parser();
-      mParser->MarkAsNotScriptCreated();
+      mParser->MarkAsNotScriptCreated(aCommand);
     } else {
       mParser = do_CreateInstance(kCParserCID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
