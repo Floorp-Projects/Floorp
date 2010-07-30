@@ -175,6 +175,7 @@
 <!ENTITY inspectMenu.accesskey        "T">
 <!ENTITY inspectMenu.commandkey       "I">
 
+<!ENTITY inspectPanelTitle.label      "HTML">
 <!ENTITY inspectButton.label          "Inspect">
 <!ENTITY inspectButton.accesskey      "I">
 <!ENTITY inspectNextButton.label      "Next">
