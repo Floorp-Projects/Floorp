@@ -1065,10 +1065,10 @@
   <binding id="content-navigator">
     <content pack="end">
       <children includes="vbox"/>
-      <xul:hbox class="panel-dark" pack="end">
+      <xul:hbox class="content-navigator-box panel-dark" pack="end">
         <children includes="textbox|arrowscrollbox"/>
-        <xul:toolbarbutton anonid="previous-button" class="button-image previous-button" xbl:inherits="command=previous"/>
-        <xul:toolbarbutton anonid="next-button" class="button-image next-button" xbl:inherits="command=next"/>
+        <xul:toolbarbutton anonid="previous-button" class="content-navigator-item button-image previous-button" xbl:inherits="command=previous"/>
+        <xul:toolbarbutton anonid="next-button" class="content-navigator-item button-image next-button" xbl:inherits="command=next"/>
       </xul:hbox>
     </content>
 

@@ -859,6 +859,8 @@ box[type="documenttab"]:only-child .documenttab-close {
 /* Popup Body Text */
 #identity-popup-content-box {
   -moz-padding-start: 8px; /* core spacing */
+  font-size: 18px !important;
+  white-space: pre-wrap;
 }
 
 /* let the text flow into a second row, if needed */
@@ -873,12 +875,6 @@ box[type="documenttab"]:only-child .documenttab-close {
 #identity-popup-content-box.verifiedIdentity > hbox > #identity-popup-connectedToLabel2,
 #identity-popup-content-box.verifiedDomain > hbox > #identity-popup-connectedToLabel2 {
   display: none;
-}
-
-#identity-popup-content-box > hbox > description,
-#identity-popup-content-box > hbox > label {
-  font-size: 18px !important;
-  white-space: pre-wrap;
 }
 
 #identity-popup-encryption-label,
@@ -916,7 +912,7 @@ box[type="documenttab"]:only-child .documenttab-close {
   -moz-border-radius-bottomright: 8px;
 }
 
-.prompt-buttons > button,
+.prompt-button,
 pageaction {
   -moz-border-top-colors: rgb(235, 235, 235);
   -moz-border-right-colors: rgb(205, 205, 205);
@@ -930,36 +926,36 @@ pageaction {
 }
 
 /* Override buttons style */
-.prompt-buttons > button {
+.prompt-button {
   margin: 0;
   -moz-border-image: none !important;
 }
 
-.prompt-buttons > button > .button-box {
+.prompt-button > .button-box {
   padding: 0 4px 1px 3px !important;
 }
 
 @media (min-width: 500px) {
-  .prompt-buttons > button,
+  .prompt-button,
   pageaction {
     width: 50%;
   }
 
-  .prompt-buttons > button:nth-last-child(2):not(:nth-child(even)),
+  .prompt-button:nth-last-child(2):not(:nth-child(even)),
   pageaction:nth-last-child(2):not(:nth-child(even)) {
     background-image: -moz-linear-gradient(top, rgb(235,235,235) 0%, rgb(215,215,215) 90%);
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomleft: 8px;
   }
 
-  .prompt-buttons > button:first-child,
-  .prompt-buttons > button:nth-child(2),
+  .prompt-button:first-child,
+  .prompt-button:nth-child(2),
   pageaction:first-child,
   pageaction:nth-child(2) {
     background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%) !important;
   }
 
-  .prompt-buttons > button:last-child:not(:nth-child(even)),
+  .prompt-button:last-child:not(:nth-child(even)),
   pageaction:last-child:not(:nth-child(even)) {
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomleft: 8px;
@@ -967,7 +963,7 @@ pageaction {
     width: 100%;
   }
 
-  .prompt-buttons > button:last-child:not(:nth-child(odd)),
+  .prompt-button:last-child:not(:nth-child(odd)),
   pageaction:last-child:not(:nth-child(odd)) {
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomright: 8px;
@@ -975,55 +971,55 @@ pageaction {
 }
 
 @media (max-width: 499px) {
-  .prompt-buttons > button:last-child,
+  .prompt-button:last-child,
   pageaction:last-child {
     -moz-border-radius-bottomleft: 8px;
     -moz-border-radius-bottomright: 8px;
   }
 }
 
-.prompt-buttons > button:last-child,
+.prompt-button:last-child,
 pageaction:last-child {
   background-image: -moz-linear-gradient(top, rgb(235,235,235) 0%, rgb(215,215,215) 90%);
 }
 
-.prompt-buttons > button:first-child,
+.prompt-button:first-child,
 pageaction:first-child {
   background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
 }
 
-.prompt-buttons > button:hover:active,
+.prompt-button:hover:active,
 pageaction:hover:active {
   background-image: none !important;
   background-color: #8db8d8 !important;
 }
 
-pageaction .pageaction-image {
+pageaction > hbox > .pageaction-image {
   width: 32px;
   height: 32px;
   -moz-margin-end: 8px;
 }
 
-pageaction:not([image]) .pageaction-image {
+pageaction:not([image]) > hbox >.pageaction-image {
   width: 0;
 }
 
-.prompt-buttons > button,
-pageaction .pageaction-title {
+.prompt-button,
+.pageaction-title {
   font-size: 24px !important;
   color: #414141 !important;
 }
 
-pageaction .pageaction-desc {
+.pageaction-desc {
   font-size: 14px !important;
   color: #414141;
 }
 
-pageaction:hover:active  .pageaction-desc {
+pageaction:hover:active > vbox > .pageaction-desc {
   color: white;
 }
 
-pageaction .pageaction-desc[value=""] {
+.pageaction-desc[value=""] {
   display: none;
 }
 
@@ -1048,7 +1044,7 @@ pageaction .pageaction-desc[value=""] {
   margin-left: 28px;  /* sized based on the 32px addon image */
 }
 
-.options-box setting:last-child .prefbox {
+.options-box > setting:last-child > .prefbox {
   border-bottom: 0;
 }
 
@@ -1088,7 +1084,8 @@ pageaction .pageaction-desc[value=""] {
 
 /* navigator popup -------------------------------------------------------------- */
 #content-navigator,
-#content-navigator #select-buttons {
+#content-navigator > #select-container > #select-spacer,
+#content-navigator > #select-container > #select-container-inner > #select-buttons {
   display: none;
 }
 
@@ -1117,57 +1114,52 @@ pageaction .pageaction-desc[value=""] {
   -moz-box-flex: 0;
 }
 
-#content-navigator > #select-container > #select-container-inner > scrollbox {
+#content-navigator > #select-container > #select-container-inner > #select-list {
   min-height: 70px;
-}
-
-#content-navigator > #select-container > spacer {
-  display: none;
 }
 
 #select-buttons {
   padding: 4px 8px; /* row size & core spacing */
 }
 
-#select-buttons > button {
+#select-buttons-done {
   -moz-user-focus: ignore;
   -moz-user-select: none;
 }
 
-#content-navigator > hbox {
+.content-navigator-box {
   padding: 2px 0; /* half row size */
 }
 
-#content-navigator > hbox > textbox,
-#content-navigator > hbox > toolbarbutton {
+#content-navigator > hbox > .content-navigator-item {
   margin: 2px 8px; /* half row size & core spacing */
 }
 
-#content-navigator > hbox > toolbarbutton.previous-button {
+#content-navigator > hbox > .previous-button {
   height: 64px;
   margin-right: 0;
   list-style-image: url("chrome://browser/skin/images/previous-default-64.png");
 }
 
-#content-navigator > hbox > toolbarbutton.previous-button:not([disabled="true"]):hover:active {
+#content-navigator > hbox > .previous-button:not([disabled="true"]):hover:active {
   list-style-image: url("chrome://browser/skin/images/previous-active-64.png");
 }
 
-#content-navigator > hbox > toolbarbutton.previous-button[disabled="true"] {
+#content-navigator > hbox > .previous-button[disabled="true"] {
   list-style-image: url("chrome://browser/skin/images/previous-disabled-64.png");
 }
 
-#content-navigator > hbox > toolbarbutton.next-button {
+#content-navigator > hbox > .next-button {
   height: 64px;
   margin-left: 0;
   list-style-image: url("chrome://browser/skin/images/next-default-64.png");
 }
 
-#content-navigator > hbox > toolbarbutton.next-button:not([disabled="true"]):hover:active {
+#content-navigator > hbox > .next-button:not([disabled="true"]):hover:active {
   list-style-image: url("chrome://browser/skin/images/next-active-64.png");
 }
 
-#content-navigator > hbox > toolbarbutton.next-button[disabled="true"] {
+#content-navigator > hbox > .next-button[disabled="true"] {
   list-style-image: url("chrome://browser/skin/images/next-disabled-64.png");
 }
 
@@ -1178,21 +1170,21 @@ pageaction .pageaction-desc[value=""] {
   background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%);
 }
 
-#form-helper-autofill .autorepeatbutton-down {
+#form-helper-autofill > .autorepeatbutton-down {
   list-style-image: url(images/arrowright-16.png);
 }
 
-#form-helper-autofill .autorepeatbutton-up {
+#form-helper-autofill > .autorepeatbutton-up {
   list-style-image: url(images/arrowleft-16.png);
 }
 
 /* force the autorepeat buttons to create a 'padding' when collapsed */
-#form-helper-autofill autorepeatbutton[collapsed="true"],
-#form-helper-autofill autorepeatbutton[disabled="true"] {
+#form-helper-autofill > autorepeatbutton[collapsed="true"],
+#form-helper-autofill > autorepeatbutton[disabled="true"] {
   visibility: hidden;
 }
 
-#form-helper-autofill > label {
+.form-helper-autofill-label {
   padding: 12px 8px; /* 12px helps get row size for the labels */
   margin: 0;
   border-color: transparent rgb(215,215,215) transparent rgb(255,255,255);
@@ -1200,21 +1192,17 @@ pageaction .pageaction-desc[value=""] {
   border-width: 1px;
 }
 
-#form-helper-autofill > label:first-child {
+.form-helper-autofill-label:first-child {
   padding-left: -moz-initial; /* the arrowscrollbox creates enough left padding */
   border-left: none;
 }
 
-#form-helper-autofill > label:last-child {
+.form-helper-autofill-label:last-child {
   border-right: none;
 }
 
-#form-helper-autofill > label:active {
+.form-helper-autofill-label:active {
   background-color: #8db8d8;
-}
-
-#form-helper-container #select-buttons {
-  display: none;
 }
 
 #select-container:not([hidden=true]) + #form-buttons {
