@@ -5954,24 +5954,20 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 void
 js_ClearNative(JSContext *cx, JSObject *obj)
 {
-    JSScope *scope;
-    uint32 i, n;
-
     /*
      * Clear our scope and the property cache of all obj's properties only if
      * obj owns the scope (i.e., not if obj is sharing another object's scope).
      * NB: we do not clear any reserved slots lying below JSSLOT_FREE(clasp).
      */
     JS_LOCK_OBJ(cx, obj);
-    scope = obj->scope();
+    JSScope *scope = obj->scope();
     if (!scope->isSharedEmpty()) {
         /* Now that we're done using scope->lastProp/table, clear scope. */
         scope->clear(cx);
 
         /* Clear slot values and reset freeslot so we're consistent. */
-        i = obj->numSlots();
-        n = JSSLOT_FREE(obj->getClass());
-        while (--i >= n)
+        int n = obj->numSlots();
+        for (int i = JSSLOT_FREE(obj->getClass()); i < n; ++i)
             obj->setSlot(i, UndefinedValue());
         scope->freeslot = n;
     }
