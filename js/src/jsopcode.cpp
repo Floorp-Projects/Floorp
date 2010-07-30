@@ -76,6 +76,7 @@
 #include "jsvector.h"
 
 #include "jsscriptinlines.h"
+#include "jscntxtinlines.h"
 
 #include "jsautooplen.h"
 
