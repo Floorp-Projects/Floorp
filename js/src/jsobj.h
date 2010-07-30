@@ -822,10 +822,6 @@ OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
         obj = op(cx, obj);
 }
 
-/*
- * The following function has been copied to jsd/jsd_val.c. If making changes to
- * OBJ_TO_OUTER_OBJECT, please update jsd/jsd_val.c as well.
- */
 inline void
 OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
 {
