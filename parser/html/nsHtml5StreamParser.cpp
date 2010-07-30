@@ -53,6 +53,7 @@
 #include "nsHtml5RefPtr.h"
 #include "nsIScriptError.h"
 #include "mozilla/Preferences.h"
+#include "nsHtml5Highlighter.h"
 
 using namespace mozilla;
 
@@ -174,12 +175,16 @@ class nsHtml5LoadFlusher : public nsRunnable
 };
 
 nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
-                                         nsHtml5Parser* aOwner)
+                                         nsHtml5Parser* aOwner,
+                                         eParserMode aMode)
   : mFirstBuffer(nsnull) // Will be filled when starting
   , mLastBuffer(nsnull) // Will be filled when starting
   , mExecutor(aExecutor)
-  , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor->GetStage(),
-                                        mExecutor->GetStage()))
+  , mTreeBuilder(new nsHtml5TreeBuilder((aMode == VIEW_SOURCE_HTML ||
+                                         aMode == VIEW_SOURCE_XML) ?
+                                             nsnull : mExecutor->GetStage(),
+                                         aMode == NORMAL ?
+                                             mExecutor->GetStage() : nsnull))
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
   , mTokenizerMutex("nsHtml5StreamParser mTokenizerMutex")
   , mOwner(aOwner)
@@ -189,6 +194,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   , mExecutorFlusher(new nsHtml5ExecutorFlusher(aExecutor))
   , mLoadFlusher(new nsHtml5LoadFlusher(aExecutor))
   , mFlushTimer(do_CreateInstance("@mozilla.org/timer;1"))
+  , mMode(aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   mFlushTimer->SetTarget(mThread);
@@ -198,6 +204,10 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
 #endif
   mTokenizer->setInterner(&mAtomTable);
   mTokenizer->setEncodingDeclarationHandler(this);
+
+  if (aMode == VIEW_SOURCE_HTML || aMode == VIEW_SOURCE_XML) {
+    mTokenizer->EnableViewSource(new nsHtml5Highlighter(mExecutor->GetStage()));
+  }
 
   // Chardet instantiation adapted from nsDOMFile.
   // Chardet is initialized here even if it turns out to be useless
@@ -685,6 +695,11 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 
   mStreamState = STREAM_BEING_READ;
 
+  if (mMode == VIEW_SOURCE_HTML || mMode == VIEW_SOURCE_XML) {
+    mTokenizer->StartViewSource();
+  }
+  // For View Source, the parser should run with scripts "enabled" if a normal
+  // load would have scripts enabled.
   bool scriptingEnabled = mExecutor->IsScriptEnabled();
   mOwner->StartTokenizer(scriptingEnabled);
   mTreeBuilder->setScriptingEnabled(scriptingEnabled);
@@ -713,7 +728,11 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 
   nsresult rv = NS_OK;
 
-  mReparseForbidden = false;
+  // The line below means that the encoding can end up being wrong if
+  // a view-source URL is loaded without having the encoding hint from a
+  // previous normal load in the history.
+  mReparseForbidden = !(mMode == NORMAL);
+
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mRequest, &rv));
   if (NS_SUCCEEDED(rv)) {
     nsCAutoString method;
@@ -1007,6 +1026,9 @@ nsHtml5StreamParser::FlushTreeOpsAndDisarmTimer()
     mFlushTimer->Cancel();
     mFlushTimerArmed = false;
   }
+  if (mMode == VIEW_SOURCE_HTML || mMode == VIEW_SOURCE_XML) {
+    mTokenizer->FlushViewSource();
+  }
   mTreeBuilder->Flush();
   if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
     NS_WARNING("failed to dispatch executor flush event");
@@ -1049,6 +1071,9 @@ nsHtml5StreamParser::ParseAvailableData()
             mAtEOF = true;
             mTokenizer->eof();
             mTreeBuilder->StreamEnded();
+            if (mMode == VIEW_SOURCE_HTML || mMode == VIEW_SOURCE_XML) {
+              mTokenizer->EndViewSource();
+            }
             FlushTreeOpsAndDisarmTimer();
             return; // no more data and not expecting more
           default:
@@ -1069,7 +1094,7 @@ nsHtml5StreamParser::ParseAvailableData()
       // Terminate, but that never happens together with script.
       // Can't assert that here, though, because it's possible that the main
       // thread has called Terminate() while this thread was parsing.
-      if (mTreeBuilder->HasScript()) {
+      if (mMode == NORMAL && mTreeBuilder->HasScript()) {
         mozilla::MutexAutoLock speculationAutoLock(mSpeculationMutex);
         nsHtml5Speculation* speculation = 
           new nsHtml5Speculation(mFirstBuffer,
@@ -1114,6 +1139,8 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
                                           bool aLastWasCR)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(!(mMode == VIEW_SOURCE_HTML || mMode == VIEW_SOURCE_XML),
+      "ContinueAfterScripts called in view source mode!");
   if (mExecutor->IsBroken()) {
     return;
   }
@@ -1329,11 +1356,20 @@ nsHtml5StreamParser::TimerFlush()
     return;
   }
 
-  // we aren't speculating and we don't know when new data is
-  // going to arrive. Send data to the main thread.
-  if (mTreeBuilder->Flush(true)) {
-    if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
-      NS_WARNING("failed to dispatch executor flush event");
+  if (mMode == VIEW_SOURCE_HTML || mMode == VIEW_SOURCE_XML) {
+    mTreeBuilder->Flush(); // delete useless ops
+    if (mTokenizer->FlushViewSource()) {
+       if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
+         NS_WARNING("failed to dispatch executor flush event");
+       }
+     }
+  } else {
+    // we aren't speculating and we don't know when new data is
+    // going to arrive. Send data to the main thread.
+    if (mTreeBuilder->Flush(true)) {
+      if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
+        NS_WARNING("failed to dispatch executor flush event");
+      }
     }
   }
 }

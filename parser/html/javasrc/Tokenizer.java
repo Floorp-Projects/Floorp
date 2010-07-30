@@ -1220,6 +1220,9 @@ public class Tokenizer implements Locator {
         if (attributeName != null) {
             String val = longStrBufToString(); // Ownership transferred to
             // HtmlAttributes
+            // CPPONLY: if (mViewSource) {
+            // CPPONLY:   mViewSource.MaybeLinkifyAttributeValue(attributeName, val);
+            // CPPONLY: }
             // [NOCPP[
             if (!endTag && html4 && html4ModeCompatibleWithXhtml1Schemata
                     && attributeName.isCaseFolded()) {
@@ -1316,8 +1319,17 @@ public class Tokenizer implements Locator {
          * meaning. (The rest of the array is garbage and should not be
          * examined.)
          */
+        // CPPONLY: if (mViewSource) {
+        // CPPONLY:   mViewSource.SetBuffer(buffer);
+        // CPPONLY:   pos = stateLoopReportTransitions(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
+        // CPPONLY:   mViewSource.DropBuffer((pos == buffer.getEnd()) ? pos : pos + 1);
+        // CPPONLY: } else {
+        // CPPONLY:   pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
+        // CPPONLY: }
+        // [NOCPP[
         pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState,
                 buffer.getEnd());
+        // ]NOCPP]
         if (pos == buffer.getEnd()) {
             // exiting due to end of buffer
             buffer.setStart(pos);
@@ -3149,6 +3161,7 @@ public class Tokenizer implements Locator {
                          * second column of the named character references
                          * table).
                          */
+                        // CPPONLY: mViewSource.CompletedNamedCharacterReference();
                         @Const @NoLength char[] val = NamedCharacters.VALUES[candidate];
                         if (
                         // [NOCPP[

@@ -107,6 +107,7 @@ CPPSRCS		= \
 		nsHtml5Speculation.cpp \
 		nsHtml5SpeculativeLoad.cpp \
 		nsHtml5SVGLoadDispatcher.cpp \
+		nsHtml5Highlighter.cpp \
 		$(NULL)
 
 FORCE_STATIC_LIB = 1

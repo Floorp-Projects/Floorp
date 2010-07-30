@@ -246,8 +246,11 @@ class nsHtml5Parser : public nsIParser,
     /**
      * Marks the HTML5 parser as not a script-created parser: Prepares the 
      * parser to be able to read a stream.
+     *
+     * @param aCommand the parser command (Yeah, this is bad API design. Let's
+     * make this better when retiring nsIParser)
      */
-    virtual void MarkAsNotScriptCreated();
+    virtual void MarkAsNotScriptCreated(const char* aCommand);
 
     /**
      * True if this is a script-created HTML5 parser.

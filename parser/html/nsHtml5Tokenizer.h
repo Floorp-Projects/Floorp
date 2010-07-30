@@ -35,9 +35,7 @@
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsString.h"
-#include "nsINameSpaceManager.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
@@ -45,10 +43,9 @@
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5NamedCharactersAccel.h"
 #include "nsHtml5Atoms.h"
-#include "nsHtml5ByteReadable.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsAHtml5TreeBuilderState.h"
 #include "nsHtml5Macros.h"
+#include "nsHtml5Highlighter.h"
 
 class nsHtml5StreamParser;
 
@@ -219,6 +216,7 @@ class nsHtml5Tokenizer
     bool tokenizeBuffer(nsHtml5UTF16Buffer* buffer);
   private:
     PRInt32 stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, bool reconsume, PRInt32 returnState, PRInt32 endPos);
+    PRInt32 stateLoopReportTransitions(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* buf, bool reconsume, PRInt32 returnState, PRInt32 endPos);
     void initDoctypeFields();
     inline void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn()
     {
@@ -291,6 +289,8 @@ class nsHtml5Tokenizer
     ~nsHtml5Tokenizer();
     static void initializeStatics();
     static void releaseStatics();
+
+#include "nsHtml5TokenizerHSupplement.h"
 };
 
 #define NS_HTML5TOKENIZER_DATA_AND_RCDATA_MASK ~1

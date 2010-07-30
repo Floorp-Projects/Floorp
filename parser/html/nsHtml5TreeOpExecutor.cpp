@@ -893,6 +893,24 @@ nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* a
   GetParser()->InitializeDocWriteParserState(aState, aLine);
 }
 
+nsIURI*
+nsHtml5TreeOpExecutor::GetViewSourceBaseURI()
+{
+  if (!mViewSourceBaseURI) {
+    nsCOMPtr<nsIURI> orig = mDocument->GetOriginalURI();
+    bool isViewSource;
+    orig->SchemeIs("view-source", &isViewSource);
+    if (isViewSource) {
+      nsCOMPtr<nsINestedURI> nested = do_QueryInterface(orig);
+      NS_ASSERTION(nested, "URI with scheme view-source didn't QI to nested!");
+      nested->GetInnerURI(getter_AddRefs(mViewSourceBaseURI));
+    } else {
+      mViewSourceBaseURI = orig;
+    }
+  }
+  return mViewSourceBaseURI;
+}
+
 // Speculative loading
 
 already_AddRefed<nsIURI>
