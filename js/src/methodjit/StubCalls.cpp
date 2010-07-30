@@ -1522,24 +1522,76 @@ JSObject * JS_FASTCALL
 stubs::LambdaForInit(VMFrame &f, JSFunction *fun)
 {
     JSObject *obj = FUN_OBJECT(fun);
-
-    JSObject *parent;
-    if (FUN_NULL_CLOSURE(fun)) {
-        parent = f.fp->scopeChain;
-
-        if (obj->getParent() == parent)
-            return obj;
-    } else {
-        parent = js_GetScopeChain(f.cx, f.fp);
-        if (!parent)
-            THROWV(NULL);
+    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == f.fp->scopeChain) {
+        fun->setMethodAtom(f.fp->script->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
+        return obj;
     }
+    return Lambda(f, fun);
+}
 
-    obj = CloneFunctionObject(f.cx, fun, parent);
-    if (!obj)
-        THROWV(NULL);
+JSObject * JS_FASTCALL
+stubs::LambdaForSet(VMFrame &f, JSFunction *fun)
+{
+    JSObject *obj = FUN_OBJECT(fun);
+    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == f.fp->scopeChain) {
+        const Value &lref = f.regs.sp[-1];
+        if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
+            fun->setMethodAtom(f.fp->script->getAtom(GET_SLOTNO(f.regs.pc + JSOP_LAMBDA_LENGTH)));
+            return obj;
+        }
+    }
+    return Lambda(f, fun);
+}
 
-    return obj;
+JSObject * JS_FASTCALL
+stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
+{
+    JSObject *obj = FUN_OBJECT(fun);
+    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == f.fp->scopeChain) {
+        /*
+         * Array.prototype.sort and String.prototype.replace are
+         * optimized as if they are special form. We know that they
+         * won't leak the joined function object in obj, therefore
+         * we don't need to clone that compiler- created function
+         * object for identity/mutation reasons.
+         */
+        int iargc = GET_ARGC(f.regs.pc + JSOP_LAMBDA_LENGTH);
+
+        /*
+         * Note that we have not yet pushed obj as the final argument,
+         * so regs.sp[1 - (iargc + 2)], and not regs.sp[-(iargc + 2)],
+         * is the callee for this JSOP_CALL.
+         */
+        const Value &cref = f.regs.sp[1 - (iargc + 2)];
+        JSObject *callee;
+
+        if (IsFunctionObject(cref, &callee)) {
+            JSFunction *calleeFun = GET_FUNCTION_PRIVATE(cx, callee);
+            FastNative fastNative = FUN_FAST_NATIVE(calleeFun);
+
+            if (fastNative) {
+                if (iargc == 1 && fastNative == array_sort)
+                    return obj;
+                if (iargc == 2 && fastNative == str_replace)
+                    return obj;
+            }
+        }
+    }
+    return Lambda(f, fun);
+}
+
+JSObject * JS_FASTCALL
+stubs::LambdaJoinableForNull(VMFrame &f, JSFunction *fun)
+{
+    JSObject *obj = FUN_OBJECT(fun);
+    if (FUN_NULL_CLOSURE(fun) && obj->getParent() == f.fp->scopeChain) {
+        jsbytecode *pc2 = f.regs.pc + JSOP_LAMBDA_LENGTH + JSOP_NULL_LENGTH;
+        JSOp op2 = JSOp(*pc2);
+
+        if (op2 == JSOP_CALL && GET_ARGC(pc2) == 0)
+            return obj;
+    }
+    return Lambda(f, fun);
 }
 
 JSObject * JS_FASTCALL
