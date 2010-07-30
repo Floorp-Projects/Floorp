@@ -1086,8 +1086,13 @@ TokenStream::getTokenInternal()
         if (c == '0') {
             c = getChar();
             if (JS_TOLOWER(c) == 'x') {
-                c = getChar();
                 radix = 16;
+                c = getChar();
+                if (!JS7_ISHEX(c)) {
+                    ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
+                                             JSMSG_MISSING_HEXDIGITS);
+                    goto error;
+                }
             } else if (JS7_ISDEC(c)) {
                 radix = 8;
             }
