@@ -1827,13 +1827,14 @@ var SelectHelperUI = {
     for (let i = 0; i < choices.length; i++) {
       let choice = choices[i];
       let item = document.createElement("option");
+      item.className = "chrome-select-option";
       item.setAttribute("label", choice.text);
       choice.disabled ? item.setAttribute("disabled", choice.disabled)
                       : item.removeAttribute("disabled");
       this._container.appendChild(item);
 
       if (choice.group) {
-        item.className = "optgroup";
+        item.classList.add("optgroup");
         continue;
       }
 
@@ -1841,7 +1842,7 @@ var SelectHelperUI = {
       item.choiceIndex = i;
 
       if (choice.inGroup)
-        item.className = "in-optgroup";
+        item.classList.add("in-optgroup");
 
       if (choice.selected) {
         item.setAttribute("selected", "true");

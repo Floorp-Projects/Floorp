@@ -1182,7 +1182,7 @@
 
   <binding id="chrome-select-option">
     <content orient="horizontal" flex="1">
-      <xul:image anonid="check"/>
+      <xul:image class="chrome-select-option-image" anonid="check"/>
       <xul:label anonid="label" xbl:inherits="value=label"/>
     </content>
 

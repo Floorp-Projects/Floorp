@@ -1231,7 +1231,7 @@ pageaction .pageaction-desc[value=""] {
   background-color: #fff;
 }
 
-#select-list > option {
+.chrome-select-option {
   color: #000;
   background-color: #fff;
   padding: 5px;
@@ -1241,37 +1241,37 @@ pageaction .pageaction-desc[value=""] {
   -moz-box-align: center;
 }
 
-#select-list > option[filtered="true"] {
+.chrome-select-option[filtered="true"] {
   display: none;
 }
 
-#select-list > option[selected="true"] {
+.chrome-select-option[selected="true"] {
   background-color: #8db8d8;
 }
 
-#select-list > option[disabled="true"] {
+.chrome-select-option[disabled="true"] {
   pointer-events: none;
   color: #aaa !important;
 }
 
-#select-list > option.optgroup {
+.chrome-select-option.optgroup {
   font-weight: bold;
   font-style: italic;
 }
 
-#select-list > option.optgroup > image {
+.chrome-select-option.optgroup > .chrome-select-option-image {
   display: none;
 }
 
-#select-list > option.in-optgroup {
+.chrome-select-option.in-optgroup {
   -moz-padding-start: 24px;
 }
 
-#select-list > option > image {
+.chrome-select-option-image {
   min-width: 30px;
 }
 
-#select-list > option[selected="true"] > image {
+.chrome-select-option[selected="true"] {
   list-style-image: url("chrome://browser/skin/images/check-30.png");
 }
 
@@ -1282,7 +1282,8 @@ pageaction .pageaction-desc[value=""] {
   border: none;
 }
 
-#context-header > label {
+#share-title,
+#context-hint {
   font-size: 18px;
   padding: 4px;
 }
@@ -1292,22 +1293,22 @@ pageaction .pageaction-desc[value=""] {
   -moz-border-radius: 0 0 8px 8px;
 }
 
-#context-commands > richlistitem {
+.context-command {
   -moz-box-align: center;
   background-color: rgb(245,245,245);
   min-width: 200px; /* keep the command from being too narrow */
 }
 
-#context-commands > richlistitem[selector="first-child"] {
+.context-command[selector="first-child"] {
   background: -moz-linear-gradient(top, rgb(255,255,255), rgb(245,245,245));
 }
 
-#context-commands > richlistitem[selector="last-child"] {
+.context-command[selector="last-child"] {
   background: -moz-linear-gradient(top, rgb(245,245,245), rgb(215,215,215));
   -moz-border-radius: 0 0 8px 8px;
 }
 
 /* Force any command tap to highlight */
-#context-commands > richlistitem:hover:active {
+.context-command:hover:active {
   background: #8db8d8;
 }

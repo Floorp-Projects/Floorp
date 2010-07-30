@@ -105,7 +105,7 @@ menulist {
   -moz-binding: url("chrome://browser/content/bindings.xml#menulist");
 }
 
-#select-list > option {
+.chrome-select-option {
   -moz-binding: url("chrome://browser/content/bindings.xml#chrome-select-option");
 }
 
