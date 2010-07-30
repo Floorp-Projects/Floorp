@@ -39,6 +39,8 @@
  * hb_font_funcs_t
  */
 
+HB_BEGIN_DECLS
+
 static hb_codepoint_t
 hb_font_get_glyph_nil (hb_font_t *font HB_UNUSED,
 		       hb_face_t *face HB_UNUSED,
@@ -72,6 +74,8 @@ hb_font_get_kerning_nil (hb_font_t *font HB_UNUSED,
 			 hb_codepoint_t first_glyph HB_UNUSED,
 			 hb_codepoint_t second_glyph HB_UNUSED)
 { return 0; }
+
+HB_END_DECLS
 
 hb_font_funcs_t _hb_font_funcs_nil = {
   HB_REFERENCE_COUNT_INVALID, /* ref_count */
