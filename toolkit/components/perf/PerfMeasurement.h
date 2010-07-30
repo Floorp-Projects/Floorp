@@ -12,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is js-ctypes.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation <http://www.mozilla.org/>.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Dan Witte <dwitte@mozilla.com>
+ *    Zack Weinberg <zweinberg@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,13 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MODULE_H
-#define MODULE_H
+#ifndef COMPONENTS_PERFMEASUREMENT_H
+#define COMPONENTS_PERFMEASUREMENT_H
 
 #include "nsIXPCScriptable.h"
 
 namespace mozilla {
-namespace ctypes {
+namespace jsperf {
 
 class Module : public nsIXPCScriptable
 {
