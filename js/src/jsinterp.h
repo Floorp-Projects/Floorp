@@ -141,12 +141,12 @@ struct JSStackFrame
     JSObject        *blockChain;
 
     uint32          flags;          /* frame flags -- see below */
-    JSStackFrame    *displaySave;   /* previous value of display entry for
-                                       script->staticLevel */
 
     /* Members only needed for inline calls. */
     void            *hookData;      /* debugger call hook data */
     JSVersion       callerVersion;  /* dynamic version of calling script */
+
+    void            *padding;
 
     void putActivationObjects(JSContext *cx) {
         /*
