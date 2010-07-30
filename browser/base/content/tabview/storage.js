@@ -61,9 +61,6 @@ Storage = {
       if (alreadyReady) {
         callback();
       } else {
-        var obsService =
-          Components.classes["@mozilla.org/observer-service;1"]
-          .getService(Components.interfaces.nsIObserverService);
         var observer = {
           observe: function(subject, topic, data) {
             try {
@@ -77,8 +74,7 @@ Storage = {
             }
           }
         };
-
-        obsService.addObserver(
+        Services.obs.addObserver(
           observer, "browser-delayed-startup-finished", false);
       }
     } catch(e) {
