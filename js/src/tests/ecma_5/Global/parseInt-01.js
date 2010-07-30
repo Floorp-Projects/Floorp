@@ -68,11 +68,13 @@ assertEq(parseInt("-0", 10), -0);
  */
 assertEq(parseInt("+12345", 10), 12345);
 assertEq(parseInt(" +12345", 10), 12345);
+assertEq(parseInt("-12345", 10), -12345);
+assertEq(parseInt(" -12345", 10), -12345);
 
 
 /*
-6.  Let R = ToInt32(radix).
-*/
+ * 6.  Let R = ToInt32(radix).
+ */
 
 upvar = "";
 str =
@@ -151,6 +153,14 @@ assertEq(parseInt("hohai", 18), 17);
  * 15. Return sign × number.
  */
 assertEq(parseInt("ohai", 36), 1142154);
+assertEq(parseInt("0ohai", 36), 1142154);
+assertEq(parseInt("00ohai", 36), 1142154);
+assertEq(parseInt("A", 16), 10);
+assertEq(parseInt("0A", 16), 10);
+assertEq(parseInt("00A", 16), 10);
+assertEq(parseInt("A", 17), 10);
+assertEq(parseInt("0A", 17), 10);
+assertEq(parseInt("00A", 17), 10);
 
 
 /******************************************************************************/

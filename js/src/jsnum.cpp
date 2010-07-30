@@ -349,7 +349,7 @@ namespace {
 bool
 ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int maybeRadix, bool stripPrefix, jsdouble *dp)
 {
-    JS_ASSERT(2 <= maybeRadix && maybeRadix <= 36);
+    JS_ASSERT(maybeRadix == 0 || (2 <= maybeRadix && maybeRadix <= 36));
     JS_ASSERT(ws <= end);
 
     const jschar *s = js_SkipWhiteSpace(ws, end);
@@ -363,28 +363,32 @@ ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int may
     if (s != end && (s[0] == '-' || s[0] == '+'))
         s++;
 
-    /* 15.1.2.2 step 10. */
+    /* 15.1.2.2 step 9. */
     int radix = maybeRadix;
+    if (radix == 0) {
+        if (end - s >= 2 && s[0] == '0' && (s[1] != 'x' && s[1] != 'X')) {
+            /*
+             * Non-standard: ES5 requires that parseInt interpret leading-zero
+             * strings not starting with "0x" or "0X" as decimal (absent an
+             * explicitly specified non-zero radix), but we continue to
+             * interpret such strings as octal when the caller is not in strict
+             * mode code.  This strictness check throws us off trace, but it
+             * only happens in code that doesn't specify an explicit, non-zero
+             * radix; thus it is easily avoidable, and idiomatic code will not
+             * suffer.
+             */
+            JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
+            radix = (fp && !fp->script->strictModeCode) ? 8 : 10;
+        } else {
+            radix = 10;
+        }
+    }
+
+    /* 15.1.2.2 step 10. */
     if (stripPrefix) {
-        if (end - s >= 2 && s[0] == '0') {
-            if (s[1] == 'x' || s[1] == 'X') {
-                s += 2;
-                radix = 16;
-            } else {
-                /*
-                 * Non-standard: ES5 requires that parseInt interpret
-                 * leading-zero strings as decimal (absent an explicitly
-                 * specified non-zero radix), but we continue to interpret such
-                 * strings as octal when the caller is not in strict mode code.
-                 * This strictness check throws us off trace, but it only
-                 * happens in code that doesn't specify an explicit, non-zero
-                 * radix; thus it is easily avoidable, and idiomatic code will
-                 * not suffer.
-                 */
-                JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
-                if (fp && !fp->script->strictModeCode)
-                    radix = 8;
-            }
+        if (end - s >= 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
+            s += 2;
+            radix = 16;
         }
     }
 
@@ -428,9 +432,9 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
         return false;
     vp[2].setString(inputString);
 
-    /* 15.1.2.2 steps 6-9. */
+    /* 15.1.2.2 steps 6-8. */
     bool stripPrefix = true;
-    int32_t radix = 10;
+    int32_t radix = 0;
     if (argc > 1) {
         if (!ValueToECMAInt32(cx, vp[3], &radix))
             return false;
@@ -441,12 +445,10 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
             }
             if (radix != 16)
                 stripPrefix = false;
-        } else {
-            radix = 10;
         }
     }
 
-    /* Steps 2-5, 10-14. */
+    /* Steps 2-5, 9-14. */
     const jschar *ws, *end;
     inputString->getCharsAndEnd(ws, end);
 
@@ -467,7 +469,7 @@ ParseInt(JSContext* cx, JSString* str)
     str->getCharsAndEnd(start, end);
 
     jsdouble d;
-    if (!ParseIntStringHelper(cx, start, end, 10, true, &d))
+    if (!ParseIntStringHelper(cx, start, end, 0, true, &d))
         return js_NaN; // FIXME bug 583126: ignores OOM!
     return d;
 }
@@ -495,7 +497,7 @@ const char js_parseInt_str[]   = "parseInt";
 #ifdef JS_TRACER
 
 JS_DEFINE_TRCINFO_2(num_parseInt,
-    (2, (static, DOUBLE, ParseInt, CONTEXT, STRING,     1, nanojit::ACCSET_NONE)),
+    (2, (static, DOUBLE_FAIL, ParseInt, CONTEXT, STRING,1, nanojit::ACCSET_NONE)),
     (1, (static, DOUBLE, ParseIntDouble, DOUBLE,        1, nanojit::ACCSET_NONE)))
 
 JS_DEFINE_TRCINFO_1(num_parseFloat,
