@@ -148,10 +148,10 @@ Trench.prototype = {
       this.minRange = minRange;
 
     // set the appropriate bounds as a rect.
-    if ( this.xory == "x" ) // vertical
-      this.rect = new Rect ( this.position - this.radius, this.range.min, 2 * this.radius, this.range.extent );
+    if (this.xory == "x") // vertical
+      this.rect = new Rect(this.position - this.radius, this.range.min, 2 * this.radius, this.range.extent);
     else // horizontal
-      this.rect = new Rect ( this.range.min, this.position - this.radius, this.range.extent, 2 * this.radius );
+      this.rect = new Rect(this.range.min, this.position - this.radius, this.range.extent, 2 * this.radius);
 
     this.show(); // DEBUG
   },
@@ -166,12 +166,12 @@ Trench.prototype = {
     if (!Utils.isRange(activeRange))
       return false;
     this.activeRange = activeRange;
-    if ( this.xory == "x" ) { // horizontal
-      this.activeRect = new Rect( this.position - this.radius, this.activeRange.min, 2 * this.radius, this.activeRange.extent );
-      this.guideRect = new Rect( this.position, this.activeRange.min, 0, this.activeRange.extent );
+    if (this.xory == "x") { // horizontal
+      this.activeRect = new Rect(this.position - this.radius, this.activeRange.min, 2 * this.radius, this.activeRange.extent);
+      this.guideRect = new Rect(this.position, this.activeRange.min, 0, this.activeRange.extent);
     } else { // vertical
-      this.activeRect = new Rect( this.activeRange.min, this.position - this.radius, this.activeRange.extent, 2 * this.radius );
-      this.guideRect = new Rect( this.activeRange.min, this.position, this.activeRange.extent, 0 );
+      this.activeRect = new Rect(this.activeRange.min, this.position - this.radius, this.activeRange.extent, 2 * this.radius);
+      this.guideRect = new Rect(this.activeRange.min, this.position, this.activeRange.extent, 0);
     }
   },
 
@@ -227,7 +227,6 @@ Trench.prototype = {
   // opacity. If <active> is false, the entire trench will be
   // very translucent.
   show: function Trench_show() { // DEBUG
-
     if (this.active && this.showGuide) {
       if (!this.dom.guideTrench)
         this.dom.guideTrench = iQ("<div/>").addClass('guideTrench').css({id: 'guideTrench'+this.id});
@@ -242,7 +241,7 @@ Trench.prototype = {
     }
 
     if (!Trenches.showDebug) {
-      this.hide( true ); // true for dontHideGuides
+      this.hide(true); // true for dontHideGuides
       return;
     }
 
@@ -274,7 +273,7 @@ Trench.prototype = {
   //----------
   // Function: hide
   // Hide the trench.
-  hide: function Trench_hide( dontHideGuides ) {
+  hide: function Trench_hide(dontHideGuides) {
     if (this.dom.visibleTrench)
       this.dom.visibleTrench.remove();
     if (this.dom.activeVisibleTrench)
@@ -429,7 +428,7 @@ Trench.prototype = {
 
     var groups = Groups.groups;
     var trench = this;
-    groups.forEach(function( group ) {
+    groups.forEach(function(group) {
       if (group.isDragging) // floating groups don't block trenches
         return;
       if (group.isNewTabsGroup())
@@ -540,7 +539,7 @@ var Trenches = {
     if (!Array.isArray(ids))
       ids = [ids];
     var self = this;
-    ids.forEach(function(id){
+    ids.forEach(function(id) {
       self.trenches[id].hide();
       delete self.trenches[id];
     });
@@ -661,7 +660,7 @@ var Trenches = {
   // Function: show
   // <Trench.show> all <Trench>es.
   show: function Trenches_show() {
-    this.trenches.forEach(function(t){
+    this.trenches.forEach(function(t) {
       t.show();
     });
   },
