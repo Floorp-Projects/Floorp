@@ -1804,6 +1804,9 @@ HeadsUpDisplay.prototype = {
     this.outputNode.setAttribute("class", "hud-output-node");
     this.outputNode.setAttribute("flex", "1");
 
+    this.filterSpacer = this.makeXULNode("spacer");
+    this.filterSpacer.setAttribute("flex", "1");
+
     this.filterBox = this.makeXULNode("textbox");
     this.filterBox.setAttribute("class", "hud-filter-box");
     this.filterBox.setAttribute("hudId", this.hudId);
@@ -1885,6 +1888,7 @@ HeadsUpDisplay.prototype = {
       }
       toolbar.appendChild(btn);
     }
+    toolbar.appendChild(this.filterSpacer);
     toolbar.appendChild(this.filterBox);
     toolbar.appendChild(this.filterClearButton);
     return toolbar;
