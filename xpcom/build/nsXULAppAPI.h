@@ -151,6 +151,11 @@ struct nsXREAppData
    *   UAppData = $HOME/$profile
    */
   const char *profile;
+
+  /**
+   * 
+   */
+  PRIntervalTime startupTimestamp;
 };
 
 /**

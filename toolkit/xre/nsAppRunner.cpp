@@ -805,6 +805,21 @@ nsXULAppInfo::InvalidateCachesOnRestart()
   return NS_OK;
 }
 
+/* readonly attribute unsigned long launchTimestamp; */
+NS_IMETHODIMP nsXULAppInfo::GetLaunchTimestamp(PRUint32 *aTimestamp)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute unsigned long startupTimestamp; */
+NS_IMETHODIMP nsXULAppInfo::GetStartupTimestamp(PRUint32 *aTimestamp)
+{
+  *aTimestamp = gAppData->startupTimestamp;
+  return NS_OK;
+}
+
+
+
 #ifdef XP_WIN
 // Matches the enum in WinNT.h for the Vista SDK but renamed so that we can
 // safely build with the Vista SDK and without it.
