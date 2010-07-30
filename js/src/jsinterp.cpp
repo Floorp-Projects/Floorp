@@ -5523,31 +5523,6 @@ BEGIN_CASE(JSOP_DEFVAR)
         obj2 = obj;
     }
 
-    /*
-     * Try to optimize a property we either just created, or found
-     * directly in the global object, that is permanent, has a slot,
-     * and has stub getter and setter, into a "fast global" accessed
-     * by the JSOP_*GVAR opcodes.
-     */
-    if (!fp->fun &&
-        index < GlobalVarCount(fp) &&
-        obj2 == obj &&
-        obj->isNative()) {
-        JSScopeProperty *sprop = (JSScopeProperty *) prop;
-        if (!sprop->configurable() &&
-            SPROP_HAS_VALID_SLOT(sprop, obj->scope()) &&
-            sprop->hasDefaultGetterOrIsMethod() &&
-            sprop->hasDefaultSetter()) {
-            /*
-             * Fast globals use frame variables to map the global name's atom
-             * index to the permanent varobj slot number, tagged as a jsval.
-             * The atom index for the global's name literal is identical to its
-             * variable index.
-             */
-            fp->slots()[index].setInt32(sprop->slot);
-        }
-    }
-
     obj2->dropProperty(cx, prop);
 }
 END_CASE(JSOP_DEFVAR)
