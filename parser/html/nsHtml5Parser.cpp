@@ -128,7 +128,8 @@ nsHtml5Parser::GetCommand(nsCString& aCommand)
 NS_IMETHODIMP_(void)
 nsHtml5Parser::SetCommand(const char* aCommand)
 {
-  NS_ASSERTION(!strcmp(aCommand, "view"), "Parser command was not view");
+  NS_ASSERTION(!strcmp(aCommand, "view") || !strcmp(aCommand, "view-source"),
+      "Parser command was not view");
 }
 
 NS_IMETHODIMP_(void)
@@ -698,10 +699,21 @@ nsHtml5Parser::EndEvaluatingParserInsertedScript()
 }
 
 void
-nsHtml5Parser::MarkAsNotScriptCreated()
+nsHtml5Parser::MarkAsNotScriptCreated(const char* aCommand)
 {
   NS_PRECONDITION(!mStreamParser, "Must not call this twice.");
-  mStreamParser = new nsHtml5StreamParser(mExecutor, this);
+  eParserMode mode = NORMAL;
+  if (!nsCRT::strcmp(aCommand, "view-source")) {
+    mode = VIEW_SOURCE_HTML;
+    // XXX XML view source not implemented yet
+  }
+#ifdef DEBUG
+  else {
+    NS_ASSERTION(!nsCRT::strcmp(aCommand, "view"),
+        "Unsupported parser command!");
+  }
+#endif
+  mStreamParser = new nsHtml5StreamParser(mExecutor, this, mode);
 }
 
 bool
