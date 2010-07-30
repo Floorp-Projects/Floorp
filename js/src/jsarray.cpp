@@ -1376,14 +1376,13 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
     if (!cx->stack().pushInvokeArgs(cx, 0, args))
         return false;
 
-    Value *sp = args.getvp();
-    sp[0] = join;
-    sp[1].setObject(*obj);
+    args.callee() = join;
+    args.thisv().setObject(*obj);
 
     /* Do the call. */
     if (!Invoke(cx, args, 0))
         return false;
-    *vp = *args.getvp();
+    *vp = args.rval();
     return true;
 }
 
@@ -1727,18 +1726,17 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     if (!JS_CHECK_OPERATION_LIMIT(cx))
         return JS_FALSE;
 
-    Value *invokevp = ca->args.getvp();
-    Value *sp = invokevp;
-    *sp++ = ca->fval;
-    *sp++ = NullValue();
-    *sp++ = *av;
-    *sp++ = *bv;
+    CallArgs &args = ca->args;
+    args.callee() = ca->fval;
+    args.thisv().setNull();
+    args[0] = *av;
+    args[1] = *bv;
 
     if (!Invoke(cx, ca->args, 0))
         return JS_FALSE;
 
     jsdouble cmp;
-    if (!ValueToNumber(cx, *invokevp, &cmp))
+    if (!ValueToNumber(cx, args.rval(), &cmp))
         return JS_FALSE;
 
     /* Clamp cmp to -1, 0, 1. */
@@ -2774,7 +2772,6 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
     MUST_FLOW_THROUGH("out");
     JSBool ok = JS_TRUE;
     JSBool cond;
-    Value *invokevp = args.getvp();
 
     Value calleev, thisv, objv;
     calleev.setObject(*callable);
@@ -2792,18 +2789,16 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
 
         /*
          * Push callable and 'this', then args. We must do this for every
-         * iteration around the loop since js_Invoke uses invokevp[0] for return
-         * value storage, while some native functions use invokevp[1] for local
-         * rooting.
+         * iteration around the loop since Invoke clobbers its arguments.
          */
-        Value *sp = invokevp;
-        *sp++ = calleev;
-        *sp++ = thisv;
+        args.callee() = calleev;
+        args.thisv() = thisv;
+        Value *sp = args.argv();
         if (REDUCE_MODE(mode))
             *sp++ = *vp;
-        *sp++ = tvr.value();
-        sp++->setInt32(i);
-        *sp++ = objv;
+        sp[0] = tvr.value();
+        sp[1].setInt32(i);
+        sp[2] = objv;
 
         /* Do the call. */
         ok = Invoke(cx, args, 0);
@@ -2811,7 +2806,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             break;
 
         if (mode > MAP)
-            cond = js_ValueToBoolean(*invokevp);
+            cond = js_ValueToBoolean(args.rval());
 #ifdef __GNUC__ /* quell GCC overwarning */
         else
             cond = JS_FALSE;
@@ -2822,10 +2817,10 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             break;
           case REDUCE:
           case REDUCE_RIGHT:
-            *vp = *invokevp;
+            *vp = args.rval();
             break;
           case MAP:
-            ok = SetArrayElement(cx, newarr, i, *invokevp);
+            ok = SetArrayElement(cx, newarr, i, args.rval());
             if (!ok)
                 goto out;
             break;
