@@ -1613,14 +1613,10 @@ function HeadsUpDisplay(aConfig)
   let hudBox = this.createHUD();
 
   let splitter = this.chromeDocument.createElement("splitter");
-  splitter.setAttribute("collapse", "before");
-  splitter.setAttribute("resizeafter", "flex");
   splitter.setAttribute("class", "hud-splitter");
 
-  let grippy = this.chromeDocument.createElement("grippy");
   this.notificationBox.insertBefore(splitter,
                                     this.notificationBox.childNodes[1]);
-  splitter.appendChild(grippy);
 
   let console = this.createConsole();
 
