@@ -61,7 +61,7 @@ Arguments:
  <dest>  \tthe path to the destination directory
 """)
             sys.exit(1)
-        preprocess_locale_files(argv[1], argv[2], argv[4], argv[4])
+        preprocess_locale_files(argv[1], argv[2], argv[3], argv[4])
 
 def open_utf16le_file(path):
     """
