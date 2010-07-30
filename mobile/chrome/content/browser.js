@@ -1178,7 +1178,7 @@ var Browser = {
       zoomRect = this._getZoomRectForRect(aRect, cY);
 
     if (!zoomRect && bv.isDefaultZoom())
-      zoomRect = this._getZoomRectForPoint(cY, cY, bv.getZoomLevel() * 2);
+      zoomRect = this._getZoomRectForPoint(cX, cY, bv.getZoomLevel() * 2);
 
     if (zoomRect)
       this.animatedZoomTo(zoomRect);
