@@ -979,6 +979,7 @@ class ConservativeGCStackMarker {
     }
 
     void markRoots();
+    void markValueRange(jsuword *begin, jsuword *end);
 
   private:
     void markRange(jsuword *begin, jsuword *end);
@@ -1254,6 +1255,24 @@ ConservativeGCStackMarker::markWord(jsuword w)
 }
 
 void
+ConservativeGCStackMarker::markValueRange(jsuword *begin, jsuword *end)
+{
+#ifdef JS_NUNBOX32
+    /*
+     * With 64-bit jsvals on 32-bit systems, an optimization is possible: only
+     * the payload ever needs to be scanned.
+     */
+    JS_ASSERT(begin <= end);
+    for (jsuword *i = begin; i != end; i += 2) {
+        CONSERVATIVE_METER(stats.words++);
+        markWord(*i);
+    }
+#else
+    markRange(begin, end);
+#endif
+}
+
+void
 ConservativeGCStackMarker::markRange(jsuword *begin, jsuword *end)
 {
     JS_ASSERT(begin <= end);
@@ -1261,6 +1280,17 @@ ConservativeGCStackMarker::markRange(jsuword *begin, jsuword *end)
         CONSERVATIVE_METER(stats.words++);
         markWord(*i);
     }
+}
+
+void
+ConservativelyMarkValueRange(JSTracer *trc, Value *beg, Value *end)
+{
+    GCMarker *gcmarker = static_cast<GCMarker *>(trc);
+    ConservativeGCStackMarker *cgc = gcmarker->conservativeMarker;
+
+    JS_ASSERT(cgc);
+
+    cgc->markValueRange((jsuword *)beg, (jsuword *)end);
 }
 
 void
@@ -2483,6 +2513,10 @@ JS_REQUIRES_STACK void
 js_TraceRuntime(JSTracer *trc)
 {
     JSRuntime *rt = trc->context->runtime;
+    GCMarker *gcmarker = static_cast<GCMarker *>(trc);
+
+    ConservativeGCStackMarker cgc(trc);
+    gcmarker->conservativeMarker = &cgc;
 
     for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront())
         gc_root_traversal(trc, r.front());
@@ -2505,7 +2539,7 @@ js_TraceRuntime(JSTracer *trc)
      * which may use additional colors to implement cycle collection.
      */
     if (rt->state != JSRTS_LANDING)
-        ConservativeGCStackMarker(trc).markRoots();
+        cgc.markRoots();
 
     if (rt->gcExtraRootsTraceOp)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
@@ -2522,6 +2556,8 @@ js_TraceRuntime(JSTracer *trc)
         }
     }
 #endif
+
+    gcmarker->conservativeMarker = NULL;
 }
 
 void

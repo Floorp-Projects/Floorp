@@ -254,14 +254,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
         e.type = fe->getKnownType();
     }
 
-    bool dataSync = !fe->data.synced() && 
-                    !e.dataSynced &&
-                    shouldSyncData(fe, e);
-    bool typeSync = !fe->type.synced() &&
-                    !e.typeSynced &&
-                    shouldSyncType(fe, e);
-
-    if (dataSync || typeSync) {
+    if (!fe->data.synced() && !e.dataSynced && shouldSyncData(fe, e)) {
         if (fe->isConstant()) {
             masm->storeValue(fe->getValue(), addr);
             return;
@@ -269,8 +262,7 @@ ImmutableSync::syncNormal(FrameEntry *fe)
         masm->storePayload(ensureDataReg(fe, e), addr);
     }
 
-    if (!fe->type.synced() && !e.typeSynced &&
-        (shouldSyncType(fe, e) || dataSync)) {
+    if (!fe->type.synced() && !e.typeSynced && shouldSyncType(fe, e)) {
         if (e.learnedType)
             masm->storeTypeTag(ImmType(e.type), addr);
         else
