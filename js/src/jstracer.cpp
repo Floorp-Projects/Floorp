@@ -9989,7 +9989,7 @@ TraceRecorder::box_value_into_alloc(const Value &v, LIns *v_ins)
 LIns*
 TraceRecorder::stobj_get_parent(nanojit::LIns* obj_ins)
 {
-    return lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, parent), ACCSET_OTHER);
+    return stobj_get_fslot_ptr(obj_ins, JSSLOT_PARENT);
 }
 
 LIns*

@@ -456,8 +456,8 @@ struct JSScope : public JSObjectMap
 
     /*
      * A scope has a method barrier when some compiler-created "null closure"
-     * function objects (functions that do not use lexical bindings above
-     * their scope, only free variable names) that have a correct parent value
+     * function objects (functions that do not use lexical bindings above their
+     * scope, only free variable names) that have a correct JSSLOT_PARENT value
      * thanks to the COMPILE_N_GO optimization are stored as newly added direct
      * property values of the scope's object.
      *

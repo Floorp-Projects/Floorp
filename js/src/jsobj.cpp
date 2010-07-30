@@ -5929,6 +5929,8 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
         compartment->marked = true;
     }
 
+    obj->traceProtoAndParent(trc);
+
     /*
      * An unmutated object that shares a prototype object's scope. We can't
      * tell how many slots are in use in obj by looking at its scope, so we
