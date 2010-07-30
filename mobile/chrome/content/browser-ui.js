@@ -399,6 +399,10 @@ var BrowserUI = {
       PreferencesView.init();
       ConsoleView.init();
 
+      // Pre-start the content process
+      Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+          .ensureContentProcess();
+
       // Init the sync system
       WeaveGlue.init();
     });
