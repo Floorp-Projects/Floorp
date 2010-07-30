@@ -75,6 +75,7 @@
 #include "jsscript.h"
 #include "jstracer.h"
 #include "jsxml.h"
+#include "jsperf.h"
 
 #include "prmjtime.h"
 
@@ -4880,6 +4881,8 @@ NewGlobalObject(JSContext *cx, JSAutoCrossCompartmentCall &call)
     if (!JS_InitCTypesClass(cx, glob))
         return NULL;
 #endif
+    if (!JS::RegisterPerfMeasurement(cx, glob))
+        return NULL;
     if (!JS_DefineFunctions(cx, glob, shell_functions))
         return NULL;
 
