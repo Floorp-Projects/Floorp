@@ -229,7 +229,9 @@
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
-           level="top">
+           level="top"
+           titlebar="normal"
+           label="&inspectPanelTitle.label;">
       <toolbar id="inspector-toolbar"
                nowindowdrag="true">
         <toolbarbutton id="inspector-inspect-toolbutton"
@@ -279,11 +281,9 @@
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
-           level="top">
-        <toolbar id="inspector-style-toolbar"
-                 nowindowdrag="true">
-          <label>&inspectStylePanelTitle.label;</label>
-        </toolbar>
+           level="top"
+           titlebar="normal"
+           label="&inspectStylePanelTitle.label;">
         <listbox id="inspector-style-listbox" flex="1"/>
         <hbox align="end">
           <spacer flex="1" />
