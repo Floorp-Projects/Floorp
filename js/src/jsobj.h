@@ -228,7 +228,9 @@ js_TypeOf(JSContext *cx, JSObject *obj);
 
 struct NativeIterator;
 
-const uint32 JS_INITIAL_NSLOTS = 3;
+const uint32 JS_INITIAL_NSLOTS = 4;
+
+const uint32 JSSLOT_PARENT  = 0;
 
 /*
  * The first available slot to store generic value. For JSCLASS_HAS_PRIVATE
@@ -237,7 +239,7 @@ const uint32 JS_INITIAL_NSLOTS = 3;
  * tagging and should be accessed using the (get|set)Private methods of
  * JSObject.
  */
-const uint32 JSSLOT_PRIVATE = 0;
+const uint32 JSSLOT_PRIVATE = 1;
 
 struct JSFunction;
 
@@ -246,13 +248,13 @@ struct JSFunction;
  * 64 bytes on 64-bit systems. The JSFunction struct is an extension of this
  * struct allocated from a larger GC size-class.
  *
- * An object is a delegate if it is on another object's prototype (the proto
- * field) or scope chain (the parent field), and therefore the delegate might
- * be asked implicitly to get or set a property on behalf of another object.
- * Delegates may be accessed directly too, as may any object, but only those
- * objects linked after the head of any prototype or scope chain are flagged
- * as delegates. This definition helps to optimize shape-based property cache
- * invalidation (see Purge{Scope,Proto}Chain in jsobj.cpp).
+ * An object is a delegate if it is on another object's prototype (linked by
+ * JSSLOT_PROTO) or scope (JSSLOT_PARENT) chain, and therefore the delegate
+ * might be asked implicitly to get or set a property on behalf of another
+ * object. Delegates may be accessed directly too, as may any object, but only
+ * those objects linked after the head of any prototype or scope chain are
+ * flagged as delegates. This definition helps to optimize shape-based property
+ * cache invalidation (see Purge{Scope,Proto}Chain in jsobj.cpp).
  *
  * The meaning of the system object bit is defined by the API client. It is
  * set in JS_NewSystemObject and is queried by JS_IsSystemObject (jsdbgapi.h),
@@ -279,8 +281,14 @@ struct JSObject {
     js::Class   *clasp;                     /* class pointer */
     jsuword     flags;                      /* see above */
     JSObject    *proto;                     /* object's prototype */
-    JSObject    *parent;                    /* object's parent */
     js::Value   *dslots;                    /* dynamically allocated slots */
+#if JS_BITS_PER_WORD == 32
+    // TODO: this is needed to pad out fslots. alternatively, clasp could be
+    // merged with flags and the padding removed, but I think the upcoming
+    // removal of JSScope will change this all anyway so I will leave this
+    // here for now.
+    uint32      padding;
+#endif
     js::Value   fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
 
     bool isNative() const {
@@ -402,11 +410,11 @@ struct JSObject {
     }
 
     JSObject *getParent() const {
-        return parent;
+        return fslots[JSSLOT_PARENT].toObjectOrNull();
     }
 
     void clearParent() {
-        parent = NULL;
+        fslots[JSSLOT_PARENT].setNull();
     }
 
     void setParent(JSObject *newParent) {
@@ -415,7 +423,14 @@ struct JSObject {
             JS_ASSERT(obj != this);
 #endif
         setDelegateNullSafe(newParent);
-        parent = newParent;
+        fslots[JSSLOT_PARENT].setObjectOrNull(newParent);
+    }
+
+    void traceProtoAndParent(JSTracer *trc) const {
+        if (JSObject *proto = getProto())
+            JS_CALL_OBJECT_TRACER(trc, proto, "__proto__");
+        if (JSObject *parent = getParent())
+            JS_CALL_OBJECT_TRACER(trc, parent, "parent");
     }
 
     JSObject *getGlobal();
