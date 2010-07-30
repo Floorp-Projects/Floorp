@@ -208,7 +208,7 @@ var UIManager = {
         // ___ make info item
         var html =
           "<div class='intro'>"
-            + "<h1>Welcome to Firefox Tab Sets</h1>"
+            + "<h1>Welcome to Firefox Tab Sets</h1>" // TODO: This needs to be localized if it's kept in
             + "<div>(more goes here)</div><br>"
             + "<video src='http://people.mozilla.org/~araskin/movies/tabcandy_howto.webm' "
             + "width='100%' preload controls>"
