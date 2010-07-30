@@ -70,6 +70,7 @@ EXTRA_COMPONENTS = \
         ContentDispatchChooser.js \
         AutoCompleteCache.js \
         AddonUpdateService.js \
+        FormAutoComplete.js \
 	$(NULL)
 
 DIRS =  phone \

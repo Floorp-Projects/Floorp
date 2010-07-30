@@ -49,6 +49,11 @@ XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
   return PlacesUtils;
 });
 
+XPCOMUtils.defineLazyGetter(this, "Contacts", function() {
+  Cu.import("resource:///modules/contacts.jsm");
+  return Contacts;
+});
+
 const TOOLBARSTATE_LOADING  = 1;
 const TOOLBARSTATE_LOADED   = 2;
 
@@ -400,6 +405,8 @@ var BrowserUI = {
 
     FormHelperUI.init();
     FindHelperUI.init();
+
+    Contacts.init();
   },
 
   uninit: function() {
@@ -1679,7 +1686,7 @@ var FormHelperUI = {
     let suggestions = [];
 
     let autocompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete);
-    let results = autocompleteService.autoCompleteSearch(aElement.name, aElement.value, aElement, null);
+    let results = autocompleteService.autoCompleteSearch(aElement.name, aElement.value, null, null);
     if (results.matchCount > 0) {
       for (let i = 0; i < results.matchCount; i++) {
         let value = results.getValueAt(i);
