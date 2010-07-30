@@ -732,6 +732,7 @@ window.TabItems = {
         return;
 
       self.link(tab);
+      self.update(tab);
     });
 
     this.paintingPaused = 0;
@@ -806,13 +807,9 @@ window.TabItems = {
   unlink: function(tab){
     try {
       Utils.assertThrow("should already be linked", tab.tabItem);
-      var tabItem = tab.tabItem;
-      tabItem._sendToSubscribers("close");
-      var tabCanvas = tabItem.tabCanvas;
-      if (tabCanvas)
-        tabCanvas.detach();
 
-      iQ(tabItem.container).remove();
+      tab.tabItem._sendToSubscribers("close");
+      iQ(tab.tabItem.container).remove();
 
       tab.tabItem = null;
     } catch(e) {

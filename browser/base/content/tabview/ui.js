@@ -49,10 +49,9 @@ window.Keys = { meta: false };
 // Class: UIManager
 // Singleton top-level UI manager.
 var UIManager = {
-  // Variable: _devMode
-  // If true (set by an url parameter), adds extra features to the screen.
-  // TODO: Integrate with the dev menu
-  _devMode : true,
+  // Variable: _frameInitalized
+  // True if the Tab View UI frame has been initialized. 
+  _frameInitalized: false,
 
   // Variable: _pageBounds
   // Stores the page bounds.
@@ -89,17 +88,64 @@ var UIManager = {
   // Function: init
   // Must be called after the object is created.
   init: function() {
+    var self = this;
+    Profile.checkpoint(); 
+    Storage.onReady(function() {
+      self._delayInit();
+    });
+  },
+
+  // ----------
+  // Function: _delayInit
+  // Called automatically by init once sessionstore is online.
+  _delayInit : function() {
     try {
+      Profile.checkpoint("delay until _delayInit");
+      let self = this;
+
+      // ___ storage
       Storage.init();
-      TabItems.init();
+      let data = Storage.readUIData(gWindow);
+      this._storageSanity(data);
+      this._pageBounds = data.pageBounds;
+      
+      // ___ hook into the browser
+      this._setBrowserKeyHandlers();
 
-      var self = this;
+      gWindow.addEventListener("tabviewshow", function() {
+        self.showTabView(true);
+      }, false);
 
+      // ___ show TabView at startup based on last session.
+      if (data.tabViewVisible) {
+        this._stopZoomPreparation = true;
+
+        this.showTabView();
+        
+        // ensure the tabs in the tab strip are in the same order as the tab
+        // items in groups when switching back to main browser UI for the first
+        // time.
+        Groups.groups.forEach(function(group) {
+          self._reorderTabsOnHide.push(group);
+        });
+      }
+    } catch(e) {
+      Utils.log(e);
+    }
+  }, 
+  
+  // ----------
+  // Function: _initFrame
+  // Initializes the TabView UI
+  _initFrame: function() {
+    try {
+      Utils.assert("must not be already initialized", !this._frameInitalized);
+
+      let self = this;
       this._currentTab = gBrowser.selectedTab;
 
       // ___ Dev Menu
-      if (this._devMode)
-        this._addDevMenu();
+      this._addDevMenu();
 
       // When you click on the background/empty part of TabView,
       // we create a new group.
@@ -114,10 +160,6 @@ var UIManager = {
         });
       });
 
-      gWindow.addEventListener("tabviewshow", function() {
-        self.showTabView(true);
-      }, false);
-
       gWindow.addEventListener("tabviewhide", function() {
         var activeTab = self.getActiveTab();
         if (activeTab)
@@ -125,31 +167,12 @@ var UIManager = {
       }, false);
 
       // ___ setup key handlers
-      this._setBrowserKeyHandlers();
       this._setTabViewFrameKeyHandlers();
 
       // ___ add tab action handlers
       this._addTabActionHandlers();
 
-      // ___ delay init
-      Storage.onReady(function() {
-        self._delayInit();
-      });
-    } catch(e) {
-      Utils.log(e);
-    }
-  },
-
-  // ----------
-  // Function: _delayInit
-  // Called automatically by init once sessionstore is online.
-  _delayInit : function() {
-    try {
-      var self = this;
-
       // ___ Storage
-      var data = Storage.readUIData(gWindow);
-      this._storageSanity(data);
 
       var groupsData = Storage.readGroupsData(gWindow);
       var firstTime = !groupsData || Utils.isEmptyObject(groupsData);
@@ -198,41 +221,18 @@ var UIManager = {
         infoItem.html(html);
       }
 
+      // ___ tabs
+      TabItems.init();
+
       // ___ resizing
-      if (data.pageBounds) {
-        this._pageBounds = data.pageBounds;
+      if (this._pageBounds) 
         this._resize(true);
-      } else
+      else
         this._pageBounds = Items.getPageBounds();
 
       iQ(window).resize(function() {
         self._resize();
       });
-
-      // ___ show TabView at startup based on last session.
-      if (data.tabViewVisible) {
-        var currentTab = self._currentTab;
-
-        if (currentTab && currentTab.tabItem)
-          currentTab.tabItem.setZoomPrep(false);
-        else
-          self._stopZoomPreparation = true;
-
-        self.showTabView();
-        // ensure the tabs in the tab strip are in the same order as the tab
-        // items in groups when switching back to main browser UI for the first
-        // time.
-        Groups.groups.forEach(function(group) {
-          self._reorderTabsOnHide.push(group);
-        });
-      } else {
-         self.hideTabView();
-        // ensure the tab items in groups are in the same order as tabs in tab
-        // strip when going into TabView for the first time.
-        Groups.groups.forEach(function(group) {
-          self._reorderTabItemsOnShow.push(group);
-        });
-      }
 
       // ___ setup observer to save canvas images
       Components.utils.import("resource://gre/modules/Services.jsm");
@@ -248,7 +248,7 @@ var UIManager = {
       Services.obs.addObserver(observer, "quit-application-requested", false);
 
       // ___ Done
-      this._initialized = true;
+      this._frameInitalized = true;
       this._save();
     } catch(e) {
       Utils.log(e);
@@ -306,6 +306,10 @@ var UIManager = {
   //   zoomOut - true for zoom out animation, false for nothing.
   showTabView: function(zoomOut) {
     var self = this;
+    
+    if (!this._frameInitalized) 
+      this._initFrame();
+      
     var currentTab = this._currentTab;
     var item = null;
 
@@ -1002,7 +1006,7 @@ var UIManager = {
   // Function: _save
   // Saves the data for this object to persistent storage
   _save: function() {
-    if (!this._initialized)
+    if (!this._frameInitalized)
       return;
 
     var data = {
@@ -1068,7 +1072,9 @@ var UIManager = {
       } else
         leftovers.push(set[0]);
     }
-    putInGroup(leftovers, "mixed");
+    
+    if(leftovers.length)
+      putInGroup(leftovers, "mixed");
 
     Groups.arrange();
   },
