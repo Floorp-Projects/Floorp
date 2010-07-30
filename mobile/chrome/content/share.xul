@@ -14,7 +14,7 @@
   </commandset>
 
   <hbox class="prompt-header">
-    <label id="share-title" class="prompt-title" crop="center" flex="1"/>
+    <label id="share-title" crop="center" flex="1"/>
   </hbox>
 
   <hbox id="share-buttons-box" class="prompt-buttons"/>
