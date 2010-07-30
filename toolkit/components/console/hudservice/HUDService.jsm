@@ -1408,10 +1408,18 @@ HUD_SERVICE.prototype =
   {
     var xulWindow = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsIDocShellTreeItem)
-      .rootTreeItem
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindow);
+                      .QueryInterface(Ci.nsIDocShell)
+                      .chromeEventHandler.ownerDocument.defaultView;
+
+    let xulWindow = XPCNativeWrapper.unwrap(xulWindow);
+
+    let docElem = xulWindow.document.documentElement;
+    if (!docElem || docElem.getAttribute("windowtype") != "navigator:browser" ||
+        !xulWindow.gBrowser) {
+      // Do not do anything unless we have a browser window.
+      // This may be a view-source window or other type of non-browser window.
+      return;
+    }
 
     if (aContentWindow.document.location.href == "about:blank" &&
         HUDWindowObserver.initialConsoleCreated == false) {
@@ -1420,7 +1428,6 @@ HUD_SERVICE.prototype =
       return;
     }
 
-    let xulWindow = XPCNativeWrapper.unwrap(xulWindow);
     let gBrowser = xulWindow.gBrowser;
 
 
