@@ -1263,6 +1263,7 @@ ConservativeGCStackMarker::markValueRange(jsuword *begin, jsuword *end)
      * the payload ever needs to be scanned.
      */
     JS_ASSERT(begin <= end);
+    JS_ASSERT(!(jsuword(end) & jsuword(7)));
     for (jsuword *i = begin; i != end; i += 2) {
         CONSERVATIVE_METER(stats.words++);
         markWord(*i);
@@ -1285,11 +1286,7 @@ ConservativeGCStackMarker::markRange(jsuword *begin, jsuword *end)
 void
 ConservativelyMarkValueRange(JSTracer *trc, Value *beg, Value *end)
 {
-    GCMarker *gcmarker = static_cast<GCMarker *>(trc);
-    ConservativeGCStackMarker *cgc = gcmarker->conservativeMarker;
-
-    JS_ASSERT(cgc);
-
+    ConservativeGCStackMarker *cgc = trc->conservativeMarker;
     cgc->markValueRange((jsuword *)beg, (jsuword *)end);
 }
 
@@ -2513,10 +2510,9 @@ JS_REQUIRES_STACK void
 js_TraceRuntime(JSTracer *trc)
 {
     JSRuntime *rt = trc->context->runtime;
-    GCMarker *gcmarker = static_cast<GCMarker *>(trc);
 
     ConservativeGCStackMarker cgc(trc);
-    gcmarker->conservativeMarker = &cgc;
+    trc->conservativeMarker = &cgc;
 
     for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront())
         gc_root_traversal(trc, r.front());
@@ -2557,7 +2553,7 @@ js_TraceRuntime(JSTracer *trc)
     }
 #endif
 
-    gcmarker->conservativeMarker = NULL;
+    trc->conservativeMarker = NULL;
 }
 
 void
