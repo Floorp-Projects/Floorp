@@ -1900,10 +1900,6 @@ struct ReplaceData
      : g(cx), cb(cx)
     {}
 
-    bool argsPushed() const {
-        return args.getvp() != NULL;
-    }
-
     JSString        *str;           /* 'this' parameter object as a string */
     RegExpGuard     g;              /* regexp parameter object and private data */
     JSObject        *lambda;        /* replacement function object or null */
@@ -2026,7 +2022,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         uintN p = rdata.g.re()->parenCount;
         uintN argc = 1 + p + 2;
 
-        if (!rdata.argsPushed() && !cx->stack().pushInvokeArgs(cx, argc, rdata.args))
+        if (!rdata.args.pushed() && !cx->stack().pushInvokeArgs(cx, argc, rdata.args))
             return false;
 
         PreserveRegExpStatics save(cx);

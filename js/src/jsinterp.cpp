@@ -503,7 +503,6 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
      * Get a pointer to new frame/slots. This memory is not "claimed", so the
      * code before pushInvokeFrame must not reenter the interpreter.
      */
-    JSFrameRegs regs;
     InvokeFrameGuard frame;
     if (!cx->stack().getInvokeFrame(cx, args, nmissing, nfixed, frame))
         return false;
@@ -530,6 +529,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     fp->flags = flags;
 
     /* Initialize regs. */
+    JSFrameRegs &regs = frame.getRegs();
     if (script) {
         regs.pc = script->code;
         regs.sp = fp->slots() + script->nfixed;
@@ -539,7 +539,7 @@ InvokeCommon(JSContext *cx, JSFunction *fun, JSScript *script, T native,
     }
 
     /* Officially push |fp|. |frame|'s destructor pops. */
-    cx->stack().pushInvokeFrame(cx, args, frame, regs);
+    cx->stack().pushInvokeFrame(cx, args, frame);
 
     /* Now that the frame has been pushed, fix up the scope chain. */
     JSObject *parent = vp[0].toObject().getParent();
@@ -851,8 +851,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
          * CallStackSegment of |down|. If |down == cx->fp|, the callstack is
          * simply the context's active callstack, so we can use
          * |down->varobj(cx)|.  When |down != cx->fp|, we need to do a slow
-         * linear search. Luckily, this only happens with indirect eval and
-         * JS_EvaluateInStackFrame.
+         * linear search. Luckily, this only happens with EvaluateInFrame.
          */
         initialVarObj = (down == cx->fp)
                         ? down->varobj(cx)
@@ -2667,11 +2666,13 @@ BEGIN_CASE(JSOP_STOP)
 
         JSStackFrame *down = fp->down;
         bool recursive = fp->script == down->script;
+        Value *newsp = fp->argv - 1;
 
         /* Pop the frame. */
         cx->stack().popInlineFrame(cx, fp, down);
 
         /* Propagate return value before fp is lost. */
+        regs.sp = newsp;
         regs.sp[-1] = fp->rval;
 
         /* Sync interpreter registers. */
@@ -4566,7 +4567,7 @@ BEGIN_CASE(JSOP_NEW)
         }
     }
 
-    if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc)))
+    if (!InvokeConstructor(cx, InvokeArgsGuard(cx, vp, argc)))
         goto error;
     regs.sp = vp + 1;
     CHECK_INTERRUPT_HANDLER();
@@ -4723,7 +4724,7 @@ BEGIN_CASE(JSOP_APPLY)
     }
 
     bool ok;
-    ok = Invoke(cx, InvokeArgsGuard(vp, argc), 0);
+    ok = Invoke(cx, InvokeArgsGuard(cx, vp, argc), 0);
     regs.sp = vp + 1;
     CHECK_INTERRUPT_HANDLER();
     if (!ok)
@@ -4740,7 +4741,7 @@ BEGIN_CASE(JSOP_SETCALL)
 {
     uintN argc = GET_ARGC(regs.pc);
     Value *vp = regs.sp - argc - 2;
-    JSBool ok = Invoke(cx, InvokeArgsGuard(vp, argc), 0);
+    JSBool ok = Invoke(cx, InvokeArgsGuard(cx, vp, argc), 0);
     if (ok)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_LEFTSIDE_OF_ASS);
     goto error;
