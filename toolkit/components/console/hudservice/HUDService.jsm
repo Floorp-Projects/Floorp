@@ -1894,11 +1894,15 @@ HeadsUpDisplay.prototype = {
   {
     var self = this;
     let prefKey = aName.toLowerCase();
-    let btn = this.makeXULNode("toolbarbutton");
 
+    let btn;
     if (aType == "checkbox") {
+      btn = this.makeXULNode("checkbox");
       btn.setAttribute("type", aType);
+    } else {
+      btn = this.makeXULNode("toolbarbutton");
     }
+
     btn.setAttribute("hudId", this.hudId);
     btn.setAttribute("buttonType", prefKey);
     btn.setAttribute("class", "hud-filter-btn");
