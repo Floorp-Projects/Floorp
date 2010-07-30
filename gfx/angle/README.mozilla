@@ -1,6 +1,6 @@
 This is the ANGLE project, from http://code.google.com/p/angleproject/.
 
-Current revision: r343
+Current revision: r367
 
 Local patches:
     angle-nspr.patch - use NSPR for TLS
