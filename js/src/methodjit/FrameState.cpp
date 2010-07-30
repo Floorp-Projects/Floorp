@@ -324,11 +324,11 @@ FrameState::sync(Assembler &masm, Uses uses) const
             /* Sync. */
             if (!fe->data.synced() && (fe->data.inRegister() || fe >= bottom)) {
                 syncData(fe, address, masm);
-                if (!fe->type.synced() && !fe->data.isConstant())
-                    syncType(fe, addressOf(fe), masm);
-            } else if (!fe->type.synced() && (fe->type.inRegister() || fe >= bottom)) {
-                syncType(fe, addressOf(fe), masm);
+                if (fe->isConstant())
+                    continue;
             }
+            if (!fe->type.synced() && (fe->type.inRegister() || fe >= bottom))
+                syncType(fe, addressOf(fe), masm);
         } else if (fe >= bottom) {
             FrameEntry *backing = fe->copyOf();
             JS_ASSERT(backing != fe);
@@ -402,7 +402,7 @@ FrameState::syncAndKill(Registers kill, Uses uses)
             fe->data.setMemory();
         }
         bool killType = fe->type.inRegister() && kill.hasReg(fe->type.reg());
-        if (!fe->type.synced() && (killType || killData || fe >= bottom)) {
+        if (!fe->type.synced() && (killType || fe >= bottom)) {
             if (backing != fe && backing->type.inMemory())
                 tempRegForType(backing);
             syncType(backing, address, masm);

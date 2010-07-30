@@ -199,6 +199,11 @@ StackSpace::mark(JSTracer *trc)
     /*
      * The correctness/completeness of marking depends on the continuity
      * invariants described by the CallStackSegment and StackSpace definitions.
+     *
+     * NB:
+     * Stack slots might be torn or uninitialized in the presence of method
+     * JIT'd code. Arguments are an exception and are always fully synced
+     * (so they can be read by functions).
      */
     Value *end = firstUnused();
     for (CallStackSegment *css = currentSegment; css; css = css->getPreviousInMemory()) {
@@ -209,13 +214,13 @@ StackSpace::mark(JSTracer *trc)
 
             /* Mark slots/args trailing off of the last stack frame. */
             JSStackFrame *fp = css->getCurrentFrame();
-            MarkValueRange(trc, fp->slots(), end, "stack");
+            ConservativelyMarkValueRange(trc, fp->slots(), end);
 
             /* Mark stack frames and slots/args between stack frames. */
             JSStackFrame *initialFrame = css->getInitialFrame();
             for (JSStackFrame *f = fp; f != initialFrame; f = f->down) {
                 js_TraceStackFrame(trc, f);
-                MarkValueRange(trc, f->down->slots(), f->argEnd(), "stack");
+                ConservativelyMarkValueRange(trc, f->down->slots(), f->argEnd());
             }
 
             /* Mark initialFrame stack frame and leading args. */
