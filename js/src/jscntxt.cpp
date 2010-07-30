@@ -164,7 +164,11 @@ StackSpace::finish()
 #elif defined(XP_OS2)
     DosFreeMem(base);
 #else
+#ifdef SOLARIS
     munmap((caddr_t)base, CAPACITY_BYTES);
+#else
+    munmap(base, CAPACITY_BYTES);
+#endif
 #endif
 }
 
