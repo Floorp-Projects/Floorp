@@ -5129,15 +5129,19 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
             } while (*--sp != v);
 
             /*
-             * The value may have come from beyond stackBase + pcdepth,
-             * meaning that it came from a temporary slot that the
-             * interpreter uses for GC roots or when JSOP_APPLY extended
-             * the stack to fit the argument array elements. Only update pc
-             * if beneath stackBase + pcdepth; otherwise blame existing
-             * (current) PC.
+             * The value may have come from beyond stackBase + pcdepth, meaning
+             * that it came from a temporary slot pushed by the interpreter or
+             * arguments pushed for an InvokeFromEngine call. Only update pc if
+             * beneath stackBase + pcdepth. If above, we don't know whether the
+             * value is associated with the current pc or from a fast native
+             * whose arguments have been pushed, so just print the value.
              */
-            if (sp < stackBase + pcdepth)
-                pc = pcstack[sp - stackBase];
+            if (sp >= stackBase + pcdepth) {
+                pcdepth = -1;
+                goto release_pcstack;
+            }
+
+            pc = pcstack[sp - stackBase];
         }
 
       release_pcstack:
