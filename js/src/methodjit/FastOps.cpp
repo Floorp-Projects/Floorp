@@ -439,22 +439,15 @@ mjit::Compiler::jsop_bitop(JSOp op)
             RegisterID reg = frame.ownRegForData(lhs);
             int shift = rhs->getValue().toInt32() & 0x1F;
 
-            if (!shift) {
-                /*
-                 * Just pop RHS - leave LHS. ARM can't shift by 0.
-                 * Type of LHS should be learned already.
-                 */
-                frame.popn(2);
-                frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
-                if (stubNeeded)
-                    stubcc.rejoin(Changes(1));
-                return;
-            }
-
-            masm.lshift32(Imm32(shift), reg);
+            if (shift)
+                masm.lshift32(Imm32(shift), reg);
 
             frame.popn(2);
             frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
+
+            if (stubNeeded)
+                stubcc.rejoin(Changes(1));
+
             return;
         }
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
