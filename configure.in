@@ -6442,13 +6442,6 @@ if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     fi
     AC_MSG_RESULT([yes])
     MAKENSISU="${CYGWIN_WRAPPER} $MAKENSISU"
-
-    # The Windows build for NSIS requires the iconv command line utility to
-    # convert the charset of the locale files.
-    MOZ_PATH_PROGS(HOST_ICONV, $HOST_ICONV "iconv", "")
-    if test -z "$HOST_ICONV"; then
-        AC_MSG_ERROR([To build the installer iconv is required in your path. To build without the installer reconfigure using --disable-installer.])
-    fi
 fi
 
 AC_SUBST(MOZ_INSTALLER)
