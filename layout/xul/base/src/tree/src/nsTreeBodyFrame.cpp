@@ -4201,10 +4201,8 @@ nsTreeBodyFrame::GetPseudoStyleContext(nsIAtom* aPseudoElement)
 
 // Our comparator for resolving our complex pseudos
 PRBool
-nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector)
+nsTreeBodyFrame::PseudoMatches(nsCSSSelector* aSelector)
 {
-  NS_ABORT_IF_FALSE(aSelector->mLowercaseTag == aTag,
-                   "should not have been called");
   // Iterate the pseudoclass list.  For each item in the list, see if
   // it is contained in our scratch array.  If we have a miss, then
   // we aren't a match.  If all items in the pseudoclass list are
