@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:expandtab:shiftwidth=2:tabstop=2:cin:
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,12 +16,12 @@
  * The Original Code is the Mozilla browser.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Nokia Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Egor Starkov <starkov.egor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,33 +37,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMIMEInfoUnix_h_
-#define nsMIMEInfoUnix_h_
+#ifndef __nsContentHandlerAppImpl_h__
+#define __nsContentHandlerAppImpl_h__
 
-#include "nsMIMEInfoImpl.h"
+#include <contentaction/contentaction.h>
+#include "nsString.h"
+#include "nsIMIMEInfo.h"
 
-class nsMIMEInfoUnix : public nsMIMEInfoImpl
+class nsContentHandlerApp : public nsIHandlerApp
 {
 public:
-  nsMIMEInfoUnix(const char *aMIMEType = "") : nsMIMEInfoImpl(aMIMEType) {}
-  nsMIMEInfoUnix(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
-  nsMIMEInfoUnix(const nsACString& aType, HandlerClass aClass) :
-    nsMIMEInfoImpl(aType, aClass) {}
-  static PRBool HandlerExists(const char *aProtocolScheme);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIHANDLERAPP
+
+  nsContentHandlerApp(nsString aName, nsCString aType, ContentAction::Action& aAction);
+  virtual ~nsContentHandlerApp() { }
 
 protected:
-  NS_IMETHOD GetHasDefaultHandler(PRBool *_retval);
+  nsString mName;
+  nsCString mType;
+  nsString mDetailedDescription;
 
-  virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
-
-  virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile *aFile);
-#if (MOZ_PLATFORM_MAEMO == 5) && defined (MOZ_ENABLE_GNOMEVFS)
-  nsresult LaunchDefaultWithDBus(const char *aFilePath);
-  NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers);
-#endif
-#if (MOZ_PLATFORM_MAEMO == 6)
-  NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers);
-#endif
+  ContentAction::Action mAction;
 };
-
-#endif // nsMIMEInfoUnix_h_
+#endif
