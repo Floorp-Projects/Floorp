@@ -637,7 +637,7 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
     JSAtomState *state = &cx->runtime->atomState;
 
     fprintf(fp, "atoms table contents:\n");
-    size_t number;
+    unsigned number;
     for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
         AtomEntryType entry = r.front();
         fprintf(fp, "%3u ", number++);
