@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Rob Campbell <rcampbell@mozilla.com> (original author)
+ *   Mihai Șucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -260,7 +261,8 @@ PanelHighlighter.prototype = {
     // Get midpoint of diagonal line.
     let midpoint = this.midPoint(a, b);
 
-    return this.win.document.elementFromPoint(midpoint.x, midpoint.y);
+    return InspectorUI.elementFromPoint(this.win.document, midpoint.x,
+      midpoint.y);
   },
 
   /**
@@ -312,8 +314,8 @@ PanelHighlighter.prototype = {
       return;
     }
     let browserRect = this.browser.getBoundingClientRect();
-    let element = this.win.document.elementFromPoint(aEvent.clientX -
-      browserRect.left, aEvent.clientY - browserRect.top);
+    let element = InspectorUI.elementFromPoint(this.win.document,
+      aEvent.clientX - browserRect.left, aEvent.clientY - browserRect.top);
     if (element && element != this.node) {
       InspectorUI.inspectNode(element);
     }
@@ -857,8 +859,8 @@ var InspectorUI = {
         }
         break;
       case "mousemove":
-        let element = this.win.document.elementFromPoint(event.clientX,
-          event.clientY);
+        let element = this.elementFromPoint(event.target.ownerDocument,
+          event.clientX, event.clientY);
         if (element && element != this.node) {
           this.inspectNode(element);
         }
@@ -929,6 +931,35 @@ var InspectorUI = {
     this.treeView.selectedNode = aNode;
     this.selectEventsSuppressed = false;
     this.updateStylePanel(aNode);
+  },
+
+  /**
+   * Find an element from the given coordinates. This method descends through 
+   * frames to find the element the user clicked inside frames.
+   *
+   * @param DOMDocument aDocument the document to look into.
+   * @param integer aX
+   * @param integer aY
+   * @returns Node|null the element node found at the given coordinates.
+   */
+  elementFromPoint: function IUI_elementFromPoint(aDocument, aX, aY)
+  {
+    let node = aDocument.elementFromPoint(aX, aY);
+    if (node && node.contentDocument) {
+      switch (node.nodeName.toLowerCase()) {
+        case "iframe":
+          let rect = node.getBoundingClientRect();
+          aX -= rect.left;
+          aY -= rect.top;
+
+        case "frame":
+          let subnode = this.elementFromPoint(node.contentDocument, aX, aY);
+          if (subnode) {
+            node = subnode;
+          }
+      }
+    }
+    return node;
   },
 
   ///////////////////////////////////////////////////////////////////////////
