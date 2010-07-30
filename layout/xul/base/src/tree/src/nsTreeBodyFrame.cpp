@@ -4201,8 +4201,8 @@ nsTreeBodyFrame::GetPseudoStyleContext(nsIAtom* aPseudoElement)
 }
 
 // Our comparator for resolving our complex pseudos
-NS_IMETHODIMP
-nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult)
+PRBool
+nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector)
 {
   NS_ABORT_IF_FALSE(aSelector->mLowercaseTag == aTag,
                    "should not have been called");
@@ -4215,13 +4215,11 @@ nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* 
     PRInt32 index;
     mScratchArray->GetIndexOf(curr->mAtom, &index);
     if (index == -1) {
-      *aResult = PR_FALSE;
-      return NS_OK;
+      return PR_FALSE;
     }
     curr = curr->mNext;
   }
-  *aResult = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 nsIContent*
