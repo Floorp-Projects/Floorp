@@ -269,28 +269,31 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op, Vo
     FPRegisterID fpRight = FPRegisters::Second;
 
     MaybeJump lhsNotNumber = loadDouble(lhs, fpLeft);
+    if (lhsNotNumber.isSet())
+        stubcc.linkExit(lhsNotNumber.get(), Uses(2));
 
     MaybeJump rhsNotNumber;
-    if (frame.haveSameBacking(lhs, rhs))
+    if (frame.haveSameBacking(lhs, rhs)) {
         masm.moveDouble(fpLeft, fpRight);
-    else
+    } else {
         rhsNotNumber = loadDouble(rhs, fpRight);
+        if (rhsNotNumber.isSet())
+            stubcc.linkExit(rhsNotNumber.get(), Uses(2));
+    }
 
     EmitDoubleOp(op, fpRight, fpLeft, masm);
     masm.storeDouble(fpLeft, frame.addressOf(lhs));
 
-    if (lhsNotNumber.isSet())
-        stubcc.linkExit(lhsNotNumber.get(), Uses(2));
-    if (rhsNotNumber.isSet())
-        stubcc.linkExit(rhsNotNumber.get(), Uses(2));
-
-    stubcc.leave();
-    stubcc.call(stub);
+    if (lhsNotNumber.isSet() || rhsNotNumber.isSet()) {
+        stubcc.leave();
+        stubcc.call(stub);
+    }
 
     frame.popn(2);
     frame.pushNumber(MaybeRegisterID());
 
-    stubcc.rejoin(Changes(1));
+    if (lhsNotNumber.isSet() || rhsNotNumber.isSet())
+        stubcc.rejoin(Changes(1));
 }
 
 /*
