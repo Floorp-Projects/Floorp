@@ -134,7 +134,6 @@ NS_NewTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsTreeBodyFrame)
 
 NS_QUERYFRAME_HEAD(nsTreeBodyFrame)
-  NS_QUERYFRAME_ENTRY(nsICSSPseudoComparator)
   NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
   NS_QUERYFRAME_ENTRY(nsTreeBodyFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
