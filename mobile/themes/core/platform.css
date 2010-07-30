@@ -630,7 +630,6 @@ progressmeter {
   -moz-border-radius: 8px;
 }
 
-.progress-bar
-{
+.progress-bar {
   background-color: #8db8d8;
 }
