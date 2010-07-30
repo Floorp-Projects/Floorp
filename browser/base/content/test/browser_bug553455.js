@@ -372,7 +372,7 @@ function runNextTest() {
     info("Running " + TESTS[0].name);
     TESTS.shift()();
   });
-},
+};
 
 function test_reload() {
   var pm = Services.perms;
