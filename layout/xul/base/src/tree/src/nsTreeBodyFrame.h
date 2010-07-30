@@ -143,7 +143,7 @@ public:
   virtual void ReflowCallbackCanceled();
 
   // nsICSSPseudoComparator
-  NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);
+  virtual PRBool PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector);
 
   // nsIScrollbarMediator
   NS_IMETHOD PositionChanged(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
