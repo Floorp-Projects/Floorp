@@ -237,8 +237,7 @@ JS_REQUIRES_STACK bool
 StackSpace::pushSegmentForInvoke(JSContext *cx, uintN argc, InvokeArgsGuard &ag)
 {
     Value *start = firstUnused();
-    uintN vplen = 2 + argc;
-    ptrdiff_t nvals = VALUES_PER_STACK_SEGMENT + vplen;
+    ptrdiff_t nvals = VALUES_PER_STACK_SEGMENT + 2 + argc;
     if (!ensureSpace(cx, start, nvals))
         return false;
 
@@ -248,8 +247,8 @@ StackSpace::pushSegmentForInvoke(JSContext *cx, uintN argc, InvokeArgsGuard &ag)
 
     ag.cx = cx;
     ag.seg = seg;
-    ag.vp = seg->getInitialArgBegin();
-    ag.argc = argc;
+    ag.argv_ = seg->getInitialArgBegin() + 2;
+    ag.argc_ = argc;
 
     /* Use invokeArgEnd to root [vp, vpend) until the frame is pushed. */
 #ifdef DEBUG
@@ -259,7 +258,7 @@ StackSpace::pushSegmentForInvoke(JSContext *cx, uintN argc, InvokeArgsGuard &ag)
     invokeFrame = NULL;
 #endif
     ag.prevInvokeArgEnd = invokeArgEnd;
-    invokeArgEnd = ag.vp + vplen;
+    invokeArgEnd = ag.argv() + ag.argc();
     return true;
 }
 
@@ -269,7 +268,7 @@ StackSpace::popSegmentForInvoke(const InvokeArgsGuard &ag)
     JS_ASSERT(!currentSegment->inContext());
     JS_ASSERT(ag.seg == currentSegment);
     JS_ASSERT(invokeSegment == currentSegment);
-    JS_ASSERT(invokeArgEnd == ag.vp + 2 + ag.argc);
+    JS_ASSERT(invokeArgEnd == ag.argv() + ag.argc());
 
     currentSegment = currentSegment->getPreviousInMemory();
 

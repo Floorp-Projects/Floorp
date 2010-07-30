@@ -1973,14 +1973,14 @@ InterpretDollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData &rdata,
 }
 
 static JS_ALWAYS_INLINE bool
-PushRegExpSubstr(JSContext *cx, const JSSubString &sub, Value *&sp)
+PushRegExpSubstr(JSContext *cx, const JSSubString &sub, Value *sp)
 {
     JSString *whole = cx->regExpStatics.input;
     size_t off = sub.chars - whole->chars();
     JSString *str = js_NewDependentString(cx, whole, off, sub.length);
     if (!str)
         return false;
-    sp++->setString(str);
+    sp->setString(str);
     return true;
 }
 
@@ -2028,17 +2028,19 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         PreserveRegExpStatics save(cx);
 
         /* Push lambda and its 'this' parameter. */
-        Value *sp = rdata.args.getvp();
-        sp++->setObject(*lambda);
-        sp++->setObjectOrNull(lambda->getParent());
+        CallArgs &args = rdata.args;
+        args.callee().setObject(*lambda);
+        args.thisv().setObjectOrNull(lambda->getParent());
+
+        Value *sp = args.argv();
 
         /* Push $&, $1, $2, ... */
-        if (!PushRegExpSubstr(cx, cx->regExpStatics.lastMatch, sp))
+        if (!PushRegExpSubstr(cx, cx->regExpStatics.lastMatch, sp++))
             return false;
 
         uintN i = 0;
         for (uintN n = cx->regExpStatics.parens.length(); i < n; i++) {
-            if (!PushRegExpSubstr(cx, cx->regExpStatics.parens[i], sp))
+            if (!PushRegExpSubstr(cx, cx->regExpStatics.parens[i], sp++))
                 return false;
         }
 
@@ -2058,7 +2060,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
          * created by this js_ValueToString that would otherwise be GC-
          * able, until we use rdata.repstr in DoReplace.
          */
-        repstr = js_ValueToString(cx, *rdata.args.getvp());
+        repstr = js_ValueToString(cx, args.rval());
         if (!repstr)
             return false;
 

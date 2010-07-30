@@ -173,29 +173,9 @@ StackSpace::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard &ag)
 #endif
 
     ag.cx = cx;
-    ag.vp = vp;
-    ag.argc = argc;
+    ag.argv_ = vp + 2;
+    ag.argc_ = argc;
     return true;
-}
-
-JS_ALWAYS_INLINE void
-StackSpace::bumpInvokeArgEnd(InvokeArgsGuard &ag)
-{
-#ifdef DEBUG
-    ag.prevInvokeSegment = invokeSegment;
-    invokeSegment = ag.cx->currentSegment;
-    ag.prevInvokeFrame = invokeFrame;
-    invokeFrame = ag.cx->fp;
-#endif
-    ag.prevInvokeArgEnd = invokeArgEnd;
-    invokeArgEnd = ag.vp + 2 + ag.argc;
-}
-
-JS_ALWAYS_INLINE
-InvokeArgsGuard::InvokeArgsGuard(JSContext *cx, Value *vp, uintN argc)
-  : cx(cx), seg(NULL), vp(vp), argc(argc)
-{
-    cx->stack().bumpInvokeArgEnd(*this);
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE void
@@ -209,7 +189,7 @@ StackSpace::popInvokeArgs(const InvokeArgsGuard &ag)
     JS_ASSERT(isCurrentAndActive(ag.cx));
     JS_ASSERT(invokeSegment == currentSegment);
     JS_ASSERT(invokeFrame == ag.cx->fp);
-    JS_ASSERT(invokeArgEnd == ag.vp + 2 + ag.argc);
+    JS_ASSERT(invokeArgEnd == ag.argv() + ag.argc());
 
 #ifdef DEBUG
     invokeSegment = ag.prevInvokeSegment;
@@ -227,14 +207,13 @@ InvokeArgsGuard::~InvokeArgsGuard()
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
-StackSpace::getInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
+StackSpace::getInvokeFrame(JSContext *cx, const CallArgs &args,
                            uintN nmissing, uintN nfixed,
                            InvokeFrameGuard &fg) const
 {
-    JS_ASSERT(firstUnused() == invokeArgEnd);
-    JS_ASSERT(invokeArgEnd == ag.vp + 2 + ag.argc);
+    JS_ASSERT(firstUnused() == args.argv() + args.argc());
 
-    Value *start = invokeArgEnd;
+    Value *start = args.argv() + args.argc();
     ptrdiff_t nvals = nmissing + VALUES_PER_STACK_FRAME + nfixed;
     if (!ensureSpace(cx, start, nvals))
         return false;
@@ -243,10 +222,10 @@ StackSpace::getInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-StackSpace::pushInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
+StackSpace::pushInvokeFrame(JSContext *cx, const CallArgs &args,
                             InvokeFrameGuard &fg)
 {
-    JS_ASSERT(firstUnused() == ag.vp + 2 + ag.argc);
+    JS_ASSERT(firstUnused() == args.argv() + args.argc());
 
     JSStackFrame *fp = fg.fp;
     JSStackFrame *down = cx->fp;
