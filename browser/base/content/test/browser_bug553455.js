@@ -355,24 +355,7 @@ function test_wronghost() {
     });
   }, true);
   gBrowser.loadURI(TESTROOT2 + "enabled.html");
-}
-];
-
-function runNextTest() {
-  AddonManager.getAllInstalls(function(aInstalls) {
-    is(aInstalls.length, 0, "Should be no active installs");
-
-    if (TESTS.length == 0) {
-      Services.prefs.setBoolPref("extensions.logging.enabled", false);
-
-      finish();
-      return;
-    }
-
-    info("Running " + TESTS[0].name);
-    TESTS.shift()();
-  });
-};
+},
 
 function test_reload() {
   var pm = Services.perms;
@@ -424,6 +407,23 @@ function test_reload() {
     });
   });
 }
+];
+
+function runNextTest() {
+  AddonManager.getAllInstalls(function(aInstalls) {
+    is(aInstalls.length, 0, "Should be no active installs");
+
+    if (TESTS.length == 0) {
+      Services.prefs.setBoolPref("extensions.logging.enabled", false);
+
+      finish();
+      return;
+    }
+
+    info("Running " + TESTS[0].name);
+    TESTS.shift()();
+  });
+};
 
 function test() {
   waitForExplicitFinish();
