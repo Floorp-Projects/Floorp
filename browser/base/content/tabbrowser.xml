@@ -2887,11 +2887,6 @@
             else
               newMargin = rect.right - tabRect.right;
           }
-          // ensure we never place the drop indicator beyond our limits
-          if (newMargin < minMargin)
-            newMargin = minMargin;
-          else if (newMargin > maxMargin)
-            newMargin = maxMargin;
         }
 
         ind.collapsed = false;
