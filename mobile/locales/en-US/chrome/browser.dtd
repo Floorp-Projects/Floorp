@@ -86,5 +86,7 @@
 
 <!ENTITY contextOpenInNewTab.label    "Open Link in New Tab">
 <!ENTITY contextSaveImage.label       "Save Image">
+<!ENTITY contextShareLink.label       "Share Link">
+<!ENTITY contextShareImage.label      "Share Image">
 <!ENTITY contextEditBookmark.label    "Edit">
 <!ENTITY contextRemoveBookmark.label  "Remove">

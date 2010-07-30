@@ -1833,16 +1833,12 @@ IdentityHandler.prototype = {
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
 
-    // Update the find in page in-site menu
+    // Update the site menu
     FindHelperUI.updateFindInPage();
-
-    // Update the search engines results
     BrowserSearch.updatePageSearchEngines();
-
-    // Update the per site permissions results
     PageActions.updatePagePermissions();
-
     PageActions.updatePageSaveAs();
+    PageActions.updateShare();
   },
 
   show: function ih_show() {

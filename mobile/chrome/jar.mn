@@ -57,6 +57,7 @@ chrome.jar:
   content/prompt/promptPassword.xul    (content/prompt/promptPassword.xul)
   content/prompt/select.xul            (content/prompt/select.xul)
   content/prompt/prompt.js             (content/prompt/prompt.js)
+  content/share.xul                    (content/share.xul)
   content/AnimatedZoom.js              (content/AnimatedZoom.js)
   content/sync.js                      (content/sync.js)
 

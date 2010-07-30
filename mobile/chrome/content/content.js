@@ -756,6 +756,7 @@ var ContextHandler = {
       types: [],
       label: "",
       linkURL: "",
+      linkTitle: "",
       linkProtocol: null,
       mediaURL: ""
     };
@@ -784,6 +785,7 @@ var ContextHandler = {
           // Target is a link or a descendant of a link.
           state.types.push("link");
           state.label = state.linkURL = this._getLinkURL(elem);
+          state.linkTitle = popupNode.textContent || popupNode.title;
           state.linkProtocol = this._getProtocol(this._getURI(state.linkURL));
           break;
         }

@@ -1177,6 +1177,16 @@ var PageActions = {
     }
   },
 
+  updateShare: function updateShare() {
+    this.removeItems("share");
+    let label = Elements.browserBundle.getString("pageactions.share.page");
+    let node = this.appendItem("share", label, "");
+    node.onclick = function(event) {
+      let browser = Browser.selectedBrowser;
+      SharingUI.show(browser.currentURI.spec, browser.contentTitle)
+    }
+  },
+
   appendItem: function appendItem(aType, aTitle, aDesc) {
     let container = document.getElementById("pageactions-container");
     let item = document.createElement("pageaction");
@@ -2111,25 +2121,102 @@ var ContextHelper = {
 };
 
 var ContextCommands = {
-  openInNewTab: function cc_openInNewTab(aEvent) {
+  openInNewTab: function cc_openInNewTab() {
     Browser.addTab(ContextHelper.popupState.linkURL, false, Browser.selectedTab);
   },
 
-  saveImage: function cc_saveImage(aEvent) {
+  saveImage: function cc_saveImage() {
     let browser = ContextHelper.popupState.target;
     saveImageURL(ContextHelper.popupState.mediaURL, null, "SaveImageTitle", false, false, browser.documentURI);
   },
 
-  editBookmark: function cc_editBookmark(aEvent) {
+  shareLink: function cc_shareLink() {
+    let state = ContextHelper.popupState;
+    SharingUI.show(state.linkURL, state.linkTitle);
+  },
+
+  shareMedia: function cc_shareMedia() {
+    let state = ContextHelper.popupState;
+    SharingUI.show(state.mediaURL, null);
+  },
+
+  editBookmark: function cc_editBookmark() {
     let target = ContextHelper.popupState.target;
     target.startEditing();
   },
 
-  removeBookmark: function cc_removeBookmark(aEvent) {
+  removeBookmark: function cc_removeBookmark() {
     let target = ContextHelper.popupState.target;
     target.remove();
   }
 }
+
+
+var SharingUI = {
+  _dialog: null,
+
+  show: function show(aURL, aTitle) {
+    this._dialog = importDialog(window, "chrome://browser/content/share.xul", null);
+    document.getElementById("share-title").value = aTitle || aURL;
+
+    BrowserUI.pushPopup(this, this._dialog);
+
+    let bbox = document.getElementById("share-buttons-box");
+    this._handlers.forEach(function(handler) {
+      let button = document.createElement("button");
+      button.setAttribute("label", handler.name);
+      button.addEventListener("command", function() {
+        handler.callback(aURL, aTitle);
+        SharingUI.hide();
+      }, false);
+      bbox.appendChild(button);
+    });
+    this._dialog.waitForClose();
+    BrowserUI.popPopup();
+  },
+
+  hide: function hide() {
+    this._dialog.close();
+    this._dialog = null;
+  },
+
+  _handlers: [
+    {
+      name: "Email",
+      callback: function callback(aURL, aTitle) {
+        let url = "mailto:?subject=" + encodeURIComponent(aTitle || "") +
+                  "&body=" + encodeURIComponent(aURL);
+        let uri = Services.io.newURI(url, null, null);
+        let extProtocolSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+                             .getService(Ci.nsIExternalProtocolService);
+        extProtocolSvc.loadUrl(uri);
+      }
+    },
+    {
+      name: "Twitter",
+      callback: function callback(aURL, aTitle) {
+        let url = "http://twitter.com/home?status=" + encodeURIComponent((aTitle ? aTitle+": " : "")+aURL);
+        Browser.addTab(url, true, Browser.selectedTab);
+      }
+    },
+    {
+      name: "Google Reader",
+      callback: function callback(aURL, aTitle) {
+        let url = "http://www.google.com/reader/link?url=" + encodeURIComponent(aURL) +
+                  "&title=" + encodeURIComponent(aTitle);
+        Browser.addTab(url, true, Browser.selectedTab);
+      }
+    },
+    {
+      name: "Facebook",
+      callback: function callback(aURL, aTitle) {
+        let url = "http://www.facebook.com/share.php?u=" + encodeURIComponent(aURL);
+        Browser.addTab(url, true, Browser.selectedTab);
+      }
+    }
+  ]
+};
+
 
 function removeBookmarksForURI(aURI) {
   //XXX blargle xpconnect! might not matter, but a method on
