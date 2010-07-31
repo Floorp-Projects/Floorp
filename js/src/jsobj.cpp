@@ -5966,10 +5966,11 @@ js_ClearNative(JSContext *cx, JSObject *obj)
         scope->clear(cx);
 
         /* Clear slot values and reset freeslot so we're consistent. */
+        int freeslot = JSSLOT_FREE(obj->getClass());
         int n = obj->numSlots();
-        for (int i = JSSLOT_FREE(obj->getClass()); i < n; ++i)
+        for (int i = freeslot; i < n; ++i)
             obj->setSlot(i, UndefinedValue());
-        scope->freeslot = n;
+        scope->freeslot = freeslot;
     }
     JS_UNLOCK_OBJ(cx, obj);
 }
