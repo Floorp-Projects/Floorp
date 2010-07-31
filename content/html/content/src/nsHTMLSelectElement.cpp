@@ -796,8 +796,8 @@ nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
                                     PRInt32 aStartIndex, PRBool aForward,
                                     PRInt32* aIndex)
 {
-  nsCOMPtr<Element> option = do_QueryInterface(aOption);
-  return mOptions->GetOptionIndex(option, aStartIndex, aForward, aIndex);
+  nsCOMPtr<nsINode> option = do_QueryInterface(aOption);
+  return mOptions->GetOptionIndex(option->AsElement(), aStartIndex, aForward, aIndex);
 }
 
 PRBool
