@@ -238,7 +238,7 @@ class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
                                            nsIDOMNSHTMLElement)
 
 private:
-  nsCOMPtr<nsGenericHTMLElement> mElement;
+  nsRefPtr<nsGenericHTMLElement> mElement;
 };
 
 NS_IMPL_CYCLE_COLLECTION_1(nsGenericHTMLElementTearoff, mElement)
