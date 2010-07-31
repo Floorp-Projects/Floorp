@@ -674,7 +674,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
         }
     }
 
-    /* This internal API is infallible, in spite of its JSBool return type. */
+    // This internal API is infallible, in spite of its JSBool return type.
     js_RemoveRoot(cx->runtime, &jp->objectStack);
 
     bool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
