@@ -808,7 +808,40 @@ nsXULAppInfo::InvalidateCachesOnRestart()
 /* readonly attribute unsigned long launchTimestamp; */
 NS_IMETHODIMP nsXULAppInfo::GetLaunchTimestamp(PRUint64 *aTimestamp)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+#ifdef XP_UNIX
+  FILE *uptime;
+  unsigned long long sec, ssec;
+
+  uptime = fopen("/proc/uptime", "r");
+  fscanf(uptime, "%lld.%lld", &sec, &ssec);
+  PRTime boottime = PR_Now() - (((sec * PR_MSEC_PER_SEC) + (ssec * 10)) * PR_USEC_PER_MSEC);
+  fclose(uptime);
+
+  FILE *pidstat;
+  pid_t pid = getpid();
+  char *statpath = PR_smprintf("/proc/%d/uptime", pid);
+  pidstat = fopen(statpath, "r");
+  PR_smprintf_free(statpath);
+
+  char stat[512];
+  memset(&stat, 0, 512);
+  int n = fread(&stat, 1, 511, pidstat);
+  if (n <= 0)
+    return NS_ERROR_FAILURE;
+  fclose(pidstat);
+
+  PRTime starttime = 0;
+  sscanf(strrchr(stat, ')') + 2,
+         "%*c %*d %*d %*d %*d %*d %*u %*u %*u %*u "
+         "%*u %*u %*u %*u %*u %*d %*d %*d %*d %llu",
+         &starttime);
+
+  printf("%llu, %llu\n", boottime, starttime * PR_USEC_PER_SEC);
+  *aTimestamp = boottime + (starttime * PR_USEC_PER_SEC);
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 /* readonly attribute unsigned long startupTimestamp; */
