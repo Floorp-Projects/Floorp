@@ -737,7 +737,7 @@ random == 387876-2.html 387876-2-ref.html # bug 471630
 == 390318-1d.html 390318-1-ref.html
 == 390318-1e.html 390318-1-ref.html
 == 390318-1f.html 390318-1-ref.html
-skip-if(!windowsWidget) == 391045.html 391045-ref.html # windows-specific Uniscribe bug, trailing period is matched against different fonts on Mac/Linux (see 396137)
+skip-if(!winWidget) == 391045.html 391045-ref.html # windows-specific Uniscribe bug, trailing period is matched against different fonts on Mac/Linux (see 396137)
 == 391140-1.html 391140-1-ref.html
 == 391412-1a.html 391412-1-ref.html
 == 391412-1b.html 391412-1-ref.html
@@ -792,7 +792,7 @@ random-if(gtk2Widget) == 399636-standards-html.html 399636-standards-ref.html # 
 random-if(gtk2Widget) == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
 # We can't rely on this test working on platforms other than Windows and
 # Mac because they need not have a font called "Symbol".
-fails-if(windowsWidget) fails-if(cocoaWidget) random-if(!cocoaWidget&&!windowsWidget) != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
+fails-if(winWidget) fails-if(cocoaWidget) random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
 == 400081-1.html about:blank
 == 400171-1a.html 400171-1-ref.html
 == 400171-1b.html 400171-1-ref.html
@@ -1268,7 +1268,7 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 481024-1e.html 481024-1-ref.html
 != 481948-1.html 481948-1-ref.html
 != 481948-2.html 481948-2-ref.html
-random-if(windowsWidget) fails-if(gtk2Widget) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
+random-if(winWidget) fails-if(gtk2Widget) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
 == 482398-1.html 482398-1-ref.html
 == 482592-1a.xhtml 482592-1-ref.html
 == 482592-1b.xhtml 482592-1-ref.html
