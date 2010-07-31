@@ -837,6 +837,65 @@ function test_uploadOutgoing_toEmptyServer() {
 }
 
 
+function test_uploadOutgoing_failed() {
+  _("SyncEngine._uploadOutgoing doesn't clear the tracker of objects that failed to upload.");
+
+  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("username", "foo");
+  let crypto_steam = new ServerWBO('steam');
+  let collection = new ServerCollection();
+  // We only define the "flying" WBO on the server, not the "scotsman"
+  // and "peppercorn" ones.
+  collection.wbos.flying = new ServerWBO('flying');
+
+  let server = sync_httpd_setup({
+      "/1.0/foo/storage/crypto/steam": crypto_steam.handler(),
+      "/1.0/foo/storage/steam": collection.handler()
+  });
+  createAndUploadKeypair();
+  createAndUploadSymKey("http://localhost:8080/1.0/foo/storage/crypto/steam");
+
+  let engine = makeSteamEngine();
+  engine._store.items = {flying: "LNER Class A3 4472",
+                         scotsman: "Flying Scotsman",
+                         peppercorn: "Peppercorn Class"};
+  // Mark one of these records as changed 
+  const FLYING_CHANGED = 12345;
+  const SCOTSMAN_CHANGED = 23456;
+  const PEPPERCORN_CHANGED = 34567;
+  engine._tracker.addChangedID('flying', FLYING_CHANGED);
+  engine._tracker.addChangedID('scotsman', SCOTSMAN_CHANGED);
+  engine._tracker.addChangedID('peppercorn', PEPPERCORN_CHANGED);
+
+  try {
+
+    // Confirm initial environment
+    do_check_eq(collection.wbos.flying.payload, undefined);
+    do_check_eq(engine._tracker.changedIDs['flying'], FLYING_CHANGED);
+    do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
+
+    engine._uploadOutgoing();
+
+    // Ensure the 'flying' record has been uploaded and is no longer marked.
+    do_check_true(!!collection.wbos.flying.payload);
+    do_check_eq(engine._tracker.changedIDs['flying'], undefined);
+
+    // The 'scotsman' and 'peppercorn' records couldn't be uploaded so
+    // they weren't cleared from the tracker.
+    do_check_eq(engine._tracker.changedIDs['scotsman'], SCOTSMAN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
+
+  } finally {
+    server.stop(function() {});
+    Svc.Prefs.resetBranch("");
+    Records.clearCache();
+    CryptoMetas.clearCache();
+    syncTesting = new SyncTestingInfrastructure(makeSteamEngine);
+  }
+}
+
+
 function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
   _("SyncEngine._uploadOutgoing uploads in batches of MAX_UPLOAD_RECORDS");
 
@@ -1034,6 +1093,7 @@ function run_test() {
   test_processIncoming_reconcile();
   test_processIncoming_fetchNum();
   test_uploadOutgoing_toEmptyServer();
+  test_uploadOutgoing_failed();
   test_uploadOutgoing_MAX_UPLOAD_RECORDS();
   test_syncFinish_noDelete();
   test_syncFinish_deleteByIds();
