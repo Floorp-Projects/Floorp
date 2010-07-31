@@ -91,6 +91,7 @@ SessionStartup.prototype = {
   // the state to restore at startup
   _iniString: null,
   _sessionType: Ci.nsISessionStartup.NO_SESSION,
+  _restoredTimestamp: 0,
 
 /* ........ Global Event Handlers .............. */
 
@@ -155,6 +156,9 @@ SessionStartup.prototype = {
     else
       this._iniString = null; // reset the state string
 
+    Services.obs.addObserver(this, "sessionstore-browser-state-restored", true);
+    Services.obs.addObserver(this, "sessionstore-windows-restored", true);
+
     if (this._sessionType != Ci.nsISessionStartup.NO_SESSION) {
       // wait for the first browser window to open
       Services.obs.addObserver(this, "domwindowopened", true);
@@ -188,6 +192,12 @@ SessionStartup.prototype = {
         self._onWindowOpened(window);
         window.removeEventListener("load", arguments.callee, false);
       }, false);
+      break;
+    case "sessionstore-browser-state-restored":
+    case "sessionstore-windows-restored":
+      this._restoredTimestamp = new Date() * 1000;
+      Services.obs.removeObserver(this, "sessionstore-browser-state-restored");
+      Services.obs.removeObserver(this, "sessionstore-windows-restored");
       break;
     case "browser:purge-session-history":
       // reset all state on sanitization
@@ -253,6 +263,10 @@ SessionStartup.prototype = {
    */
   get sessionType() {
     return this._sessionType;
+  },
+
+  get restoredTimestamp() {
+    return this._restoredTimestamp;
   },
 
 /* ........ Storage API .............. */
