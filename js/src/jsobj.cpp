@@ -3399,12 +3399,9 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         /*
          * Remember the class this function is a constructor for so that
          * we know to create an object of this class when we call the
-         * constructor. Arrays are a special case. We have a slow and a
-         * dense array. While the prototype is a slow array (it has
-         * named properties), we want to make dense arrays with the
-         * constructor, so we have to monkey patch that here.
+         * constructor.
          */
-        FUN_CLASP(fun) = (clasp == &js_SlowArrayClass) ? &js_ArrayClass : clasp;
+        FUN_CLASP(fun) = clasp;
 
         /*
          * Optionally construct the prototype object, before the class has
