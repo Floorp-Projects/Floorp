@@ -47,6 +47,7 @@
 #include "nsIEventStateManager.h"
 #include "nsINodeInfo.h"
 #include "nsIXULSortService.h"
+#include "nsContentUtils.h"
 #include "nsTreeBodyFrame.h"
 
 #define NS_ENSURE_NATIVE_COLUMN(_col)                                \
@@ -201,9 +202,22 @@ nsTreeContentView::GetSelection(nsITreeSelection** aSelection)
   return NS_OK;
 }
 
+PRBool
+nsTreeContentView::CanTrustTreeSelection(nsISupports* aValue)
+{
+  // Untrusted content is only allowed to specify known-good views
+  if (nsContentUtils::IsCallerTrustedForWrite())
+    return PR_TRUE;
+  nsCOMPtr<nsINativeTreeSelection> nativeTreeSel = do_QueryInterface(aValue);
+  return nativeTreeSel && NS_SUCCEEDED(nativeTreeSel->EnsureNative());
+}
+
 NS_IMETHODIMP
 nsTreeContentView::SetSelection(nsITreeSelection* aSelection)
 {
+  NS_ENSURE_TRUE(!aSelection || CanTrustTreeSelection(aSelection),
+                 NS_ERROR_DOM_SECURITY_ERR);
+
   mSelection = aSelection;
   if (!mSelection || !mUpdateSelection)
     return NS_OK;
