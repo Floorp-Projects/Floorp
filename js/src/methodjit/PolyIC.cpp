@@ -686,8 +686,7 @@ class GetPropCompiler : public PICStubCompiler
 
         JSC::LinkBuffer patchBuffer(&masm, ep);
 
-        int32 typeCheckOffset = -int32(pic.u.get.typeCheckOffset);
-        patchBuffer.link(notString, pic.slowPathStart.labelAtOffset(typeCheckOffset));
+        patchBuffer.link(notString, pic.slowPathStart.labelAtOffset(pic.u.get.typeCheckOffset));
         patchBuffer.link(shapeMismatch, pic.slowPathStart);
         patchBuffer.link(done, pic.storeBack);
 
@@ -726,10 +725,8 @@ class GetPropCompiler : public PICStubCompiler
             return false;
         }
 
-        int32 typeCheckOffset = -int32(pic.u.get.typeCheckOffset);
-
         JSC::LinkBuffer patchBuffer(&masm, ep);
-        patchBuffer.link(notString, pic.slowPathStart.labelAtOffset(typeCheckOffset));
+        patchBuffer.link(notString, pic.slowPathStart.labelAtOffset(pic.u.get.typeCheckOffset));
         patchBuffer.link(done, pic.storeBack);
 
         CodeLocationLabel start = patchBuffer.finalizeCodeAddendum();
