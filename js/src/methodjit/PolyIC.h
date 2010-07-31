@@ -80,7 +80,7 @@ struct PICInfo {
             bool hasTypeCheck   : 1;  // type check and reg are present
 
             // Reverse offset from slowPathStart to the type check slow path.
-            uint32 typeCheckOffset;
+            int32 typeCheckOffset;
 
             // Remat info for the object reg.
             uint32 objRemat     : 20;
@@ -221,7 +221,7 @@ void JS_FASTCALL CallProp(VMFrame &f, uint32 index);
 void JS_FASTCALL Name(VMFrame &f, uint32 index);
 void JS_FASTCALL BindName(VMFrame &f, uint32 index);
 
-}
+} /* namespace ic */
 } /* namespace mjit */
 } /* namespace js */
 
