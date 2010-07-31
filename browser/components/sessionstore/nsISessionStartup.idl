@@ -64,4 +64,5 @@ interface nsISessionStartup: nsISupports
   const unsigned long RESUME_SESSION = 2;
 
   readonly attribute unsigned long sessionType;
+  readonly attribute unsigned long long restoredTimestamp;
 };
