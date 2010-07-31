@@ -1074,6 +1074,18 @@ nsDOMWindowUtils::SendQueryContentEvent(PRUint32 aType,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
+  NS_ENSURE_TRUE(mWindow, NS_ERROR_FAILURE);
+
+  nsIDocShell *docShell = mWindow->GetDocShell();
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+  nsPresContext* presContext = presShell->GetPresContext();
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -1097,7 +1109,7 @@ nsDOMWindowUtils::SendQueryContentEvent(PRUint32 aType,
     nsQueryContentEvent dummyEvent(PR_TRUE, NS_QUERY_CONTENT_STATE, widget);
     InitEvent(dummyEvent, &pt);
     nsIFrame* popupFrame =
-      nsLayoutUtils::GetPopupFrameForEventCoordinates(&dummyEvent);
+      nsLayoutUtils::GetPopupFrameForEventCoordinates(presContext->GetRootPresContext(), &dummyEvent);
 
     nsIntRect widgetBounds;
     nsresult rv = widget->GetClientBounds(widgetBounds);

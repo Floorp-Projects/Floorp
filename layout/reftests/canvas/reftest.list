@@ -36,7 +36,7 @@
 == text-not-in-doc-test.html text-not-in-doc-ref.html
 
 # weird pixel-rounding on mac prevents these tests from passing
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == text-bidi-ltr-test.html text-bidi-ltr-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == text-bidi-rtl-test.html text-bidi-rtl-ref.html
+fails-if(cocoaWidget) == text-bidi-ltr-test.html text-bidi-ltr-ref.html
+fails-if(cocoaWidget) == text-bidi-rtl-test.html text-bidi-rtl-ref.html
 
 != text-font-lang.html text-font-lang-notref.html

@@ -40,13 +40,14 @@
 #include "ContentParent.h"
 
 #include "TabParent.h"
+#include "History.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIObserverService.h"
-
+#include "nsContentUtils.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
@@ -55,6 +56,7 @@
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
+using namespace mozilla::places;
 using mozilla::MonitorAutoEnter;
 
 namespace mozilla {
@@ -428,6 +430,39 @@ ContentParent::RequestRunToCompletion()
         mShouldCallUnblockChild = true;
     }
     return !!mRunToCompletionDepth;
+}
+
+bool
+ContentParent::RecvStartVisitedQuery(const IPC::URI& aURI)
+{
+    nsCOMPtr<nsIURI> newURI = aURI;
+    IHistory *history = nsContentUtils::GetHistory(); 
+    history->RegisterVisitedCallback(newURI, nsnull);
+    return true;
+}
+
+
+bool
+ContentParent::RecvVisitURI(const IPC::URI& uri,
+                                   const IPC::URI& referrer,
+                                   const PRUint32& flags)
+{
+    nsCOMPtr<nsIURI> ourURI = uri;
+    nsCOMPtr<nsIURI> ourReferrer = referrer;
+    IHistory *history = nsContentUtils::GetHistory(); 
+    history->VisitURI(ourURI, ourReferrer, flags);
+    return true;
+}
+
+
+bool
+ContentParent::RecvSetURITitle(const IPC::URI& uri,
+                                      const nsString& title)
+{
+    nsCOMPtr<nsIURI> ourURI = uri;
+    IHistory *history = nsContentUtils::GetHistory(); 
+    history->SetURITitle(ourURI, title);
+    return true;
 }
 
 /* void onDispatchedEvent (in nsIThreadInternal thread); */

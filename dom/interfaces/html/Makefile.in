@@ -118,9 +118,6 @@ XPIDLSRCS = 					\
 	nsIDOMHTMLCanvasElement.idl		\
 	nsIDOMNSHTMLAnchorElement.idl		\
 	nsIDOMNSHTMLAnchorElement2.idl		\
-	nsIDOMNSHTMLAreaElement.idl		\
-	nsIDOMNSHTMLAreaElement2.idl		\
-	nsIDOMNSHTMLButtonElement.idl		\
 	nsIDOMNSHTMLDocument.idl		\
 	nsIDOMNSHTMLElement.idl			\
 	nsIDOMNSHTMLFormElement.idl		\
@@ -128,12 +125,8 @@ XPIDLSRCS = 					\
 	nsIDOMNSHTMLHRElement.idl		\
 	nsIDOMNSHTMLImageElement.idl		\
 	nsIDOMNSHTMLInputElement.idl		\
-	nsIDOMNSHTMLLabelElement.idl		\
 	nsIDOMNSHTMLOptionCollectn.idl		\
-	nsIDOMNSHTMLOptionElement.idl		\
-	nsIDOMNSHTMLSelectElement.idl		\
 	nsIDOMNSHTMLTextAreaElement.idl		\
-	nsIDOMNSHTMLScriptElement.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
