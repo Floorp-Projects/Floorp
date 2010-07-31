@@ -45,8 +45,6 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsobj.h"
-#include "jsatom.h"
-#include "jsstr.h"
 
 typedef struct JSLocalNameMap JSLocalNameMap;
 
@@ -97,10 +95,6 @@ typedef union JSLocalNames {
  * can move to u.i.script->flags. For now we use function flag bits to minimize
  * pointer-chasing.
  */
-#define JSFUN_JOINABLE      0x0001  /* function is null closure that does not
-                                       appear to call itself via its own name
-                                       or arguments.callee */
-
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
 #define JSFUN_TRCINFO       0x2000  /* when set, u.n.trcinfo is non-null,
                                        JSFunctionSpec::call points to a
@@ -207,44 +201,6 @@ struct JSFunction : public JSObject
 
     bool mightEscape() const {
         return FUN_INTERPRETED(this) && (FUN_FLAT_CLOSURE(this) || u.i.nupvars == 0);
-    }
-
-    bool joinable() const {
-        return flags & JSFUN_JOINABLE;
-    }
-
-  private:
-    /*
-     * js_FunctionClass reserves two slots, which are free in JSObject::fslots
-     * without requiring dslots allocation. Null closures that can be joined to
-     * a compiler-created function object use the first one to hold a mutable
-     * methodAtom() state variable, needed for correct foo.caller handling.
-     */
-    enum {
-        METHOD_ATOM_SLOT  = JSSLOT_FUN_METHOD_ATOM
-    };
-
-  public:
-    void setJoinable() {
-        JS_ASSERT(FUN_INTERPRETED(this));
-        fslots[METHOD_ATOM_SLOT].setNull();
-        flags |= JSFUN_JOINABLE;
-    }
-
-    /*
-     * Method name imputed from property uniquely assigned to or initialized,
-     * where the function does not need to be cloned to carry a scope chain or
-     * flattened upvars.
-     */
-    JSAtom *methodAtom() const {
-        return (joinable() && fslots[METHOD_ATOM_SLOT].isString())
-               ? STRING_TO_ATOM(fslots[METHOD_ATOM_SLOT].toString())
-               : NULL;
-    }
-
-    void setMethodAtom(JSAtom *atom) {
-        JS_ASSERT(joinable());
-        fslots[METHOD_ATOM_SLOT].setString(ATOM_TO_STRING(atom));
     }
 };
 
