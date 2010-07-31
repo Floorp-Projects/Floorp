@@ -42,7 +42,8 @@
 #include "MonoIC.h"
 #include "StubCalls.h"
 #include "assembler/assembler/RepatchBuffer.h"
-
+#include "jsobj.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
 using namespace js;
