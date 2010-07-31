@@ -68,6 +68,7 @@
 #include "jsprf.h"
 #include "jsscope.h"
 #include "jsstr.h"
+#include "jstracer.h"
 #include "jsvector.h"
 
 #include "jsobjinlines.h"
@@ -469,8 +470,10 @@ ParseInt(JSContext* cx, JSString* str)
     str->getCharsAndEnd(start, end);
 
     jsdouble d;
-    if (!ParseIntStringHelper(cx, start, end, 0, true, &d))
-        return js_NaN; // FIXME bug 583126: ignores OOM!
+    if (!ParseIntStringHelper(cx, start, end, 0, true, &d)) {
+        SetBuiltinError(cx);
+        return js_NaN;
+    }
     return d;
 }
 
