@@ -121,26 +121,29 @@ typedef struct {
   string cert_nickname;
   PLHashTable* host_cert_table;
   PLHashTable* host_clientauth_table;
-  // If not empty, and this server is using HTTP CONNECT, connections
-  // will be proxied to this address.
-  PRNetAddr remote_addr;
-  // True if no SSL should be used for this server's connections.
-  bool http_proxy_only;
-  // The original host in the Host: header for the initial connection is
-  // stored here, for proxied connections.
-  string original_host;
 } server_info_t;
 
 typedef struct {
   PRFileDesc* client_sock;
   PRNetAddr client_addr;
   server_info_t* server_info;
+  // the original host in the Host: header for this connection is
+  // stored here, for proxied connections
+  string original_host;
+  // true if no SSL should be used for this connection
+  bool http_proxy_only;
+  // true if this connection is for a WebSocket
+  bool iswebsocket;
 } connection_info_t;
+
+typedef struct {
+  string fullHost;
+  bool matched;
+} server_match_t;
 
 const PRInt32 BUF_SIZE = 16384;
 const PRInt32 BUF_MARGIN = 1024;
 const PRInt32 BUF_TOTAL = BUF_SIZE + BUF_MARGIN;
-const char HEADER_HOST[] = "Host:";
 
 struct relayBuffer
 {
@@ -217,6 +220,7 @@ const PRUint32 DEFAULT_STACKSIZE = (512 * 1024);
 string nssconfigdir;
 vector<server_info_t> servers;
 PRNetAddr remote_addr;
+PRNetAddr websocket_server;
 PRThreadPool* threads = NULL;
 PRLock* shutdown_lock = NULL;
 PRCondVar* shutdown_condvar = NULL;
@@ -235,6 +239,14 @@ PR_CALLBACK PRIntn ClientAuthValueComparator(const void *v1, const void *v2)
     return 1;
   else // (a < 0)
     return -1;
+}
+
+static PRIntn match_hostname(PLHashEntry *he, PRIntn index, void* arg)
+{
+  server_match_t *match = (server_match_t*)arg;
+  if (match->fullHost.find((char*)he->key) != string::npos)
+    match->matched = true;
+  return HT_ENUMERATE_NEXT;
 }
 
 /*
@@ -354,15 +366,15 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, string &cer
  * This function examines the buffer for a S5ec-WebSocket-Location: field, 
  * and if it's present, it replaces the hostname in that field with the
  * value in the server's original_host field.  This function works
- * in the reverse direction as AdjustHost(), replacing the real hostname
- * of a response with the potentially fake hostname that is expected
+ * in the reverse direction as AdjustWebSocketHost(), replacing the real
+ * hostname of a response with the potentially fake hostname that is expected
  * by the browser (e.g., mochi.test).
  *
  * @return true if the header was adjusted successfully, or not found, false
  * if the header is present but the url is not, which should indicate
  * that more data needs to be read from the socket
  */
-bool AdjustWebSocketLocation(relayBuffer& buffer, server_info_t *si)
+bool AdjustWebSocketLocation(relayBuffer& buffer, connection_info_t *ci)
 {
   assert(buffer.margin());
   buffer.buffertail[1] = '\0';
@@ -382,16 +394,16 @@ bool AdjustWebSocketLocation(relayBuffer& buffer, server_info_t *si)
   char *crlf = strstr(wsloc, "\r\n");
   if (!crlf)
     return false;
-  if (si->original_host.empty())
+  if (ci->original_host.empty())
     return true;
 
-  int diff = si->original_host.length() - (wslocend-wsloc);
+  int diff = ci->original_host.length() - (wslocend-wsloc);
   if (diff > 0)
     assert(size_t(diff) <= buffer.margin());
   memmove(wslocend + diff, wslocend, buffer.buffertail - wsloc - diff);
   buffer.buffertail += diff;
 
-  memcpy(wsloc, si->original_host.c_str(), si->original_host.length());
+  memcpy(wsloc, ci->original_host.c_str(), ci->original_host.length());
   return true;
 }
 
@@ -403,16 +415,29 @@ bool AdjustWebSocketLocation(relayBuffer& buffer, server_info_t *si)
  * replaced with the host that the destination server is actually running
  * on.
  */
-bool AdjustHost(relayBuffer& buffer, server_info_t *si)
+bool AdjustWebSocketHost(relayBuffer& buffer, connection_info_t *ci)
 {
-  if (!si->remote_addr.inet.port)
-    return false;
+  const char HEADER_UPGRADE[] = "Upgrade:";
+  const char HEADER_HOST[] = "Host:";
+
+  PRNetAddr inet_addr = (websocket_server.inet.port ? websocket_server :
+    remote_addr);
 
   assert(buffer.margin());
 
   // Cannot use strnchr so add a null char at the end. There is always some
   // space left because we preserve a margin.
   buffer.buffertail[1] = '\0';
+
+  // Verify this is a WebSocket header.
+  char* h1 = strstr(buffer.bufferhead, HEADER_UPGRADE);
+  if (!h1)
+    return false;
+  h1 += strlen(HEADER_UPGRADE);
+  h1 += strspn(h1, " \t");
+  char* h2 = strstr(h1, "WebSocket\r\n");
+  if (!h2)
+    return false;
 
   char* host = strstr(buffer.bufferhead, HEADER_HOST);
   if (!host)
@@ -427,12 +452,12 @@ bool AdjustHost(relayBuffer& buffer, server_info_t *si)
 
   // Save the original host, so we can use it later on responses from the
   // server.
-  si->original_host.assign(host, endhost-host);
+  ci->original_host.assign(host, endhost-host);
 
   char newhost[40];
-  PR_NetAddrToString(&si->remote_addr, newhost, sizeof(newhost));
+  PR_NetAddrToString(&inet_addr, newhost, sizeof(newhost));
   assert(strlen(newhost) < sizeof(newhost) - 7);
-  sprintf(newhost, "%s:%d", newhost, PR_ntohs(si->remote_addr.inet.port));
+  sprintf(newhost, "%s:%d", newhost, PR_ntohs(inet_addr.inet.port));
 
   int diff = strlen(newhost) - (endhost-host);
   if (diff > 0)
@@ -532,7 +557,7 @@ void HandleConnection(void* data)
 
     if (!do_http_proxy)
     {
-      if (!ci->server_info->http_proxy_only && 
+      if (!ci->http_proxy_only && 
           !ConfigureSSLServerSocket(ci->client_sock, ci->server_info, certificateToUse, caNone))
         client_error = true;
       else if (!ConnectSocket(other_sock, &remote_addr, connect_timeout))
@@ -652,6 +677,27 @@ void HandleConnection(void* data)
             if (!connect_accepted && ReadConnectRequest(ci->server_info, buffers[s],
                 &response, certificateToUse, &clientAuth, fullHost))
             {
+              // Mark this as a proxy-only connection (no SSL) if the CONNECT
+              // request didn't come for port 443 or from any of the server's
+              // cert or clientauth hostnames.
+              if (fullHost.find(":443") == string::npos)
+              {
+                server_match_t match;
+                match.fullHost = fullHost;
+                match.matched = false;
+                PL_HashTableEnumerateEntries(ci->server_info->host_cert_table, 
+                                             match_hostname, 
+                                             &match);
+                PL_HashTableEnumerateEntries(ci->server_info->host_clientauth_table, 
+                                             match_hostname, 
+                                             &match);
+                ci->http_proxy_only = !match.matched;
+              }
+              else
+              {
+                ci->http_proxy_only = false;
+              }
+
               // Clean the request as it would be read
               buffers[s].bufferhead = buffers[s].buffertail = buffers[s].buffer;
               in_flags |= PR_POLL_WRITE;
@@ -670,16 +716,6 @@ void HandleConnection(void* data)
               strcpy(buffers[s2].buffer, "HTTP/1.1 200 Connected\r\nConnection: keep-alive\r\n\r\n");
               buffers[s2].buffertail = buffers[s2].buffer + strlen(buffers[s2].buffer);
 
-              PRNetAddr* addr = &remote_addr;
-              if (ci->server_info->remote_addr.inet.port > 0)
-                addr = &ci->server_info->remote_addr;
-              if (!ConnectSocket(other_sock, addr, connect_timeout))
-              {
-                printf(" could not open connection to the real server\n");
-                client_error = true;
-                break;
-              }
-
               printf(" accepted CONNECT request, connected to the server, sending OK to the client\n");
               // Send the response to the client socket
               break;
@@ -696,14 +732,32 @@ void HandleConnection(void* data)
             {
               if (s == 0 && expect_request_start) 
               {
-                if (ci->server_info->http_proxy_only)
-                  expect_request_start = !AdjustHost(buffers[s], ci->server_info);
+                if (!strstr(buffers[s].bufferhead, "\r\n\r\n"))
+                {
+                  // We haven't received the complete header yet, so wait.
+                  continue;
+                }
                 else
-                  expect_request_start = !AdjustRequestURI(buffers[s], &fullHost);
+                {
+                  ci->iswebsocket = AdjustWebSocketHost(buffers[s], ci);
+                  expect_request_start = !(ci->iswebsocket || 
+                                           AdjustRequestURI(buffers[s], &fullHost));
+                  PRNetAddr* addr = &remote_addr;
+                  if (ci->iswebsocket && websocket_server.inet.port)
+                    addr = &websocket_server;
+                  if (!ConnectSocket(other_sock, addr, connect_timeout))
+                  {
+                    printf(" could not open connection to the real server\n");
+                    client_error = true;
+                    break;
+                  }
+                  printf("\n connected to remote server\n");
+                  numberOfSockets = 2;
+                }
               }
-              else
+              else if (s == 1 && ci->iswebsocket)
               {
-                if (!AdjustWebSocketLocation(buffers[s], ci->server_info))
+                if (!AdjustWebSocketLocation(buffers[s], ci))
                   continue;
               }
 
@@ -717,7 +771,7 @@ void HandleConnection(void* data)
 
         if (out_flags & PR_POLL_WRITE)
         {
-          printf(" :writting");
+          printf(" :writing");
           PRInt32 bytesWrite = PR_Send(sockets[s].fd, buffers[s2].bufferhead, 
               buffers[s2].present(), 0, PR_INTERVAL_NO_TIMEOUT);
 
@@ -753,7 +807,7 @@ void HandleConnection(void* data)
                 printf(" proxy response sent to the client");
                 // Proxy response has just been writen, update to ssl
                 ssl_updated = true;
-                if (!ci->server_info->http_proxy_only && 
+                if (!ci->http_proxy_only && 
                     !ConfigureSSLServerSocket(ci->client_sock, ci->server_info, certificateToUse, clientAuth))
                 {
                   printf(" but failed to config server socket\n");
@@ -762,7 +816,6 @@ void HandleConnection(void* data)
                 }
 
                 printf(" client socket updated to SSL");
-                numberOfSockets = 2;
               } // sslUpdate
 
               printf(" dropping our write flag and setting other socket read flag");
@@ -892,6 +945,23 @@ int processConfigLine(char* configLine)
     return 0;
   }
 
+  if (!strcmp(keyword, "websocketserver"))
+  {
+    char* ipstring = strtok2(_caret, ":", &_caret);
+    if (PR_StringToNetAddr(ipstring, &websocket_server) != PR_SUCCESS) {
+      fprintf(stderr, "Invalid IP address in proxy config: %s\n", ipstring);
+      return 1;
+    }
+    char* remoteport = strtok2(_caret, ":", &_caret);
+    int port = atoi(remoteport);
+    if (port <= 0) {
+      fprintf(stderr, "Invalid remote port in proxy config: %s\n", remoteport);
+      return 1;
+    }
+    websocket_server.inet.port = PR_htons(port);
+    return 0;
+  }
+
   // Configure the forward address of the target server
   if (!strcmp(keyword, "forward"))
   {
@@ -908,35 +978,6 @@ int processConfigLine(char* configLine)
     }
     remote_addr.inet.port = PR_htons(port);
 
-    return 0;
-  }
-
-  if (!strcmp(keyword, "proxy"))
-  {
-    server_info_t server;
-    server.host_cert_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, PL_CompareStrings, NULL, NULL);
-    server.host_clientauth_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, ClientAuthValueComparator, NULL, NULL);
-    server.http_proxy_only = true;
-
-    char* listenport = strtok2(_caret, ":", &_caret);
-    server.listen_port = atoi(listenport);
-    if (server.listen_port <= 0) {
-      fprintf(stderr, "Invalid listen port in proxy config: %s\n", listenport);
-      return 1;
-    }
-    char* ipstring = strtok2(_caret, ":", &_caret);
-    if (PR_StringToNetAddr(ipstring, &server.remote_addr) != PR_SUCCESS) {
-      fprintf(stderr, "Invalid IP address in proxy config: %s\n", ipstring);
-      return 1;
-    }
-    char* remoteport = strtok2(_caret, ":", &_caret);
-    int port = atoi(remoteport);
-    if (port <= 0) {
-      fprintf(stderr, "Invalid remote port in proxy config: %s\n", remoteport);
-      return 1;
-    }
-    server.remote_addr.inet.port = PR_htons(port);
-    servers.push_back(server);
     return 0;
   }
 
@@ -979,10 +1020,8 @@ int processConfigLine(char* configLine)
     else
     {
       server_info_t server;
-      memset(&server.remote_addr, 0, sizeof(PRNetAddr));
       server.cert_nickname = certnick;
       server.listen_port = port;
-      server.http_proxy_only = false;
       server.host_cert_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, PL_CompareStrings, NULL, NULL);
       if (!server.host_cert_table)
       {
@@ -1136,6 +1175,8 @@ int main(int argc, char** argv)
   else
     configFilePath = argv[1];
 
+  memset(&websocket_server, 0, sizeof(PRNetAddr));
+
   if (parseConfigFile(configFilePath)) {
     fprintf(stderr, "Error: config file \"%s\" missing or formating incorrect\n"
       "Specify path to the config file as parameter to ssltunnel or \n"
@@ -1163,10 +1204,9 @@ int main(int argc, char** argv)
       "       # specified. You also have to specify the tunnel listen port.\n"
       "       clientauth:requesting-client-cert.host.com:443:4443:request\n"
       "       clientauth:requiring-client-cert.host.com:443:4443:require\n"
-      "       # Act as a simple proxy for incoming connections on port 7777,\n"
-      "       # tunneling them to the server at 127.0.0.1:9999. Not affected\n"
-      "       # by the 'forward' option.\n"
-      "       proxy:7777:127.0.0.1:9999\n",
+      "       # Proxy WebSocket traffic to the server at 127.0.0.1:9999,\n"
+      "       # instead of the server specified in the 'forward' option.\n"
+      "       websocketserver:127.0.0.1:9999\n",
       configFilePath);
     return 1;
   }

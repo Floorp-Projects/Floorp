@@ -72,7 +72,7 @@ currImageElem.src = new_image_url();
 p.style.MozBorderImage = "url( " + currImageElem.src + ") 2 2 2 2 / 7px 2px";
 is(divcs.width, "11px", "border image not loaded yet");
 is(divcs.height, "11px", "border image not loaded yet");
-currImageElem.onload = step2;
+currImageElem.onload = function() { setTimeout(step2, 0); }
 
 function step2() {
   // We got here through onload
@@ -97,7 +97,7 @@ function step2() {
   p.style.MozBorderImage = "url( " + currImageElem.src + ") 2 2 2 2 / 7px 2px";
   is(divcs.width, "5px", "border image not loaded yet");
   is(divcs.height, "5px", "border image not loaded yet");
-  currImageElem.onload = step3;
+  currImageElem.onload = function() { setTimeout(step3, 0); }
 }
 
 function step3() {
@@ -115,7 +115,7 @@ function step3() {
   p.style.MozBorderImage = "url( " + currImageElem.src + ") 2 2 2 2";
   is(divcs.width, "5px", "border image not loaded yet");
   is(divcs.height, "5px", "border image not loaded yet");
-  currImageElem.onload = step4;
+  currImageElem.onload = function() { setTimeout(step4, 0); }
 }
 
 function step4() {

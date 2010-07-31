@@ -289,12 +289,38 @@ function testRemotelyLoadTabsExperiment() {
   // (~/testpilot/website/testcases/tab-open-close/tabs_experiment.js)
 }
 
+function testRemoteLoaderIndexCache() {
+  var Cuddlefish = {};
+  Cu.import("resource://testpilot/modules/lib/cuddlefish.js",
+                          Cuddlefish);
+  let cfl = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
+                                               "resource://testpilot/modules/lib/"]});
+  let remoteLoaderModule = cfl.require("remote-experiment-loader");
+
+  let getFileFunc = function(url, callback) {
+    callback(null);
+  };
+
+  let stubLogger = {
+    getLogger: function() { return {trace: function() {},
+                                    warn: function() {},
+                                    info: function() {},
+                                    debug: function() {}};}
+  };
+
+  let remoteLoader = new remoteLoaderModule.RemoteExperimentLoader(stubLogger, getFileFunc);
+  let data = "Foo bar baz quux";
+  remoteLoader._cacheIndexFile(data);
+  cheapAssertEqual(remoteLoader._loadCachedIndexFile(), data);
+}
+
 function runAllTests() {
   testTheDataStore();
   testFirefoxVersionCheck();
   testStringSanitizer();
   //testTheCuddlefishPreferencesFilesystem();
   //testRemoteLoader();
+  testRemoteLoaderIndexCache();
   dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun +
        " tests passed.");
 }

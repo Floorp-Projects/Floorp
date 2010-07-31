@@ -270,17 +270,14 @@
                   <button id="detail-uninstall" class="addon-control remove"
                           label="&cmd.uninstallAddon.label;"
                           accesskey="&cmd.uninstallAddon.accesskey;"
-                          tooltiptext="&cmd.uninstallAddon.tooltip;"
                           command="cmd_uninstallItem"/>
                   <button id="detail-enable" class="addon-control enable"
                           label="&cmd.enableAddon.label;"
                           accesskey="&cmd.enableAddon.accesskey;"
-                          tooltiptext="&cmd.enableAddon.tooltip;"
                           command="cmd_enableItem"/>
                   <button id="detail-disable" class="addon-control disable"
                           label="&cmd.disableAddon.label;"
                           accesskey="&cmd.disableAddon.accesskey;"
-                          tooltiptext="&cmd.disableAddon.tooltip;"
                           command="cmd_disableItem"/>
                 </hbox>
               </vbox>

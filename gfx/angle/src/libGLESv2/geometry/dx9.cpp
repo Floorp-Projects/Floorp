@@ -471,6 +471,14 @@ GLenum Dx9BackEnd::setupAttributesPreDraw(const TranslatedAttribute *attributes)
     return GL_NO_ERROR;
 }
 
+void Dx9BackEnd::invalidate()
+{
+    for (int i = 0; i < MAX_VERTEX_ATTRIBS + 1; i++)
+    {
+        mStreamFrequency[i] = STREAM_FREQUENCY_DIRTY;
+    }
+}
+
 Dx9BackEnd::Dx9VertexBuffer::Dx9VertexBuffer(IDirect3DDevice9 *device, std::size_t size)
     : TranslatedVertexBuffer(size)
 {

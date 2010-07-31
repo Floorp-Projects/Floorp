@@ -173,33 +173,17 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fBufferSubData, { "BufferSubData", NULL } },
         { (PRFuncPtr*) &fClear, { "Clear", NULL } },
         { (PRFuncPtr*) &fClearColor, { "ClearColor", NULL } },
-#ifdef USE_GLES2
-        { (PRFuncPtr*) &fClearDepthf, { "ClearDepthf", NULL } },
-#else
-        { (PRFuncPtr*) &fClearDepth, { "ClearDepth", NULL } },
-#endif
         { (PRFuncPtr*) &fClearStencil, { "ClearStencil", NULL } },
         { (PRFuncPtr*) &fColorMask, { "ColorMask", NULL } },
         { (PRFuncPtr*) &fCullFace, { "CullFace", NULL } },
         { (PRFuncPtr*) &fDetachShader, { "DetachShader", "DetachShaderARB", NULL } },
         { (PRFuncPtr*) &fDepthFunc, { "DepthFunc", NULL } },
         { (PRFuncPtr*) &fDepthMask, { "DepthMask", NULL } },
-#ifdef USE_GLES2
-        { (PRFuncPtr*) &fDepthRangef, { "DepthRangef", NULL } },
-#else
-        { (PRFuncPtr*) &fDepthRange, { "DepthRange", NULL } },
-#endif
         { (PRFuncPtr*) &fDisable, { "Disable", NULL } },
-#ifndef USE_GLES2
-        { (PRFuncPtr*) &fDisableClientState, { "DisableClientState", NULL } },
-#endif
         { (PRFuncPtr*) &fDisableVertexAttribArray, { "DisableVertexAttribArray", "DisableVertexAttribArrayARB", NULL } },
         { (PRFuncPtr*) &fDrawArrays, { "DrawArrays", NULL } },
         { (PRFuncPtr*) &fDrawElements, { "DrawElements", NULL } },
         { (PRFuncPtr*) &fEnable, { "Enable", NULL } },
-#ifndef USE_GLES2
-        { (PRFuncPtr*) &fEnableClientState, { "EnableClientState", NULL } },
-#endif
         { (PRFuncPtr*) &fEnableVertexAttribArray, { "EnableVertexAttribArray", "EnableVertexAttribArrayARB", NULL } },
         { (PRFuncPtr*) &fFinish, { "Finish", NULL } },
         { (PRFuncPtr*) &fFlush, { "Flush", NULL } },
@@ -215,9 +199,6 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fGetError, { "GetError", NULL } },
         { (PRFuncPtr*) &fGetProgramiv, { "GetProgramiv", "GetProgramivARB", NULL } },
         { (PRFuncPtr*) &fGetProgramInfoLog, { "GetProgramInfoLog", "GetProgramInfoLogARB", NULL } },
-#ifndef USE_GLES2
-        { (PRFuncPtr*) &fTexCoordPointer, { "TexCoordPointer", NULL } },
-#endif
         { (PRFuncPtr*) &fTexParameteri, { "TexParameteri", NULL } },
         { (PRFuncPtr*) &fTexParameterf, { "TexParameterf", NULL } },
         { (PRFuncPtr*) &fGetString, { "GetString", NULL } },
@@ -238,9 +219,6 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fLinkProgram, { "LinkProgram", "LinkProgramARB", NULL } },
         { (PRFuncPtr*) &fPixelStorei, { "PixelStorei", NULL } },
         { (PRFuncPtr*) &fPolygonOffset, { "PolygonOffset", NULL } },
-#ifndef USE_GLES2
-        { (PRFuncPtr*) &fReadBuffer,  { "ReadBuffer", NULL } },
-#endif
         { (PRFuncPtr*) &fReadPixels, { "ReadPixels", NULL } },
         { (PRFuncPtr*) &fSampleCoverage, { "SampleCoverage", NULL } },
         { (PRFuncPtr*) &fScissor, { "Scissor", NULL } },
@@ -250,9 +228,6 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fStencilMaskSeparate, { "StencilMaskSeparate", "StencilMaskSeparateEXT", NULL } },
         { (PRFuncPtr*) &fStencilOp, { "StencilOp", NULL } },
         { (PRFuncPtr*) &fStencilOpSeparate, { "StencilOpSeparate", "StencilOpSeparateEXT", NULL } },
-#ifndef USE_GLES2
-        { (PRFuncPtr*) &fTexEnvf, { "TexEnvf",  NULL } },
-#endif
         { (PRFuncPtr*) &fTexImage2D, { "TexImage2D", NULL } },
         { (PRFuncPtr*) &fTexSubImage2D, { "TexSubImage2D", NULL } },
         { (PRFuncPtr*) &fUniform1f, { "Uniform1f", NULL } },
@@ -285,9 +260,6 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &fVertexAttrib2fv, { "VertexAttrib2fv", NULL } },
         { (PRFuncPtr*) &fVertexAttrib3fv, { "VertexAttrib3fv", NULL } },
         { (PRFuncPtr*) &fVertexAttrib4fv, { "VertexAttrib4fv", NULL } },
-#ifndef USE_GLES2
-        { (PRFuncPtr*) &fVertexPointer, { "VertexPointer", NULL } },
-#endif
         { (PRFuncPtr*) &fViewport, { "Viewport", NULL } },
         { (PRFuncPtr*) &fCompileShader, { "CompileShader", NULL } },
         { (PRFuncPtr*) &fCopyTexImage2D, { "CopyTexImage2D", NULL } },
@@ -322,6 +294,15 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
         { (PRFuncPtr*) &priv_fDeleteShader, { "DeleteShader", "DeleteShaderARB", NULL } },
         { (PRFuncPtr*) &priv_fDeleteFramebuffers, { "DeleteFramebuffers", "DeleteFramebuffersEXT", NULL } },
         { (PRFuncPtr*) &priv_fDeleteRenderbuffers, { "DeleteRenderbuffers", "DeleteRenderbuffersEXT", NULL } },
+
+        { mIsGLES2 ? (PRFuncPtr*) &priv_fClearDepthf : (PRFuncPtr*) &priv_fClearDepth,
+          { mIsGLES2 ? "ClearDepthf" : "ClearDepth", NULL } },
+        { mIsGLES2 ? (PRFuncPtr*) &priv_fDepthRangef : (PRFuncPtr*) &priv_fDepthRange,
+          { mIsGLES2 ? "DepthRangef" : "DepthRange", NULL } },
+
+        // XXX FIXME -- we shouldn't be using glReadBuffer!
+        { mIsGLES2 ? (PRFuncPtr*) NULL : (PRFuncPtr*) &fReadBuffer,
+          { mIsGLES2 ? NULL : "ReadBuffer", NULL } },
 
         { NULL, { NULL } },
 
@@ -490,12 +471,6 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
     int depth = mCreationFormat.depth;
     int stencil = mCreationFormat.stencil;
 
-#ifdef USE_GLES2
-    const bool isMobile = true;
-#else
-    const bool isMobile = false;
-#endif
-
     bool firstTime = (mOffscreenFBO == 0);
 
     GLuint curBoundTexture = 0;
@@ -521,12 +496,16 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
         fGenFramebuffers(1, &mOffscreenFBO);
         fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mOffscreenFBO);
 
-        if (depth) {
+        if (depth && stencil && !mIsGLES2) {
             fGenRenderbuffers(1, &mOffscreenDepthRB);
-        }
+        } else {
+            if (depth) {
+                fGenRenderbuffers(1, &mOffscreenDepthRB);
+            }
 
-        if (stencil) {
-            fGenRenderbuffers(1, &mOffscreenStencilRB);
+            if (stencil) {
+                fGenRenderbuffers(1, &mOffscreenStencilRB);
+            }
         }
     } else {
         fBindTexture(LOCAL_GL_TEXTURE_2D, mOffscreenTexture);
@@ -550,24 +529,31 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
                     aSize.width, aSize.height,
                     0,
                     LOCAL_GL_RGB,
-                    isMobile ? LOCAL_GL_UNSIGNED_SHORT_5_6_5
+                    mIsGLES2 ? LOCAL_GL_UNSIGNED_SHORT_5_6_5
                              : LOCAL_GL_UNSIGNED_BYTE,
                     NULL);
     }
 
-
-    if (depth) {
+    if (depth && stencil && !mIsGLES2) {
         fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenDepthRB);
         fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
-                             LOCAL_GL_DEPTH_COMPONENT16,
+                             LOCAL_GL_DEPTH24_STENCIL8,
                              aSize.width, aSize.height);
-    }
+    } else {
+        if (depth) {
+            fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenDepthRB);
+            fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
+                                 mIsGLES2 ? LOCAL_GL_DEPTH_COMPONENT16
+                                          : LOCAL_GL_DEPTH_COMPONENT24,
+                                 aSize.width, aSize.height);
+        }
 
-    if (stencil) {
-        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenStencilRB);
-        fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
-                             LOCAL_GL_STENCIL_INDEX8,
-                             aSize.width, aSize.height);
+        if (stencil) {
+            fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOffscreenStencilRB);
+            fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
+                                 LOCAL_GL_STENCIL_INDEX8,
+                                 aSize.width, aSize.height);
+        }
     }
 
     // Now assemble the FBO, if we're creating one
@@ -578,18 +564,30 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize)
                               LOCAL_GL_TEXTURE_2D,
                               mOffscreenTexture,
                               0);
-        if (depth) {
+
+        if (depth && stencil && !mIsGLES2) {
             fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                      LOCAL_GL_DEPTH_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER,
                                      mOffscreenDepthRB);
-        }
-
-        if (stencil) {
             fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                      LOCAL_GL_STENCIL_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER,
-                                     mOffscreenStencilRB);
+                                     mOffscreenDepthRB);
+        } else {
+            if (depth) {
+                fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                         LOCAL_GL_DEPTH_ATTACHMENT,
+                                         LOCAL_GL_RENDERBUFFER,
+                                         mOffscreenDepthRB);
+            }
+
+            if (stencil) {
+                fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                         LOCAL_GL_STENCIL_ATTACHMENT,
+                                         LOCAL_GL_RENDERBUFFER,
+                                         mOffscreenStencilRB);
+            }
         }
     }
 
@@ -655,21 +653,13 @@ GLContext::ClearSafely()
 
     fClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     fClearStencil(0);
-#ifdef USE_GLES2
-    fClearDepthf(1.0f);
-#else
-    fClearDepth(1.0);
-#endif
+    fClearDepth(1.0f);
 
     fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
 
     fClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
     fClearStencil(clearStencil);
-#ifdef USE_GLES2
-    fClearDepthf(clearDepth);
-#else
     fClearDepth(clearDepth);
-#endif
 }
 
 void

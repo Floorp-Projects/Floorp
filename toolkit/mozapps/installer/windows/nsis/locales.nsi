@@ -36,8 +36,7 @@
 
 /**
  * "One off" locale configuration settings for RTL (e.g. locale text is read
- * right to left). Fonts should not only be specified if Win9x systems are
- * supported for East Asian locales.
+ * right to left).
  */
 
 ; Arabic

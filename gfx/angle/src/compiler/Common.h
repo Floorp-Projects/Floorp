@@ -45,7 +45,7 @@ inline TString* NewPoolTString(const char* s)
 
 //
 // Persistent string memory.  Should only be used for strings that survive
-// across compiles/links.
+// across compiles.
 //
 #define TPersistString std::string
 #define TPersistStringStream std::ostringstream
