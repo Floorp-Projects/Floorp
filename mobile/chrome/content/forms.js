@@ -391,6 +391,7 @@ FormAssistant.prototype = {
         name: element.name,
         value: element.value,
         maxLength: element.maxLength,
+        type: element.getAttribute("type").toLowerCase(),
         choices: list,
         isAutocomplete: this._isAutocomplete(this.currentElement),
         rect: this._getRect(),
