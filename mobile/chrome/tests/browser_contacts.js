@@ -2,6 +2,9 @@
 // pull in the Contacts service
 Components.utils.import("resource:///modules/contacts.jsm");
 
+let fac = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete);
+let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+
 function test() {
   ok(Contacts, "Contacts class exists");
   for (var fname in tests) {
@@ -33,22 +36,42 @@ let MockContactsProvider = {
   }
 };
 
-Contacts.addProvider(MockContactsProvider);
+// In case there are real contacts that could mess up our test counts
+let preEmailCount = fac.autoCompleteSearch("email", "", null, null).matchCount;
+let prePhoneCount = fac.autoCompleteSearch("tel", "", null, null).matchCount;
 
-let fac = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete);
+Contacts.addProvider(MockContactsProvider);
 
 let tests = {
   testBasicMatch: function() {
-    let results = fac.autoCompleteSearch("email", "-Billy", null, null);
-    ok(results.matchCount == 2, "Found 2 emails '-Billy'");
+    // Search for any emails
+    let results = fac.autoCompleteSearch("email", "", null, null);
+    is(results.matchCount, 3 + preEmailCount, "Found 3 emails for un-filtered search");
+
+    // Do some filtered searches
+    results = fac.autoCompleteSearch("email", "-Billy", null, null);
+    is(results.matchCount, 2, "Found 2 emails '-Billy'");
 
     results = fac.autoCompleteSearch("tel", "-Billy", null, null);
-    ok(results.matchCount == 3, "Found 3 phone numbers '-Billy'");
+    is(results.matchCount, 3, "Found 3 phone numbers '-Billy'");
 
     results = fac.autoCompleteSearch("skip", "-Billy", null, null);
-    ok(results.matchCount == 0, "Found nothing for a non-contact field");
+    is(results.matchCount, 0, "Found nothing for a non-contact field");
 
     results = fac.autoCompleteSearch("phone", "-Jo", null, null);
-    ok(results.matchCount == 1, "Found 1 phone number '-Jo'");
+    is(results.matchCount, 1, "Found 1 phone number '-Jo'");
+  },
+
+  testMixingData: function() {
+    // Add a simple value to the non-contact system
+    fh.addEntry("email", "super.cool@place.com");
+
+    let results = fac.autoCompleteSearch("email", "", null, null);
+    is(results.matchCount, 4 + preEmailCount, "Found 4 emails for un-filtered search");
+
+    let firstEmail = results.getValueAt(0);
+    is(firstEmail, "super.cool@place.com", "The non-contact entry is first");
+
+    fh.removeAllEntries();
   }
 };

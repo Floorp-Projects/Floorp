@@ -79,19 +79,19 @@ FormAutoComplete.prototype = {
 
   checkQueryType: function checkQueryType(aName, aField) {
     // If we have an input field with the desired html5 type, take it!
-    if (aField != null) {
-      let type = aField.getAttribute("type");
+    if (aField && "type" in aField) {
+      let type = aField.type;
       if (this.contactTypes[type] != null)
         return type;
     }
 
-    // Grab attributes to check for contact inputs
+    // Grab properties to check for contact inputs
     let props = [aName];
-    if (aField != null) {
-      let attributes = ["class", "id", "rel"];
-      attributes.forEach(function(attr) {
-        if (aField.hasAttribute(attr))
-          props.push(aField.getAttribute(attr));
+    if (aField) {
+      let specialProps = ["className", "id", "rel"];
+      specialProps.forEach(function(attr) {
+        if (attr in aField)
+          props.push(aField[attr]);
       });
     }
 
