@@ -1,10 +1,13 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-let launched = startup = restored = 0;
+let launched, startup, restored;
 
 let runtime = Cc["@mozilla.org/xre/runtime;1"].getService(Ci.nsIXULRuntime);
+displayTimestamp("launched", launched = runtime.launchTimestamp);
 displayTimestamp("started", startup = runtime.startupTimestamp);
+if (launched)
+  displayDuration("started", startup - launched);
 
 let ss = Cc["@mozilla.org/browser/sessionstartup;1"].getService(Ci.nsISessionStartup);
 displayTimestamp("restored", restored = ss.restoredTimestamp);
