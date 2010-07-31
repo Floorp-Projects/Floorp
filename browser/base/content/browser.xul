@@ -34,6 +34,7 @@
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #   Robert Strong <robert.bugzilla@gmail.com>
 #   Rob Campbell <rcampbell@mozilla.com>
+#   Patrick Walton <pcwalton@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -497,7 +498,7 @@
         <menuseparator/>
         <menu id="appmenu_developer"
               label="&developerMenu.label;">
-          <menupopup>
+          <menupopup id="appmenu_developer_popup">
             <menuitem id="appmenu_pageSource"
                       label="&pageSourceCmd.label;"
                       command="View:PageSource"/>
