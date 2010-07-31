@@ -93,14 +93,18 @@ NoteIntentionalCrash()
   }
 }
 
+static void Crash()
+{
+  int *pi = NULL;
+  *pi = 55; // Crash dereferencing null pointer
+  ++gCrashCount;
+}
+
 static void
 IntentionalCrash()
 {
   NoteIntentionalCrash();
-
-  int *pi = NULL;
-  *pi = 55; // Crash dereferencing null pointer
-  ++gCrashCount;
+  Crash();
 }
 
 //
@@ -1654,6 +1658,14 @@ scriptableInvokeDefault(NPObject* npobj, const NPVariant* args, uint32_t argCoun
 bool
 scriptableHasProperty(NPObject* npobj, NPIdentifier name)
 {
+  if (NPN_IdentifierIsString(name)) {
+    if (NPN_GetStringIdentifier(NPN_UTF8FromIdentifier(name)) != name)
+      Crash();
+  }
+  else {
+    if (NPN_GetIntIdentifier(NPN_IntFromIdentifier(name)) != name)
+      Crash();
+  }
   for (int i = 0; i < int(ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
     if (name == sPluginPropertyIdentifiers[i])
       return true;

@@ -120,7 +120,7 @@ public:
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
   NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
-  NS_IMETHOD              GetClientOffset(nsIntPoint &aPt);
+  virtual nsIntPoint      GetClientOffset();
   NS_IMETHOD              EnableDragDrop(PRBool aEnable);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   virtual PRBool          HasPendingInputEvent();
@@ -155,6 +155,21 @@ public:
   NS_IMETHOD              ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
   NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
   NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
+
+  nsPopupLevel PopupLevel() { return mPopupLevel; }
+
+  virtual nsIntSize       ClientToWindowSize(const nsIntSize& aClientSize)
+  {
+    return aClientSize;
+  }
+
+  // return true if this is a popup widget with a native titlebar
+  PRBool IsPopupWithTitleBar() const
+  {
+    return (mWindowType == eWindowType_popup && 
+            mBorderStyle != eBorderStyle_default &&
+            mBorderStyle & eBorderStyle_title);
+  }
 
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager
@@ -228,6 +243,7 @@ protected:
   PRUint32          mClipRectCount;
   PRInt32           mZIndex;
   nsSizeMode        mSizeMode;
+  nsPopupLevel      mPopupLevel;
 
   // the last rolled up popup. Only set this when an nsAutoRollup is in scope,
   // so it can be cleared automatically.

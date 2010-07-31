@@ -110,10 +110,9 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
-// b7ec5f61-57df-4355-81f3-41ced52e8026
 #define NS_IWIDGET_IID \
-{ 0xb7ec5f61, 0x57df, 0x4355, \
-  { 0x81, 0xf3, 0x41, 0xce, 0xd5, 0x2e, 0x80, 0x26 } }
+{ 0x34b6123e, 0x78d7, 0x4275, \
+  { 0xa2, 0xbf, 0x07, 0xd4, 0xbf, 0x3a, 0x34, 0x45 } }
 
 /*
  * Window shadow styles
@@ -562,10 +561,10 @@ class nsIWidget : public nsISupports {
     /**
      * Get the client offset from the window origin.
      *
-     * @param aPt on return it holds the width and height of the offset.
+     * @return the x and y of the offset.
      *
      */
-    NS_IMETHOD GetClientOffset(nsIntPoint &aPt) = 0;
+    virtual nsIntPoint GetClientOffset() = 0;
 
     /**
      * Get the foreground color for this widget
@@ -836,6 +835,13 @@ class nsIWidget : public nsISupports {
      */
 
     virtual nsIntPoint WidgetToScreenOffset() = 0;
+
+    /**
+     * Given the specified client size, return the corresponding window size,
+     * which includes the area for the borders and titlebar. This method
+     * should work even when the window is not yet visible.
+     */
+    virtual nsIntSize ClientToWindowSize(const nsIntSize& aClientSize) = 0;
 
     /**
      * Dispatches an event to the widget

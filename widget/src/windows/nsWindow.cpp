@@ -556,11 +556,7 @@ nsWindow::Create(nsIWidget *aParent,
   }
 
   if (mWindowType == eWindowType_popup) {
-    // if a parent was specified, don't use WS_EX_TOPMOST so that the popup
-    // only appears above the parent, instead of all windows
-    if (aParent)
-      extendedStyle = WS_EX_TOOLWINDOW;
-    else
+    if (!aParent)
       parent = NULL;
   } else if (mWindowType == eWindowType_invisible) {
     // Make sure CreateWindowEx succeeds at creating a toplevel window
@@ -877,7 +873,15 @@ DWORD nsWindow::WindowStyle()
 
     if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_maximize))
       style &= ~WS_MAXIMIZEBOX;
+
+    if (IsPopupWithTitleBar()) {
+      style |= WS_CAPTION;
+      if (mBorderStyle & eBorderStyle_close) {
+        style |= WS_SYSMENU;
+      }
+    }
   }
+
   VERIFY_WINDOW_STYLE(style);
   return style;
 }
@@ -896,12 +900,16 @@ DWORD nsWindow::WindowExStyle()
       return WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
 
     case eWindowType_popup:
-      return
+    {
+      DWORD extendedStyle =
 #if defined(WINCE) && !defined(WINCE_WINDOWS_MOBILE)
         WS_EX_NOACTIVATE |
 #endif
-        WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
-
+        WS_EX_TOOLWINDOW;
+      if (mPopupLevel == ePopupLevelTop)
+        extendedStyle |= WS_EX_TOPMOST;
+      return extendedStyle;
+    }
     default:
       NS_ERROR("unknown border style");
       // fall through
@@ -1793,8 +1801,7 @@ NS_METHOD nsWindow::GetBounds(nsIntRect &aRect)
       // adjust for chrome
       nsWindow* pWidget = static_cast<nsWindow*>(GetParent());
       if (pWidget && pWidget->IsTopLevelWidget()) {
-        nsIntPoint clientOffset;
-        pWidget->GetClientOffset(clientOffset);
+        nsIntPoint clientOffset = pWidget->GetClientOffset();
         r.left -= clientOffset.x;
         r.top  -= clientOffset.y;
       }
@@ -1846,19 +1853,16 @@ NS_METHOD nsWindow::GetScreenBounds(nsIntRect &aRect)
 
 // return the x,y offset of the client area from the origin
 // of the window. If the window is borderless returns (0,0).
-NS_METHOD nsWindow::GetClientOffset(nsIntPoint &aPt)
+nsIntPoint nsWindow::GetClientOffset()
 {
   if (!mWnd) {
-    aPt.x = aPt.y = 0;
-    return NS_OK;
+    return nsIntPoint(0, 0);
   }
 
   RECT r1;
   GetWindowRect(mWnd, &r1);
   nsIntPoint pt = WidgetToScreenOffset();
-  aPt.x = pt.x - r1.left; 
-  aPt.y = pt.y - r1.top; 
-  return NS_OK;  
+  return nsIntPoint(pt.x - r1.left, pt.y - r1.top);
 }
 
 void
@@ -1970,34 +1974,46 @@ nsWindow::UpdateNonClientMargins(PRInt32 aSizeMode, PRBool aReflowWindow)
   else if (mNonClientMargins.top > 0)
     mNonClientOffset.top = mCaptionHeight - mNonClientMargins.top;
 
-   if (!mNonClientMargins.left)
+  if (!mNonClientMargins.left)
     mNonClientOffset.left = mHorResizeMargin;
-   else if (mNonClientMargins.left > 0)
+  else if (mNonClientMargins.left > 0)
     mNonClientOffset.left = mHorResizeMargin - mNonClientMargins.left;
  
-   if (!mNonClientMargins.right)
+  if (!mNonClientMargins.right)
     mNonClientOffset.right = mHorResizeMargin;
-   else if (mNonClientMargins.right > 0)
+  else if (mNonClientMargins.right > 0)
     mNonClientOffset.right = mHorResizeMargin - mNonClientMargins.right;
 
-   if (!mNonClientMargins.bottom)
+  if (!mNonClientMargins.bottom)
     mNonClientOffset.bottom = mVertResizeMargin;
-   else if (mNonClientMargins.bottom > 0)
+  else if (mNonClientMargins.bottom > 0)
     mNonClientOffset.bottom = mVertResizeMargin - mNonClientMargins.bottom;
 
-  NS_ASSERTION(mNonClientOffset.top >= 0, "non-client top margin is negative!");
-  NS_ASSERTION(mNonClientOffset.left >= 0, "non-client left margin is negative!");
-  NS_ASSERTION(mNonClientOffset.right >= 0, "non-client right margin is negative!");
-  NS_ASSERTION(mNonClientOffset.bottom >= 0, "non-client bottom margin is negative!");
-
-  if (mNonClientOffset.top < 0)
-    mNonClientOffset.top = 0;
-  if (mNonClientOffset.left < 0)
-    mNonClientOffset.left = 0;
-  if (mNonClientOffset.right < 0)
-    mNonClientOffset.right = 0;
-  if (mNonClientOffset.bottom < 0)
-    mNonClientOffset.bottom = 0;
+#ifndef WINCE
+  if (aSizeMode == nsSizeMode_Maximized) {
+    // Address an issue with auto-hide taskbars which fall behind the window.
+    // Ensure a 1 pixel margin at the bottom of the monitor so that unhiding
+    // the taskbar works properly.
+    MONITORINFO info = {sizeof(MONITORINFO)};
+    if (::GetMonitorInfo(::MonitorFromWindow(mWnd, MONITOR_DEFAULTTOPRIMARY),
+                         &info)) {
+      RECT r;
+      if (::GetWindowRect(mWnd, &r)) {
+        // Adjust window rect to account for non-client margins.
+        r.top += mVertResizeMargin - mNonClientOffset.top;
+        r.left += mHorResizeMargin - mNonClientOffset.left;
+        r.bottom -= mVertResizeMargin - mNonClientOffset.bottom;
+        r.right -= mHorResizeMargin - mNonClientOffset.right;
+        // Leave the 1 pixel margin if the window covers the monitor.
+        if (r.top <= info.rcMonitor.top &&
+            r.left <= info.rcMonitor.left && 
+            r.right >= info.rcMonitor.right &&
+            r.bottom >= info.rcMonitor.bottom)
+          mNonClientOffset.bottom -= r.bottom - info.rcMonitor.bottom + 1;
+      }
+    }
+  }
+#endif
 
   if (aReflowWindow) {
     // Force a reflow of content based on the new client
@@ -2328,8 +2344,7 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
 
   ::EnumChildWindows(mWnd, AddClientAreaToRegion, reinterpret_cast<LPARAM>(&childWindowRegion));
 
-  nsIntPoint clientOffset;
-  GetClientOffset(clientOffset);
+  nsIntPoint clientOffset = GetClientOffset();
   childWindowRegion.MoveBy(-clientOffset);
 
   RECT r;
@@ -3005,6 +3020,22 @@ nsIntPoint nsWindow::WidgetToScreenOffset()
   point.y = 0;
   ::ClientToScreen(mWnd, &point);
   return nsIntPoint(point.x, point.y);
+}
+
+nsIntSize nsWindow::ClientToWindowSize(const nsIntSize& aClientSize)
+{
+  if (!IsPopupWithTitleBar())
+    return aClientSize;
+
+  // just use (200, 200) as the position
+  RECT r;
+  r.left = 200;
+  r.top = 200;
+  r.right = 200 + aClientSize.width;
+  r.bottom = 200 + aClientSize.height;
+  ::AdjustWindowRectEx(&r, WindowStyle(), PR_FALSE, WindowExStyle());
+
+  return nsIntSize(r.right - r.left, r.bottom - r.top);
 }
 
 /**************************************************************
@@ -4659,9 +4690,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
     case WM_MOVE: // Window moved
     {
-      PRInt32 x = GET_X_LPARAM(lParam); // horizontal position in screen coordinates
-      PRInt32 y = GET_Y_LPARAM(lParam); // vertical position in screen coordinates
-      result = OnMove(x, y);
+      RECT rect;
+      ::GetWindowRect(mWnd, &rect);
+      result = OnMove(rect.left, rect.top);
     }
     break;
 
@@ -5923,6 +5954,17 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
 #ifdef WINSTATE_DEBUG_OUTPUT
     printf("*** Resize window: %d x %d x %d x %d\n", wp->x, wp->y, newWidth, newHeight);
 #endif
+    
+    // If a maximized window is resized, recalculate the non-client margins and
+    // ensure a 1 pixel margin at screen bottom to allow taskbar unhiding to
+    // work properly.
+    if (mSizeMode == nsSizeMode_Maximized) {
+      if (UpdateNonClientMargins(nsSizeMode_Maximized, PR_TRUE)) {
+        // gecko resize event already sent by UpdateNonClientMargins.
+        result = PR_TRUE;
+        return;
+      }
+    }
 
     // Recalculate the width and height based on the client area for gecko events.
     if (::GetClientRect(mWnd, &r)) {

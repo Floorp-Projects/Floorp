@@ -137,6 +137,7 @@ _BROWSER_FILES = \
                  browser_bug562649.js \
                  browser_bug563588.js \
                  browser_bug577121.js \
+                 browser_bug580956.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \
@@ -147,6 +148,7 @@ _BROWSER_FILES = \
                  browser_inspector_treeSelection.js \
                  browser_inspector_highlighter.js \
                  browser_inspector_stylePanel.js \
+                 browser_inspector_iframeTest.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \
