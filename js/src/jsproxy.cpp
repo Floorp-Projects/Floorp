@@ -888,15 +888,6 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
     if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList))
         js_TraceWatchPoints(trc, obj);
 
-    Class *clasp = obj->getClass();
-    if (clasp->mark) {
-        if (clasp->flags & JSCLASS_MARK_IS_TRACE)
-            ((JSTraceOp) clasp->mark)(trc, obj);
-        else if (IS_GC_MARKING_TRACER(trc))
-            (void) clasp->mark(cx, obj, trc);
-    }
-
-    obj->traceProtoAndParent(trc);
     obj->getProxyHandler()->trace(trc, obj);
     MarkValue(trc, obj->getProxyPrivate(), "private");
     if (obj->isFunctionProxy()) {
