@@ -336,8 +336,8 @@ mjit::Compiler::finishThisUp()
             if (pics[i].hasTypeCheck) {
                 int32 distance = stubcc.masm.distanceOf(pics[i].typeCheck) -
                                  stubcc.masm.distanceOf(pics[i].slowPathStart);
-                script->pics[i].u.get.typeCheckOffset = uint32(-distance);
-                JS_ASSERT(script->pics[i].u.get.typeCheckOffset == -distance);
+                JS_ASSERT(distance <= 0);
+                script->pics[i].u.get.typeCheckOffset = distance;
             }
         }
         new (&script->pics[i].execPools) ic::PICInfo::ExecPoolVector(SystemAllocPolicy());
