@@ -47,7 +47,7 @@ ANGLE_API int ShFinalize();
 typedef enum {
     EShLangVertex,
     EShLangFragment,
-    EShLangCount,
+    EShLangCount
 } EShLanguage;
 
 //
@@ -56,7 +56,7 @@ typedef enum {
 //
 typedef enum {
     EShSpecGLES2,
-    EShSpecWebGL,
+    EShSpecWebGL
 } EShSpec;
 
 //
@@ -66,12 +66,12 @@ typedef enum {
     EShOptNoGeneration,
     EShOptNone,
     EShOptSimple,       // Optimizations that can be done quickly
-    EShOptFull,         // Optimizations that will take more time
+    EShOptFull          // Optimizations that will take more time
 } EShOptimizationLevel;
 
 enum TDebugOptions {
     EDebugOpNone               = 0x000,
-    EDebugOpIntermediate       = 0x001,  // Writes intermediate tree into info-log.
+    EDebugOpIntermediate       = 0x001   // Writes intermediate tree into info-log.
 };
 
 //
