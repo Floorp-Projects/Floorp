@@ -919,13 +919,18 @@ struct TraceMonitor {
 # define JS_ON_TRACE(cx)            JS_FALSE
 #endif
 
+#ifdef DEBUG_brendan
+# define JS_EVAL_CACHE_METERING     1
+# define JS_FUNCTION_METERING       1
+#endif
+
 /* Number of potentially reusable scriptsToGC to search for the eval cache. */
 #ifndef JS_EVAL_CACHE_SHIFT
 # define JS_EVAL_CACHE_SHIFT        6
 #endif
 #define JS_EVAL_CACHE_SIZE          JS_BIT(JS_EVAL_CACHE_SHIFT)
 
-#ifdef DEBUG
+#ifdef JS_EVAL_CACHE_METERING
 # define EVAL_CACHE_METER_LIST(_)   _(probe), _(hit), _(step), _(noscope)
 # define identity(x)                x
 
@@ -936,14 +941,10 @@ struct JSEvalCacheMeter {
 # undef identity
 #endif
 
-#ifdef DEBUG
+#ifdef JS_FUNCTION_METERING
 # define FUNCTION_KIND_METER_LIST(_)                                          \
                         _(allfun), _(heavy), _(nofreeupvar), _(onlyfreevar),  \
-                        _(display), _(flat), _(setupvar), _(badfunarg),       \
-                        _(joinedsetmethod), _(joinedinitmethod),              \
-                        _(joinedreplace), _(joinedsort), _(joinedmodulepat),  \
-                        _(mreadbarrier), _(mwritebarrier), _(mwslotbarrier),  \
-                        _(unjoined)
+                        _(display), _(flat), _(setupvar), _(badfunarg)
 # define identity(x)    x
 
 struct JSFunctionMeter {
@@ -951,12 +952,7 @@ struct JSFunctionMeter {
 };
 
 # undef identity
-
-# define JS_FUNCTION_METER(cx,x) JS_RUNTIME_METER((cx)->runtime, functionMeter.x)
-#else
-# define JS_FUNCTION_METER(cx,x) ((void)0)
 #endif
-
 
 #define NATIVE_ITER_CACHE_LOG2  8
 #define NATIVE_ITER_CACHE_MASK  JS_BITMASK(NATIVE_ITER_CACHE_LOG2)
@@ -1003,7 +999,7 @@ struct JSThreadData {
     /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
     JSScript            *scriptsToGC[JS_EVAL_CACHE_SIZE];
 
-#ifdef DEBUG
+#ifdef JS_EVAL_CACHE_METERING
     JSEvalCacheMeter    evalCacheMeter;
 #endif
 
@@ -1607,22 +1603,9 @@ struct JSRuntime {
     JSGCStats           gcStats;
 #endif
 
-#ifdef DEBUG
-    /*
-     * If functionMeterFilename, set from an envariable in JSRuntime's ctor, is
-     * null, the remaining members in this ifdef'ed group are not initialized.
-     */
-    const char          *functionMeterFilename;
+#ifdef JS_FUNCTION_METERING
     JSFunctionMeter     functionMeter;
     char                lastScriptFilename[1024];
-
-    typedef js::HashMap<JSFunction *,
-                        int32,
-                        js::DefaultHasher<JSFunction *>,
-                        js::SystemAllocPolicy> FunctionCountMap;
-
-    FunctionCountMap    methodReadBarrierCountMap;
-    FunctionCountMap    unjoinedFunctionCountMap;
 #endif
 
     JSWrapObjectCallback wrapObjectCallback;
@@ -1663,7 +1646,7 @@ struct JSRuntime {
 #define JS_TRACE_MONITOR(cx)    (JS_THREAD_DATA(cx)->traceMonitor)
 #define JS_SCRIPTS_TO_GC(cx)    (JS_THREAD_DATA(cx)->scriptsToGC)
 
-#ifdef DEBUG
+#ifdef JS_EVAL_CACHE_METERING
 # define EVAL_CACHE_METER(x)    (JS_THREAD_DATA(cx)->evalCacheMeter.x++)
 #else
 # define EVAL_CACHE_METER(x)    ((void) 0)
@@ -2191,7 +2174,7 @@ JS_ALWAYS_INLINE jsbytecode *
 JSStackFrame::pc(JSContext *cx) const
 {
     JS_ASSERT(cx->containingSegment(this) != NULL);
-    return (cx->fp == this) ? cx->regs->pc : savedPC;
+    return cx->fp == this ? cx->regs->pc : savedPC;
 }
 
 /*
