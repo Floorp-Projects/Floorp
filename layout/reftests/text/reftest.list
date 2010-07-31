@@ -59,6 +59,6 @@ random HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
 == rgba-text.html rgba-text-ref.html
 # Test for bug 575695, 'kern' table support
 # Random on Windows because behavior depends on Uniscribe version(?)
-random-if(windowsWidget) HTTP(..) != kerning-01.html kerning-01-notref.html
+random-if(winWidget) HTTP(..) != kerning-01.html kerning-01-notref.html
 # Test for bug 577380, support for AAT layout (on OS X only)
 random-if(!cocoaWidget) == 577380.html 577380-ref.html
