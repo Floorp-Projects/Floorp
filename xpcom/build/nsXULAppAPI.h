@@ -155,7 +155,7 @@ struct nsXREAppData
   /**
    * 
    */
-  PRIntervalTime startupTimestamp;
+  PRTime startupTimestamp;
 };
 
 /**
