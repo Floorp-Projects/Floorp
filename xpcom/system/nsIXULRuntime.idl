@@ -108,6 +108,6 @@ interface nsIXULRuntime : nsISupports
    */
   void invalidateCachesOnRestart();
 
-  readonly attribute unsigned long launchTimestamp;
-  readonly attribute unsigned long startupTimestamp;
+  readonly attribute unsigned long long launchTimestamp;
+  readonly attribute unsigned long long startupTimestamp;
 };
