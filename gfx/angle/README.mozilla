@@ -9,6 +9,8 @@ Local patches:
 
     angle-sunstudio.patch - Fix compilation with Sun Studio on Solaris
 
+    fix-compile.patch - Remove some trailing commas
+
 To regenerate the flex/yacc generated files:
 
 flex --noline --nounistd --outfile=generated/glslang.cpp src/compiler/glslang.l
