@@ -95,6 +95,10 @@ nanojit::StackFilter::getTop(LIns*)
     return 0;
 }
 
+// We lump everything into a single access region for lirasm.
+static const AccSet ACCSET_OTHER = (1 << 0);
+static const uint8_t LIRASM_NUM_USED_ACCS = 1;
+
 #if defined NJ_VERBOSE
 void
 nanojit::LInsPrinter::formatGuard(InsBuf *buf, LIns *ins)
@@ -124,6 +128,24 @@ nanojit::LInsPrinter::formatGuardXov(InsBuf *buf, LIns *ins)
             (long)x->line,
             ins->record()->profGuardID);
 }
+
+const char*
+nanojit::LInsPrinter::accNames[] = {
+    "o",    // (1 << 0) == ACCSET_OTHER
+    "?", "?", "?", "?", "?", "?", "?", "?", "?", "?",   //  1..10 (unused)
+    "?", "?", "?", "?", "?", "?", "?", "?", "?", "?",   // 11..20 (unused)
+    "?", "?", "?", "?", "?", "?", "?", "?", "?", "?",   // 21..30 (unused)
+    "?"                                                 //     31 (unused)
+};
+#endif
+
+#ifdef DEBUG
+void ValidateWriter::checkAccSet(LOpcode op, LIns* base, AccSet accSet)
+{
+    (void)op;
+    (void)base;
+    NanoAssert(accSet == ACCSET_OTHER);
+}
 #endif
 
 typedef int32_t (FASTCALL *RetInt)();
@@ -148,7 +170,7 @@ enum ReturnType {
 #endif
 
 #define CI(name, args) \
-    {(uintptr_t) (&name), args, nanojit::ABI_CDECL, /*isPure*/0, ACC_STORE_ANY \
+    {(uintptr_t) (&name), args, nanojit::ABI_CDECL, /*isPure*/0, ACCSET_STORE_ANY \
      DEBUG_ONLY_NAME(name)}
 
 #define FN(name, args) \
@@ -504,7 +526,7 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
     }
 #endif
     if (optimize) {
-        mLir = mCseFilter = new CseFilter(mLir, mParent.mAlloc);
+        mLir = mCseFilter = new CseFilter(mLir, LIRASM_NUM_USED_ACCS, mParent.mAlloc);
     }
 #if NJ_SOFTFLOAT_SUPPORTED
     if (avmplus::AvmCore::config.soft_float) {
@@ -610,7 +632,7 @@ FragmentAssembler::assemble_load()
         mTokens[1].find_first_of("0123456789") == 0) {
         return mLir->insLoad(mOpcode,
                              ref(mTokens[0]),
-                             immI(mTokens[1]), ACC_LOAD_ANY);
+                             immI(mTokens[1]), ACCSET_OTHER);
     }
     bad("immediate offset required for load");
     return NULL;  // not reached
@@ -948,6 +970,8 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           CASE64(LIR_q2i:)
           CASE64(LIR_i2q:)
           CASE64(LIR_ui2uq:)
+          CASE64(LIR_dasq:)
+          CASE64(LIR_qasd:)
           case LIR_i2d:
           case LIR_ui2d:
           case LIR_d2i:
@@ -970,6 +994,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_muld:
           case LIR_divd:
           CASE64(LIR_addq:)
+          CASE64(LIR_subq:)
           case LIR_andi:
           case LIR_ori:
           case LIR_xori:
@@ -1058,7 +1083,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             need(3);
             ins = mLir->insStore(mOpcode, ref(mTokens[0]),
                                   ref(mTokens[1]),
-                                  immI(mTokens[2]), ACC_STORE_ANY);
+                                  immI(mTokens[2]), ACCSET_OTHER);
             break;
 
 #if NJ_EXPANDED_LOADSTORE_SUPPORTED 
@@ -1310,8 +1335,8 @@ const CallInfo ci_V_IQF = CI(f_V_IQF, CallInfo::typeSig3(ARGTYPE_V, ARGTYPE_I, A
 // - LIR_modd (not implemented in NJ backends)
 //
 // Other limitations:
-// - Loads always use accSet==ACC_LOAD_ANY
-// - Stores always use accSet==ACC_STORE_ANY
+// - Loads always use accSet==ACCSET_OTHER
+// - Stores always use accSet==ACCSET_OTHER
 //
 void
 FragmentAssembler::assembleRandomFragment(int nIns)
@@ -1424,6 +1449,14 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     I_D_ops.push_back(LIR_dhi2i);
 #endif
     I_D_ops.push_back(LIR_d2i);
+
+#ifdef NANOJIT_64BIT
+    vector<LOpcode> Q_D_ops;
+    Q_D_ops.push_back(LIR_dasq);
+
+    vector<LOpcode> D_Q_ops;
+    D_Q_ops.push_back(LIR_qasd);
+#endif
 
     vector<LOpcode> D_II_ops;
 #if NJ_SOFTFLOAT_SUPPORTED
@@ -1776,6 +1809,24 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
             break;
 
+#if defined NANOJIT_X64
+        case LOP_Q_D:
+            if (!Ds.empty()) {
+                ins = mLir->ins1(rndPick(Q_D_ops), rndPick(Ds));
+                addOrReplace(Qs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_D_Q:
+            if (!Qs.empty()) {
+                ins = mLir->ins1(rndPick(D_Q_ops), rndPick(Qs));
+                addOrReplace(Ds, ins);
+                n++;
+            }
+            break;
+#endif
+
         case LOP_D_II:
             if (!Is.empty() && !D_II_ops.empty()) {
                 ins = mLir->ins2(rndPick(D_II_ops), rndPick(Is), rndPick(Is));
@@ -1788,7 +1839,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             vector<LIns*> Ms = rnd(2) ? M4s : M8ps;
             if (!Ms.empty()) {
                 LIns* base = rndPick(Ms);
-                ins = mLir->insLoad(rndPick(I_loads), base, rndOffset32(base->size()), ACC_LOAD_ANY);
+                ins = mLir->insLoad(rndPick(I_loads), base, rndOffset32(base->size()), ACCSET_OTHER);
                 addOrReplace(Is, ins);
                 n++;
             }
@@ -1799,7 +1850,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LLD_Q:
             if (!M8ps.empty()) {
                 LIns* base = rndPick(M8ps);
-                ins = mLir->insLoad(rndPick(Q_loads), base, rndOffset64(base->size()), ACC_LOAD_ANY);
+                ins = mLir->insLoad(rndPick(Q_loads), base, rndOffset64(base->size()), ACCSET_OTHER);
                 addOrReplace(Qs, ins);
                 n++;
             }
@@ -1809,7 +1860,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LLD_D:
             if (!M8ps.empty()) {
                 LIns* base = rndPick(M8ps);
-                ins = mLir->insLoad(rndPick(D_loads), base, rndOffset64(base->size()), ACC_LOAD_ANY);
+                ins = mLir->insLoad(rndPick(D_loads), base, rndOffset64(base->size()), ACCSET_OTHER);
                 addOrReplace(Ds, ins);
                 n++;
             }
@@ -1819,7 +1870,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             vector<LIns*> Ms = rnd(2) ? M4s : M8ps;
             if (!Ms.empty() && !Is.empty()) {
                 LIns* base = rndPick(Ms);
-                mLir->insStore(rndPick(Is), base, rndOffset32(base->size()), ACC_STORE_ANY);
+                mLir->insStore(rndPick(Is), base, rndOffset32(base->size()), ACCSET_OTHER);
                 n++;
             }
             break;
@@ -1829,7 +1880,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LST_Q:
             if (!M8ps.empty() && !Qs.empty()) {
                 LIns* base = rndPick(M8ps);
-                mLir->insStore(rndPick(Qs), base, rndOffset64(base->size()), ACC_STORE_ANY);
+                mLir->insStore(rndPick(Qs), base, rndOffset64(base->size()), ACCSET_OTHER);
                 n++;
             }
             break;
@@ -1838,7 +1889,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LST_D:
             if (!M8ps.empty() && !Ds.empty()) {
                 LIns* base = rndPick(M8ps);
-                mLir->insStore(rndPick(Ds), base, rndOffset64(base->size()), ACC_STORE_ANY);
+                mLir->insStore(rndPick(Ds), base, rndOffset64(base->size()), ACCSET_OTHER);
                 n++;
             }
             break;
@@ -1948,7 +1999,7 @@ Lirasm::Lirasm(bool verbose) :
 #ifdef DEBUG
     if (mVerbose) {
         mLogc.lcbits = LC_ReadLIR | LC_AfterDCE | LC_Native | LC_RegAlloc | LC_Activation;
-        mLirbuf->printer = new (mAlloc) LInsPrinter(mAlloc);
+        mLirbuf->printer = new (mAlloc) LInsPrinter(mAlloc, LIRASM_NUM_USED_ACCS);
     }
 #endif
 
@@ -1987,13 +2038,13 @@ Lirasm::lookupFunction(const string &name, CallInfo *&ci)
         // The ABI, arg types and ret type will be overridden by the caller.
         if (func->second.mReturnType == RT_FLOAT) {
             CallInfo target = {(uintptr_t) func->second.rfloat,
-                               0, ABI_FASTCALL, /*isPure*/0, ACC_STORE_ANY
+                               0, ABI_FASTCALL, /*isPure*/0, ACCSET_STORE_ANY
                                verbose_only(, func->first.c_str()) };
             *ci = target;
 
         } else {
             CallInfo target = {(uintptr_t) func->second.rint,
-                               0, ABI_FASTCALL, /*isPure*/0, ACC_STORE_ANY
+                               0, ABI_FASTCALL, /*isPure*/0, ACCSET_STORE_ANY
                                verbose_only(, func->first.c_str()) };
             *ci = target;
         }
@@ -2092,6 +2143,7 @@ usageAndQuit(const string& progname)
         "  --execute        execute LIR\n"
         "  --[no-]optimize  enable or disable optimization of the LIR (default=off)\n"
         "  --random [N]     generate a random LIR block of size N (default=1000)\n"
+        "  --word-size      prints the word size (32 or 64) for this build of lirasm and exits\n"
         " i386-specific options:\n"
         "  --sse            use SSE2 instructions\n"
         " ARM-specific options:\n"
@@ -2165,6 +2217,10 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
                     opts.random = defaultSize;  // next arg is not a number
                 }
             }
+        }
+        else if (arg == "--word-size") {
+            cout << sizeof(void*) * 8 << "\n";
+            exit(0);
         }
 
         // Architecture-specific flags.

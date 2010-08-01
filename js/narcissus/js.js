@@ -1,4 +1,7 @@
+/* -*- Mode: JS; tab-width: 4; indent-tabs-mode: nil; -*-
+ * vim: set sw=4 ts=8 et tw=78:
 /* ***** BEGIN LICENSE BLOCK *****
+ *
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -46,9 +49,6 @@
  *      catch guards
  *      const declarations
  *      get and set functions in object initialisers
- *      Object.prototype.__defineGetter__
- *      Object.prototype.__defineSetter__
- *      Object.prototype.__defineProperty__
  *      Object.prototype.__proto__
  *      filename and line number arguments to *Error constructors
  *      callable regular expression objects
@@ -59,16 +59,8 @@
  *      get and set functions in object initialisers
  */
 
-/*
- * Loads a file relative to the calling script's (our) source directory, and not
- * the directory that the executing shell is being run out of.
- */
-function my_load(filename) {
-    evaluate(snarf(filename), filename, 1);
-}
-
-my_load('jsdefs.js');
-my_load('jslex.js');
-my_load('jsparse.js');
-my_load('jsexec.js');
+load('jsdefs.js');
+load('jslex.js');
+load('jsparse.js');
+load('jsexec.js');
 

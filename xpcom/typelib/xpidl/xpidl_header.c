@@ -638,14 +638,35 @@ list(TreeState *state)
     return TRUE;
 }
 
+typedef enum write_type_mode {
+    WT_PLAIN, // for use with typedef; also with NS_IMETHOD_() or NS_IMETHODIMP_()
+    WT_IN, // [in] param or setter
+    WT_OUT // [out] param, [inout] param, or getter
+} write_type_mode;
+
 static gboolean
-write_type(IDL_tree type_tree, gboolean is_out, FILE *outfile)
+write_type(IDL_tree type_tree, write_type_mode mode, gboolean force_const, FILE *outfile)
 {
+    gboolean starred;
+
     if (!type_tree) {
         fputs("void", outfile);
         return TRUE;
     }
 
+    /* In parameters for string, reference, and dipper types get const. */
+    if (force_const ||
+        (mode == WT_IN &&
+         (IDL_NODE_TYPE(type_tree) == IDLN_TYPE_STRING ||
+          IDL_NODE_TYPE(type_tree) == IDLN_TYPE_WIDE_STRING ||
+          IDL_tree_property_get(type_tree, "nsid") ||
+          IDL_tree_property_get(type_tree, "jsval") ||
+          DIPPER_TYPE(type_tree))))
+    {
+        fputs("const ", outfile);
+    }
+
+    starred = FALSE;
     switch (IDL_NODE_TYPE(type_tree)) {
       case IDLN_TYPE_INTEGER: {
         gboolean sign = IDL_TYPE_INTEGER(type_tree).f_signed;
@@ -674,9 +695,11 @@ write_type(IDL_tree type_tree, gboolean is_out, FILE *outfile)
         break;
       case IDLN_TYPE_WIDE_STRING:
         fputs("PRUnichar *", outfile);
+        starred = TRUE;
         break;
       case IDLN_TYPE_STRING:
         fputs("char *", outfile);
+        starred = TRUE;
         break;
       case IDLN_TYPE_BOOLEAN:
         fputs("PRBool", outfile);
@@ -712,19 +735,29 @@ write_type(IDL_tree type_tree, gboolean is_out, FILE *outfile)
             }
             if (IDL_tree_property_get(type_tree, "ptr")) {
                 fputs(" *", outfile);
+                starred = TRUE;
             } else if (IDL_tree_property_get(type_tree, "ref")) {
-                fputs(" &", outfile);
+                if (mode == WT_IN || DIPPER_TYPE(type_tree)) {
+                    fputs(" &", outfile);
+                }
             }
         } else {
             fputs(IDL_IDENT(type_tree).str, outfile);
         }
-        if (UP_IS_AGGREGATE(type_tree))
+        if (UP_IS_AGGREGATE(type_tree)) {
             fputs(" *", outfile);
+            starred = TRUE;
+        }
         break;
       default:
         fprintf(outfile, "unknown_type_%d", IDL_NODE_TYPE(type_tree));
         break;
     }
+
+    if (!starred)
+        fputc(' ', outfile);
+    if (mode == WT_OUT && !DIPPER_TYPE(type_tree))
+        fputc('*', outfile);
     return TRUE;
 }
 
@@ -784,26 +817,12 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
         fputs("cx, ", outfile);
     }
     if (mode == AS_DECL || mode == AS_IMPL) {
-        /* Setters for string, wstring, nsid, domstring, utf8string, 
-         * cstring and astring get const. 
-         */
-        if (!getter &&
-            (IDL_NODE_TYPE(ATTR_TYPE_DECL(attr_tree)) == IDLN_TYPE_STRING ||
-             IDL_NODE_TYPE(ATTR_TYPE_DECL(attr_tree)) == IDLN_TYPE_WIDE_STRING ||
-             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "nsid") ||
-             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "domstring")  ||
-             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "utf8string") ||
-             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "cstring")    ||
-             IDL_tree_property_get(ATTR_TYPE_DECL(attr_tree), "astring")))
-        {
-            fputs("const ", outfile);
-        }
-
-        if (!write_type(ATTR_TYPE_DECL(attr_tree), getter, outfile))
+        if (!write_type(ATTR_TYPE_DECL(attr_tree),
+                        getter ? WT_OUT : WT_IN,
+                        FALSE,
+                        outfile)) {
             return FALSE;
-        fprintf(outfile, "%s%s",
-                (STARRED_TYPE(attr_tree) ? "" : " "),
-                (getter && !DIPPER_TYPE(ATTR_TYPE_DECL(attr_tree)))? "*" : "");
+        }
     }
     fprintf(outfile, "a%c%s)", toupper(attrname[0]), attrname + 1);
     return TRUE;
@@ -915,7 +934,7 @@ do_typedef(TreeState *state)
                 printlist(state->file, doc_comments);
 
             fputs("typedef ", state->file);
-            if (!write_type(type, FALSE, state->file))
+            if (!write_type(type, WT_PLAIN, FALSE, state->file))
                 return FALSE;
             fputs(" ", state->file);
 
@@ -936,7 +955,7 @@ do_typedef(TreeState *state)
                 printlist(state->file, doc_comments);
 
             fputs("typedef ", state->file);
-            if (!write_type(type, FALSE, state->file))
+            if (!write_type(type, WT_PLAIN, FALSE, state->file))
                 return FALSE;
             fputs(" ", state->file);
             fputs(IDL_IDENT(IDL_LIST(dcls).data).str, state->file);
@@ -958,43 +977,16 @@ static gboolean
 write_param(IDL_tree param_tree, FILE *outfile)
 {
     IDL_tree param_type_spec = IDL_PARAM_DCL(param_tree).param_type_spec;
-    gboolean is_in = IDL_PARAM_DCL(param_tree).attr == IDL_PARAM_IN;
-    /* in string, wstring, nsid, domstring, utf8string, cstring and 
-     * astring any explicitly marked [const] are const 
-     */
+    write_type_mode mode =
+        (IDL_PARAM_DCL(param_tree).attr == IDL_PARAM_IN) ? WT_IN : WT_OUT;
+    IDL_tree sd = IDL_PARAM_DCL(param_tree).simple_declarator;
+    gboolean force_const =
+        (mode == WT_IN && IDL_tree_property_get(sd, "const")) ||
+        (mode == WT_OUT && IDL_tree_property_get(sd, "shared"));
 
-    if (is_in &&
-        (IDL_NODE_TYPE(param_type_spec) == IDLN_TYPE_STRING ||
-         IDL_NODE_TYPE(param_type_spec) == IDLN_TYPE_WIDE_STRING ||
-         IDL_tree_property_get(IDL_PARAM_DCL(param_tree).simple_declarator,
-                               "const") ||
-         IDL_tree_property_get(param_type_spec, "nsid") ||
-         IDL_tree_property_get(param_type_spec, "domstring")  ||
-         IDL_tree_property_get(param_type_spec, "utf8string") ||
-         IDL_tree_property_get(param_type_spec, "cstring")    ||
-         IDL_tree_property_get(param_type_spec, "astring"))) {
-        fputs("const ", outfile);
-    }
-    else if (IDL_PARAM_DCL(param_tree).attr == IDL_PARAM_OUT &&
-             IDL_tree_property_get(IDL_PARAM_DCL(param_tree).simple_declarator, 
-                                   "shared")) {
-        fputs("const ", outfile);
-    }
-
-    if (!write_type(param_type_spec, !is_in, outfile))
+    if (!write_type(param_type_spec, mode, force_const, outfile))
         return FALSE;
 
-    /* unless the type ended in a *, add a space */
-    if (!STARRED_TYPE(param_type_spec))
-        fputc(' ', outfile);
-
-    /* out and inout params get a bonus '*' (unless this is type that has a 
-     * 'dipper' class that is passed in to receive 'out' data) 
-     */
-    if (IDL_PARAM_DCL(param_tree).attr != IDL_PARAM_IN &&
-        !DIPPER_TYPE(param_type_spec)) {
-        fputc('*', outfile);
-    }
     /* arrays get a bonus * too */
     /* XXX Should this be a leading '*' or a trailing "[]" ?*/
     if (IDL_tree_property_get(IDL_PARAM_DCL(param_tree).simple_declarator,
@@ -1060,7 +1052,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
 
         if (op_notxpcom) {
             fputs("NS_IMETHOD_(", outfile);
-            if (!write_type(op->op_type_spec, FALSE, outfile))
+            if (!write_type(op->op_type_spec, WT_PLAIN, FALSE, outfile))
                 return FALSE;
             fputc(')', outfile);
         } else {
@@ -1071,7 +1063,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
     else if (mode == AS_IMPL) {
         if (op_notxpcom) {
             fputs("NS_IMETHODIMP_(", outfile);
-            if (!write_type(op->op_type_spec, FALSE, outfile))
+            if (!write_type(op->op_type_spec, WT_PLAIN, FALSE, outfile))
                 return FALSE;
             fputc(')', outfile);
         } else {

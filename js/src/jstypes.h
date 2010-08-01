@@ -77,6 +77,9 @@
 **
 **
 ***********************************************************************/
+
+#define DEFINE_LOCAL_CLASS_OF_STATIC_FUNCTION(Name) class Name
+
 #ifdef WIN32
 
 /* These also work for __MWERKS__ */
@@ -103,6 +106,17 @@
 
 # ifdef HAVE_VISIBILITY_ATTRIBUTE
 #  define JS_EXTERNAL_VIS __attribute__((visibility ("default")))
+#  if defined(__GNUC__) && __GNUC__ <= 4 && __GNUC_MINOR__ < 5
+    /*
+     * GCC wrongly produces a warning when a type with hidden visibility
+     * (e.g. js::Value) is a member of a local class of a static function.
+     * This is apparently fixed with GCC 4.5 and above.  See:
+     *
+     *   http://gcc.gnu.org/bugzilla/show_bug.cgi?id=40145.
+     */
+#   undef  DEFINE_LOCAL_CLASS_OF_STATIC_FUNCTION
+#   define DEFINE_LOCAL_CLASS_OF_STATIC_FUNCTION(Name) class __attribute__((visibility ("hidden"))) Name
+#  endif
 # elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #  define JS_EXTERNAL_VIS __global
 # else
@@ -299,6 +313,27 @@
 # include "jsautocfg.h" /* Use auto-detected configuration */
 #endif
 
+/*
+ * Define JS_64BIT iff we are building in an environment with 64-bit
+ * addresses.
+ */
+#ifdef _MSC_VER
+# if defined(_M_X64) || defined(_M_AMD64)
+#  define JS_64BIT
+# endif
+#elif defined(__GNUC__)
+# ifdef __x86_64__
+#  define JS_64BIT
+# endif
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+# ifdef __x86_64
+#  define JS_64BIT
+# endif
+#else
+# error "Implement me"
+#endif
+
+
 #include "jsinttypes.h"
 
 JS_BEGIN_EXTERN_C
@@ -357,6 +392,11 @@ typedef JSUintPtr JSUptrdiff;
 typedef JSIntn JSBool;
 #define JS_TRUE (JSIntn)1
 #define JS_FALSE (JSIntn)0
+/*
+** Special: JS_NEITHER is used by the tracer to have tri-state booleans.
+** This should not be used in new code.
+*/
+#define JS_NEITHER (JSIntn)2
 
 /************************************************************************
 ** TYPES:       JSPackedBool

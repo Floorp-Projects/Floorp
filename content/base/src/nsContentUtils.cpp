@@ -5624,15 +5624,6 @@ CloneSimpleValues(JSContext* cx,
     return SetPropertyOnValueOrObject(cx, val, rval, robj, rid);
   }
 
-  // Clone doubles.
-  if (JSVAL_IS_DOUBLE(val)) {
-    jsval newVal;
-    if (!JS_NewDoubleValue(cx, *JSVAL_TO_DOUBLE(val), &newVal)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return SetPropertyOnValueOrObject(cx, newVal, rval, robj, rid);
-  }
-
   // We'll use immutable strings to prevent copying if we can.
   if (JSVAL_IS_STRING(val)) {
     if (!JS_MakeStringImmutable(cx, JSVAL_TO_STRING(val))) {
@@ -5714,11 +5705,8 @@ CloneSimpleValues(JSContext* cx,
   }
 
   // Security wrapped objects are not allowed either.
-  JSClass* clasp = JS_GET_CLASS(cx, obj);
-  if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
-      ((JSExtendedClass*)clasp)->wrappedObject) {
+  if (obj->getClass()->ext.wrappedObject)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
 
   // See if this JSObject is backed by some C++ object. If it is then we assume
   // that it is inappropriate to clone.
