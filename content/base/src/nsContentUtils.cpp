@@ -146,7 +146,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIMEStateManager.h"
 #include "nsContentErrors.h"
 #include "nsUnicharUtilCIID.h"
-#include "nsICaseConversion.h"
 #include "nsCompressedCharMap.h"
 #include "nsINativeKeyBindings.h"
 #include "nsIDOMNSUIEvent.h"
@@ -241,7 +240,6 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
-nsICaseConversion *nsContentUtils::sCaseConv;
 nsIUGenCategory *nsContentUtils::sGenCat;
 nsTArray<nsISupports**> *nsContentUtils::sPtrsToPtrsToRelease;
 nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
@@ -402,9 +400,6 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &sCaseConv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
@@ -580,6 +575,14 @@ nsContentUtils::InitializeEventTable() {
     // This is a bit hackish, but SVG's event names are weird.
     { nsGkAtoms::onzoom,                        NS_SVG_ZOOM, EventNameType_SVGSVG, NS_EVENT_NULL },
 #endif // MOZ_SVG
+#ifdef MOZ_SMIL
+    { nsGkAtoms::onbegin,                       NS_SMIL_BEGIN, EventNameType_SMIL, NS_EVENT_NULL },
+    { nsGkAtoms::onbeginEvent,                  NS_SMIL_BEGIN, EventNameType_None, NS_SMIL_TIME_EVENT },
+    { nsGkAtoms::onend,                         NS_SMIL_END, EventNameType_SMIL, NS_EVENT_NULL },
+    { nsGkAtoms::onendEvent,                    NS_SMIL_END, EventNameType_None, NS_SMIL_TIME_EVENT },
+    { nsGkAtoms::onrepeat,                      NS_SMIL_REPEAT, EventNameType_SMIL, NS_EVENT_NULL },
+    { nsGkAtoms::onrepeatEvent,                 NS_SMIL_REPEAT, EventNameType_None, NS_SMIL_TIME_EVENT },
+#endif // MOZ_SMIL
 #ifdef MOZ_MEDIA
     { nsGkAtoms::onloadstart,                   NS_LOADSTART, EventNameType_HTML, NS_EVENT_NULL },
     { nsGkAtoms::onprogress,                    NS_PROGRESS, EventNameType_HTML, NS_EVENT_NULL },
@@ -1083,7 +1086,6 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
-  NS_IF_RELEASE(sCaseConv);
   NS_IF_RELEASE(sGenCat);
 #ifdef MOZ_XTF
   NS_IF_RELEASE(sXTFService);
@@ -5622,15 +5624,6 @@ CloneSimpleValues(JSContext* cx,
     return SetPropertyOnValueOrObject(cx, val, rval, robj, rid);
   }
 
-  // Clone doubles.
-  if (JSVAL_IS_DOUBLE(val)) {
-    jsval newVal;
-    if (!JS_NewDoubleValue(cx, *JSVAL_TO_DOUBLE(val), &newVal)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return SetPropertyOnValueOrObject(cx, newVal, rval, robj, rid);
-  }
-
   // We'll use immutable strings to prevent copying if we can.
   if (JSVAL_IS_STRING(val)) {
     if (!JS_MakeStringImmutable(cx, JSVAL_TO_STRING(val))) {
@@ -5712,11 +5705,8 @@ CloneSimpleValues(JSContext* cx,
   }
 
   // Security wrapped objects are not allowed either.
-  JSClass* clasp = JS_GET_CLASS(cx, obj);
-  if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
-      ((JSExtendedClass*)clasp)->wrappedObject) {
+  if (obj->getClass()->ext.wrappedObject)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
 
   // See if this JSObject is backed by some C++ object. If it is then we assume
   // that it is inappropriate to clone.

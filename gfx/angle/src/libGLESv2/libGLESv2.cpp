@@ -848,8 +848,13 @@ void __stdcall glCopyTexImage2D(GLenum target, GLint level, GLenum internalforma
 
         if (context)
         {
-            gl::Renderbuffer *source = context->getFramebuffer()->getColorbuffer();
+            gl::Framebuffer *framebuffer = context->getFramebuffer();
+            if (framebuffer->completeness() != GL_FRAMEBUFFER_COMPLETE)
+            {
+                return error(GL_INVALID_FRAMEBUFFER_OPERATION);
+            }
 
+            gl::Colorbuffer *source = framebuffer->getColorbuffer();
             if (target == GL_TEXTURE_2D)
             {
                 gl::Texture2D *texture = context->getTexture2D();
@@ -916,8 +921,13 @@ void __stdcall glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GL
 
         if (context)
         {
-            gl::Renderbuffer *source = context->getFramebuffer()->getColorbuffer();
+            gl::Framebuffer *framebuffer = context->getFramebuffer();
+            if (framebuffer->completeness() != GL_FRAMEBUFFER_COMPLETE)
+            {
+                return error(GL_INVALID_FRAMEBUFFER_OPERATION);
+            }
 
+            gl::Colorbuffer *source = framebuffer->getColorbuffer();
             if (target == GL_TEXTURE_2D)
             {
                 gl::Texture2D *texture = context->getTexture2D();
@@ -2508,7 +2518,7 @@ void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* 
               case GL_RENDERBUFFER_RED_SIZE:
                 if (renderbuffer->isColorbuffer())
                 {
-                    *params = static_cast<gl::Colorbuffer*>(renderbuffer)->getRedSize();
+                    *params = static_cast<gl::Colorbuffer*>(renderbuffer->getStorage())->getRedSize();
                 }
                 else
                 {
@@ -2518,7 +2528,7 @@ void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* 
               case GL_RENDERBUFFER_GREEN_SIZE:
                 if (renderbuffer->isColorbuffer())
                 {
-                    *params = static_cast<gl::Colorbuffer*>(renderbuffer)->getGreenSize();
+                    *params = static_cast<gl::Colorbuffer*>(renderbuffer->getStorage())->getGreenSize();
                 }
                 else
                 {
@@ -2528,7 +2538,7 @@ void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* 
               case GL_RENDERBUFFER_BLUE_SIZE:
                 if (renderbuffer->isColorbuffer())
                 {
-                    *params = static_cast<gl::Colorbuffer*>(renderbuffer)->getBlueSize();
+                    *params = static_cast<gl::Colorbuffer*>(renderbuffer->getStorage())->getBlueSize();
                 }
                 else
                 {
@@ -2538,7 +2548,7 @@ void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* 
               case GL_RENDERBUFFER_ALPHA_SIZE:
                 if (renderbuffer->isColorbuffer())
                 {
-                    *params = static_cast<gl::Colorbuffer*>(renderbuffer)->getAlphaSize();
+                    *params = static_cast<gl::Colorbuffer*>(renderbuffer->getStorage())->getAlphaSize();
                 }
                 else
                 {
@@ -2548,7 +2558,7 @@ void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* 
               case GL_RENDERBUFFER_DEPTH_SIZE:
                 if (renderbuffer->isDepthbuffer())
                 {
-                    *params = static_cast<gl::Depthbuffer*>(renderbuffer)->getDepthSize();
+                    *params = static_cast<gl::Depthbuffer*>(renderbuffer->getStorage())->getDepthSize();
                 }
                 else
                 {
@@ -2558,7 +2568,7 @@ void __stdcall glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* 
               case GL_RENDERBUFFER_STENCIL_SIZE:
                 if (renderbuffer->isStencilbuffer())
                 {
-                    *params = static_cast<gl::Stencilbuffer*>(renderbuffer)->getStencilSize();
+                    *params = static_cast<gl::Stencilbuffer*>(renderbuffer->getStorage())->getStencilSize();
                 }
                 else
                 {
@@ -2993,7 +3003,7 @@ void __stdcall glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
                 return error(GL_INVALID_VALUE);
             }
 
-            gl::AttributeState attribState = context->getVertexAttribState(index);
+            const gl::AttributeState &attribState = context->getVertexAttribState(index);
 
             switch (pname)
             {
@@ -3013,7 +3023,7 @@ void __stdcall glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
                 *params = (GLfloat)(attribState.mNormalized ? GL_TRUE : GL_FALSE);
                 break;
               case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-                *params = (GLfloat)attribState.mBoundBuffer;
+                *params = (GLfloat)attribState.mBoundBuffer.id();
                 break;
               case GL_CURRENT_VERTEX_ATTRIB:
                 for (int i = 0; i < 4; ++i)
@@ -3046,7 +3056,7 @@ void __stdcall glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
                 return error(GL_INVALID_VALUE);
             }
 
-            gl::AttributeState attribState = context->getVertexAttribState(index);
+            const gl::AttributeState &attribState = context->getVertexAttribState(index);
 
             switch (pname)
             {
@@ -3066,7 +3076,7 @@ void __stdcall glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
                 *params = (attribState.mNormalized ? GL_TRUE : GL_FALSE);
                 break;
               case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-                *params = attribState.mBoundBuffer;
+                *params = attribState.mBoundBuffer.id();
                 break;
               case GL_CURRENT_VERTEX_ATTRIB:
                 for (int i = 0; i < 4; ++i)
@@ -3543,6 +3553,7 @@ void __stdcall glRenderbufferStorage(GLenum target, GLenum internalformat, GLsiz
           case GL_RGB5_A1:
           case GL_RGB565:
           case GL_STENCIL_INDEX8:
+          case GL_DEPTH24_STENCIL8_OES:
             break;
           default:
             return error(GL_INVALID_ENUM);
@@ -3557,7 +3568,8 @@ void __stdcall glRenderbufferStorage(GLenum target, GLenum internalformat, GLsiz
 
         if (context)
         {
-            if (context->getRenderbufferHandle() == 0)
+            GLuint handle = context->getRenderbufferHandle();
+            if (handle == 0)
             {
                 return error(GL_INVALID_OPERATION);
             }
@@ -3565,15 +3577,18 @@ void __stdcall glRenderbufferStorage(GLenum target, GLenum internalformat, GLsiz
             switch (internalformat)
             {
               case GL_DEPTH_COMPONENT16:
-                context->setRenderbuffer(new gl::Depthbuffer(width, height));
+                context->setRenderbufferStorage(new gl::Depthbuffer(width, height));
                 break;
               case GL_RGBA4:
               case GL_RGB5_A1:
               case GL_RGB565:
-                context->setRenderbuffer(new gl::Colorbuffer(width, height, internalformat));
+                context->setRenderbufferStorage(new gl::Colorbuffer(width, height, internalformat));
                 break;
               case GL_STENCIL_INDEX8:
-                context->setRenderbuffer(new gl::Stencilbuffer(width, height));
+                context->setRenderbufferStorage(new gl::Stencilbuffer(width, height));
+                break;
+              case GL_DEPTH24_STENCIL8_OES:
+                context->setRenderbufferStorage(new gl::DepthStencilbuffer(width, height));
                 break;
               default:
                 return error(GL_INVALID_ENUM);
@@ -4965,7 +4980,7 @@ void __stdcall glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLbo
 
         if (context)
         {
-            context->setVertexAttribState(index, context->getArrayBufferHandle(), size, type, (normalized == GL_TRUE), stride, ptr);
+            context->setVertexAttribState(index, context->getArrayBuffer(), size, type, (normalized == GL_TRUE), stride, ptr);
         }
     }
     catch(std::bad_alloc&)

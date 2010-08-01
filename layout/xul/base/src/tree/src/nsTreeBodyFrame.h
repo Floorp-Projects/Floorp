@@ -143,7 +143,7 @@ public:
   virtual void ReflowCallbackCanceled();
 
   // nsICSSPseudoComparator
-  NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);
+  virtual PRBool PseudoMatches(nsCSSSelector* aSelector);
 
   // nsIScrollbarMediator
   NS_IMETHOD PositionChanged(nsIScrollbarFrame* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
@@ -428,6 +428,8 @@ protected:
       InvalidateRow(aRow + aOrientation);
   }
 
+public:
+  static
   already_AddRefed<nsTreeColumn> GetColumnImpl(nsITreeColumn* aUnknownCol) {
     if (!aUnknownCol)
       return nsnull;
@@ -436,6 +438,8 @@ protected:
     aUnknownCol->QueryInterface(NS_GET_IID(nsTreeColumn), (void**)&col);
     return col;
   }
+
+protected:
 
   // Create a new timer. This method is used to delay various actions like
   // opening/closing folders or tree scrolling.

@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(a6cf911c-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(24c39afa-44f7-4cd4-9e63-0504a581a081)]
 interface nsIDOMNSHTMLAnchorElement : nsISupports
 {
            attribute DOMString        protocol;
@@ -49,7 +49,12 @@ interface nsIDOMNSHTMLAnchorElement : nsISupports
            attribute DOMString        search;
            attribute DOMString        port;
            attribute DOMString        hash;
-  readonly attribute DOMString        text;
+
+  /**
+   * An alias for the textContent attribute.
+   */
+  [Null(Stringify)]
+           attribute DOMString        text;
 
   DOMString                 toString();
 };

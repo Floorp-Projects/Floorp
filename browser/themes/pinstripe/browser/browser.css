@@ -168,7 +168,6 @@ toolbarbutton.bookmark-item {
   -moz-border-radius: 100%;
   padding: 0 8px;
   margin: 0 0 1px;
-  height: 16px;
 }
 
 .bookmark-item > .toolbarbutton-menu-dropmarker {
@@ -211,18 +210,14 @@ toolbarbutton.bookmark-item > menupopup {
   -moz-margin-start: 3px;
 }
 
-.bookmark-item[livemark] > .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://browser/skin/places/livemarkFolder.png");
-  -moz-image-region: rect(0, 9px, 10px, 0);
-}
-
-.bookmark-item[livemark]:hover > .toolbarbutton-menu-dropmarker,
-.bookmark-item[livemark][open="true"] > .toolbarbutton-menu-dropmarker {
-  -moz-image-region: rect(0, 18px, 10px, 9px);
-}
-
 .bookmark-item > .toolbarbutton-icon {
-  display: none !important;
+  width: 16px;
+  min-height: 16px;
+}
+
+.bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
+.bookmark-item > .toolbarbutton-icon[type="menu"] {
+  -moz-margin-end: 5px;
 }
 
 .bookmark-item[container] {
@@ -567,6 +562,7 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
 }
 
 #bookmarks-menu-button.bookmark-item {
+  -moz-image-region: rect(2px, 178px, 18px, 162px);
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 

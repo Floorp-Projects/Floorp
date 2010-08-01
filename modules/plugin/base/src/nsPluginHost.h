@@ -139,9 +139,6 @@ public:
   AddHeadersToChannel(const char *aHeadersData, PRUint32 aHeadersDataLen, 
                       nsIChannel *aGenericChannel);
 
-  nsresult
-  AddUnusedLibrary(PRLibrary * aLibrary);
-
   static nsresult GetPluginTempDir(nsIFile **aDir);
 
   // Writes updated plugins settings to disk and unloads the plugin
@@ -247,9 +244,6 @@ private:
 
   nsresult EnsurePrivateDirServiceProvider();
 
-  // calls PostPluginUnloadEvent for each library in mUnusedLibraries
-  void UnloadUnusedLibraries();
-
   void OnPluginInstanceDestroyed(nsPluginTag* aPluginTag);
 
   nsRefPtr<nsPluginTag> mPlugins;
@@ -267,8 +261,6 @@ private:
   // Any instances in this array will have valid plugin objects via GetPlugin().
   // When removing an instance it might not die - be sure to null out it's plugin.
   nsTArray< nsRefPtr<nsNPAPIPluginInstance> > mInstances;
-
-  nsTArray<PRLibrary*> mUnusedLibraries;
 
   nsCOMPtr<nsIFile> mPluginRegFile;
   nsCOMPtr<nsIPrefBranch> mPrefService;

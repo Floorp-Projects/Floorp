@@ -392,7 +392,7 @@ ThebesLayerOGL::RenderLayer(int /*unused aPreviousFrameBuffer*/,
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   TextureImage::ContentType contentType =
-+    CanUseOpaqueSurface() ? gfxASurface::CONTENT_COLOR :
+    CanUseOpaqueSurface() ? gfxASurface::CONTENT_COLOR :
                             gfxASurface::CONTENT_COLOR_ALPHA;
   Buffer::PaintState state = mBuffer->BeginPaint(contentType);
   mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);

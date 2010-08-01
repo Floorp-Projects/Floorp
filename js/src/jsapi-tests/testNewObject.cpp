@@ -67,7 +67,6 @@ BEGIN_TEST(testNewObject_1)
     CHECK(len == 4);
 
     // With N arguments.
-    JS_ASSERT(INT_FITS_IN_JSVAL(N));
     for (size_t i = 0; i < N; i++)
         argv[i] = INT_TO_JSVAL(i);
     obj = JS_New(cx, Array, N, argv);

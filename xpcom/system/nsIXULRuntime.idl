@@ -44,7 +44,7 @@
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(cb6078bb-c6b3-4f35-acfd-3b4efa934484)]
+[scriptable, uuid(7685dac8-3637-4660-a544-928c5ec0e714)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -110,4 +110,13 @@ interface nsIXULRuntime : nsISupports
 
   readonly attribute unsigned long long launchTimestamp;
   readonly attribute unsigned long long startupTimestamp;
+
+  /**
+   * Starts a child process. This method is intented to pre-start a
+   * content child process so that when it is actually needed, it is
+   * ready to go.
+   *
+   * @throw NS_ERROR_NOT_AVAILABLE if not available.
+   */
+  void ensureContentProcess();
 };

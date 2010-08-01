@@ -8,9 +8,8 @@
 
 #include "compiler/OutputGLSL.h"
 
-TranslatorGLSL::TranslatorGLSL(EShLanguage l, int dOptions)
-        : TCompiler(l),
-          debugOptions(dOptions) {
+TranslatorGLSL::TranslatorGLSL(EShLanguage lang, EShSpec spec)
+    : TCompiler(lang, spec) {
 }
 
 bool TranslatorGLSL::compile(TIntermNode* root) {

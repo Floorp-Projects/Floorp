@@ -577,6 +577,9 @@ nsGtkIMModule::SetIMEEnabled(nsWindow* aCaller, PRUint32 aState)
             // Turn off auto-capitalization for editboxes
             mode &= ~HILDON_GTK_INPUT_MODE_AUTOCAP;
 
+            // Turn off predictive dictionaries for editboxes
+            mode &= ~HILDON_GTK_INPUT_MODE_DICTIONARY;
+
             g_object_set(G_OBJECT(im), "hildon-input-mode",
                          (HildonGtkInputMode)mode, NULL);
             gIsVirtualKeyboardOpened = PR_TRUE;

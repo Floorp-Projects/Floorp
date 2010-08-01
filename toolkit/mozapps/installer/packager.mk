@@ -349,19 +349,19 @@ endif
 	@$(NSINSTALL) -D $(DEPTH)/installer-stage/localized
 	@$(NSINSTALL) -D $(DEPTH)/installer-stage/optional
 	@$(NSINSTALL) -D $(DIST)/xpt
-	$(call PACKAGER_COPY, "$(DIST)",\
-		"$(DEPTH)/installer-stage/nonlocalized", \
-		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
-		$(foreach pkg,$(MOZ_NONLOCALIZED_PKG_LIST),$(PKG_ARG)) )
-	$(call PACKAGER_COPY, "$(DIST)",\
-		"$(DEPTH)/installer-stage/localized", \
-		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
-		$(foreach pkg,$(MOZ_LOCALIZED_PKG_LIST),$(PKG_ARG)) )
+	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
+	  "$(call core_abspath,$(DEPTH)/installer-stage/nonlocalized)", \
+	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
+	  $(foreach pkg,$(MOZ_NONLOCALIZED_PKG_LIST),$(PKG_ARG)) )
+	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
+	  "$(call core_abspath,$(DEPTH)/installer-stage/localized)", \
+	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
+	  $(foreach pkg,$(MOZ_LOCALIZED_PKG_LIST),$(PKG_ARG)) )
 ifdef MOZ_OPTIONAL_PKG_LIST
-	$(call PACKAGER_COPY, "$(DIST)",\
-		"$(DEPTH)/installer-stage/optional", \
-		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
-		$(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) )
+	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
+	  "$(call core_abspath,$(DEPTH)/installer-stage/optional)", \
+	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
+	  $(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) )
 endif
 	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v -x "$(XPIDL_LINK)"
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py $(DIST)/manifests $(DEPTH)/installer-stage/nonlocalized
@@ -379,8 +379,8 @@ ifndef UNIVERSAL_BINARY
 ifdef MOZ_PKG_MANIFEST
 	$(RM) -rf $(DIST)/xpt $(RM) -rf $(DIST)/manifests
 	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
-		 "$(call core_abspath,$(DIST)/$(MOZ_PKG_DIR))", \
-		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
+	  "$(call core_abspath,$(DIST)/$(MOZ_PKG_DIR))", \
+	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
 	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/components -v -x "$(XPIDL_LINK)"
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/link-manifests.py $(DIST)/manifests $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)
 else # !MOZ_PKG_MANIFEST

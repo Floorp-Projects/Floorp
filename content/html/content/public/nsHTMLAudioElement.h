@@ -77,6 +77,7 @@ public:
                         JSObject* aObj, PRUint32 argc, jsval* argv);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel);
 
   virtual nsXPCClassInfo* GetClassInfo();
 };

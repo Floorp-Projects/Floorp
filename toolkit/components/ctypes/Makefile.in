@@ -57,7 +57,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 
 CPPSRCS = \
-    Module.cpp \
+    ctypes.cpp \
     $(NULL)
 
 EXTRA_DSO_LDOPTS += \

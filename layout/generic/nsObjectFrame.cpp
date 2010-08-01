@@ -48,6 +48,7 @@
 
 #ifdef MOZ_WIDGET_QT
 #include <QWidget>
+#include <QKeyEvent>
 #ifdef MOZ_X11
 #include <QX11Info>
 #endif
@@ -4344,6 +4345,43 @@ nsEventStatus nsPluginInstanceOwner::ProcessEventX11Composited(const nsGUIEvent&
               break;
             }
 #endif
+
+#ifdef MOZ_WIDGET_QT
+          const nsKeyEvent& keyEvent = static_cast<const nsKeyEvent&>(anEvent);
+
+          memset( &event, 0, sizeof(event) );
+          event.time = anEvent.time;
+
+          QWidget* qWidget = static_cast<QWidget*>(widget->GetNativeData(NS_NATIVE_WINDOW));
+          if (qWidget)
+            event.root = qWidget->x11Info().appRootWindow();
+
+          // deduce keycode from the information in the attached QKeyEvent
+          const QKeyEvent* qtEvent = static_cast<const QKeyEvent*>(anEvent.pluginEvent);
+          if (qtEvent) {
+
+            if (qtEvent->nativeModifiers())
+              event.state = qtEvent->nativeModifiers();
+            else // fallback
+              event.state = XInputEventState(keyEvent);
+
+            if (qtEvent->nativeScanCode())
+              event.keycode = qtEvent->nativeScanCode();
+            else // fallback
+              event.keycode = XKeysymToKeycode( (widget ? static_cast<Display*>(widget->GetNativeData(NS_NATIVE_DISPLAY)) : nsnull), qtEvent->key());
+          }
+
+          switch (anEvent.message)
+            {
+            case NS_KEY_DOWN:
+              event.type = XKeyPress;
+              break;
+            case NS_KEY_UP:
+              event.type = KeyRelease;
+              break;
+           }
+#endif
+
           // Information that could be obtained from pluginEvent but we may not
           // want to promise to provide:
           event.subwindow = None;
@@ -4843,6 +4881,42 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
               event.type = KeyRelease;
               break;
             }
+#endif
+
+#ifdef MOZ_WIDGET_QT
+          const nsKeyEvent& keyEvent = static_cast<const nsKeyEvent&>(anEvent);
+
+          memset( &event, 0, sizeof(event) );
+          event.time = anEvent.time;
+
+          QWidget* qWidget = static_cast<QWidget*>(widget->GetNativeData(NS_NATIVE_WINDOW));
+          if (qWidget)
+            event.root = qWidget->x11Info().appRootWindow();
+
+          // deduce keycode from the information in the attached QKeyEvent
+          const QKeyEvent* qtEvent = static_cast<const QKeyEvent*>(anEvent.pluginEvent);
+          if (qtEvent) {
+
+            if (qtEvent->nativeModifiers())
+              event.state = qtEvent->nativeModifiers();
+            else // fallback
+              event.state = XInputEventState(keyEvent);
+
+            if (qtEvent->nativeScanCode())
+              event.keycode = qtEvent->nativeScanCode();
+            else // fallback
+              event.keycode = XKeysymToKeycode( (widget ? static_cast<Display*>(widget->GetNativeData(NS_NATIVE_DISPLAY)) : nsnull), qtEvent->key());
+          }
+
+          switch (anEvent.message)
+            {
+            case NS_KEY_DOWN:
+              event.type = XKeyPress;
+              break;
+            case NS_KEY_UP:
+              event.type = KeyRelease;
+              break;
+           }
 #endif
           // Information that could be obtained from pluginEvent but we may not
           // want to promise to provide:

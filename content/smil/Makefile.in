@@ -54,6 +54,7 @@ EXPORTS		= nsSMILKeySpline.h
 
 ifdef MOZ_SMIL
 CPPSRCS		+= \
+	nsDOMTimeEvent.cpp \
 	nsSMILAnimationController.cpp \
 	nsSMILAnimationFunction.cpp \
 	nsSMILCompositor.cpp \
@@ -105,6 +106,7 @@ EXPORTS		+= \
 INCLUDES += 	\
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../../layout/style \
+		-I$(srcdir)/../events/src \
 		$(NULL)
 endif # MOZ_SMIL
 

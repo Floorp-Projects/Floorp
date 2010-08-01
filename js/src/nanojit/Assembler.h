@@ -453,7 +453,9 @@ namespace nanojit
             void        asm_d2i(LIns* ins);
 #ifdef NANOJIT_64BIT
             void        asm_q2i(LIns* ins);
-            void        asm_promote(LIns *ins);
+            void        asm_ui2uq(LIns *ins);
+            void        asm_dasq(LIns *ins);
+            void        asm_qasd(LIns *ins);
 #endif
             void        asm_nongp_copy(Register r, Register s);
             void        asm_call(LIns*);

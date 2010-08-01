@@ -1208,6 +1208,8 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
                                               NS_GET_IID(nsISupports),
+                                              mSystemPrincipal,
+                                              EmptyCString(),
                                               nsIXPConnect::
                                                   FLAG_SYSTEM_GLOBAL_OBJECT,
                                               getter_AddRefs(holder));
@@ -1625,7 +1627,7 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
 
     jsval *retval = nsnull;
     cc->GetRetValPtr(&retval);
-    if (*retval)
+    if (retval)
         *retval = OBJECT_TO_JSVAL(globalObj);
 
     return rv;

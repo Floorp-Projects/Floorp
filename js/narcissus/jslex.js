@@ -57,6 +57,7 @@ for (var op in opTypeNames) {
     }
 }
 
+// file ptr, path to file, line number -> Tokenizer
 function Tokenizer(s, f, l) {
     this.cursor = 0;
     this.source = String(s);
@@ -363,6 +364,9 @@ Tokenizer.prototype = {
         token.value = id;
     },
 
+    // void -> token type
+    // It consumes input *only* if there is no lookahead.
+    // Dispatch to the appropriate lexing function depending on the input.
     get: function () {
         var token;
         while (this.lookahead) {
@@ -415,6 +419,8 @@ Tokenizer.prototype = {
         return token.type;
     },
 
+    // void -> undefined
+    // match depends on unget returning undefined.
     unget: function () {
         if (++this.lookahead == 4) throw "PANIC: too much lookahead!";
         this.tokenIndex = (this.tokenIndex - 1) & 3;

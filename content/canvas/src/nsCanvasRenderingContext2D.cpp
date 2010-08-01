@@ -3519,11 +3519,16 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         mThebes->SetPattern(pattern);
         DirtyAllStyles();
 
-        mThebes->Clip(clip);
-
+        /* Direct2D isn't very good at clipping so use Fill() when we can */
+        if (CurrentState().globalAlpha == 1.0f && mThebes->CurrentOperator() == gfxContext::OPERATOR_OVER) {
+            mThebes->Rectangle(clip);
+            mThebes->Fill();
+        } else {
+            /* we need to use to clip instead of fill for globalAlpha */
+            mThebes->Clip(clip);
+            mThebes->Paint(CurrentState().globalAlpha);
+        }
         dirty = mThebes->UserToDevice(clip);
-
-        mThebes->Paint(CurrentState().globalAlpha);
     }
 
 #if 1
@@ -3860,14 +3865,6 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
 //
 // device pixel getting/setting
 //
-extern "C" {
-#include "jstypes.h"
-JS_FRIEND_API(JSBool)
-js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
-                                JSUint8 *dest);
-JS_FRIEND_API(JSObject *)
-js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, jsval **vector);
-}
 
 void
 nsCanvasRenderingContext2D::EnsureUnpremultiplyTable() {

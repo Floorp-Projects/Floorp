@@ -1,14 +1,14 @@
 # HG changeset patch
+# User Vladimir Vukicevic <vladimir@pobox.com>
+# Date 1280525409 25200
+# Node ID d683bc8242ec4b6e19196fc6f6d090a6da2fa07d
+# Parent  3693726d10c60b8b2637407709d595151c191a64
+[mq]: angle-shared.patch
 
 diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/ShaderLang.h
 --- a/gfx/angle/include/GLSLANG/ShaderLang.h
 +++ b/gfx/angle/include/GLSLANG/ShaderLang.h
-@@ -1,42 +1,54 @@
- //
- // Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
- // Use of this source code is governed by a BSD-style license that can be
- // found in the LICENSE file.
- //
+@@ -6,8 +6,24 @@
  #ifndef _COMPILER_INTERFACE_INCLUDED_
  #define _COMPILER_INTERFACE_INCLUDED_
  
@@ -16,8 +16,7 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
 +
  #include "ResourceLimits.h"
  
- #ifdef _WIN32
--#define C_DECL __cdecl
++#ifdef WIN32
 +# if !defined(MOZ_ENABLE_LIBXUL) && !defined(MOZ_STATIC_BUILD)
 +#  ifdef ANGLE_BUILD
 +#   define ANGLE_API NS_EXPORT
@@ -27,157 +26,55 @@ diff --git a/gfx/angle/include/GLSLANG/ShaderLang.h b/gfx/angle/include/GLSLANG/
 +# else
 +#  define ANGLE_API  /*nothing*/
 +# endif
-+# define C_DECL __cdecl
- #else
--#define __fastcall
--#define C_DECL
++#else
 +# define ANGLE_API NS_EXTERNAL_VIS
-+# define __fastcall
-+# define C_DECL
- #endif
- 
++#endif
++
  //
  // This is the platform independent interface between an OGL driver
- // and the shading language compiler/linker.
- //
- 
- #ifdef __cplusplus
- 	extern "C" {
- #endif
- //
+ // and the shading language compiler.
+@@ -20,11 +36,11 @@ extern "C" {
  // Driver must call this first, once, before doing any other
- // compiler/linker operations.
+ // compiler operations.
  //
 -int ShInitialize();
 +ANGLE_API int ShInitialize();
  //
  // Driver should call this at shutdown.
  //
--int __fastcall ShFinalize();
+-int ShFinalize();
 +ANGLE_API int ShFinalize();
  //
  // Types of languages the compiler can consume.
  //
- typedef enum {
- 	EShLangVertex,
- 	EShLangFragment,
- 	EShLangCount
- } EShLanguage;
-@@ -83,88 +95,88 @@ typedef struct {
- // If handle creation fails, 0 will be returned.
+@@ -70,8 +86,8 @@ typedef void* ShHandle;
  //
- typedef void* ShHandle;
- 
+ // Driver calls these to create and destroy compiler objects.
  //
- // Driver calls these to create and destroy compiler/linker
- // objects.
- //
--ShHandle ShConstructCompiler(const EShLanguage, int debugOptions);  // one per shader
--ShHandle ShConstructLinker(const EShExecutable, int debugOptions);  // one per shader pair
--ShHandle ShConstructUniformMap();                 // one per uniform namespace (currently entire program object)
+-ShHandle ShConstructCompiler(EShLanguage, EShSpec, const TBuiltInResource*);
 -void ShDestruct(ShHandle);
-+ANGLE_API ShHandle ShConstructCompiler(const EShLanguage, int debugOptions);  // one per shader
-+ANGLE_API ShHandle ShConstructLinker(const EShExecutable, int debugOptions);  // one per shader pair
-+ANGLE_API ShHandle ShConstructUniformMap();                 // one per uniform namespace (currently entire program object)
++ANGLE_API ShHandle ShConstructCompiler(EShLanguage, EShSpec, const TBuiltInResource*);
 +ANGLE_API void ShDestruct(ShHandle);
  
  //
  // The return value of ShCompile is boolean, indicating
- // success or failure.
- //
+@@ -80,7 +96,7 @@ void ShDestruct(ShHandle);
  // The info-log should be written by ShCompile into 
  // ShHandle, so it can answer future queries.
  //
 -int ShCompile(
 +ANGLE_API int ShCompile(
- 	const ShHandle,
- 	const char* const shaderStrings[],
- 	const int numStrings,
- 	const EShOptimizationLevel,
- 	const TBuiltInResource *resources,
- 	int debugOptions
- 	);
- 
- 
- //
- // Similar to ShCompile, but accepts an opaque handle to an
- // intermediate language structure.
- //
--int ShCompileIntermediate(
-+ANGLE_API int ShCompileIntermediate(
- 	ShHandle compiler,
- 	ShHandle intermediate,
- 	const EShOptimizationLevel,
- 	int debuggable           // boolean
- 	);
- 
--int ShLink(
-+ANGLE_API int ShLink(
- 	const ShHandle,               // linker object
- 	const ShHandle h[],           // compiler objects to link together
- 	const int numHandles,
- 	ShHandle uniformMap,          // updated with new uniforms
- 	short int** uniformsAccessed,  // returned with indexes of uniforms accessed
- 	int* numUniformsAccessed); 	
- 
--int ShLinkExt(
-+ANGLE_API int ShLinkExt(
- 	const ShHandle,               // linker object
- 	const ShHandle h[],           // compiler objects to link together
- 	const int numHandles);
- 
- //
- // ShSetEncrpytionMethod is a place-holder for specifying
- // how source code is encrypted.
- //
--void ShSetEncryptionMethod(ShHandle);
-+ANGLE_API void ShSetEncryptionMethod(ShHandle);
- 
- //
+     const ShHandle,
+     const char* const shaderStrings[],
+     const int numStrings,
+@@ -92,8 +108,8 @@ int ShCompile(
  // All the following return 0 if the information is not
  // available in the object passed down, or the object is bad.
  //
 -const char* ShGetInfoLog(const ShHandle);
 -const char* ShGetObjectCode(const ShHandle);
--const void* ShGetExecutable(const ShHandle);
--int ShSetVirtualAttributeBindings(const ShHandle, const ShBindingTable*);   // to detect user aliasing
--int ShSetFixedAttributeBindings(const ShHandle, const ShBindingTable*);     // to force any physical mappings
--int ShGetPhysicalAttributeBindings(const ShHandle, const ShBindingTable**); // for all attributes
 +ANGLE_API const char* ShGetInfoLog(const ShHandle);
 +ANGLE_API const char* ShGetObjectCode(const ShHandle);
-+ANGLE_API const void* ShGetExecutable(const ShHandle);
-+ANGLE_API int ShSetVirtualAttributeBindings(const ShHandle, const ShBindingTable*);   // to detect user aliasing
-+ANGLE_API int ShSetFixedAttributeBindings(const ShHandle, const ShBindingTable*);     // to force any physical mappings
-+ANGLE_API int ShGetPhysicalAttributeBindings(const ShHandle, const ShBindingTable**); // for all attributes
- //
- // Tell the linker to never assign a vertex attribute to this list of physical attributes
- //
--int ShExcludeAttributes(const ShHandle, int *attributes, int count);
-+ANGLE_API int ShExcludeAttributes(const ShHandle, int *attributes, int count);
  
- //
- // Returns the location ID of the named uniform.
- // Returns -1 if error.
- //
--int ShGetUniformLocation(const ShHandle uniformMap, const char* name);
-+ANGLE_API int ShGetUniformLocation(const ShHandle uniformMap, const char* name);
- 
- enum TDebugOptions {
- 	EDebugOpNone               = 0x000,
- 	EDebugOpIntermediate       = 0x001,
- 	EDebugOpAssembly           = 0x002,
- 	EDebugOpObjectCode         = 0x004,
- 	EDebugOpLinkMaps           = 0x008
- };
-diff --git a/gfx/angle/src/compiler/ShaderLang.cpp b/gfx/angle/src/compiler/ShaderLang.cpp
---- a/gfx/angle/src/compiler/ShaderLang.cpp
-+++ b/gfx/angle/src/compiler/ShaderLang.cpp
-@@ -130,7 +130,7 @@ void ShDestruct(ShHandle handle)
- //
- // Cleanup symbol tables
- //
--int __fastcall ShFinalize()
-+int ShFinalize()
- {  
-   if (PerProcessGPA) {
-     PerProcessGPA->popAll();
+ #ifdef __cplusplus
+ }

@@ -130,7 +130,7 @@ public:
   inline nsIDocument* Document() const;
 
   struct RestyleEnumerateData : public RestyleData {
-    nsCOMPtr<Element> mElement;
+    nsRefPtr<Element> mElement;
   };
 
 private:

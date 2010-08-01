@@ -146,3 +146,27 @@ nsHTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
 
   return NS_OK;
 }
+
+  
+nsresult nsHTMLAudioElement::SetAcceptHeader(nsIHttpChannel* aChannel)
+{
+    nsCAutoString value(
+#ifdef MOZ_WEBM
+      "audio/webm,"
+#endif
+#ifdef MOZ_OGG
+      "audio/ogg,"
+#endif
+#ifdef MOZ_WAVE
+      "audio/wav,"
+#endif
+      "audio/*;q=0.9,"
+#ifdef MOZ_OGG
+      "application/ogg;q=0.7,"
+#endif
+      "video/*;q=0.6,*/*;q=0.5");
+
+    return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                      value,
+                                      PR_FALSE);
+}

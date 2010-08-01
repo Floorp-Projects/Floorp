@@ -54,13 +54,11 @@ extern "C"
 }
 #endif
 
-JS_BEGIN_EXTERN_C
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #ifdef LIVEWIRE
 #include "lwdbgapi.h"
 #endif
-JS_END_EXTERN_C
 
 JS_BEGIN_EXTERN_C
 
@@ -242,11 +240,12 @@ JSD_ClearAllProfileData(JSDContext* jsdc);
 * If JSD_HIDE_DISABLED_FRAMES is set, this is effectively set as well.
 */
 #define JSD_MASK_TOP_FRAME_ONLY   0x20
+
 /*
-* When this flag is set, object creation will not be tracked.  This will
-* reduce the performance price you pay by enabling the debugger.
+* 0x40 was formerly used to hook into object creation.
 */
-#define JSD_DISABLE_OBJECT_TRACE  0x40
+#define JSD_DISABLE_OBJECT_TRACE_RETIRED 0x40
+
 
 extern JSD_PUBLIC_API(void)
 JSD_SetContextFlags (JSDContext* jsdc, uint32 flags);
@@ -1270,7 +1269,7 @@ JSD_GetValueInt(JSDContext* jsdc, JSDValue* jsdval);
 * Return double value (does NOT do conversion).
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(jsdouble*)
+extern JSD_PUBLIC_API(jsdouble)
 JSD_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval);
 
 /*

@@ -621,7 +621,7 @@ nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant **_retval)
         return NS_ERROR_UNEXPECTED;
 
     jsval jsstr = XPCStringConvert::ReadableToJSVal(ccx, name);
-    if(!jsstr)
+    if(JSVAL_IS_NULL(jsstr))
         return NS_ERROR_OUT_OF_MEMORY;
 
     return nsXPCWrappedJSClass::

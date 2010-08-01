@@ -521,7 +521,8 @@ case "$target" in
         CFLAGS="$CFLAGS -TC -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
         # MSVC warning C4345 warns of newly conformant behavior as of VS2003.
-        CXXFLAGS="$CXXFLAGS -wd4345"
+        # MSVC warning C4800 is ubiquitous, useless, and annoying.
+        CXXFLAGS="$CXXFLAGS -wd4345 -wd4800"
         AC_LANG_SAVE
         AC_LANG_C
         AC_TRY_COMPILE([#include <stdio.h>],
@@ -3021,6 +3022,10 @@ case $target in
 	;;
 esac
 
+dnl Performance measurement headers.
+AC_CHECK_HEADER(linux/perf_event.h, HAVE_LINUX_PERF_EVENT_H=1)
+AC_SUBST(HAVE_LINUX_PERF_EVENT_H)
+
 dnl Checks for libraries.
 dnl ========================================================
 case $target in
@@ -4212,17 +4217,6 @@ MOZ_ARG_ENABLE_STRING(debug-symbols,
 if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
     AC_DEFINE(MOZ_DEBUG_SYMBOLS)
     export MOZ_DEBUG_SYMBOLS
-fi
-
-dnl ========================================================
-dnl Enable Narcissus
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(narcissus,
-[  --enable-narcissus      Build with Narcissus code enabled],
-    NARCISSUS=1,
-    NARCISSUS= )
-if test -n "$NARCISSUS"; then
-    AC_DEFINE(NARCISSUS)
 fi
 
 dnl ========================================================

@@ -468,6 +468,14 @@ void nsMediaChannelStream::SetupChannelHeaders()
     rangeString.AppendInt(mOffset);
     rangeString.Append("-");
     hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, PR_FALSE);
+
+    // Send Accept header for video and audio types only (Bug 489071)
+    NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
+    nsHTMLMediaElement* element = mDecoder->GetMediaElement();
+    if (!element) {
+      return;
+    }
+    element->SetAcceptHeader(hc);
   } else {
     NS_ASSERTION(mOffset == 0, "Don't know how to seek on this channel type");
   }

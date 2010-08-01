@@ -73,6 +73,7 @@ function veryLongRequestLine(request, response)
   writeDetails(request, response);
   response.setStatusLine(request.httpVersion, 200, "TEST PASSED");
 }
+
 var path = "/very-long-request-line?";
 var gibberish = "dfsasdbfjkbnsldkjnewiunfasjkn";
 for (var i = 0; i < 10; i++)
@@ -83,9 +84,13 @@ str = "GET /very-long-request-line?" + gibberish + " HTTP/1.1\r\n" +
 data = [];
 for (var i = 0; i < str.length; i += 50)
   data.push(str.substr(i, 50));
+
 function checkVeryLongRequestLine(data)
 {
   var iter = LineIterator(data);
+
+  print("data length: " + data.length);
+  print("iter object: " + iter);
 
   // Status-Line
   do_check_eq(iter.next(), "HTTP/1.1 200 TEST PASSED");
@@ -115,6 +120,7 @@ function lotsOfLeadingBlankLines(request, response)
   writeDetails(request, response);
   response.setStatusLine(request.httpVersion, 200, "TEST PASSED");
 }
+
 var blankLines = "\r\n";
 for (var i = 0; i < 14; i++)
   blankLines += blankLines;
@@ -125,11 +131,15 @@ str = blankLines +
 data = [];
 for (var i = 0; i < str.length; i += 100)
   data.push(str.substr(i, 100));
+
 function checkLotsOfLeadingBlankLines(data)
 {
   var iter = LineIterator(data);
 
   // Status-Line
+  print("data length: " + data.length);
+  print("iter object: " + iter);
+
   do_check_eq(iter.next(), "HTTP/1.1 200 TEST PASSED");
 
   skipHeaders(iter);
@@ -148,5 +158,6 @@ function checkLotsOfLeadingBlankLines(data)
 
   expectLines(iter, body);
 }
+
 test = new RawTest("localhost", PORT, data, checkLotsOfLeadingBlankLines),
 tests.push(test);

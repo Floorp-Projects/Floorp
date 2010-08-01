@@ -46,27 +46,7 @@
 #include "jsapi.h"
 #include "jsobj.h"
 
-JS_BEGIN_EXTERN_C
-
-/*
- * Special values, not visible to script but used internally by the engine.
- *
- * JSVAL_HOLE is a useful value for identifying a hole in an array.  It's also
- * used in the interpreter to represent "no exception pending".  In general it
- * can be used to represent "no value".
- *
- * A JSVAL_HOLE can be cheaply converted to undefined without affecting any
- * other boolean (or special value) by masking out JSVAL_HOLE_FLAG.
- *
- * JSVAL_ARETURN is used to throw asynchronous return for generator.close().
- *
- * NB: SPECIAL_TO_JSVAL(2) is JSVAL_VOID (see jsapi.h).
- */
-#define JSVAL_HOLE_FLAG jsval(4 << JSVAL_TAGBITS)
-#define JSVAL_HOLE      (JSVAL_VOID | JSVAL_HOLE_FLAG)
-#define JSVAL_ARETURN   SPECIAL_TO_JSVAL(8)
-
-extern JSClass js_BooleanClass;
+extern js::Class js_BooleanClass;
 
 inline bool
 JSObject::isBoolean() const
@@ -84,8 +64,6 @@ extern JSBool
 js_BooleanToCharBuffer(JSContext *cx, JSBool b, JSCharBuffer &cb);
 
 extern JSBool
-js_ValueToBoolean(jsval v);
-
-JS_END_EXTERN_C
+js_ValueToBoolean(const js::Value &v);
 
 #endif /* jsbool_h___ */

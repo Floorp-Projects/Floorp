@@ -195,7 +195,7 @@ ObjectWrapperChild::jsval_to_JSVariant(JSContext* cx, jsval from, JSVariant* to)
         if (JSVAL_IS_INT(from))
             *to = JSVAL_TO_INT(from);
         else if (JSVAL_IS_DOUBLE(from))
-            *to = *JSVAL_TO_DOUBLE(from);
+            *to = JSVAL_TO_DOUBLE(from);
         else return false;
         return true;
     case JSTYPE_BOOLEAN:
@@ -216,7 +216,7 @@ JSObject_from_PObjectWrapperChild(JSContext*,
 {
     const ObjectWrapperChild* owc =
         static_cast<const ObjectWrapperChild*>(from);
-    *to = owc ? owc->mObj : JSVAL_NULL;
+    *to = owc ? owc->mObj : NULL;
     return true;
 }
     
@@ -263,7 +263,7 @@ ObjectWrapperChild::jsval_from_JSVariant(JSContext* cx, const JSVariant& from,
         *to = INT_TO_JSVAL(from.get_int());
         return true;
     case JSVariant::Tdouble:
-        return !!JS_NewDoubleValue(cx, from.get_double(), to);
+        return !!JS_NewNumberValue(cx, from.get_double(), to);
     case JSVariant::Tbool:
         *to = BOOLEAN_TO_JSVAL(from.get_bool());
         return true;
@@ -444,7 +444,7 @@ ObjectWrapperChild::AnswerNewEnumerateInit(/* no in-parameters */
     JSObject* state = JS_NewObjectWithGivenProto(cx, clasp, NULL, NULL);
     if (!state)
         return false;
-    AutoValueRooter tvr(cx, state);
+    AutoObjectRooter tvr(cx, state);
 
     for (JSObject* proto = mObj;
          proto;

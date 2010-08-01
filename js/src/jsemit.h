@@ -430,6 +430,16 @@ struct JSCGObjectList {
     void finish(JSObjectArray *array);
 };
 
+class JSGCConstList {
+    js::Vector<js::Value> list;
+  public:
+    JSGCConstList(JSContext *cx) : list(cx) {}
+    bool append(js::Value v) { return list.append(v); }
+    size_t length() const { return list.length(); }
+    void finish(JSConstArray *array);
+
+};
+
 struct JSCodeGenerator : public JSTreeContext
 {
     JSArenaPool     *codePool;      /* pointer to thread code arena pool */
@@ -469,8 +479,10 @@ struct JSCodeGenerator : public JSTreeContext
 
     uintN           emitLevel;      /* js_EmitTree recursion level */
 
-    typedef js::HashMap<JSAtom *, jsval> ConstMap;
+    typedef js::HashMap<JSAtom *, js::Value> ConstMap;
     ConstMap        constMap;       /* compile time constants */
+
+    JSGCConstList   constList;      /* constants to be included with the script */
 
     JSCGObjectList  objectList;     /* list of emitted objects */
     JSCGObjectList  regexpList;     /* list of emitted regexp that will be
@@ -487,7 +499,6 @@ struct JSCodeGenerator : public JSTreeContext
     JSCodeGenerator(js::Parser *parser,
                     JSArenaPool *codePool, JSArenaPool *notePool,
                     uintN lineno);
-
     bool init();
 
     /*

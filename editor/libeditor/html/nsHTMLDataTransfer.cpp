@@ -1284,7 +1284,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
     flavor.AssignWithConversion(bestFlavor);
     nsAutoString stuffToPaste;
 #ifdef DEBUG_clipboard
-    printf("Got flavor [%s]\n", bestFlavor);
+    printf("Got flavor [%s]\n", bestFlavor.get());
 #endif
     if (0 == nsCRT::strcmp(bestFlavor, kNativeHTMLMime))
     {

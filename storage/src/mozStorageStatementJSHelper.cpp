@@ -205,11 +205,11 @@ NS_IMETHODIMP
 StatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
                                JSContext *aCtx,
                                JSObject *aScopeObj,
-                               jsval aId,
+                               jsid aId,
                                jsval *_result,
                                PRBool *_retval)
 {
-  if (!JSVAL_IS_STRING(aId))
+  if (!JSID_IS_STRING(aId))
     return NS_OK;
 
 #ifdef DEBUG
@@ -224,7 +224,7 @@ StatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
     static_cast<mozIStorageStatement *>(aWrapper->Native())
   );
 
-  const char *propName = ::JS_GetStringBytes(JSVAL_TO_STRING(aId));
+  const char *propName = ::JS_GetStringBytes(JSID_TO_STRING(aId));
   if (::strcmp(propName, "row") == 0)
     return getRow(stmt, aCtx, aScopeObj, _result);
 
@@ -239,15 +239,15 @@ NS_IMETHODIMP
 StatementJSHelper::NewResolve(nsIXPConnectWrappedNative *aWrapper,
                               JSContext *aCtx,
                               JSObject *aScopeObj,
-                              jsval aId,
+                              jsid aId,
                               PRUint32 aFlags,
                               JSObject **_objp,
                               PRBool *_retval)
 {
-  if (!JSVAL_IS_STRING(aId))
+  if (!JSID_IS_STRING(aId))
     return NS_OK;
 
-  const char *name = ::JS_GetStringBytes(JSVAL_TO_STRING(aId));
+  const char *name = ::JS_GetStringBytes(JSID_TO_STRING(aId));
   if (::strcmp(name, "step") == 0) {
     *_retval = ::JS_DefineFunction(aCtx, aScopeObj, "step", (JSNative)stepFunc,
                                    0, JSFUN_FAST_NATIVE) != nsnull;

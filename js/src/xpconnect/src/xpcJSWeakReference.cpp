@@ -134,8 +134,8 @@ xpcJSWeakReference::Get()
             // arguments! It turns out that the thisObject hook on XPConnect
             // objects does the right thing though, so...
 
-            if (obj->map->ops->thisObject &&
-                !(obj = obj->map->ops->thisObject(cx, obj)))
+            if (obj->getOps()->thisObject &&
+                !(obj = obj->getOps()->thisObject(cx, obj)))
             {
                 return NS_ERROR_FAILURE;
             }

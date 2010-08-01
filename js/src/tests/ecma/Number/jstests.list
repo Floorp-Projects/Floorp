@@ -34,3 +34,4 @@ script 15.7.4.2-4.js
 script 15.7.4.3-1.js
 script 15.7.4.3-2.js
 script 15.7.4.3-3-n.js
+script 0x-without-following-hexdigits.js

@@ -78,14 +78,14 @@ NS_IMETHODIMP
 StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
                           JSContext *aCtx,
                           JSObject *aScopeObj,
-                          jsval aId,
+                          jsid aId,
                           jsval *_vp,
                           PRBool *_retval)
 {
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
 
-  if (JSVAL_IS_STRING(aId)) {
-    nsDependentCString jsid(::JS_GetStringBytes(JSVAL_TO_STRING(aId)));
+  if (JSID_IS_STRING(aId)) {
+    nsDependentCString jsid(::JS_GetStringBytes(JSID_TO_STRING(aId)));
 
     PRUint32 idx;
     nsresult rv = mStatement->GetColumnIndex(jsid, &idx);
@@ -152,7 +152,7 @@ NS_IMETHODIMP
 StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
                          JSContext *aCtx,
                          JSObject *aScopeObj,
-                         jsval aId,
+                         jsid aId,
                          PRUint32 aFlags,
                          JSObject **_objp,
                          PRBool *_retval)
@@ -161,8 +161,8 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
   // We do not throw at any point after this because we want to allow the
   // prototype chain to be checked for the property.
 
-  if (JSVAL_IS_STRING(aId)) {
-    JSString *str = JSVAL_TO_STRING(aId);
+  if (JSID_IS_STRING(aId)) {
+    JSString *str = JSID_TO_STRING(aId);
     nsDependentCString name(::JS_GetStringBytes(str));
 
     PRUint32 idx;

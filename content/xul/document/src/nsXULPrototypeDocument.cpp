@@ -132,7 +132,7 @@ nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
 
 
 JSBool
-nsXULPDGlobalObject_resolve(JSContext *cx, JSObject *obj, jsval id)
+nsXULPDGlobalObject_resolve(JSContext *cx, JSObject *obj, jsid id)
 {
     JSBool did_resolve = JS_FALSE;
 
@@ -684,7 +684,7 @@ nsXULPDGlobalObject::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScrip
     aScriptContext->WillInitializeContext();
     // NOTE: We init this context with a NULL global - this is subtly
     // different than nsGlobalWindow which passes 'this'
-    rv = aScriptContext->InitContext(nsnull);
+    rv = aScriptContext->InitContext();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

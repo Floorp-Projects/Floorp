@@ -76,6 +76,9 @@ nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes, nsIUnicodeDecoder** decode
 PRBool
 nsHtml5MetaScanner::tryCharset(nsString* charset)
 {
+  // This code needs to stay in sync with
+  // nsHtml5StreamParser::internalEncodingDeclaration. Unfortunately, the
+  // trickery with member fields here leads to some copy-paste reuse. :-(
   nsresult res = NS_OK;
   nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   if (NS_FAILED(res)) {
@@ -85,12 +88,9 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
   nsCAutoString encoding;
   CopyUTF16toUTF8(*charset, encoding);
   // XXX spec says only UTF-16
-  if (encoding.LowerCaseEqualsASCII("utf-16") ||
-      encoding.LowerCaseEqualsASCII("utf-16be") ||
-      encoding.LowerCaseEqualsASCII("utf-16le") ||
-      encoding.LowerCaseEqualsASCII("utf-32") ||
-      encoding.LowerCaseEqualsASCII("utf-32be") ||
-      encoding.LowerCaseEqualsASCII("utf-32le")) {
+  if (encoding.LowerCaseEqualsLiteral("utf-16") ||
+      encoding.LowerCaseEqualsLiteral("utf-16be") ||
+      encoding.LowerCaseEqualsLiteral("utf-16le")) {
     mCharset.Assign("UTF-8");
     res = convManager->GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
     if (NS_FAILED(res)) {
@@ -109,17 +109,17 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
   if (NS_FAILED(res)) {
     return PR_FALSE;
   }
-  if (preferred.LowerCaseEqualsASCII("utf-16") ||
-      preferred.LowerCaseEqualsASCII("utf-16be") ||
-      preferred.LowerCaseEqualsASCII("utf-16le") ||
-      preferred.LowerCaseEqualsASCII("utf-32") ||
-      preferred.LowerCaseEqualsASCII("utf-32be") ||
-      preferred.LowerCaseEqualsASCII("utf-32le") ||
-      preferred.LowerCaseEqualsASCII("utf-7") ||
-      preferred.LowerCaseEqualsASCII("jis_x0212-1990") ||
-      preferred.LowerCaseEqualsASCII("x-jis0208") ||
-      preferred.LowerCaseEqualsASCII("x-imap4-modified-utf7") ||
-      preferred.LowerCaseEqualsASCII("x-user-defined")) {
+  if (preferred.LowerCaseEqualsLiteral("utf-16") ||
+      preferred.LowerCaseEqualsLiteral("utf-16be") ||
+      preferred.LowerCaseEqualsLiteral("utf-16le") ||
+      preferred.LowerCaseEqualsLiteral("utf-32") ||
+      preferred.LowerCaseEqualsLiteral("utf-32be") ||
+      preferred.LowerCaseEqualsLiteral("utf-32le") ||
+      preferred.LowerCaseEqualsLiteral("utf-7") ||
+      preferred.LowerCaseEqualsLiteral("jis_x0212-1990") ||
+      preferred.LowerCaseEqualsLiteral("x-jis0208") ||
+      preferred.LowerCaseEqualsLiteral("x-imap4-modified-utf7") ||
+      preferred.LowerCaseEqualsLiteral("x-user-defined")) {
     return PR_FALSE;
   }
   res = convManager->GetUnicodeDecoderRaw(preferred.get(), getter_AddRefs(mUnicodeDecoder));

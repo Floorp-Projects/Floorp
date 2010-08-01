@@ -8,8 +8,8 @@
 
 #include "compiler/OutputHLSL.h"
 
-TranslatorHLSL::TranslatorHLSL(EShLanguage language, int debugOptions)
-    : TCompiler(language), debugOptions(debugOptions)
+TranslatorHLSL::TranslatorHLSL(EShLanguage lang, EShSpec spec)
+    : TCompiler(lang, spec)
 {
 }
 

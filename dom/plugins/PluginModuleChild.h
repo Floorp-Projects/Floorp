@@ -193,6 +193,10 @@ public:
     static NPUTF8* NP_CALLBACK NPN_UTF8FromIdentifier(NPIdentifier aIdentifier);
     static int32_t NP_CALLBACK NPN_IntFromIdentifier(NPIdentifier aIdentifier);
 
+#ifdef OS_MACOSX
+    void ProcessNativeEvents();
+#endif
+
 private:
     bool InitGraphics();
 #if defined(MOZ_WIDGET_GTK2)

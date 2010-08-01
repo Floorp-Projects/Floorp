@@ -69,6 +69,10 @@
 #include "COMMessageFilter.h"
 #endif
 
+#ifdef OS_MACOSX
+#include "PluginUtilsOSX.h"
+#endif
+
 using namespace mozilla::plugins;
 
 #if defined(XP_WIN)
@@ -1515,13 +1519,67 @@ _unscheduletimer(NPP npp, uint32_t timerID)
     InstCast(npp)->UnscheduleTimer(timerID);
 }
 
+
+#ifdef OS_MACOSX
+static void ProcessBrowserEvents(void* pluginModule) {
+    PluginModuleChild* pmc = static_cast<PluginModuleChild*>(pluginModule);
+
+    if (!pmc)
+        return;
+
+    pmc->CallProcessSomeEvents();
+}
+#endif
+
 NPError NP_CALLBACK
 _popupcontextmenu(NPP instance, NPMenu* menu)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
-    NS_WARNING("Not yet implemented!");
+
+#ifdef OS_MACOSX
+    double pluginX, pluginY; 
+    double screenX, screenY;
+
+    const NPCocoaEvent* currentEvent = InstCast(instance)->getCurrentEvent();
+    if (!currentEvent) {
+        return NPERR_GENERIC_ERROR;
+    }
+
+    // Ensure that the events has an x/y value.
+    if (currentEvent->type != NPCocoaEventMouseDown    &&
+        currentEvent->type != NPCocoaEventMouseUp      &&
+        currentEvent->type != NPCocoaEventMouseMoved   &&
+        currentEvent->type != NPCocoaEventMouseEntered &&
+        currentEvent->type != NPCocoaEventMouseExited  &&
+        currentEvent->type != NPCocoaEventMouseDragged) {
+        return NPERR_GENERIC_ERROR;
+    }
+
+    pluginX = currentEvent->data.mouse.pluginX;
+    pluginY = currentEvent->data.mouse.pluginY;
+
+    if ((pluginX < 0.0) || (pluginY < 0.0))
+        return NPERR_GENERIC_ERROR;
+
+    NPBool success = _convertpoint(instance, 
+                                  pluginX,  pluginY, NPCoordinateSpacePlugin, 
+                                 &screenX, &screenY, NPCoordinateSpaceScreen);
+
+    if (success) {
+        return mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(menu,
+                                    screenX, screenY,
+                                    PluginModuleChild::current(),
+                                    ProcessBrowserEvents);
+    } else {
+        NS_WARNING("Convertpoint failed, could not created contextmenu.");
+        return NPERR_GENERIC_ERROR;
+    }
+
+#else
+    NS_WARNING("Not supported on this platform!");
     return NPERR_GENERIC_ERROR;
+#endif
 }
 
 NPBool NP_CALLBACK
@@ -2025,5 +2083,12 @@ PluginModuleChild::ResetEventHooks()
     if (mGlobalCallWndProcHook)
         UnhookWindowsHookEx(mGlobalCallWndProcHook);
     mGlobalCallWndProcHook = NULL;
+}
+#endif
+
+#ifdef OS_MACOSX
+void
+PluginModuleChild::ProcessNativeEvents() {
+    CallProcessSomeEvents();    
 }
 #endif

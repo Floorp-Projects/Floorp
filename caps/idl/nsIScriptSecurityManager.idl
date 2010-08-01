@@ -51,7 +51,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript] void checkPropertyAccess(in JSContextPtr aJSContext,
                                         in JSObjectPtr aJSObject,
                                         in string aClassName,
-                                        in jsval aProperty,
+                                        in jsid aProperty,
                                         in PRUint32 aAction);
 
     /**
