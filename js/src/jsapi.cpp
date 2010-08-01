@@ -546,7 +546,7 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 #endif
 
 JSRuntime::JSRuntime()
-    : gcChunkAllocator(&defaultGCChunkAllocator)
+  : gcChunkAllocator(&defaultGCChunkAllocator)
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&contextList);
@@ -557,6 +557,16 @@ JSRuntime::JSRuntime()
 bool
 JSRuntime::init(uint32 maxbytes)
 {
+#ifdef DEBUG
+    functionMeterFilename = getenv("JS_FUNCTION_STATFILE");
+    if (functionMeterFilename) {
+        if (!methodReadBarrierCountMap.init())
+            return false;
+        if (!unjoinedFunctionCountMap.init())
+            return false;
+    }
+#endif
+
     if (!(defaultCompartment = new JSCompartment(this)) ||
         !defaultCompartment->init()) {
         return false;

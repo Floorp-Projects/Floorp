@@ -617,12 +617,14 @@ SaveScriptFilename(JSRuntime *rt, const char *filename, uint32 flags)
         sfp->flags |= flags;
     }
 
-#ifdef JS_FUNCTION_METERING
-    size_t len = strlen(sfe->filename);
-    if (len >= sizeof rt->lastScriptFilename)
-        len = sizeof rt->lastScriptFilename - 1;
-    memcpy(rt->lastScriptFilename, sfe->filename, len);
-    rt->lastScriptFilename[len] = '\0';
+#ifdef DEBUG
+    if (rt->functionMeterFilename) {
+        size_t len = strlen(sfe->filename);
+        if (len >= sizeof rt->lastScriptFilename)
+            len = sizeof rt->lastScriptFilename - 1;
+        memcpy(rt->lastScriptFilename, sfe->filename, len);
+        rt->lastScriptFilename[len] = '\0';
+    }
 #endif
 
     return sfe;
