@@ -154,6 +154,8 @@ private:
 
     virtual bool RecvSetURITitle(const IPC::URI& uri,
                                  const nsString& title);
+
+    virtual bool RecvLoadURIExteneral(const URI& uri);
     
     virtual bool RecvNotifyIME(const int&, const int&);
 
