@@ -323,11 +323,9 @@ STATIC_LIBRARY_NAME=$(LIBRARY_NAME)
 endif
 endif
 
-# GNU make on Windows can't handle using fake libs, because the path
-# munging gets confused when we pass response files like @file to the linker.
-#ifneq (WINNT_,$(OS_ARCH)_$(.PYMAKE))
+ifeq (WINNT_,$(OS_ARCH))
 MOZ_FAKELIBS = 1
-#endif
+endif
 
 # This comes from configure
 ifdef MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE
