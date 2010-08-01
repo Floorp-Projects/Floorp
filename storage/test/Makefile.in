@@ -75,7 +75,6 @@ LOCAL_INCLUDES = \
 
 LIBS = \
 	$(LIBS_DIR) \
-	$(MOZ_COMPONENT_LIBS) \
 	$(SQLITE_LIBS) \
 	$(NULL)
 
