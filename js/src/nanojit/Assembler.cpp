@@ -1651,7 +1651,7 @@ namespace nanojit
                     countlir_alu();
                     ins->oprnd1()->setResultLive();
                     if (ins->isExtant()) {
-                        asm_promote(ins);
+                        asm_ui2uq(ins);
                     }
                     break;
 
@@ -1660,6 +1660,22 @@ namespace nanojit
                     ins->oprnd1()->setResultLive();
                     if (ins->isExtant()) {
                         asm_q2i(ins);
+                    }
+                    break;
+
+                case LIR_dasq:
+                    countlir_alu();
+                    ins->oprnd1()->setResultLive();
+                    if (ins->isExtant()) {
+                        asm_dasq(ins);
+                    }
+                    break;
+
+                case LIR_qasd:
+                    countlir_alu();
+                    ins->oprnd1()->setResultLive();
+                    if (ins->isExtant()) {
+                        asm_qasd(ins);
                     }
                     break;
 #endif

@@ -90,6 +90,7 @@ var gTestResults = {
   AssertionKnown: 0,
   Random : 0,
   Skip: 0,
+  Slow: 0,
 };
 var gTotalTests = 0;
 var gState;
@@ -126,6 +127,9 @@ const gProtocolRE = /^\w+:/;
 
 var HTTP_SERVER_PORT = 4444;
 const HTTP_SERVER_PORTS_TO_TRY = 50;
+
+// whether to run slow tests or not
+var gRunSlowTests = true;
 
 // whether we should skip caching canvases
 var gNoCanvasCache = false;
@@ -258,6 +262,9 @@ function StartTests()
 
         if ("nocache" in args && args["nocache"])
             gNoCanvasCache = true;
+
+        if ("skipslowtests" in args && args.skipslowtests)
+            gRunSlowTests = false;
 
         ReadTopManifest(args.uri);
         BuildUseCounts();
@@ -444,7 +451,8 @@ function ReadManifest(aURL)
         var expected_status = EXPECTED_PASS;
         var minAsserts = 0;
         var maxAsserts = 0;
-        while (items[0].match(/^(fails|random|skip|asserts)/)) {
+        var slow = false;
+        while (items[0].match(/^(fails|random|skip|asserts|slow)/)) {
             var item = items.shift();
             var stat;
             var cond;
@@ -469,6 +477,13 @@ function ReadManifest(aURL)
                       (m[3] == undefined) ? minAsserts
                                           : Number(m[3].substring(1));
                 }
+            } else if (item == "slow") {
+                cond = false;
+                slow = true;
+            } else if ((m = item.match(/^slow-if\((.*?)\)$/))) {
+                cond = false;
+                if (Components.utils.evalInSandbox("(" + m[1] + ")", sandbox))
+                    slow = true;
             } else {
                 throw "Error 1 in manifest file " + aURL.spec + " line " + lineNo;
             }
@@ -540,6 +555,7 @@ function ReadManifest(aURL)
                           prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
+                          slow: slow,
                           url1: testURI,
                           url2: null } );
         } else if (items[0] == TYPE_SCRIPT) {
@@ -559,6 +575,7 @@ function ReadManifest(aURL)
                           prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
+                          slow: slow,
                           url1: testURI,
                           url2: null } );
         } else if (items[0] == TYPE_REFTEST_EQUAL || items[0] == TYPE_REFTEST_NOTEQUAL) {
@@ -581,6 +598,7 @@ function ReadManifest(aURL)
                           prettyPath: prettyPath,
                           minAsserts: minAsserts,
                           maxAsserts: maxAsserts,
+                          slow: slow,
                           url1: testURI,
                           url2: refURI } );
         } else {
@@ -660,10 +678,19 @@ function ServeFiles(manifestURL, depth, aURL, files)
 function StartCurrentTest()
 {
     // make sure we don't run tests that are expected to kill the browser
-    while (gURLs.length > 0 && gURLs[0].expected == EXPECTED_DEATH) {
-        ++gTestResults.Skip;
-        gDumpLog("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].url1.spec + " | (SKIP)\n");
-        gURLs.shift();
+    while (gURLs.length > 0) {
+        var test = gURLs[0];
+        if (test.expected == EXPECTED_DEATH) {
+            ++gTestResults.Skip;
+            gDumpLog("REFTEST TEST-KNOWN-FAIL | " + test.url1.spec + " | (SKIP)\n");
+            gURLs.shift();
+        } else if (test.slow && !gRunSlowTests) {
+            ++gTestResults.Slow;
+            gDumpLog("REFTEST TEST-KNOWN-SLOW | " + test.url1.spec + " | (SLOW)\n");
+            gURLs.shift();
+        } else {
+            break;
+        }
     }
 
     if (gURLs.length == 0) {
@@ -726,12 +753,13 @@ function DoneTests()
          gTestResults.FailedLoad + " failed load, " +
          gTestResults.Exception + " exception)\n");
     count = gTestResults.KnownFail + gTestResults.AssertionKnown +
-            gTestResults.Random + gTestResults.Skip;
-    gDumpLog("REFTEST INFO | Known problems: " + count + " (" +
+            gTestResults.Random + gTestResults.Skip + gTestResults.Slow;
+    dump("REFTEST INFO | Known problems: " + count + " (" +
          gTestResults.KnownFail + " known fail, " +
          gTestResults.AssertionKnown + " known asserts, " +
          gTestResults.Random + " random, " +
-         gTestResults.Skip + " skipped)\n");
+         gTestResults.Skip + " skipped, " +
+         gTestResults.Slow + " slow)\n");
 
     gDumpLog("REFTEST INFO | Total canvas count = " + gRecycledCanvases.length + "\n");
 

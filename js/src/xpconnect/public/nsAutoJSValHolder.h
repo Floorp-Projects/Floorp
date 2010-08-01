@@ -149,7 +149,7 @@ public:
 
   nsAutoJSValHolder &operator=(jsval aOther) {
 #ifdef DEBUG
-    if (aOther) {
+    if (JSVAL_IS_OBJECT(aOther) && JSVAL_TO_OBJECT(aOther)) {
       NS_ASSERTION(mHeld, "Not rooted!");
     }
 #endif

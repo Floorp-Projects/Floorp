@@ -44,22 +44,22 @@
 #include "jsdbgapi.h"
 
 static JSBool
-XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-XPC_NW_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_NW_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
-XPC_NW_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+XPC_NW_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 static JSBool
 XPC_NW_Enumerate(JSContext *cx, JSObject *obj);
 
 static JSBool
-XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                   JSObject **objp);
 
 static JSBool
@@ -69,7 +69,7 @@ static void
 XPC_NW_Finalize(JSContext *cx, JSObject *obj);
 
 static JSBool
-XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
+XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
                    JSAccessMode mode, jsval *vp);
 
 static JSBool
@@ -81,13 +81,13 @@ XPC_NW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  jsval *rval);
 
 static JSBool
-XPC_NW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+XPC_NW_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp);
 
 static void
 XPC_NW_Trace(JSTracer *trc, JSObject *obj);
 
 static JSBool
-XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+XPC_NW_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp);
 
 static JSObject *
 XPC_NW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
@@ -109,56 +109,68 @@ namespace XPCNativeWrapper { namespace internal {
 // JS class for XPCNativeWrapper (and this doubles as the constructor
 // for XPCNativeWrapper for the moment too...)
 
-JSExtendedClass NW_NoCall_Class = {
-  // JSClass (JSExtendedClass.base) initialization
-  { "XPCNativeWrapper",
+js::Class NW_NoCall_Class = {
+    "XPCNativeWrapper",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     // Our one reserved slot holds a jsint of flag bits
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_EXTENDED | JSCLASS_CONSTRUCT_PROTOTYPE,
-    XPC_NW_AddProperty, XPC_NW_DelProperty,
-    XPC_NW_GetProperty, XPC_NW_SetProperty,
-    XPC_NW_Enumerate,   (JSResolveOp)XPC_NW_NewResolve,
-    XPC_NW_Convert,     XPC_NW_Finalize,
-    nsnull,             XPC_NW_CheckAccess,
-    nsnull,             XPC_NW_Construct,
-    nsnull,             XPC_NW_HasInstance,
-    JS_CLASS_TRACE(XPC_NW_Trace), nsnull
-  },
+    JSCLASS_MARK_IS_TRACE | JSCLASS_CONSTRUCT_PROTOTYPE,
+    js::Valueify(XPC_NW_AddProperty),
+    js::Valueify(XPC_NW_DelProperty),
+    js::Valueify(XPC_NW_GetProperty),
+    js::Valueify(XPC_NW_SetProperty),
+    XPC_NW_Enumerate,
+    (JSResolveOp)XPC_NW_NewResolve,
+    js::Valueify(XPC_NW_Convert),
+    XPC_NW_Finalize,
+    nsnull,   // reserved0
+    js::Valueify(XPC_NW_CheckAccess),
+    nsnull,   // call
+    js::Valueify(XPC_NW_Construct),
+    nsnull,   // xdrObject
+    js::Valueify(XPC_NW_HasInstance),
+    JS_CLASS_TRACE(XPC_NW_Trace),
 
-  // JSExtendedClass initialization
-  XPC_NW_Equality,
-  nsnull,             // outerObject
-  nsnull,             // innerObject
-  XPC_NW_Iterator,
-  nsnull,             // wrappedObject
-  JSCLASS_NO_RESERVED_MEMBERS
+    // ClassExtension
+    {
+      js::Valueify(XPC_NW_Equality),
+      nsnull, // outerObject
+      nsnull, // innerObject
+      XPC_NW_Iterator,
+      nsnull, // wrappedObject
+    }
 };
 
-JSExtendedClass NW_Call_Class = {
-  // JSClass (JSExtendedClass.base) initialization
-  { "XPCNativeWrapper",
+js::Class NW_Call_Class = {
+    "XPCNativeWrapper",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     // Our one reserved slot holds a jsint of flag bits
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_EXTENDED | JSCLASS_CONSTRUCT_PROTOTYPE,
-    XPC_NW_AddProperty, XPC_NW_DelProperty,
-    XPC_NW_GetProperty, XPC_NW_SetProperty,
-    XPC_NW_Enumerate,   (JSResolveOp)XPC_NW_NewResolve,
-    XPC_NW_Convert,     XPC_NW_Finalize,
-    nsnull,             XPC_NW_CheckAccess,
-    XPC_NW_Call,        XPC_NW_Construct,
-    nsnull,             XPC_NW_HasInstance,
-    JS_CLASS_TRACE(XPC_NW_Trace), nsnull
-  },
+    JSCLASS_MARK_IS_TRACE | JSCLASS_CONSTRUCT_PROTOTYPE,
+    js::Valueify(XPC_NW_AddProperty),
+    js::Valueify(XPC_NW_DelProperty),
+    js::Valueify(XPC_NW_GetProperty),
+    js::Valueify(XPC_NW_SetProperty),
+    XPC_NW_Enumerate,
+    (JSResolveOp)XPC_NW_NewResolve,
+    js::Valueify(XPC_NW_Convert),
+    XPC_NW_Finalize,
+    nsnull,   // reserved0
+    js::Valueify(XPC_NW_CheckAccess),
+    js::Valueify(XPC_NW_Call),
+    js::Valueify(XPC_NW_Construct),
+    nsnull,   // xdrObject
+    js::Valueify(XPC_NW_HasInstance),
+    JS_CLASS_TRACE(XPC_NW_Trace),
 
-  // JSExtendedClass initialization
-  XPC_NW_Equality,
-  nsnull,             // outerObject
-  nsnull,             // innerObject
-  XPC_NW_Iterator,
-  nsnull,             // wrappedObject
-  JSCLASS_NO_RESERVED_MEMBERS
+    // ClassExtension
+    {
+      js::Valueify(XPC_NW_Equality),
+      nsnull, // outerObject
+      nsnull, // innerObject
+      XPC_NW_Iterator,
+      nsnull, // wrappedObject
+    }
 };
 
 } // namespace internal
@@ -289,7 +301,7 @@ ThrowException(nsresult ex, JSContext *cx)
 static inline
 JSBool
 EnsureLegalActivity(JSContext *cx, JSObject *obj,
-                    jsval id = JSVAL_VOID, PRUint32 accessType = 0)
+                    jsid id = JSID_VOID, PRUint32 accessType = 0)
 {
   nsIScriptSecurityManager *ssm = GetSecurityManager();
   if (!ssm) {
@@ -336,7 +348,7 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
       }
 
       JSObject* flatObj;
-      if (!JSVAL_IS_VOID(id) &&
+      if (!JSID_IS_VOID(id) &&
           (accessType & (sSecMgrSetProp | sSecMgrGetProp)) &&
           (flatObj = wn->GetFlatJSObject())) {
         rv = ssm->CheckPropertyAccess(cx, flatObj,
@@ -383,13 +395,11 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
 }
 
 static JSBool
-XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-  jsid idAsId;
   JSPropertyDescriptor desc;
 
-  if (!JS_ValueToId(cx, id, &idAsId) ||
-      !JS_GetPropertyDescriptorById(cx, obj, idAsId, JSRESOLVE_QUALIFIED,
+  if (!JS_GetPropertyDescriptorById(cx, obj, id, JSRESOLVE_QUALIFIED,
                                     &desc)) {
     return JS_FALSE;
   }
@@ -416,7 +426,7 @@ XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   return EnsureLegalActivity(cx, obj);
 }
@@ -496,12 +506,12 @@ GetwrappedJSObject(JSContext *cx, JSObject *obj, jsval *vp)
 }
 
 static JSBool
-XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
+XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                         JSBool aIsSet)
 {
   // We don't deal with the following properties here.
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_PROTOTYPE) ||
-      id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+  if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTOTYPE) ||
+      id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
     return JS_TRUE;
   }
 
@@ -527,7 +537,7 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   JSObject *nativeObj = wrappedNative->GetFlatJSObject();
 
   if (!aIsSet &&
-      id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
+      id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
     return GetwrappedJSObject(cx, nativeObj, vp);
   }
 
@@ -536,13 +546,13 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
 }
 
 static JSBool
-XPC_NW_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_NW_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   return XPC_NW_GetOrSetProperty(cx, obj, id, vp, PR_FALSE);
 }
 
 static JSBool
-XPC_NW_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+XPC_NW_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   return XPC_NW_GetOrSetProperty(cx, obj, id, vp, PR_TRUE);
 }
@@ -570,18 +580,18 @@ XPC_NW_Enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                   JSObject **objp)
 {
   // No need to preserve on sets of wrappedJSObject or toString, since callers
   // couldn't get at those values anyway.  Also, we always deal with
   // wrappedJSObject and toString before looking at our scriptable hooks, so no
   // need to mess with our flags yet.
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
+  if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
     return JS_TRUE;
   }
 
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+  if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
     *objp = obj;
 
     // See the comment in WrapFunction for why we create this function
@@ -646,7 +656,7 @@ XPC_NW_Finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
+XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
                    JSAccessMode mode, jsval *vp)
 {
   // Prevent setting __proto__ on an XPCNativeWrapper
@@ -669,7 +679,7 @@ XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
 
   JSObject *wrapperJSObject = wrappedNative->GetFlatJSObject();
 
-  JSClass *clazz = wrapperJSObject->getClass();
+  JSClass *clazz = wrapperJSObject->getJSClass();
   return !clazz->checkAccess ||
     clazz->checkAccess(cx, wrapperJSObject, id, mode, vp);
 }
@@ -731,7 +741,7 @@ XPC_NW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSBool
-XPC_NW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+XPC_NW_HasInstance(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
 {
   return JS_TRUE;
 }
@@ -886,7 +896,7 @@ XPC_NW_Trace(JSTracer *trc, JSObject *obj)
 }
 
 static JSBool
-XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+XPC_NW_Equality(JSContext *cx, JSObject *obj, const jsval *valp, JSBool *bp)
 {
   NS_ASSERTION(XPCNativeWrapper::IsNativeWrapper(obj),
                "Uh, we should only ever be called for XPCNativeWrapper "
@@ -896,6 +906,7 @@ XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     return JS_FALSE;
   }
 
+  jsval v = *valp;
   if (JSVAL_IS_PRIMITIVE(v)) {
     *bp = JS_FALSE;
 
@@ -965,7 +976,7 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   if (!EnsureLegalActivity(cx, obj,
-                           GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING),
+                           GetRTIdByIndex(cx, XPCJSRuntime::IDX_TO_STRING),
                            sSecMgrGetProp)) {
     return JS_FALSE;
   }
@@ -1029,7 +1040,8 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
                                              JSObject *aGlobalObject)
 {
   JSObject *class_obj =
-    ::JS_InitClass(ccx, aGlobalObject, nsnull, &internal::NW_Call_Class.base,
+    ::JS_InitClass(ccx, aGlobalObject, nsnull,
+                   js::Jsvalify(&internal::NW_Call_Class),
                    XPCNativeWrapperCtor, 0, nsnull, nsnull,
                    nsnull, static_functions);
   if (!class_obj) {
@@ -1047,7 +1059,7 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
 
   JSBool found;
   return ::JS_SetPropertyAttributes(ccx, aGlobalObject,
-                                    internal::NW_Call_Class.base.name,
+                                    internal::NW_Call_Class.name,
                                     JSPROP_READONLY | JSPROP_PERMANENT,
                                     &found);
 }

@@ -218,6 +218,8 @@ for ( var space = " ", HEX_STRING = "0x0", HEX_VALUE = 0, POWER = 0;
   HEX_VALUE += Math.pow(16,POWER)*15;
 }
 
+new TestCase(SECTION, "parseInt(BOM + '123', 10)", 123, parseInt("\uFEFF" + "123", 10));
+
 // a few tests with negative numbers
 for ( HEX_STRING = "-0x0", HEX_VALUE = 0, POWER = 0; POWER < 15; POWER++, HEX_STRING = HEX_STRING +"f" ) {
   new TestCase( SECTION, "parseInt("+HEX_STRING+")",    HEX_VALUE,  parseInt(HEX_STRING) );

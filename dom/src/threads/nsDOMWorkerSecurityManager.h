@@ -50,7 +50,7 @@ public:
 
   static JSPrincipals* WorkerPrincipal();
 
-  static JSBool JSCheckAccess(JSContext* aCx, JSObject* aObj, jsval aId,
+  static JSBool JSCheckAccess(JSContext* aCx, JSObject* aObj, jsid aId,
                               JSAccessMode aMode, jsval* aVp);
 
   static JSPrincipals* JSFindPrincipal(JSContext* aCx, JSObject* aObj);

@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is js-ctypes.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
  * The Mozilla Foundation <http://www.mozilla.org/>.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
- *  Dan Witte <dwitte@mozilla.com>
+ *    Zack Weinberg <zweinberg@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,19 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "Module.h"
-#include "jsapi.h"
+#include "PerfMeasurement.h"
+#include "jsperf.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsMemory.h"
 
-#define JSCTYPES_CONTRACTID \
-  "@mozilla.org/jsctypes;1"
+#define JSPERF_CONTRACTID \
+  "@mozilla.org/jsperf;1"
 
-#define JSCTYPES_CID \
-{ 0xc797702, 0x1c60, 0x4051, { 0x9d, 0xd7, 0x4d, 0x74, 0x5, 0x60, 0x56, 0x42 } }
+#define JSPERF_CID            \
+{ 0x421c38e6, 0xaee0, 0x4509, \
+  { 0xa0, 0x25, 0x13, 0x0f, 0x43, 0x78, 0x03, 0x5a } }
 
 namespace mozilla {
-namespace ctypes {
+namespace jsperf {
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(Module)
 
@@ -86,14 +86,14 @@ SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
 }
 
 static JSBool
-InitAndSealCTypesClass(JSContext* cx, JSObject* global)
+InitAndSealPerfMeasurementClass(JSContext* cx, JSObject* global)
 {
-  // Init the ctypes object.
-  if (!JS_InitCTypesClass(cx, global))
+  // Init the PerfMeasurement class
+  if (!JS::RegisterPerfMeasurement(cx, global))
     return false;
 
   // Seal up Object, Function, and Array and their prototypes.  (This single
-  // object instance is shared amongst everyone who imports the ctypes module.)
+  // object instance is shared amongst everyone who imports the jsperf module.)
   if (!SealObjectAndPrototype(cx, global, "Object") ||
       !SealObjectAndPrototype(cx, global, "Function") ||
       !SealObjectAndPrototype(cx, global, "Array"))
@@ -113,30 +113,37 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
              jsval* vp,
              PRBool* _retval)
 {
-  JSObject* global = JS_GetGlobalObject(cx);
-  *_retval = InitAndSealCTypesClass(cx, global);
+  JSObject* scope = JS_GetScopeChain(cx);
+  if (!scope)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  JSObject* global = JS_GetGlobalForObject(cx, scope);
+  if (!global)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  *_retval = InitAndSealPerfMeasurementClass(cx, global);
   return NS_OK;
 }
 
 }
 }
 
-NS_DEFINE_NAMED_CID(JSCTYPES_CID);
+NS_DEFINE_NAMED_CID(JSPERF_CID);
 
-static const mozilla::Module::CIDEntry kCTypesCIDs[] = {
-  { &kJSCTYPES_CID, false, NULL, mozilla::ctypes::ModuleConstructor },
+static const mozilla::Module::CIDEntry kPerfCIDs[] = {
+  { &kJSPERF_CID, false, NULL, mozilla::jsperf::ModuleConstructor },
   { NULL }
 };
 
-static const mozilla::Module::ContractIDEntry kCTypesContracts[] = {
-  { JSCTYPES_CONTRACTID, &kJSCTYPES_CID },
+static const mozilla::Module::ContractIDEntry kPerfContracts[] = {
+  { JSPERF_CONTRACTID, &kJSPERF_CID },
   { NULL }
 };
 
-static const mozilla::Module kCTypesModule = {
+static const mozilla::Module kPerfModule = {
   mozilla::Module::kVersion,
-  kCTypesCIDs,
-  kCTypesContracts
+  kPerfCIDs,
+  kPerfContracts
 };
 
-NSMODULE_DEFN(jsctypes) = &kCTypesModule;
+NSMODULE_DEFN(jsperf) = &kPerfModule;
