@@ -47,14 +47,16 @@ function do_run_test() {
   do_set_cookies(uri2, channel1, true, [1, 2, 3, 4]);
 
   // fake a profile change
-  do_reload_profile(test_generator, profile);
+  do_close_profile(test_generator);
   yield;
+  do_load_profile();
   do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 4);
   do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
   // cleanse them
-  do_reload_profile(test_generator, profile, "shutdown-cleanse");
+  do_close_profile(test_generator, "shutdown-cleanse");
   yield;
+  do_load_profile();
   do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 0);
   do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
@@ -64,8 +66,9 @@ function do_run_test() {
   do_set_cookies(uri2, channel1, true, [1, 2, 3, 4]);
 
   // fake a profile change
-  do_reload_profile(test_generator, profile);
+  do_close_profile(test_generator);
   yield;
+  do_load_profile();
   do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 0);
   do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 0);
 

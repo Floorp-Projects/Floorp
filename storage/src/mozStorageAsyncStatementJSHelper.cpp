@@ -116,11 +116,11 @@ NS_IMETHODIMP
 AsyncStatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
                                     JSContext *aCtx,
                                     JSObject *aScopeObj,
-                                    jsval aId,
+                                    jsid aId,
                                     jsval *_result,
                                     PRBool *_retval)
 {
-  if (!JSVAL_IS_STRING(aId))
+  if (!JSID_IS_STRING(aId))
     return NS_OK;
 
   // Cast to async via mozI* since direct from nsISupports is ambiguous.
@@ -136,7 +136,7 @@ AsyncStatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
   }
 #endif
 
-  const char *propName = ::JS_GetStringBytes(JSVAL_TO_STRING(aId));
+  const char *propName = ::JS_GetStringBytes(JSID_TO_STRING(aId));
   if (::strcmp(propName, "params") == 0)
     return getParams(stmt, aCtx, aScopeObj, _result);
 

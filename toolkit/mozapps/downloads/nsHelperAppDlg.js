@@ -61,6 +61,64 @@ function isUsableDirectory(aDirectory)
          aDirectory.isWritable();
 }
 
+// Web progress listener so we can detect errors while mLauncher is
+// streaming the data to a temporary file.
+function nsUnkownContentTypeDialogProgressListener(aHelperAppDialog) {
+  this.helperAppDlg = aHelperAppDialog;
+}
+
+nsUnkownContentTypeDialogProgressListener.prototype = {
+  // nsIWebProgressListener methods.
+  // Look for error notifications and display alert to user.
+  onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage ) {
+    if ( aStatus != Components.results.NS_OK ) {
+      // Get prompt service.
+      var prompter = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
+                               .getService( Components.interfaces.nsIPromptService );
+      // Display error alert (using text supplied by back-end).
+      // FIXME this.dialog is undefined?
+      prompter.alert( this.dialog, this.helperAppDlg.mTitle, aMessage );
+      // Close the dialog.
+      this.helperAppDlg.onCancel();
+      if ( this.helperAppDlg.mDialog ) {
+        this.helperAppDlg.mDialog.close();
+      }
+    }
+  },
+
+  // Ignore onProgressChange, onProgressChange64, onStateChange, onLocationChange, onSecurityChange, and onRefreshAttempted notifications.
+  onProgressChange: function( aWebProgress,
+                              aRequest,
+                              aCurSelfProgress,
+                              aMaxSelfProgress,
+                              aCurTotalProgress,
+                              aMaxTotalProgress ) {
+  },
+
+  onProgressChange64: function( aWebProgress,
+                                aRequest,
+                                aCurSelfProgress,
+                                aMaxSelfProgress,
+                                aCurTotalProgress,
+                                aMaxTotalProgress ) {
+  },
+
+
+
+  onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
+  },
+
+  onLocationChange: function( aWebProgress, aRequest, aLocation ) {
+  },
+
+  onSecurityChange: function( aWebProgress, aRequest, state ) {
+  },
+
+  onRefreshAttempted: function( aWebProgress, aURI, aDelay, aSameURI ) {
+    return true;
+  }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 //// nsUnkownContentTypeDialog
 
@@ -154,8 +212,8 @@ nsUnknownContentTypeDialog.prototype = {
     this.getSpecialFolderKey = this.mDialog.getSpecialFolderKey;
 
     // Watch for error notifications.
-    this.progressListener.helperAppDlg = this;
-    this.mLauncher.setWebProgressListener(this.progressListener);
+    var progressListener = new nsUnkownContentTypeDialogProgressListener(this);
+    this.mLauncher.setWebProgressListener(progressListener);
   },
 
   // promptForSaveToFile:  Display file picker dialog and return selected file.
@@ -341,63 +399,6 @@ nsUnknownContentTypeDialog.prototype = {
   },
 
   // ---------- implementation methods ----------
-
-  // Web progress listener so we can detect errors while mLauncher is
-  // streaming the data to a temporary file.
-  progressListener: {
-    // Implementation properties.
-    helperAppDlg: null,
-
-    // nsIWebProgressListener methods.
-    // Look for error notifications and display alert to user.
-    onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage ) {
-      if ( aStatus != Components.results.NS_OK ) {
-        // Get prompt service.
-        var prompter = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
-                                 .getService( Components.interfaces.nsIPromptService );
-        // Display error alert (using text supplied by back-end).
-        prompter.alert( this.dialog, this.helperAppDlg.mTitle, aMessage );
-
-        // Close the dialog.
-        this.helperAppDlg.onCancel();
-        if ( this.helperAppDlg.mDialog ) {
-          this.helperAppDlg.mDialog.close();
-        }
-      }
-    },
-
-    // Ignore onProgressChange, onProgressChange64, onStateChange, onLocationChange, onSecurityChange, and onRefreshAttempted notifications.
-    onProgressChange: function( aWebProgress,
-                                aRequest,
-                                aCurSelfProgress,
-                                aMaxSelfProgress,
-                                aCurTotalProgress,
-                                aMaxTotalProgress ) {
-    },
-
-    onProgressChange64: function( aWebProgress,
-                                  aRequest,
-                                  aCurSelfProgress,
-                                  aMaxSelfProgress,
-                                  aCurTotalProgress,
-                                  aMaxTotalProgress ) {
-    },
-
-
-
-    onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
-    },
-
-    onLocationChange: function( aWebProgress, aRequest, aLocation ) {
-    },
-
-    onSecurityChange: function( aWebProgress, aRequest, state ) {
-    },
-
-    onRefreshAttempted: function( aWebProgress, aURI, aDelay, aSameURI ) {
-      return true;
-    }
-  },
 
   // initDialog:  Fill various dialog fields with initial content.
   initDialog : function() {

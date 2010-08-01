@@ -74,6 +74,8 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 USE_STATIC_LIBS = 1
 
+LOCAL_INCLUDES += -I$(srcdir)/../src
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef _MSC_VER

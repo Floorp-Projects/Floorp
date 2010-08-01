@@ -317,7 +317,7 @@ Assembler::asm_sub_imm(Register rd, Register rn, int32_t imm, int stat /* =0 */)
     NanoAssert(IsGpReg(rd));
     NanoAssert(IsGpReg(rn));
     NanoAssert((stat & 1) == stat);
-    
+
     // As a special case to simplify code elsewhere, emit nothing where we
     // don't want to update the flags (stat == 0), the second operand is 0 and
     // (rd == rn). Such instructions are effectively NOPs.
@@ -1178,7 +1178,7 @@ Assembler::nPatchBranch(NIns* branch, NIns* target)
 RegisterMask
 Assembler::nHint(LIns* ins)
 {
-    NanoAssert(ins->isop(LIR_paramp)); 
+    NanoAssert(ins->isop(LIR_paramp));
     RegisterMask prefer = 0;
     if (ins->paramKind() == 0)
         if (ins->paramArg() < 4)

@@ -61,7 +61,6 @@ nsDragService::~nsDragService()
 {
     /* destructor code */
     delete mHiddenWidget;
-    delete mDrag;
 }
 
 NS_IMETHODIMP

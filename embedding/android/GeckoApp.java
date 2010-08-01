@@ -228,16 +228,33 @@ abstract public class GeckoApp
 
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                if (event.getRepeatCount() == 0) {
+                    event.startTracking();
+                    return true;
+                } else {
+                    return false;
+                }
             case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_VOLUME_DOWN:
+            case KeyEvent.KEYCODE_SEARCH:
                 return false;
             default:
-                GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
-                return true;
+                break;
         }
+        GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
+        return true;
     }
 
     public boolean onKeyUp(int keyCode, KeyEvent event) {
+        switch(keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                if (!event.isTracking() || event.isCanceled())
+                    return false;
+                break;
+            default:
+                break;
+        }
         GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
         return true;
     }

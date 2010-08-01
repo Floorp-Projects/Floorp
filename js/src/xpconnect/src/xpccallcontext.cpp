@@ -43,13 +43,13 @@
 #include "xpcprivate.h"
 
 XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
-                               JSContext* cx    /* = nsnull  */,
-                               JSObject* obj    /* = nsnull  */,
-                               JSObject* funobj /* = nsnull  */,
-                               jsval name       /* = 0       */,
-                               uintN argc       /* = NO_ARGS */,
-                               jsval *argv      /* = nsnull  */,
-                               jsval *rval      /* = nsnull  */)
+                               JSContext* cx    /* = nsnull    */,
+                               JSObject* obj    /* = nsnull    */,
+                               JSObject* funobj /* = nsnull    */,
+                               jsid name        /* = JSID_VOID */,
+                               uintN argc       /* = NO_ARGS   */,
+                               jsval *argv      /* = nsnull    */,
+                               jsval *rval      /* = nsnull    */)
     :   mState(INIT_FAILED),
         mXPC(nsXPConnect::GetXPConnect()),
         mThreadData(nsnull),
@@ -84,7 +84,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mTearOff(tearOff),
         mCallee(nsnull)
 {
-    Init(callerLanguage, callBeginRequest, obj, nsnull, JS_FALSE, 0, NO_ARGS,
+    Init(callerLanguage, callBeginRequest, obj, nsnull, JS_FALSE, JSID_VOID, NO_ARGS,
          nsnull, nsnull);
 }
 
@@ -94,7 +94,7 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
                      JSObject* obj,
                      JSObject* funobj,
                      JSBool getWrappedNative,
-                     jsval name,
+                     jsid name,
                      uintN argc,
                      jsval *argv,
                      jsval *rval)
@@ -220,7 +220,7 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
         mFlattenedJSObject = mCurrentJSObject;
     }
 
-    if(name)
+    if(!JSID_IS_VOID(name))
         SetName(name);
 
     if(argc != NO_ARGS)
@@ -230,7 +230,7 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
 }
 
 void
-XPCCallContext::SetName(jsval name)
+XPCCallContext::SetName(jsid name)
 {
     CHECK_STATE(HAVE_OBJECT);
 

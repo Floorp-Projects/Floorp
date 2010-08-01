@@ -40,17 +40,13 @@
 #ifndef nsICSSPseudoComparator_h___
 #define nsICSSPseudoComparator_h___
 
-#include "nsQueryFrame.h"
-
 class nsIAtom;
 struct nsCSSSelector;
 
 class nsICSSPseudoComparator
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsICSSPseudoComparator)
-
-  NS_IMETHOD  PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult)=0;
+  virtual PRBool PseudoMatches(nsCSSSelector* aSelector)=0;
 };
 
 #endif /* nsICSSPseudoComparator_h___ */

@@ -279,6 +279,7 @@ if __name__ == '__main__':
         op.error('missing JS_SHELL argument')
     # We need to make sure we are using backslashes on Windows.
     JS, test_args = os.path.normpath(args[0]), args[1:]
+    JS = os.path.realpath(JS) # Burst through the symlinks!
 
     if OPTIONS.retest:
         OPTIONS.read_tests = OPTIONS.retest

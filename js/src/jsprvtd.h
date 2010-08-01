@@ -57,32 +57,17 @@
 #include "jspubtd.h"
 #include "jsutil.h"
 
-/* Internal identifier (jsid) macros. */
-
-#define JSID_IS_ATOM(id)            JSVAL_IS_STRING((jsval)(id))
-#define JSID_TO_ATOM(id)            ((JSAtom *)(id))
-#define ATOM_TO_JSID(atom)          (JS_ASSERT(ATOM_IS_STRING(atom)),         \
-                                     (jsid)(atom))
-
-#define JSID_IS_INT(id)             JSVAL_IS_INT((jsval)(id))
-#define JSID_TO_INT(id)             JSVAL_TO_INT((jsval)(id))
-#define INT_TO_JSID(i)              ((jsid)INT_TO_JSVAL(i))
-#define INT_JSVAL_TO_JSID(v)        ((jsid)(v))
-#define INT_JSID_TO_JSVAL(id)       ((jsval)(id))
-#define INT_FITS_IN_JSID(i)         INT_FITS_IN_JSVAL(i)
-
-#define JSID_IS_OBJECT(id)          JSVAL_IS_OBJECT((jsval)(id))
-#define JSID_TO_OBJECT(id)          JSVAL_TO_OBJECT((jsval)(id))
-#define OBJECT_TO_JSID(obj)         ((jsid)OBJECT_TO_JSVAL(obj))
-#define OBJECT_JSVAL_TO_JSID(v)     ((jsid)v)
-
-#define ID_TO_VALUE(id)             ((jsval)(id))
+JS_BEGIN_EXTERN_C
 
 /*
  * Convenience constants.
  */
 #define JS_BITS_PER_UINT32_LOG2 5
 #define JS_BITS_PER_UINT32      32
+
+/* The alignment required of objects stored in GC arenas. */
+static const uintN JS_GCTHING_ALIGN = 8;
+static const uintN JS_GCTHING_ZEROBITS = 3;
 
 /* Scalar typedefs. */
 typedef uint8  jsbytecode;
@@ -104,7 +89,7 @@ struct Compiler;
 /* Struct typedefs. */
 typedef struct JSArgumentFormatMap  JSArgumentFormatMap;
 typedef struct JSCodeGenerator      JSCodeGenerator;
-typedef union JSGCThing             JSGCThing;
+typedef struct JSGCThing            JSGCThing;
 typedef struct JSGenerator          JSGenerator;
 typedef struct JSNativeEnumerator   JSNativeEnumerator;
 typedef struct JSFunctionBox        JSFunctionBox;
@@ -158,7 +143,7 @@ class InvokeArgsGuard;
 class TraceRecorder;
 struct TraceMonitor;
 class StackSpace;
-class CallStack;
+class CallStackSegment;
 
 class TokenStream;
 struct Token;
@@ -192,11 +177,6 @@ class DeflatedStringCache;
 class PropertyCache;
 struct PropertyCacheEntry;
 
-static inline JSPropertyOp
-CastAsPropertyOp(JSObject *object)
-{
-    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
-}
 
 } /* namespace js */
 
@@ -232,7 +212,7 @@ typedef JSTrapStatus
                 void *closure);
 
 typedef JSBool
-(* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id, jsval old,
+(* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsid id, jsval old,
                         jsval *newp, void *closure);
 
 /* called just after script creation */
@@ -283,9 +263,6 @@ typedef void *
 (* JSInterpreterHook)(JSContext *cx, JSStackFrame *fp, JSBool before,
                       JSBool *ok, void *closure);
 
-typedef void
-(* JSObjectHook)(JSContext *cx, JSObject *obj, JSBool isNew, void *closure);
-
 typedef JSBool
 (* JSDebugErrorHook)(JSContext *cx, const char *message, JSErrorReport *report,
                      void *closure);
@@ -305,8 +282,6 @@ typedef struct JSDebugHooks {
     void                *executeHookData;
     JSInterpreterHook   callHook;
     void                *callHookData;
-    JSObjectHook        objectHook;
-    void                *objectHookData;
     JSThrowHook         throwHook;
     void                *throwHookData;
     JSDebugErrorHook    debugErrorHook;
@@ -341,7 +316,7 @@ typedef JSBool
  * value, with the specified getter, setter, and attributes.
  */
 typedef JSBool
-(* JSDefinePropOp)(JSContext *cx, JSObject *obj, jsid id, jsval value,
+(* JSDefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const jsval *value,
                    JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
 
 /*
@@ -371,6 +346,20 @@ typedef JSBool
 (* JSCallOp)(JSContext *cx, uintN argc, jsval *vp);
 
 /*
+ * A generic type for functions mapping an object to another object, or null
+ * if an error or exception was thrown on cx.
+ */
+typedef JSObject *
+(* JSObjectOp)(JSContext *cx, JSObject *obj);
+
+/*
+ * Hook that creates an iterator object for a given object. Returns the
+ * iterator object or null if an error or exception was thrown on cx.
+ */
+typedef JSObject *
+(* JSIteratorOp)(JSContext *cx, JSObject *obj, JSBool keysonly);
+
+/*
  * The following determines whether JS_EncodeCharacters and JS_DecodeBytes
  * treat char[] as utf-8 or simply as bytes that need to be inflated/deflated.
  */
@@ -379,5 +368,14 @@ typedef JSBool
 #else
 extern JSBool js_CStringsAreUTF8;
 #endif
+
+/*
+ * Hack to expose obj->getOps()->outer to the C implementation of the debugger
+ * interface.
+ */
+extern JS_FRIEND_API(JSObject *)
+js_ObjectToOuterObject(JSContext *cx, JSObject *obj);
+
+JS_END_EXTERN_C
 
 #endif /* jsprvtd_h___ */

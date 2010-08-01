@@ -176,8 +176,8 @@ private:
       Notification::Clear(); mFrom = nsnull; mTo = nsnull;
     }
   protected:
-    nsCOMPtr<Element> mFrom;
-    nsCOMPtr<Element> mTo;
+    nsRefPtr<Element> mFrom;
+    nsRefPtr<Element> mTo;
   };
   friend class ChangeNotification;
 
@@ -206,7 +206,7 @@ private:
   
   nsCOMPtr<nsIAtom>      mWatchID;
   nsCOMPtr<nsIDocument>  mWatchDocument;
-  nsCOMPtr<Element> mElement;
+  nsRefPtr<Element> mElement;
   nsRefPtr<Notification> mPendingNotification;
 };
 

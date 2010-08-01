@@ -229,6 +229,11 @@ class ReftestOptions(OptionParser):
                     help = "file to log output to in addition to stdout")
     defaults["logFile"] = None
  
+    self.add_option("--skip-slow-tests",
+                    dest = "skipSlowTests", action = "store_true",
+                    help = "skip tests marked as slow when running")
+    defaults["skipSlowTests"] = False
+
     self.set_defaults(**defaults)
 
 def main():

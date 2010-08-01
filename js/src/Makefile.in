@@ -226,6 +226,7 @@ INSTALLED_HEADERS = \
 		jsscript.h \
 		jsscriptinlines.h \
 		jsstaticcheck.h \
+		jsstdint.h \
 		jsstr.h \
 		jstask.h \
 		jstracer.h \
@@ -239,6 +240,8 @@ INSTALLED_HEADERS = \
 		jswrapper.h \
 		jsxdrapi.h \
 		jsxml.h \
+		jsval.h \
+		jsvalue.h \
 		prmjtime.h \
 		$(NULL)
 
@@ -317,6 +320,19 @@ INSTALLED_HEADERS += \
 		jsdtracef.h \
 		$(CURDIR)/javascript-trace.h \
 		$(NULL)
+endif
+
+# PerfMeasurement is available regardless of low-level support for it;
+# it just doesn't necessarily do anything useful.  There is one
+# implementation source file per supported operating system, plus a stub
+# for unsupported OSes, plus the Javascript wrapper.
+VPATH += $(srcdir)/perf
+INSTALLED_HEADERS += jsperf.h
+CPPSRCS += jsperf.cpp
+ifdef HAVE_LINUX_PERF_EVENT_H
+CPPSRCS += pm_linux.cpp
+else
+CPPSRCS += pm_stub.cpp
 endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))

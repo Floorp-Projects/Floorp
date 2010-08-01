@@ -36,14 +36,15 @@ struct TPragma {
 // they can be passed to the parser without needing a global.
 //
 struct TParseContext {
-    TParseContext(TSymbolTable& symt, TIntermediate& interm, EShLanguage L, TInfoSink& is) :
-            intermediate(interm), symbolTable(symt), infoSink(is), language(L), treeRoot(0),
+    TParseContext(TSymbolTable& symt, TIntermediate& interm, EShLanguage l, EShSpec s, TInfoSink& is) :
+            intermediate(interm), symbolTable(symt), infoSink(is), language(l), spec(s), treeRoot(0),
             recoveredFromError(false), numErrors(0), lexAfterType(false), loopNestingLevel(0),
             inTypeParen(false), contextPragma(true, false) {  }
     TIntermediate& intermediate; // to hold and build a parse tree
     TSymbolTable& symbolTable;   // symbol table that goes with the language currently being parsed
     TInfoSink& infoSink;
     EShLanguage language;        // vertex or fragment language (future: pack or unpack)
+    EShSpec spec;                // The language specification compiler conforms to - GLES2 or WebGL.
     TIntermNode* treeRoot;       // root of parse tree being created
     bool recoveredFromError;     // true if a parse error has occurred, but we continue to parse
     int numErrors;
@@ -55,8 +56,8 @@ struct TParseContext {
     TMap<TString, TBehavior> extensionBehavior;
     void initializeExtensionBehavior();
 
-    void C_DECL error(TSourceLoc, const char *szReason, const char *szToken,
-                      const char *szExtraInfoFormat, ...);
+    void error(TSourceLoc, const char *szReason, const char *szToken,
+               const char *szExtraInfoFormat, ...);
     bool reservedErrorCheck(int line, const TString& identifier);
     void recover();
 

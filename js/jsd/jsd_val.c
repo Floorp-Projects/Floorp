@@ -42,20 +42,7 @@
 #include "jsd.h"
 #include "jsapi.h"
 #include "jspubtd.h"
-
-/*
- * Lifted with slight modification from jsobj.h
- */
-
-#define OBJ_TO_OUTER_OBJECT(cx, obj)                                \
-do {                                                                \
-    JSClass *clasp_ = JS_GetClass(cx, obj);                         \
-    if (clasp_->flags & JSCLASS_IS_EXTENDED) {                      \
-        JSExtendedClass *xclasp_ = (JSExtendedClass*) clasp_;       \
-        if (xclasp_->outerObject)                                   \
-            obj = xclasp_->outerObject(cx, obj);                    \
-    }                                                               \
-} while(0)
+#include "jsprvtd.h"
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_VALUE(JSDValue* jsdval)
@@ -203,13 +190,12 @@ jsd_GetValueInt(JSDContext* jsdc, JSDValue* jsdval)
     return JSVAL_TO_INT(val);
 }
 
-jsdouble*
+jsdouble
 jsd_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 {
-    jsval val = jsdval->val;
-    if(!JSVAL_IS_DOUBLE(val))
+    if(!JSVAL_IS_DOUBLE(jsdval->val))
         return 0;
-    return JSVAL_TO_DOUBLE(val);
+    return JSVAL_TO_DOUBLE(jsdval->val);
 }
 
 JSString*
@@ -315,8 +301,7 @@ jsd_GetValueWrappedJSVal(JSDContext* jsdc, JSDValue* jsdval)
     jsval val = jsdval->val;
     if (!JSVAL_IS_PRIMITIVE(val)) {
         cx = JSD_GetDefaultJSContext(jsdc);
-        obj = JSVAL_TO_OBJECT(val);
-        OBJ_TO_OUTER_OBJECT(cx, obj);
+        obj = js_ObjectToOuterObject(cx, JSVAL_TO_OBJECT(val));
         if (!obj)
         {
             JS_ClearPendingException(cx);
@@ -492,7 +477,8 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
     JSPropertyDesc pd;
     const jschar * nameChars;
     size_t nameLen;
-    jsval val;
+    jsval val, nameval;
+    jsid nameid;
 
     if(!jsd_IsValueObject(jsdc, jsdval))
         return NULL;
@@ -548,8 +534,14 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
 
     JS_EndRequest(cx);
 
-    pd.id = STRING_TO_JSVAL(name);
-    pd.alias = pd.slot = pd.spare = 0;
+    nameval = STRING_TO_JSVAL(name);
+    if (!JS_ValueToId(cx, nameval, &nameid) ||
+        !JS_IdToValue(cx, nameid, &pd.id)) {
+        return NULL;
+    }
+
+    pd.slot = pd.spare = 0;
+    pd.alias = JSVAL_NULL;
     pd.flags |= (attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0
         | (attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0
         | (attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0;

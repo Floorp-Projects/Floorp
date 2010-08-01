@@ -693,13 +693,13 @@ static const yytype_uint16 yyrline[] =
     1385,  1405,  1434,  1454,  1530,  1540,  1566,  1569,  1575,  1583,
     1591,  1599,  1602,  1609,  1612,  1615,  1621,  1624,  1639,  1643,
     1647,  1651,  1660,  1665,  1670,  1675,  1680,  1685,  1690,  1695,
-    1700,  1705,  1711,  1717,  1723,  1728,  1733,  1738,  1751,  1761,
-    1769,  1772,  1787,  1813,  1817,  1823,  1828,  1841,  1845,  1849,
-    1850,  1856,  1857,  1858,  1859,  1860,  1864,  1865,  1865,  1865,
-    1873,  1874,  1879,  1882,  1890,  1893,  1899,  1900,  1904,  1912,
-    1916,  1926,  1931,  1948,  1948,  1953,  1953,  1960,  1960,  1968,
-    1971,  1977,  1980,  1986,  1990,  1997,  2004,  2011,  2018,  2029,
-    2038,  2042,  2049,  2052,  2058,  2058
+    1700,  1705,  1711,  1717,  1723,  1728,  1733,  1738,  1751,  1764,
+    1772,  1775,  1790,  1816,  1820,  1826,  1834,  1850,  1854,  1858,
+    1859,  1865,  1866,  1867,  1868,  1869,  1873,  1874,  1874,  1874,
+    1882,  1883,  1888,  1891,  1899,  1902,  1908,  1909,  1913,  1921,
+    1925,  1935,  1940,  1957,  1957,  1962,  1962,  1969,  1969,  1977,
+    1980,  1986,  1989,  1995,  1999,  2006,  2013,  2020,  2027,  2038,
+    2047,  2051,  2058,  2061,  2067,  2067
 };
 #endif
 
@@ -3943,6 +3943,9 @@ yyreduce:
   case 138:
 
     {
+        if (parseContext->reservedErrorCheck((yyvsp[(2) - (5)].lex).line, *(yyvsp[(2) - (5)].lex).string))
+            parseContext->recover();
+
         TType* structure = new TType((yyvsp[(4) - (5)].interm.typeList), *(yyvsp[(2) - (5)].lex).string);
         TVariable* userTypeDef = new TVariable((yyvsp[(2) - (5)].lex).string, *structure, true);
         if (! parseContext->symbolTable.insert(*userTypeDef)) {
@@ -4031,6 +4034,9 @@ yyreduce:
   case 145:
 
     {
+        if (parseContext->reservedErrorCheck((yyvsp[(1) - (1)].lex).line, *(yyvsp[(1) - (1)].lex).string))
+            parseContext->recover();
+
         (yyval.interm.typeLine).type = new TType(EbtVoid, EbpUndefined);
         (yyval.interm.typeLine).line = (yyvsp[(1) - (1)].lex).line;
         (yyval.interm.typeLine).type->setFieldName(*(yyvsp[(1) - (1)].lex).string);
@@ -4040,6 +4046,9 @@ yyreduce:
   case 146:
 
     {
+        if (parseContext->reservedErrorCheck((yyvsp[(1) - (4)].lex).line, *(yyvsp[(1) - (4)].lex).string))
+            parseContext->recover();
+
         (yyval.interm.typeLine).type = new TType(EbtVoid, EbpUndefined);
         (yyval.interm.typeLine).line = (yyvsp[(1) - (4)].lex).line;
         (yyval.interm.typeLine).type->setFieldName(*(yyvsp[(1) - (4)].lex).string);

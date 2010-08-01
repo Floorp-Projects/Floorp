@@ -79,6 +79,13 @@ RefTestCmdLineHandler.prototype =
     catch (e) {
     }
 
+    try {
+      var skipslowtests = cmdLine.handleFlag("reftestskipslowtests", false);
+      args.skipslowtests = skipslowtests;
+    }
+    catch (e) {
+    }
+
     /* Ignore the platform's online/offline status while running reftests. */
     var ios = Components.classes["@mozilla.org/network/io-service;1"]
               .getService(Components.interfaces.nsIIOService2);

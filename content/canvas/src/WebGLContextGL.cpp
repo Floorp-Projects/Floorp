@@ -2911,12 +2911,12 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         resources.maxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
         resources.maxDrawBuffers = 1;
 
-        compiler = ShConstructCompiler(lang, debugFlags);
+        compiler = ShConstructCompiler(lang, EShSpecWebGL, &resources);
 
         nsDependentCString src(shader->Source());
         const char *s = src.get();
 
-        if (!ShCompile(compiler, &s, 1, EShOptNone, &resources, debugFlags)) {
+        if (!ShCompile(compiler, &s, 1, EShOptSimple, debugFlags)) {
             shader->SetTranslationFailure(nsDependentCString(ShGetInfoLog(compiler)));
             ShDestruct(compiler);
             return NS_OK;

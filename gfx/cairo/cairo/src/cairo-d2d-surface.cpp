@@ -880,6 +880,27 @@ _cairo_d2d_point_dist(const cairo_point_double_t &p1, const cairo_point_double_t
     return hypot(p2.x - p1.x, p2.y - p1.y);
 }
 
+static void
+_cairo_d2d_normalize_point(cairo_point_double_t *p)
+{
+    double length = hypot(p->x, p->y);
+    p->x /= length;
+    p->y /= length;
+}
+
+static cairo_point_double_t
+_cairo_d2d_subtract_point(const cairo_point_double_t &p1, const cairo_point_double_t &p2)
+{
+    cairo_point_double_t p = {p1.x - p2.x, p1.y - p2.y};
+    return p;
+}
+
+static double
+_cairo_d2d_dot_product(const cairo_point_double_t &p1, const cairo_point_double_t &p2)
+{
+    return p1.x * p2.x + p1.y * p2.y;
+}
+
 static RefPtr<ID2D1Brush>
 _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 					cairo_radial_pattern_t *source_pattern)
@@ -1057,6 +1078,165 @@ _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
     return brush;
 }
 
+static RefPtr<ID2D1Brush>
+_cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
+					cairo_linear_pattern_t *source_pattern)
+{
+    if (source_pattern->p1.x == source_pattern->p2.x &&
+	source_pattern->p1.y == source_pattern->p2.y) {
+	// Cairo behavior in this situation is to draw a solid color the size of the last stop.
+	RefPtr<ID2D1SolidColorBrush> brush;
+	d2dsurf->rt->CreateSolidColorBrush(
+	    _cairo_d2d_color_from_cairo_color(source_pattern->base.stops[source_pattern->base.n_stops - 1].color),
+	    &brush);
+	return brush;
+    }
+
+    cairo_matrix_t inv_mat = source_pattern->base.base.matrix;
+    /**
+     * Cairo views this matrix as the transformation of the destination
+     * when the pattern is imposed. We see this differently, D2D transformation
+     * moves the pattern over the destination.
+     */
+    if (_cairo_matrix_is_invertible(&inv_mat)) {
+	/* If this is not invertible it will be rank zero, and invMat = mat is fine */
+	cairo_matrix_invert(&inv_mat);
+    }
+    D2D1_BRUSH_PROPERTIES brushProps =
+	D2D1::BrushProperties(1.0, _cairo_d2d_matrix_from_matrix(&inv_mat));
+    cairo_point_double_t p1, p2;
+    p1.x = _cairo_fixed_to_float(source_pattern->p1.x);
+    p1.y = _cairo_fixed_to_float(source_pattern->p1.y);
+    p2.x = _cairo_fixed_to_float(source_pattern->p2.x);
+    p2.y = _cairo_fixed_to_float(source_pattern->p2.y);
+
+    D2D1_GRADIENT_STOP *stops;
+    int num_stops = source_pattern->base.n_stops;
+    if (source_pattern->base.base.extend == CAIRO_EXTEND_REPEAT || source_pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
+
+	RefPtr<IDXGISurface> surf;
+	d2dsurf->surface->QueryInterface(&surf);
+	DXGI_SURFACE_DESC desc;
+	surf->GetDesc(&desc);
+
+	// Get this when the points are not transformed yet.
+	double gradient_length = _cairo_d2d_point_dist(p1, p2);
+
+	// Calculate the repeat count needed;
+	cairo_point_double_t top_left, top_right, bottom_left, bottom_right;
+	top_left.x = bottom_left.x = top_left.y = top_right.y = 0;
+	top_right.x = bottom_right.x = desc.Width;
+	bottom_right.y = bottom_left.y = desc.Height;
+	// Transform the corners of our surface to pattern space.
+	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &top_left.x, &top_left.y);
+	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &top_right.x, &top_right.y);
+	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &bottom_left.x, &bottom_left.y);
+	cairo_matrix_transform_point(&source_pattern->base.base.matrix, &bottom_right.x, &top_left.y);
+
+	cairo_point_double_t u;
+	// Unit vector of the gradient direction.
+	u = _cairo_d2d_subtract_point(p2, p1);
+	_cairo_d2d_normalize_point(&u);
+
+	// (corner - p1) . u = |corner - p1| cos(a) where a is the angle between the two vectors.
+	// Coincidentally |corner - p1| cos(a) is actually also the distance our gradient needs to cover since
+	// at this point on the gradient line it will be perpendicular to the line running from the gradient
+	// line through the corner.
+
+	double max_dist, min_dist;
+	max_dist = MAX(_cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(top_left, p1)),
+	               _cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(top_right, p1)));
+	max_dist = MAX(max_dist, _cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(bottom_left, p1)));
+	max_dist = MAX(max_dist, _cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(bottom_right, p1)));
+	min_dist = MIN(_cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(top_left, p1)),
+	               _cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(top_right, p1)));
+	min_dist = MIN(min_dist, _cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(bottom_left, p1)));
+	min_dist = MIN(min_dist, _cairo_d2d_dot_product(u, _cairo_d2d_subtract_point(bottom_right, p1)));
+
+	min_dist = MAX(-min_dist, 0);
+
+	// Repeats after gradient start.
+	int after_repeat = (int)ceil(max_dist / gradient_length);
+	int before_repeat = (int)ceil(min_dist / gradient_length);
+	num_stops *= (after_repeat + before_repeat);
+
+	p2.x = p1.x + u.x * after_repeat * gradient_length;
+	p2.y = p1.y + u.y * after_repeat * gradient_length;
+	p1.x = p1.x - u.x * before_repeat * gradient_length;
+	p1.y = p1.y - u.y * before_repeat * gradient_length;
+
+	float stop_scale = 1.0f / (float)(after_repeat + before_repeat);
+	float begin_position = (float)before_repeat / (float)(after_repeat + before_repeat);
+
+	stops = new D2D1_GRADIENT_STOP[num_stops];
+	if (source_pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
+	    // We start out reflected (meaning reflected starts as false since it will
+	    // immediately be inverted) if the inner_repeats are uneven.
+	    bool reflected = !(before_repeat & 0x1);
+
+	    for (int i = 0; i < num_stops; i++) {
+		if (!(i % source_pattern->base.n_stops)) {
+		    // Reflect here
+		    reflected = !reflected;
+		}
+		// Calculate the repeat count.
+		int repeat = i / source_pattern->base.n_stops;
+		// Take the stop that we're using in the pattern.
+		int stop = i % source_pattern->base.n_stops;
+		if (reflected) {
+		    // Take the stop from the opposite side when reflected.
+		    stop = source_pattern->base.n_stops - stop - 1;
+		    // When reflected take 1 - offset as the offset.
+		    stops[i].position = (FLOAT)((repeat + 1.0f - source_pattern->base.stops[stop].offset) * stop_scale);
+		} else {
+		    stops[i].position = (FLOAT)((repeat + source_pattern->base.stops[stop].offset) * stop_scale);
+		}
+		stops[i].color =
+		    _cairo_d2d_color_from_cairo_color(source_pattern->base.stops[stop].color);
+	    }
+	} else {
+	    // Simple case, we don't need to reflect.
+	    for (int i = 0; i < num_stops; i++) {
+		// Calculate which repeat this is.
+		int repeat = i / source_pattern->base.n_stops;
+		// Calculate which stop this would be in the original pattern
+		cairo_gradient_stop_t *stop = &source_pattern->base.stops[i % source_pattern->base.n_stops];
+		stops[i].position = (FLOAT)((repeat + stop->offset) * stop_scale);
+		stops[i].color = _cairo_d2d_color_from_cairo_color(stop->color);
+	    }
+	}
+    } else if (source_pattern->base.base.extend == CAIRO_EXTEND_PAD) {
+	stops = new D2D1_GRADIENT_STOP[source_pattern->base.n_stops];
+	for (unsigned int i = 0; i < source_pattern->base.n_stops; i++) {
+	    cairo_gradient_stop_t *stop = &source_pattern->base.stops[i];
+	    stops[i].position = (FLOAT)stop->offset;
+	    stops[i].color = _cairo_d2d_color_from_cairo_color(stop->color);
+	}
+    } else if (source_pattern->base.base.extend == CAIRO_EXTEND_NONE) {
+	num_stops += 2;
+	stops = new D2D1_GRADIENT_STOP[num_stops];
+	stops[0].position = 0;
+	stops[0].color = D2D1::ColorF(0, 0);
+	for (unsigned int i = 1; i < source_pattern->base.n_stops + 1; i++) {
+	    cairo_gradient_stop_t *stop = &source_pattern->base.stops[i - 1];
+	    stops[i].position = (FLOAT)stop->offset;
+	    stops[i].color = _cairo_d2d_color_from_cairo_color(stop->color);
+	}
+	stops[source_pattern->base.n_stops + 1].position = 1.0f;
+	stops[source_pattern->base.n_stops + 1].color = D2D1::ColorF(0, 0);
+    }
+    RefPtr<ID2D1GradientStopCollection> stopCollection;
+    d2dsurf->rt->CreateGradientStopCollection(stops, num_stops, &stopCollection);
+    RefPtr<ID2D1LinearGradientBrush> brush;
+    d2dsurf->rt->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(D2D1::Point2F((FLOAT)p1.x, (FLOAT)p1.y),
+									       D2D1::Point2F((FLOAT)p2.x, (FLOAT)p2.y)),
+					   brushProps,
+					   stopCollection,
+					   &brush);
+    delete [] stops;
+    return brush;
+}
+
 /**
  * This creates an ID2D1Brush that will fill with the correct pattern.
  * This function passes a -strong- reference to the caller, the brush
@@ -1094,37 +1274,9 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	}
 
     } else if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR) {
-	cairo_matrix_t mat = pattern->matrix;
-	/**
-	 * Cairo views this matrix as the transformation of the destination
-	 * when the pattern is imposed. We see this differently, D2D transformation
-	 * moves the pattern over the destination.
-	 */
-	cairo_matrix_invert(&mat);
-
-	D2D1_BRUSH_PROPERTIES brushProps =
-	    D2D1::BrushProperties(1.0, _cairo_d2d_matrix_from_matrix(&mat));
-	cairo_linear_pattern_t *sourcePattern =
+	cairo_linear_pattern_t *source_pattern =
 	    (cairo_linear_pattern_t*)pattern;
-
-	D2D1_GRADIENT_STOP *stops = 
-	    new D2D1_GRADIENT_STOP[sourcePattern->base.n_stops];
-	for (unsigned int i = 0; i < sourcePattern->base.n_stops; i++) {
-	    stops[i].position = (FLOAT)sourcePattern->base.stops[i].offset;
-	    stops[i].color = 
-		_cairo_d2d_color_from_cairo_color(sourcePattern->base.stops[i].color);
-	}
-	RefPtr<ID2D1GradientStopCollection> stopCollection;
-	d2dsurf->rt->CreateGradientStopCollection(stops, sourcePattern->base.n_stops, &stopCollection);
-	RefPtr<ID2D1LinearGradientBrush> brush;
-	d2dsurf->rt->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(_d2d_point_from_cairo_point(&sourcePattern->p1),
-										   _d2d_point_from_cairo_point(&sourcePattern->p2)),
-					       brushProps,
-					       stopCollection,
-					       &brush);
-	delete [] stops;
-	return brush;
-
+	return _cairo_d2d_create_linear_gradient_brush(d2dsurf, source_pattern);
     } else if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
 	cairo_radial_pattern_t *source_pattern =
 	    (cairo_radial_pattern_t*)pattern;
@@ -2227,7 +2379,8 @@ _cairo_d2d_fill(void			*surface,
 
     op = _cairo_d2d_simplify_operator(op, source);
 
-    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD) {
+    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD &&
+	op != CAIRO_OPERATOR_CLEAR) {
 	/** 
 	 * We don't really support ADD yet. True ADD support requires getting
 	 * the tesselated mesh from D2D, and blending that using D3D which has

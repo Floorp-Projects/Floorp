@@ -1364,6 +1364,14 @@ nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
     return nsGkAtoms::onSVGScroll;
   if (aAttr == nsGkAtoms::onzoom)
     return nsGkAtoms::onSVGZoom;
+#ifdef MOZ_SMIL
+  if (aAttr == nsGkAtoms::onbegin)
+    return nsGkAtoms::onbeginEvent;
+  if (aAttr == nsGkAtoms::onrepeat)
+    return nsGkAtoms::onrepeatEvent;
+  if (aAttr == nsGkAtoms::onend)
+    return nsGkAtoms::onendEvent;
+#endif // MOZ_SMIL
 
   return aAttr;
 }

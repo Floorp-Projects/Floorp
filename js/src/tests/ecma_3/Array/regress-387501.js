@@ -39,7 +39,9 @@ var gTestfile = 'regress-387501.js';
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 387501;
-var summary = 'Array.prototype.toString|toSource|toLocaleString is not generic';
+var summary =
+  'Array.prototype.toString|toLocaleString are generic, ' +
+  'Array.prototype.toSource is not generic';
 var actual = '';
 var expect = '';
 
@@ -54,27 +56,13 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  try
-  {
-    expect = 'TypeError: Array.prototype.toString called on incompatible String';
-    actual = Array.prototype.toString.call((new String('foo')));
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-  reportCompare(expect, actual, summary);
+  expect = '[object String]';
+  actual = Array.prototype.toString.call((new String('foo')));
+  assertEq(actual, expect, summary);
 
-  try
-  {
-    expect = 'TypeError: Array.prototype.toLocaleString called on incompatible String';
-    actual = Array.prototype.toLocaleString.call((new String('foo')));
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-  reportCompare(expect, actual, summary);
+  expect = 'f,o,o';
+  actual = Array.prototype.toLocaleString.call((new String('foo')));
+  assertEq(actual, expect, summary);
 
   if (typeof Array.prototype.toSource != 'undefined')
   {
@@ -87,8 +75,10 @@ function test()
     {
       actual = ex + '';
     }
-    reportCompare(expect, actual, summary);
+    assertEq(actual, expect, summary);
   }
+
+  reportCompare(true, true, "Tests complete");
 
   exitFunc ('test');
 }

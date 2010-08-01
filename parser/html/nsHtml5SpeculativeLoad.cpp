@@ -57,6 +57,9 @@ void
 nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
 {
   switch (mOpCode) {
+    case eSpeculativeLoadBase:
+        aExecutor->SetSpeculationBase(mUrl);
+      break;
     case eSpeculativeLoadImage:
         aExecutor->PreloadImage(mUrl);
       break;

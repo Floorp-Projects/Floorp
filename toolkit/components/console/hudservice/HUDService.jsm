@@ -1408,10 +1408,18 @@ HUD_SERVICE.prototype =
   {
     var xulWindow = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebNavigation)
-      .QueryInterface(Ci.nsIDocShellTreeItem)
-      .rootTreeItem
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindow);
+                      .QueryInterface(Ci.nsIDocShell)
+                      .chromeEventHandler.ownerDocument.defaultView;
+
+    let xulWindow = XPCNativeWrapper.unwrap(xulWindow);
+
+    let docElem = xulWindow.document.documentElement;
+    if (!docElem || docElem.getAttribute("windowtype") != "navigator:browser" ||
+        !xulWindow.gBrowser) {
+      // Do not do anything unless we have a browser window.
+      // This may be a view-source window or other type of non-browser window.
+      return;
+    }
 
     if (aContentWindow.document.location.href == "about:blank" &&
         HUDWindowObserver.initialConsoleCreated == false) {
@@ -1420,7 +1428,6 @@ HUD_SERVICE.prototype =
       return;
     }
 
-    let xulWindow = XPCNativeWrapper.unwrap(xulWindow);
     let gBrowser = xulWindow.gBrowser;
 
 
@@ -1613,14 +1620,10 @@ function HeadsUpDisplay(aConfig)
   let hudBox = this.createHUD();
 
   let splitter = this.chromeDocument.createElement("splitter");
-  splitter.setAttribute("collapse", "before");
-  splitter.setAttribute("resizeafter", "flex");
   splitter.setAttribute("class", "hud-splitter");
 
-  let grippy = this.chromeDocument.createElement("grippy");
   this.notificationBox.insertBefore(splitter,
                                     this.notificationBox.childNodes[1]);
-  splitter.appendChild(grippy);
 
   let console = this.createConsole();
 
@@ -1804,6 +1807,9 @@ HeadsUpDisplay.prototype = {
     this.outputNode.setAttribute("class", "hud-output-node");
     this.outputNode.setAttribute("flex", "1");
 
+    this.filterSpacer = this.makeXULNode("spacer");
+    this.filterSpacer.setAttribute("flex", "1");
+
     this.filterBox = this.makeXULNode("textbox");
     this.filterBox.setAttribute("class", "hud-filter-box");
     this.filterBox.setAttribute("hudId", this.hudId);
@@ -1885,6 +1891,7 @@ HeadsUpDisplay.prototype = {
       }
       toolbar.appendChild(btn);
     }
+    toolbar.appendChild(this.filterSpacer);
     toolbar.appendChild(this.filterBox);
     toolbar.appendChild(this.filterClearButton);
     return toolbar;
@@ -1894,11 +1901,15 @@ HeadsUpDisplay.prototype = {
   {
     var self = this;
     let prefKey = aName.toLowerCase();
-    let btn = this.makeXULNode("toolbarbutton");
 
+    let btn;
     if (aType == "checkbox") {
+      btn = this.makeXULNode("checkbox");
       btn.setAttribute("type", aType);
+    } else {
+      btn = this.makeXULNode("toolbarbutton");
     }
+
     btn.setAttribute("hudId", this.hudId);
     btn.setAttribute("buttonType", prefKey);
     btn.setAttribute("class", "hud-filter-btn");

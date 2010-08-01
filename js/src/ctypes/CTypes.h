@@ -448,7 +448,7 @@ namespace StructType {
   JSBool DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj);
 
   const FieldInfoHash* GetFieldInfo(JSContext* cx, JSObject* obj);
-  const FieldInfo* LookupField(JSContext* cx, JSObject* obj, jsval idval);
+  const FieldInfo* LookupField(JSContext* cx, JSObject* obj, JSString *name);
   JSObject* BuildFieldsArray(JSContext* cx, JSObject* obj);
   ffi_type* BuildFFIType(JSContext* cx, JSObject* obj);
 }

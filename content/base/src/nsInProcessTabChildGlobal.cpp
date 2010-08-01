@@ -286,8 +286,9 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
 
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(cx, scopeSupports,
-                                         NS_GET_IID(nsISupports), flags,
-                                         getter_AddRefs(mGlobal));
+                                         NS_GET_IID(nsISupports),
+                                         GetPrincipal(), EmptyCString(),
+                                         flags, getter_AddRefs(mGlobal));
   NS_ENSURE_SUCCESS(rv, false);
 
   JSObject* global = nsnull;

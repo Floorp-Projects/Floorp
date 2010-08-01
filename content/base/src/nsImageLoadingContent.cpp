@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Christian Biesinger <cbiesinger@web.de>
+ *   Bobby Holley <bobbyholley@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -103,14 +104,14 @@ nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
     mImageBlockingStatus(nsIContentPolicy::ACCEPT),
     mLoadingEnabled(PR_TRUE),
-    mStartingLoad(PR_FALSE),
     mIsImageStateForced(PR_FALSE),
     mLoading(PR_FALSE),
     // mBroken starts out true, since an image without a URI is broken....
     mBroken(PR_TRUE),
     mUserDisabled(PR_FALSE),
     mSuppressed(PR_FALSE),
-    mBlockingOnload(PR_FALSE)
+    mBlockingOnload(PR_FALSE),
+    mStateChangerDepth(0)
 {
   if (!nsContentUtils::GetImgLoader()) {
     mLoadingEnabled = PR_FALSE;
@@ -120,18 +121,9 @@ nsImageLoadingContent::nsImageLoadingContent()
 void
 nsImageLoadingContent::DestroyImageLoadingContent()
 {
-  // If we're blocking onload for any reason, now's a good time to stop
-  SetBlockingOnload(PR_FALSE);
-
   // Cancel our requests so they won't hold stale refs to us
-  if (mCurrentRequest) {
-    mCurrentRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
-    mCurrentRequest = nsnull;
-  }
-  if (mPendingRequest) {
-    mPendingRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
-    mPendingRequest = nsnull;
-  }
+  ClearCurrentRequest(NS_BINDING_ABORTED);
+  ClearPendingRequest(NS_BINDING_ABORTED);
 }
 
 nsImageLoadingContent::~nsImageLoadingContent()
@@ -261,6 +253,9 @@ nsImageLoadingContent::OnStopContainer(imgIRequest* aRequest,
   return NS_OK;
 }
 
+// Warning - This isn't actually fired when decode is complete. Rather, it's
+// fired when load is complete. See bug 505385, and in the mean time use
+// OnStopContainer.
 NS_IMETHODIMP
 nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
                                     nsresult aStatus,
@@ -273,21 +268,20 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
                   "Unknown request");
   LOOP_OVER_OBSERVERS(OnStopDecode(aRequest, aStatus, aStatusArg));
 
+  // XXXbholley - When we fix bug 505385,  everything here should go in
+  // OnStopRequest.
+
+  // Our state may change. Watch it.
+  AutoStateChanger changer(this, PR_TRUE);
+
+  // If the pending request is loaded, switch to it.
   if (aRequest == mPendingRequest) {
-
-    // If we were blocking for the soon-to-be-obsolete request, stop doing so
-    SetBlockingOnload(PR_FALSE);
-
-    // The new image is decoded - switch to it
-    // XXXbholley - This is technically not true pre bug 505385, but I don't
-    // think it's a big enough issue to worry about handling in the mean time
-    mCurrentRequest->Cancel(NS_ERROR_IMAGE_SRC_CHANGED);
-    mPendingRequest.swap(mCurrentRequest);
+    PrepareCurrentRequest() = mPendingRequest;
     mPendingRequest = nsnull;
   }
+  NS_ABORT_IF_FALSE(aRequest == mCurrentRequest,
+                    "One way or another, we should be current by now");
 
-  // XXXbholley - When we fix bug 505385,  this should go in OnStopRequest.
-  //
   // We just loaded all the data we're going to get. If we haven't done an
   // initial paint, we want to make sure the image starts decoding for 2
   // reasons:
@@ -324,25 +318,15 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
 
     // If we're requesting a decode, do it
     if (doRequestDecode)
-      aRequest->RequestDecode();
+      mCurrentRequest->RequestDecode();
   }
 
-  // XXXldb What's the difference between when OnStopDecode and OnStopRequest
-  // fire?  Should we do this work there instead?  Should they just be the
-  // same?
-
+  // Fire the appropriate DOM event.
   if (NS_SUCCEEDED(aStatus)) {
     FireEvent(NS_LITERAL_STRING("load"));
   } else {
     FireEvent(NS_LITERAL_STRING("error"));
   }
-
-  // Have to check for state changes here (for example, the new load could
-  // have resulted in a broken image).  Note that we don't want to do this
-  // async, unlike the event, because while this is waiting to happen our
-  // state could change yet again, and then we'll get confused about our
-  // state.
-  UpdateImageState(PR_TRUE);
 
   return NS_OK;
 }
@@ -513,39 +497,36 @@ NS_IMETHODIMP
 nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
                                             nsIStreamListener** aListener)
 {
-  NS_PRECONDITION(aListener, "null out param");
-  
-  NS_ENSURE_ARG_POINTER(aChannel);
-
   if (!nsContentUtils::GetImgLoader()) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  // XXX what should we do with content policies here, if anything?
-  // Shouldn't that be done before the start of the load?
-  // XXX what about shouldProcess?
-  
   nsCOMPtr<nsIDocument> doc = GetOurDocument();
   if (!doc) {
     // Don't bother
     return NS_OK;
   }
 
-  // Null out our mCurrentURI, in case we have no image requests right now.
-  mCurrentURI = nsnull;
-  
-  CancelImageRequests(NS_ERROR_IMAGE_SRC_CHANGED, PR_FALSE,
-                      nsIContentPolicy::ACCEPT);
+  // XXX what should we do with content policies here, if anything?
+  // Shouldn't that be done before the start of the load?
+  // XXX what about shouldProcess?
 
-  nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
+  // Our state might change. Watch it.
+  AutoStateChanger changer(this, PR_TRUE);
 
+  // Do the load.
   nsresult rv = nsContentUtils::GetImgLoader()->
-    LoadImageWithChannel(aChannel, this, doc, aListener, getter_AddRefs(req));
-
-  // Make sure our state is up to date
-  UpdateImageState(PR_TRUE);
-
-  return rv;
+    LoadImageWithChannel(aChannel, this, doc, aListener,
+                         getter_AddRefs(PrepareNextRequest()));
+  if (NS_FAILED(rv)) {
+    // If we don't have a current URI, we might as well store this URI so people
+    // know what we tried (and failed) to load.
+    if (!mCurrentRequest)
+      aChannel->GetURI(getter_AddRefs(mCurrentURI));
+    FireEvent(NS_LITERAL_STRING("error"));
+    return rv;
+  }
+  return NS_OK;;
 }
 
 NS_IMETHODIMP nsImageLoadingContent::ForceReload()
@@ -628,11 +609,10 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
     }
   }
 
-
-  nsresult rv;   // XXXbz Should failures in this method fire onerror?
-
-  // Skip the URI equality check if our current image was blocked.  If
-  // that happened, we really do want to try loading again.
+  // URI equality check.
+  //
+  // We skip the equality check if our current image was blocked, since in that
+  // case we really do want to try loading again.
   if (!aForce && NS_CP_ACCEPTED(mImageBlockingStatus)) {
     nsCOMPtr<nsIURI> currentURI;
     GetCurrentURI(getter_AddRefs(currentURI));
@@ -645,69 +625,44 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
     }
   }
 
-  // From this point on, our state could change before return, so make
-  // sure to notify if it does.
+  // From this point on, our image state could change. Watch it.
   AutoStateChanger changer(this, aNotify);
 
-  // Use the principal of aDocument to avoid having to QI |this| an extra time.
-  // It should be the same as the principal of this node in any case.
+  // Sanity check.
+  //
+  // We use the principal of aDocument to avoid having to QI |this| an extra
+  // time. It should always be the same as the principal of this node.
 #ifdef DEBUG
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
-  NS_ASSERTION(thisContent &&
-               thisContent->NodePrincipal() == aDocument->NodePrincipal(),
-               "Principal mismatch?");
+  NS_ABORT_IF_FALSE(thisContent &&
+                    thisContent->NodePrincipal() == aDocument->NodePrincipal(),
+                    "Principal mismatch?");
 #endif
-  
-  // If we'll be loading a new image, we want to cancel our existing
-  // requests; the question is what reason to pass in.  If everything
-  // is going smoothly, that reason should be
-  // NS_ERROR_IMAGE_SRC_CHANGED so that our frame (if any) will know
-  // not to show the broken image icon.  If the load is blocked by the
-  // content policy or security manager, we will want to cancel with
-  // the error code from those.
 
-  PRInt16 newImageStatus;
-  PRBool loadImage = nsContentUtils::CanLoadImage(aNewURI, this, aDocument,
-                                                  aDocument->NodePrincipal(),
-                                                  &newImageStatus);
-  NS_ASSERTION(loadImage || !NS_CP_ACCEPTED(newImageStatus),
-               "CanLoadImage lied");
-
-  nsresult cancelResult = loadImage ? NS_ERROR_IMAGE_SRC_CHANGED
-                                    : NS_ERROR_IMAGE_BLOCKED;
-
-  CancelImageRequests(cancelResult, PR_FALSE, newImageStatus);
-
-  // Remember the URL of this request, in case someone asks us for it later.
-  // But this only matters if we are affecting the current request.  Need to do
-  // this after CancelImageRequests, since that affects the value of
-  // mCurrentRequest.
-  if (!mCurrentRequest) {
-    mCurrentURI = aNewURI;
-  }
-  
-  if (!loadImage) {
-    // Don't actually load anything!  This was blocked by CanLoadImage.
+  // Are we blocked?
+  PRInt16 cpDecision = nsIContentPolicy::REJECT_REQUEST;
+  nsContentUtils::CanLoadImage(aNewURI, this, aDocument,
+                               aDocument->NodePrincipal(), &cpDecision);
+  if (!NS_CP_ACCEPTED(cpDecision)) {
     FireEvent(NS_LITERAL_STRING("error"));
+    SetBlockedRequest(aNewURI, cpDecision);
     return NS_OK;
   }
 
-  nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
-
+  // Not blocked. Do the load.
+  nsresult rv;
   rv = nsContentUtils::LoadImage(aNewURI, aDocument,
                                  aDocument->NodePrincipal(),
                                  aDocument->GetDocumentURI(),
                                  this, aLoadFlags,
-                                 getter_AddRefs(req));
+                                 getter_AddRefs(PrepareNextRequest()));
   if (NS_FAILED(rv)) {
+    // If we don't have a current URI, we might as well store this URI so people
+    // know what we tried (and failed) to load.
+    if (!mCurrentRequest)
+      mCurrentURI = aNewURI;
     FireEvent(NS_LITERAL_STRING("error"));
     return NS_OK;
-  }
-
-  // If we now have a current request, we don't need to store the URI, since
-  // we can get it off the request. Release it.
-  if (mCurrentRequest) {
-    mCurrentURI = nsnull;
   }
 
   return NS_OK;
@@ -734,12 +689,13 @@ nsImageLoadingContent::ImageState() const
 void
 nsImageLoadingContent::UpdateImageState(PRBool aNotify)
 {
-  if (mStartingLoad) {
-    // Ignore this call; we'll update our state when the state changer is
-    // destroyed.  Need this to work around the fact that some libpr0n stuff is
-    // actually sync and hence we can get OnStopDecode called while we're still
-    // under LoadImage, and OnStopDecode doesn't know anything about
-    // aNotify
+  if (mStateChangerDepth > 0) {
+    // Ignore this call; we'll update our state when the outermost state
+    // changer is destroyed. Need this to work around the fact that some libpr0n
+    // stuff is actually sync and hence we can get OnStopDecode called while
+    // we're still under LoadImage, and OnStopDecode doesn't know anything about
+    // aNotify.
+    // XXX - This machinery should be removed after bug 521604.
     return;
   }
   
@@ -788,78 +744,28 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
 void
 nsImageLoadingContent::CancelImageRequests(PRBool aNotify)
 {
-  // Make sure to null out mCurrentURI here, so we no longer look like an image
   AutoStateChanger changer(this, aNotify);
-  mCurrentURI = nsnull;
-  CancelImageRequests(NS_BINDING_ABORTED, PR_TRUE, nsIContentPolicy::ACCEPT);
-}
-
-void
-nsImageLoadingContent::CancelImageRequests(nsresult aReason,
-                                           PRBool   aEvenIfSizeAvailable,
-                                           PRInt16  aNewImageStatus)
-{
-  // Cancel the pending request, if any
-  if (mPendingRequest) {
-    mPendingRequest->Cancel(aReason);
-    mPendingRequest = nsnull;
-  }
-
-  // Cancel the current request if it has not progressed enough to
-  // have a size yet
-  if (mCurrentRequest) {
-    PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
-    mCurrentRequest->GetImageStatus(&loadStatus);
-
-    NS_ASSERTION(NS_CP_ACCEPTED(mImageBlockingStatus),
-                 "Have current request but blocked image?");
-    
-    if (aEvenIfSizeAvailable ||
-        !(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
-      // The new image is going to become the current request.  Make sure to
-      // set mImageBlockingStatus _before_ we cancel the request... if we set
-      // it after, things that are watching the mCurrentRequest will get wrong
-      // data.
-
-      // If we were blocking onload for this image, stop doing so
-      SetBlockingOnload(PR_FALSE);
-
-      // Get rid of it
-      mImageBlockingStatus = aNewImageStatus;
-      mCurrentRequest->Cancel(aReason);
-      mCurrentRequest = nsnull;
-    }
-  } else {
-    // No current request so the new image status will become the
-    // status of the current request
-    mImageBlockingStatus = aNewImageStatus;
-  }
-
-  // Note that the only way we could have avoided setting the image blocking
-  // status above is if we have a current request and have kept it as the
-  // current request.  In that case, we want to leave our old status, since the
-  // status corresponds to the current request.  Even if we plan to do a
-  // pending request load, having an mCurrentRequest means that our current
-  // status is not a REJECT_* status, and doing the load shouldn't change that.
-  // XXXbz there is an issue here if different ACCEPT statuses are used, but...
+  ClearPendingRequest(NS_BINDING_ABORTED);
+  ClearCurrentRequest(NS_BINDING_ABORTED);
 }
 
 nsresult
 nsImageLoadingContent::UseAsPrimaryRequest(imgIRequest* aRequest,
                                            PRBool aNotify)
 {
-  // Use an AutoStateChanger so that the clone call won't
-  // automatically notify from inside OnStopDecode.
-  // Also, make sure to use the CancelImageRequests which doesn't
-  // notify, so that the changer is handling the notifications.
-  NS_PRECONDITION(aRequest, "Must have a request here!");
+  // Our state will change. Watch it.
   AutoStateChanger changer(this, aNotify);
-  mCurrentURI = nsnull;
-  CancelImageRequests(NS_BINDING_ABORTED, PR_TRUE, nsIContentPolicy::ACCEPT);
 
-  NS_ASSERTION(!mCurrentRequest, "We should not have a current request now");
+  // Get rid if our existing images
+  ClearPendingRequest(NS_BINDING_ABORTED);
+  ClearCurrentRequest(NS_BINDING_ABORTED);
 
-  return aRequest->Clone(this, getter_AddRefs(mCurrentRequest));
+  // Clone the request we were given.
+  nsCOMPtr<imgIRequest> newRequest;
+  nsresult rv = aRequest->Clone(this, getter_AddRefs(PrepareNextRequest()));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 nsIDocument*
@@ -911,6 +817,112 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   return NS_OK;
 }
 
+nsCOMPtr<imgIRequest>&
+nsImageLoadingContent::PrepareNextRequest()
+{
+  // If we don't have a usable current request, get rid of any half-baked
+  // request that might be sitting there and make this one current.
+  if (!HaveSize(mCurrentRequest))
+    return PrepareCurrentRequest();
+
+  // Otherwise, make it pending.
+  return PreparePendingRequest();
+}
+
+void
+nsImageLoadingContent::SetBlockedRequest(nsIURI* aURI, PRInt16 aContentDecision)
+{
+  // Sanity
+  NS_ABORT_IF_FALSE(!NS_CP_ACCEPTED(aContentDecision), "Blocked but not?");
+
+  // We do some slightly illogical stuff here to maintain consistency with
+  // old behavior that people probably depend on. Even in the case where the
+  // new image is blocked, the old one should really be canceled with the
+  // reason "image source changed". However, apparently there's some abuse
+  // over in nsImageFrame where the displaying of the "broken" icon for the
+  // next image depends on the cancel reason of the previous image. ugh.
+  ClearPendingRequest(NS_ERROR_IMAGE_BLOCKED);
+
+  // For the blocked case, we only want to cancel the existing current request
+  // if size is not available. bz says the web depends on this behavior.
+  if (!HaveSize(mCurrentRequest)) {
+
+    mImageBlockingStatus = aContentDecision;
+    ClearCurrentRequest(NS_ERROR_IMAGE_BLOCKED);
+
+    // We still want to remember what URI we were despite not having an actual
+    // request.
+    mCurrentURI = aURI;
+  }
+}
+
+nsCOMPtr<imgIRequest>&
+nsImageLoadingContent::PrepareCurrentRequest()
+{
+  // Blocked images go through SetBlockedRequest, which is a separate path. For
+  // everything else, we're unblocked.
+  mImageBlockingStatus = nsIContentPolicy::ACCEPT;
+
+  // Get rid of anything that was there previously.
+  ClearCurrentRequest(NS_ERROR_IMAGE_SRC_CHANGED);
+
+  // Return a reference.
+  return mCurrentRequest;
+}
+
+nsCOMPtr<imgIRequest>&
+nsImageLoadingContent::PreparePendingRequest()
+{
+  // Get rid of anything that was there previously.
+  ClearPendingRequest(NS_ERROR_IMAGE_SRC_CHANGED);
+
+  // Return a reference.
+  return mPendingRequest;
+}
+
+void
+nsImageLoadingContent::ClearCurrentRequest(nsresult aReason)
+{
+  if (!mCurrentRequest) {
+    // Even if we didn't have a current request, we might have been keeping
+    // a URI as a placeholder for a failed load. Clear that now.
+    mCurrentURI = nsnull;
+    return;
+  }
+  NS_ABORT_IF_FALSE(!mCurrentURI,
+                    "Shouldn't have both mCurrentRequest and mCurrentURI!");
+
+  // Clean up the request.
+  mCurrentRequest->CancelAndForgetObserver(aReason);
+  mCurrentRequest = nsnull;
+
+  // We only block onload during the decoding of "current" images. This one is
+  // going away, so we should unblock unconditionally here.
+  SetBlockingOnload(PR_FALSE);
+}
+
+void
+nsImageLoadingContent::ClearPendingRequest(nsresult aReason)
+{
+  if (!mPendingRequest)
+    return;
+  mPendingRequest->CancelAndForgetObserver(aReason);
+  mPendingRequest = nsnull;
+}
+
+bool
+nsImageLoadingContent::HaveSize(imgIRequest *aImage)
+{
+  // Handle the null case
+  if (!aImage)
+    return false;
+
+  // Query the image
+  PRUint32 status;
+  nsresult rv = aImage->GetImageStatus(&status);
+  return (NS_SUCCEEDED(rv) && (status & imgIRequest::STATUS_SIZE_AVAILABLE));
+}
+
 void
 nsImageLoadingContent::SetBlockingOnload(PRBool aBlocking)
 {
@@ -940,7 +952,7 @@ nsImageLoadingContent::CreateStaticImageClone(nsImageLoadingContent* aDest) cons
   aDest->mForcedImageState = mForcedImageState;
   aDest->mImageBlockingStatus = mImageBlockingStatus;
   aDest->mLoadingEnabled = mLoadingEnabled;
-  aDest->mStartingLoad = mStartingLoad;
+  aDest->mStateChangerDepth = mStateChangerDepth;
   aDest->mIsImageStateForced = mIsImageStateForced;
   aDest->mLoading = mLoading;
   aDest->mBroken = mBroken;
