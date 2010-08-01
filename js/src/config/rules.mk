@@ -121,6 +121,21 @@ EXPAND_LIBNAME_PATH = -L$(2) $(addprefix -l,$(1))
 EXPAND_MOZLIBNAME = $(addprefix -l,$(1))
 endif
 
+ifdef MOZ_FAKELIBS
+# If a lib.fake is present, replace it with @lib.fake, otherwise just pass
+# the library name through unchanged.
+EXPAND_FAKELIBS = $(foreach f,$(1),$(if $(wildcard $(f).fake),@$(wildcard $(f).fake),$(f)))
+
+# Also override EXPAND_LIBNAME_PATH and EXPAND_MOZLIBNAME on non-RELATIVE_PATH
+# platforms, so we can shortcut linking -lfoo if we have foo.a.fake
+ifndef _LIBNAME_RELATIVE_PATHS
+EXPAND_LIBNAME_PATH = $(if $(wildcard $(2)/$(LIB_PREFIX)$(1).$(LIB_SUFFIX).fake),@$(2)/$(LIB_PREFIX)$(1).$(LIB_SUFFIX).fake,-L$(2) $(addprefix -l,$(1)))
+EXPAND_MOZLIBNAME = $(if $(wildcard $(DIST)/lib/$(LIB_PREFIX)$(1).$(LIB_SUFFIX).fake),@$(DIST)/lib/$(LIB_PREFIX)$(1).$(LIB_SUFFIX).fake,$(addprefix -l,$(1)))
+endif
+else
+EXPAND_FAKELIBS = $1
+endif
+
 ifdef EXTRA_DSO_LIBS
 EXTRA_DSO_LIBS	:= $(call EXPAND_MOZLIBNAME,$(EXTRA_DSO_LIBS))
 endif
@@ -201,6 +216,7 @@ check-one:
 
 endif # XPCSHELL_TESTS
 
+ifndef BUILD_STATIC_LIBS
 ifdef CPP_UNIT_TESTS
 
 # Compile the tests to $(DIST)/bin.  Make lots of niceties available by default
@@ -219,6 +235,7 @@ check::
 	  done
 
 endif # CPP_UNIT_TESTS
+endif # !BUILD_STATIC_LIBS
 
 .PHONY: check xpcshell-tests check-interactive check-one
 
@@ -235,6 +252,11 @@ endif # ENABLE_TESTS
 ifndef LIBRARY
 ifdef STATIC_LIBRARY_NAME
 LIBRARY			:= $(LIB_PREFIX)$(STATIC_LIBRARY_NAME).$(LIB_SUFFIX)
+ifdef MOZ_FAKELIBS
+ifndef SUPPRESS_FAKELIB
+FAKE_LIBRARY = $(LIBRARY).fake
+endif # SUPPRESS_FAKELIB
+endif # MOZ_FAKELIBS
 endif # STATIC_LIBRARY_NAME
 endif # LIBRARY
 
@@ -543,7 +565,7 @@ endif
 #
 ifndef NO_LD_ARCHIVE_FLAGS
 ifdef SHARED_LIBRARY_LIBS
-EXTRA_DSO_LDOPTS := $(MKSHLIB_FORCE_ALL) $(SHARED_LIBRARY_LIBS) $(MKSHLIB_UNFORCE_ALL) $(EXTRA_DSO_LDOPTS)
+EXTRA_DSO_LDOPTS := $(MKSHLIB_FORCE_ALL) $(call EXPAND_FAKELIBS,$(SHARED_LIBRARY_LIBS)) $(MKSHLIB_UNFORCE_ALL) $(EXTRA_DSO_LDOPTS)
 endif
 endif
 
@@ -870,16 +892,16 @@ ifndef NO_DIST_INSTALL
 ifdef LIBRARY
 ifdef EXPORT_LIBRARY # Stage libs that will be linked into a static build
 ifdef IS_COMPONENT
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DEPTH)/staticlib/components
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(FAKE_LIBRARY) $(DEPTH)/staticlib/components
 else
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DEPTH)/staticlib
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(FAKE_LIBRARY) $(DEPTH)/staticlib
 endif
 endif # EXPORT_LIBRARY
 ifdef DIST_INSTALL
 ifdef IS_COMPONENT
 	$(error Shipping static component libs makes no sense.)
 else
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(FAKE_LIBRARY) $(DIST)/lib
 endif
 endif # DIST_INSTALL
 endif # LIBRARY
@@ -998,10 +1020,10 @@ alltags:
 $(PROGRAM): $(PROGOBJS) $(LIBS_DEPS) $(EXTRA_DEPS) $(EXE_DEF_FILE) $(RESFILE) $(GLOBAL_DEPS)
 	@rm -f $@.manifest
 ifeq (WINCE,$(OS_ARCH))
-	$(LD) -NOLOGO -OUT:$@ $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+	$(LD) -NOLOGO -OUT:$@ $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(call EXPAND_FAKELIBS,$(LIBS) $(EXTRA_LIBS) $(OS_LIBS))
 else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LD) -NOLOGO -OUT:$@ -PDB:$(LINK_PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+	$(LD) -NOLOGO -OUT:$@ -PDB:$(LINK_PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(call EXPAND_FAKELIBS,$(LIBS) $(EXTRA_LIBS) $(OS_LIBS))
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		if test -f "$(srcdir)/$@.manifest"; then \
@@ -1023,9 +1045,9 @@ ifdef MOZ_PROFILE_GENERATE
 endif
 else # !WINNT || GNU_CC
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB) $(EXE_DEF_FILE)
+	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(call EXPAND_FAKELIBS,$(LIBS) $(OS_LIBS) $(EXTRA_LIBS)) $(BIN_FLAGS) $(call EXPAND_FAKELIBS,$(WRAP_MALLOC_LIB)) $(EXE_DEF_FILE)
 else # ! CPP_PROG_LINK
-	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(EXE_DEF_FILE)
+	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(call EXPAND_FAKELIBS,$(LIBS) $(OS_LIBS) $(EXTRA_LIBS)) $(BIN_FLAGS) $(EXE_DEF_FILE)
 endif # CPP_PROG_LINK
 endif # WINNT && !GNU_CC
 endif # WINCE
@@ -1082,10 +1104,10 @@ endif
 #
 $(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.$(OBJ_SUFFIX) $(LIBS_DEPS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 ifeq (WINCE,$(OS_ARCH))
-	$(LD) -nologo  -entry:mainACRTStartup -out:$@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+	$(LD) -nologo  -entry:mainACRTStartup -out:$@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(call EXPAND_FAKELIBS,$(LIBS) $(EXTRA_LIBS) $(OS_LIBS))
 else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LD) -nologo -out:$@ -pdb:$(LINK_PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+	$(LD) -nologo -out:$@ -pdb:$(LINK_PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(call EXPAND_FAKELIBS,$(LIBS) $(EXTRA_LIBS) $(OS_LIBS))
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
@@ -1158,6 +1180,17 @@ ifneq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 LOBJS	+= $(SHARED_LIBRARY_LIBS)
 endif
 else
+NONFAKE_SHARED_LIBRARY_LIBS = $(filter-out %.fake,$(call EXPAND_FAKELIBS,$(SHARED_LIBRARY_LIBS)))
+ifeq (,$(NONFAKE_SHARED_LIBRARY_LIBS))
+# All of our SHARED_LIBRARY_LIBS have fake equivalents. Score!
+# Just pass the original object files around.
+# For shared libraries, these are already included in EXTRA_DSO_LDOPTS
+# above.
+ifndef SHARED_LIBRARY
+LOBJS += $(shell cat $(addsuffix .fake,$(SHARED_LIBRARY_LIBS)))
+endif
+SKIP_SUB_LOBJS := 1
+else
 ifneq (,$(filter OSF1 BSD_OS FreeBSD NetBSD OpenBSD SunOS Darwin,$(OS_ARCH)))
 CLEANUP1	:= | egrep -v '(________64ELEL_|__.SYMDEF)'
 CLEANUP2	:= rm -f ________64ELEL_ __.SYMDEF
@@ -1165,7 +1198,8 @@ else
 CLEANUP2	:= true
 endif
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
-endif
+endif # EXPAND_FAKELIBS
+endif # SHARED_LIBARY_LIBS
 endif
 ifdef MOZILLA_PROBE_LIBS
 PROBE_LOBJS	= $(shell for lib in $(MOZILLA_PROBE_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
@@ -1176,15 +1210,33 @@ endif
 
 $(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	rm -f $@
+ifndef SKIP_SUB_LOBJS
 ifneq (,$(GNU_LD)$(filter-out OS2 WINNT WINCE, $(OS_ARCH)))
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
 endif
 endif
+endif # SKIP_SUB_LOBJS
 	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
+ifndef MOZ_FAKELIBS
+# Don't clean these up if we're building a fake lib, because then
+# we'll reference nonexistent object files in our fake lib.
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
+endif
+# Also produce a .fake file that just contains the names of the object files.
+# This can be used as a response file to the linker later instead of
+# linking the actual static library.
+ifdef MOZ_FAKELIBS
+ifndef SUPPRESS_FAKELIB
+ifeq (WINNT_,$(OS_ARCH)_$(.PYMAKE))
+	echo "$(strip $(foreach f,$(OBJS) $(SEPARATE_OBJS) $(LOBJS) $(SUB_LOBJS),$(subst \,\\,$(call core_winabspath,$(f))))) " > $@.fake
+else
+	echo "$(strip $(foreach f,$(OBJS) $(SEPARATE_OBJS) $(LOBJS) $(SUB_LOBJS),$(call core_abspath,$(f)))) " > $@.fake
+endif
+endif
+endif
 
 ifeq (,$(filter-out WINNT WINCE, $(OS_ARCH)))
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
@@ -1295,7 +1347,7 @@ endif
 		ofiles=`$(AR_LIST) $${lib}`; \
 		$(AR_DELETE) $${lib} $$ofiles; \
 	done
-	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(DTRACE_PROBE_OBJ) $(PROBE_LOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
+	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(DTRACE_PROBE_OBJ) $(PROBE_LOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(call EXPAND_FAKELIBS,$(OS_LIBS) $(EXTRA_LIBS)) $(DEF_FILE) $(SHLIB_LDENDFILE)
 	@rm -f $(PROBE_LOBJS)
 	@rm -f $(DTRACE_PROBE_OBJ)
 	@for lib in $(MOZILLA_PROBE_LIBS); do \
@@ -1304,7 +1356,7 @@ endif
 	@rm -f $(MOZILLA_PROBE_LIBS)
 
 else # ! DTRACE_LIB_DEPENDENT
-	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(DTRACE_PROBE_OBJ) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
+	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(DTRACE_PROBE_OBJ) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(call EXPAND_FAKELIBS,$(OS_LIBS) $(EXTRA_LIBS)) $(DEF_FILE) $(SHLIB_LDENDFILE)
 endif # DTRACE_LIB_DEPENDENT
 
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
