@@ -80,6 +80,11 @@ $(foreach x,$(CHECK_VARS),$(check-variable))
 
 core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURDIR)/$(1)))
 
+nullstr :=
+space :=$(nullstr) # EOL
+
+core_winabspath = $(firstword $(subst /, ,$(call core_abspath,$(1)))):$(subst $(space),,$(patsubst %,\\%,$(wordlist 2,$(words $(subst /, ,$(call core_abspath,$(1)))), $(strip $(subst /, ,$(call core_abspath,$(1)))))))
+
 # FINAL_TARGET specifies the location into which we copy end-user-shipped
 # build products (typelibs, components, chrome).
 #
@@ -317,6 +322,12 @@ ifdef LIBRARY_NAME
 STATIC_LIBRARY_NAME=$(LIBRARY_NAME)
 endif
 endif
+
+# GNU make on Windows can't handle using fake libs, because the path
+# munging gets confused when we pass response files like @file to the linker.
+#ifneq (WINNT_,$(OS_ARCH)_$(.PYMAKE))
+MOZ_FAKELIBS = 1
+#endif
 
 # This comes from configure
 ifdef MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE
@@ -719,7 +730,7 @@ DEFINES		+= -DOSARCH=$(OS_ARCH)
 
 ######################################################################
 
-GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
+GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB $(FAKE_LIBRARY)
 
 ifeq ($(OS_ARCH),Darwin)
 ifndef NSDISTMODE

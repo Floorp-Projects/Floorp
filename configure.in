@@ -8388,14 +8388,9 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
     AC_SUBST(QT_SURFACE_FEATURE)
 
-    if test "$_WIN32_MSVC"; then
-        MOZ_CAIRO_LIBS='$(DEPTH)/gfx/cairo/cairo/src/mozcairo.lib $(DEPTH)/gfx/cairo/libpixman/src/mozlibpixman.lib'
-    else
-        MOZ_CAIRO_LIBS='$(DEPTH)/gfx/cairo/cairo/src/$(LIB_PREFIX)mozcairo.$(LIB_SUFFIX) $(DEPTH)/gfx/cairo/libpixman/src/$(LIB_PREFIX)mozlibpixman.$(LIB_SUFFIX)'" $CAIRO_FT_LIBS"
-
-        if test "$MOZ_X11"; then
-            MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
-        fi
+    MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src) $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)' $CAIRO_FT_LIBS
+    if test "$MOZ_X11"; then
+        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
     fi
 
     CAIRO_FEATURES_H=gfx/cairo/cairo/src/cairo-features.h
@@ -8420,7 +8415,7 @@ dnl ========================================================
 dnl qcms
 dnl ========================================================
 
-QCMS_LIBS='$(DEPTH)/gfx/qcms/$(LIB_PREFIX)mozqcms.$(LIB_SUFFIX)'
+QCMS_LIBS='$(call EXPAND_LIBNAME_PATH,mozqcms,$(DEPTH)/gfx/qcms)'
 AC_SUBST(QCMS_LIBS)
 
 dnl ========================================================
