@@ -836,7 +836,3 @@ ifdef TIERS
 DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_dirs))
 STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
 endif
-
-ifdef BUILD_STATIC_LIBS
-include $(topsrcdir)/config/static-config.mk
-endif
