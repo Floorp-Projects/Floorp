@@ -4,7 +4,11 @@ var Ci = Components.interfaces;
 let launched, startup, restored;
 
 let runtime = Cc["@mozilla.org/xre/runtime;1"].getService(Ci.nsIXULRuntime);
-displayTimestamp("launched", launched = runtime.launchTimestamp);
+
+try {
+  displayTimestamp("launched", launched = runtime.launchTimestamp);
+} catch(x) { }
+
 displayTimestamp("started", startup = runtime.startupTimestamp);
 if (launched)
   displayDuration("started", startup - launched);
