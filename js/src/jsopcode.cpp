@@ -5496,10 +5496,6 @@ SimulateImacroCFG(JSContext *cx, JSScript *script,
 #define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
 
 static intN
-ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
-                   jsbytecode **pcstack);
-
-static intN
 ReconstructImacroPCStack(JSContext *cx, JSScript *script,
                          jsbytecode *imacstart, jsbytecode *target,
                          jsbytecode **pcstack)
