@@ -394,7 +394,7 @@ members = [
 
     # dom/interfaces/views
     'nsIDOMDocumentView.defaultView',
-    
+
     # dom/interfaces/xbl - None.
 
     # dom/interfaces/xpath

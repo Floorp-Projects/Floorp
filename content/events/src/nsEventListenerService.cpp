@@ -139,10 +139,13 @@ nsEventListenerInfo::ToSource(nsAString& aResult)
       JSContext* cx = nsnull;
       stack->GetSafeJSContext(&cx);
       if (cx && NS_SUCCEEDED(stack->Push(cx))) {
-        JSAutoRequest ar(cx);
-        JSString* str = JS_ValueToSource(cx, v);
-        if (str) {
-          aResult.Assign(nsDependentJSString(str));
+        {
+          // Extra block to finish the auto request before calling pop
+          JSAutoRequest ar(cx);
+          JSString* str = JS_ValueToSource(cx, v);
+          if (str) {
+            aResult.Assign(nsDependentJSString(str));
+          }
         }
         stack->Pop(&cx);
       }
