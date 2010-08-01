@@ -9,7 +9,7 @@
 int called_test_fn;
 int called_test_prop_get;
 
-static JSBool test_prop_get( JSContext *cx, JSObject *obj, jsval idval, jsval *vp )
+static JSBool test_prop_get( JSContext *cx, JSObject *obj, jsid id, jsval *vp )
 {
     called_test_prop_get++;
     return JS_TRUE;

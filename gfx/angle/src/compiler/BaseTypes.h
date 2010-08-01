@@ -7,6 +7,10 @@
 #ifndef _BASICTYPES_INCLUDED_
 #define _BASICTYPES_INCLUDED_
 
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#define __inline inline
+#endif
+
 //
 // Precision qualifiers
 //

@@ -88,7 +88,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
     if(!JSVAL_IS_STRING(mJSVal))
         nsVariant::Cleanup(&mData);
 
-    if(!JSVAL_IS_NULL(mJSVal))
+    if (!JSVAL_IS_NULL(mJSVal))
         RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
 }
 
@@ -303,7 +303,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
                                                     JSVAL_TO_INT(mJSVal)));
     if(JSVAL_IS_DOUBLE(mJSVal))
         return NS_SUCCEEDED(nsVariant::SetFromDouble(&mData, 
-                                                     *JSVAL_TO_DOUBLE(mJSVal)));
+                                                     JSVAL_TO_DOUBLE(mJSVal)));
     if(JSVAL_IS_BOOLEAN(mJSVal))
         return NS_SUCCEEDED(nsVariant::SetFromBool(&mData, 
                                                    JSVAL_TO_BOOLEAN(mJSVal)));

@@ -221,12 +221,6 @@ xpidl_parse_iid(nsID *id, const char *str);
     (IDL_NODE_UP(node) &&                                                     \
      IDL_NODE_TYPE(IDL_NODE_UP(node)) == IDLN_NATIVE)
 
-/* is this type output in the form "<foo> *"? */
-#define STARRED_TYPE(node) (IDL_NODE_TYPE(node) == IDLN_TYPE_STRING ||        \
-                            IDL_NODE_TYPE(node) == IDLN_TYPE_WIDE_STRING ||   \
-                            (IDL_NODE_TYPE(node) == IDLN_IDENT &&             \
-                             UP_IS_AGGREGATE(node)))
-
 #define DIPPER_TYPE(node)                                                     \
     (NULL != IDL_tree_property_get(node, "domstring")  ||                     \
      NULL != IDL_tree_property_get(node, "utf8string") ||                     \

@@ -149,28 +149,6 @@
 }
 
 /* these need to be revised ... */
-.hud-filter-btn {
-    font-weight: bold;
-    color: #222;
-    border: 0 !important;
-    -moz-border-radius: 100%;
-}
-
-.hud-filter-btn:hover {
-    background-color: rgba(0, 0, 0, .205) !important;
-    color: #FFF !important;
-    text-shadow: 0 1px rgba(0, 0, 0, .4) !important;
-}
-
-.hud-filter-btn:active:hover {
-    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4), 0 1px rgba(255, 255, 255, 0.4);
-    background-color: rgba(0, 0, 0, .5) !important;
-}
-
-.hud-filter-btn > .toolbarbutton-text {
-    margin: 1px 2px !important;
-}
-
 .hud-console-filter-toolbar {
     padding: 1px 0px;
     -moz-box-align: center;

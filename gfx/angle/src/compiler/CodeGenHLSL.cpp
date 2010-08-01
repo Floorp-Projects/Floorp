@@ -11,9 +11,9 @@
 // compile object used by higher level code.  It returns
 // a subclass of TCompiler.
 //
-TCompiler* ConstructCompiler(EShLanguage language, int debugOptions)
+TCompiler* ConstructCompiler(EShLanguage language, EShSpec spec)
 {
-    return new TranslatorHLSL(language, debugOptions);
+    return new TranslatorHLSL(language, spec);
 }
 
 //

@@ -108,7 +108,7 @@ nsDOMWorkerSecurityManager::CanAccess(PRUint32 aAction,
                                       JSObject* aJSObject,
                                       nsISupports* aObj,
                                       nsIClassInfo* aClassInfo,
-                                      jsval aName,
+                                      jsid aName,
                                       void** aPolicy)
 {
   return NS_OK;
@@ -123,7 +123,7 @@ nsDOMWorkerSecurityManager::WorkerPrincipal()
 JSBool
 nsDOMWorkerSecurityManager::JSCheckAccess(JSContext* aCx,
                                           JSObject* aObj,
-                                          jsval aId,
+                                          jsid aId,
                                           JSAccessMode aMode,
                                           jsval* aVp)
 {

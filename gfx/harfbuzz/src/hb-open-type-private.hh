@@ -369,7 +369,7 @@ template <typename Type>
 class BEInt<Type, 2>
 {
   public:
-  inline class BEInt<Type,2>& operator = (Type i) { hb_be_uint16_put (v,i); return *this; }
+  inline BEInt<Type,2>& set (Type i) { hb_be_uint16_put (v,i); return *this; }
   inline operator Type () const { return hb_be_uint16_get (v); }
   inline bool operator == (const BEInt<Type, 2>& o) const { return hb_be_uint16_cmp (v, o.v); }
   inline bool operator != (const BEInt<Type, 2>& o) const { return !(*this == o); }
@@ -379,7 +379,7 @@ template <typename Type>
 class BEInt<Type, 4>
 {
   public:
-  inline class BEInt<Type,4>& operator = (Type i) { hb_be_uint32_put (v,i); return *this; }
+  inline BEInt<Type,4>& set (Type i) { hb_be_uint32_put (v,i); return *this; }
   inline operator Type () const { return hb_be_uint32_get (v); }
   inline bool operator == (const BEInt<Type, 4>& o) const { return hb_be_uint32_cmp (v, o.v); }
   inline bool operator != (const BEInt<Type, 4>& o) const { return !(*this == o); }
@@ -390,7 +390,7 @@ class BEInt<Type, 4>
 template <typename Type>
 struct IntType
 {
-  inline void set (Type i) { v = i; }
+  inline void set (Type i) { v.set(i); }
   inline operator Type(void) const { return v; }
   inline bool operator == (const IntType<Type> &o) const { return v == o.v; }
   inline bool operator != (const IntType<Type> &o) const { return v != o.v; }

@@ -43,15 +43,19 @@
 #include "nsSMILParserUtils.h"
 #include "nsSMILTimeContainer.h"
 #include "nsGkAtoms.h"
+#include "nsGUIEvent.h"
+#include "nsEventDispatcher.h"
 #include "nsReadableUtils.h"
 #include "nsMathUtils.h"
+#include "nsThreadUtils.h"
+#include "nsIPresShell.h"
 #include "prdtoa.h"
 #include "plstr.h"
 #include "prtime.h"
 #include "nsString.h"
 
 //----------------------------------------------------------------------
-// Helper classes -- InstanceTimeComparator
+// Helper class: InstanceTimeComparator
 
 // Upon inserting an instance time into one of our instance time lists we assign
 // it a serial number. This allows us to sort the instance times in such a way
@@ -88,6 +92,43 @@ nsSMILTimedElement::InstanceTimeComparator::LessThan(
 
   PRInt8 cmp = aElem1->Time().CompareTo(aElem2->Time());
   return cmp == 0 ? aElem1->Serial() < aElem2->Serial() : cmp < 0;
+}
+
+//----------------------------------------------------------------------
+// Helper class: AsyncTimeEventRunner
+
+namespace
+{
+  class AsyncTimeEventRunner : public nsRunnable
+  {
+  protected:
+    nsRefPtr<nsIContent> mTarget;
+    PRUint32             mMsg;
+    PRInt32              mDetail;
+
+  public:
+    AsyncTimeEventRunner(nsIContent* aTarget, PRUint32 aMsg, PRInt32 aDetail)
+      : mTarget(aTarget), mMsg(aMsg), mDetail(aDetail)
+    {
+    }
+
+    NS_IMETHOD Run()
+    {
+      nsUIEvent event(PR_TRUE, mMsg, mDetail);
+      event.eventStructType = NS_SMIL_TIME_EVENT;
+
+      nsPresContext* context = nsnull;
+      nsIDocument* doc = mTarget->GetCurrentDoc();
+      if (doc) {
+        nsCOMPtr<nsIPresShell> shell = doc->GetShell();
+        if (shell) {
+          context = shell->GetPresContext();
+        }
+      }
+
+      return nsEventDispatcher::Dispatch(mTarget, context, &event);
+    }
+  };
 }
 
 //----------------------------------------------------------------------
@@ -150,6 +191,7 @@ nsSMILTimedElement::nsSMILTimedElement()
   mInstanceSerialIndex(0),
   mClient(nsnull),
   mCurrentInterval(nsnull),
+  mCurrentRepeatIteration(0),
   mPrevRegisteredMilestone(sMaxMilestone),
   mElementState(STATE_STARTUP),
   mSeekState(SEEK_NOT_SEEKING)
@@ -506,20 +548,21 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
         if (mCurrentInterval->Begin()->Time() <= sampleTime) {
           mElementState = STATE_ACTIVE;
           mCurrentInterval->FixBegin();
-          if (HasPlayed()) {
-            Reset(); // Apply restart behaviour
-          }
           if (mClient) {
             mClient->Activate(mCurrentInterval->Begin()->Time().GetMillis());
           }
+          if (mSeekState == SEEK_NOT_SEEKING) {
+            FireTimeEventAsync(NS_SMIL_BEGIN, 0);
+          }
           if (HasPlayed()) {
+            Reset(); // Apply restart behaviour
             // The call to Reset() may mean that the end point of our current
             // interval should be changed and so we should update the interval
             // now. However, calling UpdateCurrentInterval could result in the
             // interval getting deleted (perhaps through some web of syncbase
             // dependencies) therefore we make updating the interval the last
-            // thing we do. There is no guarantee that mCurrentInterval.IsSet()
-            // is true after this.
+            // thing we do. There is no guarantee that mCurrentInterval is set
+            // after this.
             UpdateCurrentInterval();
           }
           stateChanged = PR_TRUE;
@@ -541,6 +584,10 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
             mClient->Inactivate(mFillMode == FILL_FREEZE);
           }
           mCurrentInterval->FixEnd();
+          if (mSeekState == SEEK_NOT_SEEKING) {
+            FireTimeEventAsync(NS_SMIL_END, 0);
+          }
+          mCurrentRepeatIteration = 0;
           mOldIntervals.AppendElement(mCurrentInterval.forget());
           // We must update mOldIntervals before calling SampleFillValue
           SampleFillValue();
@@ -556,6 +603,19 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
                        "Sample time should not precede current interval");
           nsSMILTime activeTime = aContainerTime - beginTime;
           SampleSimpleTime(activeTime);
+          // We register our repeat times as milestones (except when we're
+          // seeking) so we should get a sample at exactly the time we repeat.
+          // (And even when we are seeking we want to update
+          // mCurrentRepeatIteration so we do that first before testing the seek
+          // state.)
+          PRUint32 prevRepeatIteration = mCurrentRepeatIteration;
+          if (ActiveTimeToSimpleTime(activeTime, mCurrentRepeatIteration)==0 &&
+              mCurrentRepeatIteration != prevRepeatIteration &&
+              mCurrentRepeatIteration &&
+              mSeekState == SEEK_NOT_SEEKING) {
+            FireTimeEventAsync(NS_SMIL_REPEAT,
+                          static_cast<PRInt32>(mCurrentRepeatIteration));
+          }
         }
       }
       break;
@@ -607,6 +667,7 @@ nsSMILTimedElement::Rewind()
   // Set the STARTUP state first so that if we get any callbacks we won't waste
   // time recalculating the current interval
   mElementState = STATE_STARTUP;
+  mCurrentRepeatIteration = 0;
 
   // Clear the intervals and instance times except those instance times we can't
   // regenerate (DOM calls etc.)
@@ -1238,13 +1299,6 @@ nsSMILTimedElement::Reset()
 void
 nsSMILTimedElement::DoPostSeek()
 {
-  // XXX When implementing TimeEvents we'll need to compare mElementState with
-  // mSeekState and dispatch events as follows:
-  //     ACTIVE->INACTIVE: End event
-  //     INACTIVE->ACTIVE: Begin event
-  //     ACTIVE->ACTIVE: Nothing (even if they're different intervals)
-  //     INACTIVE->INACTIVE: Nothing (even if we've skipped intervals)
-
   // Finish backwards seek
   if (mSeekState == SEEK_BACKWARD_FROM_INACTIVE ||
       mSeekState == SEEK_BACKWARD_FROM_ACTIVE) {
@@ -1264,6 +1318,34 @@ nsSMILTimedElement::DoPostSeek()
     //   to time earlier than the resolved end time.
     Reset();
     UpdateCurrentInterval();
+  }
+
+  // XXX
+  // Note that SMIL gives the very cryptic description:
+  //   The associated time for the event is the document time before the seek.
+  //   This action does not resolve any times in the instance times list for end
+  //   times.
+  //
+  // The second sentence was added as a clarification in a SMIL 2.0 erratum.
+  // Presumably the intention is that we fire the event as implemented below but
+  // don't act on it. This makes sense at least for dependencies within the same
+  // time container. So we'll probably need to set a flag here to ensure we
+  // don't actually act on it when we implement event-based timing.
+  switch (mSeekState)
+  {
+  case SEEK_FORWARD_FROM_ACTIVE:
+  case SEEK_BACKWARD_FROM_ACTIVE:
+    if (mElementState != STATE_ACTIVE) {
+      FireTimeEventAsync(NS_SMIL_END, 0);
+    }
+    break;
+
+  case SEEK_FORWARD_FROM_INACTIVE:
+  case SEEK_BACKWARD_FROM_INACTIVE:
+    if (mElementState == STATE_ACTIVE) {
+      FireTimeEventAsync(NS_SMIL_BEGIN, 0);
+    }
+    break;
   }
 
   mSeekState = SEEK_NOT_SEEKING;
@@ -1861,10 +1943,6 @@ nsSMILTimedElement::GetNextMilestone(nsSMILMilestone& aNextMilestone) const
 {
   // Return the next key moment in our lifetime.
   //
-  // XXX Once we implement TimeEvents and event based timing we might need to
-  // include repeat times too, particularly if it's important to get them in
-  // order.
-  //
   // XXX It may be possible in future to optimise this so that we only register
   // for milestones if:
   // a) We have time dependents, or
@@ -1896,22 +1974,27 @@ nsSMILTimedElement::GetNextMilestone(nsSMILMilestone& aNextMilestone) const
 
   case STATE_ACTIVE:
     {
-      // XXX When we implement TimeEvents, we may need to consider what comes
-      // next: the interval end or an interval repeat.
+      // Work out what comes next: the interval end or the next repeat iteration
+      nsSMILTimeValue nextRepeat;
+      if (mSeekState == SEEK_NOT_SEEKING && mSimpleDur.IsResolved()) {
+        nextRepeat.SetMillis(mCurrentInterval->Begin()->Time().GetMillis() +
+            (mCurrentRepeatIteration + 1) * mSimpleDur.GetMillis());
+      }
+      nsSMILTimeValue nextMilestone =
+        NS_MIN(mCurrentInterval->End()->Time(), nextRepeat);
 
-      // Check for an early end
-      nsSMILInstanceTime* earlyEnd =
-        CheckForEarlyEnd(mCurrentInterval->End()->Time());
+      // Check for an early end before that time
+      nsSMILInstanceTime* earlyEnd = CheckForEarlyEnd(nextMilestone);
       if (earlyEnd) {
         aNextMilestone.mIsEnd = PR_TRUE;
         aNextMilestone.mTime = earlyEnd->Time().GetMillis();
         return PR_TRUE;
       }
 
-      // Otherwise it's just the next interval end
-      if (mCurrentInterval->End()->Time().IsResolved()) {
-        aNextMilestone.mIsEnd = PR_TRUE;
-        aNextMilestone.mTime = mCurrentInterval->End()->Time().GetMillis();
+      // Apply the previously calculated milestone
+      if (nextMilestone.IsResolved()) {
+        aNextMilestone.mIsEnd = nextMilestone != nextRepeat;
+        aNextMilestone.mTime = nextMilestone.GetMillis();
         return PR_TRUE;
       }
 
@@ -1956,6 +2039,17 @@ nsSMILTimedElement::NotifyChangedInterval()
   }
 
   mCurrentInterval->NotifyChanged(container);
+}
+
+void
+nsSMILTimedElement::FireTimeEventAsync(PRUint32 aMsg, PRInt32 aDetail)
+{
+  if (!mAnimationElement)
+    return;
+
+  nsCOMPtr<nsIRunnable> event =
+    new AsyncTimeEventRunner(&mAnimationElement->Content(), aMsg, aDetail);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
 const nsSMILInstanceTime*

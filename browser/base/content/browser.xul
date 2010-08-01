@@ -34,6 +34,7 @@
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #   Robert Strong <robert.bugzilla@gmail.com>
 #   Rob Campbell <rcampbell@mozilla.com>
+#   Patrick Walton <pcwalton@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -140,7 +141,7 @@
       <menuitem id="context_undoCloseTab"
                 label="&undoCloseTab.label;"
                 accesskey="&undoCloseTab.accesskey;"
-                command="History:UndoCloseTab"/>
+                observes="History:UndoCloseTab"/>
       <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                 oncommand="gBrowser.removeTab(TabContextMenu.contextTab);"/>
     </menupopup>
@@ -229,7 +230,9 @@
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
-           level="top">
+           level="top"
+           titlebar="normal"
+           label="&inspectPanelTitle.label;">
       <toolbar id="inspector-toolbar"
                nowindowdrag="true">
         <toolbarbutton id="inspector-inspect-toolbutton"
@@ -279,11 +282,9 @@
            ignorekeys="true"
            noautofocus="true"
            noautohide="true"
-           level="top">
-        <toolbar id="inspector-style-toolbar"
-                 nowindowdrag="true">
-          <label>&inspectStylePanelTitle.label;</label>
-        </toolbar>
+           level="top"
+           titlebar="normal"
+           label="&inspectStylePanelTitle.label;">
         <listbox id="inspector-style-listbox" flex="1"/>
         <hbox align="end">
           <spacer flex="1" />
@@ -324,7 +325,12 @@
     </menupopup>
 
     <menupopup id="contentAreaContextMenu"
-               onpopupshowing="if (event.target != this) return true; updateEditUIVisibility(); gContextMenu = new nsContextMenu(this, window.getBrowser()); return gContextMenu.shouldDisplay;"
+               onpopupshowing="if (event.target != this)
+                                 return true;
+                               gContextMenu = new nsContextMenu(this, gBrowser);
+                               if (gContextMenu.shouldDisplay)
+                                 updateEditUIVisibility();
+                               return gContextMenu.shouldDisplay;"
                onpopuphiding="if (event.target == this) { gContextMenu = null; updateEditUIVisibility(); }">
 #include browser-context.inc
     </menupopup>
@@ -487,6 +493,22 @@
                       key="showAllHistoryKb"
                       command="Browser:ShowAllHistory"/>
             <menuseparator class="hide-if-empty-places-result"/>
+          </menupopup>
+        </menu>
+        <menuseparator/>
+        <menu id="appmenu_developer"
+              label="&developerMenu.label;">
+          <menupopup id="appmenu_developer_popup">
+            <menuitem id="appmenu_pageSource"
+                      label="&pageSourceCmd.label;"
+                      command="View:PageSource"/>
+            <menuseparator/>
+            <menuitem id="appmenu_pageInspect"
+                      label="&inspectMenu.label;"
+                      command="Tools:Inspect"/>
+            <menuitem id="appmenu_webConsole"
+                      label="&webConsoleCmd.label;"
+                      oncommand="HUDConsoleUI.toggleHUD();"/>
           </menupopup>
         </menu>
         <menuseparator/>

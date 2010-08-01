@@ -45,11 +45,11 @@ ABS_CONFIG_DIR := $(shell pwd)/$(CONFIG_DIR)
 
 SFX_MODULE ?= $(error SFX_MODULE is not defined)
 
-# UTF-8 encoded files that need to be converted to UTF-16LE for NSIS
-TOOLKIT_NSIS_FILES_CONV = \
+TOOLKIT_NSIS_FILES = \
 	common.nsh \
 	locales.nsi \
 	overrides.nsh \
+	setup.ico \
 	version.nsh \
 	$(NULL)
 
@@ -63,12 +63,8 @@ CUSTOM_NSIS_PLUGINS = \
 	$(NULL)
 
 $(CONFIG_DIR)/setup.exe::
-	for i in $(TOOLKIT_NSIS_FILES_CONV); do \
-	  iconv -f UTF-8 -t UTF-16LE $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/$$i | \
-	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > $(CONFIG_DIR)/$$i; \
-	done
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
-	$(INSTALL) $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && $(MAKENSISU) installer.nsi
 # Support for building the uninstaller when repackaging locales
 ifeq ($(CONFIG_DIR),l10ngen)
@@ -89,12 +85,8 @@ installer::
 # For building the uninstaller during the application build so it can be
 # included for mar file generation.
 uninstaller::
-	for i in $(TOOLKIT_NSIS_FILES_CONV); do \
-	  iconv -f UTF-8 -t UTF-16LE $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/$$i | \
-	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > $(CONFIG_DIR)/$$i; \
-	done
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS)) $(CONFIG_DIR)
-	$(INSTALL) $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && $(MAKENSISU) uninstaller.nsi
 	$(NSINSTALL) -D $(DIST)/bin/uninstall
 	cp $(CONFIG_DIR)/helper.exe $(DIST)/bin/uninstall

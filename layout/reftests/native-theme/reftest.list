@@ -30,7 +30,7 @@ fails-if(!nativeThemePref) != checkbox-native.html checkbox-nonnative.html
 != 427122-1.html 427122-1-ref.html
 
 # 403458 is a Windows-only bug
-skip-if(MOZ_WIDGET_TOOLKIT!="windows") != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul
+skip-if(!winWidget) != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul
 
 == 470711-1.xul 470711-1-ref.xul
 
@@ -45,17 +45,17 @@ fails-if(!nativeThemePref) == box-shadow-styling.html box-shadow-styling-ref.htm
 
 # RTL mirroring tests
 == checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl-ref.html
-skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl-ref.xul
-skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul
-skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
+skip-if(!cocoaWidget) == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl-ref.xul
+skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul
+skip-if(!cocoaWidget) == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
 != resizer-bottomend.xul blank-window.xul
 == resizer-bottomend.xul resizer-bottomright.xul
 != resizer-bottomend.xul resizer-bottomend-rtl.xul
-skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") != resizer-bottomend-rtl.xul blank-window.xul
-skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul
+skip-if(gtk2Widget) != resizer-bottomend-rtl.xul blank-window.xul
+skip-if(gtk2Widget) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul
 
 # Windows-only, depends on native scrollbar metrics
-skip-if(MOZ_WIDGET_TOOLKIT!="windows") == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html
-# skip-if(MOZ_WIDGET_TOOLKIT!="windows") == scroll-thumb-minimum-size-theme.html scroll-thumb-minimum-size-theme-ref.html # Bug 512206
+skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html
+# skip-if(!winWidget) == scroll-thumb-minimum-size-theme.html scroll-thumb-minimum-size-theme-ref.html # Bug 512206
 
 == checkbox-dynamic-1.html checkbox-dynamic-1-ref.html

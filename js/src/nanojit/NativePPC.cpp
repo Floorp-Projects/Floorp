@@ -1023,14 +1023,14 @@ namespace nanojit
         LWZ(rr, d+4, FP);
     }
 
-    void Assembler::asm_promote(LIns *ins) {
+    void Assembler::asm_ui2uq(LIns *ins) {
         LOpcode op = ins->opcode();
         Register r = deprecated_prepResultReg(ins, GpRegs);
         Register v = findRegFor(ins->oprnd1(), GpRegs);
         switch (op) {
         default:
             debug_only(outputf("%s",lirNames[op]));
-            TODO(asm_promote);
+            TODO(asm_ui2uq);
         case LIR_ui2uq:
             CLRLDI(r, v, 32); // clears the top 32 bits
             break;
@@ -1039,6 +1039,15 @@ namespace nanojit
             break;
         }
     }
+
+    void Assembler::asm_dasq(LIns *ins) {
+        TODO(asm_dasq);
+    }
+
+    void Assembler::asm_qasd(LIns *ins) {
+        TODO(asm_qasd);
+    }
+
     #endif
 
 #ifdef NANOJIT_64BIT

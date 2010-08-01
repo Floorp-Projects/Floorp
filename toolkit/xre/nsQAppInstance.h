@@ -41,15 +41,14 @@
 
 #include <QApplication>
 
-class nsQAppInstance : public QApplication
+class nsQAppInstance
 {
 public:
   static void AddRef(void);
   static void Release(void);
 
 private:
-  nsQAppInstance(int gArgc, char** gArgv);
-  static nsQAppInstance *sQAppInstance;
+  static QApplication *sQAppInstance;
   static int sQAppRefCount;
 };
 

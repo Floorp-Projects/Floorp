@@ -227,6 +227,8 @@ if __name__ == '__main__':
                   help='check for test files not listed in the manifest')
     op.add_option('--failure-file', dest='failure_file',
                   help='write tests that have not passed to the given file')
+    op.add_option('--run-slow-tests', dest='run_slow_tests', action='store_true',
+                  help='run particularly slow tests as well as average-speed tests')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
         if not OPTIONS.check_manifest:
@@ -309,6 +311,9 @@ if __name__ == '__main__':
     if OPTIONS.run_only_skipped:
         OPTIONS.run_skipped = True
         test_list = [ _ for _ in test_list if not _.enable ]
+
+    if not OPTIONS.run_slow_tests:
+        test_list = [ _ for _ in test_list if not _.slow ]
 
     if OPTIONS.debug and test_list:
         if len(test_list) > 1:

@@ -10,7 +10,7 @@ function check_qcms_has_assembly()
         return true;
     }
 
-    if (navigator.platform == "Win32" || navigator.platform == "OS/2") {
+    if (navigator.platform.indexOf("Win") == 0 || navigator.platform == "OS/2") {
         // Assume all Windows and OS/2 is x86 or x86_64.  We don't
         // expose any way for Web content to check.
         return true;

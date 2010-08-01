@@ -60,7 +60,7 @@ BEGIN_TEST(testGCChunkAlloc)
         "var max = 0; (function() {"
         "    var array = [];"
         "    for (; ; ++max)"
-        "        array.push(max + 0.1);"
+        "        array.push({});"
         "})();";
     JSBool ok = JS_EvaluateScript(cx, global, source, strlen(source), "", 1,
                                   root.addr());
@@ -76,7 +76,7 @@ BEGIN_TEST(testGCChunkAlloc)
          "    var array = [];"
          "    for (var i = max >> 1; i != 0;) {"
          "        --i;"
-         "        array.push(i + 0.1);"
+         "        array.push({});"
          "    }"
          "})();", root.addr());
     CHECK(errorCount == 1);

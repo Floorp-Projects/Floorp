@@ -4,7 +4,7 @@
 # The following test passes consistently only on Mac OS X;
 # both Windows and Linux give results that vary depending on the font size/zoom factor used,
 # because hinting affects the metrics used to compute the font size adjustment. See bug 429605.
-random-if(MOZ_WIDGET_TOOLKIT!="cocoa") == font-size-adjust-02.html font-size-adjust-02-ref.html
+random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 # This currently fails because line spacing does not respect font-size-adjust
 # in the "obvious" way, but it is unclear what the behavior should really be;
 # see bug #366138 for some (inconclusive) discussion
@@ -33,7 +33,7 @@ random-if(MOZ_WIDGET_TOOLKIT!="cocoa") == font-size-adjust-02.html font-size-adj
 == white-space-2.html white-space-2-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
 random == wordwrap-02.html wordwrap-02-ref.html # bad fonts on test boxes
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == wordwrap-03.html wordwrap-03-ref.html # Bad fonts on test boxes
+random-if(gtk2Widget) == wordwrap-03.html wordwrap-03-ref.html # Bad fonts on test boxes
 == wordwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
 == wordwrap-06.html wordwrap-06-ref.html
@@ -45,9 +45,9 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == wordwrap-03.html wordwrap-03-ref.html #
 == word-spacing-01.html word-spacing-01-ref.html
 # the following will fail when rendering with Core Text (see bug 389074) due to what appears to be
 # an Apple bug: the presence of ZWNJ disturbs the positioning of an adjacent glyph. rdar://6427865
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") HTTP(..) == zwnj-01.xhtml zwnj-01-ref.xhtml
+random-if(cocoaWidget) HTTP(..) == zwnj-01.xhtml zwnj-01-ref.xhtml
 HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != zwnj-01.html zwnj-01-notref.html # Bad fonts on the tinderbox -- works locally
+random-if(gtk2Widget) != zwnj-01.html zwnj-01-notref.html # Bad fonts on the tinderbox -- works locally
 == cgj-01.html cgj-01-ref.html
 == 444656.html 444656-ref.html
 == 449555-1.html 449555-1-ref.html
@@ -59,6 +59,6 @@ random HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
 == rgba-text.html rgba-text-ref.html
 # Test for bug 575695, 'kern' table support
 # Random on Windows because behavior depends on Uniscribe version(?)
-random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) != kerning-01.html kerning-01-notref.html
+random-if(winWidget) HTTP(..) != kerning-01.html kerning-01-notref.html
 # Test for bug 577380, support for AAT layout (on OS X only)
-random-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 577380.html 577380-ref.html
+random-if(!cocoaWidget) == 577380.html 577380-ref.html

@@ -647,11 +647,11 @@ namespace nanojit
         NanoAssert(0);  // q2i shouldn't occur on 32-bit platforms
     }
 
-    void Assembler::asm_promote(LIns *ins)
+    void Assembler::asm_ui2uq(LIns *ins)
     {
         USE(ins);
-        TODO(asm_promote);
-        TAG("asm_promote(ins=%p{%s})", ins, lirNames[ins->opcode()]);
+        TODO(asm_ui2uq);
+        TAG("asm_ui2uq(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 #endif
 

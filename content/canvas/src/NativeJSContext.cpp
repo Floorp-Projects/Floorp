@@ -15,6 +15,5 @@ void
 NativeJSContext::ReleaseGCRoot(JSObject **aPtr)
 {
   NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
-
   ::JS_RemoveObjectRoot(ctx, aPtr);
 }

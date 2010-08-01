@@ -122,8 +122,7 @@ nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent)
 
 nsWindow::nsWindow() :
     mIsVisible(PR_FALSE),
-    mParent(nsnull),
-    mSpecialKeyTracking(0)
+    mParent(nsnull)
 {
 }
 
@@ -1182,12 +1181,6 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
 
     if (isDown) {
         switch (keyCode) {
-            case AndroidKeyEvent::KEYCODE_BACK:
-            case AndroidKeyEvent::KEYCODE_MENU:
-            case AndroidKeyEvent::KEYCODE_SEARCH:
-                mSpecialKeyTracking = keyCode;
-                break;
-
             case AndroidKeyEvent::KEYCODE_VOLUME_UP:
                 command = nsWidgetAtoms::VolumeUp;
                 doCommand = PR_TRUE;
@@ -1198,11 +1191,6 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
                 break;
         }
     } else {
-        // Dispatch BACK, MENU, SEARCH key events only on key-up after the corresponding key-down
-        if (mSpecialKeyTracking != keyCode) {
-            mSpecialKeyTracking = 0;
-            return;
-        }
         switch (keyCode) {
             case AndroidKeyEvent::KEYCODE_BACK: {
                 nsKeyEvent pressEvent(PR_TRUE, NS_KEY_PRESS, this);
@@ -1227,7 +1215,6 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
         nsCommandEvent event(PR_TRUE, nsWidgetAtoms::onAppCommand, command, this);
         InitEvent(event);
         DispatchEvent(&event);
-        mSpecialKeyTracking = 0;
     }
 }
 
@@ -1279,8 +1266,6 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         HandleSpecialKey(ae);
         return;
     }
-
-    mSpecialKeyTracking = 0;
 
     nsKeyEvent event(PR_TRUE, msg, this);
     InitKeyEvent(event, *ae);

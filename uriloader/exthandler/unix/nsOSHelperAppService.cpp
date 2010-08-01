@@ -41,6 +41,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#if (MOZ_PLATFORM_MAEMO == 6)
+#include <contentaction/contentaction.h>
+#include <QString>
+#endif
+
 #include "nsOSHelperAppService.h"
 #include "nsMIMEInfoUnix.h"
 #ifdef MOZ_WIDGET_GTK2
@@ -1207,6 +1212,15 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
   LOG(("-- nsOSHelperAppService::OSProtocolHandlerExists for '%s'\n",
        aProtocolScheme));
   *aHandlerExists = PR_FALSE;
+
+#if (MOZ_PLATFORM_MAEMO == 6)
+  // libcontentaction requires character ':' after scheme
+  ContentAction::Action action =
+    ContentAction::Action::defaultActionForScheme(QString(aProtocolScheme) + ':');
+
+  if (action.isValid())
+    *aHandlerExists = PR_TRUE;
+#endif
 
 #ifdef MOZ_WIDGET_GTK2
   // Check the GConf registry for a protocol handler

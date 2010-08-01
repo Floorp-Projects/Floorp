@@ -62,6 +62,12 @@ WIN32_EXE_LDFLAGS += -ENTRY:mainACRTStartup
 endif
 endif
 
+ifeq ($(OS_ARCH),Darwin)
+ifeq ($(TARGET_CPU),x86_64)
+DARWIN_EXE_LDFLAGS += -pagezero_size 10000 -image_base 100000000
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_SHARK

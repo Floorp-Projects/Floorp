@@ -160,7 +160,7 @@ private:
 
   static Handle*
   Unwrap(JSContext* cx, JSObject* obj) {
-    while (obj && obj->getClass() != &sHandle_JSClass)
+    while (obj && obj->getJSClass() != &sHandle_JSClass)
       obj = obj->getProto();
 
     if (!obj)
@@ -175,7 +175,7 @@ private:
   }
 
   static JSBool
-  GetParent(JSContext* cx, JSObject* obj, jsval, jsval* vp) {
+  GetParent(JSContext* cx, JSObject* obj, jsid, jsval* vp) {
     JS_SET_RVAL(cx, vp, JSVAL_NULL);
 
     Handle* self = Unwrap(cx, obj);
@@ -193,7 +193,7 @@ private:
   }
 
   static JSBool
-  GetIsValid(JSContext* cx, JSObject* obj, jsval, jsval* vp) {
+  GetIsValid(JSContext* cx, JSObject* obj, jsid, jsval* vp) {
     Handle* self = Unwrap(cx, obj);
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(!!self));
     return JS_TRUE;

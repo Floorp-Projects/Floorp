@@ -783,7 +783,7 @@ Statement::GetUTF8String(PRUint32 aIndex,
   nsresult rv = GetTypeOfIndex(aIndex, &type);
   NS_ENSURE_SUCCESS(rv, rv);
   if (type == mozIStorageStatement::VALUE_TYPE_NULL) {
-    // NULL columns should have IsVod set to distinguis them from an empty
+    // NULL columns should have IsVoid set to distinguish them from the empty
     // string.
     _value.Truncate(0);
     _value.SetIsVoid(PR_TRUE);
@@ -806,7 +806,7 @@ Statement::GetString(PRUint32 aIndex,
   nsresult rv = GetTypeOfIndex(aIndex, &type);
   NS_ENSURE_SUCCESS(rv, rv);
   if (type == mozIStorageStatement::VALUE_TYPE_NULL) {
-    // NULL columns should have IsVod set to distinguis them from an empty
+    // NULL columns should have IsVoid set to distinguish them from the empty
     // string.
     _value.Truncate(0);
     _value.SetIsVoid(PR_TRUE);

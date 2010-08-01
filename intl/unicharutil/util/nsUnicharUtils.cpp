@@ -45,34 +45,133 @@
 #include "nsICaseConversion.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXPCOMStrings.h"
+#include "casetable.h"
 
 #include <ctype.h>
 
-static nsICaseConversion* gCaseConv = nsnull;
+// For gUpperToTitle 
+enum {
+  kUpperIdx =0,
+  kTitleIdx
+};
 
-nsICaseConversion*
-NS_GetCaseConversion()
-{
-  if (!gCaseConv) {
-    nsresult rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &gCaseConv);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("Failed to get the case conversion service!");
-      gCaseConv = nsnull;
+// For gUpperToTitle
+enum {
+  kLowIdx =0,
+  kSizeEveryIdx,
+  kDiffIdx
+};
+
+#define IS_ASCII(u)       ( 0x0000 == ((u) & 0xFF80))
+#define IS_ASCII_UPPER(u) ((0x0041 <= (u)) && ( (u) <= 0x005a))
+#define IS_ASCII_LOWER(u) ((0x0061 <= (u)) && ( (u) <= 0x007a))
+#define IS_ASCII_ALPHA(u) (IS_ASCII_UPPER(u) || IS_ASCII_LOWER(u))
+#define IS_ASCII_SPACE(u) ( 0x0020 == (u) )
+
+#define IS_NOCASE_CHAR(u)  (0==(1&(gCaseBlocks[(u)>>13]>>(0x001F&((u)>>8)))))
+  
+// Size of Tables
+
+#define CASE_MAP_CACHE_SIZE 0x40
+#define CASE_MAP_CACHE_MASK 0x3F
+
+struct nsCompressedMap {
+  const PRUnichar *mTable;
+  PRUint32 mSize;
+  PRUint32 mCache[CASE_MAP_CACHE_SIZE];
+  PRUint32 mLastBase;
+
+  PRUnichar Map(PRUnichar aChar)
+  {
+    // no need to worry about thread safety since cached values are
+    // not objects but primitive data types which could be 
+    // accessed in atomic operations. We need to access
+    // the whole 32 bit of cachedData at once in order to make it
+    // thread safe. Never access bits from mCache directly.
+
+    PRUint32 cachedData = mCache[aChar & CASE_MAP_CACHE_MASK];
+    if(aChar == ((cachedData >> 16) & 0x0000FFFF))
+      return (cachedData & 0x0000FFFF);
+
+    // try the last index first
+    // store into local variable so we can be thread safe
+    PRUint32 base = mLastBase; 
+    PRUnichar res = 0;
+    
+    if (( aChar <=  ((mTable[base+kSizeEveryIdx] >> 8) + 
+                  mTable[base+kLowIdx])) &&
+        ( mTable[base+kLowIdx]  <= aChar )) 
+    {
+        // Hit the last base
+        if(((mTable[base+kSizeEveryIdx] & 0x00FF) > 0) && 
+          (0 != ((aChar - mTable[base+kLowIdx]) % 
+                (mTable[base+kSizeEveryIdx] & 0x00FF))))
+        {
+          res = aChar;
+        } else {
+          res = aChar + mTable[base+kDiffIdx];
+        }
+    } else {
+        res = this->Lookup(0, (mSize/2), mSize-1, aChar);
+    }
+
+    mCache[aChar & CASE_MAP_CACHE_MASK] =
+        (((aChar << 16) & 0xFFFF0000) | (0x0000FFFF & res));
+    return res;
+  }
+
+  PRUnichar Lookup(PRUint32 l,
+                   PRUint32 m,
+                   PRUint32 r,
+                   PRUnichar aChar)
+  {
+    PRUint32 base = m*3;
+    if ( aChar >  ((mTable[base+kSizeEveryIdx] >> 8) + 
+                  mTable[base+kLowIdx])) 
+    {
+      if( l > m )
+        return aChar;
+      PRUint32 newm = (m+r+1)/2;
+      if(newm == m)
+        newm++;
+      return this->Lookup(m+1, newm , r, aChar);
+      
+    } else if ( mTable[base+kLowIdx]  > aChar ) {
+      if( r < m )
+        return aChar;
+      PRUint32 newm = (l+m-1)/2;
+      if(newm == m)
+        newm++;
+      return this->Lookup(l, newm, m-1, aChar);
+
+    } else  {
+      if(((mTable[base+kSizeEveryIdx] & 0x00FF) > 0) && 
+        (0 != ((aChar - mTable[base+kLowIdx]) % 
+                (mTable[base+kSizeEveryIdx] & 0x00FF))))
+      {
+        return aChar;
+      }
+      mLastBase = base; // cache the base
+      return aChar + mTable[base+kDiffIdx];
     }
   }
-  return gCaseConv;
-}
+};
+
+static nsCompressedMap gUpperMap = {
+  reinterpret_cast<const PRUnichar*>(&gToUpper[0]),
+  gToUpperItems
+};
+
+static nsCompressedMap gLowerMap = {
+  reinterpret_cast<const PRUnichar*>(&gToLower[0]),
+  gToLowerItems
+};
 
 void
 ToLowerCase(nsAString& aString)
 {
-  nsICaseConversion* caseConv = NS_GetCaseConversion();
-  if (caseConv) {
-    PRUnichar *buf = aString.BeginWriting();
-    caseConv->ToLower(buf, buf, aString.Length());
-  }
-  else
-    NS_WARNING("No case converter: no conversion done");
+  PRUnichar *buf = aString.BeginWriting();
+  ToLowerCase(buf, buf, aString.Length());
 }
 
 void
@@ -80,30 +179,18 @@ ToLowerCase(const nsAString& aSource,
             nsAString& aDest)
 {
   const PRUnichar *in;
-  PRUint32 len = NS_StringGetData(aSource, &in);
-
   PRUnichar *out;
+  PRUint32 len = NS_StringGetData(aSource, &in);
   NS_StringGetMutableData(aDest, len, &out);
-
-  nsICaseConversion* caseConv = NS_GetCaseConversion();
-  if (out && caseConv)
-    caseConv->ToLower(in, out, len);
-  else {
-    NS_WARNING("No case converter: only copying");
-    aDest.Assign(aSource);
-  }
+  NS_ASSERTION(out, "Uh...");
+  ToLowerCase(in, out, len);
 }
 
 void
 ToUpperCase(nsAString& aString)
 {
-  nsICaseConversion* caseConv = NS_GetCaseConversion();
-  if (caseConv) {
-    PRUnichar *buf = aString.BeginWriting();
-    caseConv->ToUpper(buf, buf, aString.Length());
-  }
-  else
-    NS_WARNING("No case converter: no conversion done");
+  PRUnichar *buf = aString.BeginWriting();
+  ToUpperCase(buf, buf, aString.Length());
 }
 
 void
@@ -111,18 +198,11 @@ ToUpperCase(const nsAString& aSource,
             nsAString& aDest)
 {
   const PRUnichar *in;
-  PRUint32 len = NS_StringGetData(aSource, &in);
-
   PRUnichar *out;
+  PRUint32 len = NS_StringGetData(aSource, &in);
   NS_StringGetMutableData(aDest, len, &out);
-
-  nsICaseConversion* caseConv = NS_GetCaseConversion();
-  if (out && caseConv)
-    caseConv->ToUpper(in, out, len);
-  else {
-    NS_WARNING("No case converter: only copying");
-    aDest.Assign(aSource);
-  }
+  NS_ASSERTION(out, "Uh...");
+  ToUpperCase(in, out, len);
 }
 
 #ifdef MOZILLA_INTERNAL_API
@@ -132,16 +212,7 @@ nsCaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
                                               const PRUnichar* rhs,
                                               PRUint32 aLength) const
 {
-  PRInt32 result;
-  nsICaseConversion* caseConv = NS_GetCaseConversion();
-  if (caseConv)
-    caseConv->CaseInsensitiveCompare(lhs, rhs, aLength, &result);
-  else {
-    NS_WARNING("No case converter: using default");
-    nsDefaultStringComparator comparator;
-    result = comparator(lhs, rhs, aLength);
-  }
-  return result;
+  return CaseInsensitiveCompare(lhs, rhs, aLength);
 }
 
 PRInt32
@@ -152,18 +223,8 @@ nsCaseInsensitiveStringComparator::operator()(PRUnichar lhs,
   if (lhs == rhs)
     return 0;
   
-  nsICaseConversion* caseConv = NS_GetCaseConversion();
-  if (caseConv) {
-    caseConv->ToLower(lhs, &lhs);
-    caseConv->ToLower(rhs, &rhs);
-  }
-  else {
-    if (lhs < 256)
-      lhs = tolower(char(lhs));
-    if (rhs < 256)
-      rhs = tolower(char(rhs));
-    NS_WARNING("No case converter: no conversion done");
-  }
+  lhs = ToLowerCase(lhs);
+  rhs = ToLowerCase(rhs);
   
   if (lhs == rhs)
     return 0;
@@ -173,54 +234,109 @@ nsCaseInsensitiveStringComparator::operator()(PRUnichar lhs,
     return 1;
 }
 
-#else // MOZILLA_INTERNAL_API
+#endif // MOZILLA_INTERNAL_API
 
 PRInt32
 CaseInsensitiveCompare(const PRUnichar *a,
                        const PRUnichar *b,
                        PRUint32 len)
 {
-  nsICaseConversion* caseConv = NS_GetCaseConversion();
-  if (!caseConv)
-    return NS_strcmp(a, b);
-
-  PRInt32 result;
-  caseConv->CaseInsensitiveCompare(a, b, len, &result);
-  return result;
+  NS_ASSERTION(a && b, "Do not pass in invalid pointers!");
+  
+  if (len) {
+    do {
+      PRUnichar c1 = *a++;
+      PRUnichar c2 = *b++;
+      
+      if (c1 != c2) {
+        c1 = ToLowerCase(c1);
+        c2 = ToLowerCase(c2);
+        if (c1 != c2) {
+          if (c1 < c2) {
+            return -1;
+          }
+          return 1;
+        }
+      }
+    } while (--len != 0);
+  }
+  return 0;
 }
-
-#endif // MOZILLA_INTERNAL_API
 
 PRUnichar
 ToLowerCase(PRUnichar aChar)
 {
-  PRUnichar result;
-  nsICaseConversion* caseConv = NS_GetCaseConversion();
-  if (caseConv)
-    caseConv->ToLower(aChar, &result);
-  else {
-    NS_WARNING("No case converter: no conversion done");
-    if (aChar < 256)
-      result = tolower(char(aChar));
+  if (IS_ASCII(aChar)) {
+    if (IS_ASCII_UPPER(aChar))
+      return aChar + 0x0020;
     else
-      result = aChar;
+      return aChar;
+  } else if (IS_NOCASE_CHAR(aChar)) {
+     return aChar;
   }
-  return result;
+
+  return gLowerMap.Map(aChar);
+}
+
+void
+ToLowerCase(const PRUnichar *aIn, PRUnichar *aOut, PRUint32 aLen)
+{
+  for (PRUint32 i = 0; i < aLen; i++) {
+    aOut[i] = ToLowerCase(aIn[i]);
+  }
 }
 
 PRUnichar
 ToUpperCase(PRUnichar aChar)
 {
-  PRUnichar result;
-  nsICaseConversion* caseConv = NS_GetCaseConversion();
-  if (caseConv)
-    caseConv->ToUpper(aChar, &result);
-  else {
-    NS_WARNING("No case converter: no conversion done");
-    if (aChar < 256)
-      result = toupper(char(aChar));
+  if (IS_ASCII(aChar)) {
+    if (IS_ASCII_LOWER(aChar))
+      return aChar - 0x0020;
     else
-      result = aChar;
+      return aChar;
+  } else if (IS_NOCASE_CHAR(aChar)) {
+    return aChar;
   }
-  return result;
+
+  return gUpperMap.Map(aChar);
+}
+
+void
+ToUpperCase(const PRUnichar *aIn, PRUnichar *aOut, PRUint32 aLen)
+{
+  for (PRUint32 i = 0; i < aLen; i++) {
+    aOut[i] = ToUpperCase(aIn[i]);
+  }
+}
+
+PRUnichar
+ToTitleCase(PRUnichar aChar)
+{
+  if (IS_ASCII(aChar)) {
+    return ToUpperCase(aChar);
+  } else if (IS_NOCASE_CHAR(aChar)) {
+    return aChar;
+  }
+
+  // First check for uppercase characters whose titlecase mapping is
+  // different, like U+01F1 DZ: they must remain unchanged.
+  if (0x01C0 == (aChar & 0xFFC0)) {
+    for (PRUint32 i = 0; i < gUpperToTitleItems; i++) {
+      if (aChar == gUpperToTitle[(i*2)+kUpperIdx]) {
+        return aChar;
+      }
+    }
+  }
+
+  PRUnichar upper = gUpperMap.Map(aChar);
+  
+  if (0x01C0 == ( upper & 0xFFC0)) {
+    for (PRUint32 i = 0 ; i < gUpperToTitleItems; i++) {
+      if (upper == gUpperToTitle[(i*2)+kUpperIdx]) {
+         return gUpperToTitle[(i*2)+kTitleIdx];
+      }
+    }
+  }
+
+  return upper;
 }

@@ -72,6 +72,12 @@
 #include <sys/quota.h>
 #endif
 
+#if (MOZ_PLATFORM_MAEMO == 6)
+#include <QUrl>
+#include <QString>
+#include <contentaction/contentaction.h>
+#endif
+
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -981,7 +987,14 @@ nsLocalFile::Remove(PRBool recursive)
             nsCOMPtr<nsIFile> file = do_QueryInterface(item, &rv);
             if (NS_FAILED(rv))
                 return NS_ERROR_FAILURE;
-            if (NS_FAILED(rv = file->Remove(recursive)))
+            rv = file->Remove(recursive);
+
+#ifdef ANDROID
+            // See bug 580434 - Bionic gives us just deleted files
+            if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+                continue;
+#endif
+            if (NS_FAILED(rv))
                 return rv;
         }
     }
@@ -1884,6 +1897,17 @@ nsLocalFile::Launch()
     
     return NS_ERROR_FAILURE;
 #endif
+#elif (MOZ_PLATFORM_MAEMO == 6)
+    QUrl uri = QUrl::fromLocalFile(QString::fromUtf8(mPath.get()));
+    ContentAction::Action action =
+      ContentAction::Action::defaultActionForFile(uri);
+
+    if (action.isValid()) {
+      action.trigger();
+      return NS_OK;
+    }
+
+    return NS_ERROR_FAILURE;
 #elif defined(ANDROID)
     // Try to get a mimetype, if this fails just use the file uri alone
     nsresult rv;

@@ -149,11 +149,11 @@ script 15.9.5.7.js
 script 15.9.5.8.js
 script 15.9.5.9.js
 script 15.9.5.js
-script dst-offset-caching-1-of-8.js
-script dst-offset-caching-2-of-8.js
-script dst-offset-caching-3-of-8.js
-script dst-offset-caching-4-of-8.js
-script dst-offset-caching-5-of-8.js
-script dst-offset-caching-6-of-8.js
-script dst-offset-caching-7-of-8.js
-script dst-offset-caching-8-of-8.js
+slow script dst-offset-caching-1-of-8.js
+slow script dst-offset-caching-2-of-8.js
+slow script dst-offset-caching-3-of-8.js
+slow script dst-offset-caching-4-of-8.js
+slow script dst-offset-caching-5-of-8.js
+slow script dst-offset-caching-6-of-8.js
+slow script dst-offset-caching-7-of-8.js
+slow script dst-offset-caching-8-of-8.js
