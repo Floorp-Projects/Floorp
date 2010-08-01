@@ -72,7 +72,7 @@ var tokens = [
     // Nonterminal tree node type codes.
     "SCRIPT", "BLOCK", "LABEL", "FOR_IN", "CALL", "NEW_WITH_ARGS", "INDEX",
     "ARRAY_INIT", "OBJECT_INIT", "PROPERTY_INIT", "GETTER", "SETTER",
-    "GROUP", "LIST", "LET_STM", "LET_EXP", "LET_DEF",
+    "GROUP", "LIST", "LET_BLOCK", "ARRAY_COMP", "GENERATOR", "COMP_TAIL",
 
     // Terminals.
     "IDENTIFIER", "NUMBER", "STRING", "REGEXP",
@@ -81,7 +81,7 @@ var tokens = [
     "break",
     "case", "catch", "const", "continue",
     "debugger", "default", "delete", "do",
-    "else", "enum",
+    "else",
     "false", "finally", "for", "function",
     "if", "in", "instanceof",
     "let",
