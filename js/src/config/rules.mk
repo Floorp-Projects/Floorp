@@ -1228,7 +1228,7 @@ endif
 # linking the actual static library.
 ifdef MOZ_FAKELIBS
 ifndef SUPPRESS_FAKELIB
-ifeq (WINNT_,$(OS_ARCH)_$(.PYMAKE))
+ifeq (WINNT_,$(HOST_OS_ARCH)_$(.PYMAKE))
 	echo "$(strip $(foreach f,$(OBJS) $(SEPARATE_OBJS) $(LOBJS) $(SUB_LOBJS),$(subst \,\\,$(call core_winabspath,$(f))))) " > $@.fake
 else
 	echo "$(strip $(foreach f,$(OBJS) $(SEPARATE_OBJS) $(LOBJS) $(SUB_LOBJS),$(call core_abspath,$(f)))) " > $@.fake
