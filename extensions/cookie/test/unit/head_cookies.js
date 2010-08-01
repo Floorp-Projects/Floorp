@@ -17,50 +17,42 @@ XPCOMUtils.defineLazyServiceGetter(Services, "cookiemgr",
                                    "@mozilla.org/cookiemanager;1",
                                    "nsICookieManager2");
 
-function _observer(generator, service, topic) {
-  Services.obs.addObserver(this, topic, false);
+// Close and reload the cookie database.
+function do_reload_profile(generator, profile, cleanse) {
+  function _observer(generator, service, topic) {
+    Services.obs.addObserver(this, topic, false);
 
-  this.service = service;
-  this.generator = generator;
-  this.topic = topic;
-}
+    this.service = service;
+    this.generator = generator;
+    this.topic = topic;
+  }
 
-_observer.prototype = {
-  observe: function (subject, topic, data) {
-    do_check_eq(this.topic, topic);
+  _observer.prototype = {
+    observe: function (subject, topic, data) {
+      do_check_eq(this.topic, topic);
 
-    Services.obs.removeObserver(this, this.topic);
+      Services.obs.removeObserver(this, this.topic);
 
-    // Continue executing the generator function.
-    if (this.generator)
+      // Fire the notification to reload the database, and continue executing
+      // the generator function.
+      this.service.observe(null, "profile-do-change", "");
       this.generator.next();
 
-    this.generator = null;
-    this.service = null;
-    this.topic = null;
+      this.generator = null;
+      this.service = null;
+      this.topic = null;
+    }
   }
-}
 
-// Close the cookie database. If a generator is supplied, it will be invoked
-// once the close is complete.
-function do_close_profile(generator, cleanse) {
+  let dbfile = profile.QueryInterface(Ci.nsILocalFile).clone();
+  dbfile.append("cookies.sqlite");
+
   // Register an observer for db close.
   let service = Services.cookies.QueryInterface(Ci.nsIObserver);
   let obs = new _observer(generator, service, "cookie-db-closed");
 
   // Close the db.
   service.observe(null, "profile-before-change", cleanse ? cleanse : "");
-}
-
-// Load the cookie database. If a generator is supplied, it will be invoked
-// once the load is complete.
-function do_load_profile(generator) {
-  // Register an observer for read completion.
-  let service = Services.cookies.QueryInterface(Ci.nsIObserver);
-  let obs = new _observer(generator, service, "cookie-db-read");
-
-  // Load the profile.
-  service.observe(null, "profile-do-change", "");
 }
 
 // Set four cookies; with & without channel, http and non-http; and test
@@ -81,17 +73,3 @@ function do_set_cookies(uri, channel, session, expected) {
   Services.cookies.setCookieStringFromHttp(uri, null, null, "hot=dog" + suffix, null, channel);
   do_check_eq(Services.cookiemgr.countCookiesFromHost(uri.host), expected[3]);
 }
-
-function do_count_enumerator(enumerator) {
-  let i = 0;
-  while (enumerator.hasMoreElements()) {
-    enumerator.getNext();
-    ++i;
-  }
-  return i;
-}
-
-function do_count_cookies() {
-  return do_count_enumerator(Services.cookiemgr.enumerator);
-}
-
