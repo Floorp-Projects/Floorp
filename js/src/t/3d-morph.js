@@ -32,33 +32,23 @@ function morph(a, f) {
     var sin = Math.sin
     var f30 = -(50 * sin(f*Math.PI*2))
     
-/* BEGIN LOOP */
     for (var i = 0; i < nz; ++i) {
-/* BEGIN LOOP */
         for (var j = 0; j < nx; ++j) {
             a[3*(i*nx+j)+1]    = sin((j-1) * PI2nx ) * -f30
         }
-/* END LOOP */
     }
-/* END LOOP */
 }
 
     
 var a = Array()
-/* BEGIN LOOP */
 for (var i=0; i < nx*nz*3; ++i) 
     a[i] = 0
-/* END LOOP */
 
-/* BEGIN LOOP */
 for (var i = 0; i < loops; ++i) {
     morph(a, i/loops)
 }
-/* END LOOP */
 
 testOutput = 0;
-/* BEGIN LOOP */
 for (var i = 0; i < nx; i++)
     testOutput += a[3*(i*nx+i)+1];
-/* END LOOP */
 a = null;
