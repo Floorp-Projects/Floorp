@@ -2130,11 +2130,7 @@ DeoptimizeUsesWithin(JSDefinition *dn, JSFunctionBox *funbox, uint32& tcflags)
 void
 Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
 {
-#ifdef JS_FUNCTION_METERING
-# define FUN_METER(x)   JS_RUNTIME_METER(context->runtime, functionMeter.x)
-#else
-# define FUN_METER(x)   ((void)0)
-#endif
+#define FUN_METER(x) JS_FUNCTION_METER(context, x)
 
     for (;;) {
         JSParseNode *fn = funbox->node;
@@ -2343,6 +2339,9 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
                     FlagHeavyweights(lexdep, funbox, tcflags);
             }
         }
+
+        if (funbox->joinable())
+            fun->setJoinable();
 
         funbox = funbox->siblings;
         if (!funbox)

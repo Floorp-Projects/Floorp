@@ -1,6 +1,6 @@
 url-prefix ../../jsreftest.html?test=js1_5/Scope/
 script regress-154693.js
-random-if(!xulRuntime.shell&&xulRuntime.OS=="WINNT") asserts-if(!xulRuntime.shell&&xulRuntime.OS=="WINNT",1) script regress-181834.js # bug 524732
+skip script regress-181834.js # bug 524732
 script regress-184107.js
 script regress-185485.js
 script regress-191276.js
