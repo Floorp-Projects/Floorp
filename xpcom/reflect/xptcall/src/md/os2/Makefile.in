@@ -71,4 +71,4 @@ DEFINES		+= -DEXPORT_XPTC_API
 LOCAL_INCLUDES	+= -I$(srcdir)/../..
 
 libs:: $(LIBRARY)
-	$(INSTALL) $(LIBRARY) ../..
+	$(INSTALL) $(LIBRARY) $(FAKE_LIBRARY) ../..
