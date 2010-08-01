@@ -8388,7 +8388,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
     AC_SUBST(QT_SURFACE_FEATURE)
 
-    MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src) $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)' $CAIRO_FT_LIBS
+    MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src) $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'" $CAIRO_FT_LIBS"
     if test "$MOZ_X11"; then
         MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
     fi
