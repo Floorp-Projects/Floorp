@@ -1441,7 +1441,7 @@ var gDetailView = {
     var notificationMsg = null;
     if (isPending(this._addon, "enable")) {
       showAsActive = true;
-      notificationMsg = "restartToEnable";
+      notificationMsg = "restartToEnable2";
     } else if (isPending(this._addon, "disable")) {
       showAsActive = false;
       notificationMsg = "restartToDisable";
