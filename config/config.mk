@@ -323,7 +323,7 @@ STATIC_LIBRARY_NAME=$(LIBRARY_NAME)
 endif
 endif
 
-ifeq (WINNT_,$(OS_ARCH))
+ifeq (WINNT,$(OS_ARCH))
 MOZ_FAKELIBS = 1
 endif
 
