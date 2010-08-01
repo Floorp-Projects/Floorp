@@ -1,0 +1,259 @@
+# vim: set ts=4 sw=4 tw=99 et: 
+
+import os, re
+import tempfile
+import subprocess
+import sys
+import datetime
+
+def realpath(k):
+    return os.path.realpath(os.path.normpath(k))
+
+class Benchmark:
+    def __init__(self, JS, fname):
+        self.fname = fname
+        self.JS = JS
+        self.stats = { }
+        self.runList = [ ]
+
+    def run(self, fd, eargs):
+        args = [self.JS]
+        args.extend(eargs)
+        args.append(fd.name)
+        return subprocess.check_output(args).decode()
+
+    #    self.stats[name] = { }
+    #    self.runList.append(name)
+    #    for line in output.split('\n'):
+    #        m = re.search('line (\d+): (\d+)', line)
+    #        if m:
+    #            self.stats[name][int(m.group(1))] = int(m.group(2))
+    #        else:
+    #            m = re.search('total: (\d+)', line)
+    #            if m:
+    #                self.stats[name]['total'] = m.group(1)
+
+    def winnerForLine(self, line):
+        best = self.runList[0]
+        bestTime = self.stats[best][line]
+        for run in self.runList[1:]:
+            x = self.stats[run][line]
+            if x < bestTime:
+                best = run
+                bestTime = x
+        return best
+
+    def chart(self):
+        sys.stdout.write('{0:7s}'.format(''))
+        sys.stdout.write('{0:15s}'.format('line'))
+        for run in self.runList:
+            sys.stdout.write('{0:15s}'.format(run))
+        sys.stdout.write('{0:15s}\n'.format('best'))
+        for c in self.counters:
+            sys.stdout.write('{0:10d}'.format(c))
+            for run in self.runList:
+                sys.stdout.write('{0:15d}'.format(self.stats[run][c]))
+            sys.stdout.write('{0:12s}'.format(''))
+            sys.stdout.write('{0:15s}'.format(self.winnerForLine(c)))
+            sys.stdout.write('\n')
+
+    def preprocess(self, lines, onBegin, onEnd):
+        stack = []
+        counters = []
+        rd = open(self.fname, 'rt')
+        for line in rd:
+            if re.search('\/\* BEGIN LOOP \*\/', line):
+                stack.append([len(lines), len(counters)])
+                counters.append([len(lines), 0])
+                onBegin(lines, len(lines))
+            elif re.search('\/\* END LOOP \*\/', line):
+                old = stack.pop()
+                onEnd(lines, old[0], len(lines))
+                counters[old[1]][1] = len(lines)
+            else:
+                lines.append(line)
+        return [lines, counters]
+
+    def treeSearchRun(self, fd, args):
+        total = 0
+        for i in range(1, 5):
+            output = self.run(fd, args)
+            total += int(output)
+        return total / 5
+
+    def generateBanList(self, counters, queue):
+        if os.path.exists('/tmp/permabans'):
+            os.unlink('/tmp/permabans')
+        fd = open('/tmp/permabans', 'wt')
+        for i in range(0, len(counters)):
+            for j in range(counters[i][0], counters[i][1] + 1):
+                fd.write('{0:d} {1:d}\n'.format(j, queue[i]))
+        fd.close()
+
+    def internalExhaustiveSearch(self, params):
+        counters = params['counters']
+
+        # iterative algorithm to explore every combination
+        ncombos = 2 ** len(counters)
+        queue = []
+        for c in counters:
+            queue.append(0)
+
+        fd = params['fd']
+        bestTime = float('Infinity')
+        bestCombos = []
+
+        i = 0
+        while i < ncombos:
+            temp = i
+            for j in range(0, len(counters)):
+                queue[j] = temp & 1
+                temp = temp >> 1
+            self.generateBanList(counters, queue)
+
+            t = self.treeSearchRun(fd, ['-m', '-j'])
+            if (t < bestTime):
+                bestTime = t
+                bestCombos = [queue[:]]
+                print('New best time: {0:f}ms'.format(t))
+            elif int(t) == int(bestTime):
+                bestCombos.append(queue[:])
+
+            i = i + 1
+
+        return [bestTime, bestCombos]
+
+    def treeSearch(self):
+        fd, counters = self.ppForTreeSearch()
+
+        os.system("cat " + fd.name + " > /tmp/k.js")
+
+        if os.path.exists('/tmp/permabans'):
+            os.unlink('/tmp/permabans')
+        methodTime = self.treeSearchRun(fd, ['-m'])
+        tracerTime = self.treeSearchRun(fd, ['-j'])
+        combinedTime = self.treeSearchRun(fd, ['-m', '-j'])
+
+        #Get a rough estimate of how long this benchmark will take to fully compute.
+        upperBound = max(methodTime, tracerTime, combinedTime)
+        upperBound *= 2 ** len(counters)
+        upperBound *= 5    # Number of runs
+        treeSearch = False
+        if (upperBound < 1000):
+            print('Estimating {0:d}ms to test, so picking exhaustive '.format(int(upperBound)) +
+                  'search.')
+        else:
+            upperBound = int(upperBound / 1000)
+            delta = datetime.timedelta(seconds = upperBound)
+            if upperBound <= 180:
+                print('Estimating {0:d}s to test, so picking exhaustive '.format(int(upperBound)))
+            else:
+                print('Estimating {0:s} to test, so picking tree search '.format(str(delta)))
+                treeSearch = True
+
+        best = min(methodTime, tracerTime, combinedTime)
+
+        params = {
+                    'fd': fd,
+                    'counters': counters,
+                    'methodTime': methodTime,
+                    'tracerTime': tracerTime,
+                    'combinedTime': combinedTime,
+                    'best': best
+                 }
+
+        if treeSearch:
+            results = self.internalTreeSearch(params)
+        else:
+            results = self.internalExhaustiveSearch(params)
+
+        print('Method JIT:  {0:d}ms'.format(int(methodTime)))
+        print('Tracing JIT: {0:d}ms'.format(int(tracerTime)))
+        print('Combined:    {0:d}ms'.format(int(combinedTime)))
+
+        bestTime = results[0]
+        bestCombos = results[1]
+        print('Search found winning time {0:d}ms!'.format(int(bestTime)))
+        print('Combos at this time: {0:d}'.format(len(bestCombos)))
+
+        #Find loops that traced every single time
+        for i in range(0, len(counters)):
+            start = counters[i][0]
+            end = counters[i][1]
+            n = len(bestCombos)
+            for j in bestCombos:
+                n -= j[i]
+            print('\tloop @ {0:d}-{1:d} traced {2:d}% of the time'.format(
+                    start, end, int(n / len(bestCombos) * 100)))
+
+    def ppForTreeSearch(self):
+        def onBegin(lines, lineno):
+            lines.append('GLOBAL_THINGY = 1;\n')
+        def onEnd(lines, old, lineno):
+            lines.append('GLOBAL_THINGY = 1;\n')
+
+        lines = ['var JINT_START_TIME = Date.now();\n',
+                 'var GLOBAL_THINGY = 0;\n']
+
+        lines, counters = self.preprocess(lines, onBegin, onEnd)
+        fd = tempfile.NamedTemporaryFile('wt')
+        for line in lines:
+            fd.write(line)
+        fd.write('print(Date.now() - JINT_START_TIME);\n')
+        fd.flush()
+        return [fd, counters]
+
+    def preprocessForLoopCounting(self):
+        def onBegin(lines, lineno):
+            lines.append('JINT_TRACKER.line_' + str(lineno) + '_start = Date.now();\n')
+
+        def onEnd(lines, old, lineno):
+            lines.append('JINT_TRACKER.line_' + str(old) + '_end = Date.now();\n')
+            lines.append('JINT_TRACKER.line_' + str(old) + '_total += ' + \
+                         'JINT_TRACKER.line_' + str(old) + '_end - ' + \
+                         'JINT_TRACKER.line_' + str(old) + '_start;\n')
+
+        lines, counters = self.preprocess(onBegin, onEnd)
+        fd = tempfile.NamedTemporaryFile('wt')
+        fd.write('var JINT_TRACKER = { };\n')
+        for c in counters:
+            fd.write('JINT_TRACKER.line_' + str(c) + '_start = 0;\n')
+            fd.write('JINT_TRACKER.line_' + str(c) + '_end = 0;\n')
+            fd.write('JINT_TRACKER.line_' + str(c) + '_total = 0;\n')
+        fd.write('JINT_TRACKER.begin = Date.now();\n')
+        for line in lines:
+            fd.write(line)
+        fd.write('JINT_TRACKER.total = Date.now() - JINT_TRACKER.begin;\n')
+        for c in self.counters:
+            fd.write('print("line ' + str(c) + ': " + JINT_TRACKER.line_' + str(c) +
+                           '_total);')
+        fd.write('print("total: " + JINT_TRACKER.total);')
+        fd.flush()
+        return fd
+
+if __name__ == '__main__':
+    script_path = os.path.abspath(__file__)
+    script_dir = os.path.dirname(script_path)
+    test_dir = os.path.join(script_dir, 'tests')
+    lib_dir = os.path.join(script_dir, 'lib')
+
+    # The [TESTS] optional arguments are paths of test files relative
+    # to the trace-test/tests directory.
+
+    from optparse import OptionParser
+    op = OptionParser(usage='%prog [options] JS_SHELL test')
+    (OPTIONS, args) = op.parse_args()
+    if len(args) < 2:
+        op.error('missing JS_SHELL and test argument')
+    # We need to make sure we are using backslashes on Windows.
+    JS = realpath(args[0])
+    test = realpath(args[1])
+
+    bm = Benchmark(JS, test)
+    bm.treeSearch()
+    # bm.preprocess()
+    # bm.run('mjit', ['-m'])
+    # bm.run('tjit', ['-j'])
+    # bm.run('m+tjit', ['-m', '-j'])
+    # bm.chart()
+

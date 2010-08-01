@@ -77,11 +77,13 @@ function nbi() { return new BigInteger(null); }
 function am1(i,x,w,j,c,n) {
   var this_array = this.array;
   var w_array    = w.array;
+  /* BEGIN LOOP */
   while(--n >= 0) {
     var v = x*this_array[i++]+w_array[j]+c;
     c = Math.floor(v/0x4000000);
     w_array[j++] = v&0x3ffffff;
   }
+  /* END LOOP */
   return c;
 }
 
@@ -92,6 +94,7 @@ function am2(i,x,w,j,c,n) {
   var this_array = this.array;
   var w_array    = w.array;
   var xl = x&0x7fff, xh = x>>15;
+  /* BEGIN LOOP */
   while(--n >= 0) {
     var l = this_array[i]&0x7fff;
     var h = this_array[i++]>>15;
@@ -100,6 +103,7 @@ function am2(i,x,w,j,c,n) {
     c = (l>>>30)+(m>>>15)+xh*h+(c>>>30);
     w_array[j++] = l&0x3fffffff;
   }
+  /* END LOOP */
   return c;
 }
 
@@ -110,6 +114,7 @@ function am3(i,x,w,j,c,n) {
   var w_array    = w.array;
 
   var xl = x&0x3fff, xh = x>>14;
+  /* BEGIN LOOP */
   while(--n >= 0) {
     var l = this_array[i]&0x3fff;
     var h = this_array[i++]>>14;
@@ -118,6 +123,7 @@ function am3(i,x,w,j,c,n) {
     c = (l>>28)+(m>>14)+xh*h;
     w_array[j++] = l&0xfffffff;
   }
+  /* END LOOP */
   return c;
 }
 
@@ -128,6 +134,7 @@ function am4(i,x,w,j,c,n) {
   var w_array    = w.array;
 
   var xl = x&0x1fff, xh = x>>13;
+  /* BEGIN LOOP */
   while(--n >= 0) {
     var l = this_array[i]&0x1fff;
     var h = this_array[i++]>>13;
@@ -136,6 +143,7 @@ function am4(i,x,w,j,c,n) {
     c = (l>>26)+(m>>13)+xh*h;
     w_array[j++] = l&0x3ffffff;
   }
+  /* END LOOP */
   return c;
 }
 
@@ -164,11 +172,17 @@ var BI_RM = "0123456789abcdefghijklmnopqrstuvwxyz";
 var BI_RC = new Array();
 var rr,vv;
 rr = "0".charCodeAt(0);
+  /* BEGIN LOOP */
 for(vv = 0; vv <= 9; ++vv) BI_RC[rr++] = vv;
+  /* END LOOP */
 rr = "a".charCodeAt(0);
+  /* BEGIN LOOP */
 for(vv = 10; vv < 36; ++vv) BI_RC[rr++] = vv;
+  /* END LOOP */
 rr = "A".charCodeAt(0);
+  /* BEGIN LOOP */
 for(vv = 10; vv < 36; ++vv) BI_RC[rr++] = vv;
+  /* END LOOP */
 
 function int2char(n) { return BI_RM.charAt(n); }
 function intAt(s,i) {
@@ -181,7 +195,9 @@ function bnpCopyTo(r) {
   var this_array = this.array;
   var r_array    = r.array;
 
+  /* BEGIN LOOP */
   for(var i = this.t-1; i >= 0; --i) r_array[i] = this_array[i];
+  /* END LOOP */
   r.t = this.t;
   r.s = this.s;
 }
@@ -213,6 +229,7 @@ function bnpFromString(s,b) {
   this.t = 0;
   this.s = 0;
   var i = s.length, mi = false, sh = 0;
+  /* BEGIN LOOP */
   while(--i >= 0) {
     var x = (k==8)?s[i]&0xff:intAt(s,i);
     if(x < 0) {
@@ -231,6 +248,7 @@ function bnpFromString(s,b) {
     sh += k;
     if(sh >= BI_DB) sh -= BI_DB;
   }
+  /* END LOOP */
   if(k == 8 && (s[0]&0x80) != 0) {
     this.s = -1;
     if(sh > 0) this_array[this.t-1] |= ((1<<(BI_DB-sh))-1)<<sh;
@@ -243,7 +261,9 @@ function bnpFromString(s,b) {
 function bnpClamp() {
   var this_array = this.array;
   var c = this.s&BI_DM;
+  /* BEGIN LOOP */
   while(this.t > 0 && this_array[this.t-1] == c) --this.t;
+  /* END LOOP */
 }
 
 // (public) return string representation in given radix
@@ -261,6 +281,7 @@ function bnToString(b) {
   var p = BI_DB-(i*BI_DB)%k;
   if(i-- > 0) {
     if(p < BI_DB && (d = this_array[i]>>p) > 0) { m = true; r = int2char(d); }
+  /* BEGIN LOOP */
     while(i >= 0) {
       if(p < k) {
         d = (this_array[i]&((1<<p)-1))<<(k-p);
@@ -273,6 +294,7 @@ function bnToString(b) {
       if(d > 0) m = true;
       if(m) r += int2char(d);
     }
+  /* END LOOP */
   }
   return m?r:"0";
 }
@@ -293,7 +315,9 @@ function bnCompareTo(a) {
   var i = this.t;
   r = i-a.t;
   if(r != 0) return r;
+  /* BEGIN LOOP */
   while(--i >= 0) if((r=this_array[i]-a_array[i]) != 0) return r;
+  /* END LOOP */
   return 0;
 }
 
@@ -320,8 +344,12 @@ function bnpDLShiftTo(n,r) {
   var this_array = this.array;
   var r_array = r.array;
   var i;
+  /* BEGIN LOOP */
   for(i = this.t-1; i >= 0; --i) r_array[i+n] = this_array[i];
+  /* END LOOP */
+  /* BEGIN LOOP */
   for(i = n-1; i >= 0; --i) r_array[i] = 0;
+  /* END LOOP */
   r.t = this.t+n;
   r.s = this.s;
 }
@@ -330,7 +358,9 @@ function bnpDLShiftTo(n,r) {
 function bnpDRShiftTo(n,r) {
   var this_array = this.array;
   var r_array = r.array;
+  /* BEGIN LOOP */
   for(var i = n; i < this.t; ++i) r_array[i-n] = this_array[i];
+  /* END LOOP */
   r.t = Math.max(this.t-n,0);
   r.s = this.s;
 }
@@ -343,11 +373,15 @@ function bnpLShiftTo(n,r) {
   var cbs = BI_DB-bs;
   var bm = (1<<cbs)-1;
   var ds = Math.floor(n/BI_DB), c = (this.s<<bs)&BI_DM, i;
+  /* BEGIN LOOP */
   for(i = this.t-1; i >= 0; --i) {
     r_array[i+ds+1] = (this_array[i]>>cbs)|c;
     c = (this_array[i]&bm)<<bs;
   }
+  /* END LOOP */
+  /* BEGIN LOOP */
   for(i = ds-1; i >= 0; --i) r_array[i] = 0;
+  /* END LOOP */
   r_array[ds] = c;
   r.t = this.t+ds+1;
   r.s = this.s;
@@ -365,10 +399,12 @@ function bnpRShiftTo(n,r) {
   var cbs = BI_DB-bs;
   var bm = (1<<bs)-1;
   r_array[0] = this_array[ds]>>bs;
+  /* BEGIN LOOP */
   for(var i = ds+1; i < this.t; ++i) {
     r_array[i-ds-1] |= (this_array[i]&bm)<<cbs;
     r_array[i-ds] = this_array[i]>>bs;
   }
+  /* END LOOP */
   if(bs > 0) r_array[this.t-ds-1] |= (this.s&bm)<<cbs;
   r.t = this.t-ds;
   r.clamp();
@@ -380,27 +416,33 @@ function bnpSubTo(a,r) {
   var r_array = r.array;
   var a_array = a.array;
   var i = 0, c = 0, m = Math.min(a.t,this.t);
+  /* BEGIN LOOP */
   while(i < m) {
     c += this_array[i]-a_array[i];
     r_array[i++] = c&BI_DM;
     c >>= BI_DB;
   }
+  /* END LOOP */
   if(a.t < this.t) {
     c -= a.s;
+  /* BEGIN LOOP */
     while(i < this.t) {
       c += this_array[i];
       r_array[i++] = c&BI_DM;
       c >>= BI_DB;
     }
+  /* END LOOP */
     c += this.s;
   }
   else {
     c += this.s;
+  /* BEGIN LOOP */
     while(i < a.t) {
       c -= a_array[i];
       r_array[i++] = c&BI_DM;
       c >>= BI_DB;
     }
+  /* END LOOP */
     c -= a.s;
   }
   r.s = (c<0)?-1:0;
@@ -420,8 +462,12 @@ function bnpMultiplyTo(a,r) {
 
   var i = x.t;
   r.t = i+y.t;
+  /* BEGIN LOOP */
   while(--i >= 0) r_array[i] = 0;
+  /* END LOOP */
+  /* BEGIN LOOP */
   for(i = 0; i < y.t; ++i) r_array[i+x.t] = x.am(0,y_array[i],r,i,0,x.t);
+                counters.append([old, len(lines)])
   r.s = 0;
   r.clamp();
   if(this.s != a.s) BigInteger.ZERO.subTo(r,r);
@@ -434,7 +480,10 @@ function bnpSquareTo(r) {
   var r_array = r.array;
 
   var i = r.t = 2*x.t;
+  /* BEGIN LOOP */
   while(--i >= 0) r_array[i] = 0;
+  /* END LOOP */
+  /* BEGIN LOOP */
   for(i = 0; i < x.t-1; ++i) {
     var c = x.am(i,x_array[i],r,2*i,0,1);
     if((r_array[i+x.t]+=x.am(i+1,2*x_array[i],r,2*i+1,c,x.t-i-1)) >= BI_DV) {
@@ -442,6 +491,7 @@ function bnpSquareTo(r) {
       r_array[i+x.t+1] = 1;
     }
   }
+  /* END LOOP */
   if(r.t > 0) r_array[r.t-1] += x.am(i,x_array[i],r,2*i,0,1);
   r.s = 0;
   r.clamp();
@@ -481,16 +531,22 @@ function bnpDivRemTo(m,q,r) {
   }
   BigInteger.ONE.dlShiftTo(ys,t);
   t.subTo(y,y);	// "negative" y so we can replace sub with am later
+  /* BEGIN LOOP */
   while(y.t < ys) y_array[y.t++] = 0;
+  /* END LOOP */
+  /* BEGIN LOOP */
   while(--j >= 0) {
     // Estimate quotient digit
     var qd = (r_array[--i]==y0)?BI_DM:Math.floor(r_array[i]*d1+(r_array[i-1]+e)*d2);
     if((r_array[i]+=y.am(0,qd,r,j,0,ys)) < qd) {	// Try it out
       y.dlShiftTo(j,t);
       r.subTo(t,r);
+  /* BEGIN LOOP */
       while(r_array[i] < --qd) r.subTo(t,r);
+  /* END LOOP */
     }
   }
+  /* END LOOP */
   if(q != null) {
     r.drShiftTo(ys,q);
     if(ts != ms) BigInteger.ZERO.subTo(q,q);
@@ -582,8 +638,11 @@ function montRevert(x) {
 // x = x/R mod m (HAC 14.32)
 function montReduce(x) {
   var x_array = x.array;
+  /* BEGIN LOOP */
   while(x.t <= this.mt2)	// pad x so am has enough room later
     x_array[x.t++] = 0;
+  /* END LOOP */
+  /* BEGIN LOOP */
   for(var i = 0; i < this.m.t; ++i) {
     // faster way of calculating u0 = x[i]*mp mod DV
     var j = x_array[i]&0x7fff;
@@ -592,8 +651,11 @@ function montReduce(x) {
     j = i+this.m.t;
     x_array[j] += this.m.am(0,u0,x,i,0,this.m.t);
     // propagate carry
+  /* BEGIN LOOP */
     while(x_array[j] >= BI_DV) { x_array[j] -= BI_DV; x_array[++j]++; }
+  /* BEGIN LOOP */
   }
+  /* END LOOP */
   x.clamp();
   x.drShiftTo(this.m.t,x);
   if(x.compareTo(this.m) >= 0) x.subTo(this.m,x);
@@ -622,11 +684,13 @@ function bnpExp(e,z) {
   if(e > 0xffffffff || e < 1) return BigInteger.ONE;
   var r = nbi(), r2 = nbi(), g = z.convert(this), i = nbits(e)-1;
   g.copyTo(r);
+  /* BEGIN LOOP */
   while(--i >= 0) {
     z.sqrTo(r,r2);
     if((e&(1<<i)) > 0) z.mulTo(r2,g,r);
     else { var t = r; r = r2; r2 = t; }
   }
+  /* END LOOP */
   return z.revert(r);
 }
 
@@ -719,10 +783,12 @@ function bnpToRadix(b) {
   var a = Math.pow(b,cs);
   var d = nbv(a), y = nbi(), z = nbi(), r = "";
   this.divRemTo(d,y,z);
+  /* BEGIN LOOP */
   while(y.signum() > 0) {
     r = (a+z.intValue()).toString(b).substr(1) + r;
     y.divRemTo(d,y,z);
   }
+  /* END LOOP */
   return z.intValue().toString(b) + r;
 }
 
@@ -732,6 +798,7 @@ function bnpFromRadix(s,b) {
   if(b == null) b = 10;
   var cs = this.chunkSize(b);
   var d = Math.pow(b,cs), mi = false, j = 0, w = 0;
+  /* BEGIN LOOP */
   for(var i = 0; i < s.length; ++i) {
     var x = intAt(s,i);
     if(x < 0) {
@@ -746,6 +813,7 @@ function bnpFromRadix(s,b) {
       w = 0;
     }
   }
+  /* END LOOP */
   if(j > 0) {
     this.dMultiply(Math.pow(b,j));
     this.dAddOffset(w,0);
@@ -763,10 +831,12 @@ function bnpFromNumber(a,b,c) {
       if(!this.testBit(a-1))	// force MSB set
         this.bitwiseTo(BigInteger.ONE.shiftLeft(a-1),op_or,this);
       if(this.isEven()) this.dAddOffset(1,0); // force odd
+  /* BEGIN LOOP */
       while(!this.isProbablePrime(b)) {
         this.dAddOffset(2,0);
         if(this.bitLength() > a) this.subTo(BigInteger.ONE.shiftLeft(a-1),this);
       }
+  /* END LOOP */
     }
   }
   else {
@@ -788,6 +858,7 @@ function bnToByteArray() {
   if(i-- > 0) {
     if(p < BI_DB && (d = this_array[i]>>p) != (this.s&BI_DM)>>p)
       r[k++] = d|(this.s<<(BI_DB-p));
+  /* BEGIN LOOP */
     while(i >= 0) {
       if(p < 8) {
         d = (this_array[i]&((1<<p)-1))<<(8-p);
@@ -801,6 +872,7 @@ function bnToByteArray() {
       if(k == 0 && (this.s&0x80) != (d&0x80)) ++k;
       if(k > 0 || d != this.s) r[k++] = d;
     }
+  /* END LOOP */
   }
   return r;
 }
@@ -815,15 +887,21 @@ function bnpBitwiseTo(a,op,r) {
   var a_array    = a.array;
   var r_array    = r.array;
   var i, f, m = Math.min(a.t,this.t);
+  /* BEGIN LOOP */
   for(i = 0; i < m; ++i) r_array[i] = op(this_array[i],a_array[i]);
+  /* END LOOP */
   if(a.t < this.t) {
     f = a.s&BI_DM;
+  /* BEGIN LOOP */
     for(i = m; i < this.t; ++i) r_array[i] = op(this_array[i],f);
+  /* END LOOP */
     r.t = this.t;
   }
   else {
     f = this.s&BI_DM;
+  /* BEGIN LOOP */
     for(i = m; i < a.t; ++i) r_array[i] = op(f,a_array[i]);
+  /* END LOOP */
     r.t = a.t;
   }
   r.s = op(this.s,a.s);
@@ -852,7 +930,9 @@ function bnNot() {
   var r = nbi();
   var r_array = r.array;
 
+  /* BEGIN LOOP */
   for(var i = 0; i < this.t; ++i) r_array[i] = BI_DM&~this_array[i];
+  /* END LOOP */
   r.t = this.t;
   r.s = ~this.s;
   return r;
@@ -887,8 +967,10 @@ function lbit(x) {
 // (public) returns index of lowest 1-bit (or -1 if none)
 function bnGetLowestSetBit() {
   var this_array = this.array;
+  /* BEGIN LOOP */
   for(var i = 0; i < this.t; ++i)
     if(this_array[i] != 0) return i*BI_DB+lbit(this_array[i]);
+  /* END LOOP */
   if(this.s < 0) return this.t*BI_DB;
   return -1;
 }
@@ -896,14 +978,18 @@ function bnGetLowestSetBit() {
 // return number of 1 bits in x
 function cbit(x) {
   var r = 0;
+  /* BEGIN LOOP */
   while(x != 0) { x &= x-1; ++r; }
+  /* END LOOP */
   return r;
 }
 
 // (public) return number of set bits
 function bnBitCount() {
   var r = 0, x = this.s&BI_DM;
+  /* BEGIN LOOP */
   for(var i = 0; i < this.t; ++i) r += cbit(this_array[i]^x);
+  /* END LOOP */
   return r;
 }
 
@@ -937,27 +1023,33 @@ function bnpAddTo(a,r) {
   var a_array = a.array;
   var r_array = r.array;
   var i = 0, c = 0, m = Math.min(a.t,this.t);
+  /* BEGIN LOOP */
   while(i < m) {
     c += this_array[i]+a_array[i];
     r_array[i++] = c&BI_DM;
     c >>= BI_DB;
   }
+  /* END LOOP */
   if(a.t < this.t) {
     c += a.s;
+  /* BEGIN LOOP */
     while(i < this.t) {
       c += this_array[i];
       r_array[i++] = c&BI_DM;
       c >>= BI_DB;
     }
+  /* END LOOP */
     c += this.s;
   }
   else {
     c += this.s;
+  /* BEGIN LOOP */
     while(i < a.t) {
       c += a_array[i];
       r_array[i++] = c&BI_DM;
       c >>= BI_DB;
     }
+  /* END LOOP */
     c += a.s;
   }
   r.s = (c<0)?-1:0;
@@ -1000,13 +1092,17 @@ function bnpDMultiply(n) {
 // (protected) this += n << w words, this >= 0
 function bnpDAddOffset(n,w) {
   var this_array = this.array;
+  /* BEGIN LOOP */
   while(this.t <= w) this_array[this.t++] = 0;
+  /* END LOOP */
   this_array[w] += n;
+  /* BEGIN LOOP */
   while(this_array[w] >= BI_DV) {
     this_array[w] -= BI_DV;
     if(++w >= this.t) this_array[this.t++] = 0;
     ++this_array[w];
   }
+  /* END LOOP */
 }
 
 // A "null" reducer
@@ -1031,10 +1127,16 @@ function bnpMultiplyLowerTo(a,n,r) {
   var i = Math.min(this.t+a.t,n);
   r.s = 0; // assumes a,this >= 0
   r.t = i;
+  /* BEGIN LOOP */
   while(i > 0) r_array[--i] = 0;
+  /* END LOOP */
   var j;
+  /* BEGIN LOOP */
   for(j = r.t-this.t; i < j; ++i) r_array[i+this.t] = this.am(0,a_array[i],r,i,0,this.t);
+  /* END LOOP */
+  /* BEGIN LOOP */
   for(j = Math.min(a.t,n); i < j; ++i) this.am(0,a_array[i],r,i,0,n-i);
+  /* END LOOP */
   r.clamp();
 }
 
@@ -1046,9 +1148,13 @@ function bnpMultiplyUpperTo(a,n,r) {
   --n;
   var i = r.t = this.t+a.t-n;
   r.s = 0; // assumes a,this >= 0
+  /* BEGIN LOOP */
   while(--i >= 0) r_array[i] = 0;
+  /* END LOOP */
+  /* BEGIN LOOP */
   for(i = Math.max(n-this.t,0); i < a.t; ++i)
     r_array[this.t+i-n] = this.am(n-i,a_array[i],r,0,0,this.t+i-n);
+  /* END LOOP */
   r.clamp();
   r.drShiftTo(1,r);
 }
@@ -1077,9 +1183,13 @@ function barrettReduce(x) {
   if(x.t > this.m.t+1) { x.t = this.m.t+1; x.clamp(); }
   this.mu.multiplyUpperTo(this.r2,this.m.t+1,this.q3);
   this.m.multiplyLowerTo(this.q3,this.m.t+1,this.r2);
+  /* BEGIN LOOP */
   while(x.compareTo(this.r2) < 0) x.dAddOffset(1,this.m.t+1);
+  /* END LOOP */
   x.subTo(this.r2,x);
+  /* BEGIN LOOP */
   while(x.compareTo(this.m) >= 0) x.subTo(this.m,x);
+  /* END LOOP */
 }
 
 // r = x^2 mod m; x != r
@@ -1117,15 +1227,18 @@ function bnModPow(e,m) {
   if(k > 1) {
     var g2 = nbi();
     z.sqrTo(g[1],g2);
+  /* BEGIN LOOP */
     while(n <= km) {
       g[n] = nbi();
       z.mulTo(g2,g[n-2],g[n]);
       n += 2;
     }
+  /* END LOOP */
   }
 
   var j = e.t-1, w, is1 = true, r2 = nbi(), t;
   i = nbits(e_array[j])-1;
+  /* BEGIN LOOP */
   while(j >= 0) {
     if(i >= k1) w = (e_array[j]>>(i-k1))&km;
     else {
@@ -1134,23 +1247,30 @@ function bnModPow(e,m) {
     }
 
     n = k;
+  /* BEGIN LOOP */
     while((w&1) == 0) { w >>= 1; --n; }
+  /* END LOOP */
     if((i -= n) < 0) { i += BI_DB; --j; }
     if(is1) {	// ret == 1, don't bother squaring or multiplying it
       g[w].copyTo(r);
       is1 = false;
     }
     else {
+  /* BEGIN LOOP */
       while(n > 1) { z.sqrTo(r,r2); z.sqrTo(r2,r); n -= 2; }
+  /* END LOOP */
       if(n > 0) z.sqrTo(r,r2); else { t = r; r = r2; r2 = t; }
       z.mulTo(r2,g[w],r);
     }
 
+  /* BEGIN LOOP */
     while(j >= 0 && (e_array[j]&(1<<i)) == 0) {
       z.sqrTo(r,r2); t = r; r = r2; r2 = t;
       if(--i < 0) { i = BI_DB-1; --j; }
     }
+  /* END LOOP */
   }
+  /* END LOOP */
   return z.revert(r);
 }
 
@@ -1166,6 +1286,7 @@ function bnGCD(a) {
     x.rShiftTo(g,x);
     y.rShiftTo(g,y);
   }
+  /* BEGIN LOOP */
   while(x.signum() > 0) {
     if((i = x.getLowestSetBit()) > 0) x.rShiftTo(i,x);
     if((i = y.getLowestSetBit()) > 0) y.rShiftTo(i,y);
@@ -1178,6 +1299,7 @@ function bnGCD(a) {
       y.rShiftTo(1,y);
     }
   }
+  /* END LOOP */
   if(g > 0) y.lShiftTo(g,y);
   return y;
 }
@@ -1199,7 +1321,9 @@ function bnModInverse(m) {
   if((this.isEven() && ac) || m.signum() == 0) return BigInteger.ZERO;
   var u = m.clone(), v = this.clone();
   var a = nbv(1), b = nbv(0), c = nbv(0), d = nbv(1);
+  /* BEGIN LOOP */
   while(u.signum() != 0) {
+  /* BEGIN LOOP */
     while(u.isEven()) {
       u.rShiftTo(1,u);
       if(ac) {
@@ -1209,6 +1333,8 @@ function bnModInverse(m) {
       else if(!b.isEven()) b.subTo(m,b);
       b.rShiftTo(1,b);
     }
+  /* END LOOP */
+  /* BEGIN LOOP */
     while(v.isEven()) {
       v.rShiftTo(1,v);
       if(ac) {
@@ -1218,6 +1344,7 @@ function bnModInverse(m) {
       else if(!d.isEven()) d.subTo(m,d);
       d.rShiftTo(1,d);
     }
+  /* END LOOP */
     if(u.compareTo(v) >= 0) {
       u.subTo(v,u);
       if(ac) a.subTo(c,a);
@@ -1229,6 +1356,7 @@ function bnModInverse(m) {
       d.subTo(b,d);
     }
   }
+  /* END LOOP */
   if(v.compareTo(BigInteger.ONE) != 0) return BigInteger.ZERO;
   if(d.compareTo(m) >= 0) return d.subtract(m);
   if(d.signum() < 0) d.addTo(m,d); else return d;
@@ -1249,12 +1377,18 @@ function bnIsProbablePrime(t) {
   }
   if(x.isEven()) return false;
   i = 1;
+  /* BEGIN LOOP */
   while(i < lowprimes.length) {
     var m = lowprimes[i], j = i+1;
+  /* BEGIN LOOP */
     while(j < lowprimes.length && m < lplim) m *= lowprimes[j++];
+  /* END LOOP */
     m = x.modInt(m);
+  /* BEGIN LOOP */
     while(i < j) if(m%lowprimes[i++] == 0) return false;
+  /* END LOOP */
   }
+  /* END LOOP */
   return x.millerRabin(t);
 }
 
@@ -1267,18 +1401,22 @@ function bnpMillerRabin(t) {
   t = (t+1)>>1;
   if(t > lowprimes.length) t = lowprimes.length;
   var a = nbi();
+  /* BEGIN LOOP */
   for(var i = 0; i < t; ++i) {
     a.fromInt(lowprimes[i]);
     var y = a.modPow(r,this);
     if(y.compareTo(BigInteger.ONE) != 0 && y.compareTo(n1) != 0) {
       var j = 1;
+  /* BEGIN LOOP */
       while(j++ < k && y.compareTo(n1) != 0) {
         y = y.modPowInt(2,this);
         if(y.compareTo(BigInteger.ONE) == 0) return false;
       }
+  /* END LOOP */
       if(y.compareTo(n1) != 0) return false;
     }
   }
+  /* END LOOP */
   return true;
 }
 
@@ -1351,15 +1489,19 @@ function Arcfour() {
 // Initialize arcfour context from key, an array of ints, each from [0..255]
 function ARC4init(key) {
   var i, j, t;
+  /* BEGIN LOOP */
   for(i = 0; i < 256; ++i)
     this.S[i] = i;
+  /* END LOOP */
   j = 0;
+  /* BEGIN LOOP */
   for(i = 0; i < 256; ++i) {
     j = (j + this.S[i] + key[i % key.length]) & 255;
     t = this.S[i];
     this.S[i] = this.S[j];
     this.S[j] = t;
   }
+  /* END LOOP */
   this.i = 0;
   this.j = 0;
 }
@@ -1414,11 +1556,13 @@ if(rng_pool == null) {
   rng_pool = new Array();
   rng_pptr = 0;
   var t;
+  /* BEGIN LOOP */
   while(rng_pptr < rng_psize) {  // extract some randomness from Math.random()
     t = Math.floor(65536 * Math.random());
     rng_pool[rng_pptr++] = t >>> 8;
     rng_pool[rng_pptr++] = t & 255;
   }
+  /* END LOOP */
   rng_pptr = 0;
   rng_seed_time();
   //rng_seed_int(window.screenX);
@@ -1430,8 +1574,10 @@ function rng_get_byte() {
     rng_seed_time();
     rng_state = prng_newstate();
     rng_state.init(rng_pool);
+  /* BEGIN LOOP */
     for(rng_pptr = 0; rng_pptr < rng_pool.length; ++rng_pptr)
       rng_pool[rng_pptr] = 0;
+  /* END LOOP */
     rng_pptr = 0;
     //rng_pool = null;
   }
@@ -1441,7 +1587,9 @@ function rng_get_byte() {
 
 function rng_get_bytes(ba) {
   var i;
+  /* BEGIN LOOP */
   for(i = 0; i < ba.length; ++i) ba[i] = rng_get_byte();
+  /* END LOOP */
 }
 
 function SecureRandom() {}
@@ -1457,10 +1605,12 @@ function parseBigInt(str,r) {
 function linebrk(s,n) {
   var ret = "";
   var i = 0;
+  /* BEGIN LOOP */
   while(i + n < s.length) {
     ret += s.substring(i,i+n) + "\n";
     i += n;
   }
+  /* END LOOP */
   return ret + s.substring(i,s.length);
 }
 
@@ -1479,15 +1629,21 @@ function pkcs1pad2(s,n) {
   }
   var ba = new Array();
   var i = s.length - 1;
+  /* BEGIN LOOP */
   while(i >= 0 && n > 0) ba[--n] = s.charCodeAt(i--);
+  /* END LOOP */
   ba[--n] = 0;
   var rng = new SecureRandom();
   var x = new Array();
+  /* BEGIN LOOP */
   while(n > 2) { // random non-zero pad
     x[0] = 0;
+  /* BEGIN LOOP */
     while(x[0] == 0) rng.nextBytes(x);
+  /* END LOOP */
     ba[--n] = x[0];
   }
+  /* END LOOP */
   ba[--n] = 2;
   ba[--n] = 0;
   return new BigInteger(ba);
@@ -1549,15 +1705,21 @@ RSAKey.prototype.encrypt = RSAEncrypt;
 function pkcs1unpad2(d,n) {
   var b = d.toByteArray();
   var i = 0;
+  /* BEGIN LOOP */
   while(i < b.length && b[i] == 0) ++i;
+  /* END LOOP */
   if(b.length-i != n-1 || b[i] != 2)
     return null;
   ++i;
+  /* BEGIN LOOP */
   while(b[i] != 0)
     if(++i >= b.length) return null;
+  /* END LOOP */
   var ret = "";
+  /* BEGIN LOOP */
   while(++i < b.length)
     ret += String.fromCharCode(b[i]);
+  /* END LOOP */
   return ret;
 }
 
@@ -1594,15 +1756,20 @@ function RSAGenerate(B,E) {
   var qs = B>>1;
   this.e = parseInt(E,16);
   var ee = new BigInteger(E,16);
+  /* BEGIN LOOP */
   for(;;) {
+  /* BEGIN LOOP */
     for(;;) {
       this.p = new BigInteger(B-qs,1,rng);
       if(this.p.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) == 0 && this.p.isProbablePrime(10)) break;
     }
+  /* END LOOP */
+  /* BEGIN LOOP */
     for(;;) {
       this.q = new BigInteger(qs,1,rng);
       if(this.q.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) == 0 && this.q.isProbablePrime(10)) break;
     }
+  /* END LOOP */
     if(this.p.compareTo(this.q) <= 0) {
       var t = this.p;
       this.p = this.q;
@@ -1620,6 +1787,7 @@ function RSAGenerate(B,E) {
       break;
     }
   }
+  /* END LOOP */
 }
 
 // Perform raw private operation on "x": return x^d (mod n)
@@ -1631,8 +1799,10 @@ function RSADoPrivate(x) {
   var xp = x.mod(this.p).modPow(this.dmp1, this.p);
   var xq = x.mod(this.q).modPow(this.dmq1, this.q);
 
+  /* BEGIN LOOP */
   while(xp.compareTo(xq) < 0)
     xp = xp.add(this.p);
+  /* END LOOP */
   return xp.subtract(xq).multiply(this.coeff).mod(this.p).multiply(this.q).add(xq);
 }
 
