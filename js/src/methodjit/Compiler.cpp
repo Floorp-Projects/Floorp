@@ -2124,7 +2124,7 @@ mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID obj
     pic.slowPathStart = stubcc.masm.label();
 
     stubcc.linkExit(idGuard, Uses(2));
-    stubcc.linkExitDirect(jmpShapeGuard, pic.slowPathStart);
+    stubcc.linkExit(jmpShapeGuard, Uses(2));
 
     stubcc.leave();
     stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
