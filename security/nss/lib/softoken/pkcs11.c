@@ -2293,7 +2293,7 @@ CK_RV sftk_CloseAllSessions(SFTKSlot *slot, PRBool logout)
 	handle = sftk_getKeyDB(slot);
 	SKIP_AFTER_FORK(PZ_Lock(slot->slotLock));
 	slot->isLoggedIn = PR_FALSE;
-	if (handle) {
+	if (slot->needLogin && handle) {
 	    sftkdb_ClearPassword(handle);
 	}
 	SKIP_AFTER_FORK(PZ_Unlock(slot->slotLock));
@@ -3338,8 +3338,6 @@ CK_RV NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
     if (tokenRemoved) {
 	sftk_CloseAllSessions(slot, PR_FALSE);
     }
-    sftk_freeDB(handle);
-    handle = NULL;
     if ((rv != SECSuccess) && (slot->slotID == FIPS_SLOT_ID)) {
 	PR_Sleep(loginWaitTime);
     }
@@ -3348,6 +3346,21 @@ CK_RV NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
     /* Now update our local copy of the pin */
     if (rv == SECSuccess) {
 	slot->needLogin = (PRBool)(ulNewLen != 0);
+        /* Reset login flags. */
+        if (ulNewLen == 0) {
+            PRBool tokenRemoved = PR_FALSE;
+            PZ_Lock(slot->slotLock);
+            slot->isLoggedIn = PR_FALSE;
+            slot->ssoLoggedIn = PR_FALSE;
+            PZ_Unlock(slot->slotLock);
+
+            rv = sftkdb_CheckPassword(handle, "", &tokenRemoved);
+            if (tokenRemoved) {
+                sftk_CloseAllSessions(slot, PR_FALSE);
+            }
+        }
+        sftk_update_all_states(slot);
+        sftk_freeDB(handle);
 	return CKR_OK;
     }
     crv = CKR_PIN_INCORRECT;
@@ -3447,7 +3460,7 @@ CK_RV NSC_CloseSession(CK_SESSION_HANDLE hSession)
 	PZ_Lock(slot->slotLock);
 	if (--slot->sessionCount == 0) {
 	    slot->isLoggedIn = PR_FALSE;
-	    if (handle) {
+	    if (slot->needLogin && handle) {
 		sftkdb_ClearPassword(handle);
 	    }
 	}
@@ -3537,6 +3550,9 @@ CK_RV NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
     }
 
     if (slot->isLoggedIn) return CKR_USER_ALREADY_LOGGED_IN;
+    if (!slot->needLogin) {
+        return ulPinLen ? CKR_PIN_INCORRECT : CKR_OK;
+    }
     slot->ssoLoggedIn = PR_FALSE;
 
     if (ulPinLen > SFTK_MAX_PIN) return CKR_PIN_LEN_RANGE;
@@ -3644,7 +3660,7 @@ CK_RV NSC_Logout(CK_SESSION_HANDLE hSession)
     PZ_Lock(slot->slotLock);
     slot->isLoggedIn = PR_FALSE;
     slot->ssoLoggedIn = PR_FALSE;
-    if (handle) {
+    if (slot->needLogin && handle) {
 	sftkdb_ClearPassword(handle);
     }
     PZ_Unlock(slot->slotLock);
