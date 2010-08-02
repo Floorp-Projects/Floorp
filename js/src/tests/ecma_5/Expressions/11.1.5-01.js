@@ -18,8 +18,8 @@ assertEq("get" in Object.getOwnPropertyDescriptor(o, "a b c"), true);
 o = eval('({ get "a b c"() { return 17; } })');
 assertEq("get" in Object.getOwnPropertyDescriptor(o, "a b c"), true);
 
-var f = eval("(function literalInside() { return { set 'c d e'() { } }; })");
-f = function literalInside() { return { set 'c d e'() { } }; };
+var f = eval("(function literalInside() { return { set 'c d e'(q) { } }; })");
+f = function literalInside() { return { set 'c d e'(q) { } }; };
 
 function checkO()
 {
