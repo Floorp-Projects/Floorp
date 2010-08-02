@@ -288,7 +288,7 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
 // count), once such an interface is found the "nsIDOM" prefix is cut
 // off the name and the rest of the name is added into the hash for
 // global names. This makes things like 'Node.ELEMENT_NODE' work in
-// JS. See nsWindowSH::GlobalResolve() for detais on how this is used.
+// JS. See nsCommonWindowSH::GlobalResolve() for detais on how this is used.
 
 nsresult
 nsScriptNameSpaceManager::FillHashWithDOMInterfaces()

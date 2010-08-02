@@ -1745,7 +1745,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow = currentInner;
 
     if (aDocument != oldDoc) {
-      nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
+      nsCommonWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
     }
   } else {
     if (aState) {
@@ -1930,8 +1930,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   if ((!reUseInnerWindow || aDocument != oldDoc) && !aState) {
     nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
-    nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
-                                           html_doc);
+    nsCommonWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
+                                                 html_doc);
   }
 
   // This code should not be called during shutdown any more (now that
@@ -2471,7 +2471,7 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
   if (mIsModalContentWindow) {
     // Modal content windows don't have an "arguments" property, they
     // have a "dialogArguments" property which is handled
-    // separately. See nsWindowSH::NewResolve().
+    // separately. See nsCommonWindowSH::NewResolve().
 
     return NS_OK;
   }
