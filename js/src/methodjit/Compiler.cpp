@@ -37,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "MethodJIT.h"
 #include "jsnum.h"
 #include "jsbool.h"
@@ -44,6 +45,7 @@
 #include "Compiler.h"
 #include "StubCalls.h"
 #include "MonoIC.h"
+#include "PolyIC.h"
 #include "Retcon.h"
 #include "assembler/jit/ExecutableAllocator.h"
 #include "assembler/assembler/LinkBuffer.h"
@@ -54,6 +56,9 @@
 
 using namespace js;
 using namespace js::mjit;
+#if defined JS_POLYIC
+using namespace js::mjit::ic;
+#endif
 
 #define ADD_CALLSITE(stub) addCallSite(__LINE__, (stub))
 
@@ -324,13 +329,13 @@ mjit::Compiler::finishThisUp()
 
     for (size_t i = 0; i < pics.length(); i++) {
         pics[i].copySimpleMembersTo(script->pics[i]);
-        script->pics[i].fastPathStart = fullCode.locationOf(pics[i].hotPathBegin);
+        script->pics[i].fastPathStart = fullCode.locationOf(pics[i].fastPathStart);
         script->pics[i].storeBack = fullCode.locationOf(pics[i].storeBack);
         script->pics[i].slowPathStart = stubCode.locationOf(pics[i].slowPathStart);
         script->pics[i].callReturn = uint16((uint8*)stubCode.locationOf(pics[i].callReturn).executableAddress() -
                                            (uint8*)script->pics[i].slowPathStart.executableAddress());
         script->pics[i].shapeGuard = masm.distanceOf(pics[i].shapeGuard) -
-                                     masm.distanceOf(pics[i].hotPathBegin);
+                                     masm.distanceOf(pics[i].fastPathStart);
         script->pics[i].shapeRegHasBaseShape = true;
 
         if (pics[i].kind == ic::PICInfo::SET) {
@@ -2020,8 +2025,11 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
         pic.typeReg = reg;
 
         /* Start the hot path where it's easy to patch it. */
-        pic.hotPathBegin = masm.label();
+        pic.fastPathStart = masm.label();
         Jump j = masm.testObject(Assembler::NotEqual, reg);
+
+        /* GETPROP_INLINE_TYPE_GUARD is used to patch the jmp, not cmp. */
+        JS_ASSERT(masm.differenceBetween(pic.fastPathStart, masm.label()) == GETPROP_INLINE_TYPE_GUARD);
 
         pic.typeCheck = stubcc.masm.label();
         stubcc.linkExit(j, Uses(1));
@@ -2029,7 +2037,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
         typeCheck = stubcc.masm.jump();
         pic.hasTypeCheck = true;
     } else {
-        pic.hotPathBegin = masm.label();
+        pic.fastPathStart = masm.label();
         pic.hasTypeCheck = false;
         pic.typeReg = Registers::ReturnReg;
     }
@@ -2047,8 +2055,13 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
     masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
     pic.shapeGuard = masm.label();
-    Jump j = masm.branch32(Assembler::NotEqual, shapeReg,
-                           Imm32(int32(JSObjectMap::INVALID_SHAPE)));
+
+    Label dbgInlineShapeOffset;
+    Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
+                                    Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                                    dbgInlineShapeOffset);
+    DBGLABEL(dbgInlineShapeJump);
+
     pic.slowPathStart = stubcc.masm.label();
     stubcc.linkExit(j, Uses(1));
 
@@ -2059,16 +2072,31 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck)
     pic.callReturn = stubcc.call(ic::GetProp);
 
     /* Load dslots. */
+    DBGLABEL(dbgDslotsLoad);
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
 
     /* Copy the slot value to the expression stack. */
     Address slot(objReg, 1 << 24);
     frame.pop();
+
     masm.loadTypeTag(slot, shapeReg);
+    DBGLABEL(dbgTypeLoad);
+
     masm.loadPayload(slot, objReg);
+    DBGLABEL(dbgDataLoad);
+
+    pic.storeBack = masm.label();
+
+    /* Assert correctness of hardcoded offsets. */
+    JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgDslotsLoad) == GETPROP_DSLOTS_LOAD);
+    JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgTypeLoad) == GETPROP_TYPE_LOAD);
+    JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgDataLoad) == GETPROP_DATA_LOAD);
+    /* GETPROP_INLINE_TYPE_GUARD's validity is asserted above. */
+    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeOffset) == GETPROP_INLINE_SHAPE_OFFSET);
+    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == GETPROP_INLINE_SHAPE_JUMP);
+
     pic.objReg = objReg;
     frame.pushRegs(shapeReg, objReg);
-    pic.storeBack = masm.label();
 
     stubcc.rejoin(Changes(1));
 
@@ -2087,40 +2115,61 @@ mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID obj
     pic.shapeReg = shapeReg;
     pic.hasTypeCheck = false;
 
-    pic.hotPathBegin = masm.label();
+    pic.fastPathStart = masm.label();
 
     /* Guard on shape. */
     masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
     masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
     pic.shapeGuard = masm.label();
-    Jump shapeGuard = masm.branch32(Assembler::NotEqual, shapeReg,
-                                    Imm32(int32(JSObjectMap::INVALID_SHAPE)));
+    Label dbgInlineShapeOffset;
+    Jump jmpShapeGuard = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
+                                 Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                                 dbgInlineShapeOffset);
+    DBGLABEL(dbgInlineShapeJump);
 
     /* Guard on id identity. */
     static const int32 BOGUS_ATOM = 0xdeadbeef;
     // :FIXME: x64
-    Jump idGuard = masm.branch32(Assembler::NotEqual, idReg, Imm32(BOGUS_ATOM));
+    Label dbgInlineAtomOffset;
+    Jump idGuard = masm.branch32WithPatch(Assembler::NotEqual, idReg,
+                                 Imm32(BOGUS_ATOM), dbgInlineAtomOffset);
+    DBGLABEL(dbgInlineAtomJump);
     pic.slowPathStart = stubcc.masm.label();
+
     stubcc.linkExit(idGuard, Uses(2));
-    stubcc.linkExitDirect(shapeGuard, pic.slowPathStart);
+    stubcc.linkExitDirect(jmpShapeGuard, pic.slowPathStart);
 
     stubcc.leave();
     stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
     pic.callReturn = stubcc.call(ic::GetElem);
 
     /* Load dslots. */
+    DBGLABEL(dbgDslotsLoad);
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
 
     /* Copy the slot value to the expression stack. */
     Address slot(objReg, 1 << 24);
     masm.loadTypeTag(slot, shapeReg);
+    DBGLABEL(dbgTypeLoad);
     masm.loadPayload(slot, objReg);
+    DBGLABEL(dbgDataLoad);
+
     pic.storeBack = masm.label();
     pic.objReg = objReg;
     pic.idReg = idReg;
+
+    JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgDslotsLoad) == GETELEM_DSLOTS_LOAD);
+    JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgTypeLoad) == GETELEM_TYPE_LOAD);
+    JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgDataLoad) == GETELEM_DATA_LOAD);
+    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineAtomOffset) == GETELEM_INLINE_ATOM_OFFSET);
+    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineAtomJump) == GETELEM_INLINE_ATOM_JUMP);
+    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeOffset) == GETELEM_INLINE_SHAPE_OFFSET);
+    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == GETELEM_INLINE_SHAPE_JUMP);
+
     JS_ASSERT(pic.idReg != pic.objReg);
     JS_ASSERT(pic.idReg != pic.shapeReg);
     JS_ASSERT(pic.objReg != pic.shapeReg);
+
     pics.append(pic);
 }
 #endif
@@ -2144,7 +2193,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     pic.typeReg = frame.copyTypeIntoReg(top);
 
     /* Start the hot path where it's easy to patch it. */
-    pic.hotPathBegin = masm.label();
+    pic.fastPathStart = masm.label();
 
     /*
      * Guard that the value is an object. This part needs some extra gunk
@@ -2275,7 +2324,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     JS_ASSERT(top->isTypeKnown());
     JS_ASSERT(top->getKnownType() == JSVAL_TYPE_OBJECT);
 
-    pic.hotPathBegin = masm.label();
+    pic.fastPathStart = masm.label();
     pic.hasTypeCheck = false;
     pic.typeReg = Registers::ReturnReg;
 
@@ -2368,7 +2417,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
         pic.typeReg = reg;
 
         /* Start the hot path where it's easy to patch it. */
-        pic.hotPathBegin = masm.label();
+        pic.fastPathStart = masm.label();
         Jump j = masm.testObject(Assembler::NotEqual, reg);
 
         pic.typeCheck = stubcc.masm.label();
@@ -2379,7 +2428,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
         typeCheck = stubcc.masm.jump();
         pic.hasTypeCheck = true;
     } else {
-        pic.hotPathBegin = masm.label();
+        pic.fastPathStart = masm.label();
         pic.hasTypeCheck = false;
         pic.typeReg = Registers::ReturnReg;
     }
@@ -2421,8 +2470,11 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
     masm.loadPtr(Address(objReg, offsetof(JSObject, map)), shapeReg);
     masm.load32(Address(shapeReg, offsetof(JSObjectMap, shape)), shapeReg);
     pic.shapeGuard = masm.label();
-    Jump j = masm.branch32(Assembler::NotEqual, shapeReg,
-                           Imm32(int32(JSObjectMap::INVALID_SHAPE)));
+    Label dbgInlineShapeOffset;
+    Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
+                                    Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                                    dbgInlineShapeOffset);
+    DBGLABEL(dbgInlineShapeJump);
 
     /* Slow path. */
     {
@@ -2435,18 +2487,27 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
     }
 
     /* Load dslots. */
+    DBGLABEL(dbgDslots);
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
 
     /* Store RHS into object slot. */
+    Label dbgInlineStoreType;
+    DBGLABEL(dbgInlineStoreData);
     Address slot(objReg, 1 << 24);
+
     if (vr.isConstant) {
-        masm.storeValue(Valueify(vr.u.v), slot);
+        dbgInlineStoreType = masm.storeValue(Valueify(vr.u.v), slot);
+        DBGLABEL_ASSIGN(dbgInlineStoreData);
     } else {
-        if (vr.u.s.isTypeKnown)
+        if (vr.u.s.isTypeKnown) {
             masm.storeTypeTag(ImmType(vr.u.s.type.knownType), slot);
-        else
+            DBGLABEL_ASSIGN(dbgInlineStoreType);
+        } else {
             masm.storeTypeTag(vr.u.s.type.reg, slot);
+            DBGLABEL_ASSIGN(dbgInlineStoreType);
+        }
         masm.storePayload(vr.u.s.data, slot);
+        DBGLABEL_ASSIGN(dbgInlineStoreData);
     }
     frame.freeReg(objReg);
     frame.freeReg(shapeReg);
@@ -2461,6 +2522,27 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
             typeCheck.linkTo(stubcc.masm.label(), &stubcc.masm);
         stubcc.rejoin(Changes(1));
     }
+    
+    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeOffset) == SETPROP_INLINE_SHAPE_OFFSET);
+    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineShapeJump) == SETPROP_INLINE_SHAPE_JUMP);
+#ifdef DEBUG
+    if (vr.isConstant) {
+        /* Constants are offset inside the opcode by 4. */
+        JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreType)-4 == SETPROP_INLINE_STORE_CONST_TYPE);
+        JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreData)-4 == SETPROP_INLINE_STORE_CONST_DATA);
+        JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgDslots) == SETPROP_DSLOTS_BEFORE_CONSTANT);
+    } else {
+        if (vr.u.s.isTypeKnown) {
+            JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreType)-4 == SETPROP_INLINE_STORE_KTYPE_TYPE);
+            JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreData) == SETPROP_INLINE_STORE_KTYPE_DATA);
+            JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgDslots) == SETPROP_DSLOTS_BEFORE_KTYPE);
+        } else {
+            JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreType) == SETPROP_INLINE_STORE_DYN_TYPE);
+            JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgInlineStoreData) == SETPROP_INLINE_STORE_DYN_DATA);
+            JS_ASSERT(masm.differenceBetween(pic.storeBack, dbgDslots) == SETPROP_DSLOTS_BEFORE_DYNAMIC);
+        }
+    }
+#endif
 
     pics.append(pic);
 }
@@ -2475,10 +2557,11 @@ mjit::Compiler::jsop_name(JSAtom *atom)
     pic.typeReg = Registers::ReturnReg;
     pic.atom = atom;
     pic.hasTypeCheck = false;
-    pic.hotPathBegin = masm.label();
+    pic.fastPathStart = masm.label();
 
     pic.shapeGuard = masm.label();
     Jump j = masm.jump();
+    DBGLABEL(dbgJumpOffset);
     {
         pic.slowPathStart = stubcc.masm.label();
         stubcc.linkExit(j, Uses(0));
@@ -2489,6 +2572,8 @@ mjit::Compiler::jsop_name(JSAtom *atom)
 
     pic.storeBack = masm.label();
     frame.pushRegs(pic.shapeReg, pic.objReg);
+
+    JS_ASSERT(masm.differenceBetween(pic.fastPathStart, dbgJumpOffset) == SCOPENAME_JUMP_OFFSET);
 
     stubcc.rejoin(Changes(1));
 
@@ -2505,7 +2590,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     pic.typeReg = Registers::ReturnReg;
     pic.atom = script->getAtom(index);
     pic.hasTypeCheck = false;
-    pic.hotPathBegin = masm.label();
+    pic.fastPathStart = masm.label();
 
     Address parent(pic.objReg, offsetof(JSObject, parent));
     masm.loadPtr(Address(JSFrameReg, offsetof(JSStackFrame, scopeChain)), pic.objReg);
@@ -2517,6 +2602,7 @@ mjit::Compiler::jsop_bindname(uint32 index)
     masm.loadPayload(parent, Registers::ValueReg);
     Jump j = masm.branchPtr(Assembler::NotEqual, Registers::ValueReg, ImmPtr(0));
 #endif
+    DBGLABEL(dbgInlineJumpOffset);
     {
         pic.slowPathStart = stubcc.masm.label();
         stubcc.linkExit(j, Uses(0));
@@ -2528,6 +2614,8 @@ mjit::Compiler::jsop_bindname(uint32 index)
     pic.storeBack = masm.label();
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, pic.objReg);
     frame.freeReg(pic.shapeReg);
+
+    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineJumpOffset) == BINDNAME_INLINE_JUMP_OFFSET);
 
     stubcc.rejoin(Changes(1));
 
