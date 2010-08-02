@@ -38,6 +38,7 @@ add_test(function() {
   info("Setting background check pref to false");
   Services.prefs.setBoolPref("extensions.update.enabled", true);
   is_backgroundcheck_insync(true);
+  run_next_test();
 /* XXX This is failing on OSX - need to investigate why
   
   info("Clicking on background check menuitem - setting to unchecked");
