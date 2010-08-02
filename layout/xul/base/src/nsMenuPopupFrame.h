@@ -293,12 +293,12 @@ public:
 
   nsIScrollableFrame* GetScrollFrame(nsIFrame* aStart);
 
-  // For a popup that should appear at the given anchor point, determine
+  // For a popup that should appear anchored at the given rect, determine
   // the screen area that it is constrained by. This will be the available
   // area of the screen the popup should be displayed on. Content popups,
   // however, will also be constrained by the content area, given by
   // aRootScreenRect. All coordinates are in app units.
-  nsRect GetConstraintRect(nsPoint aAnchorPoint, nsRect& aRootScreenRect);
+  nsRect GetConstraintRect(const nsRect& aAnchorRect, const nsRect& aRootScreenRect);
 
   // Determines whether the given edges of the popup may be moved, where
   // aHorizontalSide and aVerticalSide are one of the NS_SIDE_* constants, or
