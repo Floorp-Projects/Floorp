@@ -757,6 +757,16 @@ DisableTraceHint(VMFrame &f, ic::MICInfo &mic)
 
     JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n", mic.traceHint.executableAddress(),
                mic.load.executableAddress());
+
+    if (mic.u.hasSlowTraceHint) {
+        addr = (uint8 *)(mic.slowTraceHint.executableAddress());
+        JSC::RepatchBuffer repatch(addr - 64, 128);
+        repatch.relink(mic.slowTraceHint, mic.load);
+
+        JaegerSpew(JSpew_PICs, "relinking trace hint %p to %p\n",
+                   mic.slowTraceHint.executableAddress(),
+                   mic.load.executableAddress());
+    }
 }
 #endif
 

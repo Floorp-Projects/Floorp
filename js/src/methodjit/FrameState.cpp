@@ -257,6 +257,8 @@ FrameState::assertValidRegisterState() const
         JS_ASSERT_IF(fe->isCopy(),
                      fe->trackerIndex() > fe->copyOf()->trackerIndex());
         JS_ASSERT_IF(fe->isCopy(), !fe->type.inRegister() && !fe->data.inRegister());
+        JS_ASSERT_IF(fe->isCopy(), fe->copyOf() < tos);
+        JS_ASSERT_IF(fe->isCopy(), fe->copyOf()->isCopied());
 
         if (fe->isCopy())
             continue;
@@ -768,42 +770,84 @@ FrameState::uncopy(FrameEntry *original)
 {
     JS_ASSERT(original->isCopied());
 
-    /* Find the first copy. */
+    /*
+     * Copies have two critical invariants:
+     *  1) The backing store precedes all copies in the tracker.
+     *  2) The backing store of a copy cannot be popped from the stack
+     *     while the copy is still live.
+     *
+     * Maintaining this invariant iteratively is kind of hard, so we choose
+     * the "lowest" copy in the frame up-front.
+     *
+     * For example, if the stack is:
+     *    [A, B, C, D]
+     * And the tracker has:
+     *    [A, D, C, B]
+     *
+     * If B, C, and D are copies of A - we will walk the tracker to the end
+     * and select D, not B (see bug 583684).
+     */
     uint32 firstCopy = InvalidIndex;
     FrameEntry *tos = tosFe();
+    FrameEntry *bestFe = NULL;
+    uint32 ncopies = 0;
     for (uint32 i = 0; i < tracker.nentries; i++) {
         FrameEntry *fe = tracker[i];
         if (fe >= tos)
             continue;
         if (fe->isCopy() && fe->copyOf() == original) {
-            firstCopy = i;
-            break;
+            if (firstCopy == InvalidIndex) {
+                firstCopy = i;
+                bestFe = fe;
+            } else if (fe < bestFe) {
+                bestFe = fe;
+            }
+            ncopies++;
         }
     }
 
-    if (firstCopy == InvalidIndex) {
+    if (!ncopies) {
+        JS_ASSERT(firstCopy == InvalidIndex);
+        JS_ASSERT(!bestFe);
         original->copied = false;
         return NULL;
     }
 
+    JS_ASSERT(firstCopy != InvalidIndex);
+    JS_ASSERT(bestFe);
+
     /* Mark all extra copies as copies of the new backing index. */
-    FrameEntry *fe = tracker[firstCopy];
+    bestFe->setCopyOf(NULL);
+    if (ncopies > 1) {
+        bestFe->setCopied();
+        for (uint32 i = firstCopy; i < tracker.nentries; i++) {
+            FrameEntry *other = tracker[i];
+            if (other >= tos || other == bestFe)
+                continue;
 
-    fe->setCopyOf(NULL);
-    for (uint32 i = firstCopy + 1; i < tracker.nentries; i++) {
-        FrameEntry *other = tracker[i];
-        if (other >= tos)
-            continue;
+            /* The original must be tracked before copies. */
+            JS_ASSERT(other != original);
 
-        /* The original must be tracked before copies. */
-        JS_ASSERT(other != original);
+            if (!other->isCopy() || other->copyOf() != original)
+                continue;
 
-        if (!other->isCopy() || other->copyOf() != original)
-            continue;
+            other->setCopyOf(bestFe);
 
-        other->setCopyOf(fe);
-        fe->setCopied();
+            /*
+             * This is safe even though we're mutating during iteration. There
+             * are two cases. The first is that both indexes are <= i, and :.
+             * will never be observed. The other case is we're placing the
+             * other FE such that it will be observed later. Luckily, copyOf()
+             * will return != original, so nothing will happen.
+             */
+            if (other->trackerIndex() < bestFe->trackerIndex())
+                swapInTracker(bestFe, other);
+        }
+    } else {
+        bestFe->setNotCopied();
     }
+
+    FrameEntry *fe = bestFe;
 
     /*
      * Switch the new backing store to the old backing store. During
@@ -883,7 +927,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
      *
      * 1) The backing store precedes all copies in the tracker.
      * 2) The backing store of a local is never a stack slot, UNLESS the local
-     *    variable itself is a stack slot (blocks) that precesed the stack
+     *    variable itself is a stack slot (blocks) that precedes the stack
      *    slot.
      *
      * If the top is a copy, and the second condition holds true, the local
