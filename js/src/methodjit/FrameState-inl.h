@@ -36,6 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #if !defined jsjaeger_framestate_inl_h__ && defined JS_METHODJIT
 #define jsjaeger_framestate_inl_h__
 
@@ -256,17 +257,17 @@ FrameState::push(Address address)
     if (free)
         freeRegs.takeReg(address.base);
 
-    RegisterID reg = allocReg(fe, RematInfo::DATA);
-    masm.loadPayload(address, reg);
-    fe->data.setRegister(reg);
+    RegisterID dreg = allocReg(fe, RematInfo::DATA);
+    masm.loadPayload(address, dreg);
+    fe->data.setRegister(dreg);
 
     /* Now it's safe to grab this register again. */
     if (free)
         freeRegs.putReg(address.base);
 
-    reg = allocReg(fe, RematInfo::TYPE);
-    masm.loadTypeTag(address, reg);
-    fe->type.setRegister(reg);
+    RegisterID treg = allocReg(fe, RematInfo::TYPE);
+    masm.loadTypeTag(address, treg);
+    fe->type.setRegister(treg);
 }
 
 inline void

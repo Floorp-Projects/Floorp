@@ -81,6 +81,9 @@ class Compiler
         Label entry;
         Label stubEntry;
         DataLabelPtr shapeVal;
+#if defined JS_PUNBOX64
+        uint32 patchValueOffset;
+#endif
         Label load;
         Call call;
         ic::MICInfo::Kind kind;

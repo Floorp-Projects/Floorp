@@ -298,6 +298,9 @@ mjit::Compiler::finishThisUp()
             script->mics[i].u.name.typeConst = mics[i].u.name.typeConst;
             script->mics[i].u.name.dataConst = mics[i].u.name.dataConst;
             script->mics[i].u.name.dataWrite = mics[i].u.name.dataWrite;
+#if defined JS_PUNBOX64
+            script->mics[i].patchValueOffset = mics[i].patchValueOffset;
+#endif
         } else {
             uint32 offs = uint32(mics[i].jumpTarget - script->code);
             JS_ASSERT(jumpMap[offs].isValid());
@@ -2981,22 +2984,43 @@ mjit::Compiler::jsop_getgname(uint32 index)
     /* Garbage value. */
     uint32 slot = 1 << 24;
 
-    /*
-     * Ensure at least one register is available.
-     * This is necessary so the implicit push below does not change the
-     * expected instruction ordering. :FIXME: this is stupid
-     */
-    frame.freeReg(frame.allocReg());
-
-    mic.load = masm.label();
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
     Address address(objReg, slot);
-    frame.freeReg(objReg);
-    frame.push(address);
+    
+    /*
+     * On x86_64, the length of the movq instruction used is variable
+     * depending on the registers used. For example, 'movq $0x5(%r12), %r12'
+     * is one byte larger than 'movq $0x5(%r14), %r14'. This means that
+     * the constant '0x5' that we want to write is at a variable position.
+     *
+     * x86_64 only performs a single load. The constant offset is always
+     * at the end of the bytecode. Knowing the start and end of the move
+     * bytecode is sufficient for patching.
+     */
+
+    /* Allocate any register other than objReg. */
+    RegisterID dreg = frame.allocReg();
+    /* After dreg is loaded, it's safe to clobber objReg. */
+    RegisterID treg = objReg;
+
+    mic.load = masm.label();
+# if defined JS_NUNBOX32
+    masm.loadPayload(address, dreg);
+    masm.loadTypeTag(address, treg);
+# elif defined JS_PUNBOX64
+    masm.loadValue(address, treg);
+    mic.patchValueOffset = masm.differenceBetween(mic.load, masm.label());
+
+    masm.move(treg, dreg);
+    masm.convertValueToPayload(dreg);
+    masm.convertValueToType(treg);
+# endif
+
+    frame.pushRegs(treg, dreg);
 
     stubcc.rejoin(Changes(1));
-
     mics.append(mic);
+
 #else
     jsop_getgname_slow(index);
 #endif
@@ -3081,6 +3105,7 @@ mjit::Compiler::jsop_setgname(uint32 index)
     masm.loadPtr(Address(objReg, offsetof(JSObject, dslots)), objReg);
     Address address(objReg, slot);
 
+#if defined JS_NUNBOX32
     if (mic.u.name.dataConst) {
         masm.storeValue(v, address);
     } else {
@@ -3090,6 +3115,27 @@ mjit::Compiler::jsop_setgname(uint32 index)
             masm.storeTypeTag(typeReg, address);
         masm.storePayload(dataReg, address);
     }
+#elif defined JS_PUNBOX64
+    if (mic.u.name.dataConst) {
+        /* Emits a single move. No code length variation. */
+        masm.storeValue(v, address);
+    } else {
+        if (mic.u.name.typeConst)
+            masm.move(ImmType(typeTag), Registers::ValueReg);
+        else
+            masm.move(typeReg, Registers::ValueReg);
+        masm.orPtr(dataReg, Registers::ValueReg);
+        masm.storePtr(Registers::ValueReg, address);
+    }
+
+    /* 
+     * Instructions on x86_64 can vary in size based on registers
+     * used. Since we only need to patch the last instruction in
+     * both paths above, remember the distance between the
+     * load label and after the instruction to be patched.
+     */
+    mic.patchValueOffset = masm.differenceBetween(mic.load, masm.label());
+#endif
 
     if (objFe->isConstant())
         frame.freeReg(objReg);
