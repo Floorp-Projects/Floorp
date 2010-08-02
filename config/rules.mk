@@ -899,7 +899,7 @@ ifdef DIST_INSTALL
 ifdef IS_COMPONENT
 	$(error Shipping static component libs makes no sense.)
 else
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(FAKE_LIBRARY) $(DIST)/lib
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib
 endif
 endif # DIST_INSTALL
 endif # LIBRARY
