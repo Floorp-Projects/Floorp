@@ -649,11 +649,13 @@
   width: 12px;
 }
 
-.download-progress .start-cap {
+.download-progress .start-cap:-moz-locale-dir(ltr),
+.download-progress .end-cap:-moz-locale-dir(rtl) {
   -moz-border-radius: 100% 0 0 100%;
 }
 
-.download-progress .end-cap {
+.download-progress .end-cap:-moz-locale-dir(ltr),
+.download-progress .start-cap:-moz-locale-dir(rtl) {
   -moz-border-radius: 0 100% 100% 0;
 }
 
@@ -668,6 +670,7 @@
   -moz-appearance: none;
   background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
   border-width: 1px 0px 0px 1px;
+  padding-right: 1px;
   border-style: solid;
   -moz-border-top-colors: #FFF;
   -moz-border-left-colors: #FFF;
