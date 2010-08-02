@@ -39,7 +39,7 @@ function run_test() {
   let server;
 
   try {
-    let log = Log4Moz.repository.getLogger();
+    let log = Log4Moz.repository.getLogger("Test");
     Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
     log.info("Setting up server and authenticator");
