@@ -22,9 +22,10 @@
  * Aza Raskin <aza@mozilla.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
  *
- * Some portions copied from:
- * jQuery JavaScript Library v1.4.2
- * http://jquery.com/
+ * This file incorporates work from:
+ * jQuery JavaScript Library v1.4.2: http://code.jquery.com/jquery-1.4.2.js
+ * This incorporated work is covered by the following copyright and
+ * permission notice:
  * Copyright 2010, John Resig
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
