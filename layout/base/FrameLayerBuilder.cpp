@@ -152,6 +152,8 @@ protected:
      * Record that an item has been added to the ThebesLayer, so we
      * need to update our regions.
      * @param aVisibleRect the area of the item that's visible
+     * @param aDrawRect the area of the item that would be drawn if it
+     * was completely visible
      * @param aOpaqueRect if non-null, the area of the item that's opaque.
      * We pass in a separate opaque rect because the opaque rect can be
      * bigger than the visible rect, and we want to have the biggest
@@ -160,6 +162,7 @@ protected:
      * a constant color given by *aSolidColor
      */
     void Accumulate(const nsIntRect& aVisibleRect,
+                    const nsIntRect& aDrawRect,
                     const nsIntRect* aOpaqueRect,
                     nscolor* aSolidColor);
     nsIFrame* GetActiveScrolledRoot() { return mActiveScrolledRoot; }
@@ -177,6 +180,21 @@ protected:
      * Same coordinate system as mVisibleRegion.
      */
     nsIntRegion  mVisibleAboveRegion;
+    /**
+     * The region containing the bounds of all display items in the layer,
+     * regardless of visbility.
+     * Same coordinate system as mVisibleRegion.
+     */
+    nsIntRegion  mDrawRegion;
+    /**
+     * The region containing the bounds of all display items (regardless
+     * of visibility) in the layer and below the next ThebesLayerData
+     * currently in the stack, if any.
+     * Note that not all ThebesLayers for the container are in the
+     * ThebesLayerData stack.
+     * Same coordinate system as mVisibleRegion.
+     */
+    nsIntRegion  mDrawAboveRegion;
     /**
      * The region of visible content in the layer that is opaque.
      * Same coordinate system as mVisibleRegion.
@@ -231,10 +249,14 @@ protected:
   void PopThebesLayerData();
   /**
    * Find the ThebesLayer to which we should assign the next display item.
+   * We scan the ThebesLayerData stack to find the topmost ThebesLayer
+   * that is compatible with the display item (i.e., has the same
+   * active scrolled root), and that has no content from other layers above
+   * it and intersecting the aVisibleRect.
    * Returns the layer, and also updates the ThebesLayerData. Will
-   * push a new ThebesLayerData onto the stack if necessary. If we choose
-   * a ThebesLayer that's already on the ThebesLayerData stack,
-   * later elements on the stack will be popped off.
+   * push a new ThebesLayerData onto the stack if no suitable existing
+   * layer is found. If we choose a ThebesLayer that's already on the
+   * ThebesLayerData stack, later elements on the stack will be popped off.
    * @param aVisibleRect the area of the next display item that's visible
    * @param aActiveScrolledRoot the active scrolled root for the next
    * display item
@@ -243,6 +265,7 @@ protected:
    * will be painted with aSolidColor by the item
    */
   already_AddRefed<ThebesLayer> FindThebesLayerFor(const nsIntRect& aVisibleRect,
+                                                   const nsIntRect& aDrawRect,
                                                    nsIFrame* aActiveScrolledRoot,
                                                    const nsIntRect* aOpaqueRect,
                                                    nscolor* aSolidColor);
@@ -674,6 +697,10 @@ ContainerState::PopThebesLayerData()
                                      data->mVisibleAboveRegion);
     nextData->mVisibleAboveRegion.Or(nextData->mVisibleAboveRegion,
                                      data->mVisibleRegion);
+    nextData->mDrawAboveRegion.Or(nextData->mDrawAboveRegion,
+                                     data->mDrawAboveRegion);
+    nextData->mDrawAboveRegion.Or(nextData->mDrawAboveRegion,
+                                     data->mDrawRegion);
   }
 
   Layer* layer;
@@ -728,7 +755,8 @@ ContainerState::PopThebesLayerData()
 }
 
 void
-ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aRect,
+ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aVisibleRect,
+                                            const nsIntRect& aDrawRect,
                                             const nsIntRect* aOpaqueRect,
                                             nscolor* aSolidColor)
 {
@@ -738,7 +766,7 @@ ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aRect,
       mSolidColor = *aSolidColor;
       mIsSolidColorInVisibleRegion = PR_TRUE;
     } else if (mIsSolidColorInVisibleRegion &&
-               mVisibleRegion.IsEqual(nsIntRegion(aRect))) {
+               mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect))) {
       // we can just blend the colors together
       mSolidColor = NS_ComposeColors(mSolidColor, *aSolidColor);
     } else {
@@ -748,8 +776,10 @@ ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aRect,
     mIsSolidColorInVisibleRegion = PR_FALSE;
   }
 
-  mVisibleRegion.Or(mVisibleRegion, aRect);
+  mVisibleRegion.Or(mVisibleRegion, aVisibleRect);
   mVisibleRegion.SimplifyOutward(4);
+  mDrawRegion.Or(mDrawRegion, aDrawRect);
+  mDrawRegion.SimplifyOutward(4);
   if (aOpaqueRect) {
     // We don't use SimplifyInward here since it's not defined exactly
     // what it will discard. For our purposes the most important case
@@ -766,6 +796,7 @@ ContainerState::ThebesLayerData::Accumulate(const nsIntRect& aRect,
 
 already_AddRefed<ThebesLayer>
 ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
+                                   const nsIntRect& aDrawRect,
                                    nsIFrame* aActiveScrolledRoot,
                                    const nsIntRect* aOpaqueRect,
                                    nscolor* aSolidColor)
@@ -775,7 +806,7 @@ ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
   PRInt32 topmostLayerWithScrolledRoot = -1;
   for (i = mThebesLayerDataStack.Length() - 1; i >= 0; --i) {
     ThebesLayerData* data = mThebesLayerDataStack[i];
-    if (data->mVisibleAboveRegion.Intersects(aVisibleRect)) {
+    if (data->mDrawAboveRegion.Intersects(aVisibleRect)) {
       ++i;
       break;
     }
@@ -785,7 +816,7 @@ ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
         topmostLayerWithScrolledRoot = i;
       }
     }
-    if (data->mVisibleRegion.Intersects(aVisibleRect))
+    if (data->mDrawRegion.Intersects(aVisibleRect))
       break;
   }
   if (topmostLayerWithScrolledRoot < 0) {
@@ -822,7 +853,7 @@ ContainerState::FindThebesLayerFor(const nsIntRect& aVisibleRect,
     layer = thebesLayerData->mLayer;
   }
 
-  thebesLayerData->Accumulate(aVisibleRect, aOpaqueRect, aSolidColor);
+  thebesLayerData->Accumulate(aVisibleRect, aDrawRect, aOpaqueRect, aSolidColor);
   return layer.forget();
 }
 
@@ -857,6 +888,11 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(item);
     nsIntRect itemVisibleRect =
       item->GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
+    nsRect itemContent = item->GetBounds(mBuilder);
+    if (aClipRect) {
+      itemContent.IntersectRect(*aClipRect, itemContent);
+    }
+    nsIntRect itemDrawRect = itemContent.ToNearestPixels(appUnitsPerDevPixel);
     nsDisplayItem::LayerState layerState =
       item->GetLayerState(mBuilder, mManager);
 
@@ -890,6 +926,11 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       ThebesLayerData* data = GetTopThebesLayerData();
       if (data) {
         data->mVisibleAboveRegion.Or(data->mVisibleAboveRegion, itemVisibleRect);
+        // Add the entire bounds rect to the mDrawAboveRegion.
+        // The visible region may be excluding opaque content above the
+        // item, and we need to ensure that that content is not placed
+        // in a ThebesLayer below the item!
+        data->mDrawAboveRegion.Or(data->mDrawAboveRegion, itemDrawRect);
       }
       SetVisibleRectForLayer(ownLayer, itemVisibleRect);
       ContainerLayer* oldContainer = ownLayer->GetParent();
@@ -932,7 +973,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         opaqueRect = item->GetBounds(mBuilder).ToNearestPixels(appUnitsPerDevPixel);
       }
       nsRefPtr<ThebesLayer> thebesLayer =
-        FindThebesLayerFor(itemVisibleRect, activeScrolledRoot,
+        FindThebesLayerFor(itemVisibleRect, itemDrawRect, activeScrolledRoot,
                            isOpaque ? &opaqueRect : nsnull,
                            isUniform ? &uniformColor : nsnull);
 
