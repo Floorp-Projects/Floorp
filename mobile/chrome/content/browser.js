@@ -1076,15 +1076,15 @@ var Browser = {
     this.animatedZoomTo(this._getZoomRectForPoint(center.x, center.y, zoomLevel));
   },
 
-  /** Rect should be in viewport coordinates. */
+  /** Rect should be in browser coordinates. */
   _getZoomLevelForRect: function _getZoomLevelForRect(rect) {
     const margin = 15;
 
     let bv = this._browserView;
     let vis = bv.getVisibleRect();
-   
-    return bv.clampZoomLevel(bv.getZoomLevel() * vis.width / (rect.width + margin * 2));
-  }, 
+
+    return bv.clampZoomLevel(vis.width / (rect.width + margin * 2));
+  },
 
   /**
    * Find an appropriate zoom rect for an element bounding rect, if it exists.
