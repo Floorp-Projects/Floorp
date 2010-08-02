@@ -41,9 +41,11 @@ NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,
                                   YUVType yuv_type) {
   unsigned int y_shift = yuv_type == YV12 ? 1 : 0;
   unsigned int x_shift = yuv_type == YV24 ? 0 : 1;
-  // There is no optimized YV24 MMX routine so we check for this and
+  // Test for SSE because the optimized code uses movntq, which is not part of MMX.
+  bool has_sse = supports_mmx() && supports_sse();
+  // There is no optimized YV24 SSE routine so we check for this and
   // fall back to the C code.
-  bool has_mmx = supports_mmx() && yuv_type != YV24;
+  has_sse &= yuv_type != YV24;
   bool odd_pic_x = yuv_type != YV24 && pic_x % 2 != 0;
   int x_width = odd_pic_x ? pic_width - 1 : pic_width;
 
@@ -65,7 +67,7 @@ NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,
       rgb_row += 4;
     }
 
-    if (has_mmx)
+    if (has_sse)
       FastConvertYUVToRGB32Row(y_ptr,
                                u_ptr,
                                v_ptr,
@@ -81,8 +83,8 @@ NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,
   }
 
 #ifdef ARCH_CPU_X86_FAMILY
-  // MMX used for FastConvertYUVToRGB32Row requires emms instruction.
-  if (has_mmx)
+  // SSE used for FastConvertYUVToRGB32Row requires emms instruction.
+  if (has_sse)
     EMMS();
 #endif
 }
