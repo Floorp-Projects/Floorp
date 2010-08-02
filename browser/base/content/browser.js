@@ -148,6 +148,14 @@ __defineSetter__("PluralForm", function (val) {
   return this.PluralForm = val;
 });
 
+#ifdef MOZ_SERVICES_SYNC
+XPCOMUtils.defineLazyGetter(this, "Weave", function() {
+  let tmp = {};
+  Cu.import("resource://services-sync/service.js", tmp);
+  return tmp.Weave;
+});
+#endif
+
 XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
   let tmp = {};
   Cu.import("resource://gre/modules/PopupNotifications.jsm", tmp);
