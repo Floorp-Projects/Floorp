@@ -100,6 +100,9 @@ static const char* const sEventNames[] = {
   "MozRotateGesture",
   "MozTapGesture",
   "MozPressTapGesture",
+  "MozTouchDown",
+  "MozTouchMove",
+  "MozTouchUp",
   "MozScrolledAreaChanged",
   "transitionend"
 };
@@ -192,6 +195,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
       case NS_MOUSE_EVENT:
       case NS_MOUSE_SCROLL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
+      case NS_MOZTOUCH_EVENT:
         static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nsnull;
         break;
       case NS_DRAG_EVENT:
@@ -221,6 +225,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
       case NS_MOUSE_EVENT:
       case NS_MOUSE_SCROLL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
+      case NS_MOZTOUCH_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(
           static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget);
@@ -807,6 +812,14 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       break;
     }
+    case NS_MOZTOUCH_EVENT:
+    {
+      newEvent = new nsMozTouchEvent(PR_FALSE, msg, nsnull,
+                                     static_cast<nsMozTouchEvent*>(mEvent)->streamId);
+      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
+      isInputEvent = PR_TRUE;
+      break;
+    }
     default:
     {
       NS_WARNING("Unknown event type!!!");
@@ -1307,6 +1320,12 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_MozTapGesture];
   case NS_SIMPLE_GESTURE_PRESSTAP:
     return sEventNames[eDOMEvents_MozPressTapGesture];
+  case NS_MOZTOUCH_DOWN:
+    return sEventNames[eDOMEvents_MozTouchDown];
+  case NS_MOZTOUCH_MOVE:
+    return sEventNames[eDOMEvents_MozTouchMove];
+  case NS_MOZTOUCH_UP:
+    return sEventNames[eDOMEvents_MozTouchUp];
   case NS_SCROLLEDAREACHANGED:
     return sEventNames[eDOMEvents_MozScrolledAreaChanged];
   case NS_TRANSITION_END:

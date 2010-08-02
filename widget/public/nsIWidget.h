@@ -111,8 +111,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x34b6123e, 0x78d7, 0x4275, \
-  { 0xa2, 0xbf, 0x07, 0xd4, 0xbf, 0x3a, 0x34, 0x45 } }
+{ 0xeedce486, 0xeb2b, 0x41af, \
+  { 0x9a, 0x25, 0x59, 0xd1, 0x0f, 0xd1, 0xd5, 0x6f } }
 
 /*
  * Window shadow styles
@@ -285,6 +285,8 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD SetParent(nsIWidget* aNewParent) = 0;
 
+    NS_IMETHOD RegisterTouchWindow() = 0;
+    NS_IMETHOD UnregisterTouchWindow() = 0;
 
     /**
      * Return the parent Widget of this Widget or nsnull if this is a 
