@@ -2093,3 +2093,8 @@ panel[dimmed="true"] {
   opacity: 0.5;
 }
 
+/* Sync */
+#sync-status-button.statusbarpanel-iconic {
+  padding: 0 5px;
+}
+
