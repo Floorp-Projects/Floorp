@@ -230,7 +230,7 @@ EmitDoubleOp(JSOp op, FPRegisterID fpRight, FPRegisterID fpLeft, Assembler &masm
     }
 }
 
-mjit::Compiler::MaybeJump
+mjit::MaybeJump
 mjit::Compiler::loadDouble(FrameEntry *fe, FPRegisterID fpReg)
 {
     MaybeJump notNumber;
@@ -939,18 +939,16 @@ mjit::Compiler::jsop_relational_int(JSOp op, BoolStub stub, jsbytecode *target, 
                                     ? Assembler::Zero
                                     : Assembler::NonZero;
         j = stubcc.masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
-        stubcc.jumpInScript(j, target);
-        /* ^-- :TODO: use jumpAndTrace */
 
         /* Rejoin unnecessary - state is flushed. */
-        j = stubcc.masm.jump();
-        stubcc.crossJump(j, masm.label());
+        Jump j2 = stubcc.masm.jump();
+        stubcc.crossJump(j2, masm.label());
 
         /*
          * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
          * in the middle of an in-progress slow path.
          */
-        jumpAndTrace(fast, target);
+        jumpAndTrace(fast, target, &j);
 
         JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
     } else {
@@ -1125,18 +1123,16 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
                                     ? Assembler::Zero
                                     : Assembler::NonZero;
         Jump sj = stubcc.masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
-        stubcc.jumpInScript(sj, target);
-        /* ^-- :TODO: use jumpAndTrace  */
 
         /* Rejoin from the slow path. */
-        sj = stubcc.masm.jump();
-        stubcc.crossJump(sj, masm.label());
+        Jump j2 = stubcc.masm.jump();
+        stubcc.crossJump(j2, masm.label());
 
         /*
          * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
          * in the middle of an in-progress slow path.
          */
-        jumpAndTrace(j, target);
+        jumpAndTrace(j, target, &sj);
     } else {
         if (lhsNotNumber.isSet())
             stubcc.linkExit(lhsNotNumber.get(), Uses(2));
@@ -1319,22 +1315,23 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
                                     ? Assembler::Zero
                                     : Assembler::NonZero;
         Jump j = stubcc.masm.branchTest32(cond, Registers::ReturnReg, Registers::ReturnReg);
-        stubcc.jumpInScript(j, target);
-        /* ^-- :TODO: use jumpAndTrace */
 
         /* Rejoin from the slow path. */
-        j = stubcc.masm.jump();
-        stubcc.crossJump(j, masm.label());
+        Jump j2 = stubcc.masm.jump();
+        stubcc.crossJump(j2, masm.label());
 
         /* :TODO: make double path invoke tracer. */
-        if (hasDoublePath)
-            stubcc.jumpInScript(doubleTest.get(), target);
+        if (hasDoublePath) {
+            j.linkTo(stubcc.masm.label(), &stubcc.masm);
+            doubleTest.get().linkTo(stubcc.masm.label(), &stubcc.masm);
+            j = stubcc.masm.jump();
+        }
 
         /*
          * NB: jumpAndTrace emits to the OOL path, so make sure not to use it
          * in the middle of an in-progress slow path.
          */
-        jumpAndTrace(fast, target);
+        jumpAndTrace(fast, target, &j);
 
         /* Rejoin from the double path. */
         if (hasDoublePath)
