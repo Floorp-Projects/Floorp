@@ -73,6 +73,12 @@ radio[pane=paneAdvanced] {
   -moz-image-region: rect(0px, 224px, 32px, 192px)
 }
 
+%ifdef MOZ_SERVICES_SYNC
+radio[pane=paneSync] {
+  list-style-image: url("chrome://browser/skin/preferences/Options-sync.png") !important;
+}
+%endif
+
 /* Applications Pane */
 #BrowserPreferences[animated="true"] #handlersView {
   height: 25em;
@@ -158,3 +164,40 @@ radio[pane=paneAdvanced] {
 #SanitizeDialogPane > groupbox {
   margin-top: 0;
 }
+
+%ifdef MOZ_SERVICES_SYNC
+/* Sync Pane */
+#syncDesc {
+  padding: 0 12em;
+}
+
+#currentUser image {
+  list-style-image: url("chrome://mozapps/skin/profile/profileicon.png");
+}
+
+#connectThrobber {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+.expander-up,
+.expander-down {
+  min-width: 0;
+  padding: 2px 0;
+  -moz-padding-start: 2px;
+}
+
+.expander-up {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+.expander-down {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.expander-down:hover:active {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
+}
+
+.expander-up:hover:active {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
+}
+%endif
