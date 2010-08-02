@@ -52,14 +52,14 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  var f = function() { return { set this() { } }; } ;
-  expect = 'function() { return { set this() { } }; }';
+  var f = function() { return { set this(v) { } }; } ;
+  expect = 'function() { return { set this(v) { } }; }';
   actual = f + '';
 
   compareSource(expect, actual, summary);
 
-  expect = "({ set ''() {} })";
-  actual = uneval({ set ''() {} });
+  expect = "({ set ''(v) {} })";
+  actual = uneval({ set ''(v) {} });
   compareSource(expect, actual, expect);
   exitFunc ('test');
 }

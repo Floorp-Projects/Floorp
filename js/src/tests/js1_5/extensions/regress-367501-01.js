@@ -55,7 +55,7 @@ function test()
   try
   { 
     expect = 'undefined';
-    var a = { set x() {} };
+    var a = { set x(v) {} };
     actual = a.x + '';
   }
   catch(ex)
