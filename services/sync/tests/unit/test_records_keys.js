@@ -1,12 +1,8 @@
-try {
-  Cu.import("resource://services-sync/base_records/keys.js");
-  Cu.import("resource://services-sync/auth.js");
-  Cu.import("resource://services-sync/log4moz.js");
-  Cu.import("resource://services-sync/identity.js");
-  Cu.import("resource://services-sync/util.js");
-} catch (e) {
-  do_throw(e);
-}
+Cu.import("resource://services-sync/base_records/keys.js");
+Cu.import("resource://services-sync/auth.js");
+Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/util.js");
 
 function pubkey_handler(metadata, response) {
   let obj = {id: "asdf-1234-asdf-1234",
@@ -30,7 +26,7 @@ function test_get() {
   let server;
 
   try {
-    let log = Log4Moz.repository.getLogger();
+    let log = Log4Moz.repository.getLogger("Test");
     Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
     log.info("Setting up server and authenticator");
@@ -55,7 +51,6 @@ function test_get() {
 
     log.info("Done!");
   }
-  catch (e) { do_throw(e); }
   finally { server.stop(function() {}); }
 }
 
