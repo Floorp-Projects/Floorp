@@ -98,8 +98,12 @@ ic::GetGlobalName(VMFrame &f, uint32 index)
     slot -= JS_INITIAL_NSLOTS;
     slot *= sizeof(Value);
     JSC::RepatchBuffer loads(mic.load.executableAddress(), 32, false);
-    loads.repatch(mic.load.dataLabel32AtOffset(MICInfo::GET_TYPE_OFFSET), slot + 4);
+#if defined JS_NUNBOX32
     loads.repatch(mic.load.dataLabel32AtOffset(MICInfo::GET_DATA_OFFSET), slot);
+    loads.repatch(mic.load.dataLabel32AtOffset(MICInfo::GET_TYPE_OFFSET), slot + 4);
+#elif defined JS_PUNBOX64
+    loads.repatch(mic.load.dataLabel32AtOffset(mic.patchValueOffset), slot);
+#endif
 
     /* Do load anyway... this time. */
     stubs::GetGlobalName(f);
@@ -159,6 +163,7 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     slot *= sizeof(Value);
 
     JSC::RepatchBuffer stores(mic.load.executableAddress(), 32, false);
+#if defined JS_NUNBOX32
     stores.repatch(mic.load.dataLabel32AtOffset(MICInfo::SET_TYPE_OFFSET), slot + 4);
 
     uint32 dataOffset;
@@ -168,6 +173,9 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
         dataOffset = MICInfo::SET_DATA_TYPE_OFFSET;
     if (mic.u.name.dataWrite)
         stores.repatch(mic.load.dataLabel32AtOffset(dataOffset), slot);
+#elif defined JS_PUNBOX64
+    stores.repatch(mic.load.dataLabel32AtOffset(mic.patchValueOffset), slot);
+#endif
 
     /* Do load anyway... this time. */
     stubs::SetGlobalName(f, atom);

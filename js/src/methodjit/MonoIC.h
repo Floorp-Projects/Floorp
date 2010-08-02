@@ -50,11 +50,14 @@ namespace ic {
 
 struct MICInfo {
 #ifdef JS_CPU_X86
-    static const uint32 GET_DATA_OFFSET = 9;
-    static const uint32 GET_TYPE_OFFSET = 15;
+    static const uint32 GET_DATA_OFFSET = 6;
+    static const uint32 GET_TYPE_OFFSET = 12;
+
     static const uint32 SET_TYPE_OFFSET = 9;
     static const uint32 SET_DATA_CONST_TYPE_OFFSET = 19;
     static const uint32 SET_DATA_TYPE_OFFSET = 15;
+#elif JS_CPU_X64
+    /* No constants used, thanks to patchValueOffset. */
 #endif
 
     enum Kind
@@ -67,6 +70,9 @@ struct MICInfo {
         TRACER
     };
 
+#if defined JS_PUNBOX64
+    uint32 patchValueOffset;
+#endif
     JSC::CodeLocationLabel entry;
     JSC::CodeLocationLabel stubEntry;
     JSC::CodeLocationLabel load;
@@ -87,7 +93,7 @@ struct MICInfo {
 void JS_FASTCALL GetGlobalName(VMFrame &f, uint32 index);
 void JS_FASTCALL SetGlobalName(VMFrame &f, uint32 index);
 
-}
+} /* namespace ic */
 } /* namespace mjit */
 } /* namespace js */
 
