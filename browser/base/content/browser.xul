@@ -1021,6 +1021,24 @@
       <statusbarpanel id="security-button" class="statusbarpanel-iconic"
                       hidden="true"
                       onclick="if (event.button == 0 &amp;&amp; event.detail == 1) displaySecurityInfo();"/>
+#ifdef MOZ_SERVICES_SYNC
+      <statusbarpanel id="sync-status-button"
+                      class="statusbarpanel-iconic-text"
+                      image="chrome://browser/skin/sync-16.png"
+                      label="&syncLogInItem.label;"
+                      oncommand="gSyncUI.handleStatusbarButton();"
+                      onmousedown="event.preventDefault();">
+      </statusbarpanel>
+      <separator class="thin"/>
+      <statusbarpanel id="sync-notifications-button"
+                      class="statusbarpanel-iconic-text"
+                      hidden="true"
+                      popup="sync-notifications-panel">
+      </statusbarpanel>
+      <panel id="sync-notifications-panel" position="before_end">
+          <notificationbox id="sync-notifications-box"/>
+      </panel>
+#endif
       <statusbarpanel id="page-report-button" type="menu"
                       class="statusbarpanel-menu-iconic"
                       hidden="true"
