@@ -1373,8 +1373,8 @@ asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 514917-1.html 514917-1-ref.html
 HTTP(..) == 518172-1a.html 518172-a-ref.html
 HTTP(..) == 518172-1b.html 518172-b-ref.html
-fails HTTP(..) == 518172-2a.html 518172-a-ref.html # bug 518172
-fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
+HTTP(..) == 518172-2a.html 518172-a-ref.html
+HTTP(..) == 518172-2b.html 518172-b-ref.html
 == 520421-1.html 520421-1-ref.html
 == 520563-1.xhtml 520563-1-ref.xhtml
 == 521525-1.html 521525-1-ref.html
