@@ -771,6 +771,10 @@ Declaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
 void
 Declaration::ToString(nsAString& aString) const
 {
+  // Someone cares about this declaration's contents, so don't let it
+  // change from under them.  See e.g. bug 338679.
+  SetImmutable();
+
   nsCSSCompressedDataBlock *systemFontData =
     GetValueIsImportant(eCSSProperty__x_system_font) ? mImportantData : mData;
   const nsCSSValue *systemFont = 

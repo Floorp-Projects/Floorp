@@ -213,9 +213,10 @@ public:
   }
 
   /**
-   * Mark this declaration as unmodifiable.
+   * Mark this declaration as unmodifiable.  It's 'const' so it can
+   * be called from ToString.
    */
-  void SetImmutable() { mImmutable = PR_TRUE; }
+  void SetImmutable() const { mImmutable = PR_TRUE; }
 
   /**
    * Clear the data, in preparation for its replacement with entirely
@@ -258,8 +259,9 @@ private:
   // may be null
   nsAutoPtr<nsCSSCompressedDataBlock> mImportantData;
 
-  // set by style rules when |RuleMatched| is called
-  PRPackedBool mImmutable;
+  // set by style rules when |RuleMatched| is called;
+  // also by ToString (hence the 'mutable').
+  mutable PRPackedBool mImmutable;
 };
 
 } // namespace css
