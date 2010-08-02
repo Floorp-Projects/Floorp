@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +14,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Felipe Gomes <felipc@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,67 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsEvent_h__
-#define nsEvent_h__
+#ifndef nsDOMMozTouchEvent_h__
+#define nsDOMMozTouchEvent_h__
 
-/*
- * This is in a separate header file because it needs to be included
- * in many places where including nsGUIEvent.h would bring in many
- * header files that are totally unnecessary.
- */
+#include "nsIDOMMozTouchEvent.h"
+#include "nsDOMMouseEvent.h"
 
-enum UIStateChangeType {
-  UIStateChangeType_NoChange,
-  UIStateChangeType_Set,
-  UIStateChangeType_Clear
+class nsPresContext;
+
+class nsDOMMozTouchEvent : public nsDOMMouseEvent,
+                           public nsIDOMMozTouchEvent
+{
+public:
+  nsDOMMozTouchEvent(nsPresContext* aPresCOntext, nsMozTouchEvent* aEvent);
+  virtual ~nsDOMMozTouchEvent();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_NSIDOMMOZTOUCHEVENT
+
+  // Forward to base class
+  NS_FORWARD_TO_NSDOMMOUSEEVENT
 };
 
-/**
- * Return status for event processors.
- */
-
-enum nsEventStatus {  
-    /// The event is ignored, do default processing
-  nsEventStatus_eIgnore,            
-    /// The event is consumed, don't do default processing
-  nsEventStatus_eConsumeNoDefault, 
-    /// The event is consumed, but do default processing
-  nsEventStatus_eConsumeDoDefault  
-};
-
-/**
- * sizemode is an adjunct to widget size
- */
-enum nsSizeMode {
-  nsSizeMode_Normal = 0,
-  nsSizeMode_Minimized,
-  nsSizeMode_Maximized,
-  nsSizeMode_Fullscreen
-};
-
-class nsEvent;
-
-class nsGUIEvent;
-class nsSizeEvent;
-class nsSizeModeEvent;
-class nsZLevelEvent;
-class nsPaintEvent;
-class nsScrollbarEvent;
-class nsScrollPortEvent;
-class nsInputEvent;
-class nsMouseEvent;
-class nsDragEvent;
-#ifdef ACCESSIBILITY
-class nsAccessibleEvent;
 #endif
-class nsKeyEvent;
-class nsTextEvent;
-class nsCompositionEvent;
-class nsMouseScrollEvent;
-class nsReconversionEvent;
-class nsTooltipEvent;
-class nsSimpleGestureEvent;
-class nsMozTouchEvent;
-class nsContentCommandEvent;
-
-#endif // nsEvent_h__

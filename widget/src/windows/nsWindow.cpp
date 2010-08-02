@@ -375,6 +375,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mIsTopWidgetWindow    = PR_FALSE;
   mUnicodeWidget        = PR_TRUE;
   mDisplayPanFeedback   = PR_FALSE;
+  mTouchWindow          = PR_FALSE;
   mCustomNonClient      = PR_FALSE;
   mCompositorFlag       = PR_FALSE;
   mHideChrome           = PR_FALSE;
@@ -1286,6 +1287,49 @@ void nsWindow::SetThemeRegion()
   }
 #endif
 }
+
+/**************************************************************
+ *
+ * SECTION: nsIWidget::RegisterTouchWindow,
+ * nsIWidget::UnregisterTouchWindow, and helper functions
+ *
+ * Used to register the native window to receive touch events
+ *
+ **************************************************************/
+
+NS_METHOD nsWindow::RegisterTouchWindow() {
+  mTouchWindow = PR_TRUE;
+#ifndef WINCE
+  mGesture.RegisterTouchWindow(mWnd);
+  ::EnumChildWindows(mWnd, nsWindow::RegisterTouchForDescendants, NULL);
+#endif
+  return NS_OK;
+}
+
+NS_METHOD nsWindow::UnregisterTouchWindow() {
+  mTouchWindow = PR_FALSE;
+#ifndef WINCE
+  mGesture.UnregisterTouchWindow(mWnd);
+  ::EnumChildWindows(mWnd, nsWindow::UnregisterTouchForDescendants, NULL);
+#endif
+  return NS_OK;
+}
+
+#ifndef WINCE
+BOOL CALLBACK nsWindow::RegisterTouchForDescendants(HWND aWnd, LPARAM aMsg) {
+  nsWindow* win = GetNSWindowPtr(aWnd);
+  if (win)
+    win->mGesture.RegisterTouchWindow(aWnd);
+  return TRUE;
+}
+
+BOOL CALLBACK nsWindow::UnregisterTouchForDescendants(HWND aWnd, LPARAM aMsg) {
+  nsWindow* win = GetNSWindowPtr(aWnd);
+  if (win)
+    win->mGesture.UnregisterTouchWindow(aWnd);
+  return TRUE;
+}
+#endif
 
 /**************************************************************
  *
@@ -5226,7 +5270,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     result = PR_TRUE;
     *aRetValue = TABLET_ROTATE_GESTURE_ENABLE;
     break;
-    
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+  case WM_TOUCH:
+    result = OnTouch(wParam, lParam);
+    if (result) {
+      *aRetValue = 0;
+    }
+    break;
+#endif
+
   case WM_GESTURE:
     result = OnGesture(wParam, lParam);
     break;
@@ -5249,7 +5302,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         nsEventStatus status;
         DispatchEvent(&gestureNotifyEvent, status);
         mDisplayPanFeedback = gestureNotifyEvent.displayPanFeedback;
-        mGesture.SetWinGestureSupport(mWnd, gestureNotifyEvent.panDirection);
+        if (!mTouchWindow)
+          mGesture.SetWinGestureSupport(mWnd, gestureNotifyEvent.panDirection);
       }
       result = PR_FALSE; //should always bubble to DefWindowProc
     }
@@ -6081,6 +6135,45 @@ void nsWindow::UserActivity()
     mIdleService->ResetIdleTimeOut();
   }
 }
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
+PRBool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
+{
+  PRUint32 cInputs = LOWORD(wParam);
+  PTOUCHINPUT pInputs = new TOUCHINPUT[cInputs];
+
+  if (mGesture.GetTouchInputInfo((HTOUCHINPUT)lParam, cInputs, pInputs)) {
+    for (PRUint32 i = 0; i < cInputs; i++) {
+      PRUint32 msg;
+      if (pInputs[i].dwFlags & TOUCHEVENTF_MOVE) {
+        msg = NS_MOZTOUCH_MOVE;
+      } else if (pInputs[i].dwFlags & TOUCHEVENTF_DOWN) {
+        msg = NS_MOZTOUCH_DOWN;
+      } else if (pInputs[i].dwFlags & TOUCHEVENTF_UP) {
+        msg = NS_MOZTOUCH_UP;
+      } else {
+        continue;
+      }
+
+      nsPointWin touchPoint;
+      touchPoint.x = TOUCH_COORD_TO_PIXEL(pInputs[i].x);
+      touchPoint.y = TOUCH_COORD_TO_PIXEL(pInputs[i].y);
+      touchPoint.ScreenToClient(mWnd);
+
+      nsMozTouchEvent touchEvent(PR_TRUE, msg, this, pInputs[i].dwID);
+      touchEvent.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_TOUCH;
+      touchEvent.refPoint = touchPoint;
+
+      nsEventStatus status;
+      DispatchEvent(&touchEvent, status);
+    }
+  }
+
+  delete [] pInputs;
+  mGesture.CloseTouchInputHandle((HTOUCHINPUT)lParam);
+  return PR_TRUE;
+}
+#endif
 
 // Gesture event processing. Handles WM_GESTURE events.
 #if !defined(WINCE)
