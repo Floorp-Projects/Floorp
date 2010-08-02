@@ -1,0 +1,19 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Unicode tests - attribute selectors</title>
+  <style>
+    div[dİr] {color: red;}
+    div[dİr="ltr"] {text-indent: 30px;}
+    input[dİsabled] {display: none;}
+    //input[dİsabled="disabled"] {display: inline;}
+  </style>
+</head>
+
+<body>
+  <div dir='ltr'><p lang="hi">स्टार</p></div>
+  <input disabled>
+  <input dİsabled="DİSABLED">
+  <input dİsabled="disabled">
+</body>
+</html>
