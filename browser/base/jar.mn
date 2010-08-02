@@ -57,6 +57,9 @@ browser.jar:
         content/browser/aboutSyncTabs.js              (content/aboutSyncTabs.js)
         content/browser/aboutSyncTabs.css             (content/aboutSyncTabs.css)
 *       content/browser/aboutSyncTabs-bindings.xml    (content/aboutSyncTabs-bindings.xml)
+*       content/browser/syncSetup.xul                 (content/syncSetup.xul)
+        content/browser/syncSetup.js                  (content/syncSetup.js)
+        content/browser/syncUtils.js                  (content/syncUtils.js)
 #endif
 # XXX: We should exclude this one as well (bug 71895)
 *       content/browser/hiddenWindow.xul              (content/hiddenWindow.xul)
