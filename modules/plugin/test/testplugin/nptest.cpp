@@ -939,6 +939,17 @@ NPError
 NPP_SetWindow(NPP instance, NPWindow* window)
 {
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+
+  if (instanceData->scriptableObject->drawMode == DM_DEFAULT &&
+      (instanceData->window.width != window->width ||
+       instanceData->window.height != window->height)) {
+    NPRect r;
+    r.left = r.top = 0;
+    r.right = window->width;
+    r.bottom = window->height;
+    NPN_InvalidateRect(instance, &r);
+  }
+
   void* oldWindow = instanceData->window.window;
   pluginDoSetWindow(instanceData, window);
   if (instanceData->hasWidget && oldWindow != instanceData->window.window) {
