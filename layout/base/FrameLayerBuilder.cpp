@@ -672,7 +672,8 @@ SetVisibleRectForLayer(Layer* aLayer, const nsIntRect& aRect)
     layerVisible.RoundOut();
     nsIntRect visibleRect;
     if (NS_FAILED(nsLayoutUtils::GfxRectToIntRect(layerVisible, &visibleRect))) {
-      NS_ERROR("Visible rect transformed out of bounds");
+      visibleRect = nsIntRect(0, 0, 0, 0);
+      NS_WARNING("Visible rect transformed out of bounds");
     }
     aLayer->SetVisibleRegion(visibleRect);
   } else {
