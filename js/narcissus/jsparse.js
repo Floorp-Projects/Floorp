@@ -1543,9 +1543,10 @@ function Variables(t, x, letBlock) {
             if (t.token.assignOp)
                 throw t.newSyntaxError("Invalid variable initialization");
 
-            // Parse the init as a normal assignment.
-            var id = mkIdentifier(n2.tokenizer, n2.name, true);
+            // Parse the init as a normal assignment with a fake lhs.
+            var id = new Node(n2.tokenizer, IDENTIFIER);
             var n3 = b.ASSIGN$build(t);
+            id.name = id.value = n2.name;
             b.ASSIGN$addOperand(n3, id);
             b.ASSIGN$addOperand(n3, AssignExpression(t, x));
             b.ASSIGN$finish(n3);
