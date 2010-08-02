@@ -59,6 +59,8 @@ browser.jar:
 *       content/browser/aboutSyncTabs-bindings.xml    (content/aboutSyncTabs-bindings.xml)
 *       content/browser/syncSetup.xul                 (content/syncSetup.xul)
         content/browser/syncSetup.js                  (content/syncSetup.js)
+*       content/browser/syncGenericChange.xul         (content/syncGenericChange.xul)
+        content/browser/syncGenericChange.js          (content/syncGenericChange.js)
         content/browser/syncUtils.js                  (content/syncUtils.js)
 #endif
 # XXX: We should exclude this one as well (bug 71895)
