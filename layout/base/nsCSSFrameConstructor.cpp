@@ -7622,6 +7622,11 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
           DoApplyRenderingChangeToTree(child, aViewManager,
                                        aFrameManager, aChange);
         } else {  // regular frame
+          if ((child->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) &&
+              (aChange & nsChangeHint_RepaintFrame)) {
+            FrameLayerBuilder::InvalidateThebesLayerContents(child,
+              child->GetOverflowRectRelativeToSelf());
+          }
           UpdateViewsForTree(child, aViewManager, aFrameManager, aChange);
         }
       }
