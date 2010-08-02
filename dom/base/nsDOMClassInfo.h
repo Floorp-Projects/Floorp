@@ -478,14 +478,14 @@ public:
 
 // Window scriptable helper
 
-class nsWindowSH : public nsEventReceiverSH
+class nsCommonWindowSH : public nsEventReceiverSH
 {
 protected:
-  nsWindowSH(nsDOMClassInfoData* aData) : nsEventReceiverSH(aData)
+  nsCommonWindowSH(nsDOMClassInfoData *aData) : nsEventReceiverSH(aData)
   {
   }
 
-  virtual ~nsWindowSH()
+  virtual ~nsCommonWindowSH()
   {
   }
 
@@ -553,10 +553,41 @@ public:
   static void InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
                                              nsIHTMLDocument *doc);
+};
 
+class nsOuterWindowSH : public nsCommonWindowSH
+{
+protected:
+  nsOuterWindowSH(nsDOMClassInfoData* aData) : nsCommonWindowSH(aData)
+  {
+  }
+
+  virtual ~nsOuterWindowSH()
+  {
+  }
+
+public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsWindowSH(aData);
+    return new nsOuterWindowSH(aData);
+  }
+};
+
+class nsInnerWindowSH : public nsCommonWindowSH
+{
+protected:
+  nsInnerWindowSH(nsDOMClassInfoData* aData) : nsCommonWindowSH(aData)
+  {
+  }
+
+  virtual ~nsInnerWindowSH()
+  {
+  }
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsInnerWindowSH(aData);
   }
 };
 
