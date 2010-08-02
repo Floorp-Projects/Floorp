@@ -5866,14 +5866,13 @@ BEGIN_CASE(JSOP_SETTER)
         goto error;
     }
 
-    /*
-     * Getters and setters are just like watchpoints from an access control
-     * point of view.
-     */
+    /* Legacy security check. This can't fail. See bug 583850. */
     Value rtmp;
     uintN attrs;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &rtmp, &attrs))
+    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &rtmp, &attrs)) {
+        JS_NOT_REACHED("getter/setter access check failed");
         goto error;
+    }
 
     PropertyOp getter, setter;
     if (op == JSOP_GETTER) {
