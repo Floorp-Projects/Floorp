@@ -6286,8 +6286,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
       name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
     // Don't expose chrome only constructors to content windows.
-    if (name_struct->mChromeOnly && aWin->IsChromeWindow()) {
-      NS_ASSERTION(nsContentUtils::IsCallerChrome(), "Uh, bad?!");
+    if (name_struct->mChromeOnly &&
+        !nsContentUtils::IsSystemPrincipal(aWin->GetPrincipal())) {
       return NS_OK;
     }
 
