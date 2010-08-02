@@ -201,7 +201,7 @@ BenchmarkSuite.prototype.NotifyError = function(error) {
 BenchmarkSuite.prototype.RunSingleBenchmark = function(benchmark) {
   var elapsed = 0;
   var start = new Date();
-  for (var n = 0; elapsed < 50; n++) {
+  for (var n = 0; elapsed < 200; n++) {
     benchmark.run();
     elapsed = new Date() - start;
   }
