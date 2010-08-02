@@ -52,6 +52,12 @@ browser.jar:
 *       content/browser/web-panels.xul                (content/web-panels.xul)
 *       content/browser/baseMenuOverlay.xul           (content/baseMenuOverlay.xul)
 *       content/browser/nsContextMenu.js              (content/nsContextMenu.js)
+#ifdef MOZ_SERVICES_SYNC
+*       content/browser/aboutSyncTabs.xul             (content/aboutSyncTabs.xul)
+        content/browser/aboutSyncTabs.js              (content/aboutSyncTabs.js)
+        content/browser/aboutSyncTabs.css             (content/aboutSyncTabs.css)
+*       content/browser/aboutSyncTabs-bindings.xml    (content/aboutSyncTabs-bindings.xml)
+#endif
 # XXX: We should exclude this one as well (bug 71895)
 *       content/browser/hiddenWindow.xul              (content/hiddenWindow.xul)
 #ifdef XP_MACOSX
