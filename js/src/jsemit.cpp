@@ -5968,47 +5968,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_PLUS:
-        /* For TCF_IN_FUNCTION test, see TOK_RB concerning JSOP_NEWARRAY. */
-        if (pn->pn_arity == PN_LIST && pn->pn_count < JS_BIT(16) &&
-            cg->inFunction()) {
-            /* Emit up to the first string literal conventionally. */
-            for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-                if (pn2->pn_type == TOK_STRING)
-                    break;
-                if (!js_EmitTree(cx, cg, pn2))
-                    return JS_FALSE;
-                if (pn2 != pn->pn_head && js_Emit1(cx, cg, JSOP_ADD) < 0)
-                    return JS_FALSE;
-            }
-
-            if (!pn2)
-                break;
-
-            /*
-             * Having seen a string literal, we know statically that the rest
-             * of the additions are string concatenation, so we emit them as a
-             * single concatn. First, do string conversion on the result of the
-             * preceding zero or more additions so that any side effects of
-             * string conversion occur before the next operand begins.
-             */
-            if (pn2 == pn->pn_head) {
-                index = 0;
-            } else {
-                if (!js_Emit1(cx, cg, JSOP_OBJTOSTR))
-                    return JS_FALSE;
-                index = 1;
-            }
-
-            for (; pn2; pn2 = pn2->pn_next, index++) {
-                if (!js_EmitTree(cx, cg, pn2))
-                    return JS_FALSE;
-                if (!pn2->isLiteral() && js_Emit1(cx, cg, JSOP_OBJTOSTR) < 0)
-                    return JS_FALSE;
-            }
-
-            EMIT_UINT16_IMM_OP(JSOP_CONCATN, index);
-            break;
-        }
       case TOK_BITOR:
       case TOK_BITXOR:
       case TOK_BITAND:

@@ -3487,35 +3487,6 @@ BEGIN_CASE(JSOP_ADD)
 }
 END_CASE(JSOP_ADD)
 
-BEGIN_CASE(JSOP_OBJTOSTR)
-{
-    const Value &ref = regs.sp[-1];
-    if (ref.isObject()) {
-        JSString *str = js_ValueToString(cx, ref);
-        if (!str)
-            goto error;
-        regs.sp[-1].setString(str);
-    }
-}
-END_CASE(JSOP_OBJTOSTR)
-
-BEGIN_CASE(JSOP_CONCATN)
-{
-    JSCharBuffer buf(cx);
-    uintN argc = GET_ARGC(regs.pc);
-    for (Value *vp = regs.sp - argc; vp < regs.sp; vp++) {
-        JS_ASSERT(vp->isPrimitive());
-        if (!js_ValueToCharBuffer(cx, *vp, buf))
-            goto error;
-    }
-    JSString *str = js_NewStringFromCharBuffer(cx, buf);
-    if (!str)
-        goto error;
-    regs.sp -= argc - 1;
-    regs.sp[-1].setString(str);
-}
-END_CASE(JSOP_CONCATN)
-
 #define BINARY_OP(OP)                                                         \
     JS_BEGIN_MACRO                                                            \
         double d1, d2;                                                        \
