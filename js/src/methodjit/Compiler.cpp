@@ -311,6 +311,9 @@ mjit::Compiler::finishThisUp()
             JS_ASSERT(jumpMap[offs].isValid());
             script->mics[i].traceHint = fullCode.locationOf(mics[i].traceHint);
             script->mics[i].load = fullCode.locationOf(jumpMap[offs]);
+            script->mics[i].u.hasSlowTraceHint = mics[i].slowTraceHint.isSet();
+            if (mics[i].slowTraceHint.isSet())
+                script->mics[i].slowTraceHint = stubCode.locationOf(mics[i].slowTraceHint.get());
         }
     }
 #endif /* JS_MONOIC */
@@ -2959,7 +2962,7 @@ mjit::Compiler::iterMore()
     /* Test clasp */
     masm.loadPtr(Address(reg, offsetof(JSObject, clasp)), T1);
     Jump notFast = masm.branchPtr(Assembler::NotEqual, T1, ImmPtr(&js_IteratorClass));
-    stubcc.linkExit(notFast, Uses(1));
+    stubcc.linkExitForBranch(notFast);
 
     /* Get private from iter obj. */
     masm.loadFunctionPrivate(reg, T1);
@@ -2984,15 +2987,12 @@ mjit::Compiler::iterMore()
     Jump j = stubcc.masm.branchTest32(Assembler::NonZero, Registers::ReturnReg,
                                       Registers::ReturnReg);
 
-    /* :TODO: use jumpAndTrace */
-    stubcc.jumpInScript(j, target);
-
     PC += JSOP_MOREITER_LENGTH;
     PC += js_CodeSpec[next].length;
 
     stubcc.rejoin(Changes(1));
 
-    jumpAndTrace(jFast, target);
+    jumpAndTrace(jFast, target, &j);
 }
 
 void
@@ -3363,13 +3363,15 @@ mjit::Compiler::jsop_instanceof()
  * after rejoin()s.
  */
 void
-mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target)
+mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 {
 #ifndef JS_TRACER
     jumpInScript(j, target);
 #else
     if (!addTraceHints || target >= PC || JSOp(*target) != JSOP_TRACE) {
         jumpInScript(j, target);
+        if (slow)
+            stubcc.jumpInScript(*slow, target);
         return;
     }
 
@@ -3379,9 +3381,13 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target)
     mic.entry = masm.label();
     mic.jumpTarget = target;
     mic.traceHint = j;
+    if (slow)
+        mic.slowTraceHint = *slow;
 # endif
 
     stubcc.linkExitDirect(j, stubcc.masm.label());
+    if (slow)
+        slow->linkTo(stubcc.masm.label(), &stubcc.masm);
 # if JS_MONOIC
     stubcc.masm.move(Imm32(mics.length()), Registers::ArgReg1);
 # endif
