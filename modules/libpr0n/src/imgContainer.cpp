@@ -144,6 +144,7 @@ imgContainer::imgContainer() :
   mLoopCount(-1),
   mObserver(nsnull),
   mLockCount(0),
+  mStatusTracker(this),
   mDecoder(nsnull),
   mWorker(nsnull),
   mBytesDecoded(0),
@@ -336,6 +337,9 @@ NS_IMETHODIMP imgContainer::ExtractFrame(PRUint32 aWhichFrame,
     return rv;
 
   img->mFrames.AppendElement(subframe.forget());
+
+  img->mStatusTracker.RecordLoaded();
+  img->mStatusTracker.RecordDecoded();
 
   *_retval = img.forget().get();
 
@@ -2325,8 +2329,8 @@ imgContainer::RequestDecode()
     return NS_OK;
 
   // If we get this far, dispatch the worker. We do this instead of starting
-  // any immediate decoding so that actions like tabbing-over to a tab with
-  // large undecoded images don't incur an annoying lag.
+  // any immediate decoding to guarantee that all our decode notifications are
+  // dispatched asynchronously, and to ensure we stay responsive.
   return mWorker->Dispatch();
 }
 

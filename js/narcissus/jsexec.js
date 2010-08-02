@@ -71,10 +71,27 @@ var global = {
         x2.scope = x.scope;
         ExecutionContext.current = x2;
         try {
-            execute(parse(s), x2);
+            execute(parse(new VanillaBuilder, s), x2);
         } catch (e if e == THROW) {
             x.result = x2.result;
             throw e;
+        } catch (e if e instanceof SyntaxError) {
+            x.result = e;
+            throw THROW;
+        } catch (e if e instanceof InternalError) {
+            /*
+             * If we get too much recursion during parsing we need to re-throw
+             * it as a narcissus THROW.
+             *
+             * See bug 152646.
+             */
+            var re = /InternalError: (script stack space quota is exhausted|too much recursion)/;
+            if (re.test(e.toString())) {
+                x.result = e;
+                throw THROW;
+            } else {
+                throw e;
+            }
         } finally {
             ExecutionContext.current = x;
         }
@@ -106,8 +123,9 @@ var global = {
         var t = new Tokenizer("anonymous(" + p + ") {" + b + "}");
 
         // NB: Use the STATEMENT_FORM constant since we don't want to push this
-        // function onto the null compilation context.
-        var f = FunctionDefinition(t, null, false, STATEMENT_FORM);
+        // function onto the fake compilation context.
+        var x = { builder: new VanillaBuilder };
+        var f = FunctionDefinition(t, x, false, STATEMENT_FORM);
         var s = {object: global, parent: null};
         return newFunction(f,{scope:s});
     },
@@ -482,7 +500,7 @@ function execute(n, x) {
 
       case ASSIGN:
         r = execute(n[0], x);
-        t = n[0].assignOp;
+        t = n.assignOp;
         if (t)
             u = getValue(r);
         v = getValue(execute(n[1], x));
@@ -1007,7 +1025,7 @@ function evaluate(s, f, l) {
     var x2 = new ExecutionContext(GLOBAL_CODE);
     ExecutionContext.current = x2;
     try {
-        execute(parse(s, f, l), x2);
+        execute(parse(new VanillaBuilder, s, f, l), x2);
     } catch (e if e == THROW) {
         if (x) {
             x.result = x2.result;

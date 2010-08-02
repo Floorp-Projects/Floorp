@@ -1356,18 +1356,6 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_TRACE)
 
-          BEGIN_CASE(JSOP_CONCATN)
-          {
-            uint32 argc = GET_ARGC(PC);
-            prepareStubCall(Uses(argc));
-            masm.move(Imm32(argc), Registers::ArgReg1);
-            stubCall(stubs::ConcatN);
-            frame.popn(argc);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_STRING, Registers::ReturnReg);
-          }
-          END_CASE(JSOP_CONCATN)
-
           BEGIN_CASE(JSOP_INITMETHOD)
           {
             JSAtom *atom = script->getAtom(fullAtomIndex(PC));
@@ -1387,10 +1375,6 @@ mjit::Compiler::generateMethod()
             jsop_unbrand();
             frame.pop();
           END_CASE(JSOP_UNBRANDTHIS)
-
-          BEGIN_CASE(JSOP_OBJTOSTR)
-            jsop_objtostr();
-          END_CASE(JSOP_OBJTOSTR)
 
           BEGIN_CASE(JSOP_GETGLOBAL)
           BEGIN_CASE(JSOP_CALLGLOBAL)

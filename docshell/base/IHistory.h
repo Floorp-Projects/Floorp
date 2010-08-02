@@ -52,7 +52,7 @@ namespace mozilla {
     }
 
 #define IHISTORY_IID \
-  {0x6f736049, 0x6370, 0x4376, {0xb7, 0x17, 0xfa, 0xfc, 0x0b, 0x4f, 0xd0, 0xf1}}
+  {0x6f733924, 0x6321, 0x4384, {0x01, 0xee, 0x8e, 0x7d, 0xfb, 0xde, 0xe7, 0xa8}}
 
 class IHistory : public nsISupports
 {
@@ -71,7 +71,7 @@ public:
      *       UnregisterVisitedCallback.
      *
      * @pre aURI must not be null.
-     * @pre aLink must not be null.
+     * @pre aLink may be null only in the MOZ_IPC parent process.
      *
      * @param aURI
      *        The URI to check.

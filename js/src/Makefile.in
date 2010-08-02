@@ -381,6 +381,19 @@ INSTALLED_HEADERS += \
 		$(NULL)
 endif
 
+# PerfMeasurement is available regardless of low-level support for it;
+# it just doesn't necessarily do anything useful.  There is one
+# implementation source file per supported operating system, plus a stub
+# for unsupported OSes, plus the Javascript wrapper.
+VPATH += $(srcdir)/perf
+INSTALLED_HEADERS += jsperf.h
+CPPSRCS += jsperf.cpp
+ifdef HAVE_LINUX_PERF_EVENT_H
+CPPSRCS += pm_linux.cpp
+else
+CPPSRCS += pm_stub.cpp
+endif
+
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 INSTALLED_HEADERS += jscpucfg.h
 endif

@@ -1080,11 +1080,19 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     if (!scope)
         return JS_FALSE;
 
-    uint32 capacity = obj->getDenseArrayCapacity();
+    uint32 capacity;
 
-    /* For a brief moment the object has NULL dslots until we slowify it during construction. */
-    if (obj->dslots)
+    if (obj->dslots) {
+        capacity = obj->getDenseArrayCapacity();
         obj->dslots[-1].setPrivateUint32(JS_INITIAL_NSLOTS + capacity);
+    } else {
+        /*
+         * Array.prototype is constructed as a dense array, but is immediately slowified before
+         * we have time to set capacity.
+         */
+        capacity = 0;
+    }
+
     scope->freeslot = obj->numSlots();
 
     /* Begin with the length property to share more of the property tree. */
@@ -2979,6 +2987,7 @@ js_Array(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
             return JS_FALSE;
         vector = NULL;
     }
+
     return InitArrayObject(cx, obj, length, vector);
 }
 
@@ -3024,7 +3033,7 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewPreallocatedArray, CONTEXT, OBJECT, I
 JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_SlowArrayClass, js_Array, 1,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
                                    NULL, array_methods, NULL, array_static_methods);
     if (!proto)
         return NULL;

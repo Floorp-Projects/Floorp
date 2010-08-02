@@ -1,1 +1,1 @@
-skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") != 507947.html about:blank
+skip-if(!cocoaWidget) != 507947.html about:blank

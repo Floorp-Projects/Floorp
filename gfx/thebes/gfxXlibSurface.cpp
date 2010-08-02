@@ -183,40 +183,31 @@ gfxXlibSurface::CreateSimilarSurface(gfxContentType aContent,
                                      const gfxIntSize& aSize)
 {
     if (aContent == CONTENT_COLOR) {
-        // If the destination surface does not have an xrender format, then we
-        // won't be able to copy directly from another Xlib surface with a
-        // different format.  Either an xlib surface with the same visual (for
-        // XCopyArea) or an image surface might be sensible options there, but
-        // we just leave the decision to cairo_surface_create_similar.
-        XRenderPictFormat* format =
-            cairo_xlib_surface_get_xrender_format(CairoSurface());
-        if (format) {
-            // cairo_surface_create_similar will use a matching visual if it
-            // can.  However, systems with 16-bit or indexed default visuals
-            // may benefit from rendering with 24-bit formats.  This same code
-            // can also be used for opaque surfaces when not forcing 24-bit,
-            // so as to skip the black initialization that
-            // cairo_surface_create_simiar does.
-            static PRBool force24bpp = GetForce24bppPref();
-
-            if (force24bpp || (format->type == PictTypeDirect
-                               && format->direct.alphaMask != 0)) {
-                format = XRenderFindStandardFormat(mDisplay,
-                                                   PictStandardRGB24);
-            }
-
+        // cairo_surface_create_similar will use a matching visual if it can.
+        // However, systems with 16-bit or indexed default visuals may benefit
+        // from rendering with 24-bit formats.
+        static PRBool force24bpp = GetForce24bppPref();
+        if (force24bpp
+            && cairo_xlib_surface_get_depth(CairoSurface()) != 24) {
+            XRenderPictFormat* format =
+                XRenderFindStandardFormat(mDisplay, PictStandardRGB24);
             if (format) {
+                // Cairo only performs simple self-copies as desired if it
+                // knows that this is a Pixmap surface.  It only knows that
+                // surfaces are pixmap surfaces if it creates the Pixmap
+                // itself, so we use cairo_surface_create_similar with a
+                // temporary reference surface to indicate the format.
                 Screen* screen = cairo_xlib_surface_get_screen(CairoSurface());
-                nsRefPtr<gfxASurface> result =
-                    gfxXlibSurface::Create(screen, format, aSize, mDrawable);
-            
-                if (result)
-                    return result.forget();
+                nsRefPtr<gfxXlibSurface> depth24reference =
+                    gfxXlibSurface::Create(screen, format,
+                                           gfxIntSize(1, 1), mDrawable);
+                if (depth24reference)
+                    return depth24reference->
+                        gfxASurface::CreateSimilarSurface(aContent, aSize);
             }
         }
     }
 
-    // Fall back to cairo_surface_create_similar().
     return gfxASurface::CreateSimilarSurface(aContent, aSize);
 }
 

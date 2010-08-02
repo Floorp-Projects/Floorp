@@ -3086,7 +3086,7 @@ var XPIDatabase = {
     let stmt = this.getStatement("_getTargetPlatforms");
 
     stmt.params.internal_id = aAddon._internal_id;
-    return [copyRowProperties(row, ["os", "abi"]) for each (row in resultRows(stmt))];
+    return [copyProperties(row, ["os", "abi"]) for each (row in resultRows(stmt))];
   },
 
   /**

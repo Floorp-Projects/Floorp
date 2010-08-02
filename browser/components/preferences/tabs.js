@@ -60,7 +60,26 @@ var gTabsPane = {
    * browser.tabs.warnOnOpen
    * - true if the user should be warned if he attempts to open a lot of tabs at
    *   once (e.g. a large folder of bookmarks), false otherwise
+   * browser.taskbar.previews.enable
+   * - true if tabs are to be shown in the Windows 7 taskbar
    */
+
+#ifdef XP_WIN
+  /**
+   * Initialize any platform-specific UI.
+   */
+  init: function () {
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+    try {
+      let sysInfo = Cc["@mozilla.org/system-info;1"].
+                    getService(Ci.nsIPropertyBag2);
+      let ver = parseFloat(sysInfo.getProperty("version"));
+      let showTabsInTaskbar = document.getElementById("showTabsInTaskbar");
+      showTabsInTaskbar.hidden = ver < 6.1;
+    } catch (ex) {}
+  },
+#endif
 
   /**
    * Determines where a link which opens a new window will open.

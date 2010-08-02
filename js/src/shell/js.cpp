@@ -75,6 +75,7 @@
 #include "jsscript.h"
 #include "jstracer.h"
 #include "jsxml.h"
+#include "jsperf.h"
 
 #include "prmjtime.h"
 
@@ -1037,6 +1038,30 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
     }
 
     *vp = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
+static JSBool
+PutStr(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv;
+    JSString *str;
+    char *bytes;
+
+    if (argc != 0) {
+        argv = JS_ARGV(cx, vp);
+        str = JS_ValueToString(cx, argv[0]);
+        if (!str)
+            return JS_FALSE;
+        bytes = JS_EncodeString(cx, str);
+        if (!bytes)
+            return JS_FALSE;
+        fputs(bytes, gOutFile);
+        JS_free(cx, bytes);
+        fflush(gOutFile);
+    }
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
 
@@ -3894,6 +3919,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("load",           Load,           1,0,0),
     JS_FN("readline",       ReadLine,       0,0),
     JS_FN("print",          Print,          0,0),
+    JS_FN("putstr",         PutStr,         0,0),
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("assertEq",       AssertEq,       2,0),
@@ -3986,6 +4012,7 @@ static const char *const shell_help_messages[] = {
 "load(['foo.js' ...])     Load files named by string arguments",
 "readline()               Read a single line from stdin",
 "print([exp ...])         Evaluate and print expressions",
+"putstr([exp])            Evaluate and print expression without newline",
 "help([name ...])         Display usage and help messages",
 "quit()                   Quit the shell",
 "assertEq(actual, expected[, msg])\n"
@@ -4907,6 +4934,8 @@ NewGlobalObject(JSContext *cx, JSAutoCrossCompartmentCall &call)
     if (!JS_InitCTypesClass(cx, glob))
         return NULL;
 #endif
+    if (!JS::RegisterPerfMeasurement(cx, glob))
+        return NULL;
     if (!JS_DefineFunctions(cx, glob, shell_functions))
         return NULL;
 

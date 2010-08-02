@@ -54,25 +54,15 @@ DEFINES += -DAPP_VERSION=$(APP_VERSION)
 PRE_RELEASE_SUFFIX := $(shell $(PYTHON) $(topsrcdir)/config/printprereleasesuffix.py $(APP_VERSION))
 DEFINES += -DPRE_RELEASE_SUFFIX="$(PRE_RELEASE_SUFFIX)"
 
-# All script and locale files used by the Unicode version of NSIS need to be
-# converted from UTF-8 to UTF-16LE
-INSTALLER_FILES_CONV = \
+INSTALLER_FILES = \
+	app.tag \
 	nsis/installer.nsi \
 	nsis/uninstaller.nsi \
 	nsis/shared.nsh \
 	$(NULL)
 
-INSTALLER_FILES = \
-	app.tag \
-	$(NULL)
-
-# All script and locale files used by the Unicode version of NSIS need to be
-# converted from UTF-8 to UTF-16LE
-BRANDING_FILES_CONV = \
-	branding.nsi \
-	$(NULL)
-
 BRANDING_FILES = \
+	branding.nsi \
 	wizHeader.bmp \
 	wizHeaderRTL.bmp \
 	wizWatermark.bmp \
@@ -95,47 +85,23 @@ installer::
 # included for mar file generation.
 uninstaller::
 	$(RM) -rf $(CONFIG_DIR) && mkdir $(CONFIG_DIR)
-	for i in $(INSTALLER_FILES_CONV); do \
-	  iconv -f UTF-8 -t UTF-16LE $(srcdir)/$$i | \
-	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
-	    $(CONFIG_DIR)/`basename $$i`; \
-	done
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)
-	for i in $(BRANDING_FILES_CONV); do \
-	  iconv -f UTF-8 -t UTF-16LE $(DIST)/branding/$$i | \
-	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
-	    $(CONFIG_DIR)/$$i; \
-	done
 	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) $(CONFIG_DIR)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) \
-	  $(srcdir)/nsis/defines.nsi.in | iconv -f UTF-8 -t UTF-16LE | \
-	  cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
-	  $(CONFIG_DIR)/defines.nsi
-	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.pl \
-	  $(topsrcdir) $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer $(AB_CD) \
-	  $(CONFIG_DIR)
+	  $(srcdir)/nsis/defines.nsi.in > $(CONFIG_DIR)/defines.nsi
+	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+	  --preprocess-locale $(topsrcdir) \
+	  $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer $(AB_CD) $(CONFIG_DIR)
 
 $(CONFIG_DIR)/setup.exe::
 	$(RM) -rf $(CONFIG_DIR) && mkdir $(CONFIG_DIR)
-	for i in $(INSTALLER_FILES_CONV); do \
-	  iconv -f UTF-8 -t UTF-16LE $(srcdir)/$$i | \
-	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
-	    $(CONFIG_DIR)/`basename $$i`; \
-	done
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)
-	for i in $(BRANDING_FILES_CONV); do \
-	  iconv -f UTF-8 -t UTF-16LE $(DIST)/branding/$$i | \
-	    cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
-	    $(CONFIG_DIR)/$$i; \
-	done
 	$(INSTALL) $(addprefix $(DIST)/branding/,$(BRANDING_FILES)) $(CONFIG_DIR)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) \
-	  $(srcdir)/nsis/defines.nsi.in | iconv -f UTF-8 -t UTF-16LE | \
-	  cat $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/utf16-le-bom.bin - > \
-	  $(CONFIG_DIR)/defines.nsi
-	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.pl \
-	  $(topsrcdir) $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer $(AB_CD) \
-	  $(CONFIG_DIR)
+	  $(srcdir)/nsis/defines.nsi.in > $(CONFIG_DIR)/defines.nsi
+	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+	  --preprocess-locale $(topsrcdir) \
+	  $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer $(AB_CD) $(CONFIG_DIR)
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk

@@ -4937,17 +4937,23 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         }
     } else {
         exit->exitType = LOOP_EXIT;
-        exit->target = tree;
         debug_only_printf(LC_TMTreeVis, "TREEVIS CHANGEEXIT EXIT=%p TYPE=%s\n", (void*)exit,
                           getExitName(LOOP_EXIT));
 
         JS_ASSERT((fragment == fragment->root) == !!loopLabel);
         if (loopLabel) {
             lir->insBranch(LIR_j, NULL, loopLabel);
-            fragment->lastIns = lir->ins1(LIR_livep, lirbuf->state);
-        } else {
-            fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
+            lir->ins1(LIR_livep, lirbuf->state);
         }
+
+        exit->target = tree;
+        /*
+         * This guard is dead code.  However, it must be present because it
+         * can keep alive values on the stack.  Without it, StackFilter can
+         * remove some stack stores that it shouldn't.  See bug 582766 comment
+         * 19.
+         */
+        fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
     }
 
     CHECK_STATUS_A(compile());
@@ -15841,50 +15847,6 @@ TraceRecorder::record_JSOP_HOLE()
 AbortableRecordingStatus
 TraceRecorder::record_JSOP_TRACE()
 {
-    return ARECORD_CONTINUE;
-}
-
-static const uint32 sMaxConcatNSize = 32;
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_OBJTOSTR()
-{
-    Value &v = stackval(-1);
-    JS_ASSERT_IF(cx->fp->imacpc, v.isPrimitive() &&
-                                 *cx->fp->imacpc == JSOP_OBJTOSTR);
-    if (v.isPrimitive())
-        return ARECORD_CONTINUE;
-    CHECK_STATUS_A(guardNativeConversion(v));
-    return InjectStatus(callImacro(objtostr_imacros.toString));
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_CONCATN()
-{
-    JSFrameRegs regs = *cx->regs;
-    uint32 argc = GET_ARGC(regs.pc);
-    Value *argBase = regs.sp - argc;
-
-    /* Prevent code/alloca explosion. */
-    if (argc > sMaxConcatNSize)
-        return ARECORD_STOP;
-
-    /* Build an array of the stringified primitives. */
-    int32_t bufSize = argc * sizeof(JSString *);
-    LIns *buf_ins = lir->insAlloc(bufSize);
-    int32_t d = 0;
-    for (Value *vp = argBase; vp != regs.sp; ++vp, d += sizeof(void *)) {
-        JS_ASSERT(vp->isPrimitive());
-        lir->insStore(stringify(*vp), buf_ins, d, ACCSET_OTHER);
-    }
-
-    /* Perform concatenation using a builtin. */
-    LIns *args[] = { lir->insImmI(argc), buf_ins, cx_ins };
-    LIns *result_ins = lir->insCall(&js_ConcatN_ci, args);
-    guard(false, lir->insEqP_0(result_ins), OOM_EXIT);
-
-    /* Update tracker with result. */
-    set(argBase, result_ins);
     return ARECORD_CONTINUE;
 }
 
