@@ -251,14 +251,9 @@ class SetPropCompiler : public PICStubCompiler
         }
 
         uint32 shapeOffs = pic.shapeGuard + SETPROP_INLINE_SHAPE_OFFSET;
-        repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(shapeOffs),
-                          obj->shape());
-        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(inlineTypeOffset()),
-                          offset + 4);
-        if (!pic.u.vr.isConstant || !Valueify(pic.u.vr.u.v).isUndefined()) {
-            repatcher.repatch(pic.storeBack.dataLabel32AtOffset(inlineDataOffset()),
-                              offset);
-        }
+        repatcher.repatch(pic.fastPathStart.dataLabel32AtOffset(shapeOffs), obj->shape());
+        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(inlineTypeOffset()), offset + 4);
+        repatcher.repatch(pic.storeBack.dataLabel32AtOffset(inlineDataOffset()), offset);
 
         pic.inlinePathPatched = true;
 

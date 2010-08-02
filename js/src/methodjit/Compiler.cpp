@@ -2499,7 +2499,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom)
     Address slot(objReg, 1 << 24);
 
     if (vr.isConstant) {
-        dbgInlineStoreType = masm.storeValue(Valueify(vr.u.v), slot);
+        dbgInlineStoreType = masm.storeValueForIC(Valueify(vr.u.v), slot);
         DBGLABEL_ASSIGN(dbgInlineStoreData);
     } else {
         if (vr.u.s.isTypeKnown) {
