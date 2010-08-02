@@ -5653,11 +5653,12 @@ CData::ReadString(JSContext* cx, uintN argc, jsval *vp)
       return JS_FALSE;
 
     jschar* dst =
-      static_cast<jschar*>(JS_malloc(cx, dstlen * sizeof(jschar)));
+      static_cast<jschar*>(JS_malloc(cx, (dstlen + 1) * sizeof(jschar)));
     if (!dst)
       return JS_FALSE;
 
     ASSERT_OK(js_InflateUTF8StringToBuffer(cx, bytes, length, dst, &dstlen));
+    dst[dstlen] = 0;
 
     result = JS_NewUCString(cx, dst, dstlen);
     break;
