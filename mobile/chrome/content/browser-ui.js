@@ -1515,7 +1515,7 @@ var FindHelperUI = {
 
     // Zoom to a specified Rect
     if (aElementRect && bv.allowZoom && Services.prefs.getBoolPref("findhelper.autozoom")) {
-      let zoomLevel = Browser._getZoomLevelForRect(bv.browserToViewportRect(aElementRect.clone()));
+      let zoomLevel = Browser._getZoomLevelForRect(aElementRect);
       zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
 
       zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
@@ -1737,7 +1737,7 @@ var FormHelperUI = {
     // Zoom to a specified Rect
     if (aElementRect && bv.allowZoom && Services.prefs.getBoolPref("formhelper.autozoom")) {
       // Zoom to an element by keeping the caret into view
-      let zoomLevel = Browser._getZoomLevelForRect(bv.browserToViewportRect(aElementRect.clone()));
+      let zoomLevel = Browser._getZoomLevelForRect(aElementRect);
       zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);
 
       zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
