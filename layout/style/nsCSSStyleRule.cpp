@@ -1336,6 +1336,7 @@ protected:
   CSSImportantRule*       mImportantRule; // initialized by RuleMatched
   DOMCSSStyleRuleImpl*    mDOMRule;
   PRUint32                mLineNumber;
+  PRPackedBool            mWasMatched;
 };
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(nsCSSSelectorList* aSelector,
@@ -1345,7 +1346,8 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(nsCSSSelectorList* aSelector,
     mDeclaration(aDeclaration),
     mImportantRule(nsnull),
     mDOMRule(nsnull),
-    mLineNumber(0)
+    mLineNumber(0),
+    mWasMatched(PR_FALSE)
 {
 }
 
@@ -1356,7 +1358,8 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
     mDeclaration(new css::Declaration(*aCopy.mDeclaration)),
     mImportantRule(nsnull),
     mDOMRule(nsnull),
-    mLineNumber(aCopy.mLineNumber)
+    mLineNumber(aCopy.mLineNumber),
+    mWasMatched(PR_FALSE)
 {
   // rest is constructed lazily on existing data
 }
@@ -1369,7 +1372,8 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
     mDeclaration(aDeclaration),
     mImportantRule(nsnull),
     mDOMRule(aCopy.mDOMRule),
-    mLineNumber(aCopy.mLineNumber)
+    mLineNumber(aCopy.mLineNumber),
+    mWasMatched(PR_FALSE)
 {
   // The DOM rule is replacing |aCopy| with |this|, so transfer
   // the reverse pointer as well (and transfer ownership).
@@ -1438,9 +1442,10 @@ nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
 /* virtual */ void
 CSSStyleRuleImpl::RuleMatched()
 {
-  if (mDeclaration->IsMutable()) {
+  if (!mWasMatched) {
     NS_ABORT_IF_FALSE(!mImportantRule, "should not have important rule yet");
 
+    mWasMatched = PR_TRUE;
     mDeclaration->SetImmutable();
     if (mDeclaration->HasImportantData()) {
       NS_ADDREF(mImportantRule = new CSSImportantRule(mDeclaration));
@@ -1532,7 +1537,7 @@ CSSStyleRuleImpl::DeclarationChanged(css::Declaration* aDecl,
 /* virtual */ void
 CSSStyleRuleImpl::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  NS_ABORT_IF_FALSE(!mDeclaration->IsMutable(),
+  NS_ABORT_IF_FALSE(mWasMatched,
                     "somebody forgot to call nsICSSStyleRule::RuleMatched");
   mDeclaration->MapNormalRuleInfoInto(aRuleData);
 }
