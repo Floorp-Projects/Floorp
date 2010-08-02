@@ -411,7 +411,25 @@ nsResProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *baseURI)
         return NS_OK;
     }
 
-    return mSubstitutions.Put(root, baseURI) ? NS_OK : NS_ERROR_UNEXPECTED;
+    // If baseURI isn't a resource URI, we can set the substitution immediately.
+    nsCAutoString scheme;
+    nsresult rv = baseURI->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!scheme.Equals(NS_LITERAL_CSTRING("resource"))) {
+        return mSubstitutions.Put(root, baseURI) ? NS_OK : NS_ERROR_UNEXPECTED;
+    }
+
+    // baseURI is a resource URI, let's resolve it first.
+    nsCAutoString newBase;
+    rv = ResolveURI(baseURI, newBase);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> newBaseURI;
+    rv = mIOService->NewURI(newBase, nsnull, nsnull,
+                            getter_AddRefs(newBaseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return mSubstitutions.Put(root, newBaseURI) ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
