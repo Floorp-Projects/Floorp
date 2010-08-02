@@ -515,6 +515,13 @@ var gViewController = {
       },
       doCommand: function(aAddon) {
         aAddon.userDisabled = false;
+      },
+      getTooltip: function(aAddon) {
+        if (!aAddon)
+          return "";
+        if (aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE)
+          return gStrings.ext.GetStringFromName("enableAddonRestartRequiredTooltip");
+        return gStrings.ext.GetStringFromName("enableAddonTooltip");
       }
     },
 
@@ -526,6 +533,13 @@ var gViewController = {
       },
       doCommand: function(aAddon) {
         aAddon.userDisabled = true;
+      },
+      getTooltip: function(aAddon) {
+        if (!aAddon)
+          return "";
+        if (aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_DISABLE)
+          return gStrings.ext.GetStringFromName("disableAddonRestartRequiredTooltip");
+        return gStrings.ext.GetStringFromName("disableAddonTooltip");
       }
     },
 
@@ -544,6 +558,13 @@ var gViewController = {
         gViewController.loadView(gViewController.previousViewId, function() {
           gViewController.currentViewObj.getListItemForID(aAddon.id).uninstall();
         });
+      },
+      getTooltip: function(aAddon) {
+        if (!aAddon)
+          return "";
+        if (aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL)
+          return gStrings.ext.GetStringFromName("uninstallAddonRestartRequiredTooltip");
+        return gStrings.ext.GetStringFromName("uninstallAddonTooltip");
       }
     },
 
@@ -576,8 +597,16 @@ var gViewController = {
       return;
     var addon = this.currentViewObj.getSelectedAddon();
     for (let commandId in this.commands) {
-      let cmd = document.getElementById(commandId);
-      cmd.setAttribute("disabled", !this.commands[commandId].isEnabled(addon));
+      let cmd = this.commands[commandId];
+      let cmdElt = document.getElementById(commandId);
+      cmdElt.setAttribute("disabled", !cmd.isEnabled(addon));
+      if ("getTooltip" in cmd) {
+        let tooltip = cmd.getTooltip(addon);        
+        if (tooltip)
+          cmdElt.setAttribute("tooltiptext", tooltip);
+        else
+          cmdElt.removeAttribute("tooltiptext");
+      }
     }
   },
 
@@ -1412,7 +1441,7 @@ var gDetailView = {
     var notificationMsg = null;
     if (isPending(this._addon, "enable")) {
       showAsActive = true;
-      notificationMsg = "restartToEnable";
+      notificationMsg = "restartToEnable2";
     } else if (isPending(this._addon, "disable")) {
       showAsActive = false;
       notificationMsg = "restartToDisable";

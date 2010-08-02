@@ -76,6 +76,7 @@ class nsMenuBarFrame;
 class nsMenuParent;
 class nsIDOMKeyEvent;
 class nsIDocShellTreeItem;
+class nsIView;
 
 // when a menu command is executed, the closemenu attribute may be used
 // to define how the menu should be closed up
@@ -321,7 +322,7 @@ public:
   NS_IMETHOD ShouldRollupOnMouseActivate(PRBool *aShould);
 
   virtual PRUint32 GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain);
-  virtual void AdjustPopupsOnWindowChange(void);
+  virtual void AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow);
 
   static nsXULPopupManager* sInstance;
 
@@ -468,6 +469,11 @@ public:
                  nsIContent* aLastPopup = nsnull);
 
   /**
+   * Hide the popup associated the view aView
+   */
+  void HidePopup(nsIView* aView);
+
+  /**
    * Hide a popup after a short delay. This is used when rolling over menu items.
    * This timer is stored in mCloseTimer. The timer may be cancelled and the popup
    * closed by calling KillMenuTimer.
@@ -518,6 +524,18 @@ public:
    * focused, or if it is a submenu of another menu that isn't open.
    */
   PRBool MayShowPopup(nsMenuPopupFrame* aFrame);
+
+  /**
+   * Indicate that the popup associated with aView has been moved to the
+   * specified screen coordiates.
+   */
+  void PopupMoved(nsIView* aView, nsIntPoint aPoint);
+
+  /**
+   * Indicate that the popup associated with aView has been resized to the
+   * specified screen width and height.
+   */
+  void PopupResized(nsIView* aView, nsIntSize ASize);
 
   /**
    * Called when a popup frame is destroyed. In this case, just remove the

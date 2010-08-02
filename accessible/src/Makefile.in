@@ -75,4 +75,4 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 libs::
-	$(INSTALL) $(PLATFORM_DIR)/$(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX) .
+	$(INSTALL) $(PLATFORM_DIR)/$(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX) $(wildcard $(PLATFORM_DIR)/$(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX).fake) .

@@ -57,7 +57,6 @@ void JS_FASTCALL Interrupt(VMFrame &f, jsbytecode *pc);
 void JS_FASTCALL InitElem(VMFrame &f, uint32 last);
 void JS_FASTCALL InitProp(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL InitMethod(VMFrame &f, JSAtom *atom);
-JSString * JS_FASTCALL ConcatN(VMFrame &f, uint32 argc);
 
 void * JS_FASTCALL Call(VMFrame &f, uint32 argc);
 void * JS_FASTCALL New(VMFrame &f, uint32 argc);
@@ -151,7 +150,6 @@ void JS_FASTCALL Div(VMFrame &f);
 void JS_FASTCALL Mod(VMFrame &f);
 void JS_FASTCALL Neg(VMFrame &f);
 void JS_FASTCALL Pos(VMFrame &f);
-void JS_FASTCALL ObjToStr(VMFrame &f);
 void JS_FASTCALL Not(VMFrame &f);
 JSBool JS_FASTCALL StrictEq(VMFrame &f);
 JSBool JS_FASTCALL StrictNe(VMFrame &f);

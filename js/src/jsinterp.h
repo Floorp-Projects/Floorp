@@ -168,6 +168,8 @@ struct JSStackFrame
     void            *hookData;      /* debugger call hook data */
     JSVersion       callerVersion;  /* dynamic version of calling script */
 
+    void            *padding;
+
     void putActivationObjects(JSContext *cx) {
         /*
          * The order of calls here is important as js_PutCallObject needs to

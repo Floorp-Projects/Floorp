@@ -142,7 +142,11 @@ obj_getProto(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     /* Let CheckAccess get the slot's value, based on the access mode. */
     uintN attrs;
     id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-    return CheckAccess(cx, obj, id, JSACC_PROTO, vp, &attrs);
+
+    /* Legacy security check. This can't fail. See bug 583850. */
+    JSBool ok = CheckAccess(cx, obj, id, JSACC_PROTO, vp, &attrs);
+    JS_ASSERT(ok);
+    return ok;
 }
 
 static JSBool
@@ -163,10 +167,13 @@ obj_setProto(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             return JS_FALSE;
     }
 
+    /* Legacy security check. This can't fail. See bug 583850. */
     uintN attrs;
     id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-    if (!CheckAccess(cx, obj, id, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs))
+    if (!CheckAccess(cx, obj, id, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs)) {
+        JS_NOT_REACHED("setProto access check failed");
         return JS_FALSE;
+    }
 
     return SetProto(cx, obj, pobj, JS_TRUE);
 }
@@ -911,8 +918,8 @@ js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
     return JS_TRUE;
 }
 
-JSObject *
-js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller)
+static JSObject *
+CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller)
 {
     JSObject *inner;
 
@@ -1110,7 +1117,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
 #endif
 
     /* Ensure we compile this eval with the right object in the scope chain. */
-    JSObject *result = js_CheckScopeChainValidity(cx, scopeobj, js_eval_str);
+    JSObject *result = CheckScopeChainValidity(cx, scopeobj, js_eval_str);
     JS_ASSERT_IF(result, result == scopeobj);
     if (!result)
         return JS_FALSE;
@@ -1298,30 +1305,36 @@ obj_watch(JSContext *cx, uintN argc, Value *vp)
 {
     if (argc <= 1) {
         js_ReportMissingArg(cx, *vp, 1);
-        return JS_FALSE;
+        return false;
     }
 
     JSObject *callable = js_ValueToCallableObject(cx, &vp[3], 0);
     if (!callable)
-        return JS_FALSE;
+        return false;
 
     /* Compute the unique int/atom symbol id needed by js_LookupProperty. */
     jsid propid;
     if (!ValueToId(cx, vp[2], &propid))
-        return JS_FALSE;
+        return false;
 
     JSObject *obj = ComputeThisFromVp(cx, vp);
+    if (!obj)
+        return false;
+
+    /* Legacy security check. This can't fail. See bug 583850. */
     Value tmp;
     uintN attrs;
-    if (!obj || !CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs))
-        return JS_FALSE;
+    if (!CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs)) {
+        JS_NOT_REACHED("watchpoint access check failed");
+        return false;
+    }
 
     vp->setUndefined();
 
     if (attrs & JSPROP_READONLY)
-        return JS_TRUE;
+        return true;
     if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
-        return JS_FALSE;
+        return false;
     return JS_SetWatchPoint(cx, obj, propid, obj_watch_handler, callable);
 }
 
@@ -1530,14 +1543,14 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !CheckRedeclaration(cx, obj, id, JSPROP_GETTER, NULL, NULL))
         return JS_FALSE;
-    /*
-     * Getters and setters are just like watchpoints from an access
-     * control point of view.
-     */
+
+    /* Legacy security check. This can't fail. See bug 583850. */
     Value junk;
     uintN attrs;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
+    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs)) {
+        JS_NOT_REACHED("defineGetter access check failed");
         return JS_FALSE;
+    }
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, PropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
@@ -1560,14 +1573,14 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !CheckRedeclaration(cx, obj, id, JSPROP_SETTER, NULL, NULL))
         return JS_FALSE;
-    /*
-     * Getters and setters are just like watchpoints from an access
-     * control point of view.
-     */
+
+    /* Legacy security check. This can't fail. See bug 583850. */
     Value junk;
     uintN attrs;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
+    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs)) {
+        JS_NOT_REACHED("defineSetter access check failed");
         return JS_FALSE;
+    }
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), PropertyStub, setter,
                                JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
@@ -1639,9 +1652,13 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, Value *vp)
     }
 
     JSObject *obj = &vp[2].toObject();
+
+    /* Legacy security check. This can't fail. See bug 583850. */
     uintN attrs;
-    return CheckAccess(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.protoAtom),
-                       JSACC_PROTO, vp, &attrs);
+    JSBool ok = CheckAccess(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.protoAtom),
+                            JSACC_PROTO, vp, &attrs);
+    JS_ASSERT(ok);
+    return ok;
 }
 
 extern JSBool
@@ -1989,14 +2006,13 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
         JS_ASSERT(desc.isAccessorDescriptor());
 
-        /*
-         * Getters and setters are just like watchpoints from an access
-         * control point of view.
-         */
+        /* Legacy security check. This can't fail. See bug 583850. */
         Value dummy;
         uintN dummyAttrs;
-        if (!CheckAccess(cx, obj, desc.id, JSACC_WATCH, &dummy, &dummyAttrs))
+        if (!CheckAccess(cx, obj, desc.id, JSACC_WATCH, &dummy, &dummyAttrs)) {
+            JS_NOT_REACHED("defineProperty access check failed");
             return JS_FALSE;
+        }
 
         Value tmp = UndefinedValue();
         return js_DefineProperty(cx, obj, desc.id, &tmp,
@@ -2183,14 +2199,12 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
     } else {
         JS_ASSERT(desc.isAccessorDescriptor());
 
-        /*
-         * Getters and setters are just like watchpoints from an access
-         * control point of view.
-         */
+        /* Legacy security check. This can't fail. See bug 583850. */
         Value dummy;
         if (!CheckAccess(cx, obj2, desc.id, JSACC_WATCH, &dummy, &attrs)) {
-             obj2->dropProperty(cx, current);
-             return JS_FALSE;
+            JS_NOT_REACHED("defineProperty access check failed");
+            obj2->dropProperty(cx, current);
+            return JS_FALSE;
         }
 
         JS_ASSERT_IF(sprop->isMethod(), !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
@@ -3400,12 +3414,9 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         /*
          * Remember the class this function is a constructor for so that
          * we know to create an object of this class when we call the
-         * constructor. Arrays are a special case. We have a slow and a
-         * dense array. While the prototype is a slow array (it has
-         * named properties), we want to make dense arrays with the
-         * constructor, so we have to monkey patch that here.
+         * constructor.
          */
-        FUN_CLASP(fun) = (clasp == &js_SlowArrayClass) ? &js_ArrayClass : clasp;
+        FUN_CLASP(fun) = clasp;
 
         /*
          * Optionally construct the prototype object, before the class has
@@ -5582,39 +5593,6 @@ js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
     return FindClassPrototype(cx, scope, protoKey, protop, clasp);
 }
 
-/*
- * For shared precompilation of function objects, we support cloning on entry
- * to an execution context in which the function declaration or expression
- * should be processed as if it were not precompiled, where the precompiled
- * function's scope chain does not match the execution context's.  The cloned
- * function object carries its execution-context scope in its parent slot; it
- * links to the precompiled function (the "clone-parent") via its proto slot.
- *
- * Note that this prototype-based delegation leaves an unchecked access path
- * from the clone to the clone-parent's 'constructor' property.  If the clone
- * lives in a less privileged or shared scope than the clone-parent, this is
- * a security hole, a sharing hazard, or both.  Therefore we check all such
- * accesses with the following getter/setter pair, which we use when defining
- * 'constructor' in f.prototype for all function objects f.
- */
-static JSBool
-CheckCtorGetAccess(JSContext *cx, JSObject *obj, jsid id, Value *vp)
-{
-    JSAtom *atom = cx->runtime->atomState.constructorAtom;
-    JS_ASSERT(id == ATOM_TO_JSID(atom));
-    uintN attrs;
-    return CheckAccess(cx, obj, ATOM_TO_JSID(atom), JSACC_READ, vp, &attrs);
-}
-
-static JSBool
-CheckCtorSetAccess(JSContext *cx, JSObject *obj, jsid id, Value *vp)
-{
-    JSAtom *atom = cx->runtime->atomState.constructorAtom;
-    JS_ASSERT(id == ATOM_TO_JSID(atom));
-    uintN attrs;
-    return CheckAccess(cx, obj, ATOM_TO_JSID(atom), JSACC_WRITE, vp, &attrs);
-}
-
 JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs)
 {
@@ -5634,7 +5612,7 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs
      * for a user-defined function f, is DontEnum.
      */
     return proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                                 ObjectOrNullValue(ctor), CheckCtorGetAccess, CheckCtorSetAccess, 0);
+                                 ObjectOrNullValue(ctor), PropertyStub, PropertyStub, 0);
 }
 
 JSBool
@@ -5966,9 +5944,9 @@ js_ClearNative(JSContext *cx, JSObject *obj)
         scope->clear(cx);
 
         /* Clear slot values and reset freeslot so we're consistent. */
-        int freeslot = JSSLOT_FREE(obj->getClass());
-        int n = obj->numSlots();
-        for (int i = freeslot; i < n; ++i)
+        uint32 freeslot = JSSLOT_FREE(obj->getClass());
+        uint32 n = obj->numSlots();
+        for (uint32 i = freeslot; i < n; ++i)
             obj->setSlot(i, UndefinedValue());
         scope->freeslot = freeslot;
     }

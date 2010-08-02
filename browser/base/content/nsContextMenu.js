@@ -61,56 +61,26 @@
 # ***** END LICENSE BLOCK *****
 
 function nsContextMenu(aXulMenu, aBrowser) {
-  this.target            = null;
-  this.browser           = null;
-  this.menu              = null;
-  this.isFrameImage      = false;
-  this.onTextInput       = false;
-  this.onKeywordField    = false;
-  this.onImage           = false;
-  this.onLoadedImage     = false;
-  this.onCompletedImage  = false;
-  this.onCanvas          = false;
-  this.onVideo           = false;
-  this.onAudio           = false;
-  this.onLink            = false;
-  this.onMailtoLink      = false;
-  this.onSaveableLink    = false;
-  this.onMathML          = false;
-  this.link              = false;
-  this.linkURL           = "";
-  this.linkURI           = null;
-  this.linkProtocol      = null;
-  this.inFrame           = false;
-  this.hasBGImage        = false;
-  this.isTextSelected    = false;
-  this.isContentSelected = false;
-  this.shouldDisplay     = true;
-  this.isDesignMode      = false;
-  this.onEditableArea = false;
-  this.ellipsis = "\u2026";
-  try {
-    this.ellipsis = gPrefService.getComplexValue("intl.ellipsis",
-                                                 Ci.nsIPrefLocalizedString).data;
-  } catch (e) { }
-
-  // Initialize new menu.
-  this.initMenu(aXulMenu, aBrowser);
+  this.shouldDisplay = true;
+  this.initMenu(aBrowser);
 }
 
 // Prototype for nsContextMenu "class."
 nsContextMenu.prototype = {
-  // Initialize context menu.
-  initMenu: function CM_initMenu(aPopup, aBrowser) {
-    this.menu = aPopup;
-    this.browser = aBrowser;
-
-    this.isFrameImage = document.getElementById("isFrameImage");
-
+  initMenu: function CM_initMenu(aBrowser) {
     // Get contextual info.
     this.setTarget(document.popupNode, document.popupRangeParent,
                    document.popupRangeOffset);
+    if (!this.shouldDisplay)
+      return;
 
+    this.browser = aBrowser;
+    this.isFrameImage = document.getElementById("isFrameImage");
+    this.ellipsis = "\u2026";
+    try {
+      this.ellipsis = gPrefService.getComplexValue("intl.ellipsis",
+                                                   Ci.nsIPrefLocalizedString).data;
+    } catch (e) { }
     this.isTextSelected = this.isTextSelection();
     this.isContentSelected = this.isContentSelection();
 
@@ -348,10 +318,11 @@ nsContextMenu.prototype = {
     // suggestion list
     this.showItem("spell-suggestions-separator", onMisspelling);
     if (onMisspelling) {
-      var menu = document.getElementById("contentAreaContextMenu");
       var suggestionsSeparator =
         document.getElementById("spell-add-to-dictionary");
-      var numsug = InlineSpellCheckerUI.addSuggestionsToMenu(menu, suggestionsSeparator, 5);
+      var numsug =
+        InlineSpellCheckerUI.addSuggestionsToMenu(suggestionsSeparator.parentNode,
+                                                  suggestionsSeparator, 5);
       this.showItem("spell-no-suggestions", numsug == 0);
     }
     else
@@ -452,6 +423,7 @@ nsContextMenu.prototype = {
     if (aNode.namespaceURI == xulNS ||
         this.isTargetAFormControl(aNode)) {
       this.shouldDisplay = false;
+      return;
     }
 
     // Initialize contextual info.
@@ -466,6 +438,9 @@ nsContextMenu.prototype = {
     this.onKeywordField    = false;
     this.mediaURL          = "";
     this.onLink            = false;
+    this.onMailtoLink      = false;
+    this.onSaveableLink    = false;
+    this.link              = null;
     this.linkURL           = "";
     this.linkURI           = null;
     this.linkProtocol      = "";
@@ -473,7 +448,8 @@ nsContextMenu.prototype = {
     this.inFrame           = false;
     this.hasBGImage        = false;
     this.bgImageURL        = "";
-    this.onEditableArea = false;
+    this.onEditableArea    = false;
+    this.isDesignMode      = false;
 
     // Clear any old spellchecking items from the menu, this used to
     // be in the menu hiding code but wasn't getting called in all

@@ -2960,13 +2960,8 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   UpdateEditableState();
 
   // Now recurse into our kids
-  PRUint32 i;
-  // Don't call GetChildCount() here since that'll make XUL generate
-  // template children, which we're not in a consistent enough state for.
-  // Additionally, there's not really a need to generate the children here.
-  for (i = 0; i < mAttrsAndChildren.ChildCount(); ++i) {
-    // The child can remove itself from the parent in BindToTree.
-    nsCOMPtr<nsIContent> child = mAttrsAndChildren.ChildAt(i);
+  for (nsIContent* child = GetFirstChild(); child;
+       child = child->GetNextSibling()) {
     rv = child->BindToTree(aDocument, this, aBindingParent,
                            aCompileEventHandlers);
     NS_ENSURE_SUCCESS(rv, rv);

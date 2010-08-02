@@ -7,21 +7,29 @@ Cu.import("resource://services-sync/util.js");
 let logger;
 
 function server_handler(metadata, response) {
-  let body;
+  let body, statusCode, status;
 
-  // no btoa() in xpcshell.  it's guest:guest
-  if (metadata.hasHeader("Authorization") &&
-      metadata.getHeader("Authorization") == "Basic Z3Vlc3Q6Z3Vlc3Q=") {
-    body = "This path exists and is protected";
-    response.setStatusLine(metadata.httpVersion, 200, "OK, authorized");
-    response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
-
-  } else {
-    body = "This path exists and is protected - failed";
-    response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
-    response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
+  switch (metadata.getHeader("Authorization")) {
+    // guest:guest
+    case "Basic Z3Vlc3Q6Z3Vlc3Q=":
+      body = "This path exists and is protected";
+      statusCode = 200;
+      status = "OK";
+      break;
+    // johndoe:moneyislike$\u20ac\xa5\u5143
+    case "Basic am9obmRvZTptb25leWlzbGlrZSTigqzCpeWFgw==":
+      body = "This path exists and is protected by a UTF8 password";
+      statusCode = 200;
+      status = "OK";
+      break;
+    default:
+      body = "This path exists and is protected - failed";
+      statusCode = 401;
+      status = "Unauthorized";
   }
 
+  response.setStatusLine(metadata.httpVersion, statusCode, status);
+  response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
   response.bodyOutputStream.write(body, body.length);
 }
 
@@ -31,15 +39,24 @@ function run_test() {
 
   let server = new nsHttpServer();
   server.registerPathHandler("/foo", server_handler);
+  server.registerPathHandler("/bar", server_handler);
   server.start(8080);
 
   let auth = new BasicAuthenticator(new Identity("secret", "guest", "guest"));
+  let auth2 = new BasicAuthenticator(
+      new Identity("secret2", "johndoe", "moneyislike$\u20ac\xa5\u5143"));
   Auth.defaultAuthenticator = auth;
+  Auth.registerAuthenticator("bar$", auth2);
 
-  let res = new Resource("http://localhost:8080/foo");
-  let content = res.get();
-  do_check_eq(content, "This path exists and is protected");
-  do_check_eq(content.status, 200);
+  try {
+    let content = new Resource("http://localhost:8080/foo").get();
+    do_check_eq(content, "This path exists and is protected");
+    do_check_eq(content.status, 200);
 
-  server.stop(function() {});
+    content = new Resource("http://localhost:8080/bar").get();
+    do_check_eq(content, "This path exists and is protected by a UTF8 password");
+    do_check_eq(content.status, 200);
+  } finally {
+    server.stop(function() {});
+  }
 }

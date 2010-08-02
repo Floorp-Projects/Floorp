@@ -313,7 +313,6 @@ class Compiler
     void jsop_mod();
     void jsop_neg();
     void jsop_bitnot();
-    void jsop_objtostr();
     void jsop_not();
     void jsop_typeof();
     void booleanJumpScript(JSOp op, jsbytecode *target);
