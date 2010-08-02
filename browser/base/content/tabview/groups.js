@@ -198,7 +198,7 @@ window.Group = function Group(listOfEls, options) {
   };
 
   var handleKeyPress = function(e) {
-    if (e.which == 13) { // return
+    if (e.which == 13 || e.which == 27) { // return & escape
       (self.$title)[0].blur();
       self.$title
         .addClass("transparentBorder")
