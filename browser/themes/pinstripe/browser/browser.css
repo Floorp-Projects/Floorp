@@ -539,6 +539,12 @@ toolbar[iconsize="small"][mode="icons"] #forward-button:-moz-locale-dir(rtl) {
   -moz-margin-end: 3px;
 }
 
+/* tabview button */
+
+#tabview-button {
+  list-style-image: url(chrome://browser/skin/tabview/tabview.png);
+}
+
 /* download manager button */
 
 #downloads-button {
