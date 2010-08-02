@@ -44,7 +44,7 @@ const AUS_Ci = Components.interfaces;
 const AUS_Cr = Components.results;
 const AUS_Cu = Components.utils;
 
-const PREF_APP_UPDATE_CERT_ATTR_BRANCH  = "app.update.cert.attributes.";
+const PREF_APP_UPDATE_CERTS_BRANCH      = "app.update.certs.";
 const PREF_APP_UPDATE_CHANNEL           = "app.update.channel";
 const PREF_APP_UPDATE_ENABLED           = "app.update.enabled";
 const PREF_APP_UPDATE_IDLETIME          = "app.update.idletime";
