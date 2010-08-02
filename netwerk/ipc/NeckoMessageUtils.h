@@ -57,16 +57,15 @@ class URI {
  public:
   URI() : mURI(nsnull) {}
   URI(nsIURI* aURI) : mURI(aURI) {}
-  operator nsIURI*() const { return mURI.get(); }
+  // The contained URI is already addrefed on creation. We don't want another
+  // addref when passing it off to its actual owner.
+  operator nsCOMPtr<nsIURI>() const { return already_AddRefed<nsIURI>(mURI); }
 
   friend struct ParamTraits<URI>;
   
  private:
-  // Unimplemented
-  URI(URI&);
   URI& operator=(URI&);
-
-  nsCOMPtr<nsIURI> mURI;
+  nsIURI* mURI;
 };
   
 template<>
@@ -137,7 +136,7 @@ struct ParamTraits<URI>
       if (NS_FAILED(rv))
         return false;
       
-      uri.swap(aResult->mURI);
+      uri.forget(&aResult->mURI);
       return true;
     }
     
@@ -154,7 +153,7 @@ struct ParamTraits<URI>
     if (!serializable || !serializable->Read(aMsg, aIter))
       return false;
 
-    uri.swap(aResult->mURI);
+    uri.forget(&aResult->mURI);
     return true;
   }
 
