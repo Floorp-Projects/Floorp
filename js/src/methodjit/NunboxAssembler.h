@@ -149,22 +149,30 @@ class Assembler : public BaseAssembler
         store32(imm, payloadOf(address));
     }
 
-    void storeValue(const Value &v, Address address) {
+    /*
+     * Stores type first, then payload.
+     * Returns label after type store. Useful for offset verification.
+     */
+    Label storeValue(const Value &v, Address address) {
         jsval_layout jv;
         jv.asBits = JSVAL_BITS(Jsvalify(v));
 
         store32(ImmTag(jv.s.tag), tagOf(address));
+        Label l = label();
         if (!v.isUndefined())
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
+        return l;
     }
 
-    void storeValue(const Value &v, BaseIndex address) {
+    Label storeValue(const Value &v, BaseIndex address) {
         jsval_layout jv;
         jv.asBits = JSVAL_BITS(Jsvalify(v));
 
         store32(ImmTag(jv.s.tag), tagOf(address));
+        Label l = label();
         if (!v.isUndefined())
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
+        return l;
     }
 
     void loadFunctionPrivate(RegisterID base, RegisterID to) {

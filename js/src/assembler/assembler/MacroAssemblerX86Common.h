@@ -718,6 +718,17 @@ public:
         return Jump(m_assembler.jCC(x86Condition(cond)));
     }
 
+    // Branch and record a label after the comparison.
+    Jump branch32WithPatch(Condition cond, RegisterID left, Imm32 right, Label &clabel)
+    {
+        if (((cond == Equal) || (cond == NotEqual)) && !right.m_value)
+            m_assembler.testl_rr(left, left);
+        else
+            m_assembler.cmpl_ir(right.m_value, left);
+        clabel = label();
+        return Jump(m_assembler.jCC(x86Condition(cond)));
+    }
+
     Jump branch32(Condition cond, RegisterID left, Address right)
     {
         m_assembler.cmpl_mr(right.offset, right.base, left);
@@ -837,7 +848,7 @@ public:
         m_assembler.jmp_m(address.offset, address.base);
     }
 
-
+    
     // Arithmetic control flow operations:
     //
     // This set of conditional branch operations branch based

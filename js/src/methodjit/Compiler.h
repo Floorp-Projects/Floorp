@@ -107,7 +107,7 @@ class Compiler
         PICGenInfo(ic::PICInfo::Kind kind) : kind(kind)
         { }
         ic::PICInfo::Kind kind;
-        Label hotPathBegin;
+        Label fastPathStart;
         Label storeBack;
         Label typeCheck;
         Label slowPathStart;
