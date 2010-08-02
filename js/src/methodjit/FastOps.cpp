@@ -647,33 +647,6 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
 }
 
 void
-mjit::Compiler::jsop_objtostr()
-{
-    FrameEntry *top = frame.peek(-1);
-
-    if (top->isTypeKnown() && top->getKnownType() == JSVAL_TYPE_OBJECT) {
-        prepareStubCall(Uses(1));
-        stubCall(stubs::ObjToStr);
-        frame.pop();
-        frame.pushSynced();
-        return;
-    }
-
-    if (top->isTypeKnown())
-        return;
-
-    frame.giveOwnRegs(top);
-
-    Jump isObj = frame.testPrimitive(Assembler::NotEqual, top);
-    stubcc.linkExit(isObj, Uses(1));
-
-    stubcc.leave();
-    stubcc.call(stubs::ObjToStr);
-
-    stubcc.rejoin(Changes(1));
-}
-
-void
 mjit::Compiler::jsop_not()
 {
     FrameEntry *top = frame.peek(-1);

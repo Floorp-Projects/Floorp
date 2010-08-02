@@ -1350,18 +1350,6 @@ stubs::Neg(VMFrame &f)
     f.regs.sp[-1].setNumber(d);
 }
 
-void JS_FASTCALL
-stubs::ObjToStr(VMFrame &f)
-{
-    const Value &ref = f.regs.sp[-1];
-    if (ref.isObject()) {
-        JSString *str = js_ValueToString(f.cx, ref);
-        if (!str)
-            THROW();
-        f.regs.sp[-1].setString(str);
-    }
-}
-
 JSObject * JS_FASTCALL
 stubs::NewInitArray(VMFrame &f)
 {
@@ -2265,21 +2253,6 @@ stubs::StrictNe(VMFrame &f)
     const Value &rhs = f.regs.sp[-1];
     const Value &lhs = f.regs.sp[-2];
     return StrictlyEqual(f.cx, lhs, rhs) != true;
-}
-
-JSString * JS_FASTCALL
-stubs::ConcatN(VMFrame &f, uint32 argc)
-{
-    JSCharBuffer buf(f.cx);
-    for (Value *vp = f.regs.sp - argc; vp < f.regs.sp; vp++) {
-        JS_ASSERT(vp->isPrimitive());
-        if (!js_ValueToCharBuffer(f.cx, *vp, buf))
-            THROWV(NULL);
-    }
-    JSString *str = js_NewStringFromCharBuffer(f.cx, buf);
-    if (!str)
-        THROWV(NULL);
-    return str;
 }
 
 void JS_FASTCALL

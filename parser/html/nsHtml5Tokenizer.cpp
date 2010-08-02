@@ -1192,22 +1192,15 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
               adjustDoubleHyphenAndAppendToLongStrBufAndErr(c);
               continue;
             }
-            case ' ':
-            case '\t':
-            case '\f': {
-              adjustDoubleHyphenAndAppendToLongStrBufAndErr(c);
-              state = NS_HTML5TOKENIZER_COMMENT_END_SPACE;
-              NS_HTML5_BREAK(commentendloop);
-            }
             case '\r': {
               adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn();
-              state = NS_HTML5TOKENIZER_COMMENT_END_SPACE;
+              state = NS_HTML5TOKENIZER_COMMENT;
               NS_HTML5_BREAK(stateloop);
             }
             case '\n': {
               adjustDoubleHyphenAndAppendToLongStrBufLineFeed();
-              state = NS_HTML5TOKENIZER_COMMENT_END_SPACE;
-              NS_HTML5_BREAK(commentendloop);
+              state = NS_HTML5TOKENIZER_COMMENT;
+              NS_HTML5_CONTINUE(stateloop);
             }
             case '!': {
 
@@ -1225,7 +1218,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             }
           }
         }
-        commentendloop_end: ;
+
       }
       case NS_HTML5TOKENIZER_COMMENT_END_SPACE: {
         for (; ; ) {

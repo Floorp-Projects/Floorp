@@ -82,7 +82,6 @@ static const mozilla::Module::ContractIDEntry kChardetContracts[] = {
 };
 
 static const mozilla::Module::CategoryEntry kChardetCategories[] = {
-  { "parser-service-category", "Meta Charset Service", NS_META_CHARSET_CONTRACTID },
   { NS_CHARSET_DETECTOR_CATEGORY, "off", "off" },
   { NS_CHARSET_DETECTOR_CATEGORY, "ruprob", NS_CHARSET_DETECTOR_CONTRACTID_BASE "ruprob" },
   { NS_CHARSET_DETECTOR_CATEGORY, "ukprob", NS_CHARSET_DETECTOR_CONTRACTID_BASE "ukprob" },

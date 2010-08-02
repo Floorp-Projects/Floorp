@@ -171,15 +171,6 @@
 #define SHUTDOWN_COLLECTIONS(params) DEFAULT_SHUTDOWN_COLLECTIONS
 #endif
 
-#define CC_RUNTIME_ABORT_IF_FALSE(_expr, _msg)                                \
-  PR_BEGIN_MACRO                                                              \
-    if (!(_expr)) {                                                           \
-      NS_ERROR(_msg);                                                         \
-      int *foo = (int*)nsnull;                                                \
-      *foo = 42;                                                              \
-    }                                                                         \
-  PR_END_MACRO
-
 // Various parameters of this collector can be tuned using environment
 // variables.
 
@@ -389,7 +380,6 @@ public:
             { return mPointer != aOther.mPointer; }
 
     private:
-        friend class EdgePool;
         PtrInfoOrBlock *mPointer;
     };
 
@@ -427,7 +417,6 @@ public:
         Block **mNextBlockPtr;
     };
 
-    void CheckIterator(Iterator &aIterator);
 };
 
 #ifdef DEBUG_CC
@@ -634,8 +623,6 @@ public:
         // NB: mLast is a reference to allow enumerating while building!
         PtrInfo *mNext, *mBlockEnd, *&mLast;
     };
-
-    void CheckPtrInfo(PtrInfo *aPtrInfo);
 
 private:
     Block *mBlocks;
@@ -1040,14 +1027,6 @@ struct nsCycleCollector
 };
 
 
-struct DoWalkDebugInfo
-{
-    PtrInfo *mCurrentPI;
-    EdgePool::Iterator mFirstChild;
-    EdgePool::Iterator mLastChild;
-    EdgePool::Iterator mCurrentChild;
-};
-
 /**
  * GraphWalker is templatized over a Visitor class that must provide
  * the following two methods:
@@ -1060,7 +1039,6 @@ class GraphWalker
 {
 private:
     Visitor mVisitor;
-    DoWalkDebugInfo *mDebugInfo;
 
     void DoWalk(nsDeque &aQueue);
 
@@ -1260,72 +1238,20 @@ GraphWalker<Visitor>::WalkFromRoots(GCGraph& aGraph)
     DoWalk(queue);
 }
 
-void
-EdgePool::CheckIterator(Iterator &aIterator)
-{
-    PtrInfoOrBlock *iteratorPos = aIterator.mPointer;
-    CC_RUNTIME_ABORT_IF_FALSE(iteratorPos, "Iterator's pos is null.");
-
-    PtrInfoOrBlock *start = &mSentinelAndBlocks[0];
-    size_t sentinelOffset = 0;
-    PtrInfoOrBlock *end;
-    Block *nextBlockPtr;
-    do {
-        end = start + sentinelOffset;
-        nextBlockPtr = (end + 1)->block;
-        // We must be in a block of edges or on a sentinel.
-        if (iteratorPos >= start && iteratorPos <= end)
-            break;
-        sentinelOffset = Block::BlockSize - 2;
-    } while ((start = nextBlockPtr ? nextBlockPtr->Start() : nsnull));
-    CC_RUNTIME_ABORT_IF_FALSE(start, "Iterator doesn't point into EdgePool.");
-
-    // If the ptrInfo is null we need to be on the sentinel.
-    CC_RUNTIME_ABORT_IF_FALSE(iteratorPos->ptrInfo || iteratorPos == end,
-                              "iteratorPos points to null, but it's not a "
-                              "sentinel!");
-}
-
-void
-NodePool::CheckPtrInfo(PtrInfo *aPtrInfo)
-{
-    // Find out if pi is null.
-    CC_RUNTIME_ABORT_IF_FALSE(aPtrInfo, "Pointer is null.");
-
-    // Find out if pi is a dangling pointer.
-    Block *block = mBlocks;
-    do {
-        if(aPtrInfo >= &block->mEntries[0] &&
-           aPtrInfo <= &block->mEntries[BlockSize - 1])
-           break;
-    } while ((block = block->mNext));
-    CC_RUNTIME_ABORT_IF_FALSE(block, "Pointer is outside blocks.");
-}
-
 template <class Visitor>
 void
 GraphWalker<Visitor>::DoWalk(nsDeque &aQueue)
 {
     // Use a aQueue to match the breadth-first traversal used when we
     // built the graph, for hopefully-better locality.
-    DoWalkDebugInfo debugInfo;
-    mDebugInfo = &debugInfo;
-
     while (aQueue.GetSize() > 0) {
         PtrInfo *pi = static_cast<PtrInfo*>(aQueue.PopFront());
 
-        sCollector->mGraph.mNodes.CheckPtrInfo(pi);
-
-        debugInfo.mCurrentPI = pi;
         if (mVisitor.ShouldVisitNode(pi)) {
             mVisitor.VisitNode(pi);
-            debugInfo.mFirstChild = pi->mFirstChild;
-            debugInfo.mLastChild = pi->mLastChild;
-            debugInfo.mCurrentChild = pi->mFirstChild;
             for (EdgePool::Iterator child = pi->mFirstChild,
                                 child_end = pi->mLastChild;
-                 child != child_end; ++child, debugInfo.mCurrentChild = child) {
-                sCollector->mGraph.mEdges.CheckIterator(child);
+                 child != child_end; ++child) {
                 aQueue.Push(*child);
             }
         }

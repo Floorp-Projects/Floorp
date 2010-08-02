@@ -291,7 +291,7 @@ typedef union jsval_layout
 typedef union jsval_layout
 {
     uint64 asBits;
-#ifndef _MSC_VER
+#ifndef _WIN64
     /* MSVC does not pack these correctly :-( */
     struct {
         uint64             payload47 : 47;

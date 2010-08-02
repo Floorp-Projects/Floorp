@@ -1411,7 +1411,16 @@ nsWindow::SetFocus(PRBool aRaise)
 NS_IMETHODIMP
 nsWindow::GetScreenBounds(nsIntRect &aRect)
 {
-    aRect = nsIntRect(WidgetToScreenOffset(), mBounds.Size());
+    if (mIsTopLevel && mContainer) {
+        // use the point including window decorations
+        gint x, y;
+        gdk_window_get_root_origin(GTK_WIDGET(mContainer)->window, &x, &y);
+        aRect.MoveTo(x, y);
+    }
+    else {
+        aRect.MoveTo(WidgetToScreenOffset());
+    }
+    aRect.SizeTo(mBounds.Size());
     LOG(("GetScreenBounds %d %d | %d %d | %d %d\n",
          aRect.x, aRect.y,
          mBounds.width, mBounds.height,
@@ -2061,14 +2070,8 @@ nsWindow::WidgetToScreenOffset()
 {
     gint x = 0, y = 0;
 
-    if (mContainer) {
-        gdk_window_get_root_origin(GTK_WIDGET(mContainer)->window,
-                                   &x, &y);
-        LOG(("WidgetToScreenOffset (container) %d %d\n", x, y));
-    }
-    else if (mGdkWindow) {
+    if (mGdkWindow) {
         gdk_window_get_origin(mGdkWindow, &x, &y);
-        LOG(("WidgetToScreenOffset (drawing) %d %d\n", x, y));
     }
 
     return nsIntPoint(x, y);
@@ -2486,16 +2489,17 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     // Toplevel windows need to have their bounds set so that we can
     // keep track of our location.  It's not often that the x,y is set
     // by the layout engine.  Width and height are set elsewhere.
+    nsIntPoint pnt(aEvent->x, aEvent->y);
     if (mIsTopLevel) {
         mPlaced = PR_TRUE;
         // Need to translate this into the right coordinates
         mBounds.MoveTo(WidgetToScreenOffset());
+        pnt = mBounds.TopLeft();
     }
 
     nsGUIEvent event(PR_TRUE, NS_MOVE, this);
 
-    event.refPoint.x = aEvent->x;
-    event.refPoint.y = aEvent->y;
+    event.refPoint = pnt;
 
     // XXX mozilla will invalidate the entire window after this move
     // complete.  wtf?
@@ -4037,10 +4041,9 @@ nsWindow::Create(nsIWidget        *aParent,
             }
         }
         else if (mWindowType == eWindowType_popup) {
-            // The value of aParent contains a code: If a popup window has a
-            // non-NULL nsIWidget* aParent, it indicates that it should not be
-            // above all other windows (e.g a noautohide panel).
-            if (!aParent) {
+            // Popups that are not noautohide are only temporary. The are used
+            // for menus and the like and disappear when another window is used.
+            if (!aInitData->mNoAutoHide) {
                 // For most popups, use the standard GtkWindowType
                 // GTK_WINDOW_POPUP, which will use a Window with the
                 // override-redirect attribute (for temporary windows).
@@ -4052,7 +4055,16 @@ nsWindow::Create(nsIWidget        *aParent,
                 GtkWindow* gtkWin = GTK_WINDOW(mShell);
                 // ... but the window manager does not decorate this window,
                 // nor provide a separate taskbar icon.
-                gtk_window_set_decorated(gtkWin, FALSE);
+                if (mBorderStyle == eBorderStyle_default) {
+                  gtk_window_set_decorated(GTK_WINDOW(mShell), FALSE);
+                }
+                else {
+                  PRBool decorate = mBorderStyle & eBorderStyle_title;
+                  gtk_window_set_decorated(GTK_WINDOW(mShell), decorate);
+                  if (decorate) {
+                    gtk_window_set_deletable(GTK_WINDOW(mShell), mBorderStyle & eBorderStyle_close);
+                  }
+                }
                 gtk_window_set_skip_taskbar_hint(gtkWin, TRUE);
                 // Element focus is managed by the parent window so the
                 // WM_HINTS input field is set to False to tell the window
@@ -4134,6 +4146,12 @@ nsWindow::Create(nsIWidget        *aParent,
                                     // indicates that we already have the
                                     // standard cursor.
             SetCursor(eCursor_standard);
+
+            if (aInitData->mNoAutoHide) {
+                gint wmd = ConvertBorderStyles(mBorderStyle);
+                if (wmd != -1)
+                  gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
+            }
         }
     }
         break;
@@ -5221,6 +5239,7 @@ nsWindow::ConvertBorderStyles(nsBorderStyle aStyle)
     if (aStyle == eBorderStyle_default)
         return -1;
 
+    // note that we don't handle eBorderStyle_close yet
     if (aStyle & eBorderStyle_all)
         w |= GDK_DECOR_ALL;
     if (aStyle & eBorderStyle_border)
@@ -5235,11 +5254,6 @@ nsWindow::ConvertBorderStyles(nsBorderStyle aStyle)
         w |= GDK_DECOR_MINIMIZE;
     if (aStyle & eBorderStyle_maximize)
         w |= GDK_DECOR_MAXIMIZE;
-    if (aStyle & eBorderStyle_close) {
-#ifdef DEBUG
-        printf("we don't handle eBorderStyle_close yet... please fix me\n");
-#endif /* DEBUG */
-    }
 
     return w;
 }
@@ -5299,7 +5313,8 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     else
         wmd = ConvertBorderStyles(mBorderStyle);
 
-    gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
+    if (wmd != -1)
+      gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
 
     if (wasVisible)
         gdk_window_show(mShell->window);

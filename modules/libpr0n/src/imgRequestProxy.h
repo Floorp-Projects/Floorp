@@ -37,6 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef imgRequestProxy_h__
+#define imgRequestProxy_h__
+
 #include "imgIRequest.h"
 #include "imgIDecoderObserver.h"
 #include "nsISecurityInfoProvider.h"
@@ -61,6 +64,9 @@
     {0x8f, 0x65, 0x9c, 0x46, 0x2e, 0xe2, 0xbc, 0x95} \
 }
 
+class imgRequestNotifyRunnable;
+class imgStatusNotifyRunnable;
+
 class imgRequestProxy : public imgIRequest, public nsISupportsPriority, public nsISecurityInfoProvider
 {
 public:
@@ -73,18 +79,38 @@ public:
   imgRequestProxy();
   virtual ~imgRequestProxy();
 
-  // Callers to Init or ChangeOwner are required to call
-  // NotifyProxyListener on the request after (although not immediately
-  // after) doing so.
-  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver);
+  // Callers to Init or ChangeOwner are required to call NotifyListener after
+  // (although not immediately after) doing so.
+  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgContainer* aImage,
+                nsIURI* aURI, imgIDecoderObserver *aObserver);
+
   nsresult ChangeOwner(imgRequest *aNewOwner); // this will change mOwner.  Do not call this if the previous
                                                // owner has already sent notifications out!
 
   void AddToLoadGroup();
   void RemoveFromLoadGroup(PRBool releaseLoadGroup);
 
+  inline PRBool HasObserver() const {
+    return mListener != nsnull;
+  }
+
+  void SetPrincipal(nsIPrincipal *aPrincipal);
+
+  // Asynchronously notify this proxy's listener of the current state of the
+  // image, and, if we have an imgRequest mOwner, any status changes that
+  // happen between the time this function is called and the time the
+  // notification is scheduled.
+  void NotifyListener();
+
+  // Synchronously notify this proxy's listener of the current state of the
+  // image. Only use this function if you are currently servicing an
+  // asynchronously-called function.
+  void SyncNotifyListener();
+
 protected:
-  friend class imgRequest;
+  friend class imgStatusTracker;
+  friend class imgStatusNotifyRunnable;
+  friend class imgRequestNotifyRunnable;
 
   class imgCancelRunnable;
   friend class imgCancelRunnable;
@@ -106,7 +132,20 @@ protected:
       nsresult mStatus;
   };
 
+  // The following notification functions are protected to ensure that (friend
+  // class) imgStatusTracker is the only class allowed to send us
+  // notifications.
 
+  // Whether we want notifications from imgStatusTracker to be deferred until
+  // an event it has scheduled has been fired.
+  PRBool NotificationsDeferred() const
+  {
+    return mDeferNotifications;
+  }
+  void SetNotificationsDeferred(PRBool aDeferNotifications)
+  {
+    mDeferNotifications = aDeferNotifications;
+  }
 
   /* non-virtual imgIDecoderObserver methods */
   void OnStartDecode   ();
@@ -121,13 +160,9 @@ protected:
   /* non-virtual imgIContainerObserver methods */
   void FrameChanged(imgIContainer *aContainer, nsIntRect * aDirtyRect);
 
-  /* non-virtual nsIRequestObserver (plus some) methods */
-  void OnStartRequest(nsIRequest *request, nsISupports *ctxt);
-  void OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode, PRBool aLastPart); 
-
-  inline PRBool HasObserver() const {
-    return mListener != nsnull;
-  }
+  /* non-virtual sort-of-nsIRequestObserver methods */
+  void OnStartRequest();
+  void OnStopRequest(PRBool aLastPart);
 
   /* Finish up canceling ourselves */
   void DoCancel(nsresult status);
@@ -138,6 +173,7 @@ protected:
   void DoRemoveFromLoadGroup() {
     RemoveFromLoadGroup(PR_TRUE);
   }
+
 private:
   friend class imgCacheValidator;
 
@@ -148,6 +184,17 @@ private:
   // from whatever request it was registered with (if any). This, in turn,
   // means that imgRequest::mObservers will not have any stale pointers in it.
   nsRefPtr<imgRequest> mOwner;
+
+  // The URI of our request.
+  nsCOMPtr<nsIURI> mURI;
+
+  // The image we represent. Is null until data has been received, and is then
+  // set by imgRequest.
+  nsRefPtr<imgContainer> mImage;
+
+  // Our principal. Is null until data has been received from the channel, and
+  // is then set by imgRequest.
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 
   // mListener is only promised to be a weak ref (see imgILoader.idl),
   // but we actually keep a strong ref to it until we've seen our
@@ -161,4 +208,10 @@ private:
   PRPackedBool mIsInLoadGroup;
   PRPackedBool mListenerIsStrongRef;
   PRPackedBool mDecodeRequested;
+
+  // Whether we want to defer our notifications by the non-virtual Observer
+  // interfaces as image loads proceed.
+  PRPackedBool mDeferNotifications;
 };
+
+#endif // imgRequestProxy_h__

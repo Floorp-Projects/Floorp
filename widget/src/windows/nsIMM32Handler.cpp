@@ -443,12 +443,8 @@ nsIMM32Handler::OnIMEStartComposition(nsWindow* aWindow)
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: OnIMEStartComposition, hWnd=%08x, mIsComposing=%s\n",
      aWindow->GetWindowHandle(), mIsComposing ? "TRUE" : "FALSE"));
-  // ATOK send the messages following order at starting composition.
-  // 1. WM_IME_COMPOSITION
-  // 2. WM_IME_STARTCOMPOSITION
-  // We call this function at both step #1 and #2.
-  // However, the composition start event should occur only once.
   if (mIsComposing) {
+    NS_WARNING("Composition has been already started");
     return ShouldDrawCompositionStringOurselves();
   }
 
@@ -753,6 +749,29 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
   // for bug #60050
   // MS-IME 95/97/98/2000 may send WM_IME_COMPOSITION with non-conversion
   // mode before it send WM_IME_STARTCOMPOSITION.
+  // However, ATOK sends a WM_IME_COMPOSITION before WM_IME_STARTCOMPOSITION,
+  // and if we access ATOK via some APIs, ATOK will sometimes fail to
+  // initialize its state.  If WM_IME_STARTCOMPOSITION is already in the
+  // message queue, we should ignore the strange WM_IME_COMPOSITION message and
+  // skip to the next.  So, we should look for next composition message
+  // (WM_IME_STARTCOMPOSITION or WM_IME_ENDCOMPOSITION or WM_IME_COMPOSITION),
+  // and if it's WM_IME_STARTCOMPOSITION, and one more next composition message
+  // is WM_IME_COMPOSITION, current IME is ATOK, probably.  Otherwise, we
+  // should start composition forcibly.
+  if (!mIsComposing) {
+    MSG msg1, msg2;
+    HWND wnd = aWindow->GetWindowHandle();
+    if (::PeekMessageW(&msg1, wnd, WM_IME_STARTCOMPOSITION, WM_IME_COMPOSITION,
+                       PM_NOREMOVE) &&
+        msg1.message == WM_IME_STARTCOMPOSITION &&
+        ::PeekMessageW(&msg2, wnd, WM_IME_ENDCOMPOSITION, WM_IME_COMPOSITION,
+                       PM_NOREMOVE) &&
+        msg2.message == WM_IME_COMPOSITION) {
+      PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+        ("IMM32: HandleComposition, Ignores due to find a WM_IME_STARTCOMPOSITION\n"));
+      return ShouldDrawCompositionStringOurselves();
+    }
+  }
 
   if (!IS_COMMITTING_LPARAM(lParam) && !IS_COMPOSING_LPARAM(lParam)) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,

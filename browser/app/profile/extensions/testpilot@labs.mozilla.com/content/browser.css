@@ -100,6 +100,13 @@ image.study-canceled {
   margin-right: 8px;
 }
 
+image.study-missed {
+  list-style-image: url("chrome://testpilot/skin/status-missed.png");
+  height: 32px;
+  width: 64px;
+  margin-right: 8px;
+}
+
 image.new-study {
   list-style-image: url("chrome://testpilot/skin/tp-study-48x48.png");
   height: 48px;

@@ -41,7 +41,7 @@
 #ifndef imgRequest_h__
 #define imgRequest_h__
 
-#include "imgIContainer.h"
+#include "imgContainer.h"
 #include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
 
@@ -61,20 +61,14 @@
 #include "nsWeakReference.h"
 #include "ImageErrors.h"
 #include "imgIRequest.h"
+#include "imgContainer.h"
 
 class imgCacheValidator;
 
 class imgRequestProxy;
 class imgCacheEntry;
 class imgMemoryReporter;
-
-enum {
-  stateRequestStarted    = PR_BIT(0),
-  stateHasSize           = PR_BIT(1),
-  stateDecodeStarted     = PR_BIT(2),
-  stateDecodeStopped     = PR_BIT(3),
-  stateRequestStopped    = PR_BIT(4)
-};
+class imgRequestNotifyRunnable;
 
 class imgRequest : public imgIDecoderObserver,
                    public nsIStreamListener,
@@ -96,59 +90,53 @@ public:
                 void *aCacheId,
                 void *aLoadId);
 
-  // Callers must call NotifyProxyListener later.
+  // Callers must call imgRequestProxy::Notify later.
   nsresult AddProxy(imgRequestProxy *proxy);
 
   // aNotify==PR_FALSE still sends OnStopRequest.
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBool aNotify);
-  nsresult NotifyProxyListener(imgRequestProxy *proxy);
 
   void SniffMimeType(const char *buf, PRUint32 len);
 
   // a request is "reusable" if it has already been loaded, or it is
   // currently being loaded on the same event queue as the new request
   // being made...
-  PRBool IsReusable(void *aCacheId) { return !mLoading || (aCacheId == mCacheId); }
+  PRBool IsReusable(void *aCacheId) {
+    return (mImage && mImage->GetStatusTracker().IsLoading()) ||
+           (aCacheId == mCacheId);
+  }
 
   // Cancel, but also ensure that all work done in Init() is undone. Call this
   // only when the channel has failed to open, and so calling Cancel() on it
   // won't be sufficient.
   void CancelAndAbort(nsresult aStatus);
 
-  nsresult GetImage(imgIContainer **aImage);
-
   // Methods that get forwarded to the imgContainer, or deferred until it's
   // instantiated.
   nsresult LockImage();
   nsresult UnlockImage();
   nsresult RequestDecode();
-  static nsresult GetResultFromImageStatus(PRUint32 aStatus)
-  {
-    if (aStatus & imgIRequest::STATUS_ERROR)
-      return NS_IMAGELIB_ERROR_FAILURE;
-    if (aStatus & imgIRequest::STATUS_LOAD_COMPLETE)
-      return NS_IMAGELIB_SUCCESS_LOAD_FINISHED;
-    return NS_OK;
-  }
+
 private:
   friend class imgCacheEntry;
   friend class imgRequestProxy;
   friend class imgLoader;
   friend class imgCacheValidator;
+  friend class imgStatusTracker;
   friend class imgCacheExpirationTracker;
+  friend class imgRequestNotifyRunnable;
 
   inline void SetLoadId(void *aLoadId) {
     mLoadId = aLoadId;
     mLoadTime = PR_Now();
   }
-  inline PRUint32 GetImageStatus() const { return mImageStatus; }
-  inline PRUint32 GetState() const { return mState; }
   void Cancel(nsresult aStatus);
+  void RemoveFromCache();
+
   nsresult GetURI(nsIURI **aURI);
   nsresult GetKeyURI(nsIURI **aURI);
-  nsresult GetPrincipal(nsIPrincipal **aPrincipal);
   nsresult GetSecurityInfo(nsISupports **aSecurityInfo);
-  void RemoveFromCache();
+
   inline const char *GetMimeType() const {
     return mContentType.get();
   }
@@ -204,7 +192,7 @@ private:
   // The URI we are keyed on in the cache.
   nsCOMPtr<nsIURI> mKeyURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<imgIContainer> mImage;
+  nsRefPtr<imgContainer> mImage;
   nsCOMPtr<nsIProperties> mProperties;
   nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIChannel> mChannel;
@@ -212,8 +200,6 @@ private:
 
   nsTObserverArray<imgRequestProxy*> mObservers;
 
-  PRUint32 mImageStatus;
-  PRUint32 mState;
   nsCString mContentType;
 
   nsRefPtr<imgCacheEntry> mCacheEntry; /* we hold on to this to this so long as we have observers */
@@ -228,12 +214,9 @@ private:
 
   // Sometimes consumers want to do things before the image is ready. Let them,
   // and apply the action when the image becomes available.
-  PRUint32 mDeferredLocks;
   PRPackedBool mDecodeRequested : 1;
 
   PRPackedBool mIsMultiPartChannel : 1;
-  PRPackedBool mLoading : 1;
-  PRPackedBool mHadLastPart : 1;
   PRPackedBool mGotData : 1;
   PRPackedBool mIsInCache : 1;
 };

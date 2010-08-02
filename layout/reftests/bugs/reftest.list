@@ -264,7 +264,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
 == 289384-1.xhtml 289384-ref.xhtml
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
+fails-if(gtk2Widget) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
 asserts(1) == 290129-1.html 290129-1-ref.html # bug 315549/460637
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
@@ -397,7 +397,7 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 332360-width-ltr.html 332360-ltr-ref.html
 == 332557-1.html 332557-1-ref.html
 == 332975-1.html 332975-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 333970
+random-if(gtk2Widget) == 333970-1.html 333970-1-ref.html # bug 333970
 == 334829-1a.xhtml 334829-1-ref.xhtml
 == 334829-1b.xhtml 334829-1-ref.xhtml
 == 335628-1.html 335628-1-ref.html
@@ -449,7 +449,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 349695-1a.html 349695-1-ref.html
 == 349695-1b.html 349695-1-ref.html
 # fails with CoreText rendering due to clipping of one subpixel-antialiasing pixel at end of text
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 350506-1.html 350506-1-ref.html
+random-if(cocoaWidget) == 350506-1.html 350506-1-ref.html
 == 351641-1a.html 351641-1-ref.html
 == 351641-1b.html 351641-1-ref.html
 == 351641-2a.html 351641-2-ref.html
@@ -480,10 +480,10 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 350506-1.html 350506-1-ref.html
 == 352980-3f.html 352980-3-ref.html
 == 355548-1.xml 355548-1-ref.xml
 == 355548-2.xml 355548-2-ref.xml
-asserts-if(MOZ_WIDGET_TOOLKIT=="gtk2",1) == 355548-3.xml 355548-3-ref.xml # bug 456899
+asserts-if(gtk2Widget,1) == 355548-3.xml 355548-3-ref.xml # bug 456899
 == 355548-4.xml 355548-4-ref.xml
 == 355548-5.xml 355548-5-ref.xml
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 356774-1.html 356774-1-ref.html # probably bug 379317
+fails-if(cocoaWidget) == 356774-1.html 356774-1-ref.html # probably bug 379317
 == 356775-1.html 356775-1-ref.html
 == 359903-1.html 359903-1-ref.html
 == 359869-1.html 359869-1-ref.html
@@ -562,7 +562,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 356774-1.html 356774-1-ref.html # proba
 random == 368020-2.html 368020-2-ref.html # bug 403181 comment 52 explains why this test is disabled.
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-5.html 368020-5-ref.html # bug 388591
+random-if(gtk2Widget) == 368020-5.html 368020-5-ref.html # bug 388591
 == 368155-1.xhtml 368155-1-ref.xhtml
 asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html # bug 387205 / bug 457397
 # we can't test this because there's antialiasing involved, and our comparison
@@ -645,7 +645,7 @@ fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; f
 == 379178-html.html 379178-html-ref.html
 == 379178-svg.svg 379178-svg-ref.svg
 == 379316-1.html 379316-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 379316-2.html 379316-2-ref.html # bug 379786
+random-if(cocoaWidget) == 379316-2.html 379316-2-ref.html # bug 379786
 == 379328-1.html 379328-1-ref.html
 == 379349-1a.xhtml 379349-1-ref.xhtml
 == 379349-1b.xhtml 379349-1-ref.xhtml
@@ -737,7 +737,7 @@ random == 387876-2.html 387876-2-ref.html # bug 471630
 == 390318-1d.html 390318-1-ref.html
 == 390318-1e.html 390318-1-ref.html
 == 390318-1f.html 390318-1-ref.html
-skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-specific Uniscribe bug, trailing period is matched against different fonts on Mac/Linux (see 396137)
+skip-if(!winWidget) == 391045.html 391045-ref.html # windows-specific Uniscribe bug, trailing period is matched against different fonts on Mac/Linux (see 396137)
 == 391140-1.html 391140-1-ref.html
 == 391412-1a.html 391412-1-ref.html
 == 391412-1b.html 391412-1-ref.html
@@ -787,12 +787,12 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 399209-2.html 399209-2-ref.html
 == 399258-1.html 399258-1-ref.html
 == 399384-1.html 399384-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 399636-standards-css.html 399636-standards-ref.html # bug 429022
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 399636-standards-html.html 399636-standards-ref.html # bug 429022
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
+random-if(gtk2Widget) == 399636-standards-css.html 399636-standards-ref.html # bug 429022
+random-if(gtk2Widget) == 399636-standards-html.html 399636-standards-ref.html # bug 429022
+random-if(gtk2Widget) == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
 # We can't rely on this test working on platforms other than Windows and
 # Mac because they need not have a font called "Symbol".
-fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT!="cocoa"&&MOZ_WIDGET_TOOLKIT!="windows") != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
+fails-if(winWidget) fails-if(cocoaWidget) random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
 == 400081-1.html about:blank
 == 400171-1a.html 400171-1-ref.html
 == 400171-1b.html 400171-1-ref.html
@@ -924,7 +924,7 @@ fails == 413027-3.html 413027-3-ref.html
 == 413286-4b.html 413286-4-ref.html
 == 413286-5.html 413286-5-ref.html
 == 413286-6.html 413286-6-ref.html
-skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabling due to failure loading on some mac tinderboxes. See bug 432954
+skip-if(cocoaWidget) == 413292-1.html 413292-1-ref.html # disabling due to failure loading on some mac tinderboxes. See bug 432954
 == 413361-1.html 413361-1-ref.html
 == 413840-background-unchanged.html 413840-background-unchanged-ref.html
 == 413840-ltr-offsets.html 413840-ltr-offsets-ref.html
@@ -979,7 +979,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 fails == 423823-1.html 423823-1-ref.html # scrolling rowgroups were removed in bug 28800
 == 424074-1.xul 424074-1-ref.xul
 != 424074-1.xul 424074-1-ref2.xul
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
+random-if(gtk2Widget) == 424074-1-ref2.xul 424074-1-ref3.xul
 == 424236-1.html 424236-1-ref.html
 == 424236-2.html 424236-2-ref.html
 == 424236-3.html 424236-3-ref.html
@@ -1146,7 +1146,7 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 == 455171-5.html 455171-5-ref.html
 == 455280-1.xhtml 455280-1-ref.xhtml
 == 455826-1.html 455826-1-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 456147.xul 456147-ref.html # bug 458047
+fails-if(cocoaWidget) == 456147.xul 456147-ref.html # bug 458047
 == 456219-1a.html 456219-1-ref.html
 == 456219-1b.html 456219-1-ref.html
 == 456219-1c.html 456219-1-ref.html
@@ -1268,7 +1268,7 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 481024-1e.html 481024-1-ref.html
 != 481948-1.html 481948-1-ref.html
 != 481948-2.html 481948-2-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
+random-if(winWidget) fails-if(gtk2Widget) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
 == 482398-1.html 482398-1-ref.html
 == 482592-1a.xhtml 482592-1-ref.html
 == 482592-1b.xhtml 482592-1-ref.html

@@ -790,15 +790,12 @@
                       oncommand="document.getBindingParent(this).showPreferences();"/>
           <xul:button anonid="remove-btn" class="addon-control remove"
                       label="&cmd.uninstallAddon.label;"
-                      tooltiptext="&cmd.uninstallAddon.tooltip;"
                       oncommand="document.getBindingParent(this).uninstall();"/>
           <xul:button anonid="enable-btn"  class="addon-control enable"
                       label="&cmd.enableAddon.label;"
-                      tooltiptext="&cmd.enableAddon.tooltip;"
                       oncommand="document.getBindingParent(this).userDisabled = false;"/>
           <xul:button anonid="disable-btn" class="addon-control disable"
                       label="&cmd.disableAddon.label;"
-                      tooltiptext="&cmd.disableAddon.tooltip;"
                       oncommand="document.getBindingParent(this).userDisabled = true;"/>
         </xul:hbox>
         <xul:hbox class="status-container">
@@ -1022,9 +1019,33 @@
 
           this._preferencesBtn.hidden = !this.mAddon.optionsURL;
 
-          this._enableBtn.hidden = !this.hasPermission("enable");
-          this._disableBtn.hidden = !this.hasPermission("disable");
-          this._removeBtn.hidden = !this.hasPermission("uninstall");
+          if (this.hasPermission("enable")) {
+            this._enableBtn.hidden = false;
+            let tooltip = gViewController.commands["cmd_enableItem"]
+                                         .getTooltip(this.mAddon);
+            this._enableBtn.setAttribute("tooltiptext", tooltip);
+          } else {
+            this._enableBtn.hidden = true;
+          }
+
+          if (this.hasPermission("disable")) {
+            this._disableBtn.hidden = false;
+            let tooltip = gViewController.commands["cmd_disableItem"]
+                                         .getTooltip(this.mAddon);
+            this._disableBtn.setAttribute("tooltiptext", tooltip);
+          } else {
+            this._disableBtn.hidden = true;
+          }
+
+          if (this.hasPermission("uninstall")) {
+            this._removeBtn.hidden = false;
+            let tooltip = gViewController.commands["cmd_uninstallItem"]
+                                         .getTooltip(this.mAddon);
+            this._removeBtn.setAttribute("tooltiptext", tooltip);
+          }
+          else {
+            this._removeBtn.hidden = true;
+          }
 
           var showAsActive = this.mAddon.isActive;
           if (this.isPending("enable"))

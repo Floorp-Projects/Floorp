@@ -76,7 +76,6 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
-#include "nsIPrivateDOMImplementation.h"
 #include "nsIRangeUtils.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsISelection.h"
@@ -274,6 +273,9 @@ NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 nsresult
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
+
+nsresult
+NS_NewDOMImplementation(nsIDOMDOMImplementation**);
 
 static void Shutdown();
 
