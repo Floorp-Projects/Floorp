@@ -85,6 +85,24 @@ pref("app.update.timer", 600000);
 // The interval to check for updates (app.update.interval) is defined in
 // firefox-branding.js
 
+// Enables some extra Application Update Logging (can reduce performance)
+pref("app.update.log", false);
+
+// The |app.update.certs.| preference branch contains branches that are
+// sequentially numbered starting at 1 that contain attribute name / value
+// pairs for the certificate used by the server that hosts the update xml file
+// as specified in the |app.update.url| preference. When these preferences are
+// present the following conditions apply for a successful update check:
+// 1. the uri scheme must be https
+// 2. the preference name must exist as an attribute name on the certificate and
+//    the value for the name must be the same as the value for the attribute name
+//    on the certificate.
+// If these conditions aren't met it will be treated the same as when there is
+// no update available. This validation will not be performed when using the
+// |app.update.url.override| preference for update checking.
+pref("app.update.certs.1.issuerName", "OU=Equifax Secure Certificate Authority,O=Equifax,C=US");
+pref("app.update.certs.1.commonName", "*.mozilla.org");
+
 // Whether or not app updates are enabled
 pref("app.update.enabled", true);
 
@@ -100,7 +118,7 @@ pref("app.update.auto", true);
 // 1                  download no prompt  download no prompt if no incompatibilities
 // 2                  download no prompt  prompt
 //
-// See chart in nsUpdateService.js.in for more details
+// See chart in nsUpdateService.js source for more details
 //
 pref("app.update.mode", 1);
 
