@@ -64,6 +64,9 @@
     locale/browser/preferences/preferences.properties (%chrome/browser/preferences/preferences.properties)
     locale/browser/preferences/privacy.dtd            (%chrome/browser/preferences/privacy.dtd)
     locale/browser/preferences/security.dtd           (%chrome/browser/preferences/security.dtd)
+#ifdef MOZ_SERVICES_SYNC
+    locale/browser/preferences/sync.dtd               (%chrome/browser/preferences/sync.dtd)
+#endif
     locale/browser/preferences/tabs.dtd               (%chrome/browser/preferences/tabs.dtd)
     locale/browser/sidebar/sidebar.properties      (%chrome/browser/sidebar/sidebar.properties)
 #ifdef MOZ_SERVICES_SYNC
