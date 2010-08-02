@@ -967,9 +967,7 @@ LayerManager*
 nsChildView::GetLayerManager()
 {
   nsCocoaWindow* window = GetXULWindowWidget();
-  if (!window)
-    return nsnull;
-  if (window->GetAcceleratedRendering() != mUseAcceleratedRendering) {
+  if (window && window->GetAcceleratedRendering() != mUseAcceleratedRendering) {
     mLayerManager = NULL;
     mUseAcceleratedRendering = window->GetAcceleratedRendering();
   }
