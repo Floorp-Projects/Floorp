@@ -6723,6 +6723,12 @@ function isTabEmpty(aTab) {
          !aTab.hasAttribute("busy");
 }
 
+#ifdef MOZ_SERVICES_SYNC
+function BrowserOpenSyncTabs() {
+  switchToTabHavingURI("about:sync-tabs", true);
+}
+#endif
+
 /**
  * Format a URL
  * eg:

@@ -501,6 +501,12 @@
                 <menuseparator id="endHistorySeparator"
                                class="hide-if-empty-places-result"
                                builder="end"/>
+#ifdef MOZ_SERVICES_SYNC
+                <menuitem id="sync-tabs-menuitem"
+                          label="&syncTabsMenu.label;"
+                          oncommand="BrowserOpenSyncTabs();"
+                          disabled="true"/>
+#endif
                 <menu id="historyUndoMenu"
                       label="&historyUndoMenu.label;"
                       disabled="true">
