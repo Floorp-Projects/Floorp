@@ -52,6 +52,25 @@
 namespace js {
 namespace mjit {
 
+class MaybeJump {
+    typedef JSC::MacroAssembler::Jump Jump;
+  public:
+    MaybeJump()
+      : set(false)
+    { }
+
+    inline Jump getJump() const { JS_ASSERT(set); return jump; }
+    inline Jump get() const { JS_ASSERT(set); return jump; }
+    inline void setJump(const Jump &j) { jump = j; set = true; }
+    inline bool isSet() const { return set; }
+
+    inline MaybeJump &operator=(Jump j) { setJump(j); return *this; }
+
+  private:
+    Jump jump;
+    bool set;
+};
+
 //#define JS_METHODJIT_PROFILE_STUBS
 
 struct FrameAddress : JSC::MacroAssembler::Address
