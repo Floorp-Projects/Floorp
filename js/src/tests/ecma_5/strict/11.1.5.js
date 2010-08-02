@@ -103,32 +103,32 @@ assertEq(testLenientAndStrict('({x:1, get x() {}})',
                               parseRaisesException(SyntaxError)),
          true);
 
-assertEq(testLenientAndStrict('({set x() {}, x:1})',
+assertEq(testLenientAndStrict('({set x(q) {}, x:1})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
 
-assertEq(testLenientAndStrict('({x:1, set x() {}})',
+assertEq(testLenientAndStrict('({x:1, set x(q) {}})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
 
-assertEq(testLenientAndStrict('({get x() {}, set x() {}})',
+assertEq(testLenientAndStrict('({get x() {}, set x(q) {}})',
                               parsesSuccessfully,
                               parsesSuccessfully),
          true);
 
-assertEq(testLenientAndStrict('({set x() {}, get x() {}})',
+assertEq(testLenientAndStrict('({set x(q) {}, get x() {}})',
                               parsesSuccessfully,
                               parsesSuccessfully),
          true);
 
-assertEq(testLenientAndStrict('({get x() {}, set x() {}, x:1})',
+assertEq(testLenientAndStrict('({get x() {}, set x(q) {}, x:1})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
 
-assertEq(testLenientAndStrict('({set x() {}, get x() {}, x:1})',
+assertEq(testLenientAndStrict('({set x(q) {}, get x() {}, x:1})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
@@ -138,7 +138,7 @@ assertEq(testLenientAndStrict('({get x() {}, get x() {}})',
                               parseRaisesException(SyntaxError)),
          true);
 
-assertEq(testLenientAndStrict('({get x() {}, set x() {}, y:1})',
+assertEq(testLenientAndStrict('({get x() {}, set x(q) {}, y:1})',
                               parsesSuccessfully,
                               parsesSuccessfully),
          true);

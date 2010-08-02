@@ -1034,10 +1034,11 @@ private:
      */
     bool recognizeDirectivePrologue(JSParseNode *pn);
 
+    enum FunctionType { GETTER, SETTER, GENERAL };
     bool functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunction *fun,
                            JSParseNode **list);
     JSParseNode *functionBody();
-    JSParseNode *functionDef(JSAtom *name, uintN lambda);
+    JSParseNode *functionDef(JSAtom *name, FunctionType type, uintN lambda);
 
     JSParseNode *condition();
     JSParseNode *comprehensionTail(JSParseNode *kid, uintN blockid,

@@ -2664,7 +2664,7 @@ Parser::functionArguments(JSTreeContext &funtc, JSFunctionBox *funbox, JSFunctio
 }
 
 JSParseNode *
-Parser::functionDef(JSAtom *funAtom, uintN lambda)
+Parser::functionDef(JSAtom *funAtom, FunctionType type, uintN lambda)
 {
     /* Make a TOK_FUNCTION node. */
     tokenStream.mungeCurrentToken(TOK_FUNCTION, JSOP_NOP);
@@ -2804,6 +2804,17 @@ Parser::functionDef(JSAtom *funAtom, uintN lambda)
     JSParseNode *list = NULL;
     if (!functionArguments(funtc, funbox, fun, &list))
         return NULL;
+
+    if (type == GETTER && fun->nargs > 0) {
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ACCESSOR_WRONG_ARGS,
+                          "getter", "no", "s");
+        return NULL;
+    }
+    if (type == SETTER && fun->nargs != 1) {
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ACCESSOR_WRONG_ARGS,
+                          "setter", "one", "");
+        return NULL;
+    }
 
 #if JS_HAS_EXPR_CLOSURES
     TokenKind tt = tokenStream.getToken(TSF_OPERAND);
@@ -2961,7 +2972,7 @@ Parser::functionStmt()
         }
         tokenStream.ungetToken();
     }
-    return functionDef(name, 0);
+    return functionDef(name, GENERAL, 0);
 }
 
 JSParseNode *
@@ -2972,7 +2983,7 @@ Parser::functionExpr()
         name = tokenStream.currentToken().t_atom;
     else
         tokenStream.ungetToken();
-    return functionDef(name, JSFUN_LAMBDA);
+    return functionDef(name, GENERAL, JSFUN_LAMBDA);
 }
 
 /*
@@ -7939,7 +7950,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     }
 
                     /* NB: Getter function in { get x(){} } is unnamed. */
-                    pn2 = functionDef(NULL, JSFUN_LAMBDA);
+                    pn2 = functionDef(NULL, op == JSOP_SETTER ? SETTER : GETTER, JSFUN_LAMBDA);
                     pn2 = JSParseNode::newBinaryOrAppend(TOK_COLON, op, pn3, pn2, tc);
                     goto skip;
                 }
