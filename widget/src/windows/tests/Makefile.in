@@ -53,11 +53,12 @@ LIBS = ../$(LIB_PREFIX)widget_windows.$(LIB_SUFFIX) \
        $(DIST)/lib/$(LIB_PREFIX)gkgfx.$(LIB_SUFFIX) \
        $(XPCOM_LIBS) \
        $(MOZ_UNICHARUTIL_LIBS) \
+		   $(QCMS_LIBS) \
        $(NULL)
 
 EXTRA_DSO_LDOPTS += $(LIBS_DIR)
 
-OS_LIBS += $(call EXPAND_LIBNAME,ole32 shell32 comctl32 comdlg32 imm32 shlwapi winspool)
+OS_LIBS += $(call EXPAND_LIBNAME,ole32 oleaut32 shell32 comctl32 comdlg32 imm32 shlwapi winspool)
 
 CPP_UNIT_TESTS = TestWinDND.cpp \
                  $(NULL)
