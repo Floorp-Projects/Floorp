@@ -142,7 +142,11 @@ obj_getProto(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     /* Let CheckAccess get the slot's value, based on the access mode. */
     uintN attrs;
     id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-    return CheckAccess(cx, obj, id, JSACC_PROTO, vp, &attrs);
+
+    /* Legacy security check. This can't fail. See bug 583850. */
+    JSBool ok = CheckAccess(cx, obj, id, JSACC_PROTO, vp, &attrs);
+    JS_ASSERT(ok);
+    return ok;
 }
 
 static JSBool
@@ -163,10 +167,13 @@ obj_setProto(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             return JS_FALSE;
     }
 
+    /* Legacy security check. This can't fail. See bug 583850. */
     uintN attrs;
     id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-    if (!CheckAccess(cx, obj, id, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs))
+    if (!CheckAccess(cx, obj, id, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs)) {
+        JS_NOT_REACHED("setProto access check failed");
         return JS_FALSE;
+    }
 
     return SetProto(cx, obj, pobj, JS_TRUE);
 }
@@ -1298,30 +1305,36 @@ obj_watch(JSContext *cx, uintN argc, Value *vp)
 {
     if (argc <= 1) {
         js_ReportMissingArg(cx, *vp, 1);
-        return JS_FALSE;
+        return false;
     }
 
     JSObject *callable = js_ValueToCallableObject(cx, &vp[3], 0);
     if (!callable)
-        return JS_FALSE;
+        return false;
 
     /* Compute the unique int/atom symbol id needed by js_LookupProperty. */
     jsid propid;
     if (!ValueToId(cx, vp[2], &propid))
-        return JS_FALSE;
+        return false;
 
     JSObject *obj = ComputeThisFromVp(cx, vp);
+    if (!obj)
+        return false;
+
+    /* Legacy security check. This can't fail. See bug 583850. */
     Value tmp;
     uintN attrs;
-    if (!obj || !CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs))
-        return JS_FALSE;
+    if (!CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs)) {
+        JS_NOT_REACHED("watchpoint access check failed");
+        return false;
+    }
 
     vp->setUndefined();
 
     if (attrs & JSPROP_READONLY)
-        return JS_TRUE;
+        return true;
     if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
-        return JS_FALSE;
+        return false;
     return JS_SetWatchPoint(cx, obj, propid, obj_watch_handler, callable);
 }
 
@@ -1530,14 +1543,14 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !CheckRedeclaration(cx, obj, id, JSPROP_GETTER, NULL, NULL))
         return JS_FALSE;
-    /*
-     * Getters and setters are just like watchpoints from an access
-     * control point of view.
-     */
+
+    /* Legacy security check. This can't fail. See bug 583850. */
     Value junk;
     uintN attrs;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
+    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs)) {
+        JS_NOT_REACHED("defineGetter access check failed");
         return JS_FALSE;
+    }
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, PropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
@@ -1560,14 +1573,14 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisFromVp(cx, vp);
     if (!obj || !CheckRedeclaration(cx, obj, id, JSPROP_SETTER, NULL, NULL))
         return JS_FALSE;
-    /*
-     * Getters and setters are just like watchpoints from an access
-     * control point of view.
-     */
+
+    /* Legacy security check. This can't fail. See bug 583850. */
     Value junk;
     uintN attrs;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
+    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs)) {
+        JS_NOT_REACHED("defineSetter access check failed");
         return JS_FALSE;
+    }
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), PropertyStub, setter,
                                JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
@@ -1639,9 +1652,13 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, Value *vp)
     }
 
     JSObject *obj = &vp[2].toObject();
+
+    /* Legacy security check. This can't fail. See bug 583850. */
     uintN attrs;
-    return CheckAccess(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.protoAtom),
-                       JSACC_PROTO, vp, &attrs);
+    JSBool ok = CheckAccess(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.protoAtom),
+                            JSACC_PROTO, vp, &attrs);
+    JS_ASSERT(ok);
+    return ok;
 }
 
 extern JSBool
@@ -1989,14 +2006,13 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
 
         JS_ASSERT(desc.isAccessorDescriptor());
 
-        /*
-         * Getters and setters are just like watchpoints from an access
-         * control point of view.
-         */
+        /* Legacy security check. This can't fail. See bug 583850. */
         Value dummy;
         uintN dummyAttrs;
-        if (!CheckAccess(cx, obj, desc.id, JSACC_WATCH, &dummy, &dummyAttrs))
+        if (!CheckAccess(cx, obj, desc.id, JSACC_WATCH, &dummy, &dummyAttrs)) {
+            JS_NOT_REACHED("defineProperty access check failed");
             return JS_FALSE;
+        }
 
         Value tmp = UndefinedValue();
         return js_DefineProperty(cx, obj, desc.id, &tmp,
@@ -2183,14 +2199,12 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropDesc &desc,
     } else {
         JS_ASSERT(desc.isAccessorDescriptor());
 
-        /*
-         * Getters and setters are just like watchpoints from an access
-         * control point of view.
-         */
+        /* Legacy security check. This can't fail. See bug 583850. */
         Value dummy;
         if (!CheckAccess(cx, obj2, desc.id, JSACC_WATCH, &dummy, &attrs)) {
-             obj2->dropProperty(cx, current);
-             return JS_FALSE;
+            JS_NOT_REACHED("defineProperty access check failed");
+            obj2->dropProperty(cx, current);
+            return JS_FALSE;
         }
 
         JS_ASSERT_IF(sprop->isMethod(), !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
