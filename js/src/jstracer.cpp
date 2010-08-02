@@ -4939,17 +4939,23 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         }
     } else {
         exit->exitType = LOOP_EXIT;
-        exit->target = tree;
         debug_only_printf(LC_TMTreeVis, "TREEVIS CHANGEEXIT EXIT=%p TYPE=%s\n", (void*)exit,
                           getExitName(LOOP_EXIT));
 
         JS_ASSERT((fragment == fragment->root) == !!loopLabel);
         if (loopLabel) {
             lir->insBranch(LIR_j, NULL, loopLabel);
-            fragment->lastIns = lir->ins1(LIR_livep, lirbuf->state);
-        } else {
-            fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
+            lir->ins1(LIR_livep, lirbuf->state);
         }
+
+        exit->target = tree;
+        /*
+         * This guard is dead code.  However, it must be present because it
+         * can keep alive values on the stack.  Without it, StackFilter can
+         * remove some stack stores that it shouldn't.  See bug 582766 comment
+         * 19.
+         */
+        fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
     }
 
     CHECK_STATUS_A(compile());
