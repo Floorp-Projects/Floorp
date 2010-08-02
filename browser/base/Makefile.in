@@ -83,3 +83,6 @@ endif
 ifneq (,$(filter windows, $(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DMENUBAR_CAN_AUTOHIDE=1
 endif
+
+libs::
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py $(srcdir)/content/tabview/modules/* $(FINAL_TARGET)/modules/tabview
