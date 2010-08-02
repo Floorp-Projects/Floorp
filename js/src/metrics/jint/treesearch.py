@@ -3,11 +3,132 @@
 import os, re
 import tempfile
 import subprocess
-import sys
+import sys, math
 import datetime
+import random
 
 def realpath(k):
     return os.path.realpath(os.path.normpath(k))
+
+class UCTNode:
+    def __init__(self, loop):
+        self.children = None
+        self.loop = loop
+        self.visits = 1
+        self.score = 0
+
+    def addChild(self, child):
+        if self.children == None:
+            self.children = []
+        self.children.append(child)
+
+    def computeUCB(self, coeff):
+        return (self.score / self.visits) + math.sqrt(coeff / self.visits)
+
+class UCT:
+    def __init__(self, benchmark, bestTime, enableLoops, loops, fd, playouts):
+        self.bm = benchmark
+        self.fd = fd
+        self.numPlayouts = playouts
+        self.maxNodes = self.numPlayouts * 20
+        self.loops = loops
+        self.enableLoops = enableLoops
+        self.maturityThreshold = 50
+        self.originalBest = bestTime
+        self.bestTime = bestTime
+        self.bias = 20
+        self.combos = []
+        self.zobrist = { }
+        random.seed()
+
+    def expandNode(self, node, pending):
+        for loop in pending:
+            node.addChild(UCTNode(loop))
+            self.numNodes += 1
+            if self.numNodes >= self.maxNodes:
+                return False
+        return True
+
+    def findBestChild(self, node):
+        coeff = self.bias * math.log(node.visits)
+        bestChild = None
+        bestUCB = -float('Infinity')
+
+        for child in node.children:
+            ucb = child.computeUCB(coeff)
+            if ucb >= bestUCB:
+                bestUCB = ucb
+                bestChild = child
+
+        return child
+
+    def playout(self, history):
+        queue = []
+        for i in range(0, len(self.loops)):
+            queue.append(random.randint(0, 1))
+        for node in history:
+            queue[node.loop] = not self.enableLoops
+        zash = 0
+        for i in range(0, len(queue)):
+            if queue[i]:
+                zash |= (1 << i)
+        if zash in self.zobrist:
+            return self.zobrist[zash]
+
+        self.bm.generateBanList(self.loops, queue)
+        result = self.bm.treeSearchRun(self.fd, ['-m', '-j'], 2)
+        self.zobrist[zash] = result
+        return result
+
+    def step(self, loopList):
+        node = self.root
+        pending = loopList[:]
+        history = [node]
+
+        while True:
+            # If this is a leaf node...
+            if node.children == None:
+                # And the leaf node is mature...
+                if node.visits >= self.maturityThreshold:
+                    # If the node can be expanded, keep spinning.
+                    if self.expandNode(node, pending) and node.children != None:
+                        continue
+
+                # Otherwise, this is a leaf node. Run a playout.
+                score = self.playout(history)
+                break
+
+            # Find the best child.
+            node = self.findBestChild(node)
+            history.append(node)
+            pending.remove(node.loop)
+
+        # Normalize the score.
+        origScore = score
+        score = (self.originalBest - score) / self.originalBest
+
+        for node in history:
+            node.visits += 1
+            node.score += score
+
+        if int(origScore) < int(self.bestTime):
+            print('New best score: {0:f}ms'.format(origScore))
+            self.combos = []
+            self.bestTime = origScore
+        elif int(origScore) == int(self.bestTime):
+            self.combos.append(history)
+
+    def run(self):
+        loopList = [i for i in range(0, len(self.loops))]
+        self.numNodes = 1
+        self.root = UCTNode(-1)
+        self.expandNode(self.root, loopList)
+
+        for i in range(0, self.numPlayouts):
+            self.step(loopList)
+
+        # Build the expected combination vector.
+        print('Best time: {0:f}ms'.format(self.bestTime))
 
 class Benchmark:
     def __init__(self, JS, fname):
@@ -74,12 +195,12 @@ class Benchmark:
                 lines.append(line)
         return [lines, counters]
 
-    def treeSearchRun(self, fd, args):
+    def treeSearchRun(self, fd, args, count = 5):
         total = 0
-        for i in range(1, 5):
+        for i in range(0, count):
             output = self.run(fd, args)
             total += int(output)
-        return total / 5
+        return total / count
 
     def generateBanList(self, counters, queue):
         if os.path.exists('/tmp/permabans'):
@@ -87,7 +208,7 @@ class Benchmark:
         fd = open('/tmp/permabans', 'wt')
         for i in range(0, len(counters)):
             for j in range(counters[i][0], counters[i][1] + 1):
-                fd.write('{0:d} {1:d}\n'.format(j, queue[i]))
+                fd.write('{0:d} {1:d}\n'.format(j, int(queue[i])))
         fd.close()
 
     def internalExhaustiveSearch(self, params):
@@ -123,6 +244,26 @@ class Benchmark:
 
         return [bestTime, bestCombos]
 
+    def internalTreeSearch(self, params):
+        fd = params['fd']
+        methodTime = params['methodTime']
+        tracerTime = params['tracerTime']
+        combinedTime = params['combinedTime']
+        counters = params['counters']
+
+        # Build the initial loop data.
+        # If the method JIT already wins, disable tracing by default.
+        # Otherwise, enable tracing by default.
+        if methodTime < combinedTime:
+            enableLoops = True
+        else:
+            enableLoops = False
+
+        enableLoops = False
+
+        uct = UCT(self, combinedTime, enableLoops, counters[:], fd, 100000)
+        result = uct.run()
+
     def treeSearch(self):
         fd, counters = self.ppForTreeSearch()
 
@@ -145,7 +286,7 @@ class Benchmark:
         else:
             upperBound = int(upperBound / 1000)
             delta = datetime.timedelta(seconds = upperBound)
-            if upperBound <= 180:
+            if upperBound <= 18:
                 print('Estimating {0:d}s to test, so picking exhaustive '.format(int(upperBound)))
             else:
                 print('Estimating {0:s} to test, so picking tree search '.format(str(delta)))
@@ -158,18 +299,17 @@ class Benchmark:
                     'counters': counters,
                     'methodTime': methodTime,
                     'tracerTime': tracerTime,
-                    'combinedTime': combinedTime,
-                    'best': best
+                    'combinedTime': combinedTime
                  }
+
+        print('Method JIT:  {0:d}ms'.format(int(methodTime)))
+        print('Tracing JIT: {0:d}ms'.format(int(tracerTime)))
+        print('Combined:    {0:d}ms'.format(int(combinedTime)))
 
         if treeSearch:
             results = self.internalTreeSearch(params)
         else:
             results = self.internalExhaustiveSearch(params)
-
-        print('Method JIT:  {0:d}ms'.format(int(methodTime)))
-        print('Tracing JIT: {0:d}ms'.format(int(tracerTime)))
-        print('Combined:    {0:d}ms'.format(int(combinedTime)))
 
         bestTime = results[0]
         bestCombos = results[1]
