@@ -2078,7 +2078,11 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
 
     if (mIsTopLevel) {
         QGraphicsView* newView = nsnull;
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+        newView = new MozMGraphicsView(widget);
+#else
         newView = new MozQGraphicsView(widget);
+#endif
         if (!newView) {
             delete widget;
             return nsnull;
