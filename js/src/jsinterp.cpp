@@ -2734,7 +2734,7 @@ BEGIN_CASE(JSOP_STOP)
         fp->imacpc = NULL;
 # ifdef JS_METHODJIT
         if ((wasImacroRun || wasRecording) && !TRACE_RECORDER(cx)) {
-            if (script->nmap[regs.pc - script->code]) {
+            if (script->nmap && script->nmap[regs.pc - script->code]) {
                 interpReturnOK = true;
                 goto stop_recording;
             }
