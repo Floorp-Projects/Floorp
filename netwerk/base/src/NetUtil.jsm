@@ -279,7 +279,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "ioUtil", "@mozilla.org/io-util;1",
                                    "nsIIOUtil");
 
-XPCOMUtils.defineLazyGetter(this, "BadCertHandler", "@mozilla.org/io-util;1", function () {
+XPCOMUtils.defineLazyGetter(this, "BadCertHandler", function () {
   var obj = {};
   Cu.import("resource://gre/modules/CertUtils.jsm", obj);
   return obj.BadCertHandler;
