@@ -50,6 +50,32 @@ function do_run_test() {
     do_check_eq(Services.cookiemgr.countCookiesFromHost(host), 1);
   }
 
+  // reload again, to make sure the additions were written correctly
+  do_close_profile(test_generator);
+  yield;
+  do_load_profile();
+
+  // remove some of the cookies, in both reverse and forward order
+  for (let i = 100; i-- > 0; ) {
+    let host = i.toString() + ".com";
+    Services.cookiemgr.remove(host, "oh", "/", false);
+  }
+  for (let i = 2900; i < 3000; ++i) {
+    let host = i.toString() + ".com";
+    Services.cookiemgr.remove(host, "oh", "/", false);
+  }
+
+  // check the count
+  do_check_eq(do_count_cookies(), 2800);
+
+  // reload again, to make sure the removals were written correctly
+  do_close_profile(test_generator);
+  yield;
+  do_load_profile();
+
+  // check the count
+  do_check_eq(do_count_cookies(), 2800);
+
   // reload again, but wait for async read completion
   do_close_profile(test_generator);
   yield;
@@ -57,7 +83,8 @@ function do_run_test() {
   yield;
 
   // check that everything's precisely correct
-  for (let i = 0; i < 3000; ++i) {
+  do_check_eq(do_count_cookies(), 2800);
+  for (let i = 100; i < 2900; ++i) {
     let host = i.toString() + ".com";
     do_check_eq(Services.cookiemgr.countCookiesFromHost(host), 1);
   }
