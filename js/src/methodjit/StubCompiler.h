@@ -138,7 +138,7 @@ class StubCompiler
     JSC::MacroAssembler::Label syncExitAndJump(Uses uses);
 
     /* Exits from the fast path into the slow path. */
-    void linkExit(Jump j, Uses uses);
+    JSC::MacroAssembler::Label linkExit(Jump j, Uses uses);
     void linkExitForBranch(Jump j);
     void linkExitDirect(Jump j, Label L);
 
