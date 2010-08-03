@@ -310,48 +310,23 @@ protected:
   nsNavHistory& mNavHistory;
 };
 
-
-class PlacesEvent : public nsIRunnable
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  PlacesEvent(const char* aTopic)
-    : mTopic(aTopic)
-    , mDoubleEnqueue(false)
-  {
+class PlacesEvent : public nsRunnable {
+  public:
+  PlacesEvent(const char* aTopic) {
+    mTopic = aTopic;
   }
 
-  PlacesEvent(const char* aTopic,
-              bool aDoubleEnqueue)
-    : mTopic(aTopic)
-    , mDoubleEnqueue(aDoubleEnqueue)
-  {
-  }
+  NS_IMETHOD Run() {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService)
+      (void)observerService->NotifyObservers(nsnull, mTopic, nsnull);
 
-  NS_IMETHODIMP Run() { return Notify(); }
-
-  nsresult
-  Notify()
-  {
-    if (mDoubleEnqueue) {
-      mDoubleEnqueue = false;
-      (void)NS_DispatchToMainThread(this);
-    }
-    else {
-      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-      if (obs)
-        (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
-    }
     return NS_OK;
   }
-
-protected:
+  protected:
   const char* mTopic;
-  bool mDoubleEnqueue;
 };
-
-NS_IMPL_ISUPPORTS1(PlacesEvent, nsIRunnable)
 
 } // anonymouse namespace
 
@@ -5716,12 +5691,9 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
                      "Unable to shutdown Places: message dispatch failed.");
 
     // Once everybody has been notified, proceed with the real shutdown.
-    // Note: PlacesEvent contains special code to double enqueue this
-    // notification because we must ensure any enqueued work from observers
-    // is complete before going on.
-    (void)os->AddObserver(this, TOPIC_PLACES_TEARDOWN, PR_TRUE);
+    (void)os->AddObserver(this, TOPIC_PLACES_TEARDOWN, PR_FALSE);
     nsRefPtr<PlacesEvent> teardownEvent =
-      new PlacesEvent(TOPIC_PLACES_TEARDOWN, true);
+      new PlacesEvent(TOPIC_PLACES_TEARDOWN);
     rv = NS_DispatchToMainThread(teardownEvent);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Unable to shutdown Places: message dispatch failed.");
