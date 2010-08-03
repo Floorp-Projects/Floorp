@@ -13,6 +13,12 @@
 #include "mozqwidget.h"
 #include "nsWindow.h"
 
+/*
+  Pure Qt is lacking a clear API to get the current state of the VKB (opened
+  or closed). So this global is used to track that state for 
+  nsWindow::GetIMEEnabled().
+*/
+static bool gKeyboardOpen = false;
 
 MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
     : QGraphicsWidget(aParent),
@@ -289,6 +295,7 @@ void MozQWidget::showVKB()
         inputContext->filterEvent(&request);
         focusWidget->setAttribute(Qt::WA_InputMethodEnabled, true);
         inputContext->setFocusWidget(focusWidget);
+        gKeyboardOpen = true;
     }
 #else
     LOG(("VKB not supported in Qt < 4.6\n"));
@@ -307,6 +314,7 @@ void MozQWidget::hideVKB()
     QEvent request(QEvent::CloseSoftwareInputPanel);
     inputContext->filterEvent(&request);
     inputContext->reset();
+    gKeyboardOpen = false;
 #else
     LOG(("VKB not supported in Qt < 4.6\n"));
 #endif
@@ -314,8 +322,5 @@ void MozQWidget::hideVKB()
 
 bool MozQWidget::isVKBOpen()
 {
-    // There is no clear API in Pure QT about how to get OPEN/CLOSED vkb state
-    // FIXME in bug 555019.
-    return PR_FALSE;
+    return gKeyboardOpen;
 }
-
