@@ -111,6 +111,7 @@
 <!ENTITY addon.homepage                       "Homepage">
 <!ENTITY addon.unknownDate                    "Unknown">
 <!ENTITY addon.disabled.postfix               "(disabled)">
+<!-- LOCALIZATION NOTE (addon.update.postfix): This is used to signify that an item is an update, in the form "Addon v1.0 Update" -->
 <!ENTITY addon.update.postfix                 "Update">
 <!ENTITY addon.undo.label                     "Undo?">
 <!ENTITY addon.undo.tooltip                   "Undo this action">
