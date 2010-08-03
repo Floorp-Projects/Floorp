@@ -31,6 +31,7 @@ function coll_handler(metadata, response) {
 
 function run_test() {
   let server;
+  do_test_pending();
 
   try {
     let log = Log4Moz.repository.getLogger('Test');
@@ -74,5 +75,5 @@ function run_test() {
     log.info("Done!");
   }
   catch (e) { do_throw(e); }
-  finally { server.stop(function() {}); }
+  finally { server.stop(do_test_finished); }
 }
