@@ -2,9 +2,6 @@ _("Make sure queryAsync will synchronously fetch rows for a query asyncly");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
-  //XXXzpao test is disabled (bug 583985)
-  return;
-
   _("Using the form service to test queries");
   function c(query) Svc.Form.DBConnection.createStatement(query);
 
