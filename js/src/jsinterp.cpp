@@ -294,7 +294,12 @@ namespace js {
 bool
 ComputeThisFromArgv(JSContext *cx, Value *argv)
 {
-    JS_ASSERT(!argv[-1].isMagic());  // check for SynthesizeFrame poisoning
+    /*
+     * Check for SynthesizeFrame poisoning and fast constructors which
+     * didn't check their vp properly.
+     */
+    JS_ASSERT(!argv[-1].isMagic());
+
     if (argv[-1].isNull())
         return ComputeGlobalThis(cx, argv);
 
@@ -1194,6 +1199,23 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args)
     }
 
     JSObject *obj2 = &vp->toObject();
+
+    /*
+     * Call fast constructors without making the object first.
+     * The native will be able to make the right new object faster.
+     */
+    if (obj2->isFunction()) {
+        JSFunction *fun = (JSFunction *) obj2->getPrivate();
+        if (fun->isFastConstructor()) {
+            vp[1].setMagic(JS_FAST_CONSTRUCTOR);
+
+            FastNative fn = (FastNative)fun->u.n.native;
+            if (!fn(cx, args.getArgc(), vp))
+                return JS_FALSE;
+            JS_ASSERT(!vp->isPrimitive());
+            return JS_TRUE;
+        }
+    }
 
     /*
      * Get the constructor prototype object for this function.
