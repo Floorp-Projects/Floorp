@@ -58,7 +58,7 @@
 #include <windows.h>
 #endif
 
-#if defined(MOZ_PLATFORM_MAEMO) && defined(__arm__)
+#if (MOZ_PLATFORM_MAEMO == 5 || MOZ_PLATFORM_MAEMO == 4) && defined(__arm__)
 #include <fcntl.h>
 #include <unistd.h>
 static const char kHighMark[] = "/sys/kernel/high_watermark";
@@ -128,7 +128,7 @@ nsMemoryImpl::IsLowMemory(PRBool *result)
     GlobalMemoryStatusEx(&stat);
     *result = (stat.ullAvailPageFile < kRequiredMemory) &&
         ((float)stat.ullAvailPageFile / stat.ullTotalPageFile) < 0.1;
-#elif defined(MOZ_PLATFORM_MAEMO) && defined(__arm__)
+#elif (MOZ_PLATFORM_MAEMO == 5 || MOZ_PLATFORM_MAEMO == 4) && defined(__arm__)
     static int osso_highmark_fd = -1;
     if (osso_highmark_fd == -1) {
         osso_highmark_fd = open (kHighMark, O_RDONLY);
