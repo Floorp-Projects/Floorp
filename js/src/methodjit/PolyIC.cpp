@@ -489,14 +489,20 @@ class GetPropCompiler : public PICStubCompiler
         ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
 
         VoidStubUInt32 stub;
-        if (pic.kind == ic::PICInfo::GET)
+        switch (pic.kind) {
+          case ic::PICInfo::GET:
             stub = ic::GetProp;
-        else if (pic.kind == ic::PICInfo::CALL)
+            break;
+          case ic::PICInfo::CALL:
             stub = ic::CallProp;
-        else if (pic.kind == ic::PICInfo::GETELEM)
+            break;
+          case ic::PICInfo::GETELEM:
             stub = ic::GetElem;
-        else
+            break;
+          default:
             JS_NOT_REACHED("invalid pic kind for GetPropCompiler::reset");
+            return;
+        }
 
         MacroAssemblerCodePtr target(JS_FUNC_TO_DATA_PTR(void *, stub));
         repatcher.relinkCallerToTrampoline(retPtr, target);
