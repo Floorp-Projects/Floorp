@@ -3351,6 +3351,8 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow)
 {
 #ifndef JS_TRACER
     jumpInScript(j, target);
+    if (slow)
+        stubcc.jumpInScript(*slow, target);
 #else
     if (!addTraceHints || target >= PC || JSOp(*target) != JSOP_TRACE) {
         jumpInScript(j, target);
