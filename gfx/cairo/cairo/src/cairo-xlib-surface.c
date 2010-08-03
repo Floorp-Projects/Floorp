@@ -1727,20 +1727,21 @@ _surface_has_alpha (cairo_xlib_surface_t *surface)
     }
 }
 
-/* Returns true if the given operator and source-alpha combination
- * requires alpha compositing to complete.
+/* Returns true if the given operator and alpha combination requires alpha
+ * compositing to complete on source and destination surfaces with the same
+ * format.  i.e. if a simple bitwise copy is not appropriate.
  */
 static cairo_bool_t
 _operator_needs_alpha_composite (cairo_operator_t op,
-				 cairo_bool_t     destination_has_alpha,
-				 cairo_bool_t     source_has_alpha)
+				 cairo_bool_t     surfaces_have_alpha)
 {
-    if (op == CAIRO_OPERATOR_SOURCE ||
-	(! source_has_alpha &&
-	 (op == CAIRO_OPERATOR_OVER ||
-	  op == CAIRO_OPERATOR_ATOP ||
-	  op == CAIRO_OPERATOR_IN)))
-	return destination_has_alpha;
+    if (op == CAIRO_OPERATOR_SOURCE)
+	return FALSE;
+
+    if (op == CAIRO_OPERATOR_OVER ||
+	op == CAIRO_OPERATOR_IN ||
+	op == CAIRO_OPERATOR_ATOP)
+	return surfaces_have_alpha;
 
     return TRUE;
 }
@@ -1848,14 +1849,14 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
 				   cairo_surface_attributes_t *src_attr,
 				   cairo_bool_t		       have_mask)
 {
-    /* Can we use the core protocol? */
+    /* Can we use the core protocol?  (If _surfaces_compatible, then src and
+     * dst have the same format and _surface_has_alpha is the same for each.)
+     */
     if (! have_mask &&
         src->owns_pixmap &&
-	src->depth == dst->depth &&
+	_surfaces_compatible (src, dst) &&
 	_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL) &&
-	! _operator_needs_alpha_composite (op,
-					   _surface_has_alpha (dst),
-					   _surface_has_alpha (src)))
+	! _operator_needs_alpha_composite (op, _surface_has_alpha (dst)))
     {
 	if (src_attr->extend == CAIRO_EXTEND_NONE)
 	    return DO_XCOPYAREA;
@@ -2216,7 +2217,6 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     composite_operation_t       operation;
     int				itx, ity;
     cairo_bool_t		is_integer_translation;
-    cairo_bool_t		needs_alpha_composite;
     GC				gc;
 
     if (mask_pattern != NULL && ! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
@@ -2228,11 +2228,6 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	return UNSUPPORTED ("unsupported operation");
 
     X_DEBUG ((dst->dpy, "composite (dst=%x)", (unsigned int) dst->drawable));
-
-    needs_alpha_composite =
-	_operator_needs_alpha_composite (op,
-					 _surface_has_alpha (dst),
-					 ! _cairo_pattern_is_opaque (src_pattern));
 
     _cairo_xlib_display_notify (dst->display);
 
