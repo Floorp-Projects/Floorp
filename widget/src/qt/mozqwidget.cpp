@@ -20,6 +20,13 @@
 */
 static bool gKeyboardOpen = false;
 
+/*
+  In case we could not open the keyboard, we will try again when the focus
+  event is sent.  This can happen if the keyboard is asked for before the
+  window is focused. This global is used to track that case.
+*/
+static bool gFailedOpenKeyboard = false;
+ 
 MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
     : QGraphicsWidget(aParent),
       mReceiver(aReceiver)
@@ -90,6 +97,11 @@ void MozQWidget::dropEvent(QGraphicsSceneDragDropEvent* aEvent)
 void MozQWidget::focusInEvent(QFocusEvent* aEvent)
 {
     mReceiver->OnFocusInEvent(aEvent);
+
+    // The application requested the VKB during startup but did not manage
+    // to open it, because there was no focused window yet so we do it now.
+    if (gFailedOpenKeyboard)
+        showVKB();
 }
 
 void MozQWidget::focusOutEvent(QFocusEvent* aEvent)
@@ -286,6 +298,14 @@ void MozQWidget::setModal(bool modal)
 
 QVariant MozQWidget::inputMethodQuery(Qt::InputMethodQuery aQuery) const
 {
+    // The following query uses enums for the values, which are defined in
+    // MeegoTouch headers, because this should also work in the pure Qt case
+    // we use the values directly here. The original values are in the comments.
+    if (static_cast<Qt::InputMethodQuery>(/*M::ImModeQuery*/ 10004 ) == aQuery)
+    {
+        return QVariant(/*M::InputMethodModeDirect*/ 1 );
+    }
+
     return QGraphicsWidget::inputMethodQuery(aQuery);
 }
 
@@ -306,6 +326,12 @@ void MozQWidget::showVKB()
         focusWidget->setAttribute(Qt::WA_InputMethodEnabled, true);
         inputContext->setFocusWidget(focusWidget);
         gKeyboardOpen = true;
+        gFailedOpenKeyboard = false;
+    }
+    else
+    {
+        // No focused widget yet, so we have to open the VKB later on.
+        gFailedOpenKeyboard = true;
     }
 #else
     LOG(("VKB not supported in Qt < 4.6\n"));
