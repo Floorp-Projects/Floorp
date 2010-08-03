@@ -1332,7 +1332,7 @@ js_InferFlags(JSContext *cx, uintN defaultFlags);
 
 /* Object constructor native. Exposed only so the JIT can know its address. */
 JSBool
-js_Object(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
+js_Object(JSContext *cx, uintN argc, js::Value *vp);
 
 
 namespace js {
