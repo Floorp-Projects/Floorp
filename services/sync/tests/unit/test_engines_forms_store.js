@@ -3,6 +3,9 @@ Cu.import("resource://services-sync/engines/forms.js");
 Cu.import("resource://services-sync/type_records/forms.js");
 
 function run_test() {
+  //XXXzpao test is disabled (bug 583985)
+  return;
+
   let store = new FormEngine()._store;
 
   _("Remove any existing entries");
