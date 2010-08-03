@@ -718,6 +718,9 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
                 /* Could be anywhere - restart outer loop. */
                 continue;
             }
+            JSOp op = JSOp(*cx->regs->pc);
+            if (op == JSOP_RETURN && !(fp->flags & JSFRAME_BAILED_AT_RETURN))
+                fp->rval = f.regs.sp[-1];
             InlineReturn(cx, JS_TRUE);
             AdvanceReturnPC(cx);
         } else {
@@ -730,6 +733,9 @@ RemoveExcessFrames(VMFrame &f, JSStackFrame *entryFrame)
                  * edge case: at a RETURN, needing to pop a frame.
                  */
                 if (!cx->fp->imacpc && FrameIsFinished(cx)) {
+                    JSOp op = JSOp(*cx->regs->pc);
+                    if (op == JSOP_RETURN && !(cx->fp->flags & JSFRAME_BAILED_AT_RETURN))
+                        fp->rval = f.regs.sp[-1];
                     InlineReturn(cx, JS_TRUE);
                     AdvanceReturnPC(cx);
                 }

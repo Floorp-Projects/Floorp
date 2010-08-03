@@ -433,11 +433,11 @@ mjit::Compiler::generateMethod()
         JSOp op = JSOp(*PC);
 
         OpcodeStatus &opinfo = analysis[PC];
+        frame.setInTryBlock(opinfo.inTryBlock);
         if (opinfo.nincoming || opinfo.trap) {
             frame.forgetEverything(opinfo.stackDepth);
             opinfo.safePoint = true;
         }
-        frame.setInTryBlock(opinfo.inTryBlock);
         jumpMap[uint32(PC - script->code)] = masm.label();
 
         if (opinfo.trap) {
