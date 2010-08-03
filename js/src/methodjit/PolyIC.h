@@ -48,15 +48,6 @@
 #include "methodjit/MethodJIT.h"
 #include "RematInfo.h"
 
-/* Get a label for assertion purposes. Prevent #ifdef clutter. */
-#ifdef DEBUG
-# define DBGLABEL(name) Label name = masm.label();
-# define DBGLABEL_ASSIGN(name) name = masm.label();
-#else
-# define DBGLABEL(name)
-# define DBGLABEL_ASSIGN(name)
-#endif
-
 namespace js {
 namespace mjit {
 namespace ic {
