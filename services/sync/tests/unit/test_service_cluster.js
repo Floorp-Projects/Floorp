@@ -67,7 +67,7 @@ function test_findCluster() {
   } finally {
     Svc.Prefs.resetBranch("");
     if (server) {
-      server.stop(function() {});
+      server.stop(runNextTest);
     }
   }
 }
@@ -101,7 +101,7 @@ function test_setCluster() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(function() {});
+    server.stop(runNextTest);
   }
 }
 
@@ -141,12 +141,21 @@ function test_updateCluster() {
   
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(function() {});
+    server.stop(runNextTest);
   }
 }
 
+let tests = [test_findCluster, test_setCluster, test_updateCluster];
+
 function run_test() {
-  test_findCluster();
-  test_setCluster();
-  test_updateCluster();
+  do_test_pending();
+  runNextTest();
 }
+
+function runNextTest() {
+  if (tests.length)
+    tests.pop()();
+  else
+    do_test_finished();
+}
+
