@@ -103,17 +103,22 @@ StubCompiler::syncExitAndJump(Uses uses)
 // the slow path that syncs frame state for a slow call that uses |uses|
 // values from the top of the stack.
 //
+// The return value is the label for the start of the merge code. This is
+// the correct place to jump to in order to execute the slow path being
+// generated here.
+//
 // Note 1: Slow path generation is interleaved with fast path generation, but
 // the slow path goes into a separate buffer. The slow path code is appended
 // to the fast path code to keep it nearby in code memory.
 //
 // Note 2: A jump from the fast path to the slow path is called an "exit".
 //         A jump from the slow path to the fast path is called a "rejoin".
-void
+JSC::MacroAssembler::Label
 StubCompiler::linkExit(Jump j, Uses uses)
 {
     Label l = syncExit(uses);
     linkExitDirect(j, l);
+    return l;
 }
 
 // Special version of linkExit that is used when there is a JavaScript
