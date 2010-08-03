@@ -43,9 +43,12 @@ public:
     /**
      * VirtualKeyboardIntegration
      */
-    void showVKB();
+    void requestVKB(int aTimeout);
     void hideVKB();
     bool isVKBOpen();
+
+public slots:
+    void showVKB();
 
 protected:
     virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent* aEvent);

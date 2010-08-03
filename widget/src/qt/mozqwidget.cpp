@@ -9,6 +9,7 @@
 
 #include <QtCore/QEvent>
 #include <QtCore/QVariant>
+#include <QtCore/QTimer>
 
 #include "mozqwidget.h"
 #include "nsWindow.h"
@@ -27,6 +28,15 @@ static bool gKeyboardOpen = false;
 */
 static bool gFailedOpenKeyboard = false;
  
+/*
+  For websites that focus editable elements during other operations for a very
+  short time, we add some decoupling to prevent the VKB from appearing and 
+  reappearing for a very short time. This global is set when the keyboard should
+  be opened and if it is still set when a timer runs out, the VKB is really
+  shown.
+*/
+static bool gPendingVKBOpen = false;
+
 MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
     : QGraphicsWidget(aParent),
       mReceiver(aReceiver)
@@ -99,9 +109,10 @@ void MozQWidget::focusInEvent(QFocusEvent* aEvent)
     mReceiver->OnFocusInEvent(aEvent);
 
     // The application requested the VKB during startup but did not manage
-    // to open it, because there was no focused window yet so we do it now.
+    // to open it, because there was no focused window yet so we do it now by
+    // requesting the VKB without any timeout.
     if (gFailedOpenKeyboard)
-        showVKB();
+        requestVKB(0);
 }
 
 void MozQWidget::focusOutEvent(QFocusEvent* aEvent)
@@ -309,8 +320,33 @@ QVariant MozQWidget::inputMethodQuery(Qt::InputMethodQuery aQuery) const
     return QGraphicsWidget::inputMethodQuery(aQuery);
 }
 
+/**
+  Request the VKB and starts a timer with the given timeout in milliseconds.
+  If the request is not canceled when the timer runs out, the VKB is actually
+  shown.
+*/
+void MozQWidget::requestVKB(int aTimeout)
+{
+    if (!gPendingVKBOpen) {
+        gPendingVKBOpen = true;
+
+        if (aTimeout == 0)
+            showVKB();
+        else
+            QTimer::singleShot(aTimeout, this, SLOT(showVKB()));
+    }
+}
+
+
+
 void MozQWidget::showVKB()
 {
+    // skip showing of keyboard if not pending
+    if (!gPendingVKBOpen)
+        return;
+
+    gPendingVKBOpen = false;
+
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     QWidget* focusWidget = qApp->focusWidget();
 
@@ -340,6 +376,11 @@ void MozQWidget::showVKB()
 
 void MozQWidget::hideVKB()
 {
+    if (gPendingVKBOpen) {
+        // do not really open
+        gPendingVKBOpen = false;
+    }
+
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     QInputContext *inputContext = qApp->inputContext();
     if (!inputContext) {
