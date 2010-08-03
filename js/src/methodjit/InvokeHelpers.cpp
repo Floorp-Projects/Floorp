@@ -418,6 +418,17 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
 
             return ret;
         }
+
+        if (fun->isFastConstructor()) {
+            vp[1].setMagic(JS_FAST_CONSTRUCTOR);
+
+            FastNative fn = (FastNative)fun->u.n.native;
+            if (!fn(cx, argc, vp))
+                THROWV(NULL);
+            JS_ASSERT(!vp->isPrimitive());
+
+            return NULL;
+        }
     }
 
     if (!InvokeConstructor(cx, InvokeArgsGuard(vp, argc)))

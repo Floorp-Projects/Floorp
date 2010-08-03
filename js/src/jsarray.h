@@ -239,7 +239,7 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id,
 
 /* Array constructor native. Exposed only so the JIT can know its address. */
 JSBool
-js_Array(JSContext* cx, JSObject* obj, uintN argc, js::Value* argv, js::Value* rval);
+js_Array(JSContext *cx, uintN argc, js::Value *vp);
 
 /*
  * Friend api function that allows direct creation of an array object with a

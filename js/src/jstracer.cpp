@@ -11572,22 +11572,20 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
         return interpretedFunctionCall(fval, fun, argc, mode == JSOP_NEW);
     }
 
-    if (FUN_SLOW_NATIVE(fun)) {
-        Native native = fun->u.n.native;
-        Value* argv = &tval + 1;
-        if (native == js_Array)
-            return newArray(&fval.toObject(), argc, argv, &fval);
-        if (native == js_String && argc == 1) {
-            if (mode == JSOP_NEW)
-                return newString(&fval.toObject(), 1, argv, &fval);
-            if (!argv[0].isPrimitive()) {
-                CHECK_STATUS(guardNativeConversion(argv[0]));
-                return callImacro(call_imacros.String);
-            }
-            set(&fval, stringify(argv[0]));
-            pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
-            return RECORD_CONTINUE;
+    FastNative native = FUN_FAST_NATIVE(fun);
+    Value* argv = &tval + 1;
+    if (native == js_Array)
+        return newArray(&fval.toObject(), argc, argv, &fval);
+    if (native == js_String && argc == 1) {
+        if (mode == JSOP_NEW)
+            return newString(&fval.toObject(), 1, argv, &fval);
+        if (!argv[0].isPrimitive()) {
+            CHECK_STATUS(guardNativeConversion(argv[0]));
+            return callImacro(call_imacros.String);
         }
+        set(&fval, stringify(argv[0]));
+        pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+        return RECORD_CONTINUE;
     }
 
     return callNative(argc, mode);
