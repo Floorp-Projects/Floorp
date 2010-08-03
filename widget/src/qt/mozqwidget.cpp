@@ -114,16 +114,21 @@ void MozQWidget::hoverMoveEvent(QGraphicsSceneHoverEvent* aEvent)
 
 void MozQWidget::keyPressEvent(QKeyEvent* aEvent)
 {
+#if (MOZ_PLATFORM_MAEMO==5)
     // Below removed to prevent invertion of upper and lower case
     // See bug 561234
     // mReceiver->OnKeyPressEvent(aEvent);
+#else
+    mReceiver->OnKeyPressEvent(aEvent);
+#endif
 }
 
 void MozQWidget::keyReleaseEvent(QKeyEvent* aEvent)
 {
+#if (MOZ_PLATFORM_MAEMO==5)
     // Below line should be removed when bug 561234 is fixed
     mReceiver->OnKeyPressEvent(aEvent);
-
+#endif
     mReceiver->OnKeyReleaseEvent(aEvent);
 }
 
