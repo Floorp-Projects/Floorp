@@ -349,6 +349,10 @@ IsFunctionObject(const js::Value &v, JSObject **funobj)
     (JS_ASSERT((funobj)->isFunction()),                                       \
      (JSFunction *) (funobj)->getPrivate())
 
+extern JSFunction *
+js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
+               uintN flags, JSObject *parent, JSAtom *atom);
+
 namespace js {
 
 /*
@@ -364,6 +368,9 @@ IsInternalFunctionObject(JSObject *funobj)
     return funobj == fun && (fun->flags & JSFUN_LAMBDA) && !funobj->getParent();
 }
     
+extern JSString *
+fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
+
 } /* namespace js */
 
 extern JSObject *
@@ -371,10 +378,6 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 js_InitArgumentsClass(JSContext *cx, JSObject *obj);
-
-extern JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
-               uintN flags, JSObject *parent, JSAtom *atom);
 
 extern void
 js_TraceFunction(JSTracer *trc, JSFunction *fun);
@@ -555,11 +558,4 @@ js_fun_apply(JSContext *cx, uintN argc, js::Value *vp);
 extern JSBool
 js_fun_call(JSContext *cx, uintN argc, js::Value *vp);
 
-
-namespace js {
-
-extern JSString *
-fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
-
-}
 #endif /* jsfun_h___ */
