@@ -151,6 +151,11 @@ void MozQWidget::mouseReleaseEvent(QGraphicsSceneMouseEvent* aEvent)
 
 bool MozQWidget::event ( QEvent * event )
 {
+    // check receiver, since due to deleteLater() call it's possible, that
+    // events pass loop after receiver's destroy and while widget is still alive
+    if (!mReceiver)
+        return QGraphicsWidget::event(event);
+
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     switch (event->type())
     {
