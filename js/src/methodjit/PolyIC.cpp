@@ -483,7 +483,7 @@ class GetPropCompiler : public PICStubCompiler
                           int32(JSScope::INVALID_SHAPE));
         repatcher.relink(pic.fastPathStart.jumpAtOffset(pic.shapeGuard + GETPROP_INLINE_SHAPE_JUMP),
                          pic.slowPathStart);
-        // :FIXME: :TODO: :XXX: :URGENT: re-patch type guard
+        repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD), pic.slowPathStart);
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
         ReturnAddressPtr retPtr(pic.slowPathStart.callAtOffset(pic.callReturn).executableAddress());
