@@ -265,10 +265,15 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
     JSContext *cx = f.cx;
     JSStackFrame *fp = cx->fp;
     JSScript *script = fp->script;
+    f.regs.pc = script->code;
+    f.regs.sp = fp->base();
+
     if (cx->options & JSOPTION_METHODJIT) {
         if (!script->ncode) {
-            if (mjit::TryCompile(cx, script, fp->fun, fp->scopeChain) == Compile_Error)
+            if (mjit::TryCompile(cx, script, fp->fun, fp->scopeChain) == Compile_Error) {
+                InlineReturn(cx, JS_FALSE);
                 return false;
+            }
         }
         JS_ASSERT(script->ncode);
         if (script->ncode != JS_UNJITTABLE_METHOD) {
@@ -277,9 +282,6 @@ InlineCall(VMFrame &f, uint32 flags, void **pret, uint32 argc)
             return true;
         }
     }
-
-    f.regs.pc = script->code;
-    f.regs.sp = fp->base();
 
     bool ok = !!Interpret(cx, cx->fp);
     InlineReturn(cx, JS_TRUE);
