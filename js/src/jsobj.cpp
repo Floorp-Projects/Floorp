@@ -6046,9 +6046,9 @@ JSObject::wrappedObject(JSContext *cx) const
 }
 
 JSObject *
-JSObject::getGlobal()
+JSObject::getGlobal() const
 {
-    JSObject *obj = this;
+    JSObject *obj = const_cast<JSObject *>(this);
     while (JSObject *parent = obj->getParent())
         obj = parent;
     return obj;
