@@ -1613,11 +1613,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   height: 16px;
 }
 
-.notification-anchor-icon:focus {
-  outline: 1px dotted -moz-DialogText;
-  outline-offset: -3px;
-}
-
 #geo-notification-icon {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
