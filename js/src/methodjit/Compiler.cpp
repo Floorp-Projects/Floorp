@@ -2121,10 +2121,9 @@ mjit::Compiler::jsop_getelem_pic(FrameEntry *obj, FrameEntry *id, RegisterID obj
     Jump idGuard = masm.branch32WithPatch(Assembler::NotEqual, idReg,
                                  Imm32(BOGUS_ATOM), dbgInlineAtomOffset);
     DBGLABEL(dbgInlineAtomJump);
-    pic.slowPathStart = stubcc.masm.label();
 
     stubcc.linkExit(idGuard, Uses(2));
-    stubcc.linkExit(jmpShapeGuard, Uses(2));
+    pic.slowPathStart = stubcc.linkExit(jmpShapeGuard, Uses(2));
 
     stubcc.leave();
     stubcc.masm.move(Imm32(pics.length()), Registers::ArgReg1);
