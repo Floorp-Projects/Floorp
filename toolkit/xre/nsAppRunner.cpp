@@ -54,8 +54,11 @@ using mozilla::dom::ContentParent;
 #define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
 
 #if defined(MOZ_WIDGET_QT)
-#include <QApplication>
-#include <QScopedPointer>
+#include <QtGui/QApplication>
+#include <QtCore/QScopedPointer>
+#include <QtGui/QApplication>
+#include <QtGui/QInputContextFactory>
+#include <QtGui/QInputContext>
 #ifdef MOZ_ENABLE_MEEGOTOUCH
 #include <MApplication>
 #include "MozMeegoAppService.h"
@@ -3144,6 +3147,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #else
     QScopedPointer<QApplication> app(new QApplication(gArgc, gArgv));
 #endif
+
+    // try to get the MInputContext if possible to support the MeeGo VKB
+    QInputContext *inputContext = app->inputContext();
+    if (inputContext && inputContext->identifierName() != "MInputContext") {
+        QInputContext* context = QInputContextFactory::create("MInputContext",
+                                                              app.data());
+        if (context)
+            app->setInputContext(context);
+    }
 
     QStringList nonQtArguments = app->arguments();
     gQtOnlyArgc = 1;
