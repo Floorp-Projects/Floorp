@@ -1462,6 +1462,8 @@ class ScopeNameCompiler : public PICStubCompiler
             return true;
         }
 
+        if (!prop)
+            return disable("property not found");
         if (!obj->isNative() || !holder->isNative())
             return disable("non-native scope object");
         if (obj != holder)
