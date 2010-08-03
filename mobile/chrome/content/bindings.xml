@@ -452,6 +452,11 @@
         </getter>
       </property>
       <property name="isEditing" readonly="true" onget="return this._isEditing;"/>
+      <property name="isReadOnly" readonly="true">
+        <getter><![CDATA[
+          return this.control && this.control._readOnlyFolders.indexOf(parseInt(this.itemId, 10)) != -1;
+        ]]></getter>
+      </property>
       <property name="control" readonly="true">
         <getter>
           <![CDATA[
@@ -475,7 +480,7 @@
         <parameter name="autoSelect"/>
         <body>
           <![CDATA[
-            if (!this.itemId || this.control._readOnlyFolders.indexOf(parseInt(this.itemId)) != -1)
+            if (!this.itemId || this.isReadOnly)
               return;
 
             this._isEditing = true;
@@ -497,7 +502,7 @@
         <parameter name="shouldSave"/>
         <body>
           <![CDATA[
-            if (!this.itemId || this.control._readOnlyFolders.indexOf(parseInt(this.itemId)) != -1)
+            if (!this.itemId || this.isReadOnly)
               return;
 
             if (shouldSave)
@@ -817,21 +822,6 @@
             rootNode.containerOpen = false;
 
             return isEmpty;
-          ]]>
-        </body>
-      </method>
-
-      <method name="_getFirstVisibleChild">
-        <body>
-          <![CDATA[
-            let children = this._children.childNodes;
-            for (let i = 0; i < children.length; i++) {
-              let rect = children[i].getBoundingClientRect();
-              let position = rect.top - rect.height;
-              if (position > 0 && this._readOnlyFolders.indexOf(parseInt(children[i].itemId)) == -1)
-                return children[i];
-            }
-            return null;
           ]]>
         </body>
       </method>
