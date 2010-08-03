@@ -418,7 +418,7 @@ struct JSObject {
         parent = newParent;
     }
 
-    JSObject *getGlobal();
+    JSObject *getGlobal() const;
 
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
@@ -738,6 +738,8 @@ struct JSObject {
     inline void dropProperty(JSContext *cx, JSProperty *prop);
 
     JS_FRIEND_API(JSCompartment *) getCompartment(JSContext *cx);
+
+    inline JSObject *getThrowTypeError() const;
 
     void swap(JSObject *obj);
 
