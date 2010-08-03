@@ -5542,6 +5542,29 @@ then
 fi
 
 dnl ========================================================
+dnl = libproxy support
+dnl ========================================================
+
+if test "$MOZ_ENABLE_GTK2"
+then
+    MOZ_ENABLE_LIBPROXY=
+
+    MOZ_ARG_ENABLE_BOOL(libproxy,
+    [  --enable-libproxy         Enable libproxy support ],
+    MOZ_ENABLE_LIBPROXY=1,
+    MOZ_ENABLE_LIBPROXY=)
+
+    if test "$MOZ_ENABLE_LIBPROXY"
+    then
+        PKG_CHECK_MODULES(MOZ_LIBPROXY, libproxy-1.0)
+        AC_DEFINE(MOZ_ENABLE_LIBPROXY)
+    fi
+fi
+AC_SUBST(MOZ_ENABLE_LIBPROXY)
+AC_SUBST(MOZ_LIBPROXY_CFLAGS)
+AC_SUBST(MOZ_LIBPROXY_LIBS)
+
+dnl ========================================================
 dnl = libnotify support
 dnl ========================================================
 
