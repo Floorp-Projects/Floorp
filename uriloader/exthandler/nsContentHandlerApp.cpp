@@ -39,12 +39,11 @@
 
 #include "nsContentHandlerApp.h"
 #include "nsIURI.h"
-#include "nsIGenericFactory.h"
 #include "nsIClassInfoImpl.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-NS_IMPL_ISUPPORTS1_CI(nsContentHandlerApp, nsIHandlerApp)
+NS_IMPL_ISUPPORTS1(nsContentHandlerApp, nsIHandlerApp)
 
 nsContentHandlerApp::nsContentHandlerApp(nsString aName, nsCString aType,
                                          ContentAction::Action& aAction) :
@@ -106,6 +105,4 @@ nsContentHandlerApp::LaunchWithURI(nsIURI *aURI,
 
   return NS_OK;
 }
-
-NS_DECL_CLASSINFO(nsContentHandlerApp)
 
