@@ -54,9 +54,13 @@ using mozilla::dom::ContentParent;
 #define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
 
 #if defined(MOZ_WIDGET_QT)
-#include <qwidget.h>
-#include <qapplication.h>
-#endif
+#include <QApplication>
+#include <QScopedPointer>
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+#include <MApplication>
+#include "MozMeegoAppService.h"
+#endif // MOZ_ENABLE_MEEGOTOUCH
+#endif // MOZ_WIDGET_QT
 
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
@@ -3128,9 +3132,20 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     ar = CheckArg("graphicssystem", PR_TRUE, &qgraphicssystemARG, PR_FALSE);
     if (ar == ARG_FOUND)
       PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
-    QApplication app(gArgc, gArgv);
 
-    QStringList nonQtArguments = app.arguments();
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+    QScopedPointer<QApplication> app;
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      MozMeegoAppService *appService = new MozMeegoAppService;
+      app.reset(new MApplication(gArgc, gArgv, appService));
+    } else {
+      app.reset(new QApplication(gArgc, gArgv));
+    }
+#else
+    QScopedPointer<QApplication> app(new QApplication(gArgc, gArgv));
+#endif
+
+    QStringList nonQtArguments = app->arguments();
     gQtOnlyArgc = 1;
     gQtOnlyArgv = (char**) malloc(sizeof(char*) 
                   * (gRestartArgc - nonQtArguments.size() + 2));
