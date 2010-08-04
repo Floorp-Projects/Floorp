@@ -385,7 +385,7 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
         if (fun->isFastNative()) {
 #ifdef JS_MONOIC
 #ifdef JS_CPU_X86
-            ic::CallFastNative(cx, f.fp->script, mic, fun);
+            ic::CallFastNative(cx, f.fp->script, mic, fun, false);
 #endif
 #endif
 
@@ -438,6 +438,12 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
         }
 
         if (fun->isFastConstructor()) {
+#ifdef JS_MONOIC
+#ifdef JS_CPU_X86
+            ic::CallFastNative(cx, f.fp->script, mic, fun, true);
+#endif
+#endif
+
             vp[1].setMagic(JS_FAST_CONSTRUCTOR);
 
             FastNative fn = (FastNative)fun->u.n.native;
