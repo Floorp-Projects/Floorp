@@ -92,7 +92,7 @@ namespace nanojit
     // Per-opcode register hint table.  Default to no hints for all
     // instructions.  It's not marked const because individual back-ends can
     // install hint values for opcodes of interest in nInit().
-    RegisterMask hints[LIR_sentinel+1] = {
+    RegisterMask Assembler::nHints[LIR_sentinel+1] = {
 #define OP___(op, number, repKind, retType, isCse) \
         0,
 #include "LIRopcode.tbl"
@@ -824,7 +824,7 @@ namespace nanojit
         _inExit = false;
 
         //verbose_only( verbose_outputf("         LIR_xt/xf swapCodeChunks, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
-        verbose_only( verbose_outputf("%010lx:", (unsigned long)jmpTarget);)
+        verbose_only( verbose_outputf("%p:", jmpTarget);)
         verbose_only( verbose_outputf("----------------------------------- ## BEGIN exit block (LIR_xt|LIR_xf)") );
 
 #ifdef NANOJIT_IA32
@@ -1515,6 +1515,7 @@ namespace nanojit
 #endif
                 case LIR_cmovi:
                 CASE64(LIR_cmovq:)
+                case LIR_cmovd:
                     countlir_cmov();
                     ins->oprnd1()->setResultLive();
                     ins->oprnd2()->setResultLive();

@@ -2768,27 +2768,59 @@ Assembler::asm_cmov(LIns* ins)
     LIns* iffalse = ins->oprnd3();
 
     NanoAssert(condval->isCmp());
-    NanoAssert(ins->opcode() == LIR_cmovi && iftrue->isI() && iffalse->isI());
+    NanoAssert((ins->isop(LIR_cmovi) && iftrue->isI() && iffalse->isI()) ||
+               (ins->isop(LIR_cmovd) && iftrue->isD() && iffalse->isD()));
 
-    const Register rr = deprecated_prepResultReg(ins, GpRegs);
+    RegisterMask allow = ins->isD() ? FpRegs : GpRegs;
 
-    // this code assumes that neither LD nor MR nor MRcc set any of the condition flags.
-    // (This is true on Intel, is it true on all architectures?)
-    const Register iffalsereg = findRegFor(iffalse, GpRegs & ~rmask(rr));
-    switch (condval->opcode()) {
-        // note that these are all opposites...
-        case LIR_eqi:    MOVNE(rr, iffalsereg);  break;
-        case LIR_lti:    MOVGE(rr, iffalsereg);  break;
-        case LIR_lei:    MOVGT(rr, iffalsereg);  break;
-        case LIR_gti:    MOVLE(rr, iffalsereg);  break;
-        case LIR_gei:    MOVLT(rr, iffalsereg);  break;
-        case LIR_ltui:   MOVHS(rr, iffalsereg);  break;
-        case LIR_leui:   MOVHI(rr, iffalsereg);  break;
-        case LIR_gtui:   MOVLS(rr, iffalsereg);  break;
-        case LIR_geui:   MOVLO(rr, iffalsereg);  break;
-        default: debug_only( NanoAssert(0) );    break;
+    Register rr = prepareResultReg(ins, allow);
+
+    Register rf = findRegFor(iffalse, allow & ~rmask(rr));
+
+    // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+    Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
+    if (ins->isop(LIR_cmovd)) {
+        NIns* target = _nIns;
+        asm_nongp_copy(rr, rf);
+        asm_branch(false, condval, target);
+        if (rr != rt)
+            asm_nongp_copy(rr, rt);
+        freeResourcesOf(ins);
+        if (!iftrue->isInReg()) {
+            NanoAssert(rt == rr);
+            findSpecificRegForUnallocated(iftrue, rr);
+        }
+        return;
     }
-    /*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
+
+    // WARNING: We cannot generate any code that affects the condition
+    // codes between the MRcc generation here and the asm_cmp() call
+    // below.  See asm_cmp() for more details.
+    if (ins->isop(LIR_cmovi)) {
+        switch (condval->opcode()) {
+            // note that these are all opposites...
+            case LIR_eqi:    MOVNE(rr, rf);  break;
+            case LIR_lti:    MOVGE(rr, rf);  break;
+            case LIR_lei:    MOVGT(rr, rf);  break;
+            case LIR_gti:    MOVLE(rr, rf);  break;
+            case LIR_gei:    MOVLT(rr, rf);  break;
+            case LIR_ltui:   MOVHS(rr, rf);  break;
+            case LIR_leui:   MOVHI(rr, rf);  break;
+            case LIR_gtui:   MOVLS(rr, rf);  break;
+            case LIR_geui:   MOVLO(rr, rf);  break;
+            default: debug_only( NanoAssert(0) );    break;
+        }
+    }
+    if (rr != rt)
+        MR(rr, rt);
+
+    freeResourcesOf(ins);
+    if (!iftrue->isInReg()) {
+        NanoAssert(rt == rr);
+        findSpecificRegForUnallocated(iftrue, rr);
+    }
+
     asm_cmp(condval);
 }
 

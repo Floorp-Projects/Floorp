@@ -61,11 +61,16 @@
 #include "nsCSSDataBlock.h"
 #include "nsCSSStruct.h"
 
-// must be forward-declared in root namespace
-class CSSStyleRuleImpl;
-
 namespace mozilla {
 namespace css {
+
+// Declaration objects have unusual lifetime rules.  Every declaration
+// begins life in an invalid state which ends when InitializeEmpty or
+// CompressFrom is called upon it.  After that, it can be attached to
+// exactly one style rule, and will be destroyed when that style rule
+// is destroyed.  A declaration becomes immutable when its style rule's
+// |RuleMatched| method is called; after that, it must be copied before
+// it can be modified, which is taken care of by |EnsureMutable|.
 
 class Declaration {
 public:
@@ -78,16 +83,18 @@ public:
 
   Declaration(const Declaration& aCopy);
 
+  ~Declaration();
+
   /**
    * |ValueAppended| must be called to maintain this declaration's
    * |mOrder| whenever a property is parsed into an expanded data block
    * for this declaration.  aProperty must not be a shorthand.
    */
-  nsresult ValueAppended(nsCSSProperty aProperty);
+  void ValueAppended(nsCSSProperty aProperty);
 
-  nsresult RemoveProperty(nsCSSProperty aProperty);
+  void RemoveProperty(nsCSSProperty aProperty);
 
-  nsresult GetValue(nsCSSProperty aProperty, nsAString& aValue) const;
+  void GetValue(nsCSSProperty aProperty, nsAString& aValue) const;
 
   PRBool HasImportantData() const { return mImportantData != nsnull; }
   PRBool GetValueIsImportant(nsCSSProperty aProperty) const;
@@ -96,20 +103,17 @@ public:
   PRUint32 Count() const {
     return mOrder.Length();
   }
-  nsresult GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const;
+  void GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const;
 
-  nsresult ToString(nsAString& aString) const;
-
-  Declaration* Clone() const;
+  void ToString(nsAString& aString) const;
 
   nsCSSCompressedDataBlock* GetNormalBlock() const { return mData; }
   nsCSSCompressedDataBlock* GetImportantBlock() const { return mImportantData; }
 
   /**
-   * Initialize this declaration as holding no data.  Return false on
-   * out-of-memory.
+   * Initialize this declaration as holding no data.  Cannot fail.
    */
-  PRBool InitializeEmpty();
+  void InitializeEmpty();
 
   /**
    * Transfer all of the state from |aExpandedData| into this declaration.
@@ -118,8 +122,8 @@ public:
   void CompressFrom(nsCSSExpandedDataBlock *aExpandedData) {
     NS_ASSERTION(!mData, "oops");
     NS_ASSERTION(!mImportantData, "oops");
-    aExpandedData->Compress(getter_AddRefs(mData),
-                            getter_AddRefs(mImportantData));
+    aExpandedData->Compress(getter_Transfers(mData),
+                            getter_Transfers(mImportantData));
     aExpandedData->AssertInitialState();
   }
 
@@ -131,33 +135,56 @@ public:
    * |ValueAppended| should be called.
    */
   void ExpandTo(nsCSSExpandedDataBlock *aExpandedData) {
+    AssertMutable();
     aExpandedData->AssertInitialState();
 
     NS_ASSERTION(mData, "oops");
-    aExpandedData->Expand(&mData, &mImportantData);
-    NS_ASSERTION(!mData && !mImportantData,
-                 "Expand didn't null things out");
+    aExpandedData->Expand(mData.forget(), mImportantData.forget());
   }
 
   /**
-   * Return a pointer to our current value for this property.  This only
-   * returns non-null if the property is set and it not !important.  This
-   * should only be called when not expanded.  Always returns null for
-   * shorthand properties.
-   *
-   * The caller must call EnsureMutable first.
+   * Do what |nsIStyleRule::MapRuleInfoInto| needs to do for a style
+   * rule using this declaration for storage.
    */
-  void* SlotForValue(nsCSSProperty aProperty) {
-    NS_PRECONDITION(mData, "How did that happen?");
+  void MapNormalRuleInfoInto(nsRuleData *aRuleData) const {
+    NS_ABORT_IF_FALSE(mData, "called while expanded");
+    mData->MapRuleInfoInto(aRuleData);
+  }
+  void MapImportantRuleInfoInto(nsRuleData *aRuleData) const {
+    NS_ABORT_IF_FALSE(mData, "called while expanded");
+    NS_ABORT_IF_FALSE(mImportantData, "must have important data");
+    mImportantData->MapRuleInfoInto(aRuleData);
+  }
+
+  /**
+   * Return a pointer to our current value for this property.
+   * Only returns non-null if the property is longhand, set, and
+   * has the indicated importance level.
+   *
+   * May only be called when not expanded, and the caller must call
+   * EnsureMutable first.
+   */
+  void* SlotForValue(nsCSSProperty aProperty, PRBool aIsImportant) {
+    AssertMutable();
+    NS_ABORT_IF_FALSE(mData, "called while expanded");
+
     if (nsCSSProps::IsShorthand(aProperty)) {
       return nsnull;
     }
+    nsCSSCompressedDataBlock *block = aIsImportant ? mImportantData : mData;
+    // mImportantData might be null
+    if (!block) {
+      return nsnull;
+    }
 
-    void* slot = mData->SlotForValue(aProperty);
-
-    NS_ASSERTION(!slot || !mImportantData ||
-                 !mImportantData->StorageFor(aProperty),
-                 "Property both important and not?");
+    void *slot = block->SlotForValue(aProperty);
+#ifdef DEBUG
+    {
+      nsCSSCompressedDataBlock *other = aIsImportant ? mData : mImportantData;
+      NS_ABORT_IF_FALSE(!slot || !other || !other->StorageFor(aProperty),
+                        "Property both important and not?");
+    }
+#endif
     return slot;
   }
 
@@ -167,17 +194,36 @@ public:
   }
 
   /**
-   * Ensures that IsMutable on both data blocks will return true by
-   * cloning data blocks if needed.  Returns false on out-of-memory
-   * (which means IsMutable won't return true).
+   * Return whether |this| may be modified.
    */
-  PRBool EnsureMutable();
+  bool IsMutable() const {
+    return !mImmutable;
+  }
+
+  /**
+   * Copy |this|, if necessary to ensure that it can be modified.
+   */
+  Declaration* EnsureMutable();
+
+  /**
+   * Crash if |this| cannot be modified.
+   */
+  void AssertMutable() const {
+    NS_ABORT_IF_FALSE(IsMutable(), "someone forgot to call EnsureMutable");
+  }
+
+  /**
+   * Mark this declaration as unmodifiable.  It's 'const' so it can
+   * be called from ToString.
+   */
+  void SetImmutable() const { mImmutable = PR_TRUE; }
 
   /**
    * Clear the data, in preparation for its replacement with entirely
    * new data by a call to |CompressFrom|.
    */
   void ClearData() {
+    AssertMutable();
     mData = nsnull;
     mImportantData = nsnull;
     mOrder.Clear();
@@ -187,16 +233,6 @@ public:
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  // return whether there was a value in |aValue| (i.e., it had a non-null unit)
-  static PRBool AppendCSSValueToString(nsCSSProperty aProperty,
-                                       const nsCSSValue& aValue,
-                                       nsAString& aResult);
-
-  // return whether there was a value in |aStorage| (i.e., it was non-null)
-  static PRBool AppendStorageToString(nsCSSProperty aProperty,
-                                      const void* aStorage,
-                                      nsAString& aResult);
-
 private:
   // Not implemented, and not supported.
   Declaration& operator=(const Declaration& aCopy);
@@ -204,62 +240,28 @@ private:
 
   static void AppendImportanceToString(PRBool aIsImportant, nsAString& aString);
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
-  PRBool   AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  PRBool AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
   // Helper for ToString with strange semantics regarding aValue.
-  void     AppendPropertyAndValueToString(nsCSSProperty aProperty,
-                                          nsAutoString& aValue,
-                                          nsAString& aResult) const;
-
-private:
-    //
-    // Specialized ref counting.
-    // We do not want everyone to ref count us, only the rules which hold
-    //  onto us (our well defined lifetime is when the last rule releases
-    //  us).
-    // It's worth a comment here that the main css::Declaration is
-    //  refcounted, but its |mImportant| is not refcounted, just owned
-    //  by the non-important declaration.
-    //
-    friend class ::CSSStyleRuleImpl;
-    void AddRef(void) {
-      if (mRefCnt == PR_UINT32_MAX) {
-        NS_WARNING("refcount overflow, leaking object");
-        return;
-      }
-      ++mRefCnt;
-    }
-    void Release(void) {
-      if (mRefCnt == PR_UINT32_MAX) {
-        NS_WARNING("refcount overflow, leaking object");
-        return;
-      }
-      NS_ASSERTION(0 < mRefCnt, "bad Release");
-      if (0 == --mRefCnt) {
-        delete this;
-      }
-    }
-public:
-    void RuleAbort(void) {
-      NS_ASSERTION(0 == mRefCnt, "bad RuleAbort");
-      delete this;
-    }
-private:
-  // Block everyone, except us or a derivative, from deleting us.
-  ~Declaration();
+  void AppendPropertyAndValueToString(nsCSSProperty aProperty,
+                                      nsAutoString& aValue,
+                                      nsAString& aResult) const;
 
   nsCSSProperty OrderValueAt(PRUint32 aValue) const {
     return nsCSSProperty(mOrder.ElementAt(aValue));
   }
 
-private:
-    nsAutoTArray<PRUint8, 8> mOrder;
-    nsAutoRefCnt mRefCnt;
+  nsAutoTArray<PRUint8, 8> mOrder;
 
-    // never null, except while expanded
-    nsRefPtr<nsCSSCompressedDataBlock> mData;
+  // never null, except while expanded, or before the first call to
+  // InitializeEmpty or CompressFrom.
+  nsAutoPtr<nsCSSCompressedDataBlock> mData;
 
-    // may be null
-    nsRefPtr<nsCSSCompressedDataBlock> mImportantData;
+  // may be null
+  nsAutoPtr<nsCSSCompressedDataBlock> mImportantData;
+
+  // set by style rules when |RuleMatched| is called;
+  // also by ToString (hence the 'mutable').
+  mutable PRPackedBool mImmutable;
 };
 
 } // namespace css

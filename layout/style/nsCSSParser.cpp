@@ -202,14 +202,12 @@ public:
                                nsIPrincipal*     aNodePrincipal,
                                nsICSSStyleRule** aResult);
 
-  nsresult ParseAndAppendDeclaration(const nsAString&  aBuffer,
-                                     nsIURI*           aSheetURL,
-                                     nsIURI*           aBaseURL,
-                                     nsIPrincipal*     aSheetPrincipal,
-                                     css::Declaration* aDeclaration,
-                                     PRBool            aParseOnlyOneDecl,
-                                     PRBool*           aChanged,
-                                     PRBool            aClearOldDecl);
+  nsresult ParseDeclarations(const nsAString&  aBuffer,
+                             nsIURI*           aSheetURL,
+                             nsIURI*           aBaseURL,
+                             nsIPrincipal*     aSheetPrincipal,
+                             css::Declaration* aDeclaration,
+                             PRBool*           aChanged);
 
   nsresult ParseRule(const nsAString&        aRule,
                      nsIURI*                 aSheetURL,
@@ -407,37 +405,17 @@ protected:
                           PRBool aCheckForBraces,
                           PRBool aMustCallValueAppended,
                           PRBool* aChanged);
-  // After a parse error parsing |aPropID|, clear the data in
-  // |mTempData|.
-  void ClearTempData(nsCSSProperty aPropID);
-  // After a successful parse of |aPropID|, transfer data from
-  // |mTempData| to |mData|.  Set |*aChanged| to true if something
-  // changed, but leave it unmodified otherwise.  If aMustCallValueAppended
-  // is false, will not call ValueAppended on aDeclaration if the property
-  // is already set in it.  If aOverrideImportant is true, new data will
-  // replace old settings of the same properties, even if the old settings
-  // are !important and the new data aren't.
-  void TransferTempData(css::Declaration* aDeclaration,
-                        nsCSSProperty aPropID,
-                        PRBool aIsImportant,
-                        PRBool aOverrideImportant,
-                        PRBool aMustCallValueAppended,
-                        PRBool* aChanged);
-  void DoTransferTempData(css::Declaration* aDeclaration,
-                          nsCSSProperty aPropID,
-                          PRBool aIsImportant,
-                          PRBool aOverrideImportant,
-                          PRBool aMustCallValueAppended,
-                          PRBool* aChanged);
-  // Used to do a fast copy of a property value from source location to
-  // destination location.  It's the caller's responsibility to make sure that
-  // the source and destination locations point to the right kind of objects
-  // for the property id.  This can only be used for non-shorthand properties.
-  void CopyValue(void *aSource, void *aDest, nsCSSProperty aPropID,
-                 PRBool* aChanged);
+
   PRBool ParseProperty(nsCSSProperty aPropID);
   PRBool ParseSingleValueProperty(nsCSSValue& aValue,
                                   nsCSSProperty aPropID);
+
+  enum PriorityParsingStatus {
+    ePriority_None,
+    ePriority_Important,
+    ePriority_Error
+  };
+  PriorityParsingStatus ParsePriority();
 
 #ifdef MOZ_XUL
   PRBool ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs);
@@ -1008,16 +986,8 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
   css::Declaration* declaration = ParseDeclarationBlock(haveBraces);
   if (declaration) {
     // Create a style rule for the declaration
-    nsICSSStyleRule* rule = nsnull;
-    nsresult rv = NS_NewCSSStyleRule(&rule, nsnull, declaration);
-    if (NS_FAILED(rv)) {
-      declaration->RuleAbort();
-      ReleaseScanner();
-      return rv;
-    }
-    *aResult = rule;
-  }
-  else {
+    *aResult = NS_NewCSSStyleRule(nsnull, declaration).get();
+  } else {
     *aResult = nsnull;
   }
 
@@ -1028,14 +998,12 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
 }
 
 nsresult
-CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
-                                         nsIURI*           aSheetURI,
-                                         nsIURI*           aBaseURI,
-                                         nsIPrincipal*     aSheetPrincipal,
-                                         css::Declaration* aDeclaration,
-                                         PRBool            aParseOnlyOneDecl,
-                                         PRBool*           aChanged,
-                                         PRBool            aClearOldDecl)
+CSSParserImpl::ParseDeclarations(const nsAString&  aBuffer,
+                                 nsIURI*           aSheetURI,
+                                 nsIURI*           aBaseURI,
+                                 nsIPrincipal*     aSheetPrincipal,
+                                 css::Declaration* aDeclaration,
+                                 PRBool*           aChanged)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
   AssertInitialState();
@@ -1046,20 +1014,16 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
 
   mSection = eCSSSection_General;
 
-  if (aClearOldDecl) {
-    mData.AssertInitialState();
-    aDeclaration->ClearData();
-    // We could check if it was already empty, but...
-    *aChanged = PR_TRUE;
-  } else {
-    aDeclaration->ExpandTo(&mData);
-  }
+  mData.AssertInitialState();
+  aDeclaration->ClearData();
+  // We could check if it was already empty, but...
+  *aChanged = PR_TRUE;
 
   nsresult rv = NS_OK;
-  do {
+  for (;;) {
     // If we cleared the old decl, then we want to be calling
     // ValueAppended as we parse.
-    if (!ParseDeclaration(aDeclaration, PR_FALSE, aClearOldDecl, aChanged)) {
+    if (!ParseDeclaration(aDeclaration, PR_FALSE, PR_TRUE, aChanged)) {
       rv = mScanner.GetLowLevelError();
       if (NS_FAILED(rv))
         break;
@@ -1069,9 +1033,9 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
         break;
       }
     }
-  } while (!aParseOnlyOneDecl);
-  aDeclaration->CompressFrom(&mData);
+  }
 
+  aDeclaration->CompressFrom(&mData);
   ReleaseScanner();
   return rv;
 }
@@ -1121,15 +1085,17 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              PRBool aIsImportant)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  NS_PRECONDITION(aBaseURI, "need base URI");
+  NS_PRECONDITION(aDeclaration, "Need declaration to parse into!");
   AssertInitialState();
-
-  NS_ASSERTION(nsnull != aBaseURI, "need base URI");
-  NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
-  *aChanged = PR_FALSE;
+  mData.AssertInitialState();
+  mTempData.AssertInitialState();
+  aDeclaration->AssertMutable();
 
   InitScanner(aPropValue, aSheetURI, 0, aBaseURI, aSheetPrincipal);
-
   mSection = eCSSSection_General;
+
+  *aChanged = PR_FALSE;
 
   if (eCSSProperty_UNKNOWN == aPropID) { // unknown property
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
@@ -1143,42 +1109,14 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     return NS_OK;
   }
 
-  mData.AssertInitialState();
-  mTempData.AssertInitialState();
-
-  // We know we don't need to force a ValueAppended call for the new
-  // value.  So if we are not processing an !important decl or a
-  // shorthand, there's already a value for this property in the
-  // declaration, it's not !important, and we parse successfully, then
-  // we can just directly copy our parsed value into the declaration
-  // without going through the whole expand/compress thing.
-  if (!aDeclaration->EnsureMutable()) {
-    NS_WARNING("out of memory");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  void* valueSlot = nsnull;
-  if (!aIsImportant) {
-    valueSlot = aDeclaration->SlotForValue(aPropID);
-  }
-  if (!valueSlot) {
-    // Do it the slow way
-    aDeclaration->ExpandTo(&mData);
-  }
-  nsresult result = NS_OK;
   PRBool parsedOK = ParseProperty(aPropID);
-  if (parsedOK && !GetToken(PR_TRUE)) {
-    if (valueSlot) {
-      CopyValue(mTempData.PropertyAt(aPropID), valueSlot, aPropID, aChanged);
-      mTempData.ClearPropertyBit(aPropID);
-    } else {
-      TransferTempData(aDeclaration, aPropID, aIsImportant,
-                       PR_TRUE, PR_FALSE, aChanged);
-    }
-  } else {
-    if (parsedOK) {
-      // Junk at end of property value.
-      REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
-    }
+  // We should now be at EOF
+  if (parsedOK && GetToken(PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
+    parsedOK = PR_FALSE;
+  }
+
+  if (!parsedOK) {
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
     const PRUnichar *params[] = {
       propName.get()
@@ -1186,15 +1124,32 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     REPORT_UNEXPECTED_P(PEValueParsingError, params);
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
-    ClearTempData(aPropID);
-    result = mScanner.GetLowLevelError();
-  }
-  CLEAR_ERROR();
+    mTempData.ClearProperty(aPropID);
+  } else {
 
-  if (!valueSlot) {
-    aDeclaration->CompressFrom(&mData);
+    // We know we don't need to force a ValueAppended call for the new
+    // value.  So if we are not processing a shorthand, and there's
+    // already a value for this property in the declaration at the
+    // same importance level, then we can just copy our parsed value
+    // directly into the declaration without going through the whole
+    // expand/compress thing.
+    void* valueSlot = aDeclaration->SlotForValue(aPropID, aIsImportant);
+    if (valueSlot) {
+      nsCSSCompressedDataBlock::MoveValue(mTempData.PropertyAt(aPropID),
+                                          valueSlot, aPropID, aChanged);
+      mTempData.ClearPropertyBit(aPropID);
+    } else {
+      aDeclaration->ExpandTo(&mData);
+      mData.TransferFromBlock(mTempData, aPropID, aIsImportant, PR_TRUE,
+                              PR_FALSE, aDeclaration, aChanged);
+      aDeclaration->CompressFrom(&mData);
+    }
+    CLEAR_ERROR();
   }
 
+  mTempData.AssertInitialState();
+
+  nsresult result = mScanner.GetLowLevelError();
   ReleaseScanner();
   return result;
 }
@@ -1433,6 +1388,34 @@ CSSParserImpl::ExpectEndProperty()
   return PR_FALSE;
 }
 
+// Parses the priority suffix on a property, which at present may be
+// either '!important' or nothing.
+CSSParserImpl::PriorityParsingStatus
+CSSParserImpl::ParsePriority()
+{
+  if (!GetToken(PR_TRUE)) {
+    return ePriority_None; // properties may end with EOF
+  }
+  if (!mToken.IsSymbol('!')) {
+    UngetToken();
+    return ePriority_None; // dunno what it is, but it's not a priority
+  }
+
+  if (!GetToken(PR_TRUE)) {
+    // EOF is not ok after !
+    REPORT_UNEXPECTED_EOF(PEImportantEOF);
+    return ePriority_Error;
+  }
+
+  if (mToken.mType != eCSSToken_Ident ||
+      !mToken.mIdent.LowerCaseEqualsLiteral("important")) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedImportant);
+    UngetToken();
+    return ePriority_Error;
+  }
+
+  return ePriority_Important;
+}
 
 nsSubstring*
 CSSParserImpl::NextIdent()
@@ -2444,13 +2427,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
 
   // Translate the selector list and declaration block into style data
 
-  nsCOMPtr<nsICSSStyleRule> rule;
-  NS_NewCSSStyleRule(getter_AddRefs(rule), slist, declaration);
-  if (!rule) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    delete slist;
-    return PR_FALSE;
-  }
+  nsCOMPtr<nsICSSStyleRule> rule = NS_NewCSSStyleRule(slist, declaration);
   rule->SetLineNumber(linenum);
   (*aAppendFunc)(rule, aData);
 
@@ -4016,216 +3993,50 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
     REPORT_UNEXPECTED_P(PEValueParsingError, params);
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
-    ClearTempData(propID);
+    mTempData.ClearProperty(propID);
+    mTempData.AssertInitialState();
     return PR_FALSE;
   }
   CLEAR_ERROR();
 
-  // See if the declaration is followed by a "!important" declaration
-  PRBool isImportant = PR_FALSE;
-  if (!GetToken(PR_TRUE)) {
-    // EOF is a perfectly good way to end a declaration and declaration block
-    TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
-                     aMustCallValueAppended, aChanged);
-    return PR_TRUE;
-  }
+  // Look for "!important".
+  PriorityParsingStatus status = ParsePriority();
 
-  if (eCSSToken_Symbol == tk->mType && '!' == tk->mSymbol) {
-    // Look for important ident
+  // Look for a semicolon or close brace.
+  if (status != ePriority_Error) {
     if (!GetToken(PR_TRUE)) {
-      // Premature eof is not ok
-      REPORT_UNEXPECTED_EOF(PEImportantEOF);
-      ClearTempData(propID);
-      return PR_FALSE;
-    }
-    if ((eCSSToken_Ident != tk->mType) ||
-        !tk->mIdent.LowerCaseEqualsLiteral("important")) {
-      REPORT_UNEXPECTED_TOKEN(PEExpectedImportant);
-      OUTPUT_ERROR();
+      // EOF is always ok
+    } else if (mToken.IsSymbol(';')) {
+      // semicolon is always ok
+    } else if (mToken.IsSymbol('}')) {
+      // brace is ok if aCheckForBraces, but don't eat it
       UngetToken();
-      ClearTempData(propID);
-      return PR_FALSE;
-    }
-    isImportant = PR_TRUE;
-  }
-  else {
-    // Not a !important declaration
-    UngetToken();
-  }
-
-  // Make sure valid property declaration is terminated with either a
-  // semicolon, EOF or a right-curly-brace (this last only when
-  // aCheckForBraces is true).
-  if (!GetToken(PR_TRUE)) {
-    // EOF is a perfectly good way to end a declaration and declaration block
-    TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
-                     aMustCallValueAppended, aChanged);
-    return PR_TRUE;
-  }
-  if (eCSSToken_Symbol == tk->mType) {
-    if (';' == tk->mSymbol) {
-      TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
-                       aMustCallValueAppended, aChanged);
-      return PR_TRUE;
-    }
-    if (aCheckForBraces && '}' == tk->mSymbol) {
-      // Unget the '}' so we'll be able to tell that this is the end
-      // of the declaration block when we unwind from here.
-      UngetToken();
-      TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
-                       aMustCallValueAppended, aChanged);
-      return PR_TRUE;
-    }
-  }
-  if (aCheckForBraces)
-    REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd2);
-  else
-    REPORT_UNEXPECTED_TOKEN(PEBadDeclEnd);
-  REPORT_UNEXPECTED(PEDeclDropped);
-  OUTPUT_ERROR();
-  ClearTempData(propID);
-  return PR_FALSE;
-}
-
-void
-CSSParserImpl::ClearTempData(nsCSSProperty aPropID)
-{
-  if (nsCSSProps::IsShorthand(aPropID)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
-      mTempData.ClearProperty(*p);
-    }
-  } else {
-    mTempData.ClearProperty(aPropID);
-  }
-  mTempData.AssertInitialState();
-}
-
-void
-CSSParserImpl::TransferTempData(css::Declaration* aDeclaration,
-                                nsCSSProperty aPropID,
-                                PRBool aIsImportant,
-                                PRBool aOverrideImportant,
-                                PRBool aMustCallValueAppended,
-                                PRBool* aChanged)
-{
-  if (nsCSSProps::IsShorthand(aPropID)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
-      DoTransferTempData(aDeclaration, *p, aIsImportant, aOverrideImportant,
-                         aMustCallValueAppended, aChanged);
-    }
-  } else {
-    DoTransferTempData(aDeclaration, aPropID, aIsImportant, aOverrideImportant,
-                       aMustCallValueAppended, aChanged);
-  }
-  mTempData.AssertInitialState();
-}
-
-// Perhaps the transferring code should be in nsCSSExpandedDataBlock, in
-// case some other caller wants to use it in the future (although I
-// can't think of why).
-void
-CSSParserImpl::DoTransferTempData(css::Declaration* aDeclaration,
-                                  nsCSSProperty aPropID,
-                                  PRBool aIsImportant,
-                                  PRBool aOverrideImportant,
-                                  PRBool aMustCallValueAppended,
-                                  PRBool* aChanged)
-{
-  NS_ASSERTION(mTempData.HasPropertyBit(aPropID), "oops");
-  if (aIsImportant) {
-    if (!mData.HasImportantBit(aPropID))
-      *aChanged = PR_TRUE;
-    mData.SetImportantBit(aPropID);
-  } else {
-    if (mData.HasImportantBit(aPropID)) {
-      // When parsing a declaration block, an !important declaration
-      // is not overwritten by an ordinary declaration of the same
-      // property later in the block.  However, CSSOM manipulations
-      // come through here too, and in that case we do want to
-      // overwrite the property.
-      if (!aOverrideImportant) {
-        mTempData.ClearProperty(aPropID);
-        return;
+      if (!aCheckForBraces) {
+        status = ePriority_Error;
       }
-      *aChanged = PR_TRUE;
-      mData.ClearImportantBit(aPropID);
+    } else {
+      UngetToken();
+      status = ePriority_Error;
     }
   }
 
-  if (aMustCallValueAppended || !mData.HasPropertyBit(aPropID)) {
-    aDeclaration->ValueAppended(aPropID);
+  if (status == ePriority_Error) {
+    if (aCheckForBraces) {
+      REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd2);
+    } else {
+      REPORT_UNEXPECTED(PEBadDeclEnd);
+    }
+    REPORT_UNEXPECTED(PEDeclDropped);
+    OUTPUT_ERROR();
+    mTempData.ClearProperty(propID);
+    mTempData.AssertInitialState();
+    return PR_FALSE;
   }
 
-  mData.SetPropertyBit(aPropID);
-  mTempData.ClearPropertyBit(aPropID);
-
-  /*
-   * Save needless copying and allocation by calling the destructor in
-   * the destination, copying memory directly, and then using placement
-   * new.
-   */
-  void *v_source = mTempData.PropertyAt(aPropID);
-  void *v_dest = mData.PropertyAt(aPropID);
-  CopyValue(v_source, v_dest, aPropID, aChanged);
-}
-
-void
-CSSParserImpl::CopyValue(void *aSource, void *aDest, nsCSSProperty aPropID,
-                         PRBool* aChanged)
-{
-  switch (nsCSSProps::kTypeTable[aPropID]) {
-    case eCSSType_Value: {
-      nsCSSValue *source = static_cast<nsCSSValue*>(aSource);
-      nsCSSValue *dest = static_cast<nsCSSValue*>(aDest);
-      if (*source != *dest)
-        *aChanged = PR_TRUE;
-      dest->~nsCSSValue();
-      memcpy(dest, source, sizeof(nsCSSValue));
-      new (source) nsCSSValue();
-    } break;
-
-    case eCSSType_Rect: {
-      nsCSSRect *source = static_cast<nsCSSRect*>(aSource);
-      nsCSSRect *dest = static_cast<nsCSSRect*>(aDest);
-      if (*source != *dest)
-        *aChanged = PR_TRUE;
-      dest->~nsCSSRect();
-      memcpy(dest, source, sizeof(nsCSSRect));
-      new (source) nsCSSRect();
-    } break;
-
-    case eCSSType_ValuePair: {
-      nsCSSValuePair *source = static_cast<nsCSSValuePair*>(aSource);
-      nsCSSValuePair *dest = static_cast<nsCSSValuePair*>(aDest);
-      if (*source != *dest)
-        *aChanged = PR_TRUE;
-      dest->~nsCSSValuePair();
-      memcpy(dest, source, sizeof(nsCSSValuePair));
-      new (source) nsCSSValuePair();
-    } break;
-
-    case eCSSType_ValueList: {
-      nsCSSValueList **source = static_cast<nsCSSValueList**>(aSource);
-      nsCSSValueList **dest = static_cast<nsCSSValueList**>(aDest);
-      if (!nsCSSValueList::Equal(*source, *dest))
-        *aChanged = PR_TRUE;
-      delete *dest;
-      *dest = *source;
-      *source = nsnull;
-    } break;
-
-    case eCSSType_ValuePairList: {
-      nsCSSValuePairList **source =
-        static_cast<nsCSSValuePairList**>(aSource);
-      nsCSSValuePairList **dest =
-        static_cast<nsCSSValuePairList**>(aDest);
-      if (!nsCSSValuePairList::Equal(*source, *dest))
-        *aChanged = PR_TRUE;
-      delete *dest;
-      *dest = *source;
-      *source = nsnull;
-    } break;
-  }
+  mData.TransferFromBlock(mTempData, propID, status == ePriority_Important,
+                          PR_FALSE, aMustCallValueAppended,
+                          aDeclaration, aChanged);
+  return PR_TRUE;
 }
 
 static const nsCSSProperty kBorderTopIDs[] = {
@@ -9655,19 +9466,16 @@ nsCSSParser::ParseStyleAttribute(const nsAString&  aAttributeValue,
 }
 
 nsresult
-nsCSSParser::ParseAndAppendDeclaration(const nsAString&  aBuffer,
-                                       nsIURI*           aSheetURI,
-                                       nsIURI*           aBaseURI,
-                                       nsIPrincipal*     aSheetPrincipal,
-                                       css::Declaration* aDeclaration,
-                                       PRBool            aParseOnlyOneDecl,
-                                       PRBool*           aChanged,
-                                       PRBool            aClearOldDecl)
+nsCSSParser::ParseDeclarations(const nsAString&  aBuffer,
+                               nsIURI*           aSheetURI,
+                               nsIURI*           aBaseURI,
+                               nsIPrincipal*     aSheetPrincipal,
+                               css::Declaration* aDeclaration,
+                               PRBool*           aChanged)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
-    ParseAndAppendDeclaration(aBuffer, aSheetURI, aBaseURI, aSheetPrincipal,
-                              aDeclaration, aParseOnlyOneDecl, aChanged,
-                              aClearOldDecl);
+    ParseDeclarations(aBuffer, aSheetURI, aBaseURI, aSheetPrincipal,
+                      aDeclaration, aChanged);
 }
 
 nsresult

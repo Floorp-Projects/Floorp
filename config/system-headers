@@ -1033,3 +1033,7 @@ conic/conicstatisticsevent.h
 #if MOZ_NATIVE_LIBEVENT==1
 event.h
 #endif
+#ifdef MOZ_ENABLE_LIBPROXY
+proxy.h
+#endif
+
