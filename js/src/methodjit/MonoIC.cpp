@@ -41,7 +41,10 @@
 #include "jsnum.h"
 #include "MonoIC.h"
 #include "StubCalls.h"
+#include "assembler/assembler/LinkBuffer.h"
 #include "assembler/assembler/RepatchBuffer.h"
+#include "assembler/assembler/MacroAssembler.h"
+#include "CodeGenIncludes.h"
 #include "jsobj.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
@@ -180,5 +183,112 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     /* Do load anyway... this time. */
     stubs::SetGlobalName(f, atom);
 }
+
+#ifdef JS_CPU_X86
+
+ic::NativeCallCompiler::NativeCallCompiler()
+    : jumps(SystemAllocPolicy())
+{}
+
+void
+ic::NativeCallCompiler::finish(JSScript *script, uint8 *start, uint8 *fallthrough)
+{
+    /* Add a jump to fallthrough. */
+    Jump fallJump = masm.jump();
+    addLink(fallJump, fallthrough);
+
+    uint8 *result = (uint8 *)script->execPool->alloc(masm.size());
+    JSC::ExecutableAllocator::makeWritable(result, masm.size());
+    masm.executableCopy(result);
+
+    /* Overwrite start with a jump to the call buffer. */
+    BaseAssembler::insertJump(start, result);
+
+    /* Patch all calls with the correct target. */
+    masm.finalize(result);
+
+    /* Patch all jumps with the correct target. */
+    JSC::LinkBuffer linkmasm(result, masm.size());
+
+    for (size_t i = 0; i < jumps.length(); i++)
+        linkmasm.link(jumps[i].from, JSC::CodeLocationLabel(jumps[i].to));
+}
+
+void
+ic::CallFastNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fun)
+{
+    if (mic.u.generated) {
+        /* Already generated a MIC at this site, don't make another one. */
+        return;
+    }
+    mic.u.generated = true;
+
+    JS_ASSERT(fun->isFastNative());
+    FastNative fn = (FastNative)fun->u.n.native;
+
+    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
+    typedef JSC::MacroAssembler::Imm32 Imm32;
+    typedef JSC::MacroAssembler::Address Address;
+    typedef JSC::MacroAssembler::Jump Jump;
+
+    uint8 *start = (uint8*) mic.knownObject.executableAddress();
+    uint8 *stubEntry = (uint8*) mic.stubEntry.executableAddress();
+    uint8 *fallthrough = (uint8*) mic.callEnd.executableAddress();
+
+    NativeCallCompiler ncc;
+
+    Jump differentFunction = ncc.masm.branchPtr(Assembler::NotEqual, mic.dataReg, ImmPtr(fun));
+    ncc.addLink(differentFunction, stubEntry);
+
+    /* Manually construct the X86 stack. TODO: get a more portable way of doing this. */
+
+    /* Register to use for filling in the fast native's arguments. */
+    JSC::MacroAssembler::RegisterID temp = mic.dataReg;
+
+    /* Store the pc, which is the same as for the current slow call. */
+    ncc.masm.storePtr(ImmPtr(cx->regs->pc),
+                      FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
+
+    /* Store sp. */
+    uint32 spOffset = sizeof(JSStackFrame) + (mic.frameDepth + mic.argc + 2) * sizeof(jsval);
+    ncc.masm.addPtr(Imm32(spOffset), JSFrameReg, temp);
+    ncc.masm.storePtr(temp, FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, sp)));
+
+    /* Make room for the three arguments on the stack, preserving stack register alignment. */
+    const uint32 stackAdjustment = 16;
+    ncc.masm.sub32(Imm32(stackAdjustment), JSC::X86Registers::esp);
+
+    /* Compute and push vp */
+    uint32 vpOffset = sizeof(JSStackFrame) + mic.frameDepth * sizeof(jsval);
+    ncc.masm.addPtr(Imm32(vpOffset), JSFrameReg, temp);
+    ncc.masm.storePtr(temp, Address(JSC::X86Registers::esp, 0x8));
+
+    /* Push argc */
+    ncc.masm.store32(Imm32(mic.argc), Address(JSC::X86Registers::esp, 0x4));
+
+    /* Push cx. The VMFrame is homed at the stack register, so adjust for the amount we pushed. */
+    ncc.masm.loadPtr(FrameAddress(stackAdjustment + offsetof(VMFrame, cx)), temp);
+    ncc.masm.storePtr(temp, Address(JSC::X86Registers::esp, 0));
+
+    /* Do the call. */
+    ncc.masm.call((void*)fn);
+
+    /* Restore stack. */
+    ncc.masm.add32(Imm32(stackAdjustment), JSC::X86Registers::esp);
+
+    /* Check if the call is throwing, and jump to the throwpoline. */
+    Jump hasException =
+        ncc.masm.branchTest32(Assembler::Zero, Registers::ReturnReg, Registers::ReturnReg);
+    ncc.addLink(hasException, JS_FUNC_TO_DATA_PTR(uint8 *, JaegerThrowpoline));
+
+    /* Load *vp into the return register pair. */
+    Address rval(JSFrameReg, vpOffset);
+    ncc.masm.loadPayload(rval, JSReturnReg_Data);
+    ncc.masm.loadTypeTag(rval, JSReturnReg_Type);
+
+    ncc.finish(script, start, fallthrough);
+}
+
+#endif /* JS_CPU_X86 */
 
 #endif /* JS_MONOIC */

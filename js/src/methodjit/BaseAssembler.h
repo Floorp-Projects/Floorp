@@ -128,6 +128,15 @@ class BaseAssembler : public JSC::MacroAssembler
     static const RegisterID JSFrameReg = JSC::ARMRegisters::r11;
 #endif
 
+    /* Register pair storing returned type/data for calls. */
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::X86Registers::ecx;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::X86Registers::edx;
+#elif defined(JS_CPU_ARM)
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::ARMRegisters::r2;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegisters::r1;
+#endif
+
     size_t distanceOf(Label l) {
         return differenceBetween(startLabel, l);
     }
@@ -302,10 +311,24 @@ class BaseAssembler : public JSC::MacroAssembler
             repatchBuffer.relink(JSC::CodeLocationCall(cp), callPatches[i].fun);
         }
     }
+
+    /*
+     * Write a jump instruction at source which goes to target, clobbering any
+     * instructions already at source.  Can't use a patch/link buffer here
+     * as there is no original instruction we are setting the target for.
+     */
+#ifdef JS_CPU_X86
+    static void insertJump(uint8 *source, const uint8 *target) {
+        source[0] = 0xE9; /* JSC::X86Assembler::OP_JMP_rel32; */
+        *reinterpret_cast<int*>(source + 1) = (int) target - (int) source - 5;
+    }
+#endif
 };
 
 /* Save some typing. */
 static const JSC::MacroAssembler::RegisterID JSFrameReg = BaseAssembler::JSFrameReg;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = BaseAssembler::JSReturnReg_Type;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = BaseAssembler::JSReturnReg_Data;
 
 } /* namespace mjit */
 } /* namespace js */

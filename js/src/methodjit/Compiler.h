@@ -88,6 +88,11 @@ class Compiler
         Call call;
         ic::MICInfo::Kind kind;
         jsbytecode *jumpTarget;
+        uint32 argc;
+        uint32 frameDepth;
+        Label knownObject;
+        Label callEnd;
+        JSC::MacroAssembler::RegisterID dataReg;
         Jump traceHint;
         MaybeJump slowTraceHint;
         union {

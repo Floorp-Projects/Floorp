@@ -41,8 +41,10 @@
 #if !defined jsjaeger_mono_ic_h__ && defined JS_METHODJIT && defined JS_MONOIC
 #define jsjaeger_mono_ic_h__
 
+#include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
 #include "methodjit/MethodJIT.h"
+#include "CodeGenIncludes.h"
 
 namespace js {
 namespace mjit {
@@ -67,33 +69,98 @@ struct MICInfo {
     {
         GET,
         SET,
+        CALL,
+        EMPTYCALL,  /* placeholder call which cannot refer to a fast native */
         TRACER
     };
 
-#if defined JS_PUNBOX64
-    uint32 patchValueOffset;
-#endif
+    /* Used by multiple MICs. */
     JSC::CodeLocationLabel entry;
     JSC::CodeLocationLabel stubEntry;
+
+    /* TODO: use a union-like structure for the below. */
+
+    /* Used by GET/SET. */
     JSC::CodeLocationLabel load;
     JSC::CodeLocationDataLabelPtr shape;
     JSC::CodeLocationCall stubCall;
+#if defined JS_PUNBOX64
+    uint32 patchValueOffset;
+#endif
+
+    /* Used by CALL. */
+    uint32 argc;
+    uint32 frameDepth;
+    JSC::CodeLocationLabel knownObject;
+    JSC::CodeLocationLabel callEnd;
+    JSC::MacroAssembler::RegisterID dataReg;
+
+    /* Used by TRACER. */
     JSC::CodeLocationJump traceHint;
     JSC::CodeLocationJump slowTraceHint;
-    Kind kind : 2;
+
+    /* Used by all MICs. */
+    Kind kind : 4;
     union {
+        /* Used by GET/SET. */
         struct {
             bool touched : 1;
             bool typeConst : 1;
             bool dataConst : 1;
             bool dataWrite : 1;
         } name;
+        /* Used by CALL. */
+        bool generated;
+        /* Used by TRACER. */
         bool hasSlowTraceHint;
     } u;
 };
 
 void JS_FASTCALL GetGlobalName(VMFrame &f, uint32 index);
 void JS_FASTCALL SetGlobalName(VMFrame &f, uint32 index);
+
+#ifdef JS_CPU_X86
+
+/* Compiler for generating fast paths for a MIC'ed native call. */
+class NativeCallCompiler
+{
+    typedef JSC::MacroAssembler::Jump Jump;
+
+    struct Patch {
+        Patch(Jump from, uint8 *to)
+          : from(from), to(to)
+        { }
+
+        Jump from;
+        uint8 *to;
+    };
+
+  public:
+    Assembler masm;
+
+  private:
+    /* :TODO: oom check */
+    Vector<Patch, 8, SystemAllocPolicy> jumps;
+
+  public:
+    NativeCallCompiler();
+
+    size_t size() { return masm.size(); }
+    uint8 *buffer() { return masm.buffer(); }
+
+    /* Exit from the call path to target. */
+    void addLink(Jump j, uint8 *target) { jumps.append(Patch(j, target)); }
+
+    /*
+     * Finish up this native, and add an incoming jump from start
+     * and an outgoing jump to fallthrough.
+     */
+    void finish(JSScript *script, uint8 *start, uint8 *fallthrough);
+};
+
+void CallFastNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fun);
+
+#endif /* JS_CPU_X86 */
 
 } /* namespace ic */
 } /* namespace mjit */

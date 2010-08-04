@@ -355,6 +355,12 @@ void * JS_FASTCALL
 stubs::SlowCall(VMFrame &f, uint32 argc)
 {
     JSContext *cx = f.cx;
+
+#ifdef JS_MONOIC
+    ic::MICInfo &mic = f.fp->script->mics[argc];
+    argc = mic.argc;
+#endif
+
     Value *vp = f.regs.sp - (argc + 2);
 
     JSObject *obj;
@@ -377,6 +383,12 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
         }
 
         if (fun->isFastNative()) {
+#ifdef JS_MONOIC
+#ifdef JS_CPU_X86
+            ic::CallFastNative(cx, f.fp->script, mic, fun);
+#endif
+#endif
+
             FastNative fn = (FastNative)fun->u.n.native;
             if (!fn(cx, argc, vp))
                 THROWV(NULL);
@@ -394,6 +406,12 @@ void * JS_FASTCALL
 stubs::SlowNew(VMFrame &f, uint32 argc)
 {
     JSContext *cx = f.cx;
+
+#ifdef JS_MONOIC
+    ic::MICInfo &mic = f.fp->script->mics[argc];
+    argc = mic.argc;
+#endif
+
     Value *vp = f.regs.sp - (argc + 2);
 
     JSObject *obj;
