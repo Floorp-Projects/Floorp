@@ -718,6 +718,8 @@ class GetPropCompiler : public PICStubCompiler
         repatcher.relink(pic.fastPathStart.jumpAtOffset(GETPROP_INLINE_TYPE_GUARD),
                          start);
 
+        disable("generated string length stub");
+
         return true;
     }
 
