@@ -1702,20 +1702,16 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     mic.frameDepth = frame.frameDepth() - argc - 2;
 #endif
 
-    bool hasTypeReg;
-    RegisterID type = Registers::ReturnReg;
+    MaybeRegisterID typeReg;
     RegisterID data = frame.tempRegForData(fe);
     frame.pinReg(data);
 
     Address addr = frame.addressOf(fe);
 
     if (!typeKnown) {
-        if (frame.shouldAvoidTypeRemat(fe)) {
-            hasTypeReg = false;
-        } else {
-            type = frame.tempRegForType(fe);
-            hasTypeReg = true;
-            frame.pinReg(type);
+        if (!frame.shouldAvoidTypeRemat(fe)) {
+            typeReg = frame.tempRegForType(fe);
+            frame.pinReg(typeReg.reg());
         }
     }
 
@@ -1735,10 +1731,10 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
 
     Jump j;
     if (!typeKnown) {
-        if (!hasTypeReg)
+        if (!typeReg.isSet())
             j = masm.testObject(Assembler::NotEqual, frame.addressOf(fe));
         else
-            j = masm.testObject(Assembler::NotEqual, type);
+            j = masm.testObject(Assembler::NotEqual, typeReg.reg());
         stubcc.linkExit(j, Uses(argc + 2));
     }
 
