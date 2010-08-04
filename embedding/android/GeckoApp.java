@@ -239,6 +239,14 @@ abstract public class GeckoApp
             case KeyEvent.KEYCODE_VOLUME_DOWN:
             case KeyEvent.KEYCODE_SEARCH:
                 return false;
+            case KeyEvent.KEYCODE_DEL:
+                // See comments in GeckoInputConnection.onKeyDel
+                if (surfaceView != null &&
+                    surfaceView.inputConnection != null &&
+                    surfaceView.inputConnection.onKeyDel()) {
+                    return true;
+                }
+                break;
             default:
                 break;
         }

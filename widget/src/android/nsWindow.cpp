@@ -79,7 +79,6 @@ static PRBool gSym;
 // one.
 static nsTArray<nsWindow*> gTopLevelWindows;
 static nsWindow* gFocusedWindow = nsnull;
-static PRUint32 gIMEState;
 
 static nsRefPtr<gl::GLContext> sGLContext;
 static PRBool sFailedToCreateGLContext = PR_FALSE;
@@ -1283,112 +1282,159 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
     }
 }
 
-nsresult
-nsWindow::GetCurrentOffset(PRUint32 &aOffset, PRUint32 &aLength)
+#ifdef ANDROID_DEBUG_IME
+#define ALOGIME(args...) ALOG(args)
+#else
+#define ALOGIME(args...)
+#endif
+
+void
+nsWindow::OnIMEAddRange(AndroidGeckoEvent *ae)
 {
-    nsQueryContentEvent event(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
-    DispatchEvent(&event);
-
-    if (!event.mSucceeded)
-        return NS_ERROR_FAILURE;
-
-    aOffset = event.mReply.mOffset;
-    aLength = event.mReply.mString.Length();
-    return NS_OK;
-}
-
-nsresult
-nsWindow::DeleteRange(int aOffset, int aLen)
-{
-    nsSelectionEvent selectEvent(PR_TRUE, NS_SELECTION_SET, this);
-    selectEvent.mOffset = aOffset;
-    selectEvent.mLength = aLen;
-    DispatchEvent(&selectEvent);
-    NS_ENSURE_TRUE(selectEvent.mSucceeded, NS_ERROR_FAILURE);
-
-    nsContentCommandEvent event(PR_TRUE, NS_CONTENT_COMMAND_DELETE, this);
-    DispatchEvent(&event);
-    NS_ENSURE_TRUE(event.mSucceeded, NS_ERROR_FAILURE);
-
-    return NS_OK;
+    //ALOGIME("IME: IME_ADD_RANGE");
+    nsTextRange range;
+    range.mStartOffset = ae->Offset();
+    range.mEndOffset = range.mStartOffset + ae->Count();
+    range.mRangeType = ae->RangeType();
+    range.mRangeStyle.mDefinedStyles = ae->RangeStyles();
+    range.mRangeStyle.mLineStyle = nsTextRangeStyle::LINESTYLE_SOLID;
+    range.mRangeStyle.mForegroundColor = NS_RGBA(
+        ((ae->RangeForeColor() >> 16) & 0xff),
+        ((ae->RangeForeColor() >> 8) & 0xff),
+        (ae->RangeForeColor() & 0xff),
+        ((ae->RangeForeColor() >> 24) & 0xff));
+    range.mRangeStyle.mBackgroundColor = NS_RGBA(
+        ((ae->RangeBackColor() >> 16) & 0xff),
+        ((ae->RangeBackColor() >> 8) & 0xff),
+        (ae->RangeBackColor() & 0xff),
+        ((ae->RangeBackColor() >> 24) & 0xff));
+    mIMERanges.AppendElement(range);
+    return;
 }
 
 void
 nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
 {
     switch (ae->Action()) {
-    case AndroidGeckoEvent::IME_BATCH_END:
+    case AndroidGeckoEvent::IME_COMPOSITION_END:
         {
+            ALOGIME("IME: IME_COMPOSITION_END");
             nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, this);
-            event.time = PR_Now() / 1000;
+            InitEvent(event, nsnull);
             DispatchEvent(&event);
+            mIMEComposing = PR_FALSE;
         }
         return;
-    case AndroidGeckoEvent::IME_BATCH_BEGIN:
+    case AndroidGeckoEvent::IME_COMPOSITION_BEGIN:
         {
+            ALOGIME("IME: IME_COMPOSITION_BEGIN");
             nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_START, this);
-            event.time = PR_Now() / 1000;
+            InitEvent(event, nsnull);
             DispatchEvent(&event);
+            mIMEComposing = PR_TRUE;
+        }
+        return;
+    case AndroidGeckoEvent::IME_ADD_RANGE:
+        {
+            OnIMEAddRange(ae);
         }
         return;
     case AndroidGeckoEvent::IME_SET_TEXT:
         {
+            OnIMEAddRange(ae);
+
             nsTextEvent event(PR_TRUE, NS_TEXT_TEXT, this);
+            InitEvent(event, nsnull);
+
             event.theText.Assign(ae->Characters());
-            event.time = PR_Now() / 1000;
+            event.rangeArray = mIMERanges.Elements();
+            event.rangeCount = mIMERanges.Length();
+
+            ALOGIME("IME: IME_SET_TEXT: l=%u, r=%u",
+                event.theText.Length(), mIMERanges.Length());
+
             DispatchEvent(&event);
+            mIMERanges.Clear();
         }
         return;
     case AndroidGeckoEvent::IME_GET_TEXT:
         {
-            PRUint32 offset, len;
-            if (NS_FAILED(GetCurrentOffset(offset, len))) {
-                AndroidBridge::Bridge()->ReturnIMEQueryResult(nsnull, 0, 0, 0);
-                return;
-            }
-
-            PRUint32 readLen = ae->Count();
-            PRUint32 readOffset = offset;
-            if (!ae->Count() && !ae->Count2()) {
-                readOffset = 0;
-                readLen = PR_UINT32_MAX;
-            } else if (!readLen) { // backwards
-                readLen = ae->Count2();
-                if (readLen > offset) {
-                    readLen = offset;
-                    readOffset = 0;
-                } else
-                    readOffset -= readLen;
-            } else
-                readOffset += len;
+            ALOGIME("IME: IME_GET_TEXT: o=%u, l=%u", ae->Offset(), ae->Count());
 
             nsQueryContentEvent event(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
-            event.InitForQueryTextContent(0, PR_UINT32_MAX);
+            InitEvent(event, nsnull);
+
+            event.InitForQueryTextContent(ae->Offset(), ae->Count());
+            
             DispatchEvent(&event);
 
             if (!event.mSucceeded) {
-                AndroidBridge::Bridge()->ReturnIMEQueryResult(nsnull, 0, 0, 0);
+                ALOGIME("IME:     -> failed");
+                AndroidBridge::Bridge()->ReturnIMEQueryResult(
+                    nsnull, 0, 0, 0);
                 return;
             }
 
-            nsAutoString textContent(Substring(event.mReply.mString, readOffset, readLen));
-            AndroidBridge::Bridge()->ReturnIMEQueryResult(textContent.get(), textContent.Length(), offset, offset + len);
+            AndroidBridge::Bridge()->ReturnIMEQueryResult(
+                event.mReply.mString.get(), 
+                event.mReply.mString.Length(), 0, 0);
+            //ALOGIME("IME:     -> l=%u", event.mReply.mString.Length());
         }
         return;
     case AndroidGeckoEvent::IME_DELETE_TEXT:
+        {   
+            ALOGIME("IME: IME_DELETE_TEXT");
+            nsContentCommandEvent event(PR_TRUE,
+                                        NS_CONTENT_COMMAND_DELETE, this);
+            InitEvent(event, nsnull);
+            DispatchEvent(&event);
+        }
+        return;
+    case AndroidGeckoEvent::IME_SET_SELECTION:
         {
-            PRUint32 offset, len;
-            PRUint32 count = ae->Count();
-            if (NS_FAILED(GetCurrentOffset(offset, len)))
-                return;
+            ALOGIME("IME: IME_SET_SELECTION: o=%u, l=%d", ae->Offset(), ae->Count());
 
-            DeleteRange(offset + len, ae->Count2());
-            offset -= ae->Count();
-            if (offset < 0) {
-                count += offset;
-                offset = 0;
+            nsSelectionEvent selEvent(PR_TRUE, NS_SELECTION_SET, this);
+            InitEvent(selEvent, nsnull);
+
+            selEvent.mOffset = PRUint32(ae->Count() >= 0 ?
+                                        ae->Offset() :
+                                        ae->Offset() + ae->Count());
+            selEvent.mLength = PRUint32(PR_ABS(ae->Count()));
+            selEvent.mReversed = ae->Count() >= 0 ? PR_FALSE : PR_TRUE;
+
+            DispatchEvent(&selEvent);
+        }
+        return;
+    case AndroidGeckoEvent::IME_GET_SELECTION:
+        {
+            ALOGIME("IME: IME_GET_SELECTION");
+
+            nsQueryContentEvent event(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
+            InitEvent(event, nsnull);
+            DispatchEvent(&event);
+
+            if (!event.mSucceeded) {
+                ALOGIME("IME:     -> failed");
+                AndroidBridge::Bridge()->ReturnIMEQueryResult(
+                    nsnull, 0, 0, 0);
+                return;
             }
-            DeleteRange(offset, count);
+
+            int selStart = int(event.mReply.mOffset + 
+                            (event.mReply.mReversed ? 
+                                event.mReply.mString.Length() : 0));
+
+            int selLength = event.mReply.mReversed ?
+                                int(event.mReply.mString.Length()) : 
+                                -int(event.mReply.mString.Length());
+
+            AndroidBridge::Bridge()->ReturnIMEQueryResult(
+                event.mReply.mString.get(),
+                event.mReply.mString.Length(), 
+                selStart, selLength);
+
+            //ALOGIME("IME:     -> o=%u, l=%u", event.mReply.mOffset, event.mReply.mString.Length());
         }
         return;
     }
@@ -1424,17 +1470,127 @@ nsWindow::UserActivity()
 }
 
 NS_IMETHODIMP
+nsWindow::ResetInputState()
+{
+    //ALOGIME("IME: ResetInputState: s=%d", aState);
+
+    // Cancel composition on Gecko side
+    if (mIMEComposing) {
+        nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_END, this);
+        InitEvent(event, nsnull);
+        DispatchEvent(&event);
+        mIMEComposing = PR_FALSE;
+    }
+
+    if (AndroidBridge::Bridge())
+        AndroidBridge::Bridge()->NotifyIME(
+            AndroidBridge::NOTIFY_IME_RESETINPUTSTATE, 0);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWindow::SetIMEEnabled(PRUint32 aState)
 {
-    gIMEState = aState;
+    ALOGIME("IME: SetIMEEnabled: s=%d", aState);
+
+    mIMEEnabled = aState;
     if (AndroidBridge::Bridge())
-        AndroidBridge::Bridge()->ShowIME(aState);
+        AndroidBridge::Bridge()->NotifyIME(
+            AndroidBridge::NOTIFY_IME_SETENABLED, int(aState));
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWindow::GetIMEEnabled(PRUint32* aState)
 {
-    *aState = gIMEState;
+    *aState = mIMEEnabled;
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsWindow::CancelIMEComposition()
+{
+    ALOGIME("IME: CancelIMEComposition");
+
+    // Cancel composition on Gecko side
+    if (mIMEComposing) {
+        nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, this);
+        InitEvent(textEvent, nsnull);
+        DispatchEvent(&textEvent);
+
+        nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_END, this);
+        InitEvent(compEvent, nsnull);
+        DispatchEvent(&compEvent);
+        mIMEComposing = PR_FALSE;
+    }
+
+    if (AndroidBridge::Bridge())
+        AndroidBridge::Bridge()->NotifyIME(
+            AndroidBridge::NOTIFY_IME_CANCELCOMPOSITION, 0);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::OnIMEFocusChange(PRBool aFocus)
+{
+    ALOGIME("IME: OnIMEFocusChange: f=%d", aFocus);
+    
+    if (AndroidBridge::Bridge())
+        AndroidBridge::Bridge()->NotifyIME(
+            AndroidBridge::NOTIFY_IME_FOCUSCHANGE, int(aFocus));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd)
+{
+    ALOGIME("IME: OnIMETextChange: s=%d, oe=%d, ne=%d",
+            aStart, aOldEnd, aNewEnd);
+
+    // A quirk in Android makes it necessary to pass the whole text
+    // from index 0 to index aNewEnd. The more efficient way would
+    // have been passing the substring from index aStart to index aNewEnd
+
+    if (aNewEnd > 0) {
+        nsQueryContentEvent event(PR_TRUE, NS_QUERY_TEXT_CONTENT, this);
+        InitEvent(event, nsnull);
+        event.InitForQueryTextContent(0, aNewEnd);
+
+        DispatchEvent(&event);
+        if (!event.mSucceeded)
+            return NS_OK;
+
+        if (AndroidBridge::Bridge())
+            AndroidBridge::Bridge()->NotifyIMEChange(
+                event.mReply.mString.get(),
+                event.mReply.mString.Length(),
+                aStart, aOldEnd, aNewEnd);
+    } else {
+        if (AndroidBridge::Bridge())
+            AndroidBridge::Bridge()->NotifyIMEChange(
+                nsnull, 0,
+                aStart, aOldEnd, aNewEnd);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::OnIMESelectionChange(void)
+{
+    ALOGIME("IME: OnIMESelectionChange");
+
+    nsQueryContentEvent event(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
+    InitEvent(event, nsnull);
+
+    DispatchEvent(&event);
+    if (!event.mSucceeded)
+        return NS_OK;
+
+    if (AndroidBridge::Bridge())
+        AndroidBridge::Bridge()->NotifyIMEChange(
+            nsnull, 0,
+            int(event.mReply.mOffset),
+            int(event.mReply.mOffset + event.mReply.mString.Length()), -1);
+    return NS_OK;
+}
+
