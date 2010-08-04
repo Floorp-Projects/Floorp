@@ -1369,8 +1369,43 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("data"), mValue);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  if (NS_FAILED(stmt->Execute())) {
-    return nsIIDBDatabaseException::CONSTRAINT_ERR;
+  rv = stmt->Execute();
+  if (NS_FAILED(rv)) {
+    if (mCreate && mayOverwrite && rv == NS_ERROR_STORAGE_CONSTRAINT) {
+      scoper.Abandon();
+
+      stmt = mTransaction->AddStatement(false, true, mAutoIncrement);
+      NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+      mozStorageStatementScoper scoper2(stmt);
+
+      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+      if (!mAutoIncrement) {
+        NS_ASSERTION(!mKey.IsUnset(), "This shouldn't happen!");
+
+        if (mKey.IsInt()) {
+          rv = stmt->BindInt64ByName(keyValue, mKey.IntValue());
+        }
+        else if (mKey.IsString()) {
+          rv = stmt->BindStringByName(keyValue, mKey.StringValue());
+        }
+        else {
+          NS_NOTREACHED("Unknown key type!");
+        }
+        NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      }
+
+      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("data"), mValue);
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+      rv = stmt->Execute();
+    }
+
+    if (NS_FAILED(rv)) {
+      return nsIIDBDatabaseException::CONSTRAINT_ERR;
+    }
   }
 
   // If we are supposed to generate a key, get the new id.
@@ -1777,10 +1812,9 @@ OpenCursorHelper::GetSuccessResult(nsIWritableVariant* aResult)
     IDBCursor::Create(mRequest, mTransaction, mObjectStore, mDirection, mData);
   NS_ENSURE_TRUE(cursor, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(cursor));
-
   mObjectStore = nsnull;
 
+  aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(cursor));
   return OK;
 }
 
@@ -1961,6 +1995,8 @@ CreateIndexHelper::GetSuccessResult(nsIWritableVariant* aResult)
   nsresult rv = mObjectStore->Index(mName, getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
+  mObjectStore = nsnull;
+
   aResult->SetAsISupports(result);
   return OK;
 }
@@ -2022,6 +2058,7 @@ RemoveIndexHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
     }
   }
 
+  mObjectStore = nsnull;
   return OK;
 }
 
