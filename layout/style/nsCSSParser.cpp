@@ -4015,6 +4015,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
         status = ePriority_Error;
       }
     } else {
+      UngetToken();
       status = ePriority_Error;
     }
   }
