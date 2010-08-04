@@ -227,11 +227,11 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         }
       }
       else if (menuPopupFrame) {
-        nsPoint framePoint = menuPopupFrame->GetScreenRectInAppUnits().TopLeft();
+        nsRect frameRect = menuPopupFrame->GetScreenRectInAppUnits();
         nsIFrame* rootFrame = aPresContext->PresShell()->FrameManager()->GetRootFrame();
         nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
 
-        nsRect screenRect = menuPopupFrame->GetConstraintRect(framePoint, rootScreenRect);
+        nsRect screenRect = menuPopupFrame->GetConstraintRect(frameRect, rootScreenRect);
         // round using ToInsidePixels as it's better to be a pixel too small
         // than be too large. If the popup is too large it could get flipped
         // to the opposite side of the anchor point while resizing.
@@ -265,6 +265,11 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
             menuPopupFrame->GetWidget(getter_AddRefs(widget));
             if (widget)
               widget->GetScreenBounds(oldRect);
+
+            // convert the new rectangle into outer window coordinates
+            nsIntPoint clientOffset = widget->GetClientOffset();
+            rect.x -= clientOffset.x; 
+            rect.y -= clientOffset.y; 
           }
 
           // only set the property if the element could have changed in that direction

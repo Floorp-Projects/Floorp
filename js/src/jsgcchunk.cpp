@@ -202,8 +202,13 @@ MapAlignedPages(size_t size, size_t alignment)
      * We don't use MAP_FIXED here, because it can cause the *replacement*
      * of existing mappings, and we only want to create new mappings.
      */
+#ifdef SOLARIS
     void *p = mmap((caddr_t) alignment, size, PROT_READ | PROT_WRITE,
                      MAP_PRIVATE | MAP_NOSYNC | MAP_ALIGN | MAP_ANON, -1, 0);
+#else
+    void *p = mmap((void *) alignment, size, PROT_READ | PROT_WRITE,
+                     MAP_PRIVATE | MAP_NOSYNC | MAP_ALIGN | MAP_ANON, -1, 0);
+#endif
     if (p == MAP_FAILED)
         return NULL;
     return p;
@@ -235,7 +240,11 @@ MapPages(void *addr, size_t size)
 static void
 UnmapPages(void *addr, size_t size)
 {
+#ifdef SOLARIS
     JS_ALWAYS_TRUE(munmap((caddr_t) addr, size) == 0);
+#else
+    JS_ALWAYS_TRUE(munmap(addr, size) == 0);
+#endif
 }
 
 #endif

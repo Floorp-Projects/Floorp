@@ -132,7 +132,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.0
+SQLITE_VERSION=3.6.23.1
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -5314,6 +5314,7 @@ AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LIBS)
 AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LIBS)
+AC_SUBST(MOZ_ENABLE_MEEGOTOUCH)
 
 AC_SUBST(MOC)
 
@@ -6442,13 +6443,6 @@ if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     fi
     AC_MSG_RESULT([yes])
     MAKENSISU="${CYGWIN_WRAPPER} $MAKENSISU"
-
-    # The Windows build for NSIS requires the iconv command line utility to
-    # convert the charset of the locale files.
-    MOZ_PATH_PROGS(HOST_ICONV, $HOST_ICONV "iconv", "")
-    if test -z "$HOST_ICONV"; then
-        AC_MSG_ERROR([To build the installer iconv is required in your path. To build without the installer reconfigure using --disable-installer.])
-    fi
 fi
 
 AC_SUBST(MOZ_INSTALLER)
@@ -6896,9 +6890,22 @@ if test $MOZ_PLATFORM_MAEMO; then
       fi
 
    fi
+   if test $MOZ_PLATFORM_MAEMO = 6; then
+      PKG_CHECK_MODULES(LIBCONTENTACTION, contentaction-0.1, _LIB_FOUND=1, _LIB_FOUND=)
+      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBCONTENTACTION_LIBS"
+      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBCONTENTACTION_CFLAGS"
+      if test -z "$_LIB_FOUND"; then
+         AC_MSG_ERROR([libcontentaction is required when build for Maemo])
+      fi
+   fi
 
    if test "$MOZ_PLATFORM_MAEMO" -gt 5; then
      MOZ_THUMB2=1
+     PKG_CHECK_MODULES(MOZ_MEEGOTOUCH, meegotouchcore)
+     MOZ_ENABLE_MEEGOTOUCH=1
+     AC_DEFINE(MOZ_ENABLE_MEEGOTOUCH)
+     MOZ_QT_CFLAGS="$MOZ_MEEGOTOUCH_CFLAGS $MOZ_QT_CFLAGS"
+     MOZ_QT_LIBS="$MOZ_MEEGOTOUCH_LIBS $MOZ_QT_LIBS"
    fi
 
    PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
@@ -8387,14 +8394,9 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
     AC_SUBST(QT_SURFACE_FEATURE)
 
-    if test "$_WIN32_MSVC"; then
-        MOZ_CAIRO_LIBS='$(DEPTH)/gfx/cairo/cairo/src/mozcairo.lib $(DEPTH)/gfx/cairo/libpixman/src/mozlibpixman.lib'
-    else
-        MOZ_CAIRO_LIBS='$(DEPTH)/gfx/cairo/cairo/src/$(LIB_PREFIX)mozcairo.$(LIB_SUFFIX) $(DEPTH)/gfx/cairo/libpixman/src/$(LIB_PREFIX)mozlibpixman.$(LIB_SUFFIX)'" $CAIRO_FT_LIBS"
-
-        if test "$MOZ_X11"; then
-            MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
-        fi
+    MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src) $(call EXPAND_LIBNAME_PATH,mozlibpixman,$(DEPTH)/gfx/cairo/libpixman/src)'" $CAIRO_FT_LIBS"
+    if test "$MOZ_X11"; then
+        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype -lfontconfig"
     fi
 
     CAIRO_FEATURES_H=gfx/cairo/cairo/src/cairo-features.h
@@ -8419,7 +8421,7 @@ dnl ========================================================
 dnl qcms
 dnl ========================================================
 
-QCMS_LIBS='$(DEPTH)/gfx/qcms/$(LIB_PREFIX)mozqcms.$(LIB_SUFFIX)'
+QCMS_LIBS='$(call EXPAND_LIBNAME_PATH,mozqcms,$(DEPTH)/gfx/qcms)'
 AC_SUBST(QCMS_LIBS)
 
 dnl ========================================================

@@ -190,7 +190,7 @@ PRBool InitializeMember(JSContext * cx, ITypeInfo * pTypeInfo,
     pInfo = new (pInfo) XPCDispInterface::Member;
     if(!pInfo)
         return PR_FALSE;
-    pInfo->SetName(STRING_TO_JSVAL(str));
+    pInfo->SetName(INTERNED_STRING_TO_JSID(str));
     pInfo->ResetType();
     ConvertInvokeKind(pFuncDesc->invkind, *pInfo);
     pInfo->SetTypeInfo(pFuncDesc->memid, pTypeInfo, pFuncDesc);
@@ -283,25 +283,25 @@ PRBool XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo,
  * @param ccx an XPConnect call context
  * @param lhr the PRUnichar string to be compared
  * @param lhsLength the length of the PRUnichar string
- * @param rhs the JS value that is the other string to compare
+ * @param rhs the jsid that is the other string to compare
  * @return true if the strings are equal
  */
 inline
-PRBool CaseInsensitiveCompare(XPCCallContext& ccx, const PRUnichar* lhs, size_t lhsLength, jsval rhs)
+PRBool CaseInsensitiveCompare(XPCCallContext& ccx, const PRUnichar* lhs, size_t lhsLength, jsid rhs)
 {
     if(lhsLength == 0)
         return PR_FALSE;
     size_t rhsLength;
-    PRUnichar* rhsString = xpc_JSString2PRUnichar(ccx, rhs, &rhsLength);
+    PRUnichar* rhsString = xpc_JSString2PRUnichar(ccx, JSID_TO_STRING(rhs), &rhsLength);
     return rhsString && 
         lhsLength == rhsLength &&
         _wcsnicmp(lhs, rhsString, lhsLength) == 0;
 }
 
-const XPCDispInterface::Member* XPCDispInterface::FindMemberCI(XPCCallContext& ccx, jsval name) const
+const XPCDispInterface::Member* XPCDispInterface::FindMemberCI(XPCCallContext& ccx, jsid name) const
 {
     size_t nameLength;
-    PRUnichar* sName = xpc_JSString2PRUnichar(ccx, name, &nameLength);
+    PRUnichar* sName = xpc_JSString2PRUnichar(ccx, JSID_TO_STRING(name), &nameLength);
     if(!sName)
         return nsnull;
     // Iterate backwards over the members array (more efficient)
@@ -333,31 +333,21 @@ JSBool XPCDispInterface::Member::GetValue(XPCCallContext& ccx,
             return JS_FALSE;
 
         intN argc;
-        intN flags;
         JSNative callback;
         // Is this a function or a parameterized getter/setter
         if(IsFunction() || IsParameterizedProperty())
         {
             argc = GetParamCount();
-            flags = 0;
             callback = XPC_IDispatch_CallMethod;
         }
         else
         {
-            if(IsSetter())
-            {
-                flags = JSFUN_GETTER | JSFUN_SETTER;
-            }
-            else
-            {
-                flags = JSFUN_GETTER;
-            }
             argc = 0;
             callback = XPC_IDispatch_GetterSetter;
         }
 
-        JSFunction *fun = JS_NewFunction(cx, callback, argc, flags, nsnull,
-                                         JS_GetStringBytes(JSVAL_TO_STRING(mName)));
+        JSFunction *fun = JS_NewFunction(cx, callback, argc, 0, nsnull,
+                                         JS_GetStringBytes(JSID_TO_STRING(mName)));
         if(!fun)
             return JS_FALSE;
 
@@ -366,7 +356,7 @@ JSBool XPCDispInterface::Member::GetValue(XPCCallContext& ccx,
             return JS_FALSE;
 
         // Store ourselves and our native interface within the JSObject
-        if(!JS_SetReservedSlot(ccx, funobj, 0, PRIVATE_TO_JSVAL(this)))
+        if(!JS_SetReservedSlot(ccx, funobj, 0, PRIVATE_TO_JSVAL((void *) this)))
             return JS_FALSE;
 
         if(!JS_SetReservedSlot(ccx, funobj, 1, PRIVATE_TO_JSVAL(iface)))

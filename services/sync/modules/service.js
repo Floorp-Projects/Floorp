@@ -274,7 +274,6 @@ WeaveSvc.prototype = {
     }
 
     Svc.Obs.add("network:offline-status-changed", this);
-    Svc.Obs.add("private-browsing", this);
     Svc.Obs.add("weave:service:sync:finish", this);
     Svc.Obs.add("weave:service:sync:error", this);
     Svc.Obs.add("weave:service:backoff:interval", this);
@@ -408,11 +407,6 @@ WeaveSvc.prototype = {
       case "network:offline-status-changed":
         // Whether online or offline, we'll reschedule syncs
         this._log.trace("Network offline status change: " + data);
-        this._checkSyncStatus();
-        break;
-      case "private-browsing":
-        // Entering or exiting private browsing? Reschedule syncs
-        this._log.trace("Private browsing change: " + data);
         this._checkSyncStatus();
         break;
       case "weave:service:sync:error":
@@ -577,6 +571,26 @@ WeaveSvc.prototype = {
             return true;
 
           case 401:
+            // Login failed.  If the password contains non-ASCII characters,
+            // perhaps the server password is an old low-byte only one?
+            let id = ID.get('WeaveID');
+            if (id.password != id.passwordUTF8) {
+              let res = new Resource(this.infoURL);
+              let auth = new BrokenBasicAuthenticator(id);
+              res.authenticator = auth;
+              test = res.get();
+              if (test.status == 200) {
+                this._log.debug("Non-ASCII password detected. "
+                                + "Changing to UTF-8 version.");
+                // Let's change the password on the server to the UTF8 version.
+                let url = this.userAPI + this.username + "/password";
+                res = new Resource(url);
+                res.authenticator = auth;
+                res.post(id.passwordUTF8);
+                return this.verifyLogin();
+              }
+            }
+            // Yes, we want to fall through to the 404 case.
           case 404:
             // Check that we're verifying with the correct cluster
             if (this._setCluster())
@@ -636,7 +650,7 @@ WeaveSvc.prototype = {
     this._notify("changepwd", "", function() {
       let url = this.userAPI + this.username + "/password";
       try {
-        let resp = new Resource(url).post(newpass);
+        let resp = new Resource(url).post(Utils.encodeUTF8(newpass));
         if (resp.status != 200) {
           this._log.debug("Password change failed: " + resp);
           return false;
@@ -830,10 +844,10 @@ WeaveSvc.prototype = {
   },
 
   createAccount: function WeaveSvc_createAccount(username, password, email,
-                                            captchaChallenge, captchaResponse)
-  {
+                                            captchaChallenge, captchaResponse) {
     let payload = JSON.stringify({
-      "password": password, "email": email,
+      "password": Utils.encodeUTF8(password),
+      "email": email,
       "captcha-challenge": captchaChallenge,
       "captcha-response": captchaResponse
     });
@@ -1017,9 +1031,6 @@ WeaveSvc.prototype = {
       reason = kSyncWeaveDisabled;
     else if (Svc.IO.offline)
       reason = kSyncNetworkOffline;
-    else if (Svc.Private && Svc.Private.privateBrowsingEnabled)
-      // Svc.Private doesn't exist on Fennec -- don't assume it's there.
-      reason = kSyncInPrivateBrowsing;
     else if (Status.minimumNextSync > Date.now())
       reason = kSyncBackoffNotMet;
     else if (!this._loggedIn)
@@ -1292,6 +1303,7 @@ WeaveSvc.prototype = {
 
     // if we don't have a node, get one.  if that fails, retry in 10 minutes
     if (this.clusterURL == "" && !this._setCluster()) {
+      Status.sync = NO_SYNC_NODE_FOUND;
       this._scheduleNextSync(10 * 60 * 1000);
       return;
     }

@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS shell.
  */
@@ -73,6 +75,7 @@
 #include "jsscript.h"
 #include "jstracer.h"
 #include "jsxml.h"
+#include "jsperf.h"
 
 #include "prmjtime.h"
 
@@ -89,6 +92,7 @@
 #include "jsworkers.h"
 
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -248,6 +252,13 @@ private:
     JSContext *cx;
     JSString *mStr;
     JSBool mThrow;
+};
+
+class IdToString : public ToString {
+public:
+    IdToString(JSContext *cx, jsid id, JSBool aThrow = JS_FALSE)
+    : ToString(cx, IdToJsval(id), aThrow)
+    { }
 };
 
 static char *
@@ -1294,7 +1305,6 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
     } traceKindNames[] = {
         { "all",        -1                  },
         { "object",     JSTRACE_OBJECT      },
-        { "double",     JSTRACE_DOUBLE      },
         { "string",     JSTRACE_STRING      },
 #if JS_HAS_XML_SUPPORT
         { "xml",        JSTRACE_XML         },
@@ -1308,7 +1318,7 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
         if (JSVAL_IS_TRACEABLE(v)) {
             startThing = JSVAL_TO_TRACEABLE(v);
             startTraceKind = JSVAL_TRACE_KIND(v);
-        } else if (v != JSVAL_NULL) {
+        } else if (!JSVAL_IS_NULL(v)) {
             JS_ReportError(cx,
                            "the first argument is not null or a heap-allocated "
                            "thing");
@@ -1382,9 +1392,9 @@ ValueToScript(JSContext *cx, jsval v)
         JSObject *obj = JSVAL_TO_OBJECT(v);
         JSClass *clasp = JS_GET_CLASS(cx, obj);
 
-        if (clasp == &js_ScriptClass) {
+        if (clasp == Jsvalify(&js_ScriptClass)) {
             script = (JSScript *) JS_GetPrivate(cx, obj);
-        } else if (clasp == &js_GeneratorClass.base) {
+        } else if (clasp == Jsvalify(&js_GeneratorClass)) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
             fun = gen->getFloatingFrame()->fun;
             script = FUN_SCRIPT(fun);
@@ -1419,8 +1429,8 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
         v = argv[0];
         intarg = 0;
         if (!JSVAL_IS_PRIMITIVE(v) &&
-            (JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_FunctionClass ||
-             JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_ScriptClass)) {
+            (JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&js_FunctionClass) ||
+             JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == Jsvalify(&js_ScriptClass))) {
             script = ValueToScript(cx, v);
             if (!script)
                 return JS_FALSE;
@@ -1439,11 +1449,8 @@ static JSTrapStatus
 TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
             jsval closure)
 {
-    JSString *str;
-    JSStackFrame *caller;
-
-    str = JSVAL_TO_STRING(closure);
-    caller = JS_GetScriptedCaller(cx, NULL);
+    JSString *str = JSVAL_TO_STRING(closure);
+    JSStackFrame *caller = JS_GetScriptedCaller(cx, NULL);
     if (!JS_EvaluateUCInStackFrame(cx, caller,
                                    JS_GetStringChars(str), JS_GetStringLength(str),
                                    caller->script->filename, caller->script->lineno,
@@ -1636,7 +1643,6 @@ SrcNotes(JSContext *cx, JSScript *script)
           case SRC_CONT2LABEL:
             index = js_GetSrcNoteOffset(sn, 0);
             JS_GET_SCRIPT_ATOM(script, NULL, index, atom);
-            JS_ASSERT(ATOM_IS_STRING(atom));
             str = ATOM_TO_STRING(atom);
             fprintf(gOutFile, " atom %u (", index);
             js_FileEscapedString(gOutFile, str, 0);
@@ -1741,8 +1747,6 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) fputs(" " #flag, stdout);
 
             SHOW_FLAG(LAMBDA);
-            SHOW_FLAG(SETTER);
-            SHOW_FLAG(GETTER);
             SHOW_FLAG(BOUND_METHOD);
             SHOW_FLAG(HEAVYWEIGHT);
             SHOW_FLAG(THISP_STRING);
@@ -1852,6 +1856,9 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JS_SetOptions(cx, oldopts);
     if (!script)
         return JS_FALSE;
+
+    if (script->isEmpty())
+        return JS_TRUE;
 
     obj = JS_NewScriptObject(cx, script);
     if (!obj)
@@ -2020,7 +2027,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsid id;
     JSObject *obj2;
     JSProperty *prop;
-    jsval value;
+    Value value;
 
     for (i = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
@@ -2046,12 +2053,12 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (!obj->getProperty(cx, id, &value))
                     return JS_FALSE;
             }
-            if (!prop || !JSVAL_IS_OBJECT(value)) {
+            if (!prop || !value.isObjectOrNull()) {
                 fprintf(gErrFile, "js: invalid stats argument %s\n",
                         bytes);
                 continue;
             }
-            obj = JSVAL_TO_OBJECT(value);
+            obj = value.toObjectOrNull();
             if (obj)
                 DumpScope(cx, obj, stdout);
         }
@@ -2076,7 +2083,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     fileName = NULL;
     if (argc > 0) {
         v = JS_ARGV(cx, vp)[0];
-        if (v != JSVAL_NULL) {
+        if (!JSVAL_IS_NULL(v)) {
             JSString *str;
 
             str = JS_ValueToString(cx, v);
@@ -2094,7 +2101,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
         if (JSVAL_IS_TRACEABLE(v)) {
             startThing = JSVAL_TO_TRACEABLE(v);
             startTraceKind = JSVAL_TRACE_KIND(v);
-        } else if (v != JSVAL_NULL) {
+        } else if (!JSVAL_IS_NULL(v)) {
             badTraceArg = "start";
             goto not_traceable_arg;
         }
@@ -2105,7 +2112,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
         v = JS_ARGV(cx, vp)[2];
         if (JSVAL_IS_TRACEABLE(v)) {
             thingToFind = JSVAL_TO_TRACEABLE(v);
-        } else if (v != JSVAL_NULL) {
+        } else if (!JSVAL_IS_NULL(v)) {
             badTraceArg = "toFind";
             goto not_traceable_arg;
         }
@@ -2114,7 +2121,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     maxDepth = (size_t)-1;
     if (argc > 3) {
         v = JS_ARGV(cx, vp)[3];
-        if (v != JSVAL_NULL) {
+        if (!JSVAL_IS_NULL(v)) {
             uint32 depth;
 
             if (!JS_ValueToECMAUint32(cx, v, &depth))
@@ -2128,7 +2135,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
         v = JS_ARGV(cx, vp)[4];
         if (JSVAL_IS_TRACEABLE(v)) {
             thingToIgnore = JSVAL_TO_TRACEABLE(v);
-        } else if (v != JSVAL_NULL) {
+        } else if (!JSVAL_IS_NULL(v)) {
             badTraceArg = "toIgnore";
             goto not_traceable_arg;
         }
@@ -2525,25 +2532,22 @@ static ComplexObject *
 split_get_private(JSContext *cx, JSObject *obj);
 
 static JSBool
-split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+split_addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     ComplexObject *cpx;
-    jsid asId;
 
     cpx = split_get_private(cx, obj);
     if (!cpx)
         return JS_TRUE;
     if (!cpx->isInner && cpx->inner) {
         /* Make sure to define this property on the inner object. */
-        if (!JS_ValueToId(cx, id, &asId))
-            return JS_FALSE;
-        return JS_DefinePropertyById(cx, cpx->inner, asId, *vp, NULL, NULL, JSPROP_ENUMERATE);
+        return JS_DefinePropertyById(cx, cpx->inner, id, *vp, NULL, NULL, JSPROP_ENUMERATE);
     }
     return JS_TRUE;
 }
 
 static JSBool
-split_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+split_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     ComplexObject *cpx;
 
@@ -2551,22 +2555,22 @@ split_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!cpx)
         return JS_TRUE;
 
-    if (JSVAL_IS_STRING(id) &&
-        !strcmp(JS_GetStringBytes(JSVAL_TO_STRING(id)), "isInner")) {
+    if (JSID_IS_ATOM(id) &&
+        !strcmp(JS_GetStringBytes(JSID_TO_STRING(id)), "isInner")) {
         *vp = BOOLEAN_TO_JSVAL(cpx->isInner);
         return JS_TRUE;
     }
 
     if (!cpx->isInner && cpx->inner) {
-        if (JSVAL_IS_STRING(id)) {
+        if (JSID_IS_ATOM(id)) {
             JSString *str;
 
-            str = JSVAL_TO_STRING(id);
+            str = JSID_TO_STRING(id);
             return JS_GetUCProperty(cx, cpx->inner, JS_GetStringChars(str),
                                     JS_GetStringLength(str), vp);
         }
-        if (JSVAL_IS_INT(id))
-            return JS_GetElement(cx, cpx->inner, JSVAL_TO_INT(id), vp);
+        if (JSID_IS_INT(id))
+            return JS_GetElement(cx, cpx->inner, JSID_TO_INT(id), vp);
         return JS_TRUE;
     }
 
@@ -2574,7 +2578,7 @@ split_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-split_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+split_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     ComplexObject *cpx;
 
@@ -2582,15 +2586,15 @@ split_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!cpx)
         return JS_TRUE;
     if (!cpx->isInner && cpx->inner) {
-        if (JSVAL_IS_STRING(id)) {
+        if (JSID_IS_ATOM(id)) {
             JSString *str;
 
-            str = JSVAL_TO_STRING(id);
+            str = JSID_TO_STRING(id);
             return JS_SetUCProperty(cx, cpx->inner, JS_GetStringChars(str),
                                     JS_GetStringLength(str), vp);
         }
-        if (JSVAL_IS_INT(id))
-            return JS_SetElement(cx, cpx->inner, JSVAL_TO_INT(id), vp);
+        if (JSID_IS_INT(id))
+            return JS_SetElement(cx, cpx->inner, JSID_TO_INT(id), vp);
         return JS_TRUE;
     }
 
@@ -2598,7 +2602,7 @@ split_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-split_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+split_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     ComplexObject *cpx;
     jsid asId;
@@ -2610,14 +2614,14 @@ split_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         /* Make sure to define this property on the inner object. */
         if (!JS_ValueToId(cx, *vp, &asId))
             return JS_FALSE;
-        return cpx->inner->deleteProperty(cx, asId, vp);
+        return cpx->inner->deleteProperty(cx, asId, Valueify(vp));
     }
     return JS_TRUE;
 }
 
 static JSBool
 split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                  jsval *statep, jsid *idp)
+                jsval *statep, jsid *idp)
 {
     ComplexObject *cpx;
     JSObject *iterator;
@@ -2636,7 +2640,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
         *statep = OBJECT_TO_JSVAL(iterator);
         if (idp)
-            *idp = JSVAL_ZERO;
+            *idp = INT_TO_JSID(0);
         break;
 
       case JSENUMERATE_NEXT:
@@ -2644,7 +2648,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!JS_NextProperty(cx, iterator, idp))
             return JS_FALSE;
 
-        if (!JSVAL_IS_VOID(*idp))
+        if (!JSID_IS_VOID(*idp))
             break;
         /* Fall through. */
 
@@ -2658,12 +2662,12 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 static JSBool
-split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **objp)
+split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
 {
     ComplexObject *cpx;
 
-    if (JSVAL_IS_STRING(id) &&
-        !strcmp(JS_GetStringBytes(JSVAL_TO_STRING(id)), "isInner")) {
+    if (JSID_IS_ATOM(id) &&
+        !strcmp(JS_GetStringBytes(JSID_TO_STRING(id)), "isInner")) {
         *objp = obj;
         return JS_DefineProperty(cx, obj, "isInner", JSVAL_VOID, NULL, NULL,
                                  JSPROP_SHARED);
@@ -2673,13 +2677,9 @@ split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **ob
     if (!cpx)
         return JS_TRUE;
     if (!cpx->isInner && cpx->inner) {
-        jsid asId;
         JSProperty *prop;
 
-        if (!JS_ValueToId(cx, id, &asId))
-            return JS_FALSE;
-
-        if (!cpx->inner->lookupProperty(cx, asId, objp, &prop))
+        if (!cpx->inner->lookupProperty(cx, id, objp, &prop))
             return JS_FALSE;
         if (prop)
             cpx->inner->dropProperty(cx, prop);
@@ -2720,7 +2720,7 @@ split_mark(JSContext *cx, JSObject *obj, void *arg)
 
     if (!cpx->isInner && cpx->inner) {
         /* Mark the inner object. */
-        JS_MarkGCThing(cx, cpx->inner, "ComplexObject.inner", arg);
+        JS_MarkGCThing(cx, OBJECT_TO_JSVAL(cpx->inner), "ComplexObject.inner", arg);
     }
 
     return 0;
@@ -2744,23 +2744,9 @@ split_thisObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
-static JSObjectOps split_objectops;
-
-static JSObjectOps *
-split_getObjectOps(JSContext *cx, JSClass *clasp)
-{
-    if (!split_objectops.thisObject) {
-        memcpy(&split_objectops, &js_ObjectOps, sizeof split_objectops);
-        split_objectops.thisObject = split_thisObject;
-        split_objectops.call = NULL;
-        split_objectops.construct = NULL;
-    }
-
-    return &split_objectops;
-}
 
 static JSBool
-split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+split_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 static JSObject *
 split_innerObject(JSContext *cx, JSObject *obj)
@@ -2775,30 +2761,56 @@ split_innerObject(JSContext *cx, JSObject *obj)
     return !cpx->isInner ? cpx->inner : obj;
 }
 
-static JSExtendedClass split_global_class = {
-    {"split_global",
-    JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE |
-    JSCLASS_GLOBAL_FLAGS | JSCLASS_IS_EXTENDED,
-    split_addProperty, split_delProperty,
-    split_getProperty, split_setProperty,
+static Class split_global_class = {
+    "split_global",
+    JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE | JSCLASS_GLOBAL_FLAGS,
+    Valueify(split_addProperty),
+    Valueify(split_delProperty),
+    Valueify(split_getProperty),
+    Valueify(split_setProperty),
     (JSEnumerateOp)split_enumerate,
     (JSResolveOp)split_resolve,
-    JS_ConvertStub, split_finalize,
-    split_getObjectOps, NULL, NULL, NULL, NULL, NULL,
-    split_mark, NULL},
-    split_equality, split_outerObject, split_innerObject,
-    NULL, NULL, NULL, NULL, NULL
+    ConvertStub,
+    split_finalize,
+    NULL,           /* reserved0   */
+    NULL,           /* checkAccess */
+    NULL,           /* call        */
+    NULL,           /* construct   */
+    NULL,           /* xdrObject   */
+    NULL,           /* hasInstance */
+    split_mark,
+    {
+        Valueify(split_equality),
+        split_outerObject,
+        split_innerObject,
+        NULL, /* iteratorObject */
+        NULL, /* wrappedObject  */
+    },
+    {
+        NULL, /* lookupProperty */
+        NULL, /* defineProperty */
+        NULL, /* getProperty    */
+        NULL, /* setProperty    */
+        NULL, /* getAttributes  */
+        NULL, /* setAttributes  */
+        NULL, /* deleteProperty */
+        NULL, /* enumerate      */
+        NULL, /* typeOf         */
+        NULL, /* trace          */
+        split_thisObject,
+        NULL, /* clear          */
+    },
 };
 
 static JSBool
-split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+split_equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp)
 {
     *bp = JS_FALSE;
-    if (JSVAL_IS_PRIMITIVE(v))
+    if (JSVAL_IS_PRIMITIVE(*v))
         return JS_TRUE;
 
-    JSObject *obj2 = JSVAL_TO_OBJECT(v);
-    if (JS_GET_CLASS(cx, obj2) != &split_global_class.base)
+    JSObject *obj2 = JSVAL_TO_OBJECT(*v);
+    if (obj2->getClass() != &split_global_class)
         return JS_TRUE;
 
     ComplexObject *cpx = (ComplexObject *) JS_GetPrivate(cx, obj2);
@@ -2825,7 +2837,7 @@ split_create_outer(JSContext *cx)
     cpx->inner = NULL;
     cpx->outer = NULL;
 
-    obj = JS_NewGlobalObject(cx, &split_global_class.base);
+    obj = JS_NewGlobalObject(cx, Jsvalify(&split_global_class));
     if (!obj || !JS_SetParent(cx, obj, NULL)) {
         JS_free(cx, cpx);
         return NULL;
@@ -2845,7 +2857,7 @@ split_create_inner(JSContext *cx, JSObject *outer)
     ComplexObject *cpx, *outercpx;
     JSObject *obj;
 
-    JS_ASSERT(JS_GET_CLASS(cx, outer) == &split_global_class.base);
+    JS_ASSERT(outer->getClass() == &split_global_class);
 
     cpx = (ComplexObject *) JS_malloc(cx, sizeof *cpx);
     if (!cpx)
@@ -2855,7 +2867,7 @@ split_create_inner(JSContext *cx, JSObject *outer)
     cpx->inner = NULL;
     cpx->outer = outer;
 
-    obj = JS_NewGlobalObject(cx, &split_global_class.base);
+    obj = JS_NewGlobalObject(cx, Jsvalify(&split_global_class));
     if (!obj || !JS_SetParent(cx, obj, NULL) || !JS_SetPrivate(cx, obj, cpx)) {
         JS_free(cx, cpx);
         return NULL;
@@ -2872,7 +2884,7 @@ static ComplexObject *
 split_get_private(JSContext *cx, JSObject *obj)
 {
     do {
-        if (JS_GET_CLASS(cx, obj) == &split_global_class.base)
+        if (obj->getClass() == &split_global_class)
             return (ComplexObject *) JS_GetPrivate(cx, obj);
         obj = JS_GetParent(cx, obj);
     } while (obj);
@@ -2894,7 +2906,7 @@ sandbox_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-sandbox_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+sandbox_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                 JSObject **objp)
 {
     jsval v;
@@ -2946,8 +2958,8 @@ NewSandbox(JSContext *cx, bool lazy, bool split)
         if (!lazy && !JS_InitStandardClasses(cx, obj))
             return NULL;
 
-        AutoValueRooter root(cx, BOOLEAN_TO_JSVAL(lazy));
-        if (!JS_SetProperty(cx, obj, "lazy", root.addr()))
+        AutoValueRooter root(cx, BooleanValue(lazy));
+        if (!JS_SetProperty(cx, obj, "lazy", root.jsval_addr()))
             return NULL;
 
         if (split)
@@ -3017,7 +3029,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             return false;
         }
     }
-    return cx->compartment->wrap(cx, rval);
+    return cx->compartment->wrap(cx, Valueify(rval));
 }
 
 static JSBool
@@ -3035,7 +3047,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     JSString *str = JSVAL_TO_STRING(argv[1]);
 
     bool saveCurrent = (argc >= 3 && JSVAL_IS_BOOLEAN(argv[2]))
-                        ? !!(JSVAL_TO_SPECIAL(argv[2]))
+                        ? !!(JSVAL_TO_BOOLEAN(argv[2]))
                         : false;
 
     JS_ASSERT(cx->fp);
@@ -3303,7 +3315,7 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
             goto fail;
 
         {
-            JSAutoTransferRequest transfer(cx, newcx);
+            JSAutoRequest req(newcx);
             JS_SetGlobalObject(newcx, global);
         }
         JS_ClearContextThread(newcx);
@@ -3657,12 +3669,8 @@ Parent(JSContext *cx, uintN argc, jsval *vp)
 
     /* Outerize if necessary.  Embrace the ugliness! */
     if (parent) {
-        JSClass *clasp = JS_GET_CLASS(cx, parent);
-        if (clasp->flags & JSCLASS_IS_EXTENDED) {
-            JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
-            if (JSObjectOp outerize = xclasp->outerObject)
-                *vp = OBJECT_TO_JSVAL(outerize(cx, parent));
-        }
+        if (JSObjectOp op = parent->getClass()->ext.outerObject)
+            *vp = OBJECT_TO_JSVAL(op(cx, parent));
     }
 
     return JS_TRUE;
@@ -4181,7 +4189,7 @@ enum its_tinyid {
 };
 
 static JSBool
-its_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+its_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   jsval *val = (jsval *) JS_GetPrivate(cx, obj);
   *vp = val ? *val : JSVAL_VOID;
@@ -4189,7 +4197,7 @@ its_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-its_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+its_setter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
   jsval *val = (jsval *) JS_GetPrivate(cx, obj);
   if (val) {
@@ -4304,12 +4312,12 @@ static JSBool its_noisy;    /* whether to be noisy when finalizing it */
 static JSBool its_enum_fail;/* whether to fail when enumerating it */
 
 static JSBool
-its_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+its_addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     if (!its_noisy)
         return JS_TRUE;
 
-    ToString idString(cx, id);
+    IdToString idString(cx, id);
     fprintf(gOutFile, "adding its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -4317,12 +4325,12 @@ its_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-its_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+its_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     if (!its_noisy)
         return JS_TRUE;
 
-    ToString idString(cx, id);
+    IdToString idString(cx, id);
     fprintf(gOutFile, "deleting its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -4330,12 +4338,12 @@ its_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-its_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     if (!its_noisy)
         return JS_TRUE;
 
-    ToString idString(cx, id);
+    IdToString idString(cx, id);
     fprintf(gOutFile, "getting its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -4343,16 +4351,16 @@ its_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
-its_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+its_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    ToString idString(cx, id);
+    IdToString idString(cx, id);
     if (its_noisy) {
         fprintf(gOutFile, "setting its property %s,", idString.getBytes());
         ToString valueString(cx, *vp);
         fprintf(gOutFile, " new value %s\n", valueString.getBytes());
     }
 
-    if (!JSVAL_IS_STRING(id))
+    if (!JSID_IS_ATOM(id))
         return JS_TRUE;
 
     if (!strcmp(idString.getBytes(), "noisy"))
@@ -4385,7 +4393,7 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
         *statep = OBJECT_TO_JSVAL(iterator);
         if (idp)
-            *idp = JSVAL_ZERO;
+            *idp = INT_TO_JSID(0);
         break;
 
       case JSENUMERATE_NEXT:
@@ -4398,7 +4406,7 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!JS_NextProperty(cx, iterator, idp))
             return JS_FALSE;
 
-        if (!JSVAL_IS_VOID(*idp))
+        if (!JSID_IS_VOID(*idp))
             break;
         /* Fall through. */
 
@@ -4412,11 +4420,11 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 static JSBool
-its_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+its_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
     if (its_noisy) {
-        ToString idString(cx, id);
+        IdToString idString(cx, id);
         fprintf(gOutFile, "resolving its property %s, flags {%s,%s,%s}\n",
                idString.getBytes(),
                (flags & JSRESOLVE_QUALIFIED) ? "qualified" : "",
@@ -4613,7 +4621,7 @@ global_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+global_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                JSObject **objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
@@ -4689,13 +4697,13 @@ JSClass global_class = {
 };
 
 static JSBool
-env_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+env_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS
     int rv;
 
-    ToString idstr(cx, id, JS_TRUE);
+    IdToString idstr(cx, id, JS_TRUE);
     if (idstr.threw())
         return JS_FALSE;
     ToString valstr(cx, *vp, JS_TRUE);
@@ -4765,7 +4773,7 @@ env_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-env_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+env_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
     JSString *valstr;
@@ -4774,7 +4782,7 @@ env_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     if (flags & JSRESOLVE_ASSIGNING)
         return JS_TRUE;
 
-    ToString idstr(cx, id, JS_TRUE);
+    IdToString idstr(cx, id, JS_TRUE);
     if (idstr.threw())
         return JS_FALSE;
 
@@ -4801,67 +4809,6 @@ static JSClass env_class = {
     JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
-
-#ifdef NARCISSUS
-
-static JSBool
-defineProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-               jsval *rval)
-{
-    JSString *str;
-    jsval value;
-    JSBool dontDelete, readOnly, dontEnum;
-    const jschar *chars;
-    size_t length;
-    uintN attrs;
-
-    dontDelete = readOnly = dontEnum = JS_FALSE;
-    if (!JS_ConvertArguments(cx, argc, argv, "Sv/bbb",
-                             &str, &value, &dontDelete, &readOnly, &dontEnum)) {
-        return JS_FALSE;
-    }
-    chars = JS_GetStringChars(str);
-    length = JS_GetStringLength(str);
-    attrs = dontEnum ? 0 : JSPROP_ENUMERATE;
-    if (dontDelete)
-        attrs |= JSPROP_PERMANENT;
-    if (readOnly)
-        attrs |= JSPROP_READONLY;
-    return JS_DefineUCProperty(cx, obj, chars, length, value, NULL, NULL,
-                               attrs);
-}
-
-static JSBool
-Evaluate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    /* function evaluate(source, filename, lineno) { ... } */
-    JSString *source;
-    const char *filename = "";
-    jsuint lineno = 0;
-    uint32 oldopts;
-    JSBool ok;
-
-    if (argc == 0) {
-        *rval = JSVAL_VOID;
-        return JS_TRUE;
-    }
-
-    if (!JS_ConvertArguments(cx, argc, argv, "S/su",
-                             &source, &filename, &lineno)) {
-        return JS_FALSE;
-    }
-
-    oldopts = JS_GetOptions(cx);
-    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-    ok = JS_EvaluateUCScript(cx, obj, JS_GetStringChars(source),
-                             JS_GetStringLength(source), filename,
-                             lineno, rval);
-    JS_SetOptions(cx, oldopts);
-
-    return ok;
-}
-
-#endif /* NARCISSUS */
 
 /*
  * Avoid a reentrancy hazard.
@@ -4934,6 +4881,8 @@ NewGlobalObject(JSContext *cx, JSAutoCrossCompartmentCall &call)
     if (!JS_InitCTypesClass(cx, glob))
         return NULL;
 #endif
+    if (!JS::RegisterPerfMeasurement(cx, glob))
+        return NULL;
     if (!JS_DefineFunctions(cx, glob, shell_functions))
         return NULL;
 
@@ -4952,23 +4901,6 @@ NewGlobalObject(JSContext *cx, JSAutoCrossCompartmentCall &call)
                            its_setter, JSPROP_READONLY))
         return NULL;
 
-#ifdef NARCISSUS
-    jsval v;
-    static const char Object_prototype[] = "Object.prototype";
-
-    if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
-        return NULL;
-
-    if (!JS_EvaluateScript(cx, glob,
-                           Object_prototype, sizeof Object_prototype - 1,
-                           NULL, 0, &v)) {
-        return NULL;
-    }
-    if (!JS_DefineFunction(cx, JSVAL_TO_OBJECT(v), "__defineProperty__",
-                           defineProperty, 5, 0)) {
-        return NULL;
-    }
-#endif
     return glob;
 }
 

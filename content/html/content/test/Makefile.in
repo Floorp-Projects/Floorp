@@ -35,16 +35,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = content/html/content/test
+DEPTH          = ../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = content/html/content/test
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug589.html \
+_TEST_FILES = \
+		test_hidden.html \
+		test_bug589.html \
 		test_bug691.html \
 		nnc_lockup.gif \
 		test_bug694.html \
@@ -144,6 +146,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug347174_xslp.html \
 		347174transformable.xml \
 		347174transform.xsl \
+		test_a_text.html \
 		test_anchor_href_cache_invalidation.html \
 		test_bug481335.xhtml \
 		test_bug500885.html \

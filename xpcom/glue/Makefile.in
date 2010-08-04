@@ -49,8 +49,8 @@ DIRS            = standalone
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue_s
+SUPPRESS_FAKELIB = 1
 DIST_INSTALL	= 1
-
 
 
 LOCAL_INCLUDES	= \

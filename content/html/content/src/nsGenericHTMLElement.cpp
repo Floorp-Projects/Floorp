@@ -238,7 +238,7 @@ class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
                                            nsIDOMNSHTMLElement)
 
 private:
-  nsCOMPtr<nsGenericHTMLElement> mElement;
+  nsRefPtr<nsGenericHTMLElement> mElement;
 };
 
 NS_IMPL_CYCLE_COLLECTION_1(nsGenericHTMLElementTearoff, mElement)
@@ -257,6 +257,7 @@ NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
 
 NS_IMPL_INT_ATTR(nsGenericHTMLElement, TabIndex, tabindex)
+NS_IMPL_BOOL_ATTR(nsGenericHTMLElement, Hidden, hidden)
 
 nsresult
 nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
@@ -279,7 +280,7 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
                                  new nsGenericHTMLElementTearoff(this))
   NS_INTERFACE_MAP_END
 
-// No closing bracket, becuase NS_INTERFACE_MAP_END does that for us.
+// No closing bracket, because NS_INTERFACE_MAP_END does that for us.
     
 nsresult
 nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
@@ -1541,39 +1542,22 @@ nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
 
 //----------------------------------------
 
-// These tables are used for TD,TH,TR, etc (but not TABLE)
+// This table is used for td, th, tr, col, thead, tbody and tfoot.
 static const nsAttrValue::EnumTable kTableCellHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_MOZ_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
   { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
-  { 0 }
-};
-
-static const nsAttrValue::EnumTable kCompatTableCellHAlignTable[] = {
-  { "left",   NS_STYLE_TEXT_ALIGN_MOZ_LEFT },
-  { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
-  { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
-  { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
-  { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
-
-  // The following are non-standard but necessary for Nav4 compatibility
   { "middle", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
-  // allow center and absmiddle to map to NS_STYLE_TEXT_ALIGN_CENTER and
-  // NS_STYLE_TEXT_ALIGN_CENTER to map to center by using the following order
-  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
   { "absmiddle", NS_STYLE_TEXT_ALIGN_CENTER },
   { 0 }
 };
 
 PRBool
 nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
-                                                nsAttrValue& aResult) const
+                                                nsAttrValue& aResult)
 {
-  if (InNavQuirksMode(GetOwnerDoc())) {
-    return aResult.ParseEnumValue(aString, kCompatTableCellHAlignTable, PR_FALSE);
-  }
   return aResult.ParseEnumValue(aString, kTableCellHAlignTable, PR_FALSE);
 }
 
@@ -1649,11 +1633,21 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
       }
     }
   }
+
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Visibility)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
     if (value && value->Type() == nsAttrValue::eString) {
       aData->mDisplayData->mLang.SetStringValue(value->GetStringValue(),
                                                 eCSSUnit_Ident);
+    }
+  }
+
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
+    nsRuleDataDisplay* disp = aData->mDisplayData;
+    if (disp->mDisplay.GetUnit() == eCSSUnit_Null) {
+      if (aAttributes->IndexOfAttr(nsGkAtoms::hidden, kNameSpaceID_None) >= 0) {
+        disp->mDisplay.SetIntValue(NS_STYLE_DISPLAY_NONE, eCSSUnit_Enumerated);
+      }
     }
   }
 }
@@ -1695,6 +1689,7 @@ nsGenericHTMLFormElement::UpdateEditableFormControlState()
 nsGenericHTMLElement::sCommonAttributeMap[] = {
   { &nsGkAtoms::contenteditable },
   { &nsGkAtoms::lang },
+  { &nsGkAtoms::hidden },
   { nsnull }
 };
 

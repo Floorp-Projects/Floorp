@@ -88,7 +88,7 @@
 #include "nsIServiceManager.h"
 #include "nsThemeConstants.h"
 
-PRInt8 nsMenuPopupFrame::sDefaultLevelParent = -1;
+PRInt8 nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
 // NS_NewMenuPopupFrame
 //
@@ -125,9 +125,11 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   mHFlip(PR_FALSE),
   mVFlip(PR_FALSE)
 {
-  if (sDefaultLevelParent >= 0)
+  // the preference name is backwards here. True means that the 'top' level is
+  // the default, and false means that the 'parent' level is the default.
+  if (sDefaultLevelIsTop >= 0)
     return;
-  sDefaultLevelParent =
+  sDefaultLevelIsTop =
     nsContentUtils::GetBoolPref("ui.panel.default_level_parent", PR_FALSE);
 } // ctor
 
@@ -200,7 +202,7 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
 }
 
 PRBool
-nsMenuPopupFrame::IsNoAutoHide()
+nsMenuPopupFrame::IsNoAutoHide() const
 {
   // Panels with noautohide="true" don't hide when the mouse is clicked
   // outside of them, or when another application is made active. Non-autohide
@@ -210,29 +212,43 @@ nsMenuPopupFrame::IsNoAutoHide()
                                  nsGkAtoms::_true, eIgnoreCase));
 }
 
-PRBool
-nsMenuPopupFrame::IsTopMost()
+nsPopupLevel
+nsMenuPopupFrame::PopupLevel(PRBool aIsNoAutoHide) const
 {
-  // If this panel is not a panel, this is always a top-most popup
+  // The popup level is determined as follows, in this order:
+  //   1. non-panels (menus and tooltips) are always topmost
+  //   2. any specified level attribute
+  //   3. if a titlebar attribute is set, use the 'floating' level
+  //   4. if this is a noautohide panel, use the 'parent' level
+  //   5. use the platform-specific default level
+
+  // If this is not a panel, this is always a top-most popup.
   if (mPopupType != ePopupTypePanel)
-    return PR_TRUE;
+    return ePopupLevelTop;
 
-  // If this panel is a noautohide panel, it should appear just above the parent
-  // window.
-  if (IsNoAutoHide())
-    return PR_FALSE;
+  // If the level attribute has been set, use that.
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsGkAtoms::top, &nsGkAtoms::parent, &nsGkAtoms::floating, nsnull};
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::level,
+                                    strings, eCaseMatters)) {
+    case 0:
+      return ePopupLevelTop;
+    case 1:
+      return ePopupLevelParent;
+    case 2:
+      return ePopupLevelFloating;
+  }
 
-  // Otherwise, check the topmost attribute.
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::level,
-                            nsGkAtoms::top, eIgnoreCase))
-    return PR_TRUE;
+  // Panels with titlebars most likely want to be floating popups.
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::titlebar))
+    return ePopupLevelFloating;
 
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::level,
-                            nsGkAtoms::parent, eIgnoreCase))
-    return PR_FALSE;
+  // If this panel is a noautohide panel, the default is the parent level.
+  if (aIsNoAutoHide)
+    return ePopupLevelParent;
 
   // Otherwise, the result depends on the platform.
-  return sDefaultLevelParent ? PR_TRUE : PR_FALSE;
+  return sDefaultLevelIsTop ? ePopupLevelTop : ePopupLevelParent;
 }
 
 void
@@ -255,6 +271,23 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
   widgetData.mPopupHint = mPopupType;
+  widgetData.mNoAutoHide = IsNoAutoHide();
+
+  nsAutoString title;
+  if (mContent && widgetData.mNoAutoHide) {
+    if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::titlebar,
+                              nsGkAtoms::normal, eCaseMatters)) {
+      widgetData.mBorderStyle = eBorderStyle_title;
+
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, title);
+
+      if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::close,
+                                nsGkAtoms::_true, eCaseMatters)) {
+        widgetData.mBorderStyle =
+          static_cast<enum nsBorderStyle>(widgetData.mBorderStyle | eBorderStyle_close);
+      }
+    }
+  }
 
   nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(this, this);
   PRBool viewHasTransparentContent = !mInContentShell &&
@@ -265,12 +298,13 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   if (parentContent)
     tag = parentContent->Tag();
   widgetData.mDropShadow = !(viewHasTransparentContent || tag == nsGkAtoms::menulist);
+  widgetData.mPopupLevel = PopupLevel(widgetData.mNoAutoHide);
 
-  // panels which are not topmost need a parent widget. This allows them to
+  // panels which have a parent level need a parent widget. This allows them to
   // always appear in front of the parent window but behind other windows that
   // should be in front of it.
   nsCOMPtr<nsIWidget> parentWidget;
-  if (!IsTopMost()) {
+  if (widgetData.mPopupLevel != ePopupLevelTop) {
     nsCOMPtr<nsISupports> cont = PresContext()->GetContainer();
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
     if (!dsti)
@@ -297,6 +331,12 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
   widget->SetWindowShadowStyle(GetShadowStyle());
+
+  // most popups don't have a title so avoid setting the title if there isn't one
+  if (!title.IsEmpty()) {
+    widget->SetTitle(title);
+  }
+
   return NS_OK;
 }
 
@@ -361,7 +401,7 @@ nsMenuPopupFrame::IsLeaf() const
   // menu popups generate their child frames lazily only when opened, so
   // behave like a leaf frame. However, generate child frames normally if
   // the parent menu has a sizetopopup attribute. In this case the size of
-  // the parent menu is dependant on the size of the popup, so the frames
+  // the parent menu is dependent on the size of the popup, so the frames
   // need to exist in order to calculate this size.
   nsIContent* parentContent = mContent->GetParent();
   return (parentContent &&
@@ -437,11 +477,27 @@ nsMenuPopupFrame::AdjustView()
   nsIViewManager* viewManager = view->GetViewManager();
   nsRect rect = GetRect();
   rect.x = rect.y = 0;
+
+  // Increase the popup's view size to account for any titlebar or borders.
+  // XXXndeakin this should really be accounted for earlier in
+  // SetPopupPosition so that this extra size is accounted for when flipping
+  // or resizing the popup due to it being too large, but that can be a
+  // followup bug.
+  nsPresContext* pc = PresContext();
+  if (mPopupType == ePopupTypePanel && view) {
+    nsIWidget* widget = view->GetWidget();
+    if (widget) {
+      nsIntSize popupSize = nsIntSize(pc->AppUnitsToDevPixels(rect.width),
+                                      pc->AppUnitsToDevPixels(rect.height));
+      popupSize = widget->ClientToWindowSize(popupSize);
+      rect.width = pc->DevPixelsToAppUnits(popupSize.width);
+      rect.height = pc->DevPixelsToAppUnits(popupSize.height);
+    }
+  }
   viewManager->ResizeView(view, rect);
+
   viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
   mPopupState = ePopupOpenAndVisible;
-
-  nsPresContext* pc = PresContext();
   nsContainerFrame::SyncFrameViewProperties(pc, this, nsnull, view, 0);
 
   // fire popupshown event when the state has changed
@@ -968,14 +1024,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   // might be a different document so its presshell must be used.
   if (!aAnchorFrame) {
     if (mAnchorContent) {
-      nsCOMPtr<nsIDocument> document = mAnchorContent->GetDocument();
-      if (document) {
-        nsIPresShell *shell = document->GetShell();
-        if (!shell)
-          return NS_ERROR_FAILURE;
-
-        aAnchorFrame = mAnchorContent->GetPrimaryFrame();
-      }
+      aAnchorFrame = mAnchorContent->GetPrimaryFrame();
     }
 
     if (!aAnchorFrame) {
@@ -1058,6 +1107,18 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
     else
       screenPoint.x += presContext->CSSPixelsToAppUnits(mXPos);
     screenPoint.y += presContext->CSSPixelsToAppUnits(mYPos);
+
+    // If this is a noautohide popup, set the screen coordinates of the popup.
+    // This way, the popup stays at the location where it was opened even when
+    // the window is moved. Popups at the parent level follow the parent
+    // window as it is moved and remained anchored, so we want to maintain the
+    // anchoring instead.
+    if (IsNoAutoHide() && PopupLevel(PR_TRUE) != ePopupLevelParent) {
+      // Account for the margin that will end up being added to the screen coordinate
+      // the next time SetPopupPosition is called.
+      mScreenXPos = presContext->AppUnitsToIntCSSPixels(screenPoint.x - margin.left);
+      mScreenYPos = presContext->AppUnitsToIntCSSPixels(screenPoint.y - margin.top);
+    }
   }
   else {
     // the popup is positioned at a screen coordinate.
@@ -1096,7 +1157,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
     hFlip = vFlip = PR_FALSE;
   }
 
-  nsRect screenRect = GetConstraintRect(anchorRect.TopLeft(), rootScreenRect);
+  nsRect screenRect = GetConstraintRect(anchorRect, rootScreenRect);
 
   // ensure that anchorRect is on screen
   if (!anchorRect.IntersectRect(anchorRect, screenRect)) {
@@ -1139,8 +1200,21 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   // determine the x and y position of the view by subtracting the desired
   // screen position from the screen position of the root frame.
   nsPoint viewPoint = screenPoint - rootScreenRect.TopLeft();
+  nsIView* view = GetView();
+  NS_ASSERTION(view, "popup with no view");
   presContext->GetPresShell()->GetViewManager()->
-    MoveViewTo(GetView(), viewPoint.x, viewPoint.y);
+    MoveViewTo(view, viewPoint.x, viewPoint.y);
+
+  // Offset the position by the width and height of the borders and titlebar.
+  // Even though GetClientOffset should return (0, 0) when there is no
+  // titlebar or borders, we skip these calculations anyway for non-panels
+  // to save time since they will never have a titlebar.
+  nsIWidget* widget = view->GetWidget();
+  if (mPopupType == ePopupTypePanel && widget) {
+    nsIntPoint offset = widget->GetClientOffset();
+    viewPoint.x += presContext->DevPixelsToAppUnits(offset.x);
+    viewPoint.y += presContext->DevPixelsToAppUnits(offset.y);
+  }
 
   // Now that we've positioned the view, sync up the frame's origin.
   nsBoxFrame::SetPosition(viewPoint - GetParent()->GetOffsetTo(rootFrame));
@@ -1161,7 +1235,8 @@ nsMenuPopupFrame::GetCurrentMenuItem()
 }
 
 nsRect
-nsMenuPopupFrame::GetConstraintRect(nsPoint aAnchorPoint, nsRect& aRootScreenRect)
+nsMenuPopupFrame::GetConstraintRect(const nsRect& aAnchorRect,
+                                    const nsRect& aRootScreenRect)
 {
   nsIntRect screenRectPixels;
   nsPresContext* presContext = PresContext();
@@ -1176,10 +1251,12 @@ nsMenuPopupFrame::GetConstraintRect(nsPoint aAnchorPoint, nsRect& aRootScreenRec
     // This is because we need to constrain the content to this content area,
     // so we should use the same screen. Otherwise, use the screen where the
     // anchor is located.
-    nsPoint pnt = mInContentShell ? aRootScreenRect.TopLeft() : aAnchorPoint;
-    sm->ScreenForRect(presContext->AppUnitsToDevPixels(pnt.x),
-                      presContext->AppUnitsToDevPixels(pnt.y),
-                      1, 1, getter_AddRefs(screen));
+    nsRect rect = mInContentShell ? aRootScreenRect : aAnchorRect;
+    PRInt32 width = rect.width > 0 ? presContext->AppUnitsToDevPixels(rect.width) : 1;
+    PRInt32 height = rect.height > 0 ? presContext->AppUnitsToDevPixels(rect.height) : 1;
+    sm->ScreenForRect(presContext->AppUnitsToDevPixels(rect.x),
+                      presContext->AppUnitsToDevPixels(rect.y),
+                      width, height, getter_AddRefs(screen));
     if (screen) {
       // get the total screen area if the popup is allowed to overlap it.
       if (mMenuCanOverlapOSBar && !mInContentShell)
@@ -1594,6 +1671,21 @@ nsMenuPopupFrame::AttributeChanged(PRInt32 aNameSpaceID,
   if (aAttribute == nsGkAtoms::left || aAttribute == nsGkAtoms::top)
     MoveToAttributePosition();
 
+  if (aAttribute == nsGkAtoms::label) {
+    // set the label for the titlebar
+    nsIView* view = GetView();
+    if (view) {
+      nsIWidget* widget = view->GetWidget();
+      if (widget) {
+        nsAutoString title;
+        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, title);
+        if (!title.IsEmpty()) {
+          widget->SetTitle(title);
+        }
+      }
+    }
+  }
+
   // accessibility needs this to ensure the frames get constructed when the
   // menugenerated attribute is set, see bug 279703 comment 42 for discussion
   if (aAttribute == nsGkAtoms::menugenerated &&
@@ -1651,11 +1743,18 @@ nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 void
 nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop, PRBool aUpdateAttrs)
 {
+  if (mScreenXPos == aLeft && mScreenYPos == aTop)
+    return;
+
   // reposition the popup at the specified coordinates. Don't clear the anchor
   // and position, because the popup can be reset to its anchor position by
-  // using (-1, -1) as coordinates.
-  mScreenXPos = aLeft;
-  mScreenYPos = aTop;
+  // using (-1, -1) as coordinates. Subtract off the margin as it will be
+  // added to the position when SetPopupPosition is called.
+  nsMargin margin(0, 0, 0, 0);
+  GetStyleMargin()->GetMargin(margin);
+  nsPresContext* presContext = PresContext();
+  mScreenXPos = aLeft - presContext->AppUnitsToIntCSSPixels(margin.left);
+  mScreenYPos = aTop - presContext->AppUnitsToIntCSSPixels(margin.top);
 
   SetPopupPosition(nsnull, PR_TRUE);
 

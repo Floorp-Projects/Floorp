@@ -270,8 +270,7 @@ members = [
     'nsIDOMHTMLOptionElement.index',
     'nsIDOMHTMLOptionElement.selected',
     'nsIDOMHTMLOptionElement.form',
-    # Readonly, shadowed by nsIDOMNSHTMLOptionElement.text (below).
-    #'nsIDOMHTMLOptionElement.text',
+    'nsIDOMHTMLOptionElement.text',
     'nsIDOMHTMLOptionElement.defaultSelected',
     'nsIDOMHTMLOptionElement.value',
     'nsIDOMHTMLOptionElement.label',
@@ -286,6 +285,7 @@ members = [
     'nsIDOMHTMLSelectElement.length',
     'nsIDOMHTMLSelectElement.remove',
     'nsIDOMHTMLSelectElement.selectedIndex',
+    'nsIDOMHTMLSelectElement.item',
     'nsIDOMHTMLSelectElement.type',
     'nsIDOMHTMLSelectElement.options',
     'nsIDOMHTMLSelectElement.size',
@@ -351,8 +351,6 @@ members = [
     'nsIDOMNSHTMLInputElement.setSelectionRange',
     'nsIDOMNSHTMLOptionCollection.selectedIndex',
     'nsIDOMNSHTMLOptionCollection.add',
-    'nsIDOMNSHTMLOptionElement.text',
-    'nsIDOMNSHTMLSelectElement.item',
     'nsIDOMNSHTMLTextAreaElement.setSelectionRange',
     'nsIDOMNSHTMLTextAreaElement.selectionStart',
     'nsIDOMNSHTMLTextAreaElement.selectionEnd',
@@ -396,7 +394,7 @@ members = [
 
     # dom/interfaces/views
     'nsIDOMDocumentView.defaultView',
-    
+
     # dom/interfaces/xbl - None.
 
     # dom/interfaces/xpath
