@@ -282,6 +282,12 @@ protected:
    */
   static bool HaveSize(imgIRequest *aImage);
 
+  /**
+   * Adds/Removes a given imgIRequest from our document's tracker.
+   */
+  nsresult TrackImage(imgIRequest* aImage);
+  nsresult UntrackImage(imgIRequest* aImage);
+
   /* MEMBERS */
   nsCOMPtr<imgIRequest> mCurrentRequest;
   nsCOMPtr<imgIRequest> mPendingRequest;

@@ -104,6 +104,7 @@ class mozAutoSubtreeModified;
 struct JSObject;
 class nsFrameLoader;
 class nsIBoxObject;
+class imgIRequest;
 
 namespace mozilla {
 namespace css {
@@ -118,8 +119,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0xba594543, 0x95f6, 0x4160, \
-  { 0x90, 0x32, 0x82, 0x87, 0x16, 0x5d, 0x59, 0x7a } }
+{ 0x0218352e, 0x9ddf, 0x43b0, \
+  { 0xb6, 0x1d, 0xd3, 0x1a, 0x47, 0x7a, 0xfd, 0x89 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1427,6 +1428,28 @@ public:
 
   // This returns true when the document tree is being teared down.
   PRBool InUnlinkOrDeletion() { return mInUnlinkOrDeletion; }
+
+  /*
+   * Image Tracking
+   *
+   * Style and content images register their imgIRequests with their document
+   * so that the document can efficiently tell all descendant images when they
+   * are and are not visible. When an image is on-screen, we want to call
+   * LockImage() on it so that it doesn't do things like discarding frame data
+   * to save memory. The PresShell informs the document whether its images
+   * should be locked or not via SetImageLockingState().
+   *
+   * See bug 512260.
+   */
+
+  // Add/Remove images from the document image tracker
+  virtual nsresult AddImage(imgIRequest* aImage) = 0;
+  virtual nsresult RemoveImage(imgIRequest* aImage) = 0;
+
+  // Makes the images on this document locked/unlocked. By default, the locking
+  // state is unlocked/false.
+  virtual nsresult SetImageLockingState(PRBool aLocked) = 0;
+
 protected:
   ~nsIDocument()
   {
