@@ -223,6 +223,31 @@ private:
   void DestroyEditor();
   void Clear();
 
+  class InitializationGuard {
+  public:
+    explicit InitializationGuard(nsTextEditorState& aState) :
+      mState(aState),
+      mGuardSet(PR_FALSE)
+    {
+      if (!mState.mInitializing) {
+        mGuardSet = PR_TRUE;
+        mState.mInitializing = PR_TRUE;
+      }
+    }
+    ~InitializationGuard() {
+      if (mGuardSet) {
+        mState.mInitializing = PR_FALSE;
+      }
+    }
+    PRBool IsInitializingRecursively() const {
+      return !mGuardSet;
+    }
+  private:
+    nsTextEditorState& mState;
+    PRBool mGuardSet;
+  };
+  friend class InitializationGuard;
+
   nsITextControlElement* const mTextCtrlElement;
   nsRefPtr<nsTextInputSelectionImpl> mSelCon;
   nsCOMPtr<nsIEditor> mEditor;
@@ -234,6 +259,7 @@ private:
   nsRefPtr<nsAnonDivObserver> mMutationObserver;
   mutable nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.
   PRPackedBool mEditorInitialized;
+  PRPackedBool mInitializing; // Whether we're in the process of initialization
 };
 
 #endif
