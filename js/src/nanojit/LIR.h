@@ -455,7 +455,8 @@ namespace nanojit
 #if defined NANOJIT_64BIT
             op == LIR_cmovq ||
 #endif
-            op == LIR_cmovi;
+            op == LIR_cmovi ||
+            op == LIR_cmovd;
     }
     inline bool isCmpIOpcode(LOpcode op) {
         return LIR_eqi <= op && op <= LIR_geui;
