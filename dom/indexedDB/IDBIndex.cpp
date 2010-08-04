@@ -708,7 +708,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   if (mAutoIncrement) {
     keyColumn.AssignLiteral("ai_object_data_id");
     if (mUnique) {
-      tableName.AssignLiteral("unique_ai_index_data");
+      tableName.AssignLiteral("ai_unique_index_data");
     }
     else {
       tableName.AssignLiteral("ai_index_data");
@@ -957,7 +957,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   if (mAutoIncrement) {
     keyColumn.AssignLiteral("ai_object_data_id");
     if (mUnique) {
-      table.AssignLiteral("unique_ai_index_data");
+      table.AssignLiteral("ai_unique_index_data");
     }
     else {
       table.AssignLiteral("ai_index_data");
@@ -1158,11 +1158,13 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   nsCString indexTable;
   nsCString objectTable;
+  nsCString objectDataId;
 
   if (mAutoIncrement) {
     objectTable.AssignLiteral("ai_object_data");
+    objectDataId.AssignLiteral("ai_object_data_id");
     if (mUnique) {
-      indexTable.AssignLiteral("unique_ai_index_data");
+      indexTable.AssignLiteral("ai_unique_index_data");
     }
     else {
       indexTable.AssignLiteral("ai_index_data");
@@ -1170,6 +1172,7 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
   else {
     objectTable.AssignLiteral("object_data");
+    objectDataId.AssignLiteral("object_data_id");
     if (mUnique) {
       indexTable.AssignLiteral("unique_index_data");
     }
@@ -1248,7 +1251,8 @@ OpenObjectCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                     NS_LITERAL_CSTRING(" FROM ") + objectTable +
                     NS_LITERAL_CSTRING(" INNER JOIN ") + indexTable +
                     NS_LITERAL_CSTRING(" ON ") + indexTable +
-                    NS_LITERAL_CSTRING(".object_data_id = ") + objectTable +
+                    NS_LITERAL_CSTRING(".") + objectDataId +
+                    NS_LITERAL_CSTRING(" = ") + objectTable +
                     NS_LITERAL_CSTRING(".id WHERE ") + indexId +
                     NS_LITERAL_CSTRING(" = :") + indexId + keyRangeClause +
                     groupClause + NS_LITERAL_CSTRING(" ORDER BY ") +

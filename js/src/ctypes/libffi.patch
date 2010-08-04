@@ -1,4 +1,4 @@
-Patch libffi to fix bug 550602, bug 528129, bug 538216, bug 556902, and bug 538002.
+Patch libffi to fix bug 550602, bug 528129, bug 538216, bug 556902, bug 538002, and bug 581909.
 
 diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
 --- a/js/src/ctypes/libffi/Makefile.in
@@ -129,7 +129,7 @@ diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
 diff --git a/js/src/ctypes/libffi/msvcc.sh b/js/src/ctypes/libffi/msvcc.sh
 --- a/js/src/ctypes/libffi/msvcc.sh
 +++ b/js/src/ctypes/libffi/msvcc.sh
-@@ -37,17 +37,17 @@
+@@ -37,20 +37,21 @@
  #
  # ***** END LICENSE BLOCK *****
  
@@ -143,12 +143,34 @@ diff --git a/js/src/ctypes/libffi/msvcc.sh b/js/src/ctypes/libffi/msvcc.sh
  md=-MD
  cl="cl"
  ml="ml"
++safeseh="-safeseh"
  output=
  
  while [ $# -gt 0 ]
  do
    case $1
-@@ -103,17 +103,18 @@ do
+   in
+     -fexceptions)
+       # Don't enable exceptions for now.
+@@ -58,16 +59,17 @@ do
+       shift 1
+     ;;
+     -m32)
+       shift 1
+     ;;
+     -m64)
+       cl="cl"   # "$MSVC/x86_amd64/cl"
+       ml="ml64" # "$MSVC/x86_amd64/ml64"
++      safeseh=
+       shift 1
+     ;;
+     -O*)
+       args="$args $1"
+       shift 1
+     ;;
+     -g)
+       # Can't specify -RTC1 or -Zi in opt. -Gy is ok. Use -OPT:REF?
+@@ -103,17 +105,18 @@ do
        includes="$includes $1"
        shift 1
      ;;
@@ -168,6 +190,25 @@ diff --git a/js/src/ctypes/libffi/msvcc.sh b/js/src/ctypes/libffi/msvcc.sh
      ;;
      -W*)
        # TODO map specific warnings
+@@ -158,17 +161,17 @@ done
+ if [ -n "$assembly" ]; then
+     if [ -z "$outdir" ]; then
+       outdir="."
+     fi
+     ppsrc="$outdir/$(basename $src|sed 's/.S$/.asm/g')"
+     echo "$cl -nologo -EP $includes $defines $src > $ppsrc"
+     "$cl" -nologo -EP $includes $defines $src > $ppsrc || exit $?
+     output="$(echo $output | sed 's%/F[dpa][^ ]*%%g')"
+-    args="-nologo -safeseh $single $output $ppsrc"
++    args="-nologo $safeseh $single $output $ppsrc"
+ 
+     echo "$ml $args"
+     eval "\"$ml\" $args"
+     result=$?
+ 
+     # required to fix ml64 broken output?
+     #mv *.obj $outdir
+ else
 diff --git a/js/src/ctypes/libffi/src/powerpc/ffi_darwin.c b/js/src/ctypes/libffi/src/powerpc/ffi_darwin.c
 --- a/js/src/ctypes/libffi/src/powerpc/ffi_darwin.c
 +++ b/js/src/ctypes/libffi/src/powerpc/ffi_darwin.c

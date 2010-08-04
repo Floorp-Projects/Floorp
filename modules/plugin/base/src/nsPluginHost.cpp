@@ -1001,13 +1001,11 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
       return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
   }
 
-  nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_FALSE);
+  PRBool isJava = PR_FALSE;
+  nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
   if (pluginTag) {
-    if (!pluginTag->IsEnabled())
-      return NS_ERROR_NOT_AVAILABLE;
+    isJava = pluginTag->mIsJavaPlugin;
   }
-
-  PRBool isJava = pluginTag && pluginTag->mIsJavaPlugin;
 
   // Determine if the scheme of this URL is one we can handle internaly because we should
   // only open the initial stream if it's one that we can handle internally. Otherwise

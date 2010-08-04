@@ -21,30 +21,3 @@ doParseIntTests();
 
 assertEq(parseInt("08"), 0);
 assertEq(parseInt("09"), 0);
-
-function strictParseInt(s)
-{
-    "use strict";
-    return parseInt(s);
-}
-
-assertEq(strictParseInt("08"), 8);
-assertEq(strictParseInt("09"), 9);
-assertEq(strictParseInt("014"), 14);
-
-function nonTopLevelTests()
-{
-    assertEq(parseInt("08"), 0);
-    assertEq(parseInt("09"), 0);
-
-    function nestedStrictParseInt(s)
-    {
-        "use strict";
-        return parseInt(s);
-    }
-
-    assertEq(nestedStrictParseInt("08"), 8);
-    assertEq(nestedStrictParseInt("09"), 9);
-    assertEq(nestedStrictParseInt("014"), 14);
-}
-nonTopLevelTests();
