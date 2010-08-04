@@ -1813,6 +1813,9 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     mNeedsMove = PR_FALSE;
 
     if (mIsTopLevel) {
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+      if (XRE_GetProcessType() != GeckoProcessType_Default)
+#endif
       GetViewWidget()->setGeometry(aX, aY, aWidth, aHeight);
     }
     mWidget->setGeometry(aX, aY, aWidth, aHeight);
