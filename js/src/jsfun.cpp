@@ -182,6 +182,11 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
     argsobj->init(&js_ArgumentsClass, proto, parent, PrivateValue(NULL));
     argsobj->setArgsCallee(ObjectOrNullValue(callee));
     argsobj->setArgsLength(argc);
+    if (callee) {
+        JSFunction *fun = callee->getFunctionPrivate();
+        if (fun->isInterpreted() && fun->u.i.script->strictModeCode)
+            argsobj->setArgsStrictMode();
+    }
 
     argsobj->map = cx->runtime->emptyArgumentsScope->hold();
 
@@ -571,8 +576,41 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (!obj->isArgsLengthOverridden())
             valid = true;
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom)) {
-        if (!obj->getArgsCallee().isMagic(JS_ARGS_HOLE))
-            valid = true;
+        if (!obj->getArgsCallee().isMagic(JS_ARGS_HOLE)) {
+            Value tmp = UndefinedValue();
+            PropertyOp getter = ArgGetter, setter = ArgSetter;
+            uintN attrs = JSPROP_SHARED;
+            if (obj->isArgsStrictMode()) {
+                PropertyOp throwTypeError = CastAsPropertyOp(obj->getThrowTypeError());
+
+                getter = setter = throwTypeError;
+                attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
+            }
+
+            if (!js_DefineProperty(cx, obj, id, &tmp, getter, setter, attrs))
+                return false;
+            *objp = obj;
+            return true;
+        }
+    } else if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
+        /*
+         * Arguments objects have no caller property -- except when they were
+         * created from strict mode functions.  In that case the caller
+         * property is an immutable poison pill that throws a TypeError on
+         * getting or setting.
+         */
+        if (!obj->isArgsStrictMode())
+            return true;
+
+        PropertyOp throwTypeError = CastAsPropertyOp(obj->getThrowTypeError());
+        Value tmp = UndefinedValue();
+        if (!js_DefineProperty(cx, obj, id, &tmp, throwTypeError, throwTypeError,
+                               JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)) {
+            return false;
+        }
+
+        *objp = obj;
+        return true;
     }
 
     if (valid) {
