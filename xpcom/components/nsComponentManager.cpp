@@ -533,20 +533,20 @@ nsComponentManagerImpl::RegisterOmnijar(const char* aPath, bool aChromeOnly)
 
     nsAutoArrayPtr<char> whole(new char[flen + 1]);
     if (!whole)
-        return NS_ERROR_OUT_OF_MEMORY;
+        return;
 
     for (PRUint32 totalRead = 0; totalRead < flen; ) {
         PRUint32 avail;
         PRUint32 read;
 
         if (NS_FAILED(is->Available(&avail)))
-            return NS_ERROR_FAILURE;
+            return;
 
         if (avail > flen)
-            return NS_ERROR_FAILURE;
+            return;
 
         if (NS_FAILED(is->Read(whole + totalRead, avail, &read)))
-            return NS_ERROR_FAILURE;
+            return;
 
         totalRead += read;
     }
@@ -554,7 +554,6 @@ nsComponentManagerImpl::RegisterOmnijar(const char* aPath, bool aChromeOnly)
     whole[flen] = '\0';
 
     ParseManifest(NS_COMPONENT_LOCATION, aPath, whole, aChromeOnly);
-    return NS_OK;
 }
 #endif // MOZ_OMNIJAR
 
@@ -630,6 +629,21 @@ TranslateSlashes(char* path)
 }
 #endif
 
+#ifdef MOZ_OMNIJAR
+static void
+AppendFileToManifestPath(nsCString& path,
+                         const char* file)
+{
+    PRInt32 i = path.RFindChar('/');
+    if (kNotFound == i)
+        path.Truncate(0);
+    else
+        path.Truncate(i + 1);
+
+    path.Append(file);
+}
+#endif
+
 void
 nsComponentManagerImpl::ManifestManifest(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
@@ -698,21 +712,6 @@ nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, i
     RegisterModule(m, clfile);
 }
 
-#ifdef MOZ_OMNIJAR
-static void
-AppendFileToManifestPath(nsCString& path,
-                         const char* file)
-{
-    PRInt32 i = path.RFindChar('/');
-    if (kNotFound == i)
-        path.Truncate(0);
-    else
-        path.Truncate(i + 1);
-
-    path.Append(file);
-}
-#endif
-
 void
 nsComponentManagerImpl::ManifestXPT(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
@@ -727,10 +726,9 @@ nsComponentManagerImpl::ManifestXPT(ManifestProcessingContext& cx, int lineno, c
         nsCAutoString manifest(cx.mPath);
         AppendFileToManifestPath(manifest, file);
 
-        nsCOMPtr<nsIInputStream> stream;
-        nsresult rv = mManifestLoader->LoadEntry(cx.mFile, manifest.get(),
-                                                 getter_AddRefs(stream));
-        if (NS_FAILED(rv)) {
+        nsCOMPtr<nsIInputStream> stream =
+            mManifestLoader->LoadEntry(manifest.get());
+        if (!stream) {
             NS_WARNING("Failed to load omnijar XPT file.");
             return;
         }

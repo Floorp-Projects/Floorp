@@ -37,20 +37,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.h"
-#include "nsIManifestLoader.h"
 
-#include "nsIZipReader.h"
+#include "nsManifestZIPLoader.h"
+#include "nsJAR.h"
+#include "mozilla/Omnijar.h"
 
-class nsManifestZIPLoader
+nsManifestZIPLoader::nsManifestZIPLoader() 
+    : mZipReader(new nsJAR())
 {
- public:
-    nsManifestZIPLoader();
-    ~nsManifestZIPLoader();
+    nsresult rv = mZipReader->Open(mozilla::OmnijarPath());
+    if (NS_FAILED(rv))
+        mZipReader = NULL;
+}
 
-    already_AddRefed<nsIInputStream> LoadEntry(const char* name);
+nsManifestZIPLoader::~nsManifestZIPLoader()
+{
+}
 
- private:
-    nsCOMPtr<nsIZipReader> mZipReader;
-};
+already_AddRefed<nsIInputStream>
+nsManifestZIPLoader::LoadEntry(const char* aName)
+{
+    if (!mZipReader)
+        return NULL;
 
+    nsCOMPtr<nsIInputStream> is;
+    nsresult rv = mZipReader->GetInputStream(aName, getter_AddRefs(is));
+    if (NS_FAILED(rv))
+        return NULL;
+
+    return is.forget();
+}
