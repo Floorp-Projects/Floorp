@@ -271,7 +271,7 @@ ic::CallFastNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fu
     ncc.masm.storePtr(temp, Address(JSC::X86Registers::esp, 0));
 
     /* Do the call. */
-    ncc.masm.call((void*)fn);
+    ncc.masm.call(JS_FUNC_TO_DATA_PTR(void *, fn));
 
     /* Restore stack. */
     ncc.masm.add32(Imm32(stackAdjustment), JSC::X86Registers::esp);
