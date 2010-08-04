@@ -42,6 +42,8 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+CC_WRAPPER =
+CXX_WRAPPER =
 include $(topsrcdir)/config/config.mk
 
 MODULE = psm
