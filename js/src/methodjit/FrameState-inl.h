@@ -694,13 +694,18 @@ FrameState::pushLocal(uint32 n)
     if (!eval && !escaping[n]) {
         pushCopyOf(indexOfFe(getLocal(n)));
     } else {
-        if (FrameEntry *fe = base[localIndex(n)]) {
-            /* :TODO: we could do better here. */
-            if (!fe->type.synced())
-                syncType(fe, addressOf(fe), masm);
-            if (!fe->data.synced())
-                syncData(fe, addressOf(fe), masm);
+#ifdef DEBUG
+        /*
+         * We really want to assert on local variables, but in the presence of
+         * SETLOCAL equivocation of stack slots, and let expressions, just
+         * weakly assert on the fixed local vars.
+         */
+        FrameEntry *fe = base[localIndex(n)];
+        if (fe && n < script->nfixed) {
+            JS_ASSERT(fe->type.inMemory());
+            JS_ASSERT(fe->data.inMemory());
         }
+#endif
         push(Address(JSFrameReg, sizeof(JSStackFrame) + n * sizeof(Value)));
     }
 }
