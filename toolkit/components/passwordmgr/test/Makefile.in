@@ -75,6 +75,8 @@ MOCHI_TESTS = \
 		test_bug_391514.html \
 		test_bug_427033.html \
 		test_bug_444968.html \
+		test_master_password.html \
+		test_master_password_cleanup.html \
 		test_prompt_async.html \
 		test_notifications.html \
 		test_prompt.html \
@@ -93,6 +95,7 @@ MOCHI_CONTENT = \
 		subtst_privbrowsing_2.html \
 		subtst_privbrowsing_3.html \
 		subtst_privbrowsing_4.html \
+		subtst_master_pass.html \
 		subtst_notifications_1.html \
 		subtst_notifications_2.html \
 		subtst_notifications_3.html \

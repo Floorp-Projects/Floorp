@@ -169,6 +169,10 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+SHARED_LIBRARY_LIBS     += \
+       $(DEPTH)/content/media/raw/$(LIB_PREFIX)gkconraw_s.$(LIB_SUFFIX)\
+       $(NULL)
+
 ifdef MOZ_WEBM
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/content/media/webm/$(LIB_PREFIX)gkconwebm_s.$(LIB_SUFFIX) \

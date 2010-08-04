@@ -64,7 +64,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXMLDocument.h"
-#include "nsIPrivateDOMImplementation.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
 #include "nsBindingManager.h"
@@ -1412,8 +1411,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
 
     jsval v;
     nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-    rv = nsContentUtils::WrapNative(jscontext, scope, mRoot,
-                                    &NS_GET_IID(nsIDOMElement), &v,
+    rv = nsContentUtils::WrapNative(jscontext, scope, mRoot, mRoot, &v,
                                     getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 

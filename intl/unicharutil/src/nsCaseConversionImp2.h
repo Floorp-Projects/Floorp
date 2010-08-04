@@ -64,6 +64,4 @@ public:
   NS_IMETHOD CaseInsensitiveCompare(const PRUnichar* aLeft, const PRUnichar* aRight, PRUint32 aLength, PRInt32 *aResult);
 };
 
-extern nsCaseConversionImp2* gCaseConv;
-
 #endif

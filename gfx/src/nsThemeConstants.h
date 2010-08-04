@@ -29,27 +29,33 @@
 // The dropdown portion of a toolbar button
 #define NS_THEME_TOOLBAR_BUTTON_DROPDOWN                   15
 
+// Various arrows that go in buttons
+#define NS_THEME_BUTTON_ARROW_UP                           16
+#define NS_THEME_BUTTON_ARROW_DOWN                         17
+#define NS_THEME_BUTTON_ARROW_NEXT                         18
+#define NS_THEME_BUTTON_ARROW_PREVIOUS                     19
+
 // A separator.  Can be horizontal or vertical.
-#define NS_THEME_TOOLBAR_SEPARATOR                         16
+#define NS_THEME_TOOLBAR_SEPARATOR                         20
 
 // The gripper for a toolbar.
-#define NS_THEME_TOOLBAR_GRIPPER                           17
+#define NS_THEME_TOOLBAR_GRIPPER                           21
 
 // A splitter.  Can be horizontal or vertical.
-#define NS_THEME_SPLITTER                                  19
+#define NS_THEME_SPLITTER                                  22
 
 // A status bar in a main application window.
-#define NS_THEME_STATUSBAR                                 21
+#define NS_THEME_STATUSBAR                                 23
 
 // A single pane of a status bar.
-#define NS_THEME_STATUSBAR_PANEL                           22
+#define NS_THEME_STATUSBAR_PANEL                           24
 
 // The resizer background area in a status bar 
 // for the resizer widget in the corner of a window.
-#define NS_THEME_STATUSBAR_RESIZER_PANEL                   23
+#define NS_THEME_STATUSBAR_RESIZER_PANEL                   25
 
 // The resizer itself.
-#define NS_THEME_RESIZER                                   24
+#define NS_THEME_RESIZER                                   26
 
 // List boxes
 #define NS_THEME_LISTBOX                                   31

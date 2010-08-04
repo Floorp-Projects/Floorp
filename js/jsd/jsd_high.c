@@ -213,9 +213,6 @@ jsd_DebuggerOnForUser(JSRuntime*         jsrt,
     JS_SetNewScriptHookProc(jsdc->jsrt, jsd_NewScriptHookProc, jsdc);
     JS_SetDestroyScriptHookProc(jsdc->jsrt, jsd_DestroyScriptHookProc, jsdc);
     jsd_DebuggerUnpause(jsdc);
-    if (!(jsdc->flags & JSD_DISABLE_OBJECT_TRACE)) {
-        JS_SetObjectHook(jsdc->jsrt, jsd_ObjectHook, jsdc);
-    }
 #ifdef LIVEWIRE
     LWDBG_SetNewScriptHookProc(jsd_NewScriptHookProc, jsdc);
 #endif
@@ -239,9 +236,6 @@ jsd_DebuggerOff(JSDContext* jsdc)
     /* clear hooks here */
     JS_SetNewScriptHookProc(jsdc->jsrt, NULL, NULL);
     JS_SetDestroyScriptHookProc(jsdc->jsrt, NULL, NULL);
-    /* Have to unset these too, since jsd_DebuggerPause only unsets
-       them conditionally */
-    JS_SetObjectHook(jsdc->jsrt, NULL, NULL);
 #ifdef LIVEWIRE
     LWDBG_SetNewScriptHookProc(NULL,NULL);
 #endif
@@ -262,9 +256,7 @@ void
 jsd_DebuggerPause(JSDContext* jsdc, JSBool forceAllHooksOff)
 {
     JS_SetDebuggerHandler(jsdc->jsrt, NULL, NULL);
-    if (forceAllHooksOff ||
-        (!(jsdc->flags & JSD_COLLECT_PROFILE_DATA) &&
-         (jsdc->flags & JSD_DISABLE_OBJECT_TRACE))) {
+    if (forceAllHooksOff || !(jsdc->flags & JSD_COLLECT_PROFILE_DATA)) {
         JS_SetExecuteHook(jsdc->jsrt, NULL, NULL);
         JS_SetCallHook(jsdc->jsrt, NULL, NULL);
     }

@@ -800,7 +800,7 @@ gfxFontUtils::MapUVSToGlyphFormat14(const PRUint8 *aBuf, PRUint32 aCh, PRUint32 
 
 PRUint32
 gfxFontUtils::MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength,
-                             PRUnichar aCh)
+                             PRUint32 aCh)
 {
     PRUint32 offset;
     PRBool   symbol;
@@ -810,7 +810,7 @@ gfxFontUtils::MapCharToGlyph(const PRUint8 *aBuf, PRUint32 aBufLength,
     switch (format) {
     case 4:
         return aCh < UNICODE_BMP_LIMIT ?
-            MapCharToGlyphFormat4(aBuf + offset, aCh) : 0;
+            MapCharToGlyphFormat4(aBuf + offset, PRUnichar(aCh)) : 0;
     case 12:
         return MapCharToGlyphFormat12(aBuf + offset, aCh);
     default:
@@ -933,32 +933,6 @@ struct TableDirEntry {
 struct NameRecordData {
     PRUint32  offset;
     PRUint32  length;
-};
-
-// old 'kern' table, supported on Windows
-// see http://www.microsoft.com/typography/otspec/kern.htm
-struct KernTableVersion0 {
-    AutoSwap_PRUint16    version; // 0x0000
-    AutoSwap_PRUint16    nTables;
-};
-
-struct KernTableSubtableHeaderVersion0 {
-    AutoSwap_PRUint16    version;
-    AutoSwap_PRUint16    length;
-    AutoSwap_PRUint16    coverage;
-};
-
-// newer Mac-only 'kern' table, ignored by Windows
-// see http://developer.apple.com/textfonts/TTRefMan/RM06/Chap6kern.html
-struct KernTableVersion1 {
-    AutoSwap_PRUint32    version; // 0x00010000
-    AutoSwap_PRUint32    nTables;
-};
-
-struct KernTableSubtableHeaderVersion1 {
-    AutoSwap_PRUint32    length;
-    AutoSwap_PRUint16    coverage;
-    AutoSwap_PRUint16    tupleIndex;
 };
 
 #pragma pack()

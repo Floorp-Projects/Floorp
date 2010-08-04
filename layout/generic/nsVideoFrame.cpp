@@ -64,6 +64,7 @@
 #include "nsIAccessibilityService.h"
 #endif
 
+using namespace mozilla;
 using namespace mozilla::layers;
 
 nsIFrame*
@@ -100,7 +101,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                             nsnull,
                                             kNameSpaceID_XHTML);
     NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
-    mPosterImage = NS_NewHTMLImageElement(nodeInfo);
+    mPosterImage = NS_NewHTMLImageElement(nodeInfo.forget());
     NS_ENSURE_TRUE(mPosterImage, NS_ERROR_OUT_OF_MEMORY);
 
     // Set the nsImageLoadingContent::ImageState() to 0. This means that the
@@ -128,7 +129,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   nsresult rv = NS_NewElement(getter_AddRefs(mVideoControls),
                               kNameSpaceID_XUL,
-                              nodeInfo,
+                              nodeInfo.forget(),
                               PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!aElements.AppendElement(mVideoControls))
@@ -379,10 +380,19 @@ public:
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager)
   {
+    if (aManager->GetBackendType() != LayerManager::LAYERS_BASIC) {
+      // For non-basic layer managers we can assume that compositing
+      // layers is very cheap, and since ImageLayers don't require
+      // additional memory of the video frames we have to have anyway,
+      // we can't save much by making layers inactive. Also, for many
+      // accelerated layer managers calling
+      // imageContainer->GetCurrentAsSurface can be very expensive. So
+      // just always be active for these managers.
+      return LAYER_ACTIVE;
+    }
     nsHTMLMediaElement* elem =
       static_cast<nsHTMLMediaElement*>(mFrame->GetContent());
-    return elem->IsPotentiallyPlaying() ? mozilla::LAYER_ACTIVE :
-      mozilla::LAYER_INACTIVE;
+    return elem->IsPotentiallyPlaying() ? LAYER_ACTIVE : LAYER_INACTIVE;
   }
 };
 

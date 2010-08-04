@@ -914,6 +914,119 @@ function run_test_17() {
     do_check_true(t1.appDisabled);
     do_check_false(t1.isActive);
 
+    run_test_18();
+  });
+}
+
+// Disabling the active theme should switch back to the default theme
+function run_test_18() {
+  restartManager(2);
+
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
+    t1.userDisabled = false;
+
+    restartManager();
+
+    AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                                 "theme1@tests.mozilla.org"], function([d, t1]) {
+      do_check_true(d.userDisabled);
+      do_check_false(d.appDisabled);
+      do_check_false(d.isActive);
+
+      do_check_false(t1.userDisabled);
+      do_check_false(t1.appDisabled);
+      do_check_true(t1.isActive);
+
+      prepare_test({
+        "theme1@tests.mozilla.org": [
+          "onDisabling",
+        ],
+        "default@tests.mozilla.org": [
+          "onEnabling",
+        ]
+      });
+      t1.userDisabled = true;
+      ensure_test_completed();
+
+      do_check_false(d.userDisabled);
+      do_check_false(d.appDisabled);
+      do_check_false(d.isActive);
+
+      do_check_true(t1.userDisabled);
+      do_check_false(t1.appDisabled);
+      do_check_true(t1.isActive);
+
+      restartManager();
+
+      AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                                   "theme1@tests.mozilla.org"], function([d, t1]) {
+        do_check_false(d.userDisabled);
+        do_check_false(d.appDisabled);
+        do_check_true(d.isActive);
+
+        do_check_true(t1.userDisabled);
+        do_check_false(t1.appDisabled);
+        do_check_false(t1.isActive);
+
+        run_test_19();
+      });
+    });
+  });
+}
+
+// Disabling the active persona should switch back to the default theme
+function run_test_19() {
+  AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                               "1@personas.mozilla.org"], function([d, p1]) {
+    p1.userDisabled = false;
+
+    do_check_true(d.userDisabled);
+    do_check_false(d.appDisabled);
+    do_check_false(d.isActive);
+
+    do_check_false(p1.userDisabled);
+    do_check_false(p1.appDisabled);
+    do_check_true(p1.isActive);
+
+    prepare_test({
+      "1@personas.mozilla.org": [
+        ["onDisabling", false],
+        "onDisabled"
+      ],
+      "default@tests.mozilla.org": [
+        ["onEnabling", false],
+        "onEnabled"
+      ]
+    });
+    p1.userDisabled = true;
+    ensure_test_completed();
+
+    do_check_false(d.userDisabled);
+    do_check_false(d.appDisabled);
+    do_check_true(d.isActive);
+
+    do_check_true(p1.userDisabled);
+    do_check_false(p1.appDisabled);
+    do_check_false(p1.isActive);
+
+    run_test_20();
+  });
+}
+
+// Tests that you cannot disable the default theme
+function run_test_20() {
+  AddonManager.getAddonByID("default@tests.mozilla.org", function(d) {
+    do_check_false(d.userDisabled);
+    do_check_false(d.appDisabled);
+    do_check_true(d.isActive);
+
+    try {
+      d.userDisabled = true;
+      do_throw("Disabling the default theme should throw an exception");
+    }
+    catch (e) {
+    }
+
     end_test();
   });
 }

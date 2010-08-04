@@ -476,7 +476,7 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
   if (mLastBuffer->getEnd() == NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE) {
     mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE));
   }
-  PRUint32 totalByteCount = 0;
+  PRInt32 totalByteCount = 0;
   for (;;) {
     PRInt32 end = mLastBuffer->getEnd();
     PRInt32 byteCount = aCount - totalByteCount;
@@ -491,19 +491,31 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
     totalByteCount += byteCount;
     aFromSegment += byteCount;
 
-    NS_ASSERTION(mLastBuffer->getEnd() <= NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE, "The Unicode decoder wrote too much data.");
+    NS_ASSERTION(end <= NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE,
+        "The Unicode decoder wrote too much data.");
+    NS_ASSERTION(byteCount >= -1, "The decoder consumed fewer than -1 bytes.");
+    NS_ASSERTION(byteCount > 0 || NS_FAILED(convResult),
+        "The decoder consumed too few bytes but did not signal an error.");
 
     if (NS_FAILED(convResult)) {
+      // Using the more generic NS_FAILED test above in case there are still
+      // decoders around that don't use NS_ERROR_ILLEGAL_INPUT properly.
+      NS_ASSERTION(convResult == NS_ERROR_ILLEGAL_INPUT,
+          "The decoder signaled an error other than NS_ERROR_ILLEGAL_INPUT.");
+
       // There's an illegal byte in the input. It's now the responsibility
       // of this calling code to output a U+FFFD REPLACEMENT CHARACTER and
       // reset the decoder.
 
-      NS_ASSERTION(totalByteCount < aCount,
-                   "The decoder signaled an error but consumed all input.");
-      if (totalByteCount < aCount) {
+      if (totalByteCount < (PRInt32)aCount) {
         // advance over the bad byte
         ++totalByteCount;
         ++aFromSegment;
+      } else {
+        NS_NOTREACHED("The decoder signaled an error but consumed all input.");
+        // Recovering from this situation in case there are still broken
+        // decoders, since nsScanner had recovery code, too.
+        totalByteCount = (PRInt32)aCount;
       }
 
       // Emit the REPLACEMENT CHARACTER
@@ -515,16 +527,18 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
       }
 
       mUnicodeDecoder->Reset();
-      if (totalByteCount == aCount) {
-        *aWriteCount = totalByteCount;
+      if (totalByteCount == (PRInt32)aCount) {
+        *aWriteCount = (PRUint32)totalByteCount;
         return NS_OK;
       }
     } else if (convResult == NS_PARTIAL_MORE_OUTPUT) {
       mLastBuffer = mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
-      NS_ASSERTION(totalByteCount < aCount, "The Unicode decoder has consumed too many bytes.");
+      NS_ASSERTION(totalByteCount < (PRInt32)aCount,
+          "The Unicode decoder consumed too many bytes.");
     } else {
-      NS_ASSERTION(totalByteCount == aCount, "The Unicode decoder consumed the wrong number of bytes.");
-      *aWriteCount = totalByteCount;
+      NS_ASSERTION(totalByteCount == (PRInt32)aCount,
+          "The Unicode decoder consumed the wrong number of bytes.");
+      *aWriteCount = (PRUint32)totalByteCount;
       return NS_OK;
     }
   }
@@ -735,6 +749,9 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
 void
 nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
 {
+  // This code needs to stay in sync with
+  // nsHtml5MetaScanner::tryCharset. Unfortunately, the
+  // trickery with member fields there leads to some copy-paste reuse. :-(
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   if (mCharsetSource >= kCharsetFromMetaTag) { // this threshold corresponds to "confident" in the HTML5 spec
     return;
@@ -744,14 +761,21 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
     return; // not reparsing even if we wanted to
   }
 
+  nsCAutoString newEncoding;
+  CopyUTF16toUTF8(*aEncoding, newEncoding);
+  // XXX spec says only UTF-16
+  if (newEncoding.LowerCaseEqualsLiteral("utf-16") ||
+      newEncoding.LowerCaseEqualsLiteral("utf-16be") ||
+      newEncoding.LowerCaseEqualsLiteral("utf-16le")) {
+    newEncoding.Assign("UTF-8");
+  }
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
   if (NS_FAILED(rv)) {
     NS_NOTREACHED("Charset alias service not available.");
     return;
   }
-  nsCAutoString newEncoding;
-  CopyUTF16toUTF8(*aEncoding, newEncoding);
   PRBool eq;
   rv = calias->Equals(newEncoding, mCharset, &eq);
   if (NS_FAILED(rv)) {
@@ -773,6 +797,21 @@ nsHtml5StreamParser::internalEncodingDeclaration(nsString* aEncoding)
     return;
   }
   
+  if (preferred.LowerCaseEqualsLiteral("utf-16") ||
+      preferred.LowerCaseEqualsLiteral("utf-16be") ||
+      preferred.LowerCaseEqualsLiteral("utf-16le") ||
+      preferred.LowerCaseEqualsLiteral("utf-32") ||
+      preferred.LowerCaseEqualsLiteral("utf-32be") ||
+      preferred.LowerCaseEqualsLiteral("utf-32le") ||
+      preferred.LowerCaseEqualsLiteral("utf-7") ||
+      preferred.LowerCaseEqualsLiteral("jis_x0212-1990") ||
+      preferred.LowerCaseEqualsLiteral("x-jis0208") ||
+      preferred.LowerCaseEqualsLiteral("x-imap4-modified-utf7") ||
+      preferred.LowerCaseEqualsLiteral("x-user-defined")) {
+    // Not a rough ASCII superset
+    return;
+  }
+
   mTreeBuilder->NeedsCharsetSwitchTo(preferred);
   FlushTreeOpsAndDisarmTimer();
   Interrupt();

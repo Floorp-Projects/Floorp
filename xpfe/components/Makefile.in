@@ -46,17 +46,6 @@ MODULE = appcomps
 
 include $(topsrcdir)/config/config.mk
 
-MOZ_HAVE_BROWSER=1
-ifdef MOZ_THUNDERBIRD
-MOZ_HAVE_BROWSER=
-endif
-ifdef MOZ_STANDALONE_COMPOSER
-MOZ_HAVE_BROWSER=
-endif
-ifdef MOZ_SUNBIRD
-MOZ_HAVE_BROWSER=
-endif
-
 ifdef MOZ_RDF
 DIRS += \
         windowds \
@@ -67,13 +56,10 @@ ifneq (,$(MOZ_THUNDERBIRD)$(MOZ_SUITE)$(MOZ_SUNBIRD))
 DIRS += autocomplete
 endif
 
-ifdef MOZ_HAVE_BROWSER
+# build should be last
 DIRS += \
         directory \
+        build \
         $(NULL)
-
-# build should be last
-DIRS += build
-endif
 
 include $(topsrcdir)/config/rules.mk

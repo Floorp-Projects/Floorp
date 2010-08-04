@@ -47,10 +47,12 @@
  * http://www.w3.org/TR/DOM-Level-2-HTML/
  */
 
-[scriptable, uuid(a6cf9096-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(8a207452-e725-4a9e-beb6-9e0c0a65012c)]
 interface nsIDOMHTMLLabelElement : nsIDOMHTMLElement
 {
   readonly attribute nsIDOMHTMLFormElement form;
-           attribute DOMString             accessKey;
            attribute DOMString             htmlFor;
+  readonly attribute nsIDOMHTMLElement     control;
+
+           attribute DOMString             accessKey;
 };

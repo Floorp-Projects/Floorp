@@ -521,7 +521,8 @@ case "$target" in
         CFLAGS="$CFLAGS -TC -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
         # MSVC warning C4345 warns of newly conformant behavior as of VS2003.
-        CXXFLAGS="$CXXFLAGS -wd4345"
+        # MSVC warning C4800 is ubiquitous, useless, and annoying.
+        CXXFLAGS="$CXXFLAGS -wd4345 -wd4800"
         AC_LANG_SAVE
         AC_LANG_C
         AC_TRY_COMPILE([#include <stdio.h>],
@@ -3021,6 +3022,10 @@ case $target in
 	;;
 esac
 
+dnl Performance measurement headers.
+AC_CHECK_HEADER(linux/perf_event.h, HAVE_LINUX_PERF_EVENT_H=1)
+AC_SUBST(HAVE_LINUX_PERF_EVENT_H)
+
 dnl Checks for libraries.
 dnl ========================================================
 case $target in
@@ -4215,17 +4220,6 @@ if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
 fi
 
 dnl ========================================================
-dnl Enable Narcissus
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(narcissus,
-[  --enable-narcissus      Build with Narcissus code enabled],
-    NARCISSUS=1,
-    NARCISSUS= )
-if test -n "$NARCISSUS"; then
-    AC_DEFINE(NARCISSUS)
-fi
-
-dnl ========================================================
 dnl = Enable trace malloc
 dnl ========================================================
 NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
@@ -4455,13 +4449,29 @@ dnl ======================================================
 dnl = Enable compiling with ccache
 dnl ======================================================
 MOZ_ARG_WITH_STRING(ccache,
-[  --with-ccache=path/to/ccache
+[  --with-ccache[=path/to/ccache]
                           Enable compiling with ccache],
-    CCACHE_PATH=$withval,)
+    CCACHE=$withval, CCACHE="no")
 
-if test -n "$CCACHE_PATH"; then
-  CC="$CCACHE_PATH $CC"
-  CXX="$CCACHE_PATH $CXX"
+if test "$CCACHE" != "no"; then
+    if test -n "$CCACHE"; then
+        if test "$CCACHE" = "yes"; then
+            CCACHE=
+        else
+            if test ! -e "$CCACHE"; then
+                AC_MSG_ERROR([$CCACHE not found])
+            fi
+        fi
+    fi
+    MOZ_PATH_PROGS(CCACHE, $CCACHE ccache)
+    if test -z "$CCACHE" -o "$CCACHE" = ":"; then
+        AC_MSG_ERROR([ccache not found])
+    elif test -x "$CCACHE"; then
+        CC="$CCACHE $CC"
+        CXX="$CCACHE $CXX"
+    else
+        AC_MSG_ERROR([$CCACHE is not executable])
+    fi
 fi
 
 dnl ========================================================

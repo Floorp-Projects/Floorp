@@ -134,7 +134,6 @@ NS_NewTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsTreeBodyFrame)
 
 NS_QUERYFRAME_HEAD(nsTreeBodyFrame)
-  NS_QUERYFRAME_ENTRY(nsICSSPseudoComparator)
   NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
   NS_QUERYFRAME_ENTRY(nsTreeBodyFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
@@ -4201,11 +4200,9 @@ nsTreeBodyFrame::GetPseudoStyleContext(nsIAtom* aPseudoElement)
 }
 
 // Our comparator for resolving our complex pseudos
-NS_IMETHODIMP
-nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult)
+PRBool
+nsTreeBodyFrame::PseudoMatches(nsCSSSelector* aSelector)
 {
-  NS_ABORT_IF_FALSE(aSelector->mLowercaseTag == aTag,
-                   "should not have been called");
   // Iterate the pseudoclass list.  For each item in the list, see if
   // it is contained in our scratch array.  If we have a miss, then
   // we aren't a match.  If all items in the pseudoclass list are
@@ -4215,13 +4212,11 @@ nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* 
     PRInt32 index;
     mScratchArray->GetIndexOf(curr->mAtom, &index);
     if (index == -1) {
-      *aResult = PR_FALSE;
-      return NS_OK;
+      return PR_FALSE;
     }
     curr = curr->mNext;
   }
-  *aResult = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 nsIContent*

@@ -111,6 +111,7 @@ _TEST_FILES = \
 		test_info_leak.html \
 		test_load.html \
 		test_load_candidates.html \
+		test_load_source.html \
 		test_media_selection.html \
 		test_mixed_principals.html \
 		test_mozLoadFrom.html \
@@ -194,6 +195,7 @@ _TEST_FILES += \
 		dirac.ogg \
 		seek.ogv \
 		seek.webm \
+		seek.yuv \
 		short-video.ogv \
 		small-shot.ogg \
 		sound.ogg \

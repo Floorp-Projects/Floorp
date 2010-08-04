@@ -30,6 +30,12 @@ function onLoad() {
 }
 
 function onReload() {
+  var iframe = window.frames[0].frameElement;
+  SimpleTest.waitForFocus(doTest, iframe.contentWindow);
+  iframe.contentDocument.body.focus();
+}
+
+function doTest() {
   var bodyElement = window.frames[0].frameElement.contentDocument.body;
   sendChar('S', bodyElement);
   sendChar('t', bodyElement);

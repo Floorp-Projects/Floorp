@@ -60,16 +60,24 @@ JSString::getUnitString(JSContext *cx, JSString *str, size_t index)
 }
 
 inline JSString *
+JSString::length2String(jschar c1, jschar c2)
+{
+    JS_ASSERT(fitsInSmallChar(c1));
+    JS_ASSERT(fitsInSmallChar(c2));
+    return &length2StringTable[(((size_t)toSmallChar[c1]) << 6) + toSmallChar[c2]];
+}
+
+inline JSString *
 JSString::intString(jsint i)
 {
     jsuint u = jsuint(i);
-
     JS_ASSERT(u < INT_STRING_LIMIT);
-    if (u < 10) {
-        /* To avoid two ATOMIZED JSString copies of 0-9. */
-        return &JSString::unitStringTable['0' + u];
-    }
-    return &JSString::intStringTable[u];
+    return JSString::intStringTable[u];
+}
+
+inline
+JSRopeBuilder::JSRopeBuilder(JSContext *cx) {
+    mStr = cx->runtime->emptyString;
 }
 
 #endif /* jsstrinlines_h___ */

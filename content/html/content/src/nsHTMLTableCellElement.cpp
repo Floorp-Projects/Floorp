@@ -51,7 +51,7 @@ class nsHTMLTableCellElement : public nsGenericHTMLElement,
                                public nsIDOMHTMLTableCellElement
 {
 public:
-  nsHTMLTableCellElement(nsINodeInfo *aNodeInfo);
+  nsHTMLTableCellElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLTableCellElement();
 
   // nsISupports
@@ -79,6 +79,7 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   // This does not return a nsresult since all we care about is if we
   // found the row element that this cell is in or not.
@@ -90,7 +91,7 @@ protected:
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCell)
 
 
-nsHTMLTableCellElement::nsHTMLTableCellElement(nsINodeInfo *aNodeInfo)
+nsHTMLTableCellElement::nsHTMLTableCellElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -104,7 +105,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTableCellElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableCellElement, nsGenericElement) 
 
 
-DOMCI_DATA(HTMLTableCellElement, nsHTMLTableCellElement)
+DOMCI_NODE_DATA(HTMLTableCellElement, nsHTMLTableCellElement)
 
 // QueryInterface implementation for nsHTMLTableCellElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLTableCellElement)

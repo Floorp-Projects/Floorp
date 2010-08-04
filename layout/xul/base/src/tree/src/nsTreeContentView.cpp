@@ -47,6 +47,14 @@
 #include "nsIEventStateManager.h"
 #include "nsINodeInfo.h"
 #include "nsIXULSortService.h"
+#include "nsContentUtils.h"
+#include "nsTreeBodyFrame.h"
+
+#define NS_ENSURE_NATIVE_COLUMN(_col)                                \
+  nsRefPtr<nsTreeColumn> col = nsTreeBodyFrame::GetColumnImpl(_col); \
+  if (!col) {                                                        \
+    return NS_ERROR_INVALID_ARG;                                     \
+  }
 
 // A content model view implementation for the tree.
 
@@ -194,9 +202,22 @@ nsTreeContentView::GetSelection(nsITreeSelection** aSelection)
   return NS_OK;
 }
 
+PRBool
+nsTreeContentView::CanTrustTreeSelection(nsISupports* aValue)
+{
+  // Untrusted content is only allowed to specify known-good views
+  if (nsContentUtils::IsCallerTrustedForWrite())
+    return PR_TRUE;
+  nsCOMPtr<nsINativeTreeSelection> nativeTreeSel = do_QueryInterface(aValue);
+  return nativeTreeSel && NS_SUCCEEDED(nativeTreeSel->EnsureNative());
+}
+
 NS_IMETHODIMP
 nsTreeContentView::SetSelection(nsITreeSelection* aSelection)
 {
+  NS_ENSURE_TRUE(!aSelection || CanTrustTreeSelection(aSelection),
+                 NS_ERROR_DOM_SECURITY_ERR);
+
   mSelection = aSelection;
   if (!mSelection || !mUpdateSelection)
     return NS_OK;
@@ -247,7 +268,7 @@ nsTreeContentView::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aPropertie
 NS_IMETHODIMP
 nsTreeContentView::GetCellProperties(PRInt32 aRow, nsITreeColumn* aCol, nsISupportsArray* aProperties)
 {
-  NS_ENSURE_ARG_POINTER(aCol);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
   NS_ENSURE_ARG_POINTER(aProperties);
   NS_PRECONDITION(aRow >= 0 && aRow < PRInt32(mRows.Length()), "bad row");
   if (aRow < 0 || aRow >= PRInt32(mRows.Length()))
@@ -272,7 +293,7 @@ nsTreeContentView::GetCellProperties(PRInt32 aRow, nsITreeColumn* aCol, nsISuppo
 NS_IMETHODIMP
 nsTreeContentView::GetColumnProperties(nsITreeColumn* aCol, nsISupportsArray* aProperties)
 {
-  NS_ENSURE_ARG_POINTER(aCol);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
   NS_ENSURE_ARG_POINTER(aProperties);
   nsCOMPtr<nsIDOMElement> element;
   aCol->GetElement(getter_AddRefs(element));
@@ -428,7 +449,7 @@ nsTreeContentView::GetLevel(PRInt32 aIndex, PRInt32* _retval)
 nsTreeContentView::GetImageSrc(PRInt32 aRow, nsITreeColumn* aCol, nsAString& _retval)
 {
   _retval.Truncate();
-  NS_ENSURE_ARG_POINTER(aCol);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
   NS_PRECONDITION(aRow >= 0 && aRow < PRInt32(mRows.Length()), "bad row");
   if (aRow < 0 || aRow >= PRInt32(mRows.Length()))
     return NS_ERROR_INVALID_ARG;   
@@ -449,7 +470,7 @@ nsTreeContentView::GetImageSrc(PRInt32 aRow, nsITreeColumn* aCol, nsAString& _re
 NS_IMETHODIMP
 nsTreeContentView::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol, PRInt32* _retval)
 {
-  NS_ENSURE_ARG_POINTER(aCol);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
   NS_PRECONDITION(aRow >= 0 && aRow < PRInt32(mRows.Length()), "bad row");
   if (aRow < 0 || aRow >= PRInt32(mRows.Length()))
     return NS_ERROR_INVALID_ARG;   
@@ -480,7 +501,7 @@ NS_IMETHODIMP
 nsTreeContentView::GetCellValue(PRInt32 aRow, nsITreeColumn* aCol, nsAString& _retval)
 {
   _retval.Truncate();
-  NS_ENSURE_ARG_POINTER(aCol);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
   NS_PRECONDITION(aRow >= 0 && aRow < PRInt32(mRows.Length()), "bad row");
   if (aRow < 0 || aRow >= PRInt32(mRows.Length()))
     return NS_ERROR_INVALID_ARG;   
@@ -502,7 +523,7 @@ NS_IMETHODIMP
 nsTreeContentView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& _retval)
 {
   _retval.Truncate();
-  NS_ENSURE_ARG_POINTER(aCol);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
   NS_PRECONDITION(aRow >= 0 && aRow < PRInt32(mRows.Length()), "bad row");
   NS_PRECONDITION(aCol, "bad column");
 
@@ -610,7 +631,7 @@ nsTreeContentView::ToggleOpenState(PRInt32 aIndex)
 NS_IMETHODIMP
 nsTreeContentView::CycleHeader(nsITreeColumn* aCol)
 {
-  NS_ENSURE_ARG_POINTER(aCol);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
 
   if (!mRoot)
     return NS_OK;
@@ -665,7 +686,7 @@ NS_IMETHODIMP
 nsTreeContentView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval)
 {
   *_retval = PR_FALSE;
-  NS_ENSURE_ARG_POINTER(aCol);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
   NS_PRECONDITION(aRow >= 0 && aRow < PRInt32(mRows.Length()), "bad row");
   if (aRow < 0 || aRow >= PRInt32(mRows.Length()))
     return NS_ERROR_INVALID_ARG;   
@@ -690,6 +711,7 @@ nsTreeContentView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval
 NS_IMETHODIMP
 nsTreeContentView::IsSelectable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval)
 {
+  NS_ENSURE_NATIVE_COLUMN(aCol);
   NS_PRECONDITION(aRow >= 0 && aRow < PRInt32(mRows.Length()), "bad row");
   if (aRow < 0 || aRow >= PRInt32(mRows.Length()))
     return NS_ERROR_INVALID_ARG;   
@@ -714,7 +736,7 @@ nsTreeContentView::IsSelectable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retv
 NS_IMETHODIMP
 nsTreeContentView::SetCellValue(PRInt32 aRow, nsITreeColumn* aCol, const nsAString& aValue)
 {
-  NS_ENSURE_ARG_POINTER(aCol);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
   NS_PRECONDITION(aRow >= 0 && aRow < PRInt32(mRows.Length()), "bad row");
   if (aRow < 0 || aRow >= PRInt32(mRows.Length()))
     return NS_ERROR_INVALID_ARG;   
@@ -735,7 +757,7 @@ nsTreeContentView::SetCellValue(PRInt32 aRow, nsITreeColumn* aCol, const nsAStri
 NS_IMETHODIMP
 nsTreeContentView::SetCellText(PRInt32 aRow, nsITreeColumn* aCol, const nsAString& aValue)
 {
-  NS_ENSURE_ARG_POINTER(aCol);
+  NS_ENSURE_NATIVE_COLUMN(aCol);
   NS_PRECONDITION(aRow >= 0 && aRow < PRInt32(mRows.Length()), "bad row");
   if (aRow < 0 || aRow >= PRInt32(mRows.Length()))
     return NS_ERROR_INVALID_ARG;   

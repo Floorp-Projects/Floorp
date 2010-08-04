@@ -1,5 +1,5 @@
 # gnuplot script to visualize GCMETER results.
-# usage: "gnuplot gcTimer.pl >outputfile.png"
+# usage: "gnuplot gcTimer.gnu >outputfile.png"
 
 set terminal png
 # set Title
@@ -20,6 +20,5 @@ plot 'gcTimer.dat' using 2 title columnheader(2), \
 '' u 5 title columnheader(5) with points, \
 '' u 6 title columnheader(6) with points, \
 '' u 7 title columnheader(7) with points, \
-'' u 8 title columnheader(8) with points, \
-'' u 9 title columnheader(9) with points axis x1y2, \
-'' u 10 title columnheader(10) with points axis x1y2
+'' u 8 title columnheader(8) with points axis x1y2, \
+'' u 9 title columnheader(9) with points axis x1y2

@@ -76,7 +76,6 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
-#include "nsIPrivateDOMImplementation.h"
 #include "nsIRangeUtils.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsISelection.h"
@@ -155,6 +154,7 @@
 #include "nsSystemPrincipal.h"
 #include "nsNullPrincipal.h"
 #include "nsNetCID.h"
+#include "nsINodeInfo.h"
 
 #define NS_EDITORCOMMANDTABLE_CID \
 { 0x4f5e62b8, 0xd659, 0x4156, { 0x84, 0xfc, 0x2f, 0x60, 0x99, 0x40, 0x03, 0x69 }}
@@ -273,6 +273,9 @@ NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 nsresult
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
+
+nsresult
+NS_NewDOMImplementation(nsIDOMDOMImplementation**);
 
 static void Shutdown();
 
@@ -616,7 +619,8 @@ CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLImageElement is special cased to handle a null nodeinfo
-  nsIContent* inst = NS_NewHTMLImageElement(nsnull);
+  nsCOMPtr<nsINodeInfo> ni;
+  nsIContent* inst = NS_NewHTMLImageElement(ni.forget());
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   if (inst) {
     NS_ADDREF(inst);
@@ -633,7 +637,8 @@ CreateHTMLOptionElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLOptionElement is special cased to handle a null nodeinfo
-  nsIContent* inst = NS_NewHTMLOptionElement(nsnull);
+  nsCOMPtr<nsINodeInfo> ni;
+  nsIContent* inst = NS_NewHTMLOptionElement(ni.forget());
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   if (inst) {
     NS_ADDREF(inst);
@@ -651,7 +656,8 @@ CreateHTMLAudioElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLAudioElement is special cased to handle a null nodeinfo
-  nsCOMPtr<nsIContent> inst(NS_NewHTMLAudioElement(nsnull));
+  nsCOMPtr<nsINodeInfo> ni;
+  nsCOMPtr<nsIContent> inst(NS_NewHTMLAudioElement(ni.forget()));
   return inst ? inst->QueryInterface(aIID, aResult) : NS_ERROR_OUT_OF_MEMORY;
 }
 #endif

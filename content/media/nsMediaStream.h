@@ -393,6 +393,7 @@ protected:
   // if possible. Main thread only.
   nsresult OpenChannel(nsIStreamListener** aStreamListener);
   nsresult RecreateChannel();
+  // Add headers to HTTP request. Main thread only.
   void SetupChannelHeaders();
   // Closes the channel. Main thread only.
   void CloseChannel();

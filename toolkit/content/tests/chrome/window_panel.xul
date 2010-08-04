@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for panels
+  -->
+<window title="Titlebar" width="200" height="200"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var currentTest = null;
+
+function ok(condition, message) {
+  window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+}
+
+function is(left, right, message) {
+  window.opener.wrappedJSObject.SimpleTest.is(left, right, message);
+}
+
+function test_panels()
+{
+  addEventListener("popupshown", popupShown, false);
+  addEventListener("popuphidden", nextTest, false);
+  nextTest();
+}
+
+function nextTest()
+{
+  if (!tests.length) {
+    window.close();
+    window.opener.wrappedJSObject.SimpleTest.finish();
+    return;
+  }
+
+  currentTest = tests.shift();
+  var panel = createPanel(currentTest.attrs);
+  currentTest.test(panel);
+}
+
+var waitSteps = 0;
+function popupShown(event)
+{
+  var panel = event.target;
+
+  if (waitSteps > 0 && navigator.platform.indexOf("Linux") >= 0 &&
+      panel.boxObject.screenY == 210) {
+    waitSteps--;
+    setTimeout(popupShown, 10, event);
+    return;
+  }
+
+  currentTest.result(currentTest.testname + " ", panel);
+  panel.hidePopup();
+}
+
+function createPanel(attrs)
+{
+  var panel = document.createElement("panel");
+  for (var a in attrs) {
+    panel.setAttribute(a, attrs[a]);
+  }
+
+  var button = document.createElement("button");
+  panel.appendChild(button);
+  button.label = "OK";
+  button.width = 120;
+  button.height = 40;
+  button.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
+  panel.setAttribute("style", "-moz-appearance: none; border: 0; margin: 0;");
+  return document.documentElement.appendChild(panel);
+}
+
+var tests = [
+  {
+    testname: "normal panel",
+    attrs: { },
+    test: function(panel) {
+      panel.openPopupAtScreen(200, 210);
+    },
+    result: function(testname, panel) {
+      var panelrect = panel.getBoundingClientRect();
+      is(panelrect.left, 200 - mozInnerScreenX, testname + "left");
+      is(panelrect.top, 210 - mozInnerScreenY, testname + "top");
+      is(panelrect.width, 120, testname + "width");
+      is(panelrect.height, 40, testname + "height");
+    }
+  },
+  {
+    // only noautohide panels support titlebars, so one shouldn't be shown here
+    testname: "autohide panel with titlebar",
+    attrs: { titlebar: "normal" },
+    test: function(panel) {
+      panel.openPopupAtScreen(200, 210);
+    },
+    result: function(testname, panel) {
+      var panelrect = panel.getBoundingClientRect();
+      is(panelrect.left, 200 - mozInnerScreenX, testname + "left");
+      is(panelrect.top, 210 - mozInnerScreenY, testname + "top");
+      is(panelrect.width, 120, testname + "width");
+      is(panelrect.height, 40, testname + "height");
+    }
+  },
+  {
+    testname: "noautohide panel with titlebar",
+    attrs: { noautohide: true, titlebar: "normal" },
+    test: function(panel) {
+      waitSteps = 25;
+      panel.openPopupAtScreen(200, 210);
+    },
+    result: function(testname, panel) {
+      var panelrect = panel.getBoundingClientRect();
+      ok(panelrect.left >= 200 - mozInnerScreenX, testname + "left");
+      ok(panelrect.top >= 210 - mozInnerScreenY + 10, testname + "top greater");
+      ok(panelrect.top <= 210 - mozInnerScreenY + 30, testname + "top less");
+      is(panelrect.width, 120, testname + "width");
+      is(panelrect.height, 40, testname + "height");
+
+      var gotMouseEvent = false;
+      function mouseMoved(event)
+      {
+        is(event.clientY, panelrect.top + 10,
+           "popup clientY");
+        is(event.screenY, panel.boxObject.screenY + 10,
+           "popup screenY");
+        is(event.originalTarget, panel.firstChild, "popup target");
+        gotMouseEvent = true;
+      }
+
+      panel.addEventListener("mousemove", mouseMoved, true);
+      synthesizeMouse(panel, 10, 10, { type: "mousemove" });
+      ok(gotMouseEvent, "mouse event on panel");      
+      panel.removeEventListener("mousemove", mouseMoved, true);
+    }
+  }
+];
+
+window.opener.wrappedJSObject.SimpleTest.waitForFocus(test_panels, window);
+
+]]>
+</script>
+
+</window>

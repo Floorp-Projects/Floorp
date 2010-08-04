@@ -58,6 +58,7 @@ components/nsInterfaceInfoToIDL.js
 components/nsScriptableIO.js
 components/nsUrlClassifierTable.js
 components/nsXmlRpcClient.js
+components/pluginGlue.js
 components/sidebar.xpt
 components/xmlextras.xpt
 components/xpcom.xpt
@@ -707,6 +708,7 @@ xpicleanup@BIN_SUFFIX@
   extensions/inspector@mozilla.org/chrome/chromelist.txt
   init.d/README
   libwidget.rsrc
+  plugin-container
   plugins/Default Plugin.plugin/Contents/Info.plist
   plugins/Default Plugin.plugin/Contents/MacOS/Default Plugin
   plugins/Default Plugin.plugin/Contents/PkgInfo

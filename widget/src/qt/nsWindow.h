@@ -205,6 +205,8 @@ public:
 
     void DispatchActivateEvent(void);
     void DispatchDeactivateEvent(void);
+    void DispatchActivateEventOnTopLevelWindow(void);
+    void DispatchDeactivateEventOnTopLevelWindow(void);
     void DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus);
 
     nsEventStatus DispatchEvent(nsGUIEvent *aEvent) {
@@ -309,8 +311,6 @@ protected:
     gfxASurface*       GetThebesSurface();
 
 private:
-    void               GetToplevelWidget(MozQWidget **aWidget);
-    nsWindow*          GetTopLevelNsWindow();
     void*              SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);
     void               SetDefaultIcon(void);

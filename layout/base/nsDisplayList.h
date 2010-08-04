@@ -1293,10 +1293,7 @@ private:
  */
 class nsDisplayBackground : public nsDisplayItem {
 public:
-  nsDisplayBackground(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
-    mIsThemed = mFrame->IsThemed(&mThemeTransparency);
-    MOZ_COUNT_CTOR(nsDisplayBackground);
-  }
+  nsDisplayBackground(nsIFrame* aFrame);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayBackground() {
     MOZ_COUNT_DTOR(nsDisplayBackground);
@@ -1710,8 +1707,10 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder *aBuilder);
   virtual PRBool IsOpaque(nsDisplayListBuilder *aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor);
-  virtual void   Paint(nsDisplayListBuilder *aBuilder,
-                       nsIRenderingContext *aCtx);
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager);
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                    nsRegion *aVisibleRegion,
                                    nsRegion *aVisibleRegionBeforeMove);

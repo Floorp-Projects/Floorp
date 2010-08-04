@@ -231,3 +231,22 @@ void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
     mImageContainer->SetCurrentImage(aImage);
   }
 }
+
+// Number of bytes to add to the download size when we're computing
+// when the download will finish --- a safety margin in case bandwidth
+// or other conditions are worse than expected
+static const PRInt32 gDownloadSizeSafetyMargin = 1000000;
+
+PRBool nsMediaDecoder::CanPlayThrough()
+{
+  Statistics stats = GetStatistics();
+  if (!stats.mDownloadRateReliable || !stats.mPlaybackRateReliable) {
+    return PR_FALSE;
+  }
+  PRInt64 bytesToDownload = stats.mTotalBytes - stats.mDownloadPosition;
+  PRInt64 bytesToPlayback = stats.mTotalBytes - stats.mPlaybackPosition;
+  double timeToDownload =
+    (bytesToDownload + gDownloadSizeSafetyMargin)/stats.mDownloadRate;
+  double timeToPlay = bytesToPlayback/stats.mPlaybackRate;
+  return timeToDownload <= timeToPlay;
+}

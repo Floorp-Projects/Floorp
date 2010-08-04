@@ -42,6 +42,11 @@ VPATH		= @srcdir@
 relativesrcdir  = parser/htmlparser/tests/mochitest
 
 include $(DEPTH)/config/autoconf.mk
+
+DIRS = \
+		dir_bug534293 \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	parser_datreader.js \
@@ -64,6 +69,9 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug566879.html \
 		test_compatmode.html \
 		invalidchar.xml \
+		test_bug534293.html \
+		file_bug534293.sjs \
+		file_bug534293-slow.sjs \
 		$(NULL)
 
 # Disabled test due to orange on Linux

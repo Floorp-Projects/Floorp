@@ -1039,7 +1039,7 @@ namespace nanojit
         endOpRegs(ins, rr, ra);
     }
 
-    void Assembler::asm_promote(LIns *ins) {
+    void Assembler::asm_ui2uq(LIns *ins) {
         Register rr, ra;
         beginOp1Regs(ins, GpRegs, rr, ra);
         NanoAssert(IsGpReg(ra));
@@ -1050,6 +1050,20 @@ namespace nanojit
             MOVSXDR(rr, ra);    // sign extend 32->64
         }
         endOpRegs(ins, rr, ra);
+    }
+
+    void Assembler::asm_dasq(LIns *ins) {
+        Register rr = prepareResultReg(ins, GpRegs);
+        Register ra = findRegFor(ins->oprnd1(), FpRegs);
+        asm_nongp_copy(rr, ra);
+        freeResourcesOf(ins);
+    }
+
+    void Assembler::asm_qasd(LIns *ins) {
+        Register rr = prepareResultReg(ins, FpRegs);
+        Register ra = findRegFor(ins->oprnd1(), GpRegs);
+        asm_nongp_copy(rr, ra);
+        freeResourcesOf(ins);
     }
 
     // The CVTSI2SD instruction only writes to the low 64bits of the target
@@ -1096,20 +1110,37 @@ namespace nanojit
         LIns* iffalse = ins->oprnd3();
         NanoAssert(cond->isCmp());
         NanoAssert((ins->isop(LIR_cmovi) && iftrue->isI() && iffalse->isI()) ||
-                   (ins->isop(LIR_cmovq) && iftrue->isQ() && iffalse->isQ()));
+                   (ins->isop(LIR_cmovq) && iftrue->isQ() && iffalse->isQ()) ||
+                   (ins->isop(LIR_cmovd) && iftrue->isD() && iffalse->isD()));
 
-        Register rr = prepareResultReg(ins, GpRegs);
+        RegisterMask allow = ins->isD() ? FpRegs : GpRegs;
 
-        Register rf = findRegFor(iffalse, GpRegs & ~rmask(rr));
+        Register rr = prepareResultReg(ins, allow);
+
+        Register rf = findRegFor(iffalse, allow & ~rmask(rr));
 
         // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
         Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
+        if (ins->isop(LIR_cmovd)) {
+            NIns* target = _nIns;
+            asm_nongp_copy(rr, rf);
+            asm_branch(false, cond, target);
+            if (rr != rt)
+                asm_nongp_copy(rr, rt);
+            freeResourcesOf(ins);
+            if (!iftrue->isInReg()) {
+                NanoAssert(rt == rr);
+                findSpecificRegForUnallocated(iftrue, rr);
+            }
+            return;
+        }
 
         // WARNING: We cannot generate any code that affects the condition
         // codes between the MRcc generation here and the asm_cmp() call
         // below.  See asm_cmp() for more details.
         LOpcode condop = cond->opcode();
-        if (ins->opcode() == LIR_cmovi) {
+        if (ins->isop(LIR_cmovi)) {
             switch (condop) {
             case LIR_eqi:  case LIR_eqq:    CMOVNE( rr, rf);  break;
             case LIR_lti:  case LIR_ltq:    CMOVNL( rr, rf);  break;
@@ -1123,6 +1154,7 @@ namespace nanojit
             default:                        NanoAssert(0);    break;
             }
         } else {
+            NanoAssert(ins->isop(LIR_cmovq));
             switch (condop) {
             case LIR_eqi:  case LIR_eqq:    CMOVQNE( rr, rf); break;
             case LIR_lti:  case LIR_ltq:    CMOVQNL( rr, rf); break;
@@ -2013,7 +2045,7 @@ namespace nanojit
         RegisterMask prefer = 0;
         uint8_t arg = ins->paramArg();
         if (ins->paramKind() == 0) {
-            if (arg < maxArgRegs) 
+            if (arg < maxArgRegs)
                 prefer = rmask(argRegs[arg]);
         } else {
             if (arg < NumSavedRegs)

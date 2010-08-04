@@ -393,7 +393,7 @@ void nsTimerImpl::Fire()
     PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p]     delta           %4dms\n", this, (a > b) ? (PRInt32)d : -(PRInt32)d));
 
     mStart = mStart2;
-    mStart2 = TimeStamp::TimeStamp();
+    mStart2 = TimeStamp();
   }
 #endif
 

@@ -156,6 +156,7 @@
 #define TEXT_XSL                            "text/xsl"
 
 #define VIDEO_MPEG                          "video/mpeg"
+#define VIDEO_RAW                           "video/x-raw-yuv"
 #define VIDEO_OGG                           "video/ogg"
 #define VIDEO_WEBM                          "video/webm"
 #define APPLICATION_OGG                     "application/ogg"
