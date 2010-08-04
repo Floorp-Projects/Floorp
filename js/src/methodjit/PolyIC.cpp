@@ -2011,7 +2011,8 @@ ic::PurgePICs(JSContext *cx, JSScript *script)
           case ic::PICInfo::BIND:
             BindNameCompiler::reset(pic);
             break;
-          default:
+          case ic::PICInfo::CALL:
+          case ic::PICInfo::GET:
             GetPropCompiler::reset(pic);
             break;
         }
