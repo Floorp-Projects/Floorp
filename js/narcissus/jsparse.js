@@ -1182,7 +1182,7 @@ Narcissus.jsparse = (function() {
                     b.CATCH$setVarName(n2, t.token.value);
                     break;
                   default:
-                    throw t.newSyntaxError("Missing identifier in catch");
+                    throw t.newSyntaxError("missing identifier in catch");
                     break;
                 }
                 if (t.match(IF)) {
@@ -1290,7 +1290,7 @@ Narcissus.jsparse = (function() {
         if (t.lineno == t.token.lineno) {
             tt = t.peekOnSameLine();
             if (tt != END && tt != NEWLINE && tt != SEMICOLON && tt != RIGHT_CURLY)
-                throw t.newSyntaxError("Missing ; before statement");
+                throw t.newSyntaxError("missing ; before statement");
         }
         t.match(SEMICOLON);
     }
@@ -1347,7 +1347,7 @@ Narcissus.jsparse = (function() {
         if (t.match(IDENTIFIER))
             b.FUNCTION$setName(f, t.token.value);
         else if (requireName)
-            throw t.newSyntaxError("Missing function identifier");
+            throw t.newSyntaxError("missing function identifier");
     
         t.mustMatch(LEFT_PAREN);
         if (!t.match(RIGHT_PAREN)) {
@@ -1363,7 +1363,7 @@ Narcissus.jsparse = (function() {
                     b.FUNCTION$addParam(f, t.token.value);
                     break;
                   default:
-                    throw t.newSyntaxError("Missing formal parameter");
+                    throw t.newSyntaxError("missing formal parameter");
                     break;
                 }
             } while (t.match(COMMA));
@@ -1541,7 +1541,7 @@ Narcissus.jsparse = (function() {
             }
     
             if (tt != IDENTIFIER)
-                throw t.newSyntaxError("Missing variable name");
+                throw t.newSyntaxError("missing variable name");
     
             b.DECL$setName(n2, t.token.value);
             b.DECL$setReadOnly(n2, n.type == CONST);
@@ -1632,7 +1632,7 @@ Narcissus.jsparse = (function() {
             if (lhs && simpleNamesOnly) {
                 // In declarations, lhs must be simple names
                 if (lhs.type != IDENTIFIER) {
-                    throw t.newSyntaxError("Missing name in pattern");
+                    throw t.newSyntaxError("missing name in pattern");
                 } else if (data) {
                     var n2 = b.DECL$build(t);
                     b.DECL$setName(n2, lhs.value);
@@ -1705,7 +1705,7 @@ Narcissus.jsparse = (function() {
                 break;
     
               default:
-                throw t.newSyntaxError("Missing identifier");
+                throw t.newSyntaxError("missing identifier");
             }
             t.mustMatch(IN);
             b.FOR$setObject(n, Expression(t, x));
@@ -1830,7 +1830,7 @@ Narcissus.jsparse = (function() {
             b.HOOK$setThenPart(n, AssignExpression(t, x));
             x.inForLoopInit = oldLoopInit;
             if (!t.match(COLON))
-                throw t.newSyntaxError("Missing : after ?");
+                throw t.newSyntaxError("missing : after ?");
             b.HOOK$setElsePart(n, AssignExpression(t, x));
             b.HOOK$finish(n);
         }
@@ -2202,7 +2202,7 @@ Narcissus.jsparse = (function() {
                             // Support, e.g., |var {x, y} = o| as destructuring shorthand
                             // for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
                             if (t.peek() != COMMA && t.peek() != RIGHT_CURLY)
-                                throw t.newSyntaxError("Missing : after property");
+                                throw t.newSyntaxError("missing : after property");
                             b.OBJECT_INIT$addProperty(n, id);
                         }
                     }
@@ -2231,7 +2231,7 @@ Narcissus.jsparse = (function() {
             break;
     
           default:
-            throw t.newSyntaxError("Missing operand");
+            throw t.newSyntaxError("missing operand");
             break;
         }
     
