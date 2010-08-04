@@ -110,10 +110,6 @@ richlistitem[type="download"] button {
   -moz-appearance: statusbar;
 }
 
-#searchbox:-moz-window-inactive {
-  opacity: 0.7;
-}
-
 #clearListButton {
   -moz-appearance: none;
   min-height: 18px;
@@ -135,7 +131,6 @@ richlistitem[type="download"] button {
 }
 
 #clearListButton:-moz-window-inactive {
-  color: @toolbarbuttonInactiveFontColor@ !important; /* remove this when we support click-through, bug 392188 */
   border-color: @toolbarbuttonInactiveBorderColor@;
   background-image: @toolbarbuttonInactiveBackgroundImage@;
 }

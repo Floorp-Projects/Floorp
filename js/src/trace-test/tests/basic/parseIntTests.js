@@ -14,8 +14,10 @@ function doParseIntTests() {
     outputs[7] = -1;
     for (var i = 0; i < 8; i++) {
         var testfn = new Function('return parseIntHelper(' + uneval(inputs[i]) + ');');
-	assertEq(testfn(), outputs[i]);
+        assertEq(testfn(), outputs[i]);
     }
 }
 doParseIntTests();
 
+assertEq(parseInt("08"), 0);
+assertEq(parseInt("09"), 0);

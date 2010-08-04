@@ -58,6 +58,7 @@
 #endif
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
+#include "nsThemeConstants.h"
 
 #include "imgIContainer.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -604,6 +605,51 @@ void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
                                 nsIRenderingContext* aCtx) {
   aCtx->SetColor(mColor);
   aCtx->FillRect(mVisibleRect);
+}
+
+static void
+RegisterThemeWidgetGeometry(nsIFrame* aFrame)
+{
+  nsPresContext* presContext = aFrame->PresContext();
+  nsITheme* theme = presContext->GetTheme();
+  if (!theme)
+    return;
+
+  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
+  nsIWidget* widget = displayRoot->GetNearestWidget();
+  // If the display root doesn't have a widget, just bail. Something
+  // weird is going on, maybe we're printing?
+  if (!widget)
+    return;
+
+  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
+    // Bail out if we're in a transformed subtree
+    if (f->IsTransformed())
+      return;
+    // Bail out if we're not in the displayRoot's document
+    if (!f->GetParent() && f != displayRoot)
+      return;
+  }
+
+  nsRect borderBox(aFrame->GetOffsetTo(displayRoot), aFrame->GetSize());
+  theme->RegisterWidgetGeometry(widget,
+      aFrame->GetStyleDisplay()->mAppearance,
+      borderBox.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
+}
+
+nsDisplayBackground::nsDisplayBackground(nsIFrame* aFrame)
+  : nsDisplayItem(aFrame)
+{
+  MOZ_COUNT_CTOR(nsDisplayBackground);
+  const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+  mIsThemed = mFrame->IsThemed(disp, &mThemeTransparency);
+
+  // Perform necessary RegisterWidgetGeometry
+  if (mIsThemed &&
+      (disp->mAppearance == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
+       disp->mAppearance == NS_THEME_TOOLBAR)) {
+    RegisterThemeWidgetGeometry(aFrame);
+  }
 }
 
 // Returns TRUE if aContainedRect is guaranteed to be contained in
@@ -1547,43 +1593,37 @@ nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
     (newOrigin + toMozOrigin, disp->mTransform.GetThebesMatrix(bounds, aFactor));
 }
 
-/* Painting applies the transform, paints the sublist, then unapplies
- * the transform.
- */
-void nsDisplayTransform::Paint(nsDisplayListBuilder *aBuilder,
-                               nsIRenderingContext *aCtx)
+already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
+                                                       LayerManager *aManager)
 {
-  /* Get the local transform matrix with which we'll transform all wrapped
-   * elements.  If this matrix is singular, we shouldn't display anything
-   * and can abort.
-   */
   gfxMatrix newTransformMatrix =
     GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
                                  mFrame->PresContext()->AppUnitsPerDevPixel(),
                                 nsnull);
   if (newTransformMatrix.IsSingular())
-    return;
+    return nsnull;
 
-  /* Get the context and automatically save and restore it. */
-  gfxContext* gfx = aCtx->ThebesContext();
-  gfxContextAutoSaveRestore autoRestorer(gfx);
+  nsRefPtr<Layer> layer = aBuilder->LayerBuilder()->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList());
+  if (!layer)
+    return nsnull;
+ 
+  layer->SetTransform(gfx3DMatrix::From2D(newTransformMatrix));
+  return layer.forget();
+}
 
-  /* Get the new CTM by applying this transform after all of the
-   * transforms preceding it.
-   */
-  newTransformMatrix.Multiply(gfx->CurrentMatrix());
-
-  /* Set the matrix for the transform based on the old matrix and the new
-   * transform data.
-   */
-  gfx->SetMatrix(newTransformMatrix);
-
-  /* Now, send the paint call down.
-   */    
-  mStoredList.GetList()->
-      PaintForFrame(aBuilder, aCtx, mFrame, nsDisplayList::PAINT_DEFAULT);
-
-  /* The AutoSaveRestore object will clean things up. */
+nsDisplayItem::LayerState
+nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                  LayerManager* aManager) {
+  if (mFrame->AreLayersMarkedActive())
+    return LAYER_ACTIVE;
+  nsIFrame* activeScrolledRoot =
+    nsLayoutUtils::GetActiveScrolledRootFor(mFrame, nsnull, nsnull);
+  return !mStoredList.ChildrenCanBeInactive(aBuilder, 
+                                             aManager, 
+                                             *mStoredList.GetList(), 
+                                             activeScrolledRoot)
+      ? LAYER_ACTIVE : LAYER_INACTIVE;
 }
 
 PRBool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,

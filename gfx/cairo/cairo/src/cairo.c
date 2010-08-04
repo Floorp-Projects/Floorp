@@ -3094,8 +3094,12 @@ cairo_set_scaled_font (cairo_t                   *cr,
 
     _cairo_gstate_set_font_options (cr->gstate, &scaled_font->options);
 
+    /* XXX: Mozilla code assumes that the ctm of a scaled font doesn't need to
+     * match the context ctm. This assumption breaks the previous_scaled_font
+     * cache. So we avoid using the cache for now.
     if (was_previous)
 	cr->gstate->scaled_font = cairo_scaled_font_reference ((cairo_scaled_font_t *) scaled_font);
+    */
 
     return;
 

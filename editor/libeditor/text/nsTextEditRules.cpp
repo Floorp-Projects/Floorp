@@ -1006,7 +1006,8 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
     res = aSelection->GetIsCollapsed(&bCollapsed);
     NS_ENSURE_SUCCESS(res, res);
   
-    NS_ENSURE_TRUE(bCollapsed, NS_OK);
+    if (!bCollapsed)
+      return NS_OK;
 
     // Test for distance between caret and text that will be deleted
     res = CheckBidiLevelForDeletion(aSelection, startNode, startOffset, aCollapsedAction, aCancel);

@@ -101,6 +101,9 @@ class nsHashKey;
 #define NS_SVG_EVENT                      30
 #define NS_SVGZOOM_EVENT                  31
 #endif // MOZ_SVG
+#ifdef MOZ_SMIL
+#define NS_SMIL_TIME_EVENT                32
+#endif // MOZ_SMIL
 
 #define NS_QUERY_CONTENT_EVENT            33
 
@@ -111,6 +114,7 @@ class nsHashKey;
 #define NS_CONTENT_COMMAND_EVENT          39
 #define NS_GESTURENOTIFY_EVENT            40
 #define NS_UISTATECHANGE_EVENT            41
+#define NS_MOZTOUCH_EVENT                 42
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -459,6 +463,18 @@ class nsHashKey;
 
 #define NS_TRANSITION_EVENT_START    4200
 #define NS_TRANSITION_END            (NS_TRANSITION_EVENT_START)
+
+#ifdef MOZ_SMIL
+#define NS_SMIL_TIME_EVENT_START     4300
+#define NS_SMIL_BEGIN                (NS_SMIL_TIME_EVENT_START)
+#define NS_SMIL_END                  (NS_SMIL_TIME_EVENT_START + 1)
+#define NS_SMIL_REPEAT               (NS_SMIL_TIME_EVENT_START + 2)
+#endif // MOZ_SMIL
+
+#define NS_MOZTOUCH_EVENT_START      4400
+#define NS_MOZTOUCH_DOWN             (NS_MOZTOUCH_EVENT_START)
+#define NS_MOZTOUCH_MOVE             (NS_MOZTOUCH_EVENT_START+1)
+#define NS_MOZTOUCH_UP               (NS_MOZTOUCH_EVENT_START+2)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -1253,6 +1269,19 @@ public:
 
   PRPackedBool mSucceeded;                                 // [out]
   PRPackedBool mIsEnabled;                                 // [out]
+};
+
+class nsMozTouchEvent : public nsMouseEvent_base
+{
+public:
+  nsMozTouchEvent(PRBool isTrusted, PRUint32 msg, nsIWidget* w,
+                  PRUint32 streamIdArg)
+    : nsMouseEvent_base(isTrusted, msg, w, NS_MOZTOUCH_EVENT),
+      streamId(streamIdArg)
+  {
+  }
+
+  PRUint32 streamId;
 };
 
 /**

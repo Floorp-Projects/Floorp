@@ -45,7 +45,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsISelectElement.h"
 #include "nsIDOMHTMLSelectElement.h"
-#include "nsIDOMNSHTMLSelectElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
@@ -87,8 +86,10 @@ public:
   // nsIDOMHTMLCollection interface, all its methods are defined in
   // nsIDOMHTMLOptionsCollection
 
-  virtual nsISupports* GetNodeAt(PRUint32 aIndex, nsresult* aResult);
-  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult);
+  virtual nsIContent* GetNodeAt(PRUint32 aIndex, nsresult* aResult);
+  virtual nsISupports* GetNamedItem(const nsAString& aName,
+                                    nsWrapperCache** aCache,
+                                    nsresult* aResult);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHTMLOptionCollection,
                                            nsIHTMLCollection)
@@ -120,7 +121,7 @@ public:
    */
   nsHTMLOptionElement *ItemAsOption(PRUint32 aIndex)
   {
-    return mElements.SafeElementAt(aIndex, nsRefPtr<nsHTMLOptionElement>());
+    return mElements.SafeElementAt(aIndex, nsnull);
   }
 
   /**
@@ -235,11 +236,11 @@ private:
  */
 class nsHTMLSelectElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLSelectElement,
-                            public nsIDOMNSHTMLSelectElement,
                             public nsISelectElement
 {
 public:
-  nsHTMLSelectElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser = 0);
+  nsHTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                      PRUint32 aFromParser = 0);
   virtual ~nsHTMLSelectElement();
 
   // nsISupports
@@ -256,9 +257,6 @@ public:
 
   // nsIDOMHTMLSelectElement
   NS_DECL_NSIDOMHTMLSELECTELEMENT
-
-  // nsIDOMNSHTMLSelectElement
-  NS_DECL_NSIDOMNSHTMLSELECTELEMENT
 
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -314,6 +312,7 @@ public:
     return static_cast<nsHTMLSelectElement*>(static_cast<nsINode*>(aSupports));
   }
 
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   friend class nsSafeOptionListMutation;
 

@@ -85,7 +85,7 @@ class nsHTMLImageElement : public nsGenericHTMLElement,
                            public nsIJSNativeInitializer
 {
 public:
-  nsHTMLImageElement(nsINodeInfo *aNodeInfo);
+  nsHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsHTMLImageElement();
 
   // nsISupports
@@ -150,13 +150,15 @@ public:
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
   void MaybeLoadImage();
+  virtual nsXPCClassInfo* GetClassInfo();
 protected:
   nsPoint GetXY();
   nsSize GetWidthHeight();
 };
 
 nsGenericHTMLElement*
-NS_NewHTMLImageElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
+NS_NewHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                       PRUint32 aFromParser)
 {
   /*
    * nsHTMLImageElement's will be created without a nsINodeInfo passed in
@@ -174,10 +176,10 @@ NS_NewHTMLImageElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
     NS_ENSURE_TRUE(nodeInfo, nsnull);
   }
 
-  return new nsHTMLImageElement(nodeInfo);
+  return new nsHTMLImageElement(nodeInfo.forget());
 }
 
-nsHTMLImageElement::nsHTMLImageElement(nsINodeInfo *aNodeInfo)
+nsHTMLImageElement::nsHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }
@@ -192,7 +194,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLImageElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLImageElement, nsGenericElement)
 
 
-DOMCI_DATA(HTMLImageElement, nsHTMLImageElement)
+DOMCI_NODE_DATA(HTMLImageElement, nsHTMLImageElement)
 
 // QueryInterface implementation for nsHTMLImageElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLImageElement)

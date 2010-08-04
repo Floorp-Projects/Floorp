@@ -97,8 +97,9 @@ XPCNativeMember::GetCallInfo(XPCCallContext& ccx,
     jsval memberVal;
 
     if(!JS_GetReservedSlot(ccx, funobj, 0, &ifaceVal) ||
+       JSVAL_IS_VOID(ifaceVal) ||
        !JS_GetReservedSlot(ccx, funobj, 1, &memberVal) ||
-       !JSVAL_IS_INT(ifaceVal) || !JSVAL_IS_INT(memberVal))
+       JSVAL_IS_VOID(memberVal))
     {
         return JS_FALSE;
     }
@@ -166,7 +167,6 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
     // This is a method or attribute - we'll be needing a function object
 
     intN argc;
-    intN flags;
     JSNative callback;
 
     if(IsMethod())
@@ -180,15 +180,10 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
         if(argc && info->GetParam((uint8)(argc-1)).IsRetval())
             argc-- ;
 
-        flags = 0;
         callback = XPC_WN_CallMethod;
     }
     else
     {
-        if(IsWritableAttribute())
-            flags = JSFUN_GETTER | JSFUN_SETTER;
-        else
-            flags = JSFUN_GETTER;
         argc = 0;
         callback = XPC_WN_GetterSetter;
     }
@@ -206,8 +201,8 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
     JSFunction *fun;
     // Switching contexts, suspend the old and enter the new request.
     {
-        JSAutoTransferRequest transfer(ccx, cx);
-        fun = JS_NewFunction(cx, callback, argc, flags, nsnull, memberName);
+        JSAutoRequest req(cx);
+        fun = JS_NewFunction(cx, callback, argc, 0, nsnull, memberName);
     }
 
     if(!fun)
@@ -367,8 +362,8 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
     PRUint16 realTotalCount = 0;
     XPCNativeMember* cur;
     JSString*  str;
-    jsval name;
-    jsval interfaceName;
+    jsid name;
+    jsid interfaceName;
 
     // XXX Investigate lazy init? This is a problem given the
     // 'placement new' scheme - we need to at least know how big to make
@@ -432,7 +427,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
             failed = JS_TRUE;
             break;
         }
-        name = STRING_TO_JSVAL(str);
+        name = INTERNED_STRING_TO_JSID(str);
 
         if(info->IsSetter())
         {
@@ -476,7 +471,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
                 failed = JS_TRUE;
                 break;
             }
-            name = STRING_TO_JSVAL(str);
+            name = INTERNED_STRING_TO_JSID(str);
 
             // XXX need better way to find dups
             //NS_ASSERTION(!LookupMemberByID(name),"duplicate method/constant name");
@@ -495,7 +490,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
         {
             failed = JS_TRUE;
         }
-        interfaceName = STRING_TO_JSVAL(str);
+        interfaceName = INTERNED_STRING_TO_JSID(str);
     }
 
     if(!failed)
@@ -537,7 +532,7 @@ const char*
 XPCNativeInterface::GetMemberName(XPCCallContext& ccx,
                                   const XPCNativeMember* member) const
 {
-    return JS_GetStringBytes(JSVAL_TO_STRING(member->GetName()));
+    return JS_GetStringBytes(JSID_TO_STRING(member->GetName()));
 }
 
 void

@@ -116,6 +116,7 @@ typedef struct _nsCocoaWindowList {
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
 - (BOOL)isContextMenu;
 - (void)setIsContextMenu:(BOOL)flag;
+- (BOOL)canBecomeMainWindow;
 
 @end
 
@@ -172,15 +173,15 @@ struct UnifiedGradientInfo {
 {
   TitlebarAndBackgroundColor *mColor;
   float mUnifiedToolbarHeight;
-  BOOL mWaitingForUnifiedToolbarHeight;
+  BOOL mInUnifiedToolbarReset;
   NSColor *mBackgroundColor;
 }
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
-- (void)setUnifiedToolbarHeight:(float)aToolbarHeight;
+- (void)notifyToolbarAt:(float)aY height:(float)aHeight;
 - (float)unifiedToolbarHeight;
-- (void)beginMaybeResetUnifiedToolbar;
-- (void)endMaybeResetUnifiedToolbar;
+- (float)beginMaybeResetUnifiedToolbar;
+- (void)endMaybeResetUnifiedToolbar:(float)aOldHeight;
 - (float)titlebarHeight;
 - (NSRect)titlebarRect;
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync;
@@ -221,7 +222,9 @@ public:
     NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE);
     virtual nsIntPoint WidgetToScreenOffset();
-    
+    virtual nsIntPoint GetClientOffset();
+    virtual nsIntSize ClientToWindowSize(const nsIntSize& aClientSize);
+
     virtual void* GetNativeData(PRUint32 aDataType) ;
 
     NS_IMETHOD              ConstrainPosition(PRBool aAllowSlop,
@@ -235,6 +238,7 @@ public:
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
+    void                    ReportMoveEvent();
     void                    ReportSizeEvent(NSRect *overrideRect = nsnull);
     NS_IMETHOD              SetCursor(nsCursor aCursor);
     NS_IMETHOD              SetCursor(imgIContainer* aCursor, PRUint32 aHotspotX, PRUint32 aHotspotY);
@@ -288,6 +292,8 @@ public:
     NS_IMETHOD EndSecureKeyboardInput();
 
     static void UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut);
+
+    void SetPopupWindowLevel();
 
 protected:
 

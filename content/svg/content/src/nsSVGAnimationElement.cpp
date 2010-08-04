@@ -80,7 +80,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 #pragma warning(push)
 #pragma warning(disable:4355)
 #endif
-nsSVGAnimationElement::nsSVGAnimationElement(nsINodeInfo *aNodeInfo)
+nsSVGAnimationElement::nsSVGAnimationElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGAnimationElementBase(aNodeInfo),
     mHrefTarget(this),
     mTimedDocumentRoot(nsnull)
@@ -474,6 +474,12 @@ nsSVGAnimationElement::EndElementAt(float offset)
   AnimationNeedsResample();
  
   return NS_OK;
+}
+
+PRBool
+nsSVGAnimationElement::IsEventName(nsIAtom* aName)
+{
+  return nsContentUtils::IsEventAttributeName(aName, EventNameType_SMIL);
 }
 
 void

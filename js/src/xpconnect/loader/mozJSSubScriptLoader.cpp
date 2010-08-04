@@ -59,6 +59,7 @@
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
+#include "jsobj.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -204,18 +205,13 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
 
     // Innerize the target_obj so that we compile the loaded script in the
     // correct (inner) scope.
-    JSClass *target_class = JS_GET_CLASS(cx, target_obj);
-    if (target_class->flags & JSCLASS_IS_EXTENDED)
+    if (JSObjectOp op = target_obj->getClass()->ext.innerObject)
     {
-        JSExtendedClass *extended = (JSExtendedClass*)target_class;
-        if (extended->innerObject)
-        {
-            target_obj = extended->innerObject(cx, target_obj);
-            if (!target_obj) return NS_ERROR_FAILURE;
+        target_obj = op(cx, target_obj);
+        if (!target_obj) return NS_ERROR_FAILURE;
 #ifdef DEBUG_rginda
-            fprintf (stderr, "Final global: %p\n", target_obj);
+        fprintf (stderr, "Final global: %p\n", target_obj);
 #endif
-        }
     }
 
     /* load up the url.  From here on, failures are reflected as ``custom''

@@ -44,10 +44,10 @@
 class nsIContent;
 class nsINodeInfo;
 
-// {02AD2ADD-C5EC-4362-BB5F-E2C69BA76151}
+// {4ac3826f-280e-4572-9ede-6c81a4797861}
 #define NS_IXTFSERVICE_IID                             \
-  { 0x02ad2add, 0xc5ec, 0x4362, { 0xbb, 0x5f, 0xe2, 0xc6, 0x9b, 0xa7, 0x61, 0x51 } }
-
+  { 0x4ac3826f, 0x280e, 0x4572, \
+    { 0x9e, 0xde, 0x6c, 0x81, 0xa4, 0x79, 0x78, 0x61 } }
 class nsIXTFService : public nsISupports
 {
 public:
@@ -55,7 +55,7 @@ public:
 
     // try to create an xtf element based on namespace
     virtual nsresult CreateElement(nsIContent** aResult,
-                                   nsINodeInfo* aNodeInfo)=0;
+                                   already_AddRefed<nsINodeInfo> aNodeInfo) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXTFService, NS_IXTFSERVICE_IID)

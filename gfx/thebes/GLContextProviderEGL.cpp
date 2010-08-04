@@ -736,6 +736,15 @@ public:
         return PR_FALSE;        // texture not bound
     }
 
+    virtual already_AddRefed<gfxASurface>
+    GetBackingSurface()
+    {
+        NS_ADDREF(mImpl->mThebesSurface);
+        return mImpl->mThebesSurface.get();
+    }
+
+    virtual PRBool InUpdate() const { return !!mUpdateContext; }
+
 private:
     GLContext* mGLContext;
     nsRefPtr<GLContextEGL> mImpl;

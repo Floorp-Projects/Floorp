@@ -147,10 +147,6 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-ifndef MOZILLA_INTERNAL_API
-LIBS +=	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX)
-endif
-
 LIBS += $(XPCOM_LIBS)
 
 # Needed to resolve __yylex (?)

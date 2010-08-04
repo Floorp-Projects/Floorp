@@ -185,8 +185,8 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
-- (BOOL)beginMaybeResetUnifiedToolbar:(nsIntRegion*)aRegion context:(CGContextRef)aContext;
-- (void)endMaybeResetUnifiedToolbar:(BOOL)aReset;
+- (float)beginMaybeResetUnifiedToolbar;
+- (void)endMaybeResetUnifiedToolbar:(float)aOldHeight;
 
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
@@ -967,9 +967,7 @@ LayerManager*
 nsChildView::GetLayerManager()
 {
   nsCocoaWindow* window = GetXULWindowWidget();
-  if (!window)
-    return nsnull;
-  if (window->GetAcceleratedRendering() != mUseAcceleratedRendering) {
+  if (window && window->GetAcceleratedRendering() != mUseAcceleratedRendering) {
     mLayerManager = NULL;
     mUseAcceleratedRendering = window->GetAcceleratedRendering();
   }
@@ -2574,40 +2572,25 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Unified toolbar height resetting
-// This fixes the following problem:
-// The window gets notified about the height of its unified toolbar when the
-// toolbar is drawn. But when the toolbar suddenly vanishes, it's not drawn,
-// and the window is never notified about its absence.
-// So we bracket drawing operations to the pixel strip under the title bar
-// with notifications to the window.
-static BOOL DrawingAtWindowTop(CGContextRef aContext)
-{
-  // Ignore all non-trivial transforms.
-  CGAffineTransform ctm = CGContextGetCTM(aContext);
-  if (ctm.a != 1.0f || ctm.b != 0.0f || ctm.c != 0.0f || ctm.d != -1.0f)
-    return NO;
-
-  // ctm.ty contains the vertical offset from the window's bottom edge.
-  return ctm.ty >= [[[[NSView focusView] window] contentView] bounds].size.height;
-}
-
-- (BOOL)beginMaybeResetUnifiedToolbar:(nsIntRegion*)aRegion context:(CGContextRef)aContext
+// Whenever we paint a toplevel window, we will be notified of any
+// unified toolbar in the window via
+// nsNativeThemeCocoa::RegisterWidgetGeometry. 
+- (float)beginMaybeResetUnifiedToolbar
 {
   if (![[self window] isKindOfClass:[ToolbarWindow class]] ||
-      !DrawingAtWindowTop(aContext) ||
-      !aRegion->Contains(nsIntRect(0, 0, (int)[self bounds].size.width, 1)))
-    return NO;
+      [self superview] != [[self window] contentView])
+    return 0.0;
 
-  [(ToolbarWindow*)[self window] beginMaybeResetUnifiedToolbar];
-  return YES;
+  return [(ToolbarWindow*)[self window] beginMaybeResetUnifiedToolbar];
 }
 
-- (void)endMaybeResetUnifiedToolbar:(BOOL)aReset
+- (void)endMaybeResetUnifiedToolbar:(float)aOldHeight
 {
-  if (aReset) {
-    [(ToolbarWindow*)[self window] endMaybeResetUnifiedToolbar];
-  }
+  if (![[self window] isKindOfClass:[ToolbarWindow class]] ||
+      [self superview] != [[self window] contentView])
+    return;
+
+  [(ToolbarWindow*)[self window] endMaybeResetUnifiedToolbar:aOldHeight];
 }
 
 -(void)update
@@ -2715,8 +2698,7 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   }
   targetContext->Clip();
 
-  BOOL resetUnifiedToolbar =
-    [self beginMaybeResetUnifiedToolbar:&paintEvent.region context:aContext];
+  float oldHeight = [self beginMaybeResetUnifiedToolbar];
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   PRBool painted;
@@ -2734,7 +2716,7 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
                                            aRect.size.width, aRect.size.height));
   }
 
-  [self endMaybeResetUnifiedToolbar:resetUnifiedToolbar];
+  [self endMaybeResetUnifiedToolbar:oldHeight];
 
   // note that the cairo surface *MUST* be destroyed at this point,
   // or bad things will happen (since we can't keep the cgContext around
@@ -6455,21 +6437,16 @@ static BOOL WindowNumberIsUnderPoint(NSInteger aWindowNumber, NSPoint aPoint) {
   return CGRectContainsPoint(rect, point);
 }
 
-@interface NSWindow(SnowLeopardWindowUnderPointAPI)
-+ (NSInteger)windowNumberAtPoint:(NSPoint)point belowWindowWithWindowNumber:(NSInteger)windowNumber;
-@end
-
 // Find the window number of the window under the given point, regardless of
 // which app the window belongs to. Returns 0 if no window was found.
 static NSInteger WindowNumberAtPoint(NSPoint aPoint) {
-  // Use the awesome new API on 10.6+.
-  if ([NSWindow respondsToSelector:@selector(windowNumberAtPoint:belowWindowWithWindowNumber:)])
-    return [NSWindow windowNumberAtPoint:aPoint belowWindowWithWindowNumber:0];
-
-  // windowNumberAtPoint is not supported, so we'll have to find the right
-  // window manually by iterating over all windows on the screen and testing
-  // whether the mouse is inside the window's rect. We do this using private CGS
-  // functions.
+  // We'd like to use the new windowNumberAtPoint API on 10.6 but we can't rely
+  // on it being up-to-date. For example, if we've just opened a window,
+  // windowNumberAtPoint might not know about it yet, so we'd send events to the
+  // wrong window. See bug 557986.
+  // So we'll have to find the right window manually by iterating over all
+  // windows on the screen and testing whether the mouse is inside the window's
+  // rect. We do this using private CGS functions.
   // Another way of doing it would be to use tracking rects, but those are
   // view-controlled, so they need to be reset whenever an NSView changes its
   // size or position, which is expensive. See bug 300904 comment 20.

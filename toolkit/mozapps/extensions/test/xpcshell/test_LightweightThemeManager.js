@@ -6,6 +6,8 @@ const OPTIONAL = ["footerURL", "textcolor", "accentcolor", "iconURL",
                   "previewURL", "author", "description", "homepageURL",
                   "updateURL", "version"];
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 function dummy(id) {
   return {
     id: id || Math.random().toString(),
@@ -20,6 +22,8 @@ function dummy(id) {
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   startupManager();
+
+  Services.prefs.setIntPref("lightweightThemes.maxUsedThemes", 8);
 
   var temp = {};
   Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
@@ -432,4 +436,79 @@ function run_test() {
   ltm.forgetUsedTheme("x1");
   do_check_eq(ltm.usedThemes.length, 0);
   do_check_eq(ltm.currentTheme, null);
+
+  Services.prefs.clearUserPref("lightweightThemes.maxUsedThemes");
+
+  ltm.currentTheme = dummy("x1");
+  ltm.currentTheme = dummy("x2");
+  ltm.currentTheme = dummy("x3");
+  ltm.currentTheme = dummy("x4");
+  ltm.currentTheme = dummy("x5");
+  ltm.currentTheme = dummy("x6");
+  ltm.currentTheme = dummy("x7");
+  ltm.currentTheme = dummy("x8");
+  ltm.currentTheme = dummy("x9");
+  ltm.currentTheme = dummy("x10");
+  ltm.currentTheme = dummy("x11");
+  ltm.currentTheme = dummy("x12");
+  ltm.currentTheme = dummy("x13");
+  ltm.currentTheme = dummy("x14");
+  ltm.currentTheme = dummy("x15");
+  ltm.currentTheme = dummy("x16");
+  ltm.currentTheme = dummy("x17");
+  ltm.currentTheme = dummy("x18");
+  ltm.currentTheme = dummy("x19");
+  ltm.currentTheme = dummy("x20");
+  ltm.currentTheme = dummy("x21");
+  ltm.currentTheme = dummy("x22");
+  ltm.currentTheme = dummy("x23");
+  ltm.currentTheme = dummy("x24");
+  ltm.currentTheme = dummy("x25");
+  ltm.currentTheme = dummy("x26");
+  ltm.currentTheme = dummy("x27");
+  ltm.currentTheme = dummy("x28");
+  ltm.currentTheme = dummy("x29");
+  ltm.currentTheme = dummy("x30");
+
+  do_check_eq(ltm.usedThemes.length, 30);
+
+  ltm.currentTheme = dummy("x31");
+
+  do_check_eq(ltm.usedThemes.length, 30);
+  do_check_eq(ltm.getUsedTheme("x1"), null);
+
+  Services.prefs.setIntPref("lightweightThemes.maxUsedThemes", 15);
+
+  do_check_eq(ltm.usedThemes.length, 15);
+
+  Services.prefs.setIntPref("lightweightThemes.maxUsedThemes", 32);
+
+  ltm.currentTheme = dummy("x1");
+  ltm.currentTheme = dummy("x2");
+  ltm.currentTheme = dummy("x3");
+  ltm.currentTheme = dummy("x4");
+  ltm.currentTheme = dummy("x5");
+  ltm.currentTheme = dummy("x6");
+  ltm.currentTheme = dummy("x7");
+  ltm.currentTheme = dummy("x8");
+  ltm.currentTheme = dummy("x9");
+  ltm.currentTheme = dummy("x10");
+  ltm.currentTheme = dummy("x11");
+  ltm.currentTheme = dummy("x12");
+  ltm.currentTheme = dummy("x13");
+  ltm.currentTheme = dummy("x14");
+  ltm.currentTheme = dummy("x15");
+  ltm.currentTheme = dummy("x16");
+
+  ltm.currentTheme = dummy("x32");
+
+  do_check_eq(ltm.usedThemes.length, 32);
+
+  ltm.currentTheme = dummy("x33");
+
+  do_check_eq(ltm.usedThemes.length, 32);
+
+  Services.prefs.clearUserPref("lightweightThemes.maxUsedThemes");
+
+  do_check_eq(ltm.usedThemes.length, 30);
 }

@@ -80,6 +80,9 @@
     <command id="cmd_findAllUpdates"/>
     <command id="cmd_restartApp"/>
     <command id="cmd_goToDiscoverPane"/>
+    <command id="cmd_goToRecentUpdates"/>
+    <command id="cmd_goToAvailableUpdates"/>
+    <command id="cmd_toggleBackgroundUpdateCheck"/>
   </commandset>
 
   <!-- view commands - these act on the selected addon -->
@@ -125,6 +128,12 @@
         <richlistitem id="category-plugins" value="addons://list/plugin"
                       class="category"
                       name="&view.plugins.label;"/>
+        <richlistitem id="category-availableUpdates" value="addons://updates/available"
+                      class="category"
+                      name="&view.availableUpdates.label;" disabled="true"/>
+        <richlistitem id="category-recentUpdates" value="addons://updates/recent"
+                      class="category"
+                      name="&view.recentUpdates.label;" disabled="true"/>
       </richlistbox>
 
     </vbox>
@@ -143,9 +152,9 @@
           <image class="spinner"/>
           <label id="updates-noneFound" hidden="true"
                  value="&updates.noneFound.label;"/>
-          <button id="updates-checkNow" class="button-link"
-                  label="&updates.updateNow.label;"
-                  command="cmd_findAllUpdates"/>
+          <button id="updates-manualUpdatesFound" class="button-link"
+                  hidden="true" label="&updates.manualUpdatesFound.label;"
+                  command="cmd_goToAvailableUpdates"/>
           <label id="updates-progress" hidden="true"
                  value="&updates.updating.label;"/>
           <label id="updates-installed" hidden="true"
@@ -156,6 +165,24 @@
                   label="&updates.restart.label;"
                   command="cmd_restartApp"/>
         </hbox>
+        <button id="header-utils-btn" type="menu">
+          <menupopup id="utils-menu">
+            <menuitem id="utils-updateNow"
+                      label="&updates.updateAddonsNow.label;"
+                      accesskey="&updates.updateAddonsNow.accesskey;"
+                      command="cmd_findAllUpdates"/>
+            <menuitem id="utils-viewUpdates"
+                      label="&updates.viewUpdates.label;"
+                      accesskey="&updates.viewUpdates.accesskey;"
+                      command="cmd_goToRecentUpdates"/>
+            <menuseparator/>
+            <menuitem id="utils-backgroudUpdateCheck"
+                      label="&updates.backgroudUpdateCheck.label;"
+                      accesskey="&updates.backgroudUpdateCheck.accesskey;"
+                      type="checkbox" autocheck="false"
+                      command="cmd_toggleBackgroundUpdateCheck"/>
+          </menupopup>
+        </button>
         <textbox id="header-search" type="search" searchbutton="true"
                  placeholder="&search.placeholder;"/>
         <image id="header-searching"/>
@@ -216,6 +243,27 @@
           <richlistbox id="addon-list" class="list" flex="1"/>
         </vbox>
 
+        <!-- updates view -->
+        <vbox id="updates-view" flex="1" class="view-pane">
+          <hbox class="view-header" pack="end">
+            <hbox id="updates-sorters" class="sort-controls" sortby="dateUpdated"
+                  ascending="false"/>
+          </hbox>
+          <vbox id="updates-list-empty" class="empty-list-notice"
+                flex="1" hidden="true">
+            <spacer flex="1"/>
+            <label id="empty-availableUpdates-msg" value="&listEmpty.availableUpdates.label;"/>
+            <label id="empty-recentUpdates-msg" value="&listEmpty.recentUpdates.label;"/>
+            <button label="&listEmpty.findUpdates.label;" class="addon-control"
+                    command="cmd_findAllUpdates"/>
+            <spacer flex="3"/>
+          </vbox>
+          <hbox id="update-all-container" hidden="true">
+            <button label="Update these add-ons" class="addon-control"/>
+          </hbox>
+          <richlistbox id="updates-list" class="list" flex="1"/>
+        </vbox>
+
         <!-- detail view -->
         <hbox id="detail-view" flex="1" class="view-pane">
           <spacer flex="1"/>
@@ -270,17 +318,14 @@
                   <button id="detail-uninstall" class="addon-control remove"
                           label="&cmd.uninstallAddon.label;"
                           accesskey="&cmd.uninstallAddon.accesskey;"
-                          tooltiptext="&cmd.uninstallAddon.tooltip;"
                           command="cmd_uninstallItem"/>
                   <button id="detail-enable" class="addon-control enable"
                           label="&cmd.enableAddon.label;"
                           accesskey="&cmd.enableAddon.accesskey;"
-                          tooltiptext="&cmd.enableAddon.tooltip;"
                           command="cmd_enableItem"/>
                   <button id="detail-disable" class="addon-control disable"
                           label="&cmd.disableAddon.label;"
                           accesskey="&cmd.disableAddon.accesskey;"
-                          tooltiptext="&cmd.disableAddon.tooltip;"
                           command="cmd_disableItem"/>
                 </hbox>
               </vbox>

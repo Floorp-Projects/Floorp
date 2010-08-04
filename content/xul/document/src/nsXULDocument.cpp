@@ -395,7 +395,7 @@ NS_IMPL_ADDREF_INHERITED(nsXULDocument, nsXMLDocument)
 NS_IMPL_RELEASE_INHERITED(nsXULDocument, nsXMLDocument)
 
 
-DOMCI_DATA(XULDocument, nsXULDocument)
+DOMCI_NODE_DATA(XULDocument, nsXULDocument)
 
 // QueryInterface implementation for nsXULDocument
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULDocument)
@@ -2439,7 +2439,7 @@ nsXULDocument::PrepareToWalk()
 
     // Do one-time initialization if we're preparing to walk the
     // master document's prototype.
-    nsCOMPtr<Element> root;
+    nsRefPtr<Element> root;
 
     if (mState == eState_Master) {
         // Add the root element
@@ -2930,7 +2930,7 @@ nsXULDocument::ResumeWalk()
                 nsXULPrototypeElement* protoele =
                     static_cast<nsXULPrototypeElement*>(childproto);
 
-                nsCOMPtr<Element> child;
+                nsRefPtr<Element> child;
 
                 if (!processingOverlayHookupNodes) {
                     rv = CreateElementFromPrototype(protoele,
@@ -3680,7 +3680,7 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
     }
 #endif
 
-    nsCOMPtr<Element> result;
+    nsRefPtr<Element> result;
 
     if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
         // If it's a XUL element, it'll be lightweight until somebody
@@ -3699,14 +3699,16 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                                                     aPrototype->mNodeInfo->NamespaceID());
         if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
         nsCOMPtr<nsIContent> content;
-        rv = NS_NewElement(getter_AddRefs(content), newNodeInfo->NamespaceID(),
-                           newNodeInfo, PR_FALSE);
+        PRInt32 ns = newNodeInfo->NamespaceID();
+        nsCOMPtr<nsINodeInfo> xtfNi = newNodeInfo;
+        rv = NS_NewElement(getter_AddRefs(content), ns, newNodeInfo.forget(),
+                           PR_FALSE);
         if (NS_FAILED(rv)) return rv;
 
         result = content->AsElement();
 
 #ifdef MOZ_XTF
-        if (result && newNodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin) {
+        if (result && xtfNi->NamespaceID() > kNameSpaceID_LastBuiltin) {
             result->BeginAddingChildren();
         }
 #endif
@@ -3726,7 +3728,7 @@ nsXULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype,
 {
     nsresult rv;
 
-    nsCOMPtr<Element> element;
+    nsRefPtr<Element> element;
     rv = CreateElementFromPrototype(aPrototype, getter_AddRefs(element));
     if (NS_FAILED(rv)) return rv;
 
@@ -3840,7 +3842,7 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
                                           getter_AddRefs(bodyContent));
 
         if (! bodyContent) {
-            nsresult rv = document->CreateElem(nsGkAtoms::treechildren,
+            nsresult rv = document->CreateElem(nsAtomString(nsGkAtoms::treechildren),
                                                nsnull, kNameSpaceID_XUL,
                                                PR_FALSE,
                                                getter_AddRefs(bodyContent));

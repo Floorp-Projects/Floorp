@@ -85,6 +85,8 @@ function continueTest() {
   });
 }
 
+let wasPaused = {};
+
 let downloadListener = {
 
   onStateChange: function(a, b, c, d, e) {
@@ -95,6 +97,7 @@ let downloadListener = {
   {
 
     if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_PAUSED) {
+      wasPaused[aDownload.id] = true;
       testState.pausedDownloadCount++;
       testState.activeDownloadCount--;
 
@@ -114,7 +117,9 @@ let downloadListener = {
     }
 
     if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING) {
-        continueTest();
+      if (!wasPaused[aDownload.id])
+        dm.pauseDownload(aDownload.id);
+      continueTest();
     }
 
   },
@@ -126,21 +131,19 @@ let downloadListener = {
 function testSteps() {
 
   // Step 1 - Add downloads and pause
+
   testState.activeDownloadCount++;
   downloadA = addDownload();
-  yield;
-
-  dm.pauseDownload(downloadA.id);
-  yield;
+  yield; // added
+  yield; // paused
 
   testState.activeDownloadCount++;
   downloadB = addDownload();
-  yield;
-
-  dm.pauseDownload(downloadB.id);
-  yield;
+  yield; // added
+  yield; // paused
 
   // Step 2 - Resume downloads
+ 
   testState.activeDownloadCount++;
   testState.pausedDownloadCount--;
   dm.resumeDownload(downloadA.id);

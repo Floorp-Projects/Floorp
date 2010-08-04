@@ -118,8 +118,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0x19df0b2c, 0xf89a, 0x4c83, \
-  { 0x82, 0x29, 0x3a, 0xe0, 0xb6, 0x42, 0x71, 0x9c } }
+{ 0xda512fdc, 0x2d83, 0x44b0, \
+  { 0xb0, 0x99, 0x00, 0xc6, 0xbb, 0x72, 0x39, 0xed } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -830,7 +830,7 @@ public:
    * for that document (currently XHTML in HTML documents and XUL in XUL
    * documents), otherwise we use the type specified by the namespace ID.
    */
-  virtual nsresult CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
+  virtual nsresult CreateElem(const nsAString& aName, nsIAtom *aPrefix,
                               PRInt32 aNamespaceID,
                               PRBool aDocumentDefaultType,
                               nsIContent** aResult) = 0;

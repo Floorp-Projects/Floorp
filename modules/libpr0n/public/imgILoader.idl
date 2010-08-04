@@ -59,7 +59,7 @@ interface nsIChannelPolicy;
  * @version 0.3
  * @see imagelib2
  */
-[scriptable, uuid(7b776f98-3faf-40f9-b352-3283a884cb98)]
+[scriptable, uuid(47fbc3e7-c654-4ffb-83fc-a861394145ee)]
 interface imgILoader : nsISupports
 {
   /**
@@ -82,7 +82,7 @@ interface imgILoader : nsISupports
    * make sure to Cancel() the resulting request before the observer
    * goes away.
    */
-  [noscript] imgIRequest loadImage(in nsIURI aURI,
+  imgIRequest loadImage(in nsIURI aURI,
                         in nsIURI aInitialDocumentURL,
                         in nsIURI aReferrerURI,
                         in nsILoadGroup aLoadGroup,
@@ -101,15 +101,16 @@ interface imgILoader : nsISupports
    * @param aObserver the observer (may be null)
    * @param cx some random data
    * @param aListener [out]
-   *        A listener that should receive the data. Can be null, in which
-   *        case imagelib has found a cached image and is not interested in
-   *        the data. The caller needs not cancel the channel in this case.
+   *        A listener that you must send the channel's notifications and data to.
+   *        Can be null, in which case imagelib has found a cached image and is
+   *        not interested in the data. @aChannel will be canceled for you in
+   *        this case.
    *
    * libpr0n does NOT keep a strong ref to the observer; this prevents
    * reference cycles.  This means that callers of loadImageWithChannel should
    * make sure to Cancel() the resulting request before the observer goes away.
    */
-  [noscript] imgIRequest loadImageWithChannel(in nsIChannel aChannel,
+  imgIRequest loadImageWithChannel(in nsIChannel aChannel,
                         in imgIDecoderObserver aObserver,
                         in nsISupports cx,
                         out nsIStreamListener aListener);

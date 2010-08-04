@@ -245,28 +245,34 @@ function mailCharsetLoadListener (event)
     }
 }
 
-var wintype = document.documentElement.getAttribute('windowtype');
-if (window && (wintype == "navigator:browser"))
+function InitCharsetMenu()
 {
-    var contentArea = window.document.getElementById("appcontent");
-    if (contentArea)
-        contentArea.addEventListener("pageshow", charsetLoadListener, true);
-}
-else
-{
-    var arrayOfStrings = wintype.split(":");
-    if (window && arrayOfStrings[0] == "mail") 
+    removeEventListener("load", InitCharsetMenu, true);
+
+    var wintype = document.documentElement.getAttribute('windowtype');
+    if (window && (wintype == "navigator:browser"))
     {
-        var messageContent = window.document.getElementById("messagepane");
-        if (messageContent)
-            messageContent.addEventListener("pageshow", mailCharsetLoadListener, true);
+        var contentArea = window.document.getElementById("appcontent");
+        if (contentArea)
+            contentArea.addEventListener("pageshow", charsetLoadListener, true);
     }
     else
-    if (window && arrayOfStrings[0] == "composer") 
     {
-        contentArea = window.document.getElementById("appcontent");
-        if (contentArea)
-            contentArea.addEventListener("pageshow", composercharsetLoadListener, true);
+        var arrayOfStrings = wintype.split(":");
+        if (window && arrayOfStrings[0] == "mail")
+        {
+            var messageContent = window.document.getElementById("messagepane");
+            if (messageContent)
+                messageContent.addEventListener("pageshow", mailCharsetLoadListener, true);
+        }
+        else
+        if (window && arrayOfStrings[0] == "composer")
+        {
+            contentArea = window.document.getElementById("appcontent");
+            if (contentArea)
+                contentArea.addEventListener("pageshow", composercharsetLoadListener, true);
+        }
     }
-
 }
+
+addEventListener("load", InitCharsetMenu, true);

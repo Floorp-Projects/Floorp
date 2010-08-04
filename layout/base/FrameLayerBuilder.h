@@ -225,11 +225,11 @@ public:
    * aItem must have an underlying frame.
    */
   void AddThebesDisplayItem(ThebesLayer* aLayer,
-                            nsDisplayListBuilder* aBuilder,
                             nsDisplayItem* aItem,
                             const nsRect* aClipRect,
                             nsIFrame* aContainerLayerFrame,
-                            LayerState aLayerState);
+                            LayerState aLayerState,
+                            LayerManager* aTempManager);
 
   /**
    * Given a frame and a display item key that uniquely identifies a

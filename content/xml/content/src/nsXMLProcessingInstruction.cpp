@@ -63,7 +63,7 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   nsXMLProcessingInstruction *instance =
-    new nsXMLProcessingInstruction(ni, aTarget, aData);
+    new nsXMLProcessingInstruction(ni.forget(), aTarget, aData);
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -73,7 +73,7 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-nsXMLProcessingInstruction::nsXMLProcessingInstruction(nsINodeInfo *aNodeInfo,
+nsXMLProcessingInstruction::nsXMLProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
                                                        const nsAString& aTarget,
                                                        const nsAString& aData)
   : nsGenericDOMDataNode(aNodeInfo),
@@ -89,7 +89,7 @@ nsXMLProcessingInstruction::~nsXMLProcessingInstruction()
 }
 
 
-DOMCI_DATA(ProcessingInstruction, nsXMLProcessingInstruction)
+DOMCI_NODE_DATA(ProcessingInstruction, nsXMLProcessingInstruction)
 
 // QueryInterface implementation for nsXMLProcessingInstruction
 NS_INTERFACE_TABLE_HEAD(nsXMLProcessingInstruction)
@@ -174,8 +174,8 @@ nsXMLProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
-
-  return new nsXMLProcessingInstruction(aNodeInfo, mTarget, data);
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  return new nsXMLProcessingInstruction(ni.forget(), mTarget, data);
 }
 
 #ifdef DEBUG

@@ -316,8 +316,9 @@
 
       <method name="_getScrollableElements">
         <body><![CDATA[
-          return this.hasChildNodes() ?
-                   this.childNodes : document.getBindingParent(this).childNodes;
+          var nodes = this.hasChildNodes() ?
+                        this.childNodes : document.getBindingParent(this).childNodes;
+          return Array.filter(nodes, this._canScrollToElement, this);
         ]]></body>
       </method>
 
@@ -329,10 +330,8 @@
           if (!elements.length)
             return null;
 
-          if (this._isRTLScrollbox) {
-            elements = Array.slice(elements);
+          if (this._isRTLScrollbox)
             elements.reverse();
-          }
 
           var [start, end] = this._startEndProps;
           var low = 0;
@@ -550,9 +549,9 @@
                          xbl:inherits="orient"
                          anonid="scrollbutton-up"
                          onclick="_distanceScroll(event);"
-                         onmousedown="_startScroll(-1);"
+                         onmousedown="if (event.button == 0) _startScroll(-1);"
+                         onmouseup="if (event.button == 0) _stopScroll();"
                          onmouseover="_continueScroll(-1);"
-                         onmouseup="_stopScroll();"
                          onmouseout="_pauseScroll();"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
         <children/>
@@ -561,9 +560,9 @@
                          xbl:inherits="orient"
                          anonid="scrollbutton-down"
                          onclick="_distanceScroll(event);"
-                         onmousedown="_startScroll(1);"
+                         onmousedown="if (event.button == 0) _startScroll(1);"
+                         onmouseup="if (event.button == 0) _stopScroll();"
                          onmouseover="_continueScroll(1);"
-                         onmouseup="_stopScroll();"
                          onmouseout="_pauseScroll();"/>
     </content>
     <implementation implements="nsITimerCallback, nsIDOMEventListener">

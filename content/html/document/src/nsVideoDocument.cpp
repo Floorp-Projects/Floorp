@@ -116,7 +116,8 @@ nsVideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
   nsRefPtr<nsHTMLMediaElement> element =
-    static_cast<nsHTMLMediaElement*>(NS_NewHTMLVideoElement(nodeInfo, PR_FALSE));
+    static_cast<nsHTMLMediaElement*>(NS_NewHTMLVideoElement(nodeInfo.forget(),
+                                     PR_FALSE));
   if (!element)
     return NS_ERROR_OUT_OF_MEMORY;
   element->SetAutoplay(PR_TRUE);

@@ -47,15 +47,30 @@
  * http://www.w3.org/TR/DOM-Level-2-HTML/
  */
 
-[scriptable, uuid(a6cf90b0-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(fca7d30d-c834-470d-9bb2-25eddfedd86b)]
 interface nsIDOMHTMLAreaElement : nsIDOMHTMLElement
 {
-           attribute DOMString        accessKey;
            attribute DOMString        alt;
            attribute DOMString        coords;
-           attribute DOMString        href;
-           attribute boolean          noHref;
            attribute DOMString        shape;
-           attribute long             tabIndex;
+           attribute DOMString        href;
            attribute DOMString        target;
+
+           attribute DOMString        ping;
+
+           // URL decomposition IDL attributes
+           attribute DOMString        protocol;
+           attribute DOMString        host;
+           attribute DOMString        hostname;  
+           attribute DOMString        port;
+           attribute DOMString        pathname;
+           attribute DOMString        search;
+           attribute DOMString        hash;
+           
+
+           attribute DOMString        accessKey;
+           attribute long             tabIndex;
+           attribute boolean          noHref;
+           DOMString                 toString();
+
 };
