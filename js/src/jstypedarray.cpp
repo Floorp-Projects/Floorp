@@ -1231,7 +1231,22 @@ void
 TypedArrayTemplate<float>::copyIndexToValue(JSContext *cx, uint32 index, Value *vp)
 {
     float val = getIndex(index);
-    vp->setDouble(val);
+    double dval = val;
+
+    /*
+     * Doubles in typed arrays could be typed-punned arrays of integers. This
+     * could allow user code to break the engine-wide invariant that only
+     * canonical nans are stored into jsvals, which means user code could
+     * confuse the engine into interpreting a double-typed jsval as an
+     * object-typed jsval.
+     *
+     * This could be removed for platforms/compilers known to convert a 32-bit
+     * non-canonical nan to a 64-bit canonical nan.
+     */
+    if (JS_UNLIKELY(JSDOUBLE_IS_NaN(dval)))
+        dval = js_NaN;
+
+    vp->setDouble(dval);
 }
 
 template<>
@@ -1239,6 +1254,17 @@ void
 TypedArrayTemplate<double>::copyIndexToValue(JSContext *cx, uint32 index, Value *vp)
 {
     double val = getIndex(index);
+
+    /*
+     * Doubles in typed arrays could be typed-punned arrays of integers. This
+     * could allow user code to break the engine-wide invariant that only
+     * canonical nans are stored into jsvals, which means user code could
+     * confuse the engine into interpreting a double-typed jsval as an
+     * object-typed jsval.
+     */
+    if (JS_UNLIKELY(JSDOUBLE_IS_NaN(val)))
+        val = js_NaN;
+
     vp->setDouble(val);
 }
 
