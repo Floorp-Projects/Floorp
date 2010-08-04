@@ -207,14 +207,15 @@ function FormTracker(name) {
   // nsHTMLFormElement doesn't use the normal observer/observe pattern and looks
   // up nsIFormSubmitObservers to .notify() them so add manually to observers
   Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService).
-    addObserver(this, "earlyformsubmit", false);
+    addObserver(this, "earlyformsubmit", true);
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIFormSubmitObserver,
-    Ci.nsIObserver]),
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference]),
 
   trackEntry: function trackEntry(name, value) {
     this.addChangedID(FormWrapper.getGUID(name, value));
