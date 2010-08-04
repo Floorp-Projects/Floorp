@@ -215,7 +215,7 @@ ic::NativeCallCompiler::finish(JSScript *script, uint8 *start, uint8 *fallthroug
 }
 
 void
-ic::CallFastNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fun)
+ic::CallFastNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fun, bool isNew)
 {
     if (mic.u.generated) {
         /* Already generated a MIC at this site, don't make another one. */
@@ -224,6 +224,9 @@ ic::CallFastNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fu
     mic.u.generated = true;
 
     JS_ASSERT(fun->isFastNative());
+    if (isNew)
+        JS_ASSERT(fun->isFastConstructor());
+
     FastNative fn = (FastNative)fun->u.n.native;
 
     typedef JSC::MacroAssembler::ImmPtr ImmPtr;
@@ -262,6 +265,11 @@ ic::CallFastNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fu
     uint32 vpOffset = sizeof(JSStackFrame) + mic.frameDepth * sizeof(jsval);
     ncc.masm.addPtr(Imm32(vpOffset), JSFrameReg, temp);
     ncc.masm.storePtr(temp, Address(JSC::X86Registers::esp, 0x8));
+
+    if (isNew) {
+        /* Mark vp[1] as magic. */
+        ncc.masm.storeValue(MagicValue(JS_FAST_CONSTRUCTOR), Address(temp, sizeof(Value)));
+    }
 
     /* Push argc */
     ncc.masm.store32(Imm32(mic.argc), Address(JSC::X86Registers::esp, 0x4));
