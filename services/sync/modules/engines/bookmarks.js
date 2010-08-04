@@ -1001,7 +1001,7 @@ function BookmarksTracker(name) {
   for (let guid in kSpecialIds)
     this.ignoreID(guid);
 
-  Svc.Bookmark.addObserver(this, false);
+  Svc.Bookmark.addObserver(this, true);
 
   // Explicitly nullify our references to our cached services so we don't leak
   Observers.add("places-shutdown", function() {
@@ -1030,7 +1030,8 @@ BookmarksTracker.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavBookmarkObserver,
-    Ci.nsINavBookmarkObserver_MOZILLA_1_9_1_ADDITIONS
+    Ci.nsINavBookmarkObserver_MOZILLA_1_9_1_ADDITIONS,
+    Ci.nsISupportsWeakReference
   ]),
 
   /**

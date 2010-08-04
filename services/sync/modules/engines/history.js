@@ -257,14 +257,15 @@ HistoryStore.prototype = {
 
 function HistoryTracker(name) {
   Tracker.call(this, name);
-  Svc.History.addObserver(this, false);
+  Svc.History.addObserver(this, true);
 }
 HistoryTracker.prototype = {
   __proto__: Tracker.prototype,
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavHistoryObserver,
-    Ci.nsINavHistoryObserver_MOZILLA_1_9_1_ADDITIONS
+    Ci.nsINavHistoryObserver_MOZILLA_1_9_1_ADDITIONS,
+    Ci.nsISupportsWeakReference
   ]),
 
   onBeginUpdateBatch: function HT_onBeginUpdateBatch() {},

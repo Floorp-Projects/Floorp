@@ -232,7 +232,7 @@ function TabTracker(name) {
   this.onTab = Utils.bind2(this, this.onTab);
 
   // Register as an observer so we can catch windows opening and closing:
-  Svc.WinWatcher.registerNotification(this);
+  Svc.Obs.add("domwindowopened", this);
 
   // Also register listeners on already open windows
   let wins = Svc.WinMediator.getEnumerator("navigator:browser");
