@@ -1256,6 +1256,57 @@ jsvalToFloat(JSContext *cx, jsval val, FloatType* result)
   return false;
 }
 
+template<class IntegerType>
+static bool
+StringToInteger(JSContext* cx, JSString* string, IntegerType* result)
+{
+  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
+
+  const jschar* cp = string->chars();
+  const jschar* end = cp + string->length();
+  if (cp == end)
+    return false;
+
+  IntegerType sign = 1;
+  if (cp[0] == '-') {
+    if (!numeric_limits<IntegerType>::is_signed)
+      return false;
+
+    sign = -1;
+    ++cp;
+  }
+
+  // Assume base-10, unless the string begins with '0x' or '0X'.
+  IntegerType base = 10;
+  if (end - cp > 2 && cp[0] == '0' && (cp[1] == 'x' || cp[1] == 'X')) {
+    cp += 2;
+    base = 16;
+  }
+
+  // Scan the string left to right and build the number,
+  // checking for valid characters 0 - 9, a - f, A - F and overflow.
+  IntegerType i = 0;
+  while (cp != end) {
+    jschar c = *cp++;
+    if (c >= '0' && c <= '9')
+      c -= '0';
+    else if (base == 16 && c >= 'a' && c <= 'f')
+      c = c - 'a' + 10;
+    else if (base == 16 && c >= 'A' && c <= 'F')
+      c = c - 'A' + 10;
+    else
+      return false;
+
+    IntegerType ii = i;
+    i = ii * base + sign * c;
+    if (i / base != ii) // overflow
+      return false;
+  }
+
+  *result = i;
+  return true;
+}
+
 // Implicitly convert val to IntegerType, allowing jsint, jsdouble,
 // Int64, UInt64, and optionally a decimal or hexadecimal string argument.
 // (This is common code shared by jsvalToSize and the Int64/UInt64 constructors.)
@@ -1497,57 +1548,6 @@ IntegerToString(IntegerType i, jsuint radix, AutoString& result)
 
   JS_ASSERT(cp >= buffer);
   result.append(cp, end);
-}
-
-template<class IntegerType>
-static bool
-StringToInteger(JSContext* cx, JSString* string, IntegerType* result)
-{
-  JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
-
-  const jschar* cp = string->chars();
-  const jschar* end = cp + string->length();
-  if (cp == end)
-    return false;
-
-  IntegerType sign = 1;
-  if (cp[0] == '-') {
-    if (!numeric_limits<IntegerType>::is_signed)
-      return false;
-
-    sign = -1;
-    ++cp;
-  }
-
-  // Assume base-10, unless the string begins with '0x' or '0X'.
-  IntegerType base = 10;
-  if (end - cp > 2 && cp[0] == '0' && (cp[1] == 'x' || cp[1] == 'X')) {
-    cp += 2;
-    base = 16;
-  }
-
-  // Scan the string left to right and build the number,
-  // checking for valid characters 0 - 9, a - f, A - F and overflow.
-  IntegerType i = 0;
-  while (cp != end) {
-    jschar c = *cp++;
-    if (c >= '0' && c <= '9')
-      c -= '0';
-    else if (base == 16 && c >= 'a' && c <= 'f')
-      c = c - 'a' + 10;
-    else if (base == 16 && c >= 'A' && c <= 'F')
-      c = c - 'A' + 10;
-    else
-      return false;
-
-    IntegerType ii = i;
-    i = ii * base + sign * c;
-    if (i / base != ii) // overflow
-      return false;
-  }
-
-  *result = i;
-  return true;
 }
 
 template<class CharType>
