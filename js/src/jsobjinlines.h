@@ -220,15 +220,17 @@ JSObject::setArgsLength(uint32 argc)
 {
     JS_ASSERT(isArguments());
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
-    fslots[JSSLOT_ARGS_LENGTH].setInt32(argc << 1);
+    JS_ASSERT(UINT32_MAX > (uint64(argc) << ARGS_PACKED_BITS_COUNT));
+    fslots[JSSLOT_ARGS_LENGTH].setInt32(argc << ARGS_PACKED_BITS_COUNT);
     JS_ASSERT(!isArgsLengthOverridden());
+    JS_ASSERT(!isArgsStrictMode());
 }
 
 inline uint32
 JSObject::getArgsInitialLength() const
 {
     JS_ASSERT(isArguments());
-    uint32 argc = uint32(fslots[JSSLOT_ARGS_LENGTH].toInt32()) >> 1;
+    uint32 argc = uint32(fslots[JSSLOT_ARGS_LENGTH].toInt32()) >> ARGS_PACKED_BITS_COUNT;
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     return argc;
 }
@@ -237,7 +239,7 @@ inline void
 JSObject::setArgsLengthOverridden()
 {
     JS_ASSERT(isArguments());
-    fslots[JSSLOT_ARGS_LENGTH].getInt32Ref() |= 1;
+    fslots[JSSLOT_ARGS_LENGTH].getInt32Ref() |= ARGS_LENGTH_OVERRIDDEN_BIT;
 }
 
 inline bool
@@ -245,7 +247,7 @@ JSObject::isArgsLengthOverridden() const
 {
     JS_ASSERT(isArguments());
     const js::Value &v = fslots[JSSLOT_ARGS_LENGTH];
-    return (v.toInt32() & 1) != 0;
+    return v.toInt32() & ARGS_LENGTH_OVERRIDDEN_BIT;
 }
 
 inline const js::Value & 
@@ -260,6 +262,20 @@ JSObject::setArgsCallee(const js::Value &callee)
 {
     JS_ASSERT(isArguments());
     fslots[JSSLOT_ARGS_CALLEE] = callee;
+}
+
+inline void
+JSObject::setArgsStrictMode()
+{
+    fslots[JSSLOT_ARGS_LENGTH].getInt32Ref() |= ARGS_CALLEE_IN_STRICT_MODE_BIT;
+    JS_ASSERT(isArgsStrictMode());
+}
+
+inline bool
+JSObject::isArgsStrictMode() const
+{
+    JS_ASSERT(isArguments());
+    return fslots[JSSLOT_ARGS_LENGTH].toInt32() & ARGS_CALLEE_IN_STRICT_MODE_BIT;
 }
 
 inline const js::Value &
@@ -311,6 +327,13 @@ inline void
 JSObject::setMethodObj(JSObject& obj)
 {
     fslots[JSSLOT_FUN_METHOD_OBJ].setObject(obj);
+}
+
+inline JSFunction *
+JSObject::getFunctionPrivate() const
+{
+    JS_ASSERT(isFunction());
+    return reinterpret_cast<JSFunction *>(getPrivate());
 }
 
 inline NativeIterator *
