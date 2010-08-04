@@ -1515,6 +1515,7 @@ namespace nanojit
 #endif
                 case LIR_cmovi:
                 CASE64(LIR_cmovq:)
+                case LIR_cmovd:
                     countlir_cmov();
                     ins->oprnd1()->setResultLive();
                     ins->oprnd2()->setResultLive();

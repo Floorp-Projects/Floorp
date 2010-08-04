@@ -1154,7 +1154,7 @@ namespace nanojit
                 op = LIR_cmovq;
 #endif
             } else if (iftrue->isD() && iffalse->isD()) {
-                NanoAssertMsg(0, "LIR_fcmov doesn't exist yet, sorry");
+                op = LIR_cmovd;
             } else {
                 NanoAssert(0);  // type error
             }
@@ -1478,6 +1478,7 @@ namespace nanojit
 
                 case LIR_cmovi:
                 CASE64(LIR_cmovq:)
+                case LIR_cmovd:
                     live.add(ins->oprnd1(), 0);
                     live.add(ins->oprnd2(), 0);
                     live.add(ins->oprnd3(), 0);
@@ -1900,6 +1901,7 @@ namespace nanojit
 
             CASE64(LIR_cmovq:)
             case LIR_cmovi:
+            case LIR_cmovd:
                 VMPI_snprintf(s, n, "%s = %s %s ? %s : %s", formatRef(&b1, i), lirNames[op],
                     formatRef(&b2, i->oprnd1()),
                     formatRef(&b3, i->oprnd2()),
@@ -3148,6 +3150,12 @@ namespace nanojit
             formals[2] = LTy_Q;
             break;
 #endif
+
+        case LIR_cmovd:
+            checkLInsIsACondOrConst(op, 1, a);
+            formals[1] = LTy_D;
+            formals[2] = LTy_D;
+            break;
 
         default:
             NanoAssert(0);
