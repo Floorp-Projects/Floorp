@@ -699,6 +699,17 @@ JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
 
 #endif
 
+static JS_ALWAYS_INLINE double
+JS_CANONICALIZE_NAN(double d)
+{
+    if (JS_UNLIKELY(d != d)) {
+        jsval_layout l;
+        l.asBits = 0x7FF8000000000000LL;
+        return l.asDouble;
+    }
+    return d;
+}
+
 /* See JS_USE_JSVAL_JSID_STRUCT_TYPES comment in jsapi.h. */
 #if defined(DEBUG) && !defined(JS_NO_JSVAL_JSID_STRUCT_TYPES)
 # define JS_USE_JSVAL_JSID_STRUCT_TYPES
