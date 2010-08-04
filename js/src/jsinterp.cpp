@@ -4040,7 +4040,7 @@ BEGIN_CASE(JSOP_LENGTH)
             jsuint length = obj->getArrayLength();
             regs.sp[-1].setNumber(length);
         } else if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
-            uint32 length = obj->getArgsLength();
+            uint32 length = obj->getArgsInitialLength();
             JS_ASSERT(length < INT32_MAX);
             regs.sp[-1].setInt32(int32_t(length));
         } else {
@@ -4408,7 +4408,7 @@ BEGIN_CASE(JSOP_GETELEM)
         } else if (obj->isArguments()) {
             uint32 arg = uint32(i);
 
-            if (arg < obj->getArgsLength()) {
+            if (arg < obj->getArgsInitialLength()) {
                 JSStackFrame *afp = (JSStackFrame *) obj->getPrivate();
                 if (afp) {
                     copyFrom = &afp->argv[arg];
