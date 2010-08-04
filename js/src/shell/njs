@@ -28,14 +28,14 @@ if __name__ == '__main__':
 
     (options, args) = op.parse_args()
 
-    cmd = 'evaluate("__NARCISSUS__=true;"); '
+    cmd = ""
     if options.js_exps:
         for exp in options.js_exps:
-            cmd += 'evaluate("%s"); ' % exp.replace('"', '\\"')
+            cmd += 'Narcissus.jsexec.evaluate("%s"); ' % exp.replace('"', '\\"')
 
     if options.js_files:
         for file in options.js_files:
-            cmd += 'evaluate(snarf("%(file)s"), "%(file)s", 1); ' % {'file':file }
+            cmd += 'Narcissus.jsexec.evaluate(snarf("%(file)s"), "%(file)s", 1); ' % { 'file':file }
 
     Popen([js_cmd, '-f', narc_jsdefs, '-f', narc_jslex, '-f', narc_jsparse, '-f', narc_jsexec, '-e', cmd]).wait()
 
