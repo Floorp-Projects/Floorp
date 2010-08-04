@@ -264,7 +264,7 @@ IDBTransaction::AddStatement(bool aCreate,
     if (aCreate) {
       if (aOverwrite) {
         return GetCachedStatement(
-          "INSERT OR REPLACE INTO ai_object_data (object_store_id, id, data) "
+          "INSERT OR FAIL INTO ai_object_data (object_store_id, id, data) "
           "VALUES (:osid, :key_value, :data)"
         );
       }
@@ -283,7 +283,7 @@ IDBTransaction::AddStatement(bool aCreate,
   if (aCreate) {
     if (aOverwrite) {
       return GetCachedStatement(
-        "INSERT OR REPLACE INTO object_data (object_store_id, key_value, data) "
+        "INSERT OR FAIL INTO object_data (object_store_id, key_value, data) "
         "VALUES (:osid, :key_value, :data)"
       );
     }
