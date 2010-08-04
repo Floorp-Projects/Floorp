@@ -523,10 +523,13 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   AutoStateChanger changer(this, PR_TRUE);
 
   // Do the load.
+  nsCOMPtr<imgIRequest>& req = PrepareNextRequest();
   nsresult rv = nsContentUtils::GetImgLoader()->
     LoadImageWithChannel(aChannel, this, doc, aListener,
-                         getter_AddRefs(PrepareNextRequest()));
-  if (NS_FAILED(rv)) {
+                         getter_AddRefs(req));
+  if (NS_SUCCEEDED(rv)) {
+    TrackImage(req);
+  } else {
     // If we don't have a current URI, we might as well store this URI so people
     // know what we tried (and failed) to load.
     if (!mCurrentRequest)
@@ -658,13 +661,16 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   }
 
   // Not blocked. Do the load.
+  nsCOMPtr<imgIRequest>& req = PrepareNextRequest();
   nsresult rv;
   rv = nsContentUtils::LoadImage(aNewURI, aDocument,
                                  aDocument->NodePrincipal(),
                                  aDocument->GetDocumentURI(),
                                  this, aLoadFlags,
-                                 getter_AddRefs(PrepareNextRequest()));
-  if (NS_FAILED(rv)) {
+                                 getter_AddRefs(req));
+  if (NS_SUCCEEDED(rv)) {
+    TrackImage(req);
+  } else {
     // If we don't have a current URI, we might as well store this URI so people
     // know what we tried (and failed) to load.
     if (!mCurrentRequest)
@@ -769,9 +775,12 @@ nsImageLoadingContent::UseAsPrimaryRequest(imgIRequest* aRequest,
   ClearCurrentRequest(NS_BINDING_ABORTED);
 
   // Clone the request we were given.
-  nsCOMPtr<imgIRequest> newRequest;
-  nsresult rv = aRequest->Clone(this, getter_AddRefs(PrepareNextRequest()));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<imgIRequest>& req = PrepareNextRequest();;
+  nsresult rv = aRequest->Clone(this, getter_AddRefs(req));
+  if (NS_SUCCEEDED(rv))
+    TrackImage(req);
+  else
+    return rv;
 
   return NS_OK;
 }
@@ -901,6 +910,7 @@ nsImageLoadingContent::ClearCurrentRequest(nsresult aReason)
                     "Shouldn't have both mCurrentRequest and mCurrentURI!");
 
   // Clean up the request.
+  UntrackImage(mCurrentRequest);
   mCurrentRequest->CancelAndForgetObserver(aReason);
   mCurrentRequest = nsnull;
 
@@ -914,6 +924,7 @@ nsImageLoadingContent::ClearPendingRequest(nsresult aReason)
 {
   if (!mPendingRequest)
     return;
+  UntrackImage(mPendingRequest);
   mPendingRequest->CancelAndForgetObserver(aReason);
   mPendingRequest = nsnull;
 }
@@ -952,6 +963,28 @@ nsImageLoadingContent::SetBlockingOnload(PRBool aBlocking)
     mBlockingOnload = aBlocking;
   }
 }
+
+nsresult
+nsImageLoadingContent::TrackImage(imgIRequest* aImage)
+{
+  nsIDocument* doc = GetOurDocument();
+  if (doc)
+    return doc->AddImage(aImage);
+  return NS_OK;
+}
+
+nsresult
+nsImageLoadingContent::UntrackImage(imgIRequest* aImage)
+{
+  // If GetOurDocument() returns null here, we've outlived our document.
+  // That's fine, because the document empties out the tracker and unlocks
+  // all locked images on destruction.
+  nsIDocument* doc = GetOurDocument();
+  if (doc)
+    return doc->RemoveImage(aImage);
+  return NS_OK;
+}
+
 
 void
 nsImageLoadingContent::CreateStaticImageClone(nsImageLoadingContent* aDest) const
