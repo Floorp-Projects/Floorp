@@ -802,13 +802,13 @@ mjit::Compiler::jsop_mod()
 
     MaybeJump done;
     if (lhsMaybeNeg) {
-        RegisterID lhsData;
+        MaybeRegisterID lhsData;
         if (!lhsIsNeg)
             lhsData = frame.tempRegForData(lhs);
         Jump negZero1 = masm.branchTest32(Assembler::NonZero, X86Registers::edx);
         MaybeJump negZero2;
         if (!lhsIsNeg)
-            negZero2 = masm.branchTest32(Assembler::Zero, lhsData, Imm32(0x80000000));
+            negZero2 = masm.branchTest32(Assembler::Zero, lhsData.reg(), Imm32(0x80000000));
         /* Darn, negative 0. */
         masm.storeValue(DoubleValue(-0.0), frame.addressOf(lhs));
 
