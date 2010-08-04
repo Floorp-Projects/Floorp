@@ -152,7 +152,6 @@ private:
   // received until OnStartRequest completes.
   nsTArray<nsAutoPtr<Callback> > mBufferedCallbacks;
   bool mShouldBuffer;
-  mozilla::Mutex mBufferLock;
 
   bool BufferOrDispatch(Callback* callback);
 
