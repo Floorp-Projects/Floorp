@@ -1,6 +1,3 @@
-(function() {
-  this / z
-  var z = ""
-})()
+evalcx("function s(){}",evalcx('lazy'))
 
 
