@@ -767,6 +767,12 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     if (globalObj) {
         JS_ASSERT(globalObj->isNative());
         JS_ASSERT((globalObj->getClass()->flags & JSCLASS_GLOBAL_FLAGS) == JSCLASS_GLOBAL_FLAGS);
+
+        /* Make sure function and object classes are initialized. */
+        JSObject *tobj;
+        if (!js_GetClassPrototype(cx, scopeChain, JSProto_Function, &tobj))
+            return NULL;
+
         globalScope.globalFreeSlot = globalObj->scope()->freeslot;
     }
 
