@@ -15238,10 +15238,10 @@ TraceRecorder::record_JSOP_ARGSUB()
 JS_REQUIRES_STACK LIns*
 TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
 {
-    // The following implements IsOverriddenArgsLength on trace.
-    // The '2' bit is set if length was overridden.
+    // The following implements JSObject::isArgsLengthOverridden on trace.
+    // ARGS_LENGTH_OVERRIDDEN_BIT is set if length was overridden.
     LIns *len_ins = stobj_get_fslot_uint32(argsobj_ins, JSObject::JSSLOT_ARGS_LENGTH);
-    LIns *ovr_ins = lir->ins2(LIR_andi, len_ins, INS_CONST(2));
+    LIns *ovr_ins = lir->ins2(LIR_andi, len_ins, INS_CONST(JSObject::ARGS_LENGTH_OVERRIDDEN_BIT));
     guard(true, lir->insEqI_0(ovr_ins), snapshot(BRANCH_EXIT));
     return len_ins;
 }
@@ -16046,9 +16046,11 @@ TraceRecorder::record_JSOP_LENGTH()
             RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
         LIns* slot_ins = guardArgsLengthNotAssigned(obj_ins);
 
-        // slot_ins is the value from the slot; right-shift by 2 bits to get
-        // the length (see JSObject::getArgsInitialLength in jsfun.cpp).
-        LIns* v_ins = lir->ins1(LIR_i2d, lir->ins2ImmI(LIR_rshi, slot_ins, 1));
+        // slot_ins is the value from the slot; right-shift to get the length
+        // (see JSObject::getArgsInitialLength in jsfun.cpp).
+        LIns* v_ins =
+            lir->ins1(LIR_i2d, lir->ins2ImmI(LIR_rshi,
+                                             slot_ins, JSObject::ARGS_PACKED_BITS_COUNT));
         set(&l, v_ins);
         return ARECORD_CONTINUE;
     }
