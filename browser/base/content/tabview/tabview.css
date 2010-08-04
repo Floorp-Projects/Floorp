@@ -387,7 +387,9 @@ input.defaultName:hover {
   color: #CCC;
 }
 
-.title-container { }
+.title-container {
+  cursor: text;
+}
 
 .title-shield {
   position: absolute;
