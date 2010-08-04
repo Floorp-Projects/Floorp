@@ -1151,7 +1151,7 @@ mjit::Compiler::generateMethod()
             stubCall(stubs::DefLocalFun_FC);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-            frame.storeLocal(slot);
+            frame.storeLocal(slot, true);
             frame.pop();
           }
           END_CASE(JSOP_DEFFUN)
@@ -1228,7 +1228,7 @@ mjit::Compiler::generateMethod()
             stubCall(stubs::DefLocalFun);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-            frame.storeLocal(slot);
+            frame.storeLocal(slot, true);
             frame.pop();
           }
           END_CASE(JSOP_DEFLOCALFUN)

@@ -883,8 +883,9 @@ void
 FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
 {
     FrameEntry *localFe = getLocal(n);
+    bool cacheable = !eval && !escaping[n];
 
-    if (!popGuaranteed && (eval || escaping[n])) {
+    if (!popGuaranteed && !cacheable) {
         JS_ASSERT_IF(base[localIndex(n)] && (!eval || n < script->nfixed),
                      entries[localIndex(n)].type.inMemory() &&
                      entries[localIndex(n)].data.inMemory());
@@ -1022,6 +1023,17 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool typeChange)
     backing->setCopyOf(localFe);
     backing->isNumber = localFe->isNumber;
     localFe->setCopied();
+
+    if (!cacheable) {
+        /* TODO: x64 optimization */
+        if (!localFe->type.synced())
+            syncType(localFe, addressOf(localFe), masm);
+        if (!localFe->data.synced())
+            syncData(localFe, addressOf(localFe), masm);
+        forgetAllRegs(localFe);
+        localFe->type.setMemory();
+        localFe->data.setMemory();
+    }
 
     JS_ASSERT(top->copyOf() == localFe);
 }
