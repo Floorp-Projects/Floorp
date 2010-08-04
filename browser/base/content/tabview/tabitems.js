@@ -388,6 +388,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
 
       if (css.width) {
+        TabItems.update(this.tab);
 
         let widthRange, proportion;
 
@@ -684,6 +685,10 @@ window.TabItems = {
   fontSize: 9,
   items: [],
   paintingPaused: 0,
+  _tabsWaitingForUpdate: [],
+  _heartbeatOn: false,
+  _heartbeatTiming: 100, // milliseconds between beats
+  _lastUpdateTime: Date.now(),
 
   // ----------
   // Function: init
@@ -734,8 +739,6 @@ window.TabItems = {
       self.link(tab);
       self.update(tab);
     });
-
-    this.paintingPaused = 0;
   },
 
   // ----------
@@ -743,6 +746,26 @@ window.TabItems = {
   // Takes in a xul:tab.
   update: function(tab) {
     try {
+      Utils.assertThrow("tab", tab);
+      
+      if (this.isPaintingPaused() 
+          || this._tabsWaitingForUpdate.length
+          || Date.now() - this._lastUpdateTime < this._heartbeatTiming) {
+        if (this._tabsWaitingForUpdate.indexOf(tab) == -1)
+          this._tabsWaitingForUpdate.push(tab);
+      } else 
+        this._update(tab);
+    } catch(e) {
+      Utils.log(e);
+    }
+  },
+
+  // ----------
+  // Function: _update
+  // Takes in a xul:tab.
+  _update: function(tab) {
+    try {
+      Utils.assertThrow("tab", tab);
       Utils.assertThrow("must already be linked", tab.tabItem);
 
       let tabItem = tab.tabItem;
@@ -787,6 +810,8 @@ window.TabItems = {
     } catch(e) {
       Utils.log(e);
     }
+    
+    this._lastUpdateTime = Date.now();
   },
 
   // ----------
@@ -794,6 +819,7 @@ window.TabItems = {
   // Takes in a xul:tab.
   link: function(tab){
     try {
+      Utils.assertThrow("tab", tab);
       Utils.assertThrow("shouldn't already be linked", !tab.tabItem);
       new TabItem(tab); // sets tab.tabItem to itself
     } catch(e) {
@@ -806,17 +832,42 @@ window.TabItems = {
   // Takes in a xul:tab.
   unlink: function(tab) {
     try {
+      Utils.assertThrow("tab", tab);
       Utils.assertThrow("should already be linked", tab.tabItem);
 
       tab.tabItem._sendToSubscribers("close");
       iQ(tab.tabItem.container).remove();
 
       tab.tabItem = null;
+
+      let index = this._tabsWaitingForUpdate.indexOf(tab);
+      if (index != -1)
+        this._tabsWaitingForUpdate.splice(index, 1); 
     } catch(e) {
       Utils.log(e);
     }
   },
 
+  // ----------
+  // Function: heartbeat
+  // Allows us to spreadout update calls over a period of time.
+  heartbeat: function() {    
+    if (!this._heartbeatOn)
+      return;
+    
+    if (this._tabsWaitingForUpdate.length)
+      this._update(this._tabsWaitingForUpdate.shift());
+      
+    let self = this;
+    if (this._tabsWaitingForUpdate.length) {
+      Utils.timeout(function() {
+        self.heartbeat();
+      }, this._heartbeatTiming);
+    } else
+      this._hearbeatOn = false;
+  },
+  
+  // ----------
   // Function: pausePainting
   // Tells TabItems to stop updating thumbnails (so you can do
   // animations without thumbnail paints causing stutters).
@@ -824,21 +875,33 @@ window.TabItems = {
   // pausePainting needs to be mirrored with a call to <resumePainting>.
   pausePainting: function() {
     this.paintingPaused++;
+    
+    if (this.isPaintingPaused() && this._heartbeatOn)
+      this._heartbeatOn = false;
   },
 
+  // ----------
   // Function: resumePainting
   // Undoes a call to <pausePainting>. For instance, if you called
   // pausePainting three times in a row, you'll need to call resumePainting
   // three times before TabItems will start updating thumbnails again.
   resumePainting: function() {
     this.paintingPaused--;
+    
+    if (!this.isPaintingPaused() 
+        && this._tabsWaitingForUpdate.length 
+        && !this._heartbeatOn) {
+      this._heartbeatOn = true;
+      this.heartbeat();
+    }
   },
 
+  // ----------
   // Function: isPaintingPaused
   // Returns a boolean indicating whether painting
   // is paused or not.
   isPaintingPaused: function() {
-    return this.paintingPause > 0;
+    return this.paintingPaused > 0;
   },
 
   // ----------
