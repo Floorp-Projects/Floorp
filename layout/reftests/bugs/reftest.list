@@ -1459,6 +1459,7 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 571347-3.html 571347-3-ref.html
 == 572598-1.html 572598-ref.html
 == 574898-1.html 574898-ref.html
+== 584400-dash-length.svg 584400-dash-length-ref.svg
 == 580160-1.html 580160-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 581317-1.html 581317-1-ref.html
