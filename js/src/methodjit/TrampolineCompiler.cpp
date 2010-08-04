@@ -54,14 +54,6 @@ namespace mjit {
     pool = NULL;                            \
 JS_END_MACRO
 
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::X86Registers::ecx;
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::X86Registers::edx;
-#elif defined(JS_CPU_ARM)
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::ARMRegisters::r2;
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegisters::r1;
-#endif
-
 bool
 TrampolineCompiler::compile()
 {

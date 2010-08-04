@@ -76,14 +76,6 @@ JSC::MacroAssemblerX86Common::SSE2CheckState JSC::MacroAssemblerX86Common::s_sse
 NotCheckedSSE2; 
 #endif 
 
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::X86Registers::ecx;
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::X86Registers::edx;
-#elif defined(JS_CPU_ARM)
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::ARMRegisters::r2;
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::ARMRegisters::r1;
-#endif
-
 mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
   : cx(cx), script(script), scopeChain(scopeChain), globalObj(scopeChain->getGlobal()), fun(fun),
     analysis(cx, script), jumpMap(NULL), frame(cx, script, masm),
@@ -295,7 +287,9 @@ mjit::Compiler::finishThisUp()
     for (size_t i = 0; i < mics.length(); i++) {
         script->mics[i].kind = mics[i].kind;
         script->mics[i].entry = fullCode.locationOf(mics[i].entry);
-        if (mics[i].kind != ic::MICInfo::TRACER) {
+        switch (mics[i].kind) {
+          case ic::MICInfo::GET:
+          case ic::MICInfo::SET:
             script->mics[i].load = fullCode.locationOf(mics[i].load);
             script->mics[i].shape = fullCode.locationOf(mics[i].shapeVal);
             script->mics[i].stubCall = stubCode.locationOf(mics[i].call);
@@ -306,7 +300,19 @@ mjit::Compiler::finishThisUp()
 #if defined JS_PUNBOX64
             script->mics[i].patchValueOffset = mics[i].patchValueOffset;
 #endif
-        } else {
+            break;
+          case ic::MICInfo::CALL:
+            script->mics[i].frameDepth = mics[i].frameDepth;
+            script->mics[i].knownObject = fullCode.locationOf(mics[i].knownObject);
+            script->mics[i].callEnd = fullCode.locationOf(mics[i].callEnd);
+            script->mics[i].stubEntry = stubCode.locationOf(mics[i].stubEntry);
+            script->mics[i].dataReg = mics[i].dataReg;
+            script->mics[i].u.generated = false;
+            /* FALLTHROUGH */
+          case ic::MICInfo::EMPTYCALL:
+            script->mics[i].argc = mics[i].argc;
+            break;
+          case ic::MICInfo::TRACER: {
             uint32 offs = uint32(mics[i].jumpTarget - script->code);
             JS_ASSERT(jumpMap[offs].isValid());
             script->mics[i].traceHint = fullCode.locationOf(mics[i].traceHint);
@@ -314,6 +320,10 @@ mjit::Compiler::finishThisUp()
             script->mics[i].u.hasSlowTraceHint = mics[i].slowTraceHint.isSet();
             if (mics[i].slowTraceHint.isSet())
                 script->mics[i].slowTraceHint = stubCode.locationOf(mics[i].slowTraceHint.get());
+            break;
+          }
+          default:
+            JS_NOT_REACHED("Bad MIC kind");
         }
     }
 #endif /* JS_MONOIC */
@@ -1660,15 +1670,37 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     bool typeKnown = fe->isTypeKnown();
 
     if (typeKnown && fe->getKnownType() != JSVAL_TYPE_OBJECT) {
+#ifdef JS_MONOIC
+        /*
+         * Make an otherwise empty MIC to hold the argument count.
+         * This can't be a fast native so the rest of the MIC won't be used.
+         */
+        MICGenInfo mic(ic::MICInfo::EMPTYCALL);
+        mic.entry = masm.label();
+        mic.argc = argc;
+        mics.append(mic);
+#endif
+
         prepareStubCall(Uses(argc + 2));
         VoidPtrStubUInt32 stub = callingNew ? stubs::SlowNew : stubs::SlowCall;
+#ifdef JS_MONOIC
+        masm.move(Imm32(mics.length() - 1), Registers::ArgReg1);
+#else
         masm.move(Imm32(argc), Registers::ArgReg1);
+#endif
         masm.stubCall(stub, PC, frame.stackDepth() + script->nfixed);
         ADD_CALLSITE(false);
         frame.popn(argc + 2);
         frame.pushSynced();
         return;
     }
+
+#ifdef JS_MONOIC
+    MICGenInfo mic(ic::MICInfo::CALL);
+    mic.entry = masm.label();
+    mic.argc = argc;
+    mic.frameDepth = frame.frameDepth() - argc - 2;
+#endif
 
     bool hasTypeReg;
     RegisterID type = Registers::ReturnReg;
@@ -1695,6 +1727,12 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     frame.resetRegState();
 
     Label invoke = stubcc.masm.label();
+
+#ifdef JS_MONOIC
+    mic.stubEntry = invoke;
+    mic.dataReg = data;
+#endif
+
     Jump j;
     if (!typeKnown) {
         if (!hasTypeReg)
@@ -1703,10 +1741,19 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
             j = masm.testObject(Assembler::NotEqual, type);
         stubcc.linkExit(j, Uses(argc + 2));
     }
+
+#ifdef JS_MONOIC
+    mic.knownObject = masm.label();
+#endif
+
     j = masm.testFunction(Assembler::NotEqual, data);
     stubcc.linkExit(j, Uses(argc + 2));
     stubcc.leave();
+#ifdef JS_MONOIC
+    stubcc.masm.move(Imm32(mics.length()), Registers::ArgReg1);
+#else
     stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+#endif
     stubcc.call(callingNew ? stubs::SlowNew : stubs::SlowCall);
     ADD_CALLSITE(true);
 
@@ -1805,6 +1852,11 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data);
 
     stubcc.rejoin(Changes(0));
+
+#ifdef JS_MONOIC
+    mic.callEnd = masm.label();
+    mics.append(mic);
+#endif
 }
 
 /*
