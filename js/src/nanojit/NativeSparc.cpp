@@ -660,6 +660,7 @@ namespace nanojit
             int d = findMemFor(lhs) + rhs->immI();
             ADD(FP, L2, rr);
             SET32(d, L2);
+            return;
         }
 
         Register rr = deprecated_prepResultReg(ins, allow);
