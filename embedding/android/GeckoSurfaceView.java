@@ -233,6 +233,9 @@ class GeckoSurfaceView
 
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+        if (!mIMEFocus)
+            return null;
+
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT |
                              InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
         return inputConnection;
@@ -305,6 +308,7 @@ class GeckoSurfaceView
 
     // IME stuff
     GeckoInputConnection inputConnection;
+    boolean mIMEFocus;
     int mIMEState;
 
     // Software rendering
