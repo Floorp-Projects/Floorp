@@ -229,6 +229,7 @@ var UIManager = {
 
       // ___ tabs
       TabItems.init();
+      TabItems.pausePainting();
 
       // ___ resizing
       if (this._pageBounds)
@@ -352,12 +353,16 @@ var UIManager = {
         self._resize(true);
       });
     }
+
+    TabItems.resumePainting();
   },
 
   // ----------
   // Function: hideTabView
   // Hides TabView and shows the main browser UI.
   hideTabView: function() {
+    TabItems.pausePainting();
+
     this._reorderTabsOnHide.forEach(function(group) {
       group.reorderTabsBasedOnTabItemOrder();
     });
