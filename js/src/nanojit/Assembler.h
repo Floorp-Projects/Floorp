@@ -174,7 +174,7 @@ namespace nanojit
     }
 
     #ifndef AVMPLUS_ALIGN16
-        #ifdef AVMPLUS_WIN32
+        #ifdef _MSC_VER
             #define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
         #else
             #define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
@@ -478,7 +478,7 @@ namespace nanojit
             static void nPatchBranch(NIns* branch, NIns* location);
             void        nFragExit(LIns* guard);
 
-            RegisterMask nHints[LIR_sentinel];
+            static RegisterMask nHints[LIR_sentinel+1];
             RegisterMask nHint(LIns* ins);
 
             // A special entry for hints[];  if an opcode has this value, we call
