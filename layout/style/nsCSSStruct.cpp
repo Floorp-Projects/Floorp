@@ -80,26 +80,45 @@ nsCSSValueList::~nsCSSValueList()
 }
 
 nsCSSValueList*
-nsCSSValueList::Clone(PRBool aDeep) const
+nsCSSValueList::Clone() const
 {
   nsCSSValueList* result = new nsCSSValueList(*this);
-  if (NS_UNLIKELY(!result))
-    return result;
-  if (aDeep)
-    NS_CSS_CLONE_LIST_MEMBER(nsCSSValueList, this, mNext, result, (PR_FALSE));
+  nsCSSValueList* dest = result;
+  const nsCSSValueList* src = this->mNext;
+  while (src) {
+    dest->mNext = new nsCSSValueList(*src);
+    dest = dest->mNext;
+    src = src->mNext;
+  }
   return result;
 }
 
-/* static */ PRBool
-nsCSSValueList::Equal(nsCSSValueList* aList1, nsCSSValueList* aList2)
+void
+nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
 {
-  if (aList1 == aList2)
-    return PR_TRUE;
+  const nsCSSValueList* val = this;
+  for (;;) {
+    val->mValue.AppendToString(aProperty, aResult);
+    val = val->mNext;
+    if (!val)
+      break;
 
-  nsCSSValueList *p1 = aList1, *p2 = aList2;
+    if (nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
+      aResult.Append(PRUnichar(','));
+    aResult.Append(PRUnichar(' '));
+  }
+}
+
+bool
+nsCSSValueList::operator==(const nsCSSValueList& aOther) const
+{
+  if (this == &aOther)
+    return true;
+
+  const nsCSSValueList *p1 = this, *p2 = &aOther;
   for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
     if (p1->mValue != p2->mValue)
-      return PR_FALSE;
+      return false;
   }
   return !p1 && !p2; // true if same length, false otherwise
 }
@@ -164,6 +183,35 @@ nsCSSRect::nsCSSRect(const nsCSSRect& aCopy)
 nsCSSRect::~nsCSSRect()
 {
   MOZ_COUNT_DTOR(nsCSSRect);
+}
+
+void
+nsCSSRect::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+{
+  const nsCSSUnit topUnit = mTop.GetUnit();
+  if (topUnit == eCSSUnit_Inherit ||
+      topUnit == eCSSUnit_Initial ||
+      topUnit == eCSSUnit_RectIsAuto) {
+    NS_ASSERTION(mRight.GetUnit() == topUnit &&
+                 mBottom.GetUnit() == topUnit &&
+                 mLeft.GetUnit() == topUnit,
+                 "parser should make all sides have the same unit");
+    if (topUnit == eCSSUnit_RectIsAuto)
+      aResult.AppendLiteral("auto");
+    else
+      mTop.AppendToString(aProperty, aResult);
+  } else {
+    aResult.AppendLiteral("rect(");
+    mTop.AppendToString(aProperty, aResult);
+    NS_NAMED_LITERAL_STRING(comma, ", ");
+    aResult.Append(comma);
+    mRight.AppendToString(aProperty, aResult);
+    aResult.Append(comma);
+    mBottom.AppendToString(aProperty, aResult);
+    aResult.Append(comma);
+    mLeft.AppendToString(aProperty, aResult);
+    aResult.Append(PRUnichar(')'));
+  }
 }
 
 void nsCSSRect::SetAllSidesTo(const nsCSSValue& aValue)
@@ -347,7 +395,32 @@ nsCSSPage::~nsCSSPage(void)
   MOZ_COUNT_DTOR(nsCSSPage);
 }
 
-// --- nsCSSContent support -----------------
+// --- nsCSSValuePair -----------------
+
+void
+nsCSSValuePair::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+{
+  mXValue.AppendToString(aProperty, aResult);
+  if (mYValue != mXValue ||
+      ((aProperty == eCSSProperty_background_position ||
+        aProperty == eCSSProperty__moz_transform_origin) &&
+       mXValue.GetUnit() != eCSSUnit_Inherit &&
+       mXValue.GetUnit() != eCSSUnit_Initial) ||
+      (aProperty == eCSSProperty_background_size &&
+       mXValue.GetUnit() != eCSSUnit_Inherit &&
+       mXValue.GetUnit() != eCSSUnit_Initial &&
+       mXValue.GetUnit() != eCSSUnit_Enumerated)) {
+    // Only output a Y value if it's different from the X value,
+    // or if it's a background-position value other than 'initial'
+    // or 'inherit', or if it's a -moz-transform-origin value other
+    // than 'initial' or 'inherit', or if it's a background-size
+    // value other than 'initial' or 'inherit' or 'contain' or 'cover'.
+    aResult.Append(PRUnichar(' '));
+    mYValue.AppendToString(aProperty, aResult);
+  }
+}
+
+// --- nsCSSValuePairList -----------------
 
 nsCSSValuePairList::~nsCSSValuePairList()
 {
@@ -356,29 +429,55 @@ nsCSSValuePairList::~nsCSSValuePairList()
 }
 
 nsCSSValuePairList*
-nsCSSValuePairList::Clone(PRBool aDeep) const
+nsCSSValuePairList::Clone() const
 {
   nsCSSValuePairList* result = new nsCSSValuePairList(*this);
-  if (NS_UNLIKELY(!result))
-    return result;
-  if (aDeep)
-    NS_CSS_CLONE_LIST_MEMBER(nsCSSValuePairList, this, mNext, result,
-                             (PR_FALSE));
+  nsCSSValuePairList* dest = result;
+  const nsCSSValuePairList* src = this->mNext;
+  while (src) {
+    dest->mNext = new nsCSSValuePairList(*src);
+    dest = dest->mNext;
+    src = src->mNext;
+  }
   return result;
 }
 
-/* static */ PRBool
-nsCSSValuePairList::Equal(nsCSSValuePairList* aList1,
-                          nsCSSValuePairList* aList2)
+void
+nsCSSValuePairList::AppendToString(nsCSSProperty aProperty,
+                                   nsAString& aResult) const
 {
-  if (aList1 == aList2)
-    return PR_TRUE;
+  const nsCSSValuePairList* val = this;
+  for (;;) {
+    NS_ABORT_IF_FALSE(val->mXValue.GetUnit() != eCSSUnit_Null,
+                      "unexpected null unit");
+    val->mXValue.AppendToString(aProperty, aResult);
+    if (val->mXValue.GetUnit() != eCSSUnit_Inherit &&
+        val->mXValue.GetUnit() != eCSSUnit_Initial &&
+        val->mYValue.GetUnit() != eCSSUnit_Null) {
+      aResult.Append(PRUnichar(' '));
+      val->mYValue.AppendToString(aProperty, aResult);
+    }
+    val = val->mNext;
+    if (!val)
+      break;
 
-  nsCSSValuePairList *p1 = aList1, *p2 = aList2;
+    if (nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
+      aResult.Append(PRUnichar(','));
+    aResult.Append(PRUnichar(' '));
+  }
+}
+
+bool
+nsCSSValuePairList::operator==(const nsCSSValuePairList& aOther) const
+{
+  if (this == &aOther)
+    return true;
+
+  const nsCSSValuePairList *p1 = this, *p2 = &aOther;
   for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
     if (p1->mXValue != p2->mXValue ||
         p1->mYValue != p2->mYValue)
-      return PR_FALSE;
+      return false;
   }
   return !p1 && !p2; // true if same length, false otherwise
 }

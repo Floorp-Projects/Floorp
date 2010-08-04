@@ -245,54 +245,53 @@ OP___(gtd,      75, Op2,  I,    1)  // double greater-than
 OP___(led,      76, Op2,  I,    1)  // double less-than-or-equal
 OP___(ged,      77, Op2,  I,    1)  // double greater-than-or-equal
 
-OP_UN(78)
-
 //---------------------------------------------------------------------------
 // Arithmetic
 //---------------------------------------------------------------------------
-OP___(negi,     79, Op1,  I,    1)  // negate int
-OP___(addi,     80, Op2,  I,    1)  // add int
-OP___(subi,     81, Op2,  I,    1)  // subtract int
-OP___(muli,     82, Op2,  I,    1)  // multiply int
-OP_86(divi,     83, Op2,  I,    1)  // divide int
+OP___(negi,     78, Op1,  I,    1)  // negate int
+OP___(addi,     79, Op2,  I,    1)  // add int
+OP___(subi,     80, Op2,  I,    1)  // subtract int
+OP___(muli,     81, Op2,  I,    1)  // multiply int
+OP_86(divi,     82, Op2,  I,    1)  // divide int
 // LIR_modi is a hack.  It's only used on i386/X64.  The operand is the result
 // of a LIR_divi because on i386/X64 div and mod results are computed by the
 // same instruction.
-OP_86(modi,     84, Op1,  I,    1)  // modulo int
+OP_86(modi,     83, Op1,  I,    1)  // modulo int
 
-OP___(noti,     85, Op1,  I,    1)  // bitwise-NOT int
-OP___(andi,     86, Op2,  I,    1)  // bitwise-AND int
-OP___(ori,      87, Op2,  I,    1)  // bitwise-OR int
-OP___(xori,     88, Op2,  I,    1)  // bitwise-XOR int
+OP___(noti,     84, Op1,  I,    1)  // bitwise-NOT int
+OP___(andi,     85, Op2,  I,    1)  // bitwise-AND int
+OP___(ori,      86, Op2,  I,    1)  // bitwise-OR int
+OP___(xori,     87, Op2,  I,    1)  // bitwise-XOR int
 
-OP___(lshi,     89, Op2,  I,    1)  // left shift int
-OP___(rshi,     90, Op2,  I,    1)  // right shift int (>>)
-OP___(rshui,    91, Op2,  I,    1)  // right shift unsigned int (>>>)
+OP___(lshi,     88, Op2,  I,    1)  // left shift int
+OP___(rshi,     89, Op2,  I,    1)  // right shift int (>>)
+OP___(rshui,    90, Op2,  I,    1)  // right shift unsigned int (>>>)
 
-OP_64(addq,     92, Op2,  Q,    1)  // add quad
-OP_64(subq,     93, Op2,  Q,    1)  // subtract quad
+OP_64(addq,     91, Op2,  Q,    1)  // add quad
+OP_64(subq,     92, Op2,  Q,    1)  // subtract quad
 
-OP_64(andq,     94, Op2,  Q,    1)  // bitwise-AND quad
-OP_64(orq,      95, Op2,  Q,    1)  // bitwise-OR quad
-OP_64(xorq,     96, Op2,  Q,    1)  // bitwise-XOR quad
+OP_64(andq,     93, Op2,  Q,    1)  // bitwise-AND quad
+OP_64(orq,      94, Op2,  Q,    1)  // bitwise-OR quad
+OP_64(xorq,     95, Op2,  Q,    1)  // bitwise-XOR quad
 
-OP_64(lshq,     97, Op2,  Q,    1)  // left shift quad;           2nd operand is an int
-OP_64(rshq,     98, Op2,  Q,    1)  // right shift quad;          2nd operand is an int
-OP_64(rshuq,    99, Op2,  Q,    1)  // right shift unsigned quad; 2nd operand is an int
+OP_64(lshq,     96, Op2,  Q,    1)  // left shift quad;           2nd operand is an int
+OP_64(rshq,     97, Op2,  Q,    1)  // right shift quad;          2nd operand is an int
+OP_64(rshuq,    98, Op2,  Q,    1)  // right shift unsigned quad; 2nd operand is an int
 
-OP___(negd,    100, Op1,  D,    1)  // negate double
-OP___(addd,    101, Op2,  D,    1)  // add double
-OP___(subd,    102, Op2,  D,    1)  // subtract double
-OP___(muld,    103, Op2,  D,    1)  // multiply double
-OP___(divd,    104, Op2,  D,    1)  // divide double
+OP___(negd,     99, Op1,  D,    1)  // negate double
+OP___(addd,    100, Op2,  D,    1)  // add double
+OP___(subd,    101, Op2,  D,    1)  // subtract double
+OP___(muld,    102, Op2,  D,    1)  // multiply double
+OP___(divd,    103, Op2,  D,    1)  // divide double
 // LIR_modd is just a place-holder opcode, ie. the back-ends cannot generate
 // code for it.  It's used in TraceMonkey briefly but is always demoted to a
 // LIR_modl or converted to a function call before Nanojit has to do anything
 // serious with it.
-OP___(modd,    105, Op2,  D,    1)  // modulo double
+OP___(modd,    104, Op2,  D,    1)  // modulo double
 
-OP___(cmovi,   106, Op3,  I,    1)  // conditional move int
-OP_64(cmovq,   107, Op3,  Q,    1)  // conditional move quad
+OP___(cmovi,   105, Op3,  I,    1)  // conditional move int
+OP_64(cmovq,   106, Op3,  Q,    1)  // conditional move quad
+OP___(cmovd,   107, Op3,  D,    1)  // conditional move double
 
 //---------------------------------------------------------------------------
 // Conversions
