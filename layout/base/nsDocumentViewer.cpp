@@ -109,6 +109,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsCopySupport.h"
 #include "nsIDOMHTMLFrameSetElement.h"
+#include "nsIXULWindow.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
 #include "nsXULPopupManager.h"
@@ -1903,6 +1904,28 @@ DocumentViewerImpl::Move(PRInt32 aX, PRInt32 aY)
   return NS_OK;
 }
 
+static PRBool
+SetVisibilityOnXULWindow(nsIDocShellTreeItem* aTreeItem)
+{
+  if (!aTreeItem)
+    return PR_FALSE;
+  nsCOMPtr<nsIDocShellTreeOwner> owner;
+  aTreeItem->GetTreeOwner(getter_AddRefs(owner));
+  if (owner) {
+    // We need the base win interface of the parent xul window, not
+    // the doc shell of owner, which would recurse here when we call
+    // SetVisibility.
+    nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(owner);
+    nsCOMPtr<nsIBaseWindow> baseWin = do_GetInterface(xulWin);
+    if (baseWin) {
+      baseWin->SetVisibility(PR_TRUE);
+      return PR_TRUE;
+    }
+  }
+  NS_WARNING("Doc viewer attached to a parent that isn't a xul window??");
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 DocumentViewerImpl::Show(void)
 {
@@ -1943,7 +1966,15 @@ DocumentViewerImpl::Show(void)
   }
 
   if (mWindow) {
-    mWindow->Show(PR_TRUE);
+    // When attached to a top level xul window, use SetVisibility instead
+    // of calling Show directly on the widget. SetVisibility will insure
+    // the show is delayed until after the chrome document has loaded and
+    // the proper window dimensions are set.
+    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryReferent(mContainer));
+    if (!mAttachedToParent ||
+        (mAttachedToParent && !SetVisibilityOnXULWindow(treeItem))) {
+      mWindow->Show(PR_TRUE);
+    }
   }
 
   if (mDocument && !mPresShell) {
