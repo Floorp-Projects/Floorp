@@ -194,7 +194,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
 static void
 PutArguments(JSContext *cx, JSObject *argsobj, Value *args)
 {
-    uint32 argc = argsobj->getArgsLength();
+    uint32 argc = argsobj->getArgsInitialLength();
     for (uint32 i = 0; i != argc; ++i) {
         if (!argsobj->getArgsElement(i).isMagic(JS_ARGS_HOLE))
             argsobj->setArgsElement(i, args[i]);
@@ -281,7 +281,7 @@ args_delProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
     if (JSID_IS_INT(id)) {
         uintN arg = uintN(JSID_TO_INT(id));
-        if (arg < obj->getArgsLength())
+        if (arg < obj->getArgsInitialLength())
             obj->setArgsElement(arg, MagicValue(JS_ARGS_HOLE));
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         obj->setArgsLengthOverridden();
@@ -477,7 +477,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          * prototype to point to another Arguments object with a bigger argc.
          */
         uintN arg = uintN(JSID_TO_INT(id));
-        if (arg < obj->getArgsLength()) {
+        if (arg < obj->getArgsInitialLength()) {
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
                 *vp = fp->argv[arg];
@@ -489,7 +489,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         }
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (!obj->isArgsLengthOverridden())
-            vp->setInt32(obj->getArgsLength());
+            vp->setInt32(obj->getArgsInitialLength());
     } else {
         JS_ASSERT(JSID_IS_ATOM(id, cx->runtime->atomState.calleeAtom));
         const Value &v = obj->getArgsCallee();
@@ -532,7 +532,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
     if (JSID_IS_INT(id)) {
         uintN arg = uintN(JSID_TO_INT(id));
-        if (arg < obj->getArgsLength()) {
+        if (arg < obj->getArgsInitialLength()) {
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
                 fp->argv[arg] = *vp;
@@ -565,7 +565,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     bool valid = false;
     if (JSID_IS_INT(id)) {
         uint32 arg = uint32(JSID_TO_INT(id));
-        if (arg < obj->getArgsLength() && !obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
+        if (arg < obj->getArgsInitialLength() && !obj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
             valid = true;
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         if (!obj->isArgsLengthOverridden())
@@ -597,7 +597,7 @@ args_enumerate(JSContext *cx, JSObject *obj)
      * Trigger reflection in args_resolve using a series of js_LookupProperty
      * calls.
      */
-    int argc = int(obj->getArgsLength());
+    int argc = int(obj->getArgsInitialLength());
     for (int i = -2; i != argc; i++) {
         jsid id = (i == -2)
                   ? ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)
@@ -2132,7 +2132,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     if (aobj->isArray()) {
         length = aobj->getArrayLength();
     } else if (aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
-        length = aobj->getArgsLength();
+        length = aobj->getArgsInitialLength();
     } else {
         Value &lenval = vp[0];
         if (!aobj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), &lenval))
