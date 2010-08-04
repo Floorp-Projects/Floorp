@@ -1878,6 +1878,7 @@ JS_strdup(JSContext *cx, const char *s)
 JS_PUBLIC_API(JSBool)
 JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
 {
+    d = JS_CANONICALIZE_NAN(d);
     Valueify(rval)->setNumber(d);
     return JS_TRUE;
 }

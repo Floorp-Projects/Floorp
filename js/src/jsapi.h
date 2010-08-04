@@ -153,6 +153,7 @@ JSVAL_TO_DOUBLE(jsval v)
 static JS_ALWAYS_INLINE jsval
 DOUBLE_TO_JSVAL(jsdouble d)
 {
+    d = JS_CANONICALIZE_NAN(d);
     return IMPL_TO_JSVAL(DOUBLE_TO_JSVAL_IMPL(d));
 }
 

@@ -13764,6 +13764,15 @@ TraceRecorder::denseArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
     return RECORD_CONTINUE;
 }
 
+/* See comments in TypedArrayTemplate<double>::copyIndexToValue. */
+LIns *
+TraceRecorder::canonicalizeNaNs(LIns *dval_ins)
+{
+    /* NaNs are the only floating point values that do not == themselves. */
+    LIns *isnonnan_ins = lir->ins2(LIR_eqd, dval_ins, dval_ins);
+    return lir->insChoose(isnonnan_ins, dval_ins, lir->insImmD(js_NaN), true);
+}
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::typedArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_ins,
                                  LIns*& addr_ins)
@@ -13843,11 +13852,11 @@ TraceRecorder::typedArrayElement(Value& oval, Value& ival, Value*& vp, LIns*& v_
         break;
       case js::TypedArray::TYPE_FLOAT32:
         addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 2));
-        v_ins = lir->insLoad(LIR_ldf2d, addr_ins, 0, ACCSET_OTHER);
+        v_ins = canonicalizeNaNs(lir->insLoad(LIR_ldf2d, addr_ins, 0, ACCSET_OTHER));
         break;
       case js::TypedArray::TYPE_FLOAT64:
         addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 3));
-        v_ins = lir->insLoad(LIR_ldd, addr_ins, 0, ACCSET_OTHER);
+        v_ins = canonicalizeNaNs(lir->insLoad(LIR_ldd, addr_ins, 0, ACCSET_OTHER));
         break;
       default:
         JS_NOT_REACHED("Unknown typed array type in tracer");
