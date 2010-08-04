@@ -272,14 +272,14 @@ ImmutableSync::syncNormal(FrameEntry *fe)
     if (e.hasDataReg) {
         avail.putReg(e.dataReg);
         regs[e.dataReg] = NULL;
-    } else if (!e.dataClobbered && fe->data.inRegister()) {
+    } else if (!e.dataClobbered && fe->data.inRegister() && frame.regstate[fe->data.reg()].fe) {
         avail.putReg(fe->data.reg());
     }
 
     if (e.hasTypeReg) {
         avail.putReg(e.typeReg);
         regs[e.typeReg] = NULL;
-    } else if (!e.typeClobbered && fe->type.inRegister()) {
+    } else if (!e.typeClobbered && fe->type.inRegister() && frame.regstate[fe->type.reg()].fe) {
         avail.putReg(fe->type.reg());
     }
 }

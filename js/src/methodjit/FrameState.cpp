@@ -341,8 +341,8 @@ FrameState::sync(Assembler &masm, Uses uses) const
              * If the copy is backed by something not in a register, fall back
              * to a slower sync algorithm.
              */
-            if ((!fe->type.synced() && !fe->type.inRegister()) ||
-                (!fe->data.synced() && !fe->data.inRegister())) {
+            if ((!fe->type.synced() && !backing->type.inRegister()) ||
+                (!fe->data.synced() && !backing->data.inRegister())) {
                 syncFancy(masm, avail, i, bottom);
                 return;
             }
