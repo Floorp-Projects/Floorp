@@ -66,7 +66,7 @@ static const Permission DenyAccess = JSWrapper::DenyAccess;
 
 template <typename Policy>
 static bool
-Filter(JSContext *cx, JSObject *wrapper, AutoValueVector &props)
+Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     size_t w = 0;
     for (size_t n = 0; n < props.length(); ++n) {
@@ -98,7 +98,7 @@ CheckAndReport(JSContext *cx, JSObject *wrapper, jsid id, bool set, Permission &
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoValueVector &props)
+FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     return Base::getOwnPropertyNames(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
@@ -106,7 +106,7 @@ FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wra
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, AutoValueVector &props)
+FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     return Base::enumerate(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
@@ -114,7 +114,7 @@ FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, Auto
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::enumerateOwn(JSContext *cx, JSObject *wrapper, AutoValueVector &props)
+FilteringWrapper<Base, Policy>::enumerateOwn(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     return Base::enumerateOwn(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
@@ -122,7 +122,7 @@ FilteringWrapper<Base, Policy>::enumerateOwn(JSContext *cx, JSObject *wrapper, A
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, uintN flags, jsval *vp)
+FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, uintN flags, Value *vp)
 {
     // We refuse to trigger the iterator hook across chrome wrappers because
     // we don't know how to censor custom iterator objects. Instead we trigger
@@ -136,7 +136,7 @@ bool
 FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id, bool set)
 {
     Permission perm;
-    return CheckAndReport<Policy>(cx, wrapper, JSVAL_VOID, set, perm) &&
+    return CheckAndReport<Policy>(cx, wrapper, JSID_VOID, set, perm) &&
            Base::enter(cx, wrapper, id, set);
 }
 

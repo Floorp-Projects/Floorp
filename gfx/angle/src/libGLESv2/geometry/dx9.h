@@ -35,6 +35,8 @@ class Dx9BackEnd : public BufferBackEnd
     virtual GLenum setupIndicesPreDraw(const TranslatedIndexData &indexInfo);
     virtual GLenum setupAttributesPreDraw(const TranslatedAttribute *attributes);
 
+    void invalidate();
+
   private:
     IDirect3DDevice9 *mDevice;
 
@@ -47,10 +49,11 @@ class Dx9BackEnd : public BufferBackEnd
     {
         STREAM_FREQUENCY_UNINSTANCED = 0,
         STREAM_FREQUENCY_INDEXED,
-        STREAM_FREQUENCY_INSTANCED
+        STREAM_FREQUENCY_INSTANCED,
+        STREAM_FREQUENCY_DIRTY
     };
 
-    StreamFrequency mStreamFrequency[MAX_VERTEX_ATTRIBS+1];
+    StreamFrequency mStreamFrequency[MAX_VERTEX_ATTRIBS+1]; // Stream frequencies as last set.
 
     struct TranslationInfo
     {

@@ -146,7 +146,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIMEStateManager.h"
 #include "nsContentErrors.h"
 #include "nsUnicharUtilCIID.h"
-#include "nsICaseConversion.h"
 #include "nsCompressedCharMap.h"
 #include "nsINativeKeyBindings.h"
 #include "nsIDOMNSUIEvent.h"
@@ -241,7 +240,6 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
-nsICaseConversion *nsContentUtils::sCaseConv;
 nsIUGenCategory *nsContentUtils::sGenCat;
 nsTArray<nsISupports**> *nsContentUtils::sPtrsToPtrsToRelease;
 nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
@@ -264,7 +262,8 @@ PRBool nsContentUtils::sIsHandlingKeyBoardEvent = PR_FALSE;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
-nsCOMArray<nsPrefOldCallback> *nsContentUtils::sPrefCallbackList = nsnull;
+nsRefPtrHashtable<nsPrefObserverHashKey, nsPrefOldCallback>
+  *nsContentUtils::sPrefCallbackTable = nsnull;
 
 static PLDHashTable sEventListenerManagersHash;
 
@@ -315,39 +314,96 @@ class nsSameOriginChecker : public nsIChannelEventSink,
   NS_DECL_NSIINTERFACEREQUESTOR
 };
 
+class nsPrefObserverHashKey : public PLDHashEntryHdr {
+public:
+  typedef nsPrefObserverHashKey* KeyType;
+  typedef const nsPrefObserverHashKey* KeyTypePointer;
+
+  static const nsPrefObserverHashKey* KeyToPointer(nsPrefObserverHashKey *aKey)
+  {
+    return aKey;
+  }
+
+  static PLDHashNumber HashKey(const nsPrefObserverHashKey *aKey)
+  {
+    PRUint32 strHash = nsCRT::HashCode(aKey->mPref.BeginReading(),
+                                       aKey->mPref.Length());
+    return PR_ROTATE_LEFT32(strHash, 4) ^
+           NS_PTR_TO_UINT32(aKey->mCallback);
+  }
+
+  nsPrefObserverHashKey(const char *aPref, PrefChangedFunc aCallback) :
+    mPref(aPref), mCallback(aCallback) { }
+
+  nsPrefObserverHashKey(const nsPrefObserverHashKey *aOther) :
+    mPref(aOther->mPref), mCallback(aOther->mCallback)
+  { }
+
+  PRBool KeyEquals(const nsPrefObserverHashKey *aOther) const
+  {
+    return mCallback == aOther->mCallback &&
+           mPref.Equals(aOther->mPref);
+  }
+
+  nsPrefObserverHashKey *GetKey() const
+  {
+    return const_cast<nsPrefObserverHashKey*>(this);
+  }
+
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+public:
+  nsCString mPref;
+  PrefChangedFunc mCallback;
+};
+
 // For nsContentUtils::RegisterPrefCallback/UnregisterPrefCallback
-class nsPrefOldCallback : public nsIObserver
+class nsPrefOldCallback : public nsIObserver,
+                          public nsPrefObserverHashKey
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
 public:
-  nsPrefOldCallback(const char *aPref, PrefChangedFunc aCallback, void *aClosure) : mPref(aPref), mCallback(aCallback), mClosure(aClosure) {
+  nsPrefOldCallback(const char *aPref, PrefChangedFunc aCallback)
+    : nsPrefObserverHashKey(aPref, aCallback) { }
+
+  ~nsPrefOldCallback() {
+    nsIPrefBranch2 *prefBranch = nsContentUtils::GetPrefBranch();
+    if(prefBranch)
+      prefBranch->RemoveObserver(mPref.get(), this);
   }
 
-  PRBool IsEqual(const char *aPref, PrefChangedFunc aCallback, void *aClosure) {
-    return aCallback == mCallback &&
-           aClosure == mClosure &&
-           mPref.Equals(aPref);
+  void AppendClosure(void *aClosure) {
+    mClosures.AppendElement(aClosure);
+  }
+
+  void RemoveClosure(void *aClosure) {
+    mClosures.RemoveElement(aClosure);
+  }
+
+  PRBool HasNoClosures() {
+    return mClosures.Length() == 0;
   }
 
 public:
-  nsCString       mPref;
-  PrefChangedFunc mCallback;
-  void            *mClosure;
+  nsTArray<void *>  mClosures;
 };
 
 NS_IMPL_ISUPPORTS1(nsPrefOldCallback, nsIObserver)
 
 NS_IMETHODIMP
-nsPrefOldCallback::Observe(nsISupports   *aSubject,
-                         const char      *aTopic,
-                         const PRUnichar *aData)
+nsPrefOldCallback::Observe(nsISupports     *aSubject,
+                           const char      *aTopic,
+                           const PRUnichar *aData)
 {
   NS_ASSERTION(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
                "invalid topic");
-  mCallback(NS_LossyConvertUTF16toASCII(aData).get(), mClosure);
+  NS_LossyConvertUTF16toASCII data(aData);
+  for (PRUint32 i = 0; i < mClosures.Length(); i++) {
+    mCallback(data.get(), mClosures.ElementAt(i));
+  }
 
   return NS_OK;
 }
@@ -402,9 +458,6 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &sCaseConv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
@@ -580,6 +633,14 @@ nsContentUtils::InitializeEventTable() {
     // This is a bit hackish, but SVG's event names are weird.
     { nsGkAtoms::onzoom,                        NS_SVG_ZOOM, EventNameType_SVGSVG, NS_EVENT_NULL },
 #endif // MOZ_SVG
+#ifdef MOZ_SMIL
+    { nsGkAtoms::onbegin,                       NS_SMIL_BEGIN, EventNameType_SMIL, NS_EVENT_NULL },
+    { nsGkAtoms::onbeginEvent,                  NS_SMIL_BEGIN, EventNameType_None, NS_SMIL_TIME_EVENT },
+    { nsGkAtoms::onend,                         NS_SMIL_END, EventNameType_SMIL, NS_EVENT_NULL },
+    { nsGkAtoms::onendEvent,                    NS_SMIL_END, EventNameType_None, NS_SMIL_TIME_EVENT },
+    { nsGkAtoms::onrepeat,                      NS_SMIL_REPEAT, EventNameType_SMIL, NS_EVENT_NULL },
+    { nsGkAtoms::onrepeatEvent,                 NS_SMIL_REPEAT, EventNameType_None, NS_SMIL_TIME_EVENT },
+#endif // MOZ_SMIL
 #ifdef MOZ_MEDIA
     { nsGkAtoms::onloadstart,                   NS_LOADSTART, EventNameType_HTML, NS_EVENT_NULL },
     { nsGkAtoms::onprogress,                    NS_PROGRESS, EventNameType_HTML, NS_EVENT_NULL },
@@ -616,6 +677,10 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::onMozRotateGesture,            NS_SIMPLE_GESTURE_ROTATE, EventNameType_None, NS_SIMPLE_GESTURE_EVENT },
     { nsGkAtoms::onMozTapGesture,               NS_SIMPLE_GESTURE_TAP, EventNameType_None, NS_SIMPLE_GESTURE_EVENT },
     { nsGkAtoms::onMozPressTapGesture,          NS_SIMPLE_GESTURE_PRESSTAP, EventNameType_None, NS_SIMPLE_GESTURE_EVENT },
+
+    { nsGkAtoms::onMozTouchDown,                NS_MOZTOUCH_DOWN, EventNameType_None, NS_MOZTOUCH_EVENT },
+    { nsGkAtoms::onMozTouchMove,                NS_MOZTOUCH_MOVE, EventNameType_None, NS_MOZTOUCH_EVENT },
+    { nsGkAtoms::onMozTouchUp,                  NS_MOZTOUCH_UP, EventNameType_None, NS_MOZTOUCH_EVENT },
 
     { nsGkAtoms::ontransitionend,               NS_TRANSITION_END, EventNameType_None, NS_TRANSITION_EVENT }
   };
@@ -1057,16 +1122,9 @@ nsContentUtils::Shutdown()
     NS_IF_RELEASE(sStringBundles[i]);
 
   // Clean up c-style's observer 
-  if (sPrefCallbackList) {
-    while (sPrefCallbackList->Count() > 0) {
-      nsRefPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[0];
-      NS_ABORT_IF_FALSE(callback, "Invalid c-style callback is appended");
-      if (sPrefBranch)
-        sPrefBranch->RemoveObserver(callback->mPref.get(), callback);
-      sPrefCallbackList->RemoveObject(callback);
-    }
-    delete sPrefCallbackList;
-    sPrefCallbackList = nsnull;
+  if (sPrefCallbackTable) {
+    delete sPrefCallbackTable;
+    sPrefCallbackTable = nsnull;
   }
 
   delete sPrefCacheData;
@@ -1083,7 +1141,6 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
-  NS_IF_RELEASE(sCaseConv);
   NS_IF_RELEASE(sGenCat);
 #ifdef MOZ_XTF
   NS_IF_RELEASE(sXTFService);
@@ -2626,8 +2683,8 @@ nsContentUtils::GetStringPref(const char *aPref)
   return result;
 }
 
-// RegisterPrefCallback/UnregisterPrefCallback are backward compatiblity for
-// c-style observer.
+// RegisterPrefCallback/UnregisterPrefCallback are for backward compatiblity
+// with c-style observers.
 
 // static
 void
@@ -2636,20 +2693,24 @@ nsContentUtils::RegisterPrefCallback(const char *aPref,
                                      void * aClosure)
 {
   if (sPrefBranch) {
-    if (!sPrefCallbackList) {
-      sPrefCallbackList = new nsCOMArray<nsPrefOldCallback> ();
-      if (!sPrefCallbackList)
-        return;
+    if (!sPrefCallbackTable) {
+      sPrefCallbackTable = 
+        new nsRefPtrHashtable<nsPrefObserverHashKey, nsPrefOldCallback>();
+      sPrefCallbackTable->Init();
     }
 
-    nsPrefOldCallback *callback = new nsPrefOldCallback(aPref, aCallback, aClosure);
+    nsPrefObserverHashKey hashKey(aPref, aCallback);
+    nsRefPtr<nsPrefOldCallback> callback;
+    sPrefCallbackTable->Get(&hashKey, getter_AddRefs(callback));
     if (callback) {
-      if (NS_SUCCEEDED(sPrefBranch->AddObserver(aPref, callback, PR_FALSE))) {
-        sPrefCallbackList->AppendObject(callback);
-        return;
-      }
-      // error to get/add nsIPrefBranch2.  Destroy callback information
-      delete callback;
+      callback->AppendClosure(aClosure);
+      return;
+    }
+
+    callback = new nsPrefOldCallback(aPref, aCallback);
+    callback->AppendClosure(aClosure);
+    if (NS_SUCCEEDED(sPrefBranch->AddObserver(aPref, callback, PR_FALSE))) {
+      sPrefCallbackTable->Put(callback, callback);
     }
   }
 }
@@ -2661,16 +2722,19 @@ nsContentUtils::UnregisterPrefCallback(const char *aPref,
                                        void * aClosure)
 {
   if (sPrefBranch) {
-    if (!sPrefCallbackList)
+    if (!sPrefCallbackTable) {
       return;
+    }
 
-    int i;
-    for (i = 0; i < sPrefCallbackList->Count(); i++) {
-      nsRefPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[i];
-      if (callback && callback->IsEqual(aPref, aCallback, aClosure)) {
-        sPrefBranch->RemoveObserver(aPref, callback);
-        sPrefCallbackList->RemoveObject(callback);
-        return;
+    nsPrefObserverHashKey hashKey(aPref, aCallback);
+    nsRefPtr<nsPrefOldCallback> callback;
+    sPrefCallbackTable->Get(&hashKey, getter_AddRefs(callback));
+
+    if (callback) {
+      callback->RemoveClosure(aClosure);
+      if (callback->HasNoClosures()) {
+        // Delete the callback since its list of closures is empty.
+        sPrefCallbackTable->Remove(callback);
       }
     }
   }
@@ -5622,15 +5686,6 @@ CloneSimpleValues(JSContext* cx,
     return SetPropertyOnValueOrObject(cx, val, rval, robj, rid);
   }
 
-  // Clone doubles.
-  if (JSVAL_IS_DOUBLE(val)) {
-    jsval newVal;
-    if (!JS_NewDoubleValue(cx, *JSVAL_TO_DOUBLE(val), &newVal)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return SetPropertyOnValueOrObject(cx, newVal, rval, robj, rid);
-  }
-
   // We'll use immutable strings to prevent copying if we can.
   if (JSVAL_IS_STRING(val)) {
     if (!JS_MakeStringImmutable(cx, JSVAL_TO_STRING(val))) {
@@ -5712,11 +5767,8 @@ CloneSimpleValues(JSContext* cx,
   }
 
   // Security wrapped objects are not allowed either.
-  JSClass* clasp = JS_GET_CLASS(cx, obj);
-  if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
-      ((JSExtendedClass*)clasp)->wrappedObject) {
+  if (obj->getClass()->ext.wrappedObject)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
 
   // See if this JSObject is backed by some C++ object. If it is then we assume
   // that it is inappropriate to clone.

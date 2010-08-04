@@ -113,7 +113,7 @@ addLoadEvent(function test() {
     }
     function nextKey2() {
         // Test the F4 key on OS/2 and Windows.
-        if (/OS\/2|Win32/i.test(navigator.platform))
+        if (/OS\/2|Win/i.test(navigator.platform))
             testKey(IDOMKeyEvent.DOM_VK_F4, 0, "F4", finished)
         else
             finished()

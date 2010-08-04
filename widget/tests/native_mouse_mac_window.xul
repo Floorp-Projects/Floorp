@@ -169,13 +169,8 @@
     function clearExpectedEvents() {
       while (gExpectedEvents.length > 0) {
         var expectedEvent = gExpectedEvents.shift();
-        if (expectedEvent.sometimesFiresButShouldnt) {
-          // We didn't really expect it anyway, so it's good that it didn't fire.
-          ok(true, "Didn't receive unexpected event: " + eventToString(expectedEvent));
-        } else {
-          var errFun = expectedEvent.shouldFireButDoesnt || expectedEvent.shouldFireButSometimesDoesnt ? todo : ok;
-          errFun(false, "Didn't receive expected event: " + eventToString(expectedEvent));
-        }
+        var errFun = expectedEvent.shouldFireButDoesnt ? todo : ok;
+        errFun(false, "Didn't receive expected event: " + eventToString(expectedEvent));
       }
     }
 
@@ -194,20 +189,15 @@
       }
       if (e.type != expectedEvent.type) {
         // Didn't get expectedEvent.
-        if (expectedEvent.sometimesFiresButShouldnt) {
-          // We didn't really expect it anyway, so it's good that it didn't fire.
-          ok(true, "Didn't receive unexpected event: " + eventToString(expectedEvent));
-        } else {
-          var errFun = expectedEvent.shouldFireButDoesnt || expectedEvent.shouldFireButSometimesDoesnt ? todo : ok;
-          errFun(false, "Didn't receive expected event: " + eventToString(expectedEvent));
-        }
+        var errFun = expectedEvent.shouldFireButDoesnt ? todo : ok;
+        errFun(false, "Didn't receive expected event: " + eventToString(expectedEvent));
         return processEvent(e);
       }
       gEventNum++;
       is(e.screenX, expectedEvent.screenX, gEventNum + " | wrong X coord for event " + eventToString(e));
       is(e.screenY, expectedEvent.screenY, gEventNum + " | wrong Y coord for event " + eventToString(e));
       is(e.target, expectedEvent.target, gEventNum + " | wrong target for event " + eventToString(e));
-      if (expectedEvent.firesButShouldnt || expectedEvent.sometimesFiresButShouldnt) {
+      if (expectedEvent.firesButShouldnt) {
         todo(false, gEventNum + " | Got an event that should not have fired: " + eventToString(e));
       }
     }
@@ -235,7 +225,6 @@
     function runTests() {
       observe(window, eventMonitor, true);
       observe(gRightWindow, eventMonitor, true);
-      observe(gPopup, eventMonitor, true);
       var left = window, right = gRightWindow;
       var leftElem = document.getElementById("box");
       var rightElem = gRightWindow.document.documentElement;
@@ -353,34 +342,27 @@
           gPopup.openPopupAtScreen(150, 50, true);
         },
         // Move the mouse over the popup.
-        // We'll get duplicate events on the popup; ignore them.
         [200, 80, NSMouseMoved, gPopup, left, [
           { type: "mouseout", target: leftElem },
           { type: "mouseover", target: gPopup },
-          { type: "mouseover", target: gPopup, firesButShouldnt: true },
           { type: "mousemove", target: gPopup },
-          { type: "mousemove", target: gPopup, firesButShouldnt: true },
         ]],
         // Move the mouse back over the left window outside the popup.
         [160, 170, NSMouseMoved, null, left, [
           { type: "mouseout", target: gPopup },
-          { type: "mouseout", target: gPopup, firesButShouldnt: true },
           { type: "mouseover", target: leftElem },
           { type: "mousemove", target: leftElem },
         ]],
-        // Back over the popup... (double events again)
+        // Back over the popup...
         [190, 80, NSMouseMoved, gPopup, left, [
           { type: "mouseout", target: leftElem },
           { type: "mouseover", target: gPopup },
-          { type: "mouseover", target: gPopup, firesButShouldnt: true },
           { type: "mousemove", target: gPopup },
-          { type: "mousemove", target: gPopup, firesButShouldnt: true },
         ]],
-        // ...and over into the right window. (... again)
+        // ...and over into the right window.
         // It's inactive, so it shouldn't get mouseover events yet.
         [400, 170, NSMouseMoved, null, right, [
           { type: "mouseout", target: gPopup },
-          { type: "mouseout", target: gPopup, firesButShouldnt: true },
         ]],
         // Again, no mouse events please, even though a popup is open. (bug 425556)
         [400, 180, NSMouseMoved, null, right, [
@@ -412,7 +394,6 @@
           callback();
         },
         // Move the mouse to trigger the appearance of the tooltip.
-        // ... and what's that, a mousemove event without preceding mouseover? Bad.
         [410, 180, NSMouseMoved, null, right, [
           { type: "mousemove", target: rightElem },
         ]],
@@ -484,11 +465,10 @@
         // Now mouse events should get through to the panel (which is now over the
         // right window).
         [387, 170, NSMouseMoved, null, right, [
-          { type: "mouseover", target: panel, shouldFireButSometimesDoesnt: true },
-          { type: "mousemove", target: panel, shouldFireButSometimesDoesnt: true },
+          { type: "mouseover", target: panel },
+          { type: "mousemove", target: panel },
         ]],
         [387, 171, NSMouseMoved, null, left, [
-          { type: "mouseover", target: panel, sometimesFiresButShouldnt: true },
           { type: "mousemove", target: panel },
         ]],
         [388, 171, NSMouseMoved, panel, left, [
@@ -624,33 +604,26 @@
           gPopup.openPopupAtScreen(150, 50, true);
         },
         // Move the mouse over the popup.
-        // We'll get duplicate events on the popup; ignore them.
         [200, 80, NSMouseMoved, gPopup, left, [
           { type: "mouseout", target: leftElem },
           { type: "mouseover", target: gPopup },
-          { type: "mouseover", target: gPopup, firesButShouldnt: true },
           { type: "mousemove", target: gPopup },
-          { type: "mousemove", target: gPopup, firesButShouldnt: true },
         ]],
         // Move the mouse back over the left window outside the popup.
         [160, 170, NSMouseMoved, null, left, [
           { type: "mouseout", target: gPopup },
-          { type: "mouseout", target: gPopup, firesButShouldnt: true },
           { type: "mouseover", target: leftElem },
           { type: "mousemove", target: leftElem },
         ]],
-        // Back over the popup... (double events again)
+        // Back over the popup...
         [190, 80, NSMouseMoved, gPopup, left, [
           { type: "mouseout", target: leftElem },
           { type: "mouseover", target: gPopup },
-          { type: "mouseover", target: gPopup, firesButShouldnt: true },
           { type: "mousemove", target: gPopup },
-          { type: "mousemove", target: gPopup, firesButShouldnt: true },
         ]],
-        // ...and over into the right window. (... again)
+        // ...and over into the right window.
         [400, 170, NSMouseMoved, null, right, [
           { type: "mouseout", target: gPopup },
-          { type: "mouseout", target: gPopup, firesButShouldnt: true },
           { type: "mouseover", target: rightElem },
           { type: "mousemove", target: rightElem },
         ]],
@@ -685,7 +658,6 @@
           callback();
         },
         // Move the mouse to trigger the appearance of the tooltip.
-        // ... and what's that, a mousemove event without preceding mouseover? Bad.
         [410, 180, NSMouseMoved, null, right, [
           { type: "mousemove", target: rightElem },
         ]],
@@ -740,16 +712,14 @@
         // panel.
         [260, 170, NSMouseMoved, null, left, [
           { type: "mouseout", target: rightElem },
-          { type: "mouseover", target: panel, shouldFireButSometimesDoesnt: true },
-          { type: "mousemove", target: panel, shouldFireButSometimesDoesnt: true },
+          { type: "mouseover", target: panel },
+          { type: "mousemove", target: panel },
         ]],
         [260, 171, NSMouseMoved, null, left, [
-          { type: "mouseover", target: panel, sometimesFiresButShouldnt: true },
-          { type: "mousemove", target: panel, shouldFireButSometimesDoesnt: true },
+          { type: "mousemove", target: panel },
         ]],
         [261, 171, NSMouseMoved, panel, left, [
-          { type: "mouseover", target: panel, sometimesFiresButShouldnt: true },
-          { type: "mousemove", target: panel, shouldFireButSometimesDoesnt: true },
+          { type: "mousemove", target: panel },
         ]],
         // Let's be evil and click it.
         [261, 171, NSLeftMouseDown, panel, left, [
@@ -764,7 +734,6 @@
           focusAndThen(left, callback);
         },
         [387, 170, NSMouseMoved, null, right, [
-          { type: "mouseover", target: panel, sometimesFiresButShouldnt: true },
           { type: "mousemove", target: panel },
         ]],
         [387, 171, NSMouseMoved, null, left, [

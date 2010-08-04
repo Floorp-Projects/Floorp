@@ -176,8 +176,8 @@ void TParseContext::recover()
 //
 // Used by flex/bison to output all syntax and parsing errors.
 //
-void C_DECL TParseContext::error(TSourceLoc nLine, const char *szReason, const char *szToken, 
-                                 const char *szExtraInfoFormat, ...)
+void TParseContext::error(TSourceLoc nLine, const char *szReason, const char *szToken, 
+                          const char *szExtraInfoFormat, ...)
 {
     char szExtraInfo[400];
     va_list marker;
@@ -402,15 +402,28 @@ bool TParseContext::globalErrorCheck(int line, bool global, const char* token)
 // For now, keep it simple:  if it starts "gl_", it's reserved, independent
 // of scope.  Except, if the symbol table is at the built-in push-level,
 // which is when we are parsing built-ins.
+// Also checks for "webgl_" and "_webgl_" reserved identifiers if parsing a
+// webgl shader.
 //
 // Returns true if there was an error.
 //
 bool TParseContext::reservedErrorCheck(int line, const TString& identifier)
 {
+    static const char* reservedErrMsg = "reserved built-in name";
     if (!symbolTable.atBuiltInLevel()) {
         if (identifier.substr(0, 3) == TString("gl_")) {
-            error(line, "reserved built-in name", "gl_", "");
+            error(line, reservedErrMsg, "gl_", "");
             return true;
+        }
+        if (spec == EShSpecWebGL) {
+            if (identifier.substr(0, 6) == TString("webgl_")) {
+                error(line, reservedErrMsg, "webgl_", "");
+                return true;
+            }
+            if (identifier.substr(0, 7) == TString("_webgl_")) {
+                error(line, reservedErrMsg, "_webgl_", "");
+                return true;
+            }
         }
         if (identifier.find("__") != TString::npos) {
             //error(line, "Two consecutive underscores are reserved for future use.", identifier.c_str(), "", "");
@@ -1397,6 +1410,20 @@ bool InitializeParseContextIndex()
     return true;
 }
 
+bool FreeParseContextIndex()
+{
+    OS_TLSIndex tlsiIndex = GlobalParseContextIndex;
+
+    if (GlobalParseContextIndex == OS_INVALID_TLS_INDEX) {
+        assert(0 && "FreeParseContextIndex(): Parse Context index not initalised");
+        return false;
+    }
+
+    GlobalParseContextIndex = OS_INVALID_TLS_INDEX;
+
+    return OS_FreeTLSIndex(tlsiIndex);
+}
+
 bool InitializeGlobalParseContext()
 {
     if (GlobalParseContextIndex == OS_INVALID_TLS_INDEX) {
@@ -1422,17 +1449,6 @@ bool InitializeGlobalParseContext()
     return true;
 }
 
-TParseContextPointer& GetGlobalParseContext()
-{
-    //
-    // Minimal error checking for speed
-    //
-
-    TThreadParseContext *lpParseContext = static_cast<TThreadParseContext *>(OS_GetTLSValue(GlobalParseContextIndex));
-
-    return lpParseContext->lpGlobalParseContext;
-}
-
 bool FreeParseContext()
 {
     if (GlobalParseContextIndex == OS_INVALID_TLS_INDEX) {
@@ -1447,16 +1463,14 @@ bool FreeParseContext()
     return true;
 }
 
-bool FreeParseContextIndex()
+TParseContextPointer& GetGlobalParseContext()
 {
-    OS_TLSIndex tlsiIndex = GlobalParseContextIndex;
+    //
+    // Minimal error checking for speed
+    //
 
-    if (GlobalParseContextIndex == OS_INVALID_TLS_INDEX) {
-        assert(0 && "FreeParseContextIndex(): Parse Context index not initalised");
-        return false;
-    }
+    TThreadParseContext *lpParseContext = static_cast<TThreadParseContext *>(OS_GetTLSValue(GlobalParseContextIndex));
 
-    GlobalParseContextIndex = OS_INVALID_TLS_INDEX;
-
-    return OS_FreeTLSIndex(tlsiIndex);
+    return lpParseContext->lpGlobalParseContext;
 }
+

@@ -225,6 +225,7 @@ static void Usage(const char *progName)
     fprintf(stderr, "%-20s Renegotiate N times (resuming session if N>1).\n", "-r N");
     fprintf(stderr, "%-20s Enable the session ticket extension.\n", "-u");
     fprintf(stderr, "%-20s Enable compression.\n", "-z");
+    fprintf(stderr, "%-20s Enable false start.\n", "-g");
     fprintf(stderr, "%-20s Letter(s) chosen from the following list\n", 
                     "-c ciphers");
     fprintf(stderr, 
@@ -521,6 +522,7 @@ int main(int argc, char **argv)
     int                useExportPolicy = 0;
     int                enableSessionTickets = 0;
     int                enableCompression = 0;
+    int                enableFalseStart = 0;
     PRSocketOptionData opt;
     PRNetAddr          addr;
     PRPollDesc         pollset[2];
@@ -551,7 +553,7 @@ int main(int argc, char **argv)
     }
 
     optstate = PL_CreateOptState(argc, argv,
-                                 "23BSTW:a:c:d:fh:m:n:op:qr:suvw:xz");
+                                 "23BSTW:a:c:d:fgh:m:n:op:qr:suvw:xz");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
@@ -577,6 +579,8 @@ int main(int argc, char **argv)
                     break;
 
           case 'c': cipherString = PORT_Strdup(optstate->value); break;
+
+          case 'g': enableFalseStart = 1; 		break;
 
           case 'd': certDir = PORT_Strdup(optstate->value);   break;
 
@@ -863,7 +867,14 @@ int main(int argc, char **argv)
 	SECU_PrintError(progName, "error enabling compression");
 	return 1;
     }
-               
+
+    /* enable false start. */
+    rv = SSL_OptionSet(s, SSL_ENABLE_FALSE_START, enableFalseStart);
+    if (rv != SECSuccess) {
+	SECU_PrintError(progName, "error enabling false start");
+	return 1;
+    }
+
     SSL_SetPKCS11PinArg(s, &pwdata);
 
     SSL_AuthCertificateHook(s, SSL_AuthCertificate, (void *)handle);

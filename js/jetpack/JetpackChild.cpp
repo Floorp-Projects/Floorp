@@ -149,7 +149,7 @@ JetpackChild::RecvEvalScript(const nsString& code)
 
   js::AutoValueRooter ignored(mCx);
   (void) JS_EvaluateUCScript(mCx, JS_GetGlobalObject(mCx), code.get(),
-                             code.Length(), "", 1, ignored.addr());
+                             code.Length(), "", 1, ignored.jsval_addr());
   return true;
 }
 
@@ -433,7 +433,7 @@ JetpackChild::EvalInSandbox(JSContext* cx, uintN argc, jsval* vp)
 
   js::AutoValueRooter ignored(cx);
   return JS_EvaluateUCScript(cx, obj, JS_GetStringChars(str), JS_GetStringLength(str), "", 1,
-                             ignored.addr());
+                             ignored.jsval_addr());
 }
 
 bool JetpackChild::sReportingError;

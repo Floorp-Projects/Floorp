@@ -524,20 +524,14 @@ TabParent::ReceiveMessage(const nsString& aMessage,
       nsFrameMessageManager* manager = frameLoader->GetFrameMessageManager();
       JSContext* ctx = manager->GetJSContext();
       JSAutoRequest ar(ctx);
-      jsval* dest;
       PRUint32 len = 0; //TODO: obtain a real value in bug 572685
       // Because we want JS messages to have always the same properties,
       // create array even if len == 0.
-      JSObject* objectsArray =
-        js_NewArrayObjectWithCapacity(ctx, len, &dest);
+      JSObject* objectsArray = JS_NewArrayObject(ctx, len, NULL);
       if (!objectsArray) {
         return false;
       }
 
-      nsresult rv = NS_OK;
-      nsAutoGCRoot arrayGCRoot(&objectsArray, &rv);
-      NS_ENSURE_SUCCESS(rv, false);
-      
       manager->ReceiveMessage(mFrameElement,
                               aMessage,
                               aSync,

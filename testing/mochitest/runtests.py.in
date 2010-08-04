@@ -267,7 +267,6 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
     options.httpPort = self._automation.DEFAULT_HTTP_PORT
     options.sslPort = self._automation.DEFAULT_SSL_PORT
     options.webSocketPort = self._automation.DEFAULT_WEBSOCKET_PORT
-    options.webSocketProxyPort = self._automation.DEFAULT_WEBSOCKET_PROXY_PORT
 
     if options.vmwareRecording:
       if not self._automation.IS_WIN32:
@@ -724,8 +723,7 @@ def main():
   automation.setServerInfo(options.webServer, 
                            options.httpPort, 
                            options.sslPort, 
-                           options.webSocketPort, 
-                           options.webSocketProxyPort)
+                           options.webSocketPort)
   sys.exit(mochitest.runTests(options))
 
 if __name__ == "__main__":

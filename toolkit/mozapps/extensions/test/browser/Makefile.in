@@ -50,6 +50,7 @@ _TEST_FILES = \
   browser_bug562890.js \
   browser_bug562899.js \
   browser_bug562992.js \
+  browser_bug567137.js \
   browser_bug572561.js \
   browser_dragdrop.js \
   browser_searching.js \
@@ -60,7 +61,11 @@ _TEST_FILES = \
   browser_updatessl.js \
   browser_updatessl.rdf \
   browser_installssl.js \
+  browser_backgroundupdate_menuitem.js \
+  browser_recentupdates.js \
+  browser_manualupdates.js \
   redirect.sjs \
+  releaseNotes.xhtml \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

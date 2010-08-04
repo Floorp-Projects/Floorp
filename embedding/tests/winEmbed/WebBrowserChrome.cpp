@@ -40,7 +40,6 @@
 #include "nsStringAPI.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMWindow.h"
-#include "nsIGenericFactory.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRequest.h"
 #include "nsIURI.h"

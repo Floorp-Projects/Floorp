@@ -278,6 +278,7 @@
     OSXPROXY_MODULE                          \
     WINDOWSPROXY_MODULE                      \
     JSCTYPES_MODULE                          \
+    MODULE(jsperf)                           \
     /* end of list */
 
 #define MODULE(_name) \

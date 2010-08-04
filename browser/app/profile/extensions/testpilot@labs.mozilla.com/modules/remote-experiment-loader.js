@@ -247,7 +247,179 @@ exports.RemoteExperimentLoader.prototype = {
     return studiesToLoad;
   },
 
+  _executeFreshIndexFile: function(data, callback) {
+    try {
+      data = JSON.parse(data);
+    } catch (e) {
+      this._logger.warn("Error parsing index.json: " + e );
+      callback(false);
+      return;
+    }
+
+    // Cache study results and legacy studies.
+    this._studyResults = data.results;
+    this._legacyStudies = data.legacy;
+
+    /* Go through each record indicated in index.json for our locale;
+     * download the specified .jar file (replacing any version on disk)
+     */
+    let jarFiles = this.getLocalizedStudyInfo(data.new_experiments);
+    let numFilesToDload = jarFiles.length;
+    let self = this;
+
+    for each (let j in jarFiles) {
+      let filename = j.jarfile;
+      let hash = j.hash;
+      if (j.studyfile) {
+        this._experimentFileNames.push(j.studyfile);
+      }
+      this._logger.trace("I'm gonna go try to get the code for " + filename);
+      let modDate = this._jarStore.getFileModifiedDate(filename);
+
+      this._fileGetter(resolveUrl(this._baseUrl, filename),
+      function onDone(code) {
+        // code will be non-null if there is actually new code to download.
+        if (code) {
+          self._logger.info("Downloaded jar file " + filename);
+          self._jarStore.saveJarFile(filename, code, hash);
+          self._logger.trace("Saved code for: " + filename);
+        } else {
+          self._logger.info("Nothing to download for " + filename);
+        }
+        numFilesToDload--;
+        if (numFilesToDload == 0) {
+          self._logger.trace("Calling callback.");
+          callback(true);
+        }
+      }, modDate);
+    }
+  },
+
+  _executeCachedIndexFile: function(data) {
+    /* Working with a cached index file = follow its instructions except
+     * don't try to download anything - just work with the jar files already
+     * on disk. There's a lot of shared code between this and _executeFreshIndexFile;
+     * refactor?*/
+    try {
+      data = JSON.parse(data);
+    } catch (e) {
+      this._logger.warn("Error parsing index.json: " + e );
+      return false;
+    }
+    // Read study results and legacy studies from index.
+    this._studyResults = data.results;
+    this._legacyStudies = data.legacy;
+
+    // Read names of experiment modules from index.
+    let jarFiles = this.getLocalizedStudyInfo(data.new_experiments);
+    for each (let j in jarFiles) {
+      let filename = j.jarfile;
+      let hash = j.hash;
+      if (j.studyfile) {
+        this._experimentFileNames.push(j.studyfile);
+      }
+    }
+    return true;
+  },
+
+  // TODO a bad thing that can go wrong: If we have a net connection but the index file
+  // has not changed, we currently don't try to download anything...
+
+  // Another bad thing: If there's a jar download that's corrupt or unreadable or has
+    // the wrong permissions or something, we need to kill it and download a new one.
+
+  // WTF every jar file I'm downloading appears as 0 bytes with __x__x___ permissions!
+
+  _cachedIndexNsiFile: null,
+  get cachedIndexNsiFile() {
+    if (!this._cachedIndexNsiFile) {
+      try {
+        let file = Cc["@mozilla.org/file/directory_service;1"].
+                         getService(Ci.nsIProperties).
+                         get("ProfD", Ci.nsIFile);
+        file.append("TestPilotExperimentFiles"); // TODO this name should go in pref?
+        // Make sure there's a directory with this name; delete any non-directory
+        // file that's in the way.
+        if (file.exists() && !file.isDirectory()) {
+          file.remove(false);
+        }
+        if (!file.exists()) {
+          file.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+        }
+        file.append("index.json");
+        this._cachedIndexNsiFile = file;
+      } catch(e) {
+        console.warn("Error creating directory for cached index file: " + e);
+      }
+    }
+    return this._cachedIndexNsiFile;
+  },
+
+  _cacheIndexFile: function(data) {
+    // write data to disk as basedir/index.json
+    try {
+      let file = this.cachedIndexNsiFile;
+      if (file == null) {
+        console.warn("Can't cache index file because directory does not exist.");
+        return;
+      }
+      if (file.exists()) {
+        file.remove(false);
+      }
+      file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+      // file is nsIFile, data is a string
+      let foStream = Cc["@mozilla.org/network/file-output-stream;1"].
+                               createInstance(Ci.nsIFileOutputStream);
+
+      foStream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);
+      // write, create, truncate
+      let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
+                                createInstance(Ci.nsIConverterOutputStream);
+      converter.init(foStream, "UTF-8", 0, 0);
+      converter.writeString(data);
+      converter.close(); // this closes foStream too
+    } catch(e) {
+      console.warn("Error cacheing index file: " + e);
+    }
+  },
+
+  // https://developer.mozilla.org/en/Table_Of_Errors
+  _loadCachedIndexFile: function() {
+    // If basedir/index.json exists, read it and return its data
+    // Otherwise, return false
+    let file = this.cachedIndexNsiFile;
+    if (file == null) {
+      console.warn("Can't load cached index file because directory does not exist.");
+      return false;
+    }
+    if (file.exists()) {
+      try {
+        let data = "";
+        let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
+                          createInstance(Ci.nsIFileInputStream);
+        let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
+                          createInstance(Ci.nsIConverterInputStream);
+        fstream.init(file, -1, 0, 0);
+        cstream.init(fstream, "UTF-8", 0, 0);
+        let str = {};
+        while (cstream.readString(4096, str) != 0) {
+          data += str.value;
+        }
+        cstream.close(); // this closes fstream too
+        return data;
+      } catch(e) {
+        console.warn("Error occured in reading cached index file: " + e);
+        return false;
+      }
+    } else {
+      console.warn("Trying to load cached index file but it does not exist.");
+      return false;
+    }
+  },
+
   checkForUpdates: function(callback) {
+    // Check for surveys and studies.  Entry point for all download and execution of
+    // remote code.
     /* Callback will be called with true or false
      * to let us know whether there are any updates, so that client code can
      * restart any experiment whose code has changed. */
@@ -260,60 +432,31 @@ exports.RemoteExperimentLoader.prototype = {
     this._logger.info("Unloading everything to prepare to check for updates.");
     this._refreshLoader();
 
-    // Check for surveys and studies
+    let modDate = 0;
+    if (this.cachedIndexNsiFile) {
+      if (this.cachedIndexNsiFile.exists()) {
+        modDate = this.cachedIndexNsiFile.lastModifiedTime;
+      }
+    }
     let url = resolveUrl(self._baseUrl, indexFileName);
     self._fileGetter(url, function onDone(data) {
       if (data) {
-        try {
-          data = JSON.parse(data);
-        } catch (e) {
-          self._logger.warn("Error parsing index.json: " + e );
-          callback(false);
-          return;
-        }
-
-        // Cache study results and legacy studies.
-        self._studyResults = data.results;
-        self._legacyStudies = data.legacy;
-
-        /* Go through each record indicated in index.json for our locale;
-         * download the specified .jar file (replacing any version on disk)
-         */
-        let jarFiles = self.getLocalizedStudyInfo(data.new_experiments);
-        let numFilesToDload = jarFiles.length;
-
-        for each (let j in jarFiles) {
-          let filename = j.jarfile;
-          let hash = j.hash;
-          if (j.studyfile) {
-            self._experimentFileNames.push(j.studyfile);
-          }
-          self._logger.trace("I'm gonna go try to get the code for " + filename);
-          let modDate = self._jarStore.getFileModifiedDate(filename);
-
-          self._fileGetter(resolveUrl(self._baseUrl, filename),
-            function onDone(code) {
-              // code will be non-null if there is actually new code to download.
-              if (code) {
-                self._logger.info("Downloaded jar file " + filename);
-                self._jarStore.saveJarFile(filename, code, hash);
-                self._logger.trace("Saved code for: " + filename);
-              } else {
-                self._logger.info("Nothing to download for " + filename);
-              }
-              numFilesToDload--;
-              if (numFilesToDload == 0) {
-                self._logger.trace("Calling callback.");
-                callback(true);
-              }
-            }, modDate);
-        }
-
+        self._executeFreshIndexFile(data, callback);
+        // cache index file contents so we can read them later if we can't get online.
+        self._cacheIndexFile(data);
       } else {
-        self._logger.warn("Could not download index.json from test pilot server.");
-        callback(false);
+        self._logger.info("Could not download index.json, using cached version.");
+        let data = self._loadCachedIndexFile();
+        if (data) {
+          let success = self._executeCachedIndexFile(data);
+          callback(success);
+        } else {
+          self._logger.warn("Could not download index.json and no cached version.");
+          // TODO Should display an error message to the user in this case.
+          callback(false);
+        }
       }
-    });
+    }, modDate);
   },
 
   getExperiments: function() {
@@ -345,18 +488,6 @@ exports.RemoteExperimentLoader.prototype = {
 };
 
 // TODO purge the pref store of anybody who has one.
-
-// TODO i realized that right now there is no way for experiments
-// on disk to get loaded if the index file is not accessible for
-// any reason. getExperiments needs to be able to return names of
-// experiment modules on disk even if connection to server fails.  But
-// we can't just load everything; some modules in the jar are not
-// experiments.  Right now the information as to which modules are
-// experiments lives ONLY in index.json.  What if we put it into the .jar
-// file itself somehow?  Like calling one of the files "study.js".  Or
-// "survey.js"  Hey, that would be neat - one .jar file containing both
-// the study.js and the survey.js.  Or there could be a mini-manifest in the
-// jar telling which files are experiments.
 
 // TODO Also, if user has a study id foo that is not expired yet, and
 // a LegacyStudy appears with the same id, they should keep their "real"
