@@ -45,7 +45,7 @@ interface nsIProxyInfo;
  * using any feature exposed by this interface, be aware that this interface 
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(0eb66361-faaa-4e52-8c7e-6c25f11f8e3c)]
+[scriptable, uuid(91dbb42a-dffc-4f47-8b27-9579c0d92c3f)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -83,4 +83,9 @@ interface nsIHttpChannelInternal : nsISupports
      * wouldn't be.
      */
     attribute boolean forceAllowThirdPartyCookie;
+
+    /**
+     * Returns true iff the channel has been canceled.
+     */
+    readonly attribute boolean canceled;
 };

@@ -65,6 +65,8 @@ class BufferBackEnd
 
     virtual GLenum setupIndicesPreDraw(const TranslatedIndexData &indexInfo) = 0;
     virtual GLenum setupAttributesPreDraw(const TranslatedAttribute *attributes) = 0;
+
+    virtual void invalidate() = 0;
 };
 
 class TranslatedBuffer

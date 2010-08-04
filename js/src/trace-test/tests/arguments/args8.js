@@ -1,5 +1,5 @@
 actual = '';
-expected = '[object Object],[object Object],[object Object],[object Object],[object Object],';
+expected = '[object Arguments],[object Arguments],[object Arguments],[object Arguments],[object Arguments],';
 
 function h() {
   return arguments;

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
+ *  Patrick Walton <pcwalton@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,6 +65,8 @@ const TEST_NETWORK_URI = "http://example.com/browser/toolkit/components/console/
 const TEST_FILTER_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-filter.html";
 
 const TEST_PROPERTY_PROVIDER_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-property-provider.html";
+
+const TEST_ERROR_URI = "http://example.com/browser/toolkit/components/console/hudservice/tests/browser/test-error.html";
 
 function noCacheUriSpec(aUriSpec) {
   return aUriSpec + "?_=" + Date.now();
@@ -205,6 +208,14 @@ function getHUDById() {
   ok(hud.getAttribute("id") == hudId, "found HUD node by Id.");
 }
 
+// Tests to ensure that the input box is focused when the console opens. See
+// bug 579412.
+function testInputFocus() {
+  let hud = HUDService.getHeadsUpDisplay(hudId);
+  let inputNode = hud.querySelectorAll(".jsterm-input-node")[0];
+  is(inputNode.getAttribute("focused"), "true", "input node is focused");
+}
+
 function testGetContentWindowFromHUDId() {
   let window = HUDService.getContentWindowFromHUDId(hudId);
   ok(window.document, "we have a contentWindow");
@@ -323,6 +334,26 @@ function testNullUndefinedOutput()
 
   is (outputChildren[1].childNodes[0].nodeValue, "undefined",
       "'undefined' printed to output");
+}
+
+function testJSInputAndOutputStyling() {
+  let jsterm = HUDService.hudWeakReferences[hudId].get().jsterm;
+
+  jsterm.clearOutput();
+  jsterm.execute("2 + 2");
+
+  let outputChildren = jsterm.outputNode.childNodes;
+  let jsInputNode = outputChildren[0];
+  isnot(jsInputNode.childNodes[0].nodeValue.indexOf("2 + 2"), -1,
+    "JS input node contains '2 + 2'");
+  isnot(jsInputNode.getAttribute("class").indexOf("jsterm-input-line"), -1,
+    "JS input node is of the CSS class 'jsterm-input-line'");
+
+  let jsOutputNode = outputChildren[1];
+  isnot(jsOutputNode.childNodes[0].nodeValue.indexOf("4"), -1,
+    "JS output node contains '4'");
+  isnot(jsOutputNode.getAttribute("class").indexOf("jsterm-output-line"), -1,
+    "JS output node is of the CSS class 'jsterm-output-line'");
 }
 
 function testCreateDisplay() {
@@ -582,10 +613,53 @@ function testPageReload() {
     is(typeof console.error, "function", "console.error is a function");
     is(typeof console.exception, "function", "console.exception is a function");
 
-    testEnd();
+    testErrorOnPageReload();
   }, false);
 
   content.location.reload();
+}
+
+function testErrorOnPageReload() {
+  // see bug 580030: the error handler fails silently after page reload.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=580030
+
+  var pageReloaded = false;
+  browser.addEventListener("DOMContentLoaded", function onDOMLoad() {
+    if (!pageReloaded) {
+      pageReloaded = true;
+      content.location.reload();
+      return;
+    }
+
+    browser.removeEventListener("DOMContentLoaded", onDOMLoad, false);
+
+    // dispatch a click event to the button in the test page.
+    var contentDocument = browser.contentDocument.wrappedJSObject;
+    var button = contentDocument.getElementsByTagName("button")[0];
+    var clickEvent = contentDocument.createEvent("MouseEvents");
+    clickEvent.initMouseEvent("click", true, true,
+      browser.contentWindow.wrappedJSObject, 0, 0, 0, 0, 0, false, false,
+      false, false, 0, null);
+
+    var successMsg = "Found the error message after page reload";
+    var errMsg = "Could not get the error message after page reload";
+
+    var display = HUDService.getDisplayByURISpec(content.location.href);
+    var outputNode = display.querySelectorAll(".hud-output-node")[0];
+
+    button.addEventListener("click", function onClickHandler() {
+      button.removeEventListener("click", onClickHandler, false);
+
+      testLogEntry(outputNode, "fooBazBaz",
+        { success: successMsg, err: errMsg });
+
+      testEnd();
+    }, false);
+
+    button.dispatchEvent(clickEvent);
+  }, false);
+
+  content.location.href = TEST_ERROR_URI;
 }
 
 function testEnd() {
@@ -624,6 +698,7 @@ function test() {
       introspectLogNodes();
       getAllHUDS();
       getHUDById();
+      testInputFocus();
       testGetDisplayByLoadGroup();
       testGetContentWindowFromHUDId();
 
@@ -643,6 +718,7 @@ function test() {
       testConsoleHistory();
       testOutputOrder();
       testNullUndefinedOutput();
+      testJSInputAndOutputStyling();
       testExecutionScope();
       testCompletion();
       testPropertyProvider();

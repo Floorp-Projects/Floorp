@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(2eeec2e5-a48f-4251-b2e2-adfb87929d18)]
+[scriptable, uuid(f0ffe1d2-9615-492b-aae1-05428ebc2a70)]
 interface nsIDOMNSHTMLElement : nsISupports
 {
   readonly attribute long             offsetTop;
@@ -47,6 +47,13 @@ interface nsIDOMNSHTMLElement : nsISupports
   readonly attribute long             offsetHeight;
   readonly attribute nsIDOMElement    offsetParent;
            attribute DOMString        innerHTML;
+
+  /**
+   * Indicates that the element is not yet, or is no longer, relevant.
+   *
+   * See <http://www.whatwg.org/html5/#the-hidden-attribute>.
+   */
+           attribute boolean          hidden;
 
            attribute long             tabIndex;
 

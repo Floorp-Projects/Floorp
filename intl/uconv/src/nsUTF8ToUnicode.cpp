@@ -65,7 +65,7 @@ nsUTF8ToUnicode::nsUTF8ToUnicode()
  * However, there is an edge case where the output can be longer than the
  *  input: if the previous buffer ended with an incomplete multi-byte
  *  sequence and this buffer does not begin with a valid continuation
- *  byte, we will return NS_ERROR_UNEXPECTED and the caller may insert a
+ *  byte, we will return NS_ERROR_ILLEGAL_INPUT and the caller may insert a
  *  replacement character in the output buffer which corresponds to no
  *  character in the input buffer. So in the worst case the destination
  *  will need to be one code unit longer than the source.
@@ -341,7 +341,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
          * Return an error condition. Caller is responsible for flushing and
          * refilling the buffer and resetting state.
          */
-        res = NS_ERROR_UNEXPECTED;
+        res = NS_ERROR_ILLEGAL_INPUT;
         break;
       }
     } else {
@@ -370,7 +370,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
               ((mUcs4 & 0xFFFFF800) == 0xD800) ||
               // Codepoints outside the Unicode range are illegal
               (mUcs4 > 0x10FFFF)) {
-            res = NS_ERROR_UNEXPECTED;
+            res = NS_ERROR_ILLEGAL_INPUT;
             break;
           }
           if (mUcs4 > 0xFFFF) {
@@ -396,7 +396,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
          * for flushing and refilling the buffer and resetting state.
          */
         in--;
-        res = NS_ERROR_UNEXPECTED;
+        res = NS_ERROR_ILLEGAL_INPUT;
         break;
       }
     }

@@ -61,6 +61,8 @@ function run_test_1() {
     do_check_true(install.addon.hasResource("install.rdf"));
     do_check_true(install.addon.hasResource("bootstrap.js"));
     do_check_false(install.addon.hasResource("foo.bar"));
+    do_check_eq(install.addon.operationsRequiringRestart &
+                AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
     do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     prepare_test({
@@ -121,6 +123,8 @@ function run_test_2() {
       ]
     });
 
+    do_check_eq(b1.operationsRequiringRestart &
+                AddonManager.OP_NEEDS_RESTART_DISABLE, 0);
     b1.userDisabled = true;
     ensure_test_completed();
 
@@ -179,6 +183,8 @@ function run_test_4() {
       ]
     });
 
+    do_check_eq(b1.operationsRequiringRestart &
+                AddonManager.OP_NEEDS_RESTART_ENABLE, 0);
     b1.userDisabled = false;
     ensure_test_completed();
 
@@ -285,6 +291,8 @@ function run_test_7() {
       ]
     });
 
+    do_check_eq(b1.operationsRequiringRestart &
+                AddonManager.OP_NEEDS_RESTART_UNINSTALL, 0);
     b1.uninstall();
 
     check_test_7();

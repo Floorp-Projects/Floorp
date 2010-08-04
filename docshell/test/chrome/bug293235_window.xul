@@ -92,6 +92,13 @@
       ok(snapshotsEqual(refLink, snapshotWindow(TestWindow.getWindow())),
          "link should initially be blue");
 
+      let observedVisit = false, observedPageShow = false;
+      function maybeRunNextTest() {
+        ok(true, "maybe run next test? visited: " + observedVisit + " pageShow: " + observedPageShow);
+        if (observedVisit && observedPageShow)
+          nextTest();
+      }
+
       // Because adding visits is async, we will not be notified imemdiately.
       let visitObserver = {
         observe: function(aSubject, aTopic, aData)
@@ -100,14 +107,19 @@
             return;
           }
           os.removeObserver(this, aTopic);
-          SimpleTest.executeSoon(nextTest);
+          observedVisit = true;
+          maybeRunNextTest();
         },
       };
       os.addObserver(visitObserver, "uri-visit-saved", false);
 
       // Load the page that the link on the previous page points to.
       doPageNavigation({
-        uri: getHttpUrl("bug293235_p2.html")
+        uri: getHttpUrl("bug293235_p2.html"),
+        onNavComplete: function() {
+          observedPageShow = true;
+          maybeRunNextTest();
+        }
       });
       yield;
 

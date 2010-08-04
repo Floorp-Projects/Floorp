@@ -48,6 +48,14 @@ Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/trackers.js");
 Cu.import("resource://services-sync/type_records/tabs.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/ext/Preferences.js");
+
+// It is safer to inspect the private browsing preferences rather than
+// the flags of nsIPrivateBrowsingService.  The user may have turned on
+// "Never remember history" in the same session, or Firefox was started
+// with the -private command line argument.  In both cases, the
+// "autoStarted" flag of nsIPrivateBrowsingService will be wrong.
+const PBPrefs = new Preferences("browser.privatebrowsing.");
 
 function TabEngine() {
   SyncEngine.call(this, "Tabs");
@@ -142,6 +150,12 @@ TabStore.prototype = {
     let record = new TabSetRecord();
     record.clientName = Clients.localName;
 
+    // Don't provide any tabs to compare against and ignore the update later.
+    if (Svc.Private.privateBrowsingEnabled && !PBPrefs.get("autostart")) {
+      record.tabs = [];
+      return record;
+    }
+
     // Sort tabs in descending-used order to grab the most recently used
     let tabs = this.getAllTabs(true).sort(function(a, b) {
       return b.lastUsed - a.lastUsed;
@@ -172,7 +186,11 @@ TabStore.prototype = {
   },
 
   getAllIDs: function TabStore_getAllIds() {
+    // Don't report any tabs if we're in private browsing for first syncs.
     let ids = {};
+    if (Svc.Private.privateBrowsingEnabled && !PBPrefs.get("autostart"))
+      return ids;
+
     ids[Clients.localID] = true;
     return ids;
   },
@@ -197,12 +215,18 @@ TabStore.prototype = {
     // We must have gotten a new tab that isn't the same as last time
     else if (notifyState != roundModify)
       Svc.Prefs.set("notifyTabState", 0);
+  },
+
+  update: function update(record) {
+    this._log.trace("Ignoring tab updates as local ones win");
   }
 };
 
 
 function TabTracker(name) {
   Tracker.call(this, name);
+
+  Svc.Obs.add("private-browsing", this);
 
   // Make sure "this" pointer is always set correctly for event listeners
   this.onTab = Utils.bind2(this, this.onTab);
@@ -245,9 +269,17 @@ TabTracker.prototype = {
         self._registerListenersForWindow(aSubject);
       }, false);
     }
+    else if (aTopic == "private-browsing" && aData == "enter"
+             && !PBPrefs.get("autostart"))
+      this.clearChangedIDs();
   },
 
   onTab: function onTab(event) {
+    if (Svc.Private.privateBrowsingEnabled && !PBPrefs.get("autostart")) {
+      this._log.trace("Ignoring tab event from private browsing.");
+      return;
+    }
+
     this._log.trace("onTab event: " + event.type);
     this.addChangedID(Clients.localID);
 

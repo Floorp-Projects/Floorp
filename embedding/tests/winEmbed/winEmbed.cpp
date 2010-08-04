@@ -45,7 +45,7 @@
 // Mozilla Frozen APIs
 #include "nsXULAppAPI.h"
 
-XRE_InitEmbeddingType XRE_InitEmbedding;
+XRE_InitEmbedding2Type XRE_InitEmbedding2;
 XRE_TermEmbeddingType XRE_TermEmbedding;
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -202,9 +202,9 @@ int main(int argc, char *argv[])
     char temp[_MAX_PATH];
     GetModuleFileName(xulModule, temp, sizeof(temp));
 
-    XRE_InitEmbedding =
-        (XRE_InitEmbeddingType) GetProcAddress(xulModule, "XRE_InitEmbedding");
-    if (!XRE_InitEmbedding) {
+    XRE_InitEmbedding2 =
+        (XRE_InitEmbedding2Type) GetProcAddress(xulModule, "XRE_InitEmbedding2");
+    if (!XRE_InitEmbedding2) {
         fprintf(stderr, "Error: %i\n", GetLastError());
         return 5;
     }
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
         if (NS_FAILED(rv))
             return 8;
 
-        rv = XRE_InitEmbedding(xuldir, appdir, nsnull, nsnull, 0);
+        rv = XRE_InitEmbedding2(xuldir, appdir, nsnull);
         if (NS_FAILED(rv))
             return 9;
 

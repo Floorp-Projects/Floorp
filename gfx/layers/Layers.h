@@ -77,6 +77,7 @@ class ImageLayer;
 class ColorLayer;
 class ImageContainer;
 class CanvasLayer;
+class SpecificLayerAttributes;
 
 #define MOZ_LAYER_DECL_NAME(n, e)                           \
   virtual const char* Name() const { return n; }            \
@@ -215,6 +216,12 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
+   * Called when a managee has mutated.
+   */
+  virtual void Mutated(Layer* aLayer) { }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
    * Create a ThebesLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer() = 0;
@@ -314,7 +321,8 @@ public:
     TYPE_CONTAINER,
     TYPE_IMAGE,
     TYPE_COLOR,
-    TYPE_CANVAS
+    TYPE_CANVAS,
+    TYPE_SHADOW
   };
 
   virtual ~Layer() {}
@@ -332,7 +340,11 @@ public:
    * content. This enables some internal quality and performance
    * optimizations.
    */
-  void SetIsOpaqueContent(PRBool aOpaque) { mIsOpaqueContent = aOpaque; }
+  void SetIsOpaqueContent(PRBool aOpaque)
+  {
+    mIsOpaqueContent = aOpaque;
+    Mutated();
+  }
   /**
    * CONSTRUCTION PHASE ONLY
    * Tell this layer which region will be visible. It is the responsibility
@@ -340,14 +352,22 @@ public:
    * contribute to the final visible window. This can be an
    * overapproximation to the true visible region.
    */
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) { mVisibleRegion = aRegion; }
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion)
+  {
+    mVisibleRegion = aRegion;
+    Mutated();
+  }
 
   /**
    * CONSTRUCTION PHASE ONLY
    * Set the opacity which will be applied to this layer as it
    * is composited to the destination.
    */
-  void SetOpacity(float aOpacity) { mOpacity = aOpacity; }
+  void SetOpacity(float aOpacity)
+  {
+    mOpacity = aOpacity;
+    Mutated();
+  }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -365,6 +385,7 @@ public:
     if (aRect) {
       mClipRect = *aRect;
     }
+    Mutated();
   }
   /**
    * CONSTRUCTION PHASE ONLY
@@ -384,6 +405,7 @@ public:
       mUseClipRect = PR_TRUE;
       mClipRect = aRect;
     }
+    Mutated();
   }
 
   /**
@@ -393,7 +415,11 @@ public:
    * XXX Currently only transformations corresponding to 2D affine transforms
    * are supported.
    */
-  void SetTransform(const gfx3DMatrix& aMatrix) { mTransform = aMatrix; }
+  void SetTransform(const gfx3DMatrix& aMatrix)
+  {
+    mTransform = aMatrix;
+    Mutated();
+  }
 
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
@@ -405,6 +431,14 @@ public:
   Layer* GetPrevSibling() { return mPrevSibling; }
   virtual Layer* GetFirstChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
+
+  /**
+   * DRAWING PHASE ONLY
+   *
+   * Write layer-subtype-specific attributes into aAttrs.  Used to
+   * synchronize layer attributes to their shadows'.
+   */
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) { }
 
   // Returns true if it's OK to save the contents of aLayer in an
   // opaque surface (a surface without an alpha channel).
@@ -477,6 +511,8 @@ protected:
     mUseClipRect(PR_FALSE),
     mIsOpaqueContent(PR_FALSE)
     {}
+
+  void Mutated() { mManager->Mutated(this); }
 
   // Print interesting information about this into aTo.  Internally
   // used to implement Dump*() and Log*().  If subclasses have

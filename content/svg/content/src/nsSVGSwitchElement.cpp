@@ -63,7 +63,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_ADDREF_INHERITED(nsSVGSwitchElement,nsSVGSwitchElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGSwitchElement,nsSVGSwitchElementBase)
 
-DOMCI_DATA(SVGSwitchElement, nsSVGSwitchElement)
+DOMCI_NODE_DATA(SVGSwitchElement, nsSVGSwitchElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsSVGSwitchElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGSwitchElement, nsIDOMNode, nsIDOMElement,
@@ -74,7 +74,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSwitchElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGSwitchElement::nsSVGSwitchElement(nsINodeInfo *aNodeInfo)
+nsSVGSwitchElement::nsSVGSwitchElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsSVGSwitchElementBase(aNodeInfo)
 {
 }

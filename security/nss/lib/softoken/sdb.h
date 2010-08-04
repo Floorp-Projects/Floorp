@@ -60,7 +60,6 @@
 #include "pkcs11t.h"
 #include "secitem.h"
 #include "sftkdbt.h"
-#include <sqlite3.h>
 
 #define STATIC_CMD_SIZE 2048
 

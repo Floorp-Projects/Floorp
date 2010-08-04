@@ -240,6 +240,7 @@ DOMCI_CLASS(SVGAnimateTransformElement)
 DOMCI_CLASS(SVGAnimateMotionElement)
 DOMCI_CLASS(SVGMpathElement)
 DOMCI_CLASS(SVGSetElement)
+DOMCI_CLASS(TimeEvent)
 #endif // MOZ_SMIL
 DOMCI_CLASS(SVGCircleElement)
 DOMCI_CLASS(SVGClipPathElement)
@@ -446,6 +447,8 @@ DOMCI_CLASS(DataTransfer)
 DOMCI_CLASS(NotifyPaintEvent)
 
 DOMCI_CLASS(SimpleGestureEvent)
+
+DOMCI_CLASS(MozTouchEvent)
 
 #ifdef MOZ_MATHML
 DOMCI_CLASS(MathMLElement)

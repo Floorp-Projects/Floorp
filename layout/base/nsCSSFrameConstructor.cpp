@@ -1560,7 +1560,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
                                                          kNameSpaceID_XHTML);
 
     nsCOMPtr<nsIContent> content;
-    NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo,
+    NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo.forget(),
                              data.mContent.mImage);
     return content.forget();
   }
@@ -1734,7 +1734,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(elemName, nsnull,
                                                        kNameSpaceID_None);
   nsCOMPtr<nsIContent> container;
-  nsresult rv = NS_NewXMLElement(getter_AddRefs(container), nodeInfo);
+  nsresult rv = NS_NewXMLElement(getter_AddRefs(container), nodeInfo.forget());
   if (NS_FAILED(rv))
     return;
   container->SetNativeAnonymous();
@@ -7618,8 +7618,15 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
 
           DoApplyRenderingChangeToTree(outOfFlowFrame, aViewManager,
                                        aFrameManager, aChange);
-        }
-        else {  // regular frame
+        } else if (childList == nsGkAtoms::popupList) {
+          DoApplyRenderingChangeToTree(child, aViewManager,
+                                       aFrameManager, aChange);
+        } else {  // regular frame
+          if ((child->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) &&
+              (aChange & nsChangeHint_RepaintFrame)) {
+            FrameLayerBuilder::InvalidateThebesLayerContents(child,
+              child->GetOverflowRectRelativeToSelf());
+          }
           UpdateViewsForTree(child, aViewManager, aFrameManager, aChange);
         }
       }
@@ -7675,6 +7682,12 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       aFrame->MarkLayersActive();
       aFrame->InvalidateLayer(aFrame->GetOverflowRectRelativeToSelf(),
                               nsDisplayItem::TYPE_OPACITY);
+    }
+    
+    if (aChange & nsChangeHint_UpdateTransformLayer) {
+      aFrame->MarkLayersActive();
+      aFrame->InvalidateLayer(aFrame->GetOverflowRectRelativeToSelf(),
+                              nsDisplayItem::TYPE_TRANSFORM);
     }
   }
 }
@@ -7959,7 +7972,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         didReflow = PR_TRUE;
       }
       if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView |
-                  nsChangeHint_UpdateOpacityLayer)) {
+                  nsChangeHint_UpdateOpacityLayer | nsChangeHint_UpdateTransformLayer)) {
         ApplyRenderingChangeToTree(presContext, frame, hint);
         didInvalidate = PR_TRUE;
       }

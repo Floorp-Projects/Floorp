@@ -85,7 +85,8 @@ class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsIFileControlElement
 {
 public:
-  nsHTMLInputElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser);
+  nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+                     PRUint32 aFromParser);
   virtual ~nsHTMLInputElement();
 
   // nsISupports
@@ -201,6 +202,9 @@ public:
                                                      nsGenericHTMLFormElement)
 
   void MaybeLoadImage();
+
+  virtual nsXPCClassInfo* GetClassInfo();
+
 protected:
   // Pull IsSingleLineTextControl into our scope, otherwise it'd be hidden
   // by the nsITextControlElement version.
@@ -208,7 +212,8 @@ protected:
 
   // Helper method
   nsresult SetValueInternal(const nsAString& aValue,
-                            PRBool aUserInput);
+                            PRBool aUserInput,
+                            PRBool aSetValueChanged);
 
   void ClearFileNames() {
     nsTArray<nsString> fileNames;
@@ -279,7 +284,7 @@ protected:
    * Do all the work that |SetChecked| does (radio button handling, etc.), but
    * take an |aNotify| parameter.
    */
-  nsresult DoSetChecked(PRBool aValue, PRBool aNotify = PR_TRUE);
+  nsresult DoSetChecked(PRBool aValue, PRBool aNotify, PRBool aSetValueChanged);
 
   /**
    * Do all the work that |SetCheckedChanged| does (radio button handling,
@@ -335,6 +340,11 @@ protected:
    * See: http://www.whatwg.org/specs/web-apps/current-work/#value-sanitization-algorithm
    */
   void SanitizeValue(nsAString& aValue);
+
+  /**
+   * Set the current default value to the value of the input element.
+   */
+  nsresult SetDefaultValueAsValue();
 
   nsCOMPtr<nsIControllers> mControllers;
 

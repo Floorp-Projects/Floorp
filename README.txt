@@ -8,7 +8,7 @@ For information on how to build Mozilla from the source code, see:
     http://developer.mozilla.org/en/docs/Build_Documentation
 
 To have your bug fix / feature added to Mozilla, you should create a patch and
-submit it to Bugzilla (http://bugzilla.mozilla.org). Instructions are at:
+submit it to Bugzilla (https://bugzilla.mozilla.org). Instructions are at:
 
     http://developer.mozilla.org/en/docs/Creating_a_patch
     http://developer.mozilla.org/en/docs/Getting_your_patch_in_the_tree

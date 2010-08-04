@@ -247,7 +247,9 @@ namespace nanojit
 
     RegisterMask Assembler::nHint(LIns* ins)
     {
+        // Never called, because no entries in nHints[] == PREFER_SPECIAL.
         NanoAssert(0);
+        return 0;
     }
 
     bool Assembler::canRemat(LIns* ins)
@@ -658,6 +660,7 @@ namespace nanojit
             int d = findMemFor(lhs) + rhs->immI();
             ADD(FP, L2, rr);
             SET32(d, L2);
+            return;
         }
 
         Register rr = deprecated_prepResultReg(ins, allow);

@@ -183,40 +183,31 @@ gfxXlibSurface::CreateSimilarSurface(gfxContentType aContent,
                                      const gfxIntSize& aSize)
 {
     if (aContent == CONTENT_COLOR) {
-        // If the destination surface does not have an xrender format, then we
-        // won't be able to copy directly from another Xlib surface with a
-        // different format.  Either an xlib surface with the same visual (for
-        // XCopyArea) or an image surface might be sensible options there, but
-        // we just leave the decision to cairo_surface_create_similar.
-        XRenderPictFormat* format =
-            cairo_xlib_surface_get_xrender_format(CairoSurface());
-        if (format) {
-            // cairo_surface_create_similar will use a matching visual if it
-            // can.  However, systems with 16-bit or indexed default visuals
-            // may benefit from rendering with 24-bit formats.  This same code
-            // can also be used for opaque surfaces when not forcing 24-bit,
-            // so as to skip the black initialization that
-            // cairo_surface_create_simiar does.
-            static PRBool force24bpp = GetForce24bppPref();
-
-            if (force24bpp || (format->type == PictTypeDirect
-                               && format->direct.alphaMask != 0)) {
-                format = XRenderFindStandardFormat(mDisplay,
-                                                   PictStandardRGB24);
-            }
-
+        // cairo_surface_create_similar will use a matching visual if it can.
+        // However, systems with 16-bit or indexed default visuals may benefit
+        // from rendering with 24-bit formats.
+        static PRBool force24bpp = GetForce24bppPref();
+        if (force24bpp
+            && cairo_xlib_surface_get_depth(CairoSurface()) != 24) {
+            XRenderPictFormat* format =
+                XRenderFindStandardFormat(mDisplay, PictStandardRGB24);
             if (format) {
+                // Cairo only performs simple self-copies as desired if it
+                // knows that this is a Pixmap surface.  It only knows that
+                // surfaces are pixmap surfaces if it creates the Pixmap
+                // itself, so we use cairo_surface_create_similar with a
+                // temporary reference surface to indicate the format.
                 Screen* screen = cairo_xlib_surface_get_screen(CairoSurface());
-                nsRefPtr<gfxASurface> result =
-                    gfxXlibSurface::Create(screen, format, aSize, mDrawable);
-            
-                if (result)
-                    return result.forget();
+                nsRefPtr<gfxXlibSurface> depth24reference =
+                    gfxXlibSurface::Create(screen, format,
+                                           gfxIntSize(1, 1), mDrawable);
+                if (depth24reference)
+                    return depth24reference->
+                        gfxASurface::CreateSimilarSurface(aContent, aSize);
             }
         }
     }
 
-    // Fall back to cairo_surface_create_similar().
     return gfxASurface::CreateSimilarSurface(aContent, aSize);
 }
 
@@ -422,46 +413,79 @@ gfxXlibSurface::DepthOfVisual(const Screen* screen, const Visual* visual)
 }
     
 /* static */
+Visual*
+gfxXlibSurface::FindVisual(Screen *screen, gfxImageFormat format)
+{
+    int depth;
+    unsigned long red_mask, green_mask, blue_mask;
+    switch (format) {
+        case ImageFormatARGB32:
+            depth = 32;
+            red_mask = 0xff0000;
+            green_mask = 0xff00;
+            blue_mask = 0xff;
+            break;
+        case ImageFormatRGB24:
+            depth = 24;
+            red_mask = 0xff0000;
+            green_mask = 0xff00;
+            blue_mask = 0xff;
+            break;
+        case ImageFormatRGB16_565:
+            depth = 16;
+            red_mask = 0xf800;
+            green_mask = 0x7e0;
+            blue_mask = 0x1f;
+            break;
+        case ImageFormatA8:
+        case ImageFormatA1:
+        default:
+            return NULL;
+    }
+
+    for (int d = 0; d < screen->ndepths; d++) {
+        const Depth& d_info = screen->depths[d];
+        if (d_info.depth != depth)
+            continue;
+
+        for (int v = 0; v < d_info.nvisuals; v++) {
+            Visual* visual = &d_info.visuals[v];
+
+            if (visual->c_class == TrueColor &&
+                visual->red_mask == red_mask &&
+                visual->green_mask == green_mask &&
+                visual->blue_mask == blue_mask)
+                return visual;
+        }
+    }
+
+    return NULL;
+}
+
+/* static */
 XRenderPictFormat*
 gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
 {
     switch (format) {
         case ImageFormatARGB32:
             return XRenderFindStandardFormat (dpy, PictStandardARGB32);
-            break;
         case ImageFormatRGB24:
             return XRenderFindStandardFormat (dpy, PictStandardRGB24);
-            break;
         case ImageFormatRGB16_565: {
             // PictStandardRGB16_565 is not standard Xrender format
             // we should try to find related visual
             // and find xrender format by visual
-            Visual *visual = NULL;
-            Screen *screen = DefaultScreenOfDisplay(dpy);
-            int j;
-            for (j = 0; j < screen->ndepths; j++) {
-                Depth *d = &screen->depths[j];
-                if (d->depth == 16 && d->nvisuals && &d->visuals[0]) {
-                    if (d->visuals[0].red_mask   == 0xf800 &&
-                        d->visuals[0].green_mask == 0x7e0 &&
-                        d->visuals[0].blue_mask  == 0x1f)
-                        visual = &d->visuals[0];
-                    break;
-                }
-            }
+            Visual *visual = FindVisual(DefaultScreenOfDisplay(dpy), format);
             if (!visual)
                 return NULL;
             return XRenderFindVisualFormat(dpy, visual);
-            break;
         }
         case ImageFormatA8:
             return XRenderFindStandardFormat (dpy, PictStandardA8);
-            break;
         case ImageFormatA1:
             return XRenderFindStandardFormat (dpy, PictStandardA1);
-            break;
         default:
-            return NULL;
+            break;
     }
 
     return (XRenderPictFormat*)NULL;
