@@ -64,6 +64,21 @@
 #include "nsIStandaloneNativeMenu.h"
 #include "nsILocalFileMac.h"
 #include "nsString.h"
+#include "nsCommandLineServiceMac.h"
+
+class AutoAutoreleasePool {
+public:
+  AutoAutoreleasePool()
+  {
+    mLocalPool = [[NSAutoreleasePool alloc] init];
+  }
+  ~AutoAutoreleasePool()
+  {
+    [mLocalPool release];
+  }
+private:
+  NSAutoreleasePool *mLocalPool;
+};
 
 @interface MacApplicationDelegate : NSObject
 {
@@ -92,7 +107,7 @@ SetupMacApplicationDelegate()
 
   // this is called during startup, outside an event loop, and therefore
   // needs an autorelease pool to avoid cocoa object leakage (bug 559075)
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  AutoAutoreleasePool pool;
 
   // This call makes it so that application:openFile: doesn't get bogus calls
   // from Cocoa doing its own parsing of the argument string. And yes, we need
@@ -103,8 +118,6 @@ SetupMacApplicationDelegate()
   // Create the delegate. This should be around for the lifetime of the app.
   MacApplicationDelegate *delegate = [[MacApplicationDelegate alloc] init];
   [NSApp setDelegate:delegate];
-
-  [pool release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -128,6 +141,11 @@ SetupMacApplicationDelegate()
              forEventClass:'WWW!'
                 andEventID:'OURL'];
 
+    [aeMgr setEventHandler:self
+               andSelector:@selector(handleAppleEvent:withReplyEvent:)
+             forEventClass:kCoreEventClass
+                andEventID:kAEOpenDocuments];
+
     if (![NSApp windowsMenu]) {
       // If the application has a windows menu, it will keep it up to date and
       // prepend the window list to the Dock menu automatically.
@@ -148,6 +166,7 @@ SetupMacApplicationDelegate()
   NSAppleEventManager *aeMgr = [NSAppleEventManager sharedAppleEventManager];
   [aeMgr removeEventHandlerForEventClass:kInternetEventClass andEventID:kAEGetURL];
   [aeMgr removeEventHandlerForEventClass:'WWW!' andEventID:'OURL'];
+  [aeMgr removeEventHandlerForEventClass:kCoreEventClass andEventID:kAEOpenDocuments];
   [super dealloc];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -175,10 +194,20 @@ SetupMacApplicationDelegate()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NSString *escapedPath = [filename stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+  NSURL *url = [NSURL fileURLWithPath:filename];
+  if (!url)
+    return NO;
+
+  NSString *urlString = [url absoluteString];
+  if (!urlString)
+    return NO;
+
+  // Add the URL to any command line we're currently setting up.
+  if (CommandLineServiceMac::AddURLToCurrentCommandLine([urlString UTF8String]))
+    return YES;
 
   nsCOMPtr<nsILocalFileMac> inFile;
-  nsresult rv = NS_NewLocalFileWithCFURL((CFURLRef)[NSURL URLWithString:escapedPath], PR_TRUE, getter_AddRefs(inFile));
+  nsresult rv = NS_NewLocalFileWithCFURL((CFURLRef)url, PR_TRUE, getter_AddRefs(inFile));
   if (NS_FAILED(rv))
     return NO;
 
@@ -307,6 +336,8 @@ SetupMacApplicationDelegate()
   if (!event)
     return;
 
+  AutoAutoreleasePool pool;
+
   if (([event eventClass] == kInternetEventClass && [event eventID] == kAEGetURL) ||
       ([event eventClass] == 'WWW!' && [event eventID] == 'OURL')) {
     NSString* urlString = [[event paramDescriptorForKeyword:keyDirectObject] stringValue];
@@ -319,6 +350,10 @@ SetupMacApplicationDelegate()
                         range:NSMakeRange(0, [schemeString length])] == NSOrderedSame) {
       return;
     }
+
+    // Add the URL to any command line we're currently setting up.
+    if (CommandLineServiceMac::AddURLToCurrentCommandLine([urlString UTF8String]))
+      return;
 
     nsCOMPtr<nsICommandLineRunner> cmdLine(do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
     if (!cmdLine) {
@@ -334,6 +369,26 @@ SetupMacApplicationDelegate()
     if (NS_FAILED(rv))
       return;
     rv = cmdLine->Run();
+  }
+  else if ([event eventClass] == kCoreEventClass && [event eventID] == kAEOpenDocuments) {
+    NSAppleEventDescriptor* fileListDescriptor = [event paramDescriptorForKeyword:keyDirectObject];
+    if (!fileListDescriptor)
+      return;
+
+    // Descriptor list indexing is one-based...
+    NSInteger numberOfFiles = [fileListDescriptor numberOfItems];
+    for (NSInteger i = 1; i <= numberOfFiles; i++) {
+      NSString* urlString = [[fileListDescriptor descriptorAtIndex:i] stringValue];
+      if (!urlString)
+        continue;
+
+      // We need a path, not a URL
+      NSURL* url = [NSURL URLWithString:urlString];
+      if (!url)
+        continue;
+
+      [self application:NSApp openFile:[url path]];
+    }
   }
 }
 

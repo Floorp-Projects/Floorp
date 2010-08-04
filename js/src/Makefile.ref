@@ -74,10 +74,6 @@ endif
 #DEFINES += -Ivprof
 #endif
 
-ifdef NARCISSUS
-DEFINES += -DNARCISSUS
-endif
-
 # Look in OBJDIR to find jsautocfg.h, jsautokw.h, and js-config.h
 INCLUDES   += -I. -I$(OBJDIR)
 

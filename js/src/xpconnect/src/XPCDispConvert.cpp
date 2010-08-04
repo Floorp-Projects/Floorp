@@ -309,7 +309,7 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
         case VT_R8:
         {
             varDest->vt = VT_R8;
-            varDest->dblVal = *JSVAL_TO_DOUBLE(src);
+            varDest->dblVal = JSVAL_TO_DOUBLE(src);
         }
         break;
         case VT_EMPTY:

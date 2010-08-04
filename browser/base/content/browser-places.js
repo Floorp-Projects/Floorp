@@ -44,15 +44,6 @@ var StarUI = {
   uri: null,
   _batching: false,
 
-  // nsISupports
-  QueryInterface: function SU_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIDOMEventListener) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_NOINTERFACE;
-  },
-
   _element: function(aID) {
     return document.getElementById(aID);
   },
@@ -69,30 +60,33 @@ var StarUI = {
     return this.panel = element;
   },
 
-  // list of command elements (by id) to disable when the panel is opened
-  _blockedCommands: ["cmd_close", "cmd_closeWindow"],
+  // Array of command elements to disable when the panel is opened.
+  get _blockedCommands() {
+    delete this._blockedCommands;
+    return this._blockedCommands =
+      ["cmd_close", "cmd_closeWindow"].map(function (id) this._element(id), this);
+  },
+
   _blockCommands: function SU__blockCommands() {
-    for each(var key in this._blockedCommands) {
-      var elt = this._element(key);
+    this._blockedCommands.forEach(function (elt) {
       // make sure not to permanently disable this item (see bug 409155)
       if (elt.hasAttribute("wasDisabled"))
-        continue;
-      if (elt.getAttribute("disabled") == "true")
+        return;
+      if (elt.getAttribute("disabled") == "true") {
         elt.setAttribute("wasDisabled", "true");
-      else {
+      } else {
         elt.setAttribute("wasDisabled", "false");
         elt.setAttribute("disabled", "true");
       }
-    }
+    });
   },
 
   _restoreCommandsState: function SU__restoreCommandsState() {
-    for each(var key in this._blockedCommands) {
-      var elt = this._element(key);
+    this._blockedCommands.forEach(function (elt) {
       if (elt.getAttribute("wasDisabled") != "true")
         elt.removeAttribute("disabled");
       elt.removeAttribute("wasDisabled");
-    }
+    });
   },
 
   // nsIDOMEventListener
@@ -742,6 +736,28 @@ HistoryMenu.prototype = {
       "for (var i = 0; i < " + undoItems.length + "; i++) undoCloseWindow();");
   },
 
+  toggleTabsFromOtherComputers: function PHM_toggleTabsFromOtherComputers() {
+    // This is a no-op if MOZ_SERVICES_SYNC isn't defined
+#ifdef MOZ_SERVICES_SYNC
+    // enable/disable the Tabs From Other Computers menu
+    let menuitem = document.getElementById("sync-tabs-menuitem");
+
+    // If Sync isn't configured yet, then don't show the menuitem.
+    if (Weave.Status.service == Weave.CLIENT_NOT_CONFIGURED ||
+        Weave.Svc.Prefs.get("firstSync", "") == "notReady") {
+      menuitem.setAttribute("hidden", true);
+      return;
+    }
+
+    // The tabs engine might never be inited (if services.sync.registerEngines
+    // is modified), so make sure we avoid undefined errors.
+    let enabled = Weave.Service.isLoggedIn && Weave.Engines.get("tabs") &&
+                  Weave.Engines.get("tabs").enabled;
+    menuitem.setAttribute("disabled", !enabled);
+    menuitem.setAttribute("hidden", false);
+#endif
+  },
+
   _onPopupShowing: function HM__onPopupShowing(aEvent) {
     PlacesMenu.prototype._onPopupShowing.apply(this, arguments);
 
@@ -751,6 +767,7 @@ HistoryMenu.prototype = {
 
     this.toggleRecentlyClosedTabs();
     this.toggleRecentlyClosedWindows();
+    this.toggleTabsFromOtherComputers();
   },
 
   _onCommand: function HM__onCommand(aEvent) {

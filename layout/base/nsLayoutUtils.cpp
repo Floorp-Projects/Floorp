@@ -768,6 +768,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
                   aEvent->eventStructType != NS_DRAG_EVENT &&
                   aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
                   aEvent->eventStructType != NS_GESTURENOTIFY_EVENT &&
+                  aEvent->eventStructType != NS_MOZTOUCH_EVENT &&
                   aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
@@ -819,7 +820,8 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
 }
 
 nsIFrame*
-nsLayoutUtils::GetPopupFrameForEventCoordinates(const nsEvent* aEvent)
+nsLayoutUtils::GetPopupFrameForEventCoordinates(nsPresContext* aPresContext,
+                                                const nsEvent* aEvent)
 {
 #ifdef MOZ_XUL
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -831,7 +833,8 @@ nsLayoutUtils::GetPopupFrameForEventCoordinates(const nsEvent* aEvent)
   // Search from top to bottom
   for (i = 0; i < popups.Length(); i++) {
     nsIFrame* popup = popups[i];
-    if (popup->GetOverflowRect().Contains(
+    if (popup->PresContext()->GetRootPresContext() == aPresContext &&
+        popup->GetOverflowRect().Contains(
           GetEventCoordinatesRelativeTo(aEvent, popup))) {
       return popup;
     }

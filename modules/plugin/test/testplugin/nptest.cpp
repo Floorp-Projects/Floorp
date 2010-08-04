@@ -93,14 +93,18 @@ NoteIntentionalCrash()
   }
 }
 
+static void Crash()
+{
+  int *pi = NULL;
+  *pi = 55; // Crash dereferencing null pointer
+  ++gCrashCount;
+}
+
 static void
 IntentionalCrash()
 {
   NoteIntentionalCrash();
-
-  int *pi = NULL;
-  *pi = 55; // Crash dereferencing null pointer
-  ++gCrashCount;
+  Crash();
 }
 
 //
@@ -935,6 +939,17 @@ NPError
 NPP_SetWindow(NPP instance, NPWindow* window)
 {
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+
+  if (instanceData->scriptableObject->drawMode == DM_DEFAULT &&
+      (instanceData->window.width != window->width ||
+       instanceData->window.height != window->height)) {
+    NPRect r;
+    r.left = r.top = 0;
+    r.right = window->width;
+    r.bottom = window->height;
+    NPN_InvalidateRect(instance, &r);
+  }
+
   void* oldWindow = instanceData->window.window;
   pluginDoSetWindow(instanceData, window);
   if (instanceData->hasWidget && oldWindow != instanceData->window.window) {
@@ -1654,6 +1669,14 @@ scriptableInvokeDefault(NPObject* npobj, const NPVariant* args, uint32_t argCoun
 bool
 scriptableHasProperty(NPObject* npobj, NPIdentifier name)
 {
+  if (NPN_IdentifierIsString(name)) {
+    if (NPN_GetStringIdentifier(NPN_UTF8FromIdentifier(name)) != name)
+      Crash();
+  }
+  else {
+    if (NPN_GetIntIdentifier(NPN_IntFromIdentifier(name)) != name)
+      Crash();
+  }
   for (int i = 0; i < int(ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
     if (name == sPluginPropertyIdentifiers[i])
       return true;

@@ -294,50 +294,49 @@ OP___(modd,    105, Op2,  D,    1)  // modulo double
 OP___(cmovi,   106, Op3,  I,    1)  // conditional move int
 OP_64(cmovq,   107, Op3,  Q,    1)  // conditional move quad
 
-OP_UN(108)
-
 //---------------------------------------------------------------------------
 // Conversions
 //---------------------------------------------------------------------------
-OP_64(i2q,     109, Op1,  Q,    1)  // sign-extend int to quad
-OP_64(ui2uq,   110, Op1,  Q,    1)  // zero-extend unsigned int to unsigned quad
-OP_64(q2i,     111, Op1,  I,    1)  // truncate quad to int (removes the high 32 bits)
+OP_64(i2q,     108, Op1,  Q,    1)  // sign-extend int to quad
+OP_64(ui2uq,   109, Op1,  Q,    1)  // zero-extend unsigned int to unsigned quad
+OP_64(q2i,     110, Op1,  I,    1)  // truncate quad to int (removes the high 32 bits)
 
-OP___(i2d,     112, Op1,  D,    1)  // convert int to double
-OP___(ui2d,    113, Op1,  D,    1)  // convert unsigned int to double
-OP___(d2i,     114, Op1,  I,    1)  // convert double to int (no exceptions raised, platform rounding rules)
+OP___(i2d,     111, Op1,  D,    1)  // convert int to double
+OP___(ui2d,    112, Op1,  D,    1)  // convert unsigned int to double
+OP___(d2i,     113, Op1,  I,    1)  // convert double to int (no exceptions raised, platform rounding rules)
+
+OP_64(dasq,    114, Op1,  Q,    1)  // interpret the bits of a double as a quad
+OP_64(qasd,    115, Op1,  D,    1)  // interpret the bits of a quad as a double
 
 //---------------------------------------------------------------------------
 // Overflow arithmetic
 //---------------------------------------------------------------------------
 // These all exit if overflow occurred.  The result is valid on either path.
-OP___(addxovi, 115, Op3,  I,    1)  // add int and exit on overflow
-OP___(subxovi, 116, Op3,  I,    1)  // subtract int and exit on overflow
-OP___(mulxovi, 117, Op3,  I,    1)  // multiply int and exit on overflow
+OP___(addxovi, 116, Op3,  I,    1)  // add int and exit on overflow
+OP___(subxovi, 117, Op3,  I,    1)  // subtract int and exit on overflow
+OP___(mulxovi, 118, Op3,  I,    1)  // multiply int and exit on overflow
 
 // These all branch if overflow occurred.  The result is valid on either path.
-OP___(addjovi, 118, Op3,  I,    1)  // add int and branch on overflow
-OP___(subjovi, 119, Op3,  I,    1)  // subtract int and branch on overflow
-OP___(muljovi, 120, Op3,  I,    1)  // multiply int and branch on overflow
+OP___(addjovi, 119, Op3,  I,    1)  // add int and branch on overflow
+OP___(subjovi, 120, Op3,  I,    1)  // subtract int and branch on overflow
+OP___(muljovi, 121, Op3,  I,    1)  // multiply int and branch on overflow
 
-OP_64(addjovq, 121, Op3,  Q,    1)  // add quad and branch on overflow
-OP_64(subjovq, 122, Op3,  Q,    1)  // subtract quad and branch on overflow
+OP_64(addjovq, 122, Op3,  Q,    1)  // add quad and branch on overflow
+OP_64(subjovq, 123, Op3,  Q,    1)  // subtract quad and branch on overflow
 
 //---------------------------------------------------------------------------
 // SoftFloat
 //---------------------------------------------------------------------------
-OP_SF(dlo2i,   123, Op1,  I,    1)  // get the low  32 bits of a double as an int
-OP_SF(dhi2i,   124, Op1,  I,    1)  // get the high 32 bits of a double as an int
-OP_SF(ii2d,    125, Op2,  D,    1)  // join two ints (1st arg is low bits, 2nd is high)
+OP_SF(dlo2i,   124, Op1,  I,    1)  // get the low  32 bits of a double as an int
+OP_SF(dhi2i,   125, Op1,  I,    1)  // get the high 32 bits of a double as an int
+OP_SF(ii2d,    126, Op2,  D,    1)  // join two ints (1st arg is low bits, 2nd is high)
 
 // LIR_hcalli is a hack that's only used on 32-bit platforms that use
 // SoftFloat.  Its operand is always a LIR_calli, but one that specifies a
 // function that returns a double.  It indicates that the double result is
 // returned via two 32-bit integer registers.  The result is always used as the
 // second operand of a LIR_ii2d.
-OP_SF(hcalli,  126, Op1,  I,    1)
-
-OP_UN(127)
+OP_SF(hcalli,  127, Op1,  I,    1)
 
 #undef OP_UN
 #undef OP_32

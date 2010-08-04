@@ -141,13 +141,15 @@ public:
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
   nsresult ScrollIntoView(PRBool aTop, PRUint8 optional_argc);
-  // Declare Focus(), Blur(), GetTabIndex(), SetTabIndex(), GetSpellcheck(),
-  // SetSpellcheck(), and GetDraggable() such that classes that inherit interfaces
-  // with those methods properly override them
+  // Declare Focus(), Blur(), GetTabIndex(), SetTabIndex(), GetHidden(),
+  // SetHidden(), GetSpellcheck(), SetSpellcheck(), and GetDraggable() such that
+  // classes that inherit interfaces with those methods properly override them.
   NS_IMETHOD Focus();
   NS_IMETHOD Blur();
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  NS_IMETHOD GetHidden(PRBool* aHidden);
+  NS_IMETHOD SetHidden(PRBool aHidden);
   NS_IMETHOD GetSpellcheck(PRBool* aSpellcheck);
   NS_IMETHOD SetSpellcheck(PRBool aSpellcheck);
   NS_IMETHOD GetDraggable(PRBool* aDraggable);
@@ -273,8 +275,8 @@ public:
    * @param aResult the resulting HTMLValue
    * @return whether the value was parsed
    */
-  PRBool ParseTableCellHAlignValue(const nsAString& aString,
-                                   nsAttrValue& aResult) const;
+  static PRBool ParseTableCellHAlignValue(const nsAString& aString,
+                                          nsAttrValue& aResult);
 
   /**
    * Convert a table valign string to value (left/right/center/char/justify/

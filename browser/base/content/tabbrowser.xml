@@ -1459,18 +1459,31 @@
             // update first-tab/last-tab/beforeselected/afterselected attributes
             this.selectedTab._selected = true;
 
+            // Removing the panel requires fixing up selectedPanel immediately
+            // (see below), which would be hindered by the potentially expensive
+            // browser removal. So we remove the browser and the panel in two
+            // steps.
+            var panel = browser.parentNode;
+
             // This will unload the document. An unload handler could remove
             // dependant tabs, so it's important that the tabbrowser is now in
             // a consistent state (tab removed, tab positions updated, etc.).
-            // Also, it's important that another tab has been selected before
-            // the panel is removed; otherwise, a random sibling panel can flash.
-            this.mPanelContainer.removeChild(browser.parentNode);
+            panel.removeChild(browser);
 
-            // As the panel is removed, the removal of a dependent document can
+            // As the browser is removed, the removal of a dependent document can
             // cause the whole window to close. So at this point, it's possible
             // that the binding is destructed.
-            if (this.mTabBox)
-              this.mTabBox.selectedPanel = this.getBrowserForTab(this.mCurrentTab).parentNode;
+            if (this.mTabBox) {
+              let selectedPanel = this.mTabBox.selectedPanel;
+
+              this.mPanelContainer.removeChild(panel);
+
+              // Under the hood, a selectedIndex attribute controls which panel
+              // is displayed. Removing a panel A which precedes the selected
+              // panel B makes selectedIndex point to the panel next to B. We
+              // need to explicitly preserve B as the selected panel.
+              this.mTabBox.selectedPanel = selectedPanel;
+            }
 
             if (aCloseWindow)
               this._windowIsClosing = closeWindow(true);
@@ -2874,11 +2887,6 @@
             else
               newMargin = rect.right - tabRect.right;
           }
-          // ensure we never place the drop indicator beyond our limits
-          if (newMargin < minMargin)
-            newMargin = minMargin;
-          else if (newMargin > maxMargin)
-            newMargin = maxMargin;
         }
 
         ind.collapsed = false;

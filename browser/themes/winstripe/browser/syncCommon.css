@@ -1,0 +1,41 @@
+/* The following are used by both syncSetup.xul and syncGenericChange.xul */
+.status {
+  color: -moz-dialogtext;
+}
+
+.statusIcon {
+  -moz-margin-start: 4px;
+  max-height: 16px;
+  max-width: 16px;
+}
+
+.statusIcon[status="active"] {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
+.statusIcon[status="error"] {
+  list-style-image: url("chrome://global/skin/icons/error-16.png");
+}
+
+.statusIcon[status="success"] {
+  list-style-image: url("chrome://global/skin/icons/information-16.png");
+}
+
+/* .data is only used by syncGenericChange.xul, but it seems unnecessary to have
+   a separate stylesheet for it. */
+.data {
+  font-size: 90%;
+  font-weight: bold;
+}
+
+dialog#change-dialog {
+  width: 40em;
+}
+
+image#syncIcon {
+  list-style-image: url("chrome://browser/skin/sync-32.png");
+}
+
+#introText {
+  margin-top: 2px;
+}

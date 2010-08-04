@@ -50,8 +50,6 @@
 #include "nsWeakReference.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDOMImplementation.h"
-#include "nsIPrivateDOMImplementation.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"

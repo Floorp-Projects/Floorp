@@ -2439,7 +2439,7 @@ nsXULDocument::PrepareToWalk()
 
     // Do one-time initialization if we're preparing to walk the
     // master document's prototype.
-    nsCOMPtr<Element> root;
+    nsRefPtr<Element> root;
 
     if (mState == eState_Master) {
         // Add the root element
@@ -2930,7 +2930,7 @@ nsXULDocument::ResumeWalk()
                 nsXULPrototypeElement* protoele =
                     static_cast<nsXULPrototypeElement*>(childproto);
 
-                nsCOMPtr<Element> child;
+                nsRefPtr<Element> child;
 
                 if (!processingOverlayHookupNodes) {
                     rv = CreateElementFromPrototype(protoele,
@@ -3680,7 +3680,7 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
     }
 #endif
 
-    nsCOMPtr<Element> result;
+    nsRefPtr<Element> result;
 
     if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
         // If it's a XUL element, it'll be lightweight until somebody
@@ -3728,7 +3728,7 @@ nsXULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype,
 {
     nsresult rv;
 
-    nsCOMPtr<Element> element;
+    nsRefPtr<Element> element;
     rv = CreateElementFromPrototype(aPrototype, getter_AddRefs(element));
     if (NS_FAILED(rv)) return rv;
 

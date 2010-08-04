@@ -147,16 +147,19 @@ struct hb_mask_allocator_t {
     info->global = global;
   }
 
-  void compile (hb_face_t *face,
+  // compile lookup list; return true if kerning handled here,
+  // false if fallback kerning should be attempted
+  bool compile (hb_face_t *face,
 		hb_tag_t table_tag,
 		unsigned int script_index,
 		unsigned int language_index)
   {
+    bool kerning_handled = false;
     global_mask = 0;
     next_bit = MASK_BITS_USED;
 
     if (!count)
-      return;
+      return kerning_handled;
 
     qsort (infos, count, sizeof (infos[0]), feature_info_t::cmp);
 
@@ -187,13 +190,22 @@ struct hb_mask_allocator_t {
       else
         bits_needed = _hb_bit_storage (info->value);
 
-      if (!info->value || next_bit + bits_needed > 8 * sizeof (hb_mask_t))
-        continue; /* Feature disabled, or not enough bits. */
+      if (!info->value) { /* Feature disabled. */
+        if (info->global && info->tag == HB_TAG('k','e','r','n'))
+          kerning_handled = true; /* kerning explicitly disabled, don't use fallback */
+        continue;
+      }
+
+      if (next_bit + bits_needed > 8 * sizeof (hb_mask_t))
+        continue; /* Not enough bits available, skip this feature. */
 
       unsigned int feature_index;
       if (!hb_ot_layout_language_find_feature (face, table_tag, script_index, language_index,
 					       info->tag, &feature_index))
         continue;
+
+      if (info->tag == HB_TAG('k','e','r','n'))
+        kerning_handled = true; /* kern feature is present, so don't use fallback */
 
       feature_map_t *map = &maps[j++];
 
@@ -213,6 +225,8 @@ struct hb_mask_allocator_t {
         global_mask |= map->mask;
     }
     count = j;
+
+    return kerning_handled;
   }
 
   hb_mask_t get_global_mask (void) { return global_mask; }
@@ -233,7 +247,7 @@ struct hb_mask_allocator_t {
   unsigned int next_bit;
 };
 
-static void
+static bool
 setup_lookups (hb_face_t    *face,
 	       hb_buffer_t  *buffer,
 	       hb_feature_t *features,
@@ -290,7 +304,7 @@ setup_lookups (hb_face_t    *face,
 
 
   /* Compile features */
-  allocator.compile (face, table_tag, script_index, language_index);
+  bool kerning_handled = allocator.compile (face, table_tag, script_index, language_index);
 
 
   /* Gather lookup indices for features and set buffer masks at the same time */
@@ -350,6 +364,8 @@ setup_lookups (hb_face_t    *face,
     j++;
     *num_lookups = j;
   }
+
+  return kerning_handled;
 }
 
 
@@ -368,10 +384,10 @@ hb_ot_substitute_complex (hb_font_t    *font HB_UNUSED,
   if (!hb_ot_layout_has_substitution (face))
     return FALSE;
 
-  setup_lookups (face, buffer, features, num_features,
-		 HB_OT_TAG_GSUB,
-		 lookups, &num_lookups,
-		 original_direction);
+  (void)setup_lookups (face, buffer, features, num_features,
+		       HB_OT_TAG_GSUB,
+		       lookups, &num_lookups,
+		       original_direction);
 
   for (i = 0; i < num_lookups; i++)
     hb_ot_layout_substitute_lookup (face, buffer, lookups[i].index, lookups[i].mask);
@@ -394,17 +410,17 @@ hb_ot_position_complex (hb_font_t    *font,
   if (!hb_ot_layout_has_positioning (face))
     return FALSE;
 
-  setup_lookups (face, buffer, features, num_features,
-		 HB_OT_TAG_GPOS,
-		 lookups, &num_lookups,
-		 original_direction);
+  bool kerning_handled = setup_lookups (face, buffer, features, num_features,
+					HB_OT_TAG_GPOS,
+					lookups, &num_lookups,
+					original_direction);
 
   for (i = 0; i < num_lookups; i++)
     hb_ot_layout_position_lookup (font, face, buffer, lookups[i].index, lookups[i].mask);
 
   hb_ot_layout_position_finish (font, face, buffer);
 
-  return TRUE;
+  return kerning_handled;
 }
 
 

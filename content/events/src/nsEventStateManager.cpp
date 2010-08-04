@@ -66,7 +66,7 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
-#include "nsIDOMNSHTMLLabelElement.h"
+#include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -4019,7 +4019,7 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent,
 static already_AddRefed<nsIContent>
 GetLabelTarget(nsIContent* aLabel)
 {
-  nsCOMPtr<nsIDOMNSHTMLLabelElement> label = do_QueryInterface(aLabel);
+  nsCOMPtr<nsIDOMHTMLLabelElement> label = do_QueryInterface(aLabel);
   if (!label)
     return nsnull;
 

@@ -96,7 +96,7 @@ AutoConfigSecMan::CanAccess(PRUint32 aAction,
                             nsAXPCNativeCallContext *aCallContext, 
                             JSContext *aJSContext, JSObject *aJSObject, 
                             nsISupports *aObj, nsIClassInfo *aClassInfo, 
-                            jsval aName, void **aPolicy)
+                            jsid aName, void **aPolicy)
 {
     return NS_OK;
 }

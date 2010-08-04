@@ -3,7 +3,12 @@
  */
 
 const TESTROOT = "http://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
+const TESTROOT2 = "http://example.org/browser/toolkit/mozapps/extensions/test/xpinstall/";
+const CHROMEROOT = "chrome://mochikit/content/browser/toolkit/mozapps/extensions/test/xpinstall/";
 const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
+
+var gApp = document.getElementById("bundle_brand").getString("brandShortName");
+var gVersion = Services.appinfo.version;
 
 function wait_for_notification(aCallback) {
   PopupNotifications.panel.addEventListener("popupshown", function() {
@@ -56,6 +61,10 @@ function test_blocked_install() {
     let notification = aPanel.childNodes[0];
     is(notification.id, "addon-install-blocked", "Should have seen the install blocked");
     is(notification.button.label, "Allow", "Should have seen the right button");
+    is(notification.getAttribute("label"),
+       gApp + " prevented this site (example.com) from asking you to install " +
+       "software on your computer.",
+       "Should have seen the right message");
 
     // Click on Allow
     EventUtils.synthesizeMouse(notification.button, 20, 10, {});
@@ -69,6 +78,9 @@ function test_blocked_install() {
         let notification = aPanel.childNodes[0];
         is(notification.id, "addon-install-complete", "Should have seen the install complete");
         is(notification.button.label, "Restart Now", "Should have seen the right button");
+        is(notification.getAttribute("label"), 
+           "XPI Test will be installed after you restart " + gApp + ".",
+           "Should have seen the right message");
 
         AddonManager.getAllInstalls(function(aInstalls) {
         is(aInstalls.length, 1, "Should be one pending install");
@@ -101,6 +113,9 @@ function test_whitelisted_install() {
       let notification = aPanel.childNodes[0];
       is(notification.id, "addon-install-complete", "Should have seen the install complete");
       is(notification.button.label, "Restart Now", "Should have seen the right button");
+      is(notification.getAttribute("label"),
+         "XPI Test will be installed after you restart " + gApp + ".",
+         "Should have seen the right message");
 
       AddonManager.getAllInstalls(function(aInstalls) {
         is(aInstalls.length, 1, "Should be one pending install");
@@ -128,6 +143,10 @@ function test_failed_download() {
   wait_for_notification(function(aPanel) {
     let notification = aPanel.childNodes[0];
     is(notification.id, "addon-install-failed", "Should have seen the install fail");
+    is(notification.getAttribute("label"),
+       "The add-on could not be downloaded because of a connection failure " +
+       "on example.com.",
+       "Should have seen the right message");
 
     gBrowser.removeTab(gBrowser.selectedTab);
     Services.perms.remove("example.com", "install");
@@ -149,6 +168,10 @@ function test_corrupt_file() {
   wait_for_notification(function(aPanel) {
     let notification = aPanel.childNodes[0];
     is(notification.id, "addon-install-failed", "Should have seen the install fail");
+    is(notification.getAttribute("label"),
+       "The add-on downloaded from example.com could not be installed " +
+       "because it appears to be corrupt.",
+       "Should have seen the right message");
 
     gBrowser.removeTab(gBrowser.selectedTab);
     Services.perms.remove("example.com", "install");
@@ -170,6 +193,10 @@ function test_incompatible() {
   wait_for_notification(function(aPanel) {
     let notification = aPanel.childNodes[0];
     is(notification.id, "addon-install-failed", "Should have seen the install fail");
+    is(notification.getAttribute("label"),
+       "XPI Test could not be installed because it is not compatible with " +
+       gApp + " " + gVersion + ".",
+       "Should have seen the right message");
 
     gBrowser.removeTab(gBrowser.selectedTab);
     Services.perms.remove("example.com", "install");
@@ -196,6 +223,9 @@ function test_restartless() {
       let notification = aPanel.childNodes[0];
       is(notification.id, "addon-install-complete", "Should have seen the install complete");
       is(notification.button.label, "Open Add-ons Manager", "Should have seen the right button");
+      is(notification.getAttribute("label"),
+         "XPI Test has been installed successfully.",
+         "Should have seen the right message");
 
       AddonManager.getAllInstalls(function(aInstalls) {
         is(aInstalls.length, 0, "Should be no pending installs");
@@ -232,6 +262,9 @@ function test_multiple() {
       let notification = aPanel.childNodes[0];
       is(notification.id, "addon-install-complete", "Should have seen the install complete");
       is(notification.button.label, "Restart Now", "Should have seen the right button");
+      is(notification.getAttribute("label"),
+         "2 add-ons will be installed after you restart " + gApp + ".",
+         "Should have seen the right message");
 
       AddonManager.getAllInstalls(function(aInstalls) {
         is(aInstalls.length, 1, "Should be one pending install");
@@ -247,6 +280,132 @@ function test_multiple() {
       });
     });
   });
+},
+
+function test_url() {
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(TESTROOT + "unsigned.xpi");
+
+  // Wait for the install confirmation dialog
+  wait_for_install_dialog(function(aWindow) {
+    aWindow.document.documentElement.acceptDialog();
+
+    // Wait for the complete notification
+    wait_for_notification(function(aPanel) {
+      let notification = aPanel.childNodes[0];
+      is(notification.id, "addon-install-complete", "Should have seen the install complete");
+      is(notification.button.label, "Restart Now", "Should have seen the right button");
+      is(notification.getAttribute("label"),
+         "XPI Test will be installed after you restart " + gApp + ".",
+         "Should have seen the right message");
+
+      AddonManager.getAllInstalls(function(aInstalls) {
+        is(aInstalls.length, 1, "Should be one pending install");
+        aInstalls[0].cancel();
+
+        gBrowser.removeTab(gBrowser.selectedTab);
+        runNextTest();
+      });
+    });
+  });
+},
+
+function test_localfile() {
+  var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                     .getService(Components.interfaces.nsIChromeRegistry);
+  var path = cr.convertChromeURL(makeURI(CHROMEROOT + "corrupt.xpi")).spec;
+
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(path);
+
+  // Wait for the complete notification
+  wait_for_notification(function(aPanel) {
+    let notification = aPanel.childNodes[0];
+    is(notification.id, "addon-install-failed", "Should have seen the install fail");
+    is(notification.getAttribute("label"),
+       "This add-on could not be installed because it appears to be corrupt.",
+       "Should have seen the right message");
+
+    gBrowser.removeTab(gBrowser.selectedTab);
+    runNextTest();
+  });
+},
+
+function test_wronghost() {
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.addEventListener("load", function() {
+    if (gBrowser.currentURI.spec != TESTROOT2 + "enabled.html")
+      return;
+
+    gBrowser.removeEventListener("load", arguments.callee, true);
+
+    gBrowser.loadURI(TESTROOT + "corrupt.xpi");
+
+    // Wait for the complete notification
+    wait_for_notification(function(aPanel) {
+      let notification = aPanel.childNodes[0];
+      is(notification.id, "addon-install-failed", "Should have seen the install fail");
+      is(notification.getAttribute("label"),
+         "The add-on downloaded from example.com could not be installed " +
+         "because it appears to be corrupt.",
+         "Should have seen the right message");
+
+      gBrowser.removeTab(gBrowser.selectedTab);
+      runNextTest();
+    });
+  }, true);
+  gBrowser.loadURI(TESTROOT2 + "enabled.html");
+},
+
+function test_reload() {
+  var pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+
+  var triggers = encodeURIComponent(JSON.stringify({
+    "Unsigned XPI": "unsigned.xpi"
+  }));
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+
+  // Wait for the install confirmation dialog
+  wait_for_install_dialog(function(aWindow) {
+    aWindow.document.documentElement.acceptDialog();
+
+    // Wait for the complete notification
+    wait_for_notification(function(aPanel) {
+      let notification = aPanel.childNodes[0];
+      is(notification.id, "addon-install-complete", "Should have seen the install complete");
+      is(notification.button.label, "Restart Now", "Should have seen the right button");
+      is(notification.getAttribute("label"),
+         "XPI Test will be installed after you restart " + gApp + ".",
+         "Should have seen the right message");
+
+      function test_fail() {
+        ok(false, "Reloading should not have hidden the notification");
+      }
+
+      PopupNotifications.panel.addEventListener("popuphiding", test_fail, false);
+
+      gBrowser.addEventListener("load", function() {
+        if (gBrowser.currentURI.spec != TESTROOT2 + "enabled.html")
+          return;
+
+        gBrowser.removeEventListener("load", arguments.callee, true);
+
+        PopupNotifications.panel.removeEventListener("popuphiding", test_fail, false);
+
+        AddonManager.getAllInstalls(function(aInstalls) {
+          is(aInstalls.length, 1, "Should be one pending install");
+          aInstalls[0].cancel();
+
+          gBrowser.removeTab(gBrowser.selectedTab);
+          Services.perms.remove("example.com", "install");
+          runNextTest();
+        });
+      }, true);
+      gBrowser.loadURI(TESTROOT2 + "enabled.html");
+    });
+  });
 }
 ];
 
@@ -255,16 +414,21 @@ function runNextTest() {
     is(aInstalls.length, 0, "Should be no active installs");
 
     if (TESTS.length == 0) {
+      Services.prefs.setBoolPref("extensions.logging.enabled", false);
+
       finish();
       return;
     }
 
+    info("Running " + TESTS[0].name);
     TESTS.shift()();
   });
-}
+};
 
 function test() {
   waitForExplicitFinish();
+
+  Services.prefs.setBoolPref("extensions.logging.enabled", true);
 
   runNextTest();
 }

@@ -142,6 +142,11 @@ public:
     eDOMEvents_SVGScroll,
     eDOMEvents_SVGZoom,
 #endif // MOZ_SVG
+#ifdef MOZ_SMIL
+    eDOMEvents_beginEvent,
+    eDOMEvents_endEvent,
+    eDOMEvents_repeatEvent,
+#endif // MOZ_SMIL
 #ifdef MOZ_MEDIA
     eDOMEvents_loadstart,
     eDOMEvents_progress,
@@ -174,6 +179,9 @@ public:
     eDOMEvents_MozRotateGesture,
     eDOMEvents_MozTapGesture,
     eDOMEvents_MozPressTapGesture,
+    eDOMEvents_MozTouchDown,
+    eDOMEvents_MozTouchMove,
+    eDOMEvents_MozTouchUp,
     eDOMEvents_MozScrolledAreaChanged,
     eDOMEvents_transitionend
   };
