@@ -11417,11 +11417,16 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         if (!clasp->isNative())
             RETURN_STOP("new with non-native ops");
 
-        args[0] = INS_CONSTOBJ(funobj);
-        args[1] = INS_CONSTPTR(clasp);
-        args[2] = cx_ins;
-        newobj_ins = lir->insCall(&js_NewInstance_ci, args);
-        guard(false, lir->insEqP_0(newobj_ins), OOM_EXIT);
+        if (fun->flags & JSFUN_FAST_NATIVE_CTOR) {
+            vp[1].setMagic(JS_FAST_CONSTRUCTOR);
+            newobj_ins = INS_CONSTWORD(JS_FAST_CONSTRUCTOR);
+        } else {
+            args[0] = INS_CONSTOBJ(funobj);
+            args[1] = INS_CONSTPTR(clasp);
+            args[2] = cx_ins;
+            newobj_ins = lir->insCall(&js_NewInstance_ci, args);
+            guard(false, lir->insEqP_0(newobj_ins), OOM_EXIT);
+        }
         this_ins = newobj_ins;
     } else if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
         this_ins = INS_CONSTOBJ(funobj->getParent());
@@ -11477,7 +11482,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     // Set up arguments for the JSNative or JSFastNative.
     uint32 typesig;
     if (fun->flags & JSFUN_FAST_NATIVE) {
-        if (mode == JSOP_NEW)
+        if (mode == JSOP_NEW && !(fun->flags & JSFUN_FAST_NATIVE_CTOR))
             RETURN_STOP("untraceable fast native constructor");
         native_rval_ins = invokevp_ins;
         args[0] = invokevp_ins;
