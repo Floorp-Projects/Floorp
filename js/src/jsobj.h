@@ -512,7 +512,7 @@ struct JSObject {
     /* Number of extra fixed slots besides JSSLOT_PRIVATE. */
     static const uint32 ARGS_FIXED_RESERVED_SLOTS = 2;
 
-    inline uint32 getArgsLength() const;
+    inline uint32 getArgsInitialLength() const;
     inline void setArgsLength(uint32 argc);
     inline void setArgsLengthOverridden();
     inline bool isArgsLengthOverridden() const;

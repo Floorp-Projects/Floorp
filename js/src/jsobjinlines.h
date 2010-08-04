@@ -225,7 +225,7 @@ JSObject::setArgsLength(uint32 argc)
 }
 
 inline uint32
-JSObject::getArgsLength() const
+JSObject::getArgsInitialLength() const
 {
     JS_ASSERT(isArguments());
     uint32 argc = uint32(fslots[JSSLOT_ARGS_LENGTH].toInt32()) >> 1;
