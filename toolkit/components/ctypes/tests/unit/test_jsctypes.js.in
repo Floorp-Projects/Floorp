@@ -2185,8 +2185,7 @@ function run_closure_tests(library)
   run_single_closure_tests(library, ctypes.default_abi, "cdecl");
 #ifdef WIN32
 #ifndef HAVE_64BIT_OS
-  // stdcall closure tests are currently broken on windows. see bug 564966.
-  //run_single_closure_tests(library, ctypes.stdcall_abi, "stdcall");
+  run_single_closure_tests(library, ctypes.stdcall_abi, "stdcall");
 #endif
 #endif
 }
