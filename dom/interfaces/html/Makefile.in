@@ -116,8 +116,6 @@ SDK_XPIDLSRCS =					\
 
 XPIDLSRCS = 					\
 	nsIDOMHTMLCanvasElement.idl		\
-	nsIDOMNSHTMLAnchorElement.idl		\
-	nsIDOMNSHTMLAnchorElement2.idl		\
 	nsIDOMNSHTMLDocument.idl		\
 	nsIDOMNSHTMLElement.idl			\
 	nsIDOMNSHTMLFormElement.idl		\

@@ -364,7 +364,7 @@ typedef void (* ForEachPingCallback)(void *closure, nsIContent *content,
 static void
 ForEachPing(nsIContent *content, ForEachPingCallback callback, void *closure)
 {
-  // NOTE: Using nsIDOMNSHTMLAnchorElement2::GetPing isn't really worth it here
+  // NOTE: Using nsIDOMHTMLAnchorElement::GetPing isn't really worth it here
   //       since we'd still need to parse the resulting string.  Instead, we
   //       just parse the raw attribute.  It might be nice if the content node
   //       implemented an interface that exposed an enumeration of nsIURIs.
