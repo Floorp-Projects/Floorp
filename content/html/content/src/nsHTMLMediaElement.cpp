@@ -39,6 +39,7 @@
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsHTMLMediaElement.h"
+#include "nsHTMLTimeRanges.h"
 #include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -2212,4 +2213,14 @@ nsHTMLMediaElement::CopyInnerTo(nsGenericElement* aDest) const
     }
   }
   return rv;
+}
+
+nsresult nsHTMLMediaElement::GetBuffered(nsIDOMHTMLTimeRanges** aBuffered)
+{
+  nsHTMLTimeRanges* ranges = new nsHTMLTimeRanges();
+  NS_ADDREF(*aBuffered = ranges);
+  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA && mDecoder) {
+    return mDecoder->GetBuffered(ranges);
+  }
+  return NS_OK;
 }
