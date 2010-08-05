@@ -232,7 +232,14 @@ class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
   }
 
   NS_FORWARD_NSIDOMNSHTMLELEMENT(mElement->)
-  NS_FORWARD_NSIDOMELEMENTCSSINLINESTYLE(mElement->)
+  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
+  {
+    nsresult rv;
+    *aStyle = mElement->GetStyle(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ADDREF(*aStyle);
+    return NS_OK;
+  }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGenericHTMLElementTearoff,
                                            nsIDOMNSHTMLElement)

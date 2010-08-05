@@ -83,7 +83,9 @@ DOMCI_CASTABLE_INTERFACE(nsGenericTextNode, nsGenericTextNode, 5, _extra)     \
 DOMCI_CASTABLE_INTERFACE(nsDocument, nsIDocument, 6, _extra)                  \
 DOMCI_CASTABLE_INTERFACE(nsGenericHTMLElement, nsGenericHTMLElement, 7,       \
                          _extra)                                              \
-DOMCI_CASTABLE_INTERFACE(nsHTMLDocument, nsIDocument, 8, _extra)
+DOMCI_CASTABLE_INTERFACE(nsHTMLDocument, nsIDocument, 8, _extra)              \
+DOMCI_CASTABLE_INTERFACE(nsStyledElement, nsStyledElement, 9, _extra)         \
+DOMCI_CASTABLE_INTERFACE(nsSVGStylableElement, nsIContent, 10, _extra)
 
 // Make sure all classes mentioned in DOMCI_CASTABLE_INTERFACES
 // have been declared.
