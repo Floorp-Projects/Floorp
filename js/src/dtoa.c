@@ -123,16 +123,6 @@
  *	(e.g., some HP systems), it may be necessary to #define NAN_WORD0
  *	appropriately -- to the most significant word of a quiet NaN.
  *	(On HP Series 700/800 machines, -DNAN_WORD0=0x7ff40000 works.)
- *	When INFNAN_CHECK is #defined and No_Hex_NaN is not #defined,
- *	strtod also accepts (case insensitively) strings of the form
- *	NaN(x), where x is a string of hexadecimal digits and spaces;
- *	if there is only one string of hexadecimal digits, it is taken
- *	for the 52 fraction bits of the resulting NaN; if there are two
- *	or more strings of hex digits, the first is for the high 20 bits,
- *	the second and subsequent for the low 32 bits, with intervening
- *	white space ignored; but if this results in none of the 52
- *	fraction bits being on (an IEEE Infinity symbol), then NAN_WORD0
- *	and NAN_WORD1 are used instead.
  * #define MULTIPLE_THREADS if the system offers preemptively scheduled
  *	multiple threads.  In this case, you must provide (or suitably
  *	#define) two locks, acquired by ACQUIRE_DTOA_LOCK(n) and freed
@@ -1531,76 +1521,6 @@ match
 	return 1;
 	}
 
-#ifndef No_Hex_NaN
- static void
-hexnan
-#ifdef KR_headers
-	(rvp, sp) U *rvp; CONST char **sp;
-#else
-	(U *rvp, CONST char **sp)
-#endif
-{
-	ULong c, x[2];
-	CONST char *s;
-	int havedig, udx0, xshift;
-
-	x[0] = x[1] = 0;
-	havedig = xshift = 0;
-	udx0 = 1;
-	s = *sp;
-	/* allow optional initial 0x or 0X */
-	while((c = *(CONST unsigned char*)(s+1)) && c <= ' ')
-		++s;
-	if (s[1] == '0' && (s[2] == 'x' || s[2] == 'X'))
-		s += 2;
-	while((c = *(CONST unsigned char*)++s)) {
-		if (c >= '0' && c <= '9')
-			c -= '0';
-		else if (c >= 'a' && c <= 'f')
-			c += 10 - 'a';
-		else if (c >= 'A' && c <= 'F')
-			c += 10 - 'A';
-		else if (c <= ' ') {
-			if (udx0 && havedig) {
-				udx0 = 0;
-				xshift = 1;
-				}
-			continue;
-			}
-#ifdef GDTOA_NON_PEDANTIC_NANCHECK
-		else if (/*(*/ c == ')' && havedig) {
-			*sp = s + 1;
-			break;
-			}
-		else
-			return;	/* invalid form: don't change *sp */
-#else
-		else {
-			do {
-				if (/*(*/ c == ')') {
-					*sp = s + 1;
-					break;
-					}
-				} while((c = *++s));
-			break;
-			}
-#endif
-		havedig = 1;
-		if (xshift) {
-			xshift = 0;
-			x[0] = x[1];
-			x[1] = 0;
-			}
-		if (udx0)
-			x[0] = (x[0] << 4) | (x[1] >> 28);
-		x[1] = (x[1] << 4) | c;
-		}
-	if ((x[0] &= 0xfffff) || x[1]) {
-		word0(*rvp) = Exp_mask | x[0];
-		word1(*rvp) = x[1];
-		}
-	}
-#endif /*No_Hex_NaN*/
 #endif /* INFNAN_CHECK */
 
  static double
@@ -1782,10 +1702,6 @@ _strtod
 				if (match(&s, "an")) {
 					word0(rv) = NAN_WORD0;
 					word1(rv) = NAN_WORD1;
-#ifndef No_Hex_NaN
-					if (*s == '(') /*)*/
-						hexnan(&rv, &s);
-#endif
 					goto ret;
 					}
 			  }
