@@ -114,13 +114,13 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
 }
 
 nsTreeBodyFrame*
-nsTreeBoxObject::GetTreeBody()
+nsTreeBoxObject::GetTreeBody(bool aFlushLayout)
 {
   if (mTreeBody) {
     return mTreeBody;
   }
 
-  nsIFrame* frame = GetFrame(PR_FALSE);
+  nsIFrame* frame = GetFrame(aFlushLayout);
   if (!frame)
     return nsnull;
 
@@ -324,7 +324,7 @@ nsTreeBoxObject::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* aCol)
 NS_IMETHODIMP
 nsTreeBoxObject::ScrollToRow(PRInt32 aRow)
 {
-  nsTreeBodyFrame* body = GetTreeBody();
+  nsTreeBodyFrame* body = GetTreeBody(true);
   if (body)
     return body->ScrollToRow(aRow);
   return NS_OK;
