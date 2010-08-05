@@ -585,8 +585,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
         $el = iQ(a);
         item = Items.item($el);
       }
-
-      Utils.assertThrow('shouldn\'t already be in another group', !item.parent || item.parent == this);
+      Utils.assertThrow("shouldn't already be in another group", !item.parent || item.parent == this);
 
       item.removeTrenches();
 
@@ -1239,6 +1238,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
     Groups.setActiveGroup(this);
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
+    /* ToDo: why we need this here?
     // Because opening a new tab happens in a different thread(?)
     // calling UI.showTabView() inline won't do anything. Instead
     // we have to marshal it. A value of 0 wait time doesn't seem
@@ -1247,6 +1247,7 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
     Utils.timeout(function() {
       UI.showTabView()
     }, 1);
+    */
 
     var self = this;
     var doNextTab = function(tab) {
@@ -1279,7 +1280,10 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
               complete: function() {
                 iQ(tab.container).css({opacity: 1});
                 gBrowser.selectedTab = newTab;
+                /*
+                ToDo: do we need this?  onTabFocus already handles right?
                 UI.hideTabView()
+                */
                 gWindow.gURLBar.focus();
                 $anim.remove();
                 // We need a timeout here so that there is a chance for the
@@ -1287,7 +1291,10 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
                 // of the group's tab.
                 // TODO: This is probably a terrible hack that sets up a race
                 // condition. We need a better solution.
-                Utils.timeout(function() Groups.updateTabBarForActiveGroup(), 400);
+                Utils.timeout(function() {
+                  self._sendToSubscribers("tabAdded", { groupId: self.id });
+                  Groups.updateTabBarForActiveGroup();
+                }, 1);
               }
             });
           }
@@ -1298,7 +1305,6 @@ window.Group.prototype = Utils.extend(new Item(), new Subscribable(), {
     // sometimes a long delay before the animation occurs.
     // We need to fix this--immediate response to a users
     // actions is necessary for a good user experience.
-
     self.onNextNewTab(doNextTab);
   },
 

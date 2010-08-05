@@ -311,6 +311,9 @@ var UIManager = {
   // Parameters:
   //   zoomOut - true for zoom out animation, false for nothing.
   showTabView: function(zoomOut) {
+    if (this._isTabViewVisible())
+      return;
+
     var self = this;
 
     if (!this._frameInitalized)
@@ -331,6 +334,8 @@ var UIManager = {
 #ifdef XP_MACOSX
     this._setActiveTitleColor(true);
 #endif
+    let event = document.createEvent("Events");
+    event.initEvent("tabviewshown", true, false);
 
     if (zoomOut && currentTab && currentTab.tabItem) {
       item = currentTab.tabItem;
@@ -351,8 +356,10 @@ var UIManager = {
 
         window.Groups.setActiveGroup(null);
         self._resize(true);
+        dispatchEvent(event);
       });
-    }
+    } else
+      dispatchEvent(event);
 
     TabItems.resumePainting();
   },
@@ -361,6 +368,9 @@ var UIManager = {
   // Function: hideTabView
   // Hides TabView and shows the main browser UI.
   hideTabView: function() {
+    if (!this._isTabViewVisible())
+      return;
+
     TabItems.pausePainting();
 
     this._reorderTabsOnHide.forEach(function(group) {
@@ -380,6 +390,9 @@ var UIManager = {
 #ifdef XP_MACOSX
     this._setActiveTitleColor(false);
 #endif
+    let event = document.createEvent("Events");
+    event.initEvent("tabviewhidden", true, false);
+    dispatchEvent(event);
   },
 
 #ifdef XP_MACOSX

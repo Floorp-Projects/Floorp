@@ -192,9 +192,8 @@ window.Item.prototype = {
       over: function() {},
       out: function() {
         var group = drag.info.item.parent;
-        if (group) {
+        if (group)
           group.remove(drag.info.$el, {dontClose: true});
-        }
 
         iQ(this.container).removeClass("acceptsDrop");
       },
@@ -597,10 +596,9 @@ window.Item.prototype = {
 
         // drag events
         if (!startSent) {
-          if (typeof self.dragOptions.start == "function") {
+          if (typeof self.dragOptions.start == "function")
             self.dragOptions.start.apply(self,
                 [startEvent, {position: {left: startPos.x, top: startPos.y}}]);
-          }
 
           startSent = true;
         }

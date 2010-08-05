@@ -164,6 +164,7 @@ _BROWSER_FILES = \
                  browser_selectTabAtIndex.js \
                  browser_tabfocus.js \
                  browser_tabs_owner.js \
+                 browser_tabview_dragdrop.js \
                  browser_visibleTabs.js \
                  discovery.html \
                  moz.png \
