@@ -1387,4 +1387,7 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
   return NS_OK;
 }
 
-
+nsresult nsOggReader::GetBuffered(nsHTMLTimeRanges* aBuffered)
+{
+  return NS_OK;
+}

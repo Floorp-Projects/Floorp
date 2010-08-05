@@ -49,6 +49,7 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsWaveDecoder.h"
+#include "nsHTMLTimeRanges.h"
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -1652,4 +1653,10 @@ nsWaveDecoder::MoveLoadsToBackground()
   if (mStream) {
     mStream->MoveLoadsToBackground();
   }
+}
+
+nsresult
+nsWaveDecoder::GetBuffered(nsHTMLTimeRanges* aBuffered)
+{
+  return NS_OK;
 }

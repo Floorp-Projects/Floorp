@@ -46,6 +46,7 @@
 #include "nsOggCodecState.h"
 
 class nsMediaDecoder;
+class nsHTMLTimeRanges;
 
 class nsOggReader : public nsBuiltinDecoderReader
 {
@@ -80,6 +81,9 @@ public:
 
   virtual nsresult ReadMetadata();
   virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime);
+
+  // This is called on the main thread, and it must not block.
+  virtual nsresult GetBuffered(nsHTMLTimeRanges* aBuffered);
 
 private:
   // Decodes one packet of Vorbis data, storing the resulting chunks of

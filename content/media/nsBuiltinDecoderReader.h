@@ -452,6 +452,9 @@ public:
   // Queue of video samples. This queue is threadsafe.
   MediaQueue<VideoData> mVideoQueue;
 
+  // This is called on the main thread, and it must not block.
+  virtual nsresult GetBuffered(nsHTMLTimeRanges* aBuffered, PRInt64 aStartTime) = 0;
+
 protected:
 
   // Reader decode function. Matches DecodeVideoFrame() and
