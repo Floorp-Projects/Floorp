@@ -468,9 +468,6 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(nsPtrHashKey<nsIFrame>* aEntry,
   if (!newDisplayItems->HasContainerLayer()) {
     props.Delete(ThebesLayerInvalidRegionProperty());
     f->RemoveStateBits(NS_FRAME_HAS_CONTAINER_LAYER);
-  } else {
-    NS_ASSERTION(f->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER,
-                 "This bit should have been set by BuildContainerLayerFor");
   }
 
   // Reset the invalid region now so we can start collecting new dirty
@@ -1225,8 +1222,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   state.Finish();
 
   containerLayer->SetIsOpaqueContent(aChildren.IsOpaque());
-  nsRefPtr<Layer> layer = containerLayer.forget();
-  return layer.forget();
+  return containerLayer.forget();
 }
 
 Layer*
