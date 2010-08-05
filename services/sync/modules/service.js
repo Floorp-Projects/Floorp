@@ -1317,8 +1317,6 @@ WeaveSvc.prototype = {
     // we'll handle that later
     Status.resetBackoff();
 
-    this.globalScore = 0;
-
     // Ping the server with a special info request once a day
     let infoURL = this.infoURL;
     let now = Math.floor(Date.now() / 1000);
@@ -1330,8 +1328,15 @@ WeaveSvc.prototype = {
 
     // Figure out what the last modified time is for each collection
     let info = new Resource(infoURL).get();
-    if (!info.success)
+    if (!info.success) {
+      if (info.status == 401) {
+        this.logout();
+        Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+      }
       throw "aborting sync, failed to get collections";
+    }
+
+    this.globalScore = 0;
 
     // Convert the response to an object and read out the modified times
     for each (let engine in [Clients].concat(Engines.getAll()))
