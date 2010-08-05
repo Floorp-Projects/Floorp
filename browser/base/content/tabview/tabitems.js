@@ -754,9 +754,18 @@ window.TabItems = {
     try {
       Utils.assertThrow("tab", tab);
       
-      if (this.isPaintingPaused() 
-          || this._tabsWaitingForUpdate.length
-          || Date.now() - this._lastUpdateTime < this._heartbeatTiming) {
+      let shouldDefer = (
+        this.isPaintingPaused() || 
+        this._tabsWaitingForUpdate.length ||
+        Date.now() - this._lastUpdateTime < this._heartbeatTiming
+      );
+
+      let isCurrentTab = (
+        !UI._isTabViewVisible() && 
+        tab == gBrowser.selectedTab
+      );
+      
+      if (shouldDefer && !isCurrentTab) {
         if (this._tabsWaitingForUpdate.indexOf(tab) == -1)
           this._tabsWaitingForUpdate.push(tab);
       } else 
@@ -772,44 +781,53 @@ window.TabItems = {
   _update: function(tab) {
     try {
       Utils.assertThrow("tab", tab);
-      Utils.assertThrow("must already be linked", tab.tabItem);
 
+      // ___ remove from waiting list if needed
+      let index = this._tabsWaitingForUpdate.indexOf(tab);
+      if (index != -1)
+        this._tabsWaitingForUpdate.splice(index, 1); 
+        
+      // ___ get the TabItem
+      Utils.assertThrow("must already be linked", tab.tabItem);
       let tabItem = tab.tabItem;
 
+      // ___ icon
       let iconUrl = tab.image;
       if (iconUrl == null)
         iconUrl = "chrome://mozapps/skin/places/defaultFavicon.png";
 
-      let label = tab.label;
-      var $name = iQ(tabItem.nameEl);
-      var $canvas = iQ(tabItem.canvasEl);
-
       if (iconUrl != tabItem.favEl.src)
         tabItem.favEl.src = iconUrl;
 
+      // ___ URL
       let tabUrl = tab.linkedBrowser.currentURI.spec;
       if (tabUrl != tabItem.url) {
-        var oldURL = tabItem.url;
+        let oldURL = tabItem.url;
         tabItem.url = tabUrl;
         tabItem._sendToSubscribers(
           'urlChanged', {oldURL: oldURL, newURL: tabUrl});
       }
 
+      // ___ label
+      let label = tab.label;
+      let $name = iQ(tabItem.nameEl);
       if (!tabItem.isShowingCachedData && $name.text() != label)
         $name.text(label);
 
+      // ___ thumbnail
+      let $canvas = iQ(tabItem.canvasEl);
       if (!tabItem.canvasSizeForced) {
-        var w = $canvas.width();
-        var h = $canvas.height();
+        let w = $canvas.width();
+        let h = $canvas.height();
         if (w != tabItem.canvasEl.width || h != tabItem.canvasEl.height) {
           tabItem.canvasEl.width = w;
           tabItem.canvasEl.height = h;
         }
       }
 
-      // ___ Paint
       tabItem.tabCanvas.paint();
 
+      // ___ cache
       // TODO: this logic needs to be better; hiding too soon now
       if (tabItem.isShowingCachedData && !tab.hasAttribute("busy"))
         tabItem.hideCachedData();
@@ -861,8 +879,10 @@ window.TabItems = {
     if (!this._heartbeatOn)
       return;
     
-    if (this._tabsWaitingForUpdate.length)
-      this._update(this._tabsWaitingForUpdate.shift());
+    if (this._tabsWaitingForUpdate.length) {
+      this._update(this._tabsWaitingForUpdate[0]);
+      // _update will remove the tab from the waiting list
+    }
       
     let self = this;
     if (this._tabsWaitingForUpdate.length) {

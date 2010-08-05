@@ -80,7 +80,7 @@ var UIManager = {
   _reorderTabsOnHide : [],
 
   // Variable: _currentTab
-  // Keeps track of which <Tabs> tab we are currently on.
+  // Keeps track of which xul:tab we are currently on.
   // Used to facilitate zooming down from a previous tab.
   _currentTab : null,
 
