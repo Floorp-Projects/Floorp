@@ -242,6 +242,9 @@ mjit::Compiler::jsop_rsh()
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
+    if (tryBinaryConstantFold(cx, frame, JSOP_RSH, lhs, rhs))
+        return;
+
     if (lhs->isNotType(JSVAL_TYPE_INT32) || rhs->isNotType(JSVAL_TYPE_INT32)) {
         prepareStubCall(Uses(2));
         stubCall(stubs::Rsh);
@@ -250,12 +253,8 @@ mjit::Compiler::jsop_rsh()
         return;
     }
 
-    if (lhs->isConstant() && rhs->isConstant()) {
-        int32 L = lhs->getValue().toInt32();
-        int32 R = lhs->getValue().toInt32();
-        frame.popn(2);
-        frame.push(Int32Value(L >> R));
-    } else if (lhs->isConstant()) {
+    JS_ASSERT(!(lhs->isConstant() && rhs->isConstant()));
+    if (lhs->isConstant()) {
         if (rhs->isType(JSVAL_TYPE_INT32))
             jsop_rsh_const_int(lhs, rhs);
         else

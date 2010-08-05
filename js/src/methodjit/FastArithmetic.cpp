@@ -52,8 +52,9 @@ using namespace JSC;
 
 typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
 
-static inline bool
-JSOpBinaryTryConstantFold(JSContext *cx, FrameState &frame, JSOp op, FrameEntry *lhs, FrameEntry *rhs)
+bool
+mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
+                                      FrameEntry *lhs, FrameEntry *rhs)
 {
     if (!lhs->isConstant() || !rhs->isConstant())
         return false;
@@ -66,9 +67,39 @@ JSOpBinaryTryConstantFold(JSContext *cx, FrameState &frame, JSOp op, FrameEntry 
         return false;
     }
 
-    double dL, dR;
-    ValueToNumber(cx, L, &dL);
-    ValueToNumber(cx, R, &dR);
+    bool needInt;
+    switch (op) {
+      case JSOP_ADD:
+      case JSOP_SUB:
+      case JSOP_MUL:
+      case JSOP_DIV:
+      case JSOP_MOD:
+        needInt = false;
+        break;
+
+      case JSOP_RSH:
+        needInt = true;
+        break;
+
+      default:
+        JS_NOT_REACHED("NYI");
+        needInt = false; /* Silence compiler warning. */
+        break;
+    }
+
+    double dL = 0, dR = 0;
+    int32 nL = 0, nR = 0;
+    /*
+     * We don't need to check for conversion failure, since primitive conversion
+     * is infallible.
+     */
+    if (needInt) {
+        ValueToECMAInt32(cx, L, &nL);
+        ValueToECMAInt32(cx, R, &nR);
+    } else {
+        ValueToNumber(cx, L, &dL);
+        ValueToNumber(cx, R, &dR);
+    }
 
     switch (op) {
       case JSOP_ADD:
@@ -104,13 +135,20 @@ JSOpBinaryTryConstantFold(JSContext *cx, FrameState &frame, JSOp op, FrameEntry 
             dL = js_fmod(dR, dL);
         break;
 
+      case JSOP_RSH:
+        nL >>= (nR & 31);
+        break;
+
       default:
         JS_NOT_REACHED("NYI");
         break;
     }
 
     Value v;
-    v.setNumber(dL);
+    if (needInt)
+        v.setInt32(nL);
+    else
+        v.setNumber(dL);
     frame.popn(2);
     frame.push(v);
 
@@ -166,7 +204,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
-    if (JSOpBinaryTryConstantFold(cx, frame, op, lhs, rhs))
+    if (tryBinaryConstantFold(cx, frame, op, lhs, rhs))
         return;
 
     /*
