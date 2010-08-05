@@ -55,7 +55,7 @@ namespace ic {
 static const uint32 MAX_PIC_STUBS = 16;
 
 /* SetPropCompiler */
-#ifdef JS_CPU_X86
+#if defined JS_CPU_X86
 static const int32 SETPROP_INLINE_SHAPE_OFFSET     =   6; //asserted
 static const int32 SETPROP_INLINE_SHAPE_JUMP       =  12; //asserted
 static const int32 SETPROP_DSLOTS_BEFORE_CONSTANT  = -23; //asserted
@@ -68,10 +68,13 @@ static const int32 SETPROP_INLINE_STORE_KTYPE_DATA =   0; //asserted
 static const int32 SETPROP_INLINE_STORE_CONST_TYPE = -14; //asserted
 static const int32 SETPROP_INLINE_STORE_CONST_DATA =  -4; //asserted
 static const int32 SETPROP_STUB_SHAPE_JUMP         =  12; //asserted
+#elif defined JS_CPU_X64
+static const int32 SETPROP_INLINE_STORE_VALUE      =   0; //asserted
+static const int32 SETPROP_INLINE_SHAPE_JUMP       =   6; //asserted
 #endif
 
 /* GetPropCompiler */
-#ifdef JS_CPU_X86
+#if defined JS_CPU_X86
 static const int32 GETPROP_DSLOTS_LOAD         = -15; //asserted
 static const int32 GETPROP_TYPE_LOAD           =  -6; //asserted
 static const int32 GETPROP_DATA_LOAD           =   0; //asserted
@@ -79,33 +82,104 @@ static const int32 GETPROP_INLINE_TYPE_GUARD   =  12; //asserted
 static const int32 GETPROP_INLINE_SHAPE_OFFSET =   6; //asserted
 static const int32 GETPROP_INLINE_SHAPE_JUMP   =  12; //asserted
 static const int32 GETPROP_STUB_SHAPE_JUMP     =  12; //asserted
+#elif defined JS_CPU_X64
+static const int32 GETPROP_INLINE_TYPE_GUARD   =  19; //asserted
+static const int32 GETPROP_INLINE_SHAPE_JUMP   =   6; //asserted
 #endif
 
 /* GetElemCompiler */
-#ifdef JS_CPU_X86
+#if defined JS_CPU_X86
 static const int32 GETELEM_DSLOTS_LOAD         = -15; //asserted
 static const int32 GETELEM_TYPE_LOAD           =  -6; //asserted
 static const int32 GETELEM_DATA_LOAD           =   0; //asserted
 static const int32 GETELEM_INLINE_SHAPE_OFFSET =   6; //asserted
+static const int32 GETELEM_INLINE_SHAPE_JUMP   =  12; //asserted
 static const int32 GETELEM_INLINE_ATOM_OFFSET  =  18; //asserted
 static const int32 GETELEM_INLINE_ATOM_JUMP    =  24; //asserted
-static const int32 GETELEM_INLINE_SHAPE_JUMP   =  12; //asserted
 static const int32 GETELEM_STUB_ATOM_JUMP      =  12; //asserted
 static const int32 GETELEM_STUB_SHAPE_JUMP     =  24; //asserted
+#elif defined JS_CPU_X64
+static const int32 GETELEM_INLINE_SHAPE_JUMP   =   6; //asserted
+static const int32 GETELEM_INLINE_ATOM_JUMP    =   9; //asserted
+static const int32 GETELEM_STUB_ATOM_JUMP      =  19; //asserted (probably differs)
 #endif
 
 /* ScopeNameCompiler */
-#ifdef JS_CPU_X86
+#if defined JS_CPU_X86
+static const int32 SCOPENAME_JUMP_OFFSET = 5; //asserted
+#elif defined JS_CPU_X64
 static const int32 SCOPENAME_JUMP_OFFSET = 5; //asserted
 #endif
 
 /* BindNameCompiler */
-#ifdef JS_CPU_X86
+#if defined JS_CPU_X86
 static const int32 BINDNAME_INLINE_JUMP_OFFSET = 10; //asserted
+static const int32 BINDNAME_STUB_JUMP_OFFSET   =  5; //asserted
+#elif defined JS_CPU_X64
+static const int32 BINDNAME_INLINE_JUMP_OFFSET = 36; //asserted
 static const int32 BINDNAME_STUB_JUMP_OFFSET   =  5; //asserted
 #endif
 
 void PurgePICs(JSContext *cx);
+
+/*
+ * x86_64 bytecode differs in length based on the involved registers.
+ * Since constants won't work, we need an array of labels.
+ */
+#if defined JS_CPU_X64
+union PICLabels {
+    /* SetPropCompiler */
+    struct {
+        /* Offset from storeBack to beginning of 'mov dslots, addr' */
+        int32 dslotsLoadOffset : 8;
+
+        /* Offset from shapeGuard to end of shape comparison. */
+        int32 inlineShapeOffset : 8;
+
+        /* Offset from lastStubStart to end of shape jump. */
+        // TODO: We can redefine the location of lastStubStart to be
+        // after the jump -- at which point this is always 0.
+        int32 stubShapeJump : 8;
+    } setprop;
+
+    /* GetPropCompiler */
+    struct {
+        /* Offset from storeBack to beginning of 'mov dslots, addr' */
+        int32 dslotsLoadOffset : 8;
+
+        /* Offset from shapeGuard to end of shape comparison. */
+        int32 inlineShapeOffset : 8;
+    
+        /* Offset from storeBack to end of value load. */
+        int32 inlineValueOffset : 8;
+
+        /* Offset from lastStubStart to end of shape jump. */
+        // TODO: We can redefine the location of lastStubStart to be
+        // after the jump -- at which point this is always 0.
+        int32 stubShapeJump : 8;
+    } getprop;
+
+    /* GetElemCompiler */
+    struct {
+        /* Offset from storeBack to beginning of 'mov dslots, addr' */
+        int32 dslotsLoadOffset : 8;
+
+        /* Offset from shapeGuard to end of shape comparison. */
+        int32 inlineShapeOffset : 8;
+        
+        /* Offset from shapeGuard to end of atom comparison. */
+        int32 inlineAtomOffset : 8;
+
+        /* Offset from storeBack to end of value load. */
+        int32 inlineValueOffset : 8;
+
+        /* Offset from lastStubStart to end of shape jump. */
+        // TODO: We can redefine the location of lastStubStart to be
+        // after the jump -- at which point this is always 0.
+        int32 stubShapeJump : 8;
+    } getelem;
+};
+#endif
 
 struct PICInfo {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
@@ -125,7 +199,7 @@ struct PICInfo {
     };
 
     union {
-        // This struct comes out to 93 bits.
+        // This struct comes out to 93 bits with GCC.
         struct {
             RegisterID typeReg  : 5;  // reg used for checking type
             bool hasTypeCheck   : 1;  // type check and reg are present
@@ -207,6 +281,11 @@ struct PICInfo {
         JS_ASSERT(kind == CALL);
         return !hasTypeCheck();
     }
+
+#if defined JS_CPU_X64
+    // Required labels for platform-specific patching.
+    PICLabels labels;
+#endif
 
     // Index into the script's atom table.
     JSAtom *atom;

@@ -92,11 +92,13 @@ class Assembler : public BaseAssembler
     void loadSlot(RegisterID obj, RegisterID clobber, uint32 slot, RegisterID type, RegisterID data) {
         JS_ASSERT(type != data);
         Address address(obj, offsetof(JSObject, fslots) + slot * sizeof(Value));
+        RegisterID activeAddressReg = obj;
         if (slot >= JS_INITIAL_NSLOTS) {
             loadPtr(Address(obj, offsetof(JSObject, dslots)), clobber);
-            address = Address(obj, (slot - JS_INITIAL_NSLOTS) * sizeof(Value));
+            address = Address(clobber, (slot - JS_INITIAL_NSLOTS) * sizeof(Value));
+            activeAddressReg = clobber;
         }
-        if (obj == type) {
+        if (activeAddressReg == type) {
             loadPayload(address, data);
             loadTypeTag(address, type);
         } else {
