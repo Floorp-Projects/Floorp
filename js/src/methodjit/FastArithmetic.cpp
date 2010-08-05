@@ -88,7 +88,7 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
     }
 
     double dL = 0, dR = 0;
-    int32 nL = 0, nR = 0;
+    int32_t nL = 0, nR = 0;
     /*
      * We don't need to check for conversion failure, since primitive conversion
      * is infallible.
