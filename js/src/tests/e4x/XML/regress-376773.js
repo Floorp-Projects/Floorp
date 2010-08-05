@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-376773.js';
 
 var BUGNUMBER = 376773;
 var summary = 'xmlsimple.stringmethod === xmlsimple.function::stringmethod';

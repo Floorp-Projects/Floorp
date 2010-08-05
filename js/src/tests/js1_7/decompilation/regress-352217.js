@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352217.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352217;
 var summary = 'Need space between |else|, |let|';

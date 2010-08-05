@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-470739.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 470739;
 var summary = 'TM: never abort on ==';

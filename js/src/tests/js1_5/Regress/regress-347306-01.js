@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-347306-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 347306;
 var summary = 'decompilation should not be O(N**2)';

@@ -43,7 +43,6 @@
  * From correspondence with Igor Bukanov <igor@icesoft.no>:
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'array-001.js';
 var UBound = 0;
 var BUGNUMBER = '(none)';
 var summary = 'Truncating arrays that have decimal property names';

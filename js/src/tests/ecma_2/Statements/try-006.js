@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'try-006.js';
 
 /**
  *  File Name:          try-006.js

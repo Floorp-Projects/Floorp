@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '11.1.4-01.js';
 
 var summary = '11.1.4 - XML Initializer should accept single processing ' +
     'instruction';

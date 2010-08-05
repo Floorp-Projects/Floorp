@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '10.1.3-2.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 395907;
 var summary = 'eval of function declaration should change existing variable';

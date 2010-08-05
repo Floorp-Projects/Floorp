@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-313479.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 313479;
 var summary = 'Root access in jsnum.c';

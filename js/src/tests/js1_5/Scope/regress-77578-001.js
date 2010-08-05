@@ -43,7 +43,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=77578
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-77578-001.js';
 var UBound = 0;
 var BUGNUMBER = 77578;
 var summary = 'Testing eval scope inside a function';

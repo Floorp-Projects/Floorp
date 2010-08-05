@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-464403.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 464403;
 var summary = 'Do not assert: tm->recorder != NULL';

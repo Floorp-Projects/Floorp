@@ -1,7 +1,6 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
-var gTestfile = 'parseInt-octal.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 583925;
 var summary =

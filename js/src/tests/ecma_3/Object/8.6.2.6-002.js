@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '8.6.2.6-002.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 470364;
 var summary = '[[DefaultValue]] should not call valueOf, toString with an argument';

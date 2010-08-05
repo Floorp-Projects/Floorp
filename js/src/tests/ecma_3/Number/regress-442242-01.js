@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-442242-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 442242;
 var summary = 'Do not assert: INT_FITS_IN_JSVAL(i)';

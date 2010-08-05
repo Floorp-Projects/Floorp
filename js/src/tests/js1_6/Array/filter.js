@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'filter.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER     = "364603";
 var summary = "The value placed in a filtered array for an element is the " +

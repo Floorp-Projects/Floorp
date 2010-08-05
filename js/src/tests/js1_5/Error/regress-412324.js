@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-412324.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 412324;
 var summary = 'Allow function Error(){} for the love of Pete';

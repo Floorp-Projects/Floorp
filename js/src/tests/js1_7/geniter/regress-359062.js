@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-359062.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 359062;
 var summary = 'Access generator local variables from nested functions';

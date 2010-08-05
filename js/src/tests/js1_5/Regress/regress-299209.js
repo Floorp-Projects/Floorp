@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-299209.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 299209;
 var summary = 'anonymous function expression statement => JS stack overflow';

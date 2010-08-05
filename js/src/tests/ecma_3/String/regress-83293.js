@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-83293.js';
 
 /*
  * Creation Date:   30 May 2001

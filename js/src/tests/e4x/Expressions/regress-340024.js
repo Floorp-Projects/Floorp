@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-340024.js';
 
 var BUGNUMBER = 340024;
 var summary = '11.1.4 - XML Initializer';

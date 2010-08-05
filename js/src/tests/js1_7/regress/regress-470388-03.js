@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-470388-03.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 470388;
 var summary = 'TM: Do not assert: !(fp->flags & JSFRAME_POP_BLOCKS)';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '7.4-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 475834;
 var summary = ' /**/ comments with newlines in them must act as line breaks';

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'everything.js';
 
 /**
    Filename:     everything.js

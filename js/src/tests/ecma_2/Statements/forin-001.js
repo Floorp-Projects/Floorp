@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'forin-001.js';
 
 /**
  *  File Name:          forin-001.js

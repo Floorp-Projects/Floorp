@@ -48,7 +48,6 @@
  * (to hit the optimization for arguments[0]... that uses JSOP_ARGSUB)."
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-96526-delelem.js';
 var UBound = 0;
 var BUGNUMBER = 96526;
 var summary = 'Testing "use" and "set" ops on expressions like a[i][j][k]';

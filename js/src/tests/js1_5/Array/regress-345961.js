@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-345961.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 345961;
 var summary = 'Array.prototype.shift should preserve holes';

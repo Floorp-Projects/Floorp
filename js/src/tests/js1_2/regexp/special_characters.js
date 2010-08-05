@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'special_characters.js';
 
 /**
    Filename:     special_characters.js

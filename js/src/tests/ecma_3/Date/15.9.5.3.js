@@ -54,7 +54,6 @@
    Date:      14 november 2000  (adapted from ecma/Date/15.9.5.2.js)
 */
 
-var gTestfile = '15.9.5.3.js';
 var SECTION = "15.9.5.3";
 var VERSION = "ECMA_3"; 
 var TITLE   = "Date.prototype.toDateString()"; 

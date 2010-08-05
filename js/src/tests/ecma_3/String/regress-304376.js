@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-304376.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 304376;
 var summary = 'String.prototype should be readonly and permanent';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-470300-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 470300;
 var summary = 'TM: Do not assert: !fp->blockChain || OBJ_GET_PARENT(cx, obj) == fp->blockChain';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-308806-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 308806;
 var summary = 'Object.prototype.toLocaleString() should track Object.prototype.toString() ';
