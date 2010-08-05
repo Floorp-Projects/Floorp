@@ -190,6 +190,7 @@ var gErrorTests = [
   { name:"448636.ogv", type:"video/ogg" },
   { name:"bug504843.ogv", type:"video/ogg" },
   { name:"bug501279.ogg", type:"audio/ogg" },
+  { name:"bug580982.webm", type:"video/webm" },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 

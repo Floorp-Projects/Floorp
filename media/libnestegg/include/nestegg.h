@@ -7,7 +7,7 @@
 #ifndef   NESTEGG_671cac2a_365d_ed69_d7a3_4491d3538d79
 #define   NESTEGG_671cac2a_365d_ed69_d7a3_4491d3538d79
 
-#include "_stdint.h"
+#include <nestegg/nestegg-stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
