@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone="no"?>
+<svg xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns="http://www.w3.org/2000/svg">
+  <path d="M 0 0
+           C 0,0 0,0
+           501.208526, 390.4
+           501.208543, 390.4
+           0,0 0,0 0,0 0,0 0,0" stroke="black" id="p"/>
+  <script>
+    var path = document.getElementById("p");
+    var segNum = path.getPathSegAtLength(1200);
+  </script>
+</svg>
