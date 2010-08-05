@@ -240,9 +240,7 @@ members = [
     'nsIDOMHTMLDocument.images',
     'nsIDOMHTMLDocument.write',
     'nsIDOMHTMLDocument.writeln',
-    'nsIDOMHTMLElement.className',
-    'nsIDOMHTMLElement.id',
-    'nsIDOMHTMLElement.title',
+    'nsIDOMHTMLElement.*',
     'nsIDOMHTMLFormElement.elements',
     'nsIDOMHTMLFormElement.name',
     'nsIDOMHTMLFormElement.submit',
@@ -843,6 +841,9 @@ customMethodCalls = {
         'canFail': False
         },
     'nsIDOMNSHTMLElement_': {
+        'thisType': 'nsGenericHTMLElement'
+        },
+    'nsIDOMHTMLElement_': {
         'thisType': 'nsGenericHTMLElement'
         },
     'nsIDOMDocument_': {
