@@ -92,7 +92,7 @@ AccCollector::EnsureNGetObject(PRUint32 aIndex)
     if (!mFilterFunc(child))
       continue;
 
-    AppendObject(child);
+    mObjects.AppendElement(child);
     if (mObjects.Length() - 1 == aIndex)
       return mObjects[aIndex];
   }
@@ -109,39 +109,10 @@ AccCollector::EnsureNGetIndex(nsAccessible* aAccessible)
     if (!mFilterFunc(child))
       continue;
 
-    AppendObject(child);
+    mObjects.AppendElement(child);
     if (child == aAccessible)
       return mObjects.Length() - 1;
   }
 
   return -1;
-}
-
-void
-AccCollector::AppendObject(nsAccessible* aAccessible)
-{
-  mObjects.AppendElement(aAccessible);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// EmbeddedObjCollector
-////////////////////////////////////////////////////////////////////////////////
-
-PRInt32
-EmbeddedObjCollector::GetIndexAt(nsAccessible *aAccessible)
-{
-  if (aAccessible->mParent != mRoot)
-    return -1;
-
-  if (aAccessible->mIndexOfEmbeddedChild != -1)
-    return aAccessible->mIndexOfEmbeddedChild;
-
-  return mFilterFunc(aAccessible) ? EnsureNGetIndex(aAccessible) : -1;
-}
-
-void
-EmbeddedObjCollector::AppendObject(nsAccessible* aAccessible)
-{
-  aAccessible->mIndexOfEmbeddedChild = mObjects.Length();
-  mObjects.AppendElement(aAccessible);
 }
