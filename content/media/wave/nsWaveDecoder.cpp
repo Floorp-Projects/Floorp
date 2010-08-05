@@ -170,6 +170,8 @@ public:
   // main thread.
   float GetTimeForPositionChange();
 
+  nsresult GetBuffered(nsHTMLTimeRanges* aBuffered);
+
 private:
   // Returns PR_TRUE if we're in shutdown state. Threadsafe.
   PRBool IsShutdown();
@@ -1178,6 +1180,20 @@ nsWaveStateMachine::FirePositionChanged(PRBool aCoalesce)
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
+nsresult
+nsWaveStateMachine::GetBuffered(nsHTMLTimeRanges* aBuffered)
+{
+  PRInt64 startOffset = mStream->GetNextCachedData(mWavePCMOffset);
+  while (startOffset >= 0) {
+    PRInt64 endOffset = mStream->GetCachedDataEnd(startOffset);
+    // Bytes [startOffset..endOffset] are cached.
+    aBuffered->Add(BytesToTime(startOffset - mWavePCMOffset),
+                   BytesToTime(endOffset - mWavePCMOffset));
+    startOffset = mStream->GetNextCachedData(endOffset);
+  }
+  return NS_OK;
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsWaveDecoder, nsIObserver)
 
 nsWaveDecoder::nsWaveDecoder()
@@ -1658,5 +1674,6 @@ nsWaveDecoder::MoveLoadsToBackground()
 nsresult
 nsWaveDecoder::GetBuffered(nsHTMLTimeRanges* aBuffered)
 {
-  return NS_OK;
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  return mPlaybackStateMachine->GetBuffered(aBuffered);
 }
