@@ -212,6 +212,8 @@ struct nsStyleImage {
 
   void SetNull();
   void SetImageData(imgIRequest* aImage);
+  void TrackImage(nsPresContext* aContext);
+  void UntrackImage(nsPresContext* aContext);
   void SetGradientData(nsStyleGradient* aGradient);
   void SetElementId(const PRUnichar* aElementId);
   void SetCropRect(nsStyleSides* aCropRect);
@@ -220,7 +222,9 @@ struct nsStyleImage {
     return mType;
   }
   imgIRequest* GetImageData() const {
-    NS_ASSERTION(mType == eStyleImageType_Image, "Data is not an image!");
+    NS_ABORT_IF_FALSE(mType == eStyleImageType_Image, "Data is not an image!");
+    NS_ABORT_IF_FALSE(mImageTracked,
+                      "Should be tracking any image we're going to use!");
     return mImage;
   }
   nsStyleGradient* GetGradientData() const {
@@ -295,6 +299,9 @@ private:
   };
   // This is _currently_ used only in conjunction with eStyleImageType_Image.
   nsAutoPtr<nsStyleSides> mCropRect;
+#ifdef DEBUG
+  bool mImageTracked;
+#endif
 };
 
 struct nsStyleColor {
@@ -331,10 +338,7 @@ struct nsStyleBackground {
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsPresContext* aContext) {
-    this->~nsStyleBackground();
-    aContext->FreeToShell(sizeof(nsStyleBackground), this);
-  }
+  void Destroy(nsPresContext* aContext);
 
   nsChangeHint CalcDifference(const nsStyleBackground& aOther) const;
 #ifdef DEBUG
@@ -449,6 +453,17 @@ struct nsStyleBackground {
     // Initializes only mImage
     Layer();
     ~Layer();
+
+    // Register/unregister images with the document. We do this only
+    // after the dust has settled in ComputeBackgroundData.
+    void TrackImages(nsPresContext* aContext) {
+      if (mImage.GetType() == eStyleImageType_Image)
+        mImage.TrackImage(aContext);
+    }
+    void UntrackImages(nsPresContext* aContext) {
+      if (mImage.GetType() == eStyleImageType_Image)
+        mImage.UntrackImage(aContext);
+    }
 
     void SetInitialValues();
 
