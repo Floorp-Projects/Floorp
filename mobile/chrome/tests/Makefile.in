@@ -60,6 +60,7 @@ _BROWSER_FILES = \
   browser_viewport.js \
   browser_navigation.js \
   browser_preferences_basic.js \
+  browser_preferences_text.js \
   browser_sessionstore.js \
   browser_contacts.js \
   browser_blank_01.html \
