@@ -7771,7 +7771,10 @@ function switchToTabHavingURI(aURI, aOpenNew, aCallback) {
 
   // No opened tab has that url.
   if (aOpenNew) {
-    gBrowser.selectedTab = gBrowser.addTab(aURI.spec);
+    if (isTabEmpty(gBrowser.selectedTab))
+      gBrowser.selectedBrowser.loadURI(aURI.spec);
+    else
+      gBrowser.selectedTab = gBrowser.addTab(aURI.spec);
     if (aCallback) {
       let browser = gBrowser.selectedBrowser;
       browser.addEventListener("pageshow", function(event) {
