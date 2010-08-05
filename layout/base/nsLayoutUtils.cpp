@@ -2580,6 +2580,17 @@ nsLayoutUtils::GetFirstLinePosition(const nsIFrame* aFrame,
       return PR_FALSE;
     }
 
+    if (fType == nsGkAtoms::fieldSetFrame) {
+      LinePosition kidPosition;
+      nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+      // kid might be a legend frame here, but that's ok.
+      if (GetFirstLinePosition(kid, &kidPosition)) {
+        *aResult = kidPosition + kid->GetPosition().y;
+        return PR_TRUE;
+      }
+      return PR_FALSE;
+    }
+
     // No baseline.
     return PR_FALSE;
   }
