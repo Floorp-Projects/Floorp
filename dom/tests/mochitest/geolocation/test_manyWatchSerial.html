@@ -20,15 +20,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=482260
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
-resume_geolocationProvider();
-force_prompt(true);
-
+var hasAccepted = false;
 var watchID = 0;
 var completeCount = 10;
 
+var options = {
+    maximumAge: 0,
+};
 
 function successCallback(position) {
+  check_geolocation(position);
 
   navigator.geolocation.clearWatch(watchID);
 
@@ -36,15 +37,23 @@ function successCallback(position) {
 
   if (completeCount==0) {
     ok(1, "all watchPosition successCallbacks called");
-    reset_prompt();
     SimpleTest.finish();
-    return;
+  } else {
+    watchID = navigator.geolocation.watchPosition(successCallback, null, options);
+    setTimeout(accept, 50);
   }
-
-  watchID = navigator.geolocation.watchPosition(successCallback);
 }
 
-watchID = navigator.geolocation.watchPosition(successCallback);
+function accept() {
+  hasAccepted = true;
+  clickNotificationButton(kAcceptButton);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// one-shot position requests
+watchID = navigator.geolocation.watchPosition(successCallback, null, options);
+setTimeout(accept, 50);
 
 </script>
 </pre>
