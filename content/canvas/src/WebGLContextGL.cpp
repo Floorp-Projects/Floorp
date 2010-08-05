@@ -109,7 +109,6 @@ already_AddRefed<WebGLUniformLocation> WebGLProgram::GetUniformLocationObject(GL
 {
     WebGLUniformLocation *existingLocationObject;
     if (mMapUniformLocations.Get(glLocation, &existingLocationObject)) {
-        NS_ADDREF(existingLocationObject);
         return existingLocationObject;
     } else {
         nsRefPtr<WebGLUniformLocation> loc = new WebGLUniformLocation(mContext, this, glLocation);
