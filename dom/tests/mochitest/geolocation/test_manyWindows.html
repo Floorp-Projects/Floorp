@@ -21,10 +21,6 @@ href="https://bugzilla.mozilla.org/show_bug.cgi?id=478911">Crash in Multiple Win
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-// ensure we are using the right testing provider
-resume_geolocationProvider();
-force_prompt(true);
-
 /** Test for Bug  **/
 
 var numberOfWindows = 5;  // 20 seems to be the default max popups during the mochitest run
@@ -52,7 +48,6 @@ function checkDone()
     {
         ok(navigator.geolocation, "Opened a bunch of windows and didn't crash.");
         clearInterval(timer);
-        reset_prompt();
         SimpleTest.finish();
     }
 }
