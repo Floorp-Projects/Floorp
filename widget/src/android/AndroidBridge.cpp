@@ -37,6 +37,7 @@
 
 #include <android/log.h>
 
+#include "mozilla/dom/ContentChild.h"
 #include <pthread.h>
 #include <prthread.h>
 
@@ -186,22 +187,32 @@ AndroidBridge::EnsureJNIThread()
 void
 AndroidBridge::NotifyIME(int aType, int aState)
 {
-    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass,
-                                  jNotifyIME, aType, aState);
+    if (sBridge)
+        JNI()->CallStaticVoidMethod(sBridge->mGeckoAppShellClass, 
+                                    sBridge->jNotifyIME,  aType, aState);
+    else
+        mozilla::dom::ContentChild::GetSingleton()->SendNotifyIME(aType, aState);
 }
 
 void
 AndroidBridge::NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen,
                                int aStart, int aEnd, int aNewEnd)
 {
+    if (!sBridge) {
+        mozilla::dom::ContentChild::GetSingleton()->
+            SendNotifyIMEChange(nsAutoString(aText), aTextLen,
+                                aStart, aEnd, aNewEnd);
+        return;
+    }
+
     jvalue args[4];
     AutoLocalJNIFrame jniFrame(1);
-    args[0].l = mJNIEnv->NewString(aText, aTextLen);
+    args[0].l = JNI()->NewString(aText, aTextLen);
     args[1].i = aStart;
     args[2].i = aEnd;
     args[3].i = aNewEnd;
-    mJNIEnv->CallStaticVoidMethodA(mGeckoAppShellClass,
-                                   jNotifyIMEChange, args);
+    JNI()->CallStaticVoidMethodA(sBridge->mGeckoAppShellClass,
+                                     sBridge->jNotifyIMEChange, args);
 }
 
 void
