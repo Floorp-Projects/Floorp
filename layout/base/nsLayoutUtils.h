@@ -357,18 +357,7 @@ public:
   static PRBool HasPseudoStyle(nsIContent* aContent,
                                nsStyleContext* aStyleContext,
                                nsCSSPseudoElements::Type aPseudoElement,
-                               nsPresContext* aPresContext)
-  {
-    NS_PRECONDITION(aPresContext, "Must have a prescontext");
-
-    nsRefPtr<nsStyleContext> pseudoContext;
-    if (aContent) {
-      pseudoContext = aPresContext->StyleSet()->
-        ProbePseudoElementStyle(aContent->AsElement(), aPseudoElement,
-                                aStyleContext);
-    }
-    return pseudoContext != nsnull;
-  }
+                               nsPresContext* aPresContext);
 
   /**
    * If this frame is a placeholder for a float, then return the float,
