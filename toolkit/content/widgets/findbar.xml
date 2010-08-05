@@ -1345,7 +1345,7 @@
 
           var elt = document.commandDispatcher.focusedElement;
           if (elt) {
-            if (elt instanceof NSHTMLInputElement && elt.mozIsTextField(false))
+            if (elt instanceof HTMLInputElement && elt.mozIsTextField(false))
               return false;
 
             if (elt instanceof HTMLTextAreaElement ||

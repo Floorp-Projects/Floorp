@@ -48,7 +48,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsTextControlFrame.h"
 #include "nsIControllers.h"
-#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsITransactionManager.h"
 #include "nsIControllerContext.h"
@@ -726,7 +726,7 @@ DoCommandCallback(const char *aCommand, void *aData)
   nsIContent *content = frame->GetContent();
 
   nsCOMPtr<nsIControllers> controllers;
-  nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(content);
+  nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(content);
   if (input) {
     input->GetControllers(getter_AddRefs(controllers));
   } else {
@@ -1170,7 +1170,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
   if (!SuppressEventHandlers(presContext)) {
     nsCOMPtr<nsIControllers> controllers;
-    nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement =
+    nsCOMPtr<nsIDOMHTMLInputElement> inputElement =
       do_QueryInterface(mTextCtrlElement);
     if (inputElement) {
       rv = inputElement->GetControllers(getter_AddRefs(controllers));
@@ -1349,7 +1349,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   if (!SuppressEventHandlers(mBoundFrame->PresContext()))
   {
     nsCOMPtr<nsIControllers> controllers;
-    nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement =
+    nsCOMPtr<nsIDOMHTMLInputElement> inputElement =
       do_QueryInterface(mTextCtrlElement);
     if (inputElement)
       inputElement->GetControllers(getter_AddRefs(controllers));
