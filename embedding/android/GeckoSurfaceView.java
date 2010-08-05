@@ -82,6 +82,8 @@ class GeckoSurfaceView
         mBufferHeight = 0;
 
         mSurfaceLock = new ReentrantLock();
+
+        mIMEState = IME_STATE_DISABLED;
     }
 
     protected void finalize() throws Throwable {
@@ -238,6 +240,9 @@ class GeckoSurfaceView
 
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT |
                              InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+
+        if (mIMEState == IME_STATE_PASSWORD)
+            outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
         return inputConnection;
     }
 
@@ -307,6 +312,10 @@ class GeckoSurfaceView
     int mBufferHeight;
 
     // IME stuff
+    public static final int IME_STATE_DISABLED = 0;
+    public static final int IME_STATE_ENABLED = 1;
+    public static final int IME_STATE_PASSWORD = 2;
+
     GeckoInputConnection inputConnection;
     boolean mIMEFocus;
     int mIMEState;
