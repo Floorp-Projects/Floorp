@@ -383,6 +383,7 @@ members = [
     # dom/interfaces/stylesheets - None.
 
     # dom/interfaces/svg - None.
+    'nsIDOMSVGStylable.*',
 
     # dom/interfaces/threads - None.
 
@@ -506,6 +507,7 @@ customIncludes = [
     'nsGenericDOMDataNode.h',
     'nsGenericElement.h',
     'nsGenericHTMLElement.h',
+    'nsSVGStylableElement.h',
     'nsHTMLDocument.h',
     'nsDOMQS.h',
     ]
@@ -845,6 +847,19 @@ customMethodCalls = {
         },
     'nsIDOMHTMLElement_': {
         'thisType': 'nsGenericHTMLElement'
+        },
+    'nsIDOMElementCSSInlineStyle_': {
+        'thisType': 'nsStyledElement'
+        },
+    'nsIDOMElementCSSInlineStyle_GetStyle': {
+        'thisType': 'nsStyledElement',
+        'code': '    nsIDOMCSSStyleDeclaration* result = '
+                'self->GetStyle(&rv);'
+        },
+    'nsIDOMSVGStylable_GetStyle': {
+        'thisType': 'nsSVGStylableElement',
+        'code': '    nsIDOMCSSStyleDeclaration* result = '
+                'self->GetStyle(&rv);'
         },
     'nsIDOMDocument_': {
         'thisType': 'nsDocument'
