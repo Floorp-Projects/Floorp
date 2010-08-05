@@ -121,7 +121,6 @@ XPIDLSRCS = 					\
 	nsIDOMNSHTMLFormElement.idl		\
 	nsIDOMNSHTMLFrameElement.idl		\
 	nsIDOMNSHTMLHRElement.idl		\
-	nsIDOMNSHTMLImageElement.idl		\
 	nsIDOMNSHTMLInputElement.idl		\
 	nsIDOMNSHTMLOptionCollectn.idl		\
 	nsIDOMNSHTMLTextAreaElement.idl		\
