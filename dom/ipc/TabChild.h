@@ -281,6 +281,10 @@ public:
 
     nsIPrincipal* GetPrincipal() { return mPrincipal; }
 
+protected:
+    NS_OVERRIDE
+    virtual bool RecvDestroy();
+
 private:
     void ActorDestroy(ActorDestroyReason why);
 
