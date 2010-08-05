@@ -117,11 +117,16 @@ CAccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long *aHyperlinkIndex)
 __try {
   *aHyperlinkIndex = 0;
 
-  nsRefPtr<nsHyperTextAccessible> hyperAcc(do_QueryObject(this));
+  nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryObject(this));
   if (!hyperAcc)
     return E_FAIL;
 
-  *aHyperlinkIndex = hyperAcc->GetLinkIndexAtOffset(aCharIndex);
+  PRInt32 index = 0;
+  nsresult rv = hyperAcc->GetLinkIndexAtOffset(aCharIndex, &index);
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+
+  *aHyperlinkIndex = index;
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
