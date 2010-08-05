@@ -445,8 +445,11 @@ bool
 ContentParent::RecvStartVisitedQuery(const IPC::URI& aURI)
 {
     nsCOMPtr<nsIURI> newURI(aURI);
-    IHistory *history = nsContentUtils::GetHistory(); 
-    history->RegisterVisitedCallback(newURI, nsnull);
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    NS_ABORT_IF_FALSE(history, "History must exist at this point.");
+    if (history) {
+      history->RegisterVisitedCallback(newURI, nsnull);
+    }
     return true;
 }
 
@@ -458,8 +461,11 @@ ContentParent::RecvVisitURI(const IPC::URI& uri,
 {
     nsCOMPtr<nsIURI> ourURI(uri);
     nsCOMPtr<nsIURI> ourReferrer(referrer);
-    IHistory *history = nsContentUtils::GetHistory(); 
-    history->VisitURI(ourURI, ourReferrer, flags);
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    NS_ABORT_IF_FALSE(history, "History must exist at this point");
+    if (history) {
+      history->VisitURI(ourURI, ourReferrer, flags);
+    }
     return true;
 }
 
@@ -469,8 +475,11 @@ ContentParent::RecvSetURITitle(const IPC::URI& uri,
                                       const nsString& title)
 {
     nsCOMPtr<nsIURI> ourURI(uri);
-    IHistory *history = nsContentUtils::GetHistory(); 
-    history->SetURITitle(ourURI, title);
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    NS_ABORT_IF_FALSE(history, "History must exist at this point");
+    if (history) {
+      history->SetURITitle(ourURI, title);
+    }
     return true;
 }
 
