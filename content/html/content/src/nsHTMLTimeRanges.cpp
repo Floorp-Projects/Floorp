@@ -59,7 +59,7 @@ nsHTMLTimeRanges::GetLength(PRUint32* aLength) {
 
 NS_IMETHODIMP
 nsHTMLTimeRanges::Start(PRUint32 aIndex, float* aTime) {
-  if (aIndex > mRanges.Length())
+  if (aIndex >= mRanges.Length())
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   *aTime = mRanges[aIndex].mStart;
   return NS_OK;
@@ -67,7 +67,7 @@ nsHTMLTimeRanges::Start(PRUint32 aIndex, float* aTime) {
 
 NS_IMETHODIMP
 nsHTMLTimeRanges::End(PRUint32 aIndex, float* aTime) {
-  if (aIndex > mRanges.Length())
+  if (aIndex >= mRanges.Length())
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   *aTime = mRanges[aIndex].mEnd;
   return NS_OK;
