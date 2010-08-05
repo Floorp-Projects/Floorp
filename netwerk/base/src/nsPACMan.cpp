@@ -51,6 +51,7 @@
 #include "nsAutoPtr.h"
 #include "nsCRT.h"
 #include "prmon.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 //-----------------------------------------------------------------------------
 
@@ -486,8 +487,14 @@ nsPACMan::GetInterface(const nsIID &iid, void **result)
 }
 
 NS_IMETHODIMP
-nsPACMan::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
-                            PRUint32 flags)
+nsPACMan::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
+                                 PRUint32 flags,
+                                 nsIAsyncVerifyRedirectCallback *callback)
 {
-  return newChannel->GetURI(getter_AddRefs(mPACURI));
+  nsresult rv = NS_OK;
+  if (NS_FAILED((rv = newChannel->GetURI(getter_AddRefs(mPACURI)))))
+      return rv;
+
+  callback->OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
 }

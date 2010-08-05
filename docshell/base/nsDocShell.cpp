@@ -85,6 +85,7 @@
 #include "nsIAuthPrompt2.h"
 #include "nsTextFormatter.h"
 #include "nsIChannelEventSink.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIUploadChannel.h"
 #include "nsISecurityEventSink.h"
 #include "mozilla/FunctionTimer.h"
@@ -502,8 +503,9 @@ nsPingListener::GetInterface(const nsIID &iid, void **result)
 }
 
 NS_IMETHODIMP
-nsPingListener::OnChannelRedirect(nsIChannel *oldChan, nsIChannel *newChan,
-                                  PRUint32 flags)
+nsPingListener::AsyncOnChannelRedirect(nsIChannel *oldChan, nsIChannel *newChan,
+                                       PRUint32 flags,
+                                       nsIAsyncVerifyRedirectCallback *callback)
 {
   nsCOMPtr<nsIURI> newURI;
   newChan->GetURI(getter_AddRefs(newURI));
@@ -511,8 +513,10 @@ nsPingListener::OnChannelRedirect(nsIChannel *oldChan, nsIChannel *newChan,
   if (!CheckPingURI(newURI, mContent))
     return NS_ERROR_ABORT;
 
-  if (!mRequireSameHost)
+  if (!mRequireSameHost) {
+    callback->OnRedirectVerifyCallback(NS_OK);
     return NS_OK;
+  }
 
   // XXXbz should this be using something more like the nsContentUtils
   // same-origin checker?
@@ -523,6 +527,7 @@ nsPingListener::OnChannelRedirect(nsIChannel *oldChan, nsIChannel *newChan,
   if (!IsSameHost(oldURI, newURI))
     return NS_ERROR_ABORT;
 
+  callback->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
 

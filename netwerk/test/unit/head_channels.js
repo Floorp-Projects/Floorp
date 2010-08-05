@@ -149,9 +149,10 @@ ChannelEventSink.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onChannelRedirect: function(oldChannel, newChannel, flags) {
-    if (this._flags & ES_ABORT_REDIRECT) {
+  asyncOnChannelRedirect: function(oldChannel, newChannel, flags, callback) {
+    if (this._flags & ES_ABORT_REDIRECT)
       throw Cr.NS_BINDING_ABORTED;
-    }
+
+    callback.onRedirectVerifyCallback(Cr.NS_OK);
   }
 };

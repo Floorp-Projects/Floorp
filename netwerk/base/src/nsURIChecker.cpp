@@ -43,6 +43,7 @@
 #include "nsIHttpChannel.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 //-----------------------------------------------------------------------------
 
@@ -367,11 +368,13 @@ nsURIChecker::GetInterface(const nsIID & aIID, void **aResult)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsURIChecker::OnChannelRedirect(nsIChannel *aOldChannel,
-                                nsIChannel *aNewChannel,
-                                PRUint32    aFlags)
+nsURIChecker::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
+                                     nsIChannel *aNewChannel,
+                                     PRUint32 aFlags,
+                                     nsIAsyncVerifyRedirectCallback *callback)
 {
     // We have a new channel
     mChannel = aNewChannel;
+    callback->OnRedirectVerifyCallback(NS_OK);
     return NS_OK;
 }

@@ -86,6 +86,7 @@
 #include "BasicLayers.h"
 #include <limits>
 #include "nsIDocShellTreeItem.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
@@ -352,15 +353,19 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnDataAvailable(nsIRequest*
   return mNextListener->OnDataAvailable(aRequest, aContext, aStream, aOffset, aCount);
 }
 
-NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnChannelRedirect(nsIChannel* aOldChannel,
-                                                                       nsIChannel* aNewChannel,
-                                                                       PRUint32 aFlags)
+NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
+                                                                            nsIChannel* aNewChannel,
+                                                                            PRUint32 aFlags,
+                                                                            nsIAsyncVerifyRedirectCallback* cb)
 {
+  // TODO is this really correct?? See bug #579329.
   if (mElement)
     mElement->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
   nsCOMPtr<nsIChannelEventSink> sink = do_QueryInterface(mNextListener);
   if (sink)
-    return sink->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+    return sink->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, cb);
+
+  cb->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
 

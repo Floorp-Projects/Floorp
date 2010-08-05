@@ -56,6 +56,7 @@
 #include "nsDOMError.h"
 #include "nsICachingChannel.h"
 #include "nsURILoader.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 #define HTTP_OK_CODE 200
 #define HTTP_PARTIAL_RESPONSE_CODE 206
@@ -126,13 +127,20 @@ nsMediaChannelStream::Listener::OnDataAvailable(nsIRequest* aRequest,
 }
 
 nsresult
-nsMediaChannelStream::Listener::OnChannelRedirect(nsIChannel* aOldChannel,
-                                                  nsIChannel* aNewChannel,
-                                                  PRUint32 aFlags)
+nsMediaChannelStream::Listener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
+                                                       nsIChannel* aNewChannel,
+                                                       PRUint32 aFlags,
+                                                       nsIAsyncVerifyRedirectCallback* cb)
 {
-  if (!mStream)
-    return NS_OK;
-  return mStream->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+  nsresult rv = NS_OK;
+  if (mStream)
+    rv = mStream->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  cb->OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
 }
 
 nsresult
