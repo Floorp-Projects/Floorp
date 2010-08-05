@@ -51,6 +51,7 @@
 class nsHTMLMediaElement;
 class nsMediaStream;
 class nsIStreamListener;
+class nsHTMLTimeRanges;
 
 // All methods of nsMediaDecoder must be called from the main thread only
 // with the exception of GetImageContainer, SetVideoData and GetStatistics,
@@ -235,6 +236,10 @@ public:
   void SetVideoData(const gfxIntSize& aSize,
                     float aPixelAspectRatio,
                     Image* aImage);
+
+  // Constructs the time ranges representing what segments of the media
+  // are buffered and playable.
+  virtual nsresult GetBuffered(nsHTMLTimeRanges* aBuffered) = 0;
 
   // Returns PR_TRUE if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.

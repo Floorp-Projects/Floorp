@@ -110,6 +110,7 @@ CPPSRCS		= \
 		nsHTMLTableRowElement.cpp \
 		nsHTMLTableSectionElement.cpp \
 		nsHTMLTextAreaElement.cpp \
+		nsHTMLTimeRanges.cpp \
 		nsHTMLTitleElement.cpp \
 		$(NULL)
 
