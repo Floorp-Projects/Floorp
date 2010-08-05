@@ -53,6 +53,7 @@
 #include "nsRefPtrHashtable.h"
 
 class AccGroupInfo;
+class EmbeddedObjCollector;
 class nsAccessible;
 class nsAccEvent;
 struct nsRoleMapEntry;
@@ -257,6 +258,21 @@ public:
   PRBool HasChildren() { return !!GetChildAt(0); }
 
   /**
+   * Return embedded accessible children count.
+   */
+  PRInt32 GetEmbeddedChildCount();
+
+  /**
+   * Return embedded accessible child at the given index.
+   */
+  nsAccessible* GetEmbeddedChildAt(PRUint32 aIndex);
+
+  /**
+   * Return index of the given embedded accessible child.
+   */
+  PRInt32 GetIndexOfEmbeddedChild(nsAccessible* aChild);
+
+  /**
    * Return cached accessible of parent-child relatives.
    */
   nsAccessible* GetCachedParent() const { return mParent; }
@@ -271,7 +287,7 @@ public:
       mParent->mChildren.SafeElementAt(mIndexInParent - 1, nsnull).get() : nsnull;
   }
   PRUint32 GetCachedChildCount() const { return mChildren.Length(); }
-  PRBool AreChildrenCached() const { return mAreChildrenInitialized; }
+  PRBool AreChildrenCached() const { return mChildrenFlags != eChildrenUninitialized; }
 
 #ifdef DEBUG
   /**
@@ -443,8 +459,18 @@ protected:
   // Data Members
   nsRefPtr<nsAccessible> mParent;
   nsTArray<nsRefPtr<nsAccessible> > mChildren;
-  PRBool mAreChildrenInitialized;
   PRInt32 mIndexInParent;
+
+  enum ChildrenFlags {
+    eChildrenUninitialized = 0x00,
+    eMixedChildren = 0x01,
+    eEmbeddedChildren = 0x02
+  };
+  ChildrenFlags mChildrenFlags;
+
+  nsAutoPtr<EmbeddedObjCollector> mEmbeddedObjCollector;
+  PRInt32 mIndexOfEmbeddedChild;
+  friend class EmbeddedObjCollector;
 
   nsAutoPtr<AccGroupInfo> mGroupInfo;
   friend class AccGroupInfo;
