@@ -1471,6 +1471,7 @@ var FindHelperUI = {
   },
 
   show: function findHelperShow() {
+    BrowserUI.pushPopup(this, this._container);
     Browser._browserView.ignorePageScroll(true);
     this._container.show(this);
     this.search("");
@@ -1478,6 +1479,7 @@ var FindHelperUI = {
   },
 
   hide: function findHelperHide() {
+    BrowserUI.popPopup();
     Browser._browserView.ignorePageScroll(false);
     this._textbox.value = "";
     this._container.hide(this);
@@ -1506,9 +1508,8 @@ var FindHelperUI = {
     let title = Elements.browserBundle.getString("pageactions.findInPage");
     let node = PageActions.appendItem("findinpage", title, "");
     node.onclick = function(event) {
-      BrowserUI._hidePopup();
       FindHelperUI.show();
-    }
+    };
   },
 
   _zoom: function _findHelperZoom(aElementRect) {
