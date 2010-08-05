@@ -954,6 +954,16 @@ public:
     return mObservesMutationsForPrint;
   }
 
+  void SetIsActive(PRBool aIsActive)
+  {
+    mIsActive = aIsActive;
+  }
+
+  PRBool IsActive()
+  {
+    return mIsActive;
+  }
+
   // mouse capturing
 
   static CapturingContentInfo gCaptureInfo;
@@ -1083,6 +1093,7 @@ protected:
   PRPackedBool              mIsReflowing;
   PRPackedBool              mPaintingSuppressed;  // For all documents we initially lock down painting.
   PRPackedBool              mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
+  PRPackedBool              mIsActive;
 
 #ifdef ACCESSIBILITY
   /**

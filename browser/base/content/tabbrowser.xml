@@ -737,8 +737,10 @@
             this._lastRelatedTab = null;
 
             var oldBrowser = this.mCurrentBrowser;
-            if (oldBrowser)
+            if (oldBrowser) {
               oldBrowser.setAttribute("type", "content-targetable");
+              oldBrowser.docShell.isActive = false;
+            }
 
             var updatePageReport = false;
             if (!oldBrowser ||
@@ -747,6 +749,7 @@
               updatePageReport = true;
 
             newBrowser.setAttribute("type", "content-primary");
+            newBrowser.docShell.isActive = true;
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
 
@@ -1189,6 +1192,10 @@
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
               try {
                 b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
+
+                // We start our browsers out as inactive, and then maintain
+                // activeness in the tab switcher.
+                b.docShell.isActive = false;
               }
               catch (ex) { }
             }
