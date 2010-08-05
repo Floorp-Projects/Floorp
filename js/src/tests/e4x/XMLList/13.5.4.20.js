@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.5.4.20.js';
 
 START("13.5.4.20 - XMLList toString()");
 

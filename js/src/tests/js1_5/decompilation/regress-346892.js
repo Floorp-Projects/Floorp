@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-346892.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 346892;
 var summary = 'decompilation of new Function("3")';

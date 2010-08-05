@@ -3,7 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = '15.2.3.7-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 430133;
 var summary = 'ES5 Object.defineProperties(O, Properties)';

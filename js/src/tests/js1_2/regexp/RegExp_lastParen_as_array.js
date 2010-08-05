@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'RegExp_lastParen_as_array.js';
 
 /**
    Filename:     RegExp_lastParen_as_array.js

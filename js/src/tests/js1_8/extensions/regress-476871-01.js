@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-476871-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 476871;
 var summary = 'Do not assert: *(JSObject**)slot == NULL';

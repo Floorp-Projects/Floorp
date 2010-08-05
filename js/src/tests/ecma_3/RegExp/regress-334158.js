@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-334158.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 334158;
 var summary = 'Parse error in control letter escapes (RegExp)';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-465145.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 465145;
 var summary = 'Do not crash with watched defined setter';

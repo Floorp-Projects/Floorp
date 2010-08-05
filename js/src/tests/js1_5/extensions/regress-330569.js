@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-330569.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 330569;
 var summary = 'RegExp - throw InternalError on too complex regular expressions';

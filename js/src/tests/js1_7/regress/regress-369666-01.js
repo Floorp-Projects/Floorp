@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-369666-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 369666;
 var summary = 'inner function declaration in let-induced outer ' +

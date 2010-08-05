@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'order-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 433672;
 var summary = 'operator evaluation order';

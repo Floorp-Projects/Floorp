@@ -49,7 +49,6 @@
  * "Demonstrate the creation of a Deletable local variable using eval"
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-68498-002.js';
 var BUGNUMBER = 68498;
 var summary = 'Creating a Deletable local variable using eval';
 var statprefix = '; currently at expect[';

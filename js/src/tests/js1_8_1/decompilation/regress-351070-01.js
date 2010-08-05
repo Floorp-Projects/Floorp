@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-351070-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 351070;
 var summary = 'decompilation of let declaration should not change scope';

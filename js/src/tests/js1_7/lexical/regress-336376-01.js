@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-336376-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER     = "336376";
 var summary = "Tests reserved words in contexts in which they are not reserved";

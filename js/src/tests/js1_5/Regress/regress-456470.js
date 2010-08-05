@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-456470.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 456470;
 var summary = 'TM: Make sure JSOP_DEFLOCALFUN pushes the right function object.';

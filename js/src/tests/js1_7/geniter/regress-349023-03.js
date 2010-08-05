@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349023-03.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 349023;
 var summary = 'Bogus JSCLASS_IS_EXTENDED in the generator class';

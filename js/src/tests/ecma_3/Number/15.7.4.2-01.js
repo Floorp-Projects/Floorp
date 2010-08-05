@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '15.7.4.2-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = "411889";
 var summary = "num.toString(), num.toString(10), and num.toString(undefined)" +

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-316885-03.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 316885;
 var summary = 'Unrooted access in jsinterp.c';

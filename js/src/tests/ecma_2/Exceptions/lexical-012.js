@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'lexical-012.js';
 
 /**
    File Name:          lexical-012.js

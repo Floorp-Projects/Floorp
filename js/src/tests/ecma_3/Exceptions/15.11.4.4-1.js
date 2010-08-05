@@ -72,7 +72,6 @@
  * See also ECMA 15.11.4.2, 15.11.4.3
  */
 //-----------------------------------------------------------------------------
-var gTestfile = '15.11.4.4-1.js';
 var UBound = 0;
 var BUGNUMBER = '(none)';
 var summary = 'Testing Error.prototype.toString()';

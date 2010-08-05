@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452724-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452724;
 var summary = 'Do not assert with JIT: (rmask(rr) & FpRegs) != 0';

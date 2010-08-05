@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-419091.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 419091;
 var summary = 'Do not assert: JS_PROPERTY_CACHE(cx).disabled >= 0';

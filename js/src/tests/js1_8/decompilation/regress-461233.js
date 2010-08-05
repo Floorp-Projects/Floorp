@@ -5,7 +5,6 @@
  * Contributor: Jason Orendorff
  */
 
-var gTestfile = 'regress-461233.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 461233;
 var summary = 'Decompilation of function () [(1,2)]';

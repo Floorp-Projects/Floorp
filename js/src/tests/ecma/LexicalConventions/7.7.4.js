@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '7.7.4.js';
 
 /**
    File Name:          7.7.4.js

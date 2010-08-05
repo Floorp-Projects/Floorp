@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-422137.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 422137;
 var summary = 'Do not assert or bogo OOM with debugger trap on JOF_CALL bytecode';

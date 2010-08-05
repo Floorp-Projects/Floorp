@@ -3,7 +3,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestfile = 'regress-545980.js';
 var BUGNUMBER = 518103;
 var summary = 'partial flat closures must not reach across funargs';
 var actual = "no crash";

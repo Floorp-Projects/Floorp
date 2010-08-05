@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-407727-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 407727;
 var summary = 'let Object global redeclaration';

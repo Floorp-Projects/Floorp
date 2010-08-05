@@ -63,7 +63,7 @@ window.onerror = function (msg, page, line)
     EXPECTED = 'Unknown';
   }
 
-  var testcase = new TestCase(gTestfile, SUMMARY + DESCRIPTION +
+  var testcase = new TestCase("unknown-test-name", SUMMARY + DESCRIPTION +
                               ' Section ' + SECTION, EXPECTED, "error");
 
   testcase.passed = false;

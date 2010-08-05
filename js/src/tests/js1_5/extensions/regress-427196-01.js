@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-427196-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 427196;
 var summary = 'Do not assert: OBJ_SCOPE(pobj)->object == pobj';

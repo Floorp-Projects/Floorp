@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-378789.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 378789;
 var summary = 'js_PutEscapedString should handle nulls';

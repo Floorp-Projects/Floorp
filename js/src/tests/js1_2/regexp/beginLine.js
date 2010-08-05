@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'beginLine.js';
 
 /**
    Filename:     beginLine.js

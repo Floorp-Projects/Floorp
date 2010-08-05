@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-361964.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 361964;
 var summary = 'Crash [@ MarkGCThingChildren] involving watch and setter';

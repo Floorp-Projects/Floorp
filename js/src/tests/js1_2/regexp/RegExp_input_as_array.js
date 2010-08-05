@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'RegExp_input_as_array.js';
 
 /**
    Filename:     RegExp_input_as_array.js

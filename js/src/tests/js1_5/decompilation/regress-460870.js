@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-460870.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 460870;
 var summary = 'Decompilation of (function() { if (a || 1 || 2) { } })';

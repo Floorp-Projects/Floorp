@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '9.2.1.7.js';
 
 START("9.2.1.7 XMLList [[DeepCopy]]");
 

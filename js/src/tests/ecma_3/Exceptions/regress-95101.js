@@ -43,7 +43,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=95101
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-95101.js';
 var UBound = 0;
 var BUGNUMBER = 95101;
 var summary = 'Invoking an undefined function should produce a ReferenceError';
