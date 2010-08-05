@@ -1665,6 +1665,18 @@ class BindNameCompiler : public PICStubCompiler
     JSAtom *atom;
     void   *stub;
 
+    static int32 inlineJumpOffset(ic::PICInfo &pic) {
+#if defined JS_NUNBOX32
+        return BINDNAME_INLINE_JUMP_OFFSET;
+#elif defined JS_PUNBOX64
+        return pic.labels.bindname.inlineJumpOffset;
+#endif
+    }
+
+    inline int32 inlineJumpOffset() {
+        return inlineJumpOffset(pic);
+    }
+
   public:
     BindNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
                       JSAtom *atom, VoidStubUInt32 stub)
@@ -1681,7 +1693,7 @@ class BindNameCompiler : public PICStubCompiler
     static void reset(ic::PICInfo &pic)
     {
         RepatchBuffer repatcher(pic.fastPathStart.executableAddress(), INLINE_PATH_LENGTH);
-        repatcher.relink(pic.fastPathStart.jumpAtOffset(BINDNAME_INLINE_JUMP_OFFSET),
+        repatcher.relink(pic.fastPathStart.jumpAtOffset(inlineJumpOffset(pic)),
                          pic.slowPathStart);
 
         RepatchBuffer repatcher2(pic.slowPathStart.executableAddress(), INLINE_PATH_LENGTH);
@@ -1753,7 +1765,7 @@ class BindNameCompiler : public PICStubCompiler
 
         PICRepatchBuffer repatcher(pic, pic.lastPathStart()); 
         if (!pic.stubsGenerated)
-            repatcher.relink(pic.shapeGuard + BINDNAME_INLINE_JUMP_OFFSET, cs);
+            repatcher.relink(pic.shapeGuard + inlineJumpOffset(), cs);
         else
             repatcher.relink(BINDNAME_STUB_JUMP_OFFSET, cs);
 

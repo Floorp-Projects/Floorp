@@ -116,7 +116,6 @@ static const int32 SCOPENAME_JUMP_OFFSET = 5; //asserted
 static const int32 BINDNAME_INLINE_JUMP_OFFSET = 10; //asserted
 static const int32 BINDNAME_STUB_JUMP_OFFSET   =  5; //asserted
 #elif defined JS_CPU_X64
-static const int32 BINDNAME_INLINE_JUMP_OFFSET = 36; //asserted
 static const int32 BINDNAME_STUB_JUMP_OFFSET   =  5; //asserted
 #endif
 
@@ -178,6 +177,12 @@ union PICLabels {
         // after the jump -- at which point this is always 0.
         int32 stubShapeJump : 8;
     } getelem;
+
+    /* BindNameCompiler */
+    struct {
+        /* Offset from shapeGuard to end of shape jump. */
+        int32 inlineJumpOffset : 8;
+    } bindname;
 };
 #endif
 
