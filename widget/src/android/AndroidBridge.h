@@ -97,9 +97,9 @@ public:
     JNIEnv* AttachThread(PRBool asDaemon = PR_TRUE);
 
     /* These are all implemented in Java */
-    void NotifyIME(int aType, int aState);
+    static void NotifyIME(int aType, int aState);
 
-    void NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen, int aStart, int aEnd, int aNewEnd);
+    static void NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen, int aStart, int aEnd, int aNewEnd);
 
     void EnableAccelerometer(bool aEnable);
 

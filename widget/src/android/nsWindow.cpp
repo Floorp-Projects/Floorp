@@ -1482,9 +1482,7 @@ nsWindow::ResetInputState()
         mIMEComposing = PR_FALSE;
     }
 
-    if (AndroidBridge::Bridge())
-        AndroidBridge::Bridge()->NotifyIME(
-            AndroidBridge::NOTIFY_IME_RESETINPUTSTATE, 0);
+    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_RESETINPUTSTATE, 0);
     return NS_OK;
 }
 
@@ -1494,9 +1492,7 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
     ALOGIME("IME: SetIMEEnabled: s=%d", aState);
 
     mIMEEnabled = aState;
-    if (AndroidBridge::Bridge())
-        AndroidBridge::Bridge()->NotifyIME(
-            AndroidBridge::NOTIFY_IME_SETENABLED, int(aState));
+    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_SETENABLED, int(aState));
     return NS_OK;
 }
 
@@ -1524,9 +1520,7 @@ nsWindow::CancelIMEComposition()
         mIMEComposing = PR_FALSE;
     }
 
-    if (AndroidBridge::Bridge())
-        AndroidBridge::Bridge()->NotifyIME(
-            AndroidBridge::NOTIFY_IME_CANCELCOMPOSITION, 0);
+    AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_CANCELCOMPOSITION, 0);
     return NS_OK;
 }
 
@@ -1536,8 +1530,8 @@ nsWindow::OnIMEFocusChange(PRBool aFocus)
     ALOGIME("IME: OnIMEFocusChange: f=%d", aFocus);
     
     if (AndroidBridge::Bridge())
-        AndroidBridge::Bridge()->NotifyIME(
-            AndroidBridge::NOTIFY_IME_FOCUSCHANGE, int(aFocus));
+        AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_FOCUSCHANGE, 
+                                 int(aFocus));
     return NS_OK;
 }
 
@@ -1560,16 +1554,11 @@ nsWindow::OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd)
         if (!event.mSucceeded)
             return NS_OK;
 
-        if (AndroidBridge::Bridge())
-            AndroidBridge::Bridge()->NotifyIMEChange(
-                event.mReply.mString.get(),
-                event.mReply.mString.Length(),
-                aStart, aOldEnd, aNewEnd);
+        AndroidBridge::NotifyIMEChange(event.mReply.mString.get(),
+                                       event.mReply.mString.Length(),
+                                       aStart, aOldEnd, aNewEnd);
     } else {
-        if (AndroidBridge::Bridge())
-            AndroidBridge::Bridge()->NotifyIMEChange(
-                nsnull, 0,
-                aStart, aOldEnd, aNewEnd);
+        AndroidBridge::NotifyIMEChange(nsnull, 0, aStart, aOldEnd, aNewEnd);
     }
     return NS_OK;
 }
@@ -1586,11 +1575,9 @@ nsWindow::OnIMESelectionChange(void)
     if (!event.mSucceeded)
         return NS_OK;
 
-    if (AndroidBridge::Bridge())
-        AndroidBridge::Bridge()->NotifyIMEChange(
-            nsnull, 0,
-            int(event.mReply.mOffset),
-            int(event.mReply.mOffset + event.mReply.mString.Length()), -1);
+    AndroidBridge::NotifyIMEChange(nsnull, 0, int(event.mReply.mOffset),
+                                   int(event.mReply.mOffset + 
+                                       event.mReply.mString.Length()), -1);
     return NS_OK;
 }
 
