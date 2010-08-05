@@ -49,10 +49,22 @@
 #include "jspubtd.h"
 #include "jsdhash.h"
 #include "jsbit.h"
+#include "jsgcchunk.h"
 #include "jsutil.h"
 #include "jstask.h"
 #include "jsvector.h"
 #include "jsversion.h"
+
+#if !defined JS_DUMP_CONSERVATIVE_GC_ROOTS && defined DEBUG
+# define JS_DUMP_CONSERVATIVE_GC_ROOTS 1
+#endif
+
+#if defined JS_GCMETER
+const bool JS_WANT_GC_METER_PRINT = true;
+#elif defined DEBUG
+# define JS_GCMETER 1
+const bool JS_WANT_GC_METER_PRINT = false;
+#endif
 
 #define JSTRACE_XML         2
 
@@ -295,7 +307,6 @@ js_NewGCXML(JSContext *cx)
 #endif
 
 struct JSGCArena;
-struct JSGCChunkInfo;
 
 struct JSGCArenaList {
     JSGCArena       *head;          /* list start */
@@ -388,6 +399,31 @@ class BackgroundSweepTask : public JSBackgroundTask {
 
 #endif /* JS_THREADSAFE */
 
+
+struct GCChunkInfo;
+
+struct GCChunkHasher {
+    typedef jsuword Lookup;
+
+    /*
+     * Strip zeros for better distribution after multiplying by the golden
+     * ratio.
+     */
+    static HashNumber hash(jsuword chunk) {
+        JS_ASSERT(!(chunk & GC_CHUNK_MASK));
+        return HashNumber(chunk >> GC_CHUNK_SHIFT);
+    }
+
+    static bool match(jsuword k, jsuword l) {
+        JS_ASSERT(!(k & GC_CHUNK_MASK));
+        JS_ASSERT(!(l & GC_CHUNK_MASK));
+        return k == l;
+    }
+};
+
+typedef HashSet<jsuword, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
+typedef Vector<GCChunkInfo *, 32, SystemAllocPolicy> GCChunkInfoVector;
+
 struct ConservativeGCThreadData {
 
     /*
@@ -408,36 +444,87 @@ struct ConservativeGCThreadData {
     bool isEnabled() const { return enableCount > 0; }
 };
 
-} /* namespace js */
+/*
+ * The conservative GC test for a word shows that it is either a valid GC
+ * thing or is not for one of the following reasons.
+ */
+enum ConservativeGCTest {
+    CGCT_VALID,
+    CGCT_LOWBITSET, /* excluded because one of the low bits was set */
+    CGCT_NOTARENA,  /* not within arena range in a chunk */
+    CGCT_NOTCHUNK,  /* not within a valid chunk */
+    CGCT_FREEARENA, /* within arena containing only free things */
+    CGCT_WRONGTAG,  /* tagged pointer but wrong type */
+    CGCT_NOTLIVE,   /* gcthing is not allocated */
+    CGCT_END
+};
 
-#define JS_DUMP_CONSERVATIVE_GC_ROOTS 1
+struct ConservativeGCStats {
+    uint32  counter[CGCT_END];  /* ConservativeGCTest classification
+                                   counters */
+
+    void add(const ConservativeGCStats &another) {
+        for (size_t i = 0; i != JS_ARRAY_LENGTH(counter); ++i)
+            counter[i] += another.counter[i];
+    }
+
+    void dump(FILE *fp);
+};
+
+struct GCMarker : public JSTracer {
+  private:
+    /* The color is only applied to objects, functions and xml. */
+    uint32 color;
+
+    /* See comments before delayMarkingChildren is jsgc.cpp. */
+    JSGCArena           *unmarkedArenaStackTop;
+#ifdef DEBUG
+    size_t              markLaterCount;
+#endif
+
+  public:
+#if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
+    ConservativeGCStats conservativeStats;
+#endif
+   
+#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
+    struct ConservativeRoot { void *thing; uint32 traceKind; };
+    Vector<ConservativeRoot, 0, SystemAllocPolicy> conservativeRoots;
+    const char *conservativeDumpFileName;
+
+    void dumpConservativeRoots();
+#endif
+
+    js::Vector<JSObject *, 0, js::SystemAllocPolicy> arraysToSlowify;
+
+  public:
+    explicit GCMarker(JSContext *cx);
+    ~GCMarker();
+
+    uint32 getMarkColor() const {
+        return color;
+    }
+
+    void setMarkColor(uint32 newColor) {
+        /*
+         * We must process any delayed marking here, otherwise we confuse
+         * colors.
+         */
+        markDelayedChildren();
+        color = newColor;
+    }
+
+    void delayMarkingChildren(void *thing);
+
+    JS_FRIEND_API(void) markDelayedChildren();
+
+    void slowifyArrays();
+};
+
+} /* namespace js */
 
 extern void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str);
-
-#if defined JS_GCMETER
-const bool JS_WANT_GC_METER_PRINT = true;
-#elif defined DEBUG
-# define JS_GCMETER 1
-const bool JS_WANT_GC_METER_PRINT = false;
-#endif
-
-#if defined JS_GCMETER || defined JS_DUMP_CONSERVATIVE_GC_ROOTS
-
-struct JSConservativeGCStats {
-    uint32  words;      /* number of words on native stacks */
-    uint32  lowbitset;  /* excluded because one of the low bits was set */
-    uint32  notarena;   /* not within arena range in a chunk */
-    uint32  notchunk;   /* not within a valid chunk */
-    uint32  freearena;  /* not within non-free arena */
-    uint32  wrongtag;   /* tagged pointer but wrong type */
-    uint32  notlive;    /* gcthing is not allocated */
-    uint32  gcthings;   /* number of live gcthings */
-    uint32  unmarked;   /* number of unmarked gc things discovered on the
-                           stack */
-};
-
-#endif
 
 #ifdef JS_GCMETER
 
@@ -487,7 +574,7 @@ struct JSGCStats {
 
     JSGCArenaStats  arenaStats[FINALIZE_LIMIT];
 
-    JSConservativeGCStats conservative;
+    js::ConservativeGCStats conservative;
 };
 
 extern JS_FRIEND_API(void)
