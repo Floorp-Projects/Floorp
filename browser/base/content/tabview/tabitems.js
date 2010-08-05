@@ -438,7 +438,10 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var b = this.getBounds();
     var $container = iQ(this.container);
     var $title = iQ('.tab-title', $container);
-    return new Rect(b.left, b.top, b.width, b.height + $title.height());
+    var height = b.height;
+    if ( typeof $title == 'number' )
+    	height = b.height + parseInt($title.height());
+    return new Rect(b.left, b.top, b.width, height);
   },
 
   // ----------
@@ -565,9 +568,10 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           var group = Groups.group(gID);
           Groups.setActiveGroup(group);
           group.setActiveTab(self);
-        }
-        else
+        } else {
           Groups.setActiveGroup(null);
+          Groups.setActiveOrphanTab(self);
+        }
 
         if (childHitResult.callback)
           childHitResult.callback();
@@ -625,13 +629,15 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       complete: function() { // note that this will happen on the DOM thread
         $tab.removeClass('front');
 
+				Groups.setActiveOrphanTab(null);
+
         TabItems.resumePainting();
 
         self._zoomPrep = false;
         self.setBounds(self.getBounds(), true, {force: true});
 
         if (typeof complete == "function")
-           complete();
+          complete();
       }
     });
   },

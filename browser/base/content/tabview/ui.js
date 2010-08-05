@@ -877,8 +877,6 @@ var UIManager = {
       itemBounds = (itemBounds ? itemBounds.union(bounds) : new Rect(bounds));
     });
 
-    Groups.repositionNewTabGroup(); // TODO:
-
     if (newPageBounds.width < this._pageBounds.width &&
         newPageBounds.width > itemBounds.width)
       newPageBounds.width = this._pageBounds.width;
