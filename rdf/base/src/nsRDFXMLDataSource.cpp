@@ -125,6 +125,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIChannelEventSink.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsNetUtil.h"
 
 #include "rdfIDataSource.h"
@@ -901,32 +902,38 @@ RDFXMLDataSourceImpl::SetReadOnly(PRBool aIsReadOnly)
 // This code is copied from nsSameOriginChecker::OnChannelRedirect. See
 // bug 475940 on providing this code in a shared location.
 NS_IMETHODIMP
-RDFXMLDataSourceImpl::OnChannelRedirect(nsIChannel *aOldChannel,
-                                        nsIChannel *aNewChannel,
-                                        PRUint32 aFlags)
+RDFXMLDataSourceImpl::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
+                                             nsIChannel *aNewChannel,
+                                             PRUint32 aFlags,
+                                             nsIAsyncVerifyRedirectCallback *cb)
 {
-  NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
+    NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
 
-  nsresult rv;
-  nsCOMPtr<nsIScriptSecurityManager> secMan =
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrincipal> oldPrincipal;
-  secMan->GetChannelPrincipal(aOldChannel, getter_AddRefs(oldPrincipal));
+    nsCOMPtr<nsIPrincipal> oldPrincipal;
+    secMan->GetChannelPrincipal(aOldChannel, getter_AddRefs(oldPrincipal));
 
-  nsCOMPtr<nsIURI> newURI;
-  aNewChannel->GetURI(getter_AddRefs(newURI));
-  nsCOMPtr<nsIURI> newOriginalURI;
-  aNewChannel->GetOriginalURI(getter_AddRefs(newOriginalURI));
+    nsCOMPtr<nsIURI> newURI;
+    aNewChannel->GetURI(getter_AddRefs(newURI));
+    nsCOMPtr<nsIURI> newOriginalURI;
+    aNewChannel->GetOriginalURI(getter_AddRefs(newOriginalURI));
 
-  NS_ENSURE_STATE(oldPrincipal && newURI && newOriginalURI);
+    NS_ENSURE_STATE(oldPrincipal && newURI && newOriginalURI);
 
-  rv = oldPrincipal->CheckMayLoad(newURI, PR_FALSE);
-  if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
-    rv = oldPrincipal->CheckMayLoad(newOriginalURI, PR_FALSE);
-  }
-  return rv;
+    rv = oldPrincipal->CheckMayLoad(newURI, PR_FALSE);
+    if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
+        rv = oldPrincipal->CheckMayLoad(newOriginalURI, PR_FALSE);
+    }
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    cb->OnRedirectVerifyCallback(NS_OK);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
