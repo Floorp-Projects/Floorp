@@ -60,12 +60,16 @@
 #include "nsIXPConnect.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDocument.h"
 #include "nsNetUtil.h"
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDialogCreator.h"
 #include "nsIDialogParamBlock.h"
+#include "nsIPresShell.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
@@ -292,6 +296,25 @@ private:
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
+
+inline TabChild*
+GetTabChildFrom(nsIDocShell* aDocShell)
+{
+    nsCOMPtr<nsITabChild> tc = do_GetInterface(aDocShell);
+    return static_cast<TabChild*>(tc.get());
+}
+
+inline TabChild*
+GetTabChildFrom(nsIPresShell* aPresShell)
+{
+    nsIDocument* doc = aPresShell->GetDocument();
+    if (!doc) {
+        return nsnull;
+    }
+    nsCOMPtr<nsISupports> container = doc->GetContainer();
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+    return GetTabChildFrom(docShell);
+}
 
 }
 }
