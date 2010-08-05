@@ -4949,6 +4949,10 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                        bg->mSizeCount, fillCount);
   }
 
+  // Now that the dust has settled, register the images with the document
+  for (PRUint32 i = 0; i < bg->mImageCount; ++i)
+    bg->mLayers[i].TrackImages(aContext->PresContext());
+
   COMPUTE_END_RESET(Background, bg)
 }
 

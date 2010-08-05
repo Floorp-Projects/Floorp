@@ -1339,6 +1339,9 @@ nsStyleGradient::nsStyleGradient(void)
 nsStyleImage::nsStyleImage()
   : mType(eStyleImageType_Null)
   , mCropRect(nsnull)
+#ifdef DEBUG
+  , mImageTracked(false)
+#endif
 {
   MOZ_COUNT_CTOR(nsStyleImage);
 }
@@ -1353,6 +1356,9 @@ nsStyleImage::~nsStyleImage()
 nsStyleImage::nsStyleImage(const nsStyleImage& aOther)
   : mType(eStyleImageType_Null)
   , mCropRect(nsnull)
+#ifdef DEBUG
+  , mImageTracked(false)
+#endif
 {
   // We need our own copy constructor because we don't want
   // to copy the reference count
@@ -1387,6 +1393,9 @@ nsStyleImage::DoCopy(const nsStyleImage& aOther)
 void
 nsStyleImage::SetNull()
 {
+  NS_ABORT_IF_FALSE(!mImageTracked,
+                    "Calling SetNull() with image tracked!");
+
   if (mType == eStyleImageType_Gradient)
     mGradient->Release();
   else if (mType == eStyleImageType_Image)
@@ -1401,6 +1410,9 @@ nsStyleImage::SetNull()
 void
 nsStyleImage::SetImageData(imgIRequest* aImage)
 {
+  NS_ABORT_IF_FALSE(!mImageTracked,
+                    "Setting a new image without untracking the old one!");
+
   NS_IF_ADDREF(aImage);
 
   if (mType != eStyleImageType_Null)
@@ -1410,6 +1422,44 @@ nsStyleImage::SetImageData(imgIRequest* aImage)
     mImage = aImage;
     mType = eStyleImageType_Image;
   }
+}
+
+void
+nsStyleImage::TrackImage(nsPresContext* aContext)
+{
+  // Sanity
+  NS_ABORT_IF_FALSE(!mImageTracked, "Already tracking image!");
+  NS_ABORT_IF_FALSE(mType == eStyleImageType_Image,
+                    "Can't track image when there isn't one!");
+
+  // Register the image with the document
+  nsIDocument* doc = aContext->Document();
+  if (doc)
+    doc->AddImage(mImage);
+
+  // Mark state
+#ifdef DEBUG
+  mImageTracked = true;
+#endif
+}
+
+void
+nsStyleImage::UntrackImage(nsPresContext* aContext)
+{
+  // Sanity
+  NS_ABORT_IF_FALSE(mImageTracked, "Image not tracked!");
+  NS_ABORT_IF_FALSE(mType == eStyleImageType_Image,
+                    "Can't untrack image when there isn't one!");
+
+  // Unregister the image with the document
+  nsIDocument* doc = aContext->Document();
+  if (doc)
+    doc->RemoveImage(mImage);
+
+  // Mark state
+#ifdef DEBUG
+  mImageTracked = false;
+#endif
 }
 
 void
@@ -1650,6 +1700,17 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
 nsStyleBackground::~nsStyleBackground()
 {
   MOZ_COUNT_DTOR(nsStyleBackground);
+}
+
+void
+nsStyleBackground::Destroy(nsPresContext* aContext)
+{
+  // Untrack all the images stored in our layers
+  for (PRUint32 i = 0; i < mImageCount; ++i)
+    mLayers[i].UntrackImages(aContext);
+
+  this->~nsStyleBackground();
+  aContext->FreeToShell(sizeof(nsStyleBackground), this);
 }
 
 nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
