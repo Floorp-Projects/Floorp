@@ -93,6 +93,18 @@ class Assembler : public BaseAssembler
         return address;
     }
 
+    void loadSlot(RegisterID obj, RegisterID clobber, uint32 slot, RegisterID type, RegisterID data) {
+        JS_ASSERT(type != data);
+        Address address(obj, offsetof(JSObject, fslots) + slot * sizeof(Value));
+        if (slot >= JS_INITIAL_NSLOTS) {
+            loadPtr(Address(obj, offsetof(JSObject, dslots)), clobber);
+            address = Address(clobber, (slot - JS_INITIAL_NSLOTS) * sizeof(Value));
+        }
+        
+        loadValueThenPayload(address, type, data);
+        convertValueToType(type);
+    }
+
     void loadValue(Address address, RegisterID dst) {
         loadPtr(address, dst);
     }

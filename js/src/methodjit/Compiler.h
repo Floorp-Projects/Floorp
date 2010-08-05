@@ -128,6 +128,9 @@ class Compiler
         Call callReturn;
         bool hasTypeCheck;
         ValueRemat vr;
+# if defined JS_CPU_X64
+        ic::PICLabels labels;
+# endif
 
         void copySimpleMembersTo(ic::PICInfo &pi) const {
             pi.kind = kind;
