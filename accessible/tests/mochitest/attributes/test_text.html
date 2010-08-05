@@ -428,8 +428,10 @@
 
       ID = "area14";
       defAttrs = buildDefaultTextAttrs(ID, kInputFontSize);
-      attrs = { };
 
+      // XXX: While we expose text leaf accessibles for placeholder we grab its
+      // style, bug 545817.
+      attrs = { color: "rgb(109, 109, 109)" };
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
 
       //////////////////////////////////////////////////////////////////////////
