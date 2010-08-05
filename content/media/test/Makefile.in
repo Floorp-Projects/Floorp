@@ -192,6 +192,7 @@ _TEST_FILES += \
 		bug523816.ogv \
 		bug533822.ogg \
 		bug557094.ogv \
+		bug580982.webm \
 		chain.ogv \
 		dirac.ogg \
 		seek.ogv \
