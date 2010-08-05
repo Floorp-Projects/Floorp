@@ -60,6 +60,8 @@
 #include "nsContentUtils.h"
 #include "nsIPluginWidget.h"
 #include "nsXULPopupManager.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
 
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 
@@ -333,11 +335,19 @@ NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::FlushDelayedResize()
+NS_IMETHODIMP nsViewManager::FlushDelayedResize(PRBool aDoReflow)
 {
   if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
-    DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height);
-    mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
+    if (aDoReflow) {
+      DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height);
+      mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
+    } else if (mObserver) {
+      nsCOMPtr<nsIPresShell> shell = do_QueryInterface(mObserver);
+      nsPresContext* presContext = shell->GetPresContext();
+      if (presContext) {
+        presContext->SetVisibleArea(nsRect(nsPoint(0, 0), mDelayedResize));
+      }
+    }
   }
   return NS_OK;
 }
@@ -842,7 +852,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
                       : nsnull) {
             if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
                 IsViewVisible(vm->mRootView)) {
-              vm->FlushDelayedResize();
+              vm->FlushDelayedResize(PR_TRUE);
 
               // Paint later.
               vm->UpdateView(vm->mRootView, NS_VMREFRESH_NO_SYNC);
