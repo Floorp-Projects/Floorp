@@ -3539,6 +3539,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
 
         /* Direct2D isn't very good at clipping so use Fill() when we can */
         if (CurrentState().globalAlpha == 1.0f && mThebes->CurrentOperator() == gfxContext::OPERATOR_OVER) {
+            mThebes->NewPath();
             mThebes->Rectangle(clip);
             mThebes->Fill();
         } else {
