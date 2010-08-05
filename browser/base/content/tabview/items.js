@@ -852,29 +852,24 @@ window.Items = {
   // ----------
   // Function: getPageBounds
   // Returns a <Rect> defining the area of the page <Item>s should stay within.
-  getPageBounds: function(dontCountNewTabGroup) {
-    var bottom = dontCountNewTabGroup ? 0 : TabItems.tabHeight + Items.defaultGutter;
+  getPageBounds: function() {
     var width = Math.max(100, window.innerWidth);
-    var height = Math.max(100, window.innerHeight - bottom);
+    var height = Math.max(100, window.innerHeight);
     return new Rect(0, 0, width, height);
   },
 
   // ----------
   // Function: getSafeWindowBounds
   // Returns the bounds within which it is safe to place all non-stationary <Item>s.
-  getSafeWindowBounds: function(dontCountNewTabGroup) {
+  getSafeWindowBounds: function() {
     // the safe bounds that would keep it "in the window"
     var gutter = Items.defaultGutter;
-    var newTabGroupBounds = Groups.getBoundsForNewTabGroup();
     // Here, I've set the top gutter separately, as the top of the window has its own
     // extra chrome which makes a large top gutter unnecessary.
     // TODO: set top gutter separately, elsewhere.
     var topGutter = 5;
-    if (dontCountNewTabGroup)
-      return new Rect(gutter, topGutter,
+		return new Rect(gutter, topGutter,
         window.innerWidth - 2 * gutter, window.innerHeight - gutter - topGutter);
-    return new Rect(gutter, topGutter,
-      window.innerWidth - 2 * gutter, newTabGroupBounds.top -  gutter - topGutter);
 
   },
 
