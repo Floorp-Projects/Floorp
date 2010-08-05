@@ -112,7 +112,6 @@
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsFrameSelection.h"
-#include "nsIDOMNSHTMLInputElement.h" //optimization for ::DoXXX commands
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsViewsCID.h"
 #include "nsPresArena.h"
@@ -1363,6 +1362,9 @@ public:
   static PRInt64 SizeOfBidiMemoryReporter(void *) {
     return EstimateShellsMemory(LiveShellBidiSizeEnumerator);
   }
+
+protected:
+  void QueryIsActive();
 };
 
 class nsAutoCauseReflowNotifier
@@ -1596,6 +1598,7 @@ PresShell::PresShell()
 #endif
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
   mIsThemeSupportDisabled = PR_FALSE;
+  mIsActive = PR_TRUE;
 #ifdef DEBUG
   mPresArenaAllocCount = 0;
 #endif
@@ -1801,6 +1804,9 @@ PresShell::Init(nsIDocument* aDocument,
     }
   }
 #endif // MOZ_SMIL
+
+  // Get our activeness from the docShell.
+  QueryIsActive();
 
   return NS_OK;
 }
@@ -5541,7 +5547,9 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
 
   // if the area of the image is larger than the maximum area, scale it down
   float scale = 0.0;
-  nsIntRect rootScreenRect = GetRootFrame()->GetScreenRect();
+  nsIntRect rootScreenRect =
+    GetRootFrame()->GetScreenRectInAppUnits().ToNearestPixels(
+      pc->AppUnitsPerDevPixel());
 
   // if the image is larger in one or both directions than half the size of
   // the available screen area, scale the image down to that size.
@@ -7305,6 +7313,10 @@ PresShell::Thaw()
     mDocument->EnumerateSubDocuments(ThawSubDocument, nsnull);
 
   UnsuppressPainting();
+
+  // Get the activeness of our presshell, as this might have changed
+  // while we were in the bfcache
+  QueryIsActive();
 }
 
 void
@@ -8941,4 +8953,17 @@ void nsIPresShell::ReleaseStatics()
   NS_ASSERTION(sLiveShells, "ReleaseStatics called without Initialize!");
   delete sLiveShells;
   sLiveShells = nsnull;
+}
+
+// Asks our docshell whether we're active.
+void PresShell::QueryIsActive()
+{
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(container));
+  if (docshell) {
+    PRBool isActive;
+    nsresult rv = docshell->GetIsActive(&isActive);
+    if (NS_SUCCEEDED(rv))
+      SetIsActive(isActive);
+  }
 }

@@ -38,6 +38,7 @@
 
 #include "nsIDOMHTMLElement.idl"
 #include "nsIDOMHTMLMediaError.idl"
+#include "nsIDOMHTMLTimeRanges.idl"
 
 /**
  * The nsIDOMHTMLMediaElement interface is an interface to be implemented by the HTML
@@ -56,7 +57,7 @@
 #endif
 %}
 
-[scriptable, uuid(505b523e-4a27-4151-b0eb-750b7258760e)]
+[scriptable, uuid(b6c9f51d-237c-44d1-842d-996f4d62c843)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -71,6 +72,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   const unsigned short NETWORK_LOADED = 3;
   const unsigned short NETWORK_NO_SOURCE = 4;
   readonly attribute unsigned short networkState;
+  readonly attribute nsIDOMHTMLTimeRanges buffered;
   void load();
   DOMString canPlayType(in DOMString type);
 

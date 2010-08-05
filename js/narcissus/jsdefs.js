@@ -1,3 +1,4 @@
+/* vim: set sw=4 ts=4 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -42,139 +43,157 @@
  * separately to take advantage of the simple switch-case constant propagation
  * done by SpiderMonkey.
  */
-var tokens = [
-    // End of source.
-    "END",
+Narcissus = {};
+Narcissus.jsdefs = (function() {
 
-    // Operators and punctuators.  Some pair-wise order matters, e.g. (+, -)
-    // and (UNARY_PLUS, UNARY_MINUS).
-    "\n", ";",
-    ",",
-    "=",
-    "?", ":", "CONDITIONAL",
-    "||",
-    "&&",
-    "|",
-    "^",
-    "&",
-    "==", "!=", "===", "!==",
-    "<", "<=", ">=", ">",
-    "<<", ">>", ">>>",
-    "+", "-",
-    "*", "/", "%",
-    "!", "~", "UNARY_PLUS", "UNARY_MINUS",
-    "++", "--",
-    ".",
-    "[", "]",
-    "{", "}",
-    "(", ")",
-
-    // Nonterminal tree node type codes.
-    "SCRIPT", "BLOCK", "LABEL", "FOR_IN", "CALL", "NEW_WITH_ARGS", "INDEX",
-    "ARRAY_INIT", "OBJECT_INIT", "PROPERTY_INIT", "GETTER", "SETTER",
-    "GROUP", "LIST", "LET_BLOCK", "ARRAY_COMP", "GENERATOR", "COMP_TAIL",
-
-    // Terminals.
-    "IDENTIFIER", "NUMBER", "STRING", "REGEXP",
-
-    // Keywords.
-    "break",
-    "case", "catch", "const", "continue",
-    "debugger", "default", "delete", "do",
-    "else",
-    "false", "finally", "for", "function",
-    "if", "in", "instanceof",
-    "let",
-    "new", "null",
-    "return",
-    "switch",
-    "this", "throw", "true", "try", "typeof",
-    "var", "void",
-    "yield",
-    "while", "with",
-];
-
-// Operator and punctuator mapping from token to tree node type name.
-// NB: because the lexer doesn't backtrack, all token prefixes must themselves
-// be valid tokens (e.g. !== is acceptable because its prefixes are the valid
-// tokens != and !).
-var opTypeNames = {
-    '\n':   "NEWLINE",
-    ';':    "SEMICOLON",
-    ',':    "COMMA",
-    '?':    "HOOK",
-    ':':    "COLON",
-    '||':   "OR",
-    '&&':   "AND",
-    '|':    "BITWISE_OR",
-    '^':    "BITWISE_XOR",
-    '&':    "BITWISE_AND",
-    '===':  "STRICT_EQ",
-    '==':   "EQ",
-    '=':    "ASSIGN",
-    '!==':  "STRICT_NE",
-    '!=':   "NE",
-    '<<':   "LSH",
-    '<=':   "LE",
-    '<':    "LT",
-    '>>>':  "URSH",
-    '>>':   "RSH",
-    '>=':   "GE",
-    '>':    "GT",
-    '++':   "INCREMENT",
-    '--':   "DECREMENT",
-    '+':    "PLUS",
-    '-':    "MINUS",
-    '*':    "MUL",
-    '/':    "DIV",
-    '%':    "MOD",
-    '!':    "NOT",
-    '~':    "BITWISE_NOT",
-    '.':    "DOT",
-    '[':    "LEFT_BRACKET",
-    ']':    "RIGHT_BRACKET",
-    '{':    "LEFT_CURLY",
-    '}':    "RIGHT_CURLY",
-    '(':    "LEFT_PAREN",
-    ')':    "RIGHT_PAREN"
-};
-
-// Hash of keyword identifier to tokens index.  NB: we must null __proto__ to
-// avoid toString, etc. namespace pollution.
-var keywords = {__proto__: null};
-
-// Define const END, etc., based on the token names.  Also map name to index.
-var tokenIds = {};
-var consts = "const ";
-for (var i = 0, j = tokens.length; i < j; i++) {
-    if (i > 0)
-        consts += ", ";
-    var t = tokens[i];
-    var name;
-    if (/^[a-z]/.test(t)) {
-        name = t.toUpperCase();
-        keywords[t] = i;
-    } else {
-        name = (/^\W/.test(t) ? opTypeNames[t] : t);
+    var tokens = [
+        // End of source.
+        "END",
+    
+        // Operators and punctuators.  Some pair-wise order matters, e.g. (+, -)
+        // and (UNARY_PLUS, UNARY_MINUS).
+        "\n", ";",
+        ",",
+        "=",
+        "?", ":", "CONDITIONAL",
+        "||",
+        "&&",
+        "|",
+        "^",
+        "&",
+        "==", "!=", "===", "!==",
+        "<", "<=", ">=", ">",
+        "<<", ">>", ">>>",
+        "+", "-",
+        "*", "/", "%",
+        "!", "~", "UNARY_PLUS", "UNARY_MINUS",
+        "++", "--",
+        ".",
+        "[", "]",
+        "{", "}",
+        "(", ")",
+    
+        // Nonterminal tree node type codes.
+        "SCRIPT", "BLOCK", "LABEL", "FOR_IN", "CALL", "NEW_WITH_ARGS", "INDEX",
+        "ARRAY_INIT", "OBJECT_INIT", "PROPERTY_INIT", "GETTER", "SETTER",
+        "GROUP", "LIST", "LET_BLOCK", "ARRAY_COMP", "GENERATOR", "COMP_TAIL",
+    
+        // Terminals.
+        "IDENTIFIER", "NUMBER", "STRING", "REGEXP",
+    
+        // Keywords.
+        "break",
+        "case", "catch", "const", "continue",
+        "debugger", "default", "delete", "do",
+        "else",
+        "false", "finally", "for", "function",
+        "if", "in", "instanceof",
+        "let",
+        "new", "null",
+        "return",
+        "switch",
+        "this", "throw", "true", "try", "typeof",
+        "var", "void",
+        "yield",
+        "while", "with",
+    ];
+    
+    // Operator and punctuator mapping from token to tree node type name.
+    // NB: because the lexer doesn't backtrack, all token prefixes must themselves
+    // be valid tokens (e.g. !== is acceptable because its prefixes are the valid
+    // tokens != and !).
+    var opTypeNames = {
+        '\n':   "NEWLINE",
+        ';':    "SEMICOLON",
+        ',':    "COMMA",
+        '?':    "HOOK",
+        ':':    "COLON",
+        '||':   "OR",
+        '&&':   "AND",
+        '|':    "BITWISE_OR",
+        '^':    "BITWISE_XOR",
+        '&':    "BITWISE_AND",
+        '===':  "STRICT_EQ",
+        '==':   "EQ",
+        '=':    "ASSIGN",
+        '!==':  "STRICT_NE",
+        '!=':   "NE",
+        '<<':   "LSH",
+        '<=':   "LE",
+        '<':    "LT",
+        '>>>':  "URSH",
+        '>>':   "RSH",
+        '>=':   "GE",
+        '>':    "GT",
+        '++':   "INCREMENT",
+        '--':   "DECREMENT",
+        '+':    "PLUS",
+        '-':    "MINUS",
+        '*':    "MUL",
+        '/':    "DIV",
+        '%':    "MOD",
+        '!':    "NOT",
+        '~':    "BITWISE_NOT",
+        '.':    "DOT",
+        '[':    "LEFT_BRACKET",
+        ']':    "RIGHT_BRACKET",
+        '{':    "LEFT_CURLY",
+        '}':    "RIGHT_CURLY",
+        '(':    "LEFT_PAREN",
+        ')':    "RIGHT_PAREN"
+    };
+    
+    // Hash of keyword identifier to tokens index.  NB: we must null __proto__ to
+    // avoid toString, etc. namespace pollution.
+    var keywords = {__proto__: null};
+    
+    // Define const END, etc., based on the token names.  Also map name to index.
+    var tokenIds = {};
+    
+    // Building up a string to be eval'd in different contexts.
+    var consts = "const ";
+    for (var i = 0, j = tokens.length; i < j; i++) {
+        if (i > 0)
+            consts += ", ";
+        var t = tokens[i];
+        var name;
+        if (/^[a-z]/.test(t)) {
+            name = t.toUpperCase();
+            keywords[t] = i;
+        } else {
+            name = (/^\W/.test(t) ? opTypeNames[t] : t);
+        }
+        consts += name + " = " + i;
+        tokenIds[name] = i;
+        tokens[t] = i;
     }
-    consts += name + " = " + i;
-    tokenIds[name] = i;
-    tokens[t] = i;
-}
-eval(consts + ";");
+    consts += ";";
+    
+    // Map assignment operators to their indexes in the tokens array.
+    var assignOps = ['|', '^', '&', '<<', '>>', '>>>', '+', '-', '*', '/', '%'];
+    
+    for (i = 0, j = assignOps.length; i < j; i++) {
+        t = assignOps[i];
+        assignOps[t] = tokens[t];
+    }
+    
+    function defineGetter(obj, prop, fn, dontDelete, dontEnum) {
+        Object.defineProperty(obj, prop, { get: fn, configurable: !dontDelete, enumerable: !dontEnum });
+    }
+    
+    function defineProperty(obj, prop, val, dontDelete, readOnly, dontEnum) {
+        Object.defineProperty(obj, prop, { value: val, writable: !readOnly, configurable: !dontDelete, enumerable: !dontEnum });
+    }
+    
+    return {
+      "tokens": tokens,
+      "opTypeNames": opTypeNames,
+      "keywords": keywords,
+      "tokenIds": tokenIds,
+      "consts": consts,
+      "assignOps": assignOps,
+      "defineGetter": defineGetter,
+      "defineProperty": defineProperty
+    };
+}());
 
-// Map assignment operators to their indexes in the tokens array.
-var assignOps = ['|', '^', '&', '<<', '>>', '>>>', '+', '-', '*', '/', '%'];
-
-for (i = 0, j = assignOps.length; i < j; i++) {
-    t = assignOps[i];
-    assignOps[t] = tokens[t];
-}
-
-function defineGetter(obj, prop, fn, dontDelete, dontEnum) {
-    Object.defineProperty(obj, prop, { get: fn, configurable: !dontDelete, enumerable: !dontEnum });
-}
-
-function defineProperty(obj, prop, val, dontDelete, readOnly, dontEnum) {
-    Object.defineProperty(obj, prop, { value: val, writable: !readOnly, configurable: !dontDelete, enumerable: !dontEnum });
-}

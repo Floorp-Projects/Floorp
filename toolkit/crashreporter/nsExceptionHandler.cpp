@@ -64,8 +64,9 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIINIParser.h"
+#include "common/linux/linux_libc_support.h"
+#include "common/linux/linux_syscall_support.h"
 #if defined(MOZ_IPC)
-#  include "common/linux/linux_syscall_support.h"
 #  include "client/linux/crash_generation/client_info.h"
 #  include "client/linux/crash_generation/crash_generation_server.h"
 #endif
@@ -137,12 +138,21 @@ typedef char XP_CHAR;
 typedef std::string xpstring;
 #define CONVERT_UTF16_TO_XP_CHAR(x) NS_ConvertUTF16toUTF8(x)
 #define CONVERT_XP_CHAR_TO_UTF16(x) NS_ConvertUTF8toUTF16(x)
-#define XP_STRLEN(x) strlen(x)
 #define CRASH_REPORTER_FILENAME "crashreporter"
 #define PATH_SEPARATOR "/"
 #define XP_PATH_SEPARATOR "/"
 #define XP_PATH_MAX PATH_MAX
+#ifdef XP_LINUX
+#define XP_STRLEN(x) my_strlen(x)
+#define XP_TTOA(time, buffer, base) my_itos(buffer, time, sizeof(buffer))
+#else
+#define XP_STRLEN(x) strlen(x)
 #define XP_TTOA(time, buffer, base) sprintf(buffer, "%ld", time)
+#define sys_close close
+#define sys_fork fork
+#define sys_open open
+#define sys_write write
+#endif
 #endif // XP_WIN32
 
 static const XP_CHAR dumpFileExtension[] = {'.', 'd', 'm', 'p',
@@ -268,7 +278,14 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 
   // calculate time since last crash (if possible), and store
   // the time of this crash.
-  time_t crashTime = time(NULL);
+  time_t crashTime;
+#ifdef XP_LINUX
+  struct kernel_timeval tv;
+  sys_gettimeofday(&tv, NULL);
+  crashTime = tv.tv_sec;
+#else
+  crashTime = time(NULL);
+#endif
   time_t timeSinceLastCrash = 0;
   // stringified versions of the above
   char crashTimeString[32];
@@ -295,13 +312,13 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
       CloseHandle(hFile);
     }
 #elif defined(XP_UNIX)
-    int fd = open(lastCrashTimeFilename,
-                  O_WRONLY | O_CREAT | O_TRUNC,
-                  0600);
+    int fd = sys_open(lastCrashTimeFilename,
+                      O_WRONLY | O_CREAT | O_TRUNC,
+                      0600);
     if (fd != -1) {
-      ssize_t ignored = write(fd, crashTimeString, crashTimeStringLen);
+      ssize_t ignored = sys_write(fd, crashTimeString, crashTimeStringLen);
       (void)ignored;
-      close(fd);
+      sys_close(fd);
     }
 #endif
   }
@@ -362,25 +379,25 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 #elif defined(XP_UNIX)
   if (!crashReporterAPIData->IsEmpty()) {
     // write out API data
-    int fd = open(extraDataPath,
-                  O_WRONLY | O_CREAT | O_TRUNC,
-                  0666);
+    int fd = sys_open(extraDataPath,
+                      O_WRONLY | O_CREAT | O_TRUNC,
+                      0666);
 
     if (fd != -1) {
       // not much we can do in case of error
-      ssize_t ignored = write(fd, crashReporterAPIData->get(),
-                              crashReporterAPIData->Length());
-      ignored = write(fd, kCrashTimeParameter, kCrashTimeParameterLen);
-      ignored = write(fd, crashTimeString, crashTimeStringLen);
-      ignored = write(fd, "\n", 1);
+      ssize_t ignored = sys_write(fd, crashReporterAPIData->get(),
+                                  crashReporterAPIData->Length());
+      ignored = sys_write(fd, kCrashTimeParameter, kCrashTimeParameterLen);
+      ignored = sys_write(fd, crashTimeString, crashTimeStringLen);
+      ignored = sys_write(fd, "\n", 1);
       if (timeSinceLastCrash != 0) {
-        ignored = write(fd, kTimeSinceLastCrashParameter,
+        ignored = sys_write(fd, kTimeSinceLastCrashParameter,
                         kTimeSinceLastCrashParameterLen);
-        ignored = write(fd, timeSinceLastCrashString,
+        ignored = sys_write(fd, timeSinceLastCrashString,
                         timeSinceLastCrashStringLen);
-        ignored = write(fd, "\n", 1);
+        ignored = sys_write(fd, "\n", 1);
       }
-      close (fd);
+      sys_close(fd);
     }
   }
 
@@ -388,7 +405,7 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
     return returnValue;
   }
 
-  pid_t pid = fork();
+  pid_t pid = sys_fork();
 
   if (pid == -1)
     return false;
@@ -527,16 +544,6 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   nsCString tempPath = NS_LITERAL_CSTRING("/tmp/");
 #else
 #error "Implement this for your platform"
-#endif
-
-#ifdef XP_UNIX
-  // During a crash we must not enter the dynamic loader for symbol
-  // resolution. The symbols used from within the exception handler
-  // which might not be called by the application during normal run
-  // should be early-resolved by calling them from here. See bug 573290.
-  int fd = open("/dev/null", O_RDONLY);
-  close(fd);
-  write(-1, NULL, 0);
 #endif
 
   // now set the exception handler

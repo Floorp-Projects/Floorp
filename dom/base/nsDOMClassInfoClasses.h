@@ -433,6 +433,7 @@ DOMCI_CLASS(HTMLVideoElement)
 DOMCI_CLASS(HTMLSourceElement)
 DOMCI_CLASS(HTMLMediaError)
 DOMCI_CLASS(HTMLAudioElement)
+DOMCI_CLASS(HTMLTimeRanges)
 #endif
 
 DOMCI_CLASS(ProgressEvent)

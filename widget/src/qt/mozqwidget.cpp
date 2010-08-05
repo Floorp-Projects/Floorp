@@ -9,10 +9,33 @@
 
 #include <QtCore/QEvent>
 #include <QtCore/QVariant>
+#include <QtCore/QTimer>
 
 #include "mozqwidget.h"
 #include "nsWindow.h"
 
+/*
+  Pure Qt is lacking a clear API to get the current state of the VKB (opened
+  or closed). So this global is used to track that state for 
+  nsWindow::GetIMEEnabled().
+*/
+static bool gKeyboardOpen = false;
+
+/*
+  In case we could not open the keyboard, we will try again when the focus
+  event is sent.  This can happen if the keyboard is asked for before the
+  window is focused. This global is used to track that case.
+*/
+static bool gFailedOpenKeyboard = false;
+ 
+/*
+  For websites that focus editable elements during other operations for a very
+  short time, we add some decoupling to prevent the VKB from appearing and 
+  reappearing for a very short time. This global is set when the keyboard should
+  be opened and if it is still set when a timer runs out, the VKB is really
+  shown.
+*/
+static bool gPendingVKBOpen = false;
 
 MozQWidget::MozQWidget(nsWindow* aReceiver, QGraphicsItem* aParent)
     : QGraphicsWidget(aParent),
@@ -84,6 +107,12 @@ void MozQWidget::dropEvent(QGraphicsSceneDragDropEvent* aEvent)
 void MozQWidget::focusInEvent(QFocusEvent* aEvent)
 {
     mReceiver->OnFocusInEvent(aEvent);
+
+    // The application requested the VKB during startup but did not manage
+    // to open it, because there was no focused window yet so we do it now by
+    // requesting the VKB without any timeout.
+    if (gFailedOpenKeyboard)
+        requestVKB(0);
 }
 
 void MozQWidget::focusOutEvent(QFocusEvent* aEvent)
@@ -108,16 +137,21 @@ void MozQWidget::hoverMoveEvent(QGraphicsSceneHoverEvent* aEvent)
 
 void MozQWidget::keyPressEvent(QKeyEvent* aEvent)
 {
+#if (MOZ_PLATFORM_MAEMO==5)
     // Below removed to prevent invertion of upper and lower case
     // See bug 561234
     // mReceiver->OnKeyPressEvent(aEvent);
+#else
+    mReceiver->OnKeyPressEvent(aEvent);
+#endif
 }
 
 void MozQWidget::keyReleaseEvent(QKeyEvent* aEvent)
 {
+#if (MOZ_PLATFORM_MAEMO==5)
     // Below line should be removed when bug 561234 is fixed
     mReceiver->OnKeyPressEvent(aEvent);
-
+#endif
     mReceiver->OnKeyReleaseEvent(aEvent);
 }
 
@@ -145,6 +179,11 @@ void MozQWidget::mouseReleaseEvent(QGraphicsSceneMouseEvent* aEvent)
 
 bool MozQWidget::event ( QEvent * event )
 {
+    // check receiver, since due to deleteLater() call it's possible, that
+    // events pass loop after receiver's destroy and while widget is still alive
+    if (!mReceiver)
+        return QGraphicsWidget::event(event);
+
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     switch (event->type())
     {
@@ -270,11 +309,44 @@ void MozQWidget::setModal(bool modal)
 
 QVariant MozQWidget::inputMethodQuery(Qt::InputMethodQuery aQuery) const
 {
+    // The following query uses enums for the values, which are defined in
+    // MeegoTouch headers, because this should also work in the pure Qt case
+    // we use the values directly here. The original values are in the comments.
+    if (static_cast<Qt::InputMethodQuery>(/*M::ImModeQuery*/ 10004 ) == aQuery)
+    {
+        return QVariant(/*M::InputMethodModeDirect*/ 1 );
+    }
+
     return QGraphicsWidget::inputMethodQuery(aQuery);
 }
 
+/**
+  Request the VKB and starts a timer with the given timeout in milliseconds.
+  If the request is not canceled when the timer runs out, the VKB is actually
+  shown.
+*/
+void MozQWidget::requestVKB(int aTimeout)
+{
+    if (!gPendingVKBOpen) {
+        gPendingVKBOpen = true;
+
+        if (aTimeout == 0)
+            showVKB();
+        else
+            QTimer::singleShot(aTimeout, this, SLOT(showVKB()));
+    }
+}
+
+
+
 void MozQWidget::showVKB()
 {
+    // skip showing of keyboard if not pending
+    if (!gPendingVKBOpen)
+        return;
+
+    gPendingVKBOpen = false;
+
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     QWidget* focusWidget = qApp->focusWidget();
 
@@ -289,6 +361,13 @@ void MozQWidget::showVKB()
         inputContext->filterEvent(&request);
         focusWidget->setAttribute(Qt::WA_InputMethodEnabled, true);
         inputContext->setFocusWidget(focusWidget);
+        gKeyboardOpen = true;
+        gFailedOpenKeyboard = false;
+    }
+    else
+    {
+        // No focused widget yet, so we have to open the VKB later on.
+        gFailedOpenKeyboard = true;
     }
 #else
     LOG(("VKB not supported in Qt < 4.6\n"));
@@ -297,6 +376,11 @@ void MozQWidget::showVKB()
 
 void MozQWidget::hideVKB()
 {
+    if (gPendingVKBOpen) {
+        // do not really open
+        gPendingVKBOpen = false;
+    }
+
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
     QInputContext *inputContext = qApp->inputContext();
     if (!inputContext) {
@@ -307,6 +391,7 @@ void MozQWidget::hideVKB()
     QEvent request(QEvent::CloseSoftwareInputPanel);
     inputContext->filterEvent(&request);
     inputContext->reset();
+    gKeyboardOpen = false;
 #else
     LOG(("VKB not supported in Qt < 4.6\n"));
 #endif
@@ -314,8 +399,5 @@ void MozQWidget::hideVKB()
 
 bool MozQWidget::isVKBOpen()
 {
-    // There is no clear API in Pure QT about how to get OPEN/CLOSED vkb state
-    // FIXME in bug 555019.
-    return PR_FALSE;
+    return gKeyboardOpen;
 }
-

@@ -67,11 +67,24 @@ public class GeckoEvent {
     public static final int ACTIVITY_PAUSING = 9;
     public static final int LOAD_URI = 10;
 
-    public static final int IME_BATCH_END = 0;
-    public static final int IME_BATCH_BEGIN = 1;
+    public static final int IME_COMPOSITION_END = 0;
+    public static final int IME_COMPOSITION_BEGIN = 1;
     public static final int IME_SET_TEXT = 2;
     public static final int IME_GET_TEXT = 3;
     public static final int IME_DELETE_TEXT = 4;
+    public static final int IME_SET_SELECTION = 5;
+    public static final int IME_GET_SELECTION = 6;
+    public static final int IME_ADD_RANGE = 7;
+
+    public static final int IME_RANGE_CARETPOSITION = 1;
+    public static final int IME_RANGE_RAWINPUT = 2;
+    public static final int IME_RANGE_SELECTEDRAWTEXT = 3;
+    public static final int IME_RANGE_CONVERTEDTEXT = 4;
+    public static final int IME_RANGE_SELECTEDCONVERTEDTEXT = 5;
+
+    public static final int IME_RANGE_UNDERLINE = 1;
+    public static final int IME_RANGE_FORECOLOR = 2;
+    public static final int IME_RANGE_BACKCOLOR = 4;
 
     public int mType;
     public int mAction;
@@ -82,8 +95,10 @@ public class GeckoEvent {
 
     public int mMetaState, mFlags;
     public int mKeyCode, mUnicodeChar;
-    public int mCount, mCount2;
+    public int mOffset, mCount;
     public String mCharacters;
+    public int mRangeType, mRangeStyles;
+    public int mRangeForeColor, mRangeBackColor;
     public Location mLocation;
 
     public int mNativeWindow;
@@ -129,29 +144,40 @@ public class GeckoEvent {
         mLocation = l;
     }
 
-    public GeckoEvent(boolean batchEdit, String text) {
+    public GeckoEvent(int imeAction, int offset, int count) {
         mType = IME_EVENT;
-        if (text != null)
-            mAction = IME_SET_TEXT;
-        else
-            mAction = batchEdit ? IME_BATCH_BEGIN : IME_BATCH_END;
+        mAction = imeAction;
+        mOffset = offset;
+        mCount = count;
+    }
+
+    private void InitIMERange(int action, int offset, int count,
+                              int rangeType, int rangeStyles,
+                              int rangeForeColor, int rangeBackColor) {
+        mType = IME_EVENT;
+        mAction = action;
+        mOffset = offset;
+        mCount = count;
+        mRangeType = rangeType;
+        mRangeStyles = rangeStyles;
+        mRangeForeColor = rangeForeColor;
+        mRangeBackColor = rangeBackColor;
+        return;
+    }
+    
+    public GeckoEvent(int offset, int count,
+                      int rangeType, int rangeStyles,
+                      int rangeForeColor, int rangeBackColor, String text) {
+        InitIMERange(IME_SET_TEXT, offset, count, rangeType, rangeStyles,
+                     rangeForeColor, rangeBackColor);
         mCharacters = text;
     }
 
-    public GeckoEvent(boolean forward, int count) {
-        mType = IME_EVENT;
-        mAction = IME_GET_TEXT;
-        if (forward)
-            mCount = count;
-        else
-            mCount2 = count;
-    }
-
-    public GeckoEvent(int leftLen, int rightLen) {
-        mType = IME_EVENT;
-        mAction = IME_DELETE_TEXT;
-        mCount = leftLen;
-        mCount2 = rightLen;
+    public GeckoEvent(int offset, int count,
+                      int rangeType, int rangeStyles,
+                      int rangeForeColor, int rangeBackColor) {
+        InitIMERange(IME_ADD_RANGE, offset, count, rangeType, rangeStyles,
+                     rangeForeColor, rangeBackColor);
     }
 
     public GeckoEvent(int etype, Rect dirty) {

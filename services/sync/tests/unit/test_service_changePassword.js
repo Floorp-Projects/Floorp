@@ -30,6 +30,7 @@ function run_test() {
       "/user/1.0/johndoe/password": send(200, "OK", ""),
       "/user/1.0/janedoe/password": send(401, "Unauthorized", "Forbidden!")
     });
+    do_test_pending();
 
     res = Weave.Service.changePassword("ILoveJane83");
     do_check_true(res);
@@ -59,7 +60,7 @@ function run_test() {
     Weave.Svc.Prefs.resetBranch("");
     Weave.Svc.Login.removeAllLogins();
     if (server) {
-      server.stop(function() {});
+      server.stop(do_test_finished);
     }
   }
 }

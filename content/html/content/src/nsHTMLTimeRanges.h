@@ -13,14 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla code.
  *
- * The Initial Developer of the Original Code is Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Darin Fisher <darin@meer.net>
+ *  Chris Pearce <chris@pearce.org.nz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,10 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMNSHTMLAnchorElement.idl"
+#include "nsIDOMHTMLTimeRanges.h"
+#include "nsISupports.h"
+#include "nsTArray.h"
 
-[scriptable, uuid(d7627eda-6ec0-4326-87c4-c3067fe6e324)]
-interface nsIDOMNSHTMLAnchorElement2 : nsIDOMNSHTMLAnchorElement
-{
-  attribute DOMString ping;
+// Implements media TimeRanges:
+// http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#timeranges
+class nsHTMLTimeRanges : public nsIDOMHTMLTimeRanges {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMHTMLTIMERANGES
+
+  void Add(float aStart, float aEnd);
+
+private:
+
+  struct TimeRange {
+    TimeRange(float aStart, float aEnd)
+      : mStart(aStart),
+        mEnd(aEnd) {}
+    float mStart;
+    float mEnd;
+  };
+
+  nsAutoTArray<TimeRange,4> mRanges;
 };

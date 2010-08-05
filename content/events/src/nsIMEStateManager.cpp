@@ -382,6 +382,23 @@ NS_IMPL_ISUPPORTS2(nsTextStateManager,
                    nsIMutationObserver,
                    nsISelectionListener)
 
+// Helper class, used for selection change notification
+class SelectionChangeEvent : public nsRunnable {
+public:
+  SelectionChangeEvent(nsIWidget *widget)
+    : mWidget(widget)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    mWidget->OnIMESelectionChange();
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIWidget> mWidget;
+};
+
 nsresult
 nsTextStateManager::NotifySelectionChanged(nsIDOMDocument* aDoc,
                                            nsISelection* aSel,
@@ -391,10 +408,32 @@ nsTextStateManager::NotifySelectionChanged(nsIDOMDocument* aDoc,
   nsresult rv = aSel->GetRangeCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
   if (count > 0) {
-    mWidget->OnIMESelectionChange();
+    nsContentUtils::AddScriptRunner(new SelectionChangeEvent(mWidget));
   }
   return NS_OK;
 }
+
+// Helper class, used for text change notification
+class TextChangeEvent : public nsRunnable {
+public:
+  TextChangeEvent(nsIWidget *widget,
+                  PRUint32 start, PRUint32 oldEnd, PRUint32 newEnd)
+    : mWidget(widget)
+    , mStart(start)
+    , mOldEnd(oldEnd)
+    , mNewEnd(newEnd)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    mWidget->OnIMETextChange(mStart, mOldEnd, mNewEnd);
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIWidget> mWidget;
+  PRUint32 mStart, mOldEnd, mNewEnd;
+};
 
 void
 nsTextStateManager::CharacterDataChanged(nsIDocument* aDocument,
@@ -412,7 +451,9 @@ nsTextStateManager::CharacterDataChanged(nsIDocument* aDocument,
 
   PRUint32 oldEnd = offset + aInfo->mChangeEnd - aInfo->mChangeStart;
   PRUint32 newEnd = offset + aInfo->mReplaceLength;
-  mWidget->OnIMETextChange(offset, oldEnd, newEnd);
+
+  nsContentUtils::AddScriptRunner(
+      new TextChangeEvent(mWidget, offset, oldEnd, newEnd));
 }
 
 void
@@ -433,7 +474,8 @@ nsTextStateManager::NotifyContentAdded(nsINode* aContainer,
 
   // fire notification
   if (newOffset)
-    mWidget->OnIMETextChange(offset, offset, offset + newOffset);
+    nsContentUtils::AddScriptRunner(
+        new TextChangeEvent(mWidget, offset, offset, offset + newOffset));
 }
 
 void
@@ -481,7 +523,8 @@ nsTextStateManager::ContentRemoved(nsIDocument* aDocument,
 
   // fire notification
   if (childOffset)
-    mWidget->OnIMETextChange(offset, offset + childOffset, offset);
+    nsContentUtils::AddScriptRunner(
+        new TextChangeEvent(mWidget, offset, offset + childOffset, offset));
 }
 
 static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
