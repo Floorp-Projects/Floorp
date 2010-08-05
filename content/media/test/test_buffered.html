@@ -33,6 +33,39 @@ function ended(e) {
   is(b.length, 1, v._name + ": Should be buffered in one range");
   is(b.start(0), 0, v._name + ": First range start should be media start");
   is(b.end(0), v.duration, v._name + ": First range end should be media end");
+
+  // Ensure INDEX_SIZE_ERR is thrown when we access outside the range
+  var caught = false;
+  try {
+    b.start(-1);
+  } catch (e) {
+    caught = e.code == DOMException.INDEX_SIZE_ERR;
+  }
+  is(caught, true, "Should throw INDEX_SIZE_ERR on under start bounds range");
+  
+  caught = false;
+  try {
+    b.end(-1);
+  } catch (e) {
+    caught = e.code == DOMException.INDEX_SIZE_ERR;
+  }
+  is(caught, true, "Should throw INDEX_SIZE_ERR on under end bounds range");
+
+  caught = false;
+  try {
+    b.start(b.length);
+  } catch (e) {
+    caught = e.code == DOMException.INDEX_SIZE_ERR;
+  }
+  is(caught, true, "Should throw INDEX_SIZE_ERR on over start bounds range");
+  
+  caught = false;
+  try {
+    b.end(b.length);
+  } catch (e) {
+    caught = e.code == DOMException.INDEX_SIZE_ERR;
+  }
+  is(caught, true, "Should throw INDEX_SIZE_ERR on over end bounds range");
   
   v._finished = true;
   if (AllFinished(videos)) {
