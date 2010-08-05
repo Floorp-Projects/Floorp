@@ -1138,12 +1138,26 @@
             notificationbox.setAttribute("flex", "1");
             notificationbox.appendChild(b);
             b.setAttribute("flex", "1");
+
+            var position = this.tabs.length - 1;
+            var uniqueId = "panel" + Date.now() + position;
+            notificationbox.id = uniqueId;
+            t.linkedPanel = uniqueId;
+            t.linkedBrowser = b;
+            t._tPos = position;
+            if (t.previousSibling.selected)
+              t.setAttribute("afterselected", true);
+
+            // NB: this appendChild call causes us to run constructors for the
+            // browser element, which fires off a bunch of notifications. Some
+            // of those notifications can cause code to run that inspects our
+            // state, so it is important that the tab element is fully
+            // initialized by this point.
             this.mPanelContainer.appendChild(notificationbox);
 
             this.tabContainer.updateVisibility();
 
             // wire up a progress listener for the new browser object.
-            var position = this.tabs.length - 1;
             var tabListener = this.mTabProgressListener(t, b, blank);
             const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                      .createInstance(Components.interfaces.nsIWebProgress);
@@ -1154,14 +1168,6 @@
 
             b._fastFind = this.fastFind;
             b.droppedLinkHandler = handleDroppedLink;
-
-            var uniqueId = "panel" + Date.now() + position;
-            this.mPanelContainer.lastChild.id = uniqueId;
-            t.linkedPanel = uniqueId;
-            t.linkedBrowser = b;
-            t._tPos = position;
-            if (t.previousSibling.selected)
-              t.setAttribute("afterselected", true);
 
             this.tabContainer.adjustTabstrip();
 
