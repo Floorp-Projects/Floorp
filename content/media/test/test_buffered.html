@@ -41,10 +41,17 @@ function ended(e) {
   return false;
 }
 
+// Only support for buffered is available for Ogg and WAV.
+// Eventually we'll support WebM as well.
+function supportsBuffered(type) {
+  var s = type.toLowerCase();
+  return /ogg$/.test(s) || /wav$/.test(s)
+}
+
 for (var i=0; i<gSeekTests.length; ++i) {
   var v = document.createElement('video');
   var test = gSeekTests[i];
-  if (!v.canPlayType(test.type))
+  if (!v.canPlayType(test.type) || !supportsBuffered(test.type))
     continue;
   v.src = test.name;
   v._name = test.name;
