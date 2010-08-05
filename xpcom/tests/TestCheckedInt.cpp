@@ -453,9 +453,11 @@ void test()
     VERIFY(y == zero);
     x = max_value;
     VERIFY_IS_VALID(x++);
+    x = max_value;
     VERIFY_IS_INVALID(++x);
     x = min_value;
     VERIFY_IS_VALID(x--);
+    x = min_value;
     VERIFY_IS_INVALID(--x);
 }
 
