@@ -86,6 +86,7 @@ function open_manager(aView, aCallback) {
   }
 
   if ("switchToTabHavingURI" in window) {
+    gBrowser.selectedTab = gBrowser.addTab();
     switchToTabHavingURI(MANAGER_URI, true, function(aBrowser) {
       setup_manager(aBrowser.contentWindow.wrappedJSObject);
     });
