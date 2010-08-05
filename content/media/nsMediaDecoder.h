@@ -253,6 +253,12 @@ protected:
   // Stop progress information timer.
   nsresult StopProgress();
 
+  // Ensures our media stream has been pinned.
+  void PinForSeek();
+
+  // Ensures our media stream has been unpinned.
+  void UnpinForSeek();
+
 protected:
   // Timer used for updating progress events
   nsCOMPtr<nsITimer> mProgressTimer;
@@ -291,6 +297,10 @@ protected:
 
   // Pixel aspect ratio (ratio of the pixel width to pixel height)
   float mPixelAspectRatio;
+
+  // PR_TRUE when our media stream has been pinned. We pin the stream
+  // while seeking.
+  PRPackedBool mPinnedForSeek;
 
   // Has our size changed since the last repaint?
   PRPackedBool mSizeChanged;

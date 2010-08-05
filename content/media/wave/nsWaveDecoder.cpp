@@ -1218,6 +1218,7 @@ nsWaveDecoder::nsWaveDecoder()
 nsWaveDecoder::~nsWaveDecoder()
 {
   MOZ_COUNT_DTOR(nsWaveDecoder);
+  UnpinForSeek();
 }
 
 PRBool
@@ -1260,6 +1261,7 @@ nsresult
 nsWaveDecoder::Seek(float aTime)
 {
   if (mPlaybackStateMachine) {
+    PinForSeek();
     mPlaybackStateMachine->Seek(aTime);
     return NS_OK;
   }
@@ -1587,6 +1589,7 @@ nsWaveDecoder::SeekingStarted()
 void
 nsWaveDecoder::SeekingStopped()
 {
+  UnpinForSeek();
   if (mShuttingDown) {
     return;
   }
