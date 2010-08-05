@@ -252,7 +252,7 @@ struct nsStyleImage {
   /**
    * Requests a decode on the image.
    */
-  nsresult RequestDecode();
+  nsresult RequestDecode() const;
   /**
    * @return PR_TRUE if the item is definitely opaque --- i.e., paints every
    * pixel within its bounds opaquely, and the bounds contains at least a pixel.
