@@ -201,7 +201,6 @@ sub copyIfIdentical($$$);
 sub slurp($);
 sub get_sorted($);
 sub compare_sorted($$);
-sub copy_sorted($$);
 sub copyIfIdenticalWhenSorted($$$);
 sub createUniqueFile($$);
 sub makeUniversal($$$);
@@ -541,21 +540,6 @@ sub compare_sorted($$) {
   return 0;
 }
 
-# copy_sorted($source, $destination)
-#
-# $source and $destination are filenames. Read the contents of $source
-# into an array, sort it, and then write the sorted contents to $destination.
-# Returns 1 on success, and undef on failure.
-sub copy_sorted($$) {
-  my ($src, $dest) = @_;
-  my @lines = get_sorted($src);
-  return undef unless @lines;
-  open FILE, "> $dest" or return undef;
-  print FILE @lines;
-  close FILE;
-  return 1;
-}
-
 # copyIfIdenticalWhenSorted($source1, $source2, $target)
 #
 # $source1 and $source2 are FileAttrCache objects that are compared, and if
@@ -605,8 +589,8 @@ sub copyIfIdenticalWhenSorted($$$) {
       return 0;
     }
 
-    if (!copy_sorted($source1->path(), $target)) {
-      complain(1, 'copyIfIdenticalWhenSorted: copy_sorted: '.$!
+    if (!copy($source1->path(), $target)) {
+      complain(1, 'copyIfIdenticalWhenSorted: copy: '.$!
                .' while copying',
                $source1->path(),
                $target);
