@@ -287,6 +287,8 @@ class Compiler
                             MaybeJump &lhsUnknownDone);
     void emitRightDoublePath(FrameEntry *lhs, FrameEntry *rhs, FrameState::BinaryAlloc &regs,
                              MaybeJump &rhsNotNumber2);
+    bool tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
+                               FrameEntry *lhs, FrameEntry *rhs);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
