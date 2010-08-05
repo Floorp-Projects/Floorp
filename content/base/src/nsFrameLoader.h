@@ -152,6 +152,22 @@ public:
   // When IPC is enabled, destroy any associated child process.
   void DestroyChild();
 
+  /**
+   * Return the primary frame for our owning content, or null if it
+   * can't be found.
+   */
+  nsIFrame* GetPrimaryFrameOfOwningContent() const
+  {
+    return mOwnerContent ? mOwnerContent->GetPrimaryFrame() : nsnull;
+  }
+
+  /** 
+   * Return the document that owns this, or null if we don't have
+   * an owner.
+   */
+  nsIDocument* GetOwnerDoc() const
+  { return mOwnerContent ? mOwnerContent->GetOwnerDoc() : nsnull; }
+
 #ifdef MOZ_IPC
   PBrowserParent* GetRemoteBrowser();
 #endif
