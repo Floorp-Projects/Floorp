@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-256617.js';
 //-----------------------------------------------------------------------------
 // should fail with syntax error. won't run in browser...
 var BUGNUMBER = 256617;

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-302439.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 302439;
 var summary = 'spandep fu should skip unused JSOP_TABLESWITCH jump table entries';

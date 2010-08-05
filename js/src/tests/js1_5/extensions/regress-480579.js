@@ -5,7 +5,6 @@
  * Contributor: Jason Orendorff
  */
 
-var gTestfile = 'regress-480579.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 480579;
 var summary = 'Do not assert: pobj_ == obj2';

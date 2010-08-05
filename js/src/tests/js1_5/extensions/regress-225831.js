@@ -45,7 +45,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-225831.js';
 var UBound = 0;
 var BUGNUMBER = 225831;
 var summary = 'Stressing the byte code generator';

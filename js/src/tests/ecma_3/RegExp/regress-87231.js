@@ -57,7 +57,6 @@
  * Such "altruism" is the only way there can be a successful global match...
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-87231.js';
 var i = 0;
 var BUGNUMBER = 87231;
 var cnEmptyString = '';

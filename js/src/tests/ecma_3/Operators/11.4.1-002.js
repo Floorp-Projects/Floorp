@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '11.4.1-002.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 423300;
 var summary = '11.4.1 - The delete Operator - delete f()';

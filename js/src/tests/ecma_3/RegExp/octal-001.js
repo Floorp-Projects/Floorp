@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'octal-001.js';
 var i = 0;
 var BUGNUMBER = 141078;
 var summary = 'Testing octal sequences in regexps';

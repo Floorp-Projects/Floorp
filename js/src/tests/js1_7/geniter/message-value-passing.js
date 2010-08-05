@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'message-value-passing.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER     = 326466;
 var summary = "Generator value/exception passing";

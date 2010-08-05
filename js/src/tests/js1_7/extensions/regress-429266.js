@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-429266.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 429266;
 var summary = 'Do not assert: nuses == 0 || *pcstack[pcdepth - 1] == JSOP_ENTERBLOCK';

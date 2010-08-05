@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-261886.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 261886;
 var summary = 'Always evaluate delete operand expression';

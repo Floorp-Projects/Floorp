@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-340369.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 340369;
 var summary = 'Oh for crying out loud.';

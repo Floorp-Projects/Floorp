@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-383255.js';
 
 var summary = 'Do not assert: JS_UPTRDIFF(fp->sp, fp->spbase) <= depthdiff';
 var BUGNUMBER = 383255;

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-361617.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 361617;
 var summary = 'Do not crash with getter, watch and gc';

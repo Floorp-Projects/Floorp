@@ -46,7 +46,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-57572.js';
 var i = 0;
 var BUGNUMBER = 57572;
 var summary = 'Testing regular expressions containing "?"';

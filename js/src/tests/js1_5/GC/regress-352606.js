@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-352606.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 352606;
 var summary = 'Do not crash involving post decrement';

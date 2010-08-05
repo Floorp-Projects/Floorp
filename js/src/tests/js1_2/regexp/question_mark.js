@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'question_mark.js';
 
 /**
    Filename:     question_mark.js

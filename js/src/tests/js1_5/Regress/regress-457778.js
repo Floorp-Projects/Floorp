@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-457778.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 457778;
 var summary = 'Do not assert with JIT: cond->isCond()';

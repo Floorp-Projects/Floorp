@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-299644.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 299644;
 var summary = 'Arrays with holes';

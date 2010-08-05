@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-481436.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 481436;
 var summary = 'TM: Do not crash @ FlushNativeStackFrame/JS_XDRNewMem';

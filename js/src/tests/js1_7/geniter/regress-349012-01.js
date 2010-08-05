@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-349012-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 349012;
 var summary = 'closing a generator fails to report error if yield during close is ignored';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-354750-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 354750;
 var summary = 'Changing Iterator.prototype.next should not affect default iterator';

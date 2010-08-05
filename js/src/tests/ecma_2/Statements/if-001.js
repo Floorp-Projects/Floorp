@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'if-001.js';
 
 /**
  *  File Name:          if-001.js

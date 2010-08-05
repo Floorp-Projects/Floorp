@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regexparg-2-n.js';
 
 /**
    File Name:          regexparg-1.js

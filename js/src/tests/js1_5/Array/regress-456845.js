@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-456845.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 456845;
 var summary = 'JIT: popArrs[a].pop is not a function';

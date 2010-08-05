@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-406769.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 406769;
 var summary = 'Regression from bug 398609 caused infinite loop';

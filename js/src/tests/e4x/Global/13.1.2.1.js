@@ -39,7 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '13.1.2.1.js';
 
 START("13.1.2.1 - isXMLName()");
 

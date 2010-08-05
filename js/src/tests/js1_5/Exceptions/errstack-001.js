@@ -59,7 +59,6 @@
  * ECMA extension, see http://bugzilla.mozilla.org/show_bug.cgi?id=123177
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'errstack-001.js';
 var UBound = 0;
 var BUGNUMBER = '(none)';
 var summary = 'Testing Error.stack';

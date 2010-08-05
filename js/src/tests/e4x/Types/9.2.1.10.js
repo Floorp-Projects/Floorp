@@ -40,7 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '9.2.1.10.js';
 
 START("9.2.1.10 XMLList [[ResolveValue]]");
 

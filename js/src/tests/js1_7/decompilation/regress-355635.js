@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-355635.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 355635;
 var summary = 'decompilation of let binding nothing';

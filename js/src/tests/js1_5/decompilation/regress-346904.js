@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-346904.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 346904;
 var summary = 'uneval expressions with double negation, negation decrement';

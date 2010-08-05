@@ -51,7 +51,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=159849#c11
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-184107.js';
 var UBound = 0;
 var BUGNUMBER = 184107;
 var summary = 'with(...) { function f ...} should set f in the global scope';
