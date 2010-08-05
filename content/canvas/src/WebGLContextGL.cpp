@@ -2736,9 +2736,9 @@ WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, WebGLboolean transpose
 {                                                                       \
     OBTAIN_UNIFORM_LOCATION(#name ": location")                         \
     if (!wa || wa->type != js::TypedArray::arrayType)                   \
-        return ErrorInvalidOperation(#name ": array must be " #arrayType);      \
+        return ErrorInvalidValue(#name ": array must be " #arrayType);      \
     if (wa->length == 0 || wa->length % (dim*dim) != 0)                 \
-        return ErrorInvalidOperation(#name ": array must be > 0 elements and have a length multiple of %d", dim*dim); \
+        return ErrorInvalidValue(#name ": array length must be >0 and multiple of %d", dim*dim); \
     if (transpose)                                                      \
         return ErrorInvalidValue(#name ": transpose must be FALSE as per the OpenGL ES 2.0 spec"); \
     MakeContextCurrent();                                               \
