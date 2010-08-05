@@ -66,7 +66,7 @@ public:
   /**
    * Return index of the given accessible within the collection.
    */
-  PRInt32 GetIndexAt(nsAccessible* aAccessible);
+  virtual PRInt32 GetIndexAt(nsAccessible* aAccessible);
 
 protected:
   /**
@@ -79,6 +79,11 @@ protected:
    */
   PRInt32 EnsureNGetIndex(nsAccessible* aAccessible);
 
+  /**
+   * Append the object to collection.
+   */
+  virtual void AppendObject(nsAccessible* aAccessible);
+
   filters::FilterFuncPtr mFilterFunc;
   nsAccessible* mRoot;
   PRInt32 mRootChildIdx;
@@ -89,6 +94,28 @@ private:
   AccCollector();
   AccCollector(const AccCollector&);
   AccCollector& operator =(const AccCollector&);
+};
+
+/**
+ * Collect embedded objects. Provide quick access to accessible by index and
+ * vice versa.
+ */
+class EmbeddedObjCollector : public AccCollector
+{
+public:
+  virtual ~EmbeddedObjCollector() { };
+
+public:
+  virtual PRInt32 GetIndexAt(nsAccessible* aAccessible);
+
+protected:
+  // Make sure it's used by nsAccessible class only.
+  EmbeddedObjCollector(nsAccessible* aRoot) :
+    AccCollector(aRoot, filters::GetEmbeddedObject) { }
+
+  virtual void AppendObject(nsAccessible* aAccessible);
+
+  friend class nsAccessible;
 };
 
 #endif
