@@ -688,6 +688,9 @@ MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name)
     MarkValueRange(trc, vec, vec + len, name);
 }
 
+void
+MarkStackRangeConservatively(JSTracer *trc, Value *begin, Value *end);
+
 static inline void
 MarkId(JSTracer *trc, jsid id)
 {

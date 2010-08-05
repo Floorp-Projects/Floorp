@@ -111,7 +111,11 @@ def get_test_cmd(path, lib_dir):
     if not libdir_var.endswith('/'):
         libdir_var += '/'
     expr = "const platform=%r; const libdir=%r;"%(sys.platform, libdir_var)
-    return [ JS, '-j', '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'),
+    if OPTIONS.methodjit_only:
+        jit_flags = [ '-m' ]
+    else:
+        jit_flags = [ '-m', '-j' ]
+    return [ JS ] + jit_flags + [ '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'),
              '-f', path ]
 
 def run_test(test, lib_dir):
@@ -135,7 +139,7 @@ def run_test(test, lib_dir):
         cmd = valgrind_prefix + cmd
 
     if OPTIONS.show_cmd:
-        print(cmd)
+        print(subprocess.list2cmdline(cmd))
     # close_fds is not supported on Windows and will cause a ValueError.
     close_fds = sys.platform != 'win32'
     p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=close_fds, env=env)
@@ -144,6 +148,7 @@ def run_test(test, lib_dir):
     if OPTIONS.show_output:
         sys.stdout.write(out)
         sys.stdout.write(err)
+        sys.stdout.write('Exit code: ' + str(p.returncode) + "\n")
     if test.valgrind:
         sys.stdout.write(err)
     return (check_output(out, err, p.returncode, test.allow_oom, test.error), 
@@ -268,6 +273,8 @@ if __name__ == '__main__':
                   help='Run test files listed in [FILE]')
     op.add_option('-R', '--retest', dest='retest', metavar='FILE',
                   help='Retest using test list file [FILE]')
+    op.add_option('--methodjit-only', dest='methodjit_only', action='store_true',
+                  help='Run tests with only method compiler enabled, not tracing')
     op.add_option('-g', '--debug', dest='debug', action='store_true',
                   help='Run test in gdb')
     op.add_option('--valgrind', dest='valgrind', action='store_true',

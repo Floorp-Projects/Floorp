@@ -89,6 +89,7 @@ typedef enum JSOp {
 #define JOF_INT8          18      /* int8 immediate operand */
 #define JOF_ATOMOBJECT    19      /* uint16 constant index + object index */
 #define JOF_UINT16PAIR    20      /* pair of uint16 immediates */
+#define JOF_GLOBAL        21      /* uint16 global array index */
 #define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
 
 #define JOF_NAME          (1U<<5) /* name operation */
@@ -121,12 +122,15 @@ typedef enum JSOp {
                                      the slots opcode uses */
 #define JOF_TMPSLOT2     (2U<<22) /* interpreter uses extra 2 temporary slot
                                      besides the slots opcode uses */
+#define JOF_TMPSLOT3     (3U<<22) /* interpreter uses extra 3 temporary slot
+                                     besides the slots opcode uses */
 #define JOF_TMPSLOT_SHIFT 22
 #define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
 
 #define JOF_SHARPSLOT    (1U<<24) /* first immediate is uint16 stack slot no.
                                      that needs fixup when in global code (see
                                      Compiler::compileScript) */
+#define JOF_GNAME        (1U<<25) /* predicted global name */
 
 /* Shorthands for type from format and type from opcode. */
 #define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
@@ -258,6 +262,10 @@ struct JSCodeSpec {
     int8                ndefs;          /* number of stack results */
     uint8               prec;           /* operator precedence */
     uint32              format;         /* immediate operand format */
+
+#ifdef __cplusplus
+    uint32 type() const { return JOF_TYPE(format); }
+#endif
 };
 
 extern const JSCodeSpec js_CodeSpec[];

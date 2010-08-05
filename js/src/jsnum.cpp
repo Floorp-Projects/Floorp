@@ -348,7 +348,8 @@ ParseFloat(JSContext* cx, JSString* str)
 namespace {
 
 bool
-ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int maybeRadix, bool stripPrefix, jsdouble *dp)
+ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int maybeRadix,
+                     bool stripPrefix, jsdouble *dp)
 {
     JS_ASSERT(maybeRadix == 0 || (2 <= maybeRadix && maybeRadix <= 36));
     JS_ASSERT(ws <= end);
@@ -399,6 +400,18 @@ ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int may
     return true;
 }
 
+jsdouble
+ParseIntDoubleHelper(jsdouble d)
+{
+    if (!JSDOUBLE_IS_FINITE(d))
+        return js_NaN;
+    if (d > 0)
+        return floor(d);
+    if (d < 0)
+    	return -floor(-d);
+    return 0;
+}
+
 } // namespace
 
 /* See ECMA 15.1.2.2. */
@@ -411,13 +424,13 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
         return true;
     }
 
-    if (argc > 0 && vp[2].isInt32()) {
-        if (argc == 1) {
+    if (argc == 1 || (vp[3].isInt32() && (vp[3].toInt32() == 0 || vp[3].toInt32() == 10))) {
+        if (vp[2].isInt32()) {
             *vp = vp[2];
             return true;
         }
-        if (vp[3].isInt32() && (vp[3].toInt32() == 0 || vp[3].toInt32() == 10)) {
-            *vp = vp[2];
+        if (vp[2].isDouble()) {
+            vp->setDouble(ParseIntDoubleHelper(vp[2].toDouble()));
             return true;
         }
     }
@@ -475,13 +488,7 @@ ParseInt(JSContext* cx, JSString* str)
 static jsdouble FASTCALL
 ParseIntDouble(jsdouble d)
 {
-    if (!JSDOUBLE_IS_FINITE(d))
-        return js_NaN;
-    if (d > 0)
-        return floor(d);
-    if (d < 0)
-    	return -floor(-d);
-    return 0;
+    return ParseIntDoubleHelper(d);
 }
 #endif
 

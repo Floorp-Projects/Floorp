@@ -911,6 +911,8 @@ JS_StringToVersion(const char *string);
                                                    leaving that up to the
                                                    embedding. */
 
+#define JSOPTION_METHODJIT      JS_BIT(14)      /* Whole-method JIT. */
+
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
 
@@ -1073,6 +1075,15 @@ JS_InitCTypesClass(JSContext *cx, JSObject *global);
 
 extern JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp);
+
+#ifdef __cplusplus
+#undef JS_THIS
+static inline jsval
+JS_THIS(JSContext *cx, jsval *vp)
+{
+    return JSVAL_IS_PRIMITIVE(vp[1]) ? JS_ComputeThis(cx, vp) : vp[1];
+}
+#endif
 
 extern JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes);
@@ -1304,12 +1315,23 @@ JSVAL_TRACE_KIND(jsval v)
     return JSVAL_TRACE_KIND_IMPL(l);
 }
 
+#ifdef __cplusplus
+namespace js {
+    class ConservativeGCStackMarker;
+}
+#endif
+
 struct JSTracer {
     JSContext           *context;
     JSTraceCallback     callback;
     JSTraceNamePrinter  debugPrinter;
     const void          *debugPrintArg;
     size_t              debugPrintIndex;
+#ifndef __cplusplus
+    void                *conservativeMarker;
+#else
+    js::ConservativeGCStackMarker *conservativeMarker;
+#endif
 };
 
 /*
@@ -1409,6 +1431,7 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind);
         (trc)->debugPrinter = NULL;                                           \
         (trc)->debugPrintArg = NULL;                                          \
         (trc)->debugPrintIndex = (size_t)-1;                                  \
+        (trc)->conservativeMarker = NULL;                                     \
     JS_END_MACRO
 
 extern JS_PUBLIC_API(void)
