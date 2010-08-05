@@ -61,25 +61,28 @@ template<typename T> struct integer_type_manually_recorded_info
 {
     enum { is_supported = 0 };
     typedef unsupported_type twice_bigger_type;
+    typedef unsupported_type unsigned_type;
 };
 
 
-#define CHECKEDINT_REGISTER_SUPPORTED_TYPE(T,_twice_bigger_type)  \
+#define CHECKEDINT_REGISTER_SUPPORTED_TYPE(T,_twice_bigger_type,_unsigned_type)  \
 template<> struct integer_type_manually_recorded_info<T>       \
 {                                                              \
     enum { is_supported = 1 };                                 \
     typedef _twice_bigger_type twice_bigger_type;              \
-    static void TYPE_NOT_SUPPORTED_BY_CheckedInt() {}             \
+    typedef _unsigned_type unsigned_type;                      \
+    static void TYPE_NOT_SUPPORTED_BY_CheckedInt() {}          \
 };
 
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt8,   PRInt16)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint8,  PRUint16)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt16,  PRInt32)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint16, PRUint32)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt32,  PRInt64)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint32, PRUint64)
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt64,  unsupported_type) // means PRInt64 is supported, but there is no twice bigger type
-CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint64, unsupported_type)
+//                                 Type      Twice Bigger Type     Unsigned Type
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt8,   PRInt16,              PRUint8)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint8,  PRUint16,             PRUint8)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt16,  PRInt32,              PRUint16)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint16, PRUint32,             PRUint16)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt32,  PRInt64,              PRUint32)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint32, PRUint64,             PRUint32)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRInt64,  unsupported_type,     PRUint64)
+CHECKEDINT_REGISTER_SUPPORTED_TYPE(PRUint64, unsupported_type,     PRUint64)
 
 
 /*** Step 2: record some info about a given integer type,
@@ -97,6 +100,7 @@ template<> struct is_unsupported_type<unsupported_type> { enum { answer = 1 }; }
 template<typename T> struct integer_traits
 {
     typedef typename integer_type_manually_recorded_info<T>::twice_bigger_type twice_bigger_type;
+    typedef typename integer_type_manually_recorded_info<T>::unsigned_type unsigned_type;
 
     enum {
         is_supported = integer_type_manually_recorded_info<T>::is_supported,
@@ -112,7 +116,11 @@ template<typename T> struct integer_traits
     static T min_value()
     {
         // bitwise ops may return a larger type, that's why we cast explicitly to T
-        return is_signed ? T(T(1) << position_of_sign_bit) : T(0);
+        // in C++, left bit shifts on signed values is undefined by the standard unless the shifted value is representable.
+        // notice that signed-to-unsigned conversions are always well-defined in the standard,
+        // as the value congruent to 2^n as expected. By contrast, unsigned-to-signed is only well-defined if the value is
+        // representable.
+        return is_signed ? T(unsigned_type(1) << position_of_sign_bit) : T(0);
     }
 
     static T max_value()
@@ -129,7 +137,12 @@ template<typename T> struct integer_traits
 
 template<typename T> inline T has_sign_bit(T x)
 {
-    return x >> integer_traits<T>::position_of_sign_bit;
+    // in C++, right bit shifts on negative values is undefined by the standard.
+    // notice that signed-to-unsigned conversions are always well-defined in the standard,
+    // as the value congruent modulo 2^n as expected. By contrast, unsigned-to-signed is only well-defined if the value is
+    // representable. Here the unsigned-to-signed conversion is OK because the value (the result of the shift) is 0 or 1.
+    typedef typename integer_traits<T>::unsigned_type unsigned_T;
+    return T(unsigned_T(x) >> integer_traits<T>::position_of_sign_bit);
 }
 
 template<typename T> inline T binary_complement(T x)
@@ -377,7 +390,10 @@ public:
     /** \returns PR_TRUE if the checked integer is valid, i.e. is not the result
       * of an invalid operation or of an operation involving an invalid checked integer
       */
-    PRBool valid() const { return mIsValid; }
+    PRBool valid() const
+    {
+        return mIsValid;
+    }
 
     /** \returns the sum. Checks for overflow. */
     template<typename U> friend CheckedInt<U> operator +(const CheckedInt<U>& lhs, const CheckedInt<U>& rhs);
