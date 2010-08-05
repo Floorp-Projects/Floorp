@@ -2790,11 +2790,12 @@ mjit::Compiler::jsop_bindname(uint32 index)
     pic.shapeGuard = masm.label();
 #if defined JS_NUNBOX32
     Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(parent), ImmPtr(0));
+    DBGLABEL(inlineJumpOffset);
 #elif defined JS_PUNBOX64
     masm.loadPayload(parent, Registers::ValueReg);
     Jump j = masm.branchPtr(Assembler::NotEqual, Registers::ValueReg, ImmPtr(0));
+    Label inlineJumpOffset = masm.label();
 #endif
-    DBGLABEL(dbgInlineJumpOffset);
     {
         pic.slowPathStart = stubcc.masm.label();
         stubcc.linkExit(j, Uses(0));
@@ -2807,7 +2808,11 @@ mjit::Compiler::jsop_bindname(uint32 index)
     frame.pushTypedPayload(JSVAL_TYPE_OBJECT, pic.objReg);
     frame.freeReg(pic.shapeReg);
 
-    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, dbgInlineJumpOffset) == BINDNAME_INLINE_JUMP_OFFSET);
+#if defined JS_NUNBOX32
+    JS_ASSERT(masm.differenceBetween(pic.shapeGuard, inlineJumpOffset) == BINDNAME_INLINE_JUMP_OFFSET);
+#elif defined JS_PUNBOX64
+    pic.labels.bindname.inlineJumpOffset = masm.differenceBetween(pic.shapeGuard, inlineJumpOffset);
+#endif
 
     stubcc.rejoin(Changes(1));
 
