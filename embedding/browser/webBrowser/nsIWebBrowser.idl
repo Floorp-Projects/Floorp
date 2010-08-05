@@ -52,7 +52,7 @@ interface nsIWeakReference;
  * to register any listeners. The interface may also be used at runtime
  * to obtain the content DOM window and from that the rest of the DOM.
  */
-[scriptable, uuid(69E5DF00-7B8B-11d3-AF61-00A024FFC08C)]
+[scriptable, uuid(33e9d001-caab-4ba9-8961-54902f197202)]
 interface nsIWebBrowser : nsISupports
 {
     /**
@@ -165,4 +165,15 @@ interface nsIWebBrowser : nsISupports
      * @see nsIDOMWindow
      */
     readonly attribute nsIDOMWindow contentDOMWindow;
+
+    /**
+     * Whether this web browser is active. Active means that it's visible
+     * enough that we want to avoid certain optimizations like discarding
+     * decoded image data and throttling the refresh driver. In Firefox,
+     * this corresponds to the visible tab.
+     *
+     * Defaults to true. For optimal performance, set it to false when
+     * appropriate.
+     */
+    attribute boolean isActive;
 };

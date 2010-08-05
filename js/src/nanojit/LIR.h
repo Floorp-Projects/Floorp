@@ -455,7 +455,8 @@ namespace nanojit
 #if defined NANOJIT_64BIT
             op == LIR_cmovq ||
 #endif
-            op == LIR_cmovi;
+            op == LIR_cmovi ||
+            op == LIR_cmovd;
     }
     inline bool isCmpIOpcode(LOpcode op) {
         return LIR_eqi <= op && op <= LIR_geui;
@@ -1742,7 +1743,9 @@ namespace nanojit
         const int EMB_NUM_USED_ACCS;
 
         char *formatImmI(RefBuf* buf, int32_t c);
+#ifdef NANOJIT_64BIT
         char *formatImmQ(RefBuf* buf, uint64_t c);
+#endif
         char *formatImmD(RefBuf* buf, double c);
         void formatGuard(InsBuf* buf, LIns* ins);       // defined by the embedder
         void formatGuardXov(InsBuf* buf, LIns* ins);    // defined by the embedder

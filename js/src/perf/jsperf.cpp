@@ -84,7 +84,7 @@ pm_finalize(JSContext* cx, JSObject* obj)
         PerfMeasurement* p = GetPM(cx, obj, #name);                     \
         if (!p)                                                         \
             return JS_FALSE;                                            \
-        return JS_NewNumberValue(cx, p->name, vp);                      \
+        return JS_NewNumberValue(cx, jsdouble(p->name), vp);            \
     }
 
 GETTER(cpu_cycles)
@@ -127,6 +127,17 @@ pm_stop(JSContext* cx, uintN /*unused*/, jsval* vp)
 }
 
 static JSBool
+pm_reset(JSContext* cx, uintN /*unused*/, jsval* vp)
+{
+    PerfMeasurement* p = GetPMFromThis(cx, vp);
+    if (!p)
+        return JS_FALSE;
+
+    p->reset();
+    return JS_TRUE;
+}
+
+static JSBool
 pm_canMeasureSomething(JSContext* cx, uintN /*unused*/, jsval* vp)
 {
     PerfMeasurement* p = GetPMFromThis(cx, vp);
@@ -141,6 +152,7 @@ const uint8 PM_FATTRS = JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED;
 static JSFunctionSpec pm_fns[] = {
     JS_FN("start",               pm_start,               0, PM_FATTRS),
     JS_FN("stop",                pm_stop,                0, PM_FATTRS),
+    JS_FN("reset",               pm_reset,               0, PM_FATTRS),
     JS_FN("canMeasureSomething", pm_canMeasureSomething, 0, PM_FATTRS),
     JS_FS_END
 };

@@ -162,6 +162,9 @@ JEMALLOC_LIBS = $(MKSHLIB_FORCE_ALL) $(call EXPAND_MOZLIBNAME,jemalloc) $(MKSHLI
 endif
 endif
 
+CC := $(CC_WRAPPER) $(CC)
+CXX := $(CXX_WRAPPER) $(CXX)
+
 # determine debug-related options
 _DEBUG_CFLAGS :=
 _DEBUG_LDFLAGS :=

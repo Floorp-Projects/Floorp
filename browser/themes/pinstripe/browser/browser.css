@@ -419,6 +419,11 @@ toolbar[mode="icons"] .toolbarbutton-1:not([type="menu-button"]):not(#fullscreen
   -moz-box-shadow: inset rgba(0, 0, 0, 0.5) 0 3px 5px, @loweredShadow@;
 }
 
+toolbar[mode="icons"] .toolbarbutton-1 > menupopup,
+toolbar[mode="icons"] toolbarbutton[type="menu-button"] > menupopup {
+  margin-top: 1px;
+}
+
 /* unified back/forward button */
 
 #unified-back-forward-button {
@@ -2097,5 +2102,10 @@ listitem.style-section {
 
 panel[dimmed="true"] {
   opacity: 0.5;
+}
+
+/* Sync */
+#sync-status-button.statusbarpanel-iconic {
+  padding: 0 5px;
 }
 

@@ -504,6 +504,12 @@
                 <menuseparator id="endHistorySeparator"
                                class="hide-if-empty-places-result"
                                builder="end"/>
+#ifdef MOZ_SERVICES_SYNC
+                <menuitem id="sync-tabs-menuitem"
+                          label="&syncTabsMenu.label;"
+                          oncommand="BrowserOpenSyncTabs();"
+                          disabled="true"/>
+#endif
                 <menu id="historyUndoMenu"
                       label="&historyUndoMenu.label;"
                       disabled="true">
@@ -603,6 +609,35 @@
                         label="&addons.label;"
                         accesskey="&addons.accesskey;"
                         command="Tools:Addons"/>
+#ifdef MOZ_SERVICES_SYNC
+              <!-- only one of sync-setup or sync-menu will be showing at once -->
+              <menuitem id="sync-setup"
+                        label="&syncSetup.label;"
+                        accesskey="&syncSetup.accesskey;"
+                        oncommand="gSyncUI.openSetup()"/>
+              <menu id="sync-menu"
+                    label="&syncMenu.label;"
+                    accesskey="&syncMenu.accesskey;">
+                <menupopup id="sync-menu-popup"
+                           onpopupshowing="if (event.target == this) gSyncUI.doUpdateMenu(event);">
+                  <menuitem id="sync-loginitem"
+                            label="&syncLogInItem.label;"
+                            accesskey="&syncLogInItem.accesskey;"
+                            oncommand="gSyncUI.doLogin();"/>
+                  <menuitem id="sync-logoutitem"
+                            label="&syncLogOutItem.label;"
+                            accesskey="&syncLogOutItem.accesskey;"
+                            oncommand="gSyncUI.doLogout();"/>
+                  <menuitem id="sync-syncnowitem"
+                            label="&syncSyncNowItem.label;"
+                            accesskey="&syncSyncNowItem.accesskey;"
+                            oncommand="gSyncUI.doSync(event);"/>
+                  <menuseparator id="sync-lastsyncsep" hidden="true"/>
+                  <menuitem id="sync-lastsyncitem"
+                            disabled="true" hidden="true"/>
+                </menupopup>
+              </menu>
+#endif
               <menuseparator id="devToolsSeparator"/>
               <menuitem id="menu_pageinspect"
                         type="checkbox"

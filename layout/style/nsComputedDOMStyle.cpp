@@ -410,17 +410,17 @@ nsComputedDOMStyle::GetPresShellForContent(nsIContent* aContent)
 // nsDOMCSSDeclaration abstract methods which should never be called
 // on a nsComputedDOMStyle object, but must be defined to avoid
 // compile errors.
-nsresult
-nsComputedDOMStyle::GetCSSDeclaration(css::Declaration**, PRBool)
+css::Declaration*
+nsComputedDOMStyle::GetCSSDeclaration(PRBool)
 {
   NS_RUNTIMEABORT("called nsComputedDOMStyle::GetCSSDeclaration");
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 nsresult
-nsComputedDOMStyle::DeclarationChanged()
+nsComputedDOMStyle::SetCSSDeclaration(css::Declaration*)
 {
-  NS_RUNTIMEABORT("called nsComputedDOMStyle::DeclarationChanged");
+  NS_RUNTIMEABORT("called nsComputedDOMStyle::SetCSSDeclaration");
   return NS_ERROR_FAILURE;
 }
 
@@ -433,7 +433,7 @@ nsComputedDOMStyle::DocToUpdate()
 
 nsresult
 nsComputedDOMStyle::GetCSSParsingEnvironment(nsIURI**, nsIURI**, nsIPrincipal**,
-                                             mozilla::css::Loader**)
+                                             css::Loader**)
 {
   NS_RUNTIMEABORT("called nsComputedDOMStyle::GetCSSParsingEnvironment");
   return NS_ERROR_FAILURE;

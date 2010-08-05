@@ -132,7 +132,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.0
+SQLITE_VERSION=3.6.23.1
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -5314,6 +5314,7 @@ AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LIBS)
 AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LIBS)
+AC_SUBST(MOZ_ENABLE_MEEGOTOUCH)
 
 AC_SUBST(MOC)
 
@@ -5539,6 +5540,29 @@ then
     AC_SUBST(MOZ_GCONF_CFLAGS)
     AC_SUBST(MOZ_GCONF_LIBS)
 fi
+
+dnl ========================================================
+dnl = libproxy support
+dnl ========================================================
+
+if test "$MOZ_ENABLE_GTK2"
+then
+    MOZ_ENABLE_LIBPROXY=
+
+    MOZ_ARG_ENABLE_BOOL(libproxy,
+    [  --enable-libproxy         Enable libproxy support ],
+    MOZ_ENABLE_LIBPROXY=1,
+    MOZ_ENABLE_LIBPROXY=)
+
+    if test "$MOZ_ENABLE_LIBPROXY"
+    then
+        PKG_CHECK_MODULES(MOZ_LIBPROXY, libproxy-1.0)
+        AC_DEFINE(MOZ_ENABLE_LIBPROXY)
+    fi
+fi
+AC_SUBST(MOZ_ENABLE_LIBPROXY)
+AC_SUBST(MOZ_LIBPROXY_CFLAGS)
+AC_SUBST(MOZ_LIBPROXY_LIBS)
 
 dnl ========================================================
 dnl = libnotify support
@@ -6900,6 +6924,11 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    if test "$MOZ_PLATFORM_MAEMO" -gt 5; then
      MOZ_THUMB2=1
+     PKG_CHECK_MODULES(MOZ_MEEGOTOUCH, meegotouchcore)
+     MOZ_ENABLE_MEEGOTOUCH=1
+     AC_DEFINE(MOZ_ENABLE_MEEGOTOUCH)
+     MOZ_QT_CFLAGS="$MOZ_MEEGOTOUCH_CFLAGS $MOZ_QT_CFLAGS"
+     MOZ_QT_LIBS="$MOZ_MEEGOTOUCH_LIBS $MOZ_QT_LIBS"
    fi
 
    PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
@@ -7961,6 +7990,12 @@ else
     _USE_CPP_INCLUDE_FLAG=
     _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
     _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
+  else
+    _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
+    dnl cl.py provides dependency generation for MSVC
+    CC_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
+    CXX_WRAPPER="$PYTHON -O $_topsrcdirwin/build/cl.py"
+    COMPILER_DEPEND=1
   fi
 fi
 fi # MOZ_AUTO_DEPS
@@ -7968,6 +8003,8 @@ MDDEPDIR='.deps'
 AC_SUBST(MOZ_AUTO_DEPS)
 AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
+AC_SUBST(CC_WRAPPER)
+AC_SUBST(CXX_WRAPPER)
 
 
 dnl ========================================================

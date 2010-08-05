@@ -52,8 +52,10 @@
 #include "nsGkAtoms.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsIChannelEventSink.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsXMLHttpRequest.h"
+#include "nsAsyncRedirectVerifyHelper.h"
 
 static PRBool gDisableCORS = PR_FALSE;
 static PRBool gDisableCORSPrivateData = PR_FALSE;
@@ -81,9 +83,9 @@ private:
   nsIChannel* mChannel;
 };
 
-NS_IMPL_ISUPPORTS4(nsCrossSiteListenerProxy, nsIStreamListener,
+NS_IMPL_ISUPPORTS5(nsCrossSiteListenerProxy, nsIStreamListener,
                    nsIRequestObserver, nsIChannelEventSink,
-                   nsIInterfaceRequestor)
+                   nsIInterfaceRequestor, nsIAsyncVerifyRedirectCallback)
 
 /* static */
 void
@@ -370,11 +372,11 @@ nsCrossSiteListenerProxy::GetInterface(const nsIID & aIID, void **aResult)
 }
 
 NS_IMETHODIMP
-nsCrossSiteListenerProxy::OnChannelRedirect(nsIChannel *aOldChannel,
-                                            nsIChannel *aNewChannel,
-                                            PRUint32    aFlags)
+nsCrossSiteListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
+                                                 nsIChannel *aNewChannel,
+                                                 PRUint32 aFlags,
+                                                 nsIAsyncVerifyRedirectCallback *cb)
 {
-  nsChannelCanceller canceller(aOldChannel);
   nsresult rv;
   if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
     rv = CheckRequestApproved(aOldChannel, PR_TRUE);
@@ -387,22 +389,57 @@ nsCrossSiteListenerProxy::OnChannelRedirect(nsIChannel *aOldChannel,
             RemoveEntries(oldURI, mRequestingPrincipal);
         }
       }
+      aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
       return NS_ERROR_DOM_BAD_URI;
     }
   }
 
+  // Prepare to receive callback
+  mRedirectCallback = cb;
+  mOldRedirectChannel = aOldChannel;
+  mNewRedirectChannel = aNewChannel;
+
   nsCOMPtr<nsIChannelEventSink> outer =
     do_GetInterface(mOuterNotificationCallbacks);
   if (outer) {
-    rv = outer->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = outer->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, this);
+    if (NS_FAILED(rv)) {
+        aOldChannel->Cancel(rv); // is this necessary...?
+        mRedirectCallback = nsnull;
+        mOldRedirectChannel = nsnull;
+        mNewRedirectChannel = nsnull;
+    }
+    return rv;  
   }
 
-  rv = UpdateChannel(aNewChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  (void) OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
+}
 
-  canceller.DontCancel();
-  
+NS_IMETHODIMP
+nsCrossSiteListenerProxy::OnRedirectVerifyCallback(nsresult result)
+{
+  NS_ASSERTION(mRedirectCallback, "mRedirectCallback not set in callback");
+  NS_ASSERTION(mOldRedirectChannel, "mOldRedirectChannel not set in callback");
+  NS_ASSERTION(mNewRedirectChannel, "mNewRedirectChannel not set in callback");
+
+  if (NS_SUCCEEDED(result)) {
+      nsresult rv = UpdateChannel(mNewRedirectChannel);
+      if (NS_FAILED(rv)) {
+          NS_WARNING("nsCrossSiteListenerProxy::OnRedirectVerifyCallback: "
+                     "UpdateChannel() returned failure");
+      }
+      result = rv;
+  }
+
+  if (NS_FAILED(result)) {
+    mOldRedirectChannel->Cancel(result);
+  }
+
+  mOldRedirectChannel = nsnull;
+  mNewRedirectChannel = nsnull;
+  mRedirectCallback->OnRedirectVerifyCallback(result);
+  mRedirectCallback   = nsnull;
   return NS_OK;
 }
 

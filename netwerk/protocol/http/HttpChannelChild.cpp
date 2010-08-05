@@ -49,6 +49,12 @@
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 
+class Callback
+{
+ public:
+  virtual bool Run() = 0;
+};
+
 namespace mozilla {
 namespace net {
 
@@ -59,6 +65,7 @@ HttpChannelChild::HttpChannelChild()
   , mCacheExpirationTime(nsICache::NO_EXPIRATION_TIME)
   , mState(HCC_NEW)
   , mIPCOpen(false)
+  , mShouldBuffer(true)
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
 }
@@ -139,20 +146,61 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
     //  - Send Cancel msg to parent 
     //  - drop any in flight OnDataAvail msgs we receive
     //  - make sure we do call OnStopRequest eventually
-    //  - return true here, not false
-    return false;  
+    return true;  
   }
 
   if (mResponseHead)
     SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
-  return true;
+  bool ret = true;
+  nsCOMPtr<nsIHttpChannel> kungFuDeathGrip(this);
+  for (PRUint32 i = 0; i < mBufferedCallbacks.Length(); i++) {
+    ret = mBufferedCallbacks[i]->Run();
+    if (!ret)
+      break;
+  }
+  mBufferedCallbacks.Clear();
+  mShouldBuffer = false;
+  return ret;
 }
+
+class DataAvailableEvent : public Callback
+{
+ public:
+  DataAvailableEvent(HttpChannelChild* child,
+                     const nsCString& data,
+                     const PRUint32& offset,
+                     const PRUint32& count)
+  : mChild(child)
+  , mData(data)
+  , mOffset(offset)
+  , mCount(count) {}
+
+  bool Run()
+  {
+    return mChild->OnDataAvailable(mData, mOffset, mCount);
+  }
+
+ private:
+  HttpChannelChild* mChild;
+  nsCString mData;
+  PRUint32 mOffset;
+  PRUint32 mCount;
+};
 
 bool 
 HttpChannelChild::RecvOnDataAvailable(const nsCString& data,
                                       const PRUint32& offset,
                                       const PRUint32& count)
+{
+  DataAvailableEvent* event = new DataAvailableEvent(this, data, offset, count);
+  return BufferOrDispatch(event);
+}
+
+bool 
+HttpChannelChild::OnDataAvailable(const nsCString& data,
+                                  const PRUint32& offset,
+                                  const PRUint32& count)
 {
   LOG(("HttpChannelChild::RecvOnDataAvailable [this=%x]\n", this));
 
@@ -177,13 +225,37 @@ HttpChannelChild::RecvOnDataAvailable(const nsCString& data,
   stringStream->Close();
   if (NS_FAILED(rv)) {
     // TODO: Cancel request: see OnStartRequest. Bug 536317
-    return false; 
   }
   return true;
 }
 
+class StopRequestEvent : public Callback
+{
+ public:
+  StopRequestEvent(HttpChannelChild* child,
+                   const nsresult& statusCode)
+  : mChild(child)
+  , mStatusCode(statusCode) {}
+
+  bool Run()
+  {
+    return mChild->OnStopRequest(mStatusCode);
+  }
+
+ private:
+  HttpChannelChild* mChild;
+  nsresult mStatusCode;
+};
+
 bool 
 HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
+{
+  StopRequestEvent* event = new StopRequestEvent(this, statusCode);
+  return BufferOrDispatch(event);
+}
+
+bool 
+HttpChannelChild::OnStopRequest(const nsresult& statusCode)
 {
   LOG(("HttpChannelChild::RecvOnStopRequest [this=%x status=%u]\n", 
            this, statusCode));
@@ -206,9 +278,37 @@ HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
   return true;
 }
 
+class ProgressEvent : public Callback
+{
+ public:
+  ProgressEvent(HttpChannelChild* child,
+                const PRUint64& progress,
+                const PRUint64& progressMax)
+  : mChild(child)
+  , mProgress(progress)
+  , mProgressMax(progressMax) {}
+
+  bool Run()
+  {
+    return mChild->OnProgress(mProgress, mProgressMax);
+  }
+
+ private:
+  HttpChannelChild* mChild;
+  PRUint64 mProgress, mProgressMax;
+};
+
 bool
 HttpChannelChild::RecvOnProgress(const PRUint64& progress,
                                  const PRUint64& progressMax)
+{
+  ProgressEvent* event = new ProgressEvent(this, progress, progressMax);
+  return BufferOrDispatch(event);
+}
+
+bool
+HttpChannelChild::OnProgress(const PRUint64& progress,
+                             const PRUint64& progressMax)
 {
   LOG(("HttpChannelChild::RecvOnProgress [this=%p progress=%llu/%llu]\n",
        this, progress, progressMax));
@@ -230,9 +330,38 @@ HttpChannelChild::RecvOnProgress(const PRUint64& progress,
   return true;
 }
 
+class StatusEvent : public Callback
+{
+ public:
+  StatusEvent(HttpChannelChild* child,
+              const nsresult& status,
+              const nsString& statusArg)
+  : mChild(child)
+  , mStatus(status)
+  , mStatusArg(statusArg) {}
+
+  bool Run()
+  {
+    return mChild->OnStatus(mStatus, mStatusArg);
+  }
+
+ private:
+  HttpChannelChild* mChild;
+  nsresult mStatus;
+  nsString mStatusArg;
+};
+
 bool
 HttpChannelChild::RecvOnStatus(const nsresult& status,
                                const nsString& statusArg)
+{
+  StatusEvent* event = new StatusEvent(this, status, statusArg);
+  return BufferOrDispatch(event);
+}
+
+bool
+HttpChannelChild::OnStatus(const nsresult& status,
+                           const nsString& statusArg)
 {
   LOG(("HttpChannelChild::RecvOnStatus [this=%p status=%x]\n", this, status));
 
@@ -248,6 +377,19 @@ HttpChannelChild::RecvOnStatus(const nsresult& status,
   }
 
   return true;
+}
+
+bool
+HttpChannelChild::BufferOrDispatch(Callback* callback)
+{
+  if (mShouldBuffer) {
+      mBufferedCallbacks.AppendElement(callback);
+      return true;
+  }
+
+  bool result = callback->Run();
+  delete callback;
+  return result;
 }
 
 //-----------------------------------------------------------------------------

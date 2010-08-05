@@ -667,7 +667,7 @@ var gViewController = {
     var cmdElt = document.getElementById(aCommandId);
     cmdElt.setAttribute("disabled", !cmd.isEnabled(aAddon));
     if ("getTooltip" in cmd) {
-      let tooltip = cmd.getTooltip(aAddon);        
+      let tooltip = cmd.getTooltip(aAddon);
       if (tooltip)
         cmdElt.setAttribute("tooltiptext", tooltip);
       else
@@ -965,7 +965,7 @@ var gHeader = {
     if (aIsSearching)
       this._searching.setAttribute("active", true);
     else
-      this._searching.removeAttribute("active");    
+      this._searching.removeAttribute("active");
   }
 };
 
@@ -1617,7 +1617,7 @@ var gUpdatesView = {
     AddonManager.addAddonListener(this);
     AddonManager.addInstallListener(this);
   },
-  
+
   shutdown: function() {
     AddonManager.removeAddonListener(this);
     AddonManager.removeInstallListener(this);
@@ -1702,10 +1702,6 @@ var gUpdatesView = {
     });
   },
 
-  getSelectedAddon: function() {
-    return null;
-  },
-
   showEmptyNotice: function(aShow) {
     this._emptyNotice.hidden = !aShow;
   },
@@ -1775,7 +1771,7 @@ var gUpdatesView = {
         notifyInitialized();
     });
   },
-  
+
   getSelectedAddon: function() {
     var item = this._listBox.selectedItem;
     if (item)
@@ -1808,7 +1804,7 @@ var gUpdatesView = {
       return;
     this.maybeRefresh();
   },
-  
+
   onExternalInstall: function(aAddon) {
     if (aAddon.applyBackgroundUpdates === false) {
       this._numManualUpdaters++;

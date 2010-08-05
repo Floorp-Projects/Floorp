@@ -108,6 +108,7 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
    mContentType(typeContentWrapper),
    mActivating(PR_FALSE),
    mShouldEnableHistory(PR_TRUE),
+   mIsActive(PR_TRUE),
    mParentNativeWindow(nsnull),
    mProgressListener(nsnull),
    mBackgroundColor(0),
@@ -417,6 +418,23 @@ NS_IMETHODIMP nsWebBrowser::GetContentDOMWindow(nsIDOMWindow **_retval)
     *_retval = retval;
     NS_ADDREF(*_retval);
     return rv;
+}
+
+NS_IMETHODIMP nsWebBrowser::GetIsActive(PRBool *rv)
+{
+  *rv = mIsActive;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowser::SetIsActive(PRBool aIsActive)
+{
+  // Set our copy of the value
+  mIsActive = aIsActive;
+
+  // If we have a docshell, pass on the request
+  if (mDocShell)
+    return mDocShell->SetIsActive(aIsActive);
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -1631,6 +1649,12 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
          // By default, do not allow DNS prefetch, so we don't break our frozen
          // API.  Embeddors who decide to enable it should do so manually.
          mDocShell->SetAllowDNSPrefetch(PR_FALSE);
+
+         // It's possible to call setIsActive() on us before we have a docshell.
+         // If we're getting a docshell now, pass along our desired value. The
+         // default here (true) matches the default of the docshell, so this is
+         // a no-op unless setIsActive(false) has been called on us.
+         mDocShell->SetIsActive(mIsActive);
      }
      else
      {

@@ -107,6 +107,17 @@ public:
   // asynchronously-called function.
   void SyncNotifyListener();
 
+  // Whether we want notifications from imgStatusTracker to be deferred until
+  // an event it has scheduled has been fired.
+  PRBool NotificationsDeferred() const
+  {
+    return mDeferNotifications;
+  }
+  void SetNotificationsDeferred(PRBool aDeferNotifications)
+  {
+    mDeferNotifications = aDeferNotifications;
+  }
+
 protected:
   friend class imgStatusTracker;
   friend class imgStatusNotifyRunnable;
@@ -135,17 +146,6 @@ protected:
   // The following notification functions are protected to ensure that (friend
   // class) imgStatusTracker is the only class allowed to send us
   // notifications.
-
-  // Whether we want notifications from imgStatusTracker to be deferred until
-  // an event it has scheduled has been fired.
-  PRBool NotificationsDeferred() const
-  {
-    return mDeferNotifications;
-  }
-  void SetNotificationsDeferred(PRBool aDeferNotifications)
-  {
-    mDeferNotifications = aDeferNotifications;
-  }
 
   /* non-virtual imgIDecoderObserver methods */
   void OnStartDecode   ();
