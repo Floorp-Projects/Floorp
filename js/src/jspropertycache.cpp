@@ -315,6 +315,11 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
     if (op == JSOP_LENGTH)
         return cx->runtime->atomState.lengthAtom;
 
+    // The method JIT's implementation of instanceof contains an internal lookup
+    // of the prototype property.
+    if (op == JSOP_INSTANCEOF)
+        return cx->runtime->atomState.classPrototypeAtom;
+
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
     JSAtom *atom;
     GET_ATOM_FROM_BYTECODE(cx->fp->script, pc, pcoff, atom);

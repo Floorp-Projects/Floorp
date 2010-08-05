@@ -1146,6 +1146,24 @@ MarkRangeConservatively(JSTracer *trc, jsuword *begin, jsuword *end)
 }
 
 void
+MarkStackRangeConservatively(JSTracer *trc, Value *beginv, Value *endv)
+{
+    jsuword *begin = (jsuword *) beginv;
+    jsuword *end = (jsuword *) endv;
+#ifdef JS_NUNBOX32
+    /*
+     * With 64-bit jsvals on 32-bit systems, we can optimize a bit by
+     * scanning only the payloads.
+     */
+    JS_ASSERT(begin <= end);
+    for (jsuword *i = begin; i != end; i += 2)
+        MarkWordConservatively(trc, *i);
+#else
+    MarkRangeConservatively(trc, begin, end);
+#endif
+}
+
+void
 MarkConservativeStackRoots(JSTracer *trc)
 {
     /* Do conservative scanning of the stack and registers. */

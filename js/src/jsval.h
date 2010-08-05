@@ -258,6 +258,7 @@ typedef enum JSWhyMagic
                                   * enumerated like a native object. */
     JS_NO_ITER_VALUE,            /* there is not a pending iterator value */
     JS_GENERATOR_CLOSING,        /* exception value thrown when closing a generator */
+    JS_FAST_CONSTRUCTOR,         /* 'this' value for fast natives invoked with 'new' */
     JS_NO_CONSTANT,              /* compiler sentinel value */
     JS_THIS_POISON,              /* used in debug builds to catch tracing errors */
     JS_GENERIC_MAGIC             /* for local use */
@@ -749,6 +750,7 @@ extern "C++"
 
 /* Internal helper macros */
 #define JSVAL_BITS(v)    (v.asBits)
+#define JSVAL_FROM_LAYOUT(l) (l)
 #define IMPL_TO_JSVAL(v) (v)
 #define JSID_BITS(id)    (id.asBits)
 
@@ -760,6 +762,7 @@ typedef ptrdiff_t              jsid;
 
 /* Internal helper macros */
 #define JSVAL_BITS(v)    (v)
+#define JSVAL_FROM_LAYOUT(l) ((l).asBits)
 #define IMPL_TO_JSVAL(v) ((v).asBits)
 #define JSID_BITS(id)    (id)
 

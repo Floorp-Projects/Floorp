@@ -391,6 +391,9 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
                                      : 0,
                                      (script->constOffset != 0)
                                      ? script->consts()->length
+                                     : 0,
+                                     (script->globalsOffset != 0)
+                                     ? script->globals()->length
                                      : 0);
     if (!wscript)
         return NULL;
@@ -412,6 +415,10 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     if (script->trynotesOffset != 0) {
         memcpy(wscript->trynotes()->vector, script->trynotes()->vector,
                wscript->trynotes()->length * sizeof(JSTryNote));
+    }
+    if (script->globalsOffset != 0) {
+        memcpy(wscript->globals()->vector, script->globals()->vector,
+               wscript->globals()->length * sizeof(GlobalSlotArray::Entry));
     }
 
     if (wfun->u.i.nupvars != 0) {
@@ -2453,7 +2460,8 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
 
     /* Initialize all function members. */
     fun->nargs = uint16(nargs);
-    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK | JSFUN_TRCINFO);
+    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK |
+                          JSFUN_TRCINFO | JSFUN_FAST_NATIVE_CTOR);
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
@@ -2597,7 +2605,8 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, Native native,
     } else {
         gsop = NULL;
     }
-    fun = js_NewFunction(cx, NULL, native, nargs, attrs, obj, atom);
+    fun = js_NewFunction(cx, NULL, native, nargs,
+                         attrs & (JSFUN_FLAGS_MASK | JSFUN_TRCINFO), obj, atom);
     if (!fun)
         return NULL;
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ObjectValue(*fun),
