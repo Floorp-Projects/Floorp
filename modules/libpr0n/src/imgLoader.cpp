@@ -52,6 +52,7 @@
 #include "nsIPrefService.h"
 #include "nsIProgressEventSink.h"
 #include "nsIChannelEventSink.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsIFileURL.h"
@@ -319,9 +320,10 @@ nsProgressNotificationProxy::OnStatus(nsIRequest* request,
 }
 
 NS_IMETHODIMP
-nsProgressNotificationProxy::OnChannelRedirect(nsIChannel *oldChannel,
-                                               nsIChannel *newChannel,
-                                               PRUint32 flags) {
+nsProgressNotificationProxy::AsyncOnChannelRedirect(nsIChannel *oldChannel,
+                                                    nsIChannel *newChannel,
+                                                    PRUint32 flags,
+                                                    nsIAsyncVerifyRedirectCallback *cb) {
   // The 'old' channel should match the current one
   NS_ABORT_IF_FALSE(oldChannel == mChannel,
                     "old channel doesn't match current!");
@@ -337,9 +339,13 @@ nsProgressNotificationProxy::OnChannelRedirect(nsIChannel *oldChannel,
                                 loadGroup,
                                 NS_GET_IID(nsIChannelEventSink),
                                 getter_AddRefs(target));
-  if (!target)
-    return NS_OK;
-  return target->OnChannelRedirect(oldChannel, newChannel, flags);
+  if (!target) {
+      cb->OnRedirectVerifyCallback(NS_OK);
+      return NS_OK;
+  }
+
+  // Delegate to |target| if set, reusing |cb|
+  return target->AsyncOnChannelRedirect(oldChannel, newChannel, flags, cb);
 }
 
 NS_IMETHODIMP

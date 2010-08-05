@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,7 @@
  *
  * Contributor(s):
  *    Honza Bambas <honzab@firemni.cz>
+ *    Bjarne Geir Herland <bjarne@runitsoft.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,8 +41,13 @@
 #define nsAsyncRedirectVerifyHelper_h
 
 #include "nsIRunnable.h"
-
+#include "nsIThread.h"
+#include "nsIChannelEventSink.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIChannel;
 
@@ -49,14 +56,27 @@ class nsIChannel;
  * the sink bound with the channel being redirected while the result of
  * redirect decision is returned through the callback.
  */
-class nsAsyncRedirectVerifyHelper : public nsIRunnable
+class nsAsyncRedirectVerifyHelper : public nsIRunnable,
+                                    public nsIAsyncVerifyRedirectCallback
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
+    NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
 public:
+    nsAsyncRedirectVerifyHelper();
+
+    /*
+     * Calls AsyncOnChannelRedirect() on the given sink with the given
+     * channels and flags. Keeps track of number of async callbacks to expect.
+     */
+    nsresult DelegateOnChannelRedirect(nsIChannelEventSink *sink,
+                                       nsIChannel *oldChannel, 
+                                       nsIChannel *newChannel,
+                                       PRUint32 flags);
+ 
     /**
-     * Initialize and runs the chain of OnChannelRedirect calls. OldChannel
+     * Initialize and run the chain of AsyncOnChannelRedirect calls. OldChannel
      * is QI'ed for nsIAsyncVerifyRedirectCallback. The result of the redirect
      * decision is passed through this interface back to the oldChannel.
      *
@@ -81,8 +101,57 @@ protected:
     nsCOMPtr<nsIChannel> mNewChan;
     PRUint32 mFlags;
     PRBool mWaitingForRedirectCallback;
+    nsCOMPtr<nsIThread>      mCallbackThread;
+    PRBool                   mCallbackInitiated;
+    PRInt32                  mExpectedCallbacks;
+    nsresult                 mResult; // value passed to callback
 
-    void Callback(nsresult result);
+    void InitCallback();
+    
+    /**
+     * Calls back to |oldChan| as described in Init()
+     */
+    void ExplicitCallback(nsresult result);
+
+private:
+    ~nsAsyncRedirectVerifyHelper();
+    
+    bool IsOldChannelCanceled();
+};
+
+/*
+ * Helper to make the call-stack handle some control-flow for us
+ */
+class nsAsyncRedirectAutoCallback
+{
+public:
+    nsAsyncRedirectAutoCallback(nsIAsyncVerifyRedirectCallback* aCallback)
+        : mCallback(aCallback)
+    {
+        mResult = NS_OK;
+    }
+    ~nsAsyncRedirectAutoCallback()
+    {
+        if (mCallback)
+            mCallback->OnRedirectVerifyCallback(mResult);
+    }
+    /*
+     * Call this is you want it to call back with a different result-code
+     */
+    void SetResult(nsresult aRes)
+    {
+        mResult = aRes;
+    }
+    /*
+     * Call this is you want to avoid the callback
+     */
+    void DontCallback()
+    {
+        mCallback = nsnull;
+    }
+private:
+    nsIAsyncVerifyRedirectCallback* mCallback;
+    nsresult mResult;
 };
 
 #endif
