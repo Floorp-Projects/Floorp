@@ -20,13 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478911
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
-resume_geolocationProvider();
-force_prompt(true)
-
+var watchID;
 var hasBeenCleared = false;
-var successWasCalledAfterClear = false;
-
 function failureCallback(error)
 {
   ok(0, "we should not be seeing failures from this watchPosition");
@@ -34,7 +29,8 @@ function failureCallback(error)
 
 function successCallback(position) {
   if (hasBeenCleared == true) {
-    successWasCalledAfterClear = true;
+    // we should not be called here
+    ok(0, "successCallback was called after clear");
   }
 }
 
@@ -44,17 +40,22 @@ function clearWatch() {
 }
 
 function testAccepted() {
-  ok(!successWasCalledAfterClear, "The successCallback should not be called after clear");
-  reset_prompt();
   SimpleTest.finish();
 }
 
 
+/** Test for Bug  **/
+
+SimpleTest.waitForExplicitFinish();
+
 watchID = navigator.geolocation.watchPosition(successCallback, failureCallback, null);
 
-setTimeout(clearWatch, 250);
+setTimeout(clickNotificationButton, 10, kAcceptButton);
 
-setTimeout(testAccepted, 2000);
+setTimeout(clearWatch, 50);
+
+// wait for position changes
+setTimeout(testAccepted, 1000);
 
 </script>
 </pre>
