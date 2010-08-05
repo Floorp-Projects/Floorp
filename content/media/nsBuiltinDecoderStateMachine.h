@@ -235,6 +235,7 @@ public:
   State mState;
 
   nsresult GetBuffered(nsHTMLTimeRanges* aBuffered) {
+    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     return mReader->GetBuffered(aBuffered, mStartTime);
   }
 
