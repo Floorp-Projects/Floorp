@@ -20,27 +20,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=482260
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.waitForExplicitFinish();
+var completeCount = 1000;
 
-resume_geolocationProvider();
-force_prompt(true)
-
-var keepGoing = 10;
+var hasAccepted = false;
 
 function successCallback(position) {
-  dump("----------> "+ keepGoing +"\n");
-
-  if (keepGoing-- > 0) {
-    setTimeout(function() {navigator.geolocation.getCurrentPosition(successCallback);}, 0);
-    return; 
-  }
-
-  ok(1, "100 successful calls");
-  reset_prompt();
+  check_geolocation(position);
+  completeCount--;
+  if (completeCount > 0)   
+    navigator.geolocation.getCurrentPosition(successCallback, null, null);
   SimpleTest.finish();
 }
 
-navigator.geolocation.getCurrentPosition(successCallback);
+function accept() {
+  hasAccepted = true;
+  clickNotificationButton(kAcceptButton);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+var options = {
+    maximumAge: 0,
+};
+
+// one-shot position requests
+navigator.geolocation.getCurrentPosition(successCallback, null, options);
+
+setTimeout(accept, 50);
 
 </script>
 </pre>
