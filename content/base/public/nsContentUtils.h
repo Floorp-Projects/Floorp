@@ -140,7 +140,6 @@ typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
 #endif
 
 namespace mozilla {
-  class IHistory;
 
 namespace layers {
   class LayerManager;
@@ -497,11 +496,6 @@ public:
     if (!sImgLoaderInitialized)
       InitImgLoader();
     return sImgLoader;
-  }
-
-  static mozilla::IHistory* GetHistory()
-  {
-    return sHistory;
   }
 
 #ifdef MOZ_XTF
@@ -1725,8 +1719,6 @@ private:
   // The following two members are initialized lazily
   static imgILoader* sImgLoader;
   static imgICache* sImgCache;
-
-  static mozilla::IHistory* sHistory;
 
   static nsIConsoleService* sConsoleService;
 
