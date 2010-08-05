@@ -146,7 +146,8 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
     //  - Send Cancel msg to parent 
     //  - drop any in flight OnDataAvail msgs we receive
     //  - make sure we do call OnStopRequest eventually
-    return true;  
+    //  - return true here, not false
+    return false;  
   }
 
   if (mResponseHead)
@@ -225,6 +226,7 @@ HttpChannelChild::OnDataAvailable(const nsCString& data,
   stringStream->Close();
   if (NS_FAILED(rv)) {
     // TODO: Cancel request: see OnStartRequest. Bug 536317
+    return false; 
   }
   return true;
 }
