@@ -307,39 +307,6 @@ body {
   font-weight: bold;
 }
 
-.newTabGroup {
-  background-color: #8F8F8F;
-  border: none;
-  border-top: 1px solid rgba(127,127,127,.5);
-  -moz-border-radius: 0.1em;
-  -moz-box-shadow: inset 0px 5px 10px rgba(0,0,0,.1);
-}
-
-.inNewTabGroup {
-  background-color: transparent;
-}
-
-.inNewTabGroup .favicon {
-  background-color: #8F8F8F;
-  -moz-box-shadow: none;
-}
-
-.inNewTabGroup .tab-title {
-  color: #2C2C2C;
-  text-shadow: 0px 1px 0px rgba(255,255,255,.25);
-}
-
-
-.newTabGroup .name {
-  display: none;
-}
-
-.newTabAnimatee {
-  position: absolute;
-  background-color: white;
-  border: 1px solid #AAA;
-}
-
 .active {
   -moz-box-shadow: 5px 5px 4px rgba(0,0,0,.5);
 }
