@@ -102,7 +102,6 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "imgILoader.h"
-#include "mozilla/IHistory.h"
 #include "nsDocShellCID.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestor.h"
@@ -230,7 +229,6 @@ nsIXTFService *nsContentUtils::sXTFService = nsnull;
 nsIPrefBranch2 *nsContentUtils::sPrefBranch = nsnull;
 imgILoader *nsContentUtils::sImgLoader;
 imgICache *nsContentUtils::sImgCache;
-mozilla::IHistory *nsContentUtils::sHistory;
 nsIConsoleService *nsContentUtils::sConsoleService;
 nsDataHashtable<nsISupportsHashKey, EventNameMapping>* nsContentUtils::sAtomEventTable = nsnull;
 nsDataHashtable<nsStringHashKey, EventNameMapping>* nsContentUtils::sStringEventTable = nsnull;
@@ -463,12 +461,6 @@ nsContentUtils::Init()
 
   rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = CallGetService(NS_IHISTORY_CONTRACTID, &sHistory);
-  if (NS_FAILED(rv)) {
-    NS_RUNTIMEABORT("Cannot get the history service");
-    return rv;
-  }
 
   sPtrsToPtrsToRelease = new nsTArray<nsISupports**>();
   if (!sPtrsToPtrsToRelease) {
@@ -1148,7 +1140,6 @@ nsContentUtils::Shutdown()
 #endif
   NS_IF_RELEASE(sImgLoader);
   NS_IF_RELEASE(sImgCache);
-  NS_IF_RELEASE(sHistory);
   NS_IF_RELEASE(sPrefBranch);
 #ifdef IBMBIDI
   NS_IF_RELEASE(sBidiKeyboard);
