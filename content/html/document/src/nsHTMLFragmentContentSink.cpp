@@ -1217,10 +1217,8 @@ nsHTMLParanoidFragmentSink::SanitizeStyleRule(nsICSSStyleRule *aRule, nsAutoStri
   aRuleText.Truncate();
   css::Declaration *style = aRule->GetDeclaration();
   if (style) {
-    nsresult rv = style->RemoveProperty(eCSSProperty_binding);
-    if (NS_SUCCEEDED(rv)) {
-      style->ToString(aRuleText);
-    }
+    style->RemoveProperty(eCSSProperty_binding);
+    style->ToString(aRuleText);
   }
 }
 

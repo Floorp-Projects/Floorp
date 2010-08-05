@@ -51,6 +51,7 @@
 #include "jsapi.h"
 #include "nsIScriptContext.h"
 #include "nsIChannelEventSink.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIProgressEventSink.h"
@@ -70,6 +71,7 @@
 #include "nsDOMEventTargetWrapperCache.h"
 
 class nsILoadGroup;
+class AsyncVerifyRedirectCallbackForwarder;
 
 class nsAccessControlLRUCache
 {
@@ -340,6 +342,9 @@ protected:
 
   void StartProgressEventTimer();
 
+  friend class AsyncVerifyRedirectCallbackForwarder;
+  void OnRedirectVerifyCallback(nsresult result);
+
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
@@ -413,6 +418,9 @@ protected:
   nsCOMPtr<nsITimer> mProgressNotifier;
 
   PRPackedBool mFirstStartRequestSeen;
+  
+  nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
+  nsCOMPtr<nsIChannel> mNewRedirectChannel;
 };
 
 // helper class to expose a progress DOM Event

@@ -6,6 +6,9 @@ browser.jar:
 * skin/classic/browser/aboutSessionRestore.css        (aboutSessionRestore.css)
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutCertError.css             (aboutCertError.css)
+#ifdef MOZ_SERVICES_SYNC
+  skin/classic/browser/aboutSyncTabs.css
+#endif
   skin/classic/browser/actionicon-tab.png
 * skin/classic/browser/browser.css                    (browser.css)
 * skin/classic/browser/engineManager.css              (engineManager.css)
@@ -59,6 +62,9 @@ browser.jar:
   skin/classic/browser/preferences/alwaysAsk.png      (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/mail.png           (preferences/mail.png)
   skin/classic/browser/preferences/Options.png        (preferences/Options.png)
+#ifdef MOZ_SERVICES_SYNC
+  skin/classic/browser/preferences/Options-sync.png   (preferences/Options-sync.png)
+#endif
 * skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs.png          (tabbrowser/alltabs.png)
@@ -71,3 +77,18 @@ browser.jar:
   skin/classic/browser/tabview/platform.css           (tabview/platform.css)
   skin/classic/browser/tabview/stack-expander.png     (tabview/stack-expander.png)
   skin/classic/browser/tabview/tabview.png            (tabview/tabview.png)
+#ifdef MOZ_SERVICES_SYNC
+  skin/classic/browser/sync-16-throbber.png
+  skin/classic/browser/sync-16.png
+  skin/classic/browser/sync-32.png
+  skin/classic/browser/sync-bg.png
+  skin/classic/browser/sync-desktopIcon.png
+  skin/classic/browser/sync-merge.png
+  skin/classic/browser/sync-mobileIcon.png
+  skin/classic/browser/sync-usedBefore.png
+  skin/classic/browser/sync-usedNever.png
+  skin/classic/browser/sync-wipeClient.png
+  skin/classic/browser/sync-wipeServer.png
+  skin/classic/browser/syncSetup.css
+  skin/classic/browser/syncCommon.css
+#endif

@@ -594,7 +594,7 @@ nsPermissionManager::TestExactPermission(nsIURI     *aURI,
 #ifdef MOZ_IPC
   ContentChild* cpc = ChildProcess();
   if (cpc) {
-    return cpc->SendTestPermission(IPC::URI(aURI), nsDependentCString(aType), PR_TRUE,
+    return cpc->SendTestPermission(aURI, nsDependentCString(aType), PR_TRUE,
       aPermission) ? NS_OK : NS_ERROR_FAILURE;
   }
 #endif
@@ -609,7 +609,7 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
 #ifdef MOZ_IPC
   ContentChild* cpc = ChildProcess();
   if (cpc) {
-    return cpc->SendTestPermission(IPC::URI(aURI), nsDependentCString(aType), PR_FALSE,
+    return cpc->SendTestPermission(aURI, nsDependentCString(aType), PR_FALSE,
       aPermission) ? NS_OK : NS_ERROR_FAILURE;
   }
 #endif

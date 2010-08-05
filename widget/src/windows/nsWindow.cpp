@@ -4882,10 +4882,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_CONTEXTMENU:
     {
       // if the context menu is brought up from the keyboard, |lParam|
-      // will be maxlong.
+      // will be -1.
       LPARAM pos;
       PRBool contextMenukey = PR_FALSE;
-      if (lParam == 0xFFFFFFFF)
+      if (lParam == -1)
       {
         contextMenukey = PR_TRUE;
         pos = lParamToClient(GetMessagePos());

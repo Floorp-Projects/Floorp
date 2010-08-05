@@ -1,7 +1,6 @@
-/* -*- Mode: JS; tab-width: 4; indent-tabs-mode: nil; -*-
- * vim: set sw=4 ts=8 et tw=78:
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
- *
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -14,14 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Narcissus JavaScript engine.
+ * The Original Code is Mozilla code.
  *
- * The Initial Developer of the Original Code is
- * Brendan Eich <brendan@mozilla.org>.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Chris Pearce <chris@pearce.org.nz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,30 +36,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * Narcissus - JS implemented in JS.
- *
- * Native objects and classes implemented metacircularly:
- *      the global object (singleton)
- *      eval
- *      function objects, Function
- *
- * SpiderMonkey extensions used:
- *      catch guards
- *      const declarations
- *      get and set functions in object initialisers
- *      Object.prototype.__proto__
- *      filename and line number arguments to *Error constructors
- *      callable regular expression objects
- *
- * SpiderMonkey extensions supported metacircularly:
- *      catch guards
- *      const declarations
- *      get and set functions in object initialisers
- */
+#include "nsHTMLTimeRanges.h"
+#include "nsDOMError.h"
+#include "nsContentUtils.h"
 
-load('jsdefs.js');
-load('jslex.js');
-load('jsparse.js');
-load('jsexec.js');
+NS_IMPL_ADDREF(nsHTMLTimeRanges)
+NS_IMPL_RELEASE(nsHTMLTimeRanges)
 
+DOMCI_DATA(HTMLTimeRanges, nsHTMLTimeRanges)
+
+NS_INTERFACE_MAP_BEGIN(nsHTMLTimeRanges)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTimeRanges)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLTimeRanges)
+NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP
+nsHTMLTimeRanges::GetLength(PRUint32* aLength) {
+  *aLength = mRanges.Length();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTimeRanges::Start(PRUint32 aIndex, float* aTime) {
+  if (aIndex >= mRanges.Length())
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  *aTime = mRanges[aIndex].mStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTimeRanges::End(PRUint32 aIndex, float* aTime) {
+  if (aIndex >= mRanges.Length())
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  *aTime = mRanges[aIndex].mEnd;
+  return NS_OK;
+}
+
+void
+nsHTMLTimeRanges::Add(float aStart, float aEnd) {
+  mRanges.AppendElement(TimeRange(aStart,aEnd));
+}

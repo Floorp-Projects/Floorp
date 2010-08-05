@@ -134,6 +134,7 @@
  */
 
 class nsWaveStateMachine;
+class nsHTMLTimeRanges;
 
 class nsWaveDecoder : public nsMediaDecoder
 {
@@ -235,6 +236,10 @@ class nsWaveDecoder : public nsMediaDecoder
 
   // Called asynchronously to shut down the decoder
   void Stop();
+
+  // Constructs the time ranges representing what segments of the media
+  // are buffered and playable.
+  virtual nsresult GetBuffered(nsHTMLTimeRanges* aBuffered);
 
 private:
   // Notifies the element that seeking has started.

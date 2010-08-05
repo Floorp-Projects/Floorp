@@ -736,6 +736,28 @@ HistoryMenu.prototype = {
       "for (var i = 0; i < " + undoItems.length + "; i++) undoCloseWindow();");
   },
 
+  toggleTabsFromOtherComputers: function PHM_toggleTabsFromOtherComputers() {
+    // This is a no-op if MOZ_SERVICES_SYNC isn't defined
+#ifdef MOZ_SERVICES_SYNC
+    // enable/disable the Tabs From Other Computers menu
+    let menuitem = document.getElementById("sync-tabs-menuitem");
+
+    // If Sync isn't configured yet, then don't show the menuitem.
+    if (Weave.Status.service == Weave.CLIENT_NOT_CONFIGURED ||
+        Weave.Svc.Prefs.get("firstSync", "") == "notReady") {
+      menuitem.setAttribute("hidden", true);
+      return;
+    }
+
+    // The tabs engine might never be inited (if services.sync.registerEngines
+    // is modified), so make sure we avoid undefined errors.
+    let enabled = Weave.Service.isLoggedIn && Weave.Engines.get("tabs") &&
+                  Weave.Engines.get("tabs").enabled;
+    menuitem.setAttribute("disabled", !enabled);
+    menuitem.setAttribute("hidden", false);
+#endif
+  },
+
   _onPopupShowing: function HM__onPopupShowing(aEvent) {
     PlacesMenu.prototype._onPopupShowing.apply(this, arguments);
 
@@ -745,6 +767,7 @@ HistoryMenu.prototype = {
 
     this.toggleRecentlyClosedTabs();
     this.toggleRecentlyClosedWindows();
+    this.toggleTabsFromOtherComputers();
   },
 
   _onCommand: function HM__onCommand(aEvent) {

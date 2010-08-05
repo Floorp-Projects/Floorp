@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMediaDecoder.h"
+#include "nsMediaStream.h"
 
 #include "prlog.h"
 #include "prmem.h"
@@ -72,6 +73,7 @@ nsMediaDecoder::nsMediaDecoder() :
   mDataTime(),
   mVideoUpdateLock(nsnull),
   mPixelAspectRatio(1.0),
+  mPinnedForSeek(PR_FALSE),
   mSizeChanged(PR_FALSE),
   mShuttingDown(PR_FALSE)
 {
@@ -230,6 +232,26 @@ void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
   if (mImageContainer && aImage) {
     mImageContainer->SetCurrentImage(aImage);
   }
+}
+
+void nsMediaDecoder::PinForSeek()
+{
+  nsMediaStream* stream = GetCurrentStream();
+  if (!stream || mPinnedForSeek) {
+    return;
+  }
+  mPinnedForSeek = PR_TRUE;
+  stream->Pin();
+}
+
+void nsMediaDecoder::UnpinForSeek()
+{
+  nsMediaStream* stream = GetCurrentStream();
+  if (!stream || !mPinnedForSeek) {
+    return;
+  }
+  mPinnedForSeek = PR_FALSE;
+  stream->Unpin();
 }
 
 // Number of bytes to add to the download size when we're computing

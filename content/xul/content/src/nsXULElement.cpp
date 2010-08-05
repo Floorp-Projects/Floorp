@@ -102,7 +102,6 @@
 #include "nsIServiceManager.h"
 #include "nsICSSStyleRule.h"
 #include "nsIStyleSheet.h"
-#include "nsDOMCSSAttrDeclaration.h"
 #include "nsIURL.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
@@ -1948,23 +1947,7 @@ nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
         }
     }
 
-    // XXXbz could this call nsStyledElement::GetStyle now?
-    nsDOMSlots* slots = GetDOMSlots();
-    NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
-
-    if (!slots->mStyle) {
-        slots->mStyle = new nsDOMCSSAttributeDeclaration(this
-#ifdef MOZ_SMIL
-                                                         , PR_FALSE
-#endif // MOZ_SMIL
-                                                         );
-        NS_ENSURE_TRUE(slots->mStyle, NS_ERROR_OUT_OF_MEMORY);
-        SetFlags(NODE_MAY_HAVE_STYLE);
-    }
-
-    NS_IF_ADDREF(*aStyle = slots->mStyle);
-
-    return NS_OK;
+    return nsStyledElement::GetStyle(aStyle);
 }
 
 nsresult

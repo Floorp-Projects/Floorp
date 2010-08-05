@@ -1001,13 +1001,11 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
       return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
   }
 
-  nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_FALSE);
+  PRBool isJava = PR_FALSE;
+  nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
   if (pluginTag) {
-    if (!pluginTag->IsEnabled())
-      return NS_ERROR_NOT_AVAILABLE;
+    isJava = pluginTag->mIsJavaPlugin;
   }
-
-  PRBool isJava = pluginTag && pluginTag->mIsJavaPlugin;
 
   // Determine if the scheme of this URL is one we can handle internaly because we should
   // only open the initial stream if it's one that we can handle internally. Otherwise
@@ -1024,7 +1022,6 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
   }
 
   if (FindStoppedPluginForURL(aURL, aOwner) == NS_OK) {
-
     PLUGIN_LOG(PLUGIN_LOG_NOISY,
     ("nsPluginHost::InstantiateEmbeddedPlugin FoundStopped mime=%s\n", aMimeType));
 
@@ -1033,12 +1030,6 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
     nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(instanceCOMPtr.get());
     if (!isJava && bCanHandleInternally)
       rv = NewEmbeddedPluginStream(aURL, aOwner, instance);
-
-    // notify Java DOM component
-    nsresult res;
-    nsCOMPtr<nsIPluginInstanceOwner> javaDOM = do_GetService("@mozilla.org/blackwood/java-dom;1", &res);
-    if (NS_SUCCEEDED(res) && javaDOM)
-      javaDOM->SetInstance(instance);
 
     return NS_OK;
   }
@@ -1090,13 +1081,6 @@ NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
 
     if (havedata && !isJava && bCanHandleInternally)
       rv = NewEmbeddedPluginStream(aURL, aOwner, instance);
-
-    // notify Java DOM component
-    nsresult res;
-    nsCOMPtr<nsIPluginInstanceOwner> javaDOM =
-             do_GetService("@mozilla.org/blackwood/java-dom;1", &res);
-    if (NS_SUCCEEDED(res) && javaDOM)
-      javaDOM->SetInstance(instance);
   }
 
 #ifdef PLUGIN_LOGGING
@@ -1638,10 +1622,10 @@ nsPluginHost::FindPluginForType(const char* aMimeType,
 
   // if we have a mimetype passed in, search the mPlugins
   // linked list for a match
-  if (nsnull != aMimeType) {
+  if (aMimeType) {
     plugins = mPlugins;
 
-    while (nsnull != plugins) {
+    while (plugins) {
       variants = plugins->mVariants;
       for (cnt = 0; cnt < variants; cnt++) {
         if ((!aCheckEnabled || plugins->IsEnabled()) &&
@@ -1650,7 +1634,6 @@ nsPluginHost::FindPluginForType(const char* aMimeType,
           return plugins;
         }
       }
-
       plugins = plugins->mNext;
     }
   }
