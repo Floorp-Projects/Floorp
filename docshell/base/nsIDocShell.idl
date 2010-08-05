@@ -71,7 +71,7 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 
-[scriptable, uuid(8ac6b880-776a-44d4-b271-a7e64ae3debd)]
+[scriptable, uuid(bf6db598-3833-400b-9e53-ec220cb2496c)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -521,4 +521,11 @@ interface nsIDocShell : nsISupports
    * current docshell.
    */
   readonly attribute boolean canExecuteScripts;
+
+  /**
+   * Sets whether a docshell is active. An active docshell is one that is
+   * visible, and thus is not a good candidate for certain optimizations
+   * like image frame discarding. Docshells are active unless told otherwise.
+   */
+  attribute boolean isActive;
 };
