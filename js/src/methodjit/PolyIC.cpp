@@ -1040,34 +1040,21 @@ class GetElemCompiler : public PICStubCompiler
             pic.u.get.idNeedsRemat = false;
         }
 
-        Label start;
 #ifdef DEBUG
         Label dbgStubAtomJump;
         Label dbgStubShapeJump;
 #endif
-        Jump shapeGuard;
-        Jump atomGuard;
-        if (obj->isDenseArray()) {
-            start = masm.label();
-            atomGuard = masm.branchPtr(Assembler::NotEqual, pic.u.get.idReg, ImmPtr(id));
-            DBGLABEL_ASSIGN(dbgStubAtomJump);
-            shapeGuard = masm.branchPtr(Assembler::NotEqual,
-                                        Address(pic.objReg, offsetof(JSObject, clasp)),
-                                        ImmPtr(obj->getClass()));
-            DBGLABEL_ASSIGN(dbgStubShapeJump);
-        } else {
-            if (pic.shapeNeedsRemat()) {
-                masm.loadShape(pic.objReg, pic.shapeReg);
-                pic.shapeRegHasBaseShape = true;
-            }
-
-            start = masm.label();
-            atomGuard = masm.branchPtr(Assembler::NotEqual, pic.u.get.idReg, ImmPtr(id));
-            DBGLABEL_ASSIGN(dbgStubAtomJump);
-            shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
-                                               Imm32(obj->shape()));
-            DBGLABEL_ASSIGN(dbgStubShapeJump);
+        if (pic.shapeNeedsRemat()) {
+            masm.loadShape(pic.objReg, pic.shapeReg);
+            pic.shapeRegHasBaseShape = true;
         }
+
+        Label start = masm.label();
+        Jump atomGuard = masm.branchPtr(Assembler::NotEqual, pic.u.get.idReg, ImmPtr(id));
+        DBGLABEL_ASSIGN(dbgStubAtomJump);
+        Jump shapeGuard = masm.branch32_force32(Assembler::NotEqual, pic.shapeReg,
+                                           Imm32(obj->shape()));
+        DBGLABEL_ASSIGN(dbgStubShapeJump);
 
         JS_ASSERT(masm.differenceBetween(start, dbgStubAtomJump)  == GETELEM_STUB_ATOM_JUMP);
         JS_ASSERT(masm.differenceBetween(start, dbgStubShapeJump) == GETELEM_STUB_SHAPE_JUMP);
@@ -1184,6 +1171,8 @@ class GetElemCompiler : public PICStubCompiler
 
         AutoPropertyDropper dropper(f.cx, holder, prop);
 
+        if (!obj->isNative())
+            return disable("non-native obj");
         if (!holder->isNative())
             return disable("non-native holder");
 
