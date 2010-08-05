@@ -78,7 +78,7 @@
 #include "jscntxtinlines.h"
 
 #ifdef XP_WIN
-# include <windows.h>
+# include "jswin.h"
 #elif defined(XP_OS2)
 # define INCL_DOSMEMMGR
 # include <os2.h>
@@ -203,6 +203,11 @@ StackSpace::mark(JSTracer *trc)
     /*
      * The correctness/completeness of marking depends on the continuity
      * invariants described by the CallStackSegment and StackSpace definitions.
+     *
+     * NB:
+     * Stack slots might be torn or uninitialized in the presence of method
+     * JIT'd code. Arguments are an exception and are always fully synced
+     * (so they can be read by functions).
      */
     Value *end = firstUnused();
     for (CallStackSegment *css = currentSegment; css; css = css->getPreviousInMemory()) {
@@ -213,13 +218,13 @@ StackSpace::mark(JSTracer *trc)
 
             /* Mark slots/args trailing off of the last stack frame. */
             JSStackFrame *fp = css->getCurrentFrame();
-            MarkValueRange(trc, fp->slots(), end, "stack");
+            MarkStackRangeConservatively(trc, fp->slots(), end);
 
             /* Mark stack frames and slots/args between stack frames. */
             JSStackFrame *initialFrame = css->getInitialFrame();
             for (JSStackFrame *f = fp; f != initialFrame; f = f->down) {
                 js_TraceStackFrame(trc, f);
-                MarkValueRange(trc, f->down->slots(), f->argEnd(), "stack");
+                MarkStackRangeConservatively(trc, f->down->slots(), f->argEnd());
             }
 
             /* Mark initialFrame stack frame and leading args. */
@@ -521,6 +526,9 @@ JSThreadData::init()
 #ifdef JS_TRACER
     InitJIT(&traceMonitor);
 #endif
+#ifdef JS_METHODJIT
+    jmData.Initialize();
+#endif
     dtoaState = js_NewDtoaState();
     if (!dtoaState) {
         finish();
@@ -548,6 +556,9 @@ JSThreadData::finish()
     propertyCache.~PropertyCache();
 #if defined JS_TRACER
     FinishJIT(&traceMonitor);
+#endif
+#if defined JS_METHODJIT
+    jmData.Finish();
 #endif
     stackSpace.finish();
 }
@@ -578,6 +589,9 @@ JSThreadData::purge(JSContext *cx)
      */
     if (cx->runtime->gcRegenShapes)
         traceMonitor.needFlush = JS_TRUE;
+#endif
+#ifdef JS_METHODJIT
+    jmData.purge(cx);
 #endif
 
     /* Destroy eval'ed scripts. */
@@ -1895,14 +1909,15 @@ JSBool
 js_InvokeOperationCallback(JSContext *cx)
 {
     JS_ASSERT_REQUEST_DEPTH(cx);
-    JS_ASSERT(JS_THREAD_DATA(cx)->operationCallbackFlag);
+    JS_ASSERT(JS_THREAD_DATA(cx)->interruptFlags & JSThreadData::INTERRUPT_OPERATION_CALLBACK);
 
     /*
      * Reset the callback flag first, then yield. If another thread is racing
      * us here we will accumulate another callback request which will be
      * serviced at the next opportunity.
      */
-    JS_THREAD_DATA(cx)->operationCallbackFlag = 0;
+    JS_ATOMIC_CLEAR_MASK(&JS_THREAD_DATA(cx)->interruptFlags,
+                         JSThreadData::INTERRUPT_OPERATION_CALLBACK);
 
     /*
      * Unless we are going to run the GC, we automatically yield the current
@@ -1943,6 +1958,15 @@ js_InvokeOperationCallback(JSContext *cx)
      */
 
     return !cb || cb(cx);
+}
+
+JSBool
+js_HandleExecutionInterrupt(JSContext *cx)
+{
+    JSBool result = JS_TRUE;
+    if (JS_THREAD_DATA(cx)->interruptFlags & JSThreadData::INTERRUPT_OPERATION_CALLBACK)
+        result = js_InvokeOperationCallback(cx) && result;
+    return result;
 }
 
 void

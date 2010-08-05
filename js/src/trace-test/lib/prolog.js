@@ -12,13 +12,13 @@ if (HAVE_TM) {
     {
         function jit(on)
         {
-          if (on && !options().match(/jit/))
+          if (on && !options().match(/tracejit/))
           {
-            options('jit');
+            options('tracejit');
           }
-          else if (!on && options().match(/jit/))
+          else if (!on && options().match(/tracejit/))
           {
-            options('jit');
+            options('tracejit');
           }
         }
 
@@ -39,3 +39,8 @@ if (HAVE_TM) {
 var appendToActual = function(s) {
     actual += s + ',';
 }
+
+if (!("gczeal" in this)) {
+  gczeal = function() { }
+}
+

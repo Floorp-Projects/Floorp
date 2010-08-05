@@ -811,7 +811,8 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     if (!obj->isDenseArray())
         return js_SetProperty(cx, obj, id, vp);
 
-    if (!js_IdIsIndex(id, &i) || INDEX_TOO_SPARSE(obj, i)) {
+    if (!js_IdIsIndex(id, &i) || js_PrototypeHasIndexedProperties(cx, obj) ||
+        INDEX_TOO_SPARSE(obj, i)) {
         if (!obj->makeDenseArraySlow(cx))
             return JS_FALSE;
         return js_SetProperty(cx, obj, id, vp);
@@ -1007,7 +1008,8 @@ Class js_ArrayClass = {
     "Array",
     Class::NON_NATIVE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::DENSE_ARRAY_FIXED_RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
+    JSCLASS_FAST_CONSTRUCTOR,
     PropertyStub,   /* addProperty */
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -1042,7 +1044,9 @@ Class js_ArrayClass = {
 
 Class js_SlowArrayClass = {
     "Array",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
+    JSCLASS_FAST_CONSTRUCTOR,
     slowarray_addProperty,
     PropertyStub,   /* delProperty */
     PropertyStub,   /* getProperty */
@@ -2958,31 +2962,29 @@ NewDenseArrayObject(JSContext *cx)
 }
 
 JSBool
-js_Array(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
+js_Array(JSContext *cx, uintN argc, Value *vp)
 {
     jsuint length;
     const Value *vector;
 
-    /* If called without new, replace obj with a new Array object. */
-    if (!JS_IsConstructing(cx)) {
-        obj = NewDenseArrayObject(cx);
-        if (!obj)
-            return JS_FALSE;
-        rval->setObject(*obj);
-    }
+    /* Whether called with 'new' or not, use a new Array object. */
+    JSObject *obj = NewObject(cx, &js_ArrayClass, NULL, NULL);
+    if (!obj)
+        return JS_FALSE;
+    vp->setObject(*obj);
 
     if (argc == 0) {
         length = 0;
         vector = NULL;
     } else if (argc > 1) {
         length = (jsuint) argc;
-        vector = argv;
-    } else if (!argv[0].isNumber()) {
+        vector = vp + 2;
+    } else if (!vp[2].isNumber()) {
         length = 1;
-        vector = argv;
+        vector = vp + 2;
     } else {
-        length = ValueIsLength(cx, &argv[0]);
-        if (argv[0].isNull())
+        length = ValueIsLength(cx, vp + 2);
+        if (vp[2].isNull())
             return JS_FALSE;
         vector = NULL;
     }
@@ -3032,7 +3034,7 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewPreallocatedArray, CONTEXT, OBJECT, I
 JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ArrayClass, (Native) js_Array, 1,
                                    NULL, array_methods, NULL, array_static_methods);
     if (!proto)
         return NULL;
