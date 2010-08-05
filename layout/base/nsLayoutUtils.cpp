@@ -747,6 +747,24 @@ nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame)
   return nsnull;
 }
 
+//static
+PRBool
+nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
+                              nsStyleContext* aStyleContext,
+                              nsCSSPseudoElements::Type aPseudoElement,
+                              nsPresContext* aPresContext)
+{
+  NS_PRECONDITION(aPresContext, "Must have a prescontext");
+
+  nsRefPtr<nsStyleContext> pseudoContext;
+  if (aContent) {
+    pseudoContext = aPresContext->StyleSet()->
+      ProbePseudoElementStyle(aContent->AsElement(), aPseudoElement,
+                              aStyleContext);
+  }
+  return pseudoContext != nsnull;
+}
+
 nsPoint
 nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent, nsIFrame* aFrame)
 {
