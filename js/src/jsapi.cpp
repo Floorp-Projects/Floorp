@@ -568,7 +568,8 @@ JSRuntime::init(uint32 maxbytes)
 #endif
 
     if (!(defaultCompartment = new JSCompartment(this)) ||
-        !defaultCompartment->init()) {
+        !defaultCompartment->init() ||
+        !compartments.append(defaultCompartment)) {
         return false;
     }
 
@@ -657,8 +658,10 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_LOCK(debuggerLock);
 #endif
     propertyTree.finish();
-    if (defaultCompartment)
-        delete defaultCompartment;
+    /* Delete all remaining Compartments. Ideally only the defaultCompartment should be left. */
+    for (JSCompartment **c = compartments.begin(); c != compartments.end(); ++c)
+        delete *c;
+    compartments.clear();
 }
 
 JS_PUBLIC_API(JSRuntime *)
