@@ -9,6 +9,7 @@
 #include "mozilla/TimeStamp.h"
 
 #define NR_TRIALS 10000
+#define NR_SPAMS  50000
 
 namespace mozilla {
 namespace _ipdltest {
@@ -38,12 +39,15 @@ protected:
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
 
-        passed("average ping/pong latency: %g sec, "
-               "average ping5/pong5 latency: %g sec, "
-               "average RPC call/answer: %g sec",
-               mPPTimeTotal.ToSecondsSigDigits() / (double) NR_TRIALS,
-               mPP5TimeTotal.ToSecondsSigDigits() / (double) NR_TRIALS,
-               mRpcTimeTotal.ToSecondsSigDigits() / (double) NR_TRIALS);
+        passed("\n"
+               "  average #ping-pong/sec:        %g\n"
+               "  average #ping5-pong5/sec:      %g\n"
+               "  average #RPC call-answer/sec:  %g\n"
+               "  average #spams/sec:            %g\n",
+               double(NR_TRIALS) / mPPTimeTotal.ToSecondsSigDigits(),
+               double(NR_TRIALS) / mPP5TimeTotal.ToSecondsSigDigits(),
+               double(NR_TRIALS) / mRpcTimeTotal.ToSecondsSigDigits(),
+               double(NR_SPAMS) / mSpamTimeTotal.ToSecondsSigDigits());
 
         QuitParent();
     }
@@ -52,15 +56,18 @@ private:
     void PingPongTrial();
     void Ping5Pong5Trial();
     void RpcTrials();
+    void SpamTrial();
     void Exit();
 
     TimeStamp mStart;
     TimeDuration mPPTimeTotal;
     TimeDuration mPP5TimeTotal;
     TimeDuration mRpcTimeTotal;
+    TimeDuration mSpamTimeTotal;
 
     int mPPTrialsToGo;
     int mPP5TrialsToGo;
+    int mSpamsToGo;
 };
 
 
@@ -78,6 +85,10 @@ protected:
     virtual bool RecvPing5();
     NS_OVERRIDE
     virtual bool AnswerRpc();
+    NS_OVERRIDE
+    virtual bool RecvSpam();
+    NS_OVERRIDE
+    virtual bool AnswerSynchro();
 
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why)
