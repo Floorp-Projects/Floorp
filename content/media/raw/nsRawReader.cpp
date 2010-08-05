@@ -300,3 +300,8 @@ PRInt64 nsRawReader::FindEndTime(PRInt64 aEndTime)
 {
   return -1;
 }
+
+nsresult nsRawReader::GetBuffered(nsHTMLTimeRanges* aBuffered, PRInt64 aStartTime)
+{
+  return NS_OK;
+}
