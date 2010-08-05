@@ -94,7 +94,6 @@ class nsGeolocationRequest
   void SendLocation(nsIDOMGeoPosition* location);
   void MarkCleared();
   PRBool Allowed() {return mAllowed;}
-  void SetTimeoutTimer();
 
   ~nsGeolocationRequest();
 
@@ -107,6 +106,7 @@ class nsGeolocationRequest
   void NotifyError(PRInt16 errorCode);
   PRPackedBool mAllowed;
   PRPackedBool mCleared;
+  PRPackedBool mHasSentData;
 
   nsCOMPtr<nsITimer> mTimeoutTimer;
   nsCOMPtr<nsIDOMGeoPositionCallback> mCallback;
@@ -231,6 +231,8 @@ private:
 
   nsTArray<nsRefPtr<nsGeolocationRequest> > mPendingCallbacks;
   nsTArray<nsRefPtr<nsGeolocationRequest> > mWatchingCallbacks;
+
+  PRBool mUpdateInProgress;
 
   // window that this was created for.  Weak reference.
   nsWeakPtr mOwner;
