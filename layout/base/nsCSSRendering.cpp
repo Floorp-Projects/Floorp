@@ -101,7 +101,7 @@ public:
   enum {
     FLAG_SYNC_DECODE_IMAGES = 0x01
   };
-  ImageRenderer(nsIFrame* aForFrame, const nsStyleImage& aImage, PRUint32 aFlags);
+  ImageRenderer(nsIFrame* aForFrame, const nsStyleImage* aImage, PRUint32 aFlags);
   ~ImageRenderer();
   /**
    * Populates member variables to get ready for rendering.
@@ -127,7 +127,7 @@ public:
 
 private:
   nsIFrame*                 mForFrame;
-  nsStyleImage              mImage;
+  const nsStyleImage*       mImage;
   nsStyleImageType          mType;
   nsCOMPtr<imgIContainer>   mImageContainer;
   nsRefPtr<nsStyleGradient> mGradientData;
@@ -2396,7 +2396,7 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   PRUint32 irFlags = 0;
   if (aFlags & nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES)
     irFlags |= ImageRenderer::FLAG_SYNC_DECODE_IMAGES;
-  ImageRenderer imageRenderer(aForFrame, aLayer.mImage, irFlags);
+  ImageRenderer imageRenderer(aForFrame, &aLayer.mImage, irFlags);
   if (!imageRenderer.PrepareImage()) {
     // There's no image or it's not ready to be painted.
     return;
@@ -3592,11 +3592,11 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
 // ImageRenderer
 // ------------------
 ImageRenderer::ImageRenderer(nsIFrame* aForFrame,
-                             const nsStyleImage& aImage,
+                             const nsStyleImage* aImage,
                              PRUint32 aFlags)
   : mForFrame(aForFrame)
   , mImage(aImage)
-  , mType(aImage.GetType())
+  , mType(aImage->GetType())
   , mImageContainer(nsnull)
   , mGradientData(nsnull)
 #ifdef MOZ_SVG
@@ -3615,9 +3615,9 @@ ImageRenderer::~ImageRenderer()
 PRBool
 ImageRenderer::PrepareImage()
 {
-  if (mImage.IsEmpty() || !mImage.IsComplete()) {
+  if (mImage->IsEmpty() || !mImage->IsComplete()) {
     // Make sure the image is actually decoding
-    mImage.RequestDecode();
+    mImage->RequestDecode();
 
     // We can not prepare the image for rendering if it is not fully loaded.
     //
@@ -3626,7 +3626,7 @@ ImageRenderer::PrepareImage()
     nsCOMPtr<imgIContainer> img;
     if (!((mFlags & FLAG_SYNC_DECODE_IMAGES) &&
           (mType == eStyleImageType_Image) &&
-          (NS_SUCCEEDED(mImage.GetImageData()->GetImage(getter_AddRefs(img))) && img)))
+          (NS_SUCCEEDED(mImage->GetImageData()->GetImage(getter_AddRefs(img))) && img)))
     return PR_FALSE;
   }
 
@@ -3634,17 +3634,17 @@ ImageRenderer::PrepareImage()
     case eStyleImageType_Image:
     {
       nsCOMPtr<imgIContainer> srcImage;
-      mImage.GetImageData()->GetImage(getter_AddRefs(srcImage));
-      NS_ABORT_IF_FALSE(srcImage, "If srcImage is null, mImage.IsComplete() "
+      mImage->GetImageData()->GetImage(getter_AddRefs(srcImage));
+      NS_ABORT_IF_FALSE(srcImage, "If srcImage is null, mImage->IsComplete() "
                                   "should have returned false");
 
-      if (!mImage.GetCropRect()) {
+      if (!mImage->GetCropRect()) {
         mImageContainer.swap(srcImage);
       } else {
         nsIntRect actualCropRect;
         PRBool isEntireImage;
         PRBool success =
-          mImage.ComputeActualCropRect(actualCropRect, &isEntireImage);
+          mImage->ComputeActualCropRect(actualCropRect, &isEntireImage);
         NS_ASSERTION(success, "ComputeActualCropRect() should not fail here");
         if (!success || actualCropRect.IsEmpty()) {
           // The cropped image has zero size
@@ -3673,14 +3673,14 @@ ImageRenderer::PrepareImage()
       break;
     }
     case eStyleImageType_Gradient:
-      mGradientData = mImage.GetGradientData();
+      mGradientData = mImage->GetGradientData();
       mIsReady = PR_TRUE;
       break;
 #ifdef MOZ_SVG
     case eStyleImageType_Element:
     {
       nsAutoString elementId =
-        NS_LITERAL_STRING("#") + nsDependentString(mImage.GetElementId());
+        NS_LITERAL_STRING("#") + nsDependentString(mImage->GetElementId());
       nsCOMPtr<nsIURI> targetURI;
       nsCOMPtr<nsIURI> base = mForFrame->GetContent()->GetBaseURI();
       nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), elementId,
