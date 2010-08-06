@@ -173,8 +173,6 @@ members = [
     # dom/interfaces/css
     'nsIDOMElementCSSInlineStyle.*',
     'nsIDOMCSS2Properties.*',
-    'nsIDOMSVGCSS2Properties.*',
-    'nsIDOMNSCSS2Properties.*',
     'nsIDOMRect.*',
     'nsIDOMViewCSS.getComputedStyle',
     'nsIDOMCSSStyleDeclaration.*',
@@ -548,16 +546,6 @@ nsIDOMStorage_Clear_customMethodCallCode = """
         JS_ClearScope(cx, obj);
 """
 
-CSS2Properties_ = {
-    'thisType': 'nsICSSDeclaration',
-    'additionalArguments': 'const nsCSSProperty prop',
-    'additionalArgumentValues': 'QS_CSS_PROP_%s',
-    'getter_code': '    nsString result;\n' + 
-                   '    rv = self->GetPropertyValue(prop, result);',
-    'setter_code': '    rv = self->SetPropertyValue(prop, arg0);',
-    'canFail': True
-}
-
 CUSTOM_QS = {
     'skipgen': True,
     'traceable': False
@@ -675,9 +663,15 @@ customMethodCalls = {
     'nsIDOMCanvasRenderingContext2D_StrokeStyle': { 'skipgen': True },
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
-    'nsIDOMCSS2Properties_': CSS2Properties_,
-    'nsIDOMSVGCSS2Properties_': CSS2Properties_,
-    'nsIDOMNSCSS2Properties_': CSS2Properties_,
+    'nsIDOMCSS2Properties_': {
+        'thisType': 'nsICSSDeclaration',
+        'additionalArguments': 'const nsCSSProperty prop',
+        'additionalArgumentValues': 'QS_CSS_PROP_%s',
+        'getter_code': '    nsString result;\n' + 
+                       '    rv = self->GetPropertyValue(prop, result);',
+        'setter_code': '    rv = self->SetPropertyValue(prop, arg0);',
+        'canFail': True
+        },
     'nsIDOMNSElement_': {
         'thisType': 'nsGenericElement'
         },
