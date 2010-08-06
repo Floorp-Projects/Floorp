@@ -5527,12 +5527,6 @@ nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
     // if they can shrink we may not be constrained to place
     // them in the next line
     availWidth = aFloatAvailableSpace.width;
-    // round down to twips per pixel so that we fit
-    // needed when prev. float has procentage width
-    // (maybe is a table flaw that makes table chose to round up
-    // but I don't want to change that, too risky)
-    nscoord twp = nsPresContext::CSSPixelsToAppUnits(1);
-    availWidth -=  availWidth % twp;
   }
 
   // aState.mY is relative to the border-top, make it relative to the content-top
@@ -5579,6 +5573,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                           const nsRect&       aAdjustedAvailableSpace,
                           nsIFrame*           aFloat,
                           nsMargin&           aFloatMargin,
+                          PRBool              aFloatPushedDown,
                           nsReflowStatus&     aReflowStatus)
 {
   NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
@@ -5598,7 +5593,21 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                             nsSize(aAdjustedAvailableSpace.width,
                                    aAdjustedAvailableSpace.height));
 
-  // Setup a block reflow state to reflow the float.
+  // Normally the mIsTopOfPage state is copied from the parent reflow
+  // state.  However, when reflowing a float, if we've placed other
+  // floats that force this float *down* or *narrower*, we should unset
+  // the mIsTopOfPage state.
+  // FIXME: This is somewhat redundant with the |isAdjacentWithTop|
+  // variable below, which has the exact same effect.  Perhaps it should
+  // be merged into that, except that the test for narrowing here is not
+  // about adjacency with the top, so it seems misleading.
+  if (floatRS.mFlags.mIsTopOfPage &&
+      (aFloatPushedDown ||
+       aAdjustedAvailableSpace.width != aState.mContentArea.width)) {
+    floatRS.mFlags.mIsTopOfPage = PR_FALSE;
+  }
+
+  // Setup a block reflow context to reflow the float.
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState);
 
   // Reflow the float
