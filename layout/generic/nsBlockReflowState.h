@@ -117,7 +117,7 @@ public:
 private:
   void PushFloatPastBreak(nsIFrame* aFloat);
 public:
-  PRBool PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats);
+  void PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats);
 
   // Returns the first coordinate >= aY that clears the
   // floats indicated by aBreakType and has enough width between floats

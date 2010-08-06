@@ -4215,17 +4215,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // Any below current line floats to place?
   if (aState.mBelowCurrentLineFloats.NotEmpty()) {
-    // Reflow the below-current-line floats, then add them to the
-    // lines float list if there aren't any truncated floats.
-    if (aState.PlaceBelowCurrentLineFloats(aState.mBelowCurrentLineFloats)) {
-      aLine->AppendFloats(aState.mBelowCurrentLineFloats);
-    }
-    else { 
-      // At least one float is truncated, so fix up any placeholders that got split and
-      // push the line. XXX It may be better to put the float on the next line, but this
-      // is not common enough to justify the complexity. Or maybe it is now...
-      PushTruncatedPlaceholderLine(aState, aLine, *aKeepReflowGoing);
-    }
+    // Reflow the below-current-line floats, which places on the line's
+    // float list.
+    aState.PlaceBelowCurrentLineFloats(aState.mBelowCurrentLineFloats);
+    aLine->AppendFloats(aState.mBelowCurrentLineFloats);
   }
 
   // When a line has floats, factor them into the combined-area
