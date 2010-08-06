@@ -676,6 +676,7 @@ customMethodCalls = {
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
     'nsIDOMCSS2Properties_': CSS2Properties_,
+    'nsIDOMSVGCSS2Properties_': CSS2Properties_,
     'nsIDOMNSCSS2Properties_': CSS2Properties_,
     'nsIDOMNSElement_': {
         'thisType': 'nsGenericElement'
