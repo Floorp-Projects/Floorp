@@ -636,6 +636,30 @@ nsBlockReflowState::CanPlaceFloat(nscoord aFloatWidth,
          aFloatAvailableSpace.mRect.width >= aFloatWidth;
 }
 
+static nscoord
+FloatMarginWidth(const nsHTMLReflowState& aCBReflowState,
+                 nscoord aFloatAvailableWidth,
+                 nsIFrame *aFloat,
+                 const nsCSSOffsetState& aFloatOffsetState)
+{
+  return aFloat->ComputeSize(
+    aCBReflowState.rendContext,
+    nsSize(aCBReflowState.ComputedWidth(),
+           aCBReflowState.ComputedHeight()),
+    aFloatAvailableWidth,
+    nsSize(aFloatOffsetState.mComputedMargin.LeftRight(),
+           aFloatOffsetState.mComputedMargin.TopBottom()),
+    nsSize(aFloatOffsetState.mComputedBorderPadding.LeftRight() -
+             aFloatOffsetState.mComputedPadding.LeftRight(),
+           aFloatOffsetState.mComputedBorderPadding.TopBottom() -
+             aFloatOffsetState.mComputedPadding.TopBottom()),
+    nsSize(aFloatOffsetState.mComputedPadding.LeftRight(),
+           aFloatOffsetState.mComputedPadding.TopBottom()),
+    PR_TRUE).width +
+  aFloatOffsetState.mComputedMargin.LeftRight() +
+  aFloatOffsetState.mComputedBorderPadding.LeftRight();
+}
+
 PRBool
 nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
                                       nsReflowStatus& aReflowStatus)
@@ -667,32 +691,18 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
   }
     // Get the band of available space
   nsFlowAreaRect floatAvailableSpace = GetFloatAvailableSpace(mY);
+  nsRect adjustedAvailableSpace = mBlock->AdjustFloatAvailableSpace(*this,
+                                    floatAvailableSpace.mRect, aFloat);
 
   NS_ASSERTION(aFloat->GetParent() == mBlock,
                "Float frame has wrong parent");
 
-  // Reflow the float
-  nsMargin floatMargin; // computed margin
-  mBlock->ReflowFloat(*this, floatAvailableSpace.mRect, aFloat,
-                      floatMargin, aReflowStatus);
-  if (aFloat->GetPrevInFlow())
-    floatMargin.top = 0;
-  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus))
-    floatMargin.bottom = 0;
+  nsCSSOffsetState offsets(aFloat, mReflowState.rendContext,
+                           mReflowState.ComputedWidth());
 
-#ifdef DEBUG
-  if (nsBlockFrame::gNoisyReflow) {
-    nsRect region = aFloat->GetRect();
-    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-    printf("flowed float: ");
-    nsFrame::ListTag(stdout, aFloat);
-    printf(" (%d,%d,%d,%d)\n",
-	   region.x, region.y, region.width, region.height);
-  }
-#endif
-
-  nsSize floatSize = aFloat->GetSize() +
-                     nsSize(floatMargin.LeftRight(), floatMargin.TopBottom());
+  nscoord floatMarginWidth = FloatMarginWidth(mReflowState,
+                                              adjustedAvailableSpace.width,
+                                              aFloat, offsets);
 
   // Find a place to place the float. The CSS2 spec doesn't want
   // floats overlapping each other or sticking out of the containing
@@ -711,7 +721,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
       return PR_FALSE;
     }
 
-    if (CanPlaceFloat(floatSize.width, floatAvailableSpace)) {
+    if (CanPlaceFloat(floatMarginWidth, floatAvailableSpace)) {
       // We found an appropriate place.
       break;
     }
@@ -721,9 +731,12 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
           eCompatibility_NavQuirks != mPresContext->CompatibilityMode() ) {
 
       mY += floatAvailableSpace.mRect.height;
+      if (adjustedAvailableSpace.height != NS_UNCONSTRAINEDSIZE) {
+        adjustedAvailableSpace.height -= floatAvailableSpace.mRect.height;
+      }
       floatAvailableSpace = GetFloatAvailableSpace(mY);
     } else {
-      // This quirk matches the one in nsBlockFrame::ReflowFloat
+      // This quirk matches the one in nsBlockFrame::AdjustFloatAvailableSpace
       // IE handles float tables in a very special way
 
       // see if the previous float is also a table and has "align"
@@ -760,18 +773,17 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
 
       // the table does not fit anymore in this line so advance to next band 
       mY += floatAvailableSpace.mRect.height;
+      // To match nsBlockFrame::AdjustFloatAvailableSpace, we have to
+      // get a new width for the new band.
       floatAvailableSpace = GetFloatAvailableSpace(mY);
-      // reflow the float again now since we have more space
-      // XXXldb We really don't need to Reflow in a loop, we just need
-      // to ComputeSize in a loop (once ComputeSize depends on
-      // availableWidth, which should make this work again).
-      mBlock->ReflowFloat(*this, floatAvailableSpace.mRect, aFloat,
-                          floatMargin, aReflowStatus);
-      // Get the floats bounding box and margin information
-      floatSize = aFloat->GetSize() +
-                     nsSize(floatMargin.LeftRight(), floatMargin.TopBottom());
+      adjustedAvailableSpace = mBlock->AdjustFloatAvailableSpace(*this,
+                                 floatAvailableSpace.mRect, aFloat);
+      floatMarginWidth = FloatMarginWidth(mReflowState,
+                                          adjustedAvailableSpace.width,
+                                          aFloat, offsets);
     }
   }
+
   // If the float is continued, it will get the same absolute x value as its prev-in-flow
 
   // We don't worry about the geometry of the prev in flow, let the continuation
@@ -787,7 +799,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
   }
   else {
     if (!keepFloatOnSameLine) {
-      floatX = floatAvailableSpace.mRect.XMost() - floatSize.width;
+      floatX = floatAvailableSpace.mRect.XMost() - floatMarginWidth;
     } 
     else {
       // this is the IE quirk (see few lines above)
@@ -806,6 +818,16 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
     // content edge of the block that contains it.)
     floatY = 0;
   }
+
+  // Reflow the float after computing its vertical position so it knows
+  // where to break.
+  nsMargin floatMargin; // computed margin
+  mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat,
+                      floatMargin, aReflowStatus);
+  if (aFloat->GetPrevInFlow())
+    floatMargin.top = 0;
+  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus))
+    floatMargin.bottom = 0;
 
   // Calculate the actual origin of the float frame's border rect
   // relative to the parent block; floatX/Y must be converted from space-manager

@@ -582,8 +582,10 @@ protected:
                             nsIFrame*           aFloat);
   // An incomplete aReflowStatus indicates the float should be split
   // but only if the available height is constrained.
+  // aAdjustedAvailableSpace is the result of calling
+  // nsBlockFrame::AdjustFloatAvailableSpace.
   nsresult ReflowFloat(nsBlockReflowState& aState,
-                       const nsRect&       aFloatAvailableSpace,
+                       const nsRect&       aAdjustedAvailableSpace,
                        nsIFrame*           aFloat,
                        nsMargin&           aFloatMargin,
                        nsReflowStatus&     aReflowStatus);
