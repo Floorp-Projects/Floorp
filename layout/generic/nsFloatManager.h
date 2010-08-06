@@ -113,6 +113,8 @@ public:
     nscoord mX, mY;
     PRPackedBool mPushedLeftFloatPastBreak;
     PRPackedBool mPushedRightFloatPastBreak;
+    PRPackedBool mSplitLeftFloatAcrossBreak;
+    PRPackedBool mSplitRightFloatAcrossBreak;
 
     friend class nsFloatManager;
   };
@@ -187,12 +189,23 @@ public:
    * Notify that we tried to place a float that could not fit at all and
    * had to be pushed to the next page/column?  (If so, we can't place
    * any more floats in this page/column because of the rule that the
-   * top of a float cannot be above the top of an earlier float.)
+   * top of a float cannot be above the top of an earlier float.  It
+   * also means that any clear needs to continue to the next column.)
    */
   void SetPushedLeftFloatPastBreak()
     { mPushedLeftFloatPastBreak = PR_TRUE; }
   void SetPushedRightFloatPastBreak()
     { mPushedRightFloatPastBreak = PR_TRUE; }
+
+  /**
+   * Notify that we split a float, with part of it needing to be pushed
+   * to the next page/column.  (This means that any 'clear' needs to
+   * continue to the next page/column.)
+   */
+  void SetSplitLeftFloatAcrossBreak()
+    { mSplitLeftFloatAcrossBreak = PR_TRUE; }
+  void SetSplitRightFloatAcrossBreak()
+    { mSplitRightFloatAcrossBreak = PR_TRUE; }
 
   /**
    * Remove the regions associated with this floating frame and its
@@ -276,6 +289,10 @@ public:
                    mPushedLeftFloatPastBreak &&
                  aState->mPushedRightFloatPastBreak ==
                    mPushedRightFloatPastBreak &&
+                 aState->mSplitLeftFloatAcrossBreak ==
+                   mSplitLeftFloatAcrossBreak &&
+                 aState->mSplitRightFloatAcrossBreak ==
+                   mSplitRightFloatAcrossBreak &&
                  aState->mFloatInfoCount == mFloats.Length(),
                  "float manager state should match saved state");
   }
@@ -314,6 +331,12 @@ private:
   // separate left and right floats.
   PRPackedBool mPushedLeftFloatPastBreak;
   PRPackedBool mPushedRightFloatPastBreak;
+
+  // Did we split a float, with part of it needing to be pushed to the
+  // next page/column.  This means that any 'clear' needs to continue to
+  // the next page/column.
+  PRPackedBool mSplitLeftFloatAcrossBreak;
+  PRPackedBool mSplitRightFloatAcrossBreak;
 
   static PRInt32 sCachedFloatManagerCount;
   static void* sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];
