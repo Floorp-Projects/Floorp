@@ -4968,7 +4968,10 @@ BEGIN_CASE(JSOP_CALLNAME)
             goto error;
     } else {
         sprop = (JSScopeProperty *)prop;
-        NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
+        JSObject *normalized = obj;
+        if (normalized->getClass() == &js_WithClass && !sprop->hasDefaultGetter())
+            normalized = js_UnwrapWithObject(cx, normalized);
+        NATIVE_GET(cx, normalized, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
         JS_UNLOCK_OBJ(cx, obj2);
     }
 
