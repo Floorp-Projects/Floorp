@@ -104,6 +104,11 @@ TrampolineCompiler::compileTrampoline(void **where, JSC::ExecutablePool **pool,
 bool
 TrampolineCompiler::generateForceReturn(Assembler &masm)
 {
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+    // In case of no fast call, when we change the return address,
+    // we need to make sure add esp by 8.
+    masm.addPtr(Imm32(8), Registers::StackPointer);
+#endif
     /* if (!callobj) stubs::PutCallObject */
     Jump noCallObj = masm.branchPtr(Assembler::Equal,
                                     Address(JSFrameReg, offsetof(JSStackFrame, callobj)),
