@@ -1271,7 +1271,7 @@
             notificationbox.appendChild(stack);
 
             var position = this.tabs.length - 1;
-            var uniqueId = "panel" + Date.now() + position;
+            var uniqueId = "panel" + Math.floor(Date.now()) + position;
             notificationbox.id = uniqueId;
             t.linkedPanel = uniqueId;
             t.linkedBrowser = b;
