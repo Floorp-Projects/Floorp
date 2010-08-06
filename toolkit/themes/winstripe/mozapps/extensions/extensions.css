@@ -130,6 +130,12 @@
 #category-plugins > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-plugins.png");
 }
+#category-availableUpdates > .category-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/category-available.png");
+}
+#category-recentUpdates > .category-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/category-recent.png");
+}
 
 
 /*** header ***/
@@ -166,6 +172,35 @@
 
 #header-searching {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
+#header-utils-btn {
+  -moz-appearance: none;
+  min-width: 4.5em;
+  border-width: 1px;
+  -moz-border-top-colors: #999;
+  -moz-border-bottom-colors: #999;
+  -moz-border-left-colors: #999;
+  -moz-border-right-colors: #999;
+  -moz-border-radius: 8px;
+  background-image: -moz-linear-gradient(#FFF, #BBB);
+  list-style-image: url("chrome://mozapps/skin/extensions/utilities.png");
+}
+
+#header-utils-btn:hover,
+#header-utils-btn[open="true"] {
+  -moz-border-top-colors: #777;
+  -moz-border-bottom-colors: #777;
+  -moz-border-left-colors: #777;
+  -moz-border-right-colors: #777;
+}
+
+#header-utils-btn[open="true"] {
+  -moz-box-shadow: inset 3px 3px 8px #555;
+}
+
+#header-utils-btn:-moz-focusring > .button-box {
+  border: none;
 }
 
 .view-header {
@@ -337,7 +372,8 @@
 }
 
 .addon .name,
-.addon .version {
+.addon .version,
+.addon .update-postfix {
   font-size: 150%;
   margin-bottom: 0px;
 }
@@ -365,6 +401,10 @@
   opacity: 1;
 }
 
+.addon .basicinfo-container {
+  -moz-box-align: start;
+}
+
 .addon .details-container {
   -moz-box-align: end;
   -moz-margin-start: 20px;
@@ -378,6 +418,44 @@
 
 .addon[selected] .details-container {
   border-color: #AAA;
+}
+
+.addon .relnotes-container {
+  -moz-box-align: start;
+  height: 0px;
+  overflow: hidden;
+  opacity: 0;
+  -moz-transition-property: height, opacity;
+  -moz-transition-duration: 0.5s, 0.5s;
+}
+
+.addon[show-relnotes] .relnotes-container {
+  opacity: 1;
+  -moz-transition-property: height, opacity;
+  -moz-transition-duration: 0.5s, 0.5s;
+}
+
+.addon .relnotes-header {
+  font-weight: bold;
+  margin: 10px 0px;
+}
+
+.addon .relnotes-toggle {
+  -moz-appearance: none;
+  border: none;
+  background: transparent;
+  font-weight: bold;
+  -moz-box-direction: reverse;
+  cursor: pointer;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.addon .relnotes-toggle > .button-box > .button-icon {
+  -moz-padding-start: 4px;
+}
+
+.addon[show-relnotes] .relnotes-toggle {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
 
@@ -571,11 +649,13 @@
   width: 12px;
 }
 
-.download-progress .start-cap {
+.download-progress .start-cap:-moz-locale-dir(ltr),
+.download-progress .end-cap:-moz-locale-dir(rtl) {
   -moz-border-radius: 100% 0 0 100%;
 }
 
-.download-progress .end-cap {
+.download-progress .end-cap:-moz-locale-dir(ltr),
+.download-progress .start-cap:-moz-locale-dir(rtl) {
   -moz-border-radius: 0 100% 100% 0;
 }
 
@@ -590,6 +670,7 @@
   -moz-appearance: none;
   background-image: -moz-linear-gradient(#E1E1E1, #FEFEFE);
   border-width: 1px 0px 0px 1px;
+  padding-right: 1px;
   border-style: solid;
   -moz-border-top-colors: #FFF;
   -moz-border-left-colors: #FFF;

@@ -326,6 +326,9 @@ private:
     PRUint32                          mWaitingForRedirectCallback : 1;
     // True iff this channel is servicing a remote HttpChannelChild
     PRUint32                          mRemoteChannel : 1;
+    // True if mRequestTime has been set. In such a case it is safe to update
+    // the cache entry's expiration time. Otherwise, it is not(see bug 567360).
+    PRUint32                          mRequestTimeInitialized : 1;
 
     class nsContentEncodings : public nsIUTF8StringEnumerator
     {

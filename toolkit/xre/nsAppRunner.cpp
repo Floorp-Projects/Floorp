@@ -54,9 +54,16 @@ using mozilla::dom::ContentParent;
 #define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
 
 #if defined(MOZ_WIDGET_QT)
-#include <qwidget.h>
-#include <qapplication.h>
-#endif
+#include <QtGui/QApplication>
+#include <QtCore/QScopedPointer>
+#include <QtGui/QApplication>
+#include <QtGui/QInputContextFactory>
+#include <QtGui/QInputContext>
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+#include <MApplication>
+#include "MozMeegoAppService.h"
+#endif // MOZ_ENABLE_MEEGOTOUCH
+#endif // MOZ_WIDGET_QT
 
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
@@ -3128,9 +3135,29 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     ar = CheckArg("graphicssystem", PR_TRUE, &qgraphicssystemARG, PR_FALSE);
     if (ar == ARG_FOUND)
       PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
-    QApplication app(gArgc, gArgv);
 
-    QStringList nonQtArguments = app.arguments();
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+    QScopedPointer<QApplication> app;
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      MozMeegoAppService *appService = new MozMeegoAppService;
+      app.reset(new MApplication(gArgc, gArgv, appService));
+    } else {
+      app.reset(new QApplication(gArgc, gArgv));
+    }
+#else
+    QScopedPointer<QApplication> app(new QApplication(gArgc, gArgv));
+#endif
+
+    // try to get the MInputContext if possible to support the MeeGo VKB
+    QInputContext *inputContext = app->inputContext();
+    if (inputContext && inputContext->identifierName() != "MInputContext") {
+        QInputContext* context = QInputContextFactory::create("MInputContext",
+                                                              app.data());
+        if (context)
+            app->setInputContext(context);
+    }
+
+    QStringList nonQtArguments = app->arguments();
     gQtOnlyArgc = 1;
     gQtOnlyArgv = (char**) malloc(sizeof(char*) 
                   * (gRestartArgc - nonQtArguments.size() + 2));
@@ -3586,10 +3613,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #ifdef XP_MACOSX
-          // Set up ability to respond to system (Apple) events. This must be
-          // done before setting up the command line service.
-          SetupMacApplicationDelegate();
-
           // we re-initialize the command-line service and do appleevents munging
           // after we are sure that we're not restarting
           cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
@@ -3600,6 +3623,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           rv = cmdLine->Init(gArgc, gArgv,
                              workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
           NS_ENSURE_SUCCESS(rv, 1);
+          
+          // Set up ability to respond to system (Apple) events.
+          SetupMacApplicationDelegate();
 #endif
 
           MOZ_SPLASHSCREEN_UPDATE(70);

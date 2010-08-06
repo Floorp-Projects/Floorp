@@ -67,7 +67,7 @@
 #include "imgStatusTracker.h"
 
 #define NS_IMGCONTAINER_CID \
-{ /* c76ff2c1-9bf6-418a-b143-3340c00112f7 */         \
+{ /* 376ff2c1-9bf6-418a-b143-3340c00112f7 */         \
      0x376ff2c1,                                     \
      0x9bf6,                                         \
      0x418a,                                         \

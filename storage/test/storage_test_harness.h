@@ -43,6 +43,14 @@
 #include "nsDirectoryServiceDefs.h"
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
+#include "mozIStorageStatementCallback.h"
+#include "mozIStorageCompletionCallback.h"
+#include "mozIStorageBindingParamsArray.h"
+#include "mozIStorageBindingParams.h"
+#include "mozIStorageAsyncStatement.h"
+#include "mozIStorageStatement.h"
+#include "mozIStoragePendingStatement.h"
+#include "nsThreadUtils.h"
 
 static int gTotalTests = 0;
 static int gPassedTests = 0;
@@ -109,3 +117,73 @@ getDatabase()
   do_check_success(rv);
   return conn.forget();
 }
+
+
+class AsyncStatementSpinner : public mozIStorageStatementCallback
+                            , public mozIStorageCompletionCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+  NS_DECL_MOZISTORAGECOMPLETIONCALLBACK
+
+  AsyncStatementSpinner();
+
+  void SpinUntilCompleted();
+
+  PRUint16 completionReason;
+
+protected:
+  ~AsyncStatementSpinner() {}
+  volatile bool mCompleted;
+};
+
+NS_IMPL_ISUPPORTS2(AsyncStatementSpinner,
+                   mozIStorageStatementCallback,
+                   mozIStorageCompletionCallback)
+
+AsyncStatementSpinner::AsyncStatementSpinner()
+: completionReason(0)
+, mCompleted(false)
+{
+}
+
+NS_IMETHODIMP
+AsyncStatementSpinner::HandleResult(mozIStorageResultSet *aResultSet)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncStatementSpinner::HandleError(mozIStorageError *aError)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncStatementSpinner::HandleCompletion(PRUint16 aReason)
+{
+  completionReason = aReason;
+  mCompleted = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncStatementSpinner::Complete()
+{
+  mCompleted = true;
+  return NS_OK;
+}
+
+void AsyncStatementSpinner::SpinUntilCompleted()
+{
+  nsCOMPtr<nsIThread> thread(::do_GetCurrentThread());
+  nsresult rv = NS_OK;
+  PRBool processed = PR_TRUE;
+  while (!mCompleted && NS_SUCCEEDED(rv)) {
+    rv = thread->ProcessNextEvent(true, &processed);
+  }
+}
+
+#define NS_DECL_ASYNCSTATEMENTSPINNER \
+  NS_IMETHOD HandleResult(mozIStorageResultSet *aResultSet);

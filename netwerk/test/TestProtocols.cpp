@@ -70,6 +70,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIChannelEventSink.h" 
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIInterfaceRequestor.h" 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDNSService.h" 
@@ -239,12 +240,14 @@ TestChannelEventSink::~TestChannelEventSink()
 NS_IMPL_ISUPPORTS1(TestChannelEventSink, nsIChannelEventSink)
 
 NS_IMETHODIMP
-TestChannelEventSink::OnChannelRedirect(nsIChannel *channel,
-                                        nsIChannel *newChannel,
-                                        PRUint32 flags)
+TestChannelEventSink::AsyncOnChannelRedirect(nsIChannel *channel,
+                                             nsIChannel *newChannel,
+                                             PRUint32 flags,
+                                             nsIAsyncVerifyRedirectCallback *callback)
 {
     LOG(("\n+++ TestChannelEventSink::OnChannelRedirect (with flags %x) +++\n",
          flags));
+    callback->OnRedirectVerifyCallback(NS_OK);
     return NS_OK;
 }
 

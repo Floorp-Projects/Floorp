@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3gthr.c,v 1.9 2008/11/20 07:37:25 nelson%bolyard.com Exp $ */
+/* $Id: ssl3gthr.c,v 1.9.20.1 2010/07/31 04:33:52 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -188,6 +188,7 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 {
     SSL3Ciphertext cText;
     int            rv;
+    PRBool         canFalseStart = PR_FALSE;
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     do {
@@ -199,6 +200,8 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 	
 	/* decipher it, and handle it if it's a handshake. 
 	 * If it's application data, ss->gs.buf will not be empty upon return. 
+	 * If it's a change cipher spec, alert, or handshake message,
+	 * ss->gs.buf.len will be 0 when ssl3_HandleRecord returns SECSuccess.
 	 */
 	cText.type    = (SSL3ContentType)ss->gs.hdr[0];
 	cText.version = (ss->gs.hdr[1] << 8) | ss->gs.hdr[2];
@@ -207,7 +210,20 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 	if (rv < 0) {
 	    return ss->recvdCloseNotify ? 0 : rv;
 	}
-    } while (ss->ssl3.hs.ws != idle_handshake && ss->gs.buf.len == 0);
+
+	/* If we kicked off a false start in ssl3_HandleServerHelloDone, break
+	 * out of this loop early without finishing the handshake.
+	 */
+	if (ss->opt.enableFalseStart) {
+	    ssl_GetSSL3HandshakeLock(ss);
+	    canFalseStart = (ss->ssl3.hs.ws == wait_change_cipher ||
+			     ss->ssl3.hs.ws == wait_new_session_ticket) &&
+		            ssl3_CanFalseStart(ss);
+	    ssl_ReleaseSSL3HandshakeLock(ss);
+	}
+    } while (ss->ssl3.hs.ws != idle_handshake &&
+             !canFalseStart &&
+             ss->gs.buf.len == 0);
 
     ss->gs.readOffset = 0;
     ss->gs.writeOffset = ss->gs.buf.len;

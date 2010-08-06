@@ -421,6 +421,7 @@ nsContextMenu.prototype = {
   setTarget: function (aNode, aRangeParent, aRangeOffset) {
     const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (aNode.namespaceURI == xulNS ||
+        aNode.nodeType == Node.DOCUMENT_NODE ||
         this.isTargetAFormControl(aNode)) {
       this.shouldDisplay = false;
       return;
@@ -807,7 +808,7 @@ nsContextMenu.prototype = {
     this.target.pause();
 
     openDialog("chrome://browser/content/fullscreen-video.xhtml",
-               "", "chrome,dialog=no", this.target);
+               "", "chrome,centerscreen,dialog=no", this.target);
   },
 
   // Change current window to the URL of the background image.

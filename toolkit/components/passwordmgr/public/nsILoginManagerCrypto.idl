@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(1ddbe67d-a216-4915-9e0a-3e1b95b7126c)]
+[scriptable, uuid(73f85239-421d-4d34-8d9c-79cf820ea1e6)]
 
 interface nsILoginManagerCrypto : nsISupports {
 
@@ -70,4 +70,20 @@ interface nsILoginManagerCrypto : nsISupports {
      * encrypted with some other key).
      */
     AString decrypt(in AString cipherText);
+
+    /**
+     * uiBusy
+     *
+     * True when a master password prompt is being displayed.
+     */
+    readonly attribute boolean uiBusy;
+
+    /**
+     * isLoggedIn
+     *
+     * Current login state of the token used for encryption. If the user is
+     * not logged in, performing a crypto operation will result in a master
+     * password prompt.
+     */
+    readonly attribute boolean isLoggedIn;
 };

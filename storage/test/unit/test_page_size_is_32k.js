@@ -18,6 +18,7 @@ function new_file(name)
   var file = dirSvc.get("ProfD", Ci.nsIFile);
   file.append(name + ".sqlite");
   do_check_false(file.exists());
+  return file;
 }
 
 function run_test()

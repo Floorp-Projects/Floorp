@@ -145,7 +145,7 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
 }
 
 static PLDHashOperator
-DestroyMatchList(nsISupports* aKey, nsTemplateMatch* aMatch, void* aContext)
+DestroyMatchList(nsISupports* aKey, nsTemplateMatch*& aMatch, void* aContext)
 {
     nsFixedSizeAllocator* pool = static_cast<nsFixedSizeAllocator *>(aContext);
 
@@ -156,7 +156,7 @@ DestroyMatchList(nsISupports* aKey, nsTemplateMatch* aMatch, void* aContext)
         aMatch = next;
     }
 
-    return PL_DHASH_NEXT;
+    return PL_DHASH_REMOVE;
 }
 
 nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
@@ -235,8 +235,7 @@ nsXULTemplateBuilder::Uninit(PRBool aIsFinal)
 
     mQuerySets.Clear();
 
-    mMatchMap.EnumerateRead(DestroyMatchList, &mPool);
-    mMatchMap.Clear();
+    mMatchMap.Enumerate(DestroyMatchList, &mPool);
 
     mRootResult = nsnull;
     mRefVariable = nsnull;
@@ -267,6 +266,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateBuilder)
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDataSource)
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDB)
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCompDB)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRoot)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRootResult)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mListeners)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mQueryProcessor)
+    if (tmp->mMatchMap.IsInitialized()) {
+      tmp->mMatchMap.Enumerate(DestroyMatchList, &(tmp->mPool));
+    }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateBuilder)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDataSource)

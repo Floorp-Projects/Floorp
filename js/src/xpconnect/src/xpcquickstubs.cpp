@@ -1087,7 +1087,7 @@ xpc_qsStringToJsval(JSContext *cx, nsString &str, jsval *rval)
 }
 
 JSBool
-xpc_qsStringToJsstring(JSContext *cx, const nsAString &str, JSString **rval)
+xpc_qsStringToJsstring(JSContext *cx, nsString &str, JSString **rval)
 {
     // From the T_DOMSTRING case in XPCConvert::NativeData2JS.
     if(str.IsVoid())
@@ -1096,10 +1096,18 @@ xpc_qsStringToJsstring(JSContext *cx, const nsAString &str, JSString **rval)
         return JS_TRUE;
     }
 
-    jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str);
+    PRBool isShared = PR_FALSE;
+    jsval jsstr =
+        XPCStringConvert::ReadableToJSVal(cx, str, PR_TRUE, &isShared);
     if(JSVAL_IS_NULL(jsstr))
         return JS_FALSE;
     *rval = JSVAL_TO_STRING(jsstr);
+    if (isShared)
+    {
+        // The string was shared but ReadableToJSVal didn't addref it.
+        // Move the ownership from str to jsstr.
+        str.ForgetSharedBuffer();
+    }
     return JS_TRUE;
 }
 

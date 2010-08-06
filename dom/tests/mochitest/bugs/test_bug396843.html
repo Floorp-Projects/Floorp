@@ -25,7 +25,6 @@ SimpleTest.waitForExplicitFinish();
 
 var allNodes = [];
 var XMLNodes = [];
-var failNodes = [];
 
 // HTML
 function HTML_TAG(name) {
@@ -217,8 +216,8 @@ var XMLDoc = document.implementation.createDocument("", "", null);
 // And non-elements
 allNodes.push(document.createTextNode("some text"));
 allNodes.push(document.createComment("some text"));
+allNodes.push(document.createDocumentFragment());
 XMLNodes.push(XMLDoc.createCDATASection("some text"));
-failNodes.push(document.createDocumentFragment());
 XMLNodes.push(XMLDoc.createProcessingInstruction("PI", "data"));
                
 function runTest() {
@@ -260,13 +259,6 @@ function runTest2() {
        "Unexpected principal for " + XMLNodes[i].nodeName);
     is(XMLNodes[i].baseURIObject.spec, "about:blank",
        "Unexpected base URI for " + XMLNodes[i].nodeName);
-  }
-
-  for (i = 0; i < failNodes.length; ++i) {
-    todo(failNodes[i].nodePrincipal == document.nodePrincipal,
-       "Unexpected principal for " + failNodes[i].nodeName);
-    todo(failNodes[i].baseURIObject == document.baseURIObject,
-       "Unexpected base URI for " + failNodes[i].nodeName);
   }
 
   var doc = $("t").contentDocument;

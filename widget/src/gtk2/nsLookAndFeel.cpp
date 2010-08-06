@@ -803,9 +803,16 @@ nsLookAndFeel::InitLookAndFeel()
 
     // Some themes have a unified menu bar, and support window dragging on it
     gboolean supports_menubar_drag = FALSE;
-    gtk_widget_style_get(menuBar,
-                         "window-dragging", &supports_menubar_drag,
-                         NULL);
+    GParamSpec *param_spec =
+        gtk_widget_class_find_style_property(GTK_WIDGET_GET_CLASS(menuBar),
+                                             "window-dragging");
+    if (param_spec) {
+        if (g_type_is_a(G_PARAM_SPEC_VALUE_TYPE(param_spec), G_TYPE_BOOLEAN)) {
+            gtk_widget_style_get(menuBar,
+                                 "window-dragging", &supports_menubar_drag,
+                                 NULL);
+        }
+    }
     sMenuSupportsDrag = supports_menubar_drag;
 
     // GTK's guide to fancy odd row background colors:
