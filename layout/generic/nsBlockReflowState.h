@@ -62,7 +62,7 @@
 // the current line
 #define BRS_LINE_LAYOUT_EMPTY     0x00000080
 #define BRS_ISOVERFLOWCONTAINER   0x00000100
-// Our mFloatContinuations list is stored on the blocks' proptable
+// Our mPushedFloats list is stored on the blocks' proptable
 #define BRS_PROPTABLE_FLOATCLIST  0x00000200
 #define BRS_LASTFLAG              BRS_PROPTABLE_FLOATCLIST
 
@@ -101,7 +101,7 @@ public:
    * The following functions all return PR_TRUE if they were able to
    * place the float, PR_FALSE if the float did not fit in available
    * space.
-   * aLineLayout is null when we are reflowing float continuations (because
+   * aLineLayout is null when we are reflowing pushed floats (because
    * they are not associated with a line box).
    */
   PRBool AddFloat(nsLineLayout*       aLineLayout,
@@ -230,15 +230,15 @@ public:
   // Continuation out-of-flow float frames that need to move to our
   // next in flow are placed here during reflow.  It's a pointer to
   // a frame list stored in the block's property table.
-  nsFrameList *mFloatContinuations;
-  // This method makes sure float continuations are accessible to
-  // StealFrame. Call it before adding any frames to mFloatContinuations.
-  void SetupFloatContinuationList();
-  // Use this method to append to mFloatContinuations.
-  void AppendFloatContinuation(nsIFrame* aFloatCont) {
-    SetupFloatContinuationList();
-    aFloatCont->AddStateBits(NS_FRAME_IS_FLOAT_CONTINUATION);
-    mFloatContinuations->AppendFrame(mBlock, aFloatCont);
+  nsFrameList *mPushedFloats;
+  // This method makes sure pushed floats are accessible to
+  // StealFrame. Call it before adding any frames to mPushedFloats.
+  void SetupPushedFloatList();
+  // Use this method to append to mPushedFloats.
+  void AppendPushedFloat(nsIFrame* aFloatCont) {
+    SetupPushedFloatList();
+    aFloatCont->AddStateBits(NS_FRAME_IS_PUSHED_FLOAT);
+    mPushedFloats->AppendFrame(mBlock, aFloatCont);
   }
 
   // Track child overflow continuations.

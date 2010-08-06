@@ -71,7 +71,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
-    mFloatContinuations(nsnull),
+    mPushedFloats(nsnull),
     mOverflowTracker(nsnull),
     mPrevBottomMargin(),
     mLineNumber(0),
@@ -426,19 +426,19 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
 }
 
 void
-nsBlockReflowState::SetupFloatContinuationList()
+nsBlockReflowState::SetupPushedFloatList()
 {
-  NS_ABORT_IF_FALSE(!GetFlag(BRS_PROPTABLE_FLOATCLIST) == !mFloatContinuations,
+  NS_ABORT_IF_FALSE(!GetFlag(BRS_PROPTABLE_FLOATCLIST) == !mPushedFloats,
                     "flag mismatch");
   if (!GetFlag(BRS_PROPTABLE_FLOATCLIST)) {
     // If we're being re-Reflow'd without our next-in-flow having been
-    // reflowed, some float continuations from our previous reflow might
-    // still be on our float continuations list.  However, that's
+    // reflowed, some pushed floats from our previous reflow might
+    // still be on our pushed floats list.  However, that's
     // actually fine, since they'll all end up being stolen and
     // reordered into the correct order again.
     // (nsBlockFrame::ReflowDirtyLines ensures that any lines with
     // pushed floats are reflowed.)
-    mFloatContinuations = mBlock->EnsureFloatContinuations();
+    mPushedFloats = mBlock->EnsurePushedFloats();
     SetFlag(BRS_PROPTABLE_FLOATCLIST, PR_TRUE);
   }
 }
@@ -552,10 +552,10 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
   NS_ABORT_IF_FALSE(aFloat->GetParent()->IsFrameOfType(nsIFrame::eBlockFrame),
                     "float's parent must be block");
   NS_ABORT_IF_FALSE(aFloat->GetParent() == mBlock ||
-                    (aFloat->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION),
+                    (aFloat->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
                     "float should be in this block unless it was marked as "
-                    "float continuation");
-  if (aFloat->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION) {
+                    "pushed float");
+  if (aFloat->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
     // If, in a previous reflow, the float was pushed entirely to
     // another column/page, we need to steal it back.  (We might just
     // push it again, though.)  Likewise, if that previous reflow
@@ -565,7 +565,7 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
       static_cast<nsBlockFrame*>(aFloat->GetParent());
     floatParent->StealFrame(mPresContext, aFloat);
 
-    aFloat->RemoveStateBits(NS_FRAME_IS_FLOAT_CONTINUATION);
+    aFloat->RemoveStateBits(NS_FRAME_IS_PUSHED_FLOAT);
 
     // Appending is fine, since if a float was pushed to the next
     // page/column, all later floats were also pushed.
@@ -947,11 +947,11 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
     mFloatManager->SetPushedRightFloatPastBreak();
   }
 
-  // Put the float on the float continuations list, even though it
+  // Put the float on the pushed floats list, even though it
   // isn't actually a continuation.
   nsresult rv = mBlock->StealFrame(mPresContext, aFloat);
   NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
-  AppendFloatContinuation(aFloat);
+  AppendPushedFloat(aFloat);
 
   NS_FRAME_SET_OVERFLOW_INCOMPLETE(mReflowStatus);
 }

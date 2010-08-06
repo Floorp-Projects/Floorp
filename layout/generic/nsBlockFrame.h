@@ -94,7 +94,7 @@ class nsIntervalSet;
  * frame in a block's normal child list.
  * -- While a block is being reflowed, and from then until
  * its next-in-flow is reflowed it may have a
- * FloatContinuationProperty frame property that points to
+ * PushedFloatProperty frame property that points to
  * an nsFrameList. This list contains continuations for
  * floats whose prev-in-flow is in the block's regular float
  * list and first-in-flows of floats that did not fit, but
@@ -118,7 +118,7 @@ class nsIntervalSet;
  * continuation chain or none of them.
  */
 #define NS_BLOCK_NEEDS_BIDI_RESOLUTION      NS_FRAME_STATE_BIT(20)
-#define NS_BLOCK_HAS_FLOAT_CONTINUATIONS    NS_FRAME_STATE_BIT(21)
+#define NS_BLOCK_HAS_PUSHED_FLOATS          NS_FRAME_STATE_BIT(21)
 #define NS_BLOCK_HAS_LINE_CURSOR            NS_FRAME_STATE_BIT(24)
 #define NS_BLOCK_HAS_OVERFLOW_LINES         NS_FRAME_STATE_BIT(25)
 #define NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS  NS_FRAME_STATE_BIT(26)
@@ -161,7 +161,7 @@ public:
 
   // This is a child list too, but we let nsBlockReflowState get to it
   // directly too.
-  NS_DECLARE_FRAME_PROPERTY(FloatContinuationProperty,
+  NS_DECLARE_FRAME_PROPERTY(PushedFloatProperty,
                             nsContainerFrame::DestroyFrameList)
 
   // nsQueryFrame
@@ -461,19 +461,19 @@ protected:
     */
   PRBool DrainOverflowLines(nsBlockReflowState& aState);
 
-  /** grab float continuations from this block's prevInFlow, and splice
+  /** grab pushed floats from this block's prevInFlow, and splice
     * them into this block's mFloats list.
     */
-  void DrainFloatContinuations(nsBlockReflowState& aState);
+  void DrainPushedFloats(nsBlockReflowState& aState);
 
   /** Load all our floats into the float manager (without reflowing them).
    *  Assumes float manager is in our own coordinate system.
    */
   void RecoverFloats(nsFloatManager& aFloatManager);
 
-  /** Reflow float continuations
+  /** Reflow pushed floats
    */
-  nsresult ReflowFloatContinuations(nsBlockReflowState& aState,
+  nsresult ReflowPushedFloats(nsBlockReflowState& aState,
                                     nsRect&             aBounds,
                                     nsReflowStatus&     aStatus);
 
@@ -724,13 +724,13 @@ protected:
   nsFrameList* GetOverflowOutOfFlows() const;
   void SetOverflowOutOfFlows(const nsFrameList& aList, nsFrameList* aPropValue);
 
-  // Get the float continuations list
-  nsFrameList* GetFloatContinuations() const;
-  // Get the float continuations list, or if there is not currently one,
+  // Get the pushed floats list
+  nsFrameList* GetPushedFloats() const;
+  // Get the pushed floats list, or if there is not currently one,
   // make a new empty one.
-  nsFrameList* EnsureFloatContinuations();
-  // Remove and return the float continuations list.
-  nsFrameList* RemoveFloatContinuations();
+  nsFrameList* EnsurePushedFloats();
+  // Remove and return the pushed floats list.
+  nsFrameList* RemovePushedFloats();
 
 #ifdef NS_DEBUG
   void VerifyLines(PRBool aFinalCheckOK);
