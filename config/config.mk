@@ -182,7 +182,7 @@ else
   endif
 endif
 
-MOZALLOC_LIB = -L$(DIST)/bin $(call EXPAND_MOZLIBNAME,mozalloc)
+MOZALLOC_LIB = $(call EXPAND_LIBNAME_PATH,mozalloc,$(DIST)/lib)
 
 OS_CFLAGS += $(_DEBUG_CFLAGS)
 OS_CXXFLAGS += $(_DEBUG_CFLAGS)
