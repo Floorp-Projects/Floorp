@@ -74,9 +74,15 @@ using namespace js;
 static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
 
 /* static */ const JSScript JSScript::emptyScriptConst = {
+    JS_INIT_STATIC_CLIST(NULL),
     const_cast<jsbytecode*>(emptyScriptCode),
     1, JSVERSION_DEFAULT, 0, 0, 0, 0, 0, 0, 0, true, false, false, false, false,
-    false, true, const_cast<jsbytecode*>(emptyScriptCode),
+    false, true, 
+#ifdef JS_METHODJIT
+    /* debugMode */
+    false,
+#endif
+    const_cast<jsbytecode*>(emptyScriptCode),
     {0, NULL}, NULL, 0, 0, 0, NULL, {NULL},
 #ifdef CHECK_SCRIPT_OWNER
     reinterpret_cast<JSThread*>(1)
@@ -871,6 +877,7 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
     script = (JSScript *) cx->malloc(size);
     if (!script)
         return NULL;
+
     PodZero(script);
     script->length = length;
     script->version = cx->version;
@@ -980,6 +987,8 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
 #ifdef CHECK_SCRIPT_OWNER
     script->owner = cx->thread;
 #endif
+
+    JS_APPEND_LINK(&script->links, &cx->compartment->scripts);
     return script;
 }
 
@@ -1250,6 +1259,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
 #if defined(JS_METHODJIT)
     mjit::ReleaseScriptCode(cx, script);
 #endif
+    JS_REMOVE_LINK(&script->links);
 
     cx->free(script);
 

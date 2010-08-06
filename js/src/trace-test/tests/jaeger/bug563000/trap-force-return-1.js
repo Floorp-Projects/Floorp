@@ -1,3 +1,4 @@
+setDebug(true);
 function main() {
   return "failure";
 }
