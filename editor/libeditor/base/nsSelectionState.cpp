@@ -140,7 +140,7 @@ nsSelectionState::IsCollapsed()
   nsCOMPtr<nsIDOMRange> range;
   mArray[0].GetRange(address_of(range));
   NS_ENSURE_TRUE(range, PR_FALSE);
-  PRBool bIsCollapsed;
+  PRBool bIsCollapsed = PR_FALSE;
   range->GetCollapsed(&bIsCollapsed);
   return bIsCollapsed;
 }
