@@ -233,6 +233,7 @@ public:
   // Use this method to append to mFloatContinuations.
   void AppendFloatContinuation(nsIFrame* aFloatCont) {
     SetupFloatContinuationList();
+    aFloatCont->AddStateBits(NS_FRAME_IS_FLOAT_CONTINUATION);
     mFloatContinuations.AppendFrame(mBlock, aFloatCont);
   }
 

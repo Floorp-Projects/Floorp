@@ -256,6 +256,12 @@ typedef PRUint64 nsFrameState;
 // Bits 20-31 of the frame state are reserved for implementations.
 #define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xFFF00000)
 
+// This bit is set on floats whose parent does not contain their
+// placeholder.  This can happen for two reasons:  (1) the float was
+// split, and this piece is the continuation, or (2) the entire float
+// didn't fit on the page.
+#define NS_FRAME_IS_FLOAT_CONTINUATION              NS_FRAME_STATE_BIT(32)
+
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
 #define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED

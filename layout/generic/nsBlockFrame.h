@@ -97,7 +97,17 @@ class nsIntervalSet;
  * nsBlockReflowState. This list contains continuations for
  * floats whose prev-in-flow is in the block's regular float
  * list. The list is always empty/nonexistent after the
- * block has been reflowed.
+ * block has been reflowed.  (However, after it has been
+ * reflowed and before the continuations are moved to the
+ * next block, they are temporarily at the end of the
+ * block's float list.  FIXME: This temporary storage
+ * situation is not compatible with doing float breaking in
+ * dynamic cases, since we can't distinguish unflushed
+ * temporary storage (floats being transferred from the
+ * frame) in a case where we need a second reflow from
+ * frames previously transferred to the frame; fixing this
+ * would require an additional frame list for this temporary
+ * storage.)
  * -- In all these frame lists, if there are two frames for
  * the same content appearing in the list, then the frames
  * appear with the prev-in-flow before the next-in-flow.
