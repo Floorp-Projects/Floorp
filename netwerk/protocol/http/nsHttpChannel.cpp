@@ -1147,7 +1147,7 @@ nsHttpChannel::ProcessNormal()
     if (NS_SUCCEEDED(rv) && !succeeded) {
         PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessNormal);
         PRBool waitingForRedirectCallback;
-        rv = ProcessFallback(&waitingForRedirectCallback);
+        (void)ProcessFallback(&waitingForRedirectCallback);
         if (waitingForRedirectCallback) {
             // The transaction has been suspended by ProcessFallback.
             return NS_OK;
@@ -3307,7 +3307,7 @@ nsHttpChannel::AsyncProcessRedirection(PRUint32 redirectType)
         if (!NS_SecurityCompareURIs(mURI, mRedirectURI, PR_FALSE)) {
             PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessRedirectionAfterFallback);
             PRBool waitingForRedirectCallback;
-            rv = ProcessFallback(&waitingForRedirectCallback);
+            (void)ProcessFallback(&waitingForRedirectCallback);
             if (waitingForRedirectCallback)
                 return NS_OK;
             PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessRedirectionAfterFallback);
