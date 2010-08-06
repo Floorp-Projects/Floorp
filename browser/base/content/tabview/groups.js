@@ -1580,13 +1580,26 @@ window.Groups = {
 			this.setActiveGroup(newGroup);
 
     } else {
-    	Utils.log('creating a new group');
-			new Group([tabItem], {});
+      this.positionNewTabAtBottom(tabItem);
 		}
   },
 
+	// ----------
+	// Function: positionNewTabAtBottom
+	// Does what it says on the tin. 
+	// TODO: Make more robust and improve documentation, 
+	// Also, this probably belongs in tabitems.js
 	positionNewTabAtBottom: function(tabItem) {
 		let windowBounds = Items.getSafeWindowBounds();
+		
+		let itemBounds = new Rect(
+		  windowBounds.right - TabItems.tabWidth,
+		  windowBounds.bottom - TabItems.tabHeight,
+		  TabItems.tabWidth, 
+		  TabItems.tabHeight
+		);
+		
+    tabItem.setBounds(itemBounds);
 	},
 
   // ----------
@@ -1611,7 +1624,7 @@ window.Groups = {
     this._activeGroup = group;
     this.updateTabBarForActiveGroup();
 		// if a group is active, we surely are not in an orphaned tab.
-    this.getActiveOrphanTab(null);
+    this.setActiveOrphanTab(null);
   },
 
   // ----------
