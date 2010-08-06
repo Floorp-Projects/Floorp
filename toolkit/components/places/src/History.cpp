@@ -146,9 +146,11 @@ Step::HandleResult(mozIStorageResultSet* aResultSet)
 NS_IMETHODIMP
 Step::HandleCompletion(PRUint16 aReason)
 {
-  nsCOMPtr<mozIStorageResultSet> resultSet = mResultSet;
-  mResultSet = NULL;
-  Callback(resultSet);
+  if (aReason == mozIStorageStatementCallback::REASON_FINISHED) {
+    nsCOMPtr<mozIStorageResultSet> resultSet = mResultSet;
+    mResultSet = NULL;
+    Callback(resultSet);
+  }
   return NS_OK;
 }
 
@@ -211,6 +213,10 @@ public:
 
   NS_IMETHOD HandleCompletion(PRUint16 aReason)
   {
+    if (aReason != mozIStorageStatementCallback::REASON_FINISHED) {
+      return NS_OK;
+    }
+
     if (mIsVisited) {
       History::GetService()->NotifyVisited(mURI);
     }
