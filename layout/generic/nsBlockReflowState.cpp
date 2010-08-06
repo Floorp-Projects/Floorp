@@ -547,8 +547,29 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
   NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
                   "aFloat must be an out-of-flow frame");
 
-  // Set the geometric parent of the float
-  aFloat->SetParent(mBlock);
+  NS_ABORT_IF_FALSE(aFloat->GetParent(), "float must have parent");
+  NS_ABORT_IF_FALSE(aFloat->GetParent()->IsFrameOfType(nsIFrame::eBlockFrame),
+                    "float's parent must be block");
+  NS_ABORT_IF_FALSE(aFloat->GetParent() == mBlock ||
+                    (aFloat->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION),
+                    "float should be in this block unless it was marked as "
+                    "float continuation");
+  if (aFloat->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION) {
+    // If, in a previous reflow, the float was pushed entirely to
+    // another column/page, we need to steal it back.  (We might just
+    // push it again, though.)  Likewise, if that previous reflow
+    // reflowed this block but not its next continuation, we might need
+    // to steal it from our own float-continuations list.
+    nsBlockFrame *floatParent =
+      static_cast<nsBlockFrame*>(aFloat->GetParent());
+    floatParent->StealFrame(mPresContext, aFloat);
+
+    aFloat->RemoveStateBits(NS_FRAME_IS_FLOAT_CONTINUATION);
+
+    // Appending is fine, since if a float was pushed to the next
+    // page/column, all later floats were also pushed.
+    mBlock->mFloats.AppendFrame(mBlock, aFloat);
+  }
 
   aReflowStatus = NS_FRAME_COMPLETE;
 

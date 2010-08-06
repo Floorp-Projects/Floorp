@@ -4460,7 +4460,7 @@ nsBlockFrame::DrainFloatContinuations(nsBlockReflowState& aState)
   nsFrameList *list = prevBlock->RemoveFloatContinuations();
   if (list) {
     if (list->NotEmpty()) {
-      mFloats.InsertFrames(nsnull, nsnull, *list);
+      mFloats.InsertFrames(this, nsnull, *list);
     }
     delete list;
   }
