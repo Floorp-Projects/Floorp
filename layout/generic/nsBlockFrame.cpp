@@ -564,6 +564,10 @@ nsBlockFrame::GetChildList(nsIAtom* aListName) const
     const nsFrameList* list = GetOverflowOutOfFlows();
     return list ? *list : nsFrameList::EmptyList();
   }
+  else if (aListName == nsGkAtoms::floatContinuationsList) {
+    const nsFrameList* list = GetFloatContinuations();
+    return list ? *list : nsFrameList::EmptyList();
+  }
   else if (aListName == nsGkAtoms::floatList) {
     return mFloats;
   }
@@ -578,6 +582,7 @@ nsBlockFrame::GetChildList(nsIAtom* aListName) const
 #define NS_BLOCK_FRAME_FLOAT_LIST_INDEX         (NS_CONTAINER_LIST_COUNT_INCL_OC + 1)
 #define NS_BLOCK_FRAME_BULLET_LIST_INDEX        (NS_CONTAINER_LIST_COUNT_INCL_OC + 2)
 #define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX      (NS_CONTAINER_LIST_COUNT_INCL_OC + 3)
+#define NS_BLOCK_FRAME_FLOAT_CONTINUATIONS_LIST_INDEX (NS_CONTAINER_LIST_COUNT_INCL_OC + 4)
 // If adding/removing lists, don't forget to update the count in nsBlockFrame.h
 
 nsIAtom*
@@ -595,6 +600,8 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32 aIndex) const
     return nsGkAtoms::overflowOutOfFlowList;
   case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
     return nsGkAtoms::absoluteList;
+  case NS_BLOCK_FRAME_FLOAT_CONTINUATIONS_LIST_INDEX:
+    return nsGkAtoms::floatContinuationsList;
   default:
     return nsnull;
   }
@@ -1012,11 +1019,6 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_MergeReflowStatusInto(&state.mReflowStatus, ocStatus);
   NS_MergeReflowStatusInto(&state.mReflowStatus, fcStatus);
-
-  // Put continued floats at the end of mFloats
-  if (state.mFloatContinuations.NotEmpty()) {
-    mFloats.AppendFrames(nsnull, state.mFloatContinuations);
-  }
 
   // If we end in a BR with clear and affected floats continue,
   // we need to continue, too.
@@ -4451,50 +4453,16 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
 void
 nsBlockFrame::DrainFloatContinuations(nsBlockReflowState& aState)
 {
-  // Cache any continuations of our own floats that we're still holding onto
-  // so they're out of the way. This should only happen if we're re-Reflow'd
-  // before our next-in-flow gets a chance to pull these continuations.
-  // However, if it's a "continuation" that's not actually a continuation,
-  // put it back on the floats list.
-  // FIXME: This is not compatible with doing float breaking in dynamic
-  // situations, since in those situations we could have current
-  // continuations at the end of our float list that were actually
-  // continuations from a previous frame to this one.  (However, it's
-  // not clear to me that we really need this code in the first place;
-  // the best solution might just be to remove it.)
-  nsIFrame *f = mFloats.LastChild();
-  if (f && (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION)) {
-    do {
-      f = f->GetPrevSibling();
-    } while (f && (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION));
-    aState.SetupFloatContinuationList();
-    // RemoveFramesAfter(nsnull) removes the whole list
-    nsFrameList floatContinuations = mFloats.RemoveFramesAfter(f);
-    while (floatContinuations.NotEmpty()) {
-      nsIFrame *f = floatContinuations.RemoveFirstChild();
-      if (f->GetPrevContinuation()) {
-        aState.mFloatContinuations.AppendFrame(nsnull, f);
-      } else {
-        f->RemoveStateBits(NS_FRAME_IS_FLOAT_CONTINUATION);
-        mFloats.AppendFrame(nsnull, f);
-      }
-    }
-  }
-
   // Take any continuations we need to take from our prev-in-flow.
   nsBlockFrame* prevBlock = static_cast<nsBlockFrame*>(GetPrevInFlow());
   if (!prevBlock)
     return;
-  f = prevBlock->mFloats.LastChild();
-  if (f && (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION)) {
-    do {
-      ReparentFrame(f, prevBlock, this);
-      f = f->GetPrevSibling();
-    } while (f && (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION));
-
-    // RemoveFramesAfter(nsnull) removes the whole list
-    nsFrameList floatContinuations = prevBlock->mFloats.RemoveFramesAfter(f);
-    mFloats.InsertFrames(nsnull, nsnull, floatContinuations);
+  nsFrameList *list = prevBlock->RemoveFloatContinuations();
+  if (list) {
+    if (list->NotEmpty()) {
+      mFloats.InsertFrames(nsnull, nsnull, *list);
+    }
+    delete list;
   }
 
 #ifdef DEBUG
@@ -4594,6 +4562,46 @@ nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList,
                        OverflowOutOfFlowsProperty());
     AddStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
+}
+
+nsFrameList*
+nsBlockFrame::GetFloatContinuations() const
+{
+  if (!(GetStateBits() & NS_BLOCK_HAS_FLOAT_CONTINUATIONS)) {
+    return nsnull;
+  }
+  nsFrameList* result =
+    static_cast<nsFrameList*>(Properties().Get(FloatContinuationProperty()));
+  NS_ASSERTION(result, "value should always be non-empty when state set");
+  return result;
+}
+
+nsFrameList*
+nsBlockFrame::EnsureFloatContinuations()
+{
+  nsFrameList *result = GetFloatContinuations();
+  if (result)
+    return result;
+
+  result = new nsFrameList;
+  Properties().Set(FloatContinuationProperty(), result);
+  AddStateBits(NS_BLOCK_HAS_FLOAT_CONTINUATIONS);
+
+  return result;
+}
+
+nsFrameList*
+nsBlockFrame::RemoveFloatContinuations()
+{
+  if (!(GetStateBits() & NS_BLOCK_HAS_FLOAT_CONTINUATIONS)) {
+    return nsnull;
+  }
+
+  nsFrameList *result =
+    static_cast<nsFrameList*>(Properties().Remove(FloatContinuationProperty()));
+  RemoveStateBits(NS_BLOCK_HAS_FLOAT_CONTINUATIONS);
+  NS_ASSERTION(result, "value should always be non-empty when state set");
+  return result;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -5415,8 +5423,7 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
       aChild->GetStyleDisplay()->IsFloating()) {
     PRBool removed = mFloats.RemoveFrameIfPresent(aChild);
     if (!removed) {
-      nsFrameList* list = GetPropTableFrames(aPresContext,
-                                             FloatContinuationProperty());
+      nsFrameList* list = GetFloatContinuations();
       if (list) {
         removed = list->RemoveFrameIfPresent(aChild);
       }
@@ -6681,8 +6688,7 @@ void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
       if (outOfFlowFrame) {
         if (outOfFlowFrame->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION) {
           if (outOfFlowFrame->GetParent() == this) {
-            nsFrameList* list = GetPropTableFrames(PresContext(),
-                                                   FloatContinuationProperty());
+            nsFrameList* list = GetFloatContinuations();
             if (!list || !list->RemoveFrameIfPresent(outOfFlowFrame)) {
               mFloats.RemoveFrame(outOfFlowFrame);
             }
