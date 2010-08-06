@@ -4837,6 +4837,10 @@ nsCommonWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
   nsGlobalWindow *win = nsGlobalWindow::FromSupports(nativeObj);
 
+  if (win->IsOuterWindow()) {
+    win->EnsureInnerWindow();
+  }
+
   if (sgo) {
     *parentObj = sgo->GetGlobalJSObject();
 
@@ -5164,6 +5168,9 @@ nsCommonWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // check and return.
 
       nsGlobalWindow *frameWin = (nsGlobalWindow *)frame.get();
+      NS_ASSERTION(frameWin->IsOuterWindow(), "GetChildFrame gave us an inner?");
+
+      frameWin->EnsureInnerWindow();
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
       rv = WrapNative(cx, frameWin->GetGlobalJSObject(), frame,
