@@ -69,7 +69,7 @@ FrameState::init(uint32 nargs)
     }
 
     uint32 nlocals = script->nslots;
-    if ((eval = script->usesEval || cx->compartment->debugMode))
+    if ((eval = script->usesEval))
         nlocals = 0;
 
     uint8 *cursor = (uint8 *)cx->malloc(sizeof(FrameEntry) * nslots +       // entries[]

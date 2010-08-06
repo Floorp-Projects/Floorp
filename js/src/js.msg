@@ -330,4 +330,3 @@ MSG_DEF(JSMSG_CSP_BLOCKED_FUNCTION,   247, 0, JSEXN_ERR, "call to Function() blo
 MSG_DEF(JSMSG_BAD_GET_SET_FIELD,      248, 1, JSEXN_TYPEERR, "property descriptor's {0} field is neither undefined nor a function")
 MSG_DEF(JSMSG_BAD_PROXY_FIX,          249, 0, JSEXN_TYPEERR, "proxy was fixed while executing the handler")
 MSG_DEF(JSMSG_INVALID_EVAL_SCOPE_ARG, 250, 0, JSEXN_EVALERR, "invalid eval scope argument")
-MSG_DEF(JSMSG_NEED_DEBUG_MODE,        251, 0, JSEXN_ERR, "function can only be called in debug mode")
