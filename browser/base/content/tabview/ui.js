@@ -419,7 +419,7 @@ var UIManager = {
   _addTabActionHandlers: function() {
     var self = this;
 
-    Tabs.onClose(function() {
+    AllTabs.onClose(function() {
       if (this.ownerDocument.defaultView != gWindow)
         return;
 
@@ -461,7 +461,7 @@ var UIManager = {
       return false;
     });
 
-    Tabs.onMove(function() {
+    AllTabs.onMove(function() {
       if (this.ownerDocument.defaultView != gWindow)
         return;
 
@@ -472,7 +472,7 @@ var UIManager = {
       }, 1);
     });
 
-    Tabs.onSelect(function() {
+    AllTabs.onSelect(function() {
       if (this.ownerDocument.defaultView != gWindow)
         return;
 
