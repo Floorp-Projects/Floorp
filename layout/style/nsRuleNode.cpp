@@ -5848,6 +5848,14 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
              SETCOORD_CALC_LENGTH_ONLY,
            aContext, mPresContext, canStoreInRuleTree);
 
+  // If we ended up with an image, track it.
+  for (PRUint32 i = 0; i < content->ContentCount(); ++i) {
+    if ((content->ContentAt(i).mType == eStyleContentType_Image) &&
+        content->ContentAt(i).mContent.mImage) {
+      content->ContentAt(i).TrackImage(aContext->PresContext());
+    }
+  }
+
   COMPUTE_END_RESET(Content, content)
 }
 

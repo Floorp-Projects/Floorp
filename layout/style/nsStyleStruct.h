@@ -1486,8 +1486,17 @@ struct nsStyleContentData {
     imgIRequest *mImage;
     nsCSSValue::Array* mCounters;
   } mContent;
+#ifdef DEBUG
+  bool mImageTracked;
+#endif
 
-  nsStyleContentData() : mType(nsStyleContentType(0)) { mContent.mString = nsnull; }
+  nsStyleContentData()
+    : mType(nsStyleContentType(0))
+#ifdef DEBUG
+    , mImageTracked(false)
+#endif
+  { mContent.mString = nsnull; }
+
   ~nsStyleContentData();
   nsStyleContentData& operator=(const nsStyleContentData& aOther);
   PRBool operator==(const nsStyleContentData& aOther) const;
@@ -1496,9 +1505,14 @@ struct nsStyleContentData {
     return !(*this == aOther);
   }
 
+  void TrackImage(nsPresContext* aContext);
+  void UntrackImage(nsPresContext* aContext);
+
   void SetImage(imgIRequest* aRequest)
   {
-    NS_ASSERTION(mType == eStyleContentType_Image, "Wrong type!");
+    NS_ABORT_IF_FALSE(!mImageTracked,
+                      "Setting a new image without untracking the old one!");
+    NS_ABORT_IF_FALSE(mType == eStyleContentType_Image, "Wrong type!");
     NS_IF_ADDREF(mContent.mImage = aRequest);
   }
 private:
@@ -1595,10 +1609,7 @@ struct nsStyleContent {
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
   }
-  void Destroy(nsPresContext* aContext) {
-    this->~nsStyleContent();
-    aContext->FreeToShell(sizeof(nsStyleContent), this);
-  }
+  void Destroy(nsPresContext* aContext);
 
   nsChangeHint CalcDifference(const nsStyleContent& aOther) const;
 #ifdef DEBUG
