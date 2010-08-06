@@ -25,6 +25,8 @@ if __name__ == '__main__':
             help='JS file to load', metavar='FILE')
     op.add_option('-e', '--expression', dest='js_exps', action='append',
             help='JS expression to evaluate')
+    op.add_option('-i', '--interactive', dest='js_interactive', action='store_true',
+            help='enable interactive shell')
 
     (options, args) = op.parse_args()
 
@@ -36,6 +38,12 @@ if __name__ == '__main__':
     if options.js_files:
         for file in options.js_files:
             cmd += 'Narcissus.jsexec.evaluate(snarf("%(file)s"), "%(file)s", 1); ' % { 'file':file }
+
+    if (not options.js_exps) and (not options.js_files):
+        options.js_interactive = True
+
+    if options.js_interactive:
+        cmd += 'Narcissus.jsexec.repl();'
 
     Popen([js_cmd, '-f', narc_jsdefs, '-f', narc_jslex, '-f', narc_jsparse, '-f', narc_jsexec, '-e', cmd]).wait()
 

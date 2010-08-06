@@ -169,7 +169,8 @@ Narcissus.jsexec = (function() {
             evaluate(snarf(s), s, 1)
         },
         print: print,
-        version: function() { return 185; }
+        version: function() { return 185; },
+        quit: function() { throw END; }
     };
 
     // Helper to avoid Object.prototype.hasOwnProperty polluting scope objects.
@@ -204,7 +205,24 @@ Narcissus.jsexec = (function() {
         thisObject: global,
         result: undefined,
         target: null,
-        ecma3OnlyMode: false
+        ecma3OnlyMode: false,
+        // Run a thunk in this execution context and return its result.
+        run: function(thunk) {
+            var prev = ExecutionContext.current;
+            ExecutionContext.current = this;
+            try {
+                thunk();
+                return this.result;
+            } catch (e if e == THROW) {
+                if (prev) {
+                    prev.result = this.result;
+                    throw THROW;
+                }
+                throw this.result;
+            } finally {
+                ExecutionContext.current = prev;
+            }
+        }
     };
 
     function Reference(base, propertyName, node) {
@@ -1046,8 +1064,66 @@ Narcissus.jsexec = (function() {
         return x2.result;
     }
 
+    // A read-eval-print-loop that roughly tracks the behavior of the js shell.
+    function repl() {
+
+        // Display a value similarly to the js shell.
+        function display(x) {
+            if (typeof x == "object") {
+                // At the js shell, objects with no |toSource| don't print.
+                if (x != null && "toSource" in x) {
+                    try {
+                        print(x.toSource());
+                    } catch (e) {
+                    }
+                } else {
+                    print("null");
+                }
+            } else if (typeof x == "string") {
+                print(uneval(x));
+            } else if (typeof x != "undefined") {
+                // Since x must be primitive, String can't throw.
+                print(String(x));
+            }
+        }
+
+        // String conversion that never throws.
+        function string(x) {
+            try {
+                return String(x);
+            } catch (e) {
+                return "unknown (can't convert to string)";
+            }
+        }
+
+        var b = new jsparse.VanillaBuilder;
+        var x = new ExecutionContext(GLOBAL_CODE);
+
+        x.run(function() {
+            for (;;) {
+                putstr("njs> ");
+                var line = readline();
+                x.result = undefined;
+                try {
+                    execute(jsparse.parse(b, line, "stdin", 1), x);
+                    display(x.result);
+                } catch (e if e == THROW) {
+                    print("uncaught exception: " + string(x.result));
+                } catch (e if e == END) {
+                    break;
+                } catch (e if e instanceof SyntaxError) {
+                    print(e.toString());
+                } catch (e) {
+                    print("internal Narcissus error");
+                    throw e;
+                }
+            }
+        });
+    }
+
     return {
-        "evaluate": evaluate
+        "evaluate": evaluate,
+        "repl": repl
     };
 
 }());
