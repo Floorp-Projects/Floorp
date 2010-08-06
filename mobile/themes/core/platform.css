@@ -119,7 +119,7 @@ textbox[isempty="true"] {
 }
 
 dialog {
-  color: #fff;
+  color: #fff !important;
   background-color: transparent;
   -moz-border-radius: 8px;
   -moz-box-shadow: black 0 2px 2px;
