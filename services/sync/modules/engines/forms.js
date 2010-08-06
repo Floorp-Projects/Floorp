@@ -224,6 +224,7 @@ FormTracker.prototype = {
       case "weave:engine:start-tracking":
         if (!this._enabled) {
           Svc.Obs.add("form-notifier", this);
+          Svc.Obs.add("satchel-storage-changed", this);
           // nsHTMLFormElement doesn't use the normal observer/observe
           // pattern and looks up nsIFormSubmitObservers to .notify()
           // them so add manually to observers
@@ -236,18 +237,32 @@ FormTracker.prototype = {
       case "weave:engine:stop-tracking":
         if (this._enabled) {
           Svc.Obs.remove("form-notifier", this);
+          Svc.Obs.remove("satchel-storage-changed", this);
           Cc["@mozilla.org/observer-service;1"]
             .getService(Ci.nsIObserverService)
             .removeObserver(this, "earlyformsubmit");
           this._enabled = false;
         }
         break;
+      // Firefox 4.0
+      case "satchel-storage-changed":
+        if (data == "addEntry" || data == "before-removeEntry") {
+          subject = subject.QueryInterface(Ci.nsIArray);
+          let name = subject.queryElementAt(0, Ci.nsISupportsString)
+                            .toString();
+          let value = subject.queryElementAt(1, Ci.nsISupportsString)
+                             .toString();
+          this.trackEntry(name, value);
+        }
+        break;
+      // Firefox 3.5/3.6
       case "form-notifier":
         this.onFormNotifier(data);
         break;
     }
   },
 
+  // Firefox 3.5/3.6
   onFormNotifier: function onFormNotifier(data) {
     let name, value;
 
