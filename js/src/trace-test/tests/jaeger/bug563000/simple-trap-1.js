@@ -1,3 +1,4 @@
+setDebug(true);
 var x = "failure";
 function main() { x = "success"; }
 
