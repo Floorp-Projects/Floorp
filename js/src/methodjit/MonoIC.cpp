@@ -284,10 +284,21 @@ ic::CallFastNative(JSContext *cx, JSScript *script, MICInfo &mic, JSFunction *fu
     /* Restore stack. */
     ncc.masm.add32(Imm32(stackAdjustment), JSC::X86Registers::esp);
 
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+    // Usually JaegerThrowpoline got called from return address.
+    // So in JaegerThrowpoline without fastcall, esp was added by 8.
+    // If we just want to jump there, we need to sub esp by 8 first.
+    ncc.masm.sub32(Imm32(8), JSC::X86Registers::esp);
+#endif
+
     /* Check if the call is throwing, and jump to the throwpoline. */
     Jump hasException =
         ncc.masm.branchTest32(Assembler::Zero, Registers::ReturnReg, Registers::ReturnReg);
     ncc.addLink(hasException, JS_FUNC_TO_DATA_PTR(uint8 *, JaegerThrowpoline));
+
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+    ncc.masm.add32(Imm32(8), JSC::X86Registers::esp);
+#endif
 
     /* Load *vp into the return register pair. */
     Address rval(JSFrameReg, vpOffset);

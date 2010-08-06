@@ -65,9 +65,16 @@ JaegerTrampoline:
     pushl %esp
     call SetVMFrameRegs
     popl  %edx
+    pushl %esp
+    call PushActiveVMFrame
+    popl  %edx
     popl  %edx
 
     call  *%edx
+    leal -4(%esp), %ecx
+    push %ecx
+    call PopActiveVMFrame
+    popl %ecx
     leal -4(%esp), %ecx
     push %ecx
     call UnsetVMFrameRegs
@@ -104,6 +111,9 @@ JaegerThrowpoline:
     je   throwpoline_exit
     jmp  *%eax
 throwpoline_exit:
+    pushl %esp
+    call PopActiveVMFrame
+    popl %ebx
     addl $0x2c, %esp
     popl %ebx
     popl %edi
@@ -116,10 +126,13 @@ throwpoline_exit:
 .global JaegerFromTracer
 .type   JaegerFromTracer, @function
 JaegerFromTracer:
+    movl 0x24(%ebx), %edx
+    movl 0x28(%ebx), %ecx
+    movl 0x38(%ebx), %eax
     /* For Sun Studio there is no fast call. */
     /* We add the stack by 8 before. */
     addl $0x8, %esp
     /* Restore frame regs. */
     movl 0x20(%esp), %ebx
-    jmp *%eax
+    ret
 .size   JaegerFromTracer, . - JaegerFromTracer
