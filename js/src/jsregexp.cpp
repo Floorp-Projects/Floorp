@@ -2329,7 +2329,7 @@ class RegExpNativeCompiler {
     Fragment*        fragment;
     LirWriter*       lir;
 #ifdef DEBUG
-    LirWriter*       validate_writer;
+    ValidateWriter*  validate_writer;
 #endif
 #ifdef NJ_VERBOSE
     LirWriter*       verbose_filter;
@@ -3242,6 +3242,15 @@ class RegExpNativeCompiler {
 
         lirbuf->state = state = addName(lirbuf, lir->insParam(0, 0), "state");
         lirbuf->param1 = cpend = addName(lirbuf, lir->insParam(1, 0), "cpend");
+
+#ifdef DEBUG
+        // Do this before any REGlobalData loads/stores occur.  'extras' can
+        // be stack-allocated.
+        {
+            void* extras[] = { /* dummy */NULL, /* dummy */NULL };
+            validate_writer->setCheckAccSetExtras(extras);
+        }
+#endif
 
         loopLabel = lir->ins0(LIR_label);
         // If profiling, record where the loop label is, so that the
