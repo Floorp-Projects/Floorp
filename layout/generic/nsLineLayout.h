@@ -370,6 +370,9 @@ public:
   const nsLineList::iterator* GetLine() const {
     return GetFlag(LL_GOTLINEBOX) ? &mLineBox : nsnull;
   }
+  nsLineList::iterator* GetLine() {
+    return GetFlag(LL_GOTLINEBOX) ? &mLineBox : nsnull;
+  }
   
   /**
    * Returns the accumulated advance width of frames before the current frame
