@@ -155,6 +155,12 @@ nsFrameList::RemoveFrameIfPresent(nsIFrame* aFrame)
 nsFrameList
 nsFrameList::RemoveFramesAfter(nsIFrame* aAfterFrame)
 {
+  if (!aAfterFrame) {
+    nsFrameList result;
+    result.InsertFrames(nsnull, nsnull, *this);
+    return result;
+  }
+
   NS_PRECONDITION(NotEmpty(), "illegal operation on empty list");
 #ifdef DEBUG_FRAME_LIST
   NS_PRECONDITION(ContainsFrame(aAfterFrame), "wrong list");
