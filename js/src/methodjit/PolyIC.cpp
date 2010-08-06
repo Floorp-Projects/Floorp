@@ -58,9 +58,6 @@ using namespace js::mjit::ic;
 /* Rough over-estimate of how much memory we need to unprotect. */
 static const uint32 INLINE_PATH_LENGTH = 64;
 
-/* Maximum number of stubs for a given callsite. */
-static const uint32 MAX_STUBS = 16;
-
 typedef JSC::FunctionPtr FunctionPtr;
 typedef JSC::RepatchBuffer RepatchBuffer;
 typedef JSC::CodeBlock CodeBlock;
@@ -442,7 +439,7 @@ class SetPropCompiler : public PICStubCompiler
         pic.labels.setprop.stubShapeJump = masm.differenceBetween(start, stubShapeJumpLabel);
 #endif
 
-        if (pic.stubsGenerated == MAX_STUBS)
+        if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
 
         return true;
@@ -981,7 +978,7 @@ class GetPropCompiler : public PICStubCompiler
         pic.labels.getprop.stubShapeJump = masm.differenceBetween(start, stubShapeJumpLabel);
 #endif
 
-        if (pic.stubsGenerated == MAX_STUBS)
+        if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
         if (obj->isDenseArray())
             disable("dense array");
@@ -1319,7 +1316,7 @@ class GetElemCompiler : public PICStubCompiler
         pic.labels.getelem.stubShapeJump = masm.differenceBetween(start, stubShapeJump);
 #endif
 
-        if (pic.stubsGenerated == MAX_STUBS)
+        if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
         if (obj->isDenseArray())
             disable("dense array");
@@ -1506,7 +1503,7 @@ class ScopeNameCompiler : public PICStubCompiler
         pic.stubsGenerated++;
         pic.lastStubStart = buffer.locationOf(failLabel);
 
-        if (pic.stubsGenerated == MAX_STUBS)
+        if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
 
         return true;
@@ -1617,7 +1614,7 @@ class ScopeNameCompiler : public PICStubCompiler
         pic.stubsGenerated++;
         pic.lastStubStart = buffer.locationOf(failLabel);
 
-        if (pic.stubsGenerated == MAX_STUBS)
+        if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
 
         return true;
@@ -1771,7 +1768,7 @@ class BindNameCompiler : public PICStubCompiler
         pic.stubsGenerated++;
         pic.lastStubStart = buffer.locationOf(failLabel);
 
-        if (pic.stubsGenerated == MAX_STUBS)
+        if (pic.stubsGenerated == MAX_PIC_STUBS)
             disable("max stubs reached");
 
         return true;
