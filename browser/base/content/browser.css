@@ -29,15 +29,12 @@ tabbrowser {
   max-width: 250px;
   min-width: 100px;
   width: 0;
+  -moz-transition: min-width .2s ease-out, max-width .25s ease-out;
 }
 
 .tabbrowser-tab:not([pinned]):not([fadein]) {
   max-width: 1px;
   min-width: 1px;
-}
-
-.tabbrowser-tab[fadein]:not([pinned]) {
-  -moz-transition: min-width .2s ease-out, max-width .25s ease-out;
 }
 
 .tabbrowser-tab:not([fadein]):not([pinned]) > .tab-text,
@@ -46,9 +43,9 @@ tabbrowser {
   opacity: 0 !important;
 }
 
-.tabbrowser-tab[fadein] > .tab-text,
-.tabbrowser-tab[fadein] > .tab-icon-image,
-.tabbrowser-tab[fadein] > .tab-close-button {
+.tabbrowser-tab > .tab-text,
+.tabbrowser-tab > .tab-icon-image,
+.tabbrowser-tab > .tab-close-button {
   -moz-transition: opacity .25s;
 }
 
