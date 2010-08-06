@@ -169,7 +169,7 @@ Narcissus.jsexec = (function() {
             evaluate(snarf(s), s, 1)
         },
         print: print,
-        version: function() { return 185; },
+        version: function() { return Narcissus.options.version; },
         quit: function() { throw END; }
     };
 
