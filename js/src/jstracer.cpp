@@ -8678,9 +8678,7 @@ TraceRecorder::ifop()
                       lir->insEqI_0(lir->ins2(LIR_eqd, v_ins, lir->insImmD(0))));
     } else if (v.isString()) {
         cond = v.toString()->length() != 0;
-        x = lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, v_ins,
-                          offsetof(JSString, mLengthAndFlags), ACCSET_OTHER),
-                          JSString::FLAGS_LENGTH_SHIFT);
+        x = getStringLength(v_ins);
     } else {
         JS_NOT_REACHED("ifop");
         return ARECORD_STOP;
@@ -9001,9 +8999,20 @@ TraceRecorder::equalityHelper(Value& l, Value& r, LIns* l_ins, LIns* r_ins,
             JS_ASSERT(r.isBoolean());
             cond = (l == r);
         } else if (l.isString()) {
-            args[0] = r_ins, args[1] = l_ins;
-            l_ins = lir->insCall(&js_EqualStrings_ci, args);
-            r_ins = lir->insImmI(1);
+            JSString *l_str = l.toString();
+            JSString *r_str = r.toString();
+            if (!l_str->isRope() && !r_str->isRope() && l_str->length() == 1 && r_str->length() == 1) {
+                VMSideExit *exit = snapshot(BRANCH_EXIT);
+                LIns *c = INS_CONSTWORD(1);
+                guard(true, lir->ins2(LIR_eqp, getStringLength(l_ins), c), exit);
+                guard(true, lir->ins2(LIR_eqp, getStringLength(r_ins), c), exit);
+                l_ins = lir->insLoad(LIR_ldus2ui, getStringChars(l_ins), 0, ACCSET_OTHER, LOAD_CONST);
+                r_ins = lir->insLoad(LIR_ldus2ui, getStringChars(r_ins), 0, ACCSET_OTHER, LOAD_CONST);
+            } else {
+                args[0] = r_ins, args[1] = l_ins;
+                l_ins = lir->insCall(&js_EqualStrings_ci, args);
+                r_ins = lir->insImmI(1);
+            }
             cond = !!js_EqualStrings(l.toString(), r.toString());
         } else {
             JS_ASSERT(l.isNumber() && r.isNumber());
@@ -10843,9 +10852,7 @@ TraceRecorder::record_JSOP_NOT()
         return ARECORD_CONTINUE;
     }
     JS_ASSERT(v.isString());
-    set(&v, lir->insEqP_0(lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, get(&v),
-                          offsetof(JSString, mLengthAndFlags), ACCSET_OTHER),
-                          JSString::FLAGS_LENGTH_SHIFT)));
+    set(&v, lir->insEqP_0(getStringLength(get(&v))));
     return ARECORD_CONTINUE;
 }
 
@@ -12457,12 +12464,23 @@ TraceRecorder::getPropertyWithScriptGetter(JSObject *obj, LIns* obj_ins, JSScope
     }
 }
 
-// Typed array tracing depends on EXPANDED_LOADSTORE and F2I
-#if NJ_EXPANDED_LOADSTORE_SUPPORTED && NJ_F2I_SUPPORTED
-static bool OkToTraceTypedArrays = true;
-#else
-static bool OkToTraceTypedArrays = false;
-#endif
+JS_REQUIRES_STACK LIns*
+TraceRecorder::getStringLength(LIns* str_ins)
+{
+    return addName(lir->ins2ImmI(LIR_rshup,
+                                 addName(lir->insLoad(LIR_ldp, str_ins,
+                                                      offsetof(JSString, mLengthAndFlags),
+                                                      ACCSET_OTHER, LOAD_CONST), "mLengthAndFlags"),
+                                 JSString::FLAGS_LENGTH_SHIFT), "length");
+}
+
+JS_REQUIRES_STACK LIns*
+TraceRecorder::getStringChars(LIns* str_ins)
+{
+    return addName(lir->insLoad(LIR_ldp, str_ins,
+                                offsetof(JSString, mChars),
+                                ACCSET_OTHER, LOAD_CONST), "chars");
+}
 
 JS_REQUIRES_STACK LIns*
 TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
@@ -12481,8 +12499,7 @@ TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
     guard(true,
           lir->ins2(LIR_ltup, idx_ins, lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT)),
           snapshot(MISMATCH_EXIT));
-
-    LIns *chars_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mChars), ACCSET_OTHER, LOAD_CONST);
+    LIns *chars_ins = getStringChars(str_ins);
     return i2d(lir->insLoad(LIR_ldus2ui,
                             lir->ins2(LIR_addp, chars_ins, lir->ins2ImmI(LIR_lshp, idx_ins, 1)), 0,
                             ACCSET_OTHER, LOAD_CONST));
@@ -12510,7 +12527,7 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins)
     br = lir->insBranch(LIR_jf,
                         lir->ins2(LIR_ltup, idx_ins, lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT)),
                         NULL);
-    LIns *chars_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mChars), ACCSET_OTHER, LOAD_CONST);
+    LIns *chars_ins = getStringChars(str_ins);
     LIns *ch_ins = lir->insLoad(LIR_ldus2ui,
                                 lir->ins2(LIR_addp, chars_ins, lir->ins2ImmI(LIR_lshp, idx_ins, 1)), 0,
                                 ACCSET_OTHER, LOAD_CONST);
@@ -12525,6 +12542,13 @@ TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins)
 
     return lir->insLoad(LIR_ldp, phi_ins, 0, ACCSET_OTHER);
 }
+
+// Typed array tracing depends on EXPANDED_LOADSTORE and F2I
+#if NJ_EXPANDED_LOADSTORE_SUPPORTED && NJ_F2I_SUPPORTED
+static bool OkToTraceTypedArrays = true;
+#else
+static bool OkToTraceTypedArrays = false;
+#endif
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETELEM()
@@ -15922,10 +15946,7 @@ TraceRecorder::record_JSOP_LENGTH()
     if (l.isPrimitive()) {
         if (!l.isString())
             RETURN_STOP_A("non-string primitive JSOP_LENGTH unsupported");
-        set(&l, lir->ins1(LIR_i2d,
-            p2i(lir->ins2ImmI(LIR_rshup, lir->insLoad(LIR_ldp, get(&l),
-                              offsetof(JSString, mLengthAndFlags), ACCSET_OTHER),
-                              JSString::FLAGS_LENGTH_SHIFT))));
+        set(&l, lir->ins1(LIR_i2d, p2i(getStringLength(get(&l)))));
         return ARECORD_CONTINUE;
     }
 
