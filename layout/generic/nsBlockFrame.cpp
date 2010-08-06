@@ -3087,6 +3087,14 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     availSpace.y -= topMargin;
     if (NS_UNCONSTRAINEDSIZE != availSpace.height) {
       availSpace.height += topMargin;
+
+      // When there is a pushed float, clearance could equal
+      // NS_UNCONSTRAINEDSIZE (FIXME: is that really a good idea?), but
+      // we don't want that to change a constrained height to an
+      // unconstrained one.
+      if (NS_UNCONSTRAINEDSIZE == availSpace.height) {
+        --availSpace.height;
+      }
     }
     
     // Reflow the block into the available space
