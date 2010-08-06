@@ -101,41 +101,6 @@ private:
     void applyPatch(Compiler& c, PatchableAddress& toPatch);
 };
 
-/*
- * Utility classes to make iteration over the stack clean.
- */
-class FrameIterator
-{
-public:
-    FrameIterator(JSStackFrame *frame) : curfp(frame) { };
-    
-    bool done() const { return curfp == NULL; }
-    FrameIterator& operator++();
-    bool operator==(const FrameIterator& other) const;
-    bool operator!=(const FrameIterator& other) const;
-    
-    JSStackFrame *fp() const { return curfp; }
-
-private:
-    JSStackFrame *curfp;
-};
-
-class CallStackIterator
-{
-public:
-    CallStackIterator(JSContext *cx) : curcs(cx->stack().getCurrentSegment()) { };
-  
-    bool done() const { return curcs == NULL; }
-    CallStackIterator& operator++();
-    FrameIterator top() const;
-    FrameIterator bottom() const;
-
-    CallStackSegment *cs() const { return curcs; }
-
-private:
-    CallStackSegment *curcs;    
-};
-
 } /* namespace mjit */
 } /* namespace js */
 

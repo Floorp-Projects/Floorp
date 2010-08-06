@@ -237,10 +237,6 @@ namespace mjit {
     {
         JSC::ExecutableAllocator *execPool;
 
-        // Scripts that have had PICs patched or PIC stubs generated.
-        typedef js::HashSet<JSScript*, DefaultHasher<JSScript*>, js::SystemAllocPolicy> ScriptSet;
-        ScriptSet picScripts;
-
         // Trampolines for JIT code.
         Trampolines trampolines;
 
@@ -248,10 +244,6 @@ namespace mjit {
 
         bool Initialize();
         void Finish();
-
-        bool addScript(JSScript *script);
-        void removeScript(JSScript *script);
-        void purge(JSContext *cx);
     };
 }
 #endif /* JS_METHODJIT */
@@ -823,6 +815,24 @@ class FrameRegsIter
     jsbytecode *pc() const { return curpc; }
 };
 
+/*
+ * Utility class for iteration over all active stack frames.
+ */
+class AllFramesIter
+{
+public:
+    AllFramesIter(JSContext *cx);
+
+    bool done() const { return curfp == NULL; }
+    AllFramesIter& operator++();
+
+    JSStackFrame *fp() const { return curfp; }
+
+private:
+    CallStackSegment *curcs;
+    JSStackFrame *curfp;
+};
+
 /* Holds the number of recording attemps for an address. */
 typedef HashMap<jsbytecode*,
                 size_t,
@@ -1243,6 +1253,15 @@ struct JSCompartment {
     void *data;
     bool marked;
     js::WrapperMap crossCompartmentWrappers;
+    bool debugMode;
+
+#ifdef JS_METHODJIT
+    /* Executable allocator for PIC buffers. */
+    JSC::ExecutableAllocator *execPool;
+
+    /* Needed to re-JIT scripts for debug mode and so we can flush PICs. */
+    JSCList scripts;
+#endif
 
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();
@@ -1259,6 +1278,12 @@ struct JSCompartment {
     bool wrapException(JSContext *cx);
 
     void sweep(JSContext *cx);
+
+#ifdef JS_METHODJIT
+    bool addScript(JSContext *cx, JSScript *script);
+    void removeScript(JSScript *script);
+#endif
+    void purge(JSContext *cx);
 };
 
 struct JSRuntime {
