@@ -221,11 +221,9 @@ public:
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
-  PRBool AddFloat(nsIFrame*       aFloat,
-                  nscoord         aAvailableWidth,
-                  nsReflowStatus& aReflowStatus)
+  PRBool AddFloat(nsIFrame* aFloat, nscoord aAvailableWidth)
   {
-    return mBlockRS->AddFloat(this, aFloat, aAvailableWidth, aReflowStatus);
+    return mBlockRS->AddFloat(this, aFloat, aAvailableWidth);
   }
 
   void SetTrimmableWidth(nscoord aTrimmableWidth) {

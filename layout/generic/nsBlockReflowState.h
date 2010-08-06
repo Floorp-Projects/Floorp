@@ -106,14 +106,12 @@ public:
    */
   PRBool AddFloat(nsLineLayout*       aLineLayout,
                   nsIFrame*           aFloat,
-                  nscoord             aAvailableWidth,
-                  nsReflowStatus&     aReflowStatus);
+                  nscoord             aAvailableWidth);
 private:
   PRBool CanPlaceFloat(nscoord aFloatWidth,
                        const nsFlowAreaRect& aFloatAvailableSpace);
 public:
-  PRBool FlowAndPlaceFloat(nsIFrame*       aFloat,
-                           nsReflowStatus& aReflowStatus);
+  PRBool FlowAndPlaceFloat(nsIFrame* aFloat);
 private:
   void PushFloatPastBreak(nsIFrame* aFloat);
 public:
