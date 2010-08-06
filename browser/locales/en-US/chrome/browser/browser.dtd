@@ -16,7 +16,7 @@
 <!ENTITY  moveTabTo.accesskey                "M">
 <!ENTITY  createNewGroup.label               "Create New Group">
 <!ENTITY  createNewGroup.accesskey           "C">
-<!ENTITY  namedGroup.label                   "Named Group">
+<!ENTITY  namedGroups.label                  "Named Groups">
 <!ENTITY  reloadTab.label                    "Reload Tab">
 <!ENTITY  reloadTab.accesskey                "R">
 <!ENTITY  reloadAllTabs.label                "Reload All Tabs">
