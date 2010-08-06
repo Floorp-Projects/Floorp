@@ -2485,7 +2485,7 @@ namespace nanojit
                 AccSet a = storesSinceLastLoad & ((1 << EMB_NUM_USED_ACCS) - 1);
                 while (a) {
                     int acc = msbSet(a);
-                    clearL(acc);
+                    clearL((CseAcc)acc);
                     a &= ~(1 << acc);
                 }
 
