@@ -178,7 +178,7 @@ JSString::flatten()
 
 #ifdef JS_TRACER
 
-int JS_FASTCALL
+int32 JS_FASTCALL
 js_Flatten(JSString* str)
 {
     str->flatten();
