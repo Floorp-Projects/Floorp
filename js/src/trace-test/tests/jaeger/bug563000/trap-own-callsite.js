@@ -1,4 +1,3 @@
-setDebug(true);
 x = "notset";
 function myparent(nested) {
   if (nested) {
