@@ -988,17 +988,6 @@ str_substring(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
-#ifdef JS_TRACER
-static JSString* FASTCALL
-String_p_toString(JSContext* cx, JSObject* obj)
-{
-    if (!InstanceOf(cx, obj, &js_StringClass, NULL))
-        return NULL;
-    Value v = obj->getPrimitiveThis();
-    return v.toString();
-}
-#endif
-
 JSString* JS_FASTCALL
 js_toLowerCase(JSContext *cx, JSString *str)
 {
@@ -2809,11 +2798,8 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
 }
 #endif
 
-JS_DEFINE_TRCINFO_1(js_str_toString,
-    (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,
-         1, nanojit::ACCSET_NONE)))
 JS_DEFINE_TRCINFO_1(str_concat,
-    (3, (extern, STRING_RETRY,      js_ConcatStrings, CONTEXT, THIS_STRING, STRING,
+    (3, (extern, STRING_RETRY, js_ConcatStrings, CONTEXT, THIS_STRING, STRING,
          1, nanojit::ACCSET_NONE)))
 
 #define GENERIC           JSFUN_GENERIC_NATIVE
@@ -2827,7 +2813,7 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     /* Java-like methods. */
-    JS_TN(js_toString_str,     js_str_toString,       0,JSFUN_THISP_STRING, &js_str_toString_trcinfo),
+    JS_FN(js_toString_str,     js_str_toString,       0,JSFUN_THISP_STRING),
     JS_FN(js_valueOf_str,      js_str_toString,       0,JSFUN_THISP_STRING),
     JS_FN(js_toJSON_str,       js_str_toString,       0,JSFUN_THISP_STRING),
     JS_FN("substring",         str_substring,         2,GENERIC_PRIMITIVE),
