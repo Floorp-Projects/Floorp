@@ -45,6 +45,8 @@
 #include "jsnum.h"
 #include "jsregexp.h"
 #include "jswrapper.h"
+#include "methodjit/PolyIC.h"
+#include "assembler/jit/ExecutableAllocator.h"
 
 #include "jsobjinlines.h"
 
@@ -289,17 +291,24 @@ TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, u
 }
 
 JSCompartment::JSCompartment(JSRuntime *rt)
-  : rt(rt), principals(NULL), data(NULL), marked(false)
+  : rt(rt), principals(NULL), data(NULL), marked(false), debugMode(false)
 {
+    JS_INIT_CLIST(&scripts);
 }
 
 JSCompartment::~JSCompartment()
 {
+    delete execPool;
 }
 
 bool
 JSCompartment::init()
 {
+#ifdef JS_METHODJIT
+    execPool = new JSC::ExecutableAllocator();
+    if (!execPool)
+        return false;
+#endif
     return crossCompartmentWrappers.init();
 }
 
@@ -472,6 +481,26 @@ JSCompartment::sweep(JSContext *cx)
         if (js_IsAboutToBeFinalized(e.front().value.asGCThing()))
             e.removeFront();
     }
+}
+
+void
+JSCompartment::purge(JSContext *cx)
+{
+#ifdef JS_METHODJIT
+    if (!cx->runtime->gcRegenShapes)
+        return;
+
+    for (JSScript *script = (JSScript *)scripts.next;
+         &script->links != &scripts;
+         script = (JSScript *)script->links.next) {
+# if defined JS_POLYIC
+        mjit::ic::PurgePICs(cx, script);
+# endif
+# if defined JS_MONOIC
+        //mjit::ic::PurgeMICs(cx, script);
+# endif
+    }
+#endif
 }
 
 static bool
