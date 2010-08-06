@@ -161,10 +161,11 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
     NS_ENSURE_TRUE(myRange && itsRange, PR_FALSE);
   
     PRInt16 compResult;
-    myRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, itsRange, &compResult);
-    if (compResult) return PR_FALSE;
-    myRange->CompareBoundaryPoints(nsIDOMRange::END_TO_END, itsRange, &compResult);
-    if (compResult) return PR_FALSE;
+    nsresult rv;
+    rv = myRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, itsRange, &compResult);
+    if (NS_FAILED(rv) || compResult) return PR_FALSE;
+    rv = myRange->CompareBoundaryPoints(nsIDOMRange::END_TO_END, itsRange, &compResult);
+    if (NS_FAILED(rv) || compResult) return PR_FALSE;
   }
   // if we got here, they are equal
   return PR_TRUE;
