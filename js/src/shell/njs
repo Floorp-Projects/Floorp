@@ -27,10 +27,16 @@ if __name__ == '__main__':
             help='JS expression to evaluate')
     op.add_option('-i', '--interactive', dest='js_interactive', action='store_true',
             help='enable interactive shell')
+    op.add_option('-H', '--harmony', dest='js_harmony', action='store_true',
+            help='enable ECMAScript Harmony mode')
 
     (options, args) = op.parse_args()
 
     cmd = ""
+
+    if options.js_harmony:
+        cmd += 'Narcissus.options={version:"harmony"}; '
+
     if options.js_exps:
         for exp in options.js_exps:
             cmd += 'Narcissus.jsexec.evaluate("%s"); ' % exp.replace('"', '\\"')
