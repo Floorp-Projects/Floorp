@@ -3339,7 +3339,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
 #ifdef DEBUG
   PRInt32 spins = 0;
 #endif
-  LineReflowStatus lineReflowStatus = LINE_REFLOW_REDO_NEXT_BAND;
+  LineReflowStatus lineReflowStatus;
   do {
     nscoord availableSpaceHeight = 0;
     do {
