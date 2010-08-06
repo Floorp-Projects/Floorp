@@ -36,6 +36,10 @@
 
 // New API methods can be added to here.
 let TabView = {
+  isVisible: function() {
+    return (window.document.getElementById("tab-view-deck").selectedIndex == 1);
+  },
+
   toggle: function() {
     let event = document.createEvent("Events");
 
@@ -47,13 +51,63 @@ let TabView = {
     dispatchEvent(event);
   },
 
-  isVisible: function() {
-    return (window.document.getElementById("tab-view-deck").selectedIndex == 1);
+  getWindowTitle: function() {
+    let brandBundle = document.getElementById("bundle_brand");
+    let brandShortName = brandBundle.getString("brandShortName");
+    return gNavigatorBundle.getFormattedString("tabView.title", [brandShortName]);
   },
 
-  getWindowTitle: function() {
-    var brandBundle = document.getElementById("bundle_brand");
-    var brandShortName = brandBundle.getString("brandShortName");
-    return gNavigatorBundle.getFormattedString("tabView.title", [brandShortName]);
+  updateContextMenu: function(tab, popup) {
+    while(popup.lastChild && popup.lastChild.id != "context_namedGroup") {
+      popup.removeChild(popup.lastChild);
+    }
+
+    let tabViewWindow = document.getElementById("tab-view").contentWindow;
+    let showEmpty = true;
+
+    if (tabViewWindow) {
+      let activeGroup = tab.tabItem.parent;
+      let groups = tabViewWindow.Groups.groups;
+      let self = this;
+
+      groups.forEach(function(group) { 
+        if (group.getTitle().length > 0 && 
+            (!activeGroup || activeGroup.id != group.id)) {
+          let menuItem = self._createGroupMenuItem(group);
+          popup.appendChild(menuItem);
+          showEmpty = false;
+        }
+      });
+    }
+    if (showEmpty) {
+      let menuItem = this._createGroupMenuItem(null);
+      popup.appendChild(menuItem);
+    }
+  },
+
+  _createGroupMenuItem : function(group) {
+    let menuItem = document.createElement("menuitem")
+    menuItem.setAttribute("class", "group");
+
+    if (group) {
+      menuItem.setAttribute("label", group.getTitle());
+      menuItem.setAttribute(
+        "oncommand", 
+        "TabView.moveTabTo(TabContextMenu.contextTab,'" + group.id + "')");
+    } else {
+      menuItem.setAttribute(
+        "label", gNavigatorBundle.getString("tabView.noNamedGroup"));
+      menuItem.setAttribute("disabled", "true");
+    }
+
+    return menuItem;
+  },
+
+  moveTabTo: function(tab, groupId) {
+    let tabViewWindow = document.getElementById("tab-view").contentWindow;
+
+    if (tabViewWindow) {
+      tabViewWindow.Groups.moveTabToGroup(tab, groupId);
+    }
   }
 };
