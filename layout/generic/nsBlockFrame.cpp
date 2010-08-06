@@ -5727,8 +5727,7 @@ nsBlockFrame::ReflowFloatContinuations(nsBlockReflowState& aState,
       nsRect oldOverflow = f->GetOverflowRect();
 
       // Reflow
-      nsReflowStatus fStatus = NS_FRAME_COMPLETE;
-      aState.FlowAndPlaceFloat(f, fStatus);
+      aState.FlowAndPlaceFloat(f);
 
       // Invalidate if there was a position or size change
       nsRect rect = f->GetRect();

@@ -539,8 +539,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
 PRBool
 nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
                              nsIFrame*           aFloat,
-                             nscoord             aAvailableWidth,
-                             nsReflowStatus&     aReflowStatus)
+                             nscoord             aAvailableWidth)
 {
   NS_PRECONDITION(aLineLayout, "must have line layout");
   NS_PRECONDITION(mBlock->end_lines() != mCurrentLine, "null ptr");
@@ -571,9 +570,6 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
     mBlock->mFloats.AppendFrame(mBlock, aFloat);
   }
 
-  // FIXME: Remove aReflowStatus parameter!
-  aReflowStatus = NS_FRAME_COMPLETE;
-
   // Because we are in the middle of reflowing a placeholder frame
   // within a line (and possibly nested in an inline frame or two
   // that's a child of our block) we need to restore the space
@@ -598,7 +594,7 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
        mBlock->ComputeFloatWidth(*this, floatAvailableSpace, aFloat)
        <= aAvailableWidth)) {
     // And then place it
-    placed = FlowAndPlaceFloat(aFloat, aReflowStatus);
+    placed = FlowAndPlaceFloat(aFloat);
     if (placed) {
       // Pass on updated available space to the current inline reflow engine
       nsFlowAreaRect floatAvailSpace = GetFloatAvailableSpace(mY);
@@ -662,11 +658,8 @@ FloatMarginWidth(const nsHTMLReflowState& aCBReflowState,
 }
 
 PRBool
-nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
-                                      // FIXME: remove aReflowStatus
-                                      nsReflowStatus& aReflowStatus)
+nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 {
-  aReflowStatus = NS_FRAME_COMPLETE;
   // Save away the Y coordinate before placing the float. We will
   // restore mY at the end after placing the float. This is
   // necessary because any adjustments to mY during the float
@@ -975,8 +968,7 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList)
     }
 #endif
     // Place the float
-    nsReflowStatus reflowStatus;
-    PRBool placed = FlowAndPlaceFloat(fc->mFloat, reflowStatus);
+    PRBool placed = FlowAndPlaceFloat(fc->mFloat);
     nsFloatCache *next = fc->Next();
     if (!placed) {
       aList.Remove(fc);
