@@ -196,7 +196,7 @@ namespace nanojit
     typedef HashMap<uint64_t, uint64_t*> ImmDPoolMap;
 #endif
 
-#ifdef VTUNE
+#ifdef VMCFG_VTUNE
     class avmplus::CodegenLIR;
 #endif
 
@@ -271,8 +271,8 @@ namespace nanojit
             #endif // NJ_VERBOSE
 
         public:
-            #ifdef VTUNE
-            avmplus::CodegenLIR *cgen;
+            #ifdef VMCFG_VTUNE
+            void* vtuneHandle;
             #endif
 
             Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc, const Config& config);

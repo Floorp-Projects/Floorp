@@ -3038,7 +3038,7 @@ namespace nanojit
 
         case LIR_file:
         case LIR_line:
-            // XXX: not sure about these ones.  Ignore for the moment.
+            // These will never get hit since VTUNE implies !DEBUG.  Ignore for the moment.
             nArgs = 0;
             break;
 
