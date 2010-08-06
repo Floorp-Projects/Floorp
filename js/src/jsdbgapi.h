@@ -50,6 +50,28 @@
 JS_BEGIN_EXTERN_C
 
 /*
+ * Debug mode is a compartment-wide mode that enables a debugger to attach
+ * to and interact with running methodjit-ed frames. In particular, it causes
+ * every function to be compiled as if an eval was present (so eval-in-frame)
+ * can work, and it ensures that functions can be re-JITed for other debug
+ * features. In general, it is not safe to interact with frames that were live
+ * before debug mode was enabled. For this reason, it is also not safe to
+ * enable debug mode while frames are live.
+ */
+
+/* Get current state of debugging mode. */
+extern JS_PUBLIC_API(JSBool)
+JS_GetDebugMode(JSContext *cx);
+
+/* Turn on debugging mode, ignoring the presence of live frames. */
+extern JS_FRIEND_API(JSBool)
+js_SetDebugMode(JSContext *cx, JSBool debug);
+
+/* Turn on debugging mode. */
+extern JS_PUBLIC_API(JSBool)
+JS_SetDebugMode(JSContext *cx, JSBool debug);
+
+/*
  * Unexported library-private helper used to unpatch all traps in a script.
  * Returns script->code if script has no traps, else a JS_malloc'ed copy of
  * script->code which the caller must JS_free, or null on JS_malloc OOM.
