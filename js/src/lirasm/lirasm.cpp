@@ -144,6 +144,7 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns* base, int32_t disp, AccSet ac
 {
     (void)op;
     (void)base;
+    (void)disp;
     NanoAssert(accSet == ACCSET_OTHER);
 }
 #endif
