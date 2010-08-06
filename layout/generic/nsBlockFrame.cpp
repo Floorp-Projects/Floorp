@@ -565,7 +565,7 @@ nsBlockFrame::GetChildList(nsIAtom* aListName) const
     return list ? *list : nsFrameList::EmptyList();
   }
   else if (aListName == nsGkAtoms::floatContinuationsList) {
-    const nsFrameList* list = GetFloatContinuations();
+    const nsFrameList* list = GetPushedFloats();
     return list ? *list : nsFrameList::EmptyList();
   }
   else if (aListName == nsGkAtoms::floatList) {
@@ -582,7 +582,7 @@ nsBlockFrame::GetChildList(nsIAtom* aListName) const
 #define NS_BLOCK_FRAME_FLOAT_LIST_INDEX         (NS_CONTAINER_LIST_COUNT_INCL_OC + 1)
 #define NS_BLOCK_FRAME_BULLET_LIST_INDEX        (NS_CONTAINER_LIST_COUNT_INCL_OC + 2)
 #define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX      (NS_CONTAINER_LIST_COUNT_INCL_OC + 3)
-#define NS_BLOCK_FRAME_FLOAT_CONTINUATIONS_LIST_INDEX (NS_CONTAINER_LIST_COUNT_INCL_OC + 4)
+#define NS_BLOCK_FRAME_PUSHED_FLOATS_LIST_INDEX (NS_CONTAINER_LIST_COUNT_INCL_OC + 4)
 // If adding/removing lists, don't forget to update the count in nsBlockFrame.h
 
 nsIAtom*
@@ -600,7 +600,7 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32 aIndex) const
     return nsGkAtoms::overflowOutOfFlowList;
   case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
     return nsGkAtoms::absoluteList;
-  case NS_BLOCK_FRAME_FLOAT_CONTINUATIONS_LIST_INDEX:
+  case NS_BLOCK_FRAME_PUSHED_FLOATS_LIST_INDEX:
     return nsGkAtoms::floatContinuationsList;
   default:
     return nsnull;
@@ -997,11 +997,11 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   nsOverflowContinuationTracker tracker(aPresContext, this, PR_FALSE);
   state.mOverflowTracker = &tracker;
 
-  // Drain & handle float continuations
-  DrainFloatContinuations(state);
+  // Drain & handle pushed floats
+  DrainPushedFloats(state);
   nsRect fcBounds;
   nsReflowStatus fcStatus = NS_FRAME_COMPLETE;
-  rv = ReflowFloatContinuations(state, fcBounds, fcStatus);
+  rv = ReflowPushedFloats(state, fcBounds, fcStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If we're not dirty (which means we'll mark everything dirty later)
@@ -1029,7 +1029,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   if (!NS_FRAME_IS_FULLY_COMPLETE(state.mReflowStatus)) {
-    if (GetOverflowLines() || GetFloatContinuations()) {
+    if (GetOverflowLines() || GetPushedFloats()) {
       state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
     }
 
@@ -1088,7 +1088,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   ComputeCombinedArea(aReflowState, aMetrics, bottomEdgeOfChildren);
   // Factor overflow container child bounds into the overflow area
   aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, ocBounds);
-  // Factor float continuation child bounds into the overflow area
+  // Factor pushed float child bounds into the overflow area
   aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, fcBounds);
 
   // Let the absolutely positioned container reflow any absolutely positioned
@@ -1770,9 +1770,9 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // recompute the carried out margin before the line if we want to
     // reflow it or if its previous margin is dirty
   PRBool needToRecoverState = PR_FALSE;
-    // Float continuations were reflowed in ReflowFloatContinuations
+    // Float continuations were reflowed in ReflowPushedFloats
   PRBool reflowedFloat = mFloats.NotEmpty() &&
-    (mFloats.FirstChild()->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION);
+    (mFloats.FirstChild()->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT);
   PRBool lastLineMovedUp = PR_FALSE;
   // We save up information about BR-clearance here
   PRUint8 inlineFloatBreakType = aState.mFloatBreakType;
@@ -3933,7 +3933,7 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
     aState.mFloatManager->SetSplitRightFloatAcrossBreak();
   }
 
-  aState.AppendFloatContinuation(nextInFlow);
+  aState.AppendPushedFloat(nextInFlow);
   return NS_OK;
 }
 
@@ -3954,7 +3954,7 @@ CheckPlaceholderInLine(nsIFrame* aBlock, nsLineBox* aLine, nsFloatCache* aFC)
     return PR_TRUE;
   NS_ASSERTION(!aFC->mFloat->GetPrevContinuation(),
                "float in a line should never be a continuation");
-  NS_ASSERTION(!(aFC->mFloat->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION),
+  NS_ASSERTION(!(aFC->mFloat->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
                "float in a line should never be a pushed float");
   nsIFrame* ph = aBlock->PresContext()->FrameManager()->
                    GetPlaceholderFrameFor(aFC->mFloat->GetFirstInFlow());
@@ -4447,15 +4447,15 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
 
 // This function assumes our prev-in-flow has completed reflow and its
 // mFloats may contain frames at the end of its float list, marked with
-// NS_FRAME_IS_FLOAT_CONTINUATION, that should be pulled to this block.
+// NS_FRAME_IS_PUSHED_FLOAT, that should be pulled to this block.
 void
-nsBlockFrame::DrainFloatContinuations(nsBlockReflowState& aState)
+nsBlockFrame::DrainPushedFloats(nsBlockReflowState& aState)
 {
   // Take any continuations we need to take from our prev-in-flow.
   nsBlockFrame* prevBlock = static_cast<nsBlockFrame*>(GetPrevInFlow());
   if (!prevBlock)
     return;
-  nsFrameList *list = prevBlock->RemoveFloatContinuations();
+  nsFrameList *list = prevBlock->RemovePushedFloats();
   if (list) {
     if (list->NotEmpty()) {
       mFloats.InsertFrames(this, nsnull, *list);
@@ -4563,41 +4563,41 @@ nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList,
 }
 
 nsFrameList*
-nsBlockFrame::GetFloatContinuations() const
+nsBlockFrame::GetPushedFloats() const
 {
-  if (!(GetStateBits() & NS_BLOCK_HAS_FLOAT_CONTINUATIONS)) {
+  if (!(GetStateBits() & NS_BLOCK_HAS_PUSHED_FLOATS)) {
     return nsnull;
   }
   nsFrameList* result =
-    static_cast<nsFrameList*>(Properties().Get(FloatContinuationProperty()));
+    static_cast<nsFrameList*>(Properties().Get(PushedFloatProperty()));
   NS_ASSERTION(result, "value should always be non-empty when state set");
   return result;
 }
 
 nsFrameList*
-nsBlockFrame::EnsureFloatContinuations()
+nsBlockFrame::EnsurePushedFloats()
 {
-  nsFrameList *result = GetFloatContinuations();
+  nsFrameList *result = GetPushedFloats();
   if (result)
     return result;
 
   result = new nsFrameList;
-  Properties().Set(FloatContinuationProperty(), result);
-  AddStateBits(NS_BLOCK_HAS_FLOAT_CONTINUATIONS);
+  Properties().Set(PushedFloatProperty(), result);
+  AddStateBits(NS_BLOCK_HAS_PUSHED_FLOATS);
 
   return result;
 }
 
 nsFrameList*
-nsBlockFrame::RemoveFloatContinuations()
+nsBlockFrame::RemovePushedFloats()
 {
-  if (!(GetStateBits() & NS_BLOCK_HAS_FLOAT_CONTINUATIONS)) {
+  if (!(GetStateBits() & NS_BLOCK_HAS_PUSHED_FLOATS)) {
     return nsnull;
   }
 
   nsFrameList *result =
-    static_cast<nsFrameList*>(Properties().Remove(FloatContinuationProperty()));
-  RemoveStateBits(NS_BLOCK_HAS_FLOAT_CONTINUATIONS);
+    static_cast<nsFrameList*>(Properties().Remove(PushedFloatProperty()));
+  RemoveStateBits(NS_BLOCK_HAS_PUSHED_FLOATS);
   NS_ASSERTION(result, "value should always be non-empty when state set");
   return result;
 }
@@ -4935,7 +4935,7 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
     // we are removing; this way is a bit messy, but so is the rest of the code.
     // See bug 390762.
     NS_ASSERTION(!aOldFrame->GetPrevContinuation(),
-                 "RemoveFrame should not be called on float continuations.");
+                 "RemoveFrame should not be called on pushed floats.");
     for (nsIFrame* f = aOldFrame;
          f && !(f->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER);
          f = f->GetNextContinuation()) {
@@ -5421,7 +5421,7 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
       aChild->GetStyleDisplay()->IsFloating()) {
     PRBool removed = mFloats.RemoveFrameIfPresent(aChild);
     if (!removed) {
-      nsFrameList* list = GetFloatContinuations();
+      nsFrameList* list = GetPushedFloats();
       if (list) {
         removed = list->RemoveFrameIfPresent(aChild);
       }
@@ -5733,13 +5733,13 @@ nsBlockFrame::FindTrailingClear()
 }
 
 nsresult
-nsBlockFrame::ReflowFloatContinuations(nsBlockReflowState& aState,
+nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
                                        nsRect&             aBounds,
                                        nsReflowStatus&     aStatus)
 {
   nsresult rv = NS_OK;
   for (nsIFrame* f = mFloats.FirstChild(), *next;
-       f && (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION);
+       f && (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT);
        f = next) {
     // save next sibling now, since reflowing could push the entire
     // float, changing its siblings
@@ -5789,7 +5789,7 @@ void
 nsBlockFrame::RecoverFloats(nsFloatManager& aFloatManager)
 {
   // Recover our own floats
-  nsIFrame* stop = nsnull; // Stop before we reach float continuations that
+  nsIFrame* stop = nsnull; // Stop before we reach pushed floats that
                            // belong to our next-in-flow
   for (nsIFrame* f = mFloats.FirstChild(); f && f != stop; f = f->GetNextSibling()) {
     nsRect region = nsFloatManager::GetRegionFor(f);
@@ -6061,7 +6061,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, aDirtyRect, aLists);
     for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
-      if (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION)
+      if (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT)
          BuildDisplayListForChild(aBuilder, f, aDirtyRect, aLists);
     }
   }
@@ -6681,9 +6681,9 @@ void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
         aFrame->GetType() == nsGkAtoms::placeholderFrame ?
           nsLayoutUtils::GetFloatFromPlaceholder(aFrame) : nsnull;
       if (outOfFlowFrame) {
-        if (outOfFlowFrame->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION) {
+        if (outOfFlowFrame->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
           if (outOfFlowFrame->GetParent() == this) {
-            nsFrameList* list = GetFloatContinuations();
+            nsFrameList* list = GetPushedFloats();
             if (!list || !list->RemoveFrameIfPresent(outOfFlowFrame)) {
               mFloats.RemoveFrame(outOfFlowFrame);
             }
@@ -6749,7 +6749,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
   PRBool equal = PR_TRUE;
   PRUint32 i = 0;
   for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
-    if (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION)
+    if (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT)
       continue;
     storedFloats.AppendElement(f);
     if (i < lineFloats.Length() && lineFloats.ElementAt(i) != f) {

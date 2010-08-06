@@ -260,7 +260,7 @@ typedef PRUint64 nsFrameState;
 // placeholder.  This can happen for two reasons:  (1) the float was
 // split, and this piece is the continuation, or (2) the entire float
 // didn't fit on the page.
-#define NS_FRAME_IS_FLOAT_CONTINUATION              NS_FRAME_STATE_BIT(32)
+#define NS_FRAME_IS_PUSHED_FLOAT                    NS_FRAME_STATE_BIT(32)
 
 // The lower 20 bits and upper 32 bits of the frame state are reserved
 // by this API.
