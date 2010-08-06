@@ -87,13 +87,11 @@ public:
    * coordinate and within the width of the content rect.
    */
   nsFlowAreaRect GetFloatAvailableSpace() const
-    { return GetFloatAvailableSpace(mY, PR_FALSE); }
-  nsFlowAreaRect GetFloatAvailableSpace(nscoord aY,
-                                        PRBool aRelaxHeightConstraint) const
-    { return GetFloatAvailableSpaceWithState(aY, aRelaxHeightConstraint,
-                                             nsnull); }
+    { return GetFloatAvailableSpace(mY); }
+  nsFlowAreaRect GetFloatAvailableSpace(nscoord aY) const
+    { return GetFloatAvailableSpaceWithState(aY, nsnull); }
   nsFlowAreaRect
-    GetFloatAvailableSpaceWithState(nscoord aY, PRBool aRelaxHeightConstraint,
+    GetFloatAvailableSpaceWithState(nscoord aY,
                                     nsFloatManager::SavedState *aState) const;
   nsFlowAreaRect
     GetFloatAvailableSpaceForHeight(nscoord aY, nscoord aHeight,
@@ -111,12 +109,10 @@ public:
                   nscoord             aAvailableWidth,
                   nsReflowStatus&     aReflowStatus);
   PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,
-                       const nsFlowAreaRect& aFloatAvailableSpace,
-                       PRBool aForceFit);
+                       const nsFlowAreaRect& aFloatAvailableSpace);
   PRBool FlowAndPlaceFloat(nsIFrame*       aFloat,
-                           nsReflowStatus& aReflowStatus,
-                           PRBool          aForceFit);
-  PRBool PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats, PRBool aForceFit);
+                           nsReflowStatus& aReflowStatus);
+  PRBool PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats);
 
   // Returns the first coordinate >= aY that clears the
   // floats indicated by aBreakType and has enough width between floats

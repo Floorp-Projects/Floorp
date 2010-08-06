@@ -4201,9 +4201,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     return PR_TRUE;
   }
 
-  // May be needed below
-  PRBool wasAdjacentWIthTop = aState.IsAdjacentWithTop();
-
   aState.mY = newY;
   
   // Add the already placed current-line floats to the line
@@ -4213,8 +4210,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   if (aState.mBelowCurrentLineFloats.NotEmpty()) {
     // Reflow the below-current-line floats, then add them to the
     // lines float list if there aren't any truncated floats.
-    if (aState.PlaceBelowCurrentLineFloats(aState.mBelowCurrentLineFloats,
-                                           wasAdjacentWIthTop)) {
+    if (aState.PlaceBelowCurrentLineFloats(aState.mBelowCurrentLineFloats)) {
       aLine->AppendFloats(aState.mBelowCurrentLineFloats);
     }
     else { 
@@ -6599,7 +6595,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   // FIXME: aLineTop isn't actually set correctly by some callers, since
   // they reposition the line.
   nsRect floatAvailSpace =
-    aState.GetFloatAvailableSpaceWithState(aLineTop, PR_FALSE,
+    aState.GetFloatAvailableSpaceWithState(aLineTop,
                                            &aState.mFloatManagerStateBefore)
           .mRect;
   // FIXME (bug 25888): need to check the entire region that the first
