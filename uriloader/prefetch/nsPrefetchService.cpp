@@ -60,6 +60,7 @@
 #include "prtime.h"
 #include "prlog.h"
 #include "plstr.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 #if defined(PR_LOGGING)
 //
@@ -363,9 +364,10 @@ nsPrefetchNode::GetInterface(const nsIID &aIID, void **aResult)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchNode::OnChannelRedirect(nsIChannel *aOldChannel,
-                                  nsIChannel *aNewChannel,
-                                  PRUint32 aFlags)
+nsPrefetchNode::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
+                                       nsIChannel *aNewChannel,
+                                       PRUint32 aFlags,
+                                       nsIAsyncVerifyRedirectCallback *callback)
 {
     nsCOMPtr<nsIURI> newURI;
     nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
@@ -395,6 +397,7 @@ nsPrefetchNode::OnChannelRedirect(nsIChannel *aOldChannel,
 
     mChannel = aNewChannel;
 
+    callback->OnRedirectVerifyCallback(NS_OK);
     return NS_OK;
 }
 

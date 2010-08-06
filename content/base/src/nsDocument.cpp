@@ -1719,6 +1719,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mPreloadingImages)
 
+  
+  if (tmp->mBoxObjectTable) {
+   tmp->mBoxObjectTable->EnumerateRead(ClearAllBoxObjects, nsnull);
+   delete tmp->mBoxObjectTable;
+   tmp->mBoxObjectTable = nsnull;
+ }
+
   // nsDocument has a pretty complex destructor, so we're going to
   // assume that *most* cycles you actually want to break somewhere
   // else, and not unlink an awful lot here.

@@ -90,6 +90,11 @@ class nsCookie : public nsICookie2
     }
 
   public:
+    // Generate a unique creationID. This will usually be the same as the
+    // creation time, but with a guarantee of monotonicity such that it can
+    // be used as a sqlite rowid.
+    static PRInt64 GenerateCreationID(PRInt64 aCreationTime);
+
     // public helper to create an nsCookie object. use |operator delete|
     // to destroy an object created by this method.
     static nsCookie * Create(const nsACString &aName,

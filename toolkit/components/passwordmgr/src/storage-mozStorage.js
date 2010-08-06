@@ -773,6 +773,14 @@ LoginManagerStorage_mozStorage.prototype = {
 
 
     /*
+     * uiBusy
+     */
+    get uiBusy() {
+        return this._crypto.uiBusy;
+    },
+
+
+    /*
      * _sendNotification
      *
      * Send a notification when stored data is changed.

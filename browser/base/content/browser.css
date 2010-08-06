@@ -31,7 +31,7 @@ tabbrowser {
   width: 0;
 }
 
-.tabbrowser-tab:not([fadein]) {
+.tabbrowser-tab:not([pinned]):not([fadein]) {
   max-width: 1px;
   min-width: 1px;
 }
@@ -40,9 +40,9 @@ tabbrowser {
   -moz-transition: min-width .2s ease-out, max-width .25s ease-out;
 }
 
-.tabbrowser-tab:not([fadein]) > .tab-text,
-.tabbrowser-tab:not([fadein]) > .tab-icon-image,
-.tabbrowser-tab:not([fadein]) > .tab-close-button {
+.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-text,
+.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-icon-image,
+.tabbrowser-tab:not([fadein]):not([pinned]) > .tab-close-button {
   opacity: 0 !important;
 }
 

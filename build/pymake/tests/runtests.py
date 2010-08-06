@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Run the test(s) listed on the command line. If a directory is listed, the script will recursively
 walk the directory for files named .mk and run each.

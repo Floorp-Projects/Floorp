@@ -69,6 +69,9 @@ nsAccDocManager::GetDocAccessible(nsIDocument *aDocument)
   if (!aDocument)
     return nsnull;
 
+  // Ensure CacheChildren is called before we query cache.
+  nsAccessNode::GetApplicationAccessible()->EnsureChildren();
+
   nsDocAccessible *docAcc =
     mDocAccessibleCache.GetWeak(static_cast<void*>(aDocument));
   if (docAcc)

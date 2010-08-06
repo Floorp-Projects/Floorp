@@ -1707,8 +1707,10 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder *aBuilder);
   virtual PRBool IsOpaque(nsDisplayListBuilder *aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor);
-  virtual void   Paint(nsDisplayListBuilder *aBuilder,
-                       nsIRenderingContext *aCtx);
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager);
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                    nsRegion *aVisibleRegion,
                                    nsRegion *aVisibleRegionBeforeMove);

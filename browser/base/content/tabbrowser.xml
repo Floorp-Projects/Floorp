@@ -187,6 +187,7 @@
             return;
 
           this.moveTabTo(aTab, this._numPinnedTabs - 1);
+          aTab.setAttribute("fadein", "true");
           aTab.removeAttribute("pinned");
           aTab.style.MozMarginStart = "";
           this.tabContainer._positionPinnedTabs();
@@ -737,8 +738,10 @@
             this._lastRelatedTab = null;
 
             var oldBrowser = this.mCurrentBrowser;
-            if (oldBrowser)
+            if (oldBrowser) {
               oldBrowser.setAttribute("type", "content-targetable");
+              oldBrowser.docShell.isActive = false;
+            }
 
             var updatePageReport = false;
             if (!oldBrowser ||
@@ -747,6 +750,7 @@
               updatePageReport = true;
 
             newBrowser.setAttribute("type", "content-primary");
+            newBrowser.docShell.isActive = true;
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
 
@@ -1099,7 +1103,12 @@
                 tabContainer._handleNewTab(t);
               }, 0, this.tabContainer);
             } else {
-              setTimeout(function () { t.setAttribute("fadein", "true"); }, 0);
+              setTimeout(function (tabContainer) {
+                if (t.pinned)
+                  tabContainer._handleNewTab(t);
+                else
+                  t.setAttribute("fadein", "true");
+              }, 0, this.tabContainer);
             }
 
             this.tabContainer.appendChild(t);
@@ -1195,6 +1204,10 @@
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
               try {
                 b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
+
+                // We start our browsers out as inactive, and then maintain
+                // activeness in the tab switcher.
+                b.docShell.isActive = false;
               }
               catch (ex) { }
             }
@@ -2201,7 +2214,6 @@
           this.mCurrentTab.linkedPanel = uniqueId;
           this.mCurrentTab._tPos = 0;
           this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
-          this.mCurrentTab.setAttribute("fadein", "true");
 
           // set up the shared autoscroll popup
           this._autoScrollPopup = this.mCurrentBrowser._createAutoScrollPopup();

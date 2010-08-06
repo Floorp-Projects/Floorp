@@ -40,6 +40,7 @@
 #include <winternl.h>
 
 #include <stdio.h>
+#include <string.h>
 
 #include "nsAutoPtr.h"
 
@@ -56,6 +57,31 @@
 
 // define this for very verbose dll load debug spew
 #undef DEBUG_very_verbose
+
+// This class takes care of setting and restoring the current directory
+// to make sure that the process current directory is not searched when
+// loading DLLs.
+class CurrentDirectoryGuard {
+public:
+  CurrentDirectoryGuard() {
+    ::GetCurrentDirectoryW(MAX_PATH, mCwd);
+
+    WCHAR appPath[MAX_PATH] = {L'\0'};
+    ::GetModuleFileNameW(NULL, appPath, MAX_PATH);
+    LPWSTR lastBackslash = wcsrchr(appPath, L'\\');
+    if (lastBackslash) {
+      *lastBackslash = L'\0';
+    }
+    ::SetCurrentDirectoryW(appPath);
+  }
+
+  ~CurrentDirectoryGuard() {
+    ::SetCurrentDirectoryW(mCwd);
+  }
+
+private:
+  WCHAR mCwd[MAX_PATH];
+};
 
 // The signature for LdrLoadDll changed at some point, with the second arg
 // becoming a PULONG instead of a ULONG.  This should only matter on 64-bit
@@ -208,6 +234,14 @@ continue_loading:
 #endif
 
   NS_SetHasLoadedNewDLLs();
+
+  // We need to make sure that the OS implementation of LdrLoadDll does not attempt
+  // to load any DLLs from the current working directory.  That's almost never what
+  // we want, and it can cause us load unexpected DLLs.  This guard protects against
+  // that by setting the current directory to the application's directory before
+  // LdrLoadDll is called, and restoring it to the original value when that call
+  // returns.
+  CurrentDirectoryGuard cwdGuard;
 
   return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
 }

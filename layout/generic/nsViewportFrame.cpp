@@ -257,7 +257,12 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   // Because |Reflow| sets mComputedHeight on the child to
   // availableHeight.
   AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
-  
+
+  // Set our size up front, since some parts of reflow depend on it
+  // being already set.  Note that the computed height may be
+  // unconstrained; that's ok.  Consumers should watch out for that.
+  SetSize(nsSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight()));
+ 
   // Reflow the main content first so that the placeholders of the
   // fixed-position frames will be in the right places on an initial
   // reflow.

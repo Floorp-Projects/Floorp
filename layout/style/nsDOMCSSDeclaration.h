@@ -41,7 +41,7 @@
 #define nsDOMCSSDeclaration_h___
 
 #include "nsICSSDeclaration.h"
-#include "nsIDOMNSCSS2Properties.h"
+#include "nsIDOMCSS2Properties.h"
 #include "nsCOMPtr.h"
 
 class nsCSSParser;
@@ -57,7 +57,7 @@ class Loader;
 }
 
 class nsDOMCSSDeclaration : public nsICSSDeclaration,
-                            public nsIDOMNSCSS2Properties
+                            public nsIDOMCSS2Properties
 {
 public:
   // Only implement QueryInterface; subclasses have the responsibility
@@ -84,21 +84,18 @@ public:
   NS_IMETHOD Item(PRUint32 index, nsAString & _retval);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
 
-  // We implement all of these as shims which forward to GetPropertyValue
+  // We implement this as a shim which forwards to GetPropertyValue
   // and SetPropertyValue; subclasses need not.
   NS_DECL_NSIDOMCSS2PROPERTIES
-  NS_DECL_NSIDOMSVGCSS2PROPERTIES
-  NS_DECL_NSIDOMNSCSS2PROPERTIES
 
 protected:
-  // Always fills in the out parameter, even on failure, and if the out
-  // parameter is null the nsresult will be the correct thing to
-  // propagate.
-  virtual nsresult GetCSSDeclaration(mozilla::css::Declaration **aDecl,
-                                     PRBool aAllocate) = 0;
-  virtual nsresult DeclarationChanged() = 0;
+  // This method can return null regardless of the value of aAllocate;
+  // however, a null return should only be considered a failure
+  // if aAllocate is true.
+  virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool aAllocate) = 0;
+  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl) = 0;
   // Document that we must call BeginUpdate/EndUpdate on around the
-  // calls to DeclarationChanged and the style rule mutation that leads
+  // calls to SetCSSDeclaration and the style rule mutation that leads
   // to it.
   virtual nsIDocument* DocToUpdate() = 0;
 
@@ -113,8 +110,6 @@ protected:
   nsresult ParsePropertyValue(const nsCSSProperty aPropID,
                               const nsAString& aPropValue,
                               PRBool aIsImportant);
-  nsresult ParseDeclaration(const nsAString& aDecl,
-                            PRBool aParseOnlyOneDecl, PRBool aClearOldDecl);
 
   // Prop-id based version of RemoveProperty.  Note that this does not
   // return the old value; it just does a straight removal.

@@ -47,21 +47,43 @@
  * http://www.w3.org/TR/DOM-Level-2-HTML/
  */
 
-[scriptable, uuid(a6cf90aa-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(4e237175-3628-4dc8-892f-5270edc3c71a)]
 interface nsIDOMHTMLAnchorElement : nsIDOMHTMLElement
 {
+           attribute DOMString        href;
+           attribute DOMString        target;
+
+           attribute DOMString        ping;
+
+           attribute DOMString        rel;
+           attribute DOMString        hreflang;
+           attribute DOMString        type;
+
+  /**
+   * An alias for the textContent attribute.
+   */
+  [Null(Stringify)]
+           attribute DOMString        text;
+
+  // URL decomposition IDL attributes
+           attribute DOMString        protocol;
+           attribute DOMString        host;
+           attribute DOMString        hostname;
+           attribute DOMString        port;
+           attribute DOMString        pathname;
+           attribute DOMString        search;
+           attribute DOMString        hash;
+
+
            attribute DOMString        accessKey;
            attribute DOMString        charset;
            attribute DOMString        coords;
-           attribute DOMString        href;
-           attribute DOMString        hreflang;
            attribute DOMString        name;
-           attribute DOMString        rel;
            attribute DOMString        rev;
            attribute DOMString        shape;
            attribute long             tabIndex;
-           attribute DOMString        target;
-           attribute DOMString        type;
+
+  DOMString                 toString();
   void                      blur();
   void                      focus();
 };

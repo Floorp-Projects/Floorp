@@ -1708,6 +1708,9 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION, 
         enabled ? SSL_RENEGOTIATE_UNRESTRICTED : SSL_RENEGOTIATE_REQUIRES_XTN);
 
+      mPrefBranch->GetBoolPref("security.ssl.enable_false_start", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, enabled);
+
       // Disable any ciphers that NSS might have enabled by default
       for (PRUint16 i = 0; i < SSL_NumImplementedCiphers; ++i)
       {
@@ -2235,6 +2238,9 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       PRInt32 warnLevel = 1;
       mPrefBranch->GetIntPref("security.ssl.warn_missing_rfc5746", &warnLevel);
       nsSSLIOLayerHelpers::setWarnLevelMissingRFC5746(warnLevel);
+    } else if (prefName.Equals("security.ssl.enable_false_start")) {
+      mPrefBranch->GetBoolPref("security.ssl.enable_false_start", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, enabled);
     } else if (prefName.Equals("security.OCSP.enabled")
                || prefName.Equals("security.OCSP.require")) {
       setOCSPOptions(mPrefBranch);

@@ -46,10 +46,6 @@ MAPFILE = $(OBJDIR)/nssdbm.def
 
 DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" -DSOFTOKEN_LIB_NAME=\"$(notdir $(SHARED_LIBRARY))\"
 
-ifdef MOZILLA_CLIENT
-INCLUDES += -I$(DIST)/include/sqlite3
-endif
-
 CSRCS = \
 	dbmshim.c \
 	keydb.c \

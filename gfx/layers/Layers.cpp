@@ -94,8 +94,8 @@ AppendToString(nsACString& s, const gfx3DMatrix& m,
     gfxMatrix matrix;
     if (m.Is2D(&matrix)) {
       s += nsPrintfCString(
-        "[ %g %g; %g %g; %g %g; ]",
-        96, matrix.xx, matrix.yx, matrix.xy, matrix.yy, matrix.x0, matrix.y0);
+        96, "[ %g %g; %g %g; %g %g; ]",
+        matrix.xx, matrix.yx, matrix.xy, matrix.yy, matrix.x0, matrix.y0);
     } else {
       s += nsPrintfCString(
         256, "[ %g %g %g %g; %g %g %g %g; %g %g %g %g; %g %g %g %g; ]",
@@ -218,10 +218,13 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   aTo += aPrefix;
   aTo += nsPrintfCString(64, "%s%s (0x%p)", mManager->Name(), Name(), this);
 
-  if (!mVisibleRegion.IsEmpty())
-    AppendToString(aTo, mVisibleRegion, " [visible=", "]");
+  if (mUseClipRect) {
+    AppendToString(aTo, mClipRect, " [clip=", "]");
+  }
   if (!mTransform.IsIdentity())
     AppendToString(aTo, mTransform, " [transform=", "]");
+  if (!mVisibleRegion.IsEmpty())
+    AppendToString(aTo, mVisibleRegion, " [visible=", "]");
   if (1.0 != mOpacity)
     aTo.AppendPrintf(" [opacity=%g]", mOpacity);
   if (IsOpaqueContent())
@@ -250,7 +253,9 @@ nsACString&
 CanvasLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   Layer::PrintInfo(aTo, aPrefix);
-  AppendToString(aTo, mFilter, " [filter=", "]");
+  if (mFilter != gfxPattern::FILTER_GOOD) {
+    AppendToString(aTo, mFilter, " [filter=", "]");
+  }
   return aTo;
 }
 
@@ -258,7 +263,9 @@ nsACString&
 ImageLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   Layer::PrintInfo(aTo, aPrefix);
-  AppendToString(aTo, mFilter, " [filter=", "]");
+  if (mFilter != gfxPattern::FILTER_GOOD) {
+    AppendToString(aTo, mFilter, " [filter=", "]");
+  }
   return aTo;
 }
 

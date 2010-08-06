@@ -55,6 +55,12 @@ public:
     virtual NS_HIDDEN_(nsresult)
     OSProtocolHandlerExists(const char* aScheme,
                             PRBool* aExists);
+
+    NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
+                                            PRBool *found,
+                                            nsIHandlerInfo **_retval);
+
+
 };
 
 #endif /* nsOSHelperAppService_h */
