@@ -1041,8 +1041,8 @@ class GetPropCompiler : public PICStubCompiler
 
         if (obj == holder && !pic.inlinePathPatched)
             return patchInline(holder, sprop);
-        else
-            return generateStub(holder, sprop);
+        
+        return generateStub(holder, sprop);
     }
 
     bool disable(const char *reason)
@@ -1361,8 +1361,8 @@ class GetElemCompiler : public PICStubCompiler
 
         if (obj == holder && !pic.inlinePathPatched)
             return patchInline(holder, sprop);
-        else
-            return generateStub(holder, sprop);
+
+        return generateStub(holder, sprop);
     }
 
     bool disable(const char *reason)
@@ -1684,10 +1684,9 @@ class BindNameCompiler : public PICStubCompiler
         stub(JS_FUNC_TO_DATA_PTR(void *, stub))
     { }
 
-    JSObject *disable(const char *reason)
+    bool disable(const char *reason)
     {
-        PICStubCompiler::disable(reason, stub);
-        return NULL;
+        return PICStubCompiler::disable(reason, stub);
     }
 
     static void reset(ic::PICInfo &pic)
