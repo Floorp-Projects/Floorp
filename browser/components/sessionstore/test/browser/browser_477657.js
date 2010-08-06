@@ -67,7 +67,7 @@ function test() {
     }] };
     
     let uniqueKey = "bug 477657";
-    let uniqueValue = "unik" + Date.now();
+    let uniqueValue = "unik" + Math.floor(Date.now());
   
     ss.setWindowValue(newWin, uniqueKey, uniqueValue);
     is(ss.getWindowValue(newWin, uniqueKey), uniqueValue,
