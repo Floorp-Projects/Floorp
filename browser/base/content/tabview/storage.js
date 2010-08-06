@@ -107,7 +107,7 @@ Storage = {
       });
 
       // ___ Other
-      this.saveGroupsData(gWindow, {});
+      this.saveGroupItemsData(gWindow, {});
       this.saveUIData(gWindow, {});
 
       this._sessionStore.setWindowValue(gWindow, this.GROUP_DATA_IDENTIFIER,
@@ -150,54 +150,54 @@ Storage = {
   },
 
   // ----------
-  // Function: saveGroup
-  // Saves the data for a single group, associated with a specific window.
-  saveGroup: function(win, data) {
+  // Function: saveGroupItem
+  // Saves the data for a single groupItem, associated with a specific window.
+  saveGroupItem: function(win, data) {
     var id = data.id;
-    var existingData = this.readGroupData(win);
+    var existingData = this.readGroupItemData(win);
     existingData[id] = data;
     this._sessionStore.setWindowValue(win, this.GROUP_DATA_IDENTIFIER,
       JSON.stringify(existingData));
   },
 
   // ----------
-  // Function: deleteGroup
-  // Deletes the data for a single group from the given window.
-  deleteGroup: function(win, id) {
-    var existingData = this.readGroupData(win);
+  // Function: deleteGroupItem
+  // Deletes the data for a single groupItem from the given window.
+  deleteGroupItem: function(win, id) {
+    var existingData = this.readGroupItemData(win);
     delete existingData[id];
     this._sessionStore.setWindowValue(win, this.GROUP_DATA_IDENTIFIER,
       JSON.stringify(existingData));
   },
 
   // ----------
-  // Function: readGroupData
-  // Returns the data for all groups associated with the given window.
-  readGroupData: function(win) {
+  // Function: readGroupItemData
+  // Returns the data for all groupItems associated with the given window.
+  readGroupItemData: function(win) {
     var existingData = {};
     try {
-/*         Utils.log("readGroupData" + this._sessionStore.getWindowValue(win, this.GROUP_DATA_IDENTIFIER)); */
+/*         Utils.log("readGroupItemData" + this._sessionStore.getWindowValue(win, this.GROUP_DATA_IDENTIFIER)); */
       existingData = JSON.parse(
         this._sessionStore.getWindowValue(win, this.GROUP_DATA_IDENTIFIER)
       );
     } catch (e) {
       // getWindowValue will fail if the property doesn't exist
-      Utils.log("Error in readGroupData: "+e);
+      Utils.log("Error in readGroupItemData: "+e);
     }
     return existingData;
   },
 
   // ----------
-  // Function: saveGroupsData
-  // Saves the global data for the <Groups> singleton for the given window.
-  saveGroupsData: function(win, data) {
+  // Function: saveGroupItemsData
+  // Saves the global data for the <GroupItems> singleton for the given window.
+  saveGroupItemsData: function(win, data) {
     this.saveData(win, this.GROUPS_DATA_IDENTIFIER, data);
   },
 
   // ----------
-  // Function: readGroupsData
-  // Reads the global data for the <Groups> singleton for the given window.
-  readGroupsData: function(win) {
+  // Function: readGroupItemsData
+  // Reads the global data for the <GroupItems> singleton for the given window.
+  readGroupItemsData: function(win) {
     return this.readData(win, this.GROUPS_DATA_IDENTIFIER);
   },
 

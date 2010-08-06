@@ -70,12 +70,12 @@ var UIManager = {
   _stopZoomPreparation : false,
 
   // Variable: _reorderTabItemsOnShow
-  // Keeps track of the <Group>s which their tab items' tabs have been moved
+  // Keeps track of the <GroupItem>s which their tab items' tabs have been moved
   // and re-orders the tab items when switching to TabView.
   _reorderTabItemsOnShow : [],
 
   // Variable: _reorderTabsOnHide
-  // Keeps track of the <Group>s which their tab items have been moved in
+  // Keeps track of the <GroupItem>s which their tab items have been moved in
   // TabView UI and re-orders the tabs when switcing back to main browser.
   _reorderTabsOnHide : [],
 
@@ -123,10 +123,10 @@ var UIManager = {
         this.showTabView();
 
         // ensure the tabs in the tab strip are in the same order as the tab
-        // items in groups when switching back to main browser UI for the first
+        // items in groupItems when switching back to main browser UI for the first
         // time.
-        Groups.groups.forEach(function(group) {
-          self._reorderTabsOnHide.push(group);
+        GroupItems.groupItems.forEach(function(groupItem) {
+          self._reorderTabsOnHide.push(groupItem);
         });
       }
     } catch(e) {
@@ -148,7 +148,7 @@ var UIManager = {
       this._addDevMenu();
 
       // When you click on the background/empty part of TabView,
-      // we create a new group.
+      // we create a new groupItem.
       iQ(gTabViewFrame.contentDocument).mousedown(function(e) {
         if (iQ(":focus").length > 0) {
           iQ(":focus").each(function(element) {
@@ -157,7 +157,7 @@ var UIManager = {
           });
         }
         if (e.originalTarget.id == "content")
-          self._createGroupOnDrag(e)
+          self._createGroupItemOnDrag(e)
       });
 
       iQ(window).bind("beforeunload", function() {
@@ -180,10 +180,10 @@ var UIManager = {
 
       // ___ Storage
 
-      var groupsData = Storage.readGroupsData(gWindow);
-      var firstTime = !groupsData || Utils.isEmptyObject(groupsData);
-      var groupData = Storage.readGroupData(gWindow);
-      Groups.reconstitute(groupsData, groupData);
+      var groupItemsData = Storage.readGroupItemsData(gWindow);
+      var firstTime = !groupItemsData || Utils.isEmptyObject(groupItemsData);
+      var groupItemData = Storage.readGroupItemData(gWindow);
+      GroupItems.reconstitute(groupItemsData, groupItemData);
 
       if (firstTime) {
         var padding = 10;
@@ -192,7 +192,7 @@ var UIManager = {
         var pageBounds = Items.getPageBounds();
         pageBounds.inset(padding, padding);
 
-        // ___ make a fresh group
+        // ___ make a fresh groupItem
         var box = new Rect(pageBounds);
         box.width =
           Math.min(box.width * 0.667, pageBounds.width - (infoWidth + padding));
@@ -201,14 +201,14 @@ var UIManager = {
           bounds: box
         };
 
-        var group = new Group([], options);
+        var groupItem = new GroupItem([], options);
 
         var items = TabItems.getItems();
         items.forEach(function(item) {
           if (item.parent)
             item.parent.remove(item);
 
-          group.add(item);
+          groupItem.add(item);
         });
 
         // ___ make info item
@@ -322,8 +322,8 @@ var UIManager = {
     var currentTab = this._currentTab;
     var item = null;
 
-    this._reorderTabItemsOnShow.forEach(function(group) {
-      group.reorderTabItemsBasedOnTabOrder();
+    this._reorderTabItemsOnShow.forEach(function(groupItem) {
+      groupItem.reorderTabItemsBasedOnTabOrder();
     });
     this._reorderTabItemsOnShow = [];
 
@@ -350,11 +350,11 @@ var UIManager = {
 
         self.setActiveTab(item);
 
-        var activeGroup = Groups.getActiveGroup();
-        if (activeGroup)
-          activeGroup.setTopChild(item);
+        var activeGroupItem = GroupItems.getActiveGroupItem();
+        if (activeGroupItem)
+          activeGroupItem.setTopChild(item);
 
-        window.Groups.setActiveGroup(null);
+        window.GroupItems.setActiveGroupItem(null);
         self._resize(true);
         dispatchEvent(event);
       });
@@ -373,8 +373,8 @@ var UIManager = {
 
     TabItems.pausePainting();
 
-    this._reorderTabsOnHide.forEach(function(group) {
-      group.reorderTabsBasedOnTabItemOrder();
+    this._reorderTabsOnHide.forEach(function(groupItem) {
+      groupItem.reorderTabsBasedOnTabItemOrder();
     });
     this._reorderTabsOnHide = [];
 
@@ -430,17 +430,17 @@ var UIManager = {
       } else {
         // if not closing the last tab
         if (gBrowser.tabs.length > 1) {
-          var group = Groups.getActiveGroup();
+          var groupItem = GroupItems.getActiveGroupItem();
 
           // 1) Only go back to the TabView tab when there you close the last
-          // tab of a group.
+          // tab of a groupItem.
           // 2) Take care of the case where you've closed the last tab in
-          // an un-named group, which means that the group is gone (null) and
+          // an un-named groupItem, which means that the groupItem is gone (null) and
           // there are no visible tabs.
           // Can't use timeout here because user would see a flicker of
           // switching to another tab before the TabView interface shows up.
-          if ((group && group._children.length == 1) ||
-              (group == null && gBrowser.visibleTabs.length == 1)) {
+          if ((groupItem && groupItem._children.length == 1) ||
+              (groupItem == null && gBrowser.visibleTabs.length == 1)) {
             // for the tab focus event to pick up.
             self._closedLastVisibleTab = true;
             // remove the zoom prep.
@@ -452,8 +452,8 @@ var UIManager = {
           // new tabs might be added after a tab is closing. Therefore, this
           // hack is used. We should look for a better solution.
           Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
-            if ((group && group._children.length > 0) ||
-              (group == null && gBrowser.visibleTabs.length > 0))
+            if ((groupItem && groupItem._children.length > 0) ||
+              (groupItem == null && gBrowser.visibleTabs.length > 0))
               self.hideTabView();
           }, 1);
         }
@@ -466,9 +466,9 @@ var UIManager = {
         return;
 
       Utils.timeout(function() { // Marshal event from chrome thread to DOM thread
-        var activeGroup = Groups.getActiveGroup();
-        if (activeGroup)
-          self.setReorderTabItemsOnShow(activeGroup);
+        var activeGroupItem = GroupItems.getActiveGroupItem();
+        if (activeGroupItem)
+          self.setReorderTabItemsOnShow(activeGroupItem);
       }, 1);
     });
 
@@ -525,7 +525,7 @@ var UIManager = {
       var newItem = null;
       if (focusTab && focusTab.tabItem) {
         newItem = focusTab.tabItem;
-        Groups.setActiveGroup(newItem.parent);
+        GroupItems.setActiveGroupItem(newItem.parent);
       }
 
       // ___ prepare for when we return to TabView
@@ -552,36 +552,36 @@ var UIManager = {
 
   // ----------
   // Function: setReorderTabsOnHide
-  // Sets the group which the tab items' tabs should be re-ordered when
+  // Sets the groupItem which the tab items' tabs should be re-ordered when
   // switching to the main browser UI.
   // Parameters:
-  //   group - the group which would be used for re-ordering tabs.
-  setReorderTabsOnHide: function(group) {
+  //   groupItem - the groupItem which would be used for re-ordering tabs.
+  setReorderTabsOnHide: function(groupItem) {
     if (this._isTabViewVisible()) {
-      var index = this._reorderTabsOnHide.indexOf(group);
+      var index = this._reorderTabsOnHide.indexOf(groupItem);
       if (index == -1)
-        this._reorderTabsOnHide.push(group);
+        this._reorderTabsOnHide.push(groupItem);
     }
   },
 
   // ----------
   // Function: setReorderTabItemsOnShow
-  // Sets the group which the tab items should be re-ordered when
+  // Sets the groupItem which the tab items should be re-ordered when
   // switching to the tab view UI.
   // Parameters:
-  //   group - the group which would be used for re-ordering tab items.
-  setReorderTabItemsOnShow: function(group) {
+  //   groupItem - the groupItem which would be used for re-ordering tab items.
+  setReorderTabItemsOnShow: function(groupItem) {
     if (!this._isTabViewVisible()) {
-      var index = this._reorderTabItemsOnShow.indexOf(group);
+      var index = this._reorderTabItemsOnShow.indexOf(groupItem);
       if (index == -1)
-        this._reorderTabItemsOnShow.push(group);
+        this._reorderTabItemsOnShow.push(groupItem);
     }
   },
 
   // ----------
   // Function: _setBrowserKeyHandlers
   // Overrides the browser's keys for navigating between tab (outside of the
-  // TabView UI) so they do the right thing in respect to groups.
+  // TabView UI) so they do the right thing in respect to groupItems.
   _setBrowserKeyHandlers : function() {
     var self = this;
 
@@ -610,7 +610,7 @@ var UIManager = {
           (charCode == 96 || charCode == 126)) {
         event.stopPropagation();
         event.preventDefault();
-        var tabItem = Groups.getNextGroupTab(event.shiftKey);
+        var tabItem = GroupItems.getNextGroupItemTab(event.shiftKey);
         if (tabItem)
           gBrowser.selectedTab = tabItem.tab;
       }
@@ -706,7 +706,7 @@ var UIManager = {
         var activeTab = self.getActiveTab();
         if (activeTab) {
           var tabItems = (activeTab.parent ? activeTab.parent.getChildren() :
-                          Groups.getOrphanedTabs());
+                          GroupItems.getOrphanedTabs());
           var length = tabItems.length;
           var currentIndex = tabItems.indexOf(activeTab);
 
@@ -732,16 +732,16 @@ var UIManager = {
   },
 
   // ----------
-  // Function: _createGroupOnDrag
+  // Function: _createGroupItemOnDrag
   // Called in response to a mousedown in empty space in the TabView UI;
-  // creates a new group based on the user's drag.
-  _createGroupOnDrag: function(e) {
+  // creates a new groupItem based on the user's drag.
+  _createGroupItemOnDrag: function(e) {
     const minSize = 60;
     const minMinSize = 15;
 
     var startPos = { x: e.clientX, y: e.clientY };
     var phantom = iQ("<div>")
-      .addClass("group phantom")
+      .addClass("groupItem phantom")
       .css({
         position: "absolute",
         opacity: .7,
@@ -767,7 +767,7 @@ var UIManager = {
         this.container.css("opacity", opacity);
       },
       // we don't need to pushAway the phantom item at the end, because
-      // when we create a new Group, it'll do the actual pushAway.
+      // when we create a new GroupItem, it'll do the actual pushAway.
       pushAway: function () {},
     };
     item.setBounds(new Rect(startPos.y, startPos.x, 0, 0));
@@ -829,16 +829,16 @@ var UIManager = {
       else {
         var bounds = item.getBounds();
 
-        // Add all of the orphaned tabs that are contained inside the new group
-        // to that group.
-        var tabs = Groups.getOrphanedTabs();
+        // Add all of the orphaned tabs that are contained inside the new groupItem
+        // to that groupItem.
+        var tabs = GroupItems.getOrphanedTabs();
         var insideTabs = [];
         for each(tab in tabs) {
           if (bounds.contains(tab.bounds))
             insideTabs.push(tab);
         }
 
-        var group = new Group(insideTabs,{bounds:bounds});
+        var groupItem = new GroupItem(insideTabs,{bounds:bounds});
         phantom.remove();
         dragOutInfo = null;
       }
@@ -1056,59 +1056,58 @@ var UIManager = {
   // TODO: Save info items
   _saveAll: function() {
     this._save();
-    Groups.saveAll();
+    GroupItems.saveAll();
     TabItems.saveAll();
   },
 
   // ----------
   // Function: _arrangeBySite
-  // Blows away all existing groups and organizes the tabs into new groups based
+  // Blows away all existing groupItems and organizes the tabs into new groupItems based
   // on domain.
   _arrangeBySite: function() {
-    function putInGroup(set, key) {
-      var group = Groups.getGroupWithTitle(key);
-      if (group) {
+    function putInGroupItem(set, key) {
+      var groupItem = GroupItems.getGroupItemWithTitle(key);
+      if (groupItem) {
         set.forEach(function(el) {
-          group.add(el);
+          groupItem.add(el);
         });
       } else
-        new Group(set, { dontPush: true, dontArrange: true, title: key });
+        new GroupItem(set, { dontPush: true, dontArrange: true, title: key });
     }
 
-    Groups.removeAll();
+    GroupItems.removeAll();
 
-    var newTabsGroup = Groups.getNewTabGroup();
-    var groups = [];
+    var groupItems = [];
+    var leftovers = [];
     var items = TabItems.getItems();
     items.forEach(function(item) {
       var url = item.tab.linkedBrowser.currentURI.spec;
       var domain = url.split('/')[2];
 
       if (!domain)
-        newTabsGroup.add(item);
+        leftovers.push(item.container);
       else {
         var domainParts = domain.split(".");
         var mainDomain = domainParts[domainParts.length - 2];
-        if (groups[mainDomain])
-          groups[mainDomain].push(item.container);
+        if (groupItems[mainDomain])
+          groupItems[mainDomain].push(item.container);
         else
-          groups[mainDomain] = [item.container];
+          groupItems[mainDomain] = [item.container];
       }
     });
 
-    var leftovers = [];
-    for (key in groups) {
-      var set = groups[key];
+    for (key in groupItems) {
+      var set = groupItems[key];
       if (set.length > 1) {
-        putInGroup(set, key);
+        putInGroupItem(set, key);
       } else
         leftovers.push(set[0]);
     }
 
     if (leftovers.length)
-      putInGroup(leftovers, "mixed");
+      putInGroupItem(leftovers, "mixed");
 
-    Groups.arrange();
+    GroupItems.arrange();
   },
 };
 
@@ -1118,7 +1117,7 @@ Profile.wrap(UIManager, "UIManager");
 Profile.wrap(Storage, "Storage");
 Profile.wrap(Items, "Items");
 Profile.wrap(TabItems, "TabItems");
-Profile.wrap(Groups, "Groups");
+Profile.wrap(GroupItems, "GroupItems");
 
 window.UI = UIManager;
 window.UI.init();
