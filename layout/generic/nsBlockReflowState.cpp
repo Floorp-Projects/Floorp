@@ -961,33 +961,29 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
 /**
  * Place below-current-line floats.
  */
-PRBool
+void
 nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList)
 {
   nsFloatCache* fc = aList.Head();
   while (fc) {
-    {
 #ifdef DEBUG
-      if (nsBlockFrame::gNoisyReflow) {
-        nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-        printf("placing bcl float: ");
-        nsFrame::ListTag(stdout, fc->mFloat);
-        printf("\n");
-      }
-#endif
-      // Place the float
-      nsReflowStatus reflowStatus;
-      PRBool placed = FlowAndPlaceFloat(fc->mFloat, reflowStatus);
-
-      if (!placed) {
-        // return before processing all of the floats, since the line will be pushed.
-        // FIXME: This seems like it should be handled elsewhere...
-        return PR_FALSE;
-      }
+    if (nsBlockFrame::gNoisyReflow) {
+      nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+      printf("placing bcl float: ");
+      nsFrame::ListTag(stdout, fc->mFloat);
+      printf("\n");
     }
-    fc = fc->Next();
+#endif
+    // Place the float
+    nsReflowStatus reflowStatus;
+    PRBool placed = FlowAndPlaceFloat(fc->mFloat, reflowStatus);
+    nsFloatCache *next = fc->Next();
+    if (!placed) {
+      aList.Remove(fc);
+      delete fc;
+    }
+    fc = next;
   }
-  return PR_TRUE;
 }
 
 nscoord
