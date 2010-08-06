@@ -229,41 +229,6 @@ static nscoord CalcLength(const nsCSSValue &aValue,
                                 aCanStoreInRuleTree);
 }
 
-/* Helper function to process a matrix entry. */
-static void ProcessMatrix(float aMain[4], nscoord aDelta[2],
-                          float aX[2], float aY[2],
-                          const nsCSSValue::Array* aData,
-                          nsStyleContext* aContext,
-                          nsPresContext* aPresContext,
-                          PRBool& aCanStoreInRuleTree)
-{
-  NS_PRECONDITION(aData->Count() == 7, "Invalid array!");
-
-  /* Take the first four elements out of the array as floats and store
-   * them in aMain.
-   */
-  for (PRUint16 index = 1; index <= 4; ++index)
-    aMain[index - 1] = aData->Item(index).GetFloatValue();
-
-  /* For the fifth element, if it's a percentage, store it in aX[0].
-   * Otherwise, it's a length that needs to go in aDelta[0]
-   */
-  if (aData->Item(5).GetUnit() == eCSSUnit_Percent)
-    aX[0] = aData->Item(5).GetPercentValue();
-  else
-    aDelta[0] = CalcLength(aData->Item(5), aContext, aPresContext,
-                           aCanStoreInRuleTree);
-
-  /* For the final element, if it's a percentage, store it in aY[1].
-   * Otherwise, it's a length that needs to go in aDelta[1].
-   */
-  if (aData->Item(6).GetUnit() == eCSSUnit_Percent)
-    aY[1] = aData->Item(6).GetPercentValue();
-  else
-    aDelta[1] = CalcLength(aData->Item(6), aContext, aPresContext,
-                           aCanStoreInRuleTree);
-}
-
 struct LengthPercentPairCalcOps : public css::NumbersAlreadyNormalizedOps
 {
   struct result_type {
@@ -357,6 +322,31 @@ static void ProcessTranslatePart(nscoord& aOffset, float& aPercent,
     aOffset = CalcLength(aValue, aContext, aPresContext,
                          aCanStoreInRuleTree);
   }
+}
+
+/* Helper function to process a matrix entry. */
+static void ProcessMatrix(float aMain[4], nscoord aDelta[2],
+                          float aX[2], float aY[2],
+                          const nsCSSValue::Array* aData,
+                          nsStyleContext* aContext,
+                          nsPresContext* aPresContext,
+                          PRBool& aCanStoreInRuleTree)
+{
+  NS_PRECONDITION(aData->Count() == 7, "Invalid array!");
+
+  /* Take the first four elements out of the array as floats and store
+   * them in aMain.
+   */
+  for (PRUint16 index = 1; index <= 4; ++index)
+    aMain[index - 1] = aData->Item(index).GetFloatValue();
+
+  /* The last two elements have their length parts stored in aDelta
+   * and their percent parts stored in aX[0] and aY[1].
+   */
+  ProcessTranslatePart(aDelta[0], aX[0], aData->Item(5),
+                       aContext, aPresContext, aCanStoreInRuleTree);
+  ProcessTranslatePart(aDelta[1], aY[1], aData->Item(6),
+                       aContext, aPresContext, aCanStoreInRuleTree);
 }
 
 /* Helper function to process a translatex function. */
