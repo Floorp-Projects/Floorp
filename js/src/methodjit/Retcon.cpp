@@ -96,7 +96,8 @@ Recompiler::applyPatch(Compiler& c, PatchableAddress& toPatch)
     *toPatch.location = result;
 }
 
-Recompiler::Recompiler(JSContext *cx, JSScript *script) : cx(cx), script(script)
+Recompiler::Recompiler(JSContext *cx, JSScript *script)
+  : cx(cx), script(script)
 {    
 }
 
@@ -121,15 +122,12 @@ Recompiler::recompile()
 
     /* Scan the stack, saving the ncode elements of the frames. */
     JSStackFrame *firstFrame = NULL;
-    for (CallStackIterator cs(cx); !cs.done(); ++cs) {
-        FrameIterator fp = cs.top();
-        for (FrameIterator fp = cs.top(); fp != cs.bottom(); ++fp) {
-            if (!firstFrame && fp.fp()->script == script)
-                firstFrame = fp.fp();
-            if (script->isValidJitCode(fp.fp()->ncode)) {
-                if (!toPatch.append(findPatch(&fp.fp()->ncode)))
-                    return false;
-            }
+    for (AllFramesIter i(cx); !i.done(); ++i) {
+        if (!firstFrame && i.fp()->script == script)
+            firstFrame = i.fp();
+        if (script->isValidJitCode(i.fp()->ncode)) {
+            if (!toPatch.append(findPatch(&i.fp()->ncode)))
+                return false;
         }
     }
 
@@ -144,9 +142,10 @@ Recompiler::recompile()
         }
 
         void **machineReturn = f->returnAddressLocation();
-        if (script->isValidJitCode(*machineReturn))
+        if (script->isValidJitCode(*machineReturn)) {
             if (!toPatch.append(findPatch(machineReturn)))
                 return false;
+        }
     }
 
     ReleaseScriptCode(cx, script);
@@ -154,6 +153,9 @@ Recompiler::recompile()
     /* No need to actually compile or fixup if no frames on the stack */
     if (!firstFrame)
         return true;
+
+    /* If we get this far, the script is live, and we better be safe to re-jit. */
+    JS_ASSERT(cx->compartment->debugMode);
 
     Compiler c(cx, script, firstFrame->fun, firstFrame->scopeChain);
     if (c.Compile() != Compile_Okay)
@@ -164,42 +166,6 @@ Recompiler::recompile()
         applyPatch(c, toPatch[i]);
 
     return true;
-}
-
-FrameIterator&
-FrameIterator::operator++() {
-    JS_ASSERT(curfp);
-    curfp = curfp->down;
-    return *this;
-}
-
-bool
-FrameIterator::operator==(const FrameIterator& other) const {
-    return curfp == other.curfp;
-}
-
-bool
-FrameIterator::operator!=(const FrameIterator& other) const {
-    return curfp != other.curfp;
-}
-
-CallStackIterator&
-CallStackIterator::operator++() {
-    JS_ASSERT(curcs);
-    curcs = curcs->getPreviousInMemory();
-    return *this;
-}
-
-FrameIterator
-CallStackIterator::top() const {
-    JS_ASSERT(curcs);
-    return FrameIterator(curcs->getCurrentFrame());
-}
-
-FrameIterator
-CallStackIterator::bottom() const {
-    JS_ASSERT(curcs);
-    return FrameIterator(curcs->getInitialFrame()->down);
 }
 
 } /* namespace mjit */
