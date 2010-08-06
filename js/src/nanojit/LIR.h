@@ -262,6 +262,11 @@ namespace nanojit
     static const AccSet ACCSET_LOAD_ANY  = ACCSET_ALL;      // synonym
     static const AccSet ACCSET_STORE_ANY = ACCSET_ALL;      // synonym
 
+    inline bool isSingletonAccSet(AccSet accSet) {
+        // This is a neat way of testing if a value has only one bit set.
+        return (accSet & (accSet - 1)) == 0;
+    }
+
     // Full AccSets don't fit into load and store instructions.  But
     // load/store AccSets almost always contain a single access region.  We
     // take advantage of this to create a compressed AccSet, MiniAccSet, that
@@ -284,23 +289,35 @@ namespace nanojit
     struct MiniAccSet { MiniAccSetVal val; };
     static const MiniAccSet MINI_ACCSET_MULTIPLE = { 99 };
 
+#if defined(_WIN32) && (_MSC_VER >= 1300) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64))
+    extern "C" unsigned char _BitScanReverse(unsigned long * Index, unsigned long Mask);
+    # pragma intrinsic(_BitScanReverse)
+
+    // Returns the index of the most significant bit that is set.
+    static int msbSet(uint32_t x) {
+        unsigned long idx;
+        _BitScanReverse(&idx, (unsigned long)(x | 1)); // the '| 1' ensures a 0 result when x==0
+        return idx;
+    }
+#elif (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+    static int msbSet(uint32_t x) {
+        return 31 - __builtin_clz(x | 1);
+    }
+#else
+    static int msbSet(uint32_t x) {     // slow fallback version
+        for (int i = 31; i >= 0; i--)
+            if ((1 << i) & x) 
+                return i;
+        return 0;
+    }
+#endif
+
     static MiniAccSet compressAccSet(AccSet accSet) {
-        // As the number of regions increase, this may become a bottleneck.
-        // If it does we can first count the number of bits using Kernighan's
-        // technique 
-        // (http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan)
-        // and if it's a single-region set, use a bit-scanning instruction to
-        // work out which single-region set it is.  That would require
-        // factoring out the bit-scanning code currently in
-        // nRegisterAllocFromSet().
-        //
-        // Try all the single-region AccSets first.
-        for (int i = 0; i < NUM_ACCS; i++) {
-            if (accSet == (1U << i)) {
-                MiniAccSet ret = { uint8_t(i) };
-                return ret;
-            }
+        if (isSingletonAccSet(accSet)) {
+            MiniAccSet ret = { uint8_t(msbSet(accSet)) };
+            return ret;
         }
+
         // If we got here, it must be a multi-region AccSet.
         return MINI_ACCSET_MULTIPLE;
     }
@@ -2234,15 +2251,14 @@ namespace nanojit
         void checkLInsHasOpcode(LOpcode op, int argN, LIns* ins, LOpcode op2);
         void checkLInsIsACondOrConst(LOpcode op, int argN, LIns* ins);
         void checkLInsIsNull(LOpcode op, int argN, LIns* ins);
-        void checkAccSet(LOpcode op, LIns* base, AccSet accSet);   // defined by the embedder
+        void checkAccSet(LOpcode op, LIns* base, int32_t disp, AccSet accSet);   // defined by the embedder
 
         // These can be set by the embedder and used in checkAccSet().
-        LIns *checkAccSetIns1, *checkAccSetIns2;
+        void** checkAccSetExtras;
 
     public:
         ValidateWriter(LirWriter* out, LInsPrinter* printer, const char* where);
-        void setCheckAccSetIns1(LIns* ins) { checkAccSetIns1 = ins; }
-        void setCheckAccSetIns2(LIns* ins) { checkAccSetIns2 = ins; }
+        void setCheckAccSetExtras(void** extras) { checkAccSetExtras = extras; }
 
         LIns* insLoad(LOpcode op, LIns* base, int32_t d, AccSet accSet, LoadQual loadQual);
         LIns* insStore(LOpcode op, LIns* value, LIns* base, int32_t d, AccSet accSet);

@@ -1304,13 +1304,6 @@ nsGlobalWindow::SetScriptContext(PRUint32 lang_id, nsIScriptContext *aScriptCont
 
       aScriptContext->SetGCOnDestruction(PR_FALSE);
     }
-
-    nsCOMPtr<nsIPrincipal> principal =
-      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-
-    aScriptContext->CreateOuterObject(this, principal);
-    aScriptContext->DidInitializeContext();
-    mJSObject = (JSObject *)aScriptContext->GetNativeGlobal();
   }
 
   mContext = aScriptContext;
@@ -1620,6 +1613,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   if (IsFrozen()) {
     // This outer is now getting its first inner, thaw the outer now
     // that it's ready and is getting an inner window.
+    mContext->CreateOuterObject(this, aDocument->NodePrincipal());
+    mContext->DidInitializeContext();
+    mJSObject = (JSObject *)mContext->GetNativeGlobal();
+
     Thaw();
   }
 
