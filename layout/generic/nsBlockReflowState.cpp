@@ -716,7 +716,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   PRBool keepFloatOnSameLine = PR_FALSE;
 
   for (;;) {
-    if (floatAvailableSpace.mRect.height <= 0) {
+    if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE &&
+        floatAvailableSpace.mRect.height <= 0) {
       // No space, nowhere to put anything.
       PushFloatPastBreak(aFloat);
       return PR_FALSE;
