@@ -711,21 +711,11 @@ mjit::Compiler::generateMethod()
           {
             FrameEntry *top = frame.peek(-1);
             if (top->isConstant() && top->getValue().isPrimitive()) {
-                if (top->isType(JSVAL_TYPE_INT32) && 
-                    top->getValue().toInt32() != 0 &&
-                    top->getValue().toInt32() != (1 << 31))
-                {
-                    int32 value = top->getValue().toInt32();
-                    value = -value;
-                    frame.pop();
-                    frame.push(Int32Value(value));
-                } else {
-                    double d;
-                    ValueToNumber(cx, top->getValue(), &d);
-                    d = -d;
-                    frame.pop();
-                    frame.push(DoubleValue(d));
-                }
+                double d;
+                ValueToNumber(cx, top->getValue(), &d);
+                d = -d;
+                frame.pop();
+                frame.push(NumberValue(d));
             } else {
                 jsop_neg();
             }
