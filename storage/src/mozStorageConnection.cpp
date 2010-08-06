@@ -48,6 +48,8 @@
 #include "nsHashSets.h"
 #include "nsAutoPtr.h"
 #include "nsIFile.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
 #include "nsAutoLock.h"
 
@@ -76,6 +78,8 @@ PRLogModuleInfo* gStorageLog = nsnull;
 
 namespace mozilla {
 namespace storage {
+
+#define PREF_TS_SYNCHRONOUS "toolkit.storage.synchronous"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Variant Specialization Functions (variantToSQLiteT)
@@ -433,8 +437,13 @@ Connection::initialize(nsIFile *aDatabaseFile)
     return convertResultCode(srv);
   }
 
-  // Set the synchronous PRAGMA, according to the preference.
-  switch (Service::getSynchronousPref()) {
+  // Set the synchronous PRAGMA, according to the pref
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  PRInt32 synchronous = 1; // Default to NORMAL if pref not set
+  if (pref)
+    (void)pref->GetIntPref(PREF_TS_SYNCHRONOUS, &synchronous);
+
+  switch (synchronous) {
     case 2:
       (void)ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "PRAGMA synchronous = FULL;"));
