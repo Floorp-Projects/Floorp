@@ -574,6 +574,9 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
        (aLineLayout->LineIsEmpty() ||
         mBlock->ComputeFloatWidth(*this, floatAvailableSpace, aFloat)
         <= aAvailableWidth))) {
+    nsFloatManager::SavedState floatManagerState;
+    mFloatManager->PushState(&floatManagerState);
+
     // And then place it
     // force it to fit if we're at the top of the block and we can't
     // break before this
@@ -599,6 +602,11 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
       aReflowStatus &= ~NS_FRAME_TRUNCATED;
     }
     else {
+      if (placed) {
+        mFloatManager->PopState(&floatManagerState);
+      } else {
+        mFloatManager->AssertStateMatches(&floatManagerState);
+      }
       if (IsAdjacentWithTop()) {
         // Pushing the line to the next page won't give us any more space;
         // therefore, we break.
