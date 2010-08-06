@@ -58,12 +58,11 @@ let TabView = {
   },
 
   updateContextMenu: function(tab, popup) {
-    while(popup.lastChild && popup.lastChild.id != "context_namedGroup") {
+    while(popup.lastChild && popup.lastChild.id != "context_namedGroups")
       popup.removeChild(popup.lastChild);
-    }
 
     let tabViewWindow = document.getElementById("tab-view").contentWindow;
-    let showEmpty = true;
+    let isEmpty = true;
 
     if (tabViewWindow) {
       let activeGroup = tab.tabItem.parent;
@@ -75,30 +74,20 @@ let TabView = {
             (!activeGroup || activeGroup.id != group.id)) {
           let menuItem = self._createGroupMenuItem(group);
           popup.appendChild(menuItem);
-          showEmpty = false;
+          isEmpty = false;
         }
       });
     }
-    if (showEmpty) {
-      let menuItem = this._createGroupMenuItem(null);
-      popup.appendChild(menuItem);
-    }
+    document.getElementById("context_namedGroups").hidden = isEmpty;
   },
 
   _createGroupMenuItem : function(group) {
     let menuItem = document.createElement("menuitem")
     menuItem.setAttribute("class", "group");
-
-    if (group) {
-      menuItem.setAttribute("label", group.getTitle());
-      menuItem.setAttribute(
-        "oncommand", 
-        "TabView.moveTabTo(TabContextMenu.contextTab,'" + group.id + "')");
-    } else {
-      menuItem.setAttribute(
-        "label", gNavigatorBundle.getString("tabView.noNamedGroup"));
-      menuItem.setAttribute("disabled", "true");
-    }
+    menuItem.setAttribute("label", group.getTitle());
+    menuItem.setAttribute(
+      "oncommand", 
+      "TabView.moveTabTo(TabContextMenu.contextTab,'" + group.id + "')");
 
     return menuItem;
   },
@@ -106,8 +95,7 @@ let TabView = {
   moveTabTo: function(tab, groupId) {
     let tabViewWindow = document.getElementById("tab-view").contentWindow;
 
-    if (tabViewWindow) {
+    if (tabViewWindow)
       tabViewWindow.Groups.moveTabToGroup(tab, groupId);
-    }
   }
 };
