@@ -46,6 +46,11 @@
 #include "nsFrameLoader.h"
 #include "nsGkAtoms.h"
 
+// I love you too Microsoft
+#ifdef GetClassName
+#undef GetClassName
+#endif
+
 class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIDOMNodeList;
