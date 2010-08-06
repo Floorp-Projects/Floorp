@@ -241,10 +241,6 @@ namespace mjit {
     {
         JSC::ExecutableAllocator *execPool;
 
-        // Scripts that have had PICs patched or PIC stubs generated.
-        typedef js::HashSet<JSScript*, DefaultHasher<JSScript*>, js::SystemAllocPolicy> ScriptSet;
-        ScriptSet picScripts;
-
         // Trampolines for JIT code.
         Trampolines trampolines;
 
@@ -252,10 +248,6 @@ namespace mjit {
 
         bool Initialize();
         void Finish();
-
-        bool addScript(JSScript *script);
-        void removeScript(JSScript *script);
-        void purge(JSContext *cx);
     };
 }
 #endif /* JS_METHODJIT */
@@ -699,7 +691,7 @@ class StackSpace
     inline Value *firstUnused() const;
 
     inline bool isCurrentAndActive(JSContext *cx) const;
-    friend class mjit::CallStackIterator;
+    friend class AllFramesIter;
     StackSegment *getCurrentSegment() const { return currentSegment; }
 
     /*
@@ -856,6 +848,24 @@ class FrameRegsIter
     JSStackFrame *fp() const { return curfp; }
     Value *sp() const { return cursp; }
     jsbytecode *pc() const { return curpc; }
+};
+
+/*
+ * Utility class for iteration over all active stack frames.
+ */
+class AllFramesIter
+{
+public:
+    AllFramesIter(JSContext *cx);
+
+    bool done() const { return curfp == NULL; }
+    AllFramesIter& operator++();
+
+    JSStackFrame *fp() const { return curfp; }
+
+private:
+    StackSegment *curcs;
+    JSStackFrame *curfp;
 };
 
 /* Holds the number of recording attemps for an address. */
@@ -1278,6 +1288,10 @@ struct JSCompartment {
     void *data;
     bool marked;
     js::WrapperMap crossCompartmentWrappers;
+    bool debugMode;
+
+    /* List all scripts in this compartment. */
+    JSCList scripts;
 
     JSCompartment(JSRuntime *cx);
     ~JSCompartment();
@@ -1294,6 +1308,12 @@ struct JSCompartment {
     bool wrapException(JSContext *cx);
 
     void sweep(JSContext *cx);
+
+#ifdef JS_METHODJIT
+    bool addScript(JSContext *cx, JSScript *script);
+    void removeScript(JSScript *script);
+#endif
+    void purge(JSContext *cx);
 };
 
 typedef void
