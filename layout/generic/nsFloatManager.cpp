@@ -72,7 +72,9 @@ PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 
 nsFloatManager::nsFloatManager(nsIPresShell* aPresShell)
   : mX(0), mY(0),
-    mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell)
+    mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
+    mPushedLeftFloatPastBreak(PR_FALSE),
+    mPushedRightFloatPastBreak(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsFloatManager);
 }
@@ -415,6 +417,8 @@ nsFloatManager::PushState(SavedState* aState)
   // reflows ensures that nothing gets missed.
   aState->mX = mX;
   aState->mY = mY;
+  aState->mPushedLeftFloatPastBreak = mPushedLeftFloatPastBreak;
+  aState->mPushedRightFloatPastBreak = mPushedRightFloatPastBreak;
   aState->mFloatInfoCount = mFloats.Length();
 }
 
@@ -425,6 +429,8 @@ nsFloatManager::PopState(SavedState* aState)
 
   mX = aState->mX;
   mY = aState->mY;
+  mPushedLeftFloatPastBreak = aState->mPushedLeftFloatPastBreak;
+  mPushedRightFloatPastBreak = aState->mPushedRightFloatPastBreak;
 
   NS_ASSERTION(aState->mFloatInfoCount <= mFloats.Length(),
                "somebody misused PushState/PopState");
@@ -434,6 +440,9 @@ nsFloatManager::PopState(SavedState* aState)
 nscoord
 nsFloatManager::GetLowestFloatTop() const
 {
+  if (mPushedLeftFloatPastBreak || mPushedRightFloatPastBreak) {
+    return nscoord_MAX;
+  }
   if (!HasAnyFloats()) {
     return nscoord_MIN;
   }
@@ -467,6 +476,9 @@ nsFloatManager::List(FILE* out) const
 nscoord
 nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType) const
 {
+  if (ClearContinues(aBreakType)) {
+    return nscoord_MAX;
+  }
   if (!HasAnyFloats()) {
     return aY;
   }
@@ -498,8 +510,19 @@ nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType) const
 PRBool
 nsFloatManager::ClearContinues(PRUint8 aBreakType) const
 {
+  if ((mPushedLeftFloatPastBreak &&
+       (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||
+        aBreakType == NS_STYLE_CLEAR_LEFT)) ||
+      (mPushedRightFloatPastBreak &&
+       (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||
+        aBreakType == NS_STYLE_CLEAR_RIGHT))) {
+    return PR_TRUE;
+  }
   if (!HasAnyFloats() || aBreakType == NS_STYLE_CLEAR_NONE)
     return PR_FALSE;
+  // FIXME: We could make this faster by recording whenever we split a
+  // float (in addition to recording whenever we push a float in its
+  // entirety).
   for (PRUint32 i = mFloats.Length(); i > 0; i--) {
     nsIFrame* f = mFloats[i-1].mFrame;
     if (f->GetNextInFlow()) {
