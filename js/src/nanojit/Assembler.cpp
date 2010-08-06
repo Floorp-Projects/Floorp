@@ -41,7 +41,7 @@
 
 #ifdef FEATURE_NANOJIT
 
-#ifdef VTUNE
+#ifdef VMCFG_VTUNE
 #include "../core/CodegenLIR.h"
 #endif
 
@@ -49,6 +49,18 @@
     // disable some specific warnings which are normally useful, but pervasive in the code-gen macros
     #pragma warning(disable:4310) // cast truncates constant value
 #endif
+
+#ifdef VMCFG_VTUNE
+namespace vtune {
+    using namespace nanojit;
+    void vtuneStart(void*, NIns*);
+    void vtuneEnd(void*, NIns*);
+    void vtuneLine(void*, int, NIns*);
+    void vtuneFile(void*, void*);
+}
+using namespace vtune;
+#endif // VMCFG_VTUNE
+
 
 namespace nanojit
 {
@@ -74,8 +86,8 @@ namespace nanojit
     #if PEDANTIC
         , pedanticTop(NULL)
     #endif
-    #ifdef VTUNE
-        , cgen(NULL)
+    #ifdef VMCFG_VTUNE
+        , vtuneHandle(NULL)
     #endif
         , _config(config)
     {
@@ -273,14 +285,6 @@ namespace nanojit
         verbose_only( nBytes += (end - start) * sizeof(NIns); )
         NanoAssert(uintptr_t(end) - uintptr_t(start) >= (size_t)LARGEST_UNDERRUN_PROT);
         eip = end;
-
-        #ifdef VTUNE
-        if (_nIns && _nExitIns) {
-            //cgen->jitAddRecord((uintptr_t)list->code, 0, 0, true); // add placeholder record for top of page
-            cgen->jitCodePosUpdate((uintptr_t)list->code);
-            cgen->jitPushInfo(); // new page requires new entry
-        }
-        #endif
     }
 
     void Assembler::reset()
@@ -1108,6 +1112,15 @@ namespace nanojit
         // save entry point pointers
         frag->fragEntry = fragEntry;
         frag->setCode(_nIns);
+
+#ifdef VMCFG_VTUNE
+        if (vtuneHandle)
+        {
+            vtuneEnd(vtuneHandle, codeEnd);
+            vtuneStart(vtuneHandle, _nIns);
+        }
+#endif
+
         PERFM_NVPROF("code", CodeAlloc::size(codeList));
 
 #ifdef NANOJIT_IA32
@@ -1928,27 +1941,28 @@ namespace nanojit
                     asm_call(ins);
                     break;
 
-                #ifdef VTUNE
+                #ifdef VMCFG_VTUNE
                 case LIR_file: {
-                    // we traverse backwards so we are now hitting the file
-                    // that is associated with a bunch of LIR_lines we already have seen
-                    ins->oprnd1()->setResultLive();
-                    uintptr_t currentFile = ins->oprnd1()->immI();
-                    cgen->jitFilenameUpdate(currentFile);
+                     // we traverse backwards so we are now hitting the file
+                     // that is associated with a bunch of LIR_lines we already have seen
+                    if (vtuneHandle) {
+                        void * currentFile = (void *) ins->oprnd1()->immI();
+                        vtuneFile(vtuneHandle, currentFile);
+                    }
                     break;
                 }
-
                 case LIR_line: {
-                    // add a new table entry, we don't yet knwo which file it belongs
-                    // to so we need to add it to the update table too
-                    // note the alloc, actual act is delayed; see above
-                    ins->oprnd1()->setResultLive();
-                    uint32_t currentLine = (uint32_t) ins->oprnd1()->immI();
-                    cgen->jitLineNumUpdate(currentLine);
-                    cgen->jitAddRecord((uintptr_t)_nIns, 0, currentLine, true);
+                     // add a new table entry, we don't yet knwo which file it belongs
+                     // to so we need to add it to the update table too
+                     // note the alloc, actual act is delayed; see above
+                    if (vtuneHandle) {
+                        uint32_t currentLine = (uint32_t) ins->oprnd1()->immI();
+                        vtuneLine(vtuneHandle, currentLine, _nIns);
+                    }
                     break;
                 }
-                #endif // VTUNE
+               #endif // VMCFG_VTUNE
+
             }
 
 #ifdef NJ_VERBOSE
@@ -1967,10 +1981,6 @@ namespace nanojit
 
             if (error())
                 return;
-
-        #ifdef VTUNE
-            cgen->jitCodePosUpdate((uintptr_t)_nIns);
-        #endif
 
             // check that all is well (don't check in exit paths since its more complicated)
             debug_only( pageValidate(); )
