@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html class="reftest-print">
+<title>Testcase for float breaking (reference)</title>
+<body style="margin: 0">
+<div style="width: 3.5in; height: 0.5in; background: blue"></div>
+<div>
+  <div style="display: inline-block; vertical-align: top; height: 1in; width: 1in; background: aqua"></div
+  ><div style="display: inline-block; vertical-align: top; height: 1in; width: 2in; background: fuchsia"></div>
+</div>
+<div>
+  <div style="display: inline-block; vertical-align: top; height: 0.5in; width: 1in"></div
+  ><div style="display: inline-block; vertical-align: top; height: 0.5in; width: 2in; background: fuchsia"></div>
+</div>
+<div style="page-break-before: always">
+  <!-- FIXME: uncomment this when bug 511551 is fixed
+  <div style="display: inline-block; vertical-align: top; height: 0.25in; width: 1in"></div
+  >--><div style="display: inline-block; vertical-align: top; height: 0.25in; width: 2in; background: fuchsia"></div>
+</div>

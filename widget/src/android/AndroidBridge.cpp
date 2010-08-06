@@ -37,8 +37,10 @@
 
 #include <android/log.h>
 
+#include "mozilla/dom/ContentChild.h"
 #include <pthread.h>
 #include <prthread.h>
+#include "nsXPCOMStrings.h"
 
 #include "AndroidBridge.h"
 
@@ -99,7 +101,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
     jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
     jGetHandlersForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;)[Ljava/lang/String;");
-    jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;)Z");
+    jGetHandlersForProtocol = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForProtocol", "(Ljava/lang/String;)[Ljava/lang/String;");
+    jOpenUriExternal = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
     jGetMimeTypeFromExtension = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMimeTypeFromExtension", "(Ljava/lang/String;)Ljava/lang/String;");
     jMoveTaskToBack = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "moveTaskToBack", "()V");
 
@@ -186,22 +189,32 @@ AndroidBridge::EnsureJNIThread()
 void
 AndroidBridge::NotifyIME(int aType, int aState)
 {
-    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass,
-                                  jNotifyIME, aType, aState);
+    if (sBridge)
+        JNI()->CallStaticVoidMethod(sBridge->mGeckoAppShellClass, 
+                                    sBridge->jNotifyIME,  aType, aState);
+    else
+        mozilla::dom::ContentChild::GetSingleton()->SendNotifyIME(aType, aState);
 }
 
 void
 AndroidBridge::NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen,
                                int aStart, int aEnd, int aNewEnd)
 {
+    if (!sBridge) {
+        mozilla::dom::ContentChild::GetSingleton()->
+            SendNotifyIMEChange(nsAutoString(aText), aTextLen,
+                                aStart, aEnd, aNewEnd);
+        return;
+    }
+
     jvalue args[4];
     AutoLocalJNIFrame jniFrame(1);
-    args[0].l = mJNIEnv->NewString(aText, aTextLen);
+    args[0].l = JNI()->NewString(aText, aTextLen);
     args[1].i = aStart;
     args[2].i = aEnd;
     args[3].i = aNewEnd;
-    mJNIEnv->CallStaticVoidMethodA(mGeckoAppShellClass,
-                                   jNotifyIMEChange, args);
+    JNI()->CallStaticVoidMethodA(sBridge->mGeckoAppShellClass,
+                                     sBridge->jNotifyIMEChange, args);
 }
 
 void
@@ -243,38 +256,81 @@ AndroidBridge::NotifyXreExit()
     mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyXreExit);
 }
 
-void
+PRBool
 AndroidBridge::GetHandlersForMimeType(const char *aMimeType, nsStringArray* aStringArray)
 {
     NS_PRECONDITION(aStringArray != nsnull, "null array pointer passed in");
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
     jstring jstr = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
-    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, 
-                                                  jGetHandlersForMimeType, 
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
+                                                  jGetHandlersForMimeType,
                                                   jstr);
     jobjectArray arr = static_cast<jobjectArray>(obj);
     if (!arr)
-        return;
+        return PR_FALSE;
+
     jsize len = mJNIEnv->GetArrayLength(arr);
-    for (jsize i = 0; i < len; i+=2) {
+
+    if (!aStringArray)
+        return len > 0;
+
+    for (jsize i = 0; i < len; i++) {
         jstring jstr = static_cast<jstring>(mJNIEnv->GetObjectArrayElement(arr, i));
         nsJNIString jniStr(jstr);
-        aStringArray->AppendString(jniStr);
-    } 
+        aStringArray->InsertStringAt(jniStr, i);
+    }
+
+    return PR_TRUE;
 }
 
 PRBool
-AndroidBridge::OpenUriExternal(nsCString& aUriSpec, nsCString& aMimeType) 
+AndroidBridge::GetHandlersForProtocol(const char *aScheme, nsStringArray* aStringArray)
+{
+    NS_PRECONDITION(aStringArray != nsnull, "null array pointer passed in");
+    AutoLocalJNIFrame jniFrame;
+    NS_ConvertUTF8toUTF16 wScheme(aScheme);
+    jstring jstr = mJNIEnv->NewString(wScheme.get(), wScheme.Length());
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass,
+                                                  jGetHandlersForProtocol,
+                                                  jstr);
+    jobjectArray arr = static_cast<jobjectArray>(obj);
+    if (!arr)
+        return PR_FALSE;
+
+    jsize len = mJNIEnv->GetArrayLength(arr);
+
+    if (!aStringArray)
+        return len > 0;
+
+    for (jsize i = 0; i < len; i++) {
+        jstring jstr = static_cast<jstring>(mJNIEnv->GetObjectArrayElement(arr, i));
+        nsJNIString jniStr(jstr);
+        aStringArray->InsertStringAt(jniStr, i);
+    }
+
+    return PR_TRUE;
+}
+
+PRBool
+AndroidBridge::OpenUriExternal(const nsACString& aUriSpec, const nsACString& aMimeType,
+                               const nsAString& aPackageName, const nsAString& aClassName)
 {
     AutoLocalJNIFrame jniFrame;
     NS_ConvertUTF8toUTF16 wUriSpec(aUriSpec);
     NS_ConvertUTF8toUTF16 wMimeType(aMimeType);
+    const PRUnichar* wPackageName;
+    PRUint32 packageNameLen = NS_StringGetData(aPackageName, &wPackageName);
+    const PRUnichar* wClassName;
+    PRUint32 classNameLen = NS_StringGetData(aClassName, &wClassName);
+
     jstring jstrUri = mJNIEnv->NewString(wUriSpec.get(), wUriSpec.Length());
     jstring jstrType = mJNIEnv->NewString(wMimeType.get(), wMimeType.Length());
+    jstring jstrPackage = mJNIEnv->NewString(wPackageName, packageNameLen);
+    jstring jstrClass = mJNIEnv->NewString(wClassName, classNameLen);
     return mJNIEnv->CallStaticBooleanMethod(mGeckoAppShellClass,
                                             jOpenUriExternal,
-                                            jstrUri, jstrType);
+                                            jstrUri, jstrType, jstrPackage, jstrClass);
 }
 
 void
@@ -366,5 +422,5 @@ mozilla_AndroidBridge_AttachThread(PRBool asDaemon)
 
 extern "C" JNIEnv * GetJNIForThread()
 {
-  return mozilla::AndroidBridge::JNIForThread();
+    return mozilla::AndroidBridge::JNIForThread();
 }

@@ -41,7 +41,7 @@
 #define nsDOMCSSDeclaration_h___
 
 #include "nsICSSDeclaration.h"
-#include "nsIDOMNSCSS2Properties.h"
+#include "nsIDOMCSS2Properties.h"
 #include "nsCOMPtr.h"
 
 class nsCSSParser;
@@ -57,7 +57,7 @@ class Loader;
 }
 
 class nsDOMCSSDeclaration : public nsICSSDeclaration,
-                            public nsIDOMNSCSS2Properties
+                            public nsIDOMCSS2Properties
 {
 public:
   // Only implement QueryInterface; subclasses have the responsibility
@@ -84,11 +84,9 @@ public:
   NS_IMETHOD Item(PRUint32 index, nsAString & _retval);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
 
-  // We implement all of these as shims which forward to GetPropertyValue
+  // We implement this as a shim which forwards to GetPropertyValue
   // and SetPropertyValue; subclasses need not.
   NS_DECL_NSIDOMCSS2PROPERTIES
-  NS_DECL_NSIDOMSVGCSS2PROPERTIES
-  NS_DECL_NSIDOMNSCSS2PROPERTIES
 
 protected:
   // This method can return null regardless of the value of aAllocate;
