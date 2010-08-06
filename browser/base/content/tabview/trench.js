@@ -47,7 +47,7 @@
 // Constructor: Trench
 //
 // Parameters:
-//   element - the DOM element for Item (Group or TabItem) from which the trench is projected
+//   element - the DOM element for Item (GroupItem or TabItem) from which the trench is projected
 //   xory - either "x" or "y": whether the trench's <position> is along the x- or y-axis.
 //     In other words, if "x", the trench is vertical; if "y", the trench is horizontal.
 //   type - either "border" or "guide". Border trenches mark the border of an Item.
@@ -415,8 +415,8 @@ Trench.prototype = {
 
   //----------
   // Function: calculateActiveRange
-  // Computes and sets the <activeRange> for the trench, based on the <Groups> around.
-  // This makes it so trenches' active ranges don't extend through other groups.
+  // Computes and sets the <activeRange> for the trench, based on the <GroupItems> around.
+  // This makes it so trenches' active ranges don't extend through other groupItems.
   calculateActiveRange: function Trench_calculateActiveRange() {
 
     // set it to the default: just the range itself.
@@ -426,14 +426,14 @@ Trench.prototype = {
     if (this.type != 'guide')
       return;
 
-    var groups = Groups.groups;
+    var groupItems = GroupItems.groupItems;
     var trench = this;
-    groups.forEach(function(group) {
-      if (group.isDragging) // floating groups don't block trenches
+    groupItems.forEach(function(groupItem) {
+      if (groupItem.isDragging) // floating groupItems don't block trenches
         return;
-      if (trench.el == group.container) // groups don't block their own trenches
+      if (trench.el == groupItem.container) // groupItems don't block their own trenches
         return;
-      var bounds = group.getBounds();
+      var bounds = groupItem.getBounds();
       var activeRange = new Range();
       if (trench.xory == 'y') { // if this trench is horizontal...
         activeRange = trench.adjustRangeIfIntercept(bounds.left, bounds.yRange);
