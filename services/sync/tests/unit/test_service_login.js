@@ -35,7 +35,8 @@ function run_test() {
     Weave.Service.clusterURL = "http://localhost:8080/";
     Svc.Prefs.set("autoconnect", false);
 
-    _("Initial state is ok.");
+    _("Force the initial state.");
+    Status.service = STATUS_OK;
     do_check_eq(Status.service, STATUS_OK);
 
     _("Try logging in. It wont' work because we're not configured yet.");
