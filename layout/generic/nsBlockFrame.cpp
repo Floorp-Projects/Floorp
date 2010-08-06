@@ -1014,8 +1014,9 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   NS_MergeReflowStatusInto(&state.mReflowStatus, fcStatus);
 
   // Put continued floats at the end of mFloats
-  if (state.mFloatContinuations.NotEmpty())
+  if (state.mFloatContinuations.NotEmpty()) {
     mFloats.AppendFrames(nsnull, state.mFloatContinuations);
+  }
 
   // If we end in a BR with clear and affected floats continue,
   // we need to continue, too.
@@ -1768,7 +1769,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // reflow it or if its previous margin is dirty
   PRBool needToRecoverState = PR_FALSE;
     // Float continuations were reflowed in ReflowFloatContinuations
-  PRBool reflowedFloat = mFloats.NotEmpty() && mFloats.FirstChild()->GetPrevInFlow();
+  PRBool reflowedFloat = mFloats.NotEmpty() &&
+    (mFloats.FirstChild()->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION);
   PRBool lastLineMovedUp = PR_FALSE;
   // We save up information about BR-clearance here
   PRUint8 inlineFloatBreakType = aState.mFloatBreakType;
@@ -3894,8 +3896,16 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
                          nsIFrame*           aFloat,
                          nsReflowStatus      aFloatStatus)
 {
-  nsIFrame* nextInFlow = nsnull;
-  if (!aFloat->GetNextInFlow()) {
+  nsIFrame* nextInFlow = aFloat->GetNextInFlow();
+  if (nextInFlow) {
+    nsContainerFrame *oldParent =
+      static_cast<nsContainerFrame*>(nextInFlow->GetParent());
+    nsresult rv = oldParent->StealFrame(aState.mPresContext, nextInFlow);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame failed");
+    if (oldParent != this) {
+      ReparentFrame(nextInFlow, oldParent, this);
+    }
+  } else {
     nsresult rv = aState.mPresContext->PresShell()->FrameConstructor()->
       CreateContinuingFrame(aState.mPresContext, aFloat, this, &nextInFlow);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3916,10 +3926,7 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
     aState.mFloatManager->SetSplitRightFloatAcrossBreak();
   }
 
-  if (nextInFlow) {
-    // Next in flow was created above.
-    aState.AppendFloatContinuation(nextInFlow);
-  }
+  aState.AppendFloatContinuation(nextInFlow);
   return NS_OK;
 }
 
@@ -3936,8 +3943,12 @@ GetLastFloat(nsLineBox* aLine)
 static PRBool
 CheckPlaceholderInLine(nsIFrame* aBlock, nsLineBox* aLine, nsFloatCache* aFC)
 {
-  if (!aFC || aFC->mFloat->GetPrevInFlow())
+  if (!aFC)
     return PR_TRUE;
+  NS_ASSERTION(!aFC->mFloat->GetPrevContinuation(),
+               "float in a line should never be a continuation");
+  NS_ASSERTION(!(aFC->mFloat->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION),
+               "float in a line should never be a pushed float");
   nsIFrame* ph = aBlock->PresContext()->FrameManager()->
                    GetPlaceholderFrameFor(aFC->mFloat->GetFirstInFlow());
   for (nsIFrame* f = ph; f; f = f->GetParent()) {
@@ -4435,53 +4446,56 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
 }
 
 // This function assumes our prev-in-flow has completed reflow and its
-// mFloats contains at most two frames that belong to the same flow chain,
-// the second one being a last-in-flow continuation intended for this block.
+// mFloats may contain frames at the end of its float list, marked with
+// NS_FRAME_IS_FLOAT_CONTINUATION, that should be pulled to this block.
 void
 nsBlockFrame::DrainFloatContinuations(nsBlockReflowState& aState)
 {
   // Cache any continuations of our own floats that we're still holding onto
   // so they're out of the way. This should only happen if we're re-Reflow'd
   // before our next-in-flow gets a chance to pull these continuations.
-  nsFrameList floatContinuations;
-  nsPresContext* presContext = PresContext();
-  for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
-    nsIFrame* nif = f->GetNextInFlow();
-    if (!nif) continue;
-    if (nif->GetParent() == this) {
-      NS_ASSERTION(!nif->GetNextInFlow(),
-                   "Unexpected next-in-flow for float continuation");
-      StealFrame(presContext, nif);
-      floatContinuations.AppendFrame(nsnull, nif);
+  // However, if it's a "continuation" that's not actually a continuation,
+  // put it back on the floats list.
+  // FIXME: This is not compatible with doing float breaking in dynamic
+  // situations, since in those situations we could have current
+  // continuations at the end of our float list that were actually
+  // continuations from a previous frame to this one.  (However, it's
+  // not clear to me that we really need this code in the first place;
+  // the best solution might just be to remove it.)
+  nsIFrame *f = mFloats.LastChild();
+  if (f && (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION)) {
+    do {
+      f = f->GetPrevSibling();
+    } while (f && (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION));
+    aState.SetupFloatContinuationList();
+    // RemoveFramesAfter(nsnull) removes the whole list
+    nsFrameList floatContinuations = mFloats.RemoveFramesAfter(f);
+    while (floatContinuations.NotEmpty()) {
+      nsIFrame *f = floatContinuations.RemoveFirstChild();
+      if (f->GetPrevContinuation()) {
+        aState.mFloatContinuations.AppendFrame(nsnull, f);
+      } else {
+        f->RemoveStateBits(NS_FRAME_IS_FLOAT_CONTINUATION);
+        mFloats.AppendFrame(nsnull, f);
+      }
     }
   }
-  if (floatContinuations.NotEmpty()) {
-    aState.SetupFloatContinuationList();
-    aState.mFloatContinuations.AppendFrames(nsnull, floatContinuations);
-  }
 
-  // Walk our prev-in-flow's floats and prepend their continuations to our
-  // floats list. This pulls any continuations we need to take from our
-  // prev-in-flow and makes sure our continuations of its floats are in the
-  // proper order.
+  // Take any continuations we need to take from our prev-in-flow.
   nsBlockFrame* prevBlock = static_cast<nsBlockFrame*>(GetPrevInFlow());
   if (!prevBlock)
     return;
-  for (nsIFrame* pf = prevBlock->mFloats.FirstChild(); pf; pf = pf->GetNextSibling()) {
-    nsIFrame* nif = pf->GetNextInFlow();
-    if (!nif)
-      continue;
-    nsContainerFrame* nifParent = static_cast<nsContainerFrame*>(nif->GetParent());
-    nifParent->StealFrame(presContext, nif);
-    if (nif->GetParent() != this) {
-      NS_ASSERTION(!nif->GetNextInFlow(),
-                   "Unexpected next-in-flow for float continuation");
-      ReparentFrame(nif, nifParent, this);
-    }
-    floatContinuations.AppendFrame(this, nif);
-  }
-  if (floatContinuations.NotEmpty())
+  f = prevBlock->mFloats.LastChild();
+  if (f && (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION)) {
+    do {
+      ReparentFrame(f, prevBlock, this);
+      f = f->GetPrevSibling();
+    } while (f && (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION));
+
+    // RemoveFramesAfter(nsnull) removes the whole list
+    nsFrameList floatContinuations = prevBlock->mFloats.RemoveFramesAfter(f);
     mFloats.InsertFrames(nsnull, nsnull, floatContinuations);
+  }
 
 #ifdef DEBUG
   for (nsIFrame* f = mFloats.FirstChild(); f ; f = f->GetNextSibling()) {
@@ -5719,7 +5733,8 @@ nsBlockFrame::ReflowFloatContinuations(nsBlockReflowState& aState,
                                        nsReflowStatus&     aStatus)
 {
   nsresult rv = NS_OK;
-  for (nsIFrame* f = mFloats.FirstChild(); f && f->GetPrevInFlow();
+  for (nsIFrame* f = mFloats.FirstChild();
+       f && (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION);
        f = f->GetNextSibling()) {
     if (NS_SUBTREE_DIRTY(f) || aState.mReflowState.ShouldReflowAllKids()) {
       // Cache old bounds
@@ -6044,7 +6059,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, aDirtyRect, aLists);
     for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
-      if (f->GetPrevInFlow())
+      if (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION)
          BuildDisplayListForChild(aBuilder, f, aDirtyRect, aLists);
     }
   }
@@ -6664,19 +6679,30 @@ void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
         aFrame->GetType() == nsGkAtoms::placeholderFrame ?
           nsLayoutUtils::GetFloatFromPlaceholder(aFrame) : nsnull;
       if (outOfFlowFrame) {
-        // Make sure that its parent is us. Otherwise we don't want
-        // to mess around with it because it belongs to someone
-        // else. I think this could happen if the overflow lines
-        // contain a block descendant which owns its own floats.
-        NS_ASSERTION(outOfFlowFrame->GetParent() == this,
-                     "Out of flow frame doesn't have the expected parent");
-        if (aFromOverflow) {
-          nsAutoOOFFrameList oofs(this);
-          oofs.mList.RemoveFrame(outOfFlowFrame);
+        if (outOfFlowFrame->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION) {
+          if (outOfFlowFrame->GetParent() == this) {
+            nsFrameList* list = GetPropTableFrames(PresContext(),
+                                                   FloatContinuationProperty());
+            if (!list || !list->RemoveFrameIfPresent(outOfFlowFrame)) {
+              mFloats.RemoveFrame(outOfFlowFrame);
+            }
+            aList.AppendFrame(nsnull, outOfFlowFrame);
+          }
         } else {
-          mFloats.RemoveFrame(outOfFlowFrame);
+          // Make sure that its parent is us. Otherwise we don't want
+          // to mess around with it because it belongs to someone
+          // else. I think this could happen if the overflow lines
+          // contain a block descendant which owns its own floats.
+          NS_ASSERTION(outOfFlowFrame->GetParent() == this,
+                       "Out of flow frame doesn't have the expected parent");
+          if (aFromOverflow) {
+            nsAutoOOFFrameList oofs(this);
+            oofs.mList.RemoveFrame(outOfFlowFrame);
+          } else {
+            mFloats.RemoveFrame(outOfFlowFrame);
+          }
+          aList.AppendFrame(nsnull, outOfFlowFrame);
         }
-        aList.AppendFrame(nsnull, outOfFlowFrame);
       }
 
       CollectFloats(aFrame->GetFirstChild(nsnull), 
@@ -6722,7 +6748,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
   PRBool equal = PR_TRUE;
   PRUint32 i = 0;
   for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
-    if (f->GetPrevInFlow())
+    if (f->GetStateBits() & NS_FRAME_IS_FLOAT_CONTINUATION)
       continue;
     storedFloats.AppendElement(f);
     if (i < lineFloats.Length() && lineFloats.ElementAt(i) != f) {
