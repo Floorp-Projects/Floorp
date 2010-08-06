@@ -1573,12 +1573,12 @@ window.Groups = {
     } else if ( orphanTab ) {
 			let newGroupBounds = orphanTab.getBoundsWithTitle();
 			newGroupBounds.inset(-40,-40);
-				
+
 			let newGroup = new Group([orphanTab, tabItem], {bounds: newGroupBounds});
 			newGroup.snap();
-			
+
 			this.setActiveGroup(newGroup);
-			
+
     } else {
     	Utils.log('creating a new group');
 			new Group([tabItem], {});
@@ -1714,5 +1714,59 @@ window.Groups = {
       }
     }
     return tabItem;
+  },
+
+  // ----------
+  // Function: moveTabToGroup
+  // Paramaters:
+  //  tab - the <xul:tab>.
+  //  groupId - the <group>'s id.  If nothing, create a new <group>.
+  moveTabToGroup : function(tab, groupId) {
+    Utils.log("move to tab")
+    let shouldUpdateTabBar = false;
+    let group;
+
+    // switch to the appropriate tab first.
+    if (gBrowser.selectedTab == tab) {
+      let list = gBrowser.visibleTabs;
+      let listLength = list.length;
+
+      if (listLength > 1) {
+        let index = list.indexOf(tab);
+        if (index == 0 || (index + 1) < listLength)
+          gBrowser.selectTabAtIndex(index + 1);
+        else
+          gBrowser.selectTabAtIndex(index - 1);
+        shouldUpdateTabBar = true;
+      }
+    } else
+      shouldUpdateTabBar = true
+
+    // remove tab item from a group
+    if (tab.tabItem.parent)
+      tab.tabItem.parent.remove(tab.tabItem);
+
+    // add tab item to a group
+    if (groupId) {
+      group = Groups.group(groupId);
+      group.add(tab.tabItem);
+      UI.setReorderTabItemsOnShow(group);
+    } else {
+      let pageBounds = Items.getPageBounds();
+      pageBounds.inset(20, 20);
+
+      let box = new Rect(pageBounds);
+      box.width = 250;
+      box.height = 200;
+
+      new Group([ tab.tabItem ], { bounds: box });
+    }
+
+    if (shouldUpdateTabBar)
+      this.updateTabBarForActiveGroup();
+    else {
+      tab.tabItem.setZoomPrep(false);
+      UI.showTabView();
+    }
   }
 };

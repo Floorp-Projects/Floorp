@@ -2109,3 +2109,12 @@ panel[dimmed="true"] {
   padding: 0 5px;
 }
 
+/* Tab Context Menu */
+#context_tabViewMenu {
+  list-style-image: url(chrome://browser/skin/tabview/tabview-16.png);
+}
+
+#context_tabViewMenuPopup > menuitem.group {
+  padding-left: 40px;
+}
+
