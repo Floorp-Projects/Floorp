@@ -189,6 +189,7 @@
             return;
 
           this.moveTabTo(aTab, this._numPinnedTabs - 1);
+          aTab.setAttribute("fadein", "true");
           aTab.removeAttribute("pinned");
           aTab.style.MozMarginStart = "";
           this.tabContainer._positionPinnedTabs();
@@ -1109,7 +1110,12 @@
                 tabContainer._handleNewTab(t);
               }, 0, this.tabContainer);
             } else {
-              setTimeout(function () { t.setAttribute("fadein", "true"); }, 0);
+              setTimeout(function (tabContainer) {
+                if (t.pinned)
+                  tabContainer._handleNewTab(t);
+                else
+                  t.setAttribute("fadein", "true");
+              }, 0, this.tabContainer);
             }
 
             this.tabContainer.appendChild(t);

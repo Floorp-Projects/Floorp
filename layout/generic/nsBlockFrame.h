@@ -84,7 +84,7 @@ class nsIntervalSet;
  * Child list name indices
  * @see #GetAdditionalChildListName()
  */
-#define NS_BLOCK_LIST_COUNT  (NS_CONTAINER_LIST_COUNT_INCL_OC + 4)
+#define NS_BLOCK_LIST_COUNT  (NS_CONTAINER_LIST_COUNT_INCL_OC + 5)
 
 /**
  * Some invariants:
@@ -92,12 +92,14 @@ class nsIntervalSet;
  * flow frames whose placeholders are in the overflow list.
  * -- A given piece of content has at most one placeholder
  * frame in a block's normal child list.
- * -- While a block is being reflowed, it may have a FloatContinuationProperty
- * frame property that points to an nsFrameList in its
- * nsBlockReflowState. This list contains continuations for
+ * -- While a block is being reflowed, and from then until
+ * its next-in-flow is reflowed it may have a
+ * PushedFloatProperty frame property that points to
+ * an nsFrameList. This list contains continuations for
  * floats whose prev-in-flow is in the block's regular float
- * list. The list is always empty/nonexistent after the
- * block has been reflowed.
+ * list and first-in-flows of floats that did not fit, but
+ * whose placeholders are in the block or one of its
+ * prev-in-flows.
  * -- In all these frame lists, if there are two frames for
  * the same content appearing in the list, then the frames
  * appear with the prev-in-flow before the next-in-flow.
@@ -116,6 +118,7 @@ class nsIntervalSet;
  * continuation chain or none of them.
  */
 #define NS_BLOCK_NEEDS_BIDI_RESOLUTION      NS_FRAME_STATE_BIT(20)
+#define NS_BLOCK_HAS_PUSHED_FLOATS          NS_FRAME_STATE_BIT(21)
 #define NS_BLOCK_HAS_LINE_CURSOR            NS_FRAME_STATE_BIT(24)
 #define NS_BLOCK_HAS_OVERFLOW_LINES         NS_FRAME_STATE_BIT(25)
 #define NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS  NS_FRAME_STATE_BIT(26)
@@ -156,7 +159,10 @@ public:
 
   friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
-  NS_DECLARE_FRAME_PROPERTY(FloatContinuationProperty, nsnull)
+  // This is a child list too, but we let nsBlockReflowState get to it
+  // directly too.
+  NS_DECLARE_FRAME_PROPERTY(PushedFloatProperty,
+                            nsContainerFrame::DestroyFrameList)
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
@@ -455,19 +461,19 @@ protected:
     */
   PRBool DrainOverflowLines(nsBlockReflowState& aState);
 
-  /** grab float continuations from this block's prevInFlow, and splice
+  /** grab pushed floats from this block's prevInFlow, and splice
     * them into this block's mFloats list.
     */
-  void DrainFloatContinuations(nsBlockReflowState& aState);
+  void DrainPushedFloats(nsBlockReflowState& aState);
 
   /** Load all our floats into the float manager (without reflowing them).
    *  Assumes float manager is in our own coordinate system.
    */
   void RecoverFloats(nsFloatManager& aFloatManager);
 
-  /** Reflow float continuations
+  /** Reflow pushed floats
    */
-  nsresult ReflowFloatContinuations(nsBlockReflowState& aState,
+  nsresult ReflowPushedFloats(nsBlockReflowState& aState,
                                     nsRect&             aBounds,
                                     nsReflowStatus&     aStatus);
 
@@ -582,10 +588,16 @@ protected:
                             nsIFrame*           aFloat);
   // An incomplete aReflowStatus indicates the float should be split
   // but only if the available height is constrained.
+  // aAdjustedAvailableSpace is the result of calling
+  // nsBlockFrame::AdjustFloatAvailableSpace.
   nsresult ReflowFloat(nsBlockReflowState& aState,
-                       const nsRect&       aFloatAvailableSpace,
+                       const nsRect&       aAdjustedAvailableSpace,
                        nsIFrame*           aFloat,
                        nsMargin&           aFloatMargin,
+                       // Whether the float's position
+                       // (aAdjustedAvailableSpace) has been pushed down
+                       // due to the presence of other floats.
+                       PRBool              aFloatPushedDown,
                        nsReflowStatus&     aReflowStatus);
 
   //----------------------------------------
@@ -605,11 +617,11 @@ protected:
                                          nsIFrame*           aFrame,
                                          PRBool&             aMadeNewFrame);
 
-  // Push aLine which contains a positioned element that was truncated. Clean up any 
-  // placeholders on the same line that were continued. Set aKeepReflowGoing to false. 
-  void PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
-                                    line_iterator       aLine,
-                                    PRBool&             aKeepReflowGoing);
+  // Push aLine, which cannot be placed on this page/column but should
+  // fit on a future one.  Set aKeepReflowGoing to false.
+  void PushTruncatedLine(nsBlockReflowState& aState,
+                         line_iterator       aLine,
+                         PRBool&             aKeepReflowGoing);
 
   nsresult SplitLine(nsBlockReflowState& aState,
                      nsLineLayout& aLineLayout,
@@ -711,6 +723,14 @@ protected:
 
   nsFrameList* GetOverflowOutOfFlows() const;
   void SetOverflowOutOfFlows(const nsFrameList& aList, nsFrameList* aPropValue);
+
+  // Get the pushed floats list
+  nsFrameList* GetPushedFloats() const;
+  // Get the pushed floats list, or if there is not currently one,
+  // make a new empty one.
+  nsFrameList* EnsurePushedFloats();
+  // Remove and return the pushed floats list.
+  nsFrameList* RemovePushedFloats();
 
 #ifdef NS_DEBUG
   void VerifyLines(PRBool aFinalCheckOK);

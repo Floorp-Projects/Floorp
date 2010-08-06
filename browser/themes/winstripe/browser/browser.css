@@ -415,6 +415,27 @@ toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropm
   height: 18px;
 }
 
+toolbar[iconsize="small"] .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+toolbar[iconsize="small"] .toolbarbutton-1 > .toolbarbutton-icon {
+  margin: 1px;
+  width: 16px;
+  height: 16px;
+}
+
+/* Default icons have a built-in glow, so they are 18*18px even in small mode,
+   except for the large back icon, which is why the code below uses 'auto' rather
+   than 18px. This will pick the correct size based on the image region. */
+:-moz-any(
+    #back-button, #forward-button, #reload-button, #stop-button,
+    #home-button, #print-button, #downloads-button, #history-button,
+    #bookmarks-button, #bookmarks-menu-button, #new-tab-button,
+    #new-window-button, #cut-button, #copy-button, #paste-button,
+    #fullscreen-button) > .toolbarbutton-icon {
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
 toolbar[mode="full"] .toolbarbutton-1,
 toolbar[mode="full"] .toolbarbutton-menubutton-button {
   min-width: 57px;
@@ -498,11 +519,6 @@ toolbar:not([iconsize="small"])[mode="icons"] #back-button:not([disabled="true"]
                    0 0 3px rgba(0,0,0,.4) inset,
                    0 0 0 1px rgba(0,0,0,.65),
                    0 2px 0 rgba(255,255,255,.4);
-}
-
-toolbar:not([iconsize="small"])[mode="icons"] #back-button > .toolbarbutton-icon {
-  width: auto;
-  height: auto;
 }
 
 toolbar:not([iconsize="small"])[mode="icons"][currentset*="unified-back-forward-button"],

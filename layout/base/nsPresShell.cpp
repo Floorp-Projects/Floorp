@@ -207,6 +207,8 @@
 
 #include "mozilla/FunctionTimer.h"
 
+#include "Layers.h"
+
 #ifdef NS_FUNCTION_TIMER
 #define NS_TIME_FUNCTION_DECLARE_DOCURL                \
   nsCAutoString docURL__("N/A");                       \
@@ -228,8 +230,8 @@ static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 #include "nsIMemoryReporter.h"
 
 using namespace mozilla;
-using namespace mozilla::layers;
 using namespace mozilla::dom;
+using namespace mozilla::layers;
 
 PRBool nsIPresShell::gIsAccessibilityActive = PR_FALSE;
 CapturingContentInfo nsIPresShell::gCaptureInfo;
@@ -809,6 +811,8 @@ public:
                                                         nsIntRect* aScreenRect);
 
   virtual already_AddRefed<nsPIDOMWindow> GetRootWindow();
+
+  virtual LayerManager* GetLayerManager();
 
   //nsIViewObserver interface
 
@@ -5835,6 +5839,19 @@ struct PaintParams {
   const nsRegion* mDirtyRegion;
   nscolor mBackgroundColor;
 };
+
+LayerManager* PresShell::GetLayerManager()
+{
+  NS_ASSERTION(mViewManager, "Should have view manager");
+
+  nsIView* rootView;
+  if (NS_SUCCEEDED(mViewManager->GetRootView(rootView)) && rootView) {
+    if (nsIWidget* widget = rootView->GetWidget()) {
+      return widget->GetLayerManager();
+    }
+  }
+  return nsnull;
+}
 
 static void DrawThebesLayer(ThebesLayer* aLayer,
                             gfxContext* aContext,

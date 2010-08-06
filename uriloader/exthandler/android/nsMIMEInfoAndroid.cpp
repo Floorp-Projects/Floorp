@@ -76,8 +76,10 @@ nsMIMEInfoAndroid::GetMimeInfoForMimeType(const nsACString& aMimeType)
   if (len == 0)
     return nsnull;
   nsCOMPtr<nsMIMEInfoAndroid> info = new nsMIMEInfoAndroid(aMimeType);
-  for (jsize i = 0; i < len; i+=2) {
-    nsAndroidHandlerApp* app = new nsAndroidHandlerApp(*stringArray[i], empty);
+  for (jsize i = 0; i < len; i+=4) {
+    nsAndroidHandlerApp* app = 
+      new nsAndroidHandlerApp(*stringArray[i], empty, *stringArray[i + 2], 
+                              *stringArray[i + 3], aMimeType);
     info->mHandlerApps->AppendElement(app, PR_FALSE);
     if (stringArray[i + 1] > 0)
       info->mPrefApp = app;
@@ -93,6 +95,37 @@ nsMIMEInfoAndroid::GetMimeInfoForFileExt(const nsACString& aFileExt)
   mozilla::AndroidBridge::Bridge()->GetMimeTypeFromExtension(nsCString(aFileExt), mimeType);
 
   return GetMimeInfoForMimeType(mimeType);
+}
+
+nsresult
+nsMIMEInfoAndroid::GetMimeInfoForProtocol(const nsACString &aScheme,
+                                          PRBool *found,
+                                          nsIHandlerInfo **info)
+{
+    mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
+    nsStringArray stringArray;
+    bridge->GetHandlersForProtocol(nsCAutoString(aScheme).get(), &stringArray);
+
+    const nsString &empty = EmptyString();
+    const nsCString &emptyC = EmptyCString();
+    PRInt32 len = stringArray.Count();
+    if (len == 0) {
+        *found = PR_FALSE;
+        return NS_OK;
+    }
+    *found = PR_TRUE;
+    nsMIMEInfoAndroid *mimeinfo = new nsMIMEInfoAndroid(emptyC);
+    for (jsize i = 0; i < len; i+=4) {
+      nsAndroidHandlerApp* app = 
+        new nsAndroidHandlerApp(*stringArray[i], empty, *stringArray[i + 2], 
+                                *stringArray[i + 3], emptyC);
+      mimeinfo->mHandlerApps->AppendElement(app, PR_FALSE);
+      if (!stringArray[i + 1]->IsEmpty()) {
+        mimeinfo->mPrefApp = app;
+      }
+    }
+    *info = mimeinfo;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -197,7 +230,9 @@ nsMIMEInfoAndroid::SetPreferredAction(nsHandlerInfoAction aPrefAction)
 NS_IMETHODIMP
 nsMIMEInfoAndroid::GetAlwaysAskBeforeHandling(PRBool* aAlwaysAsk)
 {
-  *aAlwaysAsk = mAlwaysAsk;
+  // the chooser dialog currently causes a crash on Android, avoid this by returning false here
+  // but be sure to return mAlwaysAsk when that gets fixed (bug 584896)
+  *aAlwaysAsk = PR_FALSE;
   return NS_OK;
 }
 
@@ -328,8 +363,8 @@ nsMIMEInfoAndroid::LaunchWithFile(nsIFile *aFile)
 }
 
 nsMIMEInfoAndroid::nsMIMEInfoAndroid(const nsACString& aMIMEType) :
-  mMimeType(aMIMEType), mAlwaysAsk(PR_TRUE), 
-  mPrefAction(nsIMIMEInfo::useHelperApp), 
+  mMimeType(aMIMEType), mAlwaysAsk(PR_TRUE),
+  mPrefAction(nsIMIMEInfo::useHelperApp),
   mSystemChooser(this)
 {
   mPrefApp = &mSystemChooser;

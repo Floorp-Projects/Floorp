@@ -1442,6 +1442,28 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 561981-8.html 561981-8-ref.html
 == 562835-1.html 562835-ref.html
 == 562835-2.html 562835-ref.html
+== 563584-1.html 563584-1-ref.html
+== 563584-2.html 563584-2-ref.html
+== 563584-3.html 563584-3-ref.html
+== 563584-4.html 563584-4-ref.html
+== 563584-5.html 563584-5-ref.html
+== 563584-6-columns.html 563584-6-columns-ref.html
+== 563584-6-printing.html 563584-6-printing-ref.html
+== 563584-7.html 563584-7-ref.html
+# FIXME: It would be nice to have variants of these -8 tests for the
+# table narrowing quirk causing a change to mIsTopOfPage (though I'm not
+# entirely sure our behavior is the right one, either).
+== 563584-8a.html 563584-8a-ref.html
+== 563584-8b.html 563584-8b-ref.html
+== 563584-8c.html 563584-8c-ref.html
+== 563584-8d.html 563584-8d-ref.html
+== 563584-9a.html 563584-9a-ref.html
+== 563584-9b.html 563584-9b-ref.html
+== 563584-9c.html 563584-9cd-ref.html
+== 563584-9d.html 563584-9cd-ref.html
+== 563584-10a.html 563584-10-ref.html
+== 563584-10b.html 563584-10-ref.html
+== 563584-11.html 563584-11-ref.html
 == 564054-1.html 564054-1-ref.html
 == 564991-1.html 564991-1-ref.html
 == 565819-1.html 565819-ref.html
@@ -1459,6 +1481,10 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 571347-3.html 571347-3-ref.html
 == 572598-1.html 572598-ref.html
 == 574898-1.html 574898-ref.html
+== 582037-1a.html 582037-1-ref.html
+== 582037-1b.html 582037-1-ref.html
+== 582037-2a.html 582037-2-ref.html
+== 582037-2b.html 582037-2-ref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
 == 581579-1.html 581579-1-ref.html

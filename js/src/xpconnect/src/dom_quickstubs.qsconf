@@ -173,8 +173,6 @@ members = [
     # dom/interfaces/css
     'nsIDOMElementCSSInlineStyle.*',
     'nsIDOMCSS2Properties.*',
-    'nsIDOMSVGCSS2Properties.*',
-    'nsIDOMNSCSS2Properties.*',
     'nsIDOMRect.*',
     'nsIDOMViewCSS.getComputedStyle',
     'nsIDOMCSSStyleDeclaration.*',
@@ -240,9 +238,7 @@ members = [
     'nsIDOMHTMLDocument.images',
     'nsIDOMHTMLDocument.write',
     'nsIDOMHTMLDocument.writeln',
-    'nsIDOMHTMLElement.className',
-    'nsIDOMHTMLElement.id',
-    'nsIDOMHTMLElement.title',
+    'nsIDOMHTMLElement.*',
     'nsIDOMHTMLFormElement.elements',
     'nsIDOMHTMLFormElement.name',
     'nsIDOMHTMLFormElement.submit',
@@ -385,6 +381,7 @@ members = [
     # dom/interfaces/stylesheets - None.
 
     # dom/interfaces/svg - None.
+    'nsIDOMSVGStylable.*',
 
     # dom/interfaces/threads - None.
 
@@ -508,6 +505,7 @@ customIncludes = [
     'nsGenericDOMDataNode.h',
     'nsGenericElement.h',
     'nsGenericHTMLElement.h',
+    'nsSVGStylableElement.h',
     'nsHTMLDocument.h',
     'nsDOMQS.h',
     ]
@@ -547,16 +545,6 @@ nsIDOMStorage_Clear_customMethodCallCode = """
     if (NS_SUCCEEDED(rv))
         JS_ClearScope(cx, obj);
 """
-
-CSS2Properties_ = {
-    'thisType': 'nsICSSDeclaration',
-    'additionalArguments': 'const nsCSSProperty prop',
-    'additionalArgumentValues': 'QS_CSS_PROP_%s',
-    'getter_code': '    nsString result;\n' + 
-                   '    rv = self->GetPropertyValue(prop, result);',
-    'setter_code': '    rv = self->SetPropertyValue(prop, arg0);',
-    'canFail': True
-}
 
 CUSTOM_QS = {
     'skipgen': True,
@@ -675,8 +663,15 @@ customMethodCalls = {
     'nsIDOMCanvasRenderingContext2D_StrokeStyle': { 'skipgen': True },
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
-    'nsIDOMCSS2Properties_': CSS2Properties_,
-    'nsIDOMNSCSS2Properties_': CSS2Properties_,
+    'nsIDOMCSS2Properties_': {
+        'thisType': 'nsICSSDeclaration',
+        'additionalArguments': 'const nsCSSProperty prop',
+        'additionalArgumentValues': 'QS_CSS_PROP_%s',
+        'getter_code': '    nsString result;\n' + 
+                       '    rv = self->GetPropertyValue(prop, result);',
+        'setter_code': '    rv = self->SetPropertyValue(prop, arg0);',
+        'canFail': True
+        },
     'nsIDOMNSElement_': {
         'thisType': 'nsGenericElement'
         },
@@ -844,6 +839,22 @@ customMethodCalls = {
         },
     'nsIDOMNSHTMLElement_': {
         'thisType': 'nsGenericHTMLElement'
+        },
+    'nsIDOMHTMLElement_': {
+        'thisType': 'nsGenericHTMLElement'
+        },
+    'nsIDOMElementCSSInlineStyle_': {
+        'thisType': 'nsStyledElement'
+        },
+    'nsIDOMElementCSSInlineStyle_GetStyle': {
+        'thisType': 'nsStyledElement',
+        'code': '    nsIDOMCSSStyleDeclaration* result = '
+                'self->GetStyle(&rv);'
+        },
+    'nsIDOMSVGStylable_GetStyle': {
+        'thisType': 'nsSVGStylableElement',
+        'code': '    nsIDOMCSSStyleDeclaration* result = '
+                'self->GetStyle(&rv);'
         },
     'nsIDOMDocument_': {
         'thisType': 'nsDocument'
