@@ -142,6 +142,7 @@ ic::SetGlobalName(VMFrame &f, uint32 index)
     JSScopeProperty *sprop = scope->lookup(id);
     if (!sprop ||
         !sprop->hasDefaultGetterOrIsMethod() ||
+        !sprop->writable() ||
         !SPROP_HAS_VALID_SLOT(sprop, scope))
     {
         JS_UNLOCK_SCOPE(f.cx, scope);
