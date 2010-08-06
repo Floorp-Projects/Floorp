@@ -421,6 +421,7 @@ nsContextMenu.prototype = {
   setTarget: function (aNode, aRangeParent, aRangeOffset) {
     const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (aNode.namespaceURI == xulNS ||
+        aNode.nodeType == Node.DOCUMENT_NODE ||
         this.isTargetAFormControl(aNode)) {
       this.shouldDisplay = false;
       return;
