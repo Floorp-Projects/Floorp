@@ -5750,7 +5750,7 @@ nsBlockFrame::ReflowFloatContinuations(nsBlockReflowState& aState,
 
       // Reflow
       nsReflowStatus fStatus = NS_FRAME_COMPLETE;
-      aState.AddFloat(nsnull, f, aState.mContentArea.width, fStatus);
+      aState.FlowAndPlaceFloat(f, fStatus);
       if (!NS_FRAME_IS_FULLY_COMPLETE(fStatus)) {
         rv = SplitFloat(aState, f, fStatus);
         NS_ENSURE_SUCCESS(rv, rv);
