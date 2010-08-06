@@ -332,11 +332,12 @@ nsBlockReflowState::GetFloatAvailableSpaceWithState(
                "bad coord system");
 #endif
 
+  nscoord y = aY - BorderPadding().top;
+  nscoord height = (mContentArea.height == nscoord_MAX)
+                     ? nscoord_MAX : NS_MAX(mContentArea.height - y, 0);
   nsFlowAreaRect result =
-    mFloatManager->GetFlowArea(aY - BorderPadding().top, 
-                               nsFloatManager::BAND_FROM_POINT,
-                               mContentArea.height, mContentArea.width,
-                               aState);
+    mFloatManager->GetFlowArea(y, nsFloatManager::BAND_FROM_POINT,
+                               height, mContentArea.width, aState);
   // Keep the width >= 0 for compatibility with nsSpaceManager.
   if (result.mRect.width < 0)
     result.mRect.width = 0;
