@@ -84,7 +84,7 @@ class nsIntervalSet;
  * Child list name indices
  * @see #GetAdditionalChildListName()
  */
-#define NS_BLOCK_LIST_COUNT  (NS_CONTAINER_LIST_COUNT_INCL_OC + 4)
+#define NS_BLOCK_LIST_COUNT  (NS_CONTAINER_LIST_COUNT_INCL_OC + 5)
 
 /**
  * Some invariants:
@@ -92,22 +92,12 @@ class nsIntervalSet;
  * flow frames whose placeholders are in the overflow list.
  * -- A given piece of content has at most one placeholder
  * frame in a block's normal child list.
- * -- While a block is being reflowed, it may have a FloatContinuationProperty
- * frame property that points to an nsFrameList in its
- * nsBlockReflowState. This list contains continuations for
+ * -- While a block is being reflowed, and from then until
+ * its next-in-flow is reflowed it may have a
+ * FloatContinuationProperty frame property that points to
+ * an nsFrameList. This list contains continuations for
  * floats whose prev-in-flow is in the block's regular float
- * list. The list is always empty/nonexistent after the
- * block has been reflowed.  (However, after it has been
- * reflowed and before the continuations are moved to the
- * next block, they are temporarily at the end of the
- * block's float list.  FIXME: This temporary storage
- * situation is not compatible with doing float breaking in
- * dynamic cases, since we can't distinguish unflushed
- * temporary storage (floats being transferred from the
- * frame) in a case where we need a second reflow from
- * frames previously transferred to the frame; fixing this
- * would require an additional frame list for this temporary
- * storage.)
+ * list.
  * -- In all these frame lists, if there are two frames for
  * the same content appearing in the list, then the frames
  * appear with the prev-in-flow before the next-in-flow.
@@ -126,6 +116,7 @@ class nsIntervalSet;
  * continuation chain or none of them.
  */
 #define NS_BLOCK_NEEDS_BIDI_RESOLUTION      NS_FRAME_STATE_BIT(20)
+#define NS_BLOCK_HAS_FLOAT_CONTINUATIONS    NS_FRAME_STATE_BIT(21)
 #define NS_BLOCK_HAS_LINE_CURSOR            NS_FRAME_STATE_BIT(24)
 #define NS_BLOCK_HAS_OVERFLOW_LINES         NS_FRAME_STATE_BIT(25)
 #define NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS  NS_FRAME_STATE_BIT(26)
@@ -166,7 +157,10 @@ public:
 
   friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
-  NS_DECLARE_FRAME_PROPERTY(FloatContinuationProperty, nsnull)
+  // This is a child list too, but we let nsBlockReflowState get to it
+  // directly too.
+  NS_DECLARE_FRAME_PROPERTY(FloatContinuationProperty,
+                            nsContainerFrame::DestroyFrameList)
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
@@ -727,6 +721,14 @@ protected:
 
   nsFrameList* GetOverflowOutOfFlows() const;
   void SetOverflowOutOfFlows(const nsFrameList& aList, nsFrameList* aPropValue);
+
+  // Get the float continuations list
+  nsFrameList* GetFloatContinuations() const;
+  // Get the float continuations list, or if there is not currently one,
+  // make a new empty one.
+  nsFrameList* EnsureFloatContinuations();
+  // Remove and return the float continuations list.
+  nsFrameList* RemoveFloatContinuations();
 
 #ifdef NS_DEBUG
   void VerifyLines(PRBool aFinalCheckOK);
