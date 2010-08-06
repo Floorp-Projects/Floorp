@@ -337,7 +337,10 @@ public:
                                      // percent height frames inside cells which may not have computed heights
     PRUint16 mNextInFlowUntouched:1; // nothing in the frame's next-in-flow (or its descendants)
                                      // is changing
-    PRUint16 mIsTopOfPage:1;         // is the current context at the top of a page?
+    PRUint16 mIsTopOfPage:1;         // Is the current context at the top of a
+                                     // page?  When true, we force something
+                                     // that's too tall for a page/column to
+                                     // fit anyway to avoid infinite loops.
     PRUint16 mBlinks:1;              // Keep track of text-decoration: blink
     PRUint16 mHasClearance:1;        // Block has clearance
     PRUint16 mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
