@@ -64,9 +64,11 @@ interface nsIChannel;
 /**
  * The nsISyncDOMLoadService interface can be used to synchronously load
  * a document.
+ *
+ * @deprecated use XMLHttpRequest instead
  */
 
-[scriptable, uuid(8095998d-ae1c-4cfa-9b43-0973e5d77eb0)]
+[deprecated, scriptable, uuid(8095998d-ae1c-4cfa-9b43-0973e5d77eb0)]
 interface nsISyncLoadDOMService : nsISupports
 {
     /**
