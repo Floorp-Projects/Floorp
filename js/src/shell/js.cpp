@@ -1059,6 +1059,14 @@ PutStr(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
+Now(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsdouble now = PRMJ_Now() / double(PRMJ_USEC_PER_MSEC);
+    JS_SET_RVAL(cx, vp, DOUBLE_TO_JSVAL(now));
+    return true;
+}
+
+static JSBool
 Print(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval *argv;
@@ -3897,6 +3905,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("readline",       ReadLine,       0,0),
     JS_FN("print",          Print,          0,0),
     JS_FN("putstr",         PutStr,         0,0),
+    JS_FN("now",            Now,            0,0),
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("assertEq",       AssertEq,       2,0),
@@ -3989,6 +3998,7 @@ static const char *const shell_help_messages[] = {
 "readline()               Read a single line from stdin",
 "print([exp ...])         Evaluate and print expressions",
 "putstr([exp])            Evaluate and print expression without newline",
+"now()                    Return the current time with sub-ms precision",
 "help([name ...])         Display usage and help messages",
 "quit()                   Quit the shell",
 "assertEq(actual, expected[, msg])\n"
