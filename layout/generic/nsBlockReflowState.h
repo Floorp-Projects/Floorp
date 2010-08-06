@@ -108,10 +108,15 @@ public:
                   nsIFrame*           aFloat,
                   nscoord             aAvailableWidth,
                   nsReflowStatus&     aReflowStatus);
+private:
   PRBool CanPlaceFloat(nscoord aFloatWidth,
                        const nsFlowAreaRect& aFloatAvailableSpace);
+public:
   PRBool FlowAndPlaceFloat(nsIFrame*       aFloat,
                            nsReflowStatus& aReflowStatus);
+private:
+  void PushFloatPastBreak(nsIFrame* aFloat);
+public:
   PRBool PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats);
 
   // Returns the first coordinate >= aY that clears the

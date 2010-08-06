@@ -1029,7 +1029,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   if (!NS_FRAME_IS_FULLY_COMPLETE(state.mReflowStatus)) {
-    if (GetOverflowLines()) {
+    if (GetOverflowLines() || GetFloatContinuations()) {
       state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
     }
 
@@ -3536,10 +3536,9 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
       }
       --aLine;
 
-      if (LINE_REFLOW_TRUNCATED == lineReflowStatus) {
-        // Push the line with the truncated float
-        PushTruncatedPlaceholderLine(aState, aLine, *aKeepReflowGoing);
-      }
+      NS_ASSERTION(lineReflowStatus != LINE_REFLOW_TRUNCATED,
+                   "ReflowInlineFrame should never determine that a line "
+                   "needs to go to the next page/column");
     }
   }
 
@@ -3634,9 +3633,9 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
         aState.mFloatManager->AssertStateMatches(aFloatStateBeforeLine);
         aFloatAvailableSpace = aState.GetFloatAvailableSpace();
       } else {
-        // There's nowhere to retry placing the line. Just treat it as if
-        // we placed the float but it was truncated so we need this line
-        // to go to the next page/column.
+        // There's nowhere to retry placing the line, so we want to push
+        // it to the next page/column where its contents can fit not
+        // next to a float.
         lineReflowStatus = LINE_REFLOW_TRUNCATED;
         // Push the line that didn't fit
         PushTruncatedPlaceholderLine(aState, aLine, *aKeepReflowGoing);
@@ -3820,12 +3819,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       }
     }
   }
-  else if (NS_FRAME_IS_TRUNCATED(frameReflowStatus) &&
-           nsGkAtoms::placeholderFrame == aFrame->GetType()) {
-    // if the frame is a placeholder and was complete but truncated (and not at the top
-    // of page), the entire line will be pushed to give it another chance to not truncate.
-    *aLineReflowStatus = LINE_REFLOW_TRUNCATED;
-  }
 
   if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus)) {
     // Create a continuation for the incomplete frame. Note that the
@@ -3833,13 +3826,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     nsIAtom* frameType = aFrame->GetType();
 
     PRBool madeContinuation;
-    if (nsGkAtoms::placeholderFrame == frameType) {
-      nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(aFrame);
-      rv = SplitFloat(aState, placeholder->GetOutOfFlowFrame(), frameReflowStatus);
-    }
-    else {
-      rv = CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
-    }
+    rv = CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Remember that the line has wrapped
@@ -3915,10 +3902,8 @@ nsBlockFrame::SplitFloat(nsBlockReflowState& aState,
   if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aFloatStatus))
     aFloat->GetNextInFlow()->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
 
-  // Float continuations can only trigger overflow
-  NS_FRAME_SET_OVERFLOW_INCOMPLETE(aFloatStatus);
-  // Make sure the containing block knows about the float's status
-  NS_MergeReflowStatusInto(&aState.mReflowStatus, aFloatStatus);
+  // The containing block is now overflow-incomplete.
+  NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
 
   if (aFloat->GetStyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
     aState.mFloatManager->SetSplitLeftFloatAcrossBreak();
@@ -5755,12 +5740,6 @@ nsBlockFrame::ReflowFloatContinuations(nsBlockReflowState& aState,
       // Reflow
       nsReflowStatus fStatus = NS_FRAME_COMPLETE;
       aState.FlowAndPlaceFloat(f, fStatus);
-      if (!NS_FRAME_IS_FULLY_COMPLETE(fStatus)) {
-        rv = SplitFloat(aState, f, fStatus);
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_FRAME_SET_OVERFLOW_INCOMPLETE(fStatus);
-      }
-      NS_MergeReflowStatusInto(&aStatus, fStatus);
 
       // Invalidate if there was a position or size change
       nsRect rect = f->GetRect();

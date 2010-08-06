@@ -97,7 +97,9 @@ class nsIntervalSet;
  * FloatContinuationProperty frame property that points to
  * an nsFrameList. This list contains continuations for
  * floats whose prev-in-flow is in the block's regular float
- * list.
+ * list and first-in-flows of floats that did not fit, but
+ * whose placeholders are in the block or one of its
+ * prev-in-flows.
  * -- In all these frame lists, if there are two frames for
  * the same content appearing in the list, then the frames
  * appear with the prev-in-flow before the next-in-flow.
