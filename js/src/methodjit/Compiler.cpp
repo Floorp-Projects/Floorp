@@ -1176,7 +1176,7 @@ mjit::Compiler::generateMethod()
             frame.storeLocal(slot, true);
             frame.pop();
           }
-          END_CASE(JSOP_DEFFUN)
+          END_CASE(JSOP_DEFLOCALFUN_FC)
 
           BEGIN_CASE(JSOP_LAMBDA)
           {
