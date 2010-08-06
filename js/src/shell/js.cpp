@@ -1463,20 +1463,6 @@ ValueToScript(JSContext *cx, jsval v)
 }
 
 static JSBool
-SetDebug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    if (argc == 0 || !JSVAL_IS_BOOLEAN(argv[0])) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                             JSSMSG_NOT_ENOUGH_ARGS, "setDebug");
-        return JS_FALSE;
-    }
-    
-    js_SetDebugMode(cx, JSVAL_TO_BOOLEAN(argv[0]));
-    *rval = JSVAL_VOID;
-    return JS_TRUE;
-}
-
-static JSBool
 GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
             int32 *ip)
 {
@@ -3947,7 +3933,6 @@ static JSFunctionSpec shell_functions[] = {
 #ifdef JS_GC_ZEAL
     JS_FN("gczeal",         GCZeal,         1,0),
 #endif
-    JS_FS("setDebug",       SetDebug,       1,0,0),
     JS_FS("trap",           Trap,           3,0,0),
     JS_FS("untrap",         Untrap,         2,0,0),
     JS_FS("line2pc",        LineToPC,       0,0,0),
@@ -4049,7 +4034,6 @@ static const char *const shell_help_messages[] = {
 #ifdef JS_GC_ZEAL
 "gczeal(level)            How zealous the garbage collector should be",
 #endif
-"setDebug(debug)          Set debug mode",
 "trap([fun, [pc,]] exp)   Trap bytecode execution",
 "untrap(fun[, pc])        Remove a trap",
 "line2pc([fun,] line)     Map line number to PC",
