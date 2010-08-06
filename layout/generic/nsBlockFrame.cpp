@@ -3417,14 +3417,10 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
   return rv;
 }
 
-// If at least one float on the line was complete, not at the top of
-// page, but was truncated, then restore the overflow floats to what
-// they were before and push the line.  The floats that will be removed
-// from the list aren't yet known by the block's next in flow.  
 void
-nsBlockFrame::PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
-                                           line_iterator       aLine,
-                                           PRBool&             aKeepReflowGoing)
+nsBlockFrame::PushTruncatedLine(nsBlockReflowState& aState,
+                                line_iterator       aLine,
+                                PRBool&             aKeepReflowGoing)
 {
   line_iterator prevLine = aLine;
   --prevLine;
@@ -3638,7 +3634,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
         // next to a float.
         lineReflowStatus = LINE_REFLOW_TRUNCATED;
         // Push the line that didn't fit
-        PushTruncatedPlaceholderLine(aState, aLine, *aKeepReflowGoing);
+        PushTruncatedLine(aState, aLine, *aKeepReflowGoing);
       }
     }
 

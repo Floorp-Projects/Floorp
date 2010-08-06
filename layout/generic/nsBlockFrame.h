@@ -617,11 +617,11 @@ protected:
                                          nsIFrame*           aFrame,
                                          PRBool&             aMadeNewFrame);
 
-  // Push aLine which contains a positioned element that was truncated. Clean up any 
-  // placeholders on the same line that were continued. Set aKeepReflowGoing to false. 
-  void PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
-                                    line_iterator       aLine,
-                                    PRBool&             aKeepReflowGoing);
+  // Push aLine, which cannot be placed on this page/column but should
+  // fit on a future one.  Set aKeepReflowGoing to false.
+  void PushTruncatedLine(nsBlockReflowState& aState,
+                         line_iterator       aLine,
+                         PRBool&             aKeepReflowGoing);
 
   nsresult SplitLine(nsBlockReflowState& aState,
                      nsLineLayout& aLineLayout,
