@@ -74,7 +74,9 @@ nsFloatManager::nsFloatManager(nsIPresShell* aPresShell)
   : mX(0), mY(0),
     mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
     mPushedLeftFloatPastBreak(PR_FALSE),
-    mPushedRightFloatPastBreak(PR_FALSE)
+    mPushedRightFloatPastBreak(PR_FALSE),
+    mSplitLeftFloatAcrossBreak(PR_FALSE),
+    mSplitRightFloatAcrossBreak(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsFloatManager);
 }
@@ -419,6 +421,8 @@ nsFloatManager::PushState(SavedState* aState)
   aState->mY = mY;
   aState->mPushedLeftFloatPastBreak = mPushedLeftFloatPastBreak;
   aState->mPushedRightFloatPastBreak = mPushedRightFloatPastBreak;
+  aState->mSplitLeftFloatAcrossBreak = mSplitLeftFloatAcrossBreak;
+  aState->mSplitRightFloatAcrossBreak = mSplitRightFloatAcrossBreak;
   aState->mFloatInfoCount = mFloats.Length();
 }
 
@@ -431,6 +435,8 @@ nsFloatManager::PopState(SavedState* aState)
   mY = aState->mY;
   mPushedLeftFloatPastBreak = aState->mPushedLeftFloatPastBreak;
   mPushedRightFloatPastBreak = aState->mPushedRightFloatPastBreak;
+  mSplitLeftFloatAcrossBreak = aState->mSplitLeftFloatAcrossBreak;
+  mSplitRightFloatAcrossBreak = aState->mSplitRightFloatAcrossBreak;
 
   NS_ASSERTION(aState->mFloatInfoCount <= mFloats.Length(),
                "somebody misused PushState/PopState");
@@ -510,33 +516,12 @@ nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType) const
 PRBool
 nsFloatManager::ClearContinues(PRUint8 aBreakType) const
 {
-  if ((mPushedLeftFloatPastBreak &&
-       (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||
-        aBreakType == NS_STYLE_CLEAR_LEFT)) ||
-      (mPushedRightFloatPastBreak &&
-       (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||
-        aBreakType == NS_STYLE_CLEAR_RIGHT))) {
-    return PR_TRUE;
-  }
-  if (!HasAnyFloats() || aBreakType == NS_STYLE_CLEAR_NONE)
-    return PR_FALSE;
-  // FIXME: We could make this faster by recording whenever we split a
-  // float (in addition to recording whenever we push a float in its
-  // entirety).
-  for (PRUint32 i = mFloats.Length(); i > 0; i--) {
-    nsIFrame* f = mFloats[i-1].mFrame;
-    if (f->GetNextInFlow()) {
-      if (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT)
-        return PR_TRUE;
-      PRUint8 floatSide = f->GetStyleDisplay()->mFloats;
-      if ((aBreakType == NS_STYLE_CLEAR_LEFT &&
-           floatSide == NS_STYLE_FLOAT_LEFT) ||
-          (aBreakType == NS_STYLE_CLEAR_RIGHT &&
-           floatSide == NS_STYLE_FLOAT_RIGHT))
-        return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
+  return ((mPushedLeftFloatPastBreak || mSplitLeftFloatAcrossBreak) &&
+          (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||
+           aBreakType == NS_STYLE_CLEAR_LEFT)) ||
+         ((mPushedRightFloatPastBreak || mSplitRightFloatAcrossBreak) &&
+          (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||
+           aBreakType == NS_STYLE_CLEAR_RIGHT));
 }
 
 /////////////////////////////////////////////////////////////////////////////
