@@ -44,7 +44,6 @@
 #endif
 
 #include "nsPrefBranch.h"
-#include "nsPrefService.h"
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
@@ -53,7 +52,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
-#include "nsThreadUtils.h"
 #include "nsIStringBundle.h"
 #include "prefapi.h"
 #include "prmem.h"
@@ -155,9 +153,6 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP nsPrefBranch::GetRoot(char **aRoot)
 {
   NS_ENSURE_ARG_POINTER(aRoot);
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
   mPrefRoot.Truncate(mPrefRootLength);
   *aRoot = ToNewCString(mPrefRoot);
@@ -166,10 +161,6 @@ NS_IMETHODIMP nsPrefBranch::GetRoot(char **aRoot)
 
 NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, PRInt32 *_retval)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
@@ -188,10 +179,6 @@ NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, PRInt32 *_retval)
 
 NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, PRBool *_retval)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
@@ -209,10 +196,6 @@ NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, PRBool *_retval)
 
 NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, PRInt32 aValue)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
@@ -226,10 +209,6 @@ NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, PRInt32 aValue)
 
 NS_IMETHODIMP nsPrefBranch::GetCharPref(const char *aPrefName, char **_retval)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
@@ -249,10 +228,6 @@ NS_IMETHODIMP nsPrefBranch::GetCharPref(const char *aPrefName, char **_retval)
 
 NS_IMETHODIMP nsPrefBranch::SetCharPref(const char *aPrefName, const char *aValue)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
@@ -266,10 +241,6 @@ NS_IMETHODIMP nsPrefBranch::SetCharPref(const char *aPrefName, const char *aValu
 
 NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, PRInt32 *_retval)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (ContentChild* cpc = GetContentChild()) {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
@@ -287,10 +258,6 @@ NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, PRInt32 *_retval)
 
 NS_IMETHODIMP nsPrefBranch::SetIntPref(const char *aPrefName, PRInt32 aValue)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
@@ -304,10 +271,6 @@ NS_IMETHODIMP nsPrefBranch::SetIntPref(const char *aPrefName, PRInt32 aValue)
 
 NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID & aType, void **_retval)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   nsresult       rv;
   nsXPIDLCString utf8String;
 
@@ -482,10 +445,6 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
 
 NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
@@ -575,10 +534,6 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
 NS_IMETHODIMP nsPrefBranch::ClearUserPref(const char *aPrefName)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
@@ -593,9 +548,6 @@ NS_IMETHODIMP nsPrefBranch::ClearUserPref(const char *aPrefName)
 NS_IMETHODIMP nsPrefBranch::PrefHasUserValue(const char *aPrefName, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
 #ifdef MOZ_IPC
   if (ContentChild* cpc = GetContentChild()) {
@@ -615,10 +567,6 @@ NS_IMETHODIMP nsPrefBranch::PrefHasUserValue(const char *aPrefName, PRBool *_ret
 
 NS_IMETHODIMP nsPrefBranch::LockPref(const char *aPrefName)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (GetContentChild()) {
     NS_ERROR("cannot lock pref from content process");
@@ -633,9 +581,6 @@ NS_IMETHODIMP nsPrefBranch::LockPref(const char *aPrefName)
 NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
 #ifdef MOZ_IPC
   if (ContentChild* cpc = GetContentChild()) {
@@ -655,10 +600,6 @@ NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, PRBool *_retval)
 
 NS_IMETHODIMP nsPrefBranch::UnlockPref(const char *aPrefName)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (GetContentChild()) {
     NS_ERROR("cannot unlock pref from content process");
@@ -678,10 +619,6 @@ NS_IMETHODIMP nsPrefBranch::ResetBranch(const char *aStartingAt)
 
 NS_IMETHODIMP nsPrefBranch::DeleteBranch(const char *aStartingAt)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (GetContentChild()) {
     NS_ERROR("cannot set pref from content process");
@@ -695,10 +632,6 @@ NS_IMETHODIMP nsPrefBranch::DeleteBranch(const char *aStartingAt)
 
 NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   char            **outArray;
   PRInt32         numPrefs;
   PRInt32         dwIndex;
@@ -769,10 +702,6 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
 
 NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak)
 {
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   PrefCallbackData *pCallback;
   const char *pref;
 
@@ -838,9 +767,6 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
 {
   NS_ENSURE_ARG_POINTER(aDomain);
   NS_ENSURE_ARG_POINTER(aObserver);
-  if (NS_UNLIKELY(!nsPrefService::CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
 #ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
