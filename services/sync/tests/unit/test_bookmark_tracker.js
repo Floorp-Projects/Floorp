@@ -2,8 +2,11 @@ Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
+  let engine = new BookmarksEngine();
+  engine._store.wipe();
+
   _("Verify we've got an empty tracker to work with.");
-  let tracker = new BookmarksEngine()._tracker;
+  let tracker = engine._tracker;
   do_check_eq([id for (id in tracker.changedIDs)].length, 0);
 
   let folder = Svc.Bookmark.createFolder(Svc.Bookmark.bookmarksMenuFolder,
@@ -43,6 +46,6 @@ function run_test() {
     do_check_eq([id for (id in tracker.changedIDs)].length, 0);
   } finally {
     _("Clean up.");
-    Svc.Bookmark.removeItem(folder);
+    engine._store.wipe();
   }
 }
