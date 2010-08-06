@@ -220,8 +220,9 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub)
 #endif /* JS_CPU_ARM */
     ) {
         bool isStringResult = (op == JSOP_ADD) &&
-                              ((lhs->isTypeKnown() && lhs->getKnownType() == JSVAL_TYPE_STRING) ||
-                               (rhs->isTypeKnown() && rhs->getKnownType() == JSVAL_TYPE_STRING));
+            ((lhs->isType(JSVAL_TYPE_STRING) && rhs->isNotType(JSVAL_TYPE_OBJECT)) ||
+             (rhs->isType(JSVAL_TYPE_STRING) && lhs->isNotType(JSVAL_TYPE_OBJECT)));
+
         prepareStubCall(Uses(2));
         stubCall(stub);
         frame.popn(2);
