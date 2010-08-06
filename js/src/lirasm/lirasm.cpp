@@ -140,7 +140,7 @@ nanojit::LInsPrinter::accNames[] = {
 #endif
 
 #ifdef DEBUG
-void ValidateWriter::checkAccSet(LOpcode op, LIns* base, AccSet accSet)
+void ValidateWriter::checkAccSet(LOpcode op, LIns* base, int32_t disp, AccSet accSet)
 {
     (void)op;
     (void)base;
