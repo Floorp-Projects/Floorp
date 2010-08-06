@@ -830,6 +830,19 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
   if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus))
     floatMargin.bottom = 0;
 
+  // In the case that we're in columns and not splitting floats, we need
+  // to check here that the float's height fit, and if it didn't, bail.
+  // (This code is only for DISABLE_FLOAT_BREAKING_IN_COLUMNS .)
+  if (mContentArea.height != NS_UNCONSTRAINEDSIZE &&
+      adjustedAvailableSpace.height == NS_UNCONSTRAINEDSIZE &&
+      (!mReflowState.mFlags.mIsTopOfPage || !IsAdjacentWithTop() ||
+       pushedDown) &&
+      aFloat->GetSize().height + floatMargin.TopBottom() >
+        mContentArea.height - floatY) {
+    mY = saveY;
+    return PR_FALSE;
+  }
+
   // Calculate the actual origin of the float frame's border rect
   // relative to the parent block; floatX/Y must be converted from space-manager
   // coordinates to parent coordinates, and the margin must be added in
