@@ -49,7 +49,6 @@
 #include "mozAutoDocUpdate.h"
 
 #include "mozilla/IHistory.h"
-#include "mozilla/Services.h"
 
 namespace mozilla {
 namespace dom {
@@ -129,7 +128,7 @@ Link::LinkState() const
     }
 
     // We have a good href, so register with History.
-    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    IHistory *history = nsContentUtils::GetHistory();
     nsresult rv = history->RegisterVisitedCallback(hrefURI, self);
     if (NS_SUCCEEDED(rv)) {
       self->mRegistered = true;
@@ -509,7 +508,7 @@ Link::UnregisterFromHistory()
   NS_ASSERTION(mCachedURI, "mRegistered is true, but we have no cached URI?!");
 
   // And tell History to stop tracking us.
-  nsCOMPtr<IHistory> history = services::GetHistoryService();
+  IHistory *history = nsContentUtils::GetHistory();
   nsresult rv = history->UnregisterVisitedCallback(mCachedURI, this);
   NS_ASSERTION(NS_SUCCEEDED(rv), "This should only fail if we misuse the API!");
   if (NS_SUCCEEDED(rv)) {

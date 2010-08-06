@@ -260,7 +260,7 @@ class FailSafeFinishTask
 {
 public:
   FailSafeFinishTask()
-  : mAppended(false)
+  : mAppended(false) 
   {
   }
 
