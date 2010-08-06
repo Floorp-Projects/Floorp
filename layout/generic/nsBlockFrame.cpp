@@ -1858,6 +1858,20 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       line->MarkDirty();
     }
 
+    // If we have a constrained height (i.e., breaking columns/pages),
+    // and the distance to the bottom might have changed, then we need
+    // to reflow any line that might have floats in it, both because the
+    // breakpoints within those floats may have changed and because we
+    // might have to push/pull the floats in their entirety.
+    // FIXME: What about a deltaY or height change that forces us to
+    // push lines?  Why does that work?
+    if (!line->IsDirty() &&
+        aState.mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE &&
+        (deltaY != 0 || aState.mReflowState.mFlags.mVResize) &&
+        (line->IsBlock() || line->HasFloats() || line->HadFloatPushed())) {
+      line->MarkDirty();
+    }
+
     if (!line->IsDirty()) {
       // See if there's any reflow damage that requires that we mark the
       // line dirty.
