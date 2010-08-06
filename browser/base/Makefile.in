@@ -54,6 +54,7 @@ DIRS += content/test
 endif
 
 EXTRA_JS_MODULES = \
+	content/AllTabs.js \
 	content/openLocationLastURL.jsm \
 	content/NetworkPrioritizer.jsm \
 	content/stylePanel.jsm \

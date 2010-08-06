@@ -99,7 +99,7 @@ Storage = {
       var self = this;
 
       // ___ Tabs
-      Tabs.allTabs.forEach(function(tab) {
+      AllTabs.tabs.forEach(function(tab) {
         if (tab.ownerDocument.defaultView != gWindow)
           return;
 
