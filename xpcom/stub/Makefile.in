@@ -92,10 +92,12 @@ DEPENDENT_LIBS_LIST += \
 	$(LIB_PREFIX)mozjs$(DLL_SUFFIX) \
 	$(NULL)
 
+ifndef MOZ_NATIVE_SQLITE
 ifeq ($(OS_TARGET),OS2)
 DEPENDENT_LIBS_LIST += mozsqlt3.dll
 else
 DEPENDENT_LIBS_LIST += $(LIB_PREFIX)mozsqlite3$(DLL_SUFFIX)
+endif
 endif
 
 ifeq (bundle,$(MOZ_FS_LAYOUT))
