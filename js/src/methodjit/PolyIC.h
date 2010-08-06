@@ -247,10 +247,7 @@ struct PICInfo {
     int shapeGuard : 8;
     
     // Return address of slow path call, as an offset from slowPathStart.
-    uint16 callReturn : 9;
-
-    unsigned unused : 24;
-
+    uint32 callReturn;
 
     inline bool isGet() {
         return kind == GET || kind == CALL || kind == GETELEM;
