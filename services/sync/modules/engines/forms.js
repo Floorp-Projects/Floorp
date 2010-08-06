@@ -202,12 +202,8 @@ FormStore.prototype = {
 
 function FormTracker(name) {
   Tracker.call(this, name);
-  Svc.Obs.add("form-notifier", this);
-
-  // nsHTMLFormElement doesn't use the normal observer/observe pattern and looks
-  // up nsIFormSubmitObservers to .notify() them so add manually to observers
-  Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService).
-    addObserver(this, "earlyformsubmit", true);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -222,7 +218,37 @@ FormTracker.prototype = {
     this.score += 10;
   },
 
+  _enabled: false,
   observe: function observe(subject, topic, data) {
+    switch (topic) {
+      case "weave:engine:start-tracking":
+        if (!this._enabled) {
+          Svc.Obs.add("form-notifier", this);
+          // nsHTMLFormElement doesn't use the normal observer/observe
+          // pattern and looks up nsIFormSubmitObservers to .notify()
+          // them so add manually to observers
+          Cc["@mozilla.org/observer-service;1"]
+            .getService(Ci.nsIObserverService)
+            .addObserver(this, "earlyformsubmit", true);
+          this._enabled = true;
+        }
+        break;
+      case "weave:engine:stop-tracking":
+        if (this._enabled) {
+          Svc.Obs.remove("form-notifier", this);
+          Cc["@mozilla.org/observer-service;1"]
+            .getService(Ci.nsIObserverService)
+            .removeObserver(this, "earlyformsubmit");
+          this._enabled = false;
+        }
+        break;
+      case "form-notifier":
+        this.onFormNotifier(data);
+        break;
+    }
+  },
+
+  onFormNotifier: function onFormNotifier(data) {
     let name, value;
 
     // Figure out if it's a function that we care about tracking

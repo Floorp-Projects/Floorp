@@ -231,8 +231,9 @@ PrefStore.prototype = {
 
 function PrefTracker(name) {
   Tracker.call(this, name);
-  this._prefs.addObserver("", this, false);
   Svc.Obs.add("profile-before-change", this);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 PrefTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -255,8 +256,21 @@ PrefTracker.prototype = {
     return this.__syncPrefs;
   },
 
+  _enabled: false,
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "weave:engine:start-tracking":
+        if (!this._enabled) {
+          this._prefs.addObserver("", this, false);
+          this._enabled = true;
+        }
+        break;
+      case "weave:engine:stop-tracking":
+        if (this._enabled) {
+          this._prefs.removeObserver("", this);
+          this._enabled = false;
+        }
+        // Fall through to clean up.
       case "profile-before-change":
         this.__prefs = null;
         this.__syncPrefs = null;

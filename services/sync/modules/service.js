@@ -273,6 +273,7 @@ WeaveSvc.prototype = {
                       "Weave, since it will not work correctly.");
     }
 
+    Svc.Obs.add("weave:service:setup-complete", this);
     Svc.Obs.add("network:offline-status-changed", this);
     Svc.Obs.add("weave:service:sync:finish", this);
     Svc.Obs.add("weave:service:sync:error", this);
@@ -292,6 +293,10 @@ WeaveSvc.prototype = {
 
     this._updateCachedURLs();
 
+    let status = this._checkSetup();
+    if (status != STATUS_DISABLED && status != CLIENT_NOT_CONFIGURED)
+      Svc.Obs.notify("weave:engine:start-tracking");
+
     // Applications can specify this preference if they want autoconnect
     // to happen after a fixed delay.
     let delay = Svc.Prefs.get("autoconnectDelay");
@@ -306,7 +311,10 @@ WeaveSvc.prototype = {
   },
 
   _checkSetup: function WeaveSvc__checkSetup() {
-    if (!this.username) {
+    if (!this.enabled) {
+      Status.service = STATUS_DISABLED;
+    }
+    else if (!this.username) {
       this._log.debug("checkSetup: no username set");
       Status.login = LOGIN_FAILED_NO_USERNAME;
     }
@@ -404,6 +412,11 @@ WeaveSvc.prototype = {
 
   observe: function WeaveSvc__observe(subject, topic, data) {
     switch (topic) {
+      case "weave:service:setup-complete":
+        let status = this._checkSetup();
+        if (status != STATUS_DISABLED && status != CLIENT_NOT_CONFIGURED)
+            Svc.Obs.notify("weave:engine:start-tracking");
+        break;
       case "network:offline-status-changed":
         // Whether online or offline, we'll reschedule syncs
         this._log.trace("Network offline status change: " + data);
@@ -704,6 +717,7 @@ WeaveSvc.prototype = {
       Svc.Login.removeLogin(login);
     });
     Svc.Obs.notify("weave:service:start-over");
+    Svc.Obs.notify("weave:engine:stop-tracking");
   },
 
   delayedAutoConnect: function delayedAutoConnect(delay) {

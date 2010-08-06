@@ -257,10 +257,29 @@ HistoryStore.prototype = {
 
 function HistoryTracker(name) {
   Tracker.call(this, name);
-  Svc.History.addObserver(this, true);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 HistoryTracker.prototype = {
   __proto__: Tracker.prototype,
+
+  _enabled: false,
+  observe: function observe(subject, topic, data) {
+    switch (topic) {
+      case "weave:engine:start-tracking":
+        if (!this._enabled) {
+          Svc.History.addObserver(this, true);
+          this._enabled = true;
+        }
+        break;
+      case "weave:engine:stop-tracking":
+        if (this._enabled) {
+          Svc.History.removeObserver(this);
+          this._enabled = false;
+        }
+        break;
+    }
+  },
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavHistoryObserver,
