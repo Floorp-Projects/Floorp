@@ -713,7 +713,7 @@ SessionStoreService.prototype = {
       return;
 
     // assign it a unique identifier (timestamp)
-    aWindow.__SSi = "window" + Date.now();
+    aWindow.__SSi = "window" + Math.floor(Date.now());
 
     // and create its data object
     this._windows[aWindow.__SSi] = { tabs: [], selected: 0, _closedTabs: [] };
@@ -3751,7 +3751,7 @@ SessionStoreService.prototype = {
         // Assign a unique ID to correlate the window to be opened with the
         // remaining data
         window.__lastSessionWindowID = pinnedWindowState.__lastSessionWindowID
-                                     = "" + Date.now() + Math.random();
+                                     = "" + Math.floor(Date.now()) + Math.random();
 
         // Extract the cookies that belong with each pinned tab
         this._splitCookiesFromWindow(window, pinnedWindowState);

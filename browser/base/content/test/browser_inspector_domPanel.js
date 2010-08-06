@@ -65,25 +65,25 @@ function createDocument()
 function nodeGenerator()
 {
   let body = doc.body;
-  newProperty = "rand" + Date.now();
+  newProperty = "rand" + Math.floor(Date.now());
   body[newProperty] = Math.round(Math.random() * 100);
   InspectorUI.inspectNode(body);
   yield;
 
   let h1 = doc.querySelector("h1");
-  newProperty = "rand2" + Date.now();
+  newProperty = "rand2" + Math.floor(Date.now());
   h1[newProperty] = "test" + Math.random();
   InspectorUI.inspectNode(h1);
   yield;
 
   let first = doc.getElementById("first");
-  newProperty = "rand3" + Date.now();
+  newProperty = "rand3" + Math.floor(Date.now());
   first[newProperty] = null;
   InspectorUI.inspectNode(first);
   yield;
 
   let closing = doc.getElementById("closing");
-  newProperty = "bazbaz" + Date.now();
+  newProperty = "bazbaz" + Math.floor(Date.now());
   closing[newProperty] = false;
   InspectorUI.inspectNode(closing);
   yield;
