@@ -1,3 +1,4 @@
+setDebug(true);
 x = "notset";
 function main() {
   /* JSOP_STOP in main. */

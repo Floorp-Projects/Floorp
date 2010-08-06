@@ -580,11 +580,6 @@ ThreadData::Initialize()
         return false;
     }
 
-    if (!picScripts.init()) {
-        delete execPool;
-        return false;
-    }
-
 #ifdef JS_METHODJIT_PROFILE_STUBS
     for (size_t i = 0; i < STUB_CALLS_FOR_OP_COUNT; ++i)
         StubCallsForOp[i] = 0;
@@ -609,43 +604,6 @@ ThreadData::Finish()
     fclose(fp);
 #endif
 }
-
-bool
-ThreadData::addScript(JSScript *script)
-{
-    ScriptSet::AddPtr p = picScripts.lookupForAdd(script);
-    if (p)
-        return true;
-    return picScripts.add(p, script);
-}
-
-void
-ThreadData::removeScript(JSScript *script)
-{
-    ScriptSet::Ptr p = picScripts.lookup(script);
-    if (p)
-        picScripts.remove(p);
-}
-
-void
-ThreadData::purge(JSContext *cx)
-{
-    if (!cx->runtime->gcRegenShapes)
-        return;
-
-    for (ThreadData::ScriptSet::Enum e(picScripts); !e.empty(); e.popFront()) {
-#if defined JS_POLYIC
-        JSScript *script = e.front();
-        ic::PurgePICs(cx, script);
-#endif
-#if defined JS_MONOIC
-        //PurgeMICs(cs, script);
-#endif
-    }
-
-    picScripts.clear();
-}
-
 
 extern "C" JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
                                    uintptr_t inlineCallCount);
@@ -726,7 +684,7 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
         script->ncode = NULL;
         script->inlineLength = 0;
         script->outOfLineLength = 0;
-        
+
 #if defined JS_POLYIC
         if (script->pics) {
             uint32 npics = script->numPICs();
@@ -734,7 +692,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
                 script->pics[i].releasePools();
                 Destroy(script->pics[i].execPools);
             }
-            JS_METHODJIT_DATA(cx).removeScript(script);
             cx->free((uint8*)script->pics - sizeof(uint32));
         }
 #endif

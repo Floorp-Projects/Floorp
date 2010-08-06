@@ -69,10 +69,8 @@
 
 #include "jsautooplen.h"
 
-#ifdef JS_METHODJIT
-# include "methodjit/MethodJIT.h"
-# include "methodjit/Retcon.h"
-#endif
+#include "methodjit/MethodJIT.h"
+#include "methodjit/Retcon.h"
 
 using namespace js;
 
@@ -88,6 +86,78 @@ typedef struct JSTrap {
 #define DBG_LOCK(rt)            JS_ACQUIRE_LOCK((rt)->debuggerLock)
 #define DBG_UNLOCK(rt)          JS_RELEASE_LOCK((rt)->debuggerLock)
 #define DBG_LOCK_EVAL(rt,expr)  (DBG_LOCK(rt), (expr), DBG_UNLOCK(rt))
+
+JS_PUBLIC_API(JSBool)
+JS_GetDebugMode(JSContext *cx)
+{
+    return cx->compartment->debugMode;
+}
+
+static bool
+IsScriptLive(JSContext *cx, JSScript *script)
+{
+    for (AllFramesIter i(cx); !i.done(); ++i) {
+        if (i.fp()->script == script)
+            return true;
+    }
+    return false;
+}
+
+JS_FRIEND_API(JSBool)
+js_SetDebugMode(JSContext *cx, JSBool debug)
+{
+    cx->compartment->debugMode = debug;
+#ifdef JS_METHODJIT
+    for (JSScript *script = (JSScript *)cx->compartment->scripts.next;
+         &script->links != &cx->compartment->scripts;
+         script = (JSScript *)script->links.next) {
+        if (script->debugMode != debug &&
+            script->ncode &&
+            script->ncode != JS_UNJITTABLE_METHOD &&
+            !IsScriptLive(cx, script)) {
+            /*
+             * In the event that this fails, debug mode is left partially on,
+             * leading to a small performance overhead but no loss of
+             * correctness. We set the debug flag to false so that the caller
+             * will not later attempt to use debugging features.
+             */
+            mjit::Recompiler recompiler(cx, script);
+            if (!recompiler.recompile()) {
+                cx->compartment->debugMode = JS_FALSE;
+                return JS_FALSE;
+            }
+        }
+    }
+#endif
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_SetDebugMode(JSContext *cx, JSBool debug)
+{
+#ifdef DEBUG
+    for (AllFramesIter i(cx); !i.done(); ++i)
+        JS_ASSERT(JS_IsNativeFrame(cx, i.fp()));
+#endif
+
+    return js_SetDebugMode(cx, debug);
+}
+
+static JSBool
+CheckDebugMode(JSContext *cx)
+{
+    JSBool debugMode = JS_GetDebugMode(cx);
+    /*
+     * :TODO:
+     * This probably should be an assertion, since it's indicative of a severe
+     * API misuse.
+     */
+    if (!debugMode) {
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
+                                     NULL, JSMSG_NEED_DEBUG_MODE);
+    }
+    return debugMode;
+}
 
 /*
  * NB: FindTrap must be called with rt->debuggerLock acquired.
@@ -152,6 +222,9 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     JSTrap *junk, *trap, *twin;
     JSRuntime *rt;
     uint32 sample;
+
+    if (!CheckDebugMode(cx))
+        return JS_FALSE;
 
     if (script == JSScript::emptyScript()) {
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
@@ -237,7 +310,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep)
 {
     JSTrap *trap;
-
+    
     DBG_LOCK(cx->runtime);
     trap = FindTrap(cx->runtime, script, pc);
     if (handlerp)
@@ -1376,6 +1449,9 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
 {
     JS_ASSERT_NOT_ON_TRACE(cx);
 
+    if (!CheckDebugMode(cx))
+        return JS_FALSE;
+
     JSObject *scobj = JS_GetFrameScopeChain(cx, fp);
     if (!scobj)
         return false;
@@ -1409,6 +1485,9 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
     jschar *chars;
     JSBool ok;
     size_t len = length;
+    
+    if (!CheckDebugMode(cx))
+        return JS_FALSE;
 
     chars = js_InflateString(cx, bytes, &len);
     if (!chars)
