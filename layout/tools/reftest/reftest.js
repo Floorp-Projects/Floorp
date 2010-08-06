@@ -335,9 +335,6 @@ function BuildConditionSandbox(aURL) {
       sandbox.xulRuntime.XPCOMABI = "";
     }
 
-    // Backwards compatibility from when we preprocessed autoconf.mk.
-    sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
-
     // Shortcuts for widget toolkits.
     sandbox.cocoaWidget = xr.widgetToolkit == "cocoa";
     sandbox.gtk2Widget = xr.widgetToolkit == "gtk2";
