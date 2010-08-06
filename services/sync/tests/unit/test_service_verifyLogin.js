@@ -31,7 +31,8 @@ function run_test() {
     Weave.Service.serverURL = "http://localhost:8080/";
     Weave.Service.clusterURL = "http://localhost:8080/";
 
-    _("Initial state is ok.");
+    _("Force the initial state.");
+    Status.service = STATUS_OK;
     do_check_eq(Status.service, STATUS_OK);
 
     _("Credentials won't check out because we're not configured yet.");
