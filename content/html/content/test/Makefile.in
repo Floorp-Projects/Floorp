@@ -179,8 +179,9 @@ _TEST_FILES = \
 		test_bug546995-5.html \
 		file_bug546995.html \
 		test_bug377624.html \
-		test_bug562932.html \
 		test_bug551846.html \
+		test_bug562932.html \
+		test_bug564001.html \
 		test_bug566046.html \
 		test_bug567938-1.html \
 		test_bug567938-2.html \
