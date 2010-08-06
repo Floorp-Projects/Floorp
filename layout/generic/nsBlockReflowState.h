@@ -108,7 +108,7 @@ public:
                   nsIFrame*           aFloat,
                   nscoord             aAvailableWidth,
                   nsReflowStatus&     aReflowStatus);
-  PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,
+  PRBool CanPlaceFloat(nscoord aFloatWidth,
                        const nsFlowAreaRect& aFloatAvailableSpace);
   PRBool FlowAndPlaceFloat(nsIFrame*       aFloat,
                            nsReflowStatus& aReflowStatus);

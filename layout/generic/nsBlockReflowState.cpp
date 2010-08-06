@@ -625,102 +625,15 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
 }
 
 PRBool
-nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,
+nsBlockReflowState::CanPlaceFloat(nscoord aFloatWidth,
                                   const nsFlowAreaRect& aFloatAvailableSpace)
 {
-  // If the current Y coordinate is not impacted by any floats
-  // then by definition the float fits.
-  PRBool result = PR_TRUE;
-  if (aFloatAvailableSpace.mHasFloats) {
-    // XXX We should allow overflow by up to half a pixel here (bug 21193).
-    if (aFloatAvailableSpace.mRect.width < aFloatSize.width) {
-      // The available width is too narrow (and it's been impacted by a
-      // prior float)
-      result = PR_FALSE;
-    }
-  }
-
-  if (!result)
-    return result;
-
-  // At this point we know that there is enough horizontal space for
-  // the float (somewhere). Lets see if there is enough vertical
-  // space.
-  if (NSCoordGreaterThan(aFloatSize.height,
-                         aFloatAvailableSpace.mRect.height)) {
-    // The available height is too short. However, it's possible that
-    // there is enough open space below which is not impacted by a
-    // float.
-    //
-    // Compute the X coordinate for the float based on its float
-    // type, assuming it's placed on the current line. This is
-    // where the float will be placed horizontally if it can go
-    // here.
-    nscoord xa;
-    if (NS_STYLE_FLOAT_LEFT == aFloats) {
-      xa = aFloatAvailableSpace.mRect.x;
-    }
-    else {
-      xa = aFloatAvailableSpace.mRect.XMost() - aFloatSize.width;
-
-      // In case the float is too big, don't go past the left edge
-      // XXXldb This seems wrong, but we might want to fix bug 6976
-      // first.
-      if (xa < aFloatAvailableSpace.mRect.x) {
-        xa = aFloatAvailableSpace.mRect.x;
-      }
-    }
-    nscoord xb = xa + aFloatSize.width;
-
-    // Calculate the top and bottom y coordinates, again assuming
-    // that the float is placed on the current line.
-    const nsMargin& borderPadding = BorderPadding();
-    nscoord ya = mY - borderPadding.top;
-    if (ya < 0) {
-      // CSS2 spec, 9.5.1 rule [4]: "A floating box's outer top may not
-      // be higher than the top of its containing block."  (Since the
-      // containing block is the content edge of the block box, this
-      // means the margin edge of the float can't be higher than the
-      // content edge of the block that contains it.)
-      ya = 0;
-    }
-    nscoord yb = ya + aFloatSize.height;
-
-    nscoord saveY = mY;
-    nsFlowAreaRect floatAvailableSpace(aFloatAvailableSpace);
-    for (;;) {
-      // Get the available space at the new Y coordinate
-      if (floatAvailableSpace.mRect.height <= 0) {
-        // there is no more available space. We lose.
-        result = PR_FALSE;
-        break;
-      }
-
-      mY += floatAvailableSpace.mRect.height;
-      floatAvailableSpace = GetFloatAvailableSpace(mY);
-
-      if (floatAvailableSpace.mHasFloats) {
-        if (xa < floatAvailableSpace.mRect.x ||
-            xb > floatAvailableSpace.mRect.XMost()) {
-          // The float can't go here.
-          result = PR_FALSE;
-          break;
-        }
-      }
-
-      // See if there is now enough height for the float.
-      if (yb <= mY + floatAvailableSpace.mRect.height) {
-        // Winner. The bottom Y coordinate of the float is in
-        // this band.
-        break;
-      }
-    }
-
-    // Restore Y coordinate
-    mY = saveY;
-  }
-
-  return result;
+  // A float fits at a given vertical position if there are no floats at
+  // its horizontal position (no matter what its width) or if its width
+  // fits in the space remaining after prior floats have been placed.
+  // FIXME: We should allow overflow by up to half a pixel here (bug 21193).
+  return !aFloatAvailableSpace.mHasFloats ||
+         aFloatAvailableSpace.mRect.width >= aFloatWidth;
 }
 
 PRBool
@@ -791,12 +704,16 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
   // Can the float fit here?
   PRBool keepFloatOnSameLine = PR_FALSE;
 
-  while (!CanPlaceFloat(floatSize, floatDisplay->mFloats,
-                        floatAvailableSpace)) {
+  for (;;) {
     if (floatAvailableSpace.mRect.height <= 0) {
       // No space, nowhere to put anything.
       mY = saveY;
       return PR_FALSE;
+    }
+
+    if (CanPlaceFloat(floatSize.width, floatAvailableSpace)) {
+      // We found an appropriate place.
+      break;
     }
 
     // Nope. try to advance to the next band.
