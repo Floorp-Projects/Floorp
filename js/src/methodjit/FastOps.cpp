@@ -860,7 +860,13 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
         !(fe->isType(JSVAL_TYPE_BOOLEAN) || fe->isType(JSVAL_TYPE_INT32))) {
         stubcc.masm.fixScriptStack(frame.frameDepth());
         stubcc.masm.setupVMFrame();
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+        stubcc.masm.push(Registers::ArgReg0);
+#endif
         stubcc.masm.call(JS_FUNC_TO_DATA_PTR(void *, stubs::ValueToBoolean));
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+        stubcc.masm.pop();
+#endif
 
         jmpCvtExecScript.setJump(stubcc.masm.branchTest32(cond, Registers::ReturnReg,
                                                           Registers::ReturnReg));
