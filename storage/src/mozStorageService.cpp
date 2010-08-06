@@ -42,7 +42,7 @@
 
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
-#include "pratom.h"
+#include "prinit.h"
 #include "nsAutoPtr.h"
 #include "nsCollationCID.h"
 #include "nsEmbedCID.h"
@@ -53,8 +53,6 @@
 #include "nsIXPConnect.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 
 #include "sqlite3.h"
 
@@ -62,12 +60,6 @@
 #include "nsIMemoryReporter.h"
 
 #include "mozilla/FunctionTimer.h"
-
-////////////////////////////////////////////////////////////////////////////////
-//// Defines
-
-#define PREF_TS_SYNCHRONOUS "toolkit.storage.synchronous"
-#define PREF_TS_SYNCHRONOUS_DEFAULT 1
 
 namespace mozilla {
 namespace storage {
@@ -112,11 +104,9 @@ class ServiceMainThreadInitializer : public nsRunnable
 {
 public:
   ServiceMainThreadInitializer(nsIObserver *aObserver,
-                               nsIXPConnect **aXPConnectPtr,
-                               PRInt32 *aSynchronousPrefValPtr)
+                               nsIXPConnect **aXPConnectPtr)
   : mObserver(aObserver)
   , mXPConnectPtr(aXPConnectPtr)
-  , mSynchronousPrefValPtr(aSynchronousPrefValPtr)
   {
   }
 
@@ -142,15 +132,6 @@ public:
     // used on the main thread.
     (void)CallGetService(nsIXPConnect::GetCID(), mXPConnectPtr);
 
-    // We need to obtain the toolkit.storage.synchronous preferences on the main
-    // thread because the preference service can only be accessed there.  This
-    // is cached in the service for all future Open[Unshared]Database calls.
-    nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    PRInt32 synchronous = PREF_TS_SYNCHRONOUS_DEFAULT;
-    if (pref)
-      (void)pref->GetIntPref(PREF_TS_SYNCHRONOUS, &synchronous);
-    ::PR_AtomicSet(mSynchronousPrefValPtr, synchronous);
-
     // Register our SQLite memory reporters.  Registration can only happen on
     // the main thread (otherwise you'll get cryptic crashes).
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLitePageCacheMemoryUsed));
@@ -162,7 +143,6 @@ public:
 private:
   nsIObserver *mObserver;
   nsIXPConnect **mXPConnectPtr;
-  PRInt32 *mSynchronousPrefValPtr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +192,6 @@ Service::getSingleton()
 
 nsIXPConnect *Service::sXPConnect = nsnull;
 
-// static
 already_AddRefed<nsIXPConnect>
 Service::getXPConnect()
 {
@@ -228,15 +207,6 @@ Service::getXPConnect()
     xpc = do_GetService(nsIXPConnect::GetCID());
   NS_ASSERTION(xpc, "Could not get XPConnect!");
   return xpc.forget();
-}
-
-PRInt32 Service::sSynchronousPref;
-
-// static
-PRInt32
-Service::getSynchronousPref()
-{
-  return sSynchronousPref;
 }
 
 Service::Service()
@@ -287,13 +257,9 @@ Service::initialize()
   if (rc != SQLITE_OK)
     return convertResultCode(rc);
 
-  // Set the default value for the toolkit.storage.synchronous pref.  It will be
-  // updated with the user preference on the main thread.
-  sSynchronousPref = PREF_TS_SYNCHRONOUS_DEFAULT;
-
   // Run the things that need to run on the main thread there.
   nsCOMPtr<nsIRunnable> event =
-    new ServiceMainThreadInitializer(this, &sXPConnect, &sSynchronousPref);
+    new ServiceMainThreadInitializer(this, &sXPConnect);
   if (event && ::NS_IsMainThread()) {
     (void)event->Run();
   }
