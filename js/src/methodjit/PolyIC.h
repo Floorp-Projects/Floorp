@@ -52,6 +52,7 @@ namespace js {
 namespace mjit {
 namespace ic {
 
+/* Maximum number of stubs for a given callsite. */
 static const uint32 MAX_PIC_STUBS = 16;
 
 /* SetPropCompiler */
