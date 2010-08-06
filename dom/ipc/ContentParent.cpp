@@ -476,7 +476,7 @@ bool
 ContentParent::RecvLoadURIExteneral(const URI& uri)
 {
     nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
-    nsCOMPtr<nsIURI> ourURI(uri);
+    nsCOMPtr<nsIURI> ourURI = uri;
     extProtService->LoadURI(ourURI, nsnull);
     return true;
 }
