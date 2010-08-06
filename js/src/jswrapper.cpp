@@ -45,8 +45,6 @@
 #include "jsnum.h"
 #include "jsregexp.h"
 #include "jswrapper.h"
-#include "methodjit/PolyIC.h"
-#include "assembler/jit/ExecutableAllocator.h"
 
 #include "jsobjinlines.h"
 
@@ -291,26 +289,17 @@ TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, u
 }
 
 JSCompartment::JSCompartment(JSRuntime *rt)
-  : rt(rt), principals(NULL), data(NULL), marked(false), debugMode(false)
+  : rt(rt), principals(NULL), data(NULL), marked(false)
 {
 }
 
 JSCompartment::~JSCompartment()
 {
-    delete execPool;
 }
 
 bool
 JSCompartment::init()
 {
-#ifdef JS_METHODJIT
-    execPool = new JSC::ExecutableAllocator();
-    if (!execPool)
-        return false;
-
-    if (!jitScripts.init())
-        return false;
-#endif
     return crossCompartmentWrappers.init();
 }
 
@@ -483,48 +472,6 @@ JSCompartment::sweep(JSContext *cx)
         if (js_IsAboutToBeFinalized(e.front().value.asGCThing()))
             e.removeFront();
     }
-}
-
-#ifdef JS_METHODJIT
-bool
-JSCompartment::addScript(JSContext *cx, JSScript *script)
-{
-    ScriptSet::AddPtr ptr = jitScripts.lookupForAdd(script);
-    if (!ptr.found()) {
-        bool ok = jitScripts.add(ptr, script);
-        if (!ok)
-            JS_ReportOutOfMemory(cx);
-        return ok;
-    }
-    return true;
-}
-
-void
-JSCompartment::removeScript(JSScript *script)
-{
-    ScriptSet::Ptr ptr = jitScripts.lookup(script);
-    if (ptr.found())
-        jitScripts.remove(ptr);
-}
-#endif
-
-void
-JSCompartment::purge(JSContext *cx)
-{
-#ifdef JS_METHODJIT
-    if (!cx->runtime->gcRegenShapes)
-        return;
-
-    for (ScriptSet::Enum e(jitScripts); !e.empty(); e.popFront()) {
-# if defined JS_POLYIC
-        JSScript *script = e.front();
-        mjit::ic::PurgePICs(cx, script);
-# endif
-# if defined JS_MONOIC
-        //mjit::ic::PurgeMICs(cx, script);
-# endif
-    }
-#endif
 }
 
 static bool

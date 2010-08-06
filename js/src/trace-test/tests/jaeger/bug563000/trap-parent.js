@@ -1,4 +1,3 @@
-setDebug(true);
 x = "notset";
 function child() {
   /* JSOP_STOP in parent. */
