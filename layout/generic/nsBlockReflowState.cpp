@@ -71,6 +71,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
+    mFloatContinuations(nsnull),
     mOverflowTracker(nsnull),
     mPrevBottomMargin(),
     mLineNumber(0),
@@ -149,19 +150,11 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 
 nsBlockReflowState::~nsBlockReflowState()
 {
-  NS_ASSERTION(mFloatContinuations.IsEmpty(),
-               "Leaking float continuation frames");
-
   // Restore the coordinate system, unless the float manager is null,
   // which means it was just destroyed.
   if (mFloatManager) {
     const nsMargin& borderPadding = BorderPadding();
     mFloatManager->Translate(-borderPadding.left, -borderPadding.top);
-  }
-
-  if (GetFlag(BRS_PROPTABLE_FLOATCLIST)) {
-    mPresContext->PropertyTable()->
-      Delete(mBlock, nsBlockFrame::FloatContinuationProperty());
   }
 }
 
@@ -434,10 +427,16 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
 void
 nsBlockReflowState::SetupFloatContinuationList()
 {
+  NS_ABORT_IF_FALSE(!GetFlag(BRS_PROPTABLE_FLOATCLIST) == !mFloatContinuations,
+                    "flag mismatch");
   if (!GetFlag(BRS_PROPTABLE_FLOATCLIST)) {
-    mPresContext->PropertyTable()->
-      Set(mBlock, nsBlockFrame::FloatContinuationProperty(),
-          &mFloatContinuations);
+    // If we're being re-Reflow'd without our next-in-flow having been
+    // reflowed, some float continuations from our previous reflow might
+    // still be on our float continuations list.  However, that's
+    // actually fine, since they'll all end up being stolen and
+    // reordered into the correct order again.
+    // FIXME: Check this!
+    mFloatContinuations = mBlock->EnsureFloatContinuations();
     SetFlag(BRS_PROPTABLE_FLOATCLIST, PR_TRUE);
   }
 }

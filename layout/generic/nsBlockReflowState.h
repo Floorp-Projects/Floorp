@@ -224,9 +224,9 @@ public:
   nsSize mContentArea;
 
   // Continuation out-of-flow float frames that need to move to our
-  // next in flow are placed here during reflow. At the end of reflow
-  // they move to the end of the mFloats list.
-  nsFrameList mFloatContinuations;
+  // next in flow are placed here during reflow.  It's a pointer to
+  // a frame list stored in the block's property table.
+  nsFrameList *mFloatContinuations;
   // This method makes sure float continuations are accessible to
   // StealFrame. Call it before adding any frames to mFloatContinuations.
   void SetupFloatContinuationList();
@@ -234,7 +234,7 @@ public:
   void AppendFloatContinuation(nsIFrame* aFloatCont) {
     SetupFloatContinuationList();
     aFloatCont->AddStateBits(NS_FRAME_IS_FLOAT_CONTINUATION);
-    mFloatContinuations.AppendFrame(mBlock, aFloatCont);
+    mFloatContinuations->AppendFrame(mBlock, aFloatCont);
   }
 
   // Track child overflow continuations.
