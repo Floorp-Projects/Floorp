@@ -200,7 +200,7 @@ nsAsyncRedirectVerifyHelper::ExplicitCallback(nsresult result)
 
     if (!callback || !mCallbackThread) {
         LOG(("nsAsyncRedirectVerifyHelper::ExplicitCallback() "
-             "callback=%p mCallbackThread=%p", callback, mCallbackThread));
+             "callback=%p mCallbackThread=%p", callback.get(), mCallbackThread.get()));
         return;
     }
 
