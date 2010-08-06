@@ -480,9 +480,10 @@ nsFloatManager::List(FILE* out) const
 #endif
 
 nscoord
-nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType) const
+nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType,
+                            PRUint32 aFlags) const
 {
-  if (ClearContinues(aBreakType)) {
+  if (!(aFlags & DONT_CLEAR_PUSHED_FLOATS) && ClearContinues(aBreakType)) {
     return nscoord_MAX;
   }
   if (!HasAnyFloats()) {

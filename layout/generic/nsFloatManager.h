@@ -274,7 +274,12 @@ public:
    *
    * Both aY and the result are relative to the current translation.
    */
-  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType) const;
+  enum {
+    // Tell ClearFloats not to push to nscoord_MAX when floats have been
+    // pushed to the next page/column.
+    DONT_CLEAR_PUSHED_FLOATS = (1<<0)
+  };
+  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType, PRUint32 aFlags = 0) const;
 
   /**
    * Checks if clear would pass into the floats' BFC's next-in-flow,
