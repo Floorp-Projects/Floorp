@@ -2245,6 +2245,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
           if (aState.mReflowState.WillReflowAgainForClearance()) {
             line->MarkDirty();
             keepGoing = PR_FALSE;
+            NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
             break;
           }
 
