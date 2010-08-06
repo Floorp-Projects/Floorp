@@ -436,7 +436,8 @@ nsBlockReflowState::SetupFloatContinuationList()
     // still be on our float continuations list.  However, that's
     // actually fine, since they'll all end up being stolen and
     // reordered into the correct order again.
-    // FIXME: Check this!
+    // (nsBlockFrame::ReflowDirtyLines ensures that any lines with
+    // pushed floats are reflowed.)
     mFloatContinuations = mBlock->EnsureFloatContinuations();
     SetFlag(BRS_PROPTABLE_FLOATCLIST, PR_TRUE);
   }
