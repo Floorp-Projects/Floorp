@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is TabView Tabs.
+ * The Original Code is TabView AllTabs.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
@@ -41,11 +41,10 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let EXPORTED_SYMBOLS = ["Tabs"];
+let EXPORTED_SYMBOLS = ["AllTabs"];
 
-let Tabs = let (T = {
+let AllTabs = {
   //////////////////////////////////////////////////////////////////////////////
   //// Public
   //////////////////////////////////////////////////////////////////////////////
@@ -53,13 +52,14 @@ let Tabs = let (T = {
   /**
    * Get an array of all tabs from all tabbrowser windows.
    *
-   * @usage let numTabs = Tabs.allTabs.length;
-   *        Tabs.allTabs.forEach(handleTabs);
+   * @usage let numAllTabs = AllTabs.tabs.length;
+   *        AllTabs.tabs.forEach(handleAllTabs);
    */
-  get allTabs() {
-    // Get tabs from each browser and flatten them into one array
-    return Array.concat.apply({}, T.allBrowsers.map(function(browser) {
-      return Array.slice(browser.gBrowser.tabs);
+  get tabs() {
+    // Get tabs from each browser window and flatten them into one array
+    let browserWindows = AllTabs.allBrowserWindows;
+    return Array.concat.apply({}, browserWindows.map(function(browserWindow) {
+      return Array.slice(browserWindow.gBrowser.tabs);
     }));
   },
 
@@ -72,10 +72,10 @@ let Tabs = let (T = {
    * @param callback
    *        Callback that gets called with the tab being changed as "this" and
    *        the event as the first argument.
-   * @usage Tabs.onChange(handleChange);
-   *        Tabs.onChange.unbind(handleChange);
+   * @usage AllTabs.onChange(handleChange);
+   *        AllTabs.onChange.unbind(handleChange);
    */
-  get onChange() T.makeBind("onChange"),
+  get onChange() AllTabs.makeBind("onChange"),
 
   /**
    * Attach a callback for when a tab is closed.
@@ -85,10 +85,10 @@ let Tabs = let (T = {
    * @param callback
    *        Callback that gets called with the tab being closed as "this" and
    *        the event as the first argument.
-   * @usage Tabs.onClose(handleClose);
-   *        Tabs.onClose.unbind(handleClose);
+   * @usage AllTabs.onClose(handleClose);
+   *        AllTabs.onClose.unbind(handleClose);
    */
-  get onClose() T.makeBind("onClose"),
+  get onClose() AllTabs.makeBind("onClose"),
 
   /**
    * Attach a callback for when a tab is moved.
@@ -98,10 +98,10 @@ let Tabs = let (T = {
    * @param callback
    *        Callback that gets called with the tab being moved as "this" and
    *        the event as the first argument.
-   * @usage Tabs.onMove(handleMove);
-   *        Tabs.onMove.unbind(handleMove);
+   * @usage AllTabs.onMove(handleMove);
+   *        AllTabs.onMove.unbind(handleMove);
    */
-  get onMove() T.makeBind("onMove"),
+  get onMove() AllTabs.makeBind("onMove"),
 
   /**
    * Attach a callback for when a tab is opened.
@@ -111,10 +111,10 @@ let Tabs = let (T = {
    * @param callback
    *        Callback that gets called with the tab being opened as "this" and
    *        the event as the first argument.
-   * @usage Tabs.onOpen(handleOpen);
-   *        Tabs.onOpen.unbind(handleOpen);
+   * @usage AllTabs.onOpen(handleOpen);
+   *        AllTabs.onOpen.unbind(handleOpen);
    */
-  get onOpen() T.makeBind("onOpen"),
+  get onOpen() AllTabs.makeBind("onOpen"),
 
   /**
    * Attach a callback for when a tab is selected.
@@ -124,32 +124,21 @@ let Tabs = let (T = {
    * @param callback
    *        Callback that gets called with the tab being selected as "this" and
    *        the event as the first argument.
-   * @usage Tabs.onSelect(handleSelect);
-   *        Tabs.onSelect.unbind(handleSelect);
+   * @usage AllTabs.onSelect(handleSelect);
+   *        AllTabs.onSelect.unbind(handleSelect);
    */
-  get onSelect() T.makeBind("onSelect"),
+  get onSelect() AllTabs.makeBind("onSelect"),
 
   //////////////////////////////////////////////////////////////////////////////
   //// Private
   //////////////////////////////////////////////////////////////////////////////
 
-  init: function init() {
-    // Only allow calling init once
-    T.init = function() T;
-
-    // Register listeners on all browsers and future browsers
-    T.allBrowsers.forEach(T.registerBrowser);
-    Services.obs.addObserver(T, "domwindowopened", false);
-
-    return T;
-  },
-
-  get allBrowsers() {
-    let browsers = [];
+  get allBrowserWindows() {
+    let browserWindows = [];
     let windows = Services.wm.getEnumerator("navigator:browser");
     while (windows.hasMoreElements())
-      browsers.push(windows.getNext());
-    return browsers;
+      browserWindows.push(windows.getNext());
+    return browserWindows;
   },
 
   eventMap: {
@@ -160,11 +149,11 @@ let Tabs = let (T = {
     TabSelect: "onSelect",
   },
 
-  registerBrowser: function registerBrowser(browser) {
+  registerBrowserWindow: function registerBrowserWindow(browserWindow) {
     // Add a listener for each tab even to trigger the matching topic
-    [i for (i in Iterator(T.eventMap))].forEach(function([tabEvent, topic]) {
-      browser.addEventListener(tabEvent, function(event) {
-        T.trigger(topic, event.originalTarget, event);
+    [i for (i in Iterator(AllTabs.eventMap))].forEach(function([tabEvent, topic]) {
+      browserWindow.addEventListener(tabEvent, function(event) {
+        AllTabs.trigger(topic, event.originalTarget, event);
       }, true);
     });
   },
@@ -172,27 +161,27 @@ let Tabs = let (T = {
   listeners: {},
 
   makeBind: function makeBind(topic) {
-    delete T[topic];
-    T.listeners[topic] = [];
+    delete AllTabs[topic];
+    AllTabs.listeners[topic] = [];
 
     // Allow adding listeners to this topic
-    T[topic] = function bind(callback) {
-      T.listeners[topic].push(callback);
+    AllTabs[topic] = function bind(callback) {
+      AllTabs.listeners[topic].push(callback);
     };
 
     // Allow removing listeners from this topic
-    T[topic].unbind = function unbind(callback) {
-      let index = T.listeners[topic].indexOf(callback);
+    AllTabs[topic].unbind = function unbind(callback) {
+      let index = AllTabs.listeners[topic].indexOf(callback);
       if (index != -1)
-        T.listeners[topic].splice(index, 1);
+        AllTabs.listeners[topic].splice(index, 1);
     };
 
-    return T[topic];
+    return AllTabs[topic];
   },
 
   trigger: function trigger(topic, tab, event) {
     // Make sure we've gotten listeners before trying to call
-    let listeners = T.listeners[topic];
+    let listeners = AllTabs.listeners[topic];
     if (listeners == null)
       return;
 
@@ -219,15 +208,13 @@ let Tabs = let (T = {
           // Now that the window has loaded, only register on browser windows
           let doc = subject.document.documentElement;
           if (doc.getAttribute("windowtype") == "navigator:browser")
-            T.registerBrowser(subject);
+            AllTabs.registerBrowserWindow(subject);
         }, false);
         break;
     }
   },
+};
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsISupports
-  //////////////////////////////////////////////////////////////////////////////
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-}) T.init();
+// Register listeners on all browser windows and future ones
+AllTabs.allBrowserWindows.forEach(AllTabs.registerBrowserWindow);
+Services.obs.addObserver(AllTabs, "domwindowopened", false);
