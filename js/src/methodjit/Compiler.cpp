@@ -486,6 +486,16 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(PC), Registers::ArgReg1);
             stubCall(stubs::Trap);
         }
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+        // In case of no fast call, when we change the return address,
+        // we need to make sure add esp by 8. For normal call, we need
+        // to make sure the esp is not changed.
+        else {
+            masm.subPtr(Imm32(8), Registers::StackPointer);
+            masm.callLabel = masm.label();
+            masm.addPtr(Imm32(8), Registers::StackPointer);
+        }
+#endif
         ADD_CALLSITE(false);
 
     /**********************
@@ -1836,6 +1846,9 @@ mjit::Compiler::inlineCallHelper(uint32 argc, bool callingNew)
     masm.addPtr(Imm32(sizeof(void*)), Registers::StackPointer);
 #endif
     masm.call(Registers::ReturnReg);
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+    masm.callLabel = masm.label();
+#endif
     ADD_CALLSITE(false);
 
     /*
@@ -1887,7 +1900,11 @@ mjit::Compiler::addCallSite(uint32 id, bool stub)
 {
     InternalCallSite site;
     site.stub = stub;
+#if defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)
+    site.location = stub ? stubcc.masm.callLabel : masm.callLabel;
+#else
     site.location = stub ? stubcc.masm.label() : masm.label();
+#endif
     site.pc = PC;
     site.id = id;
     callSites.append(site);
