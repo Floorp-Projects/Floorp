@@ -54,7 +54,6 @@ catch(ex) {
 }
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/stores.js");
 Cu.import("resource://services-sync/trackers.js");
 Cu.import("resource://services-sync/type_records/bookmark.js");
@@ -115,12 +114,12 @@ BookmarksEngine.prototype = {
   _trackerObj: BookmarksTracker,
 
   _handleImport: function _handleImport() {
-    Observers.add("bookmarks-restore-begin", function() {
+    Svc.Obs.add("bookmarks-restore-begin", function() {
       this._log.debug("Ignoring changes from importing bookmarks");
       this._tracker.ignoreAll = true;
     }, this);
 
-    Observers.add("bookmarks-restore-success", function() {
+    Svc.Obs.add("bookmarks-restore-success", function() {
       this._log.debug("Tracking all items on successful import");
       this._tracker.ignoreAll = false;
 
@@ -129,7 +128,7 @@ BookmarksEngine.prototype = {
         this._tracker.addChangedID(id);
     }, this);
 
-    Observers.add("bookmarks-restore-failed", function() {
+    Svc.Obs.add("bookmarks-restore-failed", function() {
       this._tracker.ignoreAll = false;
     }, this);
   },
@@ -251,7 +250,7 @@ function BookmarksStore(name) {
   Store.call(this, name);
 
   // Explicitly nullify our references to our cached services so we don't leak
-  Observers.add("places-shutdown", function() {
+  Svc.Obs.add("places-shutdown", function() {
     this.__bms = null;
     this.__hsvc = null;
     this.__ls = null;
@@ -1001,16 +1000,36 @@ function BookmarksTracker(name) {
   for (let guid in kSpecialIds)
     this.ignoreID(guid);
 
-  Svc.Bookmark.addObserver(this, true);
-
-  // Explicitly nullify our references to our cached services so we don't leak
-  Observers.add("places-shutdown", function() {
-    this.__ls = null;
-    this.__bms = null;
-  }, this);
+  Svc.Obs.add("places-shutdown", this);
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
+
+  _enabled: false,
+  observe: function observe(subject, topic, data) {
+    switch (topic) {
+      case "weave:engine:start-tracking":
+        if (!this._enabled) {
+          Svc.Bookmark.addObserver(this, true);
+          this._enabled = true;
+        }
+        break;
+      case "weave:engine:stop-tracking":
+        if (this._enabled) {
+          Svc.Bookmark.removeObserver(this);
+          this._enabled = false;
+        }
+        // Fall through to clean up.
+      case "places-shutdown":
+        // Explicitly nullify our references to our cached services so
+        // we don't leak
+        this.__ls = null;
+        this.__bms = null;
+        break;
+    }
+  },
 
   __bms: null,
   get _bms() {
