@@ -441,7 +441,7 @@ bool
 ContentParent::RecvStartVisitedQuery(const IPC::URI& aURI)
 {
     nsCOMPtr<nsIURI> newURI(aURI);
-    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    IHistory *history = nsContentUtils::GetHistory(); 
     history->RegisterVisitedCallback(newURI, nsnull);
     return true;
 }
@@ -454,7 +454,7 @@ ContentParent::RecvVisitURI(const IPC::URI& uri,
 {
     nsCOMPtr<nsIURI> ourURI(uri);
     nsCOMPtr<nsIURI> ourReferrer(referrer);
-    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    IHistory *history = nsContentUtils::GetHistory(); 
     history->VisitURI(ourURI, ourReferrer, flags);
     return true;
 }
@@ -465,7 +465,7 @@ ContentParent::RecvSetURITitle(const IPC::URI& uri,
                                       const nsString& title)
 {
     nsCOMPtr<nsIURI> ourURI(uri);
-    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    IHistory *history = nsContentUtils::GetHistory(); 
     history->SetURITitle(ourURI, title);
     return true;
 }
