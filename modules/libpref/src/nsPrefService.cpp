@@ -45,7 +45,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
-#include "nsIConsoleService.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsIFile.h"
@@ -57,7 +56,6 @@
 #include "nsCOMArray.h"
 #include "nsXPCOMCID.h"
 #include "nsAutoPtr.h"
-#include "nsThreadUtils.h"
 
 #include "nsQuickSort.h"
 #include "prmem.h"
@@ -201,10 +199,6 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const char *aTopic, 
 
 NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
 {
-  if (NS_UNLIKELY(!CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     NS_ERROR("cannot load prefs from content process");
@@ -228,10 +222,6 @@ NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
 
 NS_IMETHODIMP nsPrefService::ResetPrefs()
 {
-  if (NS_UNLIKELY(!CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     NS_ERROR("cannot set prefs from content process");
@@ -250,10 +240,6 @@ NS_IMETHODIMP nsPrefService::ResetPrefs()
 
 NS_IMETHODIMP nsPrefService::ResetUserPrefs()
 {
-  if (NS_UNLIKELY(!CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     NS_ERROR("cannot set prefs from content process");
@@ -267,10 +253,6 @@ NS_IMETHODIMP nsPrefService::ResetUserPrefs()
 
 NS_IMETHODIMP nsPrefService::SavePrefFile(nsIFile *aFile)
 {
-  if (NS_UNLIKELY(!CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
 #ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     NS_ERROR("cannot save prefs from content process");
@@ -283,10 +265,6 @@ NS_IMETHODIMP nsPrefService::SavePrefFile(nsIFile *aFile)
 
 NS_IMETHODIMP nsPrefService::GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
 {
-  if (NS_UNLIKELY(!CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   nsresult rv;
 
   if ((nsnull != aPrefRoot) && (*aPrefRoot != '\0')) {
@@ -305,10 +283,6 @@ NS_IMETHODIMP nsPrefService::GetBranch(const char *aPrefRoot, nsIPrefBranch **_r
 
 NS_IMETHODIMP nsPrefService::GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
 {
-  if (NS_UNLIKELY(!CheckAndLogBackgroundThreadUse())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   nsresult rv;
 
   // TODO: - cache this stuff and allow consumers to share branches (hold weak references I think)
@@ -827,23 +801,4 @@ static nsresult pref_InitInitialObjects()
   observerService->NotifyObservers(nsnull, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID, nsnull);
 
   return pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
-}
-
-// static
-bool
-nsPrefService::CheckAndLogBackgroundThreadUse()
-{
-  if (NS_IsMainThread()) {
-    return true;
-  }
-
-  NS_ERROR("Cannot be used on a background thread!");
-  nsCOMPtr<nsIConsoleService> cs =
-    do_GetService("@mozilla.org/consoleservice;1");
-  if (cs) {
-    (void)cs->LogStringMessage(NS_LITERAL_STRING(
-      "Invalid use of the preferences on a background thread!"
-    ).get());
-  }
-  return false;
 }
