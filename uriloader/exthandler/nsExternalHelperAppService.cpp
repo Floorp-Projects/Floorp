@@ -42,11 +42,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#include "mozilla/dom/ContentChild.h"
-#include "nsXULAppAPI.h"
-#endif
-
 #include "nsExternalHelperAppService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIURI.h"
@@ -865,13 +860,6 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
                                     nsIInterfaceRequestor *aWindowContext)
 {
   NS_ENSURE_ARG_POINTER(aURI);
-
-#ifdef MOZ_IPC
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExteneral(aURI);
-    return NS_OK;
-  }
-#endif
 
   nsCAutoString spec;
   aURI->GetSpec(spec);
