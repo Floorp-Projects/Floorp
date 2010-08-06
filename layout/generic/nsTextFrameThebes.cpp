@@ -3475,13 +3475,8 @@ nsTextFrame::ClearFrameOffsetCache()
   // See if we need to remove ourselves from the offset cache
   if (GetStateBits() & TEXT_IN_OFFSET_CACHE) {
     nsIFrame* primaryFrame = mContent->GetPrimaryFrame();
-    if (primaryFrame) {
-      // The primary frame might be null here.  For example, nsLineBox::DeleteLineList
-      // just destroys the frames in order, which means that the primary frame is already
-      // dead if we're a continuing text frame, in which case, all of its properties are
-      // gone, and we don't need to worry about deleting this property here.
-      primaryFrame->Properties().Delete(OffsetToFrameProperty());
-    }
+    NS_ASSERTION(primaryFrame, "We should have a primary frame");
+    primaryFrame->Properties().Delete(OffsetToFrameProperty());
     RemoveStateBits(TEXT_IN_OFFSET_CACHE);
   }
 }
