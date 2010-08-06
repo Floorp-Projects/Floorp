@@ -41,7 +41,7 @@
 
 // ##########
 // Class: Item
-// Superclass for all visible objects (<TabItem>s and <Group>s).
+// Superclass for all visible objects (<TabItem>s and <GroupItem>s).
 //
 // If you subclass, in addition to the things Item provides, you need to also provide these methods:
 //   setBounds - function(rect, immediately)
@@ -92,7 +92,7 @@ window.Item = function() {
   this.locked = null;
 
   // Variable: parent
-  // The group that this item is a child of
+  // The groupItem that this item is a child of
   this.parent = null;
 
   // Variable: userSize
@@ -191,9 +191,9 @@ window.Item.prototype = {
     this.dropOptions = {
       over: function() {},
       out: function() {
-        var group = drag.info.item.parent;
-        if (group)
-          group.remove(drag.info.$el, {dontClose: true});
+        var groupItem = drag.info.item.parent;
+        if (groupItem)
+          groupItem.remove(drag.info.$el, {dontClose: true});
 
         iQ(this.container).removeClass("acceptsDrop");
       },
@@ -424,7 +424,7 @@ window.Item.prototype = {
         bounds.left += posStep.x;
         bounds.top += posStep.y;
 
-        if (!item.isAGroup) {
+        if (!item.isAGroupItem) {
           if (sizeStep.y > sizeStep.x) {
             var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
             bounds.left += (bounds.width - newWidth) / 2;
@@ -549,7 +549,7 @@ window.Item.prototype = {
 
   // ----------
   // Function: snap
-  // The snap function used during group creation via drag-out
+  // The snap function used during groupItem creation via drag-out
   snap: function Item_snap() {
     // make the snapping work with a wider range!
     var defaultRadius = Trenches.defaultRadius;
@@ -835,11 +835,11 @@ window.Items = {
 
   // ----------
   // Function: getTopLevelItems
-  // Returns an array of all Items not grouped into groups.
+  // Returns an array of all Items not grouped into groupItems.
   getTopLevelItems: function() {
     var items = [];
 
-    iQ('.tab, .group, .info-item').each(function(elem) {
+    iQ('.tab, .groupItem, .info-item').each(function(elem) {
       var $this = iQ(elem);
       var item = $this.data('item');
       if (item && !item.parent && !$this.hasClass('phantom'))
@@ -948,7 +948,7 @@ window.Items = {
     for (a = 0; a < count; a++) {
 /*
       if (animate == 'sometimes')
-        immediately = (typeof(item.groupData.row) == 'undefined' || item.groupData.row == row);
+        immediately = (typeof(item.groupItemData.row) == 'undefined' || item.groupItemData.row == row);
       else
 */
         immediately = !animate;
@@ -966,8 +966,8 @@ window.Items = {
       }
 
 /*
-      item.groupData.column = column;
-      item.groupData.row = row;
+      item.groupItemData.column = column;
+      item.groupItemData.row = row;
 */
 
       box.left += box.width + padding;
@@ -1020,7 +1020,7 @@ window.Items = {
       else
         newSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
 
-      if (item.isAGroup) {
+      if (item.isAGroupItem) {
           newBounds.width = Math.max(newBounds.width, newSize.x);
           newBounds.height = Math.max(newBounds.height, newSize.y);
       } else {

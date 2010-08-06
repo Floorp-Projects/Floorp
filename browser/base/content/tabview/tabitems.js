@@ -100,19 +100,19 @@ window.TabItem = function(tab) {
 
   // ___ drag/drop
   // override dropOptions with custom tabitem methods
-  // This is mostly to support the phantom groups.
+  // This is mostly to support the phantom groupItems.
   this.dropOptions.drop = function(e) {
     var $target = iQ(this.container);
     this.isDropTarget = false;
 
-    var phantom = $target.data("phantomGroup");
+    var phantom = $target.data("phantomGroupItem");
 
-    var group = drag.info.item.parent;
-    if (group) {
-      group.add(drag.info.$el);
+    var groupItem = drag.info.item.parent;
+    if (groupItem) {
+      groupItem.add(drag.info.$el);
     } else {
       phantom.removeClass("phantom acceptsDrop");
-      new Group([$target, drag.info.$el], {container:phantom, bounds:phantom.bounds()});
+      new GroupItem([$target, drag.info.$el], {container:phantom, bounds:phantom.bounds()});
     }
   };
 
@@ -124,17 +124,17 @@ window.TabItem = function(tab) {
 
     var phantomMargin = 40;
 
-    var groupBounds = this.getBoundsWithTitle();
-    groupBounds.inset(-phantomMargin, -phantomMargin);
+    var groupItemBounds = this.getBoundsWithTitle();
+    groupItemBounds.inset(-phantomMargin, -phantomMargin);
 
     iQ(".phantom").remove();
     var phantom = iQ("<div>")
-      .addClass("group phantom acceptsDrop")
+      .addClass("groupItem phantom acceptsDrop")
       .css({
         position: "absolute",
         zIndex: -99
       })
-      .css(groupBounds.css())
+      .css(groupItemBounds.css())
       .hide()
       .appendTo("body");
 
@@ -142,7 +142,7 @@ window.TabItem = function(tab) {
     // Extend the margin so that it covers the case where the target tab item
     // is right next to a trench.
     Trenches.defaultRadius = phantomMargin + 1;
-    var updatedBounds = drag.info.snapBounds(groupBounds,'none');
+    var updatedBounds = drag.info.snapBounds(groupItemBounds,'none');
     Trenches.defaultRadius = defaultRadius;
 
     // Utils.log('updatedBounds:',updatedBounds);
@@ -151,12 +151,12 @@ window.TabItem = function(tab) {
 
     phantom.fadeIn();
 
-    $target.data("phantomGroup", phantom);
+    $target.data("phantomGroupItem", phantom);
   };
 
   this.dropOptions.out = function(e) {
     this.isDropTarget = false;
-    var phantom = iQ(this.container).data("phantomGroup");
+    var phantom = iQ(this.container).data("phantomGroupItem");
     if (phantom) {
       phantom.fadeOut(function() {
         iQ(this).remove();
@@ -220,7 +220,7 @@ window.TabItem = function(tab) {
   });
 
   if (!TabItems.reconnect(this))
-    Groups.newTab(this);
+    GroupItems.newTab(this);
 };
 
 window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
@@ -433,7 +433,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: getBoundsWithTitle
-  // Returns a <Rect> for the group's bounds, including the title
+  // Returns a <Rect> for the groupItem's bounds, including the title
   getBoundsWithTitle: function() {
     var b = this.getBounds();
     var $container = iQ(this.container);
@@ -446,7 +446,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
   // ----------
   // Function: inStack
-  // Returns true if this item is in a stacked group.
+  // Returns true if this item is in a stacked groupItem.
   inStack: function() {
     return iQ(this.container).hasClass("stacked");
   },
@@ -561,16 +561,16 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           })
           .removeClass("front");
 
-        // If the tab is in a group set then set the active
-        // group to the tab's parent.
+        // If the tab is in a groupItem set then set the active
+        // groupItem to the tab's parent.
         if (self.parent) {
           var gID = self.parent.id;
-          var group = Groups.group(gID);
-          Groups.setActiveGroup(group);
-          group.setActiveTab(self);
+          var groupItem = GroupItems.groupItem(gID);
+          GroupItems.setActiveGroupItem(groupItem);
+          groupItem.setActiveTab(self);
         } else {
-          Groups.setActiveGroup(null);
-          Groups.setActiveOrphanTab(self);
+          GroupItems.setActiveGroupItem(null);
+          GroupItems.setActiveOrphanTab(self);
         }
 
         if (childHitResult.callback)
@@ -629,7 +629,7 @@ window.TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       complete: function() { // note that this will happen on the DOM thread
         $tab.removeClass('front');
 
-				Groups.setActiveOrphanTab(null);
+				GroupItems.setActiveOrphanTab(null);
 
         TabItems.resumePainting();
 
@@ -1010,12 +1010,12 @@ window.TabItems = {
           item.userSize = new Point(tabData.userSize);
 
         if (tabData.groupID) {
-          var group = Groups.group(tabData.groupID);
-          if (group) {
-            group.add(item);
+          var groupItem = GroupItems.groupItem(tabData.groupID);
+          if (groupItem) {
+            groupItem.add(item);
 
             if (item.tab == gBrowser.selectedTab)
-              Groups.setActiveGroup(item.parent);
+              GroupItems.setActiveGroupItem(item.parent);
           }
         }
 
@@ -1030,7 +1030,7 @@ window.TabItems = {
           }, 15000);
         }
 
-        Groups.updateTabBarForActiveGroup();
+        GroupItems.updateTabBarForActiveGroupItem();
 
         item.reconnected = true;
         found = true;

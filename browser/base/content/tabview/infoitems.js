@@ -52,11 +52,11 @@
 //
 // Parameters:
 //   bounds - a <Rect> for where the item should be located
-//   options - various options for this group (see below)
+//   options - various options for this infoItem (see below)
 //
 // Possible options:
 //   locked - see <Item.locked>; default is {}
-//   dontPush - true if this group shouldn't push away on creation; default is false
+//   dontPush - true if this infoItem shouldn't push away on creation; default is false
 window.InfoItem = function(bounds, options) {
   try {
     Utils.assertThrow('bounds', Utils.isRect(bounds));
@@ -150,8 +150,8 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       var data = this.getStorageData();
   /*
-      if (Groups.groupStorageSanity(data))
-        Storage.saveGroup(Utils.getCurrentWindow(), data);
+      if (GroupItems.groupItemStorageSanity(data))
+        Storage.saveGroupItem(Utils.getCurrentWindow(), data);
   */
     } catch(e) {
       Utils.log(e);
@@ -163,7 +163,7 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Sets the bounds with the given <Rect>, animating unless "immediately" is false.
   setBounds: function(rect, immediately) {
     try {
-      Utils.assertThrow('Group.setBounds: rect must be a real rectangle!', Utils.isRect(rect));
+      Utils.assertThrow('InfoItem.setBounds: rect must be a real rectangle!', Utils.isRect(rect));
 
       // ___ Determine what has changed
       var css = {};
@@ -184,7 +184,7 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         return;
 
       this.bounds = new Rect(rect);
-      Utils.assertThrow('Group.setBounds: this.bounds must be a real rectangle!',
+      Utils.assertThrow('InfoItem.setBounds: this.bounds must be a real rectangle!',
                         Utils.isRect(this.bounds));
 
       // ___ Update our representation
@@ -239,7 +239,7 @@ window.InfoItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         Items.unsquish();
       });
 
-  /*     Storage.deleteGroup(Utils.getCurrentWindow(), this.id); */
+  /*     Storage.deleteGroupItem(Utils.getCurrentWindow(), this.id); */
     } catch(e) {
       Utils.log(e);
     }

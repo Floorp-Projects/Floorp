@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "gTabViewFrame", function() {
 #include iq.js
 #include storage.js
 #include items.js
-#include groups.js
+#include groupitems.js
 #include tabitems.js
 #include drag.js
 #include trench.js

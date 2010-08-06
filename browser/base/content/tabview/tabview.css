@@ -173,16 +173,16 @@ body {
   -moz-box-shadow: none !important;
 }
 
-/* Tab Group
+/* Tab GroupItem
 ----------------------------------*/
 
-.tabInGroup {
+.tabInGroupItem {
   border: none;
   -moz-box-shadow: none !important;
 }
 
 
-.group {
+.groupItem {
   position: absolute;
 /*   float: left;  */
   cursor: move;
