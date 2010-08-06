@@ -1212,6 +1212,7 @@ SessionStoreService.prototype = {
 
     if (aTab.pinned)
       tabData.pinned = true;
+    tabData.hidden = aTab.hidden;
 
     var disallow = [];
     for (var i = 0; i < CAPABILITIES.length; i++)
@@ -1952,6 +1953,7 @@ SessionStoreService.prototype = {
         tabbrowser.pinTab(tabs[t]);
       else
         tabbrowser.unpinTab(tabs[t]);
+      tabs[t].hidden = winData.tabs[t].hidden;
     }
 
     // when overwriting tabs, remove all superflous ones
@@ -2036,6 +2038,7 @@ SessionStoreService.prototype = {
         tabbrowser.pinTab(tab);
       else
         tabbrowser.unpinTab(tab);
+      tab.hidden = tabData.hidden;
 
       tabData._tabStillLoading = true;
       if (!tabData.entries || tabData.entries.length == 0) {
