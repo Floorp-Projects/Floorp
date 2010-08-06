@@ -2120,6 +2120,8 @@ nsChangeHint nsStyleVisibility::MaxDifference()
 
 nsStyleContentData::~nsStyleContentData()
 {
+  NS_ABORT_IF_FALSE(!mImageTracked,
+                    "nsStyleContentData being destroyed while still tracking image!");
   if (mType == eStyleContentType_Image) {
     NS_IF_RELEASE(mContent.mImage);
   } else if (mType == eStyleContentType_Counter ||
@@ -2175,6 +2177,49 @@ PRBool nsStyleContentData::operator==(const nsStyleContentData& aOther) const
   return nsCRT::strcmp(mContent.mString, aOther.mContent.mString) == 0;
 }
 
+void
+nsStyleContentData::TrackImage(nsPresContext* aContext)
+{
+  // Sanity
+  NS_ABORT_IF_FALSE(!mImageTracked, "Already tracking image!");
+  NS_ABORT_IF_FALSE(mType == eStyleContentType_Image,
+                    "Tryingto do image tracking on non-image!");
+  NS_ABORT_IF_FALSE(mContent.mImage,
+                    "Can't track image when there isn't one!");
+
+  // Register the image with the document
+  nsIDocument* doc = aContext->Document();
+  if (doc)
+    doc->AddImage(mContent.mImage);
+
+  // Mark state
+#ifdef DEBUG
+  mImageTracked = true;
+#endif
+}
+
+void
+nsStyleContentData::UntrackImage(nsPresContext* aContext)
+{
+  // Sanity
+  NS_ABORT_IF_FALSE(mImageTracked, "Image not tracked!");
+  NS_ABORT_IF_FALSE(mType == eStyleContentType_Image,
+                    "Trying to do image tracking on non-image!");
+  NS_ABORT_IF_FALSE(mContent.mImage,
+                    "Can't untrack image when there isn't one!");
+
+  // Unregister the image with the document
+  nsIDocument* doc = aContext->Document();
+  if (doc)
+    doc->RemoveImage(mContent.mImage);
+
+  // Mark state
+#ifdef DEBUG
+  mImageTracked = false;
+#endif
+}
+
+
 //-----------------------
 // nsStyleContent
 //
@@ -2198,6 +2243,21 @@ nsStyleContent::~nsStyleContent(void)
   DELETE_ARRAY_IF(mContents);
   DELETE_ARRAY_IF(mIncrements);
   DELETE_ARRAY_IF(mResets);
+}
+
+void 
+nsStyleContent::Destroy(nsPresContext* aContext)
+{
+  // Unregister any images we might have with the document.
+  for (PRUint32 i = 0; i < mContentCount; ++i) {
+    if ((mContents[i].mType == eStyleContentType_Image) &&
+        mContents[i].mContent.mImage) {
+      mContents[i].UntrackImage(aContext);
+    }
+  }
+
+  this->~nsStyleContent();
+  aContext->FreeToShell(sizeof(nsStyleContent), this);
 }
 
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
