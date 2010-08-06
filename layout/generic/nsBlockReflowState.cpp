@@ -605,6 +605,8 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
       aLineLayout->UpdateBand(availSpace, aFloat);
       // Record this float in the current-line list
       mCurrentLineFloats.Append(mFloatCacheFreeList.Alloc(aFloat));
+    } else {
+      (*aLineLayout->GetLine())->SetHadFloatPushed();
     }
   }
   else {
@@ -956,7 +958,8 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
  * Place below-current-line floats.
  */
 void
-nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList)
+nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList,
+                                                nsLineBox* aLine)
 {
   nsFloatCache* fc = aList.Head();
   while (fc) {
@@ -974,6 +977,7 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList)
     if (!placed) {
       aList.Remove(fc);
       delete fc;
+      aLine->SetHadFloatPushed();
     }
     fc = next;
   }
