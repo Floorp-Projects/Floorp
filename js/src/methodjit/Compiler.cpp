@@ -167,12 +167,8 @@ mjit::TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *sco
     JS_ASSERT(!script->isEmpty());
 
     CompileStatus status = cc.Compile();
-    if (status == Compile_Okay) {
-        if (!cx->compartment->addScript(cx, script))
-            status = Compile_Abort;
-    } else {
+    if (status != Compile_Okay)
         script->ncode = JS_UNJITTABLE_METHOD;
-    }
 
     return status;
 }
@@ -417,10 +413,6 @@ mjit::Compiler::finishThisUp()
         callSiteList[i].c.id = callSites[i].id;
     }
     script->callSites = callSiteList;
-
-#ifdef JS_METHODJIT
-    script->debugMode = cx->compartment->debugMode;
-#endif
 
     return Compile_Okay;
 }

@@ -131,7 +131,8 @@ class PICStubCompiler
 
     JSC::ExecutablePool *getExecPool(size_t size)
     {
-        return f.cx->compartment->execPool->poolForSize(size);
+        mjit::ThreadData *jd = &JS_METHODJIT_DATA(f.cx);
+        return jd->execPool->poolForSize(size);
     }
 
   protected:
@@ -685,6 +686,12 @@ class GetPropCompiler : public PICStubCompiler
         if (!f.fp->script->compileAndGo)
             return disable("String.prototype without compile-and-go");
 
+        mjit::ThreadData &jm = JS_METHODJIT_DATA(f.cx);
+        if (!jm.addScript(script)) {
+            js_ReportOutOfMemory(f.cx);
+            return false;
+        }
+
         JSObject *holder;
         JSProperty *prop;
         if (!obj->lookupProperty(f.cx, ATOM_TO_JSID(atom), &holder, &prop))
@@ -806,6 +813,12 @@ class GetPropCompiler : public PICStubCompiler
     {
         spew("patch", "inline");
         PICRepatchBuffer repatcher(pic, pic.fastPathStart);
+
+        mjit::ThreadData &jm = JS_METHODJIT_DATA(f.cx);
+        if (!jm.addScript(script)) {
+            js_ReportOutOfMemory(f.cx);
+            return false;
+        }
 
         int32 offset;
         if (sprop->slot < JS_INITIAL_NSLOTS) {

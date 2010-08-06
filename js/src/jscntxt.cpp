@@ -513,25 +513,6 @@ FrameRegsIter::operator++()
     return *this;
 }
 
-AllFramesIter::AllFramesIter(JSContext *cx)
-  : curcs(cx->stack().getCurrentSegment()),
-    curfp(curcs ? curcs->getCurrentFrame() : NULL)
-{
-}
-
-AllFramesIter&
-AllFramesIter::operator++()
-{
-    JS_ASSERT(!done());
-    if (curfp == curcs->getInitialFrame()) {
-        curcs = curcs->getPreviousInMemory();
-        curfp = curcs ? curcs->getCurrentFrame() : NULL;
-    } else {
-        curfp = curfp->down;
-    }
-    return *this;
-}
-
 bool
 JSThreadData::init()
 {
@@ -608,6 +589,9 @@ JSThreadData::purge(JSContext *cx)
      */
     if (cx->runtime->gcRegenShapes)
         traceMonitor.needFlush = JS_TRUE;
+#endif
+#ifdef JS_METHODJIT
+    jmData.purge(cx);
 #endif
 
     /* Destroy eval'ed scripts. */
@@ -2284,9 +2268,8 @@ void
 JSContext::purge()
 {
     FreeOldArenas(runtime, &regexpPool);
-    /* :XXX: Is this the right place for this? */
-    compartment->purge(this);
 }
+
 
 namespace js {
 
