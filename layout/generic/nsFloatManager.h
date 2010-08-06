@@ -111,7 +111,9 @@ public:
   private:
     PRUint32 mFloatInfoCount;
     nscoord mX, mY;
-    
+    PRPackedBool mPushedLeftFloatPastBreak;
+    PRPackedBool mPushedRightFloatPastBreak;
+
     friend class nsFloatManager;
   };
 
@@ -180,6 +182,17 @@ public:
    * must ensure aMarginRect.height >= 0 and aMarginRect.width >= 0.
    */
   nsresult AddFloat(nsIFrame* aFloatFrame, const nsRect& aMarginRect);
+
+  /**
+   * Notify that we tried to place a float that could not fit at all and
+   * had to be pushed to the next page/column?  (If so, we can't place
+   * any more floats in this page/column because of the rule that the
+   * top of a float cannot be above the top of an earlier float.)
+   */
+  void SetPushedLeftFloatPastBreak()
+    { mPushedLeftFloatPastBreak = PR_TRUE; }
+  void SetPushedRightFloatPastBreak()
+    { mPushedRightFloatPastBreak = PR_TRUE; }
 
   /**
    * Remove the regions associated with this floating frame and its
@@ -259,6 +272,10 @@ public:
   void AssertStateMatches(SavedState *aState) const
   {
     NS_ASSERTION(aState->mX == mX && aState->mY == mY &&
+                 aState->mPushedLeftFloatPastBreak ==
+                   mPushedLeftFloatPastBreak &&
+                 aState->mPushedRightFloatPastBreak ==
+                   mPushedRightFloatPastBreak &&
                  aState->mFloatInfoCount == mFloats.Length(),
                  "float manager state should match saved state");
   }
@@ -288,6 +305,15 @@ private:
   nscoord         mX, mY;     // translation from local to global coordinate space
   nsTArray<FloatInfo> mFloats;
   nsIntervalSet   mFloatDamage;
+
+  // Did we try to place a float that could not fit at all and had to be
+  // pushed to the next page/column?  If so, we can't place any more
+  // floats in this page/column because of the rule that the top of a
+  // float cannot be above the top of an earlier float.  And we also
+  // need to apply this information to 'clear', and thus need to
+  // separate left and right floats.
+  PRPackedBool mPushedLeftFloatPastBreak;
+  PRPackedBool mPushedRightFloatPastBreak;
 
   static PRInt32 sCachedFloatManagerCount;
   static void* sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];
