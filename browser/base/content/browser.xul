@@ -120,7 +120,7 @@
           <menuitem label="&createNewGroup.label;" 
                     accesskey="&createNewGroup.accesskey;" 
                     oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);" />
-          <menuitem id="context_namedGroup" label="&namedGroup.label;" 
+          <menuitem id="context_namedGroups" label="&namedGroups.label;" 
                     disabled="true" />
         </menupopup>
       </menu>
