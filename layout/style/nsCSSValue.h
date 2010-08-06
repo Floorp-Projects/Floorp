@@ -220,6 +220,12 @@ public:
     return !(*this == aOther);
   }
 
+  /**
+   * Serialize |this| as a specified value for |aProperty| and append
+   * it to |aResult|.
+   */
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+
   nsCSSUnit GetUnit() const { return mUnit; }
   PRBool    IsLengthUnit() const
     { return eCSSUnit_Inch <= mUnit && mUnit <= eCSSUnit_Pixel; }

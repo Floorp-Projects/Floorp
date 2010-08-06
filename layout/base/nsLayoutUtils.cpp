@@ -747,6 +747,24 @@ nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame)
   return nsnull;
 }
 
+//static
+PRBool
+nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
+                              nsStyleContext* aStyleContext,
+                              nsCSSPseudoElements::Type aPseudoElement,
+                              nsPresContext* aPresContext)
+{
+  NS_PRECONDITION(aPresContext, "Must have a prescontext");
+
+  nsRefPtr<nsStyleContext> pseudoContext;
+  if (aContent) {
+    pseudoContext = aPresContext->StyleSet()->
+      ProbePseudoElementStyle(aContent->AsElement(), aPseudoElement,
+                              aStyleContext);
+  }
+  return pseudoContext != nsnull;
+}
+
 nsPoint
 nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent, nsIFrame* aFrame)
 {
@@ -768,6 +786,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
                   aEvent->eventStructType != NS_DRAG_EVENT &&
                   aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
                   aEvent->eventStructType != NS_GESTURENOTIFY_EVENT &&
+                  aEvent->eventStructType != NS_MOZTOUCH_EVENT &&
                   aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
@@ -1742,12 +1761,26 @@ GetPercentHeight(const nsStyleCoord& aStyle,
     NS_ASSERTION(pos->mHeight.GetUnit() == eStyleUnit_Auto ||
                  pos->mHeight.GetUnit() == eStyleUnit_Percent,
                  "unknown height unit");
-    // There's no basis for the percentage height, so it acts like auto.
-    // Should we consider a max-height < min-height pair a basis for
-    // percentage heights?  The spec is somewhat unclear, and not doing
-    // so is simpler and avoids troubling discontinuities in behavior,
-    // so I'll choose not to. -LDB
-    return PR_FALSE;
+    nsIAtom* fType = f->GetType();
+    if (fType != nsGkAtoms::viewportFrame && fType != nsGkAtoms::canvasFrame &&
+        fType != nsGkAtoms::pageContentFrame) {
+      // There's no basis for the percentage height, so it acts like auto.
+      // Should we consider a max-height < min-height pair a basis for
+      // percentage heights?  The spec is somewhat unclear, and not doing
+      // so is simpler and avoids troubling discontinuities in behavior,
+      // so I'll choose not to. -LDB
+      return PR_FALSE;
+    }
+
+    NS_ASSERTION(pos->mHeight.GetUnit() == eStyleUnit_Auto,
+                 "Unexpected height unit for viewport or canvas or page-content");
+    // For the viewport, canvas, and page-content kids, the percentage
+    // basis is just the parent height.
+    h = f->GetSize().height;
+    if (h == NS_UNCONSTRAINEDSIZE) {
+      // We don't have a percentage basis after all
+      return PR_FALSE;
+    }
   }
 
   nscoord maxh;
@@ -2574,6 +2607,17 @@ nsLayoutUtils::GetFirstLinePosition(const nsIFrame* aFrame,
         // kid's position, not the scrolling, so we get the initial
         // position.
         *aResult = kidPosition + aFrame->GetUsedBorderAndPadding().top;
+        return PR_TRUE;
+      }
+      return PR_FALSE;
+    }
+
+    if (fType == nsGkAtoms::fieldSetFrame) {
+      LinePosition kidPosition;
+      nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+      // kid might be a legend frame here, but that's ok.
+      if (GetFirstLinePosition(kid, &kidPosition)) {
+        *aResult = kidPosition + kid->GetPosition().y;
         return PR_TRUE;
       }
       return PR_FALSE;

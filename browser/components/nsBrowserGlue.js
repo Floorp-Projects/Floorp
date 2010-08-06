@@ -381,6 +381,29 @@ BrowserGlue.prototype = {
     }
 #endif
 #endif
+
+#ifdef MOZ_SERVICES_SYNC
+    // Assume that a non-zero value for services.sync.autoconnectDelay should override
+    if (Services.prefs.prefHasUserValue("services.sync.autoconnectDelay")) {
+      let prefDelay = Services.prefs.getIntPref("services.sync.autoconnectDelay");
+
+      if (prefDelay > 0)
+        return;
+    }
+
+    // delays are in seconds
+    const MAX_DELAY = 300;
+    let delay = 3;
+    let enum = Services.wm.getEnumerator("navigator:browser");
+    while (enum.hasMoreElements()) {
+      delay += enum.getNext().gBrowser.tabs.length;
+    }
+    delay = delay <= MAX_DELAY ? delay : MAX_DELAY;
+
+    let syncTemp = {};
+    Cu.import("resource://services-sync/service.js", syncTemp);
+    syncTemp.Weave.Service.delayedAutoConnect(delay);
+#endif
   },
 
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {

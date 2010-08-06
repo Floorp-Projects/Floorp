@@ -2,6 +2,9 @@
 <!ENTITY search.placeholder                   "Search all add-ons">
 <!ENTITY loading.label                        "Loading…">
 <!ENTITY listEmpty.installed.label            "You don't have any add-ons of this type installed">
+<!ENTITY listEmpty.availableUpdates.label     "No updates found">
+<!ENTITY listEmpty.recentUpdates.label        "You haven't recently updated any add-ons">
+<!ENTITY listEmpty.findUpdates.label          "Check For Updates">
 <!ENTITY listEmpty.search.label               "Could not find any matching add-ons">
 <!ENTITY listEmpty.button.label               "Learn more about add-ons">
 
@@ -15,14 +18,22 @@
 <!ENTITY view.features.label                  "Extensions">
 <!ENTITY view.appearance.label                "Themes">
 <!ENTITY view.plugins.label                   "Plugins">
+<!ENTITY view.recentUpdates.label             "Recent Updates">
+<!ENTITY view.availableUpdates.label          "Available Updates">
 
 <!-- addon updates -->
-<!ENTITY updates.updateNow.label              "Update add-ons">
+<!ENTITY updates.updateAddonsNow.label        "Update Add-ons Now">
+<!ENTITY updates.updateAddonsNow.accesskey    "U">
+<!ENTITY updates.viewUpdates.label            "View Recent Updates">
+<!ENTITY updates.viewUpdates.accesskey        "V">
+<!ENTITY updates.backgroudUpdateCheck.label   "Check for Updates Automatically">
+<!ENTITY updates.backgroudUpdateCheck.accesskey "C">
 <!ENTITY updates.updating.label               "Updating add-ons">
 <!ENTITY updates.installed.label              "Your add-ons have been updated.">
 <!ENTITY updates.downloaded.label             "Your add-on updates have been downloaded.">
 <!ENTITY updates.restart.label                "Restart now to complete installation">
 <!ENTITY updates.noneFound.label              "No updates found">
+<!ENTITY updates.manualUpdatesFound.label     "View Available Updates">
 
 <!-- addon actions -->
 <!ENTITY cmd.showDetails.label                "Show more information">
@@ -46,6 +57,10 @@
 <!ENTITY cmd.contribute.accesskey             "C">
 <!ENTITY cmd.contribute.tooltip               "Contribute to the development of this add-on">
 
+<!ENTITY cmd.showReleaseNotes.label           "Show Release Notes">
+<!ENTITY cmd.showReleaseNotes.tooltip         "Show the release notes for this update">
+<!ENTITY cmd.hideReleaseNotes.label           "Hide Release Notes">
+<!ENTITY cmd.hideReleaseNotes.tooltip         "Hide the release notes for this update">
 
 <!-- detail view -->
 <!ENTITY detail.version.label                 "Version">
@@ -96,6 +111,8 @@
 <!ENTITY addon.homepage                       "Homepage">
 <!ENTITY addon.unknownDate                    "Unknown">
 <!ENTITY addon.disabled.postfix               "(disabled)">
+<!-- LOCALIZATION NOTE (addon.update.postfix): This is used to signify that an item is an update, in the form "Addon v1.0 Update" -->
+<!ENTITY addon.update.postfix                 "Update">
 <!ENTITY addon.undo.label                     "Undo?">
 <!ENTITY addon.undo.tooltip                   "Undo this action">
 <!ENTITY addon.undoUninstall.label            "Undo?">
@@ -104,6 +121,11 @@
 <!ENTITY addon.restartNow.tooltip             "Restart now to complete installation">
 <!ENTITY addon.install.label                  "Install">
 <!ENTITY addon.install.tooltip                "Install this add-on">
+<!ENTITY addon.updateNow.label                "Update Now">
+<!ENTITY addon.updateNow.tooltip              "Install the update for this add-on">
 <!ENTITY addon.checkingForUpdates.label       "Checking for updates…">
+<!ENTITY addon.releaseNotes.label             "Release Notes:">
+<!ENTITY addon.loadingReleaseNotes.label      "Loading…">
+<!ENTITY addon.errorLoadingReleaseNotes.label "Sorry, but there was an error loading the release notes.">
 
 <!ENTITY addon.createdBy.label                "By ">

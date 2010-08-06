@@ -95,6 +95,7 @@ class nsMouseScrollEvent;
 class nsReconversionEvent;
 class nsTooltipEvent;
 class nsSimpleGestureEvent;
+class nsMozTouchEvent;
 class nsContentCommandEvent;
 
 #endif // nsEvent_h__

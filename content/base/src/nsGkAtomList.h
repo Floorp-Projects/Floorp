@@ -379,6 +379,7 @@ GK_ATOM(flex, "flex")
 GK_ATOM(flexgroup, "flexgroup")
 GK_ATOM(floating, "floating")
 GK_ATOM(floatList, "Float-list")
+GK_ATOM(floatContinuationsList, "FloatContinuations-list")
 GK_ATOM(floor, "floor")
 GK_ATOM(focus, "focus")
 GK_ATOM(following, "following")
@@ -1535,6 +1536,11 @@ GK_ATOM(onMozRotateGestureUpdate, "onMozRotateGestureUpdate")
 GK_ATOM(onMozRotateGesture, "onMozRotateGesture")
 GK_ATOM(onMozTapGesture, "onMozTapGesture")
 GK_ATOM(onMozPressTapGesture, "onMozPressTapGesture")
+
+// Touch events
+GK_ATOM(onMozTouchDown, "onMozTouchDown")
+GK_ATOM(onMozTouchMove, "onMozTouchMove")
+GK_ATOM(onMozTouchUp, "onMozTouchUp")
 
 // orientation support
 GK_ATOM(onMozOrientation, "onMozOrientation")

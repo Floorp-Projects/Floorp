@@ -169,6 +169,7 @@ protected:
    PRUint32                   mContentType;
    PRPackedBool               mActivating;
    PRPackedBool               mShouldEnableHistory;
+   PRPackedBool               mIsActive;
    nativeWindow               mParentNativeWindow;
    nsIWebProgressListener    *mProgressListener;
    nsCOMPtr<nsIWebProgress>      mWebProgress;

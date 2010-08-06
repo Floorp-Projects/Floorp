@@ -41,11 +41,14 @@
  */
 
 #include "nsCSSDataBlock.h"
+#include "mozilla/css/Declaration.h"
 #include "nsCSSProps.h"
 #include "nsRuleData.h"
 #include "nsRuleNode.h"
 #include "nsStyleSet.h"
 #include "nsStyleContext.h"
+
+namespace css = mozilla::css;
 
 /*
  * nsCSSCompressedDataBlock holds property-value pairs corresponding to
@@ -238,8 +241,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                      "out of range");
         if (nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]) &
             aRuleData->mSIDs) {
-            void *prop =
-                nsCSSExpandedDataBlock::RuleDataPropertyAt(aRuleData, iProp);
+            void *prop = aRuleData->StorageFor(iProp);
             switch (nsCSSProps::kTypeTable[iProp]) {
                 case eCSSType_Value: {
                     nsCSSValue* target = static_cast<nsCSSValue*>(prop);
@@ -421,14 +423,14 @@ nsCSSCompressedDataBlock::StorageFor(nsCSSProperty aProperty) const
     return nsnull;
 }
 
-already_AddRefed<nsCSSCompressedDataBlock>
+nsCSSCompressedDataBlock*
 nsCSSCompressedDataBlock::Clone() const
 {
     const char *cursor = Block(), *cursor_end = BlockEnd();
     char *result_cursor;
 
-    nsCSSCompressedDataBlock *result =
-        new(cursor_end - cursor) nsCSSCompressedDataBlock();
+    nsAutoPtr<nsCSSCompressedDataBlock> result
+        (new(cursor_end - cursor) nsCSSCompressedDataBlock());
     if (!result)
         return nsnull;
     result_cursor = result->Block();
@@ -485,8 +487,8 @@ nsCSSCompressedDataBlock::Clone() const
                         break;
                 }
                 if (!copy) {
+                    // so the destructor knows where to stop clearing
                     result->mBlockEnd = result_cursor;
-                    result->Destroy();
                     return nsnull;
                 }
                 PointerAtCursor(result_cursor) = copy;
@@ -501,12 +503,10 @@ nsCSSCompressedDataBlock::Clone() const
     result->mStyleBits = mStyleBits;
     NS_ASSERTION(result->DataSize() == DataSize(), "wrong size");
 
-    result->AddRef();
-    return result;
+    return result.forget();
 }
 
-void
-nsCSSCompressedDataBlock::Destroy()
+nsCSSCompressedDataBlock::~nsCSSCompressedDataBlock()
 {
     const char* cursor = Block();
     const char* cursor_end = BlockEnd();
@@ -554,19 +554,74 @@ nsCSSCompressedDataBlock::Destroy()
         }
     }
     NS_ASSERTION(cursor == cursor_end, "inconsistent data");
-    delete this;
 }
 
-/* static */ already_AddRefed<nsCSSCompressedDataBlock>
+/* static */ nsCSSCompressedDataBlock*
 nsCSSCompressedDataBlock::CreateEmptyBlock()
 {
     nsCSSCompressedDataBlock *result = new(0) nsCSSCompressedDataBlock();
-    if (!result)
-        return nsnull;
     result->mBlockEnd = result->Block();
-
-    result->AddRef();
     return result;
+}
+
+/* static */ void
+nsCSSCompressedDataBlock::MoveValue(void *aSource, void *aDest,
+                                    nsCSSProperty aPropID,
+                                    PRBool* aChanged)
+{
+  switch (nsCSSProps::kTypeTable[aPropID]) {
+    case eCSSType_Value: {
+      nsCSSValue *source = static_cast<nsCSSValue*>(aSource);
+      nsCSSValue *dest = static_cast<nsCSSValue*>(aDest);
+      if (*source != *dest)
+        *aChanged = PR_TRUE;
+      dest->~nsCSSValue();
+      memcpy(dest, source, sizeof(nsCSSValue));
+      new (source) nsCSSValue();
+    } break;
+
+    case eCSSType_Rect: {
+      nsCSSRect *source = static_cast<nsCSSRect*>(aSource);
+      nsCSSRect *dest = static_cast<nsCSSRect*>(aDest);
+      if (*source != *dest)
+        *aChanged = PR_TRUE;
+      dest->~nsCSSRect();
+      memcpy(dest, source, sizeof(nsCSSRect));
+      new (source) nsCSSRect();
+    } break;
+
+    case eCSSType_ValuePair: {
+      nsCSSValuePair *source = static_cast<nsCSSValuePair*>(aSource);
+      nsCSSValuePair *dest = static_cast<nsCSSValuePair*>(aDest);
+      if (*source != *dest)
+        *aChanged = PR_TRUE;
+      dest->~nsCSSValuePair();
+      memcpy(dest, source, sizeof(nsCSSValuePair));
+      new (source) nsCSSValuePair();
+    } break;
+
+    case eCSSType_ValueList: {
+      nsCSSValueList **source = static_cast<nsCSSValueList**>(aSource);
+      nsCSSValueList **dest = static_cast<nsCSSValueList**>(aDest);
+      if (**source != **dest)
+        *aChanged = PR_TRUE;
+      delete *dest;
+      *dest = *source;
+      *source = nsnull;
+    } break;
+
+    case eCSSType_ValuePairList: {
+      nsCSSValuePairList **source =
+        static_cast<nsCSSValuePairList**>(aSource);
+      nsCSSValuePairList **dest =
+        static_cast<nsCSSValuePairList**>(aDest);
+      if (**source != **dest)
+        *aChanged = PR_TRUE;
+      delete *dest;
+      *dest = *source;
+      *source = nsnull;
+    } break;
+  }
 }
 
 /*****************************************************************************/
@@ -581,49 +636,25 @@ nsCSSExpandedDataBlock::~nsCSSExpandedDataBlock()
     AssertInitialState();
 }
 
-const nsCSSExpandedDataBlock::PropertyOffsetInfo
-nsCSSExpandedDataBlock::kOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, datastruct_,     \
-                                 member_, type_, kwtable_)                     \
-        { offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),            \
-          size_t(-1),                                                          \
-          size_t(-1) },
+const size_t
+nsCSSExpandedDataBlock::kOffsetTable[] = {
     #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_, \
                      kwtable_, stylestruct_, stylestructoffset_, animtype_)    \
-        { offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),            \
-          offsetof(nsRuleData, m##datastruct_##Data),                          \
-          offsetof(nsRuleData##datastruct_, member_) },
+        offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),
     #include "nsCSSPropList.h"
     #undef CSS_PROP
-    #undef CSS_PROP_BACKENDONLY
 };
 
 void
-nsCSSExpandedDataBlock::DoExpand(nsRefPtr<nsCSSCompressedDataBlock> *aBlock,
+nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
                                  PRBool aImportant)
 {
-    NS_PRECONDITION(*aBlock, "unexpected null block");
-
-    if (!(*aBlock)->IsMutable()) {
-        // FIXME (maybe): We really don't need to clone the block
-        // itself, just all the data inside it.
-        *aBlock = (*aBlock)->Clone();
-        if (!*aBlock) {
-            // Not much we can do; just lose the properties.
-            NS_WARNING("out of memory");
-            return;
-        }
-        NS_ABORT_IF_FALSE((*aBlock)->IsMutable(), "we just cloned it");
-    }
-
     /*
      * Save needless copying and allocation by copying the memory
-     * corresponding to the stored data in the compressed block, and
-     * then, to avoid destructors, deleting the compressed block by
-     * calling |delete| instead of using its |Destroy| method.
+     * corresponding to the stored data in the compressed block.
      */
-    const char* cursor = (*aBlock)->Block();
-    const char* cursor_end = (*aBlock)->BlockEnd();
+    const char* cursor = aBlock->Block();
+    const char* cursor_end = aBlock->BlockEnd();
     while (cursor < cursor_end) {
         nsCSSProperty iProp = PropertyAtCursor(cursor);
         NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
@@ -690,20 +721,20 @@ nsCSSExpandedDataBlock::DoExpand(nsRefPtr<nsCSSCompressedDataBlock> *aBlock,
     }
     NS_ASSERTION(cursor == cursor_end, "inconsistent data");
 
-    NS_ASSERTION((*aBlock)->mRefCnt == 1, "unexpected reference count");
-    delete aBlock->forget().get();
+    // Don't destroy remnants of what we just copied
+    aBlock->mBlockEnd = aBlock->Block();
+    delete aBlock;
 }
 
 void
-nsCSSExpandedDataBlock::Expand(
-                          nsRefPtr<nsCSSCompressedDataBlock> *aNormalBlock,
-                          nsRefPtr<nsCSSCompressedDataBlock> *aImportantBlock)
+nsCSSExpandedDataBlock::Expand(nsCSSCompressedDataBlock *aNormalBlock,
+                               nsCSSCompressedDataBlock *aImportantBlock)
 {
-    NS_PRECONDITION(*aNormalBlock, "unexpected null block");
+    NS_PRECONDITION(aNormalBlock, "unexpected null block");
     AssertInitialState();
 
     DoExpand(aNormalBlock, PR_FALSE);
-    if (*aImportantBlock) {
+    if (aImportantBlock) {
         DoExpand(aImportantBlock, PR_TRUE);
     }
 }
@@ -776,11 +807,11 @@ void
 nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
                                  nsCSSCompressedDataBlock **aImportantBlock)
 {
-    nsRefPtr<nsCSSCompressedDataBlock> result_normal, result_important;
+    nsAutoPtr<nsCSSCompressedDataBlock> result_normal, result_important;
     char *cursor_normal, *cursor_important;
 
     ComputeSizeResult size = ComputeSize();
-    
+
     result_normal = new(size.normal) nsCSSCompressedDataBlock();
     if (!result_normal) {
         *aNormalBlock = nsnull;
@@ -887,8 +918,8 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
 
     ClearSets();
     AssertInitialState();
-    result_normal.forget(aNormalBlock);
-    result_important.forget(aImportantBlock);
+    *aNormalBlock = result_normal.forget();
+    *aImportantBlock = result_important.forget();
 }
 
 void
@@ -901,7 +932,7 @@ nsCSSExpandedDataBlock::Clear()
             if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
                 continue;
             nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
-            ClearProperty(iProp);
+            ClearLonghandProperty(iProp);
         }
     }
 
@@ -911,8 +942,21 @@ nsCSSExpandedDataBlock::Clear()
 void
 nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
 {
-    NS_ASSERTION(0 <= aPropID && aPropID < eCSSProperty_COUNT_no_shorthands,
-                 "out of range");
+  if (nsCSSProps::IsShorthand(aPropID)) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
+      ClearLonghandProperty(*p);
+    }
+  } else {
+    ClearLonghandProperty(aPropID);
+  }
+}
+
+void
+nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
+{
+    NS_ABORT_IF_FALSE(0 <= aPropID &&
+                      aPropID < eCSSProperty_COUNT_no_shorthands,
+                      "out of range");
 
     ClearPropertyBit(aPropID);
     ClearImportantBit(aPropID);
@@ -952,6 +996,73 @@ nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
             }
         } break;
     }
+}
+
+void
+nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
+                                          nsCSSProperty aPropID,
+                                          PRBool aIsImportant,
+                                          PRBool aOverrideImportant,
+                                          PRBool aMustCallValueAppended,
+                                          css::Declaration* aDeclaration,
+                                          PRBool* aChanged)
+{
+  if (nsCSSProps::IsShorthand(aPropID)) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
+      DoTransferFromBlock(aFromBlock, *p, aIsImportant, aOverrideImportant,
+                          aMustCallValueAppended, aDeclaration, aChanged);
+    }
+  } else {
+    DoTransferFromBlock(aFromBlock, aPropID, aIsImportant, aOverrideImportant,
+                        aMustCallValueAppended, aDeclaration, aChanged);
+  }
+}
+
+void
+nsCSSExpandedDataBlock::DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
+                                            nsCSSProperty aPropID,
+                                            PRBool aIsImportant,
+                                            PRBool aOverrideImportant,
+                                            PRBool aMustCallValueAppended,
+                                            css::Declaration* aDeclaration,
+                                            PRBool* aChanged)
+{
+  NS_ASSERTION(aFromBlock.HasPropertyBit(aPropID), "oops");
+  if (aIsImportant) {
+    if (!HasImportantBit(aPropID))
+      *aChanged = PR_TRUE;
+    SetImportantBit(aPropID);
+  } else {
+    if (HasImportantBit(aPropID)) {
+      // When parsing a declaration block, an !important declaration
+      // is not overwritten by an ordinary declaration of the same
+      // property later in the block.  However, CSSOM manipulations
+      // come through here too, and in that case we do want to
+      // overwrite the property.
+      if (!aOverrideImportant) {
+        aFromBlock.ClearLonghandProperty(aPropID);
+        return;
+      }
+      *aChanged = PR_TRUE;
+      ClearImportantBit(aPropID);
+    }
+  }
+
+  if (aMustCallValueAppended || !HasPropertyBit(aPropID)) {
+    aDeclaration->ValueAppended(aPropID);
+  }
+
+  SetPropertyBit(aPropID);
+  aFromBlock.ClearPropertyBit(aPropID);
+
+  /*
+   * Save needless copying and allocation by calling the destructor in
+   * the destination, copying memory directly, and then using placement
+   * new.
+   */
+  void *v_source = aFromBlock.PropertyAt(aPropID);
+  void *v_dest = PropertyAt(aPropID);
+  nsCSSCompressedDataBlock::MoveValue(v_source, v_dest, aPropID, aChanged);
 }
 
 #ifdef DEBUG

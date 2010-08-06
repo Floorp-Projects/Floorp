@@ -69,10 +69,8 @@ XPIDLSRCS =					\
 	nsIDOMCSSUnknownRule.idl		\
 	nsIDOMCounter.idl			\
 	nsIDOMDocumentCSS.idl			\
-	nsIDOMNSCSS2Properties.idl		\
 	nsIDOMRGBColor.idl			\
 	nsIDOMRect.idl				\
-	nsIDOMSVGCSS2Properties.idl		\
 	nsIDOMViewCSS.idl			\
 	nsIDOMNSRGBAColor.idl			\
 	$(NULL)

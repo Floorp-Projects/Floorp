@@ -59,7 +59,6 @@
 #include "nsIMenuFrame.h"
 #include "prlink.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsWidgetAtoms.h"
 #include "mozilla/Services.h"
 

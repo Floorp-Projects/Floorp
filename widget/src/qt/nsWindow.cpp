@@ -1813,6 +1813,9 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     mNeedsMove = PR_FALSE;
 
     if (mIsTopLevel) {
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+      if (XRE_GetProcessType() != GeckoProcessType_Default)
+#endif
       GetViewWidget()->setGeometry(aX, aY, aWidth, aHeight);
     }
     mWidget->setGeometry(aX, aY, aWidth, aHeight);
@@ -2078,7 +2081,11 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
 
     if (mIsTopLevel) {
         QGraphicsView* newView = nsnull;
+#ifdef MOZ_ENABLE_MEEGOTOUCH
+        newView = new MozMGraphicsView(widget);
+#else
         newView = new MozQGraphicsView(widget);
+#endif
         if (!newView) {
             delete widget;
             return nsnull;
@@ -2500,7 +2507,14 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
     switch (aState) {
         case nsIWidget::IME_STATUS_ENABLED:
         case nsIWidget::IME_STATUS_PASSWORD:
-            mWidget->showVKB();
+            {
+                PRInt32 openDelay = 200;
+                nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+                if (prefs)
+                  prefs->GetIntPref("ui.vkb.open.delay", &openDelay);
+
+                mWidget->requestVKB(openDelay);
+            }
             break;
         default:
             mWidget->hideVKB();

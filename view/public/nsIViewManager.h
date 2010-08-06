@@ -50,8 +50,8 @@ class nsIDeviceContext;
 class nsIViewObserver;
 
 #define NS_IVIEWMANAGER_IID   \
-  { 0x9e924719, 0x3c4b, 0x435b, \
-    { 0xaf, 0x1e, 0x71, 0x52, 0x04, 0x6d, 0xaa, 0x44 } }
+  { 0x35c07b12, 0x5d96, 0x49f9, \
+   { 0x91, 0xa3, 0x2f, 0xad, 0x3e, 0x84, 0x0c, 0x91 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -116,7 +116,7 @@ public:
   /**
    * Do any resizes that are pending.
    */
-  NS_IMETHOD  FlushDelayedResize() = 0;
+  NS_IMETHOD  FlushDelayedResize(PRBool aDoReflow) = 0;
 
   /**
    * Called to force a redrawing of any dirty areas.

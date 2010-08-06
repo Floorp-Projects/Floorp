@@ -232,7 +232,14 @@ class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
   }
 
   NS_FORWARD_NSIDOMNSHTMLELEMENT(mElement->)
-  NS_FORWARD_NSIDOMELEMENTCSSINLINESTYLE(mElement->)
+  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
+  {
+    nsresult rv;
+    *aStyle = mElement->GetStyle(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ADDREF(*aStyle);
+    return NS_OK;
+  }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGenericHTMLElementTearoff,
                                            nsIDOMNSHTMLElement)
@@ -257,6 +264,7 @@ NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
 
 NS_IMPL_INT_ATTR(nsGenericHTMLElement, TabIndex, tabindex)
+NS_IMPL_BOOL_ATTR(nsGenericHTMLElement, Hidden, hidden)
 
 nsresult
 nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
@@ -279,7 +287,7 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
                                  new nsGenericHTMLElementTearoff(this))
   NS_INTERFACE_MAP_END
 
-// No closing bracket, becuase NS_INTERFACE_MAP_END does that for us.
+// No closing bracket, because NS_INTERFACE_MAP_END does that for us.
     
 nsresult
 nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
@@ -1632,11 +1640,21 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
       }
     }
   }
+
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Visibility)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
     if (value && value->Type() == nsAttrValue::eString) {
       aData->mDisplayData->mLang.SetStringValue(value->GetStringValue(),
                                                 eCSSUnit_Ident);
+    }
+  }
+
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
+    nsRuleDataDisplay* disp = aData->mDisplayData;
+    if (disp->mDisplay.GetUnit() == eCSSUnit_Null) {
+      if (aAttributes->IndexOfAttr(nsGkAtoms::hidden, kNameSpaceID_None) >= 0) {
+        disp->mDisplay.SetIntValue(NS_STYLE_DISPLAY_NONE, eCSSUnit_Enumerated);
+      }
     }
   }
 }
@@ -1678,6 +1696,7 @@ nsGenericHTMLFormElement::UpdateEditableFormControlState()
 nsGenericHTMLElement::sCommonAttributeMap[] = {
   { &nsGkAtoms::contenteditable },
   { &nsGkAtoms::lang },
+  { &nsGkAtoms::hidden },
   { nsnull }
 };
 

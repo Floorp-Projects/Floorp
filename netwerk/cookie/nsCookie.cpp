@@ -83,6 +83,20 @@ StrBlockCopy(const nsACString &aSource1,
 // check each id to enforce monotonicity.
 static PRInt64 gLastCreationID;
 
+PRInt64
+nsCookie::GenerateCreationID(PRInt64 aCreationTime)
+{
+  // Check if the creation time given to us is greater than the running maximum
+  // (it should always be monotonically increasing).
+  if (aCreationTime > gLastCreationID) {
+    gLastCreationID = aCreationTime;
+    return aCreationTime;
+  }
+
+  // Make up our own.
+  return ++gLastCreationID;
+}
+
 nsCookie *
 nsCookie::Create(const nsACString &aName,
                  const nsACString &aValue,
@@ -111,12 +125,9 @@ nsCookie::Create(const nsACString &aName,
   StrBlockCopy(aName, aValue, aHost, aPath,
                name, value, host, path, end);
 
-  // check if the creation id given to us is greater than the running maximum
-  // (it should always be monotonically increasing). if it's not, make up our own.
+  // If the creationID given to us is higher than the running maximum, update it.
   if (aCreationID > gLastCreationID)
     gLastCreationID = aCreationID;
-  else
-    aCreationID = ++gLastCreationID;
 
   // construct the cookie. placement new, oh yeah!
   return new (place) nsCookie(name, value, host, path, end,
