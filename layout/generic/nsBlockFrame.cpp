@@ -5576,7 +5576,7 @@ nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
 
 nsresult
 nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
-                          const nsRect&       aFloatAvailableSpace,
+                          const nsRect&       aAdjustedAvailableSpace,
                           nsIFrame*           aFloat,
                           nsMargin&           aFloatMargin,
                           nsReflowStatus&     aReflowStatus)
@@ -5594,11 +5594,9 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   );
 #endif
 
-  nsRect availSpace = AdjustFloatAvailableSpace(aState, aFloatAvailableSpace,
-                                                aFloat);
-
   nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState, aFloat,
-                            nsSize(availSpace.width, availSpace.height));
+                            nsSize(aAdjustedAvailableSpace.width,
+                                   aAdjustedAvailableSpace.height));
 
   // Setup a block reflow state to reflow the float.
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState);
@@ -5624,7 +5622,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       }
     }
 
-    rv = brc.ReflowBlock(availSpace, PR_TRUE, margin,
+    rv = brc.ReflowBlock(aAdjustedAvailableSpace, PR_TRUE, margin,
                          0, isAdjacentWithTop,
                          nsnull, floatRS,
                          aReflowStatus, aState);
@@ -5633,7 +5631,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   // An incomplete reflow status means we should split the float 
   // if the height is constrained (bug 145305). 
   if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) &&
-      (NS_UNCONSTRAINEDSIZE == availSpace.height))
+      (NS_UNCONSTRAINEDSIZE == aAdjustedAvailableSpace.height))
     aReflowStatus = NS_FRAME_COMPLETE;
 
   if (aReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
