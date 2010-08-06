@@ -554,7 +554,7 @@ static inline bool
 FetchElementId(VMFrame &f, JSObject *obj, const Value &idval, jsid &id, Value *vp)
 {
     int32_t i_;
-    if (ValueFitsInInt32(idval, &i_)) {
+    if (ValueFitsInInt32(idval, &i_) && INT_FITS_IN_JSID(i_)) {
         id = INT_TO_JSID(i_);
         return true;
     }
