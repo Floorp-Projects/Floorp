@@ -8564,20 +8564,6 @@ TraceRecorder::d2i(LIns* f, bool resultCanBeImpreciseIfFractional)
             LIns* args[] = { fcallarg(f, 1), fcallarg(f, 0) };
             return lir->insCall(&js_StringToInt32_ci, args);
         }
-        if (ci == &js_String_p_charCodeAt0_ci) {
-            // Use a fast path builtin for a charCodeAt that converts to an int right away.
-            LIns* args[] = { fcallarg(f, 0) };
-            return lir->insCall(&js_String_p_charCodeAt0_int_ci, args);
-        }
-        if (ci == &js_String_p_charCodeAt_ci) {
-            LIns* idx = fcallarg(f, 1);
-            if (isPromote(idx)) {
-                LIns* args[] = { demote(lir, idx), fcallarg(f, 0) };
-                return lir->insCall(&js_String_p_charCodeAt_int_int_ci, args);
-            }
-            LIns* args[] = { idx, fcallarg(f, 0) };
-            return lir->insCall(&js_String_p_charCodeAt_double_int_ci, args);
-        }
     }
     return resultCanBeImpreciseIfFractional
          ? lir->ins1(LIR_d2i, f)
@@ -11343,13 +11329,33 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
 
     switch (argc) {
       case 1:
-        if (vp[2].isNumber() &&
-            (native == js_math_ceil || native == js_math_floor || native == js_math_round)) {
-            LIns* a = get(&vp[2]);
-            if (isPromote(a)) {
-                set(&vp[0], a);
-                pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
-                return RECORD_CONTINUE;
+        if (vp[2].isNumber()) {
+            if (native == js_math_ceil || native == js_math_floor || native == js_math_round) {
+                LIns* a = get(&vp[2]);
+                if (isPromote(a)) {
+                    set(&vp[0], a);
+                    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                    return RECORD_CONTINUE;
+                }
+            }
+            if (vp[1].isString()) {
+                JSString *str = vp[1].toString();
+                if (native == (FastNative)js_str_charAt) {
+                    LIns* str_ins = get(&vp[1]);
+                    LIns* idx_ins = get(&vp[2]);
+                    set(&vp[0], getCharAt(str, str_ins, idx_ins));
+                    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                    return RECORD_CONTINUE;
+                } else if (native == (FastNative)js_str_charCodeAt) {
+                    jsdouble i = vp[2].toNumber();
+                    if (i < 0 || i >= str->length())
+                        RETURN_STOP("charCodeAt out of bounds");
+                    LIns* str_ins = get(&vp[1]);
+                    LIns* idx_ins = get(&vp[2]);
+                    set(&vp[0], getCharCodeAt(str, str_ins, idx_ins));
+                    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                    return RECORD_CONTINUE;
+                }
             }
         }
         break;
@@ -12458,6 +12464,68 @@ static bool OkToTraceTypedArrays = true;
 static bool OkToTraceTypedArrays = false;
 #endif
 
+JS_REQUIRES_STACK LIns*
+TraceRecorder::getCharCodeAt(JSString *str, LIns* str_ins, LIns* idx_ins)
+{
+    idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
+    LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
+                                    ACCSET_OTHER, LOAD_CONST);
+    LIns *br = lir->insBranch(LIR_jt,
+                              lir->insEqP_0(lir->ins2(LIR_andp,
+                                                      length_ins,
+                                                      INS_CONSTWORD(JSString::ROPE_BIT))),
+                              NULL);
+    lir->insCall(&js_Flatten_ci, &str_ins);
+    br->setTarget(lir->ins0(LIR_label));
+
+    guard(true,
+          lir->ins2(LIR_ltup, idx_ins, lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT)),
+          snapshot(MISMATCH_EXIT));
+
+    LIns *chars_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mChars), ACCSET_OTHER, LOAD_CONST);
+    return i2d(lir->insLoad(LIR_ldus2ui,
+                            lir->ins2(LIR_addp, chars_ins, lir->ins2ImmI(LIR_lshp, idx_ins, 1)), 0,
+                            ACCSET_OTHER, LOAD_CONST));
+}
+
+JS_STATIC_ASSERT(sizeof(JSString) == 16 || sizeof(JSString) == 32);
+
+JS_REQUIRES_STACK LIns*
+TraceRecorder::getCharAt(JSString *str, LIns* str_ins, LIns* idx_ins)
+{
+    idx_ins = lir->insUI2P(makeNumberInt32(idx_ins));
+    LIns *length_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mLengthAndFlags),
+                                    ACCSET_OTHER, LOAD_CONST);
+    LIns *br = lir->insBranch(LIR_jt,
+                              lir->insEqP_0(lir->ins2(LIR_andp,
+                                                      length_ins,
+                                                      INS_CONSTWORD(JSString::ROPE_BIT))),
+                              NULL);
+    lir->insCall(&js_Flatten_ci, &str_ins);
+    br->setTarget(lir->ins0(LIR_label));
+
+    LIns *phi_ins = lir->insAlloc(sizeof(JSString *));
+    lir->insStore(LIR_stp, INS_CONSTSTR(cx->runtime->emptyString), phi_ins, 0, ACCSET_OTHER);
+
+    br = lir->insBranch(LIR_jf,
+                        lir->ins2(LIR_ltup, idx_ins, lir->ins2ImmI(LIR_rshup, length_ins, JSString::FLAGS_LENGTH_SHIFT)),
+                        NULL);
+    LIns *chars_ins = lir->insLoad(LIR_ldp, str_ins, offsetof(JSString, mChars), ACCSET_OTHER, LOAD_CONST);
+    LIns *ch_ins = lir->insLoad(LIR_ldus2ui,
+                                lir->ins2(LIR_addp, chars_ins, lir->ins2ImmI(LIR_lshp, idx_ins, 1)), 0,
+                                ACCSET_OTHER, LOAD_CONST);
+    guard(true, lir->ins2ImmI(LIR_ltui, ch_ins, UNIT_STRING_LIMIT), snapshot(MISMATCH_EXIT));
+    LIns *unitstr_ins = lir->ins2(LIR_addp,
+                                  INS_CONSTPTR(JSString::unitStringTable),
+                                  lir->ins2ImmI(LIR_lshp,
+                                                lir->insUI2P(ch_ins),
+                                                (sizeof(JSString) == 16) ? 4 : 5));
+    lir->insStore(LIR_stp, unitstr_ins, phi_ins, 0, ACCSET_OTHER);
+    br->setTarget(lir->ins0(LIR_label));
+
+    return lir->insLoad(LIR_ldp, phi_ins, 0, ACCSET_OTHER);
+}
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETELEM()
 {
@@ -12476,11 +12544,7 @@ TraceRecorder::record_JSOP_GETELEM()
         int i = asInt32(idx);
         if (size_t(i) >= lval.toString()->length())
             RETURN_STOP_A("Invalid string index in JSOP_GETELEM");
-        idx_ins = makeNumberInt32(idx_ins);
-        LIns* args[] = { idx_ins, obj_ins, cx_ins };
-        LIns* unitstr_ins = lir->insCall(&js_String_getelem_ci, args);
-        guard(false, lir->insEqP_0(unitstr_ins), MISMATCH_EXIT);
-        set(&lval, unitstr_ins);
+        set(&lval, getCharAt(lval.toString(), obj_ins, idx_ins));
         return ARECORD_CONTINUE;
     }
 
@@ -12519,14 +12583,15 @@ TraceRecorder::record_JSOP_GETELEM()
                 if (int_idx < 0 || int_idx >= afp->argc)
                     RETURN_STOP_A("cannot trace arguments with out of range index");
 
-                guard(true,
+                VMSideExit *exit = snapshot(MISMATCH_EXIT);
+                 guard(true,
                       addName(lir->ins2(LIR_gei, idx_ins, INS_CONST(0)),
                               "guard(upvar index >= 0)"),
-                      MISMATCH_EXIT);
+                       exit);
                 guard(true,
                       addName(lir->ins2(LIR_lti, idx_ins, INS_CONST(afp->argc)),
                               "guard(upvar index in range)"),
-                      MISMATCH_EXIT);
+                      exit);
 
                 JSValueType type = getCoercedType(*vp);
 
