@@ -58,13 +58,11 @@
 #include "nsIResumableChannel.h"
 #include "nsIProxiedChannel.h"
 #include "nsITraceableChannel.h"
-#include "mozilla/Mutex.h"
-
-class nsIRunnable;
-class Callback;
 
 namespace mozilla {
 namespace net {
+
+class ChildChannelEvent;
 
 // TODO: replace with IPDL states: bug 536319
 enum HttpChannelChildState {
@@ -148,28 +146,69 @@ private:
   enum HttpChannelChildState mState;
   bool mIPCOpen;
 
-  // Workaround for Necko re-entrancy dangers. We buffer all messages
-  // received until OnStartRequest completes.
-  nsTArray<nsAutoPtr<Callback> > mBufferedCallbacks;
-  bool mShouldBuffer;
+  // Workaround for Necko re-entrancy dangers. We buffer IPDL messages in a
+  // queue if still dispatching previous one(s) to listeners/observers.
+  // Otherwise synchronous XMLHttpRequests and/or other code that spins the
+  // event loop (ex: IPDL rpc) could cause listener->OnDataAvailable (for
+  // instance) to be called before mListener->OnStartRequest has completed.
+  void BeginEventQueueing();
+  void FlushEventQueue();
+  void EnqueueEvent(ChildChannelEvent* callback);
+  bool ShouldEnqueue();
 
-  bool BufferOrDispatch(Callback* callback);
+  nsTArray<nsAutoPtr<ChildChannelEvent> > mEventQueue;
+  enum {
+    PHASE_UNQUEUED,
+    PHASE_QUEUEING,
+    PHASE_FLUSHING
+  } mQueuePhase;
 
-  // This class does not actually implement the stream listener interface.
-  // These functions actually perform the actions associated with the
-  // corresponding IPDL receivers above.
-  bool OnDataAvailable(const nsCString& data, 
+  void OnStartRequest(const nsHttpResponseHead& responseHead,
+                          const PRBool& useResponseHead,
+                          const PRBool& isFromCache,
+                          const PRBool& cacheEntryAvailable,
+                          const PRUint32& cacheExpirationTime,
+                          const nsCString& cachedCharset);
+  void OnDataAvailable(const nsCString& data, 
                        const PRUint32& offset,
                        const PRUint32& count);
-  bool OnStopRequest(const nsresult& statusCode);
-  bool OnProgress(const PRUint64& progress, const PRUint64& progressMax);
-  bool OnStatus(const nsresult& status, const nsString& statusArg);
+  void OnStopRequest(const nsresult& statusCode);
+  void OnProgress(const PRUint64& progress, const PRUint64& progressMax);
+  void OnStatus(const nsresult& status, const nsString& statusArg);
 
+  friend class AutoEventEnqueuer;
+  friend class StartRequestEvent;
   friend class StopRequestEvent;
   friend class DataAvailableEvent;
   friend class ProgressEvent;
   friend class StatusEvent;
 };
+
+//-----------------------------------------------------------------------------
+// inline functions
+//-----------------------------------------------------------------------------
+
+inline void
+HttpChannelChild::BeginEventQueueing()
+{
+  if (mQueuePhase == PHASE_FLUSHING)
+    return;
+  // Store incoming IPDL messages for later.
+  mQueuePhase = PHASE_QUEUEING;
+}
+
+inline bool
+HttpChannelChild::ShouldEnqueue()
+{
+  return mQueuePhase != PHASE_UNQUEUED;
+}
+
+inline void
+HttpChannelChild::EnqueueEvent(ChildChannelEvent* callback)
+{
+  mEventQueue.AppendElement(callback);
+}
+
 
 } // namespace net
 } // namespace mozilla
