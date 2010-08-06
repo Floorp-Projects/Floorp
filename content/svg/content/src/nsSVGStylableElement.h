@@ -64,6 +64,11 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
+  nsIDOMCSSStyleDeclaration* GetStyle(nsresult* retval)
+  {
+    return nsSVGStylableElementBase::GetStyle(retval);
+  }
+
 protected:
 
   // nsSVGElement

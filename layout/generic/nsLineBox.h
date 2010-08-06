@@ -174,7 +174,7 @@ protected:
 //----------------------------------------------------------------------
 
 #define LINE_MAX_BREAK_TYPE  ((1 << 4) - 1)
-#define LINE_MAX_CHILD_COUNT ((1 << 20) - 1)
+#define LINE_MAX_CHILD_COUNT PR_INT32_MAX
 
 #if NS_STYLE_CLEAR_LAST_VALUE > 15
 need to rearrange the mBits bitfield;
@@ -330,8 +330,19 @@ public:
   PRBool HasBullet() const {
     return mFlags.mHasBullet;
   }
-  
-  
+
+  // mHadFloatPushed bit
+  void SetHadFloatPushed() {
+    mFlags.mHadFloatPushed = PR_TRUE;
+  }
+  void ClearHadFloatPushed() {
+    mFlags.mHadFloatPushed = PR_FALSE;
+  }
+  PRBool HadFloatPushed() const {
+    return mFlags.mHadFloatPushed;
+  }
+
+
   // mChildCount value
   PRInt32 GetChildCount() const {
     return (PRInt32) mFlags.mChildCount;
@@ -501,9 +512,13 @@ public:
     // mHasBullet indicates that this is an inline line whose block's
     // bullet is adjacent to this line and non-empty.
     PRUint32 mHasBullet : 1;
+    // Indicates that this line *may* have a placeholder for a float
+    // that was pushed to a later column or page.
+    PRUint32 mHadFloatPushed : 1;
     PRUint32 mBreakType : 4;
 
-    PRUint32 mChildCount : 17;
+    // FIXME: Move this out of FlagBits
+    PRUint32 mChildCount;
   };
 
   struct ExtraData {
