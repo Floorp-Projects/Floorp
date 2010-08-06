@@ -120,13 +120,24 @@ nsTreeBoxObject::GetTreeBody(bool aFlushLayout)
   // have to do this before checking for our cached mTreeBody, since
   // it might go away on style flush, and in any case if aFlushLayout
   // is true we need to make sure to flush no matter what.
-  nsIFrame* frame = GetFrame(aFlushLayout);
-  if (!frame)
-    return nsnull;
+  // XXXbz except that flushing style when we were not asked to flush
+  // layout here breaks things.  See bug 585123.
+  nsIFrame* frame;
+  if (aFlushLayout) {
+    frame = GetFrame(aFlushLayout);
+    if (!frame)
+      return nsnull;
+  }
 
   if (mTreeBody) {
     // Have one cached already.
     return mTreeBody;
+  }
+
+  if (!aFlushLayout) {
+    frame = GetFrame(aFlushLayout);
+    if (!frame)
+      return nsnull;
   }
 
   // Iterate over our content model children looking for the body.
