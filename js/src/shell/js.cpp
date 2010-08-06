@@ -2195,6 +2195,18 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     return JS_FALSE;
 }
 
+JSBool
+DumpObject(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSObject *arg0 = NULL;
+    if (!JS_ConvertArguments(cx, argc, argv, "o", &arg0))
+        return JS_FALSE;
+
+    js_DumpObject(arg0);
+
+    return JS_TRUE;
+}
+
 #endif /* DEBUG */
 
 #ifdef TEST_CVTARGS
@@ -3931,6 +3943,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("disfile",        DisassFile,     1,0,0),
     JS_FS("dissrc",         DisassWithSrc,  1,0,0),
     JS_FN("dumpHeap",       DumpHeap,       0,0),
+    JS_FS("dumpObject",     DumpObject,     1,0,0),
     JS_FS("notes",          Notes,          1,0,0),
     JS_FS("tracing",        Tracing,        0,0,0),
     JS_FS("stats",          DumpStats,      1,0,0),
@@ -4034,6 +4047,7 @@ static const char *const shell_help_messages[] = {
 "dissrc([fun])            Disassemble functions with source lines",
 "dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])\n"
 "  Interface to JS_DumpHeap with output sent to file",
+"dumpObject()             Dump an internal representation of an object",
 "notes([fun])             Show source notes for functions",
 "tracing([true|false|filename]) Turn bytecode execution tracing on/off.\n"
 "                         With filename, send to file.\n",
