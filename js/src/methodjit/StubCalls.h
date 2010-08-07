@@ -128,6 +128,10 @@ void JS_FASTCALL VpInc(VMFrame &f, Value *vp);
 void JS_FASTCALL VpDec(VMFrame &f, Value *vp);
 void JS_FASTCALL DecVp(VMFrame &f, Value *vp);
 void JS_FASTCALL IncVp(VMFrame &f, Value *vp);
+void JS_FASTCALL LocalInc(VMFrame &f, uint32 slot);
+void JS_FASTCALL LocalDec(VMFrame &f, uint32 slot);
+void JS_FASTCALL IncLocal(VMFrame &f, uint32 slot);
+void JS_FASTCALL DecLocal(VMFrame &f, uint32 slot);
 
 JSBool JS_FASTCALL LessThan(VMFrame &f);
 JSBool JS_FASTCALL LessEqual(VMFrame &f);
