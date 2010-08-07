@@ -54,12 +54,17 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
 
-CanvasLayerOGL::~CanvasLayerOGL()
+void
+CanvasLayerOGL::Destroy()
 {
-  mOGLManager->MakeCurrent();
+  if (!mDestroyed) {
+    if (mTexture) {
+      GLContext *cx = mOGLManager->glForResources();
+      cx->MakeCurrent();
+      cx->fDeleteTextures(1, &mTexture);
+    }
 
-  if (mTexture) {
-    gl()->fDeleteTextures(1, &mTexture);
+    mDestroyed = PR_TRUE;
   }
 }
 
@@ -116,6 +121,10 @@ CanvasLayerOGL::MakeTexture()
 void
 CanvasLayerOGL::Updated(const nsIntRect& aRect)
 {
+  if (mDestroyed) {
+    return;
+  }
+
   NS_ASSERTION(mUpdatedRect.IsEmpty(),
                "CanvasLayer::Updated called more than once during a transaction!");
 
