@@ -655,9 +655,9 @@ case "$target" in
         fi
         if test "$_CC_MAJOR_VERSION" = "13"; then
             _CC_SUITE=7
+            CXXFLAGS="$CXXFLAGS -Zc:wchar_t"
         elif test "$_CC_MAJOR_VERSION" = "14"; then
             _CC_SUITE=8
-            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
             dnl -DYNAMICBASE is only supported on VC8SP1 or newer,
             dnl so be very specific here!
             dnl VC8 is 14.00.50727.42, VC8SP1 is 14.00.50727.762
@@ -670,13 +670,11 @@ case "$target" in
             AC_DEFINE(_CRT_NONSTDC_NO_DEPRECATE)
         elif test "$_CC_MAJOR_VERSION" = "15"; then
             _CC_SUITE=9
-            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
             _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         elif test "$_CC_MAJOR_VERSION" = "16"; then
             _CC_SUITE=10
-            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
             _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
