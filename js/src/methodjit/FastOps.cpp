@@ -941,7 +941,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
 {
     bool post = (op == JSOP_LOCALINC || op == JSOP_LOCALDEC);
     int32 amt = (op == JSOP_INCLOCAL || op == JSOP_LOCALINC) ? 1 : -1;
-    uint32 depth = frame.stackDepth();
+    uint32 ndefs = 1;
 
     frame.pushLocal(slot);
 
@@ -968,45 +968,59 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot, bool popped)
     if (post && !popped) {
         frame.dup();
         fe = frame.peek(-1);
+        ndefs++;
     }
 
     if (!fe->isTypeKnown() || fe->getKnownType() != JSVAL_TYPE_INT32) {
         /* :TODO: do something smarter for the known-type-is-bad case. */
         if (fe->isTypeKnown()) {
             Jump j = masm.jump();
-            stubcc.linkExit(j, Uses(0));
+            stubcc.linkExit(j, Uses(ndefs));
         } else {
             Jump intFail = frame.testInt32(Assembler::NotEqual, fe);
-            stubcc.linkExit(intFail, Uses(0));
+            stubcc.linkExit(intFail, Uses(ndefs));
         }
     }
 
-    RegisterID reg = frame.ownRegForData(fe);
-    frame.pop();
+    RegisterID reg = frame.copyDataIntoReg(fe);
 
     Jump ovf;
     if (amt > 0)
         ovf = masm.branchAdd32(Assembler::Overflow, Imm32(1), reg);
     else
         ovf = masm.branchSub32(Assembler::Overflow, Imm32(1), reg);
-    stubcc.linkExit(ovf, Uses(0));
+    stubcc.linkExit(ovf, Uses(ndefs));
 
     /* Note, stub call will push original value again no matter what. */
     stubcc.leave();
-    stubcc.masm.addPtr(Imm32(sizeof(Value) * slot + sizeof(JSStackFrame)),
-                       JSFrameReg,
-                       Registers::ArgReg1);
-    stubcc.vpInc(op, depth);
 
+    stubcc.masm.move(Imm32(slot), Registers::ArgReg1);
+    if (post && !popped) {
+        if (op == JSOP_LOCALINC)
+            stubcc.call(stubs::LocalInc);
+        else
+            stubcc.call(stubs::LocalDec);
+    } else {
+        if (op == JSOP_LOCALINC || op == JSOP_INCLOCAL)
+            stubcc.call(stubs::IncLocal);
+        else
+            stubcc.call(stubs::DecLocal);
+    }
+
+    frame.pop();
     frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
     frame.storeLocal(slot, post || popped, false);
 
-    if (post || popped)
-        frame.pop();
-    else
+    if (popped) {
+        /* No value will be observed. */
+        frame.popn(ndefs);
+    } else {
+        if (post)
+            frame.pop();
         frame.forgetType(frame.peek(-1));
+    }
 
-    stubcc.rejoin(Changes((post || popped) ? 0 : 1));
+    stubcc.rejoin(Changes((post || popped) ? 1 : 0));
 }
 
 void
