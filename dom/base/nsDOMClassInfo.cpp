@@ -5385,34 +5385,15 @@ nsCommonWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsCommonWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                              JSObject *obj, jsid id, jsval *vp,
-                              PRBool *_retval)
+nsOuterWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                             JSObject *obj, jsid id, jsval *vp,
+                             PRBool *_retval)
 {
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
 
-#ifdef DEBUG_SH_FORWARDING
-  {
-    nsDependentJSString str(::JS_ValueToString(cx, id));
-
-    if (win->IsInnerWindow()) {
-#ifdef DEBUG_PRINT_INNER
-      printf("Property '%s' add on inner window %p\n",
-             NS_ConvertUTF16toUTF8(str).get(), (void *)win);
-#endif
-    } else {
-      printf("Property '%s' add on outer window %p\n",
-             NS_ConvertUTF16toUTF8(str).get(), (void *)win);
-    }
-  }
-#endif
-
   JSObject *realObj;
   wrapper->GetJSObject(&realObj);
-  if (win->IsOuterWindow() && obj == realObj) {
-    // XXXjst: Do security checks here when we remove the security
-    // checks on the inner window.
-
+  if (obj == realObj) {
     nsGlobalWindow *innerWin = win->GetCurrentInnerWindowInternal();
 
     JSObject *innerObj;
@@ -6529,30 +6510,14 @@ ContentWindowGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 PRBool
-nsCommonWindowSH::sResolving = PR_FALSE;
+nsOuterWindowSH::sResolving = PR_FALSE;
 
 NS_IMETHODIMP
-nsCommonWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                             JSObject *obj, jsid id, PRUint32 flags,
-                             JSObject **objp, PRBool *_retval)
+nsOuterWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                            JSObject *obj, jsid id, PRUint32 flags,
+                            JSObject **objp, PRBool *_retval)
 {
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
-
-#ifdef DEBUG_SH_FORWARDING
-  {
-    nsDependentJSString str(::JS_ValueToString(cx, id));
-
-    if (win->IsInnerWindow()) {
-#ifdef DEBUG_PRINT_INNER
-      printf("Property '%s' resolve on inner window %p\n",
-             NS_ConvertUTF16toUTF8(str).get(), (void *)win);
-#endif
-    } else {
-      printf("Property '%s' resolve on outer window %p\n",
-             NS_ConvertUTF16toUTF8(str).get(), (void *)win);
-    }
-  }
-#endif
 
   // Note, we won't forward resolve of the location property to the
   // inner window, we need to deal with that one for the outer too
@@ -6560,7 +6525,7 @@ nsCommonWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // property.  Also note that we want to enter this block even for
   // native wrappers, so that we'll ensure an inner window to wrap
   // against for the result of whatever we're getting.
-  if (win->IsOuterWindow() && id != sLocation_id) {
+  if (id != sLocation_id) {
     // XXXjst: Do security checks here when we remove the security
     // checks on the inner window.
 
@@ -6640,6 +6605,17 @@ nsCommonWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_OK;
     }
   }
+
+  return nsCommonWindowSH::NewResolve(wrapper, cx, obj, id, flags, objp,
+                                      _retval);
+}
+
+NS_IMETHODIMP
+nsCommonWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                             JSObject *obj, jsid id, PRUint32 flags,
+                             JSObject **objp, PRBool *_retval)
+{
+  nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
 
   if (!JSID_IS_STRING(id)) {
     if (JSID_IS_INT(id) && !(flags & JSRESOLVE_ASSIGNING)) {
