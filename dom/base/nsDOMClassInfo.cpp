@@ -495,18 +495,24 @@ static const char kDOMStringBundleURL[] =
 // NOTE: DEFAULT_SCRIPTABLE_FLAGS and DOM_DEFAULT_SCRIPTABLE_FLAGS
 //       are defined in nsIDOMClassInfo.h.
 
-#define WINDOW_SCRIPTABLE_FLAGS                                               \
+#define COMMON_WINDOW_SCRIPTABLE_FLAGS                                        \
  (nsIXPCScriptable::WANT_GETPROPERTY |                                        \
   nsIXPCScriptable::WANT_SETPROPERTY |                                        \
   nsIXPCScriptable::WANT_PRECREATE |                                          \
   nsIXPCScriptable::WANT_ADDPROPERTY |                                        \
   nsIXPCScriptable::WANT_DELPROPERTY |                                        \
-  nsIXPCScriptable::WANT_NEWENUMERATE |                                       \
   nsIXPCScriptable::WANT_FINALIZE |                                           \
   nsIXPCScriptable::WANT_EQUALITY |                                           \
   nsIXPCScriptable::WANT_OUTER_OBJECT |                                       \
   nsIXPCScriptable::WANT_INNER_OBJECT |                                       \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
+
+#define INNER_WINDOW_SCRIPTABLE_FLAGS                                         \
+ (COMMON_WINDOW_SCRIPTABLE_FLAGS)                                             \
+
+#define OUTER_WINDOW_SCRIPTABLE_FLAGS                                         \
+ (COMMON_WINDOW_SCRIPTABLE_FLAGS |                                            \
+  nsIXPCScriptable::WANT_NEWENUMERATE)
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
  ((DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
@@ -633,11 +639,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(Window, nsOuterWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
-                           WINDOW_SCRIPTABLE_FLAGS)
+                           OUTER_WINDOW_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(InnerWindow, nsInnerWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
-                           WINDOW_SCRIPTABLE_FLAGS)
+                           INNER_WINDOW_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(Location, nsLocationSH,
                            (DOM_DEFAULT_SCRIPTABLE_FLAGS &
@@ -928,11 +934,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // DOM Chrome Window class.
   NS_DEFINE_CLASSINFO_DATA(ChromeWindow, nsOuterWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
-                           WINDOW_SCRIPTABLE_FLAGS)
+                           OUTER_WINDOW_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(InnerChromeWindow, nsInnerWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
-                           WINDOW_SCRIPTABLE_FLAGS)
+                           INNER_WINDOW_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(CSSRGBColor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1315,11 +1321,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(ModalContentWindow, nsOuterWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
-                           WINDOW_SCRIPTABLE_FLAGS)
+                           OUTER_WINDOW_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(InnerModalContentWindow, nsInnerWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
-                           WINDOW_SCRIPTABLE_FLAGS)
+                           INNER_WINDOW_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(DataContainerEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -7159,32 +7165,30 @@ nsCommonWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsCommonWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                               JSObject *obj, PRUint32 enum_op, jsval *statep,
-                               jsid *idp, PRBool *_retval)
+nsOuterWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                              JSObject *obj, PRUint32 enum_op, jsval *statep,
+                              jsid *idp, PRBool *_retval)
 {
   switch ((JSIterateOp)enum_op) {
     /* FIXME bug 576449: non-enumerable property support */
     case JSENUMERATE_INIT_ALL:
     case JSENUMERATE_INIT:
     {
+#ifdef DEBUG
       // First, do the security check that nsDOMClassInfo does to see
       // if we need to do any work at all.
       nsDOMClassInfo::Enumerate(wrapper, cx, obj, _retval);
       if (!*_retval) {
+        NS_ERROR("security wrappers failed us");
         return NS_OK;
       }
+#endif
 
       // The security check passed, let's see if we need to get the inner
       // window's JS object or if we can just start enumerating.
-      nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
-      JSObject *enumobj = win->GetGlobalJSObject();
-      if (win->IsOuterWindow()) {
-        nsGlobalWindow *inner = win->GetCurrentInnerWindowInternal();
-        if (inner) {
-          enumobj = inner->GetGlobalJSObject();
-        }
-      }
+      nsGlobalWindow *win =
+        nsGlobalWindow::FromWrapper(wrapper)->GetCurrentInnerWindowInternal();
+      JSObject *enumobj = win->FastGetGlobalJSObject();
 
       // Great, we have the js object, now let's enumerate it.
       JSObject *iterator = JS_NewPropertyIterator(cx, enumobj);
