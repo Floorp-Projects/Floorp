@@ -160,10 +160,9 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
 
   DEBUG_GL_ERROR_CHECK(mGLContext);
 
-  const char *extensionStr =
-    (const char*) mGLContext->fGetString(LOCAL_GL_EXTENSIONS);
-
-  mHasBGRA = (strstr(extensionStr, "EXT_bgra") != nsnull);
+  mHasBGRA =
+    mGLContext->IsExtensionSupported(gl::GLContext::EXT_texture_format_BGRA8888) ||
+    mGLContext->IsExtensionSupported(gl::GLContext::EXT_bgra);
 
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
@@ -282,7 +281,7 @@ LayerManagerOGL::Initialize(GLContext *aExistingContext)
      * texture rectangle access inside GLSL (sampler2DRect,
      * texture2DRect).
      */
-    if (strstr(extensionStr, "ARB_texture_rectangle") == NULL)
+    if (!mGLContext->IsExtensionSupported(gl::GLContext::ARB_texture_rectangle))
       return false;
   }
 
@@ -744,11 +743,21 @@ LayerManagerOGL::CopyToTarget()
   NS_ASSERTION(imageSurface->Stride() == width * 4,
                "Image Surfaces being created with weird stride!");
 
+  PRUint32 currentPackAlignment = 0;
+  mGLContext->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, (GLint*)&currentPackAlignment);
+  if (currentPackAlignment != 4) {
+    mGLContext->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+  }
+
   mGLContext->fReadPixels(0, 0,
                           width, height,
                           format,
                           LOCAL_GL_UNSIGNED_BYTE,
                           imageSurface->Data());
+
+  if (currentPackAlignment != 4) {
+    mGLContext->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
+  }
 
   if (!mHasBGRA) {
     // need to swap B and R bytes
