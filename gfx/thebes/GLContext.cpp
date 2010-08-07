@@ -321,6 +321,7 @@ GLContext::InitWithPrefix(const char *prefix, PRBool trygl)
 static const char *sExtensionNames[] = {
     "GL_EXT_framebuffer_object",
     "GL_ARB_framebuffer_object",
+    "GL_ARB_texture_rectangle",
     "GL_EXT_bgra",
     "GL_EXT_texture_format_BGRA8888",
     "GL_OES_depth24",

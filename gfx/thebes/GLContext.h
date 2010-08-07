@@ -579,6 +579,7 @@ public:
     enum GLExtensions {
         EXT_framebuffer_object,
         ARB_framebuffer_object,
+        ARB_texture_rectangle,
         EXT_bgra,
         EXT_texture_format_BGRA8888,
         OES_depth24,
