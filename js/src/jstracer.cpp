@@ -3447,7 +3447,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSValueType* mp, 
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->argv) {
-                if (fp->argsobj && GetArgsPrivateNative(fp->argsobj))
+                if (fp->argsobj && fp->argsobj->getPrivate() == JS_ARGUMENT_OBJECT_ON_TRACE)
                     fp->argsobj->setPrivate(fp);
 
                 JS_ASSERT(fp->argv[-1].isObjectOrNull());
@@ -10613,16 +10613,8 @@ TraceRecorder::newArguments(LIns* callee_ins)
 {
     LIns* global_ins = INS_CONSTOBJ(globalObj);
     LIns* argc_ins = INS_CONST(cx->fp->argc);
-    LIns* argv_ins = cx->fp->argc
-                     ? lir->ins2(LIR_addp, lirbuf->sp,
-                                 lir->insImmWord(nativespOffset(&cx->fp->argv[0])))
-                     : INS_CONSTPTR((void *) 2);
-    ArgsPrivateNative *apn = ArgsPrivateNative::create(traceAlloc(), cx->fp->argc);
-    for (uintN i = 0; i < cx->fp->argc; ++i) {
-        apn->typemap()[i] = determineSlotType(&cx->fp->argv[i]);
-    }
 
-    LIns* args[] = { INS_CONSTPTR(apn), argv_ins, callee_ins, argc_ins, global_ins, cx_ins };
+    LIns* args[] = { callee_ins, argc_ins, global_ins, cx_ins };
     LIns* call_ins = lir->insCall(&js_Arguments_ci, args);
     guard(false, lir->insEqP_0(call_ins), OOM_EXIT);
     return call_ins;
@@ -10631,6 +10623,9 @@ TraceRecorder::newArguments(LIns* callee_ins)
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ARGUMENTS()
 {
+    /* In an eval, 'arguments' will be a BINDNAME, which we don't trace. */
+    JS_ASSERT(!(cx->fp->flags & JSFRAME_EVAL));
+
     if (cx->fp->flags & JSFRAME_OVERRIDE_ARGS)
         RETURN_STOP_A("Can't trace |arguments| if |arguments| is assigned to");
 

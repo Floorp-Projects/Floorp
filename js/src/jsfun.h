@@ -286,6 +286,8 @@ JSObject::isArguments() const
     return getClass() == &js_ArgumentsClass;
 }
 
+#define JS_ARGUMENT_OBJECT_ON_TRACE ((void *)0xa126)
+
 extern JS_PUBLIC_DATA(js::Class) js_CallClass;
 extern JS_PUBLIC_DATA(js::Class) js_FunctionClass;
 extern js::Class js_DeclEnvClass;
@@ -350,16 +352,6 @@ IsInternalFunctionObject(JSObject *funobj)
     return funobj == fun && (fun->flags & JSFUN_LAMBDA) && !funobj->getParent();
 }
     
-struct ArgsPrivateNative;
-
-inline ArgsPrivateNative *
-GetArgsPrivateNative(JSObject *argsobj)
-{
-    JS_ASSERT(argsobj->isArguments());
-    uintptr_t p = (uintptr_t) argsobj->getPrivate();
-    return p & 2 ? (ArgsPrivateNative *)(p & ~2) : NULL;
-}
-
 } /* namespace js */
 
 extern JSObject *
