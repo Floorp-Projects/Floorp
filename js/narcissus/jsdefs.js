@@ -44,7 +44,10 @@
  * done by SpiderMonkey.
  */
 
-Narcissus = {};
+Narcissus = {
+    options: { version: 185 }
+};
+
 Narcissus.jsdefs = (function() {
 
     var tokens = [
