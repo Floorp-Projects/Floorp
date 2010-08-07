@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=458271
+-->
+<head>
+  <title>Test for Bug 458271</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=458271">Mozilla Bug 458271</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 458271 **/
+// Note: this test uses GC to force the property cache to be purged. If
+// bug 506341 is fixed, that won't work anymore, and this test will be
+// less reliable. (That is, regressing bug 458271 would cause this test to
+// fail randomly, not reliably.)
+
+var f;
+function lookup() {
+    return f.target;
+}
+
+var content = document.getElementById("content");
+for (var i = 0; i < 4; i++) {
+    content.innerHTML = '<form name="f"></form>';
+    f = document.forms.f;
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    Components.utils.forceGC();
+
+    f.innerHTML = '';  // make sure later f.innerHTML doesn't change shape
+    lookup();
+    lookup();          // nsIDOMHTMLFormElement.target goes into propcache
+    f.innerHTML = '<input type="text" name="target">';  // shadows f.target
+    is(typeof lookup(), "object",
+       "lookup must find form input, not shadowed DOM attribute");
+}
+</script>
+</pre>
+</body>
+</html>
