@@ -101,13 +101,18 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
 
         protoIndex = 1;
         for (;;) {
-            tmp = tmp->getProto();
-
             /*
              * We cannot cache properties coming from native objects behind
-             * non-native ones on the prototype chain. The non-natives can
-             * mutate in arbitrary way without changing any shapes.
+             * non-native objects, or objects with resolve hooks, on the
+             * prototype chain. Such objects can mutate without changing any
+             * shapes.
              */
+            if (tmp->getClass()->resolve) {
+                PCMETER(noprotos++);
+                return JS_NO_PROP_CACHE_FILL;
+            }
+
+            tmp = tmp->getProto();
             if (!tmp || !tmp->isNative()) {
                 PCMETER(noprotos++);
                 return JS_NO_PROP_CACHE_FILL;
