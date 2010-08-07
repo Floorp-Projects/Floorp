@@ -78,6 +78,10 @@ typedef void *EGLNativeWindowType;
 
 #elif defined(XP_WIN)
 
+#include <nsServiceManagerUtils.h>
+#include <nsIPrefBranch.h>
+#include <nsILocalFile.h>
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
@@ -258,6 +262,43 @@ public:
         if (mInitialized) {
             return PR_TRUE;
         }
+
+#ifdef XP_WIN
+        // ANGLE is an addon currently, so we have to do a bit of work
+        // to find the directory; the addon sets this on startup/shutdown.
+        do {
+            nsCOMPtr<nsIPrefBranch> prefs = do_GetService("@mozilla.org/preferences-service;1");
+            nsCOMPtr<nsILocalFile> angleFile, glesv2File;
+            if (!prefs)
+                break;
+
+            nsresult rv = prefs->GetComplexValue("gfx.angle.egl.path",
+                                                 NS_GET_IID(nsILocalFile),
+                                                 getter_AddRefs(angleFile));
+            if (NS_FAILED(rv) || !angleFile)
+                break;
+
+            nsCAutoString s;
+
+            // note that we have to load the libs in this order, because libEGL.dll
+            // depends on libGLESv2.dll, but is not in our search path.
+            nsCOMPtr<nsIFile> f;
+            angleFile->Clone(getter_AddRefs(f));
+            glesv2File = do_QueryInterface(f);
+            if (!glesv2File)
+                break;
+
+            glesv2File->Append(NS_LITERAL_STRING("libGLESv2.dll"));
+
+            PRLibrary *glesv2lib = nsnull; // this will be leaked on purpose
+            glesv2File->Load(&glesv2lib);
+            if (!glesv2lib)
+                break;
+
+            angleFile->Append(NS_LITERAL_STRING("libEGL.dll"));
+            angleFile->Load(&mEGLLibrary);
+        } while (false);
+#endif
 
         if (!mEGLLibrary) {
             mEGLLibrary = PR_LoadLibrary(EGL_LIB);
