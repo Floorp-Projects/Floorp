@@ -1366,6 +1366,15 @@ window.GroupItems = {
   _inited: false,
 
   // ----------
+  // Function: init
+  init: function() {
+/*
+    Utils.log("hello");
+    Utils.log("Groups", Groups);
+*/
+  },
+
+  // ----------
   // Function: getNextID
   // Returns the next unused groupItem ID.
   getNextID: function() {
