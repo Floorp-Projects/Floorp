@@ -723,23 +723,6 @@ typedef enum BuiltinStatus {
     BUILTIN_ERROR = 2
 } BuiltinStatus;
 
-// Arguments objects created on trace have a private value that points to an
-// instance of this struct. The struct includes a typemap that is allocated
-// as part of the object.
-struct ArgsPrivateNative {
-    double      *argv;
-
-    static ArgsPrivateNative *create(VMAllocator &alloc, unsigned argc)
-    {
-        return (ArgsPrivateNative*) new (alloc) char[sizeof(ArgsPrivateNative) + argc];
-    }
-
-    JSValueType *typemap()
-    {
-        return (JSValueType*) (this+1);
-    }
-};
-
 static JS_INLINE void
 SetBuiltinError(JSContext *cx)
 {
@@ -1282,6 +1265,13 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus getPropertyWithScriptGetter(JSObject *obj,
                                                                   nanojit::LIns* obj_ins,
                                                                   JSScopeProperty* sprop);
+
+    JS_REQUIRES_STACK nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
+    JS_REQUIRES_STACK nanojit::LIns* getStringChars(nanojit::LIns* str_ins);
+    JS_REQUIRES_STACK nanojit::LIns* getCharCodeAt(JSString *str,
+                                                   nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
+    JS_REQUIRES_STACK nanojit::LIns* getCharAt(JSString *str,
+                                               nanojit::LIns* str_ins, nanojit::LIns* idx_ins);
 
     JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
                                                   JSScopeProperty* sprop,

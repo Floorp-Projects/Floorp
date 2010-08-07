@@ -4,7 +4,6 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-gTestsubsuite = 'extensions';
 
 // The Worker constructor can take a relative URL, but different test runners
 // run in different enough environments that it doesn't all just automatically

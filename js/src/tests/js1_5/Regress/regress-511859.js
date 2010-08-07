@@ -44,7 +44,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-511859.js';
 var UBound = 0;
 var BUGNUMBER = 511859;
 var summary = 'Utf8ToOneUcs4Char in jsstr.cpp ,overlong UTF-8 seqence detection problem';

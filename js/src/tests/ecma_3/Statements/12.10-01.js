@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '12.10-01.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 462734;
 var summary = 'evaluating lhs "Reference" *before* evaluating rhs';

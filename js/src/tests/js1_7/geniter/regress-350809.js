@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-350809.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 350809;
 var summary = 'Do not assertion: if yield in xml filtering predicate';

@@ -8,8 +8,7 @@
 
 #include "nsUTF8Utils.h"
 
-#if defined(_MSC_VER) && defined(_M_IX86) && defined(XRE_WANT_DLL_BLOCKLIST) \
-   !defined(MOZ_ENABLE_LIBXUL)
+#if defined(_MSC_VER) && defined(_M_IX86) && defined(XRE_WANT_DLL_BLOCKLIST)
 #include "nsWindowsDllBlocklist.cpp"
 #else
 #undef XRE_WANT_DLL_BLOCKLIST

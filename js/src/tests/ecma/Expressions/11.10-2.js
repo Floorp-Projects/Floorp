@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = '11.10-2.js';
 
 /**
    File Name:          11.10-2.js

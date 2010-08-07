@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-164697.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 164697;
 var summary = '(parent(instance) == parent(constructor))';

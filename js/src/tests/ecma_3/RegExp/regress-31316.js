@@ -45,7 +45,6 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=31316
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-31316.js';
 var i = 0;
 var BUGNUMBER = 31316;
 var summary = 'Regression test for Bugzilla bug 31316';

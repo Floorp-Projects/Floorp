@@ -50,7 +50,6 @@
  *   str using obj as the scope chain and variable object."
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-68498-003.js';
 var BUGNUMBER = 68498;
 var summary = 'Testing calling obj.eval(str)';
 var statprefix = '; currently at expect[';

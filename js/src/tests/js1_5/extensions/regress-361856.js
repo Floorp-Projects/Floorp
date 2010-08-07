@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-361856.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 361856;
 var summary = 'Do not assert: overwriting @ js_AddScopeProperty';

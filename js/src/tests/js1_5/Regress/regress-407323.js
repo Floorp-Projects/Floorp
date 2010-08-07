@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-407323.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 407323;
 var summary = 'XML, XMLList, QName are mutable, Namespace is not.';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452495.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452495;
 var summary = 'Do not crash with JIT: @ TraceRecorder::getThis';

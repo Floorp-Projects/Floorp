@@ -43,13 +43,17 @@
  * separately to take advantage of the simple switch-case constant propagation
  * done by SpiderMonkey.
  */
-Narcissus = {};
+
+Narcissus = {
+    options: { version: 185 }
+};
+
 Narcissus.jsdefs = (function() {
 
     var tokens = [
         // End of source.
         "END",
-    
+
         // Operators and punctuators.  Some pair-wise order matters, e.g. (+, -)
         // and (UNARY_PLUS, UNARY_MINUS).
         "\n", ";",
@@ -72,15 +76,15 @@ Narcissus.jsdefs = (function() {
         "[", "]",
         "{", "}",
         "(", ")",
-    
+
         // Nonterminal tree node type codes.
         "SCRIPT", "BLOCK", "LABEL", "FOR_IN", "CALL", "NEW_WITH_ARGS", "INDEX",
         "ARRAY_INIT", "OBJECT_INIT", "PROPERTY_INIT", "GETTER", "SETTER",
         "GROUP", "LIST", "LET_BLOCK", "ARRAY_COMP", "GENERATOR", "COMP_TAIL",
-    
+
         // Terminals.
         "IDENTIFIER", "NUMBER", "STRING", "REGEXP",
-    
+
         // Keywords.
         "break",
         "case", "catch", "const", "continue",
@@ -97,7 +101,7 @@ Narcissus.jsdefs = (function() {
         "yield",
         "while", "with",
     ];
-    
+
     // Operator and punctuator mapping from token to tree node type name.
     // NB: because the lexer doesn't backtrack, all token prefixes must themselves
     // be valid tokens (e.g. !== is acceptable because its prefixes are the valid
@@ -142,14 +146,14 @@ Narcissus.jsdefs = (function() {
         '(':    "LEFT_PAREN",
         ')':    "RIGHT_PAREN"
     };
-    
+
     // Hash of keyword identifier to tokens index.  NB: we must null __proto__ to
     // avoid toString, etc. namespace pollution.
     var keywords = {__proto__: null};
-    
+
     // Define const END, etc., based on the token names.  Also map name to index.
     var tokenIds = {};
-    
+
     // Building up a string to be eval'd in different contexts.
     var consts = "const ";
     for (var i = 0, j = tokens.length; i < j; i++) {
@@ -168,23 +172,23 @@ Narcissus.jsdefs = (function() {
         tokens[t] = i;
     }
     consts += ";";
-    
+
     // Map assignment operators to their indexes in the tokens array.
     var assignOps = ['|', '^', '&', '<<', '>>', '>>>', '+', '-', '*', '/', '%'];
-    
+
     for (i = 0, j = assignOps.length; i < j; i++) {
         t = assignOps[i];
         assignOps[t] = tokens[t];
     }
-    
+
     function defineGetter(obj, prop, fn, dontDelete, dontEnum) {
         Object.defineProperty(obj, prop, { get: fn, configurable: !dontDelete, enumerable: !dontEnum });
     }
-    
+
     function defineProperty(obj, prop, val, dontDelete, readOnly, dontEnum) {
         Object.defineProperty(obj, prop, { value: val, writable: !readOnly, configurable: !dontDelete, enumerable: !dontEnum });
     }
-    
+
     return {
       "tokens": tokens,
       "opTypeNames": opTypeNames,

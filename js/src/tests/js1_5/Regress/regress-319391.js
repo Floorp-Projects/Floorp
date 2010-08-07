@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-319391.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 319391;
 var summary = 'Assignment to eval(...) should be runtime error';

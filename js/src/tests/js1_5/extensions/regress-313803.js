@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-313803.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 313803;
 var summary = 'uneval() on func with embedded objects with getter or setter';

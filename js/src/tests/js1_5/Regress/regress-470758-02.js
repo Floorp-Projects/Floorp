@@ -5,7 +5,6 @@
  * Contributor: Blake Kaplan
  */
 
-var gTestfile = 'regress-470758-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 470758;
 var summary = 'Promote evald initializer into upvar';

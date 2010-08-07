@@ -46,7 +46,6 @@
  * an upper bound in milliseconds for any truncation to take.
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-101964.js';
 var UBound = 0;
 var BUGNUMBER = 101964;
 var summary = 'Performance: truncating even very large arrays should be fast!';

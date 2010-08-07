@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-167658.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 167658;
 var summary = 'Do not crash due to js_NewRegExp initialization';

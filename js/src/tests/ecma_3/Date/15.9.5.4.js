@@ -54,7 +54,6 @@
    See http://bugzilla.mozilla.org/show_bug.cgi?id=118636 (Rhino)
 */
 //-----------------------------------------------------------------------------
-var gTestfile = '15.9.5.4.js';
 var SECTION = "15.9.5.4";
 var VERSION = "ECMA_3"; 
 var TITLE   = "Date.prototype.toTimeString()";

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-303213.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 303213;
 var summary = 'integer overflow in js';

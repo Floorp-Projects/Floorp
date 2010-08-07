@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-406555.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 406555;
 var summary = 'decompiler should not depend on JS_C_STRINGS_ARE_UTF8';

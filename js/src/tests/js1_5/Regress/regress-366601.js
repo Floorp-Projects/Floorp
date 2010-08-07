@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-366601.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 366601;
 var summary = 'Switch with more than 64k atoms';

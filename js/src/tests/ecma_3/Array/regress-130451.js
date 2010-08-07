@@ -54,7 +54,6 @@
  *
  */
 //-----------------------------------------------------------------------------
-var gTestfile = 'regress-130451.js';
 var UBound = 0;
 var BUGNUMBER = 130451;
 var summary = 'Array.prototype.sort() should not (re-)define .length';

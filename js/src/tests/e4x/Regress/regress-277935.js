@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-gTestfile = 'regress-277935.js';
 
 START('XML("") should create empty text node');
 printBugNumber(277935);

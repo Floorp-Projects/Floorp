@@ -5,7 +5,6 @@
  * Contributor: Robert Sayre
  */
 
-var gTestfile = 'regress-455380.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 455380;
 var summary = 'Do not assert with JIT: !lhs->isQuad() && !rhs->isQuad()';

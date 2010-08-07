@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-396900.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 396900;
 var summary = 'Destructuring bind in a let';

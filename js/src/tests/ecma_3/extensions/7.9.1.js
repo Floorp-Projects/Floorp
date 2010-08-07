@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = '7.9.1.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 402386;
 var summary = 'Automatic Semicolon insertion in restricted statements';

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-378492.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 378492;
 var summary = 'namespace_trace/qname_trace should check for null private, ' +

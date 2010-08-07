@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'throw-forever.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER     = "(none)";
 var summary = "gen.throw(ex) returns ex for an exhausted gen";
