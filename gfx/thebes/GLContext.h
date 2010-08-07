@@ -387,7 +387,7 @@ public:
 
     // Mark this context as destroyed.  This will NULL out all
     // the GL function pointers!
-    void MarkDestroyed();
+    void THEBES_API MarkDestroyed();
 
     enum NativeDataType {
       NativeGLContext,
