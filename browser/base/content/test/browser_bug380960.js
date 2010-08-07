@@ -1,4 +1,6 @@
 function test() {
+  gBrowser.tabContainer.addEventListener("TabOpen", tabAdded, false);
+
   var tab = gBrowser.addTab("about:blank", { skipAnimation: true });
   gBrowser.removeTab(tab);
   is(tab.parentNode, null, "tab removed immediately");
@@ -9,9 +11,14 @@ function test() {
   nextAsyncText();
 }
 
+function tabAdded() {
+  info("tab added");
+}
+
 function cleanup() {
   if (Services.prefs.prefHasUserValue("browser.tabs.animate"))
     Services.prefs.clearUserPref("browser.tabs.animate");
+  gBrowser.tabContainer.removeEventListener("TabOpen", tabAdded, false);
   finish();
 }
 
@@ -35,11 +42,13 @@ var asyncTests = [
 ];
 
 function nextAsyncText() {
+  info("tests left: " + asyncTests.length + "; starting next");
   var tab = gBrowser.addTab("about:blank", { skipAnimation: true });
 
   var gotCloseEvent = false;
 
   tab.addEventListener("TabClose", function () {
+    info("got TabClose event");
     gotCloseEvent = true;
 
     const DEFAULT_ANIMATION_LENGTH = 250;
